@@ -282,3 +282,12 @@ socket and has `BindLogSockets=false`. Protected endpoint type/owner/incarnation
 contained view identity and authenticated peer remain separate required joins.
 These observations supply admission evidence, not terminality or installed
 effectiveness.
+The supported devpts profile additionally requires an authenticated per-slot
+`newinstance` backing, distinct from original host devpts. The trusted boot
+baseline pins original host and selected instance identities plus the exact host
+`pts/ptmx` link. The unit binds the selected root at `/dev/pts` and its read-only
+ptmx node at `/dev/pts/ptmx`; the contained observer verifies the unchanged link,
+character device and actual mount identity. `PrivateDevices` alone cannot prove
+this isolation. Shared host RO/RW views and another slot's backing refuse.
+gad.8 provisioning and gad.b refresh must deliver the selected source before
+activation; controlled tests do not establish installed effectiveness.

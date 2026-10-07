@@ -23,7 +23,7 @@ module Ace
             PropagatesStopTo StopPropagatedFrom JoinsNamespaceOf RequiresMountsFor WantsMountsFor].to_h { |key| [key, "as"] }
         }.freeze
         SERVICE_EXEC_SIGNATURES = {
-          **%w[Type User Group Restart KillMode ProtectSystem RootDirectory RootImage NetworkNamespacePath Slice StandardOutput StandardError WorkingDirectory RuntimeDirectoryPreserve DevicePolicy PAMName].to_h { |key| [key, "s"] },
+          **%w[Type User Group Restart KillMode ProtectSystem RootDirectory RootImage NetworkNamespacePath Slice StandardInput TTYPath StandardOutput StandardError WorkingDirectory RuntimeDirectoryPreserve DevicePolicy PAMName].to_h { |key| [key, "s"] },
           **%w[SupplementaryGroups ReadWritePaths ReadOnlyPaths Environment PassEnvironment UnsetEnvironment Sockets InaccessiblePaths ExtensionDirectories RuntimeDirectory].to_h { |key| [key, "as"] },
           **%w[SendSIGKILL Delegate ProtectControlGroups NoNewPrivileges PrivateIPC PrivateDevices DynamicUser RootEphemeral MountAPIVFS PrivateTmp ProtectKernelTunables BindLogSockets].to_h { |key| [key, "b"] },
           **%w[CapabilityBoundingSet AmbientCapabilities RestrictNamespaces].to_h { |key| [key, "t"] },

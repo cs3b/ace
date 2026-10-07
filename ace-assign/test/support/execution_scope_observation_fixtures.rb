@@ -7,19 +7,25 @@ module Ace
       BOOT_BASELINE_SELECTION = {"path" => "/etc/ace/boot/original.json", "sha256" => "d" * 64, "bytes" => 1}.freeze
       def self.kernel_topology(resources: [])
         verifier = Ace::Runtime::Molecules::KernelViewTopology
-        paths = ["/"] + verifier::VIEWS + resources.map { |entry| entry.fetch("view_path") }
+        paths = ["/"] + verifier::VIEWS + ["/dev/pts/ptmx"] + resources.map { |entry| entry.fetch("view_path") }
         text = paths.each_with_index.map do |path, index|
           resource = resources.find { |entry| entry.fetch("view_path") == path }
-          filesystem = resource ? resource.fetch("filesystem_type") : verifier::APIS.fetch(path, path == "/dev" ? "tmpfs" : "ext4")
+          filesystem = path == "/dev/pts/ptmx" ? "devpts" : resource ? resource.fetch("filesystem_type") : verifier::APIS.fetch(path, path == "/dev" ? "tmpfs" : "ext4")
           flags = resource || verifier::APIS.key?(path) ? "rw" : "ro"
-          root = resource ? resource.fetch("host_path") : "/"
+          root = path == "/dev/pts/ptmx" ? "/ptmx" : resource ? resource.fetch("host_path") : "/"
           "#{index + 1} 0 8:1 #{root} #{path} #{flags} - #{filesystem} fixture #{flags}\n"
         end.join
         mounts = Ace::Runtime::Molecules::LinuxMountInfo.new(text).records.map { |row| row.slice(*Ace::Runtime::Molecules::ServerResourceObservation::MOUNT_FIELDS) }
         views = verifier::VIEWS.map { |path| {"path" => path, "mount_id" => mounts.find { |row| row["mountpoint"] == path }.fetch("mount_id"),
           "device" => 8, "inode" => paths.index(path) + 100, "type" => "directory"} }
         {"ipc_namespace_identity" => {"device" => 4, "inode" => 20}, "hook_ipc_namespace_identity" => {"device" => 4, "inode" => 20},
-          "mounts" => mounts, "views" => views, "authority_socket_identity" => [1, 2, 13000]}
+          "mounts" => mounts, "views" => views, "authority_socket_identity" => [1, 2, 13000], "ptmx_link" => "pts/ptmx",
+          "ptmx_identity" => {"device" => 8, "inode" => 500, "mount_id" => paths.index("/dev/pts/ptmx") + 1, "type" => "character", "rdev_major" => 5, "rdev_minor" => 2}}
+      end
+      DEVPTS_HOST = {"device" => 9, "inode" => 1, "major_minor" => "9:1"}.freeze
+      DEVPTS_SELECTED = {"path" => "/run/ace/execution-slots/slot/devpts", "device" => 8, "inode" => 106, "major_minor" => "8:1", "ptmx_inode" => 500}.freeze
+      def self.boot_baseline
+        {"host_ipc_namespace_identity" => {"device" => 4, "inode" => 900}, "host_devpts_identity" => DEVPTS_HOST, "selected_devpts" => DEVPTS_SELECTED, "host_ptmx_link" => "pts/ptmx"}
       end
       class BootEvidence
         attr_accessor :unavailable, :selected
@@ -30,12 +36,12 @@ module Ace
         def select!(expected:)
           raise Ace::Runtime::RuntimeUnavailableError, "boot baseline unavailable" if unavailable
           @selections << expected
-          {"selection" => selected, "baseline" => {"host_ipc_namespace_identity" => {"device" => 4, "inode" => 900}}}
+          {"selection" => selected, "baseline" => ExecutionScopeObservationFixtures.boot_baseline}
         end
         def verify!(selection:, expected:)
           raise Ace::Runtime::RuntimeUnavailableError, "original boot baseline unavailable" if unavailable || selection != BOOT_BASELINE_SELECTION
           @verifications << {"selection" => selection, "expected" => expected}
-          {"host_ipc_namespace_identity" => {"device" => 4, "inode" => 900}}
+          ExecutionScopeObservationFixtures.boot_baseline
         end
       end
       NETWORK_SELECTION = %w[profile policy_export report installer_artifact].to_h { |key| [key, {"path" => "/etc/ace/network/#{key}", "sha256" => "c" * 64, "bytes" => 1}] }.freeze

@@ -366,7 +366,8 @@ module Ace
               .merge("view_path" => entry.fetch("view_path"), "filesystem_type" => host.fetch("filesystem_type"))
           end
           Ace::Runtime::Molecules::KernelViewTopology.new.verify!(topology: report.fetch("kernel_view_topology"),
-            host_ipc: baseline.fetch("host_ipc_namespace_identity"), authority_socket: endpoint, writable_resources: writable)
+            host_ipc: baseline.fetch("host_ipc_namespace_identity"), authority_socket: endpoint, writable_resources: writable,
+            host_devpts: baseline.fetch("host_devpts_identity"), selected_devpts: baseline.fetch("selected_devpts"))
           unavailable!("authority endpoint changed during view verification") unless endpoint == @files.authority_socket_identity(authority)
           report.slice("server_identity", "resource_observer_identity", "mount_namespace_identity", "resource_identities").merge(
             "scope_generation" => binding.fetch("scope_generation"), "scope_binding_event_id" => lineage.binding_event.fetch("digest"),

@@ -43,13 +43,15 @@ class ServerResourceObservationTest < AceRuntimeTestCase
     end
   end
 
-  def with_contained_fixture(changed_table: false, changed_ipc: false)
+  def with_contained_fixture(changed_table: false, changed_ipc: false, changed_ptmx_link: false, changed_ptmx_node: false)
     Dir.mktmpdir("ace-server-view-") do |root|
       views = Observation::VIEW_PATHS
       (views + ["/scratch", "/authority"]).each { |path| FileUtils.mkdir_p(root + path) }
       %w[mnt ipc replacement].each { |name| File.write(root + "/#{name}.identity", name) }
       endpoint = UNIXServer.new(root + "/authority/socket")
-      paths = ["/"] + views + ["/scratch"]
+      File.write(root + "/dev/pts/ptmx", "controlled node")
+      File.symlink(changed_ptmx_link ? "foreign" : "pts/ptmx", root + "/dev/ptmx")
+      paths = ["/"] + views + ["/scratch", "/dev/pts/ptmx"]
       mount_text = paths.each_with_index.map do |path, index|
         "#{index + 1} 0 8:1 / #{path} ro - ext4 fixture ro\n"
       end.join
@@ -71,6 +73,11 @@ class ServerResourceObservationTest < AceRuntimeTestCase
         else
           handle = real_open.call(root + path, File::RDONLY)
           handles[handle.fileno] = paths.index(path) + 1
+          if path == "/dev/pts/ptmx"
+            original_stat = handle.stat
+            typed_node = Struct.new(:dev, :ino, :rdev_major, :rdev_minor) { def chardev?; true; end }.new(original_stat.dev, original_stat.ino, 5, changed_ptmx_node ? 3 : 2)
+            handle.define_singleton_method(:stat) { typed_node }
+          end
           handle
         end
       end
@@ -120,12 +127,14 @@ class ServerResourceObservationTest < AceRuntimeTestCase
       result = files.observe(81, [{"host_path" => "/host/scratch", "view_path" => "/scratch"}], authority_socket: "/authority/socket")
       topology = result.fetch("kernel_view_topology")
       assert_equal Observation::VIEW_PATHS.sort, topology.fetch("views").map { |view| view.fetch("path") }.sort
-      assert_equal 12, topology.fetch("mounts").size
+      assert_equal 13, topology.fetch("mounts").size
+      assert_equal "pts/ptmx", topology.fetch("ptmx_link")
+      assert_equal [5, 2], topology.fetch("ptmx_identity").values_at("rdev_major", "rdev_minor")
       assert_equal topology.fetch("ipc_namespace_identity"), topology.fetch("hook_ipc_namespace_identity")
       assert_equal Process.uid, topology.fetch("authority_socket_identity").last
-      assert_equal 22, flags.count { |path, bits| path != "/scratch" && bits == 0x200000 | File::NOFOLLOW }
+      assert_equal 26, flags.count { |path, bits| path != "/scratch" && bits == 0x200000 | File::NOFOLLOW }
     end
-    [{changed_table: true}, {changed_ipc: true}].each do |options|
+    [{changed_table: true}, {changed_ipc: true}, {changed_ptmx_link: true}, {changed_ptmx_node: true}].each do |options|
       with_contained_fixture(**options) do |files, _flags|
         assert_raises(Ace::Runtime::RuntimeUnavailableError) { files.observe(81, [], authority_socket: "/authority/socket") }
       end

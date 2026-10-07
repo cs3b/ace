@@ -25,7 +25,7 @@ module Ace
           "PrivateDevices" => true, "PrivateTmp" => false, "MountAPIVFS" => true, "ProtectKernelTunables" => true, "BindLogSockets" => false,
           "DevicePolicy" => "closed", "DeviceAllow" => [], "ProtectSystem" => "strict", "DynamicUser" => false, "PAMName" => "",
           "EnvironmentFiles" => [], "PassEnvironment" => [], "UnsetEnvironment" => [],
-          "StandardOutput" => "journal", "StandardError" => "journal", "RuntimeDirectoryPreserve" => "no",
+          "StandardInput" => "null", "TTYPath" => "", "StandardOutput" => "journal", "StandardError" => "journal", "RuntimeDirectoryPreserve" => "no",
           "RuntimeDirectoryMode" => 0o700, "UMask" => 0o077, "RootImage" => "", "RootImageOptions" => [], "RootEphemeral" => false, "ExtensionDirectories" => [],
           "ExtensionImages" => [], "MountImages" => [], "TemporaryFileSystem" => [], "InaccessiblePaths" => []}.freeze
         EMPTY_ACTIVATION = %w[Requisite BindsTo PartOf Upholds OnFailure OnSuccess OnFailureOf OnSuccessOf
@@ -339,8 +339,13 @@ module Ace
             raise RuntimeUnavailableError, "authority socket has no unique exact readonly projection"
           end
           @files.authority_socket!(authority)
+          devpts = "/run/ace/execution-slots/#{@scope.fetch('slot_id')}/devpts"
+          device_projections = [[devpts, "/dev/pts", false], [devpts + "/ptmx", "/dev/pts/ptmx", true]]
+          unless projections.select { |_host, view, _| overlaps?(view, "/dev/pts") } == device_projections
+            raise RuntimeUnavailableError, "selected devpts has no exact root and ptmx projection"
+          end
           api_roots = %w[/dev /proc /sys]
-          if projections.any? { |_host, view, _| api_roots.any? { |root| overlaps?(root, view) } }
+          if (projections - device_projections).any? { |_host, view, _| api_roots.any? { |root| overlaps?(root, view) } }
             raise RuntimeUnavailableError, "API namespace has an unsupported storage alias"
           end
           readonly_paths = service.fetch("ReadOnlyPaths")
@@ -365,6 +370,7 @@ module Ace
           end
           projections.each do |host, view, readonly|
             next if [host, view, readonly] == socket_projection
+            next if device_projections.include?([host, view, readonly])
             next if readonly && artifacts.values.flatten.any? { |entry| entry["host_path"] == host && entry["view_path"] == view }
             unless entries.any? { |entry| entry.values_at("host_path", "view_path", "worker_visible", "read_only") == [host, view, true, readonly] }
               raise RuntimeUnavailableError, "effective projection is omitted from boundary inventory"

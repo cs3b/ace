@@ -58,17 +58,20 @@ module Ace
             end
             views = VIEW_PATHS.map { |path| pinned_view(root, path, table: table) }
             socket_identity = pinned_socket(root, authority_socket)
+            ptmx_identity, ptmx_link = pinned_ptmx(root, table: table)
             repeated = LinuxMountInfo.new(File.read("/proc/#{pid}/mountinfo", LinuxMountInfo::LIMIT + 1))
             unless namespace_identity == self.namespace(pid) && root_identity == identity(File.stat("/proc/#{pid}/root")) &&
                 ipc_identity == self.namespace(pid, "ipc") && hook_ipc_identity == self.namespace("self", "ipc") &&
                 table.records == repeated.records &&
                 views == VIEW_PATHS.map { |path| pinned_view(root, path, table: repeated) } &&
-                socket_identity == pinned_socket(root, authority_socket)
+                socket_identity == pinned_socket(root, authority_socket) &&
+                [ptmx_identity, ptmx_link] == pinned_ptmx(root, table: repeated)
               raise RuntimeUnavailableError, "server root or namespace changed during observation"
             end
             {"mount_namespace_identity" => namespace_identity, "resource_identities" => result, "resource_topology" => topology,
               "kernel_view_topology" => {"ipc_namespace_identity" => ipc_identity, "hook_ipc_namespace_identity" => hook_ipc_identity,
-                "mounts" => table.records.map { |row| row.slice(*MOUNT_FIELDS) }, "views" => views, "authority_socket_identity" => socket_identity}}
+                "mounts" => table.records.map { |row| row.slice(*MOUNT_FIELDS) }, "views" => views, "authority_socket_identity" => socket_identity,
+                "ptmx_identity" => ptmx_identity, "ptmx_link" => ptmx_link}}
           ensure
             root&.close
             namespace&.close
@@ -99,6 +102,32 @@ module Ace
             [stat.dev, stat.ino, stat.uid]
           ensure
             handle&.close
+          end
+
+          def pinned_ptmx(root, table:)
+            dev = open_inside(root, "/dev", flags: 0x200000 | File::NOFOLLOW)
+            link = read_ptmx_link(dev)
+            raise RuntimeUnavailableError, "selected ptmx link differs" unless link == "pts/ptmx"
+            node = open_inside(root, "/dev/pts/ptmx", flags: 0x200000 | File::NOFOLLOW)
+            stat = node.stat
+            raise RuntimeUnavailableError, "selected ptmx is not a character device" unless stat.chardev? && stat.rdev_major == 5 && stat.rdev_minor == 2
+            rows = File.read("/proc/self/fdinfo/#{node.fileno}", 16_385).lines.filter_map { |line| /\Amnt_id:\s+([0-9]+)\s*\z/.match(line)&.[](1) }
+            raise RuntimeUnavailableError, "selected ptmx mount is ambiguous" unless rows.size == 1
+            mount = table.by_id(Integer(rows.first, 10))
+            [{"device" => stat.dev, "inode" => stat.ino, "mount_id" => mount.fetch("mount_id"), "type" => "character",
+              "rdev_major" => stat.rdev_major, "rdev_minor" => stat.rdev_minor}, link]
+          ensure
+            dev&.close
+            node&.close
+          end
+
+          def read_ptmx_link(dev)
+            call = Fiddle::Function.new(Fiddle::Handle::DEFAULT["readlinkat"],
+              [Fiddle::TYPE_INT, Fiddle::TYPE_VOIDP, Fiddle::TYPE_VOIDP, Fiddle::TYPE_SIZE_T], Fiddle::TYPE_SSIZE_T)
+            buffer = Fiddle::Pointer.malloc(64)
+            count = call.call(dev.fileno, "ptmx\0", buffer, 64)
+            raise RuntimeUnavailableError, "selected ptmx link cannot be observed" unless count.between?(1, 63)
+            buffer.to_s(count)
           end
 
           def open_inside(root, path, flags: File::RDONLY | File::NONBLOCK | File::NOFOLLOW)

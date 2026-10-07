@@ -12,8 +12,8 @@ module Ace
         READONLY = %w[/proc/sys /sys /sys/fs/cgroup /dev /dev/shm].freeze
         APIS = {"/proc" => "proc", "/dev/pts" => "devpts", "/dev/mqueue" => "mqueue"}.freeze
 
-        def verify!(topology:, host_ipc:, authority_socket:, writable_resources:)
-          object!(topology, %w[authority_socket_identity hook_ipc_namespace_identity ipc_namespace_identity mounts views])
+        def verify!(topology:, host_ipc:, authority_socket:, writable_resources:, host_devpts:, selected_devpts:)
+          object!(topology, %w[authority_socket_identity hook_ipc_namespace_identity ipc_namespace_identity mounts ptmx_identity ptmx_link views])
           ipc = topology.fetch("ipc_namespace_identity")
           namespace!(ipc)
           namespace!(topology.fetch("hook_ipc_namespace_identity"))
@@ -42,8 +42,50 @@ module Ace
             row = by_path.fetch(path)
             refuse! unless row.fetch("mountpoint") == path && row.fetch("root") == "/" && row.fetch("filesystem_type") == filesystem
           end
+          object!(host_devpts, %w[device inode major_minor])
+          object!(selected_devpts, %w[device inode major_minor path ptmx_inode])
+          [host_devpts, selected_devpts].each do |instance|
+            refuse! unless %w[device inode].all? { |key| positive?(instance[key]) } &&
+              instance["major_minor"].is_a?(String) && instance["major_minor"].match?(/\A(?:0|[1-9][0-9]*):(?:0|[1-9][0-9]*)\z/)
+          end
+          refuse! unless positive?(selected_devpts["ptmx_inode"]) && path?(selected_devpts["path"])
+          pts = views.find { |view| view["path"] == "/dev/pts" }
+          pts_mount = by_path.fetch("/dev/pts")
+          refuse! unless pts.values_at("device", "inode") == selected_devpts.values_at("device", "inode") &&
+            pts_mount["major_minor"] == selected_devpts["major_minor"] &&
+            selected_devpts["device"] != host_devpts["device"] && selected_devpts["major_minor"] != host_devpts["major_minor"] &&
+            topology["ptmx_link"] == "pts/ptmx"
+          ptmx = topology.fetch("ptmx_identity")
+          object!(ptmx, %w[device inode mount_id rdev_major rdev_minor type])
+          refuse! unless ptmx["type"] == "character" && %w[device inode mount_id].all? { |key| positive?(ptmx[key]) } &&
+            ptmx["rdev_major"].is_a?(Integer) && ptmx["rdev_minor"].is_a?(Integer) &&
+            ptmx.values_at("rdev_major", "rdev_minor") == [5, 2] &&
+            ptmx.values_at("device", "inode") == selected_devpts.values_at("device", "ptmx_inode")
+          node_mount = mounts.find { |row| row["mount_id"] == ptmx["mount_id"] }
+          refuse! unless node_mount && readonly?(node_mount) &&
+            node_mount.values_at("mountpoint", "root", "filesystem_type", "major_minor") ==
+              ["/dev/pts/ptmx", "/ptmx", "devpts", selected_devpts["major_minor"]]
+          hidden_host = mounts.select { |row| row["major_minor"] == host_devpts["major_minor"] }
+          hidden_host.each do |row|
+            refuse! unless row.values_at("mountpoint", "root", "filesystem_type") == ["/dev/pts", "/", "devpts"]
+          end
+          refuse! unless hidden_host.size <= 1
+          pts_layers = mounts.select { |row| row["mountpoint"] == "/dev/pts" }
+          refuse! unless (pts_layers - [pts_mount] - hidden_host).empty?
+          unless hidden_host.empty?
+            chain = []
+            parent = pts_mount
+            while parent["mountpoint"] == "/dev/pts"
+              refuse! if chain.include?(parent["mount_id"])
+              chain << parent.fetch("mount_id")
+              parent = mounts.find { |row| row["mount_id"] == parent["parent_id"] }
+              refuse! unless parent
+            end
+            refuse! unless hidden_host.all? { |row| chain.include?(row["mount_id"]) }
+          end
           refuse! unless by_path.fetch("/dev").fetch("filesystem_type") == "tmpfs" && by_path.fetch("/dev").fetch("mountpoint") == "/dev"
           mounts.each do |row|
+            next if hidden_host.include?(row)
             next if readonly?(row)
             api = APIS[row.fetch("mountpoint")]
             next if api && row == by_path.fetch(row.fetch("mountpoint")) && row.fetch("filesystem_type") == api

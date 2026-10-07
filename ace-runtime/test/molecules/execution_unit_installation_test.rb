@@ -136,7 +136,8 @@ class ExecutionUnitInstallationTest < AceRuntimeTestCase
       "RootDirectory" => @scope.fetch("root_directory"), "NetworkNamespacePath" => @scope.fetch("network_namespace_path"),
       "WantsMountsFor" => [@scope.fetch("root_directory")], "RequiresMountsFor" => ["/run/ace-slot"],
       "ReadOnlyPaths" => ["/dev", "/dev/shm"], "RuntimeDirectory" => ["ace-slot"], "After" => ["ace-slot.slice", "-.mount", "run.mount", "systemd-journald.socket"],
-      "BindReadOnlyPaths" => [["/run/authority/socket", "/run/authority/socket", false, 0]],
+      "BindPaths" => [["/run/ace/execution-slots/slot/devpts", "/dev/pts", false, 0]],
+      "BindReadOnlyPaths" => [["/run/authority/socket", "/run/authority/socket", false, 0], ["/run/ace/execution-slots/slot/devpts/ptmx", "/dev/pts/ptmx", false, 0]],
       "Environment" => ["HERDR_CONFIG_PATH=#{paths.fetch('native_configuration')}"],
       "RestrictAddressFamilies" => [true, %w[AF_INET AF_INET6 AF_UNIX]],
       "ExecStartEx" => [command(paths.fetch("native_executable"), args: ["server"])],
@@ -430,7 +431,7 @@ class ExecutionUnitInstallationTest < AceRuntimeTestCase
     replacement = "/installed/verified-herdr"
     @files.bytes[replacement] = @files.bytes.fetch(original_host)
     artifact["host_path"] = replacement
-    overlay = [[replacement, "/usr/bin/herdr", false, 0], ["/run/authority/socket", "/run/authority/socket", false, 0]]
+    overlay = [[replacement, "/usr/bin/herdr", false, 0], ["/run/authority/socket", "/run/authority/socket", false, 0], ["/run/ace/execution-slots/slot/devpts/ptmx", "/dev/pts/ptmx", false, 0]]
     @profiles["ace-slot.service"]["BindReadOnlyPaths"] = overlay
     @manifest["properties"]["service"]["BindReadOnlyPaths"] = overlay
     save_manifest
@@ -438,6 +439,47 @@ class ExecutionUnitInstallationTest < AceRuntimeTestCase
     assert_includes @files.digested, replacement
     @files.bytes[replacement] = "changed actual bind source"
     assert_raises(Unavailable) { @installation.verify!(manager: @manager) }
+  end
+
+  def test_selected_devpts_pair_cannot_use_host_other_slot_alias_or_writable_node
+    service = @profiles.fetch("ace-slot.service")
+    original_rw = Marshal.load(Marshal.dump(service.fetch("BindPaths")))
+    original_ro = Marshal.load(Marshal.dump(service.fetch("BindReadOnlyPaths")))
+    [
+      -> { service["BindPaths"] = [["/dev/pts", "/dev/pts", false, 0]] },
+      -> { service["BindPaths"] = [["/run/ace/execution-slots/other/devpts", "/dev/pts", false, 0]] },
+      -> { service["BindReadOnlyPaths"][1][1] = "/dev/ptmx" },
+      -> { service["BindReadOnlyPaths"][1][0] = "/dev/pts/ptmx" },
+      -> { service["BindPaths"] << service["BindReadOnlyPaths"].pop },
+      -> { service["BindPaths"][0][2] = true }
+    ].each do |mutate|
+      service["BindPaths"] = Marshal.load(Marshal.dump(original_rw))
+      service["BindReadOnlyPaths"] = Marshal.load(Marshal.dump(original_ro))
+      mutate.call
+      %w[BindPaths BindReadOnlyPaths].each { |key| @manifest["properties"]["service"][key] = service.fetch(key) }
+      save_manifest
+      assert_raises(Unavailable) { @installation.verify!(manager: @manager) }
+    end
+    service["BindPaths"], service["BindReadOnlyPaths"] = original_rw, original_ro
+    %w[BindPaths BindReadOnlyPaths].each { |key| @manifest["properties"]["service"][key] = service.fetch(key) }
+    save_manifest
+    assert @installation.verify!(manager: @manager)
+  end
+  def test_host_tty_input_or_path_cannot_bypass_selected_devpts
+    service = @profiles.fetch("ace-slot.service")
+    %w[tty tty-force tty-fail].each do |input|
+      service["StandardInput"] = input
+      @manifest["properties"]["service"]["StandardInput"] = input
+      save_manifest
+      assert_raises(Unavailable) { @installation.verify!(manager: @manager) }
+    end
+    service["StandardInput"] = @manifest["properties"]["service"]["StandardInput"] = "null"
+    service["TTYPath"] = @manifest["properties"]["service"]["TTYPath"] = "/dev/pts/12"
+    save_manifest
+    assert_raises(Unavailable) { @installation.verify!(manager: @manager) }
+    service["TTYPath"] = @manifest["properties"]["service"]["TTYPath"] = ""
+    save_manifest
+    assert @installation.verify!(manager: @manager)
   end
 
   def test_other_kernel_mount_shadow_options_cannot_be_approved_by_manifest

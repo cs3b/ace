@@ -5,22 +5,25 @@ require "ace/runtime/molecules/kernel_view_topology"
 class KernelViewTopologyTest < AceRuntimeTestCase
   Verifier = Ace::Runtime::Molecules::KernelViewTopology
   def setup
-    paths = ["/"] + Verifier::VIEWS + ["/scratch"]
+    paths = ["/"] + Verifier::VIEWS + ["/dev/pts/ptmx", "/scratch"]
     text = paths.each_with_index.map do |path, index|
-      filesystem = Verifier::APIS.fetch(path, path == "/dev" ? "tmpfs" : "ext4")
+      filesystem = path == "/dev/pts/ptmx" ? "devpts" : Verifier::APIS.fetch(path, path == "/dev" ? "tmpfs" : "ext4")
       flags = Verifier::APIS.key?(path) || path == "/scratch" ? "rw" : "ro"
-      root = path == "/scratch" ? "/private/scratch" : "/"
+      root = path == "/dev/pts/ptmx" ? "/ptmx" : path == "/scratch" ? "/private/scratch" : "/"
       "#{index + 1} 0 8:1 #{root} #{path} #{flags} - #{filesystem} fixture #{flags}\n"
     end.join
     mounts = Ace::Runtime::Molecules::LinuxMountInfo.new(text).records.map { |row| row.slice(*Ace::Runtime::Molecules::ServerResourceObservation::MOUNT_FIELDS) }
     views = Verifier::VIEWS.map { |path| {"path" => path, "mount_id" => mounts.find { |row| row["mountpoint"] == path }.fetch("mount_id"),
       "device" => 8, "inode" => paths.index(path) + 100, "type" => "directory"} }
     @topology = {"ipc_namespace_identity" => {"device" => 4, "inode" => 20}, "hook_ipc_namespace_identity" => {"device" => 4, "inode" => 20},
-      "mounts" => mounts, "views" => views, "authority_socket_identity" => [8, 90, 13000]}
+      "mounts" => mounts, "views" => views, "authority_socket_identity" => [8, 90, 13000], "ptmx_link" => "pts/ptmx",
+      "ptmx_identity" => {"device" => 8, "inode" => 500, "mount_id" => paths.index("/dev/pts/ptmx") + 1, "type" => "character", "rdev_major" => 5, "rdev_minor" => 2}}
+    @host = {"device" => 9, "inode" => 1, "major_minor" => "9:1"}
+    @selected = {"path" => "/run/ace/execution-slots/slot/devpts", "device" => 8, "inode" => 106, "major_minor" => "8:1", "ptmx_inode" => 500}
     @writable = [{"view_path" => "/scratch", "major_minor" => "8:1", "filesystem_path" => "/private/scratch", "filesystem_type" => "ext4"}]
   end
   def verify(topology = @topology, writable = @writable)
-    Verifier.new.verify!(topology: topology, host_ipc: {"device" => 4, "inode" => 10}, authority_socket: [8, 90, 13000], writable_resources: writable)
+    Verifier.new.verify!(topology: topology, host_ipc: {"device" => 4, "inode" => 10}, authority_socket: [8, 90, 13000], writable_resources: writable, host_devpts: @host, selected_devpts: @selected)
   end
   def changed
     Marshal.load(Marshal.dump(@topology))
@@ -34,6 +37,57 @@ class KernelViewTopologyTest < AceRuntimeTestCase
     writable = @writable + [{"view_path" => "/tmp", "major_minor" => "8:1", "filesystem_path" => "/private/tmp", "filesystem_type" => "ext4"}]
     assert verify(topology, writable)
     assert_raises(Ace::Runtime::RuntimeUnavailableError) { verify(topology) }
+  end
+  def test_selected_private_devpts_accepts_readonly_and_writable_but_shared_host_refuses_both
+    %w[ro rw].each do |flag|
+      topology = changed
+      topology["mounts"].find { |row| row["mountpoint"] == "/dev/pts" }["options"] = [flag]
+      assert verify(topology)
+      live_host = Marshal.load(Marshal.dump(topology))
+      live_host["views"].find { |view| view["path"] == "/dev/pts" }.merge!(@host.slice("device", "inode"))
+      live_host["mounts"].find { |row| row["mountpoint"] == "/dev/pts" }["major_minor"] = @host.fetch("major_minor")
+      live_host["ptmx_identity"].merge!("device" => @host.fetch("device"), "inode" => 501)
+      live_host["mounts"].find { |row| row["mountpoint"] == "/dev/pts/ptmx" }["major_minor"] = @host.fetch("major_minor")
+      assert_raises(Ace::Runtime::RuntimeUnavailableError) { verify(live_host) }
+      original_host = @host
+      @host = @selected.slice("device", "inode", "major_minor")
+      assert_raises(Ace::Runtime::RuntimeUnavailableError) { verify(topology) }
+      @host = original_host
+      topology["views"].find { |view| view["path"] == "/dev/pts" }["inode"] += 1
+      assert_raises(Ace::Runtime::RuntimeUnavailableError) { verify(topology) }
+    end
+  end
+  def test_selected_ptmx_wrong_node_link_and_superblock_refuse
+    [->(t) { t["ptmx_link"] = "/dev/pts/ptmx" }, ->(t) { t["ptmx_identity"]["inode"] += 1 },
+      ->(t) { t["ptmx_identity"]["device"] = 9 }, ->(t) { t["ptmx_identity"]["rdev_minor"] = 3 },
+      ->(t) { t["ptmx_identity"]["type"] = "file" }, ->(t) { t["ptmx_identity"]["rdev_major"] = 5.0 },
+      ->(t) { t["ptmx_identity"]["mount_id"] = t["views"].find { |v| v["path"] == "/dev/pts" }["mount_id"] },
+      ->(t) { t["mounts"].find { |row| row["mountpoint"] == "/dev/pts/ptmx" }["options"] = ["rw"] }].each do |mutate|
+      topology = changed
+      mutate.call(topology)
+      assert_raises(Ace::Runtime::RuntimeUnavailableError) { verify(topology) }
+    end
+  end
+  def test_only_proven_stacked_original_host_layer_can_be_hidden
+    topology = changed
+    pts = topology["mounts"].find { |row| row["mountpoint"] == "/dev/pts" }
+    host = pts.merge("mount_id" => 99, "parent_id" => topology["views"].find { |v| v["path"] == "/dev" }["mount_id"],
+      "major_minor" => @host.fetch("major_minor"))
+    pts["parent_id"] = 99
+    topology["mounts"] << host
+    %w[ro rw].each do |flag|
+      host["options"] = [flag]
+      assert verify(topology)
+    end
+    [->(t) { t["mounts"].last["mountpoint"] = "/host-alias" },
+      ->(t) { t["mounts"].find { |r| r["mountpoint"] == "/dev/pts" }["parent_id"] = 998 },
+      ->(t) { t["mounts"].last["parent_id"] = pts["mount_id"] },
+      ->(t) { t["mounts"].last["major_minor"] = "7:1" },
+      ->(t) { t["mounts"] << t["mounts"].last.merge("mount_id" => 100, "mountpoint" => "/host-ro-alias", "options" => ["ro"]) }].each do |mutate|
+      changed_stack = Marshal.load(Marshal.dump(topology))
+      mutate.call(changed_stack)
+      assert_raises(Ace::Runtime::RuntimeUnavailableError) { verify(changed_stack) }
+    end
   end
   def test_host_shared_or_different_hook_ipc_and_socket_substitution_refuse
     ["ipc_namespace_identity", "hook_ipc_namespace_identity"].each do |field|

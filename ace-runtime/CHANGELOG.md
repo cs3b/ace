@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+- Authenticate the boot-selected private devpts backing and exact instance-local ptmx node before API exemption; shared host views refuse even when read-only. Verify the explicit unit projections and pinned contained ptmx link/node observations.
+
 ### Added
 
 - Verify immutable per-boot original host baseline selections and the fixed readiness configuration/runtime load surface. Collect complete bounded server mount/IPC views through contained pinned descriptors and verify exact original backing plus the authenticated read-only authority socket projection. Trusted domain boot-proof production/refresh and installed effectiveness remain separate obligations.

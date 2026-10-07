@@ -64,7 +64,8 @@ module Ace
           raise "wrong controlled callback" unless report.keys.sort == %w[challenge_id kernel_view_topology mount_namespace_identity resource_identities resource_observer_identity resource_topology server_identity version] &&
             report["challenge_id"] == challenge["challenge_id"] && peer == @kernel.capture(92)
           Ace::Runtime::Molecules::KernelViewTopology.new.verify!(topology: report.fetch("kernel_view_topology"),
-            host_ipc: {"device" => 4, "inode" => 900}, authority_socket: [1, 2, 13000], writable_resources: [])
+            host_ipc: {"device" => 4, "inode" => 900}, authority_socket: [1, 2, 13000], writable_resources: [],
+            host_devpts: ExecutionScopeObservationFixtures::DEVPTS_HOST, selected_devpts: ExecutionScopeObservationFixtures::DEVPTS_SELECTED)
           report.slice("server_identity", "resource_observer_identity", "mount_namespace_identity", "resource_identities").merge(
             "scope_generation" => lineage.binding.fetch("scope_generation"), "scope_binding_event_id" => lineage.binding_event.fetch("digest"),
             "service_invocation_id" => "c" * 32, "workspace_id" => "w1", "network_namespace_identity" => @network_installation.fetch("namespace_identity"),

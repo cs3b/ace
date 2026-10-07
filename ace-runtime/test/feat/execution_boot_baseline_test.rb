@@ -20,7 +20,9 @@ class ExecutionBootBaselineTest < AceRuntimeTestCase
     @payload = {"schema" => "ace.execution-boot-baseline/v1", "slot_id" => "slot", "boot_id" => BOOT,
       "deployment_digest" => "a" * 64, "producer_artifact" => @producer,
       "original_host_context" => {"pid" => 1, "uid" => 0, "gid" => 0, "started_at" => "linux:#{BOOT}:1"},
-      "host_ipc_namespace_identity" => {"device" => 4, "inode" => 90}}
+      "host_ipc_namespace_identity" => {"device" => 4, "inode" => 90}, "host_ptmx_link" => "pts/ptmx",
+      "host_devpts_identity" => {"device" => 9, "inode" => 1, "major_minor" => "9:1"},
+      "selected_devpts" => {"path" => "/run/ace/execution-slots/slot/devpts", "device" => 8, "inode" => 106, "major_minor" => "8:1", "ptmx_inode" => 500}}
     @ref = artifact("original", JSON.generate(@payload))
     @pointer = artifact("pointer", JSON.generate("schema" => "ace.execution-boot-selection/v1", "slot_id" => "slot", "baseline" => @ref))
     original = @reader.method(:read_path!)
@@ -56,6 +58,18 @@ class ExecutionBootBaselineTest < AceRuntimeTestCase
     assert_equal @ref, selected.fetch("selection")
     assert_equal original, selected.fetch("baseline")
     assert selected.fetch("selection").frozen?
+  end
+  def test_selected_devpts_closed_original_backing_and_host_link_are_authenticated
+    [->(p) { p.delete("selected_devpts") }, ->(p) { p["host_ptmx_link"] = "/dev/pts/ptmx" },
+      ->(p) { p["selected_devpts"]["path"] = "/run/ace/execution-slots/other/devpts" },
+      ->(p) { p["selected_devpts"]["device"] = p["host_devpts_identity"]["device"] },
+      ->(p) { p["selected_devpts"]["major_minor"] = p["host_devpts_identity"]["major_minor"] },
+      ->(p) { p["selected_devpts"]["ptmx_inode"] = 500.0 },
+      ->(p) { p["selected_devpts"]["extra"] = true }].each do |mutate|
+      payload = Marshal.load(Marshal.dump(@payload))
+      mutate.call(payload)
+      assert_raises(Unavailable) { verify_payload(payload) }
+    end
   end
 
   def test_history_authenticates_original_ref_without_mutable_pointer_fallback

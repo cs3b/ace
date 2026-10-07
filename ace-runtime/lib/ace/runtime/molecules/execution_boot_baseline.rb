@@ -13,7 +13,7 @@ module Ace
         SHA = /\A[0-9a-f]{64}\z/
         BOOT = /\A[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\z/
         EXPECTED = %w[boot_id deployment_digest installer_artifact slot_id].freeze
-        FIELDS = %w[boot_id deployment_digest host_ipc_namespace_identity original_host_context producer_artifact schema slot_id].freeze
+        FIELDS = %w[boot_id deployment_digest host_devpts_identity host_ipc_namespace_identity host_ptmx_link original_host_context producer_artifact schema selected_devpts slot_id].freeze
 
         def initialize(artifacts: ProtectedArtifactSet.new)
           @artifacts = artifacts
@@ -67,6 +67,18 @@ module Ace
           identity = value.fetch("host_ipc_namespace_identity")
           object!(identity, %w[device inode])
           refuse! unless identity.values.all? { |number| number.is_a?(Integer) && number.positive? }
+          host = value.fetch("host_devpts_identity")
+          selected = value.fetch("selected_devpts")
+          object!(host, %w[device inode major_minor])
+          object!(selected, %w[device inode major_minor path ptmx_inode])
+          [host, selected].each do |instance|
+            refuse! unless %w[device inode].all? { |key| instance[key].is_a?(Integer) && instance[key].positive? } &&
+              instance["major_minor"].is_a?(String) && instance["major_minor"].match?(/\A(?:0|[1-9][0-9]*):(?:0|[1-9][0-9]*)\z/)
+          end
+          refuse! unless value["host_ptmx_link"] == "pts/ptmx" &&
+            selected["path"] == "/run/ace/execution-slots/#{expected.fetch('slot_id')}/devpts" &&
+            selected["device"] != host["device"] && selected["major_minor"] != host["major_minor"] &&
+            selected["ptmx_inode"].is_a?(Integer) && selected["ptmx_inode"].positive?
           context = value.fetch("original_host_context")
           object!(context, %w[gid pid started_at uid])
           unless context.values_at("pid", "uid", "gid").all? { |number| number.is_a?(Integer) } &&
