@@ -53,6 +53,27 @@ module Ace
         end
       end
 
+      def test_production_export_round_trips_exact_prepared_tree_and_retains_complete_bundle
+        with_tree do |root, files, _head, _tree, _bytes|
+          work = Authority::PreparedWork.new(files: files)
+          exported = Authority::CandidateTransfer.new(root: root).export_prepared(work: work)
+          assert exported.frozen?
+          assert exported.fetch("bundle").frozen?
+          assert_equal Digest::SHA256.hexdigest(exported.fetch("bundle")), exported.fetch("sha256")
+          admitted = Authority::PreparedWork.admit(root: root, bytes: exported.fetch("bundle"),
+            size: exported.fetch("bytes"), sha256: exported.fetch("sha256"),
+            head: exported.fetch("head"), tree: exported.fetch("tree"))
+          assert_equal files, admitted.files
+          assert_equal work.selection_sha256, admitted.selection_sha256
+          assert_equal admitted.definition_bytes(head: exported.fetch("head"), tree: exported.fetch("tree")),
+            exported.fetch("definition_bytes")
+          assert_empty Dir.children(root).select { |name| name.start_with?("prepared-export-", "quarantine-") }
+          assert_raises(AttemptErrors::ReceiptRejected) do
+            Authority::CandidateTransfer.new(root: root).export_prepared(work: files)
+          end
+        end
+      end
+
       def test_actual_default_leaf_producer_job_and_materialized_selected_steps_are_admitted
         Dir.mktmpdir("prepared-default-", Etc.getpwuid(Process.uid).dir) do |root|
           File.chmod(0700, root)

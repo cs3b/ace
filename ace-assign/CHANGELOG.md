@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Export validated prepared assignment trees as complete bounded Git bundles, retaining the exact transfer bytes and derived definition for registration.
 - Export literal original network selections and namespace identities alongside retained maintenance boot proofs, with the same held all-root eligibility and immutable historical provenance.
 - Read retained canonical evidence through a bounded isolated Git snapshot without executing live source configuration; raw artifact and event-batch readers share the same read-only boundary.
 

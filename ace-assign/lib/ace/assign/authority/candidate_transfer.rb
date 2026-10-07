@@ -22,6 +22,43 @@ module Ace
           verify_root!
         end
 
+        # Export the already validated prepared tree using the same isolated Git
+        # boundary as admission. The returned bytes are retained by the producer;
+        # registration must not rebuild them after a lost response.
+        def export_prepared(work:)
+          require_relative "prepared_work"
+          reject!("Prepared export requires validated work") unless work.is_a?(PreparedWork)
+          verify_root!
+          deadline = monotonic + DEADLINE
+          Dir.mktmpdir("prepared-export-", @root) do |directory|
+            File.chmod(0700, directory)
+            repository = File.join(directory, "repository")
+            git(directory, deadline, "init", "--template=", "--initial-branch=prepared", repository)
+            work.files.each do |path, bytes|
+              target = File.join(repository, path)
+              FileUtils.mkdir_p(File.dirname(target), mode: 0700)
+              File.open(target, File::WRONLY | File::CREAT | File::EXCL | File::NOFOLLOW, 0600) do |file|
+                file.write(bytes)
+              end
+            end
+            git(repository, deadline, "add", "--", ".")
+            git(repository, deadline, "-c", "user.name=ACE prepared input", "-c", "user.email=prepared@ace.invalid",
+              "-c", "commit.gpgSign=false", "commit", "--no-verify", "-m", "Prepared assignment input")
+            head = git(repository, deadline, "rev-parse", "HEAD").strip
+            tree = git(repository, deadline, "rev-parse", "HEAD^{tree}").strip
+            bundle = File.join(directory, "prepared.bundle")
+            git(repository, deadline, "bundle", "create", bundle, "refs/heads/prepared")
+            bytes = read_bundle(bundle).freeze
+            {"head" => head.freeze, "tree" => tree.freeze, "bundle" => bytes,
+              "bytes" => bytes.bytesize, "sha256" => Digest::SHA256.hexdigest(bytes).freeze,
+              "definition_bytes" => work.definition_bytes(head: head, tree: tree)}.freeze
+          end
+        rescue Timeout::Error
+          reject!("Prepared export deadline exceeded")
+        rescue SystemCallError
+          reject!("Prepared export filesystem is unavailable")
+        end
+
         def admit(bytes:, sha256:, size:, head:, &consumer)
           unless bytes.is_a?(String) && size.is_a?(Integer) && size.positive? && size <= MAX_BYTES &&
               size == bytes.bytesize && sha256.is_a?(String) &&
