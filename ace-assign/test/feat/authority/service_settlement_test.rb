@@ -70,6 +70,59 @@ module Ace
         [params, result]
       end
 
+      def test_actual_preview_context_is_read_only_and_authenticates_both_principals
+        fixture do
+          @policy.define_singleton_method(:workspace_prune_receiver!) do |project:, uid:, service_id:, executor_uid:|
+            raise SecurityError, "selected preview policy differs" unless
+              [project, uid, service_id, executor_uid] == ["project", 13001, "executor", 13005]
+            true
+          end
+          client = start_service_server
+          params = {"assignment_id" => "assignment", "attempt_id" => @attempt,
+            "service_id" => "executor", "worker_process_binding" => @worker}
+          before = @journal.ref_value
+          result = client.call("workspace_prune_preview_context", params)
+          assert_equal before, result.data.fetch("journal_commit")
+          assert_equal @head, result.data.fetch("head")
+          assert_equal 1, result.data.fetch("candidate_generation")
+          assert_equal @worker, result.data.fetch("worker_process_binding")
+          assert_equal @worker, result.data.fetch("caller_process_binding")
+          assert_equal before, @journal.ref_value
+          assert_equal [], @journal.service_requests("assignment")
+          assert_raises(AttemptErrors::UnauthorizedIdentity) do
+            call("workspace_prune_preview_context", params.merge("worker_process_binding" => @reviewer),
+              peer: @executor, role: :executor)
+          end
+          assert_raises(AttemptErrors::UnauthorizedIdentity) do
+            call("workspace_prune_preview_context", params, peer: @worker, role: :worker)
+          end
+          assert_raises(ArgumentError) do
+            call("workspace_prune_preview_context", params, id: "no-preview-mutation", peer: @executor, role: :executor)
+          end
+          socket = UNIXSocket.new(@service.fetch("socket_path"))
+          WIRE.write(socket, {"version" => 1, "operation" => "workspace_prune_preview_context", "project_id" => "project",
+            "mutation_id" => nil, "params" => params.merge("mapping_id" => "mapping")}, deadline: WIRE.deadline(2))
+          socket.write("unexpected body")
+          socket.shutdown(Socket::SHUT_WR)
+          assert_equal "invalid_input", WIRE.read(socket, deadline: WIRE.deadline(3)).dig("error", "code")
+          assert_equal before, @journal.ref_value
+          previous = git(@journal.repo_root, "rev-parse", "#{before}^")
+          journal = @journal
+          git_runner = method(:git)
+          @policy.define_singleton_method(:workspace_prune_receiver!) do |**|
+            git_runner.call(journal.repo_root, "update-ref", journal.ref, previous, before)
+            true
+          end
+          assert_raises(AttemptErrors::Conflict) do
+            call("workspace_prune_preview_context", params, peer: @executor, role: :executor)
+          end
+          assert_equal previous, @journal.ref_value
+          git(@journal.repo_root, "update-ref", @journal.ref, before, previous)
+        ensure
+          socket&.close unless socket&.closed?
+        end
+      end
+
       def test_retained_orphan_challenge_cannot_authorize_import_or_fresh_challenge
         fixture do
           request_service
