@@ -218,7 +218,10 @@ module Ace
       end
 
       def test_private_upload_faults_never_publish_native_binding
-        %i[challenge duplicate_json invalid_utf8 truncated extra_bytes no_eof oversized sealed].each do |fault|
+        expected_errors = {none: nil, challenge: ArgumentError, duplicate_json: JSON::ParserError, invalid_utf8: ArgumentError,
+          truncated: AttemptErrors::MalformedTransfer, extra_bytes: AttemptErrors::MalformedTransfer,
+          no_eof: Timeout::Error, oversized: AttemptErrors::MalformedTransfer, sealed: AttemptErrors::Conflict}
+        expected_errors.each do |fault, expected_error|
           with_owner do
             started, resume = Queue.new, Queue.new
             original = @observer.method(:start_admitted_service!)
@@ -227,7 +230,13 @@ module Ace
               started << true
               resume.pop
             end
-            @observer.define_singleton_method(:readiness_peer!) { |_lineage, _peer| {"pid" => 90} }
+            callback_peer = {"pid" => 92, "uid" => 13001, "gid" => 13001, "groups" => [], "parent_pid" => 1,
+              "started_at" => "linux:#{BOOT}:92", "host" => "fixture"}
+            server = callback_peer.merge("pid" => 90, "started_at" => "linux:#{BOOT}:90")
+            @observer.define_singleton_method(:readiness_peer!) do |_lineage, peer|
+              raise AttemptErrors::UnauthorizedIdentity unless peer == callback_peer
+              server
+            end
             issuer = Thread.new do
               admit
             rescue StandardError => error
@@ -240,37 +249,63 @@ module Ace
             File.chmod(0700, scratch)
             codec = Authority::TransferCodec.new(root: scratch)
             handler = Thread.new do
-              @owner.native_readiness!(mapping_id: "mapping", peer: @peer, socket: left, codec: codec, deadline: wire.deadline(10))
+              @owner.native_readiness!(mapping_id: "mapping", peer: callback_peer, socket: left, codec: codec, deadline: wire.deadline(10))
             rescue StandardError => error
               error
             ensure
               left.close
             end
             challenge = wire.read(right, deadline: wire.deadline(10), limit: 16_384)
-            bytes = case fault
-              when :duplicate_json then '{"version":1,"version":2}'
-              when :invalid_utf8 then "\xff".b
-              else '{}'
-              end
-            descriptor = codec.descriptor([bytes], purpose: :scope_boundary_observation)
-            if fault == :oversized
-              descriptor["bytes"] = descriptor["parts"].first["bytes"] = 65_537
+            valid_report = {"version" => 1, "challenge_id" => challenge.fetch("challenge_id"), "server_identity" => server,
+              "resource_observer_identity" => callback_peer, "mount_namespace_identity" => {"device" => 4, "inode" => 22},
+              "resource_identities" => [], "resource_topology" => []}
+            @observer.define_singleton_method(:verify_readiness_report!) do |lineage, peer, report, challenge:|
+              raise "valid controlled observation differs" unless peer == callback_peer && report == valid_report && report["challenge_id"] == challenge["challenge_id"]
+              report.slice("server_identity", "resource_observer_identity", "mount_namespace_identity", "resource_identities").merge(
+                "scope_generation" => lineage.binding.fetch("scope_generation"), "scope_binding_event_id" => lineage.binding_event.fetch("digest"),
+                "service_invocation_id" => "c" * 32, "workspace_id" => "w1", "socket_identity" => [1, 2, 13001],
+                "network_namespace_identity" => lineage.binding.fetch("network_namespace_identity"),
+                "network_admission_event_id" => lineage.admission_event.fetch("digest"))
             end
+            bytes = JSON.generate(valid_report)
+            bytes = bytes.sub('{', '{"version":1,') if fault == :duplicate_json
+            bytes = bytes.sub('fixture', "\xff".b) if fault == :invalid_utf8
+            bytes += " " * (65_537 - bytes.bytesize) if fault == :oversized
+            descriptor = {"version" => 1, "bytes" => bytes.bytesize, "sha256" => Digest::SHA256.hexdigest(bytes),
+              "parts" => [{"bytes" => bytes.bytesize, "sha256" => Digest::SHA256.hexdigest(bytes)}]}
             close_scope("seal-upload", 3) if fault == :sealed
             before = @journal.ref_value
             wire.write(right, {"version" => 1, "challenge_id" => fault == :challenge ? "f" * 64 : challenge.fetch("challenge_id"),
               "transfer" => descriptor}, deadline: wire.deadline(10))
-            unless %i[challenge oversized].include?(fault)
-              right.write(fault == :truncated ? bytes.byteslice(0, bytes.bytesize - 1) : bytes)
-              right.write("extra") if fault == :extra_bytes
+            unless fault == :challenge
+              begin
+                right.write(fault == :truncated ? bytes.byteslice(0, bytes.bytesize - 1) : bytes)
+                right.write("extra") if fault == :extra_bytes
+              rescue Errno::EPIPE, Errno::ECONNRESET
+                raise unless fault == :oversized
+              end
             end
-            right.shutdown(Socket::SHUT_WR) unless fault == :no_eof
+            begin
+              right.shutdown(Socket::SHUT_WR) unless fault == :no_eof
+            rescue Errno::ENOTCONN
+              raise unless fault == :oversized
+            end
             error = Timeout.timeout(15) { handler.value }
-            assert_kind_of StandardError, error, fault
+            if fault == :none
+              refute_kind_of StandardError, error
+              acknowledgment = wire.read(right, deadline: wire.deadline(10))
+              assert_equal({"version" => 1, "challenge_id" => challenge.fetch("challenge_id"), "status" => "ready"}, acknowledgment)
+            else
+              assert_kind_of expected_error, error, fault
+            end
             assert_equal before, @journal.ref_value, fault
             refute @journal.read_events("assignment").any? { |event| event["type"] == "scope_native_bound" }, fault
             resume << true
-            Timeout.timeout(15) { issuer.value }
+            result = Timeout.timeout(15) { issuer.value }
+            if fault == :none
+              refute_kind_of StandardError, result
+              assert @journal.read_events("assignment").any? { |event| event["type"] == "scope_native_bound" }
+            end
             assert_empty @owner.instance_variable_get(:@native_issuers), fault
           ensure
             resume << true if issuer&.alive?
