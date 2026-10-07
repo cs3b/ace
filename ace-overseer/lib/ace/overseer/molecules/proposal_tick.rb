@@ -14,6 +14,11 @@ module Ace
         @mutex = Mutex.new
         @active = {}
 
+        def self.quiescent?
+          return false if @mutex.owned?
+          @mutex.synchronize { @active.empty? }
+        end
+
         def self.acquire(key)
           @mutex.synchronize do
             return false if @active.key?(key)

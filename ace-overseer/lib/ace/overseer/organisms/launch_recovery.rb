@@ -19,6 +19,7 @@ module Ace
           owner = @request_factory.call(File.dirname(path))
           request = owner.load(path)
           availability = owner.bundle_availability(request)
+          definition_availability = owner.definition_availability(request)
           snapshot = @status.collect(project: request.fetch("project_id"), agent: request.fetch("mapping_id"))
           mapping = snapshot.fetch("agents").find { |entry| entry.fetch("agent_id") == request.fetch("mapping_id") }
           raise Error, "Retained invocation canonical inventory is unavailable" unless mapping && mapping.fetch("status") == "ok"
@@ -41,7 +42,7 @@ module Ace
           {"request_path" => path, "project_id" => request.fetch("project_id"), "mapping_id" => request.fetch("mapping_id"),
             "assignment_id" => request.fetch("assignment_id"), "mutation_id" => request.fetch("mutation_id"),
             "definition_sha256" => request.fetch("definition_sha256"), "selection_sha256" => reference.fetch("selection_sha256"),
-            "prepared_bundle" => bundle, "local_bundle" => availability,
+            "prepared_bundle" => bundle, "local_bundle" => availability, "local_definition" => definition_availability,
             "attribution" => row ? "original_reservation" : "unattributed", "journal_commit" => inventory.fetch("journal_commit"), "item" => row}
         rescue KeyError, TypeError, JSON::ParserError
           raise Error, "Retained invocation recovery metadata is malformed"

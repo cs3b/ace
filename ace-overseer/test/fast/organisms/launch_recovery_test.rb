@@ -17,6 +17,7 @@ class LaunchRecoveryTest < AceOverseerTestCase
     @owner = Object.new
     request = @request
     @owner.define_singleton_method(:load) { |_path| request }
+    @owner.define_singleton_method(:definition_availability) { |_request| "unavailable" }
     @owner.define_singleton_method(:bundle_availability) { |_request| "unavailable" }
     @status = Object.new
     requests = @requests

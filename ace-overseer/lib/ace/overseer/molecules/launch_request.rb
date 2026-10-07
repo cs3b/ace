@@ -39,7 +39,8 @@ module Ace
           raise Error, "Retained launch request exceeds bound" if bytes.bytesize > MAX_REQUEST
           request_path = File.join(@root, "#{mutation_id}.json")
           bundle_path = File.join(@root, document.fetch("prepared_bundle").fetch("filename"))
-          [request_path, bundle_path].each do |path|
+          sidecar_path = definition_path(document)
+          [request_path, bundle_path, sidecar_path].each do |path|
             begin
               File.lstat(path)
               raise Error, "Retained launch invocation already exists"
@@ -50,6 +51,7 @@ module Ace
           # Never overwrite either input. Failure can leave an unselected orphan;
           # it cannot create a different accepted invocation under the same ID.
           write_exclusive(bundle_path, bundle)
+          write_exclusive(sidecar_path, document.fetch("definition_bytes"))
           write_exclusive(request_path, bytes)
           File.open(@root, File::RDONLY) { |directory| directory.fsync }
           load(request_path)
@@ -73,9 +75,25 @@ module Ace
         # loads the document and observes availability; it never reconstructs.
         def verify_fresh!(document)
           validate!(document)
+          definition = held_read(definition_path(document), MAX_DEFINITION)
+          raise Error, "Retained definition sidecar differs" unless definition == document.fetch("definition_bytes")
           bytes = held_read(File.join(@root, document.fetch("prepared_bundle").fetch("filename")), MAX_BUNDLE)
           verify_bundle!(document, bytes)
           bytes.freeze
+        end
+
+        def definition_path(document)
+          validate!(document)
+          File.join(@root, document.fetch("mutation_id") + ".definition.json")
+        end
+
+        def definition_availability(document)
+          bytes = held_read(definition_path(document), MAX_DEFINITION)
+          bytes == document.fetch("definition_bytes") ? "available" : "mismatch"
+        rescue Errno::ENOENT
+          "unavailable"
+        rescue Error, SystemCallError
+          "mismatch"
         end
 
         def bundle_availability(document)

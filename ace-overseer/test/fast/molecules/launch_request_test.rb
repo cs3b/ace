@@ -77,6 +77,21 @@ class LaunchRequestTest < AceOverseerTestCase
     assert_equal @artifact.bundle, File.binread(File.join(@root, "invocation.prepared.bundle"))
   end
 
+  def test_definition_sidecar_tamper_missing_and_collision_never_rebuild
+    document = publish
+    path = @owner.definition_path(document)
+    assert_equal @artifact.definition_bytes, File.binread(path)
+    assert_equal "available", @owner.definition_availability(document)
+    File.binwrite(path, "changed")
+    assert_equal "mismatch", @owner.definition_availability(document)
+    assert_raises(Ace::Overseer::Error) { @owner.verify_fresh!(document) }
+    File.unlink(path)
+    assert_equal "unavailable", @owner.definition_availability(document)
+    assert_equal document, @owner.load(File.join(@root, "invocation.json"))
+    assert_raises(Ace::Overseer::Error) { publish }
+    refute File.exist?(path)
+  end
+
   def test_held_private_file_and_closed_document_refusals
     document = publish
     path = File.join(@root, "invocation.json")
