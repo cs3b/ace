@@ -76,7 +76,7 @@ module Ace
 
       def binding(pid = 91)
         child = @kernel.capture(pid)
-        {"runtime" => "herdr", "session" => "w1", "pane" => "w1:p2", "terminal_id" => "3",
+        {"runtime" => "herdr", "session" => "w1", "pane" => "w1:p2", "terminal_id" => "term_ab",
           "process_identity" => child, "shell_identity" => child, "native_origin" => {"workspace" => "w1", "tab" => "w1:t2",
             "pane" => "w1:p2", "command" => ["/usr/libexec/ace-worker-gate", "mapping", @ticket], "cwd" => "/home/worker", "server_identity" => @kernel.capture(90), "socket_identity" => [1, 2, 13001]}}
       end
@@ -87,7 +87,28 @@ module Ace
         else
           state.fetch("generation")
         end
-        state.slice("attempt_id", "launch_ticket").merge("process_binding" => child, "expected_generation" => generation)
+        result = state.slice("attempt_id", "launch_ticket").merge("process_binding" => child, "expected_generation" => generation)
+        if state["phase"] == "reserved"
+          result["guarded_origin"] = {"terminal_id" => child.fetch("terminal_id"), "runtime_incarnation" => ExecutionScopeObservationFixtures::BOOT,
+            "child" => child.fetch("process_identity")}
+        end
+        result
+      end
+
+      def test_record_launch_guard_requires_exact_original_actor_before_canonical_acceptance
+        with_authority do
+          state = call("reserve_attempt", @reserve_params, id: "reserve").fetch(:data)
+          request = params(state)
+          old = @journal.ref_value
+          guard = request.fetch("guarded_origin")
+          [nil, guard.merge("terminal_id" => "term_cd"), guard.merge("child" => guard.fetch("child").merge("pid" => 92))].each_with_index do |changed, index|
+            assert_raises(Ace::Runtime::RuntimeUnavailableError) do
+              call("record_launch", request.merge("guarded_origin" => changed), id: "bad-guard-#{index}")
+            end
+            assert_equal old, @journal.ref_value
+            assert_nil @journal.mutation_result("bad-guard-#{index}")
+          end
+        end
       end
 
       def test_launcher_pidfd_refusal_cannot_commit_or_wedge_reservation
@@ -506,6 +527,19 @@ module Ace
           state = launch.launch(assignment_id: "assignment", definition_bytes: registered_bytes,
             scope: "010", base_head: "a" * 40, mutation_id: "actual-guard-owner")
           assert_equal "issued", state.fetch("phase"), errors.inspect + " " + state.inspect
+          recorded = @journal.mutation_result("actual-guard-owner-record").fetch("data")
+          assert_equal native.guarded_binding!(recorded.fetch("process_binding")).fetch("guarded_origin"), recorded.fetch("guarded_origin")
+          events = @journal.read_events("assignment").select { |event| event["attempt_id"] == state.fetch("attempt_id") }
+          original_record = events.find { |event| event.dig("payload", "operation") == "record_launch" }
+          authenticated = @authority.send(:original_prompt_record!, events, state,
+            params: state.slice("mapping_id", "assignment_id", "attempt_id"))
+          assert_equal original_record.fetch("digest"), authenticated.fetch("binding_digest")
+          assert_equal recorded.fetch("guarded_origin"), authenticated.fetch("origin")
+          assert_raises(AttemptErrors::EvidenceUnavailable) do
+            @authority.send(:original_prompt_record!, events, state.merge("guarded_origin" => nil),
+              params: state.slice("mapping_id", "assignment_id", "attempt_id"))
+          end
+
           original = state.fetch("process_binding")
           refute original.key?("guarded_origin")
           guarded = native.guarded_binding!(original)

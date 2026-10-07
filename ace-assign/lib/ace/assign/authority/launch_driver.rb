@@ -50,7 +50,11 @@ module Ace
           @native ||= Ace::Herdr::Molecules::ProtectedNativeControl.new(mapping: fixed, kernel: @kernel)
           binding = @native.create(mapping_id: @mapping_id, ticket: state.fetch("launch_ticket"))
           child_handle = @kernel.pin(binding.fetch("process_identity"))
-          recorded = @client.call("record_launch", lifecycle_params(state, binding), mutation_id: "#{mutation_id}-record").data
+          guarded = @native.guarded_binding!(binding)
+          unless guarded.reject { |key, _| key == "guarded_origin" } == binding
+            raise AttemptErrors::EvidenceUnavailable, "original native capture changed launch binding"
+          end
+          recorded = @client.call("record_launch", lifecycle_params(state, binding).merge("guarded_origin" => guarded.fetch("guarded_origin")), mutation_id: "#{mutation_id}-record").data
           bound = @client.call("bind_process", lifecycle_params(recorded, binding), mutation_id: "#{mutation_id}-bind").data
           # Exact original child is reobserved after canonical bind, before release.
           @native.observe(binding.fetch("native_origin").merge("process_binding" => binding))
