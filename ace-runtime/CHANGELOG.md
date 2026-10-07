@@ -20,6 +20,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- Launch the fixed worker through held interpreter and sealed wrapper descriptors, with bounded original artifact hashes and fixed OpenSSL digest initialization. Native execution remains an installed acceptance requirement.
+
 - Resolve current network installation evidence through a fixed protected slot selection while retaining immutable static profile/producer intent and original historical references.
 
 - Expose a scoped authenticated read-only duplicate of a retained artifact for exact inode handoff; verify before and after callbacks and close on every exit.

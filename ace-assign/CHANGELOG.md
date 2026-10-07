@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Pin the original worker interpreter and wrapper in the issued prepared permission and authenticate the same pair through installation and later fetch.
 - Prepare protected worker inputs from the actual managed task graph, exact task/dependency bundle context and explicitly selected managed reports, rejecting changed captures before export.
 - Export validated prepared assignment trees as complete bounded Git bundles, retaining the exact transfer bytes and derived definition for registration.
 - Export literal original network selections and namespace identities alongside retained maintenance boot proofs, with the same held all-root eligibility and immutable historical provenance.
