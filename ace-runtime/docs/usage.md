@@ -232,6 +232,14 @@ represent the access ACL mask, so named non-root ACL users/groups cannot obtain
 write through it. Unknown filesystem models refuse. All ancestors are checked;
 no symlink, untrusted writable ancestor or mutable worker artifact qualifies.
 Content bounds are 1MiB per artifact, 16MiB aggregate and 256 distinct artifacts.
+Trusted installer code verifying a larger explicitly selected source closure can
+construct `ProtectedArtifactSet.new(count_limit: 4096)`; the value must be a
+positive integer supplied by trusted code, never copied from an artifact or
+request. Existing `file_limit:` and `total_limit:` budgets still apply. Mixed
+`read!`/`read_path!` calls share the count; repeating a retained reference spends
+no additional entry, and the first new artifact beyond the limit refuses.
+Network evidence verifiers retain their default budgets. Held descriptors also
+require sufficient process file-descriptor capacity in the installer environment.
 The profile's 256-entry bound counts its four outer collections only; nested
 ranges, ports and helper/configuration refs are bounded by the profile bytes and
 separate artifact graph limits. Strict JSON parsing requires the declared

@@ -48,13 +48,17 @@ module Ace
           def trusted_owner?(stat) = stat.uid.zero?
         end
 
-        def initialize(protection: Protection.new, file_limit: LIMIT, total_limit: TOTAL_LIMIT)
+        def initialize(protection: Protection.new, file_limit: LIMIT, total_limit: TOTAL_LIMIT, count_limit: COUNT_LIMIT)
           unless file_limit.is_a?(Integer) && total_limit.is_a?(Integer) &&
               file_limit.positive? && total_limit.positive? && file_limit <= total_limit
             raise ArgumentError, "invalid protected artifact byte budgets"
           end
+          unless count_limit.is_a?(Integer) && count_limit.positive?
+            raise ArgumentError, "invalid protected artifact count budget"
+          end
           @protection = protection
           @file_limit, @total_limit = file_limit, total_limit
+          @count_limit = count_limit
         end
 
         def with
@@ -72,7 +76,7 @@ module Ace
             raise RuntimeUnavailableError, "network artifact references conflict" unless previous == reference
             return @contents.fetch(path)
           end
-          raise RuntimeUnavailableError, "network artifact graph is oversized" if @references.size >= COUNT_LIMIT
+          raise RuntimeUnavailableError, "network artifact graph is oversized" if @references.size >= @count_limit
           size = reference.fetch("bytes")
           unless size.is_a?(Integer) && size.between?(1, @file_limit) && @total + size <= @total_limit
             raise RuntimeUnavailableError, "network artifact bytes exceed bounds"
@@ -109,7 +113,7 @@ module Ace
           ancestors(path).reverse_each { |ancestor| pin!(ancestor, directory: true) }
           handle = pin!(path, directory: false)
           size = handle.stat.size
-          unless size.between?(1, limit) && @references.size < COUNT_LIMIT && @total + size <= @total_limit
+          unless size.between?(1, limit) && @references.size < @count_limit && @total + size <= @total_limit
             raise RuntimeUnavailableError, "fixed artifact exceeds bounds"
           end
           bytes = handle.read(size + 1)
