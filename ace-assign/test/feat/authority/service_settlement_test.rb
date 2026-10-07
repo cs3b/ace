@@ -8,6 +8,7 @@ require "ace/assign/authority/client"
 require "ace/lab/molecules/protected_cleanup_owner_admission"
 require "ace/lab/organisms/protected_cleanup_owner"
 require "ace/lab/organisms/protected_service_client"
+require_relative "../../../../ace-overseer/lib/ace/overseer"
 
 module Ace
   module Assign
@@ -143,7 +144,7 @@ module Ace
             transports << [root_local, root_remote, root_thread]
             Ace::Lab::Molecules::ProtectedCleanupOwnerClient.new(observer: observer, scratch_root: @root, wire: root_wire)
           end
-          public_exchange = lambda do |physical|
+          public_exchange = lambda do |physical, cli = false|
             cleanup_client = root_factory.call(physical)
             receiver = Ace::Lab::Organisms::ProtectedServiceReceiver.new(mapping_id: "mapping", service_id: "executor",
               deployment: @deployment, kernel: kernel, client: client, cleanup_owner: cleanup_client)
@@ -175,7 +176,25 @@ module Ace
             transports << [public_local, public_remote, public_thread]
             worker_client = Ace::Lab::Organisms::ProtectedServiceClient.new(mapping_id: "mapping", service_id: "executor",
               deployment: @deployment, kernel: worker_kernel, wire: public_wire)
-            worker_client.preview_workspace_prune(intent: intent)
+            if cli
+              selection = Object.new
+              deployment = @deployment
+              selection.define_singleton_method(:call) { |**_| [deployment] }
+              owner = Ace::Overseer::Organisms::ProtectedPrune.new(selection: selection,
+                document_loader: -> { {"operations" => {"prune-preserved-workspace" => {"project" => "project", "service_id" => "executor"}}} },
+                client_factory: ->(mapping, service, actual) {
+                  raise "CLI selected another receiver" unless [mapping, service, actual] == ["mapping", "executor", @deployment]
+                  worker_client
+                })
+              file = File.join(@root, "preview-intent.json")
+              File.write(file, JSON.generate(intent))
+              output = StringIO.new
+              Ace::Overseer::CLI::Commands::Prune.new(protected_prune: owner, output: output).call(
+                project: "project", agent: "old", assignment: "old-assignment", attempt: "old-attempt", request: file, dry_run: true)
+              JSON.parse(output.string)
+            else
+              worker_client.preview_workspace_prune(intent: intent)
+            end
           end
           assert_raises(SecurityError) { public_exchange.call(Object.new) }
           physical_calls = 0
@@ -194,7 +213,7 @@ module Ace
               "file_count" => 0, "total_bytes" => 0}
           end
           public_result = begin
-            public_exchange.call(physical)
+            public_exchange.call(physical, true)
           rescue SecurityError => error
             raise SecurityError, "controlled preview stages: #{preview_errors.inspect}", cause: error
           end
