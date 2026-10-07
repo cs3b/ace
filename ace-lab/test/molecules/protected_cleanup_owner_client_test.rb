@@ -19,8 +19,8 @@ class ProtectedCleanupOwnerClientTest < Minitest::Test
       local, remote = UNIXSocket.pair
       wire = Object.new
       wire.define_singleton_method(:deadline) { |seconds| Wire.deadline(seconds) }
-      wire.define_singleton_method(:root_path!) { |path| raise "arbitrary path" unless path == Client::PATH }
-      wire.define_singleton_method(:socket_identity) { |_| [1, 2, 0] }
+      wire.define_singleton_method(:root_path!) { |path, directory:| raise "arbitrary path" unless path == File.dirname(Client::PATH) && directory }
+      wire.define_singleton_method(:socket_identity) { |_, mode:| raise "wrong fixed mode" unless mode == 0o660; [1, 2, 0] }
       wire.define_singleton_method(:connect) do |_, deadline:, &block|
         begin
           block.call(local)
@@ -141,6 +141,46 @@ class ProtectedCleanupOwnerClientTest < Minitest::Test
           kind == :identity ? client.identity! : client.execute!(request: execute_request, operation_owner_binding: binding)
         end
       end
+    end
+  end
+
+  def test_real_group_connect_socket_has_protected_parent_without_leaf_write_rejection
+    Dir.mktmpdir("cleanup-root-endpoint", Etc.getpwuid(Process.uid).dir) do |root|
+      File.chmod(0o700, root)
+      path = File.join(root, "owner.sock")
+      listener = UNIXServer.new(path)
+      File.chmod(0o660, path)
+      assert_raises(Ace::Runtime::RuntimeUnavailableError) { Wire.root_path!(path, owner: Process.uid) }
+      original = binding
+      observer = Object.new
+      observer.define_singleton_method(:observe!) { |**_| original } # Root identity/DAC is the explicit controlled boundary.
+      wire = Object.new
+      wire.define_singleton_method(:root_path!) do |selected, directory: false|
+        actual = selected == Client::PATH ? path : root
+        Wire.root_path!(actual, directory: directory, owner: Process.uid)
+      end
+      wire.define_singleton_method(:socket_identity) do |_, **options|
+        identity = Wire.socket_identity(path, **options)
+        [identity[0], identity[1], 0] # Only root UID observation is injected.
+      end
+      wire.define_singleton_method(:connect) { |_, deadline:, &block| Wire.connect(path, deadline: deadline, &block) }
+      %i[read write deadline].each { |method| wire.define_singleton_method(method) { |*args, **options| Wire.public_send(method, *args, **options) } }
+      worker = Thread.new do
+        peer = listener.accept
+        Wire.read(peer, deadline: Wire.deadline(5))
+        assert_equal "", peer.read
+        Wire.write(peer, {"schema" => Client::SCHEMA, "kind" => "identity", "operation_owner_binding" => original}, deadline: Wire.deadline(5))
+        peer.close
+      end
+      client = Client.new(observer: observer, scratch_root: root, wire: wire)
+      assert_equal original, client.identity!
+      assert worker.join(2)
+      worker.value
+      File.chmod(0o666, path)
+      assert_raises(Ace::Runtime::RuntimeUnavailableError) { client.identity! }
+    ensure
+      listener&.close
+      worker&.join(2)
     end
   end
 end
