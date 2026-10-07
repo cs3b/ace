@@ -1,9 +1,26 @@
 # frozen_string_literal: true
+require "ace/runtime/molecules/kernel_view_topology"
 module Ace
   module Assign
     module ExecutionScopeObservationFixtures
       BOOT = "12345678-1234-1234-1234-123456789abc"
       BOOT_BASELINE_SELECTION = {"path" => "/etc/ace/boot/original.json", "sha256" => "d" * 64, "bytes" => 1}.freeze
+      def self.kernel_topology(resources: [])
+        verifier = Ace::Runtime::Molecules::KernelViewTopology
+        paths = ["/"] + verifier::VIEWS + resources.map { |entry| entry.fetch("view_path") }
+        text = paths.each_with_index.map do |path, index|
+          resource = resources.find { |entry| entry.fetch("view_path") == path }
+          filesystem = resource ? resource.fetch("filesystem_type") : verifier::APIS.fetch(path, path == "/dev" ? "tmpfs" : "ext4")
+          flags = resource || verifier::APIS.key?(path) ? "rw" : "ro"
+          root = resource ? resource.fetch("host_path") : "/"
+          "#{index + 1} 0 8:1 #{root} #{path} #{flags} - #{filesystem} fixture #{flags}\n"
+        end.join
+        mounts = Ace::Runtime::Molecules::LinuxMountInfo.new(text).records.map { |row| row.slice(*Ace::Runtime::Molecules::ServerResourceObservation::MOUNT_FIELDS) }
+        views = verifier::VIEWS.map { |path| {"path" => path, "mount_id" => mounts.find { |row| row["mountpoint"] == path }.fetch("mount_id"),
+          "device" => 8, "inode" => paths.index(path) + 100, "type" => "directory"} }
+        {"ipc_namespace_identity" => {"device" => 4, "inode" => 20}, "hook_ipc_namespace_identity" => {"device" => 4, "inode" => 20},
+          "mounts" => mounts, "views" => views, "authority_socket_identity" => [1, 2, 13000]}
+      end
       class BootEvidence
         attr_accessor :unavailable, :selected
         attr_reader :selections, :verifications
@@ -38,6 +55,10 @@ module Ace
         end
         def boot_id; BOOT; end
         def namespace_identity; namespace.dup; end
+        def authority_socket_identity(authority)
+          raise "unexpected authority endpoint" unless authority.values_at("socket_path", "uid") == ["/run/authority/socket", 13000]
+          [1, 2, 13000]
+        end
         def pin_network_namespace(path)
           raise Ace::Runtime::RuntimeUnavailableError, "network namespace unavailable" unless path == "/run/netns/slot" && network
           {handle: Cgroups::Handle.new(false), identity: network.dup}

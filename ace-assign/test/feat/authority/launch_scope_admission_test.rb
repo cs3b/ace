@@ -259,7 +259,8 @@ module Ace
             challenge = wire.read(right, deadline: wire.deadline(10), limit: 16_384)
             valid_report = {"version" => 1, "challenge_id" => challenge.fetch("challenge_id"), "server_identity" => server,
               "resource_observer_identity" => callback_peer, "mount_namespace_identity" => {"device" => 4, "inode" => 22},
-              "resource_identities" => [], "resource_topology" => []}
+              "resource_identities" => [], "resource_topology" => [],
+              "kernel_view_topology" => ExecutionScopeObservationFixtures.kernel_topology}
             @observer.define_singleton_method(:verify_readiness_report!) do |lineage, peer, report, challenge:|
               raise "valid controlled observation differs" unless peer == callback_peer && report == valid_report && report["challenge_id"] == challenge["challenge_id"]
               report.slice("server_identity", "resource_observer_identity", "mount_namespace_identity", "resource_identities").merge(

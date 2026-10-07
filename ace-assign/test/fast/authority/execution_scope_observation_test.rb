@@ -2,6 +2,7 @@
 require_relative "../../test_helper"
 require "ace/assign/authority/execution_scope_observation"
 require_relative "../../support/execution_scope_observation_fixtures"
+require_relative "../../support/execution_scope_native_owner_fixture"
 
 module Ace
   module Assign
@@ -76,7 +77,7 @@ module Ace
         mapping = @map
         deployment.define_singleton_method(:mapping) { |_id| mapping }
         deployment.define_singleton_method(:verify!) { |*_args, **_options| true }
-        deployment.define_singleton_method(:authority) { |_id| {"uid" => 13000} }
+        deployment.define_singleton_method(:authority) { |_id| {"uid" => 13000, "socket_path" => "/run/authority/socket"} }
         deployment.define_singleton_method(:project) { |_id| {"supervisor_uids" => [13003]} }
         network = Object.new
         network.define_singleton_method(:verify!) { |selection:, expected:| ExecutionScopeObservationFixtures::NETWORK_OUTPUT }
@@ -163,7 +164,8 @@ module Ace
           "root" => entry.fetch("host_path"), "major_minor" => "8:1", "options" => ["rw"] ) }
         {"version" => 1, "challenge_id" => "a" * 64, "server_identity" => @kernel.capture(90),
           "resource_observer_identity" => @kernel.capture(92), "mount_namespace_identity" => {"device" => 4, "inode" => 22},
-          "resource_identities" => resources, "resource_topology" => topology}
+          "resource_identities" => resources, "resource_topology" => topology,
+          "kernel_view_topology" => ExecutionScopeObservationFixtures.kernel_topology(resources: resources)}
       end
 
       def test_private_report_joins_exact_direct_manager_actor_and_complete_backing_topology
@@ -175,6 +177,40 @@ module Ace
         assert_equal lineage.admission_event.fetch("digest"), value.fetch("network_admission_event_id")
         @manager.profile["service"]["ExecStartPostEx"][0][7] = 93
         assert_raises(Ace::Runtime::RuntimeUnavailableError) { @observer.readiness_peer!(lineage, hook) }
+      end
+
+      def test_actual_readiness_hook_report_round_trips_into_production_observer
+        report = ready_report
+        left, right = UNIXSocket.pair
+        root = Dir.mktmpdir("ace-ready-wire-", Etc.getpwuid(Process.uid).dir)
+        File.chmod(0o700, root)
+        wire = Ace::Runtime::Molecules::ProtectedSocket
+        receiver = Thread.new do
+          request = wire.read(left, deadline: wire.deadline(10))
+          raise "wrong hook request" unless request["operation"] == "native_readiness" && request["params"] == {"mapping_id" => "mapping"}
+          challenge = {"version" => 1, "challenge_id" => "a" * 64, "server_identity" => @kernel.capture(90)}
+          wire.write(left, challenge, deadline: wire.deadline(10))
+          envelope = wire.read(left, deadline: wire.deadline(10))
+          codec = Authority::TransferCodec.new(root: root)
+          value = codec.receive(left, descriptor: envelope.fetch("transfer"), purpose: :scope_boundary_observation, deadline: wire.deadline(10)) do |input|
+            actual = JSON.parse(input.bytes, create_additions: false, allow_duplicate_key: false)
+            @observer.verify_readiness_report!(lineage, @kernel.capture(92), actual, challenge: challenge)
+          end
+          wire.write(left, {"version" => 1, "challenge_id" => "a" * 64, "status" => "ready"}, deadline: wire.deadline(10))
+          value
+        ensure
+          left.close
+        end
+        fixture = ExecutionScopeNativeOwnerFixture.new(@map, nil, @kernel, owner: nil)
+        assert fixture.run_readiness_hook(right, report, boundary_resources: @files.manifest.fetch("resources"))
+        value = receiver.value
+        assert_equal report.fetch("resource_identities"), value.fetch("resource_identities")
+        assert_equal lineage.admission_event.fetch("digest"), value.fetch("network_admission_event_id")
+      ensure
+        right&.close
+        receiver&.join(1)
+        left&.close unless left&.closed?
+        FileUtils.rm_rf(root) if root
       end
 
       def test_report_omitted_resource_foreign_subtree_and_wrong_actor_refuse
@@ -201,6 +237,48 @@ module Ace
         assert_raises(Ace::Runtime::RuntimeUnavailableError) { @observer.closed_observation_for_proof!(lineage, events: @events) }
         @files.native_present = false
         assert_equal 0, @observer.closed_observation_for_proof!(lineage, events: @events).fetch("populated")
+      end
+
+      def stopped_native_scope
+        report = ready_report
+        native = @observer.verify_readiness_report!(lineage, @kernel.capture(92), report, challenge: report.slice("challenge_id"))
+        append("scope_native_bound", native.merge("socket_identity" => [1, 2, 13001]))
+        seal_parent
+        @manager.service.merge!("ActiveState" => "inactive", "MainPID" => 0, "ControlPID" => 0, "Job" => [0, "/"])
+        @files.native_present = false
+      end
+
+      def test_post_native_proof_and_retained_proof_require_exact_closed_incarnation
+        stopped_native_scope
+        proof = @observer.closed_observation_for_proof!(lineage, events: @events)
+        append("scope_closed_no_writers", proof)
+        assert @observer.verify_closed!(lineage)
+        [{"InvocationID" => "d" * 32}, {"Job" => [9, "/job/9"]}, {"MainPID" => 90}, {"ControlPID" => 92}].each do |change|
+          original = @manager.service.dup
+          @manager.service.merge!(change)
+          assert_raises(Ace::Runtime::RuntimeUnavailableError) { @observer.closed_observation_for_proof!(lineage, events: @events) }
+          assert_raises(Ace::Runtime::RuntimeUnavailableError) { @observer.verify_closed!(lineage) }
+          @manager.service.replace(original)
+        end
+        [[:native_present, true], [:outside_worker, true]].each do |field, value|
+          @files.public_send("#{field}=", value)
+          assert_raises(Ace::Runtime::RuntimeUnavailableError) { @observer.closed_observation_for_proof!(lineage, events: @events) }
+          assert_raises(Ace::Runtime::RuntimeUnavailableError) { @observer.verify_closed!(lineage) }
+          @files.public_send("#{field}=", false)
+        end
+        @cgroups.populated = 1
+        assert_raises(Ace::Runtime::RuntimeUnavailableError) { @observer.closed_observation_for_proof!(lineage, events: @events) }
+        assert_raises(Ace::Runtime::RuntimeUnavailableError) { @observer.verify_closed!(lineage) }
+      end
+
+      def test_post_native_final_baseline_recheck_refuses_late_job_and_recreated_leaf
+        stopped_native_scope
+        manager, files = @manager, @files
+        files.define_singleton_method(:worker_uid_quiescent!) { |_uid| manager.service["Job"] = [9, "/job/9"]; true }
+        assert_raises(Ace::Runtime::RuntimeUnavailableError) { @observer.closed_observation_for_proof!(lineage, events: @events) }
+        manager.service["Job"] = [0, "/"]
+        files.define_singleton_method(:worker_uid_quiescent!) { |_uid| files.native_present = true; true }
+        assert_raises(Ace::Runtime::RuntimeUnavailableError) { @observer.closed_observation_for_proof!(lineage, events: @events) }
       end
 
       def test_resource_namespace_mount_object_and_parent_replacement_refuse

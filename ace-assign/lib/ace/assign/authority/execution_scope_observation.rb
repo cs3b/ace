@@ -6,6 +6,7 @@ require "ace/runtime/molecules/linux_mount_info"
 require "ace/runtime/molecules/execution_unit_installation"
 require "ace/runtime/molecules/network_installation_evidence"
 require "ace/runtime/molecules/execution_boot_baseline"
+require "ace/runtime/molecules/kernel_view_topology"
 require_relative "../molecules/execution_scope_lineage"
 require_relative "posix_acl"
 require "digest"
@@ -57,6 +58,14 @@ module Ace
               stat = namespace.stat
               {"device" => stat.dev, "inode" => stat.ino}
             end
+          end
+
+          def authority_socket_identity(authority)
+            wire = Ace::Runtime::Molecules::ProtectedSocket
+            wire.root_path!(File.dirname(authority.fetch("socket_path")), directory: true, owner: authority.fetch("uid"))
+            identity = wire.socket_identity(authority.fetch("socket_path"))
+            raise Ace::Runtime::RuntimeUnavailableError, "authority endpoint owner differs" unless identity.last == authority.fetch("uid")
+            identity
           end
 
           def pin_network_namespace(path)
@@ -281,6 +290,7 @@ module Ace
             end
             verify_resources!(native.fetch("resource_identities"), allow_runtime_absence: true, same_namespace: false)
           end
+          native_cleanup_complete!
           repeated = observe(lineage)
           unless repeated.fetch("populated").zero? && repeated.fetch("activation") == value.fetch("activation")
             unavailable!("scope activation changed during closure verification")
@@ -312,7 +322,7 @@ module Ace
 
         def verify_readiness_report!(lineage, peer, report, challenge:)
           server = readiness_peer!(lineage, peer)
-          unless report.is_a?(Hash) && report.keys.sort == %w[challenge_id mount_namespace_identity resource_identities resource_observer_identity resource_topology server_identity version] &&
+          unless report.is_a?(Hash) && report.keys.sort == %w[challenge_id kernel_view_topology mount_namespace_identity resource_identities resource_observer_identity resource_topology server_identity version] &&
               report["version"] == 1 && report["challenge_id"] == challenge.fetch("challenge_id") &&
               @kernel.same?(report.fetch("server_identity"), server) && @kernel.same?(report.fetch("resource_observer_identity"), peer)
             unavailable!("private readiness report binding differs")
@@ -347,6 +357,17 @@ module Ace
           end
           verify_resources!(resources, same_namespace: false)
           binding = lineage.binding
+          baseline = boot_baseline!(binding)
+          authority = @deployment.authority(@map.fetch("authority_id"))
+          endpoint = @files.authority_socket_identity(authority)
+          writable = entries.reject { |entry| entry.fetch("read_only") }.map do |entry|
+            host = @files.resource_identity(entry.fetch("host_path"))
+            @files.resource_topology(entry.fetch("host_path"), mount_id: host.fetch("mount_id"))
+              .merge("view_path" => entry.fetch("view_path"), "filesystem_type" => host.fetch("filesystem_type"))
+          end
+          Ace::Runtime::Molecules::KernelViewTopology.new.verify!(topology: report.fetch("kernel_view_topology"),
+            host_ipc: baseline.fetch("host_ipc_namespace_identity"), authority_socket: endpoint, writable_resources: writable)
+          unavailable!("authority endpoint changed during view verification") unless endpoint == @files.authority_socket_identity(authority)
           report.slice("server_identity", "resource_observer_identity", "mount_namespace_identity", "resource_identities").merge(
             "scope_generation" => binding.fetch("scope_generation"), "scope_binding_event_id" => lineage.binding_event.fetch("digest"),
             "service_invocation_id" => @manager.inspect_activation.fetch("service").fetch("InvocationID"),
@@ -493,10 +514,12 @@ module Ace
             unavailable!("sealed parent resources or observation namespace changed")
           end
           @files.worker_uid_quiescent!(@map.fetch("worker_uid"))
+          native_cleanup_complete!
           # Rejoin object and population after the credential baseline, keeping
           # the snapshot bounded by the same retained activation and exclusion.
-          unless observe(lineage).fetch("populated").zero?
-            unavailable!("sealed parent acquired a writer during baseline observation")
+          repeated = observe(lineage)
+          unless repeated.fetch("populated").zero? && repeated.fetch("activation") == value.fetch("activation")
+            unavailable!("sealed parent acquired a writer or pending activation during baseline observation")
           end
           lineage.binding.slice("scope_generation", "boot_id", "slice_invocation_id", "cgroup_identity").merge(
             "scope_binding_event_id" => lineage.binding_event.fetch("digest"), "seal_event_id" => lineage.seal_event.fetch("digest"), "populated" => 0)

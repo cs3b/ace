@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 require_relative "execution_scope_observation_fixtures"
+require "ace/assign/authority/readiness_hook"
 
 module Ace
   module Assign
@@ -34,32 +35,36 @@ module Ace
           codec = Authority::TransferCodec.new(root: File.dirname(@journal.repo_root))
           wire = Ace::Runtime::Molecules::ProtectedSocket
           handler = Thread.new do
+            request = wire.read(left, deadline: wire.deadline(10))
+            raise "wrong readiness control request" unless request["operation"] == "native_readiness" && request["params"] == {"mapping_id" => "mapping"}
             @owner.native_readiness!(mapping_id: "mapping", peer: @kernel.capture(92), socket: left,
               codec: codec, deadline: wire.deadline(10))
           ensure
             left.close
           end
-          challenge = wire.read(right, deadline: wire.deadline(10), limit: 16_384)
-          report = payload.slice("mount_namespace_identity", "resource_identities", "server_identity", "resource_observer_identity")
-            .merge("version" => 1, "challenge_id" => challenge.fetch("challenge_id"), "resource_topology" => [])
-          bytes = JSON.generate(report)
-          transfer = codec.descriptor([bytes], purpose: :scope_boundary_observation)
-          wire.write(right, {"version" => 1, "challenge_id" => challenge.fetch("challenge_id"), "transfer" => transfer}, deadline: wire.deadline(10))
-          codec.send(right, parts: [bytes], descriptor: transfer, purpose: :scope_boundary_observation, deadline: wire.deadline(10))
-          right.shutdown(Socket::SHUT_WR)
-          acknowledgment = wire.read(right, deadline: wire.deadline(10))
-          raise "private callback failed" unless acknowledgment["status"] == "ready"
+          run_readiness_hook(right, payload)
           handler.value
         ensure
           right&.close
-          handler&.join(1)
+          if $!
+            begin
+              handler&.join(1)
+            rescue StandardError
+              # Preserve the original producer failure; peer closure is secondary.
+            end
+          else
+            handler&.join(1)
+          end
         end
         def readiness_peer!(_lineage, peer)
           raise "wrong controlled actor" unless peer == @kernel.capture(92)
           @kernel.capture(90)
         end
         def verify_readiness_report!(lineage, peer, report, challenge:)
-          raise "wrong controlled callback" unless report["challenge_id"] == challenge["challenge_id"] && peer == @kernel.capture(92)
+          raise "wrong controlled callback" unless report.keys.sort == %w[challenge_id kernel_view_topology mount_namespace_identity resource_identities resource_observer_identity resource_topology server_identity version] &&
+            report["challenge_id"] == challenge["challenge_id"] && peer == @kernel.capture(92)
+          Ace::Runtime::Molecules::KernelViewTopology.new.verify!(topology: report.fetch("kernel_view_topology"),
+            host_ipc: {"device" => 4, "inode" => 900}, authority_socket: [1, 2, 13000], writable_resources: [])
           report.slice("server_identity", "resource_observer_identity", "mount_namespace_identity", "resource_identities").merge(
             "scope_generation" => lineage.binding.fetch("scope_generation"), "scope_binding_event_id" => lineage.binding_event.fetch("digest"),
             "service_invocation_id" => "c" * 32, "workspace_id" => "w1", "network_namespace_identity" => @network_installation.fetch("namespace_identity"),
@@ -79,6 +84,41 @@ module Ace
         def verify_closed!(lineage)
           raise "source proof missing" unless lineage.sealed? && lineage.proof_event
           true
+        end
+        def run_readiness_hook(socket, payload, boundary_resources: nil)
+          config = {"slot_id" => "slot", "project_id" => "project", "mapping_id" => "mapping",
+            "worker" => @kernel.capture(92).slice("uid", "gid", "groups"),
+            "authority" => {"socket_path" => "/run/authority/socket", "uid" => 13000, "gid" => 13000, "groups" => []}}
+          configuration = Struct.new(:data).new(config)
+          peer = @kernel.capture(92).merge("pid" => 93, "uid" => 13000, "gid" => 13000, "groups" => [])
+          original_kernel = @kernel
+          kernel = Object.new
+          kernel.define_singleton_method(:supported!) { true }
+          kernel.define_singleton_method(:capture) { |pid| original_kernel.capture(pid == Process.pid ? 92 : pid) }
+          kernel.define_singleton_method(:peer) { |_socket| peer }
+          kernel.define_singleton_method(:live!) { |identity| identity == peer || original_kernel.live!(identity) }
+          wire = Object.new
+          %i[deadline read write].each { |name| wire.define_singleton_method(name) { |*args, **kwargs| Ace::Runtime::Molecules::ProtectedSocket.public_send(name, *args, **kwargs) } }
+          wire.define_singleton_method(:root_path!) { |path, **options| raise "wrong endpoint ancestry" unless path == "/run/authority" && options == {directory: true, owner: 13000} }
+          wire.define_singleton_method(:socket_identity) { |path| raise "wrong endpoint path" unless path == "/run/authority/socket"; [1, 2, 13000] }
+          wire.define_singleton_method(:connect) { |_path, &block| block.call(socket) }
+          files = Object.new
+          selection = @network_selection
+          declarations = boundary_resources || [{"host_path" => "/private", "view_path" => "/private", "worker_visible" => false, "read_only" => true, "stage" => "parent"}]
+          files.define_singleton_method(:boundary_manifest!) do |_config|
+            {"schema" => "ace.execution-boundary-manifest/v1", "slot_id" => "slot", "network_installation" => selection,
+              "resources" => declarations}
+          end
+          files.define_singleton_method(:verify_native!) { |server, _config| raise "wrong native server" unless server == original_kernel.capture(90) }
+          resources = Object.new
+          resources.define_singleton_method(:observe!) do |server:, entries:, authority_socket:|
+            raise "wrong resource observation inputs" unless server == original_kernel.capture(90) &&
+              entries == declarations.select { |entry| entry.fetch("worker_visible") } && authority_socket == "/run/authority/socket"
+            payload.slice("mount_namespace_identity", "resource_identities").merge("resource_topology" => payload.fetch("resource_topology", []),
+              "kernel_view_topology" => payload.fetch("kernel_view_topology", ExecutionScopeObservationFixtures.kernel_topology))
+          end
+          Authority::ReadinessHook.new(slot: "slot", configuration: configuration, kernel: kernel, wire: wire,
+            files: files, resources: resources).run
         end
         def canonical(value)
           case value

@@ -144,6 +144,22 @@ class SystemdScopeManagerTest < AceRuntimeTestCase
     end
   end
 
+  def test_effective_manager_environment_has_fixed_typed_owner_and_closed_bounds
+    @command.typed_response = JSON.generate("type" => "as", "data" => ["PATH=/usr/bin", "LC_ALL="])
+    assert_equal ["PATH=/usr/bin", "LC_ALL="], @manager.manager_environment
+    argv, timeout = @command.calls.last
+    assert_equal ["/org/freedesktop/systemd1", "org.freedesktop.systemd1.Manager", "Environment"], argv.last(3)
+    assert_equal 5, timeout
+    assert_includes argv, "--allow-interactive-authorization=no"
+    [JSON.generate("type" => "s", "data" => "PATH=/usr/bin"), JSON.generate("type" => "as", "data" => ["PATH=a", "PATH=b"]),
+      JSON.generate("type" => "as", "data" => ["PATH"]), JSON.generate("type" => "as", "data" => ["PATH=a\0b"]),
+      JSON.generate("type" => "as", "data" => Array.new(257) { |index| "KEY_#{index}=value" }),
+      '{"type":"as","data":[]}' + " " * 65_536, '{"type":"as","type":"as","data":[]}', "{"].each do |bytes|
+      @command.typed_response = bytes
+      assert_raises(Unavailable) { @manager.manager_environment }
+    end
+  end
+
   def test_typed_signature_is_not_enough_without_matching_primitive_data
     [["Delegate", "b", "false"], ["RestrictNamespaces", "t", -1], ["Environment", "as", [12]],
      ["BindPaths", "a(ssbt)", [["/a", "/b", "no", 0]]],

@@ -22,8 +22,8 @@ module Ace
           "KillMode" => "control-group", "SendSIGKILL" => true, "Delegate" => false,
           "ProtectControlGroups" => true, "NoNewPrivileges" => true, "CapabilityBoundingSet" => 0,
           "AmbientCapabilities" => 0, "RestrictNamespaces" => 0, "PrivateIPC" => true,
-          "PrivateDevices" => true, "PrivateTmp" => false, "MountAPIVFS" => true, "ProtectKernelTunables" => true,
-          "DevicePolicy" => "closed", "DeviceAllow" => [], "ProtectSystem" => "strict", "DynamicUser" => false,
+          "PrivateDevices" => true, "PrivateTmp" => false, "MountAPIVFS" => true, "ProtectKernelTunables" => true, "BindLogSockets" => false,
+          "DevicePolicy" => "closed", "DeviceAllow" => [], "ProtectSystem" => "strict", "DynamicUser" => false, "PAMName" => "",
           "EnvironmentFiles" => [], "PassEnvironment" => [], "UnsetEnvironment" => [],
           "StandardOutput" => "journal", "StandardError" => "journal", "RuntimeDirectoryPreserve" => "no",
           "RuntimeDirectoryMode" => 0o700, "UMask" => 0o077, "RootImage" => "", "RootImageOptions" => [], "RootEphemeral" => false, "ExtensionDirectories" => [],
@@ -32,10 +32,19 @@ module Ace
           TriggeredBy Triggers PropagatesStopTo StopPropagatedFrom JoinsNamespaceOf].freeze
         NATIVE_ENVIRONMENT = %w[HERDR_CONFIG_PATH HERDR_SOCKET_PATH HOME SHELL PATH LANG LC_ALL TERM
           TMPDIR TMP TEMP XDG_CONFIG_HOME XDG_DATA_HOME XDG_STATE_HOME XDG_CACHE_HOME XDG_RUNTIME_DIR CODEX_HOME CLAUDE_CONFIG_DIR].freeze
+        MANAGER_ENVIRONMENT = (NATIVE_ENVIRONMENT + %w[LANGUAGE LC_CTYPE LC_NUMERIC LC_TIME LC_COLLATE LC_MONETARY LC_MESSAGES
+          LC_PAPER LC_NAME LC_ADDRESS LC_TELEPHONE LC_MEASUREMENT LC_IDENTIFICATION]).freeze
         IMPLICIT_NAMESPACE_ROOTS = %w[/dev /proc /sys /run /tmp /var/tmp].freeze
         EMPTY_EXEC = %w[ExecConditionEx ExecStartPreEx ExecReloadEx ExecStopEx ExecStopPostEx].freeze
 
         class Files
+          def authority_socket!(authority)
+            path = authority.fetch("socket_path")
+            ProtectedSocket.root_path!(File.dirname(path), directory: true, owner: authority.fetch("uid"))
+            identity = ProtectedSocket.socket_identity(path)
+            raise RuntimeUnavailableError, "selected authority socket owner differs" unless identity.last == authority.fetch("uid")
+            identity
+          end
           def read(path, limit:)
             ProtectedSocket.root_path!(path)
             File.open(path, File::RDONLY | File::NOFOLLOW) do |file|
@@ -165,6 +174,11 @@ module Ace
           unless expected.is_a?(Hash) && expected.keys.sort == %w[service slice]
             raise RuntimeUnavailableError, "unit profile declarations differ"
           end
+          environment = profile.fetch("manager_environment")
+          unless environment.is_a?(Array) && environment.all? { |entry| entry.is_a?(String) &&
+              MANAGER_ENVIRONMENT.include?(entry.split("=", 2).first) }
+            raise RuntimeUnavailableError, "effective manager environment changes the fixed startup surface"
+          end
           {"slice" => SystemdScopeManager::UNIT_GRAPH_SIGNATURES.keys,
            "service" => (SystemdScopeManager::UNIT_GRAPH_SIGNATURES.keys + SystemdScopeManager::SERVICE_EXEC_SIGNATURES.keys).uniq}.each do |kind, keys|
             wanted, actual = expected.fetch(kind), profile.fetch(kind)
@@ -225,7 +239,7 @@ module Ace
             raise RuntimeUnavailableError, "native configuration is not the exact immutable input"
           end
           verify_artifact_projection!(service, artifacts)
-          verify_boundary_topology!(service, artifacts)
+          verify_boundary_topology!(service, artifacts, authority: config.data.fetch("authority"))
         end
 
         def verify_graph!(slice, service, ancestors, prerequisites)
@@ -294,7 +308,7 @@ module Ace
           end
         end
 
-        def verify_boundary_topology!(service, artifacts)
+        def verify_boundary_topology!(service, artifacts, authority:)
           artifact = artifacts.fetch("boundary_manifest").first
           bytes = @files.read(artifact.fetch("host_path"), limit: 65_536).dup.force_encoding(Encoding::UTF_8)
           raise RuntimeUnavailableError, "boundary content is not UTF-8" unless bytes.valid_encoding?
@@ -318,20 +332,27 @@ module Ace
           end
           projections = service.fetch("BindPaths").map { |mount| [mount[0], mount[1], false] } +
             service.fetch("BindReadOnlyPaths").map { |mount| [mount[0], mount[1], true] }
+          socket = authority.fetch("socket_path")
+          socket_projection = [socket, socket, true]
+          socket_mounts = projections.select { |host, view, _| overlaps?(host, socket) || overlaps?(view, socket) }
+          unless socket_mounts == [socket_projection]
+            raise RuntimeUnavailableError, "authority socket has no unique exact readonly projection"
+          end
+          @files.authority_socket!(authority)
           api_roots = %w[/dev /proc /sys]
           if projections.any? { |_host, view, _| api_roots.any? { |root| overlaps?(root, view) } }
             raise RuntimeUnavailableError, "API namespace has an unsupported storage alias"
           end
           readonly_paths = service.fetch("ReadOnlyPaths")
           unless readonly_paths.all? { |path| path?(path) } &&
-              readonly_paths.any? { |path| covers?(path, "/dev/shm") } &&
+              %w[/dev /dev/shm].all? { |view| readonly_paths.any? { |path| covers?(path, view) } } &&
               !service.fetch("ReadWritePaths").any? { |path| !path?(path) || overlaps?(path, "/dev/shm") }
             raise RuntimeUnavailableError, "file-backed IPC is not positively read-only"
           end
           runtime = @scope.fetch("runtime_directory")
           projections << [runtime, runtime, false]
           service.fetch("ReadWritePaths").each do |view|
-            unless path?(view)
+            unless path?(view) && api_roots.none? { |root| overlaps?(root, view) }
               raise RuntimeUnavailableError, "writable path directive is not exact"
             end
             projection = projections.select { |mount| covers?(mount[1], view) }.max_by { |mount| mount[1].length }
@@ -339,7 +360,11 @@ module Ace
               @scope.fetch("root_directory") + view
             projections << [host, view, false]
           end
+          unless projections.select { |host, view, _| overlaps?(host, socket) || overlaps?(view, socket) } == [socket_projection]
+            raise RuntimeUnavailableError, "authority socket is shadowed by an effective writable or parent projection"
+          end
           projections.each do |host, view, readonly|
+            next if [host, view, readonly] == socket_projection
             next if readonly && artifacts.values.flatten.any? { |entry| entry["host_path"] == host && entry["view_path"] == view }
             unless entries.any? { |entry| entry.values_at("host_path", "view_path", "worker_visible", "read_only") == [host, view, true, readonly] }
               raise RuntimeUnavailableError, "effective projection is omitted from boundary inventory"

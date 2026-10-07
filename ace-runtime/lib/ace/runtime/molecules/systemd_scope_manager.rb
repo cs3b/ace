@@ -23,9 +23,9 @@ module Ace
             PropagatesStopTo StopPropagatedFrom JoinsNamespaceOf RequiresMountsFor WantsMountsFor].to_h { |key| [key, "as"] }
         }.freeze
         SERVICE_EXEC_SIGNATURES = {
-          **%w[Type User Group Restart KillMode ProtectSystem RootDirectory RootImage NetworkNamespacePath Slice StandardOutput StandardError WorkingDirectory RuntimeDirectoryPreserve DevicePolicy].to_h { |key| [key, "s"] },
+          **%w[Type User Group Restart KillMode ProtectSystem RootDirectory RootImage NetworkNamespacePath Slice StandardOutput StandardError WorkingDirectory RuntimeDirectoryPreserve DevicePolicy PAMName].to_h { |key| [key, "s"] },
           **%w[SupplementaryGroups ReadWritePaths ReadOnlyPaths Environment PassEnvironment UnsetEnvironment Sockets InaccessiblePaths ExtensionDirectories RuntimeDirectory].to_h { |key| [key, "as"] },
-          **%w[SendSIGKILL Delegate ProtectControlGroups NoNewPrivileges PrivateIPC PrivateDevices DynamicUser RootEphemeral MountAPIVFS PrivateTmp ProtectKernelTunables].to_h { |key| [key, "b"] },
+          **%w[SendSIGKILL Delegate ProtectControlGroups NoNewPrivileges PrivateIPC PrivateDevices DynamicUser RootEphemeral MountAPIVFS PrivateTmp ProtectKernelTunables BindLogSockets].to_h { |key| [key, "b"] },
           **%w[CapabilityBoundingSet AmbientCapabilities RestrictNamespaces].to_h { |key| [key, "t"] },
           "RuntimeDirectoryMode" => "u", "UMask" => "u", "RootImageOptions" => "a(ss)", "TemporaryFileSystem" => "a(ss)", "MountImages" => "a(ssba(ss))",
           "ExtensionImages" => "a(sba(ss))", "EnvironmentFiles" => "a(sb)", "RestartForceExitStatus" => "(aiai)", "RestrictAddressFamilies" => "(bas)",
@@ -168,7 +168,27 @@ module Ace
             show(unit)
             [unit, typed_properties(unit: unit, interface: "Unit", signatures: UNIT_GRAPH_SIGNATURES)]
           end
-          {"slice" => slice, "service" => service, "ancestors" => ancestors, "unit_paths" => unit_paths, "prerequisites" => inspect_prerequisites(service)}
+          {"slice" => slice, "service" => service, "ancestors" => ancestors, "unit_paths" => unit_paths,
+            "manager_environment" => manager_environment, "prerequisites" => inspect_prerequisites(service)}
+        end
+
+        def manager_environment
+          bytes = @command.call([BUSCTL, "--system", "--no-pager", "--json=short", "--auto-start=no",
+            "--allow-interactive-authorization=no", "get-property", "org.freedesktop.systemd1",
+            "/org/freedesktop/systemd1", "org.freedesktop.systemd1.Manager", "Environment"], timeout: 5)
+          unless bytes.is_a?(String) && bytes.bytesize.between?(1, 65_536) && bytes.lines.size == 1
+            raise RuntimeUnavailableError, "effective manager environment is unavailable"
+          end
+          value = JSON.parse(bytes, create_additions: false, allow_duplicate_key: false, allow_comments: false, max_nesting: 4)
+          unless value.is_a?(Hash) && value.keys.sort == %w[data type] && value["type"] == "as" &&
+              value["data"].is_a?(Array) && value["data"].size <= 256 &&
+              value["data"].all? { |entry| entry.is_a?(String) && entry.bytesize.between?(1, 4096) && !entry.include?("\0") && entry.match?(/\A[A-Za-z_][A-Za-z_0-9]*=.*\z/) } &&
+              value["data"].map { |entry| entry.split("=", 2).first }.uniq.size == value["data"].size
+            raise RuntimeUnavailableError, "effective manager environment differs"
+          end
+          value.fetch("data")
+        rescue JSON::ParserError, ArgumentError
+          raise RuntimeUnavailableError, "effective manager environment is malformed"
         end
 
         def unit_paths

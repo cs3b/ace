@@ -28,18 +28,27 @@ class ExecutionUnitInstallationTest < AceRuntimeTestCase
       digested << path
       Digest::SHA256.hexdigest(bytes.fetch(path) { raise Errno::ENOENT })
     end
+    def authority_socket!(authority)
+      raise Unavailable, "wrong socket" unless authority.fetch("socket_path") == "/run/authority/socket" && authority.fetch("uid") == 13000
+      [1, 2, 13000]
+    end
   end
 
   class Command
     attr_reader :profiles, :calls
+    attr_accessor :manager_environment
     def initialize(profiles)
       @profiles, @calls = profiles, []
+      @manager_environment = ["PATH=/usr/bin:/bin", "LANG=C", "LC_CTYPE=C", "LANGUAGE=en"]
     end
     def call(argv, timeout:)
       calls << [argv, timeout]
       if argv.include?("get-property")
         if argv.last == "UnitPath"
           return JSON.generate("type" => "as", "data" => ["/etc/systemd/system", "/run/systemd/generator"]) + "\n"
+        end
+        if argv[-2..] == ["org.freedesktop.systemd1.Manager", "Environment"]
+          return JSON.generate("type" => "as", "data" => manager_environment) + "\n"
         end
         index = argv.index("get-property")
         unit = argv[index + 2].delete_prefix("/org/freedesktop/systemd1/unit/").gsub(/_([0-9a-f]{2})/) { [$1.to_i(16)].pack("C") }
@@ -126,7 +135,8 @@ class ExecutionUnitInstallationTest < AceRuntimeTestCase
       "User" => "13001", "Group" => "13001", "Slice" => @scope.fetch("slice_unit"),
       "RootDirectory" => @scope.fetch("root_directory"), "NetworkNamespacePath" => @scope.fetch("network_namespace_path"),
       "WantsMountsFor" => [@scope.fetch("root_directory")], "RequiresMountsFor" => ["/run/ace-slot"],
-      "ReadOnlyPaths" => ["/dev/shm"], "RuntimeDirectory" => ["ace-slot"], "After" => ["ace-slot.slice", "-.mount", "run.mount", "systemd-journald.socket"],
+      "ReadOnlyPaths" => ["/dev", "/dev/shm"], "RuntimeDirectory" => ["ace-slot"], "After" => ["ace-slot.slice", "-.mount", "run.mount", "systemd-journald.socket"],
+      "BindReadOnlyPaths" => [["/run/authority/socket", "/run/authority/socket", false, 0]],
       "Environment" => ["HERDR_CONFIG_PATH=#{paths.fetch('native_configuration')}"],
       "RestrictAddressFamilies" => [true, %w[AF_INET AF_INET6 AF_UNIX]],
       "ExecStartEx" => [command(paths.fetch("native_executable"), args: ["server"])],
@@ -162,6 +172,21 @@ class ExecutionUnitInstallationTest < AceRuntimeTestCase
     assert @installation.verify!(manager: @manager)
   end
 
+  def test_effective_manager_environment_refuses_startup_code_inputs_and_pam
+    assert @installation.verify!(manager: @manager)
+    %w[LD_PRELOAD LD_LIBRARY_PATH DYLD_INSERT_LIBRARIES RUBYOPT RUBYLIB GEM_HOME GEM_PATH BUNDLE_GEMFILE NODE_OPTIONS BUN_OPTIONS LC_EXECUTE].each do |key|
+      @command.manager_environment = ["PATH=/usr/bin:/bin", "#{key}=/worker/untrusted"]
+      error = assert_raises(Unavailable, key) { @installation.verify!(manager: @manager) }
+      assert_match(/effective manager environment changes/, error.message)
+    end
+    @command.manager_environment = ["PATH=/usr/bin:/bin", "LANG=C", "LC_ALL=", "LANGUAGE=en"]
+    assert @installation.verify!(manager: @manager)
+    @profiles["ace-slot.service"]["PAMName"] = "worker-login"
+    @manifest["properties"]["service"]["PAMName"] = "worker-login"
+    save_manifest
+    assert_raises(Unavailable) { @installation.verify!(manager: @manager) }
+  end
+
   def test_writable_tmp_requires_complete_original_backing_inventory
     @profiles["ace-slot.service"]["ReadWritePaths"] = ["/tmp"]
     @manifest["properties"]["service"]["ReadWritePaths"] = ["/tmp"]
@@ -178,6 +203,69 @@ class ExecutionUnitInstallationTest < AceRuntimeTestCase
     assert @installation.verify!(manager: @manager)
   end
 
+  def test_exact_readonly_authority_projection_and_implicit_log_socket_refusal
+    assert @installation.verify!(manager: @manager)
+    invalid = [[], [["/run/authority/socket", "/alias", false, 0]],
+      [["/other/socket", "/run/authority/socket", false, 0]],
+      [["/run/authority", "/run/authority", false, 0]],
+      [["/run/authority/socket", "/run/authority/socket", false, 0], ["/host/run", "/run", false, 0]]]
+    original = @profiles["ace-slot.service"].fetch("BindReadOnlyPaths")
+    invalid.each do |mounts|
+      @profiles["ace-slot.service"]["BindReadOnlyPaths"] = mounts
+      @manifest["properties"]["service"]["BindReadOnlyPaths"] = mounts
+      save_manifest
+      assert_raises(Unavailable) { @installation.verify!(manager: @manager) }
+    end
+    @profiles["ace-slot.service"]["BindReadOnlyPaths"] = original
+    @manifest["properties"]["service"]["BindReadOnlyPaths"] = original
+    %w[BindPaths ReadWritePaths BindLogSockets].each do |key|
+      previous = @profiles["ace-slot.service"][key]
+      value = {"BindPaths" => [["/run/authority/socket", "/run/authority/socket", false, 0]],
+        "ReadWritePaths" => ["/run/authority/socket"], "BindLogSockets" => true}.fetch(key)
+      @profiles["ace-slot.service"][key] = value
+      @manifest["properties"]["service"][key] = value
+      save_manifest
+      assert_raises(Unavailable) { @installation.verify!(manager: @manager) }
+      @profiles["ace-slot.service"][key] = previous
+      @manifest["properties"]["service"][key] = previous
+    end
+    save_manifest
+    assert @installation.verify!(manager: @manager)
+  end
+
+  def test_selected_endpoint_owner_rejects_actual_non_socket_type
+    Dir.mktmpdir("ace-authority-socket-") do |root|
+      path = File.join(root, "endpoint")
+      endpoint = UNIXServer.new(path)
+      authority = {"socket_path" => path, "uid" => Process.uid}
+      Ace::Runtime::Molecules::ProtectedSocket.stub(:root_path!, ->(*_args, **_kwargs) { true }) do
+        assert_equal Process.uid, Installation::Files.new.authority_socket!(authority).last
+        endpoint.close
+        File.unlink(path)
+        File.write(path, "file")
+        assert_raises(Unavailable) { Installation::Files.new.authority_socket!(authority) }
+      end
+    ensure
+      endpoint&.close unless endpoint&.closed?
+    end
+  end
+
+  def test_declared_writable_api_subtree_cannot_override_fixed_profile
+    %w[/sys/storage /proc/storage /dev/shm/storage].each do |path|
+      @profiles["ace-slot.service"]["ReadWritePaths"] = [path]
+      @manifest["properties"]["service"]["ReadWritePaths"] = [path]
+      artifact = @artifacts.find { |entry| entry["role"] == "boundary_manifest" }
+      boundary = JSON.parse(@files.bytes.fetch(artifact.fetch("host_path")))
+      boundary["resources"] << {"host_path" => @scope.fetch("root_directory") + path, "view_path" => path,
+        "stage" => "parent", "worker_visible" => true, "read_only" => false}
+      bytes = JSON.generate(boundary)
+      @files.bytes[artifact.fetch("host_path")] = bytes
+      artifact["sha256"] = @scope["boundary_manifest_sha256"] = Digest::SHA256.hexdigest(bytes)
+      save_manifest
+      assert_raises(Unavailable) { @installation.verify!(manager: @manager) }
+    end
+  end
+
   def save_manifest
     bytes = JSON.generate(@manifest)
     @files.bytes["/etc/ace/execution-slots/slot/unit-manifest.json"] = bytes
@@ -188,7 +276,8 @@ class ExecutionUnitInstallationTest < AceRuntimeTestCase
     value = @installation.verify!(manager: @manager)
     assert_equal @manifest, value
     assert_equal @artifacts.map { |a| a["host_path"] }, @files.digested
-    assert_equal 15, @command.calls.size
+    assert_equal 16, @command.calls.size
+    assert @command.calls.any? { |argv, _timeout| argv[-2..] == ["org.freedesktop.systemd1.Manager", "Environment"] }
     refute value.key?("proof_id")
     refute value.key?("boundary_verified")
     @files.bytes[@scope.fetch("root_directory") + "/usr/bin/herdr"] = "changed native artifact"
@@ -341,7 +430,7 @@ class ExecutionUnitInstallationTest < AceRuntimeTestCase
     replacement = "/installed/verified-herdr"
     @files.bytes[replacement] = @files.bytes.fetch(original_host)
     artifact["host_path"] = replacement
-    overlay = [[replacement, "/usr/bin/herdr", false, 0]]
+    overlay = [[replacement, "/usr/bin/herdr", false, 0], ["/run/authority/socket", "/run/authority/socket", false, 0]]
     @profiles["ace-slot.service"]["BindReadOnlyPaths"] = overlay
     @manifest["properties"]["service"]["BindReadOnlyPaths"] = overlay
     save_manifest
