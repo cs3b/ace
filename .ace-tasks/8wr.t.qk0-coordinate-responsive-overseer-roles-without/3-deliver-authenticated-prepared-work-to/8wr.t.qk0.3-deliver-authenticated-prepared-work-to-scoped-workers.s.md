@@ -1,7 +1,7 @@
 ---
 id: 8wr.t.qk0.3
 title: Deliver authenticated prepared work to scoped workers
-status: pending
+status: in-progress
 priority: high
 created_at: "2026-10-07 06:51:55"
 estimate: large

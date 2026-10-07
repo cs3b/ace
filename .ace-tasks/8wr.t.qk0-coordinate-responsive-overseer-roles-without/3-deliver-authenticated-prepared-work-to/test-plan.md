@@ -1,0 +1,28 @@
+# Test responsibility map: qk0.3
+
+Baseline main3883a681e/own cd677f3c6, approved pending spec, 2026-10-07. Planned only: zero tests/probes run. Execution waits for xz9.2 audit and captain dispatch. 12 responsibility groups, all high integrity/user-facing risk; 2 pure/fast contract groups, 9 controlled composition/command groups (some share focused files), 1 external installed E2E owner. Matrix groups are behavioral responsibilities, not a claim of written test count.
+
+| Behavior | Risk | Layer | File/owner | Source of truth |
+|---|---|---|---|---|
+| Exact manifest/canonical digest/template/progress projection; all closed bounds and +1 | High | fast pure | ace-assign/test/fast/authority/prepared_work_test.rb (new) | SC2,SC4 |
+| Actual default leaf/subtask preparation, context closure and >32KiB artifact; invalid roots/dependencies | High | controlled filesystem/Git | ace-assign/test/feat/prepared_work_preparation_test.rb (new) | SC1,SC2 |
+| Register exact input blob+definition same commit; replay/loss/conflict/inventory fields | High | controlled Git authority | ace-assign/test/feat/authority/launch_lifecycle_test.rb and assignment_inventory tests | SC1,SC3,SC4 |
+| Prepared fetch peer/birth/issued/original commit; wrong roles/selectors/corrupt artifact | High | controlled transport | ace-assign/test/feat/authority/prepared_work_fetch_test.rb (new) | SC1–SC3 |
+| Both endpoints candidate limits; ordinary artifacts/receipt limits unchanged; partial EOF/header | High | controlled transport | ace-assign/test/feat/authority/transfer_server_test.rb + transfer_codec_test.rb | SC2,SC4 |
+| Original-self worker entry, issue-before-permission and fetch-before-effects, no FD requirement | High | controlled composition | ace-assign/test/feat/authority/prepared_worker_test.rb (new) | SC1,SC3 |
+| Private queue owner/root/atomic collision/crash cleanup/missing after effects/duplicate or descendant entry | High | controlled files+injected identity | prepared_worker_test.rb | SC2,SC3 |
+| Held work projection, legitimate progress/report; later tamper; outside scope/add/retry/renumber refusal | High | fast executor + controlled queue | ace-assign/test/fast/organisms/assignment_executor_test.rb and prepared_worker_test.rb | SC1,SC2 |
+| Explicit CLI selectors, fail/resume dry-run semantics; no cache/env/current fallback | High | fast command | ace-assign/test/fast/commands/assignment_target_test.rb + protected command tests | SC2,SC4 |
+| Captured task/dependency/report context after live source mutation; runtime token binding without byte changes | High | controlled bundle+Assign composition | ace-bundle/test/feat/prepared_task_context_test.rb (new) | SC1,SC2 |
+| Complete managed default flow through real maintained consumers with tool FD closure boundary | High | controlled source composition | ace-assign/test/feat/authority/prepared_work_flow_test.rb (new) | SC1–SC4 |
+| Actual installed Codex/Pi lineage/socket/native gate/lifetime effectiveness | High | installed E2E | gad.2 centralized acceptance owner | installed acceptance, not qk0.3 probes |
+
+## Fixtures and boundary policy
+Reuse existing authority deployment/journal/transfer fixtures and genuine generated default work-on-task job/steps. Generate valid leaf, leaf child, reviewed dependency/report closure and canonical complete Git artifact with actual owners. Mutations cover duplicate YAML keys, missing/cyclic context, symlink/executable/extra object/prerequisite paths, Unicode exact bytes, all size/count limits, wrong original selection/head/tree/birth and transport truncation. Capture actual publication/progress state, not success-string mocks.
+
+Do not mock validators, CandidateTransfer, TransferCodec, JournalMutation, canonical selection, queue/scanner/writer or task-context consumer. Use temporary private directories and real bounded Git artifact operations in controlled tests. Inject kernel identity/ancestry/liveness, runtime execution, authority transport/socket peer and provider execution boundaries; no native process/security/Linux/root/systemd/network/provider session probes. Drive uses actual consumer API and invocation builder; a mocked successful fetch is insufficient. Simulated dropped non-stdio descriptors prove no inheritance dependency in source composition, not external installed behavior.
+
+Every owner asserts its own contract once: pure tests exhaust schema/bounds, transport tests verify framing/authentication/atomic storage, queue tests verify consumption/progress, complete flow tests assert joins and observable selected input identity rather than repeat all validators. Installed E2E delegates only OS/provider effectiveness to gad.2 and does not substitute for source producer/consumer tests. Ordinary local CLI/queue and existing candidate/result/evidence schemas remain regression coverage.
+
+## Execution/checklist
+Use bin/ace-test on focused changed-package test paths only when implementation authorized; follow as-test-verify-suite required fast suite afterward. Independent source review before delivery. No raw ruby/rake package test commands. [ ] Contract/boundaries [ ] Real default graph [ ] Atomic canonical registration [ ] Exact fetch [ ] Single activation/recovery [ ] Scoped held queue [ ] Captured bundle/template [ ] Ordinary regressions [ ] Controlled full join [ ] Independent review. Installed E2E remains separate gad.2 acceptance.
