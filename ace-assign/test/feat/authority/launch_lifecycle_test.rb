@@ -114,6 +114,41 @@ module Ace
         end
       end
 
+      def test_input_inhibition_selection_and_evidence_fail_closed_without_original_authentication
+        with_authority do
+          map = @map
+          @authority.instance_variable_get(:@deployment).define_singleton_method(:verify!) { |*_args, **_kwargs| map }
+          state = call("reserve_attempt", @reserve_params, id: "reserve").fetch(:data)
+          state = call("record_launch", params(state), id: "record").fetch(:data)
+          close = call("close_execution_scope", state.slice("attempt_id").merge("expected_generation" => state.fetch("generation")), id: "seal").fetch(:data)
+          events = @journal.read_events("assignment").select { |event| event["attempt_id"] == state.fetch("attempt_id") }
+          record = events.find { |event| event.dig("payload", "operation") == "record_launch" }
+          seal = events.find { |event| event["type"] == "scope_sealed" }
+          selected = state.slice("attempt_id").merge("mapping_id" => "mapping", "assignment_id" => "assignment",
+            "original_binding_digest" => record.fetch("digest"), "seal_event_id" => seal.fetch("digest"), "journal_commit" => close.fetch("journal_commit"))
+          request = {"version" => 1, "project_id" => "project", "operation" => "launch_input_inhibit_selection", "mutation_id" => nil, "params" => selected}
+          old = @journal.ref_value
+          assert_equal selected.slice("attempt_id", "original_binding_digest", "seal_event_id", "journal_commit"), @authority.dispatch(request: request, peer: @peer, role: :launcher).fetch(:data)
+          assert_raises(AttemptErrors::UnauthorizedIdentity) { @authority.dispatch(request: request, peer: @peer.merge("pid" => 500, "started_at" => "different birth"), role: :launcher) }
+          %w[original_binding_digest seal_event_id].each do |key|
+            assert_raises(AttemptErrors::EvidenceUnavailable) { @authority.dispatch(request: request.merge("params" => selected.merge(key => "f" * 64)), peer: @peer, role: :launcher) }
+          end
+          original = record.dig("payload", "data", "guarded_origin")
+          evidence = {"outcome" => "inhibited", "origin" => original, "input_state" => "inhibited", "pending_input" => 0}
+          invalid = [evidence.merge("pending_input" => 0.0), evidence.merge("outcome" => "unconfirmed"),
+            evidence.merge("origin" => original.merge("terminal_id" => "term_other")), evidence.merge("extra" => true)]
+          invalid.each { |value| assert_raises(AttemptErrors::EvidenceUnavailable) { @journal.verify_input_drained_evidence!(value, original) } }
+          [nil, "scalar", []].each do |payload|
+            assert_raises(AttemptErrors::EvidenceUnavailable) { @authority.send(:accepted_input_inhibition?, [{"type" => "input_inhibited", "payload" => payload}], @journal, old) }
+          end
+          assert_raises(ArgumentError) do
+            @journal.mutate(assignment_id: "assignment", attempt_id: state.fetch("attempt_id"), mutation_id: "input-inhibit.#{seal.fetch('digest')}",
+              operation: "ordinary", parameters_digest: "a" * 64, expected_generation: close.fetch("generation")) { flunk "reserved inhibition namespace admitted" }
+          end
+          assert_equal old, @journal.ref_value
+        end
+      end
+
       def test_prompt_status_authenticates_original_snapshot_and_late_outcome_without_replay_upgrade
         with_authority do
           map = @map
@@ -573,12 +608,23 @@ module Ace
       end
 
       class OriginalGuardedNative < Ace::Herdr::Molecules::ProtectedNativeControl
-        attr_reader :prompt_calls
-        attr_accessor :before_prompt_ack
+        attr_reader :prompt_calls, :drain_calls
+        attr_accessor :before_prompt_ack, :before_drain_ack, :drop_prompt_ack, :unconfirmed_drains
         def exchange(method, params = {}, **limits)
+          if method == "terminal.inhibit_input"
+            (@drain_calls ||= []) << params
+            before_drain_ack&.call
+            if (unconfirmed_drains || 0).positive?
+              self.unconfirmed_drains -= 1
+              return {"id" => "native-fixture", "error" => {"code" => "input_drain_unavailable", "phase" => "unconfirmed"}}
+            end
+            return {"id" => "native-fixture", "result" => {"type" => "terminal_input_drained", "origin" => params.fetch("expected_origin"),
+              "input_state" => "inhibited", "pending_input" => 0}}
+          end
           raise "Unexpected native effect" unless method == "agent.prompt"
           (@prompt_calls ||= []) << params
           before_prompt_ack&.call
+          raise Ace::Runtime::RuntimeUnavailableError, "controlled native ACK loss" if drop_prompt_ack
           {"id" => "native-fixture", "result" => {"type" => "agent_prompted", "agent" => {"status" => "ready"},
             "origin" => params.fetch("expected_origin"), "submission" => "submitted"}}
         end
@@ -600,6 +646,18 @@ module Ace
       end
 
       def test_actual_launch_driver_remains_valid_and_explicit_native_guard_capture_preserves_scope_binding
+        exercise_actual_launch_owner
+      end
+
+      def test_actual_original_driver_recovers_unconfirmed_drain_and_unknown_prompt_without_resend
+        exercise_actual_launch_owner(input_drain: true)
+      end
+
+      def test_original_driver_reports_lost_drain_ack_after_child_exit_without_second_native_effect
+        exercise_actual_launch_owner(input_drain: :lost_ack)
+      end
+
+      def exercise_actual_launch_owner(input_drain: false)
         with_authority do
           fixed = @map.merge("native" => @map.fetch("native").merge("server_identity" => @kernel.capture(90), "socket_identity" => [1, 2, 13001]))
           native = OriginalGuardedNative.new(mapping: fixed, kernel: @kernel)
@@ -680,7 +738,7 @@ module Ace
           assert_equal "release", WIRE.read(worker, deadline: WIRE.deadline(5)).fetch("operation")
           gate.join(2)
           refute gate.alive?
-          exercise_actual_prompt_stream(launch, native, state, authenticated, cli_thread: cli_thread, continue_cli: continue_cli, cli_ready: cli_ready)
+          exercise_actual_prompt_stream(launch, native, state, authenticated, cli_thread: cli_thread, continue_cli: continue_cli, cli_ready: cli_ready, input_drain: input_drain)
           assert_equal 1, cli_output.string.lines.length
           assert_equal "launch_ready", JSON.parse(cli_output.string).fetch("type")
         ensure
@@ -695,7 +753,7 @@ module Ace
         end
       end
 
-      def exercise_actual_prompt_stream(launch, native, state, authenticated, cli_thread:, continue_cli:, cli_ready:)
+      def exercise_actual_prompt_stream(launch, native, state, authenticated, cli_thread:, continue_cli:, cli_ready:, input_drain: false)
         deployment = @authority.instance_variable_get(:@deployment)
         service_root = deployment.authority("authority").fetch("state_root")
         FileUtils.mkdir_p(service_root, mode: 0700)
@@ -747,6 +805,14 @@ module Ace
         assert_equal "launch_ready", ready_frame.fetch("type")
         assert_equal authenticated.fetch("binding_digest"), ready_frame.fetch("original_binding_digest")
         original_generation = ready_frame.fetch("generation")
+        if input_drain
+          if input_drain == :lost_ack
+            exercise_lost_input_drain_ack(client, native, state, original_generation)
+          else
+            exercise_actual_input_drain(client, native, state, original_generation)
+          end
+          return
+        end
         selectors = state.slice("assignment_id", "attempt_id").merge("expected_generation" => original_generation)
         old = @journal.ref_value
         assert_raises(AttemptErrors::EvidenceUnavailable) do
@@ -860,14 +926,21 @@ module Ace
         end
         pending_entered.pop
         close_selectors = state.slice("assignment_id", "attempt_id").merge("mapping_id" => "mapping")
+        inhibit_started = Queue.new
+        original_inhibit = @authority.method(:request_original_input_inhibition!)
+        @authority.define_singleton_method(:request_original_input_inhibition!) do |params, map, journal|
+          inhibit_started << params.fetch("mutation_id")
+          original_inhibit.call(params, map, journal)
+        end
         current = @journal.authority_generation(@journal.read_events("assignment").select { |event| event["attempt_id"] == state.fetch("attempt_id") })
-        @authority.close_execution_scope!(params: close_selectors.merge("mutation_id" => "seal-with-pending", "expected_generation" => current), peer: @peer, role: :launcher)
+        first_closer = Thread.new { @authority.close_execution_scope!(params: close_selectors.merge("mutation_id" => "seal-with-pending", "expected_generation" => current), peer: @peer, role: :launcher) }
+        assert_equal "seal-with-pending", inhibit_started.pop
         observed = @authority.observe_execution_scope!(params: close_selectors, peer: @peer, role: :launcher)
         assert_equal "unverifiable", observed.fetch("state")
         assert_equal "drain_original_prompt_issuer", observed.fetch("required_action")
         current = @journal.authority_generation(@journal.read_events("assignment").select { |event| event["attempt_id"] == state.fetch("attempt_id") })
-        closed = @authority.close_execution_scope!(params: close_selectors.merge("mutation_id" => "close-with-pending", "expected_generation" => current), peer: @peer, role: :launcher)
-        assert_equal "running", closed.dig(:data, "state")
+        second_closer = Thread.new { @authority.close_execution_scope!(params: close_selectors.merge("mutation_id" => "close-with-pending", "expected_generation" => current), peer: @peer, role: :launcher) }
+        assert_equal "close-with-pending", inhibit_started.pop
         refute @journal.read_events("assignment").any? { |event| event["type"] == "scope_closed_no_writers" }
         # Controlled deadline boundary: use the actual canonical completion
         # owner to finalize uncertainty before the held native ACK is released.
@@ -880,6 +953,8 @@ module Ace
         private_socket = old_channel.instance_variable_get(:@socket)
         private_socket.close unless private_socket.closed?
         allow_native_completion << true
+        assert_equal "running", first_closer.value.dig(:data, "state")
+        assert_equal "running", second_closer.value.dig(:data, "state")
         public_result = pending_caller.value
         if public_result.is_a?(Authority::Client::Reply)
           assert_equal "uncertain", public_result.data.fetch("outcome")
@@ -908,12 +983,107 @@ module Ace
       ensure
         allow_native_completion << true if allow_native_completion
         pending_caller&.join(3)
+        first_closer&.join(3)
+        second_closer&.join(3)
         launch.request_control_cancel
         server&.stop
         driver&.join(3)
         listener&.join(3)
         refute driver&.alive?
         refute listener&.alive?
+      end
+
+      def exercise_actual_input_drain(client, native, state, generation)
+        selected = state.slice("assignment_id", "attempt_id")
+        old = @journal.ref_value
+        assert_raises(AttemptErrors::EvidenceUnavailable) do
+          client.call("prompt_attempt", selected.merge("expected_generation" => generation), mutation_id: "input-inhibit.#{'a' * 64}",
+            upload_parts: ["reserved namespace prompt"], purpose: :prompt_text, timeout: 30)
+        end
+        assert_equal old, @journal.ref_value
+        assert_nil native.prompt_calls
+        native.drop_prompt_ack = true
+        native.unconfirmed_drains = 1
+        prompt = client.call("prompt_attempt", selected.merge("expected_generation" => generation), mutation_id: "unknown-input",
+          upload_parts: ["controlled unknown prompt"], purpose: :prompt_text, timeout: 30)
+        assert_equal "uncertain", prompt.data.fetch("outcome")
+        assert_equal 1, native.prompt_calls.length
+        generation = @journal.authority_generation(@journal.read_events("assignment").select { |event| event["attempt_id"] == state.fetch("attempt_id") })
+        first = client.call("close_execution_scope", selected.merge("expected_generation" => generation), mutation_id: "first-unconfirmed-drain", timeout: 30)
+        assert_equal "running", first.data.fetch("state")
+        assert_equal 1, native.drain_calls.length
+        refute @journal.read_events("assignment").any? { |event| event["type"] == "input_inhibited" }
+        assert_equal "drain_original_prompt_issuer", client.call("observe_execution_scope", selected).data.fetch("required_action")
+        limit = WIRE.deadline(10)
+        until @authority.instance_variable_get(:@control_channels).values.any? { |channel| !channel.closed? }
+          raise "Original driver did not reconnect after unconfirmed drain" unless Process.clock_gettime(Process::CLOCK_MONOTONIC) < limit
+          sleep(0.01)
+        end
+        generation = @journal.authority_generation(@journal.read_events("assignment").select { |event| event["attempt_id"] == state.fetch("attempt_id") })
+        second = client.call("close_execution_scope", selected.merge("expected_generation" => generation), mutation_id: "fresh-drain-after-worker-stop", timeout: 30)
+        assert_equal "running", second.data.fetch("state")
+        proof = @journal.read_events("assignment").find { |event| event["type"] == "input_inhibited" }
+        refute_nil proof
+        assert_equal 2, native.drain_calls.length
+        assert_equal 1, native.prompt_calls.length
+        later = client.call("prompt_status", selected.merge("mutation_id" => "unknown-input")).data
+        assert_equal "uncertain", later.fetch("outcome")
+        assert_nil later.fetch("outcome_event_id")
+        # Replay uses its original generation, even after drain observations.
+        original_generation = @journal.prompt_intent("unknown-input").dig("payload", "binding", "expected_generation")
+        assert_equal prompt.data, client.call("prompt_attempt", selected.merge("expected_generation" => original_generation), mutation_id: "unknown-input",
+          upload_parts: ["controlled unknown prompt"], purpose: :prompt_text, timeout: 30).data
+        assert_equal first.data, client.call("close_execution_scope", selected.merge("expected_generation" => first.data.fetch("generation") - 1),
+          mutation_id: "first-unconfirmed-drain", timeout: 30).data
+        assert_equal 2, native.drain_calls.length
+        current = @journal.authority_generation(@journal.read_events("assignment").select { |event| event["attempt_id"] == state.fetch("attempt_id") })
+        closed = client.call("close_execution_scope", selected.merge("expected_generation" => current), mutation_id: "proof-after-authentic-drain", timeout: 30)
+        assert_equal "closed_no_writers", closed.data.fetch("state")
+        assert_equal closed.data.fetch("proof_id"), client.call("observe_execution_scope", selected).data.fetch("proof_id")
+        assert_equal 2, native.drain_calls.length
+      end
+
+      def exercise_lost_input_drain_ack(client, native, state, generation)
+        selected = state.slice("assignment_id", "attempt_id")
+        native.drop_prompt_ack = true
+        prompt = client.call("prompt_attempt", selected.merge("expected_generation" => generation), mutation_id: "unknown-before-drain-loss",
+          upload_parts: ["controlled unknown original input"], purpose: :prompt_text, timeout: 30)
+        assert_equal "uncertain", prompt.data.fetch("outcome")
+        entered, release = Queue.new, Queue.new
+        native.before_drain_ack = -> { entered << true; release.pop }
+        current = @journal.authority_generation(@journal.read_events("assignment").select { |event| event["attempt_id"] == state.fetch("attempt_id") })
+        first = Thread.new do
+          client.call("close_execution_scope", selected.merge("expected_generation" => current), mutation_id: "seal-with-lost-drain-ack", timeout: 30)
+        end
+        entered.pop
+        observed = client.call("observe_execution_scope", selected).data
+        assert_equal "drain_original_prompt_issuer", observed.fetch("required_action")
+        channel = @authority.instance_variable_get(:@control_channels).values.find { |candidate| !candidate.closed? }
+        socket = channel.instance_variable_get(:@socket)
+        socket.close unless socket.closed?
+        first_reply = first.value
+        assert_equal "running", first_reply.data.fetch("state")
+        refute @journal.read_events("assignment").any? { |event| event["type"] == "input_inhibited" }
+        @kernel.dead << 91
+        release << true
+        limit = WIRE.deadline(30)
+        until @journal.read_events("assignment").any? { |event| event["type"] == "input_inhibited" }
+          raise "Known original drain ACK was not recovered" unless Process.clock_gettime(Process::CLOCK_MONOTONIC) < limit
+          sleep(0.01)
+        end
+        assert_equal 1, native.drain_calls.length
+        assert_equal 1, native.prompt_calls.length
+        assert_equal "uncertain", client.call("prompt_status", selected.merge("mutation_id" => "unknown-before-drain-loss")).data.fetch("outcome")
+        original_generation = @journal.prompt_intent("unknown-before-drain-loss").dig("payload", "binding", "expected_generation")
+        assert_equal prompt.data, client.call("prompt_attempt", selected.merge("expected_generation" => original_generation), mutation_id: "unknown-before-drain-loss",
+          upload_parts: ["controlled unknown original input"], purpose: :prompt_text, timeout: 30).data
+        current = @journal.authority_generation(@journal.read_events("assignment").select { |event| event["attempt_id"] == state.fetch("attempt_id") })
+        proof = client.call("close_execution_scope", selected.merge("expected_generation" => current), mutation_id: "fresh-proof-after-drain-recovery", timeout: 30)
+        assert_equal "closed_no_writers", proof.data.fetch("state")
+        assert_equal 1, native.drain_calls.length
+      ensure
+        release << true if release
+        first&.join(3)
       end
 
       def test_driver_never_repeats_creation_after_lost_response_and_reservation_replay

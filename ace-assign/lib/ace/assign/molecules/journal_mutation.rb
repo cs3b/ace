@@ -3,6 +3,7 @@
 require "json"
 require "digest"
 require_relative "journal_prompt_mutation"
+require_relative "journal_input_inhibition"
 
 module Ace
   module Assign
@@ -11,6 +12,7 @@ module Ace
       # Replies live in chained attempt events, rather than an RPC ledger.
       module JournalMutation
         include JournalPromptMutation
+        include JournalInputInhibition
         ID = /\A[a-zA-Z0-9][a-zA-Z0-9_.-]{0,127}\z/
 
         # Shared canonical projection used by admission and protected status.
@@ -31,12 +33,22 @@ module Ace
         # returns events [{type:, payload:}], immutable blobs, and public data.
         # Only the authority calls this internal journal API; wire requests
         # cannot select blob paths, event types, or accepted response data.
-        def mutate(assignment_id:, attempt_id:, mutation_id:, operation:, parameters_digest:, expected_generation:, with_replay: false, generation_mode: :expected, prompt_binding: nil, prompt_completion: nil, prompt_observation: nil)
+        def mutate(assignment_id:, attempt_id:, mutation_id:, operation:, parameters_digest:, expected_generation:, with_replay: false, generation_mode: :expected, prompt_binding: nil, prompt_completion: nil, prompt_observation: nil, input_inhibition: nil)
           unless (generation_mode == :expected && expected_generation.is_a?(Integer) && expected_generation >= 0) ||
               (generation_mode == :recorded_completion && operation == "complete_service" && expected_generation.nil?) ||
               (generation_mode == :prompt_completion && operation == "prompt_attempt" && expected_generation.nil? && prompt_completion.is_a?(Hash)) ||
-              (generation_mode == :prompt_observation && operation == "prompt_observation" && expected_generation.nil? && prompt_observation.is_a?(Hash))
+              (generation_mode == :prompt_observation && operation == "prompt_observation" && expected_generation.nil? && prompt_observation.is_a?(Hash)) ||
+              (generation_mode == :input_inhibition && operation == "input_inhibition_observation" && expected_generation.nil? && input_inhibition.is_a?(Hash))
             raise ArgumentError, "invalid fixed mutation generation mode"
+          end
+          if input_inhibition && generation_mode != :input_inhibition
+            raise ArgumentError, "Input inhibition requires its fixed mode"
+          end
+          if operation == "input_inhibition_observation" && !(generation_mode == :input_inhibition && input_inhibition)
+            raise ArgumentError, "Input inhibition observation requires its accepted original selector"
+          end
+          if mutation_id.is_a?(String) && mutation_id.start_with?("input-inhibit.") && !(operation == "input_inhibition_observation" && input_inhibition)
+            raise ArgumentError, "Reserved input inhibition namespace"
           end
           if prompt_completion && generation_mode != :prompt_completion
             raise ArgumentError, "prompt completion selector requires its fixed mode"
@@ -72,6 +84,8 @@ module Ace
                 assignment_id: assignment_id, attempt_id: attempt_id, commit: old) if prompt_completion
               verify_prompt_observation!(prompt_observation, mutation_id: mutation_id,
                 assignment_id: assignment_id, attempt_id: attempt_id, commit: old) if prompt_observation
+              verify_input_inhibition!(input_inhibition, mutation_id: mutation_id, digest: parameters_digest,
+                assignment_id: assignment_id, attempt_id: attempt_id, commit: old) if input_inhibition
               verify_prompt_mutation_namespace!(mutation_id: mutation_id, operation: operation, parameters_digest: parameters_digest,
                 assignment_id: assignment_id, attempt_id: attempt_id, prompt_completion: prompt_completion, prompt_observation: prompt_observation, commit: old)
               replay = mutation_result(mutation_id, commit: old)
@@ -85,7 +99,7 @@ module Ace
               end
               current = read_events(assignment_id, commit: old).select { |event| event["attempt_id"] == attempt_id }
               generation = authority_generation(current)
-              unless %i[recorded_completion prompt_completion prompt_observation].include?(generation_mode) || expected_generation == generation
+              unless %i[recorded_completion prompt_completion prompt_observation input_inhibition].include?(generation_mode) || expected_generation == generation
                 raise AttemptErrors::Conflict, "Authority registration generation changed"
               end
               plan = yield(current, old, generation)

@@ -27,7 +27,7 @@ module Ace
           "abort_launch" => %w[mapping_id assignment_id attempt_id launch_ticket failure_evidence failure_digest expected_generation]
         }.freeze
         TRANSFER_OPERATIONS = {"prompt_attempt" => {direction: :upload, purpose: :prompt_text, roles: %i[launcher supervisor]}}.freeze
-        OPERATIONS = (MUTATIONS.keys + %w[prompt_attempt prompt_status launch_prompt_intent launch_prompt_completion launch_preflight registration_status attempt_status inspect_launch observe_execution_scope close_execution_scope]).freeze
+        OPERATIONS = (MUTATIONS.keys + %w[prompt_attempt prompt_status launch_input_inhibit_selection launch_input_inhibit_completion launch_prompt_intent launch_prompt_completion launch_preflight registration_status attempt_status inspect_launch observe_execution_scope close_execution_scope]).freeze
         TERMINAL = %w[succeeded failed stopped].freeze
 
         attr_reader :mutex, :journals, :exclusions
@@ -71,6 +71,8 @@ module Ace
           operation, params = request.values_at("operation", "params")
           return prompt_attempt!(request: request, peer: peer, role: role, transfer: transfer) if operation == "prompt_attempt"
           return prompt_status!(request: request, peer: peer, role: role) if operation == "prompt_status"
+          return launch_input_inhibit_selection!(request: request, peer: peer, role: role) if operation == "launch_input_inhibit_selection"
+          return launch_input_inhibit_completion!(request: request, peer: peer, role: role) if operation == "launch_input_inhibit_completion"
           return launch_prompt_intent!(request: request, peer: peer, role: role) if operation == "launch_prompt_intent"
           return launch_prompt_completion!(request: request, peer: peer, role: role) if operation == "launch_prompt_completion"
           if operation == "observe_execution_scope"
@@ -883,3 +885,4 @@ require_relative "launch_scope_release"
 require_relative "launch_scope_parent"
 
 require_relative "launch_steering"
+require_relative "launch_input_inhibition"
