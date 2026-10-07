@@ -34,6 +34,8 @@ PATH
       ace-compressor (~> 0.25)
       ace-git (~> 0.24)
       ace-git-github (~> 0.2)
+      ace-herdr (~> 0.4)
+      ace-runtime (~> 0.2)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.18)
       ace-support-core (~> 0.32)
