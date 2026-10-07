@@ -83,10 +83,18 @@ class ServiceMergeBoundaryTest < AceGitTestCase
       end
       client = start_service_server
       phases = []
+      completion_call = nil
+      lost_reply_reached = false
       traced = Object.new
       traced.define_singleton_method(:call) do |name, params, **options|
         phases << name
-        client.call(name, params, **options)
+        response = client.call(name, params, **options)
+        if name == "complete_service"
+          completion_call = [params, options]
+          lost_reply_reached = true
+          raise Timeout::Error, "controlled lost reply after actual canonical completion"
+        end
+        response
       rescue StandardError, SecurityError => error
         phases << [name, error.class.name, error.message]
         raise
@@ -98,7 +106,8 @@ class ServiceMergeBoundaryTest < AceGitTestCase
             submission: submission, peer: @worker, input_bytes: bytes, mutation_id: "merge-original")
         end
       end
-      assert_equal "succeeded", result.fetch("state"), [result, phases].inspect
+      assert lost_reply_reached, "fault must follow the actual complete_service reply: #{[result, phases].inspect}"
+      assert_equal "uncertain", result.fetch("state"), [result, phases].inspect
       assert_equal 1, effects
       assert_equal 1, calls.count { |args| args[1] == "POST" }
       record = @journal.service_request(submission.fetch("request_id"))
@@ -108,6 +117,13 @@ class ServiceMergeBoundaryTest < AceGitTestCase
       assert_equal target, record.fetch("target")
       assert_equal "merge", record.fetch("operation")
       assert @journal.read_events("assignment").any? { |event| event["type"] == "service_transition" && event.dig("payload", "state") == "succeeded" }
+      before_replay = @journal.ref_value
+      replay = client.call("complete_service", completion_call.fetch(0), **completion_call.fetch(1))
+      assert replay.replayed
+      assert_equal "succeeded", replay.data.fetch("state")
+      assert_equal before_replay, @journal.ref_value, "identical completion replay cannot append another import or result"
+      assert_equal 1, effects
+      assert_equal 1, @journal.read_events("assignment").count { |event| event["type"] == "delivery" }
       @kernel.peer_identity = @worker
       worker_kernel = Ace::Assign::EndcapResultOwnerFixture::Kernel.new
       original_worker = @worker

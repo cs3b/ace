@@ -2,6 +2,7 @@
 require_relative "../../test_helper"
 require "ace/assign/authority/service_delivery_evidence"
 require "ace/assign/organisms/protected_delivery_coordinator"
+require "ace/assign/authority/endcap"
 
 class ServiceDeliveryEvidenceTest < AceAssignTestCase
   def test_pending_completion_reconstructs_original_input_without_any_journal_or_staging_read
@@ -66,6 +67,39 @@ class ServiceDeliveryEvidenceTest < AceAssignTestCase
     assert_raises(Ace::Assign::AttemptErrors::ReceiptRejected) { owner.perform(**selectors) }
     assert_equal 3, calls.length
     assert calls.all? { |operation, _| operation == "service_status" }
+  end
+
+  def test_cleanup_enrichment_uses_canonical_fresh_or_replayed_projection_without_an_extra_record_read
+    [false, true].product(%w[merge prune-preserved-workspace], %w[request_service begin_dispatch]).each do |replayed, operation, rpc|
+      reads, enrichments = 0, 0
+      record = {"operation" => operation, "input_digest" => "d" * 64, "target" => {"resource" => "fixture"}}
+      journal = Object.new
+      journal.define_singleton_method(:service_request) { |_| reads += 1; record }
+      journal.define_singleton_method(:mutate) do |**|
+        {data: {"operation" => operation, "journal_commit" => "c" * 40}, replayed: replayed}
+      end
+      launch = Object.new
+      launch.define_singleton_method(:with_assignment) { |**_, &block| block.call(journal, {}) }
+      policy = Object.new
+      policy.define_singleton_method(:input_binding) { |*, **| true }
+      policy.define_singleton_method(:visible!) { |**| true }
+      owner = Ace::Assign::Authority::Endcap.allocate
+      owner.instance_variable_set(:@launch, launch)
+      owner.define_singleton_method(:service_policy!) { policy }
+      %i[authorize_service_transfer! protected_journal! service_executor! service_ticket! service_replay_binding!].each do |method|
+        owner.define_singleton_method(method) { |*| true }
+      end
+      owner.define_singleton_method(:cleanup_service_mutation_event!) { |*| enrichments += 1; "e" * 64 }
+      transfer = Struct.new(:bytes) { def count; 1; end }.new("{}")
+      params = {"request_id" => "request", "assignment_id" => "assignment", "attempt_id" => "attempt", "expected_generation" => 1}.merge(record)
+      result = owner.send(:dispatch_service, {"operation" => rpc, "mutation_id" => "begin"}, params,
+        {"project_id" => "project", "worker_uid" => 13001}, {}, :executor, transfer)
+      assert_equal 2, reads, "only input and ticket admission read; CAS/replay remains a separate owner"
+      assert_equal operation == "prune-preserved-workspace" ? 1 : 0, enrichments
+      selector = rpc == "request_service" ? "request_event_digest" : "dispatch_event_digest"
+      assert_equal "e" * 64, result.fetch(:data).fetch(selector) if operation == "prune-preserved-workspace"
+      assert_equal "already_started", result.fetch(:data).fetch("invocation") if replayed && rpc == "begin_dispatch"
+    end
   end
 
   private

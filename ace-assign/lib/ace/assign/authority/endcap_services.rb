@@ -381,7 +381,7 @@ module Ace
               result = result.merge(data: data)
             end
             if %w[request_service begin_dispatch].include?(request.fetch("operation")) &&
-                journal.service_request(params.fetch("request_id")).fetch("operation") == "prune-preserved-workspace"
+                result.fetch(:data).fetch("operation") == "prune-preserved-workspace"
               selector = request.fetch("operation") == "request_service" ? "request_event_digest" : "dispatch_event_digest"
               digest = cleanup_service_mutation_event!(journal, request, params, result.fetch(:data).fetch("journal_commit"))
               result = result.merge(data: result.fetch(:data).merge(selector => digest))
