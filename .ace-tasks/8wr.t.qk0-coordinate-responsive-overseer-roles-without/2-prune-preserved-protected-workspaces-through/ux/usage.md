@@ -10,7 +10,7 @@ Expected: exact workspace/accepted head and original terminal/release/preservati
 
 ## Apply through the authorized owner
 
-`ace-overseer prune --project ace --agent old-builder --assignment ASSIGNMENT --attempt ATTEMPT --request prune-request.json --yes --mutation prune-001 --expected-generation 7`
+`ace-overseer prune --project ace --agent old-builder --assignment ASSIGNMENT --attempt ATTEMPT --request prune-request.json --yes --mutation prune-001 --expected-generation 7 --authorization APPROVAL_REF`
 
 The apply FILE is the complete bounded preview-result response defined by the amendment, including maintenance_context. The CLI validates its closed schema and exact target/publication/maintenance correlation, extracts the existing canonical service input `{schema,maintenance,target,publication,preservation}` and uses the persisted maintenance_context head/generation in the request. It never refreshes these selectors. Existing accepted review and service authorization are still required.
 
