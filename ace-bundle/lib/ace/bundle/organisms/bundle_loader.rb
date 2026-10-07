@@ -21,6 +21,7 @@ require_relative "pr_bundle_loader"
 require_relative "../models/bundle_data"
 require_relative "../atoms/content_checker"
 require_relative "../atoms/typo_detector"
+require_relative "../molecules/protected_task_context"
 
 module Ace
   module Bundle
@@ -986,19 +987,17 @@ module Ace
           # Process files
           if config["files"] && config["files"].any?
             # Resolve any protocol references (e.g., wfi://workflow-name)
-            resolved_files = config["files"].filter_map do |file_ref|
-              resolved = resolve_file_reference(file_ref)
-              if !resolved && @review_safe_mode
+            source_inputs = resolve_file_inputs(config["files"]) do |file_ref|
+              if @review_safe_mode
                 data[:errors] << "Unresolved file source: #{file_ref}"
               end
-              resolved
             end
+            resolved_files = source_inputs.filter_map { |entry| entry[:path] }
             missing_sources = missing_review_sources(resolved_files, base_dir: @options[:base_dir] || project_root,
               exclude: config["exclude"] || [])
             missing_sources.each do |pattern|
               data[:errors] << "Unmatched required file pattern: #{pattern}"
             end
-            resolved_files -= missing_sources
 
             aggregator = Ace::Core::Molecules::FileAggregator.new(
               max_size: config["max_size"] || @options[:max_size],
@@ -1008,15 +1007,7 @@ module Ace
               exclude: config["exclude"] || []
             )
 
-            # Check if any patterns contain glob characters
-            has_globs = resolved_files.any? { |f| f.include?("*") || f.include?("?") || f.include?("[") }
-
-            # Use aggregate for globs, aggregate_files for literal paths
-            result = if has_globs
-              aggregator.aggregate(resolved_files)
-            else
-              aggregator.aggregate_files(resolved_files)
-            end
+            result = aggregate_file_inputs(source_inputs, missing_sources, aggregator)
             data[:files] = result[:files]
             data[:errors].concat(result[:errors])
           end
@@ -1271,8 +1262,13 @@ module Ace
         end
 
         def load_protocol(protocol_ref)
+          if (text = protected_task_text(protocol_ref))
+            bundle = Models::BundleData.new(content: text, metadata: {protocol_ref: protocol_ref, protected_prepared: true})
+            bundle.source_files << {path: protocol_ref, content: text}
+            return bundle
+          end
           # Resolve protocol using ace-nav
-          resolved_path = resolve_protocol(protocol_ref)
+          resolved_path = resolve_protocol(protocol_ref, protected_checked: true)
 
           if resolved_path && File.exist?(resolved_path)
             # Load the resolved file
@@ -1287,7 +1283,10 @@ module Ace
           end
         end
 
-        def resolve_protocol(protocol_ref)
+        def resolve_protocol(protocol_ref, protected_checked: false)
+          if !protected_checked && protected_task_text(protocol_ref)
+            raise Ace::Bundle::Error, "Captured protected task context must be consumed as text, never a reopened pathname"
+          end
           require "ace/support/nav"
           engine = Ace::Support::Nav::Organisms::NavigationEngine.new
           if @review_safe_mode && engine.cmd_protocol?(protocol_ref.split("://", 2).first)
@@ -1317,16 +1316,61 @@ module Ace
           nil
         end
 
-        def resolve_file_reference(file_ref)
+        def protected_task_text(reference)
+          return nil unless reference.is_a?(String) && reference.start_with?("task://")
+          @protected_task_context ||= Molecules::ProtectedTaskContext.new
+          @protected_task_context.load(reference, options: @options)
+        end
+
+        def resolve_file_reference(file_ref, protected_checked: false)
           # Check if it's a protocol reference (contains ://)
           if file_ref.match?(/^[\w-]+:\/\//)
-            resolve_protocol(file_ref)
+            resolve_protocol(file_ref, protected_checked: protected_checked)
           elsif file_ref.start_with?("./") && @template_dir
             # Resolve ./ paths relative to the template file's directory
             File.join(@template_dir, file_ref)
           else
             # Regular file path or glob pattern (resolved from project root)
             file_ref
+          end
+        end
+
+        def resolve_file_inputs(references)
+          references.filter_map do |reference|
+            if (text = protected_task_text(reference))
+              {record: {path: reference, content: text}}
+            elsif (path = resolve_file_reference(reference, protected_checked: true))
+              {path: path}
+            else
+              yield reference if block_given?
+              nil
+            end
+          end
+        end
+
+        def aggregate_file_inputs(inputs, missing, aggregator)
+          paths = inputs.filter_map { |entry| entry[:path] } - missing
+          unless inputs.any? { |entry| entry[:record] }
+            return aggregate_paths(paths, aggregator)
+          end
+          # Retained protocol text enters the existing content record interface,
+          # without a temporary pathname. Preserve mixed source order.
+          inputs.each_with_object({files: [], errors: []}) do |entry, result|
+            if entry[:record]
+              result[:files] << entry.fetch(:record)
+            elsif !missing.include?(entry.fetch(:path))
+              part = aggregate_paths([entry.fetch(:path)], aggregator)
+              result[:files].concat(part.fetch(:files))
+              result[:errors].concat(part.fetch(:errors))
+            end
+          end
+        end
+
+        def aggregate_paths(paths, aggregator)
+          if paths.any? { |path| path.include?("*") || path.include?("?") || path.include?("[") }
+            aggregator.aggregate(paths)
+          else
+            aggregator.aggregate_files(paths)
           end
         end
 
@@ -1356,21 +1400,19 @@ module Ace
           return unless files.any?
 
           # Resolve any protocol references (e.g., wfi://workflow-name)
-          resolved_files = files.filter_map do |file_ref|
-            resolved = resolve_file_reference(file_ref)
-            if !resolved && @review_safe_mode
+          source_inputs = resolve_file_inputs(files) do |file_ref|
+            if @review_safe_mode
               bundle.metadata[:errors] ||= []
               bundle.metadata[:errors] << "Section '#{section_name}': unresolved file source: #{file_ref}"
             end
-            resolved
           end
+          resolved_files = source_inputs.filter_map { |entry| entry[:path] }
           missing_sources = missing_review_sources(resolved_files, base_dir: options[:base_dir] || project_root,
             exclude: section_data[:exclude] || section_data["exclude"] || [])
           missing_sources.each do |pattern|
             bundle.metadata[:errors] ||= []
             bundle.metadata[:errors] << "Section '#{section_name}': unmatched required file pattern: #{pattern}"
           end
-          resolved_files -= missing_sources
 
           aggregator = Ace::Core::Molecules::FileAggregator.new(
             max_size: options[:max_size] || options["max_size"],
@@ -1380,15 +1422,7 @@ module Ace
             exclude: section_data[:exclude] || section_data["exclude"] || []
           )
 
-          # Check if any patterns contain glob characters
-          has_globs = resolved_files.any? { |f| f.include?("*") || f.include?("?") || f.include?("[") }
-
-          # Use aggregate for globs, aggregate_files for literal paths to preserve order
-          result = if has_globs
-            aggregator.aggregate(resolved_files)
-          else
-            aggregator.aggregate_files(resolved_files)
-          end
+          result = aggregate_file_inputs(source_inputs, missing_sources, aggregator)
 
           # Store section files in section data
           section_data[:_processed_files] = result[:files]
@@ -1491,6 +1525,13 @@ module Ace
           files_in_content = bundle.source_files.any? &&
             (!bundle_config["embed_document_source"] || @section_processor.has_sections?({"bundle" => bundle_config}))
 
+          if (text = protected_task_text(base_ref))
+            bundle.content = [text, (bundle.content if files_in_content)].compact.join("\n\n")
+            bundle.metadata.merge!(base_ref: base_ref, base_type: "protected_prepared")
+            bundle.source_files << {path: base_ref, content: text}
+            return
+          end
+
           # Check if base_ref looks like a file reference (has protocol, slashes, or is a known path pattern)
           # This heuristic helps prioritize file resolution for extension-less files
           has_protocol = base_ref.match?(/^[\w-]+:\/\//)
@@ -1499,7 +1540,7 @@ module Ace
             (@review_safe_mode && base_ref.match?(/\.(?:md|markdown|txt|json|ya?ml)\z/i))
 
           # Try to resolve as file reference first (handles extension-less files like README, CONTEXT)
-          resolved_path = resolve_file_reference(base_ref)
+          resolved_path = resolve_file_reference(base_ref, protected_checked: true)
 
           # Check if we successfully resolved to an existing file
           if resolved_path && File.exist?(resolved_path)

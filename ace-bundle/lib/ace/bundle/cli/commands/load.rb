@@ -79,6 +79,9 @@ module Ace
           # Resource limits
           option :max_size, type: :integer, desc: "Maximum file size in bytes"
           option :timeout, type: :integer, desc: "Command timeout in seconds"
+          option :mapping, type: :string, desc: "Original protected mapping for captured task context"
+          option :assignment, type: :string, desc: "Original protected assignment ID@SCOPE"
+          option :attempt, type: :string, desc: "Original protected attempt for captured task context"
 
           # Standard options (inherited from Base but need explicit definition for ace-support-cli)
           option :version, type: :boolean, desc: "Show version information"
