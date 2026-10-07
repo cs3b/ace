@@ -52,6 +52,22 @@ Root separately reviewed the exact admission-proof repair: fresh held bytes and
 definition checks remain mandatory, and only the last successful exact proof is
 reused within one owner. These approvals and focused tests do not close qk0.
 
+### Public steering integration checkpoint — 2026-10-07
+
+Independent reviewer `audit_runtime_delivery_status` approved source commits
+`01ceb76dd`, `6f382c57f`, `c7fb2607e`, `191f64ddb`, `fb8a45b86`.
+They are integrated through `4f7298284`, synchronized to origin and fg.
+This supersedes the earlier open steering/terminal/legacy-removal entries above:
+lost prompt reply, changed replay refusal, authenticated terminal/release,
+immutable original stop replay and obsolete Lab forwarding removal are delivered
+as bounded source checkpoints. Worker consumption, alternate-principal negatives,
+independent delivery composition and domain charter adoption remain open.
+
+Combined main verification: `protected_work_on_composition_test.rb:230`,
+1 test / 52 assertions, zero failures/errors, 43.95s;
+receipt `bcef5384-a984-48a9-9fe1-94e7009d7a1e`.
+No parent completion or installed acceptance is claimed.
+
 ## Delivered source and foundation
 
 - [x] 1w2/tp0 — hermetic source testing foundation and tracked repairs.
