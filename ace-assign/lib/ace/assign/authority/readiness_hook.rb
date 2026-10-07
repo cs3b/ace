@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+require "ace/runtime/molecules/execution_network_selection"
 require "socket"
 require_relative "../errors"
 require "ace/runtime/molecules/readiness_configuration"
@@ -79,6 +80,7 @@ module Ace
                 manifest["resources"].is_a?(Array) && manifest["resources"].size.between?(1, 64)
               raise AttemptErrors::EvidenceUnavailable, "readiness boundary shape differs"
             end
+            Ace::Runtime::Molecules::ExecutionNetworkSelection.validate_static!(manifest.fetch("network_installation"), slot_id: config.fetch("slot_id"))
             manifest.fetch("resources").each do |entry|
               paths = entry.is_a?(Hash) ? entry.values_at("host_path", "view_path") : []
               unless entry.is_a?(Hash) && entry.keys.sort == %w[host_path read_only stage view_path worker_visible] &&

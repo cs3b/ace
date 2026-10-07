@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+require_relative "execution_network_selection"
 
 require "json"
 require "digest"
@@ -319,6 +320,7 @@ module Ace
             raise RuntimeUnavailableError, "boundary lifecycle topology differs"
           end
           entries = boundary.fetch("resources")
+          ExecutionNetworkSelection.validate_static!(boundary.fetch("network_installation"), slot_id: @scope.fetch("slot_id"))
           entries.each do |entry|
             unless entry.is_a?(Hash) && entry.keys.sort == %w[host_path read_only stage view_path worker_visible] &&
                 path?(entry["host_path"]) && path?(entry["view_path"]) && %w[parent native].include?(entry["stage"]) &&

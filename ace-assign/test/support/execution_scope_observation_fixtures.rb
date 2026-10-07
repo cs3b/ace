@@ -45,6 +45,15 @@ module Ace
         end
       end
       NETWORK_SELECTION = %w[profile policy_export report installer_artifact].to_h { |key| [key, {"path" => "/etc/ace/network/#{key}", "sha256" => "c" * 64, "bytes" => 1}] }.freeze
+      NETWORK_STATIC = NETWORK_SELECTION.slice("profile", "installer_artifact").merge("current_selection_path" => "/etc/ace/execution-slots/slot/network-installation-selection.json").freeze
+      class NetworkSelection
+        attr_accessor :selection
+        def initialize; @selection = NETWORK_SELECTION; end
+        def select!(static_selection:, slot_id:)
+          Ace::Runtime::Molecules::ExecutionNetworkSelection.validate_static!(static_selection, slot_id: slot_id)
+          selection
+        end
+      end
       NETWORK_OUTPUT = {"report_id" => BOOT, "boot_id" => BOOT, "slot_id" => "slot", "namespace_path" => "/run/netns/slot",
         "namespace_identity" => {"device" => 7, "inode" => 88}, "profile_sha256" => "c" * 64,
         "policy_export_sha256" => "c" * 64, "report_sha256" => "c" * 64, "installer_artifact_sha256" => "c" * 64}.freeze
@@ -54,7 +63,7 @@ module Ace
           @network = {"device" => 7, "inode" => 88}
           @namespace = {"device" => 4, "inode" => 77}
           @resource = {"device" => 8, "inode" => 99, "uid" => 13001, "gid" => 13001, "filesystem_type" => "ext4", "mount_id" => 23}
-          @manifest = {"schema" => Authority::ExecutionScopeObservation::BOUNDARY_SCHEMA, "slot_id" => "slot", "network_installation" => NETWORK_SELECTION, "resources" => [
+          @manifest = {"schema" => Authority::ExecutionScopeObservation::BOUNDARY_SCHEMA, "slot_id" => "slot", "network_installation" => NETWORK_STATIC, "resources" => [
             {"host_path" => "/private", "view_path" => "/host-private", "stage" => "parent", "worker_visible" => false, "read_only" => true},
             {"host_path" => "/private/scratch", "view_path" => "/scratch", "stage" => "parent", "worker_visible" => true, "read_only" => false},
             {"host_path" => "/run/slot/native", "view_path" => "/run/slot/native", "stage" => "native", "worker_visible" => true, "read_only" => false}]}

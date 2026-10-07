@@ -3,6 +3,7 @@
 require "json"
 require "etc"
 require "ace/assign"
+require_relative "../atoms/protected_workspace_prune_input"
 
 module Ace
   module Lab
@@ -16,11 +17,15 @@ module Ace
           @document_loader = document_loader || -> { GrantResolver.trusted_document(Ace::Lab.authorization_path) }
         end
 
-        def input_binding(bytes, expected_digest:, expected_target:)
+        def input_binding(bytes, expected_digest:, expected_target:, operation:)
           unless bytes.is_a?(String) && bytes.bytesize.between?(1, Atoms::ServiceInput::MAX_BYTES)
             raise ArgumentError, "structured service input exceeds its fixed limit"
           end
-          input = JSON.parse(bytes)
+          input = if operation == "prune-preserved-workspace"
+            Atoms::ProtectedWorkspacePruneInput.parse(bytes)
+          else
+            JSON.parse(bytes)
+          end
           raise ArgumentError, "structured service input must be an object" unless input.is_a?(Hash)
           Atoms::ServiceInput.validate!(input)
           digest = Atoms::ServiceInput.digest(input)
@@ -34,7 +39,8 @@ module Ace
         end
 
         def prepare!(binding, input_bytes:)
-          input = input_binding(input_bytes, expected_digest: binding.fetch("input_digest"), expected_target: binding.fetch("target"))
+          input = input_binding(input_bytes, expected_digest: binding.fetch("input_digest"),
+            expected_target: binding.fetch("target"), operation: binding.fetch("operation"))
           authorized = authorize!(binding)
           canonical = snapshot(binding).merge("executor_uid" => authorized.fetch(:operation).fetch("executor_uid"), "transport" => "unix")
           deep_freeze(authorized.merge(binding: canonical, input: input.fetch(:input)))

@@ -223,7 +223,8 @@ module Ace
           launch.define_singleton_method(:with_assignment) { |**_, &block| block.call(journal, {}) }
           policy = Object.new
           policy.define_singleton_method(:visible!) { |**_| true }
-          policy.define_singleton_method(:input_binding) do |bytes, expected_digest:, expected_target:|
+          policy.define_singleton_method(:input_binding) do |bytes, expected_digest:, expected_target:, operation:|
+            raise "wrong original operation" unless operation == "publish"
             raise SecurityError, "input differs" unless bytes == "unused exact replay input" && expected_digest == "a" * 64 && expected_target == {"resource" => "fixture"}
           end
           input = Object.new

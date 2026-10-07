@@ -8,4 +8,10 @@ This is artifact foundation only: actual managed producer/root/fork/job semantic
 
 CLI protocol boundary proposal is protocol-cli-boundary.md. Dedicated closed bounded command/output direction approved by root; exact selected executable owner extension remains source-review pending before Bundle bridge code. Test responsibility map is test-plan.md; JIT plan remains ephemeral .ace-local/plans/qk0.3/implementation-plan.md.
 
-Independent review convergence: n0n APPROVE exact840f1e9974f93e0cf6cd815e78b59e4279690246, after blockers in098f00b47 on decoded YAML key collisions and recursive nesting were repaired bye876ae4bc/840f1e997. Final controlledPASS18tests160assertions4.62s, report9883ebde-b764-425f-9c91-984b01250f6b. Supported source YAML contract is one document/no aliases/ASTdepth32, unique decoded String keys, valid nonNUL strings, finite numerics and maintained scalar timestamp types. No reviewer probes/tests were run; author receipts remain distinct.
+## Independent convergence and integration
+
+Independent reviewer wave_n0n rejected initial `098f00b47` for decoded YAML key collisions and unbounded recursive nesting. Successors `e876ae4bc` and `840f1e9974f93e0cf6cd815e78b59e4279690246` enforce decoded string keys, single-document YAML, iterative AST depth at most 32, supported decoded values and finite floats; alias and malformed encoding refusal remains. Controlled regressions cover `true`/`TRUE`, `1`/`01`, explicit integer keys, depth 100, multiple documents and nonfinite values. Reviewer independently reread both fixes and returned APPROVE for the artifact foundation only.
+
+Root inspected the repaired source and executed all three selected files (prepared_work_test, prepared_work_transfer_test, candidate_transfer_test) on the integration tree: **18 tests / 160 assertions, zero failures/errors**, 4.5s, report `4d773d17-8240-42b9-8b8c-46888282d603`. Integrated source commits `f3949a0f7`, `f6fa50cee`, `c13a9ccb4`, `cc9c666f5`. Public registration, fetch, worker and context consumption remain required; all task success criteria remain unchecked.
+
+Author's final controlled run: **18 tests / 160 assertions**, 4.62s, report `9883ebde-b764-425f-9c91-984b01250f6b`. The independent subagent reviewer ran no tests or probes; root's integration run is recorded separately above. Maintained scalar timestamp types remain supported.

@@ -18,6 +18,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- Resolve current network installation evidence through a fixed protected slot selection while retaining immutable static profile/producer intent and original historical references.
+
 - Expose a scoped authenticated read-only duplicate of a retained artifact for exact inode handoff; verify before and after callbacks and close on every exit.
 
 - Allow trusted installer code to select a bounded artifact count through `ProtectedArtifactSet.new(count_limit:)`; ordinary callers retain the 256-artifact default and both read interfaces enforce the same budget.

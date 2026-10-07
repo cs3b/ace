@@ -25,7 +25,7 @@ The Captain continues talking while a provisioned project-overseer delegates rev
 ### Expected Behavior
 
 - Deliver the three canonical generic role charters named in `../coordinator-source-contract.md`; domain consumers adopt them. Captain remains human decision owner. Selecting a charter is not OS authorization; ordinary or supervisor-only overseer cannot acquire another UID/native socket through config.
-- Fresh protected work retains/reports the qk0.3 compact definition/selection and exclusive exact prepared bundle before any authority mutation or child start; consumes its registration/release/FD/adapter API rather than reconstructing current inputs. Missing local bundle blocks fresh launch; read-only recovery reports local artifact availability separately from canonical attribution.
+- Fresh protected work retains/reports the qk0.3 compact definition/selection and exclusive exact prepared bundle before any authority mutation or child start; consumes its registration/release and original-association `evidence_fetch`/adapter API rather than reconstructing current inputs. No inherited prepared-input FD is required or accepted as the capability. Missing local bundle blocks fresh launch; read-only recovery reports local artifact availability separately from canonical attribution.
 - Actual mapped launcher-role credentials retain the maintained foreground CLI child and exact bounded ready-frame/canonical binding. No detach, replacement PID or automatic prompt resend. Missing readiness/lost reply preserves original identity for owner reconciliation.
 - Consume delivered prompt_attempt, prompt_status and stop_attempt. Submitted means full text + Enter to the unchanged original attempt terminal, not consumption/exclusive provider PID. Unknown outcome stays unknown after writer drain; terminal/release is required for accepted child exit/display cleanup.
 - Respect authoritative installed slot capacity and four actual panes per tab. Literal explicit agent never substitutes; automatic order advances only after attributable zero-effect refusal. Protected mode uses Herdr; unsupported protected tmux refuses before allocation, ordinary local tmux remains valid.
@@ -42,6 +42,10 @@ Existing qk0 work-on/status/prompt/stop/review forms and exact ready-frame, role
 - [ ] SC1: Controlled actual overseer → maintained original CLI/Driver → real authority composition exercises actual reviewed leaf preparation and qk0.3 artifact admission/scoped worker consumption, pre-effect identity under --quiet, readiness, responsive steering, immutable prompt replay/status, stop, released terminal exit, independent review and exact merge receipt. No LabClient/native probe.
 - [ ] SC2: Dead requester, absent/foreign/oversized/late ready, replaced original, transport loss, unknown acknowledgment, overlapping UID privilege, busy slots/panes, changed scope/head, local prepared-bundle loss/corruption, changed task/dependency/step input after selection and reviewer=author remain accurate with no second launch/resend.
 - [ ] SC3: Stalled/noisy/malformed HITL resolver reaches deadline while status/instructions remain usable; coalesced wakes and approve/veto/clarify/supersession preserve existing owner semantics. Fresh consumer loads all canonical charters; executed permitted deterministic suites + independent review gate source delivery.
+
+### Decomposition
+
+Child qk0.1.0 delivers exact candidate independent review through original Driver delegation and maintained Endcap acceptance, a distinct observable missing source capability. This parent delivers the remaining responsive launch/prompt/stop/role/proposal composition and consumes that child. Both remain draft until child and whole contracts independently converge; no hidden review broker or acceptance owner.
 
 ### Scope and Ownership
 

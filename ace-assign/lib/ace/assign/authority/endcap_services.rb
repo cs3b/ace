@@ -248,7 +248,7 @@ module Ace
               # Only body binding is checked here; current effect policy stays
               # inside each fresh CAS callback.
               service_policy!.input_binding(admitted, expected_digest: input_record.fetch("input_digest"),
-                expected_target: input_record.fetch("target"))
+                expected_target: input_record.fetch("target"), operation: input_record.fetch("operation"))
             end
             # Admission also runs outside mutate: an exact mutation replay
             # skips its callback and cannot bypass the authenticated ticket.

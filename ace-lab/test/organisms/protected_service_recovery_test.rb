@@ -38,8 +38,8 @@ class ProtectedServiceRecoveryTest < Minitest::Test
     @body = JSON.generate("target" => {"resource" => "fixture"})
     digest = Ace::Lab::Atoms::ServiceInput.digest(JSON.parse(@body))
     target = Ace::Lab::Atoms::ServiceInput.target(JSON.parse(@body))
-    @policy.define_singleton_method(:input_binding) do |bytes, expected_digest:, expected_target:|
-      raise "changed original input" unless bytes == @original_body && expected_digest == @original_digest && expected_target == @original_target
+    @policy.define_singleton_method(:input_binding) do |bytes, expected_digest:, expected_target:, operation:|
+      raise "changed original input" unless bytes == @original_body && expected_digest == @original_digest && expected_target == @original_target && operation == "publish"
     end
     @policy.instance_variable_set(:@original_body, @body)
     @policy.instance_variable_set(:@original_digest, digest)
