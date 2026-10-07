@@ -24,3 +24,17 @@ The actual CLI fixture also proves restarted current launcher metadata discovery
 Retained failures: `bf90c957-78a1-409a-97aa-c8399dde17b0` exposed ownership filtering before complete history proof; corrected by the separately integrated index owner. `d7bac302-8ad9-4be1-be3c-9589adcd1f56` and `21f86ab0-2c07-4909-9bd6-8bbc373b65a8` were new rotation fixture mistakes (per-attempt helper added fields to closed inventory request; assertion selected release by type instead of actual transition operation). Both were fixed in fixture only. Frame fixture invalid large task/definition IDs and pre-batching timeout receipts remain in prior source history; no owner input bounds or timeouts were loosened.
 
 SC3 oversized-single-row producer branch is defensive: valid managed token bounds keep one ordinary row below 16KiB, so no fabricated invalid canonical registration is claimed as a valid oversized-row test. Many genuine rows prove frame truncation. Final review should assess this unreachable-input distinction explicitly before child completion. Only inspected deterministic selections ran under the existing no-native/root/systemd/PTY/installed probe restriction; no default/unfiltered suite claim.
+
+## Independent final source review and combined integration
+
+Root **APPROVE qk0.0 source delivery** at author revision `abbf14376d2061241df9eaf08547f46279df31af`, integrated as `24db0193f`. Read the complete Inventory owner, shared terminal/release verification extraction, Client/Server framing, public topology/protected Deployment join, actual status consumer and regression assertions. Original release/terminal proofs remain in their existing owners; no maintenance privilege or native execution is inferred from discovery. No actionable finding remains in this source slice.
+
+On the combined integration tree, root executed:
+- `bin/ace-test ace-overseer ace-overseer/test/fast/commands/status_command_test.rb ace-overseer/test/fast/commands/status_proposal_recovery_test.rb ace-overseer/test/fast/organisms/protected_status_test.rb --timeout 180`: **17 tests/58 assertions PASS**, receipt `818f1f40-d770-4baf-96d3-fca2883c9e34`.
+- `bin/ace-test ace-assign ace-assign/test/feat/authority/historical_rotation_test.rb:484 --timeout 180`: actual Server **1 test/21 assertions PASS**, receipt `816dd7eb-4af2-4d94-9488-e9c4cdcc45c6`.
+
+Author executed actual CLI/terminal/release, rotation and large-page tests above against the same executable consumer sources. Root's earlier complete index run is independently retained. These are selected deterministic tests under current execution restrictions, not an unfiltered suite or installed acceptance.
+
+SC3 clarification: valid task and assignment selectors are token-bounded by maintained admission (`with_assignment` validates task before registration). Every legal single row fits the fixed frame; genuine maximum-token multirow pages exercise the actual shortening boundary. The oversized-one-row refusal is defensive for an unreachable valid-input case and does not require fabricating an invalid accepted registration. This source review accepts that bounded-input proof plus actual frame/continuation verification; no oversized valid-row test is claimed.
+
+SC1–SC3 source outcomes are accepted. qk0.0 may be done; parent qk0 and its launcher/prepared-input/prune children remain incomplete. gad.2 remains the sole installed acceptance gate.
