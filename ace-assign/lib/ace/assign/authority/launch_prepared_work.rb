@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+require_relative "../atoms/evidence_digest"
 
 module Ace
   module Assign
@@ -85,7 +86,7 @@ module Ace
             original_binding_digest: original.fetch("binding_digest"), commit: commit)
           pin = compact_prepared_input(projection)
           if phase == :issued
-            unless releases.first.dig("payload", "data", "prepared_input") == pin
+            unless Atoms::EvidenceDigest.digest(releases.first.dig("payload", "data", "prepared_input")) == Atoms::EvidenceDigest.digest(pin)
               raise AttemptErrors::EvidenceUnavailable, "accepted prepared release differs"
             end
           else

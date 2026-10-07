@@ -181,6 +181,9 @@ module Ace
             release = inventory.fetch("events").fetch("assignment").find { |event| event.dig("payload", "operation") == "release_launch" }
             if bad == :missing
               release.fetch("payload").fetch("data").delete("prepared_input")
+            elsif bad == :float
+              pin = release.fetch("payload").fetch("data").fetch("prepared_input")
+              pin["registration_generation"] = pin.fetch("registration_generation").to_f
             else
               release.fetch("payload").fetch("data").fetch("prepared_input")["bundle_sha256"] = "f" * 64
             end
@@ -195,6 +198,8 @@ module Ace
           before = @journal.ref_value
           assert_raises(AttemptErrors::EvidenceUnavailable) { prepared_fetch }
           bad = :changed
+          assert_raises(AttemptErrors::EvidenceUnavailable) { prepared_fetch }
+          bad = :float
           assert_raises(AttemptErrors::EvidenceUnavailable) { prepared_fetch }
           assert_equal 0, bundle_reads
           assert_equal before, @journal.ref_value

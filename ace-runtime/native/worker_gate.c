@@ -196,8 +196,8 @@ static json_object *receive(int fd,double deadline) {
   deny("authority frame oversized"); return NULL;
 }
 int main(int argc,char **argv) {
-  struct parent_identity parent={.pid=getppid()};
-  parent_birth(parent.pid,parent.birth);same_parent(&parent);
+  struct parent_identity original_parent={.pid=getppid()};
+  parent_birth(original_parent.pid,original_parent.birth);same_parent(&original_parent);
   if(prctl(PR_SET_DUMPABLE,0,0,0,0))deny("non-dumpable gate unavailable");
   if(argc!=3||!token(argv[1])||!token(argv[2]))deny("expected fixed mapping and correlation ticket");
   policy();root_path(MAP_PATH,0);char *bytes=read_file(MAP_PATH,LIMIT);
@@ -210,7 +210,7 @@ int main(int argc,char **argv) {
   int worker=number(mapping,"worker_uid"),launcher=number(mapping,"launcher_uid"),authority=number(service,"uid");
   if(worker==launcher||worker==authority||authority==launcher)deny("principals are not distinct");
   credentials(getpid(),worker,number(mapping,"worker_gid"),field(mapping,"worker_groups",json_type_array));
-  parent_credentials(&parent,mapping);
+  parent_credentials(&original_parent,mapping);
   const char *bootstrap=str(mapping,"bootstrap");root_path(bootstrap,0);
   struct stat installed,self;
   if(stat(bootstrap,&installed)||stat("/proc/self/exe",&self)||installed.st_dev!=self.st_dev||installed.st_ino!=self.st_ino||
@@ -237,7 +237,7 @@ int main(int argc,char **argv) {
   json_object_object_add(request,"version",json_object_new_int(1));json_object_object_add(request,"operation",json_object_new_string("gate_ready"));
   json_object_object_add(request,"mutation_id",NULL);json_object_object_add(request,"project_id",json_object_new_string(str(mapping,"project_id")));
   json_object_object_add(params,"mapping_id",json_object_new_string(argv[1]));json_object_object_add(params,"launch_ticket",json_object_new_string(argv[2]));
-  json_object_object_add(request,"params",params);parent_credentials(&parent,mapping);send_frame(fd,request,deadline);json_object_put(request);
+  json_object_object_add(request,"params",params);parent_credentials(&original_parent,mapping);send_frame(fd,request,deadline);json_object_put(request);
   json_object *ready=receive(fd,deadline);
   if(strcmp(str(ready,"status"),"ok")||strcmp(str(field(ready,"data",json_type_object),"phase"),"ready"))deny("gate not admitted");
   json_object_put(ready);
@@ -246,7 +246,7 @@ int main(int argc,char **argv) {
     !token(str(permission,"attempt_id"))||!token(str(permission,"assignment_id"))||!token(str(permission,"journal_commit")))deny("release permission differs");
   if(json_object_get_int64(field(permission,"generation",json_type_int))<1)deny("invalid release generation");
   prepared_permission(permission);
-  policy();parent_credentials(&parent,mapping);credentials(peer.pid,authority,number(service,"gid"),field(service,"groups",json_type_array));
+  policy();parent_credentials(&original_parent,mapping);credentials(peer.pid,authority,number(service,"gid"),field(service,"groups",json_type_array));
   json_object *arguments=field(mapping,"worker_argv",json_type_array);size_t count=json_object_array_length(arguments);
   if(count!=3)deny("invalid fixed payload");
   char **payload=calloc(count+1,sizeof(char *));if(!payload)deny("allocation failed");
@@ -264,6 +264,6 @@ int main(int argc,char **argv) {
     setenv("ACE_ASSIGN_LAUNCH_MAPPING",argv[1],1))deny("authority context unavailable");
   if(chdir(str(mapping,"worker_cwd")))deny("fixed worker directory unavailable");
   close(fd);
-  parent_credentials(&parent,mapping);
+  parent_credentials(&original_parent,mapping);
   execv(payload[0],payload);deny("fixed worker execution failed");
 }
