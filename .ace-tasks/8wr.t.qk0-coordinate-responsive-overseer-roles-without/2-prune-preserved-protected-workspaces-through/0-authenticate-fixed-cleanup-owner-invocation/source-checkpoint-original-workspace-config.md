@@ -11,3 +11,11 @@ Final executed controlled gates:
 - Actual released maintenance transaction with different successor repository/config: PASS1/66,27.07531s,6a8f01c4-4c02-426c-b094-5d055a558b7f. Exact source selector deployment_test.rb:110, raw name test_original_release_maintenance_candidate_publication_and_fresh_normal_reservation,seed22866. Original repo/config differ from candidate; accessor retains original values, complete declarations/identities and frozen nested evidence. Literal config paths are nonexistent, proving no generic config parsing. Existing original release/history/auth/context/ref guards and fresh reservation remain exercised. Earlier same-target1/64 PASS4e5d2532 preceded successor-distinction assertions and is intermediate evidence only.
 
 No native/root/systemd/installed probes or broad/default suite. This export is evidence inside existing live maintenance contexts, not physical cleanup permission after context exit. Same-Installer config parsing, Git/preservation preview/removal/inspection and direct entry publication remain wave412 source delivery. Independent frozen source review and integration are pending; no task/SC closure.
+
+Independent root review accepted source `1408fa25a`: the optional atomic pair
+is validated without interpreting Lab configuration; the held historical owner
+exports original declarations and matching identities with final reference checks.
+The distinct-successor regression proves current configuration is not substituted.
+Integrated through `289567277`; main schema check 1 test / 11 assertions PASS,
+receipt `6b918a2b-c895-48c6-b643-4bcfcdf89fbc`. This remains a source accessor
+checkpoint, not physical cleanup acceptance.
