@@ -1,0 +1,11 @@
+# Review receipt import interruption coverage
+
+Test-only successor to independently approved f3a366b67 ProtectedReview source. Actual Client/Server/TransferCodec/canonical receipt import and journal acceptance run against the controlled EndcapResultOwnerFixture. Installed/protection/identity/native boundaries remain injected. Existing original review channel is controlled; actual full Driver/ReviewManager composition is covered separately by 4db5285c and merged a0accaaf. This test does not replace that evidence or claim native/installed acceptance.
+
+Exact command: `bin/ace-test ace-assign feat test/feat/authority/review_import_interruption_test.rb:10 --timeout 180`. Terminal exit0: **1 test / 38 assertions PASS**,45.72s, receipt `fa39d4c2-34b6-46b9-8d71-e12e015a7dcf`. The named selection excludes inherited review_request tests loaded for its fixture helpers.
+
+Three actual reached fault stages: before review import_plan; after actual import_plan computes verified pending events/blobs but before CAS; after actual committed acceptance at Server response write (socket closes without success reply). Both pre-CAS cases preserve the canonical ref and publish no import/approval. Postcommit reply loss leaves an observable accepted event; the exact original acceptance mutation replays without advancing the ref, and existing approved_review! revalidates canonical imported report bytes/receipt. All stages preserve original first reply and request identity; public request replay performs no second delegation. Each asserts its injected fault was reached, avoiding false success from an earlier refusal. No production changes.
+
+Retained terminal failures: initial `--timeout180` CLI spelling refused before tests. `f6f3312d`1/11 error14.83s: controlled fake channel lacked close when actual Server shut down; added its fixture close only. `e74691fb`1/26 failure43.27s: lost reply correctly raised maintained RuntimeUnavailableError rather than the fixture's assumed Assign/IO error family. Assertion now checks that exact expected class for lost reply and EvidenceUnavailable for pre-CAS faults; product behavior unchanged. Final receipt above supersedes these failures.
+
+Independent test/source review pending. Whole-child SC closure remains separate; no task status/criteria changed here.
