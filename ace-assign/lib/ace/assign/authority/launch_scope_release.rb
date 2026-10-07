@@ -256,11 +256,27 @@ module Ace
           raise AttemptErrors::EvidenceUnavailable, "maintenance original identity is incomplete"
         end
 
+        # Only immutable Git introduction verification is shared within one
+        # held slot operation. Current records, keys, inventory, closure and
+        # canonical ref checks remain fresh on every eligibility query.
+        def historical_event_commit!(journal, assignment_id:, event_digest:, commit:)
+          memo = Thread.current[:ace_assign_history_operations]&.[](object_id)
+          held = Thread.current[:ace_assign_scope_exclusions]&.keys&.any? { |key| key.first == object_id }
+          unless memo && held && journal.evidence_mode == :protected
+            raise AttemptErrors::EvidenceUnavailable, "historical prefix requires its held protected operation"
+          end
+          identity = [journal.object_id, journal.repo_root, journal.ref, journal.checkout_root,
+            commit, assignment_id, event_digest].map { |value| value.is_a?(String) ? value.dup.freeze : value }.freeze
+          memo.fetch(identity) do
+            memo[identity] = journal.event_commit!(assignment_id: assignment_id, event_digest: event_digest, commit: commit).dup.freeze
+          end
+        end
+
         def maintenance_released_lineage!(journal, commit, assignment_id, attempt_id, events, original, map)
           releases = events.select { |event| event["type"] == "authority_mutation" && event.dig("payload", "operation") == "scope_reservation_release" }
           raise AttemptErrors::EvidenceUnavailable, "maintenance reservation lacks unique release" unless releases.one?
           release = releases.first
-          prefix_commit = journal.event_commit!(assignment_id: assignment_id, event_digest: release.fetch("digest"), commit: commit)
+          prefix_commit = historical_event_commit!(journal, assignment_id: assignment_id, event_digest: release.fetch("digest"), commit: commit)
           prefix = journal.read_events(assignment_id, commit: prefix_commit).select { |event| event["attempt_id"] == attempt_id }
           unless prefix == events.take(events.index(release) + 1) && events.last == release
             raise AttemptErrors::EvidenceUnavailable, "post-release canonical work or release prefix differs"
@@ -327,7 +343,7 @@ module Ace
             end
             journal.service_request(record.fetch("request_id"), commit: commit)
             release = entry[2].find { |event| event.dig("payload", "operation") == "scope_reservation_release" }
-            prefix = journal.event_commit!(assignment_id: entry.first, event_digest: release.fetch("digest"), commit: commit)
+            prefix = historical_event_commit!(journal, assignment_id: entry.first, event_digest: release.fetch("digest"), commit: commit)
             unless journal.service_request(record.fetch("request_id"), commit: prefix) == record
               raise AttemptErrors::EvidenceUnavailable, "current service request changed after release"
             end

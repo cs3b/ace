@@ -74,6 +74,7 @@ module Ace
           deployment.define_singleton_method(:mapping) { |_id| map }
           deployment.define_singleton_method(:authority) { |_id| {"state_root" => File.join(cache, "state")} }
           deployment.define_singleton_method(:project) { |_id| {"inbox_contexts" => {}} }
+          deployment.define_singleton_method(:artifact_reference) { {"sha256" => "d" * 64} }
           @observer = Observer.new
           @owner = Authority::LaunchLifecycle.new(deployment: deployment, kernel: Kernel.new,
             journals: {"project" => @journal}, scope_observer_factory: ->(_id) { @observer })
@@ -83,7 +84,7 @@ module Ace
             "mapping_id" => "mapping", "reservation_generation" => 1, "phase" => "reserved",
             "launcher_identity" => @peer, "launch_ticket" => "ticket"}
           mutate("attempt", "reserve", "reserve_attempt", 0, [{type: "intent", payload: {"scope" => "010"}},
-            {type: "scope_provisioning", payload: {"slot_id" => "slot", "reservation_generation" => 1, "deployment_digest" => "a" * 64}}], @state)
+            {type: "scope_provisioning", payload: {"slot_id" => "slot", "reservation_generation" => 1, "deployment_digest" => "a" * 64, "descriptor_sha256" => "d" * 64}}], @state)
           binding = @state.slice("project_id", "assignment_id", "attempt_id", "mapping_id", "reservation_generation").merge(
             "slot_id" => "slot", "scope_generation" => 2, "deployment_digest" => "a" * 64, "boot_id" => BOOT,
             "slice_invocation_id" => "b" * 32, "resource_mount_namespace_identity" => {"device" => 4, "inode" => 33},

@@ -409,9 +409,13 @@ module Ace
           raise AttemptErrors::Conflict, "execution slot exclusion cannot be entered recursively" if held[key]
           exclusion.with_exclusive(exclusion.slot_key(scope.fetch("slot_id"))) do
             held[key] = true
+            snapshots = Thread.current[:ace_assign_history_operations] ||= {}
+            owns_snapshot = !snapshots.key?(object_id)
+            snapshots[object_id] = {} if owns_snapshot
             begin
               yield
             ensure
+              snapshots.delete(object_id) if owns_snapshot
               held.delete(key)
             end
           end
