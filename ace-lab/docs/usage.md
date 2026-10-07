@@ -282,3 +282,7 @@ reads; it never provisions.
 
   `ace-assign`'s evidence journal. The Lab execution binary
   (`/usr/local/bin/lab`) is never invoked or required.
+
+### Protected handler cleanup boundary
+
+Handlers retain the fixed closed environment and 30-second execution deadline, with 16KiB stdout and 8KiB stderr caps. Owned cleanup adds at most one second of confirmed reaping; unresolved cleanup remains uncertain and cannot return a service receipt. It cannot establish an arbitrary domain target or surviving writer is absent. Receiver recovery and the gad.b operation-specific fresh inspector are still required source work; installed verification is centralized in gad.2.
