@@ -5,6 +5,7 @@ require "ace/runtime/molecules/systemd_scope_manager"
 require "ace/runtime/molecules/linux_mount_info"
 require "ace/runtime/molecules/execution_unit_installation"
 require "ace/runtime/molecules/network_installation_evidence"
+require "ace/runtime/molecules/execution_network_selection"
 require "ace/runtime/molecules/execution_boot_baseline"
 require "ace/runtime/molecules/kernel_view_topology"
 require_relative "../molecules/execution_scope_lineage"
@@ -181,10 +182,11 @@ module Ace
           end
         end
 
-        def initialize(mapping_id:, deployment:, kernel:, manager: nil, cgroups: Ace::Runtime::Molecules::CgroupObservation.new, files: Files.new, network_evidence: Ace::Runtime::Molecules::NetworkInstallationEvidence.new, boot_evidence: Ace::Runtime::Molecules::ExecutionBootBaseline.new)
+        def initialize(mapping_id:, deployment:, kernel:, manager: nil, cgroups: Ace::Runtime::Molecules::CgroupObservation.new, files: Files.new, network_evidence: Ace::Runtime::Molecules::NetworkInstallationEvidence.new, boot_evidence: Ace::Runtime::Molecules::ExecutionBootBaseline.new, network_selection: Ace::Runtime::Molecules::ExecutionNetworkSelection.new)
           @mapping_id, @deployment, @kernel, @cgroups, @files = mapping_id, deployment, kernel, cgroups, files
           @network_evidence = network_evidence
           @boot_evidence = boot_evidence
+          @network_selection = network_selection
           @map = deployment.mapping(mapping_id)
           @scope = @map.fetch("execution_scope")
           @manager = manager || Ace::Runtime::Molecules::SystemdScopeManager.new(
@@ -553,7 +555,7 @@ module Ace
 
         def network_selection!
           manifest = @files.boundary_manifest(@scope)
-          Molecules::ExecutionScopeLineage.validate_network_selection!(manifest.fetch("network_installation"))
+          @network_selection.select!(static_selection: manifest.fetch("network_installation"), slot_id: @scope.fetch("slot_id"))
         end
 
         def parent_resources!

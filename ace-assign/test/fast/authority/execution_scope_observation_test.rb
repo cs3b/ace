@@ -14,6 +14,21 @@ module Ace
       Manager = ExecutionScopeObservationFixtures::Manager
       Cgroups = ExecutionScopeObservationFixtures::Cgroups
 
+      class SelectionProtection < Ace::Runtime::Molecules::ProtectedArtifactSet::Protection
+        def initialize(root)
+          @root = root
+          mounts = Object.new
+          mounts.define_singleton_method(:mount_identity) { |_handle| {"filesystem_type" => "ext4"} }
+          super(mounts: mounts)
+        end
+        def root_path!(_path); end
+        def verify!(path, handle, directory:)
+          super if path == @root || path.start_with?(@root + "/")
+        end
+        private
+        def trusted_owner?(stat); stat.uid == Process.uid; end
+      end
+
       class Kernel
         attr_accessor :identities
         def capture(pid); identities.fetch(pid); end
@@ -53,8 +68,11 @@ module Ace
 
       def test_selection_shape_and_namespace_replacement_cannot_be_adopted
         original = @files.manifest.fetch("network_installation")
+        @files.manifest["network_installation"] = ExecutionScopeObservationFixtures::NETWORK_SELECTION
+        assert_raises(Ace::Runtime::RuntimeUnavailableError) { @observer.activate_parent!(@context) }
+        assert_equal 0, @manager.starts
         @files.manifest["network_installation"] = original.merge("unknown" => {})
-        assert_raises(AttemptErrors::EvidenceUnavailable) { @observer.activate_parent!(@context) }
+        assert_raises(Ace::Runtime::RuntimeUnavailableError) { @observer.activate_parent!(@context) }
         assert_equal 0, @manager.starts
         @files.manifest["network_installation"] = original
         binding = @observer.activate_parent!(@context)
@@ -62,6 +80,43 @@ module Ace
         @files.network["inode"] += 1
         assert_raises(Ace::Runtime::RuntimeUnavailableError) { @observer.observe(lineage) }
         assert_equal 0, @manager.service_starts
+      end
+
+      def test_actual_protected_pointer_is_pinned_before_activation_and_advance_cannot_be_adopted
+        Dir.mktmpdir("scope-network-selection-") do |temporary|
+          root = File.realpath(temporary)
+          artifact = lambda do |name, bytes|
+            path = File.join(root, name)
+            File.binwrite(path, bytes)
+            File.chmod(0600, path)
+            {"path" => path, "bytes" => bytes.bytesize, "sha256" => Digest::SHA256.hexdigest(bytes)}
+          end
+          selection = Ace::Runtime::Molecules::ExecutionNetworkSelection::FIELDS.to_h { |name| [name, artifact.call(name, "selected #{name}")] }
+          static = selection.slice("profile", "installer_artifact").merge("current_selection_path" => "/etc/ace/execution-slots/slot/network-installation-selection.json")
+          pointer = artifact.call("pointer", "missing evidence")
+          @files.manifest["network_installation"] = static
+          reader = Ace::Runtime::Molecules::ProtectedArtifactSet.new(protection: SelectionProtection.new(root))
+          read = reader.method(:read_path!)
+          reader.define_singleton_method(:read_path!) do |path, limit:|
+            raise "wrong source-owned slot pointer" unless path == static.fetch("current_selection_path")
+            read.call(pointer.fetch("path"), limit: limit)
+          end
+          @observer.instance_variable_set(:@network_selection, Ace::Runtime::Molecules::ExecutionNetworkSelection.new(artifacts: reader))
+          assert_raises(Ace::Runtime::RuntimeUnavailableError) { @observer.activate_parent!(@context) }
+          assert_equal 0, @manager.starts
+          publish = ->(value) { File.binwrite(pointer.fetch("path"), JSON.generate("schema" => "ace.network-installation-selection/v1", "slot_id" => "slot", "selection" => value)) }
+          publish.call(selection)
+          binding = @observer.activate_parent!(@context)
+          assert_equal selection, binding.fetch("network_installation_selection")
+          assert binding.fetch("network_installation_selection").frozen?
+          append("scope_bound", binding)
+          assert_equal 0, @observer.observe(lineage).fetch("populated")
+          advanced = selection.merge("report" => artifact.call("new-report", "another current report"))
+          publish.call(advanced)
+          assert_raises(Ace::Runtime::RuntimeUnavailableError) { @observer.observe(lineage) }
+          assert_equal selection, binding.fetch("network_installation_selection")
+          assert_equal 0, @manager.service_starts
+        end
       end
 
       def setup
@@ -82,8 +137,9 @@ module Ace
         network = Object.new
         network.define_singleton_method(:verify!) { |selection:, expected:| ExecutionScopeObservationFixtures::NETWORK_OUTPUT }
         @boot_evidence = ExecutionScopeObservationFixtures::BootEvidence.new
+        @network_selection = ExecutionScopeObservationFixtures::NetworkSelection.new
         @observer = Authority::ExecutionScopeObservation.new(mapping_id: "mapping", deployment: deployment, kernel: @kernel,
-          manager: @manager, cgroups: @cgroups, files: @files, network_evidence: network, boot_evidence: @boot_evidence)
+          manager: @manager, cgroups: @cgroups, files: @files, network_evidence: network, boot_evidence: @boot_evidence, network_selection: @network_selection)
         @events = []
         @context = {"project_id" => "project", "mapping_id" => "mapping", "assignment_id" => "assignment", "attempt_id" => "attempt",
           "reservation_generation" => 1, "scope_generation" => 2}

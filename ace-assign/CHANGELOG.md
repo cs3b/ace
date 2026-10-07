@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Pin fresh execution scopes to the authenticated current network selection and refuse active pointer advance; boundary readiness accepts only static network intent, preserving original literal historical proofs.
+
 - Expose authorized canonical assignment inventory at one retained revision, authenticating original registration, terminal/release and rotated descriptor provenance before bounded metadata pagination.
 
 - Authenticate complete immutable event inventories before ownership filtering, rejecting removed assignments/attempts/events, rewritten bytes and duplicate event digests while preserving valid interleaved appends.

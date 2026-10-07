@@ -107,7 +107,7 @@ module Ace
           selection = @network_selection
           declarations = boundary_resources || [{"host_path" => "/private", "view_path" => "/private", "worker_visible" => false, "read_only" => true, "stage" => "parent"}]
           files.define_singleton_method(:boundary_manifest!) do |_config|
-            {"schema" => "ace.execution-boundary-manifest/v1", "slot_id" => "slot", "network_installation" => selection,
+            {"schema" => "ace.execution-boundary-manifest/v1", "slot_id" => "slot", "network_installation" => selection.slice("profile", "installer_artifact").merge("current_selection_path" => "/etc/ace/execution-slots/slot/network-installation-selection.json"),
               "resources" => declarations}
           end
           files.define_singleton_method(:verify_native!) { |server, _config| raise "wrong native server" unless server == original_kernel.capture(90) }

@@ -97,7 +97,9 @@ class ExecutionUnitInstallationTest < AceRuntimeTestCase
       @files.bytes[host] = bytes
       {"role" => role, "host_path" => host, "view_path" => path, "sha256" => Digest::SHA256.hexdigest(bytes)}
     end
-    boundary = {"schema" => "ace.execution-boundary-manifest/v1", "slot_id" => "slot", "network_installation" => {},
+    reference = {"path" => "/etc/ace/network/profile", "sha256" => "a" * 64, "bytes" => 1}
+    boundary = {"schema" => "ace.execution-boundary-manifest/v1", "slot_id" => "slot", "network_installation" => {
+      "profile" => reference, "installer_artifact" => reference, "current_selection_path" => "/etc/ace/execution-slots/slot/network-installation-selection.json"},
       "resources" => [{"host_path" => "/var/lib/ace-slot", "view_path" => "/host-private", "stage" => "parent",
         "worker_visible" => false, "read_only" => true},
         {"host_path" => "/run/ace-slot", "view_path" => "/run/ace-slot", "stage" => "native", "worker_visible" => true, "read_only" => false}]}

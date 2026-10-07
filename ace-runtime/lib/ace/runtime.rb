@@ -13,6 +13,7 @@ require_relative "runtime/registry"
 require_relative "runtime/molecules/runtime_selector"
 require_relative "runtime/molecules/process_identity"
 require_relative "runtime/molecules/network_installation_evidence"
+require_relative "runtime/molecules/execution_network_selection"
 
 module Ace
   module Runtime
