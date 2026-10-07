@@ -32,13 +32,16 @@ After accepted work is preserved and its original execution is terminal/released
 
 ### Interface Contract
 
-`ace-overseer prune --assignment ID --dry-run` previews classified allowed/blocked targets with evidence refs. Explicit apply consumes exact preview identity plus fresh owner/preservation checks; changed scope/head/descriptor/ref/authorization blocks. Protected source-owner route and exact request/reply selector composition must be independently finalized before this child leaves draft; do not invent a public cleanup operation merely in implementation. Existing scoped service request/status is the intended transport, not an already delivered cleanup executor.
+Protected preview uses `ace-overseer prune --project PROJECT --agent MAPPING --assignment ID --attempt ATTEMPT --request FILE --dry-run`. FILE is the closed source-owned request described in `protected-prune-source-candidate.md`, including the separate maintenance attempt, exact completed successor publication and preservation destinations. CLI selectors must equal the target document. Apply uses the same selectors/FILE plus `--yes --mutation ID --expected-generation GENERATION`; these identities belong to the separate maintenance service request. `--status --request FILE --mutation ID` reads the exact original service outcome without removal. Unknown/ambiguous input, changed preview and partial publication refuse; no protected failure falls back to local prune. Existing no-project local syntax remains separate.
+
+The fixed `prune-preserved-workspace` host-maintenance operation is proposed through existing structured service request/status/receiver transport. Its existing Lab installer owner verifies completed successor publication before reacquiring exact maintenance exclusions and removing only the obsolete original workspace. No physical-prune executor is delivered yet. The exact proposed composition and recovery receipt are retained in `protected-prune-source-candidate.md` for independent review before this child leaves draft.
 
 ### Success Criteria and Verification Plan
 
 - [ ] SC1: Actual controlled protected owner composition previews, revalidates, preserves and removes an obsolete workspace while retaining literal original journal/descriptor/key/receipt/history evidence. Only the exact eligible original scope is retired/reused; no claim that slice StopUnit removed files.
 - [ ] SC2: Race fresh start against apply; late new attempt/head/ref, dirty/untracked/required ignored data, conflicting current/candidate root, surviving writers, unknown settlement, unavailable permissions and corrupt preserved destination all retain work. Service replay never duplicates removal and lost confirmation remains reconciled rather than redone blindly.
 - [ ] SC3: Separate maintenance requester and sealed target avoid an authorization/liveness cycle; unrelated active scopes aren't stopped/deleted. Execute real Git/flock/controlled authority fixtures and independent exact review; no native/installed proof claim.
+- [ ] SC4: Actual existing installer publication then fixed receiver handler removes the original-only workspace under live exclusions, imports the exact preservation/removal receipt after lock release, and recovers lost confirmation/partial capture through the operation-specific inspector without replaying deletion. Missing successor publication and active affected maintenance requester refuse.
 
 ### Scope, Readiness and Ownership
 
