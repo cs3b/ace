@@ -7,6 +7,42 @@ module Ace
   module Herdr
     module Molecules
       class BoundedProcessCleanupTest < Minitest::Test
+        def test_cleanup_signal_failure_retains_exact_system_error_cause
+          original = Errno::EPERM.new("controlled signal")
+          original.set_backtrace(["controlled_signal.rb:12"])
+          waiter = Object.new
+          waiter.define_singleton_method(:alive?) { true }
+          waiter.define_singleton_method(:join) { |_| self }
+          BoundedProcess.stub(:kill_group, ->(*) { raise original }) do
+            error = assert_raises(BoundedProcess::PostLaunchError) { BoundedProcess.cleanup_child!(waiter) }
+            assert_same original, error.cause
+            assert_equal ["controlled_signal.rb:12"], error.cause.backtrace
+          end
+        end
+
+        def test_owned_pipe_close_failure_retains_exact_system_error_cause
+          original = Errno::EPERM.new("controlled close")
+          waiter = Object.new
+          waiter.define_singleton_method(:start!) { |*| nil }
+          waiter.define_singleton_method(:started?) { true }
+          waiter.define_singleton_method(:alive?) { false }
+          calls = 0
+          BoundedProcess::OwnedChild.stub(:new, waiter) do
+            BoundedProcess.stub(:close_handles, ->(handles) {
+              handles.each { |io| io.close unless io.closed? }
+              calls += 1
+              calls == 2 ? original : nil
+            }) do
+              BoundedProcess.stub(:run_loop, ->(*) { :result }) do
+                error = assert_raises(BoundedProcess::PostLaunchError) do
+                  BoundedProcess.call(["fixed-fixture"], timeout_s: 1)
+                end
+                assert_same original, error.cause
+              end
+            end
+          end
+        end
+
         def test_closed_streams_do_not_signal_live_handler_and_exit_is_observed_before_reaping
           events = []
           waiter = Object.new

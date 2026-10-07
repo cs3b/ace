@@ -148,7 +148,7 @@ module Ace
               close_error = close_handles(handles)
               # Closing one pipe cannot prevent original-child cleanup.
               cleanup_child!(waiter) if waiter.started?
-              raise PostLaunchError, close_error.message if close_error && waiter.started?
+              raise PostLaunchError.new(close_error.message), cause: close_error if close_error && waiter.started?
             end
           ensure
             close_handles(handles)
@@ -244,7 +244,7 @@ module Ace
             waiter.release_to_reaper!
             raise PostLaunchError, "owned child cleanup could not be confirmed within deadline"
           end
-          raise PostLaunchError, signal_error.message if signal_error
+          raise PostLaunchError.new(signal_error.message), cause: signal_error if signal_error
         end
 
         # POSIX waitid observes only this original child's termination and
