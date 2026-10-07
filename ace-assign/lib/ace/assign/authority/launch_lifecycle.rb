@@ -6,6 +6,7 @@ require "time"
 require "fileutils"
 require "open3"
 require "ace/herdr/molecules/guarded_native_origin"
+require_relative "launch_control_channel"
 require_relative "deployment"
 require_relative "deployment_history"
 require_relative "../molecules/execution_scope_lineage"
@@ -25,7 +26,8 @@ module Ace
           "release_launch" => %w[mapping_id assignment_id attempt_id launch_ticket process_binding expected_generation],
           "abort_launch" => %w[mapping_id assignment_id attempt_id launch_ticket failure_evidence failure_digest expected_generation]
         }.freeze
-        OPERATIONS = (MUTATIONS.keys + %w[launch_preflight registration_status attempt_status inspect_launch observe_execution_scope close_execution_scope]).freeze
+        TRANSFER_OPERATIONS = {"prompt_attempt" => {direction: :upload, purpose: :prompt_text, roles: %i[launcher supervisor]}}.freeze
+        OPERATIONS = (MUTATIONS.keys + %w[prompt_attempt launch_prompt_intent launch_prompt_completion launch_preflight registration_status attempt_status inspect_launch observe_execution_scope close_execution_scope]).freeze
         TERMINAL = %w[succeeded failed stopped].freeze
 
         attr_reader :mutex, :journals, :exclusions
@@ -42,6 +44,7 @@ module Ace
           @observations = {}
           @streams = {}
           @native_issuers = {}
+          @control_channels = {}
           @slot_exclusions = {}
           @scope_observers = {}
           @scope_observer_factory = scope_observer_factory || ->(mapping_id) {
@@ -64,8 +67,11 @@ module Ace
             mapping_id: params.fetch("mapping_id")).require_launch_bound!
         end
 
-        def dispatch(request:, peer:, role:)
+        def dispatch(request:, peer:, role:, transfer: nil)
           operation, params = request.values_at("operation", "params")
+          return prompt_attempt!(request: request, peer: peer, role: role, transfer: transfer) if operation == "prompt_attempt"
+          return launch_prompt_intent!(request: request, peer: peer, role: role) if operation == "launch_prompt_intent"
+          return launch_prompt_completion!(request: request, peer: peer, role: role) if operation == "launch_prompt_completion"
           if operation == "observe_execution_scope"
             raise ArgumentError, "scope observation mutation ID must be null" unless request.fetch("mutation_id").nil?
             return {data: observe_execution_scope!(params: params, peer: peer, role: role), replayed: false}
@@ -327,6 +333,8 @@ module Ace
           @mutex.synchronize do
             @observations.each_value { |observation| close_observation(observation) }
             @observations.clear
+            @control_channels.each_value(&:close)
+            @control_channels.clear
           end
         end
 

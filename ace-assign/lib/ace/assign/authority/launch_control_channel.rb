@@ -1,0 +1,181 @@
+# frozen_string_literal: true
+require "securerandom"
+require_relative "transfer_codec"
+
+module Ace
+  module Assign
+    module Authority
+      # A rendezvous for one already authenticated original launcher stream.
+      # Canonical issue permits belong to LaunchLifecycle/JournalMutation.
+      # This queue owns no replay, authorization, terminal state or effects.
+      class LaunchControlChannel
+        Pending = Struct.new(:frame, :bytes, :deadline, :result, :error, :finished, keyword_init: true)
+        PROMPT_FIELDS = %w[attempt_id intent_event_id journal_commit mutation_id original_binding_digest text_descriptor transfer_id type version].freeze
+        OUTCOME_FIELDS = %w[guarded_evidence intent_event_id mutation_id original_binding_digest type version].freeze
+        RECORDED_FIELDS = %w[intent_event_id journal_commit mutation_id original_binding_digest outcome type version].freeze
+
+        def initialize(socket:, codec:, outcome:)
+          @socket, @codec, @outcome = socket, codec, outcome
+          @mutex, @changed = Mutex.new, ConditionVariable.new
+          @pending = nil
+          @closed = false
+        end
+
+        def reserve_dispatch!
+          @mutex.synchronize do
+            raise AttemptErrors::EvidenceUnavailable, "Original launcher control channel is unavailable" if @closed
+            raise AttemptErrors::Conflict, "Original launcher control channel is busy" if @reservation || @pending
+            @reservation = Object.new.freeze
+          end
+        end
+
+        def dispatch_reserved?(reservation)
+          @mutex.synchronize { !@closed && !reservation.nil? && @reservation.equal?(reservation) }
+        end
+
+        def release_dispatch!(reservation)
+          @mutex.synchronize do
+            @reservation = nil if @reservation.equal?(reservation) && !@pending
+          end
+        end
+
+        def dispatch_prompt(frame:, bytes:, deadline:, reservation:)
+          validate_prompt!(frame)
+          pending = Pending.new(frame: frame, bytes: bytes, deadline: deadline, finished: false)
+          @mutex.synchronize do
+            raise AttemptErrors::EvidenceUnavailable, "Original launcher control channel is unavailable" if @closed
+            raise AttemptErrors::EvidenceUnavailable, "Original launcher dispatch capacity is not held" unless reservation && @reservation.equal?(reservation)
+            raise AttemptErrors::Conflict, "Original launcher control channel is busy" if @pending
+            @pending = pending
+            @changed.broadcast
+            until pending.finished
+              remaining = deadline - Process.clock_gettime(Process::CLOCK_MONOTONIC)
+              raise AttemptErrors::EvidenceUnavailable, "Original launcher dispatch outcome is uncertain" unless remaining.positive?
+              @changed.wait(@mutex, remaining)
+            end
+          end
+          raise pending.error if pending.error
+          pending.result
+        end
+
+        # Only the existing Server connection handler calls serve. No slot,
+        # assignment, journal or channel mutex is held over a socket wait or
+        # the original owner's canonical outcome ingestion callback.
+        def serve
+          loop do
+            pending = @mutex.synchronize do
+              @changed.wait(@mutex, 1) unless @closed || @pending
+              break if @closed
+              @pending
+            end
+            break if closed?
+            unless pending
+              ping
+              next
+            end
+            begin
+              wire.write(@socket, pending.frame, deadline: pending.deadline, limit: 16_384)
+              @codec.send_launch_prompt(@socket, bytes: pending.bytes, descriptor: pending.frame.fetch("text_descriptor"),
+                transfer_id: pending.frame.fetch("transfer_id"), deadline: pending.deadline)
+              pending.bytes = nil
+              result = wire.read(@socket, deadline: pending.deadline, limit: 16_384)
+              validate_outcome!(result, pending.frame)
+              accepted = @outcome.call(result)
+              unless accepted.is_a?(Hash) && accepted.keys.sort == %w[journal_commit outcome] &&
+                  accepted["outcome"] == result.dig("guarded_evidence", "outcome") &&
+                  accepted["journal_commit"].is_a?(String) && accepted["journal_commit"].match?(/\A(?:[0-9a-f]{40}|[0-9a-f]{64})\z/)
+                raise AttemptErrors::EvidenceUnavailable, "Canonical prompt completion acknowledgement is unavailable"
+              end
+              recorded = pending.frame.slice("mutation_id", "intent_event_id", "original_binding_digest").merge(accepted).merge(
+                "version" => 1, "type" => "prompt_outcome_recorded")
+              wire.write(@socket, recorded, deadline: pending.deadline, limit: 16_384)
+              complete(pending, result: result)
+            rescue StandardError => error
+              complete(pending, error: error)
+              break
+            end
+          end
+        rescue IOError, SystemCallError, Ace::Runtime::RuntimeUnavailableError
+          nil
+        ensure
+          close
+        end
+
+        def close
+          @mutex.synchronize do
+            @closed = true
+            @reservation = nil
+            if @pending && !@pending.finished
+              @pending.error = AttemptErrors::EvidenceUnavailable.new("Original launcher control channel closed with uncertain outcome")
+              @pending.finished = true
+              @pending.bytes = nil
+            end
+            @changed.broadcast
+          end
+        end
+
+        def closed?
+          @mutex.synchronize { @closed }
+        end
+
+        def self.validate_prompt!(frame)
+          unless frame.is_a?(Hash) && frame.keys.all? { |key| key.is_a?(String) } && frame.keys.sort == PROMPT_FIELDS &&
+              frame["version"].is_a?(Integer) && frame["version"] == 1 && frame["type"] == "prompt_dispatch" &&
+              %w[intent_event_id original_binding_digest].all? { |key| frame[key].is_a?(String) && frame[key].match?(/\A[0-9a-f]{64}\z/) } &&
+              frame["journal_commit"].is_a?(String) && frame["journal_commit"].match?(/\A(?:[0-9a-f]{40}|[0-9a-f]{64})\z/) &&
+              %w[attempt_id mutation_id].all? { |key| frame[key].is_a?(String) && frame[key].match?(/\A[a-zA-Z0-9][a-zA-Z0-9_.-]{0,127}\z/) } &&
+              frame["transfer_id"].is_a?(String) && frame["transfer_id"].match?(/\A[0-9a-f]{32}\z/)
+            raise AttemptErrors::EvidenceUnavailable, "Private prompt dispatch frame is malformed"
+          end
+          TransferCodec.new.validate!(frame.fetch("text_descriptor"), :prompt_text)
+          true
+        end
+
+        def self.validate_recorded!(recorded, frame, evidence)
+          unless recorded.is_a?(Hash) && recorded.keys.sort == RECORDED_FIELDS && recorded["version"].is_a?(Integer) && recorded["version"] == 1 &&
+              recorded["type"] == "prompt_outcome_recorded" && recorded["outcome"] == evidence.fetch("outcome") &&
+              %w[mutation_id intent_event_id original_binding_digest].all? { |key| recorded[key] == frame.fetch(key) } &&
+              recorded["journal_commit"].is_a?(String) && recorded["journal_commit"].match?(/\A(?:[0-9a-f]{40}|[0-9a-f]{64})\z/)
+            raise AttemptErrors::EvidenceUnavailable, "Canonical prompt completion acknowledgement differs"
+          end
+          true
+        end
+
+        private
+
+        def validate_prompt!(frame) = self.class.validate_prompt!(frame)
+
+        def validate_outcome!(result, frame)
+          unless result.is_a?(Hash) && result.keys.all? { |key| key.is_a?(String) } && result.keys.sort == OUTCOME_FIELDS &&
+              result["version"].is_a?(Integer) && result["version"] == 1 && result["type"] == "prompt_dispatch_outcome" &&
+              %w[mutation_id intent_event_id original_binding_digest].all? { |key| result[key] == frame.fetch(key) } &&
+              result["guarded_evidence"].is_a?(Hash)
+            raise AttemptErrors::EvidenceUnavailable, "Private prompt outcome does not join original dispatch"
+          end
+        end
+
+        def complete(pending, result: nil, error: nil)
+          @mutex.synchronize do
+            @closed = true if error
+            pending.result, pending.error, pending.finished = result, error, true
+            pending.bytes = nil
+            @pending = nil if @pending.equal?(pending)
+            @reservation = nil
+            @changed.broadcast
+          end
+        end
+
+        def ping
+          nonce, deadline = SecureRandom.hex(16), wire.deadline(5)
+          wire.write(@socket, {"version" => 1, "type" => "launch_control_idle", "nonce" => nonce}, deadline: deadline, limit: 16_384)
+          result = wire.read(@socket, deadline: deadline, limit: 16_384)
+          unless result.is_a?(Hash) && result["version"].is_a?(Integer) && result == {"version" => 1, "type" => "launch_control_idle_ack", "nonce" => nonce}
+            raise AttemptErrors::EvidenceUnavailable, "Private launcher idle response differs"
+          end
+        end
+
+        def wire = Ace::Runtime::Molecules::ProtectedSocket
+      end
+    end
+  end
+end

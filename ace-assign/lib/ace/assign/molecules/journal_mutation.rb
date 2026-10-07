@@ -31,14 +31,18 @@ module Ace
         # returns events [{type:, payload:}], immutable blobs, and public data.
         # Only the authority calls this internal journal API; wire requests
         # cannot select blob paths, event types, or accepted response data.
-        def mutate(assignment_id:, attempt_id:, mutation_id:, operation:, parameters_digest:, expected_generation:, with_replay: false, generation_mode: :expected, prompt_binding: nil, prompt_completion: nil)
+        def mutate(assignment_id:, attempt_id:, mutation_id:, operation:, parameters_digest:, expected_generation:, with_replay: false, generation_mode: :expected, prompt_binding: nil, prompt_completion: nil, prompt_observation: nil)
           unless (generation_mode == :expected && expected_generation.is_a?(Integer) && expected_generation >= 0) ||
               (generation_mode == :recorded_completion && operation == "complete_service" && expected_generation.nil?) ||
-              (generation_mode == :prompt_completion && operation == "prompt_attempt" && expected_generation.nil? && prompt_completion.is_a?(Hash))
+              (generation_mode == :prompt_completion && operation == "prompt_attempt" && expected_generation.nil? && prompt_completion.is_a?(Hash)) ||
+              (generation_mode == :prompt_observation && operation == "prompt_observation" && expected_generation.nil? && prompt_observation.is_a?(Hash))
             raise ArgumentError, "invalid fixed mutation generation mode"
           end
           if prompt_completion && generation_mode != :prompt_completion
             raise ArgumentError, "prompt completion selector requires its fixed mode"
+          end
+          if prompt_observation && generation_mode != :prompt_observation
+            raise ArgumentError, "prompt observation selector requires its fixed mode"
           end
           if operation == "prompt_issue"
             validate_prompt_binding!(prompt_binding)
@@ -66,8 +70,10 @@ module Ace
               end
               verify_prompt_completion!(prompt_completion, mutation_id: mutation_id, digest: parameters_digest,
                 assignment_id: assignment_id, attempt_id: attempt_id, commit: old) if prompt_completion
+              verify_prompt_observation!(prompt_observation, mutation_id: mutation_id,
+                assignment_id: assignment_id, attempt_id: attempt_id, commit: old) if prompt_observation
               verify_prompt_mutation_namespace!(mutation_id: mutation_id, operation: operation, parameters_digest: parameters_digest,
-                assignment_id: assignment_id, attempt_id: attempt_id, prompt_completion: prompt_completion, commit: old)
+                assignment_id: assignment_id, attempt_id: attempt_id, prompt_completion: prompt_completion, prompt_observation: prompt_observation, commit: old)
               replay = mutation_result(mutation_id, commit: old)
               if replay
                 unless replay["operation"] == operation && replay["parameters_digest"] == parameters_digest &&
@@ -79,7 +85,7 @@ module Ace
               end
               current = read_events(assignment_id, commit: old).select { |event| event["attempt_id"] == attempt_id }
               generation = authority_generation(current)
-              unless %i[recorded_completion prompt_completion].include?(generation_mode) || expected_generation == generation
+              unless %i[recorded_completion prompt_completion prompt_observation].include?(generation_mode) || expected_generation == generation
                 raise AttemptErrors::Conflict, "Authority registration generation changed"
               end
               plan = yield(current, old, generation)

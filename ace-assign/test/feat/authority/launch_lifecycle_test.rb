@@ -2,6 +2,8 @@
 require_relative "../../test_helper"
 require "ace/assign/authority/launch_lifecycle"
 require "ace/assign/authority/launch_driver"
+require "ace/assign/authority/server"
+require "ace/assign/cli/commands/authority/launch"
 require_relative "../../support/execution_scope_observation_fixtures"
 require_relative "../../support/execution_scope_native_owner_fixture"
 
@@ -47,6 +49,7 @@ module Ace
           @peer = @kernel.capture(Process.pid)
           @map = {"project_id" => "project", "authority_id" => "authority", "worker_uid" => 13001, "worker_gid" => 13001,
             "execution_scope" => {"slot_id" => "slot", "service_unit" => "ace-slot.service", "network_namespace_path" => "/run/netns/slot"},
+            "launcher_uid" => 13002, "launcher_gid" => 13002, "launcher_groups" => [13002],
             "worker_groups" => [13001], "bootstrap" => "/usr/libexec/ace-worker-gate", "bootstrap_sha256" => "a" * 64, "worker_cwd" => "/home/worker", "worker_actor" => "worker", "native" => {"workspace_id" => "w1"}}
           deployment = Object.new
           deployment.define_singleton_method(:artifact_reference) { {"sha256" => "d" * 64} }
@@ -481,7 +484,29 @@ module Ace
         @journal.blob(registration.fetch("definition_ref"))
       end
 
+      class StreamKernel
+        def initialize(kernel, me:, peer:)
+          @kernel, @me, @peer = kernel, me, peer
+        end
+        def supported!; true; end
+        def capture(pid); pid == Process.pid ? @me : @kernel.capture(pid); end
+        def peer(_socket); @peer; end
+        def method_missing(name, *args, **options, &block); @kernel.public_send(name, *args, **options, &block); end
+        def respond_to_missing?(name, include_private = false); @kernel.respond_to?(name, include_private) || super; end
+      end
+
       class OriginalGuardedNative < Ace::Herdr::Molecules::ProtectedNativeControl
+        attr_reader :prompt_calls
+        attr_accessor :before_prompt_ack
+        def exchange(method, params = {}, **limits)
+          raise "Unexpected native effect" unless method == "agent.prompt"
+          (@prompt_calls ||= []) << params
+          before_prompt_ack&.call
+          {"id" => "native-fixture", "result" => {"type" => "agent_prompted", "agent" => {"status" => "ready"},
+            "origin" => params.fetch("expected_origin"), "submission" => "submitted"}}
+        end
+        private :exchange
+
         def request(method, params = {})
           case method
           when "ping" then {"version" => "0.9.3", "protocol" => 22, "capabilities" => {"endpoint_protocol_generation" => 1}}
@@ -524,8 +549,33 @@ module Ace
           deployment.define_singleton_method(:mapping) { |_id| map }
           deployment.define_singleton_method(:verify!) { |*_args, **_kwargs| map }
           launch = Authority::LaunchDriver.new(mapping_id: "mapping", deployment: deployment, kernel: @kernel, client: client, native: native)
-          state = launch.launch(assignment_id: "assignment", definition_bytes: registered_bytes,
-            scope: "010", base_head: "a" * 40, mutation_id: "actual-guard-owner")
+          issued_for_cli = Queue.new
+          continue_cli = Queue.new
+          cli_ready = Queue.new
+          retained_driver = launch.method(:serve_control!)
+          launch.define_singleton_method(:serve_control!) do |state:, &announce|
+            issued_for_cli << state
+            continue_cli.pop
+            retained_driver.call(state: state, &announce)
+          end
+          command = CLI::Commands::Authority::Launch.new
+          command.define_singleton_method(:build_driver) { |_| launch }
+          definition_root = Dir.mktmpdir("original-cli-definition-")
+          definition_path = File.join(definition_root, "definition.json")
+          File.write(definition_path, registered_bytes)
+          cli_output = StringIO.new
+          cli_output.define_singleton_method(:write) do |line|
+            count = super(line)
+            cli_ready << JSON.parse(line)
+            count
+          end
+          original_stdout = $stdout
+          $stdout = cli_output
+          cli_thread = Thread.new do
+            command.call(mapping: "mapping", assignment: "assignment", definition: definition_path,
+              step: "010", base_head: "a" * 40, mutation: "actual-guard-owner")
+          end
+          state = issued_for_cli.pop
           assert_equal "issued", state.fetch("phase"), errors.inspect + " " + state.inspect
           recorded = @journal.mutation_result("actual-guard-owner-record").fetch("data")
           assert_equal native.guarded_binding!(recorded.fetch("process_binding")).fetch("guarded_origin"), recorded.fetch("guarded_origin")
@@ -553,11 +603,240 @@ module Ace
           assert_equal "release", WIRE.read(worker, deadline: WIRE.deadline(5)).fetch("operation")
           gate.join(2)
           refute gate.alive?
+          exercise_actual_prompt_stream(launch, native, state, authenticated, cli_thread: cli_thread, continue_cli: continue_cli, cli_ready: cli_ready)
+          assert_equal 1, cli_output.string.lines.length
+          assert_equal "launch_ready", JSON.parse(cli_output.string).fetch("type")
         ensure
+          $stdout = original_stdout if original_stdout
+          FileUtils.rm_rf(definition_root) if definition_root
+          continue_cli << true if continue_cli
+          launch&.request_control_cancel
+          cli_thread&.join(3)
           server&.close
           worker&.close
           gate&.kill if gate&.alive?
         end
+      end
+
+      def exercise_actual_prompt_stream(launch, native, state, authenticated, cli_thread:, continue_cli:, cli_ready:)
+        deployment = @authority.instance_variable_get(:@deployment)
+        service_root = deployment.authority("authority").fetch("state_root")
+        FileUtils.mkdir_p(service_root, mode: 0700)
+        File.chmod(0700, service_root)
+        service = @kernel.capture(Process.pid).merge("uid" => Process.uid, "gid" => Process.gid, "groups" => Process.groups.sort,
+          "socket_path" => File.join(service_root, "authority.sock"), "state_root" => service_root)
+        project = deployment.project("project").merge("supervisor_uids" => [], "peer_credentials" => {
+          @peer.fetch("uid").to_s => @peer.slice("gid", "groups").merge("scratch_root" => service_root)})
+        deployment.define_singleton_method(:authority) { |_| service }
+        deployment.define_singleton_method(:project) { |_| project }
+        deployment.define_singleton_method(:verify!) { |*_, **_| @fixture_map }
+        deployment.instance_variable_set(:@fixture_map, @map)
+        deployment.define_singleton_method(:verify_composition!) { |*_, **_| true }
+        deployment.define_singleton_method(:verify_receiver_paths!) { |_| true }
+        server_kernel = StreamKernel.new(@kernel, me: service, peer: @peer)
+        client_kernel = StreamKernel.new(@kernel, me: @peer, peer: service)
+        server = Authority::Server.new(authority_id: "authority", lifecycle: @authority, deployment: deployment, kernel: server_kernel)
+        listener = Thread.new { server.serve }
+        deadline = WIRE.deadline(3)
+        until File.socket?(service.fetch("socket_path"))
+          raise "Source listener failed to start" unless listener.alive? && Process.clock_gettime(Process::CLOCK_MONOTONIC) < deadline
+          sleep(0.01)
+        end
+        client = Authority::Client.new(mapping_id: "mapping", deployment: deployment, kernel: client_kernel)
+        report_trace = []
+        original_stream_call = client.method(:call)
+        client.define_singleton_method(:call) do |operation, params, **options|
+          tracing = operation == "launch_prompt_completion"
+          report_trace << ["start", params.fetch("mutation_id"), Process.clock_gettime(Process::CLOCK_MONOTONIC)] if tracing
+          result = original_stream_call.call(operation, params, **options)
+          report_trace << ["done", params.fetch("mutation_id"), Process.clock_gettime(Process::CLOCK_MONOTONIC)] if tracing
+          result
+        rescue StandardError => error
+          report_trace << ["error", params.fetch("mutation_id"), error.class.name, error.message] if tracing
+          raise
+        end
+        launch.instance_variable_set(:@client, client)
+        disconnected_generation = @journal.authority_generation(@journal.read_events("assignment").select { |event| event["attempt_id"] == state.fetch("attempt_id") })
+        disconnected_ref = @journal.ref_value
+        assert_raises(AttemptErrors::EvidenceUnavailable) do
+          client.call("prompt_attempt", state.slice("assignment_id", "attempt_id").merge("expected_generation" => disconnected_generation),
+            mutation_id: "no-original-channel", upload_parts: ["valid prompt before channel"], purpose: :prompt_text)
+        end
+        assert_equal disconnected_ref, @journal.ref_value
+        assert_nil native.prompt_calls
+        driver = cli_thread
+        continue_cli << true
+        ready_frame = cli_ready.pop
+        assert_equal "launch_ready", ready_frame.fetch("type")
+        assert_equal authenticated.fetch("binding_digest"), ready_frame.fetch("original_binding_digest")
+        original_generation = ready_frame.fetch("generation")
+        selectors = state.slice("assignment_id", "attempt_id").merge("expected_generation" => original_generation)
+        old = @journal.ref_value
+        assert_raises(AttemptErrors::EvidenceUnavailable) do
+          client.call("prompt_attempt", selectors, mutation_id: "unicode-blank", upload_parts: ["\u2003"], purpose: :prompt_text)
+        end
+        assert_equal old, @journal.ref_value
+        assert_nil native.prompt_calls
+        first = client.call("prompt_attempt", selectors, mutation_id: "stream-first", upload_parts: ["first private prompt"], purpose: :prompt_text, timeout: 30)
+        assert_equal "submitted", first.data.fetch("outcome")
+        assert_equal 1, native.prompt_calls.length
+        intent = @journal.prompt_intent("stream-first")
+        query = {"version" => 1, "operation" => "launch_prompt_intent", "mutation_id" => nil, "project_id" => "project",
+          "params" => state.slice("assignment_id", "attempt_id").merge("mapping_id" => "mapping", "mutation_id" => "stream-first",
+            "intent_event_id" => intent.fetch("digest"), "journal_commit" => first.data.fetch("journal_commit"))}
+        before_invalid_query = @journal.ref_value
+        WIRE.connect(service.fetch("socket_path"), deadline: WIRE.deadline(3)) do |socket|
+          WIRE.write(socket, query, deadline: WIRE.deadline(3))
+          socket.write("unexpected body")
+          socket.shutdown(Socket::SHUT_WR)
+          rejected = WIRE.read(socket, deadline: WIRE.deadline(3))
+          refute_equal "ok", rejected.fetch("status")
+        end
+        assert_equal before_invalid_query, @journal.ref_value
+        assert_equal 1, native.prompt_calls.length
+        replay = client.call("prompt_attempt", selectors, mutation_id: "stream-first", upload_parts: ["first private prompt"], purpose: :prompt_text, timeout: 30)
+        assert replay.replayed
+        assert_equal first.data, replay.data
+        assert_equal 1, native.prompt_calls.length
+        assert_raises(AttemptErrors::EvidenceUnavailable) do
+          client.call("prompt_attempt", selectors, mutation_id: "stream-first", upload_parts: ["changed private prompt"], purpose: :prompt_text, timeout: 30)
+        end
+        current = @journal.authority_generation(@journal.read_events("assignment").select { |event| event["attempt_id"] == state.fetch("attempt_id") })
+        second = client.call("prompt_attempt", selectors.merge("expected_generation" => current), mutation_id: "stream-second",
+          upload_parts: ["second private prompt"], purpose: :prompt_text, timeout: 30)
+        assert_equal "submitted", second.data.fetch("outcome")
+        assert_equal 2, native.prompt_calls.length
+        assert_equal 2, @journal.read_events("assignment").count { |event| event["type"] == "prompt_issued" }
+        refute JSON.generate(@journal.read_events("assignment")).include?("private prompt")
+        unused_commit = @journal.ref_value
+        assert_raises(AttemptErrors::EvidenceUnavailable) do
+          client.call("prompt_attempt", selectors, mutation_id: "stale-capacity", upload_parts: ["valid stale-generation prompt"], purpose: :prompt_text, timeout: 30)
+        end
+        assert_equal unused_commit, @journal.ref_value
+        assert_nil @journal.prompt_intent("stale-capacity")
+        current = @journal.authority_generation(@journal.read_events("assignment").select { |event| event["attempt_id"] == state.fetch("attempt_id") })
+        original_cas = @journal.method(:update_ref_cas)
+        abandoned_commits = []
+        @journal.define_singleton_method(:update_ref_cas) { |candidate, _old| abandoned_commits << candidate; false }
+        begin
+          assert_raises(AttemptErrors::EvidenceUnavailable) do
+            client.call("prompt_attempt", selectors.merge("expected_generation" => current), mutation_id: "failed-cas-capacity",
+              upload_parts: ["valid lost-CAS prompt"], purpose: :prompt_text, timeout: 30)
+          end
+        ensure
+          @journal.define_singleton_method(:update_ref_cas, original_cas)
+        end
+        assert_equal unused_commit, @journal.ref_value
+        assert_nil @journal.prompt_intent("failed-cas-capacity")
+        assert_equal Molecules::EvidenceJournal::CAS_ATTEMPTS, abandoned_commits.length
+        assert_raises(AttemptErrors::EvidenceUnavailable) { @journal.verify_prompt_prefix!(commit: abandoned_commits.last) }
+        assert_equal 2, native.prompt_calls.length
+        pending_entered = Queue.new
+        allow_native_completion = Queue.new
+        native.before_prompt_ack = -> { pending_entered << true; allow_native_completion.pop }
+        current = @journal.authority_generation(@journal.read_events("assignment").select { |event| event["attempt_id"] == state.fetch("attempt_id") })
+        pending_caller = Thread.new do
+          client.call("prompt_attempt", selectors.merge("expected_generation" => current), mutation_id: "stream-capacity-first",
+            upload_parts: ["queued third prompt"], purpose: :prompt_text, timeout: 30)
+        rescue Ace::Runtime::RuntimeUnavailableError => error
+          error
+        end
+        pending_entered.pop
+        busy_commit = @journal.ref_value
+        busy_generation = @journal.authority_generation(@journal.read_events("assignment").select { |event| event["attempt_id"] == state.fetch("attempt_id") })
+        assert_raises(AttemptErrors::EvidenceUnavailable) do
+          client.call("prompt_attempt", selectors.merge("expected_generation" => busy_generation), mutation_id: "stream-busy",
+            upload_parts: ["distinct concurrent prompt"], purpose: :prompt_text, timeout: 30)
+        end
+        assert_equal busy_commit, @journal.ref_value
+        assert_nil @journal.prompt_intent("stream-busy")
+        assert_equal 3, native.prompt_calls.length
+        # Controlled public deadline boundary while the private stream remains
+        # intact. Its canonical ACK must select the later observed native fact.
+        capacity_intent = @journal.prompt_intent("stream-capacity-first")
+        ack_selectors = state.slice("assignment_id", "attempt_id").merge("mapping_id" => "mapping")
+        capacity_uncertain = @authority.send(:finish_prompt_outcome!, ack_selectors, @map, capacity_intent,
+          {"outcome" => "uncertain", "origin" => authenticated.fetch("origin")})
+        allow_native_completion << true
+        assert_equal "uncertain", pending_caller.value.data.fetch("outcome")
+        ack_deadline = WIRE.deadline(5)
+        until (ack_commit = launch.instance_variable_get(:@reported_prompt_completions)[capacity_intent.fetch("digest")])
+          raise "Original driver did not receive canonical live-stream ACK" unless Process.clock_gettime(Process::CLOCK_MONOTONIC) < ack_deadline
+          sleep(0.01)
+        end
+        refute_equal capacity_uncertain.dig(:data, "journal_commit"), ack_commit
+        assert @journal.read_events("assignment", commit: ack_commit).any? { |event| event["type"] == "prompt_completion_observed" &&
+          event.dig("payload", "external_mutation_id") == "stream-capacity-first" && event.dig("payload", "evidence", "outcome") == "submitted" }
+        native.before_prompt_ack = nil
+        current = @journal.authority_generation(@journal.read_events("assignment").select { |event| event["attempt_id"] == state.fetch("attempt_id") })
+        available = client.call("prompt_attempt", selectors.merge("expected_generation" => current), mutation_id: "stream-busy",
+          upload_parts: ["distinct concurrent prompt"], purpose: :prompt_text, timeout: 30)
+        assert_equal "submitted", available.data.fetch("outcome")
+        assert_equal 4, native.prompt_calls.length
+        native.before_prompt_ack = -> { pending_entered << true; allow_native_completion.pop }
+        current = @journal.authority_generation(@journal.read_events("assignment").select { |event| event["attempt_id"] == state.fetch("attempt_id") })
+        pending_caller = Thread.new do
+          client.call("prompt_attempt", selectors.merge("expected_generation" => current), mutation_id: "stream-pending",
+            upload_parts: ["fifth prompt pending close"], purpose: :prompt_text, timeout: 30)
+        rescue Ace::Runtime::RuntimeUnavailableError => error
+          error
+        end
+        pending_entered.pop
+        close_selectors = state.slice("assignment_id", "attempt_id").merge("mapping_id" => "mapping")
+        current = @journal.authority_generation(@journal.read_events("assignment").select { |event| event["attempt_id"] == state.fetch("attempt_id") })
+        @authority.close_execution_scope!(params: close_selectors.merge("mutation_id" => "seal-with-pending", "expected_generation" => current), peer: @peer, role: :launcher)
+        observed = @authority.observe_execution_scope!(params: close_selectors, peer: @peer, role: :launcher)
+        assert_equal "unverifiable", observed.fetch("state")
+        assert_equal "drain_original_prompt_issuer", observed.fetch("required_action")
+        current = @journal.authority_generation(@journal.read_events("assignment").select { |event| event["attempt_id"] == state.fetch("attempt_id") })
+        closed = @authority.close_execution_scope!(params: close_selectors.merge("mutation_id" => "close-with-pending", "expected_generation" => current), peer: @peer, role: :launcher)
+        assert_equal "running", closed.dig(:data, "state")
+        refute @journal.read_events("assignment").any? { |event| event["type"] == "scope_closed_no_writers" }
+        # Controlled deadline boundary: use the actual canonical completion
+        # owner to finalize uncertainty before the held native ACK is released.
+        pending_intent = @journal.prompt_intent("stream-pending")
+        original_guard = authenticated.fetch("origin")
+        first_uncertain = @authority.send(:finish_prompt_outcome!, close_selectors, @map, pending_intent,
+          {"outcome" => "uncertain", "origin" => original_guard})
+        assert_equal "uncertain", first_uncertain.dig(:data, "outcome")
+        old_channel = @authority.instance_variable_get(:@control_channels).values.first
+        private_socket = old_channel.instance_variable_get(:@socket)
+        private_socket.close unless private_socket.closed?
+        allow_native_completion << true
+        public_result = pending_caller.value
+        if public_result.is_a?(Authority::Client::Reply)
+          assert_equal "uncertain", public_result.data.fetch("outcome")
+        else
+          assert_instance_of Ace::Runtime::RuntimeUnavailableError, public_result
+        end
+        assert_equal 5, native.prompt_calls.length
+        assert_equal "uncertain", @journal.mutation_result("stream-pending").dig("data", "outcome")
+        late = nil
+        recovery_deadline = WIRE.deadline(30)
+        until late
+          late = @journal.read_events("assignment").find { |event| event["type"] == "prompt_completion_observed" && event.dig("payload", "external_mutation_id") == "stream-pending" }
+          unless Process.clock_gettime(Process::CLOCK_MONOTONIC) < recovery_deadline
+            reported = launch.instance_variable_get(:@reported_prompt_completions).size
+            known = launch.instance_variable_get(:@seen_prompt_intents).size
+            raise "Original process did not recover known ACK: reported=#{reported}/#{known}, trace=#{report_trace.last(12).inspect}"
+          end
+          sleep(0.05) unless late
+        end
+        assert_equal "submitted", late.dig("payload", "evidence", "outcome")
+        assert cli_ready.empty?, "Original process reconnect must not print a second ready frame"
+        current = @journal.authority_generation(@journal.read_events("assignment").select { |event| event["attempt_id"] == state.fetch("attempt_id") })
+        proven = @authority.close_execution_scope!(params: close_selectors.merge("mutation_id" => "close-after-actual-ack", "expected_generation" => current), peer: @peer, role: :launcher)
+        assert_equal "closed_no_writers", proven.dig(:data, "state")
+        assert proven.dig(:data, "proof_id")
+      ensure
+        allow_native_completion << true if allow_native_completion
+        pending_caller&.join(3)
+        launch.request_control_cancel
+        server&.stop
+        driver&.join(3)
+        listener&.join(3)
+        refute driver&.alive?
+        refute listener&.alive?
       end
 
       def test_driver_never_repeats_creation_after_lost_response_and_reservation_replay

@@ -78,6 +78,45 @@ module Ace
         end
         private :verify_prompt_completion!
 
+        # Later authenticated native completion is a separate canonical fact.
+        # It never replaces the first immutable public prompt reply.
+        def observe_prompt_completion(mutation_id:, intent_event_id:, binding_digest:, evidence:, &authentication)
+          raise ArgumentError, "prompt observation authentication is required" unless authentication
+          intent = prompt_intent(mutation_id)
+          raise AttemptErrors::EvidenceUnavailable, "Prompt issue is unavailable" unless intent
+          binding = intent.fetch("payload").fetch("binding")
+          selector = {"external_mutation_id" => mutation_id, "intent_event_id" => intent_event_id, "binding_digest" => binding_digest}
+          digest = Digest::SHA256.hexdigest(JSON.generate(canonical_prompt_value(selector.merge("evidence" => evidence))))
+          mutate(assignment_id: binding.fetch("assignment_id"), attempt_id: binding.fetch("attempt_id"),
+            mutation_id: "prompt-observe.#{intent_event_id}", operation: "prompt_observation", parameters_digest: digest,
+            expected_generation: nil, generation_mode: :prompt_observation, prompt_observation: selector, with_replay: true) do |events, commit, generation|
+            if events.any? { |event| event["type"] == "authority_mutation" && event.dig("payload", "operation") == "scope_reservation_release" }
+              raise AttemptErrors::EvidenceUnavailable, "Released prompt scope cannot accept new observation"
+            end
+            original = authentication.call(events, commit, generation)
+            unless original.is_a?(Hash) && original.keys.sort == %w[binding_digest origin] && original["binding_digest"] == binding.fetch("original_binding_digest")
+              raise AttemptErrors::EvidenceUnavailable, "Original prompt scope binding differs"
+            end
+            validate_prompt_evidence!(evidence, original.fetch("origin"))
+            unless %w[submitted not_issued].include?(evidence.fetch("outcome"))
+              raise AttemptErrors::EvidenceUnavailable, "Unknown native outcome is not completed evidence"
+            end
+            {events: [{type: "prompt_completion_observed", payload: selector.merge("evidence" => evidence)}],
+              data: selector.merge("outcome" => evidence.fetch("outcome"), "guarded_evidence" => evidence)}
+          end
+        end
+
+        def verify_prompt_observation!(selector, mutation_id:, assignment_id:, attempt_id:, commit:)
+          unless selector.is_a?(Hash) && selector.keys.sort == %w[binding_digest external_mutation_id intent_event_id] &&
+              mutation_id == "prompt-observe.#{selector["intent_event_id"]}"
+            raise ArgumentError, "invalid fixed prompt observation selector"
+          end
+          verify_prompt_completion!(selector.slice("intent_event_id", "binding_digest"),
+            mutation_id: selector.fetch("external_mutation_id"), digest: selector.fetch("binding_digest"),
+            assignment_id: assignment_id, attempt_id: attempt_id, commit: commit)
+        end
+        private :verify_prompt_observation!
+
         def validate_prompt_evidence!(evidence, original)
           unless original.is_a?(Hash) && evidence.is_a?(Hash) && evidence.keys.all? { |key| key.is_a?(String) } && evidence["origin"] == original
             raise AttemptErrors::EvidenceUnavailable, "Prompt outcome original guard differs"
@@ -99,6 +138,21 @@ module Ace
           raise AttemptErrors::EvidenceUnavailable, "Prompt outcome original guard is malformed"
         end
         private :validate_prompt_evidence!
+
+        # Private driver selection must be an actual retained canonical prefix,
+        # never an abandoned CAS candidate that merely contains valid events.
+        def verify_prompt_prefix!(commit:, canonical_commit: ref_value)
+          verify_commit!(commit)
+          verify_commit!(canonical_commit)
+          text, error, status = git("rev-list", "--first-parent", "--parents", "--max-count=#{self.class::HISTORY_LIMIT + 1}", canonical_commit)
+          nodes = text.lines.map(&:split)
+          unless status.success? && nodes.size <= self.class::HISTORY_LIMIT && !nodes.empty? &&
+              nodes.all? { |node| node.size.between?(1, 2) && node.all? { |sha| sha.match?(/\A[0-9a-f]{40}\z/) } } &&
+              nodes.each_cons(2).all? { |left, right| left[1] == right[0] } && nodes.last.size == 1 && nodes.any? { |node| node.first == commit }
+            raise AttemptErrors::EvidenceUnavailable, "Prompt prefix is not retained canonical first-parent history"
+          end
+          true
+        end
 
         # A read-only selected canonical chain lookup, never a dispatch permit.
         def prompt_intent(mutation_id, commit: ref_value)
@@ -143,7 +197,7 @@ module Ace
             raise ArgumentError, "invalid fixed prompt binding"
           end
           %w[assignment_id attempt_id mapping_id mutation_id project_id].each { |key| validate_mutation_id!(binding.fetch(key)) }
-          if binding.fetch("mutation_id").start_with?("prompt-issue.")
+          if binding.fetch("mutation_id").start_with?("prompt-issue.", "prompt-observe.")
             raise ArgumentError, "public mutation ID uses reserved prompt namespace"
           end
           caller = binding.fetch("caller")
@@ -178,11 +232,15 @@ module Ace
         end
         private :verify_prompt_external_namespace!
 
-        def verify_prompt_mutation_namespace!(mutation_id:, operation:, parameters_digest:, assignment_id:, attempt_id:, prompt_completion:, commit:)
+        def verify_prompt_mutation_namespace!(mutation_id:, operation:, parameters_digest:, assignment_id:, attempt_id:, prompt_completion:, prompt_observation: nil, commit:)
           # Ordinary mutations cannot steal an external ID while its accepted
           # prompt issue has no finalized public reply yet.
           if mutation_id.start_with?("prompt-issue.")
             raise ArgumentError, "reserved internal prompt namespace" unless operation == "prompt_issue"
+            return
+          end
+          if mutation_id.start_with?("prompt-observe.")
+            raise ArgumentError, "reserved internal prompt observation namespace" unless operation == "prompt_observation" && prompt_observation
             return
           end
           return if operation == "prompt_attempt" && prompt_completion
