@@ -7,6 +7,16 @@ module Ace
         def transfer_binding(operation) = TRANSFER_OPERATIONS[operation]
 
         def authorize_transfer!(request:, peer:, role:)
+          if request["operation"] == "register_assignment"
+            params = request.fetch("params")
+            strict!(params, MUTATIONS.fetch("register_assignment"))
+            map = @deployment.mapping(params.fetch("mapping_id"))
+            unless role == :launcher && peer.values_at("uid", "gid", "groups") == map.values_at("launcher_uid", "launcher_gid", "launcher_groups")
+              raise AttemptErrors::UnauthorizedIdentity, "prepared registration requires mapped launcher"
+            end
+            @kernel.live!(peer)
+            return true
+          end
           raise ArgumentError, "unsupported launch transfer" unless request["operation"] == "prompt_attempt"
           steering_principal!(request.fetch("params"), peer, role)
         end

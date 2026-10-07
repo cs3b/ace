@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 require_relative "execution_scope_native_owner_fixture"
+require_relative "prepared_registration_fixture"
 require "ace/assign/authority/endcap"
 require "ace/assign/authority/launch_lifecycle"
 require "ace/assign/authority/router"
@@ -59,7 +60,7 @@ module Ace
             "bootstrap" => "/fixture/gate", "bootstrap_sha256" => "a" * 64, "worker_cwd" => "/fixture/worker",
             "execution_scope" => {"slot_id" => "slot", "service_unit" => "ace-slot.service", "network_namespace_path" => "/run/netns/slot"},
             "native" => {"workspace_id" => "w1"}}
-          @project = {"assignment_root" => File.join(root, "assignments"), "supervisor_uids" => [13004],
+          @project = {"candidate_root" => root, "assignment_root" => File.join(root, "assignments"), "supervisor_uids" => [13004],
             "reviewer_uids" => [13003], "service_executor_uids" => [13005], "peer_credentials" => {}}
           [@reviewer, @executor, @supervisor, @service].each do |identity|
             @project["peer_credentials"][identity.fetch("uid").to_s] = identity.slice("gid", "groups").merge("scratch_root" => root)
@@ -133,7 +134,16 @@ module Ace
         request = {"version" => 1, "operation" => operation, "mutation_id" => id, "project_id" => "project",
           "params" => params.merge("mapping_id" => "mapping", "assignment_id" => "assignment")}
         request["params"]["attempt_id"] ||= @attempt unless %w[register_assignment reserve_attempt].include?(operation)
-        @router.dispatch(request: request, peer: peer, role: role, transfer: transfer)
+        if operation == "register_assignment"
+          FileUtils.mkdir_p(@project.fetch("candidate_root"), mode: 0700)
+          fixture = PreparedRegistrationFixture.build(root: @root, definition: JSON.parse(params.fetch("definition_bytes")), scope: "010")
+          @prepared_registration = fixture
+          fixture.with_input(root: @root) do |input, descriptor|
+            @router.dispatch(request: request.merge("params" => fixture.header(expected_generation: params.fetch("expected_generation")).merge("mapping_id" => "mapping", "assignment_id" => "assignment", "transfer" => descriptor)), peer: peer, role: role, transfer: input)
+          end
+        else
+          @router.dispatch(request: request, peer: peer, role: role, transfer: transfer)
+        end
       end
 
       def upload(verdict: "succeeded", parts: ["first\x00\r\n".b, "second evidence"], receipt: nil)

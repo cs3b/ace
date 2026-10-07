@@ -17,6 +17,9 @@ module Ace
         end
 
         def call(operation, params, mutation_id: nil, timeout: nil, upload_parts: nil, download: false, purpose: nil)
+          if operation == "register_assignment" && (!upload_parts || purpose != :candidate || download)
+            raise ArgumentError, "prepared registration requires fixed candidate upload"
+          end
           if operation == "evidence_fetch" && (!download || purpose != :artifacts || upload_parts)
             raise ArgumentError, "evidence fetch requires fixed artifacts download"
           end

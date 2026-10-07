@@ -119,13 +119,22 @@ module Ace
               Digest::SHA256.hexdigest(bytes) == registration.fetch("definition_digest")
             raise AttemptErrors::EvidenceUnavailable, "Inventory definition content differs"
           end
-          assignment = Models::Assignment.from_h(JSON.parse(bytes))
+          value = JSON.parse(bytes)
+          prepared = value.fetch("prepared_work")
+          unless registration.fetch("prepared_work") == prepared && prepared.fetch("task_id") == registration.fetch("task_id") &&
+              registration.fetch("selection_sha256") == prepared.fetch("selection_sha256") &&
+              registration.fetch("prepared_bundle_sha256").is_a?(String) && registration.fetch("prepared_bundle_sha256").match?(PreparedWork::SHA) &&
+              registration.fetch("prepared_bundle_bytes").is_a?(Integer) && registration.fetch("prepared_bundle_bytes").between?(1, PreparedWork::MAX_TOTAL) &&
+              registration.fetch("prepared_bundle_ref") == "execution/prepared/#{selector.fetch('assignment_id')}-#{registration.fetch('prepared_bundle_sha256')}.bundle"
+            raise AttemptErrors::EvidenceUnavailable, "Inventory prepared input identity differs"
+          end
+          assignment = Models::Assignment.from_h(value)
           unless assignment.managed? && assignment.id == selector.fetch("assignment_id") &&
               assignment.project_id == registration.fetch("project_id") && assignment.task_id == registration.fetch("task_id") &&
               registration.fetch("definition_generation").is_a?(Integer) && registration.fetch("definition_generation").positive?
             raise AttemptErrors::EvidenceUnavailable, "Inventory definition provenance differs"
           end
-          row = selector.merge(registration.slice("task_id", "definition_digest", "definition_generation"),
+          row = selector.merge(registration.slice("task_id", "definition_digest", "definition_generation", "prepared_bundle_ref", "prepared_bundle_bytes", "prepared_bundle_sha256", "selection_sha256"),
             "scope" => nil, "reservation_generation" => nil, "generation" => nil, "canonical_state" => nil,
             "original_binding_digest" => nil, "terminal_event_id" => nil, "reservation_release_event_id" => nil)
           return row unless selector.fetch("attempt_id")

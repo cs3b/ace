@@ -12,7 +12,8 @@ module Ace
             READY_LIMIT = 16_384
             option :mapping, required: true, desc: "Installed launch mapping ID"
             option :assignment, desc: "Managed assignment ID"
-            option :definition, desc: "Current managed assignment definition JSON file"
+            option :definition, desc: "Retained final prepared assignment definition JSON file"
+            option :prepared_bundle, desc: "Retained original prepared input Git bundle"
             option :step, desc: "Assignment subtree scope"
             option :base_head, desc: "Exact base commit SHA"
             option :mutation, desc: "Stable invocation ID for safe replay"
@@ -22,11 +23,13 @@ module Ace
               result = if options[:dry_run]
                 driver.preflight
               else
-                %i[assignment definition step base_head].each do |key|
+                %i[assignment definition prepared_bundle step base_head].each do |key|
                   raise ArgumentError, "Missing --#{key.to_s.tr('_', '-')}" unless options[key].is_a?(String) && !options[key].empty?
                 end
-                raise ArgumentError, "assignment definition is oversized" if File.size(options[:definition]) > 32_768
-                args = {assignment_id: options[:assignment], definition_bytes: File.read(options[:definition]),
+                definition = retained_input(options[:definition], 32_768).force_encoding(Encoding::UTF_8)
+                raise ArgumentError, "assignment definition is not UTF-8" unless definition.valid_encoding?
+                bundle = retained_input(options[:prepared_bundle], Ace::Assign::Authority::CandidateTransfer::MAX_BYTES)
+                args = {prepared_bundle: bundle, assignment_id: options[:assignment], definition_bytes: definition,
                   scope: options[:step], base_head: options[:base_head]}
                 args[:mutation_id] = options[:mutation] if options[:mutation]
                 driver.launch(**args)
@@ -52,6 +55,22 @@ module Ace
               driver.request_control_cancel if retaining_control
             end
             private
+            def retained_input(path, limit)
+              File.open(path, File::RDONLY | File::NOFOLLOW | File::NONBLOCK) do |file|
+                before = file.stat
+                unless before.file? && before.size.between?(1, limit)
+                  raise ArgumentError, "retained launch input is not a bounded regular file"
+                end
+                bytes = (file.read(limit + 1) || "").b
+                after = file.stat
+                identity = ->(stat) { [stat.dev, stat.ino, stat.size, stat.mtime, stat.ctime] }
+                unless bytes.bytesize == before.size && bytes.bytesize <= limit && identity.call(before) == identity.call(after)
+                  raise ArgumentError, "retained launch input changed while reading"
+                end
+                bytes
+              end
+            end
+
             def readiness_line(ready, result, options)
               unless ready.is_a?(Hash) && ready.keys.all? { |key| key.is_a?(String) } && ready.keys.sort == READY_FIELDS &&
                   ready["version"].is_a?(Integer) && ready["version"] == 1 && ready["type"] == "launch_ready" &&

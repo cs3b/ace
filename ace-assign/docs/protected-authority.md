@@ -83,14 +83,20 @@ Launch one managed definition using a stable invocation ID:
 
 ```sh
 ace-assign authority launch --mapping MAPPING --assignment ASSIGNMENT \
-  --definition /absolute/managed-definition.json --step 010 \
+  --definition /absolute/prepared-definition.json \
+  --prepared-bundle /absolute/prepared-input.bundle --step 010 \
   --base-head EXACT_40_CHARACTER_COMMIT --mutation INVOCATION_ID
 ```
 
-The definition is a normal managed assignment JSON document (maximum 32 KiB),
-with matching `session_id`, `task_id` and installed `project_id`. The authority
-stores its exact immutable bytes in the canonical journal and materializes the
-owner-private assignment cache from that accepted blob. An active attempt blocks
+The final definition (maximum 32 KiB) includes the exact `prepared_work` Git
+head/tree, manifest and selected subtree reference, with matching `session_id`,
+`task_id` and installed `project_id`. `--prepared-bundle` is mandatory: it supplies
+the original complete prepared-input Git bundle, bounded to 64 MiB. Both inputs
+are read from held regular files with bounded reads and no final symlink following
+before launch effects. The authority derives the final definition from the verified
+prepared tree and commits it with the exact received bundle in one journal mutation.
+Reusing the same definition with different bundle bytes refuses. The owner-private
+definition cache remains separate from the worker queue. An active attempt blocks
 changed definitions. A fresh reservation creates canonical intent/provisioning,
 then the owner activates and binds its independent parent under the slot exclusion.
 It pins existing resource objects, the authority mount namespace and the installed
