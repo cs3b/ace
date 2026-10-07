@@ -23,50 +23,32 @@ This ACE integration tracker owns source sequencing and release evidence. **lab-
 
 Captain approved this ownership split on 2026-10-05. Earlier chronological checkpoints and their original claims are preserved in history/before-centralized-lab-acceptance-2026-10-05.md. The source and acceptance receipts linked there remain unchanged; the checklist below is the current dispatch view. No installation success is inferred from task completion.
 
-## Current handoff — resumed at Captain request, 2026-10-07
+## Current handoff — 2026-10-07 integrated source
 
-Captain explicitly resumed implementation and delegated work after the process
-correction `e0f1e9170`. The immediate acceptance target is the maintained public
-work-on → authority → original-child path and cleanup recovery, alongside the
-original-entry → Installer composition. Review and integration of retained
-candidates precede opening further implementation scope. Installed acceptance
-remains solely in gad.2; no native or installed probes are authorized here.
+ACE `99b8cd2ac` is synchronized with origin and fg. Lab-config `627ef576`
+is synchronized with origin. These are source checkpoints, not a final release
+manifest or installed acceptance. Captain's resumed implementation authorization
+remains active; installed execution belongs solely to gad.2.
 
-| Scope / owner | Current location and evidence | Remaining action before acceptance |
+| Scope | Delivered evidence | Remaining source work |
 |---|---|---|
-| qk0.1.1 original launcher and roles / ace-overseer | On main: original-input/readiness repairs through `02353637f`; three canonical role workflows `36199d599`, independent review and packaging 2 tests / 20 assertions. | Public composition and domain charter adoption remain open. |
-| qk0.1.1 public work-on / ace-overseer | Reviewed public source and exact admission reuse are integrated (`a67cf0bb2`, `f89b3d7d1`), public file 9/58 PASS (`65fcbad2`). Maintained producer → fixed CLI → real authority → canonical readiness and read-only recovery are now reviewed and integrated through `940bd6c82`: actual composition 1/30 PASS (`1b07f937`, 21.76s), budget controls 4/12 PASS (`77d60648`). Prior timeout/catalog/phase failures are retained in its receipt. | Worker consumption, responsive steering, authenticated terminal/release, independent delivery composition and legacy removal. |
-| qk0.2 listener / ace-lab | Independently reviewed and synchronized on main through `a1ac4ba6e`, including failed-publication restart repair. Integrated client/listener 12 tests / 64 assertions passed (`8e89fce9`). Earlier failures are retained; the bounded recovery repair below resolves the repeated-history-read cause. | Receiver settlement and physical cleanup; listener transport is not full cleanup acceptance. |
-| qk0.2 inspection recovery / ace-assign + ace-lab | Independently reviewed and integrated as `c386af2f1`; actual receiver → original inspection → protected pair import → public status/historical replay passes on main, 1/27 (`de41b885`, 35.82s). Public defaults remain 5 seconds; the shared history reader and one pinned operation view remove repeated proof work. | Physical same-Installer inspection producer remains open. Ordinary settlement retains one prerequisite `EPERM` (`52e46d91`), five cases pass; no full-suite acceptance or production begin-dispatch latency guarantee. |
-| Staged unit validation / ace-runtime | Independent APPROVE; author `0a867d7b6`, integrated and synchronized as `3532db238`. Integrated focused checks 2 tests / 10 assertions passed (`14caa7d5`). | Domain composer acceptance remains open. Mandatory installed socket verification is preserved. |
-| qk0.3 + gad.b composer / lab-config | Committed bootstrap `fa7ed56`; composer remains uncommitted. Metadata test passes; existing unrelated WIP is preserved. | Materialized unit validation, first-slot publication, maintained original-entry → Installer test and partial-publication/retry checks; same Installer physical cleanup producer. |
+| qk0.1.1 public work-on | Reviewed steering, foreign-principal refusal, original terminal/release and removal of legacy forwarding are integrated. Maintained public launch → PreparedWorker → eight scoped Start/Step/Finish leaves → terminal/release passed 1/98 (`2a145464`); integrated at `d6123d479`. | Actual domain work, independent delivery composition and charter adoption; controlled provider execution does not prove these. |
+| Canonical history | Batched full history retains every prefix, raw event identity, introduction and tip check. Independent APPROVE; main inventory/snapshot 2/18 PASS (`eacbb421`), unsupported mode/tree-transition regression integrated at `18ee5f756`. | Final combined consumer/package verification after remaining changes. No cross-request authorization cache. |
+| qk0.2 transport/recovery | Retained inspection recovery through `c386af2f1`; original workspace accessor at `185b3189d`; canonical root preview transport independently approved and integrated through `99b8cd2ac`. Main actual controlled socket chain 1/36 PASS (`9c9a2ab8`). | Physical same-Installer inventory/preservation/removal, its trusted original repository bindings, and public dry-run/apply adoption. Synthetic preview metadata is transport evidence only. |
+| qk0.3 / gad.b installer | Lab-config `627ef576` delivers accepted original entry → descriptor/runtime composition → full owner → final Installer, interrupted publication/config failure and same-pin retry. Composed test 1/47.768s, focused generated-field refusal 1/0.323s; independent r2 APPROVE. ACE directory identity correction is integrated at `7573132a3`. | Physical cleanup and complete remaining task criteria. Source tests inject native/kernel boundaries; no installed proof. |
+| qkb.1 | Neutral vocabulary remains delivered. Inspection found missing maintained protected merge producer/receipt consumer; producer contract passed independent readiness review. | Implement and review actual producer/consumer and role/workflow adoption before R2. |
 
-- [ ] Resolve the existing review/integration queue before new implementation scope; resumed with independent review, cleanup recovery and domain composition owners.
-- [ ] Close the actual source producer/consumer path; partial receipts above do not close parent tasks.
-- [ ] Continue qkb.1 → R2 → R3 → qkc/vs3 source deliverables, then prepare one coherent release candidate.
-- [ ] Captain publishes with OTP; actual installation/system acceptance remains solely lab-config:gad.2.
+The original accessor EPERM failure (`620b2d4d`) remains retained. Same-seed
+main reproduction passed 1/58 (`09b90878`); this is nonreproduction, not a proven
+root-cause repair. Earlier failed and excluded test selections remain in the
+individual task receipts, not converted to acceptance.
 
-The resumed bounded integration received independent source APPROVE from
-`audit_runtime_delivery_status` for public work-on and staged-unit validation.
-Root separately reviewed the exact admission-proof repair: fresh held bytes and
-definition checks remain mandatory, and only the last successful exact proof is
-reused within one owner. These approvals and focused tests do not close qk0.
+- [ ] Complete physical cleanup and remaining qk0/xz9/xza/9c2 source criteria.
+- [ ] Complete qkb.1 → R2 → R3 → qkc/vs3 with independent review.
+- [ ] Verify one final source combination and build fresh release artifacts.
+- [ ] Captain publishes with OTP; gad.2 owns the later installed system test.
 
-### Public steering integration checkpoint — 2026-10-07
-
-Independent reviewer `audit_runtime_delivery_status` approved source commits
-`01ceb76dd`, `6f382c57f`, `c7fb2607e`, `191f64ddb`, `fb8a45b86`.
-They are integrated through `4f7298284`, synchronized to origin and fg.
-This supersedes the earlier open steering/terminal/legacy-removal entries above:
-lost prompt reply, changed replay refusal, authenticated terminal/release,
-immutable original stop replay and obsolete Lab forwarding removal are delivered
-as bounded source checkpoints. Worker consumption, alternate-principal negatives,
-independent delivery composition and domain charter adoption remain open.
-
-Combined main verification: `protected_work_on_composition_test.rb:230`,
-1 test / 52 assertions, zero failures/errors, 43.95s;
-receipt `bcef5384-a984-48a9-9fe1-94e7009d7a1e`.
-No parent completion or installed acceptance is claimed.
+No parent status or success criterion is closed by this checkpoint update.
 
 ## Delivered source and foundation
 
@@ -94,15 +76,15 @@ The five newly separated source closures (y24/vs2/1w5/09j/qkb.0) use the retaine
 
 ## Remaining local source path
 
-- [ ] 9c2 — reviewed generic readiness/history/maintenance checkpoint is integrated (`5f5de6599`); original maintenance boot-evidence export is integrated (`a4df327f8`). Actual Lab producer/installer composition and remaining terminal consumers keep this task open. Bounded pre-native abort/release was already delivered.
+- [ ] 9c2 — reviewed generic readiness/history/maintenance checkpoint is integrated (`5f5de6599`); original maintenance boot-evidence export is integrated (`a4df327f8`). Remaining domain readiness/maintenance and terminal-consumer criteria keep this task open; the reviewed Installer composition is recorded above. Bounded pre-native abort/release was already delivered.
 - [ ] xz9 — scoped service composition and remaining handlers. Captain selected original-attempt-terminal submission for xz9.2; that child is in progress. Native guard (N1), exact source packaging, and original-actor input drain are integrated through `d803c5344`; The remaining selected startup/build composition and full child acceptance remain open. See the child's `native-input-drain-source-verification.md` for reviewed source and executed test receipts. Authenticated current/historical service and Inbox settlement projections plus bounded batched canonical reads are integrated through `8740440d3`; the child's `settlement-evidence-source-receipt.md` retains independent review, integration checks and the complete historical rotation test. Proof-owned stop/release, canonical status/history and original foreground lifetime are reviewed and integrated as `8f3276901` with actual combined CLI evidence in `n2-stopped-source-receipt.md`. Selected N1 startup/build composition, downstream qk0 adoption and xz9.1 fresh no-effect challenge/inspection production remain open. No native build, installation or consumption proof is implied; dependencies remain unchanged.
 - [ ] xza — native observation/signing producer implementation under its reviewed contract.
 - [ ] qk0 — complete responsive orchestration, cleanup and role/charter composition. The family remains draft; reviewed child scopes below have their own actual delivery states.
 - [x] qk0.0 — canonical assignment discovery after coordinator restart; source task is done.
 - [x] qk0.1.0 — exact candidate review through the original launcher; source task is done.
-- [ ] qk0.1.1 — compose public launch/recovery/steering and roles. Bounded proposal wakes, retained inputs and original child/readiness are integrated through `02353637f`; canonical role assets through `36199d599`. Maintained public managed launch/read-only recovery composition is reviewed and tested through `940bd6c82`; full child acceptance, including steering/consumption/terminal and domain charter adoption, remains open.
+- [ ] qk0.1.1 — compose public launch/recovery/steering and roles. Bounded proposal wakes, retained inputs and original child/readiness are integrated through `02353637f`; canonical role assets through `36199d599`. Maintained public managed launch/read-only recovery composition is reviewed and tested through `940bd6c82`; steering, controlled worker consumption and terminal/release are now integrated as recorded above; actual domain work, independent delivery and charter adoption remain open.
 - [ ] qk0.2 — complete preserved-workspace cleanup. Original receiver-bound root admission and lost-response recovery are reviewed and integrated through `5894019a4`; the fixed listener and publication-failure repair are reviewed, tested and synchronized through `a1ac4ba6e`. Bounded inspection recovery is reviewed and integrated as `c386af2f1` with actual main 1/27 PASS (`de41b885`). Physical preservation and the same Installer producer remain open; see the current handoff above.
-- [ ] qk0.3 — complete prepared managed work delivery. Actual preparation/export, registration/fetch, scoped queue and managed worker join are reviewed and integrated. Runtime callback-return repair is integrated at `fb6ed962d`; actual emitted domain entry → Runtime → Bundle → Assign composed verification passes (receipt `2629e89f-1771-4139-b647-0299478d755b`). The production descriptor/runtime-artifact composer is now WIP in lab-config, with metadata checks only; the full maintained entry/Installer join and acceptance remain open; they are not deferred to gad.2.
+- [ ] qk0.3 — complete prepared managed work delivery. Actual preparation/export, registration/fetch, scoped queue and managed worker join are reviewed and integrated. Runtime callback-return repair is integrated at `fb6ed962d`; actual emitted domain entry → Runtime → Bundle → Assign composed verification passes (receipt `2629e89f-1771-4139-b647-0299478d755b`). The maintained original-entry/descriptor/full-owner/Installer composition is reviewed and integrated in lab-config `627ef576` with publication-failure/retry source evidence above. Remaining physical cleanup and full child criteria stay open; they are not deferred to gad.2.
 - [ ] qkb.1 / qkb — complete qk0/xz9-dependent workflow/role adoption; accepted neutral vocabulary is retained.
 - [ ] ig3 / R2 — one effective policy and loop owner after qkb.
 - [ ] ig4 / R3 — bounded review and escalation after R2.
