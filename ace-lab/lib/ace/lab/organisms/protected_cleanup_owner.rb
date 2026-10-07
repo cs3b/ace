@@ -64,12 +64,18 @@ module Ace
           end
           @listener = UNIXServer.new(path)
           @listener.close_on_exec = true
+          created = File.lstat(path)
+          unless created.socket? && created.uid == Process.uid && created.gid == connect_gid &&
+              [File.lstat(parent).dev, File.lstat(parent).ino] == parent_identity
+            raise SecurityError, "cleanup endpoint creation differs"
+          end
+          endpoint = [created.dev, created.ino, created.uid, created.gid]
           File.chmod(0o660, path)
           own = File.lstat(path)
-          unless own.socket? && (own.mode & 0o7777) == 0o660 && own.uid == Process.uid && own.gid == connect_gid && [File.lstat(parent).dev, File.lstat(parent).ino] == parent_identity
+          unless own.socket? && (own.mode & 0o7777) == 0o660 && [own.dev, own.ino, own.uid, own.gid] == endpoint && [File.lstat(parent).dev, File.lstat(parent).ino] == parent_identity
             raise SecurityError, "cleanup endpoint publication differs"
           end
-          endpoint = [own.dev, own.ino, own.uid, own.gid]
+          published = true
           until @stopping
             socket = @listener.accept
             accepted_at = Process.clock_gettime(Process::CLOCK_MONOTONIC)
@@ -118,7 +124,7 @@ module Ace
             begin
               verify_parents!(parents)
               current = File.lstat(path)
-              File.unlink(path) if current.socket? && (current.mode & 0o7777) == 0o660 && [current.dev, current.ino, current.uid, current.gid] == endpoint
+              File.unlink(path) if current.socket? && (!published || (current.mode & 0o7777) == 0o660) && [current.dev, current.ino, current.uid, current.gid] == endpoint
             rescue Errno::ENOENT
               nil
             end

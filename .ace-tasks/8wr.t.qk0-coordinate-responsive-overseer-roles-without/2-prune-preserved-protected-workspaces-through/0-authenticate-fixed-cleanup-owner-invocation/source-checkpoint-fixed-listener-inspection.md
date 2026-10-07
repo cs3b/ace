@@ -25,3 +25,20 @@ The persistent fixture assertion now includes returned state/reason, canonical s
 - Earlier diagnostic full file **6/99 PASS**, **164.151831s**, `96e6c1c2-b05a-4435-b4d6-829a667de58e`, actually seed **36629**, despite the parent shell SEED assignment (hermetic runner sanitized it).
 - Relative configuration attempt `c1470dbd-f47c-4764-9e3e-9c787e244d6e` actually used seed **509**: **6/72, 1 failure + 1 error**, **137.503706s**. Original once case returned uncertain with canonical dispatch_started and zero Installer callbacks; its initially incomplete trace collected no typed exceptions. The inspection case failed at public Client begin_dispatch with protected socket deadline expired. Both failures remain unresolved; later exact-seed success does not classify their cause or establish universal latency.
 - Premature absolute-config attempt session22376 was stopped with **exit130** to verify seed transport first; excluded from passed coverage. No deadline was increased and no production change was made between failed and successful diagnostics. No additional rerun is planned merely to obtain green.
+
+## Resumed independent review and publication-failure repair
+
+Independent GPT-6.1-sol CLI review `review-8x6o7m` found one verified medium
+finding, `8x6oewc8`: failed chmod after bind left an unowned-by-cleanup socket
+that prevented restart. The repair retains the freshly created endpoint identity
+before chmod and removes only that exact endpoint on failed publication;
+successful publication still requires mode 0660, and replacement endpoints survive.
+`wave_412` independently approved the exact two-file repair (source blob
+`0ae17b18e`, test `c76b60c8a`). Full controlled listener checks passed **5 tests /
+26 assertions, 0.847949 seconds**, `7dcbe667-5c5c-42e5-b636-d1101ed2075e`.
+An initial fixture-only ensure-scope NameError (`c4c0590d`) was corrected before
+that run. The CLI reviewer also ran client/listener **11/58 PASS** before the
+repair, but reported canonical dispatcher deadline errors before root inspection;
+these remain unresolved in the recovery owner and are not full-dispatch acceptance.
+This review permits bounded listener source integration only. Physical cleanup,
+receiver settlement and full parent acceptance remain open.

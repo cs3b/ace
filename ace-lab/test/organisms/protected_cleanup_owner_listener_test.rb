@@ -5,6 +5,68 @@ require "ace/lab/organisms/protected_cleanup_owner"
 require "delegate"
 
 class ProtectedCleanupOwnerListenerTest < Minitest::Test
+  def test_failed_publication_removes_only_original_socket_and_allows_restart
+    with_endpoint do |path|
+      owner = socket = thread = replacement = nil
+      observer = Object.new
+      observer.define_singleton_method(:observe_self!) { |**_| {"controlled" => "original root"} }
+      admission = Object.new
+      admission.define_singleton_method(:connection_group!) { |_| true }
+      admission.define_singleton_method(:identity_reader!) { |_| true }
+      kernel = Object.new
+      kernel.define_singleton_method(:peer) { |_| {} }
+      build = lambda do
+        Ace::Lab::Organisms::ProtectedCleanupOwner.new(observer: observer, admission: admission,
+          snapshots: Object.new, journals: Object.new, kernel: kernel, installer: Object.new,
+          scratch_root: @scratch, protection: controlled_protection)
+      end
+      wire = Ace::Runtime::Molecules::ProtectedSocket
+      wire.stub(:root_path!, ->(*_, **_) { true }) do
+        original_chmod = File.method(:chmod)
+        fail_publication = lambda do |mode, selected|
+          raise Errno::EIO, "controlled publication failure" if selected == path
+          original_chmod.call(mode, selected)
+        end
+        File.stub(:chmod, fail_publication) do
+          assert_raises(Errno::EIO) { build.call.serve(connect_gid: Process.gid) }
+        end
+        refute File.exist?(path), "unpublished original socket must not block a new owner"
+        File.open("#{path}.lock", File::RDWR) { |lock| assert lock.flock(File::LOCK_EX | File::LOCK_NB) }
+        ready = Queue.new
+        original_server = UNIXServer.method(:new)
+        owner = build.call
+        UNIXServer.stub(:new, ->(selected) { original_server.call(selected).tap { ready << true } }) do
+          thread = Thread.new { owner.serve(connect_gid: Process.gid) }
+          Timeout.timeout(5) { ready.pop }
+          socket = UNIXSocket.new(path)
+          wire.write(socket, {"schema" => Ace::Lab::Molecules::ProtectedCleanupOwnerClient::SCHEMA, "kind" => "identity"}, deadline: wire.deadline(5))
+          socket.shutdown(Socket::SHUT_WR)
+          assert_equal "original root", wire.read(socket, deadline: wire.deadline(5)).dig("operation_owner_binding", "controlled")
+          socket.close
+          owner.stop
+          assert thread.join(6)
+          thread.value
+        end
+        # A replacement during failed publication is not ours to remove.
+        replace_then_fail = lambda do |mode, selected|
+          next original_chmod.call(mode, selected) unless selected == path
+          File.unlink(path)
+          replacement = original_server.call(path)
+          raise Errno::EIO, "controlled replacement before failure"
+        end
+        File.stub(:chmod, replace_then_fail) do
+          assert_raises(Errno::EIO) { build.call.serve(connect_gid: Process.gid) }
+        end
+        assert File.socket?(path), "failed publication must preserve replacement endpoint"
+      end
+    ensure
+      owner&.stop
+      socket&.close unless socket&.closed?
+      thread&.join(6)
+      replacement&.close
+    end
+  end
+
   def test_fixed_listener_identity_and_lifetime_lock_preserve_replacement_endpoint
     with_endpoint do |path|
       ready = Queue.new
