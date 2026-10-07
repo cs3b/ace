@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "../molecules/canonical_evidence"
+require_relative "service_cleanup_evidence"
 
 module Ace
   module Assign
@@ -9,6 +10,7 @@ module Ace
       # The journal supplies the record and transient pending view; callers
       # never supply an alternate reader, artifact path or trusted flag.
       class ServiceEvidence
+        include ServiceCleanupEvidence
         FIELDS = (Molecules::EvidenceJournal::TERMINAL_BINDING_FIELDS +
           %w[dispatch_ticket_id claim_binding candidate_generation claim_generation policy_digest]).freeze
         CHALLENGE_FIELDS = %w[version request_id input_digest claim_binding dispatch_ticket_id no_effect_challenge
@@ -17,9 +19,10 @@ module Ace
           challenge_event_digest failure_event_digest failure_generation target dispatch_phase effect_absent
           handler_terminated writers_absent].freeze
 
-        def initialize(journal:)
+        def initialize(journal:, cleanup_artifacts: nil)
           @journal = journal
           @canonical = Molecules::CanonicalEvidence.new(journal: journal)
+          @cleanup_artifacts = cleanup_artifacts
         end
 
         # Executor-only projection from the same authenticated original record;
@@ -192,6 +195,7 @@ module Ace
         end
 
         def call(reference, record, state, pending)
+          return cleanup_collection!(reference, record, state, pending) if reference.is_a?(Array)
           no_effect = state == "failed-settled"
           expected = context(record, no_effect: no_effect, pending: pending)
           bytes = if pending && pending[:pending_events]

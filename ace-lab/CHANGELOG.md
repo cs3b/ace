@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Add fixed cleanup-owner identity and execution exchanges that authenticate the original peer on each connection and verify bounded result bytes; actual cleanup entry and receipt admission remain required.
+- Route named workspace-cleanup receiver dispatch through the fixed original root-owner client and canonical result import. Historical claim replay needs no new live root; actual installed cleanup entry, root action and production composition remain required.
 
 - Authenticate a fixed cleanup root owner through held accepted entry/load bytes, its typed manager invocation and the original pinned kernel lifetime. The root profile is separate from ordinary all-zero capability admission; actual installed cleanup entry and dispatch composition remain required.
 

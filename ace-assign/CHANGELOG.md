@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Authenticate the complete original workspace-cleanup result pair at canonical import, with held root-result protection and immutable historical verification that never rereads private archives or mutable result storage.
+
 - Bind fresh protected workspace-cleanup dispatch to an independently observed original root owner, retaining that identity through canonical replay, later updates and imported evidence context.
 - Activate authenticated prepared work only in the exact original worker, retain its private queue across scoped CLI progress, and refuse changed instructions, failed completion or missing published queues without reconstruction.
 - Require explicit canonical cancellation before replacing a direct review assignment; revoked purposes cannot export candidates or authorize future approval use, while original replies remain historical evidence.

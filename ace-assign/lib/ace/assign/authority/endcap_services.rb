@@ -312,8 +312,38 @@ module Ace
               data["claim"] = retained || result.fetch(:replayed) || result.dig(:data, "claim") == "retained" ? "retained" : "created"
               result = result.merge(data: data)
             end
+            if %w[request_service begin_dispatch].include?(request.fetch("operation")) &&
+                journal.service_request(params.fetch("request_id")).fetch("operation") == "prune-preserved-workspace"
+              selector = request.fetch("operation") == "request_service" ? "request_event_digest" : "dispatch_event_digest"
+              digest = cleanup_service_mutation_event!(journal, request, params, result.fetch(:data).fetch("journal_commit"))
+              result = result.merge(data: result.fetch(:data).merge(selector => digest))
+            end
             result
           end
+        end
+
+        # Selectors refer to the actual accepted mutation, never a caller's
+        # pathname or the latest service record. They are derived after CAS,
+        # avoiding a self-reference in the persisted mutation reply.
+        def cleanup_service_mutation_event!(journal, request, params, commit)
+          events = journal.read_events(params.fetch("assignment_id"), commit: commit)
+            .select { |event| event["attempt_id"] == params.fetch("attempt_id") }
+          unless Models::EvidenceEvent.chain_valid?(events)
+            raise AttemptErrors::EvidenceUnavailable, "cleanup service mutation chain is unavailable"
+          end
+          selected = events.select do |event|
+            event["type"] == "authority_mutation" && event.dig("payload", "mutation_id") == request.fetch("mutation_id")
+          end
+          event = selected.one? && selected.first
+          unless event && event.dig("payload", "operation") == request.fetch("operation") &&
+              event.dig("payload", "parameters_digest") == Atoms::EvidenceDigest.digest(params) &&
+              event.dig("payload", "assignment_id") == params.fetch("assignment_id") &&
+              event.dig("payload", "attempt_id") == params.fetch("attempt_id") &&
+              event.dig("payload", "data", "request_id") == params.fetch("request_id") &&
+              journal.event_commit!(assignment_id: params.fetch("assignment_id"), event_digest: event.fetch("digest"), commit: commit) == commit
+            raise AttemptErrors::EvidenceUnavailable, "cleanup service mutation introduction is unavailable"
+          end
+          event.fetch("digest")
         end
 
         def service_policy!
