@@ -118,7 +118,8 @@ module Ace
               raise AttemptErrors::EvidenceUnavailable, "maintenance original descriptor selection is ambiguous"
             end
             immutable_maintenance_projection(binding.slice("project_id", "mapping_id", "assignment_id", "attempt_id",
-              "scope_generation", "boot_id", "slot_id", "deployment_digest", "boot_baseline_selection").merge(
+              "scope_generation", "boot_id", "slot_id", "deployment_digest", "boot_baseline_selection",
+              "network_installation_selection", "network_namespace_identity").merge(
                 "descriptor_sha256" => events.first.fetch("payload").fetch("descriptor_sha256"),
                 "scope_binding_event_id" => lineage.binding_event.fetch("digest"), "proof_id" => lineage.proof_id,
                 "journal_commit" => commit, "baseline" => verify_historical_boot_baseline!(binding)))
