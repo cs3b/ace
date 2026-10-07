@@ -4,6 +4,7 @@
 #include <json-c/json.h>
 #include <poll.h>
 #include <stdio.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/prctl.h>
@@ -20,6 +21,7 @@ static _Noreturn void deny(const char *why) { fprintf(stderr, "ace-worker-gate: 
 static double now(void) { struct timespec ts; if (clock_gettime(CLOCK_MONOTONIC,&ts)) deny("clock unavailable"); return ts.tv_sec + ts.tv_nsec / 1e9; }
 static int token(const char *s) {
   if (!s || !*s || strlen(s)>128) return 0;
+  if(!((s[0]>='a'&&s[0]<='z')||(s[0]>='A'&&s[0]<='Z')||(s[0]>='0'&&s[0]<='9')))return 0;
   for (const unsigned char *p=(const unsigned char *)s; *p; p++)
     if (!((*p>='a'&&*p<='z')||(*p>='A'&&*p<='Z')||(*p>='0'&&*p<='9')||*p=='_'||*p=='-'||*p=='.')) return 0;
   return 1;
@@ -29,7 +31,11 @@ static json_object *field(json_object *o,const char *k,enum json_type t) {
   if (!o || !json_object_object_get_ex(o,k,&v) || !json_object_is_type(v,t)) deny("invalid protected schema");
   return v;
 }
-static const char *str(json_object *o,const char *k) { return json_object_get_string(field(o,k,json_type_string)); }
+static const char *str(json_object *o,const char *k) {
+  json_object *value=field(o,k,json_type_string);const char *text=json_object_get_string(value);
+  if((size_t)json_object_get_string_len(value)!=strlen(text))deny("embedded NUL in protected string");
+  return text;
+}
 static int number(json_object *o,const char *k) {
   int64_t n=json_object_get_int64(field(o,k,json_type_int));
   if (n<=0 || n>2147483647) deny("invalid principal identity");
@@ -87,19 +93,73 @@ static void credentials(pid_t pid,int uid,int gid,json_object *groups) {
   }
   free(s); if(!got_uid||!got_gid||!got_groups||!no_new_privs||caps!=31)deny("kernel credentials unavailable");
 }
-static void lineage(json_object *native) {
-  json_object *server=field(native,"server_identity",json_type_object); int pid=number(server,"pid");
-  if(getppid()!=pid) deny("gate is not the original server child");
+struct parent_identity { pid_t pid; char birth[256]; };
+static void parent_birth(pid_t pid,char birth[256]) {
+  if(pid<=1||getppid()!=pid) deny("original gate parent unavailable");
   char path[64]; snprintf(path,sizeof(path),"/proc/%d/stat",pid); char *s=read_file(path,16384);
   char *end=strrchr(s,')'); if(!end||end[1]!=' ') deny("server birth unavailable");
   char *save=NULL,*word=strtok_r(end+2," ", &save); int i=3; const char *ticks=NULL;
   while(word) { if(i==22){ticks=word;break;} i++;word=strtok_r(NULL," ",&save); }
   if(!ticks||strspn(ticks,"0123456789")!=strlen(ticks))deny("server birth unavailable");
   char *boot=read_file("/proc/sys/kernel/random/boot_id",128); boot[strcspn(boot,"\n")]=0;
-  char birth[256]; snprintf(birth,sizeof(birth),"linux:%s:%s",boot,ticks);
-  if(strcmp(birth,str(server,"started_at")))deny("server incarnation changed");
+  int written=snprintf(birth,256,"linux:%s:%s",boot,ticks);
+  if(written<0||written>=256)deny("parent birth oversized");
   free(boot);free(s);
-  credentials(pid,number(server,"uid"),number(server,"gid"),field(server,"groups",json_type_array));
+  if(getppid()!=pid)deny("original gate parent changed");
+}
+static void same_parent(const struct parent_identity *parent) {
+  char birth[256];parent_birth(parent->pid,birth);
+  if(strcmp(birth,parent->birth))deny("original gate parent incarnation changed");
+}
+static void parent_credentials(const struct parent_identity *parent,json_object *mapping) {
+  same_parent(parent);
+  credentials(parent->pid,number(mapping,"worker_uid"),number(mapping,"worker_gid"),field(mapping,"worker_groups",json_type_array));
+  same_parent(parent);
+}
+static void closed(json_object *object,const char *const *keys,size_t count) {
+  if(!json_object_is_type(object,json_type_object)||(size_t)json_object_object_length(object)!=count)deny("open protected schema");
+  for(size_t i=0;i<count;i++) { json_object *value=NULL;if(!json_object_object_get_ex(object,keys[i],&value))deny("incomplete protected schema"); }
+}
+static void hex_field(json_object *object,const char *key,size_t min,size_t max) {
+  const char *value=str(object,key);size_t length=(size_t)json_object_get_string_len(field(object,key,json_type_string));
+  if(length!=strlen(value)||(length!=min&&length!=max)||strspn(value,"0123456789abcdef")!=length)deny("invalid protected digest");
+}
+static void bounded_integer(json_object *object,const char *key,int64_t max) {
+  int64_t value=json_object_get_int64(field(object,key,json_type_int));
+  if(value<1||value>max)deny("invalid prepared bound");
+}
+static void prepared_permission(json_object *permission) {
+  static const char *const permission_keys[]={"operation","launch_ticket","attempt_id","assignment_id","generation","journal_commit","prepared_input"};
+  closed(permission,permission_keys,7);hex_field(permission,"journal_commit",40,64);
+  json_object *input=field(permission,"prepared_input",json_type_object);
+  static const char *const input_keys[]={"registration_generation","registration_commit","definition_digest","original_binding_digest","prepared_work","bundle_ref","bundle_bytes","bundle_sha256"};
+  closed(input,input_keys,8);bounded_integer(input,"registration_generation",INT64_MAX);
+  hex_field(input,"registration_commit",40,64);hex_field(input,"definition_digest",64,64);
+  hex_field(input,"original_binding_digest",64,64);hex_field(input,"bundle_sha256",64,64);
+  bounded_integer(input,"bundle_bytes",64*1024*1024);
+  char expected[256];
+  int written=snprintf(expected,sizeof(expected),"execution/prepared/%s-%s.bundle",str(permission,"assignment_id"),str(input,"bundle_sha256"));
+  if(written<0||(size_t)written>=sizeof(expected)||
+      strcmp(expected,str(input,"bundle_ref"))||json_object_get_string_len(field(input,"bundle_ref",json_type_string))!=(int)strlen(expected))deny("prepared bundle reference differs");
+  json_object *work=field(input,"prepared_work",json_type_object);
+  static const char *const work_keys[]={"version","task_id","scope","prepared_head","prepared_tree","manifest_bytes","manifest_sha256","selection_sha256"};
+  closed(work,work_keys,8);
+  const char *task=str(work,"task_id");size_t task_length=(size_t)json_object_get_string_len(field(work,"task_id",json_type_string));
+  if(json_object_get_int64(field(work,"version",json_type_int))!=1||task_length!=strlen(task)||!task_length||task_length>200||
+      !((task[0]>='a'&&task[0]<='z')||(task[0]>='A'&&task[0]<='Z')||(task[0]>='0'&&task[0]<='9')))deny("invalid prepared selection");
+  for(size_t i=0;i<task_length;i++)if(!((task[i]>='a'&&task[i]<='z')||(task[i]>='A'&&task[i]<='Z')||(task[i]>='0'&&task[i]<='9')||task[i]=='_'||task[i]=='-'||task[i]=='.'))deny("invalid prepared task");
+  const char *scope=str(work,"scope");size_t scope_length=(size_t)json_object_get_string_len(field(work,"scope",json_type_string));
+  if(scope_length!=strlen(scope)||!scope_length)deny("invalid prepared scope");
+  size_t digits=0;
+  for(size_t i=0;i<scope_length;i++) {
+    if(scope[i]>='0'&&scope[i]<='9')digits++;
+    else if(scope[i]=='.'&&digits>0)digits=0;
+    else deny("invalid prepared scope");
+  }
+  if(!digits)deny("invalid prepared scope");
+  hex_field(work,"prepared_head",40,64);hex_field(work,"prepared_tree",40,64);
+  hex_field(work,"manifest_sha256",64,64);hex_field(work,"selection_sha256",64,64);
+  bounded_integer(work,"manifest_bytes",32768);
 }
 static void wait_fd(int fd,short events,double deadline) {
   struct pollfd p={.fd=fd,.events=events}; int r;
@@ -127,24 +187,30 @@ static json_object *receive(int fd,double deadline) {
     if(r<=0)deny("authority EOF before permission");
     if(s[n++]=='\n') { json_tokener *t=json_tokener_new();json_object *o=json_tokener_parse_ex(t,s,(int)n);
       if(!o||json_tokener_get_error(t)!=json_tokener_success||json_tokener_get_parse_end(t)!=n||!json_object_is_type(o,json_type_object))deny("invalid authority frame");
+      /* The maintained wire emits one compact JSON record. Round-trip equality
+         refuses duplicate keys, extra whitespace/records and alternate escapes. */
+      const char *canonical=json_object_to_json_string_ext(o,JSON_C_TO_STRING_PLAIN|JSON_C_TO_STRING_NOSLASHESCAPE);
+      if(strlen(canonical)!=n-1||memcmp(canonical,s,n-1))deny("noncanonical authority frame");
       json_tokener_free(t);free(s);return o; }
   }
   deny("authority frame oversized"); return NULL;
 }
 int main(int argc,char **argv) {
+  struct parent_identity parent={.pid=getppid()};
+  parent_birth(parent.pid,parent.birth);same_parent(&parent);
   if(prctl(PR_SET_DUMPABLE,0,0,0,0))deny("non-dumpable gate unavailable");
   if(argc!=3||!token(argv[1])||!token(argv[2]))deny("expected fixed mapping and correlation ticket");
   policy();root_path(MAP_PATH,0);char *bytes=read_file(MAP_PATH,LIMIT);
   json_tokener *parser=json_tokener_new();json_object *map=json_tokener_parse_ex(parser,bytes,(int)strlen(bytes));
   if(!map||json_tokener_get_error(parser)!=json_tokener_success||json_tokener_get_parse_end(parser)!=strlen(bytes))deny("invalid deployment map");
   json_tokener_free(parser);free(bytes);
-  if(strcmp(str(map,"schema"),"ace.assign.authorities/v1"))deny("unsupported deployment map");
+  if(strcmp(str(map,"schema"),"ace.assign.authorities/v2"))deny("unsupported deployment map");
   json_object *mapping=field(field(map,"launch_mappings",json_type_object),argv[1],json_type_object);
   json_object *service=field(field(map,"authorities",json_type_object),str(mapping,"authority_id"),json_type_object);
   int worker=number(mapping,"worker_uid"),launcher=number(mapping,"launcher_uid"),authority=number(service,"uid");
   if(worker==launcher||worker==authority||authority==launcher)deny("principals are not distinct");
   credentials(getpid(),worker,number(mapping,"worker_gid"),field(mapping,"worker_groups",json_type_array));
-  lineage(field(mapping,"native",json_type_object));
+  parent_credentials(&parent,mapping);
   const char *bootstrap=str(mapping,"bootstrap");root_path(bootstrap,0);
   struct stat installed,self;
   if(stat(bootstrap,&installed)||stat("/proc/self/exe",&self)||installed.st_dev!=self.st_dev||installed.st_ino!=self.st_ino||
@@ -171,7 +237,7 @@ int main(int argc,char **argv) {
   json_object_object_add(request,"version",json_object_new_int(1));json_object_object_add(request,"operation",json_object_new_string("gate_ready"));
   json_object_object_add(request,"mutation_id",NULL);json_object_object_add(request,"project_id",json_object_new_string(str(mapping,"project_id")));
   json_object_object_add(params,"mapping_id",json_object_new_string(argv[1]));json_object_object_add(params,"launch_ticket",json_object_new_string(argv[2]));
-  json_object_object_add(request,"params",params);send_frame(fd,request,deadline);json_object_put(request);
+  json_object_object_add(request,"params",params);parent_credentials(&parent,mapping);send_frame(fd,request,deadline);json_object_put(request);
   json_object *ready=receive(fd,deadline);
   if(strcmp(str(ready,"status"),"ok")||strcmp(str(field(ready,"data",json_type_object),"phase"),"ready"))deny("gate not admitted");
   json_object_put(ready);
@@ -179,11 +245,14 @@ int main(int argc,char **argv) {
   if(strcmp(str(permission,"operation"),"release")||strcmp(str(permission,"launch_ticket"),argv[2])||
     !token(str(permission,"attempt_id"))||!token(str(permission,"assignment_id"))||!token(str(permission,"journal_commit")))deny("release permission differs");
   if(json_object_get_int64(field(permission,"generation",json_type_int))<1)deny("invalid release generation");
-  policy();lineage(field(mapping,"native",json_type_object));credentials(peer.pid,authority,number(service,"gid"),field(service,"groups",json_type_array));
+  prepared_permission(permission);
+  policy();parent_credentials(&parent,mapping);credentials(peer.pid,authority,number(service,"gid"),field(service,"groups",json_type_array));
   json_object *arguments=field(mapping,"worker_argv",json_type_array);size_t count=json_object_array_length(arguments);
-  if(!count||count>64)deny("invalid fixed payload");
+  if(count!=3)deny("invalid fixed payload");
   char **payload=calloc(count+1,sizeof(char *));if(!payload)deny("allocation failed");
-  for(size_t i=0;i<count;i++) {json_object *value=json_object_array_get_idx(arguments,i);if(!json_object_is_type(value,json_type_string))deny("invalid fixed argv");payload[i]=(char *)json_object_get_string(value);}
+  for(size_t i=0;i<count;i++) {json_object *value=json_object_array_get_idx(arguments,i);if(!json_object_is_type(value,json_type_string))deny("invalid fixed argv");payload[i]=(char *)json_object_get_string(value);
+    if((size_t)json_object_get_string_len(value)!=strlen(payload[i]))deny("embedded NUL in fixed argv");}
+  if(strcmp(payload[1],"authority")||strcmp(payload[2],"worker"))deny("invalid fixed worker command");
   root_path(payload[0],0);struct stat program;if(stat(payload[0],&program)||(program.st_mode&06000)||!(program.st_mode&0111))deny("unsafe payload executable");
   if(clearenv())deny("environment reset failed");
   json_object *env=field(mapping,"worker_env",json_type_object);
@@ -195,5 +264,6 @@ int main(int argc,char **argv) {
     setenv("ACE_ASSIGN_LAUNCH_MAPPING",argv[1],1))deny("authority context unavailable");
   if(chdir(str(mapping,"worker_cwd")))deny("fixed worker directory unavailable");
   close(fd);
+  parent_credentials(&parent,mapping);
   execv(payload[0],payload);deny("fixed worker execution failed");
 }

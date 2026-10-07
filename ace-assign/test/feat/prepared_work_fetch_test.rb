@@ -62,13 +62,15 @@ module Ace
 
       def issue_original
         state = call("inspect_launch", {}, peer: @launcher, role: :launcher).fetch(:data)
+        @bound_state = state
         server, worker = UNIXSocket.pair
         request = {"params" => {"mapping_id" => "mapping", "launch_ticket" => state.fetch("launch_ticket")}}
         gate = Thread.new { @launch.gate_ready(request: request, peer: @worker, socket: server, deadline: WIRE.deadline(5)) }
         assert_equal "ready", WIRE.read(worker, deadline: WIRE.deadline(5)).dig("data", "phase")
         issued = call("release_launch", {"launch_ticket" => state.fetch("launch_ticket"), "process_binding" => @binding,
           "expected_generation" => state.fetch("generation")}, id: "release", peer: @launcher, role: :launcher)
-        assert_equal "release", WIRE.read(worker, deadline: WIRE.deadline(5)).fetch("operation")
+        @release_permission = WIRE.read(worker, deadline: WIRE.deadline(5))
+        assert_equal "release", @release_permission.fetch("operation")
         gate.join(2)
         refute gate.alive?
         issued
@@ -135,6 +137,68 @@ module Ace
         end
       ensure
         @prepared_context_text = nil
+      end
+
+      def test_release_pins_exact_original_registration_and_replay_does_not_replace_it
+        fixture do
+          issued = issue_original.fetch(:data)
+          pin = issued.fetch("prepared_input")
+          assert_equal %w[bundle_bytes bundle_ref bundle_sha256 definition_digest original_binding_digest prepared_work registration_commit registration_generation], pin.keys.sort
+          assert_equal pin, @release_permission.fetch("prepared_input")
+          descriptor = prepared_fetch.fetch(:data).fetch("descriptor")
+          assert_equal descriptor.values_at("registration_generation", "registration_commit", "definition_digest", "original_binding_digest", "ref", "bytes", "sha256"),
+            pin.values_at("registration_generation", "registration_commit", "definition_digest", "original_binding_digest", "bundle_ref", "bundle_bytes", "bundle_sha256")
+          assert_equal @prepared_registration.work.reference(head: @prepared_registration.head, tree: @prepared_registration.tree), pin.fetch("prepared_work")
+          before = @journal.ref_value
+          replay = call("release_launch", {"launch_ticket" => @bound_state.fetch("launch_ticket"), "process_binding" => @binding,
+            "expected_generation" => @bound_state.fetch("generation")}, id: "release", peer: @launcher, role: :launcher)
+          assert replay.fetch(:replayed)
+          assert_equal pin, replay.fetch(:data).fetch("prepared_input")
+          assert_equal before, @journal.ref_value
+        end
+      end
+
+      def test_release_refuses_unavailable_original_bundle_before_issued_commit
+        fixture do
+          original = @journal.method(:bounded_blob)
+          @journal.define_singleton_method(:bounded_blob) do |path, **options|
+            path.start_with?("execution/prepared/") ? nil : original.call(path, **options)
+          end
+          before = @journal.ref_value
+          assert_raises(AttemptErrors::EvidenceUnavailable) { issue_original }
+          assert_equal before, @journal.ref_value
+          refute @journal.read_events("assignment").any? { |event| event.dig("payload", "operation") == "release_launch" }
+        end
+      end
+
+      def test_fetch_refuses_missing_or_changed_accepted_release_pin_before_bundle_bytes
+        fixture do
+          issue_original
+          inventory_owner = @journal.method(:canonical_event_inventory!)
+          bad = :missing
+          @journal.define_singleton_method(:canonical_event_inventory!) do |**options|
+            inventory = Marshal.load(Marshal.dump(inventory_owner.call(**options)))
+            release = inventory.fetch("events").fetch("assignment").find { |event| event.dig("payload", "operation") == "release_launch" }
+            if bad == :missing
+              release.fetch("payload").fetch("data").delete("prepared_input")
+            else
+              release.fetch("payload").fetch("data").fetch("prepared_input")["bundle_sha256"] = "f" * 64
+            end
+            inventory
+          end
+          blob_owner = @journal.method(:bounded_blob)
+          bundle_reads = 0
+          @journal.define_singleton_method(:bounded_blob) do |path, **options|
+            bundle_reads += 1 if path.start_with?("execution/prepared/")
+            blob_owner.call(path, **options)
+          end
+          before = @journal.ref_value
+          assert_raises(AttemptErrors::EvidenceUnavailable) { prepared_fetch }
+          bad = :changed
+          assert_raises(AttemptErrors::EvidenceUnavailable) { prepared_fetch }
+          assert_equal 0, bundle_reads
+          assert_equal before, @journal.ref_value
+        end
       end
 
       def test_real_client_refuses_wrong_selector_open_descriptor_extra_part_and_replay_before_body

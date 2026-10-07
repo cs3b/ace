@@ -182,7 +182,7 @@ module Ace
                 when "bind_process" then bind(params, map, events, peer)
                 when "release_launch"
                   released = true
-                  release(params, map, events, peer)
+                  release(params, map, events, peer, journal: journal, commit: commit)
                 when "abort_launch" then abort(params, map, events, peer, supervisor: role == :supervisor, journal: journal, commit: commit)
                 end
                 bounded_reply!(plan.fetch(:data), generation + 1)
@@ -203,7 +203,8 @@ module Ace
                 stream = @streams.fetch(result.fetch("attempt_id"))
                 permission = {"operation" => "release", "launch_ticket" => result.fetch("launch_ticket"),
                   "attempt_id" => result.fetch("attempt_id"), "assignment_id" => result.fetch("assignment_id"),
-                  "generation" => result.fetch("generation"), "journal_commit" => result.fetch("journal_commit")}
+                  "generation" => result.fetch("generation"), "journal_commit" => result.fetch("journal_commit"),
+                  "prepared_input" => result.fetch("prepared_input")}
                 begin
                   wire.write(stream.fetch(:socket), permission, deadline: wire.deadline(1))
                 rescue StandardError
@@ -691,7 +692,7 @@ module Ace
           {events: [{type: "scope_child_bound", payload: child}, {type: "process_start", payload: payload}], blobs: {}, data: state.merge("phase" => "bound")}
         end
 
-        def release(params, map, events, peer)
+        def release(params, map, events, peer, journal:, commit:)
           state, observation = owned(params, events, peer)
           unless state["phase"] == "bound" && state["process_binding"] == params["process_binding"] && @streams.key?(state.fetch("attempt_id"))
             raise AttemptErrors::Conflict, "exact live bound gate is unavailable"
@@ -701,7 +702,9 @@ module Ace
           raise AttemptErrors::Conflict, "canonical original child differs" unless original == params.fetch("process_binding")
           @kernel.live!(observation.fetch(:child))
           raise AttemptErrors::Conflict, "launcher has exited" unless launcher_live?(observation)
-          {events: [], blobs: {}, data: state.merge("phase" => "issued", "execution" => "potentially_executed")}
+          prepared = original_bound_prepared_registration!(journal: journal, params: params, commit: commit)
+          {events: [], blobs: {}, data: state.merge("phase" => "issued", "execution" => "potentially_executed",
+            "prepared_input" => compact_prepared_input(prepared))}
         end
 
         def abort(params, map, events, peer, supervisor: false, journal:, commit:)
