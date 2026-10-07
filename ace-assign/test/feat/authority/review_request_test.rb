@@ -122,7 +122,19 @@ module Ace
       end
 
       def test_actual_public_socket_channel_and_original_driver_join_canonical_assignment
+        require "ace/overseer/organisms/protected_review"
+        require "ace/review"
         fixture do
+          bundle_path = File.join(@root, "actual-review.bundle")
+          git(@journal.repo_root, "bundle", "create", bundle_path, "HEAD")
+          bundle = File.binread(bundle_path)
+          descriptor = Authority::TransferCodec.new(root: @root).descriptor([bundle], purpose: :candidate)
+          input = Struct.new(:body) do
+            def count = 1
+            def bytes(index: 0) = body
+          end.new(bundle)
+          call("submit_candidate", {"head" => @head, "candidate_generation" => 1,
+            "expected_generation" => generation, "transfer" => descriptor}, id: "actual-candidate", transfer: input)
           issued_with_channel
           left, right = UNIXSocket.pair
           channel = Authority::LaunchControlChannel.new(socket: left, codec: Object.new,
@@ -163,12 +175,53 @@ module Ace
           kernel = Kernel.new
           kernel.peer_identity = @service.slice("uid", "gid", "groups")
           client = Authority::Client.new(mapping_id: "mapping", deployment: @deployment, kernel: kernel)
+          # Both transport ends use controlled identities, while all protocol,
+          # original channel, snapshot, review and canonical import owners run.
+          reviewer = @reviewer
+          kernel.define_singleton_method(:capture) { |_| reviewer }
+          provider = Object.new
+          provider.define_singleton_method(:execute) do |system_prompt:, user_prompt:, model:, session_dir:, output_file: nil, **_|
+            if model == "role:review-default"
+              packet = JSON.parse(user_prompt)
+              response = JSON.generate("schema" => "ace.review.candidate-verdict/v1", "head" => packet.dig("candidate", "head"),
+                "tree" => packet.dig("candidate", "tree"), "subject_sha256" => packet.fetch("subject_sha256"),
+                "verdict" => "approved", "summary" => "Controlled executed review of full snapshot", "findings" => [])
+              output_file ||= File.join(session_dir, "review-report-controlled.md")
+            else
+              response = '{"findings":[]}'
+            end
+            FileUtils.mkdir_p(session_dir)
+            File.write(output_file, response)
+            {success: true, response: response, output_file: output_file,
+              execution: {"status" => "succeeded", "provider" => "controlled", "model" => "fixture"}}
+          end
+          calls = []
+          original_call = client.method(:call)
+          client.define_singleton_method(:call) do |operation, *arguments, **options|
+            calls << operation
+            original_call.call(operation, *arguments, **options)
+          end
+          consumer = Ace::Overseer::Organisms::ProtectedReview.new(deployment_loader: -> { @deployment }, kernel: kernel,
+            client_factory: ->(*_) { client })
+          limits = Struct.new(:context_limit, :output_limit).new(200_000, 8192)
+          result = Ace::Review::Molecules::LlmExecutor.stub(:new, provider) do
+            Ace::Review::Atoms::ContextLimitResolver.stub(:resolve_details, limits) do
+              consumer.call(project: "project", agent: "mapping", assignment: "assignment", attempt: @attempt,
+                mutation: "request", head: @head, candidate_generation: 2, expected_generation: generation, accept_mutation: "accept")
+            end
+          end
+          assert_equal "accepted", result.fetch("state"), "#{result.inspect}; calls=#{calls.inspect}"
           selectors = {"assignment_id" => "assignment", "attempt_id" => @attempt}
-          reply = client.call("request_review", request_params.merge(selectors), mutation_id: "request", timeout: 30)
-          assert_equal "assigned", reply.data.fetch("state")
           status = client.call("review_status", selectors.merge("mutation_id" => "request"), timeout: 30)
-          assert_equal reply.data, status.data.fetch("first_reply")
-          assert_equal reply.data.fetch("assignment"), status.data.fetch("assignment")
+          first_reply = JSON.parse(File.read(File.join(result.fetch("session_dir"), "assignment.json")))
+          assert_equal first_reply, status.data.fetch("first_reply")
+          assert_equal first_reply.fetch("assignment"), status.data.fetch("assignment")
+          refute_nil status.data.fetch("accepted_review_event_id")
+          events = @journal.read_events("assignment").select { |event| event["attempt_id"] == @attempt }
+          approved = @endcap.send(:approved_review!, @journal, events, selectors, @map,
+            {"head" => @head, "candidate_generation" => 2})
+          assert_equal "approved", approved.dig("review_receipt", "review", "verdict")
+          assert_equal 3, approved.dig("review_receipt", "artifacts").size
           assert driver_thread.join(3)
           driver_thread.value
         ensure

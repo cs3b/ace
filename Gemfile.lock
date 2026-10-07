@@ -272,6 +272,7 @@ PATH
       ace-git-worktree (~> 0.26)
       ace-herdr (~> 0.4)
       ace-lab (~> 0.4)
+      ace-review (~> 0.59)
       ace-runtime (~> 0.1)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.18)
