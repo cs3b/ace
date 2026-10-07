@@ -87,6 +87,23 @@ module Ace
           true
         end
 
+        # All immutable owner queries select retained canonical evidence, not
+        # arbitrary Git objects or valid-looking abandoned CAS candidates.
+        def verify_canonical_prefix!(commit:, canonical_commit: ref_value)
+          verify_commit!(commit)
+          verify_commit!(canonical_commit)
+          text, _error, status = git("rev-list", "--first-parent", "--parents",
+            "--max-count=#{self.class::HISTORY_LIMIT + 1}", canonical_commit)
+          nodes = text.lines.map(&:split)
+          unless status.success? && nodes.size <= self.class::HISTORY_LIMIT && !nodes.empty? &&
+              nodes.all? { |node| node.size.between?(1, 2) && node.all? { |sha| sha.match?(/\A[0-9a-f]{40}\z/) } } &&
+              nodes.each_cons(2).all? { |left, right| left[1] == right[0] } && nodes.last.size == 1 &&
+              nodes.any? { |node| node.first == commit }
+            raise AttemptErrors::EvidenceUnavailable, "Evidence prefix is not retained canonical first-parent history"
+          end
+          true
+        end
+
         # Normal append commits inherit the event unchanged. Locate its one
         # introduction; inherited appearances are not competing provenance.
         def event_commit!(assignment_id:, event_digest:, commit:)

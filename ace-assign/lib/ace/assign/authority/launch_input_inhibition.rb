@@ -14,7 +14,7 @@ module Ace
             "version" => 1, "type" => "launch_input_inhibit"))
           journal = journal_for(map)
           commit = params.fetch("journal_commit")
-          journal.verify_prompt_prefix!(commit: commit)
+          journal.verify_canonical_prefix!(commit: commit)
           events = journal.read_events(params.fetch("assignment_id"), commit: commit).select { |event| event["attempt_id"] == params.fetch("attempt_id") }
           authenticate_input_inhibition!(events, params, map, peer: peer)
           {data: params.slice("attempt_id", "original_binding_digest", "seal_event_id", "journal_commit"), replayed: false}
