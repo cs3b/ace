@@ -85,6 +85,7 @@ module Ace
               execution["status"] == "succeeded" && %w[provider model].all? { |key| execution[key].is_a?(String) && !execution[key].strip.empty? }
             raise ArgumentError, "Prepared provider execution is incomplete or report differs"
           end
+          {digest: Digest::SHA256.hexdigest(bytes), bytes: bytes.freeze}.freeze
         end
 
         def prepared_candidate_result(directory, binding, subject_digest, prompt_digests)
@@ -130,7 +131,7 @@ module Ace
         end
 
         def bounded_candidate_artifact(directory, name, limit: 65_536)
-          File.open(File.join(directory, name), File::RDONLY | File::NOFOLLOW) do |file|
+          File.open(File.join(directory, name), File::RDONLY | File::NOFOLLOW | File::NONBLOCK) do |file|
             unless file.stat.file? && file.stat.size.between?(1, limit)
               raise ArgumentError, "Prepared review artifact is unavailable or oversized"
             end

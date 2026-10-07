@@ -1,12 +1,13 @@
 # frozen_string_literal: true
 require "test_helper"
+require "timeout"
 
 class PreparedCandidateReviewTest < AceReviewTest
   BINDING = {"assignment_id" => "assignment", "attempt_id" => "attempt", "candidate_generation" => 1,
              "head" => "a" * 40, "purpose_id" => "review-purpose", "tree" => "b" * 40}.freeze
 
   class ControlledProvider
-    attr_accessor :verdict, :findings, :extraction, :partial, :wrong_head, :change_report, :no_verdict, :oversized, :mismatch_response, :change_prompt
+    attr_accessor :verdict, :findings, :extraction, :partial, :wrong_head, :change_report, :no_verdict, :oversized, :mismatch_response, :change_prompt, :fifo
     attr_reader :calls
     def initialize
       @calls, @verdict, @findings, @extraction = [], "approved", [], '{"findings":[]}'
@@ -30,6 +31,10 @@ class PreparedCandidateReviewTest < AceReviewTest
       end
       FileUtils.mkdir_p(session_dir)
       File.write(output_file, response)
+      if fifo && model == "role:review-default"
+        File.unlink(output_file)
+        File.mkfifo(output_file, 0o600)
+      end
       File.write(File.join(session_dir, "user.prompt.md"), "substituted prompt") if change_prompt && model == "role:review-default"
       {success: true, response: (mismatch_response ? "different" : response), output_file: output_file,
        requested_selector: model, execution: {"status" => (partial ? "failed" : "succeeded"),
@@ -69,6 +74,21 @@ class PreparedCandidateReviewTest < AceReviewTest
     assert_equal Digest::SHA256.hexdigest(@subject), metadata.fetch("subject_sha256")
     assert_equal ["exact-candidate-review-execution", "complete-review-feedback-inventory"], result[:checks].map { |c| c["name"] }
     assert result[:artifacts].values.all? { |bytes| bytes.bytesize <= 65_536 }
+  end
+
+  def test_extraction_uses_held_report_even_when_path_becomes_fifo
+    @manager.singleton_class.class_eval do
+      def validate_candidate_provider_output!(result, directory)
+        held = super
+        File.unlink(result.fetch(:output_file))
+        File.mkfifo(result.fetch(:output_file), 0o600)
+        held
+      end
+    end
+    result = Timeout.timeout(2) { run_review }
+    refute result[:success], "Final non-regular artifact must still refuse"
+    assert_equal 2, @provider.calls.size
+    assert_includes @provider.calls.last.fetch(:user), "Executed review"
   end
 
   def test_ordinary_single_model_entry_retains_its_execution_and_no_feedback_behavior
@@ -143,6 +163,14 @@ class PreparedCandidateReviewTest < AceReviewTest
     result = run_review
     refute result[:success]
     assert_includes result[:error], "conflicts with recorded findings"
+  end
+
+  def test_fifo_report_refuses_without_waiting_for_a_writer
+    @provider.fifo = true
+    result = Timeout.timeout(2) { run_review }
+    refute result[:success]
+    assert_includes result[:error], "artifact is unavailable"
+    assert_equal 1, @provider.calls.size
   end
 
   def test_oversized_report_refuses_before_extraction

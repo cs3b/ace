@@ -137,7 +137,7 @@ module Ace
         # @param session_dir [String, nil] Session directory for LLM output files
         # @param model [String, nil] Model to use for synthesis (default: config setting)
         # @return [Hash] Result with :success, :items, :metadata or :error
-        def synthesize(report_paths:, session_dir: nil, model: nil)
+        def synthesize(report_paths:, session_dir: nil, model: nil, report_contents: nil)
           # Validate inputs
           return error_result("No report paths provided") if report_paths.nil? || report_paths.empty?
 
@@ -146,7 +146,7 @@ module Ace
           FileUtils.mkdir_p(session_dir) unless Dir.exist?(session_dir)
 
           # Read all reports
-          reports = read_reports(report_paths)
+          reports = read_reports(report_paths, report_contents)
           return error_result("No valid reports found") if reports.empty?
 
           # Synthesize (handles both single and multiple reports uniformly)
@@ -161,10 +161,18 @@ module Ace
         #
         # @param report_paths [Array<String>] Paths to report files
         # @return [Array<Hash>] Array of report hashes with :path, :reviewer, :content
-        def read_reports(report_paths)
+        def read_reports(report_paths, report_contents = nil)
+          if report_contents && (!report_contents.is_a?(Hash) || report_contents.keys.sort != report_paths.sort ||
+              !report_contents.values.all? { |bytes| bytes.is_a?(String) && bytes.bytesize <= 65_536 })
+            raise ArgumentError, "Held review reports differ from selected inventory"
+          end
           report_paths.map do |path|
-            raise ArgumentError, "Review report is missing: #{path}" unless File.file?(path)
-            content = File.read(path)
+            content = if report_contents
+              report_contents.fetch(path).dup.freeze
+            else
+              raise ArgumentError, "Review report is missing: #{path}" unless File.file?(path)
+              File.read(path)
+            end
             raise ArgumentError, "Review report is empty: #{path}" if content.strip.empty?
 
             reviewer = extract_reviewer_from_filename(path)

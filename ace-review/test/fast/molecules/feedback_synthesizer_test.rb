@@ -131,6 +131,15 @@ class FeedbackSynthesizerTest < AceReviewTest
   # Single Report Tests
   # ============================================================================
 
+  def test_held_report_inventory_is_exact_and_bounded_before_provider_call
+    path = File.join(@session_dir, "review-report-fixture.md")
+    [{}, {path => "x", "extra" => "x"}, {path => nil}, {path => "x" * 65_537}].each do |contents|
+      result = @synthesizer.synthesize(report_paths: [path], report_contents: contents, session_dir: @session_dir)
+      refute result[:success]
+      assert_includes result[:error], "Held review reports differ"
+    end
+  end
+
   def test_synthesize_single_report
     report_path = create_report_file("review-report-gemini-2.5-flash.md", sample_report_content)
 

@@ -92,7 +92,7 @@ module Ace
         #     base_path: "/project"
         #   )
         #   # Produces deduplicated findings with reviewers arrays
-        def extract_and_save(report_paths:, base_path:, model: nil, session_dir: nil)
+        def extract_and_save(report_paths:, base_path:, model: nil, session_dir: nil, report_contents: nil)
           # Completed findings are immutable; avoid an unnecessary model call
           # on a retry that cannot publish into this session.
           feedback_dir = @directory_manager.feedback_path(base_path)
@@ -102,6 +102,7 @@ module Ace
 
           # Step 1: Synthesize feedback items from reports (handles deduplication)
           synthesis_result = @synthesizer.synthesize(
+            **(report_contents.nil? ? {} : {report_contents: report_contents}),
             report_paths: report_paths,
             session_dir: session_dir,
             model: model

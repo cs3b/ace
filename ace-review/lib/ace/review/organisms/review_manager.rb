@@ -1336,9 +1336,12 @@ module Ace
           )
 
           if result[:success]
-            validate_candidate_provider_output!(result, session_dir) if review_data[:candidate_binding]
+            candidate_report = validate_candidate_provider_output!(result, session_dir) if review_data[:candidate_binding]
+            if candidate_report
+              review_data = review_data.merge(report_contents: {result.fetch(:output_file) => candidate_report.fetch(:bytes)}.freeze)
+            end
             # Save Ruby API metadata if available
-            save_ruby_api_metadata(session_dir, result, prompt_digests: review_data[:prompt_digests])
+            save_ruby_api_metadata(session_dir, result, prompt_digests: review_data[:prompt_digests], report_digest: candidate_report&.fetch(:digest))
 
             # Copy final review to release folder
             release_path = copy_to_release(session_dir, review_data) unless review_data[:candidate_binding]
@@ -1705,7 +1708,7 @@ module Ace
           }
         end
 
-        def save_ruby_api_metadata(session_dir, result, prompt_digests: nil)
+        def save_ruby_api_metadata(session_dir, result, prompt_digests: nil, report_digest: nil)
           # Save rich metadata from Ruby API
           metadata_file = File.join(session_dir, "llm_metadata.yml")
           output_path = result[:output_file]
@@ -1717,7 +1720,7 @@ module Ace
             "requested_selector" => result[:requested_selector],
             "execution" => result[:execution],
             "output_file" => output_path && File.basename(output_path),
-            "report_sha256" => ((output_path && File.file?(output_path)) ? Digest::SHA256.file(output_path).hexdigest : nil),
+            "report_sha256" => report_digest || ((output_path && File.file?(output_path)) ? Digest::SHA256.file(output_path).hexdigest : nil),
             "prompt_sha256" => prompt_digests || prompt_hashes(session_dir),
             "model_info" => result[:model_info],
             "provider_info" => result[:provider_info],
@@ -1942,6 +1945,7 @@ module Ace
 
           models_to_try.each do |model|
             feedback_result = feedback_manager.extract_and_save(
+              **(review_data[:candidate_binding] ? {report_contents: review_data.fetch(:report_contents)} : {}),
               report_paths: report_paths,
               base_path: base_path,
               model: model,
