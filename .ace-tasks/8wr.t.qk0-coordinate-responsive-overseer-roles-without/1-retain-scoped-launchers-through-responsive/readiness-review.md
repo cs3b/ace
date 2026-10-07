@@ -53,3 +53,9 @@ Source trace: LaunchDriver#launch invokes NativeControl#create only after non-re
 ### Review repair candidate retained
 
 Real child qk0.1.0 now owns the distinct protected independent-review capability. Its review-delegation-contract.md proposes actual reviewer-peer capture, durable existing-journal request, original authenticated Driver channel delegation to unchanged assign_review, immutable lost-reply/status attribution, actual exported candidate→ReviewManager→ExecutionReceipt→accept_review composition. This is a new source-required interface proposal, not readiness approval or implemented behavior; exact review pending. No alternative acceptance ledger or original-birth weakening.
+
+## Whole-child design readiness after protected review integration
+
+Independent reviewer `review_lab_bootstrap`, 2026-10-07: **APPROVE** qk0.1 design readiness after reading this spec, CLI selection/retry, launch-input proposal, usage and coordinator source contract against integrated protected review `ff284f6ef` and reviewed qk0.3 contracts. Exact project/IDs, immutable pre-effect request+bundle, numeric reviewed leaf scope, 116-byte invocation, quiet recovery identity, original registration/reservation attribution, observation-only restart and stable steering retries are decision-complete. The prior sole review-capability design blocker is resolved by qk0.1.0; one pane per fresh protected tab uses the existing owner. Earlier findings above are retained history, superseded by this verdict.
+
+One child qk0.1.0 has already passed readiness and is in progress; none remain draft. Its source is independently approved, with remaining named fault/concurrency criteria still being verified. Parent promotion means specification readiness only. qk0.3 remains an explicit dependency with actual Lab publication source open; this does not authorize an incomplete implementation or claim installed acceptance. No tests/native probes performed for this design review.

@@ -1,6 +1,6 @@
 ---
 id: 8wr.t.qk0.1
-status: draft
+status: pending
 priority: high
 created_at: "2026-10-07 05:30:22"
 estimate: large
@@ -10,7 +10,7 @@ bundle:
   presets: [project]
   files: [.ace-tasks/8wr.t.qk0-coordinate-responsive-overseer-roles-without/coordinator-source-contract.md, .ace-tasks/8wr.t.qk0-coordinate-responsive-overseer-roles-without/coordinator-admission-draft.md, .ace-tasks/8wr.t.qk0-coordinate-responsive-overseer-roles-without/1-retain-scoped-launchers-through-responsive/cli-selection-and-retry-contract.md, .ace-tasks/8wr.t.qk0-coordinate-responsive-overseer-roles-without/1-retain-scoped-launchers-through-responsive/readiness-review.md, .ace-tasks/8wr.t.qk0-coordinate-responsive-overseer-roles-without/1-retain-scoped-launchers-through-responsive/launch-input-proposal.md, .ace-tasks/8wr.t.qk0-coordinate-responsive-overseer-roles-without/1-retain-scoped-launchers-through-responsive/ux/usage.md, ace-overseer/handbook/workflow-instructions/overseer.wf.md, ace-overseer/lib/ace/overseer/cli/commands/work_on.rb, ace-overseer/lib/ace/overseer/organisms/work_on_orchestrator.rb, ace-overseer/lib/ace/overseer/molecules/proposal_tick.rb, ace-overseer/lib/ace/overseer/molecules/assignment_launcher.rb, ace-assign/lib/ace/assign/organisms/task_assignment_creator.rb, .ace-tasks/8wr.t.qk0-coordinate-responsive-overseer-roles-without/3-deliver-authenticated-prepared-work-to/8wr.t.qk0.3-deliver-authenticated-prepared-work-to-scoped-workers.s.md, ace-assign/lib/ace/assign/organisms/assignment_executor.rb, ace-assign/lib/ace/assign/cli/commands/authority/launch.rb, ace-assign/lib/ace/assign/authority/launch_driver.rb, ace-hitl/lib/ace/hitl/proposals/policy.rb]
   commands: []
-needs_review: true
+needs_review: false
 parent: 8wr.t.qk0
 ---
 
@@ -45,7 +45,7 @@ Existing qk0 work-on/status/prompt/stop/review forms and exact ready-frame, role
 
 ### Decomposition
 
-Child qk0.1.0 delivers exact candidate independent review through original Driver delegation and maintained Endcap acceptance, a distinct observable missing source capability. This parent delivers the remaining responsive launch/prompt/stop/role/proposal composition and consumes that child. Both remain draft until child and whole contracts independently converge; no hidden review broker or acceptance owner.
+Child qk0.1.0 delivers exact candidate independent review through original Driver delegation and maintained Endcap acceptance, a distinct observable missing source capability. This parent delivers the remaining responsive launch/prompt/stop/role/proposal composition and consumes that child. The child has independently reviewed source integration; remaining child fault/concurrency verification is tracked in its own criteria. This parent has independent design readiness approval; its source execution still depends on qk0.3. No hidden review broker or acceptance owner.
 
 ### Scope and Ownership
 
@@ -53,8 +53,8 @@ Owner ace-overseer, maintained Assign/Runtime/HITL producers reused. Advisory si
 
 ### Usage and Review Evidence
 
-`ux/usage.md`. Exact whole child readiness review still required; older foreground-only approval does not cover this child. No source implementation during drafting.
+`ux/usage.md`. Whole-child design readiness is approved in readiness-review.md. Source implementation and acceptance remain outstanding; delivered child source does not mark this parent done.
 
 ### Prepared handoff review repair
 
-Independent 2026-10-07 review found the original qk0.3 inline-size, unspecified capability/consumer, progress hash and mutable task-context gaps. The revised child owns those exact source producer/consumer repairs. This child consumes them and preserves retained-input/read-only recovery and unchanged-terminal submitted semantics; neither artifact retention nor worker input admission is reported as consumption, task completion or installed acceptance. Full independent root review remains required; no self-promotion.
+Independent 2026-10-07 review found the original qk0.3 inline-size, unspecified capability/consumer, progress hash and mutable task-context gaps. The revised child owns those exact source producer/consumer repairs. This child consumes them and preserves retained-input/read-only recovery and unchanged-terminal submitted semantics; neither artifact retention nor worker input admission is reported as consumption, task completion or installed acceptance. Independent design review now approves this consumer contract; qk0.3 source delivery remains an explicit dependency.
