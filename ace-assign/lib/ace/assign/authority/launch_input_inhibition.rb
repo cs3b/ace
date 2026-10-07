@@ -40,7 +40,7 @@ module Ace
               state = origin(events, **params.slice("assignment_id", "attempt_id", "mapping_id").transform_keys(&:to_sym))
               # Before native release there is no admitted outside-unit input
               # owner. Its existing native issuer/guarded abort gates remain.
-              next true unless state["phase"] == "issued"
+              next true unless issued_input_actor?(events)
               original = original_prompt_record!(events, state, params: params)
               lineage = Molecules::ExecutionScopeLineage.new(events: events, project_id: map.fetch("project_id"),
                 assignment_id: params.fetch("assignment_id"), attempt_id: params.fetch("attempt_id"), mapping_id: params.fetch("mapping_id"))

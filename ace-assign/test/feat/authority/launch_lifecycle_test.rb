@@ -653,6 +653,10 @@ module Ace
         exercise_actual_launch_owner(input_drain: true)
       end
 
+      def test_issued_actor_without_prompt_rows_requires_positive_lifetime_input_inhibition
+        exercise_actual_launch_owner(input_drain: :no_prompt)
+      end
+
       def test_original_driver_reports_lost_drain_ack_after_child_exit_without_second_native_effect
         exercise_actual_launch_owner(input_drain: :lost_ack)
       end
@@ -806,7 +810,9 @@ module Ace
         assert_equal authenticated.fetch("binding_digest"), ready_frame.fetch("original_binding_digest")
         original_generation = ready_frame.fetch("generation")
         if input_drain
-          if input_drain == :lost_ack
+          if input_drain == :no_prompt
+            exercise_no_prompt_input_drain(client, native, state, original_generation)
+          elsif input_drain == :lost_ack
             exercise_lost_input_drain_ack(client, native, state, original_generation)
           else
             exercise_actual_input_drain(client, native, state, original_generation)
@@ -1041,6 +1047,39 @@ module Ace
         assert_equal "closed_no_writers", closed.data.fetch("state")
         assert_equal closed.data.fetch("proof_id"), client.call("observe_execution_scope", selected).data.fetch("proof_id")
         assert_equal 2, native.drain_calls.length
+      end
+
+      def exercise_no_prompt_input_drain(client, native, state, generation)
+        selected = state.slice("assignment_id", "attempt_id")
+        native.unconfirmed_drains = 1
+        first = client.call("close_execution_scope", selected.merge("expected_generation" => generation), mutation_id: "no-prompt-unconfirmed-drain", timeout: 30)
+        assert_equal "running", first.data.fetch("state")
+        assert_equal 1, native.drain_calls.length
+        assert_nil native.prompt_calls
+        events = @journal.read_events("assignment")
+        refute events.any? { |event| %w[prompt_issued input_inhibited scope_closed_no_writers].include?(event["type"]) }
+        assert_equal "drain_original_prompt_issuer", client.call("observe_execution_scope", selected).data.fetch("required_action")
+        limit = WIRE.deadline(10)
+        until @authority.instance_variable_get(:@control_channels).values.any? { |channel| !channel.closed? }
+          raise "Original driver did not reconnect after unconfirmed no-prompt drain" unless Process.clock_gettime(Process::CLOCK_MONOTONIC) < limit
+          sleep(0.01)
+        end
+        current = @journal.authority_generation(@journal.read_events("assignment").select { |event| event["attempt_id"] == state.fetch("attempt_id") })
+        second = client.call("close_execution_scope", selected.merge("expected_generation" => current), mutation_id: "no-prompt-positive-drain", timeout: 30)
+        assert_equal "running", second.data.fetch("state")
+        events = @journal.read_events("assignment")
+        assert_equal 1, events.count { |event| event["type"] == "input_inhibited" }
+        refute events.any? { |event| event["type"] == "scope_closed_no_writers" }
+        assert_equal 2, native.drain_calls.length
+        assert_nil native.prompt_calls
+        current = @journal.authority_generation(events.select { |event| event["attempt_id"] == state.fetch("attempt_id") })
+        proof = client.call("close_execution_scope", selected.merge("expected_generation" => current), mutation_id: "no-prompt-proof-after-drain", timeout: 30)
+        assert_equal "closed_no_writers", proof.data.fetch("state")
+        replay = client.call("close_execution_scope", selected.merge("expected_generation" => generation), mutation_id: "no-prompt-unconfirmed-drain", timeout: 30)
+        assert_equal first.data, replay.data
+        assert_equal 2, native.drain_calls.length
+        assert_nil native.prompt_calls
+        refute @journal.read_events("assignment").any? { |event| event["type"] == "prompt_issued" }
       end
 
       def exercise_lost_input_drain_ack(client, native, state, generation)
