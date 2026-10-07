@@ -836,7 +836,7 @@ module Ace
         assert_equal unused_commit, @journal.ref_value
         assert_nil @journal.prompt_intent("failed-cas-capacity")
         assert_equal Molecules::EvidenceJournal::CAS_ATTEMPTS, abandoned_commits.length
-        assert_raises(AttemptErrors::EvidenceUnavailable) { @journal.verify_prompt_prefix!(commit: abandoned_commits.last) }
+        assert_raises(AttemptErrors::EvidenceUnavailable) { @journal.verify_canonical_prefix!(commit: abandoned_commits.last) }
         assert_equal 2, native.prompt_calls.length
         pending_entered = Queue.new
         allow_native_completion = Queue.new
@@ -1147,6 +1147,22 @@ module Ace
           assert_equal "failed", abort_child(state).fetch("phase")
           assert_raises(AttemptErrors::Conflict) { call("reserve_attempt", @reserve_params, id: "new-reserve") }
           assert_equal ["failed"], @journal.derived_attempts("assignment").map(&:state)
+        end
+      end
+
+      def test_definition_reader_selects_original_accepted_commit_after_replacement
+        with_authority do
+          selected = @journal.ref_value
+          original = @authority.send(:definition, @journal, "assignment", commit: selected)
+          changed = JSON.parse(registered_bytes).merge("task_id" => "different-task", "name" => "replacement definition")
+          bytes = JSON.generate(changed)
+          registration = call("register_assignment", {"definition_bytes" => bytes,
+            "definition_digest" => Digest::SHA256.hexdigest(bytes), "expected_generation" => 1}, id: "replace-definition").fetch(:data)
+          assert_equal "different-task", registration.fetch("task_id")
+          assert_equal registration.fetch("definition_digest"), @authority.send(:definition, @journal, "assignment").fetch("definition_digest")
+          assert_equal original, @authority.send(:definition, @journal, "assignment", commit: selected)
+          assert_equal "09j", @authority.send(:definition, @journal, "assignment", commit: selected).fetch("task_id")
+          assert_equal selected, @journal.verify_canonical_prefix!(commit: selected) && selected
         end
       end
 

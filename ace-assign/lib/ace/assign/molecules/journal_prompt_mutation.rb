@@ -139,21 +139,6 @@ module Ace
         end
         private :validate_prompt_evidence!
 
-        # Private driver selection must be an actual retained canonical prefix,
-        # never an abandoned CAS candidate that merely contains valid events.
-        def verify_prompt_prefix!(commit:, canonical_commit: ref_value)
-          verify_commit!(commit)
-          verify_commit!(canonical_commit)
-          text, error, status = git("rev-list", "--first-parent", "--parents", "--max-count=#{self.class::HISTORY_LIMIT + 1}", canonical_commit)
-          nodes = text.lines.map(&:split)
-          unless status.success? && nodes.size <= self.class::HISTORY_LIMIT && !nodes.empty? &&
-              nodes.all? { |node| node.size.between?(1, 2) && node.all? { |sha| sha.match?(/\A[0-9a-f]{40}\z/) } } &&
-              nodes.each_cons(2).all? { |left, right| left[1] == right[0] } && nodes.last.size == 1 && nodes.any? { |node| node.first == commit }
-            raise AttemptErrors::EvidenceUnavailable, "Prompt prefix is not retained canonical first-parent history"
-          end
-          true
-        end
-
         # A read-only selected canonical chain lookup, never a dispatch permit.
         def prompt_intent(mutation_id, commit: ref_value)
           validate_mutation_id!(mutation_id)

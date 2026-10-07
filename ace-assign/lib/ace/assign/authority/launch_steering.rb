@@ -131,7 +131,7 @@ module Ace
             raise ArgumentError, "Invalid immutable intent commit"
           end
           journal = journal_for(map)
-          journal.verify_prompt_prefix!(commit: params.fetch("journal_commit"))
+          journal.verify_canonical_prefix!(commit: params.fetch("journal_commit"))
           intent = journal.prompt_intent(params.fetch("mutation_id"), commit: params.fetch("journal_commit"))
           raise AttemptErrors::EvidenceUnavailable, "Accepted prompt intent differs" unless intent && intent["digest"] == params.fetch("intent_event_id")
           events = journal.read_events(params.fetch("assignment_id"), commit: params.fetch("journal_commit")).select { |event| event["attempt_id"] == params.fetch("attempt_id") }

@@ -755,7 +755,7 @@ module Ace
         end
 
         def definition(journal, id, commit: journal.ref_value)
-          journal.read_events(id).reverse.filter_map do |event|
+          journal.read_events(id, commit: commit).reverse.filter_map do |event|
             next unless event["type"] == "authority_mutation" && event.dig("payload", "operation") == "register_assignment"
             event.dig("payload", "data")
           end.first

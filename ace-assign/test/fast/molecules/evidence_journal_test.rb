@@ -10,6 +10,31 @@ module Ace
     class EvidenceJournalTest < AceAssignTestCase
       REF = "refs/ace/execution"
 
+      def test_canonical_prefix_requires_retained_first_parent_membership_not_only_a_commit
+        with_temp_cache do |cache_dir|
+          repo = File.join(cache_dir, "repo")
+          init_repo(repo)
+          journal = Molecules::EvidenceJournal.new(repo_root: repo, ref: REF, checkout_root: File.join(cache_dir, "co"))
+          event = build_event(type: "intent", attempt_id: "attempt", payload: {"scope" => "one"})
+          original = journal.append(assignment_id: "assignment", attempt_id: "attempt", events: [event])
+          later = build_event(type: "process_start", attempt_id: "attempt", payload: {"pid" => 123}, previous_digest: event.fetch("digest"))
+          tip = journal.append(assignment_id: "assignment", attempt_id: "attempt", events: [later])
+          assert journal.verify_canonical_prefix!(commit: original)
+          assert journal.verify_canonical_prefix!(commit: tip)
+          tree = git(repo, "rev-parse", "#{tip}^{tree}").strip
+          abandoned = git(repo, "commit-tree", tree, "-p", original, "-m", "abandoned CAS candidate").strip
+          assert journal.verify_commit!(abandoned)
+          assert_raises(AttemptErrors::EvidenceUnavailable) { journal.verify_canonical_prefix!(commit: abandoned) }
+          assert_raises(AttemptErrors::EvidenceUnavailable) { journal.verify_canonical_prefix!(commit: "f" * 40) }
+          assert_raises(AttemptErrors::EvidenceUnavailable) { journal.verify_canonical_prefix!(commit: nil) }
+          merged = git(repo, "commit-tree", tree, "-p", tip, "-p", original, "-m", "unsupported merge").strip
+          assert_raises(AttemptErrors::EvidenceUnavailable) do
+            journal.verify_canonical_prefix!(commit: tip, canonical_commit: merged)
+          end
+          assert_equal tip, journal.ref_value
+        end
+      end
+
       def test_event_prefix_selects_introduction_through_normal_inherited_appearances
         with_temp_cache do |cache_dir|
           repo = File.join(cache_dir, "repo")
