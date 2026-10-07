@@ -1,0 +1,9 @@
+# Original workspace prefix under current maintenance admission
+
+The existing target getter accepts `source_commit:` (default the held `commit:`). The current C still supplies the exact live complete maintenance context and all-slot eligibility; existing EvidenceJournal `verify_canonical_prefix!(commit: S, canonical_commit: C)` authenticates S in retained first-parent history. The unchanged original lineage/release/descriptor/resource owners select facts at S. Projection `journal_commit` names S, and every held context/ref is rechecked at C before return. No config parsing, extra authority, current pointer or Lab-local lineage validator.
+
+The program reviewer independently approved this design and read the narrow source diff without a finding on 2026-10-08. Source-only target tests use the maintained original released transaction and a later canonical empty Git commit C, then reject unknown and abandoned sibling S. They prove the generic read invariant, not actual service-request/physical apply composition; the SAME Installer consumer must separately exercise that chain.
+
+Retained first attempt `73027dc5-2274-40c8-b8ad-4ba05c645658`: 1 test / 60 assertions / 1 error in 58.69s. The new fixture accessed block-local `advanced` after the maintenance block, raising NameError. Predeclaring that fixture variable changes no production source or deadline. Final rerun `55d7562e-f3bb-49b7-b6b9-0ea7b0813015` PASS: 1 test / 73 assertions / 0 failures or errors, 1m 8s. Exact source command `bin/ace-test ace-assign/test/feat/authority/deployment_test.rb:110`; retained raw options select only the maintained original-release method. Both prior accessor ref-advance assertions remain intact.
+
+No native/root/systemd/installed probes, broad suite, physical cleanup acceptance or task closure. Protected bind/finish/recovery WIP is excluded from this checkpoint.

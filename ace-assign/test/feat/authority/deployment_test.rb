@@ -251,6 +251,7 @@ module Ace
             end
             retained_context = nil
             target_params = nil
+            advanced = nil
             owner.with_execution_slots(mapping_ids: ["mapping"], candidate_deployment: candidate) do |contexts|
               retained_context = contexts.first
               assert owner.slot_reusable!(**contexts.first)
@@ -335,6 +336,25 @@ module Ace
             end
             assert_raises(AttemptErrors::EvidenceUnavailable) { owner.maintenance_boot_baselines!(**retained_context) }
             assert_raises(AttemptErrors::EvidenceUnavailable) { owner.maintenance_workspace_target!(**target_params) }
+            source_commit = retained_context.fetch(:commit)
+            _, _, advance_status = Open3.capture3("git", "update-ref", journal.ref, advanced, source_commit, chdir: repo)
+            assert advance_status.success?
+            owner.with_execution_slots(mapping_ids: ["mapping"], candidate_deployment: candidate) do |contexts|
+              current_params = target_params.merge(contexts.first)
+              historical = owner.maintenance_workspace_target!(**current_params, source_commit: source_commit)
+              assert_equal source_commit, historical.fetch("journal_commit")
+              assert_equal advanced, contexts.first.fetch(:commit)
+              assert_equal target_params.fetch(:release_event_digest), historical.fetch("release_event_digest")
+              assert_raises(AttemptErrors::EvidenceUnavailable) do
+                owner.maintenance_workspace_target!(**current_params, source_commit: "f" * 40)
+              end
+              abandoned, _, abandoned_status = Open3.capture3("git", "-c", "user.name=fixture", "-c", "user.email=fixture@example.invalid",
+                "commit-tree", "#{source_commit}^{tree}", "-p", source_commit, "-m", "noncanonical sibling", chdir: repo)
+              assert abandoned_status.success?
+              assert_raises(AttemptErrors::EvidenceUnavailable) do
+                owner.maintenance_workspace_target!(**current_params, source_commit: abandoned.delete_suffix("\n"))
+              end
+            end
             assert_equal prior_retirements + 1, observer.retirements
             File.binwrite(published, File.binread(candidate_ref.fetch("path")))
             fresh_history, published_candidate = Ace::Runtime::Molecules::ProtectedArtifactSet.stub(:new, factory) do
