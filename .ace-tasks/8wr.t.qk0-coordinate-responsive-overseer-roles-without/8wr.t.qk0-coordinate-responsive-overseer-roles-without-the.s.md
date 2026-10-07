@@ -66,6 +66,8 @@ Review against ACE `8327b12c4` leaves this task in `draft`, `needs_review: true`
 
 No source implementation or installed acceptance is claimed by this review.
 
+Independent review: wave_n0n APPROVE for the documentation-only findings at `76f328794`; confirmed the synchronous unbounded proposal call, status ordering and absent project admission configuration against source. `ace-task show qk0` retains draft metadata; `git diff --check` passes. This verdict accepts the recorded gaps, not whole-task readiness.
+
 ### Provenance and Invalidated Assumptions
 
 New generic charter and Lab-engine consumer migration. k86 owns terminal adapter replacement only; this task owns removal of the separate legacy Lab engine and role coordination.
