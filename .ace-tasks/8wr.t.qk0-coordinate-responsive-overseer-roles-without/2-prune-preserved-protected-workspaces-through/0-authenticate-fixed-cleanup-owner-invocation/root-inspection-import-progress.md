@@ -1,4 +1,4 @@
-# Inspection import and bounded public recovery — source review pending
+# Inspection import and bounded public recovery — reviewed source checkpoint
 
 The fixed listener checkpoint is now independently integrated on main `a1ac4ba6e`, including root's prepublication same-inode teardown repair. This worktree does not modify that listener owner. Earlier listener/fullfile failures and exact-seed diagnostics remain in `source-checkpoint-fixed-listener-inspection.md`; they are not erased by the narrower recovery result.
 
@@ -24,4 +24,4 @@ Ordinary maintained settlement fullfile: **6/92,0 failures/1 error**, `52e46d91-
 
 All earlier failed inspection receipts remain: `7c2d2d1b`, `23319d23`, `edebddd9`, `c6533128`, `bfb9a162`, `c08a7bfe`, `41408ef2`, `f4e413a2`, `18b821e7`, `7c80d2d0`, `7c2959c6`, `48054fa3`. Concrete defects were pending terminal-replacement comparison, unconditional generic text parsing, repeated owner reads, per-prefix subprocess cost, and the fixture's first-CAS-as-terminal assumption. The timing barrier now waits for the maintained protected terminal reader's authenticated failed-settled state, not merely a ref update.
 
-No task/status/SC promotion, default-suite claim, native/root/systemd/installed probe, or actual physical no-effect producer acceptance is made. Final source needs independent review and combined-main preservation before integration.
+No task/status/SC promotion, default-suite claim, native/root/systemd/installed probe, or actual physical no-effect producer acceptance is made. Root independently approved `ce192f086` and combined `83eee6d8a` after reviewing pinned ownership, original-dispatch proof, strict import and history framing. Integrated as `c386af2f1`; actual combined-main target passed 1/27 in 35.82s, receipt `de41b885-0ecf-4fde-bd40-1834bb988e93`. The unchanged public 5-second limits remain in force. This closes the bounded source repair only.
