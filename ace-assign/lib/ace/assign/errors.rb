@@ -114,6 +114,10 @@ module Ace
         end
       end
 
+      # One canonical inventory row cannot fit the fixed protocol frame.
+      class BoundedResultUnavailable < EvidenceUnavailable
+      end
+
       # Exhaustively authenticated service inventory remains unsettled.
       class ServiceSettlementPending < EvidenceUnavailable
       end

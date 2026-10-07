@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Expose authorized canonical assignment inventory at one retained revision, authenticating original registration, terminal/release and rotated descriptor provenance before bounded metadata pagination.
+
 - Authenticate complete immutable event inventories before ownership filtering, rejecting removed assignments/attempts/events, rewritten bytes and duplicate event digests while preserving valid interleaved appends.
 
 - Expose a deeply immutable original executor settlement context through the existing authenticated service status owner, binding the fixed receiver/mapping and accepted current challenge while retaining canonical receipt verification.

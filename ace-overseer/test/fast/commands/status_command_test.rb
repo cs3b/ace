@@ -4,16 +4,17 @@ require_relative "../../test_helper"
 require "tmpdir"
 
 class StatusCommandTest < AceOverseerTestCase
-  class FakeLabClient
+  class ProtectedCollector
     attr_reader :calls
 
     def initialize
       @calls = []
     end
 
-    def call(*arguments, **options)
-      @calls << {arguments: arguments, options: options}
-      "W321\tnervus\trunning\tbuilder-codex\tPR -\n"
+    def collect(project:, agent:)
+      @calls << {project: project, agent: agent}
+      {"project_id" => project, "provisioned_capacity" => 2, "visible_capacity" => 1, "visibility" => "partial",
+        "agents" => [{"agent_id" => "mapping", "status" => "unavailable", "inventory" => nil}]}
     end
   end
 
@@ -139,27 +140,42 @@ class StatusCommandTest < AceOverseerTestCase
     assert_empty stderr
   end
 
-  def test_lab_runtime_delegates_project_filter_without_repo_guard
-    client = FakeLabClient.new
-    command = Ace::Overseer::CLI::Commands::Status.new(lab_client: client)
+  def test_project_status_uses_protected_consumer_without_repo_guard
+    collector = ProtectedCollector.new
+    command = Ace::Overseer::CLI::Commands::Status.new(protected_status: collector)
 
     Dir.mktmpdir("overseer-lab-status") do |dir|
       Dir.chdir(dir) do
-        output = capture_io { command.call(format: "table", runtime: "lab", project: "nervus") }.first
-        assert_includes output, "W321"
+        output = capture_io { command.call(format: "table", project: "nervus") }.first
+        assert_includes output, "partial"
+        assert_includes output, "mapping\tunavailable"
       end
     end
 
-    assert_equal %w[work status --project nervus], client.calls.first[:arguments]
+    assert_equal({project: "nervus", agent: nil}, collector.calls.first)
   end
 
-  def test_lab_runtime_rejects_duplicate_watch_loop
-    command = Ace::Overseer::CLI::Commands::Status.new(lab_client: FakeLabClient.new)
+  def test_protected_status_rejects_duplicate_watch_and_agent_without_project
+    command = Ace::Overseer::CLI::Commands::Status.new(protected_status: ProtectedCollector.new)
 
     error = assert_raises(Ace::Support::Cli::Error) do
-      command.call(format: "table", runtime: "lab", watch: true)
+      command.call(format: "table", project: "nervus", watch: true)
     end
 
-    assert_equal "Lab watch runs in the project Herdr status pane; omit --watch", error.message
+    assert_equal "Protected status is a bounded snapshot; omit --watch", error.message
+    assert_raises(Ace::Support::Cli::Error) { command.call(format: "json", agent: "mapping") }
+    assert_raises(Ace::Support::Cli::Error) { command.call(format: "json", runtime: "lab") }
+  end
+
+  def test_protected_inventory_is_runtime_independent_including_local_tmux_default
+    collector = ProtectedCollector.new
+    tick = Object.new
+    tick.define_singleton_method(:call) { raise "protected read must not tick proposals" }
+    command = Ace::Overseer::CLI::Commands::Status.new(protected_status: collector, config: {"runtime" => "tmux"}, proposal_tick: tick)
+    [nil, "auto", "tmux", "herdr"].each do |runtime|
+      out = capture_io { command.call(format: "json", project: "project", runtime: runtime) }.first
+      assert_equal "project", JSON.parse(out).fetch("project_id")
+    end
+    assert_equal 4, collector.calls.size
   end
 end

@@ -16,39 +16,38 @@ module Ace
           option :quiet, aliases: ["-q"], type: :boolean, default: false, desc: "Suppress non-essential output"
           option :debug, aliases: ["-d"], type: :boolean, default: false, desc: "Show debug output"
           option :watch, aliases: ["-w"], type: :boolean, default: false, desc: "Auto-refresh dashboard"
-          option :runtime, default: "tmux", desc: "Runtime (tmux, lab)"
-          option :project, desc: "Filter Lab status by project"
+          option :runtime, desc: "Runtime (auto, tmux, herdr)"
+          option :project, desc: "Read protected canonical status for this project"
+          option :agent, desc: "Exact visible protected agent ID (requires --project)"
 
-          def initialize(collector: nil, config: nil, lab_client: nil, proposal_tick: nil)
+          def initialize(collector: nil, config: nil, protected_status: nil, proposal_tick: nil)
             super()
             @collector = collector || Organisms::StatusCollector.new
             @config = config
-            @lab_client = lab_client || Molecules::LabClient.new
+            @protected_status = protected_status || Organisms::ProtectedStatus.new
             @proposal_tick = proposal_tick || Molecules::ProposalTick.new
           end
 
-          def call(format:, runtime: "tmux", project: nil, **options)
-            tick_proposals
-            if runtime == "lab"
-              if options[:watch]
-                raise Ace::Support::Cli::Error, "Lab watch runs in the project Herdr status pane; omit --watch"
+          def call(format:, runtime: nil, project: nil, agent: nil, **options)
+            raise Ace::Support::Cli::Error, "--agent requires --project" if agent && project.to_s.empty?
+            selected_runtime = runtime || (@config || Ace::Overseer.config)["runtime"] || "auto"
+            unless project.to_s.empty?
+              unless %w[auto tmux herdr].include?(selected_runtime)
+                raise Ace::Support::Cli::Error, "unsupported runtime for protected inventory"
               end
-              arguments = ["work", "status"]
-              arguments.concat(["--project", project]) unless project.to_s.empty?
-              arguments << "--json" if format == "json"
-              output = @lab_client.call(*arguments, json: false)
+              if options[:watch]
+                raise Ace::Support::Cli::Error, "Protected status is a bounded snapshot; omit --watch"
+              end
+              value = @protected_status.collect(project: project, agent: agent)
               unless options[:quiet]
                 warn @proposal_error if @proposal_error
-                if format == "json" && @proposal_error
-                  value = JSON.parse(output)
-                  output = JSON.pretty_generate(value.merge("proposal_resolution" =>
-                    {"status" => "deferred", "error" => @proposal_error})) if value.is_a?(Hash)
-                end
-                puts output
+                value = value.merge("proposal_resolution" => {"status" => "deferred", "error" => @proposal_error}) if @proposal_error
+                puts(format == "json" ? JSON.pretty_generate(value) : protected_table(value))
               end
               return
             end
-            raise Ace::Support::Cli::Error, "unsupported runtime: #{runtime}" unless runtime == "tmux"
+            raise Ace::Support::Cli::Error, "unsupported local runtime: #{selected_runtime}" unless %w[auto tmux].include?(selected_runtime)
+            tick_proposals
 
             Atoms::RepoGuard.ensure_repo!
             return if options[:quiet]
@@ -65,6 +64,21 @@ module Ace
           end
 
           private
+
+          def protected_table(value)
+            lines = ["#{value.fetch('project_id')}: #{value.fetch('visible_capacity')}/#{value.fetch('provisioned_capacity')} visible mappings (#{value.fetch('visibility')})"]
+            value.fetch("agents").each do |agent|
+              if agent.fetch("status") != "ok"
+                lines << "#{agent.fetch('agent_id')}\tunavailable"
+                next
+              end
+              agent.fetch("inventory").fetch("items").each do |row|
+                lines << [agent.fetch("agent_id"), row.fetch("assignment_id"), row.fetch("attempt_id") || "registration",
+                  row.fetch("canonical_state") || "registered", row.fetch("reservation_release_event_id") ? "released" : "retained"].join("\t")
+              end
+            end
+            lines.join("\n")
+          end
 
           def tick_proposals
             @proposal_tick.call

@@ -1166,6 +1166,115 @@ module Ace
         end
       end
 
+      def test_inventory_reads_registration_and_reserved_attempt_at_selected_canonical_snapshot
+        with_authority do
+          selected_map = @map
+          deployment = @authority.instance_variable_get(:@deployment)
+          deployment.define_singleton_method(:verify!) { |_id, **| selected_map }
+          query = lambda do |commit = nil, after = nil, limit = 25, role = :launcher|
+            @authority.dispatch(request: {"version" => 1, "operation" => "assignment_inventory", "mutation_id" => nil,
+              "project_id" => "project", "params" => {"mapping_id" => "mapping", "journal_commit" => commit,
+                "after" => after, "limit" => limit}}, peer: @peer, role: role).fetch(:data)
+          end
+          old = @journal.ref_value
+          registration = query.call
+          assert_equal old, registration.fetch("journal_commit")
+          assert_equal 1, registration.fetch("items").size
+          row = registration.fetch("items").first
+          assert_equal "09j", row.fetch("task_id")
+          %w[attempt_id generation scope canonical_state original_binding_digest terminal_event_id reservation_release_event_id].each { |key| assert_nil row.fetch(key) }
+          reserved = call("reserve_attempt", @reserve_params, id: "inventory-reserve").fetch(:data)
+          current = @journal.ref_value
+          attempt = query.call.fetch("items").first
+          assert_equal reserved.fetch("attempt_id"), attempt.fetch("attempt_id")
+          assert_equal "reserved", attempt.fetch("canonical_state")
+          selected_chain = @journal.read_events("assignment", commit: current).select { |event| event["attempt_id"] == reserved.fetch("attempt_id") }
+          assert_equal @journal.authority_generation(selected_chain), attempt.fetch("generation")
+          assert_equal "010", attempt.fetch("scope")
+          assert_equal registration, query.call(old)
+          assert_equal current, @journal.ref_value
+          assert_raises(AttemptErrors::UnauthorizedIdentity) { query.call(nil, nil, 25, :worker) }
+          assert_raises(ArgumentError) { query.call(nil, nil, 1.0) }
+          assert_raises(ArgumentError) { query.call(nil, {"assignment_id" => "assignment", "attempt_id" => reserved.fetch("attempt_id")}) }
+          assert_raises(AttemptErrors::NotFound) { query.call(current, {"assignment_id" => "missing", "attempt_id" => nil}) }
+          assert_empty query.call(current, {"assignment_id" => "assignment", "attempt_id" => reserved.fetch("attempt_id")}).fetch("items")
+          assert_equal current, @journal.ref_value
+        end
+      end
+
+      def test_inventory_refuses_raw_git_registration_corruption_and_wrong_accepted_tuple
+        ["digest", "project_id", "assignment_id", "mapping_id"].each do |changed|
+          with_authority do
+            selected_map = @map
+            @authority.instance_variable_get(:@deployment).define_singleton_method(:verify!) { |_id, **| selected_map }
+            old = @journal.ref_value
+            original = @journal.read_events("assignment", commit: old).find { |event| event.dig("payload", "operation") == "register_assignment" }
+            event = JSON.parse(JSON.generate(original))
+            if changed == "digest"
+              event["digest"] = "f" * 64
+            else
+              event.fetch("payload").fetch("data")[changed] = "foreign"
+              event["digest"] = Atoms::EvidenceDigest.digest(event.except("digest"))
+              assert Models::EvidenceEvent.valid?(event), "wrong tuple must remain cryptographically valid to target association checks"
+            end
+            checkout = @journal.send(:checkout_dir)
+            directory = File.join(checkout, "execution", "assignment", "events")
+            File.unlink(File.join(directory, @journal.send(:event_filename, original)))
+            File.write(File.join(directory, @journal.send(:event_filename, event)), JSON.pretty_generate(event))
+            [ ["add", "-A", "execution/assignment"],
+              ["-c", "user.name=test", "-c", "user.email=test@localhost", "commit", "-m", "controlled invalid registration"] ].each do |arguments|
+              _out, error, result = Open3.capture3("git", "-C", checkout, *arguments)
+              assert result.success?, error
+            end
+            commit, error, result = Open3.capture3("git", "-C", checkout, "rev-parse", "HEAD")
+            assert result.success?, error
+            _out, error, result = Open3.capture3("git", "-C", @journal.repo_root, "update-ref", @journal.ref, commit.delete_suffix("\n"), old)
+            assert result.success?, error
+            request = {"version" => 1, "operation" => "assignment_inventory", "mutation_id" => nil, "project_id" => "project",
+              "params" => {"mapping_id" => "mapping", "journal_commit" => nil, "after" => nil, "limit" => 25}}
+            assert_raises(AttemptErrors::EvidenceUnavailable) { @authority.dispatch(request: request, peer: @peer, role: :launcher) }
+            assert_equal commit.delete_suffix("\n"), @journal.ref_value
+            _out, error, result = Open3.capture3("git", "-C", @journal.repo_root, "update-ref", @journal.ref, old, commit.delete_suffix("\n"))
+            assert result.success?, error
+          end
+        end
+      end
+
+      def test_inventory_shortens_genuine_bounded_rows_and_keeps_continuation_at_original_commit
+        with_authority do
+          selected_map = @map
+          @authority.instance_variable_get(:@deployment).define_singleton_method(:verify!) { |_id, **| selected_map }
+          register = lambda do |id, index|
+            bytes = JSON.generate(JSON.parse(registered_bytes).merge("session_id" => id, "task_id" => "t" * 128))
+            @authority.dispatch(request: {"operation" => "register_assignment", "mutation_id" => "page-register-#{index}",
+              "params" => {"mapping_id" => "mapping", "assignment_id" => id, "definition_bytes" => bytes,
+                "definition_digest" => Digest::SHA256.hexdigest(bytes), "expected_generation" => 0}}, peer: @peer, role: :launcher)
+          end
+          ids = 35.times.map { |index| "large-#{'a' * 100}#{format('%03d', index)}" }
+          ids.each_with_index { |id, index| register.call(id, index) }
+          query = lambda do |commit = nil, after = nil|
+            @authority.dispatch(request: {"operation" => "assignment_inventory", "mutation_id" => nil,
+              "params" => {"mapping_id" => "mapping", "journal_commit" => commit, "after" => after, "limit" => 50}},
+              peer: @peer, role: :launcher).fetch(:data)
+          end
+          selected = @journal.ref_value
+          first = query.call
+          expected = ["assignment"] + ids
+          actual = first.fetch("items").map { |row| row.fetch("assignment_id") }
+          assert_operator actual.size, :<, expected.size
+          assert_equal expected.take(actual.size), actual
+          assert_equal first.fetch("items").last.slice("assignment_id", "attempt_id"), first.fetch("next_after")
+          frame = JSON.generate("status" => "ok", "data" => first, "transport" => {"replayed" => false}) + "\n"
+          assert_operator frame.bytesize, :<=, 16_384
+          last = query.call(first.fetch("journal_commit"), first.fetch("next_after"))
+          assert_equal expected.drop(actual.size), last.fetch("items").map { |row| row.fetch("assignment_id") }
+          assert_nil last.fetch("next_after")
+          assert_equal selected, @journal.ref_value
+          register.call("later-registration", 35)
+          assert_equal last, query.call(first.fetch("journal_commit"), first.fetch("next_after"))
+        end
+      end
+
       def test_definition_change_requires_all_scopes_terminal
         with_authority do
           state = call("reserve_attempt", @reserve_params, id: "reserve").fetch(:data)

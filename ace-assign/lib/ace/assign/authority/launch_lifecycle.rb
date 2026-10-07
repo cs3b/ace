@@ -28,7 +28,7 @@ module Ace
           "abort_launch" => %w[mapping_id assignment_id attempt_id launch_ticket failure_evidence failure_digest expected_generation]
         }.freeze
         TRANSFER_OPERATIONS = {"prompt_attempt" => {direction: :upload, purpose: :prompt_text, roles: %i[launcher supervisor]}}.freeze
-        OPERATIONS = (MUTATIONS.keys + %w[stop_attempt prompt_attempt prompt_status launch_input_inhibit_selection launch_input_inhibit_completion launch_prompt_intent launch_prompt_completion launch_preflight registration_status attempt_status inspect_launch observe_execution_scope close_execution_scope]).freeze
+        OPERATIONS = (MUTATIONS.keys + %w[assignment_inventory stop_attempt prompt_attempt prompt_status launch_input_inhibit_selection launch_input_inhibit_completion launch_prompt_intent launch_prompt_completion launch_preflight registration_status attempt_status inspect_launch observe_execution_scope close_execution_scope]).freeze
         TERMINAL = %w[succeeded failed stopped].freeze
 
         attr_reader :mutex, :journals, :exclusions
@@ -70,6 +70,7 @@ module Ace
 
         def dispatch(request:, peer:, role:, transfer: nil)
           operation, params = request.values_at("operation", "params")
+          return assignment_inventory!(request: request, peer: peer, role: role) if operation == "assignment_inventory"
           return stop_attempt!(request: request, peer: peer, role: role) if operation == "stop_attempt"
           return prompt_attempt!(request: request, peer: peer, role: role, transfer: transfer) if operation == "prompt_attempt"
           return prompt_status!(request: request, peer: peer, role: role) if operation == "prompt_status"
@@ -911,3 +912,4 @@ require_relative "launch_steering"
 require_relative "launch_input_inhibition"
 
 require_relative "launch_stop"
+require_relative "assignment_inventory"

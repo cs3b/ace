@@ -35,6 +35,7 @@ require_relative "overseer/molecules/assignment_prune_safety_checker"
 require_relative "overseer/molecules/lab_prune_safety_checker"
 require_relative "overseer/organisms/work_on_orchestrator"
 require_relative "overseer/organisms/status_collector"
+require_relative "overseer/organisms/protected_status"
 require_relative "overseer/organisms/prune_orchestrator"
 require_relative "overseer/cli"
 
