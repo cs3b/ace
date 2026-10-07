@@ -17,6 +17,11 @@ module Ace
 
           private
 
+          def refuse_protected_graph_mutation!(options)
+            context = @protected_assignment_context ||= Ace::Assign::Authority::ProtectedAssignmentContext.load
+            context.refuse_graph_mutation!(options: options)
+          end
+
           def resolve_assignment_target(options)
             assignment_raw = options[:assignment]
             explicit_target = unless assignment_raw.nil? || assignment_raw.to_s.strip.empty?

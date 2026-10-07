@@ -40,6 +40,14 @@ module Ace
           end
         end
 
+        def refuse_graph_mutation!(options:)
+          selected = options.values_at(:mapping, :attempt).any? { |value| value && !value.to_s.empty? } ||
+            %w[ACE_ASSIGN_LAUNCH_MAPPING ACE_ASSIGN_ATTEMPT_ID].any? { |key| !@env[key].to_s.empty? }
+          if protected_worker? || selected
+            raise AttemptErrors::EvidenceUnavailable, "protected queue graph changes require a reviewed new prepared version and attempt"
+          end
+        end
+
         def resolve(options:, assignment_id:, scope:)
           selected = options.values_at(:mapping, :attempt).any? { |value| value && !value.to_s.empty? } ||
             %w[ACE_ASSIGN_LAUNCH_MAPPING ACE_ASSIGN_ATTEMPT_ID].any? { |key| !@env[key].to_s.empty? }

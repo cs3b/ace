@@ -55,8 +55,8 @@ require_relative "organisms/attempt_coordinator"
 
 # Commands
 require_relative "cli/commands/delivery"
-require_relative "cli/commands/create"
 require_relative "cli/commands/assignment_target"
+require_relative "cli/commands/create"
 require_relative "cli/commands/status"
 require_relative "cli/commands/resume"
 require_relative "cli/commands/inbox_reconcile"

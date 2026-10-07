@@ -54,6 +54,20 @@ module Ace
           end
         end
       end
+
+      def test_create_select_and_fork_session_refuse_retained_principal_before_owner_effects
+        owner = context(current: descriptor([13006]), retained: [descriptor([13001])], uid: 13001)
+        [CLI::Commands::Create.new, CLI::Commands::Select.new].each do |command|
+          command.instance_variable_set(:@protected_assignment_context, owner)
+          assert_raises(AttemptErrors::EvidenceUnavailable) { command.call }
+        end
+        forbidden = Object.new
+        forbidden.define_singleton_method(:launch_provider_session) { |**_| raise "provider boundary must not execute" }
+        command = CLI::Commands::ForkSession.new(launcher: forbidden)
+        command.instance_variable_set(:@protected_assignment_context, owner)
+        _, error = capture_io { assert_equal 1, command.call(assignment: "assignment", root: "010") }
+        assert_includes error, "reviewed new prepared version and attempt"
+      end
     end
   end
 end

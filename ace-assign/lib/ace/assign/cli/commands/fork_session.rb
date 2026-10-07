@@ -7,6 +7,7 @@ module Ace
         # Internal command used by tmux-backed fork panes to launch the provider session once.
         class ForkSession < Ace::Support::Cli::Command
           include Ace::Support::Cli::Base
+          include AssignmentTarget
 
           desc "Run one provider-backed fork session for a subtree"
 
@@ -21,10 +22,11 @@ module Ace
 
           def initialize(launcher: nil)
             super()
-            @launcher = launcher || Molecules::ForkSessionLauncher.new
+            @launcher = launcher
           end
 
           def call(**options)
+            refuse_protected_graph_mutation!(options)
             launcher.launch_provider_session(
               assignment_id: options[:assignment],
               fork_root: options[:root],
@@ -44,7 +46,9 @@ module Ace
 
           private
 
-          attr_reader :launcher
+          def launcher
+            @launcher ||= Molecules::ForkSessionLauncher.new
+          end
         end
       end
     end

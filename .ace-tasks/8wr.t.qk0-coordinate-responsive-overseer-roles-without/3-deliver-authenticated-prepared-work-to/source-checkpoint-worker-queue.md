@@ -30,4 +30,7 @@ Every selection was inspected for injected installed/kernel/runtime/provider bou
 
 PreparedQueue refuses missing/malformed maintained assignment metadata with typed unavailable before creating its exclusion directory; it does not invent timestamps or current source paths. The original artifact validator's minimal definition shape is unchanged by this slice. The public producer supplies actual maintained assignment metadata; a future producer must satisfy this queue consumer contract. Mutable `updated_at` still requires a supported ISO timestamp. Installed context constructs the kernel owner only after protected selector admission, so genuine ordinary use does not introduce an identity capture.
 
+## Protected mutation entry follow-up
+Post-freeze inspection found Create, Select and ForkSession bypass the shared scoped target module used by Add/Retry/ForkRun. The follow-up explicitly checks the same installed/retained principal owner before their effects and lazily constructs ForkSession's provider owner only after admission. Controlled retained-principal refusal uses the real context owner and injected provider boundary: 4 / 14 PASS, 1.17ms, `09e21763-333e-47bd-9e2f-758c2bae8541`. This closes those protected mutation entries without any new graph capability or ordinary fallback.
+
 Earlier excluded broad/default boundary runs remain excluded as documented in the fetch and entry-pin checkpoints. They are not reclassified as accepted verification by these later focused runs.
