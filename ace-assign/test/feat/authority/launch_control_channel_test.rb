@@ -8,7 +8,7 @@ module Ace
     class LaunchControlChannelTest < AceAssignTestCase
       WIRE = Ace::Runtime::Molecules::ProtectedSocket
       def deadline = WIRE.deadline(2)
-      def with_channel
+      def with_channel(input_inhibition: nil)
         Dir.mktmpdir("launch-channel-", Etc.getpwuid(Process.uid).dir) do |root|
           File.chmod(0700, root)
           reader, writer = UNIXSocket.pair
@@ -18,7 +18,7 @@ module Ace
             raise "callback channel was closed" if channel.closed?
             results << result
             {"outcome" => result.dig("guarded_evidence", "outcome"), "journal_commit" => "b" * 40}
-          })
+          }, input_inhibition: input_inhibition)
           server = Thread.new { channel.serve }
           yield channel, writer, codec, results
         ensure
@@ -47,6 +47,18 @@ module Ace
         channel.release_dispatch!(reservation) if reservation
       end
 
+      def read_action(socket, until_time: deadline)
+        loop do
+          frame = WIRE.read(socket, deadline: until_time)
+          if frame.is_a?(Hash) && frame.keys.sort == %w[nonce type version] && frame["version"].is_a?(Integer) && frame["version"] == 1 &&
+              frame["type"] == "launch_control_idle" && frame["nonce"].is_a?(String) && frame["nonce"].match?(/\A[0-9a-f]{32}\z/)
+            WIRE.write(socket, frame.merge("type" => "launch_control_idle_ack"), deadline: until_time)
+            next
+          end
+          return frame
+        end
+      end
+
       def test_two_dispatches_and_original_owner_outcome_ingestion_do_not_hold_channel_mutex
         with_channel do |channel, socket, codec, results|
           ["first secret", "second secret"].each_with_index do |body, index|
@@ -65,6 +77,36 @@ module Ace
             assert_equal reply(actual), request.value
           end
           assert_equal 2, results.length
+        end
+      end
+
+      def test_input_inhibition_requires_canonical_ack_and_monotonically_blocks_dispatch
+        inhibit = {"version" => 1, "type" => "launch_input_inhibit", "attempt_id" => "attempt",
+          "original_binding_digest" => "a" * 64, "seal_event_id" => "b" * 64, "journal_commit" => "c" * 40}
+        accepted = []
+        owner = ->(result) { accepted << result; inhibit.slice("original_binding_digest", "seal_event_id").merge("journal_commit" => "d" * 40) }
+        with_channel(input_inhibition: owner) do |channel, socket, _codec, _results|
+          reservation = channel.reserve_dispatch!
+          request = Thread.new { channel.inhibit_input(frame: inhibit, deadline: deadline) }
+          channel.release_dispatch!(reservation)
+          assert_equal inhibit, read_action(socket)
+          assert_raises(AttemptErrors::Conflict) { channel.reserve_dispatch! }
+          outcome = inhibit.slice("original_binding_digest", "seal_event_id").merge("version" => 1,
+            "type" => "launch_input_inhibit_outcome", "guarded_evidence" => {"outcome" => "inhibited"})
+          WIRE.write(socket, outcome, deadline: deadline)
+          recorded = WIRE.read(socket, deadline: deadline)
+          assert Authority::LaunchControlChannel.validate_inhibit_recorded!(recorded, inhibit)
+          assert_equal "d" * 40, recorded.fetch("journal_commit")
+          assert_equal outcome, request.value
+          assert_equal [outcome], accepted
+          assert_raises(AttemptErrors::Conflict) { channel.reserve_dispatch! }
+        end
+        [inhibit.merge("version" => 1.0), inhibit.merge("journal_commit" => "c" * 41), inhibit.merge("extra" => true)].each do |invalid|
+          assert_raises(AttemptErrors::EvidenceUnavailable) { Authority::LaunchControlChannel.validate_inhibit!(invalid) }
+        end
+        recorded = inhibit.slice("original_binding_digest", "seal_event_id", "journal_commit").merge("version" => 1, "type" => "launch_input_inhibit_recorded")
+        [recorded.merge("version" => 1.0), recorded.merge("seal_event_id" => "d" * 64), recorded.merge("journal_commit" => "c" * 41)].each do |invalid|
+          assert_raises(AttemptErrors::EvidenceUnavailable) { Authority::LaunchControlChannel.validate_inhibit_recorded!(invalid, inhibit) }
         end
       end
 

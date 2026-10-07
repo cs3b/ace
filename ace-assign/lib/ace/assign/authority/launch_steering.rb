@@ -105,7 +105,9 @@ module Ace
               prior = @control_channels[key]
               raise AttemptErrors::Conflict, "Original launcher channel already exists" if prior && !prior.closed?
               channel = LaunchControlChannel.new(socket: socket, codec: codec,
-                outcome: ->(result) { ingest_original_prompt_outcome!(params, map, result) })
+                outcome: ->(result) { ingest_original_prompt_outcome!(params, map, result) },
+                input_inhibition: ->(result) { record_original_input_inhibition!(params.merge(result.slice("original_binding_digest", "seal_event_id")), map,
+                  result.fetch("guarded_evidence"), peer: peer) })
               @control_channels[key] = channel
               ready = {"version" => 1, "type" => "launch_control_ready", "attempt_id" => params.fetch("attempt_id"),
                 "original_binding_digest" => original.fetch("binding_digest"), "journal_commit" => commit, "generation" => journal.authority_generation(events)}
@@ -273,9 +275,12 @@ module Ace
         end
 
         # Accepted input lives outside the worker unit. Only the actual closed
-        # native completion joined to its immutable issue removes this blocker;
-        # channel absence, caller exit and an empty worker cgroup cannot do so.
+        # native completion joined to its immutable issue, or accepted original
+        # actor input drainage, removes the writer blocker. Drainage never
+        # changes an unknown prompt outcome. Channel absence, caller exit and
+        # an empty worker cgroup cannot remove this blocker.
         def pending_prompt_issuers?(events, journal, commit)
+          return false if accepted_input_inhibition?(events, journal, commit)
           events.select { |event| event["type"] == "prompt_issued" }.any? do |issued|
             external_id = issued.fetch("payload").fetch("external_mutation_id")
             intent = journal.prompt_intent(external_id, commit: commit)
