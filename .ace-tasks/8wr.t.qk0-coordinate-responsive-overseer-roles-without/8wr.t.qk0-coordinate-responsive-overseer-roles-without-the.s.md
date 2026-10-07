@@ -53,7 +53,18 @@ Single end-to-end capability slice; size: large. Prerequisites: `8wq.t.k86`, `8w
 
 ### Decisions and Defaults
 
-No unresolved product choice is delegated to the implementer. Unknown authority is an error, never permission. Executed tests and independent current-head review gate delivery; CI is advisory. Spec readiness is not installed acceptance.
+Before promotion, resolve the readiness findings below so no unresolved product choice is delegated to the implementer. Unknown authority is an error, never permission. Executed tests and independent current-head review gate delivery; CI is advisory. Spec readiness is not installed acceptance.
+
+### Whole-task readiness findings — 2026-10-07
+
+Review against ACE `8327b12c4` leaves this task in `draft`, `needs_review: true`. The earlier scoped amendments do not constitute whole-task readiness. The following are specification repair work within this task, not new prerequisites of xz9.2 and not questions currently requiring Captain input:
+
+- [ ] Specify the per-project concurrency configuration key, default, admission owner and concurrent-start behavior. Current `ace-overseer/.ace-defaults/overseer/config.yml` has runtime/watch settings but no project capacity contract. Assign's existing protected slot reservation is authoritative for each slot; an overseer inventory read is not an atomic project-wide admission grant. Clarify how uncertain/released attempts count and how the four-pane tab bound applies to both runtimes. Verify simultaneous coordinators and restart without a cache.
+- [ ] Bound proposal resolution independently of status/conversation progress. `ProposalTick#call` currently uses synchronous `Open3.capture3` without a deadline, and `Status#call` invokes it before collecting status. Define a bounded outcome and visible deferred resolution when HITL stalls, without claiming authorization or retrying an external effect. Add a controlled stalled-resolver scenario to SC2.
+- [ ] Make role escalation and redirection concrete: name the canonical role assets and proposal/callback owner, distinguish an unavailable coordinator from a policy refusal, and specify how a new Captain scope is represented while the previous attempt remains uncertain. Verify that escalation does not create a second execution/review owner or bypass the existing sixteen-hour proposal policy.
+- [ ] Recheck the actual final xz9.2 public stop/status/readiness interfaces and exact settlement evidence, then review the complete task plus usage independently. A passing structural stopped-state fixture or a scoped amendment alone does not satisfy this gate.
+
+No source implementation or installed acceptance is claimed by this review.
 
 ### Provenance and Invalidated Assumptions
 
