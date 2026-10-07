@@ -27,6 +27,78 @@ module Ace
         call("launch_review_intent", params, peer: peer, role: role)
       end
 
+      def assign_delegated(params = lookup.dig(:data, "assignment_params"), id: "review-delegate.#{@selectors.fetch('request_event_id')}", peer: @launcher, role: :launcher)
+        call("assign_review", params, id: id, peer: peer, role: role)
+      end
+
+      def test_canonical_request_reserves_slot_and_exact_original_delegation_replays
+        fixture do
+          record_request
+          params = lookup.dig(:data, "assignment_params")
+          before = @journal.ref_value
+          assert_raises(AttemptErrors::Conflict) { assign_delegated(params, id: "direct") }
+          assert_raises(AttemptErrors::UnauthorizedIdentity) { assign_delegated(params, id: "review-delegate.#{'f' * 64}") }
+          assert_raises(AttemptErrors::UnauthorizedIdentity) { assign_delegated(params.merge("reviewer_process_binding" => @reviewer.merge("pid" => @reviewer.fetch("pid").to_f))) }
+          assert_raises(AttemptErrors::UnauthorizedIdentity) { assign_delegated(params, peer: @launcher.merge("pid" => 999)) }
+          assert_equal before, @journal.ref_value
+          result = assign_delegated(params)
+          assert_match(/\A[0-9a-f]{64}\z/, result.dig(:data, "assignment_event_id"))
+          assert_equal result.fetch(:data), assign_delegated(params).fetch(:data)
+          assert assign_delegated(params).fetch(:replayed)
+          candidate(2)
+          assert_equal result.fetch(:data), assign_delegated(params).fetch(:data)
+        end
+      end
+
+      def cancel_requested(event = @selectors.fetch("request_event_id"), peer: @reviewer, role: :reviewer, id: "cancel-request")
+        call("cancel_review", {"head" => @head, "candidate_generation" => 1,
+          "review_event_id" => event, "expected_generation" => generation}, id: id, peer: peer, role: role)
+      end
+
+      def test_cancelled_unassigned_request_cannot_assign_and_restarted_requester_can_cancel
+        fixture do
+          record_request
+          params = lookup.dig(:data, "assignment_params")
+          assert_raises(AttemptErrors::UnauthorizedIdentity) { cancel_requested(peer: @worker, role: :worker) }
+          result = cancel_requested(peer: @reviewer.merge("pid" => 182, "started_at" => @reviewer.fetch("started_at").sub(/82\z/, "182")))
+          assert_equal "cancelled", result.dig(:data, "state")
+          assert_nil result.dig(:data, "review_id")
+          before = @journal.ref_value
+          assert_raises(AttemptErrors::Conflict) { assign_delegated(params) }
+          assert_equal before, @journal.ref_value
+        end
+      end
+
+      def test_delegated_child_is_not_cancellation_root_and_historical_assignment_does_not_restore_permission
+        fixture do
+          record_request
+          params = lookup.dig(:data, "assignment_params")
+          assigned = assign_delegated(params)
+          assert_raises(AttemptErrors::UnauthorizedIdentity) do
+            cancel_requested(assigned.dig(:data, "assignment_event_id"), peer: @launcher, role: :launcher)
+          end
+          cancelled = cancel_requested
+          assert_equal assigned.dig(:data, "review_id"), cancelled.dig(:data, "review_id")
+          assert_equal assigned.fetch(:data), assign_delegated(params).fetch(:data)
+          before = @journal.ref_value
+          assert_raises(AttemptErrors::UnauthorizedIdentity) do
+            call("export_candidate", {"head" => @head, "candidate_generation" => 1,
+              "purpose_id" => assigned.dig(:data, "review_id")}, peer: @reviewer, role: :reviewer)
+          end
+          assert_equal before, @journal.ref_value
+        end
+      end
+
+      def test_reserved_delegation_namespace_cannot_be_used_for_another_operation
+        fixture do
+          before = @journal.ref_value
+          assert_raises(ArgumentError) do
+            call("cancel_review", {}, id: "review-delegate.#{'a' * 64}", peer: @launcher, role: :launcher)
+          end
+          assert_equal before, @journal.ref_value
+        end
+      end
+
       def test_pinned_request_returns_exact_original_assignment_generation_after_current_candidate_changes
         fixture do
           accepted = record_request

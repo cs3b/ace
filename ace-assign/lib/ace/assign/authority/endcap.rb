@@ -121,6 +121,7 @@ module Ace
               worker_or_launcher!(peer, role, map, origin,
                 launcher_only: request.fetch("operation") == "assign_review")
             end
+            delegated_review_request!(journal, events, request, params, peer, role) if request.fetch("operation") == "assign_review"
             result = journal.mutate(assignment_id: params.fetch("assignment_id"), attempt_id: params.fetch("attempt_id"),
               mutation_id: request.fetch("mutation_id"), operation: request.fetch("operation"),
               parameters_digest: Atoms::EvidenceDigest.digest(params), expected_generation: params.fetch("expected_generation"),
@@ -139,7 +140,15 @@ module Ace
               when "assign_review"
                 worker_or_launcher!(peer, role, map, origin, launcher_only: true)
                 current = exact_candidate!(candidate(events), params)
-                raise AttemptErrors::Conflict, "candidate review reservation is active" if active_review_event(events, current)
+                delegated = delegated_review_request!(journal, events, request, params, peer, role)
+                reservation = active_review_reservation(events, current)
+                if delegated
+                  unless reservation && reservation.fetch("digest") == delegated.fetch("digest") && !active_review_event(events, current)
+                    raise AttemptErrors::Conflict, "delegated review reservation is no longer assignable"
+                  end
+                elsif reservation
+                  raise AttemptErrors::Conflict, "candidate review reservation is active"
+                end
                 reviewer = params.fetch("reviewer_process_binding")
                 uid = params.fetch("reviewer_uid")
                 project = @deployment.project(map.fetch("project_id"))

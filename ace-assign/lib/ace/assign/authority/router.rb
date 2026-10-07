@@ -17,6 +17,7 @@ module Ace
         end
 
         def dispatch(request:, peer:, role:, transfer: nil)
+          validate_review_namespace!(request)
           handler = @routes.fetch(request.fetch("operation")) { raise ArgumentError, "unknown authority operation" }
           options = {request: request, peer: peer, role: role}
           options[:transfer] = transfer if transfer
@@ -24,6 +25,7 @@ module Ace
         end
 
         def transfer_binding(request)
+          validate_review_namespace!(request)
           operation = request.fetch("operation")
           handler = @routes.fetch(operation) { raise ArgumentError, "unknown authority operation" }
           return nil unless handler.class.const_defined?(:TRANSFER_OPERATIONS, false)
@@ -41,9 +43,18 @@ module Ace
         end
 
         def authorize_transfer!(request:, peer:, role:)
+          validate_review_namespace!(request)
           handler = @routes.fetch(request.fetch("operation"))
           handler.authorize_transfer!(request: request, peer: peer, role: role)
         end
+
+        def validate_review_namespace!(request)
+          if request["mutation_id"].is_a?(String) && request["mutation_id"].start_with?("review-delegate.") &&
+              request["operation"] != "assign_review"
+            raise ArgumentError, "reserved review delegation namespace"
+          end
+        end
+        private :validate_review_namespace!
 
         def close
           @launch.close
