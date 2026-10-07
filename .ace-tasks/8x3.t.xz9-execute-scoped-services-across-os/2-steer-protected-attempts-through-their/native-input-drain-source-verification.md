@@ -50,3 +50,13 @@ This is the native source producer checkpoint, not completed N2 consumer, Lab ac
 - Upstream diff-check is clean. Nonpatch ACE paths diff-check clean; generated unified patch has required single-space blank context rows reported as trailing whitespace by repository diff-check. They are patch framing, not source whitespace; exact reconstruction confirms integrity.
 
 No installed edge tests, native/PTY/systemd/root/security/VM probes, prepared gem/artifact rebuild, publication or push occurred. This receipt makes no broad all-suite or installed-readiness claim.
+
+## Automated review repair checkpoint
+
+Automated review of ACE70e78 reported one valid medium and three valid low findings; root independently verified all four. This bounded repair resolves: `8x62aepx` absent terminal must not advertise captured-origin drain capability (retain Option, use is_some_and); `8x62aepy` documented parseable inconsistent origin refusal as guard_mismatch; `8x62aepz` named fixed five-second ACK deadline and fail-closed timeout semantics; `8x62aeq0` repeat/lost-ACK recovery only while the same original actor remains attached. No native App test harness or tautological Option test was added; existing compile, pure/schema and selected asset checks cover this narrow source delta. Final independent frozen-source verdict remains root-owned.
+
+- Repaired selected upstream source `7a2e78b4e92d2b694bd8a06c1ef4943915c399b2`, tree `77d1f89f514731239c02b0966c49b9e5f30650da`; combined patch SHA256 `92971473f75c116181dc73de138d91f532e1cb62220c13eace2eb5cfd05fa811`. Original checkpoints above remain historical evidence.
+- Exact controlled fresh baseline git-am reconstruction reproduces repaired commit and tree. Cargo/toolchain/version/protocol unchanged.
+- Repaired source: cargo fmt --all and cargo +1.96.1 check --locked --tests PASS (19.04s static compile); input_drain_pure_tests PASS10/10 (0.01s); api::schema::tests PASS44/44 (0.04s). No PTY or native identity execution.
+- Repaired selection: bin/ace-test ace-herdr fast ace-herdr/test/fast/molecules/native_source_test.rb ace-herdr/test/fast/organisms/native_source_builder_test.rb --timeout120 PASS20tests/85assertions, 0failures/errors, 2.7s; receipt `2f181ff7-71ba-4b76-b629-ca3d70ede2a7`.
+- Upstream source diff-check clean; patch framing exception remains exactly as recorded above.

@@ -1,11 +1,11 @@
-From 70ee59844bccaec63e00140787bc95ff0d705ca6 Mon Sep 17 00:00:00 2001
+From 7a2e78b4e92d2b694bd8a06c1ef4943915c399b2 Mon Sep 17 00:00:00 2001
 From: Miguel <mc@cs3b.com>
 Date: Wed, 7 Oct 2026 00:43:20 +0100
 Subject: [PATCH] feat: guard and permanently drain original-terminal input
 
 ---
  docs/next/api/herdr-api.schema.json           |  338 ++++++
- .../src/content/docs/agent-automation.mdx     |   23 +
+ .../src/content/docs/agent-automation.mdx     |   25 +
  src/api/mod.rs                                |    1 +
  src/api/schema.rs                             |    2 +
  src/api/schema/agents.rs                      |   39 +
@@ -15,8 +15,8 @@ Subject: [PATCH] feat: guard and permanently drain original-terminal input
  src/api/server.rs                             |   19 +
  src/api/wait.rs                               |    9 +-
  src/app/api.rs                                |    6 +
- src/app/api/agents.rs                         |  201 +++-
- src/app/api/panes.rs                          |   14 +
+ src/app/api/agents.rs                         |  203 +++-
+ src/app/api/panes.rs                          |   10 +
  src/app/terminal_targets.rs                   |   55 +
  src/cli/agent.rs                              |    1 +
  src/pane.rs                                   |   66 ++
@@ -435,7 +435,7 @@ index e2553f7..022c899 100644
                "properties": {
                  "agents": {
 diff --git a/docs/next/website/src/content/docs/agent-automation.mdx b/docs/next/website/src/content/docs/agent-automation.mdx
-index def306f..1f60426 100644
+index def306f..6f0e9c1 100644
 --- a/docs/next/website/src/content/docs/agent-automation.mdx
 +++ b/docs/next/website/src/content/docs/agent-automation.mdx
 @@ -81,6 +81,17 @@ Startup readiness, restoring an idle conversation, and switching agent conversat
@@ -456,7 +456,7 @@ index def306f..1f60426 100644
  `pane wait-output` does not interpret agent lifecycle. It polls the selected terminal snapshot and searches it immediately, so text that was already present can match. The default source name is `recent`; matching treats that source as unwrapped recent output from the latest 80 rendered terminal rows. `--lines` changes that row limit, and `--regex` uses Rust regular-expression syntax and matches one line at a time.
  
  At the CLI, both `pane read` and `agent read` print terminal text directly. The default is UTF-8 text with ANSI escapes stripped; use `--format ansi` or `--ansi` to preserve terminal escapes where the source exposes them. The `detection` source is always plain text. For recent sources, `--lines N` selects the last N rendered terminal rows before optional unwrapping; without it, reads default to 80 rows. For `visible` and `detection`, omitting `--lines` returns the full snapshot, while specifying it keeps the last N newline-delimited lines. The socket API returns the text at `.result.read.text`.
-@@ -125,3 +136,15 @@ herdr pane wait-output w1:p3 --regex "passed|failed" --timeout 120000
+@@ -125,3 +136,17 @@ herdr pane wait-output w1:p3 --regex "passed|failed" --timeout 120000
  ```
  
  See the [CLI reference](/docs/cli-reference/) for the complete command and option list. Shell completions expose the same command tree interactively.
@@ -469,7 +469,9 @@ index def306f..1f60426 100644
 +The operation permanently inhibits that actor's input. Its `terminal_input_drained` reply returns the
 +exact origin, `input_state: "inhibited"`, and `pending_input: 0` only after received generic input,
 +guarded submissions, terminal replies, and pending input controls have been canceled or settled.
-+Queued handoff or resume cannot reopen the gate. A lost reply can be retried for the exact same actor.
++Queued handoff or resume cannot reopen the gate. A lost reply can be retried for the exact same actor while it remains attached.
++A parseable but inconsistent target/origin pair reports `guard_mismatch`.
++The fixed acknowledgement deadline is five seconds; timeout grants no drained proof.
 +Errors carry only a fixed code and `phase: "unconfirmed"`; channel loss leaves input inhibited without
 +claiming drain. This proves no further PTY input from this actor, not child exit or external scope cleanup.
 diff --git a/src/api/mod.rs b/src/api/mod.rs
@@ -825,10 +827,10 @@ index 20ca9d0..54132f2 100644
                  return responses::encode_error(
                      request.id,
 diff --git a/src/app/api/agents.rs b/src/app/api/agents.rs
-index 9289ae0..a86df5c 100644
+index 9289ae0..17ce8c1 100644
 --- a/src/app/api/agents.rs
 +++ b/src/app/api/agents.rs
-@@ -7,6 +7,7 @@ use crate::api::schema::{
+@@ -7,10 +7,13 @@ use crate::api::schema::{
      PaneReadResult, ResponseResult,
  };
  use crate::app::App;
@@ -836,7 +838,13 @@ index 9289ae0..a86df5c 100644
  
  use super::responses::{encode_error, encode_error_body, encode_success};
  
-@@ -84,14 +85,50 @@ impl App {
+ const AGENT_PROMPT_SUBMIT_DELAY: Duration = Duration::from_millis(300);
++// A missing completion never authorizes drain; inhibition remains installed.
++const INPUT_DRAIN_ACK_TIMEOUT: Duration = Duration::from_secs(5);
+ 
+ // Codex's Windows input reader does not surface bracketed paste. It detects the prompt as a
+ // "paste burst" and, while that burst is buffered, rewrites a following Enter into a newline
+@@ -84,14 +87,50 @@ impl App {
          request: crate::api::schema::Request,
          respond_to: std::sync::mpsc::Sender<String>,
      ) -> bool {
@@ -888,7 +896,7 @@ index 9289ae0..a86df5c 100644
                          Ok(Err(err)) if err.kind() == std::io::ErrorKind::TimedOut => {
                              encode_error(id, "timeout", err.to_string())
                          }
-@@ -108,6 +145,125 @@ impl App {
+@@ -108,6 +147,125 @@ impl App {
          true
      }
  
@@ -919,7 +927,7 @@ index 9289ae0..a86df5c 100644
 +        match selected {
 +            Ok(completion) => {
 +                std::thread::spawn(move || {
-+                    let response = match completion.recv_timeout(Duration::from_secs(5)) {
++                    let response = match completion.recv_timeout(INPUT_DRAIN_ACK_TIMEOUT) {
 +                        Ok(Ok(())) => encode_success(
 +                            id,
 +                            ResponseResult::TerminalInputDrained {
@@ -1014,7 +1022,7 @@ index 9289ae0..a86df5c 100644
      fn queue_agent_prompt(
          &mut self,
          id: String,
-@@ -457,6 +613,7 @@ mod tests {
+@@ -457,6 +615,7 @@ mod tests {
              &mut app,
              "req",
              AgentPromptParams {
@@ -1022,7 +1030,7 @@ index 9289ae0..a86df5c 100644
                  target: "reviewer".into(),
                  text: "A != B".into(),
                  wait: None,
-@@ -557,6 +714,7 @@ mod tests {
+@@ -557,6 +716,7 @@ mod tests {
              &mut app,
              "req",
              AgentPromptParams {
@@ -1030,7 +1038,7 @@ index 9289ae0..a86df5c 100644
                  target: public_pane_id,
                  text: "A != B".into(),
                  wait: None,
-@@ -586,6 +744,7 @@ mod tests {
+@@ -586,6 +746,7 @@ mod tests {
              &mut app,
              "req-raw",
              AgentPromptParams {
@@ -1038,7 +1046,7 @@ index 9289ae0..a86df5c 100644
                  target: "reviewer".into(),
                  text: "A != B".into(),
                  wait: None,
-@@ -601,6 +760,7 @@ mod tests {
+@@ -601,6 +762,7 @@ mod tests {
              &mut app,
              "req-label",
              AgentPromptParams {
@@ -1046,7 +1054,7 @@ index 9289ae0..a86df5c 100644
                  target: "opencode".into(),
                  text: "wrong target".into(),
                  wait: None,
-@@ -628,6 +788,7 @@ mod tests {
+@@ -628,6 +790,7 @@ mod tests {
              &mut app,
              "req",
              AgentPromptParams {
@@ -1054,7 +1062,7 @@ index 9289ae0..a86df5c 100644
                  target: "reviewer".into(),
                  text: "unrelated prompt".into(),
                  wait: None,
-@@ -668,6 +829,7 @@ mod tests {
+@@ -668,6 +831,7 @@ mod tests {
              &mut app,
              "req",
              AgentPromptParams {
@@ -1062,7 +1070,7 @@ index 9289ae0..a86df5c 100644
                  target: "reviewer".into(),
                  text: "A != B".into(),
                  wait: None,
-@@ -747,6 +909,7 @@ mod tests {
+@@ -747,6 +911,7 @@ mod tests {
              &mut app,
              "req-pending",
              AgentPromptParams {
@@ -1070,7 +1078,7 @@ index 9289ae0..a86df5c 100644
                  target: "reviewer".into(),
                  text: "A != B".into(),
                  wait: None,
-@@ -821,3 +984,39 @@ mod tests {
+@@ -821,3 +986,39 @@ mod tests {
          }
      }
  }
@@ -1111,15 +1119,16 @@ index 9289ae0..a86df5c 100644
 +    .to_string()
 +}
 diff --git a/src/app/api/panes.rs b/src/app/api/panes.rs
-index e4e03e7..461c49f 100644
+index e4e03e7..5ca1830 100644
 --- a/src/app/api/panes.rs
 +++ b/src/app/api/panes.rs
-@@ -550,10 +550,24 @@ impl App {
+@@ -550,10 +550,20 @@ impl App {
              })
              .unwrap_or_default();
  
-+        let guarded_prompt_origin = self.state.workspaces[ws_idx]
-+            .terminal_id(pane_id)
++        let terminal_id = self.state.workspaces[ws_idx].terminal_id(pane_id);
++        let guarded_prompt_origin = terminal_id
++            .as_ref()
 +            .and_then(|id| runtime.guarded_prompt_origin(id.as_str()));
 +
          encode_success(
@@ -1127,14 +1136,9 @@ index e4e03e7..461c49f 100644
              ResponseResult::PaneProcessInfo {
                  process_info: PaneProcessInfo {
 +                    guarded_prompt: guarded_prompt_origin.is_some(),
-+                    guarded_input_drain: runtime
-+                        .captured_input_origin(
-+                            self.state.workspaces[ws_idx]
-+                                .terminal_id(pane_id)
-+                                .map(|id| id.as_str())
-+                                .unwrap_or(""),
-+                        )
-+                        .is_some(),
++                    guarded_input_drain: terminal_id
++                        .as_ref()
++                        .is_some_and(|id| runtime.captured_input_origin(id.as_str()).is_some()),
 +                    guarded_prompt_origin,
                      pane_id: public_pane_id,
                      shell_pid,
