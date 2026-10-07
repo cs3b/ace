@@ -78,6 +78,14 @@ module Ace
         end
       end
 
+      def test_actual_job_refuses_typed_key_collisions_and_deep_nesting
+        ["true: first\nTRUE: second\n", "1: first\n01: second\n", "!!int 1: value\n", "steps: " + "[" * 100 + "x" + "]" * 100 + "\n"].each do |job|
+          files = fixture; replace_captured(files, "job.yaml", job)
+          error = assert_raises(ArgumentError) { Authority::PreparedWork.new(files: files) }
+          assert_match "prepared_input_invalid", error.message
+        end
+      end
+
       def test_version_is_integer_not_numerically_equal_json_float
         files = fixture
         manifest = JSON.parse(files.fetch("manifest.json")); manifest["version"] = 1.0
