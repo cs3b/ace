@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 require_relative "../test_helper"
+require "tmpdir"
+require "fileutils"
 
 class ProtectedArtifactSetTest < AceRuntimeTestCase
   Set = Ace::Runtime::Molecules::ProtectedArtifactSet
@@ -52,4 +54,81 @@ class ProtectedArtifactSetTest < AceRuntimeTestCase
       Set::Protection.new(mounts: mounts).verify!("/evidence", Handle.new(Stat.new(0, 0o100644, :file)), directory: true)
     end
   end
+
+  class ControlledProtection
+    def root_path!(_path); end
+    def verify!(_path, _handle, directory:); end
+  end
+
+  def with_artifacts
+    Dir.mktmpdir("protected-artifact-budgets") do |directory|
+      yield File.realpath(directory)
+    end
+  end
+
+  def reference(path)
+    bytes = File.binread(path)
+    {"path" => path, "bytes" => bytes.bytesize, "sha256" => Digest::SHA256.hexdigest(bytes)}
+  end
+
+  def test_default_budgets_still_refuse_artifacts_above_one_mib
+    with_artifacts do |directory|
+      path = File.join(directory, "large")
+      File.binwrite(path, "x" * (Set::LIMIT + 1))
+      Set.new(protection: ControlledProtection.new).with do |set|
+        assert_raises(Unavailable) { set.read!(reference(path)) }
+        assert_raises(Unavailable) { set.read_path!(path) }
+        assert_raises(ArgumentError) { set.read_path!(path, limit: Set::LIMIT + 1) }
+      end
+    end
+  end
+
+  def test_trusted_custom_file_budget_reads_exact_bound_and_preserves_references
+    with_artifacts do |directory|
+      path = File.join(directory, "binary")
+      bytes = "x" * (Set::LIMIT + 1)
+      File.binwrite(path, bytes)
+      Set.new(protection: ControlledProtection.new, file_limit: bytes.bytesize, total_limit: bytes.bytesize).with do |set|
+        observed, selected = set.read_path!(path)
+        assert_equal bytes, observed
+        assert_equal reference(path), selected
+        assert_same observed, set.read!(selected)
+        assert set.verify_unchanged!
+      end
+    end
+  end
+
+  def test_custom_total_budget_cannot_be_exceeded_by_multiple_files
+    with_artifacts do |directory|
+      first, second = %w[first second].map { |name| File.join(directory, name) }
+      File.write(first, "12345")
+      File.write(second, "67890")
+      Set.new(protection: ControlledProtection.new, file_limit: 5, total_limit: 9).with do |set|
+        assert_equal "12345", set.read!(reference(first))
+        assert_raises(Unavailable) { set.read!(reference(second)) }
+        assert_raises(Unavailable) { set.read_path!(second) }
+        assert_equal "12345", set.read_path!(first).first
+      end
+    end
+  end
+
+  def test_custom_file_budget_and_per_read_limit_remain_bounded
+    with_artifacts do |directory|
+      path = File.join(directory, "large")
+      File.write(path, "123456")
+      Set.new(protection: ControlledProtection.new, file_limit: 5, total_limit: 10).with do |set|
+        assert_raises(Unavailable) { set.read!(reference(path)) }
+        assert_raises(Unavailable) { set.read_path!(path) }
+        assert_raises(ArgumentError) { set.read_path!(path, limit: 6) }
+      end
+    end
+  end
+
+  def test_invalid_trusted_budget_types_or_order_refuse_at_construction
+    [[0, 1], [-1, 10], [1.0, 10], [1, 10.0], [1, 0], [1, -10], [10, 5],
+      [nil, 10], [1, nil], [true, 10]].each do |file, total|
+      assert_raises(ArgumentError) { Set.new(protection: ControlledProtection.new, file_limit: file, total_limit: total) }
+    end
+  end
+
 end

@@ -48,8 +48,13 @@ module Ace
           def trusted_owner?(stat) = stat.uid.zero?
         end
 
-        def initialize(protection: Protection.new)
+        def initialize(protection: Protection.new, file_limit: LIMIT, total_limit: TOTAL_LIMIT)
+          unless file_limit.is_a?(Integer) && total_limit.is_a?(Integer) &&
+              file_limit.positive? && total_limit.positive? && file_limit <= total_limit
+            raise ArgumentError, "invalid protected artifact byte budgets"
+          end
           @protection = protection
+          @file_limit, @total_limit = file_limit, total_limit
         end
 
         def with
@@ -69,7 +74,7 @@ module Ace
           end
           raise RuntimeUnavailableError, "network artifact graph is oversized" if @references.size >= COUNT_LIMIT
           size = reference.fetch("bytes")
-          unless size.is_a?(Integer) && size.between?(1, LIMIT) && @total + size <= TOTAL_LIMIT
+          unless size.is_a?(Integer) && size.between?(1, @file_limit) && @total + size <= @total_limit
             raise RuntimeUnavailableError, "network artifact bytes exceed bounds"
           end
           @protection.root_path!(path)
@@ -91,8 +96,8 @@ module Ace
 
         # Fixed installer entrypoints have no caller-supplied digest. Derive the
         # reference from the same protected descriptor whose bytes are retained.
-        def read_path!(path, limit: LIMIT)
-          raise ArgumentError, "invalid artifact byte limit" unless limit.is_a?(Integer) && limit.between?(1, LIMIT)
+        def read_path!(path, limit: @file_limit)
+          raise ArgumentError, "invalid artifact byte limit" unless limit.is_a?(Integer) && limit.between?(1, @file_limit)
           raise ArgumentError, "invalid fixed artifact path" unless path.is_a?(String) &&
             path.start_with?("/") && !path.include?("\0") && File.expand_path(path) == path
           if @references.key?(path)
@@ -104,7 +109,7 @@ module Ace
           ancestors(path).reverse_each { |ancestor| pin!(ancestor, directory: true) }
           handle = pin!(path, directory: false)
           size = handle.stat.size
-          unless size.between?(1, limit) && @references.size < COUNT_LIMIT && @total + size <= TOTAL_LIMIT
+          unless size.between?(1, limit) && @references.size < COUNT_LIMIT && @total + size <= @total_limit
             raise RuntimeUnavailableError, "fixed artifact exceeds bounds"
           end
           bytes = handle.read(size + 1)
