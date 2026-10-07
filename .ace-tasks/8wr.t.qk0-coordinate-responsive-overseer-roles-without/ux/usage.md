@@ -4,7 +4,7 @@ Target interfaces, not claims of implementation.
 
 ## Restart discovery and concurrent progress
 
-Run `ace-overseer status --project ace --format json` after restarting the overseer without its local assignment cache. Expected: registered assignments and original attempt references are discovered through the authorized Assign inventory. Accepted task IDs and scope references are shown; unavailable detailed status remains unknown. Empty inventory is reported only after a successful complete owner response.
+Run `ace-overseer status --project ace --format json` after restarting the overseer without its local assignment cache. Expected: registered assignments, original attempts and authenticated canonical state/terminal/release selectors are discovered through authorized Assign inventory. Accepted task IDs and scope references are shown; unavailable live details remain unknown. A restarted mapped launcher is not the old incarnation, and overlapping supervisor UID does not bypass role precedence. Empty inventory is reported only after a successful complete owner response.
 
 If the journal advances between inventory pages, continue at the selected revision. Each later attempt-status observation carries its own revision; the output does not claim all observations are an atomic snapshot. An unavailable retained revision discards the incomplete enumeration and requires a fresh read. Revoked access, an oversized record or an unreachable authority is an explicit error, never an empty queue or a labd/private-directory fallback. The precise proposed API and failure scenarios are in `../protected-inventory-contract.md`; they require independent readiness review.
 
@@ -15,6 +15,8 @@ ace-overseer work-on --task TASK --project ace --agent builder --runtime herdr
 ```
 
 Expected: One task-backed assignment starts at the registered scope; conversation remains available.
+
+Protected `builder` is the literal installed mapping ID and matching topology ID, not a role/display-name alias. Explicit unavailable selection refuses without substitution. Capacity comes from protected Deployment; partial topology visibility is labelled partial. A supervisor-only coordinator cannot launch as another UID through configuration.
 
 ## Scenario 2: See why progress stopped
 
@@ -45,6 +47,8 @@ Expected: Stop delegates to the canonical protected owner. `stopped` requires it
 ## Verification ownership
 
 These are source acceptance scenarios with controlled external boundaries. The actual installed runtime, OS-user separation, Captain conversation and complete delivery run are tracked once in lab-config:gad.2 `qkb-delivery / WORKFLOW`; source fixtures do not check that installed row.
+
+The source outcomes now have real children: qk0.0 restart/status inventory; qk0.1 responsive original-launcher role steering; qk0.2 protected physical workspace cleanup. Slice retirement, cache/pane cleanup and physical protected-root removal are distinct. qk0.2 needs actual authorized maintenance/service request/exclusion/preservation composition; it is not delivered by installed acceptance alone. Parent remains draft until the whole family is independently reviewed.
 
 ## Scenario 5: Retain the original protected launcher
 
