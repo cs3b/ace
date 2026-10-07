@@ -1,12 +1,12 @@
 # Test responsibility map: qk0.3
 
-Baseline main3883a681e/own cd677f3c6, approved pending spec, 2026-10-07. Planned only: zero tests/probes run. Execution waits for xz9.2 audit and captain dispatch. 12 responsibility groups, all high integrity/user-facing risk; 2 pure/fast contract groups, 9 controlled composition/command groups (some share focused files), 1 external installed E2E owner. Matrix groups are behavioral responsibilities, not a claim of written test count.
+Initial planning baseline main3883a681e/own cd677f3c6, approved spec, 2026-10-07. That initial plan had no executed tests. Captain has since authorized implementation against audited integrated N2/qk0.0 source contracts; whole upstream closure remains separate. Artifact foundation passed independent review and was integrated. Registration source verification is recorded in [source-checkpoint-registration.md](source-checkpoint-registration.md); implementation remains in progress. The 12 groups below are behavioral responsibilities, not written-test counts.
 
 | Behavior | Risk | Layer | File/owner | Source of truth |
 |---|---|---|---|---|
 | Exact manifest/canonical digest/template/progress projection; all closed bounds and +1 | High | fast pure | ace-assign/test/fast/authority/prepared_work_test.rb (new) | SC2,SC4 |
-| Actual default leaf/subtask preparation, context closure and >32KiB artifact; invalid roots/dependencies | High | controlled filesystem/Git | ace-assign/test/feat/prepared_work_preparation_test.rb (new) | SC1,SC2 |
-| Register exact input blob+definition same commit; replay/loss/conflict/inventory fields | High | controlled Git authority | ace-assign/test/feat/authority/launch_lifecycle_test.rb and assignment_inventory tests | SC1,SC3,SC4 |
+| Actual default leaf/subtask preparation, context closure and >32KiB artifact; invalid roots/dependencies | High | controlled filesystem/Git | ace-assign/test/feat/prepared_work_transfer_test.rb; actual TaskAssignmentCreator/AssignmentExecutor | SC1,SC2 |
+| Register exact input blob+definition same commit; replay/loss/conflict/inventory fields | High | controlled Git authority/transport | ace-assign/test/feat/authority/prepared_registration_test.rb, launch_lifecycle_test.rb and historical_rotation_test.rb; ace-overseer protected_status_test.rb consumer | SC1,SC3,SC4 |
 | Prepared fetch peer/birth/issued/original commit; wrong roles/selectors/corrupt artifact | High | controlled transport | ace-assign/test/feat/authority/prepared_work_fetch_test.rb (new) | SC1–SC3 |
 | Both endpoints candidate limits; ordinary artifacts/receipt limits unchanged; partial EOF/header | High | controlled transport | ace-assign/test/feat/authority/transfer_server_test.rb + transfer_codec_test.rb | SC2,SC4 |
 | Original-self worker entry, issue-before-permission and fetch-before-effects, no FD requirement | High | controlled composition | ace-assign/test/feat/authority/prepared_worker_test.rb (new) | SC1,SC3 |

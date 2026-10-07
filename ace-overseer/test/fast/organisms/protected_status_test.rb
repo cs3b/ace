@@ -6,6 +6,8 @@ class ProtectedStatusTest < AceOverseerTestCase
   def row(id, attempt = nil)
     {"assignment_id" => id, "task_id" => "09j", "definition_digest" => "d" * 64,
       "definition_generation" => 1, "attempt_id" => attempt, "scope" => attempt ? "010" : nil,
+      "prepared_bundle_ref" => "execution/prepared/#{id}-#{'e' * 64}.bundle", "prepared_bundle_bytes" => 123,
+      "prepared_bundle_sha256" => "e" * 64, "selection_sha256" => "f" * 64,
       "reservation_generation" => attempt ? 1 : nil, "generation" => attempt ? 3 : nil,
       "canonical_state" => attempt ? "running" : nil, "original_binding_digest" => attempt ? "b" * 64 : nil,
       "terminal_event_id" => nil, "reservation_release_event_id" => nil}
@@ -68,7 +70,10 @@ class ProtectedStatusTest < AceOverseerTestCase
 
   def test_malformed_generation_and_false_release_never_become_canonical_success
     [row("first", "attempt").merge("generation" => 3.0),
-      row("first", "attempt").merge("reservation_release_event_id" => "f" * 64)].each do |malformed|
+      row("first", "attempt").merge("reservation_release_event_id" => "f" * 64),
+      row("first").merge("prepared_bundle_bytes" => 64 * 1024 * 1024 + 1),
+      row("first").merge("prepared_bundle_ref" => "execution/prepared/other-#{'e' * 64}.bundle"),
+      row("first").merge("selection_sha256" => "invalid")].each do |malformed|
       status = collector(visible: ["one"]) { |id, _params| page(id, [malformed]) }
       value = status.collect(project: "project")
       assert_equal "unavailable", value.fetch("agents").first.fetch("status")

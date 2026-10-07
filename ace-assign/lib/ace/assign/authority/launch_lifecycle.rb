@@ -12,6 +12,7 @@ require_relative "deployment_history"
 require_relative "../molecules/execution_scope_lineage"
 require_relative "../molecules/canonical_attempt_state"
 require_relative "execution_scope_observation"
+require_relative "prepared_work"
 
 module Ace
   module Assign
@@ -20,14 +21,14 @@ module Ace
       # Process handles/streams are observations, never a replacement ledger.
       class LaunchLifecycle
         MUTATIONS = {
-          "register_assignment" => %w[mapping_id assignment_id definition_bytes definition_digest expected_generation],
+          "register_assignment" => %w[mapping_id assignment_id definition_digest prepared_head prepared_tree manifest_sha256 expected_generation transfer],
           "reserve_attempt" => %w[mapping_id assignment_id scope worker_uid runtime base_head launcher_process_binding expected_generation],
           "record_launch" => %w[mapping_id assignment_id attempt_id launch_ticket process_binding guarded_origin expected_generation],
           "bind_process" => %w[mapping_id assignment_id attempt_id launch_ticket process_binding expected_generation],
           "release_launch" => %w[mapping_id assignment_id attempt_id launch_ticket process_binding expected_generation],
           "abort_launch" => %w[mapping_id assignment_id attempt_id launch_ticket failure_evidence failure_digest expected_generation]
         }.freeze
-        TRANSFER_OPERATIONS = {"prompt_attempt" => {direction: :upload, purpose: :prompt_text, roles: %i[launcher supervisor]}}.freeze
+        TRANSFER_OPERATIONS = {"register_assignment" => {direction: :upload, purpose: :candidate, roles: [:launcher]}, "prompt_attempt" => {direction: :upload, purpose: :prompt_text, roles: %i[launcher supervisor]}}.freeze
         OPERATIONS = (MUTATIONS.keys + %w[assignment_inventory stop_attempt prompt_attempt prompt_status launch_input_inhibit_selection launch_input_inhibit_completion launch_prompt_intent launch_prompt_completion launch_preflight registration_status attempt_status inspect_launch observe_execution_scope close_execution_scope]).freeze
         TERMINAL = %w[succeeded failed stopped].freeze
 
@@ -132,6 +133,12 @@ module Ace
           @kernel.live!(peer)
           journal = journal_for(map)
           digest = Digest::SHA256.hexdigest(JSON.generate(canonical(params)))
+          prepared = if operation == "register_assignment"
+            authorize_transfer!(request: request, peer: peer, role: role)
+            admitted = admit_prepared_registration!(params, map, transfer)
+            params = params.merge("definition_bytes" => admitted.fetch(:definition_bytes))
+            admitted
+          end
           native_start = nil
           outcome = with_exclusion(params, map, journal) do
           if operation == "reserve_attempt"
@@ -167,7 +174,7 @@ module Ace
                 expected_generation: operation == "reserve_attempt" ? 0 : (params.fetch("expected_generation") || 0), with_replay: true) do |events, commit, generation|
                 fresh = true
                 plan = case operation
-                when "register_assignment" then register(params, map, journal, commit, generation)
+                when "register_assignment" then register(params, map, journal, commit, generation, prepared: prepared)
                 when "reserve_attempt" then reserve(params, map, journal, commit, generation, peer, attempt_id)
                 when "record_launch" then record(params, map, events, peer)
                 when "bind_process" then bind(params, map, events, peer)
@@ -486,14 +493,31 @@ module Ace
           token!(params.fetch("attempt_id"))
         end
 
-        def register(params, map, journal, commit, generation)
+        def admit_prepared_registration!(params, map, transfer)
+          raise AttemptErrors::MalformedTransfer, "Prepared registration transfer unavailable" unless transfer && transfer.count == 1
+          descriptor = params.fetch("transfer")
+          bytes = transfer.bytes
+          work = PreparedWork.admit(bytes: bytes, head: params.fetch("prepared_head"), tree: params.fetch("prepared_tree"),
+            sha256: descriptor.fetch("sha256"), size: descriptor.fetch("bytes"), root: @deployment.project(map.fetch("project_id")).fetch("candidate_root"))
+          unless work.manifest.values_at("assignment_id", "project_id") == [params.fetch("assignment_id"), map.fetch("project_id")] &&
+              work.manifest_sha256 == params.fetch("manifest_sha256")
+            raise ArgumentError, "prepared_input_mismatch: registration association"
+          end
+          definition_bytes = work.definition_bytes(head: params.fetch("prepared_head"), tree: params.fetch("prepared_tree"))
+          unless Digest::SHA256.hexdigest(definition_bytes) == params.fetch("definition_digest")
+            raise ArgumentError, "prepared_input_mismatch: derived definition digest"
+          end
+          {work: work, bytes: bytes.freeze, definition_bytes: definition_bytes}.freeze
+        end
+
+        def register(params, map, journal, commit, generation, prepared:)
           bytes = params.fetch("definition_bytes")
           unless bytes.is_a?(String) && bytes.bytesize <= 32_768 && params["definition_digest"].is_a?(String) &&
               Digest::SHA256.hexdigest(bytes) == params["definition_digest"]
             raise ArgumentError, "invalid assignment definition digest or size"
           end
           value = JSON.parse(bytes)
-          allowed = %w[session_id name description created_at updated_at source_config parent task_id project_id]
+          allowed = %w[session_id name description created_at updated_at source_config parent task_id project_id prepared_work]
           unless value.is_a?(Hash) && (value.keys - allowed).empty? &&
               %w[session_id name created_at source_config task_id project_id].all? { |key| value[key].is_a?(String) && !value[key].empty? } &&
               value["session_id"] == params["assignment_id"] && value["project_id"] == map["project_id"]
@@ -505,8 +529,17 @@ module Ace
           if previous && previous["definition_digest"] != params["definition_digest"] && active_events?(journal.read_events(params.fetch("assignment_id")))
             raise AttemptErrors::Conflict, "active assignment definition cannot change"
           end
+          if previous && previous["definition_digest"] == params["definition_digest"] &&
+              previous.values_at("prepared_bundle_bytes", "prepared_bundle_sha256") != [prepared.fetch(:bytes).bytesize, Digest::SHA256.hexdigest(prepared.fetch(:bytes))]
+            raise AttemptErrors::Conflict, "same prepared definition cannot replace original bundle bytes"
+          end
           path = "execution/definitions/#{params.fetch('assignment_id')}-#{params.fetch('definition_digest')}.json"
-          {events: [], blobs: {path => bytes}, data: {"assignment_id" => params.fetch("assignment_id"),
+          bundle = prepared.fetch(:bytes)
+          bundle_sha = Digest::SHA256.hexdigest(bundle)
+          bundle_path = "execution/prepared/#{params.fetch('assignment_id')}-#{bundle_sha}.bundle"
+          {events: [], blobs: {path => bytes, bundle_path => bundle}, data: {"prepared_work" => value.fetch("prepared_work"),
+            "prepared_bundle_ref" => bundle_path, "prepared_bundle_bytes" => bundle.bytesize, "prepared_bundle_sha256" => bundle_sha,
+            "selection_sha256" => prepared.fetch(:work).selection_sha256, "assignment_id" => params.fetch("assignment_id"),
             "project_id" => map.fetch("project_id"), "mapping_id" => params.fetch("mapping_id"),
             "phase" => "registered", "definition_ref" => path, "definition_digest" => params.fetch("definition_digest"),
             "definition_generation" => previous && previous["definition_digest"] == params["definition_digest"] ? previous.fetch("definition_generation") : generation + 1, "task_id" => assignment.task_id}}
@@ -520,6 +553,9 @@ module Ace
             raise AttemptErrors::UnauthorizedIdentity, "reservation identity differs"
           end
           scope = Atoms::AssignmentScope.canonicalize(params.fetch("scope"))
+          unless registration.dig("prepared_work", "scope") == scope && registration.dig("prepared_work", "task_id") == registration["task_id"]
+            raise AttemptErrors::Conflict, "reservation differs from prepared selection"
+          end
           ensure_slot_available!(map, journal)
           events = journal.read_events(params.fetch("assignment_id"))
           events.group_by { |event| event["attempt_id"] }.each_value do |chain|

@@ -47,9 +47,31 @@ module Ace
         Dir.mktmpdir("public-launch-") do |root|
           definition = File.join(root, "definition.json")
           File.write(definition, '{}')
+          bundle = File.join(root, "prepared.bundle")
+          File.binwrite(bundle, "retained bundle")
           options = {mapping: "mapping", assignment: "assignment", definition: definition,
+            prepared_bundle: bundle,
             step: "010", base_head: "a" * 40, mutation: "invocation"}
           yield command, driver, events, options, ready, result
+        end
+      end
+
+      def test_retained_inputs_refuse_symlinks_special_files_and_oversize_before_launch
+        with_launch_command do |command, _driver, events, options|
+          root = File.dirname(options.fetch(:definition))
+          link = File.join(root, "link")
+          File.symlink(options.fetch(:definition), link)
+          fifo = File.join(root, "fifo")
+          File.mkfifo(fifo, 0600)
+          oversized = File.join(root, "oversized")
+          File.binwrite(oversized, "x" * 32_769)
+          [link, fifo, root, oversized].each do |path|
+            assert_raises(Ace::Support::Cli::Error) { command.call(**options.merge(definition: path)) }
+            assert_empty events
+          end
+          File.binwrite(options.fetch(:definition), "\xff".b)
+          assert_raises(Ace::Support::Cli::Error) { command.call(**options) }
+          assert_empty events
         end
       end
 
@@ -149,6 +171,12 @@ module Ace
         %w[serve launch status terminate].each { |name| assert_includes output, "authority #{name}" }
         help = capture_io { assert_equal 0, CLI.start(["authority", "serve", "--help"]) }.first
         refute_includes help, "--config"
+        launch_help = capture_io { assert_equal 0, CLI.start(["authority", "launch", "--help"]) }.first
+        assert_includes launch_help, "--prepared-bundle"
+        with_launch_command do |command, _driver, events, options|
+          assert_raises(Ace::Support::Cli::Error) { command.call(**options.reject { |key, _| key == :prepared_bundle }) }
+          assert_empty events
+        end
       end
     end
   end

@@ -4,6 +4,7 @@ require "json"
 require "securerandom"
 require "ace/herdr/molecules/protected_native_control"
 require_relative "client"
+require_relative "candidate_transfer"
 require_relative "launch_control_channel"
 
 module Ace
@@ -23,16 +24,27 @@ module Ace
           @client.call("launch_preflight", {}).data
         end
 
-        def launch(assignment_id:, definition_bytes:, scope:, base_head:, mutation_id: SecureRandom.hex(16))
+        def launch(assignment_id:, definition_bytes:, prepared_bundle:, scope:, base_head:, mutation_id: SecureRandom.hex(16))
           preflight
           registration = @client.call("registration_status", {"assignment_id" => assignment_id}).data
           digest = Digest::SHA256.hexdigest(definition_bytes)
+          definition = JSON.parse(definition_bytes)
+          prepared = definition.fetch("prepared_work")
+          unless definition["session_id"] == assignment_id && prepared["scope"] == scope &&
+              prepared_bundle.is_a?(String) && prepared_bundle.bytesize.between?(1, CandidateTransfer::MAX_BYTES)
+            raise ArgumentError, "prepared launch selection or bundle is invalid"
+          end
+          bundle_sha = Digest::SHA256.hexdigest(prepared_bundle)
           registered = if registration["definition_digest"] == digest
+            unless registration.values_at("prepared_bundle_bytes", "prepared_bundle_sha256") == [prepared_bundle.bytesize, bundle_sha]
+              raise AttemptErrors::Conflict, "original registration prepared bundle differs"
+            end
             registration
           else
             @client.call("register_assignment", {"assignment_id" => assignment_id,
-              "definition_bytes" => definition_bytes, "definition_digest" => digest,
-              "expected_generation" => registration.fetch("generation", 0)}, mutation_id: "#{mutation_id}-register").data
+              "definition_digest" => digest, "prepared_head" => prepared.fetch("prepared_head"), "prepared_tree" => prepared.fetch("prepared_tree"),
+              "manifest_sha256" => prepared.fetch("manifest_sha256"), "expected_generation" => registration.fetch("generation", 0)},
+              mutation_id: "#{mutation_id}-register", upload_parts: [prepared_bundle], purpose: :candidate).data
           end
           reserved = @client.call("reserve_attempt", {"assignment_id" => assignment_id, "scope" => scope,
             "worker_uid" => @map.fetch("worker_uid"), "runtime" => "herdr", "base_head" => base_head,

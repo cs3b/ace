@@ -10,7 +10,7 @@ module Ace
       # actual fixed capacity. Canonical authority pages supply attempt facts.
       # None of these metadata observations is a mutation/cleanup grant.
       class ProtectedStatus
-        ROW_KEYS = %w[assignment_id task_id definition_digest definition_generation attempt_id scope reservation_generation generation canonical_state original_binding_digest terminal_event_id reservation_release_event_id].sort.freeze
+        ROW_KEYS = %w[assignment_id task_id definition_digest definition_generation prepared_bundle_ref prepared_bundle_bytes prepared_bundle_sha256 selection_sha256 attempt_id scope reservation_generation generation canonical_state original_binding_digest terminal_event_id reservation_release_event_id].sort.freeze
 
         def initialize(topology: nil, deployment_loader: nil, client_factory: nil)
           @topology = topology || Ace::Lab::Organisms::TopologyService.from_config
@@ -122,6 +122,13 @@ module Ace
           end
           digest!(row.fetch("definition_digest"))
           positive!(row.fetch("definition_generation"))
+          digest!(row.fetch("prepared_bundle_sha256"))
+          digest!(row.fetch("selection_sha256"))
+          positive!(row.fetch("prepared_bundle_bytes"))
+          unless row.fetch("prepared_bundle_bytes") <= 64 * 1024 * 1024 &&
+              row.fetch("prepared_bundle_ref") == "execution/prepared/#{row.fetch('assignment_id')}-#{row.fetch('prepared_bundle_sha256')}.bundle"
+            raise Error, "Protected prepared bundle identity is malformed"
+          end
           if row.fetch("attempt_id").nil?
             unless row.values_at("scope", "reservation_generation", "generation", "canonical_state", "original_binding_digest", "terminal_event_id", "reservation_release_event_id").all?(&:nil?)
               raise Error, "Registration-only inventory has attempt facts"

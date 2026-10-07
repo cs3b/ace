@@ -7,6 +7,7 @@ require "ace/assign/cli/commands/authority/launch"
 require_relative "../../support/execution_scope_observation_fixtures"
 require_relative "../../support/execution_scope_native_owner_fixture"
 require_relative "../../support/original_launch_driver_owner_fixture"
+require_relative "../../support/prepared_registration_fixture"
 
 module Ace
   module Assign
@@ -40,6 +41,7 @@ module Ace
 
       def with_authority
         with_temp_cache do |cache|
+          cache = Dir.mktmpdir("launch-scenario-", cache)
           repo = File.join(cache, "journal")
           FileUtils.mkdir_p(repo)
           out, error, result = Open3.capture3("git", "init", "-b", "main", repo)
@@ -47,6 +49,8 @@ module Ace
           out, error, result = Open3.capture3("git", "-C", repo, "-c", "user.name=test", "-c", "user.email=test@localhost",
             "commit", "--allow-empty", "-m", "candidate")
           assert result.success?, error
+          @prepared_fixtures = {}
+          @prepared_fixture_root = cache
           @kernel = Kernel.new
           @peer = @kernel.capture(Process.pid)
           @map = {"project_id" => "project", "authority_id" => "authority", "worker_uid" => 13001, "worker_gid" => 13001,
@@ -58,7 +62,7 @@ module Ace
           mapping = @map
           deployment.define_singleton_method(:mapping) { |_id| mapping }
           deployment.define_singleton_method(:authority) { |_id| {"state_root" => File.join(cache, "authority-state")} }
-          deployment.define_singleton_method(:project) { |_id| {"assignment_root" => File.join(cache, "assignments")} }
+          deployment.define_singleton_method(:project) { |_id| {"assignment_root" => File.join(cache, "assignments"), "candidate_root" => cache} }
           @journal = Molecules::EvidenceJournal.new(repo_root: repo, checkout_root: File.join(cache, "checkout"))
           @authority = Authority::LaunchLifecycle.new(deployment: deployment, kernel: @kernel, journals: {"project" => @journal}, scope_observer_factory: ->(_id) { ExecutionScopeNativeOwnerFixture.new(@map, @journal, @kernel, owner: @authority) })
           bytes = JSON.generate("session_id" => "assignment", "name" => "test", "created_at" => "2026-10-05T00:00:00Z",
@@ -74,7 +78,18 @@ module Ace
       def call(operation, params, id:, role: :launcher)
         request = {"version" => 1, "operation" => operation, "mutation_id" => id, "project_id" => "project",
           "params" => params.merge("mapping_id" => "mapping", "assignment_id" => "assignment")}
-        response = @authority.dispatch(request: request, peer: @peer, role: role)
+        response = if operation == "register_assignment"
+          base = params.fetch("definition_bytes")
+          fixture = @prepared_fixtures[base] ||= PreparedRegistrationFixture.build(root: @prepared_fixture_root, definition: JSON.parse(base), scope: "010")
+          @original_prepared_bundle = fixture.bundle
+          fixture.with_input(root: @prepared_fixture_root) do |input, descriptor|
+            header = fixture.header(expected_generation: params.fetch("expected_generation")).merge("transfer" => descriptor, "mapping_id" => "mapping", "assignment_id" => "assignment")
+            header["definition_digest"] = params["definition_digest"] unless Digest::SHA256.hexdigest(base) == params["definition_digest"]
+            @authority.dispatch(request: request.merge("params" => header), peer: @peer, role: role, transfer: input)
+          end
+        else
+          @authority.dispatch(request: request, peer: @peer, role: role)
+        end
         @ticket = response.dig(:data, "launch_ticket") if operation == "reserve_attempt"
         response
       end
@@ -567,10 +582,12 @@ module Ace
         def initialize(authority, peer)
           @authority, @peer = authority, peer
         end
-        def call(operation, params, mutation_id: nil, **)
+        def call(operation, params, mutation_id: nil, upload_parts: nil, purpose: nil, **)
+          params = params.merge("transfer" => Authority::TransferCodec.new.descriptor(upload_parts, purpose: purpose)) if upload_parts
+          input = upload_parts && Struct.new(:parts) { def count = parts.size; def bytes(index: 0) = parts.fetch(index) }.new(upload_parts)
           response = @authority.dispatch(request: {"version" => 1, "operation" => operation,
             "mutation_id" => mutation_id, "project_id" => "project", "params" => params.merge("mapping_id" => "mapping")},
-            peer: @peer, role: :launcher)
+            peer: @peer, role: :launcher, transfer: input)
           Authority::Client::Reply.new(data: response.fetch(:data), replayed: response.fetch(:replayed))
         end
       end
@@ -636,7 +653,7 @@ module Ace
           end
           server, worker = UNIXSocket.pair
           gate = Thread.new do
-            state = ready.pop
+            state = Timeout.timeout(30) { ready.pop }
             @authority.gate_ready(request: {"params" => {"mapping_id" => "mapping", "launch_ticket" => state.fetch("launch_ticket")}},
               peer: @kernel.capture(91), socket: server, deadline: WIRE.deadline(30))
           end
@@ -660,6 +677,7 @@ module Ace
           definition_root = Dir.mktmpdir("original-cli-definition-")
           definition_path = File.join(definition_root, "definition.json")
           File.write(definition_path, registered_bytes)
+          bundle_path = File.join(definition_root, "prepared.bundle"); File.binwrite(bundle_path, @original_prepared_bundle)
           cli_output = StringIO.new
           cli_output.define_singleton_method(:write) do |line|
             count = super(line)
@@ -669,10 +687,10 @@ module Ace
           original_stdout = $stdout
           $stdout = cli_output
           cli_thread = Thread.new do
-            command.call(mapping: "mapping", assignment: "assignment", definition: definition_path,
+            command.call(mapping: "mapping", assignment: "assignment", definition: definition_path, prepared_bundle: bundle_path,
               step: "010", base_head: "a" * 40, mutation: "actual-guard-owner")
           end
-          state = issued_for_cli.pop
+          state = Timeout.timeout(30) { issued_for_cli.pop }
           assert_equal "issued", state.fetch("phase"), errors.inspect + " " + state.inspect
           recorded = @journal.mutation_result("actual-guard-owner-record").fetch("data")
           assert_equal native.guarded_binding!(recorded.fetch("process_binding")).fetch("guarded_origin"), recorded.fetch("guarded_origin")
@@ -941,8 +959,15 @@ module Ace
         assert_equal "submitted", late.dig("payload", "evidence", "outcome")
         assert cli_ready.empty?, "Original process reconnect must not print a second ready frame"
         current = @journal.authority_generation(@journal.read_events("assignment").select { |event| event["attempt_id"] == state.fetch("attempt_id") })
-        proven = @authority.close_execution_scope!(params: close_selectors.merge("mutation_id" => "close-after-actual-ack", "expected_generation" => current), peer: @peer, role: :launcher)
-        assert_equal "closed_no_writers", proven.dig(:data, "state")
+        drained = @authority.close_execution_scope!(params: close_selectors.merge("mutation_id" => "drain-after-actual-ack", "expected_generation" => current), peer: @peer, role: :launcher)
+        assert_equal "running", drained.dig(:data, "state")
+        # A submitted prompt ACK does not prove lifetime input inhibition. The
+        # close mutation retains its pre-effect reply; only a fresh mutation
+        # after the original native drain's accepted evidence may close scope.
+        assert @journal.read_events("assignment").any? { |event| event["type"] == "input_inhibited" }, "original native input drain must be accepted"
+        current = @journal.authority_generation(@journal.read_events("assignment").select { |event| event["attempt_id"] == state.fetch("attempt_id") })
+        proven = @authority.close_execution_scope!(params: close_selectors.merge("mutation_id" => "close-after-original-drain", "expected_generation" => current), peer: @peer, role: :launcher)
+        assert_equal "closed_no_writers", proven.dig(:data, "state"), proven.inspect
         assert proven.dig(:data, "proof_id")
       ensure
         allow_native_completion << true if allow_native_completion
@@ -1089,10 +1114,10 @@ module Ace
         with_authority do
           native = LostNative.new
           launch = driver(native)
-          first = launch.launch(assignment_id: "assignment", definition_bytes: registered_bytes,
+          first = launch.launch(assignment_id: "assignment", definition_bytes: registered_bytes, prepared_bundle: @original_prepared_bundle,
             scope: "010", base_head: "a" * 40, mutation_id: "invocation")
           assert_equal "uncertain", first.fetch("phase")
-          second = launch.launch(assignment_id: "assignment", definition_bytes: registered_bytes,
+          second = launch.launch(assignment_id: "assignment", definition_bytes: registered_bytes, prepared_bundle: @original_prepared_bundle,
             scope: "010", base_head: "a" * 40, mutation_id: "invocation")
           assert_equal "inspect_retained_reservation_no_creation_permission", second.fetch("required_action")
           assert_equal 1, native.creations
@@ -1118,7 +1143,7 @@ module Ace
             original.call(new_commit, old)
           end
           native = LostNative.new
-          result = driver(native).launch(assignment_id: "assignment", definition_bytes: registered_bytes,
+          result = driver(native).launch(assignment_id: "assignment", definition_bytes: registered_bytes, prepared_bundle: @original_prepared_bundle,
             scope: "010", base_head: "a" * 40, mutation_id: "invocation")
           assert_equal "inspect_retained_reservation_no_creation_permission", result.fetch("required_action")
           assert_equal 0, native.creations
@@ -1182,6 +1207,12 @@ module Ace
           assert_equal 1, registration.fetch("items").size
           row = registration.fetch("items").first
           assert_equal "09j", row.fetch("task_id")
+          assert_equal @original_prepared_bundle.bytesize, row.fetch("prepared_bundle_bytes")
+          assert_equal Digest::SHA256.hexdigest(@original_prepared_bundle), row.fetch("prepared_bundle_sha256")
+          assert_equal @original_prepared_bundle, @journal.blob(row.fetch("prepared_bundle_ref"), commit: old)
+          definition_ref = "execution/definitions/assignment-#{row.fetch('definition_digest')}.json"
+          definition = JSON.parse(@journal.blob(definition_ref, commit: old))
+          assert_equal definition.dig("prepared_work", "selection_sha256"), row.fetch("selection_sha256")
           %w[attempt_id generation scope canonical_state original_binding_digest terminal_event_id reservation_release_event_id].each { |key| assert_nil row.fetch(key) }
           reserved = call("reserve_attempt", @reserve_params, id: "inventory-reserve").fetch(:data)
           current = @journal.ref_value
@@ -1246,9 +1277,11 @@ module Ace
           @authority.instance_variable_get(:@deployment).define_singleton_method(:verify!) { |_id, **| selected_map }
           register = lambda do |id, index|
             bytes = JSON.generate(JSON.parse(registered_bytes).merge("session_id" => id, "task_id" => "t" * 128))
-            @authority.dispatch(request: {"operation" => "register_assignment", "mutation_id" => "page-register-#{index}",
-              "params" => {"mapping_id" => "mapping", "assignment_id" => id, "definition_bytes" => bytes,
-                "definition_digest" => Digest::SHA256.hexdigest(bytes), "expected_generation" => 0}}, peer: @peer, role: :launcher)
+            fixture = PreparedRegistrationFixture.build(root: @prepared_fixture_root, definition: JSON.parse(bytes), scope: "010")
+            fixture.with_input(root: @prepared_fixture_root) do |input, descriptor|
+              @authority.dispatch(request: {"operation" => "register_assignment", "mutation_id" => "page-register-#{index}",
+                "params" => fixture.header(expected_generation: 0).merge("mapping_id" => "mapping", "assignment_id" => id, "transfer" => descriptor)}, peer: @peer, role: :launcher, transfer: input)
+            end
           end
           ids = 35.times.map { |index| "large-#{'a' * 100}#{format('%03d', index)}" }
           ids.each_with_index { |id, index| register.call(id, index) }
@@ -1267,8 +1300,17 @@ module Ace
           frame = JSON.generate("status" => "ok", "data" => first, "transport" => {"replayed" => false}) + "\n"
           assert_operator frame.bytesize, :<=, 16_384
           last = query.call(first.fetch("journal_commit"), first.fetch("next_after"))
-          assert_equal expected.drop(actual.size), last.fetch("items").map { |row| row.fetch("assignment_id") }
-          assert_nil last.fetch("next_after")
+          page = last
+          loop do
+            actual.concat(page.fetch("items").map { |row| row.fetch("assignment_id") })
+            assert_equal actual.uniq, actual
+            assert_operator actual.size, :<=, expected.size
+            assert_operator (JSON.generate("status" => "ok", "data" => page, "transport" => {"replayed" => false}) + "\n").bytesize, :<=, 16_384
+            break unless page.fetch("next_after")
+            page = query.call(first.fetch("journal_commit"), page.fetch("next_after"))
+          end
+          assert_equal expected, actual
+          assert_nil page.fetch("next_after")
           assert_equal selected, @journal.ref_value
           register.call("later-registration", 35)
           assert_equal last, query.call(first.fetch("journal_commit"), first.fetch("next_after"))

@@ -6,6 +6,7 @@ require_relative "../../support/execution_boot_baseline_owner_fixture"
 require "ace/assign/authority/server"
 require "timeout"
 require_relative "../../support/execution_scope_observation_fixtures"
+require_relative "../../support/prepared_registration_fixture"
 
 module Ace
   module Assign
@@ -172,8 +173,16 @@ module Ace
               journals: {"project" => journal}, scope_observer_factory: ->(id) { observers.fetch(id) })
             owner.define_singleton_method(:verify_maintenance_root!) { |*| true }
             dispatch = lambda do |authority, operation, params, mutation|
-              authority.dispatch(request: {"version" => 1, "operation" => operation, "mutation_id" => mutation,
-                "project_id" => "project", "params" => params.merge("mapping_id" => params.fetch("mapping_id", "mapping"), "assignment_id" => params.fetch("assignment_id", "assignment"))}, peer: peer, role: :launcher)
+              request = {"version" => 1, "operation" => operation, "mutation_id" => mutation,
+                "project_id" => "project", "params" => params.merge("mapping_id" => params.fetch("mapping_id", "mapping"), "assignment_id" => params.fetch("assignment_id", "assignment"))}
+              if operation == "register_assignment"
+                fixture = PreparedRegistrationFixture.build(root: root, definition: JSON.parse(params.fetch("definition_bytes")), scope: params["mapping_id"] == "untouched" ? "020" : "010")
+                fixture.with_input(root: root) do |input, descriptor|
+                  authority.dispatch(request: request.merge("params" => fixture.header(expected_generation: params.fetch("expected_generation")).merge(request.fetch("params").slice("mapping_id", "assignment_id"), "transfer" => descriptor)), peer: peer, role: :launcher, transfer: input)
+                end
+              else
+                authority.dispatch(request: request, peer: peer, role: :launcher)
+              end
             end
             bytes = JSON.generate("session_id" => "assignment", "name" => "fixture", "created_at" => "2026-10-05T00:00:00Z",
               "source_config" => "job.yaml", "task_id" => "09j", "project_id" => "project")

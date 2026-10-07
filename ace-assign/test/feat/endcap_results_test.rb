@@ -351,11 +351,21 @@ module Ace
           end
           assert_raises(AttemptErrors::UnauthorizedIdentity) { call("evidence_fetch", fetch_params) }
           assert_raises(AttemptErrors::UnauthorizedIdentity) { call("evidence_fetch", fetch_params, peer: @executor, role: :executor) }
-          # Fixture terminal history exercises retained reads, not finish proof.
-          events = @journal.read_events("assignment").select { |event| event["attempt_id"] == @attempt }
-          terminal = Models::EvidenceEvent.build(type: "transition", attempt_id: @attempt, previous_digest: events.last.fetch("digest"),
-            payload: {"from" => "running", "to" => "failed", "reason" => "source-only retained-read fixture"})
-          @journal.append(assignment_id: "assignment", attempt_id: @attempt, events: [terminal])
+          submitted = @journal.read_events("assignment").find { |event| event["type"] == "result_submitted" }.fetch("payload")
+          selected = {"mapping_id" => "mapping", "assignment_id" => "assignment", "attempt_id" => @attempt}
+          @launch.close_execution_scope!(params: selected.merge("mutation_id" => "retained-seal", "expected_generation" => generation), peer: @launcher, role: :launcher)
+          @launch.close_execution_scope!(params: selected.merge("mutation_id" => "retained-proof", "expected_generation" => generation), peer: @launcher, role: :launcher)
+          binding = submitted.fetch("binding")
+          canonical = Molecules::CanonicalEvidence.new(journal: @journal)
+          reader = ->(_, artifact) { canonical.read({"ref" => artifact.fetch("path"), "sha256" => artifact.fetch("sha256")},
+            kind: "result", project_id: "project", assignment_id: "assignment", attempt_id: @attempt, peer_uid: @worker.fetch("uid"),
+            binding: binding, request_id_or_event_id: binding.fetch("result_id"), generation: binding.fetch("candidate_generation")) }
+          coordinator = Organisms::AttemptCoordinator.new(cache_base: File.join(@root, "retained-terminal-cache"), repo_root: @journal.repo_root,
+            journal: @journal, verifier: Molecules::ReceiptVerifier.new(artifact_reader: reader), lifecycle_exclusion: @launch.send(:exclusion_for, @map, @journal))
+          path = File.join(@root, "retained-terminal-receipt.json")
+          File.write(path, JSON.generate(submitted.fetch("receipt")))
+          identity = Molecules::ExecutionIdentityResolver::Identity.new(actor: "fixture-operator", role: "coordinator", runtime: "local")
+          assert_equal "succeeded", coordinator.finish(attempt_id: @attempt, receipt_path: path, identity: identity).state
           @kernel.dead << @worker.fetch("pid")
           restart
           assert_equal data["result_id"], status(1).dig("submitted_result", "result_id")

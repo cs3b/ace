@@ -17,7 +17,7 @@ module Ace
           File.chmod(0700, root)
           source = File.join(root, "source"); FileUtils.mkdir_p(source, mode: 0700)
           files = {"definition.json" => JSON.generate({"session_id" => "batch", "project_id" => "ace", "task_id" => "8wr.t.qk0.3"}),
-            "job.yaml" => "assignment:\n  name: test\nsteps: []\n", "steps/010.01-execute.st.md" => "---\nname: execute\nstatus: pending\ncontext: fork\n---\nDo work.\n",
+            "job.yaml" => "session:\n  name: test\nsteps:\n- number: '010.01'\n  name: execute\n  context: fork\n  taskref: 8wr.t.qk0.3\n", "steps/010.01-execute.st.md" => "---\nname: execute\nstatus: pending\ncontext: fork\ntaskref: 8wr.t.qk0.3\n---\nDo work.\n",
             "context/8wr.t.qk0.3/spec.md" => "---\nid: 8wr.t.qk0.3\nstatus: pending\nneeds_review: false\ndependencies: []\n---\nReviewed.\n", "context/8wr.t.qk0.3/bundle.txt" => "captured " * 5000}
           record = ->(path) { {"filename" => path, "bytes" => files.fetch(path).bytesize, "sha256" => Digest::SHA256.hexdigest(files.fetch(path))} }
           manifest = {"version" => 1, "assignment_id" => "batch", "project_id" => "ace", "task_id" => "8wr.t.qk0.3", "scope" => "010.01", "job" => record.call("job.yaml"),
@@ -49,6 +49,42 @@ module Ace
           assert_raises(AttemptErrors::ReceiptRejected) do
             Authority::PreparedWork.admit(root: root, head: head, tree: tree, bytes: bytes, size: bytes.bytesize, sha256: Digest::SHA256.hexdigest(bytes))
           end
+        end
+      end
+
+      def test_actual_default_leaf_producer_job_and_materialized_selected_steps_are_admitted
+        with_temp_cache do |root|
+          task_id = "8wr.t.qk0.3"
+          manager = Object.new
+          manager.define_singleton_method(:show) { |_| Struct.new(:status).new("pending") }
+          executor = Organisms::AssignmentExecutor.new(cache_base: root)
+          creator = Organisms::TaskAssignmentCreator.new(task_manager: manager, executor: executor)
+          result = Ace::Assign.stub(:cache_dir, root) { creator.call(task_refs: [task_id, "8wr.t.qk0.1"]) }
+          assignment = result.fetch(:assignment)
+          job_bytes = File.binread(result.fetch(:job_path))
+          job = YAML.safe_load(job_bytes, permitted_classes: [Time, Date])
+          selected = job.fetch("steps").select { |step| step["context"] == "fork" && step["taskref"] == task_id }
+          assert_equal 1, selected.length
+          scope = selected.first.fetch("number")
+          files = {"definition.json" => JSON.generate({"session_id" => assignment.id, "project_id" => "ace", "task_id" => task_id}), "job.yaml" => job_bytes,
+            "context/#{task_id}/spec.md" => "---\nid: #{task_id}\nstatus: pending\nneeds_review: false\ndependencies: []\n---\nReviewed.\n",
+            "context/#{task_id}/bundle.txt" => "Exact reviewed task instructions.\n"}
+          steps = Dir.children(assignment.steps_dir).filter_map do |filename|
+            next unless filename.end_with?(".st.md")
+            number = filename.split("-", 2).first
+            next unless number == scope || number.start_with?(scope + ".")
+            files["steps/" + filename] = File.binread(File.join(assignment.steps_dir, filename))
+            [number, filename]
+          end.sort_by { |number, _| number.split(".").map(&:to_i) }
+          record = ->(path) { {"filename" => path, "bytes" => files.fetch(path).bytesize, "sha256" => Digest::SHA256.hexdigest(files.fetch(path))} }
+          manifest = {"version" => 1, "assignment_id" => assignment.id, "project_id" => "ace", "task_id" => task_id, "scope" => scope,
+            "job" => record.call("job.yaml"), "steps" => steps.map { |number, filename| record.call("steps/" + filename).merge("filename" => filename, "number" => number) },
+            "context" => [{"uri" => "task://#{task_id}", "task_id" => task_id, "spec" => record.call("context/#{task_id}/spec.md"), "text" => record.call("context/#{task_id}/bundle.txt"), "reports" => []}]}
+          files["manifest.json"] = Authority::PreparedWork.canonical_manifest(manifest) + "\n"
+          work = Authority::PreparedWork.new(files: files)
+          assert_equal job_bytes, work.files.fetch("job.yaml").b
+          assert_operator steps.length, :>, 1
+          assert_equal scope, work.manifest.fetch("scope")
         end
       end
     end

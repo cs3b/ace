@@ -134,6 +134,7 @@ module Ace
         @project["peer_credentials"] = [@worker, @launcher, @reviewer, @executor, @supervisor].to_h do |peer|
           [peer.fetch("uid").to_s, peer.slice("gid", "groups").merge("scratch_root" => File.join(@root, "scratch-#{peer.fetch('uid')}"))]
         end
+        @project.fetch("peer_credentials").each_value { |entry| FileUtils.mkdir_p(entry.fetch("scratch_root"), mode: 0700) }
         value = {"schema" => "ace.assign.authorities/v2", "authorities" => {"authority" => @service.slice("uid", "gid", "groups", "socket_path", "state_root").merge("composition" => "services")},
           "projects" => {"project" => @project}, "launch_mappings" => {"mapping" => @map}}
         if @inventory_mapping
@@ -494,8 +495,9 @@ module Ace
           end
           client = Authority::Client.new(mapping_id: "mapping", deployment: @deployment, kernel: client_kernel)
           definition = JSON.generate(JSON.parse(@journal.blob(@journal.mutation_result("register").dig("data", "definition_ref"))).merge("session_id" => "assignment-page"))
-          client.call("register_assignment", {"assignment_id" => "assignment-page", "definition_bytes" => definition,
-            "definition_digest" => Digest::SHA256.hexdigest(definition), "expected_generation" => 0}, mutation_id: "inventory-page-register", timeout: 30)
+          prepared = PreparedRegistrationFixture.build(root: @root, definition: JSON.parse(definition), scope: "010")
+          client.call("register_assignment", prepared.header(expected_generation: 0), mutation_id: "inventory-page-register", timeout: 30,
+            upload_parts: [prepared.bundle], purpose: :candidate)
           query = {"journal_commit" => nil, "after" => nil, "limit" => 1}
           first = client.call("assignment_inventory", query, timeout: 30).data
           assert first.fetch("next_after")
@@ -610,6 +612,8 @@ module Ace
           command = CLI::Commands::Authority::Launch.new
           command.define_singleton_method(:build_driver) { |_| driver }
           definition_path = File.join(@root, "foreground-definition.json")
+          bundle_path = File.join(@root, "foreground-prepared.bundle")
+          File.binwrite(bundle_path, @prepared_registration.bundle)
           File.binwrite(definition_path, definition)
           output = StringIO.new
           output.define_singleton_method(:write) do |line|
@@ -620,7 +624,7 @@ module Ace
           previous_stdout = $stdout
           $stdout = output
           foreground = Thread.new do
-            command.call(mapping: "mapping", assignment: "assignment", definition: definition_path,
+            command.call(mapping: "mapping", assignment: "assignment", definition: definition_path, prepared_bundle: bundle_path,
               step: "010", base_head: @head, mutation: "foreground-stop-owner")
           rescue StandardError => error
             ready << error
@@ -702,8 +706,9 @@ module Ace
           require "ace/overseer"
           other_client = Authority::Client.new(mapping_id: "mapping-other", deployment: @deployment, kernel: client_kernel)
           other_definition = JSON.generate(JSON.parse(definition).merge("session_id" => "other-assignment"))
-          other_client.call("register_assignment", {"assignment_id" => "other-assignment", "definition_bytes" => other_definition,
-            "definition_digest" => Digest::SHA256.hexdigest(other_definition), "expected_generation" => 0}, mutation_id: "other-inventory-register", timeout: 30)
+          prepared = PreparedRegistrationFixture.build(root: @root, definition: JSON.parse(other_definition), scope: "010")
+          other_client.call("register_assignment", prepared.header(expected_generation: 0), mutation_id: "other-inventory-register", timeout: 30,
+            upload_parts: [prepared.bundle], purpose: :candidate)
           public_agents = %w[mapping mapping-other].map { |id| {"id" => id, "project" => "project", "role" => "coder", "capabilities" => ["coding"],
             "binding" => {"kind" => "runtime", "state" => "active", "instance_id" => "controlled-#{id}", "attested_instance_id" => "controlled-#{id}"}} }
           topology = Ace::Lab::Organisms::TopologyService.from_config("schema_version" => 1,

@@ -48,10 +48,11 @@ module Ace
           @manifest_sha256 = Digest::SHA256.hexdigest(manifest_bytes).freeze
           @used = %w[manifest.json definition.json]
           record!(@manifest["job"], "job.yaml")
-          yaml!(@files.fetch("job.yaml"))
+          @job = yaml!(@files.fetch("job.yaml"))
           steps!
           context!
           task_closure!
+          selected_root!
           invalid!("undeclared file") unless @used.sort == @files.keys.sort
           definition_bytes = @files.fetch("definition.json")
           invalid!("definition size") if definition_bytes.bytesize > MAX_MANIFEST
@@ -112,6 +113,7 @@ module Ace
         def steps!
           steps = @manifest["steps"]
           invalid!("steps") unless steps.is_a?(Array) && steps.size.between?(1, 256)
+          @step_frontmatter = {}
           numbers = steps.map do |step|
             closed!(step, %w[number filename bytes sha256])
             number = step.fetch("number"); scope!(number)
@@ -124,6 +126,8 @@ module Ace
             invalid!("step frontmatter") unless match
             fm = yaml!(match[1])
             invalid!("initial status") unless fm.is_a?(Hash) && fm.fetch("status", "pending") == "pending"
+            @step_frontmatter[number] = fm
+            invalid!("step name") unless fm["name"].is_a?(String) && !fm["name"].empty?
             invalid!("step filename") unless filename == Atoms::StepFileParser.generate_filename(number, fm["name"])
             number
           end
@@ -151,6 +155,21 @@ module Ace
             uri
           end
           invalid!("context ordering/selected task") unless uris.uniq == uris && uris == uris.sort && uris.include?("task://" + @manifest["task_id"])
+        end
+
+        def selected_root!
+          scope = @manifest.fetch("scope"); task = @manifest.fetch("task_id")
+          root = @step_frontmatter.fetch(scope)
+          invalid!("selected fork root") unless root["context"] == "fork" && root["taskref"] == task
+          @step_frontmatter.each do |number, fm|
+            invalid!("selected taskref") if fm.key?("taskref") && fm["taskref"] != task
+            next if number == scope
+            parent = number.split(".")[0...-1].join(".")
+            invalid!("selected parent association") unless fm["parent"] == parent && @step_frontmatter.key?(parent)
+          end
+          invalid!("job steps") unless @job.is_a?(Hash) && @job["steps"].is_a?(Array)
+          roots = @job.fetch("steps").select { |step| step.is_a?(Hash) && step["context"] == "fork" && step["taskref"] == task }
+          invalid!("job selected root") unless roots.one? && roots.first.values_at("number", "taskref") == [scope, task]
         end
 
         def task_closure!

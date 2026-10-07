@@ -7,7 +7,7 @@ module Ace
     class PreparedWorkTest < AceAssignTestCase
       def fixture(step: "---\nname: execute\nstatus: pending\ncontext: fork\ntaskref: 8wr.t.qk0.3\n---\nDo exact work.\n")
         files = {"definition.json" => JSON.generate({"session_id" => "batch", "project_id" => "ace", "task_id" => "8wr.t.qk0.3"}),
-          "job.yaml" => "assignment:\n  name: test\nsteps: []\n", "steps/010.01-execute.st.md" => step,
+          "job.yaml" => "session:\n  name: test\nsteps:\n- number: '010.01'\n  name: execute\n  context: fork\n  taskref: 8wr.t.qk0.3\n", "steps/010.01-execute.st.md" => step,
           "context/8wr.t.qk0.3/spec.md" => "---\nid: 8wr.t.qk0.3\nstatus: pending\nneeds_review: false\ndependencies: []\n---\nReviewed task.\n", "context/8wr.t.qk0.3/bundle.txt" => "Exact captured instruction.\n"}
         record = lambda { |path| {"filename" => path, "bytes" => files.fetch(path).bytesize, "sha256" => Digest::SHA256.hexdigest(files.fetch(path))} }
         manifest = {"version" => 1, "assignment_id" => "batch", "project_id" => "ace", "task_id" => "8wr.t.qk0.3", "scope" => "010.01",
