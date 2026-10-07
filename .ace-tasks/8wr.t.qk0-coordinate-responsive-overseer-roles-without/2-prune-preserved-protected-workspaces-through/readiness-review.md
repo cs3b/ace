@@ -1,5 +1,9 @@
 # Protected prune readiness review
 
+## Current verdict on revision 3082cde90
+
+Root accepts the explicit two-child decomposition and the correction of frame, transfer-budget and inhibition contradictions for continued drafting. **Readiness still requires changes**: ground privileged Git execution against untrusted configuration/hooks and exact common-directory/output ownership; establish how the nonroot authority authenticates root evidence without access to private archives or weakening confidentiality; derive the root capability profile from those actual operations. Historical completed evidence must remain a statement about its recorded observation, not an undocumented obligation to re-read up to 256 MiB on every status call. Both children and parent remain draft with needs_review true; no privileged capability is approved for deployment. These source findings have been sent to the author for correction.
+
 Root reviewed candidate `969f793ef6c83a5193f49282e6996e67afbaab41` against current `LabHerdrNative::Installer`, `ProtectedServiceReceiver` and `LifecycleExclusion`. **Changes required; retain draft / needs_review: true.** No source implementation or installed acceptance is approved.
 
 1. Installer currently computes the complete original/candidate maintenance inventory and uses a global inhibition marker and selected stop units. The proposed unchanged maintenance requester exemption is not existing behavior. Specify the actual descriptor/authority boundary or scoped owner changes that keep the requester outside the transaction without weakening all-root eligibility.
