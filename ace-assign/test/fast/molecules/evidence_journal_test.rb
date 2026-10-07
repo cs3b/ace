@@ -253,6 +253,35 @@ module Ace
         end
       end
 
+      def test_complete_inventory_refuses_unsupported_event_modes_and_file_to_tree_transition
+        with_temp_cache do |cache_dir|
+          repo = File.join(cache_dir, "repo")
+          init_repo(repo)
+          journal = Molecules::EvidenceJournal.new(repo_root: repo, ref: REF, checkout_root: File.join(cache_dir, "co"))
+          event = build_event(type: "intent", attempt_id: "one", payload: {})
+          tip = journal.append(assignment_id: "alpha", attempt_id: "one", events: [event])
+          inventory = journal.canonical_event_inventory!(commit: tip)
+          %w[160000 040000 100600].each do |mode|
+            raw = tip + "\0:100644 #{mode} #{'1' * 40} #{'2' * 40} T\0execution/alpha/events/event.json\0"
+            assert_raises(AttemptErrors::EvidenceUnavailable) do
+              journal.send(:decode_history_diff!, [tip], ["execution/"], raw, all_paths: true)
+            end
+          end
+          checkout = File.join(cache_dir, "co", "journal")
+          path = Dir.glob(File.join(checkout, "execution", "alpha", "events", "*.json")).fetch(0)
+          File.unlink(path)
+          Dir.mkdir(path)
+          File.write(File.join(path, "non-event.txt"), "replaced historical event with directory")
+          git(checkout, "add", "-A")
+          git(checkout, "commit", "-m", "event file becomes a tree")
+          error = assert_raises(AttemptErrors::EvidenceUnavailable) do
+            journal.canonical_event_inventory!(commit: git(checkout, "rev-parse", "HEAD").strip)
+          end
+          assert_includes error.message, "removed or rewrote an attempt"
+          assert_equal inventory, journal.canonical_event_inventory!(commit: tip)
+        end
+      end
+
       def test_fixed_snapshot_requires_an_actual_readable_commit_object
         with_temp_cache do |cache_dir|
           repo = File.join(cache_dir, "repo")
