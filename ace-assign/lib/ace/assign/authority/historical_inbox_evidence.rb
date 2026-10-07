@@ -14,10 +14,48 @@ module Ace
         end
 
         def verify!(events:, params:, map:, commit:)
+          verify_records!(events: events, params: params, map: map, commit: commit)
+        end
+
+        # Authentication of one accepted source effect is independent of final
+        # all-Inbox consumption. Superseded input may legitimately remain queued.
+        # This query never reads the current Inbox or calls its context endpoint.
+        def verify_selected!(events:, params:, map:, commit:, reconciliation_digest:, mutation_id: nil)
+          unless reconciliation_digest.is_a?(String) && reconciliation_digest.match?(/\A[0-9a-f]{64}\z/)
+            raise AttemptErrors::EvidenceUnavailable, "selected inbox reconciliation is invalid"
+          end
+          @journal.verify_commit!(commit)
+          retained = @journal.read_events(params.fetch("assignment_id"), commit: commit)
+            .select { |event| event["attempt_id"] == params.fetch("attempt_id") }
+          unless retained == events && Models::EvidenceEvent.chain_valid?(events)
+            raise AttemptErrors::EvidenceUnavailable, "selected inbox requires exact canonical prefix"
+          end
+          selected = events.find { |event| event["digest"] == reconciliation_digest && event["type"] == "inbox_reconciliation" }
+          unless selected && selected.dig("payload", "event_id") == params.fetch("event_id") &&
+              selected.dig("payload", "inbox_context_id") == params.fetch("inbox_context_id")
+            raise AttemptErrors::EvidenceUnavailable, "selected inbox reconciliation differs"
+          end
+          result = verify_records!(events: events, params: params, map: map, commit: commit, selected: selected, mutation_id: mutation_id)
+          %w[reconciliation reply].each do |kind|
+            @journal.event_commit!(assignment_id: params.fetch("assignment_id"), event_digest: result.fetch(kind).fetch("digest"), commit: commit)
+          end
+          result
+        rescue KeyError, TypeError, ArgumentError, NoMethodError
+          raise AttemptErrors::EvidenceUnavailable, "selected inbox evidence is unverifiable"
+        end
+
+        private
+
+        def verify_records!(events:, params:, map:, commit:, selected: nil, mutation_id: nil)
           raise AttemptErrors::EvidenceUnavailable, "historical inbox requires protected journal" unless @journal.evidence_mode == :protected
           registrations = events.select { |event| event["type"] == "inbox_binding" }
           identities = registrations.map { |event| event.dig("payload", "event_id") }
           raise AttemptErrors::EvidenceUnavailable, "historical inbox registration repeated" unless identities.uniq == identities
+          if selected
+            registrations = registrations.select { |event| event.dig("payload", "event_id") == selected.dig("payload", "event_id") }
+            raise AttemptErrors::EvidenceUnavailable, "selected inbox registration missing" unless registrations.size == 1
+          end
+          result = nil
           registrations.each do |registered|
             payload = registered.fetch("payload")
             registration = payload.fetch("registration")
@@ -35,9 +73,14 @@ module Ace
               mapping_id: context.fetch("native_mapping_id"))
             raise AttemptErrors::EvidenceUnavailable, "historical native inbox identity missing" unless lineage.native_event
             reconciliations = events.select { |event| event["type"] == "inbox_reconciliation" && event.dig("payload", "event_id") == payload.fetch("event_id") }
+            if selected
+              position = reconciliations.index(selected)
+              raise AttemptErrors::EvidenceUnavailable, "selected inbox claim missing" unless position
+              reconciliations = reconciliations.take(position + 1)
+            end
             proof = reconciliations.last&.fetch("payload")
             unless proof && proof.keys.sort == Endcap::INBOX_PAYLOAD_FIELDS.sort && proof["version"] == 1 &&
-                proof["state"] == "completed" && proof["registration"] == registration &&
+                (selected || proof["state"] == "completed") && proof["registration"] == registration &&
                 proof.values_at("event_id", "attempt_id", "inbox_context_id") == payload.values_at("event_id", "attempt_id", "inbox_context_id") &&
                 reconciliations.map { |event| event.dig("payload", "claim_generation") }.uniq.size == reconciliations.size &&
                 reconciliations.all? { |event| event.dig("payload", "claim_generation").is_a?(Integer) && event.dig("payload", "claim_generation").between?(0, proof.fetch("claim_generation")) }
@@ -50,6 +93,10 @@ module Ace
             end
             replies = events.select { |event| event["type"] == "authority_mutation" &&
               event.dig("payload", "operation") == "reconcile_inbox" && event.dig("payload", "data", "event_id") == payload.fetch("event_id") }
+            if selected
+              replies = replies.select { |reply| reconciliations.any? { |record|
+                reply.dig("payload", "data", "receipt_ref") == record.dig("payload", "receipt_ref") } }
+            end
             unless replies.all? { |reply| reconciliations.any? { |record|
               projection = record.fetch("payload").slice("event_id", "attempt_id", "inbox_context_id", "registration", "state", "receipt_ref", "signature_ref")
               reply.fetch("payload").fetch("data").slice(*projection.keys) == projection } }
@@ -108,17 +155,29 @@ module Ace
                 raise AttemptErrors::EvidenceUnavailable, "historical signed consumption proof differs"
               end
               projection = proof.slice("event_id", "attempt_id", "inbox_context_id", "registration", "state", "receipt_ref", "signature_ref")
-              unless events.any? { |event| event["type"] == "authority_mutation" && event.dig("payload", "operation") == "reconcile_inbox" &&
-                  event.dig("payload", "data")&.slice(*projection.keys) == projection }
-                raise AttemptErrors::EvidenceUnavailable, "historical inbox owner reply missing"
+              reply = events.find { |event| event["type"] == "authority_mutation" && event.dig("payload", "operation") == "reconcile_inbox" &&
+                events.index(event) > events.index(reconciliation) &&
+                (!(selected == reconciliation && mutation_id) || event.dig("payload", "mutation_id") == mutation_id) &&
+                event.dig("payload", "data")&.slice(*projection.keys) == projection }
+              raise AttemptErrors::EvidenceUnavailable, "historical inbox owner reply missing" unless reply
+              if selected && reconciliation == selected
+                result = {"commit" => commit, "reconciliation" => reconciliation, "reply" => reply}
               end
             end
           end
           unknown = events.select { |event| event["type"] == "inbox_reconciliation" }.map { |event| event.dig("payload", "event_id") } - identities
-          raise AttemptErrors::EvidenceUnavailable, "historical inbox proof lacks registration" unless unknown.empty?
-          true
+          raise AttemptErrors::EvidenceUnavailable, "historical inbox proof lacks registration" unless selected || unknown.empty?
+          selected ? immutable(result) : true
         rescue KeyError, TypeError, ArgumentError, NoMethodError, JSON::ParserError, OpenSSL::PKey::PKeyError
           raise AttemptErrors::EvidenceUnavailable, "historical inbox evidence is unverifiable"
+        end
+        def immutable(value)
+          case value
+          when Hash then value.each_with_object({}) { |(key, item), result| result[key.dup.freeze] = immutable(item) }.freeze
+          when Array then value.map { |item| immutable(item) }.freeze
+          when String then value.dup.freeze
+          else value.freeze
+          end
         end
       end
     end

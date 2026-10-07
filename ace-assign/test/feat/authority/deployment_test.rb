@@ -607,7 +607,8 @@ module Ace
         project["peer_credentials"]["13005"] = {"gid" => 13005, "groups" => [13005], "scratch_root" => "/var/lib/ace-supervisor"}
         project["service_receivers"] = {"setup" => {"executor_uid" => 13004,
           "socket_path" => "/run/ace-setup/control.sock", "staging_root" => "/var/lib/ace-setup"}}
-        project["inbox_contexts"] = {"inbox" => {"deliveries_dir" => "/var/lib/ace-inbox",
+        project["inbox_contexts"] = {"inbox" => {"deliveries_dir" => "/var/lib/ace-inbox", "control_socket_path" => "/run/ace-inbox/context.sock",
+          "owner_credentials" => {"uid" => 13006, "gid" => 13006, "groups" => [13006]},
           "receipt_public_key" => "/etc/ace/inbox-public.pem", "native_mapping_id" => "mapping",
           "pi_queue_client" => "/usr/libexec/ace-pi-identity", "pi_queue_client_sha256" => "b" * 64,
           "supervisor_uids" => [13005]}}

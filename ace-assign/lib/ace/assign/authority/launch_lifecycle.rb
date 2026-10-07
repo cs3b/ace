@@ -403,7 +403,12 @@ module Ace
           end
           token!(task)
           keys = [exclusion.task_key(task), exclusion.assignment_key(params.fetch("assignment_id"))]
-          with_slot(map) { exclusion.with_shared_multi(keys) { yield } }
+          enter = proc { with_slot(map) { exclusion.with_shared_multi(keys) { yield } } }
+          if @result_owner && @result_owner.respond_to?(:with_inbox_settlement_contexts)
+            @result_owner.with_inbox_settlement_contexts(params: params, map: map, journal: journal, &enter)
+          else
+            enter.call
+          end
         end
 
         # Slot ownership spans assignment chains and survives authority restart

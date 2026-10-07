@@ -1,26 +1,41 @@
 # frozen_string_literal: true
 require_relative "../test_helper"
 require_relative "../support/execution_scope_observation_fixtures"
+require_relative "../support/protected_inbox_context_pipeline_fixture"
 require "ace/assign/authority/endcap"
 require "ace/herdr/organisms/inbox"
+require "ace/herdr/organisms/inbox_context_owner"
+require "ace/herdr/organisms/inbox_context_server"
+require "ace/assign/authority/inbox_context_completion"
+require "ace/assign/authority/server"
+require "ace/assign/authority/router"
+require_relative "../../../ace-herdr/test/support/inbox_context_owner_fixture"
 
 module Ace
   module Assign
     # Actual canonical Git CAS and Inbox signature/event lock; source fixtures
     # stand in for installed identities, never an installed scope/closure claim.
     class EndcapInboxesTest < AceAssignTestCase
+      include ProtectedInboxContextPipelineFixture
       BOOT = "12345678-1234-1234-1234-123456789abc"
       class Kernel
-        attr_accessor :dead
+        attr_accessor :dead, :authority_peer
         def live!(identity)
           raise AttemptErrors::EvidenceUnavailable, "dead peer" if Array(dead).include?(identity["pid"])
         end
+        def capture(_pid); authority_peer; end
         def same?(left, right); left == right; end
         def supported!; raise "consumed proof must not open native endpoint"; end
       end
       class Launch
-        def initialize(journal, launcher); @journal, @launcher = journal, launcher; end
-        def with_assignment(params:, map:); yield @journal, {}; end
+        attr_reader :journals, :locked
+        def initialize(journal, launcher); @journal, @launcher = journal, launcher; @journals = {"project" => journal}; end
+        def with_assignment(params:, map:)
+          @locked = true
+          yield @journal, {}
+        ensure
+          @locked = false
+        end
         def origin(*, **); {"launcher_identity" => @launcher}; end
       end
       Parts = Struct.new(:parts) do
@@ -48,6 +63,7 @@ module Ace
 
       def fixture(child: false, inbox: true)
         Dir.mktmpdir do |root|
+          root = File.realpath(root)
           repo = File.join(root, "repo"); FileUtils.mkdir_p(repo)
           git_in(repo, "init", "-b", "main")
           git_in(repo, "-c", "user.name=test", "-c", "user.email=test@example.invalid", "commit", "--allow-empty", "-m", "fixture")
@@ -56,8 +72,8 @@ module Ace
           @peer = process(82, 13004)
           @launcher = process(81, 13002)
           server = process(90, 13001)
-          @map = {"project_id" => "project", "authority_id" => "authority", "launcher_uid" => 13002, "native" => {}}
-          key = OpenSSL::PKey::RSA.new(1024)
+          @map = {"project_id" => "project", "authority_id" => "authority", "launcher_uid" => 13002, "native" => {}, "execution_scope" => {"slot_id" => "slot"}}
+          key = OpenSSL::PKey::RSA.new(2048)
           @key = key
           key_path = File.join(root, "public.pem"); File.write(key_path, key.public_to_pem)
           @context = {"native_mapping_id" => "mapping", "supervisor_uids" => [13004], "deliveries_dir" => File.join(root, "deliveries"),
@@ -65,19 +81,41 @@ module Ace
           @unsafe = false
           @deployment = Object.new
           owner = self
-          @deployment.define_singleton_method(:project) { |_| {"inbox_contexts" => {"context" => owner.instance_variable_get(:@context)}} }
+          @deployment.define_singleton_method(:project) do |_|
+            journal = owner.instance_variable_get(:@journal)
+            {"inbox_contexts" => {"context" => owner.instance_variable_get(:@context)}, "journal_repository" => journal.repo_root,
+              "evidence_git_ref" => journal.ref, "evidence_checkout_root" => journal.checkout_root}
+          end
+          @deployment.define_singleton_method(:mapping_digest) { |_| Atoms::EvidenceDigest.digest(owner.instance_variable_get(:@map)) }
           @deployment.define_singleton_method(:mapping) { |id| raise KeyError unless id == "mapping"; owner.instance_variable_get(:@map) }
           @deployment.define_singleton_method(:inbox_context) { |_mapping, id| raise AttemptErrors::EvidenceUnavailable unless id == "context"; owner.instance_variable_get(:@context) }
           @deployment.define_singleton_method(:verify_inbox_context!) { |*| raise Ace::Runtime::RuntimeUnavailableError if owner.instance_variable_get(:@unsafe); true }
           @kernel = Kernel.new
+          @authority_peer = process(83, 13000)
+          @context_peer = process(84, 13007)
+          @kernel.authority_peer = @authority_peer
+          @descriptor_sha256 = Digest::SHA256.hexdigest(JSON.generate(@map))
+          @retained_key = key.public_key
+          @history = Object.new
+          @history.define_singleton_method(:descriptor!) do |sha256:|
+            raise AttemptErrors::EvidenceUnavailable unless sha256 == owner.instance_variable_get(:@descriptor_sha256)
+            owner.instance_variable_get(:@deployment)
+          end
+          @history.define_singleton_method(:public_key!) do |sha256:|
+            selected = owner.instance_variable_get(:@retained_key)
+            raise AttemptErrors::EvidenceUnavailable unless sha256 == Digest::SHA256.hexdigest(selected.public_to_der)
+            selected
+          end
           @policy = Object.new
           @policy.define_singleton_method(:visible!) { |**| true }
           restart
           mutate("reserve_attempt", "reserve", 0, {data: {"project_id" => "project", "assignment_id" => "assignment",
             "attempt_id" => "attempt", "mapping_id" => "mapping", "reservation_generation" => 1, "launch_ticket" => "ticket"},
-            events: [{type: "intent", payload: {"scope" => "010"}}]})
+            events: [{type: "intent", payload: {"scope" => "010"}}, {type: "scope_provisioning", payload: {
+              "descriptor_sha256" => @descriptor_sha256, "deployment_digest" => @deployment.mapping_digest("mapping"),
+              "reservation_generation" => 1, "slot_id" => "slot"}}]})
           parent = {"project_id" => "project", "assignment_id" => "assignment", "attempt_id" => "attempt", "mapping_id" => "mapping",
-            "slot_id" => "slot", "reservation_generation" => 1, "scope_generation" => 2, "deployment_digest" => "a" * 64,
+            "slot_id" => "slot", "reservation_generation" => 1, "scope_generation" => 2, "deployment_digest" => @deployment.mapping_digest("mapping"),
             "boot_id" => BOOT, "slice_invocation_id" => "b" * 32,
             "boot_baseline_selection" => ExecutionScopeObservationFixtures::BOOT_BASELINE_SELECTION, "network_installation_selection" => ExecutionScopeObservationFixtures::NETWORK_SELECTION,
             "network_namespace_identity" => {"device" => 7, "inode" => 88},
@@ -131,10 +169,14 @@ module Ace
             "outcome" => "consumed", "observer" => {"role" => "supervisor", "id" => "observer"},
             "evidence" => {"kind" => "consumed_acknowledged", "native_reference" => "native:1", "observation" => "consumed"})
           @bytes = JSON.generate(receipt); @signature = key.sign(OpenSSL::Digest::SHA256.new, @bytes)
+          start_context_pipeline(root)
+          restart
           @params = {"mapping_id" => "mapping", "assignment_id" => "assignment", "attempt_id" => "attempt",
             "expected_generation" => child ? 6 : 5, "event_id" => "event", "inbox_context_id" => "context", "expected_registration" => @registration,
             "receipt_sha256" => Digest::SHA256.hexdigest(@bytes), "signature_sha256" => Digest::SHA256.hexdigest(@signature), "transfer" => {}}
           yield
+        ensure
+          stop_context_pipeline
         end
       end
 
@@ -148,7 +190,9 @@ module Ace
           parameters_digest: Digest::SHA256.hexdigest(id), expected_generation: generation) { plan }
       end
       def restart
-        @owner = Authority::Endcap.new(deployment: @deployment, launch: Launch.new(@journal, @launcher), kernel: @kernel, service_policy: @policy)
+        @launch = Launch.new(@journal, @launcher)
+        @owner = Authority::Endcap.new(deployment: @deployment, launch: @launch, kernel: @kernel, service_policy: @policy,
+          inbox_context_clients: @context_clients, deployment_history: @history)
       end
       def reconcile(params: @params, peer: @peer, role: :supervisor, id: "reconcile", parts: [@bytes, @signature])
         @owner.dispatch(request: {"operation" => "reconcile_inbox", "project_id" => "project", "mutation_id" => id, "params" => params},
@@ -200,6 +244,60 @@ module Ace
           assert_raises(AttemptErrors::EvidenceUnavailable) do
             @owner.historical_inbox_settlement_complete!(journal: @journal, events: prefix,
               params: @params, map: @map, commit: commit, deployment: @deployment, history: history)
+          end
+        end
+      end
+
+      def test_selected_context_completion_authenticates_consumed_and_superseded_canonical_effects
+        %w[consumed superseded].each do |outcome|
+          fixture(child: true) do
+            if outcome == "superseded"
+              receipt = JSON.parse(@bytes)
+              receipt["outcome"] = "superseded"
+              receipt["evidence"]["kind"] = "queue_evicted"
+              @bytes = JSON.generate(receipt)
+              @signature = @key.sign(OpenSSL::Digest::SHA256.new, @bytes)
+              @params = @params.merge("receipt_sha256" => Digest::SHA256.hexdigest(@bytes),
+                "signature_sha256" => Digest::SHA256.hexdigest(@signature))
+            end
+            reconcile
+            commit, prefix = @journal.ref_value, events
+            selected = prefix.find { |event| event["type"] == "inbox_reconciliation" }
+            original_key, fingerprint = @key.public_key, @registration.fetch("receipt_key_sha256")
+            history = Object.new
+            history.define_singleton_method(:public_key!) do |sha256:|
+              raise AttemptErrors::EvidenceUnavailable unless sha256 == fingerprint
+              original_key
+            end
+            @deployment.define_singleton_method(:verify_inbox_context!) { |*| raise "completion must not query current context" }
+            verifier = Authority::HistoricalInboxEvidence.new(journal: @journal, deployment: @deployment, history: history)
+            result = verifier.verify_selected!(events: prefix, params: @params, map: @map, commit: commit,
+              reconciliation_digest: selected.fetch("digest"))
+            assert_equal(outcome == "consumed" ? "completed" : "queued", result.dig("reconciliation", "payload", "state"))
+            assert_equal commit, result.fetch("commit")
+            assert_equal "authority_mutation", result.dig("reply", "type")
+            assert result.frozen?
+            assert result.dig("reconciliation", "payload", "binding").frozen?
+            assert_raises(FrozenError) { result.dig("reconciliation", "payload", "registration")["event_id"].replace("other") }
+            assert_raises(AttemptErrors::EvidenceUnavailable) do
+              verifier.verify_selected!(events: prefix, params: @params, map: @map, commit: commit,
+                reconciliation_digest: "f" * 64)
+            end
+            assert_raises(AttemptErrors::EvidenceUnavailable) do
+              verifier.verify_selected!(events: prefix.drop(1), params: @params, map: @map, commit: commit,
+                reconciliation_digest: selected.fetch("digest"))
+            end
+            @journal.stub(:blob, "corrupt") do
+              assert_raises(AttemptErrors::EvidenceUnavailable) do
+                verifier.verify_selected!(events: prefix, params: @params, map: @map, commit: commit,
+                  reconciliation_digest: selected.fetch("digest"))
+              end
+            end
+            if outcome == "superseded"
+              assert_raises(AttemptErrors::EvidenceUnavailable) { verifier.verify!(events: prefix, params: @params, map: @map, commit: commit) }
+            else
+              assert verifier.verify!(events: prefix, params: @params, map: @map, commit: commit)
+            end
           end
         end
       end
@@ -357,7 +455,12 @@ module Ace
       end
 
       def settlement(events: self.events, commit: @journal.ref_value)
-        @owner.inbox_settlement_complete!(journal: @journal, events: events, params: @params.slice("mapping_id", "assignment_id", "attempt_id"), map: @map, commit: commit)
+        unless @params.key?("inbox_context_id")
+          return @owner.inbox_settlement_complete!(journal: @journal, events: events, params: @params, map: @map, commit: commit)
+        end
+        @owner.send(:with_inbox_context, @params, @map, mutation_id: "settlement-query") do
+          @owner.inbox_settlement_complete!(journal: @journal, events: events, params: @params.slice("mapping_id", "assignment_id", "attempt_id"), map: @map, commit: commit)
+        end
       end
 
       def test_source_owned_settlement_shares_provenance_without_fabricated_public_peer
@@ -429,6 +532,36 @@ module Ace
           File.unlink(lock)
           assert_raises(AttemptErrors::EvidenceUnavailable) { settlement }
           refute File.exist?(lock)
+        end
+      end
+
+      def test_lost_canonical_completion_ack_reconfirms_without_reissuing_effect
+        fixture do
+          original_read = @context_query_wire.method(:read)
+          lost = false
+          @context_query_wire.define_singleton_method(:read) do |*args, **options|
+            result = original_read.call(*args, **options)
+            unless lost
+              lost = true
+              raise Ace::Herdr::ValidationError, "fixture lost canonical completion ACK"
+            end
+            result
+          end
+          assert_raises(AttemptErrors::EvidenceUnavailable) { reconcile }
+          assert_equal 1, events.count { |event| event["type"] == "inbox_reconciliation" }
+          retained = @journal.mutation_result("reconcile").fetch("data")
+          pending = @context_owner.status(peer: @authority_peer)
+          assert_equal 1, pending.fetch("active_operations")
+          original_effect = @box.method(:reconcile)
+          @box.define_singleton_method(:reconcile) { |**| raise "accepted Inbox effect must not be reissued" }
+          replay = reconcile
+          assert replay.fetch(:replayed)
+          assert_equal retained, replay.fetch(:data).reject { |key, _| key == "journal_commit" }
+          assert_equal @journal.mutation_result("reconcile").fetch("data"), retained
+          assert_equal @journal.mutation_result("reconcile").fetch("journal_commit"), replay.fetch(:data).fetch("journal_commit")
+          assert_equal 1, events.count { |event| event["type"] == "inbox_reconciliation" }
+          assert_equal 0, @context_owner.status(peer: @authority_peer).fetch("active_operations")
+          @box.define_singleton_method(:reconcile) { |**args| original_effect.call(**args) }
         end
       end
 

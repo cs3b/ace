@@ -86,7 +86,7 @@ module InboxContextOwnerFixture
     @keys = Keys.new(context_id: "ctx", public_key_path: @key_path, config_path: @config_path, artifacts: artifacts)
     @store = Store.new(root: @state, uid: Process.uid, protection: FixturePaths.new)
     @owner = Owner.new(context_id: "ctx", deliveries_dir: @events, grants: @grants,
-      store: @store, keys: @keys, kernel: @kernel)
+      store: @store, keys: @keys, kernel: @kernel, inbox: @source_inbox, completion: @completion)
   end
 
   def restart
@@ -101,6 +101,25 @@ module InboxContextOwnerFixture
       "public_key_sha256" => Digest::SHA256.hexdigest(bytes)}
     File.write(@config_path, JSON.generate(config))
     @config_digest = Digest::SHA256.file(@config_path).hexdigest
+  end
+
+  def prepare_reconciliation(inbox_class = Ace::Herdr::Organisms::Inbox)
+    @source_inbox = inbox_class.new(executor: PaneFixture.new, native: NativeFixture.new,
+      deliveries_dir: @events, receipt_public_key: KEY.public_key)
+    @source_inbox.enqueue(event: "event1", attempt: "attempt1", ref: {"session" => "ws1", "pane" => "p1"}, payload: "controlled secret message")
+    delivered = @source_inbox.deliver(event: "event1")
+    receipt = delivered.slice("event_id", "attempt_id", "claim_generation", "payload_sha256", "binding").merge(
+      "outcome" => "consumed", "observer" => {"role" => "supervisor", "id" => "controlled"},
+      "evidence" => {"kind" => "consumed_acknowledged", "native_reference" => "controlled-item", "observation" => "completed"})
+    @signed_bytes = JSON.generate(receipt)
+    @signature = KEY.sign(OpenSSL::Digest::SHA256.new, @signed_bytes)
+    restart
+    operation = begin_operation("reconcile")
+    @effect_binding = {"schema" => "ace.herdr.inbox-context-effect/v1", "project_id" => "project", "assignment_id" => "assignment",
+      "attempt_id" => "attempt1", "mapping_id" => "mapping", "inbox_context_id" => "ctx", "event_id" => "event1", "mutation_id" => "mutation",
+      "operation_id" => operation.fetch("operation_id"), "key_generation" => 1,
+      "registration" => delivered.slice("event_id", "attempt_id", "payload_sha256", "receipt_key_sha256"),
+      "receipt_sha256" => Digest::SHA256.hexdigest(@signed_bytes), "signature_sha256" => Digest::SHA256.hexdigest(@signature)}
   end
 
   def begin_operation(purpose = "enqueue", identity = @normal)

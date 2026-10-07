@@ -42,8 +42,10 @@ module Ace
           "complete_service" => %w[mapping_id assignment_id attempt_id candidate_generation head request_id claim_binding receipt_sha256 transfer]
         }.freeze
 
-        def initialize(deployment:, launch:, kernel: Ace::Runtime::Molecules::ProtectedLinux.new, service_policy: nil)
+        def initialize(deployment:, launch:, kernel: Ace::Runtime::Molecules::ProtectedLinux.new, service_policy: nil, inbox_context_clients: nil, deployment_history: nil)
           @deployment, @launch, @kernel, @service_policy = deployment, launch, kernel, service_policy
+          @inbox_context_clients = inbox_context_clients
+          @deployment_history = deployment_history
           launch.attach_result_owner(self) if launch.respond_to?(:attach_result_owner)
         end
 
@@ -340,3 +342,5 @@ require_relative "endcap_services"
 require_relative "endcap_results"
 
 require_relative "endcap_inboxes"
+
+require_relative "endcap_contexts"
