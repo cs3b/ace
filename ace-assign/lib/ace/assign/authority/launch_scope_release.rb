@@ -101,6 +101,34 @@ module Ace
           true
         end
 
+        # Original proofs for the trusted maintenance consumer, never fresh
+        # pointer selection. Entries remain evidence after this block; only
+        # its held complete inventory grants a live maintenance operation.
+        # Empty history supplies no authority over an unknown host instance.
+        def maintenance_boot_baselines!(mapping_id:, journal:, commit:)
+          require_maintenance_context!(mapping_id, journal, commit)
+          contexts = Thread.current[:ace_assign_maintenance_contexts].fetch(object_id)
+          contexts.each_value { |_entry, context| slot_reusable!(**context) }
+          entries = maintenance_slot_lineages!(mapping_id, journal, commit).map do |lineage|
+            binding = lineage.binding
+            events = journal.read_events(binding.fetch("assignment_id"), commit: commit).select do |event|
+              event.fetch("attempt_id") == binding.fetch("attempt_id") && event["type"] == "scope_provisioning"
+            end
+            unless events.one?
+              raise AttemptErrors::EvidenceUnavailable, "maintenance original descriptor selection is ambiguous"
+            end
+            immutable_maintenance_projection(binding.slice("project_id", "mapping_id", "assignment_id", "attempt_id",
+              "scope_generation", "boot_id", "slot_id", "deployment_digest", "boot_baseline_selection").merge(
+                "descriptor_sha256" => events.first.fetch("payload").fetch("descriptor_sha256"),
+                "scope_binding_event_id" => lineage.binding_event.fetch("digest"), "proof_id" => lineage.proof_id,
+                "journal_commit" => commit, "baseline" => verify_historical_boot_baseline!(binding)))
+          end.freeze
+          contexts.each_value do |_entry, context|
+            require_maintenance_context!(context.fetch(:mapping_id), context.fetch(:journal), context.fetch(:commit))
+          end
+          entries
+        end
+
         def retire_released_parent!(mapping_id:, journal:, commit:)
           if (contexts = Thread.current[:ace_assign_maintenance_contexts]&.[](object_id))
             # The method itself enforces the whole transaction preflight. A
@@ -270,6 +298,15 @@ module Ace
             commit, assignment_id, event_digest].map { |value| value.is_a?(String) ? value.dup.freeze : value }.freeze
           memo.fetch(identity) do
             memo[identity] = journal.event_commit!(assignment_id: assignment_id, event_digest: event_digest, commit: commit).dup.freeze
+          end
+        end
+
+        def immutable_maintenance_projection(value)
+          case value
+          when Hash then value.to_h { |key, item| [key.dup.freeze, immutable_maintenance_projection(item)] }.freeze
+          when Array then value.map { |item| immutable_maintenance_projection(item) }.freeze
+          when String then value.dup.freeze
+          else value.freeze
           end
         end
 

@@ -160,13 +160,17 @@ module Ace
             MaintenanceScopeOwner.new(map, boot_baseline_selection: proof, network_selection: network)
           end
           owner = fresh = nil
-          boot_factory = -> { fixture_boot_baseline_reader(protection: FixtureProtection.new) }
+          bad_current = File.join(root, "untrusted-current-boot.json")
+          File.binwrite(bad_current, "wrong current pointer")
+          pointers = %w[slot untouched-slot].to_h { |slot| ["/etc/ace/execution-slots/#{slot}/boot-baseline-selection.json", bad_current] }
+          boot_factory = -> { fixture_boot_baseline_reader(protection: FixtureProtection.new, pointers: pointers) }
           Ace::Runtime::Molecules::ExecutionBootBaseline.stub(:new, boot_factory) do
             observer = scope_for.call(original.mapping("mapping"), "original-boot.json")
             untouched_observer = scope_for.call(original.mapping("untouched"), "untouched-boot.json")
             observers = {"mapping" => observer, "untouched" => untouched_observer}
             owner = Authority::LaunchLifecycle.new(deployment: original, deployment_history: history, kernel: kernel,
               journals: {"project" => journal}, scope_observer_factory: ->(id) { observers.fetch(id) })
+            owner.define_singleton_method(:verify_maintenance_root!) { |*| true }
             dispatch = lambda do |authority, operation, params, mutation|
               authority.dispatch(request: {"version" => 1, "operation" => operation, "mutation_id" => mutation,
                 "project_id" => "project", "params" => params.merge("mapping_id" => params.fetch("mapping_id", "mapping"), "assignment_id" => params.fetch("assignment_id", "assignment"))}, peer: peer, role: :launcher)
@@ -174,6 +178,14 @@ module Ace
             bytes = JSON.generate("session_id" => "assignment", "name" => "fixture", "created_at" => "2026-10-05T00:00:00Z",
               "source_config" => "job.yaml", "task_id" => "09j", "project_id" => "project")
             registered = dispatch.call(owner, "register_assignment", {"definition_bytes" => bytes, "definition_digest" => Digest::SHA256.hexdigest(bytes), "expected_generation" => 0}, "register").fetch(:data)
+            empty_context = nil
+            owner.with_execution_slots(mapping_ids: ["mapping"], candidate_deployment: candidate) do |contexts|
+              empty_context = contexts.first
+              empty = owner.maintenance_boot_baselines!(**empty_context)
+              assert_equal [], empty
+              assert empty.frozen?
+            end
+            assert_raises(AttemptErrors::EvidenceUnavailable) { owner.maintenance_boot_baselines!(**empty_context) }
             reserve = {"scope" => "010", "worker_uid" => 13001, "runtime" => "herdr", "base_head" => "a" * 40,
               "launcher_process_binding" => peer, "expected_generation" => registered.fetch("definition_generation")}
             state = dispatch.call(owner, "reserve_attempt", reserve, "reserve-old").fetch(:data)
@@ -194,18 +206,66 @@ module Ace
             active = dispatch.call(owner, "reserve_attempt", reserve.merge("mapping_id" => "untouched", "assignment_id" => "assignment-b", "scope" => "020", "worker_uid" => 13006,
               "expected_generation" => other_registered.dig(:data, "definition_generation")), "reserve-untouched")
             assert_equal "reserved", active.dig(:data, "phase")
-            owner.define_singleton_method(:verify_maintenance_root!) { |*| true }
             prior_retirements = observer.retirements
+            snapshot = {mapping_id: "mapping", journal: journal, commit: journal.ref_value}
+            assert_raises(AttemptErrors::EvidenceUnavailable) { owner.maintenance_boot_baselines!(**snapshot) }
             # One selected unreleased root prevents every retirement. An active
             # untouched slot is attributable and does not block slot A alone.
             owner.with_execution_slots(mapping_ids: %w[mapping untouched], candidate_deployment: candidate) do |contexts|
               assert_raises(AttemptErrors::EvidenceUnavailable) { owner.retire_released_parent!(**contexts.first) }
+              assert_raises(AttemptErrors::EvidenceUnavailable) { owner.maintenance_boot_baselines!(**contexts.first) }
               assert_equal prior_retirements, observer.retirements
             end
+            retained_context = nil
             owner.with_execution_slots(mapping_ids: ["mapping"], candidate_deployment: candidate) do |contexts|
+              retained_context = contexts.first
               assert owner.slot_reusable!(**contexts.first)
+              entries = owner.maintenance_boot_baselines!(**contexts.first)
+              assert_equal 1, entries.size
+              entry = entries.first
+              assert_equal lineage.binding.fetch("boot_baseline_selection"), entry.fetch("boot_baseline_selection")
+              assert_equal original.artifact_reference.fetch("sha256"), entry.fetch("descriptor_sha256")
+              assert_equal lineage.binding_event.fetch("digest"), entry.fetch("scope_binding_event_id")
+              assert_equal state.fetch("attempt_id"), entry.fetch("attempt_id")
+              assert_equal ExecutionScopeObservationFixtures::DEVPTS_SELECTED, entry.dig("baseline", "selected_devpts")
+              assert entries.frozen?
+              assert_raises(FrozenError) { entry.fetch("boot_baseline_selection")["sha256"].replace("b" * 64) }
+              assert_raises(FrozenError) { entry.dig("baseline", "selected_devpts")["path"].replace("/other") }
+              assert_raises(AttemptErrors::EvidenceUnavailable) { owner.maintenance_boot_baselines!(**contexts.first.merge(commit: "f" * 40)) }
+              proof_path = entry.fetch("boot_baseline_selection").fetch("path")
+              original_bytes = File.binread(proof_path)
+              begin
+                File.binwrite(proof_path, original_bytes + " ")
+                assert_raises(AttemptErrors::EvidenceUnavailable) { owner.maintenance_boot_baselines!(**contexts.first) }
+              ensure
+                File.binwrite(proof_path, original_bytes)
+              end
+              pinned = contexts.first.fetch(:commit)
+              advanced, _, status = Open3.capture3("git", "-c", "user.name=fixture", "-c", "user.email=fixture@example.invalid",
+                "commit-tree", "#{pinned}^{tree}", "-p", pinned, "-m", "controlled ref advance", chdir: repo)
+              assert status.success?
+              advanced = advanced.delete_suffix("\n")
+              original_verify = owner.method(:verify_historical_boot_baseline!)
+              changed = false
+              owner.define_singleton_method(:verify_historical_boot_baseline!) do |binding|
+                value = original_verify.call(binding)
+                unless changed
+                  _, _, update = Open3.capture3("git", "update-ref", journal.ref, advanced, pinned, chdir: repo)
+                  raise "fixture ref advance failed" unless update.success?
+                  changed = true
+                end
+                value
+              end
+              begin
+                assert_raises(AttemptErrors::Conflict) { owner.maintenance_boot_baselines!(**contexts.first) }
+              ensure
+                owner.singleton_class.send(:remove_method, :verify_historical_boot_baseline!)
+                _, _, restored = Open3.capture3("git", "update-ref", journal.ref, pinned, advanced, chdir: repo)
+                assert restored.success?
+              end
               assert_equal "retired", owner.retire_released_parent!(**contexts.first).fetch("state")
             end
+            assert_raises(AttemptErrors::EvidenceUnavailable) { owner.maintenance_boot_baselines!(**retained_context) }
             assert_equal prior_retirements + 1, observer.retirements
             File.binwrite(published, File.binread(candidate_ref.fetch("path")))
             fresh_history, published_candidate = Ace::Runtime::Molecules::ProtectedArtifactSet.stub(:new, factory) do
