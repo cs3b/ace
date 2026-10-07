@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Require authenticated lifetime input inhibition for every issued outside-unit actor before no-writers proof, including attempts with no prompt submissions.
 
+- Keep original containment and accepted-input recovery available while authenticated Inbox work remains pending, retaining the same lifecycle exclusions and blocking fresh prompts or final release. Classify only validated pending Inbox grants separately from unavailable or corrupt evidence.
 - Authenticate original actor input inhibition and canonical drained observations, recover lost drain acknowledgements without repeating native effects, and preserve uncertain prompt outcomes while allowing maintained no-writers proof to progress.
 
 - Retain the original mapped launcher in the foreground, authenticate bounded prompt transfers and native submission outcomes, preserve immutable public replies across reconnects, and block no-writers proof or release while canonical prompt issuance remains unresolved.

@@ -32,7 +32,7 @@ module Ace
         private
 
         def request_original_input_inhibition!(params, map, journal)
-          selected = with_exclusion(params, map, journal) do
+          selected = with_containment_exclusion(params, map, journal) do
             @mutex.synchronize do
               commit = journal.ref_value
               events = journal.read_events(params.fetch("assignment_id"), commit: commit).select { |event| event["attempt_id"] == params.fetch("attempt_id") }
@@ -62,7 +62,7 @@ module Ace
 
         def record_original_input_inhibition!(params, map, evidence, peer: nil)
           journal = journal_for(map)
-          with_exclusion(params, map, journal) do
+          with_containment_exclusion(params, map, journal) do
             @mutex.synchronize do
               commit = journal.ref_value
               current = journal.read_events(params.fetch("assignment_id"), commit: commit).select { |event| event["attempt_id"] == params.fetch("attempt_id") }

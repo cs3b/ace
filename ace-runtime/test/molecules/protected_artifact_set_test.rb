@@ -177,4 +177,67 @@ class ProtectedArtifactSetTest < AceRuntimeTestCase
     end
   end
 
+  def test_scoped_readonly_duplicate_keeps_authenticated_inode_and_closes_after_callback
+    with_artifacts do |directory|
+      path = File.join(directory, "selected")
+      File.binwrite(path, "accepted bytes")
+      handle = nil
+      set = Set.new(protection: ControlledProtection.new)
+      assert_raises(Unavailable) { set.with_readonly_handle!(reference(path)) { flunk "outside callback" } }
+      set.with do |held|
+        held.with_readonly_handle!(reference(path)) do |selected|
+          handle = selected
+          assert_equal File.stat(path).ino, selected.stat.ino
+          assert_equal "accepted bytes", selected.read
+          assert selected.close_on_exec?
+          assert_raises(IOError) { selected.write("mutation") }
+          assert_equal "accepted bytes", held.read!(reference(path))
+        end
+        assert handle.closed?
+        assert held.verify_unchanged!
+      end
+      assert handle.closed?
+    end
+  end
+
+  def test_scoped_handle_closes_and_rechecks_on_callback_error
+    with_artifacts do |directory|
+      path = File.join(directory, "selected")
+      File.binwrite(path, "accepted bytes")
+      selected = nil
+      Set.new(protection: ControlledProtection.new).with do |held|
+        error = assert_raises(RuntimeError) do
+          held.with_readonly_handle!(reference(path)) do |handle|
+            selected = handle
+            raise "controlled callback failure"
+          end
+        end
+        assert_equal "controlled callback failure", error.message
+        assert selected.closed?
+        assert held.verify_unchanged!
+      end
+    end
+  end
+
+  def test_selected_path_replacement_cannot_reopen_the_duplicate_and_recheck_refuses
+    with_artifacts do |directory|
+      path = File.join(directory, "selected")
+      File.binwrite(path, "accepted bytes")
+      original_reference = reference(path)
+      selected = nil
+      Set.new(protection: ControlledProtection.new).with do |held|
+        assert_raises(Unavailable) do
+          held.with_readonly_handle!(original_reference) do |handle|
+            selected = handle
+            File.rename(path, path + ".original")
+            File.binwrite(path, "different bytes")
+            assert_equal "accepted bytes", selected.read
+            refute_equal File.stat(path).ino, selected.stat.ino
+          end
+        end
+        assert selected.closed?
+      end
+    end
+  end
+
 end

@@ -394,3 +394,17 @@ Verification checks bounded strict provenance against this gem's source selectio
 The selected source also provides `terminal.inhibit_input` for an exact original terminal/origin. Its successful `terminal_input_drained` reply proves permanent input inhibition and zero queued input, including terminal replies; it does not prove child exit or canonical scope cleanup. Lost acknowledgement may be retried only against the same original actor. Source fixtures validate this contract without running a native binary; actual Lab installation and N2 consumption remain required.
 
 The inbox context source owner supplies durable operation admission and exclusive key rotation through a fixed authenticated exchange. A lost begin reply recovers the same original process's grant; unknown effects, owner restart and incomplete installation retain blocking state. Replacement and rollback each require an attestation from the actual configured signer plus protected public/config readback. This core does not yet activate a context CLI/server, migrate Assign/private-store consumers, or authorize orphan reclamation. Existing protected mutations must all be migrated before this becomes an accepted end-to-end rotation path; installation and private-key pair handling remain the trusted provisioner's responsibility.
+
+### Trusted bounded descriptor handoff
+
+Internal source installers using `BoundedProcess.call` may supply
+`descriptor_mapping: {4 => authenticated_readonly_file}` together with bounded
+`stdin_data` carrying exact selected source bytes. The mapping has at most16
+entries; child descriptor keys are strict Integers3..63 and handles must be live
+read-only regular files. Stdio overwrite, writable/closed/nonregular handles and
+ambient descriptor/path fallback refuse before spawn. Standard Open3 spawn maps
+only explicit descriptors; `close_others: true` excludes all other descriptors.
+The supplying verification owner keeps the handle scoped and authenticates the
+selected inode; the runner does not confer authority or authenticate arbitrary
+files. Actual installed privilege-transition/PAM preservation is a separate
+installed acceptance check, not established by controlled file/child tests.

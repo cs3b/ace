@@ -98,6 +98,27 @@ module Ace
           bytes
         end
 
+        # Trusted process handoff inside the same bounded verification. The
+        # duplicate refers to the authenticated retained inode, never a reopened
+        # pathname, and is closed before this callback can outlive the set.
+        def with_readonly_handle!(reference)
+          unless @handles && @references
+            raise RuntimeUnavailableError, "protected handle requires an active verification"
+          end
+          read!(reference)
+          verify_unchanged!
+          duplicate = @handles.fetch(reference.fetch("path")).fetch(:handle).dup
+          duplicate.close_on_exec = true
+          duplicate.rewind
+          begin
+            yield duplicate
+          ensure
+            verify_unchanged!
+          end
+        ensure
+          duplicate&.close unless duplicate&.closed?
+        end
+
         # Fixed installer entrypoints have no caller-supplied digest. Derive the
         # reference from the same protected descriptor whose bytes are retained.
         def read_path!(path, limit: @file_limit)

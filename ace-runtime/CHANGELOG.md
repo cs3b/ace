@@ -14,6 +14,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- Expose a scoped authenticated read-only duplicate of a retained artifact for exact inode handoff; verify before and after callbacks and close on every exit.
+
 - Allow trusted installer code to select a bounded artifact count through `ProtectedArtifactSet.new(count_limit:)`; ordinary callers retain the 256-artifact default and both read interfaces enforce the same budget.
 
 - Verify immutable per-boot original host baseline selections and the fixed readiness configuration/runtime load surface. Collect complete bounded server mount/IPC views through contained pinned descriptors and verify exact original backing plus the authenticated read-only authority socket projection. Trusted domain boot-proof production/refresh and installed effectiveness remain separate obligations.

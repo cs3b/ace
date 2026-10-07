@@ -113,6 +113,10 @@ module Ace
           super(message, exit_code: 5)
         end
       end
+
+      # Positively admitted original Inbox work remains pending, not corrupt.
+      class InboxContextPending < EvidenceUnavailable
+      end
     end
 
   end
