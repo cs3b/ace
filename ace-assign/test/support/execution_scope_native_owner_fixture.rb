@@ -12,7 +12,7 @@ module Ace
           context.merge("slot_id" => "slot", "deployment_digest" => Digest::SHA256.hexdigest(JSON.generate(canonical(@map))),
             "boot_id" => ExecutionScopeObservationFixtures::BOOT, "slice_invocation_id" => "b" * 32,
             "resource_mount_namespace_identity" => {"device" => 4, "inode" => 11}, "resource_identities" => [],
-            "network_namespace_identity" => {"device" => 7, "inode" => 88}, "network_installation_selection" => ExecutionScopeObservationFixtures::NETWORK_SELECTION,
+            "network_namespace_identity" => {"device" => 7, "inode" => 88}, "boot_baseline_selection" => ExecutionScopeObservationFixtures::BOOT_BASELINE_SELECTION, "network_installation_selection" => ExecutionScopeObservationFixtures::NETWORK_SELECTION,
             "cgroup_identity" => {"path" => "/sys/fs/cgroup/ace-slot.slice", "mount_id" => 4, "filesystem_type" => "cgroup2", "device" => 5, "inode" => 6})
         end
         def observe(_lineage); {"populated" => 0}; end

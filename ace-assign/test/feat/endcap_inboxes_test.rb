@@ -79,7 +79,7 @@ module Ace
           parent = {"project_id" => "project", "assignment_id" => "assignment", "attempt_id" => "attempt", "mapping_id" => "mapping",
             "slot_id" => "slot", "reservation_generation" => 1, "scope_generation" => 2, "deployment_digest" => "a" * 64,
             "boot_id" => BOOT, "slice_invocation_id" => "b" * 32,
-            "network_installation_selection" => ExecutionScopeObservationFixtures::NETWORK_SELECTION,
+            "boot_baseline_selection" => ExecutionScopeObservationFixtures::BOOT_BASELINE_SELECTION, "network_installation_selection" => ExecutionScopeObservationFixtures::NETWORK_SELECTION,
             "network_namespace_identity" => {"device" => 7, "inode" => 88},
             "resource_mount_namespace_identity" => {"device" => 4, "inode" => 1111},
             "cgroup_identity" => {"path" => "/sys/fs/cgroup/slot.slice", "mount_id" => 1, "filesystem_type" => "cgroup2", "device" => 2, "inode" => 3},

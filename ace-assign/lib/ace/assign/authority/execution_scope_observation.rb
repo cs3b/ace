@@ -5,6 +5,7 @@ require "ace/runtime/molecules/systemd_scope_manager"
 require "ace/runtime/molecules/linux_mount_info"
 require "ace/runtime/molecules/execution_unit_installation"
 require "ace/runtime/molecules/network_installation_evidence"
+require "ace/runtime/molecules/execution_boot_baseline"
 require_relative "../molecules/execution_scope_lineage"
 require_relative "posix_acl"
 require "digest"
@@ -171,9 +172,10 @@ module Ace
           end
         end
 
-        def initialize(mapping_id:, deployment:, kernel:, manager: nil, cgroups: Ace::Runtime::Molecules::CgroupObservation.new, files: Files.new, network_evidence: Ace::Runtime::Molecules::NetworkInstallationEvidence.new)
+        def initialize(mapping_id:, deployment:, kernel:, manager: nil, cgroups: Ace::Runtime::Molecules::CgroupObservation.new, files: Files.new, network_evidence: Ace::Runtime::Molecules::NetworkInstallationEvidence.new, boot_evidence: Ace::Runtime::Molecules::ExecutionBootBaseline.new)
           @mapping_id, @deployment, @kernel, @cgroups, @files = mapping_id, deployment, kernel, cgroups, files
           @network_evidence = network_evidence
+          @boot_evidence = boot_evidence
           @map = deployment.mapping(mapping_id)
           @scope = @map.fetch("execution_scope")
           @manager = manager || Ace::Runtime::Molecules::SystemdScopeManager.new(
@@ -193,6 +195,7 @@ module Ace
               network_selection! == binding.fetch("network_installation_selection")
             unavailable!("retained installed network namespace or selection changed")
           end
+          boot_baseline!(binding)
           before = @manager.inspect_activation
           verify_parent!(binding, before.fetch("slice"))
           pinned = @cgroups.pin(binding.fetch("cgroup_identity").fetch("path"), expected: binding.fetch("cgroup_identity"))
@@ -223,6 +226,8 @@ module Ace
           network = @files.pin_network_namespace(@scope.fetch("network_namespace_path"))
           @files.worker_uid_quiescent!(@map.fetch("worker_uid"))
           boot = @files.boot_id
+          digest = Digest::SHA256.hexdigest(JSON.generate(canonical(@map)))
+          baseline = @boot_evidence.select!(expected: boot_baseline_expected(boot, digest, selection))
           namespace = @files.namespace_identity
           before = @manager.inspect_activation
           service = before.fetch("service")
@@ -246,10 +251,11 @@ module Ace
             unavailable!("fresh parent changed or acquired processes before binding")
           end
           verify_resources!(inventory)
-          context.merge("slot_id" => @scope.fetch("slot_id"), "deployment_digest" => Digest::SHA256.hexdigest(JSON.generate(canonical(@map))),
+          context.merge("slot_id" => @scope.fetch("slot_id"), "deployment_digest" => digest,
             "boot_id" => boot, "slice_invocation_id" => parent.fetch("InvocationID"), "cgroup_identity" => pinned.fetch(:identity),
             "resource_mount_namespace_identity" => namespace, "resource_identities" => inventory,
-            "network_installation_selection" => selection, "network_namespace_identity" => network.fetch(:identity))
+            "network_installation_selection" => selection, "network_namespace_identity" => network.fetch(:identity),
+            "boot_baseline_selection" => baseline.fetch("selection"))
         rescue SystemCallError, IOError, KeyError, TypeError, ArgumentError, JSON::ParserError
           unavailable!("fresh parent inventory or activation is unavailable")
         ensure
@@ -497,6 +503,17 @@ module Ace
         end
 
         private
+
+        def boot_baseline!(binding)
+          @boot_evidence.verify!(selection: binding.fetch("boot_baseline_selection"), expected:
+            boot_baseline_expected(binding.fetch("boot_id"), binding.fetch("deployment_digest"),
+              binding.fetch("network_installation_selection")))
+        end
+
+        def boot_baseline_expected(boot, digest, selection)
+          {"slot_id" => @scope.fetch("slot_id"), "boot_id" => boot, "deployment_digest" => digest,
+            "installer_artifact" => selection.fetch("installer_artifact")}
+        end
 
         # Inventory only: no configurable security booleans or alternative
         # policy backend. Native-only objects are observed at their later stage.

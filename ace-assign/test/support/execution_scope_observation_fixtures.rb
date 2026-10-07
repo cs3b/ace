@@ -3,6 +3,24 @@ module Ace
   module Assign
     module ExecutionScopeObservationFixtures
       BOOT = "12345678-1234-1234-1234-123456789abc"
+      BOOT_BASELINE_SELECTION = {"path" => "/etc/ace/boot/original.json", "sha256" => "d" * 64, "bytes" => 1}.freeze
+      class BootEvidence
+        attr_accessor :unavailable, :selected
+        attr_reader :selections, :verifications
+        def initialize
+          @selected, @selections, @verifications = BOOT_BASELINE_SELECTION, [], []
+        end
+        def select!(expected:)
+          raise Ace::Runtime::RuntimeUnavailableError, "boot baseline unavailable" if unavailable
+          @selections << expected
+          {"selection" => selected, "baseline" => {"host_ipc_namespace_identity" => {"device" => 4, "inode" => 900}}}
+        end
+        def verify!(selection:, expected:)
+          raise Ace::Runtime::RuntimeUnavailableError, "original boot baseline unavailable" if unavailable || selection != BOOT_BASELINE_SELECTION
+          @verifications << {"selection" => selection, "expected" => expected}
+          {"host_ipc_namespace_identity" => {"device" => 4, "inode" => 900}}
+        end
+      end
       NETWORK_SELECTION = %w[profile policy_export report installer_artifact].to_h { |key| [key, {"path" => "/etc/ace/network/#{key}", "sha256" => "c" * 64, "bytes" => 1}] }.freeze
       NETWORK_OUTPUT = {"report_id" => BOOT, "boot_id" => BOOT, "slot_id" => "slot", "namespace_path" => "/run/netns/slot",
         "namespace_identity" => {"device" => 7, "inode" => 88}, "profile_sha256" => "c" * 64,

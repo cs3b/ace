@@ -11,7 +11,7 @@ module Ace
       # This reader never promotes cached population into a proof event.
       class ExecutionScopeLineage
         BINDING_FIELDS = %w[project_id assignment_id attempt_id mapping_id slot_id reservation_generation
-          scope_generation deployment_digest boot_id slice_invocation_id cgroup_identity resource_mount_namespace_identity resource_identities network_installation_selection network_namespace_identity].freeze
+          scope_generation deployment_digest boot_id slice_invocation_id cgroup_identity resource_mount_namespace_identity resource_identities network_installation_selection network_namespace_identity boot_baseline_selection].freeze
         PROOF_FIELDS = %w[scope_generation scope_binding_event_id seal_event_id boot_id slice_invocation_id
           cgroup_identity populated].freeze
         PROCESS_FIELDS = %w[pid uid gid groups started_at host parent_pid].freeze
@@ -35,6 +35,16 @@ module Ace
             end
           end
           selection
+        end
+
+        def self.validate_boot_baseline_selection!(ref)
+          unless ref.is_a?(Hash) && ref.keys.sort == %w[bytes path sha256] && ref["path"].is_a?(String) &&
+              ref["path"].bytesize.between?(1, 4096) && ref["path"].start_with?("/") && !ref["path"].include?("\0") &&
+              File.expand_path(ref["path"]) == ref["path"] && ref["sha256"].is_a?(String) && DIGEST.match?(ref["sha256"]) &&
+              ref["bytes"].is_a?(Integer) && ref["bytes"].between?(1, 16_384)
+            raise AttemptErrors::EvidenceUnavailable, "boot baseline artifact reference differs"
+          end
+          ref
         end
 
         attr_reader :binding_event, :native_event, :child_event, :seal_event, :proof_event, :admission_event
@@ -136,6 +146,7 @@ module Ace
           namespace!(value.fetch("resource_mount_namespace_identity"))
           namespace!(value.fetch("network_namespace_identity"))
           self.class.validate_network_selection!(value.fetch("network_installation_selection"))
+          self.class.validate_boot_baseline_selection!(value.fetch("boot_baseline_selection"))
           resources = value.fetch("resource_identities")
           resources!(resources)
           @binding_event = event

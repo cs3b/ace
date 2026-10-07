@@ -27,6 +27,29 @@ module Ace
         assert_equal 0, @manager.service_starts
       end
 
+      def test_boot_proof_unavailable_refuses_before_parent_activation
+        @boot_evidence.unavailable = true
+        assert_raises(Ace::Runtime::RuntimeUnavailableError) { @observer.activate_parent!(@context) }
+        assert_equal 0, @manager.starts
+        assert_equal 0, @manager.service_starts
+      end
+
+      def test_parent_pins_boot_proof_and_observation_reauthenticates_original_context
+        binding = @observer.activate_parent!(@context)
+        assert_equal ExecutionScopeObservationFixtures::BOOT_BASELINE_SELECTION, binding.fetch("boot_baseline_selection")
+        expected = {"slot_id" => "slot", "boot_id" => BOOT, "deployment_digest" => binding.fetch("deployment_digest"),
+          "installer_artifact" => ExecutionScopeObservationFixtures::NETWORK_SELECTION.fetch("installer_artifact")}
+        assert_equal [expected], @boot_evidence.selections
+        append("scope_bound", binding)
+        @boot_evidence.selected = {"path" => "/etc/ace/boot/replacement.json", "sha256" => "e" * 64, "bytes" => 2}
+        assert_equal 0, @observer.observe(lineage).fetch("populated")
+        assert_equal [{"selection" => binding.fetch("boot_baseline_selection"), "expected" => expected}], @boot_evidence.verifications
+        assert_equal [expected], @boot_evidence.selections
+        @boot_evidence.unavailable = true
+        assert_raises(Ace::Runtime::RuntimeUnavailableError) { @observer.observe(lineage) }
+        assert_equal 0, @manager.service_starts
+      end
+
       def test_selection_shape_and_namespace_replacement_cannot_be_adopted
         original = @files.manifest.fetch("network_installation")
         @files.manifest["network_installation"] = original.merge("unknown" => {})
@@ -57,8 +80,9 @@ module Ace
         deployment.define_singleton_method(:project) { |_id| {"supervisor_uids" => [13003]} }
         network = Object.new
         network.define_singleton_method(:verify!) { |selection:, expected:| ExecutionScopeObservationFixtures::NETWORK_OUTPUT }
+        @boot_evidence = ExecutionScopeObservationFixtures::BootEvidence.new
         @observer = Authority::ExecutionScopeObservation.new(mapping_id: "mapping", deployment: deployment, kernel: @kernel,
-          manager: @manager, cgroups: @cgroups, files: @files, network_evidence: network)
+          manager: @manager, cgroups: @cgroups, files: @files, network_evidence: network, boot_evidence: @boot_evidence)
         @events = []
         @context = {"project_id" => "project", "mapping_id" => "mapping", "assignment_id" => "assignment", "attempt_id" => "attempt",
           "reservation_generation" => 1, "scope_generation" => 2}

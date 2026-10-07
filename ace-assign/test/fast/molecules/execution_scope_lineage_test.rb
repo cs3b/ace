@@ -19,7 +19,7 @@ module Ace
         @binding = {"project_id" => "project", "assignment_id" => "assignment", "attempt_id" => "attempt",
           "mapping_id" => "mapping", "slot_id" => "slot", "reservation_generation" => 1, "scope_generation" => 2,
           "deployment_digest" => "a" * 64, "boot_id" => BOOT, "slice_invocation_id" => "b" * 32,
-          "network_installation_selection" => ExecutionScopeObservationFixtures::NETWORK_SELECTION,
+          "boot_baseline_selection" => ExecutionScopeObservationFixtures::BOOT_BASELINE_SELECTION, "network_installation_selection" => ExecutionScopeObservationFixtures::NETWORK_SELECTION,
           "network_namespace_identity" => {"device" => 7, "inode" => 88},
           "resource_mount_namespace_identity" => {"device" => 4, "inode" => 1111},
           "service_invocation_id" => "c" * 32, "cgroup_identity" => {"path" => "/sys/fs/cgroup/ace-slot.slice",
@@ -56,6 +56,20 @@ module Ace
 
       def bound
         append("scope_bound", @binding)
+      end
+
+      def test_binding_requires_closed_bounded_original_boot_proof_reference
+        original = @binding.fetch("boot_baseline_selection")
+        [nil, original.merge("bytes" => 16_385), original.merge("bytes" => 1.0),
+          original.merge("extra" => true), original.merge("path" => "/etc/ace/../boot/proof")].each do |invalid|
+          @binding["boot_baseline_selection"] = invalid
+          event = bound
+          assert_raises(AttemptErrors::EvidenceUnavailable) { reader }
+          @events.delete(event)
+        end
+        @binding.delete("boot_baseline_selection")
+        bound
+        assert_raises(AttemptErrors::EvidenceUnavailable) { reader }
       end
 
       def native

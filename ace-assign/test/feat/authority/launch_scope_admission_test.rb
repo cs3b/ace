@@ -89,7 +89,7 @@ module Ace
             "slice_invocation_id" => "b" * 32, "resource_mount_namespace_identity" => {"device" => 4, "inode" => 33},
             "cgroup_identity" => {"path" => "/sys/fs/cgroup/ace-slot.slice", "mount_id" => 4, "filesystem_type" => "cgroup2", "device" => 5, "inode" => 6},
             "resource_identities" => [], "network_namespace_identity" => {"device" => 7, "inode" => 88},
-            "network_installation_selection" => ExecutionScopeObservationFixtures::NETWORK_SELECTION)
+            "boot_baseline_selection" => ExecutionScopeObservationFixtures::BOOT_BASELINE_SELECTION, "network_installation_selection" => ExecutionScopeObservationFixtures::NETWORK_SELECTION)
           mutate("attempt", "parent", "scope_parent_binding", 1, [{type: "scope_bound", payload: binding}], @state)
           @params = {"mapping_id" => "mapping", "assignment_id" => "assignment", "attempt_id" => "attempt",
             "launch_ticket" => "ticket", "mutation_id" => "admit", "expected_generation" => 2}
