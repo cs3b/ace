@@ -8,6 +8,7 @@ class ProtectedStatusTest < AceOverseerTestCase
       "definition_generation" => 1, "attempt_id" => attempt, "scope" => attempt ? "010" : nil,
       "prepared_bundle_ref" => "execution/prepared/#{id}-#{'e' * 64}.bundle", "prepared_bundle_bytes" => 123,
       "prepared_bundle_sha256" => "e" * 64, "selection_sha256" => "f" * 64,
+      "reservation_mutation_id" => attempt ? "invocation-reserve" : nil, "base_head" => attempt ? "a" * 40 : nil,
       "reservation_generation" => attempt ? 1 : nil, "generation" => attempt ? 3 : nil,
       "canonical_state" => attempt ? "running" : nil, "original_binding_digest" => attempt ? "b" * 64 : nil,
       "terminal_event_id" => nil, "reservation_release_event_id" => nil}

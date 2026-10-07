@@ -135,7 +135,7 @@ module Ace
             raise AttemptErrors::EvidenceUnavailable, "Inventory definition provenance differs"
           end
           row = selector.merge(registration.slice("task_id", "definition_digest", "definition_generation", "prepared_bundle_ref", "prepared_bundle_bytes", "prepared_bundle_sha256", "selection_sha256"),
-            "scope" => nil, "reservation_generation" => nil, "generation" => nil, "canonical_state" => nil,
+            "scope" => nil, "reservation_mutation_id" => nil, "base_head" => nil, "reservation_generation" => nil, "generation" => nil, "canonical_state" => nil,
             "original_binding_digest" => nil, "terminal_event_id" => nil, "reservation_release_event_id" => nil)
           return row unless selector.fetch("attempt_id")
           events = entry.fetch(:events)
@@ -145,7 +145,16 @@ module Ace
           unless generation.is_a?(Integer) && generation.positive? && state.fetch("reservation_generation").is_a?(Integer) && state.fetch("reservation_generation").positive?
             raise AttemptErrors::EvidenceUnavailable, "Inventory attempt generation is invalid"
           end
-          row.merge!("scope" => state.fetch("scope"), "reservation_generation" => state.fetch("reservation_generation"),
+          reservations = events.select { |event| event["type"] == "authority_mutation" && event.dig("payload", "operation") == "reserve_attempt" }
+          raise AttemptErrors::EvidenceUnavailable, "Inventory original reservation is ambiguous" unless reservations.one?
+          reservation = reservations.first.fetch("payload")
+          mutation_id = reservation.fetch("mutation_id")
+          token!(mutation_id)
+          base_head = reservation.fetch("data").fetch("base_head")
+          unless base_head.is_a?(String) && base_head.match?(/\A[0-9a-f]{40}\z/) && state.fetch("base_head") == base_head
+            raise AttemptErrors::EvidenceUnavailable, "Inventory original reservation base differs"
+          end
+          row.merge!("scope" => state.fetch("scope"), "reservation_mutation_id" => mutation_id, "base_head" => base_head, "reservation_generation" => state.fetch("reservation_generation"),
             "generation" => generation, "canonical_state" => journal.canonical_attempt_state(events))
           if events.any? { |event| event.dig("payload", "operation") == "record_launch" }
             row["original_binding_digest"] = original_prompt_record!(events, state,

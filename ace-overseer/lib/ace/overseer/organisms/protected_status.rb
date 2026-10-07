@@ -11,7 +11,7 @@ module Ace
       # actual fixed capacity. Canonical authority pages supply attempt facts.
       # None of these metadata observations is a mutation/cleanup grant.
       class ProtectedStatus
-        ROW_KEYS = %w[assignment_id task_id definition_digest definition_generation prepared_bundle_ref prepared_bundle_bytes prepared_bundle_sha256 selection_sha256 attempt_id scope reservation_generation generation canonical_state original_binding_digest terminal_event_id reservation_release_event_id].sort.freeze
+        ROW_KEYS = %w[assignment_id task_id definition_digest definition_generation prepared_bundle_ref prepared_bundle_bytes prepared_bundle_sha256 selection_sha256 attempt_id scope reservation_mutation_id base_head reservation_generation generation canonical_state original_binding_digest terminal_event_id reservation_release_event_id].sort.freeze
 
         def initialize(topology: nil, deployment_loader: nil, client_factory: nil)
           @selection = Molecules::ProtectedSelection.new(topology: topology, deployment_loader: deployment_loader)
@@ -114,12 +114,16 @@ module Ace
             raise Error, "Protected prepared bundle identity is malformed"
           end
           if row.fetch("attempt_id").nil?
-            unless row.values_at("scope", "reservation_generation", "generation", "canonical_state", "original_binding_digest", "terminal_event_id", "reservation_release_event_id").all?(&:nil?)
+            unless row.values_at("scope", "reservation_mutation_id", "base_head", "reservation_generation", "generation", "canonical_state", "original_binding_digest", "terminal_event_id", "reservation_release_event_id").all?(&:nil?)
               raise Error, "Registration-only inventory has attempt facts"
             end
           else
             token!(row.fetch("attempt_id"))
             raise Error, "Protected inventory scope is malformed" unless row["scope"].is_a?(String) && !row["scope"].empty? && row["scope"].bytesize <= 128
+            token!(row.fetch("reservation_mutation_id"))
+            unless row["base_head"].is_a?(String) && row["base_head"].match?(/\A[0-9a-f]{40}\z/)
+              raise Error, "Protected reservation base is malformed"
+            end
             positive!(row.fetch("reservation_generation"))
             positive!(row.fetch("generation"))
             unless %w[reserved running succeeded failed stopped uncertain].include?(row.fetch("canonical_state"))

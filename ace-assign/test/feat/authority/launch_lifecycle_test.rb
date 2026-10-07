@@ -1221,12 +1221,14 @@ module Ace
           definition_ref = "execution/definitions/assignment-#{row.fetch('definition_digest')}.json"
           definition = JSON.parse(@journal.blob(definition_ref, commit: old))
           assert_equal definition.dig("prepared_work", "selection_sha256"), row.fetch("selection_sha256")
-          %w[attempt_id generation scope canonical_state original_binding_digest terminal_event_id reservation_release_event_id].each { |key| assert_nil row.fetch(key) }
+          %w[attempt_id generation scope reservation_mutation_id base_head canonical_state original_binding_digest terminal_event_id reservation_release_event_id].each { |key| assert_nil row.fetch(key) }
           reserved = call("reserve_attempt", @reserve_params, id: "inventory-reserve").fetch(:data)
           current = @journal.ref_value
           attempt = query.call.fetch("items").first
           assert_equal reserved.fetch("attempt_id"), attempt.fetch("attempt_id")
           assert_equal "reserved", attempt.fetch("canonical_state")
+          assert_equal "inventory-reserve", attempt.fetch("reservation_mutation_id")
+          assert_equal "a" * 40, attempt.fetch("base_head")
           selected_chain = @journal.read_events("assignment", commit: current).select { |event| event["attempt_id"] == reserved.fetch("attempt_id") }
           assert_equal @journal.authority_generation(selected_chain), attempt.fetch("generation")
           assert_equal "010", attempt.fetch("scope")

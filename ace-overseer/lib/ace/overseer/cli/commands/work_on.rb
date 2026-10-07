@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative "../../organisms/launch_recovery"
+
 module Ace
   module Overseer
     module CLI
@@ -11,6 +13,7 @@ module Ace
 
           option :task, aliases: ["-t"], type: :array,
             desc: "Task reference(s), repeatable and comma-separated (e.g., 230 --task 231,232)"
+          option :recover_request, desc: "Read retained protected invocation input and original canonical reservation"
           option :preset, aliases: ["-p"], desc: "Assignment preset name"
           option :runtime, default: "tmux", desc: "Runtime (tmux, lab)"
           option :work, desc: "Existing Lab Work ID"
@@ -18,13 +21,23 @@ module Ace
           option :quiet, aliases: ["-q"], type: :boolean, default: false, desc: "Suppress non-essential output"
           option :debug, aliases: ["-d"], type: :boolean, default: false, desc: "Show debug output"
 
-          def initialize(orchestrator: nil, lab_client: nil)
+          def initialize(orchestrator: nil, lab_client: nil, recovery: nil)
             super()
+            @recovery = recovery || Organisms::LaunchRecovery.new
             @orchestrator = orchestrator || Organisms::WorkOnOrchestrator.new
             @lab_client = lab_client || Molecules::LabClient.new
           end
 
-          def call(task: nil, preset: nil, runtime: "tmux", work: nil, agent: nil, **options)
+          def call(task: nil, preset: nil, runtime: "tmux", work: nil, agent: nil, recover_request: nil, **options)
+            if recover_request
+              if task || preset || work || agent || runtime != "tmux"
+                raise Ace::Support::Cli::Error, "--recover-request cannot be combined with launch mode overrides"
+              end
+              # Retained identity/canonical attribution remains mandatory even
+              # under --quiet. This path never enters preparation or launch.
+              puts JSON.generate(@recovery.call(path: recover_request))
+              return
+            end
             if runtime == "lab"
               if task || preset
                 raise Ace::Support::Cli::Error, "--task and --preset are not supported with Lab runtime"
