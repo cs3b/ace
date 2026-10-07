@@ -122,6 +122,13 @@ class ProtectedServiceRecoveryTest < Minitest::Test
         assert_equal "recover", calls.find { |name, _| name == "claim_service_settlement" }.last.fetch(:mutation_id)
         assert_equal Digest::SHA256.hexdigest("no-effect:recover"), calls.find { |name, _| name == "complete_no_effect" }.last.fetch(:mutation_id)
         before = @journal.ref_value
+        @server.stop
+        @owner.join(3)
+        refute @owner.alive?, "original authority listener must end before restart"
+        restart
+        real_client = start_service_server
+        receiver = Ace::Lab::Organisms::ProtectedServiceReceiver.new(mapping_id: "mapping", service_id: "executor",
+          deployment: @deployment, kernel: kernel, client: client, handler: inspector)
         second = receiver.recover_no_effect(binding: binding, input_bytes: @body, mutation_id: "recover", expected_generation: original_generation)
         assert_equal "failed-settled", second.fetch("state")
         assert_equal before, @journal.ref_value

@@ -58,9 +58,18 @@ class ProtectedServiceReceiverTest < Minitest::Test
       calls = []
       operation = nil
       evidence = nil
+      mutation = +"fixture-mutation"
       client = Object.new
       client.define_singleton_method(:call) do |name, params, **options|
         calls << name
+        if scenario == :mutated_mutation && name == "request_service"
+          raise "claim identity must be immutable" unless options.fetch(:mutation_id).frozen? && options.fetch(:mutation_id) == "fixture-mutation"
+          mutation.replace("changed-mutation")
+        end
+        if scenario == :mutated_mutation && name == "begin_dispatch"
+          raise "changed derived invocation identity" unless options.fetch(:mutation_id) == Digest::SHA256.hexdigest("begin:fixture-mutation")
+          raise Ace::Runtime::RuntimeUnavailableError, "controlled loss before any handler invocation"
+        end
         if (scenario == :lost_begin && name == "begin_dispatch") ||
             (scenario == :lost_authorization && name == "service_authorization") ||
             (scenario == :lost_completion && name == "complete_service")
@@ -97,7 +106,7 @@ class ProtectedServiceReceiverTest < Minitest::Test
       document = {"operations" => {"publish" => configured}}
       operation = Ace::Lab::Molecules::ServicePolicy.new(document).operation!("publish", project: "fixture", service_id: "executor")
       result = Ace::Lab::Molecules::GrantResolver.stub(:trusted_document, document) do
-        receiver.execute(submission: submission, peer: peer, input_bytes: bytes, mutation_id: "fixture-mutation")
+        receiver.execute(submission: submission, peer: peer, input_bytes: bytes, mutation_id: mutation)
       end
       return [result, calls, Dir.glob(File.join(root, "**", "proof.txt")),
         Dir.glob(File.join(root, "candidate-*")), File.directory?(repo)]
@@ -128,6 +137,13 @@ class ProtectedServiceReceiverTest < Minitest::Test
     assert_equal "uncertain", result.fetch("state")
     assert_equal 1, calls.count("complete_service")
     assert_equal 1, proofs.length
+  end
+
+  def test_caller_mutation_cannot_change_claim_or_derived_dispatch_identity
+    result, calls, proofs = run_real_candidate(scenario: :mutated_mutation)
+    assert_equal "uncertain", result.fetch("state")
+    assert_equal %w[request_service export_candidate begin_dispatch], calls
+    assert_empty proofs, "loss at begin does not invoke the handler"
   end
 
   def test_retained_claim_never_invokes_or_begins

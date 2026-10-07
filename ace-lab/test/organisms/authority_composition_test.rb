@@ -70,7 +70,7 @@ class AuthorityCompositionTest < Minitest::Test
     owner = Ace::Assign::Authority::Endcap
     original = owner::OPERATIONS
     owner.send(:remove_const, :OPERATIONS)
-    owner.const_set(:OPERATIONS, (Ace::Lab::Organisms::AuthorityComposition::REQUIRED_ENDCAP - ["finish"]).freeze)
+    owner.const_set(:OPERATIONS, (Ace::Lab::Organisms::AuthorityComposition::REQUIRED_ENDCAP - ["claim_service_settlement"]).freeze)
     error = assert_raises(Ace::Lab::InvalidConfigurationError) do
       Ace::Lab::Organisms::AuthorityComposition.new(authority_id: "services", deployment: deployment, kernel: Object.new).build
     end

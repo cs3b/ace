@@ -56,6 +56,7 @@ module Ace
             raise ArgumentError, "receiver input or mutation identity is invalid"
           end
           bytes = input_bytes.dup.freeze
+          mutation_id = mutation_id.dup.freeze
           input = @inputs.input_binding(bytes, expected_digest: params.fetch("input_digest"), expected_target: params.fetch("target"))
           contacted = true
           claim = @client.call("request_service", params, mutation_id: mutation_id, upload_parts: [bytes], purpose: :service_input)

@@ -14,7 +14,7 @@ module Ace
       # and placement; source selects all handlers, policy and evidence readers.
       class AuthorityComposition
         REQUIRED_ENDCAP = %w[submit_candidate export_candidate assign_review accept_review request_service
-          begin_dispatch complete_service complete_no_effect submit_result finish recover bind_inbox reconcile_inbox
+          begin_dispatch claim_service_settlement complete_service complete_no_effect submit_result finish recover bind_inbox reconcile_inbox
           service_status evidence_fetch].freeze
 
         def initialize(authority_id:, deployment: Ace::Assign::Authority::Deployment.load,
