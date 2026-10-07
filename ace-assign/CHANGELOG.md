@@ -9,8 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Expose authorized canonical assignment inventory at one retained revision, authenticating original registration, terminal/release and rotated descriptor provenance before bounded metadata pagination.
+
+- Authenticate complete immutable event inventories before ownership filtering, rejecting removed assignments/attempts/events, rewritten bytes and duplicate event digests while preserving valid interleaved appends.
+
 - Expose a deeply immutable original executor settlement context through the existing authenticated service status owner, binding the fixed receiver/mapping and accepted current challenge while retaining canonical receipt verification.
 - Batch immutable event-introduction proofs across selected assignments in one complete first-parent traversal, preserving each original chain and exact event-file bytes without a retained cache.
+
 
 - Add the fixed original executor no-effect challenge and atomic completion APIs, authenticating accepted failure/challenge provenance and closed fresh inspection artifacts before failed-settled. Domain-specific target/handler/writer inspection remains a gad.b prerequisite.
 - Add proof-owned protected stop with authenticated running/uncertain-to-stopped events, exhaustive service and Inbox settlement joins, immutable replay and original historical release/reuse verification. Retain the original foreground Driver until same-snapshot authenticated terminal and reservation-release evidence agree.

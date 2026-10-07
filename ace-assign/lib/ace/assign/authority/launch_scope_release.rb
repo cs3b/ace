@@ -301,6 +301,19 @@ module Ace
           end
         end
 
+        # Immutable terminal authentication is also used by read-only inventory
+        # outside maintenance exclusions. Only a genuinely held operation may
+        # reuse its bounded memo; both paths use the same canonical Git owner.
+        def terminal_event_commit!(journal, assignment_id:, event_digest:, commit:)
+          memo = Thread.current[:ace_assign_history_operations]&.[](object_id)
+          held = Thread.current[:ace_assign_scope_exclusions]&.keys&.any? { |key| key.first == object_id }
+          if memo && held && journal.evidence_mode == :protected
+            historical_event_commit!(journal, assignment_id: assignment_id, event_digest: event_digest, commit: commit)
+          else
+            journal.event_commit!(assignment_id: assignment_id, event_digest: event_digest, commit: commit)
+          end
+        end
+
         def immutable_maintenance_projection(value)
           case value
           when Hash then value.to_h { |key, item| [key.dup.freeze, immutable_maintenance_projection(item)] }.freeze
@@ -324,6 +337,16 @@ module Ace
           raise AttemptErrors::EvidenceUnavailable, "maintenance reservation lacks unique release" unless releases.one?
           release = releases.first
           prefix_commit = historical_event_commit!(journal, assignment_id: assignment_id, event_digest: release.fetch("digest"), commit: commit)
+          verify_released_lineage_at_prefix!(journal, prefix_commit, assignment_id, attempt_id, events, original, map)
+        end
+
+        # The immutable release owner is shared by held maintenance and
+        # read-only discovery. Each caller obtains the introduction from the
+        # existing canonical Git owner; this method grants no maintenance lock.
+        def verify_released_lineage_at_prefix!(journal, prefix_commit, assignment_id, attempt_id, events, original, map, terminal_introduction: nil)
+          releases = events.select { |event| event["type"] == "authority_mutation" && event.dig("payload", "operation") == "scope_reservation_release" }
+          raise AttemptErrors::EvidenceUnavailable, "reservation lacks unique release" unless releases.one?
+          release = releases.first
           prefix = journal.read_events(assignment_id, commit: prefix_commit).select { |event| event["attempt_id"] == attempt_id }
           unless prefix == events.take(events.index(release) + 1) && events.last == release
             raise AttemptErrors::EvidenceUnavailable, "post-release canonical work or release prefix differs"
@@ -338,7 +361,11 @@ module Ace
           lineage.require_positive!(scope_generation: lineage.binding.fetch("scope_generation"),
             scope_binding_event_id: lineage.binding_event.fetch("digest"), seal_event_id: lineage.seal_event.fetch("digest"), proof_id: lineage.proof_id)
           terminal = if prefix.any? { |event| event["type"] == "attempt_stopped" }
-            terminal_scope_stopped!(prefix, journal, prefix_commit, deployment: original)
+            if terminal_introduction
+              verify_stopped_terminal_at_prefix!(prefix, journal, terminal_introduction, deployment: original)
+            else
+              terminal_scope_stopped!(prefix, journal, prefix_commit, deployment: original)
+            end
           elsif prefix.any? { |event| event["type"] == "receipt_accepted" }
             terminal_scope_receipt!(prefix, lineage, journal, prefix_commit, deployment: original)
           else

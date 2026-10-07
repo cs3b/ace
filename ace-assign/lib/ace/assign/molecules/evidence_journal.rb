@@ -127,15 +127,7 @@ module Ace
               selectors.values.sum(&:size) <= HISTORY_LIMIT
             raise AttemptErrors::EvidenceUnavailable, "historical event selectors are invalid"
           end
-          verify_commit!(commit)
-          topology, error, status = git("rev-list", "--first-parent", "--parents",
-            "--max-count=#{HISTORY_LIMIT + 1}", commit)
-          nodes = topology.lines.map(&:split)
-          unless status.success? && !nodes.empty? && nodes.size <= HISTORY_LIMIT &&
-              nodes.all? { |node| node.size.between?(1, 2) && node.all? { |sha| sha.match?(/\A[0-9a-f]{40}\z/) } } &&
-              nodes.each_cons(2).all? { |left, right| left[1] == right[0] } && nodes.last.size == 1
-            raise AttemptErrors::EvidenceUnavailable, "canonical history topology is unsupported or incomplete: #{error}"
-          end
+          nodes = canonical_history_nodes!(commit)
           states = selectors.to_h do |id, digests|
             [id, digests.to_h { |digest| [digest, {retained: nil, blob: nil, absent: false, introduction: nil}] }]
           end
@@ -143,9 +135,7 @@ module Ace
             snapshots, files = read_event_snapshots!(states.keys, commit: node.first)
             states.each do |assignment_id, selected_states|
               events = snapshots.fetch(assignment_id)
-              unless events.group_by { |event| event.fetch("attempt_id") }.values.all? { |chain| Models::EvidenceEvent.chain_valid?(chain) }
-                raise AttemptErrors::EvidenceUnavailable, "historical canonical event chain is corrupt"
-              end
+              validated_attempt_chains!(events)
               matches = events.select { |event| selected_states.key?(event["digest"]) }.group_by { |event| event.fetch("digest") }
               selected_states.each do |digest, state|
                 selected = matches.fetch(digest, [])
@@ -174,6 +164,84 @@ module Ace
         rescue KeyError, TypeError, ArgumentError, NoMethodError
           raise AttemptErrors::EvidenceUnavailable, "historical canonical event selectors are unverifiable"
         end
+
+        # Complete immutable index facts are authenticated before any caller
+        # filters ownership. A missing current fact cannot hide an older one.
+        def canonical_event_inventory!(commit:)
+          nodes = canonical_history_nodes!(commit)
+          root_events, introductions = nil, {}
+          newer_chains, newer_files = nil, nil
+          nodes.each do |node|
+            ids = assignment_ids(commit: node.first)
+            snapshots, files = ids.empty? ? [{}, {}] : read_event_snapshots!(ids, commit: node.first)
+            chains = snapshots.transform_values { |events| validated_attempt_chains!(events) }
+            snapshots.each do |id, events|
+              unless events.all? { |event| files.fetch(id).key?(event_filename(event)) }
+                raise AttemptErrors::EvidenceUnavailable, "canonical event filename differs"
+              end
+            end
+            if root_events.nil?
+              root_events = snapshots.reject { |_id, events| events.empty? }
+              introductions = root_events.to_h { |id, events| [id, events.to_h { |event| [event.fetch("digest"), node.first] }] }
+            else
+              chains.each do |id, attempts|
+                attempts.each do |attempt_id, chain|
+                  newer = newer_chains.fetch(id, {}).fetch(attempt_id, [])
+                  unless chain == newer.take(chain.size)
+                    raise AttemptErrors::EvidenceUnavailable, "canonical inventory history removed or rewrote an attempt"
+                  end
+                end
+              end
+              files.each do |id, selected_files|
+                unless selected_files.all? { |name, oid| newer_files.fetch(id, {})[name] == oid }
+                  raise AttemptErrors::EvidenceUnavailable, "canonical inventory history removed or rewrote event bytes"
+                end
+              end
+              snapshots.each do |id, events|
+                events.each { |event| introductions.fetch(id)[event.fetch("digest")] = node.first }
+              end
+            end
+            newer_chains, newer_files = chains, files
+          end
+          freeze_inventory_projection("commit" => commit, "events" => root_events, "introductions" => introductions)
+        rescue KeyError, TypeError, ArgumentError, NoMethodError
+          raise AttemptErrors::EvidenceUnavailable, "canonical inventory history is unverifiable"
+        end
+
+        def canonical_history_nodes!(commit)
+          verify_commit!(commit)
+          topology, error, status = git("rev-list", "--first-parent", "--parents",
+            "--max-count=#{HISTORY_LIMIT + 1}", commit)
+          nodes = topology.lines.map(&:split)
+          unless status.success? && !nodes.empty? && nodes.size <= HISTORY_LIMIT &&
+              nodes.all? { |node| node.size.between?(1, 2) && node.all? { |sha| sha.match?(/\A[0-9a-f]{40}\z/) } } &&
+              nodes.each_cons(2).all? { |left, right| left[1] == right[0] } && nodes.last.size == 1
+            raise AttemptErrors::EvidenceUnavailable, "canonical history topology is unsupported or incomplete: #{error}"
+          end
+          nodes
+        end
+
+        def validated_attempt_chains!(events)
+          chains = events.group_by { |event| event.fetch("attempt_id") }
+          unless chains.values.all? { |chain| Models::EvidenceEvent.chain_valid?(chain) }
+            raise AttemptErrors::EvidenceUnavailable, "historical canonical event chain is corrupt"
+          end
+          chains
+        end
+
+        def freeze_inventory_projection(value)
+          case value
+          when Hash
+            value.to_h { |key, item| [freeze_inventory_projection(key), freeze_inventory_projection(item)] }.freeze
+          when Array
+            value.map { |item| freeze_inventory_projection(item) }.freeze
+          when String
+            value.dup.freeze
+          else
+            value.freeze
+          end
+        end
+        private :canonical_history_nodes!, :validated_attempt_chains!, :freeze_inventory_projection
 
         # Append accepted events to the journal under lock + CAS.
         #
@@ -279,6 +347,12 @@ module Ace
             selected = batch.map { |oid, size, _id| [oid, size] }
             contents = decode_event_blobs!(selected, read_event_blobs!(selected))
             batch.zip(contents).each { |(_oid, _size, id), content| events.fetch(id) << JSON.parse(content) }
+          end
+          events.each_value do |chain|
+            digests = chain.map { |event| event.fetch("digest") }
+            unless digests.uniq.size == digests.size
+              raise AttemptErrors::EvidenceUnavailable, "canonical event digest is ambiguous"
+            end
           end
           [events.transform_values { |chain| order_by_chain(chain) }, files]
         rescue JSON::ParserError

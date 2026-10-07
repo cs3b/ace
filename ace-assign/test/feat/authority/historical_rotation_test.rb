@@ -136,6 +136,16 @@ module Ace
         end
         value = {"schema" => "ace.assign.authorities/v2", "authorities" => {"authority" => @service.slice("uid", "gid", "groups", "socket_path", "state_root").merge("composition" => "services")},
           "projects" => {"project" => @project}, "launch_mappings" => {"mapping" => @map}}
+        if @inventory_mapping
+          other = JSON.parse(JSON.generate(@map))
+          other.merge!("worker_uid" => 13006, "worker_gid" => 13006, "worker_groups" => [13006], "worker_cwd" => "/home/other", "worker_actor" => "other-worker")
+          other.fetch("execution_scope").merge!("slot_id" => "other-slot", "service_unit" => "ace-other.service", "slice_unit" => "ace-other.slice",
+            "root_directory" => "/var/lib/ace-other/root", "runtime_directory" => "/run/ace-other", "network_namespace_path" => "/run/netns/other")
+          other.fetch("native").merge!("workspace_id" => "w2", "socket_path" => "/fixture/herdr-other.sock")
+          value.fetch("launch_mappings")["mapping-other"] = other
+          @project.fetch("worker_uids") << 13006
+          @project.fetch("peer_credentials")["13006"] = {"gid" => 13006, "groups" => [13006], "scratch_root" => File.join(@root, "scratch-13006")}
+        end
         @original_ref = artifact("original.json", JSON.generate(value))
         rotated = JSON.parse(JSON.generate(value))
         rotated["launch_mappings"]["mapping"]["worker_actor"] = "rotated-worker"
@@ -468,11 +478,95 @@ module Ace
         assert_equal terminal.fetch("digest"), release.dig(:data, "terminal_event_id")
       end
 
-      def test_actual_original_foreground_cli_exits_only_after_authenticated_stopped_release
+      def test_actual_inventory_server_requires_current_permission_eof_and_a_canonical_ref
         @foreground_socket_root = true
         with_installed_boundaries do
+          server_kernel = StreamKernel.new(@kernel, me: @service, peer: @launcher)
+          client_kernel = StreamKernel.new(@kernel, me: @launcher, peer: @service)
+          server = Authority::Server.new(authority_id: "authority", lifecycle: @router, deployment: @deployment,
+            composition: "services", kernel: server_kernel)
+          listener = Thread.new { server.serve }
+          deadline = WIRE.deadline(3)
+          until File.socket?(@service.fetch("socket_path"))
+            raise "Source listener unavailable" unless listener.alive? && Process.clock_gettime(Process::CLOCK_MONOTONIC) < deadline
+            sleep(0.01)
+          end
+          client = Authority::Client.new(mapping_id: "mapping", deployment: @deployment, kernel: client_kernel)
+          definition = JSON.generate(JSON.parse(@journal.blob(@journal.mutation_result("register").dig("data", "definition_ref"))).merge("session_id" => "assignment-page"))
+          client.call("register_assignment", {"assignment_id" => "assignment-page", "definition_bytes" => definition,
+            "definition_digest" => Digest::SHA256.hexdigest(definition), "expected_generation" => 0}, mutation_id: "inventory-page-register", timeout: 30)
+          query = {"journal_commit" => nil, "after" => nil, "limit" => 1}
+          first = client.call("assignment_inventory", query, timeout: 30).data
+          assert first.fetch("next_after")
+          selected = @journal.ref_value
+          server_kernel.instance_variable_set(:@peer, @worker)
+          client_kernel.instance_variable_set(:@me, @worker)
+          assert_raises(AttemptErrors::EvidenceUnavailable) do
+            client.call("assignment_inventory", query.merge("journal_commit" => first.fetch("journal_commit"), "after" => first.fetch("next_after")), timeout: 30)
+          end
+          assert_equal selected, @journal.ref_value
+          server_kernel.instance_variable_set(:@peer, @launcher)
+          client_kernel.instance_variable_set(:@me, @launcher)
+          final = client.call("assignment_inventory", query.merge("journal_commit" => first.fetch("journal_commit"), "after" => first.fetch("next_after")), timeout: 30).data
+          assert_equal "assignment-page", final.fetch("items").first.fetch("assignment_id")
+          assert_nil final.fetch("next_after")
+          request = {"version" => 1, "project_id" => "project", "operation" => "assignment_inventory", "mutation_id" => nil,
+            "params" => query.merge("mapping_id" => "mapping")}
+          socket = nil
+          [request, request.merge("project_id" => "foreign")].each_with_index do |frame, index|
+            socket = UNIXSocket.new(@service.fetch("socket_path"))
+            WIRE.write(socket, frame, deadline: WIRE.deadline(5))
+            socket.write("extra") if index.zero?
+            socket.shutdown(Socket::SHUT_WR)
+            assert_equal "error", WIRE.read(socket, deadline: WIRE.deadline(10)).fetch("status")
+            socket.close
+            assert_equal selected, @journal.ref_value
+          end
+          assert_raises(AttemptErrors::EvidenceUnavailable) { client.call("assignment_inventory", query, mutation_id: "forbidden-query-mutation", timeout: 30) }
+          history, error, status = Open3.capture3("git", "-C", @journal.repo_root, "rev-list", "--first-parent", selected)
+          assert status.success?, error
+          empty = client.call("assignment_inventory", query.merge("journal_commit" => history.lines.last.strip), timeout: 30).data
+          assert_empty empty.fetch("items")
+          assert_nil empty.fetch("next_after")
+          _out, error, status = Open3.capture3("git", "-C", @journal.repo_root, "update-ref", "-d", @journal.ref, selected)
+          assert status.success?, error
+          assert_raises(AttemptErrors::EvidenceUnavailable) { client.call("assignment_inventory", query, timeout: 30) }
+          assert_nil @journal.ref_value # Discovery never seeds a missing ref.
+        ensure
+          Open3.capture3("git", "-C", @journal.repo_root, "update-ref", @journal.ref, selected) if selected && @journal.ref_value.nil?
+          socket&.close unless socket&.closed?
+          server&.stop
+          listener&.join(3)
+          refute listener&.alive?, "source listener must terminate"
+        end
+      end
+
+      def test_actual_original_foreground_cli_exits_only_after_authenticated_stopped_release
+        @foreground_socket_root = true
+        @inventory_mapping = true
+        with_installed_boundaries do
           # Free the fixture seed through its actual imported receipt owner.
+          seed_attempt = @attempt
           accept_terminal_and_release
+          seed_terminal = current_events.find { |event| event["type"] == "receipt_accepted" }.fetch("digest")
+          seed_release = current_events.find { |event| event.dig("payload", "operation") == "scope_reservation_release" }.fetch("digest")
+          # A third completed row comes from the real guarded pre-release abort
+          # owner, not copied terminal flags or fabricated receipt evidence.
+          guarded = call("reserve_attempt", {"scope" => "010", "worker_uid" => 13001, "runtime" => "herdr", "base_head" => @head,
+            "launcher_process_binding" => @launcher, "expected_generation" => 1}, id: "inventory-guarded-reserve", peer: @launcher, role: :launcher).fetch(:data)
+          @attempt = guarded.fetch("attempt_id")
+          guarded_attempt = @attempt
+          guarded_params = {"mapping_id" => "mapping", "assignment_id" => "assignment", "attempt_id" => @attempt}
+          @launch.close_execution_scope!(params: guarded_params.merge("mutation_id" => "inventory-guarded-seal", "expected_generation" => generation), peer: @launcher, role: :launcher)
+          @launch.close_execution_scope!(params: guarded_params.merge("mutation_id" => "inventory-guarded-proof", "expected_generation" => generation), peer: @launcher, role: :launcher)
+          guarded_lineage = Molecules::ExecutionScopeLineage.new(events: current_events, project_id: "project", **guarded_params.transform_keys(&:to_sym))
+          failure = JSON.generate("kind" => "protected_scope_before_release", "scope_generation" => guarded_lineage.binding.fetch("scope_generation"),
+            "scope_binding_event_id" => guarded_lineage.binding_event.fetch("digest"), "seal_event_id" => guarded_lineage.seal_event.fetch("digest"), "proof_id" => guarded_lineage.proof_id)
+          aborted = call("abort_launch", {"launch_ticket" => guarded.fetch("launch_ticket"), "expected_generation" => generation,
+            "failure_evidence" => failure, "failure_digest" => Digest::SHA256.hexdigest(failure)}, id: "inventory-guarded-abort", peer: @launcher, role: :launcher).fetch(:data)
+          assert_equal "failed", aborted.fetch("phase")
+          guarded_terminal = current_events.find { |event| event.dig("payload", "operation") == "abort_launch" }.fetch("digest")
+          guarded_release = current_events.find { |event| event.dig("payload", "operation") == "scope_reservation_release" }.fetch("digest")
           original_assignment = @journal.mutation_result("register").fetch("data")
           definition = @journal.blob(original_assignment.fetch("definition_ref"))
           native = OriginalGuardedNative.new(mapping: @map.merge("native" => @map.fetch("native").merge(
@@ -493,11 +587,13 @@ module Ace
           end
           client = Authority::Client.new(mapping_id: "mapping", deployment: @deployment, kernel: client_kernel)
           recorded, statuses, ready = Queue.new, Queue.new, Queue.new
-          status_durations = []
+          status_durations, inventory_durations = [], []
           original_call = client.method(:call)
           client.define_singleton_method(:call) do |operation, params, **options|
             status_started = Process.clock_gettime(Process::CLOCK_MONOTONIC) if operation == "attempt_status"
+            inventory_started = Process.clock_gettime(Process::CLOCK_MONOTONIC) if operation == "assignment_inventory"
             result = original_call.call(operation, params, **options)
+            inventory_durations << Process.clock_gettime(Process::CLOCK_MONOTONIC) - inventory_started if inventory_started
             status_durations << Process.clock_gettime(Process::CLOCK_MONOTONIC) - status_started if status_started
             recorded << result.data if operation == "record_launch"
             statuses << result.data if operation == "attempt_status"
@@ -552,6 +648,11 @@ module Ace
           assert_equal frame.fetch("original_binding_digest"), unreleased.fetch("original_binding_digest")
           assert unreleased.fetch("terminal_event_id")
           assert foreground.alive?, "terminal without release cannot terminate original driver"
+          terminal_inventory = client.call("assignment_inventory", {"journal_commit" => nil, "after" => nil, "limit" => 25}, timeout: 30).data
+          terminal_row = terminal_inventory.fetch("items").find { |row| row["attempt_id"] == @attempt }
+          assert_equal "stopped", terminal_row.fetch("canonical_state")
+          assert_equal unreleased.fetch("terminal_event_id"), terminal_row.fetch("terminal_event_id")
+          assert_nil terminal_row.fetch("reservation_release_event_id")
           released = @launch.release_scope_reservation!(params: params.merge("mutation_id" => "foreground-release", "expected_generation" => generation),
             peer: @launcher, role: :launcher)
           foreground.join(45)
@@ -570,6 +671,84 @@ module Ace
           end
           assert_equal released.dig(:data, "terminal_event_id"), observed_release.fetch("terminal_event_id")
           assert_equal "stopped", observed_release.fetch("state")
+          inventory = client.call("assignment_inventory", {"journal_commit" => frame.fetch("journal_commit"), "after" => nil, "limit" => 25}, timeout: 30).data
+          original_ready = inventory.fetch("items").find { |row| row["attempt_id"] == frame.fetch("attempt_id") }
+          assert_equal frame.fetch("generation"), original_ready.fetch("generation")
+          assert_equal frame.fetch("original_binding_digest"), original_ready.fetch("original_binding_digest")
+          assert_nil original_ready.fetch("terminal_event_id")
+          assert_nil original_ready.fetch("reservation_release_event_id")
+          # A new process with the same installed launcher credentials may
+          # discover canonical terminal metadata, but not use private old birth.
+          restarted_peer = @launcher.merge("pid" => 33333, "started_at" => "linux:#{ExecutionScopeObservationFixtures::BOOT}:33333")
+          server_kernel.instance_variable_set(:@peer, restarted_peer)
+          client_kernel.instance_variable_set(:@me, restarted_peer)
+          current_inventory = client.call("assignment_inventory", {"journal_commit" => nil, "after" => nil, "limit" => 25}, timeout: 30).data
+          assert inventory_durations.all? { |elapsed| elapsed < 30 }, inventory_durations.inspect
+          seed_row = current_inventory.fetch("items").find { |row| row["attempt_id"] == seed_attempt }
+          assert_equal "succeeded", seed_row.fetch("canonical_state")
+          assert_equal seed_terminal, seed_row.fetch("terminal_event_id")
+          assert_equal seed_release, seed_row.fetch("reservation_release_event_id")
+          guarded_row = current_inventory.fetch("items").find { |row| row["attempt_id"] == guarded_attempt }
+          assert_equal "failed", guarded_row.fetch("canonical_state")
+          assert_equal guarded_terminal, guarded_row.fetch("terminal_event_id")
+          assert_equal guarded_release, guarded_row.fetch("reservation_release_event_id")
+          stopped_row = current_inventory.fetch("items").find { |row| row["attempt_id"] == frame.fetch("attempt_id") }
+          assert_equal "stopped", stopped_row.fetch("canonical_state")
+          assert_equal observed_release.fetch("terminal_event_id"), stopped_row.fetch("terminal_event_id")
+          assert_equal observed_release.fetch("reservation_release_event_id"), stopped_row.fetch("reservation_release_event_id")
+          assert_equal frame.fetch("original_binding_digest"), stopped_row.fetch("original_binding_digest")
+          assert_raises(AttemptErrors::EvidenceUnavailable) { client.call("attempt_status", params.merge("result_candidate_generation" => nil), timeout: 30) }
+          require "ace/overseer"
+          other_client = Authority::Client.new(mapping_id: "mapping-other", deployment: @deployment, kernel: client_kernel)
+          other_definition = JSON.generate(JSON.parse(definition).merge("session_id" => "other-assignment"))
+          other_client.call("register_assignment", {"assignment_id" => "other-assignment", "definition_bytes" => other_definition,
+            "definition_digest" => Digest::SHA256.hexdigest(other_definition), "expected_generation" => 0}, mutation_id: "other-inventory-register", timeout: 30)
+          public_agents = %w[mapping mapping-other].map { |id| {"id" => id, "project" => "project", "role" => "coder", "capabilities" => ["coding"],
+            "binding" => {"kind" => "runtime", "state" => "active", "instance_id" => "controlled-#{id}", "attested_instance_id" => "controlled-#{id}"}} }
+          topology = Ace::Lab::Organisms::TopologyService.from_config("schema_version" => 1,
+            "authorization" => {"principals" => {Ace::Lab::Molecules::CallerAuthorizer.local_identity.first => {"projects" => ["project"]}}},
+            "topology" => {"projects" => [{"id" => "project"}], "services" => [], "agents" => public_agents})
+          protected_status = Ace::Overseer::Organisms::ProtectedStatus.new(topology: topology, deployment_loader: -> { @deployment },
+            client_factory: ->(id, selected) { Authority::Client.new(mapping_id: id, deployment: selected, kernel: client_kernel) })
+          joined = protected_status.join_ready!(project: "project", agent: "mapping", ready: frame)
+          assert_equal frame.fetch("journal_commit"), joined.fetch("journal_commit")
+          assert_equal original_ready, joined.fetch("item")
+          [frame.merge("generation" => frame.fetch("generation") + 1), frame.merge("original_binding_digest" => "f" * 64),
+            frame.merge("attempt_id" => "foreign"), frame.merge("journal_commit" => @head)].each do |wrong|
+            assert_raises(Ace::Overseer::Error) { protected_status.join_ready!(project: "project", agent: "mapping", ready: wrong) }
+          end
+          status_command = Ace::Overseer::CLI::Commands::Status.new(protected_status: protected_status, config: {"runtime" => "tmux"})
+          status_output = capture_io { status_command.call(format: "json", project: "project") }.first
+          coordinator_status = JSON.parse(status_output)
+          assert_equal "complete", coordinator_status.fetch("visibility")
+          assert_equal 2, coordinator_status.fetch("provisioned_capacity")
+          assert_equal %w[mapping mapping-other], coordinator_status.fetch("agents").map { |agent| agent.fetch("agent_id") }
+          actual_row = coordinator_status.fetch("agents").first.fetch("inventory").fetch("items").find { |row| row["attempt_id"] == @attempt }
+          assert_equal stopped_row, actual_row
+          registration_only = coordinator_status.fetch("agents").last.fetch("inventory").fetch("items").first
+          assert_equal "other-assignment", registration_only.fetch("assignment_id")
+          assert_nil registration_only.fetch("attempt_id")
+          assert_nil registration_only.fetch("generation")
+          original_ref = @journal.ref_value
+          %w[attempt_stopped scope_reservation_release].each do |kind|
+            @journal.send(:sync_checkout, original_ref)
+            selected_event = current_events.find { |event| event["type"] == kind || event.dig("payload", "operation") == kind }
+            checkout = @journal.send(:checkout_dir)
+            path = File.join(checkout, "execution", "assignment", "events", @journal.send(:event_filename, selected_event))
+            bytes = File.binread(path)
+            File.unlink(path)
+            git(checkout, "add", "-A", "execution/assignment")
+            git(checkout, "-c", "user.name=test", "-c", "user.email=test@localhost", "commit", "-m", "controlled removed #{kind}")
+            File.binwrite(path, bytes)
+            git(checkout, "add", "-A", "execution/assignment")
+            git(checkout, "-c", "user.name=test", "-c", "user.email=test@localhost", "commit", "-m", "controlled reintroduced #{kind}")
+            altered_ref = git(checkout, "rev-parse", "HEAD")
+            git(@journal.repo_root, "update-ref", @journal.ref, altered_ref, original_ref)
+            assert Models::EvidenceEvent.chain_valid?(current_events), "current intact chain must not hide invalid introduction history"
+            assert_raises(AttemptErrors::EvidenceUnavailable) { client.call("assignment_inventory", {"journal_commit" => nil, "after" => nil, "limit" => 25}, timeout: 30) }
+            assert_equal altered_ref, @journal.ref_value
+            git(@journal.repo_root, "update-ref", @journal.ref, original_ref, altered_ref)
+          end
         ensure
           $stdout = previous_stdout if previous_stdout
           driver&.request_control_cancel
@@ -713,6 +892,26 @@ module Ace
           assert_equal original_events, @journal.read_events("assignment").select { |event| event["attempt_id"] == original_attempt }
           provision = @journal.read_events("assignment").find { |event| event["type"] == "scope_provisioning" && event["attempt_id"] == state.fetch("attempt_id") }
           assert_equal @candidate_ref.fetch("sha256"), provision.dig("payload", "descriptor_sha256")
+          selected_commit = @journal.ref_value
+          read_inventory = lambda do |commit|
+            @router.dispatch(request: {"version" => 1, "operation" => "assignment_inventory", "mutation_id" => nil,
+              "project_id" => "project", "params" => {"mapping_id" => "mapping", "journal_commit" => commit, "after" => nil, "limit" => 25}},
+              peer: @launcher, role: :launcher).fetch(:data)
+          end
+          inventory = read_inventory.call(nil)
+          assert_equal selected_commit, inventory.fetch("journal_commit")
+          retained = inventory.fetch("items").find { |item| item["attempt_id"] == original_attempt }
+          assert_equal "succeeded", retained.fetch("canonical_state")
+          assert_equal original_events.find { |event| event["type"] == "receipt_accepted" }.fetch("digest"), retained.fetch("terminal_event_id")
+          assert_equal original_events.find { |event| event.dig("payload", "operation") == "scope_reservation_release" }.fetch("digest"), retained.fetch("reservation_release_event_id")
+          fresh = inventory.fetch("items").find { |item| item["attempt_id"] == state.fetch("attempt_id") }
+          assert_equal "reserved", fresh.fetch("canonical_state")
+          assert_nil fresh.fetch("terminal_event_id")
+          assert_nil fresh.fetch("reservation_release_event_id")
+          old_inventory = read_inventory.call(original_commit)
+          assert_equal [original_attempt], old_inventory.fetch("items").map { |item| item.fetch("attempt_id") }
+          assert_equal retained, old_inventory.fetch("items").first
+          assert_equal selected_commit, @journal.ref_value
         end
       end
     end

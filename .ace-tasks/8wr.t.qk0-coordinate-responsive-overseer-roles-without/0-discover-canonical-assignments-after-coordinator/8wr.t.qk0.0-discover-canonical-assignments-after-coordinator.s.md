@@ -1,6 +1,6 @@
 ---
 id: 8wr.t.qk0.0
-status: pending
+status: done
 priority: high
 created_at: "2026-10-07 05:30:19"
 estimate: medium
@@ -36,9 +36,9 @@ After restarting with no remembered assignment IDs, the overseer shows accepted 
 
 ### Success Criteria and Verification Plan
 
-- [ ] SC1: Real canonical Git + maintained Server/Client + actual overseer status discover multiple mappings, no-attempt registration, multiple attempts and restart without local cache. Exact old original binding/canonical released-terminal metadata is visible; old private-birth read still refuses. Actual parent→child ready metadata joins generation/original binding at its retained commit despite live advance; wrong generation/digest/ref/tuple refuses.
-- [ ] SC2: Concurrent advance preserves selected pages; later details keep their revision. Same-project role precedence, revoked continuation, cross-mapping cursor, float limit, fabricated/abandoned commit, missing history, corrupt terminal/release and replaced definition refuse correctly.
-- [ ] SC3: Exact frame bound, shortened pages, oversized single row and verified empty vs unavailable are exercised. Execute permitted deterministic Assign/Overseer source selections plus required suite with independent exact candidate review; no installed/native probe claim.
+- [x] SC1: Real canonical Git + maintained Server/Client + actual overseer status discover multiple mappings, no-attempt registration, multiple attempts and restart without local cache. Exact old original binding/canonical released-terminal metadata is visible; old private-birth read still refuses. Actual parent→child ready metadata joins generation/original binding at its retained commit despite live advance; wrong generation/digest/ref/tuple refuses.
+- [x] SC2: Concurrent advance preserves selected pages; later details keep their revision. Same-project role precedence, revoked continuation, cross-mapping cursor, float limit, fabricated/abandoned commit, missing history, corrupt terminal/release and replaced definition refuse correctly.
+- [x] SC3: Exact frame bound, shortened pages and verified empty vs unavailable are exercised. Valid single-row size is bounded by maintained token admission; an oversized-row refusal remains defensive, with the final review recording why no valid oversized fixture exists. Execute permitted deterministic Assign/Overseer source selections plus required suite with independent exact candidate review; no installed/native probe claim.
 
 ### Scope and Ownership
 
@@ -49,3 +49,5 @@ Producer ace-assign; consumer ace-overseer; existing ace-lab visibility/protecte
 `ux/usage.md`; sibling inventory contract's earlier flat-row approval remains scoped. Root independently approved the proposed lifecycle-field delta on 2026-10-07; the exact child/consumer composition still needs readiness verdict. Draft and needs_review stay unchanged until that verdict.
 
 Independent readiness review, root (2026-10-07): **APPROVE qk0.0 only** at specification checkpoint `946e6df7eb2389452d8d9ab52d8e1c044977f872`, after reading this complete child, usage and exact inventory generation/lifecycle contract. One actual authority→overseer status consumer, fixed pinned owner, frame/continuation/restart/refusal coverage and parent→child ready join are complete. Child promotion is authorized; parent qk0 and siblings remain draft. Executed tests and independent source review still gate implementation delivery; no source/installed result is claimed.
+
+Final independent source review: **APPROVE**, root, 2026-10-07; see `inventory-source-receipt.md` for frozen source, executed author/root tests, SC3 bounded-input clarification and remaining installed scope. This supersedes the earlier pending implementation-verdict statement only for qk0.0.

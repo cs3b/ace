@@ -144,3 +144,12 @@ The default preset's global onboarding/delivery steps do not become the protecte
 The initial qk0.3 draft failed independent readiness review: actual default prepared inputs exceed inline 32KiB definition capacity; gate/worker/queue capability ownership was unspecified; status rewrites conflicted with raw initial hashes; task:// dependency context remained mutable. These findings persist in qk0.3 with executed read-only size evidence. Its revised draft uses existing TransferCodec/CandidateTransfer and registration JournalMutation blobs, compact retained references, a single original-association Endcap evidence_fetch for adapter and tool consumers, immutable captured instructional context and existing scoped queue progress. qk0.1 retains exact original bundle bytes before effects and consumes that join. No new ledger/cap increase/backcompat/installed probe or producer backedge; all four children stay draft and require independent readiness decisions.
 
 Provider-boundary follow-up rejected mandatory FD propagation through external tools (local Pi explicitly maps stdio only; Codex tool source unavailable locally). The revised qk0.3 draft supersedes the earlier gate→adapter envelope and uses existing evidence_fetch/peer-birth/canonical registration for every descendant instruction consumer. It introduces no broker/ledger/custom provider tool or current-file fallback. See qk0.3/provider-input-source-feasibility.md; required fetch/CLI/bundle source joins and independent revised readiness review remain open.
+
+### Current child checkpoint — 2026-10-07
+
+- [x] qk0.0 canonical inventory/status source delivered and independently accepted; exact source/test receipts are in its task folder.
+- [x] qk0.3 specification reviewed and pending; original-association fetch replaces the rejected descriptor handoff.
+- [ ] qk0.3 implementation after required producer closure; no source completion implied by readiness.
+- [ ] qk0.1 coordinator source/readiness and qk0.2 physical cleanup source/readiness remain open.
+
+The parent stays draft/needs_review; the earlier statement that all children remain draft is superseded only by these specific child decisions. Installed acceptance remains gad.2.

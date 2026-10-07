@@ -161,7 +161,7 @@ module Ace
             @lifecycle.serve_launch_control!(request: request, peer: peer, socket: socket, codec: transfer_codec, deadline: deadline)
             return
           end
-          if %w[observe_execution_scope close_execution_scope stop_attempt prompt_status launch_input_inhibit_selection launch_input_inhibit_completion launch_prompt_intent launch_prompt_completion claim_service_settlement].include?(request["operation"]) ||
+          if %w[assignment_inventory observe_execution_scope close_execution_scope stop_attempt prompt_status launch_input_inhibit_selection launch_input_inhibit_completion launch_prompt_intent launch_prompt_completion claim_service_settlement].include?(request["operation"]) ||
               @composition == "services" && %w[attempt_status evidence_fetch inbox_context_completion].include?(request["operation"])
             bodyless_read!(socket, deadline)
           end
@@ -210,6 +210,8 @@ module Ace
           refusal(socket, "conflict")
         rescue AttemptErrors::NotFound
           refusal(socket, "missing")
+        rescue AttemptErrors::BoundedResultUnavailable
+          refusal(socket, "bounded_result")
         rescue StandardError
           refusal(socket, "evidence_unavailable")
         ensure

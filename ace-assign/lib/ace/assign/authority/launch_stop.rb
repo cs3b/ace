@@ -183,7 +183,22 @@ module Ace
           acceptance = events.find { |entry| entry["type"] == "authority_mutation" && entry["previous_digest"] == event.fetch("digest") }
           raise AttemptErrors::EvidenceUnavailable, "Stopped terminal acceptance is missing" unless acceptance
           assignment_id = event.fetch("payload").fetch("assignment_id")
-          prefix_commit = historical_event_commit!(journal, assignment_id: assignment_id, event_digest: acceptance.fetch("digest"), commit: commit)
+          prefix_commit = terminal_event_commit!(journal, assignment_id: assignment_id, event_digest: acceptance.fetch("digest"), commit: commit)
+          verify_stopped_terminal_at_prefix!(events, journal, prefix_commit, deployment: deployment)
+        rescue KeyError, TypeError, NoMethodError
+          raise AttemptErrors::EvidenceUnavailable, "Stopped original terminal evidence is malformed"
+        end
+
+        # Source composition supplies only an introduction authenticated by the
+        # canonical Git owner. This immutable verifier grants no live exclusion.
+        def verify_stopped_terminal_at_prefix!(events, journal, prefix_commit, deployment:)
+          terminals = events.select { |entry| entry["type"] == "attempt_stopped" }
+          raise AttemptErrors::EvidenceUnavailable, "Stopped terminal is missing or ambiguous" unless terminals.one?
+          event = terminals.first
+          accepted = events.select { |entry| entry["type"] == "authority_mutation" && entry["previous_digest"] == event.fetch("digest") }
+          raise AttemptErrors::EvidenceUnavailable, "Stopped terminal acceptance is missing or ambiguous" unless accepted.one?
+          acceptance = accepted.first
+          assignment_id = event.fetch("payload").fetch("assignment_id")
           prefix = journal.read_events(assignment_id, commit: prefix_commit).select { |entry| entry["attempt_id"] == event.fetch("attempt_id") }
           unless prefix == events.take(events.index(acceptance) + 1) && Molecules::CanonicalAttemptState.derive(prefix) == "stopped"
             raise AttemptErrors::EvidenceUnavailable, "Stopped terminal introduction prefix differs"

@@ -1,0 +1,217 @@
+# frozen_string_literal: true
+
+module Ace
+  module Assign
+    module Authority
+      class LaunchLifecycle
+        private
+
+        # Discovery authenticates the current mapped principal, then reads one
+        # immutable canonical prefix. It neither pins the original launcher nor
+        # grants permission to mutate that launch.
+        def assignment_inventory!(request:, peer:, role:)
+          params = request.fetch("params")
+          strict!(params, %w[mapping_id journal_commit after limit])
+          raise ArgumentError, "Inventory mutation ID must be null" unless request.fetch("mutation_id").nil?
+          unless %i[launcher supervisor].include?(role)
+            raise AttemptErrors::UnauthorizedIdentity, "Inventory requires mapped launcher or supervisor"
+          end
+          map = steering_principal!(params, peer, role)
+          limit = params.fetch("limit")
+          raise ArgumentError, "Inventory limit is invalid" unless limit.is_a?(Integer) && limit.between?(1, 50)
+          after = params.fetch("after")
+          unless after.nil?
+            strict!(after, %w[assignment_id attempt_id])
+            token!(after.fetch("assignment_id"))
+            token!(after.fetch("attempt_id")) unless after.fetch("attempt_id").nil?
+            raise ArgumentError, "Inventory continuation requires selected commit" if params.fetch("journal_commit").nil?
+          end
+          journal = journal_for(map)
+          canonical_commit = journal.ref_value
+          commit = params.fetch("journal_commit") || canonical_commit
+          journal.verify_canonical_prefix!(commit: commit, canonical_commit: canonical_commit)
+          indexed = inventory_index!(journal, commit, params.fetch("mapping_id"), map)
+          offset = 0
+          if after
+            position = indexed.index { |entry| entry.fetch(:selector) == after }
+            raise AttemptErrors::NotFound, "Inventory cursor does not select a visible row" unless position
+            offset = position + 1
+          end
+          data = {"project_id" => map.fetch("project_id"), "mapping_id" => params.fetch("mapping_id"),
+            "journal_commit" => commit, "items" => [], "next_after" => nil}
+          indexed.drop(offset).first(limit).each do |entry|
+            row = inventory_row!(journal, commit, entry)
+            proposed = data.merge("items" => data.fetch("items") + [row],
+              "next_after" => offset + data.fetch("items").size + 1 < indexed.size ? entry.fetch(:selector) : nil)
+            # Size the actual fixed public envelope, retaining whole rows and
+            # an honest cursor without truncating or omitting canonical facts.
+            frame = {"status" => "ok", "data" => proposed, "transport" => {"replayed" => false}}
+            if JSON.generate(frame).bytesize + 1 > 16_384
+              raise AttemptErrors::BoundedResultUnavailable, "Inventory row exceeds bounded response" if data.fetch("items").empty?
+              break
+            end
+            data = proposed
+          end
+          {data: data, replayed: false}
+        end
+
+        def inventory_index!(journal, commit, mapping_id, map)
+          authenticated = journal.canonical_event_inventory!(commit: commit)
+          raise AttemptErrors::EvidenceUnavailable, "Inventory authenticated snapshot differs" unless authenticated.fetch("commit") == commit
+          snapshots = authenticated.fetch("events")
+          introductions = authenticated.fetch("introductions")
+          entries = snapshots.flat_map do |assignment_id, events|
+            registrations = events.select { |event| event["type"] == "authority_mutation" && event.dig("payload", "operation") == "register_assignment" }
+            next [] if registrations.empty?
+            attempts = events.select { |event| event["type"] == "authority_mutation" && event.dig("payload", "operation") == "reserve_attempt" }
+            if attempts.empty?
+              registration = registrations.last.fetch("payload").fetch("data")
+              next [] unless registration["mapping_id"] == mapping_id
+              authenticate_inventory_registration!(journal, assignment_id, events, registration, mapping_id, map, commit, introductions.fetch(assignment_id))
+              next [{selector: {"assignment_id" => assignment_id, "attempt_id" => nil}, registration: registration, map: map}]
+            end
+            selected = attempts.select { |event| event.dig("payload", "data", "mapping_id") == mapping_id }
+            next [] if selected.empty?
+            prefixes = introductions.fetch(assignment_id)
+            selected.map do |reserve|
+              attempt_id = reserve.fetch("attempt_id")
+              chain = events.select { |event| event["attempt_id"] == attempt_id }
+              registration = definition(journal, assignment_id, commit: prefixes.fetch(reserve.fetch("digest")))
+              unless registration && registration.values_at("assignment_id", "project_id", "mapping_id") == [assignment_id, map.fetch("project_id"), mapping_id]
+                raise AttemptErrors::EvidenceUnavailable, "Inventory reservation registration differs"
+              end
+              registration_events = journal.read_events(assignment_id, commit: prefixes.fetch(reserve.fetch("digest")))
+              authenticate_inventory_registration!(journal, assignment_id, registration_events, registration, mapping_id, map, prefixes.fetch(reserve.fetch("digest")), prefixes)
+              {selector: {"assignment_id" => assignment_id, "attempt_id" => attempt_id},
+                registration: registration, events: chain, map: map, introductions: prefixes}
+            end
+          end
+          selectors = entries.map { |entry| entry.fetch(:selector).values_at("assignment_id", "attempt_id") }
+          raise AttemptErrors::EvidenceUnavailable, "Inventory row identity is ambiguous" unless selectors.uniq.size == selectors.size
+          entries.sort_by { |entry| [entry.fetch(:selector).fetch("assignment_id").b, entry.fetch(:selector).fetch("attempt_id").to_s.b] }
+        rescue KeyError, TypeError, NoMethodError
+          raise AttemptErrors::EvidenceUnavailable, "Inventory canonical index is malformed"
+        end
+
+        def authenticate_inventory_registration!(journal, assignment_id, events, registration, mapping_id, map, commit, introductions)
+          unless registration.is_a?(Hash) && registration.values_at("assignment_id", "project_id", "mapping_id", "phase") ==
+              [assignment_id, map.fetch("project_id"), mapping_id, "registered"]
+            raise AttemptErrors::EvidenceUnavailable, "Inventory accepted registration association differs"
+          end
+          chain = events.select { |event| event["attempt_id"] == "definition-#{assignment_id}" }
+          journal.authority_generation(chain)
+          accepted = chain.select { |event| event["type"] == "authority_mutation" &&
+            event.dig("payload", "operation") == "register_assignment" && event.dig("payload", "data") == registration }
+          raise AttemptErrors::EvidenceUnavailable, "Inventory registration provenance is ambiguous" unless accepted.one?
+          event = accepted.first
+          prefix = introductions.fetch(event.fetch("digest"))
+          original_chain = journal.read_events(assignment_id, commit: prefix).select { |item| item["attempt_id"] == "definition-#{assignment_id}" }
+          unless original_chain.last == event && registration["generation"].is_a?(Integer) &&
+              registration["generation"] == journal.authority_generation(original_chain)
+            raise AttemptErrors::EvidenceUnavailable, "Inventory registration generation/introduction differs"
+          end
+        end
+
+        def inventory_row!(journal, commit, entry)
+          selector, registration = entry.values_at(:selector, :registration)
+          bytes = journal.blob(registration.fetch("definition_ref"), commit: commit)
+          unless bytes.is_a?(String) && bytes.bytesize <= 32_768 &&
+              Digest::SHA256.hexdigest(bytes) == registration.fetch("definition_digest")
+            raise AttemptErrors::EvidenceUnavailable, "Inventory definition content differs"
+          end
+          assignment = Models::Assignment.from_h(JSON.parse(bytes))
+          unless assignment.managed? && assignment.id == selector.fetch("assignment_id") &&
+              assignment.project_id == registration.fetch("project_id") && assignment.task_id == registration.fetch("task_id") &&
+              registration.fetch("definition_generation").is_a?(Integer) && registration.fetch("definition_generation").positive?
+            raise AttemptErrors::EvidenceUnavailable, "Inventory definition provenance differs"
+          end
+          row = selector.merge(registration.slice("task_id", "definition_digest", "definition_generation"),
+            "scope" => nil, "reservation_generation" => nil, "generation" => nil, "canonical_state" => nil,
+            "original_binding_digest" => nil, "terminal_event_id" => nil, "reservation_release_event_id" => nil)
+          return row unless selector.fetch("attempt_id")
+          events = entry.fetch(:events)
+          map = entry.fetch(:map)
+          state = origin(events, **selector.merge("mapping_id" => registration.fetch("mapping_id")).transform_keys(&:to_sym))
+          generation = journal.authority_generation(events)
+          unless generation.is_a?(Integer) && generation.positive? && state.fetch("reservation_generation").is_a?(Integer) && state.fetch("reservation_generation").positive?
+            raise AttemptErrors::EvidenceUnavailable, "Inventory attempt generation is invalid"
+          end
+          row.merge!("scope" => state.fetch("scope"), "reservation_generation" => state.fetch("reservation_generation"),
+            "generation" => generation, "canonical_state" => journal.canonical_attempt_state(events))
+          if events.any? { |event| event.dig("payload", "operation") == "record_launch" }
+            row["original_binding_digest"] = original_prompt_record!(events, state,
+              params: selector.merge("mapping_id" => registration.fetch("mapping_id"))).fetch("binding_digest")
+          end
+          terminal_events = events.select { |event| %w[receipt_accepted attempt_stopped].include?(event["type"]) }
+          releases = events.select { |event| event.dig("payload", "operation") == "scope_reservation_release" }
+          guarded_abort = events.any? { |event| event.dig("payload", "operation") == "abort_launch" }
+          return row if terminal_events.empty? && releases.empty? && !guarded_abort
+          original, original_map = inventory_original_deployment!(journal, events, registration.fetch("mapping_id"), map)
+          lineage = Molecules::ExecutionScopeLineage.new(events: events, project_id: original_map.fetch("project_id"),
+            assignment_id: selector.fetch("assignment_id"), attempt_id: selector.fetch("attempt_id"), mapping_id: registration.fetch("mapping_id"))
+          introductions = entry.fetch(:introductions)
+          terminal_introduction = nil
+          terminal = if events.any? { |event| event["type"] == "attempt_stopped" }
+            stopped = events.find { |event| event["type"] == "attempt_stopped" }
+            accepted = events.select { |event| event["type"] == "authority_mutation" && event["previous_digest"] == stopped.fetch("digest") }
+            raise AttemptErrors::EvidenceUnavailable, "Inventory stopped acceptance is ambiguous" unless accepted.one?
+            terminal_introduction = introductions.fetch(accepted.first.fetch("digest"))
+            verify_stopped_terminal_at_prefix!(events, journal, terminal_introduction, deployment: original)
+          else
+            inventory_terminal_at_introduction!(journal, selector, events, original, original_map, registration.fetch("mapping_id"), introductions)
+          end
+          row["terminal_event_id"] = terminal.fetch("digest")
+          unless releases.empty?
+            raise AttemptErrors::EvidenceUnavailable, "Inventory release is ambiguous" unless releases.one?
+            release = releases.first
+            prefix = introductions.fetch(release.fetch("digest"))
+            verify_released_lineage_at_prefix!(journal, prefix, selector.fetch("assignment_id"), selector.fetch("attempt_id"), events, original, original_map, terminal_introduction: terminal_introduction)
+            row["reservation_release_event_id"] = release.fetch("digest")
+          end
+          row
+        rescue KeyError, TypeError, JSON::ParserError, NoMethodError
+          raise AttemptErrors::EvidenceUnavailable, "Inventory canonical row is malformed"
+        end
+
+        def inventory_terminal_at_introduction!(journal, selector, events, original, map, mapping_id, introductions)
+          terminals = events.select { |event| event["type"] == "receipt_accepted" ||
+            (event["type"] == "authority_mutation" && event.dig("payload", "operation") == "abort_launch") }
+          raise AttemptErrors::EvidenceUnavailable, "Inventory terminal provenance is ambiguous" unless terminals.one?
+          event = terminals.first
+          prefix_commit = introductions.fetch(event.fetch("digest"))
+          prefix = journal.read_events(selector.fetch("assignment_id"), commit: prefix_commit).select { |entry| entry["attempt_id"] == selector.fetch("attempt_id") }
+          unless prefix == events.take(events.index(event) + 1)
+            raise AttemptErrors::EvidenceUnavailable, "Inventory terminal introduction differs"
+          end
+          lineage = Molecules::ExecutionScopeLineage.new(events: prefix, project_id: map.fetch("project_id"),
+            assignment_id: selector.fetch("assignment_id"), attempt_id: selector.fetch("attempt_id"), mapping_id: mapping_id)
+          terminal_scope_receipt!(prefix, lineage, journal, prefix_commit, deployment: original)
+        end
+
+        def inventory_original_deployment!(journal, events, mapping_id, current_map)
+          provisioning = events.select { |event| event["type"] == "scope_provisioning" }
+          raise AttemptErrors::EvidenceUnavailable, "Inventory original provisioning is ambiguous" unless provisioning.one?
+          identity = provisioning.first.fetch("payload")
+          unless identity.is_a?(Hash) && identity.keys.sort == %w[deployment_digest descriptor_sha256 reservation_generation slot_id]
+            raise AttemptErrors::EvidenceUnavailable, "Inventory original provisioning is malformed"
+          end
+          original = if identity.fetch("descriptor_sha256") == protected_descriptor_sha256!
+            @deployment
+          else
+            raise AttemptErrors::EvidenceUnavailable, "Inventory original descriptor owner unavailable" unless @deployment_history
+            @deployment_history.descriptor!(sha256: identity.fetch("descriptor_sha256"))
+          end
+          map = original.mapping(mapping_id)
+          project = original.project(map.fetch("project_id"))
+          unless map.fetch("project_id") == current_map.fetch("project_id") &&
+              map.fetch("execution_scope").fetch("slot_id") == identity.fetch("slot_id") &&
+              original.mapping_digest(mapping_id) == identity.fetch("deployment_digest") &&
+              [project.fetch("journal_repository"), project.fetch("evidence_git_ref"), project.fetch("evidence_checkout_root")] == [journal.repo_root, journal.ref, journal.checkout_root]
+            raise AttemptErrors::EvidenceUnavailable, "Inventory original descriptor association differs"
+          end
+          [original, map]
+        end
+      end
+    end
+  end
+end

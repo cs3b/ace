@@ -1,53 +1,17 @@
 ---
 id: 8wr.t.qk0.3
 title: Deliver authenticated prepared work to scoped workers
-status: draft
+status: pending
 priority: high
 created_at: "2026-10-07 06:51:55"
 estimate: large
 dependencies: [8wr.t.qk0.0, 8x3.t.xz9.2]
 tags: [protected, assignment]
 parent: 8wr.t.qk0
-needs_review: true
+needs_review: false
 bundle:
   presets: [project]
-  files:
-    - ace-runtime/native/worker_gate.c
-    - ace-assign/exe/ace-assign
-    - ace-assign/lib/ace/assign/cli.rb
-    - ace-assign/lib/ace/assign/cli/commands/assignment_target.rb
-    - ace-assign/lib/ace/assign/cli/commands/start.rb
-    - ace-assign/lib/ace/assign/cli/commands/step.rb
-    - ace-assign/lib/ace/assign/cli/commands/finish.rb
-    - ace-assign/lib/ace/assign/cli/commands/fail.rb
-    - ace-assign/lib/ace/assign/cli/commands/status.rb
-    - ace-assign/lib/ace/assign/cli/commands/resume.rb
-    - ace-assign/handbook/workflow-instructions/assign/drive.wf.md
-    - ace-assign/lib/ace/assign/authority/launch_lifecycle.rb
-    - ace-assign/lib/ace/assign/organisms/task_assignment_creator.rb
-    - ace-assign/lib/ace/assign/organisms/assignment_executor.rb
-    - ace-assign/lib/ace/assign/molecules/fork_session_launcher.rb
-    - ace-assign/.ace-defaults/assign/presets/work-on-task.yml
-    - ace-assign/lib/ace/assign/authority/transfer_codec.rb
-    - ace-assign/lib/ace/assign/authority/candidate_transfer.rb
-    - ace-assign/lib/ace/assign/authority/server.rb
-    - ace-assign/lib/ace/assign/authority/client.rb
-    - ace-assign/lib/ace/assign/authority/endcap.rb
-    - ace-assign/lib/ace/assign/authority/endcap_results.rb
-    - ace-assign/lib/ace/assign/molecules/canonical_evidence.rb
-    - ace-llm/lib/ace/llm/query_interface.rb
-    - ace-llm-providers-cli/lib/ace/llm/providers/cli/codex_client.rb
-    - ace-llm-providers-cli/lib/ace/llm/providers/cli/pi_client.rb
-    - ace-llm-providers-cli/lib/ace/llm/providers/cli/molecules/safe_capture.rb
-    - ace-llm-providers-cli/lib/ace/llm/providers/cli/molecules/process_supervisor.rb
-    - .ace-tasks/8wr.t.qk0-coordinate-responsive-overseer-roles-without/3-deliver-authenticated-prepared-work-to/provider-input-source-feasibility.md
-    - ace-assign/lib/ace/assign/molecules/evidence_journal.rb
-    - ace-assign/lib/ace/assign/molecules/journal_mutation.rb
-    - ace-assign/lib/ace/assign/atoms/step_file_parser.rb
-    - ace-assign/lib/ace/assign/molecules/queue_scanner.rb
-    - ace-assign/lib/ace/assign/molecules/step_writer.rb
-    - ace-assign/handbook/workflow-instructions/assign/task-load-internal.wf.md
-    - .ace-tasks/8wr.t.qk0-coordinate-responsive-overseer-roles-without/3-deliver-authenticated-prepared-work-to/ux/usage.md
+  files: [ace-runtime/native/worker_gate.c, ace-assign/exe/ace-assign, ace-assign/lib/ace/assign/cli.rb, ace-assign/lib/ace/assign/cli/commands/assignment_target.rb, ace-assign/lib/ace/assign/cli/commands/start.rb, ace-assign/lib/ace/assign/cli/commands/step.rb, ace-assign/lib/ace/assign/cli/commands/finish.rb, ace-assign/lib/ace/assign/cli/commands/fail.rb, ace-assign/lib/ace/assign/cli/commands/status.rb, ace-assign/lib/ace/assign/cli/commands/resume.rb, ace-assign/handbook/workflow-instructions/assign/drive.wf.md, ace-assign/lib/ace/assign/authority/launch_lifecycle.rb, ace-assign/lib/ace/assign/organisms/task_assignment_creator.rb, ace-assign/lib/ace/assign/organisms/assignment_executor.rb, ace-assign/lib/ace/assign/molecules/fork_session_launcher.rb, ace-assign/.ace-defaults/assign/presets/work-on-task.yml, ace-assign/lib/ace/assign/authority/transfer_codec.rb, ace-assign/lib/ace/assign/authority/candidate_transfer.rb, ace-assign/lib/ace/assign/authority/server.rb, ace-assign/lib/ace/assign/authority/client.rb, ace-assign/lib/ace/assign/authority/endcap.rb, ace-assign/lib/ace/assign/authority/endcap_results.rb, ace-assign/lib/ace/assign/molecules/canonical_evidence.rb, ace-llm/lib/ace/llm/query_interface.rb, ace-llm-providers-cli/lib/ace/llm/providers/cli/codex_client.rb, ace-llm-providers-cli/lib/ace/llm/providers/cli/pi_client.rb, ace-llm-providers-cli/lib/ace/llm/providers/cli/molecules/safe_capture.rb, ace-llm-providers-cli/lib/ace/llm/providers/cli/molecules/process_supervisor.rb, .ace-tasks/8wr.t.qk0-coordinate-responsive-overseer-roles-without/3-deliver-authenticated-prepared-work-to/provider-input-source-feasibility.md, ace-assign/lib/ace/assign/molecules/evidence_journal.rb, ace-assign/lib/ace/assign/molecules/journal_mutation.rb, ace-assign/lib/ace/assign/atoms/step_file_parser.rb, ace-assign/lib/ace/assign/molecules/queue_scanner.rb, ace-assign/lib/ace/assign/molecules/step_writer.rb, ace-assign/handbook/workflow-instructions/assign/task-load-internal.wf.md, .ace-tasks/8wr.t.qk0-coordinate-responsive-overseer-roles-without/3-deliver-authenticated-prepared-work-to/ux/usage.md]
   commands: []
 ---
 
@@ -159,3 +123,5 @@ The later simplification supersedes the earlier envelope/framing proposal entire
 Readiness follow-up preserved: random reserve-time attempt selectors cannot be pre-captured literally, and authority-owned assignment_root cannot host a worker queue. This revision separates immutable parameterized instructions from authenticated post-release selector binding, and explicitly injects a worker-private per-attempt cache_base through existing manager/executor APIs. Controlled verification must cover unchanged accepted bytes, unknown tokens, forged hints, queue collision/partial crash/progress reuse, permission/symlink failures and transfer cleanup independence.
 
 Recovery review correction: prepared artifact possession cannot authorize rebuilding a missing queue after effects. Controlled cases must cover deletion/loss after step start/effects, descendant authority worker invocation, duplicate adapter invocation, original death/new birth with old attempt and crash-before-publish cleanup. All refuse new work/provider effects; complete matching queue reuse preserves progress. Original-self adapter admission is stricter than descendant fetch/CLI admission.
+
+Final independent readiness: root **APPROVE**, see `readiness-review.md`. This supersedes earlier pending-review prose for the current specification only. Implementation and installed results are not claimed.
