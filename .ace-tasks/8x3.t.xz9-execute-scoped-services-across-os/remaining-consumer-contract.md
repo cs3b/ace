@@ -75,8 +75,19 @@ Unknown attempt is missing, corrupt canonical state is evidence_unavailable.
 
 Fresh recovery atomically records the existing recovery_observation and, for a
 running nonadoptable attempt, its legal uncertain transition, plus mutation reply
-in one existing qjl CAS. Terminal/reserved/already uncertain inspection may record
-an observation/reply but no fabricated process_start or terminal transition.
+in one existing qjl CAS. Reserved/already uncertain inspection may record an
+observation/reply but no fabricated process_start or terminal transition.
+Terminal recovery is a read-only projection: authenticate the original terminal
+owner and, if released, the unique original reservation release and their accepted
+introduction prefixes at one internally pinned canonical commit. Return
+restart-required/terminal_attempt with the selected state, generation and commit;
+do not append an observation, mutation reply or generation after release. Current
+mapped supervisor or exact original launcher authorization still applies. Repeated
+reads reauthenticate the same retained evidence; an already accepted pre-terminal
+recovery mutation retains its immutable reply rather than acquiring new authority.
+This resolution was independently approved by the program reviewer on 2026-10-08;
+it preserves the existing strict post-release mutation rejection without a suffix
+allowlist amendment.
 Recovery never itself grants stopped, succeeded or failed terminality from PID,
 pane, timeout or local cache. Normal result finish and xz9.2 stop own their
 separate terminal admissions using real 9c2 proof and independent settlement.
