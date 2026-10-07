@@ -3,6 +3,10 @@
 #include <fcntl.h>
 #include <json-c/json.h>
 #include <poll.h>
+#include <openssl/crypto.h>
+#include <openssl/evp.h>
+#include <openssl/provider.h>
+#include <sys/mman.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -42,7 +46,7 @@ static int number(json_object *o,const char *k) {
   return (int)n;
 }
 static void trusted_path(const char *path,int dir,uid_t owner) {
-  char copy[4096]; size_t n=strlen(path); struct stat st;
+  char copy[4097]; size_t n=strlen(path); struct stat st;
   if (!n || n>=sizeof(copy) || path[0]!='/' || strstr(path,"//") || strstr(path,"/../") || strstr(path,"/./") ||
       !strcmp(path+n-1,"/") || !strcmp(path+n-(n>=3?3:n),"/..")) deny("invalid protected path");
   memcpy(copy,path,n+1);
@@ -128,12 +132,24 @@ static void bounded_integer(json_object *object,const char *key,int64_t max) {
   int64_t value=json_object_get_int64(field(object,key,json_type_int));
   if(value<1||value>max)deny("invalid prepared bound");
 }
+static void entry_reference(json_object *reference,int64_t limit) {
+  static const char *const keys[]={"path","bytes","sha256"};
+  closed(reference,keys,3);bounded_integer(reference,"bytes",limit);hex_field(reference,"sha256",64,64);
+  const char *path=str(reference,"path");size_t n=strlen(path);
+  if(n<2||n>4096||path[0]!='/'||path[n-1]=='/'||strstr(path,"//")||strstr(path,"/./")||strstr(path,"/../")||
+     !strcmp(path+n-2,"/.")||(n>=3&&!strcmp(path+n-3,"/..")))deny("invalid worker reference path");
+}
+static void worker_entry(json_object *entry) {
+  static const char *const keys[]={"interpreter","wrapper"};closed(entry,keys,2);
+  entry_reference(field(entry,"interpreter",json_type_object),33554432);
+  entry_reference(field(entry,"wrapper",json_type_object),1048576);
+}
 static void prepared_permission(json_object *permission) {
   static const char *const permission_keys[]={"operation","launch_ticket","attempt_id","assignment_id","generation","journal_commit","prepared_input"};
   closed(permission,permission_keys,7);hex_field(permission,"journal_commit",40,64);
   json_object *input=field(permission,"prepared_input",json_type_object);
-  static const char *const input_keys[]={"registration_generation","registration_commit","definition_digest","original_binding_digest","prepared_work","bundle_ref","bundle_bytes","bundle_sha256"};
-  closed(input,input_keys,8);bounded_integer(input,"registration_generation",INT64_MAX);
+  static const char *const input_keys[]={"registration_generation","registration_commit","definition_digest","original_binding_digest","prepared_work","bundle_ref","bundle_bytes","bundle_sha256","worker_entry"};
+  closed(input,input_keys,9);worker_entry(field(input,"worker_entry",json_type_object));bounded_integer(input,"registration_generation",INT64_MAX);
   hex_field(input,"registration_commit",40,64);hex_field(input,"definition_digest",64,64);
   hex_field(input,"original_binding_digest",64,64);hex_field(input,"bundle_sha256",64,64);
   bounded_integer(input,"bundle_bytes",64*1024*1024);
@@ -161,6 +177,64 @@ static void prepared_permission(json_object *permission) {
   hex_field(work,"manifest_sha256",64,64);hex_field(work,"selection_sha256",64,64);
   bounded_integer(work,"manifest_bytes",32768);
 }
+/* First OpenSSL call suppresses config; a private context has only the fixed
+   default provider. /dev/null is deliberately not a module directory. */
+static EVP_MD *fixed_sha256(OSSL_LIB_CTX **context,OSSL_PROVIDER **provider) {
+  if(!OPENSSL_init_crypto(OPENSSL_INIT_NO_LOAD_CONFIG,NULL))deny("digest initialization failed");
+  *context=OSSL_LIB_CTX_new();if(!*context||!OSSL_PROVIDER_set_default_search_path(*context,"/dev/null"))deny("digest context failed");
+  *provider=OSSL_PROVIDER_load(*context,"default");if(!*provider)deny("fixed digest provider unavailable");
+  EVP_MD *digest=EVP_MD_fetch(*context,"SHA256","provider=default");if(!digest)deny("fixed digest unavailable");return digest;
+}
+static int same_metadata(const struct stat *a,const struct stat *b) {
+  return a->st_dev==b->st_dev&&a->st_ino==b->st_ino&&a->st_uid==b->st_uid&&a->st_gid==b->st_gid&&
+    a->st_mode==b->st_mode&&a->st_size==b->st_size&&a->st_mtim.tv_sec==b->st_mtim.tv_sec&&
+    a->st_mtim.tv_nsec==b->st_mtim.tv_nsec&&a->st_ctim.tv_sec==b->st_ctim.tv_sec&&a->st_ctim.tv_nsec==b->st_ctim.tv_nsec;
+}
+static int held_entry(json_object *reference,int executable,const EVP_MD *digest,struct stat *verified) {
+  const char *path=str(reference,"path");root_path(path,0);
+  int fd=open(path,O_RDONLY|O_NONBLOCK|O_NOFOLLOW|O_CLOEXEC);if(fd<0)deny("worker entry unavailable");
+  struct stat before,after;
+  int64_t expected=json_object_get_int64(field(reference,"bytes",json_type_int));
+  if(fstat(fd,&before)||!S_ISREG(before.st_mode)||before.st_uid!=0||(before.st_mode&06022)||before.st_size!=expected||
+     (executable&&!(before.st_mode&0111)))deny("unsafe held worker entry");
+  unsigned char magic[4];
+  if(executable&&(pread(fd,magic,sizeof(magic),0)!=(ssize_t)sizeof(magic)||memcmp(magic,"\177ELF",4)))deny("worker interpreter is not native ELF");
+  int snapshot=-1;if(!executable) {snapshot=memfd_create("ace-worker-source",MFD_CLOEXEC|MFD_ALLOW_SEALING);if(snapshot<0)deny("worker snapshot unavailable");}
+  EVP_MD_CTX *ctx=EVP_MD_CTX_new();if(!ctx||!EVP_DigestInit_ex(ctx,digest,NULL))deny("worker digest unavailable");
+  unsigned char buffer[65536],sum[EVP_MAX_MD_SIZE];size_t total=0;unsigned int sum_size=0;
+  for(;;) {
+    ssize_t n=read(fd,buffer,sizeof(buffer));if(n<0&&errno==EINTR)continue;if(n<0)deny("held worker read failed");if(!n)break;
+    if((int64_t)total+n>expected)deny("held worker entry enlarged");
+    if(!EVP_DigestUpdate(ctx,buffer,(size_t)n))deny("worker digest failed");
+    total+=(size_t)n;
+    if(snapshot>=0) {size_t offset=0;while(offset<(size_t)n) {ssize_t written=write(snapshot,buffer+offset,(size_t)n-offset);
+      if(written<0&&errno==EINTR)continue;
+      if(written<=0)deny("worker snapshot write failed");
+      offset+=(size_t)written;}}
+  }
+  if(total!=(size_t)expected||!EVP_DigestFinal_ex(ctx,sum,&sum_size)||sum_size!=32||fstat(fd,&after)||!same_metadata(&before,&after))deny("held worker entry changed");
+  EVP_MD_CTX_free(ctx);char hex[65];for(unsigned int i=0;i<32;i++)snprintf(hex+i*2,3,"%02x",sum[i]);
+  if(strcmp(hex,str(reference,"sha256")))deny("held worker digest differs");
+  *verified=after;
+  if(executable) {if(lseek(fd,0,SEEK_SET)<0)deny("worker interpreter seek failed");return fd;}
+  close(fd);
+  int seals=F_SEAL_WRITE|F_SEAL_GROW|F_SEAL_SHRINK|F_SEAL_SEAL;
+  if(fcntl(snapshot,F_ADD_SEALS,seals)||fcntl(snapshot,F_GET_SEALS)!=seals)deny("worker snapshot sealing failed");
+  char descriptor[64];snprintf(descriptor,sizeof(descriptor),"/proc/self/fd/%d",snapshot);
+  int readonly=open(descriptor,O_RDONLY|O_CLOEXEC);if(readonly<0)deny("readonly worker snapshot unavailable");
+  struct stat sealed,reopened;
+  if(fstat(snapshot,&sealed)||fstat(readonly,&reopened)||sealed.st_dev!=reopened.st_dev||sealed.st_ino!=reopened.st_ino||
+    reopened.st_size!=expected||fcntl(readonly,F_GET_SEALS)!=seals)deny("worker snapshot identity differs");
+  *verified=reopened;
+  close(snapshot);return readonly;
+}
+static void select_entry_descriptors(int interpreter,int wrapper) {
+  int held_interpreter=fcntl(interpreter,F_DUPFD_CLOEXEC,6),held_wrapper=fcntl(wrapper,F_DUPFD_CLOEXEC,6);
+  if(held_interpreter<0||held_wrapper<0)deny("worker descriptor reservation failed");
+  close(interpreter);close(wrapper);
+  if(dup2(held_interpreter,4)!=4||dup2(held_wrapper,5)!=5||fcntl(4,F_SETFD,0)||fcntl(5,F_SETFD,0))deny("worker descriptor selection failed");
+  close(held_interpreter);close(held_wrapper);
+}
 static void wait_fd(int fd,short events,double deadline) {
   struct pollfd p={.fd=fd,.events=events}; int r;
   do {
@@ -185,7 +259,7 @@ static json_object *receive(int fd,double deadline) {
   while(n<LIMIT) { wait_fd(fd,POLLIN,deadline); ssize_t r=recv(fd,s+n,1,0);
     if(r<0&&(errno==EINTR||errno==EAGAIN))continue;
     if(r<=0)deny("authority EOF before permission");
-    if(s[n++]=='\n') { json_tokener *t=json_tokener_new();json_object *o=json_tokener_parse_ex(t,s,(int)n);
+    if(s[n++]=='\n') { json_tokener *t=json_tokener_new();json_tokener_set_flags(t,JSON_TOKENER_VALIDATE_UTF8);json_object *o=json_tokener_parse_ex(t,s,(int)n);
       if(!o||json_tokener_get_error(t)!=json_tokener_success||json_tokener_get_parse_end(t)!=n||!json_object_is_type(o,json_type_object))deny("invalid authority frame");
       /* The maintained wire emits one compact JSON record. Round-trip equality
          refuses duplicate keys, extra whitespace/records and alternate escapes. */
@@ -201,7 +275,7 @@ int main(int argc,char **argv) {
   if(prctl(PR_SET_DUMPABLE,0,0,0,0))deny("non-dumpable gate unavailable");
   if(argc!=3||!token(argv[1])||!token(argv[2]))deny("expected fixed mapping and correlation ticket");
   policy();root_path(MAP_PATH,0);char *bytes=read_file(MAP_PATH,LIMIT);
-  json_tokener *parser=json_tokener_new();json_object *map=json_tokener_parse_ex(parser,bytes,(int)strlen(bytes));
+  json_tokener *parser=json_tokener_new();json_tokener_set_flags(parser,JSON_TOKENER_VALIDATE_UTF8);json_object *map=json_tokener_parse_ex(parser,bytes,(int)strlen(bytes));
   if(!map||json_tokener_get_error(parser)!=json_tokener_success||json_tokener_get_parse_end(parser)!=strlen(bytes))deny("invalid deployment map");
   json_tokener_free(parser);free(bytes);
   if(strcmp(str(map,"schema"),"ace.assign.authorities/v2"))deny("unsupported deployment map");
@@ -245,15 +319,15 @@ int main(int argc,char **argv) {
   if(strcmp(str(permission,"operation"),"release")||strcmp(str(permission,"launch_ticket"),argv[2])||
     !token(str(permission,"attempt_id"))||!token(str(permission,"assignment_id"))||!token(str(permission,"journal_commit")))deny("release permission differs");
   if(json_object_get_int64(field(permission,"generation",json_type_int))<1)deny("invalid release generation");
+  if(strlen(json_object_to_json_string_ext(permission,JSON_C_TO_STRING_PLAIN|JSON_C_TO_STRING_NOSLASHESCAPE))+1>16384)deny("release envelope oversized");
   prepared_permission(permission);
   policy();parent_credentials(&original_parent,mapping);credentials(peer.pid,authority,number(service,"gid"),field(service,"groups",json_type_array));
-  json_object *arguments=field(mapping,"worker_argv",json_type_array);size_t count=json_object_array_length(arguments);
-  if(count!=3)deny("invalid fixed payload");
-  char **payload=calloc(count+1,sizeof(char *));if(!payload)deny("allocation failed");
-  for(size_t i=0;i<count;i++) {json_object *value=json_object_array_get_idx(arguments,i);if(!json_object_is_type(value,json_type_string))deny("invalid fixed argv");payload[i]=(char *)json_object_get_string(value);
-    if((size_t)json_object_get_string_len(value)!=strlen(payload[i]))deny("embedded NUL in fixed argv");}
-  if(strcmp(payload[1],"authority")||strcmp(payload[2],"worker"))deny("invalid fixed worker command");
-  root_path(payload[0],0);struct stat program;if(stat(payload[0],&program)||(program.st_mode&06000)||!(program.st_mode&0111))deny("unsafe payload executable");
+  json_object *entry=field(field(permission,"prepared_input",json_type_object),"worker_entry",json_type_object);
+  OSSL_LIB_CTX *digest_context=NULL;OSSL_PROVIDER *digest_provider=NULL;EVP_MD *digest=fixed_sha256(&digest_context,&digest_provider);
+  struct stat interpreter_metadata,wrapper_metadata;
+  int interpreter=held_entry(field(entry,"interpreter",json_type_object),1,digest,&interpreter_metadata);
+  int wrapper=held_entry(field(entry,"wrapper",json_type_object),0,digest,&wrapper_metadata);
+  EVP_MD_free(digest);OSSL_PROVIDER_unload(digest_provider);OSSL_LIB_CTX_free(digest_context);
   if(clearenv())deny("environment reset failed");
   json_object *env=field(mapping,"worker_env",json_type_object);
   json_object_object_foreach(env,key,value) {
@@ -264,6 +338,12 @@ int main(int argc,char **argv) {
     setenv("ACE_ASSIGN_LAUNCH_MAPPING",argv[1],1))deny("authority context unavailable");
   if(chdir(str(mapping,"worker_cwd")))deny("fixed worker directory unavailable");
   close(fd);
+  struct stat final_interpreter,final_wrapper;
+  if(fstat(interpreter,&final_interpreter)||fstat(wrapper,&final_wrapper)||
+     !same_metadata(&interpreter_metadata,&final_interpreter)||!same_metadata(&wrapper_metadata,&final_wrapper))deny("worker entry changed before execution");
+  select_entry_descriptors(interpreter,wrapper);
   parent_credentials(&original_parent,mapping);
-  execv(payload[0],payload);deny("fixed worker execution failed");
+  char *const payload[]={"/proc/self/fd/4","-I","-S","-B","/proc/self/fd/5","authority","worker",NULL};
+  extern char **environ;
+  fexecve(4,payload,environ);deny("fixed worker execution failed");
 }

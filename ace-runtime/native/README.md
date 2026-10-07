@@ -2,13 +2,13 @@
 
 The `ace-runtime` gem ships `native/worker_gate.c` and `native/build-worker-gate`.
 This is a Linux executable, not a Ruby interpreter wrapper. Build on the target
-architecture from the installed gem with the system compiler and json-c parser.
+architecture from the installed gem with the system compiler, json-c parser and OpenSSL 3 libcrypto.
 Supported initial architectures are Linux x86_64 and aarch64 with little-endian
 ELF64. A bootstrap built on another architecture fails deployment preflight.
 
 On Debian bookworm install the distribution's `build-essential`, `pkg-config`
-and `libjson-c-dev` build packages. The executable requires the matching system
-`libjson-c5`, libc and ELF loader at runtime. Use the same distribution/architecture
+`libjson-c-dev` and `libssl-dev` build packages. The executable requires the matching system
+`libjson-c5`, OpenSSL 3 `libcrypto.so.3` (`libssl3`), libc and ELF loader at runtime. Use the same distribution/architecture
 for build and deployment; retain package versions, source SHA, compiler version,
 ELF machine, `readelf -d` dependencies and output SHA256 in installer evidence.
 These libraries and their loader search directories must remain root-owned and
@@ -33,8 +33,9 @@ All installation ancestors are root-owned and non-worker-writable. The fixed
 root-owned `/etc/ace/assignment-authorities.json` records `bootstrap` and its exact
 `bootstrap_sha256`. ACE verifies digest, ELF architecture, executable permissions,
 ownership and ancestry before reservation. The native layout uses only this
-absolute executable, installed mapping ID and correlation ticket; payload argv,
-cwd and environment come from the root-controlled mapping after authority release.
+absolute executable, installed mapping ID and correlation ticket; cwd and environment come from the root-controlled mapping after authority release.
+The mandatory closed `worker_entry` pins interpreter and wrapper references; arbitrary
+worker argv and shebang/PATH execution are not admitted.
 The map grants no UID switching and the binary is never privileged.
 
 The root-installed authority, launcher and native server units require:
@@ -68,16 +69,26 @@ the check before authority admission and immediately before exec. The canonical
 `gate_ready` authority owner associates the actual gate peer and its parent with
 the original recorded child/server; the map supplies no `server_identity`.
 Changed parent birth, reparenting, inaccessible credentials or changed policy
-refuses. The fixed payload is exactly `[ABSOLUTE_ACCEPTED_ACE_ASSIGN, "authority",
-"worker"]`.
+refuses. The original retained mapping supplies `worker_entry={interpreter:REF,wrapper:REF}`
+in the authenticated release, rather than selecting code from the current map.
+Interpreter references are bounded to 32MiB and wrapper references to 1MiB.
+Both root-protected regular held files are hashed and their metadata rechecked.
+The interpreter must be an executable native ELF. The verified wrapper is copied
+into a memfd sealed against writes/growth/shrinkage, reopened read-only, and the
+writable descriptor dropped. Selected held interpreter FD4 and code FD5 survive
+`fexecve(4, ["/proc/self/fd/4", "-I", "-S", "-B", "/proc/self/fd/5", "authority", "worker"], env)`.
+Inherited stdin/stdout/stderr remain untouched; no provider lifetime timeout is added.
+The retained original source owner inside the wrapper separately validates and
+executes the accepted Ruby snapshot and its package closure.
 
 Release is one compact JSON record containing the original ticket/assignment/
 attempt/generation/commit plus `prepared_input`. That closed object pins the
 original registration generation/commit, definition and original binding digest,
-prepared-work reference and exact journal bundle reference/length/SHA256. The
+prepared-work reference, original worker entry pair and exact journal bundle reference/length/SHA256. The
 authority verifies the original bundle before durable issue; subsequent prepared
 fetch authenticates the accepted release pin before returning body bytes. The
-gate validates the closed fields, digests and unchanged bounds before exec. It
+gate validates the closed nine-field pin, digests and unchanged bounds before exec.
+The complete encoded release is bounded to16KiB before durable issue and at the gate. It
 does not receive inline work or propagate an input FD to providers. The worker
 uses the existing authenticated original prepared fetch after release.
 
@@ -87,3 +98,21 @@ isolated Linux deployment enforcing the complete policy is required for that
 positive proof; installing this gem does not change host sysctls or install OS
 service/account policy. Downstream gad.8 provisions those requirements and
 consumes this shipped build mechanism.
+
+## Fixed digest initialization and acceptance limits
+
+Before any OpenSSL API call the gate selects `OPENSSL_INIT_NO_LOAD_CONFIG`.
+It creates a private library context, fixes its provider search path to `/dev/null`
+(a non-directory), explicitly loads only `default`, and fetches `SHA256` with
+`provider=default`. Failure refuses execution; no config/engine/module fallback
+is provided. [Initialization semantics](https://docs.openssl.org/3.0/man3/OPENSSL_init_crypto/),
+[provider search path](https://docs.openssl.org/3.0/man3/OSSL_PROVIDER/), and
+[fixed provider property](https://docs.openssl.org/3.0/man7/OSSL_PROVIDER-default/) and
+[libcrypto built-in default provider](https://docs.openssl.org/3.0/man7/crypto/#default-provider)
+are the maintained API basis. The system libcrypto/loader remain in the accepted
+root-controlled OS artifact closure; this does not attest an arbitrary library build.
+
+This source checkpoint does not compile or execute native code. Real ELF,
+OpenSSL linkage/provider availability, memfd seals, retained FD execution and
+Python script/stdlib behavior require installed Linux acceptance. The trusted
+provisioned OS/Python premise remains; no separate Python runtime tree is introduced.

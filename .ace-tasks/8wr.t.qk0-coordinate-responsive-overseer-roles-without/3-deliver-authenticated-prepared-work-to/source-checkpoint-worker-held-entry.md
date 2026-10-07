@@ -1,0 +1,22 @@
+# Original held worker entry source checkpoint
+
+Root approved design c2fa785433be04a6a0f30b186fd93ffc0b22b79333f6146f47da1b4d9885b4a9; this implementation awaits independent source review. No native build/probe or installed acceptance is claimed.
+
+Deployment replaces worker_argv with mandatory closed worker_entry interpreter/wrapper refs. Shared Runtime structural admission enforces canonical UTF-8 absolute paths, exact integer sizes and SHA256 (32MiB interpreter/1MiB wrapper). ExecutionUnitInstallation retains its existing manifest authority: wrapper joins worker_executable, interpreter uniquely joins runtime_dependency, matching held host projection bytes/digest. Wrapper source need not be executable. No extra registry/role/loader is introduced.
+
+The original reservation-prefix descriptor/map join contributes the exact pair to the nine-field compact prepared_input. Durable release and later original fetch use typed pin equality; current descriptor rotation cannot replace the original pair. The complete encoded reply and release envelopes are checked before CAS at16KiB.
+
+Native source authenticates both protected regular held refs and metadata, requires native executable ELF, hashes with fixed OpenSSL3 private default-provider SHA256 after NO_LOAD_CONFIG (fixed /dev/null module search path, no config or engine fallback), seals an anonymous wrapper memfd and reopens it readonly. Temporary FD reservation precedes selected interpreterFD4/codeFD5. Fixed fexecve argv is /proc/self/fd/4,-I,-S,-B,/proc/self/fd/5,authority,worker. Inherited0/1/2 and ordinary provider lifetime remain. Existing parent birth/credentials, empty capabilities and NoNewPrivs checks remain. Build declares json-c>=0.15 and libcrypto>=3; no build was executed.
+
+Executed inspected controlled receipts:
+
+- Deployment/schema + real canonical release/replay + oversized full-envelope refusal + retained descriptor rotation:4 tests/53 assertions PASS31.19s, e58623c5-6cf1-44bb-81e1-0ccc0f3ca0cb.
+- Runtime injected Files/manager exact wrapper/interpreter role, bytes/digest and duplicate dependency refusal:1/8 PASS6.5ms,60392597-de70-43e3-b575-c33743cfe13c.
+- Original release/replay initial migrated slice:1/14 PASS10.74s534217d6-4df2-495d-ae40-9432625ca017; final4-case run supersedes this.
+- Oversize initial assertion expected raw ArgumentError, but existing Endcap translates it to EvidenceUnavailable:ce64874c retainedFAIL3/33. Corrected test observes actual bounds owner refusal, unchanged canonical ref/no release permission;1/11PASSc483b5b2 then final4-case receipt.
+
+Excluded selection evidence: --filter initially matched no files (b8f5808a/583042a7; no test acceptance). Incorrect blankline166 selection resolved entire Runtime file25/1415979192c; excluded from this gate. Exact unintended boundary: test263 creates a temporary ordinary UNIXServer and calls Files#authority_socket! with root_path injected; test407 activation scan uses injected Dir/File/stat. No Linux/ProcessIdentity/native gate/systemd/default command was run. Correct method167 selections48552977/5b701d2d/final60392597 execute only injected ownership tests.
+
+Actual migrated Driver/CLI initial test6661fb53 failed in fixture StringIO#write parsing a standalone newline from Kernel#puts as JSON; fixed instrumentation buffers complete lines without changing product, assertions or timeouts. Successor ba18fd3f reached timeout before issue because the old partial fixture lacked retained original journal tuple and worker scratch projection. The fixture now supplies the real journal owner tuple and literal worker private root; no product fallback. 7f205473 progressed actual issue/16 assertions and failed ordinary socket path116bytes above104 on macOS; shorter private fixture prefixes fix the OS pathname bound without changing product limits. Final same inspected selection PASS1/76 in36.24s cfdf6bf5-2149-4d33-b664-31d9610b61f9, exercising actual Driver/CLI→canonical registration/reservation/native-owner injection→gate-ready/release→original control and prompt status/lifetime. All handles terminal.
+
+Lab same Assembly producer/publication belongs to wave_412 and emits the exact two-ref pair with bootstrap retained inside distinct fixed worker wrapper. Native ELF/OpenSSL/memfd/fexecve/Python/FD/installed lifecycle remains separate gad.2 acceptance. qk0.3 builder/public composition belongs to root; no whole-task completion here.

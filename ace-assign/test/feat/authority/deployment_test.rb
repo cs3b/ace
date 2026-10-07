@@ -598,7 +598,7 @@ module Ace
          "launch_mappings" => {"mapping" => {"task_context_entry" => {"manifest" => {"path" => "/fixture/assign-entry.json", "bytes" => 100, "sha256" => "1" * 64}, "wrapper" => {"path" => "/fixture/assign-entry.py", "bytes" => 200, "sha256" => "2" * 64}}, "project_id" => "project", "authority_id" => "authority",
            "launcher_uid" => 13002, "launcher_gid" => 13002, "launcher_groups" => [13002],
            "worker_uid" => 13001, "worker_gid" => 13001, "worker_groups" => [13001], "worker_actor" => "worker",
-           "worker_cwd" => "/home/worker", "worker_argv" => ["/usr/bin/true", "authority", "worker"], "worker_env" => {"PATH" => "/usr/bin:/bin"},
+           "worker_cwd" => "/home/worker", "worker_entry" => {"interpreter" => {"path" => "/usr/bin/python3", "bytes" => 100, "sha256" => "3" * 64}, "wrapper" => {"path" => "/usr/libexec/ace-worker.py", "bytes" => 200, "sha256" => "4" * 64}}, "worker_env" => {"PATH" => "/usr/bin:/bin"},
            "bootstrap" => "/usr/libexec/ace-worker-gate", "bootstrap_sha256" => "a" * 64,
            "execution_scope" => {"backend" => "linux_systemd_cgroup_v2", "slot_id" => "slot",
              "slice_unit" => "ace-slot.slice", "service_unit" => "ace-slot.service",
@@ -672,6 +672,21 @@ module Ace
 
       def test_worker_entry_is_exact_fixed_authority_adapter_without_argument_fallback
         assert Authority::Deployment.new(data)
+        %w[interpreter wrapper].each do |key|
+          [0, 1.0, key == "wrapper" ? 1_048_577 : 33_554_433].each do |bytes|
+            value = data
+            value.fetch("launch_mappings").fetch("mapping").fetch("worker_entry").fetch(key)["bytes"] = bytes
+            assert_raises(ArgumentError) { Authority::Deployment.new(value) }
+          end
+          ["relative", "/a/../b", "/a\0b"].each do |path|
+            value = data
+            value.fetch("launch_mappings").fetch("mapping").fetch("worker_entry").fetch(key)["path"] = path
+            assert_raises(ArgumentError) { Authority::Deployment.new(value) }
+          end
+        end
+        value = data
+        value.fetch("launch_mappings").fetch("mapping").fetch("worker_entry")["argv"] = ["authority", "worker"]
+        assert_raises(ArgumentError) { Authority::Deployment.new(value) }
         [["/usr/bin/true"], ["relative", "authority", "worker"],
           ["/usr/bin/true", "authority", "task-context"],
           ["/usr/bin/true", "authority", "worker", "extra"],

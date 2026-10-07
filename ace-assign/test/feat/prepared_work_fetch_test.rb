@@ -36,8 +36,11 @@ module Ace
       def configure_result_owner_fixture
         @project.merge!("journal_repository" => @journal.repo_root, "evidence_git_ref" => @journal.ref,
           "evidence_checkout_root" => @journal.checkout_root)
+        if @oversized_worker_entry
+          @map.fetch("worker_entry").each_value { |reference| reference["path"] = "/" + "\n" * 4094 }
+        end
         return unless @real_history_fixture
-        @map = @map.merge("worker_argv" => ["/usr/bin/true", "authority", "worker"], "worker_env" => {"PATH" => "/usr/bin"},
+        @map = @map.merge("worker_entry" => {"interpreter" => {"path" => "/usr/bin/python3", "bytes" => 100, "sha256" => "3" * 64}, "wrapper" => {"path" => "/usr/libexec/ace-worker.py", "bytes" => 200, "sha256" => "4" * 64}}, "worker_env" => {"PATH" => "/usr/bin"},
           "execution_scope" => @map.fetch("execution_scope").merge("backend" => "linux_systemd_cgroup_v2",
             "slice_unit" => "ace-slot.slice", "unit_manifest_sha256" => "b" * 64,
             "boundary_manifest_sha256" => "c" * 64, "root_directory" => "/var/lib/ace-slot/root", "runtime_directory" => "/run/ace-slot"),
@@ -143,7 +146,8 @@ module Ace
         fixture do
           issued = issue_original.fetch(:data)
           pin = issued.fetch("prepared_input")
-          assert_equal %w[bundle_bytes bundle_ref bundle_sha256 definition_digest original_binding_digest prepared_work registration_commit registration_generation], pin.keys.sort
+          assert_equal %w[bundle_bytes bundle_ref bundle_sha256 definition_digest original_binding_digest prepared_work registration_commit registration_generation worker_entry], pin.keys.sort
+          assert_equal @map.fetch("worker_entry"), pin.fetch("worker_entry")
           assert_equal pin, @release_permission.fetch("prepared_input")
           descriptor = prepared_fetch.fetch(:data).fetch("descriptor")
           assert_equal descriptor.values_at("registration_generation", "registration_commit", "definition_digest", "original_binding_digest", "ref", "bytes", "sha256"),
@@ -156,6 +160,31 @@ module Ace
           assert_equal pin, replay.fetch(:data).fetch("prepared_input")
           assert_equal before, @journal.ref_value
         end
+      end
+
+      def test_release_refuses_full_encoded_entry_envelope_before_canonical_issue
+        @oversized_worker_entry = true
+        fixture do
+          before = @journal.ref_value
+          bounds = @launch.method(:bounded_reply!)
+          reached = []
+          @launch.define_singleton_method(:bounded_reply!) do |data, generation|
+            begin
+              bounds.call(data, generation)
+            rescue ArgumentError => error
+              reached << error.message
+              raise
+            end
+          end
+          assert_raises(AttemptErrors::EvidenceUnavailable) { issue_original }
+          assert_equal 1, reached.size
+          assert_match(/transport bounds/, reached.first)
+          assert_equal before, @journal.ref_value
+          refute @journal.read_events("assignment").any? { |event| event.dig("payload", "operation") == "release_launch" }
+          assert_nil @release_permission
+        end
+      ensure
+        @oversized_worker_entry = false
       end
 
       def test_release_refuses_unavailable_original_bundle_before_issued_commit
@@ -309,6 +338,7 @@ module Ace
           original = @deployment
           value = JSON.parse(JSON.generate(original.data))
           value.fetch("launch_mappings").fetch("mapping")["worker_cwd"] = "/different/current/worker"
+          value.fetch("launch_mappings").fetch("mapping").fetch("worker_entry").each_value { |reference| reference["sha256"] = "9" * 64 }
           value.fetch("launch_mappings").fetch("mapping").fetch("task_context_entry").fetch("wrapper")["sha256"] = "9" * 64
           value.fetch("projects").fetch("project").fetch("peer_credentials").fetch("13001")["scratch_root"] = File.join(@root, "different-current-scratch")
           current_ref = protected_artifact("current-descriptor.json", JSON.generate(value))

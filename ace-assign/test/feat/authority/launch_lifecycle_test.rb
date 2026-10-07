@@ -36,12 +36,12 @@ module Ace
       # Actual private readiness callback producer with controlled kernel,
       # manager and filesystem observations; no installed/native probes.
       def self.class_temp_dir
-        @class_temp_dir ||= Dir.mktmpdir("ace-launch-owner-", Etc.getpwuid(Process.uid).dir)
+        @class_temp_dir ||= Dir.mktmpdir("l-", Etc.getpwuid(Process.uid).dir)
       end
 
       def with_authority
         with_temp_cache do |cache|
-          cache = Dir.mktmpdir("launch-scenario-", cache)
+          cache = Dir.mktmpdir("s-", cache)
           repo = File.join(cache, "journal")
           FileUtils.mkdir_p(repo)
           out, error, result = Open3.capture3("git", "init", "-b", "main", repo)
@@ -53,7 +53,7 @@ module Ace
           @prepared_fixture_root = cache
           @kernel = Kernel.new
           @peer = @kernel.capture(Process.pid)
-          @map = {"task_context_entry" => {"manifest" => {"path" => "/fixture/assign-entry.json", "bytes" => 100, "sha256" => "1" * 64}, "wrapper" => {"path" => "/fixture/assign-entry.py", "bytes" => 200, "sha256" => "2" * 64}}, "project_id" => "project", "authority_id" => "authority", "worker_uid" => 13001, "worker_gid" => 13001,
+          @map = {"worker_entry" => {"interpreter" => {"path" => "/fixture/python", "bytes" => 100, "sha256" => "3" * 64}, "wrapper" => {"path" => "/fixture/worker.py", "bytes" => 200, "sha256" => "4" * 64}}, "task_context_entry" => {"manifest" => {"path" => "/fixture/assign-entry.json", "bytes" => 100, "sha256" => "1" * 64}, "wrapper" => {"path" => "/fixture/assign-entry.py", "bytes" => 200, "sha256" => "2" * 64}}, "project_id" => "project", "authority_id" => "authority", "worker_uid" => 13001, "worker_gid" => 13001,
             "execution_scope" => {"slot_id" => "slot", "service_unit" => "ace-slot.service", "network_namespace_path" => "/run/netns/slot"},
             "launcher_uid" => 13002, "launcher_gid" => 13002, "launcher_groups" => [13002],
             "worker_groups" => [13001], "bootstrap" => "/usr/libexec/ace-worker-gate", "bootstrap_sha256" => "a" * 64, "worker_cwd" => "/home/worker", "worker_actor" => "worker", "native" => {"workspace_id" => "w1"}}
@@ -64,6 +64,10 @@ module Ace
           deployment.define_singleton_method(:authority) { |_id| {"state_root" => File.join(cache, "authority-state")} }
           deployment.define_singleton_method(:project) { |_id| {"assignment_root" => File.join(cache, "assignments"), "candidate_root" => cache} }
           @journal = Molecules::EvidenceJournal.new(repo_root: repo, checkout_root: File.join(cache, "checkout"))
+          project = {"assignment_root" => File.join(cache, "assignments"), "candidate_root" => cache,
+            "journal_repository" => @journal.repo_root, "evidence_git_ref" => @journal.ref, "evidence_checkout_root" => @journal.checkout_root,
+            "peer_credentials" => {"13001" => {"gid" => 13001, "groups" => [13001], "scratch_root" => cache}}}
+          deployment.define_singleton_method(:project) { |_id| project }
           @authority = Authority::LaunchLifecycle.new(deployment: deployment, kernel: @kernel, journals: {"project" => @journal}, scope_observer_factory: ->(_id) { ExecutionScopeNativeOwnerFixture.new(@map, @journal, @kernel, owner: @authority) })
           bytes = JSON.generate("session_id" => "assignment", "name" => "test", "created_at" => "2026-10-05T00:00:00Z",
             "source_config" => "job.yaml", "task_id" => "09j", "project_id" => "project")
@@ -679,9 +683,13 @@ module Ace
           File.write(definition_path, registered_bytes)
           bundle_path = File.join(definition_root, "prepared.bundle"); File.binwrite(bundle_path, @original_prepared_bundle)
           cli_output = StringIO.new
-          cli_output.define_singleton_method(:write) do |line|
-            count = super(line)
-            cli_ready << JSON.parse(line)
+          pending_output = +""
+          cli_output.define_singleton_method(:write) do |chunk|
+            count = super(chunk)
+            pending_output << chunk
+            while (newline = pending_output.index("\n"))
+              cli_ready << JSON.parse(pending_output.slice!(0, newline + 1))
+            end
             count
           end
           original_stdout = $stdout

@@ -154,8 +154,32 @@ class ExecutionUnitInstallationTest < AceRuntimeTestCase
     save_manifest
     @command = Command.new(@profiles)
     @manager = Manager.new(slice_unit: @scope.fetch("slice_unit"), service_unit: @scope.fetch("service_unit"), command: @command)
+    @worker_entry = {"wrapper" => "worker_executable", "interpreter" => "runtime_dependency"}.to_h do |key, role|
+      artifact = @artifacts.find { |item| item["role"] == role }
+      [key, {"path" => artifact.fetch("view_path"), "bytes" => @files.bytes.fetch(artifact.fetch("host_path")).bytesize,
+        "sha256" => artifact.fetch("sha256")}]
+    end
     @installation = Installation.new(scope: @scope, native: @native, bootstrap: paths.fetch("bootstrap"),
-      worker_executable: paths.fetch("worker_executable"), worker_uid: 13001, worker_gid: 13001, files: @files)
+      worker_entry: @worker_entry, worker_uid: 13001, worker_gid: 13001, files: @files)
+  end
+
+
+  def test_worker_entry_requires_exact_wrapper_and_unique_runtime_dependency_bytes
+    assert @installation.verify!(manager: @manager)
+    %w[wrapper interpreter].each do |key|
+      original = @worker_entry.fetch(key).dup
+      ["path", "sha256", "bytes"].each do |field|
+        @worker_entry[key] = original.merge(field => (field == "bytes" ? original.fetch(field) + 1 : field == "path" ? "/other" : "0" * 64))
+        assert_raises(Unavailable, "#{key}:#{field}") { @installation.verify!(manager: @manager) }
+      end
+      @worker_entry[key] = original
+    end
+    dependency = @artifacts.find { |item| item["role"] == "runtime_dependency" }
+    duplicate = dependency.merge("host_path" => dependency.fetch("host_path") + "-alias")
+    @files.bytes[duplicate.fetch("host_path")] = @files.bytes.fetch(dependency.fetch("host_path"))
+    @artifacts << duplicate
+    save_manifest
+    assert_raises(Unavailable) { @installation.verify!(manager: @manager) }
   end
 
   def test_fixed_implicit_profile_refuses_private_tmp_ipc_writes_and_api_storage_aliases

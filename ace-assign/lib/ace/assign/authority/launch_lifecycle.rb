@@ -380,6 +380,11 @@ module Ace
           envelope = {"status" => "ok", "data" => data.merge("generation" => generation, "journal_commit" => "0" * 64),
             "transport" => {"replayed" => false}}
           raise ArgumentError, "accepted launch reply exceeds transport bounds" if JSON.generate(envelope).bytesize + 1 > 16_384
+          if data.key?("prepared_input")
+            permission = data.slice("launch_ticket", "attempt_id", "assignment_id", "prepared_input").merge(
+              "operation" => "release", "generation" => generation, "journal_commit" => "0" * 64)
+            raise ArgumentError, "accepted release exceeds transport bounds" if JSON.generate(permission).bytesize + 1 > 16_384
+          end
         end
 
         def close_observation(observation)

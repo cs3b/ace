@@ -7,6 +7,7 @@ require "openssl"
 require_relative "private_directory"
 require_relative "posix_acl"
 require_relative "task_context_entry"
+require "ace/runtime/molecules/protected_worker_entry"
 require "ace/runtime/molecules/protected_socket"
 require "ace/runtime/molecules/protected_artifact_set"
 require "ace/runtime/molecules/protected_linux"
@@ -364,11 +365,12 @@ module Ace
 
         def validate_mapping!(id, mapping)
           required = %w[project_id authority_id launcher_uid launcher_gid launcher_groups worker_uid worker_gid
-            worker_groups worker_actor worker_cwd worker_argv worker_env bootstrap bootstrap_sha256 native execution_scope task_context_entry]
+            worker_groups worker_actor worker_cwd worker_entry worker_env bootstrap bootstrap_sha256 native execution_scope task_context_entry]
           unless mapping.is_a?(Hash) && mapping.keys.sort == required.sort
             raise ArgumentError, "launch mapping fields differ: #{id}"
           end
           TaskContextEntry.validate!(mapping.fetch("task_context_entry"))
+          Ace::Runtime::Molecules::ProtectedWorkerEntry.validate!(mapping.fetch("worker_entry"))
           service = authority(mapping.fetch("authority_id"))
           fixed_project = project(mapping.fetch("project_id"))
           %w[launcher worker].each do |role|
@@ -412,13 +414,10 @@ module Ace
               !paths_overlap?(scope.fetch("root_directory"), scope.fetch("runtime_directory"))
             raise ArgumentError, "execution scope backing roots overlap or runtime root is invalid"
           end
-          argv = mapping.fetch("worker_argv")
           env = mapping.fetch("worker_env")
-          unless argv.is_a?(Array) && argv.size == 3 && argv.all? { |v| v.is_a?(String) && !v.include?("\0") } &&
-              argv.drop(1) == %w[authority worker] && argv.first.start_with?("/") && File.expand_path(argv.first) == argv.first &&
-              env.is_a?(Hash) && env.all? { |k, v| k.match?(/\A[A-Z_][A-Z0-9_]*\z/) && v.is_a?(String) && !v.include?("\0") } &&
+          unless env.is_a?(Hash) && env.all? { |k, v| k.match?(/\A[A-Z_][A-Z0-9_]*\z/) && v.is_a?(String) && !v.include?("\0") } &&
               env.keys.none? { |key| key.match?(/\A(?:LD_|DYLD_|RUBY|BUNDLE|PYTHON)/) }
-            raise ArgumentError, "invalid fixed worker argv or environment"
+            raise ArgumentError, "invalid fixed worker environment"
           end
           unless mapping["worker_actor"].is_a?(String) && !mapping["worker_actor"].empty? &&
               mapping["bootstrap_sha256"].match?(/\A[0-9a-f]{64}\z/)
@@ -529,7 +528,7 @@ module Ace
           manager ||= Ace::Runtime::Molecules::SystemdScopeManager.new(
             slice_unit: scope.fetch("slice_unit"), service_unit: scope.fetch("service_unit"))
           manifest = Ace::Runtime::Molecules::ExecutionUnitInstallation.new(scope: scope, native: map.fetch("native"),
-            bootstrap: map.fetch("bootstrap"), worker_executable: map.fetch("worker_argv").first,
+            bootstrap: map.fetch("bootstrap"), worker_entry: map.fetch("worker_entry"),
             worker_uid: map.fetch("worker_uid"), worker_gid: map.fetch("worker_gid")).verify!(manager: manager)
           artifacts = manifest.fetch("artifacts")
           configuration = artifacts.find { |artifact| artifact.fetch("role") == "readiness_configuration" }
@@ -543,7 +542,10 @@ module Ace
             reader.verify_unchanged!
           end
           bootstrap = artifacts.find { |artifact| artifact.fetch("role") == "bootstrap" }
-          executables = artifacts.select { |artifact| %w[bootstrap worker_executable].include?(artifact.fetch("role")) }
+          executables = artifacts.select do |artifact|
+            artifact.fetch("role") == "bootstrap" || (artifact.fetch("role") == "runtime_dependency" &&
+              artifact.fetch("view_path") == map.fetch("worker_entry").fetch("interpreter").fetch("path"))
+          end
           unless bootstrap.fetch("sha256") == map.fetch("bootstrap_sha256") && elf_architecture?(bootstrap.fetch("host_path")) &&
               executables.all? { |artifact| File.executable?(artifact.fetch("host_path")) }
             raise Ace::Runtime::RuntimeUnavailableError, "installed bootstrap or executable is unsafe"

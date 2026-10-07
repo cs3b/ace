@@ -109,6 +109,7 @@ module Ace
             "definition_digest" => registration.fetch("definition_digest"),
             "original_binding_digest" => projection.fetch(:original_binding_digest),
             "prepared_work" => registration.fetch("prepared_work"),
+            "worker_entry" => Ace::Runtime::Molecules::ProtectedWorkerEntry.validate!(projection.fetch(:map).fetch("worker_entry")),
             "bundle_ref" => registration.fetch("prepared_bundle_ref"),
             "bundle_bytes" => registration.fetch("prepared_bundle_bytes"),
             "bundle_sha256" => registration.fetch("prepared_bundle_sha256"))

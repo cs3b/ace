@@ -34,7 +34,7 @@ by `Ace::Assign::Authority::Deployment`:
 | `authorities.ID` | `uid`, `gid`, sorted unique `groups`, `socket_path`, `state_root`, `composition` (`launch` or `services`) |
 | `projects.ID` | `journal_repository`, `evidence_git_ref` (`refs/ace/execution`), `evidence_checkout_root`, `assignment_root`, `candidate_root`, `launcher_uids`, `reviewer_uids`, `worker_uids`, `service_executor_uids`, `supervisor_uids`, `peer_credentials`, optional `service_receivers` |
 | `projects.ID.peer_credentials.UID` | `gid`, sorted unique `groups`, `scratch_root`; every configured role UID has one fixed entry |
-| `launch_mappings.ID` | `project_id`, `authority_id`, `launcher_uid`, `launcher_gid`, `launcher_groups`, `worker_uid`, `worker_gid`, `worker_groups`, `worker_actor`, `worker_cwd`, `worker_argv`, `worker_env`, `bootstrap`, `bootstrap_sha256`, `native`, `execution_scope` |
+| `launch_mappings.ID` | `project_id`, `authority_id`, `launcher_uid`, `launcher_gid`, `launcher_groups`, `worker_uid`, `worker_gid`, `worker_groups`, `worker_actor`, `worker_cwd`, `worker_entry`, `worker_env`, `bootstrap`, `bootstrap_sha256`, `native`, `execution_scope`, `task_context_entry` |
 | `launch_mappings.ID.native` | `socket_path`, `executable`, `executable_sha256`, `version` (`0.9.3`), `protocol` (`22`), canonical `workspace_id` (`wN`) |
 | `launch_mappings.ID.execution_scope` | `backend` (`linux_systemd_cgroup_v2`), `slot_id`, `slice_unit`, `service_unit`, `unit_manifest_sha256`, `boundary_manifest_sha256`, `root_directory`, `runtime_directory`, `network_namespace_path` |
 
@@ -270,3 +270,13 @@ read permitted attempt evidence, including retained terminal history. Current
 visibility and peer authorization apply to every read. Reassignment revokes the
 old reviewer purpose. Inbox and observation evidence refuse until their existing
 signer and observer owners provide complete canonical provenance.
+
+The fixed worker entry is the closed `{interpreter: REF, wrapper: REF}` pair, with
+exact path/bytes/SHA256 references (interpreter<=32MiB, wrapper<=1MiB). The
+existing installed unit manifest associates the wrapper with `worker_executable`
+and the interpreter uniquely with `runtime_dependency`. The wrapper is source,
+so it need not carry executable permission; the selected interpreter must. The
+original retained mapping pair is part of the authenticated compact release.
+The native gate hashes held files, seals a readonly code snapshot, and uses the
+fixed isolated Python FD4/FD5 command while preserving operational stdio. No
+worker argv/shebang/PATH fallback remains. Native installed acceptance is separate.

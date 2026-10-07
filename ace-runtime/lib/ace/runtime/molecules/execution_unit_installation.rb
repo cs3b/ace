@@ -1,4 +1,6 @@
 # frozen_string_literal: true
+
+require_relative "protected_worker_entry"
 require_relative "execution_network_selection"
 
 require "json"
@@ -48,13 +50,18 @@ module Ace
           end
           def read(path, limit:)
             ProtectedSocket.root_path!(path)
-            File.open(path, File::RDONLY | File::NOFOLLOW) do |file|
+            File.open(path, File::RDONLY | File::NONBLOCK | File::NOFOLLOW) do |file|
               stat = file.stat
-              unless stat.file? && stat.uid.zero? && (stat.mode & 0o022).zero?
+              unless stat.file? && stat.uid.zero? && (stat.mode & 0o6022).zero? && stat.size <= limit
                 raise RuntimeUnavailableError, "installed artifact descriptor ownership is unsafe"
               end
               bytes = file.read(limit + 1)
               raise RuntimeUnavailableError, "installed artifact is oversized" if bytes.bytesize > limit
+              after = file.stat
+              unless [stat.dev, stat.ino, stat.uid, stat.gid, stat.mode, stat.size, stat.mtime, stat.ctime] ==
+                  [after.dev, after.ino, after.uid, after.gid, after.mode, after.size, after.mtime, after.ctime] && bytes.bytesize == stat.size
+                raise RuntimeUnavailableError, "installed held artifact changed"
+              end
               bytes
             end
           end
@@ -113,8 +120,9 @@ module Ace
           end
         end
 
-        def initialize(scope:, native:, bootstrap:, worker_executable:, worker_uid:, worker_gid:, files: Files.new)
-          @scope, @native, @bootstrap, @worker_executable, @files = scope, native, bootstrap, worker_executable, files
+        def initialize(scope:, native:, bootstrap:, worker_entry:, worker_uid:, worker_gid:, files: Files.new)
+          @scope, @native, @bootstrap, @worker_entry, @files = scope, native, bootstrap, worker_entry, files
+          ProtectedWorkerEntry.validate!(@worker_entry)
           @worker_uid, @worker_gid = worker_uid, worker_gid
         end
 
@@ -160,13 +168,24 @@ module Ace
             end
           end
           expected = {"native_executable" => @native.fetch("executable"), "bootstrap" => @bootstrap,
-            "worker_executable" => @worker_executable,
+            "worker_executable" => @worker_entry.fetch("wrapper").fetch("path"),
             "readiness_configuration" => "/etc/ace/execution-slots/#{@scope.fetch('slot_id')}/readiness.json",
             "boundary_manifest" => "/etc/ace/execution-slots/#{@scope.fetch('slot_id')}/boundary-manifest.json"}
           unless expected.all? { |role, path| roles.fetch(role).first.fetch("view_path") == path } &&
               roles.fetch("native_executable").first.fetch("sha256") == @native.fetch("executable_sha256") &&
               roles.fetch("boundary_manifest").first.fetch("sha256") == @scope.fetch("boundary_manifest_sha256")
             raise RuntimeUnavailableError, "installed executable declarations differ from deployment"
+          end
+          {"wrapper" => "worker_executable", "interpreter" => "runtime_dependency"}.each do |key, role|
+            reference = @worker_entry.fetch(key)
+            matches = roles.fetch(role).select { |artifact| artifact.fetch("view_path") == reference.fetch("path") }
+            unless matches.size == 1 && matches.first.fetch("sha256") == reference.fetch("sha256")
+              raise RuntimeUnavailableError, "installed worker entry role differs"
+            end
+            bytes = @files.read(matches.first.fetch("host_path"), limit: reference.fetch("bytes"))
+            unless bytes.bytesize == reference.fetch("bytes") && Digest::SHA256.hexdigest(bytes) == reference.fetch("sha256")
+              raise RuntimeUnavailableError, "installed worker entry bytes differ"
+            end
           end
           roles
         end

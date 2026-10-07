@@ -120,7 +120,7 @@ module Ace
           "control_socket_path" => File.join(@socket_root, "context.sock"), "owner_credentials" => {"uid" => 13007, "gid" => 13007, "groups" => [13007]},
           "native_mapping_id" => "mapping", "supervisor_uids" => [13004],
           "pi_queue_client" => "/fixture/pi", "pi_queue_client_sha256" => "a" * 64}
-        @map = @map.merge("worker_argv" => ["/usr/bin/true", "authority", "worker"], "worker_env" => {"PATH" => "/usr/bin"},
+        @map = @map.merge("worker_entry" => {"interpreter" => {"path" => "/usr/bin/python3", "bytes" => 100, "sha256" => "3" * 64}, "wrapper" => {"path" => "/usr/libexec/ace-worker.py", "bytes" => 200, "sha256" => "4" * 64}}, "worker_env" => {"PATH" => "/usr/bin"},
           "execution_scope" => @map.fetch("execution_scope").merge("backend" => "linux_systemd_cgroup_v2",
             "slice_unit" => "ace-slot.slice", "unit_manifest_sha256" => "b" * 64,
             "boundary_manifest_sha256" => "c" * 64, "root_directory" => "/var/lib/ace-slot/root", "runtime_directory" => "/run/ace-slot"),
