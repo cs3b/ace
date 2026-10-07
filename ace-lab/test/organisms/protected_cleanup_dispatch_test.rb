@@ -172,9 +172,26 @@ class ProtectedCleanupDispatchTest < Minitest::Test
       client = start_service_server
       receiver = cleanup_receiver(client, owner)
       Ace::Lab::Molecules::GrantResolver.stub(:trusted_document, @document) do
-        result = receiver.execute(submission: submission, peer: @worker, input_bytes: bytes, mutation_id: "receiver-cleanup")
+        # Fixture-only diagnostics identify swallowed typed boundary failures;
+        # production responses retain their value-free uncertain projection.
+        failures = []
+        diagnostic = TracePoint.new(:raise) do |event|
+          next unless %w[ace-lab ace-assign ace-runtime].any? { |package| event.path.include?("/#{package}/lib/") }
+          error = event.raised_exception
+          next unless [Ace::Assign::Error, Ace::Runtime::RuntimeUnavailableError, Ace::Lab::InvalidConfigurationError,
+            SecurityError, ArgumentError, KeyError, SystemCallError, Timeout::Error].any? { |type| error.is_a?(type) }
+          failures << "#{File.basename(event.path)}:#{event.lineno} #{error.class}: #{error.message.byteslice(0, 160)}"
+          failures.shift while failures.size > 16
+        end
+        begin
+          diagnostic.enable
+          result = receiver.execute(submission: submission, peer: @worker, input_bytes: bytes, mutation_id: "receiver-cleanup")
+        ensure
+          diagnostic.disable
+        end
         assert_equal "uncertain", result.fetch("state"), "lost root reply cannot become completed"
-        assert_equal 1, executions.size
+        record = @journal.service_request(submission.fetch("request_id"))
+        assert_equal 1, executions.size, "result=#{result.slice('state', 'reason').inspect}; canonical=#{record&.slice('state', 'dispatch_phase').inspect}; boundary=#{failures.inspect}"
         retained = owner.execute!(request: original_request, operation_owner_binding: original)
         assert_equal operation, retained.fetch(:bytes)
         assert_equal 1, executions.size, "original result reread cannot reinvoke Installer"
