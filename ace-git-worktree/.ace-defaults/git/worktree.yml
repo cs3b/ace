@@ -81,8 +81,8 @@ git:
       auto_setup_upstream: false
 
       # Automatically create draft PR after pushing branch
-      # If true, creates a draft PR via 'gh pr create --draft'
-      # Requires: gh CLI installed and authenticated
+      # If true, creates a draft PR through the resolved forge provider
+      # Requires: provider configuration and authentication for the target repository
       # NOTE: Defaults to false - enable explicitly for automated workflows
       auto_create_pr: false
 

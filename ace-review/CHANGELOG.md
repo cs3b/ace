@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Remove the unused GitHub CLI timeout setting from the shipped defaults; forge operations use provider_timeout.
 - Reject missing, duplicate-key or malformed feedback inventories instead of silently dropping findings and reporting a clean extraction.
 
 ## [0.59.1] - 2026-10-06
