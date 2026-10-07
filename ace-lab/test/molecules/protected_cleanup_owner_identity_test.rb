@@ -72,6 +72,34 @@ class ProtectedCleanupOwnerIdentityTest < Minitest::Test
     end
   end
 
+  def test_concurrent_observation_refuses_before_shared_artifact_or_kernel_transaction
+    fixture do
+      entered, release = Queue.new, Queue.new
+      calls = 0
+      unit, service = @unit, @service
+      @manager.define_singleton_method(:typed_properties) do |interface:, **_|
+        calls += 1
+        if calls == 1
+          entered << true
+          release.pop
+        end
+        interface == "Unit" ? unit.dup : service.dup
+      end
+      worker = Thread.new { @owner.observe!(socket: Object.new) }
+      Timeout.timeout(2) { entered.pop }
+      assert_raises(Unavailable) { @owner.observe!(socket: Object.new) }
+      assert_equal 1, calls
+      refute @handle.closed?
+      release << true
+      assert worker.join(2), "original verification did not finish"
+      assert_equal @identity, worker.value.fetch("process_binding")
+      assert @handle.closed?
+    ensure
+      release << true if release && worker&.alive?
+      worker&.join(2)
+    end
+  end
+
   def test_wrong_peer_original_invocation_and_replaced_dependency_refuse_and_close_lifetime
     fixture do
       @kernel.define_singleton_method(:peer) { |_socket| [78, 0, 0] }

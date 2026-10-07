@@ -103,11 +103,23 @@ module Ace
           @entry, @interpreter = @references.first(2)
           @argv = [@interpreter.fetch("path"), DISABLE, "-I", load_paths.join(":"), @entry.fetch("path")].freeze
           @manager, @kernel = manager, kernel
+          @verification = Mutex.new
           @artifacts = artifacts || Runtime::ProtectedArtifactSet.new(file_limit: 32 * 1_048_576,
             total_limit: 256 * 1_048_576, count_limit: 4096)
         end
 
         def observe!(socket:, deadline: Runtime::ProtectedSocket.deadline(5))
+          unless @verification.try_lock
+            raise Unavailable, "cleanup identity verification is busy"
+          end
+          begin
+            observe_held!(socket: socket, deadline: deadline)
+          ensure
+            @verification.unlock
+          end
+        end
+
+        def observe_held!(socket:, deadline:)
           now = Process.clock_gettime(Process::CLOCK_MONOTONIC)
           unless deadline.is_a?(Numeric) && deadline.finite? && deadline > now
             raise Unavailable, "cleanup identity observation deadline expired"
@@ -138,6 +150,7 @@ module Ace
         ensure
           handle&.close
         end
+        private :observe_held!
 
         private
 
