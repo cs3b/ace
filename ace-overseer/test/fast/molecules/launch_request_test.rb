@@ -41,6 +41,49 @@ class LaunchRequestTest < AceOverseerTestCase
     assert_equal @artifact.bundle, File.binread(File.join(@root, "invocation.prepared.bundle"))
   end
 
+  def test_last_admitted_proof_is_instance_owned_and_exact_tuple_bound
+    original = Ace::Assign::Authority::PreparedWork.method(:admit)
+    admissions = []
+    measured = ->(**args) { admissions << args; original.call(**args) }
+    Ace::Assign::Authority::PreparedWork.stub(:admit, measured) do
+      document = publish
+      assert_equal 1, admissions.size
+      2.times { assert_equal @artifact.bundle, @owner.verify_fresh!(document) }
+      assert_equal 1, admissions.size
+      fresh_owner = Ace::Overseer::Molecules::LaunchRequest.new(root: @root)
+      assert_equal @artifact.bundle, fresh_owner.verify_fresh!(fresh_owner.load(File.join(@root, "invocation.json")))
+      assert_equal 2, admissions.size
+      changed = document.merge("base_head" => "b" * 40)
+      assert_equal @artifact.bundle, @owner.verify_fresh!(changed)
+      assert_equal 3, admissions.size
+      assert_equal @artifact.bundle, @owner.verify_fresh!(document)
+      assert_equal 4, admissions.size # only the last proof, never a growing cache
+    end
+  end
+
+  def test_last_proof_never_bypasses_fresh_sidecar_or_bundle_admission
+    document = publish
+    original = Ace::Assign::Authority::PreparedWork.method(:admit)
+    admissions = []
+    Ace::Assign::Authority::PreparedWork.stub(:admit, ->(**args) { admissions << args; original.call(**args) }) do
+      File.binwrite(@owner.definition_path(document), "changed")
+      assert_raises(Ace::Overseer::Error) { @owner.verify_fresh!(document) }
+      assert_empty admissions
+      File.binwrite(@owner.definition_path(document), document.fetch("definition_bytes"))
+      path = File.join(@root, "invocation.prepared.bundle")
+      File.binwrite(path, "invalid bundle")
+      assert_raises(Ace::Overseer::Error) { @owner.verify_fresh!(document) }
+      assert_empty admissions
+      changed = document.merge("prepared_bundle" => document.fetch("prepared_bundle").merge(
+        "bytes" => 14, "sha256" => Digest::SHA256.hexdigest("invalid bundle")))
+      assert_raises(Ace::Overseer::Error) { @owner.verify_fresh!(changed) }
+      assert_equal 1, admissions.size
+      File.binwrite(path, @artifact.bundle)
+      assert_equal @artifact.bundle, @owner.verify_fresh!(document)
+      assert_equal 1, admissions.size # failed admission cannot replace the proof
+    end
+  end
+
   def test_recovery_keeps_document_when_local_bundle_is_missing_or_changed
     document = publish
     path = File.join(@root, "invocation.prepared.bundle")

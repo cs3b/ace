@@ -159,11 +159,18 @@ module Ace
         def verify_bundle!(document, bytes)
           ref = document.fetch("prepared_bundle")
           raise Error, "Retained bundle bytes differ" unless bytes.is_a?(String) && bytes.bytesize == ref.fetch("bytes") && Digest::SHA256.hexdigest(bytes) == ref.fetch("sha256")
+          # One instance-owned proof for the last exact admitted input. Every
+          # caller still validates the closed document and freshly held bytes;
+          # a new owner or any tuple/content change requires actual admission.
+          key = JSON.generate(document)
+          raise Error, "Retained launch request exceeds bound" if key.bytesize > MAX_REQUEST
+          return if @admitted_key == key
           reference = JSON.parse(document.fetch("definition_bytes")).fetch("prepared_work")
           work = Ace::Assign::Authority::PreparedWork.admit(bytes: bytes, head: reference.fetch("prepared_head"), tree: reference.fetch("prepared_tree"), sha256: ref.fetch("sha256"), size: ref.fetch("bytes"), root: @root)
           unless work.definition_bytes(head: reference.fetch("prepared_head"), tree: reference.fetch("prepared_tree")) == document.fetch("definition_bytes")
             raise Error, "Retained prepared definition differs"
           end
+          @admitted_key = key.freeze
         rescue ArgumentError, Ace::Assign::AttemptErrors::ReceiptRejected => error
           raise Error, "Retained prepared work is invalid: #{error.message}"
         end
