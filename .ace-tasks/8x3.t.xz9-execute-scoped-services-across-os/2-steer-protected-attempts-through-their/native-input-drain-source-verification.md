@@ -1,5 +1,11 @@
 # Exact original actor input inhibition and drain — reviewed source contract
 
+## Integrated source checkpoint
+
+Root independently reviewed the frozen implementation, actual actor write/admission and response lock order, then the narrow upstream `70ee598..7a2e78b4` repair. Verdict: APPROVE this native source checkpoint. Automated review session `review-8x6242` reported no high/critical finding; its four verified findings (`8x62aepx`, `8x62aepy`, `8x62aepz`, `8x62aeq0`) were fixed in `d803c5344` and resolved. Final controlled asset/builder verification passed 20 tests/85 assertions (`2f181ff7-71ba-4b76-b629-ca3d70ede2a7`); exact patch reconstruction and the static/pure/schema evidence below apply to the selected source.
+
+ACE main fast-forwarded to the exact tested/reviewed `d803c5344` and was pushed to origin and fg. Selected upstream source is `7a2e78b4e92d2b694bd8a06c1ef4943915c399b2`, tree `77d1f89f514731239c02b0966c49b9e5f30650da`. No merge changed the tested source. This does not complete xz9.2: the retained launcher channel, canonical prompt/stop composition and their controlled acceptance remain open. No native artifact was built, installed or published, and no installed acceptance row is checked by this checkpoint.
+
 Base ACE03122b6fb; existing selected upstream source96f14b6d, baseline7b116c05. This closes xz9.2's lost native ACK recovery obligation using the existing native actor/write owner. No second ledger, listener, supervisor privilege, result receipt or worker termination is introduced. Prepared gems/artifacts remain immutable; no native/PTY/root/installed probes.
 
 ## Closed API and attribution
