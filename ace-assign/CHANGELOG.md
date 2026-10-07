@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Capture and retain the exact original native guard in canonical launch record data, with whole-record authentication for steering, while preserving execution-scope process binding bytes.
 
 - Add canonical prompt issuance and authenticated immutable completion primitives with journal-wide retry identity enforcement, plus bounded private prompt framing. Public stop composition remains in progress.
+- Add authenticated read-only prompt status with the actual later outcome selector while retaining the first immutable mutation reply.
 
 ### Added
 

@@ -114,6 +114,83 @@ module Ace
         end
       end
 
+      def test_prompt_status_authenticates_original_snapshot_and_late_outcome_without_replay_upgrade
+        with_authority do
+          map = @map
+          @authority.instance_variable_get(:@deployment).define_singleton_method(:verify!) { |*_args, **_kwargs| map }
+          state = call("reserve_attempt", @reserve_params, id: "reserve").fetch(:data)
+          state = call("record_launch", params(state), id: "record").fetch(:data)
+          selected = state.slice("assignment_id", "attempt_id").merge("mapping_id" => "mapping")
+          events = @journal.read_events("assignment").select { |event| event["attempt_id"] == state.fetch("attempt_id") }
+          original = @authority.send(:original_prompt_record!, events, state, params: selected)
+          binding = selected.merge("project_id" => "project", "action" => "prompt_attempt", "mutation_id" => "status-prompt",
+            "expected_generation" => @journal.authority_generation(events), "caller" => @peer.slice("uid", "gid", "groups").merge("role" => "launcher"),
+            "original_binding_digest" => original.fetch("binding_digest"), "text_sha256" => Digest::SHA256.hexdigest("private"), "text_bytes" => 7)
+          @journal.issue_prompt(binding: binding, issued_by: @peer) { |current, *| @authority.send(:original_prompt_record!, current, state, params: selected) }
+          intent = @journal.prompt_intent("status-prompt")
+          status_request = {"version" => 1, "operation" => "prompt_status", "project_id" => "project", "mutation_id" => nil,
+            "params" => selected.merge("mutation_id" => "status-prompt")}
+          query = ->(peer = @peer, request = status_request) { @authority.dispatch(request: request, peer: peer, role: :launcher).fetch(:data) }
+          old = @journal.ref_value
+          pending = query.call
+          assert_equal "uncertain", pending.fetch("outcome")
+          assert_nil pending.fetch("outcome_event_id")
+          assert_equal old, @journal.ref_value
+          assert_equal pending, query.call(@peer.merge("pid" => 500, "started_at" => "new authorized process"))
+          assert_raises(AttemptErrors::NotFound) { query.call(@peer, status_request.merge("params" => selected.merge("mutation_id" => "missing"))) }
+          assert_raises(AttemptErrors::Conflict) { query.call(@peer, status_request.merge("params" => selected.merge("attempt_id" => "other", "mutation_id" => "status-prompt"))) }
+          assert_raises(AttemptErrors::UnauthorizedIdentity) { query.call(@peer.merge("uid" => 14000)) }
+          authentication = ->(current, *) { @authority.send(:original_prompt_record!, current, state, params: selected) }
+          uncertain = @journal.finalize_prompt(mutation_id: "status-prompt", intent_event_id: intent.fetch("digest"),
+            binding_digest: intent.dig("payload", "binding_digest"), evidence: {"outcome" => "uncertain", "origin" => original.fetch("origin")}, &authentication)
+          evidence = {"outcome" => "submitted", "origin" => original.fetch("origin"), "submission" => "submitted"}
+          @journal.observe_prompt_completion(mutation_id: "status-prompt", intent_event_id: intent.fetch("digest"),
+            binding_digest: intent.dig("payload", "binding_digest"), evidence: evidence, &authentication)
+          known = query.call
+          observation = @journal.read_events("assignment").find { |event| event["type"] == "prompt_completion_observed" }
+          assert_equal "submitted", known.fetch("outcome")
+          assert_equal observation.fetch("digest"), known.fetch("outcome_event_id")
+          assert_equal @journal.ref_value, known.fetch("journal_commit")
+          assert_equal @journal.authority_generation(@journal.read_events("assignment").select { |event| event["attempt_id"] == state.fetch("attempt_id") }), known.fetch("generation")
+          replay = @journal.finalize_prompt(mutation_id: "status-prompt", intent_event_id: intent.fetch("digest"),
+            binding_digest: intent.dig("payload", "binding_digest"), evidence: evidence, &authentication)
+          assert_equal uncertain.fetch(:data), replay.fetch(:data)
+          deployment = @authority.instance_variable_get(:@deployment)
+          root = deployment.authority("authority").fetch("state_root")
+          FileUtils.mkdir_p(root, mode: 0700)
+          File.chmod(0700, root)
+          service = @kernel.capture(Process.pid).merge("uid" => Process.uid, "gid" => Process.gid, "groups" => Process.groups.sort,
+            "socket_path" => File.join(root, "status.sock"), "state_root" => root)
+          project = deployment.project("project").merge("supervisor_uids" => [], "peer_credentials" => {})
+          deployment.define_singleton_method(:authority) { |_| service }
+          deployment.define_singleton_method(:project) { |_| project }
+          deployment.define_singleton_method(:verify_composition!) { |*_, **_| true }
+          deployment.define_singleton_method(:verify_receiver_paths!) { |_| true }
+          server = Authority::Server.new(authority_id: "authority", lifecycle: @authority, deployment: deployment,
+            kernel: StreamKernel.new(@kernel, me: service, peer: @peer))
+          listener = Thread.new { server.serve }
+          deadline = WIRE.deadline(3)
+          until File.socket?(service.fetch("socket_path"))
+            raise "Source status listener failed to start" unless listener.alive? && Process.clock_gettime(Process::CLOCK_MONOTONIC) < deadline
+            sleep(0.01)
+          end
+          client = Authority::Client.new(mapping_id: "mapping", deployment: deployment,
+            kernel: StreamKernel.new(@kernel, me: @peer, peer: service))
+          old = @journal.ref_value
+          assert_equal known, client.call("prompt_status", selected.reject { |key, _| key == "mapping_id" }.merge("mutation_id" => "status-prompt")).data
+          WIRE.connect(service.fetch("socket_path"), deadline: WIRE.deadline(3)) do |socket|
+            WIRE.write(socket, status_request, deadline: WIRE.deadline(3))
+            socket.write("trailing body")
+            socket.shutdown(Socket::SHUT_WR)
+            refute_equal "ok", WIRE.read(socket, deadline: WIRE.deadline(3)).fetch("status")
+          end
+          assert_equal old, @journal.ref_value
+        ensure
+          server&.stop
+          listener&.join
+        end
+      end
+
       def test_launcher_pidfd_refusal_cannot_commit_or_wedge_reservation
         with_authority do
           old = @journal.ref_value

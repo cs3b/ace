@@ -1,0 +1,9 @@
+# Prompt status source checkpoint
+
+The fixed EOF-only `prompt_status` route reads one canonical snapshot and authenticates the accepted issue's complete tuple, stable installed caller principal, whole original guarded record and typed accepted outcomes. The current commit/generation and actual known outcome event are returned without raw text, native/channel effects or changes to the first immutable reply. An accepted issue without known completion returns uncertain with a null outcome selector; an unknown mutation refuses.
+
+Executed source selection: `bin/ace-test ace-assign test/feat/authority/launch_lifecycle_test.rb:140 --timeout 180` passed 1 test / 17 assertions, zero failures/errors, 18.54 seconds. Receipt `1e83928a-ea7e-40af-8f57-f9d362ab743e`. This uses actual canonical record/issue/finalization/observation producers, actual Client/Server over controlled UNIX transport, and injected kernel/installation observations. It verifies same-principal process restart, unknown/tuple/principal refusals, first uncertain reply unchanged after a known observation, exact observation selector/current snapshot and trailing-body refusal with no canonical mutation. Earlier direct-dispatch selection passed 1/14 (`104de895-7595-43b5-b120-e6300ded1341`). Neither selection performs installed/native probes.
+
+Existing journal prompt regression `bin/ace-test ace-assign test/feat/prompt_intent_test.rb --timeout 180` passed 9 tests / 82 assertions, zero failures/errors, 19.41 seconds (`d6a898a6-5767-43b6-824a-ba25f6a0c3c7`). `git diff --check` passed.
+
+Independent root source/test review approved this scoped patch conditional on the final passing selection and unchanged reviewed source. Full stop, stopped terminal projection, drain/release/history composition and whole xz9.2 completion remain open. No default or full package suite claim.
