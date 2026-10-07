@@ -27,3 +27,14 @@ The same final scenario after immutable blob batching measured service6.37s, Inb
 Source search of ace-assign/lib for no_effect_challenge/challenge_event_digest finds only ServiceEvidence validation, CanonicalEvidence import naming and EvidenceJournal mutable field allowance. No actual authority challenge/complete_no_effect producer exists yet. Accepted xz9.1 SC5 and family protected-authority-contract.md (fresh durable challenge), plus 9c2 sealed-service-settlement-contract.md (settlement-only claims), own that unfinished planned work. The failed-settled fixture explicitly injects a retained challenge prerequisite through canonical journal mutation, then uses actual protected ServiceEvidence/import/terminal transition verification. It proves projection authenticity, not delivered challenge issuance. Actual failed/uncertain service stop recovery remains incomplete until those operations exist.
 
 No native/PTY, installed, privileged, VM/systemd or actual process probe. No public stop/CAS/event is added here; n0n owns its consumer. Whole xza.3 maintenance/orphan and program acceptance remain open. Independent frozen source review and integration are still required.
+
+## Independent integration verdict — 2026-10-07
+
+Root independently reviewed frozen reader `d9cfb40b1` and projection `3e370d0c9`: APPROVE these source interfaces and authenticated projections only. Reader integrated as `872dda1f3`; projection candidate `5b6e8bb9f` is based on the same code plus current task documentation. No stopped/failed-service producer or installed acceptance is claimed.
+
+Executed on the integration checkout:
+- EvidenceJournal, event_commits and journal_mutation full files: **36 tests / 306 assertions PASS**, 39.09s, receipt `f0cd5c50-d975-4902-9018-e21c38c0ad88`.
+- Current completed and empty Inbox projection selectors: **2 / 14 PASS**, 20.01s, `378abedb-1024-4cc0-8ecb-82eb7a183f24`. The mixed command's line filters selected only these two cases; it is not evidence of the whole service file.
+- Separate full atomic_service_mutation file: **14 / 182 PASS**, 36.48s, `5187200b-dfc2-4498-ab66-55b8e9c31933`.
+
+The producer's exact full historical rotation receipt `7c1c9028-b5f0-444b-a08b-54f9a6921b66` passed **1 / 24** in 89s after batching, with diagnostics removed before its frozen commit. Earlier timeout failures remain retained. These controlled source checks do not execute the installed Lab.
