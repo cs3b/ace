@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Bind fresh protected workspace-cleanup dispatch to an independently observed original root owner, retaining that identity through canonical replay, later updates and imported evidence context.
+
 - Require explicit canonical cancellation before replacing a direct review assignment; revoked purposes cannot export candidates or authorize future approval use, while original replies remain historical evidence.
 - Retain the original task-context entry pin across registration replay and prepared fetch, and return a strictly validated original worker identity for fixed adapter activation.
 

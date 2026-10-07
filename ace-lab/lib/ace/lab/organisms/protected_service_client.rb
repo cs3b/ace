@@ -47,7 +47,7 @@ module Ace
               "mutation_id" => mutation_id, "transfer" => descriptor}, deadline: deadline, limit: ProtectedServiceListener::LIMIT)
             codec.send(socket, parts: [bytes], descriptor: descriptor, purpose: :service_input, deadline: deadline)
             socket.shutdown(Socket::SHUT_WR)
-            guarded = ProtectedServiceListener::Ingress.new(socket)
+            guarded = Ace::Runtime::Molecules::ProtectedSocket::Ingress.new(socket)
             reply = @wire.read(guarded, deadline: deadline, limit: ProtectedServiceListener::LIMIT)
             eof!(guarded, deadline)
             validate_reply!(reply, submission.fetch("request_id"))

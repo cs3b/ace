@@ -81,6 +81,10 @@ module Ace
         # service writers. It never reacquires lifecycle/authority locks.
         def authorize_service_update!(journal:, existing:, replacement:, pending:)
           protected_journal!(journal)
+          if existing && existing.key?("operation_owner_binding") &&
+              Atoms::EvidenceDigest.digest(existing.fetch("operation_owner_binding")) != Atoms::EvidenceDigest.digest(replacement["operation_owner_binding"])
+            raise AttemptErrors::InvalidState, "original cleanup dispatch owner cannot change"
+          end
           if existing && %w[no_effect_challenge challenge_generation challenge_event_digest].any? { |key| existing[key] != replacement[key] }
             unless pending && pending[:operation] == "claim_service_settlement" &&
                 existing["state"] == replacement["state"] && existing["receipt"] == replacement["receipt"] &&
@@ -90,6 +94,9 @@ module Ace
             ServiceEvidence.new(journal: journal).challenge!(replacement, pending: pending)
           end
           initial = existing.nil? && %w[accepted uncertain].include?(replacement["state"])
+          if initial && replacement.key?("operation_owner_binding")
+            raise AttemptErrors::InvalidState, "cleanup owner identity requires fresh dispatch admission"
+          end
           begin_dispatch = existing && existing["dispatch_phase"] == "issued" && replacement["dispatch_phase"] == "dispatch_started"
           if existing && existing["dispatch_phase"] != replacement["dispatch_phase"] && !begin_dispatch
             raise AttemptErrors::InvalidState, "invalid protected dispatch phase change"
@@ -117,6 +124,12 @@ module Ace
           current = exact_candidate!(candidate(events), params)
           approved_review!(journal, events, params, map, current)
           service_policy!.prepare!(replacement, input_bytes: bytes)
+          if begin_dispatch && replacement.fetch("operation") == "prune-preserved-workspace"
+            unless Atoms::EvidenceDigest.digest(service_policy!.dispatch_owner_binding!(replacement)) ==
+                Atoms::EvidenceDigest.digest(replacement.fetch("operation_owner_binding"))
+              raise AttemptErrors::UnauthorizedIdentity, "fixed cleanup owner changed before dispatch acceptance"
+            end
+          end
           true
         rescue KeyError
           raise AttemptErrors::UnauthorizedIdentity, "protected service admission context is incomplete"
@@ -383,6 +396,9 @@ module Ace
           approved_review!(journal, events, params, map, current)
           service_policy!.prepare!(record, input_bytes: input_bytes)
           replacement = record.merge("dispatch_phase" => "dispatch_started")
+          if record.fetch("operation") == "prune-preserved-workspace"
+            replacement["operation_owner_binding"] = service_policy!.dispatch_owner_binding!(record)
+          end
           {data: service_projection(replacement).merge("invocation" => "permitted"),
             service_inputs: {record.fetch("request_id") => input_bytes},
             service_updates: [{request_id: record.fetch("request_id"), expected: record,
@@ -452,7 +468,7 @@ module Ace
 
         def service_projection(record)
           record.slice("request_id", "assignment_id", "attempt_id", "project_id", "operation", "service_id", "target",
-            "candidate_head", "candidate_generation", "state", "dispatch_ticket_id", "claim_binding", "claim_generation", "dispatch_phase", "policy_digest")
+            "candidate_head", "candidate_generation", "state", "dispatch_ticket_id", "claim_binding", "claim_generation", "dispatch_phase", "policy_digest", "operation_owner_binding")
         end
       end
     end

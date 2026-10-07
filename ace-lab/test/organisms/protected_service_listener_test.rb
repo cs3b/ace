@@ -144,7 +144,7 @@ class ProtectedServiceListenerTest < Minitest::Test
     left, right = UNIXSocket.pair
     Tempfile.create("receiver-ancillary") do |file|
       left.sendmsg("x", 0, nil, Socket::AncillaryData.unix_rights(file))
-      guarded = Ace::Lab::Organisms::ProtectedServiceListener::Ingress.new(right)
+      guarded = Ace::Runtime::Molecules::ProtectedSocket::Ingress.new(right)
       assert_raises(SecurityError) { guarded.read_nonblock(1) }
       refute file.closed?, "sender retains its own descriptor"
     end
