@@ -41,6 +41,42 @@ filesystem/native checks are controlled. No validator was relaxed. A method-name
 --filter attempt f0e069dc-8be1-428d-8e92-e6c467a83273 selected zero files and provides
 no test evidence; the actual existing cases ran through file:line selectors.
 
-Final merged-base verification is recorded below when terminal. No native,
-installed, protected-process, provider, mount, systemd or Linux probe is part of
-this checkpoint. Worker activation/queue consumption remains unimplemented.
+## Final authorized verification
+
+Merged source `ade023e008bd7f162542516eef20eea8299d987d`, based on integrated
+main `af5dc0d3fe39ad63517f2e996966739e34dd31cc`, passed the complete explicitly
+inspected `test/feat/prepared_work_fetch_test.rb`: **8 tests / 103 assertions,
+zero failures/errors, 111.19688 s**, receipt
+`280319ba-88b5-43c6-8a90-00f412f04e47`. This includes real frozen held deployment/
+history selection and bounded canonical blob refusal in addition to the actual
+public transport, immutable original projection and descendant cases. Source is
+unchanged by the final documentation commit. The integrated operation keyword in
+Endcap services and historical_rotation is preserved unchanged.
+
+Authorized transport regressions selected exactly
+`test/feat/transfer_codec_test.rb` and
+`test/feat/authority/transfer_server_test.rb` (21 / 130), plus
+`test/feat/endcap_results_test.rb:172` and `:217` (2 / 25). Their actual terminal
+receipts are listed above. These and the eight-case prepared fetch receipt form
+this checkpoint's execution evidence. No duplicate rerun is requested.
+
+## Excluded broad selection and scope violation
+
+The author dispatched `bin/ace-test ace-assign fast --timeout 120` without first
+inspecting its 63-file inventory. It includes actual ProcessIdentity.capture in
+`test/fast/molecules/attempt_reconciler_test.rb:42,54` and
+`test/fast/organisms/attempt_coordinator_test.rb:866`, violating the explicit
+no-ProcessIdentity-probe scope. The author attempted Ctrl-C immediately upon the
+source audit, but handle24882 had already reached terminal exit0: 834 / 3138,
+137.914508 s, receipt `f14e9d71-4b58-4ccc-a6d9-35e5a1cd8442`. This complete run
+is **excluded from authorized acceptance evidence**, regardless of its PASS.
+Its report.md retains every selected filename and all outputs remain available.
+No cancellation, failure, or clean-scope claim is inferred. Root instructed no
+rerun and future exact selection inspection before dispatch.
+
+The explicitly selected fetch/codec/client verification uses injected identity,
+ancestry and installed-directory/native admission; maintained bytes, Git, journal,
+framing and Client consumers are real. It does not establish installed/native,
+protected-process, provider, mount, systemd or Linux effectiveness. The excluded
+run is retained separately rather than hidden behind that controlled-fixture
+qualification. Worker activation/queue consumption remains unimplemented.
