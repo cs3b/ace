@@ -105,7 +105,7 @@ module Ace
               request["version"].is_a?(Integer) && request["version"] == 1 && request["operation"].is_a?(String) && request["params"].is_a?(Hash)
             raise ArgumentError, "invalid authority envelope"
           end
-          deadline = wire.deadline(90) if %w[reserve_attempt close_execution_scope].include?(request.fetch("operation"))
+          deadline = wire.deadline(90) if %w[reserve_attempt close_execution_scope stop_attempt].include?(request.fetch("operation"))
           params = request.fetch("params")
           map = @deployment.verify!(params.fetch("mapping_id"), kernel: @kernel, authority_state: true)
           unless map["authority_id"] == @authority_id && map["project_id"] == request["project_id"]
@@ -161,7 +161,7 @@ module Ace
             @lifecycle.serve_launch_control!(request: request, peer: peer, socket: socket, codec: transfer_codec, deadline: deadline)
             return
           end
-          if %w[observe_execution_scope close_execution_scope prompt_status launch_input_inhibit_selection launch_input_inhibit_completion launch_prompt_intent launch_prompt_completion].include?(request["operation"]) ||
+          if %w[observe_execution_scope close_execution_scope stop_attempt prompt_status launch_input_inhibit_selection launch_input_inhibit_completion launch_prompt_intent launch_prompt_completion].include?(request["operation"]) ||
               @composition == "services" && %w[attempt_status evidence_fetch inbox_context_completion].include?(request["operation"])
             bodyless_read!(socket, deadline)
           end

@@ -337,7 +337,9 @@ module Ace
           verify_historical_boot_baseline!(lineage.binding)
           lineage.require_positive!(scope_generation: lineage.binding.fetch("scope_generation"),
             scope_binding_event_id: lineage.binding_event.fetch("digest"), seal_event_id: lineage.seal_event.fetch("digest"), proof_id: lineage.proof_id)
-          terminal = if prefix.any? { |event| event["type"] == "receipt_accepted" }
+          terminal = if prefix.any? { |event| event["type"] == "attempt_stopped" }
+            terminal_scope_stopped!(prefix, journal, prefix_commit, deployment: original)
+          elsif prefix.any? { |event| event["type"] == "receipt_accepted" }
             terminal_scope_receipt!(prefix, lineage, journal, prefix_commit, deployment: original)
           else
             guarded_scope_abort_receipt!(prefix, lineage, journal, prefix_commit)
@@ -459,7 +461,7 @@ module Ace
         end
 
         def release_scope_reservation_held!(params, map, journal, peer, role, digest)
-            @mutex.synchronize do
+            result = @mutex.synchronize do
               current = journal.read_events(params.fetch("assignment_id")).select { |event| event["attempt_id"] == params.fetch("attempt_id") }
               scope_close_owner!(params, map, current, peer, role)
               journal.mutate(assignment_id: params.fetch("assignment_id"), attempt_id: params.fetch("attempt_id"),
@@ -482,6 +484,11 @@ module Ace
                   "terminal_event_id" => terminal.fetch("digest"), "reservation" => "released"}}
               end
             end
+            # Wake the retained original launcher only after canonical release.
+            # Its EOF is not proof; the driver authenticates the status snapshot.
+            channel = @mutex.synchronize { @control_channels[steering_key(params, map)] }
+            channel&.close
+            result
         end
 
         # A crash after guarded abort must not strand a known-clean reservation.
@@ -558,6 +565,9 @@ module Ace
         end
 
         def terminal_scope_receipt!(events, lineage, journal, commit, deployment: @deployment)
+          if events.any? { |event| event["type"] == "attempt_stopped" }
+            return terminal_scope_stopped!(events, journal, commit, deployment: deployment)
+          end
           if events.any? { |event| event["type"] == "authority_mutation" && event.dig("payload", "operation") == "abort_launch" }
             return guarded_scope_abort_receipt!(events, lineage, journal, commit)
           end

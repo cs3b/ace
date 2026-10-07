@@ -27,42 +27,10 @@ module Ace
                 mutation_id: params.fetch("mutation_id"), operation: "close_execution_scope", parameters_digest: digest,
                 expected_generation: params.fetch("expected_generation"), with_replay: true) do |events, _commit, _generation|
                 lineage = scope_close_owner!(params, map, events, peer, role)
-                binding = lineage.binding
-                raise AttemptErrors::EvidenceUnavailable, "original parent binding is missing" unless binding
-                projection = {"attempt_id" => params.fetch("attempt_id"), "scope_generation" => binding.fetch("scope_generation"),
-                  "state" => "running", "proof_id" => nil, "required_action" => "close_scope"}
-                if !lineage.sealed?
-                  stop_after_commit = true
-                  inhibit_after_commit = true
-                  payload = {"scope_generation" => binding.fetch("scope_generation"), "scope_binding_event_id" => lineage.binding_event.fetch("digest")}
-                  {events: [{type: "scope_sealed", payload: payload}], blobs: {}, data: projection}
-                elsif @native_issuers.key?(native_issuer_key(params, map)) || pending_prompt_issuers?(events, journal, _commit)
-                  # A live issuer may still start after this inactive snapshot.
-                  inhibit_after_commit = true
-                  {events: [], blobs: {}, data: projection}
-                elsif lineage.proof_event
-                  scope_observer_for(params.fetch("mapping_id")).verify_closed!(lineage)
-                  {events: [], blobs: {}, data: projection.merge("state" => "closed_no_writers", "proof_id" => lineage.proof_id, "required_action" => nil)}
-                elsif scope_observer_for(params.fetch("mapping_id")).sealed_service_stop_required?(lineage)
-                  # A fresh canonical close resumes a stop lost after the seal.
-                  # Replaying either mutation performs no manager I/O.
-                  stop_after_commit = true
-                  {events: [], blobs: {}, data: projection}
-                else
-                  # This call must return a fresh validated observation, never
-                  # a cached population, caller JSON or a manifest boolean.
-                  payload = scope_observer_for(params.fetch("mapping_id")).closed_observation_for_proof!(lineage, events: events)
-                  expected = binding.slice("scope_generation", "boot_id", "slice_invocation_id", "cgroup_identity").merge(
-                    "scope_binding_event_id" => lineage.binding_event.fetch("digest"), "seal_event_id" => lineage.seal_event.fetch("digest"), "populated" => 0)
-                  unless payload == expected
-                    raise AttemptErrors::EvidenceUnavailable, "fresh observation does not name the retained sealed parent"
-                  end
-                  at = Time.now.utc
-                  event = Models::EvidenceEvent.build(type: "scope_closed_no_writers", attempt_id: params.fetch("attempt_id"),
-                    payload: payload, previous_digest: events.last&.fetch("digest"), recorded_at: at)
-                  {events: [{type: "scope_closed_no_writers", payload: payload, recorded_at: at}], blobs: {},
-                    data: projection.merge("state" => "closed_no_writers", "proof_id" => event.fetch("digest"), "required_action" => nil)}
-                end
+                closure = scope_closure_plan!(lineage: lineage, params: params, map: map, events: events, journal: journal, commit: _commit)
+                stop_after_commit = closure.fetch(:stop_required)
+                inhibit_after_commit = closure.fetch(:inhibit_required)
+                closure.fetch(:plan)
               end
             end
             result
@@ -117,6 +85,51 @@ module Ace
         end
 
         private
+
+        # Shared source-only plan for close and public stop. It does not issue
+        # manager/native control, mutate canonical state or acquire exclusions.
+        # Each CAS invocation derives its own post-commit work flags anew.
+        def scope_closure_plan!(lineage:, params:, map:, events:, journal:, commit:)
+          stop_required = false
+          inhibit_required = false
+          binding = lineage.binding
+          raise AttemptErrors::EvidenceUnavailable, "original parent binding is missing" unless binding
+          projection = {"attempt_id" => params.fetch("attempt_id"), "scope_generation" => binding.fetch("scope_generation"),
+            "state" => "running", "proof_id" => nil, "required_action" => "close_scope"}
+          plan = if !lineage.sealed?
+            stop_required = true
+            inhibit_required = true
+            payload = {"scope_generation" => binding.fetch("scope_generation"), "scope_binding_event_id" => lineage.binding_event.fetch("digest")}
+            {events: [{type: "scope_sealed", payload: payload}], blobs: {}, data: projection}
+          elsif @native_issuers.key?(native_issuer_key(params, map)) || pending_prompt_issuers?(events, journal, commit)
+            # A live issuer may still start after this inactive snapshot.
+            inhibit_required = true
+            {events: [], blobs: {}, data: projection}
+          elsif lineage.proof_event
+            scope_observer_for(params.fetch("mapping_id")).verify_closed!(lineage)
+            {events: [], blobs: {}, data: projection.merge("state" => "closed_no_writers", "proof_id" => lineage.proof_id, "required_action" => nil)}
+          elsif scope_observer_for(params.fetch("mapping_id")).sealed_service_stop_required?(lineage)
+            # A fresh canonical close resumes a stop lost after the seal.
+            # Replaying either mutation performs no manager I/O.
+            stop_required = true
+            {events: [], blobs: {}, data: projection}
+          else
+            # This call must return a fresh validated observation, never
+            # a cached population, caller JSON or a manifest boolean.
+            payload = scope_observer_for(params.fetch("mapping_id")).closed_observation_for_proof!(lineage, events: events)
+            expected = binding.slice("scope_generation", "boot_id", "slice_invocation_id", "cgroup_identity").merge(
+              "scope_binding_event_id" => lineage.binding_event.fetch("digest"), "seal_event_id" => lineage.seal_event.fetch("digest"), "populated" => 0)
+            unless payload == expected
+              raise AttemptErrors::EvidenceUnavailable, "fresh observation does not name the retained sealed parent"
+            end
+            at = Time.now.utc
+            event = Models::EvidenceEvent.build(type: "scope_closed_no_writers", attempt_id: params.fetch("attempt_id"),
+              payload: payload, previous_digest: events.last&.fetch("digest"), recorded_at: at)
+            {events: [{type: "scope_closed_no_writers", payload: payload, recorded_at: at}], blobs: {},
+              data: projection.merge("state" => "closed_no_writers", "proof_id" => event.fetch("digest"), "required_action" => nil)}
+          end
+          {plan: plan, stop_required: stop_required, inhibit_required: inhibit_required}
+        end
 
         def scope_close_owner!(params, map, events, peer, role)
           state = states(events)[params.fetch("attempt_id")]

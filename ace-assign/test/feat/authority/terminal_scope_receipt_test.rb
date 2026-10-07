@@ -7,11 +7,30 @@ module Ace
     class TerminalScopeReceiptTest < AceAssignTestCase
       include EndcapResultOwnerFixture
       def test_actual_terminal_owner_accepts_imported_result_and_shared_release_producer_binds_it
+        exercise_actual_terminal_receipt
+      end
+
+      def test_uncertain_stop_reply_replays_after_actual_terminal_receipt_without_new_containment
+        exercise_actual_terminal_receipt(stop_replay: true)
+      end
+
+      def test_uncertain_stop_reply_replays_after_actual_failed_receipt_without_new_containment
+        exercise_actual_terminal_receipt(stop_replay: true, verdict: "failed")
+      end
+
+      def exercise_actual_terminal_receipt(stop_replay: false, verdict: "succeeded")
         fixture do
-          result = submit.fetch(:data)
+          result = submit(verdict: verdict).fetch(:data)
           events = @journal.read_events("assignment").select { |event| event["attempt_id"] == @attempt }
           submitted = events.find { |event| event["type"] == "result_submitted" }.fetch("payload")
           terminal_params = {"mapping_id" => "mapping", "assignment_id" => "assignment", "attempt_id" => @attempt}
+          if stop_replay
+            original_stop_generation = generation
+            stop_reply = @launch.stop_attempt!(request: {"params" => terminal_params.merge("expected_generation" => original_stop_generation),
+              "mutation_id" => "stop-before-receipt"}, peer: @launcher, role: :launcher)
+            assert_equal "uncertain", stop_reply.fetch(:data).fetch("state")
+            assert_equal "running", @journal.canonical_attempt_state(@journal.read_events("assignment").select { |event| event["attempt_id"] == @attempt })
+          end
           @launch.close_execution_scope!(params: terminal_params.merge("mutation_id" => "terminal-seal", "expected_generation" => generation),
             peer: @launcher, role: :launcher)
           proof = @launch.close_execution_scope!(params: terminal_params.merge("mutation_id" => "terminal-proof", "expected_generation" => generation),
@@ -29,7 +48,15 @@ module Ace
           File.write(receipt_path, JSON.generate(submitted.fetch("receipt")))
           identity = Molecules::ExecutionIdentityResolver::Identity.new(actor: "fixture-operator", role: "coordinator", runtime: "local")
           finished = coordinator.finish(attempt_id: @attempt, receipt_path: receipt_path, identity: identity)
-          assert_equal "succeeded", finished.state
+          assert_equal verdict, finished.state
+          if stop_replay
+            terminal_commit = @journal.ref_value
+            replay = @launch.stop_attempt!(request: {"params" => terminal_params.merge("expected_generation" => original_stop_generation),
+              "mutation_id" => "stop-before-receipt"}, peer: @launcher, role: :launcher)
+            assert replay.fetch(:replayed)
+            assert_equal stop_reply.fetch(:data), replay.fetch(:data)
+            assert_equal terminal_commit, @journal.ref_value
+          end
           terminal_events = @journal.read_events("assignment").select { |event| event["attempt_id"] == @attempt }
           lineage = Molecules::ExecutionScopeLineage.new(events: terminal_events, project_id: "project",
             assignment_id: "assignment", attempt_id: @attempt, mapping_id: "mapping")

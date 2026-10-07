@@ -6,6 +6,57 @@ require "ace/assign/authority/launch_driver"
 module Ace
   module Assign
     class LaunchControlChannelTest < AceAssignTestCase
+      def test_original_driver_reconnects_after_endpoint_identity_refusal
+        driver = Authority::LaunchDriver.allocate
+        state = {"phase" => "issued", "assignment_id" => "assignment", "attempt_id" => "attempt"}
+        driver.instance_variable_set(:@issued_state, state)
+        driver.instance_variable_set(:@steering_binding, {"guarded_origin" => {}})
+        calls = 0
+        client = Object.new
+        client.define_singleton_method(:with_launch_control) do |**_options|
+          calls += 1
+          raise AttemptErrors::UnauthorizedIdentity, "endpoint changed" if calls == 1
+          driver.request_control_cancel
+        end
+        driver.instance_variable_set(:@client, client)
+        driver.define_singleton_method(:sleep) { |_seconds| }
+        driver.serve_control!(state: state) { flunk "refusal cannot publish readiness" }
+        assert_equal 2, calls
+        assert_empty driver.instance_variable_get(:@seen_prompt_intents)
+      end
+
+      def test_original_driver_release_requires_exact_authenticated_status_metadata
+        driver = Authority::LaunchDriver.allocate
+        state = {"assignment_id" => "assignment", "attempt_id" => "attempt", "launcher_identity" => {"pid" => 101}}
+        binding = {"process_identity" => {"pid" => 102}, "guarded_origin" => {}}
+        driver.instance_variable_set(:@map, {"authority_id" => "authority"})
+        driver.instance_variable_set(:@mapping_id, "mapping")
+        driver.instance_variable_set(:@steering_binding, binding)
+        driver.instance_variable_set(:@control_original_binding_digest, "a" * 64)
+        deployment = Object.new
+        deployment.define_singleton_method(:authority) { |_id| {"composition" => "launch"} }
+        driver.instance_variable_set(:@deployment, deployment)
+        data = {"mapping_id" => "mapping", "assignment_id" => "assignment", "attempt_id" => "attempt",
+          "launcher_identity" => state.fetch("launcher_identity"), "process_binding" => binding.reject { |key, _| key == "guarded_origin" },
+          "original_binding_digest" => "a" * 64, "state" => "stopped", "generation" => 4,
+          "journal_commit" => "b" * 40, "terminal_event_id" => "c" * 64, "reservation_release_event_id" => nil}
+        client = Object.new
+        client.define_singleton_method(:call) { |*_args, **_options| Struct.new(:data).new(data) }
+        driver.instance_variable_set(:@client, client)
+        refute driver.send(:authenticated_control_release?, state)
+        data["reservation_release_event_id"] = "d" * 64
+        assert driver.send(:authenticated_control_release?, state)
+        {"original_binding_digest" => "e" * 64, "attempt_id" => "foreign", "journal_commit" => "b" * 41,
+          "generation" => 4.0, "reservation_release_event_id" => "corrupt", "launcher_identity" => {"pid" => 999}}.each do |key, bad|
+          original = data.fetch(key)
+          data[key] = bad
+          assert_raises(AttemptErrors::EvidenceUnavailable, key) { driver.send(:authenticated_control_release?, state) }
+          data[key] = original
+        end
+        client.define_singleton_method(:call) { |*_args, **_options| raise AttemptErrors::EvidenceUnavailable, "query lost" }
+        assert_raises(AttemptErrors::EvidenceUnavailable) { driver.send(:authenticated_control_release?, state) }
+      end
+
       WIRE = Ace::Runtime::Molecules::ProtectedSocket
       def deadline = WIRE.deadline(2)
       def with_channel(input_inhibition: nil)

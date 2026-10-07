@@ -87,9 +87,14 @@ module Ace
           announced = false
           until @control_cancelled
             begin
+              break if announced && authenticated_control_release?(state)
               report_retained_prompt_completions!(state)
               report_retained_input_inhibition!(state)
               @client.with_launch_control(state: state) do |socket, codec, ready|
+                if @control_original_binding_digest && ready.fetch("original_binding_digest") != @control_original_binding_digest
+                  raise AttemptErrors::EvidenceUnavailable, "Original launcher control binding changed"
+                end
+                @control_original_binding_digest ||= ready.fetch("original_binding_digest")
                 unless announced
                   yield({"version" => 1, "type" => "launch_ready", "mapping_id" => @mapping_id,
                     "assignment_id" => state.fetch("assignment_id"), "attempt_id" => state.fetch("attempt_id"),
@@ -99,7 +104,8 @@ module Ace
                 end
                 original_prompt_loop(socket, codec, state, ready)
               end
-            rescue Ace::Runtime::RuntimeUnavailableError, AttemptErrors::EvidenceUnavailable, IOError, SystemCallError
+            rescue Ace::Runtime::RuntimeUnavailableError, AttemptErrors::EvidenceUnavailable, AttemptErrors::UnauthorizedIdentity, IOError, SystemCallError
+              # Endpoint refusal also cannot authenticate terminal release.
               # EOF does not prove the actor drained or justify a second send.
               sleep(0.25) unless @control_cancelled
             end
@@ -125,6 +131,34 @@ module Ace
         end
 
         private
+
+        # Status is queried before reopening a private stream: synchronous
+        # canonical reads cannot consume the original channel's heartbeat wait.
+        def authenticated_control_release?(state)
+          params = state.slice("assignment_id", "attempt_id")
+          composition = @deployment.authority(@map.fetch("authority_id")).fetch("composition")
+          params["result_candidate_generation"] = nil if composition == "services"
+          data = @client.call("attempt_status", params, mutation_id: nil, timeout: 30).data
+          unless data.is_a?(Hash) && data.values_at("mapping_id", "assignment_id", "attempt_id") ==
+              [@mapping_id, state.fetch("assignment_id"), state.fetch("attempt_id")] &&
+              data["original_binding_digest"] == @control_original_binding_digest &&
+              data["process_binding"] == @steering_binding.reject { |key, _| key == "guarded_origin" } &&
+              data["launcher_identity"] == state.fetch("launcher_identity") &&
+              data["state"].is_a?(String) && %w[reserved running uncertain succeeded failed stopped].include?(data["state"]) &&
+              data["generation"].is_a?(Integer) && data["generation"] >= 0 &&
+              data["journal_commit"].is_a?(String) && data["journal_commit"].match?(/\A(?:[0-9a-f]{40}|[0-9a-f]{64})\z/)
+            raise AttemptErrors::EvidenceUnavailable, "Original launcher canonical status differs"
+          end
+          terminal = data.fetch("terminal_event_id")
+          release = data.fetch("reservation_release_event_id")
+          unless [terminal, release].all? { |value| value.nil? || value.is_a?(String) && value.match?(/\A[0-9a-f]{64}\z/) } &&
+              (release.nil? || !terminal.nil? && %w[succeeded failed stopped].include?(data.fetch("state")))
+            raise AttemptErrors::EvidenceUnavailable, "Original launcher terminal release metadata differs"
+          end
+          %w[succeeded failed stopped].include?(data.fetch("state")) && !terminal.nil? && !release.nil?
+        rescue KeyError, TypeError, NoMethodError
+          raise AttemptErrors::EvidenceUnavailable, "Original launcher canonical status is malformed"
+        end
 
         def report_retained_prompt_completions!(state)
           @seen_prompt_intents.each do |id, evidence|

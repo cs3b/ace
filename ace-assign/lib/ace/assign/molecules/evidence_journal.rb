@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative "canonical_attempt_state"
+
 require "digest"
 require "fileutils"
 require "json"
@@ -727,22 +729,7 @@ module Ace
         # Latest lifecycle state implied by the events, or nil when the
         # events do not describe a full attempt (intent missing).
         def derive_state(events)
-          return nil unless events.any? { |event| event["type"] == "intent" }
-
-          state = "reserved"
-          events.each do |event|
-            case event["type"]
-            when "process_start"
-              state = "running"
-            when "receipt_accepted"
-              state = event.dig("payload", "receipt", "verdict") || state
-            when "transition"
-              state = event.dig("payload", "to") || state
-            when "reconciliation"
-              state = event.dig("payload", "resolution") || state
-            end
-          end
-          state
+          CanonicalAttemptState.derive(events)
         end
 
         def build_attempt(assignment_id, attempt_id, intent_payload, events, state)
