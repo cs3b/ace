@@ -121,7 +121,7 @@ module Ace
           unless commits.is_a?(Array) && commits.size.between?(1, 64) && commits.uniq.size == commits.size &&
               commits.all? { |commit| commit.is_a?(String) && commit.match?(OID) } &&
               paths.is_a?(Array) && !paths.empty? && paths.uniq.size == paths.size &&
-              paths.all? { |path| path.is_a?(String) && path.match?(%r{\Aexecution/[a-zA-Z0-9_.:-]+/events/\z}) } &&
+              (paths == ["execution/"] || paths.all? { |path| path.is_a?(String) && path.match?(%r{\Aexecution/[a-zA-Z0-9_.:-]+/events/\z}) }) &&
               output_limit.is_a?(Integer) && output_limit.positive?
             refuse!("unsupported_command")
           end

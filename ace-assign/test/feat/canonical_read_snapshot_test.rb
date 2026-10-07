@@ -45,6 +45,28 @@ module Ace
           ref: REF, read_boundary: snapshot)
       end
 
+      def test_complete_inventory_diff_admits_only_fixed_root_or_selected_event_paths
+        snapshot = Snapshot.new(repo_root: "/unused/repo", checkout_root: "/unused/checkout",
+          ref: REF, private_root: "/unused/private")
+        snapshot.instance_variable_set(:@view, "/unused/view")
+        snapshot.instance_variable_set(:@commit, "a" * 40)
+        calls = []
+        snapshot.define_singleton_method(:run!) do |argv, **options|
+          calls << [argv, options]
+          Struct.new(:stdout).new("controlled raw diff")
+        end
+        assert_equal "controlled raw diff", snapshot.history_diff(["a" * 40], ["execution/"], output_limit: 1024)
+        assert_equal "execution/", calls.last.first.last
+        assert_equal "a" * 40 + "\n", calls.last.last.fetch(:stdin_data)
+        %w[execution execution/assignment/ ../source/].each do |path|
+          assert_raises(Snapshot::Unavailable) { snapshot.history_diff(["a" * 40], [path], output_limit: 1024) }
+        end
+        assert_raises(Snapshot::Unavailable) do
+          snapshot.history_diff(["a" * 40], ["execution/", "execution/assignment/events/"], output_limit: 1024)
+        end
+        assert_equal 1, calls.size
+      end
+
       def test_lock_fifo_and_symlink_checkout_refuse_without_waiting_for_writer
         fixture do |snapshot, writer, _repo, private_root, _event, _commit|
           checkout = writer.instance_variable_get(:@checkout_root)

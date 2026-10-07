@@ -195,6 +195,64 @@ module Ace
         end
       end
 
+      def test_complete_inventory_batches_multi_chunk_history_without_hiding_repaired_or_renamed_events
+        with_temp_cache do |cache_dir|
+          repo = File.join(cache_dir, "repo")
+          init_repo(repo)
+          journal = Molecules::EvidenceJournal.new(repo_root: repo, ref: REF, checkout_root: File.join(cache_dir, "co"))
+          first = build_event(type: "intent", attempt_id: "one", payload: {})
+          introduction = journal.append(assignment_id: "alpha", attempt_id: "one", events: [first])
+          other = build_event(type: "intent", attempt_id: "two", payload: {})
+          tip = journal.append(assignment_id: "beta", attempt_id: "two", events: [other])
+          tree = git(repo, "rev-parse", "#{tip}^{tree}").strip
+          70.times { tip = git(repo, "commit-tree", tree, "-p", tip, "-m", "retained no-change prefix").strip }
+          counts = Hash.new(0)
+          %i[assignment_ids read_event_snapshots! history_diff! read_event_blobs!].each do |name|
+            original = journal.method(name)
+            journal.define_singleton_method(name) do |*args, **keywords, &block|
+              counts[name] += 1
+              original.call(*args, **keywords, &block)
+            end
+          end
+          inventory = journal.canonical_event_inventory!(commit: tip)
+          assert_equal %w[alpha beta], inventory.fetch("events").keys.sort
+          assert_equal introduction, inventory.fetch("introductions").fetch("alpha").fetch(first.fetch("digest"))
+          assert_equal 0, counts[:assignment_ids]
+          assert_equal 1, counts[:read_event_snapshots!]
+          assert_equal 2, counts[:history_diff!]
+          assert_operator counts[:read_event_blobs!], :<=, 3
+          checkout = File.join(cache_dir, "co", "journal")
+          git(checkout, "checkout", "--detach", tip)
+          path = Dir.glob(File.join(checkout, "execution", "alpha", "events", "*.json")).fetch(0)
+          original_bytes = File.binread(path)
+          File.write(path, JSON.generate(first.merge("payload" => {"invalid" => true})))
+          git(checkout, "add", "-A")
+          git(checkout, "commit", "-m", "invalid historical event")
+          File.binwrite(path, original_bytes)
+          git(checkout, "add", "-A")
+          git(checkout, "commit", "-m", "repair tip event")
+          assert_raises(AttemptErrors::EvidenceUnavailable) { journal.canonical_event_inventory!(commit: git(checkout, "rev-parse", "HEAD").strip) }
+          git(checkout, "checkout", "--detach", tip)
+          File.rename(path, File.join(File.dirname(path), "renamed.json"))
+          git(checkout, "add", "-A")
+          git(checkout, "commit", "-m", "rename retained event")
+          assert_raises(AttemptErrors::EvidenceUnavailable) { journal.canonical_event_inventory!(commit: git(checkout, "rev-parse", "HEAD").strip) }
+          git(checkout, "checkout", "--detach", tip)
+          FileUtils.rm_rf(File.join(checkout, "execution", "beta"))
+          git(checkout, "add", "-A")
+          git(checkout, "commit", "-m", "delete whole historical assignment")
+          assert_raises(AttemptErrors::EvidenceUnavailable) { journal.canonical_event_inventory!(commit: git(checkout, "rev-parse", "HEAD").strip) }
+          git(checkout, "checkout", "--detach", tip)
+          File.write(File.join(File.dirname(path), "ignored.txt"), "not an event")
+          FileUtils.mkdir_p(File.join(checkout, "execution", "requests", "events"))
+          File.symlink("unused", File.join(checkout, "execution", "requests", "events", "non-event.json"))
+          File.write(File.join(checkout, "execution", "alpha", "definition.json"), "non-event definition")
+          git(checkout, "add", "-A")
+          git(checkout, "commit", "-m", "non-event canonical layout")
+          assert_equal inventory.fetch("events"), journal.canonical_event_inventory!(commit: git(checkout, "rev-parse", "HEAD").strip).fetch("events")
+        end
+      end
+
       def test_fixed_snapshot_requires_an_actual_readable_commit_object
         with_temp_cache do |cache_dir|
           repo = File.join(cache_dir, "repo")

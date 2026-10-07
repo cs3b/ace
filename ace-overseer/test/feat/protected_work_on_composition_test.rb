@@ -6,6 +6,8 @@ require_relative "../../../ace-assign/test/support/original_launch_driver_owner_
 require_relative "../../../ace-assign/test/support/execution_boot_baseline_owner_fixture"
 require "ace/assign/authority/server"
 require "ace/assign/authority/client"
+require "ace/assign/authority/prepared_worker"
+require "ace/assign/authority/protected_assignment_context"
 require "ace/overseer/organisms/protected_work_on"
 require "ace/overseer/organisms/protected_steering"
 require "stringio"
@@ -133,11 +135,12 @@ class ProtectedWorkOnCompositionTest < AceOverseerTestCase
       "evidence_checkout_root" => @journal.checkout_root)
     @project.fetch("peer_credentials")[@launcher.fetch("uid").to_s] =
       @launcher.slice("gid", "groups").merge("scratch_root" => @root)
-    deployment, map, service = @deployment, @map, @service
+    @project["worker_uids"] = [@worker.fetch("uid")]
+    deployment, map, service, project = @deployment, @map, @service, @project
     digest_owner = Ace::Assign::Authority::Deployment.allocate
     digest_owner.define_singleton_method(:mapping) { |_| map }
     deployment.define_singleton_method(:mapping_digest) { |id| digest_owner.mapping_digest(id) }
-    deployment.define_singleton_method(:data) { {"launch_mappings" => {"mapping" => map}} }
+    deployment.define_singleton_method(:data) { {"launch_mappings" => {"mapping" => map}, "projects" => {"project" => project}} }
     owner = self
     deployment.define_singleton_method(:verify!) do |*_, kernel: nil, **_options|
       if owner.instance_variable_get(:@controlled_peers) && kernel
@@ -278,6 +281,129 @@ class ProtectedWorkOnCompositionTest < AceOverseerTestCase
     exercise_public_composition(steering: true, foreign_principal: true)
   end
 
+  def test_managed_public_artifact_is_consumed_by_original_scoped_worker_before_terminal_release
+    exercise_public_composition(steering: true, terminal: true, worker_consumption: true)
+  end
+
+  def test_public_original_prepared_fetch_measures_existing_canonical_read_boundaries
+    exercise_public_composition(measure_fetch: true)
+  end
+
+  def measure_public_prepared_fetch(ready)
+    counts = Hash.new(0)
+    names = %i[canonical_event_inventory! assignment_ids read_event_snapshots! git read_event_blobs! bounded_history_read! bounded_blob]
+    originals = names.to_h { |name| [name, @journal.method(name)] }
+    originals.each do |name, original|
+      @journal.define_singleton_method(name) do |*args, **keywords, &block|
+        counts[name.to_s] += 1
+        original.call(*args, **keywords, &block)
+      end
+    end
+    started = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+    kernel = StreamKernel.new(@kernel, me: @worker, peer: @service)
+    client = Ace::Assign::Authority::Client.new(mapping_id: "mapping", deployment: @deployment, kernel: kernel)
+    input = Ace::Assign::Authority::PreparedInput.fetch(client: client,
+      assignment_id: ready.fetch("assignment_id"), attempt_id: ready.fetch("attempt_id"))
+    assert_equal ready.fetch("original_binding_digest"), input.descriptor.fetch("original_binding_digest")
+    report = {method: "test_public_original_prepared_fetch_measures_existing_canonical_read_boundaries",
+      elapsed: Process.clock_gettime(Process::CLOCK_MONOTONIC) - started, counts: counts,
+      selected_steps: input.work.manifest.fetch("steps").size}
+    path = File.expand_path("../../../.ace-local/test/work-on-diagnostic/fetch-read-counts.json", __dir__)
+    FileUtils.mkdir_p(File.dirname(path))
+    File.write(path, JSON.pretty_generate(report))
+  ensure
+    originals&.each { |name, original| @journal.define_singleton_method(name, original) }
+  end
+
+  def consume_public_work(ready, output:)
+    phase_started = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+    phase_path = File.expand_path("../../../.ace-local/test/work-on-diagnostic/worker-phases.jsonl", __dir__)
+    FileUtils.mkdir_p(File.dirname(phase_path))
+    phase = lambda do |name|
+      File.open(phase_path, "a") do |file|
+        file.puts JSON.generate(method: "test_managed_public_artifact_is_consumed_by_original_scoped_worker_before_terminal_release",
+          stage: name, elapsed: Process.clock_gettime(Process::CLOCK_MONOTONIC) - phase_started)
+        file.flush
+      end
+    end
+    File.write(phase_path, "")
+    phase.call("worker-entry")
+    worker_kernel = StreamKernel.new(@kernel, me: @worker, peer: @service)
+    worker_client = Ace::Assign::Authority::Client.new(mapping_id: "mapping", deployment: @deployment, kernel: worker_kernel)
+    history = Object.new
+    deployment = @deployment
+    history.define_singleton_method(:descriptors) { [deployment] }
+    context = Ace::Assign::Authority::ProtectedAssignmentContext.new(deployment: deployment, history: history,
+      uid: @worker.fetch("uid"), kernel: worker_kernel, env: {})
+    captured, consumed = [], []
+    owner = self
+    query = Object.new
+    query.define_singleton_method(:query) do |provider, prompt, **parameters|
+      phase.call("provider-query")
+      captured << [provider, prompt, parameters]
+      selectors = {assignment: ready.fetch("assignment_id"), mapping: "mapping", attempt: ready.fetch("attempt_id")}
+      phase.call("provider-fetch-before")
+      input = Ace::Assign::Authority::PreparedInput.fetch(client: worker_client,
+        assignment_id: selectors.fetch(:assignment), attempt_id: selectors.fetch(:attempt))
+      phase.call("provider-fetch-after")
+      owner.assert_equal ready.fetch("original_binding_digest"), input.descriptor.fetch("original_binding_digest")
+      selectors[:assignment] += "@" + input.descriptor.fetch("scope")
+      queue = Ace::Assign::Authority::PreparedQueue.new(work: input.work, descriptor: input.descriptor)
+      initial = queue.with_executor { |executor| executor.status.fetch(:state) }
+      leaves = initial.subtree_steps(input.descriptor.fetch("scope")).reject { |step| initial.has_incomplete_children?(step.number) }
+      input.work.manifest.fetch("steps").each do |entry|
+        body = input.work.parse_queue_step!(input.work.files.fetch("steps/" + entry.fetch("filename"))).fetch(:body)
+        owner.assert_includes prompt, input.render(body)
+      end
+      input.work.manifest.fetch("steps").size.times do
+        state = queue.with_executor { |executor| executor.status.fetch(:state) }
+        break if state.subtree_complete?(input.descriptor.fetch("scope"))
+        selected = state.next_workable_in_subtree(input.descriptor.fetch("scope"))
+        owner.refute_nil selected, "captured queue must expose a workable selected leaf"
+        start = Ace::Assign::CLI::Commands::Start.new
+        start.instance_variable_set(:@protected_assignment_context, context)
+        phase.call("leaf-#{selected.number}-start-before")
+        start.call(**selectors, quiet: true)
+        step = Ace::Assign::CLI::Commands::Step.new
+        step.instance_variable_set(:@protected_assignment_context, context)
+        owner.fixture_output(StringIO.new, asynchronous: true)
+        phase.call("leaf-#{selected.number}-step-before")
+        step.call(**selectors, step: selected.number)
+        owner.assert_equal input.render(selected.instructions).chomp,
+          Thread.current.thread_variable_get(:composed_stdout).string.chomp
+        finish = Ace::Assign::CLI::Commands::Finish.new
+        finish.instance_variable_set(:@protected_assignment_context, context)
+        phase.call("leaf-#{selected.number}-finish-before")
+        finish.call(**selectors, message: "Controlled captured step #{selected.number} consumed.", quiet: true)
+        phase.call("leaf-#{selected.number}-finish-after")
+        consumed << selected.number
+      end
+      final = queue.with_executor { |executor| executor.status.fetch(:state) }
+      owner.assert final.subtree_complete?(input.descriptor.fetch("scope"))
+      owner.assert_empty final.failed
+      owner.assert_equal leaves.map(&:number), consumed
+      {text: "Controlled captured subtree complete.", provider: provider, model: "controlled", metadata: {}}
+    end
+    launcher = Ace::Assign::Molecules::ForkSessionLauncher.new(config: {}, query_interface: query,
+      runner: Object.new, interactive_builder: Object.new)
+    launcher.define_singleton_method(:detect_provider_session) { |*| raise "forbidden native provider discovery" }
+    worker = Ace::Assign::Authority::PreparedWorker.new(kernel: worker_kernel, client_factory: ->(_) { worker_client }, launcher: launcher,
+      env: {"ACE_ASSIGN_LAUNCH_MAPPING" => "mapping", "ACE_ASSIGN_ASSIGNMENT_ID" => ready.fetch("assignment_id"), "ACE_ASSIGN_ATTEMPT_ID" => ready.fetch("attempt_id")})
+    before = @journal.ref_value
+    phase.call("worker-run-before")
+    result = worker.run
+    phase.call("worker-run-after")
+    assert_equal "Controlled captured subtree complete.", result.fetch(:text)
+    assert_equal 1, captured.size
+    assert_includes captured.first[1], "Reviewed public task instructions."
+    refute_includes captured.first[1], "/as-assign-drive"
+    assert_equal false, captured.first[2].fetch(:fallback)
+    assert_equal ready.fetch("attempt_id"), captured.first[2].fetch(:subprocess_env).fetch("ACE_ASSIGN_ATTEMPT_ID")
+    assert_raises(Ace::Assign::AttemptErrors::EvidenceUnavailable) { worker.run }
+    assert_equal before, @journal.ref_value
+    fixture_output(output, asynchronous: true)
+  end
+
   def fixture_output(value, asynchronous:)
     if asynchronous
       Thread.current.thread_variable_set(:composed_stdout, value)
@@ -286,8 +412,8 @@ class ProtectedWorkOnCompositionTest < AceOverseerTestCase
     end
   end
 
-  def exercise_public_composition(steering: false, lose_prompt_reply: false, terminal: false, negative_replay: false, stop_replay: false, foreign_principal: false)
-    @controlled_peers = foreign_principal
+  def exercise_public_composition(steering: false, lose_prompt_reply: false, terminal: false, negative_replay: false, stop_replay: false, foreign_principal: false, worker_consumption: false, measure_fetch: false)
+    @controlled_peers = foreign_principal || worker_consumption || measure_fetch
     fixture(prepare_attempt: false) do
       assert_empty @journal.read_events("assignment")
       client_kernel = start_public_server(lose_prompt_reply: lose_prompt_reply)
@@ -374,6 +500,7 @@ class ProtectedWorkOnCompositionTest < AceOverseerTestCase
               prompt = Ace::Overseer::CLI::Commands::Prompt.new(steering: protected_steering, input: StringIO.new("exact public steering\n"))
               original_output = terminal ? Thread.current.thread_variable_get(:composed_stdout) : $stdout
               fixture_output(StringIO.new, asynchronous: terminal)
+              consume_public_work(ready, output: Thread.current.thread_variable_get(:composed_stdout)) if worker_consumption
               if lose_prompt_reply
                 assert_raises(Ace::Support::Cli::Error) { prompt.call(**target, stdin: true) }
                 assert @prompt_reply_lost, "actual public reply fault was not reached"
@@ -503,8 +630,14 @@ class ProtectedWorkOnCompositionTest < AceOverseerTestCase
       # Assign command and its complete fixed argv parser/retained input reads.
       Ace::Assign::Authority::LaunchDriver.stub(:new, ->(**) { driver }) do
         Ace::Assign.stub(:cache_dir, cache) do
-          Dir.chdir(@journal.repo_root) do
+          original_cwd = Dir.pwd
+          begin
+            # The excluded fork runs as a thread: do not retain a chdir block
+            # while the real worker resolver enters its own scoped cwd.
+            Dir.chdir(@journal.repo_root)
             command.call(task: ["8wr.t.abc"], project: "project", mutation: "composed", quiet: true)
+          ensure
+            Dir.chdir(original_cwd)
           end
         end
       end
@@ -516,6 +649,7 @@ class ProtectedWorkOnCompositionTest < AceOverseerTestCase
       assert_equal "exited", child.state
       assert_equal ["authority", "launch"], process.argv.first(2)
       ready = JSON.parse(process.frame.string)
+      measure_public_prepared_fetch(ready) if measure_fetch
       assert_equal "launch_ready", ready.fetch("type")
       assert_equal ready, child.ready
       canonical = status.join_ready!(project: "project", agent: "mapping", ready: ready).fetch("item")

@@ -176,13 +176,35 @@ module Ace
         # all requested headers, including unchanged commits; only immutable
         # changed blob bytes are batched rather than respawned at each node.
         def each_history_event_snapshot!(ids, nodes:)
+          inventory = ids.nil?
+          ids = [] if inventory
           files = ids.to_h { |id| [id, {}] }
           contents = ids.to_h { |id| [id, {}] }
-          paths = ids.map { |id| "execution/#{id}/events/" }
+          paths = inventory ? ["execution/"] : ids.map { |id| "execution/#{id}/events/" }
           nodes.reverse.each_slice(64) do |chunk|
             commits = chunk.map(&:first)
             raw = history_diff!(commits, paths)
-            changes = decode_history_diff!(commits, paths, raw)
+            changes = decode_history_diff!(commits, paths, raw, all_paths: inventory)
+            if inventory
+              changes.each_value do |entries|
+                entries.each do |path, *_|
+                  id = path.split("/")[1]
+                  next if id == "requests"
+                  unless id && id.match?(JournalMutation::ID)
+                    raise AttemptErrors::EvidenceUnavailable, "historical assignment path is invalid"
+                  end
+                  unless files.key?(id)
+                    raise AttemptErrors::EvidenceUnavailable, "historical assignment inventory exceeds bound" if ids.size >= HISTORY_LIMIT
+                    ids << id
+                    files[id], contents[id] = {}, {}
+                  end
+                end
+                entries.select! do |path, *_|
+                  id = path.split("/")[1]
+                  id != "requests" && path.start_with?("execution/#{id}/events/") && path.end_with?(".json")
+                end
+              end
+            end
             oids = changes.values.flatten(1).filter_map { |change| change[3] unless change[3] == "0" * 40 }.uniq
             decoded = {}
             oids.each_slice(64) do |batch|
@@ -225,7 +247,7 @@ module Ace
               yield node, snapshots, files
             end
           end
-          _events, actual = read_event_snapshots!(ids, commit: nodes.first.first)
+          _events, actual = ids.empty? ? [{}, {}] : read_event_snapshots!(ids, commit: nodes.first.first)
           raise AttemptErrors::EvidenceUnavailable, "historical reconstructed tip differs from its immutable tree" unless files == actual
         rescue JSON::ParserError, KeyError, TypeError, ArgumentError
           raise AttemptErrors::EvidenceUnavailable, "historical batched snapshots are unverifiable"
@@ -260,7 +282,7 @@ module Ace
           raise AttemptErrors::EvidenceUnavailable, "historical batch is unavailable"
         end
 
-        def decode_history_diff!(commits, paths, raw)
+        def decode_history_diff!(commits, paths, raw, all_paths: false)
           unless raw.is_a?(String) && raw.end_with?("\0")
             raise AttemptErrors::EvidenceUnavailable, "historical diff frame is incomplete"
           end
@@ -280,8 +302,18 @@ module Ace
               end
               seen[path] = true
               position += 2
-              next unless path.end_with?(".json")
+              next unless all_paths || path.end_with?(".json")
               old, fresh, status = match.values_at(3, 4, 5)
+              if all_paths && !path.match?(%r{\Aexecution/[^/]+/events/.*\.json\z})
+                # Complete discovery needs these assignment paths, but their
+                # non-event bodies/modes never become canonical event facts.
+                result.fetch(commit) << [path, status, old, fresh]
+                next
+              end
+              if all_paths && path.start_with?("execution/requests/")
+                result.fetch(commit) << [path, status, old, fresh]
+                next
+              end
               modes = match.values_at(1, 2)
               unless modes.all? { |mode| %w[000000 100644 100755 120000].include?(mode) } &&
                   (status == "A" ? old == "0" * 40 && fresh != "0" * 40 && modes.first == "000000" && modes.last != "000000" :
@@ -301,40 +333,37 @@ module Ace
         # filters ownership. A missing current fact cannot hide an older one.
         def canonical_event_inventory!(commit:)
           nodes = canonical_history_nodes!(commit)
-          root_events, introductions = nil, {}
-          newer_chains, newer_files = nil, nil
-          nodes.each do |node|
-            ids = assignment_ids(commit: node.first)
-            snapshots, files = ids.empty? ? [{}, {}] : read_event_snapshots!(ids, commit: node.first)
+          root_events, introductions = {}, {}
+          previous_chains, previous_files = {}, {}
+          each_history_event_snapshot!(nil, nodes: nodes) do |node, snapshots, files|
             chains = snapshots.transform_values { |events| validated_attempt_chains!(events) }
             snapshots.each do |id, events|
               unless events.all? { |event| files.fetch(id).key?(event_filename(event)) }
                 raise AttemptErrors::EvidenceUnavailable, "canonical event filename differs"
               end
             end
-            if root_events.nil?
-              root_events = snapshots.reject { |_id, events| events.empty? }
-              introductions = root_events.to_h { |id, events| [id, events.to_h { |event| [event.fetch("digest"), node.first] }] }
-            else
-              chains.each do |id, attempts|
-                attempts.each do |attempt_id, chain|
-                  newer = newer_chains.fetch(id, {}).fetch(attempt_id, [])
-                  unless chain == newer.take(chain.size)
-                    raise AttemptErrors::EvidenceUnavailable, "canonical inventory history removed or rewrote an attempt"
-                  end
+            previous_chains.each do |id, attempts|
+              attempts.each do |attempt_id, chain|
+                newer = chains.fetch(id, {}).fetch(attempt_id, [])
+                unless chain == newer.take(chain.size)
+                  raise AttemptErrors::EvidenceUnavailable, "canonical inventory history removed or rewrote an attempt"
                 end
-              end
-              files.each do |id, selected_files|
-                unless selected_files.all? { |name, oid| newer_files.fetch(id, {})[name] == oid }
-                  raise AttemptErrors::EvidenceUnavailable, "canonical inventory history removed or rewrote event bytes"
-                end
-              end
-              snapshots.each do |id, events|
-                events.each { |event| introductions.fetch(id)[event.fetch("digest")] = node.first }
               end
             end
-            newer_chains, newer_files = chains, files
+            previous_files.each do |id, selected_files|
+              unless selected_files.all? { |name, oid| files.fetch(id, {})[name] == oid }
+                raise AttemptErrors::EvidenceUnavailable, "canonical inventory history removed or rewrote event bytes"
+              end
+            end
+            snapshots.each do |id, events|
+              introductions[id] ||= {}
+              events.each { |event| introductions.fetch(id)[event.fetch("digest")] ||= node.first }
+            end
+            root_events = snapshots.reject { |_id, events| events.empty? }
+            previous_chains = chains
+            previous_files = files.transform_values(&:dup)
           end
+          introductions.select! { |id, _| root_events.key?(id) }
           freeze_inventory_projection("commit" => commit, "events" => root_events, "introductions" => introductions)
         rescue KeyError, TypeError, ArgumentError, NoMethodError
           raise AttemptErrors::EvidenceUnavailable, "canonical inventory history is unverifiable"
