@@ -4,6 +4,7 @@ require_relative "../../../ace-lab/test/support/protected_service_boundary_fixtu
 require "ace/git/cli"
 require "ace/git/forgejo"
 require "stringio"
+require "ace/assign/cli/commands/delivery"
 
 # Actual wire/claim/candidate/import owners; only kernel identity, process
 # execution and remote provider transport are controlled excluded boundaries.
@@ -13,6 +14,8 @@ class ServiceMergeBoundaryTest < AceGitTestCase
 
   def configure_result_owner_fixture
     super
+    @project.merge!("journal_repository" => @journal.repo_root, "evidence_git_ref" => @journal.ref,
+      "evidence_checkout_root" => @journal.checkout_root)
     uid = Process.uid
     @executor.merge!("uid" => uid, "gid" => Process.gid, "groups" => Process.groups.sort)
     @project["service_executor_uids"] = [uid]
@@ -26,6 +29,7 @@ class ServiceMergeBoundaryTest < AceGitTestCase
 
   def test_real_receiver_fixed_cli_neutral_merge_and_canonical_receipt_import
     fixture do
+      issue_original
       submission, = prepared_submission
       input = {"target" => {"resource" => "#{URL}/pulls/25", "artifact_digest" => nil}, "method" => "squash",
         "delivery" => {"forge_server" => "selected", "forge_default" => false,
@@ -104,6 +108,58 @@ class ServiceMergeBoundaryTest < AceGitTestCase
       assert_equal target, record.fetch("target")
       assert_equal "merge", record.fetch("operation")
       assert @journal.read_events("assignment").any? { |event| event["type"] == "service_transition" && event.dig("payload", "state") == "succeeded" }
+      @kernel.peer_identity = @worker
+      worker_kernel = Ace::Assign::EndcapResultOwnerFixture::Kernel.new
+      original_worker = @worker
+      worker_kernel.define_singleton_method(:capture) { |_| original_worker }
+      worker_kernel.peer_identity = @service.slice("uid", "gid", "groups")
+      worker_client = Ace::Assign::Authority::Client.new(mapping_id: "mapping", deployment: @deployment, kernel: worker_kernel)
+      arguments = {assignment_id: "assignment", attempt_id: @attempt, operation: "merge", service_request_id: "service-request",
+        candidate_head: @head, candidate_generation: submission.fetch("candidate_generation"), input_digest: digest, target: target}
+      consumer = Ace::Assign::Organisms::ProtectedDeliveryCoordinator.new(client: worker_client, project_id: "project")
+      consumed = consumer.perform(**arguments)
+      assert_equal "succeeded", consumed.fetch("state")
+      assert_equal "merge", consumed.fetch("delivery_event").fetch("payload").fetch("operation")
+      assert_equal "succeeded", consumer.perform(**arguments.merge(operation: "status")).fetch("state")
+      assert_equal 1, @journal.read_events("assignment").count { |event| event["type"] == "delivery" }
+      assert_equal 1, calls.count { |args| args[1] == "POST" }, "worker consumption never reruns merge"
+      project = @project
+      @deployment.define_singleton_method(:data) { {"projects" => {"project" => project}} }
+      history = Object.new
+      history.define_singleton_method(:descriptors) { [] }
+      context = Ace::Assign::Authority::ProtectedAssignmentContext.new(deployment: @deployment, history: history,
+        uid: @worker.fetch("uid"), kernel: worker_kernel, env: {})
+      cli = Ace::Assign::CLI::Commands::Delivery.new(protected_context: context)
+      before_consume = @journal.ref_value
+      out, err = capture_io do
+        cli.call(assignment: "assignment", attempt: @attempt, operation: "merge", mapping: "mapping", scope: "010",
+          candidate_head: @head, candidate_generation: submission.fetch("candidate_generation"),
+          input_digest: digest, target: target.fetch("resource"), service_request: "service-request")
+      end
+      assert_empty err
+      assert_equal "succeeded", JSON.parse(out).fetch("state")
+      assert_equal before_consume, @journal.ref_value, "public receipt consumption is read-only"
     end
+  end
+
+  # Same controlled gate/release handshake as PreparedWorkFetchTest#issue_original;
+  # no native worker is executed. Public original-input fetch requires issued
+  # state; the inherited result-only fixture otherwise stops at bound.
+  def issue_original
+    state = call("inspect_launch", {}, peer: @launcher, role: :launcher).fetch(:data)
+    server, worker = UNIXSocket.pair
+    request = {"params" => {"mapping_id" => "mapping", "launch_ticket" => state.fetch("launch_ticket")}}
+    wire = Ace::Assign::EndcapResultOwnerFixture::WIRE
+    gate = Thread.new { @launch.gate_ready(request: request, peer: @worker, socket: server, deadline: wire.deadline(5)) }
+    assert_equal "ready", wire.read(worker, deadline: wire.deadline(5)).dig("data", "phase")
+    call("release_launch", {"launch_ticket" => state.fetch("launch_ticket"), "process_binding" => @binding,
+      "expected_generation" => state.fetch("generation")}, id: "release", peer: @launcher, role: :launcher)
+    assert_equal "release", wire.read(worker, deadline: wire.deadline(5)).fetch("operation")
+    gate.join(2)
+    refute gate.alive?
+  ensure
+    server&.close
+    worker&.close
+    gate&.kill if gate&.alive?
   end
 end

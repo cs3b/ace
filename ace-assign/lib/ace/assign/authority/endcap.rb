@@ -6,6 +6,7 @@ require "securerandom"
 require_relative "candidate_transfer"
 require_relative "receipt_transfer"
 require_relative "service_evidence"
+require_relative "service_delivery_evidence"
 require_relative "../molecules/canonical_evidence"
 
 module Ace

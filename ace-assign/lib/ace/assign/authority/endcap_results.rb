@@ -285,8 +285,10 @@ module Ace
           when :launcher
             peer["uid"] == map.fetch("launcher_uid") && @kernel.same?(peer, origin.fetch("launcher_identity"))
           when :worker
-            kind == "result" && peer["uid"] == map.fetch("worker_uid") &&
-              @kernel.descendant?(peer, origin.fetch("process_binding").fetch("process_identity"))
+            peer["uid"] == map.fetch("worker_uid") &&
+              @kernel.descendant?(peer, origin.fetch("process_binding").fetch("process_identity")) &&
+              (kind == "result" || kind == "service" && record && record["caller_uid"] == peer["uid"] &&
+                record["request_id"] == purpose_id && @kernel.descendant?(peer, record.fetch("worker_process_binding")))
           when :reviewer
             review = assigned_review(events)
             %w[result review].include?(kind) && review && current && review["head"] == current["head"] &&
@@ -305,7 +307,7 @@ module Ace
           service_policy!.visible!(project: map.fetch("project_id"), uid: peer.fetch("uid"))
           origin = retained_origin(events, params)
           kind, id = params.values_at("kind", "purpose_id")
-          if (role == :worker && kind != "result") || (role == :reviewer && !%w[result review].include?(kind)) ||
+          if (role == :worker && !%w[result service].include?(kind)) || (role == :reviewer && !%w[result review].include?(kind)) ||
               (role == :executor && kind != "service")
             raise AttemptErrors::UnauthorizedIdentity, "canonical evidence kind is unauthorized"
           end

@@ -61,14 +61,13 @@ module Ace
           unless @deployment && assignment_id && scope && scope.match?(PreparedWork::SCOPE)
             raise AttemptErrors::EvidenceUnavailable, "prepared_input_unavailable: explicit scoped assignment required"
           end
-          mapping = selected_hint(options[:mapping], "ACE_ASSIGN_LAUNCH_MAPPING")
           attempt = selected_hint(options[:attempt], "ACE_ASSIGN_ATTEMPT_ID")
           hint = @env["ACE_ASSIGN_ASSIGNMENT_ID"].to_s
           unless hint.empty? || hint == assignment_id
             raise AttemptErrors::EvidenceUnavailable, "prepared assignment hint differs"
           end
           @kernel ||= Ace::Runtime::Molecules::ProtectedLinux.new
-          input = PreparedInput.fetch(client: Client.new(mapping_id: mapping, deployment: @deployment, kernel: @kernel),
+          input = PreparedInput.fetch(client: client(options: options),
             assignment_id: assignment_id, attempt_id: attempt)
           unless input.descriptor.fetch("scope") == scope
             raise AttemptErrors::EvidenceUnavailable, "prepared_input_mismatch: scoped CLI selection"
@@ -76,6 +75,13 @@ module Ace
           input
         rescue KeyError
           raise AttemptErrors::EvidenceUnavailable, "prepared_input_unavailable: original installed mapping is unavailable"
+        end
+
+        def client(options:)
+          raise AttemptErrors::EvidenceUnavailable, "protected installed authority is unavailable" unless @deployment
+          mapping = selected_hint(options[:mapping], "ACE_ASSIGN_LAUNCH_MAPPING")
+          @kernel ||= Ace::Runtime::Molecules::ProtectedLinux.new
+          Client.new(mapping_id: mapping, deployment: @deployment, kernel: @kernel)
         end
 
         private

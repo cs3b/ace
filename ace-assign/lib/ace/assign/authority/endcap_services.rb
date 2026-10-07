@@ -266,6 +266,12 @@ module Ace
             end
             data = service_projection(record).merge("generation" => journal.authority_generation(events),
               "journal_commit" => commit)
+            data["input_digest"] = record.fetch("input_digest") if record["operation"] == "merge"
+            if record.values_at("operation", "state") == %w[merge succeeded]
+              event = ServiceDeliveryEvidence.new(journal: journal).verified(record: record, events: events, commit: commit)
+              data.merge!(record.slice("input_digest", "authorization", "executor_uid", "completion_digest", "receipt"))
+              data["delivery_event"] = event
+            end
             if role == :executor
               data["settlement_context"] = read.fetch(:settlement_context) ||
                 ServiceEvidence.new(journal: journal).settlement_context(record, commit: commit, read_view: read.fetch(:read_view))
@@ -536,6 +542,11 @@ module Ace
           normalized = JSON.parse(JSON.generate(receipt)).merge("evidence" => plan.fetch(:references))
           replacement = record.merge("state" => receipt.fetch("outcome"), "receipt" => normalized, "completion_digest" => digest)
           replacement["failed_at"] = Time.now.utc.iso8601(9) if receipt["outcome"] == "failed"
+          if replacement.values_at("operation", "state") == %w[merge succeeded]
+            event = ServiceDeliveryEvidence.new(journal: journal).completion_event(record: replacement,
+              receipt: normalized, completion_digest: digest, artifacts: admitted.fetch(:artifacts))
+            plan = plan.merge(events: plan.fetch(:events) + [event])
+          end
           plan.merge(data: service_projection(replacement), service_updates: [{request_id: record.fetch("request_id"),
             expected: record, replacement: replacement, event_type: "service_transition"}])
         end
