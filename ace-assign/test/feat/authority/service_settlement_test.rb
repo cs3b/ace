@@ -289,23 +289,6 @@ module Ace
         end
       end
 
-      def start_service_server
-        @kernel.peer_identity = @executor
-        @server = Authority::Server.new(authority_id: "authority", lifecycle: @router,
-          deployment: @deployment, kernel: @kernel, composition: "services")
-        wire = Object.new
-        wire.define_singleton_method(:root_path!) { |*_, **_| true }
-        %i[socket_identity read write deadline].each do |name|
-          wire.define_singleton_method(name) { |*args, **options| WIRE.public_send(name, *args, **options) }
-        end
-        @server.define_singleton_method(:wire) { wire }
-        @owner = Thread.new { @server.serve }
-        Timeout.timeout(3) { sleep 0.005 until File.socket?(@service.fetch("socket_path")) }
-        client_kernel = Kernel.new
-        client_kernel.peer_identity = @service.slice("uid", "gid", "groups")
-        Authority::Client.new(mapping_id: "mapping", deployment: @deployment, kernel: client_kernel)
-      end
-
       def test_actual_client_server_challenge_eof_and_completion_transfer
         fixture do
           request_service

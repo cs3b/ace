@@ -99,6 +99,25 @@ module Ace
           decision
         end
 
+        # Inspection never renews effect permission or selects effect argv.
+        def inspection!(name, project:, service_id:, executor_uid:)
+          raise ArgumentError, "invalid inspection operation" unless name.is_a?(String) && name.match?(NAME)
+          operation = @operations[name]
+          unless operation.is_a?(Hash) && operation["project"] == project && operation["service_id"] == service_id &&
+              operation["executor_uid"].is_a?(Integer) && operation["executor_uid"] == executor_uid &&
+              operation.fetch("transport", "local") == "local"
+            raise SecurityError, "inspection does not match the selected original executor"
+          end
+          argv = operation["no_effect_argv"]
+          unless argv.is_a?(Array) && argv.length.between?(1, 16) &&
+              argv.all? { |value| value.is_a?(String) && value.bytesize.between?(1, 1024) && !value.include?("\0") } &&
+              argv.first.start_with?("/")
+            raise Ace::Lab::InvalidConfigurationError, "operation has no fixed no-effect inspector"
+          end
+          executable = trusted_executable!(argv.first, executor_uid)
+          {"executor_uid" => executor_uid, "argv" => [executable] + argv.drop(1)}
+        end
+
         private
 
         # Validate the executable and every directory component on its

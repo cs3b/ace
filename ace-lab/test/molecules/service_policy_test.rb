@@ -73,6 +73,29 @@ module Ace
           end
         end
       end
+
+      def test_inspection_selects_only_original_executor_without_renewing_effect_lease
+        operation = {"project" => "ace", "service_id" => "publisher", "executor_uid" => Process.uid,
+          "argv" => ["/must/not/execute"], "no_effect_argv" => ["/usr/bin/true"],
+          "lease_expires_at" => "2020-01-01T00:00:00Z"}
+        policy = Molecules::ServicePolicy.new("operations" => {"publish" => operation})
+        assert_equal({"executor_uid" => Process.uid, "argv" => [File.realpath("/usr/bin/true")]},
+          policy.inspection!("publish", project: "ace", service_id: "publisher", executor_uid: Process.uid))
+        assert_raises(SecurityError) { policy.inspection!("publish", project: "other", service_id: "publisher", executor_uid: Process.uid) }
+        assert_raises(SecurityError) { policy.inspection!("publish", project: "ace", service_id: "other", executor_uid: Process.uid) }
+        assert_raises(SecurityError) { policy.inspection!("publish", project: "ace", service_id: "publisher", executor_uid: Process.uid + 1) }
+        operation.delete("no_effect_argv")
+        assert_raises(Ace::Lab::InvalidConfigurationError) do
+          policy.inspection!("publish", project: "ace", service_id: "publisher", executor_uid: Process.uid)
+        end
+        operation["no_effect_argv"] = ["/usr/bin/true", "bad\0argument"]
+        assert_raises(Ace::Lab::InvalidConfigurationError) do
+          policy.inspection!("publish", project: "ace", service_id: "publisher", executor_uid: Process.uid)
+        end
+        operation["no_effect_argv"] = ["/usr/bin/true"]
+        operation["transport"] = "unix"
+        assert_raises(SecurityError) { policy.inspection!("publish", project: "ace", service_id: "publisher", executor_uid: Process.uid) }
+      end
     end
   end
 end
