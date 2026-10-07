@@ -233,6 +233,9 @@ module Ace
               assert_equal 1, entries.size
               entry = entries.first
               assert_equal lineage.binding.fetch("boot_baseline_selection"), entry.fetch("boot_baseline_selection")
+              assert_equal lineage.binding.fetch("network_installation_selection"), entry.fetch("network_installation_selection")
+              assert_equal lineage.binding.fetch("network_namespace_identity"), entry.fetch("network_namespace_identity")
+              refute_same lineage.binding.fetch("network_installation_selection"), entry.fetch("network_installation_selection")
               assert_equal original.artifact_reference.fetch("sha256"), entry.fetch("descriptor_sha256")
               assert_equal lineage.binding_event.fetch("digest"), entry.fetch("scope_binding_event_id")
               assert_equal state.fetch("attempt_id"), entry.fetch("attempt_id")
@@ -240,6 +243,8 @@ module Ace
               assert entries.frozen?
               assert_raises(FrozenError) { entry.fetch("boot_baseline_selection")["sha256"].replace("b" * 64) }
               assert_raises(FrozenError) { entry.dig("baseline", "selected_devpts")["path"].replace("/other") }
+              assert_raises(FrozenError) { entry.dig("network_installation_selection", "installer_artifact", "path").replace("/other") }
+              assert_raises(FrozenError) { entry.fetch("network_namespace_identity")["inode"] = 0 }
               assert_raises(AttemptErrors::EvidenceUnavailable) { owner.maintenance_boot_baselines!(**contexts.first.merge(commit: "f" * 40)) }
               proof_path = entry.fetch("boot_baseline_selection").fetch("path")
               original_bytes = File.binread(proof_path)
