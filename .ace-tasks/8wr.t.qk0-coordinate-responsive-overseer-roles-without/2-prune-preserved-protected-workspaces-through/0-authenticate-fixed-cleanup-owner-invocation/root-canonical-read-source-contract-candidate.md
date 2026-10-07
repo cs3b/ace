@@ -1,0 +1,47 @@
+# Fixed root self observation and canonical read boundary — candidate
+
+Status: proposed source composition for independent review; no implementation or installed acceptance. Based on reviewed Receiver/result source 053b98320 and retained verdict 37d2ff72b. No task status change.
+
+## Self observation
+
+`ProtectedCleanupOwnerIdentity#observe_self!(deadline:)` is the fixed listener entrypoint. It selects only `Process.pid`; it accepts no PID, identity, unit, executable, path or caller role. It shares the existing serialized held observer verification with `observe!(socket:,deadline:)`, replacing only the socket peer join with exact current-process/MainPID equality. The unchanged root policy, original pidfd lifetime, typed Unit/Service snapshots, exact InvocationID, direct Type=exec argv, held immutable entry/interpreter/closure and aggregate five-second deadline remain mandatory. Generic ProtectedLinux stays unchanged. A positive receiver peer is authenticated separately and cannot be used as root self identity.
+
+## Fixed source selection and authoritative snapshot
+
+The source-owned listener composition selects the installed protected Deployment project, its literal `journal_repository`, `evidence_checkout_root` and `evidence_git_ref`, plus the installed Git executable. No wire field selects a repository, ref, checkout, object directory or config. Only the existing files reference backend is supported. Reftable, common-directory redirection, linked-worktree repository selection, symlinks, alternates, promisor storage and unsupported layouts refuse rather than falling back.
+
+The reader opens the existing `.evidence.lock` inode read-only/no-follow and acquires shared flock with nonblocking retries under the caller's absolute deadline. It never creates/replaces/chmods the source lock. Existing EvidenceJournal writers take exclusive flock on that same inode; source composition verifies its installed identity. Under the shared lock, select the configured ref from held regular loose-ref bytes, or the exact entry in held strict packed-refs bytes when no loose ref exists. Ref SHA must be exact supported object ID, not a symbolic ref. A malformed loose ref cannot fall back to packed refs. Record the original ref and supporting source identities; verify the same selection and held inode identities again before releasing the lock. Missing/changing evidence refuses. No lock is held across manager observation, root action, socket wait or canonical completion RPC.
+
+## Disposable clean read view
+
+Do not invoke repository Git against source config and do not point `GIT_OBJECT_DIRECTORY` at live source storage: even a clean admin directory can otherwise consume source `objects/info/alternates`.
+
+Reuse the existing CandidateTransfer clean quarantine/bounded Git pattern, not a new graph parser. Copy held regular loose object files and supported `.pack`/`.idx` pairs from the selected installed object store into an operation-private root directory. Never copy config, hooks, refs, info, grafts, replacements, alternates, promisor metadata, worktree administration or user paths. Strict inventories and no-follow held files refuse any unsupported object-store entry/redirect rather than ignoring it. Copy bytes from held descriptors, verify size/content and unchanged source object identity, and re-enumerate the source inventory while the shared journal lock remains held. Source admin/objects/refs are never written.
+
+The private view has literal minimal bare Git configuration and exactly the selected canonical ref value; it cannot publish or become authoritative. Copied-data limit is 256 MiB per operation, accounting every copied pack/index/loose byte; complete inventory has at most 4096 files plus directories, with streaming bounded copies and cleanup on every exit. Enumeration, lock acquisition, copies and commands share the absolute deadline. These are root-operation resource bounds, not a claim that arbitrarily large retained histories or unrelated candidate stores fit. Exceeding a byte/count/deadline bound raises a typed `CanonicalReadUnavailable < EvidenceUnavailable` with a fixed resource-limit reason before effect; never success, no-effect, truncation, selective unverified fallback or raised wire timeout. No omission is permitted to fit a budget.
+
+The copied selected commit and its complete first-parent graph remain immutable evidence after the source advances. Do not reclassify a valid copied prefix as corrupt merely because the live source ref later advances. Existing current service authorization remains a distinct required admission check; snapshot selection is not a grant, lease refresh or writer exclusion extending over native effects.
+
+After copying, run bounded strict Git object verification in that private view, then reuse the existing EvidenceJournal canonical inventory, first-parent introduction, complete event-chain, service record, original request and dispatch proof owners. No parallel canonical graph or authentication cache. Only fixed read builtins needed by those owners are callable; all mutation/checkout/update-ref/commit/fetch/network commands refuse. Read-only mode must also cover the existing raw blob batching path, not only `EvidenceJournal#git`.
+
+Use explicit stripped environment, the fixed installed executable, private `--git-dir`, no pager, no source config, no replacements, no optional locks and no lazy/network fetching. All reads, copies and Git commands consume one absolute operation deadline; stdout/stderr and selected blob sizes use existing bounded owners. Failure messages expose no raw Git/environment/private paths. The private view is removed on success/refusal; no accepted state or second journal remains.
+
+## Listener admission and lifecycle
+
+The root listener independently authenticates the positive installed receiver kernel peer and exact canonical admitted request/started dispatch from the selected snapshot. It compares the canonical original operation_owner_binding with `observe_self!` before effects. Existing claim, service lease, original mutation, protected prune input and prepared fixed operation selection remain required. It never substitutes receiver-returned booleans for canonical proof and never acts as the canonical executor.
+
+The fixed root lifetime serializes original dispatch consumption before invoking the Installer cleanup-only phase. Duplicate same original dispatch returns retained result or truthful uncertain; no second execution. Missing/replaced original root, changed request/dispatch, unavailable proof or expiry refuses before effects. Physical preservation/removal and inspect/recovery retain their separate reviewed qk0.2.1 obligations; this candidate does not advertise them delivered.
+
+## Controlled verification
+
+Required tests: fixed self PID vs foreign manager PID; positive receiver cannot masquerade as self; unchanged root policy/closure/deadline/concurrency checks; real temporary files-backend Git source with loose and packed ref selection; malformed/symbolic ref and unsupported backend refusal; source config hooks/include/fsmonitor never executed; source config/alternates changed during copying cannot affect private reads; source inventory/ref/lock replacement refusal; copied-byte/deadline exhaustion leaves canonical ref unchanged; read-only adapter rejects every writer; existing complete-chain/introduction/raw-blob corruption still refuses; actual listener original request/dispatch/root tuple success and replay without second effect. Kernel/manager/root/DAC observations remain injected; no root, native, installed or process-identity probes.
+
+## Source evidence
+
+Existing `EvidenceJournal#git` uses inherited-environment unbounded Open3, while `read_event_blobs!` separately uses BoundedProcess. Both require the same read boundary. Existing writer owner uses exclusive flock at `<evidence_checkout_root>/.evidence.lock`. CandidateTransfer already establishes clean bare quarantine, bounded Git and strict fsck; it does not currently publish retained journal bundles. The proposed view is only an isolated consumer of the original journal.
+
+Git documents separate repository-local configuration and object-directory/alternate behavior: https://git-scm.com/docs/git-config/2.48.0 and https://git-scm.com/book/en/v2/Git-Internals-Environment-Variables. These support isolation requirements, not a claim that this candidate is already implemented.
+
+## Independent readiness
+
+Root approved fixed self-observation using unchanged checks and, after reviewing the copy topology, approved bounded source snapshot copying under the existing lock/proof owners. Exact precision retained: count all copied storage and bounded inventory/time, reject redirects, source ref before/after consistency, release lock before manager/native waits, preserve immutable prefix semantics after source advance, and expose resource-limit refusal without manufactured success/no-effect. This is readiness approval for implementation, not source or installed acceptance.
