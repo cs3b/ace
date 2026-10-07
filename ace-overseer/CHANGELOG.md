@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Consume protected prune preview through the fixed service receiver, persist its complete result for explicitly authorized apply, and query canonical service status without repeating cleanup.
+
 - Package canonical project-overseer, Lab coordinator and second-commander role workflows with scoped authority, responsive delegation and the existing confirmed-delivery decision policy.
 
 - Execute protected candidate review through original launcher delegation, immutable Git snapshot, the maintained review engine and canonical receipt acceptance; expose explicit status/cancel modes without labd forwarding or automatic replay.

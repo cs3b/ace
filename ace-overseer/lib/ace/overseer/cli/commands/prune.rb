@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative "../../organisms/protected_prune"
+
 module Ace
   module Overseer
     module CLI
@@ -21,15 +23,60 @@ module Ace
           option :debug, aliases: ["-d"], type: :boolean, default: false, desc: "Show debug output"
           option :preservation, type: :string,
             desc: "YAML manifest (version 1) declaring verified cross-repository destinations"
+          option :project, desc: "Protected target project"
+          option :agent, desc: "Exact protected target mapping"
+          option :attempt, desc: "Exact protected target attempt"
+          option :request, desc: "Bounded protected prune JSON FILE"
+          option :status, type: :boolean, default: false, desc: "Observe the existing protected service request"
+          option :mutation, desc: "Stable explicit protected service request ID"
+          option :expected_generation, type: :integer, desc: "Expected current authority mutation generation"
+          option :authorization, desc: "Existing exact service authorization reference"
 
-          def initialize(orchestrator: nil, input: $stdin, output: $stdout)
+          def initialize(orchestrator: nil, protected_prune: nil, input: $stdin, output: $stdout)
             super()
             @orchestrator = orchestrator || Organisms::PruneOrchestrator.new
             @input = input
             @output = output
+            @protected_prune = protected_prune || Organisms::ProtectedPrune.new
           end
 
           def call(**options)
+            if options[:status]
+              if options.values_at(:project, :agent, :assignment, :attempt).any?
+                raise Ace::Support::Cli::Error, "Protected prune status selects its target only from FILE"
+              end
+              if options[:dry_run] || options[:yes] || options[:force] || options[:authorization] || options[:expected_generation] ||
+                  options[:preservation] || !Array(options[:targets]).empty? || options.key?(:runtime)
+                raise Ace::Support::Cli::Error, "Protected prune status forbids effect/local options"
+              end
+              @output.puts JSON.generate(@protected_prune.status(request: options[:request], mutation: options[:mutation]))
+              return
+            end
+            if options[:project]
+              unless options.values_at(:project, :agent, :assignment, :attempt, :request).all? { |value| value.is_a?(String) && !value.empty? }
+                raise Ace::Support::Cli::Error, "Protected prune requires exact project, agent, assignment, attempt and request FILE"
+              end
+              unless !options[:force] && !options[:preservation] &&
+                  Array(options[:targets]).empty? && !options.key?(:runtime)
+                raise Ace::Support::Cli::Error, "Protected prune forbids local options"
+              end
+              selectors = options.slice(:project, :agent, :assignment, :attempt, :request)
+              value = if options[:dry_run]
+                if options[:yes] || options[:mutation] || options[:authorization] || options[:expected_generation]
+                  raise Ace::Support::Cli::Error, "Protected preview forbids effect options"
+                end
+                @protected_prune.preview(**selectors)
+              else
+                raise Ace::Support::Cli::Error, "Protected apply requires --yes" unless options[:yes]
+                @protected_prune.apply(**selectors, mutation: options[:mutation],
+                  expected_generation: options[:expected_generation], authorization: options[:authorization])
+              end
+              @output.puts JSON.generate(value)
+              return
+            end
+            if options.values_at(:agent, :attempt, :request, :mutation, :authorization, :expected_generation).any?
+              raise Ace::Support::Cli::Error, "Protected prune options require --project"
+            end
             raise Ace::Support::Cli::Error, "Prune uses the configured local runtime; protected physical cleanup has its own owner" if options.key?(:runtime)
 
             Atoms::RepoGuard.ensure_repo!
