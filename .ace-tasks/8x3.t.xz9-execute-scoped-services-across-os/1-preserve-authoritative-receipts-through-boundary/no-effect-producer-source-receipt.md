@@ -14,3 +14,15 @@ The source owns fixed `claim_service_settlement` and `complete_no_effect`, stric
 Retained development failures: 435b4036 fixture omitted required worker UID inventory; 046de1e9 service_challenge missing from update-plan whitelist; b7426194 raw injection used checkout parent instead of actual checkout; 9a6279bb orphan assertion used assignment-level rather than exact-attempt chain; c22adf81 common fixture overrode intended wrong-map parameter. Each is preserved and corrected in the actual maintained path.
 
 External prerequisites: kernel/native/unit observations and fresh domain inspection reports are controlled fixture boundaries. The authority authenticator is actual source, not a callback returning true. No installed/root/systemd/native/PTY/security/VM tests were run. A final actual no-effect producer→stopped/release composition will follow current-main join; the five producer tests alone do not prove whole SC5 or whole-family acceptance.
+
+## Independent review and stopped composition follow-up
+
+Root independently APPROVED exact generic producer checkpoint `1e606dd1d`; whole SC5, domain inspection and installed acceptance were explicitly excluded. Current-main stop join `fe48cd3f0` preserves both service event types, attempt_stopped and the exact stop/challenge EOF route union.
+
+- `bin/ace-test ace-assign feat test/feat/authority/historical_rotation_test.rb:590 --timeout 480`: actual protected original descriptor/history/boot + signed Inbox + genuine no-effect producer → pending public stop → failed-settled → authenticated stopped → release → restart → original-only slot reuse PASS 1/22, 1m47s, d167c3d1-d8c9-4c09-8b40-34158beebbd0. Exact failed-settled terminal digest is the exhaustive stopped service set; earlier uncertain public reply remains immutable. Current boot pointer is invalidated before original-only reuse. Domain/kernel installation boundaries remain controlled, not installed proof.
+- Shared inspection upload helper extracted only to preserve one actual producer artifact shape across both fixtures.
+- Found retained Ruby numeric equality accepting record/accepted generation 1.0 as 1; source now validates strict complete record selector and Integer acceptance generation/selector before equality.
+- `bin/ace-test ace-assign feat test/feat/authority/service_settlement_test.rb:239 --timeout 180`: resolves existing renewal/replay positive, PASS 1/15, 30.13s, cad06804-75d3-4706-869d-48ed91d230c6. This is not the float negative selector.
+- `bin/ace-test ace-assign feat test/feat/authority/service_settlement_test.rb:243 --timeout 180`: exact new real-Git matching retained record/accepted-generation float negatives, PASS 1/31, 28.34s, bab1b3aa-66fb-4018-8edd-6f0abca79b55. Each first proves the authentic Integer control; valid rebuilt chain/matching record then refuses at the exact selector/accepted-authority boundary, and never becomes ServiceSettlementPending.
+
+No whole suite/installed/native execution or whole-task completion claim. The original first-slice requirements and domain producer prerequisite remain in the normative task contract.
