@@ -1,0 +1,9 @@
+# Legacy forwarding removal checkpoint
+
+All remaining Overseer LabClient/labd Work paths are removed: projects/agents query maintained public TopologyService; obsolete prepare command/registration is deleted; prune removes Lab Work destruction and its legacy safety/client owners. Local PruneOrchestrator preservation/no-writer/runtime configuration remains unchanged. The prune CLI no longer accepts a separate runtime selector; configured local runtime owns display closure, while protected physical cleanup retains its designated canonical owner. No compatibility alias or fallback is added. Existing canonical role files are untouched; only overseer.wf.md receives the delivered exact steering forms.
+
+Topology tests execute actual TopologyLoader/CallerAuthorizer/InventoryQuery with explicit injected identity, so no host identity probe occurs. They verify filtered visible projects/agents, classified unauthorized/nonzero, removed prepare and zero-dispatch obsolete prune refusal. Existing local prune command fixtures inject the cleanup owner; only local Git repository membership check executes. Registry help/version selections do not spawn a provider or native process.
+
+Inspected exact three files: test/fast/commands/public_topology_commands_test.rb, prune_command_test.rb and cli_test.rb. Initial404f33d8-3d9b-45b8-b36d-efc0b18afd3b failed only the new test's assumed alphabetical agent order; maintained topology preserves source inventory order. Test expectation corrected to actual owner semantics, no product sorting changed. Final025cf004-30ef-4397-9d5f-5fc2fb0b0b9d PASS20/83 in493.23ms under unchanged30s bound. Source grep confirms no LabClient/LabPruneSafetyChecker remains in maintained Overseer source.
+
+This source checkpoint does not close authenticated terminal/release, scoped worker consumption or complete independent delivery composition. No native/installed/root/process-identity/provider probes were run.

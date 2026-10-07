@@ -19,28 +19,18 @@ module Ace
           option :quiet, aliases: ["-q"], type: :boolean, default: false,
             desc: "Suppress progress output; failures still print and signal via exit code"
           option :debug, aliases: ["-d"], type: :boolean, default: false, desc: "Show debug output"
-          option :runtime, default: "tmux", desc: "Runtime (tmux, lab)"
           option :preservation, type: :string,
             desc: "YAML manifest (version 1) declaring verified cross-repository destinations"
 
-          def initialize(orchestrator: nil, input: $stdin, output: $stdout, lab_client: nil,
-            lab_safety_checker: nil, preservation_checker: nil)
+          def initialize(orchestrator: nil, input: $stdin, output: $stdout)
             super()
             @orchestrator = orchestrator || Organisms::PruneOrchestrator.new
             @input = input
             @output = output
-            @lab_client = lab_client || Molecules::LabClient.new
-            @lab_safety_checker = lab_safety_checker || Molecules::LabPruneSafetyChecker.new
-            @preservation_checker = preservation_checker || Molecules::GitPreservationChecker.new
           end
 
           def call(**options)
-            runtime = options.fetch(:runtime, "tmux")
-            if runtime == "lab"
-              prune_lab(**options)
-              return
-            end
-            raise Ace::Support::Cli::Error, "unsupported runtime: #{runtime}" unless runtime == "tmux"
+            raise Ace::Support::Cli::Error, "Prune uses the configured local runtime; protected physical cleanup has its own owner" if options.key?(:runtime)
 
             Atoms::RepoGuard.ensure_repo!
 
@@ -92,117 +82,6 @@ module Ace
           end
 
           private
-
-          def prune_lab(**options)
-            raise Ace::Support::Cli::Error, "--assignment is not supported with Lab runtime; provide exact Work IDs" if options[:assignment]
-            raise Ace::Support::Cli::Error, "--force is not supported with Lab runtime" if options[:force]
-            raise Ace::Support::Cli::Error, "--preservation is not supported with Lab runtime" if options[:preservation]
-
-            works = Array(options[:targets]).map(&:to_s)
-            raise Ace::Support::Cli::Error, "provide at least one exact Lab Work ID to prune" if works.empty?
-
-            classifications = if atomic_destroy_supported?
-              works.to_h do |work|
-                [work, @lab_safety_checker.check(
-                  lab_client: @lab_client,
-                  work_id: work,
-                  preservation_proof: lab_preservation_proof(work)
-                )]
-              end
-            else
-              # The raw Lab surface cannot make the no-writer check and the
-              # destruction atomic; claiming a probe was safe would be a
-              # lie, so the whole path is unsupported and preserved.
-              unsupported = Molecules::LabPruneSafetyChecker::Classification.new(
-                safe?: false,
-                reason: "lab runtime cannot make the no-writer check and destruction atomic; " \
-                  "preserve the Work instead"
-              )
-              works.to_h { |work| [work, unsupported] }
-            end
-
-            if options[:dry_run]
-              print_lab_dry_run(classifications)
-              return
-            end
-
-            raise Ace::Support::Cli::Error, "Lab prune requires --yes after reviewing --dry-run" unless options[:yes]
-
-            blocked = []
-            destroyed = []
-            works.each do |work|
-              classification = classifications[work]
-              unless classification.safe?
-                blocked << [work, classification.reason]
-                next
-              end
-
-              # Guarded delegation: re-read the authoritative state
-              # immediately before destroy; a changed state aborts.
-              recheck = @lab_safety_checker.check(
-                lab_client: @lab_client,
-                work_id: work,
-                preservation_proof: lab_preservation_proof(work)
-              )
-              unless recheck.safe?
-                blocked << [work, "state changed before destroy: #{recheck.reason}"]
-                next
-              end
-
-              result = @lab_client.call("work", "destroy", work, "--confirm", json: false)
-              destroyed << work
-              puts result unless options[:quiet]
-            end
-
-            blocked.each do |work, reason|
-              puts "Blocked: lab work #{work}: #{reason}"
-            end
-            puts "#{destroyed.length} lab work(s) destroyed." unless options[:quiet]
-            return if blocked.empty?
-
-            raise Ace::Support::Cli::Error, "#{blocked.length} lab work(s) blocked; nothing unsafe was destroyed"
-          end
-
-          # Delegation is only honest when the Lab surface itself can make
-          # the state check and the destruction atomic. The raw CLI adapter
-          # cannot, so it reports unsupported; adapters with an atomic
-          # guarded destroy opt in.
-          def atomic_destroy_supported?
-            @lab_client.respond_to?(:supports_atomic_destroy?) && @lab_client.supports_atomic_destroy?
-          end
-
-          # Preservation evidence for a Lab Work comes from the Work's own
-          # documented surviving identity (repo/head/branch). A surface that
-          # does not document it cannot prove preservation.
-          def lab_preservation_proof(work)
-            entry = @lab_client.work_entry(work)
-            return Models::PreservationProof.blocked("lab work #{work} not found in authoritative status") if entry.nil?
-
-            repo = entry["repo"].to_s
-            head = entry["head"].to_s
-            branch = entry["branch"].to_s
-            if repo.empty? || head.empty? || branch.empty? || !repo.start_with?("/")
-              return Models::PreservationProof.blocked(
-                "lab work #{work} does not document preservation data (repo/head/branch)"
-              )
-            end
-
-            accepted_base = @preservation_checker.accepted_base_for(repo)
-            @preservation_checker.ancestry_proof(repo: repo, head: head, accepted_base: accepted_base)
-          rescue Ace::Overseer::Error => e
-            Models::PreservationProof.blocked("lab preservation evidence unavailable: #{e.message}")
-          end
-
-          def print_lab_dry_run(classifications)
-            puts "Lab prune classification:"
-            classifications.each do |work, classification|
-              if classification.safe?
-                puts "  #{work}: safe (terminal, preserved, no in-flight work)"
-              else
-                puts "  #{work}: BLOCKED — #{classification.reason}"
-              end
-            end
-          end
 
           def print_assignment_result(result)
             candidate = result[:assignment_candidate]

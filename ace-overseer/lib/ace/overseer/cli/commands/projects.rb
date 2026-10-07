@@ -1,20 +1,24 @@
 # frozen_string_literal: true
 require "json"
+require "ace/lab"
 module Ace
   module Overseer
     module CLI
       module Commands
         class Projects < Ace::Support::Cli::Command
           include Ace::Support::Cli::Base
-          desc "List configured Lab projects"
-          def initialize(client: nil)
+          desc "List projects visible through maintained public topology"
+          def initialize(topology: nil)
             super()
-            @client = client || Molecules::LabClient.new
+            @topology = topology || Ace::Lab::Organisms::TopologyService.from_config
           end
-          def call(**)
-            puts JSON.pretty_generate(@client.call("project", "list", "--json"))
-          rescue => error
-            raise Ace::Support::Cli::Error.new(error.message)
+          def call(**extra)
+            raise Error, "Unsupported topology options" unless extra.empty?
+            result = @topology.projects
+            puts JSON.generate(result.envelope)
+            raise Error, "#{result.error_code}: #{result.message}" unless result.ok?
+          rescue StandardError => error
+            raise Ace::Support::Cli::Error, error.message
           end
         end
       end

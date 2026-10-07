@@ -16,7 +16,6 @@ ace-docs:
 - `ace-overseer prune`
 - `ace-overseer projects`
 - `ace-overseer agents`
-- `ace-overseer prepare`
 - `ace-overseer prompt`
 - `ace-overseer review`
 - `ace-overseer stop`
@@ -88,7 +87,7 @@ Options:
 - `--yes`, `-y`: skip interactive confirmation
 - `--dry-run`: run the same proof classification as apply, changing no worktrees, refs, assignment state or metadata (a dry-run receipt is not reusable authorization)
 - `--preservation FILE`: YAML manifest (`version: 1`, `candidates:`) declaring cross-repository destinations for migrated work; a claim to verify, never proof by itself
-- `--runtime`: `tmux` (default) or `lab`
+- Local prune uses the configured runtime; protected physical cleanup uses its canonical cleanup owner.
 - `--quiet`, `-q`: suppress progress output; blocked/failed results still print and signal through the exit code
 - `--debug`, `-d`: show debug output
 - `--help`, `-h`: show help
@@ -213,4 +212,6 @@ Status rejects both input selectors and expected generation before reading input
 
 `ace-overseer stop --project ace --agent builder --assignment A --attempt T --mutation stop-001 --expected-generation 14`
 
-Exact project/mapping/assignment/attempt selection is mandatory. Immutable stop replay does not refresh settlement. Canonical terminal plus reservation release remains separate from local child exit. These steering forms are being implemented; source-level Lab Work forwarding will be removed with their delivery.
+Exact project/mapping/assignment/attempt selection is mandatory. Immutable stop replay does not refresh settlement. Canonical terminal plus reservation release remains separate from local child exit. Legacy Lab Work forwarding and prepare/prune delegation are removed.
+
+Public topology: `ace-overseer projects` and `ace-overseer agents --project PROJECT` emit the maintained classified topology envelope for the verified caller. Visibility grants no execution authority. Local prune uses the configured runtime and existing preservation/no-writer owner; it accepts no protected cleanup or legacy runtime selector.

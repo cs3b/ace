@@ -7,7 +7,6 @@ require_relative "cli/commands/status"
 require_relative "cli/commands/prune"
 require_relative "cli/commands/projects"
 require_relative "cli/commands/agents"
-require_relative "cli/commands/prepare"
 require_relative "cli/commands/prompt"
 require_relative "cli/commands/review"
 require_relative "cli/commands/stop"
@@ -23,9 +22,8 @@ module Ace
         ["work-on", "Start local task work or one retained protected launch"],
         ["status", "Show status of task worktrees"],
         ["prune", "Remove stale task worktrees"],
-        ["projects", "List configured Lab projects"],
-        ["agents", "List configured Lab agents"],
-        ["prepare", "Prepare a Lab Work"],
+        ["projects", "List visible public projects"],
+        ["agents", "List visible public project agents"],
         ["prompt", "Prompt an exact protected attempt or inspect original prompt status"],
         ["review", "Review an exact protected candidate under its original capability"],
         ["stop", "Request proof-authenticated stop of an exact protected attempt"]
@@ -42,7 +40,6 @@ module Ace
       register "prune", Commands::Prune
       register "projects", Commands::Projects
       register "agents", Commands::Agents
-      register "prepare", Commands::Prepare
       register "prompt", Commands::Prompt
       register "review", Commands::Review
       register "stop", Commands::Stop

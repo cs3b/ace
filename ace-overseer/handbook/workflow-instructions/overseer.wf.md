@@ -52,6 +52,9 @@ ace-overseer status --format json       # machine-readable snapshot
 
 Protected canonical snapshot: `ace-overseer status --project PROJECT --agent MAPPING --format json` (no `--watch`).
 
+Exact original steering: `ace-overseer prompt --project PROJECT --agent MAPPING --assignment A --attempt T --mutation ID --expected-generation N --file FILE` (or explicit --stdin). Prompt status uses the same tuple/mutation with --status and rejects input selectors/generation before reads. Stop uses the same exact tuple with its own stable mutation/generation. Never infer consumption from submitted; immutable explicit replay never refreshes generation or resends automatically. Canonical terminal plus reservation release is required separately from local child exit. Public projects/agents use maintained topology; no lab/labd forwarding or Work-ID prepare/prune path remains.
+
+
 #### Status truth (non-negotiable executed check)
 
 Recorded blockers are **claims, not state**. During any status review:
