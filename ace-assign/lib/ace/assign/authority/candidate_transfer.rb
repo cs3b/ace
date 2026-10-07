@@ -116,6 +116,30 @@ module Ace
           reject!("Candidate filesystem materialization is unverifiable")
         end
 
+        # Prepared instructions have a narrower tree contract than candidates:
+        # no executable entries or symlinks, and bounded UTF-8 files. Read only
+        # verified Git objects; never run checkout filters or reopen uploader paths.
+        def prepared_files(repository:, deadline:, head:)
+          entries = git(repository, deadline, "ls-tree", "-r", "-z", head, limit: MAX_BYTES).split("\0")
+          reject!("Prepared file inventory is oversized") unless entries.size.between?(4, 4096)
+          total = 0
+          files = entries.to_h do |entry|
+            metadata, path = entry.split("\t", 2)
+            mode, kind, oid = metadata.to_s.split(" ")
+            unless path && mode == "100644" && kind == "blob" && oid.match?(SHA) &&
+                !path.start_with?("/") && path.split("/", -1).none? { |part| part.empty? || %w[. .. .git].include?(part.downcase) }
+              reject!("Prepared tree contains unsafe entry")
+            end
+            size = git(repository, deadline, "cat-file", "-s", oid).strip
+            reject!("Prepared text is oversized") unless size.match?(/\A[0-9]+\z/) && size.to_i.between?(1, 1024 * 1024)
+            total += size.to_i
+            reject!("Prepared expanded content is oversized") if total > MAX_BYTES
+            [path, git(repository, deadline, "cat-file", "blob", oid, limit: 1024 * 1024).b]
+          end
+          reject!("Prepared inventory has duplicate paths") unless files.size == entries.size
+          files
+        end
+
         private
 
         def verify_root!
