@@ -1,0 +1,5 @@
+# Original review delegation Driver checkpoint
+
+Existing original control loop recognizes the reviewed bodyless frame after the existing input-inhibition guard. It queries the pinned canonical intent, validates fixed original tuple/reviewer birth/positive generations, derives the stable internal mutation and calls existing assign_review. No native or provider call occurs. Generation conflicts propagate without current-generation refresh; only exact accepted candidate/reviewer and canonical event/commit reply produces a private result. Calls share original exchange deadline.
+
+Executed controlled Driver selection: bin/ace-test ace-assign feat test/feat/authority/review_driver_test.rb --timeout180,3/26 PASS2.59ms, receiptb59b4b0a-d493-4a8d-859a-d28e0ea82da0. Authority client is injected; ordinary UNIX reply bytes actual. This proves consumer orchestration only, not actual journal assignment/replay or whole-task acceptance. Canonical request/intent producer, recovery observation, immutable public first reply and consumer CLI still required. Independent review pending.

@@ -201,6 +201,10 @@ module Ace
               next
             end
             raise AttemptErrors::EvidenceUnavailable, "Original launcher input is inhibited" if @input_inhibited
+            if frame.is_a?(Hash) && frame["type"] == "launch_review_delegate"
+              original_review_delegate!(socket, state, ready, frame, deadline)
+              next
+            end
             LaunchControlChannel.validate_prompt!(frame)
             unless frame["attempt_id"] == state.fetch("attempt_id") && frame["original_binding_digest"] == ready.fetch("original_binding_digest")
               raise AttemptErrors::EvidenceUnavailable, "Private prompt does not join original launcher"
@@ -237,6 +241,56 @@ module Ace
             LaunchControlChannel.validate_recorded!(recorded, frame, evidence)
             @reported_prompt_completions[frame.fetch("intent_event_id")] = recorded.fetch("journal_commit") if %w[submitted not_issued].include?(evidence.fetch("outcome"))
           end
+        end
+
+        def original_review_delegate!(socket, state, ready, frame, deadline)
+          LaunchControlChannel.validate_review!(frame)
+          unless frame["attempt_id"] == state.fetch("attempt_id") &&
+              frame["original_binding_digest"] == ready.fetch("original_binding_digest")
+            raise AttemptErrors::EvidenceUnavailable, "Review request belongs to another original launcher"
+          end
+          selectors = state.slice("assignment_id", "attempt_id").merge(
+            frame.slice("mutation_id", "request_event_id", "journal_commit", "original_binding_digest"))
+          intent = @client.call("launch_review_intent", selectors, mutation_id: nil,
+            timeout: review_exchange_remaining!(deadline)).data
+          params = validate_review_intent!(intent, state, frame)
+          accepted = @client.call("assign_review", params, mutation_id: "review-delegate.#{frame.fetch('request_event_id')}",
+            timeout: review_exchange_remaining!(deadline)).data
+          unless accepted.is_a?(Hash) &&
+              %w[head candidate_generation reviewer_uid reviewer_process_binding].all? { |key| accepted[key] == params.fetch(key) } &&
+              accepted["generation"].is_a?(Integer) && accepted["generation"] == params.fetch("expected_generation") + 1 &&
+              accepted["review_id"].is_a?(String) && accepted["review_id"].match?(/\A[0-9a-f]{32}\z/)
+            raise AttemptErrors::EvidenceUnavailable, "Original review assignment reply differs"
+          end
+          result = frame.slice("mutation_id", "request_event_id", "original_binding_digest").merge(
+            accepted.slice("assignment_event_id", "journal_commit"), "version" => 1, "type" => "launch_review_assigned")
+          LaunchControlChannel.validate_review_assigned!(result, frame)
+          Ace::Runtime::Molecules::ProtectedSocket.write(socket, result, deadline: deadline, limit: 16_384)
+        end
+
+        def validate_review_intent!(intent, state, frame)
+          fields = %w[assignment_params original_binding_digest request_event_id]
+          params = intent.is_a?(Hash) && intent["assignment_params"]
+          unless intent.is_a?(Hash) && intent.keys.sort == fields &&
+              %w[request_event_id original_binding_digest].all? { |key| intent[key] == frame.fetch(key) } &&
+              params.is_a?(Hash) && params.keys.sort == %w[assignment_id attempt_id candidate_generation expected_generation head mapping_id reviewer_process_binding reviewer_uid] &&
+              params.values_at("mapping_id", "assignment_id", "attempt_id") == [@mapping_id, state.fetch("assignment_id"), state.fetch("attempt_id")] &&
+              params["head"].is_a?(String) && params["head"].match?(/\A(?:[0-9a-f]{40}|[0-9a-f]{64})\z/) &&
+              %w[candidate_generation expected_generation reviewer_uid].all? { |key| params[key].is_a?(Integer) && params[key].positive? } &&
+              params["reviewer_uid"] != @map.fetch("worker_uid") &&
+              params["reviewer_process_binding"].is_a?(Hash) && params["reviewer_process_binding"]["uid"] == params["reviewer_uid"]
+            raise AttemptErrors::EvidenceUnavailable, "Canonical review intent differs"
+          end
+          identity = params.fetch("reviewer_process_binding")
+          boot = identity["started_at"].is_a?(String) && identity["started_at"].split(":", -1)[1]
+          Molecules::ExecutionScopeLineage.validate_process_identity!(identity, boot_id: boot)
+          params
+        end
+
+        def review_exchange_remaining!(deadline)
+          remaining = deadline - Process.clock_gettime(Process::CLOCK_MONOTONIC)
+          raise AttemptErrors::EvidenceUnavailable, "Original review exchange deadline expired" unless remaining.positive?
+          [remaining, 30].min
         end
 
         def original_input_inhibit!(socket, state, ready, frame, deadline)
