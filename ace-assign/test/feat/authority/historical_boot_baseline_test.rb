@@ -2,6 +2,7 @@
 require_relative "../../test_helper"
 require "ace/assign/authority/launch_lifecycle"
 require "ace/runtime/molecules/execution_boot_baseline"
+require_relative "../../support/execution_scope_observation_fixtures"
 
 module Ace
   module Assign
@@ -27,6 +28,8 @@ module Ace
             "network_installation_selection" => {"installer_artifact" => producer}}
           proof = binding.slice("slot_id", "boot_id", "deployment_digest").merge("schema" => "ace.execution-boot-baseline/v1",
             "producer_artifact" => producer, "host_ipc_namespace_identity" => {"device" => 4, "inode" => 900},
+            "host_devpts_identity" => ExecutionScopeObservationFixtures::DEVPTS_HOST,
+            "host_ptmx_link" => "pts/ptmx", "selected_devpts" => ExecutionScopeObservationFixtures::DEVPTS_SELECTED,
             "original_host_context" => {"pid" => 1, "uid" => 0, "gid" => 0, "started_at" => "linux:#{binding.fetch('boot_id')}:1"})
           binding["boot_baseline_selection"] = artifact(root, "original.json", JSON.generate(proof))
           factory = lambda do
