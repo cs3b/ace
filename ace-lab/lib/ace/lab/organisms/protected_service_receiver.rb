@@ -8,6 +8,7 @@ require "ace/assign/authority/candidate_transfer"
 require "ace/assign/authority/evidence_transfer"
 require_relative "../molecules/protected_service_handler"
 require_relative "../molecules/protected_service_policy"
+require_relative "../atoms/protected_workspace_prune_preview"
 
 module Ace
   module Lab
@@ -30,6 +31,29 @@ module Ace
           @receiver = @project.fetch("service_receivers").fetch(service_id)
           @client = client || Ace::Assign::Authority::Client.new(mapping_id: mapping_id, deployment: deployment, kernel: kernel)
           @inputs = Molecules::ProtectedServicePolicy.new(proposal_resolver: ->(*) { raise SecurityError, "proposal decisions belong to authority" })
+        end
+
+        def preview_workspace_prune(intent:, peer:, deadline:)
+          raise SecurityError, "fixed cleanup preview composition unavailable" unless @cleanup_owner
+          intent = Atoms::ProtectedWorkspacePrunePreview.intent!(JSON.parse(JSON.generate(intent)))
+          maintenance = intent.fetch("maintenance")
+          unless maintenance.fetch("mapping_id") == @mapping_id && maintenance.fetch("project_id") == @map.fetch("project_id") &&
+              peer.values_at("uid", "gid", "groups") == @map.values_at("worker_uid", "worker_gid", "worker_groups")
+            raise SecurityError, "cleanup preview worker or installed scope differs"
+          end
+          @kernel.live!(peer)
+          me = @kernel.capture(Process.pid)
+          credentials = @project.fetch("peer_credentials").fetch(@receiver.fetch("executor_uid").to_s)
+          unless me.values_at("uid", "gid", "groups") == [@receiver.fetch("executor_uid"), credentials.fetch("gid"), credentials.fetch("groups")]
+            raise SecurityError, "cleanup preview receiver principal differs"
+          end
+          remaining = deadline - Process.clock_gettime(Process::CLOCK_MONOTONIC)
+          raise Ace::Runtime::RuntimeUnavailableError, "cleanup preview deadline expired" unless remaining.positive?
+          selected = @client.call("workspace_prune_preview_context", maintenance.except("project_id", "mapping_id").merge(
+            "service_id" => @service_id, "worker_process_binding" => peer), timeout: remaining).data
+          selected = Atoms::ProtectedWorkspacePrunePreview.context!(selected)
+          result = @cleanup_owner.preview!(intent: intent, maintenance_context: selected, deadline: deadline)
+          Atoms::ProtectedWorkspacePrunePreview.result!(result, intent: intent, context: selected)
         end
 
         def execute(submission:, peer:, input_bytes:, mutation_id:, on_claim: nil, claim_timeout: nil)

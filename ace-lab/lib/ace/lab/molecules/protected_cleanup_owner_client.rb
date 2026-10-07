@@ -5,6 +5,7 @@ require "ace/assign/authority/transfer_codec"
 require "ace/assign/atoms/evidence_digest"
 require_relative "../atoms/protected_workspace_prune_input"
 require_relative "../atoms/service_input"
+require_relative "../atoms/protected_workspace_prune_preview"
 
 module Ace
   module Lab
@@ -35,6 +36,21 @@ module Ace
               raise SecurityError, "cleanup identity reply differs from observed original owner"
             end
             binding
+          end
+        end
+
+        def preview!(intent:, maintenance_context:, deadline: @wire.deadline(5))
+          intent = Atoms::ProtectedWorkspacePrunePreview.intent!(JSON.parse(JSON.generate(intent)))
+          context = Atoms::ProtectedWorkspacePrunePreview.context!(JSON.parse(JSON.generate(maintenance_context)))
+          raise SecurityError, "preview maintenance differs" unless intent.fetch("maintenance") == context.fetch("maintenance")
+          connect(deadline) do |socket, _original|
+            @wire.write(socket, {"schema" => SCHEMA, "kind" => "preview", "intent" => intent,
+              "maintenance_context" => context}, deadline: deadline, limit: 65_536)
+            socket.shutdown(Socket::SHUT_WR)
+            guarded = Ace::Runtime::Molecules::ProtectedSocket::Ingress.new(socket)
+            result = @wire.read(guarded, deadline: deadline, limit: LIMIT)
+            eof!(guarded, deadline)
+            Atoms::ProtectedWorkspacePrunePreview.result!(result, intent: intent, context: context)
           end
         end
 

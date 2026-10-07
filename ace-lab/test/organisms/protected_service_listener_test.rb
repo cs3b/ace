@@ -6,6 +6,54 @@ require "ace/lab/organisms/protected_service_client"
 class ProtectedServiceListenerTest < Minitest::Test
   include ProtectedServiceBoundaryFixture
 
+  def test_preview_refuses_malformed_transfer_or_execution_fields_before_receiver
+    fixture do
+      @project.fetch("service_receivers").fetch("executor")["staging_root"] = @root
+      calls = 0
+      receiver = Object.new
+      receiver.define_singleton_method(:preview_workspace_prune) { |**_| calls += 1; raise "not admitted" }
+      kernel = Object.new
+      worker = @worker
+      kernel.define_singleton_method(:peer) { |_| worker }
+      listener = Ace::Lab::Organisms::ProtectedServiceListener.new(mapping_id: "mapping", service_id: "executor",
+        deployment: @deployment, kernel: kernel, receiver: receiver)
+      wire = Ace::Runtime::Molecules::ProtectedSocket
+      codec = Ace::Assign::Authority::TransferCodec.new(root: @root)
+      bytes = "{}"
+      descriptor = codec.descriptor([bytes], purpose: :service_input)
+      original = {"version" => 1, "kind" => "preview_workspace_prune", "transfer" => descriptor}
+      cases = [
+        [original.merge("version" => 1.0), bytes],
+        [original.merge("mutation_id" => "forbidden"), bytes],
+        [original.merge("kind" => "execute"), bytes],
+        [original, "[]"],
+        [original, bytes + "trailing"],
+        [original.merge("transfer" => descriptor.merge("parts" => descriptor.fetch("parts") * 2, "bytes" => bytes.bytesize * 2, "sha256" => Digest::SHA256.hexdigest(bytes + bytes))), bytes + bytes]
+      ]
+      before = @journal.ref_value
+      cases.each do |header, payload|
+        local, remote = UNIXSocket.pair
+        owner = Thread.new do
+          listener.send(:receive, remote)
+        ensure
+          remote.close unless remote.closed?
+        end
+        wire.write(local, header, deadline: wire.deadline(5))
+        local.write(payload)
+        local.shutdown(Socket::SHUT_WR)
+        assert_equal "unavailable", wire.read(local, deadline: wire.deadline(5)).fetch("code")
+        assert owner.join(3), "controlled refusal did not finish"
+        owner.value
+        assert_equal 0, calls
+        assert_equal before, @journal.ref_value
+      ensure
+        local&.close unless local&.closed?
+        remote&.close unless remote&.closed?
+        owner&.join(3)
+      end
+    end
+  end
+
   def test_actual_listener_short_claim_and_owned_worker_use_canonical_service_pipeline
     fixture do
       submission, bytes = prepared_submission

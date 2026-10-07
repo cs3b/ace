@@ -2,6 +2,8 @@
 
 require "ace/assign/authority/service_evidence"
 require_relative "protected_cleanup_owner_client"
+require "ace/assign/authority/endcap"
+require "ace/assign/authority/launch_lifecycle"
 
 module Ace
   module Lab
@@ -13,9 +15,10 @@ module Ace
           dispatch_event_digest input operation_owner_binding_digest].freeze
         INSPECT_FIELDS = (FIELDS + %w[challenge_ref]).freeze
 
-        def initialize(deployment:, authority_id:, mapping_id:, service_id:, kernel:)
+        def initialize(deployment:, authority_id:, mapping_id:, service_id:, kernel:, preview_policy: nil)
           @deployment, @authority_id, @kernel = deployment, authority_id, kernel
           @mapping_id, @service_id = mapping_id, service_id
+          @preview_policy = preview_policy
         end
 
         def identity_reader!(peer)
@@ -53,6 +56,31 @@ module Ace
           true
         rescue KeyError, TypeError
           raise SecurityError, "cleanup installed receiver unavailable"
+        end
+
+        def preview!(frame:, peer:, operation_owner_binding:, journal:)
+          receiver!(peer)
+          Atoms::ProtectedWorkspacePruneInput.object!(frame, %w[schema kind intent maintenance_context])
+          raise SecurityError, "cleanup preview kind differs" unless frame.values_at("schema", "kind") == [ProtectedCleanupOwnerClient::SCHEMA, "preview"]
+          intent = Atoms::ProtectedWorkspacePrunePreview.intent!(frame.fetch("intent"))
+          supplied = Atoms::ProtectedWorkspacePrunePreview.context!(frame.fetch("maintenance_context"))
+          maintenance = supplied.fetch("maintenance")
+          map = @deployment.mapping(@mapping_id)
+          unless intent.fetch("maintenance") == maintenance && maintenance.fetch("mapping_id") == @mapping_id &&
+              maintenance.fetch("project_id") == map.fetch("project_id") && map.fetch("authority_id") == @authority_id
+            raise SecurityError, "cleanup preview installed scope differs"
+          end
+          raise SecurityError, "cleanup preview policy composition unavailable" unless @preview_policy
+          launch = Ace::Assign::Authority::LaunchLifecycle.new(deployment: @deployment, kernel: @kernel)
+          owner = Ace::Assign::Authority::Endcap.new(deployment: @deployment, launch: launch, kernel: @kernel, service_policy: @preview_policy)
+          params = maintenance.except("project_id").merge("service_id" => @service_id,
+            "worker_process_binding" => supplied.fetch("caller_process_binding"))
+          selected = owner.workspace_prune_preview_context_at!(journal: journal, params: params, map: map, peer: peer, role: :executor)
+          raise SecurityError, "cleanup preview canonical selection changed" unless selected == supplied
+          Atoms::ProtectedWorkspacePruneInput.freeze_value({"intent" => intent, "maintenance_context" => selected,
+            "operation_owner_binding" => operation_owner_binding})
+        rescue KeyError, TypeError, ArgumentError
+          raise SecurityError, "cleanup preview canonical selection unavailable"
         end
 
         def admit!(frame:, peer:, operation_owner_binding:, journal:)

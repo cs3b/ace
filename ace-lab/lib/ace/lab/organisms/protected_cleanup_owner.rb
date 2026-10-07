@@ -153,16 +153,32 @@ module Ace
             return
           end
           @admission.receiver!(peer)
-          deadline = accepted_at + 300
+          deadline = frame["kind"] == "preview" ? admission_deadline : accepted_at + 300
           context = nil
           @snapshots.call do |snapshot|
             snapshot.with(deadline: deadline) do |view|
-              context = if frame["kind"] == "inspect"
+              context = if frame["kind"] == "preview"
+                @admission.preview!(frame: frame, peer: peer, operation_owner_binding: original, journal: @journals.call(view))
+              elsif frame["kind"] == "inspect"
                 @admission.inspect!(frame: frame, peer: peer, operation_owner_binding: original, journal: @journals.call(view))
               else
                 @admission.admit!(frame: frame, peer: peer, operation_owner_binding: original, journal: @journals.call(view))
               end
             end
+          end
+          if frame["kind"] == "preview"
+            unless @installer.respond_to?(:preview_cleanup!)
+              raise SecurityError, "same Installer preview producer unavailable"
+            end
+            result = @installer.preview_cleanup!(context: context, deadline: deadline)
+            unless Ace::Assign::Atoms::EvidenceDigest.digest(@observer.observe_self!(deadline: deadline)) ==
+                Ace::Assign::Atoms::EvidenceDigest.digest(original)
+              raise SecurityError, "cleanup original owner changed during preview"
+            end
+            result = Ace::Lab::Atoms::ProtectedWorkspacePrunePreview.result!(result,
+              intent: frame.fetch("intent"), context: frame.fetch("maintenance_context"))
+            Wire.write(socket, result, deadline: deadline, limit: Client::LIMIT)
+            return
           end
           if frame["kind"] == "inspect"
             inspection(socket, frame, context, original, deadline)

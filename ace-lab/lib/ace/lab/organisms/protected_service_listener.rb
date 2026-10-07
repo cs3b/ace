@@ -21,8 +21,9 @@ module Ace
           @selection = project.fetch("service_receivers").fetch(service_id)
           @credentials = project.fetch("peer_credentials").fetch(@selection.fetch("executor_uid").to_s)
           @path = @selection.fetch("socket_path")
-          @worker = ProtectedServiceWorker.new(receiver: receiver || ProtectedServiceReceiver.new(
-            mapping_id: mapping_id, service_id: service_id, deployment: deployment, kernel: kernel))
+          @receiver = receiver || ProtectedServiceReceiver.new(
+            mapping_id: mapping_id, service_id: service_id, deployment: deployment, kernel: kernel)
+          @worker = ProtectedServiceWorker.new(receiver: @receiver)
           @stopping = false
         end
 
@@ -84,6 +85,22 @@ module Ace
           end
           guarded = Ace::Runtime::Molecules::ProtectedSocket::Ingress.new(socket)
           request = @wire.read(guarded, deadline: deadline, limit: LIMIT)
+          if request.is_a?(Hash) && request["kind"] == "preview_workspace_prune"
+            unless request.keys.sort == %w[kind transfer version] && request["version"].is_a?(Integer) && request["version"] == 1
+              raise ArgumentError, "receiver preview header differs"
+            end
+            codec = Ace::Assign::Authority::TransferCodec.new(root: @selection.fetch("staging_root"))
+            bytes = codec.receive(guarded, descriptor: request.fetch("transfer"), purpose: :service_input, deadline: deadline) do |input|
+              raise ArgumentError, "preview requires one intent part" unless input.count == 1
+              input.bytes
+            end
+            intent = JSON.parse(bytes, create_additions: false, max_nesting: 16, allow_nan: false,
+              allow_comments: false, allow_duplicate_key: false)
+            intent = Atoms::ProtectedWorkspacePrunePreview.intent!(intent)
+            result = @receiver.preview_workspace_prune(intent: intent, peer: peer, deadline: deadline)
+            @wire.write(socket, result, deadline: deadline, limit: LIMIT)
+            return
+          end
           strict_request!(request)
           codec = Ace::Assign::Authority::TransferCodec.new(root: @selection.fetch("staging_root"))
           bytes = codec.receive(guarded, descriptor: request.fetch("transfer"), purpose: :service_input, deadline: deadline) { |input| input.bytes }

@@ -18,6 +18,39 @@ module Ace
           @scratch = project.fetch("peer_credentials").fetch(@map.fetch("worker_uid").to_s).fetch("scratch_root")
         end
 
+        def preview_workspace_prune(intent:)
+          intent = Atoms::ProtectedWorkspacePrunePreview.intent!(JSON.parse(JSON.generate(intent)))
+          bytes = JSON.generate(intent)
+          deadline = @wire.deadline(5)
+          @deployment.verify!(@mapping_id, kernel: @kernel)
+          caller = @kernel.capture(Process.pid)
+          unless caller.values_at("uid", "gid", "groups") == @map.values_at("worker_uid", "worker_gid", "worker_groups")
+            raise SecurityError, "preview caller differs"
+          end
+          codec = Ace::Assign::Authority::TransferCodec.new(root: @scratch)
+          descriptor = codec.descriptor([bytes], purpose: :service_input)
+          path = @selection.fetch("socket_path")
+          before = @wire.socket_identity(path)
+          raise SecurityError, "preview receiver owner differs" unless before.last == @selection.fetch("executor_uid")
+          @wire.connect(path, deadline: deadline) do |socket|
+            peer = @kernel.peer(socket)
+            unless peer.values_at("uid", "gid", "groups") == [@selection.fetch("executor_uid"), @credentials.fetch("gid"), @credentials.fetch("groups")] &&
+                @wire.socket_identity(path) == before
+              raise SecurityError, "preview receiver peer changed"
+            end
+            @wire.write(socket, {"version" => 1, "kind" => "preview_workspace_prune", "transfer" => descriptor},
+              deadline: deadline, limit: ProtectedServiceListener::LIMIT)
+            codec.send(socket, parts: [bytes], descriptor: descriptor, purpose: :service_input, deadline: deadline)
+            socket.shutdown(Socket::SHUT_WR)
+            guarded = Ace::Runtime::Molecules::ProtectedSocket::Ingress.new(socket)
+            result = @wire.read(guarded, deadline: deadline, limit: ProtectedServiceListener::LIMIT)
+            eof!(guarded, deadline)
+            raise SecurityError, "preview result unavailable" unless result.is_a?(Hash) && result.key?("maintenance_context")
+            Atoms::ProtectedWorkspacePrunePreview.context!(result.fetch("maintenance_context"))
+            Atoms::ProtectedWorkspacePrunePreview.result!(result, intent: intent, context: result.fetch("maintenance_context"))
+          end
+        end
+
         def submit(submission:, input_bytes:, mutation_id:)
           unless submission.is_a?(Hash) && submission.keys.sort == ProtectedServiceReceiver::SUBMISSION.sort &&
               input_bytes.is_a?(String) && mutation_id.is_a?(String) && mutation_id.match?(Ace::Assign::Molecules::JournalMutation::ID)
