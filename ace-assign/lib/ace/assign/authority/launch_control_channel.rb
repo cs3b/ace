@@ -13,9 +13,13 @@ module Ace
         PROMPT_FIELDS = %w[attempt_id intent_event_id journal_commit mutation_id original_binding_digest text_descriptor transfer_id type version].freeze
         OUTCOME_FIELDS = %w[guarded_evidence intent_event_id mutation_id original_binding_digest type version].freeze
         RECORDED_FIELDS = %w[intent_event_id journal_commit mutation_id original_binding_digest outcome type version].freeze
+        INHIBIT_FIELDS = %w[attempt_id journal_commit original_binding_digest seal_event_id type version].freeze
+        INHIBIT_OUTCOME_FIELDS = %w[guarded_evidence original_binding_digest seal_event_id type version].freeze
+        INHIBIT_RECORDED_FIELDS = %w[journal_commit original_binding_digest seal_event_id type version].freeze
 
-        def initialize(socket:, codec:, outcome:)
+        def initialize(socket:, codec:, outcome:, input_inhibition: nil)
           @socket, @codec, @outcome = socket, codec, outcome
+          @input_inhibition = input_inhibition
           @mutex, @changed = Mutex.new, ConditionVariable.new
           @pending = nil
           @closed = false
@@ -24,9 +28,45 @@ module Ace
         def reserve_dispatch!
           @mutex.synchronize do
             raise AttemptErrors::EvidenceUnavailable, "Original launcher control channel is unavailable" if @closed
+            raise AttemptErrors::Conflict, "Original launcher input is inhibited" if @inhibiting
             raise AttemptErrors::Conflict, "Original launcher control channel is busy" if @reservation || @pending
             @reservation = Object.new.freeze
           end
+        end
+
+        def inhibit_input(frame:, deadline:)
+          self.class.validate_inhibit!(frame)
+          pending = Pending.new(frame: frame, deadline: deadline, finished: false)
+          @mutex.synchronize do
+            @inhibiting = true
+            if @inhibition_pending
+              unless @inhibition_pending.frame.slice("attempt_id", "original_binding_digest", "seal_event_id") == frame.slice("attempt_id", "original_binding_digest", "seal_event_id")
+                raise AttemptErrors::Conflict, "Original input inhibition names another seal"
+              end
+              pending = @inhibition_pending
+            else
+              @inhibition_pending = pending
+              while @reservation || @pending
+                raise AttemptErrors::EvidenceUnavailable, "Original launcher control channel is unavailable" if @closed
+                remaining = deadline - Process.clock_gettime(Process::CLOCK_MONOTONIC)
+                raise AttemptErrors::EvidenceUnavailable, "Original input inhibition is uncertain" unless remaining.positive?
+                @changed.wait(@mutex, remaining)
+              end
+              raise AttemptErrors::EvidenceUnavailable, "Original launcher control channel is unavailable" if @closed
+              @pending = pending
+              @changed.broadcast
+            end
+            until pending.finished
+              remaining = deadline - Process.clock_gettime(Process::CLOCK_MONOTONIC)
+              raise AttemptErrors::EvidenceUnavailable, "Original input inhibition is uncertain" unless remaining.positive?
+              @changed.wait(@mutex, remaining)
+            end
+          end
+          raise pending.error if pending.error
+          pending.result
+        rescue AttemptErrors::EvidenceUnavailable
+          close
+          raise
         end
 
         def dispatch_reserved?(reservation)
@@ -36,6 +76,7 @@ module Ace
         def release_dispatch!(reservation)
           @mutex.synchronize do
             @reservation = nil if @reservation.equal?(reservation) && !@pending
+            @changed.broadcast if @inhibiting
           end
         end
 
@@ -75,6 +116,22 @@ module Ace
             end
             begin
               wire.write(@socket, pending.frame, deadline: pending.deadline, limit: 16_384)
+              if pending.frame.fetch("type") == "launch_input_inhibit"
+                result = wire.read(@socket, deadline: pending.deadline, limit: 16_384)
+                self.class.validate_inhibit_outcome!(result, pending.frame)
+                raise AttemptErrors::EvidenceUnavailable, "Canonical input inhibition owner unavailable" unless @input_inhibition
+                accepted = @input_inhibition.call(result)
+                unless accepted.is_a?(Hash) && accepted.keys.sort == %w[journal_commit original_binding_digest seal_event_id] &&
+                    %w[original_binding_digest seal_event_id].all? { |key| accepted[key] == pending.frame.fetch(key) }
+                  raise AttemptErrors::EvidenceUnavailable, "Canonical input inhibition acceptance differs"
+                end
+                recorded = pending.frame.slice("original_binding_digest", "seal_event_id").merge("version" => 1,
+                  "type" => "launch_input_inhibit_recorded", "journal_commit" => accepted.fetch("journal_commit"))
+                self.class.validate_inhibit_recorded!(recorded, pending.frame)
+                wire.write(@socket, recorded, deadline: pending.deadline, limit: 16_384)
+                complete(pending, result: result)
+                next
+              end
               @codec.send_launch_prompt(@socket, bytes: pending.bytes, descriptor: pending.frame.fetch("text_descriptor"),
                 transfer_id: pending.frame.fetch("transfer_id"), deadline: pending.deadline)
               pending.bytes = nil
@@ -110,6 +167,10 @@ module Ace
               @pending.finished = true
               @pending.bytes = nil
             end
+            if @inhibition_pending && !@inhibition_pending.finished
+              @inhibition_pending.error = AttemptErrors::EvidenceUnavailable.new("Original input inhibition is uncertain")
+              @inhibition_pending.finished = true
+            end
             @changed.broadcast
           end
         end
@@ -137,6 +198,34 @@ module Ace
               %w[mutation_id intent_event_id original_binding_digest].all? { |key| recorded[key] == frame.fetch(key) } &&
               recorded["journal_commit"].is_a?(String) && recorded["journal_commit"].match?(/\A(?:[0-9a-f]{40}|[0-9a-f]{64})\z/)
             raise AttemptErrors::EvidenceUnavailable, "Canonical prompt completion acknowledgement differs"
+          end
+          true
+        end
+
+        def self.validate_inhibit!(frame)
+          unless frame.is_a?(Hash) && frame.keys.sort == INHIBIT_FIELDS && frame["version"].is_a?(Integer) && frame["version"] == 1 &&
+              frame["type"] == "launch_input_inhibit" && frame["attempt_id"].is_a?(String) && frame["attempt_id"].match?(/\A[a-zA-Z0-9][a-zA-Z0-9_.-]{0,127}\z/) &&
+              %w[original_binding_digest seal_event_id].all? { |key| frame[key].is_a?(String) && frame[key].match?(/\A[0-9a-f]{64}\z/) } &&
+              frame["journal_commit"].is_a?(String) && frame["journal_commit"].match?(/\A(?:[0-9a-f]{40}|[0-9a-f]{64})\z/)
+            raise AttemptErrors::EvidenceUnavailable, "Private input inhibition frame is malformed"
+          end
+          true
+        end
+
+        def self.validate_inhibit_outcome!(result, frame)
+          unless result.is_a?(Hash) && result.keys.sort == INHIBIT_OUTCOME_FIELDS && result["version"].is_a?(Integer) && result["version"] == 1 &&
+              result["type"] == "launch_input_inhibit_outcome" && result["guarded_evidence"].is_a?(Hash) &&
+              %w[original_binding_digest seal_event_id].all? { |key| result[key] == frame.fetch(key) }
+            raise AttemptErrors::EvidenceUnavailable, "Private input inhibition outcome differs"
+          end
+          true
+        end
+
+        def self.validate_inhibit_recorded!(result, frame)
+          unless result.is_a?(Hash) && result.keys.sort == INHIBIT_RECORDED_FIELDS && result["version"].is_a?(Integer) && result["version"] == 1 &&
+              result["type"] == "launch_input_inhibit_recorded" && %w[original_binding_digest seal_event_id].all? { |key| result[key] == frame.fetch(key) } &&
+              result["journal_commit"].is_a?(String) && result["journal_commit"].match?(/\A(?:[0-9a-f]{40}|[0-9a-f]{64})\z/)
+            raise AttemptErrors::EvidenceUnavailable, "Canonical input inhibition acknowledgement differs"
           end
           true
         end

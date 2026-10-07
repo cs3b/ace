@@ -17,8 +17,9 @@ module Ace
           journal = journal_for(map)
           input = params.reject { |key, _| key == "mutation_id" }
           digest = Digest::SHA256.hexdigest(JSON.generate(canonical(input)))
-          with_exclusion(params, map, journal) do
-            stop_after_commit = false
+          stop_after_commit = false
+          inhibit_after_commit = false
+          result = with_exclusion(params, map, journal) do
             result = @mutex.synchronize do
               current = journal.read_events(params.fetch("assignment_id")).select { |event| event["attempt_id"] == params.fetch("attempt_id") }
               scope_close_owner!(params, map, current, peer, role)
@@ -32,10 +33,12 @@ module Ace
                   "state" => "running", "proof_id" => nil, "required_action" => "close_scope"}
                 if !lineage.sealed?
                   stop_after_commit = true
+                  inhibit_after_commit = true
                   payload = {"scope_generation" => binding.fetch("scope_generation"), "scope_binding_event_id" => lineage.binding_event.fetch("digest")}
                   {events: [{type: "scope_sealed", payload: payload}], blobs: {}, data: projection}
                 elsif @native_issuers.key?(native_issuer_key(params, map)) || pending_prompt_issuers?(events, journal, _commit)
                   # A live issuer may still start after this inactive snapshot.
+                  inhibit_after_commit = true
                   {events: [], blobs: {}, data: projection}
                 elsif lineage.proof_event
                   scope_observer_for(params.fetch("mapping_id")).verify_closed!(lineage)
@@ -62,11 +65,21 @@ module Ace
                 end
               end
             end
-            if !result.fetch(:replayed) && stop_after_commit
-              scope_observer_for(params.fetch("mapping_id")).stop_sealed_service!
-            end
             result
           end
+          if !result.fetch(:replayed) && inhibit_after_commit
+            request_original_input_inhibition!(params, map, journal)
+          end
+          if !result.fetch(:replayed) && stop_after_commit
+            with_exclusion(params, map, journal) do
+              @mutex.synchronize do
+                current = journal.read_events(params.fetch("assignment_id")).select { |event| event["attempt_id"] == params.fetch("attempt_id") }
+                scope_close_owner!(params, map, current, peer, role)
+              end
+              scope_observer_for(params.fetch("mapping_id")).stop_sealed_service!
+            end
+          end
+          result
         end
 
         def observe_execution_scope!(params:, peer:, role:)

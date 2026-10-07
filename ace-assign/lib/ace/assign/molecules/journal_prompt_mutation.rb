@@ -197,7 +197,7 @@ module Ace
             raise ArgumentError, "invalid fixed prompt binding"
           end
           %w[assignment_id attempt_id mapping_id mutation_id project_id].each { |key| validate_mutation_id!(binding.fetch(key)) }
-          if binding.fetch("mutation_id").start_with?("prompt-issue.", "prompt-observe.")
+          if binding.fetch("mutation_id").start_with?("prompt-issue.", "prompt-observe.", "input-inhibit.")
             raise ArgumentError, "public mutation ID uses reserved prompt namespace"
           end
           caller = binding.fetch("caller")

@@ -88,6 +88,7 @@ module Ace
           until @control_cancelled
             begin
               report_retained_prompt_completions!(state)
+              report_retained_input_inhibition!(state)
               @client.with_launch_control(state: state) do |socket, codec, ready|
                 unless announced
                   yield({"version" => 1, "type" => "launch_ready", "mapping_id" => @mapping_id,
@@ -149,6 +150,11 @@ module Ace
               wire.write(socket, frame.merge("type" => "launch_control_idle_ack"), deadline: deadline, limit: 16_384)
               next
             end
+            if frame.is_a?(Hash) && frame["type"] == "launch_input_inhibit"
+              original_input_inhibit!(socket, state, ready, frame, deadline)
+              next
+            end
+            raise AttemptErrors::EvidenceUnavailable, "Original launcher input is inhibited" if @input_inhibited
             LaunchControlChannel.validate_prompt!(frame)
             unless frame["attempt_id"] == state.fetch("attempt_id") && frame["original_binding_digest"] == ready.fetch("original_binding_digest")
               raise AttemptErrors::EvidenceUnavailable, "Private prompt does not join original launcher"
@@ -185,6 +191,45 @@ module Ace
             LaunchControlChannel.validate_recorded!(recorded, frame, evidence)
             @reported_prompt_completions[frame.fetch("intent_event_id")] = recorded.fetch("journal_commit") if %w[submitted not_issued].include?(evidence.fetch("outcome"))
           end
+        end
+
+        def original_input_inhibit!(socket, state, ready, frame, deadline)
+          LaunchControlChannel.validate_inhibit!(frame)
+          unless frame["attempt_id"] == state.fetch("attempt_id") && frame["original_binding_digest"] == ready.fetch("original_binding_digest")
+            raise AttemptErrors::EvidenceUnavailable, "Input inhibition does not join original launcher"
+          end
+          selectors = frame.slice("original_binding_digest", "seal_event_id", "journal_commit")
+          selected = @client.call("launch_input_inhibit_selection", state.slice("assignment_id", "attempt_id").merge(selectors), mutation_id: nil).data
+          unless selected == frame.slice("attempt_id", "original_binding_digest", "seal_event_id", "journal_commit")
+            raise AttemptErrors::EvidenceUnavailable, "Input inhibition original seal selection differs"
+          end
+          @input_inhibited = true
+          @input_inhibition_refs = frame.slice("original_binding_digest", "seal_event_id")
+          evidence = @retained_input_inhibition || @native.inhibit_input(binding: @steering_binding)
+          if evidence.is_a?(Hash) && evidence["outcome"] == "inhibited"
+            @retained_input_inhibition = evidence
+          end
+          wire = Ace::Runtime::Molecules::ProtectedSocket
+          result = @input_inhibition_refs.merge("version" => 1, "type" => "launch_input_inhibit_outcome", "guarded_evidence" => evidence)
+          wire.write(socket, result, deadline: deadline, limit: 16_384)
+          recorded = wire.read(socket, deadline: deadline, limit: 16_384)
+          LaunchControlChannel.validate_inhibit_recorded!(recorded, frame)
+          unless @retained_input_inhibition
+            raise AttemptErrors::EvidenceUnavailable, "Unconfirmed drain cannot receive positive canonical acknowledgement"
+          end
+          @reported_input_inhibition = recorded.fetch("journal_commit")
+        end
+
+        def report_retained_input_inhibition!(state)
+          return unless @retained_input_inhibition && !@reported_input_inhibition
+          accepted = @client.call("launch_input_inhibit_completion", state.slice("assignment_id", "attempt_id").merge(@input_inhibition_refs).merge(
+            "guarded_evidence" => @retained_input_inhibition), mutation_id: nil, timeout: 30).data
+          frame = @input_inhibition_refs.merge("version" => 1, "type" => "launch_input_inhibit")
+          unless accepted.is_a?(Hash) && accepted.keys.sort == %w[journal_commit original_binding_digest seal_event_id]
+            raise AttemptErrors::EvidenceUnavailable, "Retained input inhibition acknowledgement differs"
+          end
+          LaunchControlChannel.validate_inhibit_recorded!(accepted.merge("version" => 1, "type" => "launch_input_inhibit_recorded"), frame)
+          @reported_input_inhibition = accepted.fetch("journal_commit")
         end
 
         def close_before_native_release(state, mutation_id)

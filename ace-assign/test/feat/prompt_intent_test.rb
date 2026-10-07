@@ -72,6 +72,15 @@ module Ace
         end
       end
 
+      def test_reserved_input_inhibition_namespace_cannot_obtain_prompt_issuance
+        with_journal do |journal|
+          before = journal.ref_value
+          assert_raises(ArgumentError) { issue(journal, binding.merge("mutation_id" => "input-inhibit.#{'a' * 64}")) { flunk "reserved prompt admitted" } }
+          assert_equal before, journal.ref_value
+          assert_empty journal.read_events("assignment")
+        end
+      end
+
       def test_concurrent_changed_input_has_one_canonical_issue_and_one_dispatch_permit
         with_journal do |journal|
           gate, outcomes = Queue.new, Queue.new
