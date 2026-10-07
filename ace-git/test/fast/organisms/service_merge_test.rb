@@ -91,13 +91,66 @@ class ServiceMergeTest < AceGitTestCase
     end
   end
 
+  def test_missing_invalid_method_and_oversized_inputs_refuse_without_provider_io
+    [->(value) { value.fetch("input").delete("method") },
+      ->(value) { value.fetch("input")["method"] = "automatic" },
+      ->(value) { value.fetch("input").fetch("delivery")["extra"] = "x" * (64 * 1024) }].each do |change|
+      with_producer("forgejo") do |producer, envelope, root, calls|
+        change.call(envelope)
+        envelope.fetch("request")["input_digest"] = Digest::SHA256.hexdigest(JSON.generate(canonical(envelope.fetch("input"))))
+        assert_raises(ArgumentError) { producer.call(bytes: JSON.generate(envelope), root: root) }
+        assert_empty calls
+      end
+    end
+    with_producer("forgejo") do |producer, envelope, root, calls|
+      assert_raises(ArgumentError) { producer.call(bytes: JSON.generate(envelope) + " " * (128 * 1024), root: root) }
+      assert_empty calls
+    end
+  end
+
+  def test_actual_pr_resource_head_and_provenance_mismatches_never_mutate
+    [->(value) { value.fetch("input").fetch("target")["resource"] = "#{URL}/pulls/26" },
+      ->(value) { value.fetch("execution")["head"] = value.fetch("request")["candidate_head"] = "b" * 40 },
+      ->(value) { value.fetch("input").fetch("delivery").fetch("pr_provenance")["head_ref"] = "different" },
+      ->(value) { value.fetch("input").fetch("delivery").fetch("pr_provenance").merge!("mode" => "fork", "head_repository_url" => "https://forge.example.com/other/repo") },
+      ->(value) { value.fetch("input").fetch("delivery").fetch("pr_provenance")["base_ref"] = "different" }].each_with_index do |change, index|
+      with_producer("forgejo") do |producer, envelope, root, calls|
+        change.call(envelope)
+        envelope.fetch("request")["target"] = envelope.fetch("input").fetch("target")
+        envelope.fetch("request")["input_digest"] = Digest::SHA256.hexdigest(JSON.generate(canonical(envelope.fetch("input"))))
+        error = index.zero? ? Ace::Git::ProviderIdentityMismatchError : Ace::Git::ProviderExpectedHeadConflictError
+        assert_raises(error) { producer.call(bytes: JSON.generate(envelope), root: root) }
+        assert_equal 0, calls.count { |args| mutation?("forgejo", args) }
+        refute File.exist?(File.join(root, "merge-result.txt"))
+      end
+    end
+  end
+
+  def test_ambiguous_actual_default_selection_refuses_before_provider_io
+    with_producer("forgejo", default: true) do |producer, envelope, root, calls|
+      Ace::Git.instance_variable_set(:@config, Ace::Git.config.merge("servers" => [
+        {"name" => "selected", "provider" => "forgejo", "url" => URL, "default" => true},
+        {"name" => "another", "provider" => "forgejo", "url" => URL, "default" => true}]))
+      assert_raises(Ace::Git::MultipleDefaultServersError) { producer.call(bytes: JSON.generate(envelope), root: root) }
+      assert_empty calls
+    end
+  end
+
+  def test_lost_actual_mutation_reply_is_uncertain_without_retry_or_artifact
+    with_producer("forgejo", lose_reply: true) do |producer, envelope, root, calls|
+      assert_raises(Ace::Git::ProviderUnknownOutcomeError) { producer.call(bytes: JSON.generate(envelope), root: root) }
+      assert_equal 1, calls.count { |args| mutation?("forgejo", args) }
+      refute File.exist?(File.join(root, "merge-result.txt"))
+    end
+  end
+
   private
 
   def mutation?(provider, args)
     provider == "github" ? args[0, 3] == %w[gh pr merge] : args[1] == "POST"
   end
 
-  def with_producer(provider, default: false, fork: false, verify_merge: true, change_mode: false)
+  def with_producer(provider, default: false, fork: false, verify_merge: true, change_mode: false, lose_reply: false)
     Ace::Git.instance_variable_set(:@config, Ace::Git.config.merge("servers" => [
       {"name" => "selected", "provider" => provider, "url" => URL, "default" => true}
     ]))
@@ -115,6 +168,7 @@ class ServiceMergeTest < AceGitTestCase
         end
         merged = verify_merge
         File.chmod(0o755, staging) if change_mode
+        next {success: false, status: 0, stdout: "", stderr: "controlled lost reply", exit_code: 1} if lose_reply
         next {success: true, status: 200, stdout: "", stderr: "", exit_code: 0}
       end
       payload = if provider == "github"
@@ -128,7 +182,7 @@ class ServiceMergeTest < AceGitTestCase
         {"version" => "8.0.5"}
       else
         assert_equal "GET", args[1]
-        assert_equal "https://forge.example.com/api/v1/repos/owner/repo/pulls/25", args[2]
+        assert_match %r{\Ahttps://forge.example.com/api/v1/repos/owner/repo/pulls/(25|26)\z}, args[2]
         {"number" => 25, "title" => "Ship", "body" => "", "state" => merged ? "closed" : "open",
          "draft" => false, "merged" => merged, "user" => {"login" => "worker"},
          "merged_at" => merged ? "2026-10-07T12:00:00Z" : nil, "merge_commit_sha" => merged ? "d" * 40 : nil,
