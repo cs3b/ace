@@ -396,6 +396,18 @@ module Ace
         end
 
         def with_exclusion(params, map, journal)
+          enter = proc { with_containment_exclusion(params, map, journal) { yield } }
+          if @result_owner && @result_owner.respond_to?(:with_inbox_settlement_contexts)
+            @result_owner.with_inbox_settlement_contexts(params: params, map: map, journal: journal, &enter)
+          else
+            enter.call
+          end
+        end
+
+        # Containment/recovery never settles Inbox work or grants fresh input.
+        # It retains the same canonical task/slot/assignment exclusions while
+        # permitting the proof prerequisites needed to recover unknown effects.
+        def with_containment_exclusion(params, map, journal)
           exclusion = exclusion_for(map, journal)
           registration = definition(journal, params.fetch("assignment_id"))
           task = if params.key?("definition_bytes")
@@ -405,12 +417,7 @@ module Ace
           end
           token!(task)
           keys = [exclusion.task_key(task), exclusion.assignment_key(params.fetch("assignment_id"))]
-          enter = proc { with_slot(map) { exclusion.with_shared_multi(keys) { yield } } }
-          if @result_owner && @result_owner.respond_to?(:with_inbox_settlement_contexts)
-            @result_owner.with_inbox_settlement_contexts(params: params, map: map, journal: journal, &enter)
-          else
-            enter.call
-          end
+          with_slot(map) { exclusion.with_shared_multi(keys) { yield } }
         end
 
         # Slot ownership spans assignment chains and survives authority restart

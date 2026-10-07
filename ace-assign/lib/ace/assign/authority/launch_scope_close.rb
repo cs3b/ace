@@ -19,7 +19,7 @@ module Ace
           digest = Digest::SHA256.hexdigest(JSON.generate(canonical(input)))
           stop_after_commit = false
           inhibit_after_commit = false
-          result = with_exclusion(params, map, journal) do
+          result = with_containment_exclusion(params, map, journal) do
             result = @mutex.synchronize do
               current = journal.read_events(params.fetch("assignment_id")).select { |event| event["attempt_id"] == params.fetch("attempt_id") }
               scope_close_owner!(params, map, current, peer, role)
@@ -71,7 +71,7 @@ module Ace
             request_original_input_inhibition!(params, map, journal)
           end
           if !result.fetch(:replayed) && stop_after_commit
-            with_exclusion(params, map, journal) do
+            with_containment_exclusion(params, map, journal) do
               @mutex.synchronize do
                 current = journal.read_events(params.fetch("assignment_id")).select { |event| event["attempt_id"] == params.fetch("attempt_id") }
                 scope_close_owner!(params, map, current, peer, role)
@@ -88,7 +88,7 @@ module Ace
           @kernel.live!(peer)
           map = @deployment.mapping(params.fetch("mapping_id"))
           journal = journal_for(map)
-          with_exclusion(params, map, journal) do
+          with_containment_exclusion(params, map, journal) do
             @mutex.synchronize do
               commit = journal.ref_value
               events = journal.read_events(params.fetch("assignment_id"), commit: commit).select { |event| event["attempt_id"] == params.fetch("attempt_id") }

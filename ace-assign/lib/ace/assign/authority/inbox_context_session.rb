@@ -16,6 +16,7 @@ module Ace
           @operation = @client.request("begin_context_operation", {"context_id" => params.fetch("inbox_context_id"),
             "purpose" => "reconcile", "event_id" => params.fetch("event_id"), "process_binding" => authority_peer})
           unless @operation.keys.sort == %w[fingerprint key_generation operation_id state] &&
+              @operation["fingerprint"].is_a?(String) && @operation["fingerprint"].match?(/\A[0-9a-f]{64}\z/) &&
               @operation["operation_id"].is_a?(String) && @operation["operation_id"].match?(/\A[0-9a-f]{32}\z/) &&
               @operation["key_generation"].is_a?(Integer) && @operation["key_generation"].positive? && %w[admitted unknown].include?(@operation["state"])
             raise AttemptErrors::EvidenceUnavailable, "context admission response differs"
@@ -51,7 +52,7 @@ module Ace
 
         def require_idle!
           unless @operation.fetch("state") == "admitted" && @effect_binding.nil?
-            raise AttemptErrors::EvidenceUnavailable, "pending context effect cannot authorize settlement"
+            raise AttemptErrors::InboxContextPending, "pending context effect cannot authorize settlement"
           end
           true
         end
