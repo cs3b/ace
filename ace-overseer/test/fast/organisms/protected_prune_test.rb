@@ -5,6 +5,19 @@ require "stringio"
 require_relative "../../test_helper"
 
 class ProtectedPruneTest < AceOverseerTestCase
+  def test_default_command_protected_path_never_constructs_local_orchestrator
+    calls = []
+    protected = Object.new
+    protected.define_singleton_method(:preview) { |**params| calls << params; {"kind" => "preview"} }
+    Ace::Overseer::Organisms::PruneOrchestrator.stub(:new, -> { raise "local configuration must not load" }) do
+      output = StringIO.new
+      command = Ace::Overseer::CLI::Commands::Prune.new(protected_prune: protected, output: output)
+      command.call(project: "ace", agent: "old", assignment: "a", attempt: "t", request: "intent.json", dry_run: true)
+      assert_equal 1, calls.size
+      assert_equal({"kind" => "preview"}, JSON.parse(output.string))
+    end
+  end
+
   def test_actual_command_reads_closed_intent_and_uses_installed_maintenance_receiver
     intent = {
       "schema" => "ace.protected-workspace-prune-preview/v1",

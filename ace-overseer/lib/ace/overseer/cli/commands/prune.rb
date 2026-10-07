@@ -34,7 +34,7 @@ module Ace
 
           def initialize(orchestrator: nil, protected_prune: nil, input: $stdin, output: $stdout)
             super()
-            @orchestrator = orchestrator || Organisms::PruneOrchestrator.new
+            @orchestrator = orchestrator
             @input = input
             @output = output
             @protected_prune = protected_prune || Organisms::ProtectedPrune.new
@@ -80,6 +80,8 @@ module Ace
             raise Ace::Support::Cli::Error, "Prune uses the configured local runtime; protected physical cleanup has its own owner" if options.key?(:runtime)
 
             Atoms::RepoGuard.ensure_repo!
+
+            @orchestrator ||= Organisms::PruneOrchestrator.new
 
             targets = Array(options[:targets] || [])
             progress = options[:quiet] ? nil : ->(msg) { puts msg }
