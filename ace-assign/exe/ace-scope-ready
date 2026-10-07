@@ -1,0 +1,55 @@
+#!/usr/bin/ruby
+# frozen_string_literal: true
+# Private fixed interpreter action; the unit supplies --disable=gems,rubyopt.
+abort "fixed readiness requires one slot" unless ARGV.length == 1 && ARGV.first.match?(/\A[A-Za-z0-9][A-Za-z0-9._-]{0,127}\z/)
+abort "readiness startup features differ" if defined?(Gem) || ENV.keys.any? { |key| key.match?(/\A(?:RUBY|GEM|BUNDLE)/) }
+protected_path = lambda do |path, directory|
+  abort "readiness path substituted" unless path.start_with?("/") && File.expand_path(path) == path && File.realpath(path) == path
+  current = path
+  loop do
+    stat = File.lstat(current)
+    abort "readiness path is writable" unless stat.uid.zero? && !stat.symlink? && (stat.mode & 0o022).zero?
+    abort "readiness directory differs" if current == path && directory && !stat.directory?
+    break if current == "/"
+    current = File.dirname(current)
+  end
+end
+$LOAD_PATH.each { |path| protected_path.call(path, true) }
+require "json"
+require "digest"
+path = "/etc/ace/execution-slots/#{ARGV.first}/readiness.json"
+protected_path.call(path, false)
+bytes = File.open(path, File::RDONLY | File::NOFOLLOW) { |file| file.read(65_537) }
+abort "readiness configuration bound differs" unless bytes.bytesize.between?(1, 65_536)
+config = JSON.parse(bytes.force_encoding(Encoding::UTF_8), create_additions: false, max_nesting: 8,
+  allow_duplicate_key: false, allow_comments: false)
+runtime = config.fetch("runtime")
+references = runtime.fetch("dependencies")
+abort "readiness runtime closure oversized" unless references.is_a?(Array) && references.size.between?(1, 256)
+total = 0
+references.each do |ref|
+  abort "readiness dependency reference differs" unless ref.is_a?(Hash) && ref.keys.sort == %w[bytes path sha256] &&
+    ref["path"].is_a?(String) && ref["path"].bytesize.between?(1, 4096) && !ref["path"].include?("\0") &&
+    ref["bytes"].is_a?(Integer) && ref["bytes"].between?(1, 1_048_576) &&
+    ref["sha256"].is_a?(String) && ref["sha256"].match?(/\A[0-9a-f]{64}\z/)
+  total += ref.fetch("bytes")
+  abort "readiness runtime closure byte bound differs" if total > 16_777_216
+  protected_path.call(ref.fetch("path"), false)
+  content = File.open(ref.fetch("path"), File::RDONLY | File::NOFOLLOW) { |file| file.read(ref.fetch("bytes") + 1) }
+  abort "readiness dependency changed" unless content.bytesize == ref.fetch("bytes") && Digest::SHA256.hexdigest(content) == ref.fetch("sha256")
+end
+builtins = %w[enumerator.so thread.rb fiber.so rational.so complex.so ruby2_keywords.rb]
+$LOADED_FEATURES.each do |feature|
+  abort "readiness startup loaded undeclared code" unless builtins.include?(feature) || references.any? { |ref| ref.fetch("path") == feature }
+end
+paths = runtime.fetch("load_paths")
+abort "readiness load paths oversized" unless paths.is_a?(Array) && paths.size.between?(1, 16)
+paths.each { |selected| protected_path.call(selected, true) }
+$LOAD_PATH.replace(paths)
+require "ace/runtime/molecules/readiness_configuration"
+require "ace/runtime/molecules/readiness_runtime"
+configuration = Ace::Runtime::Molecules::ReadinessConfiguration.decode(bytes, slot: ARGV.first)
+Ace::Runtime::Molecules::ReadinessRuntime.new(configuration: configuration.data).activate!
+require "ace/assign/errors"
+require "ace/assign/authority/readiness_hook"
+Ace::Assign::Authority::ReadinessHook.new(slot: ARGV.first, configuration: configuration).run

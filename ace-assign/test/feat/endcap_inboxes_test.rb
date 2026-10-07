@@ -28,6 +28,24 @@ module Ace
         def bytes(index: 0); parts.fetch(index); end
       end
 
+      def test_historical_malformed_canonical_shapes_refuse_with_typed_unavailability
+        journal = Object.new
+        journal.define_singleton_method(:evidence_mode) { :protected }
+        context = {"native_mapping_id" => "mapping"}
+        deployment = Object.new
+        deployment.define_singleton_method(:inbox_context) { |*| context }
+        verifier = Authority::HistoricalInboxEvidence.new(journal: journal, deployment: deployment, history: Object.new)
+        params = {"mapping_id" => "mapping", "assignment_id" => "assignment", "attempt_id" => "attempt"}
+        registration = {"event_id" => "event", "attempt_id" => "attempt", "payload_sha256" => "a" * 64, "receipt_key_sha256" => "b" * 64}
+        payloads = [nil, "scalar", {"attempt_id" => "attempt", "event_id" => "event", "inbox_context_id" => "context", "registration" => registration}]
+        payloads.each do |payload|
+          event = {"type" => "inbox_binding", "payload" => payload}
+          assert_raises(AttemptErrors::EvidenceUnavailable) do
+            verifier.verify!(events: [event], params: params, map: {"project_id" => "project"}, commit: "a" * 40)
+          end
+        end
+      end
+
       def fixture(child: false, inbox: true)
         Dir.mktmpdir do |root|
           repo = File.join(root, "repo"); FileUtils.mkdir_p(repo)
@@ -61,7 +79,7 @@ module Ace
           parent = {"project_id" => "project", "assignment_id" => "assignment", "attempt_id" => "attempt", "mapping_id" => "mapping",
             "slot_id" => "slot", "reservation_generation" => 1, "scope_generation" => 2, "deployment_digest" => "a" * 64,
             "boot_id" => BOOT, "slice_invocation_id" => "b" * 32,
-            "network_installation_selection" => ExecutionScopeObservationFixtures::NETWORK_SELECTION,
+            "boot_baseline_selection" => ExecutionScopeObservationFixtures::BOOT_BASELINE_SELECTION, "network_installation_selection" => ExecutionScopeObservationFixtures::NETWORK_SELECTION,
             "network_namespace_identity" => {"device" => 7, "inode" => 88},
             "resource_mount_namespace_identity" => {"device" => 4, "inode" => 1111},
             "cgroup_identity" => {"path" => "/sys/fs/cgroup/slot.slice", "mount_id" => 1, "filesystem_type" => "cgroup2", "device" => 2, "inode" => 3},
@@ -162,6 +180,30 @@ module Ace
         end
       end
 
+      def test_historical_consumption_uses_original_public_key_and_canonical_prefix_without_native_discovery
+        fixture(child: true) do
+          reconcile
+          commit = @journal.ref_value
+          prefix = events
+          original_key = @key.public_key
+          fingerprint = @registration.fetch("receipt_key_sha256")
+          history = Object.new
+          history.define_singleton_method(:public_key!) do |sha256:|
+            raise AttemptErrors::EvidenceUnavailable, "missing original key" unless sha256 == fingerprint
+            original_key
+          end
+          File.write(@context.fetch("receipt_public_key"), OpenSSL::PKey::RSA.new(1024).public_to_pem)
+          @deployment.define_singleton_method(:verify_inbox_context!) { |*| raise "history must not inspect current key/native paths" }
+          assert @owner.historical_inbox_settlement_complete!(journal: @journal, events: prefix,
+            params: @params, map: @map, commit: commit, deployment: @deployment, history: history)
+          history.define_singleton_method(:public_key!) { |sha256:| OpenSSL::PKey::RSA.new(1024).public_key }
+          assert_raises(AttemptErrors::EvidenceUnavailable) do
+            @owner.historical_inbox_settlement_complete!(journal: @journal, events: prefix,
+              params: @params, map: @map, commit: commit, deployment: @deployment, history: history)
+          end
+        end
+      end
+
       def test_wrong_registration_role_context_signature_and_body_refuse_without_import
         fixture do
           assert_raises(AttemptErrors::Conflict) { reconcile(params: @params.merge("expected_registration" => @registration.merge("payload_sha256" => "a" * 64))) }
@@ -239,6 +281,41 @@ module Ace
             reconcile(params: old_params, parts: [old_bytes, old_signature])
           end
           assert_equal second.fetch(:data), reconcile(id: "claim-two").fetch(:data)
+          original_key = @key.public_key
+          fingerprint = @registration.fetch("receipt_key_sha256")
+          history = Object.new
+          history.define_singleton_method(:public_key!) do |sha256:|
+            raise AttemptErrors::EvidenceUnavailable unless sha256 == fingerprint
+            original_key
+          end
+          assert @owner.historical_inbox_settlement_complete!(journal: @journal, events: events,
+            params: @params, map: @map, commit: @journal.ref_value, deployment: @deployment, history: history)
+          bogus_reply = {"type" => "authority_mutation", "payload" => {"operation" => "reconcile_inbox",
+            "data" => {"event_id" => "event", "state" => "completed"}}}
+          assert_raises(AttemptErrors::EvidenceUnavailable) do
+            Authority::HistoricalInboxEvidence.new(journal: @journal, deployment: @deployment, history: history).verify!(
+              events: events + [bogus_reply], params: @params, map: @map, commit: @journal.ref_value)
+          end
+          reordered = events.dup
+          zero = JSON.parse(JSON.generate(historical))
+          zero["payload"]["claim_generation"] = 0
+          reordered.insert(reordered.index(historical) + 1, zero)
+          assert_raises(AttemptErrors::EvidenceUnavailable) do
+            Authority::HistoricalInboxEvidence.new(journal: @journal, deployment: @deployment, history: history).verify!(
+              events: reordered, params: @params, map: @map, commit: @journal.ref_value)
+          end
+          # Earlier superseded claim evidence stays part of authenticated
+          # history; the final consumed claim cannot conceal its corruption.
+          historical_ref = historical.dig("payload", "receipt_ref", "ref")
+          checkout = File.join(@journal.checkout_root, "journal")
+          File.binwrite(File.join(checkout, historical_ref), "corrupt")
+          git_in(checkout, "add", "-A")
+          git_in(checkout, "commit", "-m", "fixture corrupt retained claim evidence")
+          git_in(@journal.repo_root, "update-ref", @journal.ref, git_in(checkout, "rev-parse", "HEAD").strip)
+          assert_raises(AttemptErrors::EvidenceUnavailable) do
+            @owner.historical_inbox_settlement_complete!(journal: @journal, events: events,
+              params: @params, map: @map, commit: @journal.ref_value, deployment: @deployment, history: history)
+          end
         end
       end
 

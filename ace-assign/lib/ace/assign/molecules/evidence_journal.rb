@@ -29,6 +29,7 @@ module Ace
         include JournalMutation
         include ProposalJournal
         CAS_ATTEMPTS = 3
+        HISTORY_LIMIT = 100_000
 
         # Selected by source composition, never by receipt or wire parameters.
         def evidence_mode
@@ -80,6 +81,51 @@ module Ace
             raise AttemptErrors::EvidenceUnavailable, "canonical journal commit is unavailable: #{error}"
           end
           true
+        end
+
+        # Normal append commits inherit the event unchanged. Locate its one
+        # introduction; inherited appearances are not competing provenance.
+        def event_commit!(assignment_id:, event_digest:, commit:)
+          unless event_digest.is_a?(String) && event_digest.match?(/\A[0-9a-f]{64}\z/)
+            raise AttemptErrors::EvidenceUnavailable, "historical event digest is invalid"
+          end
+          verify_commit!(commit)
+          topology, error, status = git("rev-list", "--first-parent", "--parents",
+            "--max-count=#{HISTORY_LIMIT + 1}", commit)
+          nodes = topology.lines.map(&:split)
+          unless status.success? && !nodes.empty? && nodes.size <= HISTORY_LIMIT &&
+              nodes.all? { |node| node.size.between?(1, 2) && node.all? { |sha| sha.match?(/\A[0-9a-f]{40}\z/) } } &&
+              nodes.each_cons(2).all? { |left, right| left[1] == right[0] } && nodes.last.size == 1
+            raise AttemptErrors::EvidenceUnavailable, "canonical history topology is unsupported or incomplete: #{error}"
+          end
+          introduction = nil
+          retained = nil
+          retained_blob = nil
+          absent = false
+          nodes.each do |node|
+            events = read_events(assignment_id, commit: node.first)
+            unless events.group_by { |event| event.fetch("attempt_id") }.values.all? { |chain| Models::EvidenceEvent.chain_valid?(chain) }
+              raise AttemptErrors::EvidenceUnavailable, "historical canonical event chain is corrupt"
+            end
+            matches = events.select { |event| event["digest"] == event_digest }
+            raise AttemptErrors::EvidenceUnavailable, "historical event selector is ambiguous" if matches.size > 1
+            if matches.empty?
+              absent = true
+              next
+            end
+            if absent || (retained && retained != matches.first)
+              raise AttemptErrors::EvidenceUnavailable, "historical event disappeared or changed"
+            end
+            path = "execution/#{assignment_id}/events/#{event_filename(matches.first)}"
+            blob, blob_error, blob_status = git("rev-parse", "#{node.first}:#{path}")
+            unless blob_status.success? && blob.match?(/\A[0-9a-f]{40}\z/) && (!retained_blob || retained_blob == blob)
+              raise AttemptErrors::EvidenceUnavailable, "historical canonical event bytes changed or are unavailable: #{blob_error}"
+            end
+            retained_blob ||= blob
+            retained ||= matches.first
+            introduction = node.first
+          end
+          introduction || raise(AttemptErrors::EvidenceUnavailable, "historical canonical event is unavailable")
         end
 
         # Append accepted events to the journal under lock + CAS.

@@ -10,6 +10,7 @@ require "ace/runtime/molecules/protected_socket"
 require "ace/runtime/molecules/protected_artifact_set"
 require "ace/runtime/molecules/protected_linux"
 require "ace/runtime/molecules/execution_unit_installation"
+require "ace/runtime/molecules/readiness_configuration"
 
 module Ace
   module Assign
@@ -535,6 +536,16 @@ module Ace
             bootstrap: map.fetch("bootstrap"), worker_executable: map.fetch("worker_argv").first,
             worker_uid: map.fetch("worker_uid"), worker_gid: map.fetch("worker_gid")).verify!(manager: manager)
           artifacts = manifest.fetch("artifacts")
+          configuration = artifacts.find { |artifact| artifact.fetch("role") == "readiness_configuration" }
+          Ace::Runtime::Molecules::ProtectedArtifactSet.new.with do |reader|
+            bytes, = reader.read_path!(configuration.fetch("host_path"), limit: 65_536)
+            unless Digest::SHA256.hexdigest(bytes) == configuration.fetch("sha256")
+              raise Ace::Runtime::RuntimeUnavailableError, "readiness configuration content differs"
+            end
+            Ace::Runtime::Molecules::ReadinessConfiguration.decode(bytes, slot: scope.fetch("slot_id"))
+              .verify_selection!(mapping_id: id, mapping: map, authority: service, installation: manifest)
+            reader.verify_unchanged!
+          end
           bootstrap = artifacts.find { |artifact| artifact.fetch("role") == "bootstrap" }
           executables = artifacts.select { |artifact| %w[bootstrap worker_executable].include?(artifact.fetch("role")) }
           unless bootstrap.fetch("sha256") == map.fetch("bootstrap_sha256") && elf_architecture?(bootstrap.fetch("host_path")) &&

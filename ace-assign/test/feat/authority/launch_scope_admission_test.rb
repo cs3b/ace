@@ -29,13 +29,19 @@ module Ace
           @starts += 1
           raise Ace::Runtime::RuntimeUnavailableError, "StartUnit reply lost" if lost_reply
         end
+        def complete_native_readiness!(_lineage, report)
+          raise AttemptErrors::EvidenceUnavailable, "completed start lacks private report" unless report
+          report
+        end
         def sealed_service_stop_required?(lineage)
           raise "unsealed stop" unless lineage.sealed?
           !!stop_required
         end
         def stop_sealed_service!
           raise "authority mutex held during StopUnit" if owner.mutex.owned?
-          raise "seal missing before StopUnit" unless journal.read_events("assignment").any? { |event| event["type"] == "scope_sealed" }
+          raise "admission or seal missing before StopUnit" unless journal.read_events("assignment").any? do |event|
+            event["type"] == "scope_sealed" || event.dig("payload", "operation") == "scope_service_admission"
+          end
           @stops += 1
           raise Ace::Runtime::RuntimeUnavailableError, "StopUnit reply lost" if lost_reply
         end
@@ -52,7 +58,8 @@ module Ace
       end
 
       def with_owner
-        with_temp_cache do |cache|
+        with_temp_cache do |parent|
+          Dir.mktmpdir("owner-", parent) do |cache|
           repo = File.join(cache, "repo")
           FileUtils.mkdir_p(repo)
           _out, err, status = Open3.capture3("git", "init", "-b", "main", repo)
@@ -67,6 +74,7 @@ module Ace
           deployment.define_singleton_method(:mapping) { |_id| map }
           deployment.define_singleton_method(:authority) { |_id| {"state_root" => File.join(cache, "state")} }
           deployment.define_singleton_method(:project) { |_id| {"inbox_contexts" => {}} }
+          deployment.define_singleton_method(:artifact_reference) { {"sha256" => "d" * 64} }
           @observer = Observer.new
           @owner = Authority::LaunchLifecycle.new(deployment: deployment, kernel: Kernel.new,
             journals: {"project" => @journal}, scope_observer_factory: ->(_id) { @observer })
@@ -76,19 +84,20 @@ module Ace
             "mapping_id" => "mapping", "reservation_generation" => 1, "phase" => "reserved",
             "launcher_identity" => @peer, "launch_ticket" => "ticket"}
           mutate("attempt", "reserve", "reserve_attempt", 0, [{type: "intent", payload: {"scope" => "010"}},
-            {type: "scope_provisioning", payload: {"slot_id" => "slot", "reservation_generation" => 1, "deployment_digest" => "a" * 64}}], @state)
+            {type: "scope_provisioning", payload: {"slot_id" => "slot", "reservation_generation" => 1, "deployment_digest" => "a" * 64, "descriptor_sha256" => "d" * 64}}], @state)
           binding = @state.slice("project_id", "assignment_id", "attempt_id", "mapping_id", "reservation_generation").merge(
             "slot_id" => "slot", "scope_generation" => 2, "deployment_digest" => "a" * 64, "boot_id" => BOOT,
             "slice_invocation_id" => "b" * 32, "resource_mount_namespace_identity" => {"device" => 4, "inode" => 33},
             "cgroup_identity" => {"path" => "/sys/fs/cgroup/ace-slot.slice", "mount_id" => 4, "filesystem_type" => "cgroup2", "device" => 5, "inode" => 6},
             "resource_identities" => [], "network_namespace_identity" => {"device" => 7, "inode" => 88},
-            "network_installation_selection" => ExecutionScopeObservationFixtures::NETWORK_SELECTION)
+            "boot_baseline_selection" => ExecutionScopeObservationFixtures::BOOT_BASELINE_SELECTION, "network_installation_selection" => ExecutionScopeObservationFixtures::NETWORK_SELECTION)
           mutate("attempt", "parent", "scope_parent_binding", 1, [{type: "scope_bound", payload: binding}], @state)
           @params = {"mapping_id" => "mapping", "assignment_id" => "assignment", "attempt_id" => "attempt",
             "launch_ticket" => "ticket", "mutation_id" => "admit", "expected_generation" => 2}
           yield
         ensure
           @owner&.close
+          end
         end
       end
 
@@ -114,10 +123,11 @@ module Ace
 
       def test_only_fresh_canonical_winner_starts_and_replay_keeps_original_reply
         with_owner do
+          assert_raises(AttemptErrors::EvidenceUnavailable) { admit }
           fresh = admit
           assert_equal "issued_uncertain", fresh.dig(:data, "native_admission")
           assert_equal 3, fresh.dig(:data, "generation")
-          refute fresh.fetch(:replayed)
+          assert fresh.fetch(:replayed)
           replay = admit
           assert replay.fetch(:replayed)
           assert_equal fresh.fetch(:data), replay.fetch(:data)
@@ -144,6 +154,169 @@ module Ace
           assert_equal "issued_uncertain", replay.dig(:data, "native_admission")
           assert_equal old, @journal.ref_value
           assert_equal 1, @observer.starts
+        end
+      end
+
+      def test_delayed_admitted_issuer_cannot_start_after_seal_or_publish_early_proof
+        with_owner do
+          admitted, resume = Queue.new, Queue.new
+          original = @owner.method(:complete_native_start!)
+          @owner.define_singleton_method(:complete_native_start!) do |*arguments|
+            admitted << true
+            resume.pop
+            original.call(*arguments)
+          end
+          issuer = Thread.new { admit }
+          Timeout.timeout(15) { admitted.pop }
+          seal = close_scope("seal-delayed", 3)
+          assert_equal "running", seal.dig(:data, "state")
+          attempted_proof = close_scope("pending-proof", 4)
+          assert_equal "running", attempted_proof.dig(:data, "state")
+          assert_nil attempted_proof.dig(:data, "proof_id")
+          refute @journal.read_events("assignment").any? { |event| event["type"] == "scope_closed_no_writers" }
+          assert_equal 0, @observer.starts
+          resume << true
+          Timeout.timeout(15) { issuer.value }
+          assert_equal 0, @observer.starts
+          proof = close_scope("settled-proof", 5)
+          assert_equal "closed_no_writers", proof.dig(:data, "state")
+        ensure
+          resume << true if issuer&.alive?
+          issuer&.join(1)
+        end
+      end
+
+      def test_owner_exit_after_admission_before_scheduling_does_not_leave_unreachable_issuer
+        with_owner do
+          original = @owner.method(:with_exclusion)
+          @owner.define_singleton_method(:with_exclusion) do |*arguments, &block|
+            original.call(*arguments, &block)
+            raise IOError, "controlled exclusion return lost"
+          end
+          assert_raises(IOError) { admit }
+          assert_empty @owner.instance_variable_get(:@native_issuers)
+          assert_equal 0, @observer.starts
+          assert_equal 1, @journal.read_events("assignment").count { |event| event.dig("payload", "operation") == "scope_service_admission" }
+        end
+      end
+
+      def test_private_callback_cannot_select_same_attempt_id_from_another_project
+        with_owner do
+          params = @params.dup
+          other_map = @map.merge("project_id" => "other-project")
+          key = @owner.send(:native_issuer_key, params, @map)
+          other_key = @owner.send(:native_issuer_key, params, other_map)
+          refute_equal key, other_key
+          @owner.instance_variable_get(:@native_issuers)[key] = {params: params, report: nil}
+          @owner.instance_variable_get(:@journals)["other-project"] = @journal
+          @owner.instance_variable_get(:@deployment).define_singleton_method(:mapping) { |_id| other_map }
+          assert_raises(AttemptErrors::EvidenceUnavailable) do
+            @owner.native_readiness!(mapping_id: "mapping", peer: @peer, socket: nil, codec: nil, deadline: 0)
+          end
+          assert_nil @owner.instance_variable_get(:@native_issuers).fetch(key)[:challenge]
+          assert_equal 0, @observer.starts
+        end
+      end
+
+      def test_private_upload_faults_never_publish_native_binding
+        expected_errors = {none: nil, challenge: ArgumentError, duplicate_json: JSON::ParserError, invalid_utf8: ArgumentError,
+          truncated: AttemptErrors::MalformedTransfer, extra_bytes: AttemptErrors::MalformedTransfer,
+          no_eof: Timeout::Error, oversized: AttemptErrors::MalformedTransfer, sealed: AttemptErrors::Conflict}
+        expected_errors.each do |fault, expected_error|
+          with_owner do
+            started, resume = Queue.new, Queue.new
+            original = @observer.method(:start_admitted_service!)
+            @observer.define_singleton_method(:start_admitted_service!) do
+              original.call
+              started << true
+              resume.pop
+            end
+            callback_peer = {"pid" => 92, "uid" => 13001, "gid" => 13001, "groups" => [], "parent_pid" => 1,
+              "started_at" => "linux:#{BOOT}:92", "host" => "fixture"}
+            server = callback_peer.merge("pid" => 90, "started_at" => "linux:#{BOOT}:90")
+            @observer.define_singleton_method(:readiness_peer!) do |_lineage, peer|
+              raise AttemptErrors::UnauthorizedIdentity unless peer == callback_peer
+              server
+            end
+            issuer = Thread.new do
+              admit
+            rescue StandardError => error
+              error
+            end
+            Timeout.timeout(15) { started.pop }
+            left, right = UNIXSocket.pair
+            wire = Ace::Runtime::Molecules::ProtectedSocket
+            scratch = Dir.mktmpdir("ace-callback-", Etc.getpwuid(Process.uid).dir)
+            File.chmod(0700, scratch)
+            codec = Authority::TransferCodec.new(root: scratch)
+            handler = Thread.new do
+              @owner.native_readiness!(mapping_id: "mapping", peer: callback_peer, socket: left, codec: codec, deadline: wire.deadline(10))
+            rescue StandardError => error
+              error
+            ensure
+              left.close
+            end
+            challenge = wire.read(right, deadline: wire.deadline(10), limit: 16_384)
+            valid_report = {"version" => 1, "challenge_id" => challenge.fetch("challenge_id"), "server_identity" => server,
+              "resource_observer_identity" => callback_peer, "mount_namespace_identity" => {"device" => 4, "inode" => 22},
+              "resource_identities" => [], "resource_topology" => [],
+              "kernel_view_topology" => ExecutionScopeObservationFixtures.kernel_topology}
+            @observer.define_singleton_method(:verify_readiness_report!) do |lineage, peer, report, challenge:|
+              raise "valid controlled observation differs" unless peer == callback_peer && report == valid_report && report["challenge_id"] == challenge["challenge_id"]
+              report.slice("server_identity", "resource_observer_identity", "mount_namespace_identity", "resource_identities").merge(
+                "scope_generation" => lineage.binding.fetch("scope_generation"), "scope_binding_event_id" => lineage.binding_event.fetch("digest"),
+                "service_invocation_id" => "c" * 32, "workspace_id" => "w1", "socket_identity" => [1, 2, 13001],
+                "network_namespace_identity" => lineage.binding.fetch("network_namespace_identity"),
+                "network_admission_event_id" => lineage.admission_event.fetch("digest"))
+            end
+            bytes = JSON.generate(valid_report)
+            bytes = bytes.sub('{', '{"version":1,') if fault == :duplicate_json
+            bytes = bytes.sub('fixture', "\xff".b) if fault == :invalid_utf8
+            bytes += " " * (65_537 - bytes.bytesize) if fault == :oversized
+            descriptor = {"version" => 1, "bytes" => bytes.bytesize, "sha256" => Digest::SHA256.hexdigest(bytes),
+              "parts" => [{"bytes" => bytes.bytesize, "sha256" => Digest::SHA256.hexdigest(bytes)}]}
+            close_scope("seal-upload", 3) if fault == :sealed
+            before = @journal.ref_value
+            wire.write(right, {"version" => 1, "challenge_id" => fault == :challenge ? "f" * 64 : challenge.fetch("challenge_id"),
+              "transfer" => descriptor}, deadline: wire.deadline(10))
+            unless fault == :challenge
+              begin
+                right.write(fault == :truncated ? bytes.byteslice(0, bytes.bytesize - 1) : bytes)
+                right.write("extra") if fault == :extra_bytes
+              rescue Errno::EPIPE, Errno::ECONNRESET
+                raise unless fault == :oversized
+              end
+            end
+            begin
+              right.shutdown(Socket::SHUT_WR) unless fault == :no_eof
+            rescue Errno::ENOTCONN
+              raise unless fault == :oversized
+            end
+            error = Timeout.timeout(15) { handler.value }
+            if fault == :none
+              refute_kind_of StandardError, error
+              acknowledgment = wire.read(right, deadline: wire.deadline(10))
+              assert_equal({"version" => 1, "challenge_id" => challenge.fetch("challenge_id"), "status" => "ready"}, acknowledgment)
+            else
+              assert_kind_of expected_error, error, fault
+            end
+            assert_equal before, @journal.ref_value, fault
+            refute @journal.read_events("assignment").any? { |event| event["type"] == "scope_native_bound" }, fault
+            resume << true
+            result = Timeout.timeout(15) { issuer.value }
+            if fault == :none
+              refute_kind_of StandardError, result
+              assert @journal.read_events("assignment").any? { |event| event["type"] == "scope_native_bound" }
+            end
+            assert_empty @owner.instance_variable_get(:@native_issuers), fault
+          ensure
+            resume << true if issuer&.alive?
+            right&.close
+            handler&.join(1)
+            issuer&.join(1)
+            left&.close unless left&.closed?
+            FileUtils.remove_entry(scratch) if scratch && File.exist?(scratch)
+          end
         end
       end
 

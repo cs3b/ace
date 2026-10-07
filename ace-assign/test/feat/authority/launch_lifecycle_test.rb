@@ -38,7 +38,7 @@ module Ace
           context.merge("slot_id" => "slot", "deployment_digest" => Digest::SHA256.hexdigest(JSON.generate(canonical(@map))),
             "boot_id" => ExecutionScopeObservationFixtures::BOOT, "slice_invocation_id" => "b" * 32,
             "resource_mount_namespace_identity" => {"device" => 4, "inode" => 11}, "resource_identities" => [],
-            "network_namespace_identity" => {"device" => 7, "inode" => 88}, "network_installation_selection" => ExecutionScopeObservationFixtures::NETWORK_SELECTION,
+            "network_namespace_identity" => {"device" => 7, "inode" => 88}, "boot_baseline_selection" => ExecutionScopeObservationFixtures::BOOT_BASELINE_SELECTION, "network_installation_selection" => ExecutionScopeObservationFixtures::NETWORK_SELECTION,
             "cgroup_identity" => {"path" => "/sys/fs/cgroup/ace-slot.slice", "mount_id" => 4, "filesystem_type" => "cgroup2", "device" => 5, "inode" => 6})
         end
         def observe(_lineage); {"populated" => 0}; end
@@ -81,6 +81,7 @@ module Ace
             "execution_scope" => {"slot_id" => "slot", "service_unit" => "ace-slot.service", "network_namespace_path" => "/run/netns/slot"},
             "worker_groups" => [13001], "bootstrap" => "/usr/libexec/ace-worker-gate", "bootstrap_sha256" => "a" * 64, "worker_cwd" => "/home/worker", "worker_actor" => "worker", "native" => {"workspace_id" => "w1"}}
           deployment = Object.new
+          deployment.define_singleton_method(:artifact_reference) { {"sha256" => "d" * 64} }
           mapping = @map
           deployment.define_singleton_method(:mapping) { |_id| mapping }
           deployment.define_singleton_method(:authority) { |_id| {"state_root" => File.join(cache, "authority-state")} }

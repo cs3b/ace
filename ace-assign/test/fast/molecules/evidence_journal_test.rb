@@ -10,6 +10,64 @@ module Ace
     class EvidenceJournalTest < AceAssignTestCase
       REF = "refs/ace/execution"
 
+      def test_event_prefix_selects_introduction_through_normal_inherited_appearances
+        with_temp_cache do |cache_dir|
+          repo = File.join(cache_dir, "repo")
+          init_repo(repo)
+          journal = Molecules::EvidenceJournal.new(repo_root: repo, ref: REF, checkout_root: File.join(cache_dir, "co"))
+          event = build_event(type: "intent", attempt_id: "atj0001", payload: {"operation" => "implement"})
+          introduction = journal.append(assignment_id: "8wrja", attempt_id: "atj0001", events: [event])
+          second = build_event(type: "process_start", attempt_id: "atj0001", payload: {"pid" => 123}, previous_digest: event.fetch("digest"))
+          tip = journal.append(assignment_id: "8wrja", attempt_id: "atj0001", events: [second])
+          assert_equal introduction, journal.event_commit!(assignment_id: "8wrja", event_digest: event.fetch("digest"), commit: tip)
+          assert_equal tip, journal.event_commit!(assignment_id: "8wrja", event_digest: second.fetch("digest"), commit: tip)
+          assert_raises(AttemptErrors::EvidenceUnavailable) do
+            journal.event_commit!(assignment_id: "8wrja", event_digest: "f" * 64, commit: tip)
+          end
+        end
+      end
+
+      def test_event_prefix_refuses_disappearance_reappearance_and_merge_topology
+        with_temp_cache do |cache_dir|
+          repo = File.join(cache_dir, "repo")
+          base = init_repo(repo)
+          journal = Molecules::EvidenceJournal.new(repo_root: repo, ref: REF, checkout_root: File.join(cache_dir, "co"))
+          event = build_event(type: "intent", attempt_id: "atj0001", payload: {"operation" => "implement"})
+          introduction = journal.append(assignment_id: "8wrja", attempt_id: "atj0001", events: [event])
+          empty_tree = git(repo, "rev-parse", "#{base}^{tree}").strip
+          full_tree = git(repo, "rev-parse", "#{introduction}^{tree}").strip
+          absent = git(repo, "commit-tree", empty_tree, "-p", introduction, "-m", "removed event").strip
+          reappeared = git(repo, "commit-tree", full_tree, "-p", absent, "-m", "reintroduced event").strip
+          merged = git(repo, "commit-tree", full_tree, "-p", introduction, "-p", base, "-m", "unsupported merge").strip
+          [absent, reappeared, merged].each do |tip|
+            assert_raises(AttemptErrors::EvidenceUnavailable) do
+              journal.event_commit!(assignment_id: "8wrja", event_digest: event.fetch("digest"), commit: tip)
+            end
+          end
+        end
+      end
+
+      def test_event_prefix_refuses_changed_serialization_of_the_same_valid_event
+        with_temp_cache do |cache_dir|
+          repo = File.join(cache_dir, "repo")
+          init_repo(repo)
+          journal = Molecules::EvidenceJournal.new(repo_root: repo, ref: REF, checkout_root: File.join(cache_dir, "co"))
+          event = build_event(type: "intent", attempt_id: "atj0001", payload: {"operation" => "implement"})
+          introduction = journal.append(assignment_id: "8wrja", attempt_id: "atj0001", events: [event])
+          checkout = File.join(cache_dir, "co", "journal")
+          path = Dir.glob(File.join(checkout, "execution", "8wrja", "events", "*.json")).fetch(0)
+          File.write(path, JSON.generate(event))
+          git(checkout, "add", "-A")
+          git(checkout, "commit", "-m", "changed serialization")
+          tip = git(checkout, "rev-parse", "HEAD").strip
+          assert Models::EvidenceEvent.chain_valid?(journal.read_events("8wrja", commit: tip))
+          assert_raises(AttemptErrors::EvidenceUnavailable) do
+            journal.event_commit!(assignment_id: "8wrja", event_digest: event.fetch("digest"), commit: tip)
+          end
+          assert_equal introduction, journal.event_commit!(assignment_id: "8wrja", event_digest: event.fetch("digest"), commit: introduction)
+        end
+      end
+
       def test_fixed_snapshot_requires_an_actual_readable_commit_object
         with_temp_cache do |cache_dir|
           repo = File.join(cache_dir, "repo")

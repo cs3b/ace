@@ -520,3 +520,34 @@ verification are connected. The inventory block grants neither policy publicatio
 nor positive maintenance readiness. Finish/stop wiring and installed acceptance
 remain separate unfinished 9c2 requirements. Existing normal admission and guarded
 abort/release behavior retain their current checks.
+
+## Authenticated readiness and terminal scope closure
+
+The source-owned fixed ExecStartPost readiness hook uploads one bounded report
+through the authenticated authority connection, closes its write side and waits
+for acknowledgement. The authority joins the exact manager-selected hook/server
+actors, immutable runtime/configuration dependencies, original boot/network
+proofs and complete live mount/IPC/resource observations before binding native
+admission. Unknown writable projections, writable API descendants, changed
+socket endpoints and incomplete evidence refuse. A read-only socket mount does
+not authorize messages.
+
+Original service issuance remains tracked while the manager command runs outside
+the callback's exclusions. Sealing cannot publish an empty-scope proof while an
+original issuer can still start the service. Admitted-but-unbound starts use the
+same positive cleanup and worker baseline as bound starts; an inactive snapshot
+does not assert that execution never happened.
+
+After the genuine terminal owner accepts authenticated result evidence, the
+existing release producer joins that receipt to the exact sealed empty scope.
+Current activation, jobs, recursive population, original resource identities,
+native directory absence and outside worker UID writers are checked again before
+publishing or consuming the proof. Empty scope alone supplies no terminal result.
+
+The required per-boot host proof is selected before parent activation and retained
+in canonical `scope_bound.boot_baseline_selection`; later reads authenticate that
+original immutable artifact rather than a current pointer. Domain gad.8/gad.b
+still must deliver trusted cold-start/boot refresh and activation inhibition.
+These source interfaces and controlled tests do not establish installed native,
+network or boot acceptance, and task 9c2 remains in progress through integration
+and independent review.

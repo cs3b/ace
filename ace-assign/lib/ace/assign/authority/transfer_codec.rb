@@ -12,7 +12,7 @@ module Ace
       # Server selects purpose from a source handler's fixed operation table,
       # admits a transfer slot before calling, and holds no journal lock here.
       class TransferCodec
-        LIMITS = {candidate: [64 * 1024 * 1024, 1, 64 * 1024 * 1024],
+        LIMITS = {scope_boundary_observation: [65_536, 1, 65_536], candidate: [64 * 1024 * 1024, 1, 64 * 1024 * 1024],
                   artifacts: [256 * 1024, 16, 64 * 1024],
                   receipt_artifacts: [272 * 1024, 17, 64 * 1024],
                   service_input: [64 * 1024, 1, 64 * 1024],
@@ -43,8 +43,8 @@ module Ace
           end
         end
 
-        def initialize(root:)
-          @root = PrivateDirectory.verify!(root)
+        def initialize(root: nil)
+          @root = root && PrivateDirectory.verify!(root)
         end
 
         # Upload write-EOF is required before invoking the mutation consumer.
@@ -53,6 +53,7 @@ module Ace
           validate!(descriptor, purpose)
           descriptor = descriptor.merge("parts" => descriptor.fetch("parts").map { |part| part.dup.freeze }.freeze).freeze
           deadline = [deadline, Process.clock_gettime(Process::CLOCK_MONOTONIC) + 30].min
+          raise ArgumentError, "receive requires protected source scratch" unless @root
           PrivateDirectory.verify!(@root)
           Tempfile.create(["transfer-", ".bytes"], @root, binmode: true) do |file|
             digest = Digest::SHA256.new

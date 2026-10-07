@@ -255,3 +255,39 @@ Root installation lifetime, private admission CAS, stage joins,
 namespace containment and maintenance ordering belong to their respective
 installed owners; this verifier does not implement them or supply native,
 packet-filter or installed acceptance by itself.
+
+### Original boot proof and fixed live readiness views
+
+`ExecutionBootBaseline#select!(expected:)` authenticates the fixed protected
+per-slot publication pointer at provisioning and returns its immutable proof
+reference. `#verify!(selection:, expected:)` reads only that original reference,
+joining whole-file bytes, slot, original boot, mapping digest, root PID1 birth
+context and exact original network installer artifact. It never discovers an old
+namespace or substitutes a current pointer. Proof JSON is closed and at most
+16KiB. Trusted host capture, per-boot refresh and cold-start admission inhibition
+remain domain gad.8/gad.b producer obligations.
+
+`ServerResourceObservation` uses the same-UID native server's pinned root and
+namespace descriptors without entering or changing a namespace. It reports the
+complete mount table (at most256 rows), fixed API/tmp view mount IDs obtained from
+contained O_PATH descriptors, server/hook IPC identities and the exact authority
+socket identity. The private report shares a65,536-byte ceiling. Mount path
+prefixes, typed isolation flags and filesystem names alone do not prove live
+isolation. `KernelViewTopology` verifies the fixed supported profile, read-only
+API views, private IPC host difference and exact writable original backing;
+unknown writable aliases and even declared writable API descendants refuse.
+
+The fixed unit exposes only the selected read-only source-equals-view authority
+socket and has `BindLogSockets=false`. Protected endpoint type/owner/incarnation,
+contained view identity and authenticated peer remain separate required joins.
+These observations supply admission evidence, not terminality or installed
+effectiveness.
+The supported devpts profile additionally requires an authenticated per-slot
+`newinstance` backing, distinct from original host devpts. The trusted boot
+baseline pins original host and selected instance identities plus the exact host
+`pts/ptmx` link. The unit binds the selected root at `/dev/pts` and its read-only
+ptmx node at `/dev/pts/ptmx`; the contained observer verifies the unchanged link,
+character device and actual mount identity. `PrivateDevices` alone cannot prove
+this isolation. Shared host RO/RW views and another slot's backing refuse.
+gad.8 provisioning and gad.b refresh must deliver the selected source before
+activation; controlled tests do not establish installed effectiveness.

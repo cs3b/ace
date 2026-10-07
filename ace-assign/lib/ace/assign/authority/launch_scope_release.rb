@@ -1,4 +1,6 @@
 # frozen_string_literal: true
+require_relative "../molecules/terminal_scope_receipt"
+require "ace/runtime/molecules/execution_boot_baseline"
 
 module Ace
   module Assign
@@ -15,6 +17,12 @@ module Ace
             raise ArgumentError, "fixed execution slot selections must be unique and bounded"
           end
           mapping_ids.each { |id| token!(id) }
+          if @deployment_history && !@deployment_history.selects?(@deployment, selection: :original)
+            raise AttemptErrors::EvidenceUnavailable, "maintenance requires original protected transaction descriptor"
+          end
+          if @deployment_history && !@deployment_history.selects?(candidate_deployment, selection: :candidate)
+            raise AttemptErrors::EvidenceUnavailable, "maintenance candidate differs from protected history transaction"
+          end
           inventory = @deployment.maintenance_inventory(candidate_deployment)
           missing = mapping_ids - inventory.map(&:first)
           raise ArgumentError, "maintenance mapping is unavailable" unless missing.empty?
@@ -69,7 +77,7 @@ module Ace
                 end.freeze
                 active[object_id] = selected.zip(contexts).to_h { |entry, context| [context.fetch(:mapping_id), [entry, context]] }
                 begin
-                  block.call(contexts)
+                  with_maintenance_inbox_inventory(candidate_deployment) { block.call(contexts) }
                 ensure
                   active.delete(object_id)
                 end
@@ -82,8 +90,9 @@ module Ace
         def slot_reusable!(mapping_id:, journal:, commit:)
           if Thread.current[:ace_assign_maintenance_contexts]&.key?(object_id)
             require_maintenance_context!(mapping_id, journal, commit)
-            raise AttemptErrors::EvidenceUnavailable,
-              "complete original authentication and current inventory maintenance verification is unavailable"
+            maintenance_slot_lineages!(mapping_id, journal, commit)
+            require_maintenance_context!(mapping_id, journal, commit)
+            return true
           end
           map = @deployment.mapping(mapping_id)
           require_slot_snapshot!(map, journal, commit)
@@ -93,8 +102,28 @@ module Ace
         end
 
         def retire_released_parent!(mapping_id:, journal:, commit:)
+          if (contexts = Thread.current[:ace_assign_maintenance_contexts]&.[](object_id))
+            # The method itself enforces the whole transaction preflight. A
+            # caller cannot validate one root then retire before checking others.
+            contexts.each_value { |_entry, context| slot_reusable!(**context) }
+            require_maintenance_context!(mapping_id, journal, commit)
+            _id, owner, _map = contexts.fetch(mapping_id).first
+            lineages = maintenance_slot_lineages!(mapping_id, journal, commit)
+            result = maintenance_scope_observer_for(owner, mapping_id).retire_released_parent!(lineages)
+            contexts.each_value { |_entry, context| require_maintenance_context!(context.fetch(:mapping_id), context.fetch(:journal), context.fetch(:commit)) }
+            return result
+          end
           slot_reusable!(mapping_id: mapping_id, journal: journal, commit: commit)
           map = @deployment.mapping(mapping_id)
+          if @deployment_history
+            protected = maintenance_journal_for(@deployment, map)
+            return with_maintenance_inbox_inventory(@deployment_history.candidate) do
+              lineages = maintenance_slot_lineages!(mapping_id, protected, commit, selected_context: [@deployment, map])
+              result = scope_observer_for(mapping_id).retire_released_parent!(lineages)
+              require_slot_snapshot!(map, journal, commit)
+              result
+            end
+          end
           slot = map.fetch("execution_scope").fetch("slot_id")
           lineages = journal.assignment_ids(commit: commit).flat_map do |assignment_id|
             journal.read_events(assignment_id, commit: commit).group_by { |event| event.fetch("attempt_id") }.filter_map do |attempt_id, events|
@@ -129,6 +158,269 @@ module Ace
 
         private
 
+        def with_maintenance_inbox_inventory(candidate)
+          unless @deployment_history && @deployment_history.selects?(candidate, selection: :candidate)
+            # No history grant is silently synthesized for arbitrary descriptors.
+            return yield
+          end
+          require "ace/herdr/organisms/inbox"
+          roots = (@deployment_history.descriptors + [candidate]).flat_map do |owner|
+            owner.data.fetch("projects").values.flat_map do |project|
+              project.fetch("inbox_contexts", {}).values.map { |context| context.fetch("deliveries_dir") }
+            end
+          end.uniq.sort
+          roots.each { |root| verify_maintenance_inbox_root!(root) }
+          enter = lambda do |offset|
+            return yield if offset == roots.size
+            Ace::Herdr::Organisms::Inbox.with_retained_records(deliveries_dir: roots.fetch(offset)) { enter.call(offset + 1) }
+          end
+          enter.call(0)
+        end
+
+        def verify_maintenance_inbox_root!(root)
+          PrivateDirectory.verify!(root)
+          @deployment.send(:verify_inbox_acl!, root, private_leaf: true)
+          true
+        rescue AttemptErrors::ReceiptRejected, Ace::Runtime::RuntimeUnavailableError
+          raise AttemptErrors::EvidenceUnavailable, "maintenance retained inbox root is not protected"
+        end
+
+        def maintenance_scope_observer_for(owner, mapping_id)
+          return scope_observer_for(mapping_id) if owner.equal?(@deployment)
+          @maintenance_scope_observers ||= {}
+          key = [owner.artifact_reference.fetch("sha256"), mapping_id]
+          @maintenance_scope_observers[key] ||= ExecutionScopeObservation.new(mapping_id: mapping_id, deployment: owner, kernel: @kernel)
+        end
+
+        def maintenance_slot_lineages!(mapping_id, journal, commit, selected_context: nil)
+          unless @deployment_history
+            raise AttemptErrors::EvidenceUnavailable, "complete original authentication requires retained deployment history"
+          end
+          unless journal.evidence_mode == :protected
+            raise AttemptErrors::EvidenceUnavailable, "maintenance requires original protected journal reader"
+          end
+          if selected_context
+            selected_owner, selected_map = selected_context
+            mapping_id = selected_owner.data.fetch("launch_mappings").find { |_id, fixed| fixed == selected_map }&.first
+            raise AttemptErrors::EvidenceUnavailable, "historical admission map is unavailable" unless mapping_id
+          else
+            _id, selected_owner, selected_map = Thread.current[:ace_assign_maintenance_contexts].fetch(object_id).fetch(mapping_id).first
+          end
+          lineages = []
+          retained_attempts = []
+          journal.assignment_ids(commit: commit).each do |assignment_id|
+            journal.read_events(assignment_id, commit: commit).group_by { |event| event.fetch("attempt_id") }.each do |attempt_id, events|
+              raise AttemptErrors::EvidenceUnavailable, "maintenance canonical chain corrupt" unless Models::EvidenceEvent.chain_valid?(events)
+              reservations = events.select { |event| event["type"] == "authority_mutation" && event.dig("payload", "operation") == "reserve_attempt" }
+              # A chain with effect work but no permanent reservation is never
+              # hidden behind the absence of an attributable slot selector.
+              if reservations.empty?
+                if events.any? { |event| %w[service_claim service_transition inbox_binding inbox_reconciliation scope_provisioning].include?(event["type"]) }
+                  raise AttemptErrors::EvidenceUnavailable, "maintenance effect chain lacks reservation"
+                end
+                next
+              end
+              provisioning = events.select { |event| event["type"] == "scope_provisioning" }
+              unless reservations.one? && provisioning.one?
+                raise AttemptErrors::EvidenceUnavailable, "maintenance reservation identity ambiguous"
+              end
+              reservation = reservations.first.dig("payload", "data")
+              identity = provisioning.first.fetch("payload")
+              unless identity.is_a?(Hash) && identity.keys.sort == %w[deployment_digest descriptor_sha256 reservation_generation slot_id] &&
+                  identity["reservation_generation"] == reservation.fetch("reservation_generation")
+                raise AttemptErrors::EvidenceUnavailable, "maintenance provisioning selector differs"
+              end
+              original = @deployment_history.descriptor!(sha256: identity.fetch("descriptor_sha256"))
+              original_map = original.mapping(reservation.fetch("mapping_id"))
+              unless Digest::SHA256.hexdigest(JSON.generate(canonical(original_map))) == identity.fetch("deployment_digest") &&
+                  original_map.fetch("project_id") == reservation.fetch("project_id") &&
+                  original_map.fetch("execution_scope").fetch("slot_id") == identity.fetch("slot_id") &&
+                  original.project(original_map.fetch("project_id")).values_at("journal_repository", "evidence_git_ref", "evidence_checkout_root") ==
+                    [journal.repo_root, journal.ref, journal.checkout_root]
+                raise AttemptErrors::EvidenceUnavailable, "original descriptor canonical association differs"
+              end
+              retained_attempts << [assignment_id, attempt_id, events, original, original_map]
+              next unless identity.fetch("slot_id") == selected_map.fetch("execution_scope").fetch("slot_id")
+              unless original.maintenance_association(original_map) == selected_owner.maintenance_association(selected_map)
+                raise AttemptErrors::EvidenceUnavailable, "original physical slot association differs"
+              end
+              lineage = maintenance_released_lineage!(journal, commit, assignment_id, attempt_id, events, original, original_map)
+              lineages << lineage
+            end
+          end
+          selected_attempts = retained_attempts.select { |entry| entry.last.fetch("execution_scope").fetch("slot_id") == selected_map.fetch("execution_scope").fetch("slot_id") }
+          maintenance_current_inventory!(journal, commit, selected_attempts, all_attempts: retained_attempts,
+            slot_filter: selected_map.fetch("execution_scope").fetch("slot_id"))
+          maintenance_scope_observer_for(selected_owner, mapping_id).verify_maintenance_closed!(lineages)
+          lineages.freeze
+        rescue KeyError, TypeError, ArgumentError
+          raise AttemptErrors::EvidenceUnavailable, "maintenance original identity is incomplete"
+        end
+
+        # Only immutable Git introduction verification is shared within one
+        # held slot operation. Current records, keys, inventory, closure and
+        # canonical ref checks remain fresh on every eligibility query.
+        def historical_event_commit!(journal, assignment_id:, event_digest:, commit:)
+          memo = Thread.current[:ace_assign_history_operations]&.[](object_id)
+          held = Thread.current[:ace_assign_scope_exclusions]&.keys&.any? { |key| key.first == object_id }
+          unless memo && held && journal.evidence_mode == :protected
+            raise AttemptErrors::EvidenceUnavailable, "historical prefix requires its held protected operation"
+          end
+          identity = [journal.object_id, journal.repo_root, journal.ref, journal.checkout_root,
+            commit, assignment_id, event_digest].map { |value| value.is_a?(String) ? value.dup.freeze : value }.freeze
+          memo.fetch(identity) do
+            memo[identity] = journal.event_commit!(assignment_id: assignment_id, event_digest: event_digest, commit: commit).dup.freeze
+          end
+        end
+
+        def verify_historical_boot_baseline!(binding)
+          Ace::Runtime::Molecules::ExecutionBootBaseline.new.verify!(
+            selection: binding.fetch("boot_baseline_selection"),
+            expected: binding.slice("slot_id", "boot_id", "deployment_digest").merge(
+              "installer_artifact" => binding.fetch("network_installation_selection").fetch("installer_artifact")))
+        rescue Ace::Runtime::RuntimeUnavailableError, KeyError, TypeError, NoMethodError
+          raise AttemptErrors::EvidenceUnavailable, "historical original boot proof unavailable"
+        end
+
+        def maintenance_released_lineage!(journal, commit, assignment_id, attempt_id, events, original, map)
+          releases = events.select { |event| event["type"] == "authority_mutation" && event.dig("payload", "operation") == "scope_reservation_release" }
+          raise AttemptErrors::EvidenceUnavailable, "maintenance reservation lacks unique release" unless releases.one?
+          release = releases.first
+          prefix_commit = historical_event_commit!(journal, assignment_id: assignment_id, event_digest: release.fetch("digest"), commit: commit)
+          prefix = journal.read_events(assignment_id, commit: prefix_commit).select { |event| event["attempt_id"] == attempt_id }
+          unless prefix == events.take(events.index(release) + 1) && events.last == release
+            raise AttemptErrors::EvidenceUnavailable, "post-release canonical work or release prefix differs"
+          end
+          id = release.dig("payload", "data", "mapping_id")
+          lineage = Molecules::ExecutionScopeLineage.new(events: prefix, project_id: map.fetch("project_id"),
+            assignment_id: assignment_id, attempt_id: attempt_id, mapping_id: id)
+          unless lineage.binding && lineage.seal_event && lineage.proof_id
+            raise AttemptErrors::EvidenceUnavailable, "historical released parent lacks canonical closed proof"
+          end
+          verify_historical_boot_baseline!(lineage.binding)
+          lineage.require_positive!(scope_generation: lineage.binding.fetch("scope_generation"),
+            scope_binding_event_id: lineage.binding_event.fetch("digest"), seal_event_id: lineage.seal_event.fetch("digest"), proof_id: lineage.proof_id)
+          terminal = if prefix.any? { |event| event["type"] == "receipt_accepted" }
+            terminal_scope_receipt!(prefix, lineage, journal, prefix_commit, deployment: original)
+          else
+            guarded_scope_abort_receipt!(prefix, lineage, journal, prefix_commit)
+          end
+          expected = {"assignment_id" => assignment_id, "attempt_id" => attempt_id, "mapping_id" => id,
+            "scope_generation" => lineage.binding.fetch("scope_generation"), "scope_binding_event_id" => lineage.binding_event.fetch("digest"),
+            "proof_id" => lineage.proof_id, "terminal_event_id" => terminal.fetch("digest"), "reservation" => "released"}
+          data = release.dig("payload", "data")
+          unless data.is_a?(Hash) && data.except("generation") == expected && prefix.index(terminal) < prefix.index(release) &&
+              data["generation"] == journal.authority_generation(prefix) &&
+              lineage.binding.fetch("deployment_digest") == prefix.find { |event| event["type"] == "scope_provisioning" }.dig("payload", "deployment_digest")
+            raise AttemptErrors::EvidenceUnavailable, "historical release parent/terminal binding differs"
+          end
+          params = expected.slice("assignment_id", "attempt_id", "mapping_id")
+          service_events = prefix.any? { |event| %w[service_claim service_transition].include?(event["type"]) }
+          inbox_events = prefix.any? { |event| event["type"].start_with?("inbox_") }
+          if !@result_owner && (service_events || inbox_events || original.project(map.fetch("project_id")).fetch("inbox_contexts", {}).any? ||
+              journal.service_request_records(commit: prefix_commit).any? { |record| record.values_at("assignment_id", "attempt_id") == [assignment_id, attempt_id] })
+            raise AttemptErrors::EvidenceUnavailable, "historical settlement receipt owner unavailable"
+          end
+          if @result_owner
+            @result_owner.service_settlement_complete!(journal: journal, events: prefix, params: params, map: map, commit: prefix_commit)
+            @result_owner.historical_inbox_settlement_complete!(journal: journal, events: prefix, params: params, map: map,
+              commit: prefix_commit, deployment: original, history: @deployment_history)
+          end
+          lineage
+        end
+
+        def maintenance_current_inventory!(journal, commit, attempts, all_attempts: nil, slot_filter: nil)
+          indexed = attempts.to_h { |entry| [entry.values_at(0, 1), entry] }
+          raise AttemptErrors::EvidenceUnavailable, "maintenance attempt attribution conflicts" unless indexed.size == attempts.size
+          verified = {}
+          verify_attempt = lambda do |entry|
+            assignment_id, attempt_id, events, original, map = entry
+            verified[[assignment_id, attempt_id]] ||= maintenance_released_lineage!(journal, commit,
+              assignment_id, attempt_id, events, original, map)
+          end
+          journal.service_request_records(commit: commit).each do |record|
+            entry = indexed[record.values_at("assignment_id", "attempt_id")]
+            if !entry && all_attempts&.any? { |known| known.values_at(0, 1) == record.values_at("assignment_id", "attempt_id") &&
+                known.last.fetch("project_id") == record["project_id"] &&
+                known[2].find { |event| event.dig("payload", "operation") == "reserve_attempt" }.dig("payload", "data", "mapping_id") == record["mapping_id"] }
+              next
+            end
+            raise AttemptErrors::EvidenceUnavailable, "current service request is unregistered" unless entry
+            verify_attempt.call(entry)
+            unless record["project_id"] == entry.last.fetch("project_id") &&
+                record["mapping_id"] == entry[2].find { |event| event.dig("payload", "operation") == "reserve_attempt" }.dig("payload", "data", "mapping_id") &&
+                %w[succeeded failed-settled].include?(record["state"])
+              raise AttemptErrors::EvidenceUnavailable, "current service request is not historically settled"
+            end
+            journal.service_request(record.fetch("request_id"), commit: commit)
+            release = entry[2].find { |event| event.dig("payload", "operation") == "scope_reservation_release" }
+            prefix = historical_event_commit!(journal, assignment_id: entry.first, event_digest: release.fetch("digest"), commit: commit)
+            unless journal.service_request(record.fetch("request_id"), commit: prefix) == record
+              raise AttemptErrors::EvidenceUnavailable, "current service request changed after release"
+            end
+          end
+          require "ace/herdr/organisms/inbox"
+          registrations = attempts.flat_map do |entry|
+            entry[2].select { |event| event["type"] == "inbox_binding" }.map do |event|
+              fixed = entry[3].inbox_context(entry[2].find { |item| item.dig("payload", "operation") == "reserve_attempt" }.dig("payload", "data", "mapping_id"),
+                event.dig("payload", "inbox_context_id"))
+              [fixed.fetch("deliveries_dir"), event.dig("payload", "event_id"), entry, event]
+            end
+          end
+          unless registrations.map { |entry| entry.values_at(0, 1) }.uniq.size == registrations.size
+            raise AttemptErrors::EvidenceUnavailable, "current inbox identity attribution conflicts"
+          end
+          fixed_roots = @deployment_history.descriptors.flat_map do |owner|
+            owner.data.fetch("projects").values.select do |project|
+              project.values_at("journal_repository", "evidence_git_ref", "evidence_checkout_root") == [journal.repo_root, journal.ref, journal.checkout_root]
+            end.flat_map do |project|
+              project.fetch("inbox_contexts", {}).values.filter_map do |context|
+                if all_attempts
+                  native = owner.mapping(context.fetch("native_mapping_id"))
+                  next unless slot_filter == native.fetch("execution_scope").fetch("slot_id")
+                end
+                context.fetch("deliveries_dir")
+              end
+            end
+          end.uniq
+          fixed_roots.each do |root|
+            unless Thread.current[:ace_herdr_retained_inventory_locks]&.key?(root)
+              raise AttemptErrors::EvidenceUnavailable, "current inbox inventory lifetime lock is unavailable"
+            end
+            records = Ace::Herdr::Organisms::Inbox.retained_records(deliveries_dir: root)
+            expected = registrations.select { |registration| registration.first == root }
+            unless records.map(&:event_id).sort == expected.map { |registration| registration[1] }.sort
+              raise AttemptErrors::EvidenceUnavailable, "current inbox retained registration set differs"
+            end
+            records.each do |record|
+              registration = expected.find { |entry| entry[1] == record.event_id }
+              entry, registered = registration.values_at(2, 3)
+              verify_attempt.call(entry)
+              proof = entry[2].reverse.find { |event| event["type"] == "inbox_reconciliation" && event.dig("payload", "event_id") == record.event_id }&.fetch("payload")
+              public_identity = {"event_id" => record.event_id, "attempt_id" => record.inbox.fetch("attempt_id"),
+                "payload_sha256" => record.answer_digest, "receipt_key_sha256" => record.inbox.fetch("receipt_key_sha256")}
+              unless proof && record.state == "completed" && public_identity == registered.dig("payload", "registration") &&
+                  record.inbox.fetch("claim_generation") == proof.fetch("claim_generation") &&
+                  record.inbox.fetch("binding") == proof.dig("binding", "native_binding") &&
+                  record.inbox.fetch("reconciliation") == JSON.parse(journal.blob(proof.dig("receipt_ref", "ref"), commit: commit))
+                raise AttemptErrors::EvidenceUnavailable, "current inbox claim or retained settlement differs"
+              end
+              original = record.inbox.fetch("origin_target")
+              native = proof.dig("binding", "scope_native_binding")
+              unless original.is_a?(Hash) && original["session"] == native.fetch("workspace_id")
+                raise AttemptErrors::EvidenceUnavailable, "current retained inbox original native identity differs"
+              end
+              child = entry[2].find { |event| event["type"] == "scope_child_bound" }&.dig("payload", "original_process_binding")
+              if child && original.values_at("session", "pane", "terminal_id") != child.values_at("session", "pane", "terminal_id")
+                raise AttemptErrors::EvidenceUnavailable, "current retained inbox original child identity differs"
+              end
+            end
+          end
+          true
+        rescue KeyError, TypeError, ArgumentError, JSON::ParserError, Ace::Herdr::Error
+          raise AttemptErrors::EvidenceUnavailable, "current retained inventory is unverifiable"
+        end
+
         def release_scope_reservation_held!(params, map, journal, peer, role, digest)
             @mutex.synchronize do
               current = journal.read_events(params.fetch("assignment_id")).select { |event| event["attempt_id"] == params.fetch("attempt_id") }
@@ -137,7 +429,8 @@ module Ace
                 mutation_id: params.fetch("mutation_id"), operation: "scope_reservation_release", parameters_digest: digest,
                 expected_generation: params.fetch("expected_generation"), with_replay: true) do |events, commit, _generation|
                 lineage = scope_close_owner!(params, map, events, peer, role)
-                terminal = guarded_scope_abort_receipt!(events, lineage, journal, commit)
+                native_issuer_pending!(params, map)
+                terminal = terminal_scope_receipt!(events, lineage, journal, commit)
                 scope_observer_for(params.fetch("mapping_id")).verify_closed!(lineage)
                 scope_settlement_complete!(journal: journal, events: events, params: params, map: map, commit: commit)
                 if events.any? { |event| event["type"] == "authority_mutation" && event.dig("payload", "operation") == "scope_reservation_release" }
@@ -180,11 +473,25 @@ module Ace
         end
 
         def maintenance_journal_for(owner, map)
-          return journal_for(map) if owner.equal?(@deployment)
           project = owner.project(map.fetch("project_id"))
+          if owner.equal?(@deployment)
+            current = journal_for(map)
+            return current if current.evidence_mode == :protected
+          end
           @maintenance_journals ||= {}
           key = project.values_at("journal_repository", "evidence_git_ref", "evidence_checkout_root")
-          @maintenance_journals[key] ||= Molecules::EvidenceJournal.new(repo_root: key[0], ref: key[1], checkout_root: key[2])
+          @maintenance_journals[key] ||= begin
+            require_relative "service_evidence"
+            reader = nil
+            journal = Molecules::EvidenceJournal.new(repo_root: key[0], ref: key[1], checkout_root: key[2],
+              mode: :protected,
+              evidence_reader: ->(reference, record, state, pending) { reader.call(reference, record, state, pending) },
+              service_authorizer: ->(*) {
+                raise AttemptErrors::EvidenceUnavailable, "historical maintenance reader cannot mutate service records"
+              })
+            reader = ServiceEvidence.new(journal: journal)
+            journal
+          end
         end
 
         def require_maintenance_context!(mapping_id, journal, commit)
@@ -208,6 +515,15 @@ module Ace
           unless Thread.current[:ace_assign_scope_exclusions]&.fetch(key, false) && journal.equal?(journal_for(map)) && journal.ref_value == commit
             raise AttemptErrors::EvidenceUnavailable, "slot query requires its held exclusion and exact current canonical ref"
           end
+        end
+
+        def terminal_scope_receipt!(events, lineage, journal, commit, deployment: @deployment)
+          if events.any? { |event| event["type"] == "authority_mutation" && event.dig("payload", "operation") == "abort_launch" }
+            return guarded_scope_abort_receipt!(events, lineage, journal, commit)
+          end
+          reservation = events.find { |event| event["type"] == "authority_mutation" && event.dig("payload", "operation") == "reserve_attempt" }
+          mapping = deployment.mapping(reservation.fetch("payload").fetch("data").fetch("mapping_id"))
+          Molecules::TerminalScopeReceipt.verify!(events: events, lineage: lineage, journal: journal, commit: commit, mapping: mapping)
         end
 
         def guarded_scope_abort_receipt!(events, lineage, journal, commit)
@@ -248,7 +564,7 @@ module Ace
           releases = events.select { |event| event["type"] == "authority_mutation" && event.dig("payload", "operation") == "scope_reservation_release" }
           return false if releases.empty?
           raise AttemptErrors::EvidenceUnavailable, "canonical reservation release is repeated" unless releases.size == 1
-          terminal = guarded_scope_abort_receipt!(events, lineage, journal, commit)
+          terminal = terminal_scope_receipt!(events, lineage, journal, commit)
           data = releases.first.dig("payload", "data")
           expected = {"assignment_id" => lineage.binding.fetch("assignment_id"), "attempt_id" => lineage.binding.fetch("attempt_id"),
             "mapping_id" => lineage.binding.fetch("mapping_id"), "scope_generation" => lineage.binding.fetch("scope_generation"),

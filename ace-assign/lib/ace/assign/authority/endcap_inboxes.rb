@@ -2,6 +2,7 @@
 
 require "ace/herdr/organisms/protected_inbox"
 require_relative "../molecules/execution_scope_lineage"
+require_relative "historical_inbox_evidence"
 
 module Ace
   module Assign
@@ -14,6 +15,17 @@ module Ace
           registration claim_generation native_binding scope_binding_event_id native_binding_event_id
           scope_native_binding receipt_key_sha256 receipt_sha256 signature_sha256 submitter_uid submitter_role].freeze
         INBOX_REF_FIELDS = %w[artifact_id ref sha256 bytes].freeze
+
+        def historical_inbox_settlement_complete!(journal:, events:, params:, map:, commit:, deployment:, history:)
+          protected_journal!(journal)
+          retained = journal.read_events(params.fetch("assignment_id"), commit: commit)
+            .select { |event| event["attempt_id"] == params.fetch("attempt_id") }
+          unless retained == events && Models::EvidenceEvent.chain_valid?(events)
+            raise AttemptErrors::EvidenceUnavailable, "historical inbox requires exact release prefix"
+          end
+          HistoricalInboxEvidence.new(journal: journal, deployment: deployment, history: history)
+            .verify!(events: events, params: params, map: map, commit: commit)
+        end
 
         # Shared source-owned predicate for existing scope abort/reuse/finish.
         # The caller holds lifecycle exclusion; this is never a wire operation.

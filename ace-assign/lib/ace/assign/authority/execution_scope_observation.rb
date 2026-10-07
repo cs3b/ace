@@ -4,10 +4,14 @@ require "ace/runtime/molecules/cgroup_observation"
 require "ace/runtime/molecules/systemd_scope_manager"
 require "ace/runtime/molecules/linux_mount_info"
 require "ace/runtime/molecules/execution_unit_installation"
+require "ace/runtime/molecules/network_installation_evidence"
+require "ace/runtime/molecules/execution_boot_baseline"
+require "ace/runtime/molecules/kernel_view_topology"
 require_relative "../molecules/execution_scope_lineage"
 require_relative "posix_acl"
 require "digest"
 require "json"
+require "ace/herdr/molecules/protected_native_control"
 
 module Ace
   module Assign
@@ -50,8 +54,18 @@ module Ace
           end
 
           def namespace_identity
-            stat = File.stat("/proc/self/ns/mnt")
-            {"device" => stat.dev, "inode" => stat.ino}
+            File.open("/proc/self/ns/mnt", File::RDONLY) do |namespace|
+              stat = namespace.stat
+              {"device" => stat.dev, "inode" => stat.ino}
+            end
+          end
+
+          def authority_socket_identity(authority)
+            wire = Ace::Runtime::Molecules::ProtectedSocket
+            wire.root_path!(File.dirname(authority.fetch("socket_path")), directory: true, owner: authority.fetch("uid"))
+            identity = wire.socket_identity(authority.fetch("socket_path"))
+            raise Ace::Runtime::RuntimeUnavailableError, "authority endpoint owner differs" unless identity.last == authority.fetch("uid")
+            identity
           end
 
           def pin_network_namespace(path)
@@ -88,6 +102,12 @@ module Ace
           rescue StandardError
             handle&.close
             raise
+          end
+
+          def resource_topology(path, mount_id:)
+            table = Ace::Runtime::Molecules::LinuxMountInfo.new(File.read("/proc/self/mountinfo", Ace::Runtime::Molecules::LinuxMountInfo::LIMIT + 1))
+            record = table.by_id(mount_id)
+            {"major_minor" => record.fetch("major_minor"), "filesystem_path" => table.filesystem_path(record, path)}
           end
 
           def resource_boundary_policy(path)
@@ -142,6 +162,13 @@ module Ace
             true
           end
 
+          def resource_present?(path)
+            File.lstat(path)
+            true
+          rescue Errno::ENOENT
+            false
+          end
+
           def boundary_manifest(scope)
             path = "/etc/ace/execution-slots/#{scope.fetch('slot_id')}/boundary-manifest.json"
             bytes = Ace::Runtime::Molecules::ExecutionUnitInstallation::Files.new.read(path, limit: 65_536)
@@ -154,8 +181,10 @@ module Ace
           end
         end
 
-        def initialize(mapping_id:, deployment:, kernel:, manager: nil, cgroups: Ace::Runtime::Molecules::CgroupObservation.new, files: Files.new)
+        def initialize(mapping_id:, deployment:, kernel:, manager: nil, cgroups: Ace::Runtime::Molecules::CgroupObservation.new, files: Files.new, network_evidence: Ace::Runtime::Molecules::NetworkInstallationEvidence.new, boot_evidence: Ace::Runtime::Molecules::ExecutionBootBaseline.new)
           @mapping_id, @deployment, @kernel, @cgroups, @files = mapping_id, deployment, kernel, cgroups, files
+          @network_evidence = network_evidence
+          @boot_evidence = boot_evidence
           @map = deployment.mapping(mapping_id)
           @scope = @map.fetch("execution_scope")
           @manager = manager || Ace::Runtime::Molecules::SystemdScopeManager.new(
@@ -175,6 +204,7 @@ module Ace
               network_selection! == binding.fetch("network_installation_selection")
             unavailable!("retained installed network namespace or selection changed")
           end
+          boot_baseline!(binding)
           before = @manager.inspect_activation
           verify_parent!(binding, before.fetch("slice"))
           pinned = @cgroups.pin(binding.fetch("cgroup_identity").fetch("path"), expected: binding.fetch("cgroup_identity"))
@@ -205,6 +235,8 @@ module Ace
           network = @files.pin_network_namespace(@scope.fetch("network_namespace_path"))
           @files.worker_uid_quiescent!(@map.fetch("worker_uid"))
           boot = @files.boot_id
+          digest = Digest::SHA256.hexdigest(JSON.generate(canonical(@map)))
+          baseline = @boot_evidence.select!(expected: boot_baseline_expected(boot, digest, selection))
           namespace = @files.namespace_identity
           before = @manager.inspect_activation
           service = before.fetch("service")
@@ -228,10 +260,11 @@ module Ace
             unavailable!("fresh parent changed or acquired processes before binding")
           end
           verify_resources!(inventory)
-          context.merge("slot_id" => @scope.fetch("slot_id"), "deployment_digest" => Digest::SHA256.hexdigest(JSON.generate(canonical(@map))),
+          context.merge("slot_id" => @scope.fetch("slot_id"), "deployment_digest" => digest,
             "boot_id" => boot, "slice_invocation_id" => parent.fetch("InvocationID"), "cgroup_identity" => pinned.fetch(:identity),
             "resource_mount_namespace_identity" => namespace, "resource_identities" => inventory,
-            "network_installation_selection" => selection, "network_namespace_identity" => network.fetch(:identity))
+            "network_installation_selection" => selection, "network_namespace_identity" => network.fetch(:identity),
+            "boot_baseline_selection" => baseline.fetch("selection"))
         rescue SystemCallError, IOError, KeyError, TypeError, ArgumentError, JSON::ParserError
           unavailable!("fresh parent inventory or activation is unavailable")
         ensure
@@ -247,6 +280,8 @@ module Ace
               service.fetch("ControlPID").zero? && service.fetch("Job") == [0, "/"]
             unavailable!("canonical closure has a live or pending native activation")
           end
+          native_cleanup_complete!
+          @files.worker_uid_quiescent!(@map.fetch("worker_uid"))
           if lineage.native_event
             native = lineage.native_event.fetch("payload")
             invocation = service.fetch("InvocationID")
@@ -255,7 +290,110 @@ module Ace
             end
             verify_resources!(native.fetch("resource_identities"), allow_runtime_absence: true, same_namespace: false)
           end
+          native_cleanup_complete!
+          repeated = observe(lineage)
+          unless repeated.fetch("populated").zero? && repeated.fetch("activation") == value.fetch("activation")
+            unavailable!("scope activation changed during closure verification")
+          end
           true
+        end
+
+        def readiness_peer!(lineage, peer)
+          lineage.require_open!
+          @deployment.verify!(@mapping_id, kernel: @kernel, manager: @manager)
+          activation = observe(lineage).fetch("activation")
+          service = activation.fetch("service")
+          profile = @manager.inspect_profile
+          command = profile.fetch("service").fetch("ExecStartPostEx").first
+          unless service.fetch("ControlPID").positive? && peer.fetch("pid") == service.fetch("ControlPID") &&
+              command.fetch(7) == peer.fetch("pid") && service.fetch("MainPID").positive? &&
+              service.fetch("MainPID") != peer.fetch("pid") &&
+              peer.values_at("uid", "gid", "groups") == @map.values_at("worker_uid", "worker_gid", "worker_groups")
+            unavailable!("peer is not the exact fixed readiness actor")
+          end
+          server = @kernel.capture(service.fetch("MainPID"))
+          unless server.values_at("uid", "gid", "groups") == peer.values_at("uid", "gid", "groups")
+            unavailable!("native server principal differs")
+          end
+          @kernel.live!(peer)
+          unavailable!("readiness activation changed") unless @manager.inspect_activation == activation
+          server
+        end
+
+        def verify_readiness_report!(lineage, peer, report, challenge:)
+          server = readiness_peer!(lineage, peer)
+          unless report.is_a?(Hash) && report.keys.sort == %w[challenge_id kernel_view_topology mount_namespace_identity resource_identities resource_observer_identity resource_topology server_identity version] &&
+              report["version"] == 1 && report["challenge_id"] == challenge.fetch("challenge_id") &&
+              @kernel.same?(report.fetch("server_identity"), server) && @kernel.same?(report.fetch("resource_observer_identity"), peer)
+            unavailable!("private readiness report binding differs")
+          end
+          entries = @files.boundary_manifest(@scope).fetch("resources").select { |entry| entry.fetch("worker_visible") }
+          resources = report.fetch("resource_identities")
+          unless resources.is_a?(Array) && resources.map { |entry| entry.values_at("host_path", "view_path") }.sort ==
+              entries.map { |entry| entry.values_at("host_path", "view_path") }.sort
+            unavailable!("readiness reachable resource union differs")
+          end
+          topology = report.fetch("resource_topology")
+          unless topology.is_a?(Array) && topology.size == resources.size &&
+              topology.map { |entry| entry.values_at("host_path", "view_path") }.sort ==
+                entries.map { |entry| entry.values_at("host_path", "view_path") }.sort
+            unavailable!("readiness resource mount topology differs")
+          end
+          resources.each do |resource|
+            declaration = entries.find { |entry| entry.values_at("host_path", "view_path") == resource.values_at("host_path", "view_path") }
+            view = topology.find { |entry| entry.values_at("host_path", "view_path") == resource.values_at("host_path", "view_path") }
+            unless view.keys.sort == %w[host_path major_minor mountpoint options root view_path] &&
+                view["options"].is_a?(Array) && view["options"].include?(declaration.fetch("read_only") ? "ro" : "rw") &&
+                view["mountpoint"].is_a?(String) && (resource.fetch("view_path") == view["mountpoint"] ||
+                  resource.fetch("view_path").start_with?(view["mountpoint"].delete_suffix("/") + "/"))
+              unavailable!("readiness mount flags or projection differ")
+            end
+            host_identity = @files.resource_identity(resource.fetch("host_path"))
+            host = @files.resource_topology(resource.fetch("host_path"), mount_id: host_identity.fetch("mount_id"))
+            physical = File.expand_path(File.join(view.fetch("root"), resource.fetch("view_path").delete_prefix(view.fetch("mountpoint")).delete_prefix("/")))
+            unless host.fetch("major_minor") == view.fetch("major_minor") && host.fetch("filesystem_path") == physical
+              unavailable!("readiness mounted source or subtree differs")
+            end
+          end
+          verify_resources!(resources, same_namespace: false)
+          binding = lineage.binding
+          baseline = boot_baseline!(binding)
+          authority = @deployment.authority(@map.fetch("authority_id"))
+          endpoint = @files.authority_socket_identity(authority)
+          writable = entries.reject { |entry| entry.fetch("read_only") }.map do |entry|
+            host = @files.resource_identity(entry.fetch("host_path"))
+            @files.resource_topology(entry.fetch("host_path"), mount_id: host.fetch("mount_id"))
+              .merge("view_path" => entry.fetch("view_path"), "filesystem_type" => host.fetch("filesystem_type"))
+          end
+          Ace::Runtime::Molecules::KernelViewTopology.new.verify!(topology: report.fetch("kernel_view_topology"),
+            host_ipc: baseline.fetch("host_ipc_namespace_identity"), authority_socket: endpoint, writable_resources: writable,
+            host_devpts: baseline.fetch("host_devpts_identity"), selected_devpts: baseline.fetch("selected_devpts"))
+          unavailable!("authority endpoint changed during view verification") unless endpoint == @files.authority_socket_identity(authority)
+          report.slice("server_identity", "resource_observer_identity", "mount_namespace_identity", "resource_identities").merge(
+            "scope_generation" => binding.fetch("scope_generation"), "scope_binding_event_id" => lineage.binding_event.fetch("digest"),
+            "service_invocation_id" => @manager.inspect_activation.fetch("service").fetch("InvocationID"),
+            "workspace_id" => @map.fetch("native").fetch("workspace_id"),
+            "network_namespace_identity" => binding.fetch("network_namespace_identity"),
+            "network_admission_event_id" => lineage.admission_event.fetch("digest"))
+        end
+
+        def complete_native_readiness!(lineage, payload)
+          unavailable!("completed activation lacks authenticated readiness") unless payload.is_a?(Hash)
+          activation = observe(lineage).fetch("activation")
+          service = activation.fetch("service")
+          unless service.fetch("ActiveState") == "active" && service.fetch("ControlPID").zero? && service.fetch("Job") == [0, "/"] &&
+              service.fetch("MainPID") == payload.dig("server_identity", "pid") &&
+              service.fetch("InvocationID") == payload.fetch("service_invocation_id")
+            unavailable!("native service has not completed the exact admitted activation")
+          end
+          @kernel.live!(payload.fetch("server_identity"))
+          socket = Ace::Runtime::Molecules::ProtectedSocket.socket_identity(@map.fetch("native").fetch("socket_path"))
+          value = payload.merge("socket_identity" => socket)
+          native_map = @map.merge("native" => @map.fetch("native").merge(value.slice("server_identity", "socket_identity")))
+          Ace::Herdr::Molecules::ProtectedNativeControl.new(mapping: native_map, kernel: @kernel).preflight!
+          verify_resources!(value.fetch("resource_identities"), same_namespace: false)
+          unavailable!("native activation changed during preflight") unless @manager.inspect_activation == activation
+          value
         end
 
         def native_admission_ready!(lineage)
@@ -265,10 +403,12 @@ module Ace
               service.fetch("MainPID").zero? && service.fetch("ControlPID").zero? && service.fetch("Job") == [0, "/"]
             unavailable!("native admission has an occupied or pending generation")
           end
-          # Effective firewall evidence cannot be obtained through this fixed
-          # unprivileged owner. The reviewed evidence/lifetime contract is still
-          # open: unit hashes and /proc routes must never substitute for it.
-          unavailable!("required effective network boundary evidence is unavailable")
+          binding = lineage.binding
+          selection = binding.fetch("network_installation_selection")
+          @network_evidence.verify!(selection: selection, expected: {
+            "slot_id" => @scope.fetch("slot_id"), "namespace_path" => @scope.fetch("network_namespace_path"),
+            "boot_id" => binding.fetch("boot_id"), "namespace_identity" => binding.fetch("network_namespace_identity"),
+            "installer_artifact_sha256" => selection.fetch("installer_artifact").fetch("sha256")})
         end
 
         def start_admitted_service!
@@ -286,7 +426,41 @@ module Ace
           @manager.stop_service
         end
 
+        # Read-only original owner check used before all-root retirement.
+        def verify_maintenance_closed!(lineages)
+          @deployment.verify!(@mapping_id, kernel: @kernel, manager: @manager)
+          activation = @manager.inspect_activation
+          service, slice = activation.values_at("service", "slice")
+          unless %w[inactive failed].include?(service.fetch("ActiveState")) &&
+              service.fetch("Job") == [0, "/"] && service.fetch("MainPID").zero? && service.fetch("ControlPID").zero? &&
+              slice.fetch("Job") == [0, "/"]
+            unavailable!("maintenance has live or pending fixed-unit activation")
+          end
+          parent_resources!
+          @files.worker_uid_quiescent!(@map.fetch("worker_uid"))
+          if %w[inactive failed].include?(slice.fetch("ActiveState"))
+            unless slice.fetch("InvocationID").empty? || lineages.any? { |lineage| lineage.binding.fetch("slice_invocation_id") == slice.fetch("InvocationID") }
+              unavailable!("stopped maintenance parent is unknown")
+            end
+            unless slice.fetch("ControlGroup").empty?
+              pinned = @cgroups.pin(Ace::Runtime::Molecules::CgroupObservation::ROOT + slice.fetch("ControlGroup"))
+              unavailable!("stopped maintenance parent has writers") unless @cgroups.observe(pinned).fetch("populated").zero?
+            end
+          else
+            exact = lineages.select { |lineage| lineage.binding.fetch("slice_invocation_id") == slice.fetch("InvocationID") }
+            unavailable!("maintenance parent has no unique canonical released owner") unless exact.size == 1
+            verify_closed!(exact.first)
+          end
+          unless @manager.inspect_activation == activation
+            unavailable!("maintenance fixed activation changed during observation")
+          end
+          true
+        ensure
+          pinned&.fetch(:handle)&.close
+        end
+
         def retire_released_parent!(lineages)
+          verify_maintenance_closed!(lineages)
           @deployment.verify!(@mapping_id, kernel: @kernel, manager: @manager)
           activation = @manager.inspect_activation
           service = activation.fetch("service")
@@ -323,27 +497,30 @@ module Ace
               service.fetch("MainPID").zero? && service.fetch("ControlPID").zero? && service.fetch("Job") == [0, "/"]
             unavailable!("sealed parent still has writers or pending activation")
           end
-          admitted = events.any? { |event| event["type"] == "authority_mutation" && event.dig("payload", "operation") == "scope_service_admission" }
-          if admitted && !lineage.native_event
-            unavailable!("admitted native activation lacks verified writer-boundary evidence")
+          native_cleanup_complete!
+          # A stopped admitted-but-unbound start can have executed. Its proof
+          # therefore uses the same positive writer baseline as a native bound
+          # generation; absence of a binding is never a no-execution assertion.
+          if lineage.native_event
+            native = lineage.native_event.fetch("payload")
+            invocation = service.fetch("InvocationID")
+            unless invocation.empty? || invocation == native.fetch("service_invocation_id")
+              unavailable!("closed native incarnation was replaced")
+            end
+            verify_resources!(native.fetch("resource_identities"), allow_runtime_absence: true, same_namespace: false)
           end
-          if admitted || lineage.native_event || lineage.child_event || events.any? { |event|
-              %w[process_start service_claim service_transition inbox_binding].include?(event["type"]) ||
-                event["type"] == "authority_mutation" && %w[record_launch bind_process release_launch].include?(event.dig("payload", "operation")) }
-            unavailable!("post-native writer-boundary revalidation is unavailable")
-          end
-          # This bounded path proves a generation that never admitted native,
-          # child or effect creation. It is not post-native readiness proof.
           current = parent_resources!
           unless current == lineage.binding.fetch("resource_identities") &&
               @files.namespace_identity == lineage.binding.fetch("resource_mount_namespace_identity")
-            unavailable!("never-admitted parent resources or observation namespace changed")
+            unavailable!("sealed parent resources or observation namespace changed")
           end
           @files.worker_uid_quiescent!(@map.fetch("worker_uid"))
+          native_cleanup_complete!
           # Rejoin object and population after the credential baseline, keeping
           # the snapshot bounded by the same retained activation and exclusion.
-          unless observe(lineage).fetch("populated").zero?
-            unavailable!("never-admitted parent acquired a writer during baseline observation")
+          repeated = observe(lineage)
+          unless repeated.fetch("populated").zero? && repeated.fetch("activation") == value.fetch("activation")
+            unavailable!("sealed parent acquired a writer or pending activation during baseline observation")
           end
           lineage.binding.slice("scope_generation", "boot_id", "slice_invocation_id", "cgroup_identity").merge(
             "scope_binding_event_id" => lineage.binding_event.fetch("digest"), "seal_event_id" => lineage.seal_event.fetch("digest"), "populated" => 0)
@@ -351,8 +528,29 @@ module Ace
 
         private
 
+        def boot_baseline!(binding)
+          @boot_evidence.verify!(selection: binding.fetch("boot_baseline_selection"), expected:
+            boot_baseline_expected(binding.fetch("boot_id"), binding.fetch("deployment_digest"),
+              binding.fetch("network_installation_selection")))
+        end
+
+        def boot_baseline_expected(boot, digest, selection)
+          {"slot_id" => @scope.fetch("slot_id"), "boot_id" => boot, "deployment_digest" => digest,
+            "installer_artifact" => selection.fetch("installer_artifact")}
+        end
+
         # Inventory only: no configurable security booleans or alternative
         # policy backend. Native-only objects are observed at their later stage.
+        def native_cleanup_complete!
+          @files.boundary_manifest(@scope).fetch("resources").each do |entry|
+            next unless entry.fetch("stage") == "native"
+            if @files.resource_present?(entry.fetch("host_path"))
+              unavailable!("fixed service cleanup retained a service-created resource")
+            end
+          end
+          true
+        end
+
         def network_selection!
           manifest = @files.boundary_manifest(@scope)
           Molecules::ExecutionScopeLineage.validate_network_selection!(manifest.fetch("network_installation"))
@@ -367,7 +565,10 @@ module Ace
           end
           pairs = []
           resources = manifest.fetch("resources").filter_map do |resource|
-            unless resource.is_a?(Hash) && resource.keys.sort == %w[host_path stage view_path] && %w[parent native].include?(resource["stage"])
+            unless resource.is_a?(Hash) && resource.keys.sort == %w[host_path read_only stage view_path worker_visible] &&
+                [true, false].include?(resource["worker_visible"]) && [true, false].include?(resource["read_only"]) &&
+                (resource["worker_visible"] || resource["stage"] == "parent" && resource["read_only"]) &&
+                (resource["stage"] != "native" || resource["worker_visible"]) && %w[parent native].include?(resource["stage"])
               unavailable!("boundary resource inventory is not closed")
             end
             paths = resource.values_at("host_path", "view_path")

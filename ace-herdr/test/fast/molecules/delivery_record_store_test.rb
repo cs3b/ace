@@ -33,7 +33,7 @@ module Ace
 
           DeliveryRecordStore.save(@record, nested)
 
-          assert_equal ["evt-1.json"], Dir.children(nested).sort
+          assert_equal [".inventory.lock", "evt-1.json"], Dir.children(nested).sort
         end
 
         def test_overwrite_replaces_record
@@ -134,7 +134,33 @@ module Ace
           assert_equal File.join(@dir, "archive", "evt-1.json"), dest
           assert File.exist?(dest)
           refute File.exist?(DeliveryRecordStore.path_for(@dir, "evt-1"))
-          assert_equal ["archive"], Dir.children(@dir).sort
+          assert_equal [".inventory.lock", "archive"], Dir.children(@dir).sort
+        end
+
+        def test_exclusive_inventory_lifetime_blocks_normal_save_and_archive
+          DeliveryRecordStore.save(@record, @dir)
+          %i[save create archive].each do |operation|
+            started = Queue.new
+            writer = nil
+            DeliveryRecordStore.with_inventory_lock(@dir, exclusive: true, create: false) do
+              writer = Thread.new do
+                started << true
+                case operation
+                when :save then DeliveryRecordStore.save(@record, @dir)
+                when :create then DeliveryRecordStore.save(Models::DeliveryRecord.new(event_id: "new-event", session: "ws-1", pane: "p5", answer_digest: "e" * 64), @dir)
+                when :archive then DeliveryRecordStore.archive(@dir, "evt-1")
+                end
+              end
+              started.pop
+              assert_nil writer.join(0.05), "normal writer escaped exclusive inventory lifetime"
+              assert File.exist?(DeliveryRecordStore.path_for(@dir, "evt-1"))
+              refute File.exist?(DeliveryRecordStore.path_for(@dir, "new-event")) if operation == :create
+            end
+            assert writer.join(2), "normal writer did not resume after inventory release"
+            assert File.exist?(DeliveryRecordStore.path_for(@dir, "new-event")) if operation == :create
+          ensure
+            writer&.kill if writer&.alive?
+          end
         end
 
         def test_load_falls_back_to_archived_record

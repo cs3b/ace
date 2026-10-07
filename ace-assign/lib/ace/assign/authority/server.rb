@@ -111,6 +111,22 @@ module Ace
           unless map["authority_id"] == @authority_id && map["project_id"] == request["project_id"]
             raise AttemptErrors::UnauthorizedIdentity, "mapping belongs to another authority or project"
           end
+          if request["operation"] == "native_readiness"
+            unless @composition == "launch" && request["mutation_id"].nil? && params.keys == ["mapping_id"] &&
+                frame.fetch(:bytesize) <= 16_384
+              raise ArgumentError, "private readiness envelope differs"
+            end
+            admitted_transfer = @mutex.synchronize do
+              if @transfers < 2
+                @transfers += 1
+                true
+              end
+            end
+            raise AttemptErrors::Conflict, "readiness transfer capacity is busy" unless admitted_transfer
+            @lifecycle.native_readiness!(mapping_id: params.fetch("mapping_id"), peer: peer, socket: socket,
+              codec: transfer_codec, deadline: wire.deadline(10))
+            return
+          end
           role = if principal?(peer, map, "launcher_uid", "launcher_gid", "launcher_groups")
             :launcher
           elsif principal?(peer, map, "worker_uid", "worker_gid", "worker_groups")

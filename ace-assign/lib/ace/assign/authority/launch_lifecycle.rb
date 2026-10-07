@@ -6,6 +6,7 @@ require "time"
 require "fileutils"
 require "open3"
 require_relative "deployment"
+require_relative "deployment_history"
 require_relative "../molecules/execution_scope_lineage"
 require_relative "execution_scope_observation"
 
@@ -27,13 +28,19 @@ module Ace
         TERMINAL = %w[succeeded failed stopped].freeze
 
         attr_reader :mutex, :journals, :exclusions
-        def initialize(deployment:, kernel: Ace::Runtime::Molecules::ProtectedLinux.new, journals: nil, mutex: Mutex.new, exclusions: {}, scope_observer_factory: nil)
+        def initialize(deployment:, kernel: Ace::Runtime::Molecules::ProtectedLinux.new, journals: nil, mutex: Mutex.new, exclusions: {}, scope_observer_factory: nil, deployment_history: nil)
           @deployment, @kernel = deployment, kernel
+          if deployment_history && (!deployment_history.is_a?(DeploymentHistory) ||
+              !deployment_history.selects?(deployment))
+            raise ArgumentError, "protected history transaction does not select installed descriptor"
+          end
+          @deployment_history = deployment_history
           @journals = journals || {}
           @exclusions = exclusions
           @mutex = mutex
           @observations = {}
           @streams = {}
+          @native_issuers = {}
           @slot_exclusions = {}
           @scope_observers = {}
           @scope_observer_factory = scope_observer_factory || ->(mapping_id) {
@@ -112,7 +119,8 @@ module Ace
           @kernel.live!(peer)
           journal = journal_for(map)
           digest = Digest::SHA256.hexdigest(JSON.generate(canonical(params)))
-          with_exclusion(params, map, journal) do
+          native_start = nil
+          outcome = with_exclusion(params, map, journal) do
           if operation == "reserve_attempt"
             existing = @mutex.synchronize { journal.mutation_result(request.fetch("mutation_id")) }
             unless existing
@@ -198,7 +206,8 @@ module Ace
                 "mutation_id" => "scope-admission-#{Digest::SHA256.hexdigest(response.dig(:data, 'attempt_id'))[0, 48]}",
                 "expected_generation" => parent.dig(:data, "generation"))
               digest = Digest::SHA256.hexdigest(JSON.generate(canonical(admission.reject { |key, _| key == "mutation_id" })))
-              admit_native_service_held!(admission, map, journal, peer, role, digest)
+              admitted = admit_native_service_held!(admission, map, journal, peer, role, digest)
+              native_start = [admission, admitted] unless admitted.fetch(:replayed)
             rescue Ace::Runtime::RuntimeUnavailableError, AttemptErrors::EvidenceUnavailable
               # Reservation is already canonical. A failed/lost parent job is
               # held for exact inspection; replay must not activate it again.
@@ -211,6 +220,17 @@ module Ace
           end
           response
           end
+          if native_start
+            begin
+              complete_native_start!(native_start.first, map, journal, peer, role, native_start.last)
+            rescue Ace::Runtime::RuntimeUnavailableError, AttemptErrors::EvidenceUnavailable
+              # Canonical admission remains uncertain; original reserve reply is immutable.
+              nil
+            end
+          end
+          outcome
+        ensure
+          settle_native_issuer!(native_start.first, map) if native_start
         end
 
         def gate_ready(request:, peer:, socket:, deadline:)
@@ -311,6 +331,15 @@ module Ace
 
         private
 
+        def protected_descriptor_sha256!
+          reference = @deployment.artifact_reference
+          unless reference.is_a?(Hash) && reference["sha256"].is_a?(String) &&
+              Molecules::ExecutionScopeLineage::DIGEST.match?(reference["sha256"])
+            raise AttemptErrors::EvidenceUnavailable, "selected deployment has no protected whole-descriptor provenance"
+          end
+          reference.fetch("sha256")
+        end
+
         def scope_observer_for(mapping_id)
           @scope_observers[mapping_id] ||= @scope_observer_factory.call(mapping_id)
         end
@@ -380,9 +409,13 @@ module Ace
           raise AttemptErrors::Conflict, "execution slot exclusion cannot be entered recursively" if held[key]
           exclusion.with_exclusive(exclusion.slot_key(scope.fetch("slot_id"))) do
             held[key] = true
+            snapshots = Thread.current[:ace_assign_history_operations] ||= {}
+            owns_snapshot = !snapshots.key?(object_id)
+            snapshots[object_id] = {} if owns_snapshot
             begin
               yield
             ensure
+              snapshots.delete(object_id) if owns_snapshot
               held.delete(key)
             end
           end
@@ -479,6 +512,7 @@ module Ace
             "launcher_identity" => peer, "launch_ticket" => ticket}
           provisioning = {"slot_id" => map.fetch("execution_scope").fetch("slot_id"),
             "deployment_digest" => Digest::SHA256.hexdigest(JSON.generate(canonical(map))),
+            "descriptor_sha256" => protected_descriptor_sha256!,
             "reservation_generation" => generation + 1}
           {events: [{type: "intent", payload: payload}, {type: "scope_provisioning", payload: provisioning}], blobs: {}, data: payload.merge(
             "attempt_id" => attempt_id, "phase" => "reserved", "mapping_id" => params.fetch("mapping_id"),
@@ -486,6 +520,17 @@ module Ace
         end
 
         def ensure_slot_available!(map, journal, commit: journal.ref_value)
+          if @deployment_history
+            protected = maintenance_journal_for(@deployment, map)
+            unless protected.ref_value == commit
+              raise AttemptErrors::Conflict, "historical admission canonical ref changed"
+            end
+            return with_maintenance_inbox_inventory(@deployment_history.candidate) do
+              maintenance_slot_lineages!(nil, protected, commit, selected_context: [@deployment, map])
+              raise AttemptErrors::Conflict, "historical admission canonical ref changed" unless protected.ref_value == commit
+              true
+            end
+          end
           slot = map.fetch("execution_scope").fetch("slot_id")
           journal.assignment_ids(commit: commit).each do |assignment_id|
             journal.read_events(assignment_id, commit: commit).group_by { |event| event.fetch("attempt_id") }.each do |attempt_id, chain|
@@ -503,10 +548,14 @@ module Ace
                 raise AttemptErrors::EvidenceUnavailable, "canonical slot provisioning identity is incomplete"
               end
               owner = provisioning.first.fetch("payload")
-              unless owner.is_a?(Hash) && owner.keys.sort == %w[deployment_digest reservation_generation slot_id] &&
+              unless owner.is_a?(Hash) && owner.keys.sort == %w[deployment_digest descriptor_sha256 reservation_generation slot_id] &&
                   owner["reservation_generation"] == reservation.fetch("reservation_generation") &&
+                  owner["descriptor_sha256"].is_a?(String) && Molecules::ExecutionScopeLineage::DIGEST.match?(owner["descriptor_sha256"]) &&
                   owner["deployment_digest"].is_a?(String) && Molecules::ExecutionScopeLineage::DIGEST.match?(owner["deployment_digest"])
                 raise AttemptErrors::EvidenceUnavailable, "canonical slot provisioning identity differs"
+              end
+              unless owner.fetch("descriptor_sha256") == protected_descriptor_sha256!
+                raise AttemptErrors::EvidenceUnavailable, "historical descriptor requires authenticated maintenance before normal slot reuse"
               end
               prior_map = @deployment.mapping(reservation.fetch("mapping_id"))
               unless prior_map.fetch("execution_scope").fetch("slot_id") == owner.fetch("slot_id") &&
