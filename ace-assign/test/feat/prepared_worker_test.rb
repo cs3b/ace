@@ -183,6 +183,56 @@ module Ace
           assert_equal before, @journal.ref_value
         end
       end
+
+      def test_fixed_task_context_actual_descendant_fetch_requires_exact_original_source_hook
+        fixture do
+          issue_original
+          start_server
+          child = @kernel.capture(92).merge("parent_pid" => @worker.fetch("pid"))
+          original = @worker
+          @kernel.define_singleton_method(:descendant?) { |peer, anchor| anchor == original && [original, child].include?(peer) }
+          @kernel.peer_identity = child
+          kernel = controlled_worker_kernel(child)
+          kernel.peer_identity = @service.slice("uid", "gid", "groups")
+          command = CLI::Commands::Authority::TaskContext.new
+          command.instance_variable_set(:@protected_assignment_context, protected_cli_context(kernel))
+          options = {mapping: "mapping", assignment: "assignment@010", attempt: @attempt, task: "task"}
+          before = @journal.ref_value
+          assert_raises(Ace::Support::Cli::Error) { command.call(**options) }
+          pin = JSON.parse(JSON.generate(@map.fetch("task_context_entry")))
+          pending = [pin]
+          until pending.empty?
+            value = pending.pop
+            pending.concat(value.keys + value.values) if value.is_a?(Hash)
+            value.freeze
+          end
+          Object.const_set(:ACE_PROTECTED_TASK_CONTEXT_ENTRY, pin)
+          output, error = capture_io { assert_equal 0, command.call(**options) }
+          assert_empty error
+          assert_equal 1, output.lines.size
+          record = JSON.parse(output)
+          assert_equal Authority::PreparedTaskContext::SCHEMA, record.fetch("schema")
+          assert_equal "Exact fixture context.\n", record.fetch("text")
+          assert_equal @attempt, record.fetch("attempt_id")
+          assert_equal "010", record.fetch("scope")
+          assert_raises(Ace::Support::Cli::Error) { command.call(**options.merge(task: "uncaptured")) }
+          Object.send(:remove_const, :ACE_PROTECTED_TASK_CONTEXT_ENTRY)
+          changed = Marshal.load(Marshal.dump(pin))
+          changed.fetch("wrapper")["sha256"] = "9" * 64
+          pending = [changed]
+          until pending.empty?
+            value = pending.pop
+            pending.concat(value.keys + value.values) if value.is_a?(Hash)
+            value.freeze
+          end
+          Object.const_set(:ACE_PROTECTED_TASK_CONTEXT_ENTRY, changed)
+          assert_raises(Ace::Support::Cli::Error) { command.call(**options) }
+          assert_equal before, @journal.ref_value
+          refute File.exist?(File.join(@root, "prepared-queues"))
+        ensure
+          Object.send(:remove_const, :ACE_PROTECTED_TASK_CONTEXT_ENTRY) if Object.const_defined?(:ACE_PROTECTED_TASK_CONTEXT_ENTRY, false)
+        end
+      end
     end
   end
 end
