@@ -53,6 +53,14 @@ module Ace
         # canonical prefix as its import. Pending events are the journal owner's
         # held CAS plan, never caller-supplied alternative history.
         def challenge!(record, pending: nil, current: true)
+          context(record)
+          selector = record.slice("no_effect_challenge", "challenge_generation", "challenge_event_digest")
+          unless selector.keys.sort == %w[no_effect_challenge challenge_generation challenge_event_digest].sort &&
+              selector["no_effect_challenge"].is_a?(String) && selector["no_effect_challenge"].match?(/\A[0-9a-f]{32}\z/) &&
+              selector["challenge_generation"].is_a?(Integer) && selector["challenge_generation"].positive? &&
+              selector["challenge_event_digest"].is_a?(String) && selector["challenge_event_digest"].match?(/\A[0-9a-f]{64}\z/)
+            raise AttemptErrors::EvidenceUnavailable, "canonical challenge selector is invalid"
+          end
           commit = pending && pending[:commit] || @journal.ref_value
           events = if pending && pending[:pending_events]
             pending.fetch(:current_events) + pending.fetch(:pending_events)
@@ -101,7 +109,9 @@ module Ace
                 accepted && accepted["type"] == "authority_mutation" && accepted.dig("payload", "operation") == "claim_service_settlement" &&
                 accepted.dig("payload", "assignment_id") == record.fetch("assignment_id") && accepted.dig("payload", "attempt_id") == record.fetch("attempt_id") &&
                 accepted.dig("payload", "parameters_digest") == Atoms::EvidenceDigest.digest(expected_params) &&
+                accepted.dig("payload", "data", "generation").is_a?(Integer) &&
                 accepted.dig("payload", "data", "generation") == payload.fetch("challenge_generation") &&
+                accepted.dig("payload", "data", "reconciliation_challenge", "challenge_generation").is_a?(Integer) &&
                 accepted.dig("payload", "data", "request_id") == record.fetch("request_id") &&
                 accepted.dig("payload", "data", "reconciliation_challenge") == record.slice("no_effect_challenge", "challenge_generation", "challenge_event_digest")
               raise AttemptErrors::EvidenceUnavailable, "canonical challenge lacks its accepted authority mutation"

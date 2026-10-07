@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 require_relative "../../test_helper"
 require_relative "../../support/endcap_result_owner_fixture"
+require_relative "../../support/service_no_effect_owner_fixture"
 require "ace/assign/authority/service_evidence"
 require "ace/assign/authority/server"
 require "ace/assign/authority/client"
@@ -11,6 +12,7 @@ module Ace
     # controlled prerequisite, not evidence of delivered domain inspection.
     class ServiceSettlementTest < AceAssignTestCase
       include EndcapResultOwnerFixture
+      include ServiceNoEffectOwnerFixture
       Parts = Struct.new(:parts) do
         def count; parts.length; end
         def bytes(index: 0); parts.fetch(index); end
@@ -65,26 +67,6 @@ module Ace
           "request_id" => "service-request", "expected_generation" => generation}
         result = call("claim_service_settlement", params, id: "challenge", peer: @executor, role: :executor)
         [params, result]
-      end
-
-      def no_effect_upload(record, challenge)
-        inspection = challenge.fetch("payload").slice("request_id", "input_digest", "claim_binding",
-          "no_effect_challenge", "challenge_generation", "failure_event_digest", "failure_generation").merge(
-            "version" => 1, "challenge_event_digest" => challenge.fetch("digest"), "target" => record.fetch("target"),
-            "dispatch_phase" => record.fetch("dispatch_phase"), "effect_absent" => true,
-            "handler_terminated" => true, "writers_absent" => true)
-        evidence = "ace-service-attestation request:service-request input:#{record.fetch("input_digest")} outcome:failed no-effect:true\n" +
-          "ace-service-no-effect #{JSON.generate(inspection)}\n"
-        receipt = record.slice(*Molecules::EvidenceJournal::TERMINAL_BINDING_FIELDS).merge("outcome" => "failed",
-          "evidence" => [{"ref" => "executor-inspection", "sha256" => Digest::SHA256.hexdigest(evidence)}])
-        bytes = JSON.generate(receipt)
-        parts = [bytes, evidence]
-        params = {"head" => @head, "candidate_generation" => 1, "request_id" => "service-request",
-          "claim_binding" => record.fetch("claim_binding"),
-          "reconciliation_challenge" => record.slice("no_effect_challenge", "challenge_generation", "challenge_event_digest"),
-          "receipt_sha256" => Digest::SHA256.hexdigest(bytes),
-          "transfer" => Authority::TransferCodec.new(root: @root).descriptor(parts, purpose: :receipt_artifacts)}
-        [params, Parts.new(parts)]
       end
 
       def test_retained_orphan_challenge_cannot_authorize_import_or_fresh_challenge
@@ -254,6 +236,55 @@ module Ace
           assert_raises(AttemptErrors::Conflict) do
             call("complete_no_effect", params.merge("claim_binding" => "0" * 64), id: "renewed-settlement",
               peer: @executor, role: :executor, transfer: parts)
+          end
+        end
+      end
+
+      def test_matching_retained_record_and_accepted_generations_refuse_json_floats
+        %w[record accepted].each do |kind|
+          fixture do
+            request_service
+            seal_and_challenge
+            record = @journal.service_request("service-request")
+            owner = Authority::ServiceEvidence.new(journal: @journal)
+            assert owner.challenge!(record)
+            checkout = @journal.send(:checkout_dir)
+            if kind == "record"
+              replacement = record.merge("challenge_generation" => record.fetch("challenge_generation").to_f)
+              @journal.mutate(assignment_id: "assignment", attempt_id: @attempt, mutation_id: "float-record",
+                operation: "fixture_float_record", parameters_digest: "f" * 64, expected_generation: generation) do
+                {data: {}, events: [{type: "service_transition", payload: {"request_id" => "service-request",
+                  "state" => replacement.fetch("state"), "input_digest" => replacement.fetch("input_digest"),
+                  "record_digest" => Atoms::EvidenceDigest.digest(replacement), "receipt_digest" => nil}}]}
+              end
+              @journal.send(:write_service_records, [{path: @journal.send(:service_request_path, "service-request"), record: replacement}])
+              git(checkout, "add", "--", @journal.send(:service_request_path, "service-request"))
+            else
+              replacement = record
+              accepted = @journal.read_events("assignment").select { |event| event["attempt_id"] == @attempt }.last
+              assert_equal "claim_service_settlement", accepted.dig("payload", "operation")
+              payload = JSON.parse(JSON.generate(accepted.fetch("payload")))
+              payload.fetch("data")["generation"] = payload.fetch("data").fetch("generation").to_f
+              changed = Models::EvidenceEvent.build(type: "authority_mutation", attempt_id: @attempt, payload: payload,
+                previous_digest: accepted.fetch("previous_digest"), recorded_at: Time.iso8601(accepted.fetch("recorded_at")))
+              File.delete(File.join(checkout, "execution", "assignment", "events", @journal.send(:event_filename, accepted)))
+              @journal.send(:write_event_files, "assignment", [changed])
+              git(checkout, "add", "--", "execution/assignment")
+            end
+            old = @journal.ref_value
+            git(checkout, "-c", "user.name=test", "-c", "user.email=test@example.invalid", "commit", "-m", "injected float #{kind}")
+            commit = git(checkout, "rev-parse", "HEAD")
+            git(@journal.repo_root, "update-ref", @journal.ref, commit, old)
+            assert Models::EvidenceEvent.chain_valid?(@journal.read_events("assignment").select { |event| event["attempt_id"] == @attempt })
+            assert_equal replacement, @journal.service_request("service-request")
+            error = assert_raises(AttemptErrors::EvidenceUnavailable) { owner.challenge!(replacement, current: false) }
+            assert_match(kind == "record" ? /selector is invalid/ : /accepted authority mutation/, error.message)
+            pending = assert_raises(AttemptErrors::EvidenceUnavailable) do
+              @endcap.service_settlement_evidence!(journal: @journal,
+                events: @journal.read_events("assignment").select { |event| event["attempt_id"] == @attempt },
+                params: {"mapping_id" => "mapping", "assignment_id" => "assignment", "attempt_id" => @attempt}, map: @map, commit: commit)
+            end
+            refute_kind_of AttemptErrors::ServiceSettlementPending, pending
           end
         end
       end

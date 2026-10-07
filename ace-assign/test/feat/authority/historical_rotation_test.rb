@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 require_relative "../../test_helper"
 require_relative "../../support/endcap_result_owner_fixture"
+require_relative "../../support/service_no_effect_owner_fixture"
 require_relative "../../support/execution_boot_baseline_owner_fixture"
 require_relative "../../support/protected_inbox_context_pipeline_fixture"
 require "ace/assign/authority/deployment_history"
@@ -15,6 +16,7 @@ module Ace
     class HistoricalRotationTest < AceAssignTestCase
       include OriginalLaunchDriverOwnerFixture
       include EndcapResultOwnerFixture
+      include ServiceNoEffectOwnerFixture
       include ProtectedInboxContextPipelineFixture
       include ExecutionBootBaselineOwnerFixture
 
@@ -203,7 +205,7 @@ module Ace
         @journal.read_events("assignment").select { |event| event["attempt_id"] == @attempt }
       end
 
-      def settle_service
+      def settle_service(no_effect: false)
         review = call("assign_review", {"head" => @head, "candidate_generation" => 1, "expected_generation" => generation,
           "reviewer_uid" => @reviewer.fetch("uid"), "reviewer_process_binding" => @reviewer},
           id: "review", peer: @launcher, role: :launcher).fetch(:data)
@@ -228,6 +230,7 @@ module Ace
         begin_params = params.slice("head", "candidate_generation", "request_id", "transfer").merge("expected_generation" => generation, "claim_binding" => claim.fetch("claim_binding"))
         call("begin_dispatch", begin_params, id: "service-begin", peer: @executor, role: :executor, transfer: Parts.new([body]))
         record = @journal.service_request("service-request")
+        return record if no_effect
         evidence = "ace-service-attestation request:service-request input:#{input_digest} outcome:succeeded\nactual executor source receipt"
         receipt = record.slice(*Molecules::EvidenceJournal::TERMINAL_BINDING_FIELDS).merge("outcome" => "succeeded",
           "evidence" => [{"ref" => "private-executor-evidence", "sha256" => Digest::SHA256.hexdigest(evidence)}])
@@ -576,6 +579,57 @@ module Ace
           gate_socket&.close
           worker_socket&.close
           gate&.kill if gate&.alive?
+        end
+      end
+
+      def test_actual_no_effect_producer_composes_pending_stop_terminal_and_original_release
+        with_installed_boundaries do
+          settle_service(no_effect: true)
+          settle_inbox
+          params = {"mapping_id" => "mapping", "assignment_id" => "assignment", "attempt_id" => @attempt}
+          @launch.close_execution_scope!(params: params.merge("mutation_id" => "no-effect-seal", "expected_generation" => generation),
+            peer: @launcher, role: :launcher)
+          closed = @launch.close_execution_scope!(params: params.merge("mutation_id" => "no-effect-proof", "expected_generation" => generation),
+            peer: @launcher, role: :launcher)
+          assert_equal "closed_no_writers", closed.dig(:data, "state")
+          pending_params = params.merge("expected_generation" => generation)
+          pending = call("stop_attempt", pending_params, id: "pending-no-effect-stop", peer: @supervisor, role: :supervisor)
+          assert_equal "uncertain", pending.dig(:data, "state")
+          assert_equal "settle_services", pending.dig(:data, "required_action")
+          assert_equal "running", @journal.canonical_attempt_state(current_events)
+          assert_empty current_events.select { |event| event["type"] == "attempt_stopped" }
+          challenge = call("claim_service_settlement", {"head" => @head, "candidate_generation" => 1,
+            "request_id" => "service-request", "expected_generation" => generation}, id: "actual-no-effect-challenge", peer: @executor, role: :executor)
+          record = @journal.service_request("service-request")
+          assert_equal record.slice("no_effect_challenge", "challenge_generation", "challenge_event_digest"),
+            challenge.dig(:data, "reconciliation_challenge")
+          completion_params, input = no_effect_upload(record, Authority::ServiceEvidence.new(journal: @journal).challenge!(record))
+          complete = call("complete_no_effect", completion_params, id: "actual-no-effect-completion", peer: @executor, role: :executor, transfer: input)
+          assert_equal "failed-settled", complete.dig(:data, "state")
+          final_params = params.merge("expected_generation" => generation)
+          stopped = call("stop_attempt", final_params, id: "actual-no-effect-stop", peer: @supervisor, role: :supervisor)
+          assert_equal "stopped", stopped.dig(:data, "state")
+          assert_equal "stopped", @journal.canonical_attempt_state(current_events)
+          terminal = current_events.find { |event| event["type"] == "attempt_stopped" }
+          settled = current_events.select { |event| event["type"] == "service_transition" && event.dig("payload", "state") == "failed-settled" }
+          assert_equal 1, settled.length
+          assert_equal settled.map { |event| event.fetch("digest") }, terminal.dig("payload", "service_settlement_event_digests")
+          assert_equal current_events.select { |event| event["type"] == "inbox_reconciliation" && event.dig("payload", "state") == "completed" }
+            .map { |event| event.fetch("digest") }.sort, terminal.dig("payload", "inbox_settlement_event_digests")
+          assert_equal pending.fetch(:data), call("stop_attempt", pending_params, id: "pending-no-effect-stop",
+            peer: @supervisor, role: :supervisor).fetch(:data)
+          release = @launch.release_scope_reservation!(params: params.merge("mutation_id" => "actual-no-effect-release", "expected_generation" => generation),
+            peer: @launcher, role: :launcher)
+          assert_equal terminal.fetch("digest"), release.dig(:data, "terminal_event_id")
+          before = @journal.ref_value
+          restart
+          assert_equal stopped.fetch(:data), call("stop_attempt", final_params, id: "actual-no-effect-stop",
+            peer: @supervisor, role: :supervisor).fetch(:data)
+          assert_equal before, @journal.ref_value
+          File.binwrite(@boot_pointer, "invalid current pointer")
+          @launch.with_execution_slots(mapping_ids: ["mapping"], candidate_deployment: @history.candidate) do |contexts|
+            assert @launch.slot_reusable!(**contexts.first)
+          end
         end
       end
 
