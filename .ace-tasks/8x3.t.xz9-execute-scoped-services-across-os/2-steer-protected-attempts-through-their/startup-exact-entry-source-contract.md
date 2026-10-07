@@ -39,3 +39,7 @@ The failed assertion demonstrated that Ruby/Open3 preserves a caller descriptor 
 Executed new Herdr descriptor target PASS4/24 receipt7a2e1279 after explicit close_others repair. Existing broad bounded_process_test includes real Process.kill identity/absence probes and is intentionally not run under current restriction; new selected tests only execute ordinary Ruby temp-file children and validate no ambient descriptor inheritance. Full installed interpreter/PAM acceptance remains gad.2.
 
 Final scoped independent root APPROVE reviewed complete APIs/tests in this frozen worktree; only concise Unreleased/checklist evidence was added afterward. Source consumer and installed rows remain unchecked. No version bump/publication; root performs main integration after receiving scoped commit.
+
+## Main integration evidence
+
+Root independently approved frozen source `a8c39b74ac50702a01c4b65d2059528a13e25335` after reading both APIs, tests and usage. It applies cleanly as `7817c7e1a`; complete ace-runtime and ace-herdr trees match the reviewed candidate. Executed in the integration checkout: protected artifact set **15/69 PASS**, receipt `441791f5-5a10-4c07-b15d-e66ab426b15f`; bounded descriptor handoff **4/24 PASS**, receipt `7640a9fc-5b1b-4b7e-9a5f-b34be24dde74`. Default unmapped descriptor isolation and exact selected inode handoff are covered. Lab consumer, host runuser/PAM execution and installed acceptance remain unchecked as above.
