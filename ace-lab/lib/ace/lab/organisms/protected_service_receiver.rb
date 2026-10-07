@@ -21,8 +21,9 @@ module Ace
 
         def initialize(mapping_id:, service_id:, deployment: Ace::Assign::Authority::Deployment.load,
           kernel: Ace::Runtime::Molecules::ProtectedLinux.new, client: nil,
-          handler: Molecules::ProtectedServiceHandler.new)
+          handler: Molecules::ProtectedServiceHandler.new, cleanup_owner: nil)
           @mapping_id, @service_id, @deployment, @kernel, @handler = mapping_id, service_id, deployment, kernel, handler
+          @cleanup_owner = cleanup_owner
           @map = deployment.mapping(mapping_id)
           deployment.verify_composition!(@map.fetch("authority_id"), composition: "services")
           @project = deployment.project(@map.fetch("project_id"))
@@ -63,6 +64,8 @@ module Ace
           mutation_id = mutation_id.dup.freeze
           input = @inputs.input_binding(bytes, expected_digest: params.fetch("input_digest"),
             expected_target: params.fetch("target"), operation: params.fetch("operation"))
+          cleanup = params.fetch("operation") == "prune-preserved-workspace"
+          raise SecurityError, "fixed cleanup owner composition is unavailable" if cleanup && !@cleanup_owner
           contacted = true
           claim_options = {mutation_id: mutation_id, upload_parts: [bytes], purpose: :service_input}
           claim_options[:timeout] = claim_timeout if claim_timeout
@@ -71,6 +74,7 @@ module Ace
           unless !claim.replayed && claim.data["claim"] == "created"
             return projection(claim.data)
           end
+          original_cleanup_owner = @cleanup_owner.identity! if cleanup
           binding = params.slice("assignment_id", "attempt_id", "candidate_generation", "head", "request_id")
           exported = @client.call("export_candidate", binding.except("request_id").merge("purpose_id" => params.fetch("request_id")),
             download: true, purpose: :candidate, timeout: 30)
@@ -84,6 +88,10 @@ module Ace
           begin_params = binding.merge("claim_binding" => claim.data.fetch("claim_binding"), "expected_generation" => claim.data.fetch("generation"))
           started = @client.call("begin_dispatch", begin_params, mutation_id: Digest::SHA256.hexdigest("begin:#{mutation_id}"), upload_parts: [bytes], purpose: :service_input)
           return projection(started.data) unless !started.replayed && started.data["invocation"] == "permitted"
+          if cleanup && Ace::Assign::Atoms::EvidenceDigest.digest(original_cleanup_owner) !=
+              Ace::Assign::Atoms::EvidenceDigest.digest(started.data.fetch("operation_owner_binding"))
+            raise SecurityError, "original cleanup admission owner differs"
+          end
 
           document = Molecules::GrantResolver.trusted_document(Ace::Lab.authorization_path)
           operation = Molecules::ServicePolicy.new(document).operation!(params.fetch("operation"),
@@ -109,9 +117,16 @@ module Ace
             "executor_uid" => @receiver.fetch("executor_uid"), "authority_id" => @map.fetch("authority_id"),
             "claim_binding" => claim.data.fetch("claim_binding"), "candidate_generation" => binding.fetch("candidate_generation"),
             "head" => binding.fetch("head"), "staging_id" => File.basename(materialized.fetch("directory"))})
-          response = @handler.execute(operation: immutable(operation), envelope: envelope, candidate_root: materialized.fetch("directory"))
-          return uncertain(params.fetch("request_id")) unless response
-          artifacts = Ace::Assign::Authority::EvidenceTransfer.read_staged(root: materialized.fetch("directory"), evidence: response.fetch("evidence"))
+          if cleanup
+            artifacts = cleanup_result_evidence!(params, input.fetch(:input), claim.data, started.data)
+            response = {"outcome" => "succeeded", "evidence" => artifacts.each_with_index.map do |artifact, index|
+              {"ref" => "cleanup-#{index}", "sha256" => Digest::SHA256.hexdigest(artifact)}
+            end}
+          else
+            response = @handler.execute(operation: immutable(operation), envelope: envelope, candidate_root: materialized.fetch("directory"))
+            return uncertain(params.fetch("request_id")) unless response
+            artifacts = Ace::Assign::Authority::EvidenceTransfer.read_staged(root: materialized.fetch("directory"), evidence: response.fetch("evidence"))
+          end
           receipt = canonical.slice(*Ace::Assign::Molecules::EvidenceJournal::TERMINAL_BINDING_FIELDS).merge(
             "outcome" => response.fetch("outcome"), "evidence" => response.fetch("evidence"))
           receipt_bytes = JSON.generate(receipt)
@@ -129,6 +144,20 @@ module Ace
         end
 
         private
+
+        def cleanup_result_evidence!(params, input, claim, started)
+          owner = started.fetch("operation_owner_binding")
+          result = @cleanup_owner.execute!(request: {
+            "request_id" => params.fetch("request_id"), "input_digest" => params.fetch("input_digest"),
+            "claim_binding" => claim.fetch("claim_binding"), "request_event_digest" => claim.fetch("request_event_digest"),
+            "dispatch_event_digest" => started.fetch("dispatch_event_digest"), "input" => input
+          }, operation_owner_binding: owner)
+          selection = {"schema" => "ace.protected-workspace-prune-root-selection/v1",
+            "request_id" => params.fetch("request_id"), "input_digest" => params.fetch("input_digest"),
+            "operation_owner_binding_digest" => Ace::Assign::Atoms::EvidenceDigest.digest(owner),
+            "receipt_ref" => result.fetch(:receipt_ref)}
+          [result.fetch(:bytes), JSON.generate(selection)]
+        end
 
         # A source-owned listener callback, never a wire-selected handler. Its
         # reply exposes accepted canonical identity before long work. Transport

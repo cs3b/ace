@@ -473,6 +473,16 @@ module Ace
               "Service settlement requires a no-effect attestation artifact"
           end
           if @mode == :protected
+            if current["operation"] == "prune-preserved-workspace" && state == "succeeded"
+              # The same installed evidence reader owns the entire imported
+              # cleanup pair; individual textual markers cannot authorize it.
+              contents = @evidence_reader.call(evidence_items, current, state, pending)
+              unless contents.is_a?(Array) && contents.size == evidence_items.size &&
+                  contents.each_with_index.all? { |content, index| content.is_a?(String) && Digest::SHA256.hexdigest(content.b) == evidence_items.fetch(index).fetch("sha256") }
+                raise AttemptErrors::ReceiptRejected, "Canonical cleanup evidence is unverifiable"
+              end
+              return true
+            end
             evidence_items.each do |item|
               content = @evidence_reader.call(item, current, state, pending)
               unless content.is_a?(String) && Digest::SHA256.hexdigest(content.b) == item["sha256"]
