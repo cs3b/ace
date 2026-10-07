@@ -31,7 +31,7 @@ module Ace
           @inputs = Molecules::ProtectedServicePolicy.new(proposal_resolver: ->(*) { raise SecurityError, "proposal decisions belong to authority" })
         end
 
-        def execute(submission:, peer:, input_bytes:, mutation_id:)
+        def execute(submission:, peer:, input_bytes:, mutation_id:, on_claim: nil, claim_timeout: nil)
           contacted = false
           request_id = nil
           unless submission.is_a?(Hash) && submission.keys.sort == SUBMISSION.sort &&
@@ -55,12 +55,19 @@ module Ace
           unless input_bytes.is_a?(String) && mutation_id.is_a?(String) && mutation_id.match?(Ace::Assign::Molecules::JournalMutation::ID)
             raise ArgumentError, "receiver input or mutation identity is invalid"
           end
+          if claim_timeout && (!claim_timeout.is_a?(Numeric) || !claim_timeout.finite? ||
+              !claim_timeout.positive? || claim_timeout > 5)
+            raise ArgumentError, "receiver claim deadline is invalid"
+          end
           bytes = input_bytes.dup.freeze
           mutation_id = mutation_id.dup.freeze
           input = @inputs.input_binding(bytes, expected_digest: params.fetch("input_digest"),
             expected_target: params.fetch("target"), operation: params.fetch("operation"))
           contacted = true
-          claim = @client.call("request_service", params, mutation_id: mutation_id, upload_parts: [bytes], purpose: :service_input)
+          claim_options = {mutation_id: mutation_id, upload_parts: [bytes], purpose: :service_input}
+          claim_options[:timeout] = claim_timeout if claim_timeout
+          claim = @client.call("request_service", params, **claim_options)
+          notify_claim(on_claim, claim, request_id) if on_claim
           unless !claim.replayed && claim.data["claim"] == "created"
             return projection(claim.data)
           end
@@ -122,6 +129,21 @@ module Ace
         end
 
         private
+
+        # A source-owned listener callback, never a wire-selected handler. Its
+        # reply exposes accepted canonical identity before long work. Transport
+        # loss in the callback is handled by that listener; it cannot resend.
+        def notify_claim(callback, claim, request_id)
+          data = claim.data
+          unless data.is_a?(Hash) && data["request_id"] == request_id &&
+              data["generation"].is_a?(Integer) && data["generation"].positive? &&
+              data["journal_commit"].is_a?(String) && data["journal_commit"].match?(/\A(?:[0-9a-f]{40}|[0-9a-f]{64})\z/) &&
+              [true, false].include?(claim.replayed)
+            raise SecurityError, "canonical service acceptance identity is unavailable"
+          end
+          callback.call(immutable(data.slice("request_id", "generation", "journal_commit", "state", "claim")
+            .merge("replayed" => claim.replayed)))
+        end
 
         def cleanup_staging(directory, identity, prefix: "candidate-")
           quarantine = nil

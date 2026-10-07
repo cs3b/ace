@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 require_relative "../support/protected_service_boundary_fixture"
+require "ace/lab/organisms/protected_service_worker"
 
 class ProtectedServiceBoundaryTest < Minitest::Test
   include ProtectedServiceBoundaryFixture
@@ -44,6 +45,52 @@ class ProtectedServiceBoundaryTest < Minitest::Test
     end
   end
 
+  def test_actual_accepted_claim_is_reported_before_handler_and_remains_observable
+    fixture do
+      submission, bytes = prepared_submission
+      client = start_service_server
+      accepted, entered, release, invocations = Queue.new, Queue.new, Queue.new, Queue.new
+      delegate = controlled_handler(invocations)
+      handler = Object.new
+      handler.define_singleton_method(:execute) do |**arguments|
+        entered << true
+        release.pop
+        delegate.execute(**arguments)
+      end
+      worker = nil
+      Ace::Lab::Molecules::GrantResolver.stub(:trusted_document, @document) do
+        worker = Thread.new do
+          receiver(client, handler).execute(submission: submission, peer: @worker, input_bytes: bytes,
+            mutation_id: "reported-original", on_claim: ->(identity) { accepted << identity })
+        end
+        identity = Timeout.timeout(60) { accepted.pop }
+        assert_equal "service-request", identity.fetch("request_id")
+        refute identity.fetch("replayed")
+        assert identity.frozen?
+        prefix = @journal.read_events("assignment", commit: identity.fetch("journal_commit"))
+        assert_equal 1, prefix.count { |event| event["type"] == "service_claim" }
+        refute prefix.any? { |event| event.dig("payload", "operation") == "begin_dispatch" }
+        Timeout.timeout(60) { entered.pop }
+        status = client.call("service_status", submission.slice("assignment_id", "attempt_id", "candidate_generation", "head", "request_id"), timeout: 30)
+        assert_equal "dispatch_started", status.data.fetch("dispatch_phase")
+        assert worker.alive?, "original admitted worker remains owned while handler is blocked"
+        release << true
+        assert_equal "succeeded", Timeout.timeout(60) { worker.value }.fetch("state")
+        assert_equal 1, invocations.size
+        observed = []
+        replay = receiver(client, handler).execute(submission: submission, peer: @worker, input_bytes: bytes,
+          mutation_id: "reported-original", on_claim: ->(value) { observed << value })
+        assert_equal "succeeded", replay.fetch("state")
+        assert_equal 1, observed.length
+        assert observed.first.fetch("replayed")
+        assert_equal 1, invocations.size, "observing canonical claim cannot invoke handler again"
+      end
+    ensure
+      release << true if release && worker&.alive?
+      assert worker.join(5), "controlled admitted worker must terminate" if worker
+    end
+  end
+
   def test_second_listener_refuses_without_changing_active_endpoint
     fixture do
       client = start_service_server
@@ -61,6 +108,52 @@ class ProtectedServiceBoundaryTest < Minitest::Test
       end
       assert_match(/refused \(unauthorized\)/, refusal.message)
       assert_equal before, Ace::Runtime::Molecules::ProtectedSocket.socket_identity(@service.fetch("socket_path"))
+    end
+  end
+
+  def test_owned_worker_refuses_busy_before_claim_and_survives_lost_acceptance_reply
+    fixture do
+      submission, bytes = prepared_submission
+      client = start_service_server
+      accepted, entered, release, invocations = Queue.new, Queue.new, Queue.new, Queue.new
+      delegate = controlled_handler(invocations)
+      handler = Object.new
+      handler.define_singleton_method(:execute) do |**arguments|
+        entered << true
+        release.pop
+        delegate.execute(**arguments)
+      end
+      owner = Ace::Lab::Organisms::ProtectedServiceWorker.new(receiver: receiver(client, handler))
+      worker = nil
+      Ace::Lab::Molecules::GrantResolver.stub(:trusted_document, @document) do
+        worker = owner.start(submission: submission, peer: @worker, input_bytes: bytes,
+          mutation_id: "lost-acceptance", on_claim: lambda do |identity|
+            accepted << identity
+            raise IOError, "controlled lost public acknowledgement"
+          end)
+        identity = Timeout.timeout(60) { accepted.pop }
+        assert_equal "service-request", identity.fetch("request_id")
+        Timeout.timeout(60) { entered.pop }
+        before = @journal.ref_value
+        assert_raises(Ace::Assign::AttemptErrors::Conflict) do
+          owner.start(submission: submission.merge("request_id" => "other-request"), peer: @worker,
+            input_bytes: bytes, mutation_id: "other-mutation", on_claim: ->(*) { flunk "busy request cannot be accepted" })
+        end
+        assert_equal before, @journal.ref_value, "capacity refusal precedes every journal mutation"
+        refute owner.close(timeout: 0), "closing cannot pretend a blocked admitted worker exited"
+        assert worker.alive?
+        release << true
+        assert_equal "succeeded", Timeout.timeout(60) { worker.value }.fetch("state")
+        assert owner.close(timeout: 1)
+        assert_equal 1, invocations.size
+        assert_raises(Ace::Assign::AttemptErrors::Conflict) do
+          owner.start(submission: submission, peer: @worker, input_bytes: bytes,
+            mutation_id: "after-close", on_claim: ->(*) { flunk "closed listener cannot accept" })
+        end
+      end
+    ensure
+      release << true if release && worker&.alive?
+      assert worker.join(5), "controlled owned worker must terminate" if worker
     end
   end
 end
