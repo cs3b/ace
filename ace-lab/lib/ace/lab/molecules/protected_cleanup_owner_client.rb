@@ -78,6 +78,39 @@ module Ace
           end
         end
 
+        def inspect!(request:, operation_owner_binding:)
+          request = JSON.parse(JSON.generate(request), create_additions: false, max_nesting: 16)
+          fields = %w[request_id input_digest claim_binding request_event_digest dispatch_event_digest input challenge_ref]
+          Atoms::ProtectedWorkspacePruneInput.object!(request, fields)
+          Atoms::ProtectedWorkspacePruneInput.token!(request.fetch("request_id"))
+          (fields - %w[request_id input challenge_ref]).each { |key| Atoms::ProtectedWorkspacePruneInput.digest!(request.fetch(key)) }
+          Atoms::ProtectedWorkspacePruneInput.object!(request.fetch("challenge_ref"), %w[challenge_event_digest])
+          Atoms::ProtectedWorkspacePruneInput.digest!(request.dig("challenge_ref", "challenge_event_digest"))
+          input = Atoms::ProtectedWorkspacePruneInput.parse(JSON.generate(request.fetch("input")))
+          raise SecurityError, "cleanup inspection input differs" unless Atoms::ServiceInput.digest(input) == request.fetch("input_digest")
+          frame = request.merge("schema" => SCHEMA, "kind" => "inspect", "operation_owner_binding_digest" => digest(operation_owner_binding))
+          Atoms::ProtectedWorkspacePruneInput.freeze_value(frame)
+          deadline = @wire.deadline(300)
+          admission_deadline = [deadline, @wire.deadline(5)].min
+          connect(admission_deadline) do |socket, _observed|
+            @wire.write(socket, frame, deadline: admission_deadline, limit: 65_536)
+            socket.shutdown(Socket::SHUT_WR)
+            guarded = Ace::Runtime::Molecules::ProtectedSocket::Ingress.new(socket)
+            reply = @wire.read(guarded, deadline: deadline, limit: LIMIT)
+            unless reply.is_a?(Hash) && reply.keys.sort == %w[input_digest inspection_ref kind request_id schema] &&
+                reply.values_at("schema", "kind", "request_id", "input_digest") == [SCHEMA, "inspection", request.fetch("request_id"), request.fetch("input_digest")]
+              raise SecurityError, "cleanup inspection result differs"
+            end
+            ref = reply.fetch("inspection_ref")
+            Atoms::ProtectedWorkspacePruneInput.reference!(ref)
+            descriptor = {"version" => 1, "bytes" => ref.fetch("bytes"), "sha256" => ref.fetch("sha256"), "parts" => [ref.slice("bytes", "sha256")]}
+            @codec.receive(guarded, descriptor: descriptor, purpose: :artifacts, deadline: deadline) do |received|
+              Atoms::ProtectedWorkspacePruneInput.freeze_value(ref)
+              {inspection_ref: ref, bytes: received.bytes.freeze}.freeze
+            end
+          end
+        end
+
         private
 
         def digest(value) = Ace::Assign::Atoms::EvidenceDigest.digest(value)

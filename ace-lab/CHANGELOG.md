@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Serve the fixed cleanup endpoint with bounded connection capacity, held protected lifetime exclusion and original request deadlines. Authenticate original inspection input/challenge and inhibit further dispatch before invoking the read-only Inspector; physical Installer evidence and Receiver settlement composition remain required.
+
 - Refuse unsafe effective manager or unit startup environments when observing the fixed root cleanup entry, with a shared absolute deadline; trusted provisioning still verifies the original environment before starting the entry.
 
 - Verify a fixed cleanup listener's own original process through the existing root policy, immutable closure and manager/pidfd joins without confusing its positive receiver peer with the root owner.

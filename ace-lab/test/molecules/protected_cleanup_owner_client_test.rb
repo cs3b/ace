@@ -85,6 +85,29 @@ class ProtectedCleanupOwnerClientTest < Minitest::Test
       "claim_binding" => "3" * 64, "request_event_digest" => "4" * 64, "dispatch_event_digest" => "5" * 64, "input" => input}
   end
 
+  def test_inspection_actual_original_input_challenge_half_close_and_bounded_result
+    request = execute_request.merge("challenge_ref" => {"challenge_event_digest" => "6" * 64})
+    bytes = "Controlled physical inspection bytes, not an accepted no-effect verdict."
+    ref = {"path" => "/fixed/inspection.json", "bytes" => bytes.bytesize, "sha256" => Digest::SHA256.hexdigest(bytes)}
+    server = lambda do |socket, root|
+      frame = Wire.read(socket, deadline: Wire.deadline(5), limit: 65_536)
+      assert_equal request.merge("schema" => Client::SCHEMA, "kind" => "inspect", "operation_owner_binding_digest" => Ace::Assign::Atoms::EvidenceDigest.digest(binding)), frame
+      assert_equal "", socket.read
+      Wire.write(socket, {"schema" => Client::SCHEMA, "kind" => "inspection", "request_id" => "request",
+        "input_digest" => request.fetch("input_digest"), "inspection_ref" => ref}, deadline: Wire.deadline(5))
+      codec = Ace::Assign::Authority::TransferCodec.new(root: root)
+      codec.send(socket, parts: [bytes], descriptor: codec.descriptor([bytes], purpose: :artifacts), purpose: :artifacts, deadline: Wire.deadline(5))
+      socket.close
+    end
+    exchange(server: server) do |client|
+      result = client.inspect!(request: request, operation_owner_binding: binding)
+      assert_equal bytes, result.fetch(:bytes)
+      assert_equal ref, result.fetch(:inspection_ref)
+      assert result.frozen?
+      assert result.fetch(:inspection_ref).frozen?
+    end
+  end
+
   def test_execute_actual_frame_half_close_and_bounded_exact_result_bytes
     bytes = "bounded controlled operation result"
     ref = {"path" => "/var/lib/lab/results/request.json", "bytes" => bytes.bytesize, "sha256" => Digest::SHA256.hexdigest(bytes)}

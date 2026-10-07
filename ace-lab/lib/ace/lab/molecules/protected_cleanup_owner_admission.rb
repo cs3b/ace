@@ -11,6 +11,9 @@ module Ace
       class ProtectedCleanupOwnerAdmission
         FIELDS = %w[schema kind request_id input_digest claim_binding request_event_digest
           dispatch_event_digest input operation_owner_binding_digest].freeze
+        INSPECT_FIELDS = (FIELDS + %w[challenge_ref]).freeze
+        MUTABLE_SETTLEMENT_FIELDS = %w[state receipt reason claimed_at failed_at no_effect_challenge
+          challenge_generation challenge_event_digest completion_digest no_effect_completion_digest].freeze
 
         def initialize(deployment:, authority_id:, mapping_id:, service_id:, kernel:)
           @deployment, @authority_id, @kernel = deployment, authority_id, kernel
@@ -24,6 +27,18 @@ module Ace
             return true
           end
           receiver!(peer)
+        end
+
+        def connection_group!(gid)
+          authority = @deployment.authority(@authority_id)
+          map = @deployment.mapping(@mapping_id)
+          project = @deployment.project(map.fetch("project_id"))
+          receiver = project.fetch("service_receivers").fetch(@service_id)
+          credentials = project.fetch("peer_credentials").fetch(receiver.fetch("executor_uid").to_s)
+          unless gid.is_a?(Integer) && gid.positive? && [authority, credentials].all? { |principal| principal.fetch("gid") == gid || principal.fetch("groups").include?(gid) }
+            raise SecurityError, "cleanup connection group differs from installed principals"
+          end
+          true
         end
 
         def receiver!(peer)
@@ -43,9 +58,27 @@ module Ace
         end
 
         def admit!(frame:, peer:, operation_owner_binding:, journal:)
+          admit_original!(frame: frame, peer: peer, operation_owner_binding: operation_owner_binding, journal: journal, purpose: :execute)
+        end
+
+        def inspect!(frame:, peer:, operation_owner_binding:, journal:)
+          context = admit_original!(frame: frame, peer: peer, operation_owner_binding: operation_owner_binding, journal: journal, purpose: :inspect)
+          reference = frame.fetch("challenge_ref")
+          Atoms::ProtectedWorkspacePruneInput.object!(reference, %w[challenge_event_digest])
+          Atoms::ProtectedWorkspacePruneInput.digest!(reference.fetch("challenge_event_digest"))
+          challenge = Ace::Assign::Authority::ServiceEvidence.new(journal: journal).challenge!(context.fetch("record"), pending: {commit: context.fetch("commit")})
+          unless challenge.fetch("digest") == reference.fetch("challenge_event_digest")
+            raise SecurityError, "cleanup inspection challenge differs"
+          end
+          Atoms::ProtectedWorkspacePruneInput.freeze_value(context.merge("challenge" => challenge))
+        end
+
+        private
+
+        def admit_original!(frame:, peer:, operation_owner_binding:, journal:, purpose:)
           receiver!(peer)
-          Atoms::ProtectedWorkspacePruneInput.object!(frame, FIELDS)
-          unless frame.values_at("schema", "kind") == [ProtectedCleanupOwnerClient::SCHEMA, "execute"]
+          Atoms::ProtectedWorkspacePruneInput.object!(frame, purpose == :execute ? FIELDS : INSPECT_FIELDS)
+          unless frame.values_at("schema", "kind") == [ProtectedCleanupOwnerClient::SCHEMA, purpose.to_s]
             raise SecurityError, "cleanup invocation kind differs"
           end
           Atoms::ProtectedWorkspacePruneInput.token!(frame.fetch("request_id"))
@@ -54,7 +87,7 @@ module Ace
           end
           input = Atoms::ProtectedWorkspacePruneInput.parse(JSON.generate(frame.fetch("input")))
           unless Atoms::ServiceInput.digest(input) == frame.fetch("input_digest") &&
-              digest(operation_owner_binding) == frame.fetch("operation_owner_binding_digest")
+              (purpose == :inspect || digest(operation_owner_binding) == frame.fetch("operation_owner_binding_digest"))
             raise SecurityError, "cleanup original input or owner differs"
           end
           maintenance = input.fetch("maintenance")
@@ -69,11 +102,12 @@ module Ace
           journal.verify_canonical_prefix!(commit: commit)
           record = journal.service_request(frame.fetch("request_id"), commit: commit)
           unless record && record.fetch("service_id") == @service_id && record.slice("project_id", "mapping_id", "assignment_id", "attempt_id") == maintenance &&
-              record.values_at("operation", "dispatch_phase", "state") == ["prune-preserved-workspace", "dispatch_started", "uncertain"] &&
+              record.values_at("operation", "dispatch_phase") == ["prune-preserved-workspace", "dispatch_started"] &&
+              (purpose == :execute ? record["state"] == "uncertain" : %w[uncertain failed].include?(record["state"])) &&
               record.slice("request_id", "input_digest", "claim_binding") == frame.slice("request_id", "input_digest", "claim_binding") &&
               record.fetch("target") == Atoms::ServiceInput.target(input) &&
-              digest(record.fetch("operation_owner_binding")) == digest(operation_owner_binding) &&
-              digest(record.fetch("executor_process_binding")) == digest(peer)
+              digest(record.fetch("operation_owner_binding")) == frame.fetch("operation_owner_binding_digest") &&
+              (purpose == :inspect || digest(record.fetch("executor_process_binding")) == digest(peer))
             raise SecurityError, "cleanup canonical original dispatch differs"
           end
           Ace::Assign::Authority::ServiceEvidence.new(journal: journal).context(record, pending: {commit: commit})
@@ -103,9 +137,11 @@ module Ace
               .select { |entry| entry.fetch("attempt_id") == record.fetch("attempt_id") }
             original_record = journal.service_request(record.fetch("request_id"), commit: introductions.fetch(selector))
             expected_record = operation == "request_service" ? original_record&.merge(
-              "dispatch_phase" => "dispatch_started", "operation_owner_binding" => operation_owner_binding,
-              "executor_process_binding" => peer) : original_record
-            unless expected_record == record && prefix.last == event &&
+              "dispatch_phase" => "dispatch_started", "operation_owner_binding" => record.fetch("operation_owner_binding"),
+              "executor_process_binding" => record.fetch("executor_process_binding")) : original_record
+            same_original = purpose == :execute ? expected_record == record :
+              expected_record&.except(*MUTABLE_SETTLEMENT_FIELDS) == record.except(*MUTABLE_SETTLEMENT_FIELDS)
+            unless same_original && prefix.last == event &&
                 prefix[-2] && prefix[-2].fetch("type") == (operation == "request_service" ? "service_claim" : "service_transition") &&
                 prefix[-2].dig("payload", "record_digest") == digest(original_record) &&
                 event.fetch("previous_digest") == prefix[-2].fetch("digest")
@@ -118,8 +154,6 @@ module Ace
         rescue KeyError, TypeError, ArgumentError
           raise SecurityError, "cleanup canonical admission is unavailable"
         end
-
-        private
 
         def digest(value) = Ace::Assign::Atoms::EvidenceDigest.digest(value)
       end

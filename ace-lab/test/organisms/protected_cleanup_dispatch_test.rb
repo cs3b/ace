@@ -214,6 +214,74 @@ class ProtectedCleanupDispatchTest < Minitest::Test
     end
   end
 
+  def test_original_root_inspection_authenticates_actual_challenge_and_supplied_input
+    fixture do
+      submission, bytes = cleanup_submission
+      original = owner_binding
+      selected = Object.new
+      selected.define_singleton_method(:identity!) { original }
+      @policy.instance_variable_set(:@cleanup_owner, selected)
+      client = start_service_server
+      claim, params = request_and_begin(client, submission, bytes)
+      begun = client.call("begin_dispatch", params, mutation_id: "cleanup-begin", upload_parts: [bytes], purpose: :service_input)
+      @launch.close_execution_scope!(params: {"mapping_id" => "mapping", "assignment_id" => "assignment", "attempt_id" => @attempt,
+        "mutation_id" => "inspection-seal", "expected_generation" => generation}, peer: @launcher, role: :launcher)
+      challenged = client.call("claim_service_settlement", submission.slice("assignment_id", "attempt_id", "candidate_generation", "head", "request_id")
+        .merge("expected_generation" => generation), mutation_id: "inspection-challenge")
+      request_event = @journal.read_events("assignment").find { |event| event.dig("payload", "mutation_id") == "cleanup-request" }
+      dispatch_event = @journal.read_events("assignment").find { |event| event.dig("payload", "mutation_id") == "cleanup-begin" }
+      frame = {"schema" => Ace::Lab::Molecules::ProtectedCleanupOwnerClient::SCHEMA, "kind" => "inspect",
+        "request_id" => submission.fetch("request_id"), "input_digest" => submission.fetch("input_digest"), "claim_binding" => claim.data.fetch("claim_binding"),
+        "request_event_digest" => request_event.fetch("digest"), "dispatch_event_digest" => dispatch_event.fetch("digest"),
+        "operation_owner_binding_digest" => Ace::Assign::Atoms::EvidenceDigest.digest(original), "input" => JSON.parse(bytes),
+        "challenge_ref" => challenged.data.fetch("reconciliation_challenge").slice("challenge_event_digest")}
+      kernel = Object.new
+      executor = @executor
+      kernel.define_singleton_method(:peer) { |_| executor }
+      kernel.define_singleton_method(:live!) { |_| true }
+      admission = Ace::Lab::Molecules::ProtectedCleanupOwnerAdmission.new(deployment: @deployment,
+        authority_id: @deployment.mapping("mapping").fetch("authority_id"), mapping_id: "mapping", service_id: "executor", kernel: kernel)
+      context = admission.inspect!(frame: frame, peer: executor, operation_owner_binding: original, journal: @journal)
+      assert_equal frame.fetch("input"), context.fetch("input")
+      assert_equal frame.dig("challenge_ref", "challenge_event_digest"), context.dig("challenge", "digest")
+      before = @journal.ref_value
+      assert_raises(SecurityError) { admission.inspect!(frame: frame.merge("input" => frame.fetch("input").merge("unknown" => true)), peer: executor, operation_owner_binding: original, journal: @journal) }
+      assert_raises(SecurityError) { admission.inspect!(frame: frame.merge("challenge_ref" => {"challenge_event_digest" => "0" * 64}), peer: executor, operation_owner_binding: original, journal: @journal) }
+      observer = Object.new
+      observer.define_singleton_method(:observe_self!) { |deadline:| original }
+      inspected = []
+      output = "Controlled inspection transport, not physical absence."
+      installer = Object.new
+      installer.define_singleton_method(:execute_cleanup!) { |**_| raise "inspection cannot execute cleanup" }
+      installer.define_singleton_method(:inspect_cleanup!) do |context:, deadline:|
+        inspected << context
+        {bytes: output, receipt_ref: {"path" => "/fixed/inspection.json", "bytes" => output.bytesize, "sha256" => Digest::SHA256.hexdigest(output)}}
+      end
+      owner = Ace::Lab::Organisms::ProtectedCleanupOwner.new(observer: observer, admission: admission,
+        snapshots: ->(&block) { block.call(Object.new.tap { |view| view.define_singleton_method(:with) { |deadline:, &consume| consume.call(:original) } }) },
+        journals: ->(view) { raise "wrong source view" unless view == :original; @journal }, kernel: kernel, installer: installer, scratch_root: @root)
+      local, remote = UNIXSocket.pair
+      worker = Thread.new { owner.handle(remote) }
+      wire = Ace::Runtime::Molecules::ProtectedSocket
+      wire.write(local, frame, deadline: wire.deadline(5), limit: 65_536)
+      local.shutdown(Socket::SHUT_WR)
+      reply = wire.read(local, deadline: wire.deadline(5))
+      assert_equal "inspection", reply.fetch("kind")
+      ref = reply.fetch("inspection_ref")
+      descriptor = {"version" => 1, "bytes" => ref.fetch("bytes"), "sha256" => ref.fetch("sha256"), "parts" => [ref.slice("bytes", "sha256")]}
+      Ace::Assign::Authority::TransferCodec.new(root: @root).receive(local, descriptor: descriptor, purpose: :artifacts, deadline: wire.deadline(5)) { |input| assert_equal output, input.bytes }
+      worker.value
+      assert_equal 1, inspected.size
+      assert_equal "inhibited", inspected.first.dig("input_inhibition", "state")
+      assert_equal 0, inspected.first.dig("input_inhibition", "pending_effects")
+      assert_equal before, @journal.ref_value, "inspection transport cannot mutate canonical state or settle physical absence"
+    ensure
+      local&.close unless local&.closed?
+      remote&.close unless remote&.closed?
+      worker&.join(5)
+    end
+  end
+
   def test_actual_import_requires_held_original_result_and_history_does_not_reopen_it
     fixture do
       submission, bytes = cleanup_submission
