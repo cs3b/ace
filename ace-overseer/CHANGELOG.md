@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Package canonical project-overseer, Lab coordinator and second-commander role workflows with scoped authority, responsive delegation and the existing confirmed-delivery decision policy.
+
 - Execute protected candidate review through original launcher delegation, immutable Git snapshot, the maintained review engine and canonical receipt acceptance; expose explicit status/cancel modes without labd forwarding or automatic replay.
 
 - Discover protected project assignments through the actual authority inventory and public topology, preserving pinned pages, restart metadata and partial visibility without a local-journal fallback or proposal effects during status reads.

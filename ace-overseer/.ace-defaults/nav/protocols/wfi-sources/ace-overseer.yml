@@ -9,5 +9,5 @@ priority: 10
 
 config:
   relative_path: handbook/workflow-instructions
-  pattern: "*.wf.md"
+  pattern: "**/*.wf.md"
   enabled: true

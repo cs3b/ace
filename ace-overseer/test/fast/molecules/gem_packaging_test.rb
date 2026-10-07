@@ -9,6 +9,9 @@ require "tmpdir"
 class GemPackagingTest < AceOverseerTestCase
   PAYLOAD_FILES = [
     "handbook/workflow-instructions/overseer.wf.md",
+    "handbook/workflow-instructions/roles/project-overseer.wf.md",
+    "handbook/workflow-instructions/roles/lab-coordinator.wf.md",
+    "handbook/workflow-instructions/roles/second-commander.wf.md",
     ".ace-defaults/nav/protocols/wfi-sources/ace-overseer.yml"
   ].freeze
 
@@ -46,11 +49,9 @@ class GemPackagingTest < AceOverseerTestCase
     Dir.mktmpdir("ace-overseer-packaging") do |dir|
       artifact = Dir.chdir(package_root) do
         spec = Gem::Specification.load("ace-overseer.gemspec")
-        Gem::Package.build(spec, true)
+        Gem::Package.build(spec, true, false, File.join(dir, "#{spec.full_name}.gem"))
       end
-      gem_path = File.join(dir, artifact)
-      FileUtils.mv(File.join(package_root, artifact), gem_path)
-      gem_data_files(gem_path)
+      gem_data_files(artifact)
     end
   end
 
