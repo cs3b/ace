@@ -56,6 +56,48 @@ module Ace
         end
       end
 
+      def test_history_batch_preserves_introductions_across_more_than_one_commit_chunk
+        fixture do |journal, git, _base, first, second, first_commit, tip|
+          tree = git.call("rev-parse", "#{tip}^{tree}")
+          selected = tip
+          70.times { |index| selected = git.call("commit-tree", tree, "-p", selected, "-m", "unchanged #{index}") }
+          commands = []
+          original = Herdr::Molecules::BoundedProcess.method(:call)
+          runner = lambda do |argv, **options|
+            commands << argv.dup
+            original.call(argv, **options)
+          end
+          batch = Herdr::Molecules::BoundedProcess.stub(:call, runner) do
+            journal.event_commits!(assignment_id: "assignment", event_digests: [first, second].map { |event| event.fetch("digest") }, commit: selected)
+          end
+          assert_equal first_commit, batch.fetch(first.fetch("digest"))
+          assert_equal tip, batch.fetch(second.fetch("digest"))
+          assert_equal 2, commands.count { |argv| argv[1] == "diff-tree" }, "73 prefixes require two fixed batches, including empty commits"
+          assert_equal [first, second], journal.read_events("assignment", commit: selected)
+          assert_raises(AttemptErrors::EvidenceUnavailable) do
+            journal.send(:decode_history_diff!, [first_commit, tip], ["execution/assignment/events/"], "#{tip}\0#{first_commit}\0")
+          end
+        end
+      end
+
+      def test_history_raw_frames_refuse_missing_duplicate_extra_and_invalid_object_metadata
+        journal = Molecules::EvidenceJournal.new(repo_root: "/unused")
+        commits = ["a" * 40, "b" * 40]
+        paths = ["execution/assignment/events/"]
+        path = paths.first + "event.json"
+        oid = "c" * 40
+        valid = "#{commits.first}\0:000000 100644 #{'0' * 40} #{oid} A\0#{path}\0#{commits.last}\0"
+        assert_equal [[path, "A", "0" * 40, oid]], journal.send(:decode_history_diff!, commits, paths, valid).fetch(commits.first)
+        [valid.chop, "", "#{commits.first}\0", valid + "extra\0", valid.sub(commits.last, commits.first),
+          valid.sub("100644", "160000"), valid.sub("100644", "000000"), valid.sub(path, "execution/foreign/events/event.json"),
+          valid.sub(" A\0", " R100\0"), valid.sub("#{commits.last}\0", ":000000 100644 #{'0' * 40} #{oid} A\0#{path}\0#{commits.last}\0")].each do |raw|
+          assert_raises(AttemptErrors::EvidenceUnavailable) { journal.send(:decode_history_diff!, commits, paths, raw) }
+        end
+        assert_raises(AttemptErrors::EvidenceUnavailable) do
+          journal.stub(:bounded_history_read!, "#{oid} tree 12\n") { journal.send(:history_blob_sizes!, [oid]) }
+        end
+      end
+
       def test_batch_refuses_changed_original_event_bytes_even_when_parsed_chain_is_unchanged
         fixture do |journal, git, _base, first, second, _first_commit, _tip|
           checkout = journal.send(:checkout_dir)

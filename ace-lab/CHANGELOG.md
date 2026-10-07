@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Recover original workspace-cleanup inspection through canonical pair import and historical status without reacquiring a lost root owner; physical Installer inspection remains a required producer join.
+
 - Serve the fixed cleanup endpoint with bounded connection capacity, held protected lifetime exclusion and original request deadlines. Authenticate original inspection input/challenge and inhibit further dispatch before invoking the read-only Inspector; physical Installer evidence and Receiver settlement composition remain required.
 
 - Refuse unsafe effective manager or unit startup environments when observing the fixed root cleanup entry, with a shared absolute deadline; trusted provisioning still verifies the original environment before starting the entry.

@@ -6,6 +6,8 @@ module Ace
       class ProtectedServiceReceiver
         RECOVERY_BINDING = %w[assignment_id attempt_id candidate_generation head request_id].freeze
         RECOVERY_EXECUTION = %w[mapping_id candidate_generation head claim_binding dispatch_phase].freeze
+        CLEANUP_RECOVERY_EXECUTION = (RECOVERY_EXECUTION + %w[operation_owner_binding executor_process_binding
+          request_event_digest dispatch_event_digest]).freeze
         RECOVERY_CHALLENGE = %w[request_id input_digest claim_binding no_effect_challenge challenge_generation
           failure_event_digest failure_generation challenge_event_digest].freeze
 
@@ -42,10 +44,19 @@ module Ace
             "execution" => context.fetch("execution"), "challenge" => context.fetch("challenge"))
           # The selected domain inspector produces absence observations; this
           # owner cannot derive them from a timeout or process/scope cleanup.
-          response = @handler.execute(operation: immutable(operation), envelope: envelope, candidate_root: directory)
+          if context.dig("request", "operation") == "prune-preserved-workspace"
+            return uncertain(request_id) unless @cleanup_owner && context.dig("execution", "dispatch_phase") == "dispatch_started"
+            artifacts = cleanup_inspection_evidence!(context, input.fetch(:input))
+            response = {"outcome" => "failed", "request_id" => request_id,
+              "input_digest" => context.dig("request", "input_digest"), "evidence" => artifacts.each_with_index.map do |artifact, index|
+                {"ref" => index.zero? ? "cleanup-inspection-no-effect" : "cleanup-inspection-selection", "sha256" => Digest::SHA256.hexdigest(artifact)}
+              end}
+          else
+            response = @handler.execute(operation: immutable(operation), envelope: envelope, candidate_root: directory)
+          end
           return uncertain(request_id) unless response && response["outcome"] == "failed" &&
             response["request_id"] == request_id && response["input_digest"] == context.dig("request", "input_digest")
-          artifacts = Ace::Assign::Authority::EvidenceTransfer.read_staged(root: directory, evidence: response.fetch("evidence"))
+          artifacts ||= Ace::Assign::Authority::EvidenceTransfer.read_staged(root: directory, evidence: response.fetch("evidence"))
           receipt = context.fetch("request").merge("outcome" => "failed", "evidence" => response.fetch("evidence"))
           bytes = JSON.generate(receipt)
           completion_params = params.merge("claim_binding" => context.dig("execution", "claim_binding"),
@@ -97,8 +108,10 @@ module Ace
             raise SecurityError, "canonical recovery context is malformed"
           end
           request, execution, challenge = context.values_at("request", "execution", "challenge")
+          execution_fields = request.is_a?(Hash) && request["operation"] == "prune-preserved-workspace" &&
+            execution.is_a?(Hash) && execution["dispatch_phase"] == "dispatch_started" ? CLEANUP_RECOVERY_EXECUTION : RECOVERY_EXECUTION
           unless request.is_a?(Hash) && request.keys.sort == Ace::Assign::Molecules::EvidenceJournal::TERMINAL_BINDING_FIELDS.sort &&
-              execution.is_a?(Hash) && execution.keys.sort == RECOVERY_EXECUTION.sort &&
+              execution.is_a?(Hash) && execution.keys.sort == execution_fields.sort &&
               %w[assignment_id attempt_id request_id].all? { |key| request[key] == params.fetch(key) } &&
               request["project_id"] == @map.fetch("project_id") && request["executor_uid"] == @receiver.fetch("executor_uid") &&
               request["transport"] == "unix" && request["candidate_head"] == params.fetch("head") &&
@@ -117,6 +130,27 @@ module Ace
           input = @inputs.input_binding(bytes, expected_digest: request.fetch("input_digest"),
             expected_target: request.fetch("target"), operation: request.fetch("operation"))
           [data, immutable(context), input]
+        end
+
+        def cleanup_inspection_evidence!(context, input)
+          request, execution = context.values_at("request", "execution")
+          result = @cleanup_owner.inspect!(request: request.slice("request_id", "input_digest").merge(
+            "claim_binding" => execution.fetch("claim_binding"),
+            "request_event_digest" => execution.fetch("request_event_digest"),
+            "dispatch_event_digest" => execution.fetch("dispatch_event_digest"), "input" => input,
+            "challenge_ref" => context.fetch("challenge").slice("challenge_event_digest")),
+            operation_owner_binding: execution.fetch("operation_owner_binding"))
+          ref, bytes = result.values_at(:inspection_ref, :bytes)
+          unless ref.is_a?(Hash) && ref.keys.sort == %w[bytes path sha256] && bytes.is_a?(String) &&
+              bytes.bytesize.between?(1, 65_536) && ref["bytes"].is_a?(Integer) && ref["bytes"] == bytes.bytesize &&
+              ref["sha256"] == Digest::SHA256.hexdigest(bytes)
+            raise SecurityError, "original cleanup inspection result differs"
+          end
+          selection = {"schema" => Ace::Assign::Authority::ServiceCleanupEvidence::ROOT_INSPECTION_SELECTION_SCHEMA,
+            "request_id" => request.fetch("request_id"), "input_digest" => request.fetch("input_digest"),
+            "operation_owner_binding_digest" => Ace::Assign::Atoms::EvidenceDigest.digest(execution.fetch("operation_owner_binding")),
+            "inspection_ref" => ref}
+          [bytes, JSON.generate(selection)].freeze
         end
 
         def recovery_inspector!(context)

@@ -50,7 +50,7 @@ module Ace
             raise ArgumentError, "protected journal requires source-owned evidence and service boundaries"
           end
           @mode, @evidence_reader, @service_authorizer = mode, evidence_reader, service_authorizer
-          if read_boundary && !%i[call blob_batch blob].all? { |method| read_boundary.respond_to?(method) }
+          if read_boundary && !%i[call blob_batch blob history_diff blob_sizes].all? { |method| read_boundary.respond_to?(method) }
             raise ArgumentError, "read-only journal boundary is malformed"
           end
           @read_boundary = read_boundary
@@ -135,8 +135,7 @@ module Ace
           states = selectors.to_h do |id, digests|
             [id, digests.to_h { |digest| [digest, {retained: nil, blob: nil, absent: false, introduction: nil}] }]
           end
-          nodes.each do |node|
-            snapshots, files = read_event_snapshots!(states.keys, commit: node.first)
+          each_history_event_snapshot!(states.keys, nodes: nodes) do |node, snapshots, files|
             states.each do |assignment_id, selected_states|
               events = snapshots.fetch(assignment_id)
               validated_attempt_chains!(events)
@@ -145,17 +144,17 @@ module Ace
                 selected = matches.fetch(digest, [])
                 raise AttemptErrors::EvidenceUnavailable, "historical event selector is ambiguous" if selected.size > 1
                 if selected.empty?
-                  state[:absent] = true
+                  raise AttemptErrors::EvidenceUnavailable, "historical event disappeared" if state[:retained]
                   next
                 end
                 event = selected.first
                 blob = files.fetch(assignment_id).fetch(event_filename(event))
-                if state[:absent] || (state[:retained] && state[:retained] != event) || (state[:blob] && state[:blob] != blob)
-                  raise AttemptErrors::EvidenceUnavailable, "historical event disappeared or changed"
+                if (state[:retained] && state[:retained] != event) || (state[:blob] && state[:blob] != blob)
+                  raise AttemptErrors::EvidenceUnavailable, "historical event changed"
                 end
                 state[:blob] ||= blob
                 state[:retained] ||= event
-                state[:introduction] = node.first
+                state[:introduction] ||= node.first
               end
             end
           end
@@ -168,6 +167,135 @@ module Ace
         rescue KeyError, TypeError, ArgumentError, NoMethodError
           raise AttemptErrors::EvidenceUnavailable, "historical canonical event selectors are unverifiable"
         end
+
+        HISTORY_DIFF_BYTES = 256 * 1024 * 1024
+        HISTORY_DIFF_FLAGS = %w[diff-tree --stdin --always --root -r --raw -z --no-renames
+          --no-ext-diff --no-textconv --no-abbrev --].freeze
+
+        # The existing history owner still validates every prefix. Git returns
+        # all requested headers, including unchanged commits; only immutable
+        # changed blob bytes are batched rather than respawned at each node.
+        def each_history_event_snapshot!(ids, nodes:)
+          files = ids.to_h { |id| [id, {}] }
+          contents = ids.to_h { |id| [id, {}] }
+          paths = ids.map { |id| "execution/#{id}/events/" }
+          nodes.reverse.each_slice(64) do |chunk|
+            commits = chunk.map(&:first)
+            raw = history_diff!(commits, paths)
+            changes = decode_history_diff!(commits, paths, raw)
+            oids = changes.values.flatten(1).filter_map { |change| change[3] unless change[3] == "0" * 40 }.uniq
+            decoded = {}
+            oids.each_slice(64) do |batch|
+              sizes = history_blob_sizes!(batch)
+              entries = batch.zip(sizes)
+              groups = []
+              entries.each do |entry|
+                groups << [] if groups.empty? || (!groups.last.empty? && groups.last.sum(&:last) + entry.last > EVENT_BATCH_BYTES)
+                groups.last << entry
+              end
+              groups.each do |group|
+                decode_event_blobs!(group, read_event_blobs!(group)).each_with_index do |bytes, index|
+                  decoded[group.fetch(index).first] = JSON.parse(bytes)
+                end
+              end
+            end
+            chunk.each do |node|
+              changes.fetch(node.first).each do |path, status, old, fresh|
+                id = ids.find { |selected| path.start_with?("execution/#{selected}/events/") }
+                name = path.delete_prefix("execution/#{id}/events/")
+                current = files.fetch(id)[name]
+                unless (status == "A" && old == "0" * 40 && current.nil?) ||
+                    (%w[M D T].include?(status) && current == old)
+                  raise AttemptErrors::EvidenceUnavailable, "historical tree change differs from previous immutable snapshot"
+                end
+                if status == "D"
+                  files.fetch(id).delete(name)
+                  contents.fetch(id).delete(name)
+                else
+                  files.fetch(id)[name] = fresh
+                  contents.fetch(id)[name] = decoded.fetch(fresh)
+                end
+              end
+              snapshots = contents.transform_values do |selected|
+                events = selected.values
+                digests = events.map { |event| event.fetch("digest") }
+                raise AttemptErrors::EvidenceUnavailable, "historical event digest is ambiguous" unless digests.uniq.size == digests.size
+                order_by_chain(events)
+              end
+              yield node, snapshots, files
+            end
+          end
+          _events, actual = read_event_snapshots!(ids, commit: nodes.first.first)
+          raise AttemptErrors::EvidenceUnavailable, "historical reconstructed tip differs from its immutable tree" unless files == actual
+        rescue JSON::ParserError, KeyError, TypeError, ArgumentError
+          raise AttemptErrors::EvidenceUnavailable, "historical batched snapshots are unverifiable"
+        end
+
+        def history_diff!(commits, paths)
+          return @read_boundary.history_diff(commits, paths, output_limit: HISTORY_DIFF_BYTES) if @read_boundary
+          bounded_history_read!(HISTORY_DIFF_FLAGS + paths, commits.join("\n") + "\n", HISTORY_DIFF_BYTES)
+        end
+
+        def history_blob_sizes!(oids)
+          raw = if @read_boundary
+            @read_boundary.blob_sizes(oids)
+          else
+            bounded_history_read!(%w[cat-file --batch-check], oids.join("\n") + "\n", oids.size * 128)
+          end
+          lines = raw.lines
+          raise AttemptErrors::EvidenceUnavailable, "historical blob metadata count differs" unless lines.size == oids.size
+          lines.zip(oids).map do |line, oid|
+            match = /\A([0-9a-f]{40}) blob (0|[1-9][0-9]*)\n\z/.match(line)
+            raise AttemptErrors::EvidenceUnavailable, "historical blob metadata differs" unless match && match[1] == oid
+            match[2].to_i
+          end
+        end
+
+        def bounded_history_read!(argv, stdin, limit)
+          result = Herdr::Molecules::BoundedProcess.call(["git", *argv], chdir: File.expand_path(@repo_root),
+            stdin_data: stdin, timeout_s: 30, output_limit: limit)
+          raise AttemptErrors::EvidenceUnavailable, "historical batch unavailable or exceeds bound" unless result.status.success? && !result.oversized
+          result.stdout.to_s.b
+        rescue Timeout::Error, Herdr::Molecules::BoundedProcess::PostLaunchError, IOError, SystemCallError
+          raise AttemptErrors::EvidenceUnavailable, "historical batch is unavailable"
+        end
+
+        def decode_history_diff!(commits, paths, raw)
+          unless raw.is_a?(String) && raw.end_with?("\0")
+            raise AttemptErrors::EvidenceUnavailable, "historical diff frame is incomplete"
+          end
+          tokens = raw.split("\0", -1)
+          tokens.pop
+          result = commits.to_h { |commit| [commit, []] }
+          position = 0
+          commits.each do |commit|
+            raise AttemptErrors::EvidenceUnavailable, "historical commit header differs" unless tokens[position] == commit
+            position += 1
+            seen = {}
+            while tokens[position]&.start_with?(":")
+              metadata, path = tokens.values_at(position, position + 1)
+              match = /\A:([0-7]{6}) ([0-7]{6}) ([0-9a-f]{40}) ([0-9a-f]{40}) ([AMDT])\z/.match(metadata)
+              unless match && path.is_a?(String) && paths.any? { |prefix| path.start_with?(prefix) } && !seen[path]
+                raise AttemptErrors::EvidenceUnavailable, "historical tree metadata differs"
+              end
+              seen[path] = true
+              position += 2
+              next unless path.end_with?(".json")
+              old, fresh, status = match.values_at(3, 4, 5)
+              modes = match.values_at(1, 2)
+              unless modes.all? { |mode| %w[000000 100644 100755 120000].include?(mode) } &&
+                  (status == "A" ? old == "0" * 40 && fresh != "0" * 40 && modes.first == "000000" && modes.last != "000000" :
+                    status == "D" ? old != "0" * 40 && fresh == "0" * 40 && modes.first != "000000" && modes.last == "000000" :
+                      old != "0" * 40 && fresh != "0" * 40 && modes.none? { |mode| mode == "000000" })
+                raise AttemptErrors::EvidenceUnavailable, "historical event object type differs"
+              end
+              result.fetch(commit) << [path, status, old, fresh]
+            end
+          end
+          raise AttemptErrors::EvidenceUnavailable, "historical diff has extra headers or bytes" unless position == tokens.size
+          result
+        end
+        private :each_history_event_snapshot!, :history_diff!, :history_blob_sizes!, :bounded_history_read!, :decode_history_diff!
 
         # Complete immutable index facts are authenticated before any caller
         # filters ownership. A missing current fact cannot hide an older one.
@@ -477,7 +605,7 @@ module Ace
               "Service settlement requires a no-effect attestation artifact"
           end
           if @mode == :protected
-            if current["operation"] == "prune-preserved-workspace" && state == "succeeded"
+            if current["operation"] == "prune-preserved-workspace" && %w[succeeded failed-settled].include?(state)
               # The same installed evidence reader owns the entire imported
               # cleanup pair; individual textual markers cannot authorize it.
               contents = @evidence_reader.call(evidence_items, current, state, pending)
@@ -518,6 +646,33 @@ module Ace
         end
 
         def service_request(request_id, commit: ref_value)
+          read_service_request(request_id, commit: commit, pending: {commit: commit})
+        end
+
+        # A read operation owns this view only until its caller returns. The
+        # original complete first-parent/raw-blob owner supplies every fact;
+        # it is never retained on the journal or reused for another operation.
+        ServiceReadView = Struct.new(:journal, :commit, :inventory, :projection, keyword_init: true)
+
+        def service_settlement_read(request_id, commit: ref_value)
+          verify_canonical_prefix!(commit: commit)
+          record = read_service_request(request_id, commit: commit, pending: {commit: commit}, terminal: false)
+          return {record: nil, settlement_context: nil, read_view: nil}.freeze unless record
+          id = record.fetch("assignment_id")
+          events = read_events(id, commit: commit)
+          selectors = events.map { |event| event.fetch("digest") }
+          introductions = event_commits!(assignment_id: id, event_digests: selectors, commit: commit)
+          inventory = freeze_inventory_projection("commit" => commit, "events" => {id => events}, "introductions" => {id => introductions})
+          view = ServiceReadView.new(journal: self, commit: commit, inventory: inventory)
+          if @mode == :protected && terminal_state?(record["state"])
+            validate_terminal_receipt!(record, record["state"], record["receipt"],
+              pending: {commit: commit, service_read_view: view})
+          end
+          view.freeze
+          {record: freeze_inventory_projection(record), settlement_context: view.projection, read_view: view}.freeze
+        end
+
+        def read_service_request(request_id, commit:, pending:, terminal: true)
           validate_request_id!(request_id)
           value = commit
           return nil unless value
@@ -525,7 +680,7 @@ module Ace
           if status.success?
             record = JSON.parse(out)
             verify_service_record!(record, commit: value) if @mode == :protected
-            validate_terminal_receipt!(record, record["state"], record["receipt"], pending: {commit: value}) if @mode == :protected && terminal_state?(record["state"])
+            validate_terminal_receipt!(record, record["state"], record["receipt"], pending: pending) if terminal && @mode == :protected && terminal_state?(record["state"])
             return record
           end
           return nil if stderr.include?("does not exist") || stderr.include?("exists on disk")
@@ -533,6 +688,8 @@ module Ace
         rescue JSON::ParserError
           raise AttemptErrors::EvidenceUnavailable, "Corrupt service request #{request_id}"
         end
+
+        private :read_service_request
 
         # Every service request recorded in this evidence ref, whatever the
         # owning assignment. Backs the journal-wide request-ID and

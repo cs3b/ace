@@ -187,20 +187,24 @@ module Ace
         def service_status(_request, params, map, peer, role)
           @launch.with_assignment(params: params, map: map) do |journal, _registration|
             protected_journal!(journal)
-            record = journal.service_request(params.fetch("request_id"))
+            commit = journal.ref_value
+            read = role == :executor && journal.service_settlement_read(params.fetch("request_id"), commit: commit)
+            record = read ? read.fetch(:record) : journal.service_request(params.fetch("request_id"), commit: commit)
             unless record && record["assignment_id"] == params["assignment_id"] && record["attempt_id"] == params["attempt_id"] &&
                 record["project_id"] == map["project_id"] && record["candidate_head"] == params["head"] &&
                 record["candidate_generation"] == params["candidate_generation"]
               raise AttemptErrors::UnauthorizedIdentity, "service status binding differs"
             end
-            if %w[no_effect_challenge challenge_generation challenge_event_digest].any? { |key| record.key?(key) }
-              ServiceEvidence.new(journal: journal).challenge!(record, current: false)
+            if role != :executor && %w[no_effect_challenge challenge_generation challenge_event_digest].any? { |key| record.key?(key) }
+              ServiceEvidence.new(journal: journal).challenge!(record, pending: {commit: commit}, current: false)
             end
-            events = attempt_events(journal, params)
+            selected = read ? read.fetch(:read_view).inventory.fetch("events").fetch(params.fetch("assignment_id")) :
+              journal.read_events(params.fetch("assignment_id"), commit: commit)
+            events = selected.select { |event| event.fetch("attempt_id") == params.fetch("attempt_id") }
             @kernel.live!(peer)
             service_policy!.visible!(project: map.fetch("project_id"), uid: peer.fetch("uid"))
             if role == :executor
-              record = service_settlement_record!(journal, params, map, peer, role)
+              record = service_settlement_record!(journal, params, map, peer, role, record: record)
             else
               authorized = case role
               when :worker
@@ -216,10 +220,12 @@ module Ace
               end
               raise AttemptErrors::UnauthorizedIdentity, "service status purpose differs" unless authorized
             end
-            commit = journal.ref_value
             data = service_projection(record).merge("generation" => journal.authority_generation(events),
               "journal_commit" => commit)
-            data["settlement_context"] = ServiceEvidence.new(journal: journal).settlement_context(record, commit: commit) if role == :executor
+            if role == :executor
+              data["settlement_context"] = read.fetch(:settlement_context) ||
+                ServiceEvidence.new(journal: journal).settlement_context(record, commit: commit, read_view: read.fetch(:read_view))
+            end
             {data: data, replayed: false}
           end
         end

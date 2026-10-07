@@ -14,8 +14,8 @@ module Ace
           true
         end
 
-        def service_settlement_record!(journal, params, map, peer, role)
-          record = journal.service_request(params.fetch("request_id"))
+        def service_settlement_record!(journal, params, map, peer, role, record: nil)
+          record ||= journal.service_request(params.fetch("request_id"))
           raise AttemptErrors::NotFound, "canonical service request is missing" unless record
           service_executor!(peer, role, record)
           receiver = service_receiver!(peer, role, map, record.fetch("service_id"))
@@ -134,7 +134,11 @@ module Ace
           return {data: service_projection(record)} if record["no_effect_completion_digest"]
           owner = ServiceEvidence.new(journal: journal)
           challenge = owner.challenge!(record)
-          admitted.fetch(:artifacts).each { |bytes| owner.inspection!(bytes, record, challenge) }
+          if record["operation"] == "prune-preserved-workspace"
+            owner.cleanup_inspection_inputs!(admitted.fetch(:artifacts), record, challenge)
+          else
+            admitted.fetch(:artifacts).each { |bytes| owner.inspection!(bytes, record, challenge) }
+          end
           plan = Molecules::CanonicalEvidence.new(journal: journal).import_plan(**owner.context(record, no_effect: true),
             artifacts: admitted.fetch(:artifacts), admitted_after_event_digest: challenge.fetch("digest"))
           receipt = admitted.fetch(:receipt).merge("evidence" => plan.fetch(:references))

@@ -116,6 +116,29 @@ module Ace
           result.stdout.to_s.b
         end
 
+        def history_diff(commits, paths, output_limit:)
+          refuse!("read_outside_snapshot") unless @view && @commit
+          unless commits.is_a?(Array) && commits.size.between?(1, 64) && commits.uniq.size == commits.size &&
+              commits.all? { |commit| commit.is_a?(String) && commit.match?(OID) } &&
+              paths.is_a?(Array) && !paths.empty? && paths.uniq.size == paths.size &&
+              paths.all? { |path| path.is_a?(String) && path.match?(%r{\Aexecution/[a-zA-Z0-9_.:-]+/events/\z}) } &&
+              output_limit.is_a?(Integer) && output_limit.positive?
+            refuse!("unsupported_command")
+          end
+          result = run!(%w[diff-tree --stdin --always --root -r --raw -z --no-renames --no-ext-diff
+            --no-textconv --no-abbrev --] + paths, stdin_data: commits.join("\n") + "\n",
+            limit: [output_limit, BYTE_LIMIT].min)
+          result.stdout.to_s.b
+        end
+
+        def blob_sizes(oids)
+          refuse!("read_outside_snapshot") unless @view && @commit
+          unless oids.is_a?(Array) && oids.size.between?(1, 64) && oids.all? { |oid| oid.is_a?(String) && oid.match?(OID) }
+            refuse!("unsupported_command")
+          end
+          run!(%w[cat-file --batch-check], stdin_data: oids.join("\n") + "\n", limit: oids.size * 128).stdout.to_s.b
+        end
+
         def blob(path, commit:, max_bytes:)
           refuse!("read_outside_snapshot") unless @view && @commit
           unless commit.is_a?(String) && commit.match?(OID) && max_bytes.is_a?(Integer) && max_bytes.positive?

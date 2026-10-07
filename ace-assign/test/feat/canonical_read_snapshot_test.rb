@@ -100,6 +100,9 @@ module Ace
             assert_equal [event], journal.read_events("assignment")
             assert_equal commit, journal.event_commit!(assignment_id: "assignment", event_digest: event.fetch("digest"), commit: commit)
             assert journal.verify_canonical_prefix!(commit: commit)
+            assert_raises(Snapshot::Unavailable) { selected.history_diff([commit, commit], ["execution/assignment/events/"], output_limit: 1024) }
+            assert_raises(Snapshot::Unavailable) { selected.history_diff([commit], ["../source/"], output_limit: 1024) }
+            assert_raises(Snapshot::Unavailable) { selected.blob_sizes(["not-an-oid"]) }
             assert_raises(Snapshot::Unavailable) { selected.call(["update-ref", REF, "0" * 40]) }
             assert_raises(AttemptErrors::EvidenceUnavailable) do
               journal.append(assignment_id: "assignment", attempt_id: "attempt", events: [event])

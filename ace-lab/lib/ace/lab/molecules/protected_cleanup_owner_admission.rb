@@ -12,8 +12,6 @@ module Ace
         FIELDS = %w[schema kind request_id input_digest claim_binding request_event_digest
           dispatch_event_digest input operation_owner_binding_digest].freeze
         INSPECT_FIELDS = (FIELDS + %w[challenge_ref]).freeze
-        MUTABLE_SETTLEMENT_FIELDS = %w[state receipt reason claimed_at failed_at no_effect_challenge
-          challenge_generation challenge_event_digest completion_digest no_effect_completion_digest].freeze
 
         def initialize(deployment:, authority_id:, mapping_id:, service_id:, kernel:)
           @deployment, @authority_id, @kernel = deployment, authority_id, kernel
@@ -118,35 +116,10 @@ module Ace
             raise SecurityError, "cleanup original executor differs"
           end
           @kernel.live!(peer)
-          events = journal.read_events(record.fetch("assignment_id"), commit: commit)
-            .select { |event| event.fetch("attempt_id") == record.fetch("attempt_id") }
-          selectors = frame.values_at("request_event_digest", "dispatch_event_digest")
-          raise SecurityError, "cleanup original acceptance selectors are not distinct" unless selectors.uniq.size == 2
-          introductions = journal.event_commits!(assignment_id: record.fetch("assignment_id"), event_digests: selectors, commit: commit)
-          selectors.zip(%w[request_service begin_dispatch]).each do |selector, operation|
-            matches = events.select { |event| event.fetch("digest") == selector }
-            event = matches.one? && matches.first
-            payload = event && event.fetch("payload")
-            unless event && event.fetch("type") == "authority_mutation" && payload.fetch("operation") == operation &&
-                payload.slice("assignment_id", "attempt_id") == maintenance.slice("assignment_id", "attempt_id") &&
-                payload.fetch("data").slice("request_id", "claim_binding") == record.slice("request_id", "claim_binding") &&
-                payload.fetch("data").fetch(operation == "request_service" ? "claim" : "invocation") == (operation == "request_service" ? "created" : "permitted")
-              raise SecurityError, "cleanup original acceptance differs"
-            end
-            prefix = journal.read_events(record.fetch("assignment_id"), commit: introductions.fetch(selector))
-              .select { |entry| entry.fetch("attempt_id") == record.fetch("attempt_id") }
-            original_record = journal.service_request(record.fetch("request_id"), commit: introductions.fetch(selector))
-            expected_record = operation == "request_service" ? original_record&.merge(
-              "dispatch_phase" => "dispatch_started", "operation_owner_binding" => record.fetch("operation_owner_binding"),
-              "executor_process_binding" => record.fetch("executor_process_binding")) : original_record
-            same_original = purpose == :execute ? expected_record == record :
-              expected_record&.except(*MUTABLE_SETTLEMENT_FIELDS) == record.except(*MUTABLE_SETTLEMENT_FIELDS)
-            unless same_original && prefix.last == event &&
-                prefix[-2] && prefix[-2].fetch("type") == (operation == "request_service" ? "service_claim" : "service_transition") &&
-                prefix[-2].dig("payload", "record_digest") == digest(original_record) &&
-                event.fetch("previous_digest") == prefix[-2].fetch("digest")
-              raise SecurityError, "cleanup acceptance is not its original canonical introduction"
-            end
+          proof = Ace::Assign::Authority::ServiceEvidence.new(journal: journal).cleanup_dispatch_context!(
+            record, commit: commit, selectors: frame.slice("request_event_digest", "dispatch_event_digest"))
+          if purpose == :execute && proof.fetch("dispatch_record") != record
+            raise SecurityError, "cleanup original executable record differs"
           end
           Atoms::ProtectedWorkspacePruneInput.freeze_value(JSON.parse(JSON.generate({"commit" => commit,
             "record" => record, "input" => input, "operation_owner_binding" => operation_owner_binding,

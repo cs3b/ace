@@ -108,6 +108,11 @@ module Ace
               operation.fetch("transport", "local") == "local"
             raise SecurityError, "inspection does not match the selected original executor"
           end
+          # This source-composed inspector uses the fixed original root SDK;
+          # configured handler argv cannot select or replace that owner.
+          if name == "prune-preserved-workspace"
+            return {"executor_uid" => executor_uid, "operation" => name}
+          end
           argv = operation["no_effect_argv"]
           unless argv.is_a?(Array) && argv.length.between?(1, 16) &&
               argv.all? { |value| value.is_a?(String) && value.bytesize.between?(1, 1024) && !value.include?("\0") } &&

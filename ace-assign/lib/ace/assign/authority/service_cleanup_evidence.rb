@@ -12,15 +12,33 @@ module Ace
         ROOT_SELECTION_SCHEMA = "ace.protected-workspace-prune-root-selection/v1"
         ROOT_RECEIPT_SCHEMA = "ace.protected-workspace-prune-receipt/v1"
         ROOT_SELECTION_FIELDS = %w[schema request_id input_digest operation_owner_binding_digest receipt_ref].freeze
+        ROOT_INSPECTION_SELECTION_SCHEMA = "ace.protected-workspace-prune-inspection-selection/v1"
+        ROOT_INSPECTION_SELECTION_FIELDS = %w[schema request_id input_digest operation_owner_binding_digest inspection_ref].freeze
         ROOT_RECEIPT_FIELDS = %w[schema request_id input_digest maintenance target publication canonical_snapshots preservation removal].freeze
+
+        # Pre-import decoding reuses the collection validator. Only the lower
+        # writer's pending collection can authenticate protected storage and
+        # accept a terminal update.
+        def cleanup_inspection_inputs!(contents, record, challenge)
+          unless record["operation"] == "prune-preserved-workspace" && contents.is_a?(Array) && contents.size == 2
+            raise AttemptErrors::ReceiptRejected, "cleanup inspection requires its complete pair"
+          end
+          cleanup_documents!(contents, record, no_effect: true, challenge: challenge)
+          true
+        rescue KeyError, TypeError, JSON::ParserError, JSON::GeneratorError
+          raise AttemptErrors::ReceiptRejected, "cleanup inspection pair is unavailable"
+        end
 
         private
 
         def cleanup_collection!(references, record, state, pending)
-          unless record["operation"] == "prune-preserved-workspace" && state == "succeeded" && references.size == 2
+          unless record["operation"] == "prune-preserved-workspace" && %w[succeeded failed-settled].include?(state) && references.size == 2
             raise AttemptErrors::ReceiptRejected, "cleanup completion requires its complete original evidence pair"
           end
-          expected = context(record, pending: pending)
+          no_effect = state == "failed-settled"
+          challenge = no_effect ? challenge!(record, pending: pending) : nil
+          expected = no_effect ? context_for_challenge(record, challenge) : context(record)
+          proof = cleanup_dispatch_context!(record, commit: pending && pending[:commit] || @journal.ref_value, pending: pending)
           contents = references.map do |reference|
             if pending && pending[:pending_events]
               @canonical.read_pending(reference, **expected, **pending.slice(:current_events, :pending_events, :blobs, :commit))
@@ -28,31 +46,9 @@ module Ace
               @canonical.read(reference, **expected, commit: pending && pending[:commit] || @journal.ref_value)
             end
           end
-          documents = contents.map { |bytes| cleanup_json!(bytes) }
-          selection_index = documents.each_index.select { |index| documents[index]["schema"] == ROOT_SELECTION_SCHEMA }
-          receipt_index = documents.each_index.select { |index| documents[index]["schema"] == ROOT_RECEIPT_SCHEMA }
-          unless selection_index.one? && receipt_index.one?
-            raise AttemptErrors::ReceiptRejected, "cleanup original evidence selection is ambiguous"
-          end
-          selection = documents.fetch(selection_index.first)
-          receipt = documents.fetch(receipt_index.first)
-          closed_cleanup!(selection, ROOT_SELECTION_FIELDS)
-          closed_cleanup!(receipt, ROOT_RECEIPT_FIELDS)
-          unless [selection, receipt].all? { |value| value["request_id"] == record.fetch("request_id") && value["input_digest"] == record.fetch("input_digest") } &&
-              selection["operation_owner_binding_digest"] == Atoms::EvidenceDigest.digest(record.fetch("operation_owner_binding"))
-            raise AttemptErrors::ReceiptRejected, "cleanup original owner or request differs"
-          end
-          reference = selection.fetch("receipt_ref")
-          closed_cleanup!(reference, %w[path bytes sha256])
+          reference, operation_bytes = cleanup_documents!(contents, record, no_effect: no_effect,
+            challenge: challenge)
           path = reference.fetch("path")
-          operation_bytes = contents.fetch(receipt_index.first)
-          unless path.is_a?(String) && path.bytesize <= 4096 && path.valid_encoding? && !path.include?("\0") &&
-              path.start_with?("/") && File.expand_path(path) == path &&
-              reference["bytes"].is_a?(Integer) && reference["bytes"].between?(1, 65_536) &&
-              reference["bytes"] == operation_bytes.bytesize && reference["sha256"] == Digest::SHA256.hexdigest(operation_bytes)
-            raise AttemptErrors::ReceiptRejected, "cleanup retained result reference differs"
-          end
-          cleanup_receipt_projection!(receipt, record)
           # The lower writer supplies its pending import transaction. Historical
           # consumers have only a pinned commit and never reopen mutable storage.
           if pending && pending[:pending_events]
@@ -65,9 +61,49 @@ module Ace
               artifacts.verify_unchanged!
             end
           end
+          if (view = service_read_view(pending))
+            view.projection = settlement_projection(record, pending, challenge, proof)
+          end
           contents.freeze
         rescue KeyError, TypeError, JSON::ParserError, JSON::GeneratorError, Ace::Runtime::RuntimeUnavailableError
           raise AttemptErrors::ReceiptRejected, "cleanup original evidence is unavailable"
+        end
+
+        def cleanup_documents!(contents, record, no_effect:, challenge:)
+          documents = contents.map { |bytes| cleanup_json!(bytes) }
+          selection_schema = no_effect ? ROOT_INSPECTION_SELECTION_SCHEMA : ROOT_SELECTION_SCHEMA
+          selection_fields = no_effect ? ROOT_INSPECTION_SELECTION_FIELDS : ROOT_SELECTION_FIELDS
+          selection_index = documents.each_index.select { |index| documents[index]["schema"] == selection_schema }
+          receipt_index = documents.each_index.select do |index|
+            no_effect ? documents[index].keys.sort == ServiceEvidence::INSPECTION_FIELDS.sort : documents[index]["schema"] == ROOT_RECEIPT_SCHEMA
+          end
+          unless selection_index.one? && receipt_index.one?
+            raise AttemptErrors::ReceiptRejected, "cleanup original evidence selection is ambiguous"
+          end
+          selection = documents.fetch(selection_index.first)
+          receipt = documents.fetch(receipt_index.first)
+          closed_cleanup!(selection, selection_fields)
+          closed_cleanup!(receipt, no_effect ? ServiceEvidence::INSPECTION_FIELDS : ROOT_RECEIPT_FIELDS)
+          unless [selection, receipt].all? { |value| value["request_id"] == record.fetch("request_id") && value["input_digest"] == record.fetch("input_digest") } &&
+              selection["operation_owner_binding_digest"] == Atoms::EvidenceDigest.digest(record.fetch("operation_owner_binding"))
+            raise AttemptErrors::ReceiptRejected, "cleanup original owner or request differs"
+          end
+          reference = selection.fetch(no_effect ? "inspection_ref" : "receipt_ref")
+          closed_cleanup!(reference, %w[path bytes sha256])
+          path = reference.fetch("path")
+          operation_bytes = contents.fetch(receipt_index.first)
+          unless path.is_a?(String) && path.bytesize <= 4096 && path.valid_encoding? && !path.include?("\0") &&
+              path.start_with?("/") && File.expand_path(path) == path &&
+              reference["bytes"].is_a?(Integer) && reference["bytes"].between?(1, 65_536) &&
+              reference["bytes"] == operation_bytes.bytesize && reference["sha256"] == Digest::SHA256.hexdigest(operation_bytes)
+            raise AttemptErrors::ReceiptRejected, "cleanup retained result reference differs"
+          end
+          if no_effect
+            inspection_projection!(receipt, record, challenge)
+          else
+            cleanup_receipt_projection!(receipt, record)
+          end
+          [reference, operation_bytes]
         end
 
         def cleanup_json!(bytes)

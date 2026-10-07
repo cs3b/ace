@@ -2,6 +2,7 @@
 
 require_relative "../molecules/canonical_evidence"
 require_relative "service_cleanup_evidence"
+require_relative "service_cleanup_dispatch"
 require_relative "../molecules/execution_scope_lineage"
 
 module Ace
@@ -12,6 +13,7 @@ module Ace
       # never supply an alternate reader, artifact path or trusted flag.
       class ServiceEvidence
         include ServiceCleanupEvidence
+        include ServiceCleanupDispatch
         FIELDS = (Molecules::EvidenceJournal::TERMINAL_BINDING_FIELDS +
           %w[dispatch_ticket_id claim_binding candidate_generation claim_generation policy_digest]).freeze
         CHALLENGE_FIELDS = %w[version request_id input_digest claim_binding dispatch_ticket_id no_effect_challenge
@@ -28,27 +30,14 @@ module Ace
 
         # Executor-only projection from the same authenticated original record;
         # selectors never come from the receiver or a caller-supplied target.
-        def settlement_context(record, commit: @journal.ref_value)
-          context(record, pending: {commit: commit})
-          selected = nil
-          if %w[no_effect_challenge challenge_generation challenge_event_digest].any? { |key| record.key?(key) }
-            challenge = challenge!(record, pending: {commit: commit}, current: false)
-            latest_failure = @journal.read_events(record.fetch("assignment_id"), commit: commit).reverse.find do |event|
-              event["attempt_id"] == record.fetch("attempt_id") &&
-                %w[service_claim service_transition].include?(event["type"]) &&
-                event.dig("payload", "request_id") == record.fetch("request_id") &&
-                %w[uncertain failed].include?(event.dig("payload", "state"))
-            end
-            if latest_failure && latest_failure.fetch("digest") == challenge.dig("payload", "failure_event_digest")
-              selected = challenge.fetch("payload").slice("request_id", "input_digest", "claim_binding",
-                "no_effect_challenge", "challenge_generation", "failure_event_digest", "failure_generation")
-                .merge("challenge_event_digest" => challenge.fetch("digest"))
-            end
-          end
-          value = {"version" => 1, "request" => record.slice(*Molecules::EvidenceJournal::TERMINAL_BINDING_FIELDS),
-            "execution" => record.slice("mapping_id", "candidate_generation", "claim_binding", "dispatch_phase")
-              .merge("head" => record.fetch("candidate_head")), "challenge" => selected}
-          freeze_projection(JSON.parse(JSON.generate(value)))
+        def settlement_context(record, commit: @journal.ref_value, read_view: nil)
+          pending = {commit: commit, service_read_view: read_view}
+          context(record, pending: pending)
+          challenge = challenge!(record, pending: pending, current: false) if
+            %w[no_effect_challenge challenge_generation challenge_event_digest].any? { |key| record.key?(key) }
+          proof = cleanup_dispatch_context!(record, commit: commit, pending: pending) if
+            record.values_at("operation", "dispatch_phase") == ["prune-preserved-workspace", "dispatch_started"]
+          settlement_projection(record, pending, challenge, proof)
         rescue KeyError, TypeError
           raise AttemptErrors::EvidenceUnavailable, "original service settlement context is incomplete"
         end
@@ -69,17 +58,7 @@ module Ace
             raise AttemptErrors::EvidenceUnavailable, "canonical dispatch binding is invalid"
           end
           if no_effect
-            selection = challenge!(record, pending: pending)
-            binding.merge!(%w[no_effect_challenge challenge_generation challenge_event_digest].to_h do |key|
-              [key, record.fetch(key)]
-            end)
-            unless binding["no_effect_challenge"].is_a?(String) && !binding["no_effect_challenge"].empty? &&
-                binding["challenge_generation"].is_a?(Integer) && binding["challenge_generation"].positive? &&
-                binding["challenge_event_digest"].is_a?(String) && binding["challenge_event_digest"].match?(/\A[0-9a-f]{64}\z/)
-              raise AttemptErrors::EvidenceUnavailable, "canonical no-effect challenge is invalid"
-            end
-            binding.merge!(selection.fetch("payload").slice("failure_event_digest", "failure_generation"))
-            binding["dispatch_phase"] = record.fetch("dispatch_phase")
+            return context_for_challenge(record, challenge!(record, pending: pending))
           end
           {kind: "service", project_id: record.fetch("project_id"), assignment_id: record.fetch("assignment_id"),
             attempt_id: record.fetch("attempt_id"), peer_uid: record.fetch("executor_uid"), binding: binding,
@@ -104,8 +83,7 @@ module Ace
           events = if pending && pending[:pending_events]
             pending.fetch(:current_events) + pending.fetch(:pending_events)
           else
-            @journal.read_events(record.fetch("assignment_id"), commit: commit)
-              .select { |event| event["attempt_id"] == record.fetch("attempt_id") }
+            service_read_events(record, pending)
           end
           unless Models::EvidenceEvent.chain_valid?(events)
             raise AttemptErrors::EvidenceUnavailable, "canonical challenge chain is corrupt"
@@ -155,8 +133,8 @@ module Ace
                 accepted.dig("payload", "data", "reconciliation_challenge") == record.slice("no_effect_challenge", "challenge_generation", "challenge_event_digest")
               raise AttemptErrors::EvidenceUnavailable, "canonical challenge lacks its accepted authority mutation"
             end
-            commits = @journal.event_commits!(assignment_id: record.fetch("assignment_id"),
-              event_digests: [challenge.fetch("digest"), failure.fetch("digest"), update.fetch("digest"), accepted.fetch("digest")], commit: commit)
+            commits = service_read_introductions(record,
+              [challenge.fetch("digest"), failure.fetch("digest"), update.fetch("digest"), accepted.fetch("digest")], pending)
             unless commits.fetch(challenge.fetch("digest")) == commits.fetch(update.fetch("digest")) &&
                 commits.fetch(challenge.fetch("digest")) == commits.fetch(accepted.fetch("digest"))
               raise AttemptErrors::EvidenceUnavailable, "challenge record and authority acceptance were not atomic"
@@ -185,6 +163,12 @@ module Ace
           raise AttemptErrors::EvidenceUnavailable, "no-effect inspection is missing or repeated" unless lines.size == 1
           inspection = JSON.parse(lines.first, create_additions: false, max_nesting: 8,
             allow_duplicate_key: false, allow_comments: false)
+          inspection_projection!(inspection, record, challenge)
+        rescue JSON::ParserError, KeyError, TypeError
+          raise AttemptErrors::EvidenceUnavailable, "no-effect inspection is malformed"
+        end
+
+        def inspection_projection!(inspection, record, challenge)
           expected = challenge.fetch("payload").slice("request_id", "input_digest", "claim_binding", "no_effect_challenge",
             "challenge_generation", "failure_event_digest", "failure_generation").merge("version" => 1,
               "challenge_event_digest" => challenge.fetch("digest"), "target" => record.fetch("target"),
@@ -196,7 +180,7 @@ module Ace
             raise AttemptErrors::EvidenceUnavailable, "no-effect inspection differs from original challenge"
           end
           true
-        rescue JSON::ParserError, KeyError, TypeError
+        rescue KeyError, TypeError
           raise AttemptErrors::EvidenceUnavailable, "no-effect inspection is malformed"
         end
 
@@ -217,6 +201,66 @@ module Ace
         end
 
         private
+
+        def settlement_projection(record, pending, challenge, proof)
+          selected = nil
+          if challenge
+            latest_failure = service_read_events(record, pending).reverse.find do |event|
+              event["attempt_id"] == record.fetch("attempt_id") &&
+                %w[service_claim service_transition].include?(event["type"]) &&
+                event.dig("payload", "request_id") == record.fetch("request_id") &&
+                %w[uncertain failed].include?(event.dig("payload", "state"))
+            end
+            if latest_failure && latest_failure.fetch("digest") == challenge.dig("payload", "failure_event_digest")
+              selected = challenge.fetch("payload").slice("request_id", "input_digest", "claim_binding",
+                "no_effect_challenge", "challenge_generation", "failure_event_digest", "failure_generation")
+                .merge("challenge_event_digest" => challenge.fetch("digest"))
+            end
+          end
+          execution = record.slice("mapping_id", "candidate_generation", "claim_binding", "dispatch_phase")
+            .merge("head" => record.fetch("candidate_head"))
+          if record["operation"] == "prune-preserved-workspace" && record["dispatch_phase"] == "dispatch_started"
+            execution.merge!(record.slice("operation_owner_binding", "executor_process_binding"))
+            execution.merge!(proof.slice("request_event_digest", "dispatch_event_digest"))
+          end
+          value = {"version" => 1, "request" => record.slice(*Molecules::EvidenceJournal::TERMINAL_BINDING_FIELDS),
+            "execution" => execution, "challenge" => selected}
+          freeze_projection(JSON.parse(JSON.generate(value)))
+        end
+
+        def context_for_challenge(record, selection)
+          expected = context(record)
+          binding = expected.fetch(:binding)
+          binding.merge!(record.slice("no_effect_challenge", "challenge_generation", "challenge_event_digest"))
+          binding.merge!(selection.fetch("payload").slice("failure_event_digest", "failure_generation"))
+          binding["dispatch_phase"] = record.fetch("dispatch_phase")
+          expected
+        end
+
+        def service_read_view(pending)
+          view = pending && pending[:service_read_view]
+          return nil unless view
+          unless view.is_a?(Molecules::EvidenceJournal::ServiceReadView) && view.journal.equal?(@journal) &&
+              view.commit == pending.fetch(:commit) && view.inventory.fetch("commit") == view.commit
+            raise AttemptErrors::EvidenceUnavailable, "service read view differs from its selected owner"
+          end
+          view
+        end
+
+        def service_read_events(record, pending)
+          view = service_read_view(pending)
+          selected = view ? view.inventory.fetch("events").fetch(record.fetch("assignment_id")) :
+            @journal.read_events(record.fetch("assignment_id"), commit: pending && pending[:commit] || @journal.ref_value)
+          selected.select { |event| event.fetch("attempt_id") == record.fetch("attempt_id") }
+        end
+
+        def service_read_introductions(record, selectors, pending)
+          view = service_read_view(pending)
+          return @journal.event_commits!(assignment_id: record.fetch("assignment_id"), event_digests: selectors,
+            commit: pending && pending[:commit] || @journal.ref_value) unless view
+          facts = view.inventory.fetch("introductions").fetch(record.fetch("assignment_id"))
+          selectors.to_h { |selector| [selector, facts.fetch(selector)] }.freeze
+        end
 
         def freeze_projection(value)
           value.each_value { |child| freeze_projection(child) } if value.is_a?(Hash)
