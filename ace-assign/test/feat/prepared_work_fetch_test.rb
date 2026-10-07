@@ -37,7 +37,7 @@ module Ace
         @project.merge!("journal_repository" => @journal.repo_root, "evidence_git_ref" => @journal.ref,
           "evidence_checkout_root" => @journal.checkout_root)
         return unless @real_history_fixture
-        @map = @map.merge("worker_argv" => ["/usr/bin/true"], "worker_env" => {"PATH" => "/usr/bin"},
+        @map = @map.merge("worker_argv" => ["/usr/bin/true", "authority", "worker"], "worker_env" => {"PATH" => "/usr/bin"},
           "execution_scope" => @map.fetch("execution_scope").merge("backend" => "linux_systemd_cgroup_v2",
             "slice_unit" => "ace-slot.slice", "unit_manifest_sha256" => "b" * 64,
             "boundary_manifest_sha256" => "c" * 64, "root_directory" => "/var/lib/ace-slot/root", "runtime_directory" => "/run/ace-slot"),
@@ -93,6 +93,8 @@ module Ace
         @owner = Thread.new { @server.serve }
         Timeout.timeout(3) { sleep 0.005 until File.socket?(@service.fetch("socket_path")) }
         client_kernel = Kernel.new
+        original_worker = @worker
+        client_kernel.define_singleton_method(:capture) { |_| original_worker }
         client_kernel.peer_identity = @service.slice("uid", "gid", "groups")
         @client = Authority::Client.new(mapping_id: "mapping", deployment: @deployment, kernel: client_kernel)
       end
@@ -159,14 +161,15 @@ module Ace
             end
             result
           end
-          codec = @client.send(:transfer_codec)
+          descriptor = prepared_fetch.fetch(:data).fetch("descriptor")
+          codec = @client.send(:prepared_transfer_codec, descriptor)
           original_receive = codec.method(:receive)
           receives = 0
           codec.define_singleton_method(:receive) do |*args, **options, &block|
             receives += 1
             original_receive.call(*args, **options, &block)
           end
-          @client.define_singleton_method(:transfer_codec) { codec }
+          @client.define_singleton_method(:prepared_transfer_codec) { |_descriptor| codec }
           before = @journal.ref_value
           %i[selector purpose ref digest identity entry open extra replay].each do |bad|
             corruption = bad
@@ -238,6 +241,7 @@ module Ace
           value = JSON.parse(JSON.generate(original.data))
           value.fetch("launch_mappings").fetch("mapping")["worker_cwd"] = "/different/current/worker"
           value.fetch("launch_mappings").fetch("mapping").fetch("task_context_entry").fetch("wrapper")["sha256"] = "9" * 64
+          value.fetch("projects").fetch("project").fetch("peer_credentials").fetch("13001")["scratch_root"] = File.join(@root, "different-current-scratch")
           current_ref = protected_artifact("current-descriptor.json", JSON.generate(value))
           current = with_artifact_protection { Authority::Deployment.load_artifact(current_ref) }
           history_ref = protected_artifact("history.json", JSON.generate("schema" => "ace.assign.deployment-history/v1",

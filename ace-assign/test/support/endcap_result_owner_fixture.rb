@@ -62,7 +62,7 @@ module Ace
             "native" => {"workspace_id" => "w1"}}
           @project = {"candidate_root" => root, "assignment_root" => File.join(root, "assignments"), "supervisor_uids" => [13004],
             "reviewer_uids" => [13003], "service_executor_uids" => [13005], "peer_credentials" => {}}
-          [@reviewer, @executor, @supervisor, @service].each do |identity|
+          [@worker, @reviewer, @executor, @supervisor, @service].each do |identity|
             @project["peer_credentials"][identity.fetch("uid").to_s] = identity.slice("gid", "groups").merge("scratch_root" => root)
           end
           map, project, service = @map, @project, @service

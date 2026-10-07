@@ -37,10 +37,10 @@ module Ace
           end
         end
 
-        def initialize(cache_base: nil, skill_source_resolver: nil, step_catalog: nil)
-          @assignment_manager = Molecules::AssignmentManager.new(cache_base: cache_base)
-          @queue_scanner = Molecules::QueueScanner.new
-          @step_writer = Molecules::StepWriter.new
+        def initialize(cache_base: nil, skill_source_resolver: nil, step_catalog: nil, selected_assignment: nil, queue_scanner: nil)
+          @assignment_manager = Molecules::AssignmentManager.new(cache_base: cache_base, selected_assignment: selected_assignment)
+          @queue_scanner = queue_scanner || Molecules::QueueScanner.new
+          @step_writer = Molecules::StepWriter.new(private_files: !selected_assignment.nil?)
           @skill_source_resolver = skill_source_resolver || Molecules::SkillAssignSourceResolver.new
           @step_catalog = nil
           @step_catalog_from_fixture = step_catalog

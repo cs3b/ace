@@ -28,6 +28,7 @@ module Ace
             @deployment_history.descriptor!(sha256: sha)
           end
           map = selected.mapping(params.fetch("mapping_id"))
+          original_project = selected.project(map.fetch("project_id"))
           unless identity.fetch("deployment_digest") == Digest::SHA256.hexdigest(JSON.generate(canonical(map))) &&
               identity.fetch("slot_id") == map.fetch("execution_scope").fetch("slot_id") && state.fetch("project_id") == map.fetch("project_id") &&
               selected.project(map.fetch("project_id")).values_at("journal_repository", "evidence_git_ref", "evidence_checkout_root") ==
@@ -63,6 +64,7 @@ module Ace
             raise AttemptErrors::EvidenceUnavailable, "original prepared definition differs"
           end
           immutable_maintenance_projection(registration: registration, registration_commit: registration_commit, state: state, map: map, events: chain,
+            original_worker_scratch_root: original_project.fetch("peer_credentials").fetch(map.fetch("worker_uid").to_s).fetch("scratch_root"),
             original_binding_digest: original.fetch("binding_digest"), commit: commit)
         rescue KeyError, TypeError, NoMethodError, JSON::ParserError
           raise AttemptErrors::EvidenceUnavailable, "original prepared registration is unavailable"

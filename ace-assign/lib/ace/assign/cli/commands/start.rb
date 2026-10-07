@@ -12,6 +12,8 @@ module Ace
           desc "Start next workable pending step"
 
           argument :step, required: false, desc: "Step number to start (active assignment only)"
+          option :mapping, desc: "Installed protected launch mapping ID"
+          option :attempt, desc: "Original protected attempt ID"
           option :assignment, desc: "Target specific assignment ID"
           option :quiet, aliases: ["-q"], type: :boolean, default: false, desc: "Suppress non-essential output"
           option :debug, aliases: ["-d"], type: :boolean, default: false, desc: "Show debug output"

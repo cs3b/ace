@@ -90,6 +90,26 @@ module Ace
           bytes.freeze
         end
 
+        # Mutable queue progress still uses the accepted YAML grammar/bounds.
+        # Return the same parsed bytes that the queue decision will consume.
+        def parse_queue_step!(bytes)
+          invalid!("queue step size") unless bytes.is_a?(String) && bytes.bytesize.between?(1, MAX_TEXT)
+          match = Atoms::StepFileParser::FRONTMATTER_REGEX.match(bytes)
+          invalid!("queue step frontmatter") unless match
+          frontmatter = yaml!(match[1])
+          invalid!("queue step frontmatter") unless frontmatter.is_a?(Hash)
+          {frontmatter: frontmatter, body: bytes[match.end(0)..].strip}
+        rescue Psych::Exception => error
+          invalid!(error.message)
+        end
+
+        def parse_queue_metadata!(bytes)
+          invalid!("queue metadata size") unless bytes.is_a?(String) && bytes.bytesize.between?(1, MAX_MANIFEST)
+          yaml!(bytes)
+        rescue Psych::Exception => error
+          invalid!(error.message)
+        end
+
         # StepFileParser owns body/frontmatter semantics; only these progress
         # fields differ from accepted work. Reports are separate mutable output.
         def self.work_projection(bytes)

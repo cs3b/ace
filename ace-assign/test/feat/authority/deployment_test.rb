@@ -593,7 +593,7 @@ module Ace
          "launch_mappings" => {"mapping" => {"task_context_entry" => {"manifest" => {"path" => "/fixture/assign-entry.json", "bytes" => 100, "sha256" => "1" * 64}, "wrapper" => {"path" => "/fixture/assign-entry.py", "bytes" => 200, "sha256" => "2" * 64}}, "project_id" => "project", "authority_id" => "authority",
            "launcher_uid" => 13002, "launcher_gid" => 13002, "launcher_groups" => [13002],
            "worker_uid" => 13001, "worker_gid" => 13001, "worker_groups" => [13001], "worker_actor" => "worker",
-           "worker_cwd" => "/home/worker", "worker_argv" => ["/usr/bin/true"], "worker_env" => {"PATH" => "/usr/bin:/bin"},
+           "worker_cwd" => "/home/worker", "worker_argv" => ["/usr/bin/true", "authority", "worker"], "worker_env" => {"PATH" => "/usr/bin:/bin"},
            "bootstrap" => "/usr/libexec/ace-worker-gate", "bootstrap_sha256" => "a" * 64,
            "execution_scope" => {"backend" => "linux_systemd_cgroup_v2", "slot_id" => "slot",
              "slice_unit" => "ace-slot.slice", "service_unit" => "ace-slot.service",
@@ -663,6 +663,18 @@ module Ace
         scope.merge!("slot_id" => "another", "slice_unit" => "ace-another.slice", "service_unit" => "ace-another.service",
           "root_directory" => "/var/lib/ace-another/root", "runtime_directory" => "/run/ace-another")
         assert_raises(ArgumentError) { Authority::Deployment.new(value) }
+      end
+
+      def test_worker_entry_is_exact_fixed_authority_adapter_without_argument_fallback
+        assert Authority::Deployment.new(data)
+        [["/usr/bin/true"], ["relative", "authority", "worker"],
+          ["/usr/bin/true", "authority", "task-context"],
+          ["/usr/bin/true", "authority", "worker", "extra"],
+          ["/usr/bin/../true", "authority", "worker"]].each do |argv|
+          value = data
+          value.fetch("launch_mappings").fetch("mapping")["worker_argv"] = argv
+          assert_raises(ArgumentError) { Authority::Deployment.new(value) }
+        end
       end
 
       def test_inbox_context_is_fixed_project_selection_without_native_repinnning

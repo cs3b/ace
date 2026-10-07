@@ -47,6 +47,7 @@ module Ace
             "project_id" => original_map.fetch("project_id"), "definition_digest" => registration.fetch("definition_digest"),
             "task_context_entry" => registration.fetch("task_context_entry"),
             "original_worker_identity" => selected.fetch(:state).fetch("process_binding").fetch("process_identity"),
+            "original_worker_scratch_root" => selected.fetch(:original_worker_scratch_root),
             "registration_generation" => registration.fetch("generation"), "registration_commit" => selected.fetch(:registration_commit),
             "original_binding_digest" => selected.fetch(:original_binding_digest), "ref" => registration.fetch("prepared_bundle_ref"), "bytes" => bytes.bytesize,
             "sha256" => registration.fetch("prepared_bundle_sha256"))

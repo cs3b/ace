@@ -414,8 +414,9 @@ module Ace
           end
           argv = mapping.fetch("worker_argv")
           env = mapping.fetch("worker_env")
-          unless argv.is_a?(Array) && !argv.empty? && argv.size <= 64 && argv.all? { |v| v.is_a?(String) && !v.include?("\0") } &&
-              argv.first.start_with?("/") && env.is_a?(Hash) && env.all? { |k, v| k.match?(/\A[A-Z_][A-Z0-9_]*\z/) && v.is_a?(String) && !v.include?("\0") } &&
+          unless argv.is_a?(Array) && argv.size == 3 && argv.all? { |v| v.is_a?(String) && !v.include?("\0") } &&
+              argv.drop(1) == %w[authority worker] && argv.first.start_with?("/") && File.expand_path(argv.first) == argv.first &&
+              env.is_a?(Hash) && env.all? { |k, v| k.match?(/\A[A-Z_][A-Z0-9_]*\z/) && v.is_a?(String) && !v.include?("\0") } &&
               env.keys.none? { |key| key.match?(/\A(?:LD_|DYLD_|RUBY|BUNDLE|PYTHON)/) }
             raise ArgumentError, "invalid fixed worker argv or environment"
           end

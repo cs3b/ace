@@ -12,6 +12,8 @@ module Ace
           desc "Show instructions for the active, next, or explicit step"
 
           argument :step, required: false, desc: "Exact step number to inspect"
+          option :mapping, desc: "Installed protected launch mapping ID"
+          option :attempt, desc: "Original protected attempt ID"
           option :assignment, desc: "Target specific assignment ID"
           option :quiet, aliases: ["-q"], type: :boolean, default: false, desc: "Suppress non-essential output"
           option :debug, aliases: ["-d"], type: :boolean, default: false, desc: "Show debug output"
@@ -24,7 +26,7 @@ module Ace
             return if options[:quiet]
 
             if inspected
-              puts inspected.instructions
+              puts(target.prepared_input ? target.prepared_input.render(inspected.instructions) : inspected.instructions)
             else
               puts no_work_message(view)
             end

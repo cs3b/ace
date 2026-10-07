@@ -13,7 +13,8 @@ module Ace
       # Uses ace-b36ts for assignment ID generation.
       class AssignmentManager
         # @param cache_base [String] Base cache directory
-        def initialize(cache_base: nil)
+        def initialize(cache_base: nil, selected_assignment: nil)
+          @selected_assignment = selected_assignment
           @cache_base = cache_base || Ace::Assign.cache_dir
         end
 
@@ -85,6 +86,7 @@ module Ace
         #
         # @return [Models::Assignment, nil] Most recent assignment or nil
         def find_active
+          return @selected_assignment if @selected_assignment
           return nil unless File.directory?(@cache_base)
 
           # Priority 1: use .current symlink if it exists (explicit selection)
@@ -185,6 +187,7 @@ module Ace
           )
 
           write_assignment_file(updated)
+          @selected_assignment = updated if @selected_assignment && @selected_assignment.id == updated.id
 
           # Update .latest symlink since this assignment was just updated
           update_latest_symlink(assignment.id)
@@ -259,7 +262,14 @@ module Ace
 
         def write_assignment_file(assignment)
           assignment_file = File.join(assignment.cache_dir, "assignment.yaml")
-          File.write(assignment_file, assignment.to_h.to_yaml)
+          if @selected_assignment
+            File.open(assignment_file, File::WRONLY | File::TRUNC | File::NOFOLLOW | File::NONBLOCK) do |file|
+              raise ArgumentError, "selected assignment metadata is not regular" unless file.stat.file?
+              file.write(assignment.to_h.to_yaml); file.flush; file.fsync
+            end
+          else
+            File.write(assignment_file, assignment.to_h.to_yaml)
+          end
         end
 
         def load_from_file(assignment_file)

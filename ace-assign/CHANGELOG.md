@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Activate authenticated prepared work only in the exact original worker, retain its private queue across scoped CLI progress, and refuse changed instructions, failed completion or missing published queues without reconstruction.
 - Retain the original task-context entry pin across registration replay and prepared fetch, and return a strictly validated original worker identity for fixed adapter activation.
 - Require explicit canonical cancellation before replacing a direct review assignment; revoked purposes cannot export candidates or authorize future approval use, while original replies remain historical evidence.
 
