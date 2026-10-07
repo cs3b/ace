@@ -1,0 +1,37 @@
+# Prepared input consumer feasibility — source-only review 2026-10-07
+
+This records read-only evidence against ACE branch codex/xza-3-context-admission at 9b7bc95b5. No native/provider/process probe, session or test ran. Both the gate→adapter envelope and universal provider-tool FD propagation are superseded by one original-association fetch.
+
+## Existing ACE boundaries
+
+- ace-assign/lib/ace/assign/molecules/fork_session_launcher.rb:87–110 passes provider/prompt/subprocess_env to QueryInterface; no readonly descriptor contract.
+- ace-llm/lib/ace/llm/query_interface.rb:34–41 and 236–267 accepts/merges subprocess_env and command_prefix; no descriptor mapping. ace-llm/lib/ace/llm/molecules/interactive_command_builder.rb:12–40 likewise returns provider invocation metadata.
+- ace-llm-providers-cli/lib/ace/llm/providers/cli/codex_client.rb:313–321 and pi_client.rb:278–286 call SafeCapture with env/command_prefix, no descriptor option. Interactive invocations at codex_client.rb:115–146 and pi_client.rb:96–117 return command/env/working_dir/prompt; adding FD3 only at the first adapter spawn would not reach this path.
+- SafeCapture at ace-llm-providers-cli/lib/ace/llm/providers/cli/molecules/safe_capture.rb:209–222 maps only its own readiness pipe in spawn opts. Linux ProcessSupervisor at process_supervisor.rb:17–21 spawns the provider with only ready_fd=>close. Neither source owner promises preservation of a custom work-input FD.
+- Herdr BoundedProcess at ace-herdr/lib/ace/herdr/molecules/bounded_process.rb:102–123 has explicit readonly descriptor_mapping with close_others:true. This existing facility proves only an ACE-controlled immediate child mapping, not downstream external-provider tools.
+
+## Available local provider source
+
+Installed Pi package: @earendil-works/pi-coding-agent 0.87.1 under /Users/mc/.local/share/mise/installs/node/24.18.0/lib/node_modules/@earendil-works/pi-coding-agent. dist/core/tools/bash.js:50–55 spawns a shell with stdio [stdin, stdout, stderr] only. dist/core/exec.js:10–16 does the same for extension exec; dist/core/extensions/loader.js:304–306 routes pi.exec there. Neither maps FD3 into the tool child. This source is local feasibility evidence, not an installed Lab version/acceptance assertion.
+
+Pi SDK exposes createBashTool({operations}) (dist/core/tools/bash.d.ts:23–39,58–60), custom user_bash operations (dist/core/extensions/types.d.ts:897–905) and registerTool. A source-owned extension could explicitly preserve FD3 in a custom Node spawn, but would need all Bash/user_bash/extension paths, fixed installation/activation and prevention of the default boundary being used. spawnHook only changes command/cwd/env (bash.d.ts:52–68); it cannot add a descriptor mapping. This alternative is not selected: it adds provider-specific work while the existing canonical read owner can serve the same immutable original inputs.
+
+Installed Codex resolves from /opt/homebrew/bin/codex to /opt/homebrew/Caskroom/codex/0.159.3/bin/codex. The local cask is binary-only; no matching local codex-rs tool-spawn source was found. No executable/version/session probe ran. This is absence of source proof, not a claim that Codex closes/preserves particular descriptors. Whole-source readiness cannot rely on undisclosed behavior here or silently label every intended provider unsupported.
+
+## Existing owner route and source changes required
+
+Root selected exact original-input retrieval through Endcap evidence_fetch. Current Endcap already authenticates mapped kernel peers, service visibility and original canonical attempt chains, uses a retained read commit and streams immutable canonical artifacts through Client/Server/TransferCodec. worker_or_launcher! (endcap.rb:201–211) checks mapped worker UID plus actual descendant of the exact original process_identity; result worker admission also checks original worker/native server liveness (endcap_results.rb:91–99). These are the reusable identity mechanisms, not environment authority.
+
+Current code does NOT yet support prepared input: endcap_results.rb:55 rejects unknown CanonicalEvidence kind; fetch_plan:303 onward restricts worker to result and selects result/review/service/inbox records. purpose_peer!:287–289 permits worker only for result. CanonicalEvidence.import_plan is a bounded 64KiB result/evidence importer, not the owner of the registered 64MiB prepared bundle. Client.validate_evidence_download! at client.rb:115–128 only accepts existing CanonicalEvidence descriptors, and Client.call currently forces evidence_fetch purpose :artifacts. Router.transfer_binding/Server currently selects purpose by operation alone. Thus simply passing kind=prepared_work would fail; these producer/consumer branches belong to qk0.3 source implementation together.
+
+The revised qk0.3 contract defines one source-fixed prepared_work/original_prepared_work/prepared_bundle purpose, null mutation, actual active released original-worker descendant admission, exact original registration refs and a closed descriptor/one-part download using existing :candidate limits. It keeps ordinary evidence imports/schemas/caps unchanged. The sole journal blob is the already registered prepared bundle: no new import, ledger, listener, or work grant. Returned metadata derives the final definition from the verified graph and is bound to original release/selection. Caller IDs are hints only and must match actual canonical/kernel association. Missing/corrupt/unavailable input refuses rather than reading current files or reconstructing a graph.
+
+The fixed adapter fetches before any queue/provider effect; tools repeat the same immutable read. A normal descendant ace-assign/ace-bundle invocation performs the exact read itself before cache/instruction resolution. This supports the intended Codex/Pi command architecture without a custom Bash tool or universal descriptor promise. It still requires the tool process to be a visible actual original-worker descendant with access to the installed authority. Controlled source verification injects peer/transport boundaries and deliberately drops descriptors; real Codex/Pi lineage/socket availability remains gad.2 installed acceptance. A fake successful fetch or metadata-only fixture is insufficient source delivery.
+
+## Readiness state
+
+The earlier scoped APPROVE covered dependency direction and gate→adapter entry/framing only. The all-descendant FD claim was disproved for local Pi source. The replacement existing-owner fetch design is a revised draft for independent root review; required source implementation is absent. No task is promoted, and no installed success is claimed.
+
+## Adapter admission immediately after release
+
+LaunchLifecycle#bind (629–645) persists scope_child_bound/process_start with original process_identity. #release (647–658) checks that exact live original chain and yields issued; dispatch (191–205) writes gate permission only after accepted journal.mutate. worker_gate.c:198–199 closes the private socket and execv replaces the original process. ProtectedLinux#descendant? (75–91) accepts peer PID equal to original ancestor only after matching birth/identity and rechecking observations. Thus original worker association exists before the fixed adapter first fetch; no FD attachment or new bootstrap grant is needed. This is read-only source feasibility, not runtime proof. The new prepared purpose/Client/Server/consumer composition still requires qk0.3 implementation and controlled ordering checks.
