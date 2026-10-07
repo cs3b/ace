@@ -1,0 +1,7 @@
+# Original stop reply after canonical release
+
+Test-only successor to `191f64ddb`. The actual async controlled public composition reaches original prompt submission, public stop/proof/stopped terminal, authenticated stopped status without release, and canonical original reservation release. After actual Driver status observes release, the caller explicitly repeats the first stop mutation with its original generation. The maintained public command returns the original uncertain reply byte-equivalent as parsed JSON; canonical ref and native drain count remain unchanged. Inventory still names the same authenticated release. No renewed settlement or implicit retry is supplied.
+
+The controlled async stdout router remains installed through both child and steering-thread completion; the existing outer ensure restores caller stdout. This avoids routing the late explicit replay output into the parent identity stream when the simulated original child has already exited. It changes only the excluded fork fixture, not production process behavior.
+
+Inspected named selection **1 test / 52 assertions PASS**, 44.21s, receipt `47c0e965-60b9-44e8-b147-6716eb1863a9`, seed11198,90s harness bound. Original readiness/driver budgets are unchanged. Actual local Git, wire/channel, canonical verification and real baseline/held reader remain; excluded kernel/fork/native/installed/provider seams remain injected. Independent verdict is required; alternate principal, worker consumption and independent delivery remain open.

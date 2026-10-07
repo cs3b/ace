@@ -118,7 +118,6 @@ class ProtectedWorkOnCompositionTest < AceOverseerTestCase
       if @asynchronous
         return nil if @child_thread.alive?
         @child_thread.value
-        $stdout = @previous_output
       end
       [pid, Struct.new(:exitstatus).new(code)]
     end
@@ -228,6 +227,10 @@ class ProtectedWorkOnCompositionTest < AceOverseerTestCase
     exercise_public_composition(steering: true, negative_replay: true)
   end
 
+  def test_public_original_stop_replay_after_release_does_not_refresh_settlement
+    exercise_public_composition(steering: true, terminal: true, stop_replay: true)
+  end
+
   def fixture_output(value, asynchronous:)
     if asynchronous
       Thread.current.thread_variable_set(:composed_stdout, value)
@@ -236,7 +239,7 @@ class ProtectedWorkOnCompositionTest < AceOverseerTestCase
     end
   end
 
-  def exercise_public_composition(steering: false, lose_prompt_reply: false, terminal: false, negative_replay: false)
+  def exercise_public_composition(steering: false, lose_prompt_reply: false, terminal: false, negative_replay: false, stop_replay: false)
     fixture(prepare_attempt: false) do
       assert_empty @journal.read_events("assignment")
       client_kernel = start_public_server(lose_prompt_reply: lose_prompt_reply)
@@ -367,7 +370,8 @@ class ProtectedWorkOnCompositionTest < AceOverseerTestCase
               row = status.collect(project: "project", agent: "mapping").fetch("agents").first.fetch("inventory").fetch("items").find { |item| item["attempt_id"] == target.fetch(:attempt) }
               stop = Ace::Overseer::CLI::Commands::Stop.new(steering: protected_steering)
               fixture_output(StringIO.new, asynchronous: terminal)
-              stop.call(**target.merge(mutation: "public-stop", expected_generation: row.fetch("generation")))
+              first_stop_target = target.merge(mutation: "public-stop", expected_generation: row.fetch("generation"))
+              stop.call(**first_stop_target)
               stopped = JSON.parse(terminal ? Thread.current.thread_variable_get(:composed_stdout).string : $stdout.string)
               assert_equal "uncertain", stopped.fetch("state")
               assert_nil status.collect(project: "project", agent: "mapping").fetch("agents").first.fetch("inventory").fetch("items").find { |item| item["attempt_id"] == target.fetch(:attempt) }.fetch("reservation_release_event_id")
@@ -405,6 +409,16 @@ class ProtectedWorkOnCompositionTest < AceOverseerTestCase
                 end
                 assert_equal unreleased.fetch("terminal_event_id"), release_status.fetch("terminal_event_id")
                 assert_equal ready.fetch("original_binding_digest"), release_status.fetch("original_binding_digest")
+                if stop_replay
+                  before = @journal.ref_value
+                  drains = native.drain_calls.length
+                  fixture_output(StringIO.new, asynchronous: true)
+                  stop.call(**first_stop_target)
+                  assert_equal stopped, JSON.parse(Thread.current.thread_variable_get(:composed_stdout).string)
+                  assert_equal before, @journal.ref_value
+                  assert_equal drains, native.drain_calls.length
+                  assert_equal release_status.fetch("reservation_release_event_id"), exact_row.call.fetch("reservation_release_event_id")
+                end
               end
             rescue StandardError => error
               raise Ace::Support::Cli::Error, "#{error.message}; status owner=#{@status_owner_errors.uniq.inspect}; controlled operations=#{calls.inspect}; native_count=#{(native.prompt_calls || []).length}"
