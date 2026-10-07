@@ -2,6 +2,7 @@
 
 require "open3"
 require "timeout"
+require "fcntl"
 
 module Ace
   module Herdr
@@ -33,15 +34,24 @@ module Ace
         # @raise [Timeout::Error] when the child outlives the deadline (killed)
         # @raise [SystemCallError] spawn failures only (child never launched)
         # @raise [PostLaunchError] SystemCallError while the child was live
-        def call(argv, stdin_data: "", timeout_s:, output_limit: 65_536, environment: nil, chdir: nil)
+        def call(argv, stdin_data: "", timeout_s:, output_limit: 65_536, environment: nil, chdir: nil, descriptor_mapping: {})
           if environment && (!environment.is_a?(Hash) || !environment.all? { |key, value| key.is_a?(String) && value.is_a?(String) })
             raise ArgumentError, "bounded process environment must be explicit strings"
           end
           if chdir && (!chdir.is_a?(String) || !chdir.start_with?("/"))
             raise ArgumentError, "bounded process working directory must be absolute"
           end
+          unless descriptor_mapping.is_a?(Hash) && descriptor_mapping.size <= 16 &&
+              descriptor_mapping.all? { |descriptor, handle|
+                descriptor.is_a?(Integer) && descriptor.between?(3, 63) &&
+                  handle.is_a?(File) && !handle.closed? && handle.stat.file? &&
+                  (handle.fcntl(Fcntl::F_GETFL) & Fcntl::O_ACCMODE) == Fcntl::O_RDONLY
+              }
+            raise ArgumentError, "bounded process descriptors must be explicit read-only regular files"
+          end
+          selected_descriptors = descriptor_mapping.dup.freeze
           command = environment ? [environment, *argv] : argv
-          options = {pgroup: true}
+          options = {pgroup: true, close_others: true}.merge(selected_descriptors)
           options[:chdir] = chdir if chdir
           options[:unsetenv_others] = true if environment
           Open3.popen3(*command, **options) do |stdin, stdout, stderr, waiter|
