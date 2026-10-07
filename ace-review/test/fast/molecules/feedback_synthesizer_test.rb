@@ -116,6 +116,11 @@ class FeedbackSynthesizerTest < AceReviewTest
     # Create mock LLM executor
     @mock_executor = MockLlmExecutor.new
     @synthesizer = Ace::Review::Molecules::FeedbackSynthesizer.new(llm_executor: @mock_executor)
+    # Prompt discovery is an external boundary; this selection exercises the
+    # maintained synthesis/validation path with controlled provider output.
+    @synthesizer.define_singleton_method(:load_system_prompt) do
+      Ace::Review::Molecules::FeedbackSynthesizer::FALLBACK_SYSTEM_PROMPT
+    end
   end
 
   def teardown
@@ -445,7 +450,7 @@ class FeedbackSynthesizerTest < AceReviewTest
     assert_empty result[:items]
   end
 
-  def test_synthesize_skips_findings_without_title
+  def test_synthesize_refuses_entire_inventory_when_a_finding_has_no_title
     report_path = create_report_file("report.md", sample_report_content)
 
     response = {
@@ -462,9 +467,27 @@ class FeedbackSynthesizerTest < AceReviewTest
       session_dir: @session_dir
     )
 
-    assert result[:success]
-    assert_equal 1, result[:items].length
-    assert_equal "Valid title", result[:items].first.title
+    refute result[:success]
+    assert_nil result[:items]
+    assert_includes result[:error], "malformed finding"
+    refute File.exist?(File.join(@session_dir, "feedback-synthesis.cleaned.json"))
+  end
+
+  def test_synthesize_refuses_missing_wrongly_typed_or_hidden_inventory
+    report_path = create_report_file("report.md", sample_report_content)
+    responses = ["null", "[]", "{}", '{"findings":null}', '{"findings":{}}',
+      '{"findings":[false]}', '{"findings":[{"title":true,"finding":"defect"}]}',
+      '{"findings":[{"title":"defect","finding":" "}]}',
+      '{"findings":[{"title":"lost","finding":"defect"}],"findings":[]}']
+    responses.each do |response|
+      @mock_executor.set_response(response)
+      before = @mock_executor.call_count
+      result = @synthesizer.synthesize(report_paths: [report_path], session_dir: @session_dir)
+      refute result[:success], response
+      assert_nil result[:items], response
+      assert_equal before + 1, @mock_executor.call_count, "Malformed inventory must not be repaired into clean review"
+      refute File.exist?(File.join(@session_dir, "feedback-synthesis.cleaned.json"))
+    end
   end
 
   # ============================================================================

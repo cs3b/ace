@@ -42,6 +42,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   # Runtime dependencies
+  spec.add_dependency "json", ">= 2.20", "< 3" # Explicit duplicate-key rejection
   spec.add_dependency "ace-support-fs", "~> 0.3"
   spec.add_dependency "ace-support-cli", "~> 0.6"
   spec.add_dependency "ace-support-config", "~> 0.18"

@@ -319,6 +319,7 @@ PATH
       ace-support-fs (~> 0.3)
       ace-support-nav (~> 0.28)
       ace-task (~> 0.37)
+      json (>= 2.20, < 3)
 
 PATH
   remote: ace-runtime

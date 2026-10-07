@@ -1,0 +1,5 @@
+# Feedback inventory prerequisite
+
+Actual maintained FeedbackSynthesizer now rejects absent/wrongly typed findings, malformed title/body members and duplicate JSON keys; it never filter-maps a finding out or emits cleaned success before every item constructs. Explicit empty inventory remains extraction only, not approval. JSON >=2.20,<3 is declared directly for duplicate-key refusal, matching existing project support. Ordinary supported formatting and syntax-repair behavior remains covered, but duplicate-key/invalid inventories are not handed to repair to choose a meaning.
+
+Inspected exact test target: provider executor injected, prompt discovery injected, actual parser/feedback construction/persistence exercised. First run `5f4a0988-ac1f-4387-86d1-c976aeaaaa14` exposed that JSON's optimized Hash subclass handling bypasses Ruby []=, so the attempted custom duplicate guard was removed in favor of the maintained JSON duplicate-key option. Final controlled target **33/134 PASS**,268.76ms, `9d12f48c-0908-4e62-9982-72311d2562b1`. No provider/native/installed execution. Whole qk0.1.0 remains open. Independent exact source review pending.

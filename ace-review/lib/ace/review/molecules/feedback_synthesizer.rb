@@ -302,16 +302,24 @@ module Ace
           return error_result(parse_result[:error]) unless parse_result[:success]
 
           data = parse_result[:data]
-          persist_cleaned_json(session_dir, data)
-          findings = data["findings"] || []
+          unless data.is_a?(Hash) && data["findings"].is_a?(Array)
+            return error_result("Feedback inventory requires an explicit findings array")
+          end
+          findings = data.fetch("findings")
+          unless findings.all? { |finding| finding.is_a?(Hash) && %w[title finding].all? { |key|
+            finding[key].is_a?(String) && !finding[key].strip.empty?
+          } }
+            return error_result("Feedback inventory contains a malformed finding; none may be omitted")
+          end
 
           # Pre-generate unique sequential IDs for all findings
           # This ensures uniqueness even when items are created in rapid succession
           ids = findings.empty? ? [] : Atoms::FeedbackIdGenerator.generate_sequence(findings.length)
 
-          items = findings.each_with_index.filter_map do |finding, idx|
+          items = findings.each_with_index.map do |finding, idx|
             create_feedback_item(finding, available_reviewers, id: ids[idx])
           end
+          persist_cleaned_json(session_dir, data)
 
           metadata = {
             total_findings: items.length,
@@ -364,11 +372,14 @@ module Ace
           candidates.each_with_index do |candidate, idx|
             return {
               success: true,
-              data: JSON.parse(candidate),
+              data: JSON.parse(candidate, allow_duplicate_key: false),
               cleaned: candidate,
               stage: idx.zero? ? stage : "#{stage}/sanitized"
             }
           rescue JSON::ParserError => e
+            # A duplicate changes the inventory's meaning; do not ask another
+            # model or sanitization pass to choose which finding survives.
+            raise ArgumentError, "Duplicate feedback inventory key" if e.message.include?("duplicate key")
             last_error = e
           end
 
@@ -450,12 +461,8 @@ module Ace
         # @param finding [Hash] Synthesized finding data
         # @param available_reviewers [Array<String>] List of available reviewers
         # @param id [String, nil] Pre-generated ID (optional, generates new if nil)
-        # @return [FeedbackItem, nil] Created item or nil if invalid
+        # @return [FeedbackItem] Created item; invalid inventory refuses the whole extraction
         def create_feedback_item(finding, available_reviewers, id: nil)
-          # Skip findings without required fields
-          return nil if finding["title"].nil? || finding["title"].to_s.strip.empty?
-          return nil if finding["finding"].nil? || finding["finding"].to_s.strip.empty?
-
           # Use provided ID or generate a new one
           id ||= Atoms::FeedbackIdGenerator.generate
 
@@ -479,9 +486,6 @@ module Ace
             finding: finding["finding"].to_s.strip,
             context: finding["context"]&.to_s&.strip
           )
-        rescue ArgumentError => e
-          warn "Warning: Failed to create FeedbackItem: #{e.message}" if Ace::Review.debug?
-          nil
         end
 
         # Extract reviewers from finding or use available reviewers
