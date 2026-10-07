@@ -178,6 +178,7 @@ module Ace
         def blob(path, commit: ref_value)
           validate_blob_path!(path)
           raise AttemptErrors::EvidenceUnavailable, "Canonical evidence ref is missing" unless commit
+          return @read_boundary.blob(path, commit: commit, max_bytes: CanonicalEvidence::MAX_ARTIFACT_BYTES) if @read_boundary
           out, _error, status = Open3.capture3("git", "show", "#{commit}:#{path}",
             chdir: repo_root, stdin_data: "")
           raise AttemptErrors::EvidenceUnavailable, "Canonical evidence blob is missing" unless status.success?
@@ -192,6 +193,7 @@ module Ace
               max_bytes.is_a?(Integer) && max_bytes.between?(1, 64 * 1024 * 1024)
             raise AttemptErrors::EvidenceUnavailable, "Canonical prepared blob selector differs"
           end
+          return @read_boundary.blob(path, commit: commit, max_bytes: max_bytes) if @read_boundary
           environment = ENV.keys.to_h { |key| [key, nil] }
           environment.merge!("GIT_CONFIG_NOSYSTEM" => "1", "GIT_CONFIG_GLOBAL" => "/dev/null",
             "GIT_TERMINAL_PROMPT" => "0", "GIT_NO_REPLACE_OBJECTS" => "1", "PATH" => "/usr/bin:/bin", "LC_ALL" => "C")

@@ -88,6 +88,7 @@ class ProtectedCleanupOwnerIdentityTest < Minitest::Test
       worker = Thread.new { @owner.observe!(socket: Object.new) }
       Timeout.timeout(2) { entered.pop }
       assert_raises(Unavailable) { @owner.observe!(socket: Object.new) }
+      assert_raises(Unavailable) { @owner.observe_self! }
       assert_equal 1, calls
       refute @handle.closed?
       release << true
@@ -97,6 +98,31 @@ class ProtectedCleanupOwnerIdentityTest < Minitest::Test
     ensure
       release << true if release && worker&.alive?
       worker&.join(2)
+    end
+  end
+
+  def test_self_observation_joins_only_fixed_current_pid_and_never_receiver_peer
+    fixture do
+      @identity["pid"] = Process.pid
+      @service["MainPID"] = Process.pid
+      @service["ExecStartEx"][0][7] = Process.pid
+      @kernel.define_singleton_method(:peer) { |_socket| raise "self observation must not inspect receiver peer" }
+      binding = @owner.observe_self!
+      assert_equal Process.pid, binding.fetch("process_binding").fetch("pid")
+      assert binding.frozen?
+      assert @handle.closed?
+    end
+    fixture do
+      assert_raises(Unavailable) { @owner.observe_self! }
+      assert @handle.closed?
+    end
+    fixture do
+      @identity["pid"] = Process.pid
+      @service["MainPID"] = Process.pid
+      @service["ExecStartEx"][0][7] = Process.pid
+      @manager.define_singleton_method(:unit_for_pidfd) { |**_| {"unit" => "cleanup.service", "invocation_id" => "b" * 32} }
+      assert_raises(Unavailable) { @owner.observe_self! }
+      assert @handle.closed?
     end
   end
 

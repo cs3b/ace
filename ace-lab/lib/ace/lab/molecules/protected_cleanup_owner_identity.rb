@@ -109,17 +109,37 @@ module Ace
         end
 
         def observe!(socket:, deadline: Runtime::ProtectedSocket.deadline(5))
+          with_verification do
+            observe_held!(deadline: deadline, peer_join: ->(identity) {
+              @kernel.peer(socket) == [identity.fetch("pid"), 0, 0]
+            })
+          end
+        end
+
+        # Only the immutable installed listener calls this entrypoint. Its
+        # positive receiver peer is not the root process being measured.
+        def observe_self!(deadline: Runtime::ProtectedSocket.deadline(5))
+          pid = Process.pid
+          with_verification do
+            observe_held!(deadline: deadline, peer_join: ->(identity) {
+              identity.fetch("pid") == pid
+            })
+          end
+        end
+
+        def with_verification
           unless @verification.try_lock
             raise Unavailable, "cleanup identity verification is busy"
           end
           begin
-            observe_held!(socket: socket, deadline: deadline)
+            yield
           ensure
             @verification.unlock
           end
         end
+        private :with_verification
 
-        def observe_held!(socket:, deadline:)
+        def observe_held!(deadline:, peer_join:)
           now = Process.clock_gettime(Process::CLOCK_MONOTONIC)
           unless deadline.is_a?(Numeric) && deadline.finite? && deadline > now
             raise Unavailable, "cleanup identity observation deadline expired"
@@ -135,7 +155,7 @@ module Ace
             end
             join = @manager.unit_for_pidfd(handle: handle, timeout: remaining(deadline))
             unless join == {"unit" => @unit, "invocation_id" => before.fetch("InvocationID")} &&
-                @kernel.peer(socket) == [identity.fetch("pid"), 0, 0] && !@kernel.exited?(handle) &&
+                peer_join.call(identity) && !@kernel.exited?(handle) &&
                 @kernel.capture(identity.fetch("pid")) == identity && snapshot(deadline) == before
               raise Unavailable, "cleanup peer differs from the original installed invocation"
             end

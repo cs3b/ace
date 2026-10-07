@@ -44,12 +44,16 @@ module Ace
         # @param ref [String, nil] Evidence ref (default from config)
         # @param checkout_root [String, nil] Isolated checkout root (default from config)
         def initialize(repo_root:, ref: nil, checkout_root: nil, mode: :local,
-          evidence_reader: nil, service_authorizer: nil)
+          evidence_reader: nil, service_authorizer: nil, read_boundary: nil)
           unless %i[local protected].include?(mode) &&
               (mode != :protected || [evidence_reader, service_authorizer].all? { |owner| owner.respond_to?(:call) })
             raise ArgumentError, "protected journal requires source-owned evidence and service boundaries"
           end
           @mode, @evidence_reader, @service_authorizer = mode, evidence_reader, service_authorizer
+          if read_boundary && !%i[call blob_batch blob].all? { |method| read_boundary.respond_to?(method) }
+            raise ArgumentError, "read-only journal boundary is malformed"
+          end
+          @read_boundary = read_boundary
           @repo_root = repo_root
           @ref = ref || default_config("evidence_git_ref") || "refs/ace/execution"
           root = checkout_root || default_config("evidence_checkout_root") || ".ace-local/assign/evidence-checkout"
@@ -658,6 +662,7 @@ module Ace
         # its previous read semantics rather than gaining a lifetime ceiling.
         def read_event_blobs!(entries)
           limit = entries.sum { |_oid, size| size + 128 }
+          return @read_boundary.blob_batch(entries.map(&:first), output_limit: limit) if @read_boundary
           result = Herdr::Molecules::BoundedProcess.call(["git", "cat-file", "--batch"],
             chdir: File.expand_path(@repo_root), stdin_data: entries.map { |oid, _size| "#{oid}\n" }.join,
             timeout_s: 30, output_limit: limit)
@@ -1001,6 +1006,7 @@ module Ace
         end
 
         def with_lock
+          raise AttemptErrors::EvidenceUnavailable, "read-only journal cannot mutate canonical evidence" if @read_boundary
           FileUtils.mkdir_p(@checkout_root)
           File.open(lock_path, File::RDWR | File::CREAT) do |lock|
             lock.flock(File::LOCK_EX)
@@ -1068,6 +1074,7 @@ module Ace
         end
 
         def git(*argv)
+          return @read_boundary.call(argv) if @read_boundary
           unless File.directory?(@repo_root)
             return ["", "repository root missing: #{@repo_root}", FAILED_RESULT]
           end
