@@ -64,9 +64,12 @@ module Ace
           socket&.close unless socket&.closed?
         end
 
-        def socket_identity(path)
+        def socket_identity(path, mode: nil)
           stat = File.lstat(path)
           raise RuntimeUnavailableError, "protected endpoint is not a socket" unless stat.socket? && !stat.symlink?
+          if !mode.nil? && (!mode.is_a?(Integer) || !mode.between?(0, 0o7777) || (stat.mode & 0o7777) != mode)
+            raise RuntimeUnavailableError, "protected endpoint mode differs"
+          end
           [stat.dev, stat.ino, stat.uid]
         rescue SystemCallError
           raise RuntimeUnavailableError, "protected endpoint is unavailable"

@@ -83,12 +83,12 @@ module Ace
         def digest(value) = Ace::Assign::Atoms::EvidenceDigest.digest(value)
 
         def connect(deadline)
-          @wire.root_path!(PATH)
-          before = @wire.socket_identity(PATH)
+          @wire.root_path!(File.dirname(PATH), directory: true)
+          before = @wire.socket_identity(PATH, mode: 0o660)
           raise SecurityError, "cleanup endpoint owner differs" unless before.last == 0
           @wire.connect(PATH, deadline: deadline) do |socket|
             observed = @observer.observe!(socket: socket, deadline: deadline)
-            raise SecurityError, "cleanup endpoint was replaced" unless @wire.socket_identity(PATH) == before
+            raise SecurityError, "cleanup endpoint was replaced" unless @wire.socket_identity(PATH, mode: 0o660) == before
             yield socket, observed
           end
         end

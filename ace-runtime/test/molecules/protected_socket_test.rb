@@ -61,4 +61,18 @@ class ProtectedSocketTest < AceRuntimeTestCase
     end
   end
 
+  def test_fixed_endpoint_mode_is_exact_and_typed_without_changing_identity_shape
+    Dir.mktmpdir("socket-mode") do |root|
+      path = File.join(root, "mode.sock")
+      listener = UNIXServer.new(path)
+      File.chmod(0o660, path)
+      assert_equal WIRE.socket_identity(path), WIRE.socket_identity(path, mode: 0o660)
+      [false, 0o660.to_f, -1, 0o666].each do |mode|
+        assert_raises(Ace::Runtime::RuntimeUnavailableError) { WIRE.socket_identity(path, mode: mode) }
+      end
+    ensure
+      listener&.close
+    end
+  end
+
 end
