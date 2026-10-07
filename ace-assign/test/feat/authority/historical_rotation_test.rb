@@ -225,7 +225,8 @@ module Ace
         call("accept_review", params.merge("purpose_id" => review.fetch("review_id")), id: "accept-review", peer: @reviewer, role: :reviewer, transfer: input)
         body = "exact service input"
         input_digest = Digest::SHA256.hexdigest(body)
-        @policy.define_singleton_method(:input_binding) do |bytes, expected_digest:, expected_target:|
+        @policy.define_singleton_method(:input_binding) do |bytes, expected_digest:, expected_target:, operation:|
+          raise "wrong original operation" unless operation == "publish"
           raise "wrong policy input" unless bytes == body && expected_digest == input_digest && expected_target == {"resource" => "fixture"}
         end
         @policy.define_singleton_method(:prepare!) do |binding, input_bytes:|
