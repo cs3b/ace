@@ -3,6 +3,7 @@ PATH
   specs:
     ace-assign (0.65.0)
       ace-b36ts (~> 0.14)
+      ace-bundle (~> 0.44)
       ace-git (~> 0.29)
       ace-herdr (~> 0.4)
       ace-llm (~> 0.39)
