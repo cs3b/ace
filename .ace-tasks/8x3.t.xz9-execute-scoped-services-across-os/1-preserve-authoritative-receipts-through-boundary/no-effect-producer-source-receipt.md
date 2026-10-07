@@ -26,3 +26,9 @@ Root independently APPROVED exact generic producer checkpoint `1e606dd1d`; whole
 - `bin/ace-test ace-assign feat test/feat/authority/service_settlement_test.rb:243 --timeout 180`: exact new real-Git matching retained record/accepted-generation float negatives, PASS 1/31, 28.34s, bab1b3aa-66fb-4018-8edd-6f0abca79b55. Each first proves the authentic Integer control; valid rebuilt chain/matching record then refuses at the exact selector/accepted-authority boundary, and never becomes ServiceSettlementPending.
 
 No whole suite/installed/native execution or whole-task completion claim. The original first-slice requirements and domain producer prerequisite remain in the normative task contract.
+
+## Independent review and main integration
+
+Root independently reviewed frozen producer `1e606dd1d` and approves this scoped source checkpoint. Accepted challenge provenance, atomic record/mutation binding, exact import barrier, strict inspection, immutable replay, and partial/orphan challenge refusal were checked against the actual code and executed tests above. The merge `fe48cd3f0` preserves both stopped-state and service challenge event types and both Client/Server EOF routes.
+
+Root integration execution at `fe48cd3f0`: `bin/ace-test ace-assign feat test/feat/authority/service_settlement_test.rb:278 --timeout 180` passed **1 test / 8 assertions**, zero failures/errors, 22.85s; receipt `93fe2482-a173-4e02-adf3-cb7d4b61ff72`. This executes the actual merged Client/Server challenge and completion-transfer path. It does not replace the separate pending full stopped/release composition or domain inspection acceptance. Task status remains in progress.

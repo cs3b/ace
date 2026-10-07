@@ -8,7 +8,7 @@ dependencies: [8wq.t.k86, 8wr.t.qjl, 8wr.t.qjx, 8wr.t.qjy, 8wq.t.1w5, 8wm.t.vs2,
 tags: [lab-readiness]
 bundle:
   presets: [project]
-  files: [ace-overseer/lib/ace/overseer/molecules/lab_client.rb, ace-overseer/lib/ace/overseer/cli/commands/work_on.rb, ace-overseer/lib/ace/overseer/organisms/status_collector.rb, ace-overseer/handbook/workflow-instructions/overseer.wf.md, ace-assign/handbook/workflow-instructions/assign/drive.wf.md, .ace-tasks/8wr.t.qk0-coordinate-responsive-overseer-roles-without/protected-inventory-contract.md]
+  files: [ace-overseer/lib/ace/overseer/molecules/lab_client.rb, ace-overseer/lib/ace/overseer/cli/commands/work_on.rb, ace-overseer/lib/ace/overseer/organisms/status_collector.rb, ace-overseer/handbook/workflow-instructions/overseer.wf.md, ace-assign/handbook/workflow-instructions/assign/drive.wf.md, .ace-tasks/8wr.t.qk0-coordinate-responsive-overseer-roles-without/protected-inventory-contract.md, .ace-tasks/8wr.t.qk0-coordinate-responsive-overseer-roles-without/coordinator-source-contract.md, .ace-tasks/8wr.t.qk0-coordinate-responsive-overseer-roles-without/coordinator-admission-draft.md]
   commands: []
 needs_review: true
 title: Coordinate responsive overseer roles without the legacy Lab engine
@@ -49,7 +49,19 @@ Owner: **ace-overseer**. Consumers/boundaries are named above. Code layout belon
 
 ### Vertical Slice Decomposition
 
-Single end-to-end capability slice; size: large. Prerequisites: `8wq.t.k86`, `8wr.t.qjl`, `8wr.t.qjx`, `8wr.t.qjy`, `8wq.t.1w5`, `8wm.t.vs2`, `8wr.t.qjz`, `8x3.t.xz9.2`. Canonical cross-repository program: lab-config:`8wl.t.gad`. External gates are explicit references, not unresolved local dependency IDs.
+The parent retains the complete original coordinator capability and acceptance criteria. Three real observable children separate independently deliverable outcomes without dropping protected cleanup:
+
+- `8wr.t.qk0.0`: canonical assignment/restart status from actual authority to overseer consumer; medium. Exact inventory lifecycle delta has scoped root approval, but child readiness/implementation is still separate.
+- `8wr.t.qk0.1`: actual original foreground launcher with responsive role steering, bounded proposal resolution and generic charters; large. Depends on discovery and existing protected steering owners.
+- `8wr.t.qk0.2`: preserved protected workspace physical cleanup through its actual authorized owner; large. Slice/devpts retirement and display/cache cleanup do not satisfy it. Draft pending exact source-owner/request/exclusion composition; no installed-only transfer or extra hidden task.
+
+All three children require their own complete readiness review. Parent remains draft/needs_review until all children are reviewed; delivery remains incomplete until all original outcomes pass executed tests and independent review. Existing prerequisites remain `8wq.t.k86`, `8wr.t.qjl`, `8wr.t.qjx`, `8wr.t.qjy`, `8wq.t.1w5`, `8wm.t.vs2`, `8wr.t.qjz`, `8x3.t.xz9.2`. Canonical cross-repository program: lab-config:`8wl.t.gad`. No backedge from a source producer to this coordinator.
+
+### Current source contract repair
+
+`coordinator-source-contract.md` ties protected agent ID exactly to existing mapping ID, installed slot capacity/partial visibility, current role precedence, metadata-only canonical restart projection, actual foreground CLI lifetime, canonical charters and the unchanged sixteen-hour HITL owner. It is a readiness candidate, not an implementation claim. Generic charter/config selection cannot give an ordinary overseer native socket or another UID. N1 startup/source packaging remains explicit xz9.2/domain work; integrated prompt/status/stop does not mark that child complete.
+
+The four lifecycle fields added to `protected-inventory-contract.md` have independent root scoped readiness APPROVE (2026-10-07), preserving the private original Driver birth and actual terminal/release verifier. This does not approve all role/cleanup behavior or promote the parent. The older readiness findings below remain historical evidence; their resolution is now allocated to real children rather than left solely in parent prose.
 
 ### Decisions and Defaults
 
