@@ -16,15 +16,15 @@ bundle:
 
 # Delegate exact candidate review through the original launcher
 
-## Review findings to resolve
+## Reviewed contract repairs
 
-Independent review in `readiness-review.md` requires three technical repairs before promotion:
+The repair candidate in commit55ac1ab1e received independent review recorded in `readiness-review.md`:
 
-- [ ] Pin the post-request assignment generation and define concurrent-generation refusal/recovery.
-- [ ] Define canonical pending-delegation supersession after proven reviewer death.
-- [ ] Enforce the same reservation and replacement rules on direct and delegated assign_review calls.
+- [x] Pin the accepted request generation; concurrent advances refuse without implicit refresh.
+- [x] Define explicit canonical cancellation before a fresh request; cancellation revokes authority and makes no claim of process death.
+- [x] Enforce the same canonical reservation on direct/delegated assignment and approval consumers.
 
-These require autonomous contract repair, not new Captain policy decisions. Keep draft/needs_review until the repaired contract passes independent review.
+Full readiness review now includes cancellation CLI modes, reserved mutation admission and the concrete test map below. Keep draft/needs_review until that review completes; these checkboxes record contract repair, not delivered source.
 
 ## Observable behavior
 
