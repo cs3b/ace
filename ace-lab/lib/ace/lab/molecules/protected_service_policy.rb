@@ -12,8 +12,9 @@ module Ace
       # Only composition supplies collaborators; no wire-selected policy,
       # executable, input path or caller identity is accepted here.
       class ProtectedServicePolicy
-        def initialize(proposal_resolver:, document_loader: nil)
+        def initialize(proposal_resolver:, document_loader: nil, cleanup_owner: nil)
           @proposal_resolver = proposal_resolver
+          @cleanup_owner = cleanup_owner
           @document_loader = document_loader || -> { GrantResolver.trusted_document(Ace::Lab.authorization_path) }
         end
 
@@ -44,6 +45,16 @@ module Ace
           authorized = authorize!(binding)
           canonical = snapshot(binding).merge("executor_uid" => authorized.fetch(:operation).fetch("executor_uid"), "transport" => "unix")
           deep_freeze(authorized.merge(binding: canonical, input: input.fetch(:input)))
+        end
+
+        # Selected by installed composition, independently of receiver fields.
+        # Ordinary services never acquire this domain-specific root capability.
+        def dispatch_owner_binding!(binding)
+          return nil unless binding.fetch("operation") == "prune-preserved-workspace"
+          unless @cleanup_owner
+            raise SecurityError, "fixed cleanup owner composition is unavailable"
+          end
+          @cleanup_owner.identity!
         end
 
         # Called again inside each claim/begin CAS retry using the immutable

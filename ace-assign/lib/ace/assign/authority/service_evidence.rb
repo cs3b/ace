@@ -51,6 +51,9 @@ module Ace
 
         def context(record, no_effect: false, pending: nil)
           binding = FIELDS.to_h { |key| [key, record.fetch(key)] }
+          if record.fetch("operation") == "prune-preserved-workspace" && record["dispatch_phase"] == "dispatch_started"
+            binding["operation_owner_binding"] = record.fetch("operation_owner_binding")
+          end
           unless %w[claim_binding policy_digest].all? { |key| binding[key].is_a?(String) && binding[key].match?(/\A[0-9a-f]{64}\z/) } &&
               %w[candidate_generation claim_generation].all? { |key| binding[key].is_a?(Integer) && binding[key].positive? } &&
               binding["dispatch_ticket_id"].is_a?(String) && binding["dispatch_ticket_id"].match?(Molecules::JournalMutation::ID)
