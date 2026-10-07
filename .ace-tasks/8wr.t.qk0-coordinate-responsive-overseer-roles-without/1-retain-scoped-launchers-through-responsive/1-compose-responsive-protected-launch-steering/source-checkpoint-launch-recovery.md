@@ -1,5 +1,7 @@
 # Original retained invocation recovery checkpoint
 
+Independent root source review APPROVE (2026-10-07), exact author a0a77aa439c98bc1554c7e6ce46d49239deeffa8, integrated as 51b03f7f9. Reviewed all ten paths, original reserve provenance, paired strict consumer schema, exact immutable tuple recovery and public quiet output with no launch dispatch. The controlled 10/80 evidence below supports this checkpoint. Complete actual public fresh-launch/recovery composition remains required before qk0.1.1 closure.
+
 Base de4f0fd8a4ee0551ebfe3105fd2f6277f06136f5; independent review pending. Child status changed only through bin/ace-task update to in-progress; dependencies and reviewed metadata retained.
 
 The existing authenticated assignment inventory now projects reservation_mutation_id and base_head from the exact original accepted reserve_attempt event; registration-only rows carry null. Ambiguous reserve provenance, invalid base or disagreement with retained original launch state refuses. ProtectedStatus strictly validates the extended closed row before consumption.
