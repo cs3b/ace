@@ -35,3 +35,15 @@ All commands used this isolated checkout's `bin/ace-test`. No native, installed,
 The full-file failure compared raw immutable mutation data to the public response, which additionally carries its acceptance `journal_commit`. Recovery itself succeeded with the actual query and no second Inbox effect. The final assertion-only repair compares immutable data separately, proves the accepted reply remains unchanged, and checks the public commit equals the actual retained acceptance commit. The final selected regression was `bin/ace-test ace-assign feat ace-assign/test/feat/endcap_inboxes_test.rb:538 --timeout 180`; the source runner resolves that line to the maintained test method. A preceding named `--filter` invocation selected zero files (b0e7ab4d-5f69-4292-a9a9-81f870b2e7f3) and supplies no test evidence.
 
 Full maintenance/orphan recovery and installed provisioning remain open. Current ordinary release/abort/reuse/resume entry ordering and historical original-key acceptance are covered by the retained source receipts above.
+
+## Main integration review — 2026-10-07
+
+Root reviewed frozen source `9201d354576df24183937b8b1de569d8ac2cfbc2` and approved this bounded source checkpoint. Combined revision `fa52798dbe3e0257c674faa873a917ee9ef56f9b` preserves main prompt steering, immutable later status, original-guard authentication and pending-prompt release checks. Independent integration reviewer wave_5h5 approved that exact revision, including the Server conflict resolution: context-owner exclusivity precedes ordinary roles, launch_control remains launcher-only, and all existing EOF query restrictions remain alongside context completion.
+
+Executed on the combined revision:
+
+- Assign context routing, launch-control channel and public launch: **19 tests / 135 assertions, PASS**, receipt `9ad52b93-ba0e-4e57-bc80-be9e953ada2b`.
+- Actual services composition: **3 / 13, PASS**, receipt `34bd75e2-6f22-43c3-8899-cce6b10b1f6e`.
+- Actual lost completion acknowledgement regression: **1 / 9, PASS**, receipt `cb75e701-6a5d-45ac-99fa-372e5f644d2d`. Accepted public journal commit is retained; replay does not repeat the Inbox effect.
+
+These controlled source results do not complete xza.3, maintenance admission, orphan recovery or installed gad.2 acceptance. No native or installed probe was run.
