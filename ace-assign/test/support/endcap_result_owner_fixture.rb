@@ -82,6 +82,7 @@ module Ace
           end
           @journal = Molecules::EvidenceJournal.new(repo_root: repo, checkout_root: File.join(root, "checkout"), mode: :protected,
             evidence_reader: ->(*) { raise "unused service reader" }, service_authorizer: ->(*) { raise "unused service policy" })
+          configure_result_owner_fixture if respond_to?(:configure_result_owner_fixture)
           restart
           bytes = JSON.generate("session_id" => "assignment", "name" => "result fixture", "created_at" => "2026-10-05T00:00:00Z",
             "source_config" => "job.yaml", "task_id" => "task", "project_id" => "project")
@@ -110,7 +111,7 @@ module Ace
       end
 
       def restart
-        @launch = Authority::LaunchLifecycle.new(deployment: @deployment, kernel: @kernel, journals: {"project" => @journal},
+        @launch = Authority::LaunchLifecycle.new(deployment: @deployment, deployment_history: @history, kernel: @kernel, journals: {"project" => @journal},
           scope_observer_factory: ->(_id) { ExecutionScopeNativeOwnerFixture.new(@map, @journal, @kernel, owner: @launch) })
         @endcap = Authority::Endcap.new(deployment: @deployment, launch: @launch, kernel: @kernel, service_policy: @policy)
         @router = Authority::Router.new(launch: @launch, handlers: [@endcap])
