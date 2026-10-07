@@ -105,8 +105,20 @@ class ProtectedServiceReceiverTest < Minitest::Test
           "test \"$(cat README)\" = 'exact candidate' || exit 9; printf '%s' '#{evidence}' > proof.txt; printf '%s' '#{response}'"]}
       document = {"operations" => {"publish" => configured}}
       operation = Ace::Lab::Molecules::ServicePolicy.new(document).operation!("publish", project: "fixture", service_id: "executor")
+      real_runner = Ace::Herdr::Molecules::BoundedProcess.method(:call)
+      controlled_runner = lambda do |argv, **options|
+        if argv == configured.fetch("argv")
+          # This fixture tests real candidate/evidence orchestration. Actual
+          # process-group cleanup is an installed boundary, not its subject.
+          assert_equal true, options.fetch(:cleanup_group)
+          options = options.merge(cleanup_group: false)
+        end
+        real_runner.call(argv, **options)
+      end
       result = Ace::Lab::Molecules::GrantResolver.stub(:trusted_document, document) do
-        receiver.execute(submission: submission, peer: peer, input_bytes: bytes, mutation_id: mutation)
+        Ace::Herdr::Molecules::BoundedProcess.stub(:call, controlled_runner) do
+          receiver.execute(submission: submission, peer: peer, input_bytes: bytes, mutation_id: mutation)
+        end
       end
       return [result, calls, Dir.glob(File.join(root, "**", "proof.txt")),
         Dir.glob(File.join(root, "candidate-*")), File.directory?(repo)]

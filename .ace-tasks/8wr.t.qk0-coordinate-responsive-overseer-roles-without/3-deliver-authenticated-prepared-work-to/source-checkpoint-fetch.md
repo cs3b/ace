@@ -89,3 +89,7 @@ receipt and targeted codec/client evidence above. No worker/queue/installed
 entry-pin or whole-task completion is implied. The unrelated upstream audit
 documents match integrated main exactly; final commits only preserve those
 bytes and record receipts/review.
+
+## Independent integration verdict
+
+Root APPROVE source at ade023e00 and final documentation correction65fa4547a, integrated as0b938c204. Reviewed original registration-at-reservation selection, original descriptor/map/journal and maintained lineage/peer checks, bounded canonical reads, fixed-kind transfer purpose and closed client validation before bytes. Authorized eight-case280319ba and exact codec/client selections support this scope; excluded broadfast remains excluded. Verified ace-assign source/test diff between final author head and joined integration is empty. Unrelated upstream audit documents retain exact main content. No whole qk0.3, original entry pin, worker/queue or installed acceptance is claimed.
