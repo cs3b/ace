@@ -35,6 +35,16 @@ module Ace
         HISTORY_LIMIT = 100_000
         EVENT_BATCH_BYTES = 1024 * 1024
 
+        # A wire operation may retain one immutable selection, never admission
+        # or current-ref truth. Nested operations own independent selections.
+        def self.with_event_read_operation
+          previous = Thread.current[:ace_assign_event_read_operation]
+          Thread.current[:ace_assign_event_read_operation] = {}
+          yield
+        ensure
+          Thread.current[:ace_assign_event_read_operation] = previous
+        end
+
         # Selected by source composition, never by receipt or wire parameters.
         def evidence_mode
           @mode
@@ -466,8 +476,23 @@ module Ace
         # @param assignment_id [String] Assignment ID
         # @return [Array<Hash>] Parsed events in journal order
         def read_events(assignment_id, commit: ref_value)
-          return [] if commit.nil?
-          read_event_snapshots!([assignment_id], commit: commit).first.fetch(assignment_id)
+          context = Thread.current[:ace_assign_event_read_operation]
+          if commit.nil?
+            context&.clear
+            return []
+          end
+          unless context && @mode == :protected && commit.is_a?(String) && commit.match?(/\A[0-9a-f]{40}\z/)
+            context&.clear
+            return read_event_snapshots!([assignment_id], commit: commit).first.fetch(assignment_id)
+          end
+          selection = [object_id, @repo_root, @ref, @checkout_root, @mode, @read_boundary&.object_id,
+            assignment_id, commit].map { |value| value.is_a?(String) ? value.dup.freeze : value }.freeze
+          return context.fetch(:events) if context[:selection] == selection
+          context.clear
+          events = read_event_snapshots!([assignment_id], commit: commit).first.fetch(assignment_id)
+          frozen = freeze_inventory_projection(events)
+          context[:selection], context[:events] = selection, frozen
+          frozen
         end
 
         # Bounded argv/blob batches from the same immutable tree. Preserve the

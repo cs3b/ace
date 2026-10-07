@@ -3,6 +3,7 @@ require "socket"
 require "fileutils"
 require_relative "deployment"
 require_relative "transfer_codec"
+require_relative "../molecules/evidence_journal"
 
 module Ace
   module Assign
@@ -170,37 +171,39 @@ module Ace
             raise AttemptErrors::UnauthorizedIdentity, "gate readiness requires worker peer" unless role == :worker
             @lifecycle.gate_ready(request: request, peer: peer, socket: socket, deadline: deadline)
           else
-            binding = @lifecycle.transfer_binding(request) if @lifecycle.respond_to?(:transfer_binding)
-            if binding
-              raise AttemptErrors::UnauthorizedIdentity, "transfer role differs" unless binding.fetch(:roles).include?(role)
-              raise ArgumentError, "transfer control header is oversized" if frame.fetch(:bytesize) > 16_384
-              @lifecycle.authorize_transfer!(request: request, peer: peer, role: role)
-              admitted_transfer = @mutex.synchronize do
-                if @transfers < 2
-                  @transfers += 1
-                  true
+            Molecules::EvidenceJournal.with_event_read_operation do
+              binding = @lifecycle.transfer_binding(request) if @lifecycle.respond_to?(:transfer_binding)
+              if binding
+                raise AttemptErrors::UnauthorizedIdentity, "transfer role differs" unless binding.fetch(:roles).include?(role)
+                raise ArgumentError, "transfer control header is oversized" if frame.fetch(:bytesize) > 16_384
+                @lifecycle.authorize_transfer!(request: request, peer: peer, role: role)
+                admitted_transfer = @mutex.synchronize do
+                  if @transfers < 2
+                    @transfers += 1
+                    true
+                  end
                 end
-              end
-              raise AttemptErrors::Conflict, "transfer capacity is busy" unless admitted_transfer
-              codec = transfer_codec
-              if binding.fetch(:direction) == :upload
-                result = codec.receive(socket, descriptor: params.fetch("transfer"), purpose: binding.fetch(:purpose), deadline: deadline) do |input|
-                  @lifecycle.dispatch(request: request, peer: peer, role: role, transfer: input)
+                raise AttemptErrors::Conflict, "transfer capacity is busy" unless admitted_transfer
+                codec = transfer_codec
+                if binding.fetch(:direction) == :upload
+                  result = codec.receive(socket, descriptor: params.fetch("transfer"), purpose: binding.fetch(:purpose), deadline: deadline) do |input|
+                    @lifecycle.dispatch(request: request, peer: peer, role: role, transfer: input)
+                  end
+                else
+                  result = @lifecycle.dispatch(request: request, peer: peer, role: role)
+                  parts = result.fetch(:transfer_parts)
+                  descriptor = codec.descriptor(parts, purpose: binding.fetch(:purpose))
+                  result = result.merge(data: result.fetch(:data).merge("transfer" => descriptor))
                 end
               else
+                raise ArgumentError, "unexpected transfer descriptor" if params.key?("transfer")
                 result = @lifecycle.dispatch(request: request, peer: peer, role: role)
-                parts = result.fetch(:transfer_parts)
-                descriptor = codec.descriptor(parts, purpose: binding.fetch(:purpose))
-                result = result.merge(data: result.fetch(:data).merge("transfer" => descriptor))
               end
-            else
-              raise ArgumentError, "unexpected transfer descriptor" if params.key?("transfer")
-              result = @lifecycle.dispatch(request: request, peer: peer, role: role)
-            end
-            wire.write(socket, {"status" => "ok", "data" => result.fetch(:data),
-              "transport" => {"replayed" => result.fetch(:replayed, false)}}, deadline: deadline, limit: 16_384)
-            if binding && binding.fetch(:direction) == :download
-              codec.send(socket, parts: parts, descriptor: descriptor, purpose: binding.fetch(:purpose), deadline: deadline)
+              wire.write(socket, {"status" => "ok", "data" => result.fetch(:data),
+                "transport" => {"replayed" => result.fetch(:replayed, false)}}, deadline: deadline, limit: 16_384)
+              if binding && binding.fetch(:direction) == :download
+                codec.send(socket, parts: parts, descriptor: descriptor, purpose: binding.fetch(:purpose), deadline: deadline)
+              end
             end
           end
         rescue ArgumentError, KeyError, AttemptErrors::MalformedTransfer

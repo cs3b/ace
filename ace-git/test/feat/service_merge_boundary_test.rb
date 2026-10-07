@@ -28,6 +28,20 @@ class ServiceMergeBoundaryTest < AceGitTestCase
   end
 
   def test_real_receiver_fixed_cli_neutral_merge_and_canonical_receipt_import
+    exercise_completion
+  end
+
+  def test_completion_interruption_before_cas_publishes_no_partial_result_or_import
+    @interrupt_before_cas = true
+    exercise_completion
+  end
+
+  def test_measure_original_request_service_admission_only
+    @measure_request_admission = true
+    exercise_completion
+  end
+
+  def exercise_completion
     fixture do
       issue_original
       submission, = prepared_submission
@@ -67,9 +81,18 @@ class ServiceMergeBoundaryTest < AceGitTestCase
         Ace::Git::Organisms::PullRequestLifecycle.new(**selection, runner: runner) })
       effects = 0
       original_process = Ace::Herdr::Molecules::BoundedProcess.method(:call)
+      read_metrics = Hash.new { |hash, key| hash[key] = {"calls" => 0, "seconds" => 0.0} }
+      @read_metrics = read_metrics
       process = lambda do |argv, **options|
         unless argv == @document.fetch("operations").fetch("merge").fetch("argv")
-          next original_process.call(argv, **options)
+          started_at = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+          begin
+            next original_process.call(argv, **options)
+          ensure
+            metric = read_metrics[argv.first == "git" ? "git" : "other"]
+            metric["calls"] += 1
+            metric["seconds"] += Process.clock_gettime(Process::CLOCK_MONOTONIC) - started_at
+          end
         end
         assert_equal @document.fetch("operations").fetch("merge").fetch("argv"), argv
         effects += 1
@@ -85,9 +108,42 @@ class ServiceMergeBoundaryTest < AceGitTestCase
       phases = []
       completion_call = nil
       lost_reply_reached = false
+      cas_fault_reached = false
+      before_completion = nil
+      journal = @journal
+      interrupt_before_cas = @interrupt_before_cas
+      measure_request = @measure_request_admission
+      if measure_request
+        [[journal, %i[service_request canonical_event_inventory! read_events event_commits!]],
+          [@endcap.instance_variable_get(:@launch), %i[with_assignment definition]]].each do |owner, methods|
+          methods.each do |method|
+            original = owner.method(method)
+            owner.define_singleton_method(method) do |*args, **keywords, &block|
+              started_at = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+              begin
+                original.call(*args, **keywords, &block)
+              ensure
+                metric = read_metrics[method.to_s]
+                metric["calls"] += 1
+                metric["seconds"] += Process.clock_gettime(Process::CLOCK_MONOTONIC) - started_at
+                selections = metric["commit_selections"] ||= Hash.new(0)
+                selected = keywords[:commit]
+                selections[selected.is_a?(String) && selected.match?(/\A[0-9a-f]{40}\z/) ? selected : "implicit-current"] += 1
+              end
+            end
+          end
+        end
+      end
       traced = Object.new
       traced.define_singleton_method(:call) do |name, params, **options|
         phases << name
+        raise Timeout::Error, "measurement stops before export or provider" if measure_request && name != "request_service"
+        if name == "complete_service" && interrupt_before_cas
+          completion_call = [params, options]
+          before_completion = journal.ref_value
+          fault = ->(*) { cas_fault_reached = true; raise Ace::Assign::AttemptErrors::EvidenceUnavailable, "controlled interruption before publication" }
+          return journal.stub(:update_ref_cas, fault) { client.call(name, params, **options) }
+        end
         response = client.call(name, params, **options)
         if name == "complete_service"
           completion_call = [params, options]
@@ -106,7 +162,31 @@ class ServiceMergeBoundaryTest < AceGitTestCase
             submission: submission, peer: @worker, input_bytes: bytes, mutation_id: "merge-original")
         end
       end
-      assert lost_reply_reached, "fault must follow the actual complete_service reply: #{[result, phases].inspect}"
+      if measure_request
+        directory = File.expand_path("../../../.ace-local/task/8wr.t.qkb.1", __dir__)
+        FileUtils.mkdir_p(directory)
+        path = File.join(directory, "request-admission-measurement.json")
+        File.write(path, JSON.pretty_generate({"method" => "test_measure_original_request_service_admission_only",
+          "phases" => phases, "processes" => read_metrics, "provider_effects" => effects}))
+        assert_equal 0, effects
+        assert_equal "request_service", phases.first
+        assert_operator read_metrics.fetch("git").fetch("calls"), :>, 0
+        next
+      end
+      if interrupt_before_cas
+        assert cas_fault_reached, "CAS fault must be reached: #{[result, phases].inspect}"
+        assert_equal before_completion, @journal.ref_value
+        assert_equal "uncertain", @journal.service_request("service-request").fetch("state")
+        events = @journal.read_events("assignment")
+        assert_equal 0, events.count { |event| event["type"] == "delivery" }
+        assert_equal 0, events.count { |event| event["type"] == "service_transition" && event.dig("payload", "state") == "succeeded" }
+        assert_equal 0, events.count { |event| event["type"] == "evidence_import" && event.dig("payload", "kind") == "service" }
+        completion = client.call("complete_service", completion_call.fetch(0), **completion_call.fetch(1))
+        refute completion.replayed
+        assert_equal "succeeded", completion.data.fetch("state")
+      else
+        assert lost_reply_reached, "fault must follow the actual complete_service reply: #{[result, phases].inspect}"
+      end
       assert_equal "uncertain", result.fetch("state"), [result, phases].inspect
       assert_equal 1, effects
       assert_equal 1, calls.count { |args| args[1] == "POST" }
@@ -124,6 +204,7 @@ class ServiceMergeBoundaryTest < AceGitTestCase
       assert_equal before_replay, @journal.ref_value, "identical completion replay cannot append another import or result"
       assert_equal 1, effects
       assert_equal 1, @journal.read_events("assignment").count { |event| event["type"] == "delivery" }
+      next if interrupt_before_cas # Lost-reply case owns the full public worker composition.
       @kernel.peer_identity = @worker
       worker_kernel = Ace::Assign::EndcapResultOwnerFixture::Kernel.new
       original_worker = @worker
