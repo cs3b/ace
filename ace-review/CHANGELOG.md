@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- ReviewManager can execute a bounded prepared candidate through the maintained provider and feedback pipeline, requiring an explicit bound verdict and complete execution evidence before returning approval.
+
 ### Fixed
 
 - Reject missing, duplicate-key or malformed feedback inventories instead of silently dropping findings and reporting a clean extraction.

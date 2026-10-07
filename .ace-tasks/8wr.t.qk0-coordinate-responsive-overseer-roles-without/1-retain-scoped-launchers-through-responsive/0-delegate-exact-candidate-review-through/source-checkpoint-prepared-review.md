@@ -1,0 +1,9 @@
+# Maintained prepared ReviewManager entry
+
+Behavioral source precision independently reviewed by wave_412 before source integration; fixed original-candidate snapshot/explicit verdict/completed provider/extraction ownership approved. Existing engine/feedback owners are extended, not replaced by another review runner or approval cache.
+
+Actual controlled pipeline tests use maintained ReviewManager, actual metadata/report parsing, FeedbackManager and FeedbackSynthesizer with only provider execution and model-limit lookup injected. Initial12/41PASS `5969bc51-1363-427d-9cf5-90a2445436bd`; original prompt identity strengthened to retain pre-execution hashes and compare held final files. Combined prepared/synthesis **46/178 PASS**,449.29ms, `bdd79760-bb7f-4e2d-970c-845a3eb163c7`. Final prepared plus explicit ordinary single-model regression **14/49 PASS**,154.58ms, `55dca46c-d3db-4c41-8997-755cbe1b826d`.
+
+Covered: explicit bound approval, unavailable observation, absence of explicit verdict, wronghead, partial provider despite successflag, response/report mismatch, report or prompt modification, malformed extraction, reportfinding lost by extraction, oversized report, permanent session reuse refusal, typedbinding/budget refusal beforeprovider; ordinary no-feedback single-model entry retains execution behavior. No native/provider/installed probe.
+
+Pending: independent exact implementation review; actual canonical export/materialization subject producer, protected Overseer CLI/orchestration, attributed receipt import and complete Endcap feature composition. No task success criterion checked or whole-task closure.

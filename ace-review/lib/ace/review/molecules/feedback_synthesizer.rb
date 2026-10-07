@@ -122,8 +122,9 @@ module Ace
 
         attr_reader :llm_executor
 
-        def initialize(llm_executor: nil)
+        def initialize(llm_executor: nil, system_prompt: nil)
           @llm_executor = llm_executor || LlmExecutor.new
+          @system_prompt = system_prompt
         end
 
         # Synthesize feedback items from review reports
@@ -250,7 +251,7 @@ module Ace
         #
         # @return [String] System prompt content
         def load_system_prompt
-          self.class.system_prompt("synthesize-feedback.system.md")
+          @system_prompt || self.class.system_prompt("synthesize-feedback.system.md")
         end
 
         # Fallback synthesis prompt (used when prompt file not found)
