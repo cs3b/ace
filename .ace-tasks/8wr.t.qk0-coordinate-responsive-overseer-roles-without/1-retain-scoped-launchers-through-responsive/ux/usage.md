@@ -29,3 +29,9 @@ After a lost prompt reply, use `ace-overseer prompt --status --project ace --age
 Wake the project-overseer while HITL resolution is stalled; then redirect the accepted task scope.
 
 Expected: deferred resolver within five seconds, usable status/conversation, existing acknowledged-delivery sixteen-hour policy, revised/superseded attributable proposal and safe stop request. Uncertain old work still occupies its slot; no replacement launch or fabricated approval.
+
+## Independent exact candidate review (child proposal)
+
+`ace-overseer review --project ace --agent builder --assignment A --attempt T --head HEAD --candidate-generation 1 --mutation review-001 --expected-generation 12 --accept-mutation review-accept-001`
+
+An already provisioned reviewer-role instance runs this proposed form. Actual original Driver delegates unchanged Endcap assign_review; the reviewer exports that exact candidate, runs maintained ReviewManager and imports actual receipt via accept_review. No --work forwarding, PR-as-approval or caller-selected reviewer credentials. See child qk0.1.0 ux/usage.md for lost-reply/status boundaries. The child is draft and this is not a delivered command.
