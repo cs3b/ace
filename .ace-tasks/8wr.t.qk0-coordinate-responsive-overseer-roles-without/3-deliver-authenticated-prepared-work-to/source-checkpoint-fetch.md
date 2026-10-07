@@ -80,3 +80,12 @@ framing and Client consumers are real. It does not establish installed/native,
 protected-process, provider, mount, systemd or Linux effectiveness. The excluded
 run is retained separately rather than hidden behind that controlled-fixture
 qualification. Worker activation/queue consumption remains unimplemented.
+
+## Independent source review
+
+Root independently reviewed the prepared fetch source at `ade023e00` and returned
+**APPROVE**, scoped to registration/fetch, using the authorized final 8 / 103
+receipt and targeted codec/client evidence above. No worker/queue/installed
+entry-pin or whole-task completion is implied. The unrelated upstream audit
+documents match integrated main exactly; final commits only preserve those
+bytes and record receipts/review.
