@@ -237,10 +237,11 @@ module Ace
       end
 
       def settle_inbox
+        terminal_id = @binding.fetch("terminal_id")
         executor = Object.new
         executor.define_singleton_method(:pane_get_bounded) do |*|
           Ace::Herdr::Molecules::ExecutionResult.new(stdout: JSON.generate("result" => {"pane" => {
-            "pane_id" => "p1", "workspace_id" => "w1", "terminal_id" => "terminal", "agent" => "codex", "agent_status" => "busy",
+            "pane_id" => "p1", "workspace_id" => "w1", "terminal_id" => terminal_id, "agent" => "codex", "agent_status" => "busy",
             "agent_session" => {"agent" => "codex", "kind" => "id", "value" => "0123abcd-0000-4000-8000-000000000001"}}}), stderr: "", success: true, exit_code: 0)
         end
         native = Object.new
@@ -266,6 +267,7 @@ module Ace
         params = {"event_id" => "event", "inbox_context_id" => "inbox", "expected_registration" => registration, "expected_generation" => generation,
           "receipt_sha256" => Digest::SHA256.hexdigest(bytes), "signature_sha256" => Digest::SHA256.hexdigest(signature),
           "transfer" => Authority::TransferCodec.new(root: @root).descriptor(parts, purpose: :inbox_proof)}
+        yield if block_given?
         assert_equal "completed", call("reconcile_inbox", params, id: "consume", peer: @supervisor, role: :supervisor, transfer: Parts.new(parts)).dig(:data, "state")
       end
 
@@ -289,6 +291,138 @@ module Ace
         release = @launch.release_scope_reservation!(params: params.merge("mutation_id" => "release", "expected_generation" => generation), peer: @launcher, role: :launcher)
         terminal = current_events.find { |event| event["type"] == "receipt_accepted" }
         assert_equal terminal.fetch("digest"), release.dig(:data, "terminal_event_id")
+      end
+
+      def with_original_control
+        server_socket, driver_socket = UNIXSocket.pair
+        wire = Ace::Runtime::Molecules::ProtectedSocket
+        codec = Authority::TransferCodec.new(root: @root)
+        selection = {"mapping_id" => "mapping", "assignment_id" => "assignment", "attempt_id" => @attempt}
+        server = Thread.new do
+          @launch.serve_launch_control!(request: {"mutation_id" => nil, "params" => selection}, peer: @launcher,
+            socket: server_socket, codec: codec, deadline: wire.deadline(5))
+        rescue Ace::Runtime::RuntimeUnavailableError, AttemptErrors::EvidenceUnavailable, IOError
+          nil
+        end
+        ready = wire.read(driver_socket, deadline: wire.deadline(5))
+        assert_equal "launch_control_ready", ready.fetch("type")
+        origin = current_events.find { |event| event["type"] == "authority_mutation" &&
+          event.dig("payload", "operation") == "record_launch" }.dig("payload", "data", "guarded_origin")
+        yield driver_socket, codec, ready, origin
+      ensure
+        driver_socket&.close
+        server_socket&.close
+        server&.join
+      end
+
+      def read_original_control_frame(socket, deadline:)
+        wire = Ace::Runtime::Molecules::ProtectedSocket
+        loop do
+          frame = wire.read(socket, deadline: deadline)
+          return frame unless frame["type"] == "launch_control_idle"
+          wire.write(socket, {"version" => 1, "type" => "launch_control_idle_ack", "nonce" => frame.fetch("nonce")}, deadline: deadline)
+        end
+      end
+
+      def test_unknown_context_preserves_original_containment_and_recovery_prerequisites
+        with_installed_boundaries do
+          selection = {"mapping_id" => "mapping", "assignment_id" => "assignment", "attempt_id" => @attempt}
+          wire = Ace::Runtime::Molecules::ProtectedSocket
+          body = +"controlled original input"
+          state = @launch.send(:origin, current_events, mapping_id: "mapping", assignment_id: "assignment", attempt_id: @attempt)
+          gate_server, gate_worker = UNIXSocket.pair
+          begin
+            gate = Thread.new do
+              @launch.gate_ready(request: {"params" => {"mapping_id" => "mapping", "launch_ticket" => state.fetch("launch_ticket")}},
+                peer: @worker, socket: gate_server, deadline: wire.deadline(10))
+            end
+            assert_equal "ready", wire.read(gate_worker, deadline: wire.deadline(10)).dig("data", "phase")
+            call("release_launch", {"launch_ticket" => state.fetch("launch_ticket"), "process_binding" => @binding,
+              "expected_generation" => generation}, id: "issued-for-recovery", peer: @launcher, role: :launcher)
+            assert_equal "release", wire.read(gate_worker, deadline: wire.deadline(10)).fetch("operation")
+            gate.value
+          ensure
+            gate_server.close; gate_worker.close
+            gate&.join
+          end
+          with_original_control do |socket, codec, ready, original|
+            reporter = Thread.new do
+              frame = read_original_control_frame(socket, deadline: wire.deadline(30))
+              codec.receive_launch_prompt(socket, descriptor: frame.fetch("text_descriptor"), transfer_id: frame.fetch("transfer_id"),
+                deadline: wire.deadline(10)) { |input| assert_equal body, input.bytes }
+              wire.write(socket, frame.slice("mutation_id", "intent_event_id", "original_binding_digest").merge(
+                "version" => 1, "type" => "prompt_dispatch_outcome", "guarded_evidence" => {"outcome" => "uncertain", "origin" => original}),
+                deadline: wire.deadline(10))
+              wire.read(socket, deadline: wire.deadline(10))
+            end
+            prompt = @launch.prompt_attempt!(request: {"mutation_id" => "prior-prompt", "params" => selection.merge(
+              "expected_generation" => generation, "transfer" => codec.descriptor([body], purpose: :prompt_text))},
+              peer: @launcher, role: :launcher, transfer: Struct.new(:bytes).new(body))
+            assert_equal "uncertain", prompt.dig(:data, "outcome")
+            reporter.value
+          end
+          lost_completion = false
+          error = assert_raises(AttemptErrors::EvidenceUnavailable) do
+            settle_inbox do
+              read = @context_query_wire.method(:read)
+              @context_query_wire.define_singleton_method(:read) do |*args, **options|
+                read.call(*args, **options)
+                lost_completion = true
+                raise Ace::Herdr::ValidationError, "fixture lost original canonical completion ACK"
+              end
+            end
+          end
+          causes = []; cause = error
+          while cause && causes.size < 6
+            causes << "#{cause.class}: #{cause.message}"
+            cause = cause.cause
+          end
+          assert lost_completion, causes.join("; ")
+          assert_equal 1, @context_owner.status(peer: @authority_peer).fetch("active_operations")
+          before = current_events
+          failure = assert_raises(AttemptErrors::InboxContextPending) do
+            @launch.prompt_attempt!(request: {"mutation_id" => "blocked-prompt", "params" => selection.merge(
+              "expected_generation" => generation, "transfer" => Authority::TransferCodec.new(root: @root).descriptor([body], purpose: :prompt_text))},
+              peer: @launcher, role: :launcher, transfer: Struct.new(:bytes).new(body))
+          end
+          assert_match(/pending context effect/, failure.message)
+          assert_equal before, current_events
+          with_original_control do |socket, _codec, ready, original|
+            drainer = Thread.new do
+              frame = read_original_control_frame(socket, deadline: wire.deadline(30))
+              selected = @launch.launch_input_inhibit_selection!(request: {"mutation_id" => nil, "params" => selection.merge(
+                frame.slice("original_binding_digest", "seal_event_id", "journal_commit"))}, peer: @launcher, role: :launcher)
+              assert_equal frame.fetch("seal_event_id"), selected.dig(:data, "seal_event_id")
+              wire.write(socket, frame.slice("original_binding_digest", "seal_event_id").merge("version" => 1,
+                "type" => "launch_input_inhibit_outcome", "guarded_evidence" => {"outcome" => "inhibited", "origin" => original,
+                  "input_state" => "inhibited", "pending_input" => 0}), deadline: wire.deadline(30))
+              recorded = wire.read(socket, deadline: wire.deadline(30))
+              assert_equal "launch_input_inhibit_recorded", recorded.fetch("type")
+            end
+            intent = @journal.prompt_intent("prior-prompt")
+            completion = @launch.launch_prompt_completion!(request: {"mutation_id" => nil, "params" => selection.merge(
+              "mutation_id" => "prior-prompt", "intent_event_id" => intent.fetch("digest"),
+              "original_binding_digest" => ready.fetch("original_binding_digest"), "guarded_evidence" => {
+                "outcome" => "not_issued", "origin" => original, "phase" => "not_issued", "code" => "agent_blocked"})},
+              peer: @launcher, role: :launcher)
+            assert_equal "not_issued", completion.dig(:data, "outcome")
+            assert_equal "uncertain", @journal.mutation_result("prior-prompt").dig("data", "outcome")
+            @launch.close_execution_scope!(params: selection.merge("mutation_id" => "unknown-seal", "expected_generation" => generation),
+              peer: @launcher, role: :launcher)
+            drainer.value
+            assert current_events.any? { |event| event["type"] == "input_inhibited" }
+          end
+          closed = @launch.close_execution_scope!(params: selection.merge("mutation_id" => "unknown-proof", "expected_generation" => generation),
+            peer: @launcher, role: :launcher)
+          assert_equal "closed_no_writers", closed.dig(:data, "state")
+          assert_equal "closed_no_writers", @launch.observe_execution_scope!(params: selection, peer: @launcher, role: :launcher).fetch("state")
+          failure = assert_raises(AttemptErrors::InboxContextPending) do
+            @launch.release_scope_reservation!(params: selection.merge("mutation_id" => "unknown-release", "expected_generation" => generation),
+              peer: @launcher, role: :launcher)
+          end
+          assert_match(/pending context effect/, failure.message)
+          assert_equal 1, @context_owner.status(peer: @authority_peer).fetch("active_operations")
+        end
       end
 
       def test_actual_terminal_service_inbox_original_history_retirement_and_rotated_normal_reuse

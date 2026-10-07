@@ -90,7 +90,7 @@ module Ace
           map = steering_principal!(params, peer, :launcher)
           journal = journal_for(map)
           channel = ready = nil
-          with_exclusion(params, map, journal) do
+          with_containment_exclusion(params, map, journal) do
             @mutex.synchronize do
               commit = journal.ref_value
               events = journal.read_events(params.fetch("assignment_id"), commit: commit).select { |event| event["attempt_id"] == params.fetch("attempt_id") }
@@ -230,7 +230,7 @@ module Ace
 
         def finish_prompt_outcome!(params, map, intent, evidence, peer: nil, completion_ack: false)
           journal = journal_for(map)
-          with_exclusion(params, map, journal) do
+          with_containment_exclusion(params, map, journal) do
             @mutex.synchronize do
               authentication = lambda do |events, _commit, _generation|
                 state = origin(events, **params.slice("assignment_id", "attempt_id", "mapping_id").transform_keys(&:to_sym))
