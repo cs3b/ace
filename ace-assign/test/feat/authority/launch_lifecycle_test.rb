@@ -3,6 +3,7 @@ require_relative "../../test_helper"
 require "ace/assign/authority/launch_lifecycle"
 require "ace/assign/authority/launch_driver"
 require_relative "../../support/execution_scope_observation_fixtures"
+require_relative "../../support/execution_scope_native_owner_fixture"
 
 module Ace
   module Assign
@@ -27,43 +28,10 @@ module Ace
         def same?(left, right); left == right; end
       end
 
-      # Controlled fixed native-owner stages; no installed/native readiness is
-      # established by this 09j lifecycle fixture.
-      class ScopeObserver
-        def initialize(map, journal, kernel)
-          @map, @journal, @kernel = map, journal, kernel
-        end
-        def retire_released_parent!(_lineages); true; end
-        def activate_parent!(context)
-          context.merge("slot_id" => "slot", "deployment_digest" => Digest::SHA256.hexdigest(JSON.generate(canonical(@map))),
-            "boot_id" => ExecutionScopeObservationFixtures::BOOT, "slice_invocation_id" => "b" * 32,
-            "resource_mount_namespace_identity" => {"device" => 4, "inode" => 11}, "resource_identities" => [],
-            "network_namespace_identity" => {"device" => 7, "inode" => 88}, "boot_baseline_selection" => ExecutionScopeObservationFixtures::BOOT_BASELINE_SELECTION, "network_installation_selection" => ExecutionScopeObservationFixtures::NETWORK_SELECTION,
-            "cgroup_identity" => {"path" => "/sys/fs/cgroup/ace-slot.slice", "mount_id" => 4, "filesystem_type" => "cgroup2", "device" => 5, "inode" => 6})
-        end
-        def observe(_lineage); {"populated" => 0}; end
-        def native_admission_ready!(lineage)
-          @lineage = lineage
-          ExecutionScopeObservationFixtures::NETWORK_OUTPUT
-        end
-        def start_admitted_service!
-          events = @journal.read_events("assignment").select { |event| event["attempt_id"] == @lineage.binding.fetch("attempt_id") }
-          admission = events.find { |event| event.dig("payload", "operation") == "scope_service_admission" }
-          payload = {"scope_generation" => 2, "scope_binding_event_id" => @lineage.binding_event.fetch("digest"),
-            "service_invocation_id" => "c" * 32, "server_identity" => @kernel.capture(90), "socket_identity" => [1, 2, 13001], "workspace_id" => "w1",
-            "mount_namespace_identity" => {"device" => 4, "inode" => 22}, "resource_observer_identity" => @kernel.capture(92), "resource_identities" => [],
-            "network_namespace_identity" => {"device" => 7, "inode" => 88}, "network_admission_event_id" => admission.fetch("digest")}
-          @journal.mutate(assignment_id: "assignment", attempt_id: @lineage.binding.fetch("attempt_id"),
-            mutation_id: "native-#{@lineage.binding.fetch('attempt_id')}", operation: "scope_native_binding", parameters_digest: "a" * 64,
-            expected_generation: @journal.authority_generation(events)) { {events: [{type: "scope_native_bound", payload: payload}], blobs: {}, data: {}} }
-        end
-        def canonical(value)
-          case value
-          when Hash then value.keys.sort.to_h { |key| [key, canonical(value[key])] }
-          when Array then value.map { |item| canonical(item) }
-          else value
-          end
-        end
+      # Actual private readiness callback producer with controlled kernel,
+      # manager and filesystem observations; no installed/native probes.
+      def self.class_temp_dir
+        @class_temp_dir ||= Dir.mktmpdir("ace-launch-owner-", Etc.getpwuid(Process.uid).dir)
       end
 
       def with_authority
@@ -87,7 +55,7 @@ module Ace
           deployment.define_singleton_method(:authority) { |_id| {"state_root" => File.join(cache, "authority-state")} }
           deployment.define_singleton_method(:project) { |_id| {"assignment_root" => File.join(cache, "assignments")} }
           @journal = Molecules::EvidenceJournal.new(repo_root: repo, checkout_root: File.join(cache, "checkout"))
-          @authority = Authority::LaunchLifecycle.new(deployment: deployment, kernel: @kernel, journals: {"project" => @journal}, scope_observer_factory: ->(_id) { ScopeObserver.new(@map, @journal, @kernel) })
+          @authority = Authority::LaunchLifecycle.new(deployment: deployment, kernel: @kernel, journals: {"project" => @journal}, scope_observer_factory: ->(_id) { ExecutionScopeNativeOwnerFixture.new(@map, @journal, @kernel, owner: @authority) })
           bytes = JSON.generate("session_id" => "assignment", "name" => "test", "created_at" => "2026-10-05T00:00:00Z",
             "source_config" => "job.yaml", "task_id" => "09j", "project_id" => "project")
           registered = call("register_assignment", {"definition_bytes" => bytes,
@@ -490,6 +458,72 @@ module Ace
       def registered_bytes
         registration = @journal.mutation_result("register").fetch("data")
         @journal.blob(registration.fetch("definition_ref"))
+      end
+
+      class OriginalGuardedNative < Ace::Herdr::Molecules::ProtectedNativeControl
+        def request(method, params = {})
+          case method
+          when "ping" then {"version" => "0.9.3", "protocol" => 22, "capabilities" => {"endpoint_protocol_generation" => 1}}
+          when "workspace.get" then {"workspace" => {"workspace_id" => "w1"}}
+          when "layout.apply" then {"layout" => {"workspace_id" => "w1", "tab_id" => "w1:t2", "root" => {
+            "type" => "pane", "pane_id" => "w1:p2", "command" => params.fetch("root").fetch("command"), "cwd" => @mapping.fetch("worker_cwd")}}}
+          when "pane.get" then {"pane" => {"workspace_id" => "w1", "tab_id" => "w1:t2", "pane_id" => "w1:p2", "terminal_id" => "term_ab"}}
+          when "pane.process_info" then {"process_info" => {"pane_id" => "w1:p2", "shell_pid" => 91,
+            "guarded_prompt" => true, "guarded_input_drain" => true, "guarded_prompt_origin" => {
+              "terminal_id" => "term_ab", "runtime_incarnation" => ExecutionScopeObservationFixtures::BOOT, "child" => @kernel.capture(91)}}}
+          else raise "Unexpected source native request"
+          end
+        end
+      end
+
+      def test_actual_launch_driver_remains_valid_and_explicit_native_guard_capture_preserves_scope_binding
+        with_authority do
+          fixed = @map.merge("native" => @map.fetch("native").merge("server_identity" => @kernel.capture(90), "socket_identity" => [1, 2, 13001]))
+          native = OriginalGuardedNative.new(mapping: fixed, kernel: @kernel)
+          client = ClientAdapter.new(@authority, @peer)
+          original_call = client.method(:call)
+          ready = Queue.new
+          errors = []
+          client.define_singleton_method(:call) do |operation, params, **options|
+            response = original_call.call(operation, params, **options)
+            ready << response.data if operation == "record_launch"
+            response
+          rescue StandardError => error
+            errors << [operation, error.class.name, error.message]
+            raise
+          end
+          server, worker = UNIXSocket.pair
+          gate = Thread.new do
+            state = ready.pop
+            @authority.gate_ready(request: {"params" => {"mapping_id" => "mapping", "launch_ticket" => state.fetch("launch_ticket")}},
+              peer: @kernel.capture(91), socket: server, deadline: WIRE.deadline(30))
+          end
+          deployment = Object.new
+          map = @map
+          deployment.define_singleton_method(:mapping) { |_id| map }
+          deployment.define_singleton_method(:verify!) { |*_args, **_kwargs| map }
+          launch = Authority::LaunchDriver.new(mapping_id: "mapping", deployment: deployment, kernel: @kernel, client: client, native: native)
+          state = launch.launch(assignment_id: "assignment", definition_bytes: registered_bytes,
+            scope: "010", base_head: "a" * 40, mutation_id: "actual-guard-owner")
+          assert_equal "issued", state.fetch("phase"), errors.inspect + " " + state.inspect
+          original = state.fetch("process_binding")
+          refute original.key?("guarded_origin")
+          guarded = native.guarded_binding!(original)
+          guard = guarded.fetch("guarded_origin")
+          assert_equal @kernel.capture(91), guard.fetch("child")
+          assert_equal "term_ab", guard.fetch("terminal_id")
+          assert_equal original, @journal.mutation_result("actual-guard-owner-record").dig("data", "process_binding")
+          assert_equal original, @journal.read_events("assignment").find { |event| event["type"] == "scope_child_bound" }.dig("payload", "original_process_binding")
+          assert_equal original, guarded.reject { |key, _| key == "guarded_origin" }
+          assert_equal "ready", WIRE.read(worker, deadline: WIRE.deadline(5)).dig("data", "phase")
+          assert_equal "release", WIRE.read(worker, deadline: WIRE.deadline(5)).fetch("operation")
+          gate.join(2)
+          refute gate.alive?
+        ensure
+          server&.close
+          worker&.close
+          gate&.kill if gate&.alive?
+        end
       end
 
       def test_driver_never_repeats_creation_after_lost_response_and_reservation_replay

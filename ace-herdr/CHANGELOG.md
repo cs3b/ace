@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Add explicit original native guard capture, closed guarded prompt decoding and exact-actor input inhibition decoding without changing existing launch binding bytes.
+
 ## [0.4.0] - 2026-10-05
 
 ### Fixed

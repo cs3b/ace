@@ -3,6 +3,7 @@
 require "digest"
 require "tempfile"
 require "timeout"
+require "ace/runtime/molecules/protected_socket"
 require_relative "private_directory"
 
 module Ace
@@ -12,7 +13,7 @@ module Ace
       # Server selects purpose from a source handler's fixed operation table,
       # admits a transfer slot before calling, and holds no journal lock here.
       class TransferCodec
-        LIMITS = {scope_boundary_observation: [65_536, 1, 65_536], candidate: [64 * 1024 * 1024, 1, 64 * 1024 * 1024],
+        LIMITS = {prompt_text: [16_384, 1, 16_384], scope_boundary_observation: [65_536, 1, 65_536], candidate: [64 * 1024 * 1024, 1, 64 * 1024 * 1024],
                   artifacts: [256 * 1024, 16, 64 * 1024],
                   receipt_artifacts: [272 * 1024, 17, 64 * 1024],
                   service_input: [64 * 1024, 1, 64 * 1024],
@@ -48,8 +49,41 @@ module Ace
         end
 
         # Upload write-EOF is required before invoking the mutation consumer.
-        # Persistent launch gate connections never use this codec.
+        # Persistent launch prompt streams use their fixed framed entry point below.
         def receive(socket, descriptor:, purpose:, deadline:)
+          receive_parts(socket, descriptor: descriptor, purpose: purpose, deadline: deadline, eof: true) { |input| yield input }
+        end
+
+        # Fixed authenticated launch_control stream only. A declared exact
+        # prompt body is followed by the next bounded control frame; unlike
+        # public uploads, this private duplex connection remains writable.
+        def receive_launch_prompt(socket, descriptor:, transfer_id:, deadline:)
+          deadline = [deadline, Process.clock_gettime(Process::CLOCK_MONOTONIC) + 30].min
+          marker = launch_prompt_marker(transfer_id)
+          receive_parts(socket, descriptor: descriptor, purpose: :prompt_text, deadline: deadline, eof: false) do |input|
+            boundary = Ace::Runtime::Molecules::ProtectedSocket.read(socket, deadline: deadline, limit: 16_384, with_size: true)
+            unless boundary.fetch(:data) == marker && boundary.fetch(:bytesize) == (JSON.generate(marker) + "\n").bytesize
+              reject!("Private prompt boundary differs")
+            end
+            yield input
+          end
+        end
+
+        def send_launch_prompt(socket, bytes:, descriptor:, transfer_id:, deadline:)
+          marker = launch_prompt_marker(transfer_id)
+          send(socket, parts: [bytes], descriptor: descriptor, purpose: :prompt_text, deadline: deadline)
+          Ace::Runtime::Molecules::ProtectedSocket.write(socket, marker, deadline: deadline, limit: 16_384)
+        end
+
+        def launch_prompt_marker(transfer_id)
+          unless transfer_id.is_a?(String) && transfer_id.match?(/\A[0-9a-f]{32}\z/)
+            raise ArgumentError, "invalid private prompt transfer identity"
+          end
+          {"type" => "launch_prompt_end", "transfer_id" => transfer_id}
+        end
+        private :launch_prompt_marker
+
+        def receive_parts(socket, descriptor:, purpose:, deadline:, eof:)
           validate!(descriptor, purpose)
           descriptor = descriptor.merge("parts" => descriptor.fetch("parts").map { |part| part.dup.freeze }.freeze).freeze
           deadline = [deadline, Process.clock_gettime(Process::CLOCK_MONOTONIC) + 30].min
@@ -71,12 +105,13 @@ module Ace
               reject!("Transferred part digest differs") unless part_digest.hexdigest == part["sha256"]
             end
             reject!("Transferred aggregate digest differs") unless digest.hexdigest == descriptor["sha256"]
-            reject!("Transferred bytes exceed declared size") unless read(socket, 1, deadline).nil?
+            reject!("Transferred bytes exceed declared size") if eof && !read(socket, 1, deadline).nil?
             file.flush
             file.rewind
             yield Input.new(file, descriptor)
           end
         end
+        private :receive_parts
 
         def descriptor(parts, purpose:)
           reject!("Invalid transfer parts") unless parts.is_a?(Array) && parts.all? { |part| part.is_a?(String) }
@@ -114,7 +149,7 @@ module Ace
                 part["bytes"].is_a?(Integer) && part["bytes"].between?(0, each) &&
                 part["sha256"].is_a?(String) && part["sha256"].match?(SHA256) } &&
               descriptor["bytes"] == descriptor["parts"].sum { |part| part["bytes"] } &&
-              (!%i[candidate service_input].include?(purpose) || descriptor["bytes"].positive?)
+              (!%i[candidate service_input prompt_text].include?(purpose) || descriptor["bytes"].positive?)
             reject!("Invalid or oversized transfer descriptor")
           end
           if purpose == :inbox_proof &&
