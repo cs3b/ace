@@ -74,6 +74,13 @@ Work through the plan checklist, step by step:
 - If a test fails: fix it before moving to the next step
 - If a test failure is undiagnosable after one attempt: stop and report
 
+**Diagnostic reruns and contract corrections:**
+- Before rerunning a failure, state the hypothesis and the observation that will distinguish it. Verify the runner's actual selected tests/count, effective configuration path and seed from its report or a narrow configuration probe; command arguments alone are not proof that options reached the child.
+- Resolve configuration against the runner's actual working directory. If it changes directories, use a verified absolute path. A reproduction with a different seed or zero selected tests does not satisfy the intended check.
+- Add bounded diagnostics at the failing boundary before repeating an opaque failure. Preserve earlier failures and distinguish product fixes, fixture corrections and diagnostic-only changes; do not rerun merely to obtain green output or silently increase deadlines.
+- Poll an owned live test handle to its terminal result. Quiet output is not a reason to start a duplicate run. After a meaningful fix or new hypothesis, rerun only the affected checks, then broaden when integration risk requires it.
+- When a contract changes, revise its current authoritative spec and consumer obligations together. Keep superseded decisions in history rather than leaving competing current addenda. A partial source commit cannot close an unverified acceptance criterion.
+
 **Task lifecycle:**
 - `draft` status: warn the user that the spec hasn't been reviewed, then continue only with explicit confirmation. In unattended/fork contexts where interactive confirmation is not possible, proceed after marking in-progress -- the assignment creation layer is responsible for blocking draft tasks before they reach this point.
 - Mark in-progress before first change, done after last verification

@@ -42,6 +42,22 @@ is recorded, inspect it with
 (or `--default-server`, otherwise remote resolution). Inside ACE use source
 `bin/ace-*` commands. Load the relevant implementation and test instructions.
 
+## Coordinating parallel delivery
+
+The coordinating agent owns the review and integration queue as well as dispatch.
+Before opening another scope, review completed candidates and integrate those
+whose executed checks and independent verdict permit it. If a candidate cannot
+integrate, record its exact blocker and owner in the existing task checklist;
+continue independent work only when it advances the same delivery objective.
+Do not become a review bottleneck by repeatedly starting unrelated work while
+finished candidates wait for your decision.
+
+After integration, verify the actual main and requested remote refs and update
+the current checklist. Distinguish committed in a worktree, accepted by review,
+integrated locally, pushed and released. A partial merge is useful incremental
+work, not task completion. Keep the remaining producer/consumer join explicit
+and test it on the combined candidate before declaring that result delivered.
+
 ## Standalone delivery
 
 Implement and commit the requested local task/inline scope using existing task

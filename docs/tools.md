@@ -32,6 +32,25 @@ only when relevant. Add a rule to `AGENTS.md` only after an agent repeatedly get
 - For visual or interactive UI changes, audit overflow, clipped text, overlaps, stale element references, and interaction targets.
 - Keep agent-facing CLI output concise, deterministic, and explicit about empty states, counts, truncation, and next steps.
 
+### Delivery convergence in long-running work
+
+Before dispatching a wave, name the next observable acceptance result and the
+real producer-to-consumer path that proves it. Exercise that path early using
+maintained owners; inject only explicitly excluded external boundaries. Passing
+isolated pieces does not establish that their composition works.
+
+Use the existing task checklist as the single current delivery map. Each wave
+report states which acceptance criterion was closed, the evidence, what is on
+main, and the next blocking dependency. Commits, reports and review rounds alone
+are not completed outcomes. Keep source, publication and installed acceptance
+separate without moving unfinished source behavior into the installed test.
+
+When a new dependency or contract defect expands the critical path, update the
+current spec and reassess sequencing before opening more work. Preserve the old
+record in history; remove contradictory current instructions. Explain the impact
+on delivery rather than silently accumulating another partial milestone. This
+checkpoint changes sequencing, not the user's required end state or quality gates.
+
 ### Command types
 
 | Type | Environment | Prefix | Example |

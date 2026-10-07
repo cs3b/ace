@@ -23,6 +23,26 @@ This ACE integration tracker owns source sequencing and release evidence. **lab-
 
 Captain approved this ownership split on 2026-10-05. Earlier chronological checkpoints and their original claims are preserved in history/before-centralized-lab-acceptance-2026-10-05.md. The source and acceptance receipts linked there remain unchanged; the checklist below is the current dispatch view. No installation success is inferred from task completion.
 
+## Current handoff — paused at Captain request, 2026-10-07
+
+Implementation remains paused. This inventory is a source-state snapshot, not
+permission to resume or a replacement for the remaining program checklist.
+ACE main/origin/fg were verified at `36199d599` before the process-only correction.
+
+| Scope / owner | Current location and evidence | Remaining action before acceptance |
+|---|---|---|
+| qk0.1.1 original launcher and roles / ace-overseer | On main: original-input/readiness repairs through `02353637f`; three canonical role workflows `36199d599`, independent review and packaging 2 tests / 20 assertions. | Public composition and domain charter adoption remain open. |
+| qk0.1.1 public work-on / ace-overseer | Worktree commit `35ab4a44d`; controlled checks 40 tests / 210 assertions; not on main. | Independent review, integration and actual maintained producer → authority → original-child composition; remaining steering and legacy removal. |
+| qk0.2 listener / ace-lab | Author `793738c97` + `faaccba00`; copied to integration branch as `5449d0327` + `bdaebf005`, not main. Exact seed 41237 passed 6 tests / 99 assertions. Earlier intermittent failures remain unresolved in its receipt. | Final integration verdict and main synchronization; this does not complete physical cleanup. |
+| qk0.2 inspection recovery / ace-assign + ace-lab | Uncommitted source in cleanup worktree; findings retained in `b80201115`. Canonical imported pair verified, public recovery status exceeded its 5-second default. | Review proposed consumer budget against existing contract, complete diagnostics and source acceptance. No 30-second change is approved or implemented. |
+| Staged unit validation / ace-runtime | Four-path uncommitted change in worker-independent-review worktree; focused checks 1/7 and 1/3. | Independent review and integration; preserve mandatory installed socket verification. |
+| qk0.3 + gad.b composer / lab-config | Committed bootstrap `fa7ed56`; composer remains uncommitted. Metadata test passes; existing unrelated WIP is preserved. | Materialized unit validation, first-slot publication, maintained original-entry → Installer test and partial-publication/retry checks; same Installer physical cleanup producer. |
+
+- [ ] On explicit resume, resolve the existing review/integration queue before new implementation scope.
+- [ ] Close the actual source producer/consumer path; partial receipts above do not close parent tasks.
+- [ ] Continue qkb.1 → R2 → R3 → qkc/vs3 source deliverables, then prepare one coherent release candidate.
+- [ ] Captain publishes with OTP; actual installation/system acceptance remains solely lab-config:gad.2.
+
 ## Delivered source and foundation
 
 - [x] 1w2/tp0 — hermetic source testing foundation and tracked repairs.
@@ -55,9 +75,9 @@ The five newly separated source closures (y24/vs2/1w5/09j/qkb.0) use the retaine
 - [ ] qk0 — complete responsive orchestration, cleanup and role/charter composition. The family remains draft; reviewed child scopes below have their own actual delivery states.
 - [x] qk0.0 — canonical assignment discovery after coordinator restart; source task is done.
 - [x] qk0.1.0 — exact candidate review through the original launcher; source task is done.
-- [ ] qk0.1.1 — compose public launch/recovery/steering and roles. Bounded proposal wakes and durable exact launch inputs passed independent source review and are integrated through `7520b82de`; public composition and original child ownership remain open.
-- [ ] qk0.2 — complete preserved-workspace cleanup. Original receiver-bound root admission and lost-response recovery are reviewed and integrated through `5894019a4`; fixed listener, physical inspection/preservation and the same Installer producer remain open.
-- [ ] qk0.3 — complete prepared managed work delivery. Actual preparation/export, registration/fetch, scoped queue and managed worker join are reviewed and integrated. Runtime callback-return repair is integrated at `fb6ed962d`; actual emitted domain entry → Runtime → Bundle → Assign composed verification passes (receipt `2629e89f-1771-4139-b647-0299478d755b`). The production descriptor/runtime-artifact composer is still missing: the fixture currently wires returned entry refs into its mapping. That source join and full acceptance remain open; they are not deferred to gad.2.
+- [ ] qk0.1.1 — compose public launch/recovery/steering and roles. Bounded proposal wakes, retained inputs and original child/readiness are integrated through `02353637f`; canonical role assets through `36199d599`. Public composition is frozen at `35ab4a44d` pending review/integration; full child acceptance remains open.
+- [ ] qk0.2 — complete preserved-workspace cleanup. Original receiver-bound root admission and lost-response recovery are reviewed and integrated through `5894019a4`; the fixed listener is tested on the integration branch but not on main. Inspection recovery, physical preservation and the same Installer producer remain open; see the current handoff above.
+- [ ] qk0.3 — complete prepared managed work delivery. Actual preparation/export, registration/fetch, scoped queue and managed worker join are reviewed and integrated. Runtime callback-return repair is integrated at `fb6ed962d`; actual emitted domain entry → Runtime → Bundle → Assign composed verification passes (receipt `2629e89f-1771-4139-b647-0299478d755b`). The production descriptor/runtime-artifact composer is now WIP in lab-config, with metadata checks only; the full maintained entry/Installer join and acceptance remain open; they are not deferred to gad.2.
 - [ ] qkb.1 / qkb — complete qk0/xz9-dependent workflow/role adoption; accepted neutral vocabulary is retained.
 - [ ] ig3 / R2 — one effective policy and loop owner after qkb.
 - [ ] ig4 / R3 — bounded review and escalation after R2.
