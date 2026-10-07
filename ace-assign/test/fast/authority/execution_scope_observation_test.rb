@@ -119,6 +119,33 @@ module Ace
         end
       end
 
+      def test_workspace_selection_requires_exact_original_writable_parent_declaration
+        @map["worker_cwd"] = "/private/scratch"
+        binding = @observer.activate_parent!(@context)
+        append("scope_bound", binding)
+        original = lineage
+        assert_equal binding.fetch("resource_identities").find { |entry| entry.fetch("host_path") == "/private/scratch" },
+          @observer.maintenance_workspace_resource!(original)
+        declaration = @files.manifest.fetch("resources").find { |entry| entry.fetch("host_path") == "/private/scratch" }
+        [{"read_only" => true}, {"worker_visible" => false}, {"stage" => "native"}, {"view_path" => "/different"}].each do |change|
+          saved = declaration.dup
+          declaration.merge!(change)
+          assert_raises(Ace::Runtime::RuntimeUnavailableError) { @observer.maintenance_workspace_resource!(original) }
+          declaration.replace(saved)
+        end
+        resources = @files.manifest.fetch("resources")
+        resources << declaration.dup
+        assert_raises(Ace::Runtime::RuntimeUnavailableError) { @observer.maintenance_workspace_resource!(original) }
+        resources.pop
+        saved_binding = JSON.parse(JSON.generate(binding))
+        saved_binding.fetch("resource_identities").find { |entry| entry.fetch("host_path") == "/private/scratch" }["inode"] = 0
+        @events.pop
+        append("scope_bound", saved_binding)
+        assert_raises(Ace::Runtime::RuntimeUnavailableError) { @observer.maintenance_workspace_resource!(lineage) }
+        resources.delete(declaration)
+        assert_raises(Ace::Runtime::RuntimeUnavailableError) { @observer.maintenance_workspace_resource!(original) }
+      end
+
       def setup
         super
         @files, @manager, @cgroups = Files.new, Manager.new, Cgroups.new

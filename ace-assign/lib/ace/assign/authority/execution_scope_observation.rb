@@ -528,6 +528,27 @@ module Ace
             "scope_binding_event_id" => lineage.binding_event.fetch("digest"), "seal_event_id" => lineage.seal_event.fetch("digest"), "populated" => 0)
         end
 
+        # Declaration bytes are selected by this original observer's pinned
+        # deployment digest. A workspace cannot inherit eligibility merely
+        # because another parent resource has the same host pathname.
+        def maintenance_workspace_resource!(lineage)
+          manifest = @files.boundary_manifest(@scope)
+          declarations = manifest.fetch("resources").select { |entry| entry.fetch("host_path") == @map.fetch("worker_cwd") }
+          unless declarations.one? && declarations.first.values_at("stage", "worker_visible", "read_only") == ["parent", true, false]
+            unavailable!("workspace original declaration is not a writable parent view")
+          end
+          declaration = declarations.first
+          resources = lineage.binding.fetch("resource_identities").select do |entry|
+            entry.values_at("host_path", "view_path") == declaration.values_at("host_path", "view_path")
+          end
+          unless resources.one? && %w[mount_id device inode].all? { |key| resources.first.fetch(key).is_a?(Integer) && resources.first.fetch(key).positive? }
+            unavailable!("workspace original parent identity is unavailable")
+          end
+          resources.first
+        rescue KeyError, TypeError, ArgumentError, Ace::Runtime::RuntimeUnavailableError
+          unavailable!("workspace original boundary is unavailable")
+        end
+
         private
 
         def boot_baseline!(binding)

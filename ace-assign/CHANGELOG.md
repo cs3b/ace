@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Export an immutable original workspace target only inside held complete maintenance exclusions, requiring the retained writable parent declaration and exact original resource identity.
+
 - Batch canonical event-history snapshots and reuse one immutable authenticated settlement read per status operation, preserving full original provenance without increasing public deadlines.
 
 - Pin the original worker interpreter and wrapper in the issued prepared permission and authenticate the same pair through installation and later fetch.

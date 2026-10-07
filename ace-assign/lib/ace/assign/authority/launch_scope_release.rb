@@ -130,6 +130,46 @@ module Ace
           entries
         end
 
+        # A target observation is authoritative only inside the same complete
+        # held maintenance transaction. Historical owner/map selection comes
+        # from the original provisioning fact, never the current deployment.
+        def maintenance_workspace_target!(mapping_id:, journal:, commit:, assignment_id:, attempt_id:,
+          binding_event_digest:, release_event_digest:, descriptor_sha256:)
+          require_maintenance_context!(mapping_id, journal, commit)
+          contexts = Thread.current[:ace_assign_maintenance_contexts].fetch(object_id)
+          contexts.each_value { |_entry, context| slot_reusable!(**context) }
+          matches = maintenance_slot_lineages!(mapping_id, journal, commit).select do |lineage|
+            lineage.binding.values_at("assignment_id", "attempt_id", "mapping_id") == [assignment_id, attempt_id, mapping_id] &&
+              lineage.binding_event.fetch("digest") == binding_event_digest
+          end
+          raise AttemptErrors::EvidenceUnavailable, "maintenance workspace lineage differs" unless matches.one?
+          lineage = matches.first
+          events = journal.read_events(assignment_id, commit: commit).select { |event| event.fetch("attempt_id") == attempt_id }
+          provisioning = events.select { |event| event["type"] == "scope_provisioning" }
+          releases = events.select { |event| event["type"] == "authority_mutation" && event.dig("payload", "operation") == "scope_reservation_release" }
+          unless provisioning.one? && releases.one? && releases.first.fetch("digest") == release_event_digest &&
+              provisioning.first.dig("payload", "descriptor_sha256") == descriptor_sha256
+            raise AttemptErrors::EvidenceUnavailable, "maintenance workspace original selectors differ"
+          end
+          original = @deployment_history.descriptor!(sha256: descriptor_sha256)
+          map = original.mapping(lineage.binding.fetch("mapping_id"))
+          cwd = map.fetch("worker_cwd")
+          context_owner = contexts.fetch(mapping_id).first.fetch(1)
+          observer_owner = context_owner.artifact_reference.fetch("sha256") == descriptor_sha256 ? context_owner : original
+          resource = maintenance_scope_observer_for(observer_owner, lineage.binding.fetch("mapping_id")).maintenance_workspace_resource!(lineage)
+          result = immutable_maintenance_projection(lineage.binding.slice("project_id", "mapping_id", "assignment_id", "attempt_id").merge(
+            "descriptor_sha256" => descriptor_sha256, "journal_commit" => commit,
+            "binding_event_digest" => binding_event_digest, "release_event_digest" => release_event_digest,
+            "proof_event_digest" => lineage.proof_event.fetch("digest"), "worker_cwd" => cwd,
+            "workspace_resource" => resource, "original_mapping_digest" => original.mapping_digest(lineage.binding.fetch("mapping_id"))))
+          contexts.each_value do |_entry, context|
+            require_maintenance_context!(context.fetch(:mapping_id), context.fetch(:journal), context.fetch(:commit))
+          end
+          result
+        rescue KeyError, TypeError, ArgumentError, Ace::Runtime::RuntimeUnavailableError
+          raise AttemptErrors::EvidenceUnavailable, "maintenance workspace original identity is incomplete"
+        end
+
         def retire_released_parent!(mapping_id:, journal:, commit:)
           if (contexts = Thread.current[:ace_assign_maintenance_contexts]&.[](object_id))
             # The method itself enforces the whole transaction preflight. A

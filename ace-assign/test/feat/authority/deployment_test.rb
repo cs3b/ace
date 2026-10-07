@@ -46,8 +46,10 @@ module Ace
 
       class MaintenanceScopeOwner
         attr_reader :retirements, :checks
+        attr_accessor :resources
         def initialize(map, boot_baseline_selection:, network_selection:)
           @map, @retirements, @checks = map, 0, 0
+          @resources = []
           @boot_baseline_selection, @network_selection = boot_baseline_selection, network_selection
         end
         def activate_parent!(context)
@@ -61,11 +63,16 @@ module Ace
           context.merge("slot_id" => @map.fetch("execution_scope").fetch("slot_id"),
             "deployment_digest" => Digest::SHA256.hexdigest(JSON.generate(canonical.call(@map))),
             "boot_id" => ExecutionScopeObservationFixtures::BOOT, "slice_invocation_id" => "b" * 32,
-            "resource_mount_namespace_identity" => {"device" => 4, "inode" => 11}, "resource_identities" => [],
+            "resource_mount_namespace_identity" => {"device" => 4, "inode" => 11}, "resource_identities" => @resources,
             "network_namespace_identity" => {"device" => 7, "inode" => 88},
             "boot_baseline_selection" => @boot_baseline_selection, "network_installation_selection" => @network_selection,
             "cgroup_identity" => {"path" => "/sys/fs/cgroup/#{@map.fetch('execution_scope').fetch('slice_unit')}", "mount_id" => 4,
               "filesystem_type" => "cgroup2", "device" => 5, "inode" => @map.fetch("worker_uid")})
+        end
+        def maintenance_workspace_resource!(lineage)
+          selected = lineage.binding.fetch("resource_identities").select { |entry| entry.fetch("host_path") == @map.fetch("worker_cwd") }
+          raise AttemptErrors::EvidenceUnavailable, "controlled original workspace unavailable" unless selected.one? && selected.first.fetch("inode").positive?
+          selected.first
         end
         def observe(_lineage); {"populated" => 0}; end
         def native_admission_ready!(_lineage)
@@ -167,6 +174,8 @@ module Ace
           boot_factory = -> { fixture_boot_baseline_reader(protection: FixtureProtection.new, pointers: pointers) }
           Ace::Runtime::Molecules::ExecutionBootBaseline.stub(:new, boot_factory) do
             observer = scope_for.call(original.mapping("mapping"), "original-boot.json")
+            observer.resources = [{"host_path" => original.mapping("mapping").fetch("worker_cwd"), "view_path" => "/workspace",
+              "mount_id" => 4, "filesystem_type" => "ext4", "device" => 8, "inode" => 99, "uid" => 13001, "gid" => 13001}]
             untouched_observer = scope_for.call(original.mapping("untouched"), "untouched-boot.json")
             observers = {"mapping" => observer, "untouched" => untouched_observer}
             owner = Authority::LaunchLifecycle.new(deployment: original, deployment_history: history, kernel: kernel,
@@ -223,14 +232,37 @@ module Ace
             owner.with_execution_slots(mapping_ids: %w[mapping untouched], candidate_deployment: candidate) do |contexts|
               assert_raises(AttemptErrors::EvidenceUnavailable) { owner.retire_released_parent!(**contexts.first) }
               assert_raises(AttemptErrors::EvidenceUnavailable) { owner.maintenance_boot_baselines!(**contexts.first) }
+              released = journal.read_events("assignment").find { |event| event["type"] == "authority_mutation" && event.dig("payload", "operation") == "scope_reservation_release" }
+              assert_raises(AttemptErrors::EvidenceUnavailable) do
+                owner.maintenance_workspace_target!(**contexts.first, assignment_id: "assignment", attempt_id: state.fetch("attempt_id"),
+                  binding_event_digest: lineage.binding_event.fetch("digest"), release_event_digest: released.fetch("digest"),
+                  descriptor_sha256: original.artifact_reference.fetch("sha256"))
+              end
               assert_equal prior_retirements, observer.retirements
             end
             retained_context = nil
+            target_params = nil
             owner.with_execution_slots(mapping_ids: ["mapping"], candidate_deployment: candidate) do |contexts|
               retained_context = contexts.first
               assert owner.slot_reusable!(**contexts.first)
               entries = owner.maintenance_boot_baselines!(**contexts.first)
               assert_equal 1, entries.size
+              released = journal.read_events("assignment").find { |event| event["type"] == "authority_mutation" && event.dig("payload", "operation") == "scope_reservation_release" }
+              target_params = contexts.first.merge(assignment_id: "assignment", attempt_id: state.fetch("attempt_id"),
+                binding_event_digest: lineage.binding_event.fetch("digest"), release_event_digest: released.fetch("digest"),
+                descriptor_sha256: original.artifact_reference.fetch("sha256"))
+              target = owner.maintenance_workspace_target!(**target_params)
+              assert_equal original.mapping("mapping").fetch("worker_cwd"), target.fetch("worker_cwd")
+              assert_equal observer.resources.first, target.fetch("workspace_resource")
+              assert_equal original.mapping_digest("mapping"), target.fetch("original_mapping_digest")
+              assert_equal lineage.proof_event.fetch("digest"), target.fetch("proof_event_digest")
+              assert_equal %w[assignment_id attempt_id binding_event_digest descriptor_sha256 journal_commit mapping_id original_mapping_digest project_id proof_event_digest release_event_digest worker_cwd workspace_resource], target.keys.sort
+              assert_raises(FrozenError) { target.fetch("workspace_resource")["inode"] = 0 }
+              assert_raises(FrozenError) { target.fetch("worker_cwd").replace("/replaced") }
+              [:assignment_id, :attempt_id, :binding_event_digest, :release_event_digest, :descriptor_sha256].each do |selector|
+                assert_raises(AttemptErrors::EvidenceUnavailable) { owner.maintenance_workspace_target!(**target_params.merge(selector => "wrong")) }
+              end
+              assert_raises(AttemptErrors::EvidenceUnavailable) { owner.maintenance_workspace_target!(**target_params.merge(commit: "f" * 40)) }
               entry = entries.first
               assert_equal lineage.binding.fetch("boot_baseline_selection"), entry.fetch("boot_baseline_selection")
               assert_equal lineage.binding.fetch("network_installation_selection"), entry.fetch("network_installation_selection")
@@ -272,6 +304,10 @@ module Ace
               end
               begin
                 assert_raises(AttemptErrors::Conflict) { owner.maintenance_boot_baselines!(**contexts.first) }
+                _, _, reset = Open3.capture3("git", "update-ref", journal.ref, pinned, advanced, chdir: repo)
+                assert reset.success?
+                changed = false
+                assert_raises(AttemptErrors::Conflict) { owner.maintenance_workspace_target!(**target_params) }
               ensure
                 owner.singleton_class.send(:remove_method, :verify_historical_boot_baseline!)
                 _, _, restored = Open3.capture3("git", "update-ref", journal.ref, pinned, advanced, chdir: repo)
@@ -280,6 +316,7 @@ module Ace
               assert_equal "retired", owner.retire_released_parent!(**contexts.first).fetch("state")
             end
             assert_raises(AttemptErrors::EvidenceUnavailable) { owner.maintenance_boot_baselines!(**retained_context) }
+            assert_raises(AttemptErrors::EvidenceUnavailable) { owner.maintenance_workspace_target!(**target_params) }
             assert_equal prior_retirements + 1, observer.retirements
             File.binwrite(published, File.binread(candidate_ref.fetch("path")))
             fresh_history, published_candidate = Ace::Runtime::Molecules::ProtectedArtifactSet.stub(:new, factory) do
