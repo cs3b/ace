@@ -5,6 +5,9 @@ require_relative "../../support/service_no_effect_owner_fixture"
 require "ace/assign/authority/service_evidence"
 require "ace/assign/authority/server"
 require "ace/assign/authority/client"
+require "ace/lab/molecules/protected_cleanup_owner_admission"
+require "ace/lab/organisms/protected_cleanup_owner"
+require "ace/lab/organisms/protected_service_client"
 
 module Ace
   module Assign
@@ -89,6 +92,148 @@ module Ace
           assert_equal @worker, result.data.fetch("caller_process_binding")
           assert_equal before, @journal.ref_value
           assert_equal [], @journal.service_requests("assignment")
+          root_admission = Ace::Lab::Molecules::ProtectedCleanupOwnerAdmission.new(deployment: @deployment,
+            authority_id: "authority", mapping_id: "mapping", service_id: "executor", kernel: @kernel, preview_policy: @policy)
+          target = {"project_id" => "project", "mapping_id" => "old", "assignment_id" => "old-assignment", "attempt_id" => "old-attempt",
+            "resource" => "workspace:project:old:old-assignment", "descriptor_sha256" => "a" * 64,
+            "binding_event_digest" => "b" * 64, "release_event_digest" => "c" * 64, "journal_commit" => "d" * 40}
+          intent = {"schema" => "ace.protected-workspace-prune-preview/v1", "maintenance" => result.data.fetch("maintenance"),
+            "target" => target, "publication" => {"descriptor_sha256" => "e" * 64,
+              "installation_ref" => {"path" => "/fixture/installation.json", "bytes" => 10, "sha256" => "f" * 64}}, "destinations" => []}
+          frame = {"schema" => Ace::Lab::Molecules::ProtectedCleanupOwnerClient::SCHEMA, "kind" => "preview",
+            "intent" => intent, "maintenance_context" => result.data}
+          original_root = {"controlled_original_root" => "fixed"}
+          selected = root_admission.preview!(frame: frame, peer: @executor, operation_owner_binding: original_root, journal: @journal)
+          assert_equal result.data, selected.fetch("maintenance_context")
+          assert selected.frozen?
+          # Actual socket transports and canonical owners, with no physical
+          # Installer producer claimed by this controlled metadata collaborator.
+          @project.fetch("service_receivers").fetch("executor")["staging_root"] = @root
+          kernel = @kernel
+          executor = @executor
+          original_capture = kernel.method(:capture)
+          kernel.define_singleton_method(:capture) { |pid| pid == Process.pid ? executor : original_capture.call(pid) }
+          transports = []
+          root_owners = []
+          preview_errors = []
+          root_factory = lambda do |physical|
+            root_local, root_remote = UNIXSocket.pair
+            root_wire = Object.new
+            %i[deadline read write].each { |name| root_wire.define_singleton_method(name) { |*args, **opts| WIRE.public_send(name, *args, **opts) } }
+            root_wire.define_singleton_method(:root_path!) { |*_, **_| true }
+            root_wire.define_singleton_method(:socket_identity) { |*_, **_| [1, 2, 0] }
+            root_wire.define_singleton_method(:connect) { |*_, **_, &block| block.call(root_local) }
+            observer = Object.new
+            observer.define_singleton_method(:observe!) { |**_| original_root }
+            observer.define_singleton_method(:observe_self!) { |**_| original_root }
+            view = Object.new
+            view.define_singleton_method(:with) { |**_, &block| block.call(:held_snapshot) }
+            original_journal = @journal
+            root_owner = Ace::Lab::Organisms::ProtectedCleanupOwner.new(observer: observer, admission: root_admission,
+              snapshots: ->(&block) { block.call(view) }, journals: ->(_) { original_journal }, kernel: kernel,
+              installer: physical, scratch_root: @root)
+            root_owners << root_owner
+            root_errors = Queue.new
+            root_thread = Thread.new do
+              root_owner.handle(root_remote)
+            rescue SecurityError => error
+              root_errors << error.class
+              preview_errors << [error.class.name, error.message, error.backtrace.first]
+            end
+            transports << [root_local, root_remote, root_thread]
+            Ace::Lab::Molecules::ProtectedCleanupOwnerClient.new(observer: observer, scratch_root: @root, wire: root_wire)
+          end
+          public_exchange = lambda do |physical|
+            cleanup_client = root_factory.call(physical)
+            receiver = Ace::Lab::Organisms::ProtectedServiceReceiver.new(mapping_id: "mapping", service_id: "executor",
+              deployment: @deployment, kernel: kernel, client: client, cleanup_owner: cleanup_client)
+            receiver_preview = receiver.method(:preview_workspace_prune)
+            receiver.define_singleton_method(:preview_workspace_prune) do |**args|
+              receiver_preview.call(**args)
+            rescue Exception => error
+              preview_errors << [error.class.name, error.message, error.backtrace.first]
+              raise
+            end
+            receiver_kernel = Kernel.new
+            receiver_kernel.peer_identity = @worker
+            receiver_listener = Ace::Lab::Organisms::ProtectedServiceListener.new(mapping_id: "mapping", service_id: "executor",
+              deployment: @deployment, kernel: receiver_kernel, receiver: receiver)
+            worker_kernel = Kernel.new
+            original_worker = @worker
+            worker_kernel.define_singleton_method(:capture) { |_| original_worker }
+            worker_kernel.peer_identity = @executor
+            public_local, public_remote = UNIXSocket.pair
+            public_wire = Object.new
+            %i[deadline read write].each { |name| public_wire.define_singleton_method(name) { |*args, **opts| WIRE.public_send(name, *args, **opts) } }
+            public_wire.define_singleton_method(:socket_identity) { |_| [3, 4, executor.fetch("uid")] }
+            public_wire.define_singleton_method(:connect) { |*_, **_, &block| block.call(public_local) }
+            public_thread = Thread.new do
+              receiver_listener.send(:receive, public_remote)
+            ensure
+              public_remote.close unless public_remote.closed?
+            end
+            transports << [public_local, public_remote, public_thread]
+            worker_client = Ace::Lab::Organisms::ProtectedServiceClient.new(mapping_id: "mapping", service_id: "executor",
+              deployment: @deployment, kernel: worker_kernel, wire: public_wire)
+            worker_client.preview_workspace_prune(intent: intent)
+          end
+          assert_raises(SecurityError) { public_exchange.call(Object.new) }
+          physical_calls = 0
+          physical = Object.new
+          physical.define_singleton_method(:execute_cleanup!) { |**_| raise "preview must not execute cleanup" }
+          physical.define_singleton_method(:inspect_cleanup!) { |**_| raise "preview must not inspect an effect" }
+          physical.define_singleton_method(:preview_cleanup!) do |context:, deadline:|
+            raise "deadline reset" unless deadline - Process.clock_gettime(Process::CLOCK_MONOTONIC) <= 5
+            physical_calls += 1
+            preservation = {"head" => "a" * 40, "branch" => nil, "destinations" => [], "manifest_sha256" => "b" * 64}
+            target_result = target.merge("artifact_digest" => Ace::Assign::Atoms::EvidenceDigest.digest("target" => target, "preservation" => preservation))
+            {"schema" => "ace.protected-workspace-prune-preview-result/v1", "kind" => "preview",
+              "intent_digest" => Ace::Assign::Atoms::EvidenceDigest.digest(intent), "publication" => intent.fetch("publication"),
+              "maintenance" => intent.fetch("maintenance"), "maintenance_context" => context.fetch("maintenance_context"),
+              "target" => target_result, "preservation" => preservation, "inventory_sha256" => "c" * 64,
+              "file_count" => 0, "total_bytes" => 0}
+          end
+          public_result = begin
+            public_exchange.call(physical)
+          rescue SecurityError => error
+            raise SecurityError, "controlled preview stages: #{preview_errors.inspect}", cause: error
+          end
+          assert_equal result.data, public_result.fetch("maintenance_context")
+          assert_equal 1, physical_calls
+          assert root_owners.all? { |owner| owner.instance_variable_get(:@consumed).empty? }, "preview must not consume invocation state"
+          assert_equal before, @journal.ref_value
+          transports.each do |left, right, thread|
+            left.close unless left.closed?
+            right.close unless right.closed?
+            assert thread.join(3), "controlled transport did not finish"
+            thread.value
+          end
+          mismatched = JSON.parse(JSON.generate(frame))
+          mismatched["intent"]["maintenance"]["attempt_id"] = "foreign-attempt"
+          assert_raises(SecurityError) do
+            root_admission.preview!(frame: mismatched, peer: @executor, operation_owner_binding: original_root, journal: @journal)
+          end
+          stale = JSON.parse(JSON.generate(frame))
+          stale["maintenance_context"]["head"] = "f" * 40
+          assert_raises(SecurityError) do
+            root_admission.preview!(frame: stale, peer: @executor, operation_owner_binding: original_root, journal: @journal)
+          end
+          assert_equal 1, physical_calls
+          missing = JSON.parse(JSON.generate(frame))
+          missing["intent"]["maintenance"]["assignment_id"] = "missing-assignment"
+          missing["maintenance_context"]["maintenance"]["assignment_id"] = "missing-assignment"
+          assert_raises(AttemptErrors::EvidenceUnavailable) do
+            root_admission.preview!(frame: missing, peer: @executor, operation_owner_binding: original_root, journal: @journal)
+          end
+          original_project = @map.fetch("project_id")
+          @map["project_id"] = "foreign-project"
+          wrong = JSON.parse(JSON.generate(frame))
+          wrong["intent"]["maintenance"]["project_id"] = "foreign-project"
+          wrong["maintenance_context"]["maintenance"]["project_id"] = "foreign-project"
+          assert_raises(AttemptErrors::EvidenceUnavailable) do
+            root_admission.preview!(frame: wrong, peer: @executor, operation_owner_binding: original_root, journal: @journal)
+          end
+          @map["project_id"] = original_project
           assert_raises(AttemptErrors::UnauthorizedIdentity) do
             call("workspace_prune_preview_context", params.merge("worker_process_binding" => @reviewer),
               peer: @executor, role: :executor)
@@ -120,6 +265,11 @@ module Ace
           git(@journal.repo_root, "update-ref", @journal.ref, before, previous)
         ensure
           socket&.close unless socket&.closed?
+          transports&.each do |left, right, thread|
+            left.close unless left.closed?
+            right.close unless right.closed?
+            thread.join(3)
+          end
         end
       end
 

@@ -4,6 +4,18 @@ module Ace
   module Assign
     module Authority
       class LaunchLifecycle
+        # Fixed source readers reuse the complete canonical inventory and its
+        # original registration/definition proof; this is never a live grant.
+        def preview_attempt_events!(journal:, commit:, params:, map:)
+          entries = inventory_index!(journal, commit, params.fetch("mapping_id"), map).select do |entry|
+            entry.fetch(:selector) == params.slice("assignment_id", "attempt_id")
+          end
+          raise AttemptErrors::EvidenceUnavailable, "preview original registration is unavailable or ambiguous" unless entries.one?
+          entry = entries.first
+          inventory_definition!(journal, commit, entry)
+          entry.fetch(:events)
+        end
+
         private
 
         # Discovery authenticates the current mapped principal, then reads one
@@ -112,7 +124,7 @@ module Ace
           end
         end
 
-        def inventory_row!(journal, commit, entry)
+        def inventory_definition!(journal, commit, entry)
           selector, registration = entry.values_at(:selector, :registration)
           bytes = journal.blob(registration.fetch("definition_ref"), commit: commit)
           unless bytes.is_a?(String) && bytes.bytesize <= 32_768 &&
@@ -134,6 +146,12 @@ module Ace
               registration.fetch("definition_generation").is_a?(Integer) && registration.fetch("definition_generation").positive?
             raise AttemptErrors::EvidenceUnavailable, "Inventory definition provenance differs"
           end
+          assignment
+        end
+
+        def inventory_row!(journal, commit, entry)
+          inventory_definition!(journal, commit, entry)
+          selector, registration = entry.values_at(:selector, :registration)
           row = selector.merge(registration.slice("task_id", "definition_digest", "definition_generation", "prepared_bundle_ref", "prepared_bundle_bytes", "prepared_bundle_sha256", "selection_sha256"),
             "scope" => nil, "reservation_mutation_id" => nil, "base_head" => nil, "reservation_generation" => nil, "generation" => nil, "canonical_state" => nil,
             "original_binding_digest" => nil, "terminal_event_id" => nil, "reservation_release_event_id" => nil)

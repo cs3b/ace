@@ -188,35 +188,45 @@ module Ace
         # This immutable observation grants no service claim or dispatch permit.
         def workspace_prune_preview_context(_request, params, map, peer, role, transfer)
           raise ArgumentError, "preview context forbids upload" unless transfer.nil?
-          service_policy!.visible!(project: map.fetch("project_id"), uid: map.fetch("worker_uid"))
           @launch.with_assignment(params: params, map: map) do |journal, _registration|
-            protected_journal!(journal)
-            commit = journal.ref_value
-            events = journal.read_events(params.fetch("assignment_id"), commit: commit).select do |event|
-              event["attempt_id"] == params.fetch("attempt_id")
-            end
-            origin = active_origin(events, params)
-            worker_or_launcher!(params.fetch("worker_process_binding"), :worker, map, origin)
-            receiver = service_receiver!(peer, role, map, params.fetch("service_id"))
-            service_policy!.workspace_prune_receiver!(project: map.fetch("project_id"), uid: map.fetch("worker_uid"),
-              service_id: params.fetch("service_id"), executor_uid: receiver.fetch("executor_uid"))
-            selected = candidate(events)
-            unless selected && selected["head"].is_a?(String) && selected["head"].match?(CandidateTransfer::SHA) &&
-                selected["candidate_generation"].is_a?(Integer) && selected["candidate_generation"].positive?
-              raise AttemptErrors::EvidenceUnavailable, "preview candidate is unavailable"
-            end
-            data = {
-              "journal_commit" => commit,
-              "maintenance" => params.slice("mapping_id", "assignment_id", "attempt_id").merge("project_id" => map.fetch("project_id")),
-              "head" => selected.fetch("head"), "candidate_generation" => selected.fetch("candidate_generation"),
-              "worker_process_binding" => origin.fetch("process_binding").fetch("process_identity"),
-              "caller_process_binding" => params.fetch("worker_process_binding")
-            }
-            raise AttemptErrors::Conflict, "preview canonical selection changed" unless journal.ref_value == commit
-            raise AttemptErrors::EvidenceUnavailable, "preview context exceeds bound" if JSON.generate(data).bytesize > 16_384
-            {data: data, replayed: false}
+            {data: workspace_prune_preview_context_at!(journal: journal, params: params, map: map, peer: peer, role: role), replayed: false}
           end
         end
+
+        # Only source composition supplies this fixed journal/snapshot owner.
+        # Both ordinary admission and the root read-only view use the same
+        # original registration, process and candidate proof implementation.
+        public
+
+        def workspace_prune_preview_context_at!(journal:, params:, map:, peer:, role:)
+          service_policy!.visible!(project: map.fetch("project_id"), uid: map.fetch("worker_uid"))
+          protected_journal!(journal)
+          commit = journal.ref_value
+          events = @launch.preview_attempt_events!(journal: journal, commit: commit, params: params, map: map)
+          origin = active_origin(events, params)
+          worker_or_launcher!(params.fetch("worker_process_binding"), :worker, map, origin)
+          receiver = service_receiver!(peer, role, map, params.fetch("service_id"))
+          service_policy!.workspace_prune_receiver!(project: map.fetch("project_id"), uid: map.fetch("worker_uid"),
+            service_id: params.fetch("service_id"), executor_uid: receiver.fetch("executor_uid"))
+          selected = candidate(events)
+          unless selected && selected["head"].is_a?(String) && selected["head"].match?(CandidateTransfer::SHA) &&
+              selected["candidate_generation"].is_a?(Integer) && selected["candidate_generation"].positive?
+            raise AttemptErrors::EvidenceUnavailable, "preview candidate is unavailable"
+          end
+          data = {
+            "journal_commit" => commit,
+            "maintenance" => params.slice("mapping_id", "assignment_id", "attempt_id").merge("project_id" => map.fetch("project_id")),
+            "head" => selected.fetch("head"), "candidate_generation" => selected.fetch("candidate_generation"),
+            "worker_process_binding" => origin.fetch("process_binding").fetch("process_identity"),
+            "caller_process_binding" => params.fetch("worker_process_binding")
+          }
+          raise AttemptErrors::Conflict, "preview canonical selection changed" unless journal.ref_value == commit
+          raise AttemptErrors::EvidenceUnavailable, "preview context exceeds bound" if JSON.generate(data).bytesize > 16_384
+          Atoms::EvidenceDigest.digest(data) # Reject unsupported transport values before copying.
+          JSON.parse(JSON.generate(data))
+        end
+
+        private
 
         def service_status(_request, params, map, peer, role)
           @launch.with_assignment(params: params, map: map) do |journal, _registration|
