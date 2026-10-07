@@ -19,7 +19,9 @@ class ProposalWatchRegressionTest < AceOverseerTestCase
     command = Ace::Overseer::CLI::Commands::Status.new(collector: collector,
       config: {'watch' => {'refresh_interval' => 1, 'git_refresh_interval' => 300}}, proposal_tick: tick)
     command.define_singleton_method(:sleep_interruptible) { |_| }
-    capture_io { command.call(format: 'table', watch: true) }
+    Ace::Overseer::Atoms::RepoGuard.stub(:ensure_repo!, true) do
+      capture_io { command.call(format: 'table', watch: true) }
+    end
     assert_equal 4, calls, 'a failed tick must defer resolution and retry on the next watch tick'
   end
   def test_startup_tick_failure_still_displays_status_with_deferred_projection
@@ -29,7 +31,9 @@ class ProposalWatchRegressionTest < AceOverseerTestCase
     collector.define_singleton_method(:collect) { {} }
     collector.define_singleton_method(:to_h) { |_| {worktrees: []} }
     command = Ace::Overseer::CLI::Commands::Status.new(collector: collector, proposal_tick: tick)
-    out, = capture_io { command.call(format: 'json') }
+    out, = Ace::Overseer::Atoms::RepoGuard.stub(:ensure_repo!, true) do
+      capture_io { command.call(format: 'json') }
+    end
     value = JSON.parse(out)
     assert_equal [], value['worktrees']
     assert_equal 'deferred', value.dig('proposal_resolution', 'status')
