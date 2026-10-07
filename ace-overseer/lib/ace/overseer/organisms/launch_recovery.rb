@@ -14,6 +14,25 @@ module Ace
           @request_factory = request_factory || ->(root) { Molecules::LaunchRequest.new(root: root) }
         end
 
+        # Shared readiness/recovery association. A valid canonical row is not
+        # enough: it must belong to this retained invocation and exact inputs.
+        def self.verify_original!(request:, row:)
+          reference = JSON.parse(request.fetch("definition_bytes")).fetch("prepared_work")
+          bundle = request.fetch("prepared_bundle")
+          expected = {"assignment_id" => request.fetch("assignment_id"), "task_id" => request.fetch("task_id"),
+            "scope" => request.fetch("scope"), "base_head" => request.fetch("base_head"),
+            "reservation_mutation_id" => request.fetch("mutation_id") + "-reserve",
+            "definition_digest" => request.fetch("definition_sha256"), "selection_sha256" => reference.fetch("selection_sha256"),
+            "prepared_bundle_bytes" => bundle.fetch("bytes"), "prepared_bundle_sha256" => bundle.fetch("sha256"),
+            "prepared_bundle_ref" => "execution/prepared/#{request.fetch('assignment_id')}-#{bundle.fetch('sha256')}.bundle"}
+          unless expected.all? { |key, value| row.fetch(key) == value && row.fetch(key).class == value.class }
+            raise Error, "Retained invocation differs from original reservation"
+          end
+          row
+        rescue KeyError, TypeError, JSON::ParserError
+          raise Error, "Retained invocation association is malformed"
+        end
+
         def call(path:)
           path = File.expand_path(path)
           owner = @request_factory.call(File.dirname(path))
@@ -31,14 +50,7 @@ module Ace
           end
           raise Error, "Retained invocation reservation is ambiguous" if matches.size > 1
           row = matches.first
-          if row
-            expected = {"assignment_id" => request.fetch("assignment_id"), "task_id" => request.fetch("task_id"),
-              "scope" => request.fetch("scope"), "base_head" => request.fetch("base_head"),
-              "definition_digest" => request.fetch("definition_sha256"), "selection_sha256" => reference.fetch("selection_sha256"),
-              "prepared_bundle_bytes" => bundle.fetch("bytes"), "prepared_bundle_sha256" => bundle.fetch("sha256"),
-              "prepared_bundle_ref" => "execution/prepared/#{request.fetch('assignment_id')}-#{bundle.fetch('sha256')}.bundle"}
-            raise Error, "Retained invocation differs from original reservation" unless expected.all? { |key, value| row.fetch(key) == value }
-          end
+          self.class.verify_original!(request: request, row: row) if row
           {"request_path" => path, "project_id" => request.fetch("project_id"), "mapping_id" => request.fetch("mapping_id"),
             "assignment_id" => request.fetch("assignment_id"), "mutation_id" => request.fetch("mutation_id"),
             "definition_sha256" => request.fetch("definition_sha256"), "selection_sha256" => reference.fetch("selection_sha256"),

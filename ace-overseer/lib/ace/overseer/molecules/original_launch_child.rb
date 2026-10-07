@@ -4,6 +4,7 @@ require "json"
 require "ace/assign/cli"
 require "ace/runtime/molecules/process_identity"
 require_relative "proposal_tick"
+require_relative "../organisms/launch_recovery"
 
 module Ace
   module Overseer
@@ -58,6 +59,7 @@ module Ace
           @reader, writer = @process.pipe
           opened_here = true
           safe_boundary!
+          @readiness_deadline = @clock.call + DEADLINE
           @pid = @process.fork_loaded(argv: argv, reader: @reader, writer: writer)
           started_here = true
           @state = "awaiting_ready"
@@ -83,10 +85,9 @@ module Ace
 
         def await_ready(status:)
           return self unless state == "awaiting_ready"
-          deadline = @clock.call + DEADLINE
           bytes = +"".b
           loop do
-            remaining = deadline - @clock.call
+            remaining = @readiness_deadline - @clock.call
             return uncertain!("Original child readiness timed out") unless remaining.positive? && @process.readable?(@reader, remaining)
             chunk = @reader.read_nonblock(LIMIT + 1 - bytes.bytesize, exception: false)
             next if chunk == :wait_readable
@@ -103,7 +104,8 @@ module Ace
                 @kernel.capture(pid) == identity
               raise Error, "Original child readiness differs from original selection"
             end
-            status.join_ready!(project: @request.fetch("project_id"), agent: @request.fetch("mapping_id"), ready: ready)
+            canonical = status.join_ready!(project: @request.fetch("project_id"), agent: @request.fetch("mapping_id"), ready: ready)
+            Organisms::LaunchRecovery.verify_original!(request: @request, row: canonical.fetch("item"))
             raise Error, "Original child birth changed during readiness join" unless @kernel.capture(pid) == identity
             ready.each_value(&:freeze)
             @ready = ready.freeze
