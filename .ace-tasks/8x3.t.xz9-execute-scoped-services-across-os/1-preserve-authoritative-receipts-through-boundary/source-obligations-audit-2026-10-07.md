@@ -24,3 +24,9 @@ Executed follow-up:
 - `bin/ace-test ace-lab organisms test/organisms/protected_service_recovery_test.rb --timeout 180`: PASS1/29 `6f76d600-47c6-4791-a7bf-79625a6e323d`. Actual canonical receipt remains; reconstructs listener/receiver after accepted lost ACK.
 
 Task remains inprogress, SC1–SC6 remain unchecked. Source gaps are not moved to installed acceptance. Existing gad.2 09j-launch/RESTRICTED and9c2-scope/SCOPE responsibility and prior execution restrictions are unchanged. Gad.b owns domain inspector/caller source; wave412 is sole Lab writer. Generic source follow-ups may independently cover the remaining controlled concurrency/listener/late-completion cases without native probes.
+
+## Independent follow-up integration
+
+Root reviewed frozen `fde561ab8fa8a729402d5445823133a2edb614dc`, cherry-picked as `a08e02ea4`. Scoped APPROVE: immutable execute mutation identity, recovery producer composition guard and reconstruction evidence; no whole-SC acceptance.
+
+Executed on the combined integration tree: exact receiver mutation regression PASS1/4, receipt `22975afb-cb12-475e-9e0d-cd520d20b74b`; composition plus reconstructed recovery PASS4/42, receipt `7f075ef9-3612-40c3-a828-f44c51fc3cc0`. The first invocation included other filenames, but its line selector filtered the run to the mutation method; only 1/4 is attributed to that receipt. The separate unfiltered two-file run supplies the other evidence. No native or installed verification.
