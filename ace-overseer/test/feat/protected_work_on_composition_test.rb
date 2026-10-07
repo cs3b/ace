@@ -138,6 +138,13 @@ class ProtectedWorkOnCompositionTest < AceOverseerTestCase
     digest_owner.define_singleton_method(:mapping) { |_| map }
     deployment.define_singleton_method(:mapping_digest) { |id| digest_owner.mapping_digest(id) }
     deployment.define_singleton_method(:data) { {"launch_mappings" => {"mapping" => map}} }
+    owner = self
+    deployment.define_singleton_method(:verify!) do |*_, kernel: nil, **_options|
+      if owner.instance_variable_get(:@controlled_peers) && kernel
+        Thread.current.thread_variable_set(:composed_request_peer, kernel.capture(Process.pid))
+      end
+      map
+    end
     deployment.define_singleton_method(:authority) { |_| service.merge("composition" => "services") }
     deployment.define_singleton_method(:verify_composition!) do |id, composition:|
       raise "wrong attached full-service owner composition" unless id == "authority" && composition == "services"
@@ -164,8 +171,44 @@ class ProtectedWorkOnCompositionTest < AceOverseerTestCase
   def fixture(**options, &block)
     super(**options) do
       factory = -> { fixture_boot_baseline_reader(protection: ArtifactProtection.new) }
-      Ace::Runtime::Molecules::ExecutionBootBaseline.stub(:new, factory) { block.call }
+      Ace::Runtime::Molecules::ExecutionBootBaseline.stub(:new, factory) do
+        @controlled_peers ? with_controlled_peer_connections(&block) : block.call
+      end
     end
+  end
+
+  # Only the excluded kernel credential boundary is selected here. The actual
+  # connection and every protocol byte remain production-owned. Establishment
+  # is serialized through server admission; the protocol runs without this lock.
+  def with_controlled_peer_connections
+    establishment = Mutex.new
+    pending = Queue.new
+    original_connect = WIRE.method(:connect)
+    @kernel.define_singleton_method(:peer) do |_socket|
+      admission = Timeout.timeout(3) { pending.pop }
+      admission.fetch(:accepted) << true
+      admission.fetch(:identity)
+    end
+    path = @service.fetch("socket_path")
+    identities = [@launcher, @worker, @supervisor, @reviewer, @executor]
+    connect = lambda do |selected_path, deadline:, &consumer|
+      identity = Thread.current.thread_variable_get(:composed_request_peer)
+      raise "unexpected controlled endpoint/principal" unless selected_path == path && identities.include?(identity)
+      accepted = Queue.new
+      establishment.lock
+      pending << {identity: identity, accepted: accepted}
+      original_connect.call(selected_path, deadline: deadline) do |socket|
+        Timeout.timeout(3) { accepted.pop }
+        establishment.unlock
+        consumer.call(socket)
+      end
+    ensure
+      establishment.unlock if establishment.owned?
+    end
+    WIRE.stub(:connect, connect) { yield }
+    assert pending.empty?, "every controlled connection must consume its exact peer"
+  ensure
+    Thread.current.thread_variable_set(:composed_request_peer, nil)
   end
 
   def start_public_server(lose_prompt_reply: false)
@@ -231,6 +274,10 @@ class ProtectedWorkOnCompositionTest < AceOverseerTestCase
     exercise_public_composition(steering: true, terminal: true, stop_replay: true)
   end
 
+  def test_foreign_visible_supervisor_cannot_observe_or_replay_original_public_prompt
+    exercise_public_composition(steering: true, foreign_principal: true)
+  end
+
   def fixture_output(value, asynchronous:)
     if asynchronous
       Thread.current.thread_variable_set(:composed_stdout, value)
@@ -239,7 +286,8 @@ class ProtectedWorkOnCompositionTest < AceOverseerTestCase
     end
   end
 
-  def exercise_public_composition(steering: false, lose_prompt_reply: false, terminal: false, negative_replay: false, stop_replay: false)
+  def exercise_public_composition(steering: false, lose_prompt_reply: false, terminal: false, negative_replay: false, stop_replay: false, foreign_principal: false)
+    @controlled_peers = foreign_principal
     fixture(prepare_attempt: false) do
       assert_empty @journal.read_events("assignment")
       client_kernel = start_public_server(lose_prompt_reply: lose_prompt_reply)
@@ -339,6 +387,25 @@ class ProtectedWorkOnCompositionTest < AceOverseerTestCase
               end
               assert_equal "submitted", first.fetch("outcome")
               assert_equal 1, native.prompt_calls.length
+              if foreign_principal
+                foreign_kernel = StreamKernel.new(@kernel, me: @supervisor, peer: @service)
+                foreign_client = Ace::Assign::Authority::Client.new(mapping_id: "mapping", deployment: @deployment, kernel: foreign_kernel)
+                foreign_status = Ace::Overseer::Organisms::ProtectedStatus.new(topology: topology, deployment_loader: loader,
+                  client_factory: ->(*) { foreign_client })
+                foreign_steering = Ace::Overseer::Organisms::ProtectedSteering.new(selection: selection, status: foreign_status,
+                  client_factory: ->(*) { foreign_client })
+                foreign_prompt = Ace::Overseer::CLI::Commands::Prompt.new(steering: foreign_steering, input: StringIO.new("exact public steering\n"))
+                before = @journal.ref_value
+                fixture_output(StringIO.new, asynchronous: terminal)
+                assert_raises(Ace::Support::Cli::Error) { foreign_prompt.call(**target.reject { |key, _| key == :expected_generation }, status: true) }
+                assert_equal before, @journal.ref_value
+                assert_equal 1, native.prompt_calls.length
+                assert_raises(Ace::Support::Cli::Error) { foreign_prompt.call(**target, stdin: true) }
+                assert_equal before, @journal.ref_value
+                assert_equal 1, native.prompt_calls.length
+                assert @status_owner_errors.any? { |entry| entry.values_at(0, 1, 2) == ["prompt_status", "Ace::Assign::AttemptErrors::UnauthorizedIdentity", "Prompt mutation belongs to another principal"] }
+                assert @status_owner_errors.any? { |entry| entry.values_at(0, 1, 2) == ["prompt_attempt", "Ace::Assign::AttemptErrors::Conflict", "Mutation ID is already bound to different input"] }
+              end
               fixture_output(StringIO.new, asynchronous: terminal)
               error = assert_raises(Ace::Support::Cli::Error) { prompt.call(**target, stdin: true) }
               assert_match(/bounded UTF-8/, error.message)
