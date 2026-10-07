@@ -200,3 +200,17 @@ Use these user-visible checks when validating behavior end-to-end:
   5. `ace-overseer prune --dry-run` to confirm no remaining safe candidates
 
 Assignment JSON includes `recovery`: current liveness, recovery decision/reason, last verified observation, exact attempt identities, checkpoints and unresolved effect/inbox references. Unreadable evidence is explicitly unknown; dashboard rows needing reconciliation use a question mark instead of a success indicator. An older verified observation remains audit history and does not make a current unknown observation live.
+
+## Exact protected steering (reviewed target interface)
+
+`ace-overseer prompt --project ace --agent builder --assignment A --attempt T --mutation steer-001 --expected-generation 12 --file instruction.txt`
+
+Use exactly one explicit `--file PATH` or `--stdin` input selection. Prompt text remains bounded UTF-8 (16,384 bytes), preserved exactly and omitted from operational output. Redirecting stdin alone does not select input.
+
+`ace-overseer prompt --status --project ace --agent builder --assignment A --attempt T --mutation steer-001`
+
+Status rejects both input selectors and expected generation before reading input; it uses the original prompt mutation and never resends. An explicit identical replay retains the original generation and text; changed input refuses.
+
+`ace-overseer stop --project ace --agent builder --assignment A --attempt T --mutation stop-001 --expected-generation 14`
+
+Exact project/mapping/assignment/attempt selection is mandatory. Immutable stop replay does not refresh settlement. Canonical terminal plus reservation release remains separate from local child exit. These steering forms are being implemented; source-level Lab Work forwarding will be removed with their delivery.

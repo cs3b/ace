@@ -6,6 +6,7 @@ require_relative "../../../ace-assign/test/support/original_launch_driver_owner_
 require "ace/assign/authority/server"
 require "ace/assign/authority/client"
 require "ace/overseer/organisms/protected_work_on"
+require "ace/overseer/organisms/protected_steering"
 require "stringio"
 
 class ProtectedWorkOnCompositionTest < AceOverseerTestCase
@@ -31,6 +32,7 @@ class ProtectedWorkOnCompositionTest < AceOverseerTestCase
       def closed? = @closed
       def readable? = @position < string.bytesize
     end
+    attr_accessor :on_ready
     attr_reader :argv, :code, :frame, :failure
     def initialize(driver:, output:, identity:)
       @driver, @output, @identity = driver, output, identity
@@ -45,8 +47,14 @@ class ProtectedWorkOnCompositionTest < AceOverseerTestCase
       writer.on_flush = lambda do
         # Git subprocess setup may flush an empty caller stream too. Only the
         # actual complete readiness write ends this excluded lifetime boundary.
-        if reader.string.include?('"type":"launch_ready"') && reader.string.end_with?("\n")
-          @driver.request_control_cancel
+        if !@ready_announced && reader.string.include?('"type":"launch_ready"') && reader.string.end_with?("\n")
+          @ready_announced = true
+          if on_ready
+            callback, self.on_ready = on_ready, nil
+            callback.call
+          else
+            @driver.request_control_cancel
+          end
         end
       end
       [reader, writer]
@@ -103,6 +111,14 @@ class ProtectedWorkOnCompositionTest < AceOverseerTestCase
   end
 
   def test_public_managed_inputs_fixed_cli_transport_and_exact_canonical_readiness
+    exercise_public_composition
+  end
+
+  def test_public_prompt_status_replay_and_stop_use_same_original_live_driver
+    exercise_public_composition(steering: true)
+  end
+
+  def exercise_public_composition(steering: false)
     fixture(prepare_attempt: false) do
       assert_empty @journal.read_events("assignment")
       client_kernel = start_public_server
@@ -175,6 +191,49 @@ class ProtectedWorkOnCompositionTest < AceOverseerTestCase
           task_manager: tasks, executor: executor, bundle_loader: Ace::Bundle::Organisms::BundleLoader.new(base_dir: @root)) })
       command = Ace::Overseer::CLI::Commands::WorkOn.new(protected_work_on: coordinator, config: {"runtime" => "auto"},
         orchestrator: Object.new, recovery: Object.new)
+      if steering
+        protected_steering = Ace::Overseer::Organisms::ProtectedSteering.new(selection: selection, status: status,
+          client_factory: ->(*) { client })
+        process.on_ready = lambda do
+          steering_thread = Thread.new do
+            begin
+              ready = JSON.parse(process.frame.string)
+              target = {project: "project", agent: "mapping", assignment: ready.fetch("assignment_id"),
+                attempt: ready.fetch("attempt_id"), mutation: "public-steer", expected_generation: ready.fetch("generation")}
+              prompt = Ace::Overseer::CLI::Commands::Prompt.new(steering: protected_steering, input: StringIO.new("exact public steering\n"))
+              original_output = $stdout
+              $stdout = StringIO.new
+              prompt.call(**target, stdin: true)
+              first = JSON.parse($stdout.string)
+              assert_equal "submitted", first.fetch("outcome")
+              assert_equal 1, native.prompt_calls.length
+              $stdout = StringIO.new
+              error = assert_raises(Ace::Support::Cli::Error) { prompt.call(**target, stdin: true) }
+              assert_match(/bounded UTF-8/, error.message)
+              $stdout = StringIO.new
+              replay = Ace::Overseer::CLI::Commands::Prompt.new(steering: protected_steering, input: StringIO.new("exact public steering\n"))
+              replay.call(**target, stdin: true)
+              assert_equal first, JSON.parse($stdout.string)
+              assert_equal 1, native.prompt_calls.length
+              $stdout = StringIO.new
+              replay.call(**target.reject { |key, _| key == :expected_generation }, status: true)
+              assert_equal "submitted", JSON.parse($stdout.string).fetch("outcome")
+              assert_equal 1, native.prompt_calls.length
+              row = status.collect(project: "project", agent: "mapping").fetch("agents").first.fetch("inventory").fetch("items").find { |item| item["attempt_id"] == target.fetch(:attempt) }
+              stop = Ace::Overseer::CLI::Commands::Stop.new(steering: protected_steering)
+              $stdout = StringIO.new
+              stop.call(**target.merge(mutation: "public-stop", expected_generation: row.fetch("generation")))
+              stopped = JSON.parse($stdout.string)
+              assert_equal "uncertain", stopped.fetch("state")
+              assert_nil status.collect(project: "project", agent: "mapping").fetch("agents").first.fetch("inventory").fetch("items").find { |item| item["attempt_id"] == target.fetch(:attempt) }.fetch("reservation_release_event_id")
+            ensure
+              $stdout = original_output if original_output
+              driver.request_control_cancel
+            end
+          end
+          process.instance_variable_set(:@steering_thread, steering_thread)
+        end
+      end
       previous = $stdout
       $stdout = output
       # Source-owned constructor injection preserves the actual registered
@@ -186,6 +245,7 @@ class ProtectedWorkOnCompositionTest < AceOverseerTestCase
           end
         end
       end
+      process.instance_variable_get(:@steering_thread)&.value
       identity, observation = output.string.lines.map { |line| JSON.parse(line) }
       assert_equal "launch_inputs_retained", identity.fetch("type")
       assert_equal "ready", observation.fetch("state"), {"child_failure" => process.failure, "calls" => calls}.inspect
@@ -209,7 +269,7 @@ class ProtectedWorkOnCompositionTest < AceOverseerTestCase
       assert_equal "release", WIRE.read(gate_worker, deadline: WIRE.deadline(5)).fetch("operation")
       gate.join(2)
       refute gate.alive?
-      assert_empty native.prompt_calls || []
+      assert_empty native.prompt_calls || [] unless steering
       before = @journal.ref_value
       File.write(spec, "Current instructions changed after original launch.\n")
       File.unlink(identity.fetch("prepared_bundle_path"))

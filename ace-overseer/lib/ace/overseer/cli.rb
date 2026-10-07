@@ -26,9 +26,9 @@ module Ace
         ["projects", "List configured Lab projects"],
         ["agents", "List configured Lab agents"],
         ["prepare", "Prepare a Lab Work"],
-        ["prompt", "Prompt a Lab Work from stdin"],
-        ["review", "Start a Lab Work review"],
-        ["stop", "Stop a Lab Work"]
+        ["prompt", "Prompt an exact protected attempt or inspect original prompt status"],
+        ["review", "Review an exact protected candidate under its original capability"],
+        ["stop", "Request proof-authenticated stop of an exact protected attempt"]
       ].freeze
 
       HELP_EXAMPLES = [

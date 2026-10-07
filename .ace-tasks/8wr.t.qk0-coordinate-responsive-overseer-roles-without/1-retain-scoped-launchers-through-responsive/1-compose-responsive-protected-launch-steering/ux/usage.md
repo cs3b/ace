@@ -22,7 +22,7 @@ Expected: read-only canonical discovery using the retained original inputs. Do n
 
 Expected: real protected owner outcomes; submitted never implies consumption. Lost acknowledgments are not resent. Stop/pane close alone never permits physical cleanup. The original child exits only after actual authenticated terminal and reservation release.
 
-After a lost prompt reply, use `ace-overseer prompt --status --project ace --agent builder --assignment ASSIGNMENT --attempt ATTEMPT --mutation steer-001`. This lookup sends no prompt and supplies neither input nor expected generation. An explicit identical mutation retry retains the original tuple, text and generation; changed input refuses. Missing or ambiguous attempt selection never chooses the newest attempt. Full reviewed steering semantics are in `cli-selection-and-retry-contract.md`.
+After a lost prompt reply, use `ace-overseer prompt --status --project ace --agent builder --assignment ASSIGNMENT --attempt ATTEMPT --mutation steer-001`. This lookup sends no prompt and rejects --file, --stdin and --expected-generation before reading input. Mutating prompt requires exactly one of --file PATH or --stdin; redirected stdin alone is not selected. An explicit identical mutation retry retains the original tuple, text and generation; changed input refuses. Missing or ambiguous attempt selection never chooses the newest attempt. Full reviewed steering semantics are in `cli-selection-and-retry-contract.md`.
 
 ## Stalled decision or new Captain direction
 
