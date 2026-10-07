@@ -233,6 +233,63 @@ module Ace
           Object.send(:remove_const, :ACE_PROTECTED_TASK_CONTEXT_ENTRY) if Object.const_defined?(:ACE_PROTECTED_TASK_CONTEXT_ENTRY, false)
         end
       end
+
+      def test_fixed_principal_and_selection_use_retained_owner_and_return_original_entry_without_text
+        fixture do
+          issue_original
+          start_server
+          child = @kernel.capture(92).merge("parent_pid" => @worker.fetch("pid"))
+          original = @worker
+          @kernel.define_singleton_method(:descendant?) { |peer, anchor| anchor == original && [original, child].include?(peer) }
+          @kernel.peer_identity = child
+          kernel = controlled_worker_kernel(child)
+          kernel.peer_identity = @service.slice("uid", "gid", "groups")
+          context = protected_cli_context(kernel)
+          current_entry = Marshal.load(Marshal.dump(@map.fetch("task_context_entry")))
+          current_entry.fetch("wrapper")["sha256"] = "9" * 64
+          pending = [current_entry]
+          until pending.empty?
+            value = pending.pop
+            pending.concat(value.keys + value.values) if value.is_a?(Hash)
+            value.freeze
+          end
+          Object.const_set(:ACE_PROTECTED_TASK_CONTEXT_ENTRY, current_entry)
+          principal = CLI::Commands::Authority::TaskContextPrincipal.new
+          principal.instance_variable_set(:@protected_assignment_context, context)
+          output, error = capture_io { assert_equal 0, principal.call }
+          assert_empty error
+          assert_equal({"schema" => Authority::PreparedTaskContext::PRINCIPAL_SCHEMA, "uid" => 13001, "protected_worker" => true}, JSON.parse(output))
+          assert_raises(Ace::Support::Cli::Error) { principal.call(uid: 13002) }
+          selection = CLI::Commands::Authority::TaskContextSelection.new
+          selection.instance_variable_set(:@protected_assignment_context, context)
+          options = {mapping: "mapping", assignment: "assignment@010", attempt: @attempt}
+          before = @journal.ref_value
+          output, error = capture_io { assert_equal 0, selection.call(**options) }
+          assert_empty error
+          record = JSON.parse(output)
+          assert_equal %w[assignment_id attempt_id definition_digest mapping_id schema scope selection_sha256 task_context_entry], record.keys.sort
+          assert_equal @map.fetch("task_context_entry"), record.fetch("task_context_entry")
+          refute_equal current_entry, record.fetch("task_context_entry")
+          assert_equal @attempt, record.fetch("attempt_id")
+          assert_raises(Ace::Support::Cli::Error) { selection.call(**options.merge(task: "task")) }
+          assert_raises(AttemptErrors::EvidenceUnavailable) do
+            Authority::PreparedTaskContext.new(context: context).call(**options, task: "task")
+          end
+          retained = Object.new
+          retained.define_singleton_method(:data) { {"projects" => {"project" => {"worker_uids" => [13001]}}} }
+          history = context.instance_variable_get(:@history)
+          history.define_singleton_method(:descriptors) { [retained] }
+          @deployment.define_singleton_method(:data) { {"projects" => {"project" => {"worker_uids" => []}}} }
+          output, = capture_io { assert_equal 0, principal.call }
+          assert_equal true, JSON.parse(output).fetch("protected_worker"), "removed current UID remains protected through retained history"
+          empty = Authority::ProtectedAssignmentContext.new(deployment: nil, history: nil, env: {})
+          assert_raises(AttemptErrors::EvidenceUnavailable) { Authority::PreparedTaskContext.new(context: empty).principal }
+          assert_equal before, @journal.ref_value
+          refute File.exist?(File.join(@root, "prepared-queues"))
+        ensure
+          Object.send(:remove_const, :ACE_PROTECTED_TASK_CONTEXT_ENTRY) if Object.const_defined?(:ACE_PROTECTED_TASK_CONTEXT_ENTRY, false)
+        end
+      end
     end
   end
 end

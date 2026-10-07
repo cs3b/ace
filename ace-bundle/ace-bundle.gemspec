@@ -53,6 +53,8 @@ Gem::Specification.new do |spec|
   spec.add_dependency "ace-git", "~> 0.24"
   spec.add_dependency "ace-git-github", "~> 0.2" # PR bundle diffs via the GitHub provider
   spec.add_dependency "ace-support-nav", "~> 0.28" # For in-process protocol resolution (wfi://, guide://, etc.)
+  spec.add_dependency "ace-runtime", "~> 0.2" # Held installed task-context entry selection
+  spec.add_dependency "ace-herdr", "~> 0.4" # Maintained bounded fixed CLI process boundary
   spec.add_dependency "ace-compressor", "~> 0.25" # For --compress option (section content compression)
 
   # Development dependencies managed in root Gemfile

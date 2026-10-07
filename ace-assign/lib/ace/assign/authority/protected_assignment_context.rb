@@ -10,6 +10,8 @@ module Ace
       # Installed and retained deployment owners determine protected principals.
       # A removed original mapping never silently restores ordinary local mode.
       class ProtectedAssignmentContext
+        attr_reader :uid
+
         def self.load
           paths = [Deployment::PATH, DeploymentHistory::PATH]
           installed = paths.any? do |path|
@@ -38,6 +40,10 @@ module Ace
           [@deployment, *@history.descriptors].any? do |owner|
             owner.data.fetch("projects").values.any? { |project| project.fetch("worker_uids").include?(@uid) }
           end
+        end
+
+        def installed?
+          !@deployment.nil? && !@history.nil?
         end
 
         def refuse_graph_mutation!(options:)
