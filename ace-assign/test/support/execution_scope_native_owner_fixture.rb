@@ -4,21 +4,24 @@ require_relative "execution_scope_observation_fixtures"
 module Ace
   module Assign
       class ExecutionScopeNativeOwnerFixture
-        def initialize(map, journal, kernel, owner:)
+        def initialize(map, journal, kernel, owner:, network_selection: ExecutionScopeObservationFixtures::NETWORK_SELECTION,
+          boot_baseline_selection: ExecutionScopeObservationFixtures::BOOT_BASELINE_SELECTION,
+          network_installation: ExecutionScopeObservationFixtures::NETWORK_OUTPUT)
           @map, @journal, @kernel, @owner = map, journal, kernel, owner
+          @network_selection, @boot_baseline_selection, @network_installation = network_selection, boot_baseline_selection, network_installation
         end
         def retire_released_parent!(_lineages); true; end
         def activate_parent!(context)
           context.merge("slot_id" => "slot", "deployment_digest" => Digest::SHA256.hexdigest(JSON.generate(canonical(@map))),
             "boot_id" => ExecutionScopeObservationFixtures::BOOT, "slice_invocation_id" => "b" * 32,
             "resource_mount_namespace_identity" => {"device" => 4, "inode" => 11}, "resource_identities" => [],
-            "network_namespace_identity" => {"device" => 7, "inode" => 88}, "boot_baseline_selection" => ExecutionScopeObservationFixtures::BOOT_BASELINE_SELECTION, "network_installation_selection" => ExecutionScopeObservationFixtures::NETWORK_SELECTION,
+            "network_namespace_identity" => @network_installation.fetch("namespace_identity"), "boot_baseline_selection" => @boot_baseline_selection, "network_installation_selection" => @network_selection,
             "cgroup_identity" => {"path" => "/sys/fs/cgroup/ace-slot.slice", "mount_id" => 4, "filesystem_type" => "cgroup2", "device" => 5, "inode" => 6})
         end
         def observe(_lineage); {"populated" => 0}; end
         def native_admission_ready!(lineage)
           @lineage = lineage
-          ExecutionScopeObservationFixtures::NETWORK_OUTPUT
+          @network_installation
         end
         def start_admitted_service!
           events = @journal.read_events("assignment").select { |event| event["attempt_id"] == @lineage.binding.fetch("attempt_id") }
@@ -26,7 +29,7 @@ module Ace
           payload = {"scope_generation" => 2, "scope_binding_event_id" => @lineage.binding_event.fetch("digest"),
             "service_invocation_id" => "c" * 32, "server_identity" => @kernel.capture(90), "socket_identity" => [1, 2, 13001], "workspace_id" => "w1",
             "mount_namespace_identity" => {"device" => 4, "inode" => 22}, "resource_observer_identity" => @kernel.capture(92), "resource_identities" => [],
-            "network_namespace_identity" => {"device" => 7, "inode" => 88}, "network_admission_event_id" => admission.fetch("digest")}
+            "network_namespace_identity" => @network_installation.fetch("namespace_identity"), "network_admission_event_id" => admission.fetch("digest")}
           left, right = UNIXSocket.pair
           codec = Authority::TransferCodec.new(root: File.dirname(@journal.repo_root))
           wire = Ace::Runtime::Molecules::ProtectedSocket
@@ -59,7 +62,7 @@ module Ace
           raise "wrong controlled callback" unless report["challenge_id"] == challenge["challenge_id"] && peer == @kernel.capture(92)
           report.slice("server_identity", "resource_observer_identity", "mount_namespace_identity", "resource_identities").merge(
             "scope_generation" => lineage.binding.fetch("scope_generation"), "scope_binding_event_id" => lineage.binding_event.fetch("digest"),
-            "service_invocation_id" => "c" * 32, "workspace_id" => "w1", "network_namespace_identity" => {"device" => 7, "inode" => 88},
+            "service_invocation_id" => "c" * 32, "workspace_id" => "w1", "network_namespace_identity" => @network_installation.fetch("namespace_identity"),
             "network_admission_event_id" => lineage.admission_event.fetch("digest"))
         end
         def complete_native_readiness!(_lineage, payload)
