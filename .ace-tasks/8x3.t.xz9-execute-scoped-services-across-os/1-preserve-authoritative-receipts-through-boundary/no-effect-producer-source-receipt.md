@@ -14,3 +14,9 @@ The source owns fixed `claim_service_settlement` and `complete_no_effect`, stric
 Retained development failures: 435b4036 fixture omitted required worker UID inventory; 046de1e9 service_challenge missing from update-plan whitelist; b7426194 raw injection used checkout parent instead of actual checkout; 9a6279bb orphan assertion used assignment-level rather than exact-attempt chain; c22adf81 common fixture overrode intended wrong-map parameter. Each is preserved and corrected in the actual maintained path.
 
 External prerequisites: kernel/native/unit observations and fresh domain inspection reports are controlled fixture boundaries. The authority authenticator is actual source, not a callback returning true. No installed/root/systemd/native/PTY/security/VM tests were run. A final actual no-effect producer→stopped/release composition will follow current-main join; the five producer tests alone do not prove whole SC5 or whole-family acceptance.
+
+## Independent review and main integration
+
+Root independently reviewed frozen producer `1e606dd1d` and approves this scoped source checkpoint. Accepted challenge provenance, atomic record/mutation binding, exact import barrier, strict inspection, immutable replay, and partial/orphan challenge refusal were checked against the actual code and executed tests above. The merge `fe48cd3f0` preserves both stopped-state and service challenge event types and both Client/Server EOF routes.
+
+Root integration execution at `fe48cd3f0`: `bin/ace-test ace-assign feat test/feat/authority/service_settlement_test.rb:278 --timeout 180` passed **1 test / 8 assertions**, zero failures/errors, 22.85s; receipt `93fe2482-a173-4e02-adf3-cb7d4b61ff72`. This executes the actual merged Client/Server challenge and completion-transfer path. It does not replace the separate pending full stopped/release composition or domain inspection acceptance. Task status remains in progress.
