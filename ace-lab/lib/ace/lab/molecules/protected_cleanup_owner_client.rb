@@ -91,6 +91,8 @@ module Ace
             raise SecurityError, "cleanup endpoint was replaced" unless @wire.socket_identity(PATH, mode: 0o660) == before
             yield socket, observed
           end
+        rescue IOError, SystemCallError
+          raise Ace::Runtime::RuntimeUnavailableError, "cleanup original transport unavailable"
         end
 
         def eof!(socket, deadline)

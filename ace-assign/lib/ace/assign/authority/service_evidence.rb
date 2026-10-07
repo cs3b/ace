@@ -2,6 +2,7 @@
 
 require_relative "../molecules/canonical_evidence"
 require_relative "service_cleanup_evidence"
+require_relative "../molecules/execution_scope_lineage"
 
 module Ace
   module Assign
@@ -56,6 +57,11 @@ module Ace
           binding = FIELDS.to_h { |key| [key, record.fetch(key)] }
           if record.fetch("operation") == "prune-preserved-workspace" && record["dispatch_phase"] == "dispatch_started"
             binding["operation_owner_binding"] = record.fetch("operation_owner_binding")
+            executor = record.fetch("executor_process_binding")
+            boot = record.fetch("worker_process_binding").fetch("started_at").split(":").fetch(1)
+            Molecules::ExecutionScopeLineage.validate_process_identity!(executor, boot_id: boot)
+            raise AttemptErrors::EvidenceUnavailable, "original cleanup executor differs" unless executor.fetch("uid") == record.fetch("executor_uid")
+            binding["executor_process_binding"] = executor
           end
           unless %w[claim_binding policy_digest].all? { |key| binding[key].is_a?(String) && binding[key].match?(/\A[0-9a-f]{64}\z/) } &&
               %w[candidate_generation claim_generation].all? { |key| binding[key].is_a?(Integer) && binding[key].positive? } &&

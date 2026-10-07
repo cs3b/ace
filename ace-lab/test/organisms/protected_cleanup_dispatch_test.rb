@@ -1,6 +1,9 @@
 # frozen_string_literal: true
 require_relative "../support/protected_service_boundary_fixture"
 require "ace/lab/molecules/protected_cleanup_owner_client"
+require "ace/lab/molecules/protected_cleanup_owner_admission"
+require "ace/lab/organisms/protected_cleanup_owner"
+require "ace/assign/molecules/canonical_read_snapshot"
 
 class ProtectedCleanupDispatchTest < Minitest::Test
   include ProtectedServiceBoundaryFixture
@@ -76,6 +79,17 @@ class ProtectedCleanupDispatchTest < Minitest::Test
       client_class = Ace::Lab::Molecules::ProtectedCleanupOwnerClient
       ref = {"path" => path, "bytes" => operation.bytesize, "sha256" => Digest::SHA256.hexdigest(operation)}
       executions = []
+      admission_kernel = Object.new
+      executor = @executor
+      authority = @service
+      replacement = executor.merge("pid" => 99, "started_at" => "linux:#{executor.fetch('started_at').split(':')[1]}:9900")
+      admission_kernel.define_singleton_method(:live!) { |peer| raise "foreign observed actor" unless [executor, authority, replacement].include?(peer); true }
+      admission = Ace::Lab::Molecules::ProtectedCleanupOwnerAdmission.new(deployment: @deployment,
+        authority_id: @deployment.mapping("mapping").fetch("authority_id"), mapping_id: "mapping", service_id: "executor", kernel: admission_kernel)
+      private_view = File.join(@root, "root-read-view")
+      FileUtils.mkdir_p(private_view, mode: 0o700)
+      snapshot = Ace::Assign::Molecules::CanonicalReadSnapshot.new(repo_root: @journal.repo_root,
+        checkout_root: @journal.checkout_root, ref: @journal.ref, private_root: private_view)
       observations = []
       alive = true
       observer = Object.new
@@ -84,32 +98,55 @@ class ProtectedCleanupDispatchTest < Minitest::Test
         observations << socket
         original
       end
-      root = @root
-      server = lambda do |socket|
-        frame = wire_class.read(socket, deadline: wire_class.deadline(5), limit: 65_536)
-        assert_equal "", socket.read, "root requests retain exact EOF framing"
-        if frame.fetch("kind") == "identity"
-          assert_equal({"schema" => client_class::SCHEMA, "kind" => "identity"}, frame)
-          wire_class.write(socket, {"schema" => client_class::SCHEMA, "kind" => "identity", "operation_owner_binding" => original}, deadline: wire_class.deadline(5))
-        else
-          assert_equal "execute", frame.fetch("kind")
-          assert_equal JSON.parse(bytes), frame.fetch("input")
-          assert_equal submission.fetch("input_digest"), frame.fetch("input_digest")
-          events = @journal.read_events("assignment")
-          request = events.find { |event| event.dig("payload", "operation") == "request_service" }
-          dispatch = events.find { |event| event.dig("payload", "operation") == "begin_dispatch" }
-          assert_equal request.fetch("digest"), frame.fetch("request_event_digest")
-          assert_equal dispatch.fetch("digest"), frame.fetch("dispatch_event_digest")
-          assert_equal Ace::Assign::Atoms::EvidenceDigest.digest(original), frame.fetch("operation_owner_binding_digest")
-          executions << frame
-          wire_class.write(socket, {"schema" => client_class::SCHEMA, "kind" => "result",
-            "request_id" => submission.fetch("request_id"), "input_digest" => submission.fetch("input_digest"), "receipt_ref" => ref}, deadline: wire_class.deadline(5))
-          codec = Ace::Assign::Authority::TransferCodec.new(root: root)
-          codec.send(socket, parts: [operation], descriptor: codec.descriptor([operation], purpose: :artifacts), purpose: :artifacts, deadline: wire_class.deadline(5))
-        end
-      ensure
-        socket.close unless socket.closed?
+      observer.define_singleton_method(:observe_self!) do |deadline:|
+        raise Ace::Runtime::RuntimeUnavailableError, "controlled original root is gone" unless alive
+        original
       end
+      transport_peer = executor
+      admission_kernel.define_singleton_method(:peer) { |_| transport_peer }
+      journal_factory = lambda do |selected|
+        service_evidence = nil
+        reader = Ace::Assign::Molecules::EvidenceJournal.new(repo_root: @journal.repo_root,
+          checkout_root: @journal.checkout_root, ref: @journal.ref, read_boundary: selected, mode: :protected,
+          evidence_reader: ->(*args) { service_evidence.call(*args) },
+          service_authorizer: ->(*) { raise SecurityError, "root read snapshot cannot authorize journal writes" })
+        service_evidence = Ace::Assign::Authority::ServiceEvidence.new(journal: reader)
+        reader
+      end
+      installer = Object.new
+      owner = client = active_client = original_request = nil
+      test = self
+      installer.define_singleton_method(:execute_cleanup!) do |context:, deadline:|
+        test.assert_equal JSON.parse(bytes), context.fetch("input")
+        test.assert_equal "dispatch_started", context.fetch("record").fetch("dispatch_phase")
+        test.assert context.frozen?
+        executions << context
+        original_client = active_client
+        record = context.fetch("record")
+        original_request = record.slice("request_id", "input_digest", "claim_binding").merge(
+          "request_event_digest" => context.fetch("request_event_digest"),
+          "dispatch_event_digest" => context.fetch("dispatch_event_digest"), "input" => context.fetch("input"))
+        test.assert_equal "uncertain", client.call("service_status", submission.slice(
+          "assignment_id", "attempt_id", "candidate_generation", "head", "request_id")).data.fetch("state")
+        test.assert_raises(Ace::Runtime::RuntimeUnavailableError) { owner.execute!(request: original_request, operation_owner_binding: original) }
+        begin
+          transport_peer = authority
+          test.assert_equal original, owner.identity!
+          test.assert_raises(SecurityError) { owner.execute!(request: original_request, operation_owner_binding: original) }
+          transport_peer = replacement
+          test.assert_raises(SecurityError) { owner.execute!(request: original_request, operation_owner_binding: original) }
+        ensure
+          transport_peer = executor
+        end
+        # Real socket loss after physical-result production but before reply;
+        # the source owner must retain that result without invoking again.
+        original_client.close
+        {receipt_ref: ref, bytes: operation}
+      end
+      endpoint = Ace::Lab::Organisms::ProtectedCleanupOwner.new(observer: observer, admission: admission,
+        snapshots: ->(&block) { block.call(snapshot) }, journals: journal_factory,
+        kernel: admission_kernel, installer: installer, scratch_root: @root)
+      server = ->(socket) { endpoint.handle(socket) }
       wire = Object.new
       wire.define_singleton_method(:deadline) { |seconds| wire_class.deadline(seconds) }
       wire.define_singleton_method(:root_path!) { |selected, directory:| raise "wrong fixed ancestor" unless directory && selected == File.dirname(client_class::PATH) }
@@ -119,7 +156,9 @@ class ProtectedCleanupDispatchTest < Minitest::Test
       wire.define_singleton_method(:connect) do |selected, deadline:, &block|
         raise "wrong fixed endpoint" unless selected == client_class::PATH
         local, remote = UNIXSocket.pair
+        active_client = local
         worker = Thread.new { server.call(remote) }
+        worker.report_on_exception = false
         begin
           block.call(local)
         ensure
@@ -134,8 +173,16 @@ class ProtectedCleanupDispatchTest < Minitest::Test
       receiver = cleanup_receiver(client, owner)
       Ace::Lab::Molecules::GrantResolver.stub(:trusted_document, @document) do
         result = receiver.execute(submission: submission, peer: @worker, input_bytes: bytes, mutation_id: "receiver-cleanup")
-        assert_equal "succeeded", result.fetch("state")
+        assert_equal "uncertain", result.fetch("state"), "lost root reply cannot become completed"
         assert_equal 1, executions.size
+        retained = owner.execute!(request: original_request, operation_owner_binding: original)
+        assert_equal operation, retained.fetch(:bytes)
+        assert_equal 1, executions.size, "original result reread cannot reinvoke Installer"
+        claim = client.call("request_service", submission.merge("service_id" => "executor", "worker_process_binding" => @worker),
+          mutation_id: "receiver-cleanup", upload_parts: [bytes], purpose: :service_input)
+        assert_equal "retained", claim.data.fetch("claim")
+        completed = cleanup_completion(client, submission, claim, operation, path)
+        assert_equal "succeeded", completed.data.fetch("state")
         assert_equal 2, @journal.service_request(submission.fetch("request_id")).fetch("receipt").fetch("evidence").size
         before = observations.size
         alive = false

@@ -81,6 +81,10 @@ module Ace
         # service writers. It never reacquires lifecycle/authority locks.
         def authorize_service_update!(journal:, existing:, replacement:, pending:)
           protected_journal!(journal)
+          if existing && existing.key?("executor_process_binding") &&
+              Atoms::EvidenceDigest.digest(existing.fetch("executor_process_binding")) != Atoms::EvidenceDigest.digest(replacement["executor_process_binding"])
+            raise AttemptErrors::InvalidState, "original cleanup executor cannot change"
+          end
           if existing && existing.key?("operation_owner_binding") &&
               Atoms::EvidenceDigest.digest(existing.fetch("operation_owner_binding")) != Atoms::EvidenceDigest.digest(replacement["operation_owner_binding"])
             raise AttemptErrors::InvalidState, "original cleanup dispatch owner cannot change"
@@ -94,7 +98,7 @@ module Ace
             ServiceEvidence.new(journal: journal).challenge!(replacement, pending: pending)
           end
           initial = existing.nil? && %w[accepted uncertain].include?(replacement["state"])
-          if initial && replacement.key?("operation_owner_binding")
+          if initial && (replacement.key?("operation_owner_binding") || replacement.key?("executor_process_binding"))
             raise AttemptErrors::InvalidState, "cleanup owner identity requires fresh dispatch admission"
           end
           begin_dispatch = existing && existing["dispatch_phase"] == "issued" && replacement["dispatch_phase"] == "dispatch_started"
@@ -125,6 +129,14 @@ module Ace
           approved_review!(journal, events, params, map, current)
           service_policy!.prepare!(replacement, input_bytes: bytes)
           if begin_dispatch && replacement.fetch("operation") == "prune-preserved-workspace"
+            executor = replacement.fetch("executor_process_binding")
+            boot = replacement.fetch("worker_process_binding").fetch("started_at").split(":").fetch(1)
+            Molecules::ExecutionScopeLineage.validate_process_identity!(executor, boot_id: boot)
+            credentials = @deployment.project(map.fetch("project_id")).fetch("peer_credentials").fetch(receiver.fetch("executor_uid").to_s)
+            unless executor.slice("uid", "gid", "groups") == credentials.slice("gid", "groups").merge("uid" => receiver.fetch("executor_uid"))
+              raise AttemptErrors::UnauthorizedIdentity, "original cleanup executor credentials differ"
+            end
+            @kernel.live!(executor)
             unless Atoms::EvidenceDigest.digest(service_policy!.dispatch_owner_binding!(replacement)) ==
                 Atoms::EvidenceDigest.digest(replacement.fetch("operation_owner_binding"))
               raise AttemptErrors::UnauthorizedIdentity, "fixed cleanup owner changed before dispatch acceptance"
@@ -428,6 +440,7 @@ module Ace
           replacement = record.merge("dispatch_phase" => "dispatch_started")
           if record.fetch("operation") == "prune-preserved-workspace"
             replacement["operation_owner_binding"] = service_policy!.dispatch_owner_binding!(record)
+            replacement["executor_process_binding"] = JSON.parse(JSON.generate(peer))
           end
           {data: service_projection(replacement).merge("invocation" => "permitted"),
             service_inputs: {record.fetch("request_id") => input_bytes},
@@ -498,7 +511,7 @@ module Ace
 
         def service_projection(record)
           record.slice("request_id", "assignment_id", "attempt_id", "project_id", "operation", "service_id", "target",
-            "candidate_head", "candidate_generation", "state", "dispatch_ticket_id", "claim_binding", "claim_generation", "dispatch_phase", "policy_digest", "operation_owner_binding")
+            "candidate_head", "candidate_generation", "state", "dispatch_ticket_id", "claim_binding", "claim_generation", "dispatch_phase", "policy_digest", "operation_owner_binding", "executor_process_binding")
         end
       end
     end

@@ -780,9 +780,10 @@ module Ace
             # root collaborator identity. It is immutable on every later update.
             if @mode == :protected && pending && pending[:operation] == "begin_dispatch" &&
                 existing["operation"] == "prune-preserved-workspace" && existing["dispatch_phase"] == "issued" &&
-                replacement["dispatch_phase"] == "dispatch_started" && !existing.key?("operation_owner_binding") &&
-                replacement.key?("operation_owner_binding")
-              mutable << "operation_owner_binding"
+                replacement["dispatch_phase"] == "dispatch_started" &&
+                %w[operation_owner_binding executor_process_binding].none? { |key| existing.key?(key) } &&
+                %w[operation_owner_binding executor_process_binding].all? { |key| replacement.key?(key) }
+              mutable.concat(%w[operation_owner_binding executor_process_binding])
             end
             unless existing.except(*mutable) == replacement.except(*mutable)
               raise AttemptErrors::Conflict, "Service request #{request_id} changed immutable binding"
