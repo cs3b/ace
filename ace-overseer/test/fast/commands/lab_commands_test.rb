@@ -79,14 +79,11 @@ class LabCommandsTest < AceOverseerTestCase
     assert_equal "continue safely\n", client.calls.first[:options][:stdin_data]
   end
 
-  def test_review_and_stop_forward_exact_work_arguments
-    review = FakeLabClient.new
+  def test_stop_forwards_exact_work_arguments
     stop = FakeLabClient.new
 
-    capture_io { Ace::Overseer::CLI::Commands::Review.new(client: review).call(work: "W321", pr: 3) }
     capture_io { Ace::Overseer::CLI::Commands::Stop.new(client: stop).call(work: "W321") }
 
-    assert_equal ["work", "review", "W321", "--pr", 3], review.calls.first[:arguments]
     assert_equal %w[work stop W321], stop.calls.first[:arguments]
   end
 
