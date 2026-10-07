@@ -14,7 +14,20 @@ module Ace
         end
 
         def verify!(events:, params:, map:, commit:)
+          settlement_evidence!(events: events, params: params, map: map, commit: commit)
+          true
+        end
+
+        def settlement_evidence!(events:, params:, map:, commit:)
+          @journal.verify_commit!(commit)
+          retained = @journal.read_events(params.fetch("assignment_id"), commit: commit)
+            .select { |event| event["attempt_id"] == params.fetch("attempt_id") }
+          unless retained == events && Models::EvidenceEvent.chain_valid?(events)
+            raise AttemptErrors::EvidenceUnavailable, "historical inbox requires exact canonical prefix"
+          end
           verify_records!(events: events, params: params, map: map, commit: commit)
+        rescue KeyError, TypeError, ArgumentError, NoMethodError
+          raise AttemptErrors::EvidenceUnavailable, "historical inbox settlement is unverifiable"
         end
 
         # Authentication of one accepted source effect is independent of final
@@ -36,9 +49,8 @@ module Ace
             raise AttemptErrors::EvidenceUnavailable, "selected inbox reconciliation differs"
           end
           result = verify_records!(events: events, params: params, map: map, commit: commit, selected: selected, mutation_id: mutation_id)
-          %w[reconciliation reply].each do |kind|
-            @journal.event_commit!(assignment_id: params.fetch("assignment_id"), event_digest: result.fetch(kind).fetch("digest"), commit: commit)
-          end
+          @journal.event_commits!(assignment_id: params.fetch("assignment_id"),
+            event_digests: %w[reconciliation reply].map { |kind| result.fetch(kind).fetch("digest") }, commit: commit)
           result
         rescue KeyError, TypeError, ArgumentError, NoMethodError
           raise AttemptErrors::EvidenceUnavailable, "selected inbox evidence is unverifiable"
@@ -56,6 +68,7 @@ module Ace
             raise AttemptErrors::EvidenceUnavailable, "selected inbox registration missing" unless registrations.size == 1
           end
           result = nil
+          settled = []
           registrations.each do |registered|
             payload = registered.fetch("payload")
             registration = payload.fetch("registration")
@@ -160,6 +173,12 @@ module Ace
                 (!(selected == reconciliation && mutation_id) || event.dig("payload", "mutation_id") == mutation_id) &&
                 event.dig("payload", "data")&.slice(*projection.keys) == projection }
               raise AttemptErrors::EvidenceUnavailable, "historical inbox owner reply missing" unless reply
+              unless selected || reconciliation != reconciliations.last
+                settled << {"inbox_context_id" => context_id, "event_id" => payload.fetch("event_id"),
+                  "claim_generation" => proof.fetch("claim_generation"),
+                  "reconciliation_event_digest" => reconciliation.fetch("digest"), "reply_event_digest" => reply.fetch("digest"),
+                  "receipt_ref" => proof.fetch("receipt_ref"), "signature_ref" => proof.fetch("signature_ref")}
+              end
               if selected && reconciliation == selected
                 result = {"commit" => commit, "reconciliation" => reconciliation, "reply" => reply}
               end
@@ -167,7 +186,11 @@ module Ace
           end
           unknown = events.select { |event| event["type"] == "inbox_reconciliation" }.map { |event| event.dig("payload", "event_id") } - identities
           raise AttemptErrors::EvidenceUnavailable, "historical inbox proof lacks registration" unless selected || unknown.empty?
-          selected ? immutable(result) : true
+          unless selected || settled.empty?
+            @journal.event_commits!(assignment_id: params.fetch("assignment_id"), commit: commit,
+              event_digests: settled.flat_map { |row| row.values_at("reconciliation_event_digest", "reply_event_digest") })
+          end
+          selected ? immutable(result) : immutable({"commit" => commit, "inboxes" => settled.sort_by { |row| row.values_at("inbox_context_id", "event_id") }})
         rescue KeyError, TypeError, ArgumentError, NoMethodError, JSON::ParserError, OpenSSL::PKey::PKeyError
           raise AttemptErrors::EvidenceUnavailable, "historical inbox evidence is unverifiable"
         end

@@ -454,12 +454,59 @@ module Ace
         end
       end
 
-      def settlement(events: self.events, commit: @journal.ref_value)
+      def settlement(events: self.events, commit: @journal.ref_value, evidence: false)
+        method = evidence ? :inbox_settlement_evidence! : :inbox_settlement_complete!
         unless @params.key?("inbox_context_id")
-          return @owner.inbox_settlement_complete!(journal: @journal, events: events, params: @params, map: @map, commit: commit)
+          return @owner.public_send(method, journal: @journal, events: events, params: @params, map: @map, commit: commit)
         end
-        @owner.send(:with_inbox_context, @params, @map, mutation_id: "settlement-query") do
-          @owner.inbox_settlement_complete!(journal: @journal, events: events, params: @params.slice("mapping_id", "assignment_id", "attempt_id"), map: @map, commit: commit)
+        registrations = events.select { |event| event["type"] == "inbox_binding" }
+        enter = lambda do |index|
+          if index == registrations.size
+            return @owner.public_send(method, journal: @journal, events: events,
+              params: @params.slice("mapping_id", "assignment_id", "attempt_id"), map: @map, commit: commit)
+          end
+          payload = registrations.fetch(index).fetch("payload")
+          selected = @params.merge("event_id" => payload.fetch("event_id"), "inbox_context_id" => payload.fetch("inbox_context_id"))
+          @owner.send(:with_inbox_context, selected, @map, mutation_id: "settlement-query") { enter.call(index + 1) }
+        end
+        enter.call(0)
+      end
+
+      def test_signed_queued_inbox_never_masks_corrupt_later_or_earlier_import
+        fixture do
+          receipt = JSON.parse(@bytes)
+          receipt["outcome"] = "superseded"
+          receipt["evidence"]["kind"] = "queue_evicted"
+          @bytes = JSON.generate(receipt)
+          @signature = @key.sign(OpenSSL::Digest::SHA256.new, @bytes)
+          @params = @params.merge("receipt_sha256" => Digest::SHA256.hexdigest(@bytes),
+            "signature_sha256" => Digest::SHA256.hexdigest(@signature))
+          reconcile
+          record = @box.enqueue(event: "event-2", attempt: "attempt", ref: {"session" => "w1", "pane" => "p1"}, payload: "second")
+          record = @box.deliver(event: "event-2")
+          registration = record.slice("event_id", "attempt_id", "payload_sha256", "receipt_key_sha256")
+          mutate("fixture_registration", "registration-2", 6, {data: {}, events: [{type: "inbox_binding", payload: {
+            "event_id" => "event-2", "attempt_id" => "attempt", "inbox_context_id" => "context", "registration" => registration}}]})
+          receipt = record.slice("event_id", "attempt_id", "claim_generation", "payload_sha256", "binding").merge(
+            "outcome" => "consumed", "observer" => {"role" => "supervisor", "id" => "observer"},
+            "evidence" => {"kind" => "consumed_acknowledged", "native_reference" => "native:2", "observation" => "consumed"})
+          bytes = JSON.generate(receipt)
+          signature = @key.sign(OpenSSL::Digest::SHA256.new, bytes)
+          params = @params.merge("event_id" => "event-2", "expected_registration" => registration, "expected_generation" => 7,
+            "receipt_sha256" => Digest::SHA256.hexdigest(bytes), "signature_sha256" => Digest::SHA256.hexdigest(signature))
+          reconcile(params: params, id: "reconcile-2", parts: [bytes, signature])
+          assert_raises(AttemptErrors::InboxSettlementPending) { settlement(evidence: true) }
+          second = events.find { |event| event["type"] == "inbox_reconciliation" && event.dig("payload", "event_id") == "event-2" }
+          first = events.find { |event| event["type"] == "inbox_reconciliation" && event.dig("payload", "event_id") == "event" }
+          original = @journal.method(:blob)
+          [first, second].each do |corrupted|
+            corrupted_path = corrupted.dig("payload", "signature_ref", "ref")
+            reader = ->(path, commit:) { path == corrupted_path ? "corrupt" : original.call(path, commit: commit) }
+            @journal.stub(:blob, reader) do
+              error = assert_raises(AttemptErrors::EvidenceUnavailable) { settlement(evidence: true) }
+              refute_kind_of AttemptErrors::InboxSettlementPending, error
+            end
+          end
         end
       end
 
@@ -470,6 +517,16 @@ module Ace
           @kernel.dead = [81, 82, 90, 91]
           @policy.define_singleton_method(:visible!) { |**| raise "internal source predicate must not invent a public peer" }
           assert settlement
+          evidence = settlement(evidence: true)
+          reconciliation = events.find { |event| event["type"] == "inbox_reconciliation" }
+          reply = events.find { |event| event["type"] == "authority_mutation" && event.dig("payload", "operation") == "reconcile_inbox" }
+          assert_equal @journal.ref_value, evidence.fetch("commit")
+          assert_equal [{"inbox_context_id" => "context", "event_id" => "event",
+            "claim_generation" => reconciliation.dig("payload", "claim_generation"),
+            "reconciliation_event_digest" => reconciliation.fetch("digest"), "reply_event_digest" => reply.fetch("digest"),
+            "receipt_ref" => reconciliation.dig("payload", "receipt_ref"),
+            "signature_ref" => reconciliation.dig("payload", "signature_ref")}], evidence.fetch("inboxes")
+          assert_raises(FrozenError) { evidence.fetch("inboxes").first.fetch("receipt_ref")["ref"].replace("changed") }
           store = Ace::Herdr::Molecules::DeliveryRecordStore
           store.with_lock(@context.fetch("deliveries_dir"), "event") { store.archive(@context.fetch("deliveries_dir"), "event") }
           assert settlement
@@ -494,6 +551,7 @@ module Ace
           @kernel.dead = [81, 82, 90, 91]
           @policy.define_singleton_method(:visible!) { |**| raise "no invented public peer" }
           assert settlement
+          assert_equal [], settlement(evidence: true).fetch("inboxes")
           @unsafe = true
           assert_raises(AttemptErrors::EvidenceUnavailable) { settlement }
         end

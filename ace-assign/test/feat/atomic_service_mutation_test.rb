@@ -15,9 +15,9 @@ module Ace
         out.strip
       end
 
-      def fixture
+      def fixture(mapping_id: nil, suffix: "")
         with_temp_cache do |cache|
-          repo = File.join(cache, "repo")
+          repo = File.join(cache, "repo#{suffix}")
           FileUtils.mkdir_p(repo)
           git(repo, "init", "-b", "main")
           git(repo, "-c", "user.name=test", "-c", "user.email=test@example.invalid", "commit", "--allow-empty", "-m", "candidate")
@@ -26,10 +26,11 @@ module Ace
             "target" => {"resource" => "fixture"}, "candidate_head" => git(repo, "rev-parse", "HEAD"),
             "executor_uid" => Process.uid, "transport" => "unix", "dispatch_ticket_id" => "fixture-ticket",
             "claim_binding" => "b" * 64, "candidate_generation" => 1, "claim_generation" => 1, "policy_digest" => "c" * 64}
+          binding["mapping_id"] = mapping_id if mapping_id
           importer = nil
           owner = nil
           reader = ->(reference, record, state, pending) { owner.call(reference, record, state, pending) }
-          journal = Molecules::EvidenceJournal.new(repo_root: repo, checkout_root: File.join(cache, "journal"),
+          journal = Molecules::EvidenceJournal.new(repo_root: repo, checkout_root: File.join(cache, "journal#{suffix}"),
             mode: :protected, evidence_reader: reader, service_authorizer: ->(*) {})
           importer = Molecules::CanonicalEvidence.new(journal: journal)
           owner = Authority::ServiceEvidence.new(journal: journal)
@@ -47,15 +48,128 @@ module Ace
           operation: "fixture", parameters_digest: Digest::SHA256.hexdigest(id), expected_generation: generation, &block)
       end
 
-      def completion(journal, importer, context, binding)
-        bytes = "ace-service-attestation request:request-1 input:#{binding.fetch("input_digest")} outcome:succeeded\nexact artifact bytes\r\n"
+      def completion(journal, importer, context, binding, failed: false)
+        outcome = failed ? "failed" : "succeeded"
+        state = failed ? "failed-settled" : "succeeded"
+        bytes = "ace-service-attestation request:#{binding.fetch("request_id")} input:#{binding.fetch("input_digest")} outcome:#{outcome}#{failed ? " no-effect:true" : ""}\nexact artifact bytes\r\n"
         plan = importer.import_plan(**context, artifacts: [bytes],
           admitted_after_event_digest: journal.read_events("assignment-1").last.fetch("digest"))
         receipt = binding.slice(*Molecules::EvidenceJournal::TERMINAL_BINDING_FIELDS).merge(
-          "outcome" => "succeeded", "evidence" => plan.fetch(:references))
-        record = binding.merge("state" => "succeeded", "receipt" => receipt)
-        plan.merge(data: {"state" => "succeeded"}, service_updates: [
-          {request_id: "request-1", expected: journal.service_request("request-1"), replacement: record, event_type: "service_transition"}])
+          "outcome" => outcome, "evidence" => plan.fetch(:references))
+        record = binding.merge("state" => state, "receipt" => receipt)
+        plan.merge(data: {"state" => state}, service_updates: [
+          {request_id: binding.fetch("request_id"), expected: journal.service_request(binding.fetch("request_id")), replacement: record, event_type: "service_transition"}])
+      end
+
+      def test_pending_never_masks_changed_terminal_event_history_bytes
+        %w[request-0 request-2].each do |other_id|
+          fixture(mapping_id: "map", suffix: "raw-#{other_id}") do |journal, importer, _context, binding, _repo|
+            other = binding.merge("request_id" => other_id)
+            mutate(journal, "other-claim", 1) { {data: {}, service_updates: [
+              {request_id: other_id, expected: nil, replacement: other.merge("state" => "accepted"), event_type: "service_claim"}]} }
+            context = Authority::ServiceEvidence.new(journal: journal).context(other)
+            mutate(journal, "other-complete", 2) { completion(journal, importer, context, other) }
+            owner = Authority::Endcap.new(deployment: Object.new, launch: Object.new)
+            query = -> { owner.service_settlement_evidence!(journal: journal, events: journal.read_events("assignment-1"),
+              params: binding.slice("mapping_id", "assignment_id", "attempt_id"), map: {"project_id" => "fixture"}, commit: journal.ref_value) }
+            assert_raises(AttemptErrors::ServiceSettlementPending) { query.call }
+            event = journal.read_events("assignment-1").find { |entry| entry["type"] == "service_transition" }
+            old = journal.ref_value
+            checkout = journal.send(:checkout_dir)
+            path = File.join(checkout, "execution", "assignment-1", "events", journal.send(:event_filename, event))
+            File.binwrite(path, File.binread(path) + " ")
+            git(checkout, "-c", "user.name=test", "-c", "user.email=test@example.invalid", "commit", "-am", "changed original event bytes")
+            changed = git(checkout, "rev-parse", "HEAD")
+            git(journal.repo_root, "update-ref", journal.ref, changed, old)
+            error = assert_raises(AttemptErrors::EvidenceUnavailable) { query.call }
+            refute_kind_of AttemptErrors::ServiceSettlementPending, error
+          end
+        end
+      end
+
+      def test_authenticated_pending_never_masks_later_or_earlier_corrupt_service_record
+        %w[request-0 request-2].each do |other_id|
+          fixture(mapping_id: "map", suffix: other_id) do |journal, _importer, _context, binding, _repo|
+            other = binding.merge("request_id" => other_id, "state" => "accepted")
+            mutate(journal, "other-claim", 1) { {data: {}, service_updates: [
+              {request_id: other_id, expected: nil, replacement: other, event_type: "service_claim"}]} }
+            records = journal.service_request_records.map do |record|
+              record["request_id"] == other_id ? record.merge("input_digest" => "z" * 64) : record
+            end
+            assert_equal 2, records.size
+            refute_equal journal.service_request(other_id), records.find { |record| record["request_id"] == other_id }
+            owner = Authority::Endcap.new(deployment: Object.new, launch: Object.new)
+            journal.stub(:service_request_records, records) do
+              error = assert_raises(AttemptErrors::EvidenceUnavailable) do
+                owner.service_settlement_evidence!(journal: journal, events: journal.read_events("assignment-1"),
+                  params: binding.slice("mapping_id", "assignment_id", "attempt_id"), map: {"project_id" => "fixture"},
+                  commit: journal.ref_value)
+              end
+              refute_kind_of AttemptErrors::ServiceSettlementPending, error
+            end
+          end
+        end
+      end
+
+      def test_settlement_projection_pending_is_authenticated_and_failed_settled_import_is_verified
+        fixture(mapping_id: "map") do |journal, importer, _context, binding, _repo|
+          owner = Authority::Endcap.new(deployment: Object.new, launch: Object.new)
+          params = binding.slice("mapping_id", "assignment_id", "attempt_id")
+          query = -> { owner.service_settlement_evidence!(journal: journal, events: journal.read_events("assignment-1"),
+            params: params, map: {"project_id" => "fixture"}, commit: journal.ref_value) }
+          assert_raises(AttemptErrors::ServiceSettlementPending) { query.call }
+          altered = journal.service_request("request-1").merge("input_digest" => "z" * 64)
+          journal.stub(:service_request_records, [altered]) do
+            error = assert_raises(AttemptErrors::EvidenceUnavailable) { query.call }
+            refute_kind_of AttemptErrors::ServiceSettlementPending, error
+          end
+          # Retained challenge is an injected prerequisite: production challenge
+          # issuance is a separate xz9.1 obligation, not supplied by projection.
+          current = journal.service_request("request-1")
+          challenged = current.merge("no_effect_challenge" => "fixture-challenge", "challenge_generation" => 1,
+            "challenge_event_digest" => journal.read_events("assignment-1").last.fetch("digest"))
+          mutate(journal, "challenge-prerequisite", 1) { {data: {}, service_updates: [
+            {request_id: "request-1", expected: current, replacement: challenged, event_type: "service_transition"}]} }
+          binding = challenged.except("state")
+          context = Authority::ServiceEvidence.new(journal: journal).context(binding, no_effect: true)
+          plan = completion(journal, importer, context, binding, failed: true)
+          mutate(journal, "failed-complete", 2) { plan }
+          projection = query.call
+          assert_equal "failed-settled", projection.fetch("services").first.fetch("state")
+          assert_equal plan.fetch(:references), projection.fetch("services").first.fetch("evidence_refs")
+          journal.stub(:blob, "corrupt") do
+            error = assert_raises(AttemptErrors::EvidenceUnavailable) { query.call }
+            refute_kind_of AttemptErrors::ServiceSettlementPending, error
+          end
+          empty_params = params.merge("attempt_id" => "empty-attempt")
+          assert_equal [], owner.service_settlement_evidence!(journal: journal, events: [], params: empty_params,
+            map: {"project_id" => "fixture"}, commit: journal.ref_value).fetch("services")
+        end
+      end
+
+      def test_settlement_projection_authenticates_exact_terminal_transition_and_imports
+        fixture(mapping_id: "map") do |journal, importer, context, binding, _repo|
+          plan = completion(journal, importer, context, binding)
+          mutate(journal, "complete", 1) { plan }
+          owner = Authority::Endcap.new(deployment: Object.new, launch: Object.new)
+          params = binding.slice("mapping_id", "assignment_id", "attempt_id")
+          commit = journal.ref_value
+          events = journal.read_events("assignment-1", commit: commit)
+          evidence = owner.service_settlement_evidence!(journal: journal, events: events, params: params,
+            map: {"project_id" => "fixture"}, commit: commit)
+          transition = events.find { |event| event["type"] == "service_transition" }
+          assert_equal commit, evidence.fetch("commit")
+          assert_equal [{"request_id" => "request-1", "state" => "succeeded", "event_digest" => transition.fetch("digest"),
+            "record_digest" => transition.dig("payload", "record_digest"), "receipt_digest" => transition.dig("payload", "receipt_digest"),
+            "evidence_refs" => plan.fetch(:references)}], evidence.fetch("services")
+          assert_raises(FrozenError) { evidence.fetch("services").first.fetch("evidence_refs").first["ref"].replace("changed") }
+          assert owner.service_settlement_complete!(journal: journal, events: events, params: params,
+            map: {"project_id" => "fixture"}, commit: commit)
+          assert_raises(AttemptErrors::EvidenceUnavailable) do
+            owner.service_settlement_evidence!(journal: journal, events: events.drop(1), params: params,
+              map: {"project_id" => "fixture"}, commit: commit)
+          end
+        end
       end
 
       def test_pending_import_record_event_and_reply_share_one_commit_with_exact_bytes

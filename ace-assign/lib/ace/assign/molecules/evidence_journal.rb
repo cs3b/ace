@@ -6,6 +6,7 @@ require "digest"
 require "fileutils"
 require "json"
 require "open3"
+require "ace/herdr/molecules/bounded_process"
 require_relative "proposal_journal"
 require_relative "journal_mutation"
 
@@ -32,6 +33,7 @@ module Ace
         include ProposalJournal
         CAS_ATTEMPTS = 3
         HISTORY_LIMIT = 100_000
+        EVENT_BATCH_BYTES = 1024 * 1024
 
         # Selected by source composition, never by receipt or wire parameters.
         def evidence_mode
@@ -88,8 +90,16 @@ module Ace
         # Normal append commits inherit the event unchanged. Locate its one
         # introduction; inherited appearances are not competing provenance.
         def event_commit!(assignment_id:, event_digest:, commit:)
-          unless event_digest.is_a?(String) && event_digest.match?(/\A[0-9a-f]{64}\z/)
-            raise AttemptErrors::EvidenceUnavailable, "historical event digest is invalid"
+          event_commits!(assignment_id: assignment_id, event_digests: [event_digest], commit: commit).fetch(event_digest)
+        end
+
+        # Operation-scoped batch of the same provenance proof. No retained
+        # cache: every call authenticates the entire fixed first-parent history.
+        def event_commits!(assignment_id:, event_digests:, commit:)
+          unless event_digests.is_a?(Array) && event_digests.size.between?(1, HISTORY_LIMIT) &&
+              event_digests.uniq.size == event_digests.size &&
+              event_digests.all? { |digest| digest.is_a?(String) && digest.match?(/\A[0-9a-f]{64}\z/) }
+            raise AttemptErrors::EvidenceUnavailable, "historical event selectors are invalid"
           end
           verify_commit!(commit)
           topology, error, status = git("rev-list", "--first-parent", "--parents",
@@ -100,34 +110,51 @@ module Ace
               nodes.each_cons(2).all? { |left, right| left[1] == right[0] } && nodes.last.size == 1
             raise AttemptErrors::EvidenceUnavailable, "canonical history topology is unsupported or incomplete: #{error}"
           end
-          introduction = nil
-          retained = nil
-          retained_blob = nil
-          absent = false
+          selectors = event_digests.to_h { |digest| [digest, {retained: nil, blob: nil, absent: false, introduction: nil}] }
           nodes.each do |node|
             events = read_events(assignment_id, commit: node.first)
             unless events.group_by { |event| event.fetch("attempt_id") }.values.all? { |chain| Models::EvidenceEvent.chain_valid?(chain) }
               raise AttemptErrors::EvidenceUnavailable, "historical canonical event chain is corrupt"
             end
-            matches = events.select { |event| event["digest"] == event_digest }
-            raise AttemptErrors::EvidenceUnavailable, "historical event selector is ambiguous" if matches.size > 1
-            if matches.empty?
-              absent = true
-              next
+            matches = events.select { |event| selectors.key?(event["digest"]) }.group_by { |event| event.fetch("digest") }
+            present = []
+            selectors.each do |digest, state|
+              selected = matches.fetch(digest, [])
+              raise AttemptErrors::EvidenceUnavailable, "historical event selector is ambiguous" if selected.size > 1
+              if selected.empty?
+                state[:absent] = true
+                next
+              end
+              event = selected.first
+              if state[:absent] || (state[:retained] && state[:retained] != event)
+                raise AttemptErrors::EvidenceUnavailable, "historical event disappeared or changed"
+              end
+              present << [state, event, "#{node.first}:execution/#{assignment_id}/events/#{event_filename(event)}"]
             end
-            if absent || (retained && retained != matches.first)
-              raise AttemptErrors::EvidenceUnavailable, "historical event disappeared or changed"
+            # Keep argv bounded independently of the closed selector-set bound.
+            present.each_slice(64) do |batch|
+              output, blob_error, blob_status = git("rev-parse", *batch.map(&:last))
+              blobs = output.lines.map(&:strip)
+              unless blob_status.success? && blobs.size == batch.size &&
+                  blobs.all? { |blob| blob.match?(/\A[0-9a-f]{40}\z/) }
+                raise AttemptErrors::EvidenceUnavailable, "historical event bytes are unavailable: #{blob_error}"
+              end
+              batch.zip(blobs).each do |(state, event, _path), blob|
+                if state[:blob] && state[:blob] != blob
+                  raise AttemptErrors::EvidenceUnavailable, "historical canonical event bytes changed"
+                end
+                state[:blob] ||= blob
+                state[:retained] ||= event
+                state[:introduction] = node.first
+              end
             end
-            path = "execution/#{assignment_id}/events/#{event_filename(matches.first)}"
-            blob, blob_error, blob_status = git("rev-parse", "#{node.first}:#{path}")
-            unless blob_status.success? && blob.match?(/\A[0-9a-f]{40}\z/) && (!retained_blob || retained_blob == blob)
-              raise AttemptErrors::EvidenceUnavailable, "historical canonical event bytes changed or are unavailable: #{blob_error}"
-            end
-            retained_blob ||= blob
-            retained ||= matches.first
-            introduction = node.first
           end
-          introduction || raise(AttemptErrors::EvidenceUnavailable, "historical canonical event is unavailable")
+          unless selectors.values.all? { |state| state[:introduction] }
+            raise AttemptErrors::EvidenceUnavailable, "historical canonical event is unavailable"
+          end
+          selectors.to_h { |digest, state| [digest.dup.freeze, state.fetch(:introduction).dup.freeze] }.freeze
+        rescue KeyError, TypeError, ArgumentError, NoMethodError
+          raise AttemptErrors::EvidenceUnavailable, "historical canonical event selectors are unverifiable"
         end
 
         # Append accepted events to the journal under lock + CAS.
@@ -195,13 +222,27 @@ module Ace
           value = commit
           return [] if value.nil?
 
-          paths, stderr, status = git("ls-tree", "-r", "--name-only", value, "--",
+          paths, stderr, status = git("ls-tree", "-r", "-l", value, "--",
             "execution/#{assignment_id}/events/")
           raise AttemptErrors::EvidenceUnavailable, "Cannot read journal events: #{stderr}" unless status.success?
-          events = paths.lines.map(&:strip).select { |path| path.end_with?(".json") }.map do |path|
-            content, error, read_status = git("show", "#{value}:#{path}")
-            raise AttemptErrors::EvidenceUnavailable, "Cannot read journal event: #{error}" unless read_status.success?
-            JSON.parse(content)
+          entries = paths.lines.filter_map do |line|
+            metadata, path = line.chomp.split("\t", 2)
+            next unless path&.end_with?(".json")
+            _mode, kind, oid, size = metadata.split
+            unless kind == "blob" && oid&.match?(/\A[0-9a-f]{40}\z/) &&
+                size&.match?(/\A(?:0|[1-9][0-9]*)\z/)
+              raise AttemptErrors::EvidenceUnavailable, "canonical event blob selection is invalid"
+            end
+            [oid, size.to_i]
+          end
+          batches = []
+          entries.each do |entry|
+            batches << [] if batches.empty? || batches.last.size == 64 ||
+              (!batches.last.empty? && batches.last.sum(&:last) + entry.last > EVENT_BATCH_BYTES)
+            batches.last << entry
+          end
+          events = batches.flat_map do |batch|
+            decode_event_blobs!(batch, read_event_blobs!(batch)).map { |content| JSON.parse(content) }
           end
           order_by_chain(events)
         rescue JSON::ParserError => e
@@ -490,6 +531,45 @@ module Ace
         end
 
         private
+
+        # Sizes come from the same immutable tree selection. Batch memory is
+        # bounded by that selection; an existing larger single event retains
+        # its previous read semantics rather than gaining a lifetime ceiling.
+        def read_event_blobs!(entries)
+          limit = entries.sum { |_oid, size| size + 128 }
+          result = Herdr::Molecules::BoundedProcess.call(["git", "cat-file", "--batch"],
+            chdir: File.expand_path(@repo_root), stdin_data: entries.map { |oid, _size| "#{oid}\n" }.join,
+            timeout_s: 30, output_limit: limit)
+          unless result.status.success? && !result.oversized
+            raise AttemptErrors::EvidenceUnavailable, "canonical blob batch is unavailable or exceeds selected sizes"
+          end
+          result.stdout.to_s.b
+        rescue Timeout::Error, Herdr::Molecules::BoundedProcess::PostLaunchError, IOError, SystemCallError => error
+          raise AttemptErrors::EvidenceUnavailable, "canonical blob batch is unavailable: #{error.message}"
+        end
+
+        def decode_event_blobs!(entries, output)
+          output = output.b
+          offset = 0
+          entries.map do |oid, size|
+            ending = output.index("\n", offset)
+            unless ending && ending - offset <= 127 && output.byteslice(offset, ending - offset) == "#{oid} blob #{size}"
+              raise AttemptErrors::EvidenceUnavailable, "canonical blob batch header is invalid"
+            end
+            offset = ending + 1
+            content = output.byteslice(offset, size)
+            unless content&.bytesize == size && output.byteslice(offset + size, 1) == "\n" &&
+                Digest::SHA1.hexdigest("blob #{size}\0" + content) == oid
+              raise AttemptErrors::EvidenceUnavailable, "canonical blob batch bytes are invalid"
+            end
+            offset += size + 1
+            content
+          end.tap do
+            unless offset == output.bytesize
+              raise AttemptErrors::EvidenceUnavailable, "canonical blob batch has unexpected trailing bytes"
+            end
+          end
+        end
 
         def update_service_request(request_id, expected:, replacement:, event_type:, guard: nil)
           validate_request_id!(request_id)
