@@ -26,8 +26,25 @@ validation. The fixture now records real definition bytes in the same Git
 journal without weakening validation. The two-file check passed 16 tests/187
 assertions in 2m 1s (d6cbb543). Lab source cleanup is integrated as ced5f99;
 the removed-service/publication refusal check passes on the primary checkout.
-Remaining ACE observer/provider cleanup, bounded verification, one final
-independent code review, main integration and fresh gem preparation stay open.
+ACE 7ceb3786d removes the Assign observe/settle producer, signer and import
+API. 6b9a0ed38 removes the two read-proof-only installed scenario goals; the
+remaining scenario checks actual scoped execution (one goal discovered by
+dry-run, not executed in Lab). 24bb29285 aligns the service-consumer contract,
+and f1802de73 removes the read-proof handler from Lab composition. The focused
+composition check passed 3 tests/13 assertions (f519acde); its prior fixture
+error c1d4604f is retained. a9b98f02b removes the Herdr app-server/read-key/reconciliation source and
+Assign read-proof closure/recovery gates (79 files; 6,655 deleted lines).
+42bb4fe64 connects HITL status to its original transport owner and completes
+human attention after terminal submission. The focused joined HITL file passes
+10 tests/70 assertions (1d7934da) without a read signer or cached recovery query.
+Owner checks pass Herdr 89/512 (c411a6b2), affected direct/CLI cases 61/393
+(904ab97f), and Assign scope/canonical/admission 42/221 (d9a82f05). These are
+scoped checks, not a final joined-suite verdict. The original consumer file
+remains red: df0b5bdf includes two lifecycle-resource fixture errors; the later
+two-case check 79108f01 passes sealed-scope refusal but one stale-CAS assertion
+receives evidence_unavailable instead of conflict. No full consumer pass is
+claimed. One final independent code review, resolution of actual source
+findings, main integration and fresh gem preparation stay open.
 Captain performs OTP publication, then gad.2 launches and observes a real task.
 
 The sections below are historical implementation evidence. Any statement
@@ -69,7 +86,7 @@ Lab integration branch `codex/lab-source-integration` joins coldboot, selected n
 - [x] Canonical observation import/fetch and distinct signer source are joined through `33b432e6c`. Public `inbox-observe` and `inbox-settle` adoption is committed at `ab5094864`; the actual journal/owner/signature/replay check is joined at `8deb2633b`. This closes the local producer/import/fetch/sign/reconcile path, not deployed permissions or whole-task acceptance.
 - [x] Obsolete fake-native inbox E2E removed at `737c4ef79`; its scripts manufactured native acknowledgement and required the removed argv path. Source responsibility remains in maintained record/socket checks; installed requirements remain in gad.2. No replacement Lab emulation was added.
 - [x] Existing provider CLI route restored at 0036003a6; the speculative managed remote consumer from e293dd435 was removed.
-- [ ] Remove obsolete native-observation/read-proof source and installation assumptions; validate ordinary ace-llm launch and live runtime capture. Dedicated Codex startup/ACL is cancelled, not a gate.
+- [x] Remove obsolete native-observation/read-proof source and dedicated installation assumptions. Ordinary ace-llm launch source checks and terminal-submission checks are recorded above; real live runtime observation stays in gad.2. Dedicated Codex startup/ACL is cancelled, not a gate.
 - [x] Canonical protected workflow source adoption: document and verify the actual round/export/submit-result public sequence, preserving ordinary/protected ownership and exact current candidate gates.
 - [ ] One independent review of the final joined source, plus appropriate local unit/integration verification.
 - [ ] Integrate main, synchronize repositories and prepare fresh gem artifacts. Publication remains the Captain's interactive OTP step; actual installed task/observation remains `gad.2`.
