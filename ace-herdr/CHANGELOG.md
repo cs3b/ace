@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Bind protected direct Inbox admission and retained DeliveryRecord to explicit original project, assignment, mapping and context; recheck canonical original identity outside then under the existing store exclusion before effects.
+
 - Read original canonical Inbox launch identity through the same bounded authenticated context authority client, refusing mismatched registration, guard and native association without authorizing dispatch.
 
 - Construct a maintained context service from held literal configuration, the selected full installation owner, fresh key artifacts and an observed service epoch. Bound listener population and stop, retain issuer epochs, and refuse active-incarnation replacement. Pin native queue/wake executables, dependency bytes, environment and IPC placement; use separate bounded initialization acknowledgement and read-only same-epoch replay before ingress. Actual Lab entry/acknowledgement publication, original guarded native admission and stopped-owner recovery remain required composition gates.

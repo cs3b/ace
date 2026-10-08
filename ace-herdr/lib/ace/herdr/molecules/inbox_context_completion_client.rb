@@ -92,7 +92,7 @@ module Ace
           native = data.fetch("native_binding")
           origin = process["native_origin"]
           unless process.keys.sort == %w[native_origin pane process_identity runtime session shell_identity terminal_id] &&
-              native.keys.sort == %w[mount_namespace_identity network_admission_event_id network_namespace_identity resource_identities resource_observer_identity scope_binding_event_id scope_generation server_identity service_invocation_id socket_identity workspace_id] &&
+              native.keys.sort == %w[scope_binding_event_id scope_generation server_identity service_invocation_id socket_identity workspace_id] &&
               origin.is_a?(Hash) && origin.keys.sort == %w[command cwd pane server_identity socket_identity tab workspace] &&
               process["runtime"] == "herdr" && process["shell_identity"] == process["process_identity"] &&
               process["session"] == native["workspace_id"] && origin["workspace"] == process["session"] &&

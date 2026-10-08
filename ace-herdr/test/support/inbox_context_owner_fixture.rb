@@ -43,6 +43,19 @@ module InboxContextOwnerFixture
     end
   end
 
+  # Controlled authority-query substitution for pure context/record tests.
+  # Actual socket/canonical owner composition lives in Assign's pipeline tests.
+  class ControlledOriginalIdentity
+    def original!(**params)
+      params.transform_keys(&:to_s).merge("project_id" => "project", "mapping_id" => "mapping",
+        "original_binding_digest" => "a" * 64, "process_binding" => {"session" => "ws1", "pane" => "p1"})
+    end
+  end
+
+  def direct_original
+    {"project_id" => "project", "assignment_id" => "assignment", "mapping_id" => "mapping", "inbox_context_id" => "ctx"}
+  end
+
   class NativeFixture
     def submit(**_arguments) = {"accepted" => true, "stdout" => "controlled receipt"}
   end
@@ -90,7 +103,7 @@ module InboxContextOwnerFixture
     @keys = Keys.new(context_id: "ctx", public_key_path: @key_path, config_path: @config_path, artifacts: artifacts)
     @store = Store.new(root: @state, uid: Process.uid, protection: FixturePaths.new)
     @owner = Owner.new(context_id: "ctx", deliveries_dir: @events, grants: @grants, epoch: @owner_epoch,
-      store: @store, keys: @keys, kernel: @kernel, inbox: @source_inbox, completion: @completion)
+      store: @store, keys: @keys, kernel: @kernel, inbox: @source_inbox, completion: @completion || (@source_inbox && ControlledOriginalIdentity.new))
   end
 
   def restart(epoch: nil)
@@ -127,7 +140,8 @@ module InboxContextOwnerFixture
   end
 
   def begin_operation(purpose = "enqueue", identity = @normal)
-    @owner.begin_context_operation(context_id: "ctx", purpose: purpose, event_id: "event1", process_binding: identity, peer: identity)
+    options = %w[enqueue deliver].include?(purpose) ? {original: direct_original.merge("attempt_id" => "attempt1")} : {}
+    @owner.begin_context_operation(context_id: "ctx", purpose: purpose, event_id: "event1", process_binding: identity, peer: identity, **options)
   end
 
   def begin_rotation

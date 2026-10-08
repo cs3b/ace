@@ -45,7 +45,7 @@ class InboxDirectEffectsTest < Minitest::Test
   def enqueue_arguments(operation)
     {operation_id: operation.fetch("operation_id"), key_generation: operation.fetch("key_generation"), event_id: "event1", attempt_id: "attempt1",
       reverse: {"schema" => Ace::Hitl::Providers::Ref::SCHEMA, "session" => "ws1", "pane" => "p1"}, payload_bytes: 5,
-      payload_sha256: Digest::SHA256.hexdigest("hello"), payload: "hello", peer: @normal}
+      payload_sha256: Digest::SHA256.hexdigest("hello"), payload: "hello", original: direct_original, peer: @normal}
   end
 
   def enqueue_known
@@ -57,7 +57,41 @@ class InboxDirectEffectsTest < Minitest::Test
 
   def delivery_arguments(admission, expected: 0)
     {operation_id: admission.fetch("operation_id"), key_generation: admission.fetch("key_generation"), event_id: "event1", attempt_id: "attempt1",
-      expected_claim_generation: expected, peer: @normal}
+      expected_claim_generation: expected, original: direct_original, peer: @normal}
+  end
+
+  def test_original_query_runs_outside_store_and_changed_admission_refuses_before_enqueue
+    source_box
+    operation = begin_operation
+    changed = false
+    query = @completion = ControlledOriginalIdentity.new
+    test = self
+    query.define_singleton_method(:original!) do |**params|
+      test.instance_variable_get(:@store).transaction do |state|
+        state.fetch("operations").fetch(operation.fetch("operation_id")).fetch("original")["assignment_id"] = "other"
+        changed = true
+      end
+      super(**params)
+    end
+    restart
+    assert_raises(ERROR) { @owner.enqueue_context(**enqueue_arguments(operation)) }
+    assert changed, "query must finish its separate store transaction without nested lock"
+    assert_equal 0, @native.calls
+    refute File.exist?(File.join(@events, "event1.json"))
+    state = @store.transaction { |value| JSON.parse(JSON.generate(value)) }
+    retained = state.fetch("operations").fetch(operation.fetch("operation_id"))
+    assert_equal 0, retained.fetch("in_flight")
+    assert_nil retained.fetch("effect_binding")
+  end
+
+  def test_changed_original_tuple_cannot_replay_or_read_an_existing_event
+    source_box
+    admission, = enqueue_known
+    before = File.binread(File.join(@events, "event1.json"))
+    assert_raises(ERROR) { @owner.enqueue_context(**enqueue_arguments(admission).merge(original: direct_original.merge("assignment_id" => "other"))) }
+    assert_raises(ERROR) { @owner.status_context(event_id: "event1", attempt_id: "attempt1", original: direct_original.merge("mapping_id" => "other"), peer: @normal) }
+    assert_equal before, File.binread(File.join(@events, "event1.json"))
+    assert_equal 0, @native.calls
   end
 
   def test_known_enqueue_reply_loss_restart_revalidates_record_before_resume_or_end
@@ -185,7 +219,7 @@ class InboxDirectEffectsTest < Minitest::Test
     assert_equal "completed", settled.fetch("state")
     # This is the retained-record verifier's unit input, not an authenticated
     # canonical completion fixture. Actual query/CAS acceptance is tested in Assign.
-    proof = {"registration" => registration, "state" => "completed", "claim_generation" => delivered.fetch("claim_generation"),
+    proof = {"effect_binding" => direct_original, "registration" => registration, "state" => "completed", "claim_generation" => delivered.fetch("claim_generation"),
       "binding" => {"native_binding" => delivered.fetch("binding")}}
     actual = operation.fetch("admitted_claim")
     assert @source_inbox.verify_direct_canonical_settlement(binding: operation.fetch("effect_binding"), admitted_claim: actual, proof: proof)

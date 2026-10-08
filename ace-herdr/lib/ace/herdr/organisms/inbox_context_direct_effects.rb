@@ -7,10 +7,10 @@ module Ace
     module Organisms
       # Fixed methods on the same context admission and DeliveryRecord owner.
       module InboxContextDirectEffects
-        def enqueue_context(operation_id:, key_generation:, event_id:, attempt_id:, reverse:, payload_bytes:, payload_sha256:, payload:, peer:)
+        def enqueue_context(operation_id:, key_generation:, event_id:, attempt_id:, reverse:, payload_bytes:, payload_sha256:, payload:, original:, peer:)
           authorize!(peer, purpose: "enqueue")
           binding = Molecules::InboxDirectEffectBinding.build(purpose: "enqueue", event_id: event_id,
-            attempt_id: attempt_id, key_generation: key_generation,
+            attempt_id: attempt_id, key_generation: key_generation, original: original,
             selection: {"reverse" => reverse, "payload_bytes" => payload_bytes, "payload_sha256" => payload_sha256})
           unless payload.is_a?(String) && payload.bytesize == payload_bytes &&
               payload.encoding == Encoding::UTF_8 && payload.valid_encoding? && !payload.include?("\0") &&
@@ -18,12 +18,19 @@ module Ace
             raise ValidationError, "direct enqueue payload differs"
           end
           selected = @keys.selected
+          original_query = direct_original_query!(operation_id, binding, selected, peer, payload_sha256: payload_sha256)
+          unless original_query.fetch("process_binding").values_at("session", "pane") == reverse.values_at("session", "pane")
+            raise ValidationError, "direct reverse address differs from original launch"
+          end
           dispatch = false
           transaction do |state|
             operation = operation!(state, operation_id, peer)
-            unless operation.values_at("purpose", "event_id", "key_generation") == ["enqueue", event_id, key_generation] &&
+            unless operation.values_at("purpose", "event_id", "key_generation") == ["enqueue", event_id, key_generation] && operation.fetch("original") == original.merge("attempt_id" => attempt_id) &&
                 selected.fetch(:snapshot) == state.fetch("key")
               raise ValidationError, "direct enqueue admission differs"
+            end
+            if operation["original_binding_digest"] && operation.fetch("original_binding_digest") != original_query.fetch("original_binding_digest")
+              raise ValidationError, "direct original launch record changed"
             end
             if operation["effect_binding"]
               raise ValidationError, "direct enqueue input changed" unless operation.fetch("effect_binding") == binding
@@ -31,6 +38,7 @@ module Ace
               direct_idle_readback!(state, operation)
             else
               raise ValidationError, "direct enqueue admission is uncertain" unless operation.fetch("in_flight").zero?
+              operation["original_binding_digest"] = original_query.fetch("original_binding_digest")
               operation["effect_binding"] = binding
               operation["in_flight"] = 1
               operation["issuer_state"] = "running"
@@ -41,7 +49,7 @@ module Ace
           end
           box = source_inbox!(selected)
           if dispatch
-            box.enqueue(event: event_id, attempt: attempt_id, ref: reverse, payload: payload)
+            box.enqueue(event: event_id, attempt: attempt_id, ref: reverse, payload: payload, original_context: original, original_binding_digest: original_query.fetch("original_binding_digest"))
             record_direct_return!(operation_id, peer, binding)
           end
           result = box.verify_direct_enqueue(binding)
@@ -63,20 +71,28 @@ module Ace
           end
         end
 
-        def deliver_context(operation_id:, key_generation:, event_id:, attempt_id:, expected_claim_generation:, peer:)
+        def deliver_context(operation_id:, key_generation:, event_id:, attempt_id:, expected_claim_generation:, original:, peer:)
           authorize!(peer, purpose: "deliver")
           binding = Molecules::InboxDirectEffectBinding.build(purpose: "deliver", event_id: event_id,
-            attempt_id: attempt_id, key_generation: key_generation,
+            attempt_id: attempt_id, key_generation: key_generation, original: original,
             selection: {"expected_claim_generation" => expected_claim_generation})
           selected = @keys.selected
+          record = source_inbox!(selected).retained_status(event: event_id)
+          original_query = direct_original_query!(operation_id, binding, selected, peer, payload_sha256: record.fetch("payload_sha256"))
+          unless record.fetch("original_binding_digest") == original_query.fetch("original_binding_digest")
+            raise ValidationError, "direct retained original record differs"
+          end
           dispatch = false
           transaction do |state|
             operation = operation!(state, operation_id, peer)
-            unless operation.values_at("purpose", "event_id", "key_generation") == ["deliver", event_id, key_generation] &&
+            unless operation.values_at("purpose", "event_id", "key_generation") == ["deliver", event_id, key_generation] && operation.fetch("original") == original.merge("attempt_id" => attempt_id) &&
                 selected.fetch(:snapshot) == state.fetch("key")
               raise ValidationError, "direct delivery admission differs"
             end
             direct_delivery_predecessors!(state, operation_id, event_id, key_generation)
+            if operation["original_binding_digest"] && operation.fetch("original_binding_digest") != original_query.fetch("original_binding_digest")
+              raise ValidationError, "direct original launch record changed"
+            end
             if operation["effect_binding"]
               raise ValidationError, "direct delivery input changed" unless operation.fetch("effect_binding") == binding
               raise ValidationError, "direct delivery issuer remains live" if @effect_issuers.key?(operation_id)
@@ -85,6 +101,7 @@ module Ace
             else
               raise ValidationError, "direct delivery admission is uncertain" unless operation.fetch("in_flight").zero?
               source_inbox!(selected).verify_direct_delivery(binding)
+              operation["original_binding_digest"] = original_query.fetch("original_binding_digest")
               operation["effect_binding"] = binding
               operation["in_flight"] = 1
               operation["issuer_state"] = "running"
@@ -130,18 +147,43 @@ module Ace
           end
         end
 
-        def status_context(event_id:, attempt_id:, peer:)
+        def status_context(event_id:, attempt_id:, original:, peer:)
           grant = authorize!(peer)
           unless (grant.fetch("purposes") & %w[enqueue deliver observe_to_sign reconcile]).any?
             raise ValidationError, "context event observation is unauthorized"
           end
           token!(event_id); token!(attempt_id)
+          Molecules::InboxDirectEffectBinding.original!(original)
+          context!(original.fetch("inbox_context_id"))
           record = source_inbox!(@keys.selected).retained_status(event: event_id)
-          raise ValidationError, "context event attempt differs" unless record.fetch("attempt_id") == attempt_id
+          raise ValidationError, "context event attempt differs" unless record.fetch("attempt_id") == attempt_id && record.fetch("original_context") == original
           immutable_effect(Molecules::InboxDirectResult.build(operation: "status_context", record: record))
         end
 
         private
+
+        # Remote canonical identity read occurs outside the store transaction.
+        # Both sides recheck the original durable admission/key before effects.
+        def direct_original_query!(operation_id, binding, selected, peer, payload_sha256:)
+          transaction do |state|
+            operation = operation!(state, operation_id, peer)
+            unless selected.fetch(:snapshot) == state.fetch("key") &&
+                operation.fetch("original") == binding.slice(*Molecules::InboxDirectEffectBinding::ORIGINAL_FIELDS, "attempt_id") &&
+                operation.values_at("purpose", "event_id") == binding.values_at("purpose", "event_id")
+              raise ValidationError, "original query admission differs"
+            end
+          end
+          result = @completion.original!(assignment_id: binding.fetch("assignment_id"), attempt_id: binding.fetch("attempt_id"),
+            event_id: binding.fetch("event_id"), inbox_context_id: binding.fetch("inbox_context_id"), purpose: binding.fetch("purpose"),
+            payload_sha256: payload_sha256, receipt_key_sha256: selected.fetch(:snapshot).fetch("fingerprint"))
+          unless result.slice(*Molecules::InboxDirectEffectBinding::ORIGINAL_FIELDS, "attempt_id", "event_id", "purpose") ==
+              binding.slice(*Molecules::InboxDirectEffectBinding::ORIGINAL_FIELDS, "attempt_id", "event_id", "purpose")
+            raise ValidationError, "original authority association differs"
+          end
+          result
+        rescue NoMethodError, KeyError, TypeError
+          raise ValidationError, "original authority identity is unavailable"
+        end
 
         def record_direct_return!(operation_id, peer, binding)
           transaction do |state|
@@ -172,11 +214,15 @@ module Ace
           raise ValidationError, "direct readback key changed" unless selected.fetch(:snapshot) == state.fetch("key")
           binding = Molecules::InboxDirectEffectBinding.verify!(operation.fetch("effect_binding"), key_generation: operation.fetch("key_generation"))
           box = source_inbox!(selected)
-          if binding.fetch("purpose") == "enqueue"
+          record = if binding.fetch("purpose") == "enqueue"
             box.verify_direct_enqueue(binding)
           else
-            box.verify_direct_delivery(binding, require_idle: true)
+            box.verify_direct_delivery(binding, require_idle: true).fetch("record")
           end
+          unless record.fetch("original_binding_digest") == operation.fetch("original_binding_digest")
+            raise ValidationError, "direct readback original record changed"
+          end
+          record
         end
       end
     end

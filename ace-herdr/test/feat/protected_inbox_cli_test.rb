@@ -149,7 +149,7 @@ class ProtectedInboxCliTest < Minitest::Test
     ref = File.join(@root, "ref.json"); payload = File.join(@root, "payload.txt")
     File.write(ref, JSON.generate("schema" => Ace::Hitl::Providers::Ref::SCHEMA, "session" => "ws1", "pane" => "p1"))
     File.write(payload, "actual registered payload")
-    args = %w[inbox enqueue --project project --mapping mapping --inbox-context ctx --event event1 --attempt attempt1] + ["--ref", ref, "--file", payload]
+    args = %w[inbox enqueue --project project --mapping mapping --inbox-context ctx --assignment assignment --event event1 --attempt attempt1] + ["--ref", ref, "--file", payload]
     out, err = capture_io { assert_equal 0, Ace::Herdr::CLI.start(args) }
     assert_empty err
     queued = JSON.parse(out)
@@ -160,7 +160,7 @@ class ProtectedInboxCliTest < Minitest::Test
     out, = capture_io { assert_equal 0, Ace::Herdr::CLI.start(args) }
     assert_equal queued, JSON.parse(out)
     assert_equal 0, @owner.status(peer: @normal).fetch("active_operations")
-    deliver_args = %w[inbox deliver --project project --mapping mapping --inbox-context ctx --event event1 --attempt attempt1 --claim-generation 0]
+    deliver_args = %w[inbox deliver --project project --mapping mapping --inbox-context ctx --assignment assignment --event event1 --attempt attempt1 --claim-generation 0]
     out, err = capture_io { assert_equal 0, Ace::Herdr::CLI.start(deliver_args) }
     assert_empty err
     delivered = JSON.parse(out)

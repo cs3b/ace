@@ -32,9 +32,7 @@ class InboxContextOriginalClientTest < Minitest::Test
       "host" => "fixture", "started_at" => "linux:12345678-1234-1234-1234-123456789abc:91"}
     server = child.merge("pid" => 11, "parent_pid" => 1)
     native = {"scope_generation" => 2, "scope_binding_event_id" => "e" * 64, "service_invocation_id" => "f" * 32,
-      "workspace_id" => "w1", "server_identity" => server, "socket_identity" => [1, 2, 13001],
-      "mount_namespace_identity" => {}, "network_admission_event_id" => "a" * 64, "network_namespace_identity" => {},
-      "resource_identities" => [], "resource_observer_identity" => server.merge("pid" => 13)}
+      "workspace_id" => "w1", "server_identity" => server, "socket_identity" => [1, 2, 13001]}
     @data = @params.transform_keys(&:to_s).slice("assignment_id", "attempt_id", "event_id", "inbox_context_id", "purpose")
       .merge("schema" => "ace.assign.inbox-context-original/v1", "project_id" => "project", "mapping_id" => "mapping",
         "commit" => "c" * 40, "registered" => false, "original_binding_digest" => "d" * 64,

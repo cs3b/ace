@@ -12,6 +12,7 @@ module Ace
       class InboxContextOriginal
         OPERATIONS = ["inbox_context_original"].freeze
         PARAMETERS = %w[assignment_id attempt_id event_id inbox_context_id mapping_id payload_sha256 purpose receipt_key_sha256].freeze
+        NATIVE_FIELDS = %w[scope_generation scope_binding_event_id service_invocation_id server_identity socket_identity workspace_id].freeze
         TOKEN = /\A[A-Za-z0-9][A-Za-z0-9._-]{0,127}\z/
         SHA = /\A[0-9a-f]{64}\z/
 
@@ -82,7 +83,7 @@ module Ace
             .merge("schema" => "ace.assign.inbox-context-original/v1", "project_id" => map.fetch("project_id"),
               "commit" => commit, "registration" => registration, "registered" => bindings.one?,
               "original_binding_digest" => guarded.fetch("binding_digest"), "process_binding" => child,
-              "guarded_origin" => guarded.fetch("origin"), "native_binding" => lineage.native_event.fetch("payload"))
+              "guarded_origin" => guarded.fetch("origin"), "native_binding" => lineage.native_event.fetch("payload").slice(*NATIVE_FIELDS))
           raise AttemptErrors::EvidenceUnavailable, "original inbox projection exceeds bound" if JSON.generate(data).bytesize > 15_360
           {data: immutable(data), replayed: false}
         rescue KeyError, TypeError, ArgumentError, NoMethodError, Ace::Herdr::Error, Ace::Runtime::RuntimeUnavailableError

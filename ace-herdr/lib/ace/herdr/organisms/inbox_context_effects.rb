@@ -160,6 +160,9 @@ module Ace
             next unless direct_binding?(operation) && operation["issuer_state"] == "returned" &&
               operation.fetch("event_id") == binding.fetch("event_id") &&
               operation.fetch("effect_binding").fetch("attempt_id") == binding.fetch("attempt_id")
+            unless operation.fetch("effect_binding").slice(*Molecules::InboxDirectEffectBinding::ORIGINAL_FIELDS) == binding.slice(*Molecules::InboxDirectEffectBinding::ORIGINAL_FIELDS)
+              raise ValidationError, "direct settlement original context differs"
+            end
             raise ValidationError, "direct settlement producer remains live" if @effect_issuers.key?(id)
             if operation.fetch("purpose") == "deliver" && operation["admitted_claim"].nil? && operation.fetch("in_flight").zero?
               # A source-returned known-idle observation created no claim.

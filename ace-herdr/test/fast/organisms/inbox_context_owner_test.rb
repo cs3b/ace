@@ -294,7 +294,8 @@ class InboxContextOwnerTest < Minitest::Test
       Owner::OPERATION_LIMIT.times do |i|
         state.fetch("operations")[i.to_s(16).rjust(32, "0")] = {"peer" => @normal, "purpose" => "enqueue",
           "event_id" => "event-#{i}", "key_generation" => 1, "in_flight" => 0, "effect_binding" => nil, "completion" => nil,
-          "issuer_state" => nil, "admitted_claim" => nil, "issuer_epoch" => nil}
+          "issuer_state" => nil, "admitted_claim" => nil, "issuer_epoch" => nil,
+          "original" => direct_original.merge("attempt_id" => "attempt1"), "original_binding_digest" => nil}
       end
     end
     assert_raises(ERROR) { begin_operation }

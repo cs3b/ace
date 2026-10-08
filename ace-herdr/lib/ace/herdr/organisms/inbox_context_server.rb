@@ -11,9 +11,9 @@ module Ace
       class InboxContextServer
         FIELDS = {
           "status" => [],
-          "enqueue_context" => %w[attempt_id event_id key_generation operation_id payload_bytes payload_sha256 reverse],
-          "status_context" => %w[attempt_id event_id],
-          "deliver_context" => %w[attempt_id event_id expected_claim_generation key_generation operation_id],
+          "enqueue_context" => %w[attempt_id event_id key_generation operation_id original payload_bytes payload_sha256 reverse],
+          "status_context" => %w[attempt_id event_id original],
+          "deliver_context" => %w[attempt_id event_id expected_claim_generation key_generation operation_id original],
           "snapshot_context" => %w[event_id key_generation operation_id],
           "reconcile_context" => %w[effect_binding proof_sizes],
           "verify_context_reconciliation" => %w[event_id expected_registration key_generation operation_id proof_sizes],
@@ -31,6 +31,16 @@ module Ace
           @owner, @context_id, @kernel = owner, context_id, kernel
         end
 
+        def fields_for(request)
+          fields = FIELDS.fetch(request.fetch("operation"))
+          if request["operation"] == "begin_context_operation" && %w[enqueue deliver].include?(request.dig("params", "purpose"))
+            (fields + ["original"]).sort
+          else
+            fields
+          end
+        end
+        private :fields_for
+
         # One bounded exchange; EOF never releases an operation/rotation grant.
         def handle(socket)
           deadline = Molecules::InboxContextWire.deadline
@@ -39,7 +49,7 @@ module Ace
           unless request.is_a?(Hash) && request.keys.sort == %w[context_id operation params version] &&
               request["version"].is_a?(Integer) && request["version"] == 1 && request["context_id"] == @context_id &&
               FIELDS.key?(request["operation"]) && request["params"].is_a?(Hash) &&
-              request["params"].keys.sort == FIELDS.fetch(request["operation"])
+              request["params"].keys.sort == fields_for(request)
             raise ValidationError, "context request fields differ"
           end
           options = request.fetch("params").transform_keys(&:to_sym)

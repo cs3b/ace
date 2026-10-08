@@ -8,20 +8,24 @@ module Ace
     module Molecules
       # Original selectors only; DeliveryRecord is the sole effect ledger.
       module InboxDirectEffectBinding
-        SCHEMA = "ace.herdr.inbox-direct-effect/v1"
+        SCHEMA = "ace.herdr.inbox-direct-effect/v2"
+        ORIGINAL_FIELDS = %w[project_id assignment_id mapping_id inbox_context_id].freeze
         TOKEN = /\A[A-Za-z0-9][A-Za-z0-9._-]{0,127}\z/
         SHA = /\A[0-9a-f]{64}\z/
         module_function
 
-        def build(purpose:, event_id:, attempt_id:, key_generation:, selection:)
+        def build(purpose:, event_id:, attempt_id:, key_generation:, selection:, original:)
           value = {"schema" => SCHEMA, "purpose" => purpose, "event_id" => event_id,
             "attempt_id" => attempt_id, "selection" => selection}
+          original!(original)
+          value.merge!(original)
           value["input_sha256"] = digest_input(value, key_generation)
           verify!(value, key_generation: key_generation)
         end
 
         def verify!(value, key_generation:)
-          object!(value, %w[schema purpose event_id attempt_id selection input_sha256])
+          object!(value, %w[schema purpose event_id attempt_id selection input_sha256] + ORIGINAL_FIELDS)
+          original!(value.slice(*ORIGINAL_FIELDS))
           unless value["schema"] == SCHEMA && %w[enqueue deliver].include?(value["purpose"]) &&
               %w[event_id attempt_id].all? { |key| value[key].is_a?(String) && TOKEN.match?(value[key]) } &&
               key_generation.is_a?(Integer) && key_generation.between?(1, (1 << 63) - 1)
@@ -48,6 +52,14 @@ module Ace
           JSON.parse(JSON.generate(value))
         end
 
+        def original!(value)
+          object!(value, ORIGINAL_FIELDS)
+          unless ORIGINAL_FIELDS.all? { |key| value[key].is_a?(String) && TOKEN.match?(value[key]) }
+            raise ValidationError, "direct original context selection differs"
+          end
+          value
+        end
+
         def reverse!(value)
           object!(value, %w[schema session pane])
           raise ValidationError, "direct reverse schema differs" unless value["schema"] == Ace::Hitl::Providers::Ref::SCHEMA
@@ -65,7 +77,7 @@ module Ace
           else
             {"expected_claim_generation" => selection.fetch("expected_claim_generation")}
           end
-          Digest::SHA256.hexdigest(JSON.generate(value.slice("purpose", "event_id", "attempt_id")
+          Digest::SHA256.hexdigest(JSON.generate(value.slice("purpose", "event_id", "attempt_id", *ORIGINAL_FIELDS)
             .merge("key_generation" => generation, "selection" => normalized)))
         rescue KeyError, TypeError, NoMethodError
           raise ValidationError, "direct context selectors differ"

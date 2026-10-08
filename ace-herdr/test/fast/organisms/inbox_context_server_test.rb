@@ -42,7 +42,7 @@ class InboxContextServerTest < Minitest::Test
     operation = begin_operation
     payload = "hello"
     params = {"operation_id" => operation.fetch("operation_id"), "key_generation" => 1,
-      "event_id" => "event1", "attempt_id" => "attempt1", "payload_bytes" => payload.bytesize,
+      "event_id" => "event1", "attempt_id" => "attempt1", "original" => direct_original, "payload_bytes" => payload.bytesize,
       "payload_sha256" => Digest::SHA256.hexdigest(payload),
       "reverse" => {"schema" => Ace::Hitl::Providers::Ref::SCHEMA, "session" => "ws1", "pane" => "p1"}}
     frame = ->(arguments) { JSON.generate("version" => 1, "context_id" => "ctx", "operation" => "enqueue_context", "params" => arguments) + "\n" }
@@ -80,7 +80,7 @@ class InboxContextServerTest < Minitest::Test
   end
 
   def test_actual_socket_framing_uses_kernel_peer_and_retains_grant_after_response_disconnect
-    params = {"context_id" => "ctx", "purpose" => "enqueue", "event_id" => "event1", "process_binding" => @normal}
+    params = {"context_id" => "ctx", "purpose" => "enqueue", "event_id" => "event1", "process_binding" => @normal, "original" => direct_original.merge("attempt_id" => "attempt1")}
     first = request("begin_context_operation", params).fetch("result")
     assert_equal first, request("begin_context_operation", params).fetch("result")
     assert_equal 1, @owner.status(peer: @normal).fetch("active_operations")

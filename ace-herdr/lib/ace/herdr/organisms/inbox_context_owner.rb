@@ -95,10 +95,12 @@ module Ace
           end
         end
 
-        def begin_context_operation(context_id:, purpose:, event_id:, process_binding:, peer:)
+        def begin_context_operation(context_id:, purpose:, event_id:, process_binding:, peer:, original: nil)
           context!(context_id)
           authorize!(peer, purpose: purpose)
           token!(event_id)
+          validate_direct_original!(original) if %w[enqueue deliver].include?(purpose)
+          raise ValidationError, "non-direct admission cannot select original delivery" if !%w[enqueue deliver].include?(purpose) && original
           peer!(process_binding)
           raise ValidationError, "context process binding differs from kernel peer" unless @kernel.same?(process_binding, peer)
           transaction do |state|
@@ -109,14 +111,14 @@ module Ace
             end
             if existing
               id, operation = existing
-              raise ValidationError, "context admission retry binding differs" unless operation.fetch("purpose") == purpose
+              raise ValidationError, "context admission retry binding differs" unless operation.fetch("purpose") == purpose && operation["original"] == original
               direct_idle_readback!(state, operation) if operation["effect_binding"] && operation.fetch("in_flight").zero? && direct_binding?(operation)
               next operation_projection(state, id, operation)
             end
             raise ValidationError, "context admission count exceeds bounds" if state.fetch("operations").size >= OPERATION_LIMIT
             id = SecureRandom.hex(16)
             state.fetch("operations")[id] = {"peer" => copy(peer), "purpose" => purpose, "event_id" => event_id,
-              "key_generation" => state.fetch("key").fetch("key_generation"), "in_flight" => 0,
+              "key_generation" => state.fetch("key").fetch("key_generation"), "in_flight" => 0, "original" => copy(original), "original_binding_digest" => nil,
               "effect_binding" => nil, "completion" => nil, "issuer_state" => nil, "admitted_claim" => nil, "issuer_epoch" => nil}
             operation_projection(state, id, state.fetch("operations").fetch(id))
           end
@@ -391,6 +393,14 @@ module Ace
           raise ValidationError, "context key generation differs" unless state.fetch("key").fetch("key_generation") == expected
         end
 
+        def validate_direct_original!(value)
+          fields = Molecules::InboxDirectEffectBinding::ORIGINAL_FIELDS
+          strict!(value, fields + ["attempt_id"])
+          Molecules::InboxDirectEffectBinding.original!(value.slice(*fields))
+          token!(value.fetch("attempt_id"))
+          context!(value.fetch("inbox_context_id"))
+        end
+
         def validate_grants!
           unless @grants.is_a?(Array) && @grants.size.between?(1, 64) && @grants.all? { |grant| grant.is_a?(Hash) } &&
               @grants.map { |g| g["uid"] }.uniq.size == @grants.size
@@ -425,17 +435,26 @@ module Ace
           raise ValidationError, "context admission map exceeds bounds" unless operations.is_a?(Hash) && operations.size <= OPERATION_LIMIT
           operations.each do |id, operation|
             id!(id)
-            strict!(operation, %w[admitted_claim completion effect_binding event_id in_flight issuer_epoch issuer_state key_generation peer purpose])
+            strict!(operation, %w[admitted_claim completion effect_binding event_id in_flight issuer_epoch issuer_state key_generation original original_binding_digest peer purpose])
             peer!(operation.fetch("peer"))
             token!(operation.fetch("event_id"))
+            if %w[enqueue deliver].include?(operation["purpose"])
+              validate_direct_original!(operation.fetch("original"))
+            elsif operation["original"]
+              raise ValidationError, "non-direct retained original selection differs"
+            end
             unless PURPOSES.include?(operation["purpose"]) && [0, 1].include?(operation["in_flight"]) &&
                 operation["in_flight"].is_a?(Integer) && operation["key_generation"] == state.fetch("key").fetch("key_generation")
               raise ValidationError, "context admission metadata differs"
             end
             if operation["effect_binding"]
               if direct_binding?(operation)
+                unless operation["original_binding_digest"].is_a?(String) && DIGEST.match?(operation["original_binding_digest"])
+                  raise ValidationError, "direct original record digest differs"
+                end
                 effect = Molecules::InboxDirectEffectBinding.verify!(operation.fetch("effect_binding"), key_generation: operation.fetch("key_generation"))
-                unless effect.values_at("purpose", "event_id") == operation.values_at("purpose", "event_id") && operation["completion"].nil?
+                unless effect.values_at("purpose", "event_id") == operation.values_at("purpose", "event_id") &&
+                    effect.slice(*Molecules::InboxDirectEffectBinding::ORIGINAL_FIELDS, "attempt_id") == operation.fetch("original") && operation["completion"].nil?
                   raise ValidationError, "context retained direct binding differs"
                 end
                 unless %w[running returned].include?(operation["issuer_state"])
@@ -462,7 +481,7 @@ module Ace
                 raise ValidationError, "context retained effect lacks canonical completion"
               end
             end
-            unless operation["issuer_state"].nil? && operation["admitted_claim"].nil? && operation["issuer_epoch"].nil?
+            unless operation["issuer_state"].nil? && operation["admitted_claim"].nil? && operation["issuer_epoch"].nil? && operation["original_binding_digest"].nil?
               raise ValidationError, "context non-direct issuer evidence differs"
             end
             if operation["completion"]

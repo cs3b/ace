@@ -97,11 +97,11 @@ module Ace
           private
 
           def protected_call(operation, options, selected)
-            %i[event attempt].each { |key| cli_error("--#{key} is required") if options[key].to_s.empty? }
+            %i[event attempt assignment].each { |key| cli_error("--#{key} is required") if options[key].to_s.empty? }
             unless %w[enqueue status deliver reconcile].include?(operation)
               cli_error("protected operation requires its maintained direct handler")
             end
-            allowed = %i[project mapping inbox_context event attempt format]
+            allowed = %i[project mapping inbox_context event attempt assignment format]
             allowed += %i[ref file] if operation == "enqueue"
             allowed += %i[claim_generation] if operation == "deliver"
             allowed += %i[assignment mutation expected_generation receipt_key_sha256 receipt] if operation == "reconcile"
@@ -123,7 +123,7 @@ module Ace
             client = @context_client_factory.call(context_id: selected.fetch("inbox_context_id"),
               socket_path: context.fetch("control_socket_path"), owner_credentials: context.fetch("owner_credentials"))
             if operation == "status"
-              return client.request("status_context", {"event_id" => options.fetch(:event), "attempt_id" => options.fetch(:attempt)}).fetch("record")
+              return client.request("status_context", {"event_id" => options.fetch(:event), "attempt_id" => options.fetch(:attempt), "original" => direct_original(selected, options)}).fetch("record")
             end
             if operation == "deliver"
               unless options[:claim_generation].is_a?(Integer) && options[:claim_generation] >= 0
@@ -132,7 +132,7 @@ module Ace
               admission = direct_admission(client, selected, options, "deliver")
               result = client.request("deliver_context", {"operation_id" => admission.fetch("operation_id"),
                 "key_generation" => admission.fetch("key_generation"), "event_id" => options.fetch(:event),
-                "attempt_id" => options.fetch(:attempt), "expected_claim_generation" => options.fetch(:claim_generation)})
+                "attempt_id" => options.fetch(:attempt), "original" => direct_original(selected, options), "expected_claim_generation" => options.fetch(:claim_generation)})
               unless %w[idle unknown].include?(result["admission_state"])
                 cli_error("direct delivery admission observation differs")
               end
@@ -146,16 +146,22 @@ module Ace
             admission = direct_admission(client, selected, options, "enqueue")
             result = client.request("enqueue_context", {"operation_id" => admission.fetch("operation_id"),
               "key_generation" => admission.fetch("key_generation"), "event_id" => options.fetch(:event),
-              "attempt_id" => options.fetch(:attempt), "reverse" => reverse, "payload_bytes" => payload.bytesize,
+              "attempt_id" => options.fetch(:attempt), "original" => direct_original(selected, options), "reverse" => reverse, "payload_bytes" => payload.bytesize,
               "payload_sha256" => Digest::SHA256.hexdigest(payload)}, payload: payload)
             client.request("end_context_operation", {"operation_id" => admission.fetch("operation_id")})
             result.fetch("record").merge("admission_state" => result.fetch("admission_state"))
           end
 
+          def direct_original(selected, options)
+            value = selected.slice("project_id", "mapping_id", "inbox_context_id").merge("assignment_id" => options.fetch(:assignment))
+            Molecules::InboxDirectEffectBinding.original!(value)
+          end
+
           def direct_admission(client, selected, options, purpose)
             peer = @kernel.capture(Process.pid)
             client.request("begin_context_operation", {"context_id" => selected.fetch("inbox_context_id"),
-              "purpose" => purpose, "event_id" => options.fetch(:event), "process_binding" => peer})
+              "purpose" => purpose, "event_id" => options.fetch(:event), "process_binding" => peer,
+              "original" => direct_original(selected, options).merge("attempt_id" => options.fetch(:attempt))})
           end
 
         end

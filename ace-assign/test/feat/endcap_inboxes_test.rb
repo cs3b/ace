@@ -64,7 +64,9 @@ module Ace
       end
 
       def test_original_query_joins_accepted_guard_and_registration_without_effect_permission
-        fixture(child: true, inbox: false, original_terminal: "term_aa") do
+        resources = 64.times.map { |index| {"host_path" => "/var/lib/slot/#{"a" * 160}/#{index}", "view_path" => "/scratch/#{"a" * 160}/#{index}",
+          "mount_id" => index + 10, "filesystem_type" => "ext4", "device" => 5, "inode" => index + 10, "uid" => 13001, "gid" => 13001} }
+        fixture(child: true, inbox: false, original_terminal: "term_aa", resources: resources) do
           @context["owner_credentials"] = @context_peer.slice("uid", "gid", "groups")
           child = events.find { |event| event["type"] == "scope_child_bound" }.dig("payload", "original_process_binding")
           guard = {"terminal_id" => child.fetch("terminal_id"), "runtime_incarnation" => BOOT,
@@ -84,6 +86,9 @@ module Ace
           assert_equal guard, result.fetch("guarded_origin")
           refute result.fetch("registered")
           refute result.key?("agent_session")
+          assert_operator JSON.generate(events.find { |event| event["type"] == "scope_native_bound" }.fetch("payload")).bytesize, :>, 16_384
+          assert_operator JSON.generate(result).bytesize, :<=, 15_360
+          refute result.fetch("native_binding").key?("resource_identities")
           assert result.frozen?
           assert result.fetch("process_binding").frozen?
           assert_equal before, @journal.ref_value
@@ -103,8 +108,10 @@ module Ace
         end
       end
 
-      def fixture(child: false, inbox: true, direct: false, original_terminal: "terminal")
+      def fixture(child: false, inbox: true, direct: false, original_terminal: "terminal", resources: nil)
         @direct_fixture = direct
+        child = true if direct
+        original_terminal = "term_aa" if direct && original_terminal == "terminal"
         Dir.mktmpdir do |root|
           root = File.realpath(root)
           repo = File.join(root, "repo"); FileUtils.mkdir_p(repo)
@@ -164,7 +171,7 @@ module Ace
             "network_namespace_identity" => {"device" => 7, "inode" => 88},
             "resource_mount_namespace_identity" => {"device" => 4, "inode" => 1111},
             "cgroup_identity" => {"path" => "/sys/fs/cgroup/slot.slice", "mount_id" => 1, "filesystem_type" => "cgroup2", "device" => 2, "inode" => 3},
-            "resource_identities" => [{"host_path" => "/var/lib/slot", "view_path" => "/scratch", "mount_id" => 4,
+            "resource_identities" => resources || [{"host_path" => "/var/lib/slot", "view_path" => "/scratch", "mount_id" => 4,
               "filesystem_type" => "ext4", "device" => 5, "inode" => 6, "uid" => 13001, "gid" => 13001}]}
           mutate("fixture_parent", "parent", 1, {data: {}, events: [{type: "scope_bound", payload: parent}]})
           parent_event = events.find { |event| event["type"] == "scope_bound" }
@@ -188,6 +195,11 @@ module Ace
               "native_binding_event_id" => events.find { |event| event["type"] == "scope_native_bound" }.fetch("digest"),
               "original_process_binding" => original}}]})
           end
+          if direct
+            guarded = {"terminal_id" => original.fetch("terminal_id"), "runtime_incarnation" => BOOT, "child" => original.fetch("process_identity")}
+            mutate("record_launch", "fixture-original-record", 5, {data: {"assignment_id" => "assignment", "mapping_id" => "mapping",
+              "attempt_id" => "attempt", "process_binding" => original, "guarded_origin" => guarded}})
+          end
           unless inbox
             FileUtils.mkdir_p(@context.fetch("deliveries_dir"))
             @params = {"mapping_id" => "mapping", "assignment_id" => "assignment", "attempt_id" => "attempt"}
@@ -197,7 +209,7 @@ module Ace
           executor = Object.new
           executor.define_singleton_method(:pane_get_bounded) do |_pane|
             Ace::Herdr::Molecules::ExecutionResult.new(stdout: JSON.generate("result" => {"pane" => {
-              "pane_id" => "p1", "workspace_id" => "w1", "terminal_id" => "terminal", "agent" => "codex", "agent_status" => "busy",
+              "pane_id" => "p1", "workspace_id" => "w1", "terminal_id" => original_terminal, "agent" => "codex", "agent_status" => "busy",
               "agent_session" => {"agent" => "codex", "kind" => "id", "value" => "0123abcd-0000-4000-8000-000000000001"}}}),
               stderr: "", success: true, exit_code: 0)
           end
@@ -208,10 +220,11 @@ module Ace
             direct ? {"accepted" => false, "error" => "controlled lost native acknowledgement"} : {"accepted" => true}
           end
           @box = Ace::Herdr::Organisms::Inbox.new(executor: executor, native: native, deliveries_dir: @context.fetch("deliveries_dir"), receipt_public_key: key.public_key)
-          @box.enqueue(event: "event", attempt: "attempt", ref: {"session" => "w1", "pane" => "p1"}, payload: "message")
+          original_options = direct ? {original_context: direct_original_context, original_binding_digest: events.find { |event| event.dig("payload", "operation") == "record_launch" }.fetch("digest")} : {}
+          @box.enqueue(event: "event", attempt: "attempt", ref: {"session" => "w1", "pane" => "p1"}, payload: "message", **original_options)
           record = direct ? @box.retained_status(event: "event") : @box.deliver(event: "event")
           @registration = record.slice("event_id", "attempt_id", "payload_sha256", "receipt_key_sha256")
-          mutate("fixture_registration", "registration", child ? 5 : 4, {data: {}, events: [{type: "inbox_binding", payload: {
+          mutate("fixture_registration", "registration", direct ? 6 : child ? 5 : 4, {data: {}, events: [{type: "inbox_binding", payload: {
             "event_id" => "event", "attempt_id" => "attempt", "inbox_context_id" => "context", "registration" => @registration}}]})
           receipt = record.slice("event_id", "attempt_id", "claim_generation", "payload_sha256", "binding").merge(
             "outcome" => "consumed", "observer" => {"role" => "supervisor", "id" => "observer"},
@@ -220,7 +233,7 @@ module Ace
           start_context_pipeline(root)
           restart
           @params = {"mapping_id" => "mapping", "assignment_id" => "assignment", "attempt_id" => "attempt",
-            "expected_generation" => child ? 6 : 5, "event_id" => "event", "inbox_context_id" => "context", "expected_registration" => @registration,
+            "expected_generation" => direct ? 7 : child ? 6 : 5, "event_id" => "event", "inbox_context_id" => "context", "expected_registration" => @registration,
             "receipt_sha256" => Digest::SHA256.hexdigest(@bytes), "signature_sha256" => Digest::SHA256.hexdigest(@signature), "transfer" => {}}
           yield
         ensure
@@ -275,9 +288,9 @@ module Ace
       def test_returned_direct_issuer_is_retired_by_actual_canonical_confirmation_and_restarted_exact_replay
         fixture(direct: true) do
           admission = @context_owner.begin_context_operation(context_id: "context", purpose: "deliver", event_id: "event",
-            process_binding: @peer, peer: @peer)
+            process_binding: @peer, peer: @peer, original: direct_original_context.merge("attempt_id" => "attempt"))
           reply = @context_owner.deliver_context(operation_id: admission.fetch("operation_id"), key_generation: 1,
-            event_id: "event", attempt_id: "attempt", expected_claim_generation: 0, peer: @peer)
+            event_id: "event", attempt_id: "attempt", expected_claim_generation: 0, original: direct_original_context, peer: @peer)
           assert_equal "unknown", reply.fetch("admission_state")
           assert_equal "uncertain", reply.dig("record", "state")
           assert_equal 1, @native_calls
@@ -319,11 +332,15 @@ module Ace
         @params = @params.merge("receipt_sha256" => Digest::SHA256.hexdigest(@bytes), "signature_sha256" => Digest::SHA256.hexdigest(@signature))
       end
 
+      def direct_original_context
+        {"project_id" => "project", "assignment_id" => "assignment", "mapping_id" => "mapping", "inbox_context_id" => "context"}
+      end
+
       def direct_admission_and_arguments
         admission = @context_owner.begin_context_operation(context_id: "context", purpose: "deliver", event_id: "event",
-          process_binding: @peer, peer: @peer)
+          process_binding: @peer, peer: @peer, original: direct_original_context.merge("attempt_id" => "attempt"))
         [admission, {operation_id: admission.fetch("operation_id"), key_generation: 1,
-          event_id: "event", attempt_id: "attempt", expected_claim_generation: 0, peer: @peer}]
+          event_id: "event", attempt_id: "attempt", expected_claim_generation: 0, original: direct_original_context, peer: @peer}]
       end
 
       def test_genuine_consumed_proof_cannot_clear_crash_before_durable_issuer_return

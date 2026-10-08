@@ -84,7 +84,7 @@ module Ace
             end
             data = result.fetch("result")
             if %w[enqueue_context deliver_context status_context].include?(operation)
-              InboxDirectResult.verify!(data, operation: operation, event_id: params.fetch("event_id"), attempt_id: params.fetch("attempt_id"))
+              InboxDirectResult.verify!(data, operation: operation, event_id: params.fetch("event_id"), attempt_id: params.fetch("attempt_id"), original: params.fetch("original"))
             end
             data
           end

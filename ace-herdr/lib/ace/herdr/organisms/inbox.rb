@@ -8,6 +8,7 @@ require "securerandom"
 require "openssl"
 require "ace/hitl/contract"
 require_relative "../molecules/inbox_receipt_authentication"
+require_relative "../molecules/inbox_direct_effect_binding"
 
 module Ace
   module Herdr
@@ -188,7 +189,7 @@ module Ace
           self.class.new(executor: @executor, native: @native, deliveries_dir: @deliveries_dir, receipt_public_key: key)
         end
 
-        def enqueue(event:, attempt:, ref:, payload:, managed_envelope: nil, expected_target: nil)
+        def enqueue(event:, attempt:, ref:, payload:, managed_envelope: nil, expected_target: nil, original_context: nil, original_binding_digest: nil)
           validate_id!(event, "event")
           validate_id!(attempt, "attempt")
           raise ValidationError, "trusted receipt public key is unavailable" unless @receipt_public_key
@@ -202,6 +203,14 @@ module Ace
             raise ValidationError, "payload is not valid UTF-8 text"
           end
 
+          if original_context
+            Molecules::InboxDirectEffectBinding.original!(original_context)
+            unless original_binding_digest.is_a?(String) && Molecules::InboxDirectEffectBinding::SHA.match?(original_binding_digest)
+              raise ValidationError, "original launch record digest differs"
+            end
+          elsif original_binding_digest
+            raise ValidationError, "original digest requires its context association"
+          end
           address = address_for(ref)
           digest = Digest::SHA256.hexdigest(payload)
           envelope = if managed_envelope
@@ -226,7 +235,7 @@ module Ace
           with_event(event) do |record|
             if record
               validate_match!(record, attempt, address, digest)
-              unless record.inbox["managed_envelope"] == envelope
+              unless record.inbox["managed_envelope"] == envelope && record.inbox["original_context"] == original_context && record.inbox["original_binding_digest"] == original_binding_digest
                 raise ValidationError, "managed envelope conflicts with immutable inbox event"
               end
               if expected_target && record.inbox["origin_target"] != expected_target
@@ -257,7 +266,7 @@ module Ace
               answer_digest: digest, answer: payload, state: "queued",
               inbox: {"attempt_id" => attempt, "claim_generation" => 0,
                 "receipt_key_sha256" => key_fingerprint,
-                "managed_envelope" => envelope,
+                "managed_envelope" => envelope, "original_context" => original_context, "original_binding_digest" => original_binding_digest,
                 "origin_target" => target.slice(*TARGET_IDENTITY),
                 "target" => target, "binding" => target.merge("payload_sha256" => digest)}
             )
@@ -288,6 +297,8 @@ module Ace
             validate_expected_target!(origin)
             unless record.answer.bytesize == selection.fetch("payload_bytes") &&
                 record.inbox.fetch("receipt_key_sha256") == key_fingerprint &&
+                record.inbox.fetch("original_context") == binding.slice(*Molecules::InboxDirectEffectBinding::ORIGINAL_FIELDS) &&
+                record.inbox["original_binding_digest"].is_a?(String) && Molecules::InboxDirectEffectBinding::SHA.match?(record.inbox.fetch("original_binding_digest")) &&
                 origin.values_at("session", "pane") == [address.session, address.pane] &&
                 record.inbox.fetch("binding").fetch("payload_sha256") == record.answer_digest
               raise ValidationError, "direct enqueue retained association differs"
@@ -301,7 +312,9 @@ module Ace
         def verify_direct_delivery(binding, require_idle: false)
           with_event(binding.fetch("event_id"), create_lock: false) do |record|
             unless record&.inbox && record.inbox.fetch("attempt_id") == binding.fetch("attempt_id") &&
-                record.inbox.fetch("receipt_key_sha256") == key_fingerprint
+                record.inbox.fetch("receipt_key_sha256") == key_fingerprint &&
+                record.inbox.fetch("original_context") == binding.slice(*Molecules::InboxDirectEffectBinding::ORIGINAL_FIELDS) &&
+                record.inbox["original_binding_digest"].is_a?(String) && Molecules::InboxDirectEffectBinding::SHA.match?(record.inbox.fetch("original_binding_digest"))
               raise ValidationError, "direct delivery retained association differs"
             end
             validate_expected_target!(record.inbox.fetch("origin_target"))
@@ -539,6 +552,8 @@ module Ace
             receipt = record&.inbox&.fetch("reconciliation", nil)
             unless record&.inbox && record.state == proof.fetch("state") &&
                 record.inbox.fetch("attempt_id") == binding.fetch("attempt_id") &&
+                record.inbox.fetch("original_context") == binding.slice(*Molecules::InboxDirectEffectBinding::ORIGINAL_FIELDS) &&
+                proof.fetch("effect_binding").slice(*Molecules::InboxDirectEffectBinding::ORIGINAL_FIELDS) == record.inbox.fetch("original_context") &&
                 registration == {"event_id" => record.event_id, "attempt_id" => record.inbox.fetch("attempt_id"),
                   "payload_sha256" => record.answer_digest, "receipt_key_sha256" => key_fingerprint} &&
                 record.inbox.fetch("receipt_key_sha256") == key_fingerprint && receipt.is_a?(Hash) &&
@@ -920,6 +935,8 @@ module Ace
            "session" => record.session, "pane" => record.pane,
            "payload_sha256" => record.answer_digest, "state" => record.state,
            "managed_envelope" => record.inbox["managed_envelope"],
+           "original_context" => record.inbox["original_context"],
+           "original_binding_digest" => record.inbox["original_binding_digest"],
            "receipt_key_sha256" => record.inbox["receipt_key_sha256"],
            "claim_generation" => record.inbox["claim_generation"],
            "claim_owner" => record.inbox["claim_owner"],
