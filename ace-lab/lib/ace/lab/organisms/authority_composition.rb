@@ -4,7 +4,6 @@ require "ace/assign/authority/server"
 require "ace/assign/authority/router"
 require "ace/assign/authority/launch_lifecycle"
 require "ace/assign/authority/endcap"
-require "ace/assign/authority/inbox_context_completion"
 require_relative "../molecules/protected_service_policy"
 require "ace/hitl/providers/lab"
 require "ace/hitl/providers/lab/protected_assignment_binding"
@@ -18,7 +17,7 @@ module Ace
       # and placement; source selects all handlers, policy and evidence readers.
       class AuthorityComposition
         REQUIRED_ENDCAP = %w[submit_candidate export_candidate assign_review accept_review request_service
-          begin_dispatch publication_challenge publication_continue claim_service_settlement complete_service complete_no_effect submit_result finish recover bind_inbox reconcile_inbox
+          begin_dispatch publication_challenge publication_continue claim_service_settlement complete_service complete_no_effect submit_result finish recover bind_inbox
           service_status evidence_fetch].freeze
 
         def initialize(authority_id:, deployment: Ace::Assign::Authority::Deployment.load,
@@ -64,9 +63,7 @@ module Ace
             kernel: @kernel, journals: journals)
           endcap = Ace::Assign::Authority::Endcap.new(deployment: @deployment, launch: launch, kernel: @kernel,
             service_policy: policy, deployment_history: history)
-          completion = Ace::Assign::Authority::InboxContextCompletion.new(deployment: @deployment, history: history,
-            authority_id: @authority_id, journals: journals, kernel: @kernel)
-          router = Ace::Assign::Authority::Router.new(launch: launch, handlers: [endcap, completion])
+          router = Ace::Assign::Authority::Router.new(launch: launch, handlers: [endcap])
           Ace::Assign::Authority::Server.new(authority_id: @authority_id, deployment: @deployment, kernel: @kernel,
             lifecycle: router, composition: "services", hitl_service: publication_hitl(endcap, journals))
         end
