@@ -2,7 +2,12 @@
 
 require "json"
 require "etc"
-require "ace/assign"
+require "ace/assign/atoms/evidence_digest"
+require_relative "../authorization_path"
+require_relative "../atoms/service_input"
+require_relative "grant_resolver"
+require_relative "caller_authorizer"
+require_relative "service_policy"
 require_relative "../atoms/protected_workspace_prune_input"
 
 module Ace

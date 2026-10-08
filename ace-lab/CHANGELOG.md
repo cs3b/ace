@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Load protected policy and listener dependencies directly, preserving the fixed trusted authorization path and error hierarchy without loading broad package configuration entrypoints.
+
 - Bind protected cleanup identity to the explicitly selected dedicated systemd slice and reject a different observed service slice.
 - Admit the complete protected cleanup runtime of up to 64 verified load paths, with a 16KiB aggregate startup argument bound matching the installed producer.
 - Reject cleanup previews whose inventory digest differs from the complete preservation manifest digest.

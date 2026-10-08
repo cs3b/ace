@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
+require_relative "../errors"
 require "yaml"
+require "date"
 
 module Ace
   module Lab

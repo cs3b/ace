@@ -3,14 +3,8 @@
 require_relative "lab/version"
 require "ace/support/config"
 
-module Ace
-  module Lab
-    class Error < StandardError; end
-
-    # Raised when topology configuration violates the schema contract
-    class InvalidConfigurationError < Error; end
-  end
-end
+require_relative "lab/errors"
+require_relative "lab/authorization_path"
 
 # Load all ace-lab components
 require_relative "lab/atoms/topology_schema"
@@ -63,20 +57,6 @@ module Ace
     # Same discovery the cascade resolver performs for this namespace
     LAB_FILE_PATTERNS = ["lab/config.yml", "lab/config.yaml"].freeze
 
-    # Authorization grants live in a single deployment-controlled file at a
-    # FIXED path — never in the caller-writable configuration cascade and
-    # never at a caller-selected location (review rounds 4-5, F3/F1). The
-    # file must be root-owned and not group/world-writable, including every
-    # directory on its real path; GrantResolver verifies and fails closed.
-    AUTHORIZATION_PATH = "/etc/lab/ace-lab/authorization.yml"
-
-    # Path of the trusted authorization grants document. A method (not a
-    # bare constant reference) so tests can stub the seam without any
-    # caller-controllable production override.
-    # @return [String]
-    def self.authorization_path
-      AUTHORIZATION_PATH
-    end
 
     # Load configuration using Ace::Support::Config cascade.
     # Load failures raise InvalidConfigurationError (classified by the query
