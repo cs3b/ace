@@ -173,6 +173,7 @@ module Ace
               duration: total_duration,
               test_times: all_test_times
             },
+            files: all_files.uniq,
             stopped_at_target: stopped
           }
         end

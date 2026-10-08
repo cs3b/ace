@@ -265,6 +265,9 @@ module Ace
             end
           end
 
+          # Only dispatched targets belong in the execution report after an early stop.
+          all_files = execution_result.fetch(:files)
+
           # Use the parsed result from sequential executor
           @parsed_result = execution_result[:parsed_result]
 
