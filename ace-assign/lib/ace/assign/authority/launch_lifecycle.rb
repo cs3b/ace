@@ -609,6 +609,11 @@ module Ace
           end
           head = params.fetch("base_head")
           raise ArgumentError, "invalid base revision" unless head.is_a?(String) && head.match?(/\A[0-9a-f]{40}\z/)
+          registered_definition = inventory_definition!(journal, commit,
+            {selector: {"assignment_id" => params.fetch("assignment_id"), "attempt_id" => nil}, registration: registration})
+          if registered_definition.campaign_execution && head != registered_definition.campaign_execution.fetch("base")
+            raise AttemptErrors::Conflict, "campaign child base differs from pinned parent candidate"
+          end
           ticket = SecureRandom.hex(24)
           payload = {"assignment_id" => params.fetch("assignment_id"), "scope" => scope,
             "project_id" => map.fetch("project_id"), "task_id" => registration.fetch("task_id"),

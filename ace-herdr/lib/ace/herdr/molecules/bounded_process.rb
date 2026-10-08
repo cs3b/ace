@@ -206,7 +206,13 @@ module Ace
             next unless ready
 
             ready.first.each do |io|
-              chunk = io.read_nonblock(4096, exception: false)
+              begin
+                chunk = io.read_nonblock(4096, exception: false)
+              rescue Errno::EINTR
+                # No bytes were returned. Keep the original child/pipe and
+                # return to the same absolute-deadline loop before reading again.
+                next
+              end
               if chunk.nil?
                 io.close
                 streams.delete(io)

@@ -43,6 +43,37 @@ module Ace
           raise ArgumentError, "campaign execution round is incomplete"
         end
 
+        # This does not accept a receipt; the canonical result owner still
+        # validates its producer, artifacts and introduction before use.
+        def self.validate_result!(value, receipt:, base:)
+          unless receipt.is_a?(Hash) && receipt["campaign"].nil? &&
+              receipt["operation"] == value.fetch("operation") &&
+              receipt["head"] == value.fetch("head") && base == value.fetch("base")
+            raise ArgumentError, "campaign child result differs from registered phase or candidate"
+          end
+          if receipt["verdict"] == "succeeded" && !Array(receipt["checks"]).any? { |check|
+              check.is_a?(Hash) && check["name"] == value.fetch("check_name") && check["verdict"] == "passed" }
+            raise ArgumentError, "campaign child result lacks its executed phase check"
+          end
+          value
+        rescue KeyError, TypeError
+          raise ArgumentError, "campaign child result binding is incomplete"
+        end
+
+        def self.validate_finished_review!(value, receipt:, accepted_review:)
+          executed = Array(receipt.fetch("artifacts")).map { |ref| ref.fetch("sha256") }
+          reviewed = Array(accepted_review.fetch("artifacts")).map { |ref| ref.fetch("sha256") }
+          unless (executed - reviewed).empty?
+            raise ArgumentError, "independent campaign review does not cover executed artifacts"
+          end
+          if value.fetch("phase") == "approval" && receipt["review"] != accepted_review.fetch("review")
+            raise ArgumentError, "campaign approval differs from canonical independent review"
+          end
+          true
+        rescue KeyError, TypeError
+          raise ArgumentError, "campaign independent review binding is incomplete"
+        end
+
         def self.validate!(value, parent:, policy:)
           unless value.is_a?(Hash) && value.keys.sort == FIELDS && value["version"].is_a?(Integer) && value["version"] == 1
             raise ArgumentError, "campaign execution fields differ"

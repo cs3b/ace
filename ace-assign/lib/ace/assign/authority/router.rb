@@ -30,7 +30,7 @@ module Ace
           handler = @routes.fetch(operation) { raise ArgumentError, "unknown authority operation" }
           return nil unless handler.class.const_defined?(:TRANSFER_OPERATIONS, false)
           binding = handler.class::TRANSFER_OPERATIONS[operation]
-          if operation == "evidence_fetch" && request.dig("params", "kind") == "prepared_work"
+          if operation == "evidence_fetch" && %w[prepared_work campaign_candidate].include?(request.dig("params", "kind"))
             binding = {direction: :download, purpose: :candidate, roles: [:worker]}
           end
           return nil unless binding

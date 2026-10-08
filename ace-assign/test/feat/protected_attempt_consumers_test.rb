@@ -532,14 +532,14 @@ module Ace
           campaign_args[campaign_args.index("--expected-generation") + 1] = generation.to_s
           campaign_ref = @journal.ref_value
           campaign_owner_error = nil
-          original_verifier = @endcap.method(:verify_result_receipt)
-          observing_verifier = lambda do |*args|
-            original_verifier.call(*args)
+          original_verifier = @endcap.method(:with_campaign_submission!)
+          observing_verifier = lambda do |**args, &consumer|
+            original_verifier.call(**args, &consumer)
           rescue AttemptErrors::EvidenceUnavailable => error
             campaign_owner_error = error.message
             raise
           end
-          @endcap.stub(:verify_result_receipt, observing_verifier) do
+          @endcap.stub(:with_campaign_submission!, observing_verifier) do
             refusal = assert_raises(AttemptErrors::EvidenceUnavailable) { public_cli_json(campaign_args) }
             assert_equal "protected authority refused (evidence_unavailable)", refusal.message
           end

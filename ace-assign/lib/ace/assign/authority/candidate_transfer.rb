@@ -4,6 +4,7 @@ require "digest"
 require "json"
 require "fileutils"
 require "tmpdir"
+require "tempfile"
 require "ace/herdr/molecules/bounded_process"
 require_relative "private_directory"
 
@@ -16,6 +17,61 @@ module Ace
         MAX_BYTES = 64 * 1024 * 1024
         DEADLINE = 30
         SHA = /\A[0-9a-f]{40}\z/
+
+        class CampaignReadView
+          def initialize(owner:, repository:, base:, deadline:)
+            @owner, @repository, @base, @deadline = owner, repository, base, deadline
+            @thread, @active = Thread.current, true
+          end
+
+          def close = @active = false
+          def head = command("rev-parse", "HEAD").strip
+          def base
+            commit!(@base)
+            @base
+          end
+          def commit!(revision)
+            raise ArgumentError, "campaign revision is invalid" unless revision.is_a?(String) && revision.match?(SHA)
+            command("cat-file", "-e", "#{revision}^{commit}")
+            true
+          end
+          def full_diff?(base, head)
+            commit!(base)
+            commit!(head)
+            !command("diff", "--raw", "--no-ext-diff", "--no-textconv", base, head, "--").empty?
+          end
+          def clean?
+            command("status", "--porcelain", "-z", "--untracked-files=all").split("\0")
+              .all? { |entry| entry.start_with?("?? .ace-local/") }
+          end
+
+          private
+
+          def command(*arguments)
+            unless @active && Thread.current.equal?(@thread)
+              raise AttemptErrors::EvidenceUnavailable, "campaign Git read view escaped its source lifetime"
+            end
+            @owner.send(:git, @repository, @deadline, *arguments)
+          rescue Timeout::Error
+            raise AttemptErrors::EvidenceUnavailable, "campaign Git read deadline expired"
+          end
+        end
+
+        def with_campaign_repository(bytes:, sha256:, size:, head:, tree:, base:)
+          raise ArgumentError, "campaign repository requires a block" unless block_given?
+          deadline = monotonic + DEADLINE
+          materialized = materialize_repository(bytes: bytes, sha256: sha256, size: size, head: head, tree: tree, root: @root)
+          directory = materialized.fetch("directory")
+          reader = CampaignReadView.new(owner: self, repository: directory, base: base, deadline: deadline)
+          unless reader.head == head
+            raise AttemptErrors::EvidenceUnavailable, "campaign Git head differs from original candidate"
+          end
+          reader.base
+          yield reader
+        ensure
+          reader&.close
+          FileUtils.remove_entry(directory) if directory && File.directory?(directory)
+        end
 
         def initialize(root:)
           @root = File.expand_path(root)
@@ -153,6 +209,28 @@ module Ace
           end
         rescue SystemCallError, ArgumentError
           reject!("Candidate filesystem materialization is unverifiable")
+        end
+
+        # Executing campaign children need local Git history as well as files.
+        # Create only our own empty administration; no uploader configuration,
+        # checkout filters or hooks enter this private repository.
+        def materialize_repository(bytes:, sha256:, size:, head:, tree:, root:)
+          deadline = monotonic + DEADLINE
+          result = materialize(bytes: bytes, sha256: sha256, size: size, head: head, tree: tree, root: root)
+          directory = result.fetch("directory")
+          Tempfile.create(["campaign-candidate-", ".bundle"], root) do |file|
+            file.binmode
+            file.write(bytes); file.flush
+            git(directory, deadline, "init", "--template=", "--initial-branch=work")
+            git(directory, deadline, "fetch", "--no-tags", file.path, "#{head}:refs/heads/candidate")
+            git(directory, deadline, "symbolic-ref", "HEAD", "refs/heads/candidate")
+            git(directory, deadline, "read-tree", head)
+            reject!("Campaign private repository differs") unless git(directory, deadline, "rev-parse", "HEAD^{tree}").strip == tree
+          end
+          result
+        rescue Exception
+          FileUtils.remove_entry(directory) if directory && File.directory?(directory) && !File.symlink?(directory)
+          raise
         end
 
         # Full immutable review input comes from the same admitted Git objects

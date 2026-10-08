@@ -16,10 +16,12 @@ module Ace
         Contract = Atoms::CampaignContract
         attr_reader :store
 
-        def initialize(repo_root: Dir.pwd, store: nil, revisions: nil, check_evidence: nil, review_evidence: nil, approval_evidence: nil)
+        def initialize(repo_root: Dir.pwd, store: nil, revisions: nil, check_evidence: nil, review_evidence: nil, approval_evidence: nil, artifact_paths: {}, candidate_reader: nil)
           @repo_root = File.realpath(repo_root)
+          raise ArgumentError, "canonical candidate cannot use a revision override" if candidate_reader && revisions
+          @candidate_reader = candidate_reader
           @store = store || Molecules::CampaignStore.new(root: File.join(@repo_root, ".ace-local/review/campaigns"))
-          @evidence = Molecules::CampaignEvidence.new(repo_root: @repo_root, check_evidence: check_evidence, review_evidence: review_evidence, approval_evidence: approval_evidence)
+          @evidence = Molecules::CampaignEvidence.new(repo_root: @repo_root, check_evidence: check_evidence, review_evidence: review_evidence, approval_evidence: approval_evidence, artifact_paths: artifact_paths)
           @live_git = revisions.nil?
           @revisions = revisions || method(:git_revision)
         end
@@ -79,21 +81,30 @@ module Ace
           end
         end
 
-        def record_round(id, input, dry_run: false)
+        def record_round(id, input, dry_run: false, source_digest: nil, expected_campaign: nil, consumer_profiles: nil, before_record: nil)
           Contract.object!(input, "round input")
           unknown = input.keys - %w[attempt_id round_id head base required_scopes scope_identity sessions dispositions approval]
           raise Contract::Invalid, "unknown round fields: #{unknown.join(', ')}" unless unknown.empty?
           attempt_id = Contract.id!(input["attempt_id"], "attempt ID")
           round_id = Contract.id!(input["round_id"], "round ID")
-          digest = Contract.digest(input)
+          if source_digest && !(source_digest.is_a?(String) && source_digest.match?(/\A[0-9a-f]{64}\z/))
+            raise Contract::Invalid, "round source digest is invalid"
+          end
+          digest = Contract.digest(source_digest ? {"input" => input, "source_digest" => source_digest} : input)
           store.transaction(dry_run: dry_run) do
             record = store.read(id)
+            if expected_campaign && expected_campaign != {"campaign_id" => record.fetch("id"),
+                "subject" => record.fetch("subject"), "contract_identity" => record.fetch("contract_identity"), "policy" => record.fetch("policy")}
+              raise Contract::Invalid, "round original campaign differs"
+            end
             prior = record["attempts"].find { |a| a["attempt_id"] == attempt_id }
             if prior
               raise Contract::Invalid, "conflicting replay of attempt #{attempt_id}" unless prior["input_digest"] == digest
               next projection(record).merge("replayed" => true, "recorded_complete" => prior["completed"])
             end
             raise Contract::Invalid, "campaign contract is superseded" if record["successor"]
+            verify_consumer_policy!(record, consumer_profiles) if consumer_profiles
+            before_record.call if before_record
             binding = round_binding(input, record)
             validate_local_commits(record, binding["head"], binding["base"])
             validate_local_full_diff(record, binding["head"], binding["base"])
@@ -163,28 +174,120 @@ module Ace
           end
         end
 
+        ACCEPTED_SNAPSHOT_FIELDS = %w[accepted base campaign_id contract_identity dry_run effective_policy head prefix producer result_identity reviewer schema subject].freeze
+
+        # Bounded serialization of the same accepted record, not new authority.
+        def accepted_result_snapshot(id)
+          store.transaction(dry_run: true, require_lock: true) do
+            record = store.read(id)
+            current = projection(record)
+            raise Contract::Invalid, "campaign result is not accepted" unless current["accepted"]
+            approval = current.fetch("rounds").last.fetch("approval")
+            immutable_projection({"schema" => "ace.review.accepted-result/v1", "campaign_id" => id,
+              "accepted" => true, "dry_run" => false, "subject" => current.fetch("subject"),
+              "contract_identity" => current.fetch("contract_identity"), "effective_policy" => current.fetch("effective_policy"),
+              "head" => current.fetch("evidence").fetch("current_head"), "base" => current.fetch("evidence").fetch("current_base"),
+              "producer" => approval.fetch("producer"), "reviewer" => approval.fetch("reviewer"),
+              "result_identity" => current.fetch("result_identity"), "prefix" => {
+                "attempts" => record.fetch("attempts").length, "rounds" => record.fetch("rounds").length,
+                "assessments" => record.fetch("assessments").length}})
+          end
+        end
+
         # Hold current campaign authority across the fixed receipt/CAS consumer.
         # Never call a public transaction-owning method from this block.
-        def with_verified_result!(result:, subject:, contract_identity:, policy:, head:, base:, producer:, reviewer:)
+        def with_verified_result!(result:, subject:, contract_identity:, policy:, head:, base:, producer:, reviewer:, consumer_profiles: nil)
           raise ArgumentError, "verified campaign result requires a block" unless block_given?
           Contract.object!(result, "campaign result")
           subject = Contract.subject!(subject)
           policy = Contract.policy!(policy)
           id = Contract.id!(result["campaign_id"], "campaign ID")
           store.transaction(dry_run: true, require_lock: true) do
-            current = projection(store.read(id))
+            record = store.read(id)
+            verify_consumer_policy!(record, consumer_profiles) if consumer_profiles
+            current = projection(record)
             approval = current["rounds"].last&.fetch("approval", nil)
+            compact = result["schema"] == "ace.review.accepted-result/v1"
+            if compact
+              prefix = accepted_snapshot_prefix!(record, result)
+              unless prefix.values_at("attempts", "rounds", "assessments").map(&:length) == record.values_at("attempts", "rounds", "assessments").map(&:length)
+                raise Contract::Invalid, "campaign result prefix is no longer current"
+              end
+            end
+            result_head, result_base = compact ? result.values_at("head", "base") :
+              [result.dig("evidence", "current_head"), result.dig("evidence", "current_base")]
             unless result["accepted"] == true && result["dry_run"] == false && current["accepted"] == true &&
                 result["result_identity"] == current["result_identity"] &&
                 current["subject"] == subject && current["contract_identity"] == contract_identity &&
                 current["effective_policy"] == policy &&
                 current.dig("evidence", "current_head") == head && current.dig("evidence", "current_base") == base &&
-                result.dig("evidence", "current_head") == head && result.dig("evidence", "current_base") == base &&
+                result_head == head && result_base == base &&
                 approval && approval["producer"] == producer && approval["reviewer"] == reviewer
               raise Contract::Invalid, "campaign result does not match current acceptance and expected binding"
             end
             yield immutable_projection(current)
           end
+        end
+
+        # Only a canonical accepted receipt consumer uses this historical read.
+        # It verifies retained append-only rounds and every original execution;
+        # a later campaign successor does not revoke a past accepted receipt.
+        def verify_retained_result!(result:, subject:, contract_identity:, policy:, head:, base:, producer:, reviewer:)
+          Contract.object!(result, "retained campaign result")
+          store.transaction(dry_run: true, require_lock: true) do
+            record = store.read(Contract.id!(result["campaign_id"], "campaign ID"))
+            snapshot = accepted_snapshot_prefix!(record, result)
+            attempts, rounds = snapshot.values_at("attempts", "rounds")
+            result_head, result_base = result.values_at("head", "base")
+            unless result["accepted"] == true && result["dry_run"] == false &&
+                result["result_identity"].is_a?(String) && result["result_identity"].match?(/\A[0-9a-f]{64}\z/) &&
+                record.values_at("subject", "contract_identity", "policy") == [subject, contract_identity, policy] &&
+                result.values_at("subject", "contract_identity", "effective_policy") == [subject, contract_identity, policy] &&
+                result_head == head && result_base == base &&
+                attempts.is_a?(Array) && rounds.is_a?(Array) && !rounds.empty? &&
+                record.fetch("attempts").first(attempts.length) == attempts && record.fetch("rounds").first(rounds.length) == rounds
+              raise Contract::Invalid, "retained campaign result differs from original store evidence"
+            end
+            approval = rounds.last.fetch("approval")
+            unless approval && approval.values_at("producer", "reviewer", "head") == [producer, reviewer, head]
+              raise Contract::Invalid, "retained campaign approval actors differ"
+            end
+            attempts.each do |attempt|
+              attempt.fetch("sessions").select { |session| session["completed"] }.each do |session|
+                @evidence.verify_session_authority(session, head: attempt.fetch("binding").fetch("head"), historical: true)
+              end
+              @evidence.verify_approval_authority(attempt.fetch("approval"), historical: true) if attempt["approval"]
+            end
+            true
+          end
+        end
+
+        private def accepted_snapshot_prefix!(record, result)
+          prefix = result["prefix"]
+          unless result.keys.sort == ACCEPTED_SNAPSHOT_FIELDS && result["schema"] == "ace.review.accepted-result/v1" &&
+              prefix.is_a?(Hash) && prefix.keys.sort == %w[assessments attempts rounds] &&
+              prefix.all? { |key, count| count.is_a?(Integer) && count.between?(0, record.fetch(key).length) } &&
+              prefix.fetch("rounds").positive? && result["accepted"] == true && result["dry_run"] == false &&
+              result.values_at("campaign_id", "subject", "contract_identity", "effective_policy") ==
+                record.values_at("id", "subject", "contract_identity", "policy") &&
+              %w[head base].all? { |key| result[key].is_a?(String) && result[key].match?(/\A[0-9a-f]{40}\z/) }
+            raise Contract::Invalid, "accepted campaign snapshot selectors differ"
+          end
+          snapshot = record.merge(prefix.to_h { |key, count| [key, record.fetch(key).first(count)] }, "successor" => nil)
+          approval = snapshot.fetch("rounds").last.fetch("approval")
+          unless approval && approval.values_at("producer", "reviewer", "head") == result.values_at("producer", "reviewer", "head") &&
+              result_identity_for(snapshot, result.fetch("head"), result.fetch("base")) == result["result_identity"]
+            raise Contract::Invalid, "accepted campaign snapshot identity differs from retained prefix"
+          end
+          snapshot
+        rescue KeyError, TypeError
+          raise Contract::Invalid, "accepted campaign snapshot prefix is unavailable"
+        end
+
+        private def result_identity_for(record, head, base)
+          Contract.digest({"campaign_id" => record["id"], "contract_identity" => record["contract_identity"],
+            "policy" => record["policy"], "attempts" => record["attempts"], "assessments" => record["assessments"],
+            "current_head" => head, "current_base" => base, "successor" => record["successor"]})
         end
 
         def with_campaign_registration!(id, subject:, contract_identity:, policy:)
@@ -235,14 +338,7 @@ module Ace
           unless attempt && record["rounds"].none? { |entry| entry["round_id"] == round_id }
             raise Contract::Invalid, "campaign execution requires a pinned incomplete round"
           end
-          if consumer_profiles
-            current = Contract.policy!(consumer_profiles.fetch(record.fetch("profile")))
-            recorded = Contract.policy!(record.fetch("policy"))
-            unless %w[minimum_rounds clean_rounds].all? { |key| recorded.fetch(key) >= current.fetch(key) } &&
-                %w[required_scopes required_checks].all? { |key| (current.fetch(key) - recorded.fetch(key)).empty? }
-              raise Contract::Invalid, "campaign policy no longer satisfies current consumer constraints"
-            end
-          end
+          verify_consumer_policy!(record, consumer_profiles) if consumer_profiles
           head, base = current_revisions(record)
           binding = attempt.fetch("binding")
           unless binding.values_at("head", "base") == [head, base] && clean_candidate?
@@ -251,6 +347,17 @@ module Ace
           immutable_projection({"campaign_id" => record.fetch("id"), "subject" => record.fetch("subject"),
             "contract_identity" => record.fetch("contract_identity"), "policy" => record.fetch("policy"),
             "round_id" => round_id, "binding" => binding})
+        rescue KeyError, TypeError
+          raise Contract::Invalid, "current campaign consumer policy is unavailable"
+        end
+
+        private def verify_consumer_policy!(record, consumer_profiles)
+          current = Contract.policy!(consumer_profiles.fetch(record.fetch("profile")))
+          recorded = Contract.policy!(record.fetch("policy"))
+          unless %w[minimum_rounds clean_rounds].all? { |key| recorded.fetch(key) >= current.fetch(key) } &&
+              %w[required_scopes required_checks].all? { |key| (current.fetch(key) - recorded.fetch(key)).empty? }
+            raise Contract::Invalid, "campaign policy no longer satisfies current consumer constraints"
+          end
         rescue KeyError, TypeError
           raise Contract::Invalid, "current campaign consumer policy is unavailable"
         end
@@ -471,10 +578,7 @@ module Ace
           result.merge("active_contract" => successor.nil?, "superseded_by" => successor, "evidence" => {"valid" => current_evidence, "available" => available,
             "source_head" => source_head, "current_head" => head, "source_base" => source_base,
             "current_base" => base, "reason" => error || revision_error}, "accepted" => reasons.empty?, "reasons" => reasons,
-            "result_identity" => Contract.digest({"campaign_id" => record["id"],
-              "contract_identity" => record["contract_identity"], "policy" => record["policy"],
-              "attempts" => record["attempts"], "assessments" => record["assessments"],
-              "current_head" => head, "current_base" => base, "successor" => successor}))
+            "result_identity" => result_identity_for(record, head, base))
         end
 
         def observe(record, head, base)
@@ -485,6 +589,10 @@ module Ace
 
         def validate_local_commits(record, head, base)
           return unless @live_git && record["subject"]["local_candidate_id"]
+          if @candidate_reader
+            [head, base].each { |revision| @candidate_reader.commit!(revision) }
+            return
+          end
           [head, base].each do |revision|
             _, status = Open3.capture2("git", "cat-file", "-e", "#{revision}^{commit}",
               chdir: @repo_root, err: File::NULL)
@@ -495,6 +603,10 @@ module Ace
         def validate_local_full_diff(record, head, base)
           return unless @live_git && record["subject"]["local_candidate_id"] &&
             record["policy"]["required_scopes"].include?("full")
+          if @candidate_reader
+            raise Contract::Invalid, "local full scope cannot review an empty Git diff" unless @candidate_reader.full_diff?(base, head)
+            return
+          end
           _, stderr, status = Open3.capture3("git", "diff", "--quiet", "--no-ext-diff", "--no-textconv",
             base, head, "--", chdir: @repo_root)
           raise Contract::Invalid, "local full scope cannot review an empty Git diff" if status.exitstatus == 0
@@ -502,6 +614,12 @@ module Ace
         end
 
         def current_revisions(record)
+          if @candidate_reader
+            head, base = @candidate_reader.head, @candidate_reader.base
+            validate_local_commits(record, head, base)
+            validate_local_full_diff(record, head, base)
+            return [head, base]
+          end
           if @live_git && record["subject"]["pr"]
             metadata = fetch_pr_metadata(record["subject"])
             raise Contract::Invalid, metadata[:error] unless metadata[:success]
@@ -529,6 +647,7 @@ module Ace
         end
 
         def clean_candidate?
+          return @candidate_reader.clean? if @candidate_reader
           return true unless @live_git
           out, status = Open3.capture2("git", "status", "--porcelain", "-z", "--untracked-files=all",
             chdir: @repo_root, err: File::NULL)
@@ -546,6 +665,7 @@ module Ace
         end
 
         def git_revision(ref, record = nil)
+          return ref == "base" ? @candidate_reader.base : @candidate_reader.head if @candidate_reader
           # Local base is the latest explicit committed pin. PR revisions use
           # the existing provider adapter in current_revisions.
           if ref == "base"

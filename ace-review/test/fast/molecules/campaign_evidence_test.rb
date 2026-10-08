@@ -29,6 +29,27 @@ class CampaignEvidenceTest < AceReviewTest
     assert_equal 1, result["completed_rounds"]
   end
 
+  def test_round_retains_and_rechecks_source_child_linkage_for_approval_and_checks
+    campaign = start_campaign
+    input = round_input(1)
+    make_campaign_session(campaign, input)
+    add_campaign_approval(campaign, input, reviewer: "uid-13002")
+    linkage = {"assignment_id" => "child", "attempt_id" => "child-attempt",
+      "definition_digest" => "a" * 64, "binding_digest" => "b" * 64}
+    @accepted_approvals.each_value { |proof| proof["execution_binding"] = linkage.dup }
+    @accepted_checks.each_value { |proof| proof["execution_binding"] = linkage.dup }
+    manager = campaign_manager
+    manager.record_round(campaign.fetch("campaign_id"), input)
+    stored = manager.store.transaction(dry_run: true) { manager.store.read(campaign.fetch("campaign_id")) }
+    approval = stored.fetch("rounds").first.fetch("approval")
+    assert_equal linkage, approval.fetch("execution_proof").fetch("execution_binding")
+    assert_equal linkage, approval.fetch("checks").first.fetch("execution_proof").fetch("execution_binding")
+    evidence = manager.instance_variable_get(:@evidence)
+    evidence.verify_approval_authority(approval, historical: true)
+    @accepted_checks.each_value { |proof| proof["execution_binding"]["binding_digest"] = "c" * 64 }
+    assert_raises(Ace::Review::Atoms::CampaignContract::Invalid) { evidence.verify_approval_authority(approval, historical: true) }
+  end
+
   def test_approval_requires_complete_unambiguous_verified_report_models
     campaign = start_campaign
     mutations = [

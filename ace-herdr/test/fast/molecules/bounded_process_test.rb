@@ -23,6 +23,33 @@ module Ace
           refute result.oversized
         end
 
+        def test_interrupted_pipe_read_keeps_original_child_and_deadline_loop
+          original_loop = BoundedProcess.method(:run_loop)
+          invocations = 0
+          reads = 0
+          observed_child = nil
+          controlled = lambda do |stdin, stdout, stderr, waiter, **limits|
+            invocations += 1
+            observed_child = waiter
+            assert_equal 5, limits.fetch(:timeout_s)
+            original_read = stdout.method(:read_nonblock)
+            stdout.define_singleton_method(:read_nonblock) do |*arguments, **options|
+              reads += 1
+              raise Errno::EINTR if reads == 1
+              original_read.call(*arguments, **options)
+            end
+            original_loop.call(stdin, stdout, stderr, waiter, **limits)
+          end
+          result = BoundedProcess.stub(:run_loop, controlled) do
+            BoundedProcess.call(["/bin/echo", "unchanged"], timeout_s: 5)
+          end
+          assert_equal 1, invocations, "interruption must not start another child"
+          assert_operator reads, :>=, 2
+          assert_equal "unchanged\n", result.stdout
+          assert_predicate result.status, :success?
+          refute observed_child.alive?
+        end
+
         def test_clean_exit_with_group_cleanup_returns_original_status
           result = BoundedProcess.call(["/bin/sh", "-c", "printf exact; exit 0"],
             timeout_s: 5, cleanup_group: true)

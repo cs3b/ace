@@ -24,12 +24,16 @@ module Ace
         # @param identity_resolver [ExecutionIdentityResolver] Trust boundary
         # @param artifact_reader [#call, nil] Source-owned canonical byte
         #   reader for protected composition; nil selects explicit local files
-        def initialize(identity_resolver: nil, artifact_reader: nil)
+        def initialize(identity_resolver: nil, artifact_reader: nil, campaign_verifier: nil)
           @identity_resolver = identity_resolver || ExecutionIdentityResolver.new
           unless artifact_reader.nil? || artifact_reader.respond_to?(:call)
             raise ArgumentError, "artifact reader must be a source-owned callable"
           end
           @artifact_reader = artifact_reader
+          unless campaign_verifier.nil? || campaign_verifier.respond_to?(:call)
+            raise ArgumentError, "campaign verifier must be a source-owned callable"
+          end
+          @campaign_verifier = campaign_verifier
         end
 
         # Validate a submitted receipt against an attempt.
@@ -243,6 +247,10 @@ module Ace
           end
           result = JSON.parse(artifact_bytes(data, reference, repo_root))
           reject_unless(result.is_a?(Hash), "campaign result must be an object")
+          if @campaign_verifier
+            @campaign_verifier.call(data, result, live_head)
+            return
+          end
           require "ace/review"
           current = Ace::Review::Organisms::CampaignManager.new(repo_root: repo_root).status(campaign["id"])
           unless result["campaign_id"] == campaign["id"] && result["accepted"] == true &&

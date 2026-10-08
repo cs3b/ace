@@ -63,6 +63,8 @@ require_relative "cli/commands/inbox_reconcile"
 require_relative "cli/commands/inbox_bind"
 require_relative "cli/commands/submit_candidate"
 require_relative "cli/commands/submit_result"
+require_relative "cli/commands/campaign_record_round"
+require_relative "cli/commands/campaign_export_result"
 require_relative "cli/commands/step"
 require_relative "cli/commands/start"
 require_relative "cli/commands/finish"
@@ -114,6 +116,8 @@ module Ace
         ["delivery", "Execute or reconcile attempt-bound forge delivery"],
         ["submit-candidate", "Submit original protected worker candidate bytes"],
         ["submit-result", "Submit original protected worker receipt and artifact bytes"],
+        ["campaign-export-result", "Download the original parent campaign's verified accepted result"],
+        ["campaign-record-round", "Consume canonical settled children into the original campaign store"],
         ["status", "Show assignment status"],
         ["step", "Show step instructions"],
         ["start", "Start next workable step"],
@@ -211,6 +215,8 @@ register "authority inbox-context-selection", wrap_command(Commands::Authority::
       register "inbox-bind", wrap_command(Commands::InboxBind)
       register "submit-candidate", wrap_command(Commands::SubmitCandidate)
       register "submit-result", wrap_command(Commands::SubmitResult)
+      register "campaign-export-result", wrap_command(Commands::CampaignExportResult)
+      register "campaign-record-round", wrap_command(Commands::CampaignRecordRound)
 
       # Register version command
       version_cmd = Ace::Support::Cli::VersionCommand.build(

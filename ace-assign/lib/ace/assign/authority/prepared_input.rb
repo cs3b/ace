@@ -10,16 +10,20 @@ module Ace
       # One authenticated original fetch and one immutable verified work graph.
       # Caller identifiers select; the maintained Client/Endcap authenticates.
       class PreparedInput
-        attr_reader :descriptor, :work
+        attr_reader :descriptor, :work, :working_directory
 
         def self.fetch(client:, assignment_id:, attempt_id:)
           reply = client.call("evidence_fetch", {"assignment_id" => assignment_id, "attempt_id" => attempt_id,
             "kind" => "prepared_work", "purpose_id" => "original_prepared_work", "artifact_id" => "prepared_bundle"},
             download: true, purpose: :candidate, timeout: 30)
-          new(reply: reply)
+          new(reply: reply, candidate_loader: -> {
+            client.call("evidence_fetch", {"assignment_id" => assignment_id, "attempt_id" => attempt_id,
+              "kind" => "campaign_candidate", "purpose_id" => "original_campaign_candidate", "artifact_id" => "candidate_bundle"},
+              download: true, purpose: :candidate, timeout: 30)
+          })
         end
 
-        def initialize(reply:)
+        def initialize(reply:, candidate_reply: nil, candidate_loader: nil)
           @descriptor = reply.data.fetch("descriptor")
           Molecules::LifecycleExclusion.workspace_reader(projection: descriptor.fetch("workspace_exclusion"))
           unless descriptor.dig("workspace_exclusion", "root_resource", "view_path") ==
@@ -38,6 +42,25 @@ module Ace
               descriptor.values_at("assignment_id", "project_id") == work.manifest.values_at("assignment_id", "project_id") &&
               Digest::SHA256.hexdigest(definition) == descriptor.fetch("definition_digest")
             raise AttemptErrors::EvidenceUnavailable, "prepared_input_mismatch: original graph association"
+          end
+          execution = work.definition["campaign_execution"]
+          if execution
+            candidate_reply ||= candidate_loader&.call
+            candidate = candidate_reply&.data&.fetch("descriptor")
+            unless candidate.is_a?(Hash) && candidate.keys.sort == %w[head tree bytes sha256 candidate_generation campaign_execution mapping_id assignment_id attempt_id project_id original_worker_identity original_worker_scratch_root original_binding_digest].sort &&
+                candidate.slice("mapping_id", "assignment_id", "attempt_id", "project_id", "original_worker_identity", "original_worker_scratch_root", "original_binding_digest") ==
+                  descriptor.slice("mapping_id", "assignment_id", "attempt_id", "project_id", "original_worker_identity", "original_worker_scratch_root", "original_binding_digest") &&
+                candidate.fetch("campaign_execution") == execution && candidate.fetch("head") == execution.fetch("head") &&
+                candidate.fetch("candidate_generation") == execution.fetch("parent_candidate_generation") &&
+                candidate_reply.parts.is_a?(Array) && candidate_reply.parts.one?
+              raise AttemptErrors::EvidenceUnavailable, "campaign original candidate input differs"
+            end
+            materialized = CandidateTransfer.new(root: root).materialize_repository(bytes: candidate_reply.parts.first,
+              sha256: candidate.fetch("sha256"), size: candidate.fetch("bytes"), head: candidate.fetch("head"),
+              tree: candidate.fetch("tree"), root: root)
+            @working_directory = materialized.fetch("directory").freeze
+          elsif candidate_reply
+            raise AttemptErrors::EvidenceUnavailable, "ordinary prepared input forbids a campaign candidate"
           end
           @descriptor = JSON.parse(JSON.generate(descriptor))
           pending = [@descriptor]
@@ -81,6 +104,9 @@ module Ace
           target = Shellwords.escape(descriptor.fetch("assignment_id") + "@" + descriptor.fetch("scope"))
           selectors = "--assignment #{target} --mapping #{Shellwords.escape(descriptor.fetch('mapping_id'))} --attempt #{Shellwords.escape(descriptor.fetch('attempt_id'))}"
           instructions = ["Drive the authenticated captured assignment subtree. Use ace-assign status #{selectors}, step #{selectors}, start #{selectors}, finish #{selectors} --message REPORT, and fail #{selectors} --message REASON. Do not fork-run, add, retry, renumber, or expand another graph."]
+          if (execution = work.definition.campaign_execution)
+            instructions << "This is a registered campaign #{execution.fetch('phase')} child. The provider working directory is the private authenticated parent candidate repository at #{Shellwords.escape(execution.fetch('head'))}, with original base #{Shellwords.escape(execution.fetch('base'))}. Do not edit or advance that candidate. Execute the captured #{Shellwords.escape(execution.fetch('operation'))} phase and retain its actual #{Shellwords.escape(execution.fetch('check_name'))} check and report artifacts. Submit an ordinary campaign-free result (campaign null), operation #{Shellwords.escape(execution.fetch('operation'))}, exact original head/base, and actual check outcome. The existing independent reviewer must validate those same artifact bytes; an approval child must retain the exact canonical independent review actor/verdict. No session metadata or completed queue step counts as a settled R1 campaign round."
+          end
           original = "--mapping #{Shellwords.escape(descriptor.fetch('mapping_id'))} --assignment #{Shellwords.escape(descriptor.fetch('assignment_id'))} --attempt #{Shellwords.escape(descriptor.fetch('attempt_id'))}"
           instructions << "Before the original worker exits, explicitly submit its tested candidate and real execution result through the protected authority. Queue completion is not candidate/result acceptance. Read ace-assign authority status #{original}; persist its authority_generation with the complete next command arguments and ordered byte inputs. For each NEW operation use a new explicit mutation and a newly selected generation; for exact retries preserve the original generation, mutation and bytes."
           instructions << "Submit one prepared Git bundle: ace-assign submit-candidate #{original} --head HEAD --candidate-generation CURRENT_CANDIDATE --expected-generation G --mutation CANDIDATE_MUTATION --bundle FILE. Select CURRENT_CANDIDATE from status result_candidate_generation, using 0 when null. Persist the returned candidate_generation and head as REVIEWED_CANDIDATE and HEAD; never derive the next counter by arithmetic or from queue completion."

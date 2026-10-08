@@ -2,6 +2,8 @@
 require "securerandom"
 require_relative "deployment"
 require_relative "transfer_codec"
+require_relative "campaign_execution"
+require_relative "candidate_transfer"
 require_relative "../molecules/canonical_evidence"
 require_relative "../molecules/execution_scope_lineage"
 
@@ -21,11 +23,17 @@ module Ace
           if operation == "register_assignment" && (!upload_parts || purpose != :candidate || download)
             raise ArgumentError, "prepared registration requires fixed candidate upload"
           end
-          if operation == "evidence_fetch" && (!download || purpose != (params["kind"] == "prepared_work" ? :candidate : :artifacts) || upload_parts)
+          if operation == "evidence_fetch" && (!download || purpose != (%w[prepared_work campaign_candidate].include?(params["kind"]) ? :candidate : :artifacts) || upload_parts)
             raise ArgumentError, "evidence fetch requires source-fixed kind download"
           end
           if operation == "submit_result" && (!upload_parts || purpose != :receipt_artifacts || download)
             raise ArgumentError, "result submission requires fixed receipt upload"
+          end
+          if operation == "campaign_export_result" && (!download || purpose != :artifacts || upload_parts || mutation_id)
+            raise ArgumentError, "campaign result requires fixed read-only artifact download"
+          end
+          if operation == "campaign_record_round" && (!upload_parts || purpose != :receipt_artifacts || download)
+            raise ArgumentError, "campaign round requires fixed bounded upload"
           end
           @deployment.verify!(mapping_id, kernel: @kernel)
           wire = Ace::Runtime::Molecules::ProtectedSocket
@@ -33,7 +41,7 @@ module Ace
           before = wire.socket_identity(path)
           raise Ace::Runtime::RuntimeUnavailableError, "authority endpoint owner differs" unless before.last == @service.fetch("uid")
           raise ArgumentError, "cannot upload and download on one request" if upload_parts && download
-          prepared_download = operation == "evidence_fetch" && params["kind"] == "prepared_work"
+          prepared_download = operation == "evidence_fetch" && %w[prepared_work campaign_candidate].include?(params["kind"])
           codec = transfer_codec if upload_parts || download && !prepared_download
           descriptor = codec.descriptor(upload_parts, purpose: purpose) if upload_parts
           parameters = upload_parts ? params.merge("transfer" => descriptor) : params
@@ -70,7 +78,7 @@ module Ace
               raise AttemptErrors::EvidenceUnavailable, "authority replay metadata is unavailable"
             end
             if operation == "evidence_fetch"
-              if params["kind"] == "prepared_work" && transport.fetch("replayed")
+              if %w[prepared_work campaign_candidate].include?(params["kind"]) && transport.fetch("replayed")
                 raise AttemptErrors::EvidenceUnavailable, "prepared fetch cannot replay a mutation"
               end
               validate_evidence_download!(result.fetch("data"), params)
@@ -128,6 +136,10 @@ module Ace
           descriptor, transfer = data.values_at("descriptor", "transfer")
           if params["kind"] == "prepared_work"
             validate_prepared_download!(data, params)
+            return
+          end
+          if params["kind"] == "campaign_candidate"
+            validate_campaign_candidate_download!(data, params)
             return
           end
           unless data.keys.sort == %w[descriptor generation journal_commit transfer] &&
@@ -194,6 +206,39 @@ module Ace
           end
         rescue ArgumentError, KeyError
           raise AttemptErrors::EvidenceUnavailable, "original prepared download descriptor differs"
+        end
+
+        def validate_campaign_candidate_download!(data, params)
+          descriptor, transfer = data.values_at("descriptor", "transfer")
+          fields = %w[head tree bytes sha256 candidate_generation campaign_execution mapping_id assignment_id attempt_id
+            project_id original_worker_identity original_worker_scratch_root original_binding_digest].sort
+          unless data.keys.sort == %w[descriptor generation journal_commit transfer] &&
+              descriptor.is_a?(Hash) && descriptor.keys.sort == fields &&
+              params.values_at("purpose_id", "artifact_id") == %w[original_campaign_candidate candidate_bundle] &&
+              descriptor["mapping_id"] == mapping_id && descriptor["project_id"] == @map.fetch("project_id") &&
+              %w[assignment_id attempt_id].all? { |key| descriptor[key] == params[key] } &&
+              %w[head tree].all? { |key| descriptor[key].is_a?(String) && descriptor[key].match?(CandidateTransfer::SHA) } &&
+              %w[sha256 original_binding_digest].all? { |key| descriptor[key].is_a?(String) && descriptor[key].match?(/\A[0-9a-f]{64}\z/) } &&
+              descriptor["candidate_generation"].is_a?(Integer) && descriptor["candidate_generation"].positive? &&
+              descriptor["bytes"].is_a?(Integer) && descriptor["bytes"].between?(1, CandidateTransfer::MAX_BYTES) &&
+              descriptor["campaign_execution"].is_a?(Hash) && descriptor["campaign_execution"].keys.sort == CampaignExecution::FIELDS &&
+              data["generation"].is_a?(Integer) && data["generation"].positive? &&
+              data["journal_commit"].is_a?(String) && data["journal_commit"].match?(/\A(?:[0-9a-f]{40}|[0-9a-f]{64})\z/) &&
+              transfer.is_a?(Hash) && transfer.keys.sort == %w[bytes parts sha256 version] && transfer["version"] == 1 &&
+              transfer["version"].is_a?(Integer) &&
+              transfer.values_at("bytes", "sha256") == descriptor.values_at("bytes", "sha256") && transfer["parts"] == [descriptor.slice("bytes", "sha256")]
+            raise AttemptErrors::EvidenceUnavailable, "original campaign candidate download differs"
+          end
+          identity = descriptor.fetch("original_worker_identity")
+          birth = identity.is_a?(Hash) && identity["started_at"]
+          Molecules::ExecutionScopeLineage.validate_process_identity!(identity, boot_id: birth.to_s.split(":", -1)[1])
+          root = descriptor.fetch("original_worker_scratch_root")
+          unless root.is_a?(String) && root.valid_encoding? && root.bytesize.between?(2, 4096) &&
+              root.start_with?("/") && !root.include?("\0") && File.expand_path(root) == root
+            raise AttemptErrors::EvidenceUnavailable, "original campaign scratch root differs"
+          end
+        rescue ArgumentError, KeyError
+          raise AttemptErrors::EvidenceUnavailable, "original campaign candidate download differs"
         end
 
         def prepared_transfer_codec(descriptor)

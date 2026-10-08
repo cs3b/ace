@@ -148,7 +148,9 @@ module Ace
                 raise AttemptErrors::EvidenceUnavailable, "result replay provenance differs"
               end
             end
-            result = journal.mutate(assignment_id: params.fetch("assignment_id"), attempt_id: params.fetch("attempt_id"),
+            result = with_campaign_submission!(journal: journal, commit: commit, events: events, params: params,
+              map: map, admitted: admitted, replay: replay) do
+              journal.mutate(assignment_id: params.fetch("assignment_id"), attempt_id: params.fetch("attempt_id"),
               mutation_id: request.fetch("mutation_id"), operation: "submit_result",
               parameters_digest: Atoms::EvidenceDigest.digest(params), expected_generation: params.fetch("expected_generation"),
               with_replay: true) do |fresh_events, fresh_commit, generation|
@@ -158,6 +160,7 @@ module Ace
                 raise AttemptErrors::Conflict, "candidate already has a result"
               end
               result_plan(journal, fresh_events, params, map, origin, current, admitted, fresh_commit, generation)
+              end
             end
             # A CAS loser may return a competing accepted same-ID reply. It
             # still needs exact canonical private provenance outside callback.
@@ -188,22 +191,26 @@ module Ace
             intent.fetch("payload"), events, "running")
         end
 
-        def verify_result_receipt(journal, events, params, map, head, receipt, reader)
+        def verify_result_receipt(journal, events, params, map, head, receipt, reader, commit:)
           unless receipt["producer"] == {"actor" => map.fetch("worker_actor"), "role" => "worker", "runtime" => "herdr"}
             raise AttemptErrors::ReceiptRejected, "result producer differs from mapped worker"
           end
-          raise AttemptErrors::EvidenceUnavailable, "protected campaigns require their canonical owner" if receipt["campaign"]
           allowed = Models::ExecutionReceipt.from_h(receipt).to_h.keys
           raise AttemptErrors::ReceiptRejected, "result receipt fields differ" unless (receipt.keys - allowed).empty?
           # Failed receipts can omit artifacts, but every declared artifact still
           # needs canonical byte/provenance validation.
           Array(receipt["artifacts"]).each { |artifact| reader.call(receipt, artifact) }
-          Molecules::ReceiptVerifier.new(artifact_reader: reader).verify_result!(receipt,
+          campaign_verifier = ->(data, result, _head) {
+            with_campaign_receipt!(journal: journal, commit: commit, events: events, params: params,
+              map: map, receipt: data, result: result, historical: true) { true }
+          }
+          Molecules::ReceiptVerifier.new(artifact_reader: reader, campaign_verifier: campaign_verifier).verify_result!(receipt,
             attempt: result_attempt(journal, events, params), live_head: head, repo_root: journal.repo_root)
         end
 
         def result_plan(journal, events, params, map, origin, current, admitted, commit, generation)
           receipt = admitted.fetch(:receipt)
+          campaign_child_result!(journal: journal, commit: commit, events: events, params: params, map: map, receipt: receipt)
           original = Models::ExecutionReceipt.from_h(receipt)
           unless original.digest == Atoms::EvidenceDigest.digest(original.digest_payload)
             raise AttemptErrors::ReceiptRejected, "original result digest differs"
@@ -221,10 +228,15 @@ module Ace
               admitted_after_event_digest: events.last.fetch("digest"))
           normalized = JSON.parse(JSON.generate(receipt)).except("digest", "recorded_at")
           normalized["artifacts"] = plan.fetch(:references).map { |ref| {"path" => ref.fetch("ref"), "sha256" => ref.fetch("sha256")} }
+          if normalized["campaign"]
+            campaign_index = receipt.fetch("artifacts").index(receipt.fetch("campaign").fetch("result"))
+            raise AttemptErrors::ReceiptRejected, "campaign result artifact missing" unless campaign_index
+            normalized["campaign"]["result"] = normalized.fetch("artifacts").fetch(campaign_index)
+          end
           pending = journal.send(:chain_mutation_events, params.fetch("attempt_id"), events.last.fetch("digest"), plan.fetch(:events))
           reader = ->(_data, artifact) { canonical.read_pending({"ref" => artifact.fetch("path"), "sha256" => artifact.fetch("sha256")},
             **result_context(binding), current_events: events, pending_events: pending, blobs: plan.fetch(:blobs), commit: commit) }
-          verified = verify_result_receipt(journal, events, params, map, current.fetch("head"), normalized, reader)
+          verified = verify_result_receipt(journal, events, params, map, current.fetch("head"), normalized, reader, commit: commit)
           payload = {"version" => 1, "result_id" => id, "binding" => binding,
             "uploaded_receipt_sha256" => admitted.fetch(:receipt_sha256), "original_receipt_digest" => original.digest,
             "receipt_digest" => verified.digest, "receipt" => verified.to_h, "artifacts" => verified.artifacts}
@@ -266,10 +278,12 @@ module Ace
               replies.first.fetch("payload").fetch("data").slice(*RESULT_FIELDS) == result_projection(payload)
             raise AttemptErrors::EvidenceUnavailable, "private result provenance differs"
           end
+          campaign_child_result!(journal: journal, commit: commit, events: events, params: params, map: map,
+            receipt: payload.fetch("receipt"))
           canonical = Molecules::CanonicalEvidence.new(journal: journal)
           reader = ->(_data, artifact) { canonical.read({"ref" => artifact.fetch("path"), "sha256" => artifact.fetch("sha256")},
             **result_context(binding), commit: commit) }
-          receipt = verify_result_receipt(journal, events, params, map, current.fetch("head"), payload.fetch("receipt"), reader)
+          receipt = verify_result_receipt(journal, events, params, map, current.fetch("head"), payload.fetch("receipt"), reader, commit: commit)
           raise AttemptErrors::EvidenceUnavailable, "normalized result digest differs" unless receipt.digest == payload.fetch("receipt_digest")
           payload
         rescue KeyError, ArgumentError, TypeError, AttemptErrors::ReceiptRejected
@@ -381,7 +395,7 @@ module Ace
           end
           canonical = Molecules::CanonicalEvidence.new(journal: journal)
           reader = ->(_data, artifact) { canonical.read({"ref" => artifact.fetch("path"), "sha256" => artifact.fetch("sha256")}, **context, commit: commit) }
-          receipt = verify_result_receipt(journal, events, params, map, current.fetch("head"), accepted.fetch("review_receipt"), reader)
+          receipt = verify_result_receipt(journal, events, params, map, current.fetch("head"), accepted.fetch("review_receipt"), reader, commit: commit)
           unless receipt.operation == "review" && receipt.verdict == "succeeded" && receipt.digest == accepted.fetch("receipt_digest")
             raise AttemptErrors::EvidenceUnavailable, "retained review receipt differs"
           end

@@ -251,6 +251,27 @@ module Ace
         verify_raises(data) { |e| assert_includes e.message, "digest mismatch" }
       end
 
+      def test_protected_campaign_uses_exact_source_owner_result_without_ambient_store
+        data = review_receipt_data
+        result = {"campaign_id" => "source-campaign", "accepted" => true, "result_identity" => "a" * 64}
+        bytes = JSON.generate(result)
+        ref = {"path" => "canonical-result", "sha256" => Digest::SHA256.hexdigest(bytes)}
+        data["artifacts"] << ref
+        data["campaign"] = {"id" => "source-campaign", "result" => ref}
+        seen = []
+        reader = ->(_receipt, artifact) { artifact == ref ? bytes : "reviewed deliverable" }
+        owner = ->(receipt, observed, head) { seen << [receipt, observed, head] }
+        verified = Molecules::ReceiptVerifier.new(artifact_reader: reader, campaign_verifier: owner)
+          .verify_result!(data, attempt: @attempt, live_head: HEAD_A, repo_root: @repo_root)
+        assert_equal data["campaign"], verified.to_h["campaign"]
+        assert_equal [[data, result, HEAD_A]], seen
+        refusal = ->(*) { raise AttemptErrors::ReceiptRejected, "required canonical check missing" }
+        assert_raises(AttemptErrors::ReceiptRejected) do
+          Molecules::ReceiptVerifier.new(artifact_reader: reader, campaign_verifier: refusal)
+            .verify_result!(data, attempt: @attempt, live_head: HEAD_A, repo_root: @repo_root)
+        end
+      end
+
       def test_external_effect_operations_are_classified
         verifier = Molecules::ReceiptVerifier.new
 

@@ -55,6 +55,48 @@ module Ace
         end
       end
 
+      def test_campaign_materialization_has_exact_private_git_head_and_no_uploader_configuration
+        with_fixture do |transfer, root, source, head, bytes|
+          tree = git(source, "rev-parse", "HEAD^{tree}").strip
+          result = transfer.materialize_repository(bytes: bytes, sha256: Digest::SHA256.hexdigest(bytes),
+            size: bytes.bytesize, head: head, tree: tree, root: File.join(root, "authority"))
+          private_repo = result.fetch("directory")
+          refute_equal source, private_repo
+          assert_equal head, git(private_repo, "rev-parse", "HEAD").strip
+          assert_equal tree, git(private_repo, "rev-parse", "HEAD^{tree}").strip
+          assert_equal "candidate\x00\n".b, File.binread(File.join(private_repo, "README"))
+          assert_empty git(private_repo, "status", "--porcelain")
+          assert_equal head, git(source, "rev-parse", "HEAD").strip
+        end
+      end
+
+      def test_campaign_read_view_uses_exact_bundle_and_expires_without_changing_source
+        with_fixture do |transfer, root, source, base, _bytes|
+          File.binwrite(File.join(source, "README"), "second candidate\n")
+          git(source, "add", "README")
+          git(source, "-c", "user.name=test", "-c", "user.email=test@example.invalid", "commit", "-m", "second")
+          head = git(source, "rev-parse", "HEAD").strip
+          tree = git(source, "rev-parse", "HEAD^{tree}").strip
+          path = File.join(root, "full.bundle")
+          git(source, "bundle", "create", path, "--all")
+          bytes = File.binread(path)
+          retained = nil
+          transfer.with_campaign_repository(bytes: bytes, sha256: Digest::SHA256.hexdigest(bytes), size: bytes.bytesize,
+            head: head, tree: tree, base: base) do |view|
+            retained = view
+            assert_equal head, view.head
+            assert_equal base, view.base
+            assert view.clean?
+            assert view.full_diff?(base, head)
+            assert_raises(AttemptErrors::ReceiptRejected) { view.commit!("f" * 40) }
+            assert_raises(AttemptErrors::EvidenceUnavailable) { Thread.new { view.head }.value }
+          end
+          assert_raises(AttemptErrors::EvidenceUnavailable) { retained.head }
+          assert_empty Dir.children(File.join(root, "authority"))
+          assert_equal head, git(source, "rev-parse", "HEAD").strip
+        end
+      end
+
       def test_refuses_size_digest_and_unadvertised_head_without_retained_objects
         with_fixture do |transfer, root, _source, head, bytes|
           assert_raises(AttemptErrors::ReceiptRejected) { admit(transfer, head, bytes, size: bytes.bytesize + 1) }

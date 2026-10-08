@@ -1,101 +1,15 @@
 # frozen_string_literal: true
 require_relative "../test_helper"
 require_relative "../support/endcap_result_owner_fixture"
+require_relative "../support/protected_campaign_fixture"
 require "ace/assign/authority/server"
 require "ace/assign/authority/client"
+require "ace/assign/authority/prepared_input"
 
 module Ace
   module Assign
     class ProtectedCampaignRegistrationTest < AceAssignTestCase
-      include EndcapResultOwnerFixture
-
-      # The protected filesystem boundary is injected; held bytes, inode
-      # replacement, Git bundles, sockets and canonical journal remain real.
-      class ArtifactProtection
-        def root_path!(_path); end
-        def verify!(path, handle, directory:)
-          raise Ace::Runtime::RuntimeUnavailableError, "unsafe fixture mode" unless
-            (handle.stat.mode & 0o022).zero? && (directory ? handle.stat.directory? : handle.stat.file?)
-        end
-      end
-
-      def configure_result_owner_fixture
-        File.chmod(0700, @journal.repo_root)
-        @project["campaign_repository"] = @journal.repo_root
-        @project["campaign_store_root"] = File.join(@root, "campaign-store")
-        @campaign_manager = Ace::Review::Organisms::CampaignManager.new(repo_root: @journal.repo_root,
-          store: Ace::Review::Molecules::CampaignStore.new(root: @project.fetch("campaign_store_root")))
-        @campaign_policy = {"revision" => "delivery-v1", "minimum_rounds" => 3, "clean_rounds" => 2,
-          "required_scopes" => ["full"], "required_checks" => ["tests"]}
-        @campaign = @campaign_manager.start(subject: {"repository" => "local:#{@journal.repo_root}", "local_candidate_id" => "candidate"},
-          contract: "Reviewed parent requirements", policy: @campaign_policy)
-        File.chmod(0700, @project.fetch("campaign_store_root"))
-        set_current_policy(@campaign_policy)
-        parent_map = @map
-        child_map = @map.merge("execution_scope" => @map.fetch("execution_scope").merge("slot_id" => "child-slot"))
-        @deployment.define_singleton_method(:mapping) { |id| {"mapping" => parent_map, "child-mapping" => child_map}.fetch(id) }
-      end
-
-      def set_current_policy(policy)
-        bytes = JSON.generate("schema" => "ace.review.consumer-policy/v1", "profiles" => {"delivery" => policy})
-        path = File.join(@root, "consumer-#{Digest::SHA256.hexdigest(bytes)}.json")
-        File.binwrite(path, bytes); File.chmod(0600, path)
-        @project["campaign_policy"] = {"path" => path, "sha256" => Digest::SHA256.hexdigest(bytes), "bytes" => bytes.bytesize}
-      end
-
-      def candidate(_number); end
-
-      def restart
-        super
-        launch = @launch
-        @launch.instance_variable_set(:@scope_observer_factory, ->(id) {
-          map = @deployment.mapping(id)
-          installation = ExecutionScopeObservationFixtures::NETWORK_OUTPUT.merge("slot_id" => map.fetch("execution_scope").fetch("slot_id"))
-          ExecutionScopeNativeOwnerFixture.new(map, @journal, @kernel, owner: launch,
-            mapping_id: id, network_installation: installation)
-        })
-      end
-
-      def call(operation, params, **options)
-        if operation == "register_assignment"
-          value = JSON.parse(params.fetch("definition_bytes"))
-          value["review_campaign"] = {"version" => 1}.merge(@campaign.slice("campaign_id", "subject", "contract_identity"))
-            .merge("policy" => @campaign.fetch("effective_policy"))
-          bytes = JSON.generate(value)
-          params = params.merge("definition_bytes" => bytes, "definition_digest" => Digest::SHA256.hexdigest(bytes))
-        end
-        super(operation, params, **options)
-      end
-
-      def start_public_server
-        @kernel.peer_identity = @worker
-        @server = Authority::Server.new(authority_id: "authority", lifecycle: @router,
-          deployment: @deployment, kernel: @kernel, composition: "services")
-        wire = Object.new
-        wire.define_singleton_method(:root_path!) { |*_, **_| true }
-        %i[socket_identity read write deadline].each do |name|
-          wire.define_singleton_method(name) { |*args, **options| WIRE.public_send(name, *args, **options) }
-        end
-        @server.define_singleton_method(:wire) { wire }
-        @owner = Thread.new { @server.serve }
-        Timeout.timeout(3) { sleep 0.005 until File.socket?(@service.fetch("socket_path")) }
-        kernel = Kernel.new; kernel.peer_identity = @service.slice("uid", "gid", "groups")
-        @client = Authority::Client.new(mapping_id: "mapping", deployment: @deployment, kernel: kernel)
-      end
-
-      def child_definition(id, execution)
-        {"session_id" => id, "name" => "campaign child", "created_at" => "2026-10-08T00:00:00Z",
-          "source_config" => "job.yaml", "task_id" => "task", "project_id" => "project",
-          "parent" => "assignment", "campaign_execution" => execution}
-      end
-
-      def register_child(id, execution, mutation:, expected_generation: 0)
-        work = PreparedRegistrationFixture.build(root: @root, definition: child_definition(id, execution), scope: "010")
-        work.with_input(root: @root) do |_input, _descriptor|
-          @client.call("register_assignment", work.header(expected_generation: expected_generation), mutation_id: mutation,
-            upload_parts: [work.bundle], purpose: :candidate, timeout: 30)
-        end
-      end
+      include ProtectedCampaignFixture
 
       def test_public_child_registration_consumes_actual_parent_candidate_and_pinned_round
         protection = ->(path, **options) { raise "not private: #{File.basename(path)}" if options[:directory] && (!File.directory?(path) || (File.stat(path).mode & 0o077) != 0) }
@@ -117,9 +31,28 @@ module Ace
                 upload_parts: [File.binread(bundle_path)], purpose: :candidate, timeout: 30)
               assert_equal 1, candidate.data.fetch("candidate_generation")
               scope_identity = {"full" => {"preset" => "code-valid", "subjects" => ["diff:#{@base}..#{@head}"]}}
-              @campaign_manager.record_round(@campaign.fetch("campaign_id"), {"attempt_id" => "pin", "round_id" => "round-1",
-                "head" => @head, "base" => @base, "required_scopes" => ["full"], "scope_identity" => scope_identity,
-                "sessions" => [], "dispositions" => []})
+              round = {"attempt_id" => "pin", "round_id" => "round-1", "head" => @head, "base" => @base,
+                "required_scopes" => ["full"], "scope_identity" => scope_identity, "sessions" => [], "dispositions" => []}
+              round_bytes = JSON.generate("version" => 1, "round" => round, "artifacts" => [])
+              @kernel.peer_identity = @launcher
+              pinned_ref = @journal.ref_value
+              pinned = @client.call("campaign_record_round", {"assignment_id" => "assignment", "attempt_id" => @attempt,
+                "head" => @head, "candidate_generation" => 1, "input_sha256" => Digest::SHA256.hexdigest(round_bytes)},
+                mutation_id: "pin", upload_parts: [round_bytes], purpose: :receipt_artifacts, timeout: 30)
+              assert_equal "round-1", pinned.data.fetch("round_id")
+              assert_equal pinned_ref, @journal.ref_value, "R1 storage must not advance canonical authority"
+              replay = @client.call("campaign_record_round", {"assignment_id" => "assignment", "attempt_id" => @attempt,
+                "head" => @head, "candidate_generation" => 1, "input_sha256" => Digest::SHA256.hexdigest(round_bytes)},
+                mutation_id: "pin", upload_parts: [round_bytes], purpose: :receipt_artifacts, timeout: 30)
+              assert_equal true, replay.data.fetch("replayed")
+              changed_round = JSON.generate("version" => 1, "round" => round.merge("round_id" => "changed-round"), "artifacts" => [])
+              assert_raises(AttemptErrors::EvidenceUnavailable) do
+                @client.call("campaign_record_round", {"assignment_id" => "assignment", "attempt_id" => @attempt,
+                  "head" => @head, "candidate_generation" => 1, "input_sha256" => Digest::SHA256.hexdigest(changed_round)},
+                  mutation_id: "pin", upload_parts: [changed_round], purpose: :receipt_artifacts, timeout: 30)
+              end
+              assert_equal pinned_ref, @journal.ref_value
+              assert_equal "round-1", @campaign_manager.status(@campaign.fetch("campaign_id")).fetch("attempts").first.fetch("round_id")
               execution = {"version" => 1, "parent_assignment_id" => "assignment", "parent_attempt_id" => @attempt,
                 "parent_scope" => "010", "parent_candidate_generation" => 1, "subject" => @campaign.fetch("subject"),
                 "campaign_id" => @campaign.fetch("campaign_id"), "contract_identity" => @campaign.fetch("contract_identity"),
@@ -184,11 +117,16 @@ module Ace
               assert_raises(AttemptErrors::EvidenceUnavailable) { register_child("revoked", check, mutation: "revoked") }
               assert_equal selected, @journal.ref_value
               reserve = {"assignment_id" => "child", "scope" => "010", "worker_uid" => @map.fetch("worker_uid"),
-                "runtime" => "herdr", "base_head" => @head, "launcher_process_binding" => @launcher,
+                "runtime" => "herdr", "base_head" => @base, "launcher_process_binding" => @launcher,
                 "expected_generation" => accepted.data.fetch("definition_generation")}
               assert_raises(AttemptErrors::EvidenceUnavailable) { @client.call("reserve_attempt", reserve, mutation_id: "revoked-reserve", timeout: 30) }
               assert_equal selected, @journal.ref_value
               set_current_policy(@campaign_policy)
+              refusal = assert_raises(AttemptErrors::EvidenceUnavailable) do
+                @client.call("reserve_attempt", reserve.merge("base_head" => @head), mutation_id: "wrong-child-base", timeout: 30)
+              end
+              assert_includes refusal.message, "(conflict)"
+              assert_equal selected, @journal.ref_value
               native_failure = nil
               %i[provision_reserved_parent_held! admit_native_service_held! complete_native_start!].each do |name|
                 original = @launch.method(name)
@@ -247,6 +185,7 @@ module Ace
               child_binding = JSON.parse(JSON.generate(@binding))
               child_binding["process_identity"] = child_binding["shell_identity"] = child_identity
               child_binding.fetch("native_origin")["command"] = [@map.fetch("bootstrap"), "child-mapping", reserved.data.fetch("launch_ticket")]
+              child_binding.fetch("native_origin")["cwd"] = @deployment.mapping("child-mapping").fetch("worker_cwd")
               current = @client.call("attempt_status", {"assignment_id" => "child", "attempt_id" => reserved.data.fetch("attempt_id"),
                 "result_candidate_generation" => nil}, timeout: 30)
               refusal = nil
@@ -267,6 +206,52 @@ module Ace
               assert Models::EvidenceEvent.chain_valid?(bound_chain)
               assert_equal child_binding, bound_chain.find { |event| event["type"] == "scope_child_bound" }.dig("payload", "original_process_binding")
               assert_equal child_identity, bound_chain.find { |event| event["type"] == "process_start" }.dig("payload", "process_identity")
+              child_params = {"mapping_id" => "child-mapping", "assignment_id" => "child",
+                "attempt_id" => reserved.data.fetch("attempt_id")}
+              receipt = {"operation" => execution.fetch("operation"), "head" => execution.fetch("head"), "verdict" => "succeeded",
+                "checks" => [{"name" => execution.fetch("check_name"), "verdict" => "passed"}]}
+              assert_equal execution, @endcap.send(:campaign_child_result!, journal: @journal, commit: @journal.ref_value,
+                events: bound_chain, params: child_params, map: @deployment.mapping("child-mapping"), receipt: receipt)
+              assert_raises(AttemptErrors::ReceiptRejected) do
+                @endcap.send(:campaign_child_result!, journal: @journal, commit: @journal.ref_value,
+                  events: bound_chain, params: child_params, map: @deployment.mapping("child-mapping"),
+                  receipt: receipt.merge("operation" => "merge"))
+              end
+              code, bundle = @endcap.send(:campaign_prepared_candidate!, journal: @journal, commit: @journal.ref_value,
+                execution: execution, map: @deployment.mapping("child-mapping"))
+              assert_equal @head, code.fetch("head")
+              assert_equal 1, code.fetch("candidate_generation")
+              materialized = Authority::CandidateTransfer.new(root: @root).materialize_repository(bytes: bundle,
+                sha256: code.fetch("sha256"), size: code.fetch("bytes"), head: code.fetch("head"),
+                tree: code.fetch("tree"), root: @root)
+              assert File.directory?(materialized.fetch("directory"))
+              gate_server, gate_worker = UNIXSocket.pair
+              gate = Thread.new do
+                @launch.gate_ready(request: {"params" => {"mapping_id" => "child-mapping", "launch_ticket" => reserved.data.fetch("launch_ticket")}},
+                  peer: child_identity, socket: gate_server, deadline: WIRE.deadline(5))
+              end
+              assert_equal "ready", WIRE.read(gate_worker, deadline: WIRE.deadline(5)).dig("data", "phase")
+              released = @client.call("release_launch", child_params.except("mapping_id").merge(
+                "launch_ticket" => reserved.data.fetch("launch_ticket"), "process_binding" => child_binding,
+                "expected_generation" => bound.data.fetch("generation")), mutation_id: "child-release", timeout: 30)
+              assert_equal "issued", released.data.fetch("phase")
+              assert_equal "release", WIRE.read(gate_worker, deadline: WIRE.deadline(5)).fetch("operation")
+              gate.join(2)
+              refute gate.alive?
+              gate_server.close; gate_worker.close
+              @kernel.peer_identity = child_identity
+              worker_kernel = Kernel.new
+              worker_kernel.define_singleton_method(:capture) { |_| child_identity }
+              worker_kernel.peer_identity = @service.slice("uid", "gid", "groups")
+              @client = Authority::Client.new(mapping_id: "child-mapping", deployment: @deployment, kernel: worker_kernel)
+              input = Authority::PreparedInput.fetch(client: @client, assignment_id: "child", attempt_id: child_params.fetch("attempt_id"))
+              assert_equal @head, git(input.working_directory, "rev-parse", "HEAD")
+              assert_equal "child", input.descriptor.fetch("assignment_id")
+              assert_equal execution, input.work.definition.fetch("campaign_execution")
+              assert_raises(AttemptErrors::Conflict) do
+                @launch.campaign_children_settled!(journal: @journal, commit: @journal.ref_value,
+                  params: {"mapping_id" => "mapping", "assignment_id" => "assignment", "attempt_id" => @attempt}, map: @map)
+              end
             end
           end
         end

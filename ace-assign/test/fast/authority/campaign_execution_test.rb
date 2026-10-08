@@ -28,6 +28,33 @@ class CampaignExecutionTest < AceAssignTestCase
     end
   end
 
+  def test_result_matches_registered_phase_candidate_and_executed_check
+    receipt = {"operation" => "review-collect", "head" => binding.fetch("head"), "verdict" => "succeeded",
+      "checks" => [{"name" => "review-execution", "verdict" => "passed"}]}
+    assert_equal binding, Binding.validate_result!(binding, receipt: receipt, base: binding.fetch("base"))
+    [receipt.merge("operation" => "test"), receipt.merge("head" => "e" * 40),
+      receipt.merge("campaign" => {}), receipt.merge("checks" => []),
+      receipt.merge("checks" => [{"name" => "review-execution", "verdict" => "failed"}])].each do |changed|
+      assert_raises(ArgumentError) { Binding.validate_result!(binding, receipt: changed, base: binding.fetch("base")) }
+    end
+    assert_raises(ArgumentError) { Binding.validate_result!(binding, receipt: receipt, base: "e" * 40) }
+    assert_equal binding, Binding.validate_result!(binding, receipt: receipt.merge("verdict" => "failed", "checks" => []),
+      base: binding.fetch("base"))
+  end
+
+  def test_canonical_independent_review_covers_phase_artifacts_and_exact_approval_actor
+    artifact = {"path" => "result-import", "sha256" => "a" * 64}
+    review = {"reviewer" => {"actor" => "independent", "runtime" => "herdr"}, "head" => binding.fetch("head"), "verdict" => "approved"}
+    receipt = {"artifacts" => [artifact], "review" => review}
+    accepted = {"artifacts" => [artifact.merge("path" => "review-import")], "review" => review}
+    value = binding.merge("phase" => "approval", "operation" => "review", "check_name" => "review-approval")
+    assert Binding.validate_finished_review!(value, receipt: receipt, accepted_review: accepted)
+    assert_raises(ArgumentError) { Binding.validate_finished_review!(value, receipt: receipt,
+      accepted_review: accepted.merge("artifacts" => [])) }
+    assert_raises(ArgumentError) { Binding.validate_finished_review!(value, receipt: receipt,
+      accepted_review: accepted.merge("review" => review.merge("reviewer" => {"actor" => "other", "runtime" => "herdr"}))) }
+  end
+
   def test_parent_registration_is_closed_and_canonical
     value = binding.slice("version", "campaign_id", "subject", "contract_identity").merge("policy" => policy)
     assert_equal value, Binding.validate_parent!(value)

@@ -142,7 +142,7 @@ module CampaignFixtures
   end
 
   def fixture_check_evidence
-    lambda do |ref, head:, name:|
+    lambda do |ref, head:, name:, historical: false|
       proof = (@accepted_checks || {})[ref["digest"]]
       unless proof && proof["head"] == head && proof["checks"].any? { |c| c["name"] == name && c["verdict"] == "passed" }
         raise Ace::Review::Atoms::CampaignContract::Invalid, "fixture coordinator did not accept check evidence"
@@ -151,7 +151,7 @@ module CampaignFixtures
         unless artifact_ref(artifact["path"]) == artifact
           raise Ace::Review::Atoms::CampaignContract::Invalid, "accepted check artifact changed"
         end
-      end
+      end unless historical
       proof
     end
   end

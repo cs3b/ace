@@ -13,8 +13,8 @@ module Ace
           @repo_root = repo_root
         end
 
-        def check(reference, head:, name:)
-          data = read(reference, head: head, kind: "check", check_name: name)
+        def check(reference, head:, name:, historical: false)
+          data = read(reference, head: head, kind: "check", check_name: name, historical: historical)
           unless Array(data["checks"]).any? { |check| check["name"] == name && check["verdict"] == "passed" }
             raise Atoms::CampaignContract::Invalid, "check receipt does not prove #{name} at the reviewed head"
           end

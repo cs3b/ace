@@ -110,7 +110,8 @@ module Ace
             timeout: resolved_timeout,
             fallback: false,
             last_message_file: last_msg_file,
-            subprocess_env: scope_env
+            subprocess_env: scope_env,
+            working_dir: prepared_input&.working_directory
           )
 
           if last_msg_file && result[:text] && !result[:text].strip.empty?

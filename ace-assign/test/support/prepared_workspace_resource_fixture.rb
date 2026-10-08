@@ -7,18 +7,18 @@ module Ace
     # Same maintained operator provisioning and original observer projection.
     # Installed namespace/ACL/filesystem observations remain controlled.
     module PreparedWorkspaceResourceFixture
-      def configure_original_workspace_resource
-        authority = @deployment.authority(@map.fetch("authority_id"))
-        cwd = {"host_path" => @map.fetch("worker_cwd"), "view_path" => @map.fetch("worker_cwd"),
+      def configure_original_workspace_resource(mapping_id: "mapping", map: @map)
+        authority = @deployment.authority(map.fetch("authority_id"))
+        cwd = {"host_path" => map.fetch("worker_cwd"), "view_path" => map.fetch("worker_cwd"),
           "device" => 8, "inode" => 42, "mount_id" => 10, "filesystem_type" => "ext4", "uid" => 13001, "gid" => 13001}
-        selection = Molecules::LifecycleExclusion.workspace_selection(mapping_id: "mapping", project_id: "project",
+        selection = Molecules::LifecycleExclusion.workspace_selection(mapping_id: mapping_id, project_id: map.fetch("project_id"),
           authority: authority, cwd_resource: cwd)
         mounts = ProtectedWorkspaceFixture::Mounts.new(selection.fetch("view_path"), selection.fetch("host_path"))
         acl = ProtectedWorkspaceFixture::ACL.new
         protection = Molecules::LifecycleExclusion::WorkspaceProvisioner::Protection.new(
           projection: {"authority_uid" => authority.fetch("uid"), "authority_gid" => authority.fetch("gid"), "root_resource" => {}},
           mounts: mounts, acl: acl)
-        association = Molecules::LifecycleExclusion.provision_workspace!(mapping_id: "mapping", project_id: "project",
+        association = Molecules::LifecycleExclusion.provision_workspace!(mapping_id: mapping_id, project_id: map.fetch("project_id"),
           authority: authority, cwd_resource: cwd, protection: protection)
         root = selection.slice("host_path", "view_path").merge(association.fetch("host_identity"),
           "mount_id" => 10, "filesystem_type" => "ext4")
@@ -30,8 +30,10 @@ module Ace
         declarations = @prepared_workspace_declarations
         files = Object.new
         files.define_singleton_method(:boundary_manifest) { |_scope| {"resources" => declarations} }
-        @prepared_workspace_observer = Authority::ExecutionScopeObservation.new(mapping_id: "mapping", deployment: @deployment,
+        @prepared_workspace_observer = Authority::ExecutionScopeObservation.new(mapping_id: mapping_id, deployment: @deployment,
           kernel: @kernel, files: files, manager: Object.new)
+        {observer: @prepared_workspace_observer, resources: @prepared_workspace_resources,
+          declarations: @prepared_workspace_declarations}.freeze
       end
 
       def controlled_workspace_reader(projection)

@@ -28,8 +28,9 @@ module Ace
             !entry["completed_at"].to_s.empty?
         end
 
-        def initialize(repo_root:, check_evidence: nil, review_evidence: nil, approval_evidence: nil)
+        def initialize(repo_root:, check_evidence: nil, review_evidence: nil, approval_evidence: nil, artifact_paths: {})
           @repo_root = File.realpath(repo_root)
+          @artifact_paths = artifact_paths.dup.freeze
           authority = CampaignExecutionEvidence.new(repo_root: @repo_root)
           @check_evidence = check_evidence || authority.method(:check)
           @review_evidence = review_evidence || authority.method(:review)
@@ -39,7 +40,7 @@ module Ace
         def artifact(reference)
           Contract.object!(reference, "artifact reference")
           path = Contract.string!(reference["path"], "artifact path")
-          candidate = File.expand_path(path, @repo_root)
+          candidate = File.expand_path(@artifact_paths.fetch(path, path), @repo_root)
           resolved = File.realpath(candidate)
           unless resolved.start_with?(@repo_root + File::SEPARATOR) && File.file?(resolved)
             raise Contract::Invalid, "artifact escapes repository or is not a file: #{path}"
@@ -154,13 +155,29 @@ module Ace
         end
 
         def verify_session_authority(session, head:, historical: false)
-          @review_evidence.call(session.fetch("receipt"), head: head, artifacts: session.fetch("artifacts"), historical: historical)
+          proof = @review_evidence.call(session.fetch("receipt"), head: head, artifacts: session.fetch("artifacts"), historical: historical)
+          verify_execution_linkage!(session["execution_proof"], proof)
+          proof
         end
 
         def verify_approval_authority(approval, historical: false)
-          @approval_evidence.call(approval.fetch("receipt"), head: approval.fetch("head"),
+          proof = @approval_evidence.call(approval.fetch("receipt"), head: approval.fetch("head"),
             artifacts: approval.fetch("reports"), producer: approval.fetch("producer"),
             reviewer: approval.fetch("reviewer"), historical: historical)
+          verify_execution_linkage!(approval["execution_proof"], proof)
+          approval.fetch("checks").each do |check|
+            accepted = @check_evidence.call(check.fetch("receipt"), head: approval.fetch("head"), name: check.fetch("name"), historical: historical)
+            verify_execution_linkage!(check["execution_proof"], accepted)
+          end
+          proof
+        end
+
+        def verify_execution_linkage!(recorded, observed)
+          binding = recorded.is_a?(Hash) && recorded["execution_binding"]
+          if binding && (!observed.is_a?(Hash) || observed["execution_binding"] != binding)
+            raise Contract::Invalid, "canonical campaign execution linkage changed"
+          end
+          true
         end
 
         def resolution(previous)
@@ -224,24 +241,27 @@ module Ace
             raise Contract::Invalid, "approval does not cover every required scope"
           end
           approval_receipt = data.fetch("receipt")
-          @approval_evidence.call(approval_receipt, head: binding["head"], artifacts: review_refs,
+          approval_proof = @approval_evidence.call(approval_receipt, head: binding["head"], artifacts: review_refs,
             producer: producer, reviewer: reviewer)
           checks = data["checks"]
           raise Contract::Invalid, "approval requires executed checks" unless checks.is_a?(Array) && !checks.empty?
           check_refs = []
+          accepted_checks = []
           checks.each do |check|
             Contract.object!(check, "check")
             Contract.string!(check["name"], "check name")
             raise Contract::Invalid, "check did not pass" unless check["verdict"] == "passed"
             accepted = @check_evidence.call(check.fetch("receipt"), head: binding["head"], name: check["name"])
             check_refs.concat(accepted.fetch("artifacts"))
+            accepted_checks << check.merge("execution_proof" => accepted)
           end
           unless (record["policy"]["required_checks"] - checks.map { |c| c["name"] }).empty?
             raise Contract::Invalid, "missing required checks"
           end
           {"artifact" => normalized, "artifacts" => check_refs + review_refs, "receipt" => approval_receipt,
+           "execution_proof" => approval_proof,
            "reports" => review_refs, "report_models" => report_models, "producer" => producer,
-           "reviewer" => reviewer, "head" => binding["head"], "base" => binding["base"], "checks" => checks,
+           "reviewer" => reviewer, "head" => binding["head"], "base" => binding["base"], "checks" => accepted_checks,
            "verdict" => "approved"}
         rescue JSON::ParserError, KeyError => e
           raise Contract::Invalid, "invalid approval evidence: #{e.message}"

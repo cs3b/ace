@@ -6,6 +6,41 @@ module Ace
   module Assign
     module Authority
       class LaunchLifecycle
+        # Called by the terminal owner at its selected CAS prefix. Discover
+        # children from canonical registration; no caller list can omit one.
+        def campaign_children_settled!(journal:, commit:, params:, map:)
+          parent = preview_attempt_definition!(journal: journal, commit: commit, params: params, map: map)
+          return true unless parent.review_campaign
+          inventory = journal.canonical_event_inventory!(commit: commit)
+          inventory.fetch("events").each do |assignment, events|
+            next if assignment == params.fetch("assignment_id")
+            registrations = events.select { |event| event.dig("payload", "operation") == "register_assignment" }
+            next if registrations.empty?
+            registration = registrations.last.fetch("payload").fetch("data")
+            child = inventory_definition!(journal, commit,
+              {selector: {"assignment_id" => assignment, "attempt_id" => nil}, registration: registration})
+            execution = child.campaign_execution
+            next unless execution && execution.values_at("parent_assignment_id", "parent_attempt_id") ==
+              params.values_at("assignment_id", "attempt_id")
+            original = control_original_descriptor!(registration.fetch("lifecycle_control"))
+            mapping_id = registration.fetch("mapping_id")
+            child_map = original.mapping(mapping_id)
+            authenticate_inventory_registration!(journal, assignment, events, registration, mapping_id,
+              child_map, commit, inventory.fetch("introductions").fetch(assignment))
+            rows = inventory_index!(journal, commit, mapping_id, child_map).select { |entry|
+              entry.fetch(:selector).fetch("assignment_id") == assignment }
+            unless !rows.empty? && rows.all? { |entry|
+                row = inventory_row!(journal, commit, entry)
+                %w[succeeded failed stopped].include?(row["canonical_state"]) &&
+                  row["terminal_event_id"] && row["reservation_release_event_id"] }
+              raise AttemptErrors::Conflict, "campaign parent has an unsettled registered child"
+            end
+          end
+          true
+        rescue KeyError, TypeError
+          raise AttemptErrors::EvidenceUnavailable, "campaign child completion provenance is unavailable"
+        end
+
         private
 
         # Resolve both immutable canonical owners before entering exclusions.
@@ -94,7 +129,7 @@ module Ace
           raise AttemptErrors::EvidenceUnavailable, "registered parent campaign is unavailable"
         end
 
-        def campaign_manager_for!(context)
+        def campaign_manager_for!(context, **evidence)
           descriptor = context.fetch(:descriptor)
           map = context.fetch(:map)
           project = descriptor.project(map.fetch("project_id"))
@@ -107,7 +142,7 @@ module Ace
             end
           end
           store = Ace::Review::Molecules::CampaignStore.new(root: project.fetch("campaign_store_root"))
-          Ace::Review::Organisms::CampaignManager.new(repo_root: project.fetch("campaign_repository"), store: store)
+          Ace::Review::Organisms::CampaignManager.new(repo_root: project.fetch("campaign_repository"), store: store, **evidence)
         end
 
         def with_child_campaign_registration(params, context)

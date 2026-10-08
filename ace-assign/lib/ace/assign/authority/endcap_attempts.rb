@@ -12,7 +12,13 @@ module Ace
         # introduction prefix, using the original deployment mapping.
         def finished_review_evidence!(journal:, events:, params:, map:, commit:)
           current = exact_candidate!(retained_candidate(events, params.fetch("candidate_generation")), params)
-          approved_review!(journal, events, params, map, current, commit: commit)
+          accepted = approved_review!(journal, events, params, map, current, commit: commit)
+          result = verified_result(journal, events, params, map, retained_origin(events, params), current, commit)
+          raise AttemptErrors::EvidenceUnavailable, "finished canonical result is missing" unless result
+          campaign_finished_result!(journal: journal, commit: commit, events: events, params: params, map: map,
+            result: result, accepted: accepted)
+          @launch.campaign_children_settled!(journal: journal, commit: commit, params: params, map: map)
+          accepted
         end
 
         private
@@ -164,7 +170,8 @@ module Ace
               if replay && replay["operation"] == "finish"
                 @launch.completion_terminal!(journal: selected, commit: commit, params: params, map: map)
               end
-              selected.mutate(assignment_id: params.fetch("assignment_id"), attempt_id: params.fetch("attempt_id"),
+              with_campaign_finish!(journal: selected, commit: commit, events: events, params: params, map: map) do
+                selected.mutate(assignment_id: params.fetch("assignment_id"), attempt_id: params.fetch("attempt_id"),
                 mutation_id: request.fetch("mutation_id"), operation: "finish", parameters_digest: Atoms::EvidenceDigest.digest(params),
                 expected_generation: params.fetch("expected_generation"), with_replay: true) do |fresh, prefix, _generation|
                 origin = finish_identity!(fresh, params, map, peer, role)
@@ -176,13 +183,19 @@ module Ace
                 unless result && result.fetch("result_id") == params.fetch("result_id")
                   raise AttemptErrors::EvidenceUnavailable, "Result finish requires its exact submitted receipt"
                 end
-                approved_review!(selected, fresh, params, map, current, commit: prefix) if result.dig("receipt", "verdict") == "succeeded"
+                if result.dig("receipt", "verdict") == "succeeded"
+                  accepted = approved_review!(selected, fresh, params, map, current, commit: prefix)
+                  campaign_finished_result!(journal: selected, commit: prefix, events: fresh, params: params, map: map,
+                    result: result, accepted: accepted)
+                end
+                @launch.campaign_children_settled!(journal: selected, commit: prefix, params: params, map: map)
                 @launch.completion_scope!(journal: selected, events: fresh, params: params, map: map, commit: prefix)
                 service_settlement_evidence!(journal: selected, events: fresh, params: params, map: map, commit: prefix)
                 inbox_settlement_evidence!(journal: selected, events: fresh, params: params, map: map, commit: prefix)
                 plan = Organisms::AttemptCoordinator.finished_transition_plan(events: fresh, receipt: result.fetch("receipt"))
                 plan.merge(data: params.slice("attempt_id", "result_id", "head", "candidate_generation").merge(
                   "receipt_digest" => result.fetch("receipt_digest"), "state" => result.dig("receipt", "verdict")))
+                end
               end
             end
           end

@@ -15,8 +15,10 @@ module Ace
       # Business admission shares the launch origin, lifecycle exclusion and
       # journal CAS. Network transfer is completed outside those locks.
       class Endcap
-        OPERATIONS = %w[submit_candidate export_candidate request_review review_status assign_review cancel_review accept_review request_service begin_dispatch complete_service publication_challenge publication_continue claim_service_settlement complete_no_effect service_authorization service_status workspace_prune_preview_context submit_result evidence_fetch reconcile_inbox bind_inbox finish recover].freeze
+        OPERATIONS = %w[submit_candidate export_candidate request_review review_status assign_review cancel_review accept_review request_service begin_dispatch complete_service publication_challenge publication_continue claim_service_settlement complete_no_effect service_authorization service_status workspace_prune_preview_context submit_result evidence_fetch reconcile_inbox bind_inbox finish recover campaign_record_round campaign_export_result].freeze
         TRANSFER_OPERATIONS = {
+          "campaign_export_result" => {direction: :download, purpose: :artifacts, roles: %i[worker launcher supervisor]},
+          "campaign_record_round" => {direction: :upload, purpose: :receipt_artifacts, roles: %i[launcher supervisor]},
           "reconcile_inbox" => {direction: :upload, purpose: :inbox_proof, roles: %i[launcher supervisor]},
           "submit_result" => {direction: :upload, purpose: :receipt_artifacts, roles: [:worker]},
           "evidence_fetch" => {direction: :download, purpose: :artifacts, roles: %i[worker reviewer executor launcher supervisor]},
@@ -31,6 +33,8 @@ module Ace
           "complete_no_effect" => {direction: :upload, purpose: :receipt_artifacts, roles: [:executor]}
         }.freeze
         PARAMETERS = {
+          "campaign_export_result" => %w[mapping_id assignment_id attempt_id candidate_generation head],
+          "campaign_record_round" => %w[mapping_id assignment_id attempt_id candidate_generation head input_sha256 transfer],
           "reconcile_inbox" => %w[mapping_id assignment_id attempt_id expected_generation event_id inbox_context_id expected_registration receipt_sha256 signature_sha256 transfer],
           "submit_result" => %w[mapping_id assignment_id attempt_id expected_generation candidate_generation head receipt_sha256 transfer],
           "evidence_fetch" => %w[mapping_id assignment_id attempt_id kind purpose_id artifact_id],
@@ -81,6 +85,8 @@ module Ace
         end
 
         def authorize_transfer!(request:, peer:, role:)
+          return dispatch_campaign_export(request: request, peer: peer, role: role, body: false) if request.fetch("operation") == "campaign_export_result"
+          return authorize_campaign_round!(request: request, peer: peer, role: role) if request.fetch("operation") == "campaign_record_round"
           return dispatch_prepared_fetch(request: request, peer: peer, role: role, body: false) if prepared_fetch?(request)
           return authorize_inbox_transfer!(request: request, peer: peer, role: role) if request.fetch("operation") == "reconcile_inbox"
           return authorize_result_transfer!(request: request, peer: peer, role: role) if %w[submit_result evidence_fetch].include?(request.fetch("operation"))
@@ -103,6 +109,8 @@ module Ace
         end
 
         def dispatch(request:, peer:, role:, transfer: nil)
+          return dispatch_campaign_export(request: request, peer: peer, role: role) if request.fetch("operation") == "campaign_export_result"
+          return dispatch_campaign_round(request: request, peer: peer, role: role, transfer: transfer) if request.fetch("operation") == "campaign_record_round"
           if prepared_fetch?(request)
             raise ArgumentError, "prepared fetch forbids upload" unless transfer.nil?
             return dispatch_prepared_fetch(request: request, peer: peer, role: role)
@@ -344,7 +352,7 @@ module Ace
         # A retained approval grants permission only while its original imported
         # bytes, independent reviewer and exact candidate still verify. An old
         # successful mutation reply is not a substitute for canonical evidence.
-        def approved_review!(journal, events, params, map, current, commit: journal.ref_value)
+        def approved_review!(journal, events, params, map, current, commit: journal.ref_value, service_operation: nil)
           accepted = events.reverse.find { |event| event["type"] == "authority_mutation" &&
             event.dig("payload", "operation") == "accept_review" }&.dig("payload", "data")
           review = active_review_event(events, current)&.dig("payload", "data")
@@ -371,6 +379,9 @@ module Ace
           unless receipt.digest == accepted.fetch("receipt_digest") && receipt.operation == "review" &&
               receipt.to_h.dig("review", "reviewer", "actor") == review.fetch("reviewer_actor")
             raise AttemptErrors::ReceiptRejected, "canonical review receipt differs"
+          end
+          if %w[ready merge].include?(service_operation)
+            campaign_service_checks!(journal: journal, commit: commit, events: events, params: params, map: map, current: current)
           end
           accepted
         rescue KeyError
@@ -430,6 +441,8 @@ end
 require_relative "endcap_services"
 require_relative "endcap_service_settlement"
 
+require_relative "endcap_campaign_results"
+require_relative "endcap_campaign_rounds"
 require_relative "endcap_results"
 
 require_relative "endcap_inboxes"

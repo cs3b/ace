@@ -123,6 +123,49 @@ class CampaignManagerTest < AceReviewTest
     assert_equal "reopened", result["open_findings"][0]["disposition"]
   end
 
+  def test_source_round_digest_binds_replay_and_fresh_consumer_policy
+    campaign = start_campaign
+    manager = campaign_manager
+    input = round_input(1).merge("attempt_id" => "source-pin")
+    invoked = 0
+    kwargs = {source_digest: "a" * 64, expected_campaign: campaign.slice("campaign_id", "subject", "contract_identity").merge("policy" => campaign["effective_policy"]),
+      consumer_profiles: {"delivery" => campaign_policy}, before_record: -> { invoked += 1 }}
+    manager.record_round(campaign.fetch("campaign_id"), input, **kwargs)
+    assert_equal 1, invoked
+    assert manager.record_round(campaign.fetch("campaign_id"), input, **kwargs.merge(consumer_profiles: {}))["replayed"]
+    assert_equal 1, invoked
+    assert_raises(ArgumentError) { manager.record_round(campaign.fetch("campaign_id"), input, **kwargs.merge(source_digest: "b" * 64)) }
+    assert_raises(ArgumentError) { manager.record_round(campaign.fetch("campaign_id"), input.merge("attempt_id" => "new-pin"), **kwargs.merge(consumer_profiles: {})) }
+  end
+
+  def test_retained_result_rechecks_required_checks_after_campaign_supersession
+    campaign = start_campaign
+    3.times do |n|
+      input = round_input(n)
+      make_campaign_session(campaign, input)
+      add_campaign_approval(campaign, input) if n == 2
+      campaign_manager.record_round(campaign["campaign_id"], input)
+    end
+    result = campaign_manager.accepted_result_snapshot(campaign["campaign_id"])
+    args = {result: result, subject: result["subject"], contract_identity: result["contract_identity"],
+      policy: result["effective_policy"], head: @head, base: @base, producer: "worker", reviewer: "reviewer"}
+    assert campaign_manager.verify_retained_result!(**args)
+    assert result.frozen?
+    assert result.fetch("prefix").frozen?
+    assert_operator JSON.generate(result).bytesize, :<, 16 * 1024
+    assert_equal true, campaign_manager.with_verified_result!(**args) { true }
+    [result.merge("unexpected" => true), result.merge("result_identity" => "f" * 64),
+      result.merge("prefix" => result.fetch("prefix").merge("attempts" => 999)),
+      result.merge("prefix" => result.fetch("prefix").merge("assessments" => 0.0)),
+      result.merge("head" => "c" * 40)].each do |invalid|
+      assert_raises(ArgumentError) { campaign_manager.verify_retained_result!(**args.merge(result: invalid)) }
+    end
+    campaign_manager.start(subject: campaign_subject, contract: "Successor", policy: campaign_policy, reason: "Changed requirements")
+    assert campaign_manager.verify_retained_result!(**args)
+    @accepted_checks.clear
+    assert_raises(ArgumentError) { campaign_manager.verify_retained_result!(**args) }
+  end
+
   def test_verified_result_guard_holds_lock_and_releases_after_exception
     campaign = start_campaign
     3.times do |n|

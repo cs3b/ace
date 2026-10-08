@@ -47,6 +47,24 @@ module Ace
           assert_match(/prepared_input_invalid:/, error.message)
         end
       end
+
+      def test_campaign_child_prompt_uses_registered_phase_and_private_candidate
+        execution = {"phase" => "check", "operation" => "lint", "check_name" => "lint",
+          "head" => "a" * 40, "base" => "b" * 40}
+        definition = Struct.new(:campaign_execution).new(execution)
+        work = Struct.new(:definition, :manifest).new(definition, {"context" => [], "steps" => []})
+        @input.instance_variable_set(:@work, work)
+        @input.instance_variable_set(:@descriptor, @selectors.merge("project_id" => "project"))
+        prompt = @input.drive_prompt
+        assert_includes prompt, "registered campaign check child"
+        assert_includes prompt, "private authenticated parent candidate repository at #{execution.fetch('head')}"
+        assert_includes prompt, "actual lint check"
+        assert_includes prompt, "campaign null"
+        assert_includes prompt, "Do not edit or advance that candidate"
+        assert_includes prompt, "CURRENT_CANDIDATE"
+        assert_includes prompt, "REVIEWED_CANDIDATE"
+        assert prompt.frozen?
+      end
     end
   end
 end

@@ -6,13 +6,14 @@ module Ace
       class Endcap
 
         def prepared_fetch?(request)
-          request["operation"] == "evidence_fetch" && request.dig("params", "kind") == "prepared_work"
+          request["operation"] == "evidence_fetch" && %w[prepared_work campaign_candidate].include?(request.dig("params", "kind"))
         end
 
         def dispatch_prepared_fetch(request:, peer:, role:, body: true)
           params = request.fetch("params")
           unless request.fetch("mutation_id").nil? && params.is_a?(Hash) && params.keys.sort == PARAMETERS.fetch("evidence_fetch").sort &&
-              params.values_at("kind", "purpose_id", "artifact_id") == %w[prepared_work original_prepared_work prepared_bundle]
+              [%w[prepared_work original_prepared_work prepared_bundle],
+                %w[campaign_candidate original_campaign_candidate candidate_bundle]].include?(params.values_at("kind", "purpose_id", "artifact_id"))
             raise ArgumentError, "prepared fetch envelope differs"
           end
           %w[mapping_id assignment_id attempt_id].each { |key| result_id!(params.fetch(key)) }
@@ -34,8 +35,25 @@ module Ace
             worker_or_launcher!(peer, role, original_map, state)
           end
           original_map = selected.fetch(:map)
-          return true unless body
           registration = selected.fetch(:registration)
+          if params.fetch("kind") == "campaign_candidate"
+            definition = @launch.preview_attempt_definition!(journal: journal, commit: commit, params: params, map: original_map)
+            execution = definition.campaign_execution
+            raise AttemptErrors::UnauthorizedIdentity, "original worker is not a campaign child" unless execution
+            descriptor, candidate_bytes = campaign_prepared_candidate!(journal: journal, commit: commit, execution: execution, map: original_map)
+            return true unless body
+            unless journal.ref_value == commit
+              raise AttemptErrors::Conflict, "campaign original candidate selection advanced"
+            end
+            descriptor = descriptor.merge(params.slice("mapping_id", "assignment_id", "attempt_id"),
+              "project_id" => original_map.fetch("project_id"),
+              "original_worker_identity" => selected.fetch(:state).fetch("process_binding").fetch("process_identity"),
+              "original_worker_scratch_root" => selected.fetch(:original_worker_scratch_root),
+              "original_binding_digest" => selected.fetch(:original_binding_digest))
+            return {data: {"descriptor" => descriptor, "generation" => journal.authority_generation(selected.fetch(:events)),
+              "journal_commit" => commit}, replayed: false, transfer_parts: [candidate_bytes]}
+          end
+          return true unless body
           reference = registration.fetch("prepared_work")
           bytes = journal.bounded_blob(registration.fetch("prepared_bundle_ref"), commit: selected.fetch(:registration_commit), max_bytes: CandidateTransfer::MAX_BYTES)
           unless bytes.is_a?(String) && bytes.bytesize == registration.fetch("prepared_bundle_bytes") &&
