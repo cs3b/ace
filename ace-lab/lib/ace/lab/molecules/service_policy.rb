@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "../errors"
+require "ace/assign/errors"
 require "pathname"
 require "time"
 

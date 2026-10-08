@@ -14,3 +14,7 @@ The existing Lab error definitions and fixed authorization constant/method are m
 - Intermediate `lab/a2355333-9570-4a2e-8e55-d1f421f2b8f8` retained FAIL because new test supplied raw target instead of existing ServiceInput.target projection; test corrected to use the actual owner projection, no production validation relaxed.
 
 Raw reports retained in this worktree `.ace-local/test/reports`. This verifies loading and existing bounded policy behavior, not physical Installer/native acceptance. Independent reviewer and actual composed Installer proof remain required.
+
+## Independent review repair
+
+The independent reviewer identified ServicePolicy's rescue dependency on `Ace::Assign::Error`, which the narrowed graph did not require. The actual ServicePolicy owner now explicitly requires `ace/assign/errors`; no broad entrypoint is restored. The fresh policy/listener child also invokes a refusing canonical proposal resolver and requires the existing SecurityError classification. Before correction `lab/a37a2cd1-4462-43e1-b1fa-fe7c91bc99b4` reproduces NameError; final fresh load plus ProtectedServicePolicy/ServicePolicy tests `lab/c5f7319d-b0e3-4eb7-b468-a6057f1243b8` PASS12/67. This successor remains awaiting independent review.

@@ -23,6 +23,13 @@ class ProtectedServiceLoadingTest < Minitest::Test
         rescue SecurityError
         end
         abort "default path changed" unless observed == ["/etc/lab/ace-lab/authorization.yml"]
+        proposal = Ace::Lab::Molecules::ServicePolicy.new({}, ->(*) { raise Ace::Assign::Error, "canonical owner refused" })
+        begin
+          proposal.authorize!("proposal-refused", {})
+          abort "proposal refusal authorized"
+        rescue SecurityError => error
+          abort "proposal refusal changed" unless error.message == "canonical proposal does not authorize this exact effect"
+        end
         STDOUT.write("loaded")
       RUBY
       result = Ace::Herdr::Molecules::BoundedProcess.call(
