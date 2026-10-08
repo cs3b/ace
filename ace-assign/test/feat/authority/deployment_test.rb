@@ -806,6 +806,38 @@ module Ace
         end
       end
 
+      def test_context_service_selection_is_closed_and_dedicated_before_any_observation
+        value = inbox_data
+        context = value.fetch("projects").fetch("project").fetch("inbox_contexts").fetch("inbox")
+        scope = value.fetch("launch_mappings").fetch("mapping").fetch("execution_scope").merge(
+          "slot_id" => "inbox-slot", "slice_unit" => "ace-inbox.slice", "service_unit" => "ace-inbox.service",
+          "root_directory" => "/var/lib/ace-inbox-service/root", "runtime_directory" => "/run/ace-inbox-service",
+          "network_namespace_path" => "/run/netns/ace-inbox-service")
+        refs = %w[unit_manifest boundary_manifest entry interpreter bootstrap_manifest].to_h do |role|
+          digest = role == "unit_manifest" ? "c" : role == "boundary_manifest" ? "d" : "e"
+          [role, {"path" => "/etc/ace/inbox-service/#{role}", "bytes" => 100, "sha256" => digest * 64}]
+        end
+        context["service"] = refs.merge("execution_scope" => scope)
+        assert_equal context.fetch("service"), Authority::Deployment.new(value).inbox_context("mapping", "inbox").fetch("service")
+        [->(row) { row.fetch("service")["unknown"] = true },
+         ->(row) { row.fetch("service").fetch("unit_manifest")["sha256"] = "f" * 64 },
+         ->(row) { row.fetch("service").fetch("execution_scope")["slot_id"] = "slot" },
+         ->(row) { row.fetch("service").fetch("execution_scope")["runtime_directory"] = "/run/ace-slot/nested" },
+         ->(row) { row.fetch("owner_credentials")["uid"] = 13001 },
+         ->(row) { row.fetch("owner_credentials")["uid"] = 13004 }].each do |change|
+          candidate = Marshal.load(Marshal.dump(value))
+          change.call(candidate.fetch("projects").fetch("project").fetch("inbox_contexts").fetch("inbox"))
+          assert_raises(ArgumentError) { Authority::Deployment.new(candidate) }
+        end
+        candidate = Marshal.load(Marshal.dump(value))
+        sibling = Marshal.load(Marshal.dump(candidate.fetch("projects").fetch("project").fetch("inbox_contexts").fetch("inbox")))
+        sibling.delete("service")
+        sibling["deliveries_dir"] = "/var/lib/ace-sibling-inbox"
+        sibling["control_socket_path"] = "/run/ace-sibling-inbox/context.sock"
+        candidate.fetch("projects").fetch("project").fetch("inbox_contexts")["sibling"] = sibling
+        assert_raises(ArgumentError) { Authority::Deployment.new(candidate) }
+      end
+
       def test_inbox_context_is_fixed_project_selection_without_native_repinnning
         deployment = Authority::Deployment.new(inbox_data)
         context = deployment.inbox_context("mapping", "inbox")

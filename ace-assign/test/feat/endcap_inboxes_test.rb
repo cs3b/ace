@@ -252,7 +252,7 @@ module Ace
           @context_store.close
           @context_store = Ace::Herdr::Molecules::InboxContextStore.new(root: @context_state_root, uid: Process.uid, protection: InboxContextOwnerFixture::FixturePaths.new)
           @context_owner = Ace::Herdr::Organisms::InboxContextOwner.new(context_id: "context", deliveries_dir: @context.fetch("deliveries_dir"),
-            grants: @context_grants, store: @context_store, keys: @context_keys, kernel: @kernel, inbox: @box, completion: @context_completion)
+            grants: @context_grants, store: @context_store, keys: @context_keys, kernel: @kernel, inbox: @box, completion: @context_completion, epoch: context_owner_epoch)
           result = reconcile
           assert_equal "completed", result.dig(:data, "state")
           assert_nil @box.prepare_direct_delivery(event: "event", expected_claim_generation: 1,

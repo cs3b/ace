@@ -3,6 +3,7 @@
 require "open3"
 require "json"
 require "timeout"
+require_relative "bounded_process"
 
 module Ace
   module Herdr
@@ -16,8 +17,9 @@ module Ace
         WAKE_OUTPUT_LIMIT = 65_536
         DEFAULT_PROBE_TIMEOUT_S = 60
 
-        def initialize(binary: DEFAULT_BINARY)
+        def initialize(binary: DEFAULT_BINARY, process: BoundedProcess)
           @binary = binary
+          @process = process
         end
 
         # Probe the agent living in a pane (raises AgentNotFoundError when none)
@@ -30,7 +32,7 @@ module Ace
         # killed at the deadline and the timeout classifies as a retryable
         # pre-submission failure.
         def pane_get_bounded(pane, timeout_s: DEFAULT_PROBE_TIMEOUT_S)
-          result = BoundedProcess.call([@binary, "pane", "get", pane], stdin_data: "",
+          result = @process.call([@binary, "pane", "get", pane], stdin_data: "",
             timeout_s: timeout_s, output_limit: WAKE_OUTPUT_LIMIT)
           execution = ExecutionResult.new(
             stdout: result.stdout.strip, stderr: result.stderr.strip,
@@ -65,7 +67,7 @@ module Ace
         # keep the inbox event lock through Open3.capture3 cleanup.
         def agent_prompt_bounded(pane:, text:, timeout_ms:)
           cmd = [@binary, "agent", "prompt", pane, text]
-          result = BoundedProcess.call(cmd, stdin_data: "",
+          result = @process.call(cmd, stdin_data: "",
             timeout_s: timeout_ms / 1000.0, output_limit: WAKE_OUTPUT_LIMIT)
           execution = ExecutionResult.new(
             stdout: result.stdout.strip, stderr: result.stderr.strip,

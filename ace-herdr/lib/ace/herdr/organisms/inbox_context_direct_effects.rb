@@ -34,6 +34,7 @@ module Ace
               operation["effect_binding"] = binding
               operation["in_flight"] = 1
               operation["issuer_state"] = "running"
+              operation["issuer_epoch"] = @epoch
               @effect_issuers[operation_id] = Thread.current
               dispatch = true
             end
@@ -87,6 +88,7 @@ module Ace
               operation["effect_binding"] = binding
               operation["in_flight"] = 1
               operation["issuer_state"] = "running"
+              operation["issuer_epoch"] = @epoch
               @effect_issuers[operation_id] = Thread.current
               dispatch = true
             end

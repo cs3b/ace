@@ -1,6 +1,9 @@
 # frozen_string_literal: true
 
+require_relative "inbox_context_epoch_fixture"
+
 module InboxContextOwnerFixture
+  include InboxContextEpochFixture
   Owner = Ace::Herdr::Organisms::InboxContextOwner
   Store = Ace::Herdr::Molecules::InboxContextStore
   Keys = Ace::Herdr::Molecules::InboxContextKey
@@ -81,17 +84,18 @@ module InboxContextOwnerFixture
       "host" => "controlled", "started_at" => "linux:00000000-0000-0000-0000-000000000001:42"}
   end
 
-  def start_owner
+  def start_owner(epoch: nil)
+    @owner_epoch = epoch || @owner_epoch || context_owner_epoch
     artifacts = Ace::Runtime::Molecules::ProtectedArtifactSet.new(protection: FixtureArtifacts.new(@root))
     @keys = Keys.new(context_id: "ctx", public_key_path: @key_path, config_path: @config_path, artifacts: artifacts)
     @store = Store.new(root: @state, uid: Process.uid, protection: FixturePaths.new)
-    @owner = Owner.new(context_id: "ctx", deliveries_dir: @events, grants: @grants,
+    @owner = Owner.new(context_id: "ctx", deliveries_dir: @events, grants: @grants, epoch: @owner_epoch,
       store: @store, keys: @keys, kernel: @kernel, inbox: @source_inbox, completion: @completion)
   end
 
-  def restart
+  def restart(epoch: nil)
     @store.close
-    start_owner
+    start_owner(epoch: epoch)
   end
 
   def install(key, generation)

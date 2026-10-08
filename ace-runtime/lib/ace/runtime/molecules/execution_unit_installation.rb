@@ -21,6 +21,9 @@ module Ace
           readiness_executable readiness_configuration boundary_manifest bootstrap worker_executable runtime_dependency].freeze
         REQUIRED_ROLES = %w[slice_fragment service_fragment native_executable native_configuration
           readiness_executable readiness_configuration boundary_manifest bootstrap worker_executable].freeze
+        CONTEXT_REQUIRED_ROLES = %w[slice_fragment service_fragment boundary_manifest bootstrap
+          context_executable context_configuration interpreter].freeze
+        CONTEXT_ROLES = (CONTEXT_REQUIRED_ROLES + %w[unit_dropin runtime_dependency]).freeze
         SERVICE_REQUIRED = {"Type" => "exec", "Restart" => "no", "RestartForceExitStatus" => [[], []],
           "KillMode" => "control-group", "SendSIGKILL" => true, "Delegate" => false,
           "ProtectControlGroups" => true, "NoNewPrivileges" => true, "CapabilityBoundingSet" => 0,
@@ -126,13 +129,38 @@ module Ace
           @worker_uid, @worker_gid = worker_uid, worker_gid
         end
 
+        # Context entries have their own fixed protocol. The same effective
+        # installation, activation, mount and isolation checks still apply.
+        def self.for_inbox_context(service:, configuration:, load_paths:, authority:, owner_credentials:, files: Files.new)
+          unless owner_credentials.is_a?(Hash) && owner_credentials.keys.sort == %w[gid groups uid] &&
+              owner_credentials.values_at("uid", "gid").all? { |id| id.is_a?(Integer) && id.positive? } &&
+              owner_credentials["groups"].is_a?(Array) && owner_credentials["groups"].size <= 64 &&
+              owner_credentials["groups"].all? { |id| id.is_a?(Integer) && id >= 0 } &&
+              owner_credentials["groups"] == owner_credentials["groups"].sort.uniq &&
+              load_paths.is_a?(Array) && load_paths.size.between?(1, 64) && load_paths.uniq.size == load_paths.size
+            raise RuntimeUnavailableError, "context installation selection differs"
+          end
+          selected = allocate
+          selected.send(:initialize_context, service, configuration, load_paths, authority, owner_credentials, files)
+          selected
+        end
+
+        # Descriptor shape only; no effective unit observation or role grant.
+        def self.validate_inbox_context_service!(service)
+          selected = allocate
+          selected.send(:validate_context_service!, service)
+          true
+        end
+
         def verify!(manager:)
           slot = @scope.fetch("slot_id")
           unless slot.is_a?(String) && SystemdScopeManager::UNIT.match?(slot)
             raise RuntimeUnavailableError, "installed slot identity is invalid"
           end
-          bytes = @files.read("/etc/ace/execution-slots/#{slot}/unit-manifest.json", limit: 65_536)
-          unless Digest::SHA256.hexdigest(bytes) == @scope.fetch("unit_manifest_sha256")
+          path = @context ? @context.fetch("unit_manifest").fetch("path") : "/etc/ace/execution-slots/#{slot}/unit-manifest.json"
+          bytes = @files.read(path, limit: 65_536)
+          unless Digest::SHA256.hexdigest(bytes) == @scope.fetch("unit_manifest_sha256") &&
+              (!@context || bytes.bytesize == @context.fetch("unit_manifest").fetch("bytes"))
             raise RuntimeUnavailableError, "unit manifest bytes differ from deployment"
           end
           manifest = JSON.parse(bytes)
@@ -141,7 +169,7 @@ module Ace
             raise RuntimeUnavailableError, "unit manifest schema/slot differs"
           end
           artifacts = verify_artifacts!(manifest.fetch("artifacts"))
-          profile = manager.inspect_profile
+          profile = @context ? manager.inspect_inbox_context_profile : manager.inspect_profile
           verify_profile!(profile, manifest.fetch("properties"), artifacts)
           manifest
         rescue SystemCallError, IOError, JSON::ParserError, KeyError, TypeError, NoMethodError
@@ -155,17 +183,134 @@ module Ace
           true
         end
 
+        def inbox_context_scope
+          raise RuntimeUnavailableError, "installation is not a context service" unless @context
+          @scope
+        end
+
+        def inbox_context_configuration_reference
+          raise RuntimeUnavailableError, "installation is not a context service" unless @context
+          @context_configuration
+        end
+
+        def inbox_context_service
+          raise RuntimeUnavailableError, "installation is not a context service" unless @context
+          @context
+        end
+
+        # Called from the held context configuration before service admission.
+        # Native startup bytes and IPC paths must be actual members of this
+        # SAME complete installed profile, not merely readable host selections.
+        def verify_inbox_native_projection!(references:, resources:, manager:)
+          raise RuntimeUnavailableError, "installation is not a context service" unless @context
+          manifest = verify!(manager: manager)
+          artifacts = manifest.fetch("artifacts")
+          profile = manager.inspect_inbox_context_profile.fetch("service")
+          unless references.is_a?(Array) && references.size.between?(3, 512) &&
+              resources.is_a?(Array) && resources.size <= 64
+            raise RuntimeUnavailableError, "context native projection exceeds bounds"
+          end
+          references.each do |ref|
+            unless ref.is_a?(Hash) && ref.keys.sort == %w[bytes path sha256] &&
+                ref["bytes"].is_a?(Integer) && ref["bytes"].between?(1, 268_435_456) &&
+                artifacts.any? { |artifact| artifact.values_at("host_path", "view_path", "sha256", "role") ==
+                  [ref.fetch("path"), ref.fetch("path"), ref.fetch("sha256"), "runtime_dependency"] }
+              raise RuntimeUnavailableError, "context native startup reference is not exactly projected"
+            end
+            bytes = @files.read(ref.fetch("path"), limit: ref.fetch("bytes"))
+            unless bytes.bytesize == ref.fetch("bytes") && Digest::SHA256.hexdigest(bytes) == ref.fetch("sha256")
+              raise RuntimeUnavailableError, "context native startup reference differs"
+            end
+          end
+          boundary = JSON.parse(@files.read(@context.fetch("boundary_manifest").fetch("path"), limit: 65_536))
+          resources.each do |resource|
+            unless resource.is_a?(Hash) && resource.keys.sort == %w[access gid kind mode path uid] &&
+                %w[read write].include?(resource["access"]) && path?(resource["path"])
+              raise RuntimeUnavailableError, "context native resource fields differ"
+            end
+            path = resource.fetch("path")
+            readonly = resource.fetch("access") == "read"
+            mounts = profile.fetch(readonly ? "BindReadOnlyPaths" : "BindPaths")
+            unless mounts.include?([path, path, false, 0]) &&
+                boundary.fetch("resources").any? { |entry| entry.values_at("host_path", "view_path", "stage", "worker_visible", "read_only") ==
+                  [path, path, "parent", true, readonly] } &&
+                (!readonly || profile.fetch("BindPaths").none? { |mount| overlaps?(path, mount[1]) } &&
+                  profile.fetch("ReadWritePaths").none? { |root| overlaps?(path, root) })
+              raise RuntimeUnavailableError, "context native resource is not exactly projected"
+            end
+          end
+          verify!(manager: manager)
+          true
+        rescue SystemCallError, IOError, JSON::ParserError, KeyError, TypeError, NoMethodError
+          raise RuntimeUnavailableError, "context native projection is unavailable"
+        end
+
         private
 
+        def initialize_context(service, configuration, load_paths, authority, credentials, files)
+          validate_context_service!(service)
+          refs = service.slice("unit_manifest", "boundary_manifest", "entry", "interpreter", "bootstrap_manifest").merge("configuration" => configuration)
+          unless refs.values.all? { |ref| ref.is_a?(Hash) && ref.keys.sort == %w[bytes path sha256] && path?(ref["path"]) &&
+              ref["bytes"].is_a?(Integer) && ref["bytes"].between?(1, 268_435_456) &&
+              ref["sha256"].is_a?(String) && ref["sha256"].match?(/\A[0-9a-f]{64}\z/) } &&
+              load_paths.all? { |path| path?(path) }
+            raise RuntimeUnavailableError, "context installation artifacts differ"
+          end
+          @scope = immutable_selection(service.fetch("execution_scope"))
+          @context = immutable_selection(service)
+          @context_configuration, @context_authority = immutable_selection(configuration), immutable_selection(authority)
+          @context_load_paths, @context_groups = immutable_selection(load_paths), immutable_selection(credentials.fetch("groups"))
+          @worker_uid, @worker_gid, @files = credentials.fetch("uid"), credentials.fetch("gid"), files
+        rescue KeyError, TypeError
+          raise RuntimeUnavailableError, "context installation selection is incomplete"
+        end
+
+        def validate_context_service!(service)
+          unless service.is_a?(Hash) && service.keys.sort == %w[bootstrap_manifest boundary_manifest entry execution_scope interpreter unit_manifest] &&
+              service.reject { |key, _| key == "execution_scope" }.values.all? { |ref|
+                ref.is_a?(Hash) && ref.keys.sort == %w[bytes path sha256] && path?(ref["path"]) &&
+                  ref["bytes"].is_a?(Integer) && ref["bytes"].between?(1, 268_435_456) &&
+                  ref["sha256"].is_a?(String) && ref["sha256"].match?(/\A[0-9a-f]{64}\z/)
+              }
+            raise RuntimeUnavailableError, "context service descriptor differs"
+          end
+          scope = service.fetch("execution_scope")
+          unless scope.is_a?(Hash) && scope.keys.sort == %w[backend boundary_manifest_sha256 network_namespace_path root_directory runtime_directory service_unit slice_unit slot_id unit_manifest_sha256] &&
+              scope["backend"] == "linux_systemd_cgroup_v2" && scope["slot_id"].is_a?(String) && SystemdScopeManager::UNIT.match?(scope["slot_id"]) &&
+              %w[root_directory runtime_directory network_namespace_path].all? { |key| path?(scope[key]) } &&
+              scope.fetch("runtime_directory").start_with?("/run/") && !overlaps?(scope.fetch("root_directory"), scope.fetch("runtime_directory")) &&
+              {"slice_unit" => ".slice", "service_unit" => ".service"}.all? { |key, suffix|
+                scope[key].is_a?(String) && SystemdScopeManager::UNIT.match?(scope[key]) && scope[key].end_with?(suffix) && !scope[key].downcase.include?("overseer")
+              } &&
+              scope["unit_manifest_sha256"] == service.fetch("unit_manifest").fetch("sha256") &&
+              scope["boundary_manifest_sha256"] == service.fetch("boundary_manifest").fetch("sha256") &&
+              service.fetch("unit_manifest").fetch("bytes") <= 65_536 && service.fetch("boundary_manifest").fetch("bytes") <= 65_536
+            raise RuntimeUnavailableError, "context service scope differs"
+          end
+        rescue KeyError, TypeError, NoMethodError
+          raise RuntimeUnavailableError, "context service descriptor is incomplete"
+        end
+
+        def immutable_selection(value)
+          case value
+          when Hash then value.to_h { |key, item| [key.dup.freeze, immutable_selection(item)] }.freeze
+          when Array then value.map { |item| immutable_selection(item) }.freeze
+          when String then value.dup.freeze
+          else value.freeze
+          end
+        end
+
         def verify_artifacts!(artifacts)
-          unless artifacts.is_a?(Array) && artifacts.size.between?(9, 512) &&
+          minimum = @context ? CONTEXT_REQUIRED_ROLES.size : 9
+          unless artifacts.is_a?(Array) && artifacts.size.between?(minimum, 512) &&
               artifacts.all? { |a| a.is_a?(Hash) && a.keys.sort == %w[host_path role sha256 view_path] } &&
               artifacts.map { |a| a["host_path"] }.uniq.size == artifacts.size
             raise RuntimeUnavailableError, "installed unit artifact declarations differ"
           end
           roles = artifacts.group_by { |a| a.fetch("role") }
-          unless REQUIRED_ROLES.all? { |role| roles.key?(role) } && (roles.keys - ROLES).empty? &&
-              %w[slice_fragment service_fragment native_executable native_configuration readiness_executable readiness_configuration boundary_manifest bootstrap worker_executable].all? { |role| roles[role].size == 1 }
+          required, allowed = @context ? [CONTEXT_REQUIRED_ROLES, CONTEXT_ROLES] : [REQUIRED_ROLES, ROLES]
+          unless required.all? { |role| roles.key?(role) } && (roles.keys - allowed).empty? &&
+              required.all? { |role| roles[role].size == 1 }
             raise RuntimeUnavailableError, "installed unit artifacts are incomplete or ambiguous"
           end
           artifacts.each do |artifact|
@@ -174,6 +319,7 @@ module Ace
               raise RuntimeUnavailableError, "installed unit artifact identity changed"
             end
           end
+          return verify_context_artifacts!(roles) if @context
           expected = {"native_executable" => @native.fetch("executable"), "bootstrap" => @bootstrap,
             "worker_executable" => @worker_entry.fetch("wrapper").fetch("path"),
             "readiness_configuration" => "/etc/ace/execution-slots/#{@scope.fetch('slot_id')}/readiness.json",
@@ -197,6 +343,22 @@ module Ace
           roles
         end
 
+        def verify_context_artifacts!(roles)
+          refs = {"context_executable" => @context.fetch("entry"), "interpreter" => @context.fetch("interpreter"),
+            "bootstrap" => @context.fetch("bootstrap_manifest"), "boundary_manifest" => @context.fetch("boundary_manifest"),
+            "context_configuration" => @context_configuration}
+          refs.each do |role, ref|
+            artifact = roles.fetch(role).first
+            bytes = @files.read(artifact.fetch("host_path"), limit: ref.fetch("bytes"))
+            unless artifact.fetch("host_path") == ref.fetch("path") && artifact.fetch("sha256") == ref.fetch("sha256") &&
+                (!%w[bootstrap boundary_manifest context_configuration].include?(role) || artifact.fetch("view_path") == ref.fetch("path")) &&
+                bytes.bytesize == ref.fetch("bytes") && Digest::SHA256.hexdigest(bytes) == ref.fetch("sha256")
+              raise RuntimeUnavailableError, "context host artifact differs from selected immutable reference"
+            end
+          end
+          roles
+        end
+
         def verify_profile!(profile, expected, artifacts)
           unless expected.is_a?(Hash) && expected.keys.sort == %w[service slice]
             raise RuntimeUnavailableError, "unit profile declarations differ"
@@ -207,7 +369,7 @@ module Ace
             raise RuntimeUnavailableError, "effective manager environment changes the fixed startup surface"
           end
           {"slice" => SystemdScopeManager::UNIT_GRAPH_SIGNATURES.keys,
-           "service" => (SystemdScopeManager::UNIT_GRAPH_SIGNATURES.keys + SystemdScopeManager::SERVICE_EXEC_SIGNATURES.keys).uniq}.each do |kind, keys|
+           "service" => (SystemdScopeManager::UNIT_GRAPH_SIGNATURES.keys + SystemdScopeManager::SERVICE_EXEC_SIGNATURES.keys + (@context ? ["TimeoutStopUSec"] : [])).uniq}.each do |kind, keys|
             wanted, actual = expected.fetch(kind), profile.fetch(kind)
             projected = actual.dup
             %w[ExecStartEx ExecStartPostEx].each do |key|
@@ -239,10 +401,16 @@ module Ace
               credential_id(service.fetch("User"), :uid) == @worker_uid &&
               credential_id(service.fetch("Group"), :gid) == @worker_gid &&
               SERVICE_REQUIRED.all? { |key, value| service[key] == value } &&
-              service["SupplementaryGroups"] == [] &&
+              service["SupplementaryGroups"] == (@context ? @context_groups.map(&:to_s) : []) &&
               service["RestrictAddressFamilies"] == [true, %w[AF_INET AF_INET6 AF_UNIX]] &&
               EMPTY_EXEC.all? { |key| service[key] == [] }
             raise RuntimeUnavailableError, "execution unit lacks the required retained isolation profile"
+          end
+          if @context
+            verify_context_protocol!(service, artifacts)
+            verify_artifact_projection!(service, artifacts)
+            verify_boundary_topology!(service, artifacts, authority: @context_authority)
+            return
           end
           verify_command!(service.fetch("ExecStartEx"), artifacts.fetch("native_executable").first.fetch("view_path"))
           config_artifact = artifacts.fetch("readiness_configuration").first
@@ -267,6 +435,18 @@ module Ace
           end
           verify_artifact_projection!(service, artifacts)
           verify_boundary_topology!(service, artifacts, authority: config.data.fetch("authority"))
+        end
+
+        def verify_context_protocol!(service, artifacts)
+          interpreter = artifacts.fetch("interpreter").first.fetch("view_path")
+          entry = artifacts.fetch("context_executable").first.fetch("view_path")
+          verify_command!(service.fetch("ExecStartEx"), interpreter)
+          arguments = [interpreter, "--disable=gems,rubyopt", *@context_load_paths.flat_map { |path| ["-I", path] }, entry]
+          unless service.fetch("ExecStartEx").first[1] == arguments && service.fetch("ExecStartPostEx") == [] &&
+              service.fetch("Environment") == [] && service.fetch("TimeoutStopUSec") == 35_000_000 &&
+              @context_load_paths.all? { |path| artifacts.fetch("runtime_dependency", []).any? { |artifact| covers?(path, artifact.fetch("view_path")) } }
+            raise RuntimeUnavailableError, "context commands differ from the fixed service protocol"
+          end
         end
 
         def verify_graph!(slice, service, ancestors, prerequisites)
@@ -372,7 +552,7 @@ module Ace
             raise RuntimeUnavailableError, "authority socket has no unique exact readonly projection"
           end
           devpts = "/run/ace/execution-slots/#{@scope.fetch('slot_id')}/devpts"
-          device_projections = [[devpts, "/dev/pts", false], [devpts + "/ptmx", "/dev/pts/ptmx", true]]
+          device_projections = @context ? [] : [[devpts, "/dev/pts", false], [devpts + "/ptmx", "/dev/pts/ptmx", true]]
           unless projections.select { |_host, view, _| overlaps?(view, "/dev/pts") } == device_projections
             raise RuntimeUnavailableError, "selected devpts has no exact root and ptmx projection"
           end

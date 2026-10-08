@@ -37,6 +37,7 @@ module Ace
         MOUNT_SIGNATURES = {"Where" => "s"}.freeze
         ACTIVATION_UNIT_SIGNATURES = UNIT_STATE_SIGNATURES.merge("InvocationID" => "ay", "ControlGroup" => "s").freeze
         ACTIVATION_SERVICE_SIGNATURES = {"MainPID" => "u", "ControlPID" => "u", "Slice" => "s"}.freeze
+        INBOX_CONTEXT_SIGNATURES = {"TimeoutStopUSec" => "t"}.freeze
 
         PIDFD_ARGV = [BUSCTL, "--system", "--no-pager", "--json=short", "--auto-start=no",
           "--allow-interactive-authorization=no", "--timeout=5", "call", "org.freedesktop.systemd1",
@@ -205,6 +206,13 @@ module Ace
             "manager_environment" => manager_environment, "prerequisites" => inspect_prerequisites(service)}
         end
 
+        def inspect_inbox_context_profile
+          profile = inspect_profile
+          profile.fetch("service").merge!(typed_properties(unit: @service_unit, interface: "Service",
+            signatures: INBOX_CONTEXT_SIGNATURES))
+          profile
+        end
+
         def manager_environment(timeout: 5)
           bytes = @command.call([BUSCTL, "--system", "--no-pager", "--json=short", "--auto-start=no",
             "--allow-interactive-authorization=no", "get-property", "org.freedesktop.systemd1",
@@ -250,7 +258,7 @@ module Ace
               signatures.all? { |key, value|
                 allowed = case interface
                 when "Unit" then UNIT_GRAPH_SIGNATURES.merge(ACTIVATION_UNIT_SIGNATURES)
-                when "Service" then SERVICE_EXEC_SIGNATURES.merge(ACTIVATION_SERVICE_SIGNATURES)
+                when "Service" then SERVICE_EXEC_SIGNATURES.merge(ACTIVATION_SERVICE_SIGNATURES).merge(INBOX_CONTEXT_SIGNATURES)
                 when "Mount" then MOUNT_SIGNATURES
                 end
                 allowed[key] == value

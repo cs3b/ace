@@ -222,13 +222,17 @@ module Ace
 
         def validate_inbox_contexts!
           roots = []
+          service_scopes = data.fetch("launch_mappings").values.map { |map| map.fetch("execution_scope") }
+          service_owner_uids = []
           data.fetch("projects").each do |project_id, fixed_project|
             contexts = fixed_project.fetch("inbox_contexts", {})
             unless contexts.is_a?(Hash) && contexts.keys.all? { |id| id.is_a?(String) && TOKEN.match?(id) }
               raise ArgumentError, "invalid installed inbox context map"
             end
             contexts.each_value do |context|
-              strict!(context, %w[control_socket_path deliveries_dir owner_credentials receipt_public_key native_mapping_id pi_queue_client pi_queue_client_sha256 supervisor_uids])
+              fields = %w[control_socket_path deliveries_dir owner_credentials receipt_public_key native_mapping_id pi_queue_client pi_queue_client_sha256 supervisor_uids]
+              fields << "service" if context.key?("service")
+              strict!(context, fields)
               credentials = context.fetch("owner_credentials")
               strict!(credentials, %w[gid groups uid])
               principal!(credentials, "uid", "gid", "groups")
@@ -250,6 +254,33 @@ module Ace
               unless native.fetch("project_id") == project_id && authority(native.fetch("authority_id")).fetch("composition") == "services"
                 raise ArgumentError, "inbox context requires its services project mapping"
               end
+              if context.key?("service")
+                Ace::Runtime::Molecules::ExecutionUnitInstallation.validate_inbox_context_service!(context.fetch("service"))
+                scope = context.fetch("service").fetch("execution_scope")
+                if service_scopes.any? { |other|
+                  %w[slot_id slice_unit service_unit].any? { |field| scope.fetch(field) == other.fetch(field) } ||
+                    scope.values_at("root_directory", "runtime_directory").any? { |path|
+                      other.values_at("root_directory", "runtime_directory").any? { |existing| paths_overlap?(path, existing) }
+                    }
+                }
+                  raise ArgumentError, "context service shares a protected execution slot or backing root"
+                end
+                prohibited_uids = data.fetch("authorities").values.map { |service| service.fetch("uid") } +
+                  data.fetch("launch_mappings").values.flat_map { |map| map.values_at("launcher_uid", "worker_uid") } +
+                  data.fetch("projects").values.flat_map { |project|
+                    %w[launcher_uids reviewer_uids worker_uids service_executor_uids supervisor_uids].flat_map { |field| project.fetch(field) } +
+                      project.fetch("service_receivers", {}).values.map { |receiver| receiver.fetch("executor_uid") }
+                  }
+                prohibited_uids.concat(data.fetch("projects").values.flat_map { |project|
+                  project.fetch("inbox_contexts", {}).values.reject { |other| other.equal?(context) }.map { |other| other.fetch("owner_credentials").fetch("uid") }
+                })
+                uid = credentials.fetch("uid")
+                if prohibited_uids.include?(uid) || service_owner_uids.include?(uid)
+                  raise ArgumentError, "context service owner shares another protected principal"
+                end
+                service_owner_uids << uid
+                service_scopes << scope
+              end
               roots << context.fetch("deliveries_dir")
             end
           end
@@ -263,6 +294,8 @@ module Ace
               roots.any? { |root| forbidden.any? { |other| paths_overlap?(root, other) } }
             raise ArgumentError, "installed inbox private roots overlap protected state"
           end
+        rescue Ace::Runtime::RuntimeUnavailableError
+          raise ArgumentError, "invalid context service installation selection"
         end
         private :validate_inbox_contexts!
 

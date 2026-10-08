@@ -10,6 +10,7 @@ module Ace
       # Operational admission metadata only; DeliveryRecord remains the event ledger.
       class InboxContextStore
         LIMIT = 1_048_576
+        class AlreadyProvisioned < ValidationError; end
         class ClosedObject < Hash
           def []=(key, value)
             raise ValidationError, "duplicate context field" if key?(key)
@@ -52,6 +53,8 @@ module Ace
             end
             fsync_root!
           end
+        rescue Errno::EEXIST
+          raise AlreadyProvisioned, "context metadata already exists"
         rescue SystemCallError
           raise ValidationError, "context metadata provisioning refused"
         end

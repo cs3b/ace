@@ -4,6 +4,7 @@ require "securerandom"
 require "ace/runtime/molecules/protected_linux"
 require_relative "../molecules/inbox_context_store"
 require_relative "../molecules/inbox_context_key"
+require_relative "../molecules/inbox_context_lifetime"
 require_relative "inbox"
 require_relative "inbox_context_effects"
 require_relative "inbox_context_direct_effects"
@@ -23,7 +24,7 @@ module Ace
         KEY_FIELDS = %w[config_sha256 fingerprint key_generation public_key_sha256].freeze
         OPERATION_LIMIT = 256
 
-        def initialize(context_id:, deliveries_dir:, grants:, store:, keys:,
+        def initialize(context_id:, deliveries_dir:, grants:, store:, keys:, epoch:,
           kernel: Ace::Runtime::Molecules::ProtectedLinux.new, inbox: nil, completion: nil)
           token!(context_id)
           @context_id, @deliveries_dir, @store, @keys, @kernel = context_id, deliveries_dir, store, keys, kernel
@@ -31,6 +32,8 @@ module Ace
             raise ValidationError, "context Inbox selection differs"
           end
           @inbox, @completion, @effect_issuers = inbox, completion, {}
+          Molecules::InboxContextLifetime.validate_epoch!(epoch)
+          @epoch = immutable_effect(epoch)
           @grants = JSON.parse(JSON.generate(grants))
           validate_grants!
         end
@@ -39,8 +42,39 @@ module Ace
         def provision!
           key = @keys.snapshot
           validate_key!(key)
-          @store.provision!({"schema" => "ace.herdr.inbox-context-control/v2", "context_id" => @context_id,
-            "key" => key, "operations" => {}, "rotation" => nil, "last_rotation" => nil})
+          @store.provision!({"schema" => "ace.herdr.inbox-context-control/v3", "context_id" => @context_id,
+            "key" => key, "operations" => {}, "rotation" => nil, "last_rotation" => nil,
+            "owner_epoch" => @epoch, "owner_epoch_state" => "active", "owner_epoch_closure_sha256" => nil})
+        end
+
+        # Startup never initializes missing state or replaces an active old
+        # owner. A closed old epoch is a retained recovery publication, not a
+        # claim inferred from process absence.
+        def activate_epoch!
+          @store.transaction do |state|
+            validate_state!(state, current_epoch: false)
+            key_current!(state)
+            if state.fetch("owner_epoch") == @epoch && state.fetch("owner_epoch_state") == "active"
+              next @epoch
+            end
+            unless state.fetch("owner_epoch_state") == "closed" && state.fetch("operations").empty? && state["rotation"].nil?
+              raise ValidationError, "context prior epoch has not been positively closed"
+            end
+            raise ValidationError, "context closed epoch cannot be reactivated" if state.fetch("owner_epoch") == @epoch
+            state["owner_epoch"], state["owner_epoch_state"], state["owner_epoch_closure_sha256"] = @epoch, "active", nil
+            validate_state!(state)
+            @epoch
+          end
+        end
+
+        # Initializer acknowledgement recovery is strictly read-only. A
+        # retained installation ticket cannot reactivate a closed old epoch or
+        # authorize another service incarnation.
+        def observe_initialized_epoch!
+          transaction do |state|
+            key_current!(state)
+            @epoch
+          end
         end
 
         def status(peer:)
@@ -83,7 +117,7 @@ module Ace
             id = SecureRandom.hex(16)
             state.fetch("operations")[id] = {"peer" => copy(peer), "purpose" => purpose, "event_id" => event_id,
               "key_generation" => state.fetch("key").fetch("key_generation"), "in_flight" => 0,
-              "effect_binding" => nil, "completion" => nil, "issuer_state" => nil, "admitted_claim" => nil}
+              "effect_binding" => nil, "completion" => nil, "issuer_state" => nil, "admitted_claim" => nil, "issuer_epoch" => nil}
             operation_projection(state, id, state.fetch("operations").fetch(id))
           end
         end
@@ -373,17 +407,25 @@ module Ace
           end
         end
 
-        def validate_state!(state)
-          strict!(state, %w[context_id key last_rotation operations rotation schema])
-          unless state["schema"] == "ace.herdr.inbox-context-control/v2" && state["context_id"] == @context_id
+        def validate_state!(state, current_epoch: true)
+          strict!(state, %w[context_id key last_rotation operations owner_epoch owner_epoch_closure_sha256 owner_epoch_state rotation schema])
+          unless state["schema"] == "ace.herdr.inbox-context-control/v3" && state["context_id"] == @context_id
             raise ValidationError, "context metadata belongs to another context"
+          end
+          Molecules::InboxContextLifetime.validate_epoch!(state.fetch("owner_epoch"))
+          unless state["owner_epoch_state"] == "active" && state["owner_epoch_closure_sha256"].nil? ||
+              state["owner_epoch_state"] == "closed" && state["owner_epoch_closure_sha256"].is_a?(String) && DIGEST.match?(state["owner_epoch_closure_sha256"])
+            raise ValidationError, "context epoch disposition differs"
+          end
+          if current_epoch && (state.fetch("owner_epoch") != @epoch || state.fetch("owner_epoch_state") != "active")
+            raise ValidationError, "context owner epoch is not the current active incarnation"
           end
           validate_key!(state.fetch("key"))
           operations = state.fetch("operations")
           raise ValidationError, "context admission map exceeds bounds" unless operations.is_a?(Hash) && operations.size <= OPERATION_LIMIT
           operations.each do |id, operation|
             id!(id)
-            strict!(operation, %w[admitted_claim completion effect_binding event_id in_flight issuer_state key_generation peer purpose])
+            strict!(operation, %w[admitted_claim completion effect_binding event_id in_flight issuer_epoch issuer_state key_generation peer purpose])
             peer!(operation.fetch("peer"))
             token!(operation.fetch("event_id"))
             unless PURPOSES.include?(operation["purpose"]) && [0, 1].include?(operation["in_flight"]) &&
@@ -398,6 +440,9 @@ module Ace
                 end
                 unless %w[running returned].include?(operation["issuer_state"])
                   raise ValidationError, "context direct issuer evidence differs"
+                end
+                unless operation["issuer_epoch"] == state.fetch("owner_epoch")
+                  raise ValidationError, "context direct issuer epoch differs"
                 end
                 if (claim = operation["admitted_claim"])
                   strict!(claim, %w[claim_generation claim_owner])
@@ -417,7 +462,7 @@ module Ace
                 raise ValidationError, "context retained effect lacks canonical completion"
               end
             end
-            unless operation["issuer_state"].nil? && operation["admitted_claim"].nil?
+            unless operation["issuer_state"].nil? && operation["admitted_claim"].nil? && operation["issuer_epoch"].nil?
               raise ValidationError, "context non-direct issuer evidence differs"
             end
             if operation["completion"]

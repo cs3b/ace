@@ -11,6 +11,7 @@ module Ace
     # Actual owner, signed Inbox, canonical query and Server over real sockets.
     # Only installed filesystem credentials/kernel peers are controlled seams.
     module ProtectedInboxContextPipelineFixture
+      include ::InboxContextEpochFixture
       class PeerKernel
         def initialize(peer); @peer = peer; end
         def live!(_identity); true; end
@@ -58,7 +59,7 @@ module Ace
         grants << @peer.slice("uid", "gid", "groups").merge("role" => "authority", "purposes" => %w[deliver enqueue]) if @direct_fixture
         @context_keys, @context_completion, @context_grants, @context_state_root = keys, completion, grants, state_root
         @context_owner = Ace::Herdr::Organisms::InboxContextOwner.new(context_id: context_id, deliveries_dir: @context.fetch("deliveries_dir"),
-          grants: grants, store: @context_store, keys: keys, kernel: @kernel, inbox: @box, completion: completion)
+          grants: grants, store: @context_store, keys: keys, kernel: @kernel, inbox: @box, completion: completion, epoch: context_owner_epoch)
         @context_owner.provision!
         client = Ace::Herdr::Molecules::InboxContextClient.new(context_id: context_id, socket_path: @context_path, owner_identity: @context_peer,
           kernel: PeerKernel.new(@context_peer), wire: SocketFixtureWire.new(@socket_root, @context_peer.fetch("uid")))

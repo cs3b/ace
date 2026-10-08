@@ -2,6 +2,7 @@
 
 require "json"
 require "timeout"
+require_relative "bounded_process"
 
 module Ace
   module Herdr
@@ -26,12 +27,13 @@ module Ace
 
         # runner: test seam. Callable (argv, stdin_data:, timeout_s:) ->
         # [stdout, stderr, status]. Defaults to the bounded runner.
-        def initialize(codex: "codex", pi_client: nil, runner: nil,
+        def initialize(codex: "codex", pi_client: nil, runner: nil, process: BoundedProcess,
           submit_timeout_s: DEFAULT_SUBMIT_TIMEOUT_S,
           identity_timeout_s: DEFAULT_IDENTITY_TIMEOUT_S)
           @codex = codex
           @pi_client = pi_client || ENV["ACE_HERDR_PI_QUEUE_CLIENT"] || "pi-overseer-queue-client"
           @runner = runner
+          @process = process
           @submit_timeout_s = submit_timeout_s
           @identity_timeout_s = identity_timeout_s
         end
@@ -103,7 +105,7 @@ module Ace
             return BoundedProcess::Result.new(stdout, stderr, status, false)
           end
 
-          BoundedProcess.call(argv, stdin_data: stdin_data, timeout_s: timeout_s)
+          @process.call(argv, stdin_data: stdin_data, timeout_s: timeout_s)
         rescue SystemCallError => e
           # popen3 raises spawn failures before the child exists, so no
           # submission can have begun: proven pre-launch, retryable.

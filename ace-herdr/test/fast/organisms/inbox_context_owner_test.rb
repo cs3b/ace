@@ -6,6 +6,58 @@ require_relative "../../support/inbox_context_owner_fixture"
 class InboxContextOwnerTest < Minitest::Test
   include InboxContextOwnerFixture
 
+  def test_initializer_replay_is_read_only_and_cannot_activate_closed_or_other_epoch
+    path = File.join(@state, ".context-control.json")
+    before = File.binread(path)
+    assert_equal @owner_epoch, @owner.observe_initialized_epoch!
+    assert_equal before, File.binread(path)
+    assert_raises(Ace::Herdr::Molecules::InboxContextStore::AlreadyProvisioned) { @owner.provision! }
+    assert_equal before, File.binread(path)
+    @store.transaction do |state|
+      state["owner_epoch_state"] = "closed"
+      state["owner_epoch_closure_sha256"] = "d" * 64
+    end
+    closed = File.binread(path)
+    assert_raises(ERROR) { @owner.observe_initialized_epoch! }
+    assert_equal closed, File.binread(path)
+    replacement = Marshal.load(Marshal.dump(@owner_epoch))
+    replacement["service_invocation_id"] = "c" * 32
+    restart(epoch: replacement)
+    assert_raises(ERROR) { @owner.observe_initialized_epoch! }
+    assert_equal closed, File.binread(path)
+    File.unlink(path)
+    assert_raises(ERROR) { @owner.observe_initialized_epoch! }
+    refute File.exist?(path)
+  end
+
+  def test_same_observed_epoch_startup_is_read_only_and_new_epoch_cannot_replace_active_owner
+    path = File.join(@state, ".context-control.json")
+    before = File.binread(path)
+    assert_equal @owner_epoch, @owner.activate_epoch!
+    assert_equal before, File.binread(path)
+    replacement = Marshal.load(Marshal.dump(@owner_epoch))
+    replacement["service_invocation_id"] = "c" * 32
+    replacement.fetch("process_identity")["pid"] += 1
+    replacement.fetch("process_identity")["started_at"] = replacement.fetch("process_identity")["started_at"].sub(/:42\z/, ":43")
+    restart(epoch: replacement)
+    assert_raises(ERROR) { @owner.activate_epoch! }
+    assert_raises(ERROR) { @owner.status(peer: @normal) }
+    assert_equal before, File.binread(path)
+  end
+
+  def test_startup_never_provisions_missing_metadata_or_accepts_malformed_closed_epoch
+    path = File.join(@state, ".context-control.json")
+    @store.transaction do |state|
+      state["owner_epoch_state"] = "closed"
+      state["owner_epoch_closure_sha256"] = nil
+    end
+    assert_raises(ERROR) { @owner.activate_epoch! }
+    File.unlink(path)
+    restart
+    assert_raises(ERROR) { @owner.activate_epoch! }
+    refute File.exist?(path)
+  end
+
   class CountedInbox < Ace::Herdr::Organisms::Inbox
     class << self
       attr_accessor :effects
@@ -242,7 +294,7 @@ class InboxContextOwnerTest < Minitest::Test
       Owner::OPERATION_LIMIT.times do |i|
         state.fetch("operations")[i.to_s(16).rjust(32, "0")] = {"peer" => @normal, "purpose" => "enqueue",
           "event_id" => "event-#{i}", "key_generation" => 1, "in_flight" => 0, "effect_binding" => nil, "completion" => nil,
-          "issuer_state" => nil, "admitted_claim" => nil}
+          "issuer_state" => nil, "admitted_claim" => nil, "issuer_epoch" => nil}
       end
     end
     assert_raises(ERROR) { begin_operation }
