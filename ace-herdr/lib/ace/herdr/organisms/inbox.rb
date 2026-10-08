@@ -383,7 +383,7 @@ module Ace
           end
         end
 
-        def deliver(event:, expected_claim_generation: nil, expected_attempt: nil, prepared_claim: nil)
+        def deliver(event:, expected_claim_generation: nil, expected_attempt: nil, prepared_claim: nil, &guarded_submission)
           validate_id!(event, "event")
           with_event(event) do |record|
             raise ValidationError, "unknown inbox event: #{event}" unless record&.inbox
@@ -456,7 +456,7 @@ module Ace
             record = transition(record, "uncertain", intent, "submit-intent")
             save(record)
 
-            result = submit(record, binding)
+            result = submit(record, binding, guarded_submission)
             if result["pre_submit"]
               # Missing executable is the only proven pre-submission error.
               record = transition(record, "queued", bound.merge("last_error" => result["error"]),
@@ -628,8 +628,15 @@ module Ace
            "agent_status" => status}
         end
 
-        def submit(record, binding)
+        def submit(record, binding, guarded_submission)
           if binding.fetch("agent") == "codex"
+            if record.inbox["original_context"]
+              raise ValidationError, "original terminal submission owner is unavailable" unless guarded_submission
+              result = guarded_submission.call(record.answer)
+              return {"accepted" => true} if result["outcome"] == "submitted"
+              return {"accepted" => false, "pre_submit" => true, "error" => result.fetch("code")} if result["outcome"] == "not_issued"
+              return {"accepted" => false, "error" => "original terminal submission outcome unknown"}
+            end
             result = @executor.agent_prompt_bounded(pane: binding.fetch("pane"), text: record.answer,
               timeout_ms: 10_000)
             return {"accepted" => true, "stdout" => result.stdout}

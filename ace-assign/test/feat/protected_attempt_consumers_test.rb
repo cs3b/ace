@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 require_relative "../test_helper"
 require_relative "../support/endcap_result_owner_fixture"
+require_relative "../support/prepared_workspace_resource_fixture"
 require_relative "../support/execution_boot_baseline_owner_fixture"
 require_relative "../support/protected_inbox_context_pipeline_fixture"
 require "ace/assign/authority/client"
@@ -11,6 +12,7 @@ module Ace
   module Assign
     class ProtectedAttemptConsumersTest < AceAssignTestCase
       include EndcapResultOwnerFixture
+      include PreparedWorkspaceResourceFixture
       include ProtectedInboxContextPipelineFixture
       include ExecutionBootBaselineOwnerFixture
 
@@ -25,7 +27,8 @@ module Ace
         @pending_service_fixture = pending_service
         original = ExecutionScopeNativeOwnerFixture.method(:new)
         scope = ->(*args, **kwargs) do
-          original.call(*args, **kwargs.merge(boot_baseline_selection: @retained_boot, network_selection: @retained_network,
+          original.call(*args, **kwargs.merge(workspace_observer: @prepared_workspace_observer, resource_identities: @prepared_workspace_resources || [],
+            parent_declarations: @prepared_workspace_declarations, boot_baseline_selection: @retained_boot, network_selection: @retained_network,
             network_installation: ExecutionScopeObservationFixtures::NETWORK_OUTPUT.merge(
               "installer_artifact_sha256" => @retained_network.fetch("installer_artifact").fetch("sha256"))))
         end
@@ -49,6 +52,7 @@ module Ace
         producer = {"path" => producer_path, "sha256" => Digest::SHA256.hexdigest(producer_bytes), "bytes" => producer_bytes.bytesize}
         @retained_network = ExecutionScopeObservationFixtures::NETWORK_SELECTION.merge("installer_artifact" => producer)
         @retained_boot = retained_boot_baseline_artifact(root: File.realpath(@root), name: "retained-boot.json", map: @map, installer: producer)
+        configure_original_workspace_resource
         @project.merge!("launcher_uids" => [@launcher.fetch("uid")], "worker_uids" => [@worker.fetch("uid")])
         map, project, service = @map, @project, @service
         @deployment.define_singleton_method(:data) do
@@ -191,6 +195,7 @@ module Ace
             malformed[-1] = "1.0"
             assert_raises(Ace::Support::Cli::Error) { public_cli_json(malformed) }
             assert_equal original, @journal.ref_value
+            assert_raises(AttemptErrors::Conflict) { @router.dispatch(request: {"version" => 1, "operation" => "bind_inbox", "mutation_id" => "bind-inbox", "project_id" => "project", "params" => params.merge("mapping_id" => "mapping", "expected_generation" => generation + 1)}, peer: @worker, role: :worker) }
             stale = args.dup
             stale[-1] = (generation + 1).to_s
             conflict = assert_raises(AttemptErrors::EvidenceUnavailable) { public_cli_json(stale) }

@@ -127,6 +127,33 @@ class InboxDirectEffectsTest < Minitest::Test
       expected_claim_generation: expected, original: direct_original, peer: @normal}
   end
 
+  def test_codex_submission_uses_original_guard_and_lost_reply_is_not_reissued
+    executor = PaneFixture.new
+    pane_read = executor.method(:pane_get_bounded)
+    executor.define_singleton_method(:pane_get_bounded) do |id|
+      result = pane_read.call(id)
+      value = JSON.parse(result.stdout)
+      value.fetch("result").fetch("pane")["terminal_id"] = "term_ab"
+      Ace::Herdr::Molecules::ExecutionResult.new(stdout: JSON.generate(value), stderr: "", success: true, exit_code: 0)
+    end
+    executor.define_singleton_method(:agent_prompt_bounded) { |**| raise "unguarded prompt must never run" }
+    source_box(executor: executor)
+    control = guarded_control
+    enqueue, = enqueue_known
+    @owner.end_context_operation(operation_id: enqueue.fetch("operation_id"), peer: @normal)
+    admission = begin_operation("deliver")
+    result = @owner.deliver_context(**delivery_arguments(admission))
+    assert_equal "uncertain", result.fetch("record").fetch("state")
+    assert_equal 1, control.calls.size
+    method, params = control.calls.first
+    assert_equal "agent.prompt", method
+    assert_equal "term_ab", params.fetch("target")
+    assert_equal "hello", params.fetch("text")
+    assert_equal @normal, params.fetch("expected_origin").fetch("child")
+    @owner.deliver_context(**delivery_arguments(admission))
+    assert_equal 1, control.calls.size
+  end
+
   def test_original_query_runs_outside_store_and_changed_admission_refuses_before_enqueue
     source_box
     operation = begin_operation

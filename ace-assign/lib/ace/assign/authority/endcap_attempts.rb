@@ -221,7 +221,6 @@ module Ace
           params, map = attempt_consumer_request!(request, BIND_INBOX_PARAMETERS)
           %w[event_id inbox_context_id].each { |key| result_id!(params.fetch(key)) }
           with_inbox_context(params, map, mutation_id: request.fetch("mutation_id")) do |session|
-            session.require_idle!
             @launch.with_assignment(params: params, map: map, exclusive: true) do |journal, _|
               protected_journal!(journal)
               commit = journal.ref_value

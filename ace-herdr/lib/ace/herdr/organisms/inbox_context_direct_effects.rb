@@ -129,7 +129,10 @@ module Ace
             claim = transaction { |state| copy(operation!(state, operation_id, peer)["admitted_claim"]) }
             unless claim && claim.fetch("kind") == "wake"
               box.deliver(event: event_id, expected_claim_generation: expected_claim_generation,
-                expected_attempt: attempt_id, prepared_claim: claim && claim.slice("claim_generation", "claim_owner"))
+                expected_attempt: attempt_id, prepared_claim: claim && claim.slice("claim_generation", "claim_owner")) do |text|
+                native_binding = original_query.fetch("process_binding").merge("guarded_origin" => original_query.fetch("guarded_origin"))
+                direct_queue_control!(original_query).prompt(binding: native_binding, text: text)
+              end
             end
             direct_guarded_wake!(operation_id, peer, binding, claim, original_query, box) if claim
             record_direct_return!(operation_id, peer, binding)
