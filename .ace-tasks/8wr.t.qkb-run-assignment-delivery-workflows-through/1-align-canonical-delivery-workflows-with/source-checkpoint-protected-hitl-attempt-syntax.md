@@ -8,6 +8,21 @@ The actual SC5 feature WIP (separate from this narrow freeze) uses the real orig
 
 Preserved failures: `15bc6511-ccd1-4622-9c78-3341593c860d` exposed Store rejection; `8c167183-a751-4a8d-938d-d5d429f87c27` exposed the additional envelope guard. `dacd5bcf-b1c8-4c70-98a3-a8e10f49e2ce` reached real canonical approval then exposed stale fixture generation captured before proposal mutations; the fixture now captures generation after decision preparation, without automatic retry or changed deadlines.
 
-No task closure, authorization-policy change, OTP-on-merge requirement or installed acceptance is claimed. Independent source review remains required.
+No task closure, authorization-policy change, OTP-on-merge requirement or installed acceptance is claimed.
 
 Independent root review of af6 found an explicit source dependency missing: Kinds referenced ManagedEnvelope while requiring only secret_gate. The successor explicitly requires managed_envelope. Supported ace-test standalone source-load subprocess regression passed 1/5, receipt `40ddb5db-29cf-443b-b5d5-cb372df9c098`, loading lifecycle/kinds without the main HITL loader and proving the identical shared pattern owner. No native/authority/provider work occurs. SC5 feature WIP remains separate; missing-authorization selection `27c22547-7189-42c3-9518-98e31d691886` currently exposes unconfirmed transport rather than a completed refusal and is not acceptance.
+
+## Independent integration review — 2026-10-08
+
+Root reviewed both frozen commits `af6ee5aec` and `b878440fb`, including the
+producer's exact ID format, unchanged assignment validation and expected binding,
+malformed-input negatives, and explicit dependency load. Verdict: **APPROVE this
+narrow correction**. Integrated as `96f9b48f9` and `12ee17571`.
+
+Executed on integrated main from each package directory: shared envelope file
+**10 tests / 53 assertions**, receipt `e0772fc2-2c11-4ba1-9be4-e4f03c28e739`;
+lifecycle store file **30 tests / 206 assertions**, receipt
+`b8833193-4296-4d1c-9902-59db0c605d8f`. Both passed without skips. Initial
+repository-root file invocations failed to load `test_helper` before running any
+tests (`11f9f448`, `96cc3755`); these are retained and excluded from acceptance.
+The package-directory invocations used the same checkout binstub and source.
