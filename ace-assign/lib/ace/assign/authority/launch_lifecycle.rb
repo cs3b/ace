@@ -969,3 +969,4 @@ require_relative "assignment_inventory"
 require_relative "launch_prepared_work"
 
 require_relative "launch_review"
+require_relative "launch_attempt_consumers"

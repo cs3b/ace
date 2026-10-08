@@ -15,7 +15,7 @@ module Ace
       # Business admission shares the launch origin, lifecycle exclusion and
       # journal CAS. Network transfer is completed outside those locks.
       class Endcap
-        OPERATIONS = %w[submit_candidate export_candidate request_review review_status assign_review cancel_review accept_review request_service begin_dispatch complete_service claim_service_settlement complete_no_effect service_authorization service_status workspace_prune_preview_context submit_result evidence_fetch reconcile_inbox].freeze
+        OPERATIONS = %w[submit_candidate export_candidate request_review review_status assign_review cancel_review accept_review request_service begin_dispatch complete_service claim_service_settlement complete_no_effect service_authorization service_status workspace_prune_preview_context submit_result evidence_fetch reconcile_inbox bind_inbox finish recover].freeze
         TRANSFER_OPERATIONS = {
           "reconcile_inbox" => {direction: :upload, purpose: :inbox_proof, roles: %i[launcher supervisor]},
           "submit_result" => {direction: :upload, purpose: :receipt_artifacts, roles: [:worker]},
@@ -82,6 +82,9 @@ module Ace
             raise ArgumentError, "prepared fetch forbids upload" unless transfer.nil?
             return dispatch_prepared_fetch(request: request, peer: peer, role: role)
           end
+          return dispatch_bind_inbox(request: request, peer: peer, role: role, transfer: transfer) if request.fetch("operation") == "bind_inbox"
+          return dispatch_finish(request: request, peer: peer, role: role, transfer: transfer) if request.fetch("operation") == "finish"
+          return dispatch_recover(request: request, peer: peer, role: role, transfer: transfer) if request.fetch("operation") == "recover"
           return dispatch_inbox(request: request, peer: peer, role: role, transfer: transfer) if request.fetch("operation") == "reconcile_inbox"
           return dispatch_result(request: request, peer: peer, role: role, transfer: transfer) if %w[submit_result evidence_fetch].include?(request.fetch("operation"))
           return review_status(request, peer, role, transfer) if request.fetch("operation") == "review_status"
@@ -383,3 +386,5 @@ require_relative "endcap_prepared_work"
 require_relative "endcap_reviews"
 
 require_relative "endcap_review_requests"
+
+require_relative "endcap_attempts"

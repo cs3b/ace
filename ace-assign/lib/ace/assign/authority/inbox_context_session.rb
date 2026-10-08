@@ -23,6 +23,8 @@ module Ace
           end
         end
 
+        def receipt_key_sha256 = @operation.fetch("fingerprint")
+
         def pending? = @operation.fetch("state") == "unknown"
 
         def resume_completion!(binding:, registration:, reconciliation_digest:)

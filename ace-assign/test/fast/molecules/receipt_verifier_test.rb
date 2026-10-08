@@ -85,6 +85,28 @@ module Ace
         assert_equal receipt.digest, verify(build_receipt_data).digest
       end
 
+      def test_protected_historical_failed_empty_and_nonempty_artifacts_keep_verdict_rules
+        bytes = "retained failed-result evidence"
+        reads = []
+        verifier = Molecules::ReceiptVerifier.new(artifact_reader: ->(_receipt, artifact) { reads << artifact.fetch("path"); bytes })
+        empty = build_receipt_data
+        verifier.verify_accepted_evidence!(empty, live_head: HEAD_A, repo_root: @repo_root, historical: true)
+        assert_empty reads
+        nonempty = build_receipt_data("artifacts" => [{"path" => "canonical", "sha256" => Digest::SHA256.hexdigest(bytes)}])
+        verifier.verify_accepted_evidence!(nonempty, live_head: HEAD_A, repo_root: @repo_root, historical: true)
+        assert_equal ["canonical"], reads
+        bytes = "changed retained bytes"
+        assert_raises(AttemptErrors::ReceiptRejected) do
+          verifier.verify_accepted_evidence!(nonempty, live_head: HEAD_A, repo_root: @repo_root, historical: true)
+        end
+        assert_raises(AttemptErrors::ReceiptRejected) do
+          verifier.verify_accepted_evidence!(empty.merge("verdict" => "succeeded"), live_head: HEAD_A, repo_root: @repo_root, historical: true)
+        end
+        assert_raises(AttemptErrors::ReceiptRejected) do
+          verifier.verify_accepted_evidence!(empty.merge("artifacts" => nil), live_head: HEAD_A, repo_root: @repo_root, historical: true)
+        end
+      end
+
       def test_forbidden_fields_are_rejected
         ["stdout", "token", "environment", "terminal_output"].each do |field|
           data = build_receipt_data(field => "leak")

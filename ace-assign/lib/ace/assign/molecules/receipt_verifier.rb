@@ -93,7 +93,11 @@ module Ace
         # readers always reverify imported bytes, including historical reads.
         def verify_accepted_evidence!(data, live_head:, repo_root:, historical: false)
           verify_head(data, live_head)
-          verify_artifacts(data, repo_root) if @artifact_reader || !historical
+          artifacts = data["artifacts"]
+          reject_unless(artifacts.is_a?(Array), "accepted artifacts must be an array")
+          if (@artifact_reader || !historical) && (data["verdict"] == "succeeded" || !artifacts.empty?)
+            verify_artifacts(data, repo_root)
+          end
           verify_checks(data)
           verify_review(data)
           verify_campaign(data, repo_root: repo_root, live_head: live_head) if @artifact_reader

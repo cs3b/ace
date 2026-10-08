@@ -52,6 +52,19 @@ module Ace
           unless model.digest == Atoms::EvidenceDigest.digest(model.digest_payload) && model.digest == payload.fetch("receipt_digest")
             raise AttemptErrors::EvidenceUnavailable, "accepted terminal receipt digest differs"
           end
+          finishes = events.select { |event| event["type"] == "authority_mutation" && event.dig("payload", "operation") == "finish" }
+          unless finishes.empty?
+            transition = events[events.index(accepted) + 1]
+            finish = events[events.index(accepted) + 2]
+            expected_reply = binding.slice("attempt_id", "result_id", "head", "candidate_generation").merge(
+              "receipt_digest" => payload.fetch("receipt_digest"), "state" => receipt.fetch("verdict"))
+            unless finishes.one? && finishes.first == finish && transition && transition["type"] == "transition" &&
+                transition.fetch("payload") == {"from" => "running", "to" => receipt.fetch("verdict"), "reason" => "protected_result_accepted"} &&
+                finish.dig("payload", "data").except("generation") == expected_reply &&
+                finish.dig("payload", "data", "generation") == events.take(events.index(finish) + 1).count { |event| event["type"] == "authority_mutation" }
+              raise AttemptErrors::EvidenceUnavailable, "accepted finish reply or terminal transition differs"
+            end
+          end
           canonical = CanonicalEvidence.new(journal: journal)
           context = {kind: "result", project_id: binding.fetch("project_id"), assignment_id: binding.fetch("assignment_id"),
             attempt_id: binding.fetch("attempt_id"), peer_uid: binding.fetch("worker_uid"), binding: binding,

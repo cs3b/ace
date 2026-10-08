@@ -20,6 +20,21 @@ module Ace
       # effects are never retried automatically, and an uncertain attempt
       # without a receipt stays uncertain.
       class AttemptReconciler
+        # The protected boundary supplies authenticated original scope facts
+        # and exact kernel identities; never a runtime discovered by pane name.
+        def self.protected_observation(kernel:, binding:, observer:, lineage:)
+          return {"liveness" => "unknown"} if lineage.sealed?
+          kernel.live!(binding.fetch("process_identity"))
+          kernel.live!(binding.fetch("native_origin").fetch("server_identity"))
+          observation = observer.observe(lineage)
+          unless observation.is_a?(Hash) && observation["populated"].is_a?(Integer) && observation["populated"].positive?
+            return {"liveness" => "unknown"}
+          end
+          {"liveness" => "live", "identity" => binding.fetch("process_identity"), "runtime_binding" => binding}
+        rescue AttemptErrors::EvidenceUnavailable, Ace::Runtime::RuntimeUnavailableError
+          {"liveness" => "unknown"}
+        end
+
         # @param journal [EvidenceJournal, nil] Managed evidence journal
         # @param verifier [ReceiptVerifier, nil] Receipt verifier (coordinator supplies on use)
         def initialize(journal: nil, verifier: nil, observer: nil, runtime_resolver: Ace::Runtime)

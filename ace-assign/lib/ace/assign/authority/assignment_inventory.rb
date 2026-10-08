@@ -216,12 +216,36 @@ module Ace
           event = terminals.first
           prefix_commit = introductions.fetch(event.fetch("digest"))
           prefix = journal.read_events(selector.fetch("assignment_id"), commit: prefix_commit).select { |entry| entry["attempt_id"] == selector.fetch("attempt_id") }
-          unless prefix == events.take(events.index(event) + 1)
+          terminal_length = events.index(event) + 1
+          if event["type"] == "receipt_accepted"
+            transition, acceptance = events.drop(terminal_length).take(2)
+            if transition && acceptance && transition["type"] == "transition" &&
+                acceptance["type"] == "authority_mutation" && acceptance.dig("payload", "operation") == "finish"
+              unless introductions.fetch(transition.fetch("digest")) == prefix_commit &&
+                  introductions.fetch(acceptance.fetch("digest")) == prefix_commit
+                raise AttemptErrors::EvidenceUnavailable, "Inventory finish acceptance introduction differs"
+              end
+              terminal_length += 2
+            end
+          end
+          unless prefix == events.take(terminal_length)
             raise AttemptErrors::EvidenceUnavailable, "Inventory terminal introduction differs"
           end
           lineage = Molecules::ExecutionScopeLineage.new(events: prefix, project_id: map.fetch("project_id"),
             assignment_id: selector.fetch("assignment_id"), attempt_id: selector.fetch("attempt_id"), mapping_id: mapping_id)
-          terminal_scope_receipt!(prefix, lineage, journal, prefix_commit, deployment: original)
+          terminal = terminal_scope_receipt!(prefix, lineage, journal, prefix_commit, deployment: original)
+          if prefix.any? { |entry| entry.dig("payload", "operation") == "finish" }
+            unless lineage.proof_event && !pending_prompt_issuers?(prefix, journal, prefix_commit) && @result_owner
+              raise AttemptErrors::EvidenceUnavailable, "Inventory finish closure owner is unavailable"
+            end
+            lineage.require_positive!(scope_generation: lineage.binding.fetch("scope_generation"),
+              scope_binding_event_id: lineage.binding_event.fetch("digest"), seal_event_id: lineage.seal_event.fetch("digest"), proof_id: lineage.proof_id)
+            params = selector.merge("mapping_id" => mapping_id)
+            @result_owner.service_settlement_complete!(journal: journal, events: prefix, params: params, map: map, commit: prefix_commit)
+            @result_owner.historical_inbox_settlement_complete!(journal: journal, events: prefix, params: params, map: map,
+              commit: prefix_commit, deployment: original, history: @deployment_history)
+          end
+          terminal
         end
 
         def inventory_original_deployment!(journal, events, mapping_id, current_map)

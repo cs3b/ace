@@ -57,6 +57,51 @@ module Ace
           {events: [{type: "attempt_stopped", payload: payload}], blobs: {}}
         end
 
+        # The protected result owner authenticates imported bytes, candidate,
+        # closure and independent settlements at the same CAS prefix.
+        def self.finished_transition_plan(events:, receipt:)
+          state = Molecules::CanonicalAttemptState.derive(events)
+          unless state == "running" && %w[succeeded failed].include?(receipt.fetch("verdict"))
+            raise AttemptErrors::Conflict, "Result finish requires a running attempt"
+          end
+          Atoms::AttemptStateMachine.transition!(state, receipt.fetch("verdict"))
+          {events: [{type: "receipt_accepted", payload: {"receipt" => receipt}},
+            {type: "transition", payload: {"from" => state, "to" => receipt.fetch("verdict"), "reason" => "protected_result_accepted"}}], blobs: {}}
+        end
+
+        def self.protected_recovery_decision(state:, effects_pending:, inboxes_pending:, bound:, live:, checkpoint:)
+          return ["restart-required", "terminal_attempt"] if %w[succeeded failed stopped].include?(state)
+          reason = if effects_pending
+            "unresolved_effect"
+          elsif inboxes_pending
+            "unresolved_inbox"
+          elsif state == "uncertain"
+            "attempt_uncertain"
+          elsif !bound
+            "launch_unbound"
+          elsif !checkpoint
+            "checkpoint_unavailable"
+          elsif !live
+            "scope_unverifiable"
+          end
+          reason ? ["reconcile-required", reason] : ["adopt", "live_owner"]
+        end
+
+        def self.protected_recovery_plan(events:, decision:, reason:, observation:)
+          state = Molecules::CanonicalAttemptState.derive(events)
+          if %w[succeeded failed stopped].include?(state)
+            raise AttemptErrors::Conflict, "Terminal recovery is read-only"
+          end
+          planned = [{type: "recovery_observation", payload: {"decision" => decision,
+            "recovery_reason" => reason, "observation" => observation}}]
+          if state == "running" && decision != "adopt"
+            Atoms::AttemptStateMachine.transition!(state, "uncertain")
+            planned << {type: "transition", payload: {"from" => state, "to" => "uncertain", "reason" => reason}}
+            state = "uncertain"
+          end
+          {events: planned, blobs: {}, state: state}
+        end
+
         # Read-only exact native reverse binding from accepted history. A PID
         # supplied by a trusted boundary must be kernel-derived; no command
         # flag, environment address or local cache grants this authority.
