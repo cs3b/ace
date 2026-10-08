@@ -35,6 +35,29 @@ module Ace
           @deployment, @history, @uid, @kernel, @env = deployment, history, uid, kernel, env
         end
 
+        # A declared installed account never falls through to local authority.
+        # This is classification only; each wire operation still authenticates
+        # the current kernel peer and its exact permitted role.
+        def protected_participant?
+          return false unless @deployment
+          raise AttemptErrors::EvidenceUnavailable, "protected retained owners are unavailable" unless @history
+          [@deployment, *@history.descriptors].any? do |owner|
+            data = owner.data
+            principals = data.fetch("authorities").values.map { |authority| authority.fetch("uid") }
+            principals.concat(data.fetch("launch_mappings").values.flat_map { |map| map.values_at("launcher_uid", "worker_uid") })
+            data.fetch("projects").each_value do |project|
+              %w[launcher_uids reviewer_uids worker_uids service_executor_uids supervisor_uids].each do |key|
+                principals.concat(project.fetch(key))
+              end
+              principals.concat(project.fetch("service_receivers", {}).values.map { |receiver| receiver.fetch("executor_uid") })
+              principals.concat(project.fetch("inbox_contexts", {}).values.map { |context| context.fetch("owner_credentials").fetch("uid") })
+            end
+            principals.include?(@uid)
+          end
+        rescue KeyError, TypeError, NoMethodError
+          raise AttemptErrors::EvidenceUnavailable, "protected installed principal inventory is malformed"
+        end
+
         def protected_worker?
           return false unless @deployment
           [@deployment, *@history.descriptors].any? do |owner|
