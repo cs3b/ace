@@ -2,12 +2,14 @@
 require_relative "../test_helper"
 require_relative "../../../ace-git/test/support/protected_merge_flow_fixture"
 require_relative "../support/managed_prepared_registration_fixture"
+require_relative "../support/prepared_workspace_resource_fixture"
 
 module Ace
   module Assign
     class PreparedDeliveryFlowTest < AceAssignTestCase
       include ProtectedMergeFlowFixture
       include ManagedPreparedRegistrationFixture
+      include PreparedWorkspaceResourceFixture
 
       def test_original_prepared_child_delivers_before_queue_completion
         @managed_flow = @managed_delivery = @public_lab = true
@@ -24,6 +26,11 @@ module Ace
         assert_equal "prepared provider exited before selected queue completed", error.message
         assert_equal false, @delivery_completed
         assert @authorization_observations.any? { |entry| entry.fetch("exact") && entry.fetch("rejected") }
+      end
+
+      def configure_result_owner_fixture
+        super
+        configure_original_workspace_resource
       end
 
       def delivery_authority_client
@@ -57,6 +64,7 @@ module Ace
         launcher = Molecules::ForkSessionLauncher.new(query_interface: query, config: {}, runner: Object.new, interactive_builder: Object.new)
         launcher.define_singleton_method(:detect_provider_session) { |*| raise "native discovery forbidden" }
         worker = Authority::PreparedWorker.new(kernel: kernel, client_factory: ->(_) { worker_client }, launcher: launcher,
+          workspace_reader_factory: method(:controlled_workspace_reader),
           env: {"ACE_ASSIGN_LAUNCH_MAPPING" => "mapping", "ACE_ASSIGN_ASSIGNMENT_ID" => "assignment", "ACE_ASSIGN_ATTEMPT_ID" => @attempt})
         assert_equal "Original protected delivery completed.", worker.run.fetch(:text)
       end
