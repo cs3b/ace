@@ -18,6 +18,23 @@ class AceGitTestCase < AceTestCase
     super
   end
 
+  # Tests that reset the process-wide registry must restore the loaded package
+  # registrations too: requiring an already loaded provider cannot recreate it.
+  def snapshot_provider_registry
+    owner = Ace::Git::Providers
+    owner.instance_variable_get(:@mutex).synchronize do
+      [owner.instance_variable_get(:@registry).dup, owner.instance_variable_get(:@required_configured)&.dup]
+    end
+  end
+
+  def restore_provider_registry(snapshot)
+    owner = Ace::Git::Providers
+    owner.instance_variable_get(:@mutex).synchronize do
+      owner.instance_variable_set(:@registry, snapshot.fetch(0))
+      owner.instance_variable_set(:@required_configured, snapshot.fetch(1))
+    end
+  end
+
   # Helper to build mock PR data for PrMetadataFetcher stubs
   # Used across multiple organism tests to avoid duplication
   def build_mock_prs(current_pr: nil, merged_prs: [], open_prs: [])

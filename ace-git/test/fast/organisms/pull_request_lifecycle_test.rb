@@ -33,11 +33,12 @@ module Organisms
     end
 
     def with_test_providers
+      original = snapshot_provider_registry
       Ace::Git::Providers.register(:testforge, RecordingProvider)
       Ace::Git::Providers.register(:testforge2, RecordingProvider)
       yield
     ensure
-      Ace::Git::Providers.reset!
+      restore_provider_registry(original)
     end
 
     def test_show_with_bare_number_resolves_remote_once

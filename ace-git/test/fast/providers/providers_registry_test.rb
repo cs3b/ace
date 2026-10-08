@@ -4,8 +4,13 @@ require "test_helper"
 
 module Providers
   class ProvidersRegistryTest < AceGitTestCase
+    def setup
+      super
+      @original_provider_registry = snapshot_provider_registry
+    end
+
     def teardown
-      Ace::Git::Providers.reset!
+      restore_provider_registry(@original_provider_registry)
       super
     end
 

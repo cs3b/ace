@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Restore process-wide provider registrations and loader state after registry test fixtures, preserving real adapter tests across randomized single-batch execution.
+
 - Resolve receiver-side merge provider identity from the authenticated PR URL when the prepared candidate has no remote, refusing mismatched or changed pinned servers.
 
 - Route protected delivery through original worker merge request, canonical status and exact result consumption while preserving ordinary delivery and unresolved protected PR policy.
