@@ -1,6 +1,6 @@
 # Correlated Codex submission source checkpoint
 
-Base: 4a55ea5d3 (final independently approved endpoint/bootstrap construction contract), atop 27f029d9b. Source-only SC5 consumer checkpoint, awaiting independent source review. xza.0 and the parent remain draft; no SC1–4, Lab producer, installed/native or whole-task acceptance.
+Base: 4a55ea5d3 (final independently approved endpoint/bootstrap construction contract), atop 27f029d9b. Source-only SC5 consumer checkpoint, independently reviewed and integrated. xza.0 and the parent remain draft; no SC1–4, Lab producer, installed/native or whole-task acceptance.
 
 ## Delivered path
 
@@ -30,4 +30,20 @@ Earlier interim handler-borrowing report351c74bc is not final acceptance: arbitr
 
 ## Remaining source boundaries
 
-SAME Lab Assembly/Installer gad.8 must implement static intent/runtime startup, authenticated dynamic output/pointer, SAME app-server UI/thread ownership, typed factory bootstrap hooks and retirement/restart publication. No existing Lab startup is relabeled as delivered. SC1–4 native completed-message observation/signing and historical successor consumption remain required. Provider/source version0.159.3 is pinned; no implicit embedded or ambient queue CLI fallback is kept. Independent source review and combined-main verification remain required before integration.
+SAME Lab Assembly/Installer gad.8 must implement static intent/runtime startup, authenticated dynamic output/pointer, SAME app-server UI/thread ownership, typed factory bootstrap hooks and retirement/restart publication. No existing Lab startup is relabeled as delivered. SC1–4 native completed-message observation/signing and historical successor consumption remain required. Provider/source version0.159.3 is pinned; no implicit embedded or ambient queue CLI fallback is kept. Independent review and combined-main Herdr fast verification are recorded below; this does not close the remaining producer or native boundaries.
+
+## Independent review and main integration
+
+Independent reviewer audit_runtime_delivery_status approved exact source commit
+`adb8182e19781f381062e43bcdd1d8ff5eb1d3fd` over `4a55ea5d3`. Integrated
+on main as `1bb1a8a18`. Initial full fast report `99376f9f` retained one
+fixture error: the initial protected-inbox fake lacked `prepare_submission`.
+The three-line fixture-only successor `aaa33c6379bdb679ebfbecba48317503cd896b7f`
+was independently inspected by the integrator and integrated as `6096099aa`.
+The retained reconciliation boundary still raises if a native endpoint is opened.
+
+Full main Herdr fast verification: **623 tests / 2683 assertions PASS**, 14.04s,
+report `3b1d25d1-7d8e-4fd2-91e3-fb3db3683ca2`, at main `71e97c105`.
+Locked dependencies were installed in the checkout-local bundle; no global gem
+installation. This proves the SC5 consumer source gate, not Lab producer startup,
+SC1–4 observation/signing, installed acceptance, or whole-task completion.
