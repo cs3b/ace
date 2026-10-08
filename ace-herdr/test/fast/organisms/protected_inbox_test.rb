@@ -20,6 +20,9 @@ module Ace
                 stderr: "", success: true, exit_code: 0)
             end
             native = Object.new
+            # Only the initial delivery boundary is injected. Retained signed
+            # reconciliation below must never prepare or contact a native client.
+            native.define_singleton_method(:prepare_submission) { |**_args| nil }
             native.define_singleton_method(:submit) { |**args| {"accepted" => true} }
             original = Inbox.new(executor: executor, native: native, deliveries_dir: root, receipt_public_key: key.public_key)
             original.enqueue(event: "event", attempt: "attempt", ref: {"session" => "w1", "pane" => "p1"}, payload: "message")
