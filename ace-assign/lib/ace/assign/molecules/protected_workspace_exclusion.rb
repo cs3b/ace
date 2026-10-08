@@ -213,6 +213,16 @@ module Ace
             state
           end
         end
+        # Native activation owns this host lease for the original scope lifetime.
+        # An admission deadline must not become a provider lifetime ceiling.
+        class WorkspaceNativeReader < WorkspaceReader
+          def initialize(projection:, protection: nil, files: File)
+            super(projection: projection, protection: protection, files: files)
+            @root = @projection.fetch("root_resource").fetch("host_path")
+            @protection = protection || WorkspaceHostReader::Protection.new(projection: @projection)
+          end
+        end
+
         class WorkspaceHostReader < WorkspaceReader
           class Protection < WorkspaceReader::Protection
             private

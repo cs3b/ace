@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Retain the original protected workspace shared lock across native activation uncertainty until authenticated sealed no-writers observation.
+
 - Load coordinator error/record primitives directly during protected admission; select ordinary Herdr recovery configuration only when its local recovery method runs. Require the actual EvidenceJournal owner for service evidence constants.
 
 - Require the authenticated readiness report to match the original server network namespace to both parent selection and canonical installation admission before native binding.

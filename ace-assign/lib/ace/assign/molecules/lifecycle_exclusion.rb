@@ -34,6 +34,7 @@ module Ace
             descriptor_sha256: descriptor_sha256, root_identity: root_identity, **boundaries)
         end
 
+        autoload :WorkspaceNativeReader, File.expand_path("protected_workspace_exclusion", __dir__)
         autoload :WorkspaceReader, File.expand_path("protected_workspace_exclusion", __dir__)
 
         autoload :WorkspaceWriter, File.expand_path("protected_workspace_exclusion", __dir__)

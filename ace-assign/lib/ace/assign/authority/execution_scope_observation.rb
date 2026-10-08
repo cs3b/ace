@@ -214,11 +214,15 @@ module Ace
           end
         end
 
-        def initialize(mapping_id:, deployment:, kernel:, manager: nil, cgroups: Ace::Runtime::Molecules::CgroupObservation.new, files: Files.new, network_evidence: Ace::Runtime::Molecules::NetworkInstallationEvidence.new, boot_evidence: Ace::Runtime::Molecules::ExecutionBootBaseline.new, network_selection: Ace::Runtime::Molecules::ExecutionNetworkSelection.new)
+        def initialize(mapping_id:, deployment:, kernel:, manager: nil, cgroups: Ace::Runtime::Molecules::CgroupObservation.new, files: Files.new, network_evidence: Ace::Runtime::Molecules::NetworkInstallationEvidence.new, boot_evidence: Ace::Runtime::Molecules::ExecutionBootBaseline.new, network_selection: Ace::Runtime::Molecules::ExecutionNetworkSelection.new, workspace_reader_factory: nil)
           @mapping_id, @deployment, @kernel, @cgroups, @files = mapping_id, deployment, kernel, cgroups, files
           @network_evidence = network_evidence
           @boot_evidence = boot_evidence
           @network_selection = network_selection
+          @workspace_reader_factory = workspace_reader_factory || ->(projection:) {
+            Molecules::LifecycleExclusion::WorkspaceNativeReader.new(projection: projection)
+          }
+          @native_workspace_lifetime = nil
           @map = deployment.mapping(mapping_id)
           @scope = @map.fetch("execution_scope")
           @manager = manager || Ace::Runtime::Molecules::SystemdScopeManager.new(
@@ -446,13 +450,25 @@ module Ace
           end
           binding = lineage.binding
           selection = binding.fetch("network_installation_selection")
-          @network_evidence.verify!(selection: selection, expected: {
+          evidence = @network_evidence.verify!(selection: selection, expected: {
             "slot_id" => @scope.fetch("slot_id"), "namespace_path" => @scope.fetch("network_namespace_path"),
             "boot_id" => binding.fetch("boot_id"), "namespace_identity" => binding.fetch("network_namespace_identity"),
             "installer_artifact_sha256" => selection.fetch("installer_artifact").fetch("sha256")})
+          selector = lineage.binding_event.fetch("digest")
+          if @native_workspace_lifetime
+            unavailable!("native workspace lifetime belongs to another scope") unless @native_workspace_lifetime.fetch(:selector) == selector
+            @native_workspace_lifetime.fetch(:reader).verify_unchanged!
+          else
+            reader = @workspace_reader_factory.call(projection: workspace_exclusion_projection!(lineage))
+            reader.acquire!
+            @native_workspace_lifetime = {selector: selector, reader: reader}
+          end
+          evidence
         end
 
         def start_admitted_service!
+          unavailable!("native workspace lifetime is not retained") unless @native_workspace_lifetime
+          @native_workspace_lifetime.fetch(:reader).verify_unchanged!
           @manager.start_service
         end
 
@@ -563,8 +579,15 @@ module Ace
           unless repeated.fetch("populated").zero? && repeated.fetch("activation") == value.fetch("activation")
             unavailable!("sealed parent acquired a writer or pending activation during baseline observation")
           end
-          lineage.binding.slice("scope_generation", "boot_id", "slice_invocation_id", "cgroup_identity").merge(
+          proof = lineage.binding.slice("scope_generation", "boot_id", "slice_invocation_id", "cgroup_identity").merge(
             "scope_binding_event_id" => lineage.binding_event.fetch("digest"), "seal_event_id" => lineage.seal_event.fetch("digest"), "populated" => 0)
+          if @native_workspace_lifetime
+            unavailable!("closed proof differs from native workspace lifetime") unless @native_workspace_lifetime.fetch(:selector) == lineage.binding_event.fetch("digest")
+            @native_workspace_lifetime.fetch(:reader).verify_unchanged!
+            @native_workspace_lifetime.fetch(:reader).close!
+            @native_workspace_lifetime = nil
+          end
+          proof
         end
 
         # Declaration bytes are selected by this original observer's pinned

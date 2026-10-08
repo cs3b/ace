@@ -67,6 +67,22 @@ class ProtectedWorkspaceExclusionTest < AceAssignTestCase
     assert_includes @acl.attributes, "system.posix_acl_default"
   end
 
+  def test_native_host_lease_has_no_provider_lifetime_deadline_and_holds_original_inode
+    host = @projection.fetch("root_resource").fetch("host_path")
+    files = WriterFiles.new(@root, @view, host)
+    protection = owner::WorkspaceHostReader::Protection.new(projection: @projection, mounts: @mounts, acl: @acl)
+    @reader = owner::WorkspaceNativeReader.new(projection: @projection, files: files, protection: protection)
+    @reader.acquire!
+    assert @reader.verify_unchanged!
+    File.open(lock_path, File::RDWR) do |writer|
+      refute writer.flock(File::LOCK_EX | File::LOCK_NB)
+      assert_nil @reader.instance_variable_get(:@deadline)
+      @reader.close!
+      assert writer.flock(File::LOCK_EX | File::LOCK_NB)
+    end
+    assert files.opened.all?(&:closed?)
+  end
+
   def test_close_error_still_releases_every_other_retained_descriptor
     reader.acquire!
     handle = @files.opened.last

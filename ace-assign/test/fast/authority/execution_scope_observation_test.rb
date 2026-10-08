@@ -3,6 +3,7 @@ require_relative "../../test_helper"
 require "ace/assign/authority/execution_scope_observation"
 require_relative "../../support/execution_scope_observation_fixtures"
 require_relative "../../support/execution_scope_native_owner_fixture"
+require_relative "../../support/protected_workspace_fixture"
 
 module Ace
   module Assign
@@ -227,7 +228,7 @@ module Ace
         assert_equal 99, @binding.dig("resource_identities", 1, "inode")
         assert @cgroups.handles.all?(&:closed)
         assert_equal 0, @observer.observe(lineage).fetch("populated")
-        assert_equal ExecutionScopeObservationFixtures::NETWORK_OUTPUT, @observer.native_admission_ready!(lineage)
+        assert_raises(Ace::Runtime::RuntimeUnavailableError) { @observer.native_admission_ready!(lineage) }
         assert_equal 0, @manager.service_starts
       end
 
@@ -275,6 +276,76 @@ module Ace
         end
         @observer.instance_variable_set(:@files, observed)
         selection
+      end
+
+      def test_production_native_admission_retains_actual_host_flock_until_original_closed_proof
+        selection = install_controlled_lifecycle_resource
+        Dir.mktmpdir("native-workspace-lifetime") do |root|
+          File.chmod(0o755, root)
+          stat = File.stat(root)
+          @lifecycle_identity.merge!("device" => stat.dev, "inode" => stat.ino)
+          @lifecycle_policies.fetch(selection.fetch("host_path")).merge!("device" => stat.dev, "inode" => stat.ino)
+          key_digest = Digest::SHA256.hexdigest(selection.fetch("key"))
+          lock = File.join(root, "#{key_digest}.lock")
+          File.write(lock, "", mode: "w", perm: 0o644)
+          File.write(File.join(root, "#{key_digest}.state.json"),
+            Molecules::LifecycleExclusion.workspace_initial_marker(key: selection.fetch("key")), mode: "w", perm: 0o644)
+          fixture = ProtectedWorkspaceFixture
+          files = fixture::WriterFiles.new(root, selection.fetch("view_path"), selection.fetch("host_path"))
+          files.define_singleton_method(:open) do |path, flags|
+            raw = File.open(actual(path), flags)
+            handle = fixture::Handle.new(raw, [13000, 13000])
+            opened << handle
+            handle
+          end
+          files.define_singleton_method(:lstat) { |path| fixture::StatView.new(File.lstat(actual(path)), [13000, 13000]) }
+          lease = nil
+          @observer.instance_variable_set(:@workspace_reader_factory, ->(projection:) {
+            protection = Molecules::LifecycleExclusion::WorkspaceHostReader::Protection.new(projection: projection,
+              mounts: fixture::Mounts.new(selection.fetch("view_path"), selection.fetch("host_path")), acl: fixture::ACL.new)
+            lease = Molecules::LifecycleExclusion::WorkspaceNativeReader.new(projection: projection, files: files, protection: protection)
+          })
+          bind_parent
+          assert_equal ExecutionScopeObservationFixtures::NETWORK_OUTPUT, @observer.native_admission_ready!(lineage)
+          File.open(lock, File::RDWR) do |writer|
+            refute writer.flock(File::LOCK_EX | File::LOCK_NB)
+            @manager.define_singleton_method(:start_service) { raise Ace::Runtime::RuntimeUnavailableError, "unknown original start" }
+            assert_raises(Ace::Runtime::RuntimeUnavailableError) { @observer.start_admitted_service! }
+            refute writer.flock(File::LOCK_EX | File::LOCK_NB)
+            seal_parent
+            assert_equal 0, @observer.closed_observation_for_proof!(lineage, events: @events).fetch("populated")
+            assert writer.flock(File::LOCK_EX | File::LOCK_NB)
+          end
+          assert files.opened.all?(&:closed?)
+        ensure
+          lease&.close!
+        end
+      end
+
+      def test_native_lifetime_survives_unknown_start_and_releases_only_after_original_closed_proof
+        install_controlled_lifecycle_resource
+        bind_parent
+        lease = Object.new
+        calls = []
+        lease.define_singleton_method(:acquire!) { calls << :acquire; self }
+        lease.define_singleton_method(:verify_unchanged!) { calls << :verify; true }
+        lease.define_singleton_method(:close!) { calls << :close }
+        @observer.instance_variable_set(:@workspace_reader_factory, ->(projection:) {
+          assert_equal @observer.workspace_exclusion_projection!(lineage), projection
+          lease
+        })
+        assert_equal ExecutionScopeObservationFixtures::NETWORK_OUTPUT, @observer.native_admission_ready!(lineage)
+        @observer.native_admission_ready!(lineage)
+        assert_equal 1, calls.count(:acquire)
+        @manager.define_singleton_method(:start_service) { raise Ace::Runtime::RuntimeUnavailableError, "unknown original start" }
+        assert_raises(Ace::Runtime::RuntimeUnavailableError) { @observer.start_admitted_service! }
+        assert_equal 0, calls.count(:close)
+        assert_raises(Ace::Runtime::RuntimeUnavailableError) { @observer.closed_observation_for_proof!(lineage, events: @events) }
+        assert_equal 0, calls.count(:close)
+        seal_parent
+        assert_equal 0, @observer.closed_observation_for_proof!(lineage, events: @events).fetch("populated")
+        assert_equal 1, calls.count(:close)
+        assert_raises(Ace::Runtime::RuntimeUnavailableError) { @observer.start_admitted_service! }
       end
 
       def test_exact_authority_owned_readonly_lifecycle_parent_joins_original_scope
