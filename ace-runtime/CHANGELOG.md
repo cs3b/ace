@@ -13,6 +13,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+- Accept and validate the original workspace exclusion in the compact prepared worker release, keeping the native gate and authority producer closed schemas consistent.
+
 - Verify protected ancestor directory identity and protection without treating unrelated sibling publication timestamps as selected-artifact mutation; regular-file metadata remains fully pinned.
 
 - Return the protected task-context callback result only after unchanged artifact verification, preserving Bundle responses and raw context text while refusing post-callback mutation.

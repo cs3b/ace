@@ -144,12 +144,48 @@ static void worker_entry(json_object *entry) {
   entry_reference(field(entry,"interpreter",json_type_object),33554432);
   entry_reference(field(entry,"wrapper",json_type_object),1048576);
 }
-static void prepared_permission(json_object *permission) {
+static void workspace_resource(json_object *resource) {
+  static const char *const keys[]={"device","filesystem_type","gid","host_path","inode","mount_id","uid","view_path"};
+  closed(resource,keys,8);
+  const char *numbers[]={"device","inode","uid","gid"};
+  for(size_t i=0;i<4;i++)if(json_object_get_int64(field(resource,numbers[i],json_type_int))<0)deny("invalid workspace identity");
+  bounded_integer(resource,"mount_id",INT64_MAX);
+  const char *fs=str(resource,"filesystem_type");
+  if(strcmp(fs,"ext4")&&strcmp(fs,"xfs")&&strcmp(fs,"btrfs")&&strcmp(fs,"tmpfs"))deny("invalid workspace filesystem");
+  const char *paths[]={"host_path","view_path"};
+  for(size_t i=0;i<2;i++) {
+    const char *path=str(resource,paths[i]);size_t n=strlen(path);
+    if(!n||n>4096||path[0]!='/'||(n>1&&path[n-1]=='/')||strstr(path,"//")||strstr(path,"/./")||strstr(path,"/../")||
+       (n>=2&&!strcmp(path+n-2,"/."))||(n>=3&&!strcmp(path+n-3,"/..")))deny("invalid workspace path");
+  }
+}
+static void workspace_exclusion(json_object *projection,const char *mapping_id) {
+  static const char *const keys[]={"authority_gid","authority_uid","key","root_resource","worker_cwd_resource"};
+  closed(projection,keys,5);number(projection,"authority_uid");number(projection,"authority_gid");
+  json_object *root=field(projection,"root_resource",json_type_object);
+  workspace_resource(root);workspace_resource(field(projection,"worker_cwd_resource",json_type_object));
+  char view[256],prefix[256];
+  int v=snprintf(view,sizeof(view),"/run/ace/lifecycle-exclusion/%s",mapping_id);
+  int p=snprintf(prefix,sizeof(prefix),"workspace:%s:",mapping_id);
+  const char *key=str(projection,"key");size_t n=strlen(key);
+  if(v<0||(size_t)v>=sizeof(view)||p<0||(size_t)p>=sizeof(prefix)||strcmp(view,str(root,"view_path"))||
+     n!=(size_t)p+64||strncmp(key,prefix,(size_t)p))deny("workspace mapping differs");
+  for(size_t i=(size_t)p;i<n;i++)if(!((key[i]>='0'&&key[i]<='9')||(key[i]>='a'&&key[i]<='f')))deny("invalid workspace digest");
+  char suffix[256];int s=snprintf(suffix,sizeof(suffix),"/workspaces/%s/%s",mapping_id,key+p);
+  const char *host=str(root,"host_path");size_t h=strlen(host);
+  if(s<0||(size_t)s>=sizeof(suffix)||h<(size_t)s||strcmp(host+h-s,suffix)||
+     json_object_get_int64(field(root,"uid",json_type_int))!=number(projection,"authority_uid")||
+     json_object_get_int64(field(root,"gid",json_type_int))!=number(projection,"authority_gid"))deny("workspace owner differs");
+  /* The original Ruby owner verifies the canonical cwd digest and held inode.
+     These closed release fields convey no independent filesystem grant. */
+}
+static void prepared_permission(json_object *permission,const char *mapping_id) {
   static const char *const permission_keys[]={"operation","launch_ticket","attempt_id","assignment_id","generation","journal_commit","prepared_input"};
   closed(permission,permission_keys,7);hex_field(permission,"journal_commit",40,64);
   json_object *input=field(permission,"prepared_input",json_type_object);
-  static const char *const input_keys[]={"registration_generation","registration_commit","definition_digest","original_binding_digest","prepared_work","bundle_ref","bundle_bytes","bundle_sha256","worker_entry"};
-  closed(input,input_keys,9);worker_entry(field(input,"worker_entry",json_type_object));bounded_integer(input,"registration_generation",INT64_MAX);
+  static const char *const input_keys[]={"registration_generation","registration_commit","definition_digest","original_binding_digest","prepared_work","bundle_ref","bundle_bytes","bundle_sha256","worker_entry","workspace_exclusion"};
+  closed(input,input_keys,10);worker_entry(field(input,"worker_entry",json_type_object));bounded_integer(input,"registration_generation",INT64_MAX);
+  workspace_exclusion(field(input,"workspace_exclusion",json_type_object),mapping_id);
   hex_field(input,"registration_commit",40,64);hex_field(input,"definition_digest",64,64);
   hex_field(input,"original_binding_digest",64,64);hex_field(input,"bundle_sha256",64,64);
   bounded_integer(input,"bundle_bytes",64*1024*1024);
@@ -320,7 +356,7 @@ int main(int argc,char **argv) {
     !token(str(permission,"attempt_id"))||!token(str(permission,"assignment_id"))||!token(str(permission,"journal_commit")))deny("release permission differs");
   if(json_object_get_int64(field(permission,"generation",json_type_int))<1)deny("invalid release generation");
   if(strlen(json_object_to_json_string_ext(permission,JSON_C_TO_STRING_PLAIN|JSON_C_TO_STRING_NOSLASHESCAPE))+1>16384)deny("release envelope oversized");
-  prepared_permission(permission);
+  prepared_permission(permission,argv[1]);
   policy();parent_credentials(&original_parent,mapping);credentials(peer.pid,authority,number(service,"gid"),field(service,"groups",json_type_array));
   json_object *entry=field(field(permission,"prepared_input",json_type_object),"worker_entry",json_type_object);
   OSSL_LIB_CTX *digest_context=NULL;OSSL_PROVIDER *digest_provider=NULL;EVP_MD *digest=fixed_sha256(&digest_context,&digest_provider);

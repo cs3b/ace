@@ -87,7 +87,13 @@ original registration generation/commit, definition and original binding digest,
 prepared-work reference, original worker entry pair and exact journal bundle reference/length/SHA256. The
 authority verifies the original bundle before durable issue; subsequent prepared
 fetch authenticates the accepted release pin before returning body bytes. The
-gate validates the closed nine-field pin, digests and unchanged bounds before exec.
+gate validates the closed ten-field pin, including the original workspace exclusion,
+digests and unchanged bounds before exec. The exclusion has five closed fields:
+key, authority UID/GID, readonly root resource and original cwd resource. Each
+resource has the existing eight identity fields. The gate checks integer/path/
+filesystem bounds and exact mapping/view/key association; the retained Ruby owner
+verifies the canonical cwd digest and held filesystem identity before acquiring
+the lifetime reader. This metadata does not itself grant filesystem access.
 The complete encoded release is bounded to16KiB before durable issue and at the gate. It
 does not receive inline work or propagate an input FD to providers. The worker
 uses the existing authenticated original prepared fetch after release.
