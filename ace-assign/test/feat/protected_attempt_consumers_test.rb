@@ -73,10 +73,8 @@ module Ace
 
       def with_original_inbox
         @key = OpenSSL::PKey::RSA.new(2048)
-        key_path = File.join(@root, "receipt-public.pem")
-        File.write(key_path, @key.public_to_pem)
         @context = {"native_mapping_id" => "mapping", "supervisor_uids" => [13004],
-          "deliveries_dir" => File.join(@root, "deliveries"), "receipt_public_key" => key_path,
+          "deliveries_dir" => File.join(@root, "deliveries"),
           "pi_queue_client" => "/fixture/inbox-client"}
         @project["inbox_contexts"] = {"context" => @context}
         selected = @context
