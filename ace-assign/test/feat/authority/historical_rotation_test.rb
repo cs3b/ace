@@ -6,6 +6,7 @@ require_relative "../../support/execution_boot_baseline_owner_fixture"
 require_relative "../../support/protected_inbox_context_pipeline_fixture"
 require "ace/assign/authority/deployment_history"
 require "ace/herdr/organisms/inbox"
+require "ace/herdr/molecules/herdr_executor"
 require "ace/assign/cli/commands/authority/launch"
 require_relative "../../support/original_launch_driver_owner_fixture"
 
@@ -116,7 +117,7 @@ module Ace
         File.binwrite(@published_key, @key.public_to_pem)
         deliveries = File.join(@root, "deliveries")
         Dir.mkdir(deliveries, 0700)
-        @context = {"deliveries_dir" => deliveries, "receipt_public_key" => @published_key,
+        @context = {"deliveries_dir" => deliveries,
           "control_socket_path" => File.join(@socket_root, "context.sock"), "owner_credentials" => {"uid" => 13007, "gid" => 13007, "groups" => [13007]},
           "native_mapping_id" => "mapping", "supervisor_uids" => [13004],
           "pi_queue_client" => "/fixture/pi", "pi_queue_client_sha256" => "a" * 64}
@@ -131,6 +132,9 @@ module Ace
           "launcher_uids" => [13002], "worker_uids" => [13001],
           "service_receivers" => {"executor" => {"executor_uid" => 13005, "socket_path" => "/fixture/service.sock", "staging_root" => "/fixture/staging"}},
           "inbox_contexts" => {"inbox" => @context})
+        @project.merge!("campaign_repository" => File.join(@root, "campaign-repo"),
+          "campaign_store_root" => File.join(@root, "campaign-store"),
+          "campaign_policy" => artifact("campaign-policy.json", JSON.generate("schema" => "ace.review.consumer-policy/v1", "profiles" => {})))
         @project["peer_credentials"] = [@worker, @launcher, @reviewer, @executor, @supervisor].to_h do |peer|
           [peer.fetch("uid").to_s, peer.slice("gid", "groups").merge("scratch_root" => File.join(@root, "scratch-#{peer.fetch('uid')}"))]
         end
@@ -228,7 +232,7 @@ module Ace
         input_digest = Digest::SHA256.hexdigest(body)
         @policy.define_singleton_method(:input_binding) do |bytes, expected_digest:, expected_target:, operation:|
           raise "wrong original operation" unless operation == "publish"
-          raise "wrong policy input" unless bytes == body && expected_digest == input_digest && expected_target == {"resource" => "fixture"}
+          raise "wrong policy input" unless bytes == body && expected_digest == input_digest && expected_target == {"resource" => "rubygems:fixture:1.0.0"}
         end
         @policy.define_singleton_method(:prepare!) do |binding, input_bytes:|
           raise "wrong policy input" unless input_bytes == body && binding.fetch("input_digest") == input_digest
@@ -236,14 +240,17 @@ module Ace
         end
         transfer = Authority::TransferCodec.new(root: @root).descriptor([body], purpose: :service_input)
         params = {"head" => @head, "candidate_generation" => 1, "expected_generation" => generation, "request_id" => "service-request",
-          "operation" => "publish", "input_digest" => input_digest, "target" => {"resource" => "fixture"}, "authorization" => "review",
+          "operation" => "publish", "input_digest" => input_digest, "target" => {"resource" => "rubygems:fixture:1.0.0"}, "authorization" => "review",
           "service_id" => "executor", "worker_process_binding" => @worker, "transfer" => transfer}
         claim = call("request_service", params, id: "service-claim", peer: @executor, role: :executor, transfer: Parts.new([body])).fetch(:data)
         begin_params = params.slice("head", "candidate_generation", "request_id", "transfer").merge("expected_generation" => generation, "claim_binding" => claim.fetch("claim_binding"))
         call("begin_dispatch", begin_params, id: "service-begin", peer: @executor, role: :executor, transfer: Parts.new([body]))
         record = @journal.service_request("service-request")
         return record if no_effect
-        evidence = "ace-service-attestation request:service-request input:#{input_digest} outcome:succeeded\nactual executor source receipt"
+        evidence = JSON.generate(record.slice("request_id", "input_digest", "claim_binding", "target").merge(
+          "schema" => "ace.publication-result/v1", "classification" => "succeeded", "code" => "registry_exact_artifact",
+          "publication" => {"gem_name" => "fixture", "version" => "1.0.0", "head" => @head,
+            "registry" => "https://rubygems.org", "artifact_relative_path" => "pkg/fixture-1.0.0.gem"}))
         receipt = record.slice(*Molecules::EvidenceJournal::TERMINAL_BINDING_FIELDS).merge("outcome" => "succeeded",
           "evidence" => [{"ref" => "private-executor-evidence", "sha256" => Digest::SHA256.hexdigest(evidence)}])
         bytes = JSON.generate(receipt)
@@ -254,7 +261,7 @@ module Ace
         assert_equal "succeeded", @journal.service_request("service-request").fetch("state")
       end
 
-      def settle_inbox
+      def submit_inbox
         terminal_id = @binding.fetch("terminal_id")
         executor = Object.new
         executor.define_singleton_method(:pane_get_bounded) do |*|
@@ -262,10 +269,12 @@ module Ace
             "pane_id" => "p1", "workspace_id" => "w1", "terminal_id" => terminal_id, "agent" => "codex", "agent_status" => "busy",
             "agent_session" => {"agent" => "codex", "kind" => "id", "value" => "0123abcd-0000-4000-8000-000000000001"}}}), stderr: "", success: true, exit_code: 0)
         end
+        executor.define_singleton_method(:agent_prompt_bounded) do |**|
+          Ace::Herdr::Molecules::ExecutionResult.new(stdout: "submitted", stderr: "", success: true, exit_code: 0)
+        end
         native = Object.new
-        native.define_singleton_method(:submit) { |**| {"accepted" => true} }
         @box = Ace::Herdr::Organisms::Inbox.new(executor: executor, native: native,
-          deliveries_dir: @context.fetch("deliveries_dir"), receipt_public_key: @key.public_key)
+          deliveries_dir: @context.fetch("deliveries_dir"))
         @box.enqueue(event: "event", attempt: @attempt, ref: {"session" => "w1", "pane" => "p1"}, payload: "message")
         record = @box.deliver(event: "event")
         registration = record.slice(*Authority::Endcap::INBOX_REGISTRATION_FIELDS)
@@ -274,19 +283,7 @@ module Ace
           {data: {}, events: [{type: "inbox_binding", payload: {"event_id" => "event", "attempt_id" => @attempt,
             "inbox_context_id" => "inbox", "registration" => registration}}]}
         end
-        receipt = record.slice("event_id", "attempt_id", "claim_generation", "payload_sha256", "binding").merge("outcome" => "consumed",
-          "observer" => {"role" => "supervisor", "id" => "observer"},
-          "evidence" => {"kind" => "consumed_acknowledged", "native_reference" => "native:1", "observation" => "consumed"})
-        bytes = JSON.generate(receipt)
-        signature = @key.sign(OpenSSL::Digest::SHA256.new, bytes)
-        parts = [bytes, signature]
-        start_context_pipeline(@root, context_id: "inbox", installed: true)
-        @router = Authority::Router.new(launch: @launch, handlers: [@endcap, @query_owner])
-        params = {"event_id" => "event", "inbox_context_id" => "inbox", "expected_registration" => registration, "expected_generation" => generation,
-          "receipt_sha256" => Digest::SHA256.hexdigest(bytes), "signature_sha256" => Digest::SHA256.hexdigest(signature),
-          "transfer" => Authority::TransferCodec.new(root: @root).descriptor(parts, purpose: :inbox_proof)}
-        yield if block_given?
-        assert_equal "completed", call("reconcile_inbox", params, id: "consume", peer: @supervisor, role: :supervisor, transfer: Parts.new(parts)).dig(:data, "state")
+        assert_equal "delivered", record.fetch("state")
       end
 
       def accept_terminal_and_release
@@ -301,7 +298,7 @@ module Ace
           kind: "result", project_id: "project", assignment_id: "assignment", attempt_id: @attempt, peer_uid: 13001,
           binding: binding, request_id_or_event_id: binding.fetch("result_id"), generation: binding.fetch("candidate_generation")) }
         coordinator = Organisms::AttemptCoordinator.new(cache_base: File.join(@root, "terminal-cache"), repo_root: @journal.repo_root,
-          journal: @journal, verifier: Molecules::ReceiptVerifier.new(artifact_reader: reader), lifecycle_exclusion: @launch.send(:exclusion_for, @map, @journal))
+          journal: @journal, verifier: Molecules::ReceiptVerifier.new(artifact_reader: reader), lifecycle_exclusion: @launch.send(:control_registration_context!, {"mapping_id" => "mapping", "assignment_id" => "assignment"}, @map, @journal).fetch(:exclusion))
         path = File.join(@root, "terminal-receipt.json")
         File.write(path, JSON.generate(submitted.fetch("receipt")))
         identity = Molecules::ExecutionIdentityResolver::Identity.new(actor: "fixture-operator", role: "coordinator", runtime: "local")
@@ -342,112 +339,11 @@ module Ace
         end
       end
 
-      def test_unknown_context_preserves_original_containment_and_recovery_prerequisites
-        with_installed_boundaries do
-          selection = {"mapping_id" => "mapping", "assignment_id" => "assignment", "attempt_id" => @attempt}
-          wire = Ace::Runtime::Molecules::ProtectedSocket
-          body = +"controlled original input"
-          state = @launch.send(:origin, current_events, mapping_id: "mapping", assignment_id: "assignment", attempt_id: @attempt)
-          gate_server, gate_worker = UNIXSocket.pair
-          begin
-            gate = Thread.new do
-              @launch.gate_ready(request: {"params" => {"mapping_id" => "mapping", "launch_ticket" => state.fetch("launch_ticket")}},
-                peer: @worker, socket: gate_server, deadline: wire.deadline(10))
-            end
-            assert_equal "ready", wire.read(gate_worker, deadline: wire.deadline(10)).dig("data", "phase")
-            call("release_launch", {"launch_ticket" => state.fetch("launch_ticket"), "process_binding" => @binding,
-              "expected_generation" => generation}, id: "issued-for-recovery", peer: @launcher, role: :launcher)
-            assert_equal "release", wire.read(gate_worker, deadline: wire.deadline(10)).fetch("operation")
-            gate.value
-          ensure
-            gate_server.close; gate_worker.close
-            gate&.join
-          end
-          with_original_control do |socket, codec, ready, original|
-            reporter = Thread.new do
-              frame = read_original_control_frame(socket, deadline: wire.deadline(30))
-              codec.receive_launch_prompt(socket, descriptor: frame.fetch("text_descriptor"), transfer_id: frame.fetch("transfer_id"),
-                deadline: wire.deadline(10)) { |input| assert_equal body, input.bytes }
-              wire.write(socket, frame.slice("mutation_id", "intent_event_id", "original_binding_digest").merge(
-                "version" => 1, "type" => "prompt_dispatch_outcome", "guarded_evidence" => {"outcome" => "uncertain", "origin" => original}),
-                deadline: wire.deadline(10))
-              wire.read(socket, deadline: wire.deadline(10))
-            end
-            prompt = @launch.prompt_attempt!(request: {"mutation_id" => "prior-prompt", "params" => selection.merge(
-              "expected_generation" => generation, "transfer" => codec.descriptor([body], purpose: :prompt_text))},
-              peer: @launcher, role: :launcher, transfer: Struct.new(:bytes).new(body))
-            assert_equal "uncertain", prompt.dig(:data, "outcome")
-            reporter.value
-          end
-          lost_completion = false
-          error = assert_raises(AttemptErrors::EvidenceUnavailable) do
-            settle_inbox do
-              read = @context_query_wire.method(:read)
-              @context_query_wire.define_singleton_method(:read) do |*args, **options|
-                read.call(*args, **options)
-                lost_completion = true
-                raise Ace::Herdr::ValidationError, "fixture lost original canonical completion ACK"
-              end
-            end
-          end
-          causes = []; cause = error
-          while cause && causes.size < 6
-            causes << "#{cause.class}: #{cause.message}"
-            cause = cause.cause
-          end
-          assert lost_completion, causes.join("; ")
-          assert_equal 1, @context_owner.status(peer: @authority_peer).fetch("active_operations")
-          before = current_events
-          failure = assert_raises(AttemptErrors::InboxContextPending) do
-            @launch.prompt_attempt!(request: {"mutation_id" => "blocked-prompt", "params" => selection.merge(
-              "expected_generation" => generation, "transfer" => Authority::TransferCodec.new(root: @root).descriptor([body], purpose: :prompt_text))},
-              peer: @launcher, role: :launcher, transfer: Struct.new(:bytes).new(body))
-          end
-          assert_match(/pending context effect/, failure.message)
-          assert_equal before, current_events
-          with_original_control do |socket, _codec, ready, original|
-            drainer = Thread.new do
-              frame = read_original_control_frame(socket, deadline: wire.deadline(30))
-              selected = @launch.launch_input_inhibit_selection!(request: {"mutation_id" => nil, "params" => selection.merge(
-                frame.slice("original_binding_digest", "seal_event_id", "journal_commit"))}, peer: @launcher, role: :launcher)
-              assert_equal frame.fetch("seal_event_id"), selected.dig(:data, "seal_event_id")
-              wire.write(socket, frame.slice("original_binding_digest", "seal_event_id").merge("version" => 1,
-                "type" => "launch_input_inhibit_outcome", "guarded_evidence" => {"outcome" => "inhibited", "origin" => original,
-                  "input_state" => "inhibited", "pending_input" => 0}), deadline: wire.deadline(30))
-              recorded = wire.read(socket, deadline: wire.deadline(30))
-              assert_equal "launch_input_inhibit_recorded", recorded.fetch("type")
-            end
-            intent = @journal.prompt_intent("prior-prompt")
-            completion = @launch.launch_prompt_completion!(request: {"mutation_id" => nil, "params" => selection.merge(
-              "mutation_id" => "prior-prompt", "intent_event_id" => intent.fetch("digest"),
-              "original_binding_digest" => ready.fetch("original_binding_digest"), "guarded_evidence" => {
-                "outcome" => "not_issued", "origin" => original, "phase" => "not_issued", "code" => "agent_blocked"})},
-              peer: @launcher, role: :launcher)
-            assert_equal "not_issued", completion.dig(:data, "outcome")
-            assert_equal "uncertain", @journal.mutation_result("prior-prompt").dig("data", "outcome")
-            @launch.close_execution_scope!(params: selection.merge("mutation_id" => "unknown-seal", "expected_generation" => generation),
-              peer: @launcher, role: :launcher)
-            drainer.value
-            assert current_events.any? { |event| event["type"] == "input_inhibited" }
-          end
-          closed = @launch.close_execution_scope!(params: selection.merge("mutation_id" => "unknown-proof", "expected_generation" => generation),
-            peer: @launcher, role: :launcher)
-          assert_equal "closed_no_writers", closed.dig(:data, "state")
-          assert_equal "closed_no_writers", @launch.observe_execution_scope!(params: selection, peer: @launcher, role: :launcher).fetch("state")
-          failure = assert_raises(AttemptErrors::InboxContextPending) do
-            @launch.release_scope_reservation!(params: selection.merge("mutation_id" => "unknown-release", "expected_generation" => generation),
-              peer: @launcher, role: :launcher)
-          end
-          assert_match(/pending context effect/, failure.message)
-          assert_equal 1, @context_owner.status(peer: @authority_peer).fetch("active_operations")
-        end
-      end
-
       def stop_terminal_and_release(uncertain: false)
         params = {"mapping_id" => "mapping", "assignment_id" => "assignment", "attempt_id" => @attempt}
         if uncertain
           coordinator = Organisms::AttemptCoordinator.new(cache_base: File.join(@root, "stopped-cache"), repo_root: @journal.repo_root,
-            journal: @journal, lifecycle_exclusion: @launch.send(:exclusion_for, @map, @journal))
+            journal: @journal, lifecycle_exclusion: @launch.send(:control_registration_context!, {"mapping_id" => "mapping", "assignment_id" => "assignment"}, @map, @journal).fetch(:exclusion))
           observer = Object.new
           observer.define_singleton_method(:observe) { |_| {"liveness" => "unknown", "reason" => "controlled interrupted native observation"} }
           coordinator.send(:reconciler).instance_variable_set(:@observer, observer)
@@ -469,8 +365,6 @@ module Ace
         terminal = current_events.find { |event| event["type"] == "attempt_stopped" }
         assert_equal current_events.select { |event| event["type"] == "service_transition" && event.dig("payload", "state") == "succeeded" }.map { |event| event.fetch("digest") }.sort,
           terminal.dig("payload", "service_settlement_event_digests")
-        assert_equal current_events.select { |event| event["type"] == "inbox_reconciliation" && event.dig("payload", "state") == "completed" }.map { |event| event.fetch("digest") }.sort,
-          terminal.dig("payload", "inbox_settlement_event_digests")
         prior = @journal.ref_value
         restarted_peer = @supervisor.merge("pid" => 98, "started_at" => "linux:#{ExecutionScopeObservationFixtures::BOOT}:98")
         assert_equal stopped.fetch(:data), call("stop_attempt", final_params, id: "public-stop-terminal", peer: restarted_peer, role: :supervisor).fetch(:data)
@@ -770,7 +664,7 @@ module Ace
       def test_actual_no_effect_producer_composes_pending_stop_terminal_and_original_release
         with_installed_boundaries do
           settle_service(no_effect: true)
-          settle_inbox
+          submit_inbox
           params = {"mapping_id" => "mapping", "assignment_id" => "assignment", "attempt_id" => @attempt}
           @launch.close_execution_scope!(params: params.merge("mutation_id" => "no-effect-seal", "expected_generation" => generation),
             peer: @launcher, role: :launcher)
@@ -799,8 +693,6 @@ module Ace
           settled = current_events.select { |event| event["type"] == "service_transition" && event.dig("payload", "state") == "failed-settled" }
           assert_equal 1, settled.length
           assert_equal settled.map { |event| event.fetch("digest") }, terminal.dig("payload", "service_settlement_event_digests")
-          assert_equal current_events.select { |event| event["type"] == "inbox_reconciliation" && event.dig("payload", "state") == "completed" }
-            .map { |event| event.fetch("digest") }.sort, terminal.dig("payload", "inbox_settlement_event_digests")
           assert_equal pending.fetch(:data), call("stop_attempt", pending_params, id: "pending-no-effect-stop",
             peer: @supervisor, role: :supervisor).fetch(:data)
           release = @launch.release_scope_reservation!(params: params.merge("mutation_id" => "actual-no-effect-release", "expected_generation" => generation),
@@ -821,7 +713,7 @@ module Ace
       def test_actual_settled_canonical_uncertain_stop_releases_and_retains_original_history_after_rotation
         with_installed_boundaries do
           settle_service
-          settle_inbox
+          submit_inbox
           stop_terminal_and_release(uncertain: true)
           original_events = current_events
           original_attempt = @attempt
@@ -852,24 +744,16 @@ module Ace
           assert @deployment.frozen?
           assert_equal @original_ref.fetch("sha256"), @deployment.artifact_reference.fetch("sha256")
           settle_service
-          settle_inbox
+          submit_inbox
           accept_terminal_and_release
           original_attempt = @attempt
           original_events = current_events
-          original_deployment = @deployment
           original_map = @map
           original_commit = @journal.ref_value
           settlement_params = {"mapping_id" => "mapping", "assignment_id" => "assignment", "attempt_id" => original_attempt}
           service_evidence = @endcap.service_settlement_evidence!(journal: @journal, events: original_events,
             params: settlement_params, map: original_map, commit: original_commit)
-          inbox_evidence = @endcap.historical_inbox_settlement_evidence!(journal: @journal, events: original_events,
-            params: settlement_params, map: original_map, commit: original_commit, deployment: original_deployment, history: @history)
           assert_equal 1, service_evidence.fetch("services").size
-          assert_equal 1, inbox_evidence.fetch("inboxes").size
-          reconciliation = original_events.find { |event| event["type"] == "inbox_reconciliation" }
-          assert_equal reconciliation.fetch("digest"), inbox_evidence.fetch("inboxes").first.fetch("reconciliation_event_digest")
-          assert_equal reconciliation.dig("payload", "receipt_ref"), inbox_evidence.fetch("inboxes").first.fetch("receipt_ref")
-          assert_raises(FrozenError) { inbox_evidence.fetch("inboxes").first.fetch("signature_ref")["ref"].replace("changed") }
           assert_equal @boot_ref, original_events.find { |event| event["type"] == "scope_bound" }.dig("payload", "boot_baseline_selection")
           # Retained historical authentication must not rediscover current boot.
           File.binwrite(@boot_pointer, "invalid current boot pointer")
@@ -889,8 +773,6 @@ module Ace
           @map = @deployment.mapping("mapping")
           refresh_candidate_boot!
           restart
-          assert_equal inbox_evidence, @endcap.historical_inbox_settlement_evidence!(journal: @journal, events: original_events,
-            params: settlement_params, map: original_map, commit: original_commit, deployment: original_deployment, history: @history)
           state = call("reserve_attempt", {"scope" => "010", "worker_uid" => 13001, "runtime" => "herdr", "base_head" => @head,
             "launcher_process_binding" => @launcher, "expected_generation" => 1}, id: "rotated-reserve", peer: @launcher, role: :launcher).fetch(:data)
           refute_equal original_attempt, state.fetch("attempt_id")

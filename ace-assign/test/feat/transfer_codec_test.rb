@@ -250,44 +250,6 @@ module Ace
         end
       end
 
-      def test_inbox_proof_requires_exact_two_nonempty_parts_without_capacity_tradeoff
-        with_codec do |codec, root|
-          parts = ["r" * (16 * 1024), "s" * (16 * 1024)]
-          assert_equal 32 * 1024, codec.descriptor(parts, purpose: :inbox_proof).fetch("bytes")
-          [["receipt"], ["receipt", "signature", "extra"], ["", "signature"], ["receipt", ""],
-            ["r" * (16 * 1024 + 1), "s"], ["r", "s" * (16 * 1024 + 1)]].each do |invalid|
-            assert_raises(AttemptErrors::MalformedTransfer) { codec.descriptor(invalid, purpose: :inbox_proof) }
-          end
-          assert_empty Dir.children(root)
-        end
-      end
-
-      def test_inbox_proof_preserves_order_and_refuses_reorder_extra_short_and_missing_eof
-        with_codec do |codec, root|
-          parts = ['{"outcome":"consumed"}', "detached-signature"]
-          descriptor = codec.descriptor(parts, purpose: :inbox_proof)
-          with_upload(parts.join) do |socket|
-            result = codec.receive(socket, descriptor: descriptor, purpose: :inbox_proof, deadline: deadline) do |input|
-              [input.bytes(index: 0), input.bytes(index: 1)]
-            end
-            assert_equal parts, result
-          end
-          [parts.reverse.join, parts.join + "extra", parts.first].each do |invalid|
-            with_upload(invalid) do |socket|
-              assert_raises(AttemptErrors::MalformedTransfer) do
-                codec.receive(socket, descriptor: descriptor, purpose: :inbox_proof, deadline: deadline) { flunk "bad proof admitted" }
-              end
-            end
-          end
-          with_upload(parts.join, eof: false) do |socket|
-            assert_raises(Timeout::Error) do
-              codec.receive(socket, descriptor: descriptor, purpose: :inbox_proof, deadline: deadline(0.05)) { flunk "missing EOF admitted" }
-            end
-          end
-          assert_empty Dir.children(root)
-        end
-      end
-
       def test_export_uses_exact_binary_bytes_and_refuses_mismatched_descriptor
         with_codec do |codec, _root|
           parts = ["first\x00".b, "second\n".b]
