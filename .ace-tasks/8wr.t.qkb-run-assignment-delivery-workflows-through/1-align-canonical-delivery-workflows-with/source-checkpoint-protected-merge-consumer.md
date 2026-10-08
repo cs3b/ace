@@ -41,3 +41,7 @@ Each named case reuses the real original registration, accepted independent revi
 - Later forged delivery event with the original service selectors but changed outcome: PASS1/37, 26.66s, git/f369c14d-d22c-47c8-9ab5-310e5133fdd7. The fixture appends a real canonical chained event after completion; actual status refuses inconsistent delivery evidence rather than consuming or repairing it. Ref stays at that deliberately modified canonical commit.
 
 These close the listed controlled merge-consumer negative gates together with the lost-reply/replay and before-CAS receipts. They do not close create/update/ready policy, canonical workflow/role adoption, whole qkb.1 or central installed/native acceptance.
+
+## Main integration checkpoint
+
+Independent reviewer approved the complete bounded consumer range through `531963609`, including all actual negative receipts above. Integrated onto main as `a0be676b6`, `c248f5070`, `c208f47c0`, `50862d43e`. On that integrated tree, the two pure files passed **11 tests / 76 assertions** (assign/14803ba5-9f09-4c3c-89ba-6633c85ff21c); the exact actual public merge/completion lost-reply and replay method passed **1 test / 40 assertions**, 45.91s (git/e3f7ccd8-0c2e-4a0c-8650-bea11f6c0f1b). No installed/native or full-suite claim. Public service-request protected-client adoption, workflow authorization ordering and whole qkb.1 remain open.
