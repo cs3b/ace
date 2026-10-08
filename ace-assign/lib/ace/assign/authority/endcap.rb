@@ -69,7 +69,7 @@ module Ace
             origin = active_origin(events, params)
             if request.fetch("operation") == "submit_candidate"
               worker_or_launcher!(peer, role, map, origin)
-              candidate_generation!(candidate(events), params)
+              candidate_generation!(candidate(events), params) unless candidate_submission_replay!(journal, events, request, params)
             else
               export_admission!(journal, events, params, map, origin, peer, role)
             end
@@ -131,6 +131,7 @@ module Ace
                 launcher_only: request.fetch("operation") == "assign_review")
             end
             delegated_review_request!(journal, events, request, params, peer, role) if request.fetch("operation") == "assign_review"
+            candidate_submission_replay!(journal, events, request, params, admitted: admitted) if request.fetch("operation") == "submit_candidate"
             result = journal.mutate(assignment_id: params.fetch("assignment_id"), attempt_id: params.fetch("attempt_id"),
               mutation_id: request.fetch("mutation_id"), operation: request.fetch("operation"),
               parameters_digest: Atoms::EvidenceDigest.digest(params), expected_generation: params.fetch("expected_generation"),
@@ -245,6 +246,34 @@ module Ace
         def candidate(events)
           event = events.reverse.find { |entry| entry["type"] == "authority_mutation" && entry.dig("payload", "operation") == "submit_candidate" }
           event&.dig("payload", "data")
+        end
+
+        # Header replay admission still requires the live original caller above.
+        # TransferCodec and CandidateTransfer verify the exact body before dispatch;
+        # the descriptor is part of the original immutable parameter digest.
+        def candidate_submission_replay!(journal, events, request, params, admitted: nil)
+          replay = journal.mutation_result(request.fetch("mutation_id"))
+          return false unless replay
+          unless replay["operation"] == "submit_candidate" && replay["assignment_id"] == params.fetch("assignment_id") &&
+              replay["attempt_id"] == params.fetch("attempt_id") && replay["parameters_digest"] == Atoms::EvidenceDigest.digest(params)
+            raise AttemptErrors::Conflict, "candidate replay input differs"
+          end
+          data = replay.fetch("data")
+          retained = retained_candidate(events, data.fetch("candidate_generation"))
+          unless retained == data && data.fetch("candidate_generation") == params.fetch("candidate_generation") + 1 &&
+              data.fetch("head") == params.fetch("head")
+            raise AttemptErrors::EvidenceUnavailable, "candidate replay provenance differs"
+          end
+          bytes = journal.bounded_blob(data.fetch("bundle_ref"), commit: replay.fetch("journal_commit"), max_bytes: 64 * 1024 * 1024)
+          unless bytes.bytesize == data.fetch("bytes") && Digest::SHA256.hexdigest(bytes) == data.fetch("sha256")
+            raise AttemptErrors::EvidenceUnavailable, "candidate replay bundle differs"
+          end
+          if admitted && admitted.values_at("head", "tree", "sha256", "bytes") != data.values_at("head", "tree", "sha256", "bytes")
+            raise AttemptErrors::EvidenceUnavailable, "candidate replay normalized bundle differs"
+          end
+          true
+        rescue KeyError, TypeError
+          raise AttemptErrors::EvidenceUnavailable, "candidate replay evidence is malformed"
         end
 
         def candidate_generation!(current, params)
