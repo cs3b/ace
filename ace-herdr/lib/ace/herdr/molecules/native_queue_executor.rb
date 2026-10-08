@@ -62,6 +62,16 @@ module Ace
             claim_generation: claim_generation, digest: digest, thread: thread)
         end
 
+        # Caller retains the original absolute observation budget. This read
+        # does not submit, retry, sign or transition the canonical inbox event.
+        def observe(agent:, thread:, event_id:, digest:, submission:, deadline:, receipt: nil)
+          unless agent == "codex" && @codex_runtime.is_a?(CodexRuntimeSelection) && submission.is_a?(Hash) &&
+              submission.values_at("thread_id", "event_id", "payload_sha256") == [thread, event_id, digest]
+            return {"outcome" => "uncertain", "error" => "Codex original observation selection differs"}
+          end
+          @codex_runtime.observe(submission: submission, deadline: deadline, receipt: receipt)
+        end
+
         def submit(agent:, thread:, event_id:, digest:, payload:, submission: nil)
           if agent == "codex"
             unless @codex_runtime.is_a?(CodexRuntimeSelection) && submission.is_a?(Hash) &&

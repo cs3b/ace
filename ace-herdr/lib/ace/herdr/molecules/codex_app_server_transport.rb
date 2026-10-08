@@ -49,20 +49,7 @@ module Ace
               payload.valid_encoding? && payload.bytesize.between?(1, 65_536) && !payload.include?("\0")
             raise Unavailable, "Codex submission fields differ"
           end
-          @socket, @deadline = socket, deadline
-          @messages, @open, @error, @count, @total, @header = [], false, nil, 0, 0, 0
-          @ingress = Ace::Runtime::Molecules::ProtectedSocket::Ingress.new(socket)
-          @driver = WebSocket::Driver.client(Writer.new(socket, deadline), max_length: MESSAGE_LIMIT)
-          @driver.on(:open) { @open = true }
-          @driver.on(:error) { @error = "Codex WebSocket protocol is unavailable" }
-          @driver.on(:close) { @error = "Codex WebSocket closed" }
-          @driver.on(:message) { |event| receive_message!(event.data) }
-          @driver.start
-          pump! until @open
-          request!(1, "initialize", {"clientInfo" => {"name" => "ace-herdr", "version" => "1"},
-            "capabilities" => {"experimentalApi" => true}})
-          response!(1)
-          send_json!({"method" => "initialized"})
+          initialize_connection!(socket: socket, deadline: deadline)
           # Conservatively crosses the boundary before the driver can write OR
           # buffer add. Every subsequent failure remains uncertain.
           @submission_started = true
@@ -89,10 +76,100 @@ module Ace
           {"accepted" => false, "pre_submit" => !@submission_started,
             "error" => @submission_started ? "Codex submission unconfirmed" : "Codex transport unavailable before submission"}
         ensure
-          @driver = @socket = @ingress = @messages = nil
+          clear_connection!
+        end
+
+        # Read only the selected native history. Content is hashed transiently;
+        # returned data contains neither prompt nor response bodies.
+        def observe(socket:, thread:, client_id:, payload_sha256:, deadline:)
+          unless deadline.is_a?(Numeric) && deadline.finite? && thread.is_a?(String) && UUID.match?(thread) &&
+              client_id.is_a?(String) && CLIENT_ID.match?(client_id) &&
+              payload_sha256.is_a?(String) && payload_sha256.match?(/\A[0-9a-f]{64}\z/)
+            raise Unavailable, "Codex observation fields differ"
+          end
+          initialize_connection!(socket: socket, deadline: deadline)
+          request!(2, "thread/read", {"threadId" => thread, "includeTurns" => true})
+          result = response!(2)
+          history = result.fetch("thread")
+          unless result.keys == ["thread"] && history.is_a?(Hash) && history["id"] == thread &&
+              history["cliVersion"] == "0.159.3" && history.fetch("historyMode", "legacy") == "legacy" &&
+              history["turns"].is_a?(Array) && history["turns"].size <= MESSAGE_COUNT
+            raise Unavailable, "Codex thread history differs"
+          end
+          matches, turn_ids, item_ids = [], [], []
+          history.fetch("turns").each do |turn|
+            unless turn.is_a?(Hash) && turn["id"].is_a?(String) && UUID.match?(turn["id"]) &&
+                %w[completed interrupted failed inProgress].include?(turn["status"]) &&
+                turn.fetch("itemsView", "full") == "full" && turn["items"].is_a?(Array) &&
+                turn["items"].size <= MESSAGE_COUNT
+              raise Unavailable, "Codex turn history is incomplete"
+            end
+            turn_ids << turn.fetch("id")
+            turn.fetch("items").each do |item|
+              unless item.is_a?(Hash) && native_item_id?(item["id"]) && native_item_id?(item["type"])
+                raise Unavailable, "Codex item identity differs"
+              end
+              item_ids << item.fetch("id")
+              next unless item["type"] == "userMessage"
+              unless (item.keys - %w[type id clientId content]).empty? && item["content"].is_a?(Array) &&
+                  (!item.key?("clientId") || item["clientId"].nil? || item["clientId"].is_a?(String))
+                raise Unavailable, "Codex user message differs"
+              end
+              next unless item["clientId"] == client_id
+              content = item.fetch("content")
+              text = content.first
+              unless turn["status"] == "completed" && turn.fetch("error", nil).nil? && content.one? &&
+                  text.is_a?(Hash) && (text.keys - %w[type text text_elements]).empty? &&
+                  text["type"] == "text" && text["text"].is_a?(String) &&
+                  text["text"].encoding == Encoding::UTF_8 && text["text"].valid_encoding? &&
+                  text["text"].bytesize.between?(1, 65_536) && !text["text"].include?("\0") &&
+                  (!text.key?("text_elements") || text["text_elements"] == []) &&
+                  Digest::SHA256.hexdigest(text.fetch("text")) == payload_sha256
+                raise Unavailable, "Codex completed payload association differs"
+              end
+              matches << {"thread_id" => thread, "client_user_message_id" => client_id,
+                "turn_id" => turn.fetch("id"), "item_id" => item.fetch("id"), "payload_sha256" => payload_sha256}
+            end
+          end
+          unless turn_ids.uniq == turn_ids && matches.one? && item_ids.count(matches.first.fetch("item_id")) == 1
+            raise Unavailable, "Codex completed message is absent or ambiguous"
+          end
+          check_deadline!
+          {"outcome" => "consumed", "native_reference" => matches.first}
+        rescue Unavailable, Ace::Runtime::RuntimeUnavailableError, SecurityError, IOError, SystemCallError,
+            JSON::ParserError, KeyError, TypeError
+          {"outcome" => "uncertain", "error" => "Codex completed observation unavailable"}
+        ensure
+          clear_connection!
         end
 
         private
+
+        def native_item_id?(value)
+          value.is_a?(String) && value.encoding == Encoding::UTF_8 && value.valid_encoding? &&
+            value.bytesize.between?(1, 256) && !value.include?("\0")
+        end
+
+        def clear_connection!
+          @driver = @socket = @ingress = @messages = nil
+        end
+
+        def initialize_connection!(socket:, deadline:)
+          @socket, @deadline = socket, deadline
+          @messages, @open, @error, @count, @total, @header = [], false, nil, 0, 0, 0
+          @ingress = Ace::Runtime::Molecules::ProtectedSocket::Ingress.new(socket)
+          @driver = WebSocket::Driver.client(Writer.new(socket, deadline), max_length: MESSAGE_LIMIT)
+          @driver.on(:open) { @open = true }
+          @driver.on(:error) { @error = "Codex WebSocket protocol is unavailable" }
+          @driver.on(:close) { @error = "Codex WebSocket closed" }
+          @driver.on(:message) { |event| receive_message!(event.data) }
+          @driver.start
+          pump! until @open
+          request!(1, "initialize", {"clientInfo" => {"name" => "ace-herdr", "version" => "1"},
+            "capabilities" => {"experimentalApi" => true}})
+          response!(1)
+          send_json!({"method" => "initialized"})
+        end
 
         def request!(id, method, params)
           send_json!({"id" => id, "method" => method, "params" => params})

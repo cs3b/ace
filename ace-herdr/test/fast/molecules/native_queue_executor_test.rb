@@ -37,6 +37,13 @@ module Ace
           end
         end
 
+        def test_observation_without_typed_original_runtime_is_uncertain_without_cli_fallback
+          result = @executor.observe(agent: "codex", thread: "thread-1", event_id: "inb-12345678",
+            digest: "a" * 64, submission: {}, deadline: Process.clock_gettime(Process::CLOCK_MONOTONIC) + 1)
+          assert_equal "uncertain", result.fetch("outcome")
+          assert_empty @calls
+        end
+
         def test_pi_uses_digest_bound_client_and_validates_receipt
           @stdout = JSON.generate("ok" => true, "id" => "inb-12345678",
             "session_id" => "thread-1", "payload_sha256" => "a" * 64)

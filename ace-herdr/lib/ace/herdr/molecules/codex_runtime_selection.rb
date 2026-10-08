@@ -269,9 +269,9 @@ module Ace
             raise ValidationError, "Codex retained submission association differs"
           end
           result = nil
-          with_connection(deadline: deadline) do |socket|
+          with_connection(deadline: deadline) do |socket, connection_deadline|
             result = CodexAppServerTransport.new.submit(socket: socket, thread: data.fetch("thread_id"),
-              client_id: submission.fetch("client_user_message_id"), payload: payload, deadline: deadline)
+              client_id: submission.fetch("client_user_message_id"), payload: payload, deadline: connection_deadline)
           end
           return result unless result.fetch("accepted")
           immutable(result.merge("provider_version" => data.fetch("provider_version"),
@@ -279,6 +279,45 @@ module Ace
             "server_process_binding" => data.fetch("server_process_binding")))
         rescue ValidationError, Ace::Runtime::RuntimeUnavailableError, SecurityError, IOError, SystemCallError
           {"accepted" => false, "pre_submit" => result.nil?, "error" => "Codex runtime submission unavailable"}
+        end
+
+        def observe(submission:, deadline:, receipt: nil)
+          verify!
+          unless submission.is_a?(Hash) && submission.keys.sort == SUBMISSION_FIELDS &&
+              submission.values_at("schema", "provider_version", "endpoint_reference_sha256", "server_process_binding", "thread_id") ==
+                ["ace.herdr.codex-submission/v1", data.fetch("provider_version"), reference.fetch("sha256"),
+                  data.fetch("server_process_binding"), data.fetch("thread_id")] &&
+              %w[event_id attempt_id].all? { |key| InboxContextServiceConfiguration.token?(submission[key]) } &&
+              submission["claim_generation"].is_a?(Integer) && submission["claim_generation"].positive? &&
+              submission["client_user_message_id"].is_a?(String) &&
+              CodexAppServerTransport::CLIENT_ID.match?(submission["client_user_message_id"]) &&
+              submission["payload_sha256"].is_a?(String) && submission["payload_sha256"].match?(/\A[0-9a-f]{64}\z/) &&
+              deadline.is_a?(Numeric) && deadline.finite? && deadline > monotonic
+            raise ValidationError, "Codex retained observation association differs"
+          end
+          if receipt
+            expected = submission.slice("provider_version", "endpoint_reference_sha256", "thread_id",
+              "client_user_message_id", "payload_sha256", "server_process_binding")
+            unless receipt.is_a?(Hash) && receipt.keys.sort == (expected.keys + ["queued_submission_id"]).sort &&
+                receipt.slice(*expected.keys) == expected && receipt["queued_submission_id"].is_a?(String) &&
+                CodexAppServerTransport::UUID.match?(receipt["queued_submission_id"])
+              raise ValidationError, "Codex retained queue receipt differs"
+            end
+          end
+          result = nil
+          with_connection(deadline: deadline) do |socket, connection_deadline|
+            result = CodexAppServerTransport.new.observe(socket: socket, thread: data.fetch("thread_id"),
+              client_id: submission.fetch("client_user_message_id"), payload_sha256: submission.fetch("payload_sha256"),
+              deadline: connection_deadline)
+          end
+          return result unless result.fetch("outcome") == "consumed"
+          immutable(result.merge("native_reference" => result.fetch("native_reference").merge(
+            "provider" => "codex", "version" => data.fetch("provider_version"),
+            "queued_submission_id" => receipt && receipt.fetch("queued_submission_id")),
+            "endpoint_reference_sha256" => reference.fetch("sha256"),
+            "server_process_binding" => data.fetch("server_process_binding")))
+        rescue ValidationError, Ace::Runtime::RuntimeUnavailableError, SecurityError, IOError, SystemCallError, KeyError, TypeError
+          {"outcome" => "uncertain", "error" => "Codex runtime observation unavailable"}
         end
 
         def with_connection(deadline:)
@@ -297,7 +336,7 @@ module Ace
               begin
                 kernel.live!(peer)
                 raise ValidationError, "Codex server lifetime ended" if kernel.exited?(pin)
-                yield socket
+                yield socket, deadline
                 verify!
                 kernel.live!(peer)
                 unless !kernel.exited?(pin) && kernel.same?(peer, kernel.peer(socket))

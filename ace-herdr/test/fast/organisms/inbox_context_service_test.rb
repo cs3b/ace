@@ -178,6 +178,11 @@ class InboxContextServiceTest < Minitest::Test
           message = JSON.parse(event.data)
           if message["method"] == "initialize"
             driver.text(JSON.generate("id" => message.fetch("id"), "result" => {}))
+          elsif message["method"] == "thread/read"
+            @native_reads ||= []
+            @native_reads << message
+            @before_native_read&.call(message)
+            driver.text(JSON.generate("id" => message.fetch("id"), "result" => @native_read_result))
           elsif message["method"] == "thread/queue/add"
             @native_adds ||= []
             @native_adds << message
@@ -381,6 +386,64 @@ class InboxContextServiceTest < Minitest::Test
           native: native, deliveries_dir: @events, receipt_public_key: InboxContextOwnerFixture::KEY.public_key)
         assert_equal "uncertain", restarted.deliver(event: "event1").fetch("state")
         assert_equal 2, @native_adds.size, "uncertain restart must not repeat native queue add"
+      end
+    end
+  end
+
+  def test_typed_original_runtime_reads_exact_intent_without_resend_and_refuses_changed_binding
+    with_source_observation_seams do
+      assert_raises(ERROR) do # The mutated held artifact also refuses scope exit.
+        Ace::Herdr::Molecules::CodexRuntimeSelection.with(stage_reference: @stage.fetch("codex_runtime"),
+          configuration: @configuration, installation: @document, bootstrap: @bootstrap) do |runtime|
+          native = Ace::Herdr::Molecules::NativeQueueExecutor.new(codex_runtime: runtime)
+          thread = runtime.data.fetch("thread_id")
+          digest = Digest::SHA256.hexdigest("same text")
+          intent = native.prepare_submission(agent: "codex", thread: thread, event_id: "event1",
+            attempt_id: "attempt1", claim_generation: 1, digest: digest)
+          @native_read_result = {"thread" => {"id" => thread, "cliVersion" => "0.159.3", "turns" => [
+            {"id" => "00000000-0000-0000-0000-000000000003", "status" => "completed", "items" => [
+              {"id" => "item-1", "type" => "userMessage", "clientId" => intent.fetch("client_user_message_id"),
+                "content" => [{"type" => "text", "text" => "same text"}]}]}]}}
+          deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + 2
+          args = {agent: "codex", thread: thread, event_id: "event1", digest: digest, submission: intent, deadline: deadline}
+          observed = native.observe(**args)
+          assert_equal "consumed", observed.fetch("outcome")
+          assert_nil observed.fetch("native_reference").fetch("queued_submission_id"), "lost add reply is not invented"
+          assert_equal @stage.fetch("codex_runtime").fetch("sha256"), observed.fetch("endpoint_reference_sha256")
+          assert_equal runtime.data.fetch("server_process_binding"), observed.fetch("server_process_binding")
+          assert_empty @native_adds || [], "observation never resubmits even without a retained add reply"
+          assert_equal({"threadId" => thread, "includeTurns" => true}, @native_reads.last.fetch("params"))
+          assert_equal "uncertain", native.observe(**args.merge(event_id: "foreign")).fetch("outcome")
+          assert_equal 1, @native_reads.size
+          assert_equal "uncertain", native.observe(**args.merge(deadline: Process.clock_gettime(Process::CLOCK_MONOTONIC) - 1)).fetch("outcome")
+          assert_equal 1, @native_reads.size
+          receipt = intent.slice("provider_version", "endpoint_reference_sha256", "thread_id",
+            "client_user_message_id", "payload_sha256", "server_process_binding").merge(
+            "queued_submission_id" => "00000000-0000-0000-0000-000000000004")
+          assert_equal "uncertain", native.observe(**args.merge(receipt: receipt.merge("client_user_message_id" => "ace-#{"f" * 32}"))).fetch("outcome")
+          assert_equal 1, @native_reads.size
+          assert_equal receipt.fetch("queued_submission_id"), native.observe(**args.merge(receipt: receipt)).fetch("native_reference").fetch("queued_submission_id")
+          transport = Ace::Herdr::Molecules::CodexAppServerTransport.new
+          original_observe = transport.method(:observe)
+          observed_deadline = nil
+          transport.define_singleton_method(:observe) do |**parameters|
+            observed_deadline = parameters.fetch(:deadline)
+            original_observe.call(**parameters)
+          end
+          handler_deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + 1
+          dispatcher = runtime.handler_dispatcher(limit: 8)
+          Ace::Herdr::Molecules::CodexAppServerTransport.stub(:new, transport) do
+            worker = Thread.new do
+              dispatcher.call(deadline: handler_deadline) { native.observe(**args) }
+            end
+            assert worker.join(2), "owned observation did not finish within original budget"
+            assert_equal "consumed", worker.value.fetch("outcome")
+          end
+          assert_equal handler_deadline, observed_deadline, "held handler original deadline caps the native read"
+          @before_native_read = ->(*) { File.open(@runtime_path, "a") { |file| file.write(" ") } }
+          assert_equal "uncertain", native.observe(**args).fetch("outcome"), "changed held binding discards positive history"
+          assert_empty @native_adds || []
+        end
       end
     end
   end
