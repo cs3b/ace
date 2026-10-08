@@ -4,23 +4,31 @@ This is implementation progress, not a completion verdict, main delivery or inst
 
 ## Joined source
 
-ACE integration branch `codex/protected-pr-integration` joins protected PR operations, scoped publication, explicit HITL project routing, R2 parent/child registration and canonical round/export/results. Ready/merge carry their exact operation into the current campaign gate at claim, authorization, dispatch and journal CAS; draft creation/update retain the Captain-approved ordering. Commits through `09a40c053` include bounded per-operation immutable journal inventory reuse; the existing 30s candidate Git deadline is unchanged.
+ACE integration branch `codex/protected-pr-integration` joins protected PR operations, scoped publication, explicit HITL project routing, R2 parent/child registration and canonical round/export/results. Ready/merge carry their exact operation into the current campaign gate at claim, authorization, dispatch and journal CAS; draft creation/update retain the Captain-approved ordering. Bounded per-operation immutable journal inventory reuse retains the existing 30s candidate Git deadline.
 
-Lab integration branch `codex/lab-source-integration` joins coldboot, selected network producer, physical cleanup and static Codex composition through `5bbf15b`. The latter installs/authenticates original static fragments and inventories; actual attempt-owned runtime admission and producer startup attachment remain in implementation. It does not establish a working native launch by itself.
+R3 is integrated at `49a57f4f5`: finite phases, durably reserved provider attempts, convergence limits, escalation and resume use the same campaign owner. `238074f43` makes the R2 result consumer use the compact snapshot yielded by the same held verification; it no longer opens a second campaign projection. `9b9d72d65` fixes the real typed-subject parser's rejection of Forgejo PR URLs, tracked as actual child `qkc.0`. `413b7b1a8` classifies the 57 active coupling matches, and `3f1a79911` installs three maintained acceptance scenarios using the existing E2E runner. Their discovery checks are not installed execution.
+
+`31dabb87f` adds original Serve/lifecycle attachment and exact Codex admission/stop seams. These deliberately refuse an installed context without its original startup owner; the production Lab factory and actual client/producer ownership join remain absent. A typed callback seam is not a working native startup.
+
+Lab integration branch `codex/lab-source-integration` joins coldboot, selected network producer, physical cleanup and static Codex composition through `5bbf15b`. The latter installs/authenticates original static fragments and inventories. `ad2bde6` records the official Codex endpoint incompatibility and removes the unsupported production-factory claim; it does not establish a working native launch.
 
 ## Executed evidence
 
 - Canonical recovery cleanup: retained success with replaced root, 1/16 PASS (`8ca78686`); lost completion reply recovered from canonical status, 1/19 PASS (`203cdb90`). No deadline changed.
 - R2/service boundary join: 9/65 PASS (`ce81533a`); manager/canonical compact evidence: 46/345 PASS (`8c7e7ff0`); execution/transfer/prepared-input/receipt checks: 39/218 PASS (`30813b64`).
 - Integrated operation-local inventory isolation and service gates: 18/131 PASS (`ba19098a`). Actual Git scan-reuse proof retained from the producer: 1/27 PASS (`ca38b565`), fresh operation revalidates.
+- R3 plus the typed PR subject and public CLI boundaries on joined source: 140/612 PASS (`ca315ed0`). Original lifecycle attachment/admission on joined source: 8/26 PASS (`3b14ab79`).
+- Actual local Git, canonical imported result bytes and the same R1/R3 owner: 1/24 PASS in 23.82s (`d05538ec`). Held-snapshot Endcap boundary: 1/6 PASS in 2.41ms (`1236ae94`). These prove their specific source joins, not installed OS/native execution.
 - Actual static Lab composer, Codex artifacts, coldboot and publication: 10 Python tests PASS after source join. Before adding static Codex composition, the four metadata/installer-boundary modules passed 7 tests after fixture correction.
 - Removed obsolete 417-line fake full-installer case and historical worktree dependency; retained direct mandatory-composition refusal and actual static metadata generator. Ownership and retained coverage are documented in lab-config task `gad.b/test-environment-source-cleanup.md`.
+- Removed the obsolete one-round protected campaign fixture: it violated the delivered R3 minimum and simulated three OS children. The smaller canonical-result join above replaces its local logic/byte-flow responsibility. Its original `5dd1b0fc` timeout remains retained; removal is not a claim that installed protected full-flow performance passed.
 
 ## Remaining implementation and delivery gates
 
-- [ ] R2 full canonical parent-result flow: prior `5dd1b0fc` timeout remains unaccepted; narrow reuse corrections are not a substitute for confirming this flow. Older broad compatibility run `309ad430` contains 13 errors, not a pass.
-- [ ] R3 (`ig4`): integrate bounded execution, phases, escalation and public modes with the same R2 manager/receipts.
-- [ ] Lab Codex attempt-owned startup: original LaunchLifecycle attachment, exact producer/socket lifetime and whole-slice retirement/recovery. Literal startup input handoff remains unresolved; no new latest-session lookup or empty-scope exception is accepted.
-- [ ] `qkc`: executable acceptance assets and classified coupling inventory. Installed execution belongs only to lab-config `gad.2`.
+- [x] R3 (`ig4`) source integration: bounded execution, phases, escalation and public modes share R2 manager/receipts. Whole-task completion awaits final review and delivery.
+- [x] R2 canonical local byte/result join and same-held snapshot boundary verified. Actual protected parent-result performance and installed flow remain open centrally in `gad.2`; prior `5dd1b0fc` is not accepted. Older broad compatibility `309ad430` contains 13 errors, not a pass.
+- [x] `qkc` executable source assets and classified coupling inventory integrated. Final source review remains open; installed execution belongs only to lab-config `gad.2`.
+- [ ] Lab Codex attempt-owned startup: finish original factory/producer/client ownership, exact socket lifetime, contained context startup and whole-slice retirement/recovery. Official Codex uses a native-UID-only physical socket exposed through an advertised symlink; resolving the alias cannot grant the distinct service UIDs access. Literal startup input handoff remains unresolved; no latest-session lookup, unsafe chmod or empty-scope exception is accepted.
+- [ ] Canonical protected workflow adoption: document and verify the actual round/export/submit-result public sequence, preserving ordinary/protected ownership and exact current candidate gates.
 - [ ] One independent review of the final joined source, plus appropriate local unit/integration verification.
 - [ ] Integrate main, synchronize repositories and prepare fresh gem artifacts. Publication remains the Captain's interactive OTP step; actual installed task/observation remains `gad.2`.
