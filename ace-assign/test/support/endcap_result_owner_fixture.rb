@@ -146,10 +146,18 @@ module Ace
             context_text: @prepared_context_text || "Exact fixture context.\n")
           @prepared_registration = fixture
           fixture.with_input(root: @root) do |input, descriptor|
-            @router.dispatch(request: request.merge("params" => fixture.header(expected_generation: params.fetch("expected_generation")).merge("mapping_id" => "mapping", "assignment_id" => "assignment", "transfer" => descriptor)), peer: peer, role: role, transfer: input)
+            dispatch_request(request: request.merge("params" => fixture.header(expected_generation: params.fetch("expected_generation")).merge("mapping_id" => "mapping", "assignment_id" => "assignment", "transfer" => descriptor)), peer: peer, role: role, transfer: input)
           end
         else
-          @router.dispatch(request: request, peer: peer, role: role, transfer: transfer)
+          dispatch_request(request: request, peer: peer, role: role, transfer: transfer)
+        end
+      end
+
+      # Match Server's immutable event-read lifetime: one scope per request,
+      # never shared with preparation, subsequent requests, or the scenario.
+      def dispatch_request(**arguments)
+        Ace::Assign::Molecules::EvidenceJournal.with_event_read_operation do
+          @router.dispatch(**arguments)
         end
       end
 
