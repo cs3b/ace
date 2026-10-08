@@ -163,6 +163,15 @@ module Ace
                 assert_equal before, @journal.ref_value
                 @cgroups.populated = 0
                 proof = close.call("proof")
+                # Reconstruct production owners from the retained journal before
+                # consuming proof; no in-memory owner or replacement start.
+                old_launch = @launch
+                before_restart = @journal.ref_value
+                starts_before_restart = @manager.service_starts
+                restart
+                refute_same old_launch, @launch
+                assert_equal before_restart, @journal.ref_value
+                assert_equal starts_before_restart, @manager.service_starts
                 assert_equal "succeeded", finish.call("finish").dig(:data, "state")
                 @cgroups.populated = 1
                 before = @journal.ref_value
