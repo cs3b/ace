@@ -1,0 +1,11 @@
+# Protected campaign workflow adoption checkpoint
+
+Base `3f1a79911`, branch `codex/protected-campaign-workflows`. Updated only canonical delivery and PR-review workflows to explain the existing public protected `campaign-record-round`, `campaign-export-result` and `submit-result` join. Instructions distinguish ordinary campaign/coordinator receipts from the registered protected parent and its settled collection/check/approval children, preserve draft-before-review and current ready/merge gates, and document exact input envelope, ordered transferred bytes, exported-result ownership, distinct authority/candidate generations, replay and stale-candidate refusal. The global R3 completion policy is unchanged; this source work remains subject to the root's one final independent review.
+
+Source references inspected: the three CLI command implementations; CampaignRoundTransfer; Endcap campaign rounds/results; ExecutionReceipt; docs/campaigns.md; existing protected campaign command and canonical result-join tests. No receipt builder, selector, producer, deployment or new test was introduced.
+
+Projection: `bundle exec ace-handbook sync --provider agents` succeeded, 102 skills, 0 updated/removed. This checkout lacks a bin/ace-handbook binstub; the documented source-pinned bundle exec path was used. No harness-native tree was created.
+
+Executed `bin/ace-test ace-assign fast test/fast/atoms/catalog_loader_test.rb`: 22 tests, 111 assertions, no failures/errors; report `.ace-local/test/reports/assign/0fab601a-4364-4879-86a1-b5225cb963b8/`. An existing workflow check was also executed: `bin/ace-test ace-handbook feat test/feat/installed_neutral_pr_resolution_test.rb`, 1 test, 48 assertions, no failures/errors; report `.ace-local/test/reports/handbook/936bc7f8-90a3-4e92-813e-12755508138b/`. Selecting that test before fully inspecting its setup was an unintended scope deviation: it built ephemeral local gem fixtures despite the request for no environment creation. It used no network, model, native runtime or privileged operation and is not claimed as installed protected acceptance. No additional environment check was run.
+
+No planner/model/provider call, task completion, review round, merge, publication or installed acceptance was performed. Exact source review and final integrated verification remain root-owned and open.

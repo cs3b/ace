@@ -160,6 +160,46 @@ the bounded draft input; credentials do not grant those operations.
    effect to obtain a receipt. Publication, deployment and synchronization still
    require their separate authorization, evidence and OTP where applicable.
 
+## Protected campaign result before readiness or merge
+
+When the original protected parent registers `review_campaign`, finish the existing
+R1/R2/R3 review policy through its linked, canonically settled collection/check/
+approval children. Follow the protected handoff in `wfi://review/pr`; ordinary
+`ace-review campaign` output and `ace-assign attempt finish` are not substitutes.
+Draft create/update above may run before independent review. Ready and merge wait
+for the current canonical parent campaign result, executed checks and independent
+review acceptance.
+
+1. Upload the documented R1 round input using the closed envelope
+   `{"version":1,"round":ROUND_OBJECT,"artifacts":[{"path":"report.md","sha256":"SHA256"}]}`.
+   Keep the original parent selectors, pinned head/base/scopes and registered
+   campaign/requirements/policy. The round attempt_id equals its stable mutation.
+   `ace-assign campaign-record-round --mapping MAPPING --assignment ID --attempt ATTEMPT --head SHA --candidate-generation N --mutation ROUND-ATTEMPT --input ROUND-ENVELOPE.json --artifact REPORT-BYTES`
+   supplies ordered immutable artifact bytes, not authority-readable worker paths.
+   Repeat the artifact flag in envelope order; settled child receipts establish
+   execution and approval, not editable reports alone.
+2. After policy acceptance, download its verified exact bytes:
+   `ace-assign campaign-export-result --mapping MAPPING --assignment ID --attempt ATTEMPT --head SHA --candidate-generation N --output RESULT.json`.
+   Retain exported sha256/result_identity/journal_commit. The authority owns the
+   campaign store and validates the accepted immutable candidate; the output file
+   is a transfer artifact, not permission to change or bypass policy.
+3. Keep the original parent's succeeded review receipt, independent actors and
+   executed checks. Add `campaign: {id: REGISTERED-CAMPAIGN, result: {path:
+   RESULT.json, sha256: EXPORTED-SHA256}}` and the identical reference in its
+   ordered artifacts. Upload exact exported bytes in that artifact slot with
+   `ace-assign submit-result --mapping MAPPING --assignment ID --attempt ATTEMPT --head SHA --candidate-generation N --expected-generation G --mutation RESULT-MUTATION --receipt PARENT-RECEIPT.json --artifact RESULT.json`.
+   Supply any other receipt artifacts in their declared order. Submission imports
+   evidence; the original reviewer/finish owner still owns acceptance and release.
+   G is persisted authority generation; N is candidate generation, never G.
+
+Restart retains original mutations, envelope/receipt bytes, ordered artifacts and
+selectors. Exact replay preserves the existing round/result; re-export only accepts
+an identical existing file. Changed candidate, policy or missing canonical child
+settlement rejects current acceptance without erasing history. Ready/merge service
+admission rechecks the canonical parent campaign result. Route a missing producer
+to its owner, keeping delivery unfinished; do not build a new receipt generator,
+refresh conflicting generations or use ordinary commands as a protected fallback.
+
 ## Ordinary managed delivery steps
 
 These steps retain the existing nonprotected managed workflow. They are not a
