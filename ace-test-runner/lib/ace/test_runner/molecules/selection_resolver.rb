@@ -31,6 +31,11 @@ module Ace
               "Cannot read test selector #{entry[:file]}:#{entry[:line]}: #{error.class}"
           end
           identities = identities.uniq { |entry| entry.values_at(:file, :class_name, :name) }
+          identities.group_by { |entry| entry.values_at(:class_name, :name) }.each_value do |matches|
+            next if matches.size == 1
+            selectors = matches.map { |entry| "#{entry[:file]}:#{entry[:start_line]}" }.join(", ")
+            raise Atoms::LineNumberResolver::SelectionError, "Ambiguous test identity across files: #{selectors}"
+          end
           Models::TestSelectionPlan.new(files: sources.keys, identities: identities,
             source_digests: sources.transform_values { |source| Digest::SHA256.hexdigest(source) })
         end

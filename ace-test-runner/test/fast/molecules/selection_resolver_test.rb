@@ -30,6 +30,15 @@ class ExactSelectionResolverTest < Minitest::Test
     end
   end
 
+  def test_same_runtime_identity_in_distinct_files_refuses_before_loading
+    with_fixture do |file|
+      other = File.join(File.dirname(file), "other_test.rb")
+      File.write(other, File.read(file))
+      error = assert_raises(SelectionError) { Resolver.resolve(["#{file}:2", "#{other}:2"]) }
+      assert_includes error.message, "Ambiguous test identity across files"
+    end
+  end
+
   def test_one_invalid_selector_refuses_entire_plan_without_loading
     with_fixture do |file|
       assert_raises(SelectionError) { Resolver.resolve(["#{file}:2", "#{file}:1"]) }

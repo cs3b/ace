@@ -27,7 +27,9 @@ class ExplicitFileExecutionTest < Minitest::Test
         assert_equal ["one"], File.readlines(marker, chomp: true)
         File.unlink(marker)
         File.unlink(loaded)
-        [["#{file}:4", "#{file}:2"], [file, "#{file}:4"], ["#{file}:0"]].each do |selectors|
+        other = File.join(directory, "duplicate_test.rb")
+        File.write(other, File.read(file))
+        [["#{file}:4", "#{other}:4"], ["#{file}:4", "#{file}:2"], [file, "#{file}:4"], ["#{file}:0"]].each do |selectors|
           output, error, status = Open3.capture3(RbConfig.ruby, executable, mode, *selectors, "--no-save")
           refute status.success?, "#{mode}: #{output}\n#{error}"
           refute File.exist?(marker)
