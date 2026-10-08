@@ -29,3 +29,27 @@ The 9c2 main spec's early "history eligibility unimplemented" and N1/N2 document
 ## Downstream boundary
 
 qk0.3 may plan/implement its reviewed public prompt/status/stop consumer against the integrated N2 APIs and qk0.0 inventory source checkpoint; this audit finds no missing generic steering endpoint or registry prerequisite. That source sequencing decision belongs root and does not require pretending the whole dependency is done. Actual provisioned launcher-role/Startup wiring remains wave412/qk0 consumer work. Physical protected workspace cleanup belongs qk0.2, not slice retirement. Central real native/multi-UID/systemd/PAM/descendant/network enforcement and replacement acceptance remains exclusively gad.2 and is not proved by these controlled fixtures.
+
+## Current source reconciliation — 2026-10-08
+
+At ACE `9968fbbf6`, historical gap1 above is superseded: maintained
+ExecutionScopeObservation#network_selection! calls ExecutionNetworkSelection#select!
+with the descriptor-pinned static boundary and exact slot. The generic static
+selector is delivered (`b1df69912`); historical literal selection remains required.
+This is not proof that Lab publishes the actual network measurement.
+
+Lab owner reports committed Startup/Installer publication through main `53bb835`:
+selected owner/history/pin, baseline refresh, launcher/task-context projection and
+installation publication. Its actual original-entry/Assembly bridge passed one
+controlled test in178.253s (owned run47914). That scoped bridge is not physical
+cleanup acceptance. The current Producer still accepts only baseline refresh/verify;
+operational network policy/measurement/current-selection publication and complete
+initial/coldboot routing remain **gad.b source work**, not tests deferred to gad.2.
+The physical canonical execute/inspect path remains separate qk0.2/gad.b WIP.
+
+The qk0 public prepared-work/steering composition is now integrated (`de2591f8b`),
+independently approved with full9/435 source PASS and main readiness1/30 PASS.
+See qk0.3/source-checkpoint-public-composition-fixture.md. This removes the old
+missing public-composition evidence, not the remaining network/domain producers
+or final family verification. No xz9.2,9c2 or installed acceptance checkbox is
+closed by this reconciliation.
