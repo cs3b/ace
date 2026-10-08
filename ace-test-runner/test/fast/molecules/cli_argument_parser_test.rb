@@ -184,6 +184,28 @@ class CliArgumentParserTest < Minitest::Test
     end
   end
 
+  def test_missing_literal_ruby_files_refuse_even_after_a_target_is_selected
+    Dir.chdir(@project_root) do
+      missing = "test/fast/authority/missing_selector_test.rb"
+      [["ace-assign", "fast", missing], ["ace-assign", "fast", "ace-assign/#{missing}"],
+        ["fast", "./#{missing}"], ["fast", File.join(@project_root, missing)], ["missing_test.rb"]].each do |argv|
+        error = assert_raises(ArgumentError, argv.inspect) do
+          Ace::TestRunner::Molecules::CliArgumentParser.new(argv).parse
+        end
+        assert_match(/File not found/, error.message)
+      end
+    end
+  end
+
+  def test_ruby_glob_patterns_keep_their_existing_target_classification
+    Dir.chdir(@project_root) do
+      ["test/**/*_test.rb", "test/?_test.rb", "test/[ab]_test.rb", "test/{one,two}_test.rb"].each do |glob|
+        result = Ace::TestRunner::Molecules::CliArgumentParser.new(["ace-assign", glob]).parse
+        assert_equal glob, result.fetch(:target)
+      end
+    end
+  end
+
   def test_raises_error_for_nonexistent_file_with_line
     Dir.chdir(@project_root) do
       argv = ["atoms", "nonexistent_file.rb:10"]

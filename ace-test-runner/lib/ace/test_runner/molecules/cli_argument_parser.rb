@@ -127,6 +127,8 @@ module Ace
               @test_files << arg
             elsif package_relative_ruby_file?(arg)
               @test_files << arg
+            elsif literal_ruby_file?(arg)
+              raise ArgumentError, "File not found: #{arg}"
             elsif known_target?(arg)
               @target = arg
             elsif @target.nil? && !File.exist?(arg)
@@ -212,7 +214,7 @@ module Ace
         # Check if an argument could be a package name (not a target, file, or file:line)
         def potential_package?(arg)
           !known_target?(arg) &&
-            !(arg.end_with?(".rb") && File.file?(arg)) &&
+            !literal_ruby_file?(arg) &&
             !file_with_line?(arg)
         end
 
@@ -236,6 +238,10 @@ module Ace
 
           # Store the path that will work from the package directory
           @test_files << (@package_dir ? format_file_with_line(file_part, line_part) : arg)
+        end
+
+        def literal_ruby_file?(arg)
+          arg.end_with?(".rb") && !arg.match?(/[\*?\[\]{}]/)
         end
 
         def existing_ruby_file?(arg)
