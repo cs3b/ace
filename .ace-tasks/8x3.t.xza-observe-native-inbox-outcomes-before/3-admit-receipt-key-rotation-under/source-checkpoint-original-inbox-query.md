@@ -19,3 +19,7 @@ Executed scoped evidence:
 Retained initial failing report assign/a8552b12-5c11-4d88-8904-402ca5298674: the old child fixture used terminal label `terminal`, which the actual closed GuardedNativeOrigin refuses. The new test explicitly selects term_aa and leaves historical fixture defaults unchanged. No validation was weakened. The combined file/line command stopped on that failure, so it did not execute the subsequent route file; its separate passing receipt above is the executed route evidence.
 
 Remaining consumers: source-owned bounded original query client and SAME full producer Router registration; explicit direct v2 selectors/bindings and DeliveryRecord association; authenticated original native channel/thread join; reviewed guarded fixed wake; actual Installer/generated entry/selected child composition and stopped-owner/LiveClient acceptance. No source criterion is checked from this checkpoint alone.
+
+## Independent review and integration
+
+review_lab_bootstrap approved exact 3f4285925 against a2bf3183d, including unchanged steering extraction and read-only scope. Root integrated as 26a14e9ba; the sole changelog conflict retained both sides. On this combined tree the actual canonical query method passed 1/11 (9ea2d5b5-44b8-42a3-8097-eab46b151dd6). The mixed file/line command selected only that method, so the other two whole files were run separately: binding verifier and server route passed 6/32 (9fb75d8b-f3f2-4740-abb5-f90ea0d06d0a). No claim of three whole files or native effect acceptance.
