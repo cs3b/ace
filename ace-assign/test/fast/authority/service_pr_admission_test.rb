@@ -79,6 +79,29 @@ class ServicePrAdmissionTest < AceAssignTestCase
     end
   end
 
+  def test_ready_and_merge_revalidate_campaign_gate_at_claim_authorization_dispatch_and_cas
+    calls = []
+    @owner.define_singleton_method(:approved_review!) do |*_, service_operation:, **|
+      calls << service_operation
+    end
+    %w[ready merge].each do |operation|
+      @record = nil
+      @params["operation"] = operation
+      claim = @owner.send(:service_claim_plan, @journal, @events, @params, @map, @executor, :executor, "{}")
+      @record = claim.fetch(:service_updates).first.fetch(:replacement)
+      binding = @params.slice("mapping_id", "assignment_id", "attempt_id", "candidate_generation", "head", "request_id", "input_digest")
+        .merge("claim_binding" => @record.fetch("claim_binding"))
+      transfer = Struct.new(:bytes) { def count; 1; end }.new("{}")
+      @owner.send(:service_authorization, {"operation" => "service_authorization"}, binding, @map, @executor, :executor, transfer)
+      plan = @owner.send(:service_begin_plan, @journal, @events, binding, @map, @executor, :executor, "{}")
+      replacement = plan.fetch(:service_updates).first.fetch(:replacement)
+      @owner.authorize_service_update!(journal: @journal, existing: @record, replacement: replacement,
+        pending: {current_events: @events, service_inputs: {"request" => "{}"}})
+      assert_equal [operation] * 4, calls
+      calls.clear
+    end
+  end
+
   def test_draft_still_refuses_stale_candidate_wrong_executor_and_revoked_scope
     assert_raises(Ace::Assign::AttemptErrors::Conflict) do
       @owner.send(:service_claim_plan, @journal, @events, @params.merge("head" => "c" * 40), @map, @executor, :executor, "{}")
