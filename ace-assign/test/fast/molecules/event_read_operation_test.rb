@@ -118,8 +118,8 @@ class EventReadOperationTest < AceAssignTestCase
       assert_raises(FrozenError) { original.fetch("events")["forged"] = [] }
       assert_raises(FrozenError) { original.fetch("events").fetch("assignment").first.fetch("payload")["value"].replace("forged") }
       refute_same original, journal.canonical_event_inventory!(commit: "b" * 40)
-      refute_same original, journal.canonical_event_inventory!(commit: "a" * 40)
-      assert_equal 3, counts.fetch(:inventory)
+      assert_same original, journal.canonical_event_inventory!(commit: "a" * 40)
+      assert_equal 2, counts.fetch(:inventory)
       %i[repo_root ref checkout_root read_boundary].each do |field|
         before = journal.canonical_event_inventory!(commit: "a" * 40)
         journal.instance_variable_set(:"@#{field}", field == :read_boundary ? Object.new : "/different/#{field}")
@@ -135,6 +135,23 @@ class EventReadOperationTest < AceAssignTestCase
     assert_equal before + 2, counts.fetch(:inventory)
   end
 
+  def test_inventory_eviction_is_bounded_and_new_operation_verifies_again
+    journal, counts = inventory_reader
+    Journal.with_event_read_operation do
+      oldest = journal.canonical_event_inventory!(commit: "0" * 40)
+      Journal::OPERATION_INVENTORY_LIMIT.times do |index|
+        journal.canonical_event_inventory!(commit: "%040x" % (index + 1))
+      end
+      assert_equal Journal::OPERATION_INVENTORY_LIMIT, Thread.current[:ace_assign_event_read_operation].fetch(:inventories).size
+      refute_same oldest, journal.canonical_event_inventory!(commit: "0" * 40)
+      assert_equal Journal::OPERATION_INVENTORY_LIMIT + 2, counts.fetch(:inventory)
+    end
+    before = counts.fetch(:inventory)
+    Journal.with_event_read_operation { journal.canonical_event_inventory!(commit: "0" * 40) }
+    assert_equal before + 1, counts.fetch(:inventory)
+    assert_nil Thread.current[:ace_assign_event_read_operation]
+  end
+
   def test_failed_inventory_is_not_cached_and_nested_refusal_restores_only_parent_operation
     journal, counts = inventory_reader
     Journal.with_event_read_operation do
@@ -147,8 +164,8 @@ class EventReadOperationTest < AceAssignTestCase
       end
       assert_same original, journal.canonical_event_inventory!(commit: "a" * 40)
       2.times { assert_raises(Ace::Assign::AttemptErrors::EvidenceUnavailable) { journal.canonical_event_inventory!(commit: "f" * 40) } }
-      refute_same original, journal.canonical_event_inventory!(commit: "a" * 40)
-      assert_equal 5, counts.fetch(:inventory)
+      assert_same original, journal.canonical_event_inventory!(commit: "a" * 40)
+      assert_equal 4, counts.fetch(:inventory)
       %w[HEAD aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa].each do |commit|
         journal.instance_variable_set(:@mode, :local)
         before = counts.fetch(:inventory)

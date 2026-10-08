@@ -36,7 +36,9 @@ module Ace
         HISTORY_LIMIT = 100_000
         EVENT_BATCH_BYTES = 1024 * 1024
 
-        # A wire operation may retain one event, inventory and raw service selection, never admission
+        OPERATION_INVENTORY_LIMIT = 8
+
+        # A wire operation may retain one event/raw service selection and bounded immutable inventories, never admission
         # or current-ref truth. Nested operations own independent selections.
         def self.with_event_read_operation
           previous = Thread.current[:ace_assign_event_read_operation]
@@ -417,12 +419,21 @@ module Ace
           context = Thread.current[:ace_assign_event_read_operation]
           reusable = context && @mode == :protected && commit.is_a?(String) && commit.match?(/\A[0-9a-f]{40}\z/)
           selection = operation_inventory_selection(commit) if reusable
-          return context.fetch(:inventory) if reusable && context[:inventory_selection] == selection
-          context&.delete(:inventory_selection)
-          context&.delete(:inventory)
+          if reusable
+            inventories = context[:inventories] ||= {}
+            if inventories.key?(selection)
+              # Refresh bounded insertion order, retaining only immutable facts.
+              inventory = inventories.delete(selection)
+              inventories[selection] = inventory
+              return inventory
+            end
+          else
+            context&.delete(:inventories)
+          end
           inventory = read_canonical_inventory!(commit: commit)
           if reusable
-            context[:inventory_selection], context[:inventory] = selection, inventory
+            inventories.shift while inventories.size >= OPERATION_INVENTORY_LIMIT
+            inventories[selection] = inventory
           end
           inventory
         end
@@ -436,9 +447,8 @@ module Ace
 
         def retained_operation_inventory(commit)
           context = Thread.current[:ace_assign_event_read_operation]
-          return unless context && @mode == :protected && commit.is_a?(String) && commit.match?(/\A[0-9a-f]{40}\z/) &&
-            context[:inventory_selection] == operation_inventory_selection(commit)
-          context[:inventory]
+          return unless context && @mode == :protected && commit.is_a?(String) && commit.match?(/\A[0-9a-f]{40}\z/)
+          context.fetch(:inventories, {})[operation_inventory_selection(commit)]
         end
         private :operation_inventory_selection, :retained_operation_inventory
 

@@ -281,11 +281,22 @@ module Ace
           foreign = build_event(type: "intent", attempt_id: "foreign", payload: {})
           tip = journal.append(assignment_id: "beta", attempt_id: "foreign", events: [foreign])
           journal.instance_variable_set(:@mode, :protected)
+          scans = 0
+          inventory = nil
+          scan = journal.method(:read_canonical_inventory!)
+          journal.define_singleton_method(:read_canonical_inventory!) do |commit:|
+            scans += 1
+            scan.call(commit: commit)
+          end
           Molecules::EvidenceJournal.with_event_read_operation do
           inventory = journal.canonical_event_inventory!(commit: tip)
           assert_equal %w[alpha beta], inventory.fetch("events").keys.sort
           assert_equal introduction, inventory.fetch("introductions").fetch("alpha").fetch(first.fetch("digest"))
           assert_same inventory, journal.canonical_event_inventory!(commit: tip)
+          historical = journal.canonical_event_inventory!(commit: introduction)
+          assert_equal [first], historical.fetch("events").fetch("alpha")
+          assert_same inventory, journal.canonical_event_inventory!(commit: tip)
+          assert_equal 2, scans, "current/historical/current must perform only two full history scans"
           assert inventory.frozen?
           assert inventory.fetch("events").fetch("alpha").all?(&:frozen?)
           # The full authenticated immutable inventory already proves these
@@ -330,8 +341,13 @@ module Ace
           assert_equal introduction, journal.event_commit!(assignment_id: "alpha", event_digest: first.fetch("digest"), commit: changed)
           recovered = journal.canonical_event_inventory!(commit: tip)
           assert_equal inventory, recovered
-          refute_same inventory, recovered, "failed inventory cannot retain the previous cache"
+          assert_same inventory, recovered, "a rejected different commit cannot replace an authenticated immutable snapshot"
           end
+          before = scans
+          Molecules::EvidenceJournal.with_event_read_operation do
+            refute_same inventory, journal.canonical_event_inventory!(commit: tip)
+          end
+          assert_equal before + 1, scans, "a new operation must authenticate again"
         end
       end
 
