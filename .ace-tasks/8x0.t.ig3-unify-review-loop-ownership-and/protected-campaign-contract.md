@@ -1,6 +1,6 @@
-# Protected campaign lookup and import contract — draft, 2026-10-05
+# Protected campaign lookup and import contract — reviewed with technical closure
 
-This is R2's proposed mandatory acceptance contract, not installed functionality.
+This is R2's mandatory acceptance contract as amended by the independently reviewed technical closure, not installed functionality.
 It preserves accepted review policy and R3 dependencies. R1's CampaignManager
 remains the only campaign/history/disposition owner; Assign remains the only
 attempt, candidate, receipt and evidence owner. No new listener, campaign journal,
@@ -8,7 +8,7 @@ policy dialect or repair controller is introduced.
 
 The exact managed-child, model/actor and nonreentrant lock proposal is now in
 `protected-campaign-technical-closure.md`. It supersedes conflicting API/lock
-shorthand and alternatives below; independent readiness remains required.
+shorthand and alternatives below. Independent readiness approved the amendment at `62a24a0c570f093a1c0de3fd3feec509cf3fb27e`; see protected-campaign-draft-review.md. In particular, implement the block-form `with_verified_result!`, not the historical `verify_result!` shorthand below.
 
 ## Actual owners and the missing seam
 
@@ -209,11 +209,11 @@ positive campaign-bearing acceptance waits for R2. xz9.3 is neither blocked by
 this contract nor responsible for implementing it. R3/final qkc consume mandatory
 R2 integration; none of these dependencies is weakened.
 
-The mapping, public method, lock order and provenance expectations above are
-explicit proposed decisions requiring independent readiness review. They are
-not evidence that source supports them today. The two exact unresolved source
-choices (non-circular execution receipt ingress and model/actor attribution) are
-recorded in `protected-campaign-readiness-inputs.md`; an implementer must not
-silently invent their resolution. Independent readiness must decide them and
-amend this contract before approving positive integration. Task stays
-`draft` / `needs_review: true` until independent review closes this contract.
+The technical closure and its independent readiness review supersede the initial
+open alternatives: use succeeded managed campaign-free child assignments, separate
+report_models from authenticated actors, and the nonreentrant block-form
+with_verified_result! guard. protected-campaign-readiness-inputs.md retains the
+historical research; it is not a competing implementation choice. These decisions
+are specification evidence only. Upstream campaign-free finish/no-writer and qkb
+integration, the complete R2 implementation and executed acceptance remain required.
+This reconciliation does not promote the task or mark any criterion complete.
