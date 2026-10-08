@@ -41,12 +41,12 @@ class ServiceMergeBoundaryTest < AceGitTestCase
     exercise_completion
   end
 
-  def test_public_merge_missing_authorization_refuses_then_creates_exact_pending_proposal
+  def test_public_merge_missing_authorization_blocks_then_creates_exact_pending_proposal
     @public_lab, @authorization_mode = true, :missing
     exercise_completion
   end
 
-  def test_public_merge_out_of_scope_authorization_refuses_then_creates_exact_pending_proposal
+  def test_public_merge_out_of_scope_authorization_blocks_then_creates_exact_pending_proposal
     @public_lab, @authorization_mode = true, :out_of_scope
     exercise_completion
   end
@@ -166,6 +166,22 @@ class ServiceMergeBoundaryTest < AceGitTestCase
   def configure_merge_authorization(submission, input)
     return unless @authorization_mode
 
+    if %i[missing out_of_scope].include?(@authorization_mode)
+      original_authorize = @policy.method(:authorize!)
+      expected_message = @authorization_mode == :missing ? "authorization reference is unresolved" : "authorization does not match the exact service request"
+      exact = submission.slice("assignment_id", "attempt_id", "operation", "input_digest", "target", "authorization").merge(
+        "project_id" => "project", "candidate_head" => @head, "caller_uid" => @worker.fetch("uid"))
+      observations = @authorization_observations = []
+      @policy.define_singleton_method(:authorize!) do |binding|
+        started = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+        original_authorize.call(binding)
+      rescue SecurityError => error
+        observations << {"exact" => exact.all? { |key, value| binding[key] == value },
+          "rejected" => error.message == expected_message,
+          "seconds" => Process.clock_gettime(Process::CLOCK_MONOTONIC) - started}
+        raise
+      end
+    end
     case @authorization_mode
     when :proposal
       record = create_merge_proposal(input)
@@ -380,7 +396,7 @@ class ServiceMergeBoundaryTest < AceGitTestCase
         end
       end
       if %i[missing out_of_scope].include?(@authorization_mode)
-        assert_equal "refused", result.fetch("state")
+        assert_equal "blocked", result.fetch("state")
         assert_equal 0, effects
         assert_empty calls
         assert_empty @journal.proposals
@@ -723,12 +739,21 @@ class ServiceMergeBoundaryTest < AceGitTestCase
         assert_equal "error", response.fetch("status")
         @authorization_blocker = response.dig("error", "code")
         assert_includes %w[service_claim_refused service_claim_unconfirmed], @authorization_blocker
-        assert_equal before_refusal, @journal.ref_value, "canonical owner proves no claim was published"
-        assert_empty reached, "fixed provider handler was not admitted"
         listener.stop
         assert owner.join(10)
-        owner.value
-        next({"state" => "refused", "blocker" => @authorization_blocker})
+        owner.value # listener ensure joins its admitted worker before releasing exclusion
+        assert_equal before_refusal, @journal.ref_value, "terminal canonical owner proves no claim was published"
+        assert_empty reached, "terminal fixed provider handler was not admitted"
+        assert @authorization_observations.any? { |entry| entry.fetch("exact") && entry.fetch("rejected") },
+          "maintained policy must reject the exact authorization, not merely time out"
+        directory = File.expand_path("../../../.ace-local/task/8wr.t.qkb.1", __dir__)
+        FileUtils.mkdir_p(directory)
+        File.write(File.join(directory, "#{name}.authorization.json"), JSON.pretty_generate({
+          "blocker" => @authorization_blocker, "policy" => @authorization_observations}))
+        # A contacted authority rejection remains uncertain at transport.
+        # Actual policy denial plus terminal canonical/effect checks above
+        # prove this scenario; an unconfirmed reply alone never does.
+        next({"state" => "blocked", "blocker" => @authorization_blocker})
       end
       record.call("cli.request.before")
       out, err = capture_io do
