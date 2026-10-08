@@ -8,6 +8,44 @@ module Ace
   module Assign
     module Authority
       class LaunchLifecycle
+        # Original Installer preparation under its operator lock/inhibition.
+        # This is not a wire operation or a maintenance eligibility grant.
+        def prepare_execution_journals!(candidate_deployment:, initializer:)
+          if Thread.current[:ace_assign_maintenance_contexts]&.key?(object_id)
+            raise AttemptErrors::Conflict, "canonical preparation cannot run inside maintenance"
+          end
+          unless @deployment_history && @deployment_history.selects?(@deployment, selection: :original) &&
+              @deployment_history.selects?(candidate_deployment, selection: :candidate)
+            raise AttemptErrors::EvidenceUnavailable, "canonical preparation requires exact protected history"
+          end
+          raise AttemptErrors::EvidenceUnavailable, "canonical preparation child is unavailable" unless initializer.respond_to?(:call)
+          snapshots = {}
+          @deployment.maintenance_inventory(candidate_deployment).each do |id, owner, map|
+            project = owner.project(map.fetch("project_id"))
+            service = owner.authority(map.fetch("authority_id"))
+            identity = project.values_at("journal_repository", "evidence_git_ref", "evidence_checkout_root")
+            verify_maintenance_root!(service.fetch("state_root"), service.fetch("uid"))
+            identity.values_at(0, 2).each { |root| verify_maintenance_root!(root, service.fetch("uid")) }
+            next if snapshots.key?(identity)
+            journal = maintenance_journal_for(owner, map)
+            unless [journal.repo_root, journal.ref, journal.checkout_root] == identity
+              raise AttemptErrors::EvidenceUnavailable, "canonical preparation journal differs from fixed descriptor"
+            end
+            # The original operator's fixed accepted-source child drops to
+            # this selected authority before all Ruby/Git mutation. Its reply
+            # is only a selector; independently read the configured journal.
+            value = initializer.call(mapping_id: id, descriptor_sha256: owner.artifact_reference.fetch("sha256"))
+            unless value.is_a?(String) && value.match?(/\A[0-9a-f]{40}\z/) && journal.ref_value == value
+              raise AttemptErrors::EvidenceUnavailable, "canonical preparation child reply differs from selected journal"
+            end
+            journal.verify_commit!(value)
+            journal.canonical_event_inventory!(commit: value)
+            raise AttemptErrors::EvidenceUnavailable, "canonical preparation journal changed" unless journal.ref_value == value
+            snapshots[identity.freeze] = value.dup.freeze
+          end
+          snapshots.freeze
+        end
+
         # Source-only maintenance entry. Transport stop/drain/inhibition belongs
         # to the trusted installer; this method supplies the exact same locks
         # and canonical owner query, without a live endpoint or another ledger.

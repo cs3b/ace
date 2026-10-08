@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Prepare absent canonical evidence journals explicitly under the selected authority identity before maintenance exclusion, preserving valid registered/prepared/imported history and refusing foreign state or unsafe lock ownership.
+
 - Reuse exact immutable event and raw service-record proofs within one protected wire operation; revalidate terminal evidence on every read and keep fresh ref, admission and CAS checks.
 
 - Reuse one fully authenticated canonical inventory at an exact immutable journal commit within a protected wire operation, retaining fresh admission and CAS checks.

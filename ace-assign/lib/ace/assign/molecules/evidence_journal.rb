@@ -77,6 +77,71 @@ module Ace
           git_ok?("rev-parse", "--git-dir")
         end
 
+        # Original operator preparation only. Reuse the journal's existing lock
+        # and absent-ref CAS; never manufacture an event or reset existing history.
+        def initialize_canonical!(owner_uid:, owner_gid:, owner_groups:)
+          raise AttemptErrors::EvidenceUnavailable, "read-only journal cannot initialize canonical evidence" if @read_boundary
+          unless [owner_uid, owner_gid].all? { |id| id.is_a?(Integer) && id.between?(0, 2**31 - 1) } && @repo_root.is_a?(String) && @checkout_root.is_a?(String) &&
+              [@repo_root, @checkout_root].all? { |path| Pathname.new(path).absolute? && File.expand_path(path) == path } &&
+              File.directory?(@repo_root) && !File.symlink?(@repo_root) &&
+              git_ok?("check-ref-format", @ref)
+            raise AttemptErrors::EvidenceUnavailable, "canonical initialization selection is invalid"
+          end
+          unless owner_groups.is_a?(Array) && owner_groups.all? { |id| id.is_a?(Integer) && id.between?(0, 2**31 - 1) } &&
+              owner_groups.uniq.size == owner_groups.size &&
+              [Process.uid, Process.euid, Process.gid, Process.egid] == [owner_uid, owner_uid, owner_gid, owner_gid] &&
+              Process.groups.sort == owner_groups.sort
+            raise AttemptErrors::EvidenceUnavailable, "canonical initialization process identity differs"
+          end
+          selected = File.stat(@repo_root)
+          raise AttemptErrors::EvidenceUnavailable, "canonical initialization repository owner differs" unless selected.uid == owner_uid
+          identity = [selected.dev, selected.ino, selected.uid, selected.gid, selected.mode]
+          with_lock(cleanup_on_failure: false, owner_uid: owner_uid, owner_gid: owner_gid) do
+            value = ref_value
+            unless value
+              if File.exist?(checkout_dir) || File.symlink?(checkout_dir)
+                raise AttemptErrors::EvidenceUnavailable, "uninitialized journal has foreign checkout state"
+              end
+              seed_ref
+              value = ref_value
+            end
+            nodes = canonical_history_nodes!(value)
+            seed = nodes.last.first
+            tree = git!("rev-parse", "#{seed}^{tree}").first
+            message = git!("show", "-s", "--format=%B", seed).first
+            unless tree == git!("hash-object", "-t", "tree", "--stdin").first && message == "seed: ace-assign execution evidence"
+              raise AttemptErrors::EvidenceUnavailable, "canonical initialization has foreign root history"
+            end
+            canonical_event_inventory!(commit: value)
+            raw_paths = bounded_history_read!(["ls-tree", "-r", "-z", "--name-only", value], "", HISTORY_DIFF_BYTES)
+            paths = raw_paths.empty? ? [] : raw_paths.split("\0", -1)
+            unless paths.empty? || paths.pop == ""
+              raise AttemptErrors::EvidenceUnavailable, "canonical initialization tree inventory is incomplete"
+            end
+            raise AttemptErrors::EvidenceUnavailable, "canonical initialization tree inventory is oversized" if paths.size > HISTORY_LIMIT
+            paths.each do |path|
+              parts = path.split("/", -1)
+              event = parts.size == 4 && parts[0] == "execution" && parts[2] == "events" && JournalMutation::ID.match?(parts[1]) && parts[3].end_with?(".json")
+              request = parts.size == 3 && parts[0, 2] == %w[execution requests] && parts[2].end_with?(".json") && JournalMutation::ID.match?(parts[2].delete_suffix(".json"))
+              # Definitions, prepared packets, candidate bundles and imports
+              # retain the SAME mutation owner's closed immutable blob dialect.
+              validate_blob_path!(path) unless event || request
+            end
+            records = service_request_records(commit: value)
+            expected_requests = paths.select { |path| path.start_with?("execution/requests/") }.map { |path| File.basename(path, ".json") }.sort
+            unless records.map { |record| record.fetch("request_id") }.sort == expected_requests
+              raise AttemptErrors::EvidenceUnavailable, "canonical initialization service inventory differs"
+            end
+            current = File.stat(@repo_root)
+            unless !File.symlink?(@repo_root) && [current.dev, current.ino, current.uid, current.gid, current.mode] == identity && ref_value == value
+              raise AttemptErrors::EvidenceUnavailable, "canonical initialization selection changed"
+            end
+            value.dup.freeze
+          end
+        rescue SystemCallError, ArgumentError
+          raise AttemptErrors::EvidenceUnavailable, "canonical initialization repository is unavailable"
+        end
+
         # Current value of the evidence ref.
         #
         # @return [String, nil] Commit SHA or nil when the ref does not exist
@@ -1300,22 +1365,52 @@ module Ace
           File.join(@checkout_root, ".evidence.lock")
         end
 
-        def with_lock
+        def with_lock(cleanup_on_failure: true, owner_uid: nil, owner_gid: nil)
           raise AttemptErrors::EvidenceUnavailable, "read-only journal cannot mutate canonical evidence" if @read_boundary
           FileUtils.mkdir_p(@checkout_root)
-          File.open(lock_path, File::RDWR | File::CREAT) do |lock|
+          lock = if owner_uid
+            initialization_lock!(owner_uid: owner_uid, owner_gid: owner_gid)
+          else
+            File.open(lock_path, File::RDWR | File::CREAT, 0o600)
+          end
+          begin
             lock.flock(File::LOCK_EX)
             begin
               yield
             rescue StandardError
-              # No rejected writer may leave staged or untracked transaction
-              # data for the next writer to admit. This checkout is disposable.
-              sync_checkout(ref_value) if File.exist?(File.join(checkout_dir, ".git"))
+              # Ordinary mutation rollback is unchanged. Initialization must
+              # not adopt/reset a foreign disposable checkout on refusal.
+              sync_checkout(ref_value) if cleanup_on_failure && File.exist?(File.join(checkout_dir, ".git"))
               raise
             ensure
               lock.flock(File::LOCK_UN)
             end
+          ensure
+            lock.close
           end
+        end
+
+        def initialization_lock!(owner_uid:, owner_gid:)
+          created = false
+          begin
+            file = File.open(lock_path, File::RDWR | File::CREAT | File::EXCL | File::NOFOLLOW, 0o600)
+            created = true
+          rescue Errno::EEXIST
+            file = File.open(lock_path, File::RDWR | File::NOFOLLOW)
+          end
+          if created
+            file.flush
+            file.fsync
+          end
+          info = file.stat
+          unless info.file? && info.nlink == 1 && info.size.zero? &&
+              [info.uid, info.gid, info.mode & 0o7777] == [owner_uid, owner_gid, 0o600]
+            raise AttemptErrors::EvidenceUnavailable, "canonical initialization lock protection differs"
+          end
+          file
+        rescue Exception
+          file&.close
+          raise
         end
 
         def ensure_checkout!

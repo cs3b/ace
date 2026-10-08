@@ -10,6 +10,129 @@ module Ace
     class EvidenceJournalTest < AceAssignTestCase
       REF = "refs/ace/execution"
 
+      def test_canonical_initialization_refuses_existing_lock_mode_and_symlink_without_repair
+        with_temp_cache do |root|
+          repo = File.join(root, "repo"); init_repo(repo)
+          co = File.join(root, "co"); FileUtils.mkdir_p(co)
+          lock = File.join(co, ".evidence.lock")
+          File.write(lock, ""); File.chmod(0o644, lock)
+          journal = Molecules::EvidenceJournal.new(repo_root: repo, ref: REF, checkout_root: co)
+          assert_raises(AttemptErrors::EvidenceUnavailable) do
+            journal.initialize_canonical!(owner_uid: Process.uid, owner_gid: Process.gid, owner_groups: Process.groups)
+          end
+          assert_equal 0o644, File.stat(lock).mode & 0o7777
+          assert_nil journal.ref_value
+          File.unlink(lock)
+          target = File.join(root, "outside"); File.write(target, "keep")
+          File.symlink(target, lock)
+          assert_raises(AttemptErrors::EvidenceUnavailable) do
+            journal.initialize_canonical!(owner_uid: Process.uid, owner_gid: Process.gid, owner_groups: Process.groups)
+          end
+          assert File.symlink?(lock)
+          assert_equal "keep", File.read(target)
+          assert_nil journal.ref_value
+        end
+      end
+
+      def test_canonical_initialization_refuses_wrong_identity_before_git_or_lock_effects
+        with_temp_cache do |root|
+          repo = File.join(root, "repo"); init_repo(repo)
+          co = File.join(root, "co")
+          journal = Molecules::EvidenceJournal.new(repo_root: repo, ref: REF, checkout_root: co)
+          assert_raises(AttemptErrors::EvidenceUnavailable) do
+            journal.initialize_canonical!(owner_uid: Process.uid + 1, owner_gid: Process.gid, owner_groups: Process.groups)
+          end
+          assert_nil journal.ref_value
+          refute File.exist?(co)
+          assert_raises(AttemptErrors::EvidenceUnavailable) do
+            journal.initialize_canonical!(owner_uid: Process.uid, owner_gid: Process.gid, owner_groups: Process.groups + [2**31])
+          end
+          refute File.exist?(co)
+        end
+      end
+
+      def test_canonical_initialization_seeds_once_and_preserves_existing_events
+        with_temp_cache do |root|
+          repo = File.join(root, "repo"); head = init_repo(repo)
+          journal = Molecules::EvidenceJournal.new(repo_root: repo, ref: REF, checkout_root: File.join(root, "co"))
+          seed = journal.initialize_canonical!(owner_uid: Process.uid, owner_gid: Process.gid, owner_groups: Process.groups)
+          assert_equal seed, journal.ref_value
+          assert_equal({}, journal.canonical_event_inventory!(commit: seed).fetch("events"))
+          assert_equal seed, journal.initialize_canonical!(owner_uid: Process.uid, owner_gid: Process.gid, owner_groups: Process.groups)
+          assert_equal head, git(repo, "rev-parse", "HEAD").strip
+          event = build_event(type: "intent", attempt_id: "attempt", payload: {"operation" => "implement"})
+          tip = journal.append(assignment_id: "assignment", attempt_id: "attempt", events: [event])
+          assert_equal tip, journal.initialize_canonical!(owner_uid: Process.uid, owner_gid: Process.gid, owner_groups: Process.groups)
+          assert_equal [event], journal.read_events("assignment")
+          assert_equal head, git(repo, "rev-parse", "HEAD").strip
+        end
+      end
+
+      def test_canonical_initialization_concurrent_absent_ref_uses_one_cas_winner
+        with_temp_cache do |root|
+          repo = File.join(root, "repo"); init_repo(repo)
+          journals = 2.times.map { |index| Molecules::EvidenceJournal.new(repo_root: repo, ref: REF, checkout_root: File.join(root, "co-#{index}")) }
+          ready = Queue.new; start = Queue.new
+          threads = journals.map { |journal| Thread.new { ready << true; start.pop; journal.initialize_canonical!(owner_uid: Process.uid, owner_gid: Process.gid, owner_groups: Process.groups) } }
+          2.times { ready.pop }; 2.times { start << true }
+          results = threads.map(&:value)
+          assert_equal 1, results.uniq.size
+          assert_equal results.first, journals.first.ref_value
+          assert_equal 1, git(repo, "rev-list", "--count", REF).strip.to_i
+        end
+      end
+
+      def test_canonical_initialization_refuses_foreign_history_checkout_and_malformed_ref
+        with_temp_cache do |root|
+          repo = File.join(root, "repo"); head = init_repo(repo)
+          co = File.join(root, "co")
+          journal = Molecules::EvidenceJournal.new(repo_root: repo, ref: REF, checkout_root: co)
+          FileUtils.mkdir_p(File.join(co, "journal")); File.write(File.join(co, "journal", "foreign"), "keep")
+          assert_raises(AttemptErrors::EvidenceUnavailable) { journal.initialize_canonical!(owner_uid: Process.uid, owner_gid: Process.gid, owner_groups: Process.groups) }
+          assert_nil journal.ref_value
+          assert_equal "keep", File.read(File.join(co, "journal", "foreign"))
+          git(File.join(co, "journal"), "init", "-b", "foreign")
+          git(repo, "update-ref", REF, head)
+          assert_raises(AttemptErrors::EvidenceUnavailable) { journal.initialize_canonical!(owner_uid: Process.uid, owner_gid: Process.gid, owner_groups: Process.groups) }
+          assert_equal head, journal.ref_value
+          assert_equal "keep", File.read(File.join(co, "journal", "foreign"))
+          malformed = Molecules::EvidenceJournal.new(repo_root: repo, ref: "refs/ace/../execution", checkout_root: co)
+          assert_raises(AttemptErrors::EvidenceUnavailable) { malformed.initialize_canonical!(owner_uid: Process.uid, owner_gid: Process.gid, owner_groups: Process.groups) }
+        end
+      end
+
+      def test_canonical_initialization_refuses_readonly_boundary_and_corrupt_events
+        with_temp_cache do |root|
+          repo = File.join(root, "repo"); init_repo(repo)
+          boundary = Object.new
+          %i[call blob_batch blob history_diff blob_sizes].each { |method| boundary.define_singleton_method(method) { |*| raise "read-only boundary must not execute" } }
+          readonly = Molecules::EvidenceJournal.new(repo_root: repo, ref: REF, checkout_root: File.join(root, "read"), read_boundary: boundary)
+          assert_raises(AttemptErrors::EvidenceUnavailable) { readonly.initialize_canonical!(owner_uid: Process.uid, owner_gid: Process.gid, owner_groups: Process.groups) }
+          journal = Molecules::EvidenceJournal.new(repo_root: repo, ref: REF, checkout_root: File.join(root, "co"))
+          seed = journal.initialize_canonical!(owner_uid: Process.uid, owner_gid: Process.gid, owner_groups: Process.groups)
+          event = build_event(type: "intent", attempt_id: "attempt", payload: {"operation" => "implement"})
+          tip = journal.append(assignment_id: "assignment", attempt_id: "attempt", events: [event])
+          checkout = File.join(root, "co", "journal")
+          path = Dir.glob(File.join(checkout, "execution", "assignment", "events", "*.json")).fetch(0)
+          File.write(path, "{}")
+          git(checkout, "add", "-A"); git(checkout, "commit", "-m", "corrupt")
+          corrupt = git(checkout, "rev-parse", "HEAD").strip
+          git(repo, "update-ref", REF, corrupt, tip)
+          assert_raises(AttemptErrors::EvidenceUnavailable) { journal.initialize_canonical!(owner_uid: Process.uid, owner_gid: Process.gid, owner_groups: Process.groups) }
+          assert_equal corrupt, journal.ref_value
+          assert journal.verify_commit!(seed)
+          git(repo, "update-ref", REF, tip, corrupt)
+          git(checkout, "reset", "--hard", tip)
+          File.write(File.join(checkout, "foreign.txt"), "unrecognized")
+          git(checkout, "add", "-A"); git(checkout, "commit", "-m", "foreign path")
+          foreign = git(checkout, "rev-parse", "HEAD").strip
+          git(repo, "update-ref", REF, foreign, tip)
+          assert_raises(AttemptErrors::EvidenceUnavailable) { journal.initialize_canonical!(owner_uid: Process.uid, owner_gid: Process.gid, owner_groups: Process.groups) }
+          assert_equal foreign, journal.ref_value
+          assert_equal "unrecognized", File.read(File.join(checkout, "foreign.txt"))
+        end
+      end
+
       def test_canonical_prefix_requires_retained_first_parent_membership_not_only_a_commit
         with_temp_cache do |cache_dir|
           repo = File.join(cache_dir, "repo")
