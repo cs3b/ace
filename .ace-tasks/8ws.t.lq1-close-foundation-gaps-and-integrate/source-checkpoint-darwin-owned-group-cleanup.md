@@ -19,3 +19,8 @@ Executed through source binstubs, package cwd; all handles terminal:
 - Excluded setup mistake0d4f5e36: repository-cwd require test_helper failure,0 tests. A later edit command used wrong cwd, changed nothing, then accidentally ran unchanged candidate1c8c4130 (27/148 PASS). This nondeterministic race pass does not supersede the retained aba failure or prove signal-once correction. No hidden cancellation or deadline changes.
 
 Commands: from ace-herdr, ../bin/ace-test test/fast/molecules/bounded_process_cleanup_test.rb test/fast/molecules/bounded_process_test.rb --timeout30; from ace-lab, ../bin/ace-test test/molecules/protected_service_handler_test.rb --timeout30 (actual argv used separate --timeout 30). No additional standalone native/process diagnostic was executed by author. Root supplied original minimal reproduction. No Linux/root/systemd/installed Lab probe or broad-suite claim. Independent source review and main verification remain required.
+# Independent root review
+
+Scoped APPROVE of b0532132b plus receipt correction d0a7169c0. Root inspected implementation, failed-signal versus successful-signal retention, pinned original child ownership, complete bounded group enumeration and refusal paths. Apple XNU proc_info.c proc_listpids enumerates allproc and zombproc; kern_sig.c killpg1 excludes SZOMB and can return EPERM for the remaining zombie group. The implementation accepts only the observed singleton owned exited leader, not arbitrary signal denial or general escaped-child confinement.
+
+Reviewer run: bounded_process_test.rb and bounded_process_cleanup_test.rb, 31 tests / 164 assertions PASS, herdr/bdfdd9d0-207a-4811-8c53-e017ef7de467. Integrated as 809241ea0 and a6fef9b51. Whole Lab acceptance remains open.
