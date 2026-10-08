@@ -1,4 +1,4 @@
-# Exact test selection — draft CLI contract
+# Exact test selection — CLI contract
 
 Given `test/fast/example_test.rb` with `test_alpha` declared at20, its body at21–24 and closing end at25:
 
@@ -7,4 +7,6 @@ Given `test/fast/example_test.rb` with `test_alpha` declared at20, its body at21
 - Combining a valid line20 with nonexistent line999 refuses the whole request before test execution. It does not run line20 alone.
 - An unqualified `bin/ace-test ace-example fast test/fast/example_test.rb` keeps ordinary whole-file behavior.
 
-These are behavioral examples against a controlled fixture, not current guarantees. Same-prefix and inherited methods are never implied by an explicit line selection.
+These behaviors are covered by controlled fixtures and public CLI checks in both execution modes. Same-prefix and inherited methods are never implied by an explicit line selection.
+
+Mixed whole-file and line selectors are explicitly refused before loading. Two selected files defining the same class/method identity also refuse. Repeated selectors for one identity execute once.
