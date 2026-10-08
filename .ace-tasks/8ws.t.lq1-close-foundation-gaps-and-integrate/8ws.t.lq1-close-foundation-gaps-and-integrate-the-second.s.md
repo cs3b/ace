@@ -23,7 +23,30 @@ This ACE integration tracker owns source sequencing and release evidence. **lab-
 
 Captain approved this ownership split on 2026-10-05. Earlier chronological checkpoints and their original claims are preserved in history/before-centralized-lab-acceptance-2026-10-05.md. The source and acceptance receipts linked there remain unchanged; the checklist below is the current dispatch view. No installation success is inferred from task completion.
 
-## Current handoff — 2026-10-07 integrated source
+## Current handoff — 2026-10-08 implementation integration
+
+The current ACE source is on `codex/protected-pr-integration`; Lab source is on
+`codex/lab-source-integration`. Neither branch is delivered to main or a current
+publication candidate. The exact joined commits, test reports, interrupted
+checks and remaining implementation are recorded in
+[source-integration-2026-10-08.md](source-integration-2026-10-08.md).
+
+- [x] Integrate protected PR/service operations, scoped publication and explicit project routing source.
+- [x] Integrate R2 canonical round/export/result consumption and R3 bounds/escalation source.
+- [x] Integrate physical cleanup, coldboot/network and static Codex composition source.
+- [x] Adopt public protected campaign handoff in canonical workflow instructions and integrate maintained delivery acceptance assets.
+- [ ] Finish actual original Codex startup/producer/client privilege and literal-input handoff; current source seams refuse without that attachment.
+- [ ] Repair the joined HITL LiveClient fixture against the current correlated Codex submission contract; full run `d74ff6d5` has five errors, not a pass.
+- [ ] Perform one independent final source review, fix findings and verify the affected simple unit/integration flows. Reconcile every remaining child criterion before closing tasks.
+- [ ] Deliver main and build fresh artifacts from that integrated revision; Captain publishes with OTP, then propagation proof and the single installed task/observation in gad.2.
+
+The source checkmarks above identify implemented integration slices. They do not
+close parent/child tasks or claim actual OS/native execution. The remaining
+local-source checklist below retains the previously delivered scope and gates;
+its older "implement" descriptions for qkb/R2/R3/qkc/vs3 are superseded by this
+current implementation handoff and its exact source checkpoint.
+
+## Retained earlier handoff — 2026-10-07 integrated source
 
 ACE `99b8cd2ac` is synchronized with origin and fg. Lab-config `627ef576`
 is synchronized with origin. These are source checkpoints, not a final release
