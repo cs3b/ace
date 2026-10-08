@@ -42,6 +42,27 @@ that session; this record retains the actionable result with the task.
 
 ## Integrated verification
 
+### Follow-up refusal and delivery review, 2026-10-08
+
+The coordinating reviewer independently inspected production and test changes in
+`041185661` and `246ed96fb`: APPROVE for these bounded fixes. Integrated as
+`0da2ea09d` and `ddf732e91`. Malformed installed JSON yields a value-free refusal;
+missing accepted review cannot claim a service. Delivery uses the fully qualified
+context owner and refuses every protected nonworker before local coordination.
+The changelog conflict retained both independently delivered entries.
+
+Executed on the integrated source: Lab service commands 7 tests/60 assertions
+(`lab/e141ca03-b4be-4faa-9977-a06df9a29cf6`); missing-review real service scenario
+1/19 (`git/f76775fb-2fdf-48a1-b341-9fe48a84eea0`); Delivery command controls 3/25
+(`assign/0c076ad6-cb7d-4c0f-959a-d7a02afef435`); complete public Lab request,
+canonical result and Delivery consumption 1/64 in 37.54 seconds
+(`git/5cdb94e4-dd9b-4283-9fc5-709ca7934cdc`). All passed. The Delivery command
+check ran before resolving a changelog-only cherry-pick conflict; its source was
+unchanged thereafter. The full composition ran at `ddf732e91`.
+
+Workflow adoption and the family gates above remain open; these controlled
+fixtures do not prove installed Lab or release readiness.
+
 At main `0c191d366`, Lab command/adapter/cleanup owner tests passed27/200 (`lab/842849fc-7ba5-42fd-a690-da3c49dd1acd`), Assign context passed7/47 (`assign/3f599c6d-8a4a-422c-a8fe-7bfb2bd5ecb7`), and actual public lost-claim response/status/exact replay passed1/67 in35.51s (`git/4d558680-5481-4a11-ab87-0185545cc515`). No source changed while these checks ran. Existing held-input evidence was retained when merging task documentation; changelog conflict resolution preserved both source entries.
 
 The separate cleanup runtime-bound repair `d0e5b52ea` was independently approved by `/root/wave_412` and integrated as `0c191d366`:64 selected unique paths with16,384 aggregate argv bytes including terminators. Actual Lab producer measured45 paths/10,091 argv bytes and503,317 entry bytes, within unchanged1MiB entry cap. This proves bounded source composition, not installed root execution or full physical cleanup.
