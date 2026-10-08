@@ -31,3 +31,5 @@ An intermediate inventory-only run `lab/87fc1a30-b0bb-4e8f-8d57-3f31b1ad1205` re
 Root APPROVED exact author commit `4545dacce3d5760d72f12733334a44c738525ad2` after source and test review. The retained raw record remains exact-commit and operation scoped; each terminal evidence callback runs fresh, failures evict the raw slot, callers cannot mutate retained data, and current-ref/admission/CAS checks remain unchanged. No findings for this bounded optimization.
 
 Directly inspected final uninstrumented controlled cleanup receipt `d32899be-1ddf-4187-9c9a-6fdd7e0b49b3`: 4 tests / 67 assertions, no failures/errors/skips. Integrated as `e843b65be`; main operation test file passed 12 tests / 98 assertions, receipt `89225bec-8d80-4ddf-8a11-3cb1b902e457`. No extra Lab profiling instrumentation was integrated. Remaining source and installed acceptance requirements are unchanged.
+
+Full Assign fast regression on fixed main `524f284a8` passed 951 tests / 3968 assertions, no failures/errors, in 132 seconds: `assign/19772d54-ddb2-4332-acf2-d8515e715e96`. No source changed during the run. This verifies broader journal consumers, not installed Lab acceptance.
