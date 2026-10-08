@@ -9,3 +9,6 @@ Executed controlled source gates: production observer plus workspace primitives 
 The existing parent-without-lifecycle-resource test now explicitly refuses native activation rather than claiming readiness without a protected workspace projection. It still proves unchanged parent-only observations and no service start.
 
 No native, privileged, installed, systemd or C compilation probes. Independent source review required before integration. Whole physical Installer adoption and whole task acceptance remain separate; this checkpoint does not turn EX into physical quiescence evidence.
+# Main integration review — 2026-10-08
+
+Root independently approved `3ce54f4e2` after inspecting original host lease acquisition, pre-start verification, uncertainty retention and same-binding sealed closed-proof release, including the actual observer-to-reader-to-flock fixture. Integrated as `818a4f64f`. Main applied source verification passed **43 tests / 214 assertions**, report `.ace-local/test/reports/assign/65c9eeaa-6ed5-4dc1-b6bb-ad6b5ec4988f/`; test execution preceded only resolution of the changelog conflict, with no subsequent source/test changes. Both existing and incoming changelog behavior were retained without duplicating the control registration entry. This is bounded source approval, not whole task or installed Lab acceptance.
