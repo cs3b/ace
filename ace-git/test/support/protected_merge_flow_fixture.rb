@@ -747,6 +747,47 @@ module ProtectedMergeFlowFixture
       @kernel.peer_identity = worker
       status_command = Ace::Lab::CLI::Commands::Service::Status.new
       status_command.instance_variable_set(:@protected_service, Ace::Lab::Organisms::ProtectedServiceRequest.new(context: context))
+      if @authority_unavailable
+        before_loss = @journal.ref_value
+        retained_claim = @journal.service_request("service-request")
+        retained_arguments = arguments.dup.freeze
+        @server.stop
+        assert @owner.join(10), "actual authority listener must terminate before unavailable probes"
+        @owner.value
+        refute File.socket?(@service.fetch("socket_path")), "fault removes the actual authority endpoint"
+        assert_empty reached, "only the original parked handler was admitted"
+        request_out, request_err = capture_io do
+          assert_raises(Ace::Support::Cli::Error) { registered_lab_call("service request", command, arguments) }
+        end
+        assert_empty request_err
+        assert_equal "protected_service_unavailable", JSON.parse(request_out).dig("error", "code")
+        unavailable_status = ["--request", "service-request", "--project", "project", "--assignment", "assignment",
+          "--attempt", @attempt, "--mapping", "mapping", "--scope", "010", "--candidate-head", @head,
+          "--candidate-generation", submission.fetch("candidate_generation").to_s,
+          "--input-digest", submission.fetch("input_digest"), "--target", submission.fetch("target").fetch("resource")]
+        status_refusal, status_error = capture_io do
+          assert_raises(Ace::Support::Cli::Error) { registered_lab_call("service status", status_command, unavailable_status) }
+        end
+        assert_empty status_error
+        assert_equal "protected_service_unavailable", JSON.parse(status_refusal).dig("error", "code")
+        delivery_out, delivery_err = capture_io do
+          assert_raises(Ace::Support::Cli::Error) do
+            Ace::Assign::CLI::Commands::Delivery.new(protected_context: context).call(assignment: "assignment", attempt: @attempt,
+              operation: "merge", mapping: "mapping", scope: "010", service_request: "service-request",
+              candidate_head: @head, candidate_generation: submission.fetch("candidate_generation"),
+              input_digest: submission.fetch("input_digest"), target: submission.fetch("target").fetch("resource"))
+          end
+        end
+        assert_empty delivery_out, "unavailable canonical authority cannot emit delivery success"
+        assert_empty delivery_err
+        assert_equal retained_arguments, arguments, "no selector or generation refresh on unavailable authority"
+        assert_equal before_loss, @journal.ref_value, "all unavailable public calls preserve canonical state"
+        assert_equal retained_claim, @journal.service_request("service-request"), "the exact admitted claim remains attributable"
+        assert_empty reached, "unavailable replay cannot admit another handler"
+        refute release.size.positive?, "no native/provider effect can escape the parked original handler"
+        start_service_server
+        @kernel.peer_identity = worker
+      end
       before_status = @journal.ref_value
       status_out, status_err = capture_io do
         registered_lab_call("service status", status_command, ["--request", "service-request", "--project", "project",

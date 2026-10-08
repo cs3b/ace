@@ -68,6 +68,12 @@ class ServiceMergeBoundaryTest < AceGitTestCase
     exercise_completion
   end
 
+  def test_public_lab_authority_loss_preserves_original_claim_without_another_effect
+    @public_lab = true
+    @authority_unavailable = true
+    exercise_completion
+  end
+
   def test_public_lab_lost_claim_reply_recovers_by_exact_canonical_status_and_replay
     @public_lab = true
     @lose_public_claim = true
