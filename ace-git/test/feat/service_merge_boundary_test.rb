@@ -35,6 +35,12 @@ class ServiceMergeBoundaryTest < AceGitTestCase
     exercise_completion
   end
 
+  def test_public_lab_lost_claim_reply_recovers_by_exact_canonical_status_and_replay
+    @public_lab = true
+    @lose_public_claim = true
+    exercise_completion
+  end
+
   def test_real_receiver_fixed_cli_neutral_merge_and_canonical_receipt_import
     exercise_completion
   end
@@ -358,10 +364,16 @@ class ServiceMergeBoundaryTest < AceGitTestCase
     listener_kernel.define_singleton_method(:capture) { |_| executor }
     listener_kernel.define_singleton_method(:live!) { |_| true }
     wire, real = Module.new, Ace::Runtime::Molecules::ProtectedSocket
+    lose_reply, lost_reply = @lose_public_claim, false
     wire.define_singleton_method(:deadline) { |*args| real.deadline(*args) }
     %i[read write connect].each do |method|
       wire.define_singleton_method(method) do |*args, **kwargs, &block|
         record.call("wire.#{method}.before")
+        if method == :write && lose_reply && !lost_reply && args[1].is_a?(Hash) && args[1]["type"] == "service_claim_accepted"
+          lost_reply = true
+          record.call("wire.claim_reply.suppressed")
+          raise Ace::Runtime::RuntimeUnavailableError, "controlled loss of authenticated canonical claim reply"
+        end
         result = real.public_send(method, *args, **kwargs, &block)
         record.call("wire.#{method}.after")
         result
@@ -381,8 +393,9 @@ class ServiceMergeBoundaryTest < AceGitTestCase
     wire.define_singleton_method(:root_path!) do |selected, directory:, owner:|
       raise "wrong controlled socket parent" unless selected == File.dirname(path) && directory && owner == executor.fetch("uid")
     end
-    listener = Ace::Lab::Organisms::ProtectedServiceListener.new(mapping_id: "mapping", service_id: "executor",
-      deployment: @deployment, kernel: listener_kernel, receiver: receiver_owner, wire: wire)
+    new_listener = -> { Ace::Lab::Organisms::ProtectedServiceListener.new(mapping_id: "mapping", service_id: "executor",
+      deployment: @deployment, kernel: listener_kernel, receiver: receiver_owner, wire: wire) }
+    listener = new_listener.call
     worker_kernel = Ace::Assign::EndcapResultOwnerFixture::Kernel.new
     worker_kernel.define_singleton_method(:capture) { |_| worker }
     worker_kernel.peer_identity = @service.slice("uid", "gid", "groups")
@@ -413,27 +426,72 @@ class ServiceMergeBoundaryTest < AceGitTestCase
     File.stub(:chown, controlled_chown) do
       owner = Thread.new { listener.serve }
       Timeout.timeout(5) { ready.pop }
+      arguments = ["--project", "project", "--assignment", "assignment", "--attempt", @attempt,
+        "--operation", "merge", "--authorization", "decision", "--request-id", "service-request", "--input", input_path,
+        "--mapping", "mapping", "--scope", "010", "--service", "executor", "--candidate-head", @head,
+        "--candidate-generation", submission.fetch("candidate_generation").to_s,
+        "--expected-generation", submission.fetch("expected_generation").to_s]
       record.call("cli.request.before")
       out, err = capture_io do
-        registered_lab_call("service request", command, ["--project", "project", "--assignment", "assignment", "--attempt", @attempt,
-          "--operation", "merge", "--authorization", "decision", "--request-id", "service-request", "--input", input_path,
-          "--mapping", "mapping", "--scope", "010", "--service", "executor", "--candidate-head", @head,
-          "--candidate-generation", submission.fetch("candidate_generation").to_s,
-          "--expected-generation", submission.fetch("expected_generation").to_s])
+        if lose_reply
+          error = assert_raises(Ace::Support::Cli::Error) { registered_lab_call("service request", command, arguments) }
+          assert_includes error.message, "service_claim_unconfirmed"
+        else
+          registered_lab_call("service request", command, arguments)
+        end
       end
       assert_empty err
       record.call("cli.request.after")
       claim = JSON.parse(out)
-      assert_equal "ok", claim.fetch("status")
-      assert_equal "service_claim_accepted", claim.dig("data", "claim", "type")
-      assert_equal "service-request", claim.dig("data", "selection", "request_id")
+      if lose_reply
+        assert lost_reply, "fault must follow validated original canonical claim"
+        assert_equal "error", claim.fetch("status")
+        assert_equal "service_claim_unconfirmed", claim.dig("error", "code")
+        assert_equal "service-request", claim.dig("error", "selection", "request_id")
+      else
+        assert_equal "ok", claim.fetch("status")
+        assert_equal "service_claim_accepted", claim.dig("data", "claim", "type")
+        assert_equal "service-request", claim.dig("data", "selection", "request_id")
+      end
       refute release.size.positive?, "public acknowledgement precedes provider execution release"
       Timeout.timeout(30) { reached.pop }
+      # Provider is parked, so no executor authority call overlaps this worker read.
+      @kernel.peer_identity = worker
+      status_command = Ace::Lab::CLI::Commands::Service::Status.new
+      status_command.instance_variable_set(:@protected_service, Ace::Lab::Organisms::ProtectedServiceRequest.new(context: context))
+      before_status = @journal.ref_value
+      status_out, status_err = capture_io do
+        registered_lab_call("service status", status_command, ["--request", "service-request", "--project", "project",
+          "--assignment", "assignment", "--attempt", @attempt, "--mapping", "mapping", "--scope", "010", "--candidate-head", @head,
+          "--candidate-generation", submission.fetch("candidate_generation").to_s,
+          "--input-digest", submission.fetch("input_digest"), "--target", submission.fetch("target").fetch("resource")])
+      end
+      assert_empty status_err
+      assert_equal "uncertain", JSON.parse(status_out).dig("data", "state")
+      assert_equal before_status, @journal.ref_value, "pending/lost-reply observation cannot write or restart"
+      @kernel.peer_identity = executor
       listener.stop
       release << true
       assert owner.join(30), "owned receiver must finish after admitted provider"
       owner.value
-      Timeout.timeout(1) { completed.pop }
+      result = Timeout.timeout(1) { completed.pop }
+      before_replay = @journal.ref_value
+      @kernel.peer_identity = worker
+      listener = new_listener.call
+      ready.clear
+      owner = Thread.new { listener.serve }
+      Timeout.timeout(5) { ready.pop }
+      replay_out, replay_err = capture_io { registered_lab_call("service request", command, arguments) }
+      assert_empty replay_err
+      replay_claim = JSON.parse(replay_out).fetch("data").fetch("claim")
+      assert_equal "service_claim_accepted", replay_claim.fetch("type")
+      assert replay_claim.fetch("data").fetch("replayed")
+      assert_equal "succeeded", replay_claim.fetch("data").fetch("state")
+      listener.stop
+      assert owner.join(30)
+      owner.value
+      assert_equal before_replay, @journal.ref_value, "identical public invocation preserves canonical completion"
+      result
     end
   ensure
     release << true if release
@@ -442,7 +500,7 @@ class ServiceMergeBoundaryTest < AceGitTestCase
     directory = File.expand_path("../../../.ace-local/task/8wr.t.qkb.1", __dir__)
     FileUtils.mkdir_p(directory)
     File.write(File.join(directory, "public-service-wire-phases.json"), JSON.pretty_generate({
-      "method" => "test_public_lab_request_and_status_use_original_receiver_and_canonical_result", "phases" => diagnostic}))
+      "method" => name, "phases" => diagnostic}))
   end
 
   # Same controlled gate/release handshake as PreparedWorkFetchTest#issue_original;

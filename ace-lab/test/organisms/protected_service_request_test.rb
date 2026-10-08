@@ -78,6 +78,32 @@ class ProtectedServiceRequestTest < Minitest::Test
     assert_empty @calls
   end
 
+  def test_status_refuses_mutation_options_before_original_fetch_and_binds_pending_digest
+    %i[input authorization dry_run expected_generation service unknown].each do |key|
+      assert_raises(ArgumentError) { @adapter.status(request_id: "request", **{key => true}) }
+      assert_empty @calls
+    end
+    data = {"assignment_id" => "assignment", "attempt_id" => "attempt", "request_id" => "request",
+      "candidate_generation" => 1, "project_id" => "project", "candidate_head" => "a" * 40,
+      "target" => @bytes.fetch("target"), "operation" => "merge", "generation" => 3,
+      "input_digest" => "c" * 64, "journal_commit" => "b" * 40, "state" => "uncertain"}
+    calls = @calls
+    client = Object.new
+    client.define_singleton_method(:call) do |name, binding|
+      calls << [name, binding]
+      Struct.new(:data).new(data)
+    end
+    @context.define_singleton_method(:client) { |**_| client }
+    options = @options.slice(:mapping, :scope, :candidate_head, :candidate_generation).merge(project: "project",
+      assignment: "assignment", attempt: "attempt", input_digest: "c" * 64, target: @bytes.fetch("target").fetch("resource"))
+    result = @adapter.status(request_id: "request", **options)
+    assert_equal "uncertain", result.dig("data", "state")
+    assert_equal ["service_status"], @calls.select { |item| item.first.is_a?(String) }.map(&:first)
+    assert_raises(Ace::Assign::AttemptErrors::ReceiptRejected) do
+      @adapter.status(request_id: "request", **options.merge(input_digest: "d" * 64))
+    end
+  end
+
   def test_unconfirmed_claim_is_error_not_success_or_retry
     @reply.replace({"version" => 1, "type" => "service_claim_unconfirmed", "required_action" => "inspect_canonical_service_status"})
     result = request
