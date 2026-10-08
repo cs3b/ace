@@ -90,6 +90,7 @@ module Ace
           # Execution mode options
           option :parallel, type: :boolean, desc: "Run tests in parallel (experimental)"
           option :per_file, type: :boolean, desc: "Execute each test file separately (slower, for debugging)"
+          # File-line selectors resolve exact declarations; mixed whole-file/line input refuses.
           option :direct, type: :boolean, desc: "Force in-process execution (faster, less isolation)"
           option :subprocess, type: :boolean, desc: "Force subprocess execution (slower, full isolation)"
           option :run_in_sequence, type: :boolean, aliases: %w[--ris], desc: "Run test targets sequentially (default)"

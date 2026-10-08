@@ -33,39 +33,28 @@ module Ace
 
           # Add the test files
           if files.is_a?(Array)
-            # Check if any file has a line number (file:line format)
-            has_line_numbers = files.any? { |f| f.match?(/:\d+$/) }
+            # Build a Ruby script that requires each file and fails on LoadError
+            requires_script = files.map do |f|
+              # Add ./ prefix if it's a relative path without one
+              path = f.start_with?("/", "./") ? f : "./#{f}"
+              # Escape the path for shell safety
+              escaped_path = path.gsub("'", "\\\\'")
+              "begin; require '#{escaped_path}'; rescue LoadError => e; STDERR.puts \\\"Failed to load #{escaped_path}: \\\" + e.message; exit(1); end"
+            end.join("; ")
 
-            if has_line_numbers
-              # For files with line numbers, resolve to test names and filter
-              raise LineNumberResolver::SelectionError, "Unresolved selection"
-            else
-              # Build a Ruby script that requires each file and fails on LoadError
-              requires_script = files.map do |f|
-                # Add ./ prefix if it's a relative path without one
-                path = f.start_with?("/", "./") ? f : "./#{f}"
-                # Escape the path for shell safety
-                escaped_path = path.gsub("'", "\\\\'")
-                "begin; require '#{escaped_path}'; rescue LoadError => e; STDERR.puts \\\"Failed to load #{escaped_path}: \\\" + e.message; exit(1); end"
-              end.join("; ")
+            # Build the script parts
+            script_parts = []
+            # Inject ARGV with --verbose for Minitest if profile is requested
+            # (Ruby's --verbose flag only sets $VERBOSE, doesn't enable Minitest verbose mode)
+            script_parts << "ARGV.replace(['--verbose'])" if options[:profile]
+            script_parts << requires_script
+            script_parts << "exit_code = Minitest.autorun"
+            script_parts << "exit(exit_code)"
 
-              # Build the script parts
-              script_parts = []
-              # Inject ARGV with --verbose for Minitest if profile is requested
-              # (Ruby's --verbose flag only sets $VERBOSE, doesn't enable Minitest verbose mode)
-              script_parts << "ARGV.replace(['--verbose'])" if options[:profile]
-              script_parts << requires_script
-              script_parts << "exit_code = Minitest.autorun"
-              script_parts << "exit(exit_code)"
-
-              # Execute the requires and then run Minitest
-              cmd_parts << "-e"
-              # Use double quotes to wrap the entire script
-              cmd_parts << "\"#{script_parts.join("; ")}\""
-            end
-          elsif files.match?(/:\d+$/)
-            # Check if single file has line number
-            raise LineNumberResolver::SelectionError, "Unresolved selection"
+            # Execute the requires and then run Minitest
+            cmd_parts << "-e"
+            # Use double quotes to wrap the entire script
+            cmd_parts << "\"#{script_parts.join("; ")}\""
           elsif options[:profile]
             # Single file without line number
             cmd_parts << "-e"
@@ -125,7 +114,8 @@ module Ace
               pattern = verifier.verify_loaded!(plan)
               args = ["--name", "/" + pattern + "/"]
               args << "--verbose" if #{!!options[:profile]}
-              success = Minitest.run(args)
+              Minitest::Reporters.use! Minitest::Reporters::DefaultReporter.new
+              success = verifier.verify_execution!(plan) { Minitest.run(args) }
               STDOUT.flush
               STDERR.flush
               exit!(success ? 0 : 1)

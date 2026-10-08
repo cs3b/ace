@@ -107,6 +107,27 @@ class ExactSelectionVerifierTest < Minitest::Test
     end
   end
 
+  def test_subprocess_refuses_selection_that_runtime_does_not_execute
+    require "ace/test_runner/atoms/command_builder"
+    Dir.mktmpdir("selection-no-execution") do |directory|
+      file = File.join(directory, "selected.rb")
+      marker = File.join(directory, "executed")
+      File.write(file, <<~SOURCE)
+        require "minitest/autorun"
+        class UnexecutedSelectedFixture < Minitest::Test
+          def self.run(*); end
+          def test_one; File.write(#{marker.inspect}, "executed"); end
+        end
+      SOURCE
+      builder = Ace::TestRunner::Atoms::CommandBuilder.new(ruby_command: RbConfig.ruby, bundler: false)
+      command = builder.build_test_command(["#{file}:4"])
+      _output, error, status = Open3.capture3(*command)
+      refute status.success?
+      assert_includes error, "Executed test identities do not match"
+      refute File.exist?(marker)
+    end
+  end
+
   def test_loaded_identity_source_and_anchored_filter
     Dir.mktmpdir("selection-verification") do |directory|
       file = File.join(directory, "selected.rb")

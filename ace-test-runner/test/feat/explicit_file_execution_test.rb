@@ -2,8 +2,41 @@
 
 require_relative "../test_helper"
 require "ace/test_runner/organisms/test_orchestrator"
+require "open3"
+require "rbconfig"
+require "tmpdir"
 
 class ExplicitFileExecutionTest < Minitest::Test
+  def test_public_line_selection_and_atomic_refusal_in_both_modes
+    Dir.mktmpdir("public-selection") do |directory|
+      file = File.join(directory, "selected_test.rb")
+      marker = File.join(directory, "executed")
+      loaded = File.join(directory, "loaded")
+      File.write(file, <<~SOURCE)
+        require "minitest/autorun"
+        File.write(#{loaded.inspect}, "loaded")
+        class PublicSelectedFixture < Minitest::Test
+          def test_one; File.open(#{marker.inspect}, "a") { |io| io.puts("one") }; assert true; end
+          def test_one_more; File.open(#{marker.inspect}, "a") { |io| io.puts("other") }; end
+        end
+      SOURCE
+      executable = File.expand_path("../../../bin/ace-test", __dir__)
+      %w[--direct --subprocess].each do |mode|
+        output, error, status = Open3.capture3(RbConfig.ruby, executable, mode, "#{file}:4", "#{file}:4", "--no-save")
+        assert status.success?, "#{mode}: #{output}\n#{error}"
+        assert_equal ["one"], File.readlines(marker, chomp: true)
+        File.unlink(marker)
+        File.unlink(loaded)
+        [["#{file}:4", "#{file}:2"], [file, "#{file}:4"], ["#{file}:0"]].each do |selectors|
+          output, error, status = Open3.capture3(RbConfig.ruby, executable, mode, *selectors, "--no-save")
+          refute status.success?, "#{mode}: #{output}\n#{error}"
+          refute File.exist?(marker)
+          refute File.exist?(loaded)
+        end
+      end
+    end
+  end
+
   def test_orchestrator_bypasses_targets_when_explicit_files_provided
     # Create configuration with both targets and explicit files
     options = {

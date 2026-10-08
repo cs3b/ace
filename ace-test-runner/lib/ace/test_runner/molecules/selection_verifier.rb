@@ -1,12 +1,45 @@
 # frozen_string_literal: true
 require "digest"
+require "minitest/reporters"
 require_relative "../atoms/line_number_resolver"
 
 module Ace
   module TestRunner
     module Molecules
       module SelectionVerifier
+        class ExecutionCollector < Minitest::Reporters::BaseReporter
+          attr_reader :identities
+
+          def initialize
+            super
+            @identities = []
+            @mutex = Mutex.new
+          end
+
+          def record(result)
+            @mutex.synchronize do
+              super
+              @identities << [result.class_name, result.name]
+            end
+          end
+        end
+
         module_function
+
+        def verify_execution!(plan)
+          previous = Minitest::Reporters.reporters
+          collector = ExecutionCollector.new
+          Minitest::Reporters.reporters = Array(previous) + [collector]
+          result = yield
+          expected = plan.identities.map { |identity| identity.values_at(:class_name, :name) }.sort
+          unless collector.identities.sort == expected
+            raise Atoms::LineNumberResolver::SelectionError,
+              "Executed test identities do not match selected identities"
+          end
+          result
+        ensure
+          Minitest::Reporters.reporters = previous
+        end
 
         def verify_sources!(plan)
           plan.source_digests.each do |file, digest|

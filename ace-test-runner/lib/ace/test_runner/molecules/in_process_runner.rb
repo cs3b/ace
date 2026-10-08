@@ -116,12 +116,17 @@ module Ace
 
             # Run Minitest with captured output
             # Suppress Minitest's own output by using null reporter
-            exit_code = if @timeout
-              Timeout.timeout(@timeout, ExecutionTimeout) do
+            execution = lambda do
+              if @timeout
+                Timeout.timeout(@timeout, ExecutionTimeout) { run_minitest_silent(options) }
+              else
                 run_minitest_silent(options)
               end
+            end
+            exit_code = if selection.qualified?
+              SelectionVerifier.verify_execution!(selection, &execution)
             else
-              run_minitest_silent(options)
+              execution.call
             end
 
             success = exit_code == true || exit_code == 0
