@@ -202,7 +202,7 @@ module Ace
           # Environment for the installed CLI: only the variables the process
           # needs — inherited workspace/bundler state is dropped entirely
           # (review R5). ACE dependencies come from the isolated GEM_HOME
-          # (workspace-built); the system gem dir remains fallback for
+          # (workspace-built); resolved third-party gem directories remain fallback for
           # third-party gems only (dry-cli etc.). HOME points at the fresh
           # project. There is deliberately no caller-controllable grants
           # override (review round 5, F1).
@@ -227,11 +227,13 @@ module Ace
           end
 
           def fallback_gem_dir
-            @fallback_gem_dir ||= [Gem.default_dir, Gem.user_dir].compact.find do |dir|
-              Dir.exist?(File.join(dir, "gems"))
-            end
-            flunk("no system gem dir found for third-party dependency fallback") unless @fallback_gem_dir
-
+            # Third-party dependencies may be installed in the checkout's
+            # Bundler directory rather than Ruby's global gem directory.
+            @fallback_gem_dir ||= ([Gem.default_dir, Gem.user_dir] +
+              Gem.loaded_specs.values.reject { |spec| spec.name.start_with?("ace-") }.map(&:base_dir))
+              .compact.uniq.select { |dir| Dir.exist?(File.join(dir, "gems")) }
+              .join(File::PATH_SEPARATOR)
+            flunk("no installed third-party dependency directory found") if @fallback_gem_dir.empty?
             @fallback_gem_dir
           end
 
