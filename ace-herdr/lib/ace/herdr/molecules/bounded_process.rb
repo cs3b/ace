@@ -25,6 +25,7 @@ module Ace
         end
 
         CLEANUP_TIMEOUT = 1.0
+        DARWIN_GROUP_PID_LIMIT = 4096
 
         # No detached waiter may reap this leader before its owned group is
         # signalled: the unreaped child pins its PID even after normal exit.
@@ -33,11 +34,20 @@ module Ace
 
           def initialize(pid = nil)
             @pid, @status, @owned = pid, nil, !pid.nil?
+            @group_signalled = false
           end
 
           def start!(command, options)
+            raise PostLaunchError, "original child handle cannot be replaced" if started?
             @pid = Process.spawn(*command, **options)
             @owned = true
+          end
+
+          def group_signalled? = @group_signalled
+
+          def group_signalled!
+            raise PostLaunchError, "original child ownership is unavailable" unless alive?
+            @group_signalled = true
           end
 
           def started?
@@ -271,9 +281,45 @@ module Ace
 
         def kill_group(waiter)
           return unless waiter.alive?
+          return if waiter.is_a?(OwnedChild) && waiter.group_signalled?
           Process.kill("KILL", -waiter.pid)
+          waiter.group_signalled! if waiter.is_a?(OwnedChild)
         rescue Errno::ESRCH
           nil
+        rescue Errno::EPERM
+          # XNU killpg1 excludes SZOMB members and can return EPERM for
+          # the owned zombie alone. Genuine permission failures still fail:
+          # prove the complete group contains only our unreaped child.
+          raise unless darwin_singleton_exited_group?(waiter)
+        end
+
+        def darwin_singleton_exited_group?(waiter)
+          return false unless darwin_platform? && waiter.is_a?(OwnedChild) &&
+            waiter.alive? && waiter.exited?
+          return false unless darwin_group_pids(waiter.pid) == [waiter.pid]
+          waiter.alive? && waiter.exited? && waiter.alive?
+        rescue SystemCallError, IOError, Fiddle::DLError, PostLaunchError
+          false
+        end
+
+        def darwin_platform? = RUBY_PLATFORM.include?("darwin")
+
+        # libproc enumerates allproc AND zombproc under the kernel process
+        # list lock. A full buffer is potentially truncated, never proof.
+        # This observes only the owned group, not children escaping it.
+        def darwin_group_pids(pid)
+          library = Fiddle.dlopen("/usr/lib/libproc.dylib")
+          function = Fiddle::Function.new(library["proc_listpids"],
+            [Fiddle::TYPE_INT, Fiddle::TYPE_INT, Fiddle::TYPE_VOIDP, Fiddle::TYPE_INT], Fiddle::TYPE_INT)
+          capacity = DARWIN_GROUP_PID_LIMIT * Fiddle::SIZEOF_INT
+          buffer = Fiddle::Pointer.malloc(capacity, Fiddle::RUBY_FREE)
+          buffer[0, capacity] = "\0" * capacity
+          # PROC_PGRP_ONLY=2, from XNU bsd/sys/proc_info.h.
+          size = function.call(2, pid, buffer, capacity)
+          return nil unless size.positive? && size < capacity && (size % Fiddle::SIZEOF_INT).zero?
+          pids = buffer[0, size].unpack("i!*")
+          return nil unless pids.all?(&:positive?) && pids.uniq == pids
+          pids
         end
       end
     end

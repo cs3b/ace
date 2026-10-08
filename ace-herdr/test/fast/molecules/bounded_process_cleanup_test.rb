@@ -7,6 +7,175 @@ module Ace
   module Herdr
     module Molecules
       class BoundedProcessCleanupTest < Minitest::Test
+        def test_owned_child_cannot_replace_original_identity_after_signal
+          child = BoundedProcess::OwnedChild.new(123)
+          Process.stub(:kill, 1) { BoundedProcess.kill_group(child) }
+          Process.stub(:spawn, ->(*) { flunk "original child cannot be replaced" }) do
+            assert_raises(BoundedProcess::PostLaunchError) { child.start!(["replacement"], {}) }
+          end
+          assert_equal 123, child.pid
+          assert child.alive?
+          assert child.group_signalled?
+        end
+
+        def test_failed_signal_is_not_retained_and_success_belongs_only_to_original_child
+          original = BoundedProcess::OwnedChild.new(123)
+          fresh = BoundedProcess::OwnedChild.new(456)
+          signals = []
+          failed = true
+          BoundedProcess.stub(:darwin_platform?, false) do
+            Process.stub(:kill, ->(*args) { signals << args; raise Errno::EPERM if failed; 1 }) do
+              assert_raises(Errno::EPERM) { BoundedProcess.kill_group(original) }
+              refute original.group_signalled?
+              failed = false
+              BoundedProcess.kill_group(original)
+              BoundedProcess.kill_group(original)
+              BoundedProcess.kill_group(fresh)
+            end
+          end
+          assert_equal [["KILL", -123], ["KILL", -123], ["KILL", -456]], signals
+          assert original.group_signalled?
+          assert fresh.group_signalled?
+        end
+
+        def test_successful_timeout_signal_does_not_upgrade_timeout_outcome
+          child = BoundedProcess::OwnedChild.new
+          signals = []
+          Process.stub(:spawn, 123) do
+            BoundedProcess::OwnedChild.stub(:new, child) do
+              Process.stub(:kill, ->(*args) { signals << args; 1 }) do
+                Process.stub(:waitpid2, [123, :status]) do
+                  BoundedProcess.stub(:run_loop, ->(*args, **) {
+                    BoundedProcess.kill_group(args.fetch(3))
+                    raise Timeout::Error, "original execution deadline"
+                  }) do
+                    error = assert_raises(Timeout::Error) { BoundedProcess.call(["controlled"], timeout_s: 1) }
+                    assert_equal "original execution deadline", error.message
+                  end
+                end
+              end
+            end
+          end
+          assert_equal [["KILL", -123]], signals
+          refute child.alive?
+        end
+
+        def test_successful_group_signal_is_not_repeated_before_owned_reaping
+          child = BoundedProcess::OwnedChild.new(123)
+          signals = []
+          Process.stub(:kill, ->(*args) { signals << args; 1 }) do
+            BoundedProcess.kill_group(child)
+            Process.stub(:waitpid2, ->(*) { [123, :status] }) do
+              BoundedProcess.cleanup_child!(child)
+            end
+          end
+          assert_equal [["KILL", -123]], signals
+          refute child.alive?
+          assert_equal :status, child.value
+        end
+
+        def test_darwin_eperm_accepts_only_owned_unreaped_singleton_between_exit_checks
+          child = BoundedProcess::OwnedChild.new(123)
+          events = []
+          BoundedProcess.stub(:darwin_platform?, true) do
+            BoundedProcess.stub(:nonreaping_exit?, ->(pid) { events << [:exit, pid]; true }) do
+              BoundedProcess.stub(:darwin_group_pids, ->(pid) { events << [:group, pid]; [123] }) do
+                Process.stub(:kill, ->(*args) { events << [:signal, args]; raise Errno::EPERM }) do
+                  BoundedProcess.kill_group(child)
+                end
+              end
+            end
+          end
+          assert_equal [[:signal, ["KILL", -123]], [:exit, 123], [:group, 123], [:exit, 123]], events
+          assert child.alive?, "singleton proof must not reap or detach the pinned child"
+        end
+
+        def test_darwin_eperm_preserves_denial_for_incomplete_or_extra_group_members
+          [nil, [], [456], [123, 456], [123, 123]].each do |members|
+            child = BoundedProcess::OwnedChild.new(123)
+            original = Errno::EPERM.new("original denial")
+            BoundedProcess.stub(:darwin_platform?, true) do
+              BoundedProcess.stub(:nonreaping_exit?, true) do
+                BoundedProcess.stub(:darwin_group_pids, members) do
+                  Process.stub(:kill, ->(*) { raise original }) do
+                    assert_same original, assert_raises(Errno::EPERM) { BoundedProcess.kill_group(child) }
+                  end
+                end
+              end
+            end
+            assert child.alive?
+          end
+        end
+
+        def test_darwin_eperm_requires_both_exit_checks_and_original_ownership
+          [[false], [true, false], [true, :lost]].each do |observations|
+            child = BoundedProcess::OwnedChild.new(123)
+            exits = observations.dup
+            BoundedProcess.stub(:darwin_platform?, true) do
+              BoundedProcess.stub(:nonreaping_exit?, ->(*) { value = exits.shift; raise Errno::ECHILD if value == :lost; value }) do
+                BoundedProcess.stub(:darwin_group_pids, [123]) do
+                  Process.stub(:kill, ->(*) { raise Errno::EPERM }) do
+                    assert_raises(Errno::EPERM) { BoundedProcess.kill_group(child) }
+                  end
+                end
+              end
+            end
+            assert_equal observations.last != :lost, child.alive?
+          end
+          child = BoundedProcess::OwnedChild.new(123)
+          BoundedProcess.stub(:darwin_platform?, false) do
+            BoundedProcess.stub(:darwin_group_pids, ->(*) { flunk "unsupported platform must not enumerate" }) do
+              Process.stub(:kill, ->(*) { raise Errno::EPERM }) do
+                assert_raises(Errno::EPERM) { BoundedProcess.kill_group(child) }
+              end
+            end
+          end
+        end
+
+        def test_darwin_eperm_group_observation_error_remains_original_denial
+          [Errno::EPERM, IOError, Fiddle::DLError].each do |error_class|
+            child = BoundedProcess::OwnedChild.new(123)
+            original = Errno::EPERM.new("signal denial")
+            BoundedProcess.stub(:darwin_platform?, true) do
+              BoundedProcess.stub(:nonreaping_exit?, true) do
+                BoundedProcess.stub(:darwin_group_pids, ->(*) { raise error_class, "snapshot unavailable" }) do
+                  Process.stub(:kill, ->(*) { raise original }) do
+                    assert_same original, assert_raises(Errno::EPERM) { BoundedProcess.kill_group(child) }
+                  end
+                end
+              end
+            end
+          end
+        end
+
+        def test_darwin_group_snapshot_uses_bounded_complete_native_list_including_zombies
+          library = Object.new
+          library.define_singleton_method(:[]) { |name| raise "wrong symbol" unless name == "proc_listpids"; 123 }
+          capacity = BoundedProcess::DARWIN_GROUP_PID_LIMIT * Fiddle::SIZEOF_INT
+          response = [456].pack("i!*")
+          size = response.bytesize
+          native = Object.new
+          native.define_singleton_method(:call) do |kind, pid, buffer, limit|
+            raise "wrong group or bound" unless [kind, pid, limit] == [2, 456, capacity]
+            buffer[0, response.bytesize] = response
+            size
+          end
+          Fiddle.stub(:dlopen, ->(path) { assert_equal "/usr/lib/libproc.dylib", path; library }) do
+            Fiddle::Function.stub(:new, ->(*) { native }) do
+              assert_equal [456], BoundedProcess.darwin_group_pids(456)
+              [0, -1, capacity, capacity + 4, 3].each do |invalid|
+                size = invalid
+                assert_nil BoundedProcess.darwin_group_pids(456)
+              end
+              [[0], [-1], [456, 456]].each do |invalid|
+                response = invalid.pack("i!*")
+                size = response.bytesize
+                assert_nil BoundedProcess.darwin_group_pids(456)
+              end
+            end
+          end
+        end
+
         def test_cleanup_signal_failure_retains_exact_system_error_cause
           original = Errno::EPERM.new("controlled signal")
           original.set_backtrace(["controlled_signal.rb:12"])

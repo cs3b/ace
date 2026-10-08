@@ -23,6 +23,14 @@ module Ace
           refute result.oversized
         end
 
+        def test_clean_exit_with_group_cleanup_returns_original_status
+          result = BoundedProcess.call(["/bin/sh", "-c", "printf exact; exit 0"],
+            timeout_s: 5, cleanup_group: true)
+          assert_equal "exact", result.stdout
+          assert_predicate result.status, :success?
+          refute result.oversized
+        end
+
         def test_stdin_payload_reaches_the_child
           result = BoundedProcess.call(["/bin/cat"], stdin_data: "payload-bytes", timeout_s: 5)
 
