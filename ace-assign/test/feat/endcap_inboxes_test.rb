@@ -84,6 +84,7 @@ module Ace
           result = @context_completion.original!(**params.reject { |key, _| key == "mapping_id" }.transform_keys(&:to_sym))
           assert_equal child, result.fetch("process_binding")
           assert_equal guard, result.fetch("guarded_origin")
+          assert_equal @map.fetch("native").slice("socket_path", "version"), result.fetch("native_channel")
           refute result.fetch("registered")
           refute result.key?("agent_session")
           assert_operator JSON.generate(events.find { |event| event["type"] == "scope_native_bound" }.fetch("payload")).bytesize, :>, 16_384
@@ -108,7 +109,35 @@ module Ace
         end
       end
 
-      def fixture(child: false, inbox: true, direct: false, original_terminal: "terminal", resources: nil)
+      def test_original_channel_refuses_inconsistent_accepted_map_without_native_effect
+        changes = [
+          {"worker_uid" => 13003}, {"worker_gid" => 13003}, {"worker_groups" => [13003]},
+          {"native" => {"socket_path" => "/fixed/native.sock", "version" => "0.9.3", "protocol" => 22, "workspace_id" => "w2"}},
+          {"native" => {"socket_path" => "/fixed/native.sock", "version" => "old", "protocol" => 22, "workspace_id" => "w1"}},
+          {"native" => {"socket_path" => "relative", "version" => "0.9.3", "protocol" => 22, "workspace_id" => "w1"}}
+        ]
+        changes.each do |change|
+          fixture(child: true, inbox: false, original_terminal: "term_aa", original_map_override: change) do
+            @context["owner_credentials"] = @context_peer.slice("uid", "gid", "groups")
+            child = events.find { |event| event["type"] == "scope_child_bound" }.dig("payload", "original_process_binding")
+            guard = {"terminal_id" => child.fetch("terminal_id"), "runtime_incarnation" => BOOT, "child" => child.fetch("process_identity")}
+            mutate("record_launch", "record-original", 5, {data: @params.merge("process_binding" => child, "guarded_origin" => guard)})
+            query = Authority::InboxContextOriginal.new(deployment: @deployment, history: @history,
+              authority_id: "authority", journals: {"project" => @journal}, kernel: @kernel)
+            params = @params.merge("event_id" => "event", "inbox_context_id" => "context", "purpose" => "enqueue",
+              "payload_sha256" => Digest::SHA256.hexdigest("message"), "receipt_key_sha256" => Digest::SHA256.hexdigest(@key.public_to_der))
+            before = @journal.ref_value
+            error = assert_raises(AttemptErrors::EvidenceUnavailable) do
+              query.dispatch(request: {"version" => 1, "operation" => "inbox_context_original", "mutation_id" => nil,
+                "project_id" => "project", "params" => params}, peer: @context_peer, role: :context_owner)
+            end
+            assert_equal "original inbox native channel differs", error.message
+            assert_equal before, @journal.ref_value
+          end
+        end
+      end
+
+      def fixture(child: false, inbox: true, direct: false, original_terminal: "terminal", resources: nil, original_map_override: nil)
         @direct_fixture = direct
         child = true if direct
         original_terminal = "term_aa" if direct && original_terminal == "terminal"
@@ -122,7 +151,10 @@ module Ace
           @peer = process(82, 13004)
           @launcher = process(81, 13002)
           server = process(90, 13001)
-          @map = {"project_id" => "project", "authority_id" => "authority", "launcher_uid" => 13002, "native" => {}, "execution_scope" => {"slot_id" => "slot"}}
+          @map = {"project_id" => "project", "authority_id" => "authority", "launcher_uid" => 13002, "worker_uid" => 13001, "worker_gid" => 13001, "worker_groups" => [13001],
+            "native" => {"socket_path" => "/fixed/native.sock", "executable" => "/fixed/herdr", "executable_sha256" => "a" * 64,
+              "version" => "0.9.3", "protocol" => 22, "workspace_id" => "w1"}, "execution_scope" => {"slot_id" => "slot"}}
+          @map = @map.merge(original_map_override) if original_map_override
           key = OpenSSL::PKey::RSA.new(2048)
           @key = key
           key_path = File.join(root, "public.pem"); File.write(key_path, key.public_to_pem)

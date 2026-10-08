@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Validate the closed original Inbox native channel before returning its identity projection, refusing malformed socket paths or native versions.
+
 - Bind protected direct Inbox admission and retained DeliveryRecord to explicit original project, assignment, mapping and context; recheck canonical original identity outside then under the existing store exclusion before effects.
 
 - Read original canonical Inbox launch identity through the same bounded authenticated context authority client, refusing mismatched registration, guard and native association without authorizing dispatch.

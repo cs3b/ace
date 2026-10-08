@@ -76,7 +76,7 @@ module Ace
         end
 
         def verify_original!(data, params)
-          fields = %w[assignment_id attempt_id commit event_id guarded_origin inbox_context_id mapping_id native_binding original_binding_digest process_binding project_id purpose registered registration schema]
+          fields = %w[assignment_id attempt_id commit event_id guarded_origin inbox_context_id mapping_id native_binding native_channel original_binding_digest process_binding project_id purpose registered registration schema]
           registration = params.slice("event_id", "attempt_id", "payload_sha256", "receipt_key_sha256")
           unless data.is_a?(Hash) && data.keys.sort == fields && data["schema"] == "ace.assign.inbox-context-original/v1" &&
               data.slice("assignment_id", "attempt_id", "event_id", "inbox_context_id", "mapping_id", "purpose") ==
@@ -90,6 +90,13 @@ module Ace
           end
           process = data.fetch("process_binding")
           native = data.fetch("native_binding")
+          channel = data.fetch("native_channel")
+          path = channel["socket_path"] if channel.is_a?(Hash)
+          unless channel.is_a?(Hash) && channel.keys.sort == %w[socket_path version] && channel["version"] == "0.9.3" &&
+              path.is_a?(String) && path.valid_encoding? && path.bytesize.between?(1, 107) && path.start_with?("/") &&
+              !path.include?("\0") && File.expand_path(path) == path
+            raise ValidationError, "original context native channel differs"
+          end
           origin = process["native_origin"]
           unless process.keys.sort == %w[native_origin pane process_identity runtime session shell_identity terminal_id] &&
               native.keys.sort == %w[scope_binding_event_id scope_generation server_identity service_invocation_id socket_identity workspace_id] &&

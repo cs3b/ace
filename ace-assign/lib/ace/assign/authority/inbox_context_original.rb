@@ -79,11 +79,22 @@ module Ace
           digests = [guarded.fetch("binding_digest"), lineage.native_event.fetch("digest"), lineage.child_event.fetch("digest")] + bindings.map { |event| event.fetch("digest") }
           journal.event_commits!(assignment_id: params.fetch("assignment_id"), event_digests: digests, commit: commit)
           @kernel.live!(peer)
+          channel = original_map.fetch("native")
+          server = lineage.native_event.fetch("payload").fetch("server_identity")
+          path = channel.fetch("socket_path")
+          unless path.is_a?(String) && path.valid_encoding? && path.bytesize.between?(1, 107) &&
+              path.start_with?("/") && !path.include?("\0") && File.expand_path(path) == path &&
+              channel.fetch("version") == "0.9.3" && channel.fetch("protocol") == 22 &&
+              channel.fetch("workspace_id") == lineage.native_event.fetch("payload").fetch("workspace_id") &&
+              server.values_at("uid", "gid", "groups") == original_map.values_at("worker_uid", "worker_gid", "worker_groups")
+            raise AttemptErrors::EvidenceUnavailable, "original inbox native channel differs"
+          end
           data = params.slice("assignment_id", "attempt_id", "event_id", "inbox_context_id", "mapping_id", "purpose")
             .merge("schema" => "ace.assign.inbox-context-original/v1", "project_id" => map.fetch("project_id"),
               "commit" => commit, "registration" => registration, "registered" => bindings.one?,
               "original_binding_digest" => guarded.fetch("binding_digest"), "process_binding" => child,
-              "guarded_origin" => guarded.fetch("origin"), "native_binding" => lineage.native_event.fetch("payload").slice(*NATIVE_FIELDS))
+              "guarded_origin" => guarded.fetch("origin"), "native_binding" => lineage.native_event.fetch("payload").slice(*NATIVE_FIELDS),
+              "native_channel" => channel.slice("socket_path", "version"))
           raise AttemptErrors::EvidenceUnavailable, "original inbox projection exceeds bound" if JSON.generate(data).bytesize > 15_360
           {data: immutable(data), replayed: false}
         rescue KeyError, TypeError, ArgumentError, NoMethodError, Ace::Herdr::Error, Ace::Runtime::RuntimeUnavailableError

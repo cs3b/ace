@@ -26,6 +26,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Route protected `attempt finish`, `attempt reconcile` and `inbox-bind` through the installed authority with explicit original selectors and retry identity; installed participants cannot fall back to local receipts or local coordination.
 - Refuse local delivery fallback for every declared installed participant and classify unavailable protected owners.
+- Project the exact historical Inbox native channel only after original-map server credentials and workspace match canonical launch evidence.
+
 - Keep the original Inbox query frame bounded by projecting verified native identity without its resource inventory; full canonical resource lineage verification remains mandatory.
 
 - Expose a fixed read-only Inbox context original-record query that verifies canonical launch guard, native lineage and exact registration without inferring a native thread or authorizing dispatch.

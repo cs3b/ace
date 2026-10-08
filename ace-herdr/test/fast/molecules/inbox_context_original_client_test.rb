@@ -42,7 +42,7 @@ class InboxContextOriginalClientTest < Minitest::Test
             "pane" => "p1", "server_identity" => server, "socket_identity" => [1, 2, 13001],
             "command" => ["/fixed/gate", "mapping", "ticket"], "cwd" => "/fixed/workspace"}},
         "guarded_origin" => {"terminal_id" => "term_ab", "runtime_incarnation" => "12345678-1234-1234-1234-123456789abc", "child" => child},
-        "native_binding" => native)
+        "native_binding" => native, "native_channel" => {"socket_path" => "/fixed/native.sock", "version" => "0.9.3"})
     @wire, @kernel = Wire.new(@data), Kernel.new
     @client = Client.new(authority: {"socket_path" => "/fixed/authority.sock", "uid" => 13000, "gid" => 13000, "groups" => [13000]},
       project_id: "project", mapping_id: "mapping", wire: @wire, kernel: @kernel)
@@ -69,6 +69,17 @@ class InboxContextOriginalClientTest < Minitest::Test
     end
     @wire.data = @data.merge("purpose" => "deliver")
     assert_raises(Error) { @client.original!(**@params.merge(purpose: "deliver")) }
+  end
+
+  def test_channel_shape_path_and_version_are_closed
+    [{}, {"socket_path" => "/fixed/native.sock", "version" => "old"},
+      {"socket_path" => "relative", "version" => "0.9.3"},
+      {"socket_path" => "/fixed/../native.sock", "version" => "0.9.3"},
+      {"socket_path" => "/" + "x" * 107, "version" => "0.9.3"},
+      @data.fetch("native_channel").merge("worker_uid" => 13001)].each do |channel|
+      @wire.data = @data.merge("native_channel" => channel)
+      assert_raises(Error) { @client.original!(**@params) }
+    end
   end
 
   def test_bad_selectors_refuse_before_transport
