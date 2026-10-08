@@ -1,5 +1,5 @@
 # frozen_string_literal: true
-require "ace/review"
+require "ace/review/organisms/campaign_manager"
 require_relative "campaign_consumer_policy"
 
 module Ace

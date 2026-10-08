@@ -5,7 +5,14 @@ require "ace/herdr/molecules/bounded_process"
 
 class ProtectedServiceLoadingTest < Minitest::Test
   def test_fixed_policy_and_listener_load_without_broad_configuration_entrypoints
-    %w[ace/lab/molecules/protected_service_policy ace/lab/organisms/protected_service_listener ace/lab/molecules/protected_cleanup_owner_admission].each do |entry|
+    entries = %w[
+      ace/hitl/providers/lab
+      ace/review/organisms/campaign_manager
+      ace/lab/molecules/protected_service_policy
+      ace/lab/organisms/protected_service_listener
+      ace/lab/molecules/protected_cleanup_owner_admission
+    ]
+    entries.each do |entry|
       code = <<~RUBY
         require #{entry.inspect}
         require "ace/lab/molecules/protected_service_policy"

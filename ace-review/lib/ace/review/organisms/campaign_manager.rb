@@ -2,7 +2,6 @@
 
 require "open3"
 require "time"
-require "ace/b36ts"
 require_relative "../atoms/campaign_projection"
 require_relative "../molecules/campaign_store"
 require_relative "../molecules/campaign_evidence"
@@ -863,6 +862,7 @@ module Ace
         end
 
         def allocate_id
+          require "ace/b36ts"
           value = Ace::B36ts.encode(Time.now)
           value = (value.to_i(36) + 1).to_s(36).rjust(6, "0") while store.registered_id?(value)
           value

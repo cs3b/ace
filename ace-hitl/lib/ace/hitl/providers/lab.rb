@@ -6,7 +6,6 @@ require_relative "lab/assignment_binding"
 require_relative "../lifecycle/store"
 require_relative "../lifecycle/policy"
 require_relative "../lifecycle/client"
-require_relative "../organisms/hitl_manager"
 
 module Ace
   module Hitl
@@ -161,7 +160,12 @@ module Ace
         end
 
         def build_manager
-          @manager || Organisms::HitlManager.new
+          return @manager if @manager
+
+          # Boundary-only consumers use fixed grants and authenticated transport;
+          # local event configuration belongs to the ask operation alone.
+          require_relative "../organisms/hitl_manager"
+          Organisms::HitlManager.new
         end
       end
     end
