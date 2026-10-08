@@ -63,6 +63,29 @@ module Organisms
       end
     end
 
+    def test_identifier_delivery_identity_is_exact_and_refuses_before_provider_access
+      with_test_providers do
+        url = "#{SERVER.url}/pull/25"
+        lifecycle = Ace::Git::Organisms::PullRequestLifecycle.new(runner: @runner)
+        assert_equal SERVER.to_h.transform_keys(&:to_s).transform_values(&:to_s), lifecycle.resolved_identity(url)
+        [ {server_name: "github-public"}, {use_default: true} ].each do |selection|
+          assert_raises(Ace::Git::ProviderIdentityMismatchError) do
+            Ace::Git::Organisms::PullRequestLifecycle.new(**selection, runner: @runner).resolved_identity(url)
+          end
+        end
+        assert_raises(Ace::Git::AmbiguousRemoteError) { lifecycle.resolved_identity("https://absent.example.com/owner/repo/pull/25") }
+        pinned = Ace::Git::Organisms::PullRequestLifecycle.new(resolved_server: SERVER, runner: @runner)
+        Ace::Git.instance_variable_set(:@config, Ace::Git.config.merge("servers" => [
+          {"name" => "renamed", "provider" => "testforge2", "url" => SERVER.url}]))
+        assert_raises(Ace::Git::ProviderIdentityMismatchError) { pinned.resolved_identity(url) }
+        Ace::Git.instance_variable_set(:@config, Ace::Git.config.merge("servers" => [
+          {"name" => "first", "provider" => "testforge", "url" => SERVER.url},
+          {"name" => "second", "provider" => "testforge2", "url" => SERVER.url}]))
+        assert_raises(Ace::Git::AmbiguousRemoteError) { lifecycle.resolved_identity(url) }
+        assert_empty @calls
+      end
+    end
+
     def test_pinned_delivery_identity_rejects_configuration_change_before_write
       with_test_providers do
         lifecycle = Ace::Git::Organisms::PullRequestLifecycle.new(server_name: "forgejo-lab", resolved_server: SERVER,

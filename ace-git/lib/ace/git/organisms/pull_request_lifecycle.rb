@@ -237,8 +237,12 @@ module Ace
         end
 
         # Freeze the selected provider identity for an assignment attempt.
-        def resolved_identity
-          resolve_selected_server.to_h.transform_keys(&:to_s).transform_values(&:to_s)
+        def resolved_identity(identifier = nil)
+          selected = identifier.nil? ? resolve_selected_server : resolve_server_for(parse_identifier(identifier))
+          if @pinned_server && selected != @pinned_server
+            raise ProviderIdentityMismatchError, "Configured server identity changed from the pinned delivery identity"
+          end
+          selected.to_h.transform_keys(&:to_s).transform_values(&:to_s)
         end
 
         # Read-only reconciliation of a possibly completed create. Absence

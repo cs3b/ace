@@ -36,7 +36,7 @@ module Ace
           directory, held = private_root!(root)
           begin
             lifecycle = @factory.call(server_name: parameters["forge_server"], use_default: parameters.fetch("forge_default"), repo_root: directory)
-            server = lifecycle.resolved_identity
+            server = lifecycle.resolved_identity(request.fetch("target").fetch("resource"))
             provenance = parameters.fetch("pr_provenance")
             unless Atoms::ServerUrl.match?(server.fetch("url"), provenance.fetch("base_repository_url"))
               raise ProviderIdentityMismatchError, "merge forge differs from accepted provenance"

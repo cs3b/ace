@@ -3,6 +3,7 @@ require "test_helper"
 require_relative "../../../ace-lab/test/support/protected_service_boundary_fixture"
 require "ace/git/cli"
 require "ace/git/forgejo"
+require "ace/git/github"
 require "stringio"
 require "ace/assign/cli/commands/delivery"
 require "ace/lab/cli/commands/service"
@@ -66,6 +67,31 @@ class ServiceMergeBoundaryTest < AceGitTestCase
     exercise_completion
   end
 
+  def test_public_github_url_canonical_preserves_one_original_delivery
+    @public_lab, @merge_provider, @merge_selection = true, "github", :remote
+    exercise_completion
+  end
+
+  def test_public_github_url_fork_preserves_one_original_delivery
+    @public_lab, @merge_provider, @merge_selection, @merge_fork = true, "github", :remote, true
+    exercise_completion
+  end
+
+  def test_public_forgejo_default_canonical_preserves_one_original_delivery
+    @public_lab, @merge_selection = true, :default
+    exercise_completion
+  end
+
+  def test_public_forgejo_default_fork_preserves_one_original_delivery
+    @public_lab, @merge_selection, @merge_fork = true, :default, true
+    exercise_completion
+  end
+
+  def test_public_forgejo_named_fork_preserves_one_original_delivery
+    @public_lab, @merge_fork = true, true
+    exercise_completion
+  end
+
   def test_real_receiver_fixed_cli_neutral_merge_and_canonical_receipt_import
     exercise_completion
   end
@@ -95,13 +121,20 @@ class ServiceMergeBoundaryTest < AceGitTestCase
     exercise_completion
   end
 
+  def merge_mutation?(provider, args)
+    provider == "github" ? args[0, 3] == %w[gh pr merge] : args[1] == "POST"
+  end
+
   def exercise_completion
     fixture do
       issue_original
       submission, = prepared_submission(accept_review: !@missing_review)
-      input = {"target" => {"resource" => "#{URL}/pulls/25", "artifact_digest" => nil}, "method" => "squash",
-        "delivery" => {"forge_server" => "selected", "forge_default" => false,
-          "pr_provenance" => {"mode" => "canonical", "head_repository_url" => URL, "head_ref" => "feature/x",
+      provider, selection = @merge_provider || "forgejo", @merge_selection || :named
+      head_owner = @merge_fork ? "fork-owner" : "owner"
+      resource = "#{URL}/#{provider == 'github' ? 'pull' : 'pulls'}/25"
+      input = {"target" => {"resource" => resource, "artifact_digest" => nil}, "method" => "squash",
+        "delivery" => {"forge_server" => selection == :named ? "selected" : nil, "forge_default" => selection == :default,
+          "pr_provenance" => {"mode" => @merge_fork ? "fork" : "canonical", "head_repository_url" => "https://forge.example.com/#{head_owner}/repo", "head_ref" => "feature/x",
             "base_repository_url" => URL, "base_ref" => "main"}}}
       bytes = JSON.generate(input)
       digest = Ace::Lab::Atoms::ServiceInput.digest(input)
@@ -109,25 +142,37 @@ class ServiceMergeBoundaryTest < AceGitTestCase
       submission.merge!("operation" => "merge", "input_digest" => digest, "target" => target)
       @document["authorizations"]["decision"].merge!("operation" => "merge", "input_digest" => digest, "target" => target)
       Ace::Git.instance_variable_set(:@config, Ace::Git.config.merge("servers" => [
-        {"name" => "selected", "provider" => "forgejo", "url" => URL}]))
+        {"name" => "selected", "provider" => provider, "url" => URL, "default" => true}]))
       calls, merged = [], false
       runner = lambda do |args:, **|
         calls << args
-        payload = if args[1] == "POST"
-          assert_equal @head, args[3].fetch("head_commit_id")
-          assert_equal "squash", args[3].fetch("Do")
+        payload = if merge_mutation?(provider, args)
+          if provider == "github"
+            assert_includes args, @head
+            assert_includes args, "--squash"
+          else
+            assert_equal @head, args[3].fetch("head_commit_id")
+            assert_equal "squash", args[3].fetch("Do")
+          end
           merged = true
           nil
+        elsif provider == "github"
+          assert_equal %w[gh pr view 25], args[0, 4]
+          {"number" => 25, "title" => "Ship", "body" => "", "state" => merged ? "MERGED" : "OPEN",
+            "isDraft" => false, "author" => {"login" => "worker"}, "headRefName" => "feature/x", "baseRefName" => "main",
+            "url" => resource, "headRefOid" => @head, "headRepositoryOwner" => {"login" => head_owner},
+            "headRepository" => {"name" => "repo"}, "mergeCommit" => merged ? {"oid" => "d" * 40} : nil,
+            "mergedAt" => merged ? "2026-10-07T12:00:00Z" : nil}
         elsif args[2].end_with?("/version")
           {"version" => "8.0.5"}
         else
           assert_equal "GET", args[1]
           assert_equal "https://forge.example.com/api/v1/repos/owner/repo/pulls/25", args[2]
-          branch = ->(ref, head) { {"ref" => ref, "sha" => head, "repo" => {"full_name" => "owner/repo"}} }
+          branch = ->(ref, head, owner) { {"ref" => ref, "sha" => head, "repo" => {"full_name" => "#{owner}/repo"}} }
           {"number" => 25, "title" => "Ship", "body" => "", "state" => merged ? "closed" : "open", "draft" => false,
             "merged" => merged, "merged_at" => merged ? "2026-10-07T12:00:00Z" : nil,
             "merge_commit_sha" => merged ? "d" * 40 : nil, "user" => {"login" => "worker"},
-            "head" => branch.call("feature/x", @head), "base" => branch.call("main", "e" * 40)}
+            "head" => branch.call("feature/x", @head, head_owner), "base" => branch.call("main", "e" * 40, "owner")}
         end
         {success: true, status: 200, stdout: payload ? JSON.generate(payload) : "", stderr: "", exit_code: 0}
       end
@@ -227,7 +272,7 @@ class ServiceMergeBoundaryTest < AceGitTestCase
       if @public_refusals
         assert_equal "refused", result.fetch("state")
         assert_equal 0, effects
-        assert_equal 0, calls.count { |args| args[1] == "POST" }
+        assert_equal 0, calls.count { |args| merge_mutation?(provider, args) }
         assert_equal 0, @journal.read_events("assignment").count { |event| event["type"] == "service_claim" || event["type"] == "delivery" }
         next
       end
@@ -258,7 +303,7 @@ class ServiceMergeBoundaryTest < AceGitTestCase
       end
       assert_equal "uncertain", result.fetch("state"), [result, phases].inspect
       assert_equal 1, effects
-      assert_equal 1, calls.count { |args| args[1] == "POST" }
+      assert_equal 1, calls.count { |args| merge_mutation?(provider, args) }
       record = @journal.service_request(submission.fetch("request_id"))
       assert_equal "succeeded", record.fetch("state")
       assert_equal @head, record.fetch("candidate_head")
@@ -319,7 +364,7 @@ class ServiceMergeBoundaryTest < AceGitTestCase
         end
         assert_equal before_controls, @journal.ref_value, "negative observations do not write or repair evidence"
         assert_equal 1, effects
-        assert_equal 1, calls.count { |args| args[1] == "POST" }
+        assert_equal 1, calls.count { |args| merge_mutation?(provider, args) }
         next
       end
       consumed = consumer.perform(**arguments)
@@ -327,7 +372,7 @@ class ServiceMergeBoundaryTest < AceGitTestCase
       assert_equal "merge", consumed.fetch("delivery_event").fetch("payload").fetch("operation")
       assert_equal "succeeded", consumer.perform(**arguments.merge(operation: "status")).fetch("state")
       assert_equal 1, @journal.read_events("assignment").count { |event| event["type"] == "delivery" }
-      assert_equal 1, calls.count { |args| args[1] == "POST" }, "worker consumption never reruns merge"
+      assert_equal 1, calls.count { |args| merge_mutation?(provider, args) }, "worker consumption never reruns merge"
       project = @project
       mapping, authority = @map, @service
       @deployment.define_singleton_method(:data) { {"projects" => {"project" => project}, "launch_mappings" => {"mapping" => mapping}, "authorities" => {"authority" => {"uid" => authority.fetch("uid")}}} }
