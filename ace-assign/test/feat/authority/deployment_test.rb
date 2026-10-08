@@ -539,7 +539,7 @@ module Ace
       class OrderedSlotLock
         def initialize(root, order); @root, @order = root, order; end
         def slot_key(slot); "execution-slot:#{slot}"; end
-        def with_exclusive(key)
+        def with_exclusive(key, deadline: nil)
           @order << [:enter, @root, key]
           yield
         ensure

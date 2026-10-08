@@ -218,7 +218,7 @@ module Ace
           params["transfer"] = {"fixture" => "retained reply projection only"}
           journal.mutate(assignment_id: "assignment-1", attempt_id: "attempt-1", mutation_id: "lost-begin-reply",
             operation: "begin_dispatch", parameters_digest: Atoms::EvidenceDigest.digest(params), expected_generation: 2,
-            with_replay: true) { {data: {"invocation" => "permitted"}} }
+            with_replay: true) { {data: endcap.send(:service_projection, started).merge("invocation" => "permitted")} }
           launch = Object.new
           launch.define_singleton_method(:with_assignment) { |**_, &block| block.call(journal, {}) }
           policy = Object.new

@@ -49,7 +49,10 @@ module Ace
           owner = Authority::LaunchLifecycle.new(deployment: deployment, kernel: kernel, journals: {"project" => journal},
             scope_observer_factory: ->(_id) { observer })
           client = Object.new
-          client.define_singleton_method(:call) do |operation, params, mutation_id: nil, upload_parts: nil, purpose: nil|
+          budgets = []
+          client.define_singleton_method(:call) do |operation, params, mutation_id: nil, upload_parts: nil, purpose: nil, timeout:|
+            raise "invalid original launch budget" unless timeout.positive? && timeout <= Authority::LaunchDriver::LAUNCH_DEADLINE
+            budgets << timeout
             input = upload_parts && Struct.new(:parts) { def count = parts.size; def bytes(index: 0) = parts.fetch(index) }.new(upload_parts)
             params = params.merge("transfer" => Authority::TransferCodec.new.descriptor(upload_parts, purpose: purpose)) if upload_parts
             result = owner.dispatch(request: {"operation" => operation, "mutation_id" => mutation_id,
@@ -65,6 +68,7 @@ module Ace
           assert_equal "failed", result["phase"], result.inspect
           assert_equal 1, manager.starts
           assert_equal 0, manager.service_starts
+          refute_empty budgets
           events = journal.read_events("assignment")
           assert_equal 1, events.count { |event| event["type"] == "scope_bound" }
           assert_equal 1, events.count { |event| event["type"] == "scope_closed_no_writers" }
