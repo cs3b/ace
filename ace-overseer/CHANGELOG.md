@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.20.1] - 2026-10-08
+
+### Changed
+
+- Require the coordinated Assign, Herdr, Lab and Review producer versions for ordinary CLI worker launch and current protected delivery contracts.
+
 - Repair protected work-on composition fixtures to retain the originally provisioned workspace lifecycle resource, exercise the real worker reader, and return the simulated fork before post-readiness steering without changing product admission.
 
 - Route protected delivery through original worker merge request, canonical status and exact result consumption while preserving ordinary delivery and unresolved protected PR policy.

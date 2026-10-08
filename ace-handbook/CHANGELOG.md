@@ -7,10 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.35.0] - 2026-10-08
+
+### Changed
+
+- Document standalone and protected delivery, current canonical campaign round/result handoff and scoped publication prerequisites. Keep source verification separate from installed Lab acceptance.
+
 - Route unavailable publication prerequisites through the original assignment failure/status owners without claiming protected publication or retry authority.
 
 - Route protected delivery through original worker merge request, canonical status and exact result consumption while preserving ordinary delivery and unresolved protected PR policy.
-
 
 ## [0.34.0] - 2026-10-05
 

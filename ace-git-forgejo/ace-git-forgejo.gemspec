@@ -40,7 +40,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   # Runtime dependencies
-  spec.add_dependency "ace-git", "~> 0.26"
+  spec.add_dependency "ace-git", "~> 0.30"
   # Repository-bound API transport for the PR delivery lifecycle (ADR-010).
   spec.add_dependency "faraday", "~> 2.14"
   spec.add_dependency "faraday-retry", "~> 2.4"

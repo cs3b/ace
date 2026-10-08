@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.30.0] - 2026-10-08
+
+### Added
+
+- Execute protected draft create/update, ready and merge through named forge providers, binding exact repository provenance, candidate SHA, input and current campaign acceptance.
+
+### Fixed
+
+- Resolve receiver provider identity from the authenticated PR URL and preserve uncertain effects without replay.
+
 - Verify protected request, status and delivery refuse actual authority endpoint loss without replacing the original claim or dispatching another effect.
 
 - Restore process-wide provider registrations and loader state after registry test fixtures, preserving real adapter tests across randomized single-batch execution.

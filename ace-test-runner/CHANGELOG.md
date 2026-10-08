@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.1] - 2026-10-08
+
+### Fixed
+
+- Reject missing explicit Ruby test files before loading tests or running selectors. Preserve exact unambiguous file-line selection.
+
 ### Fixed
 
 - Refuse invalid or ambiguous file-line selections and execute exact class/method identities in direct and subprocess modes. Reject mixed whole-file/line selections before loading tests.

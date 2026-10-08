@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
 
   spec.summary = "Zero-token ergonomic wrapper over the herdr CLI for agent panes"
   spec.description = "Herdr agent orchestration with push delivery, agent bootstrap, dispatch, and a durable " \
-                     "attempt-linked inbox for exact-session Codex/Pi queue submission and signed reconciliation. " \
+                     "attempt-linked inbox for submission to the original Codex/Pi terminal, with explicit uncertain outcomes. " \
                      "Implements the ace-hitl provider delivery contract."
   spec.homepage = "https://github.com/cs3b/ace"
   spec.license = "MIT"

@@ -611,4 +611,3 @@ canonical acceptance. Independent installed reviewers use the existing
 a new generation after review; exact retries retain the original generation,
 mutation and identical ordered bytes. Supervisor finish still revalidates result,
 review, writer exclusion and settlement. A lost reply never causes automatic resend.
-

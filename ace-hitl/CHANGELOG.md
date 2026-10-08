@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.0] - 2026-10-08
+
+### Added
+
+- Bind scoped publication to the original canonical HITL challenge and authorization; keep OTP material out of agent messages and ordinary transport.
+
+### Changed
+
+- Read delivery history from the original Inbox owner. Complete human attention on terminal submission without requiring an agent-read receipt or querying recovery caches.
+
+### Fixed
+
+- Route proposals through the retained project journal and preserve exact protected attempt identity across lifecycle calls.
+- Exercise concurrent creation under the actual lifecycle lock.
+
 ### Fixed
 
 - Accept exact protected launch attempt identifiers for HITL requests while preserving assignment syntax and authoritative binding checks.

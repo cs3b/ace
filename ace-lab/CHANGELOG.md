@@ -7,50 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- Import positively authenticated retained cleanup success through inspection without rerunning removal; replacement root readback cannot manufacture original input inhibition.
-
-- Pass the authenticated receiver process to cleanup execution and inspection so the installer can revalidate the actual caller, including a restarted inspection receiver.
-
-### Fixed
-
-- End failed cleanup callback activity without treating its unknown outcome as settlement; permit actual domain inspection and report unconfirmed shutdown instead of waiting forever on an ended callback.
-
-- Reuse immutable canonical event reads only within each held cleanup admission, discarding the memo before Installer effects and subsequent connections.
-
-- Load protected policy and listener dependencies directly, preserving the fixed trusted authorization path and error hierarchy without loading broad package configuration entrypoints.
-
-- Bind protected cleanup identity to the explicitly selected dedicated systemd slice and reject a different observed service slice.
-- Admit the complete protected cleanup runtime of up to 64 verified load paths, with a 16KiB aggregate startup argument bound matching the installed producer.
-- Reject cleanup previews whose inventory digest differs from the complete preservation manifest digest.
-- Snapshot the original protected effect mutation ID across IO and require the no-effect challenge producer in full-service composition. Verify receiver and authority reconstruction after accepted recovery acknowledgement loss.
-- Run protected handlers through the shared bounded subprocess owner with separate 16KiB stdout/8KiB stderr caps and owned cleanup. Stream EOF does not imply child exit; timeout or unconfirmed reaping never produces a receipt or domain absence proof. Receiver recovery and domain inspection remain required source work.
+## [0.5.0] - 2026-10-08
 
 ### Added
 
-- Refuse malformed installed protected selection with value-free JSON output and no local service fallback.
+- Deliver scoped RubyGems publication through the fixed receiver and canonical HITL authorization, preserving original request, OTP challenge and publication-result evidence.
 
-- Route protected merge service requests and exact canonical status through original prepared admission and the fixed receiver, with classified refusals and uncertain claim observation.
+### Changed
 
-- Carry read-only cleanup previews across worker, receiver and original root listener with one bounded deadline and full canonical context; missing physical producers remain unavailable.
+- Compose actual service/result owners without a read-proof completion handler; retain authenticated service settlement and cleanup boundaries.
 
-- Select the installed cleanup receiver for read-only preview without resolving proposal grants or admitting an effect.
+### Fixed
 
-- Recover original workspace-cleanup inspection through canonical pair import and historical status without reacquiring a lost root owner; physical Installer inspection remains a required producer join.
-
-- Serve the fixed cleanup endpoint with bounded connection capacity, held protected lifetime exclusion and original request deadlines. Authenticate original inspection input/challenge and inhibit further dispatch before invoking the read-only Inspector; physical Installer evidence and Receiver settlement composition remain required.
-
-- Refuse unsafe effective manager or unit startup environments when observing the fixed root cleanup entry, with a shared absolute deadline; trusted provisioning still verifies the original environment before starting the entry.
-
-- Verify a fixed cleanup listener's own original process through the existing root policy, immutable closure and manager/pidfd joins without confusing its positive receiver peer with the root owner.
-
-- Route named workspace-cleanup receiver dispatch through the fixed original root-owner client and canonical result import. Historical claim replay needs no new live root; actual installed cleanup entry, root action and production composition remain required.
-
-- Authenticate a fixed cleanup root owner through held accepted entry/load bytes, its typed manager invocation and the original pinned kernel lifetime. The root profile is separate from ordinary all-zero capability admission; actual installed cleanup entry and dispatch composition remain required.
-
-- Admit fixed protected service requests through a bounded receiver listener and worker client. Retain the original five-second claim budget and listener lifetime exclusion until admitted work finishes; canonical replay never launches another handler.
-
-- Recover selected protected services through authenticated original canonical status, accepted no-effect challenges and existing receipt import, preserving original immutable inputs and lost-ACK retry identity. Select only fixed no-effect inspection argv; domain-specific inspection remains a gad.b source prerequisite.
-- Compose the fixed read-only Inbox context completion owner with existing Endcap services over the same protected canonical journals and deployment history. Installed context provisioning remains separate.
+- Load protected policy/listener dependencies directly and keep cleanup inspection tied to the original receiver and immutable result evidence.
 
 ## [0.4.0] - 2026-10-05
 

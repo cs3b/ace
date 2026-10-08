@@ -7,116 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- Load the canonical journal owner’s Pathname dependency directly so a fresh accepted initialization child does not rely on a warmed authority loader.
-
-- Prepare absent canonical evidence journals explicitly under the selected authority identity before maintenance exclusion, preserving valid registered/prepared/imported history and refusing foreign state or unsafe lock ownership.
-
-- Reuse exact immutable event and raw service-record proofs within one protected wire operation; revalidate terminal evidence on every read and keep fresh ref, admission and CAS checks.
-
-- Reuse one fully authenticated canonical inventory at an exact immutable journal commit within a protected wire operation, retaining fresh admission and CAS checks.
-
-- Share prepared-work fetch helpers without inheriting runnable tests, so managed-flow and worker feature files execute only their own scenarios. Keep managed workspace admission on its existing controlled native boundary.
-
-- Preserve literal nested JSON in captured instructions while strictly parsing only opened, closed admitted-selector tokens and quoting each original value once.
-
-- Add proof-bound maintenance retirement sessions and read-only completed readback under the complete original slot exclusions, retaining exact resource and collection lifetimes.
-
-- Retain the original protected workspace shared lock across native activation uncertainty until authenticated sealed no-writers observation.
-
-- Load coordinator error/record primitives directly during protected admission; select ordinary Herdr recovery configuration only when its local recovery method runs. Require the actual EvidenceJournal owner for service evidence constants.
-
-- Require the authenticated readiness report to match the original server network namespace to both parent selection and canonical installation admission before native binding.
-- Admit authenticated protected cleanup success after dispatch failure only when no immutable completion digest exists; retain terminal completion conflict checks.
-- Retain the first authenticated authority control-root selection across registration replay, descriptor rotation and permitted task changes. Provision protected no-replace task and assignment guards, require a fresh assignment for authority/root/slot migration, and recheck held guard identities before canonical CAS.
-
-- Resolve lifecycle locks from the selected repository's actual Git common directory for every ordinary creator and prune caller. `CACHE_BASE` only selects assignment storage, never a separate lock namespace. Refuse malformed retained fences and unsafe lock files, unwind partial admission, and fsync removed-fence publication.
-
-- Accept exact candidate-submission replay after its counter advances, revalidating the original live caller, raw upload identity and retained normalized bundle without creating another candidate.
-
-- Refuse cleanup completion when public inventory, preservation and private manifest digests disagree.
-- Allow maintenance preview to refuse contended slot, authority and retained Inbox exclusions within its original deadline, releasing partially acquired locks.
+## [0.66.0] - 2026-10-08
 
 ### Added
 
-- Submit protected worker candidates/results and reconcile signed Inbox proofs through the public CLI; preserve original retry inputs, counter semantics and canonical authority admission.
+- Connect protected PR delivery and parent/child campaign results to the canonical assignment owner, with current candidate checks, independent review and original operation authorization.
+- Launch authenticated prepared workers through the existing ace-llm provider CLI in the original terminal.
 
-- Route protected `attempt finish`, `attempt reconcile` and `inbox-bind` through the installed authority with explicit original selectors and retry identity; installed participants cannot fall back to local receipts or local coordination.
-- Refuse local delivery fallback for every declared installed participant and classify unavailable protected owners.
-- Project the exact historical Inbox native channel only after original-map server credentials and workspace match canonical launch evidence.
+### Changed
 
-- Keep the original Inbox query frame bounded by projecting verified native identity without its resource inventory; full canonical resource lineage verification remains mandatory.
-
-- Expose a fixed read-only Inbox context original-record query that verifies canonical launch guard, native lineage and exact registration without inferring a native thread or authorizing dispatch.
-
-- Validate optional maintained Inbox context-service descriptors through the shared Runtime owner and refuse execution slots, backing roots or owner principals shared with another protected service.
-
-- Confirm original Inbox canonical completion for exact replay while preserving pending admission recovery and refusing foreign same-event reconciliation races; retire only returned direct issuers with matching retained claim lineage.
-
-- Export bounded read-only Inbox principal classification and exact installed context/authority selection through the existing immutable task-context entry.
-
-- Bind original protected Inbox registrations and finish exact results through the public authority, authenticating independent review, prior no-writers proof and settlement; recover one original attempt with immutable observations or read-only terminal evidence.
-- Expose original prepared installed transport selection and mapping-hint presence through the existing protected context owner, refusing unavailable mappings without local fallback.
-
-- Export original opaque workspace cleanup configuration and complete authenticated parent resource declarations during held maintenance transactions.
-
-- Reuse original canonical registration and prepared-definition proof for root cleanup preview selection.
-
-- Read a bounded cleanup preview context at one canonical revision, separately authenticating the original worker descendant and installed receiver without minting service permission.
-
-- Export an immutable original workspace target only inside held complete maintenance exclusions, requiring the retained writable parent declaration and exact original resource identity.
-
-- Batch canonical event-history snapshots and reuse one immutable authenticated settlement read per status operation, preserving full original provenance without increasing public deadlines.
-
-- Pin the original worker interpreter and wrapper in the issued prepared permission and authenticate the same pair through installation and later fetch.
-- Prepare protected worker inputs from the actual managed task graph, exact task/dependency bundle context and explicitly selected managed reports, rejecting changed captures before export.
-- Export validated prepared assignment trees as complete bounded Git bundles, retaining the exact transfer bytes and derived definition for registration.
-- Export literal original network selections and namespace identities alongside retained maintenance boot proofs, with the same held all-root eligibility and immutable historical provenance.
-- Read retained canonical evidence through a bounded isolated Git snapshot without executing live source configuration; raw artifact and event-batch readers share the same read-only boundary.
-
-- Authenticate the complete original workspace-cleanup result pair at canonical import, with held root-result protection and immutable historical verification that never rereads private archives or mutable result storage.
-
-- Bind fresh protected workspace-cleanup dispatch to an independently observed original root owner, retaining that identity through canonical replay, later updates and imported evidence context.
-- Activate authenticated prepared work only in the exact original worker, retain its private queue across scoped CLI progress, and refuse changed instructions, failed completion or missing published queues without reconstruction.
-- Require explicit canonical cancellation before replacing a direct review assignment; revoked purposes cannot export candidates or authorize future approval use, while original replies remain historical evidence.
-- Retain the original task-context entry pin across registration replay and prepared fetch, and return a strictly validated original worker identity for fixed adapter activation.
-
-- Fetch exact original prepared inputs through authenticated worker and descendant admission on the existing Endcap transport, binding immutable registration provenance and fixed candidate limits without changing ordinary evidence artifact bounds.
-- Pin fresh execution scopes to the authenticated current network selection and refuse active pointer advance; boundary readiness accepts only static network intent, preserving original literal historical proofs.
-
-- Expose authorized canonical assignment inventory at one retained revision, authenticating original registration, terminal/release and rotated descriptor provenance before bounded metadata pagination.
-
-- Authenticate complete immutable event inventories before ownership filtering, rejecting removed assignments/attempts/events, rewritten bytes and duplicate event digests while preserving valid interleaved appends.
-
-- Expose a deeply immutable original executor settlement context through the existing authenticated service status owner, binding the fixed receiver/mapping and accepted current challenge while retaining canonical receipt verification.
-- Batch immutable event-introduction proofs across selected assignments in one complete first-parent traversal, preserving each original chain and exact event-file bytes without a retained cache.
-
-
-- Add the fixed original executor no-effect challenge and atomic completion APIs, authenticating accepted failure/challenge provenance and closed fresh inspection artifacts before failed-settled. Domain-specific target/handler/writer inspection remains a gad.b prerequisite.
-- Add proof-owned protected stop with authenticated running/uncertain-to-stopped events, exhaustive service and Inbox settlement joins, immutable replay and original historical release/reuse verification. Retain the original foreground Driver until same-snapshot authenticated terminal and reservation-release evidence agree.
-
-- Expose exhaustive immutable authenticated service and Inbox settlement evidence through the existing Endcap owners, retaining original historical descriptor/key proofs and distinguishing fully verified pending work from unavailable evidence. Public stopped delivery and no-effect challenge issuance remain separate work.
-
-- Require authenticated lifetime input inhibition for every issued outside-unit actor before no-writers proof, including attempts with no prompt submissions.
-
-- Keep original containment and accepted-input recovery available while authenticated Inbox work remains pending, retaining the same lifecycle exclusions and blocking fresh prompts or final release. Classify only validated pending Inbox grants separately from unavailable or corrupt evidence.
-- Authenticate original actor input inhibition and canonical drained observations, recover lost drain acknowledgements without repeating native effects, and preserve uncertain prompt outcomes while allowing maintained no-writers proof to progress.
-
-- Retain the original mapped launcher in the foreground, authenticate bounded prompt transfers and native submission outcomes, preserve immutable public replies across reconnects, and block no-writers proof or release while canonical prompt issuance remains unresolved.
-
-- Capture and retain the exact original native guard in canonical launch record data, with whole-record authentication for steering, while preserving execution-scope process binding bytes.
-
-- Add canonical prompt issuance and authenticated immutable completion primitives with journal-wide retry identity enforcement, plus bounded private prompt framing. Public stop composition remains in progress.
-- Add authenticated read-only prompt status with the actual later outcome selector while retaining the first immutable mutation reply.
-- Route protected Inbox snapshot/reconciliation through the selected context owner and authenticate effect completion from the original signed canonical journal reply. Add the fixed query-only context-owner role; maintenance admission and orphan reclamation remain in progress.
-
-### Added
-
-- Authenticate the fixed private readiness hook, original protected configuration and boot/network proofs, complete descriptor-pinned server resource/API views, and canonical native admission. Track pending original service issuance across unlocked callbacks and refuse closure while issuance remains unresolved.
-- Join actual accepted terminal receipts to sealed admitted/post-native empty-scope proof and reservation release, refusing replaced activation, pending jobs, recreated native resources and outside worker writers. Domain boot-refresh provisioning and installed acceptance remain separate outstanding obligations.
-
-### Fixed
-
-- Return the existing bounded unauthorized refusal for service policy SecurityError instead of leaking a failed handler thread through authority listener shutdown. Late original completion remains valid after lease expiry; fresh effects remain denied.
+- Remove message-read proofs, observation/signing APIs and Inbox settlement requirements from finish, recovery and stop. Retain actual service/result/review evidence and whole-scope writer checks.
+- Reuse verified immutable journal inventories only within a single operation while retaining fresh admission and compare-and-swap checks.
+- Preserve original workspace leases when provider ownership or shutdown is uncertain.
 
 ## [0.65.0] - 2026-10-06
 

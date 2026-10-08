@@ -7,45 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- Bind static Codex service metadata separately from executable dependencies and retain both context and dedicated app-server installation checks throughout the original runtime/handler scope.
+## [0.5.0] - 2026-10-08
 
+### Changed
 
-- Allow maintenance preview to refuse contended slot, authority and retained Inbox exclusions within its original deadline, releasing partially acquired locks.
+- Submit Codex answers through the existing Herdr prompt command to the original live terminal. A successful send means submitted, not read; retain unknown sends without automatic resend.
+- Remove dedicated Codex app-server selection, message-read observation, signing keys and consumed/superseded reconciliation APIs.
+- Keep authenticated original-context admission and actual scoped effects without a second current-state projection.
 
 ### Fixed
 
-- On macOS, accept group-signal `EPERM` only after a complete bounded group snapshot proves the pinned exited child is its sole member. Retain a successful signal on that original owned child to avoid redundant cleanup signalling while it becomes waitable; execution deadlines and bounded reaping remain unchanged.
-
-- Load the shared error hierarchy explicitly from Inbox and executor primitives, allowing a fresh protected authority source load without the broad Herdr configuration entrypoint.
-
-- Bound subprocess cleanup to one additional second after execution timeout, retain the unreaped original child through owned signalling, and transfer only unconfirmed cleanup to an eventual reaper. Generic successful calls preserve their no-group-signal behavior; protected handlers may select nonreaping termination observation before owned group cleanup. Native effectiveness remains unverified here.
-
-### Added
-
-- Submit managed Codex Inbox payloads through the original held app-server Unix WebSocket and retain client/native queue correlation before acceptance. Refuse unmanaged instances without a CLI fallback; keep lost replies uncertain without resend. Hold runtime artifacts through joined bounded context handlers, and let the Codex native queue own progression without a terminal wake. Same-instance Lab startup/publication and completed-message observation remain separate source gates.
-
-- Persist guarded queue notifications before IO, retain the original queue claim separately from an explicit notification retry, and never retry an issuing or uncertain notification. Known native not-issued responses permit a fresh admitted notification without resending the queued payload.
-
-- Validate the closed original Inbox native channel before returning its identity projection, refusing malformed socket paths or native versions.
-
-- Bind protected direct Inbox admission and retained DeliveryRecord to explicit original project, assignment, mapping and context; recheck canonical original identity outside then under the existing store exclusion before effects.
-
-- Read original canonical Inbox launch identity through the same bounded authenticated context authority client, refusing mismatched registration, guard and native association without authorizing dispatch.
-
-- Construct a maintained context service from held literal configuration, the selected full installation owner, fresh key artifacts and an observed service epoch. Bound listener population and stop, retain issuer epochs, and refuse active-incarnation replacement. Pin native queue/wake executables, dependency bytes, environment and IPC placement; use separate bounded initialization acknowledgement and read-only same-epoch replay before ingress. Actual Lab entry/acknowledgement publication, original guarded native admission and stopped-owner recovery remain required composition gates.
-
-- Permit explicit protected retry only after fixed canonical supersession confirmation, retaining one exact completion binding in the existing DeliveryRecord and invalidating it on each new claim or proof replacement. Revalidate source-returned idle read-only deliveries separately from effectful exact claim ownership.
-
-- Route protected Inbox reconciliation through the existing authenticated authority upload/CAS, and retain exact direct claim ownership and returned-issuer evidence for verified canonical retirement; pre-return recovery and canonical retry remain separate source gates.
-
-- Route protected Inbox enqueue, deliver and status through fixed installed selection and authenticated context admissions, retaining exact inputs and unknown outcomes across restart; ordinary local commands remain independently supported.
-
-- Support explicit bounded read-only regular-file descriptor mappings and exact stdin source handoff; close all unmapped descriptors and reject invalid or stdio-overwriting mappings before spawn.
-
-- Retain pending Inbox effects durably until the fixed authority authenticates their exact canonical completion. Add bounded binary proof exchange and protected snapshot/reconciliation endpoints; exceptions and lost acknowledgements continue to block end/rotation.
-- Add the source-owned inbox context admission/rotation core with durable grants, authenticated signer replacement/rollback attestations, protected key readback and bounded fixed transport. Protected Assign/CLI migration and positive orphan reclamation remain required before full context acceptance.
-- Select the exact native original-actor input inhibition/drain source, with monotonic admission/write exclusion, bounded closed replies and controlled race coverage. Installed effectiveness and N2 consumer integration remain separate acceptance gates.
-- Add explicit original native guard capture, closed guarded prompt decoding and exact-actor input inhibition decoding without changing existing launch binding bytes.
+- Load bounded process/error primitives directly and preserve bounded cleanup of the original process after execution uncertainty.
 
 ## [0.4.0] - 2026-10-05
 

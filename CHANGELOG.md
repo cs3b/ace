@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Changed
+
+- **ACE Lab source release, 2026-10-08**: ace-assign 0.66.0, ace-git 0.30.0, ace-git-forgejo 0.6.2, ace-review 0.60.0 and ace-lab 0.5.0 join exact-candidate protected delivery, bounded canonical review campaigns and scoped HITL publication.
+- **ace-herdr 0.5.0, ace-hitl 0.13.0**: Use the original live terminal for message submission and direct panel/process reads for current state. Remove dedicated Codex app-server and message-read/signed reconciliation requirements; retain actual privileged-effect authorization and result evidence.
+- **ace-handbook 0.35.0, ace-hitl-hermes 0.2.1, ace-overseer 0.20.1**: Align documented delivery, project routing and minimum producer dependencies with the coordinated contract.
+- **ace-test-runner 0.28.1**: Reject absent explicit test file selections before execution.
+- This release prepares source implementation for the separate installed Lab task and observation. Source verification does not claim installed acceptance or RubyGems publication.
+
 
 ### Fixed
 

@@ -50,6 +50,6 @@ Gem::Specification.new do |spec|
   # through the ace-assign coordinator (spec 8wq.t.34i). No reverse
   # dependency exists or may be added (consumers share the leaf
   # ace-hitl-contract provider protocol instead).
-  spec.add_dependency "ace-assign", "~> 0.64"
-  spec.add_dependency "ace-herdr", "~> 0.4"
+  spec.add_dependency "ace-assign", "~> 0.66"
+  spec.add_dependency "ace-herdr", "~> 0.5"
 end

@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.60.0] - 2026-10-08
+
+### Added
+
+- Enforce finite campaign phases, durable provider-attempt reservations, convergence limits, escalation and resume through the same campaign owner.
+- Join canonical collection/check/approval child receipts and current parent result acceptance.
+
+### Fixed
+
+- Accept forge-neutral URLs in typed PR subjects and use the verified held result snapshot without a second projection.
+
 ### Added
 
 - ReviewManager can execute a bounded prepared candidate through the maintained provider and feedback pipeline, requiring an explicit bound verdict and complete execution evidence before returning approval.
