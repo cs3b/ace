@@ -108,10 +108,93 @@ class EventReadOperationTest < AceAssignTestCase
     end
   end
 
+  def test_inventory_reuses_only_exact_immutable_identity_and_events_cannot_evict_it
+    journal, counts = inventory_reader
+    Journal.with_event_read_operation do
+      original = journal.canonical_event_inventory!(commit: "a" * 40)
+      journal.read_events("assignment", commit: "b" * 40)
+      assert_same original, journal.canonical_event_inventory!(commit: "a" * 40)
+      assert_equal 1, counts.fetch(:inventory)
+      assert_raises(FrozenError) { original.fetch("events")["forged"] = [] }
+      assert_raises(FrozenError) { original.fetch("events").fetch("assignment").first.fetch("payload")["value"].replace("forged") }
+      refute_same original, journal.canonical_event_inventory!(commit: "b" * 40)
+      refute_same original, journal.canonical_event_inventory!(commit: "a" * 40)
+      assert_equal 3, counts.fetch(:inventory)
+      %i[repo_root ref checkout_root read_boundary].each do |field|
+        before = journal.canonical_event_inventory!(commit: "a" * 40)
+        journal.instance_variable_set(:"@#{field}", field == :read_boundary ? Object.new : "/different/#{field}")
+        refute_same before, journal.canonical_event_inventory!(commit: "a" * 40)
+      end
+      other, other_counts = inventory_reader
+      other.canonical_event_inventory!(commit: "a" * 40)
+      assert_equal 1, other_counts.fetch(:inventory)
+      refute_same original, journal.canonical_event_inventory!(commit: "a" * 40)
+    end
+    before = counts.fetch(:inventory)
+    2.times { journal.canonical_event_inventory!(commit: "a" * 40) }
+    assert_equal before + 2, counts.fetch(:inventory)
+  end
+
+  def test_failed_inventory_is_not_cached_and_nested_refusal_restores_only_parent_operation
+    journal, counts = inventory_reader
+    Journal.with_event_read_operation do
+      original = journal.canonical_event_inventory!(commit: "a" * 40)
+      assert_raises(IOError) do
+        Journal.with_event_read_operation do
+          refute_same original, journal.canonical_event_inventory!(commit: "a" * 40)
+          raise IOError, "controlled refusal"
+        end
+      end
+      assert_same original, journal.canonical_event_inventory!(commit: "a" * 40)
+      2.times { assert_raises(Ace::Assign::AttemptErrors::EvidenceUnavailable) { journal.canonical_event_inventory!(commit: "f" * 40) } }
+      refute_same original, journal.canonical_event_inventory!(commit: "a" * 40)
+      assert_equal 5, counts.fetch(:inventory)
+      %w[HEAD aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa].each do |commit|
+        journal.instance_variable_set(:@mode, :local)
+        before = counts.fetch(:inventory)
+        2.times { journal.canonical_event_inventory!(commit: commit) }
+        assert_equal before + 2, counts.fetch(:inventory)
+      end
+    end
+    assert_nil Thread.current[:ace_assign_event_read_operation]
+  end
+
+  def test_concurrent_inventory_operations_never_share_a_journal_snapshot
+    journal, counts = inventory_reader
+    ready, release = Queue.new, Queue.new
+    threads = 2.times.map do
+      Thread.new do
+        Journal.with_event_read_operation do
+          inventory = journal.canonical_event_inventory!(commit: "a" * 40)
+          ready << inventory
+          release.pop
+          raise "inventory replaced" unless inventory.equal?(journal.canonical_event_inventory!(commit: "a" * 40))
+        end
+      end
+    end
+    refute_same ready.pop, ready.pop
+    2.times { release << true }
+    threads.each(&:value)
+    assert_equal 2, counts.fetch(:inventory)
+  ensure
+    threads&.each { |thread| thread.kill if thread.alive? }
+  end
+
   private
 
   # Only the memo's maintained decoder boundary is controlled here; actual
   # Git/Client/Server/CAS composition has a separate feature responsibility.
+  def inventory_reader
+    journal, counts = reader
+    counts[:inventory] = 0
+    journal.define_singleton_method(:read_canonical_inventory!) do |commit:|
+      counts[:inventory] += 1
+      raise Ace::Assign::AttemptErrors::EvidenceUnavailable, "controlled invalid history" if commit == "f" * 40
+      freeze_inventory_projection("commit" => commit, "events" => {"assignment" => [{"payload" => {"value" => "original"}}]}, "introductions" => {})
+    end
+    [journal, counts]
+  end
+
   def reader
     counts = {reads: 0, refs: 0}
     journal = Journal.allocate

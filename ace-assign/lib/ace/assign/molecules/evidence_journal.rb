@@ -35,7 +35,7 @@ module Ace
         HISTORY_LIMIT = 100_000
         EVENT_BATCH_BYTES = 1024 * 1024
 
-        # A wire operation may retain one immutable selection, never admission
+        # A wire operation may retain one event and one inventory selection, never admission
         # or current-ref truth. Nested operations own independent selections.
         def self.with_event_read_operation
           previous = Thread.current[:ace_assign_event_read_operation]
@@ -342,6 +342,23 @@ module Ace
         # Complete immutable index facts are authenticated before any caller
         # filters ownership. A missing current fact cannot hide an older one.
         def canonical_event_inventory!(commit:)
+          context = Thread.current[:ace_assign_event_read_operation]
+          reusable = context && @mode == :protected && commit.is_a?(String) && commit.match?(/\A[0-9a-f]{40}\z/)
+          selection = if reusable
+            [object_id, @repo_root, @ref, @checkout_root, @mode, @read_boundary&.object_id, commit]
+              .map { |value| value.is_a?(String) ? value.dup.freeze : value }.freeze
+          end
+          return context.fetch(:inventory) if reusable && context[:inventory_selection] == selection
+          context&.delete(:inventory_selection)
+          context&.delete(:inventory)
+          inventory = read_canonical_inventory!(commit: commit)
+          if reusable
+            context[:inventory_selection], context[:inventory] = selection, inventory
+          end
+          inventory
+        end
+
+        def read_canonical_inventory!(commit:)
           nodes = canonical_history_nodes!(commit)
           root_events, introductions = {}, {}
           previous_chains, previous_files = {}, {}
@@ -378,6 +395,8 @@ module Ace
         rescue KeyError, TypeError, ArgumentError, NoMethodError
           raise AttemptErrors::EvidenceUnavailable, "canonical inventory history is unverifiable"
         end
+
+        private :read_canonical_inventory!
 
         def canonical_history_nodes!(commit)
           verify_commit!(commit)
@@ -478,17 +497,20 @@ module Ace
         def read_events(assignment_id, commit: ref_value)
           context = Thread.current[:ace_assign_event_read_operation]
           if commit.nil?
-            context&.clear
+            context&.delete(:selection)
+            context&.delete(:events)
             return []
           end
           unless context && @mode == :protected && commit.is_a?(String) && commit.match?(/\A[0-9a-f]{40}\z/)
-            context&.clear
+            context&.delete(:selection)
+            context&.delete(:events)
             return read_event_snapshots!([assignment_id], commit: commit).first.fetch(assignment_id)
           end
           selection = [object_id, @repo_root, @ref, @checkout_root, @mode, @read_boundary&.object_id,
             assignment_id, commit].map { |value| value.is_a?(String) ? value.dup.freeze : value }.freeze
           return context.fetch(:events) if context[:selection] == selection
-          context.clear
+          context.delete(:selection)
+          context.delete(:events)
           events = read_event_snapshots!([assignment_id], commit: commit).first.fetch(assignment_id)
           frozen = freeze_inventory_projection(events)
           context[:selection], context[:events] = selection, frozen

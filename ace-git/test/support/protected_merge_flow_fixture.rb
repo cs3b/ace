@@ -231,6 +231,12 @@ module ProtectedMergeFlowFixture
             next original_process.call(argv, **options)
           ensure
             metric = read_metrics[argv.first == "git" ? "git" : "other"]
+            if argv.first == "git"
+              verb = argv.drop(1).drop_while { |arg| arg != "-C" }.drop(2).first || argv[1]
+              group = read_metrics["git:#{verb}"]
+              group["calls"] += 1
+              group["seconds"] += Process.clock_gettime(Process::CLOCK_MONOTONIC) - started_at
+            end
             metric["calls"] += 1
             metric["seconds"] += Process.clock_gettime(Process::CLOCK_MONOTONIC) - started_at
           end
@@ -267,8 +273,8 @@ module ProtectedMergeFlowFixture
       interrupt_before_cas = @interrupt_before_cas
       measure_request = @measure_request_admission
       if measure_request
-        [[journal, %i[service_request canonical_event_inventory! read_events event_commits!]],
-          [@endcap.instance_variable_get(:@launch), %i[with_assignment definition]]].each do |owner, methods|
+        [[journal, %i[service_request canonical_event_inventory! read_events event_commits! read_event_snapshots! canonical_history_nodes! each_history_event_snapshot! verify_service_record! ref_value mutate]],
+          [@endcap.instance_variable_get(:@launch), %i[with_assignment definition control_registration_context! recheck_control_registration! authenticate_inventory_registration!]]].each do |owner, methods|
           methods.each do |method|
             original = owner.method(method)
             owner.define_singleton_method(method) do |*args, **keywords, &block|

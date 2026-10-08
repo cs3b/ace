@@ -157,9 +157,12 @@ module Ace
           journal.append(assignment_id: "alpha", attempt_id: "one", events: [following])
           foreign = build_event(type: "intent", attempt_id: "foreign", payload: {})
           tip = journal.append(assignment_id: "beta", attempt_id: "foreign", events: [foreign])
+          journal.instance_variable_set(:@mode, :protected)
+          Molecules::EvidenceJournal.with_event_read_operation do
           inventory = journal.canonical_event_inventory!(commit: tip)
           assert_equal %w[alpha beta], inventory.fetch("events").keys.sort
           assert_equal introduction, inventory.fetch("introductions").fetch("alpha").fetch(first.fetch("digest"))
+          assert_same inventory, journal.canonical_event_inventory!(commit: tip)
           assert inventory.frozen?
           assert inventory.fetch("events").fetch("alpha").all?(&:frozen?)
           checkout = File.join(cache_dir, "co", "journal")
@@ -191,7 +194,10 @@ module Ace
           assert_raises(AttemptErrors::EvidenceUnavailable) { journal.canonical_event_inventory!(commit: changed) }
           # Existing selective proof still authenticates only its selected assignment.
           assert_equal introduction, journal.event_commit!(assignment_id: "alpha", event_digest: first.fetch("digest"), commit: changed)
-          assert_equal inventory, journal.canonical_event_inventory!(commit: tip)
+          recovered = journal.canonical_event_inventory!(commit: tip)
+          assert_equal inventory, recovered
+          refute_same inventory, recovered, "failed inventory cannot retain the previous cache"
+          end
         end
       end
 

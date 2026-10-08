@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Reuse one fully authenticated canonical inventory at an exact immutable journal commit within a protected wire operation, retaining fresh admission and CAS checks.
+
 - Share prepared-work fetch helpers without inheriting runnable tests, so managed-flow and worker feature files execute only their own scenarios. Keep managed workspace admission on its existing controlled native boundary.
 
 - Preserve literal nested JSON in captured instructions while strictly parsing only opened, closed admitted-selector tokens and quoting each original value once.
