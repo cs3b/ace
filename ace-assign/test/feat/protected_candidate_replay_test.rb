@@ -43,6 +43,13 @@ module Ace
           first = send_candidate.call("first", params)
           assert_equal 1, first.data.fetch("candidate_generation")
           first_ref = @journal.ref_value
+          parent = {"mapping_id" => "mapping", "assignment_id" => "assignment", "attempt_id" => @attempt,
+            "scope" => "010", "head" => @head, "base" => @head, "candidate_generation" => 1}
+          candidate_owner = @endcap
+          observed = candidate_owner.campaign_parent_candidate!(journal: @journal, commit: first_ref, params: parent, map: @map)
+          assert_equal 1, observed.fetch("candidate_generation")
+          assert observed.frozen?
+          assert observed.fetch("head").frozen?
           replay = send_candidate.call("first", params)
           assert replay.replayed
           assert_equal first.data, replay.data
@@ -55,6 +62,18 @@ module Ace
           second = send_candidate.call("second", next_params)
           assert_equal 2, second.data.fetch("candidate_generation")
           selected = @journal.ref_value
+          assert_raises(AttemptErrors::Conflict) do
+            candidate_owner.campaign_parent_candidate!(journal: @journal, commit: selected, params: parent, map: @map)
+          end
+          assert_raises(AttemptErrors::Conflict) do
+            candidate_owner.campaign_parent_candidate!(journal: @journal, commit: first_ref, params: parent, map: @map)
+          end
+          assert_raises(AttemptErrors::Conflict) do
+            candidate_owner.campaign_parent_candidate!(journal: @journal, commit: selected,
+              params: parent.merge("candidate_generation" => 2, "scope" => "other"), map: @map)
+          end
+          assert_equal 2, candidate_owner.campaign_parent_candidate!(journal: @journal, commit: selected,
+            params: parent.merge("candidate_generation" => 2), map: @map).fetch("candidate_generation")
           assert_equal first.data, send_candidate.call("first", params).data
           assert_equal selected, @journal.ref_value
           @kernel.peer_identity = @kernel.capture(92)
@@ -62,6 +81,10 @@ module Ace
           assert_equal selected, @journal.ref_value
           @kernel.peer_identity = @worker
           @kernel.dead << @worker.fetch("pid")
+          assert_raises(AttemptErrors::EvidenceUnavailable) do
+            candidate_owner.campaign_parent_candidate!(journal: @journal, commit: selected,
+              params: parent.merge("candidate_generation" => 2), map: @map)
+          end
           assert_raises(AttemptErrors::EvidenceUnavailable) { send_candidate.call("first", params) }
           assert_equal selected, @journal.ref_value
         end

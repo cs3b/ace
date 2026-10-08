@@ -59,6 +59,27 @@ module Ace
           launch.attach_result_owner(self) if launch.respond_to?(:attach_result_owner)
         end
 
+        # Internal registration consumer only: caller holds the original parent
+        # lifecycle exclusion. Read one authenticated prefix; never accept a
+        # child's revisions as evidence of the parent's current candidate.
+        def campaign_parent_candidate!(journal:, commit:, params:, map:)
+          events = @launch.preview_attempt_events!(journal: journal, commit: commit, params: params, map: map)
+          original = active_origin(events, params)
+          current = candidate(events)
+          unless current && original.fetch("scope") == params.fetch("scope") &&
+              original.fetch("base_head") == params.fetch("base") &&
+              current.fetch("head") == params.fetch("head") &&
+              current.fetch("candidate_generation") == params.fetch("candidate_generation") && journal.ref_value == commit
+            raise AttemptErrors::Conflict, "campaign parent candidate changed"
+          end
+          projection = params.slice("assignment_id", "attempt_id").merge(
+            "scope" => original.fetch("scope"), "base" => original.fetch("base_head"),
+            "head" => current.fetch("head"), "candidate_generation" => current.fetch("candidate_generation"))
+          projection.transform_values { |value| value.is_a?(String) ? value.dup.freeze : value }.freeze
+        rescue KeyError, TypeError
+          raise AttemptErrors::EvidenceUnavailable, "campaign parent candidate is unavailable"
+        end
+
         def authorize_transfer!(request:, peer:, role:)
           return dispatch_prepared_fetch(request: request, peer: peer, role: role, body: false) if prepared_fetch?(request)
           return authorize_inbox_transfer!(request: request, peer: peer, role: role) if request.fetch("operation") == "reconcile_inbox"
