@@ -53,7 +53,14 @@ module Ace
             key_path = File.join(@dir, "receipt-public.pem")
             File.write(key_path, @receipt_key.public_key.to_pem)
             @native = Native.new
-            @command = Inbox.new(executor: Executor.new, native: @native)
+            entry = Ace::Runtime::Molecules::ProtectedTaskContextEntry.new(stat: ->(path) {
+              allowed = [Ace::Runtime::Molecules::ProtectedTaskContextEntry::PATH,
+                *Ace::Runtime::Molecules::ProtectedTaskContextEntry::PRESENCE_PATHS]
+              raise "unexpected installation probe" unless allowed.include?(path)
+              raise Errno::ENOENT, path
+            })
+            @selection = Molecules::ProtectedInboxSelection.new(entry_owner: entry, env: {})
+            @command = Inbox.new(executor: Executor.new, native: @native, selection: @selection)
             delivery_path = File.join(@dir, "deliveries")
             @command.define_singleton_method(:config) do
               {"inbox_receipt_public_key" => key_path, "deliveries_dir" => delivery_path}
@@ -69,6 +76,13 @@ module Ace
           def call(operation, **options)
             out, = capture_io { @command.call(operation: operation, event: "inb-12345678", **options) }
             JSON.parse(out)
+          end
+
+          def test_even_empty_protected_only_options_refuse_before_local_configuration
+            @command.define_singleton_method(:config) { raise "local configuration must not be read" }
+            %i[project mapping inbox_context claim_generation].each do |key|
+              assert_raises(Ace::Support::Cli::Error) { call("status", **{key => ""}) }
+            end
           end
 
           def test_enqueue_status_deliver_across_separate_command_calls
@@ -140,7 +154,7 @@ module Ace
             assert_match(/does not match/, refused["reconciliation_refusal"])
             assert_equal "uncertain", call("status")["state"]
 
-            restarted = Inbox.new(executor: Executor.new, native: @native)
+            restarted = Inbox.new(executor: Executor.new, native: @native, selection: @selection)
             delivery_path = File.join(@dir, "deliveries")
             trusted_path = File.join(@dir, "receipt-public.pem")
             restarted.define_singleton_method(:config) do

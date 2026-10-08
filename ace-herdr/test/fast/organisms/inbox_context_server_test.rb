@@ -35,6 +35,35 @@ class InboxContextServerTest < Minitest::Test
     exchange(JSON.generate({"version" => 1, "context_id" => "ctx", "operation" => operation, "params" => params}) + "\n", identity)
   end
 
+  def test_direct_enqueue_exact_raw_payload_framing_refuses_before_effect_entry
+    @source_inbox = Ace::Herdr::Organisms::Inbox.new(executor: PaneFixture.new, native: NativeFixture.new,
+      deliveries_dir: @events, receipt_public_key: KEY.public_key)
+    restart
+    operation = begin_operation
+    payload = "hello"
+    params = {"operation_id" => operation.fetch("operation_id"), "key_generation" => 1,
+      "event_id" => "event1", "attempt_id" => "attempt1", "payload_bytes" => payload.bytesize,
+      "payload_sha256" => Digest::SHA256.hexdigest(payload),
+      "reverse" => {"schema" => Ace::Hitl::Providers::Ref::SCHEMA, "session" => "ws1", "pane" => "p1"}}
+    frame = ->(arguments) { JSON.generate("version" => 1, "context_id" => "ctx", "operation" => "enqueue_context", "params" => arguments) + "\n" }
+    bad = [frame.call(params) + "hell", frame.call(params) + payload + "extra",
+      frame.call(params.merge("payload_bytes" => "5")) + payload,
+      frame.call(params.merge("payload_bytes" => 65_537)) + payload,
+      frame.call(params.merge("payload_sha256" => "0" * 64)) + payload,
+      frame.call(params.merge("payload_bytes" => 1, "payload_sha256" => Digest::SHA256.hexdigest("\xff".b))) + "\xff".b,
+      frame.call(params.merge("payload_bytes" => 1, "payload_sha256" => Digest::SHA256.hexdigest("\0"))) + "\0",
+      frame.call(params.merge("body" => payload)) + payload]
+    bad.each do |bytes|
+      assert_equal "context_blocked", exchange(bytes).dig("error", "code")
+      assert_equal "admitted", begin_operation.fetch("state")
+      refute File.exist?(File.join(@events, "event1.json"))
+    end
+    result = exchange(frame.call(params) + payload).fetch("result")
+    assert_equal "ace.herdr.inbox-direct-result/v1", result.fetch("schema")
+    assert_equal "idle", result.fetch("admission_state")
+    assert_equal "queued", result.dig("record", "state")
+  end
+
   def test_actual_binary_proof_frame_reconciles_only_after_complete_eof
     prepare_reconciliation
     frame = {"version" => 1, "context_id" => "ctx", "operation" => "reconcile_context",

@@ -79,6 +79,8 @@ require_relative "cli/commands/authority/worker"
 require_relative "cli/commands/authority/task_context"
 require_relative "cli/commands/authority/task_context_principal"
 require_relative "cli/commands/authority/task_context_selection"
+require_relative "cli/commands/authority/inbox_context_principal"
+require_relative "cli/commands/authority/inbox_context_selection"
 require_relative "cli/commands/attempt/base"
 require_relative "cli/commands/attempt/start"
 require_relative "cli/commands/attempt/status"
@@ -105,6 +107,8 @@ module Ace
         ["authority task-context", "Read captured original task context through the fixed entry"],
         ["authority task-context-principal", "Classify the actual caller through retained protected owners"],
         ["authority task-context-selection", "Read the authenticated original context entry selection"],
+        ["authority inbox-context-principal", "Classify the actual caller through every retained protected owner"],
+        ["authority inbox-context-selection", "Read the fixed current inbox context endpoint selection"],
         ["delivery", "Execute or reconcile attempt-bound forge delivery"],
         ["status", "Show assignment status"],
         ["step", "Show step instructions"],
@@ -178,6 +182,8 @@ register "authority worker", wrap_command(Commands::Authority::Worker)
 register "authority task-context", wrap_command(Commands::Authority::TaskContext)
 register "authority task-context-principal", wrap_command(Commands::Authority::TaskContextPrincipal)
 register "authority task-context-selection", wrap_command(Commands::Authority::TaskContextSelection)
+register "authority inbox-context-principal", wrap_command(Commands::Authority::InboxContextPrincipal)
+register "authority inbox-context-selection", wrap_command(Commands::Authority::InboxContextSelection)
       register "create", wrap_command(Commands::Create)
       register "delivery", wrap_command(Commands::Delivery)
       register "status", wrap_command(Commands::Status)

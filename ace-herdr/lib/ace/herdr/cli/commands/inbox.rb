@@ -4,6 +4,10 @@ require "json"
 require "openssl"
 require "ace/support/cli"
 require_relative "support"
+require_relative "../../molecules/protected_inbox_selection"
+require_relative "../../molecules/inbox_context_client"
+require_relative "../../molecules/inbox_cli_input"
+require_relative "../../molecules/inbox_direct_effect_binding"
 
 module Ace
   module Herdr
@@ -15,6 +19,10 @@ module Ace
 
           desc "Enqueue, inspect, deliver, or reconcile a durable agent inbox event"
           argument :operation, desc: "enqueue, status, deliver, or reconcile"
+          option :project, type: :string, desc: "Installed project ID"
+          option :mapping, type: :string, desc: "Installed mapping ID"
+          option :inbox_context, type: :string, desc: "Installed inbox context ID"
+          option :claim_generation, type: :integer, desc: "Original expected claim generation"
           option :event, type: :string, desc: "Stable event ID"
           option :attempt, type: :string, desc: "Assignment attempt ID"
           option :ref, type: :string, desc: "Herdr reverse-address JSON file"
@@ -22,9 +30,11 @@ module Ace
           option :receipt, type: :string, desc: "Native proof JSON file"
           option :format, type: :string, desc: "Output format (json)"
 
-          def initialize(executor: nil, native: nil)
+          def initialize(executor: nil, native: nil, selection: Molecules::ProtectedInboxSelection.new,
+            context_client_factory: Molecules::InboxContextClient.method(:selected), kernel: Ace::Runtime::Molecules::ProtectedLinux.new)
             @executor = executor
             @native = native
+            @selection, @context_client_factory, @kernel = selection, context_client_factory, kernel
           end
 
           def call(operation: nil, **options)
@@ -32,6 +42,13 @@ module Ace
             translate_errors do
               cli_error("--event is required") if options[:event].to_s.empty?
               cli_error("only --format json is supported") if options[:format] && options[:format] != "json"
+              protected = false
+              @selection.with(options) do |selected|
+                next unless selected
+                puts JSON.generate(protected_call(operation, options, selected))
+                protected = true
+              end
+              next if protected
               inbox = Organisms::Inbox.from_config(config: config, executor: executor,
                 native: @native || Molecules::NativeQueueExecutor.new,
                 root: Dir.pwd)
@@ -67,6 +84,60 @@ module Ace
             end
           rescue Errno::ENOENT, JSON::ParserError => e
             raise Ace::Support::Cli::Error, e.message
+          end
+
+
+          private
+
+          def protected_call(operation, options, selected)
+            %i[event attempt].each { |key| cli_error("--#{key} is required") if options[key].to_s.empty? }
+            unless %w[enqueue status deliver].include?(operation)
+              cli_error("protected operation requires its maintained direct handler")
+            end
+            allowed = %i[project mapping inbox_context event attempt format]
+            allowed += %i[ref file] if operation == "enqueue"
+            allowed += %i[claim_generation] if operation == "deliver"
+            if options.any? { |key, value| !value.nil? && !allowed.include?(key) }
+              cli_error("protected inbox operation options differ")
+            end
+            context = selected.fetch("context")
+            client = @context_client_factory.call(context_id: selected.fetch("inbox_context_id"),
+              socket_path: context.fetch("control_socket_path"), owner_credentials: context.fetch("owner_credentials"))
+            if operation == "status"
+              return client.request("status_context", {"event_id" => options.fetch(:event), "attempt_id" => options.fetch(:attempt)}).fetch("record")
+            end
+            if operation == "deliver"
+              unless options[:claim_generation].is_a?(Integer) && options[:claim_generation] >= 0
+                cli_error("--claim-generation must be an explicit nonnegative integer")
+              end
+              admission = direct_admission(client, selected, options, "deliver")
+              result = client.request("deliver_context", {"operation_id" => admission.fetch("operation_id"),
+                "key_generation" => admission.fetch("key_generation"), "event_id" => options.fetch(:event),
+                "attempt_id" => options.fetch(:attempt), "expected_claim_generation" => options.fetch(:claim_generation)})
+              unless %w[idle unknown].include?(result["admission_state"])
+                cli_error("direct delivery admission observation differs")
+              end
+              client.request("end_context_operation", {"operation_id" => admission.fetch("operation_id")}) if result.fetch("admission_state") == "idle"
+              return result.fetch("record").merge("admission_state" => result.fetch("admission_state"))
+            end
+            %i[ref file].each { |key| cli_error("--#{key} is required") if options[key].to_s.empty? }
+            reverse = Molecules::InboxCliInput.reverse(options.fetch(:ref))
+            payload = Molecules::InboxCliInput.read(options.fetch(:file), limit: 65_536).dup.force_encoding(Encoding::UTF_8)
+            cli_error("payload encoding differs") unless payload.valid_encoding? && !payload.include?("\0")
+            admission = direct_admission(client, selected, options, "enqueue")
+            result = client.request("enqueue_context", {"operation_id" => admission.fetch("operation_id"),
+              "key_generation" => admission.fetch("key_generation"), "event_id" => options.fetch(:event),
+              "attempt_id" => options.fetch(:attempt), "reverse" => reverse, "payload_bytes" => payload.bytesize,
+              "payload_sha256" => Digest::SHA256.hexdigest(payload)}, payload: payload)
+            client.request("end_context_operation", {"operation_id" => admission.fetch("operation_id")})
+            result.fetch("record").merge("admission_state" => result.fetch("admission_state"))
+          end
+
+
+          def direct_admission(client, selected, options, purpose)
+            peer = @kernel.capture(Process.pid)
+            client.request("begin_context_operation", {"context_id" => selected.fetch("inbox_context_id"),
+              "purpose" => purpose, "event_id" => options.fetch(:event), "process_binding" => peer})
           end
 
         end

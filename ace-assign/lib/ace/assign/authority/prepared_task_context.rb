@@ -52,6 +52,20 @@ module Ace
           unavailable!("task-context original selection differs")
         end
 
+        def inbox_principal
+          selected_entry!
+          context = installed_context!
+          response!({"schema" => "ace.assign.inbox-context-principal/v1", "uid" => context.uid,
+            "protected_participant" => context.protected_participant?}, MAX_PRINCIPAL)
+        end
+
+        def inbox_selection(project:, mapping:, inbox_context:)
+          selected_entry!
+          installed_context!.inbox_context_selection(project: project, mapping: mapping, inbox_context: inbox_context) do |record|
+            response!(record.merge("schema" => "ace.assign.inbox-context-selection/v1"), 16_384)
+          end
+        end
+
         private
 
         def selected_entry!

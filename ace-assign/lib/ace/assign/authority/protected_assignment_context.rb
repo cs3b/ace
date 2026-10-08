@@ -31,8 +31,10 @@ module Ace
           new(deployment: deployment, history: history)
         end
 
-        def initialize(deployment:, history:, uid: Process.uid, kernel: nil, env: ENV)
+        def initialize(deployment:, history:, uid: Process.uid, kernel: nil, env: ENV,
+          artifacts_factory: -> { Ace::Runtime::Molecules::ProtectedArtifactSet.new })
           @deployment, @history, @uid, @kernel, @env = deployment, history, uid, kernel, env
+          @artifacts_factory = artifacts_factory
         end
 
         # A declared installed account never falls through to local authority.
@@ -56,6 +58,37 @@ module Ace
           end
         rescue KeyError, TypeError, NoMethodError
           raise AttemptErrors::EvidenceUnavailable, "protected installed principal inventory is malformed"
+        end
+
+        # Read-only current selection; no role grant or private Inbox access.
+        def inbox_context_selection(project:, mapping:, inbox_context:)
+          unless installed? && [project, mapping, inbox_context].all? { |id| id.is_a?(String) && Deployment::TOKEN.match?(id) }
+            raise AttemptErrors::EvidenceUnavailable, "installed inbox selectors differ"
+          end
+          descriptor = @deployment.artifact_reference
+          history = @history.artifact_reference
+          unless descriptor && history && @history.selects?(@deployment)
+            raise AttemptErrors::EvidenceUnavailable, "installed inbox references are unavailable"
+          end
+          @artifacts_factory.call.with do |held|
+            held.read!(descriptor)
+            held.read!(history)
+            map = @deployment.mapping(mapping)
+            unless map.fetch("project_id") == project
+              raise AttemptErrors::EvidenceUnavailable, "installed inbox project differs"
+            end
+            selected = @deployment.inbox_context(mapping, inbox_context)
+            authority = @deployment.authority(map.fetch("authority_id"))
+            result = {"uid" => @uid, "project_id" => project, "mapping_id" => mapping,
+              "inbox_context_id" => inbox_context, "descriptor" => descriptor, "history" => history,
+              "context" => selected.slice("control_socket_path", "owner_credentials", "native_mapping_id"),
+              "authority" => authority.slice("socket_path", "uid", "gid", "groups")
+                .merge("authority_id" => map.fetch("authority_id"))}
+            held.verify_unchanged!
+            yield result
+          end
+        rescue ArgumentError, KeyError, TypeError, Ace::Runtime::Error
+          raise AttemptErrors::EvidenceUnavailable, "installed inbox selection is unavailable"
         end
 
         def protected_worker?

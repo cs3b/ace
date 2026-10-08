@@ -276,6 +276,62 @@ module Ace
           end
         end
 
+        # Direct completion readback uses the existing event lock and immutable ledger.
+        def verify_direct_enqueue(binding)
+          selection = binding.fetch("selection")
+          address = address_for(selection.fetch("reverse"))
+          with_event(binding.fetch("event_id"), create_lock: false) do |record|
+            raise ValidationError, "direct enqueue record is unavailable" unless record&.inbox
+            validate_match!(record, binding.fetch("attempt_id"), address, selection.fetch("payload_sha256"))
+            origin = record.inbox.fetch("origin_target")
+            validate_expected_target!(origin)
+            unless record.answer.bytesize == selection.fetch("payload_bytes") &&
+                record.inbox.fetch("receipt_key_sha256") == key_fingerprint &&
+                origin.values_at("session", "pane") == [address.session, address.pane] &&
+                record.inbox.fetch("binding").fetch("payload_sha256") == record.answer_digest
+              raise ValidationError, "direct enqueue retained association differs"
+            end
+            public_record(record)
+          end
+        rescue KeyError, TypeError, SystemCallError
+          raise ValidationError, "direct enqueue retained record is unavailable"
+        end
+
+        def verify_direct_delivery(binding, require_idle: false)
+          with_event(binding.fetch("event_id"), create_lock: false) do |record|
+            unless record&.inbox && record.inbox.fetch("attempt_id") == binding.fetch("attempt_id") &&
+                record.inbox.fetch("receipt_key_sha256") == key_fingerprint
+              raise ValidationError, "direct delivery retained association differs"
+            end
+            validate_expected_target!(record.inbox.fetch("origin_target"))
+            unless record.inbox.fetch("origin_target").values_at("session", "pane") == [record.session, record.pane] &&
+                record.inbox.fetch("binding").fetch("payload_sha256") == record.answer_digest
+              raise ValidationError, "direct delivery retained target differs"
+            end
+            expected = binding.fetch("selection").fetch("expected_claim_generation")
+            generation = record.inbox.fetch("claim_generation")
+            raise ValidationError, "direct delivery retained generation differs" unless generation >= expected
+            idle = case record.state
+            when "queued"
+              !record.inbox["submission_intent"] && (generation.zero? || record.history.last&.fetch("action", nil) == "pre-submit-rejection")
+            when "delivered"
+              receipt = record.inbox["receipt"]
+              receipt.is_a?(Hash) && receipt.slice("event_id", "attempt_id", "claim_generation", "payload_sha256", "binding") ==
+                {"event_id" => record.event_id, "attempt_id" => binding.fetch("attempt_id"), "claim_generation" => generation,
+                  "payload_sha256" => record.answer_digest, "binding" => record.inbox.fetch("binding")} &&
+                %w[none sent].include?(record.inbox.dig("wake", "status"))
+            when "completed"
+              record.inbox["reconciliation"].is_a?(Hash) && generation.positive?
+            else
+              false
+            end
+            raise ValidationError, "direct delivery completion is not retained" if require_idle && !idle
+            {"record" => public_record(record), "idle" => !!idle}
+          end
+        rescue KeyError, TypeError, SystemCallError
+          raise ValidationError, "direct delivery retained record is unavailable"
+        end
+
         # Protected canonical reads only use an already registered event's lock.
         # Missing retention is unavailable evidence, never query-time repair.
         def retained_status(event:)
@@ -288,10 +344,24 @@ module Ace
           raise ValidationError, "retained inbox lock is unavailable"
         end
 
-        def deliver(event:)
+        def deliver(event:, expected_claim_generation: nil, expected_attempt: nil)
           validate_id!(event, "event")
           with_event(event) do |record|
             raise ValidationError, "unknown inbox event: #{event}" unless record&.inbox
+            unless expected_claim_generation.nil?
+              unless expected_claim_generation.is_a?(Integer) && expected_claim_generation >= 0 &&
+                  expected_attempt.is_a?(String) && EVENT.match?(expected_attempt) &&
+                  record.inbox.fetch("attempt_id") == expected_attempt && record.inbox.fetch("receipt_key_sha256") == key_fingerprint
+                raise ValidationError, "protected delivery original association differs"
+              end
+              current = record.inbox.fetch("claim_generation")
+              raise ValidationError, "protected delivery expected generation is future" if expected_claim_generation > current
+              next public_record(record) if expected_claim_generation < current || %w[delivered completed uncertain].include?(record.state)
+              unless record.state == "queued" && !record.inbox["submission_intent"] &&
+                  (current.zero? || record.history.last&.fetch("action", nil) == "pre-submit-rejection")
+                raise ValidationError, "protected delivery is not known pre-submission"
+              end
+            end
             next retry_wake(record) if record.state == "delivered" && wake_pending?(record)
             next public_record(record) if %w[delivered completed uncertain].include?(record.state)
             unless record.state == "queued"

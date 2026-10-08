@@ -32,6 +32,26 @@ module Ace
           Ace::Runtime::Molecules::ProtectedSocket.write(socket, value, deadline: deadline, limit: LIMIT)
         end
 
+        def read_payload(socket, size:, deadline:)
+          unless size.is_a?(Integer) && size.between?(1, 65_536)
+            raise ValidationError, "context payload byte count differs"
+          end
+          bytes = +"".b
+          while bytes.bytesize < size
+            remaining = deadline - Process.clock_gettime(Process::CLOCK_MONOTONIC)
+            unless remaining.positive? && IO.select([socket], nil, nil, remaining)
+              raise ValidationError, "context payload upload deadline expired"
+            end
+            part = socket.read_nonblock([size - bytes.bytesize, 4096].min, exception: false)
+            next if part == :wait_readable
+            raise ValidationError, "context payload upload was not completed" unless part
+            bytes << part
+          end
+          text = bytes.force_encoding(Encoding::UTF_8)
+          raise ValidationError, "context payload encoding differs" unless text.valid_encoding? && !text.include?("\0")
+          text.freeze
+        end
+
         def read_proof(socket, sizes:, deadline:)
           unless sizes.is_a?(Array) && sizes.size == 2 && sizes.all? { |size| size.is_a?(Integer) && size.between?(1, LIMIT) }
             raise ValidationError, "context proof byte counts differ"

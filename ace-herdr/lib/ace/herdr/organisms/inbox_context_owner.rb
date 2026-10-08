@@ -6,6 +6,7 @@ require_relative "../molecules/inbox_context_store"
 require_relative "../molecules/inbox_context_key"
 require_relative "inbox"
 require_relative "inbox_context_effects"
+require_relative "inbox_context_direct_effects"
 
 module Ace
   module Herdr
@@ -13,6 +14,7 @@ module Ace
       # The existing inbox owner grants admission; this metadata never contains delivery outcomes.
       class InboxContextOwner
         include InboxContextEffects
+        include InboxContextDirectEffects
         TOKEN = /\A[A-Za-z0-9][A-Za-z0-9._-]{0,127}\z/
         DIGEST = /\A[0-9a-f]{64}\z/
         ID = /\A[0-9a-f]{32}\z/
@@ -74,6 +76,7 @@ module Ace
             if existing
               id, operation = existing
               raise ValidationError, "context admission retry binding differs" unless operation.fetch("purpose") == purpose
+              direct_idle_readback!(state, operation) if operation["effect_binding"] && operation.fetch("in_flight").zero? && direct_binding?(operation)
               next operation_projection(state, id, operation)
             end
             raise ValidationError, "context admission count exceeds bounds" if state.fetch("operations").size >= OPERATION_LIMIT
@@ -91,6 +94,7 @@ module Ace
           transaction do |state|
             operation = operation!(state, operation_id, peer)
             raise ValidationError, "context operation is still executing" unless operation.fetch("in_flight").zero?
+            direct_idle_readback!(state, operation) if direct_binding?(operation)
             state.fetch("operations").delete(operation_id)
             {"operation_id" => operation_id, "state" => "ended"}
           end
@@ -387,6 +391,13 @@ module Ace
               raise ValidationError, "context admission metadata differs"
             end
             if operation["effect_binding"]
+              if direct_binding?(operation)
+                effect = Molecules::InboxDirectEffectBinding.verify!(operation.fetch("effect_binding"), key_generation: operation.fetch("key_generation"))
+                unless effect.values_at("purpose", "event_id") == operation.values_at("purpose", "event_id") && operation["completion"].nil?
+                  raise ValidationError, "context retained direct binding differs"
+                end
+                next
+              end
               effect = Molecules::InboxContextEffectBinding.verify!(operation.fetch("effect_binding"))
               unless effect.values_at("operation_id", "key_generation", "event_id", "inbox_context_id") ==
                   [id, operation.fetch("key_generation"), operation.fetch("event_id"), @context_id] && operation.fetch("purpose") == "reconcile"
