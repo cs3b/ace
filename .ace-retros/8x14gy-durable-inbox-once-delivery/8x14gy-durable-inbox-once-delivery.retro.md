@@ -12,7 +12,7 @@ status: active
 ## What Went Well
 
 - Reusing `DeliveryRecordStore` and its per-event lock gave the inbox durable write-ahead state without a second idempotency store. An accepted native submission is saved before an optional idle wake, and uncertain outcomes require signed operator or supervisor proof.
-- Exact-session Codex and Pi queues prevent a reused pane from receiving the payload. Installed TS-HERDR-001 passed all three goals, including separate CLI processes, signed reconciliation, and idle Pi delivery.
+- Historical TS-HERDR-001 reported three passing goals using installed ACE gems with fake Herdr, Codex and Pi executables. That result was fixture packaging/record evidence, not actual installed native consumption proof. The obsolete scenario was removed when Codex moved to the held authenticated WebSocket route; actual installed native acceptance belongs to lab-config:8wl.t.gad.2.
 - Focused unit cases caught crash/retry, target movement, malformed replacement addresses, and bounded wake process behavior. The final package run passed 297 tests and 897 assertions; `ace-herdr v0.2.0` was prepared locally.
 
 ## What Could Be Improved

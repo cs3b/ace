@@ -1,5 +1,0 @@
-# Goal 3 — Installed idle Pi delivery
-
-Use the installed `ace-herdr` executable and the same isolated gem environment as goals 1 and 2. Set `ACE_E2E_AGENT=pi`, put the sandbox `bin/` first on `PATH`, and set `ACE_HERDR_PI_QUEUE_CLIENT` to the sandbox `bin/pi-overseer-queue-client`. Set `ACE_E2E_PI_QUEUE_LOG` and `ACE_E2E_WAKE_LOG` to separate sandbox-local files. The fake Herdr pane reports an idle Pi agent; the fake Pi client reports its live session identity and returns an event, session, and digest-bound queue receipt.
-
-Create a separate event `inb-99999999` with the same reverse address and a fresh payload. Run installed `inbox enqueue`, `inbox deliver`, `inbox status`, and `inbox deliver` again in distinct CLI processes. Capture stdout, stderr, and numeric exits under `results/tc/03/`. Keep the queue and wake logs and durable record. Confirm that the delivered binding uses `agent: pi` and the expected session ID, that the second delivery does not submit again, and that exactly one generic wake prompt is sent without the inbox payload.

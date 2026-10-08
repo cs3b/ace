@@ -464,7 +464,7 @@ class SetupExecutorTest < Minitest::Test
       result = executor.execute(
         setup_steps: [{"runtime-session" => {"runtime" => "herdr"}}],
         sandbox_dir: sandbox,
-        scenario_name: "TS-HERDR-001",
+        scenario_name: "TS-RUNTIME-HERDR-CONTEXT",
         initial_env: {"HERDR_SESSION" => "ws-live", "HERDR_PANE" => "p9"}
       )
 

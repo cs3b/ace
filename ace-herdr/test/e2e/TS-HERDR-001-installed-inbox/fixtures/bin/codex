@@ -1,8 +1,0 @@
-#!/bin/sh
-printf '%s\n' "$*" >> "$ACE_E2E_QUEUE_LOG"
-if [ "${ACE_E2E_CODEX_FAIL:-0}" = 1 ]; then
-  printf '{"event_id":"%s","thread":"0123abcd-0000-4000-8000-000000000001","outcome":"consumed_acknowledged","native_reference":"fake-native:%s","observation":"prompt consumed and acknowledged before queue client stalled"}\n' "$ACE_E2E_EVENT_ID" "$ACE_E2E_EVENT_ID" >> "$ACE_E2E_OUTCOME_LOG"
-  printf '%s\n' 'native queue stalled' >&2
-  exit 1
-fi
-printf '%s\n' 'queued'
