@@ -342,7 +342,7 @@ module Ace
           result = reconcile
           assert_equal "completed", result.dig(:data, "state")
           assert_nil @box.prepare_direct_delivery(event: "event", expected_claim_generation: 1,
-            expected_attempt: "attempt", claim_owner: "b" * 64)
+            expected_attempt: "attempt", **direct_preparation_identity(1))
           assert_equal 1, @native_calls
           assert_equal 0, @context_owner.status(peer: @authority_peer).fetch("active_operations")
           assert_raises(Ace::Herdr::ValidationError) { @context_owner.end_context_operation(operation_id: admission.fetch("operation_id"), peer: @peer) }
@@ -362,6 +362,14 @@ module Ace
           "evidence" => {"kind" => "consumed_acknowledged", "native_reference" => "native:1", "observation" => "consumed"})
         @bytes = JSON.generate(receipt); @signature = @key.sign(OpenSSL::Digest::SHA256.new, @bytes)
         @params = @params.merge("receipt_sha256" => Digest::SHA256.hexdigest(@bytes), "signature_sha256" => Digest::SHA256.hexdigest(@signature))
+      end
+
+      def direct_preparation_identity(expected)
+        operation_id = "b" * 32
+        {operation_id: operation_id, key_generation: 1,
+          claim_owner: Digest::SHA256.hexdigest(JSON.generate(["context", operation_id])),
+          effect_binding: Ace::Herdr::Molecules::InboxDirectEffectBinding.build(purpose: "deliver", event_id: "event",
+            attempt_id: "attempt", key_generation: 1, selection: {"expected_claim_generation" => expected}, original: direct_original_context)}
       end
 
       def direct_original_context
@@ -548,7 +556,7 @@ module Ace
           before = File.binread(File.join(@context.fetch("deliveries_dir"), "event.json"))
           assert_raises(Ace::Herdr::ValidationError) do
             @box.prepare_direct_delivery(event: "event", expected_claim_generation: 1,
-              expected_attempt: "attempt", claim_owner: "b" * 64)
+              expected_attempt: "attempt", **direct_preparation_identity(1))
           end
           assert_equal before, File.binread(File.join(@context.fetch("deliveries_dir"), "event.json"))
           assert_equal 1, @native_calls
