@@ -3,8 +3,8 @@
 This proposal supersedes the two alternatives in `protected-campaign-readiness-inputs.md`
 and the source API/lock shorthand in `protected-campaign-contract.md`. It selects
 existing succeeded managed campaign-free execution attempts and separates report
-model from reviewer actor. It is specification only, pending independent review.
-No public interface below is claimed installed.
+model from reviewer actor. The amended specification was independently approved at `62a24a0c570f093a1c0de3fd3feec509cf3fb27e`; see the technical-closure review in `protected-campaign-draft-review.md`. This is specification readiness only.
+No public interface below is claimed implemented or installed.
 
 ## Managed execution attempts and exact linkage
 
@@ -277,5 +277,4 @@ refusal; real succeeded children before parent finish; failed-child retry withou
 replacement; exact report_models coverage with actor/model mismatch controls;
 CAS contention with no nested flock; restart reads of linked accepted children.
 Source readiness must name the campaign-free finish/no-writer prerequisite and
-cannot claim installed proof from this spec. Task remains draft / needs_review
-until an independent reviewer approves the amended contract and prerequisites.
+cannot claim installed proof from this spec. The independent readiness verdict is recorded in `protected-campaign-draft-review.md`. Implementation acceptance still requires the prerequisites and executed scenarios above; specification approval does not satisfy them.
