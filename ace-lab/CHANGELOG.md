@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Reuse immutable canonical event reads only within each held cleanup admission, discarding the memo before Installer effects and subsequent connections.
+
 - Load protected policy and listener dependencies directly, preserving the fixed trusted authorization path and error hierarchy without loading broad package configuration entrypoints.
 
 - Bind protected cleanup identity to the explicitly selected dedicated systemd slice and reject a different observed service slice.

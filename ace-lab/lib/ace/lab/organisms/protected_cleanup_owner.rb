@@ -157,13 +157,18 @@ module Ace
           deadline = frame["kind"] == "preview" ? admission_deadline : accepted_at + 300
           context = nil
           @snapshots.call do |snapshot|
-            snapshot.with(deadline: deadline) do |view|
-              context = if frame["kind"] == "preview"
-                @admission.preview!(frame: frame, peer: peer, operation_owner_binding: original, journal: @journals.call(view))
-              elsif frame["kind"] == "inspect"
-                @admission.inspect!(frame: frame, peer: peer, operation_owner_binding: original, journal: @journals.call(view))
-              else
-                @admission.admit!(frame: frame, peer: peer, operation_owner_binding: original, journal: @journals.call(view))
+            # Reuse exact immutable event bytes only during this held read.
+            # Peer admission remains fresh; neither the view nor its memo
+            # survives into Installer effects or the next connection.
+            Ace::Assign::Molecules::EvidenceJournal.with_event_read_operation do
+              snapshot.with(deadline: deadline) do |view|
+                context = if frame["kind"] == "preview"
+                  @admission.preview!(frame: frame, peer: peer, operation_owner_binding: original, journal: @journals.call(view))
+                elsif frame["kind"] == "inspect"
+                  @admission.inspect!(frame: frame, peer: peer, operation_owner_binding: original, journal: @journals.call(view))
+                else
+                  @admission.admit!(frame: frame, peer: peer, operation_owner_binding: original, journal: @journals.call(view))
+                end
               end
             end
           end
