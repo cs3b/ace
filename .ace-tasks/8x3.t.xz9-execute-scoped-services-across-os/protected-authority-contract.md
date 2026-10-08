@@ -1,5 +1,17 @@
 # Protected assignment authority contract — readiness decision, 2026-10-05
 
+## Captain correction — live runtime is the source, 2026-10-08
+
+This contract retains authenticated scoped operations, task/attempt attribution
+and genuine result/review/service evidence. The xza message-read proof model
+is cancelled. No dedicated app-server or read-receipt service, signer keys,
+consumption settlement gate or shadow terminal-state cache is required.
+Current agent output/process information comes from direct Herdr/tmux capture
+when needed. Submitted means sent to the selected original terminal, not read.
+Old companion proposals requiring native read proofs are historical and cannot
+restore that requirement or block ordinary work/stop/resource release.
+
+
 ## Implementation-discovered launch ownership amendment
 
 The cross-user launcher assumption was not satisfied by current runtime source.
@@ -101,7 +113,7 @@ Wire envelope: `{version: 1, operation: NAME, mutation_id: ID, project_id: ID, p
 | recover / exact launcher or mapped supervisor | Closed attempt-scoped recovery schema and canonical owner routing in remaining-consumer-contract.md; no assignment-wide implicit resume. |
 | bind_inbox / active exact worker | Closed mapping/context/event/generation schema in remaining-consumer-contract.md; owner resolves fixed Inbox and records immutable registration. |
 | reconcile_inbox / mapped supervisor | Closed signed receipt/signature transfer and canonical import in remaining-consumer-contract.md; Herdr retains signature/event authority. |
-| attempt/service status and evidence fetch / owning worker, assigned reviewer or mapped supervisor/executor | fixed project/attempt/request/evidence ID plus required role binding; visibility filtered by current project grant and purpose. Worker gets sanitized public projections; raw review/observation artifacts only to allowed peers. |
+| attempt/service status and evidence fetch / owning worker, assigned reviewer or mapped supervisor/executor | fixed project/attempt/request/evidence ID plus required role binding; visibility filtered by current project grant and purpose. Worker gets sanitized public projections; raw review/result/service artifacts only to allowed peers. |
 
 All current protected driver start/receipt acceptance/finish/recover and evidence consumers route through this API. reserve/process_start separation is a required source refactor of current start, whose intent and process_start are emitted together. Ordinary local standalone assignment behavior is a separate explicit operating mode; it never acts as a protected assignment fallback.
 
@@ -299,9 +311,10 @@ R2/R3 or the overall program.
 
 ### Purpose-filtered evidence fetch
 
-kind is exactly result, review, service, inbox or observation. purpose_id is the
-canonical result_id / review_id / request_id / event_id / observation event ID
-for that kind. artifact_id selects one artifact already referenced by that exact
+For retained business evidence, kind is exactly result, review or service.
+purpose_id is its canonical result_id / review_id / request_id. The separately
+defined prepared_work fetch returns the original accepted task input only;
+it does not describe current terminal state. artifact_id selects one artifact already referenced by that exact
 accepted/submitted record, never a caller path or journal commit. The owner
 resolves the reference, producer peer UID, exact binding and generation from
 canonical records, then reads descriptor and bytes from one current immutable
@@ -324,10 +337,10 @@ terminality/head advance alone does not. The current assigned review must still
 name the retained candidate/result being fetched. Retained approval verification
 for finish uses its admitted independent attribution, not live reviewer presence;
 reviewer exit does not invalidate executed review evidence. Worker receives only
-sanitized review/observation projections through existing status, never raw bytes.
-Inbox and observation fetch refuse evidence_unavailable until their existing
-canonical signer/observer owner supplies the complete exact bound provenance;
-there is no permissive generic project-visible reader.
+sanitized review projections through existing status, never unrelated raw bytes.
+The removed Inbox/observation read-proof fetch is not part of this contract.
+Read/capture current agent state directly from the selected live Herdr/tmux
+panel and process under its existing visibility/authorization boundary.
 
 Success data is exactly `{descriptor, generation, journal_commit, transfer}`
 plus one artifacts transfer part. transfer is the existing TransferCodec
