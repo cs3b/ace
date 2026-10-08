@@ -5,6 +5,7 @@ require "ace/git/cli"
 require "ace/git/forgejo"
 require "stringio"
 require "ace/assign/cli/commands/delivery"
+require "ace/lab/cli/commands/service"
 
 # Actual wire/claim/candidate/import owners; only kernel identity, process
 # execution and remote provider transport are controlled excluded boundaries.
@@ -14,10 +15,12 @@ class ServiceMergeBoundaryTest < AceGitTestCase
 
   def configure_result_owner_fixture
     super
+    @project["launcher_uids"] = [@launcher.fetch("uid")]
     @project.merge!("journal_repository" => @journal.repo_root, "evidence_git_ref" => @journal.ref,
       "evidence_checkout_root" => @journal.checkout_root)
     uid = Process.uid
     @executor.merge!("uid" => uid, "gid" => Process.gid, "groups" => Process.groups.sort)
+    @executor["groups"] = (@executor.fetch("groups") + [@map.fetch("worker_gid")]).uniq.sort if @public_lab
     @project["service_executor_uids"] = [uid]
     @project["peer_credentials"][uid.to_s] = @executor.slice("gid", "groups").merge("scratch_root" => @root)
     @project["service_receivers"]["executor"]["executor_uid"] = uid
@@ -25,6 +28,11 @@ class ServiceMergeBoundaryTest < AceGitTestCase
     @document["operations"] = {"merge" => {"project" => "project", "service_id" => "executor", "executor_uid" => uid,
       "argv" => [File.expand_path("../../../bin/ace-git", __dir__), "service", "merge"],
       "lease_expires_at" => (Time.now.utc + 3600).iso8601}}
+  end
+
+  def test_public_lab_request_and_status_use_original_receiver_and_canonical_result
+    @public_lab = true
+    exercise_completion
   end
 
   def test_real_receiver_fixed_cli_neutral_merge_and_canonical_receipt_import
@@ -120,6 +128,10 @@ class ServiceMergeBoundaryTest < AceGitTestCase
         Struct.new(:stdout, :stderr, :status, :oversized).new(out, err, status, false)
       end
       client = start_service_server
+      if @public_lab
+        executor_identity = @executor
+        client.instance_variable_get(:@kernel).define_singleton_method(:capture) { |_| executor_identity }
+      end
       phases = []
       completion_call = nil
       lost_reply_reached = false
@@ -173,8 +185,12 @@ class ServiceMergeBoundaryTest < AceGitTestCase
       result = nil
       Ace::Lab::Molecules::GrantResolver.stub(:trusted_document, @document) do
         Ace::Herdr::Molecules::BoundedProcess.stub(:call, process) do
-          result = receiver(traced, Ace::Lab::Molecules::ProtectedServiceHandler.new).execute(
-            submission: submission, peer: @worker, input_bytes: bytes, mutation_id: "merge-original")
+          if @public_lab
+            result = public_lab_request(traced, submission, bytes)
+          else
+            result = receiver(traced, Ace::Lab::Molecules::ProtectedServiceHandler.new).execute(
+              submission: submission, peer: @worker, input_bytes: bytes, mutation_id: "merge-original")
+          end
         end
       end
       if measure_request
@@ -275,7 +291,8 @@ class ServiceMergeBoundaryTest < AceGitTestCase
       assert_equal 1, @journal.read_events("assignment").count { |event| event["type"] == "delivery" }
       assert_equal 1, calls.count { |args| args[1] == "POST" }, "worker consumption never reruns merge"
       project = @project
-      @deployment.define_singleton_method(:data) { {"projects" => {"project" => project}} }
+      mapping, authority = @map, @service
+      @deployment.define_singleton_method(:data) { {"projects" => {"project" => project}, "launch_mappings" => {"mapping" => mapping}, "authorities" => {"authority" => {"uid" => authority.fetch("uid")}}} }
       history = Object.new
       history.define_singleton_method(:descriptors) { [] }
       context = Ace::Assign::Authority::ProtectedAssignmentContext.new(deployment: @deployment, history: history,
@@ -287,10 +304,145 @@ class ServiceMergeBoundaryTest < AceGitTestCase
           candidate_head: @head, candidate_generation: submission.fetch("candidate_generation"),
           input_digest: digest, target: target.fetch("resource"), service_request: "service-request")
       end
+      if @public_lab
+        command = Ace::Lab::CLI::Commands::Service::Status.new
+        command.instance_variable_set(:@protected_service, Ace::Lab::Organisms::ProtectedServiceRequest.new(context: context))
+        out, err = capture_io do
+          registered_lab_call("service status", command, ["--request", "service-request", "--project", "project", "--assignment", "assignment",
+            "--attempt", @attempt, "--mapping", "mapping", "--scope", "010", "--candidate-head", @head,
+            "--candidate-generation", submission.fetch("candidate_generation").to_s, "--input-digest", digest, "--target", target.fetch("resource")])
+        end
+        assert_equal "ok", JSON.parse(out).fetch("status")
+        assert_equal "succeeded", JSON.parse(out).dig("data", "state")
+        out = JSON.generate(JSON.parse(out).fetch("data"))
+      end
       assert_empty err
       assert_equal "succeeded", JSON.parse(out).fetch("state")
       assert_equal before_consume, @journal.ref_value, "public receipt consumption is read-only"
     end
+  end
+
+  def registered_lab_call(name, command, arguments)
+    original, = Ace::Lab::CLI.resolve(name.split)
+    Ace::Lab::CLI.register(name, command)
+    assert_equal 0, Ace::Lab::CLI.start(name.split + arguments)
+  ensure
+    Ace::Lab::CLI.register(name, original) if original
+  end
+
+  def public_lab_request(client, submission, bytes)
+    diagnostic = []
+    started = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+    record = ->(phase, error = nil) { diagnostic << {"phase" => phase, "elapsed" => Process.clock_gettime(Process::CLOCK_MONOTONIC) - started, "error_class" => error&.class&.name, "error" => error&.message&.byteslice(0, 256)} }
+    receiver_owner = receiver(client, Ace::Lab::Molecules::ProtectedServiceHandler.new)
+    reached, release, completed, ready = Queue.new, Queue.new, Queue.new, Queue.new
+    original_handler = receiver_owner.instance_variable_get(:@handler)
+    blocked = Object.new
+    blocked.define_singleton_method(:execute) do |**arguments|
+      reached << true
+      release.pop
+      original_handler.execute(**arguments)
+    end
+    receiver_owner.instance_variable_set(:@handler, blocked)
+    receiver_call = receiver_owner.method(:execute)
+    receiver_owner.define_singleton_method(:execute) do |**arguments|
+      record.call("receiver.execute.before")
+      result = receiver_call.call(**arguments)
+      record.call("receiver.execute.after")
+      completed << result
+      result
+    end
+    worker, executor = @worker, @executor
+    listener_kernel = Object.new
+    listener_kernel.define_singleton_method(:peer) { |_| worker }
+    listener_kernel.define_singleton_method(:capture) { |_| executor }
+    listener_kernel.define_singleton_method(:live!) { |_| true }
+    wire, real = Module.new, Ace::Runtime::Molecules::ProtectedSocket
+    wire.define_singleton_method(:deadline) { |*args| real.deadline(*args) }
+    %i[read write connect].each do |method|
+      wire.define_singleton_method(method) do |*args, **kwargs, &block|
+        record.call("wire.#{method}.before")
+        result = real.public_send(method, *args, **kwargs, &block)
+        record.call("wire.#{method}.after")
+        result
+      rescue Exception => error
+        record.call("wire.#{method}.error", error)
+        raise
+      end
+    end
+    path = File.join(@root, "public-receiver.sock")
+    @project.fetch("service_receivers").fetch("executor")["socket_path"] = path
+    wire.define_singleton_method(:socket_identity) do |selected|
+      stat = File.lstat(selected)
+      raise "wrong controlled socket" unless selected == path && stat.socket?
+      ready << true
+      [stat.dev, stat.ino, executor.fetch("uid")]
+    end
+    wire.define_singleton_method(:root_path!) do |selected, directory:, owner:|
+      raise "wrong controlled socket parent" unless selected == File.dirname(path) && directory && owner == executor.fetch("uid")
+    end
+    listener = Ace::Lab::Organisms::ProtectedServiceListener.new(mapping_id: "mapping", service_id: "executor",
+      deployment: @deployment, kernel: listener_kernel, receiver: receiver_owner, wire: wire)
+    worker_kernel = Ace::Assign::EndcapResultOwnerFixture::Kernel.new
+    worker_kernel.define_singleton_method(:capture) { |_| worker }
+    worker_kernel.peer_identity = @service.slice("uid", "gid", "groups")
+    caller = Object.new
+    caller.define_singleton_method(:capture) { |_| worker }
+    caller.define_singleton_method(:peer) { |_| executor }
+    project = @project
+    mapping, authority = @map, @service
+    @deployment.define_singleton_method(:data) { {"projects" => {"project" => project}, "launch_mappings" => {"mapping" => mapping}, "authorities" => {"authority" => {"uid" => authority.fetch("uid")}}} }
+    history = Object.new
+    history.define_singleton_method(:descriptors) { [] }
+    context = Ace::Assign::Authority::ProtectedAssignmentContext.new(deployment: @deployment, history: history,
+      uid: worker.fetch("uid"), kernel: worker_kernel, env: {})
+    @kernel.peer_identity = worker
+    adapter = Ace::Lab::Organisms::ProtectedServiceRequest.new(context: context, ingress_factory: ->(**selection) {
+      @kernel.peer_identity = executor
+      Ace::Lab::Organisms::ProtectedServiceClient.new(**selection.merge(kernel: caller, wire: wire)) })
+    command = Ace::Lab::CLI::Commands::Service::Request.new
+    command.instance_variable_set(:@protected_service, adapter)
+    input_path = File.join(@root, "public-input.json")
+    File.write(input_path, bytes)
+    original_chown = File.method(:chown)
+    controlled_chown = lambda do |uid, gid, *paths|
+      raise "unexpected ownership mutation" unless paths == [path] && uid.nil? && gid == @map.fetch("worker_gid")
+      original_chown.call(nil, Process.gid, path)
+    end
+    owner = nil
+    File.stub(:chown, controlled_chown) do
+      owner = Thread.new { listener.serve }
+      Timeout.timeout(5) { ready.pop }
+      record.call("cli.request.before")
+      out, err = capture_io do
+        registered_lab_call("service request", command, ["--project", "project", "--assignment", "assignment", "--attempt", @attempt,
+          "--operation", "merge", "--authorization", "decision", "--request-id", "service-request", "--input", input_path,
+          "--mapping", "mapping", "--scope", "010", "--service", "executor", "--candidate-head", @head,
+          "--candidate-generation", submission.fetch("candidate_generation").to_s,
+          "--expected-generation", submission.fetch("expected_generation").to_s])
+      end
+      assert_empty err
+      record.call("cli.request.after")
+      claim = JSON.parse(out)
+      assert_equal "ok", claim.fetch("status")
+      assert_equal "service_claim_accepted", claim.dig("data", "claim", "type")
+      assert_equal "service-request", claim.dig("data", "selection", "request_id")
+      refute release.size.positive?, "public acknowledgement precedes provider execution release"
+      Timeout.timeout(30) { reached.pop }
+      listener.stop
+      release << true
+      assert owner.join(30), "owned receiver must finish after admitted provider"
+      owner.value
+      Timeout.timeout(1) { completed.pop }
+    end
+  ensure
+    release << true if release
+    listener&.stop
+    owner&.join(30)
+    directory = File.expand_path("../../../.ace-local/task/8wr.t.qkb.1", __dir__)
+    FileUtils.mkdir_p(directory)
+    File.write(File.join(directory, "public-service-wire-phases.json"), JSON.pretty_generate({
+      "method" => "test_public_lab_request_and_status_use_original_receiver_and_canonical_result", "phases" => diagnostic}))
   end
 
   # Same controlled gate/release handshake as PreparedWorkFetchTest#issue_original;

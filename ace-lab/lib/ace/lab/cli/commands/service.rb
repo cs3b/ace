@@ -3,6 +3,7 @@
 require "json"
 require "ace/support/cli"
 require_relative "support"
+require_relative "../../organisms/protected_service_request"
 
 module Ace
   module Lab
@@ -12,6 +13,10 @@ module Ace
           module Output
             def service
               @service ||= Organisms::ServiceRequestService.new
+            end
+
+            def protected_service
+              @protected_service ||= Organisms::ProtectedServiceRequest.new
             end
 
             def emit(envelope)
@@ -39,8 +44,19 @@ module Ace
             option :request_id, type: :string, required: true, desc: "Idempotency key"
             option :dry_run, type: :boolean, desc: "Validate without claiming or executing"
 
+            option :mapping, type: :string, desc: "Original protected mapping ID"
+            option :scope, type: :string, desc: "Original hierarchical prepared scope"
+            option :service, type: :string, desc: "Installed receiver ID"
+            option :candidate_head, type: :string, desc: "Exact approved candidate head"
+            option :candidate_generation, type: :integer, desc: "Original candidate generation"
+            option :expected_generation, type: :integer, desc: "Original authority generation"
+
             def call(project:, assignment:, attempt:, operation:, input:, authorization:, request_id:, **options)
               reject_identity_flags!(options)
+              if protected_service.selected?(options)
+                return emit(protected_service.request(project: project, assignment: assignment, attempt: attempt,
+                  operation: operation, input_path: input, authorization: authorization, request_id: request_id, **options))
+              end
               emit(service.request(project: project, assignment: assignment, attempt: attempt,
                 operation: operation, input_path: input, authorization: authorization,
                 request_id: request_id, dry_run: options[:dry_run]))
@@ -56,8 +72,23 @@ module Ace
             option :request, type: :string, required: true, desc: "Request ID"
             option :format, type: :string, desc: "Output format (json only)"
 
+            option :project, type: :string, desc: "Original project ID"
+            option :assignment, type: :string, desc: "Original assignment ID"
+            option :attempt, type: :string, desc: "Original attempt ID"
+            option :mapping, type: :string, desc: "Original protected mapping ID"
+            option :scope, type: :string, desc: "Original hierarchical prepared scope"
+            option :candidate_head, type: :string, desc: "Exact approved candidate head"
+            option :candidate_generation, type: :integer, desc: "Original candidate generation"
+            option :input_digest, type: :string, desc: "Original normalized input SHA-256"
+            option :target, type: :string, desc: "Original target resource ID"
+            option :artifact_digest, type: :string, desc: "Original artifact SHA-256 (omit for null)"
+
             def call(request:, **options)
+              reject_identity_flags!(options)
               ensure_json_format!(options)
+              if protected_service.selected?(options)
+                return emit(protected_service.status(request_id: request, **options))
+              end
               emit(service.status(request_id: request))
             end
           end

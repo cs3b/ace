@@ -107,6 +107,24 @@ module Ace
           Client.new(mapping_id: mapping, deployment: @deployment, kernel: @kernel)
         end
 
+        def mapping_hint?
+          !@env["ACE_ASSIGN_LAUNCH_MAPPING"].to_s.empty?
+        end
+
+        # Consumers call only after original PreparedInput admission. These
+        # existing owners select transport; they do not confer a new grant.
+        def with_installed_selection(options:, input:)
+          raise AttemptErrors::EvidenceUnavailable, "protected installed authority is unavailable" unless @deployment
+          mapping = selected_hint(options[:mapping], "ACE_ASSIGN_LAUNCH_MAPPING")
+          map = @deployment.mapping(mapping)
+          unless input && input.descriptor.fetch("mapping_id") == mapping &&
+              input.descriptor.fetch("project_id") == map.fetch("project_id")
+            raise AttemptErrors::EvidenceUnavailable, "original prepared installed selection differs"
+          end
+          @kernel ||= Ace::Runtime::Molecules::ProtectedLinux.new
+          yield @deployment, @kernel, mapping
+        end
+
         private
 
         def selected_hint(explicit, key)

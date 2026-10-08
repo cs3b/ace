@@ -45,6 +45,31 @@ module Ace
         assert_raises(AttemptErrors::EvidenceUnavailable) { invalid.protected_participant? }
       end
 
+      def test_installed_transport_selection_requires_admitted_original_mapping_and_project
+        current = descriptor([13001])
+        current.define_singleton_method(:mapping) { |_| {"project_id" => "project"} }
+        owner = context(current: current, retained: [], uid: 13001,
+          env: {"ACE_ASSIGN_LAUNCH_MAPPING" => "mapping"})
+        assert owner.mapping_hint?
+        input = Struct.new(:descriptor).new({"mapping_id" => "mapping", "project_id" => "project"})
+        selected = owner.with_installed_selection(options: {mapping: "mapping"}, input: input) { |deployment, kernel, mapping| [deployment, kernel, mapping] }
+        assert_same current, selected.first
+        assert_equal "mapping", selected.last
+        [{"mapping_id" => "foreign", "project_id" => "project"}, {"mapping_id" => "mapping", "project_id" => "foreign"}].each do |bad|
+          assert_raises(AttemptErrors::EvidenceUnavailable) do
+            owner.with_installed_selection(options: {mapping: "mapping"}, input: Struct.new(:descriptor).new(bad)) { flunk "no transport effect" }
+          end
+        end
+        assert_raises(AttemptErrors::EvidenceUnavailable) do
+          owner.with_installed_selection(options: {mapping: "replacement"}, input: input) { flunk "hint mismatch" }
+        end
+        ordinary = Authority::ProtectedAssignmentContext.new(deployment: nil, history: nil, env: {})
+        refute ordinary.mapping_hint?
+        assert_raises(AttemptErrors::EvidenceUnavailable) do
+          ordinary.with_installed_selection(options: {mapping: "mapping"}, input: input) { flunk "no installed owner" }
+        end
+      end
+
       def test_retained_worker_principal_cannot_restore_ordinary_mode_after_current_mapping_removal
         owner = context(current: descriptor([13006]), retained: [descriptor([13001])], uid: 13001)
         assert owner.protected_worker?
