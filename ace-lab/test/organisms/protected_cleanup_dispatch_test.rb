@@ -208,13 +208,26 @@ class ProtectedCleanupDispatchTest < Minitest::Test
         before = observations.size
         alive = false
         failures.clear
+        replay_costs = Hash.new { |hash, key| hash[key] = [0, 0.0] }
+        %i[git read_events service_request service_request_records event_commits! verify_canonical_prefix!].each do |name|
+          original_reader = @journal.method(name)
+          @journal.define_singleton_method(name) do |*arguments, **keywords, &block|
+            started = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+            begin
+              original_reader.call(*arguments, **keywords, &block)
+            ensure
+              replay_costs[name][0] += 1
+              replay_costs[name][1] += Process.clock_gettime(Process::CLOCK_MONOTONIC) - started
+            end
+          end
+        end
         begin
           diagnostic.enable
           replay = receiver.execute(submission: submission, peer: @worker, input_bytes: bytes, mutation_id: "receiver-cleanup")
         ensure
           diagnostic.disable
         end
-        assert_equal "succeeded", replay.fetch("state"), "replay=#{replay.inspect}; boundary=#{failures.inspect}"
+        assert_equal "succeeded", replay.fetch("state"), "replay=#{replay.inspect}; boundary=#{failures.inspect}; costs=#{replay_costs.inspect}"
         assert_equal "retained", replay.fetch("claim")
         assert_equal before, observations.size, "accepted claim replay cannot depend on a new root lifetime"
         assert_equal 1, executions.size, "accepted replay cannot execute root again"
@@ -523,8 +536,20 @@ class ProtectedCleanupDispatchTest < Minitest::Test
       end
       before = @journal.ref_value
       Ace::Lab::Molecules::GrantResolver.stub(:trusted_document, @document) do
-        result = receiver.recover_no_effect(binding: binding, input_bytes: bytes,
-          mutation_id: "retained-success-recovery", expected_generation: generation)
+        recovery_failures = []
+        diagnostic = TracePoint.new(:raise) do |event|
+          next unless %w[ace-lab ace-assign ace-runtime].any? { |package| event.path.include?("/#{package}/lib/") }
+          error = event.raised_exception
+          recovery_failures << "#{File.basename(event.path)}:#{event.lineno} #{error.class}: #{error.message.byteslice(0, 160)}"
+          recovery_failures.shift while recovery_failures.size > 16
+        end
+        begin
+          diagnostic.enable
+          result = receiver.recover_no_effect(binding: binding, input_bytes: bytes,
+            mutation_id: "retained-success-recovery", expected_generation: generation)
+        ensure
+          diagnostic.disable
+        end
         if lost_reply
           assert loss_observed, "fault must occur after actual accepted canonical completion"
           assert_equal "uncertain", result.fetch("state")
@@ -549,7 +574,7 @@ class ProtectedCleanupDispatchTest < Minitest::Test
           assert_empty endpoint.instance_variable_get(:@consumed)
           next
         end
-        assert_equal "succeeded", result.fetch("state")
+        assert_equal "succeeded", result.fetch("state"), "recovery=#{result.inspect}; boundary=#{recovery_failures.inspect}"
         record = @journal.service_request(submission.fetch("request_id"))
         assert_equal original, record.fetch("operation_owner_binding")
         assert_equal @executor, record.fetch("executor_process_binding")
