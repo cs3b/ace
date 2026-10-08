@@ -127,7 +127,13 @@ class ProtectedWorkspacePruneInputTest < Minitest::Test
       "candidate_head" => params.fetch("head"), "operation" => "prune-preserved-workspace",
       "input_digest" => Ace::Lab::Atoms::ServiceInput.digest(input), "target" => Ace::Lab::Atoms::ServiceInput.target(input))
     execution = {"mapping_id" => "maintenance", "candidate_generation" => 1, "claim_binding" => "b" * 64,
-      "dispatch_phase" => "dispatch_started", "head" => params.fetch("head")}
+      "dispatch_phase" => "dispatch_started", "head" => params.fetch("head"),
+      "operation_owner_binding" => {"unit" => "cleanup.service", "invocation_id" => "c" * 32, "entry_sha256" => "d" * 64,
+        "process_binding" => {"pid" => 77, "uid" => 0, "gid" => 0, "groups" => [0],
+          "started_at" => "linux:boot:900", "host" => "host", "parent_pid" => 1}},
+      "executor_process_binding" => {"pid" => 78, "uid" => 13005, "gid" => 13005, "groups" => [13005],
+        "started_at" => "linux:boot:901", "host" => "host", "parent_pid" => 1},
+      "request_event_digest" => "e" * 64, "dispatch_event_digest" => "f" * 64}
     data = {"state" => "uncertain", "request_id" => "cleanup", "service_id" => "executor",
       "settlement_context" => {"version" => 1, "request" => record, "execution" => execution, "challenge" => nil}}
     client = Object.new
