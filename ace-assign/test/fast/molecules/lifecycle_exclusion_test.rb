@@ -169,11 +169,120 @@ class LifecycleExclusionTest < AceAssignTestCase
     assert_equal :entered, result.pop(timeout: 2)
   end
 
-  def test_default_root_prefers_cache_base_sandbox
-    ENV["CACHE_BASE"] = @tmp
-    root = Ace::Assign::Molecules::LifecycleExclusion.default_root
-    assert_equal File.join(@tmp, ".exclusion"), root
+  def test_explicit_repository_uses_its_actual_common_directory_despite_cache_and_current_project
+    repo = File.join(@tmp, "selected")
+    system("git", "init", "--quiet", repo, exception: true)
+    previous = ENV["CACHE_BASE"]
+    ENV["CACHE_BASE"] = File.join(@tmp, "unrelated-cache")
+    assert_equal File.join(File.realpath(repo), ".git", "ace", "lifecycle-exclusion"),
+      Ace::Assign::Molecules::LifecycleExclusion.default_root(repo)
+    system("git", "-C", repo, "-c", "user.name=controlled", "-c", "user.email=controlled@example.test",
+      "commit", "--allow-empty", "--quiet", "-m", "controlled", exception: true)
+    linked = File.join(@tmp, "linked")
+    system("git", "-C", repo, "worktree", "add", "--detach", "--quiet", linked, "HEAD", exception: true)
+    assert_equal Ace::Assign::Molecules::LifecycleExclusion.default_root(repo),
+      Ace::Assign::Molecules::LifecycleExclusion.default_root(linked)
+    [repo, linked].each do |selected|
+      Ace::Support::Fs::Molecules::ProjectRootFinder.stub(:find_or_current, selected) do
+        assert_equal Ace::Assign::Molecules::LifecycleExclusion.default_root(repo),
+          Ace::Assign::Molecules::LifecycleExclusion.default_root
+      end
+    end
+    assert_raises(Ace::Assign::AttemptErrors::Conflict) do
+      Ace::Assign::Molecules::LifecycleExclusion.default_root(File.join(@tmp, "missing"))
+    end
   ensure
-    ENV.delete("CACHE_BASE")
+    previous ? ENV["CACHE_BASE"] = previous : ENV.delete("CACHE_BASE")
   end
+
+  def test_corrupt_misbound_duplicate_or_redirected_marker_never_permits_start_or_reset
+    key = "assignment:abc12"
+    @exclusion.record_removed!(key)
+    path = File.join(@root, "#{Digest::SHA256.hexdigest(key)}.state.json")
+    valid = File.binread(path)
+    ["{", "[]", valid.sub('abc12', 'foreign'), valid.sub('true', 'false'),
+      valid.sub('"removed":true', '"removed":true,"removed":true')].each do |bytes|
+      File.binwrite(path, bytes)
+      [false, true].each do |reset|
+        assert_raises(Ace::Assign::AttemptErrors::Conflict) do
+          @exclusion.with_shared(key, reset_removed: reset) { flunk "unsafe start" }
+        end
+      end
+      assert_equal bytes, File.binread(path)
+    end
+    File.delete(path)
+    target = File.join(@tmp, "marker")
+    File.binwrite(target, valid)
+    File.symlink(target, path)
+    assert_raises(Ace::Assign::AttemptErrors::Conflict) { @exclusion.with_shared(key) {} }
+    assert_equal valid, File.binread(target)
+  end
+
+  def test_restart_retains_fence_and_symlink_lock_cannot_admit_writer
+    @exclusion.with_exclusive("worktree:original") { @exclusion.record_removed!("worktree:original") }
+    restarted = Ace::Assign::Molecules::LifecycleExclusion.new(root: @root)
+    assert_raises(Ace::Assign::AttemptErrors::Conflict) { restarted.with_shared("worktree:original") {} }
+    path = File.join(@root, "#{Digest::SHA256.hexdigest('worktree:other')}.lock")
+    File.symlink(File.join(@tmp, "foreign-lock"), path)
+    assert_raises(Ace::Assign::AttemptErrors::Conflict) { restarted.with_shared("worktree:other") {} }
+    refute File.exist?(File.join(@tmp, "foreign-lock"))
+  end
+
+  def test_failed_multi_open_closes_earlier_handles
+    opened = []
+    original = @exclusion.method(:open_lock)
+    @exclusion.stub(:open_lock, ->(key) {
+      raise IOError, "controlled later open" if key == "b"
+      original.call(key).tap { |file| opened << file }
+    }) do
+      assert_raises(IOError) { @exclusion.with_shared_multi(%w[a b]) {} }
+    end
+    assert opened.all?(&:closed?)
+  end
+
+  def test_hardlinked_lock_refuses_with_typed_error_and_closes_once
+    key = "worktree:hardlink"
+    FileUtils.mkdir_p(@root)
+    target = File.join(@tmp, "retained-lock")
+    File.write(target, "", mode: "w", perm: 0600)
+    path = File.join(@root, "#{Digest::SHA256.hexdigest(key)}.lock")
+    File.link(target, path)
+    assert_raises(Ace::Assign::AttemptErrors::MaintenanceBusy) { @exclusion.with_shared(key) {} }
+    assert_equal 2, File.stat(target).nlink
+  end
+
+  def test_file_sync_failure_leaves_original_marker_and_removes_unpublished_temporary
+    key = "assignment:durable"
+    @exclusion.record_removed!(key)
+    path = File.join(@root, "#{Digest::SHA256.hexdigest(key)}.state.json")
+    before = File.binread(path)
+    original_open = File.method(:open)
+    failing_open = lambda do |name, *args, **options, &block|
+      if File.basename(name.to_s).start_with?(".tmp-")
+        original_open.call(name, *args, **options) do |file|
+          file.define_singleton_method(:fsync) { raise IOError, "controlled file sync failure" }
+          block.call(file)
+        end
+      else
+        original_open.call(name, *args, **options, &block)
+      end
+    end
+    File.stub(:open, failing_open) do
+      assert_raises(IOError) { @exclusion.record_removed!(key) }
+    end
+    assert_equal before, File.binread(path)
+    assert_empty Dir.children(@root).grep(/\A\.tmp-/)
+    assert @exclusion.removed?(key)
+  end
+
+  def test_parent_sync_failure_is_reported_and_published_fence_remains_closed
+    key = "assignment:parent-sync"
+    @exclusion.stub(:sync_directory, ->(*) { raise IOError, "controlled directory sync failure" }) do
+      assert_raises(IOError) { @exclusion.record_removed!(key) }
+    end
+    restarted = Ace::Assign::Molecules::LifecycleExclusion.new(root: @root)
+    assert restarted.removed?(key)
+    assert_raises(Ace::Assign::AttemptErrors::Conflict) { restarted.with_shared(key) {} }
+  end
+
 end

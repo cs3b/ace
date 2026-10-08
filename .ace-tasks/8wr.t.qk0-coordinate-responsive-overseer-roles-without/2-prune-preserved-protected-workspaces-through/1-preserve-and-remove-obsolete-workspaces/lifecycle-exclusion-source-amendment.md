@@ -2,6 +2,8 @@
 
 Candidate for independent review; no protected producer or creator adoption is claimed delivered.
 
+Independent root source-design review APPROVE of 30af29df0 on 2026-10-08 permits implementation of the exact derived readonly resource exception while retaining other resource barriers. EX capacity never substitutes for the maintained physical no-writers proof. The earlier independent bootstrap review APPROVE of 4c663b64f covered storage/provisioning/creator direction; host path and mounted view alias must be joined by actual device/inode identity, not literal path equality. These verdicts do not accept implementation or native behavior.
+
 ## Verified defects and ownership
 
 LifecycleExclusion.default_root ignores its supplied repository and gives CACHE_BASE precedence. removed? treats malformed JSON as absent. open_lock creates/follows files for ordinary readers, multi-open acquisition can leak earlier descriptors on a later open failure, and marker atomic_write uses a predictable following temporary path without file/directory fsync. Protected LaunchLifecycle.exclusion_for currently selects common/ace/lifecycle-exclusion. That common directory is a declared worker-writable Git resource, so a trusted child alone cannot defeat ancestor replacement. Existing local cache locks cannot prove protected cleanup safety.

@@ -5,6 +5,7 @@ require "fileutils"
 require "json"
 require "open3"
 require "time"
+require "securerandom"
 
 module Ace
   module Assign
@@ -33,21 +34,17 @@ module Ace
         end
 
         # The exclusion root shared by every writer and prune for this repo.
-        # Sandboxed environments (CACHE_BASE) scope it under the cache base,
-        # which itself is never a deletion target; otherwise it lives under
-        # the shared Git common dir, which survives worktree removal.
-        def self.default_root(_repo_root = nil)
-          cache_base = ENV["CACHE_BASE"]
-          if cache_base && !cache_base.empty?
-            return File.join(File.expand_path(cache_base), ".exclusion")
-          end
-
-          repo_root = Ace::Support::Fs::Molecules::ProjectRootFinder.find_or_current
+        # Assignment cache configuration does not select this repository
+        # identity. The Git common dir survives linked worktree removal.
+        def self.default_root(repo_root = nil)
+          repo_root ||= Ace::Support::Fs::Molecules::ProjectRootFinder.find_or_current
           common_dir, _stderr, status = Open3.capture3(
             "git", "-C", repo_root, "rev-parse", "--path-format=absolute", "--git-common-dir"
           )
-          base = status.success? && !common_dir.to_s.strip.empty? ? common_dir.strip : File.join(repo_root, ".git")
-          File.join(base, "ace", "lifecycle-exclusion")
+          unless status.success? && !common_dir.to_s.strip.empty? && File.absolute_path(common_dir.strip) == common_dir.strip
+            raise AttemptErrors::Conflict, "Repository lifecycle root is unavailable"
+          end
+          File.join(common_dir.strip, "ace", "lifecycle-exclusion")
         end
 
         def assignment_key(assignment_id)
@@ -131,8 +128,9 @@ module Ace
           ordered = Array(keys).compact.reject { |key| key.to_s.empty? }.uniq
           raise ArgumentError, "exclusion keys are required" if ordered.empty?
 
-          locks = ordered.map { |key| open_lock(key) }
+          locks = []
           begin
+            ordered.each { |key| locks << open_lock(key) }
             locks.each { |lock| lock.flock(File::LOCK_SH) }
             ordered.each do |key|
               if removed?(key)
@@ -162,16 +160,37 @@ module Ace
         end
 
         def removed?(key)
-          state = JSON.parse(File.read(state_path(key)))
-          state["removed"] == true
-        rescue Errno::ENOENT, JSON::ParserError, TypeError
+          path = state_path(key)
+          opened = false
+          File.open(path, File::RDONLY | File::NOFOLLOW | File::NONBLOCK) do |file|
+            opened = true
+            before = file.stat
+            unless before.file? && before.nlink == 1 && before.size.between?(1, 8192) && (before.mode & 0022).zero?
+              raise AttemptErrors::Conflict, "Lifecycle marker is unsafe"
+            end
+            content = file.read(8193).force_encoding(Encoding::UTF_8)
+            unless content.valid_encoding? && content.bytesize == before.size && same_file?(before, file.stat) && same_file?(before, File.lstat(path))
+              raise AttemptErrors::Conflict, "Lifecycle marker changed"
+            end
+            state = JSON.parse(content, create_additions: false, max_nesting: 4, allow_duplicate_key: false)
+            unless state.is_a?(Hash) && state.keys.sort == %w[key removed removed_at] &&
+                state["key"] == key && state["removed"] == true && state["removed_at"].is_a?(String)
+              raise AttemptErrors::Conflict, "Lifecycle marker is malformed"
+            end
+            Time.iso8601(state.fetch("removed_at"))
+            true
+          end
+        rescue Errno::ENOENT
+          raise AttemptErrors::Conflict, "Lifecycle marker disappeared during read" if opened
           false
+        rescue JSON::ParserError, ArgumentError, TypeError, SystemCallError, IOError
+          raise AttemptErrors::Conflict, "Lifecycle marker is unavailable or malformed"
         end
 
         def clear_removed!(key)
+          return unless removed?(key)
           File.delete(state_path(key))
-        rescue Errno::ENOENT
-          nil
+          sync_directory(root)
         end
 
         private
@@ -179,15 +198,20 @@ module Ace
         attr_reader :root
 
         def open_lock(key, nonblock: false)
+          retained = false
           FileUtils.mkdir_p(root)
-          flags = File::RDWR | File::CREAT
-          flags |= File::NONBLOCK | File::NOFOLLOW if nonblock
-          file = File.open(lock_path(key), flags)
-          unless file.stat.file?
-            file.close
+          flags = File::RDWR | File::CREAT | File::NONBLOCK | File::NOFOLLOW
+          file = File.open(lock_path(key), flags, 0600)
+          unless file.stat.file? && file.stat.nlink == 1 && (file.stat.mode & 0022).zero? &&
+              same_file?(file.stat, File.lstat(lock_path(key)))
             raise AttemptErrors::MaintenanceBusy, "maintenance exclusion is not a regular file"
           end
+          retained = true
           file
+        rescue SystemCallError
+          raise AttemptErrors::Conflict, "Lifecycle lock is unavailable"
+        ensure
+          file&.close unless retained
         end
 
         def maintenance_deadline!(deadline)
@@ -219,15 +243,32 @@ module Ace
           end
         end
 
+        def same_file?(left, right)
+          [left.dev, left.ino, left.size, left.mtime, left.ctime] == [right.dev, right.ino, right.size, right.mtime, right.ctime]
+        end
+
+        def sync_directory(path)
+          File.open(path, File::RDONLY | File::NOFOLLOW | File::NONBLOCK) { |directory| directory.fsync }
+        end
+
         def atomic_write(path, content)
           dir = File.dirname(path)
-          FileUtils.mkdir_p(dir)
-          temp = File.join(dir, ".tmp-#{Process.pid}-#{rand(1_000_000)}")
-          File.write(temp, content)
+          FileUtils.mkdir_p(dir, mode: 0700)
+          temp = File.join(dir, ".tmp-#{SecureRandom.hex(16)}")
+          File.open(temp, File::WRONLY | File::CREAT | File::EXCL | File::NOFOLLOW | File::NONBLOCK, 0600) do |file|
+            file.write(content)
+            file.flush
+            file.fsync
+          end
+          if File.exist?(path) || File.symlink?(path)
+            removed?(JSON.parse(content).fetch("key"))
+          end
           File.rename(temp, path)
+          sync_directory(dir)
         ensure
           File.delete(temp) if temp && File.exist?(temp)
         end
+
       end
     end
   end
