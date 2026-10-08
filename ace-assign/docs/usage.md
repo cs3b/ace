@@ -115,7 +115,7 @@ ace-assign inbox-bind --mapping MAP --assignment ASSIGNMENT --attempt ATTEMPT --
 
 The installed authority authenticates the current caller. Finish and recovery require the original launcher or an authorized mapped supervisor; Inbox binding requires the original worker or its authenticated descendant and an open execution scope. Installed current or retained authority, service and Inbox accounts also stay on the protected path: unsupported roles refuse rather than opening local authority.
 
-Protected finish selects an already submitted canonical result. A succeeded result requires accepted independent review for that exact candidate, prior no-writers proof and complete service/Inbox settlement. It does not close the scope or accept `--receipt`. Protected recovery observes one original attempt; unresolved effects or queued authenticated Inbox claims remain unresolved. Terminal/released recovery returns authenticated retained selectors without creating another mutation or restarting execution. Inbox binding retains the original registration and key identity; fresh binding after scope seal refuses.
+Protected finish selects an already submitted canonical result. A succeeded result requires accepted independent review for that exact candidate, prior no-writers proof and complete service settlement. It does not close the scope or accept `--receipt`. Protected recovery observes one original attempt; unresolved service effects remain unresolved. Terminal/released recovery returns authenticated retained selectors without creating another mutation or restarting execution. Inbox binding retains the original event/attempt attribution; fresh binding after scope seal refuses.
 
 Keep the original `--mutation` and `--expected-generation` for exact retries. Authority generation is distinct from `--candidate-generation`; rereading a newer generation changes the request. Assignment, attempt and mapping hints must agree with explicit selection. Commands print canonical JSON metadata and never resend effects during recovery.
 
@@ -438,14 +438,19 @@ See [exit-codes.md](exit-codes.md) for complete descriptions.
 ```bash
 ace-assign resume --assignment ID --dry-run
 ace-assign resume --assignment ID
-ace-assign inbox-reconcile --attempt ID --event ID --receipt proof.json
 ```
 
-Both commands return JSON with task goal, checkpoint, attempts, pending HITL references and unresolved effect/inbox references. Each attempt reports `adopt`, `restart-required` or `reconcile-required`, liveness, recovery reason and its last verified observation. Dry-run writes nothing. Actual resume journals a bounded observation; unproven running attempts become uncertain and keep their writer slot. Intent-only reservations remain `reserved` with `reconcile-required`: absent process-start history never proves that a child did not launch. `attempt start` refuses to reuse an unbound reservation, and `attempt reconcile` reports that protected launch reconciliation requires positive no-execution/no-surviving-writer proof before abort. The protected launch authority owns that proof and abort path; these source primitives do not implement it. Finish also rejects an unbound reservation before accepting any receipt, even if a stale local cache says running. Imported canonical evidence stores the exact submitted bytes without Git clean filters or line-ending conversions; immutable reuse compares the accepted Git blob. It never launches a new process or resends a payload. Restart goes through a new `attempt start` only after the previous attempt ends with accepted evidence.
+Resume returns JSON with task goal, checkpoint, attempts, pending HITL references and unresolved effect/inbox references. Each attempt reports `adopt`, `restart-required` or `reconcile-required`, liveness, recovery reason and its last verified observation. Dry-run writes nothing. Actual resume journals a bounded observation; unproven running attempts become uncertain and keep their writer slot. Intent-only reservations remain `reserved` with `reconcile-required`: absent process-start history never proves that a child did not launch. `attempt start` refuses to reuse an unbound reservation, and `attempt reconcile` reports that protected launch reconciliation requires positive no-execution/no-surviving-writer proof before abort. The protected launch authority owns that proof and abort path; these source primitives do not implement it. Finish also rejects an unbound reservation before accepting any receipt, even if a stale local cache says running. Imported canonical evidence stores the exact submitted bytes without Git clean filters or line-ending conversions; immutable reuse compares the accepted Git blob. It never launches a new process or resends a payload. Restart goes through a new `attempt start` only after the previous attempt ends with accepted evidence.
 
 Managed agents invoking attempt start inside tmux/Herdr obtain a runtime-owned process binding. Recovery compares PID, UID, OS start time, host, exact pane/native session and Herdr terminal/native thread. A surviving shell is not the agent. Missing, unreadable or reused identity remains unknown. A plain local CLI establishes its actor through its effective UID's OS account, requiring equal real/effective UIDs, but supplies no durable agent identity; trusted service executors may supply `process_pid` in their configured identity JSON. Process observation never grants service privilege or effect authority.
 
-Pending HITL references retain their exact scope/attempt and are not rebound by resume. Uncertain external claims require existing effect receipt reconciliation. Delivery consumption is separate from business success. Herdr owns signed inbox verification (`ace-herdr inbox reconcile --event ID --receipt FILE`); the assignment `inbox-reconcile` command uses that same configured verifier and additionally records the accepted observation references. `AttemptCoordinator#bind_inbox` records only the event reference, and `#reconcile_inbox` delegates that same verifier and journals only the verified proof digest/path and native observation reference. A consumed receipt settles transport once. A superseded receipt requeues the same event for an explicit retry, without succeeding the attempt. Exact signed replay recovers a crash between Herdr settlement and the assignment journal write; changed key, target, payload or generation fails closed. Retain the matching protected key pair for unresolved events or postpone rotation.
+Pending HITL references retain their exact scope/attempt and are not rebound by
+resume. Uncertain external effects require their actual owner/result evidence;
+message submission cannot establish business success. `AttemptCoordinator#bind_inbox`
+retains original event attribution only. There is no agent-read reconciliation
+or signing-key requirement for ending or recovering an attempt. Inspect current
+agent progress at its original Herdr/tmux panel; uncertain sends are not repeated
+automatically.
 
 Installed Herdr/Pi compaction and writing-child stop/close acceptance must be recorded separately from deterministic fixture coverage before Lab cutover.
 
@@ -607,54 +612,3 @@ a new generation after review; exact retries retain the original generation,
 mutation and identical ordered bytes. Supervisor finish still revalidates result,
 review, writer exclusion and settlement. A lost reply never causes automatic resend.
 
-### Protected signed Inbox reconciliation
-
-Save the closed `registration` from `inbox-bind` output. Under the installed
-supervisor or exact original launcher, submit the original signed proof:
-
-```sh
-ace-assign inbox-reconcile --mapping M --assignment A --attempt T --event E \
-  --inbox-context I --expected-generation G --mutation RECONCILE \
-  --registration registration.json --receipt proof.json --signature proof.sig
-```
-
-These files supply bounded bytes; the authority independently authenticates
-original registration, key, context and native outcome. Queued/superseded is not
-consumed or settled. Preserve original parameters/files for exact retry. Installed
-participants cannot fall back to ordinary local Inbox coordination. Without
-protected selection the existing ordinary receipt/FILE.sig interface remains.
-
-### Observe and settle a native Inbox event
-
-The configured observer reads one original event through its installed context
-and imports a completed native observation into the assignment journal:
-
-```sh
-ace-assign inbox-observe --project P --mapping M --assignment A --attempt T \
-  --inbox-context I --event E --claim-generation C --mutation OBSERVE \
-  --expected-generation G
-```
-
-All selectors are explicit and required. A confirmed import returns an opaque
-`evidence_id`, event, claim generation, `consumed` outcome and content reference.
-Uncertain native history returns `uncertain` without importing or resending.
-Consumption describes this message, not completion of the assignment.
-
-The distinct configured signer independently fetches and validates the evidence,
-uses its fixed protected key, and submits the signed proof to the same authority:
-
-```sh
-ace-assign inbox-settle --project P --mapping M --assignment A --attempt T \
-  --inbox-context I --event E --evidence EVIDENCE_ID --mutation SETTLE \
-  --expected-generation NEXT_G
-```
-
-Use the current authority generation for a new mutation. After an unavailable
-response, retry only with the original selectors, mutation and generation;
-exact replay returns the original acceptance rather than performing another
-effect. Neither command accepts a caller-supplied observation, key or asserted
-outcome. Wrong users, changed runtime/claim/key or conflicting evidence refuse.
-Unconfirmed operations retain their admission for recovery. See
-[signer permissions and recovery](inbox-settle.md) for the fixed key contract.
-Actual account provisioning and native execution are verified centrally in the
-Lab installation and acceptance task, not by these source command examples.

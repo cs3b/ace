@@ -14,7 +14,7 @@ ace-docs:
 ## Command Surface
 
 - `ace-herdr deliver [OPTIONS]`
-- `ace-herdr inbox enqueue|status|deliver|reconcile [OPTIONS]`
+- `ace-herdr inbox enqueue|status|deliver [OPTIONS]`
 - `ace-herdr dispatch [OPTIONS]`
 - `ace-herdr list [--panes|--tabs|--workspaces] [--workspace ID] [--quiet]`
 - `ace-herdr send [--cmd TEXT] [--msg TEXT...] [--key NAME...] --pane ID [--quiet]`
@@ -53,7 +53,7 @@ remain valid; the codec also preserves paired native tmux IDs (`$0`/`%0`) when
 carried by managed metadata. Mixed native/token or cross-field IDs refuse.
 Wire and persisted references must be canonical. Syntax acceptance does not add
 tmux execution to this Herdr controller or replace its exact native ownership,
-target and signed receipt checks.
+target and submission checks.
 
 ```bash
 ace-herdr inbox enqueue --event inb-12345678 --attempt ATTEMPT --ref ref.json --file prompt.txt
@@ -61,84 +61,22 @@ ace-herdr inbox status --event inb-12345678 --format json
 ace-herdr inbox deliver --event inb-12345678
 ```
 
-`enqueue` checks the live pane, durable terminal, agent kind, and native thread identity. Managed API callers must supply `expected_target`, projected from the accepted runtime owner with `Inbox#target_from_owner`; the live observation must equal that original session/pane/terminal/agent/thread identity under the event lock. The immutable `origin_target` survives retries and signed replacement of the current target. Managed payloads are checked for secret shapes before persistence, including envelopes without a nested message. Repeating the same event, attempt, target, and payload returns its existing record; a changed value is an error. `deliver` claims the record once. Idle and busy Codex or Pi agents receive an exact-session native queue submission. After an accepted idle submission, Herdr sends a generic wake prompt without the inbox payload. A pane replacement can receive at most that generic wake, never the payload. The JSON result includes `state`, `claim_generation`, `binding`, `last_error`, and any submission receipt.
+`enqueue` checks the live pane, terminal and original agent-session identity.
+Managed callers supply `expected_target` from the accepted runtime owner. Reusing
+an event with identical attempt, target and payload returns its original record;
+changed input refuses. `deliver` records one submission intent before sending.
 
-`queued` can be retried after a proven pre-submission rejection. `delivered` means native submission was accepted; it does not mean the agent consumed the message. A crash after claim, changed target identity, or a native result without a verified acceptance receipt is `uncertain`; another `deliver` call does not resend it. A `completed` record has a positively verified consumption receipt. A superseded uncertain record can return to `queued` only after positive nonconsumption proof.
+Codex delivery uses the existing Herdr terminal prompt; Pi uses its maintained
+queue boundary. `delivered` means the submission was accepted, not that the
+agent read it or completed the task. A known pre-submission refusal stays queued.
+A lost response, process interruption after intent, or changed target is uncertain;
+a later `deliver` does not automatically resend or select a replacement terminal.
 
-```bash
-ace-herdr inbox reconcile --event inb-12345678 --receipt proof.json
-```
-
-The receipt is supplied from an independently verified operator or supervisor observation of the native outcome. A selected Codex 0.159.3 runtime supports a read-only completed-turn query described below; that query neither signs a receipt nor settles an event. `reconcile` verifies the supplied proof and never infers an outcome from age or queue absence. Before enqueue, the supervisor sets `inbox_receipt_public_key` in `.ace/herdr/config.yml` to the absolute path of its trusted RSA public key. Each event pins that key's fingerprint; a later process cannot substitute a different key. Protect this configuration from delivery requesters. The receipt file must have a detached SHA-256 RSA signature at `FILE.sig`. The private key stays with the operator or supervisor. Its JSON must include the recorded event, attempt, claim generation, payload digest, and complete binding, plus an outcome (`consumed` or `superseded`), an identified observer, and a native observation reference:
-
-```json
-{
-  "event_id": "inb-12345678",
-  "attempt_id": "ATTEMPT",
-  "claim_generation": 1,
-  "payload_sha256": "<digest from inbox status>",
-  "binding": {"session": "<exact binding from inbox status>"},
-  "outcome": "consumed",
-  "observer": {"role": "operator", "id": "operator-id"},
-  "evidence": {"kind": "consumed_acknowledged", "native_reference": "session-log:42", "observation": "message consumed and acknowledged"}
-}
-```
-
-Copy the **entire** `binding` object from `inbox status`; the shortened object above only illustrates the field. `consumed` requires `evidence.kind: consumed_acknowledged`. `superseded` requires `queue_evicted`, `queue_expired`, or `thread_replaced`, with an observation that the old queue entry cannot be consumed. A matching receipt changes `uncertain` to `completed` for consumption, or to `queued` for proven supersession. The original target binding stays pinned. To authorize a replacement native session, include `replacement_target` in the signed receipt with the complete target identity from a fresh Herdr pane observation; reconciliation verifies its session, pane, terminal, agent, and thread against that live replacement address before saving it. Without that field, a new claim can only use the original target. A missing or mismatched receipt returns JSON with unchanged `state: uncertain` and `reconciliation_refusal`; it does not resend. Keep the observation record with the receipt. Signature validation authenticates the configured key; the operator or supervisor remains responsible for checking the cited native outcome before signing.
-
-After inspecting the native outcome and writing `proof.json`, the trusted operator signs the exact bytes:
-
-```bash
-openssl dgst -sha256 -sign operator-private.pem -out proof.json.sig proof.json
-ace-herdr inbox reconcile --event inb-12345678 --receipt proof.json
-```
-
-The command verifies the detached signature against the configured public key before any transition. Missing, malformed, or self-signed receipts leave the event uncertain and return a machine-readable refusal. Keep the signed receipt and source observation for audit.
-
-### Protected Codex observation API
-
-From the installed supervisor principal authorized for `observe_to_sign`, use
-the explicit retained project, mapping, context, assignment, event, attempt and
-positive claim generation:
-
-```bash
-ace-herdr inbox observe --project PROJECT --mapping MAPPING --inbox-context CONTEXT --assignment ASSIGNMENT --event EVENT --attempt ATTEMPT --claim-generation 1 --format json
-```
-
-Inside an ACE source checkout use `bin/ace-herdr` for this command. There is no
-ordinary configuration fallback. The command validates the same-selection
-retained record, admits its actual kernel process for `observe_to_sign`, reads
-the candidate, and rechecks the record before ending the read-only admission.
-Invalid flags, unauthorized peers and stale generations refuse. Lost or invalid
-replies retain admission rather than declaring completion. JSON includes
-`candidate: true` and a sanitized `observation` whose outcome is `consumed` or
-`uncertain`. This is not an evidence ID, signed receipt or settlement; uncertainty
-does not resend. Authority import/signer integration and installed startup
-acceptance remain open under lab-config:8wl.t.gad.2.
-
-The installed inbox context endpoint accepts `observe_context` from a mapped
-peer holding an `observe_to_sign` admission. Parameters are `operation_id`,
-`key_generation`, `event_id`, `attempt_id`, and `claim_generation`. The owner
-selects the retained submission and actual typed runtime; the request cannot
-supply a thread, endpoint, client ID, payload or outcome. Its original 30-second
-transport budget also bounds the event lock and native read.
-
-The response contains the event/attempt/generation/digest, binding, and a
-sanitized `observation`. `outcome: consumed` means that one exact client ID and
-payload digest were found in a uniquely identified completed Codex turn. It is
-a candidate native observation, not a signed receipt, trusted imported evidence,
-or business completion. Missing or ambiguous history is `uncertain`; changed
-record, admission, key or runtime provenance refuses the result. Lost add replies
-can be inspected using the retained client ID, with a missing queue ID kept null.
-No read signs, settles, resends or removes a message. Authority import and signer
-integration remain required before automatic reconciliation.
-
-The protected `snapshot_context` response also supplies `record.codex_submission`
-and `record.codex_receipt` from the same retained event lock. These contain only
-the original correlation metadata; the receipt is null after a lost add reply.
-The evidence authority compares these owner-supplied IDs with an observation
-before import. Ordinary and direct public status do not gain these fields, and
-the snapshot contains no message body or full delivery receipt.
+Inspect current progress directly through `ace-herdr capture` or the native pane.
+Inbox status is transport history, not a cached projection of current agent state.
+No agent-read proof, signing key, reconciliation command or dedicated Codex
+app-server is required. Actual task results and scoped service effects retain
+their independent authorization and verification.
 
 ## tmux-intent ↔ herdr-command parity
 
@@ -417,9 +355,9 @@ Commands raise a CLI error (non-zero exit) carrying herdr's machine code where o
 
 Exit `0` means success (including an explicit empty `list` result or a satisfied wait).
 
-An identical signed reconciliation receipt may be verified again after a consumed/superseded settlement, without another transition. This lets an assignment consumer recover a crash before journaling its verified observation reference. Re-verification preserves the original pinned key, complete binding and generation checks; a later claim's generation rejects the old proof. It never resubmits the payload. Runtime recovery additionally exposes the read-only `process_binding(pane:, caller_pid:)` adapter operation, which requires OS ancestry under the native shell, a matching foreground owner and immutable agent-session identity.
-
-Recovery consumers with a separately accepted journal registration pass `expected_registration:` to `Inbox#reconcile`. The exact `event_id`, `attempt_id`, `payload_sha256` and `receipt_key_sha256` map is checked inside the event lock before signature verification or settlement. A prior `status` call alone does not establish this precondition. A mismatch raises `ValidationError` without settling the event.
+Runtime recovery exposes the read-only `process_binding(pane:, caller_pid:)`
+adapter operation, which checks OS ancestry, foreground ownership and the
+original agent-session identity. Message submission is never task completion.
 
 ## Packaged guarded native source
 
