@@ -27,7 +27,7 @@ class InboxContextOriginalClientTest < Minitest::Test
 
   def setup
     @params = {assignment_id: "assignment", attempt_id: "attempt", event_id: "event", inbox_context_id: "context",
-      purpose: "enqueue", payload_sha256: "a" * 64, receipt_key_sha256: "b" * 64}
+      purpose: "enqueue", payload_sha256: "a" * 64}
     child = {"pid" => 12, "parent_pid" => 11, "uid" => 13001, "gid" => 13001, "groups" => [13001],
       "host" => "fixture", "started_at" => "linux:12345678-1234-1234-1234-123456789abc:91"}
     server = child.merge("pid" => 11, "parent_pid" => 1)
@@ -36,7 +36,7 @@ class InboxContextOriginalClientTest < Minitest::Test
     @data = @params.transform_keys(&:to_s).slice("assignment_id", "attempt_id", "event_id", "inbox_context_id", "purpose")
       .merge("schema" => "ace.assign.inbox-context-original/v1", "project_id" => "project", "mapping_id" => "mapping",
         "commit" => "c" * 40, "registered" => false, "original_binding_digest" => "d" * 64,
-        "registration" => @params.transform_keys(&:to_s).slice("event_id", "attempt_id", "payload_sha256", "receipt_key_sha256"),
+        "registration" => @params.transform_keys(&:to_s).slice("event_id", "attempt_id", "payload_sha256"),
         "process_binding" => {"runtime" => "herdr", "session" => "w1", "pane" => "p1", "terminal_id" => "term_ab",
           "process_identity" => child, "shell_identity" => child, "native_origin" => {"workspace" => "w1", "tab" => "t1",
             "pane" => "p1", "server_identity" => server, "socket_identity" => [1, 2, 13001],

@@ -4,7 +4,7 @@ require "rbconfig"
 
 class HerdrPrimitiveLoadingTest < Minitest::Test
   def test_primitives_load_errors_without_the_broad_configuration_entrypoint
-    %w[ace/assign/organisms/attempt_coordinator ace/herdr/errors ace/herdr/organisms/inbox ace/herdr/organisms/protected_inbox ace/herdr/molecules/herdr_executor ace/herdr/molecules/native_queue_executor].each do |entry|
+    %w[ace/assign/organisms/attempt_coordinator ace/herdr/errors ace/herdr/organisms/inbox ace/herdr/molecules/herdr_executor ace/herdr/molecules/native_queue_executor].each do |entry|
       code = <<~RUBY
         require #{entry.inspect}
         abort "missing hierarchy" unless Ace::Herdr::ValidationError < Ace::Herdr::Error && Ace::Herdr::ExecutorError < Ace::Herdr::Error

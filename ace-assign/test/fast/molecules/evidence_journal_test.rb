@@ -560,9 +560,9 @@ module Ace
             reads += 1
             original_read.call(*args, **options)
           end
-          reloaded.instance_variable_set(:@evidence_reader, ->(item, *_args) {
+          reloaded.instance_variable_set(:@evidence_reader, ->(items, *_args) {
             callbacks += 1
-            corrupt ? "changed current callback verdict" : File.binread(File.join(repo, item.fetch("ref")))
+            items.map { |item| corrupt ? "changed current callback verdict" : File.binread(File.join(repo, item.fetch("ref"))) }
           })
           Molecules::EvidenceJournal.with_event_read_operation do
             reloaded.canonical_event_inventory!(commit: reloaded.ref_value)
