@@ -2,6 +2,7 @@
 
 require "test_helper"
 require "support/lifecycle_fixtures"
+require "open3"
 
 # Test successors of lab-config tests/test_hitl.py TransportTest
 # (lifecycle rows, M1 audit brief 8wm.t.y21): the generic request
@@ -16,6 +17,15 @@ class LifecycleStoreTest < AceHitlTestCase
 
   def root_identity(name = "lab-admin")
     LifecycleFixtures::TestIdentity.new(username: name, root: true)
+  end
+
+  def test_kinds_loads_its_contract_dependency_without_the_main_loader
+    paths = [File.expand_path("../../../lib", __dir__), File.expand_path("../../../../ace-hitl-contract/lib", __dir__)]
+    source = 'require "ace/hitl/lifecycle/kinds"; abort unless Ace::Hitl::Lifecycle::Kinds::PROTECTED_ATTEMPT_ID.equal?(Ace::Hitl::Contract::ManagedEnvelope::PROTECTED_ATTEMPT)'
+    out, err, status = Open3.capture3(RbConfig.ruby, *paths.flat_map { |path| ["-I", path] }, "-e", source)
+    assert status.success?, err
+    assert_empty out
+    assert_empty err
   end
 
   def test_protected_attempt_syntax_preserves_exact_binding_and_assignment_rules

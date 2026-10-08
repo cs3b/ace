@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "ace/hitl/contract/secret_gate"
+require "ace/hitl/contract/managed_envelope"
 
 module Ace
   module Hitl
