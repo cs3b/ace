@@ -107,31 +107,65 @@ module Ace
             raise ValidationError, "fixed canonical completion authority is unavailable"
           end
           transaction do |state|
-            operation = operation!(state, binding.fetch("operation_id"), peer)
-            raise ValidationError, "context completion effect differs" unless operation["effect_binding"] == binding
-            raise ValidationError, "context effect producer remains live" if @effect_issuers.key?(binding.fetch("operation_id"))
+            completion_admission!(state, binding, peer)
           end
           proof = @completion.verify!(effect_binding: binding, reconciliation_digest: reconciliation_digest)
           transaction do |state|
-            operation = operation!(state, binding.fetch("operation_id"), peer)
-            unless operation["effect_binding"] == binding && !@effect_issuers.key?(binding.fetch("operation_id"))
-              raise ValidationError, "context completion effect changed"
-            end
+            operation = completion_admission!(state, binding, peer)
             completion = proof.slice("commit", "reconciliation_digest", "reply_digest")
-            if operation["completion"]
+            if operation && operation["completion"]
               unless operation.fetch("completion").values_at("reconciliation_digest", "reply_digest") == completion.values_at("reconciliation_digest", "reply_digest")
                 raise ValidationError, "context canonical completion changed"
               end
               completion = operation.fetch("completion")
             end
-            operation["completion"] = completion
-            operation["in_flight"] = 0
+            if operation
+              operation["completion"] = completion
+              operation["in_flight"] = 0
+            end
+            retire_returned_direct_issuers!(state, binding, proof)
             {"operation_id" => binding.fetch("operation_id"), "effect_binding_digest" => Molecules::InboxContextEffectBinding.digest(binding),
               "state" => "confirmed", "completion" => completion}
           end
         end
 
         private
+
+        def completion_admission!(state, binding, peer)
+          state.fetch("operations").each do |id, other|
+            next if id == binding.fetch("operation_id") || other.fetch("purpose") != "reconcile" ||
+              other.fetch("event_id") != binding.fetch("event_id") || other.fetch("key_generation") != binding.fetch("key_generation")
+            unless other.fetch("in_flight").zero? && other["effect_binding"].nil? && !@effect_issuers.key?(id) &&
+                @kernel.same?(other.fetch("peer"), peer)
+              raise ValidationError, "another original-event reconciliation admission remains unresolved or foreign"
+            end
+          end
+          return nil unless state.fetch("operations").key?(binding.fetch("operation_id"))
+          operation = operation!(state, binding.fetch("operation_id"), peer)
+          unless operation["effect_binding"] == binding && !@effect_issuers.key?(binding.fetch("operation_id"))
+            raise ValidationError, "context completion effect differs or producer remains live"
+          end
+          operation
+        end
+
+        def retire_returned_direct_issuers!(state, binding, proof)
+          selected = @keys.selected
+          unless selected.fetch(:snapshot) == state.fetch("key") &&
+              binding.fetch("key_generation") == state.fetch("key").fetch("key_generation") &&
+              binding.fetch("registration").fetch("receipt_key_sha256") == state.fetch("key").fetch("fingerprint")
+            raise ValidationError, "direct settlement key selection differs"
+          end
+          ids = state.fetch("operations").filter_map do |id, operation|
+            next unless direct_binding?(operation) && operation["issuer_state"] == "returned" &&
+              operation.fetch("event_id") == binding.fetch("event_id") &&
+              operation.fetch("effect_binding").fetch("attempt_id") == binding.fetch("attempt_id")
+            raise ValidationError, "direct settlement producer remains live" if @effect_issuers.key?(id)
+            source_inbox!(selected).verify_direct_canonical_settlement(binding: operation.fetch("effect_binding"),
+              admitted_claim: operation["admitted_claim"], proof: proof)
+            id
+          end
+          ids.each { |id| state.fetch("operations").delete(id) }
+        end
 
         def source_inbox!(selected)
           raise ValidationError, "fixed context Inbox owner is unavailable" unless @inbox.is_a?(Inbox)

@@ -80,7 +80,7 @@ module Ace
 
           def test_even_empty_protected_only_options_refuse_before_local_configuration
             @command.define_singleton_method(:config) { raise "local configuration must not be read" }
-            %i[project mapping inbox_context claim_generation].each do |key|
+            %i[project mapping inbox_context claim_generation assignment mutation expected_generation receipt_key_sha256].each do |key|
               assert_raises(Ace::Support::Cli::Error) { call("status", **{key => ""}) }
             end
           end

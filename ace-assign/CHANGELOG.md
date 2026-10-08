@@ -18,6 +18,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Route protected `attempt finish`, `attempt reconcile` and `inbox-bind` through the installed authority with explicit original selectors and retry identity; installed participants cannot fall back to local receipts or local coordination.
 - Refuse local delivery fallback for every declared installed participant and classify unavailable protected owners.
+- Confirm original Inbox canonical completion for exact replay while preserving pending admission recovery and refusing foreign same-event reconciliation races; retire only returned direct issuers with matching retained claim lineage.
+
 - Export bounded read-only Inbox principal classification and exact installed context/authority selection through the existing immutable task-context entry.
 
 - Bind original protected Inbox registrations and finish exact results through the public authority, authenticating independent review, prior no-writers proof and settlement; recover one original attempt with immutable observations or read-only terminal evidence.

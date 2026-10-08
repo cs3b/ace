@@ -205,7 +205,7 @@ module Ace
           params, map = inbox_request(request)
           with_inbox_context(params, map, mutation_id: request.fetch("mutation_id")) do |session|
             result = dispatch_admitted_inbox(request: request, peer: peer, role: role, transfer: transfer)
-            if session.effect_binding
+            if result.fetch(:data)["context_operation"]
               # The qjl transaction and all lifecycle exclusions have returned.
               # Completion is verified by its fixed read-only authority endpoint.
               journal = @launch.journals.fetch(map.fetch("project_id"))
@@ -215,7 +215,11 @@ module Ace
                   event.dig("payload", "binding", "receipt_sha256") == params.fetch("receipt_sha256") &&
                   event.dig("payload", "binding", "signature_sha256") == params.fetch("signature_sha256") }
               raise AttemptErrors::EvidenceUnavailable, "accepted context reconciliation missing" unless record
-              session.confirm!(reconciliation_digest: record.fetch("digest"))
+              if session.effect_binding
+                session.confirm!(reconciliation_digest: record.fetch("digest"))
+              elsif !session.pending?
+                session.confirm_original_completion!(binding: result.fetch(:data).fetch("context_operation"), reconciliation_digest: record.fetch("digest"))
+              end
             end
             result
           end

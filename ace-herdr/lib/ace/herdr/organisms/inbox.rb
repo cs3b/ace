@@ -344,11 +344,46 @@ module Ace
           raise ValidationError, "retained inbox lock is unavailable"
         end
 
-        def deliver(event:, expected_claim_generation: nil, expected_attempt: nil)
+        # Called while the fixed context owner holds its admission transaction.
+        # Only the event claim is written here; no native observation or effect.
+        def prepare_direct_delivery(event:, expected_claim_generation:, expected_attempt:, claim_owner:)
+          validate_id!(event, "event")
+          unless claim_owner.is_a?(String) && claim_owner.match?(/\A[0-9a-f]{64}\z/)
+            raise ValidationError, "direct claim owner differs"
+          end
+          with_event(event) do |record|
+            unless record&.inbox && record.inbox.fetch("attempt_id") == expected_attempt &&
+                record.inbox.fetch("receipt_key_sha256") == key_fingerprint &&
+                expected_claim_generation.is_a?(Integer) && expected_claim_generation >= 0
+              raise ValidationError, "direct claim original association differs"
+            end
+            current = record.inbox.fetch("claim_generation")
+            raise ValidationError, "direct claim expected generation is future" if expected_claim_generation > current
+            next nil if expected_claim_generation < current || %w[delivered completed uncertain].include?(record.state)
+            unless record.state == "queued" && !record.inbox["submission_intent"] &&
+                (current.zero? || record.history.last&.fetch("action", nil) == "pre-submit-rejection")
+              raise ValidationError, "direct claim is not known pre-submission"
+            end
+            claim = record.inbox.merge("claim_owner" => claim_owner, "claim_generation" => current + 1)
+            save(record.advance_inbox(state: "claimed", inbox: claim,
+              detail: {"action" => "claim", "claim_generation" => current + 1, "claim_owner" => claim_owner}, timestamp: Time.now.utc.iso8601))
+            {"claim_generation" => current + 1, "claim_owner" => claim_owner}
+          end
+        end
+
+        def deliver(event:, expected_claim_generation: nil, expected_attempt: nil, prepared_claim: nil)
           validate_id!(event, "event")
           with_event(event) do |record|
             raise ValidationError, "unknown inbox event: #{event}" unless record&.inbox
-            unless expected_claim_generation.nil?
+            if prepared_claim
+              unless prepared_claim.is_a?(Hash) && prepared_claim.keys.sort == %w[claim_generation claim_owner] &&
+                  record.state == "claimed" && !record.inbox["submission_intent"] &&
+                  record.inbox.slice("claim_generation", "claim_owner") == prepared_claim &&
+                  record.inbox.fetch("attempt_id") == expected_attempt && record.inbox.fetch("receipt_key_sha256") == key_fingerprint &&
+                  expected_claim_generation.is_a?(Integer) && prepared_claim.fetch("claim_generation") == expected_claim_generation + 1
+                raise ValidationError, "prepared direct claim changed"
+              end
+            elsif !expected_claim_generation.nil?
               unless expected_claim_generation.is_a?(Integer) && expected_claim_generation >= 0 &&
                   expected_attempt.is_a?(String) && EVENT.match?(expected_attempt) &&
                   record.inbox.fetch("attempt_id") == expected_attempt && record.inbox.fetch("receipt_key_sha256") == key_fingerprint
@@ -364,7 +399,7 @@ module Ace
             end
             next retry_wake(record) if record.state == "delivered" && wake_pending?(record)
             next public_record(record) if %w[delivered completed uncertain].include?(record.state)
-            unless record.state == "queued"
+            unless record.state == "queued" || prepared_claim
               if record.inbox["submission_intent"]
                 # A previous owner crashed after saving submission intent:
                 # the submission boundary is unknown to a new process.
@@ -380,12 +415,14 @@ module Ace
               next public_record(record)
             end
 
-            claim = record.inbox.merge(
+            claim = prepared_claim ? record.inbox : record.inbox.merge(
               "claim_owner" => "#{Process.pid}:#{SecureRandom.hex(8)}",
               "claim_generation" => record.inbox.fetch("claim_generation", 0) + 1
             )
-            record = transition(record, "claimed", claim, "claim")
-            save(record)
+            unless prepared_claim
+              record = transition(record, "claimed", claim, "claim")
+              save(record)
+            end
 
             begin
               binding = observe(record)
@@ -445,6 +482,42 @@ module Ace
         def reconcile(event:, receipt:, signed_bytes: nil, signature: nil, expected_registration: nil)
           reconcile_record(event: event, receipt: receipt, signed_bytes: signed_bytes,
             signature: signature, expected_registration: expected_registration, settle: true)
+        end
+
+        def verify_direct_canonical_settlement(binding:, admitted_claim:, proof:)
+          with_event(binding.fetch("event_id"), create_lock: false) do |record|
+            registration = proof.fetch("registration")
+            receipt = record&.inbox&.fetch("reconciliation", nil)
+            unless record&.inbox && record.state == proof.fetch("state") &&
+                record.inbox.fetch("attempt_id") == binding.fetch("attempt_id") &&
+                registration == {"event_id" => record.event_id, "attempt_id" => record.inbox.fetch("attempt_id"),
+                  "payload_sha256" => record.answer_digest, "receipt_key_sha256" => key_fingerprint} &&
+                record.inbox.fetch("receipt_key_sha256") == key_fingerprint && receipt.is_a?(Hash) &&
+                receipt.slice("event_id", "attempt_id", "payload_sha256", "claim_generation", "binding") ==
+                  registration.slice("event_id", "attempt_id", "payload_sha256").merge(
+                    "claim_generation" => proof.fetch("claim_generation"), "binding" => proof.fetch("binding").fetch("native_binding")) &&
+                receipt.fetch("outcome") == (proof.fetch("state") == "completed" ? "consumed" : "superseded") &&
+                record.inbox.fetch("claim_generation") == proof.fetch("claim_generation")
+              raise ValidationError, "direct canonical settlement retained record differs"
+            end
+            if binding.fetch("purpose") == "deliver"
+              unless admitted_claim && admitted_claim.fetch("claim_generation") == proof.fetch("claim_generation") &&
+                  record.history.count { |entry| entry.slice("action", "claim_generation", "claim_owner") ==
+                    admitted_claim.merge("action" => "claim") } == 1
+                raise ValidationError, "direct canonical settlement belongs to another invocation"
+              end
+            else
+              reverse = binding.fetch("selection").fetch("reverse")
+              unless record.answer_digest == binding.fetch("selection").fetch("payload_sha256") &&
+                  record.answer.bytesize == binding.fetch("selection").fetch("payload_bytes") &&
+                  record.inbox.fetch("origin_target").values_at("session", "pane") == reverse.values_at("session", "pane")
+                raise ValidationError, "direct canonical enqueue origin differs"
+              end
+            end
+            true
+          end
+        rescue KeyError, TypeError, SystemCallError
+          raise ValidationError, "direct canonical settlement is unavailable"
         end
 
         # Canonical consumers reverify retained signed settlement without creating

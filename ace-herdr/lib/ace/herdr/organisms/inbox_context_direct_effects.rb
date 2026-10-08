@@ -33,12 +33,16 @@ module Ace
               raise ValidationError, "direct enqueue admission is uncertain" unless operation.fetch("in_flight").zero?
               operation["effect_binding"] = binding
               operation["in_flight"] = 1
+              operation["issuer_state"] = "running"
               @effect_issuers[operation_id] = Thread.current
               dispatch = true
             end
           end
           box = source_inbox!(selected)
-          box.enqueue(event: event_id, attempt: attempt_id, ref: reverse, payload: payload) if dispatch
+          if dispatch
+            box.enqueue(event: event_id, attempt: attempt_id, ref: reverse, payload: payload)
+            record_direct_return!(operation_id, peer, binding)
+          end
           result = box.verify_direct_enqueue(binding)
           if dispatch
             transaction do |state|
@@ -85,13 +89,28 @@ module Ace
               source_inbox!(selected).verify_direct_delivery(binding)
               operation["effect_binding"] = binding
               operation["in_flight"] = 1
+              operation["issuer_state"] = "running"
               @effect_issuers[operation_id] = Thread.current
               dispatch = true
             end
           end
           box = source_inbox!(selected)
-          box.deliver(event: event_id, expected_claim_generation: expected_claim_generation,
-            expected_attempt: attempt_id) if dispatch
+          if dispatch
+            transaction do |state|
+              operation = operation!(state, operation_id, peer)
+              unless operation["effect_binding"] == binding && operation["issuer_state"] == "running" &&
+                  @effect_issuers[operation_id].equal?(Thread.current)
+                raise ValidationError, "direct claim preparation ownership differs"
+              end
+              operation["admitted_claim"] = box.prepare_direct_delivery(event: event_id,
+                expected_claim_generation: expected_claim_generation, expected_attempt: attempt_id,
+                claim_owner: Digest::SHA256.hexdigest(JSON.generate([@context_id, operation_id])))
+            end
+            claim = transaction { |state| copy(operation!(state, operation_id, peer)["admitted_claim"]) }
+            box.deliver(event: event_id, expected_claim_generation: expected_claim_generation,
+              expected_attempt: attempt_id, prepared_claim: claim)
+            record_direct_return!(operation_id, peer, binding)
+          end
           verified = box.verify_direct_delivery(binding)
           transaction do |state|
             operation = operation!(state, operation_id, peer)
@@ -123,6 +142,17 @@ module Ace
         end
 
         private
+
+        def record_direct_return!(operation_id, peer, binding)
+          transaction do |state|
+            operation = operation!(state, operation_id, peer)
+            unless operation["effect_binding"] == binding && operation["issuer_state"] == "running" &&
+                @effect_issuers[operation_id].equal?(Thread.current)
+              raise ValidationError, "direct issuer return ownership differs"
+            end
+            operation["issuer_state"] = "returned"
+          end
+        end
 
         def direct_binding?(operation)
           operation.dig("effect_binding", "schema") == Molecules::InboxDirectEffectBinding::SCHEMA

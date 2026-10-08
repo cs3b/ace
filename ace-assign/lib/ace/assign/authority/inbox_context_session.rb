@@ -104,6 +104,24 @@ module Ace
           result
         end
 
+        def confirm_original_completion!(binding:, reconciliation_digest:)
+          selected = Ace::Herdr::Molecules::InboxContextEffectBinding.verify!(binding)
+          expected = {"project_id" => @map.fetch("project_id"), "mutation_id" => @mutation_id,
+            "key_generation" => @operation.fetch("key_generation"), "registration" => @params.fetch("expected_registration")}
+            .merge(@params.slice("assignment_id", "attempt_id", "mapping_id", "inbox_context_id", "event_id", "receipt_sha256", "signature_sha256"))
+          unless @operation.fetch("state") == "admitted" && @effect_binding.nil? &&
+              expected.all? { |key, value| selected.fetch(key) == value } && selected.fetch("registration").fetch("receipt_key_sha256") == receipt_key_sha256
+            raise AttemptErrors::EvidenceUnavailable, "original proof-only completion selection differs"
+          end
+          result = @client.request("confirm_context_completion", {"effect_binding" => selected, "reconciliation_digest" => reconciliation_digest})
+          unless result.keys.sort == %w[completion effect_binding_digest operation_id state] && result["state"] == "confirmed" &&
+              result["operation_id"] == selected.fetch("operation_id") &&
+              result["effect_binding_digest"] == Ace::Herdr::Molecules::InboxContextEffectBinding.digest(selected)
+            raise AttemptErrors::EvidenceUnavailable, "original proof-only confirmation differs"
+          end
+          result
+        end
+
         def end!
           result = @client.request("end_context_operation", {"operation_id" => @operation.fetch("operation_id")})
           unless result == {"operation_id" => @operation.fetch("operation_id"), "state" => "ended"}

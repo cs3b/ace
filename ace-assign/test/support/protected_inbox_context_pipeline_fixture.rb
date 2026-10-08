@@ -55,6 +55,8 @@ module Ace
           authority: @authority_peer.slice("uid", "gid", "groups").merge("socket_path" => @query_path),
           kernel: PeerKernel.new(@authority_peer), wire: query_wire)
         grants = [@authority_peer.slice("uid", "gid", "groups").merge("role" => "authority", "purposes" => ["reconcile"])]
+        grants << @peer.slice("uid", "gid", "groups").merge("role" => "authority", "purposes" => %w[deliver enqueue]) if @direct_fixture
+        @context_keys, @context_completion, @context_grants, @context_state_root = keys, completion, grants, state_root
         @context_owner = Ace::Herdr::Organisms::InboxContextOwner.new(context_id: context_id, deliveries_dir: @context.fetch("deliveries_dir"),
           grants: grants, store: @context_store, keys: keys, kernel: @kernel, inbox: @box, completion: completion)
         @context_owner.provision!

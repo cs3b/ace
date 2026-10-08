@@ -8,6 +8,7 @@ require_relative "../../molecules/protected_inbox_selection"
 require_relative "../../molecules/inbox_context_client"
 require_relative "../../molecules/inbox_cli_input"
 require_relative "../../molecules/inbox_direct_effect_binding"
+require_relative "../../molecules/inbox_reconciliation_client"
 
 module Ace
   module Herdr
@@ -23,6 +24,10 @@ module Ace
           option :mapping, type: :string, desc: "Installed mapping ID"
           option :inbox_context, type: :string, desc: "Installed inbox context ID"
           option :claim_generation, type: :integer, desc: "Original expected claim generation"
+          option :assignment, type: :string, desc: "Original assignment ID"
+          option :mutation, type: :string, desc: "Stable reconciliation mutation ID"
+          option :expected_generation, type: :integer, desc: "Original expected authority generation"
+          option :receipt_key_sha256, type: :string, desc: "Original registered receipt-key digest"
           option :event, type: :string, desc: "Stable event ID"
           option :attempt, type: :string, desc: "Assignment attempt ID"
           option :ref, type: :string, desc: "Herdr reverse-address JSON file"
@@ -31,10 +36,12 @@ module Ace
           option :format, type: :string, desc: "Output format (json)"
 
           def initialize(executor: nil, native: nil, selection: Molecules::ProtectedInboxSelection.new,
-            context_client_factory: Molecules::InboxContextClient.method(:selected), kernel: Ace::Runtime::Molecules::ProtectedLinux.new)
+            context_client_factory: Molecules::InboxContextClient.method(:selected), reconciliation_client_factory: Molecules::InboxReconciliationClient.method(:new),
+            kernel: Ace::Runtime::Molecules::ProtectedLinux.new)
             @executor = executor
             @native = native
             @selection, @context_client_factory, @kernel = selection, context_client_factory, kernel
+            @reconciliation_client_factory = reconciliation_client_factory
           end
 
           def call(operation: nil, **options)
@@ -91,14 +98,26 @@ module Ace
 
           def protected_call(operation, options, selected)
             %i[event attempt].each { |key| cli_error("--#{key} is required") if options[key].to_s.empty? }
-            unless %w[enqueue status deliver].include?(operation)
+            unless %w[enqueue status deliver reconcile].include?(operation)
               cli_error("protected operation requires its maintained direct handler")
             end
             allowed = %i[project mapping inbox_context event attempt format]
             allowed += %i[ref file] if operation == "enqueue"
             allowed += %i[claim_generation] if operation == "deliver"
+            allowed += %i[assignment mutation expected_generation receipt_key_sha256 receipt] if operation == "reconcile"
             if options.any? { |key, value| !value.nil? && !allowed.include?(key) }
               cli_error("protected inbox operation options differ")
+            end
+            if operation == "reconcile"
+              %i[assignment mutation receipt_key_sha256 receipt].each { |key| cli_error("--#{key.to_s.tr('_', '-')} is required") if options[key].to_s.empty? }
+              unless options[:expected_generation].is_a?(Integer) && options[:expected_generation] >= 0
+                cli_error("--expected-generation must be an explicit nonnegative integer")
+              end
+              signed_bytes = Molecules::InboxCliInput.read(options.fetch(:receipt), limit: 16_384)
+              signature = Molecules::InboxCliInput.read("#{options.fetch(:receipt)}.sig", limit: 16_384)
+              return @reconciliation_client_factory.call(selection: selected).reconcile(assignment_id: options.fetch(:assignment),
+                mutation_id: options.fetch(:mutation), expected_generation: options.fetch(:expected_generation), event_id: options.fetch(:event),
+                attempt_id: options.fetch(:attempt), receipt_key_sha256: options.fetch(:receipt_key_sha256), signed_bytes: signed_bytes, signature: signature)
             end
             context = selected.fetch("context")
             client = @context_client_factory.call(context_id: selected.fetch("inbox_context_id"),

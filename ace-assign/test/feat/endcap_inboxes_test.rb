@@ -9,6 +9,7 @@ require "ace/herdr/organisms/inbox_context_server"
 require "ace/assign/authority/inbox_context_completion"
 require "ace/assign/authority/server"
 require "ace/assign/authority/router"
+require "ace/herdr/cli"
 require_relative "../../../ace-herdr/test/support/inbox_context_owner_fixture"
 
 module Ace
@@ -61,7 +62,8 @@ module Ace
         end
       end
 
-      def fixture(child: false, inbox: true)
+      def fixture(child: false, inbox: true, direct: false)
+        @direct_fixture = direct
         Dir.mktmpdir do |root|
           root = File.realpath(root)
           repo = File.join(root, "repo"); FileUtils.mkdir_p(repo)
@@ -158,10 +160,15 @@ module Ace
               "agent_session" => {"agent" => "codex", "kind" => "id", "value" => "0123abcd-0000-4000-8000-000000000001"}}}),
               stderr: "", success: true, exit_code: 0)
           end
-          native = Object.new; native.define_singleton_method(:submit) { |**| {"accepted" => true} }
+          native = Object.new
+          @native_calls = 0
+          native.define_singleton_method(:submit) do |**|
+            owner.instance_variable_set(:@native_calls, owner.instance_variable_get(:@native_calls) + 1)
+            direct ? {"accepted" => false, "error" => "controlled lost native acknowledgement"} : {"accepted" => true}
+          end
           @box = Ace::Herdr::Organisms::Inbox.new(executor: executor, native: native, deliveries_dir: @context.fetch("deliveries_dir"), receipt_public_key: key.public_key)
           @box.enqueue(event: "event", attempt: "attempt", ref: {"session" => "w1", "pane" => "p1"}, payload: "message")
-          record = @box.deliver(event: "event")
+          record = direct ? @box.retained_status(event: "event") : @box.deliver(event: "event")
           @registration = record.slice("event_id", "attempt_id", "payload_sha256", "receipt_key_sha256")
           mutate("fixture_registration", "registration", child ? 5 : 4, {data: {}, events: [{type: "inbox_binding", payload: {
             "event_id" => "event", "attempt_id" => "attempt", "inbox_context_id" => "context", "registration" => @registration}}]})
@@ -221,6 +228,187 @@ module Ace
             assert_raises(AttemptErrors::EvidenceUnavailable) { reconcile }
             assert_raises(AttemptErrors::EvidenceUnavailable) { @owner.dispatch(request: request, peer: @peer, role: :supervisor) }
           end
+        end
+      end
+
+      def test_returned_direct_issuer_is_retired_by_actual_canonical_confirmation_and_restarted_exact_replay
+        fixture(direct: true) do
+          admission = @context_owner.begin_context_operation(context_id: "context", purpose: "deliver", event_id: "event",
+            process_binding: @peer, peer: @peer)
+          reply = @context_owner.deliver_context(operation_id: admission.fetch("operation_id"), key_generation: 1,
+            event_id: "event", attempt_id: "attempt", expected_claim_generation: 0, peer: @peer)
+          assert_equal "unknown", reply.fetch("admission_state")
+          assert_equal "uncertain", reply.dig("record", "state")
+          assert_equal 1, @native_calls
+          state = @context_store.transaction { |value| JSON.parse(JSON.generate(value)) }
+          operation = state.fetch("operations").fetch(admission.fetch("operation_id"))
+          assert_equal "returned", operation.fetch("issuer_state")
+          assert_equal 1, operation.fetch("admitted_claim").fetch("claim_generation")
+          receipt = reply.fetch("record").slice("event_id", "attempt_id", "claim_generation", "payload_sha256", "binding").merge(
+            "outcome" => "consumed", "observer" => {"role" => "supervisor", "id" => "observer"},
+            "evidence" => {"kind" => "consumed_acknowledged", "native_reference" => "native:1", "observation" => "consumed"})
+          @bytes = JSON.generate(receipt); @signature = @key.sign(OpenSSL::Digest::SHA256.new, @bytes)
+          @params = @params.merge("receipt_sha256" => Digest::SHA256.hexdigest(@bytes), "signature_sha256" => Digest::SHA256.hexdigest(@signature))
+          @context_store.close
+          @context_store = Ace::Herdr::Molecules::InboxContextStore.new(root: @context_state_root, uid: Process.uid, protection: InboxContextOwnerFixture::FixturePaths.new)
+          @context_owner = Ace::Herdr::Organisms::InboxContextOwner.new(context_id: "context", deliveries_dir: @context.fetch("deliveries_dir"),
+            grants: @context_grants, store: @context_store, keys: @context_keys, kernel: @kernel, inbox: @box, completion: @context_completion)
+          result = reconcile
+          assert_equal "completed", result.dig(:data, "state")
+          assert_equal 0, @context_owner.status(peer: @authority_peer).fetch("active_operations")
+          assert_raises(Ace::Herdr::ValidationError) { @context_owner.end_context_operation(operation_id: admission.fetch("operation_id"), peer: @peer) }
+          replay = reconcile
+          assert replay.fetch(:replayed)
+          assert_equal result.fetch(:data), replay.fetch(:data)
+          assert_equal 1, @native_calls
+          assert_equal 1, events.count { |event| event["type"] == "inbox_reconciliation" }
+          assert_equal 2, events.count { |event| event["type"] == "evidence_import" }
+        end
+      end
+
+      def prepare_direct_consumed_proof
+        record = @box.retained_status(event: "event")
+        receipt = record.slice("event_id", "attempt_id", "claim_generation", "payload_sha256", "binding").merge(
+          "outcome" => "consumed", "observer" => {"role" => "supervisor", "id" => "observer"},
+          "evidence" => {"kind" => "consumed_acknowledged", "native_reference" => "native:1", "observation" => "consumed"})
+        @bytes = JSON.generate(receipt); @signature = @key.sign(OpenSSL::Digest::SHA256.new, @bytes)
+        @params = @params.merge("receipt_sha256" => Digest::SHA256.hexdigest(@bytes), "signature_sha256" => Digest::SHA256.hexdigest(@signature))
+      end
+
+      def direct_admission_and_arguments
+        admission = @context_owner.begin_context_operation(context_id: "context", purpose: "deliver", event_id: "event",
+          process_binding: @peer, peer: @peer)
+        [admission, {operation_id: admission.fetch("operation_id"), key_generation: 1,
+          event_id: "event", attempt_id: "attempt", expected_claim_generation: 0, peer: @peer}]
+      end
+
+      def test_genuine_consumed_proof_cannot_clear_crash_before_durable_issuer_return
+        fixture(direct: true) do
+          admission, args = direct_admission_and_arguments
+          @context_store.singleton_class.class_eval do
+            define_method(:persist!) do |state|
+              raise Ace::Herdr::ValidationError, "controlled crash before returned commit" if state.fetch("operations").values.any? { |item| item["issuer_state"] == "returned" }
+              super(state)
+            end
+          end
+          assert_raises(Ace::Herdr::ValidationError) { @context_owner.deliver_context(**args) }
+          assert_equal 1, @native_calls
+          @context_store.singleton_class.send(:remove_method, :persist!)
+          prepare_direct_consumed_proof
+          assert_equal "completed", reconcile.dig(:data, "state")
+          retained = @context_store.transaction { |state| JSON.parse(JSON.generate(state.fetch("operations").fetch(admission.fetch("operation_id")))) }
+          assert_equal "running", retained.fetch("issuer_state")
+          assert_equal 1, retained.fetch("in_flight")
+          assert_raises(Ace::Herdr::ValidationError) { @context_owner.end_context_operation(operation_id: admission.fetch("operation_id"), peer: @peer) }
+          assert reconcile.fetch(:replayed)
+          assert_equal 1, @context_owner.status(peer: @authority_peer).fetch("active_operations")
+          assert_equal 1, @native_calls
+        end
+      end
+
+      def test_foreign_same_event_reconciliation_admitted_after_query_prevents_retirement_until_exact_replay
+        fixture(direct: true) do
+          admission, args = direct_admission_and_arguments
+          @context_owner.deliver_context(**args)
+          prepare_direct_consumed_proof
+          actual_read = @context_query_wire.method(:read)
+          test = self
+          foreign = @authority_peer.merge("pid" => 85, "started_at" => "linux:#{BOOT}:85")
+          foreign_admission = nil
+          @context_query_wire.define_singleton_method(:read) do |*arguments, **options|
+            proof = actual_read.call(*arguments, **options)
+            foreign_admission ||= test.instance_variable_get(:@context_owner).begin_context_operation(context_id: "context", purpose: "reconcile",
+              event_id: "event", process_binding: foreign, peer: foreign)
+            proof
+          end
+          assert_raises(AttemptErrors::EvidenceUnavailable) { reconcile }
+          state = @context_store.transaction { |value| JSON.parse(JSON.generate(value)) }
+          direct = state.fetch("operations").fetch(admission.fetch("operation_id"))
+          assert_equal "returned", direct.fetch("issuer_state")
+          assert_equal 1, direct.fetch("in_flight")
+          original = state.fetch("operations").values.find { |item| item["effect_binding"]&.fetch("schema") == "ace.herdr.inbox-context-effect/v1" }
+          assert_nil original.fetch("completion"), "failed post-query admission check cannot partially confirm"
+          assert_equal 1, events.count { |event| event["type"] == "inbox_reconciliation" }
+          @context_query_wire.define_singleton_method(:read) { |*arguments, **options| actual_read.call(*arguments, **options) }
+          @context_owner.end_context_operation(operation_id: foreign_admission.fetch("operation_id"), peer: foreign)
+          assert reconcile.fetch(:replayed)
+          assert_equal 0, @context_owner.status(peer: @authority_peer).fetch("active_operations")
+          assert_equal 1, @native_calls
+        end
+      end
+
+      def test_registered_herdr_reconciliation_uses_actual_existing_authority_upload_and_canonical_replay
+        fixture do
+          project_method = @deployment.method(:project)
+          selected_peer = @peer
+          @deployment.define_singleton_method(:project) do |id|
+            project_method.call(id).merge("peer_credentials" => {selected_peer.fetch("uid").to_s => selected_peer.slice("gid", "groups")},
+              "reviewer_uids" => [], "service_executor_uids" => [], "supervisor_uids" => [selected_peer.fetch("uid")])
+          end
+          # Real protected ancestry: /tmp intentionally fails the production
+          # transfer-spool ancestry gate even when its leaf is private.
+          state_root = File.realpath(Dir.mktmpdir("inbox-authority-", File.realpath(".ace-local")))
+          authority_method = @deployment.method(:authority)
+          @deployment.define_singleton_method(:authority) { |id| authority_method.call(id).merge("state_root" => state_root) }
+          path = File.join(@socket_root, "mutate.sock")
+          listener = UNIXServer.new(path)
+          server = Authority::Server.new(authority_id: "authority", deployment: @deployment, lifecycle: Authority::Router.new(launch: @owner),
+            kernel: ProtectedInboxContextPipelineFixture::PeerKernel.new(@peer), composition: "services")
+          server.define_singleton_method(:refusal) do |socket, code|
+            @observed_refusal = code
+            @observed_error = [$!&.class&.name, $!&.message]
+            super(socket, code)
+          end
+          workers = []; stopping = false
+          acceptor = Thread.new do
+            until stopping
+              socket = listener.accept
+              workers << Thread.new(socket) do |connection|
+                server.send(:receive, connection)
+              ensure
+                connection.close
+              end
+            end
+          rescue IOError, Errno::EBADF
+            raise unless stopping
+          end
+          selected = {"project_id" => "project", "mapping_id" => "mapping", "inbox_context_id" => "context",
+            "authority" => @authority_peer.slice("uid", "gid", "groups").merge("socket_path" => path)}
+          selection = Object.new
+          selection.define_singleton_method(:with) { |_options, &block| block.call(selected) }
+          wire = ProtectedInboxContextPipelineFixture::SocketFixtureWire.new(@socket_root, @authority_peer.fetch("uid"))
+          kernel = ProtectedInboxContextPipelineFixture::PeerKernel.new(@authority_peer)
+          factory = ->(selection:) { Ace::Herdr::Molecules::InboxReconciliationClient.new(selection: selection, kernel: kernel, wire: wire) }
+          command = Ace::Herdr::CLI.resolve(["inbox"]).first
+          previous = %i[@selection @reconciliation_client_factory].to_h { |key| [key, command.instance_variable_get(key)] }
+          command.instance_variable_set(:@selection, selection); command.instance_variable_set(:@reconciliation_client_factory, factory)
+          command.define_singleton_method(:config) { raise "local Inbox must not be constructed" }
+          proof = File.join(@socket_root, "proof.json"); File.binwrite(proof, @bytes); File.binwrite("#{proof}.sig", @signature)
+          arguments = %w[inbox reconcile --project project --mapping mapping --inbox-context context --assignment assignment --attempt attempt --event event] +
+            ["--receipt", proof, "--mutation", "reconcile", "--expected-generation", "5", "--receipt-key-sha256", @registration.fetch("receipt_key_sha256")]
+          out, err = capture_io do
+            assert_equal 0, Ace::Herdr::CLI.start(arguments)
+          rescue Ace::Support::Cli::Error => error
+            raise error.class, "#{error.message} (actual source server refusal #{server.instance_variable_get(:@observed_refusal)}: #{server.instance_variable_get(:@observed_error).inspect})"
+          end
+          assert_empty err
+          first = JSON.parse(out)
+          assert_equal "completed", first.fetch("state")
+          refute first.fetch("replayed")
+          refute first.key?("context_operation")
+          out, = capture_io { assert_equal 0, Ace::Herdr::CLI.start(arguments) }
+          replay = JSON.parse(out)
+          assert replay.fetch("replayed")
+          assert_equal first.reject { |key, _| key == "replayed" }, replay.reject { |key, _| key == "replayed" }
+          assert_equal 1, events.count { |event| event["type"] == "inbox_reconciliation" }
+          assert_equal 2, events.count { |event| event["type"] == "evidence_import" }
+          assert_equal 0, @context_owner.status(peer: @authority_peer).fetch("active_operations")
+        ensure
+          previous&.each { |key, value| command.instance_variable_set(key, value) }
+          command&.singleton_class&.send(:remove_method, :config) if command&.singleton_class&.instance_methods(false)&.include?(:config)
+          stopping = true; listener&.close; acceptor&.value
+          workers&.each(&:value)
+          FileUtils.remove_entry(state_root) if state_root && File.exist?(state_root)
         end
       end
 

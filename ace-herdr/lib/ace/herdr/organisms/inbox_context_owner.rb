@@ -39,7 +39,7 @@ module Ace
         def provision!
           key = @keys.snapshot
           validate_key!(key)
-          @store.provision!({"schema" => "ace.herdr.inbox-context-control/v1", "context_id" => @context_id,
+          @store.provision!({"schema" => "ace.herdr.inbox-context-control/v2", "context_id" => @context_id,
             "key" => key, "operations" => {}, "rotation" => nil, "last_rotation" => nil})
         end
 
@@ -83,7 +83,7 @@ module Ace
             id = SecureRandom.hex(16)
             state.fetch("operations")[id] = {"peer" => copy(peer), "purpose" => purpose, "event_id" => event_id,
               "key_generation" => state.fetch("key").fetch("key_generation"), "in_flight" => 0,
-              "effect_binding" => nil, "completion" => nil}
+              "effect_binding" => nil, "completion" => nil, "issuer_state" => nil, "admitted_claim" => nil}
             operation_projection(state, id, state.fetch("operations").fetch(id))
           end
         end
@@ -375,7 +375,7 @@ module Ace
 
         def validate_state!(state)
           strict!(state, %w[context_id key last_rotation operations rotation schema])
-          unless state["schema"] == "ace.herdr.inbox-context-control/v1" && state["context_id"] == @context_id
+          unless state["schema"] == "ace.herdr.inbox-context-control/v2" && state["context_id"] == @context_id
             raise ValidationError, "context metadata belongs to another context"
           end
           validate_key!(state.fetch("key"))
@@ -383,7 +383,7 @@ module Ace
           raise ValidationError, "context admission map exceeds bounds" unless operations.is_a?(Hash) && operations.size <= OPERATION_LIMIT
           operations.each do |id, operation|
             id!(id)
-            strict!(operation, %w[completion effect_binding event_id in_flight key_generation peer purpose])
+            strict!(operation, %w[admitted_claim completion effect_binding event_id in_flight issuer_state key_generation peer purpose])
             peer!(operation.fetch("peer"))
             token!(operation.fetch("event_id"))
             unless PURPOSES.include?(operation["purpose"]) && [0, 1].include?(operation["in_flight"]) &&
@@ -396,6 +396,16 @@ module Ace
                 unless effect.values_at("purpose", "event_id") == operation.values_at("purpose", "event_id") && operation["completion"].nil?
                   raise ValidationError, "context retained direct binding differs"
                 end
+                unless %w[running returned].include?(operation["issuer_state"])
+                  raise ValidationError, "context direct issuer evidence differs"
+                end
+                if (claim = operation["admitted_claim"])
+                  strict!(claim, %w[claim_generation claim_owner])
+                  unless effect["purpose"] == "deliver" && claim["claim_generation"] == effect.fetch("selection").fetch("expected_claim_generation") + 1 &&
+                      claim["claim_owner"] == Digest::SHA256.hexdigest(JSON.generate([@context_id, id]))
+                    raise ValidationError, "context actual claim evidence differs"
+                  end
+                end
                 next
               end
               effect = Molecules::InboxContextEffectBinding.verify!(operation.fetch("effect_binding"))
@@ -406,6 +416,9 @@ module Ace
               unless operation["completion"] || operation.fetch("in_flight") == 1
                 raise ValidationError, "context retained effect lacks canonical completion"
               end
+            end
+            unless operation["issuer_state"].nil? && operation["admitted_claim"].nil?
+              raise ValidationError, "context non-direct issuer evidence differs"
             end
             if operation["completion"]
               strict!(operation.fetch("completion"), %w[commit reconciliation_digest reply_digest])

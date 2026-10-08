@@ -17,7 +17,7 @@ module Ace
 
         def with(options)
           downstream_started = false
-          selected = options.values_at(:project, :mapping, :inbox_context, :claim_generation).any? { |item| !item.nil? } ||
+          selected = options.values_at(:project, :mapping, :inbox_context, :claim_generation, :assignment, :mutation, :expected_generation, :receipt_key_sha256).any? { |item| !item.nil? } ||
             %w[ACE_ASSIGN_PROJECT_ID ACE_ASSIGN_LAUNCH_MAPPING ACE_ASSIGN_INBOX_CONTEXT_ID].any? { |key| !@env[key].to_s.empty? }
           @owner.with do |pin|
             unless pin
