@@ -623,3 +623,38 @@ original registration, key, context and native outcome. Queued/superseded is not
 consumed or settled. Preserve original parameters/files for exact retry. Installed
 participants cannot fall back to ordinary local Inbox coordination. Without
 protected selection the existing ordinary receipt/FILE.sig interface remains.
+
+### Observe and settle a native Inbox event
+
+The configured observer reads one original event through its installed context
+and imports a completed native observation into the assignment journal:
+
+```sh
+ace-assign inbox-observe --project P --mapping M --assignment A --attempt T \
+  --inbox-context I --event E --claim-generation C --mutation OBSERVE \
+  --expected-generation G
+```
+
+All selectors are explicit and required. A confirmed import returns an opaque
+`evidence_id`, event, claim generation, `consumed` outcome and content reference.
+Uncertain native history returns `uncertain` without importing or resending.
+Consumption describes this message, not completion of the assignment.
+
+The distinct configured signer independently fetches and validates the evidence,
+uses its fixed protected key, and submits the signed proof to the same authority:
+
+```sh
+ace-assign inbox-settle --project P --mapping M --assignment A --attempt T \
+  --inbox-context I --event E --evidence EVIDENCE_ID --mutation SETTLE \
+  --expected-generation NEXT_G
+```
+
+Use the current authority generation for a new mutation. After an unavailable
+response, retry only with the original selectors, mutation and generation;
+exact replay returns the original acceptance rather than performing another
+effect. Neither command accepts a caller-supplied observation, key or asserted
+outcome. Wrong users, changed runtime/claim/key or conflicting evidence refuse.
+Unconfirmed operations retain their admission for recovery. See
+[signer permissions and recovery](inbox-settle.md) for the fixed key contract.
+Actual account provisioning and native execution are verified centrally in the
+Lab installation and acceptance task, not by these source command examples.

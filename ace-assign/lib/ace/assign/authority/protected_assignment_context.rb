@@ -85,7 +85,9 @@ module Ace
               "authority" => authority.slice("socket_path", "uid", "gid", "groups")
                 .merge("authority_id" => map.fetch("authority_id"))}
             held.verify_unchanged!
-            yield result
+            value = yield result
+            held.verify_unchanged!
+            value
           end
         rescue ArgumentError, KeyError, TypeError, Ace::Runtime::Error
           raise AttemptErrors::EvidenceUnavailable, "installed inbox selection is unavailable"
@@ -148,6 +150,17 @@ module Ace
 
         def mapping_hint?
           !@env["ACE_ASSIGN_LAUNCH_MAPPING"].to_s.empty?
+        end
+
+        # Observer/signer commands reuse the installed selection and held
+        # descriptor pair. This grants no effect; endpoints authorize the peer.
+        def with_inbox_workflow(options:)
+          mapping = selected_hint(options[:mapping], "ACE_ASSIGN_LAUNCH_MAPPING")
+          project, inbox_context = options.values_at(:project, :inbox_context)
+          inbox_context_selection(project: project, mapping: mapping, inbox_context: inbox_context) do |_selection|
+            @kernel ||= Ace::Runtime::Molecules::ProtectedLinux.new
+            yield @deployment, @kernel, @deployment.mapping(mapping)
+          end
         end
 
         # Consumers call only after original PreparedInput admission. These

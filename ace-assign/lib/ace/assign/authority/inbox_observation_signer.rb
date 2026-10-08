@@ -88,7 +88,8 @@ module Ace
                 "receipt_sha256" => Digest::SHA256.hexdigest(signed_bytes), "signature_sha256" => Digest::SHA256.hexdigest(signature)),
                 mutation_id: mutation_id, upload_parts: [signed_bytes, signature], purpose: :inbox_proof, timeout: 30).data
               verify_settlement!(accepted, params: params, map: map, mutation_id: mutation_id,
-                registration: registration, signed_bytes: signed_bytes, signature: signature, key_generation: grant.fetch("key_generation"))
+                registration: registration, signed_bytes: signed_bytes, signature: signature,
+                key_generation: grant.fetch("key_generation"), expected_generation: expected_generation)
               accepted
             end
             ended = context.request("end_context_operation", {"operation_id" => grant.fetch("operation_id")})
@@ -154,9 +155,11 @@ module Ace
           [bytes, observation, binding]
         end
 
-        def verify_settlement!(data, params:, map:, mutation_id:, registration:, signed_bytes:, signature:, key_generation:)
+        def verify_settlement!(data, params:, map:, mutation_id:, registration:, signed_bytes:, signature:, key_generation:, expected_generation:)
           unless data.is_a?(Hash) && data.values_at("event_id", "attempt_id", "inbox_context_id", "registration", "state") ==
-              [params.fetch("event_id"), params.fetch("attempt_id"), params.fetch("inbox_context_id"), registration, "completed"]
+              [params.fetch("event_id"), params.fetch("attempt_id"), params.fetch("inbox_context_id"), registration, "completed"] &&
+              data["generation"] == expected_generation + 1 && data["journal_commit"].is_a?(String) &&
+              data["journal_commit"].match?(/\A(?:[0-9a-f]{40}|[0-9a-f]{64})\z/)
             unavailable!("canonical settlement response differs")
           end
           %w[receipt_ref signature_ref].zip([signed_bytes, signature]).each do |field, bytes|

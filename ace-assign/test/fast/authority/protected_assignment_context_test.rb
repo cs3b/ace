@@ -86,6 +86,50 @@ module Ace
         end
       end
 
+      def test_inbox_workflow_holds_installed_references_and_yields_selected_mapping
+        references = [{"path" => "/fixed/descriptor"}, {"path" => "/fixed/history"}]
+        map = {"project_id" => "project", "authority_id" => "authority"}
+        current = Object.new
+        current.define_singleton_method(:artifact_reference) { references.first }
+        current.define_singleton_method(:mapping) { |id| raise KeyError unless id == "mapping"; map }
+        current.define_singleton_method(:inbox_context) do |mapping, id|
+          raise KeyError unless [mapping, id] == ["mapping", "context"]
+          {"control_socket_path" => "/fixed/context.sock", "owner_credentials" => {"uid" => 20}, "native_mapping_id" => mapping}
+        end
+        current.define_singleton_method(:authority) { |_| {"socket_path" => "/fixed/authority.sock", "uid" => 21, "gid" => 21, "groups" => []} }
+        history = Object.new
+        history.define_singleton_method(:artifact_reference) { references.last }
+        history.define_singleton_method(:selects?) { |owner| owner.equal?(current) }
+        calls = []
+        held = Object.new
+        held.define_singleton_method(:read!) { |ref| calls << ref }
+        held.define_singleton_method(:verify_unchanged!) { calls << :verified }
+        artifacts = Object.new
+        artifacts.define_singleton_method(:with) do |&block|
+          calls << :opened
+          block.call(held)
+        ensure
+          calls << :closed
+        end
+        kernel = Object.new
+        owner = Authority::ProtectedAssignmentContext.new(deployment: current, history: history, kernel: kernel,
+          env: {"ACE_ASSIGN_LAUNCH_MAPPING" => "mapping"}, artifacts_factory: -> { artifacts })
+        owner.with_inbox_workflow(options: {project: "project", mapping: "mapping", inbox_context: "context"}) do |deployment, selected_kernel, selected_map|
+          assert_same current, deployment
+          assert_same kernel, selected_kernel
+          assert_same map, selected_map
+          assert_equal [:opened, *references, :verified], calls
+          calls << :effect
+        end
+        assert_equal [:opened, *references, :verified, :effect, :verified, :closed], calls
+        assert_raises(AttemptErrors::EvidenceUnavailable) do
+          owner.with_inbox_workflow(options: {project: "foreign", mapping: "mapping", inbox_context: "context"}) { flunk "foreign project has no effect" }
+        end
+        assert_raises(AttemptErrors::EvidenceUnavailable) do
+          owner.with_inbox_workflow(options: {project: "project", mapping: "foreign", inbox_context: "context"}) { flunk "hint mismatch has no effect" }
+        end
+      end
+
       def test_retained_worker_principal_cannot_restore_ordinary_mode_after_current_mapping_removal
         owner = context(current: descriptor([13006]), retained: [descriptor([13001])], uid: 13001)
         assert owner.protected_worker?

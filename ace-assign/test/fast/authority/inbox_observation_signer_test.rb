@@ -62,7 +62,8 @@ module Ace
               "schema" => "ace.herdr.inbox-context-effect/v1", "operation_id" => "c" * 32, "key_generation" => 1,
               "registration" => params.fetch("expected_registration"))
             response = params.slice("event_id", "attempt_id", "inbox_context_id").merge("registration" => params.fetch("expected_registration"),
-              "state" => "completed", "receipt_ref" => references.first, "signature_ref" => references.last, "context_operation" => effect)
+              "state" => "completed", "generation" => params.fetch("expected_generation") + 1, "journal_commit" => "a" * 40,
+              "receipt_ref" => references.first, "signature_ref" => references.last, "context_operation" => effect)
             response["receipt_ref"]["sha256"] = "0" * 64 if bad_ack
             raise AttemptErrors::EvidenceUnavailable, "reply lost" if fail_reply
             Authority::Client::Reply.new(data: response, replayed: uploads.size > 1)
