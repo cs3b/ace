@@ -574,3 +574,47 @@ For the fixed original executor, `service_status` includes a closed immutable `s
 The fixed original executor uses `claim_service_settlement` against the sealed original request. The authority records an acyclic challenge selecting the latest canonical uncertain/failed outcome. `complete_no_effect` uploads the exact original receipt and bounded inspection artifact through the existing private transfer. It authenticates the accepted challenge, original dispatch binding and imported artifact before atomically reaching `failed-settled`. Exact retries retain their first reply and do not invoke a new effect. A later genuine failure needs a fresh challenge; missing/orphan/stale challenges and changed input refuse.
 
 This generic authority path attributes the closed inspection report to the recorded executor. Actual operation-specific target absence, handler termination and surviving-writer inspection are an open gad.b producer obligation; a closed scope or timeout does not prove no effect. The current protected ingress atomically accepts a request and executor claim, so an absent canonical request cannot be converted into a requested-but-unclaimed settlement record.
+
+
+### Protected original worker submission
+
+Run under the actual original prepared worker while its lineage is live. Read
+`ace-assign authority status --mapping M --assignment A --attempt T` and save
+`authority_generation` for the next new mutation. Candidate submission uses
+current `result_candidate_generation` (zero if null), then returns the next
+positive candidate generation. Review/result use that returned generation.
+
+```sh
+ace-assign submit-candidate --mapping M --assignment A --attempt T --head H \
+  --candidate-generation CURRENT --expected-generation G --mutation CANDIDATE --bundle candidate.bundle
+ace-assign submit-result --mapping M --assignment A --attempt T --head H \
+  --candidate-generation ACCEPTED --expected-generation G --mutation RESULT --receipt result.json \
+  --artifact first-evidence --artifact second-evidence
+```
+
+The actual worker builds `Ace::Assign::Models::ExecutionReceipt` from its original
+assignment/project/scope, installed worker actor, tested head and actual executed
+checks/artifact digests. Failed receipts may have zero artifacts; succeeded
+receipts require evidence. Captured queue completion does not create a receipt or
+canonical acceptance. Independent installed reviewers use the existing
+`ace-overseer review` consumer for that exact candidate. Result submission obtains
+a new generation after review; exact retries retain the original generation,
+mutation and identical ordered bytes. Supervisor finish still revalidates result,
+review, writer exclusion and settlement. A lost reply never causes automatic resend.
+
+### Protected signed Inbox reconciliation
+
+Save the closed `registration` from `inbox-bind` output. Under the installed
+supervisor or exact original launcher, submit the original signed proof:
+
+```sh
+ace-assign inbox-reconcile --mapping M --assignment A --attempt T --event E \
+  --inbox-context I --expected-generation G --mutation RECONCILE \
+  --registration registration.json --receipt proof.json --signature proof.sig
+```
+
+These files supply bounded bytes; the authority independently authenticates
+original registration, key, context and native outcome. Queued/superseded is not
+consumed or settled. Preserve original parameters/files for exact retry. Installed
+participants cannot fall back to ordinary local Inbox coordination. Without
+protected selection the existing ordinary receipt/FILE.sig interface remains.

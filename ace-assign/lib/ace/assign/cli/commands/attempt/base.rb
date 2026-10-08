@@ -15,7 +15,7 @@ module Ace
             private
 
             def protected_context(options)
-              keys = %i[mapping assignment result head candidate_generation mutation expected_generation]
+              keys = %i[mapping assignment result head candidate_generation mutation expected_generation inbox_context registration signature]
               keys.each do |key|
                 if options.key?(key) && options[key].to_s.strip.empty?
                   raise Ace::Support::Cli::Error, "Empty protected --#{key.to_s.tr('_', '-')} selector"

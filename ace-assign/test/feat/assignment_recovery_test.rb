@@ -182,9 +182,10 @@ class AssignmentRecoveryTest < AceAssignTestCase
     File.binwrite(path, bytes)
     File.binwrite("#{path}.sig", KEY.sign(OpenSSL::Digest::SHA256.new, bytes))
     command = A::CLI::Commands::InboxReconcile.new(coordinator: @coordinator, inbox: @inbox)
-    output = capture_io do
-      command.call(attempt: @attempt.attempt_id, event: @event, receipt: path)
-    end.first
+    context = A::Authority::ProtectedAssignmentContext.new(deployment: nil, history: nil, env: {})
+    output = A::Authority::ProtectedAssignmentContext.stub(:load, context) do
+      capture_io { command.call(attempt: @attempt.attempt_id, event: @event, receipt: path) }.first
+    end
     projection = JSON.parse(output)
     assert_equal "completed", projection["state"]
     assert_equal @attempt.attempt_id, projection["attempt_id"]

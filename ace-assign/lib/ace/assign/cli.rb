@@ -61,6 +61,8 @@ require_relative "cli/commands/status"
 require_relative "cli/commands/resume"
 require_relative "cli/commands/inbox_reconcile"
 require_relative "cli/commands/inbox_bind"
+require_relative "cli/commands/submit_candidate"
+require_relative "cli/commands/submit_result"
 require_relative "cli/commands/step"
 require_relative "cli/commands/start"
 require_relative "cli/commands/finish"
@@ -205,6 +207,8 @@ register "authority inbox-context-selection", wrap_command(Commands::Authority::
       register "resume", wrap_command(Commands::Resume)
       register "inbox-reconcile", wrap_command(Commands::InboxReconcile)
       register "inbox-bind", wrap_command(Commands::InboxBind)
+      register "submit-candidate", wrap_command(Commands::SubmitCandidate)
+      register "submit-result", wrap_command(Commands::SubmitResult)
 
       # Register version command
       version_cmd = Ace::Support::Cli::VersionCommand.build(

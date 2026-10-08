@@ -34,6 +34,11 @@ module Ace
         end
       end
 
+      def candidate(number)
+        return if @public_candidate_fixture
+        super
+      end
+
       def configure_result_owner_fixture
         @project.merge!("journal_repository" => @journal.repo_root, "evidence_git_ref" => @journal.ref,
           "evidence_checkout_root" => @journal.checkout_root)
@@ -278,10 +283,19 @@ module Ace
             bytes = JSON.generate(receipt)
             signature = @key.sign(OpenSSL::Digest::SHA256.new, bytes)
             @kernel.peer_identity = @supervisor
-            reconciled = @client.call("reconcile_inbox", selectors.merge("event_id" => "event", "inbox_context_id" => "context",
-              "expected_registration" => @registration, "expected_generation" => generation,
-              "receipt_sha256" => Digest::SHA256.hexdigest(bytes), "signature_sha256" => Digest::SHA256.hexdigest(signature)),
-              mutation_id: "pending-reconcile", timeout: 30, upload_parts: [bytes, signature], purpose: :inbox_proof).data
+            registration_path = File.join(@root, "registration.json")
+            receipt_path = File.join(@root, "inbox-receipt.json")
+            signature_path = File.join(@root, "inbox-receipt.sig")
+            File.binwrite(registration_path, JSON.generate(@registration))
+            File.binwrite(receipt_path, bytes)
+            File.binwrite(signature_path, signature)
+            reconcile_args = ["inbox-reconcile", "--mapping", "mapping", "--assignment", "assignment", "--attempt", @attempt,
+              "--event", "event", "--inbox-context", "context", "--expected-generation", generation.to_s,
+              "--mutation", "pending-reconcile", "--registration", registration_path, "--receipt", receipt_path, "--signature", signature_path]
+            reconciled = public_cli_json(reconcile_args)
+            reconcile_ref = @journal.ref_value
+            assert_equal reconciled, public_cli_json(reconcile_args)
+            assert_equal reconcile_ref, @journal.ref_value
             assert_equal "queued", reconciled.fetch("state")
             original_generation = generation
             args = ["attempt", "reconcile", "--mapping", "mapping", "--assignment", "assignment", "--attempt", @attempt,
@@ -382,8 +396,18 @@ module Ace
 
       def test_public_failed_finish_requires_closure_and_replays_after_worker_exit
         fixture do
-          result = submit(verdict: "failed", parts: []).fetch(:data)
           start_public_server
+          missing = File.join(@root, "expected-but-missing")
+          refute File.exist?(missing)
+          receipt = Models::ExecutionReceipt.new(assignment_id: "assignment", attempt_id: @attempt, project_id: "project",
+            scope: "010", operation: "work", producer: {"actor" => "worker", "role" => "worker", "runtime" => "herdr"},
+            head: @head, verdict: "failed", checks: [{"name" => "expected artifact absent", "verdict" => "failed"}],
+            artifacts: [], recorded_at: Time.now.utc)
+          path = File.join(@root, "failed-receipt.json")
+          File.binwrite(path, JSON.generate(receipt.to_h))
+          result = public_cli_json(["submit-result", "--mapping", "mapping", "--assignment", "assignment", "--attempt", @attempt,
+            "--head", @head, "--candidate-generation", "1", "--expected-generation", generation.to_s,
+            "--mutation", "failed-worker-result", "--receipt", path])
           @kernel.peer_identity = @supervisor
           params = {"assignment_id" => "assignment", "attempt_id" => @attempt, "expected_generation" => generation,
             "candidate_generation" => 1, "head" => @head, "result_id" => result.fetch("result_id")}
@@ -452,12 +476,60 @@ module Ace
       end
 
       def test_public_succeeded_finish_requires_actual_independent_review_acceptance
+        @public_candidate_fixture = true
         fixture do
-          result = submit.fetch(:data)
           start_public_server
+          bundle_path = File.join(@root, "tested.bundle")
+          git(@journal.repo_root, "bundle", "create", bundle_path, "HEAD")
+          first_args = ["submit-candidate", "--mapping", "mapping", "--assignment", "assignment", "--attempt", @attempt,
+            "--head", @head, "--candidate-generation", "0", "--expected-generation", generation.to_s,
+            "--mutation", "worker-first-candidate", "--bundle", bundle_path]
+          first_candidate = public_cli_json(first_args)
+          assert_equal 1, first_candidate.fetch("candidate_generation")
+          first_ref = @journal.ref_value
+          assert_equal first_candidate, public_cli_json(first_args)
+          assert_equal first_ref, @journal.ref_value
+          candidate_args = ["submit-candidate", "--mapping", "mapping", "--assignment", "assignment", "--attempt", @attempt,
+            "--head", @head, "--candidate-generation", "1", "--expected-generation", generation.to_s,
+            "--mutation", "worker-candidate", "--bundle", bundle_path]
+          admitted = public_cli_json(candidate_args)
+          assert_equal 2, admitted.fetch("candidate_generation")
+          admitted_ref = @journal.ref_value
+          assert_equal admitted, public_cli_json(candidate_args)
+          assert_equal admitted_ref, @journal.ref_value
+          stale_args = candidate_args.dup
+          stale_args[stale_args.index("worker-candidate")] = "stale-candidate"
+          assert_raises(AttemptErrors::EvidenceUnavailable) { public_cli_json(stale_args) }
+          assert_equal admitted_ref, @journal.ref_value
+          @kernel.peer_identity = @kernel.capture(92)
+          assert_raises(AttemptErrors::EvidenceUnavailable) { public_cli_json(candidate_args) }
+          assert_equal admitted_ref, @journal.ref_value
+          @kernel.peer_identity = @worker
+          changed_bundle = File.join(@root, "changed.bundle")
+          File.binwrite(changed_bundle, File.binread(bundle_path) + "changed")
+          changed_args = candidate_args.dup
+          changed_args[changed_args.index(bundle_path)] = changed_bundle
+          assert_raises(AttemptErrors::EvidenceUnavailable) { public_cli_json(changed_args) }
+          assert_equal admitted_ref, @journal.ref_value
+          artifact_path = File.join(@root, "worker-check.txt")
+          File.binwrite(artifact_path, "actual controlled check evidence")
+          receipt = Models::ExecutionReceipt.new(assignment_id: "assignment", attempt_id: @attempt, project_id: "project",
+            scope: "010", operation: "work", producer: {"actor" => "worker", "role" => "worker", "runtime" => "herdr"},
+            head: @head, verdict: "succeeded", checks: [{"name" => "candidate head equality", "verdict" => "passed"}],
+            artifacts: [{"path" => "worker-check.txt", "sha256" => Digest::SHA256.file(artifact_path).hexdigest}], recorded_at: Time.now.utc)
+          assert_equal @head, admitted.fetch("head")
+          receipt_path = File.join(@root, "worker-receipt.json")
+          File.binwrite(receipt_path, JSON.generate(receipt.to_h))
+          result_args = ["submit-result", "--mapping", "mapping", "--assignment", "assignment", "--attempt", @attempt,
+            "--head", @head, "--candidate-generation", "2", "--expected-generation", generation.to_s,
+            "--mutation", "worker-result", "--receipt", receipt_path, "--artifact", artifact_path]
+          result = public_cli_json(result_args)
+          result_ref = @journal.ref_value
+          assert_equal result, public_cli_json(result_args)
+          assert_equal result_ref, @journal.ref_value
           @kernel.peer_identity = @launcher
           review = @client.call("assign_review", {"assignment_id" => "assignment", "attempt_id" => @attempt,
-            "head" => @head, "candidate_generation" => 1, "expected_generation" => generation,
+            "head" => @head, "candidate_generation" => 2, "expected_generation" => generation,
             "reviewer_uid" => @reviewer.fetch("uid"), "reviewer_process_binding" => @reviewer}, mutation_id: "finish-review", timeout: 30).data
           selectors = {"mapping_id" => "mapping", "assignment_id" => "assignment", "attempt_id" => @attempt}
           @launch.close_execution_scope!(params: selectors.merge("mutation_id" => "success-seal", "expected_generation" => generation),
@@ -466,7 +538,7 @@ module Ace
             peer: @supervisor, role: :supervisor)
           @kernel.peer_identity = @supervisor
           params = {"assignment_id" => "assignment", "attempt_id" => @attempt, "expected_generation" => generation,
-            "candidate_generation" => 1, "head" => @head, "result_id" => result.fetch("result_id")}
+            "candidate_generation" => 2, "head" => @head, "result_id" => result.fetch("result_id")}
           unapproved = @journal.ref_value
           assert_raises(AttemptErrors::EvidenceUnavailable) do
             @client.call("finish", params, mutation_id: "unapproved-finish", timeout: 30)
@@ -478,7 +550,7 @@ module Ace
           receipt_params, input, = upload(parts: ["independent review report"], receipt: receipt)
           @kernel.peer_identity = @reviewer
           accepted_review = @client.call("accept_review", receipt_params.except("transfer").merge(
-            "assignment_id" => "assignment", "attempt_id" => @attempt, "purpose_id" => review.fetch("review_id")),
+            "assignment_id" => "assignment", "attempt_id" => @attempt, "candidate_generation" => 2, "purpose_id" => review.fetch("review_id")),
             mutation_id: "finish-review-accept", timeout: 30, upload_parts: input.parts, purpose: :receipt_artifacts).data
           refute_nil accepted_review.fetch("receipt_digest")
           @kernel.dead << @worker.fetch("pid")
@@ -486,7 +558,7 @@ module Ace
           params["expected_generation"] = generation
           first = public_cli_json(["attempt", "finish", "--mapping", "mapping", "--assignment", "assignment",
             "--attempt", @attempt, "--result", params.fetch("result_id"), "--head", @head,
-            "--candidate-generation", "1", "--mutation", "success-finish",
+            "--candidate-generation", "2", "--mutation", "success-finish",
             "--expected-generation", params.fetch("expected_generation").to_s])
           assert_equal "succeeded", first.fetch("state")
           accepted = @journal.ref_value
@@ -495,6 +567,11 @@ module Ace
           assert replay.replayed
           assert_equal first, replay.data
           assert_equal accepted, @journal.ref_value
+          @kernel.peer_identity = @worker
+          assert_raises(AttemptErrors::EvidenceUnavailable) { public_cli_json(candidate_args) }
+          assert_raises(AttemptErrors::EvidenceUnavailable) { public_cli_json(result_args) }
+          assert_equal accepted, @journal.ref_value
+          @kernel.peer_identity = @supervisor
           terminal_events = @journal.read_events("assignment").select { |event| event["attempt_id"] == @attempt }
           receipt_event = terminal_events.find { |event| event["type"] == "receipt_accepted" }
           @server.stop
@@ -514,6 +591,8 @@ module Ace
           end
           assert_match(/exact independent review/, error.message)
         end
+      ensure
+        @public_candidate_fixture = false
       end
     end
   end

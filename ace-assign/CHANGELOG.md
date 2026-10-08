@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Submit protected worker candidates/results and reconcile signed Inbox proofs through the public CLI; preserve original retry inputs, counter semantics and canonical authority admission.
+
 - Route protected `attempt finish`, `attempt reconcile` and `inbox-bind` through the installed authority with explicit original selectors and retry identity; installed participants cannot fall back to local receipts or local coordination.
 - Refuse local delivery fallback for every declared installed participant and classify unavailable protected owners.
 - Export bounded read-only Inbox principal classification and exact installed context/authority selection through the existing immutable task-context entry.
