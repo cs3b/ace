@@ -8,3 +8,9 @@ Independent reviewer audit_runtime_delivery_status inspected main d6e35fed9 agai
 - SC4: candidate/result framing remains separate; inventory carries prepared refs/bytes/digests/selection; public launch consumer uses this handoff.
 
 Evidence owners include source-checkpoint-prepared-fixture-extraction.md (integrated managed report8837d346), registration3/49 reporte80d4260 and explicit child/builder9/46 reportdd9f710d. Next required action is one-revision integrated verification of the maintained preparation/register/fetch/queue/worker/consumer test selection and review of its results. Source readiness is not proof of native Codex/Pi or installed Lab behavior; those remain gad.2.
+
+## Integrated verification
+
+Current source verification: ten complete Assign files (prepared_work, prepared_input_render, assignment_target, prepared_work_builder/transfer, prepared_registration/fetch/queue/worker/managed_flow) in one batch passed64/653 in4m40s; receipt `assign/0333b4f0-4352-4cc2-96a6-c66b955fa217`. Protected Bundle task-context file passed8/432 (`bundle/f0090d71-9128-4106-b657-0daf4b85ff4e`), Overseer protected work-on command passed9/58 (`overseer/13a3516d-6d55-4a69-a5b7-4b3d474c5bce`). The remaining work-on composition file is executing separately.
+
+The relevant Assign/Overseer/Bundle/Runtime/lock source trees were verified identical between test-start9a8fcb355 and ea6221ae5; only unrelated Lab diagnostic/docs changed. This is scoped source verification, not final whole-program frozen-revision acceptance. Task dependency xz9.2 still reports in-progress; qk0.3 status remains unchanged pending prerequisite reconciliation and final composition result.
