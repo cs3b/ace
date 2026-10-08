@@ -21,4 +21,10 @@ Historical checkpoint wording that sends all SC4 publication/OTP evidence to vs3
 
 Publisher primitive audit on main 7d12934ae: actual script fixture `ace-handbook/test/feat/rubygems_publish_script_test.rb` passed 12 tests / 100 assertions, report handbook/27de2a33-5e90-4aff-a5ec-43334aa1c9c0. It executes the existing script against fake RubyGems and checks preparation without push, invalid OTP refusal before push, credential refusal and secret isolation. This is supporting publisher evidence only: neither this test nor current merge-only ProtectedDeliveryCoordinator demonstrates a routed scoped publication blocker. SC4 workflow composition therefore remains open; do not relabel the script tests as full delivery acceptance.
 
+## Integrated publication blocker checkpoint
+
+Source `fa3d045eb` received independent APPROVE from `audit_runtime_delivery_status` and was integrated as `6a1e9e7ae`. The integrated original prepared-worker composition passed 2 tests / 65 assertions in 37.8 seconds, report `assign/e09dfb94-b191-460b-8511-3385e2a23bda`. Author publisher regressions passed 12/100 (`handbook/44682aa7`). This supersedes the missing bounded publication-blocker composition above, not the remaining SC4 audit or positive downstream publication.
+
+Missing-publisher proof includes actual policy denial, joined listener, unchanged canonical ref, absent request and no handler effects. Missing OTP exercises the ordinary script without push and routes failure through original protected assignment fail/status. The fixture captures the actual publication section only; full-workflow literal JSON rendering remains a separate known defect. No task closure is inferred.
+
 Run the specified affected-package tests and default suite against one integrated revision; record exact source receipts and independent review. No full task checkbox is newly completed by this audit.
