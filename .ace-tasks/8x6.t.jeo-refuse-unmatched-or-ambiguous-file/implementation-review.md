@@ -18,3 +18,5 @@ Reports retained under integration worktree `.ace-local/test/reports/test-runner
 SC1 is supported by syntax boundary fixtures and exact loaded identity verification. SC2 uses atomic preflight plus no-load markers. SC3 uses qualified anchored filters, declaring-owner/source checks, deduplicated plan and completed identity multiset. SC4 uses both public execution modes and ordinary all-suite regression.
 
 Earlier failing and incomplete receipts remain historical; none substitutes for the above. Final program-wide frozen revision verification remains owned by the program, not inferred from this task.
+
+Post-integration main `6951906ee`: resolver/verifier/public CLI 22 tests / 88 assertions PASS, report `15fe14da-5ee4-4271-a162-b64f3c1e004b` in primary checkout. Status transitioned through `ace-task update` and `show` confirmed done.
