@@ -61,8 +61,6 @@ require_relative "cli/commands/status"
 require_relative "cli/commands/resume"
 require_relative "cli/commands/inbox_reconcile"
 require_relative "cli/commands/inbox_bind"
-require_relative "cli/commands/inbox_observe"
-require_relative "cli/commands/inbox_settle"
 require_relative "cli/commands/submit_candidate"
 require_relative "cli/commands/submit_result"
 require_relative "cli/commands/campaign_record_round"
@@ -136,8 +134,6 @@ module Ace
         ["attempt finish", "Finish a protected canonical result or an ordinary local receipt"],
         ["attempt reconcile", "Recover an exact protected attempt or reconcile an ordinary attempt"],
         ["inbox-bind", "Bind an original protected Inbox registration"],
-        ["inbox-observe", "Import an owner-verified native observation"],
-        ["inbox-settle", "Verify and sign canonical native observation evidence"]
       ].freeze
 
       HELP_EXAMPLES = [
@@ -217,8 +213,6 @@ register "authority inbox-context-selection", wrap_command(Commands::Authority::
       register "resume", wrap_command(Commands::Resume)
       register "inbox-reconcile", wrap_command(Commands::InboxReconcile)
       register "inbox-bind", wrap_command(Commands::InboxBind)
-      register "inbox-observe", wrap_command(Commands::InboxObserve)
-      register "inbox-settle", wrap_command(Commands::InboxSettle)
       register "submit-candidate", wrap_command(Commands::SubmitCandidate)
       register "submit-result", wrap_command(Commands::SubmitResult)
       register "campaign-export-result", wrap_command(Commands::CampaignExportResult)

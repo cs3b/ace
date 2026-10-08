@@ -15,10 +15,8 @@ module Ace
       # Business admission shares the launch origin, lifecycle exclusion and
       # journal CAS. Network transfer is completed outside those locks.
       class Endcap
-        OPERATIONS = %w[import_observation fetch_observation submit_candidate export_candidate request_review review_status assign_review cancel_review accept_review request_service begin_dispatch complete_service publication_challenge publication_continue claim_service_settlement complete_no_effect service_authorization service_status workspace_prune_preview_context submit_result evidence_fetch reconcile_inbox bind_inbox finish recover campaign_record_round campaign_export_result].freeze
+        OPERATIONS = %w[submit_candidate export_candidate request_review review_status assign_review cancel_review accept_review request_service begin_dispatch complete_service publication_challenge publication_continue claim_service_settlement complete_no_effect service_authorization service_status workspace_prune_preview_context submit_result evidence_fetch reconcile_inbox bind_inbox finish recover campaign_record_round campaign_export_result].freeze
         TRANSFER_OPERATIONS = {
-          "import_observation" => {direction: :upload, purpose: :observation, roles: [:observer]},
-          "fetch_observation" => {direction: :download, purpose: :artifacts, roles: %i[observer signer supervisor]},
           "campaign_export_result" => {direction: :download, purpose: :artifacts, roles: %i[worker launcher supervisor]},
           "campaign_record_round" => {direction: :upload, purpose: :receipt_artifacts, roles: %i[launcher supervisor]},
           "reconcile_inbox" => {direction: :upload, purpose: :inbox_proof, roles: %i[launcher supervisor signer]},
@@ -35,8 +33,6 @@ module Ace
           "complete_no_effect" => {direction: :upload, purpose: :receipt_artifacts, roles: [:executor]}
         }.freeze
         PARAMETERS = {
-          "import_observation" => %w[mapping_id assignment_id attempt_id event_id inbox_context_id expected_registration expected_generation observation_sha256 transfer],
-          "fetch_observation" => %w[mapping_id assignment_id attempt_id event_id inbox_context_id evidence_id],
           "campaign_export_result" => %w[mapping_id assignment_id attempt_id candidate_generation head],
           "campaign_record_round" => %w[mapping_id assignment_id attempt_id candidate_generation head input_sha256 transfer],
           "reconcile_inbox" => %w[mapping_id assignment_id attempt_id expected_generation event_id inbox_context_id expected_registration receipt_sha256 signature_sha256 transfer],
@@ -89,7 +85,6 @@ module Ace
         end
 
         def authorize_transfer!(request:, peer:, role:)
-          return authorize_observation!(request: request, peer: peer, role: role) if %w[import_observation fetch_observation].include?(request.fetch("operation"))
           return dispatch_campaign_export(request: request, peer: peer, role: role, body: false) if request.fetch("operation") == "campaign_export_result"
           return authorize_campaign_round!(request: request, peer: peer, role: role) if request.fetch("operation") == "campaign_record_round"
           return dispatch_prepared_fetch(request: request, peer: peer, role: role, body: false) if prepared_fetch?(request)
@@ -114,7 +109,6 @@ module Ace
         end
 
         def dispatch(request:, peer:, role:, transfer: nil)
-          return dispatch_observation(request: request, peer: peer, role: role, transfer: transfer) if %w[import_observation fetch_observation].include?(request.fetch("operation"))
           return dispatch_campaign_export(request: request, peer: peer, role: role) if request.fetch("operation") == "campaign_export_result"
           return dispatch_campaign_round(request: request, peer: peer, role: role, transfer: transfer) if request.fetch("operation") == "campaign_record_round"
           if prepared_fetch?(request)
@@ -463,5 +457,3 @@ require_relative "endcap_review_requests"
 require_relative "endcap_attempts"
 
 require_relative "endcap_publication"
-
-require_relative "endcap_observations"

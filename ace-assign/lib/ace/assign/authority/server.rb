@@ -170,11 +170,10 @@ module Ace
               codec: transfer_codec, deadline: wire.deadline(10))
             return
           end
-          if %w[import_observation fetch_observation reconcile_inbox evidence_fetch].include?(request["operation"])
+          if %w[reconcile_inbox evidence_fetch].include?(request["operation"])
             configured = project.fetch("peer_credentials")[peer.fetch("uid").to_s]
             if configured && peer.values_at("gid", "groups") == configured.values_at("gid", "groups")
-              role = :observer if %w[import_observation fetch_observation].include?(request["operation"]) && project.fetch("observer_uids", []).include?(peer.fetch("uid"))
-              role ||= :signer if project.fetch("signer_uids", []).include?(peer.fetch("uid")) && %w[fetch_observation reconcile_inbox evidence_fetch].include?(request["operation"])
+              role ||= :signer if project.fetch("signer_uids", []).include?(peer.fetch("uid")) && %w[reconcile_inbox evidence_fetch].include?(request["operation"])
             end
           end
           role ||= if principal?(peer, map, "launcher_uid", "launcher_gid", "launcher_groups")
@@ -198,7 +197,7 @@ module Ace
             @lifecycle.serve_launch_control!(request: request, peer: peer, socket: socket, codec: transfer_codec, deadline: deadline)
             return
           end
-          if %w[fetch_observation bind_inbox finish recover request_review review_status launch_review_intent cancel_review evidence_fetch assignment_inventory observe_execution_scope close_execution_scope stop_attempt prompt_status launch_input_inhibit_selection launch_input_inhibit_completion launch_prompt_intent launch_prompt_completion claim_service_settlement workspace_prune_preview_context].include?(request["operation"]) ||
+          if %w[bind_inbox finish recover request_review review_status launch_review_intent cancel_review evidence_fetch assignment_inventory observe_execution_scope close_execution_scope stop_attempt prompt_status launch_input_inhibit_selection launch_input_inhibit_completion launch_prompt_intent launch_prompt_completion claim_service_settlement workspace_prune_preview_context].include?(request["operation"]) ||
               @composition == "services" && %w[attempt_status inbox_context_completion inbox_context_original].include?(request["operation"])
             raise ArgumentError, "review control header is oversized" if %w[request_review review_status cancel_review launch_review_intent].include?(request["operation"]) && frame.fetch(:bytesize) > 16_384
             bodyless_read!(socket, deadline)

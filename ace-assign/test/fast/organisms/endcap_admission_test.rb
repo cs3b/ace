@@ -19,6 +19,16 @@ module Ace
           payload: {"operation" => operation, "data" => @params.merge("launch_ticket" => "fixture-ticket", "phase" => phase)})
       end
 
+      def test_removed_message_observation_is_not_an_authority_transfer
+        %w[import_observation fetch_observation].each do |operation|
+          refute_includes Authority::Endcap::OPERATIONS, operation
+          refute Authority::Endcap::PARAMETERS.key?(operation)
+          refute Authority::Endcap::TRANSFER_OPERATIONS.key?(operation)
+        end
+        assert_equal [:worker], Authority::Endcap::TRANSFER_OPERATIONS.fetch("submit_result").fetch(:roles)
+        assert_equal [:executor], Authority::Endcap::TRANSFER_OPERATIONS.fetch("complete_service").fetch(:roles)
+      end
+
       def test_business_mutation_echo_cannot_manufacture_native_origin
         events = [event("submit_candidate", "issued")]
         assert_raises(AttemptErrors::NotFound) { @endcap.send(:active_origin, events, @params) }
