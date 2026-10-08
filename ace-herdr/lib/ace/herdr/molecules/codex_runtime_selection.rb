@@ -27,79 +27,141 @@ module Ace
         attr_reader :data, :reference, :static_association
 
         class EndpointProtection
-          def initialize(mounts: Ace::Runtime::Molecules::CgroupObservation::KernelFiles.new)
-            @mounts = mounts
+          # Exact rust-v0.159.3 Unix rendezvous: the advertised name is an alias
+          # of an owner-only physical socket in the fixed native daemon root.
+          # Native0700/0600 protection does not grant a distinct UID access.
+          # Source: openai/codex rust-v0.159.3 app-server-transport/src/transport/unix_socket.rs
+          # and codex-rs/uds/src/daemon_directory.rs.
+          class Files
+            def realpath(path) = File.realpath(path)
+            def lstat(path) = File.lstat(path)
+            def readlink(path) = File.readlink(path)
+            def open_node(path)
+              raise ValidationError, "Codex endpoint observation requires Linux" unless RUBY_PLATFORM.include?("linux")
+              File.open(path, 0x200000 | File::NOFOLLOW | File::NONBLOCK) # O_PATH pins directories, symlinks and socket inodes.
+            end
+
+            def acl_absent!(path, attribute, symlink: false)
+              raise ValidationError, "Codex ACL observation requires Linux" unless RUBY_PLATFORM.include?("linux")
+              function = Fiddle::Function.new(Fiddle::Handle::DEFAULT["lgetxattr"],
+                [Fiddle::TYPE_VOIDP, Fiddle::TYPE_VOIDP, Fiddle::TYPE_VOIDP, Fiddle::TYPE_SIZE_T], Fiddle::TYPE_SSIZE_T)
+              result = function.call(path, attribute, 0, 0)
+              error = Fiddle.last_error
+              # Linux symlink nodes cannot carry POSIX ACLs. Unsupported on that
+              # exact node is absence; directory/socket ACL failures still refuse.
+              absent = error == Errno::ENODATA::Errno || symlink && error == Errno::ENOTSUP::Errno
+              raise ValidationError, "Codex endpoint ACL is unavailable or present" unless result == -1 && absent
+            rescue Fiddle::DLError
+              raise ValidationError, "Codex endpoint ACL reader unavailable"
+            end
+          end
+
+          def initialize(mounts: Ace::Runtime::Molecules::CgroupObservation::KernelFiles.new, files: Files.new)
+            @mounts, @files = mounts, files
           end
 
           def with(path, uid:, gid:)
             handles = []
+            unless path.is_a?(String) && path.start_with?("/") && File.expand_path(path) == path && !path.include?("\0") &&
+                uid.is_a?(Integer) && uid.positive? && gid.is_a?(Integer) && gid.positive? && File.dirname(path) != "/"
+              raise ValidationError, "Codex endpoint native selection differs"
+            end
             parent = File.dirname(path)
-            unless uid.is_a?(Integer) && uid.positive? && gid.is_a?(Integer) && gid.positive? && parent != "/"
-              raise ValidationError, "Codex endpoint native principal differs"
+            temporary = @files.realpath("/tmp")
+            unless @files.realpath(parent) == parent && temporary.start_with?("/") && File.expand_path(temporary) == temporary
+              raise ValidationError, "Codex rendezvous parent is substituted"
             end
-            # Only this final directory is writable by the exact selected native
-            # process. Its root-owned parent prevents directory replacement;
-            # every ancestor keeps the ordinary root protection policy.
-            Ace::Runtime::Molecules::ProtectedSocket.root_path!(File.dirname(parent), directory: true)
-            current = parent
-            loop do
-              directory = File.open(current, File::RDONLY | File::NOFOLLOW | File::NONBLOCK)
-              handles << [current, directory, identity(directory.stat)]
-              stat = directory.stat
-              unless stat.directory? && stat.uid == (current == parent ? uid : 0) && (stat.mode & 0o022).zero? &&
-                  (current != parent || stat.gid == gid && (stat.mode & 0o7777) == 0o750) &&
-                  Ace::Runtime::Molecules::ProtectedArtifactSet::Protection::FILESYSTEMS.include?(
-                    @mounts.mount_identity(directory).fetch("filesystem_type"))
-                raise ValidationError, "Codex endpoint parent protection differs"
-              end
-              acl_absent!(current, "system.posix_acl_access")
-              acl_absent!(current, "system.posix_acl_default")
-              break if current == "/"
-              current = File.dirname(current)
+            daemon = File.join(temporary, "codex-daemon-#{uid}")
+            physical = File.join(daemon, Digest::SHA256.hexdigest(path.b))
+            paths = (ancestors(parent) + ancestors(daemon)).uniq
+            paths.each do |directory|
+              node = pin!(directory, handles)
+              stat = node.fetch(:handle).stat
+              native = directory == daemon || directory == parent && stat.uid == uid
+              modes = directory == daemon ? [0o700] : [0o700, 0o750]
+              safe = stat.directory? && !stat.symlink? &&
+                (native ? stat.uid == uid && stat.gid == gid && modes.include?(stat.mode & 0o7777) :
+                  stat.uid.zero? && ((stat.mode & 0o022).zero? || directory == temporary && (stat.mode & 0o7777) == 0o1777))
+              raise ValidationError, "Codex endpoint directory protection differs" unless safe
+              acl_absent!(directory, directory: true)
             end
-            socket = File.lstat(path)
-            unless socket.socket? && !socket.symlink? && socket.uid == uid && socket.gid == gid &&
-                (socket.mode & 0o7777) == 0o660
-              raise ValidationError, "Codex endpoint leaf protection differs"
+            alias_node = pin!(path, handles)
+            alias_stat = alias_node.fetch(:handle).stat
+            unless alias_stat.symlink? && alias_stat.uid == uid && alias_stat.gid == gid && @files.readlink(path) == physical
+              raise ValidationError, "Codex advertised alias differs from its fixed physical socket"
             end
-            acl_absent!(path, "system.posix_acl_access")
-            selected = {path: path, socket: identity(socket), ancestors: handles}.freeze
+            acl_absent!(path, symlink: true)
+            socket_node = pin!(physical, handles)
+            socket = socket_node.fetch(:handle).stat
+            unless socket.socket? && !socket.symlink? && socket.uid == uid && socket.gid == gid && (socket.mode & 0o7777) == 0o600
+              raise ValidationError, "Codex physical socket protection differs"
+            end
+            acl_absent!(physical)
+            selected = {path: path.dup.freeze, physical_path: physical.freeze, temporary: temporary.freeze, ancestors: handles.freeze}.freeze
             verify!(selected)
             yield selected
             verify!(selected)
           ensure
-            handles&.reverse_each { |_, handle, _| handle.close unless handle.closed? }
+            handles&.reverse_each { |node| node.fetch(:handle).close unless node.fetch(:handle).closed? }
           end
 
           def verify!(selected)
-            unless identity(File.lstat(selected.fetch(:path))) == selected.fetch(:socket) &&
-                selected.fetch(:ancestors).all? { |path, handle, original|
-                  !handle.closed? && identity(handle.stat) == original && identity(File.lstat(path)) == original }
-              raise ValidationError, "Codex endpoint changed during observation"
+            unless @files.realpath("/tmp") == selected.fetch(:temporary) &&
+                @files.realpath(File.dirname(selected.fetch(:path))) == File.dirname(selected.fetch(:path)) &&
+                @files.readlink(selected.fetch(:path)) == selected.fetch(:physical_path)
+              raise ValidationError, "Codex native rendezvous changed during observation"
             end
-            acl_absent!(selected.fetch(:path), "system.posix_acl_access")
-            selected.fetch(:ancestors).each do |path, _, _|
-              acl_absent!(path, "system.posix_acl_access")
-              acl_absent!(path, "system.posix_acl_default")
+            selected.fetch(:ancestors).each do |node|
+              path, handle, original = node.values_at(:path, :handle, :identity)
+              unless !handle.closed? && identity(handle.stat) == original && identity(@files.lstat(path)) == original &&
+                  @mounts.mount_identity(handle) == node.fetch(:mount)
+                raise ValidationError, "Codex endpoint changed during observation"
+              end
+              current = @files.open_node(path)
+              begin
+                unless identity(current.stat) == original && @mounts.mount_identity(current) == node.fetch(:mount)
+                  raise ValidationError, "Codex endpoint path or mount changed during observation"
+                end
+              ensure
+                current.close
+              end
+              acl_absent!(path, directory: handle.stat.directory?, symlink: handle.stat.symlink?)
             end
             true
           end
 
           private
 
+          def pin!(path, handles)
+            handle = @files.open_node(path)
+            mount = @mounts.mount_identity(handle).transform_values { |value| value.is_a?(String) ? value.dup.freeze : value }.freeze
+            node = {path: path.dup.freeze, handle: handle, identity: identity(handle.stat), mount: mount}.freeze
+            handles << node
+            unless node.fetch(:identity) == identity(@files.lstat(path)) &&
+                Ace::Runtime::Molecules::ProtectedArtifactSet::Protection::FILESYSTEMS.include?(node.fetch(:mount).fetch("filesystem_type"))
+              raise ValidationError, "Codex endpoint inode or filesystem differs"
+            end
+            node
+          rescue StandardError
+            handle&.close unless handles.any? { |node| node.fetch(:handle).equal?(handle) }
+            raise
+          end
+
+          def ancestors(path)
+            paths = []
+            loop do
+              paths << path
+              break if path == "/"
+              path = File.dirname(path)
+            end
+            paths.reverse
+          end
+
           def identity(stat) = [stat.dev, stat.ino, stat.uid, stat.gid, stat.mode].freeze
 
-          def acl_absent!(path, attribute)
-            raise ValidationError, "Codex ACL observation requires Linux" unless RUBY_PLATFORM.include?("linux")
-            function = Fiddle::Function.new(Fiddle::Handle::DEFAULT["lgetxattr"],
-              [Fiddle::TYPE_VOIDP, Fiddle::TYPE_VOIDP, Fiddle::TYPE_VOIDP, Fiddle::TYPE_SIZE_T], Fiddle::TYPE_SSIZE_T)
-            result = function.call(path, attribute, 0, 0)
-            error = Fiddle.last_error
-            unless result == -1 && error == Errno::ENODATA::Errno
-              raise ValidationError, "Codex endpoint ACL is unavailable or present"
-            end
-          rescue Fiddle::DLError
-            raise ValidationError, "Codex endpoint ACL reader unavailable"
+          def acl_absent!(path, directory: false, symlink: false)
+            @files.acl_absent!(path, "system.posix_acl_access", symlink: symlink)
+            @files.acl_absent!(path, "system.posix_acl_default") if directory
           end
         end
 
@@ -225,7 +287,7 @@ module Ace
           deadline = [deadline, original].min if original
           path, peer = data.values_at("socket_path", "server_process_binding")
           kernel = @static_association.fetch(:kernel)
-          @protection.with(path, uid: peer.fetch("uid"), gid: data.fetch("socket_gid")) do |endpoint|
+          @protection.with(path, uid: peer.fetch("uid"), gid: peer.fetch("gid")) do |endpoint|
             Ace::Runtime::Molecules::ProtectedSocket.connect(path, deadline: deadline) do |socket|
               @protection.verify!(endpoint)
               unless kernel.same?(peer, kernel.peer(socket))
