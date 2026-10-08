@@ -31,9 +31,12 @@ module Ace
           end
 
           def call(**options)
-            context = @protected_assignment_context ||= Authority::ProtectedAssignmentContext.load
-            protected = context.protected_worker? || options[:mapping] || !ENV["ACE_ASSIGN_LAUNCH_MAPPING"].to_s.empty?
+            context = @protected_assignment_context ||= Ace::Assign::Authority::ProtectedAssignmentContext.load
+            protected = context.protected_participant? || options[:mapping] || context.mapping_hint?
             if protected
+              unless context.protected_worker?
+                raise AttemptErrors::EvidenceUnavailable, "protected delivery is worker-only"
+              end
               unless %w[merge status].include?(options[:operation]) && %i[title body_file tests review].all? { |key| options[key].nil? }
                 raise ArgumentError, "protected delivery accepts canonical merge/status only; local input/evidence flags are unavailable"
               end
@@ -57,8 +60,10 @@ module Ace
               tests: read_json(options[:tests]), review: read_json(options[:review]),
               service_request_id: options[:service_request])
             puts JSON.generate(json_value(result))
-          rescue ArgumentError, Ace::Git::Error, Ace::Assign::Error, Errno::ENOENT => e
-            raise Ace::Support::Cli::Error, e.message
+          rescue ArgumentError, Ace::Git::Error, Ace::Assign::Error, Ace::Runtime::RuntimeUnavailableError,
+            JSON::ParserError, SecurityError, SystemCallError => e
+            message = e.is_a?(JSON::ParserError) ? "protected installed selection unavailable" : e.message
+            raise Ace::Support::Cli::Error, message
           end
 
           private

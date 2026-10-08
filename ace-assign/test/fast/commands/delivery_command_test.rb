@@ -3,9 +3,34 @@ require_relative "../../test_helper"
 
 class DeliveryCommandTest < AceAssignTestCase
   def command_with(coordinator)
-    command = Ace::Assign::CLI::Commands::Delivery.new
+    context = Object.new
+    context.define_singleton_method(:protected_participant?) { false }
+    context.define_singleton_method(:mapping_hint?) { false }
+    command = Ace::Assign::CLI::Commands::Delivery.new(protected_context: context)
     command.define_singleton_method(:build_delivery) { coordinator }
     command
+  end
+
+  def test_installed_nonworker_and_typed_owner_failure_never_reach_local_delivery
+    context = Object.new
+    context.define_singleton_method(:protected_participant?) { true }
+    context.define_singleton_method(:protected_worker?) { false }
+    command = Ace::Assign::CLI::Commands::Delivery.new(protected_context: context)
+    command.define_singleton_method(:build_delivery) { flunk "protected account cannot select local coordinator" }
+    error = assert_raises(Ace::Support::Cli::Error) { command.call(assignment: "assignment", attempt: "attempt", operation: "create") }
+    assert_includes error.message, "worker-only"
+    [Ace::Runtime::RuntimeUnavailableError.new("deadline expired"), SecurityError.new("owner refused"),
+      JSON::ParserError.new("PRIVATE_DESCRIPTOR_MARKER")].each do |failure|
+      command = Ace::Assign::CLI::Commands::Delivery.new
+      command.define_singleton_method(:build_delivery) { flunk "unavailable installed owner cannot select local coordinator" }
+      output, stderr = capture_io do
+        Ace::Assign::Authority::ProtectedAssignmentContext.stub(:load, -> { raise failure }) do
+          error = assert_raises(Ace::Support::Cli::Error) { command.call(assignment: "assignment", attempt: "attempt", operation: "status") }
+          refute_includes error.message, "PRIVATE_DESCRIPTOR_MARKER"
+        end
+      end
+      assert_empty output + stderr
+    end
   end
 
   def test_passes_exact_evidence_references_and_serializes_projection
