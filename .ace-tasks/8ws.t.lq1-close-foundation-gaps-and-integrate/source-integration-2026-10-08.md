@@ -1,51 +1,67 @@
 # Source integration checkpoint — 2026-10-08
 
-This is implementation progress, not a completion verdict, main delivery or installed Lab acceptance.
+## Current decision and delivery boundary
 
-## Current decision and implementation boundary
+Captain cancelled message-read/consumed/superseded proofs, additional Codex
+app-server services and duplicate terminal-state projections. This is not
+postponement. `xza` is cancelled. Workers launch through the existing `ace-llm`
+CLI in Herdr/tmux; overseers read live panel/process state. Terminal submission
+means submitted to the original terminal, never read or task success. Unknown
+sends remain uncertain and are not automatically repeated. Actual assignment,
+result, review, privileged-effect history and protected stop/release remain.
 
-Captain removed the message-read/consumed/superseded proof model, additional
-Codex app-server services and duplicate terminal-state projections. This is
-cancellation, not postponement. xza is cancelled; its old source receipts do
-not establish a continuing requirement. The overseer obtains current state
-from the selected live Herdr/tmux panel/process. Existing attempt/result/review
-history remains history; it cannot substitute for a live read.
+The joined source implements canonical review campaign ownership and bounded
+convergence, protected forge delivery and scoped publication. Protected Codex
+Inbox now uses the existing expected-origin native write; the independent
+review's one confirmed P1 race is repaired. Inbox keeps its existing 65536-byte
+limit; no extra service or read signer was added. Removed API references and
+fixture-only participant/proof assumptions were cleaned up. Fresh loading of
+InboxContextStore explicitly imports its validation error definitions.
 
-0036003a6 restores ordinary prepared worker execution through the existing
-ace-llm provider CLI; b881c461d retains the workspace lease when provider
-ownership is uncertain. Agent checks passed: prepared-worker 9/130,
-launcher/direct CLI 28/112, LLM 7/25 and provider 58/171. These are owner checks,
-not a final frozen-tree suite verdict. Lab eebaef3 removes automatic dedicated
-Codex composition; 0555ac9 stages the actual task trial in gad.2.
+### Executed delivery checks
 
-Root Serve/admission cleanup removes the unused startup attachment and
-Codex callback requirement. Its first focused run was red (16 tests/71
-assertions, 7 failures/4 errors, 26104e30) because the maintained scope fixture
-lacked the canonical definition_ref/digest required by current campaign
-validation. The fixture now records real definition bytes in the same Git
-journal without weakening validation. The two-file check passed 16 tests/187
-assertions in 2m 1s (d6cbb543). Lab source cleanup is integrated as ced5f99;
-the removed-service/publication refusal check passes on the primary checkout.
-ACE 7ceb3786d removes the Assign observe/settle producer, signer and import
-API. 6b9a0ed38 removes the two read-proof-only installed scenario goals; the
-remaining scenario checks actual scoped execution (one goal discovered by
-dry-run, not executed in Lab). 24bb29285 aligns the service-consumer contract,
-and f1802de73 removes the read-proof handler from Lab composition. The focused
-composition check passed 3 tests/13 assertions (f519acde); its prior fixture
-error c1d4604f is retained. a9b98f02b removes the Herdr app-server/read-key/reconciliation source and
-Assign read-proof closure/recovery gates (79 files; 6,655 deleted lines).
-42bb4fe64 connects HITL status to its original transport owner and completes
-human attention after terminal submission. The focused joined HITL file passes
-10 tests/70 assertions (1d7934da) without a read signer or cached recovery query.
-Owner checks pass Herdr 89/512 (c411a6b2), affected direct/CLI cases 61/393
-(904ab97f), and Assign scope/canonical/admission 42/221 (d9a82f05). These are
-scoped checks, not a final joined-suite verdict. The original consumer file
-remains red: df0b5bdf includes two lifecycle-resource fixture errors; the later
-two-case check 79108f01 passes sealed-scope refusal but one stale-CAS assertion
-receives evidence_unavailable instead of conflict. No full consumer pass is
-claimed. One final independent code review, resolution of actual source
-findings, main integration and fresh gem preparation stay open.
-Captain performs OTP publication, then gad.2 launches and observes a real task.
+- Original-terminal Inbox: 61 tests / 486 assertions PASS (`a12281c2`).
+- Native guarded control: 11 / 68 PASS (`46ea9e78`).
+- Overseer: 279 / 1306 PASS (`c9b78e53`).
+- Joined assignment recovery/consumers: 12 / 238 PASS (`69f98d88`).
+- Fresh installed source/load checks: 3 / 144, zero failures/errors, one
+  root-only test skipped (`2c9efd62`). Third-party dependencies come from
+  already-resolved non-ACE gem directories; installed ACE remains isolated.
+- Retained historical/transfer checks: 3 / 74 and 18 / 109 PASS (owner checks).
+- Maintained Herdr loading/original-client fixtures: 5 / 43 PASS (`b4fed3de`).
+- Maintained assignment participant/service-receipt fixtures: 2 / 44 PASS
+  (`f33d6211`). Actual receipt validation and corrupt-result cache eviction
+  remain; deleted reconciliation CLI is no longer tested.
+- Generic service fixtures now select `verify-artifact`, not the special
+  publication operation. Real publication/OTP checks are unchanged. Receiver
+  10 / 46 PASS (`3daf8ad4`), expiry/recovery 2 / 48 PASS (`4e0d76ed`),
+  boundary/listener 4 / 85 PASS (`b300aae9`), under existing deadlines.
+- Clean committed lab-config source: seven Python tests PASS, at `ced5f99`.
+  The primary Lab checkout's unrelated dirty network/legacy work is excluded.
+
+The executed default suite reported **47 packages green, three red: 11894
+passed, 22 failed, 33 skipped**. It began before final cleanup and is not a
+frozen-tree green verdict. Its actual missing-import/dependency and obsolete
+fixture failures are resolved by the focused checks above and the service
+checks recorded below. No timeout was increased and no fake Lab was added.
+
+### Release path and ownership
+
+- [x] Join implementation and remove the rejected read-proof/app-server model.
+- [x] Repair the original-terminal race through existing guarded native control.
+- [x] Coordinate versions, changelogs, dependency floors and root lockfile.
+- [x] Finish the remaining focused Lab service fixture checks.
+- [ ] Final exact-head independent verdict in the same combined code review.
+- [ ] Fast-forward ACE/Lab main and synchronize their authorized remotes.
+- [ ] Build fresh artifacts using the repository publisher's prepare mode.
+- [ ] Captain publishes interactively with OTP.
+- [ ] Post-publication `TS-MONO-001` verifies installation propagation.
+- [ ] `lab-config 8wl.t.gad.2` installs, launches and observes a real Lab task.
+
+Publication/propagation/installed acceptance are not claimed by source review
+or fixture success. Whole program tasks are not marked done by this checkpoint.
+The historical sections below retain prior evidence only; their cancelled
+native observation/startup requirements do not reopen the Captain's decision.
 
 The sections below are historical implementation evidence. Any statement
 requiring managed remote startup/native consumption is superseded here.
