@@ -58,7 +58,7 @@ module Ace
         end
       end
 
-      def with_owner
+      def with_owner(contexts: {})
         with_temp_cache do |parent|
           Dir.mktmpdir("owner-", parent) do |cache|
           repo = File.join(cache, "repo")
@@ -75,14 +75,20 @@ module Ace
           deployment.define_singleton_method(:mapping) { |_id| map }
           deployment.define_singleton_method(:authority) { |_id| {"uid" => 13000, "gid" => 13000, "state_root" => File.join(cache, "state")} }
           journal = @journal
-          deployment.define_singleton_method(:project) { |_id| {"inbox_contexts" => {}, "journal_repository" => journal.repo_root, "evidence_git_ref" => journal.ref, "evidence_checkout_root" => journal.checkout_root} }
+          deployment.define_singleton_method(:project) { |_id| {"inbox_contexts" => contexts, "journal_repository" => journal.repo_root, "evidence_git_ref" => journal.ref, "evidence_checkout_root" => journal.checkout_root} }
           deployment.define_singleton_method(:artifact_reference) { {"sha256" => "d" * 64} }
           @observer = Observer.new
           @owner = Authority::LaunchLifecycle.new(deployment: deployment, control_exclusion_factory: ProtectedControlFixture.factory, kernel: Kernel.new,
             journals: {"project" => @journal}, scope_observer_factory: ->(_id) { @observer })
           @observer.owner, @observer.journal = @owner, @journal
           registration = ProtectedControlFixture.registration(deployment: deployment, journal: @journal, mapping_id: "mapping", assignment_id: "assignment", task_id: "task")
-          mutate("definition-assignment", "register", "register_assignment", 0, [], registration)
+          definition = JSON.generate("session_id" => "assignment", "name" => "test", "created_at" => "2026-10-05T00:00:00Z",
+            "source_config" => "job.yaml", "task_id" => "task", "project_id" => "project")
+          digest = Digest::SHA256.hexdigest(definition)
+          reference = "execution/definitions/assignment-#{digest}.json"
+          registration.merge!("definition_ref" => reference, "definition_digest" => digest)
+          mutate("definition-assignment", "register", "register_assignment", 0, [], registration,
+            blobs: {reference => definition})
           @state = {"project_id" => "project", "assignment_id" => "assignment", "attempt_id" => "attempt",
             "mapping_id" => "mapping", "reservation_generation" => 1, "phase" => "reserved",
             "launcher_identity" => @peer, "launch_ticket" => "ticket"}
@@ -104,9 +110,9 @@ module Ace
         end
       end
 
-      def mutate(attempt, id, operation, generation, events, data)
+      def mutate(attempt, id, operation, generation, events, data, blobs: {})
         @journal.mutate(assignment_id: "assignment", attempt_id: attempt, mutation_id: id, operation: operation,
-          parameters_digest: "c" * 64, expected_generation: generation) { {events: events, blobs: {}, data: data} }
+          parameters_digest: "c" * 64, expected_generation: generation) { {events: events, blobs: blobs, data: data} }
       end
 
       def admit(params = @params, peer: @peer)
@@ -139,6 +145,21 @@ module Ace
           assert_raises(AttemptErrors::Conflict) { admit(@params.merge("mutation_id" => "another", "expected_generation" => 3)) }
           assert_equal 1, @observer.starts
           assert_raises(AttemptErrors::UnauthorizedIdentity) { admit(peer: {"pid" => 82}) }
+        end
+      end
+
+      def test_inbox_service_metadata_does_not_require_a_separate_codex_startup
+        with_owner(contexts: {"inbox" => {"native_mapping_id" => "mapping", "service" => {}}}) do
+          # The original worker still needs its authenticated readiness report.
+          # An unrelated Inbox service must not prevent issuing its one start.
+          error = assert_raises(AttemptErrors::EvidenceUnavailable) { admit }
+          assert_includes error.message, "completed start lacks private report"
+          assert_equal 1, @observer.starts
+          assert_equal 1, @journal.read_events("assignment").count { |event|
+            event.dig("payload", "operation") == "scope_service_admission"
+          }
+          assert admit.fetch(:replayed)
+          assert_equal 1, @observer.starts
         end
       end
 

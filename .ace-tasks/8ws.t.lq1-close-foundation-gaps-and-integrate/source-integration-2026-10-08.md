@@ -18,12 +18,16 @@ launcher/direct CLI 28/112, LLM 7/25 and provider 58/171. These are owner checks
 not a final frozen-tree suite verdict. Lab eebaef3 removes automatic dedicated
 Codex composition; 0555ac9 stages the actual task trial in gad.2.
 
-Additional root Serve/admission cleanup is uncommitted. Its last focused run
-was red (16 tests/71 assertions, 7 failures/4 errors, 26104e30); the existing
-scope fixture lacks the canonical definition_ref/digest required by current
-campaign validation. This remains a local fixture repair, not grounds to
-restore the rejected service. Code cleanup, bounded verification, one final
-independent code review, main integration and fresh gem preparation remain open.
+Root Serve/admission cleanup removes the unused startup attachment and
+Codex callback requirement. Its first focused run was red (16 tests/71
+assertions, 7 failures/4 errors, 26104e30) because the maintained scope fixture
+lacked the canonical definition_ref/digest required by current campaign
+validation. The fixture now records real definition bytes in the same Git
+journal without weakening validation. The two-file check passed 16 tests/187
+assertions in 2m 1s (d6cbb543). Lab source cleanup is integrated as ced5f99;
+the removed-service/publication refusal check passes on the primary checkout.
+Remaining ACE observer/provider cleanup, bounded verification, one final
+independent code review, main integration and fresh gem preparation stay open.
 Captain performs OTP publication, then gad.2 launches and observes a real task.
 
 The sections below are historical implementation evidence. Any statement
