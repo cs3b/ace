@@ -8,6 +8,7 @@ require "timeout"
 require_relative "../../support/execution_scope_observation_fixtures"
 require_relative "../../support/prepared_registration_fixture"
 require_relative "../../support/protected_control_fixture"
+require_relative "../../support/protected_workspace_fixture"
 
 module Ace
   module Assign
@@ -105,7 +106,8 @@ module Ace
             scope_binding_event_id: lineage.binding_event.fetch("digest"), seal_event_id: lineage.seal_event.fetch("digest"), proof_id: lineage.proof_id)
           true
         end
-        def verify_maintenance_closed!(lineages)
+        def verify_maintenance_closed!(lineages, retirement: nil)
+          retirement.verify_consumption! if retirement
           @checks += 1
           lineages.each { |lineage| verify_closed!(lineage) }
           true
@@ -149,6 +151,10 @@ module Ace
             path = File.join(root, name); File.binwrite(path, bytes)
             {"path" => path, "sha256" => Digest::SHA256.hexdigest(bytes), "bytes" => bytes.bytesize}
           end
+          worktree = File.join(root, "original-worktree")
+          _out, error, status = Open3.capture3("git", "-C", repo, "worktree", "add", "-b", "retirement-target", worktree, "HEAD")
+          assert status.success?, error
+          value.fetch("launch_mappings").fetch("mapping")["worker_cwd"] = worktree
           original_ref = ref.call("original.json", JSON.generate(value))
           changed = JSON.parse(JSON.generate(value))
           changed["launch_mappings"]["mapping"]["worker_actor"] = "rotated-worker"
@@ -194,13 +200,22 @@ module Ace
           boot_factory = -> { fixture_boot_baseline_reader(protection: FixtureProtection.new, pointers: pointers) }
           Ace::Runtime::Molecules::ExecutionBootBaseline.stub(:new, boot_factory) do
             observer = scope_for.call(original.mapping("mapping"), "original-boot.json")
+            cwd_stat = File.stat(worktree)
             observer.resources = [{"host_path" => original.mapping("mapping").fetch("worker_cwd"), "view_path" => "/workspace",
-              "mount_id" => 4, "filesystem_type" => "ext4", "device" => 8, "inode" => 99, "uid" => 13001, "gid" => 13001}]
+              "mount_id" => 4, "filesystem_type" => "ext4", "device" => cwd_stat.dev, "inode" => cwd_stat.ino, "uid" => cwd_stat.uid, "gid" => cwd_stat.gid}]
             authority = original.authority(original.mapping("mapping").fetch("authority_id"))
             lock_selection = Molecules::LifecycleExclusion.workspace_selection(mapping_id: "mapping", project_id: "project",
               authority: authority, cwd_resource: observer.resources.first)
+            lock_root = lock_selection.fetch("host_path")
+            FileUtils.mkdir_p(lock_root, mode: 0o755)
+            File.chmod(0o755, lock_root)
+            File.write(File.join(lock_root, "#{Digest::SHA256.hexdigest(lock_selection.fetch('key'))}.lock"), "")
+            File.write(File.join(lock_root, "#{Digest::SHA256.hexdigest(lock_selection.fetch('key'))}.state.json"), Atoms::EvidenceDigest.canonical_json(
+              {"key" => lock_selection.fetch("key"), "removed" => false, "removed_at" => nil}))
+            Dir.children(lock_root).each { |name| File.chmod(0o644, File.join(lock_root, name)) }
+            lock_stat = File.stat(lock_root)
             observer.resources << lock_selection.slice("host_path", "view_path").merge("mount_id" => 4,
-              "filesystem_type" => "ext4", "device" => 8, "inode" => 100, "uid" => authority.fetch("uid"), "gid" => authority.fetch("gid"))
+              "filesystem_type" => "ext4", "device" => lock_stat.dev, "inode" => lock_stat.ino, "uid" => authority.fetch("uid"), "gid" => authority.fetch("gid"))
             untouched_observer = scope_for.call(original.mapping("untouched"), "untouched-boot.json")
             observers = {"mapping" => observer, "untouched" => untouched_observer}
             owner = Authority::LaunchLifecycle.new(deployment: original, deployment_history: history, kernel: kernel,
@@ -296,6 +311,136 @@ module Ace
               assert_raises(FrozenError) { target.fetch("parent_resource_declarations").first["read_only"] = true }
               assert_raises(FrozenError) { target.fetch("workspace_resource")["inode"] = 0 }
               assert_raises(FrozenError) { target.fetch("worker_cwd").replace("/replaced") }
+              retirement_target = target.slice(*Authority::MaintenanceWorkspaceRetirement::TARGET_FIELDS).merge(
+                "resource" => "workspace:project:mapping:assignment")
+              collection = Object.new
+              active_collection = false
+              escaped_evidence = nil
+              collection.define_singleton_method(:verify_retirement_evidence!) do |**|
+                raise AttemptErrors::EvidenceUnavailable, "collection lifetime ended" unless active_collection
+                true
+              end
+              collection.define_singleton_method(:with_retirement_evidence!) do |phase:, target:, projection:, deadline:, &block|
+                active_collection = true
+                rows = projection.fetch("parent_resource_declarations").select { |row| row.fetch("host_path") == projection.fetch("worker_cwd") }.map { |decl|
+                  projection.fetch("resource_identities").find { |row| row.values_at("host_path", "view_path") == decl.values_at("host_path", "view_path") }}
+                descriptor = {"schema" => Authority::MaintenanceWorkspaceRetirement::SCHEMA, "phase" => phase, "target" => target,
+                  "resource" => projection.fetch("workspace_resource"), "covered_resources" => rows.map { |row|
+                    {"original" => row, "captured_host_path" => File.join(root, "captured-worktree")} },
+                  "invocation" => {"request_id" => "request", "input_digest" => "d" * 64,
+                    "operation_owner_binding_digest" => "e" * 64, "dispatch_event_digest" => "f" * 64},
+                  "refs" => Authority::MaintenanceWorkspaceRetirement::REFERENCES.fetch(phase).to_h { |key|
+                    [key, {"path" => "/fixed/#{key}", "sha256" => "1" * 64, "bytes" => 10}] }}
+                escaped_evidence = Authority::MaintenanceWorkspaceRetirement::Evidence.mint!(owner: self, descriptor: descriptor)
+                block.call(escaped_evidence)
+              ensure
+                active_collection = false
+              end
+              observed = owner.maintenance_workspace_readback!(**contexts.first, target: retirement_target,
+                evidence_owner: collection, deadline: Process.clock_gettime(Process::CLOCK_MONOTONIC) + 10) do |readback, evidence|
+                assert active_collection
+                assert_equal target, readback
+                assert evidence.verify_consumption!
+                "read-only observation"
+              end
+              assert_equal "read-only observation", observed
+              refute active_collection
+              # Namespace ownership is injected; maintained protection, real
+              # lock descriptors, flock, fsync and Git admin mutation remain real.
+              exclusion = target.fetch("workspace_exclusion")
+              writer_files = ProtectedWorkspaceFixture::WriterFiles.new(lock_root, lock_selection.fetch("view_path"), lock_root)
+              raw_open, raw_lstat = writer_files.method(:open), writer_files.method(:lstat)
+              selected_owner = authority.values_at("uid", "gid")
+              writer_files.define_singleton_method(:open) do |path, flags, mode = nil, &block|
+                handle = raw_open.call(path, flags, mode)
+                owner_ids = path.end_with?(".fence") || path.end_with?(".state.json") && marker_owner == [0, 0] ? [0, 0] : selected_owner
+                held = ProtectedWorkspaceFixture::Handle.new(handle, owner_ids)
+                return held unless block
+                begin
+                  block.call(held)
+                ensure
+                  held.close
+                end
+              end
+              writer_files.define_singleton_method(:lstat) do |path|
+                owner_ids = path.end_with?(".state.json") && marker_owner == [0, 0] ? [0, 0] : selected_owner
+                ProtectedWorkspaceFixture::StatView.new(raw_lstat.call(path), owner_ids)
+              end
+              mounts = Object.new
+              mounts.define_singleton_method(:mount_identity) { |_handle| {"filesystem_type" => "ext4"} }
+              writer_protection = Molecules::LifecycleExclusion::WorkspaceWriter::Protection.new(projection: exclusion,
+                mounts: mounts, acl: ProtectedWorkspaceFixture::ACL.new)
+              writer = Molecules::LifecycleExclusion.workspace_writer(projection: exclusion, protection: writer_protection, files: writer_files)
+              deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + 30
+              writer.acquire!(deadline: deadline)
+              collection.define_singleton_method(:retirement_workspace_writer!) { writer }
+              retained_session = nil
+              captured_evidence = removed_evidence = nil
+              begin
+                callback_error = IOError.new("controlled caller failure")
+                interrupted_session = nil
+                raised = assert_raises(IOError) do
+                  owner.with_workspace_retirement!(**contexts.first, target: retirement_target, evidence_owner: collection, deadline: deadline) do |session|
+                    interrupted_session = session
+                    raise callback_error
+                  end
+                end
+                assert_same callback_error, raised
+                assert writer.verify_unchanged!, "session borrows rather than closes the original writer"
+                collection.with_retirement_evidence!(phase: "captured", target: retirement_target, projection: target, deadline: deadline) do |proof|
+                  assert_raises(AttemptErrors::EvidenceUnavailable) { interrupted_session.verify_captured!(evidence: proof) }
+                end
+                assert_raises(AttemptErrors::MaintenanceBusy) { owner.with_workspace_retirement!(**contexts.first,
+                  target: retirement_target, evidence_owner: collection, deadline: Process.clock_gettime(Process::CLOCK_MONOTONIC) - 1) {} }
+                owner.with_workspace_retirement!(**contexts.first, target: retirement_target, evidence_owner: collection, deadline: deadline) do |session|
+                  retained_session = session
+                  collection.with_retirement_evidence!(phase: "captured", target: retirement_target, projection: target, deadline: deadline) do |proof|
+                    pinned_commit = contexts.first.fetch(:commit)
+                    next_commit, error, status = Open3.capture3("git", "-C", repo, "-c", "user.name=fixture", "-c", "user.email=fixture@example.invalid",
+                      "commit-tree", "#{pinned_commit}^{tree}", "-p", pinned_commit, "-m", "retirement current-ref invalidation")
+                    assert status.success?, error
+                    next_commit = next_commit.strip
+                    journal.send(:git!, "update-ref", journal.ref, next_commit, pinned_commit)
+                    begin
+                      assert_raises(AttemptErrors::Conflict) { session.verify_captured!(evidence: proof) }
+                    ensure
+                      journal.send(:git!, "update-ref", journal.ref, pinned_commit, next_commit)
+                    end
+                  end
+                  # No removed proof or cross-thread use can advance this session.
+                  collection.with_retirement_evidence!(phase: "removed", target: retirement_target, projection: target, deadline: deadline) do |proof|
+                    assert_raises(AttemptErrors::EvidenceUnavailable) { session.verify_removed!(evidence: proof) }
+                  end
+                  capture_path = File.join(root, "captured-worktree")
+                  _out, error, status = Open3.capture3("git", "-C", repo, "worktree", "move", worktree, capture_path)
+                  assert status.success?, error
+                  assert_equal cwd_stat.ino, File.stat(capture_path).ino
+                  collection.with_retirement_evidence!(phase: "captured", target: retirement_target, projection: target, deadline: deadline) do |proof|
+                    captured_evidence = proof
+                    assert_raises(AttemptErrors::EvidenceUnavailable) { Thread.new { Thread.current.report_on_exception = false; session.verify_captured!(evidence: proof) }.value }
+                    assert session.verify_captured!(evidence: proof)
+                    assert_raises(AttemptErrors::EvidenceUnavailable) { session.verify_captured!(evidence: proof) }
+                  end
+                  writer.publish_removed!(removed_at: "2026-10-08T00:00:00Z")
+                  _out, error, status = Open3.capture3("git", "-C", repo, "worktree", "remove", "--force", capture_path)
+                  assert status.success?, error
+                  refute File.exist?(capture_path)
+                  collection.with_retirement_evidence!(phase: "removed", target: retirement_target, projection: target, deadline: deadline) do |proof|
+                    removed_evidence = proof
+                    assert session.verify_removed!(evidence: proof)
+                    refute proof.descriptor.fetch("refs").key?("receipt")
+                  end
+                end
+                assert_raises(AttemptErrors::EvidenceUnavailable) { retained_session.verify_removed!(evidence: removed_evidence) }
+                assert_raises(AttemptErrors::EvidenceUnavailable) { captured_evidence.verify_consumption! }
+                assert_raises(AttemptErrors::EvidenceUnavailable) { removed_evidence.verify_consumption! }
+              ensure
+                writer.close!
+              end
+              assert_raises(AttemptErrors::EvidenceUnavailable) { escaped_evidence.verify_consumption! }
+              assert_raises(AttemptErrors::EvidenceUnavailable) { owner.maintenance_workspace_readback!(**contexts.first,
+                target: retirement_target.merge("release_event_digest" => "0" * 64), evidence_owner: collection,
+                deadline: Process.clock_gettime(Process::CLOCK_MONOTONIC) + 10) {} }
               [:assignment_id, :attempt_id, :binding_event_digest, :release_event_digest, :descriptor_sha256].each do |selector|
                 assert_raises(AttemptErrors::EvidenceUnavailable) { owner.maintenance_workspace_target!(**target_params.merge(selector => "wrong")) }
               end

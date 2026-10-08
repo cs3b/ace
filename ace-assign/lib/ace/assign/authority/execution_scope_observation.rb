@@ -11,6 +11,7 @@ require "ace/runtime/molecules/kernel_view_topology"
 require_relative "../molecules/execution_scope_lineage"
 require_relative "../molecules/lifecycle_exclusion"
 require_relative "posix_acl"
+require_relative "maintenance_workspace_retirement"
 require "digest"
 require "json"
 require "ace/herdr/molecules/protected_native_control"
@@ -229,7 +230,7 @@ module Ace
             slice_unit: @scope.fetch("slice_unit"), service_unit: @scope.fetch("service_unit"))
         end
 
-        def observe(lineage)
+        def observe(lineage, retirement: nil)
           @deployment.verify!(@mapping_id, kernel: @kernel, manager: @manager)
           binding = lineage.binding
           unless binding && binding.fetch("slot_id") == @scope.fetch("slot_id") && binding.fetch("boot_id") == @files.boot_id &&
@@ -246,10 +247,10 @@ module Ace
           before = @manager.inspect_activation
           verify_parent!(binding, before.fetch("slice"))
           pinned = @cgroups.pin(binding.fetch("cgroup_identity").fetch("path"), expected: binding.fetch("cgroup_identity"))
-          unless parent_resources! == binding.fetch("resource_identities")
+          unless parent_resources!(retirement: retirement) == binding.fetch("resource_identities")
             unavailable!("retained parent inventory changed")
           end
-          verify_resources!(binding.fetch("resource_identities"))
+          verify_resources!(binding.fetch("resource_identities"), retirement: retirement)
           value = @cgroups.observe(pinned)
           after = @manager.inspect_activation
           unless before == after && @files.boot_id == binding.fetch("boot_id")
@@ -310,8 +311,8 @@ module Ace
           network&.fetch(:handle)&.close
         end
 
-        def verify_closed!(lineage)
-          value = observe(lineage)
+        def verify_closed!(lineage, retirement: nil)
+          value = observe(lineage, retirement: retirement)
           service = value.fetch("activation").fetch("service")
           unless lineage.sealed? && lineage.proof_event && value.fetch("populated").zero? &&
               %w[inactive failed].include?(service.fetch("ActiveState")) && service.fetch("MainPID").zero? &&
@@ -326,10 +327,10 @@ module Ace
             unless invocation.empty? || invocation == native.fetch("service_invocation_id")
               unavailable!("closed native incarnation was replaced")
             end
-            verify_resources!(native.fetch("resource_identities"), allow_runtime_absence: true, same_namespace: false)
+            verify_resources!(native.fetch("resource_identities"), allow_runtime_absence: true, same_namespace: false, retirement: retirement)
           end
           native_cleanup_complete!
-          repeated = observe(lineage)
+          repeated = observe(lineage, retirement: retirement)
           unless repeated.fetch("populated").zero? && repeated.fetch("activation") == value.fetch("activation")
             unavailable!("scope activation changed during closure verification")
           end
@@ -484,7 +485,7 @@ module Ace
         end
 
         # Read-only original owner check used before all-root retirement.
-        def verify_maintenance_closed!(lineages)
+        def verify_maintenance_closed!(lineages, retirement: nil)
           @deployment.verify!(@mapping_id, kernel: @kernel, manager: @manager)
           activation = @manager.inspect_activation
           service, slice = activation.values_at("service", "slice")
@@ -493,7 +494,7 @@ module Ace
               slice.fetch("Job") == [0, "/"]
             unavailable!("maintenance has live or pending fixed-unit activation")
           end
-          parent_resources!
+          parent_resources!(retirement: retirement)
           @files.worker_uid_quiescent!(@map.fetch("worker_uid"))
           if %w[inactive failed].include?(slice.fetch("ActiveState"))
             unless slice.fetch("InvocationID").empty? || lineages.any? { |lineage| lineage.binding.fetch("slice_invocation_id") == slice.fetch("InvocationID") }
@@ -506,7 +507,7 @@ module Ace
           else
             exact = lineages.select { |lineage| lineage.binding.fetch("slice_invocation_id") == slice.fetch("InvocationID") }
             unavailable!("maintenance parent has no unique canonical released owner") unless exact.size == 1
-            verify_closed!(exact.first)
+            verify_closed!(exact.first, retirement: retirement)
           end
           unless @manager.inspect_activation == activation
             unavailable!("maintenance fixed activation changed during observation")
@@ -688,7 +689,7 @@ module Ace
           @network_selection.select!(static_selection: manifest.fetch("network_installation"), slot_id: @scope.fetch("slot_id"))
         end
 
-        def parent_resources!
+        def parent_resources!(retirement: nil)
           manifest = @files.boundary_manifest(@scope)
           unless manifest.is_a?(Hash) && manifest.keys.sort == %w[network_installation resources schema slot_id] &&
               manifest["schema"] == BOUNDARY_SCHEMA && manifest["slot_id"] == @scope.fetch("slot_id") &&
@@ -710,14 +711,14 @@ module Ace
             end
             pairs << paths
             next if resource.fetch("stage") == "native"
-            actual = @files.resource_identity(resource.fetch("host_path"))
+            actual = retirement_resource_identity(resource.fetch("host_path"), retirement) || @files.resource_identity(resource.fetch("host_path"))
             unless LOCAL_FILESYSTEMS.include?(actual.fetch("filesystem_type"))
               unavailable!("parent resource backing is not local kernel-managed storage")
             end
             resource.slice("host_path", "view_path").merge(actual)
           end
           unavailable!("parent resource inventory is empty") if resources.empty?
-          verify_parent_access_boundary!(resources, declarations: manifest.fetch("resources"))
+          verify_parent_access_boundary!(resources, declarations: manifest.fetch("resources"), retirement: retirement)
           resources
         end
 
@@ -750,21 +751,32 @@ module Ace
           resource
         end
 
-        def verify_parent_access_boundary!(resources, declarations:)
+        def verify_parent_access_boundary!(resources, declarations:, retirement: nil)
           lifecycle = lifecycle_parent_resource!(resources, declarations)
           resources = resources.reject { |resource| resource.equal?(lifecycle) }
+          covered = resources.select { |resource| retirement_covered_resource(resource, retirement) }
+          vanished = retirement && retirement.descriptor.fetch("phase") != "captured" ? covered : []
+          resources = resources - vanished
           worker = @map.fetch("worker_uid")
           authority = @deployment.authority(@map.fetch("authority_id")).fetch("uid")
           readers = @deployment.project(@map.fetch("project_id")).fetch("supervisor_uids")
           trusted = [worker, authority, @map.fetch("launcher_uid"), *readers].uniq
           policies = resources.to_h do |resource|
             path = resource.fetch("host_path")
-            policy = @files.resource_boundary_policy(path)
+            observed_path = retirement_observation_path(resource, retirement)
+            policy = @files.resource_boundary_policy(observed_path)
             unless %w[device inode uid gid].all? { |key| policy.fetch(key) == resource.fetch(key) }
               unavailable!("parent access policy belongs to a replaced object")
             end
             [path, policy]
           end
+          captured_ancestors = covered.flat_map do |resource|
+            path = retirement_observation_path(resource, retirement)
+            next [] if path == resource.fetch("host_path")
+            parts = File.dirname(path).split("/").reject(&:empty?)
+            ["/"] + parts.each_index.map { |index| "/" + parts.take(index + 1).join("/") }
+          end.uniq
+          captured_ancestors.each { |path| policies[path] = @files.resource_boundary_policy(path) }
           barriers = policies.select do |_path, policy|
             next false unless policy.fetch("uid").zero? && (policy.fetch("mode") & 0o7022).zero?
             acl = policy.fetch("acl")
@@ -781,13 +793,13 @@ module Ace
               end
             end
           end
-          unless resources.any? { |resource| resource.fetch("uid") == worker } && resources.all? { |resource|
-              path = resource.fetch("host_path")
+          unless (resources + vanished).any? { |resource| resource.fetch("uid") == worker } && resources.all? { |resource|
+              path = retirement_observation_path(resource, retirement)
               [0, worker].include?(resource.fetch("uid")) && barriers.keys.any? { |ancestor| path == ancestor || path.start_with?(ancestor + "/") } }
             unavailable!("parent roots lack an immutable exclusive host traversal boundary")
           end
           resources.each do |resource|
-            aliases = @files.resource_aliases(resource.fetch("host_path"), identity: resource)
+            aliases = @files.resource_aliases(retirement_observation_path(resource, retirement), identity: resource)
             unless aliases.all? { |path| barriers.keys.any? { |ancestor| path == ancestor || path.start_with?(ancestor + "/") } }
               unavailable!("protected parent backing is exposed through an outside writable mount")
             end
@@ -803,11 +815,11 @@ module Ace
           end
         end
 
-        def verify_resources!(resources, allow_runtime_absence: false, same_namespace: true)
+        def verify_resources!(resources, allow_runtime_absence: false, same_namespace: true, retirement: nil)
           resources.each do |resource|
             path = resource.fetch("host_path")
             begin
-              actual = @files.resource_identity(path)
+              actual = retirement_resource_identity(path, retirement) || @files.resource_identity(path)
             rescue Errno::ENOENT
               runtime = @scope.fetch("runtime_directory")
               # Fixed stopped RuntimeDirectoryPreserve=no cleanup may remove
@@ -821,6 +833,51 @@ module Ace
               unavailable!("retained resource backing object changed")
             end
           end
+        end
+
+        def retirement_covered_resource(resource, retirement)
+          return nil unless retirement
+          unless retirement.is_a?(MaintenanceWorkspaceRetirement::Evidence)
+            unavailable!("maintenance retirement requires source-owned proof")
+          end
+          retirement.verify_consumption!
+          entry = retirement.covered_resource(resource.fetch("host_path"))
+          unavailable!("retirement row differs from original resource") if entry && entry.fetch("original") != resource
+          entry
+        end
+
+        def retirement_resource_identity(path, retirement)
+          return nil unless retirement
+          unless retirement.is_a?(MaintenanceWorkspaceRetirement::Evidence)
+            unavailable!("maintenance retirement requires source-owned proof")
+          end
+          retirement.verify_consumption!
+          entry = retirement.covered_resource(path)
+          return nil unless entry
+          resource = entry.fetch("original")
+          return resource.reject { |key, _| %w[host_path view_path].include?(key) } unless retirement.descriptor.fetch("phase") == "captured"
+          observed_path = retirement_observation_path(resource, retirement)
+          actual = @files.resource_identity(observed_path)
+          unless %w[device inode uid gid mount_id filesystem_type].all? { |key| actual.fetch(key) == resource.fetch(key) }
+            unavailable!("retirement captured path differs from original resource")
+          end
+          actual
+        end
+
+        def retirement_observation_path(resource, retirement)
+          entry = retirement_covered_resource(resource, retirement)
+          return resource.fetch("host_path") unless entry && retirement.descriptor.fetch("phase") == "captured"
+          held = retirement.owner.retirement_resource_handle!(evidence: retirement, resource: resource)
+          unless held.is_a?(Hash) && held.keys.sort == %i[captured_host_path handle].sort &&
+              held.fetch(:captured_host_path) == entry.fetch("captured_host_path")
+            unavailable!("retirement captured resource handle differs")
+          end
+          handle = held.fetch(:handle)
+          stat = handle.stat
+          unless !handle.closed? && stat.directory? && [stat.dev, stat.ino, stat.uid, stat.gid] == resource.values_at("device", "inode", "uid", "gid")
+            unavailable!("retirement captured resource is not original held inode")
+          end
+          held.fetch(:captured_host_path)
         end
 
         def canonical(value)

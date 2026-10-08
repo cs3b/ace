@@ -11,6 +11,7 @@ module Ace
         # A retained reader lease only. It cannot provision, reset or publish.
         # Source-owned original PreparedInput selects its closed projection.
         class WorkspaceReader
+          attr_reader :projection
           class Protection < Ace::Runtime::Molecules::ProtectedArtifactSet::Protection
             def initialize(projection:, acl: Authority::PosixAcl.new, **options)
               super(**options)

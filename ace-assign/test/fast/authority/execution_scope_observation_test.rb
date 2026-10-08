@@ -348,6 +348,113 @@ module Ace
         assert_raises(Ace::Runtime::RuntimeUnavailableError) { @observer.start_admitted_service! }
       end
 
+      def test_captured_retirement_observes_original_held_inode_at_derived_path
+        Dir.mktmpdir("retirement-held") do |base|
+          original = File.join(base, "workspace")
+          captured = File.join(base, "captured-worktree")
+          Dir.mkdir(original)
+          handle = File.open(original, File::RDONLY)
+          begin
+            stat = handle.stat
+            row = {"host_path" => original, "view_path" => "/workspace", "mount_id" => 10,
+              "filesystem_type" => "ext4", "device" => stat.dev, "inode" => stat.ino, "uid" => stat.uid, "gid" => stat.gid}
+            target = {"project_id" => "project", "mapping_id" => "mapping", "assignment_id" => "assignment", "attempt_id" => "attempt",
+              "resource" => "workspace:project:mapping:assignment", "journal_commit" => "a" * 40,
+              "binding_event_digest" => "b" * 64, "release_event_digest" => "c" * 64, "descriptor_sha256" => "d" * 64}
+            projection = {"worker_cwd" => original, "workspace_resource" => row, "resource_identities" => [row],
+              "parent_resource_declarations" => [row.slice("host_path", "view_path").merge("stage" => "parent", "worker_visible" => true, "read_only" => false)]}
+            owner = Object.new
+            owner.define_singleton_method(:verify_retirement_evidence!) { |**| true }
+            owner.define_singleton_method(:retirement_resource_handle!) { |**| {captured_host_path: captured, handle: handle}.freeze }
+            retirement = Authority::MaintenanceWorkspaceRetirement
+            descriptor = {"schema" => retirement::SCHEMA, "phase" => "captured", "target" => target, "resource" => row,
+              "covered_resources" => [{"original" => row, "captured_host_path" => captured}],
+              "invocation" => {"request_id" => "request", "input_digest" => "e" * 64, "operation_owner_binding_digest" => "f" * 64,
+                "dispatch_event_digest" => "1" * 64}, "refs" => retirement::REFERENCES.fetch("captured").to_h { |key|
+                  [key, {"path" => File.join(base, key), "sha256" => "2" * 64, "bytes" => 10}] }}
+            proof = retirement::Evidence.mint!(owner: owner, descriptor: descriptor)
+            verify = -> { proof.verify!(owner: owner, target: target, projection: projection, phase: "captured",
+              deadline: Process.clock_gettime(Process::CLOCK_MONOTONIC) + 5) }
+            @files.define_singleton_method(:resource_identity) do |path|
+              current = File.stat(path)
+              row.reject { |key, _| %w[host_path view_path].include?(key) }.merge("device" => current.dev, "inode" => current.ino,
+                "uid" => current.uid, "gid" => current.gid)
+            end
+            File.rename(original, captured)
+            proof.with_consumption(verify) do
+              assert_equal row.reject { |key, _| %w[host_path view_path].include?(key) }, @observer.send(:retirement_resource_identity, original, proof)
+              File.rename(captured, File.join(base, "retained-original"))
+              Dir.mkdir(captured)
+              assert_raises(Ace::Runtime::RuntimeUnavailableError) { @observer.send(:retirement_resource_identity, original, proof) }
+              owner.define_singleton_method(:retirement_resource_handle!) { |**| {captured_host_path: original, handle: handle}.freeze }
+              assert_raises(Ace::Runtime::RuntimeUnavailableError) { @observer.send(:retirement_resource_identity, original, proof) }
+            end
+            assert_raises(AttemptErrors::EvidenceUnavailable) { @observer.send(:retirement_resource_identity, original, proof) }
+          ensure
+            handle.close
+          end
+        end
+      end
+
+      def test_completed_retirement_only_tolerates_exact_proven_rows_and_retains_fresh_closure
+        child = @files.resource.merge("inode" => 100)
+        original_identity = @files.method(:resource_identity)
+        gone = []
+        @files.define_singleton_method(:resource_identity) do |path|
+          raise Errno::ENOENT if gone.include?(path)
+          path == "/private/scratch/nested" ? child.dup : original_identity.call(path)
+        end
+        @files.manifest.fetch("resources") << {"host_path" => "/private/scratch/nested", "view_path" => "/nested",
+          "stage" => "parent", "worker_visible" => true, "read_only" => false}
+        install_controlled_lifecycle_resource
+        bind_parent
+        seal_parent
+        append("scope_closed_no_writers", @observer.closed_observation_for_proof!(lineage, events: @events))
+        projection = {"worker_cwd" => "/private/scratch", "workspace_resource" => @observer.maintenance_workspace_resource!(lineage),
+          "resource_identities" => @binding.fetch("resource_identities"),
+          "parent_resource_declarations" => @observer.maintenance_parent_resource_declarations!(lineage)}
+        target = {"project_id" => "project", "mapping_id" => "mapping", "assignment_id" => "assignment", "attempt_id" => "attempt",
+          "resource" => "workspace:project:mapping:assignment", "journal_commit" => "a" * 40,
+          "binding_event_digest" => lineage.binding_event.fetch("digest"), "release_event_digest" => "b" * 64, "descriptor_sha256" => "c" * 64}
+        collection = Object.new
+        verifications = []
+        collection.define_singleton_method(:verify_retirement_evidence!) { |**args| verifications << args; true }
+        rows = projection.fetch("resource_identities").select { |row| row.fetch("host_path").start_with?("/private/scratch") }.sort_by { |row| row.values_at("host_path", "view_path") }
+        descriptor = {"schema" => Authority::MaintenanceWorkspaceRetirement::SCHEMA, "phase" => "completed", "target" => target,
+          "resource" => projection.fetch("workspace_resource"), "covered_resources" => rows.map { |row| {"original" => row,
+            "captured_host_path" => "/fixed/captured-worktree" + row.fetch("host_path").delete_prefix("/private/scratch")} },
+          "invocation" => {"request_id" => "request", "input_digest" => "d" * 64, "operation_owner_binding_digest" => "e" * 64,
+            "dispatch_event_digest" => "f" * 64}, "refs" => Authority::MaintenanceWorkspaceRetirement::REFERENCES.fetch("completed").to_h { |key|
+              [key, {"path" => "/fixed/#{key}", "sha256" => "1" * 64, "bytes" => 10}] }}
+        proof = Authority::MaintenanceWorkspaceRetirement::Evidence.mint!(owner: collection, descriptor: descriptor)
+        verify = -> { proof.verify!(owner: collection, target: target, projection: projection, phase: "completed",
+          deadline: Process.clock_gettime(Process::CLOCK_MONOTONIC) + 5) }
+        gone.concat(rows.map { |row| row.fetch("host_path") })
+        assert_raises(Errno::ENOENT) { @observer.verify_maintenance_closed!([lineage]) }
+        assert_raises(AttemptErrors::EvidenceUnavailable) { @observer.verify_maintenance_closed!([lineage], retirement: proof) }
+        proof.with_consumption(verify) do
+          assert @observer.verify_maintenance_closed!([lineage], retirement: proof)
+          @cgroups.populated = 1
+          assert_raises(Ace::Runtime::RuntimeUnavailableError) { @observer.verify_maintenance_closed!([lineage], retirement: proof) }
+          @cgroups.populated = 0
+          @files.outside_worker = true
+          assert_raises(Ace::Runtime::RuntimeUnavailableError) { @observer.verify_maintenance_closed!([lineage], retirement: proof) }
+          @files.outside_worker = false
+          gone << "/private"
+          assert_raises(Errno::ENOENT) { @observer.verify_maintenance_closed!([lineage], retirement: proof) }
+          gone.delete("/private")
+          @files.outside_alias = true
+          assert_raises(Ace::Runtime::RuntimeUnavailableError) { @observer.verify_maintenance_closed!([lineage], retirement: proof) }
+          @files.outside_alias = false
+          @manager.service["MainPID"] = 81
+          assert_raises(Ace::Runtime::RuntimeUnavailableError) { @observer.verify_maintenance_closed!([lineage], retirement: proof) }
+          @manager.service["MainPID"] = 0
+          assert @observer.verify_maintenance_closed!([lineage], retirement: proof)
+        end
+        assert_equal 2, verifications.size, "full fixed collection rechecks bracket the complete observation"
+        assert_equal 0, @manager.service_starts
+      end
+
       def test_exact_authority_owned_readonly_lifecycle_parent_joins_original_scope
         selection = install_controlled_lifecycle_resource
         bind_parent

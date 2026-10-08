@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 require_relative "../molecules/terminal_scope_receipt"
+require_relative "maintenance_workspace_retirement"
 require "ace/runtime/molecules/execution_boot_baseline"
 require "ace/herdr/molecules/delivery_record_store"
 
@@ -143,44 +144,57 @@ module Ace
           require_maintenance_context!(mapping_id, journal, commit)
           contexts = Thread.current[:ace_assign_maintenance_contexts].fetch(object_id)
           contexts.each_value { |_entry, context| slot_reusable!(**context) }
-          journal.verify_canonical_prefix!(commit: source_commit, canonical_commit: commit)
-          matches = maintenance_slot_lineages!(mapping_id, journal, source_commit).select do |lineage|
-            lineage.binding.values_at("assignment_id", "attempt_id", "mapping_id") == [assignment_id, attempt_id, mapping_id] &&
-              lineage.binding_event.fetch("digest") == binding_event_digest
-          end
-          raise AttemptErrors::EvidenceUnavailable, "maintenance workspace lineage differs" unless matches.one?
-          lineage = matches.first
-          events = journal.read_events(assignment_id, commit: source_commit).select { |event| event.fetch("attempt_id") == attempt_id }
-          provisioning = events.select { |event| event["type"] == "scope_provisioning" }
-          releases = events.select { |event| event["type"] == "authority_mutation" && event.dig("payload", "operation") == "scope_reservation_release" }
-          unless provisioning.one? && releases.one? && releases.first.fetch("digest") == release_event_digest &&
-              provisioning.first.dig("payload", "descriptor_sha256") == descriptor_sha256
-            raise AttemptErrors::EvidenceUnavailable, "maintenance workspace original selectors differ"
-          end
-          original = @deployment_history.descriptor!(sha256: descriptor_sha256)
-          map = original.mapping(lineage.binding.fetch("mapping_id"))
-          repository = map.fetch("workspace_repository_id")
-          cleanup_config = map.fetch("workspace_cleanup_config")
-          cwd = map.fetch("worker_cwd")
-          context_owner = contexts.fetch(mapping_id).first.fetch(1)
-          observer_owner = context_owner.artifact_reference.fetch("sha256") == descriptor_sha256 ? context_owner : original
-          observer = maintenance_scope_observer_for(observer_owner, lineage.binding.fetch("mapping_id"))
-          resource = observer.maintenance_workspace_resource!(lineage)
-          declarations = observer.maintenance_parent_resource_declarations!(lineage)
-          result = immutable_maintenance_projection(lineage.binding.slice("project_id", "mapping_id", "assignment_id", "attempt_id").merge(
-            "descriptor_sha256" => descriptor_sha256, "journal_commit" => source_commit,
-            "binding_event_digest" => binding_event_digest, "release_event_digest" => release_event_digest,
-            "proof_event_digest" => lineage.proof_event.fetch("digest"), "worker_cwd" => cwd,
-            "workspace_resource" => resource, "workspace_repository_id" => repository, "workspace_cleanup_config" => cleanup_config,
-            "workspace_exclusion" => observer.workspace_exclusion_projection!(lineage),
-            "parent_resource_declarations" => declarations, "resource_identities" => lineage.binding.fetch("resource_identities"),
-            "original_mapping_digest" => original.mapping_digest(lineage.binding.fetch("mapping_id"))))
+          result = immutable_workspace_target_projection!(mapping_id: mapping_id, journal: journal, commit: commit,
+            assignment_id: assignment_id, attempt_id: attempt_id, binding_event_digest: binding_event_digest,
+            release_event_digest: release_event_digest, descriptor_sha256: descriptor_sha256, source_commit: source_commit)
           contexts.each_value do |_entry, context|
             require_maintenance_context!(context.fetch(:mapping_id), context.fetch(:journal), context.fetch(:commit))
           end
           result
         rescue KeyError, TypeError, ArgumentError, Ace::Runtime::RuntimeUnavailableError
           raise AttemptErrors::EvidenceUnavailable, "maintenance workspace original identity is incomplete"
+        end
+
+        # This source capability exists only within the complete original and
+        # candidate maintenance exclusions. The fixed adapter already owns EX.
+        def with_workspace_retirement!(mapping_id:, journal:, commit:, target:, evidence_owner:, deadline:)
+          maintenance_deadline!(deadline)
+          selectors = retirement_target_selectors!(mapping_id, target)
+          projection = maintenance_workspace_target!(mapping_id: mapping_id, journal: journal, commit: commit, **selectors)
+          verify_retirement_target!(target, projection)
+          contexts = Thread.current[:ace_assign_maintenance_contexts].fetch(object_id)
+          session = MaintenanceWorkspaceRetirement::Session.open!(lifecycle: self, mapping_id: mapping_id,
+            journal: journal, commit: commit, target: target, projection: projection, evidence_owner: evidence_owner,
+            deadline: deadline, contexts: contexts)
+          yield session
+        ensure
+          session&.close!
+        end
+
+        def maintenance_workspace_readback!(mapping_id:, journal:, commit:, target:, evidence_owner:, deadline:)
+          maintenance_deadline!(deadline)
+          require_maintenance_context!(mapping_id, journal, commit)
+          projection = immutable_workspace_target_projection!(mapping_id: mapping_id, journal: journal, commit: commit,
+            **retirement_target_selectors!(mapping_id, target))
+          verify_retirement_target!(target, projection)
+          evidence_owner.with_retirement_evidence!(phase: "completed", target: target, projection: projection, deadline: deadline) do |evidence|
+            verify = -> {
+              maintenance_deadline!(deadline)
+              require_maintenance_context!(mapping_id, journal, commit)
+              unless evidence.is_a?(MaintenanceWorkspaceRetirement::Evidence)
+                raise AttemptErrors::EvidenceUnavailable, "retirement readback requires source-owned evidence"
+              end
+              evidence.verify!(owner: evidence_owner, target: target, projection: projection, phase: "completed", deadline: deadline)
+            }
+            evidence.with_consumption(verify) do
+              verify_retirement_contexts!(evidence: evidence, deadline: deadline)
+              result = yield projection, evidence
+              verify_retirement_contexts!(evidence: evidence, deadline: deadline)
+              result
+            end
+          ensure
+            evidence.expire! if evidence.is_a?(MaintenanceWorkspaceRetirement::Evidence)
+          end
         end
 
         def retire_released_parent!(mapping_id:, journal:, commit:)
@@ -240,6 +254,35 @@ module Ace
 
         private
 
+        def retirement_target_selectors!(mapping_id, target)
+          unless target.is_a?(Hash) && target.keys.sort == MaintenanceWorkspaceRetirement::TARGET_FIELDS.sort &&
+              target["mapping_id"] == mapping_id
+            raise AttemptErrors::EvidenceUnavailable, "retirement target is not the exact closed original selection"
+          end
+          {assignment_id: target.fetch("assignment_id"), attempt_id: target.fetch("attempt_id"),
+            binding_event_digest: target.fetch("binding_event_digest"), release_event_digest: target.fetch("release_event_digest"),
+            descriptor_sha256: target.fetch("descriptor_sha256"), source_commit: target.fetch("journal_commit")}
+        end
+
+        def verify_retirement_target!(target, projection)
+          expected = projection.slice(*MaintenanceWorkspaceRetirement::TARGET_FIELDS).merge(
+            "resource" => "workspace:#{projection.fetch('project_id')}:#{projection.fetch('mapping_id')}:#{projection.fetch('assignment_id')}")
+          raise AttemptErrors::EvidenceUnavailable, "retirement target original identity differs" unless target == expected
+        end
+
+        def verify_retirement_contexts!(evidence:, deadline:)
+          contexts = Thread.current[:ace_assign_maintenance_contexts].fetch(object_id)
+          contexts.each_value do |_entry, context|
+            maintenance_deadline!(deadline)
+            require_maintenance_context!(context.fetch(:mapping_id), context.fetch(:journal), context.fetch(:commit))
+            snapshot = maintenance_slot_snapshot!(context.fetch(:mapping_id), context.fetch(:journal), context.fetch(:commit))
+            maintenance_scope_observer_for(snapshot.fetch(:owner), snapshot.fetch(:mapping_id)).verify_maintenance_closed!(
+              snapshot.fetch(:lineages), retirement: evidence)
+            require_maintenance_context!(context.fetch(:mapping_id), context.fetch(:journal), context.fetch(:commit))
+          end
+          maintenance_deadline!(deadline)
+        end
+
         def with_maintenance_inbox_inventory(candidate, deadline: nil)
           unless @deployment_history && @deployment_history.selects?(candidate, selection: :candidate)
             # No history grant is silently synthesized for arbitrary descriptors.
@@ -292,6 +335,45 @@ module Ace
           raise AttemptErrors::EvidenceUnavailable, "maintenance retained inbox root is not protected"
         end
 
+        # Canonical original facts only. This private projection cannot grant
+        # maintenance eligibility or replace current resource/closure checks.
+        def immutable_workspace_target_projection!(mapping_id:, journal:, commit:, assignment_id:, attempt_id:,
+          binding_event_digest:, release_event_digest:, descriptor_sha256:, source_commit:)
+          contexts = Thread.current[:ace_assign_maintenance_contexts].fetch(object_id)
+          journal.verify_canonical_prefix!(commit: source_commit, canonical_commit: commit)
+          matches = maintenance_slot_snapshot!(mapping_id, journal, source_commit).fetch(:lineages).select do |lineage|
+            lineage.binding.values_at("assignment_id", "attempt_id", "mapping_id") == [assignment_id, attempt_id, mapping_id] &&
+              lineage.binding_event.fetch("digest") == binding_event_digest
+          end
+          raise AttemptErrors::EvidenceUnavailable, "maintenance workspace lineage differs" unless matches.one?
+          lineage = matches.first
+          events = journal.read_events(assignment_id, commit: source_commit).select { |event| event.fetch("attempt_id") == attempt_id }
+          provisioning = events.select { |event| event["type"] == "scope_provisioning" }
+          releases = events.select { |event| event["type"] == "authority_mutation" && event.dig("payload", "operation") == "scope_reservation_release" }
+          unless provisioning.one? && releases.one? && releases.first.fetch("digest") == release_event_digest &&
+              provisioning.first.dig("payload", "descriptor_sha256") == descriptor_sha256
+            raise AttemptErrors::EvidenceUnavailable, "maintenance workspace original selectors differ"
+          end
+          original = @deployment_history.descriptor!(sha256: descriptor_sha256)
+          map = original.mapping(lineage.binding.fetch("mapping_id"))
+          repository = map.fetch("workspace_repository_id")
+          cleanup_config = map.fetch("workspace_cleanup_config")
+          cwd = map.fetch("worker_cwd")
+          context_owner = contexts.fetch(mapping_id).first.fetch(1)
+          observer_owner = context_owner.artifact_reference.fetch("sha256") == descriptor_sha256 ? context_owner : original
+          observer = maintenance_scope_observer_for(observer_owner, lineage.binding.fetch("mapping_id"))
+          resource = observer.maintenance_workspace_resource!(lineage)
+          declarations = observer.maintenance_parent_resource_declarations!(lineage)
+          immutable_maintenance_projection(lineage.binding.slice("project_id", "mapping_id", "assignment_id", "attempt_id").merge(
+            "descriptor_sha256" => descriptor_sha256, "journal_commit" => source_commit,
+            "binding_event_digest" => binding_event_digest, "release_event_digest" => release_event_digest,
+            "proof_event_digest" => lineage.proof_event.fetch("digest"), "worker_cwd" => cwd,
+            "workspace_resource" => resource, "workspace_repository_id" => repository, "workspace_cleanup_config" => cleanup_config,
+            "workspace_exclusion" => observer.workspace_exclusion_projection!(lineage),
+            "parent_resource_declarations" => declarations, "resource_identities" => lineage.binding.fetch("resource_identities"),
+            "original_mapping_digest" => original.mapping_digest(lineage.binding.fetch("mapping_id"))))
+        end
+
         def maintenance_scope_observer_for(owner, mapping_id)
           return scope_observer_for(mapping_id) if owner.equal?(@deployment)
           @maintenance_scope_observers ||= {}
@@ -300,6 +382,14 @@ module Ace
         end
 
         def maintenance_slot_lineages!(mapping_id, journal, commit, selected_context: nil)
+          snapshot = maintenance_slot_snapshot!(mapping_id, journal, commit, selected_context: selected_context)
+          maintenance_scope_observer_for(snapshot.fetch(:owner), snapshot.fetch(:mapping_id)).verify_maintenance_closed!(snapshot.fetch(:lineages))
+          snapshot.fetch(:lineages)
+        end
+
+        # Complete immutable history and settlement authentication, shared only
+        # by ordinary fresh eligibility and proof-bound retirement readback.
+        def maintenance_slot_snapshot!(mapping_id, journal, commit, selected_context: nil)
           unless @deployment_history
             raise AttemptErrors::EvidenceUnavailable, "complete original authentication requires retained deployment history"
           end
@@ -358,8 +448,7 @@ module Ace
           selected_attempts = retained_attempts.select { |entry| entry.last.fetch("execution_scope").fetch("slot_id") == selected_map.fetch("execution_scope").fetch("slot_id") }
           maintenance_current_inventory!(journal, commit, selected_attempts, all_attempts: retained_attempts,
             slot_filter: selected_map.fetch("execution_scope").fetch("slot_id"))
-          maintenance_scope_observer_for(selected_owner, mapping_id).verify_maintenance_closed!(lineages)
-          lineages.freeze
+          {owner: selected_owner, mapping_id: mapping_id, lineages: lineages.freeze}.freeze
         rescue KeyError, TypeError, ArgumentError
           raise AttemptErrors::EvidenceUnavailable, "maintenance original identity is incomplete"
         end
