@@ -289,7 +289,7 @@ module Ace
         # A retained approval grants permission only while its original imported
         # bytes, independent reviewer and exact candidate still verify. An old
         # successful mutation reply is not a substitute for canonical evidence.
-        def approved_review!(journal, events, params, map, current)
+        def approved_review!(journal, events, params, map, current, commit: journal.ref_value)
           accepted = events.reverse.find { |event| event["type"] == "authority_mutation" &&
             event.dig("payload", "operation") == "accept_review" }&.dig("payload", "data")
           review = active_review_event(events, current)&.dig("payload", "data")
@@ -305,7 +305,6 @@ module Ace
             binding: accepted.fetch("review_binding"), request_id_or_event_id: review.fetch("review_id"),
             generation: current.fetch("candidate_generation")}
           canonical = Molecules::CanonicalEvidence.new(journal: journal)
-          commit = journal.ref_value
           reader = ->(_data, artifact) { canonical.read({"ref" => artifact.fetch("path"), "sha256" => artifact.fetch("sha256")},
             **context, commit: commit) }
           intent = events.find { |event| event["type"] == "intent" }

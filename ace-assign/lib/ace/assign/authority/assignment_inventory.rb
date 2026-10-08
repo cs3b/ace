@@ -241,6 +241,12 @@ module Ace
             lineage.require_positive!(scope_generation: lineage.binding.fetch("scope_generation"),
               scope_binding_event_id: lineage.binding_event.fetch("digest"), seal_event_id: lineage.seal_event.fetch("digest"), proof_id: lineage.proof_id)
             params = selector.merge("mapping_id" => mapping_id)
+            if terminal.dig("payload", "receipt", "verdict") == "succeeded"
+              finish = prefix.find { |entry| entry.dig("payload", "operation") == "finish" }
+              review_params = params.merge(finish.fetch("payload").fetch("data").slice("head", "candidate_generation"))
+              @result_owner.finished_review_evidence!(journal: journal, events: prefix, params: review_params,
+                map: map, commit: prefix_commit)
+            end
             @result_owner.service_settlement_complete!(journal: journal, events: prefix, params: params, map: map, commit: prefix_commit)
             @result_owner.historical_inbox_settlement_complete!(journal: journal, events: prefix, params: params, map: map,
               commit: prefix_commit, deployment: original, history: @deployment_history)

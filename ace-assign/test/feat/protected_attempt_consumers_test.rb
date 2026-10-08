@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 require_relative "../test_helper"
 require_relative "../support/endcap_result_owner_fixture"
+require_relative "../support/execution_boot_baseline_owner_fixture"
 require_relative "../support/protected_inbox_context_pipeline_fixture"
 require "ace/assign/authority/client"
 require "ace/herdr/organisms/inbox"
@@ -10,10 +11,37 @@ module Ace
     class ProtectedAttemptConsumersTest < AceAssignTestCase
       include EndcapResultOwnerFixture
       include ProtectedInboxContextPipelineFixture
+      include ExecutionBootBaselineOwnerFixture
+
+      class BootProtection
+        def root_path!(_path); end
+        def verify!(_path, handle, directory:)
+          raise "wrong controlled boot artifact type" unless directory ? handle.stat.directory? : handle.stat.file?
+        end
+      end
+
+      def fixture(**options, &block)
+        original = ExecutionScopeNativeOwnerFixture.method(:new)
+        scope = ->(*args, **kwargs) do
+          original.call(*args, **kwargs.merge(boot_baseline_selection: @retained_boot, network_selection: @retained_network,
+            network_installation: ExecutionScopeObservationFixtures::NETWORK_OUTPUT.merge(
+              "installer_artifact_sha256" => @retained_network.fetch("installer_artifact").fetch("sha256"))))
+        end
+        baseline = -> { fixture_boot_baseline_reader(protection: BootProtection.new) }
+        ExecutionScopeNativeOwnerFixture.stub(:new, scope) do
+          Ace::Runtime::Molecules::ExecutionBootBaseline.stub(:new, baseline) { super(**options, &block) }
+        end
+      end
 
       def configure_result_owner_fixture
         @project.merge!("journal_repository" => @journal.repo_root, "evidence_git_ref" => @journal.ref,
           "evidence_checkout_root" => @journal.checkout_root)
+        producer_path = File.join(File.realpath(@root), "retained-installer")
+        producer_bytes = "controlled original installer artifact"
+        File.binwrite(producer_path, producer_bytes)
+        producer = {"path" => producer_path, "sha256" => Digest::SHA256.hexdigest(producer_bytes), "bytes" => producer_bytes.bytesize}
+        @retained_network = ExecutionScopeObservationFixtures::NETWORK_SELECTION.merge("installer_artifact" => producer)
+        @retained_boot = retained_boot_baseline_artifact(root: File.realpath(@root), name: "retained-boot.json", map: @map, installer: producer)
         map = @map
         @deployment.define_singleton_method(:mapping_digest) { |_| Atoms::EvidenceDigest.digest(map) }
       end
@@ -212,6 +240,22 @@ module Ace
           again = @client.call("recover", recovery_params, mutation_id: "terminal-recovery-again", timeout: 30)
           assert_equal recovery.data, again.data
           assert_equal accepted, @journal.ref_value
+          released = @launch.release_scope_reservation!(params: selectors.merge("mutation_id" => "finish-release",
+            "expected_generation" => generation), peer: @supervisor, role: :supervisor)
+          assert_equal "released", released.fetch(:data).fetch("reservation")
+          accepted = @journal.ref_value
+          terminal_projection!(params, accepted)
+          released_recovery = @client.call("recover", recovery_params.merge("expected_generation" => generation),
+            mutation_id: "released-recovery", timeout: 30)
+          assert_equal "restart-required", released_recovery.data.fetch("decision")
+          assert_equal "terminal_attempt", released_recovery.data.fetch("reason")
+          assert_equal accepted, released_recovery.data.fetch("journal_commit")
+          assert_equal accepted, @journal.ref_value
+          assert_equal 1, @journal.read_events("assignment").count { |event| event.dig("payload", "operation") == "scope_reservation_release" }
+          released_replay = @client.call("finish", params, mutation_id: "finish", timeout: 30)
+          assert released_replay.replayed
+          assert_equal first.data, released_replay.data
+          assert_equal accepted, @journal.ref_value
           error = assert_raises(AttemptErrors::EvidenceUnavailable) do
             @client.call("finish", params.merge("expected_generation" => generation), mutation_id: "finish-again", timeout: 30)
           end
@@ -261,6 +305,24 @@ module Ace
           assert replay.replayed
           assert_equal first.data, replay.data
           assert_equal accepted, @journal.ref_value
+          terminal_events = @journal.read_events("assignment").select { |event| event["attempt_id"] == @attempt }
+          receipt_event = terminal_events.find { |event| event["type"] == "receipt_accepted" }
+          @server.stop
+          @owner.value
+          git(@journal.repo_root, "update-ref", @journal.ref, unapproved, accepted)
+          forged = @journal.mutate(assignment_id: "assignment", attempt_id: @attempt,
+            mutation_id: "forged-unapproved-finish", operation: "finish",
+            parameters_digest: Atoms::EvidenceDigest.digest(params), expected_generation: generation) do
+            {events: [{type: "receipt_accepted", payload: receipt_event.fetch("payload")},
+              {type: "transition", payload: {"from" => "running", "to" => "succeeded", "reason" => "protected_result_accepted"}}],
+              blobs: {}, data: first.data.except("generation", "journal_commit")}
+          end
+          assert_equal "succeeded", forged.fetch("state")
+          error = assert_raises(AttemptErrors::ReceiptRejected) do
+            @launch.completion_terminal!(journal: @journal, commit: @journal.ref_value,
+              params: params.merge("mapping_id" => "mapping"), map: @map)
+          end
+          assert_match(/exact independent review/, error.message)
         end
       end
     end

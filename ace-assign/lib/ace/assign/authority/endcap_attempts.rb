@@ -8,6 +8,13 @@ module Ace
         FINISH_PARAMETERS = %w[mapping_id assignment_id attempt_id expected_generation candidate_generation head result_id].freeze
         RECOVERY_PARAMETERS = %w[mapping_id assignment_id attempt_id expected_generation].freeze
 
+        # Called only by the canonical terminal owner at its authenticated
+        # introduction prefix, using the original deployment mapping.
+        def finished_review_evidence!(journal:, events:, params:, map:, commit:)
+          current = exact_candidate!(retained_candidate(events, params.fetch("candidate_generation")), params)
+          approved_review!(journal, events, params, map, current, commit: commit)
+        end
+
         private
 
         def dispatch_recover(request:, peer:, role:, transfer: nil)
@@ -169,7 +176,7 @@ module Ace
                 unless result && result.fetch("result_id") == params.fetch("result_id")
                   raise AttemptErrors::EvidenceUnavailable, "Result finish requires its exact submitted receipt"
                 end
-                approved_review!(selected, fresh, params, map, current) if result.dig("receipt", "verdict") == "succeeded"
+                approved_review!(selected, fresh, params, map, current, commit: prefix) if result.dig("receipt", "verdict") == "succeeded"
                 @launch.completion_scope!(journal: selected, events: fresh, params: params, map: map, commit: prefix)
                 service_settlement_evidence!(journal: selected, events: fresh, params: params, map: map, commit: prefix)
                 inbox_settlement_evidence!(journal: selected, events: fresh, params: params, map: map, commit: prefix)
