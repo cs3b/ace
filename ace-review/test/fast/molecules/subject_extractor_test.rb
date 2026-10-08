@@ -360,6 +360,18 @@ class SubjectExtractorTest < AceReviewTest
     assert_equal({"bundle" => {"pr" => ["https://github.com/owner/repo/pull/789"]}}, config)
   end
 
+  def test_pr_forgejo_urls_preserve_selected_server_and_repository
+    %w[https://forge.example/team/repo/pulls/25 https://forge.example:3443/git/team/repo/pull/25].each do |url|
+      assert_equal({"bundle" => {"pr" => [url]}}, @extractor.parse_typed_subject_config("pr:#{url}"))
+    end
+  end
+
+  def test_pr_zero_and_unrecognized_references_are_rejected_before_bundle_extraction
+    %w[0 owner/repo#0 https://forge.example/team/repo/pulls/0 not-a-reference].each do |ref|
+      assert_raises(ArgumentError) { @extractor.parse_typed_subject_config("pr:#{ref}") }
+    end
+  end
+
   def test_pr_mixed_formats_accepted
     # Mixed numeric and qualified refs should all be accepted
     config = @extractor.parse_typed_subject_config("pr:123,owner/repo#456,789")

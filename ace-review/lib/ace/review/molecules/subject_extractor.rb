@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "ace/git/github"
+require "ace/git/atoms/pr_reference"
 require "yaml"
 require "open3"
 require "timeout"
@@ -187,9 +187,10 @@ module Ace
               raise ArgumentError, "No valid PR references provided. Usage: pr:REF (e.g., pr:123, pr:owner/repo#456)"
             end
             # Pre-validate PR refs for early error feedback using ace-git's parser
-            # Supports: simple numbers (123), qualified refs (owner/repo#456), GitHub URLs
+            # Supports numbers, qualified references and either forge URL form.
             pr_refs.each do |ref|
-              Ace::Git::Github::PrIdentifier.parse(ref)
+              reference = Ace::Git::Atoms::PrReference.parse(ref)
+              raise ArgumentError, "Invalid PR identifier format: #{ref}" unless reference && reference.number.positive?
             end
             {"bundle" => {"pr" => pr_refs}}
           when /^pr:$/
