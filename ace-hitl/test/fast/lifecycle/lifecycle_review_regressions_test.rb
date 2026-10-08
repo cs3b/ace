@@ -64,18 +64,51 @@ class LifecycleReviewRegressionsTest < AceHitlTestCase
       creator = make_store(root: root)
       broker = make_store(root: root, identity: root_identity)
 
-      # The broker wins the lifecycle lock first and completes a full
-      # delivery before the creator's projection initialization runs:
-      # the initialization must recognize the current-incarnation
-      # projection and leave it untouched.
-      creator.define_singleton_method(:with_request_lock) do |request_id, &block|
-        broker.deliver(request_id, ->(_limit) { "approved" })
-        block.call(request_id)
+      published = Queue.new
+      resume_create = Queue.new
+      answer_read = Queue.new
+      initialize_projection = creator.method(:initialize_projection_locked!)
+      creator.define_singleton_method(:initialize_projection_locked!) do |value|
+        published << value
+        resume_create.pop
+        initialize_projection.call(value)
       end
-      creator.create(**request_args)
 
+      # Publication and initial projection share the real lifecycle lock.
+      # Pause after publication so the broker can read the request, but must
+      # wait until create has initialized its projection before delivery.
+      create = Thread.new { creator.create(**request_args(project: "ace")) }
+      value = published.pop
+      delivery = Thread.new do
+        broker.deliver(value.fetch("id"), lambda do |_limit|
+          answer_read << true
+          "approved"
+        end)
+      end
+      answer_read.pop
+      File.open(File.join(root, "locks", "hitl001.lock"), File::RDWR) do |lock|
+        refute lock.flock(File::LOCK_EX | File::LOCK_NB), "create holds the request lock through projection"
+      end
+      refute delivery.join(0), "delivery cannot commit before create releases its lock"
+      resume_create << true
+      create.value
+      delivery.value
+      creator.define_singleton_method(:initialize_projection_locked!, initialize_projection)
+
+      # A repeated initialization after completed delivery must retain the
+      # same-incarnation projection, rather than overwriting it as created.
+      creator.send(:initialize_projection!, value)
       record = JSON.parse(File.read(File.join(root, "public", "hitl001.json")))
       assert_equal "answer-delivered", record["state"]
+      assert_equal "ace", record["project"]
+      assert_equal value.fetch("incarnation"), record.fetch("incarnation")
+    ensure
+      resume_create << true if resume_create
+      [create, delivery].compact.each do |thread|
+        thread.kill if thread.alive?
+        thread.join
+      end
+
     end
   end
 
