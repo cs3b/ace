@@ -3,6 +3,8 @@ require_relative "../test_helper"
 require_relative "../support/execution_scope_observation_fixtures"
 require_relative "../support/protected_inbox_context_pipeline_fixture"
 require "ace/assign/authority/endcap"
+require "ace/assign/authority/inbox_observation_producer"
+require "ace/assign/authority/inbox_observation_signer"
 require "ace/herdr/organisms/inbox"
 require "ace/herdr/organisms/inbox_context_owner"
 require "ace/herdr/organisms/inbox_context_server"
@@ -62,6 +64,115 @@ module Ace
       def fetch_observation(evidence_id, peer: @signer, role: :signer)
         params = @params.slice("mapping_id", "assignment_id", "attempt_id", "event_id", "inbox_context_id").merge("evidence_id" => evidence_id)
         @owner.dispatch(request: {"operation" => "fetch_observation", "project_id" => "project", "mutation_id" => nil, "params" => params}, peer: peer, role: role)
+      end
+
+      # Reuses the actual owner/journal fixture. Only native completed-turn
+      # query and installed process credentials are controlled source seams.
+      def joined_workflows
+        prepare_observation
+        original = {"project_id" => "project", "mapping_id" => "mapping", "assignment_id" => "assignment", "inbox_context_id" => "context"}
+        record = Ace::Herdr::Molecules::DeliveryRecordStore.load(@context.fetch("deliveries_dir"), "event")
+        Ace::Herdr::Molecules::DeliveryRecordStore.save(record.advance_inbox(state: record.state,
+          inbox: record.inbox.merge("original_context" => original, "original_binding_digest" => events.find { |event| event["type"] == "scope_native_bound" }.fetch("digest")), detail: {"action" => "retained original fixture"},
+          timestamp: Time.now.utc.iso8601), @context.fetch("deliveries_dir"))
+        grants = @context_grants + [@observer, @signer].map { |peer| peer.slice("uid", "gid", "groups").merge("role" => "supervisor", "purposes" => ["observe_to_sign"]) }
+        @context_owner = Ace::Herdr::Organisms::InboxContextOwner.new(context_id: "context", deliveries_dir: @context.fetch("deliveries_dir"),
+          grants: grants, store: @context_store, keys: @context_keys, kernel: @kernel, inbox: @box, completion: @context_completion, epoch: context_owner_epoch)
+        @candidate = @observation.slice("event_id", "attempt_id", "claim_generation", "payload_sha256", "binding").merge(
+          "observation" => {"outcome" => "consumed", "native_reference" => @observation.fetch("native_reference"), "server_process_binding" => @runtime.fetch("runtime_process_binding"), "endpoint_reference_sha256" => @runtime.fetch("endpoint_reference_sha256")})
+        fixture_owner = self
+        @box.instance_variable_get(:@native).define_singleton_method(:observe) { |**| fixture_owner.instance_variable_get(:@candidate).fetch("observation") }
+        @context["receipt_private_key"] = {"path" => "/fixture/signer/key"}
+        @workflow_uploads = []; @workflow_context_calls = []; @lose_reply = false
+        @workflow_peer = @observer
+        context = Object.new
+        context.define_singleton_method(:request) do |operation, params|
+          fixture_owner.instance_variable_get(:@workflow_context_calls) << operation
+          opts = params.transform_keys(&:to_sym).merge(peer: fixture_owner.instance_variable_get(:@workflow_peer))
+          opts[:deadline] = Ace::Runtime::Molecules::ProtectedSocket.deadline(30) if operation == "observe_context"
+          result = fixture_owner.instance_variable_get(:@context_owner).public_send(operation, **opts)
+          result = result.merge("attempt_id" => "foreign") if operation == "observe_context" && fixture_owner.instance_variable_get(:@wrong_candidate_response)
+          result
+        end
+        client = Object.new
+        client.define_singleton_method(:mapping_id) { "mapping" }
+        client.define_singleton_method(:call) do |operation, params, **options|
+          peer = fixture_owner.instance_variable_get(:@workflow_peer)
+          fixture_owner.instance_variable_get(:@workflow_uploads) << [operation, options[:upload_parts]] if options[:upload_parts]
+          selected = params.merge("mapping_id" => "mapping")
+          selected["transfer"] = {} if options[:upload_parts]
+          result = fixture_owner.instance_variable_get(:@owner).dispatch(request: {"operation" => operation, "project_id" => "project",
+            "mutation_id" => options[:mutation_id], "params" => selected}, peer: peer, role: peer["uid"] == 13008 ? :observer : :signer,
+            transfer: options[:upload_parts] && Parts.new(options[:upload_parts]))
+          raise AttemptErrors::EvidenceUnavailable, "controlled lost canonical reply" if fixture_owner.instance_variable_get(:@lose_reply) && options[:upload_parts]
+          Authority::Client::Reply.new(data: result.fetch(:data), parts: result[:transfer_parts], replayed: result[:replayed])
+        end
+        kernel = PeerKernel.new(@observer)
+        @producer = Authority::InboxObservationProducer.new(client: client, deployment: @deployment, kernel: kernel, context_client_factory: ->(**) { context })
+        key = @key
+        loader = Object.new
+        loader.define_singleton_method(:with) do |**_, &block|
+          artifacts = Object.new; artifacts.define_singleton_method(:verify_unchanged!) { true }
+          block.call(key, artifacts)
+        end
+        @settler = Authority::InboxObservationSigner.new(client: client, deployment: @deployment, kernel: PeerKernel.new(@signer),
+          context_client_factory: ->(*) { context }, signing_key_factory: ->(*) { loader })
+      end
+
+      def produce(generation)
+        @producer.observe(assignment_id: "assignment", attempt_id: "attempt", event_id: "event", inbox_context_id: "context",
+          claim_generation: 1, mutation_id: "producer", expected_generation: generation)
+      end
+
+      def settle_observation(id, generation)
+        @workflow_peer = @signer
+        @settler.settle(assignment_id: "assignment", attempt_id: "attempt", event_id: "event", inbox_context_id: "context",
+          evidence_id: id, mutation_id: "settler", expected_generation: generation)
+      end
+
+      def test_joined_producer_and_signer_recover_exact_canonical_reply_loss
+        fixture do
+          joined_workflows
+          generation = @journal.authority_generation(events)
+          @lose_reply = true
+          assert_raises(AttemptErrors::EvidenceUnavailable) { produce(generation) }
+          assert_equal 1, @context_owner.status(peer: @authority_peer).fetch("active_operations")
+          @lose_reply = false
+          imported = produce(generation)
+          assert_equal "consumed", imported.fetch("outcome")
+          assert_equal 1, events.count { |event| event["type"] == "native_observation" }
+          assert_equal 0, @context_owner.status(peer: @authority_peer).fetch("active_operations")
+          generation = @journal.authority_generation(events)
+          @lose_reply = true
+          assert_raises(AttemptErrors::EvidenceUnavailable) { settle_observation(imported.fetch("evidence_id"), generation) }
+          assert_equal 1, @context_owner.status(peer: @authority_peer).fetch("active_operations")
+          @lose_reply = false
+          assert_equal "completed", settle_observation(imported.fetch("evidence_id"), generation).fetch("state")
+          proofs = @workflow_uploads.select { |op, _| op == "reconcile_inbox" }.map(&:last)
+          assert_equal proofs.first, proofs.last
+          assert @key.verify(OpenSSL::Digest::SHA256.new, proofs.first.last, proofs.first.first)
+          assert_equal 1, events.count { |event| event["type"] == "inbox_reconciliation" }
+          assert_equal 0, @context_owner.status(peer: @authority_peer).fetch("active_operations")
+          assert_equal 1, @native_calls
+        end
+      end
+
+      def test_producer_uncertainty_and_wrong_association_never_import_or_settle
+        fixture do
+          joined_workflows
+          generation = @journal.authority_generation(events)
+          @candidate["observation"] = {"outcome" => "uncertain"}
+          assert_equal "uncertain", produce(generation).fetch("outcome")
+          assert_empty @workflow_uploads
+          assert_equal 0, @context_owner.status(peer: @authority_peer).fetch("active_operations")
+          @wrong_candidate_response = true
+          @candidate["observation"] = {"outcome" => "consumed", "native_reference" => @observation.fetch("native_reference"),
+            "server_process_binding" => @runtime.fetch("runtime_process_binding"), "endpoint_reference_sha256" => @runtime.fetch("endpoint_reference_sha256")}
+          assert_raises(AttemptErrors::EvidenceUnavailable) { produce(generation) }
+          assert_empty @workflow_uploads
+          assert_equal 1, @context_owner.status(peer: @authority_peer).fetch("active_operations")
+          assert_equal 0, events.count { |event| event["type"] == "native_observation" }
+        end
       end
 
       def test_observation_routes_import_fetch_restart_and_deduplicate_exact_canonical_bytes
