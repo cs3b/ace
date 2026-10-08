@@ -1,6 +1,6 @@
 # Protected delivery service request — reviewed amendment
 
-This closes the public worker-request join in the existing qkb.1 scope. It does not decide whether create/update/ready may precede independent review. Those operations remain unavailable in this protected delivery route pending the separate policy decision. The existing authority review/authorization gate is unchanged.
+This closes the public worker-request join in the existing qkb.1 scope. Captain decision, 2026-10-08: authenticated workers may create/update a draft PR before independent review; ready and merge require executed tests, independent acceptance of the current revision and applicable operation authorization. This merge-only amendment does not itself implement create/update/ready; those operations remain required qkb.1 implementation work. Historical checkpoints referring to an unresolved ordering decision describe their original source state.
 
 ## Source-grounded gap and owners
 
