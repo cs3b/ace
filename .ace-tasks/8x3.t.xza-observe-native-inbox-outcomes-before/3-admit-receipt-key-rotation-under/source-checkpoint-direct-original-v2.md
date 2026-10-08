@@ -1,5 +1,11 @@
 # Direct original identity v2 source checkpoint
 
+## Main integration receipt — 2026-10-08
+
+Independent reviewer `/root/review_lab_bootstrap` approved source commit `9d7f09377`: original tuple binding, locked pre-effect rechecks, retained-record equality, replay safeguards and bounded native projection. Integrated as `ebf985041`; guarded-wake contract amendment `41fe28f4f` is integrated as `b4eff0f4f`. Documentation conflicts retained both prior evidence and incoming additions.
+
+Executed on main `b4eff0f4f`: direct binding/client/effects tests **15 tests, 97 assertions PASS**, report `.ace-local/test/reports/herdr/1fb6e445-d8e7-466a-a87f-17ce2948bce9/`; actual canonical query and issuer completion/restarted replay selections **2 tests, 29 assertions PASS**, report `.ace-local/test/reports/assign/80533aa8-1eea-401b-9fbf-029e9f828871/`. No skipped tests or errors in either report. This approves the integrated delta only; the remaining full gates below stay open.
+
 Parent `30f21414b`. This is a bounded source candidate awaiting independent review, not whole xza.3 acceptance.
 
 Protected enqueue/deliver/status require explicit assignment alongside selected project/mapping/context/event/attempt. Direct admission retains exact original `{project_id,assignment_id,mapping_id,inbox_context_id,attempt_id}` before effects. Direct effect binding v2 adds the four original context fields to its closed existing selector/digest fields and includes each in the digest. v1 is rejected rather than migrated. Other-purpose admissions preserve their reviewed invariants.
