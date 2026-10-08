@@ -214,6 +214,26 @@ fallback for an installed protected participant or a blocked protected operation
    authorized merge; publication is not mandatory. Keep the task in progress until
    all of its actual acceptance criteria are satisfied.
 
+## Unavailable publication prerequisite
+
+Requested publication is a separate step, never a consequence of merge success.
+Use the existing configured service policy and publisher prerequisites; an absent
+publisher or unavailable required OTP is a routed blocker, not permission to run
+an alternate command/account. The ordinary tested publisher's precondition
+failure is ordinary source evidence only; it does not supply a protected
+publication receipt or positive scoped OTP capability.
+
+If the requested step cannot proceed, record its value-free cause through the
+existing assignment failure owner:
+`ace-assign fail --assignment ID@SCOPE --attempt ATTEMPT --mapping MAPPING --message "publication blocked: prerequisite unavailable"`.
+Use the actual original protected selectors; ordinary assignments omit protected
+selectors and use their existing target. Read `ace-assign status` for that same
+scope afterward. The step remains failed/unfinished, with no publication receipt
+or task completion. Preserve an uncertain service request separately: a failure
+report must not claim a definitive denial or effect absence from a lost reply.
+Protected recovery requires the reviewed new prepared version/attempt; never
+finish the failed step or retry publication to manufacture success.
+
 ## Uncertainty and resume
 
 In managed mode, read assignment status and retained qjl delivery events before

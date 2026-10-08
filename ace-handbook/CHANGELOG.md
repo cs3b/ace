@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Route unavailable publication prerequisites through the original assignment failure/status owners without claiming protected publication or retry authority.
+
 - Route protected delivery through original worker merge request, canonical status and exact result consumption while preserving ordinary delivery and unresolved protected PR policy.
 
 
