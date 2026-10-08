@@ -10,9 +10,16 @@ consumers, not test gaps.
 ## Selection and ownership
 
 Reuse ProtectedAssignmentContext.load and its delivered client(options:) helper.
-Extend this same classifier with an authority-operation selection method: installed
-current/retained worker, launcher, supervisor, reviewer or executor principal, or
-explicit --mapping / ACE_ASSIGN_LAUNCH_MAPPING, selects protected operation.
+Extend this same classifier with an authority-operation selection method using
+exhaustive current and retained installed principal inventories: all five declared
+project role UID arrays (launcher/reviewer/worker/service_executor/supervisor),
+authorities[].uid, each Inbox context owner_credentials.uid, installed receiver
+executor_uid and mapping launcher/worker UIDs. These exact declared source fields
+are the inventory; do not guess UID fields recursively or omit non-command roles.
+Any such participant, or explicit --mapping / ACE_ASSIGN_LAUNCH_MAPPING, selects
+protected operation. Unsupported installed participants (including authority,
+service and Inbox context-owner accounts) must refuse before local coordinator
+construction; classification never upgrades them to launcher/supervisor/worker.
 The principal classification is a refusal boundary, never permission: actual
 Client/Server kernel role admission remains authoritative. Any protected hint,
 removed retained mapping, corrupt installed descriptor/history, or protected
