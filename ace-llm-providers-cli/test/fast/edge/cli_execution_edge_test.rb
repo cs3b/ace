@@ -358,7 +358,9 @@ describe "CLI Execution Edge Cases" do
       stderr = ""
       status = mock_success_status
 
-      result = @client.send(:parse_opencode_response, stdout, stderr, status, "test prompt", {})
+      capture = Ace::LLM::Providers::CLI::Models::CaptureResult.new(
+        outcome: :completed, stdout: stdout, stderr: stderr, status: status, provider_name: "OpenCode")
+      result = @client.send(:parse_opencode_response, capture, "test prompt", {})
 
       assert_equal "This is plain text output from the CLI", result[:text],
         "Should extract plain text as response text"
@@ -378,7 +380,9 @@ describe "CLI Execution Edge Cases" do
       stderr = ""
       status = mock_success_status
 
-      result = @client.send(:parse_opencode_response, stdout, stderr, status, "test prompt", {})
+      capture = Ace::LLM::Providers::CLI::Models::CaptureResult.new(
+        outcome: :completed, stdout: stdout, stderr: stderr, status: status, provider_name: "OpenCode")
+      result = @client.send(:parse_opencode_response, capture, "test prompt", {})
 
       assert_equal "Generated response", result[:text],
         "Should extract result from JSON response"
@@ -394,7 +398,9 @@ describe "CLI Execution Edge Cases" do
       stderr = ""
       status = mock_success_status
 
-      result = @client.send(:parse_opencode_response, stdout, stderr, status, "test prompt", {})
+      capture = Ace::LLM::Providers::CLI::Models::CaptureResult.new(
+        outcome: :completed, stdout: stdout, stderr: stderr, status: status, provider_name: "OpenCode")
+      result = @client.send(:parse_opencode_response, capture, "test prompt", {})
 
       assert_equal "", result[:text],
         "Should handle empty output without error"
