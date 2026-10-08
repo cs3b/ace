@@ -37,6 +37,7 @@ patterns:
   core: "test/{fast/,}core/**/*_test.rb"
   lifecycle: "test/{fast/,}lifecycle/**/*_test.rb"
   edge: "test/edge/**/*_test.rb"
+  fast_tests: "test/fast/**/*_test.rb"
   feat_tests: "test/feat/**/*_test.rb"
 
 # Test targets
@@ -56,6 +57,7 @@ targets:
     - contract
     - core
     - lifecycle
+    - fast_tests
   feat:
     - feat_tests
     - edge
