@@ -64,8 +64,8 @@ module Ace
 
         # Hold the exclusive per-event lock while delivering; concurrent
         # callers block until the winner finishes, then observe its record.
-        def with_lock(deliveries_dir, event_id, create: true)
-          with_locks(deliveries_dir, [event_id], create: create) { yield }
+        def with_lock(deliveries_dir, event_id, create: true, deadline: nil)
+          with_locks(deliveries_dir, [event_id], create: create, deadline: deadline) { yield }
         end
 
         def with_locks(deliveries_dir, event_ids, create: false, deadline: nil)

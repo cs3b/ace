@@ -9,6 +9,7 @@ require "openssl"
 require "ace/hitl/contract"
 require_relative "../molecules/inbox_receipt_authentication"
 require_relative "inbox_guarded_wake"
+require_relative "inbox_native_observation"
 require_relative "../molecules/inbox_direct_effect_binding"
 
 module Ace
@@ -18,6 +19,7 @@ module Ace
       # DeliveryRecordStore; a saved submission intent is never replayed.
       class Inbox
         include InboxGuardedWake
+        include InboxNativeObservation
         class IdentityDriftError < ValidationError; end
 
         EVENT = /\A[A-Za-z0-9][A-Za-z0-9._-]{0,127}\z/
@@ -351,13 +353,13 @@ module Ace
 
         # Protected canonical reads only use an already registered event's lock.
         # Missing retention is unavailable evidence, never query-time repair.
-        def retained_status(event:)
+        def retained_status(event:, deadline: nil)
           validate_id!(event, "event")
-          with_event(event, create_lock: false) do |record|
+          with_event(event, create_lock: false, deadline: deadline) do |record|
             raise ValidationError, "unknown inbox event: #{event}" unless record&.inbox
             public_record(record)
           end
-        rescue SystemCallError
+        rescue SystemCallError, Molecules::DeliveryRecordStore::LockUnavailable
           raise ValidationError, "retained inbox lock is unavailable"
         end
 
@@ -796,8 +798,8 @@ module Ace
           Molecules::InboxReceiptAuthentication.proof_refusal(receipt)
         end
 
-        def with_event(event, create_lock: true)
-          Molecules::DeliveryRecordStore.with_lock(@deliveries_dir, event, create: create_lock) do
+        def with_event(event, create_lock: true, deadline: nil)
+          Molecules::DeliveryRecordStore.with_lock(@deliveries_dir, event, create: create_lock, deadline: deadline) do
             record = Molecules::DeliveryRecordStore.load(@deliveries_dir, event)
             if record
               Ace::Hitl::Providers::Ref.new(session: record.session, pane: record.pane, canonical: true)

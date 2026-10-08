@@ -4,7 +4,18 @@
 
 A protected supervisor can correlate one Codex inbox delivery to genuine native consumption and expose sanitized verifiable observation without changing the event.
 
-Use proposed app-server correlation fields in companion contract only after real installed runtime evidence resolves the consumption definition. Current codex queue argv submission cannot satisfy correlation; this child includes replacing that provider submission boundary.
+The source provider now uses the selected app-server correlation contract;
+the argv queue path is removed. Installed acceptance still belongs to
+lab-config:8wl.t.gad.2 and is not established by local socket fixtures.
+
+The fixed context API exposes `observe_context(operation_id, key_generation,
+event_id, attempt_id, claim_generation)` under `observe_to_sign` admission.
+It selects the stored submission itself and queries the same authenticated
+runtime. A completed exact client/digest/turn/item returns a sanitized candidate
+observation. Missing history returns uncertainty. Wrong peer, stale generation,
+changed record/key/admission or runtime association refuses. The original
+ingress deadline covers record locks and the native query. The API never signs,
+settles, resends or deletes; import/signer integration remains incomplete.
 
 ## Refusal scenario
 

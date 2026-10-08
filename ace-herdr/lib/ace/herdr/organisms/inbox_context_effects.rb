@@ -10,7 +10,23 @@ module Ace
       module InboxContextEffects
         SNAPSHOT_FIELDS = %w[event_id attempt_id payload_sha256 receipt_key_sha256 claim_generation state origin_target target binding].freeze
 
-        def snapshot_context(operation_id:, key_generation:, event_id:, peer:)
+        def observe_context(operation_id:, key_generation:, event_id:, attempt_id:, claim_generation:, peer:, deadline:)
+          authorize!(peer, purpose: "observe_to_sign")
+          before = snapshot_context(operation_id: operation_id, key_generation: key_generation, event_id: event_id, peer: peer, deadline: deadline)
+          transaction do |state|
+            unless operation!(state, operation_id, peer).fetch("purpose") == "observe_to_sign"
+              raise ValidationError, "native observation admission purpose differs"
+            end
+          end
+          selected = @keys.selected
+          result = source_inbox!(selected).observe_consumption(event: event_id, expected_attempt: attempt_id,
+            expected_claim_generation: claim_generation, deadline: deadline)
+          after = snapshot_context(operation_id: operation_id, key_generation: key_generation, event_id: event_id, peer: peer, deadline: deadline)
+          raise ValidationError, "native observation admission changed" unless before == after
+          immutable_effect(before.slice("context_id", "operation_id", "key_generation").merge(result))
+        end
+
+        def snapshot_context(operation_id:, key_generation:, event_id:, peer:, deadline: nil)
           authorize!(peer)
           generation!(key_generation)
           selected = @keys.selected
@@ -22,7 +38,7 @@ module Ace
             end
             raise ValidationError, "context snapshot key changed" unless selected.fetch(:snapshot) == state.fetch("key")
           end
-          record = source_inbox!(selected).retained_status(event: event_id)
+          record = source_inbox!(selected).retained_status(event: event_id, deadline: deadline)
           projection = record.slice(*SNAPSHOT_FIELDS)
           immutable_effect({"context_id" => @context_id, "operation_id" => operation_id,
             "key_generation" => key_generation, "record" => projection})

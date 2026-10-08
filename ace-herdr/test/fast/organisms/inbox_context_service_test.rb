@@ -386,6 +386,25 @@ class InboxContextServiceTest < Minitest::Test
           native: native, deliveries_dir: @events, receipt_public_key: InboxContextOwnerFixture::KEY.public_key)
         assert_equal "uncertain", restarted.deliver(event: "event1").fetch("state")
         assert_equal 2, @native_adds.size, "uncertain restart must not repeat native queue add"
+        @native_read_result = {"thread" => {"id" => correlation.fetch("thread_id"), "cliVersion" => "0.159.3", "turns" => [
+          {"id" => "00000000-0000-0000-0000-000000000003", "status" => "completed", "items" => [
+            {"id" => "item-1", "type" => "userMessage", "clientId" => correlation.fetch("client_user_message_id"),
+              "content" => [{"type" => "text", "text" => "same text"}]}]}]}}
+        deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + 2
+        reader = Thread.new do
+          dispatcher.call(deadline: deadline) do
+            restarted.observe_consumption(event: "event1", expected_attempt: "attempt1",
+              expected_claim_generation: 1, deadline: deadline)
+          end
+        end
+        assert reader.join(3)
+        observation = reader.value.fetch("observation")
+        assert_equal "consumed", observation.fetch("outcome")
+        assert_equal correlation.fetch("client_user_message_id"), observation.fetch("native_reference").fetch("client_user_message_id")
+        assert_nil observation.fetch("native_reference").fetch("queued_submission_id")
+        assert_equal "uncertain", restarted.retained_status(event: "event1").fetch("state"), "unsigned observation never settles"
+        assert_equal 2, @native_adds.size
+        assert_equal 1, @native_reads.size
       end
     end
   end

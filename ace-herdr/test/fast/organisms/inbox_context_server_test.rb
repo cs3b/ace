@@ -3,6 +3,7 @@
 require "test_helper"
 require "socket"
 require_relative "../../support/inbox_context_owner_fixture"
+require_relative "../../support/codex_inbox_observation_fixture"
 
 class InboxContextServerTest < Minitest::Test
   include InboxContextOwnerFixture
@@ -33,6 +34,55 @@ class InboxContextServerTest < Minitest::Test
 
   def request(operation, params, identity = @normal)
     exchange(JSON.generate({"version" => 1, "context_id" => "ctx", "operation" => operation, "params" => params}) + "\n", identity)
+  end
+
+  def prepare_native_observation
+    @observation_native = CodexInboxObservationFixture::Native.new
+    @source_inbox = Ace::Herdr::Organisms::Inbox.new(executor: CodexInboxObservationFixture::Pane.new,
+      native: @observation_native, deliveries_dir: @events, receipt_public_key: KEY.public_key)
+    @source_inbox.enqueue(event: "event1", attempt: "attempt1", ref: {"session" => "ws1", "pane" => "p1"}, payload: "private answer")
+    @source_inbox.deliver(event: "event1")
+    restart
+    operation = begin_operation("observe_to_sign", @signer)
+    {"operation_id" => operation.fetch("operation_id"), "key_generation" => 1,
+      "event_id" => "event1", "attempt_id" => "attempt1", "claim_generation" => 1}
+  end
+
+  def test_native_observation_traverses_authenticated_context_socket_without_settling_or_signing
+    params = prepare_native_observation
+    before = File.binread(File.join(@events, "event1.json"))
+    result = request("observe_context", params, @signer).fetch("result")
+    assert_equal "ctx", result.fetch("context_id")
+    assert_equal params.fetch("operation_id"), result.fetch("operation_id")
+    assert_equal "consumed", result.dig("observation", "outcome")
+    assert_equal before, File.binread(File.join(@events, "event1.json"))
+    assert_equal 1, @observation_native.sends.size
+    refute_includes JSON.generate(result), "private answer"
+    refute result.key?("signature")
+    assert_equal "ended", request("end_context_operation", params.slice("operation_id"), @signer).dig("result", "state")
+  end
+
+  def test_observation_refuses_wrong_peer_generation_selection_and_extra_fields_before_query
+    params = prepare_native_observation
+    assert_equal "context_blocked", request("observe_context", params, @normal).dig("error", "code")
+    [params.merge("key_generation" => 2), params.merge("claim_generation" => 2),
+      params.merge("attempt_id" => "other"), params.merge("event_id" => "other"),
+      params.merge("outcome" => "consumed")].each do |arguments|
+      assert_equal "context_blocked", request("observe_context", arguments, @signer).dig("error", "code")
+    end
+    assert_empty @observation_native.reads
+    assert_equal "delivered", @source_inbox.retained_status(event: "event1").fetch("state")
+  end
+
+  def test_retired_context_admission_discards_query_result_and_cannot_rotate_unresolved_record
+    params = prepare_native_observation
+    @observation_native.on_read = lambda do
+      @owner.end_context_operation(operation_id: params.fetch("operation_id"), peer: @signer)
+    end
+    assert_equal "context_blocked", request("observe_context", params, @signer).dig("error", "code")
+    assert_equal 1, @observation_native.reads.size
+    assert_raises(ERROR) { begin_rotation }
+    assert_equal "delivered", @source_inbox.retained_status(event: "event1").fetch("state")
   end
 
   def test_direct_enqueue_exact_raw_payload_framing_refuses_before_effect_entry

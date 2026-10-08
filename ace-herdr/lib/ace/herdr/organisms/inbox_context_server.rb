@@ -15,6 +15,7 @@ module Ace
           "status_context" => %w[attempt_id event_id original],
           "deliver_context" => %w[attempt_id event_id expected_claim_generation key_generation operation_id original],
           "snapshot_context" => %w[event_id key_generation operation_id],
+          "observe_context" => %w[attempt_id claim_generation event_id key_generation operation_id],
           "reconcile_context" => %w[effect_binding proof_sizes],
           "verify_context_reconciliation" => %w[event_id expected_registration key_generation operation_id proof_sizes],
           "confirm_context_completion" => %w[effect_binding reconciliation_digest],
@@ -53,6 +54,7 @@ module Ace
             raise ValidationError, "context request fields differ"
           end
           options = request.fetch("params").transform_keys(&:to_sym)
+          options[:deadline] = deadline if request.fetch("operation") == "observe_context"
           if %w[reconcile_context verify_context_reconciliation].include?(request.fetch("operation"))
             bytes, signature = Molecules::InboxContextWire.read_proof(socket, sizes: options.delete(:proof_sizes), deadline: deadline)
             options.merge!(signed_bytes: bytes, signature: signature)

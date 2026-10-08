@@ -69,7 +69,7 @@ ace-herdr inbox deliver --event inb-12345678
 ace-herdr inbox reconcile --event inb-12345678 --receipt proof.json
 ```
 
-The receipt is a file supplied from an operator or supervisor observation of the native outcome. Codex and Pi expose submission but no queryable consumption or eviction proof, so `reconcile` never polls the native queue or infers an outcome from age. Before enqueue, the supervisor sets `inbox_receipt_public_key` in `.ace/herdr/config.yml` to the absolute path of its trusted RSA public key. Each event pins that key's fingerprint; a later process cannot substitute a different key. Protect this configuration from delivery requesters. The receipt file must have a detached SHA-256 RSA signature at `FILE.sig`. The private key stays with the operator or supervisor. Its JSON must include the recorded event, attempt, claim generation, payload digest, and complete binding, plus an outcome (`consumed` or `superseded`), an identified observer, and a native observation reference:
+The receipt is supplied from an independently verified operator or supervisor observation of the native outcome. A selected Codex 0.159.3 runtime supports a read-only completed-turn query described below; that query neither signs a receipt nor settles an event. `reconcile` verifies the supplied proof and never infers an outcome from age or queue absence. Before enqueue, the supervisor sets `inbox_receipt_public_key` in `.ace/herdr/config.yml` to the absolute path of its trusted RSA public key. Each event pins that key's fingerprint; a later process cannot substitute a different key. Protect this configuration from delivery requesters. The receipt file must have a detached SHA-256 RSA signature at `FILE.sig`. The private key stays with the operator or supervisor. Its JSON must include the recorded event, attempt, claim generation, payload digest, and complete binding, plus an outcome (`consumed` or `superseded`), an identified observer, and a native observation reference:
 
 ```json
 {
@@ -94,6 +94,25 @@ ace-herdr inbox reconcile --event inb-12345678 --receipt proof.json
 ```
 
 The command verifies the detached signature against the configured public key before any transition. Missing, malformed, or self-signed receipts leave the event uncertain and return a machine-readable refusal. Keep the signed receipt and source observation for audit.
+
+### Protected Codex observation API
+
+The installed inbox context endpoint accepts `observe_context` from a mapped
+peer holding an `observe_to_sign` admission. Parameters are `operation_id`,
+`key_generation`, `event_id`, `attempt_id`, and `claim_generation`. The owner
+selects the retained submission and actual typed runtime; the request cannot
+supply a thread, endpoint, client ID, payload or outcome. Its original 30-second
+transport budget also bounds the event lock and native read.
+
+The response contains the event/attempt/generation/digest, binding, and a
+sanitized `observation`. `outcome: consumed` means that one exact client ID and
+payload digest were found in a uniquely identified completed Codex turn. It is
+a candidate native observation, not a signed receipt, trusted imported evidence,
+or business completion. Missing or ambiguous history is `uncertain`; changed
+record, admission, key or runtime provenance refuses the result. Lost add replies
+can be inspected using the retained client ID, with a missing queue ID kept null.
+No read signs, settles, resends or removes a message. Authority import and signer
+integration remain required before automatic reconciliation.
 
 ## tmux-intent ↔ herdr-command parity
 
