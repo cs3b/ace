@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Include uncategorized fast test directories in default fast/all selection without executing overlapping matches twice or widening explicit target overrides.
+- Exclude undispatched groups from sequential execution reports after target fail-fast.
+
 ## [0.28.0] - 2026-10-05
 
 ### Fixed

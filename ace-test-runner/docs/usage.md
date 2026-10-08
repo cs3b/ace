@@ -23,6 +23,8 @@ ace-test [PACKAGE] [TARGET] [options] [files...]
 
 File args take precedence over target execution.
 
+The default `fast` target includes every `test/fast/**/*_test.rb`, including new category directories and `test/fast/edge`, plus the existing legacy category paths. Default `all` adds feature and legacy edge tests; deterministic E2E remains separate. Explicit target overrides retain their selected scope. Overlapping patterns execute each file once in both sequential and single-batch modes. After target fail-fast, reports list only dispatched groups, not later groups that never ran.
+
 ### Global and execution options
 
 - `-f`, `--format FORMAT` (`progress`, `progress-file`, `json`)
