@@ -15,8 +15,10 @@ These support the bounded adapter contract, not completion of qkb.1.
 
 - [ ] `8x7124ek`: translate protected request/status refusals into one classified
   JSON error and nonzero CLI result. Verified against the executable, which
-  catches only `Ace::Support::Cli::Error`; adapter ArgumentError and Assign
-  exceptions currently escape. Test the registered command's refusal output.
+  catches only `Ace::Support::Cli::Error`; adapter ArgumentError, SecurityError
+  and RuntimeUnavailableError escape. Assign::Error already inherits CLI Error
+  (errors.rb), so its gap is the missing JSON envelope, not a backtrace. Test
+  the registered command's refusal output and the runtime deadline path.
 - [ ] `8x7124el`: classify missing installed mapping as EvidenceUnavailable.
   Verified that Deployment.mapping uses Hash#fetch and the new public selection
   hook does not translate its KeyError. Add a focused missing-mapping test.
