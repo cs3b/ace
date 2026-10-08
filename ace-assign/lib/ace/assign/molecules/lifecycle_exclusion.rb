@@ -27,6 +27,13 @@ module Ace
       # present. Legitimate fresh provisioning (a new worktree for a task)
       # clears the marker explicitly via `reset_removed`.
       class LifecycleExclusion
+        autoload :ControlExclusion, File.expand_path("protected_control_exclusion", __dir__)
+
+        def self.control_exclusion(authority:, project_id:, descriptor_sha256:, root_identity: nil, **boundaries)
+          ControlExclusion.new(authority: authority, project_id: project_id,
+            descriptor_sha256: descriptor_sha256, root_identity: root_identity, **boundaries)
+        end
+
         autoload :WorkspaceReader, File.expand_path("protected_workspace_exclusion", __dir__)
 
         autoload :WorkspaceWriter, File.expand_path("protected_workspace_exclusion", __dir__)

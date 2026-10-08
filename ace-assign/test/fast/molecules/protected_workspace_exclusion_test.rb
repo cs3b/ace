@@ -156,6 +156,8 @@ class ProtectedWorkspaceExclusionTest < AceAssignTestCase
     lock = File.join(selected, "#{Digest::SHA256.hexdigest(key)}.lock")
     marker = File.join(selected, "#{Digest::SHA256.hexdigest(key)}.state.json")
     inode = File.stat(lock).ino
+    control = File.join(File.dirname(File.dirname(File.dirname(selected))), "control")
+    assert_equal 0o700, File.stat(control).mode & 0o7777
     assert_equal 0o755, File.stat(selected).mode & 0o7777
     assert_equal 0o644, File.stat(lock).mode & 0o7777
     assert_equal owner.workspace_initial_marker(key: key), File.binread(marker)

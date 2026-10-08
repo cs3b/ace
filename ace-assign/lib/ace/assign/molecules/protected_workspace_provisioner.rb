@@ -36,23 +36,12 @@ module Ace
             relative.each_with_index do |part, index|
               path = File.join(parent, part)
               mode = index == relative.length - 1 ? 0o755 : 0o700
-              created = begin
-                @directories.mkdir(path, 0o700)
-                true
-              rescue Errno::EEXIST
-                false
-              end
-              handle = hold_directory!(path)
-              if created
-                handle.chown(@authority.fetch("uid"), @authority.fetch("gid"))
-                handle.chmod(mode)
-                handle.fsync
-                @handles.fetch(parent).fsync
-              end
-              selected_directory!(handle, mode: mode)
+              provision_directory!(path, parent, mode)
               verify_unchanged!
               parent = path
             end
+            project = File.dirname(File.dirname(File.dirname(@selection.fetch("host_path"))))
+            provision_directory!(File.join(project, "control"), project, 0o700)
             root_stat = @handles.fetch(@selection.fetch("host_path")).stat
             host_identity = {"device" => root_stat.dev, "inode" => root_stat.ino,
               "uid" => root_stat.uid, "gid" => root_stat.gid}.freeze
@@ -78,6 +67,23 @@ module Ace
           end
 
           private
+
+          def provision_directory!(path, parent, mode)
+            created = begin
+              @directories.mkdir(path, 0o700)
+              true
+            rescue Errno::EEXIST
+              false
+            end
+            handle = hold_directory!(path)
+            if created
+              handle.chown(@authority.fetch("uid"), @authority.fetch("gid"))
+              handle.chmod(mode)
+              handle.fsync
+              @handles.fetch(parent).fsync
+            end
+            selected_directory!(handle, mode: mode)
+          end
 
           def hold_directory!(path)
             handle = @files.open(path, File::RDONLY | File::NOFOLLOW | File::NONBLOCK)

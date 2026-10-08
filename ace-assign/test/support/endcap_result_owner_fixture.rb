@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 require_relative "execution_scope_native_owner_fixture"
 require_relative "prepared_registration_fixture"
+require_relative "protected_control_fixture"
 require "ace/assign/authority/endcap"
 require "ace/assign/authority/launch_lifecycle"
 require "ace/assign/authority/router"
@@ -83,6 +84,9 @@ module Ace
           end
           @journal = Molecules::EvidenceJournal.new(repo_root: repo, checkout_root: File.join(root, "checkout"), mode: :protected,
             evidence_reader: ->(*) { raise "unused service reader" }, service_authorizer: ->(*) { raise "unused service policy" })
+          @project.merge!("journal_repository" => @journal.repo_root, "evidence_git_ref" => @journal.ref,
+            "evidence_checkout_root" => @journal.checkout_root)
+          FileUtils.mkdir_p(File.join(root, "lifecycle-exclusion", "project", "control"), mode: 0700)
           configure_result_owner_fixture if respond_to?(:configure_result_owner_fixture)
           restart
           unless prepare_attempt
@@ -118,6 +122,7 @@ module Ace
 
       def restart
         @launch = Authority::LaunchLifecycle.new(deployment: @deployment, deployment_history: @history, kernel: @kernel, journals: {"project" => @journal},
+          control_exclusion_factory: ProtectedControlFixture.factory,
           scope_observer_factory: ->(_id) { ExecutionScopeNativeOwnerFixture.new(@map, @journal, @kernel, owner: @launch,
             workspace_observer: @prepared_workspace_observer, resource_identities: @prepared_workspace_resources || [],
             parent_declarations: @prepared_workspace_declarations) })

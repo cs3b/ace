@@ -33,8 +33,8 @@ module Ace
         OPERATIONS = (MUTATIONS.keys + %w[assignment_inventory stop_attempt prompt_attempt prompt_status launch_review_intent launch_input_inhibit_selection launch_input_inhibit_completion launch_prompt_intent launch_prompt_completion launch_preflight registration_status attempt_status inspect_launch observe_execution_scope close_execution_scope]).freeze
         TERMINAL = %w[succeeded failed stopped].freeze
 
-        attr_reader :mutex, :journals, :exclusions
-        def initialize(deployment:, kernel: Ace::Runtime::Molecules::ProtectedLinux.new, journals: nil, mutex: Mutex.new, exclusions: {}, scope_observer_factory: nil, deployment_history: nil)
+        attr_reader :mutex, :journals
+        def initialize(deployment:, kernel: Ace::Runtime::Molecules::ProtectedLinux.new, journals: nil, mutex: Mutex.new, scope_observer_factory: nil, deployment_history: nil, control_exclusion_factory: nil)
           @deployment, @kernel = deployment, kernel
           if deployment_history && (!deployment_history.is_a?(DeploymentHistory) ||
               !deployment_history.selects?(deployment))
@@ -42,7 +42,9 @@ module Ace
           end
           @deployment_history = deployment_history
           @journals = journals || {}
-          @exclusions = exclusions
+          @control_exclusion_factory = control_exclusion_factory || ->(**options) {
+            Molecules::LifecycleExclusion.control_exclusion(**options)
+          }
           @mutex = mutex
           @observations = {}
           @streams = {}
@@ -143,7 +145,7 @@ module Ace
             admitted
           end
           native_start = nil
-          outcome = with_exclusion(params, map, journal) do
+          outcome = with_exclusion(params, map, journal) do |control_context|
           if operation == "reserve_attempt"
             existing = @mutex.synchronize { journal.mutation_result(request.fetch("mutation_id")) }
             unless existing
@@ -176,8 +178,10 @@ module Ace
                 mutation_id: request.fetch("mutation_id"), operation: operation, parameters_digest: digest,
                 expected_generation: operation == "reserve_attempt" ? 0 : (params.fetch("expected_generation") || 0), with_replay: true) do |events, commit, generation|
                 fresh = true
+                recheck_control_registration!(control_context, params, map, journal, commit: commit)
                 plan = case operation
-                when "register_assignment" then register(params, map, journal, commit, generation, prepared: prepared)
+                when "register_assignment" then register(params, map, journal, commit, generation, prepared: prepared,
+                  lifecycle_control: control_context.fetch(:selection))
                 when "reserve_attempt" then reserve(params, map, journal, commit, generation, peer, attempt_id)
                 when "record_launch" then record(params, map, events, peer)
                 when "bind_process" then bind(params, map, events, peer)
@@ -320,27 +324,26 @@ module Ace
           id = params.fetch("assignment_id")
           token!(id)
           journal = journal_for(map)
-          initial = definition(journal, id)
-          raise AttemptErrors::NotFound, "canonical assignment registration is missing" unless initial
-          task = initial.fetch("task_id")
-          token!(task)
-          exclusion = exclusion_for(map, journal)
+          context = control_registration_context!(params, map, journal)
+          exclusion = context.fetch(:exclusion)
           enter = proc do
             @mutex.synchronize do
-              registration = definition(journal, id)
-              unless registration && registration.fetch("task_id") == task
-                raise AttemptErrors::Conflict, "assignment registration changed while entering lifecycle exclusion"
-              end
-              yield journal, JSON.parse(JSON.generate(registration))
+              recheck_control_registration!(context, params, map, journal)
+              yield journal, JSON.parse(JSON.generate(context.fetch(:registration)))
             end
           end
-          with_slot(map) do
+          with_slot(context.fetch(:map), deployment: context.fetch(:descriptor)) do
             if exclusive
-              exclusion.with_exclusive(exclusion.task_key(task)) do
-                exclusion.with_exclusive(exclusion.assignment_key(id)) { enter.call }
+              enter_exclusive = lambda do |offset|
+                if offset == context.fetch(:keys).size
+                  enter.call
+                else
+                  exclusion.with_exclusive(context.fetch(:keys).fetch(offset)) { enter_exclusive.call(offset + 1) }
+                end
               end
+              enter_exclusive.call(0)
             else
-              exclusion.with_shared_multi([exclusion.task_key(task), exclusion.assignment_key(id)]) { enter.call }
+              exclusion.with_shared_multi(context.fetch(:keys)) { enter.call }
             end
           end
         end
@@ -404,18 +407,15 @@ module Ace
           end
         end
 
-        def exclusion_for(map, journal)
-          exclusion = @exclusions[map.fetch("project_id")] ||= begin
-            common, error, result = Open3.capture3("git", "-C", journal.repo_root,
-              "rev-parse", "--path-format=absolute", "--git-common-dir", stdin_data: "")
-            raise AttemptErrors::EvidenceUnavailable, "canonical lifecycle root is unavailable" unless result.success? && !common.strip.empty?
-            Molecules::LifecycleExclusion.new(root: File.join(common.strip, "ace", "lifecycle-exclusion"))
-          end
-          exclusion
+        def exclusion_for(map, _journal, deployment:, selection:)
+          @control_exclusion_factory.call(authority: deployment.authority(map.fetch("authority_id")),
+            project_id: map.fetch("project_id"), descriptor_sha256: deployment.artifact_reference.fetch("sha256"),
+            root_identity: selection&.fetch("root_identity"))
         end
 
         def with_exclusion(params, map, journal)
-          enter = proc { with_containment_exclusion(params, map, journal) { yield } }
+          context = control_registration_context!(params, map, journal)
+          enter = proc { with_selected_control_exclusion(context, params, map, journal) { yield context } }
           if @result_owner && @result_owner.respond_to?(:with_inbox_settlement_contexts)
             @result_owner.with_inbox_settlement_contexts(params: params, map: map, journal: journal, &enter)
           else
@@ -427,16 +427,19 @@ module Ace
         # It retains the same canonical task/slot/assignment exclusions while
         # permitting the proof prerequisites needed to recover unknown effects.
         def with_containment_exclusion(params, map, journal)
-          exclusion = exclusion_for(map, journal)
-          registration = definition(journal, params.fetch("assignment_id"))
-          task = if params.key?("definition_bytes")
-            JSON.parse(params.fetch("definition_bytes")).fetch("task_id")
-          else
-            registration&.fetch("task_id")
+          context = control_registration_context!(params, map, journal)
+          with_selected_control_exclusion(context, params, map, journal) { yield context }
+        end
+
+        def with_selected_control_exclusion(context, params, map, journal)
+          exclusion = context.fetch(:exclusion)
+          exclusion.provision_keys!(keys: context.fetch(:keys)) if params.key?("definition_bytes")
+          with_slot(context.fetch(:map), deployment: context.fetch(:descriptor)) do
+            exclusion.with_shared_multi(context.fetch(:keys)) do
+              @mutex.synchronize { recheck_control_registration!(context, params, map, journal) }
+              yield context
+            end
           end
-          token!(task)
-          keys = [exclusion.task_key(task), exclusion.assignment_key(params.fetch("assignment_id"))]
-          with_slot(map) { exclusion.with_shared_multi(keys) { yield } }
         end
 
         # Slot ownership spans assignment chains and survives authority restart
@@ -521,22 +524,14 @@ module Ace
             task_context_entry: immutable_maintenance_projection(entry)}.freeze
         end
 
-        def register(params, map, journal, commit, generation, prepared:)
+        def register(params, map, journal, commit, generation, prepared:, lifecycle_control:)
+          assignment = validated_registration_definition!(params, map)
           bytes = params.fetch("definition_bytes")
-          unless bytes.is_a?(String) && bytes.bytesize <= 32_768 && params["definition_digest"].is_a?(String) &&
-              Digest::SHA256.hexdigest(bytes) == params["definition_digest"]
-            raise ArgumentError, "invalid assignment definition digest or size"
-          end
           value = JSON.parse(bytes)
-          allowed = %w[session_id name description created_at updated_at source_config parent task_id project_id prepared_work]
-          unless value.is_a?(Hash) && (value.keys - allowed).empty? &&
-              %w[session_id name created_at source_config task_id project_id].all? { |key| value[key].is_a?(String) && !value[key].empty? } &&
-              value["session_id"] == params["assignment_id"] && value["project_id"] == map["project_id"]
-            raise ArgumentError, "invalid managed assignment definition"
-          end
-          assignment = Models::Assignment.from_h(value)
-          raise ArgumentError, "definition is not managed" unless assignment.managed?
           previous = definition(journal, params.fetch("assignment_id"), commit: commit)
+          if previous && previous.fetch("lifecycle_control") != lifecycle_control
+            raise AttemptErrors::Conflict, "same assignment cannot replace original lifecycle control"
+          end
           if previous && previous["definition_digest"] == params["definition_digest"] &&
               previous["task_context_entry"] != prepared.fetch(:task_context_entry)
             raise AttemptErrors::Conflict, "same prepared definition cannot replace original task context entry"
@@ -553,6 +548,7 @@ module Ace
           bundle_sha = Digest::SHA256.hexdigest(bundle)
           bundle_path = "execution/prepared/#{params.fetch('assignment_id')}-#{bundle_sha}.bundle"
           {events: [], blobs: {path => bytes, bundle_path => bundle}, data: {"prepared_work" => value.fetch("prepared_work"),
+            "lifecycle_control" => lifecycle_control,
             "task_context_entry" => prepared.fetch(:task_context_entry),
             "prepared_bundle_ref" => bundle_path, "prepared_bundle_bytes" => bundle.bytesize, "prepared_bundle_sha256" => bundle_sha,
             "selection_sha256" => prepared.fetch(:work).selection_sha256, "assignment_id" => params.fetch("assignment_id"),
@@ -971,3 +967,4 @@ require_relative "launch_prepared_work"
 
 require_relative "launch_review"
 require_relative "launch_attempt_consumers"
+require_relative "launch_control_exclusions"

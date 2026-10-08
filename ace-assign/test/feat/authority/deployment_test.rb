@@ -7,6 +7,7 @@ require "ace/assign/authority/server"
 require "timeout"
 require_relative "../../support/execution_scope_observation_fixtures"
 require_relative "../../support/prepared_registration_fixture"
+require_relative "../../support/protected_control_fixture"
 
 module Ace
   module Assign
@@ -117,7 +118,7 @@ module Ace
       end
 
       def test_original_release_maintenance_candidate_publication_and_fresh_normal_reservation
-        Dir.mktmpdir do |root|
+        Dir.mktmpdir("original-control-", Etc.getpwuid(Process.uid).dir) do |root|
           root = File.realpath(root)
           value = data
           value.fetch("launch_mappings").fetch("mapping").merge!("workspace_repository_id" => "repo",
@@ -138,6 +139,7 @@ module Ace
             FileUtils.mkdir_p(project[field], mode: 0o700)
           end
           FileUtils.mkdir_p(value["authorities"]["authority"]["state_root"], mode: 0o700)
+          FileUtils.mkdir_p(File.join(value["authorities"]["authority"]["state_root"], "lifecycle-exclusion", "project", "control"), mode: 0o700)
           repo = project.fetch("journal_repository")
           _out, error, status = Open3.capture3("git", "init", "-b", "main", repo)
           assert status.success?, error
@@ -202,7 +204,7 @@ module Ace
             untouched_observer = scope_for.call(original.mapping("untouched"), "untouched-boot.json")
             observers = {"mapping" => observer, "untouched" => untouched_observer}
             owner = Authority::LaunchLifecycle.new(deployment: original, deployment_history: history, kernel: kernel,
-              journals: {"project" => journal}, scope_observer_factory: ->(id) { observers.fetch(id) })
+              journals: {"project" => journal}, control_exclusion_factory: ProtectedControlFixture.factory, scope_observer_factory: ->(id) { observers.fetch(id) })
             owner.define_singleton_method(:verify_maintenance_root!) { |*| true }
             dispatch = lambda do |authority, operation, params, mutation|
               request = {"version" => 1, "operation" => operation, "mutation_id" => mutation,
@@ -380,7 +382,7 @@ module Ace
             assert_equal candidate_ref.fetch("sha256"), published_candidate.artifact_reference.fetch("sha256")
             fresh_observer = scope_for.call(published_candidate.mapping("mapping"), "candidate-boot.json", published_candidate)
             fresh = Authority::LaunchLifecycle.new(deployment: published_candidate, deployment_history: fresh_history, kernel: kernel,
-              journals: {"project" => journal}, scope_observer_factory: ->(_) { fresh_observer })
+              journals: {"project" => journal}, control_exclusion_factory: ProtectedControlFixture.factory, scope_observer_factory: ->(_) { fresh_observer })
             # Publication selects the immutable candidate; old canonical proofs
             # remain byte-identical and a genuinely eligible slot can be reused.
             before = journal.read_events("assignment")
