@@ -170,7 +170,8 @@ module Ace
             unless @installer.respond_to?(:preview_cleanup!)
               raise SecurityError, "same Installer preview producer unavailable"
             end
-            result = @installer.preview_cleanup!(context: context, deadline: deadline)
+            receiver_peer = Atoms::ProtectedWorkspacePruneInput.freeze_value(JSON.parse(JSON.generate(peer)))
+            result = @installer.preview_cleanup!(context: context, receiver_peer: receiver_peer, deadline: deadline)
             unless Ace::Assign::Atoms::EvidenceDigest.digest(@observer.observe_self!(deadline: deadline)) ==
                 Ace::Assign::Atoms::EvidenceDigest.digest(original)
               raise SecurityError, "cleanup original owner changed during preview"

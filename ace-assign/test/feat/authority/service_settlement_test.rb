@@ -201,8 +201,16 @@ module Ace
           physical = Object.new
           physical.define_singleton_method(:execute_cleanup!) { |**_| raise "preview must not execute cleanup" }
           physical.define_singleton_method(:inspect_cleanup!) { |**_| raise "preview must not inspect an effect" }
-          physical.define_singleton_method(:preview_cleanup!) do |context:, deadline:|
+          physical.define_singleton_method(:preview_cleanup!) do |context:, receiver_peer:, deadline:|
             raise "deadline reset" unless deadline - Process.clock_gettime(Process::CLOCK_MONOTONIC) <= 5
+            raise "receiver peer changed" unless receiver_peer == executor
+            raise "receiver peer aliases kernel object" if receiver_peer.equal?(executor)
+            verify_frozen = lambda do |value|
+              raise "mutable receiver peer" unless value.frozen?
+              value.each { |key, item| verify_frozen.call(key); verify_frozen.call(item) } if value.is_a?(Hash)
+              value.each { |item| verify_frozen.call(item) } if value.is_a?(Array)
+            end
+            verify_frozen.call(receiver_peer)
             physical_calls += 1
             preservation = {"head" => "a" * 40, "branch" => nil, "destinations" => [], "manifest_sha256" => "b" * 64}
             target_result = target.merge("artifact_digest" => Ace::Assign::Atoms::EvidenceDigest.digest("target" => target, "preservation" => preservation))
@@ -226,6 +234,10 @@ module Ace
             right.close unless right.closed?
             assert thread.join(3), "controlled transport did not finish"
             thread.value
+          end
+          assert_raises(SecurityError) do
+            root_admission.preview!(frame: frame.merge("receiver_peer" => @executor), peer: @executor,
+              operation_owner_binding: original_root, journal: @journal)
           end
           mismatched = JSON.parse(JSON.generate(frame))
           mismatched["intent"]["maintenance"]["attempt_id"] = "foreign-attempt"
