@@ -19,4 +19,6 @@ Historical checkpoint wording that sends all SC4 publication/OTP evidence to vs3
 
 ## Final evidence still required
 
+Publisher primitive audit on main 7d12934ae: actual script fixture `ace-handbook/test/feat/rubygems_publish_script_test.rb` passed 12 tests / 100 assertions, report handbook/27de2a33-5e90-4aff-a5ec-43334aa1c9c0. It executes the existing script against fake RubyGems and checks preparation without push, invalid OTP refusal before push, credential refusal and secret isolation. This is supporting publisher evidence only: neither this test nor current merge-only ProtectedDeliveryCoordinator demonstrates a routed scoped publication blocker. SC4 workflow composition therefore remains open; do not relabel the script tests as full delivery acceptance.
+
 Run the specified affected-package tests and default suite against one integrated revision; record exact source receipts and independent review. No full task checkbox is newly completed by this audit.
