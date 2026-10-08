@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require_relative "../errors"
 require "open3"
 require "json"
 require "timeout"

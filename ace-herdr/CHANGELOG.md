@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Load the shared error hierarchy explicitly from Inbox and executor primitives, allowing a fresh protected authority source load without the broad Herdr configuration entrypoint.
+
 - Bound subprocess cleanup to one additional second after execution timeout, retain the unreaped original child through owned signalling, and transfer only unconfirmed cleanup to an eventual reaper. Generic successful calls preserve their no-group-signal behavior; protected handlers may select nonreaping termination observation before owned group cleanup. Native effectiveness remains unverified here.
 
 ### Added

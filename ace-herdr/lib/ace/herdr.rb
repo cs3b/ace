@@ -3,34 +3,6 @@
 require_relative "herdr/version"
 require "ace/support/config"
 
-module Ace
-  module Herdr
-    class Error < StandardError; end
-
-    # Raised when the caller's herdr workspace/session/pane cannot be resolved
-    class TargetResolutionError < Error; end
-
-    # Raised when arguments or refs fail validation
-    class ValidationError < Error; end
-
-    # Raised when a bounded wait exceeds its timeout
-    class WaitTimeoutError < Error; end
-
-    # Raised when a preset tab was created natively but a later
-    # materialization step (splits, commands, agents) failed; carries the
-    # created tab id so the owner can roll back exactly that tab.
-    class TabMaterializationError < Error
-      attr_reader :tab_id
-
-      def initialize(tab_id:, message:)
-        @tab_id = tab_id
-        super(message)
-      end
-    end
-  end
-end
-
-# Executor error hierarchy (subclasses Ace::Herdr::Error)
 require_relative "herdr/errors"
 
 # Load all ace-herdr components
