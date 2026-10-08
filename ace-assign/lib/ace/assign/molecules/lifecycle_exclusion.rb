@@ -27,6 +27,31 @@ module Ace
       # present. Legitimate fresh provisioning (a new worktree for a task)
       # clears the marker explicitly via `reset_removed`.
       class LifecycleExclusion
+        autoload :WorkspaceReader, File.expand_path("protected_workspace_exclusion", __dir__)
+
+        autoload :WorkspaceWriter, File.expand_path("protected_workspace_exclusion", __dir__)
+
+        autoload :WorkspaceFenceReader, File.expand_path("protected_workspace_exclusion", __dir__)
+
+        def self.workspace_fence_reader(projection:, protection: nil, files: File)
+          WorkspaceFenceReader.new(projection: projection, protection: protection, files: files)
+        end
+
+        def self.workspace_writer(projection:, protection: nil, files: File)
+          WorkspaceWriter.new(projection: projection, protection: protection, files: files)
+        end
+
+        autoload :WorkspaceProvisioner, File.expand_path("protected_workspace_provisioner", __dir__)
+
+        def self.provision_workspace!(mapping_id:, project_id:, authority:, cwd_resource:, **boundaries)
+          WorkspaceProvisioner.new(mapping_id: mapping_id, project_id: project_id,
+            authority: authority, cwd_resource: cwd_resource, **boundaries).provision!
+        end
+
+        def self.workspace_reader(projection:, protection: nil, files: File)
+          WorkspaceReader.new(projection: projection, protection: protection, files: files)
+        end
+
         def self.workspace_selection(mapping_id:, project_id:, authority:, cwd_resource:)
           fields = %w[device filesystem_type gid host_path inode mount_id uid view_path]
           unless authority.is_a?(Hash) && cwd_resource.is_a?(Hash) && cwd_resource.keys.sort == fields &&
@@ -61,6 +86,26 @@ module Ace
             raise AttemptErrors::EvidenceUnavailable, "Original lifecycle workspace key is malformed"
           end
           Atoms::EvidenceDigest.canonical_json({"key" => key, "removed" => false, "removed_at" => nil}).freeze
+        end
+
+        def self.workspace_marker!(bytes:, key:)
+          unless bytes.is_a?(String) && bytes.bytesize.between?(1, 8192)
+            raise AttemptErrors::EvidenceUnavailable, "Lifecycle marker bytes differ"
+          end
+          bytes = bytes.dup.force_encoding(Encoding::UTF_8)
+          unless bytes.valid_encoding?
+            raise AttemptErrors::EvidenceUnavailable, "Lifecycle marker is not bounded UTF8"
+          end
+          state = JSON.parse(bytes, create_additions: false, max_nesting: 4, allow_duplicate_key: false)
+          unless state.is_a?(Hash) && state.keys.sort == %w[key removed removed_at] && state.fetch("key") == key &&
+              (state.values_at("removed", "removed_at") == [false, nil] || state["removed"] == true &&
+                state["removed_at"].is_a?(String) && Time.iso8601(state["removed_at"]).utc.iso8601 == state["removed_at"])
+            raise AttemptErrors::EvidenceUnavailable, "Lifecycle marker schema differs"
+          end
+          state.each_value { |value| value.freeze }
+          state.freeze
+        rescue JSON::ParserError, ArgumentError, KeyError
+          raise AttemptErrors::EvidenceUnavailable, "Lifecycle marker schema differs"
         end
 
         # @param repo_root [String, nil] Repository used to resolve the
