@@ -23,7 +23,7 @@ class LiveClientTest < AceHitlTestCase
     # installed endpoint authentication or actual native consumption.
     def prepare_submission(agent:, thread:, event_id:, attempt_id:, claim_generation:, digest:)
       raise Ace::Herdr::ValidationError, "fixture requires original Codex thread" unless agent == "codex" && thread == THREAD
-      submission = {"schema" => "ace.herdr.codex-submission/v1", "provider_version" => "rust-v0.159.3",
+      submission = {"schema" => "ace.herdr.codex-submission/v1", "provider_version" => "0.159.3",
         "endpoint_reference_sha256" => "a" * 64, "thread_id" => thread,
         "server_process_binding" => {"pid" => 42, "parent_pid" => 1, "uid" => 1001, "gid" => 1001,
           "groups" => [1001], "host" => "fixture", "started_at" => "linux:0123abcd-0000-4000-8000-000000000001:42"},
@@ -196,6 +196,7 @@ class LiveClientTest < AceHitlTestCase
       submission.values_at("event_id", "attempt_id", "claim_generation", "payload_sha256")
     durable = Ace::Herdr::Molecules::DeliveryRecordStore.load(File.join(@dir, "deliveries"), first.fetch("event_id"))
     accepted = durable.inbox.fetch("receipt").fetch("codex_submission")
+    assert_equal "0.159.3", accepted.fetch("provider_version")
     assert_equal submission.fetch("client_user_message_id"), accepted.fetch("client_user_message_id")
     assert_equal THREAD, accepted.fetch("thread_id")
     assert_match(Ace::Herdr::Molecules::CodexAppServerTransport::UUID, accepted.fetch("queued_submission_id"))

@@ -36,7 +36,7 @@ checks and remaining implementation are recorded in
 - [x] Integrate physical cleanup, coldboot/network and static Codex composition source.
 - [x] Adopt public protected campaign handoff in canonical workflow instructions and integrate maintained delivery acceptance assets.
 - [ ] Finish actual original Codex startup/producer/client privilege and literal-input handoff; current source seams refuse without that attachment.
-- [ ] Repair the joined HITL LiveClient fixture against the current correlated Codex submission contract; full run `d74ff6d5` has five errors, not a pass.
+- [x] Repair the joined HITL LiveClient fixture against the current correlated Codex submission contract; the affected real Store/Inbox/signature flow passes 11/94 (`46f3cd30`). The preceding full run `d74ff6d5` retains its five errors, not a pass.
 - [ ] Perform one independent final source review, fix findings and verify the affected simple unit/integration flows. Reconcile every remaining child criterion before closing tasks.
 - [ ] Deliver main and build fresh artifacts from that integrated revision; Captain publishes with OTP, then propagation proof and the single installed task/observation in gad.2.
 
