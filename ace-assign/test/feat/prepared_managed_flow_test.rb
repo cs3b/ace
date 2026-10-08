@@ -1,5 +1,6 @@
 # frozen_string_literal: true
-require_relative "prepared_work_fetch_test"
+require_relative "../test_helper"
+require_relative "../support/prepared_work_fetch_fixture"
 require "ace/assign/organisms/prepared_work_builder"
 require "ace/assign/authority/prepared_worker"
 require "ace/assign/authority/launch_driver"
@@ -7,7 +8,8 @@ require_relative "../support/managed_prepared_registration_fixture"
 
 module Ace
   module Assign
-    class PreparedManagedFlowTest < PreparedWorkFetchTest
+    class PreparedManagedFlowTest < AceAssignTestCase
+      include PreparedWorkFetchFixture
       include ManagedPreparedRegistrationFixture
 
       def original_cli(args, kernel:)
@@ -196,7 +198,7 @@ module Ace
           launcher.define_singleton_method(:detect_provider_session) { |*| raise "native session discovery forbidden" }
           worker = Authority::PreparedWorker.new(kernel: kernel,
             env: {"ACE_ASSIGN_LAUNCH_MAPPING" => "mapping", "ACE_ASSIGN_ASSIGNMENT_ID" => "assignment", "ACE_ASSIGN_ATTEMPT_ID" => @attempt},
-            client_factory: ->(_) { @client }, launcher: launcher)
+            client_factory: ->(_) { @client }, launcher: launcher, workspace_reader_factory: method(:controlled_workspace_reader))
           before = @journal.ref_value
           assert_equal "Controlled provider received original work.", worker.run.fetch(:text)
           assert_equal 1, captured.size

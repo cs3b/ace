@@ -1,10 +1,12 @@
 # frozen_string_literal: true
-require_relative "prepared_work_fetch_test"
+require_relative "../test_helper"
+require_relative "../support/prepared_work_fetch_fixture"
 require "ace/assign/authority/prepared_worker"
 
 module Ace
   module Assign
-    class PreparedWorkerTest < PreparedWorkFetchTest
+    class PreparedWorkerTest < AceAssignTestCase
+      include PreparedWorkFetchFixture
       # Reuse the maintained actual Server/Client/Endcap/Git transfer fixture.
       # Every kernel identity/ancestry, installed deployment/directory boundary
       # and provider query is injected. No default installed-context loader,
