@@ -153,6 +153,7 @@ module Ace
             return
           end
           @admission.receiver!(peer)
+          receiver_peer = Atoms::ProtectedWorkspacePruneInput.freeze_value(JSON.parse(JSON.generate(peer)))
           deadline = frame["kind"] == "preview" ? admission_deadline : accepted_at + 300
           context = nil
           @snapshots.call do |snapshot|
@@ -170,7 +171,6 @@ module Ace
             unless @installer.respond_to?(:preview_cleanup!)
               raise SecurityError, "same Installer preview producer unavailable"
             end
-            receiver_peer = Atoms::ProtectedWorkspacePruneInput.freeze_value(JSON.parse(JSON.generate(peer)))
             result = @installer.preview_cleanup!(context: context, receiver_peer: receiver_peer, deadline: deadline)
             unless Ace::Assign::Atoms::EvidenceDigest.digest(@observer.observe_self!(deadline: deadline)) ==
                 Ace::Assign::Atoms::EvidenceDigest.digest(original)
@@ -182,7 +182,7 @@ module Ace
             return
           end
           if frame["kind"] == "inspect"
-            inspection(socket, frame, context, original, deadline)
+            inspection(socket, frame, context, original, deadline, receiver_peer: receiver_peer)
             return
           end
           key = Ace::Assign::Atoms::EvidenceDigest.digest(frame)
@@ -207,7 +207,7 @@ module Ace
             unless @observer.observe_self!(deadline: [deadline, Wire.deadline(5)].min) == original
               raise SecurityError, "cleanup original owner changed before invocation"
             end
-            result = @installer.execute_cleanup!(context: context, deadline: deadline)
+            result = @installer.execute_cleanup!(context: context, receiver_peer: receiver_peer, deadline: deadline)
             result = result!(result, frame)
             @lock.synchronize { retained[:result] = result; retained[:state] = :completed; @changed.broadcast }
           end
@@ -225,7 +225,7 @@ module Ace
 
         private
 
-        def inspection(socket, frame, context, original, deadline)
+        def inspection(socket, frame, context, original, deadline, receiver_peer:)
           unless context.fetch("record").fetch("operation_owner_binding") == original
             raise Ace::Runtime::RuntimeUnavailableError, "original cleanup lifetime exclusion unavailable"
           end
@@ -254,7 +254,7 @@ module Ace
           unless @observer.observe_self!(deadline: [deadline, Wire.deadline(5)].min) == original
             raise SecurityError, "cleanup original owner changed before inspection"
           end
-          result = result!(@installer.inspect_cleanup!(context: context, deadline: deadline), frame)
+          result = result!(@installer.inspect_cleanup!(context: context, receiver_peer: receiver_peer, deadline: deadline), frame)
           unless @observer.observe_self!(deadline: [deadline, Wire.deadline(5)].min) == original
             raise SecurityError, "cleanup original owner changed before inspection result"
           end

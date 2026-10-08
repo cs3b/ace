@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Pass the authenticated receiver process to cleanup execution and inspection so the installer can revalidate the actual caller, including a restarted inspection receiver.
+
 ### Fixed
 
 - Bind protected cleanup identity to the explicitly selected dedicated systemd slice and reject a different observed service slice.

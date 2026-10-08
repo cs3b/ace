@@ -116,7 +116,11 @@ class ProtectedCleanupDispatchTest < Minitest::Test
       installer = Object.new
       owner = client = active_client = original_request = nil
       test = self
-      installer.define_singleton_method(:execute_cleanup!) do |context:, deadline:|
+      installer.define_singleton_method(:execute_cleanup!) do |context:, receiver_peer:, deadline:|
+        test.assert_equal executor, receiver_peer
+        test.refute_same executor, receiver_peer
+        test.assert receiver_peer.frozen?
+        test.assert receiver_peer.fetch("groups").frozen?
         test.assert_equal JSON.parse(bytes), context.fetch("input")
         test.assert_equal "dispatch_started", context.fetch("record").fetch("dispatch_phase")
         test.assert context.frozen?
@@ -254,7 +258,7 @@ class ProtectedCleanupDispatchTest < Minitest::Test
       absent = false
       installer = Object.new
       installer.define_singleton_method(:execute_cleanup!) { |**_| raise "recovery cannot execute physical cleanup" }
-      installer.define_singleton_method(:inspect_cleanup!) do |context:, deadline:|
+      installer.define_singleton_method(:inspect_cleanup!) do |context:, receiver_peer:, deadline:|
         inspections << context
         # Controlled physical facts exercise import plumbing only. The actual
         # same Installer baseline/exclusion producer remains a delivery gap.
@@ -447,10 +451,19 @@ class ProtectedCleanupDispatchTest < Minitest::Test
       observer = Object.new
       observer.define_singleton_method(:observe_self!) { |deadline:| original }
       inspected = []
+      # A restarted receiver may inspect the original effect. The Installer must
+      # receive its actual admitted birth, not the original record's executor.
+      executor = executor.merge("pid" => 99, "started_at" => "linux:#{executor.fetch('started_at').split(':')[1]}:9900")
+      test = self
       output = "Controlled inspection transport, not physical absence."
       installer = Object.new
       installer.define_singleton_method(:execute_cleanup!) { |**_| raise "inspection cannot execute cleanup" }
-      installer.define_singleton_method(:inspect_cleanup!) do |context:, deadline:|
+      installer.define_singleton_method(:inspect_cleanup!) do |context:, receiver_peer:, deadline:|
+        test.assert_equal executor, receiver_peer
+        test.refute_equal context.fetch("record").fetch("executor_process_binding"), receiver_peer
+        test.refute_same executor, receiver_peer
+        test.assert receiver_peer.frozen?
+        test.assert receiver_peer.fetch("groups").frozen?
         inspected << context
         {bytes: output, receipt_ref: {"path" => "/fixed/inspection.json", "bytes" => output.bytesize, "sha256" => Digest::SHA256.hexdigest(output)}}
       end
