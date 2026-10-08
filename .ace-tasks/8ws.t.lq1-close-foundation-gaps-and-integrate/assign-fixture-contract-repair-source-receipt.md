@@ -14,9 +14,9 @@ Executed using checkout bin/ace-test, inspected declaration selectors and inject
 
 | Command suffix after bin/ace-test ace-assign | Report | Result |
 |---|---|---|
-| test/feat/atomic_service_mutation_test.rb:192 --timeout60 (flag/value separated in actual invocation) |678d3086-d9a0-473f-96ed-2f75a69c48ad|1/12 PASS2.49309s|
-| test/feat/authority/deployment_test.rb:534 test/feat/authority/deployment_test.rb:573 --timeout60|a4b6d9e5-83a5-4710-b991-cad881904485|2/38 PASS.00446s|
-| test/feat/authority/launch_scope_parent_cap_test.rb:23 --timeout60|e2696bc8-f542-4efd-b448-bad355ed652f|1/21 PASS12.01741s|
+| test/feat/atomic_service_mutation_test.rb:192 --timeout 60 |678d3086-d9a0-473f-96ed-2f75a69c48ad|1/12 PASS2.49309s|
+| test/feat/authority/deployment_test.rb:534 test/feat/authority/deployment_test.rb:573 --timeout 60|a4b6d9e5-83a5-4710-b991-cad881904485|2/38 PASS.00446s|
+| test/feat/authority/launch_scope_parent_cap_test.rb:23 --timeout 60|e2696bc8-f542-4efd-b448-bad355ed652f|1/21 PASS12.01741s|
 
 Raw run options identify exactly the four intended methods; total4tests/71assertions, no failures/errors/skips. Reports reside in this repair worktree .ace-local/test/reports/assign. Initial accidental selector190 resolved preceding test_pending_import_record_event_and_reply_share_one_commit_with_exact_bytes; report4bd0b649-3aab-4f1a-bb46-c4972f7a5b32 PASS1/16 is excluded from repair acceptance. It had already terminated when interruption was attempted; no live duplicate was started. This is retained selection-error history, not failure of repaired behavior.
 
