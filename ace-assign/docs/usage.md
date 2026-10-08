@@ -91,6 +91,8 @@ Execution evidence lives in assignment attempts, not in reports. An attempt bind
 
 ### Ordinary local attempt lifecycle
 
+Lifecycle exclusion uses the selected repository's actual Git common directory, shared by linked worktrees. `CACHE_BASE` changes assignment cache storage but cannot split creator and prune locks into a separate namespace. A missing Git repository or malformed retained removal fence refuses admission; it does not create a fallback lock root.
+
 ```bash
 ace-assign attempt start --assignment ASSIGNMENT --step STEP --project PROJECT
 ace-assign attempt status --assignment ASSIGNMENT --format json

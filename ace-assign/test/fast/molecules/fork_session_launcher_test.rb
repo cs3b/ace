@@ -3,6 +3,17 @@
 require_relative "../../test_helper"
 
 class ForkSessionLauncherTest < AceAssignTestCase
+  def setup
+    super
+    @lifecycle_root = Dir.mktmpdir("controlled-fork-exclusion")
+    @exclusion = Ace::Assign::Molecules::LifecycleExclusion.new(root: @lifecycle_root)
+  end
+
+  def teardown
+    FileUtils.rm_rf(@lifecycle_root)
+    super
+  end
+
   class FakeRuntimeRunner
     attr_reader :last_ensure, :last_prepare, :last_invocation, :last_metadata
 
@@ -123,7 +134,7 @@ class ForkSessionLauncherTest < AceAssignTestCase
       query_interface: query_interface,
       runner: runner || FakeRuntimeRunner.new,
       interactive_builder: interactive_builder,
-      lifecycle_exclusion: lifecycle_exclusion
+      lifecycle_exclusion: lifecycle_exclusion || @exclusion
     )
   end
 

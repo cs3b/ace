@@ -4,6 +4,17 @@ require "tmpdir"
 require_relative "../../test_helper"
 
 class WorkOnOrchestratorTest < AceOverseerTestCase
+  def setup
+    super
+    @lifecycle_root = Dir.mktmpdir("controlled-work-on-exclusion")
+    @exclusion = Ace::Assign::Molecules::LifecycleExclusion.new(root: @lifecycle_root)
+  end
+
+  def teardown
+    FileUtils.rm_rf(@lifecycle_root)
+    super
+  end
+
   class FakeTaskManager
     attr_reader :calls
 
@@ -93,6 +104,7 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
   def test_resolves_preset_from_task_frontmatter
     Dir.mktmpdir("task.230") do |worktree|
       orchestrator = Ace::Overseer::Organisms::WorkOnOrchestrator.new(
+        lifecycle_exclusion: @exclusion,
         task_loader: FakeTaskManager.new("230" => {metadata: {"assign" => {"preset" => "fix-bug"}}}),
         worktree_provisioner: FakeWorktreeProvisioner.new(
           {worktree_path: worktree, branch: "230-feature", created: true}
@@ -116,6 +128,7 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
     Dir.mktmpdir("task.232") do |worktree|
       messages = []
       orchestrator = Ace::Overseer::Organisms::WorkOnOrchestrator.new(
+        lifecycle_exclusion: @exclusion,
         task_loader: FakeTaskManager.new("232" => {metadata: {}}),
         worktree_provisioner: FakeWorktreeProvisioner.new(
           {worktree_path: worktree, branch: "232-feature", created: true}
@@ -143,6 +156,7 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
     Dir.mktmpdir("task.233") do |worktree|
       messages = []
       orchestrator = Ace::Overseer::Organisms::WorkOnOrchestrator.new(
+        lifecycle_exclusion: @exclusion,
         task_loader: FakeTaskManager.new("233" => {metadata: {}}),
         worktree_provisioner: FakeWorktreeProvisioner.new(
           {worktree_path: worktree, branch: "233-feature", created: false}
@@ -169,6 +183,7 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
         "focus_step" => {"number" => "020-implement"}
       }
       orchestrator = Ace::Overseer::Organisms::WorkOnOrchestrator.new(
+        lifecycle_exclusion: @exclusion,
         task_loader: FakeTaskManager.new("234" => {metadata: {}}),
         worktree_provisioner: FakeWorktreeProvisioner.new(
           {worktree_path: worktree, branch: "234-feature", created: true}
@@ -201,6 +216,7 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
       }
       launcher = FakeAssignmentLauncher.new
       orchestrator = Ace::Overseer::Organisms::WorkOnOrchestrator.new(
+        lifecycle_exclusion: @exclusion,
         task_loader: FakeTaskManager.new("272" => task),
         worktree_provisioner: FakeWorktreeProvisioner.new(
           {worktree_path: worktree, branch: "272-orchestrator", created: true}
@@ -230,6 +246,7 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
       FakeAssignmentLauncher.new
     }) do
       orchestrator = Ace::Overseer::Organisms::WorkOnOrchestrator.new(
+        lifecycle_exclusion: @exclusion,
         task_loader: task_manager,
         worktree_provisioner: FakeWorktreeProvisioner.new(
           {worktree_path: "/tmp/worktree", branch: "280-feature", created: false}
@@ -252,6 +269,7 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
       task = {metadata: {}, is_orchestrator: false}
       launcher = FakeAssignmentLauncher.new
       orchestrator = Ace::Overseer::Organisms::WorkOnOrchestrator.new(
+        lifecycle_exclusion: @exclusion,
         task_loader: FakeTaskManager.new("150" => task),
         worktree_provisioner: FakeWorktreeProvisioner.new(
           {worktree_path: worktree, branch: "150-feature", created: true}
@@ -274,6 +292,7 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
   def test_falls_back_to_cli_preset
     Dir.mktmpdir("task.231") do |worktree|
       orchestrator = Ace::Overseer::Organisms::WorkOnOrchestrator.new(
+        lifecycle_exclusion: @exclusion,
         task_loader: FakeTaskManager.new("231" => {metadata: {}}),
         worktree_provisioner: FakeWorktreeProvisioner.new(
           {worktree_path: worktree, branch: "231-feature", created: false}
@@ -297,6 +316,7 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
     Dir.mktmpdir("task.235") do |worktree|
       opener = FakeWindowOpener.new
       orchestrator = Ace::Overseer::Organisms::WorkOnOrchestrator.new(
+        lifecycle_exclusion: @exclusion,
         task_loader: FakeTaskManager.new("235" => {metadata: {}}),
         worktree_provisioner: FakeWorktreeProvisioner.new(
           {worktree_path: worktree, branch: "235-feature", created: true}
@@ -326,6 +346,7 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
     Dir.mktmpdir("task.236") do |worktree|
       opener = FakeWindowOpener.new
       orchestrator = Ace::Overseer::Organisms::WorkOnOrchestrator.new(
+        lifecycle_exclusion: @exclusion,
         task_loader: FakeTaskManager.new("236" => {metadata: {}}),
         worktree_provisioner: FakeWorktreeProvisioner.new(
           {worktree_path: worktree, branch: "236-feature", created: true}
@@ -352,6 +373,7 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
     Dir.mktmpdir("task.288") do |worktree|
       launcher = FakeAssignmentLauncher.new
       orchestrator = Ace::Overseer::Organisms::WorkOnOrchestrator.new(
+        lifecycle_exclusion: @exclusion,
         task_loader: FakeTaskManager.new(
           "288" => {
             metadata: {},
@@ -390,6 +412,7 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
       launcher = FakeAssignmentLauncher.new(supports_taskrefs: false)
 
       orchestrator = Ace::Overseer::Organisms::WorkOnOrchestrator.new(
+        lifecycle_exclusion: @exclusion,
         task_loader: FakeTaskManager.new(
           "288" => {metadata: {}, is_orchestrator: false},
           "287" => {metadata: {}, is_orchestrator: false}
@@ -423,6 +446,7 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
       launcher = FakeAssignmentLauncher.new
 
       orchestrator = Ace::Overseer::Organisms::WorkOnOrchestrator.new(
+        lifecycle_exclusion: @exclusion,
         task_loader: FakeTaskManager.new(
           "288" => {metadata: {}, is_orchestrator: false},
           "999" => nil
@@ -456,6 +480,7 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
       launcher = FakeAssignmentLauncher.new
 
       orchestrator = Ace::Overseer::Organisms::WorkOnOrchestrator.new(
+        lifecycle_exclusion: @exclusion,
         task_loader: FakeTaskManager.new("400" => {metadata: {}, status: "draft"}),
         worktree_provisioner: worktree_provisioner,
         window_opener: opener,
@@ -485,6 +510,7 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
       launcher = FakeAssignmentLauncher.new
 
       orchestrator = Ace::Overseer::Organisms::WorkOnOrchestrator.new(
+        lifecycle_exclusion: @exclusion,
         task_loader: FakeTaskManager.new({}),
         worktree_provisioner: worktree_provisioner,
         window_opener: opener,
@@ -513,6 +539,7 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
       launcher = FakeAssignmentLauncher.new
 
       orchestrator = Ace::Overseer::Organisms::WorkOnOrchestrator.new(
+        lifecycle_exclusion: @exclusion,
         task_loader: FakeTaskManager.new("401" => {metadata: {}, status: "done"}),
         worktree_provisioner: worktree_provisioner,
         window_opener: opener,
@@ -542,6 +569,7 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
       launcher = FakeAssignmentLauncher.new
 
       orchestrator = Ace::Overseer::Organisms::WorkOnOrchestrator.new(
+        lifecycle_exclusion: @exclusion,
         task_loader: FakeTaskManager.new(
           "402" => {metadata: {}, status: "done"},
           "403" => {metadata: {}, status: "skipped"}
@@ -572,6 +600,7 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
       launcher = FakeAssignmentLauncher.new
 
       orchestrator = Ace::Overseer::Organisms::WorkOnOrchestrator.new(
+        lifecycle_exclusion: @exclusion,
         task_loader: FakeTaskManager.new(
           "404" => {metadata: {}, status: "done"},
           "405" => {metadata: {}, status: nil}
@@ -612,6 +641,7 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
       }
 
       orchestrator = Ace::Overseer::Organisms::WorkOnOrchestrator.new(
+        lifecycle_exclusion: @exclusion,
         task_loader: FakeTaskManager.new("500" => task),
         worktree_provisioner: FakeWorktreeProvisioner.new(
           {worktree_path: worktree, branch: "500-orchestrator", created: true}
