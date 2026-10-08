@@ -34,13 +34,19 @@ module Ace
           def with(path, uid:, gid:)
             handles = []
             parent = File.dirname(path)
-            Ace::Runtime::Molecules::ProtectedSocket.root_path!(parent, directory: true)
+            unless uid.is_a?(Integer) && uid.positive? && gid.is_a?(Integer) && gid.positive? && parent != "/"
+              raise ValidationError, "Codex endpoint native principal differs"
+            end
+            # Only this final directory is writable by the exact selected native
+            # process. Its root-owned parent prevents directory replacement;
+            # every ancestor keeps the ordinary root protection policy.
+            Ace::Runtime::Molecules::ProtectedSocket.root_path!(File.dirname(parent), directory: true)
             current = parent
             loop do
               directory = File.open(current, File::RDONLY | File::NOFOLLOW | File::NONBLOCK)
               handles << [current, directory, identity(directory.stat)]
               stat = directory.stat
-              unless stat.directory? && stat.uid.zero? && (stat.mode & 0o022).zero? &&
+              unless stat.directory? && stat.uid == (current == parent ? uid : 0) && (stat.mode & 0o022).zero? &&
                   (current != parent || stat.gid == gid && (stat.mode & 0o7777) == 0o750) &&
                   Ace::Runtime::Molecules::ProtectedArtifactSet::Protection::FILESYSTEMS.include?(
                     @mounts.mount_identity(directory).fetch("filesystem_type"))
