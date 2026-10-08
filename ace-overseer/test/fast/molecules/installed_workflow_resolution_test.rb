@@ -253,3 +253,5 @@ class InstalledConsumerEnvironment
     staged_path
   end
 end
+
+Minitest.after_run { InstalledConsumerEnvironment.cleanup_all }
