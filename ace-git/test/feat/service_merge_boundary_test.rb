@@ -7,6 +7,8 @@ require "ace/git/github"
 require "stringio"
 require "ace/assign/cli/commands/delivery"
 require "ace/lab/cli/commands/service"
+require "ace/hitl"
+require_relative "../../../ace-hitl/test/support/lifecycle_fixtures"
 
 # Actual wire/claim/candidate/import owners; only kernel identity, process
 # execution and remote provider transport are controlled excluded boundaries.
@@ -14,8 +16,48 @@ class ServiceMergeBoundaryTest < AceGitTestCase
   include ProtectedServiceBoundaryFixture
   URL = "https://forge.example.com/owner/repo"
 
+  class ProposalBinding < LifecycleFixtures::TestBinding
+    attr_accessor :proposal_journal
+  end
+
+  class ProposalPolicy < LifecycleFixtures::AllowTransportPolicy
+    def proposal?(_peer, project:)
+      project == "project"
+    end
+  end
+
+  def test_public_merge_uses_canonical_silence_proposal_without_another_proposal
+    @public_lab, @authorization_mode = true, :proposal
+    exercise_completion
+  end
+
+  def test_public_merge_direct_decision_creates_no_redundant_proposal
+    @public_lab, @authorization_mode = true, :direct
+    exercise_completion
+  end
+
+  def test_public_merge_scoped_standing_decision_creates_no_redundant_proposal
+    @public_lab, @authorization_mode = true, :standing
+    exercise_completion
+  end
+
+  def test_public_merge_missing_authorization_refuses_then_creates_exact_pending_proposal
+    @public_lab, @authorization_mode = true, :missing
+    exercise_completion
+  end
+
+  def test_public_merge_out_of_scope_authorization_refuses_then_creates_exact_pending_proposal
+    @public_lab, @authorization_mode = true, :out_of_scope
+    exercise_completion
+  end
+
   def configure_result_owner_fixture
     super
+    @policy = Ace::Lab::Molecules::ProtectedServicePolicy.new(document_loader: -> { @document },
+      proposal_resolver: ->(project, reference, binding) {
+        raise "wrong original proposal project" unless project == "project"
+        @journal.proposal_authorize!(reference, binding)
+      }) if @authorization_mode
     @project["launcher_uids"] = [@launcher.fetch("uid")]
     @project.merge!("journal_repository" => @journal.repo_root, "evidence_git_ref" => @journal.ref,
       "evidence_checkout_root" => @journal.checkout_root)
@@ -121,6 +163,49 @@ class ServiceMergeBoundaryTest < AceGitTestCase
     exercise_completion
   end
 
+  def configure_merge_authorization(submission, input)
+    return unless @authorization_mode
+
+    case @authorization_mode
+    when :proposal
+      record = create_merge_proposal(input)
+      record = @proposal_store.proposal_acknowledge(record.fetch("request_id"), submitted_at: @proposal_now.iso8601)
+      @proposal_now += 16 * 3600
+      checkpoint = {"schema" => "ace.hitl.hermes.ingress-checkpoint/v1", "request" => record.fetch("request_id"),
+        "revision" => record.fetch("revision_id"), "healthy" => true, "drained" => true,
+        "checkpoint" => {"through" => record.fetch("deadline"), "sequence" => 0}}
+      record = @proposal_store.proposal_reconcile(record.fetch("request_id"), checkpoint: checkpoint)
+      assert_equal "approved-by-silence", record.fetch("state")
+      submission["authorization"] = record.fetch("revision_id")
+      @document.fetch("authorizations").clear
+    when :standing
+      @document["authorizations"]["standing-decision"] = @document.fetch("authorizations").delete("decision")
+      submission["authorization"] = "standing-decision"
+    when :missing
+      @document.fetch("authorizations").clear
+    when :out_of_scope
+      @document.fetch("authorizations").fetch("decision")["target"] = input.fetch("target").merge("resource" => "#{URL}/pulls/26")
+    end
+  end
+
+  def create_merge_proposal(input)
+    unless @proposal_store
+      identity = LifecycleFixtures::TestIdentity.new(username: "worker")
+      worker = @worker
+      identity.define_singleton_method(:uid) { worker.fetch("uid") }
+      binding = ProposalBinding.new
+      binding.proposal_journal = @journal
+      @proposal_now = Time.now.utc - 16 * 3600
+      @proposal_store = Ace::Hitl::Lifecycle::Store.new(root: File.join(@root, "proposal-store"), binding: binding,
+        identity: identity, policy: ProposalPolicy.new, ownership: LifecycleFixtures::RecordingOwnership.new,
+        proposal_clock: -> { @proposal_now })
+    end
+    @proposal_store.proposal_create(id: "proposal-#{'a' * 24}", assignment: "assignment", attempt: @attempt, project: "project",
+      document: {"operation" => "merge", "target" => input.fetch("target"), "candidate_head" => @head,
+        "input_digest" => Ace::Lab::Atoms::ServiceInput.digest(input), "context" => "Exact protected merge",
+        "options" => ["yes", "no"], "recommendation" => "yes", "prerequisites" => ["accepted exact-head review"]})
+  end
+
   def matrix_phase(stage)
     return unless name.match?(/test_public_(github_url|forgejo_default|forgejo_named)/)
 
@@ -159,6 +244,8 @@ class ServiceMergeBoundaryTest < AceGitTestCase
       @document["authorizations"]["decision"].merge!("operation" => "merge", "input_digest" => digest, "target" => target)
       Ace::Git.instance_variable_set(:@config, Ace::Git.config.merge("servers" => [
         {"name" => "selected", "provider" => provider, "url" => URL, "default" => true}]))
+      configure_merge_authorization(submission, input)
+      submission["expected_generation"] = generation if @authorization_mode
       calls, merged = [], false
       runner = lambda do |args:, **|
         calls << args
@@ -291,6 +378,22 @@ class ServiceMergeBoundaryTest < AceGitTestCase
               submission: submission, peer: @worker, input_bytes: bytes, mutation_id: "merge-original")
           end
         end
+      end
+      if %i[missing out_of_scope].include?(@authorization_mode)
+        assert_equal "refused", result.fetch("state")
+        assert_equal 0, effects
+        assert_empty calls
+        assert_empty @journal.proposals
+        proposal = create_merge_proposal(input)
+        assert_equal "awaiting-delivery", proposal.fetch("state")
+        assert_equal 1, @journal.proposals.length
+        binding = submission.slice("assignment_id", "attempt_id", "operation", "input_digest", "target").merge(
+          "project_id" => "project", "candidate_head" => @head, "caller_uid" => @worker.fetch("uid"))
+        assert_equal binding, proposal.slice(*Ace::Assign::Molecules::ProposalJournal::PROPOSAL_BINDING)
+        assert_raises(Ace::Assign::AttemptErrors::ReceiptRejected) do
+          @journal.proposal_authorize!(proposal.fetch("revision_id"), binding)
+        end
+        next
       end
       if @public_refusals
         assert_equal "refused", result.fetch("state")
@@ -425,6 +528,14 @@ class ServiceMergeBoundaryTest < AceGitTestCase
       assert_empty err
       assert_equal "succeeded", JSON.parse(out).fetch("state")
       assert_equal before_consume, @journal.ref_value, "public receipt consumption is read-only"
+      if @authorization_mode
+        proposals = @journal.proposals
+        assert_equal @authorization_mode == :proposal ? 1 : 0, proposals.length
+        if @authorization_mode == :proposal
+          assert_equal submission.fetch("authorization"), proposals.first.fetch("revision_id")
+          assert_equal "approved-by-silence", proposals.first.fetch("state")
+        end
+      end
     end
   end
 
@@ -588,7 +699,7 @@ class ServiceMergeBoundaryTest < AceGitTestCase
       owner = Thread.new { listener.serve }
       Timeout.timeout(5) { ready.pop }
       arguments = ["--project", "project", "--assignment", "assignment", "--attempt", @attempt,
-        "--operation", "merge", "--authorization", "decision", "--request-id", "service-request", "--input", input_path,
+        "--operation", "merge", "--authorization", submission.fetch("authorization"), "--request-id", "service-request", "--input", input_path,
         "--mapping", "mapping", "--scope", "010", "--service", "executor", "--candidate-head", @head,
         "--candidate-generation", submission.fetch("candidate_generation").to_s,
         "--expected-generation", public_generation.fetch("generation").to_s]
@@ -601,6 +712,23 @@ class ServiceMergeBoundaryTest < AceGitTestCase
         assert owner.join(10)
         owner.value
         next({"state" => "refused"})
+      end
+      if %i[missing out_of_scope].include?(@authorization_mode)
+        before_refusal = @journal.ref_value
+        output, error_output = capture_io do
+          assert_raises(Ace::Support::Cli::Error) { registered_lab_call("service request", command, arguments) }
+        end
+        assert_empty error_output
+        response = JSON.parse(output)
+        assert_equal "error", response.fetch("status")
+        @authorization_blocker = response.dig("error", "code")
+        assert_includes %w[service_claim_refused service_claim_unconfirmed], @authorization_blocker
+        assert_equal before_refusal, @journal.ref_value, "canonical owner proves no claim was published"
+        assert_empty reached, "fixed provider handler was not admitted"
+        listener.stop
+        assert owner.join(10)
+        owner.value
+        next({"state" => "refused", "blocker" => @authorization_blocker})
       end
       record.call("cli.request.before")
       out, err = capture_io do
