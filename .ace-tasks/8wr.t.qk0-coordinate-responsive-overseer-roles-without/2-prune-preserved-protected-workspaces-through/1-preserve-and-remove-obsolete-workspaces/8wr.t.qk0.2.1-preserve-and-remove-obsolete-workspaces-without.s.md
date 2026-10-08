@@ -10,7 +10,7 @@ bundle:
   presets: [project]
   files: [.ace-tasks/8wr.t.qk0-coordinate-responsive-overseer-roles-without/2-prune-preserved-protected-workspaces-through/protected-prune-source-candidate.md, ace-overseer/lib/ace/overseer/cli/commands/prune.rb, ace-overseer/lib/ace/overseer/organisms/prune_orchestrator.rb, ace-overseer/lib/ace/overseer/molecules/git_preservation_checker.rb, ace-assign/lib/ace/assign/molecules/lifecycle_exclusion.rb, ace-assign/lib/ace/assign/authority/launch_scope_release.rb, ace-assign/lib/ace/assign/authority/deployment_history.rb]
   commands: []
-needs_review: false
+needs_review: true
 parent: 8wr.t.qk0.2
 ---
 
