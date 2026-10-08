@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+require_relative "../../support/protected_control_fixture"
 require_relative "../../test_helper"
 require "ace/assign/authority/launch_lifecycle"
 require "ace/assign/authority/transfer_codec"
@@ -43,11 +44,13 @@ module Ace
           peer = {"pid" => 123, "uid" => 1001, "gid" => 1001, "groups" => [1001]}
           kernel = Object.new; kernel.define_singleton_method(:live!) { |_identity| true }
           mapping = {"task_context_entry" => {"manifest" => {"path" => "/fixture/assign-entry.json", "bytes" => 100, "sha256" => "1" * 64}, "wrapper" => {"path" => "/fixture/assign-entry.py", "bytes" => 200, "sha256" => "2" * 64}}, "project_id" => "ace", "authority_id" => "authority", "launcher_uid" => 1001, "launcher_gid" => 1001, "launcher_groups" => [1001], "execution_scope" => {"slot_id" => "slot"}}
-          deployment = Object.new; deployment.define_singleton_method(:mapping) { |_id| mapping }
+          deployment = Object.new; deployment.define_singleton_method(:artifact_reference) { {"sha256" => "d" * 64} }; deployment.define_singleton_method(:mapping) { |_id| mapping }
           deployment.define_singleton_method(:project) { |_id| {"candidate_root" => quarantine, "assignment_root" => File.join(root, "definitions")} }
-          deployment.define_singleton_method(:authority) { |_id| {"state_root" => File.join(root, "authority-state")} }
+          deployment.define_singleton_method(:authority) { |_id| {"uid" => 13000, "gid" => 13000, "state_root" => File.join(root, "authority-state")} }
           journal = Molecules::EvidenceJournal.new(repo_root: journal_root, checkout_root: File.join(root, "checkout"))
-          authority = Authority::LaunchLifecycle.new(deployment: deployment, kernel: kernel, journals: {"ace" => journal})
+          deployment.define_singleton_method(:project) { |_id| {"candidate_root" => quarantine, "assignment_root" => File.join(root, "definitions"), "journal_repository" => journal.repo_root, "evidence_git_ref" => journal.ref, "evidence_checkout_root" => journal.checkout_root} }
+          ProtectedControlFixture.prepare!(authority: deployment.authority("authority"), project_id: "ace")
+          authority = Authority::LaunchLifecycle.new(deployment: deployment, control_exclusion_factory: ProtectedControlFixture.factory, kernel: kernel, journals: {"ace" => journal})
           Tempfile.create("prepared-input", root, binmode: true) do |file|
             file.write(bundle); file.flush; file.rewind
             input = Authority::TransferCodec::Input.new(file, descriptor)
@@ -122,6 +125,7 @@ module Ace
           service = {"uid" => Process.uid, "gid" => Process.gid, "groups" => Process.groups.sort,
             "socket_path" => File.join(root, "authority.sock"), "state_root" => root}
           deployment.define_singleton_method(:authority) { |_| service }
+          ProtectedControlFixture.prepare!(authority: service, project_id: "ace")
           deployment.define_singleton_method(:verify_composition!) { |*_, **_| true }
           deployment.define_singleton_method(:verify_receiver_paths!) { |_| true }
           mapping = deployment.mapping("mapping")

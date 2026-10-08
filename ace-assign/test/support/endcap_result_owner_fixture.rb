@@ -88,6 +88,8 @@ module Ace
             "evidence_checkout_root" => @journal.checkout_root)
           FileUtils.mkdir_p(File.join(root, "lifecycle-exclusion", "project", "control"), mode: 0700)
           configure_result_owner_fixture if respond_to?(:configure_result_owner_fixture)
+          ProtectedControlFixture.prepare!(authority: @deployment.authority(@map.fetch("authority_id")),
+            project_id: @map.fetch("project_id"))
           restart
           unless prepare_attempt
             yield

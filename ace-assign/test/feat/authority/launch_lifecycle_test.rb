@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+require_relative "../../support/protected_control_fixture"
 require_relative "../../test_helper"
 require "ace/assign/authority/launch_lifecycle"
 require "ace/assign/authority/launch_driver"
@@ -61,14 +62,15 @@ module Ace
           deployment.define_singleton_method(:artifact_reference) { {"sha256" => "d" * 64} }
           mapping = @map
           deployment.define_singleton_method(:mapping) { |_id| mapping }
-          deployment.define_singleton_method(:authority) { |_id| {"state_root" => File.join(cache, "authority-state")} }
+          deployment.define_singleton_method(:authority) { |_id| {"uid" => 13000, "gid" => 13000, "state_root" => File.join(cache, "authority-state")} }
           deployment.define_singleton_method(:project) { |_id| {"assignment_root" => File.join(cache, "assignments"), "candidate_root" => cache} }
           @journal = Molecules::EvidenceJournal.new(repo_root: repo, checkout_root: File.join(cache, "checkout"))
           project = {"assignment_root" => File.join(cache, "assignments"), "candidate_root" => cache,
             "journal_repository" => @journal.repo_root, "evidence_git_ref" => @journal.ref, "evidence_checkout_root" => @journal.checkout_root,
             "peer_credentials" => {"13001" => {"gid" => 13001, "groups" => [13001], "scratch_root" => cache}}}
           deployment.define_singleton_method(:project) { |_id| project }
-          @authority = Authority::LaunchLifecycle.new(deployment: deployment, kernel: @kernel, journals: {"project" => @journal}, scope_observer_factory: ->(_id) { ExecutionScopeNativeOwnerFixture.new(@map, @journal, @kernel, owner: @authority) })
+          ProtectedControlFixture.prepare!(authority: deployment.authority("authority"), project_id: "project")
+          @authority = Authority::LaunchLifecycle.new(deployment: deployment, control_exclusion_factory: ProtectedControlFixture.factory, kernel: @kernel, journals: {"project" => @journal}, scope_observer_factory: ->(_id) { ExecutionScopeNativeOwnerFixture.new(@map, @journal, @kernel, owner: @authority) })
           bytes = JSON.generate("session_id" => "assignment", "name" => "test", "created_at" => "2026-10-05T00:00:00Z",
             "source_config" => "job.yaml", "task_id" => "09j", "project_id" => "project")
           registered = call("register_assignment", {"definition_bytes" => bytes,
@@ -319,7 +321,7 @@ module Ace
       def test_shared_assignment_context_uses_canonical_registration_and_one_mutex
         with_authority do
           [false, true].each do |exclusive|
-            @authority.with_assignment(params: {"assignment_id" => "assignment"}, map: @map, exclusive: exclusive) do |journal, registration|
+            @authority.with_assignment(params: {"mapping_id" => "mapping", "assignment_id" => "assignment"}, map: @map, exclusive: exclusive) do |journal, registration|
               assert_same @journal, journal
               assert @authority.mutex.owned?
               assert_equal "09j", registration.fetch("task_id")
@@ -327,7 +329,7 @@ module Ace
               registration["task_id"] = "forged"
             end
           end
-          @authority.with_assignment(params: {"assignment_id" => "assignment"}, map: @map) do |_journal, registration|
+          @authority.with_assignment(params: {"mapping_id" => "mapping", "assignment_id" => "assignment"}, map: @map) do |_journal, registration|
             assert_equal "09j", registration.fetch("task_id")
           end
         end
@@ -575,13 +577,7 @@ module Ace
           assert_equal "failed", @journal.derived_attempts("assignment").first.state
         end
       end
-    end
-  end
-end
 
-module Ace
-  module Assign
-    class ProtectedLaunchLifecycleTest
       class ClientAdapter
         def initialize(authority, peer)
           @authority, @peer = authority, peer
@@ -1158,13 +1154,7 @@ module Ace
           assert_equal @journal.ref_value, result.fetch("journal_commit")
         end
       end
-    end
-  end
-end
 
-module Ace
-  module Assign
-    class ProtectedLaunchLifecycleTest
       def abort_child(state, id: "abort")
         @kernel.dead << 91
         evidence = "exact pre-acquired child pidfd exited before any release"

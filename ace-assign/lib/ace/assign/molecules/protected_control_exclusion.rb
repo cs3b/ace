@@ -111,6 +111,7 @@ module Ace
           private
 
           def with_locks(keys, mode, deadline: nil)
+            callback_error = nil
             ordered = keys!(keys)
             deadline!(deadline) if deadline
             with_root do |handles, identities|
@@ -150,7 +151,12 @@ module Ace
                 checks = registry[object_id] ||= []
                 checks << check
                 begin
-                  result = yield
+                  begin
+                    result = yield
+                  rescue Exception => error
+                    callback_error = error
+                    raise
+                  end
                   verify_unchanged!
                 ensure
                   checks.pop
@@ -163,10 +169,12 @@ module Ace
               end
             end
           rescue SystemCallError, IOError, Ace::Runtime::RuntimeUnavailableError
+            raise if callback_error
             unavailable!("Lifecycle control admission is unavailable")
           end
 
           def with_root
+            callback_error = nil
             handles, identities = {}, {}
             begin
               parts = @root.split("/").reject(&:empty?)
@@ -184,13 +192,19 @@ module Ace
                   (!@identity || [root.dev, root.ino, root.uid, root.gid] == @identity.values_at("device", "inode", "uid", "gid"))
                 unavailable!("Lifecycle control original root differs")
               end
-              result = yield handles, identities
+              begin
+                result = yield handles, identities
+              rescue Exception => error
+                callback_error = error
+                raise
+              end
               unchanged!(handles, identities)
               result
             ensure
               close_all!(handles.values)
             end
           rescue SystemCallError, IOError, Ace::Runtime::RuntimeUnavailableError
+            raise if callback_error
             unavailable!("Lifecycle control root is unavailable")
           end
 

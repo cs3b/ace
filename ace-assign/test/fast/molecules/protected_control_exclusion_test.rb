@@ -126,4 +126,18 @@ class ProtectedControlExclusionTest < AceAssignTestCase
     assert_raises(Errors::EvidenceUnavailable) { @owner.provision_keys!(keys: ["assignment:../../foreign"]) }
     assert_equal before, Dir.children(@root).sort
   end
+  def test_owner_callback_failure_retains_original_exception_and_unwinds_all_guards
+    @owner.provision_keys!(keys: @keys)
+    [IOError.new("callback"), Errno::EPERM.new("callback"), Ace::Runtime::RuntimeUnavailableError.new("callback")].each do |failure|
+      actual = assert_raises(failure.class) do
+        @owner.with_shared_multi(@keys) { raise failure }
+      end
+      assert_same failure, actual
+      @keys.each do |key|
+        File.open(path(key, "lock"), File::RDONLY) { |file| assert file.flock(File::LOCK_EX | File::LOCK_NB) }
+      end
+      assert @files.opened.all?(&:closed?)
+    end
+  end
+
 end

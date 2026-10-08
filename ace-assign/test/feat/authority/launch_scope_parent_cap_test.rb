@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+require_relative "../../support/protected_control_fixture"
 require_relative "../../test_helper"
 require "ace/assign/authority/launch_lifecycle"
 require "ace/assign/authority/launch_driver"
@@ -37,8 +38,9 @@ module Ace
           deployment.define_singleton_method(:artifact_reference) { {"sha256" => "d" * 64} }
           deployment.define_singleton_method(:mapping) { |_id| map }
           deployment.define_singleton_method(:verify!) { |*_args, **_options| true }
-          deployment.define_singleton_method(:authority) { |_id| {"uid" => 13000, "state_root" => File.join(cache, "state")} }
-          deployment.define_singleton_method(:project) { |_id| {"supervisor_uids" => [13003], "inbox_contexts" => {}, "candidate_root" => cache, "assignment_root" => File.join(cache, "assignments")} }
+          deployment.define_singleton_method(:authority) { |_id| {"uid" => 13000, "gid" => 13000, "state_root" => File.join(cache, "state")} }
+          deployment.define_singleton_method(:project) { |_id| {"supervisor_uids" => [13003], "inbox_contexts" => {}, "candidate_root" => cache, "assignment_root" => File.join(cache, "assignments"), "journal_repository" => journal.repo_root, "evidence_git_ref" => journal.ref, "evidence_checkout_root" => journal.checkout_root} }
+          ProtectedControlFixture.prepare!(authority: deployment.authority("authority"), project_id: "project")
           manager = ExecutionScopeObservationFixtures::Manager.new
           files = ExecutionScopeObservationFixtures::Files.new
           cgroups = ExecutionScopeObservationFixtures::Cgroups.new
@@ -46,7 +48,7 @@ module Ace
             manager: manager, files: files, cgroups: cgroups,
             network_selection: ExecutionScopeObservationFixtures::NetworkSelection.new,
             boot_evidence: ExecutionScopeObservationFixtures::BootEvidence.new)
-          owner = Authority::LaunchLifecycle.new(deployment: deployment, kernel: kernel, journals: {"project" => journal},
+          owner = Authority::LaunchLifecycle.new(deployment: deployment, control_exclusion_factory: ProtectedControlFixture.factory, kernel: kernel, journals: {"project" => journal},
             scope_observer_factory: ->(_id) { observer })
           client = Object.new
           budgets = []
@@ -75,7 +77,7 @@ module Ace
           assert_equal 1, events.count { |event| event.dig("payload", "operation") == "scope_reservation_release" }
           refute events.any? { |event| %w[scope_native_bound scope_child_bound process_start].include?(event["type"]) }
           owner.close
-          owner = Authority::LaunchLifecycle.new(deployment: deployment, kernel: kernel, journals: {"project" => journal},
+          owner = Authority::LaunchLifecycle.new(deployment: deployment, control_exclusion_factory: ProtectedControlFixture.factory, kernel: kernel, journals: {"project" => journal},
             scope_observer_factory: ->(_id) { observer })
           before_replay = journal.ref_value
           replay = driver.launch(assignment_id: "assignment", definition_bytes: bytes, prepared_bundle: prepared.bundle, scope: "010", base_head: "a" * 40, mutation_id: "first")

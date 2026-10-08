@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+require_relative "../../support/protected_control_fixture"
 require_relative "../../test_helper"
 require "ace/assign/authority/launch_lifecycle"
 require_relative "../../support/execution_scope_observation_fixtures"
@@ -72,14 +73,16 @@ module Ace
           deployment = Object.new
           map = @map
           deployment.define_singleton_method(:mapping) { |_id| map }
-          deployment.define_singleton_method(:authority) { |_id| {"state_root" => File.join(cache, "state")} }
-          deployment.define_singleton_method(:project) { |_id| {"inbox_contexts" => {}} }
+          deployment.define_singleton_method(:authority) { |_id| {"uid" => 13000, "gid" => 13000, "state_root" => File.join(cache, "state")} }
+          journal = @journal
+          deployment.define_singleton_method(:project) { |_id| {"inbox_contexts" => {}, "journal_repository" => journal.repo_root, "evidence_git_ref" => journal.ref, "evidence_checkout_root" => journal.checkout_root} }
           deployment.define_singleton_method(:artifact_reference) { {"sha256" => "d" * 64} }
           @observer = Observer.new
-          @owner = Authority::LaunchLifecycle.new(deployment: deployment, kernel: Kernel.new,
+          @owner = Authority::LaunchLifecycle.new(deployment: deployment, control_exclusion_factory: ProtectedControlFixture.factory, kernel: Kernel.new,
             journals: {"project" => @journal}, scope_observer_factory: ->(_id) { @observer })
           @observer.owner, @observer.journal = @owner, @journal
-          mutate("definition-assignment", "register", "register_assignment", 0, [], {"task_id" => "task"})
+          registration = ProtectedControlFixture.registration(deployment: deployment, journal: @journal, mapping_id: "mapping", assignment_id: "assignment", task_id: "task")
+          mutate("definition-assignment", "register", "register_assignment", 0, [], registration)
           @state = {"project_id" => "project", "assignment_id" => "assignment", "attempt_id" => "attempt",
             "mapping_id" => "mapping", "reservation_generation" => 1, "phase" => "reserved",
             "launcher_identity" => @peer, "launch_ticket" => "ticket"}
@@ -146,7 +149,7 @@ module Ace
           old = @journal.ref_value
           deployment = @owner.instance_variable_get(:@deployment)
           @owner.close
-          @owner = Authority::LaunchLifecycle.new(deployment: deployment, kernel: Kernel.new,
+          @owner = Authority::LaunchLifecycle.new(deployment: deployment, control_exclusion_factory: ProtectedControlFixture.factory, kernel: Kernel.new,
             journals: {"project" => @journal}, scope_observer_factory: ->(_id) { @observer })
           @observer.owner = @owner
           replay = admit
@@ -423,7 +426,7 @@ module Ace
           assert_raises(AttemptErrors::Conflict) { @owner.send(:ensure_slot_available!, @map, @journal) }
           deployment = @owner.instance_variable_get(:@deployment)
           @owner.close
-          @owner = Authority::LaunchLifecycle.new(deployment: deployment, kernel: Kernel.new,
+          @owner = Authority::LaunchLifecycle.new(deployment: deployment, control_exclusion_factory: ProtectedControlFixture.factory, kernel: Kernel.new,
             journals: {"project" => @journal}, scope_observer_factory: ->(_id) { @observer })
           @observer.owner = @owner
           replay = @owner.dispatch(request: request, peer: @peer, role: :launcher)

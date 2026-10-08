@@ -112,7 +112,7 @@ module Ace
         start_context_pipeline(@root)
         service = @service
         @deployment.define_singleton_method(:authority) { |_| service }
-        @launch = Authority::LaunchLifecycle.new(deployment: @deployment, kernel: @kernel, journals: {"project" => @journal},
+        @launch = Authority::LaunchLifecycle.new(deployment: @deployment, control_exclusion_factory: ProtectedControlFixture.factory, kernel: @kernel, journals: {"project" => @journal},
           scope_observer_factory: ->(_id) { ExecutionScopeNativeOwnerFixture.new(@map, @journal, @kernel, owner: @launch) })
         @endcap = Authority::Endcap.new(deployment: @deployment, launch: @launch, kernel: @kernel,
           service_policy: @policy, inbox_context_clients: @context_clients, deployment_history: @history)
@@ -249,7 +249,7 @@ module Ace
             observer.define_singleton_method(:observe) { |_lineage| {"populated" => 1} }
             observer
           end
-          @launch = Authority::LaunchLifecycle.new(deployment: @deployment, deployment_history: @history,
+          @launch = Authority::LaunchLifecycle.new(deployment: @deployment, control_exclusion_factory: ProtectedControlFixture.factory, deployment_history: @history,
             kernel: @kernel, journals: {"project" => @journal}, scope_observer_factory: scope_factory)
           @endcap = Authority::Endcap.new(deployment: @deployment, launch: @launch, kernel: @kernel, service_policy: @policy)
           @router = Authority::Router.new(launch: @launch, handlers: [@endcap])

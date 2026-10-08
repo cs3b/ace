@@ -177,7 +177,7 @@ module Ace
 
       def restart
         @scope = nil
-        @launch = Authority::LaunchLifecycle.new(deployment: @deployment, deployment_history: @history,
+        @launch = Authority::LaunchLifecycle.new(deployment: @deployment, control_exclusion_factory: ProtectedControlFixture.factory, deployment_history: @history,
           kernel: @kernel, journals: {"project" => @journal}, scope_observer_factory: ->(_) {
             @scope ||= Scope.new(@map, @journal, @kernel, owner: @launch, network_selection: @network_selection,
               boot_baseline_selection: @boot_ref, network_installation: @network_installation) })
