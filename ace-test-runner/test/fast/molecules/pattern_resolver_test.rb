@@ -242,4 +242,40 @@ class PatternResolverTest < Minitest::Test
       assert_equal "Unknown target: #{target}. Available targets: atoms, edge, fast, feat, models, molecules, organisms, quick", error.message
     end
   end
+  def test_default_fast_discovers_unknown_categories_once_without_widening_overrides
+    require "tmpdir"
+    require "fileutils"
+    require "yaml"
+    defaults = YAML.safe_load(File.read(File.expand_path("../../../.ace-defaults/test-runner/config.yml", __dir__)))
+    paths = %w[test/fast/atoms/a_test.rb test/fast/authority/b_test.rb
+      test/fast/new/nested/c_test.rb test/fast/edge/d_test.rb test/atoms/e_test.rb
+      test/edge/f_test.rb test/feat/g_test.rb test/e2e/h_test.rb]
+    Dir.mktmpdir do |root|
+      paths.each do |path|
+        file = File.join(root, path)
+        FileUtils.mkdir_p(File.dirname(file))
+        File.write(file, "# fixture")
+      end
+      Dir.chdir(root) do
+        config = Ace::TestRunner::Models::TestConfiguration.new(
+          patterns: defaults.fetch("patterns"), targets: defaults.fetch("targets"))
+        resolver = Ace::TestRunner::Molecules::PatternResolver.new(config)
+        fast = paths.take(5)
+        assert_equal fast.sort, resolver.resolve_target("fast").sort
+        assert_equal paths.take(7).sort, resolver.resolve_target("all").sort
+        %w[fast all].each do |target|
+          grouped = resolver.resolve_target_sequential(target).flat_map { |group| group.fetch(:files) }
+          assert_equal resolver.resolve_target(target), grouped
+          assert_equal grouped.uniq, grouped
+        end
+        assert_equal [paths[3], paths[5]].sort, resolver.resolve_target("edge").sort
+        assert_equal [paths[0], paths[4]].sort, resolver.resolve_target("atoms").sort
+        assert_equal [paths[1]], resolver.resolve_target(paths[1])
+        narrow = Ace::TestRunner::Models::TestConfiguration.new(
+          patterns: defaults.fetch("patterns"), targets: defaults.fetch("targets").merge("all" => ["fast"]))
+        assert_equal fast.sort, Ace::TestRunner::Molecules::PatternResolver.new(narrow).resolve_target("all").sort
+      end
+    end
+  end
+
 end

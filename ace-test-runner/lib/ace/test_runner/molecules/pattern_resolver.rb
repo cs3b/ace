@@ -5,7 +5,8 @@ module Ace
     module Molecules
       class PatternResolver
         INTERNAL_PATTERN_LABELS = {
-          "feat_tests" => "feat"
+          "feat_tests" => "feat",
+          "fast_tests" => "fast"
         }.freeze
 
         attr_reader :using_catch_all
@@ -42,7 +43,7 @@ module Ace
           targets.flat_map { |target| resolve_target(target) }.uniq
         end
 
-        def resolve_target_sequential(target_name, seen = [])
+        def resolve_target_sequential(target_name, seen = [], selected = {})
           target_key = target_name.to_s
           if seen.include?(target_key)
             raise ArgumentError, "Cyclic test target definition detected: #{(seen + [target_key]).join(' -> ')}"
@@ -55,12 +56,14 @@ module Ace
             member_key = member.to_s
 
             if @targets.key?(member_key)
-              resolve_target_sequential(member_key, seen + [target_key])
+              resolve_target_sequential(member_key, seen + [target_key], selected)
             elsif @patterns.key?(member_key)
-              files = expand_pattern(@patterns[member_key])
+              files = expand_pattern(@patterns[member_key]).reject { |file| selected.key?(file) }
+              files.each { |file| selected[file] = true }
               files.empty? ? [] : [{name: display_name_for(member_key), files: files}]
             else
-              files = expand_pattern(member)
+              files = expand_pattern(member).reject { |file| selected.key?(file) }
+              files.each { |file| selected[file] = true }
               files.empty? ? [] : [{name: "other", files: files}]
             end
           end
