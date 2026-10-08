@@ -1,4 +1,4 @@
-# Protected delivery service request — draft amendment
+# Protected delivery service request — reviewed amendment
 
 This closes the public worker-request join in the existing qkb.1 scope. It does not decide whether create/update/ready may precede independent review. Those operations remain unavailable in this protected delivery route pending the separate policy decision. The existing authority review/authorization gate is unchanged.
 
@@ -41,4 +41,4 @@ The canonical delivery workflow names the exact original prepared mapping/assign
 
 Test responsibilities: real registered request/status CLI → original PreparedInput → actual ProtectedServiceClient/Listener → existing receiver → real Assign Client/Server/CAS/import/result → existing worker consumer. Inject excluded kernel/process/provider boundaries only; preserve the fixed neutral producer and actual temporary Git. Verify asynchronous claim output before provider completion, one effect/result on replay, lost claim/reply with exact read-only recovery, foreign worker/birth, stale candidate/generation/input/project/scope, removed/unreadable installed selection, missing service/review/authorization, unsafe/oversized input, and protected preflight refusal with zero local coordinator/provider dispatch. Genuine standalone tests retain existing behavior. No native/installed/root/process probes are authorized by this amendment.
 
-This candidate needs independent readiness review before source implementation. It leaves create/update/ready policy, broader role/workflow adoption and central installed acceptance open; it does not mark qkb.1 complete.
+Independent reviewer `/root/audit_runtime_delivery_status` approved frozen `f74c36a5d` for bounded merge request/status specification readiness, with no findings. This authorizes implementation of this amendment, not implementation acceptance. Create/update/ready policy, broader role/workflow adoption and central installed acceptance remain open; qkb.1 is not complete.
