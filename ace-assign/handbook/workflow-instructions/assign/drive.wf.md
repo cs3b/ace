@@ -659,6 +659,30 @@ Follow the instructions directly, performing the described work:
 
 Every external-facing step (implement, verify, review, merge, publish, deploy, release) runs inside a scoped attempt. The attempt -- not the report and not exit status -- is the delivery record.
 
+For an original protected PreparedWorker, use its already admitted assignment,
+attempt and selected scope. Do not run the local `attempt start`/receipt-file
+sequence below, acquire another attempt, or execute an outer preset step. The
+delivery step must already belong to the immutable captured subtree. Submit the
+actual candidate and obtain the installed independent reviewer acceptance through
+the protected commands supplied by the original drive prompt.
+
+For an authorized protected merge, retain the exact approved head/candidate
+generation, structured input file, installed receiver, authorization and stable
+request ID. Read current authority generation for the first new request. Invoke
+`ace-lab service request` with those original mapping/assignment/attempt/scope
+selectors. Inspect `ace-lab service status` with the same request, input digest and
+target, then consume succeeded canonical evidence with `ace-assign delivery
+--operation merge --service-request REQUEST` and the same selectors. Include
+`--artifact-digest` on status and consumption when the original target has one.
+Exact retries retain the original generation, mutation/request ID and input bytes;
+uncertainty never permits refreshing or resending an effect. The protected delivery
+consumer verifies the imported receipt and canonical delivery event without another
+provider mutation. Only that succeeded result permits finishing the active queue
+step. Refusal, unavailable evidence or uncertainty leaves it unfinished and reports
+the exact blocker. Credentials and queue completion do not replace authorization
+or canonical evidence. The following local attempt sequence applies only to
+ordinary standalone assignments.
+
 **Step 1: Start the attempt before executing the step.** Actor identity is derived from the execution boundary; never pass actor flags.
 
 ```bash

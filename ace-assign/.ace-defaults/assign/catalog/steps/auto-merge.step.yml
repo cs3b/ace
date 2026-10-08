@@ -1,0 +1,11 @@
+name: auto-merge
+description: Consume an authorized exact-candidate merge through the delivery owner
+workflow: wfi://assign/drive
+instructions: |
+  Merge only when separately authorized and the existing merge checks pass.
+  For an original protected worker, follow the protected delivery rule in
+  wfi://assign/drive using the admitted assignment, attempt and scope. Retain
+  exact approved candidate and request selectors. Request the installed service,
+  inspect canonical status, and consume its succeeded result with ace-assign
+  delivery. Never execute another provider effect during result consumption.
+  Refused, unavailable or uncertain delivery leaves this step unfinished.

@@ -3,50 +3,12 @@ require_relative "prepared_work_fetch_test"
 require "ace/assign/organisms/prepared_work_builder"
 require "ace/assign/authority/prepared_worker"
 require "ace/assign/authority/launch_driver"
+require_relative "../support/managed_prepared_registration_fixture"
 
 module Ace
   module Assign
     class PreparedManagedFlowTest < PreparedWorkFetchTest
-      def configure_result_owner_fixture
-        super
-        return unless @managed_flow
-        task_root = File.join(@root, "tasks")
-        directory = File.join(task_root, "8wr.t.abc-managed")
-        FileUtils.mkdir_p(directory)
-        @managed_spec = File.join(directory, "8wr.t.abc-managed.s.md")
-        File.write(@managed_spec, "---\nid: 8wr.t.abc\ntitle: Managed input\nstatus: pending\nneeds_review: false\ndependencies: []\n---\nOriginal managed task instructions.\n")
-        tasks = Ace::Task::Organisms::TaskManager.new(root_dir: task_root, config: {})
-        cache = File.join(@root, "managed-source")
-        executor = Organisms::AssignmentExecutor.new(cache_base: cache)
-        # Only the fresh local assignment ID generator is fixed to the shared
-        # authority fixture identity. Graph/materialization/definition stay real.
-        executor.assignment_manager.define_singleton_method(:generate_assignment_id) { "assignment" }
-        builder = Organisms::PreparedWorkBuilder.new(export_root: @root, task_manager: tasks,
-          executor: executor, bundle_loader: Ace::Bundle::Organisms::BundleLoader.new(base_dir: @root))
-        @managed_input = Ace::Assign.stub(:cache_dir, cache) do
-          builder.call(task_ref: "8wr.t.abc", project_id: "project", dependency_reports: [])
-        end
-      end
-
-      def call(operation, params, **options)
-        return super unless @managed_input
-        if operation == "register_assignment"
-          input = @managed_input
-          work = Authority::PreparedWork.admit(root: @root, bytes: input.fetch("bundle"), size: input.fetch("bytes"),
-            sha256: input.fetch("sha256"), head: input.fetch("head"), tree: input.fetch("tree"))
-          @prepared_registration = PreparedRegistrationFixture::Artifact.new(definition_bytes: input.fetch("definition_bytes"),
-            bundle: input.fetch("bundle"), work: work, head: input.fetch("head"), tree: input.fetch("tree"))
-          @prepared_registration.with_input(root: @root) do |transfer, descriptor|
-            request = {"version" => 1, "operation" => operation, "mutation_id" => options.fetch(:id), "project_id" => "project",
-              "params" => @prepared_registration.header(expected_generation: params.fetch("expected_generation"))
-                .merge("mapping_id" => "mapping", "transfer" => descriptor)}
-            @router.dispatch(request: request, peer: options.fetch(:peer), role: options.fetch(:role), transfer: transfer)
-          end
-        else
-          params = params.merge("scope" => @managed_input.fetch("scope")) if operation == "reserve_attempt"
-          super(operation, params, **options)
-        end
-      end
+      include ManagedPreparedRegistrationFixture
 
       def original_cli(args, kernel:)
         project = @project.merge("worker_uids" => [@worker.fetch("uid")], "launcher_uids" => [@launcher.fetch("uid")])
@@ -247,6 +209,9 @@ module Ace
             assert_includes captured.first[1], "--candidate-generation CURRENT_CANDIDATE"
             assert_includes captured.first[1], "--candidate-generation REVIEWED_CANDIDATE"
             assert_includes captured.first[1], "using 0 when null"
+            assert_includes captured.first[1], "ace-lab service request"
+            assert_includes captured.first[1], "ace-lab service status"
+            assert_includes captured.first[1], "Refusal, unavailable or uncertain leaves the active delivery step unfinished"
             assert_includes captured.first[1], "ace-assign submit-result"
             assert_includes captured.first[1], "ace-overseer review"
             assert_equal "succeeded", @produced_result.fetch("verdict")
