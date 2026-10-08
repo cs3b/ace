@@ -187,10 +187,11 @@ module Ace
         fixture do
           issued = issue_original.fetch(:data)
           pin = issued.fetch("prepared_input")
-          assert_equal %w[bundle_bytes bundle_ref bundle_sha256 definition_digest original_binding_digest prepared_work registration_commit registration_generation worker_entry], pin.keys.sort
+          assert_equal %w[bundle_bytes bundle_ref bundle_sha256 definition_digest original_binding_digest prepared_work registration_commit registration_generation worker_entry workspace_exclusion], pin.keys.sort
           assert_equal @map.fetch("worker_entry"), pin.fetch("worker_entry")
           assert_equal pin, @release_permission.fetch("prepared_input")
           descriptor = prepared_fetch.fetch(:data).fetch("descriptor")
+          assert_equal pin.fetch("workspace_exclusion"), descriptor.fetch("workspace_exclusion")
           assert_equal descriptor.values_at("registration_generation", "registration_commit", "definition_digest", "original_binding_digest", "ref", "bytes", "sha256"),
             pin.values_at("registration_generation", "registration_commit", "definition_digest", "original_binding_digest", "bundle_ref", "bundle_bytes", "bundle_sha256")
           assert_equal @prepared_registration.work.reference(head: @prepared_registration.head, tree: @prepared_registration.tree), pin.fetch("prepared_work")
