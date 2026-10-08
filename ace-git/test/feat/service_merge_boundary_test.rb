@@ -41,6 +41,21 @@ class ServiceMergeBoundaryTest < AceGitTestCase
     exercise_completion
   end
 
+  def test_original_service_artifact_refuses_foreign_principal_and_reused_worker_birth
+    @identity_controls = true
+    exercise_completion
+  end
+
+  def test_original_merge_consumer_refuses_stale_selectors_and_direct_local_artifact
+    @selector_controls = true
+    exercise_completion
+  end
+
+  def test_canonical_status_refuses_a_forged_later_delivery_result
+    @forged_control = true
+    exercise_completion
+  end
+
   def exercise_completion
     fixture do
       issue_original
@@ -214,6 +229,45 @@ class ServiceMergeBoundaryTest < AceGitTestCase
       arguments = {assignment_id: "assignment", attempt_id: @attempt, operation: "merge", service_request_id: "service-request",
         candidate_head: @head, candidate_generation: submission.fetch("candidate_generation"), input_digest: digest, target: target}
       consumer = Ace::Assign::Organisms::ProtectedDeliveryCoordinator.new(client: worker_client, project_id: "project")
+      if @identity_controls || @selector_controls || @forged_control
+        reference = record.fetch("receipt").fetch("evidence").first.fetch("ref").delete_prefix("evidence/imports/")
+        fetch = {"assignment_id" => "assignment", "attempt_id" => @attempt, "kind" => "service",
+          "purpose_id" => "service-request", "artifact_id" => reference}
+        before_controls = @journal.ref_value
+        if @identity_controls
+          [@reviewer, @worker.merge("started_at" => "linux:#{Ace::Assign::ExecutionScopeObservationFixtures::BOOT}:999")].each do |foreign|
+            @kernel.peer_identity = foreign
+            error = assert_raises(Ace::Assign::AttemptErrors::EvidenceUnavailable) do
+              worker_client.call("evidence_fetch", fetch, download: true, purpose: :artifacts)
+            end
+            assert_includes error.message, "unauthorized", "identity refusal must be reached, not a timeout"
+          end
+          @kernel.peer_identity = @worker
+        elsif @selector_controls
+          [arguments.merge(candidate_head: "f" * 40), arguments.merge(candidate_generation: arguments.fetch(:candidate_generation) + 1)].each do |stale|
+            error = assert_raises(Ace::Assign::AttemptErrors::EvidenceUnavailable) { consumer.perform(**stale.merge(operation: "status")) }
+            assert_includes error.message, "unauthorized"
+          end
+          assert_raises(Ace::Assign::AttemptErrors::ReceiptRejected) { consumer.perform(**arguments.merge(operation: "status", input_digest: "f" * 64)) }
+          assert_raises(Ace::Assign::AttemptErrors::ReceiptRejected) { consumer.perform(**arguments.merge(operation: "status", target: target.merge("resource" => "#{URL}/pulls/26"))) }
+          File.binwrite(File.join(@root, "local-proof"), "not canonical evidence")
+          error = assert_raises(Ace::Assign::AttemptErrors::EvidenceUnavailable) do
+            worker_client.call("evidence_fetch", fetch.merge("artifact_id" => "local-proof"), download: true, purpose: :artifacts)
+          end
+          refute_includes error.message, "deadline", "local artifact must be refused by the canonical owner"
+        else
+          original = @journal.read_events("assignment").find { |event| event["type"] == "delivery" }
+          @journal.record(assignment_id: "assignment", attempt_id: @attempt, type: "delivery",
+            payload: original.fetch("payload").merge("outcome" => "failed"))
+          before_controls = @journal.ref_value
+          error = assert_raises(Ace::Assign::AttemptErrors::EvidenceUnavailable) { consumer.perform(**arguments.merge(operation: "status")) }
+          refute_includes error.message, "deadline", "later forged result must fail canonical verification"
+        end
+        assert_equal before_controls, @journal.ref_value, "negative observations do not write or repair evidence"
+        assert_equal 1, effects
+        assert_equal 1, calls.count { |args| args[1] == "POST" }
+        next
+      end
       consumed = consumer.perform(**arguments)
       assert_equal "succeeded", consumed.fetch("state")
       assert_equal "merge", consumed.fetch("delivery_event").fetch("payload").fetch("operation")
