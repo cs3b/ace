@@ -1,0 +1,11 @@
+# Literal instruction JSON parser correction
+
+PreparedInput owns the derived runtime instruction view. The accepted qk0.3 grammar permits exactly four opened tokens: `{{admitted.mapping_id}}`, `{{admitted.assignment_id}}`, `{{admitted.scope}}`, `{{admitted.attempt_id}}`. A closing brace pair with no token opening is literal instructional text, including ordinary nested JSON. No consumer rewrite or context omission is required by this correction.
+
+The owner now scans the original source left to right. An opening `{{` requires a closing delimiter, brace-free token content and an exact supported name. Unknown, empty, whitespace-variant, nested and unterminated placeholders still raise typed EvidenceUnavailable. Other bytes are preserved verbatim. Every selector is Shellwords-escaped once; substituted values are not reparsed as instructions. Accepted source/work/definition digests and authority admission remain unchanged.
+
+The actual shipped perform-delivery workflow is loaded through BundleLoader in the parser regression, proving its nested JSON survives unchanged. Unit tests explicitly cover all four quoted selectors, malicious-looking argument content, literal braces and malformed/unknown opened placeholders. This parser-only object fixture conveys no capability. Surrounding authenticated worker composition uses the existing actual Server/Client/Endcap/Git fixture with injected kernel/resource/provider boundaries.
+
+Evidence: initial nonexistent atoms-directory selection ran no tests; cold test import failure `40ee86e3-cbc3-445e-a296-fc8f51576b1a` executed0 tests and was corrected by loading the actual Bundle package owner. FAIL-BEFORE `8ac2e729-5abf-4599-bcea-3a76888352bb`:4/34, errors in actual shipped workflow and literal closing JSON, while refusal/quoting tests passed. PASS-AFTER `666af825-199a-4ef8-ac0d-d4d4616537c3`:4/40, 3.29ms.
+
+Existing controlled worker regression `test_worker_actual_original_fetch_queue_inline_provider_and_scoped_cli_finish`, selected by freshly verified definition line32: PASS1/27,15.7s, `8df71132-365d-454f-a53a-fb8f3a10f542`. Raw run options confirm the unique method selection. Independent code review: pending. No whole qk0.3, provider, installed or native acceptance is claimed.

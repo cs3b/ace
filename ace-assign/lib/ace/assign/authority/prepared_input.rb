@@ -52,17 +52,28 @@ module Ace
 
         def render(text)
           values = descriptor.slice("mapping_id", "assignment_id", "scope", "attempt_id")
-          rendered = text.gsub(/\{\{([^{}]*)\}\}/) do
-            token = Regexp.last_match(1)
+          rendered = +""
+          cursor = 0
+          # Only an opening delimiter introduces a token. Closing braces in
+          # literal JSON are preserved; inserted selector values are not parsed.
+          while (opening = text.index("{{", cursor))
+            rendered << text[cursor...opening]
+            closing = text.index("}}", opening + 2)
+            unless closing
+              raise AttemptErrors::EvidenceUnavailable, "prepared_input_invalid: unresolved instruction token"
+            end
+            token = text[(opening + 2)...closing]
+            if token.include?("{") || token.include?("}")
+              raise AttemptErrors::EvidenceUnavailable, "prepared_input_invalid: unresolved instruction token"
+            end
             field = token.delete_prefix("admitted.")
             unless token == "admitted." + field && values.key?(field)
               raise AttemptErrors::EvidenceUnavailable, "prepared_input_invalid: unknown instruction token"
             end
-            Shellwords.escape(values.fetch(field))
+            rendered << Shellwords.escape(values.fetch(field))
+            cursor = closing + 2
           end
-          if rendered.include?("{{") || rendered.include?("}}")
-            raise AttemptErrors::EvidenceUnavailable, "prepared_input_invalid: unresolved instruction token"
-          end
+          rendered << text[cursor..]
           rendered.freeze
         end
 

@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Preserve literal nested JSON in captured instructions while strictly parsing only opened, closed admitted-selector tokens and quoting each original value once.
+
 - Add proof-bound maintenance retirement sessions and read-only completed readback under the complete original slot exclusions, retaining exact resource and collection lifetimes.
 
 - Retain the original protected workspace shared lock across native activation uncertainty until authenticated sealed no-writers observation.
