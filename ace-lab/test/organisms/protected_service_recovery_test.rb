@@ -39,7 +39,7 @@ class ProtectedServiceRecoveryTest < Minitest::Test
     digest = Ace::Lab::Atoms::ServiceInput.digest(JSON.parse(@body))
     target = Ace::Lab::Atoms::ServiceInput.target(JSON.parse(@body))
     @policy.define_singleton_method(:input_binding) do |bytes, expected_digest:, expected_target:, operation:|
-      raise "changed original input" unless bytes == @original_body && expected_digest == @original_digest && expected_target == @original_target && operation == "publish"
+      raise "changed original input" unless bytes == @original_body && expected_digest == @original_digest && expected_target == @original_target && operation == "verify-artifact"
     end
     @policy.instance_variable_set(:@original_body, @body)
     @policy.instance_variable_set(:@original_digest, digest)
@@ -50,7 +50,7 @@ class ProtectedServiceRecoveryTest < Minitest::Test
     end
     transfer = Ace::Assign::Authority::TransferCodec.new(root: @root).descriptor([@body], purpose: :service_input)
     params = {"head" => @head, "candidate_generation" => 1, "expected_generation" => generation, "request_id" => "service-request",
-      "operation" => "publish", "input_digest" => digest, "target" => target, "authorization" => "review",
+      "operation" => "verify-artifact", "input_digest" => digest, "target" => target, "authorization" => "review",
       "service_id" => "executor", "worker_process_binding" => @worker, "transfer" => transfer}
     claim = call("request_service", params, id: "claim", peer: @executor, role: :executor, transfer: Parts.new([@body])).fetch(:data)
     call("begin_dispatch", params.slice("head", "candidate_generation", "request_id", "transfer")
@@ -107,7 +107,7 @@ class ProtectedServiceRecoveryTest < Minitest::Test
         deployment: @deployment, kernel: kernel, client: client, handler: inspector)
       # The selected executable/inspection is a controlled domain prerequisite,
       # not proof that the actual gad.b inspector has been implemented.
-      document = {"operations" => {"publish" => {"project" => "project", "service_id" => "executor",
+      document = {"operations" => {"verify-artifact" => {"project" => "project", "service_id" => "executor",
         "executor_uid" => 13005, "argv" => ["/must/not/execute"], "no_effect_argv" => ["/usr/bin/true"],
         "lease_expires_at" => "2020-01-01T00:00:00Z"}}}
       binding = {"assignment_id" => "assignment", "attempt_id" => @attempt, "candidate_generation" => 1,

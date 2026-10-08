@@ -16,7 +16,7 @@ module ProtectedServiceBoundaryFixture
     @project["service_receivers"] = {"executor" => {"executor_uid" => 13005,
       "socket_path" => "/fixture/service.sock", "staging_root" => @root}}
     @document = {"principals" => {"13001" => {"projects" => ["project"]}, "13005" => {"projects" => ["project"]}},
-      "operations" => {"publish" => {"project" => "project", "service_id" => "executor", "executor_uid" => 13005,
+      "operations" => {"verify-artifact" => {"project" => "project", "service_id" => "executor", "executor_uid" => 13005,
         "argv" => ["/usr/bin/true"], "lease_expires_at" => (Time.now.utc + 3600).iso8601}}, "authorizations" => {}}
     @policy = Ace::Lab::Molecules::ProtectedServicePolicy.new(document_loader: -> { @document },
       proposal_resolver: ->(*) { raise "no proposal authority in this test" })
@@ -48,17 +48,17 @@ module ProtectedServiceBoundaryFixture
       call("accept_review", params.merge("candidate_generation" => number, "purpose_id" => review.fetch("review_id")),
         id: "accept-review", peer: @reviewer, role: :reviewer, transfer: input)
     end
-    bytes = JSON.generate("target" => {"resource" => "rubygems:ace-hitl:1.2.3", "artifact_digest" => "b" * 64},
-      "publication" => {"gem_name" => "ace-hitl", "version" => "1.2.3", "head" => @head,
-        "registry" => "https://rubygems.org", "artifact_relative_path" => "pkg/ace-hitl-1.2.3.gem"})
+    # Generic service lifecycle coverage uses a named artifact-check operation;
+    # publication/OTP admission belongs to the dedicated publication tests.
+    bytes = JSON.generate("target" => {"resource" => "artifact:ace-hitl:1.2.3", "artifact_digest" => "b" * 64})
     digest = Ace::Lab::Atoms::ServiceInput.digest(JSON.parse(bytes))
     target = Ace::Lab::Atoms::ServiceInput.target(JSON.parse(bytes))
-    @document["authorizations"]["decision"] = {"operation" => "publish", "project_id" => "project",
+    @document["authorizations"]["decision"] = {"operation" => "verify-artifact", "project_id" => "project",
       "assignment_id" => "assignment", "attempt_id" => @attempt, "input_digest" => digest, "target" => target,
       "candidate_head" => @head, "caller_uid" => 13001, "expires_at" => (Time.now.utc + 3600).iso8601}
     submission = {"assignment_id" => "assignment", "attempt_id" => @attempt, "candidate_generation" => number,
       "head" => @head, "request_id" => "service-request", "expected_generation" => generation,
-      "operation" => "publish", "input_digest" => digest, "target" => target, "authorization" => "decision"}
+      "operation" => "verify-artifact", "input_digest" => digest, "target" => target, "authorization" => "decision"}
     [submission, bytes]
   end
 
@@ -78,7 +78,7 @@ module ProtectedServiceBoundaryFixture
       raise "wrong selected handler" unless operation.fetch("argv") == [File.realpath("/usr/bin/true")]
       invocations << envelope
       if expire
-        document.fetch("operations").fetch("publish")["lease_expires_at"] = "2020-01-01T00:00:00Z"
+        document.fetch("operations").fetch("verify-artifact")["lease_expires_at"] = "2020-01-01T00:00:00Z"
         document.fetch("authorizations").fetch("decision")["expires_at"] = "2020-01-01T00:00:00Z"
       end
       request = envelope.fetch("request")

@@ -30,7 +30,7 @@ class ProtectedServiceReceiverTest < Minitest::Test
       deployment: deployment, kernel: kernel, client: client, handler: handler)
     input = {"target" => {"resource" => "fixture"}}
     submission = {"assignment_id" => "assignment", "attempt_id" => "attempt", "expected_generation" => 2,
-      "candidate_generation" => 1, "head" => "a" * 40, "request_id" => "request", "operation" => "publish",
+      "candidate_generation" => 1, "head" => "a" * 40, "request_id" => "request", "operation" => "verify-artifact",
       "input_digest" => Ace::Lab::Atoms::ServiceInput.digest(input), "target" => Ace::Lab::Atoms::ServiceInput.target(input),
       "authorization" => "decision"}
     [receiver, submission, worker, JSON.generate(input)]
@@ -103,8 +103,8 @@ class ProtectedServiceReceiverTest < Minitest::Test
       configured = {"project" => "fixture", "service_id" => "executor", "executor_uid" => Process.uid,
         "lease_expires_at" => (Time.now.utc + 3600).iso8601, "argv" => ["/bin/sh", "-c",
           "test \"$(cat README)\" = 'exact candidate' || exit 9; printf '%s' '#{evidence}' > proof.txt; printf '%s' '#{response}'"]}
-      document = {"operations" => {"publish" => configured}}
-      operation = Ace::Lab::Molecules::ServicePolicy.new(document).operation!("publish", project: "fixture", service_id: "executor")
+      document = {"operations" => {"verify-artifact" => configured}}
+      operation = Ace::Lab::Molecules::ServicePolicy.new(document).operation!("verify-artifact", project: "fixture", service_id: "executor")
       real_runner = Ace::Herdr::Molecules::BoundedProcess.method(:call)
       controlled_runner = lambda do |argv, **options|
         if argv == configured.fetch("argv")
