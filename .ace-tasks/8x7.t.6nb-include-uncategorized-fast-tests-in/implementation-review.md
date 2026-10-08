@@ -12,3 +12,9 @@ Executed worktree receipts:
 Retained d7a543fb failed test expected later feat/edge execution despite target_fail_fast default. Corrected expectation to actual stopping boundary; production report now excludes those undispatched groups. This is not an increase of test budgets.
 
 Primarymain ace-assign defaultfast verification started on d6ff5bba0 and remains pending at this checkpoint. Earlier mainall826797e5 reached858/3383 before feat group timed out at180seconds; it is NOT a completed package pass. Six earlier omitted authorityfiles passed separately49/27796661b6b. The postfix defaultfast receipt must establish their inclusion before closing this task. Wholeprogram suite/finalrevision verification and release preparation remain independent unfinished gates.
+
+## Repository override correction
+
+Main d6ff5bba0 default-fast run completed 872 tests / 3447 assertions, zero failures or errors (0e3ec4e6-85ed-4c05-9fcb-eda77f38cc36), but its actual files_tested omitted all six authority files. Root .ace/test/runner.yml explicitly replaced the gem target list; generic override preservation correctly retained that stale list. This receipt therefore does not establish complete discovery.
+
+Commit 285c766c2 adds fast_tests to the explicit repository pattern and fast target after known categories. Independent reviewer review_lab_bootstrap APPROVED this exact two-line correction, preserving generic overrides and first-category deduplication. Actual worktree run 13596 selected 73/133 files and remains live; its terminal report must still prove inclusion and uniqueness.
