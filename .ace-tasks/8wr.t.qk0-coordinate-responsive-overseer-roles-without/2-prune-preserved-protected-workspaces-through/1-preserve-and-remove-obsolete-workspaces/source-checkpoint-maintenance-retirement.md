@@ -23,3 +23,8 @@ ExecutionScopeObservation retains its ordinary resource/closure algorithms. Only
 Earlier `f19798cd` failed because the fixture expected RuntimeUnavailable for an ordinary missing path; existing source correctly raised ENOENT. The assertion was corrected without changing production refusal. One attempted mixed whole-file/file:line command was rejected before test execution; it is not an acceptance receipt. Final verification ran supported separate selections.
 
 Lab wave412 remains sole owner of the SAME Installer's actual preservation/capture/removal/completed collection and callback adapter. No Lab files, root/native/systemd/process identity probes or compilation were touched. The generic controlled callback cannot close physical source obligations or prove installed behavior. Actual combined Lab producer adoption and independent source verdict remain necessary; no task metadata/checklist closure in this checkpoint.
+# Independent integration verdict
+
+Root scoped APPROVE of bef9d9d47 after reviewing canonical projection versus fresh closure, original owner/thread/held contexts/writer/deadline checks, complete covered resources and callback lifetime. Integrated as 53ed01295. Reviewer source tests passed 35/187 (1c2f9ddc) and actual canonical deployment scenario passed 1/104 in 33.94s (0d8ebc1c). Integrated main fast observer/evidence tests passed 35/187 (3940ecf5).
+
+The Lab physical collection adapter and full original-entry execution remain separate unaccepted work. These tests do not close qk0, xz9 or 9c2. The concurrent ace-lab per-file performance diagnostic spans this integration and must not be treated as verification of a single frozen revision.
