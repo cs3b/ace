@@ -33,3 +33,14 @@ Independent source review is required before integration. No real native,
 root/systemd, ACL, installed or producer startup acceptance. Dedicated app-server
 unit/installation specialization and actual Lab bootstrap remain separate source
 joins under the existing producer contract.
+
+## Independent integration review
+
+Root APPROVE exact author commits `6c663a24f`, `3e4e5a0ac`, and receipt-only
+`ea0e2b50b`: inspected native UID/GID/mode restriction on only the selected final
+directory, root ancestry and held identity/ACL/filesystem checks, unchanged leaf
+and original connected process checks, and positive/negative controlled tests.
+Integrated as `f6fd64a0a`, `064fdab5b`, `17fef1fd7`. Main verification of both
+complete endpoint and context-service files passed **16 tests / 123 assertions**,
+report `herdr/8d06b806-057f-47da-b9de-49cdce2449f1`, 937ms.
+No installed/native or complete producer acceptance is inferred.
