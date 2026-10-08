@@ -133,7 +133,6 @@ module Ace
             result.fetch("record").merge("admission_state" => result.fetch("admission_state"))
           end
 
-
           def direct_admission(client, selected, options, purpose)
             peer = @kernel.capture(Process.pid)
             client.request("begin_context_operation", {"context_id" => selected.fetch("inbox_context_id"),

@@ -187,4 +187,27 @@ class ProtectedInboxCliTest < Minitest::Test
     previous&.each { |key, value| command.instance_variable_set(key, value) }
     command&.singleton_class&.send(:remove_method, :config) if command&.singleton_class&.instance_methods(false)&.include?(:config)
   end
+
+  def test_actual_selector_runner_deadline_is_typed_before_downstream
+    runner = Object.new
+    runner.define_singleton_method(:call) do |*_, **_options|
+      Ace::Herdr::Molecules::BoundedProcess.call([RbConfig.ruby, "-e", "sleep 10"],
+        timeout_s: 0.02, output_limit: 1024, cleanup_group: true)
+    end
+    selection = Ace::Herdr::Molecules::ProtectedInboxSelection.new(entry_owner: selected_entry, runner: runner, env: {})
+    called = false
+    error = assert_raises(Ace::Herdr::ValidationError) { selection.with({}) { called = true } }
+    assert_equal "protected inbox selection is unavailable", error.message
+    refute called
+    assert_empty Dir.children(@events)
+  end
+
+  def test_downstream_timeout_keeps_its_original_exception
+    owner = Object.new
+    owner.define_singleton_method(:with) { |&block| block.call(nil) }
+    selection = Ace::Herdr::Molecules::ProtectedInboxSelection.new(entry_owner: owner, env: {})
+    original = Timeout::Error.new("downstream effect is uncertain")
+    error = assert_raises(Timeout::Error) { selection.with({}) { raise original } }
+    assert_same original, error
+  end
 end

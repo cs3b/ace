@@ -66,7 +66,7 @@ module Ace
             downstream_started = true
             yield result
           end
-        rescue Ace::Runtime::Error, IOError, SystemCallError, BoundedProcess::PostLaunchError, KeyError, TypeError, ArgumentError
+        rescue Ace::Runtime::Error, IOError, SystemCallError, Timeout::Error, BoundedProcess::PostLaunchError, KeyError, TypeError, ArgumentError
           raise if downstream_started
           raise ValidationError, "protected inbox selection is unavailable"
         end

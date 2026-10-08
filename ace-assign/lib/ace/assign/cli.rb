@@ -108,7 +108,7 @@ module Ace
         ["authority task-context-principal", "Classify the actual caller through retained protected owners"],
         ["authority task-context-selection", "Read the authenticated original context entry selection"],
         ["authority inbox-context-principal", "Classify the actual caller through every retained protected owner"],
-        ["authority inbox-context-selection", "Read the fixed current inbox context endpoint selection"],
+        ["authority inbox-context-selection", "Read the fixed installed inbox context selection"],
         ["delivery", "Execute or reconcile attempt-bound forge delivery"],
         ["status", "Show assignment status"],
         ["step", "Show step instructions"],

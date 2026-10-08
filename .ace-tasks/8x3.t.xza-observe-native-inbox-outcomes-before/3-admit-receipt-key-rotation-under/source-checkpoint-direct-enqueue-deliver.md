@@ -1,5 +1,11 @@
 # Direct Inbox enqueue/deliver source checkpoint
 
+## Independent review repair
+
+Review session review-8x71j2 verified findings 8x71u09h/i: normalize the actual BoundedProcess selector deadline before downstream starts, and add package changelogs. The repair catches Timeout::Error only in discovery/selection; a downstream effect's Timeout::Error is re-raised unchanged. An actual controlled Ruby sleeping child reaches the real bounded runner deadline before any context/effect callback. Cosmetic duplicate blank/help drift is corrected too.
+
+Executed inspected test file: `bin/ace-test ace-herdr test/feat/protected_inbox_cli_test.rb --config-path /Users/mc/.codex/worktrees/xza-direct-cli-contract/ace/.ace/test/runner.yml`. Retained report `.ace-local/test/reports/herdr/537d8327-af51-4ab1-a155-b1955475fa98`: actual 3 tests/103 assertions PASS, raw seed21541, 0.184256s. Includes the existing registered socket composition and both deadline regressions; native/Linux identity and installed probes remain excluded. Separate returned-issuer state implementation is not part of this repair.
+
 The root independently reviewed the technical candidate through ce9b5c576 and accepted bounded technical readiness; equivalent documentation is integrated on main through c2ea2feeb. This implementation worktree retains its original candidate ancestry and imports the shared participant classifier main05e7c951e as1a3f593ea. Whole xza.3 remains draft; this checkpoint changes no task metadata or success criteria and is not self-approved.
 
 ## Implemented bounded source

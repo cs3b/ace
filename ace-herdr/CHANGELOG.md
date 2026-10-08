@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Route protected Inbox enqueue, deliver and status through fixed installed selection and authenticated context admissions, retaining exact inputs and unknown outcomes across restart; ordinary local commands remain independently supported.
+
 - Support explicit bounded read-only regular-file descriptor mappings and exact stdin source handoff; close all unmapped descriptors and reject invalid or stdio-overwriting mappings before spawn.
 
 - Retain pending Inbox effects durably until the fixed authority authenticates their exact canonical completion. Add bounded binary proof exchange and protected snapshot/reconciliation endpoints; exceptions and lost acknowledgements continue to block end/rotation.
