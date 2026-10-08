@@ -976,8 +976,6 @@ module Ace
           deliveries = File.join(root, "deliveries")
           Dir.mkdir(deliveries, 0700)
           File.write(File.join(deliveries, "retained"), "original")
-          key = File.join(root, "key.pem")
-          File.write(key, OpenSSL::PKey::RSA.new(1024).public_to_pem)
           client = File.join(root, "client")
           File.write(client, "#!/bin/sh\nexit 1\n")
           File.chmod(0700, client)
@@ -985,7 +983,7 @@ module Ace
           service = value["authorities"]["authority"]
           service.merge!("uid" => Process.uid, "gid" => Process.gid, "groups" => Process.groups.sort)
           context = value["projects"]["project"]["inbox_contexts"]["inbox"]
-          context.merge!("deliveries_dir" => deliveries, "receipt_public_key" => key,
+          context.merge!("deliveries_dir" => deliveries,
             "pi_queue_client" => client, "pi_queue_client_sha256" => Digest::SHA256.file(client).hexdigest)
           deployment = Authority::Deployment.new(value)
           # Genuine filesystem ownership fails root-installed artifact policy;
@@ -1022,7 +1020,7 @@ module Ace
          ->(context) { context["supervisor_uids"] = [13001] },
          ->(context) { context["supervisor_uids"] = [13005, 13005] },
          ->(context) { context["native_mapping_id"] = "unknown" },
-         ->(context) { context["receipt_public_key"] = "relative.pem" },
+         ->(context) { context["receipt_public_key"] = "/removed/read-proof.pem" },
          ->(context) { context["pi_queue_client"] = "/usr/../tmp/client" },
          ->(context) { context["pi_queue_client_sha256"] = "B" * 64 }].each do |change|
           value = inbox_data

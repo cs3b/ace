@@ -13,7 +13,7 @@ module Ace
         end
         def capture(_pid); authority_peer; end
         def same?(left, right); left == right; end
-        def supported!; raise "consumed proof must not open native endpoint"; end
+        def supported!; raise "fixture must not open native endpoint"; end
       end
       class Launch
         attr_reader :journals, :locked
@@ -51,9 +51,8 @@ module Ace
           @map = @map.merge(original_map_override) if original_map_override
           key = OpenSSL::PKey::RSA.new(2048)
           @key = key
-          key_path = File.join(root, "public.pem"); File.write(key_path, key.public_to_pem)
           @context = {"native_mapping_id" => "mapping", "supervisor_uids" => [13004], "deliveries_dir" => File.join(root, "deliveries"),
-            "receipt_public_key" => key_path, "pi_queue_client" => "/absent/client"}
+            "pi_queue_client" => "/absent/client"}
           @unsafe = false
           @deployment = Object.new
           owner = self
@@ -71,16 +70,10 @@ module Ace
           @context_peer = process(84, 13007)
           @kernel.authority_peer = @authority_peer
           @descriptor_sha256 = Digest::SHA256.hexdigest(JSON.generate(@map))
-          @retained_key = key.public_key
           @history = Object.new
           @history.define_singleton_method(:descriptor!) do |sha256:|
             raise AttemptErrors::EvidenceUnavailable unless sha256 == owner.instance_variable_get(:@descriptor_sha256)
             owner.instance_variable_get(:@deployment)
-          end
-          @history.define_singleton_method(:public_key!) do |sha256:|
-            selected = owner.instance_variable_get(:@retained_key)
-            raise AttemptErrors::EvidenceUnavailable unless sha256 == Digest::SHA256.hexdigest(selected.public_to_der)
-            selected
           end
           @policy = Object.new
           @policy.define_singleton_method(:visible!) { |**| true }
@@ -139,31 +132,23 @@ module Ace
               "agent_session" => {"agent" => "codex", "kind" => "id", "value" => "0123abcd-0000-4000-8000-000000000001"}}}),
               stderr: "", success: true, exit_code: 0)
           end
-          native = Object.new
-          # This maintained fixture injects queue acceptance; observer tests
-          # separately install and verify retained source correlation.
-          native.define_singleton_method(:prepare_submission) { |**| nil }
           @native_calls = 0
-          native.define_singleton_method(:submit) do |**|
+          executor.define_singleton_method(:agent_prompt_bounded) do |**|
             owner.instance_variable_set(:@native_calls, owner.instance_variable_get(:@native_calls) + 1)
-            direct ? {"accepted" => false, "error" => "controlled lost native acknowledgement"} : {"accepted" => true}
+            raise Ace::Herdr::ExecutorError, "controlled lost terminal acknowledgement" if direct
+            Ace::Herdr::Molecules::ExecutionResult.new(stdout: "sent", stderr: "", success: true, exit_code: 0)
           end
-          @box = Ace::Herdr::Organisms::Inbox.new(executor: executor, native: native, deliveries_dir: @context.fetch("deliveries_dir"), receipt_public_key: key.public_key)
+          @box = Ace::Herdr::Organisms::Inbox.new(executor: executor, deliveries_dir: @context.fetch("deliveries_dir"))
           original_options = direct ? {original_context: direct_original_context, original_binding_digest: events.find { |event| event.dig("payload", "operation") == "record_launch" }.fetch("digest")} : {}
           @box.enqueue(event: "event", attempt: "attempt", ref: {"session" => "w1", "pane" => "p1"}, payload: "message", **original_options)
           record = direct ? @box.retained_status(event: "event") : @box.deliver(event: "event")
-          @registration = record.slice("event_id", "attempt_id", "payload_sha256", "receipt_key_sha256")
+          @registration = record.slice("event_id", "attempt_id", "payload_sha256")
           mutate("fixture_registration", "registration", direct ? 6 : child ? 5 : 4, {data: {}, events: [{type: "inbox_binding", payload: {
             "event_id" => "event", "attempt_id" => "attempt", "inbox_context_id" => "context", "registration" => @registration}}]})
-          receipt = record.slice("event_id", "attempt_id", "claim_generation", "payload_sha256", "binding").merge(
-            "outcome" => "consumed", "observer" => {"role" => "supervisor", "id" => "observer"},
-            "evidence" => {"kind" => "consumed_acknowledged", "native_reference" => "native:1", "observation" => "consumed"})
-          @bytes = JSON.generate(receipt); @signature = key.sign(OpenSSL::Digest::SHA256.new, @bytes)
           start_context_pipeline(root)
           restart
           @params = {"mapping_id" => "mapping", "assignment_id" => "assignment", "attempt_id" => "attempt",
-            "expected_generation" => direct ? 7 : child ? 6 : 5, "event_id" => "event", "inbox_context_id" => "context", "expected_registration" => @registration,
-            "receipt_sha256" => Digest::SHA256.hexdigest(@bytes), "signature_sha256" => Digest::SHA256.hexdigest(@signature), "transfer" => {}}
+            "expected_generation" => direct ? 7 : child ? 6 : 5, "event_id" => "event", "inbox_context_id" => "context", "expected_registration" => @registration}
           yield
         ensure
           stop_context_pipeline
@@ -183,10 +168,6 @@ module Ace
         @launch = Launch.new(@journal, @launcher)
         @owner = Authority::Endcap.new(deployment: @deployment, launch: @launch, kernel: @kernel, service_policy: @policy,
           inbox_context_clients: @context_clients, deployment_history: @history)
-      end
-      def reconcile(params: @params, peer: @peer, role: :supervisor, id: "reconcile", parts: [@bytes, @signature])
-        @owner.dispatch(request: {"operation" => "reconcile_inbox", "project_id" => "project", "mutation_id" => id, "params" => params},
-          peer: peer, role: role, transfer: Parts.new(parts))
       end
 
     end

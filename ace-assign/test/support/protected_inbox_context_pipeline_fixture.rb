@@ -8,7 +8,7 @@ require_relative "../../../ace-herdr/test/support/inbox_context_owner_fixture"
 
 module Ace
   module Assign
-    # Actual owner, signed Inbox, canonical query and Server over real sockets.
+    # Actual owner, durable Inbox, canonical query and Server over real sockets.
     # Only installed filesystem credentials/kernel peers are controlled seams.
     module ProtectedInboxContextPipelineFixture
       include ::InboxContextEpochFixture
@@ -48,7 +48,9 @@ module Ace
         config_path = File.join(root, "context-key.json")
         File.write(config_path, JSON.generate("schema" => "ace.herdr.inbox-key/v1", "context_id" => context_id, "key_generation" => 1,
           "public_key_sha256" => Digest::SHA256.hexdigest(@key.public_to_pem)))
-        keys = Ace::Herdr::Molecules::InboxContextKey.new(context_id: context_id, public_key_path: @context.fetch("receipt_public_key"), config_path: config_path,
+        key_path = File.join(root, "context-public.pem")
+        File.write(key_path, @key.public_to_pem)
+        keys = Ace::Herdr::Molecules::InboxContextKey.new(context_id: context_id, public_key_path: key_path, config_path: config_path,
           artifacts: Ace::Runtime::Molecules::ProtectedArtifactSet.new(protection: InboxContextOwnerFixture::FixtureArtifacts.new(root)))
         @context_store = Ace::Herdr::Molecules::InboxContextStore.new(root: state_root, uid: Process.uid, protection: InboxContextOwnerFixture::FixturePaths.new)
         @context_query_wire = query_wire = SocketFixtureWire.new(@socket_root, @authority_peer.fetch("uid"))

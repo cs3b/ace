@@ -2,29 +2,22 @@
 
 require_relative "../test_helper"
 require "ace/herdr"
-require "openssl"
 
 class AssignmentRecoveryTest < AceAssignTestCase
   A = Ace::Assign
   H = Ace::Herdr
-  KEY = OpenSSL::PKey::RSA.generate(2048)
   THREAD = "0123abcd-0000-4000-8000-000000000001"
 
-  class Native
-    attr_reader :calls
-    def initialize
-      @calls = []
-    end
-    def submit(**options)
-      @calls << options
-      {"accepted" => false, "error" => "submission outcome lost"}
-    end
-  end
-
   class Executor
+    attr_reader :calls
     attr_accessor :thread
     def initialize
       @thread = THREAD
+      @calls = []
+    end
+    def agent_prompt_bounded(**options)
+      @calls << options
+      raise H::ExecutorError, "submission outcome lost"
     end
     def pane_get_bounded(_id)
       H::Molecules::ExecutionResult.new(stdout: JSON.generate("result" => {"pane" => {
@@ -53,7 +46,6 @@ class AssignmentRecoveryTest < AceAssignTestCase
       runtime: "native:thread", adapter: "service", process_pid: Process.pid)
     @deliveries = File.join(@repo, ".ace-local/herdr/deliveries")
     @executor = Executor.new
-    @native = Native.new
     @inbox = inbox
     @coordinator = coordinator
     @attempt = @coordinator.start(assignment_id: @assignment.id, step: "010", project_id: "ace",
@@ -63,12 +55,6 @@ class AssignmentRecoveryTest < AceAssignTestCase
       ref: {"session" => "ws1", "pane" => "p1"}, payload: "work instruction")
     @coordinator.bind_inbox(attempt_id: @attempt.attempt_id, event_id: @event, inbox: @inbox, identity: @identity)
     @record = @inbox.deliver(event: @event)
-    @proof = {"event_id" => @event, "attempt_id" => @attempt.attempt_id,
-      "claim_generation" => @record["claim_generation"], "payload_sha256" => @record["payload_sha256"],
-      "binding" => @record["binding"], "outcome" => "consumed",
-      "observer" => {"role" => "supervisor", "id" => "observer-1"},
-      "evidence" => {"kind" => "consumed_acknowledged", "native_reference" => "native-observation:42",
-        "observation" => "native consumption acknowledged"}}
   end
 
   def teardown
@@ -89,23 +75,8 @@ class AssignmentRecoveryTest < AceAssignTestCase
       lifecycle_exclusion: A::Molecules::LifecycleExclusion.new(root: File.join(@dir, "exclusion")))
   end
 
-  def inbox(key: KEY)
-    H::Organisms::Inbox.new(executor: @executor, native: @native, deliveries_dir: @deliveries,
-      receipt_public_key: key.public_key)
-  end
-
-  def reconcile(proof = @proof, key: KEY, consumer: @coordinator, transport: @inbox)
-    path = File.join(@dir, "proof.json")
-    bytes = JSON.generate(proof)
-    File.binwrite(path, bytes)
-    File.binwrite("#{path}.sig", key.sign(OpenSSL::Digest::SHA256.new, bytes))
-    consumer.reconcile_inbox(attempt_id: @attempt.attempt_id, event_id: @event, receipt_path: path,
-      inbox: transport, identity: @identity)
-  end
-
-  def events
-    @coordinator.send(:journal_for).read_events(@assignment.id)
-      .select { |event| event["type"] == "inbox_reconciliation" }
+  def inbox
+    H::Organisms::Inbox.new(executor: @executor, deliveries_dir: @deliveries)
   end
 
   def test_managed_runtime_owner_is_produced_by_adapter_and_reobserved_after_restart
@@ -136,27 +107,22 @@ class AssignmentRecoveryTest < AceAssignTestCase
     end
   end
 
-  def test_consumed_after_supervisor_restart_settles_once_without_business_effect_success
+  def test_uncertain_submission_after_restart_never_resends_or_changes_attempt
     before = git("rev-parse", "HEAD")
-    assert_equal "reconcile-required", coordinator.recovery_snapshot(@assignment.id)["attempts"].first["decision"]
-    assert_equal "completed", reconcile(consumer: coordinator, transport: inbox)["state"]
-    assert_equal "completed", reconcile(consumer: coordinator, transport: inbox)["state"]
-    assert_equal 1, events.length
-    assert_equal "running", coordinator.recovery_snapshot(@assignment.id)["attempts"].first["state"]
-    assert_equal 1, @native.calls.length
+    assert_equal "uncertain", inbox.deliver(event: @event)["state"]
+    snapshot = coordinator.recovery_snapshot(@assignment.id)
+    assert_equal "uncertain", snapshot["inbox_events"].first["state"]
+    assert_equal "running", snapshot["attempts"].first["state"]
+    assert_equal "adopt", snapshot["attempts"].first["decision"]
+    assert_equal 1, @executor.calls.length
     assert_equal before, git("rev-parse", "HEAD")
-    refute JSON.generate(events).include?("work instruction")
-    refute JSON.generate(events).include?("native consumption acknowledged")
   end
 
   def test_registered_live_and_archived_records_fail_closed_when_replaced
-    reconcile(consumer: coordinator, transport: inbox)
     original = H::Molecules::DeliveryRecordStore.load(@deliveries, @event).to_h
     changes = [
       ->(data) { data["inbox"]["attempt_id"] = "different-attempt" },
-      ->(data) { data["inbox"]["receipt_key_sha256"] = "different-key" },
-      ->(data) { data["answer"] = "replaced"; data["answer_digest"] = Digest::SHA256.hexdigest("replaced") },
-      ->(data) { data["inbox"]["claim_generation"] += 1 }
+      ->(data) { data["answer"] = "replaced"; data["answer_digest"] = Digest::SHA256.hexdigest("replaced") }
     ]
     changes.each do |change|
       [false, true].each do |archive|
@@ -170,28 +136,10 @@ class AssignmentRecoveryTest < AceAssignTestCase
         end
         snapshot = coordinator.recovery_snapshot(@assignment.id)
         assert_equal "unknown", snapshot["inbox_events"].find { |record| record["event_id"] == @event }["state"]
-        assert_equal "reconcile-required", snapshot["decision"]
+        assert_equal "adopt", snapshot["decision"]
         FileUtils.rm_rf(File.join(@deliveries, "archive"))
       end
     end
-  end
-
-  def test_public_inbox_consumer_uses_existing_signed_proof_and_redacts_output
-    path = File.join(@dir, "proof.json")
-    bytes = JSON.generate(@proof)
-    File.binwrite(path, bytes)
-    File.binwrite("#{path}.sig", KEY.sign(OpenSSL::Digest::SHA256.new, bytes))
-    command = A::CLI::Commands::InboxReconcile.new(coordinator: @coordinator, inbox: @inbox)
-    context = A::Authority::ProtectedAssignmentContext.new(deployment: nil, history: nil, env: {})
-    output = A::Authority::ProtectedAssignmentContext.stub(:load, context) do
-      capture_io { command.call(attempt: @attempt.attempt_id, event: @event, receipt: path) }.first
-    end
-    projection = JSON.parse(output)
-    assert_equal "completed", projection["state"]
-    assert_equal @attempt.attempt_id, projection["attempt_id"]
-    refute output.include?("observation")
-    refute output.include?("work instruction")
-    assert_equal 1, events.length
   end
 
   def test_compaction_with_same_binding_does_not_reregister_or_replay_payload
@@ -200,93 +148,17 @@ class AssignmentRecoveryTest < AceAssignTestCase
     @coordinator.send(:journal_for).read_events(@assignment.id).then do |history|
       assert_equal 1, history.count { |event| event["type"] == "inbox_binding" }
     end
-    assert_equal 1, @native.calls.length
+    assert_equal 1, @executor.calls.length
     assert_equal @record["binding"], @inbox.status(event: @event)["binding"]
     assert_equal "uncertain", @inbox.status(event: @event)["state"]
-  end
-
-  def test_crash_after_transport_receipt_before_consumer_journal_is_recoverable
-    bytes = JSON.generate(@proof)
-    @inbox.reconcile(event: @event, receipt: @proof, signed_bytes: bytes,
-      signature: KEY.sign(OpenSSL::Digest::SHA256.new, bytes))
-    assert_empty events
-    assert_equal "completed", reconcile(consumer: coordinator, transport: inbox)["state"]
-    assert_equal 1, events.length
-  end
-
-  def test_invalid_or_absent_proofs_preserve_uncertainty
-    invalid = [@proof.merge("claim_generation" => 88), @proof.merge("attempt_id" => "other"),
-      @proof.merge("payload_sha256" => "b" * 64), @proof.merge("binding" => @proof["binding"].merge("thread" => "other")),
-      @proof.merge("observer" => {"role" => "requester", "id" => "self"}), @proof.reject { |key, _| key == "evidence" }]
-    invalid.each do |proof|
-      result = reconcile(proof)
-      assert_equal "uncertain", result["state"]
-      assert result["reconciliation_refusal"]
-    end
-    assert_equal "uncertain", reconcile(key: OpenSSL::PKey::RSA.generate(2048))["state"]
-    assert_empty events
-    assert_equal 1, @native.calls.length
-  end
-
-  def test_rotation_with_unresolved_event_refuses_new_key_and_accepts_retained_pair
-    replacement = OpenSSL::PKey::RSA.generate(2048)
-    result = reconcile(key: replacement, transport: inbox(key: replacement))
-    assert_equal "uncertain", result["state"]
-    assert_match(/public key differs/, result["reconciliation_refusal"])
-    assert_equal "completed", reconcile(transport: inbox)["state"]
-  end
-
-  def test_superseded_requeues_same_event_but_does_not_restart_or_succeed_attempt
-    proof = @proof.merge("outcome" => "superseded", "evidence" => {
-      "kind" => "queue_evicted", "native_reference" => "eviction:42", "observation" => "cannot consume old entry"})
-    assert_equal "queued", reconcile(proof)["state"]
-    assert_equal "queued", reconcile(proof, consumer: coordinator)["state"]
-    assert_equal "running", coordinator.recovery_snapshot(@assignment.id)["attempts"].first["state"]
-    assert_equal "superseded", events.first.dig("payload", "outcome")
-    @inbox.deliver(event: @event)
-    result = reconcile(proof)
-    assert_equal "uncertain", result["state"]
-    assert result["reconciliation_refusal"]
-    assert_equal 2, @native.calls.length
-    assert_equal 1, events.length
   end
 
   def test_missing_record_and_stale_target_stay_uncertain_and_never_resend
     File.unlink(H::Molecules::DeliveryRecordStore.path_for(@deliveries, @event))
     snapshot = coordinator.recovery_snapshot(@assignment.id)
     assert_equal "unknown", snapshot["inbox_events"].first["state"]
-    assert_equal "reconcile-required", snapshot["attempts"].first["decision"]
-    assert_equal 1, @native.calls.length
+    assert_equal "adopt", snapshot["attempts"].first["decision"]
+    assert_equal 1, @executor.calls.length
   end
-  def test_replacement_after_registration_check_cannot_settle_another_attempt
-    transport = inbox
-    original_status = transport.method(:status)
-    deliveries = @deliveries
-    event_id = @event
-    replaced = false
-    transport.define_singleton_method(:status) do |event:|
-      observed = original_status.call(event: event)
-      unless replaced
-        H::Molecules::DeliveryRecordStore.with_lock(deliveries, event_id) do
-          record = H::Molecules::DeliveryRecordStore.load(deliveries, event_id)
-          data = JSON.parse(JSON.generate(record.to_h))
-          data['inbox']['attempt_id'] = 'substituted-attempt'
-          H::Molecules::DeliveryRecordStore.save(H::Models::DeliveryRecord.from_h(data), deliveries)
-        end
-        replaced = true
-      end
-      observed
-    end
-    proof = @proof.merge('attempt_id' => 'substituted-attempt')
-    refused = false
-    begin
-      result = reconcile(proof, transport: transport)
-      refused = result['reconciliation_refusal'] || result['state'] != 'completed'
-    rescue A::AttemptErrors::ReceiptRejected
-      refused = true
-    end
-    assert refused, 'Consumer settled substituted attempt after registration status check'
-    assert_empty events
-    assert_equal 'uncertain', H::Molecules::DeliveryRecordStore.load(@deliveries, @event).state
-  end
+
 end
