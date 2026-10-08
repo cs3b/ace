@@ -31,7 +31,7 @@ Only installed filesystem/key selection and OS/kernel/native boundaries are cont
 
 - [x] Join independently reviewed shared `mapping_hint?` helper before ordinary-mode branch verification/integration. No duplicate helper is introduced.
 - [x] Execute existing ordinary local finish/reconcile owners with fixed filesystem selection injected absent, leaving their actual local coordinator and temp Git behavior intact.
-- [ ] Independent final review and combined-source integration verification.
+- [x] Independent final review and combined-source integration verification for this bounded CLI slice (details below).
 
 Family scope remains open: public result submission and wider Inbox reconciliation workflow adoption, actual domain/installed producers, and protected R2/R3 are not closed by these CLI consumers. No task metadata or family success criteria are promoted here.
 
@@ -46,3 +46,7 @@ Result tests must run actual registered worker command → real Client/Server �
 `Commands::InboxReconcile` currently constructs local AttemptCoordinator and Inbox.from_config unconditionally. Its protected branch must use the same installed participant classification and fixed Client, with exact mapping/assignment/attempt/context/event, expected registration, original authority generation and stable mutation. Existing `EndcapInboxes#inbox_selection` authenticates actual mapped supervisor/original launcher; `inbox_environment` authenticates canonical original registration/native lineage. Receipt and detached signature are uploaded together using existing `:inbox_proof`; receipt/signature SHA and expected registration remain explicit, never current local cache authority. Existing signed Herdr receipt authentication, original descriptor/key selection and context completion query remain the only acceptance owners.
 
 Inbox tests must start from real public binding and signed retained native receipt, then registered reconciliation → actual public transfer/context/canonical import, including Herdr-before-Git recovery and exact accepted replay. Wrong registration/key/context, malformed signature, current/replaced native target, foreign role and same-ID changed bytes refuse without local coordinator, native resend or partial import. Ordinary local reconciliation remains separate and must be tested with absent installed selection injected, not host discovery.
+
+## Independent integration verdict
+
+Root independently reviewed frozen `11f8342dd02daefd863361e7d4332cb1a9d049a4` production, fixture, documentation and raw ordinary/binding receipts: APPROVE bounded three-command adoption. Integrated as `e43ff67ec`. Post-integration actual successful finish with independent review passed1/19, seed28108,19.43127s (`assign/568eb5a1-2207-47fd-bf8c-4415dd351f25`). Ordinary finish/reconcile and protected refusal files separately passed9/97 (`assign/aacf8f88-3519-48bd-8d92-f1d2c1614d75`). The initial combined command carried a file:line selector that selected only the successful-finish method; its one-test result is not evidence for the ordinary files. No source changed during either run. All remaining family obligations listed above remain open.
