@@ -47,3 +47,7 @@ See protected-attempt-cli-adoption-candidate.md. Actual pending service/Inbox
 public recovery classification and fresh sealed bind refusal still need composed
 coverage. No installed/native/root/systemd test or whole-family closure claim.
 Independent source verdict remains required before integration.
+
+## Main integration
+
+Independent reviewer `/root/audit_runtime_delivery_status` approved frozen `938fe2344` plus repair `8243e70ae`; exact-prefix independent-review finding resolved. Integrated as `64cda42e9` and `623aa67e4`; main Server event-read wrapper retained with new bodyless operation list. On unchanged `623aa67e4`, the actual five-case consumer file plus ReceiptVerifier and event-read-operation files passed **30 tests / 205 assertions**, seed19121,151.64833s, zero skips: `assign/0d0ba03b-e6b1-4e9c-9d71-171fb9c35818`. This remains controlled source evidence; CLI/role adoption, pending service/Inbox and sealed-binding gates remain open.
