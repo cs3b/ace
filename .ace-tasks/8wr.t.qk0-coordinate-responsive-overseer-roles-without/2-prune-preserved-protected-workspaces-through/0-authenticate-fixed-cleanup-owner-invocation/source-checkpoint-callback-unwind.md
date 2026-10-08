@@ -1,0 +1,13 @@
+# Cleanup callback terminal-unconfirmed correction
+
+Base `de83cd57f`. ProtectedCleanupOwner formerly retained `:invoked` after any callback exception. Original inspection waited for that state forever/until its request deadline even though the Ruby callback had ended. Listener teardown also had an existing indefinite wait for the stale state.
+
+Root approved the narrow owner correction: distinguish active callback from terminal-unconfirmed attempt, retain input consumption/inhibition and broadcast only after actual callback/validation unwind. Preserve the original exception; no catch-to-success or no-effect conversion. Inspection waits for true active invocation, then calls the same actual Installer inspector. Repeat execute cannot reissue. A callback that never unwinds still requires its existing deadline/domain owner; this patch does not add a killer/supervisor.
+
+`input_inhibition.pending_effects: 0` establishes no active/reissuable OWNER CALLBACK only. It is not proof of no descendant, writer or physical effect. Author412 confirmed the same API requires fresh canonical/challenge admission, original lifetime inhibition, complete retained baseline, unchanged physical resources, false fence and positive handler/writer quiescence before failed-no-effect. Unknown children, partial capture and true fence still refuse. Replacement root cannot inherit that inhibition; retained-success readback remains separate.
+
+After actual connection/callback threads have ended, shutdown reports a value-free RuntimeUnavailable for unconfirmed outcome and closes its original transport resources. It does not settle the canonical consumed dispatch, manufacture receipt, restart/retry effects or assert physical closure. Existing serve exceptions are not replaced by this shutdown diagnosis.
+
+Tests exercise real ingress sockets, callback synchronization, listener/lock teardown and client framing with controlled identity/admission/snapshot/domain collaborators. They are state-owner tests, not full canonical or physical proof. The raised callback preserves the exact exception and invokes once; actual inspector entry refuses unproven no-effect. Concurrent inspection cannot enter while the callback's ensure remains blocked. Ended unconfirmed callback shutdown returns bounded error without inspecting/settling; existing live-handler lifetime-lock tests remain unchanged.
+
+FAIL-BEFORE exact new raised-callback case: `e707a469-acaa-44bc-9ac7-475a80494f9c`,1/2, expected unconfirmed but actual invoked. PASS-AFTER full inspected listener and client files: `8bd37a4f-d065-4a34-bdb2-2400ebec28df`,16/118,193.05ms. No live handles, native/root/installed probes, Lab edits or physical acceptance. Independent source verdict pending.

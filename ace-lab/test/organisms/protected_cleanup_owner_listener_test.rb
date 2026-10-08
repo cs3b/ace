@@ -225,7 +225,165 @@ class ProtectedCleanupOwnerListenerTest < Minitest::Test
     end
   end
 
+  def test_raised_callback_is_consumed_and_actual_inspector_still_must_prove_no_effect
+    with_endpoint do
+      original_error = Errno::EIO.new("controlled pre-fence callback failure")
+      invocations, inspections = [], []
+      installer = Object.new
+      installer.define_singleton_method(:execute_cleanup!) { |**arguments| invocations << arguments; raise original_error }
+      installer.define_singleton_method(:inspect_cleanup!) do |**arguments|
+        inspections << arguments
+        raise SecurityError, "domain proof unavailable: unknown child or partial capture"
+      end
+      owner, context, binding, frame = invocation_fixture(installer)
+      assert_same original_error, dispatch_error(owner, frame)
+      retained = owner.instance_variable_get(:@consumed).fetch("request")
+      assert_equal :unconfirmed, retained.fetch(:state)
+      assert retained.fetch(:inhibited)
+      refute retained.key?(:result)
+      assert_instance_of Ace::Runtime::RuntimeUnavailableError, dispatch_error(owner, frame)
+      assert_equal 1, invocations.size, "same original execute must never reissue"
+      error = inspection_error(owner, frame, context, binding)
+      assert_instance_of SecurityError, error
+      assert_includes error.message, "domain proof unavailable"
+      assert_equal 1, inspections.size
+      assert_equal 0, inspections.first.fetch(:context).fetch("input_inhibition").fetch("pending_effects")
+      assert_equal :unconfirmed, retained.fetch(:state), "inspector refusal cannot settle the outcome"
+      refute retained.key?(:result)
+    end
+  end
+
+  def test_concurrent_inspection_waits_for_callback_ensure_to_actually_unwind
+    with_endpoint do
+      unwinding, release, waiting, inspected = Queue.new, Queue.new, Queue.new, Queue.new
+      original_error = IOError.new("controlled callback error")
+      installer = Object.new
+      installer.define_singleton_method(:execute_cleanup!) do |**_|
+        begin
+          raise original_error
+        ensure
+          unwinding << true
+          release.pop
+        end
+      end
+      installer.define_singleton_method(:inspect_cleanup!) do |**_|
+        inspected << true
+        raise SecurityError, "actual inspector refuses unproven no-effect"
+      end
+      owner, context, binding, frame = invocation_fixture(installer)
+      changed = owner.instance_variable_get(:@changed)
+      real_wait = changed.method(:wait)
+      changed.define_singleton_method(:wait) { |*arguments| waiting << true; real_wait.call(*arguments) }
+      effect = Thread.new { dispatch_error(owner, frame) }
+      Timeout.timeout(2) { unwinding.pop }
+      inspection = Thread.new { inspection_error(owner, frame, context, binding, seconds: 2) }
+      Timeout.timeout(2) { waiting.pop }
+      assert inspected.empty?, "exception raised is not callback unwind"
+      assert_equal :invoked, owner.instance_variable_get(:@consumed).fetch("request").fetch(:state)
+      release << true
+      assert effect.join(2)
+      assert_same original_error, effect.value
+      assert inspection.join(2)
+      assert_instance_of SecurityError, inspection.value
+      assert_equal 1, inspected.size
+      assert_equal :unconfirmed, owner.instance_variable_get(:@consumed).fetch("request").fetch(:state)
+    ensure
+      release << true if release
+      effect&.join(2)
+      inspection&.join(2)
+    end
+  end
+
+  def test_unconfirmed_ended_callback_shutdown_reports_error_without_settlement
+    with_endpoint do |path|
+      inspections = 0
+      installer = Object.new
+      installer.define_singleton_method(:execute_cleanup!) { |**_| raise IOError, "controlled unconfirmed invocation" }
+      installer.define_singleton_method(:inspect_cleanup!) { |**_| inspections += 1; raise "shutdown cannot inspect or settle" }
+      owner, _, _, frame = invocation_fixture(installer)
+      assert_instance_of IOError, dispatch_error(owner, frame)
+      server = UNIXServer.method(:new)
+      ready = Queue.new
+      thread = nil
+      Ace::Runtime::Molecules::ProtectedSocket.stub(:root_path!, ->(*_, **_) { true }) do
+        UNIXServer.stub(:new, ->(selected) { server.call(selected).tap { ready << true } }) do
+          thread = Thread.new do
+            begin
+              owner.serve(connect_gid: Process.gid)
+            rescue Exception => error
+              error
+            end
+          end
+          Timeout.timeout(2) { ready.pop }
+          owner.stop
+          assert thread.join(2), "ended callback must not become an indefinite shutdown wait"
+          assert_instance_of Ace::Runtime::RuntimeUnavailableError, thread.value
+          assert_includes thread.value.message, "unconfirmed after callback termination"
+          File.open("#{path}.lock", File::RDWR) { |lock| assert lock.flock(File::LOCK_EX | File::LOCK_NB) }
+          assert_equal 0, inspections
+          refute File.exist?(path)
+          retained = owner.instance_variable_get(:@consumed).fetch("request")
+          assert_equal :unconfirmed, retained.fetch(:state)
+          refute retained.key?(:result)
+        end
+      end
+    ensure
+      owner&.stop
+      thread&.join(2)
+    end
+  end
+
   private
+
+  # Invocation-state unit boundary: real wire and callback synchronization,
+  # controlled canonical admission/snapshot and domain proof. No grant claimed.
+  def invocation_fixture(installer)
+    binding = {"controlled" => "same original root"}
+    context = {"record" => {"request_id" => "request", "operation_owner_binding" => binding}}
+    observer = Object.new
+    observer.define_singleton_method(:observe_self!) { |**_| binding }
+    admission = Object.new
+    admission.define_singleton_method(:receiver!) { |_| true }
+    admission.define_singleton_method(:connection_group!) { |_| true }
+    admission.define_singleton_method(:admit!) { |**_| context }
+    snapshot = Object.new
+    snapshot.define_singleton_method(:with) { |deadline:, &block| block.call(:controlled_view) }
+    kernel = Object.new
+    kernel.define_singleton_method(:peer) { |_| {"controlled" => "actual ingress receiver"} }
+    owner = Ace::Lab::Organisms::ProtectedCleanupOwner.new(observer: observer, admission: admission,
+      snapshots: ->(&block) { block.call(snapshot) }, journals: ->(_) { Object.new }, kernel: kernel,
+      installer: installer, scratch_root: @scratch, protection: controlled_protection)
+    frame = {"schema" => Ace::Lab::Molecules::ProtectedCleanupOwnerClient::SCHEMA, "kind" => "execute",
+      "request_id" => "request", "input_digest" => "a" * 64, "dispatch_event_digest" => "b" * 64,
+      "operation_owner_binding_digest" => Ace::Assign::Atoms::EvidenceDigest.digest(binding)}
+    [owner, context, binding, frame]
+  end
+
+  def dispatch_error(owner, frame)
+    server, client = UNIXSocket.pair
+    wire = Ace::Runtime::Molecules::ProtectedSocket
+    wire.write(client, frame, deadline: wire.deadline(2))
+    client.shutdown(Socket::SHUT_WR)
+    owner.handle(server)
+    flunk "unconfirmed invocation cannot emit success"
+  rescue Exception => error
+    error
+  ensure
+    server&.close unless server&.closed?
+    client&.close unless client&.closed?
+  end
+
+  def inspection_error(owner, frame, context, binding, seconds: 0.2)
+    server, client = UNIXSocket.pair
+    owner.send(:inspection, server, frame.merge("kind" => "inspect", "challenge_ref" => {}), context, binding,
+      Ace::Runtime::Molecules::ProtectedSocket.deadline(seconds), receiver_peer: {"controlled" => "fresh receiver"})
+    flunk "unproved inspection cannot emit a result"
+  rescue Exception => error
+    error
+  ensure
+    server&.close unless server&.closed?
+    client&.close unless client&.closed?
+  end
 
   def controlled_protection
     Object.new.tap { |protection| protection.define_singleton_method(:verify!) { |*_, **_| true } }

@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- End failed cleanup callback activity without treating its unknown outcome as settlement; permit actual domain inspection and report unconfirmed shutdown instead of waiting forever on an ended callback.
+
 - Reuse immutable canonical event reads only within each held cleanup admission, discarding the memo before Installer effects and subsequent connections.
 
 - Load protected policy and listener dependencies directly, preserving the fixed trusted authorization path and error hierarchy without loading broad package configuration entrypoints.

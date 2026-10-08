@@ -114,12 +114,13 @@ module Ace
         ensure
           @listener.close if @listener && !@listener.closed?
           @lock.synchronize do
-            # An exceptional effect is unconfirmed even after its Ruby thread
-            # exits. Keep the lifetime exclusion until actual recovery settles it.
+            # Wait for actual callbacks, never mistake a dead callback's
+            # unconfirmed outcome for activity or physical settlement.
             while @connections.any?(&:alive?) || @consumed.values.any? { |entry| entry[:state] == :invoked }
               @changed.wait(@lock, 0.1)
             end
           end
+          unconfirmed = @lock.synchronize { @consumed.values.any? { |entry| entry[:state] == :unconfirmed } }
           if endpoint
             begin
               verify_parents!(parents)
@@ -131,6 +132,9 @@ module Ace
           end
           lifetime&.close
           parents&.each { |entry| entry.fetch(:handle).close }
+          if unconfirmed && $!.nil?
+            raise Ace::Runtime::RuntimeUnavailableError, "cleanup invocation outcome remains unconfirmed after callback termination"
+          end
         end
 
         def stop
@@ -208,13 +212,23 @@ module Ace
               true
             end
             raise Ace::Runtime::RuntimeUnavailableError, "cleanup original result unavailable" unless authorized
-            # No canonical/source lock is held over fixed privileged work.
-            unless @observer.observe_self!(deadline: [deadline, Wire.deadline(5)].min) == original
-              raise SecurityError, "cleanup original owner changed before invocation"
+            begin
+              # No canonical/source lock is held over fixed privileged work.
+              unless @observer.observe_self!(deadline: [deadline, Wire.deadline(5)].min) == original
+                raise SecurityError, "cleanup original owner changed before invocation"
+              end
+              result = @installer.execute_cleanup!(context: context, receiver_peer: receiver_peer, deadline: deadline)
+              result = result!(result, frame)
+              @lock.synchronize { retained[:result] = result; retained[:state] = :completed }
+            ensure
+              @lock.synchronize do
+                if retained[:state] == :invoked
+                  retained[:state] = :unconfirmed
+                  retained[:inhibited] = true
+                end
+                @changed.broadcast
+              end
             end
-            result = @installer.execute_cleanup!(context: context, receiver_peer: receiver_peer, deadline: deadline)
-            result = result!(result, frame)
-            @lock.synchronize { retained[:result] = result; retained[:state] = :completed; @changed.broadcast }
           end
           unless @observer.observe_self!(deadline: [deadline, Wire.deadline(5)].min) == original
             raise SecurityError, "cleanup original owner changed before result"
@@ -253,6 +267,8 @@ module Ace
                 @changed.wait(@lock, remaining)
               end
             end
+            # This is callback inhibition only. Child/writer/physical absence
+            # still requires the actual domain inspector's independent proof.
             inhibition = {"operation_owner_binding_digest" => frame.fetch("operation_owner_binding_digest"),
               "dispatch_event_digest" => frame.fetch("dispatch_event_digest"), "state" => "inhibited", "pending_effects" => 0}
             context = Atoms::ProtectedWorkspacePruneInput.freeze_value(context.merge("input_inhibition" => inhibition))
