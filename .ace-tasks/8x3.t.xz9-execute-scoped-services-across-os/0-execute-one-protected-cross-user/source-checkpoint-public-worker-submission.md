@@ -40,3 +40,9 @@ Review correction: the changed-artifact negative now supplies both declared part
 so it reaches the exact typed hash/declaration refusal rather than a count mismatch.
 Client calls remain unchanged. Executed 9bb11e3d-9c99-4675-bb7f-465a141097b1:
 1 test / 16 assertions, 20.1ms. This supersedes the hash-specific claim of 37aa43c1.
+
+### Formal-review corrections
+
+The successor registers both submission commands in public help, derives the local receipt vocabulary from the same ExecutionReceipt model as Endcap, corrects top-level usage prefixes, and tests malformed Inbox registration/receipt/signature inputs before any send or local coordinator construction. Model-known campaign serialization does not grant campaign authority: the maintained public wire test observes the unchanged Endcap campaign refusal before the first accepted result and proves the canonical ref unchanged.
+
+Executed source-only checks: registered fast submission/Inbox cases **3/43 PASS**, report `ea50034a-9ade-40dd-bbb2-b8a30912867e`; actual public succeeded finish/campaign-owner refusal **1/60 PASS in 24.05s**, report `e4b48738-f539-470b-a6cd-bf3cd9c02419`. Retained failures: `37b6ceae` placed the campaign negative after accepted result and incorrectly expected an internal reason through the sanitized wire; `aae6cd39` expected an authority exception for an empty argument rejected earlier by the public parser. Corrections preserve production error disclosure and canonical ownership. Delivery-child composition remains a separate open gate.

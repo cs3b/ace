@@ -11,6 +11,12 @@ module Ace
           include Attempt::Base
           private
 
+          def require_option(options, key, usage)
+            value = options[key].to_s.strip
+            raise Ace::Support::Cli::Error, "Missing --#{key}: usage: ace-assign #{usage}" if value.empty?
+            value
+          end
+
           def submission_request(options, usage)
             context = protected_context(options)
             raise AttemptErrors::EvidenceUnavailable, "Submission requires installed protected authority" unless context

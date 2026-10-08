@@ -112,6 +112,8 @@ module Ace
         ["authority inbox-context-principal", "Classify the actual caller through every retained protected owner"],
         ["authority inbox-context-selection", "Read the fixed installed inbox context selection"],
         ["delivery", "Execute or reconcile attempt-bound forge delivery"],
+        ["submit-candidate", "Submit original protected worker candidate bytes"],
+        ["submit-result", "Submit original protected worker receipt and artifact bytes"],
         ["status", "Show assignment status"],
         ["step", "Show step instructions"],
         ["start", "Start next workable step"],

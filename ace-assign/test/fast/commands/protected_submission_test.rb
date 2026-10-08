@@ -61,6 +61,36 @@ module Ace
           end
         end
       end
+
+      def test_help_top_level_usage_and_model_receipt_vocabulary
+        output, = capture_io { assert_equal 0, CLI.start(["--help"]) }
+        assert_includes output, "submit-candidate"
+        assert_includes output, "submit-result"
+        calls = []
+        client = Object.new
+        client.define_singleton_method(:call) { |*args, **options| calls << [args, options]; Struct.new(:data).new({"generation" => 8}) }
+        Authority::ProtectedAssignmentContext.stub(:load, command_context(client)) do
+          missing = assert_raises(Ace::Support::Cli::Error) { CLI.start(["submit-candidate", "--mapping", "mapping"]) }
+          assert_includes missing.message, "usage: ace-assign submit-candidate"
+          refute_includes missing.message, "ace-assign attempt submit-candidate"
+          Dir.mktmpdir("receipt-vocabulary-") do |root|
+            receipt = Models::ExecutionReceipt.new(assignment_id: "assignment", attempt_id: "attempt", project_id: "project",
+              scope: "010", operation: "work", producer: {"actor" => "worker", "role" => "worker", "runtime" => "herdr"},
+              head: "a" * 40, verdict: "failed", campaign: {"id" => "campaign"}, recorded_at: Time.now.utc)
+            path = File.join(root, "receipt.json")
+            File.binwrite(path, JSON.generate(receipt.to_h))
+            capture_io do
+              assert_equal 0, CLI.start(["submit-result", "--mapping", "mapping", "--assignment", "assignment",
+                "--attempt", "attempt", "--head", "a" * 40, "--candidate-generation", "1",
+                "--expected-generation", "7", "--mutation", "model-fields", "--receipt", path])
+            end
+            assert_equal 1, calls.size
+            assert_equal [File.binread(path)], calls.first.last.fetch(:upload_parts)
+            # Local serialization vocabulary does not grant campaign authority;
+            # the actual Endcap campaign refusal is covered by the wire fixture.
+          end
+        end
+      end
     end
   end
 end

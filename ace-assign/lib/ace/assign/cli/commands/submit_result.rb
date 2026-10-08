@@ -28,7 +28,7 @@ module Ace
             bytes = input_bytes(require_option(options, :receipt, usage), limit: 16 * 1024)
             receipt = input_json(bytes)
             raise Ace::Support::Cli::Error, "Receipt must be an object" unless receipt.is_a?(Hash)
-            allowed = %w[attempt_id assignment_id project_id scope operation producer head verdict artifacts checks review recorded_at digest]
+            allowed = Models::ExecutionReceipt.from_h(receipt).to_h.keys
             if (receipt.keys - allowed).any? || Models::ExecutionReceipt.forbidden_field?(receipt)
               raise Ace::Support::Cli::Error, "Receipt contains unsupported fields"
             end

@@ -523,6 +523,28 @@ module Ace
           result_args = ["submit-result", "--mapping", "mapping", "--assignment", "assignment", "--attempt", @attempt,
             "--head", @head, "--candidate-generation", "2", "--expected-generation", generation.to_s,
             "--mutation", "worker-result", "--receipt", receipt_path, "--artifact", artifact_path]
+          campaign_receipt = Models::ExecutionReceipt.from_h(receipt.to_h.merge("campaign" => {"id" => "campaign"}, "digest" => nil))
+          campaign_path = File.join(@root, "campaign-receipt.json")
+          File.binwrite(campaign_path, JSON.generate(campaign_receipt.to_h))
+          campaign_args = result_args.dup
+          campaign_args[campaign_args.index("worker-result")] = "campaign-result"
+          campaign_args[campaign_args.index(receipt_path)] = campaign_path
+          campaign_args[campaign_args.index("--expected-generation") + 1] = generation.to_s
+          campaign_ref = @journal.ref_value
+          campaign_owner_error = nil
+          original_verifier = @endcap.method(:verify_result_receipt)
+          observing_verifier = lambda do |*args|
+            original_verifier.call(*args)
+          rescue AttemptErrors::EvidenceUnavailable => error
+            campaign_owner_error = error.message
+            raise
+          end
+          @endcap.stub(:verify_result_receipt, observing_verifier) do
+            refusal = assert_raises(AttemptErrors::EvidenceUnavailable) { public_cli_json(campaign_args) }
+            assert_equal "protected authority refused (evidence_unavailable)", refusal.message
+          end
+          assert_equal "protected campaigns require their canonical owner", campaign_owner_error
+          assert_equal campaign_ref, @journal.ref_value
           result = public_cli_json(result_args)
           result_ref = @journal.ref_value
           assert_equal result, public_cli_json(result_args)
