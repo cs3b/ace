@@ -4,6 +4,7 @@ require_relative "../test_helper"
 require_relative "../../../ace-assign/test/support/endcap_result_owner_fixture"
 require_relative "../../../ace-assign/test/support/original_launch_driver_owner_fixture"
 require_relative "../../../ace-assign/test/support/execution_boot_baseline_owner_fixture"
+require_relative "../../../ace-assign/test/support/prepared_workspace_resource_fixture"
 require "ace/assign/authority/server"
 require "ace/assign/authority/client"
 require "ace/assign/authority/prepared_worker"
@@ -16,6 +17,7 @@ class ProtectedWorkOnCompositionTest < AceOverseerTestCase
   include Ace::Assign::EndcapResultOwnerFixture
   include Ace::Assign::OriginalLaunchDriverOwnerFixture
   include Ace::Assign::ExecutionBootBaselineOwnerFixture
+  include Ace::Assign::PreparedWorkspaceResourceFixture
 
   class ArtifactProtection
     def root_path!(_); true; end
@@ -153,6 +155,7 @@ class ProtectedWorkOnCompositionTest < AceOverseerTestCase
       raise "wrong attached full-service owner composition" unless id == "authority" && composition == "services"
       true
     end
+    configure_original_workspace_resource
     installer_path = File.join(@root, "controlled-installer")
     File.binwrite(installer_path, "controlled installed OS producer")
     installer = {"path" => installer_path, "bytes" => File.size(installer_path),
@@ -165,6 +168,8 @@ class ProtectedWorkOnCompositionTest < AceOverseerTestCase
     super
     @launch.instance_variable_set(:@scope_observer_factory, ->(_id) {
       Ace::Assign::ExecutionScopeNativeOwnerFixture.new(@map, @journal, @kernel, owner: @launch,
+        workspace_observer: @prepared_workspace_observer, resource_identities: @prepared_workspace_resources,
+        parent_declarations: @prepared_workspace_declarations,
         network_selection: @original_network_selection, boot_baseline_selection: @original_boot_selection,
         network_installation: Ace::Assign::ExecutionScopeObservationFixtures::NETWORK_OUTPUT.merge(
           "installer_artifact_sha256" => @original_network_selection.fetch("installer_artifact").fetch("sha256")))
@@ -388,7 +393,8 @@ class ProtectedWorkOnCompositionTest < AceOverseerTestCase
       runner: Object.new, interactive_builder: Object.new)
     launcher.define_singleton_method(:detect_provider_session) { |*| raise "forbidden native provider discovery" }
     worker = Ace::Assign::Authority::PreparedWorker.new(kernel: worker_kernel, client_factory: ->(_) { worker_client }, launcher: launcher,
-      env: {"ACE_ASSIGN_LAUNCH_MAPPING" => "mapping", "ACE_ASSIGN_ASSIGNMENT_ID" => ready.fetch("assignment_id"), "ACE_ASSIGN_ATTEMPT_ID" => ready.fetch("attempt_id")})
+      env: {"ACE_ASSIGN_LAUNCH_MAPPING" => "mapping", "ACE_ASSIGN_ASSIGNMENT_ID" => ready.fetch("assignment_id"), "ACE_ASSIGN_ATTEMPT_ID" => ready.fetch("attempt_id")},
+      workspace_reader_factory: method(:controlled_workspace_reader))
     before = @journal.ref_value
     phase.call("worker-run-before")
     result = worker.run
@@ -413,6 +419,7 @@ class ProtectedWorkOnCompositionTest < AceOverseerTestCase
   end
 
   def exercise_public_composition(steering: false, lose_prompt_reply: false, terminal: false, negative_replay: false, stop_replay: false, foreign_principal: false, worker_consumption: false, measure_fetch: false)
+    asynchronous = steering || terminal
     @controlled_peers = foreign_principal || worker_consumption || measure_fetch
     fixture(prepare_attempt: false) do
       assert_empty @journal.read_events("assignment")
@@ -472,7 +479,7 @@ class ProtectedWorkOnCompositionTest < AceOverseerTestCase
       status = Ace::Overseer::Organisms::ProtectedStatus.new(topology: topology, deployment_loader: loader,
         client_factory: ->(*) { client })
       output = Output.new
-      process = LoadedProcess.new(driver: driver, output: output, identity: @launcher, asynchronous: terminal)
+      process = LoadedProcess.new(driver: driver, output: output, identity: @launcher, asynchronous: asynchronous)
       child_kernel = Object.new
       original_launcher = @launcher
       child_kernel.define_singleton_method(:capture) do |pid|
@@ -482,7 +489,7 @@ class ProtectedWorkOnCompositionTest < AceOverseerTestCase
       child = Ace::Overseer::Molecules::OriginalLaunchChild.new(process: process, kernel: child_kernel,
         threads: -> { [Thread.current] }, quiescent: -> { true }, clock: -> { Process.clock_gettime(Process::CLOCK_MONOTONIC) })
       coordinator = Ace::Overseer::Organisms::ProtectedWorkOn.new(selection: selection, status: status,
-        task_manager: tasks, request_root: File.join(@root, "retained"), pause: (terminal ? nil : -> {}),
+        task_manager: tasks, request_root: File.join(@root, "retained"), pause: (asynchronous ? nil : -> {}),
         driver_factory: ->(*) { driver }, child_factory: -> { child },
         builder_factory: ->(root) { Ace::Assign::Organisms::PreparedWorkBuilder.new(export_root: root,
           task_manager: tasks, executor: executor, bundle_loader: Ace::Bundle::Organisms::BundleLoader.new(base_dir: @root)) })
@@ -498,19 +505,19 @@ class ProtectedWorkOnCompositionTest < AceOverseerTestCase
               target = {project: "project", agent: "mapping", assignment: ready.fetch("assignment_id"),
                 attempt: ready.fetch("attempt_id"), mutation: "public-steer", expected_generation: ready.fetch("generation")}
               prompt = Ace::Overseer::CLI::Commands::Prompt.new(steering: protected_steering, input: StringIO.new("exact public steering\n"))
-              original_output = terminal ? Thread.current.thread_variable_get(:composed_stdout) : $stdout
-              fixture_output(StringIO.new, asynchronous: terminal)
+              original_output = asynchronous ? Thread.current.thread_variable_get(:composed_stdout) : $stdout
+              fixture_output(StringIO.new, asynchronous: asynchronous)
               consume_public_work(ready, output: Thread.current.thread_variable_get(:composed_stdout)) if worker_consumption
               if lose_prompt_reply
                 assert_raises(Ace::Support::Cli::Error) { prompt.call(**target, stdin: true) }
                 assert @prompt_reply_lost, "actual public reply fault was not reached"
                 first = @journal.mutation_result("public-steer").fetch("data").merge("journal_commit" => @journal.mutation_result("public-steer").fetch("journal_commit"))
-                fixture_output(StringIO.new, asynchronous: terminal)
+                fixture_output(StringIO.new, asynchronous: asynchronous)
                 prompt.call(**target.reject { |key, _| key == :expected_generation }, status: true)
-                assert_equal "submitted", JSON.parse(terminal ? Thread.current.thread_variable_get(:composed_stdout).string : $stdout.string).fetch("outcome")
+                assert_equal "submitted", JSON.parse(asynchronous ? Thread.current.thread_variable_get(:composed_stdout).string : $stdout.string).fetch("outcome")
               else
                 prompt.call(**target, stdin: true)
-                first = JSON.parse(terminal ? Thread.current.thread_variable_get(:composed_stdout).string : $stdout.string)
+                first = JSON.parse(asynchronous ? Thread.current.thread_variable_get(:composed_stdout).string : $stdout.string)
               end
               assert_equal "submitted", first.fetch("outcome")
               assert_equal 1, native.prompt_calls.length
@@ -523,7 +530,7 @@ class ProtectedWorkOnCompositionTest < AceOverseerTestCase
                   client_factory: ->(*) { foreign_client })
                 foreign_prompt = Ace::Overseer::CLI::Commands::Prompt.new(steering: foreign_steering, input: StringIO.new("exact public steering\n"))
                 before = @journal.ref_value
-                fixture_output(StringIO.new, asynchronous: terminal)
+                fixture_output(StringIO.new, asynchronous: asynchronous)
                 assert_raises(Ace::Support::Cli::Error) { foreign_prompt.call(**target.reject { |key, _| key == :expected_generation }, status: true) }
                 assert_equal before, @journal.ref_value
                 assert_equal 1, native.prompt_calls.length
@@ -533,23 +540,23 @@ class ProtectedWorkOnCompositionTest < AceOverseerTestCase
                 assert @status_owner_errors.any? { |entry| entry.values_at(0, 1, 2) == ["prompt_status", "Ace::Assign::AttemptErrors::UnauthorizedIdentity", "Prompt mutation belongs to another principal"] }
                 assert @status_owner_errors.any? { |entry| entry.values_at(0, 1, 2) == ["prompt_attempt", "Ace::Assign::AttemptErrors::Conflict", "Mutation ID is already bound to different input"] }
               end
-              fixture_output(StringIO.new, asynchronous: terminal)
+              fixture_output(StringIO.new, asynchronous: asynchronous)
               error = assert_raises(Ace::Support::Cli::Error) { prompt.call(**target, stdin: true) }
               assert_match(/bounded UTF-8/, error.message)
-              fixture_output(StringIO.new, asynchronous: terminal)
+              fixture_output(StringIO.new, asynchronous: asynchronous)
               replay = Ace::Overseer::CLI::Commands::Prompt.new(steering: protected_steering, input: StringIO.new("exact public steering\n"))
               replay.call(**target, stdin: true)
-              assert_equal first, JSON.parse(terminal ? Thread.current.thread_variable_get(:composed_stdout).string : $stdout.string)
+              assert_equal first, JSON.parse(asynchronous ? Thread.current.thread_variable_get(:composed_stdout).string : $stdout.string)
               assert_equal 1, native.prompt_calls.length
               if negative_replay
                 before = @journal.ref_value
                 changed_text = Ace::Overseer::CLI::Commands::Prompt.new(steering: protected_steering, input: StringIO.new("changed public steering\n"))
-                fixture_output(StringIO.new, asynchronous: terminal)
+                fixture_output(StringIO.new, asynchronous: asynchronous)
                 assert_raises(Ace::Support::Cli::Error) { changed_text.call(**target, stdin: true) }
                 assert_equal before, @journal.ref_value
                 assert_equal 1, native.prompt_calls.length
                 changed_generation = Ace::Overseer::CLI::Commands::Prompt.new(steering: protected_steering, input: StringIO.new("exact public steering\n"))
-                fixture_output(StringIO.new, asynchronous: terminal)
+                fixture_output(StringIO.new, asynchronous: asynchronous)
                 assert_raises(Ace::Support::Cli::Error) do
                   changed_generation.call(**target.merge(expected_generation: target.fetch(:expected_generation) + 1), stdin: true)
                 end
@@ -557,16 +564,16 @@ class ProtectedWorkOnCompositionTest < AceOverseerTestCase
                 assert_equal 1, native.prompt_calls.length
                 assert_equal "submitted", @journal.mutation_result("public-steer").dig("data", "outcome")
               end
-              fixture_output(StringIO.new, asynchronous: terminal)
+              fixture_output(StringIO.new, asynchronous: asynchronous)
               replay.call(**target.reject { |key, _| key == :expected_generation }, status: true)
-              assert_equal "submitted", JSON.parse(terminal ? Thread.current.thread_variable_get(:composed_stdout).string : $stdout.string).fetch("outcome")
+              assert_equal "submitted", JSON.parse(asynchronous ? Thread.current.thread_variable_get(:composed_stdout).string : $stdout.string).fetch("outcome")
               assert_equal 1, native.prompt_calls.length
               row = status.collect(project: "project", agent: "mapping").fetch("agents").first.fetch("inventory").fetch("items").find { |item| item["attempt_id"] == target.fetch(:attempt) }
               stop = Ace::Overseer::CLI::Commands::Stop.new(steering: protected_steering)
-              fixture_output(StringIO.new, asynchronous: terminal)
+              fixture_output(StringIO.new, asynchronous: asynchronous)
               first_stop_target = target.merge(mutation: "public-stop", expected_generation: row.fetch("generation"))
               stop.call(**first_stop_target)
-              stopped = JSON.parse(terminal ? Thread.current.thread_variable_get(:composed_stdout).string : $stdout.string)
+              stopped = JSON.parse(asynchronous ? Thread.current.thread_variable_get(:composed_stdout).string : $stdout.string)
               assert_equal "uncertain", stopped.fetch("state")
               assert_nil status.collect(project: "project", agent: "mapping").fetch("agents").first.fetch("inventory").fetch("items").find { |item| item["attempt_id"] == target.fetch(:attempt) }.fetch("reservation_release_event_id")
               if terminal
@@ -617,7 +624,7 @@ class ProtectedWorkOnCompositionTest < AceOverseerTestCase
             rescue StandardError => error
               raise Ace::Support::Cli::Error, "#{error.message}; status owner=#{@status_owner_errors.uniq.inspect}; controlled operations=#{calls.inspect}; native_count=#{(native.prompt_calls || []).length}"
             ensure
-              fixture_output(original_output, asynchronous: terminal)
+              fixture_output(original_output, asynchronous: asynchronous)
               driver.request_control_cancel unless terminal && release_status
             end
           end
@@ -644,7 +651,7 @@ class ProtectedWorkOnCompositionTest < AceOverseerTestCase
       process.instance_variable_get(:@steering_thread)&.value
       identity, observation = output.string.lines.map { |line| JSON.parse(line) }
       assert_equal "launch_inputs_retained", identity.fetch("type")
-      assert_equal "ready", observation.fetch("state"), {"child_failure" => process.failure, "calls" => calls}.inspect
+      assert_equal "ready", observation.fetch("state"), {"child_failure" => process.failure, "calls" => calls, "owner_errors" => @status_owner_errors}.inspect
       assert_equal 0, process.code
       assert_equal "exited", child.state
       assert_equal ["authority", "launch"], process.argv.first(2)
