@@ -2,6 +2,8 @@
 
 require "digest"
 require "json"
+require "uri"
+require "ace/git/atoms/server_url"
 
 module Ace
   module Review
@@ -86,15 +88,22 @@ module Ace
             parsed = Ace::Git::Atoms::PrIdentifier.parse(string!(pr, "pr"))
             raise Invalid, "PR must include repository identity (owner/repo#number)" unless parsed&.repo
             raise Invalid, "PR number must be positive" unless parsed.number.to_i.positive?
-            repository = repository.delete_suffix("/")
-            repo = parsed.repo
-            if repository.start_with?("https://github.com/")
-              unless repository.delete_prefix("https://github.com/").casecmp?(repo)
-                raise Invalid, "PR repository identity does not match the declared repository"
-              end
-              repo = repo.downcase
-              repository = "https://github.com/#{repo}"
+            begin
+              uri = URI.parse(repository)
+            rescue URI::InvalidURIError
+              raise Invalid, "PR repository must be an explicit HTTP(S) repository URL"
             end
+            unless uri.is_a?(URI::HTTP) && uri.host && !uri.userinfo && !uri.query && !uri.fragment
+              raise Invalid, "PR repository must be an explicit HTTP(S) repository URL"
+            end
+            normalized = Ace::Git::Atoms::ServerUrl.normalize(repository)
+            repo = parsed.repo.downcase
+            # Retain the exact server/port and optional forge base path. The
+            # qualified PR names the final owner/repository pair on that server.
+            unless normalized.split("/").drop(1).last(2).join("/") == repo
+              raise Invalid, "PR repository identity does not match the declared repository"
+            end
+            repository = "#{uri.scheme.downcase}://#{normalized}"
             {"repository" => repository, "pr" => "#{repo}##{parsed.number.to_i}"}
           else
             {"repository" => repository, "local_candidate_id" => id!(local, "local_candidate_id")}

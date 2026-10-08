@@ -26,3 +26,26 @@ The initial search of `PACKAGE/config` failed because those directories do not e
 Both changed YAML files parse as mappings; `git diff --check` passes. No execution code changed in this cleanup and no installed/native probes were run. Independent reviewer `audit_runtime_delivery_status` approved the four-path configuration/CHANGELOG cleanup and distinguished the subject normalization issue from a verified authorization defect.
 
 Remaining qkc scope: inventory remaining commands and active skill projections, supply every executable positive/negative/uncertainty matrix scenario, verify the delivered R2/R3 and protected producer/consumer combination, execute deterministic integration checks, and obtain final exact-revision review. All qkc completion checkboxes remain open. Installed runs remain solely in lab-config:gad.2.
+
+## Subsequent owner correction — not installed acceptance
+
+The original classification above remains the history of that inspection. The
+CampaignContract atom did admit a mismatched owner/repository for a non-GitHub
+URL, although CampaignManager separately checks the selected live repository;
+this is an inconsistent input contract, not proof of a protected merge bypass.
+The owner now validates every PR repository URL through the same neutral URL
+normalizer, retains its server/port/base path, checks the qualified repository,
+and rejects credential-bearing or query/fragment-bearing subject URLs.
+Local-candidate subjects keep their existing explicit identity contract.
+
+Executed atom plus actual CampaignManager tests: **31 tests / 256 assertions
+PASS**, report `2ca30e4c-dcd0-4f0f-b2a6-f3504e41ae53`. Tests cover Forgejo
+normalization, a conflicting repository, credential-bearing URLs and distinct
+server/port identities. This source correction still needs the final integrated
+independent review; it does not close the qkc matrix.
+
+Provider-specific release-publish workflows are explicitly GitHub release
+capabilities, not a common PR delivery provider default. The generic gem
+publication owner is the scoped vs3 publisher. GitHub example URLs, contributor
+document paths and workflow statements prohibiting gh/fj/labd fallback are
+non-operational references. They are not instructions to invoke a fallback.

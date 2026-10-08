@@ -27,6 +27,22 @@ class CampaignContractTest < AceReviewTest
     assert_raises(ArgumentError) { Contract.sha!("a" * 41, "head") }
   end
 
+  def test_forge_neutral_subject_checks_repository_and_preserves_server_identity
+    canonical = Contract.subject!({"repository" => "http://forge.internal:3000/git/Owner/Repo.git/",
+      "pr" => "Owner/Repo#042"})
+    assert_equal({"repository" => "http://forge.internal:3000/git/owner/repo", "pr" => "owner/repo#42"}, canonical)
+    %w[https://forge.example/other/repo https://forge.example/owner/other
+      https://forge.example/repo https://user:secret@forge.example/owner/repo
+      https://forge.example/owner/repo?token=secret https://forge.example/owner/repo#fragment
+      local:/owner/repo].each do |repository|
+      assert_raises(Contract::Invalid) { Contract.subject!({"repository" => repository, "pr" => "owner/repo#42"}) }
+    end
+    other_server = Contract.subject!({"repository" => "https://other.example/owner/repo", "pr" => "owner/repo#42"})
+    refute_equal Contract.digest(canonical), Contract.digest(other_server)
+    other_port = Contract.subject!({"repository" => "http://forge.internal:3001/git/owner/repo", "pr" => "owner/repo#42"})
+    refute_equal Contract.digest(canonical), Contract.digest(other_port)
+  end
+
   def test_policy_requires_explicit_scopes_checks_revision_and_positive_counters
     policy = {"revision" => "delivery-v1", "minimum_rounds" => 3, "clean_rounds" => 2,
       "required_scopes" => ["full"], "required_checks" => ["tests"]}
