@@ -1,0 +1,13 @@
+# Production observer and terminal owner composition
+
+Candidate follows reviewed original-server network correction `b36cc7e0a` (integrated as `3c3a0f0db`). No whole-task or installed acceptance is claimed.
+
+`observed_terminal_scope_test.rb` composes actual LaunchLifecycle, ExecutionScopeObservation, NetworkInstallationEvidence, retained ExecutionBootBaseline, ReadinessHook with a real socket pair/TransferCodec, protected Git journal, Endcap result/review/finish handlers and reservation release. A real independent-review receipt is assigned and accepted by the source owner before successful finish. Controlled manager/kernel/resource/native-request seams supply host observations; no native/root/systemd probe runs. The existing NativeOwner fixture is used ONLY to drive its actual ReadinessHook; none of its fake observer/proof methods is used. The existing registration fixture seeds a candidate, so this is not independent coverage of candidate submission or original native executable spawning.
+
+The test rejects finish before closure, rejects positive proof while recursive population is nonzero, then accepts original positive proof and authenticated successful finish. A newly observed writer after terminal acceptance prevents release; after its removal, release names the exact proof and accepted terminal event. Every rejected mutation leaves the journal ref unchanged.
+
+Executed from ace-assign: `../bin/ace-test test/feat/authority/observed_terminal_scope_test.rb --timeout 120`. Final functional run: 1 test / 16 assertions, zero failures/errors/skips, 17.67s, receipt `4db60d0c-7e16-4869-b955-cce79d4f2b29`.
+
+Retained development evidence: initial `f25281a2` asserted RuntimeUnavailable at release, but the actual settlement owner correctly translates it to EvidenceUnavailable; corrected the assertion, obtaining `422e2b4b` (1/14). Strengthened the test to use actual public finish/review and retained boot verifier rather than internal local coordinator/fake baseline. Run `7122f5fd` refused missing canonical scope because the new fixture wrote a bare baseline reference instead of the required closed selection envelope; corrected that producer fixture before the final functional pass. No production behavior or timeouts weakened.
+
+Independent review pending. Full source-task criteria, other recovery/race scenarios and gad.2 installed Linux evidence remain separately required.
