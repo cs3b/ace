@@ -1,6 +1,6 @@
 ---
 id: 8wr.t.qk0.2.1
-status: pending
+status: in-progress
 priority: high
 created_at: "2026-10-07 08:01:00"
 estimate: large
