@@ -4,7 +4,7 @@ require "digest"
 require "json"
 require "fileutils"
 require "tmpdir"
-require "ace/herdr"
+require "ace/herdr/molecules/bounded_process"
 require_relative "private_directory"
 
 module Ace
