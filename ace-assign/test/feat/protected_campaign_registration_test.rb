@@ -45,6 +45,17 @@ module Ace
 
       def candidate(_number); end
 
+      def restart
+        super
+        launch = @launch
+        @launch.instance_variable_set(:@scope_observer_factory, ->(id) {
+          map = @deployment.mapping(id)
+          installation = ExecutionScopeObservationFixtures::NETWORK_OUTPUT.merge("slot_id" => map.fetch("execution_scope").fetch("slot_id"))
+          ExecutionScopeNativeOwnerFixture.new(map, @journal, @kernel, owner: launch,
+            mapping_id: id, network_installation: installation)
+        })
+      end
+
       def call(operation, params, **options)
         if operation == "register_assignment"
           value = JSON.parse(params.fetch("definition_bytes"))
@@ -178,6 +189,16 @@ module Ace
               assert_raises(AttemptErrors::EvidenceUnavailable) { @client.call("reserve_attempt", reserve, mutation_id: "revoked-reserve", timeout: 30) }
               assert_equal selected, @journal.ref_value
               set_current_policy(@campaign_policy)
+              native_failure = nil
+              %i[provision_reserved_parent_held! admit_native_service_held! complete_native_start!].each do |name|
+                original = @launch.method(name)
+                @launch.define_singleton_method(name) do |*arguments|
+                  original.call(*arguments)
+                rescue StandardError => error
+                  native_failure = error
+                  raise
+                end
+              end
               @kernel.dead << @worker.fetch("pid")
               assert_raises(AttemptErrors::EvidenceUnavailable) { @client.call("reserve_attempt", reserve, mutation_id: "dead-parent-reserve", timeout: 30) }
               assert_equal selected, @journal.ref_value
@@ -194,6 +215,58 @@ module Ace
               assert replay.replayed
               assert_equal accepted.data, replay.data
               assert_equal selected, @journal.ref_value
+              set_current_policy(@campaign_policy)
+              dispatch = @router.method(:dispatch)
+              refusal = nil
+              @router.define_singleton_method(:dispatch) do |**arguments|
+                dispatch.call(**arguments)
+              rescue StandardError => error
+                refusal = error
+                raise
+              end
+              begin
+                reserved = @client.call("reserve_attempt", reserve, mutation_id: "live-parent-reserve", timeout: 30)
+              rescue AttemptErrors::EvidenceUnavailable
+                raise(refusal || $!)
+              end
+              assert_equal "reserved", reserved.data.fetch("phase")
+              assert_equal "child-mapping", reserved.data.fetch("mapping_id")
+              assert_equal "child", reserved.data.fetch("assignment_id")
+              assert_equal "010", reserved.data.fetch("scope")
+              raise native_failure if native_failure
+              child_events = @journal.read_events("child", commit: @journal.ref_value)
+              child_chain = child_events.select { |event| event["attempt_id"] == reserved.data.fetch("attempt_id") }
+              assert Models::EvidenceEvent.chain_valid?(child_chain)
+              provisioning = child_chain.find { |event| event["type"] == "scope_provisioning" }.fetch("payload")
+              assert_equal "child-slot", provisioning.fetch("slot_id")
+              assert_equal @deployment.artifact_reference.fetch("sha256"), provisioning.fetch("descriptor_sha256")
+              mutation = child_chain.find { |event| event["type"] == "authority_mutation" }.fetch("payload")
+              assert_equal "reserve_attempt", mutation.fetch("operation")
+              assert_equal "live-parent-reserve", mutation.fetch("mutation_id")
+              child_identity = @kernel.capture(191).merge("parent_pid" => 90)
+              child_binding = JSON.parse(JSON.generate(@binding))
+              child_binding["process_identity"] = child_binding["shell_identity"] = child_identity
+              child_binding.fetch("native_origin")["command"] = [@map.fetch("bootstrap"), "child-mapping", reserved.data.fetch("launch_ticket")]
+              current = @client.call("attempt_status", {"assignment_id" => "child", "attempt_id" => reserved.data.fetch("attempt_id"),
+                "result_candidate_generation" => nil}, timeout: 30)
+              refusal = nil
+              begin
+                recorded = @client.call("record_launch", {"assignment_id" => "child", "attempt_id" => reserved.data.fetch("attempt_id"),
+                "launch_ticket" => reserved.data.fetch("launch_ticket"), "process_binding" => child_binding,
+                "guarded_origin" => {"terminal_id" => child_binding.fetch("terminal_id"), "runtime_incarnation" => ExecutionScopeObservationFixtures::BOOT, "child" => child_identity},
+                "expected_generation" => current.data.fetch("generation")}, mutation_id: "child-record", timeout: 30)
+              rescue AttemptErrors::EvidenceUnavailable
+                raise(refusal || $!)
+              end
+              assert_equal "recorded", recorded.data.fetch("phase")
+              bound = @client.call("bind_process", {"assignment_id" => "child", "attempt_id" => reserved.data.fetch("attempt_id"),
+                "launch_ticket" => reserved.data.fetch("launch_ticket"), "process_binding" => child_binding,
+                "expected_generation" => recorded.data.fetch("generation")}, mutation_id: "child-bind", timeout: 30)
+              assert_equal "bound", bound.data.fetch("phase")
+              bound_chain = @journal.read_events("child").select { |event| event["attempt_id"] == reserved.data.fetch("attempt_id") }
+              assert Models::EvidenceEvent.chain_valid?(bound_chain)
+              assert_equal child_binding, bound_chain.find { |event| event["type"] == "scope_child_bound" }.dig("payload", "original_process_binding")
+              assert_equal child_identity, bound_chain.find { |event| event["type"] == "process_start" }.dig("payload", "process_identity")
             end
           end
         end

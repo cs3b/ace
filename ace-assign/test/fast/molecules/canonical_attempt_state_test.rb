@@ -16,7 +16,7 @@ module Ace
         append("scope_provisioning", {"descriptor_sha256" => @descriptor})
         append("authority_mutation", {"operation" => "reserve_attempt", "data" => @tuple.merge("reservation_generation" => 1,
           "generation" => 1, "launch_ticket" => "ticket")})
-        owner = ExecutionScopeNativeOwnerFixture.new({"project_id" => "project"}, nil, nil, owner: nil)
+        owner = ExecutionScopeNativeOwnerFixture.new({"project_id" => "project", "execution_scope" => {"slot_id" => "slot"}}, nil, nil, owner: nil)
         binding = owner.activate_parent!(@tuple.merge("reservation_generation" => 1, "scope_generation" => 2))
         parent = append("scope_bound", binding)
         admission = append("authority_mutation", {"operation" => "scope_service_admission", "data" => @tuple.merge(
