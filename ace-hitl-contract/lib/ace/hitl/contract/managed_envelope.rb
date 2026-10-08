@@ -20,6 +20,7 @@ module Ace
         OPTIONAL = %w[payload_sha256 message effect].freeze
         TOKEN = /\A[A-Za-z0-9][A-Za-z0-9._:-]{0,127}\z/
         COMPACT = /\A[0-9a-z][0-9a-z]{4,63}\z/
+        PROTECTED_ATTEMPT = /\Alaunch-[0-9a-f]{24}\z/
         DIGEST = /\A[0-9a-f]{64}\z/
         KINDS = %w[text choice confirm review question decision verification otp proposal].freeze
         MESSAGE_SCHEMA = "ace.hitl.hermes.message/v1"
@@ -39,7 +40,8 @@ module Ace
           raise InvalidEnvelope, "unsupported managed envelope version" unless data["schema"] == SCHEMA
           %w[request_id request_incarnation project requester correlation_id].each { |key| token!(data[key], key) }
           %w[assignment_id attempt_id].each do |key|
-            raise InvalidEnvelope, "invalid #{key}" unless data[key].is_a?(String) && COMPACT.match?(data[key])
+            raise InvalidEnvelope, "invalid #{key}" unless data[key].is_a?(String) &&
+              (COMPACT.match?(data[key]) || (key == "attempt_id" && PROTECTED_ATTEMPT.match?(data[key])))
           end
           raise InvalidEnvelope, "unsupported managed request kind" unless KINDS.include?(data["kind"])
           reverse!(data["reverse"])

@@ -730,7 +730,8 @@ module Ace
         end
 
         def validate_binding_ids!(assignment, attempt)
-          unless Kinds::COMPACT_ID.match?(assignment.to_s) && Kinds::COMPACT_ID.match?(attempt.to_s)
+          unless Kinds::COMPACT_ID.match?(assignment.to_s) &&
+              (Kinds::COMPACT_ID.match?(attempt.to_s) || Kinds::PROTECTED_ATTEMPT_ID.match?(attempt.to_s))
             raise StateError, "HITL request requires the exact managed assignment and attempt ids"
           end
         end

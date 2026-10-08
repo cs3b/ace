@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Accept exact protected launch attempt identifiers for HITL requests while preserving assignment syntax and authoritative binding checks.
+
 ## [0.12.0] - 2026-10-05
 
 ### Added

@@ -6,6 +6,18 @@ class ManagedEnvelopeTest < AceHitlContractTestCase
   Envelope = Ace::Hitl::Contract::ManagedEnvelope
   Invalid = Ace::Hitl::Contract::InvalidEnvelope
 
+  def test_protected_attempt_roundtrip_preserves_exact_expected_binding
+    attempt = "launch-#{'a' * 24}"
+    value = ordinary.merge("attempt_id" => attempt)
+    assert_equal value, Envelope.load(JSON.generate(value), expected: {attempt_id: attempt})
+    assert_raises(Invalid) { Envelope.load(value, expected: {attempt_id: "launch-#{'b' * 24}"}) }
+    assert_raises(Invalid) { Envelope.load(value.merge("assignment_id" => attempt)) }
+    ["launch-#{'a' * 23}", "launch-#{'a' * 25}", "launch-#{'A' * 24}",
+      "launch-#{'g' * 24}", "launch-#{'a' * 24}\n", "../launch-#{'a' * 24}"].each do |invalid|
+      assert_raises(Invalid) { Envelope.load(value.merge("attempt_id" => invalid)) }
+    end
+  end
+
   def test_packaged_shared_examples_are_valid
     directory = File.expand_path("../../../lib/ace/hitl/contract/examples", __dir__)
     paths = Dir[File.join(directory, "managed-*.json")]

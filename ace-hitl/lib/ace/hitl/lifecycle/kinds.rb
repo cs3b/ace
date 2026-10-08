@@ -16,8 +16,10 @@ module Ace
 
         REQUEST_ID = /\A[A-Za-z0-9_-]{6,64}\z/
         # Compact managed identifiers (ADR-030): ace-assign assignment and
-        # attempt ids are Base36 timestamp ids plus optional local suffix.
+        # standalone attempt ids are Base36 timestamp ids plus optional local suffix.
+        # Protected attempts retain the exact LaunchLifecycle launch identity.
         COMPACT_ID = /\A[0-9a-z][0-9a-z]{4,63}\z/
+        PROTECTED_ATTEMPT_ID = Contract::ManagedEnvelope::PROTECTED_ATTEMPT
         SAFE_LABEL = /\A[A-Za-z0-9_. -]{1,48}\z/
         OTP_ANSWER = /\A[0-9]{6}\z/
 

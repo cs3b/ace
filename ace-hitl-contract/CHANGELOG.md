@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- Preserve exact protected launch attempt identifiers in managed envelopes without widening assignment IDs or expected binding correlation.
+
 ## [0.2.0] - 2026-10-05
 
 ### Added

@@ -18,6 +18,24 @@ class LifecycleStoreTest < AceHitlTestCase
     LifecycleFixtures::TestIdentity.new(username: name, root: true)
   end
 
+  def test_protected_attempt_syntax_preserves_exact_binding_and_assignment_rules
+    with_lifecycle_root do |root|
+      binding = LifecycleFixtures::TestBinding.new
+      store = make_store(root: root, identity: unprivileged_identity, binding: binding)
+      attempt = "launch-#{'a' * 24}"
+      store.create(**request_args(attempt: attempt))
+      assert_equal attempt, binding.validations.last.fetch(:attempt)
+      ["launch-#{'a' * 23}", "launch-#{'a' * 25}", "launch-#{'A' * 24}",
+        "launch-#{'g' * 24}", "launch-#{'a' * 24}\n", "../launch-#{'a' * 24}"].each do |invalid|
+        assert_raises(Ace::Hitl::Lifecycle::StateError) { store.create(**request_args(attempt: invalid)) }
+      end
+      assert_raises(Ace::Hitl::Lifecycle::StateError) do
+        store.create(**request_args(assignment: attempt, attempt: attempt))
+      end
+      assert_equal 1, binding.validations.length, "malformed syntax must not reach authority binding"
+    end
+  end
+
   def test_create_requires_exact_attempt_id
     with_lifecycle_root do |root|
       store = make_store(root: root, identity: unprivileged_identity)
