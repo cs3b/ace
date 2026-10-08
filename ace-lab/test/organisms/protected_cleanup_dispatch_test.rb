@@ -207,8 +207,14 @@ class ProtectedCleanupDispatchTest < Minitest::Test
         assert_equal 2, @journal.service_request(submission.fetch("request_id")).fetch("receipt").fetch("evidence").size
         before = observations.size
         alive = false
-        replay = receiver.execute(submission: submission, peer: @worker, input_bytes: bytes, mutation_id: "receiver-cleanup")
-        assert_equal "succeeded", replay.fetch("state")
+        failures.clear
+        begin
+          diagnostic.enable
+          replay = receiver.execute(submission: submission, peer: @worker, input_bytes: bytes, mutation_id: "receiver-cleanup")
+        ensure
+          diagnostic.disable
+        end
+        assert_equal "succeeded", replay.fetch("state"), "replay=#{replay.inspect}; boundary=#{failures.inspect}"
         assert_equal "retained", replay.fetch("claim")
         assert_equal before, observations.size, "accepted claim replay cannot depend on a new root lifetime"
         assert_equal 1, executions.size, "accepted replay cannot execute root again"
