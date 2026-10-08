@@ -50,3 +50,15 @@ shipped workflow instructions, not fixture-only command prose. A refused or
 uncertain delivery must leave the child unfinished; replay preserves the original
 parameters. This is approval of the implementation direction, not code acceptance,
 task promotion, installed acceptance, or a decision on protected PR ordering.
+
+## Executed composition checkpoint
+
+The maintained project preset captures the shipped `auto-merge` catalog child and `wfi://assign/drive` instructions inside the selected fork before registration. The same original PreparedWorker fetches that immutable graph, activates its actual PreparedQueue/Executor, and the controlled provider invokes the shared maintained public Lab request/status and Assign Delivery pipeline while that child remains active. Provider transport and excluded kernel/process boundaries are controlled; canonical journal, candidate/review, receiver, socket, receipt import and delivery owners remain actual. No outer preset step or replacement attempt is executed.
+
+Executed positive **1/80 PASS in 28.21s**, report `cf0b4ae5-e6b2-4a62-ad14-784b795ddcbe`: uncertain original status leaves the active subtree incomplete; canonical succeeded delivery and read-only receipt consumption precede child completion. Executed actual authorization denial **1/42 PASS in 21.65s**, report `46e12a78-4abc-442a-9c6a-751c79e25108`: unchanged maintained policy denies the exact request, terminal listener checks prove no effect/claim, provider returns without finishing and PreparedWorker refuses the incomplete queue. An unconfirmed transport response alone is not claimed as denial proof.
+
+The shared pipeline is extracted from reviewed SC5 `7e3717a25`/`e0e4fa906` into test support; no concrete test subclass or duplicate executable pipeline. Earlier retained fixture failures: `14f6f8af` incorrect launcher keyword, `416d71d3` incorrect QueueState accessor; source integration failures `5aecb198`/`1075acae` exposed the shipped nested shell default's literal closing braces rejected by strict instruction rendering. Equivalent separate shell-default assignments remove that ambiguity without relaxing the renderer. Root-cwd loader attempts `596684e0`/`0d25ce86` are not behavior evidence; verified normal package-cwd source commands match the SC5 author's runner boundary. Initial captured-child-only evidence `eb259cdb` is superseded for actual delivery composition by the two proofs above.
+
+Independent source review remains required before integration. This checkpoint does not resolve protected PR create/update/ready ordering, physical cleanup, installed native acceptance or whole-family closure.
+
+Shared-pipeline extraction preserves its default maintained consumer: actual original public Lab request/status + canonical receipt consumption **1/70 PASS in 25.49s**, report `13e6fe01-0d34-4acc-9224-011e0cbf6536`, using the unchanged default hook. All owned handles are terminal; no source changes followed these final three composition runs.

@@ -40,7 +40,8 @@ If this workflow is invoked with an argument (for example `/as-assign-drive abc1
 
 ```bash
 # Set once from workflow argument or internal scoped default (empty when neither is provided)
-ASSIGNMENT_TARGET="${1:-${ACE_ASSIGN_DEFAULT_TARGET:-}}"
+DEFAULT_ASSIGNMENT_TARGET="${ACE_ASSIGN_DEFAULT_TARGET:-}"
+ASSIGNMENT_TARGET="${1:-$DEFAULT_ASSIGNMENT_TARGET}"
 
 # Resolve and pin assignment identity for the full drive loop
 if [ -n "$ASSIGNMENT_TARGET" ]; then
