@@ -4,7 +4,9 @@ require "digest"
 require "json"
 require "open3"
 require "pathname"
-require "ace/herdr"
+require "ace/herdr/errors"
+require "ace/herdr/models/delivery_record"
+require "ace/herdr/molecules/delivery_record_store"
 require_relative "../molecules/canonical_attempt_state"
 
 module Ace
@@ -915,6 +917,9 @@ input:#{Regexp.escape(request.fetch("input_digest"))} outcome:(\S+)( no-effect:(
         end
 
         def recovery_inboxes(attempts)
+          # Ordinary local recovery selects Herdr's configuration only here;
+          # protected launch admission must not initialize that broad entry.
+          require "ace/herdr"
           root = File.expand_path(Ace::Herdr.config["deliveries_dir"] || ".ace-local/herdr/deliveries", @repo_root)
           entries = Ace::Herdr::Molecules::DeliveryRecordStore.list_records(root)
           registrations = attempts.flat_map do |attempt|

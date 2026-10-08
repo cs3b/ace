@@ -5,9 +5,10 @@ require "ace/herdr/molecules/bounded_process"
 
 class ProtectedServiceLoadingTest < Minitest::Test
   def test_fixed_policy_and_listener_load_without_broad_configuration_entrypoints
-    %w[ace/lab/molecules/protected_service_policy ace/lab/organisms/protected_service_listener].each do |entry|
+    %w[ace/lab/molecules/protected_service_policy ace/lab/organisms/protected_service_listener ace/lab/molecules/protected_cleanup_owner_admission].each do |entry|
       code = <<~RUBY
         require #{entry.inspect}
+        require "ace/lab/molecules/protected_service_policy"
         abort "broad entry loaded" if $LOADED_FEATURES.any? { |path| path.match?(%r{/ace/(assign|lab|herdr)\.rb$}) }
         abort "config loader loaded" if $LOADED_FEATURES.any? { |path| path.end_with?("/ace/support/config.rb") }
         observed = []

@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require_relative "../molecules/evidence_journal"
 require_relative "../molecules/canonical_evidence"
 require_relative "service_cleanup_evidence"
 require_relative "service_cleanup_dispatch"

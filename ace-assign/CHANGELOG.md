@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Load coordinator error/record primitives directly during protected admission; select ordinary Herdr recovery configuration only when its local recovery method runs. Require the actual EvidenceJournal owner for service evidence constants.
+
 - Require the authenticated readiness report to match the original server network namespace to both parent selection and canonical installation admission before native binding.
 - Admit authenticated protected cleanup success after dispatch failure only when no immutable completion digest exists; retain terminal completion conflict checks.
 - Resolve lifecycle locks from the selected repository's actual Git common directory for every ordinary creator and prune caller. `CACHE_BASE` only selects assignment storage, never a separate lock namespace. Refuse malformed retained fences and unsafe lock files, unwind partial admission, and fsync removed-fence publication.
