@@ -88,6 +88,17 @@ module Ace
             end
           end
 
+          def test_observe_requires_explicit_protected_selection_before_configuration
+            @command.define_singleton_method(:config) { raise "local configuration must not be read" }
+            assert_raises(Ace::Support::Cli::Error) { call("observe") }
+            opts = {project: "project", mapping: "mapping", inbox_context: "ctx", assignment: "assignment", attempt: "attempt1", claim_generation: 1}
+            assert_raises(Ace::Support::Cli::Error) { call("observe", **opts) }
+            [0, -1, "1", nil].each do |generation|
+              assert_raises(Ace::Support::Cli::Error) { call("observe", **opts.merge(claim_generation: generation)) }
+            end
+            assert_empty @native.calls
+          end
+
           def test_enqueue_status_deliver_across_separate_command_calls
             queued = call("enqueue", attempt: "att-1", ref: File.join(@dir, "ref.json"),
               file: File.join(@dir, "payload.txt"))

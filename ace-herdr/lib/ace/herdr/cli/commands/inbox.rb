@@ -18,8 +18,8 @@ module Ace
           include Ace::Support::Cli::Base
           include Runtime
 
-          desc "Enqueue, inspect, deliver, or reconcile a durable agent inbox event"
-          argument :operation, desc: "enqueue, status, deliver, or reconcile"
+          desc "Enqueue, inspect, deliver, observe, or reconcile a durable agent inbox event"
+          argument :operation, desc: "enqueue, status, deliver, observe, or reconcile"
           option :project, type: :string, desc: "Installed project ID"
           option :mapping, type: :string, desc: "Installed mapping ID"
           option :inbox_context, type: :string, desc: "Installed inbox context ID"
@@ -49,6 +49,12 @@ module Ace
             translate_errors do
               cli_error("--event is required") if options[:event].to_s.empty?
               cli_error("only --format json is supported") if options[:format] && options[:format] != "json"
+              if operation == "observe"
+                %i[project mapping inbox_context event attempt assignment].each do |key|
+                  cli_error("--#{key.to_s.tr('_', '-')} must be explicit") unless options[key].is_a?(String) && Molecules::ProtectedInboxSelection::TOKEN.match?(options[key])
+                end
+                cli_error("--claim-generation must be an explicit positive integer") unless options[:claim_generation].is_a?(Integer) && options[:claim_generation].positive?
+              end
               protected = false
               @selection.with(options) do |selected|
                 next unless selected
@@ -56,6 +62,7 @@ module Ace
                 protected = true
               end
               next if protected
+              cli_error("observe requires an installed protected inbox selection") if operation == "observe"
               inbox = Organisms::Inbox.from_config(config: config, executor: executor,
                 native: @native || Molecules::NativeQueueExecutor.new,
                 root: Dir.pwd)
@@ -98,12 +105,12 @@ module Ace
 
           def protected_call(operation, options, selected)
             %i[event attempt assignment].each { |key| cli_error("--#{key} is required") if options[key].to_s.empty? }
-            unless %w[enqueue status deliver reconcile].include?(operation)
+            unless %w[enqueue status deliver observe reconcile].include?(operation)
               cli_error("protected operation requires its maintained direct handler")
             end
             allowed = %i[project mapping inbox_context event attempt assignment format]
             allowed += %i[ref file] if operation == "enqueue"
-            allowed += %i[claim_generation] if operation == "deliver"
+            allowed += %i[claim_generation] if %w[deliver observe].include?(operation)
             allowed += %i[assignment mutation expected_generation receipt_key_sha256 receipt] if operation == "reconcile"
             if options.any? { |key, value| !value.nil? && !allowed.include?(key) }
               cli_error("protected inbox operation options differ")
@@ -122,6 +129,7 @@ module Ace
             context = selected.fetch("context")
             client = @context_client_factory.call(context_id: selected.fetch("inbox_context_id"),
               socket_path: context.fetch("control_socket_path"), owner_credentials: context.fetch("owner_credentials"))
+            return protected_observe(client, selected, options) if operation == "observe"
             if operation == "status"
               return client.request("status_context", {"event_id" => options.fetch(:event), "attempt_id" => options.fetch(:attempt), "original" => direct_original(selected, options)}).fetch("record")
             end
@@ -155,6 +163,58 @@ module Ace
           def direct_original(selected, options)
             value = selected.slice("project_id", "mapping_id", "inbox_context_id").merge("assignment_id" => options.fetch(:assignment))
             Molecules::InboxDirectEffectBinding.original!(value)
+          end
+
+          def protected_observe(client, selected, options)
+            original = direct_original(selected, options)
+            status = client.request("status_context", {"event_id" => options.fetch(:event),
+              "attempt_id" => options.fetch(:attempt), "original" => original}).fetch("record")
+            unless status["claim_generation"] == options.fetch(:claim_generation)
+              cli_error("observation retained claim generation differs")
+            end
+            admission = client.request("begin_context_operation", {"context_id" => selected.fetch("inbox_context_id"),
+              "purpose" => "observe_to_sign", "event_id" => options.fetch(:event), "process_binding" => @kernel.capture(Process.pid)})
+            unless admission.is_a?(Hash) && admission.keys.sort == %w[fingerprint key_generation operation_id state] &&
+                admission["state"] == "admitted" && admission["operation_id"].is_a?(String) && admission["operation_id"].match?(/\A[0-9a-f]{32}\z/) &&
+                admission["key_generation"].is_a?(Integer) && admission["key_generation"].positive? &&
+                admission["fingerprint"] == status.fetch("receipt_key_sha256")
+              cli_error("observation admission differs")
+            end
+            params = admission.slice("operation_id", "key_generation").merge("event_id" => options.fetch(:event),
+              "attempt_id" => options.fetch(:attempt), "claim_generation" => options.fetch(:claim_generation))
+            result = client.request("observe_context", params)
+            unless result.is_a?(Hash) && result.keys.sort == %w[attempt_id binding claim_generation context_id event_id key_generation observation operation_id payload_sha256] &&
+                result.slice(*params.keys) == params && result["context_id"] == selected.fetch("inbox_context_id") &&
+                result["payload_sha256"] == status.fetch("payload_sha256") && result["binding"] == status.fetch("binding") &&
+                observation_candidate?(result["observation"], status)
+              cli_error("observation candidate association differs")
+            end
+            # A second same-selection read refuses record drift before releasing the admission.
+            current = client.request("status_context", {"event_id" => options.fetch(:event),
+              "attempt_id" => options.fetch(:attempt), "original" => original}).fetch("record")
+            cli_error("observation retained selection changed") unless current == status
+            ended = client.request("end_context_operation", admission.slice("operation_id"))
+            cli_error("observation admission end is unconfirmed") unless ended == {"operation_id" => admission.fetch("operation_id"), "state" => "ended"}
+            result.merge("candidate" => true)
+          end
+
+          def observation_candidate?(value, status)
+            return false unless value.is_a?(Hash)
+            return value == {"outcome" => "uncertain"} if value["outcome"] == "uncertain"
+            reference = value["native_reference"]
+            uuid = /\A[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}\z/i
+            value.keys.sort == %w[endpoint_reference_sha256 native_reference outcome server_process_binding] &&
+              value["outcome"] == "consumed" && status.dig("binding", "agent") == "codex" && reference.is_a?(Hash) &&
+              reference.keys.sort == %w[client_user_message_id item_id payload_sha256 provider queued_submission_id thread_id turn_id version] &&
+              reference.values_at("provider", "version", "thread_id", "payload_sha256") ==
+                ["codex", "0.159.3", status.dig("binding", "thread"), status["payload_sha256"]] &&
+              reference["client_user_message_id"].is_a?(String) && reference["client_user_message_id"].match?(/\Aace-[0-9a-f]{32}\z/) &&
+              reference["turn_id"].is_a?(String) && uuid.match?(reference["turn_id"]) &&
+              (reference["queued_submission_id"].nil? || reference["queued_submission_id"].is_a?(String) && uuid.match?(reference["queued_submission_id"])) &&
+              reference["item_id"].is_a?(String) && reference["item_id"].valid_encoding? &&
+              reference["item_id"].bytesize.between?(1, 256) && !reference["item_id"].include?("\0") &&
+              value["endpoint_reference_sha256"].is_a?(String) && value["endpoint_reference_sha256"].match?(/\A[0-9a-f]{64}\z/) &&
+              value["server_process_binding"].is_a?(Hash)
           end
 
           def direct_admission(client, selected, options, purpose)

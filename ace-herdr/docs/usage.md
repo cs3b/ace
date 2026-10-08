@@ -97,6 +97,25 @@ The command verifies the detached signature against the configured public key be
 
 ### Protected Codex observation API
 
+From the installed supervisor principal authorized for `observe_to_sign`, use
+the explicit retained project, mapping, context, assignment, event, attempt and
+positive claim generation:
+
+```bash
+ace-herdr inbox observe --project PROJECT --mapping MAPPING --inbox-context CONTEXT --assignment ASSIGNMENT --event EVENT --attempt ATTEMPT --claim-generation 1 --format json
+```
+
+Inside an ACE source checkout use `bin/ace-herdr` for this command. There is no
+ordinary configuration fallback. The command validates the same-selection
+retained record, admits its actual kernel process for `observe_to_sign`, reads
+the candidate, and rechecks the record before ending the read-only admission.
+Invalid flags, unauthorized peers and stale generations refuse. Lost or invalid
+replies retain admission rather than declaring completion. JSON includes
+`candidate: true` and a sanitized `observation` whose outcome is `consumed` or
+`uncertain`. This is not an evidence ID, signed receipt or settlement; uncertainty
+does not resend. Authority import/signer integration and installed startup
+acceptance remain open under lab-config:8wl.t.gad.2.
+
 The installed inbox context endpoint accepts `observe_context` from a mapped
 peer holding an `observe_to_sign` admission. Parameters are `operation_id`,
 `key_generation`, `event_id`, `attempt_id`, and `claim_generation`. The owner

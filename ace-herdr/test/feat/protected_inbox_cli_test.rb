@@ -7,6 +7,7 @@ require "ace/assign/cli/commands/authority/inbox_context_selection"
 require "ace/assign/authority/protected_assignment_context"
 require "socket"
 require_relative "../support/inbox_context_owner_fixture"
+require_relative "../support/codex_inbox_observation_fixture"
 
 class ProtectedInboxCliTest < Minitest::Test
   include InboxContextOwnerFixture
@@ -19,9 +20,12 @@ class ProtectedInboxCliTest < Minitest::Test
     def capture(_pid) = @peer
   end
 
-  class CountingNative < NativeFixture
+  class CountingNative < CodexInboxObservationFixture::Native
     attr_reader :calls
-    def initialize = @calls = []
+    def initialize
+      super
+      @calls = []
+    end
     def submit(**arguments)
       @calls << arguments
       super
@@ -131,7 +135,7 @@ class ProtectedInboxCliTest < Minitest::Test
       until stop
         socket = listener.accept
         workers << Thread.new(socket) do |connection|
-          Ace::Herdr::Organisms::InboxContextServer.new(owner: @owner, context_id: "ctx", kernel: PeerKernel.new(@normal)).handle(connection)
+          Ace::Herdr::Organisms::InboxContextServer.new(owner: @owner, context_id: "ctx", kernel: PeerKernel.new(@cli_peer || @normal)).handle(connection)
         ensure
           connection.close
         end
@@ -171,6 +175,59 @@ class ProtectedInboxCliTest < Minitest::Test
     out, = capture_io { assert_equal 0, Ace::Herdr::CLI.start(deliver_args) }
     assert_equal delivered, JSON.parse(out)
     assert_equal 1, native.calls.size, "exact original generation replay must not resubmit or wake"
+    observe_args = %w[inbox observe --project project --mapping mapping --inbox-context ctx --assignment assignment --event event1 --attempt attempt1 --claim-generation 1]
+    out, = capture_io { assert_raises(Ace::Support::Cli::Error) { Ace::Herdr::CLI.start(observe_args) } }
+    assert_empty out, "ordinary peer cannot acquire observe_to_sign admission"
+    @cli_peer = @signer
+    command.instance_variable_set(:@kernel, PeerKernel.new(@signer))
+    out, = capture_io { assert_raises(Ace::Support::Cli::Error) { Ace::Herdr::CLI.start(observe_args + ["--file", payload]) } }
+    assert_empty out
+    stale_args = observe_args.dup; stale_args[-1] = "2"
+    out, = capture_io { assert_raises(Ace::Support::Cli::Error) { Ace::Herdr::CLI.start(stale_args) } }
+    assert_empty out
+    ledger = File.join(@events, "event1.json")
+    before_observe = File.binread(ledger)
+    mutations = [{"event_id" => "foreign"}, {"attempt_id" => "foreign"}, {"claim_generation" => 2},
+      {"operation_id" => "f" * 32}, {"key_generation" => 2}, {"context_id" => "foreign"},
+      {"payload_sha256" => "f" * 64}, {"binding" => {}}, {"observation" => {"outcome" => "uncertain", "evidence_id" => "forged"}}]
+    mutations.each do |mutation|
+      command.instance_variable_set(:@context_client_factory, ->(**opts) do
+        actual = client_factory.call(**opts)
+        wrapper = Object.new
+        wrapper.define_singleton_method(:request) do |operation, params|
+          result = actual.request(operation, params)
+          operation == "observe_context" ? result.merge(mutation) : result
+        end
+        wrapper
+      end)
+      out, = capture_io { assert_raises(Ace::Support::Cli::Error) { Ace::Herdr::CLI.start(observe_args) } }
+      assert_empty out
+      assert_equal 1, @owner.status(peer: @signer).fetch("active_operations"), "unvalidated response retains admission"
+      assert_equal before_observe, File.binread(ledger)
+    end
+    command.instance_variable_set(:@context_client_factory, client_factory)
+    native.result = {"outcome" => "uncertain"}
+    out, err = capture_io { assert_equal 0, Ace::Herdr::CLI.start(observe_args) }
+    assert_empty err
+    candidate = JSON.parse(out)
+    assert_equal true, candidate.fetch("candidate")
+    assert_equal({"outcome" => "uncertain"}, candidate.fetch("observation"))
+    refute candidate.key?("evidence_id")
+    assert_equal before_observe, File.binread(ledger)
+    assert_equal 1, native.calls.size
+    assert_equal 0, @owner.status(peer: @signer).fetch("active_operations")
+    native.result = nil
+    out, err = capture_io { assert_equal 0, Ace::Herdr::CLI.start(observe_args) }
+    assert_empty err
+    completed_candidate = JSON.parse(out)
+    assert_equal true, completed_candidate.fetch("candidate")
+    assert_equal "consumed", completed_candidate.dig("observation", "outcome")
+    refute completed_candidate.key?("signature")
+    assert_equal before_observe, File.binread(ledger)
+    assert_equal 1, native.calls.size
+    assert_equal 0, @owner.status(peer: @signer).fetch("active_operations")
+    @cli_peer = @normal
+    command.instance_variable_set(:@kernel, PeerKernel.new(@normal))
     ledger = File.join(@events, "event1.json")
     before_conflict = File.binread(ledger)
     File.write(payload, "conflicting payload")
@@ -178,7 +235,7 @@ class ProtectedInboxCliTest < Minitest::Test
     assert_empty out
     assert_equal before_conflict, File.binread(ledger)
     assert_equal 1, @owner.status(peer: @normal).fetch("active_operations"), "failed effect retains unknown admission"
-    assert_equal 10, invocations.size
+    assert_equal 38, invocations.size
   ensure
     stop = true
     listener&.close
