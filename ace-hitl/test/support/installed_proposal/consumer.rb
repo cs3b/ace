@@ -165,10 +165,10 @@ class InstalledProposalScenario
     check(Dir.empty?(path("inbox")), "proposal creation manually populated transport")
     File.write(path("submit-failed"), "fixture")
     invoke_actor
-    check(!client.proposal_show(id).key?("deadline"), "failed submission armed deadline")
+    check(!client.proposal_show(id, project: "ace").key?("deadline"), "failed submission armed deadline")
     File.unlink(path("submit-failed"))
     invoke_actor
-    armed = client.proposal_show(id)
+    armed = client.proposal_show(id, project: "ace")
     check(armed["state"] == "awaiting-decision", "acknowledgement did not arm proposal")
     check(armed["deadline"] == "2026-10-05T17:00:00Z", "deadline differs from confirmed +16h")
     check(File.readlines(path("submissions")).size == 1, "unexpected submissions")
@@ -178,12 +178,12 @@ class InstalledProposalScenario
     write("clock.json", "2026-10-05T16:59:59Z")
     check(Ace::Hitl::Proposals::Evaluator.new(boundary: client, project: "ace").call.empty?, "premature due wake")
     invoke_actor
-    check(client.proposal_show(id)["decision_state"] == "awaiting-decision", "approved before deadline")
+    check(client.proposal_show(id, project: "ace")["decision_state"] == "awaiting-decision", "approved before deadline")
     write("clock.json", armed["deadline"])
     wake = Ace::Hitl::Proposals::Evaluator.new(boundary: client, project: "ace").call
     check(wake.first["status"] == "queued-for-transport", "due wake bypassed transport")
     invoke_actor
-    decision = client.proposal_show(id)
+    decision = client.proposal_show(id, project: "ace")
     check(decision["decision_state"] == "approved-by-silence", "post-poll deadline did not resolve")
     check(decision["deadline"] == armed["deadline"], "restart changed deadline")
     request = {project: "ace", assignment: assignment.id, attempt: attempt.attempt_id, operation: "forge-sync",
@@ -203,7 +203,7 @@ class InstalledProposalScenario
     check(service_request(coordinator).request(**request).dig("data", "outcome") == "succeeded", "receipt replay failed")
     check(File.readlines(path("effects"), chomp: true) == ["sc3-effect"], "effect replayed")
     check(File.readlines(path("submissions")).size == 1, "restart resent acknowledged proposal")
-    check(client.proposal_show(id)["state"] == "succeeded", "actual outcome projection missing")
+    check(client.proposal_show(id, project: "ace")["state"] == "succeeded", "actual outcome projection missing")
     claims = owner.send(:journal_for).proposal_claims(decision["revision_id"])
     check(claims.length == 1 && claims.first["state"] == "succeeded", "canonical claim/receipt duplicated")
     check(claims.first.dig("receipt", "executor_uid") == Process.uid, "receipt identity differs")
@@ -212,18 +212,18 @@ class InstalledProposalScenario
     blocked_id = "proposal-#{SecureRandom.hex(12)}"
     client.proposal_create(**args.merge(id: blocked_id))
     invoke_actor
-    blocked = client.proposal_show(blocked_id)
+    blocked = client.proposal_show(blocked_id, project: "ace")
     write("clock.json", blocked.fetch("deadline"))
     Ace::Hitl::Proposals::Evaluator.new(boundary: client, project: "ace").call
     File.write(path("poll-failed"), "fixture")
     invoke_actor(success: false)
-    check(client.proposal_show(blocked_id)["decision_state"] == "awaiting-decision", "failed poll authorized silence")
+    check(client.proposal_show(blocked_id, project: "ace")["decision_state"] == "awaiting-decision", "failed poll authorized silence")
     File.unlink(path("poll-failed"))
     invoke_actor
-    check(client.proposal_show(blocked_id)["decision_state"] == "awaiting-decision", "fresh poll invented lost coverage")
+    check(client.proposal_show(blocked_id, project: "ace")["decision_state"] == "awaiting-decision", "fresh poll invented lost coverage")
     check(owner.send(:journal_for).proposal_claims(blocked["revision_id"]).empty?, "unhealthy proposal consumed authority")
-    write("canonical-evidence.json", {"proposal" => client.proposal_show(id), "claims" => claims,
-      "blocked_proposal" => client.proposal_show(blocked_id), "ref" => owner.send(:journal_for).ref_value,
+    write("canonical-evidence.json", {"proposal" => client.proposal_show(id, project: "ace"), "claims" => claims,
+      "blocked_proposal" => client.proposal_show(blocked_id, project: "ace"), "ref" => owner.send(:journal_for).ref_value,
       "native_binding" => owner.runtime_binding(attempt_id: attempt.attempt_id, caller_pid: Process.pid)})
     {"success" => true, "checks" => @checks, "effect_count" => 1, "window_seconds" => 16 * 3600,
       "outcome" => "succeeded", "decision" => decision["decision_state"],

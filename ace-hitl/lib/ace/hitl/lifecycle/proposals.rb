@@ -12,7 +12,7 @@ module Ace
           unless id.is_a?(String) && id.match?(/\Aproposal-[0-9a-f]{24}\z/)
             raise StateError, "create requires a stable proposal ID"
           end
-          existing = proposal_journal.proposal_record(id)
+          existing = proposal_journal(project).proposal_record(id)
           if existing && existing.values_at("assignment_id", "attempt_id", "project_id", "requester", "caller_uid", "content_digest") !=
               [assignment, attempt, project, @identity.username, @identity.uid, Digest::SHA256.hexdigest(JSON.generate(content))]
             raise StateError, "proposal retry changed immutable content or caller"
@@ -20,15 +20,15 @@ module Ace
           proposal_revision(id, 1, assignment: assignment, attempt: attempt, project: project, content: content)
         end
 
-        def proposal_revise(id, expected_revision:, operation_id:, document:)
-          old = proposal_access!(id, requester: true)
+        def proposal_revise(id, project:, expected_revision:, operation_id:, document:)
+          old = proposal_access!(id, project: project, requester: true)
           require_proposer!(old["project_id"])
           unless expected_revision.is_a?(Integer) && expected_revision.positive? &&
               operation_id.is_a?(String) && operation_id.match?(/\Arevision-[0-9a-f]{24}\z/)
             raise StateError, "revise requires an expected source revision and stable revision operation ID"
           end
           content = Ace::Hitl::Proposals::Policy.document(document)
-          replay = proposal_revision_replay(id, expected_revision, operation_id, content)
+          replay = proposal_revision_replay(id, expected_revision, operation_id, content, project: project)
           if replay
             project_proposal_request(replay)
             return replay
@@ -40,18 +40,18 @@ module Ace
           raise StateError, "Proposal revision refused (#{e.message})"
         end
 
-        def proposal_show(id, history_after: 0)
-          record = proposal_access!(id)
+        def proposal_show(id, project:, history_after: 0)
+          record = proposal_access!(id, project: project)
           unless history_after.is_a?(Integer) && history_after >= 0
             raise StateError, "history cursor must be a non-negative offset"
           end
-          history = proposal_journal.proposal_history(id)
+          history = proposal_journal(project).proposal_history(id)
           entries = (history.slice(history_after, 3) || []).map do |entry|
-            outcome = proposal_journal.proposal_claims(entry["revision_id"]).last
+            outcome = proposal_journal(project).proposal_claims(entry["revision_id"]).last
             entry.merge("actual_outcome" => outcome && outcome["state"],
               "effect_request_id" => outcome && outcome["request_id"])
           end
-          claims = proposal_journal.proposal_claims(record["revision_id"])
+          claims = proposal_journal(project).proposal_claims(record["revision_id"])
           claim = claims.last
           outcome = case claim && claim["state"]
           when "accepted" then "executing"
@@ -64,19 +64,19 @@ module Ace
             "history_next" => history_after + entries.length < history.length ? history_after + entries.length : nil)
         end
 
-        def proposal_acknowledge(request, submitted_at:)
-          record = proposal_for_request!(request)
+        def proposal_acknowledge(request, project:, submitted_at:)
+          record = proposal_for_request!(request, project: project)
           require_transport!("proposal delivery", {"project" => record["project_id"]})
           proposal_transition(record) { |current| Ace::Hitl::Proposals::Policy.acknowledge(current, submitted_at) }
         end
 
-        def proposal_reply(request, answer:, received_at:, sequence:)
-          record = proposal_for_request!(request)
+        def proposal_reply(request, project:, answer:, received_at:, sequence:)
+          record = proposal_for_request!(request, project: project)
           require_transport!("proposal reply", {"project" => record["project_id"]})
           proposal_transition(record) do |current|
             # Claims and this transition share one canonical ref lock/CAS.
-            claimed = proposal_journal.proposal_claims(current["revision_id"]).any?
-            applied = proposal_journal.proposal_history(current["proposal_id"]).find do |entry|
+            claimed = proposal_journal(project).proposal_claims(current["revision_id"]).any?
+            applied = proposal_journal(project).proposal_history(current["proposal_id"]).find do |entry|
               entry["revision_id"] == current["revision_id"] && entry["reply_sequence"] == sequence
             end
             Ace::Hitl::Proposals::Policy.reply(current, applied: applied, answer: answer, received_at: received_at,
@@ -84,8 +84,8 @@ module Ace
           end
         end
 
-        def proposal_reconcile(request, checkpoint:)
-          record = proposal_for_request!(request)
+        def proposal_reconcile(request, project:, checkpoint:)
+          record = proposal_for_request!(request, project: project)
           require_transport!("proposal reconciliation", {"project" => record["project_id"]})
           proposal_transition(record) do |current|
             Ace::Hitl::Proposals::Policy.resolve(current, checkpoint: checkpoint, now: proposal_now)
@@ -95,7 +95,7 @@ module Ace
         def proposal_wake(project:, after: nil)
           raise StateError, "invalid proposal wake project" unless project.is_a?(String) && Kinds::SAFE_LABEL.match?(project)
           require_proposer!(project)
-          records = proposal_journal.proposals.sort_by { |record| record["proposal_id"] }.select do |record|
+          records = proposal_journal(project).proposals.sort_by { |record| record["proposal_id"] }.select do |record|
             record["project_id"] == project && (!after || record["proposal_id"] > after) &&
               record["state"] == "awaiting-decision" && record["deadline"] <= proposal_now
           end
@@ -107,10 +107,10 @@ module Ace
           {"items" => items, "next" => records.length > 8 ? selected.last["proposal_id"] : nil}
         end
 
-        def proposal_due(after: nil)
-          require_transport!("proposal deadlines")
-          records = proposal_journal.proposals.sort_by { |record| record["proposal_id"] }.select do |record|
-            (!after || record["proposal_id"] > after) &&
+        def proposal_due(project:, after: nil)
+          require_transport!("proposal deadlines", {"project" => project})
+          records = proposal_journal(project).proposals.sort_by { |record| record["proposal_id"] }.select do |record|
+            record["project_id"] == project && (!after || record["proposal_id"] > after) &&
               @policy.transport?(@identity, project: record["project_id"]) &&
               record["state"] == "awaiting-decision" && record["deadline"] <= proposal_now && record["reconcile_requested_at"]
           end
@@ -123,7 +123,7 @@ module Ace
           unless query.is_a?(String) && query.bytesize <= 240 && project.is_a?(String)
             raise StateError, "history requires a project and bounded query"
           end
-          records = proposal_journal.proposals.sort_by { |record| record["proposal_id"] }.select do |record|
+          records = proposal_journal(project).proposals.sort_by { |record| record["proposal_id"] }.select do |record|
             next false unless record["project_id"] == project && (!after || record["proposal_id"] > after)
             visible = (record["requester"] == @identity.username && record["caller_uid"] == @identity.uid &&
               @policy.respond_to?(:proposal?) && @policy.proposal?(@identity, project: project)) ||
@@ -146,18 +146,21 @@ module Ace
           @proposal_clock.call.utc.iso8601
         end
 
-        def proposal_journal
-          @binding.proposal_journal
+        def proposal_journal(project)
+          unless project.is_a?(String) && Kinds::SAFE_LABEL.match?(project)
+            raise StateError, "proposal requires an explicit project"
+          end
+          @binding.proposal_journal(project: project)
         rescue NoMethodError
           raise BindingError, "Managed proposal authority is unavailable"
         end
 
-        def proposal_access!(id, requester: false)
+        def proposal_access!(id, project:, requester: false)
           unless id.is_a?(String) && id.match?(/\Aproposal-[0-9a-f]{24}\z/)
             raise StateError, "invalid proposal ID"
           end
-          record = proposal_journal.proposal_record(id)
-          raise StateError, "unknown proposal" unless record
+          record = proposal_journal(project).proposal_record(id)
+          raise StateError, "unknown proposal" unless record && record["project_id"] == project
           if record["requester"] == @identity.username && record["caller_uid"] == @identity.uid &&
               @policy.respond_to?(:proposal?) && @policy.proposal?(@identity, project: record["project_id"])
             return record
@@ -172,19 +175,19 @@ module Ace
           record
         end
 
-        def proposal_for_request!(request)
+        def proposal_for_request!(request, project:)
           unless request.is_a?(String) && request.match?(/\Aproposal-[0-9a-f]{24}-r[1-9][0-9]*\z/)
             raise StateError, "invalid proposal revision request"
           end
           id = request.sub(/-r[1-9][0-9]*\z/, "")
-          proposal_access!(id)
-          record = proposal_journal.proposal_history(id).reverse.find { |entry| entry["request_id"] == request }
+          proposal_access!(id, project: project)
+          record = proposal_journal(project).proposal_history(id).reverse.find { |entry| entry["request_id"] == request }
           raise StateError, "unknown proposal revision" unless record
           record
         end
 
         def proposal_transition(record, &policy)
-          proposal_journal.change_proposal(record["proposal_id"], assignment_id: record["assignment_id"],
+          proposal_journal(record.fetch("project_id")).change_proposal(record["proposal_id"], assignment_id: record["assignment_id"],
             attempt_id: record["attempt_id"]) do |current|
             # A reply to an older revision cannot modify the new decision.
             next current unless current["request_id"] == record["request_id"]
@@ -199,9 +202,9 @@ module Ace
           question = "Proposal #{request}: #{JSON.generate(content)}"
           replay = nil
           record = @binding.with_active(assignment: assignment, attempt: attempt, project: project, requester: @identity.username) do
-            proposal_journal.change_proposal(id, assignment_id: assignment, attempt_id: attempt) do |previous|
+            proposal_journal(project).change_proposal(id, assignment_id: assignment, attempt_id: attempt) do |previous|
               if operation_id
-                replay = proposal_revision_replay(id, expected_revision, operation_id, content)
+                replay = proposal_revision_replay(id, expected_revision, operation_id, content, project: project)
                 next previous if replay
                 unless previous && previous["revision"] == expected_revision
                   raise StateError, "proposal source revision changed concurrently"
@@ -238,11 +241,11 @@ module Ace
           record
         end
 
-        def proposal_revision_replay(id, expected_revision, operation_id, content)
-          replay = proposal_journal.proposal_operation_record(operation_id)
+        def proposal_revision_replay(id, expected_revision, operation_id, content, project:)
+          replay = proposal_journal(project).proposal_operation_record(operation_id)
           return unless replay
-          unless replay.values_at("proposal_id", "expected_source_revision", "requester", "caller_uid", "content_digest") ==
-              [id, expected_revision, @identity.username, @identity.uid, Digest::SHA256.hexdigest(JSON.generate(content))]
+          unless replay.values_at("proposal_id", "project_id", "expected_source_revision", "requester", "caller_uid", "content_digest") ==
+              [id, project, expected_revision, @identity.username, @identity.uid, Digest::SHA256.hexdigest(JSON.generate(content))]
             raise StateError, "revision retry changed immutable source, content or caller"
           end
           replay
@@ -267,10 +270,13 @@ module Ace
 
         def recover_proposal_projections(project:)
           return unless @binding.respond_to?(:proposal_journal)
-          proposal_journal.proposals.each do |record|
-            next if project && record["project_id"] != project
-            next unless @policy.transport?(@identity, project: record["project_id"])
-            project_proposal_request(record)
+          selected_projects = project ? [project] : @binding.proposal_projects
+          selected_projects.each do |selected|
+            next unless @policy.transport?(@identity, project: selected)
+            proposal_journal(selected).proposals.each do |record|
+              next unless record["project_id"] == selected
+              project_proposal_request(record)
+            end
           end
         end
       end

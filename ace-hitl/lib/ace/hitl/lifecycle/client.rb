@@ -27,32 +27,32 @@ module Ace
           request("proposal-create", params)
         end
 
-        def proposal_show(id, history_after: 0)
-          request("proposal-show", {"id" => id, "history_after" => history_after})
+        def proposal_show(id, project:, history_after: 0)
+          request("proposal-show", {"id" => id, "project" => project, "history_after" => history_after})
         end
 
-        def proposal_revise(id, expected_revision:, operation_id:, document:)
-          request("proposal-revise", {"id" => id, "expected_revision" => expected_revision, "operation_id" => operation_id, "document" => document})
+        def proposal_revise(id, project:, expected_revision:, operation_id:, document:)
+          request("proposal-revise", {"id" => id, "project" => project, "expected_revision" => expected_revision, "operation_id" => operation_id, "document" => document})
         end
 
-        def proposal_acknowledge(id, submitted_at:)
-          request("proposal-ack", {"id" => id, "submitted_at" => submitted_at})
+        def proposal_acknowledge(id, project:, submitted_at:)
+          request("proposal-ack", {"id" => id, "project" => project, "submitted_at" => submitted_at})
         end
 
-        def proposal_reply(id, **params)
-          request("proposal-reply", {"id" => id}.merge(params))
+        def proposal_reply(id, project:, **params)
+          request("proposal-reply", {"id" => id, "project" => project}.merge(params))
         end
 
-        def proposal_reconcile(id, checkpoint:)
-          request("proposal-reconcile", {"id" => id, "checkpoint" => checkpoint})
+        def proposal_reconcile(id, project:, checkpoint:)
+          request("proposal-reconcile", {"id" => id, "project" => project, "checkpoint" => checkpoint})
         end
 
         def proposal_wake(project:, after: nil)
           request("proposal-wake", {"project" => project, "after" => after}.compact)
         end
 
-        def proposal_due(after: nil)
-          request("proposal-due", {"after" => after}.compact)
+        def proposal_due(project:, after: nil)
+          request("proposal-due", {"project" => project, "after" => after}.compact)
         end
 
         def proposal_history(project:, query: "", after: nil)

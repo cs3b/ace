@@ -190,7 +190,8 @@ module Ace
               if proposal?(record)
                 # Same ingress lock as receive; no received reply can land
                 # between this checkpoint and the HITL decision transition.
-                checkpoint["proposal"] = @lifecycle.proposal_reconcile(request, checkpoint: checkpoint)
+                checkpoint["proposal"] = @lifecycle.proposal_reconcile(request,
+                  project: record.fetch("binding").fetch("envelope").fetch("project"), checkpoint: checkpoint)
               end
               checkpoint
             end
@@ -211,7 +212,8 @@ module Ace
 
           def acknowledge_proposal(record)
             return unless proposal?(record)
-            @lifecycle.proposal_acknowledge(record["request"], submitted_at: record.fetch("submitted_at"))
+            @lifecycle.proposal_acknowledge(record["request"],
+              project: record.fetch("binding").fetch("envelope").fetch("project"), submitted_at: record.fetch("submitted_at"))
           end
 
           def now
@@ -293,7 +295,7 @@ module Ace
             end
             answer = text.sub(/\A\/hitl-reply(?:@\w+)?\s+\S+\s+/i, "")
             if proposal?(record)
-              @lifecycle.proposal_reply(record["request"], answer: answer,
+              @lifecycle.proposal_reply(record["request"], project: record.fetch("binding").fetch("envelope").fetch("project"), answer: answer,
                 received_at: item["received_at"], sequence: item["sequence"])
               item["status"] = "delivered"
               commit.call

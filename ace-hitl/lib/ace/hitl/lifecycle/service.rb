@@ -232,18 +232,18 @@ module Ace
           case op
           when "ping" then {"pong" => true}
           when "proposal-create" then store.proposal_create(**symbolize(params))
-          when "proposal-show" then store.proposal_show(required(params, "id"), history_after: params.fetch("history_after", 0))
-          when "proposal-revise" then store.proposal_revise(required(params, "id"), expected_revision: required(params, "expected_revision"),
+          when "proposal-show" then store.proposal_show(required(params, "id"), project: required(params, "project"), history_after: params.fetch("history_after", 0))
+          when "proposal-revise" then store.proposal_revise(required(params, "id"), project: required(params, "project"), expected_revision: required(params, "expected_revision"),
             operation_id: required(params, "operation_id"), document: required(params, "document"))
           when "proposal-ack"
-            store.proposal_acknowledge(required(params, "id"), submitted_at: required(params, "submitted_at"))
+            store.proposal_acknowledge(required(params, "id"), project: required(params, "project"), submitted_at: required(params, "submitted_at"))
           when "proposal-reply"
-            store.proposal_reply(required(params, "id"), answer: required(params, "answer"),
+            store.proposal_reply(required(params, "id"), project: required(params, "project"), answer: required(params, "answer"),
               received_at: required(params, "received_at"), sequence: required(params, "sequence"))
           when "proposal-reconcile"
-            store.proposal_reconcile(required(params, "id"), checkpoint: required(params, "checkpoint"))
+            store.proposal_reconcile(required(params, "id"), project: required(params, "project"), checkpoint: required(params, "checkpoint"))
           when "proposal-wake" then store.proposal_wake(project: required(params, "project"), after: params["after"])
-          when "proposal-due" then store.proposal_due(after: params["after"])
+          when "proposal-due" then store.proposal_due(project: required(params, "project"), after: params["after"])
           when "proposal-history" then store.proposal_history(project: required(params, "project"),
             query: params.fetch("query", ""), after: params["after"])
           when "create" then store.create(**symbolize(params))

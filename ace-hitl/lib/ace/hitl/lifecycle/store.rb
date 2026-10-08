@@ -241,7 +241,7 @@ module Ace
             "effect_receipt_ref" => effect_receipt_ref(value),
             "effect" => value["effect_state"]
           }
-          facts["proposal"] = proposal_for_request!(request_id) if value["kind"] == "proposal"
+          facts["proposal"] = proposal_for_request!(request_id, project: value.fetch("project")) if value["kind"] == "proposal"
           facts
         end
 

@@ -36,12 +36,14 @@ module Ace
                 project: options[:project], document: load_document(options[:file]))
             when "show"
               raise_lifecycle_error("proposal ID required") if id.to_s.empty?
-              lifecycle_client.proposal_show(id, history_after: options[:"history-after"] || 0)
+              raise_lifecycle_error("--project required") if options[:project].to_s.empty?
+              lifecycle_client.proposal_show(id, project: options[:project], history_after: options[:"history-after"] || 0)
             when "revise"
               raise_lifecycle_error("proposal ID required") if id.to_s.empty?
               raise_lifecycle_error("--expected-revision required") unless options[:"expected-revision"]
               raise_lifecycle_error("--operation-id required") if options[:"operation-id"].to_s.empty?
-              lifecycle_client.proposal_revise(id, expected_revision: options[:"expected-revision"],
+              raise_lifecycle_error("--project required") if options[:project].to_s.empty?
+              lifecycle_client.proposal_revise(id, project: options[:project], expected_revision: options[:"expected-revision"],
                 operation_id: options[:"operation-id"], document: load_document(options[:file]))
             when "resolve-due"
               raise_lifecycle_error("--project required") if options[:project].to_s.empty?

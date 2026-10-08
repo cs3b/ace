@@ -121,16 +121,18 @@ module Ace
         end
 
         def reconcile_proposals
-          after = nil
-          loop do
-            page = @lifecycle.proposal_due(after: after)
-            page.fetch("items").each do |proposal|
-              @relay.reconcile(request: proposal.fetch("request_id"), through: proposal.fetch("deadline"))
+          @registry.channels.flat_map { |channel| channel.fetch("projects") }.each do |project|
+            after = nil
+            loop do
+              page = @lifecycle.proposal_due(project: project, after: after)
+              page.fetch("items").each do |proposal|
+                @relay.reconcile(request: proposal.fetch("request_id"), through: proposal.fetch("deadline"))
+              end
+              cursor = page.fetch("next")
+              break unless cursor
+              raise ContractError, "proposal deadline cursor did not advance" unless cursor.is_a?(String) && (!after || cursor > after)
+              after = cursor
             end
-            cursor = page.fetch("next")
-            break unless cursor
-            raise ContractError, "proposal deadline cursor did not advance" unless cursor.is_a?(String) && (!after || cursor > after)
-            after = cursor
           end
         rescue Ace::Hitl::Lifecycle::Error, ContractError => e
           warn "ace-hitl-hermes: proposal reconciliation unavailable (#{e.class}); deadlines deferred"

@@ -370,11 +370,17 @@ publishing, deployment and access/privilege expansion. Fixed service scope, curr
 independently executed review/tests, bound running attempt and operation-specific OTP gates
 still apply at execution. Proposal authorization never supplies credentials or runs a callback.
 
-`ace-hitl proposal show ID --format json` shows decision, deadline, actual Assign claim/outcome
+All proposal reads, revisions and transport acknowledgements/replies carry an explicit project.
+The authority selects that project's canonical Assign journal; a proposal ID does not select a journal.
+The managed request's existing project supplies this selector for ordinary `read`; Hermes uses the
+accepted envelope's project for acknowledgement, reply and reconciliation. Missing selectors are
+rejected, and an ID from another project's journal cannot be read or changed through the selected project.
+
+`ace-hitl proposal show ID --project PROJECT --format json` shows decision, deadline, actual Assign claim/outcome
 and a bounded history page; continue with `--history-after HISTORY_NEXT`.
 `ace-hitl proposal history --project ID --query TEXT` retrieves relevant prior decisions;
 continue with `--after NEXT`. Current project grants and exact requester identity gate history and show; losing project access refuses reads and excludes history, including lifecycle proposal request reads.
-`ace-hitl proposal revise ID --expected-revision N --operation-id revision-abcdef0123456789abcdef01 --file changed.json` supersedes the prior decision and creates a
+`ace-hitl proposal revise ID --project PROJECT --expected-revision N --operation-id revision-abcdef0123456789abcdef01 --file changed.json` supersedes the prior decision and creates a
 new request with a fresh full window after acknowledgement. An unresolved claimed effect
 must be reconciled before revision; known successful or proven no-effect settlement can be
 followed by a new revision. Persist the proposal ID, expected source revision, stable revision operation ID and exact file before invocation. The operation ID is `revision-` followed by 24 lowercase hex digits and is unique across proposals. Exact retry returns that committed revision, including after acknowledged delivery, approval or a later revision, without creating another request or resetting the window. Changed proposal/source/content/caller bindings and stale-source new operations are refused. Supersession and new prepared revision commit atomically against effect claims. Generic lifecycle `create` rejects proposal kind; use this canonical proposal interface.

@@ -12,7 +12,12 @@ require "etc"
 class ProposalLifecycleTest < AceHitlTestCase
   include LifecycleFixtures
   class Binding < TestBinding
-    attr_accessor :proposal_journal
+    attr_writer :proposal_journal
+    def proposal_journal(project:)
+      raise Ace::Hitl::Lifecycle::BindingError, "wrong fixture project" unless %w[ace other].include?(project)
+      @proposal_journal
+    end
+    def proposal_projects = ["ace"]
   end
   class DecisionPolicy < AllowTransportPolicy
     def proposal?(_peer, project:)
@@ -65,7 +70,27 @@ class ProposalLifecycleTest < AceHitlTestCase
   end
 
   def acknowledge(record)
-    @store.proposal_acknowledge(record["request_id"], submitted_at: @now.iso8601)
+    @store.proposal_acknowledge(record["request_id"], project: "ace", submitted_at: @now.iso8601)
+  end
+
+  def test_exact_project_selects_its_journal_and_cannot_read_or_mutate_another_project
+    record = create
+    original_ref = @journal.ref_value
+    other = Ace::Assign::Molecules::EvidenceJournal.new(repo_root: @repo,
+      checkout_root: File.join(@dir, "other-journal"), ref: "refs/ace/other-project")
+    journals = {"other" => other, "ace" => @journal}
+    @binding.define_singleton_method(:proposal_journal) { |project:| journals.fetch(project) }
+    @binding.define_singleton_method(:proposal_projects) { journals.keys }
+    assert_equal record["proposal_id"], @store.proposal_show(record["proposal_id"], project: "ace")["proposal_id"]
+    assert_raises(Ace::Hitl::Lifecycle::StateError) do
+      @store.proposal_show(record["proposal_id"], project: "other")
+    end
+    assert_raises(Ace::Hitl::Lifecycle::StateError) do
+      @store.proposal_acknowledge(record["request_id"], project: "other", submitted_at: @now.iso8601)
+    end
+    assert_empty other.proposals
+    assert_equal original_ref, @journal.ref_value
+    assert_raises(ArgumentError) { @store.proposal_show(record["proposal_id"]) }
   end
 
   def checkpoint(record)
@@ -85,7 +110,7 @@ class ProposalLifecycleTest < AceHitlTestCase
     assert_equal "#{record['proposal_id']}-r1", record["request_id"]
     refute record.key?("delivered_at")
     refute record.key?("deadline")
-    assert_equal record["request_id"], @store.proposal_show(record["proposal_id"])["request_id"]
+    assert_equal record["request_id"], @store.proposal_show(record["proposal_id"], project: "ace")["request_id"]
   end
 
   def test_lower_journal_cannot_rewrite_revision_scope_or_create_approved_revision
@@ -107,14 +132,14 @@ class ProposalLifecycleTest < AceHitlTestCase
 
   def test_unseen_lower_reply_veto_applies_and_changed_duplicate_is_refused
     record = acknowledge(create)
-    @store.proposal_reply(record["request_id"], answer: "approve", received_at: @now.iso8601, sequence: 2)
-    @store.proposal_reply(record["request_id"], answer: "veto", received_at: @now.iso8601, sequence: 1)
+    @store.proposal_reply(record["request_id"], project: "ace", answer: "approve", received_at: @now.iso8601, sequence: 2)
+    @store.proposal_reply(record["request_id"], project: "ace", answer: "veto", received_at: @now.iso8601, sequence: 1)
     assert_equal "denied", @journal.proposal_record(record["proposal_id"])["state"]
     before = @journal.ref_value
-    @store.proposal_reply(record["request_id"], answer: "veto", received_at: @now.iso8601, sequence: 1)
+    @store.proposal_reply(record["request_id"], project: "ace", answer: "veto", received_at: @now.iso8601, sequence: 1)
     assert_equal before, @journal.ref_value
     assert_raises(Ace::Hitl::Lifecycle::StateError) do
-      @store.proposal_reply(record["request_id"], answer: "approve", received_at: @now.iso8601, sequence: 1)
+      @store.proposal_reply(record["request_id"], project: "ace", answer: "approve", received_at: @now.iso8601, sequence: 1)
     end
     assert_raises(Ace::Assign::AttemptErrors::ReceiptRejected) { @journal.claim_service_request(binding(record)) }
   end
@@ -200,7 +225,7 @@ class ProposalLifecycleTest < AceHitlTestCase
   def test_restart_preserves_deadline_and_one_effect_claim
     record = acknowledge(create)
     @now += 16 * 3600
-    resolved = @store.proposal_reconcile(record["request_id"], checkpoint: checkpoint(record))
+    resolved = @store.proposal_reconcile(record["request_id"], project: "ace", checkpoint: checkpoint(record))
     assert_equal "approved-by-silence", resolved["state"]
     restarted = Ace::Assign::Molecules::EvidenceJournal.new(repo_root: @repo, checkout_root: File.join(@dir, "journal"))
     assert_equal record["deadline"], restarted.proposal_record(record["proposal_id"])["deadline"]
@@ -209,22 +234,22 @@ class ProposalLifecycleTest < AceHitlTestCase
     assert_raises(Ace::Assign::AttemptErrors::Conflict) do
       @journal.claim_service_request(binding(resolved, "effect002"), state: "uncertain")
     end
-    reply = @store.proposal_reply(record["request_id"], answer: "veto", received_at: @now.iso8601, sequence: 1)
+    reply = @store.proposal_reply(record["request_id"], project: "ace", answer: "veto", received_at: @now.iso8601, sequence: 1)
     assert reply["stop_requested"]
     assert_equal "approved-by-silence", reply["state"]
-    assert_equal "uncertain", @store.proposal_show(record["proposal_id"])["state"]
+    assert_equal "uncertain", @store.proposal_show(record["proposal_id"], project: "ace")["state"]
   end
 
   def test_lower_level_claim_cannot_bypass_denied_or_changed_authorization
     record = acknowledge(create)
     assert_raises(Ace::Assign::AttemptErrors::ReceiptRejected) { @journal.claim_service_request(binding(record)) }
-    @store.proposal_reply(record["request_id"], answer: "approve", received_at: @now.iso8601, sequence: 1)
+    @store.proposal_reply(record["request_id"], project: "ace", answer: "approve", received_at: @now.iso8601, sequence: 1)
     %w[operation input_digest candidate_head caller_uid target].each do |field|
       assert_raises(Ace::Assign::AttemptErrors::ReceiptRejected) do
         @journal.claim_service_request(binding(record).merge(field => "changed"))
       end
     end
-    @store.proposal_reply(record["request_id"], answer: "veto", received_at: @now.iso8601, sequence: 2)
+    @store.proposal_reply(record["request_id"], project: "ace", answer: "veto", received_at: @now.iso8601, sequence: 2)
     assert_raises(Ace::Assign::AttemptErrors::ReceiptRejected) { @journal.claim_service_request(binding(record)) }
     assert_empty @journal.service_requests("assign500")
   end
@@ -239,30 +264,30 @@ class ProposalLifecycleTest < AceHitlTestCase
     assert_raises(Ace::Hitl::Lifecycle::PermissionError) do
       worker.proposal_create(id: "proposal-#{SecureRandom.hex(12)}", assignment: "assign500", attempt: "attempt500", project: "ace", document: content)
     end
-    assert_raises(Ace::Hitl::Lifecycle::PermissionError) { worker.proposal_revise(record["proposal_id"], expected_revision: 1, operation_id: "revision-#{'a' * 24}", document: content) }
+    assert_raises(Ace::Hitl::Lifecycle::PermissionError) { worker.proposal_revise(record["proposal_id"], project: "ace", expected_revision: 1, operation_id: "revision-#{'a' * 24}", document: content) }
     library = Ace::Hitl::Lifecycle::Store.new(root: File.join(@dir, "hitl"), binding: @binding, identity: TestIdentity.new)
     assert_raises(Ace::Hitl::Lifecycle::PermissionError) do
       library.proposal_create(id: "proposal-#{SecureRandom.hex(12)}", assignment: "assign500", attempt: "attempt500", project: "ace", document: content)
     end
     assert_raises(Ace::Hitl::Lifecycle::PermissionError) do
-      worker.proposal_acknowledge(record["request_id"], submitted_at: @now.iso8601)
+      worker.proposal_acknowledge(record["request_id"], project: "ace", submitted_at: @now.iso8601)
     end
     assert_raises(Ace::Hitl::Lifecycle::PermissionError) do
-      worker.proposal_reply(record["request_id"], answer: "approve", received_at: @now.iso8601, sequence: 1)
+      worker.proposal_reply(record["request_id"], project: "ace", answer: "approve", received_at: @now.iso8601, sequence: 1)
     end
     assert_raises(Ace::Hitl::Lifecycle::PermissionError) do
-      worker.proposal_reconcile(record["request_id"], checkpoint: checkpoint(record))
+      worker.proposal_reconcile(record["request_id"], project: "ace", checkpoint: checkpoint(record))
     end
     assert_equal "awaiting-delivery", @journal.proposal_record(record["proposal_id"])["state"]
   end
 
   def test_revision_requires_fresh_delivery_and_old_reply_cannot_authorize_new_scope
     old = acknowledge(create)
-    revised = @store.proposal_revise(old["proposal_id"], expected_revision: 1, operation_id: "revision-#{'a' * 24}", document: content("access"))
+    revised = @store.proposal_revise(old["proposal_id"], project: "ace", expected_revision: 1, operation_id: "revision-#{'a' * 24}", document: content("access"))
     assert_equal 2, revised["revision"]
     assert_equal "awaiting-delivery", revised["state"]
     refute revised.key?("deadline")
-    @store.proposal_reply(old["request_id"], answer: "approve", received_at: @now.iso8601, sequence: 1)
+    @store.proposal_reply(old["request_id"], project: "ace", answer: "approve", received_at: @now.iso8601, sequence: 1)
     assert_equal "awaiting-delivery", @journal.proposal_record(old["proposal_id"])["state"]
     assert_raises(Ace::Hitl::Lifecycle::StateError) { @store.deliver(revised["request_id"], stdin_reader("approve")) }
     @now += 7200
@@ -270,7 +295,7 @@ class ProposalLifecycleTest < AceHitlTestCase
     assert_equal "2026-10-05T19:00:00Z", armed["deadline"]
     assert_equal [old["proposal_id"]], @store.proposal_history(project: "ace", query: "production")["items"].map { |entry| entry["proposal_id"] }
     assert_empty @store.proposal_history(project: "other")["items"]
-    assert_operator @store.proposal_show(old["proposal_id"])["history"].size, :<=, 3
+    assert_operator @store.proposal_show(old["proposal_id"], project: "ace")["history"].size, :<=, 3
   end
 
   def test_interrupted_revision_is_exactly_recoverable_without_another_request
@@ -288,11 +313,11 @@ class ProposalLifecycleTest < AceHitlTestCase
       end
     end
     assert_raises(Ace::Assign::AttemptErrors::EvidenceUnavailable) do
-      @store.proposal_revise(old["proposal_id"], expected_revision: 1, operation_id: "revision-#{'a' * 24}", document: content("access"))
+      @store.proposal_revise(old["proposal_id"], project: "ace", expected_revision: 1, operation_id: "revision-#{'a' * 24}", document: content("access"))
     end
     assert_equal old, @journal.proposal_record(old["proposal_id"])
     refute @journal.proposal_history(old["proposal_id"]).any? { |entry| entry["state"] == "superseded" }
-    revised = @store.proposal_revise(old["proposal_id"], expected_revision: 1, operation_id: "revision-#{'a' * 24}", document: content("access"))
+    revised = @store.proposal_revise(old["proposal_id"], project: "ace", expected_revision: 1, operation_id: "revision-#{'a' * 24}", document: content("access"))
     assert_equal 2, revised["revision"]
     assert_equal "awaiting-delivery", revised["state"]
     assert_equal 2, Dir.children(File.join(@dir, "hitl", "requests")).size
@@ -311,7 +336,7 @@ class ProposalLifecycleTest < AceHitlTestCase
       result
     end
     assert_raises(Ace::Assign::AttemptErrors::EvidenceUnavailable) do
-      @store.proposal_revise(old["proposal_id"], expected_revision: 1, operation_id: "revision-#{'a' * 24}", document: content("access"))
+      @store.proposal_revise(old["proposal_id"], project: "ace", expected_revision: 1, operation_id: "revision-#{'a' * 24}", document: content("access"))
     end
     committed = @journal.proposal_record(old["proposal_id"])
     assert_equal 2, committed["revision"]
@@ -319,9 +344,9 @@ class ProposalLifecycleTest < AceHitlTestCase
     @store.pending(project: "ace")
     assert_equal 2, Dir.children(File.join(@dir, "hitl", "requests")).size
     armed = acknowledge(committed)
-    approved = @store.proposal_reply(armed["request_id"], answer: "approve", received_at: @now.iso8601, sequence: 1)
+    approved = @store.proposal_reply(armed["request_id"], project: "ace", answer: "approve", received_at: @now.iso8601, sequence: 1)
     before = @journal.ref_value
-    retry_record = @store.proposal_revise(old["proposal_id"], expected_revision: 1, operation_id: "revision-#{'a' * 24}", document: content("access"))
+    retry_record = @store.proposal_revise(old["proposal_id"], project: "ace", expected_revision: 1, operation_id: "revision-#{'a' * 24}", document: content("access"))
     assert_equal 2, retry_record["revision"]
     assert_equal approved["deadline"], retry_record["deadline"]
     assert_equal "approved-explicitly", retry_record["state"]
@@ -331,31 +356,31 @@ class ProposalLifecycleTest < AceHitlTestCase
   def test_revision_identity_binding_and_replay_after_further_revision
     old = create
     op = "revision-#{'a' * 24}"
-    revised = @store.proposal_revise(old["proposal_id"], expected_revision: 1, operation_id: op, document: content("access"))
+    revised = @store.proposal_revise(old["proposal_id"], project: "ace", expected_revision: 1, operation_id: op, document: content("access"))
     assert_equal "superseded", @journal.proposal_history(old["proposal_id"]).reverse.find { |entry| entry["revision"] == 1 }["state"]
     assert_equal 2, revised["revision"]
     before = @journal.ref_value
     [content("publish"), content.merge("input_digest" => "c" * 64)].each do |changed|
       assert_raises(Ace::Hitl::Lifecycle::StateError) do
-        @store.proposal_revise(old["proposal_id"], expected_revision: 1, operation_id: op, document: changed)
+        @store.proposal_revise(old["proposal_id"], project: "ace", expected_revision: 1, operation_id: op, document: changed)
       end
     end
     assert_raises(Ace::Hitl::Lifecycle::StateError) do
-      @store.proposal_revise(old["proposal_id"], expected_revision: 2, operation_id: op, document: content("access"))
+      @store.proposal_revise(old["proposal_id"], project: "ace", expected_revision: 2, operation_id: op, document: content("access"))
     end
     assert_raises(Ace::Hitl::Lifecycle::StateError) do
-      @store.proposal_revise(old["proposal_id"], expected_revision: 1, operation_id: "revision-#{'b' * 24}", document: content("access"))
+      @store.proposal_revise(old["proposal_id"], project: "ace", expected_revision: 1, operation_id: "revision-#{'b' * 24}", document: content("access"))
     end
     assert_equal before, @journal.ref_value
     another = create
     assert_raises(Ace::Hitl::Lifecycle::StateError) do
-      @store.proposal_revise(another["proposal_id"], expected_revision: 1, operation_id: op, document: content("access"))
+      @store.proposal_revise(another["proposal_id"], project: "ace", expected_revision: 1, operation_id: op, document: content("access"))
     end
     assert_equal 1, @journal.proposal_record(another["proposal_id"])["revision"]
-    latest = @store.proposal_revise(old["proposal_id"], expected_revision: 2, operation_id: "revision-#{'b' * 24}", document: content("publish"))
+    latest = @store.proposal_revise(old["proposal_id"], project: "ace", expected_revision: 2, operation_id: "revision-#{'b' * 24}", document: content("publish"))
     assert_equal 3, latest["revision"]
     before = @journal.ref_value
-    replay = @store.proposal_revise(old["proposal_id"], expected_revision: 1, operation_id: op, document: content("access"))
+    replay = @store.proposal_revise(old["proposal_id"], project: "ace", expected_revision: 1, operation_id: op, document: content("access"))
     assert_equal 2, replay["revision"]
     assert_equal "superseded", replay["state"]
     assert_equal latest, @journal.proposal_record(old["proposal_id"])
@@ -371,7 +396,7 @@ class ProposalLifecycleTest < AceHitlTestCase
         ready << true
         start.pop
         begin
-          @store.proposal_revise(old["proposal_id"], expected_revision: 1,
+          @store.proposal_revise(old["proposal_id"], project: "ace", expected_revision: 1,
             operation_id: "revision-#{suffix * 24}", document: content("access"))
         rescue Ace::Hitl::Lifecycle::StateError => e
           e
@@ -389,7 +414,7 @@ class ProposalLifecycleTest < AceHitlTestCase
 
   def test_direct_owner_revision_cannot_overtake_unsettled_claim
     old = acknowledge(create)
-    @store.proposal_reply(old["request_id"], answer: "approve", received_at: @now.iso8601, sequence: 1)
+    @store.proposal_reply(old["request_id"], project: "ace", answer: "approve", received_at: @now.iso8601, sequence: 1)
     @journal.claim_service_request(binding(old), state: "uncertain")
     before = @journal.ref_value
     assert_raises(Ace::Assign::AttemptErrors::ReceiptRejected) do
@@ -405,7 +430,7 @@ class ProposalLifecycleTest < AceHitlTestCase
 
   def test_revision_and_effect_claim_race_has_only_one_authority_winner
     old = acknowledge(create)
-    @store.proposal_reply(old["request_id"], answer: "approve", received_at: @now.iso8601, sequence: 1)
+    @store.proposal_reply(old["request_id"], project: "ace", answer: "approve", received_at: @now.iso8601, sequence: 1)
     ready = Queue.new
     start = Queue.new
     claim = Thread.new do
@@ -420,7 +445,7 @@ class ProposalLifecycleTest < AceHitlTestCase
     revision = Thread.new do
       ready << true; start.pop
       begin
-        @store.proposal_revise(old["proposal_id"], expected_revision: 1,
+        @store.proposal_revise(old["proposal_id"], project: "ace", expected_revision: 1,
           operation_id: "revision-#{'a' * 24}", document: content("access"))
         :revised
       rescue Ace::Hitl::Lifecycle::StateError
@@ -433,7 +458,7 @@ class ProposalLifecycleTest < AceHitlTestCase
     if results.include?(:claimed)
       assert_equal 1, @journal.proposal_record(old["proposal_id"])["revision"]
       assert_raises(Ace::Hitl::Lifecycle::StateError) do
-        @store.proposal_revise(old["proposal_id"], expected_revision: 1,
+        @store.proposal_revise(old["proposal_id"], project: "ace", expected_revision: 1,
           operation_id: "revision-#{'a' * 24}", document: content("access"))
       end
     else
@@ -449,21 +474,21 @@ class ProposalLifecycleTest < AceHitlTestCase
     policy = Ace::Hitl::Lifecycle::GrantsPolicy.new(document: document)
     reader = Ace::Hitl::Lifecycle::Store.new(root: File.join(@dir, "hitl"), binding: @binding,
       identity: TestIdentity.new, policy: policy, ownership: RecordingOwnership.new)
-    assert_equal record["proposal_id"], reader.proposal_show(record["proposal_id"])["proposal_id"]
+    assert_equal record["proposal_id"], reader.proposal_show(record["proposal_id"], project: "ace")["proposal_id"]
     assert_equal 1, reader.proposal_history(project: "ace")["items"].size
     document["authorization"]["principals"][Process.uid.to_s]["projects"] = ["other"]
-    assert_raises(Ace::Hitl::Lifecycle::PermissionError) { reader.proposal_show(record["proposal_id"]) }
+    assert_raises(Ace::Hitl::Lifecycle::PermissionError) { reader.proposal_show(record["proposal_id"], project: "ace") }
     assert_empty reader.proposal_history(project: "ace")["items"]
     assert_raises(Ace::Hitl::Lifecycle::PermissionError) { reader.read(record["request_id"]) }
     assert_raises(Ace::Hitl::Lifecycle::PermissionError) do
-      reader.proposal_revise(record["proposal_id"], expected_revision: 1,
+      reader.proposal_revise(record["proposal_id"], project: "ace", expected_revision: 1,
         operation_id: "revision-#{'a' * 24}", document: content("access"))
     end
   end
 
   def test_late_veto_and_direct_claim_share_atomic_authority
     record = acknowledge(create)
-    @store.proposal_reply(record["request_id"], answer: "approve", received_at: @now.iso8601, sequence: 1)
+    @store.proposal_reply(record["request_id"], project: "ace", answer: "approve", received_at: @now.iso8601, sequence: 1)
     ready = Queue.new
     start = Queue.new
     claim = Thread.new do
@@ -476,7 +501,7 @@ class ProposalLifecycleTest < AceHitlTestCase
     end
     veto = Thread.new do
       ready << true; start.pop
-      @store.proposal_reply(record["request_id"], answer: "veto", received_at: @now.iso8601, sequence: 2)
+      @store.proposal_reply(record["request_id"], project: "ace", answer: "veto", received_at: @now.iso8601, sequence: 2)
     end
     2.times { ready.pop }
     2.times { start << true }
@@ -547,17 +572,17 @@ class ProposalLifecycleTest < AceHitlTestCase
       actor.relay.instance_variable_set(:@lifecycle, transport_store)
       record = boundary.proposal_create(id: "proposal-#{SecureRandom.hex(12)}", assignment: "assign500", attempt: "attempt500", project: "ace", document: content)
       actor.serve(once: true)
-      armed = boundary.proposal_show(record["proposal_id"])
+      armed = boundary.proposal_show(record["proposal_id"], project: "ace")
       @now += 16 * 3600
-      assert_raises(Ace::Hitl::Lifecycle::PermissionError) { boundary.proposal_due }
-      assert_raises(Ace::Hitl::Lifecycle::PermissionError) { boundary.proposal_reconcile(record["request_id"], checkpoint: checkpoint(armed)) }
+      assert_raises(Ace::Hitl::Lifecycle::PermissionError) { boundary.proposal_due(project: "ace") }
+      assert_raises(Ace::Hitl::Lifecycle::PermissionError) { boundary.proposal_reconcile(record["request_id"], project: "ace", checkpoint: checkpoint(armed)) }
       assert_equal "queued-for-transport", Ace::Hitl::Proposals::Evaluator.new(boundary: boundary, project: "ace").call.first["status"]
       before = @journal.ref_value
       Ace::Hitl::Proposals::Evaluator.new(boundary: boundary, project: "ace").call
       assert_equal before, @journal.ref_value, "duplicate wake is idempotent"
       assert_equal "awaiting-decision", @journal.proposal_record(record["proposal_id"])["state"]
       actor.serve(once: true)
-      assert_equal "approved-by-silence", boundary.proposal_show(record["proposal_id"])["decision_state"]
+      assert_equal "approved-by-silence", boundary.proposal_show(record["proposal_id"], project: "ace")["decision_state"]
       assert_raises(Ace::Hitl::Lifecycle::PermissionError) { boundary.proposal_wake(project: "other") }
       assert_raises(Ace::Hitl::Lifecycle::PermissionError) { transport_store.proposal_wake(project: "ace") }
     end
@@ -580,7 +605,7 @@ class ProposalLifecycleTest < AceHitlTestCase
       record = boundary.proposal_create(id: "proposal-#{SecureRandom.hex(12)}", assignment: "assign500", attempt: "attempt500", project: "ace", document: content)
       assert_equal "awaiting-delivery", record["state"]
       actor.serve(once: true) # producer creates folder question itself; no manual injection
-      armed = boundary.proposal_show(record["proposal_id"])
+      armed = boundary.proposal_show(record["proposal_id"], project: "ace")
       assert_equal "awaiting-decision", armed["state"]
       assert_equal "2026-10-05T17:00:00Z", armed["deadline"]
       @now += 16 * 3600
@@ -588,7 +613,7 @@ class ProposalLifecycleTest < AceHitlTestCase
       results = Ace::Hitl::Proposals::Evaluator.new(boundary: boundary, project: "ace").call
       assert_equal "queued-for-transport", results.first["status"]
       actor.serve(once: true)
-      assert_equal "approved-by-silence", boundary.proposal_show(record["proposal_id"])["decision_state"]
+      assert_equal "approved-by-silence", boundary.proposal_show(record["proposal_id"], project: "ace")["decision_state"]
       before = @journal.ref_value
       actor.relay.reconcile(request: record["request_id"], through: armed["deadline"])
       assert_equal before, @journal.ref_value, "duplicate wake must not replay ticks"
@@ -599,7 +624,7 @@ class ProposalLifecycleTest < AceHitlTestCase
     with_transport do |boundary, actor|
       record = boundary.proposal_create(id: "proposal-#{SecureRandom.hex(12)}", assignment: "assign500", attempt: "attempt500", project: "ace", document: content)
       actor.serve(once: true)
-      armed = boundary.proposal_show(record["proposal_id"])
+      armed = boundary.proposal_show(record["proposal_id"], project: "ace")
       @now += 16 * 3600
       actor.serve(once: true)
       result = nil
@@ -619,14 +644,14 @@ class ProposalLifecycleTest < AceHitlTestCase
       transport.define_singleton_method(:call) { |*| raise Ace::Hitl::Hermes::Transport::SubmitFailed }
       actor.serve(once: true)
       assert_equal "failed", actor.relay.delivery(record["request_id"])["status"]
-      refute boundary.proposal_show(record["proposal_id"]).key?("deadline")
+      refute boundary.proposal_show(record["proposal_id"], project: "ace").key?("deadline")
       transport.define_singleton_method(:call) { |*| raise IOError, "lost acknowledgement" }
       actor.serve(once: true)
       assert_equal "uncertain", actor.relay.delivery(record["request_id"])["status"]
       @now += 20 * 3600
       actor.serve(once: true)
-      assert_empty boundary.proposal_due["items"]
-      assert_equal "awaiting-delivery", boundary.proposal_show(record["proposal_id"])["state"]
+      assert_empty boundary.proposal_due(project: "ace")["items"]
+      assert_equal "awaiting-delivery", boundary.proposal_show(record["proposal_id"], project: "ace")["state"]
     end
   end
 end

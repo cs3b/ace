@@ -7,7 +7,7 @@ class ProposalCliTest < AceHitlTestCase
     boundary = Object.new
     calls = []
     boundary.define_singleton_method(:proposal_create) { |**args| calls << args; {"proposal_id" => "p1", "state" => "awaiting-delivery"} }
-    boundary.define_singleton_method(:proposal_show) { |id, **| calls << id; {"proposal_id" => id, "history" => []} }
+    boundary.define_singleton_method(:proposal_show) { |id, **args| calls << [id, args]; {"proposal_id" => id, "history" => []} }
     boundary.define_singleton_method(:proposal_wake) { |**args| calls << args; {"items" => [{"status" => "queued-for-transport"}], "next" => nil} }
     boundary.define_singleton_method(:proposal_revise) { |id, **args| calls << [id, args]; {"proposal_id" => id, "revision" => 2} }
     klass = Ace::Hitl::Providers::Lab
@@ -27,12 +27,14 @@ class ProposalCliTest < AceHitlTestCase
         assert_equal 0, result[:exit_code], result[:stderr]
         assert_equal "awaiting-delivery", JSON.parse(result[:stdout])["state"]
         assert_equal "a1", calls.last[:assignment]
-        result = run_cli(["proposal", "show", "p1", "--format", "json"])
+        result = run_cli(["proposal", "show", "p1", "--project", "ace", "--format", "json"])
         assert_equal 0, result[:exit_code]
         assert_equal "p1", JSON.parse(result[:stdout])["proposal_id"]
-        result = run_cli(["proposal", "revise", "p1", "--expected-revision", "1", "--operation-id", "revision-#{'a' * 24}", "--file", file])
+        assert_equal "ace", calls.last.last[:project]
+        result = run_cli(["proposal", "revise", "p1", "--project", "ace", "--expected-revision", "1", "--operation-id", "revision-#{'a' * 24}", "--file", file])
         assert_equal 0, result[:exit_code]
         assert_equal 2, JSON.parse(result[:stdout])["revision"]
+        assert_equal "ace", calls.last.last[:project]
         assert_equal 1, calls.last.last[:expected_revision]
         assert_equal "revision-#{'a' * 24}", calls.last.last[:operation_id]
         result = run_cli(["proposal", "resolve-due", "--project", "ace"])
@@ -58,6 +60,15 @@ class ProposalCliTest < AceHitlTestCase
     result = run_cli(["proposal", "revise", "proposal-#{'a' * 24}", "--expected-revision", "1", "--file", "missing"])
     refute_equal 0, result[:exit_code]
     assert_includes result[:stderr], "--operation-id required"
+  end
+
+  def test_show_and_revise_require_the_explicit_project
+    [ ["proposal", "show", "p1"],
+      ["proposal", "revise", "p1", "--expected-revision", "1", "--operation-id", "revision-#{'a' * 24}"] ].each do |args|
+      result = run_cli(args)
+      refute_equal 0, result[:exit_code]
+      assert_includes result[:stderr], "--project required"
+    end
   end
 
 end

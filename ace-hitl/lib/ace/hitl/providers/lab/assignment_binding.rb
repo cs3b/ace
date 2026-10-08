@@ -45,8 +45,15 @@ module Ace
             with_verified(assignment, attempt, project, requester) { yield }
           end
 
-          def proposal_journal
+          def proposal_journal(project:)
+            unless project.is_a?(String) && !project.empty?
+              raise Lifecycle::BindingError, "proposal requires an explicit project"
+            end
             coordinator.send(:journal_for)
+          end
+
+          def proposal_projects
+            coordinator.send(:journal_for).proposals.map { |record| record.fetch("project_id") }.uniq.sort
           end
 
           private
