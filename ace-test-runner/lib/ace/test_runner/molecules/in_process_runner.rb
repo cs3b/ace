@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "stringio"
+require "timeout"
 require "ostruct"
 require "minitest"
 
@@ -62,30 +63,11 @@ module Ace
               require "minitest/autorun"
             end
 
-            # First pass: check for line numbers and resolve test names
-            # This must be done before loading files
-            test_names_to_run = []
-            files_to_load = []
-
-            files.each do |file|
-              # Check if file has line number (file:line format)
-              if file =~ /^(.+):(\d+)$/
-                actual_file = $1
-                line_number = $2.to_i
-
-                # Resolve line number to test name
-                require_relative "../atoms/line_number_resolver"
-                test_name = Ace::TestRunner::Atoms::LineNumberResolver.resolve_test_at_line(actual_file, line_number)
-                test_names_to_run << test_name if test_name
-
-                files_to_load << actual_file
-              else
-                files_to_load << file
-              end
-            end
-
-            # Store test names in options to pass to run_minitest_with_args
-            options = options.merge(test_names_filter: test_names_to_run) if test_names_to_run.any?
+            require_relative "selection_resolver"
+            require_relative "selection_verifier"
+            selection = options[:selection_plan] || SelectionResolver.resolve(files)
+            SelectionVerifier.verify_sources!(selection)
+            files_to_load = selection.files
 
             # Clear previously loaded test classes to avoid accumulation between groups
             # This is crucial for in-process execution where tests from previous groups
@@ -126,6 +108,10 @@ module Ace
                 # Re-raise to fail the entire test run
                 raise
               end
+            end
+
+            if selection.qualified?
+              options = options.merge(selection_pattern: SelectionVerifier.verify_loaded!(selection))
             end
 
             # Run Minitest with captured output
@@ -242,9 +228,8 @@ module Ace
           args << "--verbose" if options[:verbose]
 
           # Add test name filter if line numbers were provided
-          if options[:test_names_filter] && options[:test_names_filter].any?
-            pattern = options[:test_names_filter].map { |name| Regexp.escape(name) }.join("|")
-            args << "--name" << "/#{pattern}/"
+          if options[:selection_pattern]
+            args << "--name" << "/#{options[:selection_pattern]}/"
           end
 
           # Run Minitest
@@ -261,9 +246,8 @@ module Ace
           args << "--seed" << options[:seed].to_s if options[:seed]
 
           # Add test name filter if line numbers were provided
-          if options[:test_names_filter] && options[:test_names_filter].any?
-            pattern = options[:test_names_filter].map { |name| Regexp.escape(name) }.join("|")
-            args << "--name" << "/#{pattern}/"
+          if options[:selection_pattern]
+            args << "--name" << "/#{options[:selection_pattern]}/"
           end
 
           # Minitest swallows Interrupt and returns a normal failure. Preserve

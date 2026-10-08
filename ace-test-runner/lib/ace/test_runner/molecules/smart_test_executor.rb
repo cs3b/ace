@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "test_executor"
+require_relative "selection_resolver"
 require_relative "in_process_runner"
 require_relative "../atoms/test_type_detector"
 
@@ -20,6 +21,7 @@ module Ace
           return empty_result if files.empty?
 
           # Determine execution mode
+          options = options.merge(selection_plan: options[:selection_plan] || SelectionResolver.resolve(files))
           mode = determine_execution_mode(files, options)
 
           # Execute with appropriate runner
@@ -31,6 +33,7 @@ module Ace
         end
 
         def execute_single_file(file, options = {})
+          options = options.merge(selection_plan: options[:selection_plan] || SelectionResolver.resolve([file]))
           mode = determine_execution_mode([file], options)
 
           if mode == :direct
@@ -46,6 +49,7 @@ module Ace
         end
 
         def execute_with_progress(files, options = {}, &block)
+          options = options.merge(selection_plan: options[:selection_plan] || SelectionResolver.resolve(files))
           mode = determine_execution_mode(files, options)
 
           # Add mode information to progress callback

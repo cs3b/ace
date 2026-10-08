@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Refuse invalid or ambiguous file-line selections and execute exact class/method identities in direct and subprocess modes. Reject mixed whole-file/line selections before loading tests.
+
 - Include uncategorized fast test directories in default fast/all selection without executing overlapping matches twice or widening explicit target overrides.
 - Exclude undispatched groups from sequential execution reports after target fail-fast.
 

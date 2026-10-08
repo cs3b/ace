@@ -110,6 +110,10 @@ ace-test-suite --config .ace/test/suite.yml --timeout 1200
 - Canonical `ace-test-runner` scenario E2E invocation is `ace-test-e2e ace-test-runner`.
 - For suite E2E coverage, prefer explicit config + target (`--config .ace/test/suite.yml`, optional `--target fast`) rather than fallback command branching.
 - Explicit test files (`.rb` and `file.rb:line`) override target selection.
+- A `file.rb:line` selector must fall within one supported test declaration, its body, or its closing `end`. Static instance `def test_*` methods and literal `test "description" do` declarations are supported.
+- Multiple line selectors select the deduplicated union of exact class/method identities. Similar method names and inherited methods do not expand that selection.
+- Invalid, missing, dynamic, or ambiguous selections fail before selected files are loaded. A changed source or a loaded identity that differs from the selection fails before test bodies run.
+- Whole-file selectors and line selectors cannot be mixed in one invocation; use separate invocations. Unqualified file runs keep their whole-file behavior.
 - Package defaults and user config are merged with CLI options.
 
 ## Hermetic Environment Contract

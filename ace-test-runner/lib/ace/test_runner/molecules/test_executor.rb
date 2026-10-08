@@ -3,6 +3,7 @@
 require "open3"
 require "timeout"
 require "ostruct"
+require_relative "selection_resolver"
 
 module Ace
   module TestRunner
@@ -39,15 +40,15 @@ module Ace
           # environment (Process.spawn merges onto the parent by default).
           # MT_NO_AUTORUN is part of the fixture environment.
           env = @launch_env
-          command = command.sub(/^MT_NO_AUTORUN=1\s+/, "")
+          command = command.sub(/^MT_NO_AUTORUN=1\s+/, "") if command.is_a?(String)
 
           begin
             if @timeout
               Timeout.timeout(@timeout) do
-                stdout, stderr, status = Open3.capture3(env, command, unsetenv_others: true)
+                stdout, stderr, status = Open3.capture3(env, *Array(command), unsetenv_others: true)
               end
             else
-              stdout, stderr, status = Open3.capture3(env, command, unsetenv_others: true)
+              stdout, stderr, status = Open3.capture3(env, *Array(command), unsetenv_others: true)
             end
           rescue Timeout::Error
             stderr = "Test execution timed out after #{@timeout} seconds"
@@ -69,6 +70,7 @@ module Ace
         end
 
         def execute_with_progress(files, options = {}, &block)
+          options = options.merge(selection_plan: options[:selection_plan] || SelectionResolver.resolve(files))
           # Fail-fast requires per-file execution to stop on first failure
           # For performance, execute all files together unless explicitly disabled or fail-fast enabled
           if options[:per_file] == true || options[:fail_fast]
@@ -93,12 +95,16 @@ module Ace
         end
 
         def execute_per_file_with_progress(files, options = {}, &block)
+          options = options.merge(selection_plan: options[:selection_plan] || SelectionResolver.resolve(files))
           results = []
+          plan = options.fetch(:selection_plan)
+          files = plan.files if plan.qualified?
 
           files.each do |file|
             yield({type: :start, file: file}) if block_given?
 
-            result = execute_single_file(file, options)
+            file_options = plan.qualified? ? options.merge(selection_plan: plan.for_file(file)) : options
+            result = execute_single_file(file, file_options)
             results << result
 
             if block_given?

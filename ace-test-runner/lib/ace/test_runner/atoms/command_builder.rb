@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 require_relative "line_number_resolver"
+require_relative "../molecules/selection_resolver"
+require "shellwords"
 
 module Ace
   module TestRunner
@@ -13,6 +15,8 @@ module Ace
         end
 
         def build_test_command(files, options = {})
+          selection = options[:selection_plan] || Molecules::SelectionResolver.resolve(Array(files))
+          return exact_selection_command(selection, options) if selection.qualified?
           cmd_parts = []
 
           # Use bundler if available and requested
@@ -34,7 +38,7 @@ module Ace
 
             if has_line_numbers
               # For files with line numbers, resolve to test names and filter
-              build_line_number_command(cmd_parts, files, options)
+              raise LineNumberResolver::SelectionError, "Unresolved selection"
             else
               # Build a Ruby script that requires each file and fails on LoadError
               requires_script = files.map do |f|
@@ -61,7 +65,7 @@ module Ace
             end
           elsif files.match?(/:\d+$/)
             # Check if single file has line number
-            build_line_number_command(cmd_parts, [files], options)
+            raise LineNumberResolver::SelectionError, "Unresolved selection"
           elsif options[:profile]
             # Single file without line number
             cmd_parts << "-e"
@@ -100,60 +104,40 @@ module Ace
 
         private
 
-        def build_line_number_command(cmd_parts, files, options = {})
-          # For files with line numbers, we need to:
-          # 1. Load each file
-          # 2. Resolve line numbers to test names
-          # 3. Filter using --name option
-
-          file_requires = []
-          test_names = []
-
-          files.each do |file_with_line|
-            parsed = LineNumberResolver.parse_file_with_line(file_with_line)
-            file_path = parsed[:file]
-            line_number = parsed[:line]
-
-            # Add ./ prefix if it's a relative path without one
-            path = file_path.start_with?("/", "./") ? file_path : "./#{file_path}"
-            escaped_path = path.gsub("'", "\\\\'")
-
-            # Always require the file
-            file_requires << "require '#{escaped_path}'"
-
-            # If there's a line number, resolve it to a test name
-            if line_number
-              test_name = LineNumberResolver.resolve_test_at_line(file_path, line_number)
-              if test_name
-                test_names << test_name
-              end
+        def exact_selection_command(plan, options)
+          argv = []
+          argv.concat(["bundle", "exec"]) if @bundler && bundler_available?
+          argv.concat(Shellwords.split(@ruby_command))
+          argv << "-Ilib:test" unless options[:no_load_path]
+          model = File.expand_path("../models/test_selection_plan", __dir__)
+          verifier = File.expand_path("../molecules/selection_verifier", __dir__)
+          script = <<~RUBY
+            begin
+              require #{model.inspect}
+              require #{verifier.inspect}
+              plan = Ace::TestRunner::Models::TestSelectionPlan.new(
+                files: #{plan.files.inspect}, identities: #{plan.identities.inspect},
+                source_digests: #{plan.source_digests.inspect})
+              verifier = Ace::TestRunner::Molecules::SelectionVerifier
+              verifier.verify_sources!(plan)
+              require "minitest/autorun"
+              plan.files.each { |file| require file }
+              pattern = verifier.verify_loaded!(plan)
+              args = ["--name", "/" + pattern + "/"]
+              args << "--verbose" if #{!!options[:profile]}
+              success = Minitest.run(args)
+              STDOUT.flush
+              STDERR.flush
+              exit!(success ? 0 : 1)
+            rescue Exception => error
+              STDERR.puts(error.message)
+              STDERR.flush
+              exit!(1)
             end
-          end
-
-          # Build the command
-          script_parts = []
-
-          # Require all files
-          script_parts << file_requires.join("; ")
-
-          # Set up ARGV with --name filter and --verbose if needed
-          argv_args = []
-          argv_args << "--verbose" if options[:profile]
-          if test_names.any?
-            # Create a regex pattern that matches any of the test names
-            pattern = test_names.map { |name| Regexp.escape(name) }.join("|")
-            argv_args << "--name"
-            argv_args << "/#{pattern}/"
-          end
-          script_parts << "ARGV.replace([#{argv_args.map { |a| "'#{a}'" }.join(", ")}])" if argv_args.any?
-
-          # Run Minitest
-          script_parts << "exit_code = Minitest.autorun"
-          script_parts << "exit(exit_code)"
-
-          # Add to command
-          cmd_parts << "-e"
-          cmd_parts << "\"#{script_parts.join("; ")}\""
+          RUBY
+          argv.concat(["-e", script])
+          argv.concat(Array(options[:args])) if options[:args]
+          argv
         end
 
         def bundler_available?

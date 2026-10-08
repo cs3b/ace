@@ -38,6 +38,8 @@ module Ace
         #
         # @return [Hash] Parsed options with :package_dir, :target, :files keys
         def parse
+          require_relative "../atoms/line_number_resolver"
+          @argv.each { |argument| Atoms::LineNumberResolver.parse_file_with_line(argument) }
           parse_first_argument
           parse_remaining_arguments
 

@@ -24,9 +24,9 @@ module Ace
           resolve_identity(file_path, line_number).fetch(:name)
         end
 
-        def resolve_identity(file_path, line_number)
+        def resolve_identity(file_path, line_number, source: nil)
           selector = "#{file_path}:#{line_number}"
-          source = File.read(file_path)
+          source ||= File.read(file_path)
           unless line_number.is_a?(Integer) && line_number.positive? && line_number <= source.lines.size
             raise SelectionError, "Invalid test selector: #{selector}"
           end
