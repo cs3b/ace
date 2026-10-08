@@ -12,7 +12,7 @@ Responsibility map: bounded_process_cleanup_test.rb injects only syscall/native 
 
 Executed through source binstubs, package cwd; all handles terminal:
 
-- Final Herdr exact two-file selection: d4450b0f-9921-433b-abb3-b8f33b6a00f5,31 tests/164 assertions PASS, raw2.173s (summary2.17). Raw report under .ace-local/test/reports/herdr/d4450b0f-9921-433b-abb3-b8f33b6a00f5/.
+- Final Herdr exact two-file selection: d4450b0f-9921-433b-abb3-b8f33b6a00f5,31 tests/164 assertions PASS, raw2.170207s (summary2.17). Raw report under .ace-local/test/reports/herdr/d4450b0f-9921-433b-abb3-b8f33b6a00f5/.
 - Actual unchanged Lab protected_service_handler_test.rb:6631ef93-2d95-4014-b76b-2fb421a40b27,3 tests/7 assertions PASS374.65ms. Contains both real receipt/environment and actual in-group background-writer cases. Final source adds only a start-once guard after this pass; actual child startup remains identical.
 - Earlier candidate: aba9649b-5925-42ad-a809-7760498512d0,27/144 with2 real timeout failures. Deadline KILL had succeeded but ensure redundantly signalled before nonreaping exit became visible. These motivated owned signal-once correction, not a deadline increase or weakened timeout assertion.
 - Correction progression1e23d4f3 (28/151),d57c58c8 (30/160) passed; final31/164 supersedes them.
