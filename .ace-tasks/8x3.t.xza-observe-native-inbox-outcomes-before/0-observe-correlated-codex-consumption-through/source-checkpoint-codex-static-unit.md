@@ -26,3 +26,5 @@ Root independently APPROVED author commits `dd3b40d8b` and `28f87d1e2`: reviewed
 Directly inspected author receipts: runtime `15ce6f2e-953e-4a5a-be3a-45967612f1bc` (34 tests, 180 assertions) and Herdr `cf7a8e3c-6f36-414d-a581-a42cdd68769c` (27 tests, 177 assertions), all passing without skips. Integrated as `dbc2c9c06` and `0a7dd9a74`. Main composed Inbox service file passed 10 tests / 102 assertions, no failures/errors, receipt `7e27d8de-9c2a-47df-a7f4-3dab2d1a20db`.
 
 Actual Lab startup, dedicated callback producer and immutable runtime output publication remain source-open. This review does not close the task or prove installed/native behavior.
+
+Full Herdr fast regression on integrated main `569e6132a`: `../bin/ace-test fast` passed 630 tests / 2720 assertions, no failures/errors, report `herdr/85f3b1e7-b614-4f30-845b-4841f29793d6` (17.81 seconds). This checks remaining source consumers after the required static-association change; it is not an installed startup result.
