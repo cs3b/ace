@@ -1,0 +1,49 @@
+{
+  "owner": "lab-config:8wl.t.gad.2/forge-matrix",
+  "manifest": {
+    "id": null,
+    "sha256": null,
+    "path": null,
+    "packages": {},
+    "source_receipts": {
+      "qk1": null,
+      "qkb": null,
+      "qjl": null,
+      "R2": null,
+      "R3": null,
+      "xz9": null,
+      "xza": null
+    },
+    "deployment_receipts": {
+      "gad.8": null,
+      "gad.b": null
+    }
+  },
+  "selection": {
+    "column": null,
+    "server_name": null,
+    "provider": null,
+    "repository_url": null,
+    "fork_repository_url": null,
+    "checkout": null,
+    "second_checkout": null,
+    "disposable_scope_receipt": null
+  },
+  "assignment": {
+    "task": null,
+    "assignment": null,
+    "attempts": {},
+    "candidate_head": null,
+    "candidate_generation": null,
+    "campaign_id": null
+  },
+  "authority": {
+    "mapping": null,
+    "actors": {},
+    "endpoint_receipts": {},
+    "native_sessions": {}
+  },
+  "fault_controls": {},
+  "deadline_seconds": null,
+  "restoration_owner": null
+}

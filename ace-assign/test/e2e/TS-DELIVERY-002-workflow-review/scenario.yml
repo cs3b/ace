@@ -1,0 +1,23 @@
+test-id: TS-DELIVERY-002
+title: "Installed workflow and bounded review policy"
+area: delivery
+package: ace-assign
+priority: high
+timeout: 1800
+cost-tier: deep
+tags: [installed-acceptance, "use-case:delivery"]
+tool-under-test: ace-assign
+e2e-justification: >
+  Requires the actual installed public CLI, disposable provider state or authenticated
+  protected/native producer; deterministic fixtures cannot prove installed outcomes.
+e2e-evidence-strength: state+content
+unit-coverage-reviewed:
+  - ace-assign/test/edge/installed_herdr_workflows_test.rb
+  - ace-review/test/fast/organisms/campaign_convergence_test.rb
+  - ace-review/test/feat/campaign_canonical_result_join_test.rb
+  - ace-task/test/fast/molecules/workflow_layer_ownership_contract_test.rb
+requires:
+  tools: [ace-assign, ace-git, ace-git-worktree, ace-task, ace-review, ace-bundle, ace-overseer, ace-herdr, git]
+  ruby: ">= 3.2"
+setup:
+  - run: 'test -n "$ACE_QKC_SCOPE_FILE" && test -r "$ACE_QKC_SCOPE_FILE" && cp "$ACE_QKC_SCOPE_FILE" scope.json'

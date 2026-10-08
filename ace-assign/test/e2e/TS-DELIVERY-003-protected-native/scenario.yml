@@ -1,0 +1,25 @@
+test-id: TS-DELIVERY-003
+title: "Installed protected execution and native settlement"
+area: delivery
+package: ace-assign
+priority: high
+timeout: 1800
+cost-tier: deep
+tags: [installed-acceptance, "use-case:delivery"]
+tool-under-test: ace-assign
+e2e-justification: >
+  Requires the actual installed public CLI, disposable provider state or authenticated
+  protected/native producer; deterministic fixtures cannot prove installed outcomes.
+e2e-evidence-strength: state+content
+unit-coverage-reviewed:
+  - ace-assign/test/feat/authority/service_settlement_test.rb
+  - ace-assign/test/feat/endcap_inboxes_test.rb
+  - ace-assign/test/feat/endcap_results_test.rb
+  - ace-herdr/test/fast/molecules/native_queue_executor_test.rb
+  - ace-herdr/test/feat/protected_inbox_cli_test.rb
+  - ace-lab/test/organisms/protected_service_recovery_test.rb
+requires:
+  tools: [ace-assign, ace-git, ace-git-worktree, ace-task, ace-review, ace-bundle, ace-overseer, ace-herdr, git]
+  ruby: ">= 3.2"
+setup:
+  - run: 'test -n "$ACE_QKC_SCOPE_FILE" && test -r "$ACE_QKC_SCOPE_FILE" && cp "$ACE_QKC_SCOPE_FILE" scope.json'

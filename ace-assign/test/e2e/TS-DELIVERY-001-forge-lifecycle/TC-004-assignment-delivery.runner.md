@@ -1,0 +1,11 @@
+# Goal 4 — Attempt-owned draft, ready and authorized merge
+
+## Style
+
+public-surface
+
+## Goal
+
+This scenario is executed once within lab-config:8wl.t.gad.2 `forge-matrix`, against its exact installed manifest. Source preparation does not execute it. Read `scope.json` before any command. Refuse missing or inconsistent scope, manifest, receipt, actor, endpoint or repository input; report the exact producer prerequisite through the harness. Do not infer defaults or repair deployment here. Use public package README/usage/help; retain exact argv, cwd, exit and product-created artifact paths in harness observations. Do not pipe, redirect or post-process ace commands. Read their reported artifact paths. No new executable, direct journal mutation, library import, fabricated receipt, runtime fixture binary, account setup or signing-key creation is allowed. Only the gad.2 operator supplies disposable scopes and scoped fault controls. Bounded faults require a stop condition and restoration by that operator; unavailable controls leave the required row unexecuted. Do not assign verdicts in runner output.
+
+Follow ace-assign documented local recipe for local scope (remote delivery N/A). For every remote scope use one actual assignment with separate scoped attempts as the installed canonical recipe requires: draft create, review, readiness with coordinator-accepted executed tests and independent current-head review, then authorized merge through the installed protected service executor. Retain qjl journal/evidence references and canonical server-bound PR/service receipts. Do not invent one long-lived attempt for the whole recipe. Test CI failure with genuine passing tests/review (CI advisory), and independently test actual test failure, rejected reviewer and changed head (each blocks). Operator drops replies after create/update/ready/merge; inspect exact intent/status and restart/reconcile the original operation before any explicitly authorized retry. Changed requested content or evidence must not complete as the previous effect. Observe each effect count from the scoped target. Server-side expected-head enforcement is mandatory for merge; unsupported enforcement fails the required provider row. Workers consume merge completion; they never issue a credential-only merge.

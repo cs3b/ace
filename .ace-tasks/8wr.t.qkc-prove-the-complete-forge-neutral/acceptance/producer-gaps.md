@@ -1,0 +1,11 @@
+# Installed producer prerequisites — no apparent pass
+
+| Required row | Exact producer prerequisite | Current source checkpoint treatment |
+|---|---|---|
+| Actual Codex startup and signed settlement | ace-assign attempt-owned native startup plus ace-herdr endpoint protection/transport selection must accept official Codex physical UDS provenance (advertised symlink to private socket), actual native session and trusted observer/signer; gad.8 supplies installed receipt | Separate startup owner is implementing this; TS-DELIVERY-003/TC-002 is unexecuted and cannot use chmod, a direct app-server fixture or unowned server launch |
+| Definite no-effect | Original gad.b domain executor must provide operation-specific target absence, handler termination and surviving-writer inspection, then protected sealed-service settlement through the accepted challenge | ace-assign generic settlement contract is insufficient by itself; absent inspection remains a failed/unexecuted 003/TC-001 variant |
+| Protected merge | Installed gad.b scoped PR handler must execute neutral provider merge with server-side expected-head enforcement and import exact candidate/PR/service receipt | Source protected PR handling exists; installed receipt absent here. Unsupported required provider merge fails, never skipped |
+| Actual Pi and Codex consumption/nonexecution | Actual installed producer, endpoint, observer and signer retain event/digest/native-session/attempt/OS-birth/generation correlation for busy/equal-text/restart/cancel variants | No capability fixture, queue log, empty queue, timeout or unsigned worker claim substitutes for this producer |
+| Publication | Captain's interactive OTP authorizes the installed scoped publication operation | Source readiness/merge/release preparation never claims publication pass; no OTP prompt or publication run in this task |
+
+These are prerequisite claims requiring real producer receipts, not invented commands. gad.8/gad.b and exact xz9/xza source receipts must match the same manifest before the relevant installed goal can run. A future source receipt can close a source gap; installed results remain unexecuted until gad.2 executes and independently reviews them.
