@@ -7,6 +7,20 @@ module Ace
       # transition. The retained claim selects every query input; callers cannot
       # substitute a thread, correlation ID, native endpoint or claimed outcome.
       module InboxNativeObservation
+        # Only the authenticated context owner publishes this projection. The
+        # canonical evidence issuer must compare native IDs with the original
+        # persisted submission, never with an observer's asserted association.
+        def retained_observation_status(event:, deadline: nil)
+          validate_id!(event, "event")
+          with_event(event, create_lock: false, deadline: deadline) do |record|
+            raise ValidationError, "unknown inbox event: #{event}" unless record&.inbox
+            public_record(record).merge("codex_submission" => record.inbox["codex_submission"],
+              "codex_receipt" => record.inbox.dig("receipt", "codex_submission"))
+          end
+        rescue SystemCallError, Molecules::DeliveryRecordStore::LockUnavailable
+          raise ValidationError, "retained inbox correlation is unavailable"
+        end
+
         def observe_consumption(event:, expected_attempt:, expected_claim_generation:, deadline:)
           validate_id!(event, "event")
           validate_id!(expected_attempt, "attempt")

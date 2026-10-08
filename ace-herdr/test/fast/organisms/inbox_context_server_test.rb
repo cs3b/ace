@@ -62,6 +62,38 @@ class InboxContextServerTest < Minitest::Test
     assert_equal "ended", request("end_context_operation", params.slice("operation_id"), @signer).dig("result", "state")
   end
 
+  def test_protected_snapshot_supplies_original_native_correlation_without_widening_public_status
+    params = prepare_native_observation
+    before = File.binread(File.join(@events, "event1.json"))
+    snapshot = request("snapshot_context", params.slice("operation_id", "key_generation", "event_id"), @signer).fetch("result")
+    retained = JSON.parse(before).fetch("inbox")
+    record = snapshot.fetch("record")
+    assert_equal retained.fetch("codex_submission"), record.fetch("codex_submission")
+    assert_equal retained.fetch("receipt").fetch("codex_submission"), record.fetch("codex_receipt")
+    refute record.key?("receipt")
+    refute_includes JSON.generate(snapshot), "private answer"
+    refute @source_inbox.status(event: "event1").key?("codex_submission")
+    assert_equal before, File.binread(File.join(@events, "event1.json"))
+    assert_empty @observation_native.reads
+    assert_equal "ended", request("end_context_operation", params.slice("operation_id"), @signer).dig("result", "state")
+  end
+
+  def test_protected_snapshot_preserves_lost_add_identity_without_inventing_a_queue_receipt
+    params = prepare_native_observation
+    Ace::Herdr::Molecules::DeliveryRecordStore.with_lock(@events, "event1") do
+      record = Ace::Herdr::Molecules::DeliveryRecordStore.load(@events, "event1")
+      record = record.advance_inbox(state: "uncertain", inbox: record.inbox.reject { |key, _| key == "receipt" },
+        detail: {"action" => "controlled lost add reply"}, timestamp: Time.now.utc.iso8601)
+      Ace::Herdr::Molecules::DeliveryRecordStore.save(record, @events)
+    end
+    snapshot = request("snapshot_context", params.slice("operation_id", "key_generation", "event_id"), @signer).fetch("result")
+    assert_equal "uncertain", snapshot.dig("record", "state")
+    assert_equal "ace-" + "a" * 32, snapshot.dig("record", "codex_submission", "client_user_message_id")
+    assert_nil snapshot.dig("record", "codex_receipt")
+    assert_equal "context_blocked", request("snapshot_context", params.slice("operation_id", "key_generation", "event_id"), @normal).dig("error", "code")
+    assert_empty @observation_native.reads
+  end
+
   def test_observation_refuses_wrong_peer_generation_selection_and_extra_fields_before_query
     params = prepare_native_observation
     assert_equal "context_blocked", request("observe_context", params, @normal).dig("error", "code")

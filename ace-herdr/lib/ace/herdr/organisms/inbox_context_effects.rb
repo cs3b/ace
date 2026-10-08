@@ -8,7 +8,7 @@ module Ace
     module Organisms
       # Source effect methods on the same context owner and admission metadata.
       module InboxContextEffects
-        SNAPSHOT_FIELDS = %w[event_id attempt_id payload_sha256 receipt_key_sha256 claim_generation state origin_target target binding].freeze
+        SNAPSHOT_FIELDS = %w[event_id attempt_id payload_sha256 receipt_key_sha256 claim_generation state origin_target target binding codex_submission codex_receipt].freeze
 
         def observe_context(operation_id:, key_generation:, event_id:, attempt_id:, claim_generation:, peer:, deadline:)
           authorize!(peer, purpose: "observe_to_sign")
@@ -38,7 +38,7 @@ module Ace
             end
             raise ValidationError, "context snapshot key changed" unless selected.fetch(:snapshot) == state.fetch("key")
           end
-          record = source_inbox!(selected).retained_status(event: event_id, deadline: deadline)
+          record = source_inbox!(selected).retained_observation_status(event: event_id, deadline: deadline)
           projection = record.slice(*SNAPSHOT_FIELDS)
           immutable_effect({"context_id" => @context_id, "operation_id" => operation_id,
             "key_generation" => key_generation, "record" => projection})

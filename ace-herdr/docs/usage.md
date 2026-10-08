@@ -133,6 +133,13 @@ can be inspected using the retained client ID, with a missing queue ID kept null
 No read signs, settles, resends or removes a message. Authority import and signer
 integration remain required before automatic reconciliation.
 
+The protected `snapshot_context` response also supplies `record.codex_submission`
+and `record.codex_receipt` from the same retained event lock. These contain only
+the original correlation metadata; the receipt is null after a lost add reply.
+The evidence authority compares these owner-supplied IDs with an observation
+before import. Ordinary and direct public status do not gain these fields, and
+the snapshot contains no message body or full delivery receipt.
+
 ## tmux-intent ↔ herdr-command parity
 
 Every common terminal-control intent available through `ace-tmux` is available through `ace-herdr` (herdr 0.9.1). Parity is of INTENT and FLAG VOCABULARY, not byte-format: ace-herdr keeps one-line JSON where ace-tmux renders human tables.
