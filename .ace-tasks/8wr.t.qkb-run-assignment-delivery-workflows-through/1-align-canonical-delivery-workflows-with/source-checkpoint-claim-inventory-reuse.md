@@ -33,3 +33,7 @@ Existing with_event_read_operation owns one event selection and one full invento
 - Initial measurement instrumentation failure retained1aabe6af1/7: attempted to wrap nonexistent original_registration_context!, before measured admission. Corrected to actual authenticate_inventory_registration!; no production failure or performance evidence inferred.
 
 Actual composed authority-loss regression PASS1/93,56.84s: git/e7a647ec-e6f9-4628-a0da-d62c6323fb8c. It removes the real authority socket and refuses public request/status/Delivery, retains the original claim/ref/selectors, then completes/replays exactly one original effect after restart. Independent review remains required. This bounded checkpoint does not close qkb or certify deployed latency.
+
+## Independent integration verdict
+
+Root APPROVE frozen `ebcec5fe0ab3147eaefeb80973583c669e9f18a2`: inspected complete selection key, operation/thread lifetime, failure eviction, existing deep freeze and unchanged canonical decoding/admission/CAS. Integrated `373748542`. Main full operation-read and evidence-journal files passed32/185, zero failures/errors,28.93s; receipt `assign/77b2da0d-21b7-44ef-95a1-d4b806de0a1b`. No aggregate performance or installed acceptance claim follows from this scoped result.
