@@ -17,6 +17,18 @@ position: 6o000l
 
 # Close foundation gaps and integrate the second ACE Lab wave
 
+## Captain correction — live runtime source, 2026-10-08
+
+The xza family is cancelled, not deferred. Agents run through existing ace-llm
+under Herdr/tmux. Overseers read/capture the selected live panel and process
+when needed. Do not add message-read proofs, dedicated Codex app-server or
+observer/signer services, or a duplicate cache of current terminal state.
+Existing durable task/attempt/result/review history and authorization for real
+scoped effects retain their separate purposes. First installed execution and
+observation remain the single lab-config:gad.2 task. The source cleanup and
+one final combined code review remain open before main integration/gem prep.
+
+
 ## Current ownership and state
 
 This ACE integration tracker owns source sequencing and release evidence. **lab-config:8wl.t.gad.2 is the single Lab installation/system-test execution task**, with its own unchecked producer-linked matrix. Generic source tasks close on implemented behavior, executed applicable package/integration tests and independent source review; deployment evidence is not duplicated as each source task's final gate.

@@ -1,6 +1,8 @@
 # Codex root start phase: candidate contract
 
-Status: proposed, pending Captain approval; no implementation, task promotion, native probe, or acceptance claim. This amends the existing xza.0/gad installation join rather than introducing a broker. Official rust-v0.159.3 source establishes native UID-owned `0700` daemon directory, `0600` physical socket, and advertised symlink. Existing distinct context UID cannot reconnect through normal DAC. Accepted executable provenance must still bind that source behavior.
+Status: rejected historical proposal, 2026-10-08. Captain removed the message-read proof and dedicated Codex app-server model. Existing ace-llm CLI under Herdr/tmux is the execution path. This is not an approval request, future obligation or delivery gate. No additional root phase, socket ACL or service is authorized by it.
+
+Historical context: this proposed amendment targeted the xza.0/gad native-observation join rather than introducing a broker. Official rust-v0.159.3 source establishes native UID-owned `0700` daemon directory, `0600` physical socket, and advertised symlink. Existing distinct context UID cannot reconnect through normal DAC. Accepted executable provenance must still bind that source behavior.
 
 ## Existing product and required changes
 

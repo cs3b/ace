@@ -17,6 +17,24 @@ bundle:
 
 # Deliver authenticated prepared work to scoped workers
 
+## Captain clarification — CLI launch, 2026-10-08
+
+The Lab launches agents through the existing `ace-llm` provider CLI under Herdr
+or tmux. Prepared worker activation must use that same provider owner with the
+captured prompt, original attempt identity, selected scope, environment and
+working directory. It must not require a separate Codex app-server, remote
+session selection, root socket ACL or a typed app-server runtime.
+
+This corrects the additional managed-remote startup requirement introduced in
+implementation; it does not relax authenticated prepared input, workspace
+preservation, original-worker attribution, result/review acceptance or stop
+safety. Runtime submission still means `submitted` to the original terminal,
+not message consumption. Captain removed the xza message-read proof model;
+it is cancelled, not deferred. No observer/signer/app-server service or cached
+copy of terminal state is required. The overseer captures the selected live
+Herdr/tmux panel when it needs current information. Retained assignment and
+result/review evidence describes past operations, never current terminal truth.
+
 ## Objective and observable result
 
 A protected worker consumes exactly the reviewed prepared task subtree accepted for its original attempt. The numeric reservation must constrain actual assignment driving, rather than merely label canonical ownership while a fixed worker reads unrelated mutable local input. This is a vertical source prerequisite of qk0.1; qk0.0 canonical inventory is independent of this child; qk0.3 depends on its delivered inventory before extending its row contract. No new execution journal, launcher, listener, privilege, or caller-selected executable is introduced.

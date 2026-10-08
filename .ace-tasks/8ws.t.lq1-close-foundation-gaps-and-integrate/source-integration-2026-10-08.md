@@ -2,6 +2,33 @@
 
 This is implementation progress, not a completion verdict, main delivery or installed Lab acceptance.
 
+## Current decision and implementation boundary
+
+Captain removed the message-read/consumed/superseded proof model, additional
+Codex app-server services and duplicate terminal-state projections. This is
+cancellation, not postponement. xza is cancelled; its old source receipts do
+not establish a continuing requirement. The overseer obtains current state
+from the selected live Herdr/tmux panel/process. Existing attempt/result/review
+history remains history; it cannot substitute for a live read.
+
+0036003a6 restores ordinary prepared worker execution through the existing
+ace-llm provider CLI; b881c461d retains the workspace lease when provider
+ownership is uncertain. Agent checks passed: prepared-worker 9/130,
+launcher/direct CLI 28/112, LLM 7/25 and provider 58/171. These are owner checks,
+not a final frozen-tree suite verdict. Lab eebaef3 removes automatic dedicated
+Codex composition; 0555ac9 stages the actual task trial in gad.2.
+
+Additional root Serve/admission cleanup is uncommitted. Its last focused run
+was red (16 tests/71 assertions, 7 failures/4 errors, 26104e30); the existing
+scope fixture lacks the canonical definition_ref/digest required by current
+campaign validation. This remains a local fixture repair, not grounds to
+restore the rejected service. Code cleanup, bounded verification, one final
+independent code review, main integration and fresh gem preparation remain open.
+Captain performs OTP publication, then gad.2 launches and observes a real task.
+
+The sections below are historical implementation evidence. Any statement
+requiring managed remote startup/native consumption is superseded here.
+
 ## Joined source
 
 ACE integration branch `codex/protected-pr-integration` joins protected PR operations, scoped publication, explicit HITL project routing, R2 parent/child registration and canonical round/export/results. Ready/merge carry their exact operation into the current campaign gate at claim, authorization, dispatch and journal CAS; draft creation/update retain the Captain-approved ordering. Bounded per-operation immutable journal inventory reuse retains the existing 30s candidate Git deadline.
@@ -37,8 +64,8 @@ Lab integration branch `codex/lab-source-integration` joins coldboot, selected n
 - [x] Public protected `inbox observe` CLI joined at `5407d873d`, using existing original-selection status and authenticated `observe_to_sign` admission, with candidate-only output. The final joined nine-file check passed 129 tests/1255 assertions (`fad9b8e3`) in 5.87s. Lab source Codex producer/static/transport compatibility check passed 4 Python tests in 1.60s; no native or installed probe. `xza.0` is now in-progress, still needs_review, with every whole-slice success criterion open.
 - [x] Canonical observation import/fetch and distinct signer source are joined through `33b432e6c`. Public `inbox-observe` and `inbox-settle` adoption is committed at `ab5094864`; the actual journal/owner/signature/replay check is joined at `8deb2633b`. This closes the local producer/import/fetch/sign/reconcile path, not deployed permissions or whole-task acceptance.
 - [x] Obsolete fake-native inbox E2E removed at `737c4ef79`; its scripts manufactured native acknowledgement and required the removed argv path. Source responsibility remains in maintained record/socket checks; installed requirements remain in gad.2. No replacement Lab emulation was added.
-- [x] Managed Codex UI/worker consumer is joined at `e293dd435`: an admitted typed runtime reaches the actual QueryInterface/provider and remote resume in the original worker terminal. Missing runtime/TTY and mismatched selectors refuse. The actual original-entry producer supplying that typed runtime remains unfinished below; this is not a working installed startup.
-- [ ] Lab Codex attempt-owned startup: finish original factory/producer/client ownership, exact socket lifetime, contained context startup and whole-slice retirement/recovery. Official Codex uses a native-UID-only physical socket exposed through an advertised symlink; resolving the alias cannot grant the distinct service UIDs access. Literal startup input handoff remains unresolved; no latest-session lookup, unsafe chmod or empty-scope exception is accepted.
+- [x] Existing provider CLI route restored at 0036003a6; the speculative managed remote consumer from e293dd435 was removed.
+- [ ] Remove obsolete native-observation/read-proof source and installation assumptions; validate ordinary ace-llm launch and live runtime capture. Dedicated Codex startup/ACL is cancelled, not a gate.
 - [x] Canonical protected workflow source adoption: document and verify the actual round/export/submit-result public sequence, preserving ordinary/protected ownership and exact current candidate gates.
 - [ ] One independent review of the final joined source, plus appropriate local unit/integration verification.
 - [ ] Integrate main, synchronize repositories and prepare fresh gem artifacts. Publication remains the Captain's interactive OTP step; actual installed task/observation remains `gad.2`.
@@ -86,22 +113,9 @@ child's `joined-observation-source-checkpoint.md`.
 frontmatter errors; it still reports 465 warnings. This is not full doctor
 scope/structure acceptance or repair of the historical backlog.
 
-## Remaining original startup producer, verified in source
+## Historical startup investigation — rejected design
 
-Inspection of `LaunchLifecycle.complete_native_start!` confirms that its Codex
-startup callback result is discarded, then `scope_native_bound` retains worker
-readiness alone. Authenticated PreparedInput therefore has no original literal
-completed installation/runtime-stage selection to open in `authority worker`.
-The original selected CLI entry has no such selector either. Adding a factory
-that reads a synthetic or mutable selection would leave a disconnected product;
-that proposed subagent slice was stopped before edits.
-
-The original startup owner must produce those references before gate release,
-retain them in the same native-binding event, export them through authenticated
-PreparedInput and hold the exact runtime around original worker execution.
-Static installation can precede the attempt; the native start/ACL and literal
-handoff contract remains the pending Captain decision in the child's
-`codex-root-start-phase-contract-candidate.md`. No dependent root phase was
-implemented. Native provisioning grants/key installation, whole-source review,
-main integration, fresh gems and installed `gad.2` acceptance remain delivery
-obligations rather than inferred outcomes of these tests.
+The former Codex app-server startup/ACL investigation is superseded by the
+Captain decision above. It is neither an unresolved approval nor a future
+prerequisite. Historical source/test receipts retain their actual scope;
+native-observation implementation is being removed, not accepted.

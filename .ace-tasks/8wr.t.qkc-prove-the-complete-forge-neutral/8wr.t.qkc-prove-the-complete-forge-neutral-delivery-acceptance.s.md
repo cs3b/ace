@@ -4,11 +4,11 @@ status: pending
 priority: high
 created_at: "2026-09-28 17:42:36"
 estimate: TBD
-dependencies: [8wr.t.qk1, 8wr.t.qkb, 8x0.t.ig4, 8x3.t.xz9, 8x3.t.xza]
+dependencies: [8wr.t.qk1, 8wr.t.qkb, 8x0.t.ig4, 8x3.t.xz9]
 tags: [lab-readiness]
 bundle:
   presets: [project]
-  files: [.ace-tasks/_archive/8x/v/8wr.t.qk1-complete-forge-neutral-worktree-review/8wr.t.qk1-complete-forge-neutral-worktree-review-and-task.s.md, .ace-tasks/8wr.t.qkb-run-assignment-delivery-workflows-through/8wr.t.qkb-run-assignment-delivery-workflows-through-named-forge.s.md, .ace-tasks/_archive/8w/y/8wk.t.l1e-forge-neutral-git-core-with/8wk.t.l1e-forge-neutral-git-core-with-github-and.s.md, .ace-tasks/_archive/8x/v/8wr.t.qjl-persist-assignment-attempts-and-exact/8wr.t.qjl-persist-assignment-attempts-and-exact-execution.s.md, .ace-tasks/8wr.t.qkc-prove-the-complete-forge-neutral/ux/usage.md, .ace-tasks/8x0.t.ig3-unify-review-loop-ownership-and/8x0.t.ig3-unify-review-loop-ownership-and-effective-policy.s.md, .ace-tasks/8x0.t.ig4-bound-review-convergence-and-expose/8x0.t.ig4-bound-review-convergence-and-expose-escalation.s.md, .ace-tasks/8x3.t.xz9-execute-scoped-services-across-os/protected-authority-contract.md, .ace-tasks/8x3.t.xza-observe-native-inbox-outcomes-before/observation-authority-contract.md, .ace-tasks/8x3.t.xz9-execute-scoped-services-across-os/consumer-dependency-map.md]
+  files: [.ace-tasks/_archive/8x/v/8wr.t.qk1-complete-forge-neutral-worktree-review/8wr.t.qk1-complete-forge-neutral-worktree-review-and-task.s.md, .ace-tasks/8wr.t.qkb-run-assignment-delivery-workflows-through/8wr.t.qkb-run-assignment-delivery-workflows-through-named-forge.s.md, .ace-tasks/_archive/8w/y/8wk.t.l1e-forge-neutral-git-core-with/8wk.t.l1e-forge-neutral-git-core-with-github-and.s.md, .ace-tasks/_archive/8x/v/8wr.t.qjl-persist-assignment-attempts-and-exact/8wr.t.qjl-persist-assignment-attempts-and-exact-execution.s.md, .ace-tasks/8wr.t.qkc-prove-the-complete-forge-neutral/ux/usage.md, .ace-tasks/8x0.t.ig3-unify-review-loop-ownership-and/8x0.t.ig3-unify-review-loop-ownership-and-effective-policy.s.md, .ace-tasks/8x0.t.ig4-bound-review-convergence-and-expose/8x0.t.ig4-bound-review-convergence-and-expose-escalation.s.md, .ace-tasks/8x3.t.xz9-execute-scoped-services-across-os/protected-authority-contract.md, .ace-tasks/8x3.t.xz9-execute-scoped-services-across-os/consumer-dependency-map.md]
   commands: []
 needs_review: false
 position: 6o000i
@@ -73,16 +73,27 @@ R1 (8x0.t.ig2) is delivered storage/evidence foundation, not proof of caps or es
 
 Central gad.2 `REVIEW` obligation: Final review-policy row binds R2/R3 revisions and executes cap/escalation/restart negative scenarios before full Lab acceptance.
 
-## Protected execution and native settlement acceptance
+## Protected execution and live runtime observation — Captain correction, 2026-10-08
 
-Required input also includes accepted xz9 and xza source receipts on the exact installed manifest. Add required rows for protected cross-user execution and for actual native Codex and Pi inbox outcomes. Use xz9's real authenticated launcher/worker/reviewer/authority/executor route, approved immutable candidate and canonical imported receipt; worker-local success JSON, mutable refs, same-UID stubs and direct journal injection are negative controls, never acceptance evidence. Run duplicate/lost-response/restart and no-effect-versus-uncertain cases; retain actor UIDs, candidate generation/head, claim/import references and observed effect count.
+Required source inputs include xz9 for scoped cross-user execution. Use its
+actual authenticated launcher/worker/reviewer/authority/executor route and
+operation/result evidence. Worker-local success JSON is not independent
+confirmation of a privileged effect. Keep bounded duplicate/lost-response and
+uncertainty checks for those real effects.
 
-For each native runtime, execute the actual deployed producer, bound endpoint, observer and signer through consumed/superseded reconciliation. Retain exact event/digest/native-session/attempt/OS-birth correlation and trusted observation references. Exercise busy queues, duplicate/equal-text messages, lost replies, runtime restart and cancellation/dequeue races. Empty queue, elapsed time, generic enqueue acknowledgement or a direct app-server capability fixture cannot stand in for signed trustworthy consumption/nonexecution. Missing supported correlation is a failed required row, not a permitted skip.
+The xza consumption-proof requirement is removed. No signed consumed or
+superseded row, observer/signer service, dedicated Codex app-server or root
+socket ACL is required. The existing ace-llm CLI executes in Herdr/tmux; query
+or capture the selected live panel/process directly when the overseer needs
+current state. Report submission as submission, observed output as output and
+verified task results as results, without constructing message-read evidence
+or a duplicate current-state ledger.
 
-Cross-repository prerequisites are explicit evidence references: lab-config:8wl.t.gad.8 proves exact authority accounts, protected paths/topology, runtime endpoints and signer-key installation on this manifest; lab-config:8wl.t.gad.b proves migrated scoped domain handlers and actual signed settlement using the same authority. Record their IDs, tested revisions, receipts and matching deployment manifest in acceptance/matrix.md. qkc supplies source scenario assets; lab-config:gad.2 executes them and records installation/operation proofs once. qkc source completion is an input; its installed outcomes are outputs of gad.2, never a circular prerequisite. Keep R2/R3 mandatory and ig5 outside the gate. No live installed proof is claimed by this specification amendment.
-
-Central gad.2 `forge-matrix` obligation: Protected execution row binds xz9 source, actual peer identities and gad.8/gad.b installation/handler receipts to the installed manifest.
-Central gad.2 `forge-matrix` obligation: Both native settlement rows bind xza source and real producer/observer/signer evidence, including race and restart negatives.
+lab-config:gad.8/gad.b supply installed accounts, scoped handlers and ordinary
+runtime wiring. gad.2 remains the single installed task/test owner. Its first
+run launches a real task and observes the live runtime, output, result and
+stop behavior. R2/R3 and genuine scoped-effect checks remain separate program
+requirements; ig5 remains outside the gate. No installed pass is claimed here.
 
 ## Source completion checklist
 
