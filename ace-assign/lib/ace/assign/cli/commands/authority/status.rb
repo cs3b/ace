@@ -13,7 +13,7 @@ module Ace
             option :attempt, required: true, desc: "Attempt ID"
             def call(**options)
               reply = Ace::Assign::Authority::Client.new(mapping_id: options.fetch(:mapping)).call("attempt_status",
-                {"assignment_id" => options.fetch(:assignment), "attempt_id" => options.fetch(:attempt)})
+                {"assignment_id" => options.fetch(:assignment), "attempt_id" => options.fetch(:attempt), "result_candidate_generation" => nil})
               puts JSON.generate(reply.data)
             rescue ArgumentError, Ace::Runtime::Error, Ace::Assign::Error => error
               raise Ace::Support::Cli::Error, error.message

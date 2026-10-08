@@ -489,6 +489,20 @@ class ServiceMergeBoundaryTest < AceGitTestCase
     context = Ace::Assign::Authority::ProtectedAssignmentContext.new(deployment: @deployment, history: history,
       uid: worker.fetch("uid"), kernel: worker_kernel, env: {})
     @kernel.peer_identity = worker
+    # The worker reads the actual public current generation before its first
+    # claim. No arithmetic or fixture generation substitutes for this owner.
+    before_generation = @journal.ref_value
+    status_client = context.client(options: {mapping: "mapping"})
+    generation_out, generation_err = capture_io do
+      Ace::Assign::Authority::Client.stub(:new, ->(**_) { status_client }) do
+        Ace::Assign::CLI::Commands::Authority::Status.new.call(mapping: "mapping", assignment: "assignment", attempt: @attempt)
+      end
+    end
+    assert_empty generation_err
+    public_generation = JSON.parse(generation_out)
+    assert_equal submission.fetch("expected_generation"), public_generation.fetch("generation")
+    assert_equal submission.fetch("candidate_generation"), public_generation.fetch("result_candidate_generation")
+    assert_equal before_generation, @journal.ref_value, "generation discovery is read-only"
     adapter = Ace::Lab::Organisms::ProtectedServiceRequest.new(context: context, ingress_factory: ->(**selection) {
       @kernel.peer_identity = executor
       Ace::Lab::Organisms::ProtectedServiceClient.new(**selection.merge(kernel: caller, wire: wire)) })
@@ -509,7 +523,7 @@ class ServiceMergeBoundaryTest < AceGitTestCase
         "--operation", "merge", "--authorization", "decision", "--request-id", "service-request", "--input", input_path,
         "--mapping", "mapping", "--scope", "010", "--service", "executor", "--candidate-head", @head,
         "--candidate-generation", submission.fetch("candidate_generation").to_s,
-        "--expected-generation", submission.fetch("expected_generation").to_s]
+        "--expected-generation", public_generation.fetch("generation").to_s]
       if @public_refusals
         before_refusals = @journal.ref_value
         exercise_registered_request_refusals(command, arguments, worker, @public_refusals)
