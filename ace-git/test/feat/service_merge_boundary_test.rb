@@ -41,6 +41,18 @@ class ServiceMergeBoundaryTest < AceGitTestCase
     exercise_completion
   end
 
+  def test_public_lab_request_refuses_selector_service_and_foreign_birth_controls
+    @public_lab = true
+    @public_refusals = %i[selectors missing_service foreign_birth]
+    exercise_completion
+  end
+
+  def test_public_lab_request_refuses_stale_candidate_and_missing_authorization
+    @public_lab = true
+    @public_refusals = %i[stale_head stale_generation missing_authorization]
+    exercise_completion
+  end
+
   def test_real_receiver_fixed_cli_neutral_merge_and_canonical_receipt_import
     exercise_completion
   end
@@ -199,6 +211,13 @@ class ServiceMergeBoundaryTest < AceGitTestCase
           end
         end
       end
+      if @public_refusals
+        assert_equal "refused", result.fetch("state")
+        assert_equal 0, effects
+        assert_equal 0, calls.count { |args| args[1] == "POST" }
+        assert_equal 0, @journal.read_events("assignment").count { |event| event["type"] == "service_claim" || event["type"] == "delivery" }
+        next
+      end
       if measure_request
         directory = File.expand_path("../../../.ace-local/task/8wr.t.qkb.1", __dir__)
         FileUtils.mkdir_p(directory)
@@ -336,6 +355,53 @@ class ServiceMergeBoundaryTest < AceGitTestCase
     Ace::Lab::CLI.register(name, original) if original
   end
 
+  def exercise_registered_request_refusals(command, original, worker, controls)
+    replacement = lambda do |flag, value|
+      arguments = original.dup
+      arguments[arguments.index(flag) + 1] = value
+      arguments
+    end
+    if controls.include?(:selectors)
+      [["--scope", "011"], ["--project", "foreign"]].each do |flag, value|
+        @kernel.peer_identity = worker
+        capture_io do
+          assert_raises(Ace::Support::Cli::Error) do
+            registered_lab_call("service request", command, replacement.call(flag, value))
+          end
+        end
+      end
+      capture_io do
+        assert_raises(Ace::Support::Cli::Error) { registered_lab_call("service request", command, replacement.call("--candidate-head", "a" * 64)) }
+      end
+    end
+    if controls.include?(:missing_service)
+      @kernel.peer_identity = worker
+      capture_io do
+        assert_raises(Ace::Support::Cli::Error) { registered_lab_call("service request", command, replacement.call("--service", "missing")) }
+      end
+    end
+    if controls.include?(:foreign_birth)
+      @kernel.peer_identity = worker.merge("started_at" => "linux:#{Ace::Assign::ExecutionScopeObservationFixtures::BOOT}:999")
+      capture_io do
+        error = assert_raises(Ace::Support::Cli::Error) { registered_lab_call("service request", command, original) }
+        assert_includes error.message, "unauthorized"
+      end
+    end
+    [["--candidate-head", "f" * 40, :stale_head], ["--candidate-generation", (original[original.index("--candidate-generation") + 1].to_i + 1).to_s, :stale_generation],
+      ["--authorization", "missing-decision", :missing_authorization]].each do |flag, value, selected|
+      next unless controls.include?(selected)
+      @kernel.peer_identity = worker
+      output = capture_io do
+        assert_raises(Ace::Support::Cli::Error) { registered_lab_call("service request", command, replacement.call(flag, value)) }
+      end.first
+      refusal = JSON.parse(output)
+      assert_equal "error", refusal.fetch("status")
+      assert_includes %w[service_claim_refused service_claim_unconfirmed], refusal.dig("error", "code")
+    end
+  ensure
+    @kernel.peer_identity = worker
+  end
+
   def public_lab_request(client, submission, bytes)
     diagnostic = []
     started = Process.clock_gettime(Process::CLOCK_MONOTONIC)
@@ -431,6 +497,16 @@ class ServiceMergeBoundaryTest < AceGitTestCase
         "--mapping", "mapping", "--scope", "010", "--service", "executor", "--candidate-head", @head,
         "--candidate-generation", submission.fetch("candidate_generation").to_s,
         "--expected-generation", submission.fetch("expected_generation").to_s]
+      if @public_refusals
+        before_refusals = @journal.ref_value
+        exercise_registered_request_refusals(command, arguments, worker, @public_refusals)
+        assert_equal before_refusals, @journal.ref_value, "public refusal cannot claim/write/repair"
+        assert_empty reached, "no fixed handler admitted"
+        listener.stop
+        assert owner.join(10)
+        owner.value
+        next({"state" => "refused"})
+      end
       record.call("cli.request.before")
       out, err = capture_io do
         if lose_reply

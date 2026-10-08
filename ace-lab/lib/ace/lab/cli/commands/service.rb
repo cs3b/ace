@@ -19,6 +19,11 @@ module Ace
               @protected_service ||= Organisms::ProtectedServiceRequest.new
             end
 
+            def protected_refusal(error)
+              code = error.is_a?(ArgumentError) || error.is_a?(SecurityError) ? "protected_service_refused" : "protected_service_unavailable"
+              emit({"status" => "error", "error" => {"code" => code, "message" => error.message.to_s.scrub[0, 512]}})
+            end
+
             def emit(envelope)
               puts JSON.generate(envelope)
               return if envelope["status"] == "ok"
@@ -53,13 +58,17 @@ module Ace
 
             def call(project:, assignment:, attempt:, operation:, input:, authorization:, request_id:, **options)
               reject_identity_flags!(options)
-              if protected_service.selected?(options)
+              selected = protected_service.selected?(options)
+              if selected
                 return emit(protected_service.request(project: project, assignment: assignment, attempt: attempt,
                   operation: operation, input_path: input, authorization: authorization, request_id: request_id, **options))
               end
               emit(service.request(project: project, assignment: assignment, attempt: attempt,
                 operation: operation, input_path: input, authorization: authorization,
                 request_id: request_id, dry_run: options[:dry_run]))
+            rescue ArgumentError, Ace::Assign::Error, Ace::Git::Error, Ace::Runtime::RuntimeUnavailableError, SecurityError, KeyError, SystemCallError => error
+              raise if selected == false
+              protected_refusal(error)
             end
           end
 
@@ -86,10 +95,14 @@ module Ace
             def call(request:, **options)
               reject_identity_flags!(options)
               ensure_json_format!(options)
-              if protected_service.selected?(options)
+              selected = protected_service.selected?(options)
+              if selected
                 return emit(protected_service.status(request_id: request, **options))
               end
               emit(service.status(request_id: request))
+            rescue ArgumentError, Ace::Assign::Error, Ace::Git::Error, Ace::Runtime::RuntimeUnavailableError, SecurityError, KeyError, SystemCallError => error
+              raise if selected == false
+              protected_refusal(error)
             end
           end
         end

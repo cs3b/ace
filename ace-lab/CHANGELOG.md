@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Route protected merge service requests and exact canonical status through original prepared admission and the fixed receiver, with classified refusals and uncertain claim observation.
+
 - Carry read-only cleanup previews across worker, receiver and original root listener with one bounded deadline and full canonical context; missing physical producers remain unavailable.
 
 - Select the installed cleanup receiver for read-only preview without resolving proposal grants or admitting an effect.

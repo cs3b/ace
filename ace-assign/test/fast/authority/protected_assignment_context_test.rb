@@ -70,6 +70,20 @@ module Ace
         end
       end
 
+      def test_absent_installed_mapping_and_project_are_typed_unavailable_without_yield
+        current = descriptor([13001])
+        owner = context(current: current, retained: [], uid: 13001)
+        input = Struct.new(:descriptor).new({"mapping_id" => "mapping", "project_id" => "project"})
+        current.define_singleton_method(:mapping) { |_| raise KeyError, "missing mapping" }
+        assert_raises(AttemptErrors::EvidenceUnavailable) do
+          owner.with_installed_selection(options: {mapping: "mapping"}, input: input) { flunk "absent mapping has no transport" }
+        end
+        current.define_singleton_method(:mapping) { |_| {} }
+        assert_raises(AttemptErrors::EvidenceUnavailable) do
+          owner.with_installed_selection(options: {mapping: "mapping"}, input: input) { flunk "missing project has no transport" }
+        end
+      end
+
       def test_retained_worker_principal_cannot_restore_ordinary_mode_after_current_mapping_removal
         owner = context(current: descriptor([13006]), retained: [descriptor([13001])], uid: 13001)
         assert owner.protected_worker?

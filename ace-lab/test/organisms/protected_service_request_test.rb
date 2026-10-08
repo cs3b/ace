@@ -104,6 +104,18 @@ class ProtectedServiceRequestTest < Minitest::Test
     end
   end
 
+  def test_oversized_post_submission_output_is_unconfirmed_with_original_lookup_not_refusal
+    # Fault the admitted output boundary, not a provider or canonical result.
+    @reply.fetch("data")["generation"] = 10**16_000
+    result = request
+    assert_equal "error", result.fetch("status")
+    assert_equal "service_claim_unconfirmed", result.dig("error", "code")
+    assert_equal "request", result.dig("error", "selection", "request_id")
+    assert_equal "inspect_canonical_service_status", result.dig("error", "claim", "required_action")
+    assert_operator JSON.generate(result).bytesize, :<=, Ace::Lab::Organisms::ProtectedServiceRequest::LIMIT
+    assert_equal 1, @calls.count { |item| item.first == :submit }
+  end
+
   def test_unconfirmed_claim_is_error_not_success_or_retry
     @reply.replace({"version" => 1, "type" => "service_claim_unconfirmed", "required_action" => "inspect_canonical_service_status"})
     result = request

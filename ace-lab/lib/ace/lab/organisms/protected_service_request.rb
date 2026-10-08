@@ -69,7 +69,7 @@ module Ace
               "message" => "inspect original canonical service status; no automatic resubmission",
               "selection" => selection, "claim" => claim}}
           end
-          bounded!(envelope)
+          bounded!(envelope, selection: selection)
         end
 
         def status(request_id:, **options)
@@ -117,9 +117,18 @@ module Ace
           input
         end
 
-        def bounded!(envelope)
-          raise ArgumentError, "protected service output exceeds bound" if JSON.generate(envelope).bytesize > LIMIT
-          envelope
+        def bounded!(envelope, selection: nil)
+          return envelope if JSON.generate(envelope).bytesize <= LIMIT
+          if selection
+            # Submission may already be durable. Never classify lost output as
+            # a pre-effect refusal or retry; retain the original lookup tuple.
+            envelope = {"status" => "error", "error" => {"code" => "service_claim_unconfirmed",
+              "message" => "claim output unavailable; inspect original canonical service status without resubmission",
+              "selection" => selection, "claim" => {"version" => 1, "type" => "service_claim_unconfirmed",
+                "required_action" => "inspect_canonical_service_status"}}}
+            return envelope if JSON.generate(envelope).bytesize <= LIMIT
+          end
+          raise Ace::Assign::AttemptErrors::EvidenceUnavailable, "protected status output exceeds bound"
         end
       end
     end

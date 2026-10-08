@@ -116,10 +116,14 @@ module Ace
         def with_installed_selection(options:, input:)
           raise AttemptErrors::EvidenceUnavailable, "protected installed authority is unavailable" unless @deployment
           mapping = selected_hint(options[:mapping], "ACE_ASSIGN_LAUNCH_MAPPING")
-          map = @deployment.mapping(mapping)
-          unless input && input.descriptor.fetch("mapping_id") == mapping &&
-              input.descriptor.fetch("project_id") == map.fetch("project_id")
-            raise AttemptErrors::EvidenceUnavailable, "original prepared installed selection differs"
+          begin
+            map = @deployment.mapping(mapping)
+            unless input && input.descriptor.fetch("mapping_id") == mapping &&
+                input.descriptor.fetch("project_id") == map.fetch("project_id")
+              raise AttemptErrors::EvidenceUnavailable, "original prepared installed selection differs"
+            end
+          rescue KeyError
+            raise AttemptErrors::EvidenceUnavailable, "original installed mapping is unavailable"
           end
           @kernel ||= Ace::Runtime::Molecules::ProtectedLinux.new
           yield @deployment, @kernel, mapping
