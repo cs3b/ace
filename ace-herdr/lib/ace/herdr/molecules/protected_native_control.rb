@@ -77,6 +77,12 @@ module Ace
           submit_prompt(origin, body)
         end
 
+        # Called only by the admitted Inbox owner after durable queue/wake
+        # intent; this domain notification accepts no caller text or target.
+        def queue_wake(binding:)
+          submit_prompt(guarded_origin!(binding), "Check your native queued messages.")
+        end
+
         def submit_prompt(origin, body)
           frame = exchange("agent.prompt", {"target" => origin.fetch("terminal_id"), "text" => body, "expected_origin" => origin},
             write_limit: 131_072, read_limit: 16_384)

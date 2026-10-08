@@ -464,9 +464,13 @@ module Ace
                   raise ValidationError, "context direct issuer epoch differs"
                 end
                 if (claim = operation["admitted_claim"])
-                  strict!(claim, %w[claim_generation claim_owner])
-                  unless effect["purpose"] == "deliver" && claim["claim_generation"] == effect.fetch("selection").fetch("expected_claim_generation") + 1 &&
-                      claim["claim_owner"] == Digest::SHA256.hexdigest(JSON.generate([@context_id, id]))
+                  strict!(claim, %w[kind claim_generation claim_owner])
+                  expected = effect.fetch("selection").fetch("expected_claim_generation")
+                  valid_queue = claim["kind"] == "queue" && claim["claim_generation"] == expected + 1 &&
+                    claim["claim_owner"] == Digest::SHA256.hexdigest(JSON.generate([@context_id, id]))
+                  valid_wake = claim["kind"] == "wake" && expected.positive? && claim["claim_generation"] == expected &&
+                    claim["claim_owner"].is_a?(String) && DIGEST.match?(claim["claim_owner"])
+                  unless effect["purpose"] == "deliver" && (valid_queue || valid_wake)
                     raise ValidationError, "context actual claim evidence differs"
                   end
                 end

@@ -53,7 +53,7 @@ module Ace
           end
           if record["wake"]
             InboxDirectEffectBinding.object!(record["wake"], %w[status])
-            raise ValidationError, "direct context wake observation differs" unless %w[none sent pending].include?(record.dig("wake", "status"))
+            raise ValidationError, "direct context wake observation differs" unless %w[none sent pending issuing uncertain not_issued].include?(record.dig("wake", "status"))
           end
           value
         rescue KeyError, TypeError, Ace::Hitl::Providers::InvalidRefError

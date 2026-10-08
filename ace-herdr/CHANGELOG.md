@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Persist guarded queue notifications before IO, retain the original queue claim separately from an explicit notification retry, and never retry an issuing or uncertain notification. Known native not-issued responses permit a fresh admitted notification without resending the queued payload.
+
 - Validate the closed original Inbox native channel before returning its identity projection, refusing malformed socket paths or native versions.
 
 - Bind protected direct Inbox admission and retained DeliveryRecord to explicit original project, assignment, mapping and context; recheck canonical original identity outside then under the existing store exclusion before effects.

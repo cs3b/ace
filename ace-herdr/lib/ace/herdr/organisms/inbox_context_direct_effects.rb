@@ -2,6 +2,8 @@
 require_relative "../molecules/inbox_direct_effect_binding"
 require_relative "../molecules/inbox_direct_result"
 
+require_relative "../molecules/protected_native_control"
+
 module Ace
   module Herdr
     module Organisms
@@ -121,11 +123,15 @@ module Ace
               direct_delivery_predecessors!(state, operation_id, event_id, key_generation)
               operation["admitted_claim"] = box.prepare_direct_delivery(event: event_id,
                 expected_claim_generation: expected_claim_generation, expected_attempt: attempt_id,
-                claim_owner: Digest::SHA256.hexdigest(JSON.generate([@context_id, operation_id])))
+                claim_owner: Digest::SHA256.hexdigest(JSON.generate([@context_id, operation_id])),
+                operation_id: operation_id, key_generation: key_generation, effect_binding: binding)
             end
             claim = transaction { |state| copy(operation!(state, operation_id, peer)["admitted_claim"]) }
-            box.deliver(event: event_id, expected_claim_generation: expected_claim_generation,
-              expected_attempt: attempt_id, prepared_claim: claim)
+            unless claim && claim.fetch("kind") == "wake"
+              box.deliver(event: event_id, expected_claim_generation: expected_claim_generation,
+                expected_attempt: attempt_id, prepared_claim: claim && claim.slice("claim_generation", "claim_owner"))
+            end
+            direct_guarded_wake!(operation_id, peer, binding, claim, original_query, box) if claim
             record_direct_return!(operation_id, peer, binding)
           end
           verified = box.verify_direct_delivery(binding)
@@ -185,6 +191,47 @@ module Ace
           raise ValidationError, "original authority identity is unavailable"
         end
 
+        def direct_queue_control!(original)
+          native = original.fetch("native_binding")
+          server = native.fetch("server_identity")
+          mapping = {"worker_uid" => server.fetch("uid"), "worker_gid" => server.fetch("gid"), "worker_groups" => server.fetch("groups"),
+            "native" => original.fetch("native_channel").merge("server_identity" => server, "socket_identity" => native.fetch("socket_identity"))}
+          Molecules::ProtectedNativeControl.new(mapping: mapping, kernel: @kernel)
+        end
+
+        def direct_guarded_wake!(operation_id, peer, binding, claim, original, box)
+          return unless box.guarded_wake_pending?(event: binding.fetch("event_id"), binding: binding, claim: claim)
+          control = direct_queue_control!(original)
+          native_binding = original.fetch("process_binding").merge("guarded_origin" => original.fetch("guarded_origin"))
+          begin
+            control.prompt_preflight!(native_binding)
+          rescue Ace::Runtime::RuntimeUnavailableError
+            # This readonly preflight never entered notification IO. Pending
+            # stays positively unissued; a fresh explicit retry owns recovery.
+            return
+          end
+          issuing = transaction do |state|
+            operation = operation!(state, operation_id, peer)
+            unless operation["admitted_claim"] == claim && operation["effect_binding"] == binding &&
+                operation["issuer_state"] == "running" && @effect_issuers[operation_id].equal?(Thread.current) &&
+                operation.fetch("original_binding_digest") == original.fetch("original_binding_digest")
+              raise ValidationError, "guarded wake issuer changed"
+            end
+            direct_delivery_predecessors!(state, operation_id, binding.fetch("event_id"), operation.fetch("key_generation"))
+            box.prepare_guarded_wake(event: binding.fetch("event_id"), binding: binding, claim: claim, operation_id: operation_id)
+          end
+          return unless issuing
+          result = control.queue_wake(binding: native_binding)
+          transaction do |state|
+            operation = operation!(state, operation_id, peer)
+            unless operation["admitted_claim"] == claim && operation["effect_binding"] == binding &&
+                operation["issuer_state"] == "running" && @effect_issuers[operation_id].equal?(Thread.current)
+              raise ValidationError, "guarded wake finish admission changed"
+            end
+            box.finish_guarded_wake(event: binding.fetch("event_id"), binding: binding, claim: claim, issuing: issuing, result: result)
+          end
+        end
+
         def record_direct_return!(operation_id, peer, binding)
           transaction do |state|
             operation = operation!(state, operation_id, peer)
@@ -217,6 +264,11 @@ module Ace
           record = if binding.fetch("purpose") == "enqueue"
             box.verify_direct_enqueue(binding)
           else
+            claim = operation["admitted_claim"]
+            if claim && claim["kind"] == "wake"
+              operation_id = state.fetch("operations").find { |_id, retained| retained.equal?(operation) }&.first
+              box.verify_guarded_wake_admission!(binding: binding, claim: claim, operation_id: operation_id)
+            end
             box.verify_direct_delivery(binding, require_idle: true).fetch("record")
           end
           unless record.fetch("original_binding_digest") == operation.fetch("original_binding_digest")

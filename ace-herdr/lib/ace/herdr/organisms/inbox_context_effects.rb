@@ -171,7 +171,7 @@ module Ace
               source_inbox!(selected).verify_direct_canonical_observation(binding: operation.fetch("effect_binding"), proof: proof)
             else
               source_inbox!(selected).verify_direct_canonical_settlement(binding: operation.fetch("effect_binding"),
-                admitted_claim: operation["admitted_claim"], proof: proof)
+                admitted_claim: operation["admitted_claim"], proof: proof, operation_id: id)
             end
             id
           end

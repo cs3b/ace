@@ -92,6 +92,25 @@ class ProtectedNativeControlTest < Minitest::Test
     [native, native.guarded_binding!(native.create(mapping_id: "otp", ticket: "ticket"))]
   end
 
+  def test_fixed_queue_notification_cannot_carry_payload_or_call_public_steering_prompt
+    native, binding = prompt_native
+    native.define_singleton_method(:prompt) { |**| flunk "must not use public steering prompt" }
+    native.response = ->(origin) { {"id" => "test", "result" => {"type" => "agent_prompted", "agent" => {}, "origin" => origin, "submission" => "submitted"}} }
+    result = native.queue_wake(binding: binding)
+    assert_equal "submitted", result.fetch("outcome")
+    call = native.calls.last
+    assert_equal "Check your native queued messages.", call[1].fetch("text")
+    assert_equal binding.fetch("guarded_origin"), call[1].fetch("expected_origin")
+    before = native.calls.size
+    assert_raises(ArgumentError) { native.queue_wake(binding: binding, text: "private payload") }
+    assert_raises(ArgumentError) { native.queue_wake(binding: binding, target: "other") }
+    assert_equal before, native.calls.size
+    native.response = ->(_) { {"id" => "test", "error" => {"code" => "guard_mismatch", "phase" => "not_issued", "message" => "private"}} }
+    assert_equal "not_issued", native.queue_wake(binding: binding).fetch("outcome")
+    native.response = Ace::Runtime::RuntimeUnavailableError.new("lost acknowledgement")
+    assert_equal "uncertain", native.queue_wake(binding: binding).fetch("outcome")
+  end
+
   def test_malformed_canonical_guard_refuses_without_issuing_or_origin_nil_evidence
     native, binding = prompt_native
     [nil, {}, "bad", binding.fetch("guarded_origin").merge("child" => nil)].each do |guard|

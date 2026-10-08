@@ -29,6 +29,63 @@ class InboxDirectEffectsTest < Minitest::Test
     end
   end
 
+  # This owner-phase fixture substitutes only the native transport. The real
+  # control's fixed queue payload, response parser, and origin validator run.
+  class GuardedControl < Ace::Herdr::Molecules::ProtectedNativeControl
+    attr_reader :calls
+    attr_accessor :response, :before_exchange
+    def initialize
+      super(mapping: {})
+      @calls = []
+      @response = :lost
+    end
+    def guarded_binding!(binding) = binding.merge("guarded_origin" => @origin)
+    def origin=(value)
+      @origin = value
+    end
+    def exchange(method, params, **_limits)
+      @calls << [method, params]
+      before_exchange&.call
+      if response == :sent
+        return {"id" => "controlled", "result" => {"type" => "agent_prompted", "submission" => "submitted", "origin" => params.fetch("expected_origin"), "agent" => {}}}
+      end
+      raise Ace::Runtime::RuntimeUnavailableError, "controlled lost wake" if response == :lost
+      {"id" => "controlled", "error" => {"phase" => "not_issued", "code" => "agent_not_ready", "message" => "controlled refusal"}}
+    end
+  end
+
+  def guarded_control
+    control = GuardedControl.new
+    identity = @normal
+    origin = {"terminal_id" => "term_ab", "runtime_incarnation" => "00000000-0000-0000-0000-000000000001", "child" => identity}
+    control.origin = origin
+    query = @completion = ControlledOriginalIdentity.new
+    query.define_singleton_method(:original!) do |**params|
+      super(**params).merge("process_binding" => {"session" => "ws1", "pane" => "p1", "terminal_id" => "term_ab", "process_identity" => identity},
+        "guarded_origin" => origin)
+    end
+    restart
+    @owner.define_singleton_method(:direct_queue_control!) { |_original| control }
+    control
+  end
+
+  class FaultedWakeInbox < Ace::Herdr::Organisms::Inbox
+    attr_accessor :fail_status, :after_publication
+    def with_receipt_public_key(key)
+      super(key).tap do |box|
+        box.fail_status = fail_status
+        box.after_publication = after_publication
+      end
+    end
+    def save(record)
+      if fail_status && record.inbox.dig("wake", "status") == fail_status
+        super(record) if after_publication
+        raise Ace::Herdr::ValidationError, "controlled notification publication interruption"
+      end
+      super(record)
+    end
+  end
+
   class LostEnqueue < Ace::Herdr::Organisms::Inbox
     def enqueue(**arguments)
       super
@@ -126,17 +183,150 @@ class InboxDirectEffectsTest < Minitest::Test
     source_box(executor: pane)
     enqueue, = enqueue_known
     @owner.end_context_operation(operation_id: enqueue.fetch("operation_id"), peer: @normal)
+    control = guarded_control
     admission = begin_operation("deliver")
     first = @owner.deliver_context(**delivery_arguments(admission))
     assert_equal "delivered", first.dig("record", "state")
     assert_equal "unknown", first.fetch("admission_state")
-    assert_equal "pending", first.dig("record", "wake", "status")
-    assert_equal [1, 1], [@native.calls, pane.wakes]
+    assert_equal "uncertain", first.dig("record", "wake", "status")
+    assert_equal [1, 1], [@native.calls, control.calls.size]
     restart
     assert_equal first, @owner.deliver_context(**delivery_arguments(admission))
-    assert_equal [1, 1], [@native.calls, pane.wakes]
+    assert_equal [1, 1], [@native.calls, control.calls.size]
     assert_raises(ERROR) { @owner.end_context_operation(operation_id: admission.fetch("operation_id"), peer: @normal) }
     assert_raises(ERROR) { begin_rotation }
+  end
+
+  def test_positive_not_issued_requires_fresh_admission_and_retries_only_notification
+    source_box(executor: IdlePane.new)
+    enqueue, = enqueue_known
+    @owner.end_context_operation(operation_id: enqueue.fetch("operation_id"), peer: @normal)
+    control = guarded_control
+    control.response = :not_issued
+    original = begin_operation("deliver")
+    first = @owner.deliver_context(**delivery_arguments(original))
+    assert_equal "idle", first.fetch("admission_state")
+    assert_equal "not_issued", first.dig("record", "wake", "status")
+    retained = JSON.parse(File.binread(File.join(@events, "event1.json")))
+    queue_tuple = retained.fetch("inbox").slice("claim_generation", "claim_owner", "queue_issuer", "receipt")
+    assert_equal first, @owner.deliver_context(**delivery_arguments(original))
+    assert_equal 1, control.calls.size
+    @owner.end_context_operation(operation_id: original.fetch("operation_id"), peer: @normal)
+    restarted = guarded_control
+    restarted.response = :not_issued
+    retry_admission = begin_operation("deliver")
+    second = @owner.deliver_context(**delivery_arguments(retry_admission, expected: 1))
+    assert_equal "idle", second.fetch("admission_state")
+    assert_equal "not_issued", second.dig("record", "wake", "status")
+    assert_equal [1, 1], [@native.calls, restarted.calls.size]
+    after = JSON.parse(File.binread(File.join(@events, "event1.json")))
+    assert_equal queue_tuple, after.fetch("inbox").slice("claim_generation", "claim_owner", "queue_issuer", "receipt")
+    assert_equal retry_admission.fetch("operation_id"), after.dig("inbox", "wake", "operation_id")
+    metadata = JSON.parse(File.binread(File.join(@state, ".context-control.json")))
+    assert_equal "wake", metadata.dig("operations", retry_admission.fetch("operation_id"), "admitted_claim", "kind")
+    assert_equal second, @owner.deliver_context(**delivery_arguments(retry_admission, expected: 1))
+    assert_equal 1, restarted.calls.size
+    assert restarted.calls.all? { |method, params| method == "agent.prompt" && params.fetch("text") == "Check your native queued messages." }
+    @owner.end_context_operation(operation_id: retry_admission.fetch("operation_id"), peer: @normal)
+  end
+
+  def test_guarded_notification_io_releases_context_and_event_locks_and_returns_saved_sent_state
+    source_box(executor: IdlePane.new)
+    enqueue, = enqueue_known
+    @owner.end_context_operation(operation_id: enqueue.fetch("operation_id"), peer: @normal)
+    control = guarded_control
+    control.response = :sent
+    admission = begin_operation("deliver")
+    observed = false
+    control.before_exchange = lambda do
+      metadata = @store.transaction { |state| JSON.parse(JSON.generate(state)) }
+      assert_equal 1, metadata.dig("operations", admission.fetch("operation_id"), "in_flight")
+      assert_equal "issuing", @source_inbox.retained_status(event: "event1").dig("wake", "status")
+      observed = true
+    end
+    result = @owner.deliver_context(**delivery_arguments(admission))
+    assert observed, "actual notification boundary must allow separate store/event reads"
+    assert_equal "sent", result.dig("record", "wake", "status")
+    assert_equal "idle", result.fetch("admission_state")
+    assert_equal [1, 1], [@native.calls, control.calls.size]
+    restart
+    assert_equal result, @owner.deliver_context(**delivery_arguments(admission))
+    assert_equal [1, 1], [@native.calls, control.calls.size]
+    assert_equal "ended", @owner.end_context_operation(operation_id: admission.fetch("operation_id"), peer: @normal).fetch("state")
+  end
+
+  def test_notification_retry_rejects_forged_queue_issuer_receipt_and_wake_binding_before_io
+    source_box(executor: IdlePane.new)
+    enqueue, = enqueue_known
+    @owner.end_context_operation(operation_id: enqueue.fetch("operation_id"), peer: @normal)
+    control = guarded_control
+    control.response = :not_issued
+    original = begin_operation("deliver")
+    @owner.deliver_context(**delivery_arguments(original))
+    @owner.end_context_operation(operation_id: original.fetch("operation_id"), peer: @normal)
+    retry_admission = begin_operation("deliver")
+    path = File.join(@events, "event1.json")
+    saved = File.binread(path)
+    changes = [
+      ->(value) { value.fetch("inbox").fetch("queue_issuer")["operation_id"] = "f" * 32 },
+      ->(value) { value.fetch("inbox").fetch("queue_issuer")["input_sha256"] = "f" * 64 },
+      ->(value) { value.fetch("inbox").fetch("receipt")["claim_generation"] = 2 },
+      ->(value) { value.fetch("inbox").fetch("wake")["binding_digest"] = "f" * 64 }
+    ]
+    changes.each do |change|
+      value = JSON.parse(saved)
+      change.call(value)
+      File.binwrite(path, JSON.generate(value))
+      assert_raises(ERROR) { @owner.deliver_context(**delivery_arguments(retry_admission, expected: 1)) }
+      assert_equal [1, 1], [@native.calls, control.calls.size]
+      File.binwrite(path, saved)
+    end
+    accepted = @owner.deliver_context(**delivery_arguments(retry_admission, expected: 1))
+    assert_equal "idle", accepted.fetch("admission_state")
+    assert_equal [1, 2], [@native.calls, control.calls.size]
+    value = JSON.parse(File.binread(path))
+    value.fetch("inbox").fetch("wake")["operation_id"] = original.fetch("operation_id")
+    File.binwrite(path, JSON.generate(value))
+    assert_raises(ERROR) { @owner.end_context_operation(operation_id: retry_admission.fetch("operation_id"), peer: @normal) }
+    assert_equal [1, 2], [@native.calls, control.calls.size]
+  end
+
+  def assert_wake_publication_interruption(status:, after:, expected_calls:, retained_status:)
+    source_box(executor: IdlePane.new, type: FaultedWakeInbox)
+    enqueue, = enqueue_known
+    @owner.end_context_operation(operation_id: enqueue.fetch("operation_id"), peer: @normal)
+    control = guarded_control
+    @source_inbox.fail_status = status
+    @source_inbox.after_publication = after
+    admission = begin_operation("deliver")
+    assert_raises(ERROR) { @owner.deliver_context(**delivery_arguments(admission)) }
+    assert_equal [1, expected_calls], [@native.calls, control.calls.size]
+    retained = @source_inbox.retained_status(event: "event1")
+    assert_equal retained_status, retained.dig("wake", "status")
+    @source_inbox.fail_status = nil
+    restart
+    replay = @owner.deliver_context(**delivery_arguments(admission))
+    assert_equal "unknown", replay.fetch("admission_state")
+    assert_equal retained_status, replay.dig("record", "wake", "status")
+    assert_equal [1, expected_calls], [@native.calls, control.calls.size]
+    assert_raises(ERROR) { @owner.end_context_operation(operation_id: admission.fetch("operation_id"), peer: @normal) }
+    assert_equal "unknown", begin_operation("deliver").fetch("state")
+  end
+
+  def test_failed_issuing_save_never_sends_and_cannot_be_adopted_after_restart
+    assert_wake_publication_interruption(status: "issuing", after: false, expected_calls: 0, retained_status: "pending")
+  end
+
+  def test_crash_after_issuing_save_never_sends_or_adopts_after_restart
+    assert_wake_publication_interruption(status: "issuing", after: true, expected_calls: 0, retained_status: "issuing")
+  end
+
+  def test_failed_uncertain_finish_save_never_repeats_notification_after_restart
+    assert_wake_publication_interruption(status: "uncertain", after: false, expected_calls: 1, retained_status: "issuing")
+  end
+
+  def test_crash_after_uncertain_finish_save_never_repeats_notification_after_restart
+    assert_wake_publication_interruption(status: "uncertain", after: true, expected_calls: 1, retained_status: "uncertain")
   end
 
   def test_future_generation_refuses_before_effect_entry_and_wrong_attempt_cannot_deliver
@@ -185,8 +375,13 @@ class InboxDirectEffectsTest < Minitest::Test
     threads = 2.times.map do |index|
       Thread.new do
         gate.pop
+        operation_id = "%032x" % (index + 1)
+        binding = Ace::Herdr::Molecules::InboxDirectEffectBinding.build(purpose: "deliver", event_id: "event1",
+          attempt_id: "attempt1", key_generation: enqueue.fetch("key_generation"),
+          selection: {"expected_claim_generation" => 0}, original: direct_original)
         @source_inbox.prepare_direct_delivery(event: "event1", expected_claim_generation: 0,
-          expected_attempt: "attempt1", claim_owner: Digest::SHA256.hexdigest("issuer#{index}"))
+          expected_attempt: "attempt1", operation_id: operation_id, key_generation: enqueue.fetch("key_generation"),
+          effect_binding: binding, claim_owner: Digest::SHA256.hexdigest(JSON.generate([direct_original.fetch("inbox_context_id"), operation_id])))
       rescue ERROR => error
         error
       end
@@ -222,16 +417,50 @@ class InboxDirectEffectsTest < Minitest::Test
     proof = {"effect_binding" => direct_original, "registration" => registration, "state" => "completed", "claim_generation" => delivered.fetch("claim_generation"),
       "binding" => {"native_binding" => delivered.fetch("binding")}}
     actual = operation.fetch("admitted_claim")
-    assert @source_inbox.verify_direct_canonical_settlement(binding: operation.fetch("effect_binding"), admitted_claim: actual, proof: proof)
+    assert @source_inbox.verify_direct_canonical_settlement(binding: operation.fetch("effect_binding"), admitted_claim: actual, proof: proof, operation_id: admission.fetch("operation_id"))
     before = File.binread(File.join(@events, "event1.json"))
     [actual.merge("claim_generation" => 0), actual.merge("claim_generation" => 2),
       actual.merge("claim_owner" => "f" * 64)].each do |foreign|
       assert_raises(ERROR) do
-        @source_inbox.verify_direct_canonical_settlement(binding: operation.fetch("effect_binding"), admitted_claim: foreign, proof: proof)
+        @source_inbox.verify_direct_canonical_settlement(binding: operation.fetch("effect_binding"), admitted_claim: foreign, proof: proof, operation_id: admission.fetch("operation_id"))
       end
     end
     assert_equal before, File.binread(File.join(@events, "event1.json"))
     assert_equal 1, @native.calls
+  end
+
+  def test_wake_settlement_compares_original_queue_claim_and_exact_notification_invocation
+    source_box(executor: IdlePane.new)
+    enqueue, = enqueue_known
+    @owner.end_context_operation(operation_id: enqueue.fetch("operation_id"), peer: @normal)
+    control = guarded_control
+    control.response = :not_issued
+    queue = begin_operation("deliver")
+    @owner.deliver_context(**delivery_arguments(queue))
+    @owner.end_context_operation(operation_id: queue.fetch("operation_id"), peer: @normal)
+    wake = begin_operation("deliver")
+    delivered = @owner.deliver_context(**delivery_arguments(wake, expected: 1)).fetch("record")
+    metadata = JSON.parse(File.binread(File.join(@state, ".context-control.json")))
+    operation = metadata.fetch("operations").fetch(wake.fetch("operation_id"))
+    receipt = delivered.slice("event_id", "attempt_id", "claim_generation", "payload_sha256", "binding").merge(
+      "outcome" => "consumed", "observer" => {"role" => "supervisor", "id" => "controlled"},
+      "evidence" => {"kind" => "consumed_acknowledged", "native_reference" => "controlled-item", "observation" => "completed"})
+    bytes = JSON.generate(receipt)
+    registration = delivered.slice("event_id", "attempt_id", "payload_sha256", "receipt_key_sha256")
+    @source_inbox.reconcile(event: "event1", receipt: receipt, signed_bytes: bytes,
+      signature: KEY.sign(OpenSSL::Digest::SHA256.new, bytes), expected_registration: registration)
+    # Pure retained-record verification, not a substituted canonical CAS proof.
+    proof = {"effect_binding" => direct_original, "registration" => registration, "state" => "completed", "claim_generation" => 1,
+      "binding" => {"native_binding" => delivered.fetch("binding")}}
+    actual = operation.fetch("admitted_claim")
+    assert @source_inbox.verify_direct_canonical_settlement(binding: operation.fetch("effect_binding"), admitted_claim: actual, proof: proof, operation_id: wake.fetch("operation_id"))
+    assert_raises(ERROR) do
+      @source_inbox.verify_direct_canonical_settlement(binding: operation.fetch("effect_binding"), admitted_claim: actual, proof: proof, operation_id: queue.fetch("operation_id"))
+    end
+    assert_raises(ERROR) do
+      @source_inbox.verify_direct_canonical_settlement(binding: operation.fetch("effect_binding"), admitted_claim: actual.merge("claim_owner" => Digest::SHA256.hexdigest(JSON.generate(["ctx", wake.fetch("operation_id")]))), proof: proof, operation_id: wake.fetch("operation_id"))
+    end
+    assert_equal [1, 2], [@native.calls, control.calls.size]
   end
 
 end
