@@ -12,4 +12,10 @@ ServiceEvidence defines its field contract from EvidenceJournal, so the actual o
 - Final three cold entry children plus ProtectedServicePolicy/ServicePolicy behavior: `lab/b9ba1de3-ba0b-420e-aeb2-f6d92375b93a` PASS12/71. Includes actual refusing canonical proposal classification and unchanged fixed-path empty-grant refusal.
 - Inspected ordinary coordinator resume adoption/dry-run, lost-cache, unresolved-effect methods at lines1240/1256/1289: `assign/195a95e8-99df-49e5-8e27-13778e5784df` PASS3/14. Temporary canonical Git fixtures and fixed execution identity resolver; no native service, installed or Linux identity probes.
 
-This verifies source loading and existing controlled owner behavior, not actual physical Installer acceptance. Independent review required; no xza.3 closure.
+This verifies source loading and existing controlled owner behavior, not actual physical Installer acceptance; no xza.3 closure.
+
+## Independent review and main integration
+
+`/root/review_lab_bootstrap` independently approved frozen `6ae9a49b0`: all direct coordinator dependencies remain explicit, ordinary recovery retains its existing configuration behavior at point of use, and ServiceEvidence now loads the owner of its field constants. No actionable finding; reviewer ran no additional tests or probes.
+
+Integrated on main as `0f5ed5054`. Root executed `../bin/ace-test test/molecules/protected_service_loading_test.rb --timeout 120` from ace-lab: **1 test / 12 assertions PASS**, no skips/errors, report `.ace-local/test/reports/lab/e36f765b-1efa-41ad-b7a0-01ffa1fe25db/`. The actual Installer composition remains a separate pending source check; this receipt does not replace it.
