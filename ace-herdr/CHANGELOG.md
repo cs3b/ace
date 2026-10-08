@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Permit explicit protected retry only after fixed canonical supersession confirmation, retaining one exact completion binding in the existing DeliveryRecord and invalidating it on each new claim or proof replacement. Revalidate source-returned idle read-only deliveries separately from effectful exact claim ownership.
+
 - Route protected Inbox reconciliation through the existing authenticated authority upload/CAS, and retain exact direct claim ownership and returned-issuer evidence for verified canonical retirement; pre-return recovery and canonical retry remain separate source gates.
 
 - Route protected Inbox enqueue, deliver and status through fixed installed selection and authenticated context admissions, retaining exact inputs and unknown outcomes across restart; ordinary local commands remain independently supported.

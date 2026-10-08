@@ -255,6 +255,9 @@ module Ace
             grants: @context_grants, store: @context_store, keys: @context_keys, kernel: @kernel, inbox: @box, completion: @context_completion)
           result = reconcile
           assert_equal "completed", result.dig(:data, "state")
+          assert_nil @box.prepare_direct_delivery(event: "event", expected_claim_generation: 1,
+            expected_attempt: "attempt", claim_owner: "b" * 64)
+          assert_equal 1, @native_calls
           assert_equal 0, @context_owner.status(peer: @authority_peer).fetch("active_operations")
           assert_raises(Ace::Herdr::ValidationError) { @context_owner.end_context_operation(operation_id: admission.fetch("operation_id"), peer: @peer) }
           replay = reconcile
@@ -409,6 +412,157 @@ module Ace
           stopping = true; listener&.close; acceptor&.value
           workers&.each(&:value)
           FileUtils.remove_entry(state_root) if state_root && File.exist?(state_root)
+        end
+      end
+
+      def test_stale_known_idle_readonly_delivery_does_not_block_actual_canonical_retirement
+        fixture(direct: true) do
+          counter = self
+          @box.instance_variable_get(:@native).define_singleton_method(:submit) do |**|
+            counter.instance_variable_set(:@native_calls, counter.instance_variable_get(:@native_calls) + 1)
+            {"accepted" => true}
+          end
+          first, args = direct_admission_and_arguments
+          assert_equal "idle", @context_owner.deliver_context(**args).fetch("admission_state")
+          @context_owner.end_context_operation(operation_id: first.fetch("operation_id"), peer: @peer)
+          stale, stale_args = direct_admission_and_arguments
+          assert_equal "idle", @context_owner.deliver_context(**stale_args).fetch("admission_state")
+          operation = @context_store.transaction { |value| JSON.parse(JSON.generate(value.fetch("operations").fetch(stale.fetch("operation_id")))) }
+          assert_equal ["returned", nil, 0], operation.values_at("issuer_state", "admitted_claim", "in_flight")
+          assert_equal 1, @native_calls
+          prepare_direct_consumed_proof
+          assert_equal "completed", reconcile.dig(:data, "state")
+          assert_equal 0, @context_owner.status(peer: @authority_peer).fetch("active_operations")
+          assert reconcile.fetch(:replayed)
+          assert_equal 1, @native_calls
+        end
+      end
+
+      def prepare_direct_superseded_proof
+        prepare_direct_consumed_proof
+        receipt = JSON.parse(@bytes)
+        receipt["outcome"] = "superseded"
+        receipt.fetch("evidence")["kind"] = "queue_evicted"
+        @bytes = JSON.generate(receipt); @signature = @key.sign(OpenSSL::Digest::SHA256.new, @bytes)
+        @params = @params.merge("receipt_sha256" => Digest::SHA256.hexdigest(@bytes), "signature_sha256" => Digest::SHA256.hexdigest(@signature))
+      end
+
+      def test_private_supersession_refuses_retry_until_canonical_confirmation_then_one_exact_claim
+        fixture(direct: true) do
+          original, args = direct_admission_and_arguments
+          @context_owner.deliver_context(**args)
+          prepare_direct_superseded_proof
+          @box.reconcile(event: "event", receipt: JSON.parse(@bytes), signed_bytes: @bytes,
+            signature: @signature, expected_registration: @registration)
+          assert_equal "queued", @box.retained_status(event: "event").fetch("state")
+          before = File.binread(File.join(@context.fetch("deliveries_dir"), "event.json"))
+          assert_raises(Ace::Herdr::ValidationError) do
+            @box.prepare_direct_delivery(event: "event", expected_claim_generation: 1,
+              expected_attempt: "attempt", claim_owner: "b" * 64)
+          end
+          assert_equal before, File.binread(File.join(@context.fetch("deliveries_dir"), "event.json"))
+          assert_equal 1, @native_calls
+          assert_equal "queued", reconcile.dig(:data, "state")
+          marker = JSON.parse(File.binread(File.join(@context.fetch("deliveries_dir"), "event.json"))).dig("inbox", "canonical_completion")
+          assert_equal 1, marker.fetch("claim_generation")
+          assert_equal @registration, marker.fetch("registration")
+          assert_equal 0, @context_owner.status(peer: @authority_peer).fetch("active_operations")
+          retry_admission, retry_args = direct_admission_and_arguments
+          retained_path = File.join(@context.fetch("deliveries_dir"), "event.json")
+          retained_bytes = File.binread(retained_path)
+          [marker.merge("claim_generation" => 2), marker.merge("claim_generation" => true),
+            marker.merge("parsed_receipt_sha256" => "f" * 64), marker.merge("native_binding_sha256" => "f" * 64),
+            marker.merge("commit" => "invalid"), marker.merge("extra" => true),
+            marker.merge("registration" => marker.fetch("registration").merge("event_id" => "foreign"))].each do |bad|
+            value = JSON.parse(retained_bytes); value.fetch("inbox")["canonical_completion"] = bad
+            File.binwrite(retained_path, JSON.generate(value))
+            assert_raises(Ace::Herdr::ValidationError) { @context_owner.deliver_context(**retry_args.merge(expected_claim_generation: 1)) }
+            assert_equal 1, @native_calls
+          end
+          File.binwrite(retained_path, retained_bytes)
+          result = @context_owner.deliver_context(**retry_args.merge(expected_claim_generation: 1))
+          assert_equal 2, result.dig("record", "claim_generation")
+          assert_equal 2, @native_calls
+          refute JSON.parse(File.binread(File.join(@context.fetch("deliveries_dir"), "event.json"))).fetch("inbox").key?("canonical_completion")
+          assert_equal result, @context_owner.deliver_context(**retry_args.merge(expected_claim_generation: 1))
+          assert_equal 2, @native_calls
+          current = @journal.ref_value
+          assert_raises(AttemptErrors::EvidenceUnavailable) { reconcile }
+          assert_equal current, @journal.ref_value
+          retained = @context_store.transaction { |value| JSON.parse(JSON.generate(value.fetch("operations"))) }
+          assert_equal [retry_admission.fetch("operation_id")], retained.keys
+          assert_equal 2, retained.fetch(retry_admission.fetch("operation_id")).fetch("admitted_claim").fetch("claim_generation")
+          assert_equal 1, events.count { |event| event["type"] == "inbox_reconciliation" }
+          assert_equal 2, @native_calls
+        end
+      end
+
+      def test_canonical_marker_save_before_context_failure_blocks_retry_until_exact_confirmation_replay
+        fixture(direct: true) do
+          original, args = direct_admission_and_arguments
+          @context_owner.deliver_context(**args)
+          prepare_direct_superseded_proof
+          @context_store.singleton_class.class_eval do
+            define_method(:persist!) do |state|
+              raise Ace::Herdr::ValidationError, "controlled failure after event completion save" if state.fetch("operations").values.any? { |operation| operation["completion"] }
+              super(state)
+            end
+          end
+          assert_raises(AttemptErrors::EvidenceUnavailable) { reconcile }
+          record = JSON.parse(File.binread(File.join(@context.fetch("deliveries_dir"), "event.json")))
+          assert_equal 1, record.dig("inbox", "canonical_completion", "claim_generation")
+          retained = @context_store.transaction { |value| JSON.parse(JSON.generate(value.fetch("operations"))) }
+          assert_equal "returned", retained.fetch(original.fetch("operation_id")).fetch("issuer_state")
+          assert_equal 1, retained.fetch(original.fetch("operation_id")).fetch("in_flight")
+          assert retained.values.any? { |operation| operation.fetch("purpose") == "reconcile" && operation.fetch("completion").nil? }
+          assert_raises(Ace::Herdr::ValidationError) { @context_owner.deliver_context(**args.merge(expected_claim_generation: 1)) }
+          assert_equal 1, @native_calls
+          @context_store.singleton_class.send(:remove_method, :persist!)
+          original_commit = record.dig("inbox", "canonical_completion", "commit")
+          @journal.record(assignment_id: "unrelated", attempt_id: "unrelated", type: "intent", payload: {"scope" => "010"})
+          refute_equal original_commit, @journal.ref_value
+          assert reconcile.fetch(:replayed)
+          assert_equal original_commit, JSON.parse(File.binread(File.join(@context.fetch("deliveries_dir"), "event.json"))).dig("inbox", "canonical_completion", "commit")
+          assert_equal 0, @context_owner.status(peer: @authority_peer).fetch("active_operations")
+          retry_admission, retry_args = direct_admission_and_arguments
+          assert_equal 2, @context_owner.deliver_context(**retry_args.merge(expected_claim_generation: 1)).dig("record", "claim_generation")
+          assert_equal 2, @native_calls
+        end
+      end
+
+      def test_new_reconciliation_between_retry_entry_and_claim_preparation_refuses_without_native_effect
+        fixture(direct: true) do
+          original, args = direct_admission_and_arguments
+          @context_owner.deliver_context(**args)
+          prepare_direct_superseded_proof
+          reconcile
+          retry_admission, retry_args = direct_admission_and_arguments
+          actual = @context_store.method(:transaction)
+          foreign = @authority_peer.merge("pid" => 85, "started_at" => "linux:#{BOOT}:85")
+          owner = @context_owner
+          interrupted = false
+          @context_store.define_singleton_method(:transaction) do |&block|
+            result = actual.call(&block)
+            unless interrupted
+              # Inspect through the real transaction, after the original one
+              # released its mutex. Inject only the concurrent admission seam.
+              pending = actual.call { |value| value.fetch("operations")[retry_admission.fetch("operation_id")] }
+              if pending && pending["issuer_state"] == "running" && pending["admitted_claim"].nil?
+                interrupted = true
+                owner.begin_context_operation(context_id: "context", purpose: "reconcile", event_id: "event",
+                  process_binding: foreign, peer: foreign)
+              end
+            end
+            result
+          end
+          assert_raises(Ace::Herdr::ValidationError) { @context_owner.deliver_context(**retry_args.merge(expected_claim_generation: 1)) }
+          assert interrupted, "the concurrent admission must occur after actual direct entry and before claim preparation"
+          assert_equal 1, @native_calls
+          assert_equal 1, @box.retained_status(event: "event").fetch("claim_generation")
+          retained = actual.call { |value| JSON.parse(JSON.generate(value.fetch("operations"))) }
+          direct = retained.fetch(retry_admission.fetch("operation_id"))
+          assert_equal ["running", nil, 1], direct.values_at("issuer_state", "admitted_claim", "in_flight")
+          assert retained.values.any? { |operation| operation["purpose"] == "reconcile" }
         end
       end
 

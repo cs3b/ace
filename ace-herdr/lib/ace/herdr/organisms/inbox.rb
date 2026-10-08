@@ -313,7 +313,7 @@ module Ace
             raise ValidationError, "direct delivery retained generation differs" unless generation >= expected
             idle = case record.state
             when "queued"
-              !record.inbox["submission_intent"] && (generation.zero? || record.history.last&.fetch("action", nil) == "pre-submit-rejection")
+              !record.inbox["submission_intent"] && (generation.zero? || record.history.last&.fetch("action", nil) == "pre-submit-rejection" || canonical_superseded_retry?(record))
             when "delivered"
               receipt = record.inbox["receipt"]
               receipt.is_a?(Hash) && receipt.slice("event_id", "attempt_id", "claim_generation", "payload_sha256", "binding") ==
@@ -361,10 +361,10 @@ module Ace
             raise ValidationError, "direct claim expected generation is future" if expected_claim_generation > current
             next nil if expected_claim_generation < current || %w[delivered completed uncertain].include?(record.state)
             unless record.state == "queued" && !record.inbox["submission_intent"] &&
-                (current.zero? || record.history.last&.fetch("action", nil) == "pre-submit-rejection")
+                (current.zero? || record.history.last&.fetch("action", nil) == "pre-submit-rejection" || canonical_superseded_retry?(record))
               raise ValidationError, "direct claim is not known pre-submission"
             end
-            claim = record.inbox.merge("claim_owner" => claim_owner, "claim_generation" => current + 1)
+            claim = record.inbox.reject { |key, _| key == "canonical_completion" }.merge("claim_owner" => claim_owner, "claim_generation" => current + 1)
             save(record.advance_inbox(state: "claimed", inbox: claim,
               detail: {"action" => "claim", "claim_generation" => current + 1, "claim_owner" => claim_owner}, timestamp: Time.now.utc.iso8601))
             {"claim_generation" => current + 1, "claim_owner" => claim_owner}
@@ -393,7 +393,7 @@ module Ace
               raise ValidationError, "protected delivery expected generation is future" if expected_claim_generation > current
               next public_record(record) if expected_claim_generation < current || %w[delivered completed uncertain].include?(record.state)
               unless record.state == "queued" && !record.inbox["submission_intent"] &&
-                  (current.zero? || record.history.last&.fetch("action", nil) == "pre-submit-rejection")
+                  (current.zero? || record.history.last&.fetch("action", nil) == "pre-submit-rejection" || canonical_superseded_retry?(record))
                 raise ValidationError, "protected delivery is not known pre-submission"
               end
             end
@@ -415,7 +415,7 @@ module Ace
               next public_record(record)
             end
 
-            claim = prepared_claim ? record.inbox : record.inbox.merge(
+            claim = prepared_claim ? record.inbox : record.inbox.reject { |key, _| key == "canonical_completion" }.merge(
               "claim_owner" => "#{Process.pid}:#{SecureRandom.hex(8)}",
               "claim_generation" => record.inbox.fetch("claim_generation", 0) + 1
             )
@@ -485,6 +485,54 @@ module Ace
         end
 
         def verify_direct_canonical_settlement(binding:, admitted_claim:, proof:)
+          verify_direct_canonical_record!(binding: binding, admitted_claim: admitted_claim, proof: proof, mode: :effect)
+        end
+
+        def verify_direct_canonical_observation(binding:, proof:)
+          verify_direct_delivery(binding, require_idle: true)
+          verify_direct_canonical_record!(binding: binding, admitted_claim: nil, proof: proof, mode: :observation)
+        end
+
+        # Called only by the fixed context completion owner after its authenticated
+        # canonical query and fresh admission check. One current record binding.
+        def record_canonical_completion!(proof:)
+          with_event(proof.fetch("registration").fetch("event_id"), create_lock: false) do |record|
+            marker = canonical_completion_for!(record, proof)
+            if record.inbox["canonical_completion"]
+              original = record.inbox.fetch("canonical_completion")
+              # The fixed query observes a fresh canonical tip. Preserve the
+              # first accepted snapshot while exact immutable proof bindings stay equal.
+              unless original.is_a?(Hash) && original["commit"].is_a?(String) && original["commit"].match?(/\A[0-9a-f]{40}\z/) &&
+                  original.reject { |key, _| key == "commit" } == marker.reject { |key, _| key == "commit" }
+                raise ValidationError, "canonical completion changed"
+              end
+            else
+              save(Models::DeliveryRecord.from_h(record.to_h.merge("inbox" => record.inbox.merge("canonical_completion" => marker))))
+            end
+            true
+          end
+        rescue KeyError, TypeError, SystemCallError
+          raise ValidationError, "canonical completion retention unavailable"
+        end
+
+        # Canonical consumers reverify retained signed settlement without creating
+        # a new local transition. The same event lock and proof owner are used.
+        def verify_reconciliation(event:, receipt:, signed_bytes:, signature:, expected_registration:)
+          unless expected_registration.is_a?(Hash) && expected_registration.keys.sort ==
+              %w[event_id attempt_id payload_sha256 receipt_key_sha256].sort &&
+              %w[event_id attempt_id].all? { |key| expected_registration[key].is_a?(String) && EVENT.match?(expected_registration[key]) } &&
+              %w[payload_sha256 receipt_key_sha256].all? { |key| expected_registration[key].is_a?(String) && expected_registration[key].match?(/\A[0-9a-f]{64}\z/) }
+            raise ValidationError, "canonical reconciliation requires exact registration"
+          end
+          reconcile_record(event: event, receipt: receipt, signed_bytes: signed_bytes,
+            signature: signature, expected_registration: expected_registration, settle: false)
+        rescue SystemCallError
+          raise ValidationError, "retained inbox lock is unavailable"
+        end
+
+        private
+
+        def verify_direct_canonical_record!(binding:, admitted_claim:, proof:, mode:)
           with_event(binding.fetch("event_id"), create_lock: false) do |record|
             registration = proof.fetch("registration")
             receipt = record&.inbox&.fetch("reconciliation", nil)
@@ -500,7 +548,12 @@ module Ace
                 record.inbox.fetch("claim_generation") == proof.fetch("claim_generation")
               raise ValidationError, "direct canonical settlement retained record differs"
             end
-            if binding.fetch("purpose") == "deliver"
+            if mode == :observation
+              unless binding.fetch("purpose") == "deliver" && admitted_claim.nil? &&
+                  binding.fetch("selection").fetch("expected_claim_generation") <= proof.fetch("claim_generation")
+                raise ValidationError, "direct canonical observation binding differs"
+              end
+            elsif binding.fetch("purpose") == "deliver"
               unless admitted_claim && admitted_claim.fetch("claim_generation") == proof.fetch("claim_generation") &&
                   record.history.count { |entry| entry.slice("action", "claim_generation", "claim_owner") ==
                     admitted_claim.merge("action" => "claim") } == 1
@@ -520,22 +573,58 @@ module Ace
           raise ValidationError, "direct canonical settlement is unavailable"
         end
 
-        # Canonical consumers reverify retained signed settlement without creating
-        # a new local transition. The same event lock and proof owner are used.
-        def verify_reconciliation(event:, receipt:, signed_bytes:, signature:, expected_registration:)
-          unless expected_registration.is_a?(Hash) && expected_registration.keys.sort ==
-              %w[event_id attempt_id payload_sha256 receipt_key_sha256].sort &&
-              %w[event_id attempt_id].all? { |key| expected_registration[key].is_a?(String) && EVENT.match?(expected_registration[key]) } &&
-              %w[payload_sha256 receipt_key_sha256].all? { |key| expected_registration[key].is_a?(String) && expected_registration[key].match?(/\A[0-9a-f]{64}\z/) }
-            raise ValidationError, "canonical reconciliation requires exact registration"
+        def canonical_completion_for!(record, proof)
+          receipt = record&.inbox&.fetch("reconciliation", nil)
+          registration = proof.fetch("registration")
+          binding = proof.fetch("effect_binding")
+          unless record&.inbox && record.state == proof.fetch("state") && %w[queued completed].include?(record.state) &&
+              registration == public_record(record).slice("event_id", "attempt_id", "payload_sha256", "receipt_key_sha256") &&
+              registration == binding.fetch("registration") && registration.fetch("receipt_key_sha256") == key_fingerprint &&
+              record.inbox.fetch("claim_generation") == proof.fetch("claim_generation") && receipt.is_a?(Hash) &&
+              receipt.slice("event_id", "attempt_id", "payload_sha256", "claim_generation", "binding") ==
+                registration.slice("event_id", "attempt_id", "payload_sha256").merge("claim_generation" => proof.fetch("claim_generation"),
+                  "binding" => proof.fetch("binding").fetch("native_binding")) &&
+              receipt.fetch("outcome") == (record.state == "completed" ? "consumed" : "superseded")
+            raise ValidationError, "canonical completion retained association differs"
           end
-          reconcile_record(event: event, receipt: receipt, signed_bytes: signed_bytes,
-            signature: signature, expected_registration: expected_registration, settle: false)
-        rescue SystemCallError
-          raise ValidationError, "retained inbox lock is unavailable"
+          {"schema" => "ace.herdr.inbox-canonical-completion/v1", "registration" => registration,
+            "claim_generation" => proof.fetch("claim_generation"), "receipt_sha256" => binding.fetch("receipt_sha256"),
+            "signature_sha256" => binding.fetch("signature_sha256"), "parsed_receipt_sha256" => retained_object_digest(receipt),
+            "native_binding_sha256" => retained_object_digest(record.inbox.fetch("binding")),
+            "effect_binding_digest" => proof.fetch("effect_binding_digest"), "commit" => proof.fetch("commit"),
+            "reconciliation_digest" => proof.fetch("reconciliation_digest"), "reply_digest" => proof.fetch("reply_digest")}
         end
 
-        private
+        def canonical_superseded_retry?(record)
+          marker = record.inbox["canonical_completion"]
+          return false unless marker
+          fields = %w[claim_generation commit effect_binding_digest native_binding_sha256 parsed_receipt_sha256 receipt_sha256 reconciliation_digest registration reply_digest schema signature_sha256]
+          receipt = record.inbox["reconciliation"]
+          registration = public_record(record).slice("event_id", "attempt_id", "payload_sha256", "receipt_key_sha256")
+          valid = marker.is_a?(Hash) && marker.keys.sort == fields && marker["schema"] == "ace.herdr.inbox-canonical-completion/v1" &&
+            record.state == "queued" && record.history.last&.fetch("action", nil) == "reconcile-superseded" && receipt.is_a?(Hash) &&
+            receipt["outcome"] == "superseded" && marker["registration"] == registration && registration["receipt_key_sha256"] == key_fingerprint &&
+            marker["claim_generation"].is_a?(Integer) && marker["claim_generation"].positive? &&
+            marker["claim_generation"] == record.inbox.fetch("claim_generation") &&
+            receipt.slice("event_id", "attempt_id", "payload_sha256", "claim_generation", "binding") ==
+              registration.slice("event_id", "attempt_id", "payload_sha256").merge("claim_generation" => marker["claim_generation"], "binding" => record.inbox.fetch("binding")) &&
+            marker["parsed_receipt_sha256"] == retained_object_digest(receipt) && marker["native_binding_sha256"] == retained_object_digest(record.inbox.fetch("binding")) &&
+            marker["commit"].is_a?(String) && marker["commit"].match?(/\A[0-9a-f]{40}\z/) &&
+            fields.grep(/sha256|digest/).all? { |field| marker[field].is_a?(String) && marker[field].match?(/\A[0-9a-f]{64}\z/) } && JSON.generate(marker).bytesize <= 4096
+          raise ValidationError, "retained canonical retry binding differs" unless valid
+          true
+        end
+
+        def retained_object_digest(value)
+          sorted = lambda do |item|
+            case item
+            when Hash then item.keys.sort.to_h { |key| [key, sorted.call(item.fetch(key))] }
+            when Array then item.map { |entry| sorted.call(entry) }
+            else item
+            end
+          end
+          Digest::SHA256.hexdigest(JSON.generate(sorted.call(value)))
+        end
 
         def reconcile_record(event:, receipt:, signed_bytes:, signature:, expected_registration:, settle:)
           validate_id!(event, "event")
@@ -610,7 +699,7 @@ module Ace
 
             outcome = receipt["outcome"]
             state = outcome == "consumed" ? "completed" : "queued"
-            inbox = record.inbox.merge("reconciliation" => receipt)
+            inbox = record.inbox.reject { |key, _| key == "canonical_completion" }.merge("reconciliation" => receipt)
             if state == "queued"
               inbox = inbox.reject do |key, _|
                 %w[submission_intent claim_owner receipt].include?(key)

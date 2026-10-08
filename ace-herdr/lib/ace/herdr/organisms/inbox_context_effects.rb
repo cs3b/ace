@@ -123,6 +123,7 @@ module Ace
               operation["completion"] = completion
               operation["in_flight"] = 0
             end
+            source_inbox!(@keys.selected).record_canonical_completion!(proof: proof)
             retire_returned_direct_issuers!(state, binding, proof)
             {"operation_id" => binding.fetch("operation_id"), "effect_binding_digest" => Molecules::InboxContextEffectBinding.digest(binding),
               "state" => "confirmed", "completion" => completion}
@@ -160,8 +161,15 @@ module Ace
               operation.fetch("event_id") == binding.fetch("event_id") &&
               operation.fetch("effect_binding").fetch("attempt_id") == binding.fetch("attempt_id")
             raise ValidationError, "direct settlement producer remains live" if @effect_issuers.key?(id)
-            source_inbox!(selected).verify_direct_canonical_settlement(binding: operation.fetch("effect_binding"),
-              admitted_claim: operation["admitted_claim"], proof: proof)
+            if operation.fetch("purpose") == "deliver" && operation["admitted_claim"].nil? && operation.fetch("in_flight").zero?
+              # A source-returned known-idle observation created no claim.
+              # It still requires exact retained record plus canonical proof.
+              direct_idle_readback!(state, operation)
+              source_inbox!(selected).verify_direct_canonical_observation(binding: operation.fetch("effect_binding"), proof: proof)
+            else
+              source_inbox!(selected).verify_direct_canonical_settlement(binding: operation.fetch("effect_binding"),
+                admitted_claim: operation["admitted_claim"], proof: proof)
+            end
             id
           end
           ids.each { |id| state.fetch("operations").delete(id) }

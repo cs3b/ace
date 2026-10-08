@@ -75,10 +75,7 @@ module Ace
                 selected.fetch(:snapshot) == state.fetch("key")
               raise ValidationError, "direct delivery admission differs"
             end
-            others = state.fetch("operations").reject { |id, _| id == operation_id }.values
-            if others.any? { |item| item.fetch("event_id") == event_id && item.fetch("in_flight") == 1 }
-              raise ValidationError, "direct delivery preceding issuer remains unresolved"
-            end
+            direct_delivery_predecessors!(state, operation_id, event_id, key_generation)
             if operation["effect_binding"]
               raise ValidationError, "direct delivery input changed" unless operation.fetch("effect_binding") == binding
               raise ValidationError, "direct delivery issuer remains live" if @effect_issuers.key?(operation_id)
@@ -102,6 +99,7 @@ module Ace
                   @effect_issuers[operation_id].equal?(Thread.current)
                 raise ValidationError, "direct claim preparation ownership differs"
               end
+              direct_delivery_predecessors!(state, operation_id, event_id, key_generation)
               operation["admitted_claim"] = box.prepare_direct_delivery(event: event_id,
                 expected_claim_generation: expected_claim_generation, expected_attempt: attempt_id,
                 claim_owner: Digest::SHA256.hexdigest(JSON.generate([@context_id, operation_id])))
@@ -156,6 +154,15 @@ module Ace
 
         def direct_binding?(operation)
           operation.dig("effect_binding", "schema") == Molecules::InboxDirectEffectBinding::SCHEMA
+        end
+
+        def direct_delivery_predecessors!(state, operation_id, event_id, key_generation)
+          state.fetch("operations").each do |id, other|
+            next if id == operation_id || other.fetch("event_id") != event_id || other.fetch("key_generation") != key_generation
+            if other.fetch("in_flight") == 1 || other.fetch("purpose") == "reconcile" || @effect_issuers.key?(id)
+              raise ValidationError, "direct delivery preceding issuer remains unresolved"
+            end
+          end
         end
 
         def direct_idle_readback!(state, operation)
