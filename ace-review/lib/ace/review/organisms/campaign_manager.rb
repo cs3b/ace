@@ -204,26 +204,55 @@ module Ace
 
         # Source-owned child registration holds the pinned round while its
         # canonical definition is accepted. Parent lineage is checked by Assign.
-        def with_execution_round!(id, round_id:)
+        def with_execution_round!(id, round_id:, consumer_profiles: nil)
           raise ArgumentError, "campaign execution round requires a block" unless block_given?
           Contract.id!(round_id, "round ID")
           store.transaction(dry_run: true, require_lock: true) do
-            record = store.read(id)
-            raise Contract::Invalid, "campaign contract is superseded" if record["successor"]
-            attempt = record["attempts"].find { |entry| entry["round_id"] == round_id }
-            unless attempt && record["rounds"].none? { |entry| entry["round_id"] == round_id }
-              raise Contract::Invalid, "campaign execution requires a pinned incomplete round"
+            value = execution_round_projection!(id, round_id, consumer_profiles)
+            thread = Thread.current
+            active = true
+            recheck = lambda do
+              raise Contract::Invalid, "campaign round guard is not held" unless active && Thread.current.equal?(thread)
+              unless execution_round_projection!(id, round_id, consumer_profiles) == value
+                raise Contract::Invalid, "campaign round changed during consumption"
+              end
+              true
             end
-            head, base = current_revisions(record)
-            binding = attempt.fetch("binding")
-            unless binding.values_at("head", "base") == [head, base] && clean_candidate?
-              raise Contract::Invalid, "campaign execution candidate changed"
+            begin
+              result = yield value, recheck
+              recheck.call
+              result
+            ensure
+              active = false
             end
-            value = {"campaign_id" => record.fetch("id"), "subject" => record.fetch("subject"),
-              "contract_identity" => record.fetch("contract_identity"), "policy" => record.fetch("policy"),
-              "round_id" => round_id, "binding" => binding}
-            yield immutable_projection(value)
           end
+        end
+
+        private def execution_round_projection!(id, round_id, consumer_profiles)
+          record = store.read(id)
+          raise Contract::Invalid, "campaign contract is superseded" if record["successor"]
+          attempt = record["attempts"].find { |entry| entry["round_id"] == round_id }
+          unless attempt && record["rounds"].none? { |entry| entry["round_id"] == round_id }
+            raise Contract::Invalid, "campaign execution requires a pinned incomplete round"
+          end
+          if consumer_profiles
+            current = Contract.policy!(consumer_profiles.fetch(record.fetch("profile")))
+            recorded = Contract.policy!(record.fetch("policy"))
+            unless %w[minimum_rounds clean_rounds].all? { |key| recorded.fetch(key) >= current.fetch(key) } &&
+                %w[required_scopes required_checks].all? { |key| (current.fetch(key) - recorded.fetch(key)).empty? }
+              raise Contract::Invalid, "campaign policy no longer satisfies current consumer constraints"
+            end
+          end
+          head, base = current_revisions(record)
+          binding = attempt.fetch("binding")
+          unless binding.values_at("head", "base") == [head, base] && clean_candidate?
+            raise Contract::Invalid, "campaign execution candidate changed"
+          end
+          immutable_projection({"campaign_id" => record.fetch("id"), "subject" => record.fetch("subject"),
+            "contract_identity" => record.fetch("contract_identity"), "policy" => record.fetch("policy"),
+            "round_id" => round_id, "binding" => binding})
+        rescue KeyError, TypeError
+          raise Contract::Invalid, "current campaign consumer policy is unavailable"
         end
 
         # Called before collection by the existing review runner. A pinned empty

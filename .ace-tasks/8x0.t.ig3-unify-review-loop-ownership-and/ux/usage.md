@@ -83,6 +83,8 @@ worker `.ace-local` files and campaign records beside the journal are never used
 
 **Action:** The authenticated launcher registers collection/check/approval managed
 child definitions bound to the parent's exact round/scope/head/base/generation.
+Each child selects its own captured numeric prepared subtree (for example 010);
+its receipt scope matches that selection, while parent_scope remains separate.
 Real child workers submit campaign-free results; independently assigned reviewer
 processes admit exact direct reviews; launcher/supervisor finishes each child
 using protected cleanup/no-writer proof.

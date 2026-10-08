@@ -56,6 +56,33 @@ class CampaignManagerTest < AceReviewTest
     assert_raises(ArgumentError) { manager.with_execution_round!(id, round_id: "round-1") { flunk } }
   end
 
+  def test_execution_round_current_consumer_constraints_and_guard_lifetime
+    campaign = start_campaign
+    manager = campaign_manager
+    input = round_input(1)
+    manager.record_round(campaign.fetch("campaign_id"), input.merge("attempt_id" => "pin-1"))
+    profiles = {"delivery" => campaign_policy}
+    escaped = nil
+    manager.with_execution_round!(campaign.fetch("campaign_id"), round_id: "round-1", consumer_profiles: profiles) do |value, guard|
+      assert_equal campaign.fetch("effective_policy"), value.fetch("policy")
+      assert guard.call
+      assert_raises(ArgumentError) { Thread.new { guard.call }.value }
+      escaped = guard
+    end
+    assert_raises(ArgumentError) { escaped.call }
+    [{}, {"delivery" => nil}, {"delivery" => campaign_policy.merge("minimum_rounds" => 4)},
+      {"delivery" => campaign_policy.merge("required_checks" => %w[tests lint])}].each do |current|
+      assert_raises(ArgumentError) do
+        manager.with_execution_round!(campaign.fetch("campaign_id"), round_id: "round-1", consumer_profiles: current) { flunk }
+      end
+    end
+    manager.with_execution_round!(campaign.fetch("campaign_id"), round_id: "round-1", consumer_profiles: profiles) do |_value, guard|
+      @head = "e" * 40
+      assert_raises(ArgumentError) { guard.call }
+      @head = input.fetch("head")
+    end
+  end
+
   def test_history_survives_heads_restart_and_unresolved_high_absent_from_later_reviews
     campaign = start_campaign
     first = round_input(1)

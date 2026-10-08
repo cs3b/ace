@@ -7,16 +7,25 @@ module Ace
         # Fixed source readers reuse the complete canonical inventory and its
         # original registration/definition proof; this is never a live grant.
         def preview_attempt_events!(journal:, commit:, params:, map:)
+          preview_attempt_entry!(journal: journal, commit: commit, params: params, map: map).fetch(:events)
+        end
+
+        def preview_attempt_definition!(journal:, commit:, params:, map:)
+          entry = preview_attempt_entry!(journal: journal, commit: commit, params: params, map: map)
+          inventory_definition!(journal, commit, entry)
+        end
+
+        private
+
+        def preview_attempt_entry!(journal:, commit:, params:, map:)
           entries = inventory_index!(journal, commit, params.fetch("mapping_id"), map).select do |entry|
             entry.fetch(:selector) == params.slice("assignment_id", "attempt_id")
           end
           raise AttemptErrors::EvidenceUnavailable, "preview original registration is unavailable or ambiguous" unless entries.one?
           entry = entries.first
           inventory_definition!(journal, commit, entry)
-          entry.fetch(:events)
+          entry
         end
-
-        private
 
         # Discovery authenticates the current mapped principal, then reads one
         # immutable canonical prefix. It neither pins the original launcher nor

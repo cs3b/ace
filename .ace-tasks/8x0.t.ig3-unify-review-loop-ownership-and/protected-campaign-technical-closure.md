@@ -31,8 +31,10 @@ Collection, check and independent approval run as separate managed child
 assignment ID, same project and task ID, and one ordinary protected attempt.
 They are not nested scopes inside the parent's active assignment: LaunchLifecycle
 rejects overlapping scopes in one assignment (`reserve` lines 370–375).
-Each child uses scope `execution`, ordinary origin/gated process binding and its
-own authority generation. Lifecycle locks are acquired for the same task and
+Each child uses its own exact ordinary numeric AssignmentScope subtree captured
+in its prepared manifest, ordinary origin/gated process binding and its own
+authority generation. The parent_scope selector is a separate canonical parent
+link; no special literal `execution` scope or widened prepared grammar exists. Lifecycle locks are acquired for the same task and
 both relevant assignments in the existing sorted multi-key order. The parent
 remains active while child attempts run; parent terminalization requires all
 registered child attempts settled. No child can mutate parent candidate code.

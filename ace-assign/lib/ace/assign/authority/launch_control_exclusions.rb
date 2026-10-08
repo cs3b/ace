@@ -101,7 +101,7 @@ module Ace
           end
         end
 
-        def recheck_control_registration!(context, params, map, journal, commit: journal.ref_value)
+        def recheck_control_registration!(context, params, map, journal, commit: journal.ref_value, held_exclusion: context.fetch(:exclusion))
           fresh = if context.fetch(:commit) == commit
             context
           else
@@ -112,7 +112,7 @@ module Ace
               journal.ref_value == commit && context.fetch(:exclusion).selection! == context.fetch(:selection)
             raise AttemptErrors::Conflict, "Control registration changed while entering exclusion"
           end
-          context.fetch(:exclusion).verify_unchanged!
+          held_exclusion.verify_unchanged!
           true
         end
 
@@ -123,7 +123,7 @@ module Ace
             raise ArgumentError, "invalid assignment definition digest or size"
           end
           value = JSON.parse(bytes)
-          allowed = %w[session_id name description created_at updated_at source_config parent task_id project_id prepared_work review_campaign]
+          allowed = %w[session_id name description created_at updated_at source_config parent task_id project_id prepared_work review_campaign campaign_execution]
           unless value.is_a?(Hash) && (value.keys - allowed).empty? &&
               %w[session_id name created_at source_config task_id project_id].all? { |key| value[key].is_a?(String) && !value[key].empty? } &&
               value["session_id"] == params["assignment_id"] && value["project_id"] == map["project_id"]

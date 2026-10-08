@@ -9,7 +9,7 @@ module Ace
         # Normal lifecycle settlement enters every selected current descriptor
         # context before the slot/assignment/journal exclusions. Historical
         # descriptor eligibility remains the existing historical owner's job.
-        def with_inbox_settlement_contexts(params:, map:, journal:)
+        def with_inbox_settlement_contexts(params:, map:, journal:, additional_maps: [])
           # Closed register_assignment parameters are the one normal entry
           # that cannot inspect/settle an attempt and may create the first ref.
           return yield if params.key?("definition_bytes")
@@ -19,6 +19,7 @@ module Ace
           raise AttemptErrors::EvidenceUnavailable, "current context descriptor is unavailable" unless reference
           commit = journal.ref_value
           journal.verify_commit!(commit)
+          slots = ([map] + additional_maps).map { |selected| selected.fetch("execution_scope").fetch("slot_id") }.uniq
           selections = journal.assignment_ids(commit: commit).flat_map do |assignment_id|
             journal.read_events(assignment_id, commit: commit).group_by { |event| event.fetch("attempt_id") }.flat_map do |attempt_id, chain|
               next [] unless chain.any? { |event| event["type"] == "inbox_binding" }
@@ -33,7 +34,7 @@ module Ace
               next [] unless provisioning.first.dig("payload", "descriptor_sha256") == reference.fetch("sha256")
               prior_map_id = reservations.first.dig("payload", "data", "mapping_id")
               prior_map = @deployment.mapping(prior_map_id)
-              next [] unless prior_map.fetch("execution_scope").fetch("slot_id") == map.fetch("execution_scope").fetch("slot_id")
+              next [] unless slots.include?(prior_map.fetch("execution_scope").fetch("slot_id"))
               chain.filter_map do |event|
                 next unless event["type"] == "inbox_binding"
                 params.merge("mapping_id" => prior_map_id, "assignment_id" => assignment_id, "attempt_id" => attempt_id,

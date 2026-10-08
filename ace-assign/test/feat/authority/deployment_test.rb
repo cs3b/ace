@@ -844,7 +844,7 @@ module Ace
           "state_root" => "/var/lib/ace-authority", "composition" => "launch"}},
          "projects" => {"project" => {"journal_repository" => "/var/lib/ace-journal", "evidence_git_ref" => "refs/ace/execution",
            "evidence_checkout_root" => "/var/lib/ace-checkout", "assignment_root" => "/var/lib/ace-assignments",
-           "candidate_root" => "/var/lib/ace-candidates", "campaign_repository" => "/var/lib/ace-campaign-repository", "campaign_store_root" => "/var/lib/ace-campaign-store", "launcher_uids" => [13002], "reviewer_uids" => [],
+           "candidate_root" => "/var/lib/ace-candidates", "campaign_repository" => "/var/lib/ace-campaign-repository", "campaign_store_root" => "/var/lib/ace-campaign-store", "campaign_policy" => {"path" => "/etc/ace/campaign-policy.json", "sha256" => "a" * 64, "bytes" => 100}, "launcher_uids" => [13002], "reviewer_uids" => [],
            "worker_uids" => [13001], "service_executor_uids" => [], "supervisor_uids" => [],
            "peer_credentials" => {"13001" => {"gid" => 13001, "groups" => [13001], "scratch_root" => "/var/lib/ace-worker"},
              "13002" => {"gid" => 13002, "groups" => [13002], "scratch_root" => "/var/lib/ace-launcher"}}}},
@@ -1102,6 +1102,24 @@ module Ace
             assert_raises(ArgumentError) { Authority::Deployment.new(changed) }
           end
         end
+      end
+
+      def test_current_campaign_consumer_policy_reference_is_mandatory_closed_and_bounded
+        assert Authority::Deployment.new(data)
+        missing = data
+        missing.fetch("projects").fetch("project").delete("campaign_policy")
+        assert_raises(ArgumentError) { Authority::Deployment.new(missing) }
+        reference = data.fetch("projects").fetch("project").fetch("campaign_policy")
+        [nil, reference.merge("extra" => true), reference.merge("bytes" => 0), reference.merge("bytes" => 65_537),
+          reference.merge("bytes" => 1.0), reference.merge("sha256" => "A" * 64),
+          reference.merge("path" => "/etc/ace/../campaign-policy.json"), reference.merge("path" => "/" + "a" * 4096)].each do |invalid|
+          value = data
+          value.fetch("projects").fetch("project")["campaign_policy"] = invalid
+          assert_raises(ArgumentError) { Authority::Deployment.new(value) }
+        end
+        value = data
+        value.fetch("projects").fetch("project")["campaign_policy"]["bytes"] = 65_536
+        assert Authority::Deployment.new(value)
       end
 
       def test_fixed_mapping_and_source_composition_match

@@ -7,6 +7,7 @@ require "openssl"
 require_relative "private_directory"
 require_relative "posix_acl"
 require_relative "task_context_entry"
+require_relative "campaign_consumer_policy"
 require "ace/runtime/molecules/protected_worker_entry"
 require "ace/runtime/molecules/protected_socket"
 require "ace/runtime/molecules/protected_artifact_set"
@@ -83,11 +84,12 @@ module Ace
           end
           @data["projects"].each_value do |project|
             raise ArgumentError, "invalid project mapping" unless project.is_a?(Hash)
-            keys = %w[journal_repository evidence_git_ref evidence_checkout_root assignment_root candidate_root campaign_repository campaign_store_root
+            keys = %w[journal_repository evidence_git_ref evidence_checkout_root assignment_root candidate_root campaign_repository campaign_store_root campaign_policy
               launcher_uids reviewer_uids worker_uids service_executor_uids supervisor_uids peer_credentials]
             keys << "service_receivers" if project.key?("service_receivers")
             keys << "inbox_contexts" if project.key?("inbox_contexts")
             strict!(project, keys)
+            CampaignConsumerPolicy.reference!(project.fetch("campaign_policy"))
             %w[journal_repository evidence_checkout_root assignment_root candidate_root campaign_repository campaign_store_root].each { |key| path!(project.fetch(key)) }
             unless project["evidence_git_ref"] == "refs/ace/execution"
               raise ArgumentError, "protected authority uses the canonical execution ref"

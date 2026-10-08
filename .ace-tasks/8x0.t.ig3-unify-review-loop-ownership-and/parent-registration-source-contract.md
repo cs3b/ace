@@ -22,4 +22,9 @@ Original parent definition/attempt/candidate/store/descriptor come from the firs
 
 Test responsibility: actual prepared launcher registration and canonical parent candidate; current artifact allows a stronger recorded policy; tightened policy and explicit revocation refuse with unchanged ref; artifact duplicate keys, wrong REF bytes/hash/path and replacement refuse; original campaign store remains selected after current descriptor rotation while only current policy selection changes. Parent/child same-task locks are deduplicated and sorted, parent completion/candidate advance under CAS refuses, and accepted exact replay after supersession/revocation returns only its retained result. Producer/schema adoption remains required before this join is delivered.
 
-This paragraph is a review candidate, not independent approval or implementation acceptance. Wire `campaign_execution` remains unavailable until the complete guarded owner is implemented and tested.
+Independent /root readiness APPROVE of16a20cb52 confirms this exact accepted policy artifact/current constraints design. This is not implementation acceptance. Wire `campaign_execution` remains unavailable until the complete guarded owner is implemented and tested.
+
+
+## Prepared child scope correction — independently approved
+
+Actual PreparedWork#scope! only accepts existing numeric AssignmentScope subtrees. The earlier literal `execution` in the technical-closure document could not enter mandatory prepared registration (retained controlled failure assign/f5c821f4-a1c2-48f3-a7cf-a985d2d43c7a). Independent /root readiness APPROVE corrects each child to its own exact numeric selected subtree (010 is a fixture illustration, never a product constant). Its receipt scope is that admitted child scope; campaign_execution.parent_scope separately selects the parent. No parser bypass, grammar extension or weakened manifest equality is permitted.

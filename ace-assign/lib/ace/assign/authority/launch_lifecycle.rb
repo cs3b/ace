@@ -174,12 +174,13 @@ module Ace
             begin
               fresh = false
               released = false
-              result = with_parent_campaign_registration(params, control_context, replay: !replay.nil?) do
+              result = with_parent_campaign_registration(params, control_context, replay: !replay.nil?) do |campaign_guard|
               journal.mutate(assignment_id: params.fetch("assignment_id"), attempt_id: attempt_id,
                 mutation_id: request.fetch("mutation_id"), operation: operation, parameters_digest: digest,
                 expected_generation: operation == "reserve_attempt" ? 0 : (params.fetch("expected_generation") || 0), with_replay: true) do |events, commit, generation|
                 fresh = true
                 recheck_control_registration!(control_context, params, map, journal, commit: commit)
+                campaign_guard&.call(journal, commit)
                 plan = case operation
                 when "register_assignment" then register(params, map, journal, commit, generation, prepared: prepared,
                   lifecycle_control: control_context.fetch(:selection))
@@ -417,9 +418,17 @@ module Ace
 
         def with_exclusion(params, map, journal)
           context = control_registration_context!(params, map, journal)
+          context = campaign_child_context!(params, context, map, journal)
           enter = proc { with_selected_control_exclusion(context, params, map, journal) { yield context } }
           if @result_owner && @result_owner.respond_to?(:with_inbox_settlement_contexts)
-            @result_owner.with_inbox_settlement_contexts(params: params, map: map, journal: journal, &enter)
+            selected_params = context[:campaign]&.fetch(:params) || params
+            selected_map = context[:campaign]&.fetch(:map) || map
+            if context[:campaign]
+              @result_owner.with_inbox_settlement_contexts(params: selected_params, map: selected_map, journal: journal,
+                additional_maps: [map], &enter)
+            else
+              @result_owner.with_inbox_settlement_contexts(params: selected_params, map: selected_map, journal: journal, &enter)
+            end
           else
             enter.call
           end
@@ -435,9 +444,18 @@ module Ace
 
         def with_selected_control_exclusion(context, params, map, journal)
           exclusion = context.fetch(:exclusion)
-          exclusion.provision_keys!(keys: context.fetch(:keys)) if params.key?("definition_bytes")
-          with_slot(context.fetch(:map), deployment: context.fetch(:descriptor)) do
-            exclusion.with_shared_multi(context.fetch(:keys)) do
+          owners = [context, context[:campaign]&.fetch(:context)].compact
+          keys = owners.flat_map { |owner| owner.fetch(:keys) }.uniq
+          exclusion.provision_keys!(keys: keys) if params.key?("definition_bytes")
+          slots = owners.sort_by { |owner| [owner.fetch(:descriptor).authority(owner.fetch(:map).fetch("authority_id")).fetch("state_root"), owner.fetch(:map).fetch("execution_scope").fetch("slot_id")] }
+            .uniq { |owner| [owner.fetch(:descriptor).authority(owner.fetch(:map).fetch("authority_id")).fetch("state_root"), owner.fetch(:map).fetch("execution_scope").fetch("slot_id")] }
+          enter_slot = lambda do |offset, &body|
+            return body.call if offset == slots.size
+            owner = slots.fetch(offset)
+            with_slot(owner.fetch(:map), deployment: owner.fetch(:descriptor)) { enter_slot.call(offset + 1, &body) }
+          end
+          enter_slot.call(0) do
+            exclusion.with_shared_multi(keys) do
               @mutex.synchronize { recheck_control_registration!(context, params, map, journal) }
               yield context
             end
@@ -531,6 +549,15 @@ module Ace
           bytes = params.fetch("definition_bytes")
           value = JSON.parse(bytes)
           previous = definition(journal, params.fetch("assignment_id"), commit: commit)
+          if previous
+            original = inventory_definition!(journal, commit,
+              {selector: {"assignment_id" => params.fetch("assignment_id"), "attempt_id" => nil}, registration: previous})
+            if original.campaign_execution &&
+                [assignment.campaign_execution, assignment.parent, assignment.task_id, assignment.project_id] !=
+                  [original.campaign_execution, original.parent, original.task_id, original.project_id]
+              raise AttemptErrors::Conflict, "registered campaign child linkage is immutable"
+            end
+          end
           if previous && previous.fetch("lifecycle_control") != lifecycle_control
             raise AttemptErrors::Conflict, "same assignment cannot replace original lifecycle control"
           end
