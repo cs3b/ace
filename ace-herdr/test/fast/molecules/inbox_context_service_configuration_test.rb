@@ -2,6 +2,7 @@
 
 require "test_helper"
 require "ace/herdr/molecules/inbox_context_service_configuration"
+require "ace/herdr/molecules/codex_runtime_selection"
 require_relative "../../support/inbox_context_owner_fixture"
 require_relative "../../support/inbox_context_service_selection_fixture"
 
@@ -29,7 +30,7 @@ class InboxContextServiceConfigurationTest < Minitest::Test
   def stage(bytes = JSON.generate(@data))
     File.write(@path, bytes)
     File.chmod(0o600, @path)
-    {"schema" => "ace.herdr.inbox-context-stage/v1", "project_id" => "project", "inbox_context_id" => "ctx",
+    {"schema" => "ace.herdr.inbox-context-stage/v1", "codex_runtime" => {"path" => "/opt/context/runtime.json", "bytes" => 1, "sha256" => "a" * 64}, "project_id" => "project", "inbox_context_id" => "ctx",
       "configuration" => {"path" => @path, "bytes" => bytes.bytesize, "sha256" => Digest::SHA256.hexdigest(bytes)}}
   end
 
@@ -41,6 +42,19 @@ class InboxContextServiceConfigurationTest < Minitest::Test
     @data["project_id"] = "changed"
     assert_equal "project", selected.data.fetch("project_id")
     assert_raises(NoMethodError) { Configuration.new({}, {}) }
+  end
+
+  def test_runtime_factory_refuses_a_different_stage_reference_before_bootstrap
+    selected = Configuration.load(stage: stage, artifacts: @artifacts)
+    bootstrap = Object.new
+    called = false
+    bootstrap.define_singleton_method(:with_inbox_context_installation) { |**| called = true }
+    assert_raises(ERROR) do
+      Ace::Herdr::Molecules::CodexRuntimeSelection.with(
+        stage_reference: selected.codex_runtime_reference.merge("sha256" => "b" * 64),
+        configuration: selected, installation: {}, bootstrap: bootstrap) { flunk "unselected runtime yielded" }
+    end
+    refute called
   end
 
   def test_actual_held_reader_refuses_changed_bytes_and_duplicate_decoded_keys
@@ -72,7 +86,8 @@ class InboxContextServiceConfigurationTest < Minitest::Test
       ->(d) { d["dependencies"] = [d["codex"].dup] }, ->(d) { d["environment"]["PATH"] = "bad\0value" },
       ->(d) { d["environment"]["RUBYOPT"] = "-r arbitrary" },
       ->(d) { d["resources"] = [] }, ->(d) { d["resources"].first["access"] = "grant" },
-      ->(d) { d["codex"]["bytes"] = 268_435_456 }]
+      ->(d) { d["codex"]["bytes"] = 268_435_456 },
+      ->(d) { d["codex_runtime_intent"]["bytes"] = 65_537 }]
     changes.each do |change|
       value = native_client_selection
       change.call(value)

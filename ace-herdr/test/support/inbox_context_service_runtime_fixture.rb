@@ -61,7 +61,7 @@ module InboxContextServiceRuntimeFixture
     File.write(path, bytes)
     File.chmod(0o600, path)
     @configuration = Ace::Herdr::Molecules::InboxContextServiceConfiguration.load(stage: {
-      "schema" => "ace.herdr.inbox-context-stage/v1", "project_id" => "project", "inbox_context_id" => "ctx",
+      "schema" => "ace.herdr.inbox-context-stage/v1", "codex_runtime" => {"path" => "/opt/context/runtime.json", "bytes" => 1, "sha256" => "a" * 64}, "project_id" => "project", "inbox_context_id" => "ctx",
       "configuration" => {"path" => path, "bytes" => bytes.bytesize, "sha256" => Digest::SHA256.hexdigest(bytes)}},
       artifacts: Ace::Runtime::Molecules::ProtectedArtifactSet.new(protection: InboxContextOwnerFixture::FixtureArtifacts.new(@root)))
     artifact = @artifacts.find { |entry| entry["role"] == "context_configuration" }

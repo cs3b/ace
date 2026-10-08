@@ -4,6 +4,7 @@ require_relative "../errors"
 require "json"
 require "timeout"
 require_relative "bounded_process"
+require_relative "codex_runtime_selection"
 
 module Ace
   module Herdr
@@ -19,19 +20,15 @@ module Ace
       class NativeQueueExecutor
         DEFAULT_SUBMIT_TIMEOUT_S = 60
         DEFAULT_IDENTITY_TIMEOUT_S = 20
-        # Codex payloads ride in argv; a single argument beyond the OS
-        # per-argument limit fails at exec with E2BIG — before any client
-        # code ran — so the payload is bounded pre-launch and any E2BIG
-        # escape is classified as a proven pre-submission rejection.
-        MAX_ARG_PAYLOAD_BYTES = 65_536
+        CODEX_PAYLOAD_LIMIT_BYTES = 65_536
         PI_PAYLOAD_LIMIT_BYTES = 65_536
 
         # runner: test seam. Callable (argv, stdin_data:, timeout_s:) ->
         # [stdout, stderr, status]. Defaults to the bounded runner.
-        def initialize(codex: "codex", pi_client: nil, runner: nil, process: BoundedProcess,
+        def initialize(codex_runtime: nil, pi_client: nil, runner: nil, process: BoundedProcess,
           submit_timeout_s: DEFAULT_SUBMIT_TIMEOUT_S,
           identity_timeout_s: DEFAULT_IDENTITY_TIMEOUT_S)
-          @codex = codex
+          @codex_runtime = codex_runtime
           @pi_client = pi_client || ENV["ACE_HERDR_PI_QUEUE_CLIENT"] || "pi-overseer-queue-client"
           @runner = runner
           @process = process
@@ -56,22 +53,31 @@ module Ace
           raise ExecutorError, "Pi identity probe timed out"
         end
 
-        def submit(agent:, thread:, event_id:, digest:, payload:)
-          if agent == "pi" && (payload.empty? || payload.bytesize > PI_PAYLOAD_LIMIT_BYTES)
+        def prepare_submission(agent:, thread:, event_id:, attempt_id:, claim_generation:, digest:)
+          return nil unless agent == "codex"
+          unless @codex_runtime.is_a?(CodexRuntimeSelection)
+            raise ValidationError, "Codex has no authenticated original runtime selection"
+          end
+          @codex_runtime.submission(event_id: event_id, attempt_id: attempt_id,
+            claim_generation: claim_generation, digest: digest, thread: thread)
+        end
+
+        def submit(agent:, thread:, event_id:, digest:, payload:, submission: nil)
+          if agent == "codex"
+            unless @codex_runtime.is_a?(CodexRuntimeSelection) && submission.is_a?(Hash) &&
+                submission.values_at("thread_id", "event_id", "payload_sha256") == [thread, event_id, digest] &&
+                payload.is_a?(String) && payload.bytesize.between?(1, CODEX_PAYLOAD_LIMIT_BYTES)
+              return {"accepted" => false, "pre_submit" => true, "error" => "Codex original submission selection differs"}
+            end
+            deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + @submit_timeout_s
+            return @codex_runtime.submit(submission: submission, payload: payload, deadline: deadline)
+          end
+          raise ValidationError, "unsupported native queue agent: #{agent}" unless agent == "pi"
+          if payload.empty? || payload.bytesize > PI_PAYLOAD_LIMIT_BYTES
             return {"accepted" => false, "pre_submit" => true, "error" => "Pi payload must be 1..65536 bytes"}
           end
-          if agent == "codex" && payload.bytesize > MAX_ARG_PAYLOAD_BYTES
-            return {"accepted" => false, "pre_submit" => true,
-                    "error" => "Codex payload must be at most #{MAX_ARG_PAYLOAD_BYTES} bytes for argv delivery"}
-          end
-          argv = if agent == "codex"
-            [@codex, "queue", "--thread", thread, "--message", payload]
-          elsif agent == "pi"
-            [@pi_client, "--delivery", event_id, "--session-id", thread,
-              "--payload-sha256", digest, "--payload-bytes", payload.bytesize.to_s]
-          else
-            raise ValidationError, "unsupported native queue agent: #{agent}"
-          end
+          argv = [@pi_client, "--delivery", event_id, "--session-id", thread,
+            "--payload-sha256", digest, "--payload-bytes", payload.bytesize.to_s]
           result = execute(argv, stdin_data: agent == "pi" ? payload : "",
             timeout_s: @submit_timeout_s)
           raise ExecutorError, "native queue output exceeded the retained limit" if result.oversized

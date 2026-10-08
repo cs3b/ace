@@ -8,6 +8,7 @@ class InboxDirectEffectsTest < Minitest::Test
   class Native < NativeFixture
     attr_reader :calls
     def initialize = @calls = 0
+    def pi_identity = "0123abcd-0000-4000-8000-000000000001"
     def submit(**arguments)
       @calls += 1
       super
@@ -20,7 +21,10 @@ class InboxDirectEffectsTest < Minitest::Test
     def pane_get_bounded(id)
       result = super
       value = JSON.parse(result.stdout)
-      value.fetch("result").fetch("pane")["agent_status"] = "idle"
+      pane = value.fetch("result").fetch("pane")
+      pane["agent_status"] = "idle"
+      pane["agent"] = "pi"
+      pane.fetch("agent_session")["agent"] = "pi"
       Ace::Herdr::Molecules::ExecutionResult.new(stdout: JSON.generate(value), stderr: "", success: true, exit_code: 0)
     end
     def agent_prompt_bounded(**_options)
@@ -93,6 +97,12 @@ class InboxDirectEffectsTest < Minitest::Test
     end
   end
 
+  # Pi retains the separate terminal notification effect. Codex queue/add
+  # owns progression and is covered by the real-driver service composition.
+  def begin_operation(purpose = "enqueue", identity = @normal)
+    super(purpose, identity, event: "inb-event001")
+  end
+
   def source_box(executor: PaneFixture.new, type: Ace::Herdr::Organisms::Inbox)
     @native = Native.new
     @source_inbox = type.new(executor: executor, native: @native, deliveries_dir: @events, receipt_public_key: KEY.public_key)
@@ -100,7 +110,7 @@ class InboxDirectEffectsTest < Minitest::Test
   end
 
   def enqueue_arguments(operation)
-    {operation_id: operation.fetch("operation_id"), key_generation: operation.fetch("key_generation"), event_id: "event1", attempt_id: "attempt1",
+    {operation_id: operation.fetch("operation_id"), key_generation: operation.fetch("key_generation"), event_id: "inb-event001", attempt_id: "attempt1",
       reverse: {"schema" => Ace::Hitl::Providers::Ref::SCHEMA, "session" => "ws1", "pane" => "p1"}, payload_bytes: 5,
       payload_sha256: Digest::SHA256.hexdigest("hello"), payload: "hello", original: direct_original, peer: @normal}
   end
@@ -113,7 +123,7 @@ class InboxDirectEffectsTest < Minitest::Test
   end
 
   def delivery_arguments(admission, expected: 0)
-    {operation_id: admission.fetch("operation_id"), key_generation: admission.fetch("key_generation"), event_id: "event1", attempt_id: "attempt1",
+    {operation_id: admission.fetch("operation_id"), key_generation: admission.fetch("key_generation"), event_id: "inb-event001", attempt_id: "attempt1",
       expected_claim_generation: expected, original: direct_original, peer: @normal}
   end
 
@@ -134,7 +144,7 @@ class InboxDirectEffectsTest < Minitest::Test
     assert_raises(ERROR) { @owner.enqueue_context(**enqueue_arguments(operation)) }
     assert changed, "query must finish its separate store transaction without nested lock"
     assert_equal 0, @native.calls
-    refute File.exist?(File.join(@events, "event1.json"))
+    refute File.exist?(File.join(@events, "inb-event001.json"))
     state = @store.transaction { |value| JSON.parse(JSON.generate(value)) }
     retained = state.fetch("operations").fetch(operation.fetch("operation_id"))
     assert_equal 0, retained.fetch("in_flight")
@@ -144,10 +154,10 @@ class InboxDirectEffectsTest < Minitest::Test
   def test_changed_original_tuple_cannot_replay_or_read_an_existing_event
     source_box
     admission, = enqueue_known
-    before = File.binread(File.join(@events, "event1.json"))
+    before = File.binread(File.join(@events, "inb-event001.json"))
     assert_raises(ERROR) { @owner.enqueue_context(**enqueue_arguments(admission).merge(original: direct_original.merge("assignment_id" => "other"))) }
-    assert_raises(ERROR) { @owner.status_context(event_id: "event1", attempt_id: "attempt1", original: direct_original.merge("mapping_id" => "other"), peer: @normal) }
-    assert_equal before, File.binread(File.join(@events, "event1.json"))
+    assert_raises(ERROR) { @owner.status_context(event_id: "inb-event001", attempt_id: "attempt1", original: direct_original.merge("mapping_id" => "other"), peer: @normal) }
+    assert_equal before, File.binread(File.join(@events, "inb-event001.json"))
     assert_equal 0, @native.calls
   end
 
@@ -158,7 +168,7 @@ class InboxDirectEffectsTest < Minitest::Test
     assert_equal operation, begin_operation
     assert_equal result, @owner.enqueue_context(**enqueue_arguments(operation))
     before = File.binread(File.join(@state, ".context-control.json"))
-    File.delete(File.join(@events, "event1.json"))
+    File.delete(File.join(@events, "inb-event001.json"))
     assert_raises(ERROR) { begin_operation }
     assert_raises(ERROR) { @owner.end_context_operation(operation_id: operation.fetch("operation_id"), peer: @normal) }
     assert_equal before, File.binread(File.join(@state, ".context-control.json"))
@@ -169,7 +179,7 @@ class InboxDirectEffectsTest < Minitest::Test
     source_box(type: LostEnqueue)
     operation = begin_operation
     assert_raises(ERROR) { @owner.enqueue_context(**enqueue_arguments(operation)) }
-    assert_equal "queued", @source_inbox.retained_status(event: "event1").fetch("state")
+    assert_equal "queued", @source_inbox.retained_status(event: "inb-event001").fetch("state")
     restart
     assert_equal "unknown", begin_operation.fetch("state")
     assert_raises(ERROR) { @owner.enqueue_context(**enqueue_arguments(operation)) }
@@ -207,7 +217,7 @@ class InboxDirectEffectsTest < Minitest::Test
     first = @owner.deliver_context(**delivery_arguments(original))
     assert_equal "idle", first.fetch("admission_state")
     assert_equal "not_issued", first.dig("record", "wake", "status")
-    retained = JSON.parse(File.binread(File.join(@events, "event1.json")))
+    retained = JSON.parse(File.binread(File.join(@events, "inb-event001.json")))
     queue_tuple = retained.fetch("inbox").slice("claim_generation", "claim_owner", "queue_issuer", "receipt")
     assert_equal first, @owner.deliver_context(**delivery_arguments(original))
     assert_equal 1, control.calls.size
@@ -219,7 +229,7 @@ class InboxDirectEffectsTest < Minitest::Test
     assert_equal "idle", second.fetch("admission_state")
     assert_equal "not_issued", second.dig("record", "wake", "status")
     assert_equal [1, 1], [@native.calls, restarted.calls.size]
-    after = JSON.parse(File.binread(File.join(@events, "event1.json")))
+    after = JSON.parse(File.binread(File.join(@events, "inb-event001.json")))
     assert_equal queue_tuple, after.fetch("inbox").slice("claim_generation", "claim_owner", "queue_issuer", "receipt")
     assert_equal retry_admission.fetch("operation_id"), after.dig("inbox", "wake", "operation_id")
     metadata = JSON.parse(File.binread(File.join(@state, ".context-control.json")))
@@ -241,7 +251,7 @@ class InboxDirectEffectsTest < Minitest::Test
     control.before_exchange = lambda do
       metadata = @store.transaction { |state| JSON.parse(JSON.generate(state)) }
       assert_equal 1, metadata.dig("operations", admission.fetch("operation_id"), "in_flight")
-      assert_equal "issuing", @source_inbox.retained_status(event: "event1").dig("wake", "status")
+      assert_equal "issuing", @source_inbox.retained_status(event: "inb-event001").dig("wake", "status")
       observed = true
     end
     result = @owner.deliver_context(**delivery_arguments(admission))
@@ -265,7 +275,7 @@ class InboxDirectEffectsTest < Minitest::Test
     @owner.deliver_context(**delivery_arguments(original))
     @owner.end_context_operation(operation_id: original.fetch("operation_id"), peer: @normal)
     retry_admission = begin_operation("deliver")
-    path = File.join(@events, "event1.json")
+    path = File.join(@events, "inb-event001.json")
     saved = File.binread(path)
     changes = [
       ->(value) { value.fetch("inbox").fetch("queue_issuer")["operation_id"] = "f" * 32 },
@@ -301,7 +311,7 @@ class InboxDirectEffectsTest < Minitest::Test
     admission = begin_operation("deliver")
     assert_raises(ERROR) { @owner.deliver_context(**delivery_arguments(admission)) }
     assert_equal [1, expected_calls], [@native.calls, control.calls.size]
-    retained = @source_inbox.retained_status(event: "event1")
+    retained = @source_inbox.retained_status(event: "inb-event001")
     assert_equal retained_status, retained.dig("wake", "status")
     @source_inbox.fail_status = nil
     restart
@@ -357,7 +367,7 @@ class InboxDirectEffectsTest < Minitest::Test
     end
     assert_raises(ERROR) { @owner.deliver_context(**delivery_arguments(admission)) }
     assert_equal 0, @native.calls
-    record = @source_inbox.retained_status(event: "event1")
+    record = @source_inbox.retained_status(event: "inb-event001")
     assert_equal ["claimed", 1, false], record.values_at("state", "claim_generation", "submission_intent")
     state = JSON.parse(File.binread(File.join(@state, ".context-control.json")))
     retained = state.fetch("operations").fetch(admission.fetch("operation_id"))
@@ -376,10 +386,10 @@ class InboxDirectEffectsTest < Minitest::Test
       Thread.new do
         gate.pop
         operation_id = "%032x" % (index + 1)
-        binding = Ace::Herdr::Molecules::InboxDirectEffectBinding.build(purpose: "deliver", event_id: "event1",
+        binding = Ace::Herdr::Molecules::InboxDirectEffectBinding.build(purpose: "deliver", event_id: "inb-event001",
           attempt_id: "attempt1", key_generation: enqueue.fetch("key_generation"),
           selection: {"expected_claim_generation" => 0}, original: direct_original)
-        @source_inbox.prepare_direct_delivery(event: "event1", expected_claim_generation: 0,
+        @source_inbox.prepare_direct_delivery(event: "inb-event001", expected_claim_generation: 0,
           expected_attempt: "attempt1", operation_id: operation_id, key_generation: enqueue.fetch("key_generation"),
           effect_binding: binding, claim_owner: Digest::SHA256.hexdigest(JSON.generate([direct_original.fetch("inbox_context_id"), operation_id])))
       rescue ERROR => error
@@ -390,7 +400,7 @@ class InboxDirectEffectsTest < Minitest::Test
     results = threads.map(&:value)
     assert_equal 1, results.count { |item| item.is_a?(Hash) }
     assert_equal 1, results.count(&:nil?), "the loser observes the advanced generation and creates no claim"
-    record = JSON.parse(File.binread(File.join(@events, "event1.json")))
+    record = JSON.parse(File.binread(File.join(@events, "inb-event001.json")))
     assert_equal 1, record.fetch("inbox").fetch("claim_generation")
     assert_equal results.find { |item| item.is_a?(Hash) }.fetch("claim_owner"), record.fetch("inbox").fetch("claim_owner")
     assert_equal 1, record.fetch("history").count { |item| item["action"] == "claim" }
@@ -409,7 +419,7 @@ class InboxDirectEffectsTest < Minitest::Test
       "evidence" => {"kind" => "consumed_acknowledged", "native_reference" => "controlled-item", "observation" => "completed"})
     bytes = JSON.generate(receipt)
     registration = delivered.slice("event_id", "attempt_id", "payload_sha256", "receipt_key_sha256")
-    settled = @source_inbox.reconcile(event: "event1", receipt: receipt, signed_bytes: bytes,
+    settled = @source_inbox.reconcile(event: "inb-event001", receipt: receipt, signed_bytes: bytes,
       signature: KEY.sign(OpenSSL::Digest::SHA256.new, bytes), expected_registration: registration)
     assert_equal "completed", settled.fetch("state")
     # This is the retained-record verifier's unit input, not an authenticated
@@ -418,14 +428,14 @@ class InboxDirectEffectsTest < Minitest::Test
       "binding" => {"native_binding" => delivered.fetch("binding")}}
     actual = operation.fetch("admitted_claim")
     assert @source_inbox.verify_direct_canonical_settlement(binding: operation.fetch("effect_binding"), admitted_claim: actual, proof: proof, operation_id: admission.fetch("operation_id"))
-    before = File.binread(File.join(@events, "event1.json"))
+    before = File.binread(File.join(@events, "inb-event001.json"))
     [actual.merge("claim_generation" => 0), actual.merge("claim_generation" => 2),
       actual.merge("claim_owner" => "f" * 64)].each do |foreign|
       assert_raises(ERROR) do
         @source_inbox.verify_direct_canonical_settlement(binding: operation.fetch("effect_binding"), admitted_claim: foreign, proof: proof, operation_id: admission.fetch("operation_id"))
       end
     end
-    assert_equal before, File.binread(File.join(@events, "event1.json"))
+    assert_equal before, File.binread(File.join(@events, "inb-event001.json"))
     assert_equal 1, @native.calls
   end
 
@@ -447,7 +457,7 @@ class InboxDirectEffectsTest < Minitest::Test
       "evidence" => {"kind" => "consumed_acknowledged", "native_reference" => "controlled-item", "observation" => "completed"})
     bytes = JSON.generate(receipt)
     registration = delivered.slice("event_id", "attempt_id", "payload_sha256", "receipt_key_sha256")
-    @source_inbox.reconcile(event: "event1", receipt: receipt, signed_bytes: bytes,
+    @source_inbox.reconcile(event: "inb-event001", receipt: receipt, signed_bytes: bytes,
       signature: KEY.sign(OpenSSL::Digest::SHA256.new, bytes), expected_registration: registration)
     # Pure retained-record verification, not a substituted canonical CAS proof.
     proof = {"effect_binding" => direct_original, "registration" => registration, "state" => "completed", "claim_generation" => 1,

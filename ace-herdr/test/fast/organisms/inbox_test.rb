@@ -57,6 +57,9 @@ module Ace
             session
           end
 
+          # This state-machine fixture injects the native boundary; real correlation is tested in the service composition.
+          def prepare_submission(**_arguments) = nil
+
           def submit(**args)
             @calls << args
             result
@@ -405,7 +408,7 @@ module Ace
           result = @inbox.deliver(event: @event)
 
           assert_equal "delivered", result["state"]
-          assert_equal "none", result.dig("wake", "status")
+          assert_nil result.dig("wake", "status")
           assert_empty @executor.prompts
           assert_equal 1, @native.calls.length
         end
@@ -504,16 +507,18 @@ module Ace
           assert_empty @executor.prompts
         end
 
-        def test_idle_agent_uses_exact_session_native_queue
+        def test_idle_codex_uses_exact_session_queue_without_terminal_wake
           @executor.pane["agent_status"] = "idle"
           enqueue
           assert_equal "delivered", @inbox.deliver(event: @event)["state"]
-          assert_equal [["p1", "Check your native queued messages."]], @executor.prompts
+          assert_empty @executor.prompts
           assert_equal 1, @native.calls.length
           assert_equal THREAD, @native.calls.first[:thread]
         end
 
         def test_idle_wake_failure_preserves_accepted_native_delivery
+          @executor.pane["agent"] = "pi"
+          @executor.pane["agent_session"]["agent"] = "pi"
           @executor.pane["agent_status"] = "idle"
           @executor.prompt_error = RuntimeError.new("wake process crashed")
           enqueue
@@ -536,7 +541,7 @@ module Ace
           assert_equal 1, @native.calls.length
         end
 
-        def test_crash_before_wake_is_recovered_without_resubmission
+        def test_missing_codex_wake_metadata_never_issues_terminal_input
           @executor.pane["agent_status"] = "idle"
           enqueue
           @inbox.deliver(event: @event)
@@ -553,14 +558,15 @@ module Ace
           result = @inbox.deliver(event: @event)
 
           assert_equal "delivered", result["state"]
-          assert_equal "sent", result.dig("wake", "status")
-          assert_equal "sent",
-            Molecules::DeliveryRecordStore.load(@dir, @event).inbox.dig("wake", "status")
-          assert_equal [["p1", "Check your native queued messages."]], @executor.prompts
+          assert_nil result.dig("wake", "status")
+          assert_nil Molecules::DeliveryRecordStore.load(@dir, @event).inbox.dig("wake", "status")
+          assert_empty @executor.prompts
           assert_equal 1, @native.calls.length
         end
 
         def test_wake_retry_with_identity_drift_requires_reconciliation
+          @executor.pane["agent"] = "pi"
+          @executor.pane["agent_session"]["agent"] = "pi"
           @executor.pane["agent_status"] = "idle"
           @executor.prompt_error = RuntimeError.new("wake process crashed")
           enqueue
@@ -684,7 +690,7 @@ module Ace
           @native.result = {"accepted" => true, "stdout" => "queued"}
           assert_equal "delivered", @inbox.deliver(event: @event)["state"]
           assert_equal 2, @native.calls.length
-          assert_equal [["p1", "Check your native queued messages."]], @executor.prompts
+          assert_empty @executor.prompts
         end
 
         def test_pi_uses_live_session_identity_and_digest_bound_queue

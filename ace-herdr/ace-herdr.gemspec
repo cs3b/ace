@@ -40,6 +40,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   # Runtime dependencies
+  spec.add_dependency "websocket-driver", "~> 0.8.2"
   spec.add_dependency "fiddle", ">= 1.1", "< 2"
   spec.add_dependency "ace-hitl-contract", "~> 0.2"
   spec.add_dependency "ace-runtime", "~> 0.2"

@@ -56,7 +56,7 @@ module Ace
 
         private
 
-        def references = @selection.values_at("codex", "pi", "herdr") + @selection.fetch("dependencies")
+        def references = @selection.values_at("codex", "pi", "herdr", "codex_runtime_intent") + @selection.fetch("dependencies")
 
         def access_bits(stat)
           if stat.uid == @credentials.fetch("uid")

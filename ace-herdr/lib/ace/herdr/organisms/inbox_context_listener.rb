@@ -14,11 +14,12 @@ module Ace
         STOP_SECONDS = 35
 
         def initialize(configuration:, server:, kernel: Ace::Runtime::Molecules::ProtectedLinux.new,
-          protection: Ace::Runtime::Molecules::ProtectedSocket)
+          protection: Ace::Runtime::Molecules::ProtectedSocket, handler_dispatcher: nil)
           unless configuration.is_a?(Molecules::InboxContextServiceConfiguration)
             raise ValidationError, "context listener configuration is not held"
           end
           @configuration, @server, @kernel, @protection = configuration, server, kernel, protection
+          @handler_dispatcher = handler_dispatcher
           @path = configuration.data.fetch("control_socket_path")
           @credentials = configuration.data.fetch("owner_credentials")
           @mutex, @handlers, @stopping = Mutex.new, {}, false
@@ -47,15 +48,20 @@ module Ace
           @identity = @protection.socket_identity(@path)
           until stopping?
             socket = @listener.accept
+            accepted_deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + 60
             @mutex.synchronize do
               if @stopping || @handlers.size >= MAX_HANDLERS
                 socket.close
               else
                 gate = Queue.new
-                thread = Thread.new(socket) do |connection|
+                thread = Thread.new(socket, accepted_deadline) do |connection, operation_deadline|
                   gate.pop
                   begin
-                    @server.handle(connection)
+                    if @handler_dispatcher
+                      @handler_dispatcher.call(deadline: operation_deadline) { @server.handle(connection) }
+                    else
+                      @server.handle(connection)
+                    end
                   rescue ValidationError, Ace::Runtime::RuntimeUnavailableError, IOError, SystemCallError, Timeout::Error
                     # Wire loss preserves the owner's retained operation state.
                     nil

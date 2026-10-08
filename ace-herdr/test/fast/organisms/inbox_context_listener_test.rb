@@ -53,7 +53,7 @@ class InboxContextListenerTest < Minitest::Test
     path = File.join(@root, "service.json")
     File.write(path, bytes)
     File.chmod(0o600, path)
-    stage = {"schema" => "ace.herdr.inbox-context-stage/v1", "project_id" => "project", "inbox_context_id" => "ctx",
+    stage = {"schema" => "ace.herdr.inbox-context-stage/v1", "codex_runtime" => {"path" => "/opt/context/runtime.json", "bytes" => 1, "sha256" => "a" * 64}, "project_id" => "project", "inbox_context_id" => "ctx",
       "configuration" => {"path" => path, "bytes" => bytes.bytesize, "sha256" => Digest::SHA256.hexdigest(bytes)}}
     @configuration = Configuration.load(stage: stage, artifacts: Ace::Runtime::Molecules::ProtectedArtifactSet.new(
       protection: InboxContextOwnerFixture::FixtureArtifacts.new(@root)))

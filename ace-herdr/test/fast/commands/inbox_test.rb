@@ -41,6 +41,9 @@ module Ace
               @result = {"accepted" => true, "stdout" => "queued"}
             end
 
+            # This state-machine fixture injects the native boundary; real correlation is tested in the service composition.
+            def prepare_submission(**_arguments) = nil
+
             def submit(**options)
               @calls << options
               result

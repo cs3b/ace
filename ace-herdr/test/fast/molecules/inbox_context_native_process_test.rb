@@ -41,6 +41,10 @@ class InboxContextNativeProcessTest < Minitest::Test
       File.chmod(0o700, path)
       [role, {"path" => path, "bytes" => bytes.bytesize, "sha256" => Digest::SHA256.hexdigest(bytes)}]
     end
+    intent_path = File.join(@root, "intent.json")
+    File.write(intent_path, "{}")
+    File.chmod(0o600, intent_path)
+    refs["codex_runtime_intent"] = {"path" => intent_path, "bytes" => 2, "sha256" => Digest::SHA256.hexdigest("{}")}
     @clients = refs.merge("dependencies" => [], "environment" => {"LANG" => "selected"}, "cwd" => @root,
       "resources" => [{"path" => @root, "kind" => "directory", "access" => "read", "uid" => Process.uid, "gid" => File.stat(@root).gid, "mode" => 0o700}])
     data = {"schema" => "ace.herdr.inbox-context-service/v1", "project_id" => "project", "inbox_context_id" => "ctx",
@@ -55,7 +59,7 @@ class InboxContextNativeProcessTest < Minitest::Test
     File.write(config_path, config_bytes)
     File.chmod(0o600, config_path)
     @artifacts = -> { Ace::Runtime::Molecules::ProtectedArtifactSet.new(protection: InboxContextOwnerFixture::FixtureArtifacts.new(@root)) }
-    selected = Configuration.load(stage: {"schema" => "ace.herdr.inbox-context-stage/v1", "project_id" => "project", "inbox_context_id" => "ctx",
+    selected = Configuration.load(stage: {"schema" => "ace.herdr.inbox-context-stage/v1", "codex_runtime" => {"path" => "/opt/context/runtime.json", "bytes" => 1, "sha256" => "a" * 64}, "project_id" => "project", "inbox_context_id" => "ctx",
       "configuration" => {"path" => config_path, "bytes" => config_bytes.bytesize, "sha256" => Digest::SHA256.hexdigest(config_bytes)}}, artifacts: @artifacts.call)
     @process = ProcessOwner.new(configuration: selected, artifacts_factory: @artifacts, process: DescriptorNamespace)
   end
@@ -64,16 +68,13 @@ class InboxContextNativeProcessTest < Minitest::Test
 
   def test_actual_selected_child_constructs_queue_and_wake_with_fixed_environment
     ENV["ACE_UNSELECTED_SECRET"] = "must-not-be-inherited"
-    native = Ace::Herdr::Molecules::NativeQueueExecutor.new(codex: @clients.fetch("codex").fetch("path"),
-      pi_client: @clients.fetch("pi").fetch("path"), process: @process)
+    native = Ace::Herdr::Molecules::NativeQueueExecutor.new(pi_client: @clients.fetch("pi").fetch("path"), process: @process)
     result = native.submit(agent: "pi", thread: "original-session", event_id: "inb-controlled", digest: "a" * 64, payload: "payload")
     assert_equal true, result.fetch("accepted"), result.inspect
     assert_equal "original-session", native.pi_identity
     result = native.submit(agent: "codex", thread: "original-session", event_id: "event", digest: "a" * 64, payload: "payload")
-    output = JSON.parse(result.fetch("stdout"))
-    assert_equal ["queue", "--thread", "original-session", "--message", "payload"], output.fetch("argv")
-    assert_nil output.fetch("inherited")
-    assert_equal "selected", output.fetch("fixed")
+    refute result.fetch("accepted")
+    assert result.fetch("pre_submit"), "selected executable alone is not an authenticated Codex runtime"
     executor = Ace::Herdr::Molecules::HerdrExecutor.new(binary: @clients.fetch("herdr").fetch("path"), process: @process)
     wake = executor.agent_prompt_bounded(pane: "original-pane", text: "Check your native queued messages.", timeout_ms: 1000)
     assert_equal ["agent", "prompt", "original-pane", "Check your native queued messages."], wake.parsed_json.fetch("argv")

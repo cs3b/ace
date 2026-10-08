@@ -57,6 +57,9 @@ module InboxContextOwnerFixture
   end
 
   class NativeFixture
+    # This state-machine fixture injects the native boundary; real correlation is tested in the service composition.
+    def prepare_submission(**_arguments) = nil
+
     def submit(**_arguments) = {"accepted" => true, "stdout" => "controlled receipt"}
   end
 
@@ -139,9 +142,9 @@ module InboxContextOwnerFixture
       "receipt_sha256" => Digest::SHA256.hexdigest(@signed_bytes), "signature_sha256" => Digest::SHA256.hexdigest(@signature)}
   end
 
-  def begin_operation(purpose = "enqueue", identity = @normal)
+  def begin_operation(purpose = "enqueue", identity = @normal, event: "event1")
     options = %w[enqueue deliver].include?(purpose) ? {original: direct_original.merge("attempt_id" => "attempt1")} : {}
-    @owner.begin_context_operation(context_id: "ctx", purpose: purpose, event_id: "event1", process_binding: identity, peer: identity, **options)
+    @owner.begin_context_operation(context_id: "ctx", purpose: purpose, event_id: event, process_binding: identity, peer: identity, **options)
   end
 
   def begin_rotation

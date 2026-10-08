@@ -257,7 +257,7 @@ module Ace
             end
             payload_limit = target["agent"] == "pi" ?
               Molecules::NativeQueueExecutor::PI_PAYLOAD_LIMIT_BYTES :
-              Molecules::NativeQueueExecutor::MAX_ARG_PAYLOAD_BYTES
+              Molecules::NativeQueueExecutor::CODEX_PAYLOAD_LIMIT_BYTES
             if payload.bytesize > payload_limit
               raise ValidationError,
                 "payload exceeds the #{target['agent']} native queue limit " \
@@ -463,6 +463,9 @@ module Ace
 
             begin
               binding = observe(record)
+              codex_submission = @native.prepare_submission(agent: binding.fetch("agent"), thread: binding.fetch("thread"),
+                event_id: record.event_id, attempt_id: claim.fetch("attempt_id"),
+                claim_generation: claim.fetch("claim_generation"), digest: record.answer_digest)
             rescue ValidationError, ExecutorError => e
               state = e.is_a?(IdentityDriftError) ? "uncertain" : "queued"
               record = transition(record, state, claim.merge("last_error" => e.message),
@@ -473,6 +476,7 @@ module Ace
 
             target = binding.reject { |key, _| key == "payload_sha256" }
             bound = claim.merge("binding" => binding, "target" => target)
+            bound["codex_submission"] = codex_submission if codex_submission
             record = transition(record, "claimed", bound, "bind")
             save(record)
             # No later process may infer from a claimed record that submission
@@ -491,11 +495,18 @@ module Ace
                 "claim_generation" => bound["claim_generation"],
                 "payload_sha256" => record.answer_digest, "binding" => binding,
                 "native_output" => result["stdout"]}
+              if binding.fetch("agent") == "codex"
+                receipt.delete("native_output")
+                receipt["codex_submission"] = result.slice("provider_version", "endpoint_reference_sha256", "thread_id",
+                  "queued_submission_id", "client_user_message_id", "payload_sha256", "server_process_binding")
+              end
               # The wake is a separate effect from the accepted submission,
               # but its DECISION rides the first delivered transition: a crash
               # between saves must never leave the wake field missing (which
               # later reads as pending) for a busy target.
-              wake = if WAKE_STATUSES.include?(binding["agent_status"])
+              wake = if binding.fetch("agent") == "codex"
+                {"status" => "none", "reason" => "Codex native queue owns turn progression"}
+              elsif WAKE_STATUSES.include?(binding["agent_status"])
                 {"status" => "pending"}
               else
                 {"status" => "none", "reason" => "busy target uses the native queue form"}
@@ -741,7 +752,7 @@ module Ace
                 end
                 payload_limit = observed["agent"] == "pi" ?
                   Molecules::NativeQueueExecutor::PI_PAYLOAD_LIMIT_BYTES :
-                  Molecules::NativeQueueExecutor::MAX_ARG_PAYLOAD_BYTES
+                  Molecules::NativeQueueExecutor::CODEX_PAYLOAD_LIMIT_BYTES
                 if record.answer.to_s.bytesize > payload_limit
                   refusal ||= "payload exceeds the replacement agent's native queue limit"
                 end
@@ -759,7 +770,7 @@ module Ace
             inbox = record.inbox.reject { |key, _| key == "canonical_completion" }.merge("reconciliation" => receipt)
             if state == "queued"
               inbox = inbox.reject do |key, _|
-                %w[submission_intent claim_owner receipt].include?(key)
+                %w[submission_intent claim_owner receipt codex_submission].include?(key)
               end
               inbox = inbox.merge("target" => replacement) if replacement
             end
@@ -908,7 +919,8 @@ module Ace
 
         def submit(record, binding)
           @native.submit(agent: binding["agent"], thread: binding["thread"],
-            event_id: record.event_id, digest: record.answer_digest, payload: record.answer)
+            event_id: record.event_id, digest: record.answer_digest, payload: record.answer,
+            submission: record.inbox["codex_submission"])
         rescue ExecutorError => e
           {"accepted" => false, "error" => e.message}
         end
@@ -945,6 +957,7 @@ module Ace
         end
 
         def wake_pending?(record)
+          return false if record.inbox.dig("binding", "agent") == "codex"
           wake = record.inbox["wake"]
           wake.nil? || wake["status"] == "pending"
         end
@@ -964,6 +977,7 @@ module Ace
         end
 
         def wake_idle(binding)
+          raise ValidationError, "Codex native queue has no terminal wake operation" unless binding.fetch("agent") == "pi"
           @executor.agent_prompt_bounded(pane: binding["pane"],
             text: "Check your native queued messages.", timeout_ms: 10_000)
           nil

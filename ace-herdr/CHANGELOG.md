@@ -19,6 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Submit managed Codex Inbox payloads through the original held app-server Unix WebSocket and retain client/native queue correlation before acceptance. Refuse unmanaged instances without a CLI fallback; keep lost replies uncertain without resend. Hold runtime artifacts through joined bounded context handlers, and let the Codex native queue own progression without a terminal wake. Same-instance Lab startup/publication and completed-message observation remain separate source gates.
+
 - Persist guarded queue notifications before IO, retain the original queue claim separately from an explicit notification retry, and never retry an issuing or uncertain notification. Known native not-issued responses permit a fresh admitted notification without resending the queued payload.
 
 - Validate the closed original Inbox native channel before returning its identity projection, refusing malformed socket paths or native versions.

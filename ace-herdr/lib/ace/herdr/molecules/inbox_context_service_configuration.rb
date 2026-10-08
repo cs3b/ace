@@ -13,11 +13,11 @@ module Ace
         LIMIT = 65_536
         TOKEN = /\A[A-Za-z0-9][A-Za-z0-9._-]{0,127}\z/
         MAX_ID = (1 << 32) - 2
-        STAGE_FIELDS = %w[configuration inbox_context_id project_id schema].freeze
+        STAGE_FIELDS = %w[codex_runtime configuration inbox_context_id project_id schema].freeze
         FIELDS = %w[authority control_socket_path deliveries_dir grants inbox_context_id key native_clients native_mapping_id owner_credentials project_id schema socket_gid state_root].freeze
         PURPOSES = %w[deliver enqueue maintenance_inventory observe_to_sign reconcile].freeze
         ROLES = %w[authority maintenance observer signer supervisor].freeze
-        attr_reader :data, :reference
+        attr_reader :data, :reference, :codex_runtime_reference
 
         def self.load(stage:, artifacts: Ace::Runtime::Molecules::ProtectedArtifactSet.new)
           strict!(stage, STAGE_FIELDS)
@@ -31,6 +31,12 @@ module Ace
               reference["sha256"].is_a?(String) && reference["sha256"].match?(/\A[0-9a-f]{64}\z/)
             raise ValidationError, "context service configuration reference differs"
           end
+          runtime = stage.fetch("codex_runtime")
+          strict!(runtime, %w[bytes path sha256])
+          unless path?(runtime["path"]) && runtime["bytes"].is_a?(Integer) && runtime["bytes"].between?(1, LIMIT) &&
+              runtime["sha256"].is_a?(String) && runtime["sha256"].match?(/\A[0-9a-f]{64}\z/)
+            raise ValidationError, "context Codex runtime reference differs"
+          end
           artifacts.with do |reader|
             data = InboxContextStore.decode(reader.read!(reference), limit: LIMIT)
             validate!(data)
@@ -38,7 +44,7 @@ module Ace
               raise ValidationError, "context service configuration association differs"
             end
             reader.verify_unchanged!
-            new(data, reference)
+            new(data, reference, runtime)
           end
         rescue KeyError, TypeError, Ace::Runtime::RuntimeUnavailableError
           raise ValidationError, "context service configuration unavailable"
@@ -111,12 +117,17 @@ module Ace
         # The accepted release owns executable startup bytes and IPC placement;
         # no PATH discovery, inherited HOME or ambient queue-client fallback.
         def self.native_clients!(value)
-          strict!(value, %w[codex cwd dependencies environment herdr pi resources])
+          strict!(value, %w[codex codex_runtime_intent cwd dependencies environment herdr pi resources])
           dependencies = value.fetch("dependencies")
-          unless dependencies.is_a?(Array) && dependencies.size <= 509
+          unless dependencies.is_a?(Array) && dependencies.size <= 508
             raise ValidationError, "context native dependency closure exceeds bounds"
           end
-          refs = value.values_at("codex", "pi", "herdr") + dependencies
+          unless value.fetch("codex_runtime_intent").is_a?(Hash) &&
+              value.fetch("codex_runtime_intent")["bytes"].is_a?(Integer) &&
+              value.fetch("codex_runtime_intent").fetch("bytes").between?(1, 65_536)
+            raise ValidationError, "context Codex runtime intent exceeds bounds"
+          end
+          refs = value.values_at("codex", "pi", "herdr", "codex_runtime_intent") + dependencies
           refs.each do |ref|
             strict!(ref, %w[bytes path sha256])
             unless path?(ref["path"]) && ref["bytes"].is_a?(Integer) && ref["bytes"].between?(1, 268_435_456) &&
@@ -163,8 +174,8 @@ module Ace
 
         private
 
-        def initialize(data, reference)
-          @data, @reference = [data, reference].map { |value| immutable(value) }
+        def initialize(data, reference, runtime)
+          @data, @reference, @codex_runtime_reference = [data, reference, runtime].map { |value| immutable(value) }
           freeze
         end
 

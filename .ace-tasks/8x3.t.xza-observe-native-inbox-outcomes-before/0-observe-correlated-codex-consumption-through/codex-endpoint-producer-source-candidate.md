@@ -1,6 +1,6 @@
 # Codex correlated queue producer — endpoint ownership candidate
 
-Base27f029d9b. Draft for independent readiness review; xza.0 remains draft/needs_review. No runtime source/test change, native probe, installed acceptance or task promotion. This repairs the concrete SC5 source gap, rather than treating the old `codex queue --thread --message` as correlated submission.
+Base27f029d9b. Draft for independent readiness review; xza.0 remains draft/needs_review. This document retains the specification/readiness history; executed source scope is recorded in source-checkpoint-codex-submission.md. No native probe, installed acceptance or task promotion. This repairs the concrete SC5 source gap, rather than treating the old `codex queue --thread --message` as correlated submission.
 
 ## Observed boundary and retained capability
 
@@ -86,3 +86,12 @@ Retained generated schema SHA256: ThreadQueueAddParams `60f25b7d3e3357c215bef9d2
 53aadcfb3's proposed dynamic runtime→configuration→descriptor order was incorrect against current Assembly/Installer; this successor explicitly replaces it with static install followed by separately bound runtime output. Parent review history remains in Git. No new implementation/test/native acceptance is claimed.
 
 Controlled same-owner tests must inject crashes after each static publication and each dynamic output publication. Before completed installation no runtime start is allowed. After runtime/thread but before pointer, context/Inbox/UI cannot activate; retry may recover only an authenticated retained identical live instance/output under the fixed owner or positively retire it first, never create a second instance/thread by silence. After pointer but before context activation, retry verifies exact output/config/installation/live peer before activating once. After context readiness but before UI start, UI retry is only explicit same endpoint/thread and cannot queue a prompt. Restart crash after old retirement but before successor publication leaves old claims uncertain and no pointer adoption until the new exact output is complete. Replaced install/config/intent, advanced pointer during held read, wrong descriptor/native unit, unadmitted scope and old still-live server must refuse before native mutation. Runtime output installation REF is literal original publication; a later current installation pointer cannot silently authorize it.
+
+
+## Source-owned handler lifetime precision (independent root approval)
+
+The runtime factory owner thread creates the fixed Listener dispatch capability. Only that owner and a thread registered inside this capability's handler block may use the held selection; possessing the object in another thread is insufficient. The existing Listener bounds this population to eight and unregisters every handler in ensure, including exceptional exits. It passes one absolute operation deadline captured at accept (60 seconds, the existing native submission bound), and native connection/queue submission uses the lesser of that deadline and its existing caller deadline. No wait or transfer creates a fresh budget.
+
+Listener's existing 35-second stop deadline remains unchanged. A stop timeout remains a failure/uncertainty, but runtime-scope cleanup must join admitted source-owned handlers before releasing the held artifact set. It refuses late dispatcher entry once scope closing begins; no detached holder or new background operation is permitted. Successful and exceptional admitted handler exits release their registration; escaped/closed selection and dispatcher reuse refuse. This corrects the factory-owner versus Listener-handler distinction without allowing arbitrary cross-thread bearers.
+
+Codex native queue/add owns progression; no terminal Enter/wake is issued for either busy or idle Codex. Existing Pi's separate guarded notification remains unchanged and its controlled notification regression uses a valid Pi event identity. A missing Codex wake field cannot cause a terminal submission.
