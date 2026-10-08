@@ -140,6 +140,10 @@ Submit a normal succeeded review receipt through `ace-assign attempt finish`. Ad
 
 The receipt retains ordinary attempt/assignment/project/scope binding, producer, current head, reviewer approval and executed checks. Its producer/reviewer actors must match the campaign assessment. The trusted coordinator rechecks live campaign state and rejects stale, blocked, mismatched or dry-run results. Accepting evidence records a separate journal commit without moving the candidate branch.
 
+## Guarded source consumption
+
+Source-owned receipt composition can call `CampaignManager#with_verified_result!(result:, subject:, contract_identity:, policy:, head:, base:, producer:, reviewer:) { |current| ... }`. It requires a block and an existing campaign lock, revalidates current acceptance and the exact expected tuple, and yields a deeply frozen projection while holding one read transaction. Keep the entire receipt/CAS operation inside that block; a retained projection is not a later permission. Do not call public campaign methods from inside the block. Exceptions release the lock, and validation failures never yield. This API does not itself provide protected child linkage or authorize a journal mutation.
+
 ## Restart, contract changes and failures
 
 Campaign authority lives in `.ace-local/review/campaigns/`; retain this directory and source evidence across process/context restarts. Records are serialized with a lock and replaced atomically with checksums. Every retained completed session, including earlier rounds and partial coverage, must keep its immutable accepted review-collection authority. Historical reads use `ace-assign attempt evidence --kind review-collection --historical-head EXACT_RECORDED_HEAD` to validate that receipt and its artifacts. This read-only mode cannot certify current checks; check-purpose proofs always require the live head. Losing/corrupting evidence from any retained counted round or assessment makes it unavailable; historical counters remain diagnostic and do not manufacture acceptance. These records are durable local artifacts, not a second assignment execution journal.

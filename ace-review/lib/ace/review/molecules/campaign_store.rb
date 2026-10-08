@@ -17,11 +17,17 @@ module Ace
           @root = File.expand_path(root)
         end
 
-        def transaction(dry_run: false)
+        def transaction(dry_run: false, require_lock: false)
           if dry_run
             # No directory or lock-file creation in dry-run mode.
+            if require_lock && !File.directory?(root)
+              raise Atoms::CampaignContract::Invalid, "campaign lock unavailable"
+            end
             return yield unless File.directory?(root)
             lock_path = File.join(root, ".lock")
+            if require_lock && !File.file?(lock_path)
+              raise Atoms::CampaignContract::Invalid, "campaign lock unavailable"
+            end
             return yield unless File.file?(lock_path)
             return File.open(lock_path, File::RDONLY) { |lock| lock.flock(File::LOCK_SH); yield }
           end

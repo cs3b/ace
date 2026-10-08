@@ -59,6 +59,42 @@ class CampaignManagerTest < AceReviewTest
     assert_equal "reopened", result["open_findings"][0]["disposition"]
   end
 
+  def test_verified_result_guard_holds_lock_and_releases_after_exception
+    campaign = start_campaign
+    3.times do |n|
+      input = round_input(n)
+      make_campaign_session(campaign, input)
+      add_campaign_approval(campaign, input) if n == 2
+      campaign_manager.record_round(campaign["campaign_id"], input)
+    end
+    result = campaign_manager.finish(campaign["campaign_id"])
+    args = {result: result, subject: result["subject"], contract_identity: result["contract_identity"],
+      policy: result["effective_policy"], head: @head, base: @base, producer: "worker", reviewer: "reviewer"}
+    manager = campaign_manager
+    assert_raises(ArgumentError) { manager.with_verified_result!(**args) }
+    lock_path = File.join(manager.store.root, ".lock")
+    assert_raises(RuntimeError) do
+      manager.with_verified_result!(**args) do |current|
+        assert current.frozen?
+        assert current["rounds"].last["approval"]["report_models"].first.frozen?
+        File.open(lock_path, File::RDWR) { |lock| refute lock.flock(File::LOCK_EX | File::LOCK_NB) }
+        raise "consumer failed"
+      end
+    end
+    File.open(lock_path, File::RDWR) { |lock| assert lock.flock(File::LOCK_EX | File::LOCK_NB) }
+    assert_equal :consumed, manager.with_verified_result!(**args) { :consumed }
+    {head: "c" * 40, base: "c" * 40, producer: "other", reviewer: "other", contract_identity: "f" * 64,
+      policy: result["effective_policy"].merge("minimum_rounds" => 4)}.each do |key, value|
+      assert_raises(ArgumentError) { manager.with_verified_result!(**args.merge(key => value)) { flunk "invalid binding yielded" } }
+    end
+    [result.merge("dry_run" => true), result.merge("result_identity" => "f" * 64)].each do |invalid|
+      assert_raises(ArgumentError) { manager.with_verified_result!(**args.merge(result: invalid)) { flunk "invalid result yielded" } }
+    end
+    File.unlink(lock_path)
+    assert_raises(ArgumentError) { manager.with_verified_result!(**args) { flunk "missing lock yielded" } }
+
+  end
+
   def test_three_clean_rounds_need_actual_current_approval_checks_and_report_integrity
     campaign = start_campaign
     3.times do |n|

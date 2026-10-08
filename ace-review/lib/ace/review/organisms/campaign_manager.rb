@@ -163,6 +163,37 @@ module Ace
           end
         end
 
+        # Hold current campaign authority across the fixed receipt/CAS consumer.
+        # Never call a public transaction-owning method from this block.
+        def with_verified_result!(result:, subject:, contract_identity:, policy:, head:, base:, producer:, reviewer:)
+          raise ArgumentError, "verified campaign result requires a block" unless block_given?
+          Contract.object!(result, "campaign result")
+          subject = Contract.subject!(subject)
+          policy = Contract.policy!(policy)
+          id = Contract.id!(result["campaign_id"], "campaign ID")
+          store.transaction(dry_run: true, require_lock: true) do
+            current = projection(store.read(id))
+            approval = current["rounds"].last&.fetch("approval", nil)
+            unless result["accepted"] == true && result["dry_run"] == false && current["accepted"] == true &&
+                result["result_identity"] == current["result_identity"] &&
+                current["subject"] == subject && current["contract_identity"] == contract_identity &&
+                current["effective_policy"] == policy &&
+                current.dig("evidence", "current_head") == head && current.dig("evidence", "current_base") == base &&
+                result.dig("evidence", "current_head") == head && result.dig("evidence", "current_base") == base &&
+                approval && approval["producer"] == producer && approval["reviewer"] == reviewer
+              raise Contract::Invalid, "campaign result does not match current acceptance and expected binding"
+            end
+            freeze_projection = lambda do |value|
+              case value
+              when Hash then value.each { |key, item| freeze_projection.call(key); freeze_projection.call(item) }
+              when Array then value.each { |item| freeze_projection.call(item) }
+              end
+              value.freeze
+            end
+            yield freeze_projection.call(current)
+          end
+        end
+
         # Called before collection by the existing review runner. A pinned empty
         # attempt must already exist, so coverage/head/base cannot be invented
         # after model execution. This method itself performs no mutation.
