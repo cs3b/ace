@@ -6,6 +6,24 @@ existing succeeded managed campaign-free execution attempts and separates report
 model from reviewer actor. The amended specification was independently approved at `62a24a0c570f093a1c0de3fd3feec509cf3fb27e`; see the technical-closure review in `protected-campaign-draft-review.md`. This is specification readiness only.
 No public interface below is claimed implemented or installed.
 
+### Source prerequisite checkpoint — 2026-10-08
+
+The historical statement below that positive campaign-free finish is absent is
+superseded for the bounded source handler: main `64cda42e9` supplies protected
+finish/recovery/bind, and `623aa67e4` authenticates successful finish's independent
+review at its original accepted journal prefix. `Endcap#finished_review_evidence!`
+and `LaunchLifecycle#completion_scope!` retain review and no-writer requirements;
+they do not accept worker claims or recreate closure during a read. Integrated
+controlled source verification recorded 30 tests / 205 assertions passing in
+`assign/0d0ba03b-e6b1-4e9c-9d71-171fb9c35818`.
+
+This does **not** complete xz9.0, qkb or R2. Public command/workflow adoption and
+the full cleanup producer remain under integration. The proposed
+`campaign_execution`, `report_models` and `with_verified_result!` joins are still
+absent from the reviewed implementation. R2 must consume the completed upstream
+contracts and execute the full child-to-parent acceptance scenarios below; this
+checkpoint neither removes dependencies nor substitutes installed Lab evidence.
+
 ## Managed execution attempts and exact linkage
 
 Collection, check and independent approval run as separate managed child
