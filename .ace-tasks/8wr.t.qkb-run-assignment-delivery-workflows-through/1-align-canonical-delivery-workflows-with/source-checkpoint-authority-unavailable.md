@@ -17,3 +17,7 @@ Executed `bin/ace-test ace-git feat ace-git/test/feat/service_merge_boundary_tes
 Initial same-command report `a2266423-5630-4f18-a596-f2c1f4aae59b` is retained: 1/12 error before the intended fault, seed27021,52.456212 seconds. Original receiver claim admission exceeded the unchanged5s transport deadline (client read expired elapsed9.506481s; receiver returned9.516319s). That run is not authority-loss evidence. The inspected transport trace justified one rerun; neither source nor fixture deadlines were increased. The passing run reached accepted claim within4.413s of connect before actual socket termination.
 
 Independent source review is pending. No task closure, native installation, external provider or full qkb acceptance is claimed.
+
+## Independent integration verdict
+
+Root APPROVE frozen `5c38e0557fe11556b9ab99b24fd113bf02b25119`: inspected real stop/join/socket absence, parked handler, original public CLI paths, unchanged canonical claim/ref/selectors and subsequent original completion/replay assertions. Integrated `e00eee602`. Main exact selection `../bin/ace-test test/feat/service_merge_boundary_test.rb:71 --timeout 180` passed1/93 in1m3s, receipt `git/aa0cbcbb-c92b-408c-ae45-483dfec24270`. The180s value bounds this test process only; production transport deadlines are unchanged. This closes the identified SC7 authority-loss scenario gap, not whole qkb acceptance. Default-suite aggregate runtime diagnosis and protected PR policy remain open.
