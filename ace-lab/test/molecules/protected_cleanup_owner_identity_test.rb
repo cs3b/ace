@@ -75,6 +75,34 @@ class ProtectedCleanupOwnerIdentityTest < Minitest::Test
     end
   end
 
+  def test_complete_selected_load_path_graph_is_verified_and_bounded
+    fixture do
+      root = File.dirname(@refs.first.fetch("path"))
+      paths = 64.times.map { |index| File.join(root, "library-#{index}") }
+      dependencies = paths.map do |directory|
+        FileUtils.mkdir_p(directory)
+        path = File.join(directory, "source.rb")
+        File.binwrite(path, "selected source")
+        File.chmod(0o444, path)
+        {"path" => path, "bytes" => 15, "sha256" => Digest::SHA256.hexdigest("selected source")}
+      end
+      build = lambda do |selected, refs = dependencies|
+        Owner.new(unit: "cleanup.service", entry: @refs[0], interpreter: @refs[1], closure: @refs.drop(2) + refs,
+          load_paths: selected, manager: @manager, kernel: @kernel,
+          artifacts: Owner::Runtime::ProtectedArtifactSet.new(protection: Protection.new))
+      end
+      @service["ExecStartEx"][0][1][3] = paths.join(":")
+      assert_equal @identity, build.call(paths).observe!(socket: Object.new).fetch("process_binding")
+      assert_raises(ArgumentError) { build.call(paths + [File.join(root, "extra")]) }
+      assert_raises(ArgumentError) { build.call(paths.take(63) + [paths.first]) }
+      assert_raises(ArgumentError) { build.call(paths, dependencies.drop(1)) }
+      oversized = 64.times.map { |index| "/selected/#{index}/#{'x' * 300}" }
+      refs = oversized.map { |path| {"path" => path + "/source.rb", "bytes" => 1, "sha256" => "a" * 64} }
+      error = assert_raises(ArgumentError) { build.call(oversized, refs) }
+      assert_match(/startup arguments exceed bound/, error.message)
+    end
+  end
+
   def test_concurrent_observation_refuses_before_shared_artifact_or_kernel_transaction
     fixture do
       entered, release = Queue.new, Queue.new

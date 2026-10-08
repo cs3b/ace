@@ -93,7 +93,7 @@ module Ace
         def initialize(unit:, entry:, interpreter:, closure:, load_paths:, manager:, kernel: Kernel.new, artifacts: nil)
           unless unit.is_a?(String) && Runtime::SystemdScopeManager::UNIT.match?(unit) && unit.end_with?(".service") &&
               closure.is_a?(Array) && closure.size.between?(1, 4094) &&
-              load_paths.is_a?(Array) && load_paths.size.between?(1, 16) && load_paths.uniq == load_paths &&
+              load_paths.is_a?(Array) && load_paths.size.between?(1, 64) && load_paths.uniq == load_paths &&
               load_paths.all? { |path| path.is_a?(String) && path.start_with?("/") && !path.include?("\0") && !path.include?(":") && File.expand_path(path) == path }
             raise ArgumentError, "cleanup identity requires a fixed accepted-release selection"
           end
@@ -107,6 +107,9 @@ module Ace
           end
           @entry, @interpreter = @references.first(2)
           @argv = [@interpreter.fetch("path"), DISABLE, "-I", load_paths.join(":"), @entry.fetch("path")].freeze
+          unless @argv.sum { |argument| argument.bytesize + 1 } <= 16_384
+            raise ArgumentError, "cleanup startup arguments exceed bound"
+          end
           @manager, @kernel = manager, kernel
           @verification = Mutex.new
           @artifacts = artifacts || Runtime::ProtectedArtifactSet.new(file_limit: 32 * 1_048_576,
