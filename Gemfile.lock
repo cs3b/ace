@@ -460,6 +460,7 @@ PATH
       minitest (~> 5.0)
       minitest-reporters (~> 1.8)
       ostruct
+      prism (~> 1.9)
 
 PATH
   remote: ace-test
