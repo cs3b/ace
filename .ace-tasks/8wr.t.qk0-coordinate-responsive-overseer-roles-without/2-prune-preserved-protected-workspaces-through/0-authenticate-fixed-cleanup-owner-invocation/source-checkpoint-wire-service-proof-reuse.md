@@ -33,3 +33,9 @@ Root APPROVED exact author commit `4545dacce3d5760d72f12733334a44c738525ad2` aft
 Directly inspected final uninstrumented controlled cleanup receipt `d32899be-1ddf-4187-9c9a-6fdd7e0b49b3`: 4 tests / 67 assertions, no failures/errors/skips. Integrated as `e843b65be`; main operation test file passed 12 tests / 98 assertions, receipt `89225bec-8d80-4ddf-8a11-3cb1b902e457`. No extra Lab profiling instrumentation was integrated. Remaining source and installed acceptance requirements are unchanged.
 
 Full Assign fast regression on fixed main `524f284a8` passed 951 tests / 3968 assertions, no failures/errors, in 132 seconds: `assign/19772d54-ddb2-4332-acf2-d8515e715e96`. No source changed during the run. This verifies broader journal consumers, not installed Lab acceptance.
+
+## Full cleanup-file regression
+
+On unchanged main `cad5b0250`, the complete `ace-lab/test/organisms/protected_cleanup_dispatch_test.rb` ran with the original `SEED=3211`, existing public deadlines, and a 1200-second test runner bound. All 12 tests / 219 assertions passed without failures/errors in 290 seconds: `lab/5e45ae0f-3e23-4781-b3cd-75380d2ece8c`. This supersedes the earlier same-seed aggregate failure for this file; earlier failing receipts remain retained. The original process handle was polled to terminal completion without restarting. No temporary profiling wrapper was present.
+
+This completes the full-file source regression after the bounded proof-reuse optimization, not the still-open physical Installer or installed/native Lab acceptance.
