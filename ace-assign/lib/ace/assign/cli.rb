@@ -59,7 +59,6 @@ require_relative "cli/commands/assignment_target"
 require_relative "cli/commands/create"
 require_relative "cli/commands/status"
 require_relative "cli/commands/resume"
-require_relative "cli/commands/inbox_reconcile"
 require_relative "cli/commands/inbox_bind"
 require_relative "cli/commands/submit_candidate"
 require_relative "cli/commands/submit_result"
@@ -211,7 +210,6 @@ register "authority inbox-context-selection", wrap_command(Commands::Authority::
       register "attempt finish", wrap_command(Commands::Attempt::Finish)
       register "attempt reconcile", wrap_command(Commands::Attempt::Reconcile)
       register "resume", wrap_command(Commands::Resume)
-      register "inbox-reconcile", wrap_command(Commands::InboxReconcile)
       register "inbox-bind", wrap_command(Commands::InboxBind)
       register "submit-candidate", wrap_command(Commands::SubmitCandidate)
       register "submit-result", wrap_command(Commands::SubmitResult)

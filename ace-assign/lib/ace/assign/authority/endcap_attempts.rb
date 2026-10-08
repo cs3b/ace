@@ -46,18 +46,10 @@ module Ace
               "journal_commit" => selected_commit}, replayed: false}
           end
           return readonly if readonly
-          begin
-            with_inbox_settlement_contexts(params: params, map: map, journal: journal) do
-              recover_under_exclusion!(request, params, map, peer, role, selected_commit)
-            end
-          rescue AttemptErrors::InboxContextPending
-            # This typed condition only follows authenticated fixed context
-            # admission. It never clears the original unknown operation.
-            recover_under_exclusion!(request, params, map, peer, role, selected_commit, context_pending: true)
-          end
+          recover_under_exclusion!(request, params, map, peer, role, selected_commit)
         end
 
-        def recover_under_exclusion!(request, params, map, peer, role, selected_commit, context_pending: false)
+        def recover_under_exclusion!(request, params, map, peer, role, selected_commit)
           @launch.with_assignment(params: params, map: map, exclusive: true) do |journal, _|
             unless journal.ref_value == selected_commit
               raise AttemptErrors::Conflict, "Recovery canonical selection advanced"
@@ -75,17 +67,14 @@ module Ace
               effects_pending = recovery_pending_settlement do
                 service_settlement_evidence!(journal: journal, events: fresh, params: params, map: map, commit: prefix)
               end
-              inboxes_pending = context_pending || recovery_pending_settlement do
-                inbox_settlement_evidence!(journal: journal, events: fresh, params: params, map: map, commit: prefix)
-              end
               bound = %w[bound issued].include?(origin["phase"])
-              observation = if !effects_pending && !inboxes_pending && state == "running" && bound
+              observation = if !effects_pending && state == "running" && bound
                 @launch.recovery_observation!(journal: journal, events: fresh, params: params, map: map, commit: prefix)
               else
                 {"liveness" => "unknown"}
               end
               decision, reason = Organisms::AttemptCoordinator.protected_recovery_decision(state: state,
-                effects_pending: effects_pending, inboxes_pending: inboxes_pending, bound: bound,
+                effects_pending: effects_pending, bound: bound,
                 live: observation["liveness"] == "live", checkpoint: true)
               plan = Organisms::AttemptCoordinator.protected_recovery_plan(events: fresh, decision: decision, reason: reason, observation: observation)
               plan.except(:state).merge(data: {"attempt_id" => params.fetch("attempt_id"), "state" => plan.fetch(:state),
@@ -97,7 +86,7 @@ module Ace
         def recovery_pending_settlement
           yield
           false
-        rescue AttemptErrors::ServiceSettlementPending, AttemptErrors::InboxSettlementPending
+        rescue AttemptErrors::ServiceSettlementPending
           true
         end
 
@@ -160,7 +149,6 @@ module Ace
             {data: accepted.fetch("data").merge("journal_commit" => accepted.fetch("journal_commit")), replayed: true}
           end
           return replay if replay
-          with_inbox_settlement_contexts(params: params, map: map, journal: journal) do
             @launch.with_assignment(params: params, map: map, exclusive: true) do |selected, _|
               protected_journal!(selected)
               commit = selected.ref_value
@@ -191,14 +179,12 @@ module Ace
                 @launch.campaign_children_settled!(journal: selected, commit: prefix, params: params, map: map)
                 @launch.completion_scope!(journal: selected, events: fresh, params: params, map: map, commit: prefix)
                 service_settlement_evidence!(journal: selected, events: fresh, params: params, map: map, commit: prefix)
-                inbox_settlement_evidence!(journal: selected, events: fresh, params: params, map: map, commit: prefix)
                 plan = Organisms::AttemptCoordinator.finished_transition_plan(events: fresh, receipt: result.fetch("receipt"))
                 plan.merge(data: params.slice("attempt_id", "result_id", "head", "candidate_generation").merge(
                   "receipt_digest" => result.fetch("receipt_digest"), "state" => result.dig("receipt", "verdict")))
                 end
               end
             end
-          end
         end
 
         def finish_identity!(events, params, map, peer, role)
@@ -266,11 +252,12 @@ module Ace
           context = @deployment.inbox_context(params.fetch("mapping_id"), params.fetch("inbox_context_id"))
           lineage = Molecules::ExecutionScopeLineage.new(events: events, project_id: map.fetch("project_id"),
             assignment_id: params.fetch("assignment_id"), attempt_id: params.fetch("attempt_id"), mapping_id: context.fetch("native_mapping_id"))
-          record = session.retained_status(event: params.fetch("event_id"))
+          original = params.slice("assignment_id", "mapping_id", "inbox_context_id").merge("project_id" => map.fetch("project_id"))
+          record = session.request("status_context", {"event_id" => params.fetch("event_id"),
+            "attempt_id" => params.fetch("attempt_id"), "original" => original}).fetch("record")
           registration = record.slice(*INBOX_REGISTRATION_FIELDS)
-          unless inbox_registration?(registration) && registration.values_at("event_id", "attempt_id") == params.values_at("event_id", "attempt_id") &&
-              registration.fetch("receipt_key_sha256") == session.receipt_key_sha256
-            raise AttemptErrors::EvidenceUnavailable, "Inbox original registration or pinned key differs"
+          unless inbox_registration?(registration) && registration.values_at("event_id", "attempt_id") == params.values_at("event_id", "attempt_id")
+            raise AttemptErrors::EvidenceUnavailable, "Inbox original registration differs"
           end
           inbox_native_lineage!(record, lineage)
           params.slice("event_id", "attempt_id", "inbox_context_id").merge("registration" => registration)

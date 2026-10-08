@@ -27,15 +27,7 @@ module Ace
           @selection_mutex = Mutex.new
         end
 
-        def request(operation, params, proof: nil, payload: nil)
-          if %w[reconcile_context verify_context_reconciliation].include?(operation)
-            unless proof.is_a?(Array) && proof.size == 2 && proof.all? { |part| part.is_a?(String) && part.bytesize.between?(1, InboxContextWire::LIMIT) }
-              raise ValidationError, "context proof parts differ"
-            end
-            params = params.merge("proof_sizes" => proof.map(&:bytesize))
-          elsif proof
-            raise ValidationError, "context operation does not accept proof bytes"
-          end
+        def request(operation, params, payload: nil)
           if operation == "enqueue_context"
             unless payload.is_a?(String) && payload.bytesize.between?(1, 65_536) &&
                 params["payload_bytes"] == payload.bytesize && params["payload_sha256"] == Digest::SHA256.hexdigest(payload)
@@ -61,7 +53,6 @@ module Ace
             end
             InboxContextWire.write(socket, {"version" => 1, "context_id" => @context_id,
               "operation" => operation, "params" => params}, deadline: deadline)
-            InboxContextWire.write_proof(socket, parts: proof, deadline: deadline) if proof
             if payload
               # Same bounded writer; a one-part raw ingress has the larger native payload bound.
               offset = 0

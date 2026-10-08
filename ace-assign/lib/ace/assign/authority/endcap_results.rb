@@ -101,7 +101,7 @@ module Ace
 
         def authorize_result_transfer!(request:, peer:, role:)
           params, map = result_request(request)
-          with_inbox_read_contexts(params, map) { authorize_admitted_result_transfer!(request: request, peer: peer, role: role) }
+          authorize_admitted_result_transfer!(request: request, peer: peer, role: role)
         end
 
         def authorize_admitted_result_transfer!(request:, peer:, role:)
@@ -122,7 +122,7 @@ module Ace
 
         def dispatch_result(request:, peer:, role:, transfer: nil)
           params, map = result_request(request)
-          with_inbox_read_contexts(params, map) { dispatch_admitted_result(request: request, peer: peer, role: role, transfer: transfer) }
+          dispatch_admitted_result(request: request, peer: peer, role: role, transfer: transfer)
         end
 
         def dispatch_admitted_result(request:, peer:, role:, transfer: nil)
@@ -322,7 +322,7 @@ module Ace
           origin = retained_origin(events, params)
           kind, id = params.values_at("kind", "purpose_id")
           if (role == :worker && !%w[result service].include?(kind)) || (role == :reviewer && !%w[result review].include?(kind)) ||
-              (role == :executor && kind != "service") || (role == :signer && kind != "inbox")
+              (role == :executor && kind != "service")
             raise AttemptErrors::UnauthorizedIdentity, "canonical evidence kind is unauthorized"
           end
           context, references = case kind
@@ -350,14 +350,6 @@ module Ace
               request_id_or_event_id: id, generation: review.fetch("candidate_generation")}
             verify_retained_review!(journal, events, params, map, current, review, ctx, commit)
             [ctx, review.fetch("review_receipt").fetch("artifacts")]
-          when "inbox"
-            registrations = events.select { |entry| entry["type"] == "inbox_binding" && entry.dig("payload", "event_id") == id }
-            raise AttemptErrors::NotFound, "inbox purpose not found" if registrations.empty?
-            raise AttemptErrors::EvidenceUnavailable, "inbox registration differs" unless registrations.one?
-            selected = params.merge("event_id" => id, "inbox_context_id" => registrations.first.dig("payload", "inbox_context_id"))
-            retained = verified_inbox(journal, events, selected, map, peer, role, commit)
-            raise AttemptErrors::EvidenceUnavailable, "canonical inbox proof missing" unless retained
-            [inbox_context(retained.fetch("binding")), %w[receipt_ref signature_ref].map { |key| retained.fetch(key).slice("sha256").merge("path" => retained.fetch(key).fetch("ref")) }]
           when "service"
             record = journal.service_request(id, commit: commit)
             raise AttemptErrors::NotFound, "service purpose not found" unless record

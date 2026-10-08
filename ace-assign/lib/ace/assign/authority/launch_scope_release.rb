@@ -450,7 +450,7 @@ module Ace
               # A chain with effect work but no permanent reservation is never
               # hidden behind the absence of an attributable slot selector.
               if reservations.empty?
-                if events.any? { |event| %w[service_claim service_transition inbox_binding inbox_reconciliation scope_provisioning].include?(event["type"]) }
+                if events.any? { |event| %w[service_claim service_transition inbox_binding scope_provisioning].include?(event["type"]) }
                   raise AttemptErrors::EvidenceUnavailable, "maintenance effect chain lacks reservation"
                 end
                 next
@@ -588,15 +588,12 @@ module Ace
           end
           params = expected.slice("assignment_id", "attempt_id", "mapping_id")
           service_events = prefix.any? { |event| %w[service_claim service_transition].include?(event["type"]) }
-          inbox_events = prefix.any? { |event| event["type"].start_with?("inbox_") }
-          if !@result_owner && (service_events || inbox_events || original.project(map.fetch("project_id")).fetch("inbox_contexts", {}).any? ||
+          if !@result_owner && (service_events ||
               journal.service_request_records(commit: prefix_commit).any? { |record| record.values_at("assignment_id", "attempt_id") == [assignment_id, attempt_id] })
             raise AttemptErrors::EvidenceUnavailable, "historical settlement receipt owner unavailable"
           end
           if @result_owner
             @result_owner.service_settlement_complete!(journal: journal, events: prefix, params: params, map: map, commit: prefix_commit)
-            @result_owner.historical_inbox_settlement_complete!(journal: journal, events: prefix, params: params, map: map,
-              commit: prefix_commit, deployment: original, history: @deployment_history)
           end
           lineage
         end
@@ -668,18 +665,14 @@ module Ace
               registration = expected.find { |entry| entry[1] == record.event_id }
               entry, registered = registration.values_at(2, 3)
               verify_attempt.call(entry)
-              proof = entry[2].reverse.find { |event| event["type"] == "inbox_reconciliation" && event.dig("payload", "event_id") == record.event_id }&.fetch("payload")
               public_identity = {"event_id" => record.event_id, "attempt_id" => record.inbox.fetch("attempt_id"),
-                "payload_sha256" => record.answer_digest, "receipt_key_sha256" => record.inbox.fetch("receipt_key_sha256")}
-              unless proof && record.state == "completed" && public_identity == registered.dig("payload", "registration") &&
-                  record.inbox.fetch("claim_generation") == proof.fetch("claim_generation") &&
-                  record.inbox.fetch("binding") == proof.dig("binding", "native_binding") &&
-                  record.inbox.fetch("reconciliation") == JSON.parse(journal.blob(proof.dig("receipt_ref", "ref"), commit: commit))
-                raise AttemptErrors::EvidenceUnavailable, "current inbox claim or retained settlement differs"
+                "payload_sha256" => record.answer_digest}
+              unless public_identity == registered.dig("payload", "registration")
+                raise AttemptErrors::EvidenceUnavailable, "current retained inbox registration differs"
               end
               original = record.inbox.fetch("origin_target")
-              native = proof.dig("binding", "scope_native_binding")
-              unless original.is_a?(Hash) && original["session"] == native.fetch("workspace_id")
+              native = entry[2].find { |event| event["type"] == "scope_native_bound" }&.fetch("payload")
+              unless original.is_a?(Hash) && native && original["session"] == native.fetch("workspace_id")
                 raise AttemptErrors::EvidenceUnavailable, "current retained inbox original native identity differs"
               end
               child = entry[2].find { |event| event["type"] == "scope_child_bound" }&.dig("payload", "original_process_binding")

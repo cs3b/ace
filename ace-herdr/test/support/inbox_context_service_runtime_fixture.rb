@@ -56,12 +56,12 @@ module InboxContextServiceRuntimeFixture
       "owner_credentials" => {"uid" => 13001, "gid" => 13001, "groups" => [13002]}, "socket_gid" => 13002,
       "key" => {"public_key_path" => "/etc/context/public.pem", "configuration_path" => "/etc/context/key.json"},
       "authority" => {"socket_path" => "/run/authority/socket", "uid" => 13000, "gid" => 13000, "groups" => []},
-      "grants" => [{"uid" => 13000, "gid" => 13000, "groups" => [13002], "role" => "authority", "purposes" => %w[deliver enqueue reconcile]}]}
+      "grants" => [{"uid" => 13000, "gid" => 13000, "groups" => [13002], "role" => "authority", "purposes" => %w[deliver enqueue]}]}
     bytes = JSON.generate(data)
     File.write(path, bytes)
     File.chmod(0o600, path)
     @configuration = Ace::Herdr::Molecules::InboxContextServiceConfiguration.load(stage: {
-      "schema" => "ace.herdr.inbox-context-stage/v1", "codex_runtime" => {"path" => "/opt/context/runtime.json", "bytes" => 1, "sha256" => "a" * 64}, "project_id" => "project", "inbox_context_id" => "ctx",
+      "schema" => "ace.herdr.inbox-context-stage/v1", "project_id" => "project", "inbox_context_id" => "ctx",
       "configuration" => {"path" => path, "bytes" => bytes.bytesize, "sha256" => Digest::SHA256.hexdigest(bytes)}},
       artifacts: Ace::Runtime::Molecules::ProtectedArtifactSet.new(protection: InboxContextOwnerFixture::FixtureArtifacts.new(@root)))
     artifact = @artifacts.find { |entry| entry["role"] == "context_configuration" }

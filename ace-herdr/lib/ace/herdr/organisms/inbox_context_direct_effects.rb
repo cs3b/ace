@@ -155,7 +155,7 @@ module Ace
 
         def status_context(event_id:, attempt_id:, original:, peer:)
           grant = authorize!(peer)
-          unless (grant.fetch("purposes") & %w[enqueue deliver observe_to_sign reconcile]).any?
+          unless (grant.fetch("purposes") & %w[enqueue deliver]).any?
             raise ValidationError, "context event observation is unauthorized"
           end
           token!(event_id); token!(attempt_id)
@@ -181,7 +181,7 @@ module Ace
           end
           result = @completion.original!(assignment_id: binding.fetch("assignment_id"), attempt_id: binding.fetch("attempt_id"),
             event_id: binding.fetch("event_id"), inbox_context_id: binding.fetch("inbox_context_id"), purpose: binding.fetch("purpose"),
-            payload_sha256: payload_sha256, receipt_key_sha256: selected.fetch(:snapshot).fetch("fingerprint"))
+            payload_sha256: payload_sha256)
           unless result.slice(*Molecules::InboxDirectEffectBinding::ORIGINAL_FIELDS, "attempt_id", "event_id", "purpose") ==
               binding.slice(*Molecules::InboxDirectEffectBinding::ORIGINAL_FIELDS, "attempt_id", "event_id", "purpose")
             raise ValidationError, "original authority association differs"
@@ -250,7 +250,7 @@ module Ace
         def direct_delivery_predecessors!(state, operation_id, event_id, key_generation)
           state.fetch("operations").each do |id, other|
             next if id == operation_id || other.fetch("event_id") != event_id || other.fetch("key_generation") != key_generation
-            if other.fetch("in_flight") == 1 || other.fetch("purpose") == "reconcile" || @effect_issuers.key?(id)
+            if other.fetch("in_flight") == 1 || @effect_issuers.key?(id)
               raise ValidationError, "direct delivery preceding issuer remains unresolved"
             end
           end

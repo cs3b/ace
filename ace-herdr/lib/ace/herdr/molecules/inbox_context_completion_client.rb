@@ -2,7 +2,7 @@
 
 require "ace/runtime/molecules/protected_linux"
 require "ace/runtime/molecules/protected_socket"
-require_relative "inbox_context_effect_binding"
+require_relative "inbox_direct_effect_binding"
 require_relative "guarded_native_origin"
 
 module Ace
@@ -11,7 +11,6 @@ module Ace
       # Fixed installed authority selection; there is no caller-selected verifier
       # callback, generic finished flag, current Inbox lookup or local fallback.
       class InboxContextCompletionClient
-        FIELDS = %w[binding claim_generation commit effect_binding effect_binding_digest receipt_ref reconciliation_digest registration reply_digest schema signature_ref state].freeze
         LIMIT = 16_384
 
         def initialize(authority:, project_id:, mapping_id:, kernel: Ace::Runtime::Molecules::ProtectedLinux.new,
@@ -19,25 +18,17 @@ module Ace
           @authority, @project_id, @mapping_id, @kernel, @wire = authority, project_id, mapping_id, kernel, wire
         end
 
-        def verify!(effect_binding:, reconciliation_digest:)
-          binding = InboxContextEffectBinding.verify!(effect_binding)
-          unless binding.values_at("project_id", "mapping_id") == [@project_id, @mapping_id] && InboxContextEffectBinding.digest?(reconciliation_digest)
-            raise ValidationError, "context completion selection differs"
-          end
-          params = binding.slice("mapping_id", "assignment_id", "attempt_id", "inbox_context_id", "event_id")
-            .merge("effect_binding" => binding, "reconciliation_digest" => reconciliation_digest)
-          query!(operation: "inbox_context_completion", params: params) { |data| verify_data!(data, binding, reconciliation_digest) }
-        end
+
 
         # Identity evidence only: callers must independently own admission and
         # exact native context/thread selection before any native effect.
-        def original!(assignment_id:, attempt_id:, event_id:, inbox_context_id:, purpose:, payload_sha256:, receipt_key_sha256:)
+        def original!(assignment_id:, attempt_id:, event_id:, inbox_context_id:, purpose:, payload_sha256:)
           params = {"mapping_id" => @mapping_id, "assignment_id" => assignment_id, "attempt_id" => attempt_id,
             "event_id" => event_id, "inbox_context_id" => inbox_context_id, "purpose" => purpose,
-            "payload_sha256" => payload_sha256, "receipt_key_sha256" => receipt_key_sha256}
+            "payload_sha256" => payload_sha256}
           unless %w[assignment_id attempt_id event_id inbox_context_id mapping_id].all? { |key|
               params[key].is_a?(String) && params[key].match?(/\A[A-Za-z0-9][A-Za-z0-9._-]{0,127}\z/) } &&
-              %w[enqueue deliver].include?(purpose) && %w[payload_sha256 receipt_key_sha256].all? { |key| InboxContextEffectBinding.digest?(params[key]) }
+              %w[enqueue deliver].include?(purpose) && %w[payload_sha256].all? { |key| (params[key].is_a?(String) && InboxDirectEffectBinding::SHA.match?(params[key])) }
             raise ValidationError, "original context selection differs"
           end
           query!(operation: "inbox_context_original", params: params) { |data| verify_original!(data, params) }
@@ -77,14 +68,14 @@ module Ace
 
         def verify_original!(data, params)
           fields = %w[assignment_id attempt_id commit event_id guarded_origin inbox_context_id mapping_id native_binding native_channel original_binding_digest process_binding project_id purpose registered registration schema]
-          registration = params.slice("event_id", "attempt_id", "payload_sha256", "receipt_key_sha256")
+          registration = params.slice("event_id", "attempt_id", "payload_sha256")
           unless data.is_a?(Hash) && data.keys.sort == fields && data["schema"] == "ace.assign.inbox-context-original/v1" &&
               data.slice("assignment_id", "attempt_id", "event_id", "inbox_context_id", "mapping_id", "purpose") ==
                 params.slice("assignment_id", "attempt_id", "event_id", "inbox_context_id", "mapping_id", "purpose") &&
               data["project_id"] == @project_id && data["registration"] == registration &&
               [true, false].include?(data["registered"]) && (params.fetch("purpose") != "deliver" || data["registered"]) &&
               data["commit"].is_a?(String) && data["commit"].match?(/\A[0-9a-f]{40}\z/) &&
-              InboxContextEffectBinding.digest?(data["original_binding_digest"]) &&
+              (data["original_binding_digest"].is_a?(String) && InboxDirectEffectBinding::SHA.match?(data["original_binding_digest"])) &&
               data["process_binding"].is_a?(Hash) && data["native_binding"].is_a?(Hash)
             raise ValidationError, "original context projection differs"
           end
@@ -112,29 +103,7 @@ module Ace
           immutable(data)
         end
 
-        def verify_data!(data, expected, reconciliation_digest)
-          unless data.is_a?(Hash) && data.keys.sort == FIELDS && data["schema"] == "ace.assign.inbox-context-completion/v1" &&
-              InboxContextEffectBinding.verify!(data.fetch("effect_binding")) == expected &&
-              data["effect_binding_digest"] == InboxContextEffectBinding.digest(expected) && data["reconciliation_digest"] == reconciliation_digest &&
-              data["commit"].is_a?(String) && data["commit"].match?(/\A[0-9a-f]{40}\z/) && InboxContextEffectBinding.digest?(data["reply_digest"]) &&
-              %w[completed queued].include?(data["state"]) && data["claim_generation"].is_a?(Integer) && data["claim_generation"].positive? &&
-              data["registration"] == expected.fetch("registration") && data["binding"].is_a?(Hash) &&
-              data["binding"].slice("project_id", "assignment_id", "attempt_id", "mapping_id", "inbox_context_id", "event_id", "registration", "receipt_sha256", "signature_sha256") ==
-                expected.slice("project_id", "assignment_id", "attempt_id", "mapping_id", "inbox_context_id", "event_id", "registration", "receipt_sha256", "signature_sha256") &&
-              data.dig("binding", "claim_generation").is_a?(Integer) && data.dig("binding", "claim_generation") == data["claim_generation"]
-            raise ValidationError, "context completion proof binding differs"
-          end
-          %w[receipt signature].each do |kind|
-            reference = data.fetch("#{kind}_ref")
-            unless reference.is_a?(Hash) && reference.keys.sort == %w[artifact_id bytes ref sha256] &&
-                reference["artifact_id"].is_a?(String) && reference["artifact_id"].match?(/\A[0-9a-f]{32}\z/) &&
-                reference["ref"] == "evidence/imports/#{reference['artifact_id']}" && reference["sha256"] == expected.fetch("#{kind}_sha256") &&
-                reference["bytes"].is_a?(Integer) && reference["bytes"].between?(1, 16_384)
-              raise ValidationError, "context completion immutable reference differs"
-            end
-          end
-          immutable(data)
-        end
+
 
         def immutable(value)
           case value

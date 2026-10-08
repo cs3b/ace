@@ -14,11 +14,6 @@ module Ace
           "enqueue_context" => %w[attempt_id event_id key_generation operation_id original payload_bytes payload_sha256 reverse],
           "status_context" => %w[attempt_id event_id original],
           "deliver_context" => %w[attempt_id event_id expected_claim_generation key_generation operation_id original],
-          "snapshot_context" => %w[event_id key_generation operation_id],
-          "observe_context" => %w[attempt_id claim_generation event_id key_generation operation_id],
-          "reconcile_context" => %w[effect_binding proof_sizes],
-          "verify_context_reconciliation" => %w[event_id expected_registration key_generation operation_id proof_sizes],
-          "confirm_context_completion" => %w[effect_binding reconciliation_digest],
           "begin_context_operation" => %w[context_id event_id process_binding purpose],
           "end_context_operation" => %w[operation_id],
           "begin_rotation" => %w[context_id expected_key_generation],
@@ -54,11 +49,6 @@ module Ace
             raise ValidationError, "context request fields differ"
           end
           options = request.fetch("params").transform_keys(&:to_sym)
-          options[:deadline] = deadline if request.fetch("operation") == "observe_context"
-          if %w[reconcile_context verify_context_reconciliation].include?(request.fetch("operation"))
-            bytes, signature = Molecules::InboxContextWire.read_proof(socket, sizes: options.delete(:proof_sizes), deadline: deadline)
-            options.merge!(signed_bytes: bytes, signature: signature)
-          end
           if request.fetch("operation") == "enqueue_context"
             options[:payload] = Molecules::InboxContextWire.read_payload(socket, size: options.fetch(:payload_bytes), deadline: deadline)
             unless Digest::SHA256.hexdigest(options.fetch(:payload)) == options.fetch(:payload_sha256)

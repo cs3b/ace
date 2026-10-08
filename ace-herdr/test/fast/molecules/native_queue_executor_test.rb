@@ -25,25 +25,6 @@ module Ace
           FileUtils.remove_entry(@dir)
         end
 
-        def test_codex_without_original_runtime_refuses_without_cli_fallback
-          result = @executor.submit(agent: "codex", thread: "thread-1", event_id: "inb-12345678",
-            digest: "a" * 64, payload: "line 1\nline 2")
-          refute result.fetch("accepted")
-          assert result.fetch("pre_submit")
-          assert_empty @calls
-          assert_raises(ValidationError) do
-            @executor.prepare_submission(agent: "codex", thread: "thread-1", event_id: "inb-12345678",
-              attempt_id: "attempt-1", claim_generation: 1, digest: "a" * 64)
-          end
-        end
-
-        def test_observation_without_typed_original_runtime_is_uncertain_without_cli_fallback
-          result = @executor.observe(agent: "codex", thread: "thread-1", event_id: "inb-12345678",
-            digest: "a" * 64, submission: {}, deadline: Process.clock_gettime(Process::CLOCK_MONOTONIC) + 1)
-          assert_equal "uncertain", result.fetch("outcome")
-          assert_empty @calls
-        end
-
         def test_pi_uses_digest_bound_client_and_validates_receipt
           @stdout = JSON.generate("ok" => true, "id" => "inb-12345678",
             "session_id" => "thread-1", "payload_sha256" => "a" * 64)

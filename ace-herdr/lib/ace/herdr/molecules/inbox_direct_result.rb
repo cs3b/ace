@@ -6,7 +6,7 @@ module Ace
     module Molecules
       module InboxDirectResult
         SCHEMA = "ace.herdr.inbox-direct-result/v1"
-        RECORD_FIELDS = %w[event_id attempt_id payload_sha256 receipt_key_sha256 claim_generation state original_context original_binding_digest origin_target target binding session pane submission_intent wake].freeze
+        RECORD_FIELDS = %w[event_id attempt_id payload_sha256 claim_generation state original_context original_binding_digest origin_target target binding session pane submission_intent wake].freeze
         module_function
 
         def build(operation:, record:, admission_state: nil)
@@ -33,7 +33,7 @@ module Ace
           raise ValidationError, "direct result original selection differs" unless record.fetch("original_context") == original
           raise ValidationError, "direct result original record differs" unless record["original_binding_digest"].is_a?(String) && InboxDirectEffectBinding::SHA.match?(record["original_binding_digest"])
           unless record.values_at("event_id", "attempt_id") == [event_id, attempt_id] &&
-              %w[payload_sha256 receipt_key_sha256].all? { |key| record[key].is_a?(String) && InboxDirectEffectBinding::SHA.match?(record[key]) } &&
+              %w[payload_sha256].all? { |key| record[key].is_a?(String) && InboxDirectEffectBinding::SHA.match?(record[key]) } &&
               record["claim_generation"].is_a?(Integer) && record["claim_generation"] >= 0 &&
               %w[queued claimed uncertain delivered completed].include?(record["state"]) &&
               [true, false].include?(record["submission_intent"])

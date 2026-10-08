@@ -5,11 +5,9 @@ require "digest"
 require "json"
 require "time"
 require "securerandom"
-require "openssl"
 require "ace/hitl/contract"
-require_relative "../molecules/inbox_receipt_authentication"
+require_relative "../molecules/native_queue_executor"
 require_relative "inbox_guarded_wake"
-require_relative "inbox_native_observation"
 require_relative "../molecules/inbox_direct_effect_binding"
 
 module Ace
@@ -19,8 +17,8 @@ module Ace
       # DeliveryRecordStore; a saved submission intent is never replayed.
       class Inbox
         include InboxGuardedWake
-        include InboxNativeObservation
         class IdentityDriftError < ValidationError; end
+        class MissingEventError < ValidationError; end
 
         EVENT = /\A[A-Za-z0-9][A-Za-z0-9._-]{0,127}\z/
         TARGET_IDENTITY = %w[session pane terminal_id agent thread thread_kind].freeze
@@ -36,20 +34,11 @@ module Ace
         AGENT_STATUSES = %w[idle busy working blocked done].freeze
         WAKE_STATUSES = %w[idle done].freeze
 
-        # One configured verifier construction for the Herdr CLI and signed
-        # receipt consumers. Configuration remains supervisor-owned.
+        # The maintained CLI uses the configured durable delivery store.
         def self.from_config(config: Ace::Herdr.config, root: Dir.pwd,
           executor: Molecules::HerdrExecutor.new, native: Molecules::NativeQueueExecutor.new)
-          path = config["inbox_receipt_public_key"]
-          key = begin
-            candidate = OpenSSL::PKey.read(File.read(path)) if path.is_a?(String) && path.start_with?("/")
-            candidate if candidate.is_a?(OpenSSL::PKey::RSA) && !candidate.private?
-          rescue SystemCallError, OpenSSL::PKey::PKeyError
-            nil
-          end
           new(executor: executor, native: native,
-            deliveries_dir: File.expand_path(config["deliveries_dir"] || ".ace-local/herdr/deliveries", root),
-            receipt_public_key: key)
+            deliveries_dir: File.expand_path(config["deliveries_dir"] || ".ace-local/herdr/deliveries", root))
         end
 
         # Enumerate retained event identities through the same store/lock owner.
@@ -162,11 +151,10 @@ module Ace
           raise ValidationError, "retained inbox inventory is unavailable"
         end
 
-        def initialize(executor:, native:, deliveries_dir:, receipt_public_key: nil)
+        def initialize(executor:, deliveries_dir:, native: Molecules::NativeQueueExecutor.new)
           @executor = executor
           @native = native
           @deliveries_dir = deliveries_dir
-          @receipt_public_key = receipt_public_key
         end
 
         # Project the accepted runtime owner before consuming an answer. Native
@@ -184,19 +172,10 @@ module Ace
 
         def context_root = @deliveries_dir.dup.freeze
 
-        # Fixed source construction preserves the existing native/store owners;
-        # the verified context key is refreshed at admitted operation entry.
-        def with_receipt_public_key(key)
-          unless key.is_a?(OpenSSL::PKey::RSA) && !key.private?
-            raise ValidationError, "inbox requires a public receipt verifier"
-          end
-          self.class.new(executor: @executor, native: @native, deliveries_dir: @deliveries_dir, receipt_public_key: key)
-        end
 
         def enqueue(event:, attempt:, ref:, payload:, managed_envelope: nil, expected_target: nil, original_context: nil, original_binding_digest: nil)
           validate_id!(event, "event")
           validate_id!(attempt, "attempt")
-          raise ValidationError, "trusted receipt public key is unavailable" unless @receipt_public_key
           payload = payload.to_s
           raise ValidationError, "payload is required" if payload.empty?
           raise ValidationError, "payload contains NUL" if payload.include?("\0")
@@ -269,7 +248,6 @@ module Ace
               event_id: event, session: address.session, pane: address.pane,
               answer_digest: digest, answer: payload, state: "queued",
               inbox: {"attempt_id" => attempt, "claim_generation" => 0,
-                "receipt_key_sha256" => key_fingerprint,
                 "managed_envelope" => envelope, "original_context" => original_context, "original_binding_digest" => original_binding_digest,
                 "origin_target" => target.slice(*TARGET_IDENTITY),
                 "target" => target, "binding" => target.merge("payload_sha256" => digest)}
@@ -284,7 +262,7 @@ module Ace
         def status(event:)
           validate_id!(event, "event")
           with_event(event) do |record|
-            raise ValidationError, "unknown inbox event: #{event}" unless record&.inbox
+            raise MissingEventError, "unknown inbox event: #{event}" unless record&.inbox
 
             public_record(record)
           end
@@ -300,7 +278,6 @@ module Ace
             origin = record.inbox.fetch("origin_target")
             validate_expected_target!(origin)
             unless record.answer.bytesize == selection.fetch("payload_bytes") &&
-                record.inbox.fetch("receipt_key_sha256") == key_fingerprint &&
                 record.inbox.fetch("original_context") == binding.slice(*Molecules::InboxDirectEffectBinding::ORIGINAL_FIELDS) &&
                 record.inbox["original_binding_digest"].is_a?(String) && Molecules::InboxDirectEffectBinding::SHA.match?(record.inbox.fetch("original_binding_digest")) &&
                 origin.values_at("session", "pane") == [address.session, address.pane] &&
@@ -316,7 +293,6 @@ module Ace
         def verify_direct_delivery(binding, require_idle: false)
           with_event(binding.fetch("event_id"), create_lock: false) do |record|
             unless record&.inbox && record.inbox.fetch("attempt_id") == binding.fetch("attempt_id") &&
-                record.inbox.fetch("receipt_key_sha256") == key_fingerprint &&
                 record.inbox.fetch("original_context") == binding.slice(*Molecules::InboxDirectEffectBinding::ORIGINAL_FIELDS) &&
                 record.inbox["original_binding_digest"].is_a?(String) && Molecules::InboxDirectEffectBinding::SHA.match?(record.inbox.fetch("original_binding_digest"))
               raise ValidationError, "direct delivery retained association differs"
@@ -331,7 +307,7 @@ module Ace
             raise ValidationError, "direct delivery retained generation differs" unless generation >= expected
             idle = case record.state
             when "queued"
-              !record.inbox["submission_intent"] && (generation.zero? || record.history.last&.fetch("action", nil) == "pre-submit-rejection" || canonical_superseded_retry?(record))
+              !record.inbox["submission_intent"] && (generation.zero? || record.history.last&.fetch("action", nil) == "pre-submit-rejection")
             when "delivered"
               guarded_queue_record!(record, binding, record.inbox.slice("claim_generation", "claim_owner"))
               receipt = record.inbox["receipt"]
@@ -339,8 +315,6 @@ module Ace
                 {"event_id" => record.event_id, "attempt_id" => binding.fetch("attempt_id"), "claim_generation" => generation,
                   "payload_sha256" => record.answer_digest, "binding" => record.inbox.fetch("binding")} &&
                 %w[none sent pending not_issued].include?(record.inbox.dig("wake", "status"))
-            when "completed"
-              record.inbox["reconciliation"].is_a?(Hash) && generation.positive?
             else
               false
             end
@@ -356,7 +330,7 @@ module Ace
         def retained_status(event:, deadline: nil)
           validate_id!(event, "event")
           with_event(event, create_lock: false, deadline: deadline) do |record|
-            raise ValidationError, "unknown inbox event: #{event}" unless record&.inbox
+            raise MissingEventError, "unknown inbox event: #{event}" unless record&.inbox
             public_record(record)
           end
         rescue SystemCallError, Molecules::DeliveryRecordStore::LockUnavailable
@@ -372,7 +346,6 @@ module Ace
           end
           with_event(event) do |record|
             unless record&.inbox && record.inbox.fetch("attempt_id") == expected_attempt &&
-                record.inbox.fetch("receipt_key_sha256") == key_fingerprint &&
                 expected_claim_generation.is_a?(Integer) && expected_claim_generation >= 0
               raise ValidationError, "direct claim original association differs"
             end
@@ -399,7 +372,7 @@ module Ace
             end
             next nil if expected_claim_generation < current || %w[delivered completed uncertain].include?(record.state)
             unless record.state == "queued" && !record.inbox["submission_intent"] &&
-                (current.zero? || record.history.last&.fetch("action", nil) == "pre-submit-rejection" || canonical_superseded_retry?(record))
+                (current.zero? || record.history.last&.fetch("action", nil) == "pre-submit-rejection")
               raise ValidationError, "direct claim is not known pre-submission"
             end
             claim = record.inbox.reject { |key, _| key == "canonical_completion" }.merge("claim_owner" => claim_owner, "claim_generation" => current + 1,
@@ -418,21 +391,21 @@ module Ace
               unless prepared_claim.is_a?(Hash) && prepared_claim.keys.sort == %w[claim_generation claim_owner] &&
                   record.state == "claimed" && !record.inbox["submission_intent"] &&
                   record.inbox.slice("claim_generation", "claim_owner") == prepared_claim &&
-                  record.inbox.fetch("attempt_id") == expected_attempt && record.inbox.fetch("receipt_key_sha256") == key_fingerprint &&
+                  record.inbox.fetch("attempt_id") == expected_attempt &&
                   expected_claim_generation.is_a?(Integer) && prepared_claim.fetch("claim_generation") == expected_claim_generation + 1
                 raise ValidationError, "prepared direct claim changed"
               end
             elsif !expected_claim_generation.nil?
               unless expected_claim_generation.is_a?(Integer) && expected_claim_generation >= 0 &&
                   expected_attempt.is_a?(String) && EVENT.match?(expected_attempt) &&
-                  record.inbox.fetch("attempt_id") == expected_attempt && record.inbox.fetch("receipt_key_sha256") == key_fingerprint
+                  record.inbox.fetch("attempt_id") == expected_attempt
                 raise ValidationError, "protected delivery original association differs"
               end
               current = record.inbox.fetch("claim_generation")
               raise ValidationError, "protected delivery expected generation is future" if expected_claim_generation > current
               next public_record(record) if expected_claim_generation < current || %w[delivered completed uncertain].include?(record.state)
               unless record.state == "queued" && !record.inbox["submission_intent"] &&
-                  (current.zero? || record.history.last&.fetch("action", nil) == "pre-submit-rejection" || canonical_superseded_retry?(record))
+                  (current.zero? || record.history.last&.fetch("action", nil) == "pre-submit-rejection")
                 raise ValidationError, "protected delivery is not known pre-submission"
               end
             end
@@ -465,9 +438,6 @@ module Ace
 
             begin
               binding = observe(record)
-              codex_submission = @native.prepare_submission(agent: binding.fetch("agent"), thread: binding.fetch("thread"),
-                event_id: record.event_id, attempt_id: claim.fetch("attempt_id"),
-                claim_generation: claim.fetch("claim_generation"), digest: record.answer_digest)
             rescue ValidationError, ExecutorError => e
               state = e.is_a?(IdentityDriftError) ? "uncertain" : "queued"
               record = transition(record, state, claim.merge("last_error" => e.message),
@@ -478,7 +448,6 @@ module Ace
 
             target = binding.reject { |key, _| key == "payload_sha256" }
             bound = claim.merge("binding" => binding, "target" => target)
-            bound["codex_submission"] = codex_submission if codex_submission
             record = transition(record, "claimed", bound, "bind")
             save(record)
             # No later process may infer from a claimed record that submission
@@ -497,17 +466,12 @@ module Ace
                 "claim_generation" => bound["claim_generation"],
                 "payload_sha256" => record.answer_digest, "binding" => binding,
                 "native_output" => result["stdout"]}
-              if binding.fetch("agent") == "codex"
-                receipt.delete("native_output")
-                receipt["codex_submission"] = result.slice("provider_version", "endpoint_reference_sha256", "thread_id",
-                  "queued_submission_id", "client_user_message_id", "payload_sha256", "server_process_binding")
-              end
               # The wake is a separate effect from the accepted submission,
               # but its DECISION rides the first delivered transition: a crash
               # between saves must never leave the wake field missing (which
               # later reads as pending) for a busy target.
               wake = if binding.fetch("agent") == "codex"
-                {"status" => "none", "reason" => "Codex native queue owns turn progression"}
+                {"status" => "none", "reason" => "terminal prompt was submitted"}
               elsif WAKE_STATUSES.include?(binding["agent_status"])
                 {"status" => "pending"}
               else
@@ -535,268 +499,13 @@ module Ace
           end
         end
 
-        def reconcile(event:, receipt:, signed_bytes: nil, signature: nil, expected_registration: nil)
-          reconcile_record(event: event, receipt: receipt, signed_bytes: signed_bytes,
-            signature: signature, expected_registration: expected_registration, settle: true)
-        end
-
-        def verify_direct_canonical_settlement(binding:, admitted_claim:, proof:, operation_id:)
-          verify_direct_canonical_record!(binding: binding, admitted_claim: admitted_claim, proof: proof, mode: :effect, operation_id: operation_id)
-        end
-
-        def verify_direct_canonical_observation(binding:, proof:)
-          verify_direct_delivery(binding, require_idle: true)
-          verify_direct_canonical_record!(binding: binding, admitted_claim: nil, proof: proof, mode: :observation)
-        end
-
-        # Called only by the fixed context completion owner after its authenticated
-        # canonical query and fresh admission check. One current record binding.
-        def record_canonical_completion!(proof:)
-          with_event(proof.fetch("registration").fetch("event_id"), create_lock: false) do |record|
-            marker = canonical_completion_for!(record, proof)
-            if record.inbox["canonical_completion"]
-              original = record.inbox.fetch("canonical_completion")
-              # The fixed query observes a fresh canonical tip. Preserve the
-              # first accepted snapshot while exact immutable proof bindings stay equal.
-              unless original.is_a?(Hash) && original["commit"].is_a?(String) && original["commit"].match?(/\A[0-9a-f]{40}\z/) &&
-                  original.reject { |key, _| key == "commit" } == marker.reject { |key, _| key == "commit" }
-                raise ValidationError, "canonical completion changed"
-              end
-            else
-              save(Models::DeliveryRecord.from_h(record.to_h.merge("inbox" => record.inbox.merge("canonical_completion" => marker))))
-            end
-            true
-          end
-        rescue KeyError, TypeError, SystemCallError
-          raise ValidationError, "canonical completion retention unavailable"
-        end
-
-        # Canonical consumers reverify retained signed settlement without creating
-        # a new local transition. The same event lock and proof owner are used.
-        def verify_reconciliation(event:, receipt:, signed_bytes:, signature:, expected_registration:)
-          unless expected_registration.is_a?(Hash) && expected_registration.keys.sort ==
-              %w[event_id attempt_id payload_sha256 receipt_key_sha256].sort &&
-              %w[event_id attempt_id].all? { |key| expected_registration[key].is_a?(String) && EVENT.match?(expected_registration[key]) } &&
-              %w[payload_sha256 receipt_key_sha256].all? { |key| expected_registration[key].is_a?(String) && expected_registration[key].match?(/\A[0-9a-f]{64}\z/) }
-            raise ValidationError, "canonical reconciliation requires exact registration"
-          end
-          reconcile_record(event: event, receipt: receipt, signed_bytes: signed_bytes,
-            signature: signature, expected_registration: expected_registration, settle: false)
-        rescue SystemCallError
-          raise ValidationError, "retained inbox lock is unavailable"
-        end
-
         private
 
-        def verify_direct_canonical_record!(binding:, admitted_claim:, proof:, mode:, operation_id: nil)
-          with_event(binding.fetch("event_id"), create_lock: false) do |record|
-            registration = proof.fetch("registration")
-            receipt = record&.inbox&.fetch("reconciliation", nil)
-            unless record&.inbox && record.state == proof.fetch("state") &&
-                record.inbox.fetch("attempt_id") == binding.fetch("attempt_id") &&
-                record.inbox.fetch("original_context") == binding.slice(*Molecules::InboxDirectEffectBinding::ORIGINAL_FIELDS) &&
-                proof.fetch("effect_binding").slice(*Molecules::InboxDirectEffectBinding::ORIGINAL_FIELDS) == record.inbox.fetch("original_context") &&
-                registration == {"event_id" => record.event_id, "attempt_id" => record.inbox.fetch("attempt_id"),
-                  "payload_sha256" => record.answer_digest, "receipt_key_sha256" => key_fingerprint} &&
-                record.inbox.fetch("receipt_key_sha256") == key_fingerprint && receipt.is_a?(Hash) &&
-                receipt.slice("event_id", "attempt_id", "payload_sha256", "claim_generation", "binding") ==
-                  registration.slice("event_id", "attempt_id", "payload_sha256").merge(
-                    "claim_generation" => proof.fetch("claim_generation"), "binding" => proof.fetch("binding").fetch("native_binding")) &&
-                receipt.fetch("outcome") == (proof.fetch("state") == "completed" ? "consumed" : "superseded") &&
-                record.inbox.fetch("claim_generation") == proof.fetch("claim_generation")
-              raise ValidationError, "direct canonical settlement retained record differs"
-            end
-            if mode == :observation
-              unless binding.fetch("purpose") == "deliver" && admitted_claim.nil? &&
-                  binding.fetch("selection").fetch("expected_claim_generation") <= proof.fetch("claim_generation")
-                raise ValidationError, "direct canonical observation binding differs"
-              end
-            elsif binding.fetch("purpose") == "deliver"
-              issuer = queue_issuer!(record)
-              expected = binding.fetch("selection").fetch("expected_claim_generation")
-              if admitted_claim && admitted_claim["kind"] == "wake"
-                unless expected == proof.fetch("claim_generation") && operation_id &&
-                    record.inbox.fetch("wake").values_at("operation_id", "input_sha256") == [operation_id, binding.fetch("input_sha256")]
-                  raise ValidationError, "canonical wake settlement issuer differs"
-                end
-              elsif admitted_claim && admitted_claim["kind"] == "queue"
-                unless expected + 1 == proof.fetch("claim_generation") && issuer.values_at("operation_id", "input_sha256") == [operation_id, binding.fetch("input_sha256")]
-                  raise ValidationError, "canonical queue settlement issuer differs"
-                end
-              end
-              unless admitted_claim && %w[queue wake].include?(admitted_claim["kind"]) && admitted_claim.fetch("claim_generation") == proof.fetch("claim_generation") &&
-                  record.history.count { |entry| entry.slice("action", "claim_generation", "claim_owner") ==
-                    admitted_claim.slice("claim_generation", "claim_owner").merge("action" => "claim") } == 1
-                raise ValidationError, "direct canonical settlement belongs to another invocation"
-              end
-            else
-              reverse = binding.fetch("selection").fetch("reverse")
-              unless record.answer_digest == binding.fetch("selection").fetch("payload_sha256") &&
-                  record.answer.bytesize == binding.fetch("selection").fetch("payload_bytes") &&
-                  record.inbox.fetch("origin_target").values_at("session", "pane") == reverse.values_at("session", "pane")
-                raise ValidationError, "direct canonical enqueue origin differs"
-              end
-            end
-            true
-          end
-        rescue KeyError, TypeError, SystemCallError
-          raise ValidationError, "direct canonical settlement is unavailable"
-        end
 
-        def canonical_completion_for!(record, proof)
-          receipt = record&.inbox&.fetch("reconciliation", nil)
-          registration = proof.fetch("registration")
-          binding = proof.fetch("effect_binding")
-          unless record&.inbox && record.state == proof.fetch("state") && %w[queued completed].include?(record.state) &&
-              registration == public_record(record).slice("event_id", "attempt_id", "payload_sha256", "receipt_key_sha256") &&
-              registration == binding.fetch("registration") && registration.fetch("receipt_key_sha256") == key_fingerprint &&
-              record.inbox.fetch("claim_generation") == proof.fetch("claim_generation") && receipt.is_a?(Hash) &&
-              receipt.slice("event_id", "attempt_id", "payload_sha256", "claim_generation", "binding") ==
-                registration.slice("event_id", "attempt_id", "payload_sha256").merge("claim_generation" => proof.fetch("claim_generation"),
-                  "binding" => proof.fetch("binding").fetch("native_binding")) &&
-              receipt.fetch("outcome") == (record.state == "completed" ? "consumed" : "superseded")
-            raise ValidationError, "canonical completion retained association differs"
-          end
-          {"schema" => "ace.herdr.inbox-canonical-completion/v1", "registration" => registration,
-            "claim_generation" => proof.fetch("claim_generation"), "receipt_sha256" => binding.fetch("receipt_sha256"),
-            "signature_sha256" => binding.fetch("signature_sha256"), "parsed_receipt_sha256" => retained_object_digest(receipt),
-            "native_binding_sha256" => retained_object_digest(record.inbox.fetch("binding")),
-            "effect_binding_digest" => proof.fetch("effect_binding_digest"), "commit" => proof.fetch("commit"),
-            "reconciliation_digest" => proof.fetch("reconciliation_digest"), "reply_digest" => proof.fetch("reply_digest")}
-        end
 
-        def canonical_superseded_retry?(record)
-          marker = record.inbox["canonical_completion"]
-          return false unless marker
-          fields = %w[claim_generation commit effect_binding_digest native_binding_sha256 parsed_receipt_sha256 receipt_sha256 reconciliation_digest registration reply_digest schema signature_sha256]
-          receipt = record.inbox["reconciliation"]
-          registration = public_record(record).slice("event_id", "attempt_id", "payload_sha256", "receipt_key_sha256")
-          valid = marker.is_a?(Hash) && marker.keys.sort == fields && marker["schema"] == "ace.herdr.inbox-canonical-completion/v1" &&
-            record.state == "queued" && record.history.last&.fetch("action", nil) == "reconcile-superseded" && receipt.is_a?(Hash) &&
-            receipt["outcome"] == "superseded" && marker["registration"] == registration && registration["receipt_key_sha256"] == key_fingerprint &&
-            marker["claim_generation"].is_a?(Integer) && marker["claim_generation"].positive? &&
-            marker["claim_generation"] == record.inbox.fetch("claim_generation") &&
-            receipt.slice("event_id", "attempt_id", "payload_sha256", "claim_generation", "binding") ==
-              registration.slice("event_id", "attempt_id", "payload_sha256").merge("claim_generation" => marker["claim_generation"], "binding" => record.inbox.fetch("binding")) &&
-            marker["parsed_receipt_sha256"] == retained_object_digest(receipt) && marker["native_binding_sha256"] == retained_object_digest(record.inbox.fetch("binding")) &&
-            marker["commit"].is_a?(String) && marker["commit"].match?(/\A[0-9a-f]{40}\z/) &&
-            fields.grep(/sha256|digest/).all? { |field| marker[field].is_a?(String) && marker[field].match?(/\A[0-9a-f]{64}\z/) } && JSON.generate(marker).bytesize <= 4096
-          raise ValidationError, "retained canonical retry binding differs" unless valid
-          true
-        end
 
-        def retained_object_digest(value)
-          sorted = lambda do |item|
-            case item
-            when Hash then item.keys.sort.to_h { |key| [key, sorted.call(item.fetch(key))] }
-            when Array then item.map { |entry| sorted.call(entry) }
-            else item
-            end
-          end
-          Digest::SHA256.hexdigest(JSON.generate(sorted.call(value)))
-        end
 
-        def reconcile_record(event:, receipt:, signed_bytes:, signature:, expected_registration:, settle:)
-          validate_id!(event, "event")
-          with_event(event, create_lock: settle) do |record|
-            raise ValidationError, "unknown inbox event: #{event}" unless record&.inbox
-            # The consumer's accepted registration must match under the same
-            # event lock that verifies and settles the signed observation.
-            unless expected_registration.nil?
-              registration = public_record(record).slice("event_id", "attempt_id", "payload_sha256", "receipt_key_sha256")
-              unless expected_registration == registration
-                raise ValidationError, "inbox event differs from expected registration"
-              end
-            end
-            # `delivered` only proves native queue acceptance: the message may
-            # still be consumed or evicted afterwards, so a signed observation
-            # can reconcile it exactly like an uncertain outcome.
-            replay = %w[completed queued].include?(record.state) && receipt.is_a?(Hash) &&
-              receipt == record.inbox["reconciliation"]
-            unless replay || (settle && %w[uncertain delivered].include?(record.state))
-              raise ValidationError, "event is not reconcilable from state #{record.state}"
-            end
-            binding = record.inbox["binding"]
-            matches = receipt.is_a?(Hash) && receipt["event_id"] == event &&
-              receipt["attempt_id"] == record.inbox["attempt_id"] &&
-              receipt["claim_generation"] == record.inbox["claim_generation"] &&
-              receipt["payload_sha256"] == record.answer_digest &&
-              receipt["binding"] == binding
-            refusal = if !binding
-              "event has no verified binding"
-            elsif !matches
-              "reconciliation receipt does not match bound event"
-            end
-            refusal ||= proof_refusal(receipt) if receipt.is_a?(Hash)
-            refusal ||= signature_refusal(record, receipt, signed_bytes, signature)
-            replacement = nil
-            if !refusal && receipt["outcome"] == "superseded" && receipt.key?("replacement_target")
-              replacement = receipt["replacement_target"]
-              observed = begin
-                raise ValidationError, "replacement target must be an object" unless replacement.is_a?(Hash)
 
-                address = address_for(replacement)
-                observe_target(address.session, address.pane)
-              rescue ValidationError, ExecutorError, Ace::Hitl::Providers::InvalidRefError => e
-                refusal = "replacement target cannot be verified: #{e.message}"
-                nil
-              end
-              stable = TARGET_IDENTITY
-              unless replacement.is_a?(Hash) && observed &&
-                  stable.all? { |key| replacement[key] == observed[key] }
-                refusal ||= "replacement target does not match the live native session"
-              end
-              # The replacement agent's own delivery rules must admit this
-              # event: its immutable-id requirement and payload bound.
-              if observed
-                if observed["agent"] == "pi" && !PI_EVENT_ID.match?(event)
-                  refusal ||= "replacement pi target requires an inbox (inb-) or wake (wnk-) event id"
-                end
-                payload_limit = observed["agent"] == "pi" ?
-                  Molecules::NativeQueueExecutor::PI_PAYLOAD_LIMIT_BYTES :
-                  Molecules::NativeQueueExecutor::CODEX_PAYLOAD_LIMIT_BYTES
-                if record.answer.to_s.bytesize > payload_limit
-                  refusal ||= "payload exceeds the replacement agent's native queue limit"
-                end
-              end
-            end
-            next public_record(record).merge("reconciliation_refusal" => refusal) if refusal
-            # The consumer may crash after Herdr settles but before recording
-            # its observation reference. Re-verify the identical signed proof
-            # without another transition. A later claim has a new generation
-            # and fails the binding checks above.
-            next public_record(record) if replay
-
-            outcome = receipt["outcome"]
-            state = outcome == "consumed" ? "completed" : "queued"
-            inbox = record.inbox.reject { |key, _| key == "canonical_completion" }.merge("reconciliation" => receipt)
-            if state == "queued"
-              inbox = inbox.reject do |key, _|
-                %w[submission_intent claim_owner receipt codex_submission].include?(key)
-              end
-              inbox = inbox.merge("target" => replacement) if replacement
-            end
-            record = transition(record, state, inbox, "reconcile-#{outcome}")
-            save(record)
-            public_record(record)
-          end
-        end
-
-        private
-
-        def key_fingerprint
-          Digest::SHA256.hexdigest(@receipt_public_key.public_to_der)
-        end
-
-        def signature_refusal(record, receipt, signed_bytes, signature)
-          Molecules::InboxReceiptAuthentication.signature_refusal(key: @receipt_public_key,
-            key_sha256: record.inbox["receipt_key_sha256"], receipt: receipt,
-            signed_bytes: signed_bytes, signature: signature)
-        end
-
-        def proof_refusal(receipt)
-          Molecules::InboxReceiptAuthentication.proof_refusal(receipt)
-        end
 
         def with_event(event, create_lock: true, deadline: nil)
           Molecules::DeliveryRecordStore.with_lock(@deliveries_dir, event, create: create_lock, deadline: deadline) do
@@ -857,7 +566,7 @@ module Ace
           # reconcile, not loop on a pre-send validation error.
           stable = TARGET_IDENTITY
           if target && !stable.all? { |key| target[key] == binding[key] }
-            raise IdentityDriftError, "target identity changed since enqueue; reconciliation is required"
+            raise IdentityDriftError, "target identity changed since enqueue; delivery remains uncertain"
           end
           if binding["agent"] == "pi" && !PI_EVENT_ID.match?(record.event_id)
             raise ValidationError, "Pi queue requires an inbox or wake event ID"
@@ -880,7 +589,7 @@ module Ace
           # An agent change is target drift: classify it as reconciliation-
           # worthy before any agent-specific validation can mask it.
           if target && target["agent"] != agent
-            raise IdentityDriftError, "target identity changed since enqueue; reconciliation is required"
+            raise IdentityDriftError, "target identity changed since enqueue; delivery remains uncertain"
           end
           raise ValidationError, "unsupported native agent" unless %w[codex pi].include?(agent)
           session = pane["agent_session"]
@@ -920,9 +629,15 @@ module Ace
         end
 
         def submit(record, binding)
-          @native.submit(agent: binding["agent"], thread: binding["thread"],
-            event_id: record.event_id, digest: record.answer_digest, payload: record.answer,
-            submission: record.inbox["codex_submission"])
+          if binding.fetch("agent") == "codex"
+            result = @executor.agent_prompt_bounded(pane: binding.fetch("pane"), text: record.answer,
+              timeout_ms: 10_000)
+            return {"accepted" => true, "stdout" => result.stdout}
+          end
+          @native.submit(agent: binding.fetch("agent"), thread: binding.fetch("thread"),
+            event_id: record.event_id, digest: record.answer_digest, payload: record.answer)
+        rescue ExecutorUnavailableError => e
+          {"accepted" => false, "pre_submit" => true, "error" => e.message}
         rescue ExecutorError => e
           {"accepted" => false, "error" => e.message}
         end
@@ -994,14 +709,12 @@ module Ace
            "managed_envelope" => record.inbox["managed_envelope"],
            "original_context" => record.inbox["original_context"],
            "original_binding_digest" => record.inbox["original_binding_digest"],
-           "receipt_key_sha256" => record.inbox["receipt_key_sha256"],
            "claim_generation" => record.inbox["claim_generation"],
            "claim_owner" => record.inbox["claim_owner"],
            "submission_intent" => !!record.inbox["submission_intent"],
            "origin_target" => record.inbox["origin_target"],
            "target" => record.inbox["target"],
            "binding" => record.inbox["binding"], "receipt" => record.inbox["receipt"],
-           "reconciliation" => record.inbox["reconciliation"],
            "wake" => record.inbox["wake"],
            "last_error" => record.inbox["last_error"]}
         end

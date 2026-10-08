@@ -21,13 +21,6 @@ module Ace
               raise AttemptErrors::EvidenceUnavailable, "canonical service settlement owner is unavailable"
             end
           end
-          contexts = @deployment.project(map.fetch("project_id")).fetch("inbox_contexts", {})
-          if contexts.any? || events.any? { |event| event["type"].start_with?("inbox_") }
-            unless @result_owner && @result_owner.respond_to?(:inbox_settlement_complete!)
-              raise AttemptErrors::EvidenceUnavailable, "canonical inbox settlement owner is unavailable"
-            end
-            @result_owner.inbox_settlement_complete!(journal: journal, events: events, params: params, map: map, commit: commit)
-          end
           true
         end
 

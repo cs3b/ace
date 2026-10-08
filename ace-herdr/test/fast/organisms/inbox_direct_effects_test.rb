@@ -105,7 +105,7 @@ class InboxDirectEffectsTest < Minitest::Test
 
   def source_box(executor: PaneFixture.new, type: Ace::Herdr::Organisms::Inbox)
     @native = Native.new
-    @source_inbox = type.new(executor: executor, native: @native, deliveries_dir: @events, receipt_public_key: KEY.public_key)
+    @source_inbox = type.new(executor: executor, native: @native, deliveries_dir: @events)
     restart
   end
 
@@ -406,71 +406,8 @@ class InboxDirectEffectsTest < Minitest::Test
     assert_equal 1, record.fetch("history").count { |item| item["action"] == "claim" }
     assert_equal 0, @native.calls
   end
-  def test_retained_signed_settlement_cannot_match_an_older_later_or_foreign_direct_claim
-    source_box
-    enqueue, = enqueue_known
-    @owner.end_context_operation(operation_id: enqueue.fetch("operation_id"), peer: @normal)
-    admission = begin_operation("deliver")
-    delivered = @owner.deliver_context(**delivery_arguments(admission)).fetch("record")
-    state = JSON.parse(File.binread(File.join(@state, ".context-control.json")))
-    operation = state.fetch("operations").fetch(admission.fetch("operation_id"))
-    receipt = delivered.slice("event_id", "attempt_id", "claim_generation", "payload_sha256", "binding").merge(
-      "outcome" => "consumed", "observer" => {"role" => "supervisor", "id" => "controlled"},
-      "evidence" => {"kind" => "consumed_acknowledged", "native_reference" => "controlled-item", "observation" => "completed"})
-    bytes = JSON.generate(receipt)
-    registration = delivered.slice("event_id", "attempt_id", "payload_sha256", "receipt_key_sha256")
-    settled = @source_inbox.reconcile(event: "inb-event001", receipt: receipt, signed_bytes: bytes,
-      signature: KEY.sign(OpenSSL::Digest::SHA256.new, bytes), expected_registration: registration)
-    assert_equal "completed", settled.fetch("state")
-    # This is the retained-record verifier's unit input, not an authenticated
-    # canonical completion fixture. Actual query/CAS acceptance is tested in Assign.
-    proof = {"effect_binding" => direct_original, "registration" => registration, "state" => "completed", "claim_generation" => delivered.fetch("claim_generation"),
-      "binding" => {"native_binding" => delivered.fetch("binding")}}
-    actual = operation.fetch("admitted_claim")
-    assert @source_inbox.verify_direct_canonical_settlement(binding: operation.fetch("effect_binding"), admitted_claim: actual, proof: proof, operation_id: admission.fetch("operation_id"))
-    before = File.binread(File.join(@events, "inb-event001.json"))
-    [actual.merge("claim_generation" => 0), actual.merge("claim_generation" => 2),
-      actual.merge("claim_owner" => "f" * 64)].each do |foreign|
-      assert_raises(ERROR) do
-        @source_inbox.verify_direct_canonical_settlement(binding: operation.fetch("effect_binding"), admitted_claim: foreign, proof: proof, operation_id: admission.fetch("operation_id"))
-      end
-    end
-    assert_equal before, File.binread(File.join(@events, "inb-event001.json"))
-    assert_equal 1, @native.calls
-  end
 
-  def test_wake_settlement_compares_original_queue_claim_and_exact_notification_invocation
-    source_box(executor: IdlePane.new)
-    enqueue, = enqueue_known
-    @owner.end_context_operation(operation_id: enqueue.fetch("operation_id"), peer: @normal)
-    control = guarded_control
-    control.response = :not_issued
-    queue = begin_operation("deliver")
-    @owner.deliver_context(**delivery_arguments(queue))
-    @owner.end_context_operation(operation_id: queue.fetch("operation_id"), peer: @normal)
-    wake = begin_operation("deliver")
-    delivered = @owner.deliver_context(**delivery_arguments(wake, expected: 1)).fetch("record")
-    metadata = JSON.parse(File.binread(File.join(@state, ".context-control.json")))
-    operation = metadata.fetch("operations").fetch(wake.fetch("operation_id"))
-    receipt = delivered.slice("event_id", "attempt_id", "claim_generation", "payload_sha256", "binding").merge(
-      "outcome" => "consumed", "observer" => {"role" => "supervisor", "id" => "controlled"},
-      "evidence" => {"kind" => "consumed_acknowledged", "native_reference" => "controlled-item", "observation" => "completed"})
-    bytes = JSON.generate(receipt)
-    registration = delivered.slice("event_id", "attempt_id", "payload_sha256", "receipt_key_sha256")
-    @source_inbox.reconcile(event: "inb-event001", receipt: receipt, signed_bytes: bytes,
-      signature: KEY.sign(OpenSSL::Digest::SHA256.new, bytes), expected_registration: registration)
-    # Pure retained-record verification, not a substituted canonical CAS proof.
-    proof = {"effect_binding" => direct_original, "registration" => registration, "state" => "completed", "claim_generation" => 1,
-      "binding" => {"native_binding" => delivered.fetch("binding")}}
-    actual = operation.fetch("admitted_claim")
-    assert @source_inbox.verify_direct_canonical_settlement(binding: operation.fetch("effect_binding"), admitted_claim: actual, proof: proof, operation_id: wake.fetch("operation_id"))
-    assert_raises(ERROR) do
-      @source_inbox.verify_direct_canonical_settlement(binding: operation.fetch("effect_binding"), admitted_claim: actual, proof: proof, operation_id: queue.fetch("operation_id"))
-    end
-    assert_raises(ERROR) do
-      @source_inbox.verify_direct_canonical_settlement(binding: operation.fetch("effect_binding"), admitted_claim: actual.merge("claim_owner" => Digest::SHA256.hexdigest(JSON.generate(["ctx", wake.fetch("operation_id")]))), proof: proof, operation_id: wake.fetch("operation_id"))
-    end
-    assert_equal [1, 2], [@native.calls, control.calls.size]
-  end
+
+
 
 end

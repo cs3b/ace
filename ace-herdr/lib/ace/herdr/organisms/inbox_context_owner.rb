@@ -19,7 +19,7 @@ module Ace
         TOKEN = /\A[A-Za-z0-9][A-Za-z0-9._-]{0,127}\z/
         DIGEST = /\A[0-9a-f]{64}\z/
         ID = /\A[0-9a-f]{32}\z/
-        PURPOSES = %w[deliver enqueue maintenance_inventory observe_to_sign reconcile].freeze
+        PURPOSES = %w[deliver enqueue maintenance_inventory].freeze
         PEER_FIELDS = %w[gid groups host parent_pid pid started_at uid].freeze
         KEY_FIELDS = %w[config_sha256 fingerprint key_generation public_key_sha256].freeze
         OPERATION_LIMIT = 256
@@ -378,15 +378,12 @@ module Ace
         end
 
         def completed_record?(record)
-          return false unless record.state == "completed" && record.inbox.is_a?(Hash)
+          return false unless record.state == "delivered" && record.inbox.is_a?(Hash)
           inbox = record.inbox
-          receipt = inbox["reconciliation"]
-          inbox["receipt_key_sha256"].is_a?(String) && DIGEST.match?(inbox["receipt_key_sha256"]) &&
-            inbox["claim_generation"].is_a?(Integer) && inbox["claim_generation"].positive? &&
-            inbox["binding"].is_a?(Hash) && receipt.is_a?(Hash) && receipt["outcome"] == "consumed" &&
-            receipt.values_at("event_id", "attempt_id", "claim_generation", "payload_sha256", "binding") ==
-              [record.event_id, inbox["attempt_id"], inbox["claim_generation"], record.answer_digest, inbox["binding"]] &&
-            Molecules::InboxReceiptAuthentication.proof_refusal(receipt).nil?
+          receipt = inbox["receipt"]
+          inbox["claim_generation"].is_a?(Integer) && inbox["claim_generation"].positive? &&
+            receipt.is_a?(Hash) && receipt.values_at("event_id", "attempt_id", "claim_generation", "payload_sha256", "binding") ==
+              [record.event_id, inbox["attempt_id"], inbox["claim_generation"], record.answer_digest, inbox["binding"]]
         end
 
         def expected!(state, expected)
@@ -408,7 +405,7 @@ module Ace
           end
           @grants.each do |grant|
             strict!(grant, %w[gid groups purposes role uid])
-            unless %w[authority maintenance observer signer supervisor].include?(grant["role"]) &&
+            unless %w[authority maintenance signer supervisor].include?(grant["role"]) &&
                 grant.values_at("uid", "gid").all? { |v| v.is_a?(Integer) && v >= 0 } && groups?(grant["groups"]) &&
                 grant["purposes"].is_a?(Array) && grant["purposes"] == grant["purposes"].sort.uniq &&
                 (grant["purposes"] - PURPOSES).empty? && (grant["role"] != "maintenance" || grant["purposes"] == ["maintenance_inventory"])
@@ -476,27 +473,12 @@ module Ace
                 end
                 next
               end
-              effect = Molecules::InboxContextEffectBinding.verify!(operation.fetch("effect_binding"))
-              unless effect.values_at("operation_id", "key_generation", "event_id", "inbox_context_id") ==
-                  [id, operation.fetch("key_generation"), operation.fetch("event_id"), @context_id] && operation.fetch("purpose") == "reconcile"
-                raise ValidationError, "context retained effect binding differs"
-              end
-              unless operation["completion"] || operation.fetch("in_flight") == 1
-                raise ValidationError, "context retained effect lacks canonical completion"
-              end
+              raise ValidationError, "unsupported context effect binding"
             end
             unless operation["issuer_state"].nil? && operation["admitted_claim"].nil? && operation["issuer_epoch"].nil? && operation["original_binding_digest"].nil?
               raise ValidationError, "context non-direct issuer evidence differs"
             end
-            if operation["completion"]
-              strict!(operation.fetch("completion"), %w[commit reconciliation_digest reply_digest])
-              completion = operation.fetch("completion")
-              unless operation["effect_binding"] && operation.fetch("in_flight").zero? &&
-                  completion["commit"].is_a?(String) && completion["commit"].match?(/\A[0-9a-f]{40}\z/) &&
-                  %w[reconciliation_digest reply_digest].all? { |key| completion[key].is_a?(String) && DIGEST.match?(completion[key]) }
-                raise ValidationError, "context retained canonical completion differs"
-              end
-            end
+            raise ValidationError, "non-direct completion is unavailable" if operation["completion"]
           end
           if (rotation = state["rotation"])
             strict!(rotation, %w[attestation challenge old_key peer rotation_id])

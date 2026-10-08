@@ -113,12 +113,8 @@ module Ace
         # Only positively authenticated owner-pending subclasses have public
         # recovery actions. Missing/corrupt evidence and auth failures propagate.
         def authenticated_stop_pending_action(error)
-          return "reconcile_inbox" if error.is_a?(AttemptErrors::InboxContextPending)
           if error.is_a?(AttemptErrors::ServiceSettlementPending)
             return "settle_services"
-          end
-          if error.is_a?(AttemptErrors::InboxSettlementPending)
-            return "reconcile_inbox"
           end
           nil
         end
@@ -159,7 +155,7 @@ module Ace
                 scope_observer_for(params.fetch("mapping_id")).verify_closed!(lineage)
                 raise AttemptErrors::EvidenceUnavailable, "Settlement owner is unavailable" unless @result_owner
                 services = @result_owner.service_settlement_evidence!(journal: journal, events: events, params: params, map: map, commit: commit)
-                inboxes = @result_owner.inbox_settlement_evidence!(journal: journal, events: events, params: params, map: map, commit: commit)
+
                 provisioning = events.select { |event| event["type"] == "scope_provisioning" }
                 raise AttemptErrors::EvidenceUnavailable, "Original deployment provenance is ambiguous" unless provisioning.one?
                 selection = params.slice("mapping_id", "assignment_id", "attempt_id").merge("project_id" => map.fetch("project_id"),
@@ -167,7 +163,7 @@ module Ace
                   "scope_binding_event_id" => lineage.binding_event.fetch("digest"), "seal_event_id" => lineage.seal_event.fetch("digest"),
                   "closed_proof_event_id" => lineage.proof_id)
                 plan = Organisms::AttemptCoordinator.stopped_transition_plan(events: events, selection: selection,
-                  service_evidence: services, inbox_evidence: inboxes, commit: commit)
+                  service_evidence: services, commit: commit)
                 plan.merge(data: {"attempt_id" => params.fetch("attempt_id"), "state" => "stopped", "proof_id" => lineage.proof_id, "required_action" => nil})
               end
             end
@@ -243,11 +239,10 @@ module Ace
           end
           raise AttemptErrors::EvidenceUnavailable, "Original stopped settlement owner is unavailable" unless @result_owner
           services = @result_owner.service_settlement_evidence!(journal: journal, events: prefix, params: params, map: map, commit: prefix_commit)
-          inboxes = @result_owner.historical_inbox_settlement_evidence!(journal: journal, events: prefix, params: params, map: map,
-            commit: prefix_commit, deployment: descriptor, history: @deployment_history)
+
           expected = Molecules::CanonicalAttemptState.stopped_payload!(events: prefix,
             selection: payload.slice(*Molecules::CanonicalAttemptState::SELECTION_FIELDS), service_evidence: services,
-            inbox_evidence: inboxes, commit: prefix_commit)
+            commit: prefix_commit)
           raise AttemptErrors::EvidenceUnavailable, "Stopped exhaustive settlement differs" unless payload == expected
           event
         rescue KeyError, TypeError, NoMethodError

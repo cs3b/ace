@@ -15,11 +15,10 @@ module Ace
       # Business admission shares the launch origin, lifecycle exclusion and
       # journal CAS. Network transfer is completed outside those locks.
       class Endcap
-        OPERATIONS = %w[submit_candidate export_candidate request_review review_status assign_review cancel_review accept_review request_service begin_dispatch complete_service publication_challenge publication_continue claim_service_settlement complete_no_effect service_authorization service_status workspace_prune_preview_context submit_result evidence_fetch reconcile_inbox bind_inbox finish recover campaign_record_round campaign_export_result].freeze
+        OPERATIONS = %w[submit_candidate export_candidate request_review review_status assign_review cancel_review accept_review request_service begin_dispatch complete_service publication_challenge publication_continue claim_service_settlement complete_no_effect service_authorization service_status workspace_prune_preview_context submit_result evidence_fetch bind_inbox finish recover campaign_record_round campaign_export_result].freeze
         TRANSFER_OPERATIONS = {
           "campaign_export_result" => {direction: :download, purpose: :artifacts, roles: %i[worker launcher supervisor]},
           "campaign_record_round" => {direction: :upload, purpose: :receipt_artifacts, roles: %i[launcher supervisor]},
-          "reconcile_inbox" => {direction: :upload, purpose: :inbox_proof, roles: %i[launcher supervisor signer]},
           "submit_result" => {direction: :upload, purpose: :receipt_artifacts, roles: [:worker]},
           "evidence_fetch" => {direction: :download, purpose: :artifacts, roles: %i[worker reviewer executor launcher supervisor signer]},
           "submit_candidate" => {direction: :upload, purpose: :candidate, roles: %i[worker launcher]},
@@ -35,7 +34,6 @@ module Ace
         PARAMETERS = {
           "campaign_export_result" => %w[mapping_id assignment_id attempt_id candidate_generation head],
           "campaign_record_round" => %w[mapping_id assignment_id attempt_id candidate_generation head input_sha256 transfer],
-          "reconcile_inbox" => %w[mapping_id assignment_id attempt_id expected_generation event_id inbox_context_id expected_registration receipt_sha256 signature_sha256 transfer],
           "submit_result" => %w[mapping_id assignment_id attempt_id expected_generation candidate_generation head receipt_sha256 transfer],
           "evidence_fetch" => %w[mapping_id assignment_id attempt_id kind purpose_id artifact_id],
           "submit_candidate" => %w[mapping_id assignment_id attempt_id expected_generation candidate_generation head transfer],
@@ -88,7 +86,6 @@ module Ace
           return dispatch_campaign_export(request: request, peer: peer, role: role, body: false) if request.fetch("operation") == "campaign_export_result"
           return authorize_campaign_round!(request: request, peer: peer, role: role) if request.fetch("operation") == "campaign_record_round"
           return dispatch_prepared_fetch(request: request, peer: peer, role: role, body: false) if prepared_fetch?(request)
-          return authorize_inbox_transfer!(request: request, peer: peer, role: role) if request.fetch("operation") == "reconcile_inbox"
           return authorize_result_transfer!(request: request, peer: peer, role: role) if %w[submit_result evidence_fetch].include?(request.fetch("operation"))
           params, map = validate_request(request)
           return authorize_service_settlement!(request, params, map, peer, role) if request.fetch("operation") == "complete_no_effect"
@@ -118,7 +115,6 @@ module Ace
           return dispatch_bind_inbox(request: request, peer: peer, role: role, transfer: transfer) if request.fetch("operation") == "bind_inbox"
           return dispatch_finish(request: request, peer: peer, role: role, transfer: transfer) if request.fetch("operation") == "finish"
           return dispatch_recover(request: request, peer: peer, role: role, transfer: transfer) if request.fetch("operation") == "recover"
-          return dispatch_inbox(request: request, peer: peer, role: role, transfer: transfer) if request.fetch("operation") == "reconcile_inbox"
           return dispatch_result(request: request, peer: peer, role: role, transfer: transfer) if %w[submit_result evidence_fetch].include?(request.fetch("operation"))
           return review_status(request, peer, role, transfer) if request.fetch("operation") == "review_status"
           params, map = validate_request(request)

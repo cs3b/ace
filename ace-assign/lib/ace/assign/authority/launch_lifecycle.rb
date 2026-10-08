@@ -422,18 +422,7 @@ module Ace
           context = control_registration_context!(params, map, journal)
           context = campaign_child_context!(params, context, map, journal)
           enter = proc { with_selected_control_exclusion(context, params, map, journal) { yield context } }
-          if @result_owner && @result_owner.respond_to?(:with_inbox_settlement_contexts)
-            selected_params = context[:campaign]&.fetch(:params) || params
-            selected_map = context[:campaign]&.fetch(:map) || map
-            if context[:campaign]
-              @result_owner.with_inbox_settlement_contexts(params: selected_params, map: selected_map, journal: journal,
-                additional_maps: [map], &enter)
-            else
-              @result_owner.with_inbox_settlement_contexts(params: selected_params, map: selected_map, journal: journal, &enter)
-            end
-          else
-            enter.call
-          end
+          enter.call
         end
 
         # Containment/recovery never settles Inbox work or grants fresh input.

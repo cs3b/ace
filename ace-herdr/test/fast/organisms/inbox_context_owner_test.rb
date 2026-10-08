@@ -58,53 +58,11 @@ class InboxContextOwnerTest < Minitest::Test
     refute File.exist?(path)
   end
 
-  class CountedInbox < Ace::Herdr::Organisms::Inbox
-    class << self
-      attr_accessor :effects
-    end
-    def reconcile(**arguments)
-      self.class.effects += 1
-      super
-    end
-  end
 
-  def test_real_signed_context_effect_replay_keeps_pending_until_actual_canonical_query
-    CountedInbox.effects = 0
-    prepare_reconciliation(CountedInbox)
-    snapshot = @owner.snapshot_context(operation_id: @effect_binding.fetch("operation_id"), key_generation: 1,
-      event_id: "event1", peer: @normal)
-    assert_equal "delivered", snapshot.dig("record", "state")
-    refute_includes JSON.generate(snapshot), "controlled secret message"
-    refute snapshot.fetch("record").key?("receipt")
-    arguments = {effect_binding: @effect_binding, signed_bytes: @signed_bytes, signature: @signature, peer: @normal}
-    accepted = @owner.reconcile_context(**arguments)
-    assert_equal "completed", accepted.fetch("state")
-    assert_equal 1, CountedInbox.effects
-    assert accepted.frozen?
-    assert_raises(ERROR) { @owner.end_context_operation(operation_id: @effect_binding.fetch("operation_id"), peer: @normal) }
-    assert_raises(ERROR) { begin_rotation }
-    restart
-    assert_equal "unknown", begin_operation("reconcile").fetch("state")
-    assert_equal accepted, @owner.reconcile_context(**arguments)
-    assert_equal 1, CountedInbox.effects
-    assert_raises(ERROR) do
-      @owner.confirm_context_completion(effect_binding: @effect_binding, reconciliation_digest: "a" * 64, peer: @normal)
-    end
-    assert_raises(ERROR) { @owner.end_context_operation(operation_id: @effect_binding.fetch("operation_id"), peer: @normal) }
-    assert_raises(ERROR) { @owner.reconcile_context(**arguments.merge(effect_binding: @effect_binding.merge("mutation_id" => "other"))) }
-    assert_raises(ERROR) { @owner.reconcile_context(**arguments.merge(signed_bytes: @signed_bytes + " ")) }
-    assert_equal 1, CountedInbox.effects
-  end
 
-  def test_retained_effect_cannot_be_marked_idle_without_canonical_completion
-    prepare_reconciliation
-    @owner.reconcile_context(effect_binding: @effect_binding, signed_bytes: @signed_bytes, signature: @signature, peer: @normal)
-    @store.transaction { |state| state.fetch("operations").fetch(@effect_binding.fetch("operation_id"))["in_flight"] = 0 }
-    restart
-    assert_raises(ERROR) { @owner.status(peer: @normal) }
-    assert_raises(ERROR) { @owner.end_context_operation(operation_id: @effect_binding.fetch("operation_id"), peer: @normal) }
-    assert_raises(ERROR) { begin_rotation }
-  end
+
+
+
 
   def test_lost_begin_ack_returns_same_exact_admission_before_and_after_restart
     first = begin_operation
@@ -222,33 +180,7 @@ class InboxContextOwnerTest < Minitest::Test
     assert_raises(ERROR) { begin_rotation }
   end
 
-  def test_genuinely_reconciled_completed_live_archive_bytes_remain_unchanged_across_rotation
-    inbox = Ace::Herdr::Organisms::Inbox.new(executor: PaneFixture.new, native: NativeFixture.new,
-      deliveries_dir: @events, receipt_public_key: KEY.public_key)
-    inbox.enqueue(event: "event1", attempt: "attempt1", ref: {"session" => "ws1", "pane" => "p1"}, payload: "controlled")
-    delivered = inbox.deliver(event: "event1")
-    assert_equal "delivered", delivered.fetch("state")
-    receipt = {"event_id" => "event1", "attempt_id" => "attempt1", "claim_generation" => delivered.fetch("claim_generation"),
-      "payload_sha256" => delivered.fetch("payload_sha256"), "binding" => delivered.fetch("binding"),
-      "outcome" => "consumed", "observer" => {"role" => "supervisor", "id" => "controlled"},
-      "evidence" => {"kind" => "consumed_acknowledged", "native_reference" => "controlled-item1", "observation" => "controlled completed item"}}
-    bytes = JSON.generate(receipt)
-    assert_equal "completed", inbox.reconcile(event: "event1", receipt: receipt, signed_bytes: bytes,
-      signature: KEY.sign(OpenSSL::Digest::SHA256.new, bytes)).fetch("state")
-    path = File.join(@events, "event1.json")
-    original = File.binread(path)
-    archive = Ace::Herdr::Molecules::DeliveryRecordStore.archive_dir(@events)
-    FileUtils.mkdir_p(archive)
-    archived = File.join(archive, "event1.json")
-    File.binwrite(archived, original)
-    rotation = begin_rotation
-    install(NEXT_KEY, 2)
-    commit(rotation, attestation(rotation, NEXT_KEY))
-    assert_equal original, File.binread(path)
-    assert_equal original, File.binread(archived)
-    assert_equal Digest::SHA256.hexdigest(KEY.public_to_der), JSON.parse(File.read(path)).dig("inbox", "receipt_key_sha256")
-    assert_equal Digest::SHA256.hexdigest(NEXT_KEY.public_to_der), begin_operation.fetch("fingerprint")
-  end
+
 
   def test_admission_vs_rotation_real_metadata_contention_has_one_winner
     start = Queue.new

@@ -11,7 +11,7 @@ module Ace
       # live process observation, context lock or journal mutation is returned.
       class InboxContextOriginal
         OPERATIONS = ["inbox_context_original"].freeze
-        PARAMETERS = %w[assignment_id attempt_id event_id inbox_context_id mapping_id payload_sha256 purpose receipt_key_sha256].freeze
+        PARAMETERS = %w[assignment_id attempt_id event_id inbox_context_id mapping_id payload_sha256 purpose].freeze
         NATIVE_FIELDS = %w[scope_generation scope_binding_event_id service_invocation_id server_identity socket_identity workspace_id].freeze
         TOKEN = /\A[A-Za-z0-9][A-Za-z0-9._-]{0,127}\z/
         SHA = /\A[0-9a-f]{64}\z/
@@ -30,7 +30,7 @@ module Ace
           end
           params = request.fetch("params")
           unless %w[assignment_id attempt_id event_id inbox_context_id mapping_id].all? { |key| params[key].is_a?(String) && TOKEN.match?(params[key]) } &&
-              %w[payload_sha256 receipt_key_sha256].all? { |key| params[key].is_a?(String) && SHA.match?(params[key]) } &&
+              %w[payload_sha256].all? { |key| params[key].is_a?(String) && SHA.match?(params[key]) } &&
               %w[enqueue deliver].include?(params["purpose"])
             raise AttemptErrors::UnauthorizedIdentity, "original inbox selectors differ"
           end
@@ -56,10 +56,6 @@ module Ace
           unless original_context.fetch("native_mapping_id") == params.fetch("mapping_id")
             raise AttemptErrors::EvidenceUnavailable, "original inbox native mapping differs"
           end
-          key = @history.public_key!(sha256: params.fetch("receipt_key_sha256"))
-          unless Digest::SHA256.hexdigest(key.public_to_der) == params.fetch("receipt_key_sha256")
-            raise AttemptErrors::EvidenceUnavailable, "original inbox key differs"
-          end
           lineage = Molecules::ExecutionScopeLineage.new(events: events, project_id: original_map.fetch("project_id"),
             assignment_id: params.fetch("assignment_id"), attempt_id: params.fetch("attempt_id"), mapping_id: params.fetch("mapping_id"))
           child = lineage.child_event&.dig("payload", "original_process_binding")
@@ -69,7 +65,7 @@ module Ace
           raise AttemptErrors::EvidenceUnavailable, "original inbox child differs" unless state.fetch("process_binding") == child
           guarded = Molecules::OriginalLaunchBinding.verify!(events: events, state: state, params: params)
           registration = {"event_id" => params.fetch("event_id"), "attempt_id" => params.fetch("attempt_id"),
-            "payload_sha256" => params.fetch("payload_sha256"), "receipt_key_sha256" => params.fetch("receipt_key_sha256")}
+            "payload_sha256" => params.fetch("payload_sha256")}
           bindings = events.select { |event| event["type"] == "inbox_binding" && event.dig("payload", "event_id") == params.fetch("event_id") }
           unless bindings.size <= 1 && (params.fetch("purpose") == "enqueue" || bindings.one?) && bindings.all? { |event|
             event.fetch("payload") == {"attempt_id" => params.fetch("attempt_id"), "event_id" => params.fetch("event_id"),

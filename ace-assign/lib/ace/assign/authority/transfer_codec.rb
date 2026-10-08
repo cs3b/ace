@@ -13,11 +13,10 @@ module Ace
       # Server selects purpose from a source handler's fixed operation table,
       # admits a transfer slot before calling, and holds no journal lock here.
       class TransferCodec
-        LIMITS = {observation: [65_536, 1, 65_536], prompt_text: [16_384, 1, 16_384], scope_boundary_observation: [65_536, 1, 65_536], candidate: [64 * 1024 * 1024, 1, 64 * 1024 * 1024],
+        LIMITS = {prompt_text: [16_384, 1, 16_384], scope_boundary_observation: [65_536, 1, 65_536], candidate: [64 * 1024 * 1024, 1, 64 * 1024 * 1024],
                   artifacts: [256 * 1024, 16, 64 * 1024],
                   receipt_artifacts: [272 * 1024, 17, 64 * 1024],
-                  service_input: [64 * 1024, 1, 64 * 1024],
-                  inbox_proof: [32 * 1024, 2, 16 * 1024]}.freeze
+                  service_input: [64 * 1024, 1, 64 * 1024]}.freeze
         SHA256 = /\A[0-9a-f]{64}\z/
 
         class Input
@@ -152,10 +151,6 @@ module Ace
               descriptor["bytes"] == descriptor["parts"].sum { |part| part["bytes"] } &&
               (!%i[candidate service_input prompt_text].include?(purpose) || descriptor["bytes"].positive?)
             reject!("Invalid or oversized transfer descriptor")
-          end
-          if purpose == :inbox_proof &&
-              (descriptor.fetch("parts").length != 2 || descriptor.fetch("parts").any? { |part| part.fetch("bytes").zero? })
-            reject!("Inbox proof requires exactly two nonempty bounded parts")
           end
           if purpose == :receipt_artifacts
             receipt, *evidence = descriptor.fetch("parts")

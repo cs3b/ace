@@ -4,7 +4,6 @@ require_relative "../errors"
 require "json"
 require "timeout"
 require_relative "bounded_process"
-require_relative "codex_runtime_selection"
 
 module Ace
   module Herdr
@@ -25,10 +24,9 @@ module Ace
 
         # runner: test seam. Callable (argv, stdin_data:, timeout_s:) ->
         # [stdout, stderr, status]. Defaults to the bounded runner.
-        def initialize(codex_runtime: nil, pi_client: nil, runner: nil, process: BoundedProcess,
+        def initialize(pi_client: nil, runner: nil, process: BoundedProcess,
           submit_timeout_s: DEFAULT_SUBMIT_TIMEOUT_S,
           identity_timeout_s: DEFAULT_IDENTITY_TIMEOUT_S)
-          @codex_runtime = codex_runtime
           @pi_client = pi_client || ENV["ACE_HERDR_PI_QUEUE_CLIENT"] || "pi-overseer-queue-client"
           @runner = runner
           @process = process
@@ -53,35 +51,7 @@ module Ace
           raise ExecutorError, "Pi identity probe timed out"
         end
 
-        def prepare_submission(agent:, thread:, event_id:, attempt_id:, claim_generation:, digest:)
-          return nil unless agent == "codex"
-          unless @codex_runtime.is_a?(CodexRuntimeSelection)
-            raise ValidationError, "Codex has no authenticated original runtime selection"
-          end
-          @codex_runtime.submission(event_id: event_id, attempt_id: attempt_id,
-            claim_generation: claim_generation, digest: digest, thread: thread)
-        end
-
-        # Caller retains the original absolute observation budget. This read
-        # does not submit, retry, sign or transition the canonical inbox event.
-        def observe(agent:, thread:, event_id:, digest:, submission:, deadline:, receipt: nil)
-          unless agent == "codex" && @codex_runtime.is_a?(CodexRuntimeSelection) && submission.is_a?(Hash) &&
-              submission.values_at("thread_id", "event_id", "payload_sha256") == [thread, event_id, digest]
-            return {"outcome" => "uncertain", "error" => "Codex original observation selection differs"}
-          end
-          @codex_runtime.observe(submission: submission, deadline: deadline, receipt: receipt)
-        end
-
-        def submit(agent:, thread:, event_id:, digest:, payload:, submission: nil)
-          if agent == "codex"
-            unless @codex_runtime.is_a?(CodexRuntimeSelection) && submission.is_a?(Hash) &&
-                submission.values_at("thread_id", "event_id", "payload_sha256") == [thread, event_id, digest] &&
-                payload.is_a?(String) && payload.bytesize.between?(1, CODEX_PAYLOAD_LIMIT_BYTES)
-              return {"accepted" => false, "pre_submit" => true, "error" => "Codex original submission selection differs"}
-            end
-            deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + @submit_timeout_s
-            return @codex_runtime.submit(submission: submission, payload: payload, deadline: deadline)
-          end
+        def submit(agent:, thread:, event_id:, digest:, payload:)
           raise ValidationError, "unsupported native queue agent: #{agent}" unless agent == "pi"
           if payload.empty? || payload.bytesize > PI_PAYLOAD_LIMIT_BYTES
             return {"accepted" => false, "pre_submit" => true, "error" => "Pi payload must be 1..65536 bytes"}

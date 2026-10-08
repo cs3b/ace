@@ -13,57 +13,36 @@ module Ace
         LIMIT = 65_536
         TOKEN = /\A[A-Za-z0-9][A-Za-z0-9._-]{0,127}\z/
         MAX_ID = (1 << 32) - 2
-        STAGE_FIELDS = %w[codex_runtime configuration inbox_context_id project_id schema].freeze
+        STAGE_FIELDS = %w[configuration inbox_context_id project_id schema].freeze
         FIELDS = %w[authority control_socket_path deliveries_dir grants inbox_context_id key native_clients native_mapping_id owner_credentials project_id schema socket_gid state_root].freeze
-        PURPOSES = %w[deliver enqueue maintenance_inventory observe_to_sign reconcile].freeze
-        ROLES = %w[authority maintenance observer signer supervisor].freeze
-        attr_reader :data, :reference, :codex_runtime_reference
+        PURPOSES = %w[deliver enqueue maintenance_inventory].freeze
+        ROLES = %w[authority maintenance signer supervisor].freeze
+        attr_reader :data, :reference
 
         def self.load(stage:, artifacts: Ace::Runtime::Molecules::ProtectedArtifactSet.new)
           strict!(stage, STAGE_FIELDS)
-          unless stage["schema"] == "ace.herdr.inbox-context-stage/v1"
+          unless stage["schema"] == "ace.herdr.inbox-context-stage/v1" &&
+              %w[project_id inbox_context_id].all? { |key| token?(stage[key]) }
             raise ValidationError, "context service stage differs"
           end
-          runtime = stage.fetch("codex_runtime")
-          metadata_reference!(runtime)
-          load_configuration!(reference: stage.fetch("configuration"), project_id: stage.fetch("project_id"),
-            inbox_context_id: stage.fetch("inbox_context_id"), runtime: runtime, artifacts: artifacts)
-        rescue KeyError, TypeError, Ace::Runtime::RuntimeUnavailableError
-          raise ValidationError, "context service configuration unavailable"
-        end
-
-        def self.load_static(configuration_reference:, project_id:, inbox_context_id:,
-          artifacts: Ace::Runtime::Molecules::ProtectedArtifactSet.new)
-          load_configuration!(reference: configuration_reference, project_id: project_id,
-            inbox_context_id: inbox_context_id, runtime: nil, artifacts: artifacts)
-        rescue KeyError, TypeError, Ace::Runtime::RuntimeUnavailableError
-          raise ValidationError, "context service configuration unavailable"
-        end
-
-        def self.metadata_reference!(reference)
+          reference = stage.fetch("configuration")
           strict!(reference, %w[bytes path sha256])
           unless path?(reference["path"]) && reference["bytes"].is_a?(Integer) && reference["bytes"].between?(1, LIMIT) &&
               reference["sha256"].is_a?(String) && reference["sha256"].match?(/\A[0-9a-f]{64}\z/)
-            raise ValidationError, "context service metadata reference differs"
+            raise ValidationError, "context service configuration reference differs"
           end
-        end
-
-        def self.load_configuration!(reference:, project_id:, inbox_context_id:, runtime:, artifacts:)
-          unless token?(project_id) && token?(inbox_context_id)
-            raise ValidationError, "context service identity differs"
-          end
-          metadata_reference!(reference)
           artifacts.with do |reader|
             data = InboxContextStore.decode(reader.read!(reference), limit: LIMIT)
             validate!(data)
-            unless data.values_at("project_id", "inbox_context_id") == [project_id, inbox_context_id]
+            unless data.values_at("project_id", "inbox_context_id") == stage.values_at("project_id", "inbox_context_id")
               raise ValidationError, "context service configuration association differs"
             end
             reader.verify_unchanged!
-            new(data, reference, runtime)
+            new(data, reference)
           end
+        rescue KeyError, TypeError, Ace::Runtime::RuntimeUnavailableError
+          raise ValidationError, "context service configuration unavailable"
         end
-        private_class_method :metadata_reference!, :load_configuration!
 
         def self.validate!(data)
           strict!(data, FIELDS)
@@ -132,19 +111,12 @@ module Ace
         # The accepted release owns executable startup bytes and IPC placement;
         # no PATH discovery, inherited HOME or ambient queue-client fallback.
         def self.native_clients!(value)
-          strict!(value, %w[codex codex_runtime_intent codex_runtime_service cwd dependencies environment herdr pi resources])
+          strict!(value, %w[codex cwd dependencies environment herdr pi resources])
           dependencies = value.fetch("dependencies")
-          unless dependencies.is_a?(Array) && dependencies.size <= 506
+          unless dependencies.is_a?(Array) && dependencies.size <= 509
             raise ValidationError, "context native dependency closure exceeds bounds"
           end
-          unless value.fetch("codex_runtime_intent").is_a?(Hash) &&
-              value.fetch("codex_runtime_intent")["bytes"].is_a?(Integer) &&
-              value.fetch("codex_runtime_intent").fetch("bytes").between?(1, 65_536)
-            raise ValidationError, "context Codex runtime intent exceeds bounds"
-          end
-          service = value.fetch("codex_runtime_service")
-          codex_runtime_service!(service)
-          refs = native_references(value)
+          refs = value.values_at("codex", "pi", "herdr") + dependencies
           refs.each do |ref|
             strict!(ref, %w[bytes path sha256])
             unless path?(ref["path"]) && ref["bytes"].is_a?(Integer) && ref["bytes"].between?(1, 268_435_456) &&
@@ -178,35 +150,6 @@ module Ace
           raise ValidationError, "context native selection is malformed"
         end
 
-        def self.native_references(value)
-          service = value.fetch("codex_runtime_service")
-          value.values_at("codex", "pi", "herdr", "codex_runtime_intent") +
-            service.values_at("unit_manifest", "boundary_manifest") + value.fetch("dependencies")
-        end
-
-        def self.codex_runtime_service!(service)
-          strict!(service, %w[boundary_manifest execution_scope unit_manifest])
-          %w[unit_manifest boundary_manifest].each do |name|
-            ref = service.fetch(name)
-            strict!(ref, %w[bytes path sha256])
-            unless path?(ref["path"]) && ref["bytes"].is_a?(Integer) && ref["bytes"].between?(1, LIMIT) &&
-                ref["sha256"].is_a?(String) && ref["sha256"].match?(/\A[0-9a-f]{64}\z/)
-              raise ValidationError, "context Codex service reference differs"
-            end
-          end
-          scope = service.fetch("execution_scope")
-          strict!(scope, %w[backend boundary_manifest_sha256 network_namespace_path root_directory runtime_directory service_unit slice_unit slot_id unit_manifest_sha256])
-          unless scope["backend"] == "linux_systemd_cgroup_v2" && token?(scope["slot_id"]) &&
-              %w[root_directory runtime_directory network_namespace_path].all? { |key| path?(scope[key]) } &&
-              scope["runtime_directory"].start_with?("/run/") && !overlap?(scope["root_directory"], scope["runtime_directory"]) &&
-              {"service_unit" => ".service", "slice_unit" => ".slice"}.all? { |key, suffix|
-                token?(scope[key]) && scope[key].end_with?(suffix) && !scope[key].downcase.include?("overseer")
-              } && scope["unit_manifest_sha256"] == service.fetch("unit_manifest").fetch("sha256") &&
-              scope["boundary_manifest_sha256"] == service.fetch("boundary_manifest").fetch("sha256")
-            raise ValidationError, "context Codex service scope differs"
-          end
-        end
-
         def self.strict!(value, fields)
           raise ValidationError, "context service fields differ" unless value.is_a?(Hash) && value.keys.sort == fields
         end
@@ -220,8 +163,8 @@ module Ace
 
         private
 
-        def initialize(data, reference, runtime)
-          @data, @reference, @codex_runtime_reference = [data, reference, runtime].map { |value| immutable(value) }
+        def initialize(data, reference)
+          @data, @reference = [data, reference].map { |value| immutable(value) }
           freeze
         end
 

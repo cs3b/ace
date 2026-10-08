@@ -91,7 +91,7 @@ class ProtectedInboxCliTest < Minitest::Test
   def test_registered_enqueue_uses_selected_child_actual_socket_and_durable_store
     native = CountingNative.new
     @source_inbox = Ace::Herdr::Organisms::Inbox.new(executor: PaneFixture.new, native: native,
-      deliveries_dir: @events, receipt_public_key: KEY.public_key)
+      deliveries_dir: @events)
     restart
     endpoint = File.join(@root, "context.sock")
     listener = UNIXServer.new(endpoint)

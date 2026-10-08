@@ -14,8 +14,8 @@ module Ace
         MAX_TOTAL_BYTES = 256 * 1024
         MAX_ARTIFACTS = 16
         ID = /\A[a-zA-Z0-9][a-zA-Z0-9_.-]{0,127}\z/
-        ROLES = {"service" => "executor", "review" => "reviewer", "inbox" => "signer",
-                 "observation" => "observer", "result" => "worker"}.freeze
+        ROLES = {"service" => "executor", "review" => "reviewer",
+                 "result" => "worker"}.freeze
         DESCRIPTOR_FIELDS = %w[version artifact_id kind project_id assignment_id attempt_id peer_uid role
           binding_digest sha256 bytes admitted_at admitted_after_event_digest request_id_or_event_id
           candidate_generation_or_claim_generation].freeze

@@ -11,9 +11,8 @@ module Ace
       # existing owners' authenticated original-prefix evidence and fresh proof.
       module CanonicalAttemptState
         STOPPED_FIELDS = %w[project_id mapping_id assignment_id attempt_id descriptor_sha256
-          scope_binding_event_id seal_event_id closed_proof_event_id service_settlement_event_digests
-          inbox_settlement_event_digests].freeze
-        SELECTION_FIELDS = (STOPPED_FIELDS - %w[service_settlement_event_digests inbox_settlement_event_digests]).freeze
+          scope_binding_event_id seal_event_id closed_proof_event_id service_settlement_event_digests].freeze
+        SELECTION_FIELDS = (STOPPED_FIELDS - %w[service_settlement_event_digests]).freeze
 
         def self.derive(events)
           return nil unless events.any? { |event| event["type"] == "intent" }
@@ -37,25 +36,20 @@ module Ace
           state
         end
 
-        def self.stopped_payload!(events:, selection:, service_evidence:, inbox_evidence:, commit:)
+        def self.stopped_payload!(events:, selection:, service_evidence:, commit:)
           unless selection.is_a?(Hash) && selection.keys.sort == SELECTION_FIELDS.sort &&
               service_evidence.is_a?(Hash) && service_evidence.keys.sort == %w[commit services] &&
-              inbox_evidence.is_a?(Hash) && inbox_evidence.keys.sort == %w[commit inboxes] &&
               commit.is_a?(String) && commit.match?(/\A(?:[0-9a-f]{40}|[0-9a-f]{64})\z/) &&
-              service_evidence["commit"] == commit && inbox_evidence["commit"] == commit
+              service_evidence["commit"] == commit
             unavailable!("Stopped plan evidence prefix differs")
           end
           services = service_evidence.fetch("services")
-          inboxes = inbox_evidence.fetch("inboxes")
-          unless services.is_a?(Array) && inboxes.is_a?(Array) &&
-              services.all? { |item| item.is_a?(Hash) && item.keys.sort == %w[event_digest evidence_refs receipt_digest record_digest request_id state] } &&
-              inboxes.all? { |item| item.is_a?(Hash) && item.keys.sort == %w[claim_generation event_id inbox_context_id receipt_ref reconciliation_event_digest reply_event_digest signature_ref] }
+          unless services.is_a?(Array) &&
+              services.all? { |item| item.is_a?(Hash) && item.keys.sort == %w[event_digest evidence_refs receipt_digest record_digest request_id state] }
             unavailable!("Stopped settlement projections are malformed")
           end
           service_ids = services.map { |item| item.fetch("request_id") }
-          inbox_ids = inboxes.map { |item| item.values_at("inbox_context_id", "event_id") }
-          unless service_ids == service_ids.sort && service_ids.uniq == service_ids &&
-              inbox_ids == inbox_ids.sort && inbox_ids.uniq == inbox_ids
+          unless service_ids == service_ids.sort && service_ids.uniq == service_ids
             unavailable!("Stopped settlement projection is not ordered unique owner output")
           end
           services.each do |item|
@@ -67,21 +61,7 @@ module Ace
               unavailable!("Stopped service projection differs from canonical terminal event")
             end
           end
-          inboxes.each do |item|
-            reconciliation = events.find { |entry| entry["digest"] == item.fetch("reconciliation_event_digest") && entry["type"] == "inbox_reconciliation" }
-            reply = events.find { |entry| entry["digest"] == item.fetch("reply_event_digest") && entry["type"] == "authority_mutation" }
-            unless reconciliation && reply && reply["previous_digest"] == reconciliation["digest"] &&
-                reply.dig("payload", "operation") == "reconcile_inbox" &&
-                reconciliation.dig("payload", "inbox_context_id") == item.fetch("inbox_context_id") &&
-                reconciliation.dig("payload", "event_id") == item.fetch("event_id") &&
-                reconciliation.dig("payload", "claim_generation") == item.fetch("claim_generation") &&
-                reconciliation.dig("payload", "receipt_ref") == item.fetch("receipt_ref") &&
-                reconciliation.dig("payload", "signature_ref") == item.fetch("signature_ref")
-              unavailable!("Stopped Inbox projection differs from canonical reconciliation")
-            end
-          end
-          payload = selection.merge("service_settlement_event_digests" => services.map { |item| item.fetch("event_digest") }.sort,
-            "inbox_settlement_event_digests" => inboxes.map { |item| item.fetch("reconciliation_event_digest") }.sort)
+          payload = selection.merge("service_settlement_event_digests" => services.map { |item| item.fetch("event_digest") }.sort)
           validate_stopped_payload!(events, payload)
           payload
         rescue KeyError, TypeError, ArgumentError, NoMethodError
@@ -137,7 +117,7 @@ module Ace
           unless payload.is_a?(Hash) && payload.keys.sort == STOPPED_FIELDS.sort &&
               %w[project_id mapping_id assignment_id attempt_id].all? { |key| payload[key].is_a?(String) && ExecutionScopeLineage::ID.match?(payload[key]) } &&
               %w[descriptor_sha256 scope_binding_event_id seal_event_id closed_proof_event_id].all? { |key| digest?(payload[key]) } &&
-              %w[service_settlement_event_digests inbox_settlement_event_digests].all? { |key|
+              %w[service_settlement_event_digests].all? { |key|
                 values = payload[key]
                 values.is_a?(Array) && values.all? { |value| digest?(value) } && values == values.sort && values.uniq == values }
             unavailable!("Stopped canonical payload is not closed")
@@ -155,12 +135,6 @@ module Ace
             unless events.any? { |event| event["digest"] == digest && event["type"] == "service_transition" &&
                 %w[succeeded failed-settled].include?(event.dig("payload", "state")) }
               unavailable!("Stopped canonical service selector is not terminal evidence")
-            end
-          end
-          payload.fetch("inbox_settlement_event_digests").each do |digest|
-            unless events.any? { |event| event["digest"] == digest && event["type"] == "inbox_reconciliation" &&
-                event.dig("payload", "state") == "completed" }
-              unavailable!("Stopped canonical Inbox selector is not completed evidence")
             end
           end
           payload

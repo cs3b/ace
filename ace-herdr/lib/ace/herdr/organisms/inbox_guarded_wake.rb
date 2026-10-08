@@ -77,10 +77,8 @@ module Ace
             selection: {"expected_claim_generation" => generation - 1}, original: original)
           owner = Digest::SHA256.hexdigest(JSON.generate([original.fetch("inbox_context_id"), issuer.fetch("operation_id")]))
           retained_owner = record.inbox["claim_owner"]
-          superseded = record.state == "queued" && record.inbox.dig("reconciliation", "outcome") == "superseded" &&
-            record.inbox.dig("reconciliation", "claim_generation") == generation
           unless issuer.fetch("input_sha256") == expected.fetch("input_sha256") &&
-              (retained_owner == owner || (retained_owner.nil? && superseded)) &&
+              retained_owner == owner &&
               record.history.count { |entry| entry.slice("action", "claim_generation", "claim_owner") ==
                 {"action" => "claim", "claim_generation" => generation, "claim_owner" => owner} } == 1
             raise ValidationError, "guarded queue claim attribution differs"
@@ -93,7 +91,7 @@ module Ace
           receipt = record.inbox.fetch("receipt")
           unless binding.fetch("purpose") == "deliver" && binding.fetch("event_id") == record.event_id &&
               record.inbox.fetch("original_context") == binding.slice(*Molecules::InboxDirectEffectBinding::ORIGINAL_FIELDS) &&
-              record.inbox.fetch("attempt_id") == binding.fetch("attempt_id") && record.inbox.fetch("receipt_key_sha256") == key_fingerprint &&
+              record.inbox.fetch("attempt_id") == binding.fetch("attempt_id") &&
               claim.slice("claim_generation", "claim_owner") == record.inbox.slice("claim_generation", "claim_owner") &&
               receipt.is_a?(Hash) && receipt.slice("event_id", "attempt_id", "claim_generation", "payload_sha256", "binding") ==
                 {"event_id" => record.event_id, "attempt_id" => record.inbox.fetch("attempt_id"), "claim_generation" => record.inbox.fetch("claim_generation"),

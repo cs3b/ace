@@ -52,10 +52,10 @@ module Ace
         # Pure producer plan. The protected lifecycle authenticates the original
         # proof and both exhaustive owner projections anew at each CAS prefix.
         # No caller receipt, cache state, native wait or store mutation enters it.
-        def self.stopped_transition_plan(events:, selection:, service_evidence:, inbox_evidence:, commit:)
+        def self.stopped_transition_plan(events:, selection:, service_evidence:, commit:)
           Atoms::AttemptStateMachine.proof_stopped_transition!(Molecules::CanonicalAttemptState.derive(events))
           payload = Molecules::CanonicalAttemptState.stopped_payload!(events: events, selection: selection,
-            service_evidence: service_evidence, inbox_evidence: inbox_evidence, commit: commit)
+            service_evidence: service_evidence, commit: commit)
           {events: [{type: "attempt_stopped", payload: payload}], blobs: {}}
         end
 
@@ -71,12 +71,10 @@ module Ace
             {type: "transition", payload: {"from" => state, "to" => receipt.fetch("verdict"), "reason" => "protected_result_accepted"}}], blobs: {}}
         end
 
-        def self.protected_recovery_decision(state:, effects_pending:, inboxes_pending:, bound:, live:, checkpoint:)
+        def self.protected_recovery_decision(state:, effects_pending:, bound:, live:, checkpoint:)
           return ["restart-required", "terminal_attempt"] if %w[succeeded failed stopped].include?(state)
           reason = if effects_pending
             "unresolved_effect"
-          elsif inboxes_pending
-            "unresolved_inbox"
           elsif state == "uncertain"
             "attempt_uncertain"
           elsif !bound
@@ -630,14 +628,10 @@ input:#{Regexp.escape(request.fetch("input_digest"))} outcome:(\S+)( no-effect:(
           recovered = attempts.sort_by { |attempt| [attempt.binding.created_at, attempt.attempt_id] }.map do |attempt|
             observation = reconciler.observation(attempt)
             blocked = unresolved.any? { |request| request["attempt_id"] == attempt.attempt_id }
-            inbox_blocked = inbox_records.any? do |record|
-              [nil, attempt.attempt_id].include?(record["attempt_id"]) &&
-                %w[unknown claimed uncertain delivered].include?(record["state"])
-            end
             unstarted = !reconciler.process_started?(attempt)
-            decision, reason = if blocked || inbox_blocked || attempt.uncertain?
+            decision, reason = if blocked || attempt.uncertain?
               ["reconcile-required", blocked ? "unresolved external effect" :
-                (inbox_blocked ? "inbox outcome requires signed native observation" : "attempt remains uncertain")]
+                "attempt remains uncertain"]
             elsif attempt.terminal?
               ["restart-required", "attempt ended; restart requires a new attributable attempt"]
             elsif unstarted
@@ -715,60 +709,7 @@ input:#{Regexp.escape(request.fetch("input_digest"))} outcome:(\S+)( no-effect:(
         # Inbox delivery is transport evidence, never business-effect proof.
         # Herdr owns signature, pinned key, generation and native identity
         # verification; this consumer records only its verified references.
-        def reconcile_inbox(attempt_id:, event_id:, receipt_path:, inbox:, identity: nil)
-          identity ||= @identity_resolver.resolve
-          unless @identity_resolver.trusted?(identity)
-            raise AttemptErrors::UnauthorizedIdentity, "Inbox recovery requires a trusted supervisor"
-          end
-          attempt = @store.find(attempt_id) || recover_managed_attempt(nil, attempt_id)
-          raise AttemptErrors::NotFound, "Attempt '#{attempt_id}' not found" unless attempt
 
-          lifecycle_exclusion.with_exclusive(lifecycle_exclusion.assignment_key(attempt.binding.assignment_id)) do
-            @store.with_lock(attempt.binding.assignment_id) do
-              attempt = attempt.managed? ? recover_managed_attempt(attempt.binding.assignment_id, attempt_id) :
-                @store.load(attempt.binding.assignment_id, attempt_id)
-              record = inbox.status(event: event_id)
-              unless record["attempt_id"] == attempt_id
-                raise AttemptErrors::ReceiptRejected, "Inbox event does not belong to this attempt"
-              end
-              registered = reconciler.events(attempt).find do |event|
-                event["type"] == "inbox_binding" && event.dig("payload", "event_id") == event_id
-              end
-              expected = record.slice("event_id", "attempt_id", "payload_sha256", "receipt_key_sha256")
-              unless registered && registered["payload"] == expected
-                raise AttemptErrors::ReceiptRejected, "Inbox event does not match its registered binding"
-              end
-              bytes = File.binread(receipt_path)
-              receipt = JSON.parse(bytes)
-              result = inbox.reconcile(event: event_id, receipt: receipt,
-                expected_registration: registered.fetch("payload"),
-                signed_bytes: bytes, signature: File.binread("#{receipt_path}.sig"))
-              return result if result["reconciliation_refusal"]
-
-              payload = result.slice("event_id", "attempt_id", "claim_generation", "payload_sha256",
-                "receipt_key_sha256", "binding", "state")
-                .merge("receipt_sha256" => Digest::SHA256.hexdigest(bytes),
-                  "receipt_ref" => File.expand_path(receipt_path),
-                  "outcome" => receipt["outcome"], "observer" => receipt["observer"],
-                  "evidence" => receipt["evidence"].slice("kind", "native_reference"))
-              accepted = reconciler.events(attempt).any? do |event|
-                event["type"] == "inbox_reconciliation" &&
-                  event["payload"].reject { |key, _| %w[receipt_ref receipt_sha256].include?(key) } ==
-                    payload.reject { |key, _| %w[receipt_ref receipt_sha256].include?(key) }
-              end
-              unless accepted
-                event = Models::EvidenceEvent.build(type: "inbox_reconciliation", attempt_id: attempt_id,
-                  payload: payload, previous_digest: last_event_digest(attempt))
-                @store.save(append_events(attempt, [event]))
-              end
-              result
-            end
-          end
-        rescue JSON::ParserError, SystemCallError => e
-          raise AttemptErrors::ReceiptRejected, "Inbox proof unavailable (#{e.class})"
-        rescue Ace::Herdr::Error => e
-          raise AttemptErrors::ReceiptRejected, "Inbox proof rejected: #{e.message}"
-        end
 
         # Register a transport reference in the existing attempt journal so
         # a missing delivery record cannot be mistaken for no pending effect.
@@ -788,7 +729,7 @@ input:#{Regexp.escape(request.fetch("input_digest"))} outcome:(\S+)( no-effect:(
               unless record["attempt_id"] == attempt_id
                 raise AttemptErrors::ReceiptRejected, "Inbox event does not belong to this attempt"
               end
-              payload = record.slice("event_id", "attempt_id", "payload_sha256", "receipt_key_sha256")
+              payload = record.slice("event_id", "attempt_id", "payload_sha256")
               existing = reconciler.events(attempt).find do |event|
                 event["type"] == "inbox_binding" && event.dig("payload", "event_id") == event_id
               end
@@ -930,21 +871,9 @@ input:#{Regexp.escape(request.fetch("input_digest"))} outcome:(\S+)( no-effect:(
             record = Ace::Herdr::Molecules::DeliveryRecordStore.load(root, payload["event_id"])
             attributed = record && record.inbox && record.event_id == payload["event_id"] &&
               record.inbox["attempt_id"] == attempt.attempt_id && payload["attempt_id"] == attempt.attempt_id &&
-              record.answer_digest == payload["payload_sha256"] &&
-              record.inbox["receipt_key_sha256"] == payload["receipt_key_sha256"]
-            verified = attributed && reconciler.events(attempt).any? do |event|
-              next false unless event["type"] == "inbox_reconciliation"
-              proof = event["payload"]
-              proof["event_id"] == record.event_id && proof["claim_generation"] == record.inbox["claim_generation"] &&
-                proof["payload_sha256"] == record.answer_digest && proof["binding"] == record.inbox["binding"] &&
-                proof["receipt_key_sha256"] == record.inbox["receipt_key_sha256"] && proof["state"] == record.state
-            end
-            state = if !attributed || ((record.state == "completed" || record.state == "queued" && record.inbox["reconciliation"]) && !verified)
-              "unknown"
-            else
-              record.state
-            end
-            payload.slice("event_id", "attempt_id", "receipt_key_sha256").merge("state" => state)
+              record.answer_digest == payload["payload_sha256"]
+            state = attributed ? record.state : "unknown"
+            payload.slice("event_id", "attempt_id").merge("state" => state)
           rescue JSON::ParserError, ArgumentError, SystemCallError
             payload.slice("event_id", "attempt_id").merge("state" => "unknown")
           end

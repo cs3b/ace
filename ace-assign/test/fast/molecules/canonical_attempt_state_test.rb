@@ -51,9 +51,9 @@ module Ace
         event
       end
 
-      def plan(selection: @selection, services: {"commit" => @commit, "services" => []}, inboxes: {"commit" => @commit, "inboxes" => []})
+      def plan(selection: @selection, services: {"commit" => @commit, "services" => []})
         Organisms::AttemptCoordinator.stopped_transition_plan(events: @events, selection: selection,
-          service_evidence: services, inbox_evidence: inboxes, commit: @commit)
+          service_evidence: services, commit: @commit)
       end
 
       def accept(plan)
@@ -102,7 +102,7 @@ module Ace
           assert_equal :stopped, Molecules::AttemptReconciler.new(journal: journal, observer: observer).classify(attempt)
           assert_equal @selection, accepted.fetch("payload").slice(*Molecules::CanonicalAttemptState::SELECTION_FIELDS)
           assert_empty accepted.dig("payload", "service_settlement_event_digests")
-          assert_empty accepted.dig("payload", "inbox_settlement_event_digests")
+          refute accepted.fetch("payload").key?("inbox_settlement_event_digests")
           refute Atoms::AttemptStateMachine.can_transition?("uncertain", "stopped")
           @events = original
         end

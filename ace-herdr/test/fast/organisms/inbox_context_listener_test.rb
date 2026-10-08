@@ -48,12 +48,12 @@ class InboxContextListenerTest < Minitest::Test
       "owner_credentials" => {"uid" => Process.uid, "gid" => Process.gid, "groups" => Process.groups.sort.uniq},
       "key" => {"public_key_path" => File.join(@root, "public.pem"), "configuration_path" => File.join(@root, "key.json")},
       "authority" => {"uid" => Process.uid + 100, "gid" => Process.gid, "groups" => [], "socket_path" => File.join(@root, "authority.sock")},
-      "grants" => [{"uid" => Process.uid + 100, "gid" => Process.gid, "groups" => [], "role" => "authority", "purposes" => %w[deliver enqueue reconcile]}]}
+      "grants" => [{"uid" => Process.uid + 100, "gid" => Process.gid, "groups" => [], "role" => "authority", "purposes" => %w[deliver enqueue]}]}
     bytes = JSON.generate(data)
     path = File.join(@root, "service.json")
     File.write(path, bytes)
     File.chmod(0o600, path)
-    stage = {"schema" => "ace.herdr.inbox-context-stage/v1", "codex_runtime" => {"path" => "/opt/context/runtime.json", "bytes" => 1, "sha256" => "a" * 64}, "project_id" => "project", "inbox_context_id" => "ctx",
+    stage = {"schema" => "ace.herdr.inbox-context-stage/v1", "project_id" => "project", "inbox_context_id" => "ctx",
       "configuration" => {"path" => path, "bytes" => bytes.bytesize, "sha256" => Digest::SHA256.hexdigest(bytes)}}
     @configuration = Configuration.load(stage: stage, artifacts: Ace::Runtime::Molecules::ProtectedArtifactSet.new(
       protection: InboxContextOwnerFixture::FixtureArtifacts.new(@root)))

@@ -5,6 +5,7 @@ require_relative "../support/execution_boot_baseline_owner_fixture"
 require_relative "../support/protected_inbox_context_pipeline_fixture"
 require "ace/assign/authority/client"
 require "ace/herdr/organisms/inbox"
+require "ace/herdr/molecules/herdr_executor"
 
 module Ace
   module Assign
@@ -91,13 +92,18 @@ module Ace
             "agent_session" => {"agent" => "codex", "kind" => "id", "value" => "0123abcd-0000-4000-8000-000000000001"}}}),
             stderr: "", success: true, exit_code: 0)
         end
+        executor.define_singleton_method(:agent_prompt_bounded) do |**|
+          Ace::Herdr::Molecules::ExecutionResult.new(stdout: "sent", stderr: "", success: true, exit_code: 0)
+        end
         native = Object.new
         native.define_singleton_method(:submit) { |**| {"accepted" => true} }
         @box = Ace::Herdr::Organisms::Inbox.new(executor: executor, native: native,
-          deliveries_dir: selected.fetch("deliveries_dir"), receipt_public_key: @key.public_key)
-        @box.enqueue(event: "event", attempt: @attempt, ref: {"session" => "w1", "pane" => "p1"}, payload: "message")
-        record = @box.deliver(event: "event")
-        @registration = record.slice("event_id", "attempt_id", "payload_sha256", "receipt_key_sha256")
+          deliveries_dir: selected.fetch("deliveries_dir"))
+        @box.enqueue(event: "event", attempt: @attempt, ref: {"session" => "w1", "pane" => "p1"}, payload: "message",
+          original_context: {"project_id" => "project", "assignment_id" => "assignment", "mapping_id" => "mapping", "inbox_context_id" => "context"},
+          original_binding_digest: "a" * 64)
+        record = @box.status(event: "event")
+        @registration = record.slice("event_id", "attempt_id", "payload_sha256")
         original, retained_key = @deployment, @key.public_key
         descriptor_sha256 = original.artifact_reference.fetch("sha256")
         @history = Object.new
@@ -269,48 +275,7 @@ module Ace
         end
       end
 
-      def test_public_cli_recovery_preserves_authenticated_queued_inbox
-        fixture do
-          with_original_inbox do
-            start_public_server
-            selectors = {"assignment_id" => "assignment", "attempt_id" => @attempt}
-            @client.call("bind_inbox", selectors.merge("expected_generation" => generation, "event_id" => "event",
-              "inbox_context_id" => "context"), mutation_id: "pending-bind", timeout: 30)
-            record = @box.retained_status(event: "event")
-            receipt = record.slice("event_id", "attempt_id", "claim_generation", "payload_sha256", "binding").merge(
-              "outcome" => "superseded", "observer" => {"role" => "supervisor", "id" => "observer"},
-              "evidence" => {"kind" => "queue_evicted", "native_reference" => "native:pending", "observation" => "superseded"})
-            bytes = JSON.generate(receipt)
-            signature = @key.sign(OpenSSL::Digest::SHA256.new, bytes)
-            @kernel.peer_identity = @supervisor
-            registration_path = File.join(@root, "registration.json")
-            receipt_path = File.join(@root, "inbox-receipt.json")
-            signature_path = File.join(@root, "inbox-receipt.sig")
-            File.binwrite(registration_path, JSON.generate(@registration))
-            File.binwrite(receipt_path, bytes)
-            File.binwrite(signature_path, signature)
-            reconcile_args = ["inbox-reconcile", "--mapping", "mapping", "--assignment", "assignment", "--attempt", @attempt,
-              "--event", "event", "--inbox-context", "context", "--expected-generation", generation.to_s,
-              "--mutation", "pending-reconcile", "--registration", registration_path, "--receipt", receipt_path, "--signature", signature_path]
-            reconciled = public_cli_json(reconcile_args)
-            reconcile_ref = @journal.ref_value
-            assert_equal reconciled, public_cli_json(reconcile_args)
-            assert_equal reconcile_ref, @journal.ref_value
-            assert_equal "queued", reconciled.fetch("state")
-            original_generation = generation
-            args = ["attempt", "reconcile", "--mapping", "mapping", "--assignment", "assignment", "--attempt", @attempt,
-              "--mutation", "pending-recovery", "--expected-generation", original_generation.to_s]
-            result = public_cli_json(args)
-            assert_equal "reconcile-required", result.fetch("decision")
-            assert_equal "unresolved_inbox", result.fetch("reason")
-            assert_equal "uncertain", result.fetch("state")
-            accepted = @journal.ref_value
-            assert_equal result, public_cli_json(args)
-            assert_equal accepted, @journal.ref_value
-            assert_equal "queued", @box.retained_status(event: "event").fetch("state")
-          end
-        end
-      end
+
 
       def test_public_cli_recovery_preserves_authenticated_started_service
         fixture(pending_service: true) do

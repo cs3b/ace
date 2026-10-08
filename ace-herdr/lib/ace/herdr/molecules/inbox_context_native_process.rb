@@ -56,7 +56,7 @@ module Ace
 
         private
 
-        def references = InboxContextServiceConfiguration.native_references(@selection)
+        def references = @selection.values_at("codex", "pi", "herdr") + @selection.fetch("dependencies")
 
         def access_bits(stat)
           if stat.uid == @credentials.fetch("uid")

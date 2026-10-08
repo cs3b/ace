@@ -257,8 +257,6 @@ module Ace
                 map: map, commit: prefix_commit)
             end
             @result_owner.service_settlement_complete!(journal: journal, events: prefix, params: params, map: map, commit: prefix_commit)
-            @result_owner.historical_inbox_settlement_complete!(journal: journal, events: prefix, params: params, map: map,
-              commit: prefix_commit, deployment: original, history: @deployment_history)
           end
           terminal
         end

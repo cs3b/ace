@@ -64,6 +64,9 @@ module InboxContextOwnerFixture
   end
 
   class PaneFixture
+    def agent_prompt_bounded(pane:, text:, timeout_ms:)
+      Ace::Herdr::Molecules::ExecutionResult.new(stdout: "sent", stderr: "", success: true, exit_code: 0)
+    end
     def pane_get_bounded(_id)
       pane = {"pane_id" => "p1", "workspace_id" => "ws1", "terminal_id" => "term1",
         "agent" => "codex", "agent_status" => "busy",
@@ -81,8 +84,8 @@ module InboxContextOwnerFixture
     @key_path, @config_path = %w[public.pem key.json].map { |name| File.join(@root, name) }
     @kernel = Kernel.new
     @normal, @maintenance, @signer = [101, 202, 303].map { |uid| peer(uid) }
-    @grants = [[@normal, "authority", %w[deliver enqueue reconcile]],
-      [@maintenance, "maintenance", ["maintenance_inventory"]], [@signer, "signer", ["observe_to_sign"]]].map do |identity, role, purposes|
+    @grants = [[@normal, "authority", %w[deliver enqueue]],
+      [@maintenance, "maintenance", ["maintenance_inventory"]], [@signer, "signer", ["maintenance_inventory"]]].map do |identity, role, purposes|
       identity.slice("uid", "gid", "groups").merge("role" => role, "purposes" => purposes)
     end
     install(KEY, 1)
@@ -123,24 +126,7 @@ module InboxContextOwnerFixture
     @config_digest = Digest::SHA256.file(@config_path).hexdigest
   end
 
-  def prepare_reconciliation(inbox_class = Ace::Herdr::Organisms::Inbox)
-    @source_inbox = inbox_class.new(executor: PaneFixture.new, native: NativeFixture.new,
-      deliveries_dir: @events, receipt_public_key: KEY.public_key)
-    @source_inbox.enqueue(event: "event1", attempt: "attempt1", ref: {"session" => "ws1", "pane" => "p1"}, payload: "controlled secret message")
-    delivered = @source_inbox.deliver(event: "event1")
-    receipt = delivered.slice("event_id", "attempt_id", "claim_generation", "payload_sha256", "binding").merge(
-      "outcome" => "consumed", "observer" => {"role" => "supervisor", "id" => "controlled"},
-      "evidence" => {"kind" => "consumed_acknowledged", "native_reference" => "controlled-item", "observation" => "completed"})
-    @signed_bytes = JSON.generate(receipt)
-    @signature = KEY.sign(OpenSSL::Digest::SHA256.new, @signed_bytes)
-    restart
-    operation = begin_operation("reconcile")
-    @effect_binding = {"schema" => "ace.herdr.inbox-context-effect/v1", "project_id" => "project", "assignment_id" => "assignment",
-      "attempt_id" => "attempt1", "mapping_id" => "mapping", "inbox_context_id" => "ctx", "event_id" => "event1", "mutation_id" => "mutation",
-      "operation_id" => operation.fetch("operation_id"), "key_generation" => 1,
-      "registration" => delivered.slice("event_id", "attempt_id", "payload_sha256", "receipt_key_sha256"),
-      "receipt_sha256" => Digest::SHA256.hexdigest(@signed_bytes), "signature_sha256" => Digest::SHA256.hexdigest(@signature)}
-  end
+
 
   def begin_operation(purpose = "enqueue", identity = @normal, event: "event1")
     options = %w[enqueue deliver].include?(purpose) ? {original: direct_original.merge("attempt_id" => "attempt1")} : {}

@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 require "ace/herdr/organisms/inbox_context_owner"
 require "ace/herdr/organisms/inbox_context_server"
-require "ace/assign/authority/inbox_context_completion"
 require "ace/assign/authority/inbox_context_original"
 require "ace/assign/authority/router"
 require "ace/assign/authority/server"
@@ -56,7 +55,7 @@ module Ace
         completion = Ace::Herdr::Molecules::InboxContextCompletionClient.new(project_id: "project", mapping_id: "mapping",
           authority: @authority_peer.slice("uid", "gid", "groups").merge("socket_path" => @query_path),
           kernel: PeerKernel.new(@authority_peer), wire: query_wire)
-        grants = [@authority_peer.slice("uid", "gid", "groups").merge("role" => "authority", "purposes" => ["reconcile"])]
+        grants = [@authority_peer.slice("uid", "gid", "groups").merge("role" => "authority", "purposes" => %w[deliver enqueue])]
         grants << @peer.slice("uid", "gid", "groups").merge("role" => "authority", "purposes" => %w[deliver enqueue]) if @direct_fixture
         @context_keys, @context_completion, @context_grants, @context_state_root = keys, completion, grants, state_root
         @context_owner = Ace::Herdr::Organisms::InboxContextOwner.new(context_id: context_id, deliveries_dir: @context.fetch("deliveries_dir"),
@@ -66,10 +65,9 @@ module Ace
           kernel: PeerKernel.new(@context_peer), wire: SocketFixtureWire.new(@socket_root, @context_peer.fetch("uid")))
         @context_clients ||= {}
         @context_clients[context_id] = client
-        @query_owner = Authority::InboxContextCompletion.new(deployment: @deployment, history: @history, authority_id: "authority",
+        @query_owner = Authority::InboxContextOriginal.new(deployment: @deployment, history: @history, authority_id: "authority",
           journals: {"project" => @journal}, kernel: @kernel)
-        @query_router = Authority::Router.new(launch: @query_owner, handlers: [Authority::InboxContextOriginal.new(
-          deployment: @deployment, history: @history, authority_id: "authority", journals: {"project" => @journal}, kernel: @kernel)])
+        @query_router = Authority::Router.new(launch: @query_owner, handlers: [])
         unless installed
         @deployment.define_singleton_method(:verify_composition!) { |*args, **keywords| true }
         @deployment.define_singleton_method(:authority) { |_| {"uid" => 13000, "gid" => 13000, "groups" => [13000]} }
