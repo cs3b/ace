@@ -38,4 +38,15 @@ boundary. Extract reusable test helpers from the concrete service fixture only
 after its author freezes SC5, preserving its existing tests. OS/kernel facts and
 remote provider calls are injected; canonical clients, sockets, journal, handler,
 queue and workflow command dispatch remain actual maintained owners. No native,
-installed or privileged probes. This candidate awaits independent review.
+installed or privileged probes.
+
+## Independent direction review — 2026-10-08
+
+Root reviewed this composition against `PreparedWorkBuilder`'s actual immutable
+fork-descendant selection and qkb.1 SC2/SC7. Direction approved: keep the original
+attempt and candidate, compose the delivery child before registration, and reuse
+the public receiver and canonical consumer. Implementation must use maintained
+shipped workflow instructions, not fixture-only command prose. A refused or
+uncertain delivery must leave the child unfinished; replay preserves the original
+parameters. This is approval of the implementation direction, not code acceptance,
+task promotion, installed acceptance, or a decision on protected PR ordering.
