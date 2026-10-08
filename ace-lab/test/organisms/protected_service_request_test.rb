@@ -29,12 +29,31 @@ class ProtectedServiceRequestTest < Minitest::Test
         "base_repository_url" => "https://forge.example/team/repo", "base_ref" => "main"}}, "method" => "squash"}
   end
 
-  def request(options = @options)
+  def request(options = @options, operation: "merge")
     Dir.mktmpdir do |root|
       path = File.join(root, "input.json")
       File.write(path, JSON.generate(@bytes))
-      @adapter.request(project: "project", assignment: "assignment", attempt: "attempt", operation: "merge",
+      @adapter.request(project: "project", assignment: "assignment", attempt: "attempt", operation: operation,
         authorization: "approval", request_id: "request", input_path: path, **options)
+    end
+  end
+
+  def test_fixed_pr_operations_forward_exact_input_to_original_receiver
+    %w[create update ready].each do |operation|
+      @calls.clear
+      @bytes.delete("method")
+      if operation == "ready"
+        @bytes.delete("title")
+        @bytes.delete("body")
+      else
+        @bytes.merge!("title" => "Ship", "body" => "Description")
+      end
+      @bytes["target"]["resource"] = operation == "create" ? "https://forge.example/team/repo" : "https://forge.example/team/repo/pulls/1"
+      assert_equal "ok", request(operation: operation).fetch("status")
+      submitted = @calls.last.last
+      assert_equal operation, submitted.fetch(:submission).fetch("operation")
+      assert_equal @bytes, JSON.parse(submitted.fetch(:input_bytes))
+      assert_equal Digest::SHA256.hexdigest("qkb.#{operation}.claim:v1:assignment:attempt:request"), submitted.fetch(:mutation_id)
     end
   end
 

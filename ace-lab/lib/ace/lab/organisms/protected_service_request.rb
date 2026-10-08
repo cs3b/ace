@@ -2,6 +2,7 @@
 require "ace/assign/authority/protected_assignment_context"
 require "ace/assign/organisms/protected_delivery_coordinator"
 require_relative "protected_service_client"
+require "ace/git/atoms/service_pr_input"
 
 module Ace
   module Lab
@@ -26,7 +27,7 @@ module Ace
           unless (options.keys - %i[mapping scope service candidate_head candidate_generation expected_generation dry_run]).empty?
             raise ArgumentError, "protected request rejects incompatible options"
           end
-          raise ArgumentError, "protected service request requires merge and no dry-run" unless operation == "merge" && !options[:dry_run]
+          raise ArgumentError, "protected service request requires a fixed PR operation and no dry-run" unless Ace::Git::Atoms::ServicePrInput::OPERATIONS.include?(operation) && !options[:dry_run]
           validate!(project, assignment, attempt, request_id, options)
           unless authorization.is_a?(String) && authorization.match?(Molecules::ServicePolicy::ID) &&
               options[:service].is_a?(String) && options[:service].match?(Molecules::ServicePolicy::ID) &&
@@ -34,17 +35,8 @@ module Ace
             raise ArgumentError, "protected service request requires receiver, authorization and original generation"
           end
           input = Atoms::ServiceInput.load(input_path)
-          unless input.keys.sort == %w[delivery method target] && input["target"].is_a?(Hash) &&
-              input["target"].keys.sort == %w[artifact_digest resource] &&
-              input["delivery"] == Ace::Git::Atoms::DeliveryParameters.validate(input["delivery"]) &&
-              Ace::Git::Organisms::PullRequestLifecycle::MERGE_METHODS.map(&:to_s).include?(input["method"])
-            raise ArgumentError, "protected service input requires normalized merge selection"
-          end
+          Ace::Git::Atoms::ServicePrInput.validate(input, operation: operation)
           target = Atoms::ServiceInput.target(input)
-          reference = Ace::Git::Atoms::PrReference.parse(target.fetch("resource"))
-          unless reference && reference.repository_url
-            raise ArgumentError, "protected merge target requires an exact PR URL"
-          end
           digest = Atoms::ServiceInput.digest(input)
           prepared = resolve!(project, assignment, attempt, options)
           selection = {"project_id" => project, "mapping_id" => options.fetch(:mapping), "assignment_id" => assignment,
@@ -54,9 +46,9 @@ module Ace
             "input_digest" => digest, "target" => target}
           submission = {"assignment_id" => assignment, "attempt_id" => attempt, "expected_generation" => options.fetch(:expected_generation),
             "candidate_generation" => options.fetch(:candidate_generation), "head" => options.fetch(:candidate_head),
-            "request_id" => request_id, "operation" => "merge", "input_digest" => digest, "target" => target,
+            "request_id" => request_id, "operation" => operation, "input_digest" => digest, "target" => target,
             "authorization" => authorization}
-          mutation = Digest::SHA256.hexdigest("qkb.merge.claim:v1:#{assignment}:#{attempt}:#{request_id}")
+          mutation = Digest::SHA256.hexdigest("qkb.#{operation}.claim:v1:#{assignment}:#{attempt}:#{request_id}")
           claim = @context.with_installed_selection(options: options, input: prepared) do |deployment, kernel, mapping|
             @ingress.call(mapping_id: mapping, service_id: options.fetch(:service), deployment: deployment, kernel: kernel)
               .submit(submission: submission, input_bytes: JSON.generate(input), mutation_id: mutation)

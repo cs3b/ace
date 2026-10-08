@@ -126,7 +126,7 @@ module Ace
           receiver = @deployment.project(map.fetch("project_id")).fetch("service_receivers").fetch(replacement.fetch("service_id"))
           raise AttemptErrors::UnauthorizedIdentity, "protected service executor differs" unless receiver.fetch("executor_uid") == replacement.fetch("executor_uid")
           current = exact_candidate!(candidate(events), params)
-          approved_review!(journal, events, params, map, current)
+          approved_review!(journal, events, params, map, current) unless %w[create update].include?(replacement.fetch("operation"))
           service_policy!.prepare!(replacement, input_bytes: bytes)
           if begin_dispatch && replacement.fetch("operation") == "prune-preserved-workspace"
             executor = replacement.fetch("executor_process_binding")
@@ -266,8 +266,8 @@ module Ace
             end
             data = service_projection(record).merge("generation" => journal.authority_generation(events),
               "journal_commit" => commit)
-            data["input_digest"] = record.fetch("input_digest") if record["operation"] == "merge"
-            if record.values_at("operation", "state") == %w[merge succeeded]
+            data["input_digest"] = record.fetch("input_digest") if %w[create update ready merge].include?(record["operation"])
+            if %w[create update ready merge].include?(record["operation"]) && record["state"] == "succeeded"
               event = ServiceDeliveryEvidence.new(journal: journal).verified(record: record, events: events, commit: commit)
               data.merge!(record.slice("input_digest", "authorization", "executor_uid", "completion_digest", "receipt"))
               data["delivery_event"] = event
@@ -304,7 +304,7 @@ module Ace
               raise AttemptErrors::Conflict, "authorization candidate changed"
             end
             service_receiver!(peer, role, map, record.fetch("service_id"))
-            approved_review!(journal, events, params, map, current)
+            approved_review!(journal, events, params, map, current) unless %w[create update].include?(record.fetch("operation"))
             prepared = service_policy!.prepare!(record, input_bytes: bytes)
             data = params.slice("request_id", "claim_binding", "head", "candidate_generation").merge(
               "policy_digest" => prepared.fetch(:policy_digest), "operation_digest" => prepared.fetch(:operation_digest))
@@ -445,7 +445,7 @@ module Ace
           worker = params.fetch("worker_process_binding")
           worker_or_launcher!(worker, :worker, map, origin)
           current = exact_candidate!(candidate(events), params)
-          approved_review!(journal, events, params, map, current)
+          approved_review!(journal, events, params, map, current) unless %w[create update].include?(params.fetch("operation"))
           receiver = service_receiver!(peer, role, map, params.fetch("service_id"))
           binding = params.slice("request_id", "assignment_id", "attempt_id", "operation", "input_digest", "target",
             "authorization", "service_id").merge("project_id" => map.fetch("project_id"),
@@ -491,7 +491,7 @@ module Ace
           unless record["candidate_head"] == current["head"] && record["candidate_generation"] == current["candidate_generation"]
             raise AttemptErrors::Conflict, "dispatch candidate changed"
           end
-          approved_review!(journal, events, params, map, current)
+          approved_review!(journal, events, params, map, current) unless %w[create update].include?(record.fetch("operation"))
           service_policy!.prepare!(record, input_bytes: input_bytes)
           replacement = record.merge("dispatch_phase" => "dispatch_started")
           if record.fetch("operation") == "prune-preserved-workspace"
@@ -542,7 +542,7 @@ module Ace
           normalized = JSON.parse(JSON.generate(receipt)).merge("evidence" => plan.fetch(:references))
           replacement = record.merge("state" => receipt.fetch("outcome"), "receipt" => normalized, "completion_digest" => digest)
           replacement["failed_at"] = Time.now.utc.iso8601(9) if receipt["outcome"] == "failed"
-          if replacement.values_at("operation", "state") == %w[merge succeeded]
+          if %w[create update ready merge].include?(replacement["operation"]) && replacement["state"] == "succeeded"
             event = ServiceDeliveryEvidence.new(journal: journal).completion_event(record: replacement,
               receipt: normalized, completion_digest: digest, artifacts: admitted.fetch(:artifacts))
             plan = plan.merge(events: plan.fetch(:events) + [event])

@@ -93,16 +93,18 @@ and merge evidence is accepted. Preparation after a completed delivery is a
 separate follow-up candidate/scope and must obtain its own required evidence.
 Publication remains separately authorized and gated, including OTP when required.
 
-## Protected worker merge and status
+## Protected worker PR operations and status
 
 An installed protected worker uses its original prepared assignment, attempt,
 mapping and hierarchical scope. A role charter or selector is not an authority
 capability: the public owners authenticate the actual worker descendant and
 original birth. Other installed participants must delegate to the provisioned
 worker/executor; they cannot select local delivery. Do not run the ordinary
-managed create/update/ready commands below from this protected route. Their
-protected authorization ordering remains unresolved; report that policy blocker
-without creating a PR or changing readiness through another account or command.
+managed delivery commands below from this protected route. Draft create/update
+may precede independent review, through the same configured receiver. Ready and
+merge require executed checks, current accepted independent review and the exact
+operation authorization. See `wfi://git/pr/create` and `wfi://git/pr/update` for
+the bounded draft input; credentials do not grant those operations.
 
 1. Retain the exact accepted candidate head and candidate generation, original
    assignment/attempt/mapping/scope, configured receiver ID, authorization and
@@ -117,8 +119,11 @@ without creating a PR or changing readiness through another account or command.
    matches the accepted candidate. Unavailable or changed selection blocks the
    request. Keep the exact returned generation for this invocation; a conflict
    is not permission to refresh it and resend.
-3. Save one nonsecret input file containing exactly `target`, `delivery` and
-   `method`. Target contains the exact PR URL as `resource` and nullable
+3. Select `create`, `update`, `ready` or `merge`. Save one nonsecret input file:
+   create/update contain exactly `target`, `delivery`, `title`, `body`; ready
+   contains `target`, `delivery`; merge contains `target`, `delivery`, `method`.
+   A create target is the selected base repository URL; other operations use
+   the exact PR URL. Target contains that URL as `resource` and nullable
    `artifact_digest`; delivery is the retained `forge_server`/`forge_default` and
    complete `pr_provenance` mapping. Method is explicitly squash, merge or rebase.
    The maintained owner reads one unchanged bounded regular file and computes its
@@ -129,21 +134,21 @@ without creating a PR or changing readiness through another account or command.
    ```
 
 4. Invoke the existing configured receiver through
-   `ace-lab service request --project PROJECT --assignment ID --attempt ATTEMPT --mapping MAPPING --scope SCOPE --service SERVICE --candidate-head SHA --candidate-generation CANDIDATE-GENERATION --expected-generation AUTHORITY-GENERATION --operation merge --authorization AUTHORIZATION --request-id REQUEST --input INPUT.json`.
+   `ace-lab service request --project PROJECT --assignment ID --attempt ATTEMPT --mapping MAPPING --scope SCOPE --service SERVICE --candidate-head SHA --candidate-generation CANDIDATE-GENERATION --expected-generation AUTHORITY-GENERATION --operation OPERATION --authorization AUTHORIZATION --request-id REQUEST --input INPUT.json`.
    No dry-run or standalone fallback exists here. Retain the returned original
    `selection` from either `data` or `error`: it includes input_digest and target.
-   `service_claim_accepted` acknowledges a durable claim, not merge completion.
+   `service_claim_accepted` acknowledges a durable claim, not operation completion.
    `service_claim_unconfirmed` requires inspection of this original request;
    neither uncertainty nor a timeout authorizes automatic resubmission.
 5. Read exact canonical status without an effect:
-   `ace-lab service status --request REQUEST --project PROJECT --assignment ID --attempt ATTEMPT --mapping MAPPING --scope SCOPE --candidate-head SHA --candidate-generation CANDIDATE-GENERATION --input-digest INPUT-DIGEST --target PR-URL`.
+   `ace-lab service status --request REQUEST --project PROJECT --assignment ID --attempt ATTEMPT --mapping MAPPING --scope SCOPE --candidate-head SHA --candidate-generation CANDIDATE-GENERATION --input-digest INPUT-DIGEST --target ORIGINAL-TARGET`.
    Use the original returned selection; omit `--artifact-digest` for null, or
    supply its exact original SHA256 when present. Status does not use a refreshed
    expected generation and never repairs or restarts an uncertain service.
    Missing receiver, review, authorization or installed owner stays a routed
    blocker. A caller-local journal or remote PR observation is not canonical proof.
 6. Only after canonical succeeded status, consume the exact completed result:
-   `ace-assign delivery --assignment ID --attempt ATTEMPT --mapping MAPPING --scope SCOPE --operation merge --service-request REQUEST --candidate-head SHA --candidate-generation CANDIDATE-GENERATION --input-digest INPUT-DIGEST --target PR-URL`.
+   `ace-assign delivery --assignment ID --attempt ATTEMPT --mapping MAPPING --scope SCOPE --operation OPERATION --service-request REQUEST --candidate-head SHA --candidate-generation CANDIDATE-GENERATION --input-digest INPUT-DIGEST --target ORIGINAL-TARGET`.
    Apply the same nullable artifact flag rule. Do not supply local `--tests`,
    `--review`, title/body or parameters. The authority has already verified the
    original review, completion receipt/import and exact input association, and

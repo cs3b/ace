@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 require_relative "../../test_helper"
 require "ace/assign/authority/service_delivery_evidence"
+require "ace/git/forgejo"
 require "ace/assign/organisms/protected_delivery_coordinator"
 require "ace/assign/authority/endcap"
 
@@ -19,6 +20,23 @@ class ServiceDeliveryEvidenceTest < AceAssignTestCase
     assert_equal Ace::Assign::Atoms::EvidenceDigest.digest(receipt), payload.fetch("service_receipt_digest")
     assert_equal receipt.fetch("evidence"), payload.fetch("service_evidence")
     assert_equal "service:13005", payload.fetch("producer").fetch("actor")
+  end
+
+  def test_draft_and_ready_results_bind_original_input_and_operation
+    %w[create update ready].each do |operation|
+      record, receipt, value = fixture_values(operation: operation)
+      owner = Ace::Assign::Authority::ServiceDeliveryEvidence.new(journal: Object.new)
+      event = owner.completion_event(record: record, receipt: receipt,
+        completion_digest: "c" * 64, artifacts: [artifact(record, value)])
+      assert_equal operation, event.fetch(:payload).fetch("operation")
+      assert_equal operation != "ready", event.fetch(:payload).fetch("pr").fetch("draft")
+      assert_equal "https://forge.example/owner/repo/pulls/25", event.fetch(:payload).fetch("pr").fetch("url")
+      value.fetch("input")["body"] = "changed" unless operation == "ready"
+      value.fetch("receipt").fetch("pull_request")["head_sha"] = "e" * 40
+      assert_raises(Ace::Assign::AttemptErrors::ReceiptRejected) do
+        owner.completion_event(record: record, receipt: receipt, completion_digest: "c" * 64, artifacts: [artifact(record, value)])
+      end
+    end
   end
 
   def test_valid_artifact_with_changed_method_or_coherent_provenance_cannot_replace_accepted_input
@@ -108,22 +126,33 @@ class ServiceDeliveryEvidenceTest < AceAssignTestCase
     "ace-service-attestation request:request input:#{record.fetch('input_digest')} outcome:succeeded\n#{JSON.generate(value)}\n"
   end
 
-  def fixture_values
+  def fixture_values(operation: "merge")
     url = "https://forge.example/owner/repo"
     target = {"resource" => "#{url}/pulls/25", "artifact_digest" => nil}
     delivery = {"forge_server" => "selected", "forge_default" => false,
       "pr_provenance" => {"mode" => "canonical", "head_repository_url" => url, "head_ref" => "feature",
         "base_repository_url" => url, "base_ref" => "main"}}
-    input = {"target" => target, "delivery" => delivery, "method" => "squash"}
-    record = {"request_id" => "request", "input_digest" => Ace::Assign::Atoms::EvidenceDigest.digest(input),
+    input = {"target" => target, "delivery" => delivery}
+    if operation == "merge"
+      input["method"] = "squash"
+    elsif operation != "ready"
+      input.merge!("title" => "Ship", "body" => "")
+    end
+    target["resource"] = url if operation == "create"
+    record = {"operation" => operation, "request_id" => "request", "input_digest" => Ace::Assign::Atoms::EvidenceDigest.digest(input),
       "target" => target, "candidate_head" => "a" * 40, "executor_uid" => 13005}
     receipt = {"evidence" => [{"ref" => "evidence/imports/original", "sha256" => "d" * 64}]}
-    pr = Ace::Git::ProviderPullRequest.new(server_name: "selected", number: 25, title: "Ship", body: "",
-      state: :merged, head_ref: "feature", base_ref: "main", head_sha: "a" * 40, author: "worker", url: target.fetch("resource"),
-      draft: false, merged_at: "2026-10-08T12:00:00Z", head_repository_url: url, base_repository_url: url, merge_commit_sha: "b" * 40)
+    pr = Ace::Git::ProviderPullRequest.new(server_name: "selected", number: 25, title: %w[create update].include?(operation) ? "WIP: Ship" : "Ship", body: "",
+      state: operation == "merge" ? :merged : :open, head_ref: "feature", base_ref: "main", head_sha: "a" * 40, author: "worker", url: "#{url}/pulls/25",
+      draft: %w[create update].include?(operation), merged_at: "2026-10-08T12:00:00Z", head_repository_url: url, base_repository_url: url, merge_commit_sha: "b" * 40)
     value = JSON.parse(JSON.generate({"server" => {"name" => "selected", "provider" => "forgejo", "url" => url},
       "delivery" => delivery, "method" => "squash", "candidate_head" => "a" * 40,
-      "receipt" => Ace::Git::ProviderMutationReceipt.new(server_name: "selected", operation: :merge, pull_request: pr, idempotency: nil).to_h}))
+      "receipt" => Ace::Git::ProviderMutationReceipt.new(server_name: "selected", operation: operation.to_sym, pull_request: pr, idempotency: operation == "create" ? :created : nil).to_h}))
+    unless operation == "merge"
+      value.delete("delivery")
+      value.delete("method")
+      value.merge!("operation" => operation, "input" => input)
+    end
     [record, receipt, value]
   end
 end

@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 require "ace/git/atoms/service_merge_evidence"
+require "ace/git/atoms/service_pr_evidence"
 require_relative "service_evidence"
 
 module Ace
@@ -20,7 +21,7 @@ module Ace
         end
 
         def verified(record:, events:, commit:)
-          unless record.values_at("operation", "state") == %w[merge succeeded] &&
+          unless %w[create update ready merge].include?(record["operation"]) && record["state"] == "succeeded" &&
               record.fetch("receipt").fetch("evidence").length == 1
             raise AttemptErrors::EvidenceUnavailable, "canonical merge completion is unavailable"
           end
@@ -65,8 +66,13 @@ module Ace
         private
 
         def validate_artifact!(record, bytes)
-          proof = Ace::Git::Atoms::ServiceMergeEvidence.validate(bytes, request_id: record.fetch("request_id"),
-            input_digest: record.fetch("input_digest"), target: record.fetch("target"), head: record.fetch("candidate_head"))
+          options = {request_id: record.fetch("request_id"), input_digest: record.fetch("input_digest"),
+            target: record.fetch("target"), head: record.fetch("candidate_head")}
+          proof = if record.fetch("operation") == "merge"
+            Ace::Git::Atoms::ServiceMergeEvidence.validate(bytes, **options)
+          else
+            Ace::Git::Atoms::ServicePrEvidence.validate(bytes, operation: record.fetch("operation"), **options)
+          end
           unless Atoms::EvidenceDigest.digest(proof.fetch(:input)) == record.fetch("input_digest")
             raise AttemptErrors::ReceiptRejected, "merge evidence does not reconstruct the originally accepted input"
           end
@@ -82,7 +88,7 @@ module Ace
         # Pure result shape shared with the read-only worker consumer. This
         # function creates no evidence or authorization on its own.
         def self.payload(record, receipt, completion_digest, proof)
-          {"stage" => "result", "operation" => "merge", "head" => record.fetch("candidate_head"), "outcome" => "succeeded",
+          {"stage" => "result", "operation" => record.fetch("operation"), "head" => record.fetch("candidate_head"), "outcome" => "succeeded",
             "intent_digest" => nil, "intent_attempt_id" => nil,
             "pr" => proof.fetch(:pr).slice("number", "url", "head_sha", "draft", "state", "merge_commit_sha"),
             "service_request_id" => record.fetch("request_id"), "service_completion_digest" => completion_digest,

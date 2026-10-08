@@ -40,3 +40,22 @@ Use `ace-lab service request --project PROJECT --assignment ASSIGNMENT --attempt
 If the claim reply is lost, retain the same request and input/head/generation/target selectors. Use `ace-lab service status --request REQUEST --project PROJECT --assignment ASSIGNMENT --attempt ATTEMPT --mapping MAPPING --scope SCOPE --candidate-head SHA --candidate-generation GENERATION --input-digest SHA256 --target PR_URL`, with --artifact-digest only when the original target has one. Expected: exact read-only canonical status; uncertain remains uncertain, and only verified original completion/import/result reports succeeded. Do not refresh generation and resubmit to resolve uncertainty.
 
 For a protected worker, missing mapping/service, unsafe input or --dry-run refuses without local dispatch. An unreadable/removed installed selection never enables ordinary mode. Genuine standalone request/status retain their existing semantics. These draft cases leave create/update/ready ordering and publication authority unchanged.
+
+## Protected draft creation before review
+
+Use the protected request command above with `--operation create`, exact original
+candidate selectors and operation-scoped authorization. Input is exactly
+`{target:{resource:BASE_REPOSITORY_URL,artifact_digest:null},delivery:NORMALIZED_DELIVERY,title:TITLE,body:BODY}`.
+Expected: the original receiver may admit a draft without prior review; status
+reports success only after canonical artifact/import/result verification and
+returns the exact PR URL. Repeat observation after a lost reply, never the effect.
+
+Update uses `--operation update` with that exact PR URL and the same four input
+fields. Expected: an open draft stays draft; stale head, a ready/closed PR or a
+revoked grant refuses. Forgejo's provider-owned WIP title encoding is preserved.
+
+Ready uses `--operation ready` and exactly `{target,delivery}`. Expected: accepted
+current independent review, executed required checks and scoped authorization
+are still mandatory. Draft success alone supplies none of them. A completed
+result can be read through `ace-assign delivery --operation OPERATION` with the
+original service request/head/generation/input/target selectors; no local flags.

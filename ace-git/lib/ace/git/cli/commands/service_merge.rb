@@ -6,16 +6,16 @@ module Ace
     module CLI
       module Commands
         class ServiceMerge < Ace::Support::Cli::Command
-          desc "Execute the fixed receiver-owned exact-head merge envelope"
+          desc "Execute a fixed receiver-owned exact-head PR envelope"
 
-          def initialize(input: nil, producer: nil, root: nil)
-            @input, @producer, @root = input, producer, root
+          def initialize(input: nil, producer: nil, root: nil, operation: "merge")
+            @input, @producer, @root, @operation = input, producer, root, operation
           end
 
           def call(**options)
-            raise ArgumentError, "fixed merge entry accepts no options" unless options.empty?
+            raise ArgumentError, "fixed PR entry accepts no options" unless options.empty?
             bytes = (@input || $stdin).read(Organisms::ServiceMerge::MAX_INPUT + 1)
-            result = (@producer || Organisms::ServiceMerge.new).call(bytes: bytes, root: @root || Dir.pwd)
+            result = (@producer || Organisms::ServiceMerge.new(operation: @operation)).call(bytes: bytes, root: @root || Dir.pwd)
             puts JSON.generate(result)
           rescue Ace::Git::Error, ArgumentError, SystemCallError, IOError => error
             # No stdout receipt on an unverified/uncertain effect. The existing

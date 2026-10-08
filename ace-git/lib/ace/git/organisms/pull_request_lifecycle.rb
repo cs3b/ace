@@ -196,6 +196,11 @@ module Ace
           )
         end
 
+        # Pure provider-owned encoding; selection is pinned by the caller.
+        def draft_title(title)
+          provider_for(resolve_selected_server).class.pull_request_title(title: title, draft: true)
+        end
+
         # Update title/body after exact-head verification.
         #
         # @return [ProviderMutationReceipt]
@@ -239,6 +244,17 @@ module Ace
         # Freeze the selected provider identity for an assignment attempt.
         def resolved_identity(identifier = nil)
           selected = identifier.nil? ? resolve_selected_server : resolve_server_for(parse_identifier(identifier))
+          if @pinned_server && selected != @pinned_server
+            raise ProviderIdentityMismatchError, "Configured server identity changed from the pinned delivery identity"
+          end
+          selected.to_h.transform_keys(&:to_s).transform_values(&:to_s)
+        end
+
+        # Protected create has no PR identifier or materialized origin remote.
+        # Resolve the retained base repository through the same exact registry.
+        def resolved_repository_identity(repository_url)
+          Atoms::DeliveryParameters.validate_url!(repository_url)
+          selected = resolve_matching_server(ServerRegistry.matching_servers(repository_url), repository_url)
           if @pinned_server && selected != @pinned_server
             raise ProviderIdentityMismatchError, "Configured server identity changed from the pinned delivery identity"
           end
@@ -295,10 +311,13 @@ module Ace
             ServerRegistry.servers_for_owner_repo(reference.owner_repo)
           end
 
+          resolve_matching_server(candidates, reference.repository_url || reference.owner_repo)
+        end
+
+        def resolve_matching_server(candidates, identity)
           if @selection[:server_name] || @selection[:use_default]
             selected = resolve_selected_server
             unless candidates.any? { |candidate| candidate.name == selected.name }
-              identity = reference.repository_url || reference.owner_repo
               raise ProviderIdentityMismatchError,
                 "PR identifier (#{identity}) does not match the selected server '#{selected.name}'"
             end
@@ -307,12 +326,10 @@ module Ace
           elsif candidates.size == 1
             candidates.first
           elsif candidates.empty?
-            identity = reference.repository_url || reference.owner_repo
             raise AmbiguousRemoteError,
               "PR repository '#{identity}' matches no configured server (configured: " \
               "#{ServerRegistry.servers.map(&:name).join(", ")})"
           else
-            identity = reference.repository_url || reference.owner_repo
             raise AmbiguousRemoteError,
               "PR repository '#{identity}' matches multiple configured servers " \
               "(#{candidates.map(&:name).join(", ")}); select one explicitly"

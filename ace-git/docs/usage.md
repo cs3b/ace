@@ -289,14 +289,22 @@ Note: `test/**/*` and `spec/**/*` are NOT excluded by default - test changes are
 
 ## Provider Packages
 
-`ace-git service merge` is the fixed protected receiver handler. It accepts no
+`ace-git service create`, `service update`, `service ready` and `service merge`
+are fixed protected receiver handlers. It accepts no
 options; the receiver supplies its claimed JSON envelope on stdin and its
 private materialized candidate directory as the working directory. The handler
 checks the exact input digest, executor, candidate and forge provenance, calls
-the selected neutral merge once, and emits the existing bounded evidence
-response only after verifying the merged PR and commit. An unverified or lost
+the selected neutral operation once, and emits the existing bounded evidence
+response only after verifying the exact PR outcome (and merge commit for merge). An unverified or lost
 outcome emits no success and never retries. This command does not authorize a
-merge or replace the protected worker's canonical receipt acceptance.
+operation or replace the protected worker's canonical receipt acceptance.
+Create/update use an exact `{target,delivery,title,body}` input and remain draft;
+ready uses `{target,delivery}`, merge uses `{target,delivery,method}`. Create targets
+the base repository; all other operations target the exact PR URL. The original
+title remains part of the accepted input; the provider owns its draft encoding
+(Forgejo's WIP prefix). Updating a draft preserves that encoding. Each handler
+publishes the fixed `pr-result.txt` evidence only after its observed content,
+identity, head and draft/merge outcome agree.
 
 `ace-git` is forge-neutral. It defines the server registry (`Ace::Git::ServerRegistry`),
 the provider contract (`Ace::Git::Providers::Base`), and normalized evidence types;

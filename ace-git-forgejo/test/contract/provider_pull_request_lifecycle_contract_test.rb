@@ -77,7 +77,7 @@ class ForgejoProviderPullRequestLifecycleContractTest < AceGitForgejoTestCase
         assert_equal "Ship it", body["title"], "ready must strip the WIP prefix"
         @ready_edited = true
       else
-        assert_equal "New title", body["title"]
+        assert_equal "WIP: New title", body["title"], "update must preserve draft state"
       end
       return ok("")
     end

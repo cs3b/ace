@@ -33,6 +33,16 @@ module Ace
         WIP_PREFIXES = ["WIP:", "[WIP]"].freeze
 
         class << self
+          def pull_request_title(title:, draft:)
+            wip = WIP_PREFIXES.any? { |prefix| title.to_s.upcase.start_with?(prefix) }
+            return wip ? title : "WIP: #{title}" if draft
+            if wip
+              raise Ace::Git::ProviderConflictingMatchesError,
+                "Requested draft:false conflicts with the WIP-prefixed title"
+            end
+            title
+          end
+
           def display_name
             "Forgejo"
           end
@@ -549,7 +559,10 @@ module Ace
         # @return [ProviderMutationReceipt] operation :update
         def update_pull_request(number:, expected_head:, title: nil, body: nil)
           number = request_number!(number)
-          verify_expected_head!(pull_request(number: number), expected_head)
+          before = verify_expected_head!(pull_request(number: number), expected_head)
+          # Title edits are not a ready transition. Keep Forgejo's title-based
+          # draft state, just as providers with an explicit draft field do.
+          title = draft_title!(title, before.draft) if title
           if title || body
             pr_api.ensure_version_supported!
             outcome = send_lifecycle_mutation("PR ##{number} on #{server.name}, head #{expected_head}") do
@@ -560,9 +573,13 @@ module Ace
                 "PR update refused for ##{number} (HTTP #{outcome.status}: #{outcome.message}); " \
                 "reconcile before repeating"
             end
-            verify_post_mutation_head!(number, expected_head, "update")
+            after = verify_post_mutation_head!(number, expected_head, "update")
+            unless after.draft == before.draft
+              raise Ace::Git::ProviderUnknownOutcomeError,
+                "PR update changed draft state for ##{number}; reconcile before repeating"
+            end
           end
-          receipt(:update, pull_request(number: number), nil)
+          receipt(:update, after || before, nil)
         end
 
         # Mark a draft ready on the exact head. Forgejo derives draft state
@@ -715,15 +732,7 @@ module Ace
         # defaults, compared case-insensitively without trimming); the API
         # create form has no draft field.
         def draft_title!(title, draft)
-          if draft
-            work_in_progress_title?(title) ? title : "WIP: #{title}"
-          elsif work_in_progress_title?(title)
-            raise Ace::Git::ProviderConflictingMatchesError,
-              "Requested draft:false conflicts with the WIP-prefixed title #{title.inspect}; " \
-              "Forgejo would create the pull request as a draft"
-          else
-            title
-          end
+          self.class.pull_request_title(title: title, draft: draft)
         end
 
         def work_in_progress_title?(title)

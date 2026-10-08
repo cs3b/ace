@@ -17,14 +17,36 @@ A managed assignment with a recorded PR and active delivery attempt. Reuse the o
 ## Protected worker boundary
 
 The steps below are ordinary managed delivery only. An installed protected
-participant cannot use caller-local delivery or direct provider commands as a
-fallback. Protected create/update/ready authorization ordering remains unresolved;
-report the exact policy/capability blocker without performing those effects.
-For an already selected reviewed PR, use the protected merge/status section of
-`wfi://handbook/perform-delivery`: the original worker requests the configured
-receiver with full original selectors and consumes only its canonical completed
-result. Local test/review reference files cannot authorize that protected route.
-Credentials, charter selection and a service acknowledgement do not prove merge.
+participant uses the configured receiver and the original canonical authority,
+with no caller-local journal or direct-provider fallback.
+
+The authenticated worker may create/update a draft before independent review.
+Save a nonsecret input object with exactly `target`, `delivery`, `title`, `body`;
+`delivery` is the normalized original forge/provenance mapping. `target` has
+`resource` and nullable `artifact_digest`: the selected base repository URL for
+create, the exact recorded PR URL for update. Title/body are bounded UTF-8 text.
+Request the installed receiver with:
+
+```sh
+ace-lab service request --project PROJECT --assignment ID --attempt ATTEMPT \
+  --mapping MAPPING --scope SCOPE --service SERVICE --operation OPERATION \
+  --candidate-head SHA --candidate-generation CANDIDATE-GENERATION \
+  --expected-generation AUTHORITY-GENERATION --authorization AUTHORIZATION \
+  --request-id REQUEST --input INPUT.json
+```
+
+Use `create` or `update` as OPERATION; each requires its own exact scoped grant.
+The receiver runs the fixed `ace-git service create` or `service update` handler.
+A claim acknowledges admission, not PR success. Retain its complete selection
+and observe `ace-lab service status` as described in
+`wfi://handbook/perform-delivery`. Lost replies stay uncertain; status does not
+repeat an effect. Only canonical completion supplies the created PR URL.
+
+For ready, use the same request with OPERATION `ready` and input containing only
+`target` and `delivery`. Ready and merge require executed checks, accepted
+independent review for the current revision and the matching authorization.
+Local report/reference files cannot replace those canonical proofs. Draft
+creation/update does not grant readiness, merge or publication.
 
 ## Steps
 

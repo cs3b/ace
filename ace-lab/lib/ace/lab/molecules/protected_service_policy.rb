@@ -5,6 +5,7 @@ require "etc"
 require "ace/assign/atoms/evidence_digest"
 require_relative "../authorization_path"
 require_relative "../atoms/service_input"
+require "ace/git/atoms/service_pr_input"
 require_relative "grant_resolver"
 require_relative "caller_authorizer"
 require_relative "service_policy"
@@ -34,6 +35,9 @@ module Ace
           end
           raise ArgumentError, "structured service input must be an object" unless input.is_a?(Hash)
           Atoms::ServiceInput.validate!(input)
+          if Ace::Git::Atoms::ServicePrInput::OPERATIONS.include?(operation)
+            Ace::Git::Atoms::ServicePrInput.validate(input, operation: operation)
+          end
           digest = Atoms::ServiceInput.digest(input)
           target = Atoms::ServiceInput.target(input)
           unless digest == expected_digest && target == expected_target

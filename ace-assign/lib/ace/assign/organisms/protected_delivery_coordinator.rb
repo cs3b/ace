@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 require_relative "../authority/service_delivery_evidence"
+require "ace/git/atoms/service_pr_evidence"
 
 module Ace
   module Assign
@@ -17,7 +18,7 @@ module Ace
 
         def perform(assignment_id:, attempt_id:, operation:, service_request_id:, candidate_head:, candidate_generation:,
           input_digest:, target:, parameters: nil, title: nil, body: nil, tests: nil, review: nil)
-          unless %w[merge status].include?(operation) && [title, body, tests, review].all?(&:nil?) &&
+          unless %w[create update ready merge status].include?(operation) && [title, body, tests, review].all?(&:nil?) &&
               [assignment_id, attempt_id, service_request_id].all? { |value| value.is_a?(String) && value.match?(Molecules::JournalMutation::ID) } &&
               candidate_head.is_a?(String) && candidate_head.match?(/\A[0-9a-f]{40}\z/) &&
               candidate_generation.is_a?(Integer) && candidate_generation.positive? &&
@@ -32,7 +33,7 @@ module Ace
           unless data.is_a?(Hash) && (data.keys - BASE_FIELDS - COMPLETE_FIELDS).empty? &&
               Atoms::EvidenceDigest.digest(data.slice("assignment_id", "attempt_id", "request_id", "candidate_generation")) == Atoms::EvidenceDigest.digest(binding.except("head")) &&
               data["project_id"] == @project_id && data["candidate_head"] == candidate_head && Atoms::EvidenceDigest.digest(data["target"]) == Atoms::EvidenceDigest.digest(target) &&
-              data["operation"] == "merge" && data["generation"].is_a?(Integer) && data["generation"].positive? &&
+              %w[create update ready merge].include?(data["operation"]) && (operation == "status" || data["operation"] == operation) && data["generation"].is_a?(Integer) && data["generation"].positive? &&
               data["input_digest"] == input_digest &&
               data["journal_commit"].is_a?(String) && data["journal_commit"].match?(/\A(?:[0-9a-f]{40}|[0-9a-f]{64})\z/)
             raise AttemptErrors::ReceiptRejected, "original canonical merge status differs"
@@ -48,7 +49,7 @@ module Ace
           end
           receipt = data.fetch("receipt")
           unless receipt.is_a?(Hash) && receipt.keys.sort == Molecules::EvidenceJournal::TERMINAL_RECEIPT_FIELDS.sort &&
-              receipt["outcome"] == "succeeded" && receipt["operation"] == "merge" && receipt["transport"] == "unix" &&
+              receipt["outcome"] == "succeeded" && receipt["operation"] == data["operation"] && receipt["transport"] == "unix" &&
               receipt.slice("request_id", "assignment_id", "attempt_id", "project_id", "input_digest", "target", "candidate_head", "executor_uid") ==
                 data.slice("request_id", "assignment_id", "attempt_id", "project_id", "input_digest", "target", "candidate_head", "executor_uid") &&
               receipt["evidence"].is_a?(Array) && receipt["evidence"].one?
@@ -72,8 +73,12 @@ module Ace
               Digest::SHA256.hexdigest(fetched.parts.first) == reference.fetch("sha256")
             raise AttemptErrors::ReceiptRejected, "original canonical artifact descriptor differs"
           end
-          proof = Ace::Git::Atoms::ServiceMergeEvidence.validate(fetched.parts.first, request_id: service_request_id,
-            input_digest: input_digest, target: target, head: candidate_head)
+          proof_options = {request_id: service_request_id, input_digest: input_digest, target: target, head: candidate_head}
+          proof = if data.fetch("operation") == "merge"
+            Ace::Git::Atoms::ServiceMergeEvidence.validate(fetched.parts.first, **proof_options)
+          else
+            Ace::Git::Atoms::ServicePrEvidence.validate(fetched.parts.first, operation: data.fetch("operation"), **proof_options)
+          end
           unless Atoms::EvidenceDigest.digest(proof.fetch(:input)) == input_digest &&
               (!parameters || Atoms::EvidenceDigest.digest(Atoms::DeliveryParameters.validate(parameters)) == Atoms::EvidenceDigest.digest(proof.fetch(:input).fetch("delivery")))
             raise AttemptErrors::ReceiptRejected, "canonical merge artifact accepted input differs"

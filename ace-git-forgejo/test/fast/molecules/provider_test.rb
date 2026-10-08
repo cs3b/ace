@@ -287,6 +287,63 @@ module Forgejo
       assert_match(/cannot prove the PR delivery capability floor/, error.message)
     end
 
+    def test_update_preserves_draft_state_using_the_provider_title_encoding
+      [true, false].each do |draft|
+        payload = pr_payload(25, state: "open", merged: false, draft: draft,
+          title: draft ? "WIP: Old title" : "Old title")
+        edits = []
+        runner = lambda do |args:, **|
+          case args[2].to_s
+          when "https://forge.example.com/api/v1/version"
+            ok_raw(200, {"version" => "8.0.3"}.to_json)
+          when "#{API}/pulls/25"
+            if args[1] == "PATCH"
+              edits << args[3]
+              payload["title"] = args[3].fetch("title")
+              payload["draft"] = payload["title"].start_with?("WIP:")
+            end
+            ok(payload)
+          else
+            flunk("Unexpected #{args[1]} #{args[2]}")
+          end
+        end
+        receipt = build_provider(runner).update_pull_request(number: 25, expected_head: SHA, title: "New title")
+        assert_equal [{"title" => draft ? "WIP: New title" : "New title"}], edits
+        assert_equal draft, receipt.pull_request.draft
+        assert_equal :update, receipt.operation
+      end
+    end
+
+    def test_update_cannot_mark_a_ready_pr_draft_via_its_title
+      writes = []
+      runner = lambda do |args:, **|
+        writes << args if args[1] == "PATCH"
+        ok(pr_payload(25, state: "open", merged: false, draft: false))
+      end
+      assert_raises(Ace::Git::ProviderConflictingMatchesError) do
+        build_provider(runner).update_pull_request(number: 25, expected_head: SHA, title: "WIP: Sneak transition")
+      end
+      assert_empty writes
+    end
+
+    def test_update_reports_uncertainty_if_read_back_changes_draft_state
+      writes = []
+      runner = lambda do |args:, **|
+        if args[2] == "https://forge.example.com/api/v1/version"
+          ok_raw(200, {"version" => "8.0.3"}.to_json)
+        else
+          writes << args if args[1] == "PATCH"
+          ok(pr_payload(25, state: "open", merged: false, draft: writes.empty?,
+            title: writes.empty? ? "WIP: Old title" : "New title"))
+        end
+      end
+      error = assert_raises(Ace::Git::ProviderUnknownOutcomeError) do
+        build_provider(runner).update_pull_request(number: 25, expected_head: SHA, title: "New title")
+      end
+      assert_match(/draft state/, error.message)
+      assert_equal 1, writes.length
+    end
+
     # ---- Merge classification ----
 
     def test_merge_transient_mergeable_check_is_retryable_unreachable

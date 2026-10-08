@@ -17,6 +17,12 @@ module Ace
       #   keyword arguments (args:, timeout:, env:) and returning a Hash with
       #   :stdout, :stderr, :exit_code
       class Base
+        # Pure transport title for the requested draft state. Providers own
+        # server-specific draft encodings; callers retain their original title.
+        def self.pull_request_title(title:, draft:)
+          title
+        end
+
         attr_reader :server, :timeout
 
         # @param server [ResolvedServer] resolved server identity

@@ -16,11 +16,11 @@ class ServiceMergeTest < AceGitTestCase
       with_producer(provider, default: default, fork: fork) do |producer, envelope, root, calls|
         response = producer.call(bytes: JSON.generate(envelope), root: root)
         assert_equal "succeeded", response.fetch("outcome")
-        artifact = File.binread(File.join(root, "merge-result.txt"))
+        artifact = File.binread(File.join(root, "pr-result.txt"))
         assert_equal Digest::SHA256.hexdigest(artifact), response.fetch("evidence").first.fetch("sha256")
         assert_includes artifact, "request:request-1 input:#{envelope.fetch('request').fetch('input_digest')} outcome:succeeded"
         assert_equal 1, calls.count { |args| mutation?(provider, args) }
-        assert_equal 0o400, File.stat(File.join(root, "merge-result.txt")).mode & 0o777
+        assert_equal 0o400, File.stat(File.join(root, "pr-result.txt")).mode & 0o777
       end
     end
   end
@@ -30,7 +30,7 @@ class ServiceMergeTest < AceGitTestCase
       envelope.fetch("execution")["head"] = "b" * 40
       assert_raises(ArgumentError) { producer.call(bytes: JSON.generate(envelope), root: root) }
       assert_empty calls
-      refute File.exist?(File.join(root, "merge-result.txt"))
+      refute File.exist?(File.join(root, "pr-result.txt"))
     end
   end
 
@@ -40,7 +40,7 @@ class ServiceMergeTest < AceGitTestCase
         producer.call(bytes: JSON.generate(envelope), root: root)
       end
       assert_equal 1, calls.count { |args| mutation?("forgejo", args) }
-      refute File.exist?(File.join(root, "merge-result.txt"))
+      refute File.exist?(File.join(root, "pr-result.txt"))
     end
   end
 
@@ -52,7 +52,7 @@ class ServiceMergeTest < AceGitTestCase
         assert_raises(ArgumentError) { producer.call(bytes: bytes, root: root) }
       end
       assert_empty calls
-      refute File.exist?(File.join(root, "merge-result.txt"))
+      refute File.exist?(File.join(root, "pr-result.txt"))
     end
   end
 
@@ -62,7 +62,7 @@ class ServiceMergeTest < AceGitTestCase
       $stdin = StringIO.new(JSON.generate(envelope))
       stdout, stderr = capture_io do
         Dir.chdir(root) do
-          Ace::Git::Organisms::ServiceMerge.stub(:new, -> { producer }) { Ace::Git::CLI.start(%w[service merge]) }
+          Ace::Git::Organisms::ServiceMerge.stub(:new, ->(operation:) { assert_equal "merge", operation; producer }) { Ace::Git::CLI.start(%w[service merge]) }
         end
       end
       response = JSON.parse(stdout)
@@ -79,7 +79,7 @@ class ServiceMergeTest < AceGitTestCase
     with_producer("forgejo", change_mode: true) do |producer, envelope, root, calls|
       assert_raises(Ace::Git::ProviderUnknownOutcomeError) { producer.call(bytes: JSON.generate(envelope), root: root) }
       assert_equal 1, calls.count { |args| mutation?("forgejo", args) }
-      refute File.exist?(File.join(root, "merge-result.txt"))
+      refute File.exist?(File.join(root, "pr-result.txt"))
     end
   end
 
@@ -121,7 +121,7 @@ class ServiceMergeTest < AceGitTestCase
         error = index.zero? ? Ace::Git::ProviderIdentityMismatchError : Ace::Git::ProviderExpectedHeadConflictError
         assert_raises(error) { producer.call(bytes: JSON.generate(envelope), root: root) }
         assert_equal 0, calls.count { |args| mutation?("forgejo", args) }
-        refute File.exist?(File.join(root, "merge-result.txt"))
+        refute File.exist?(File.join(root, "pr-result.txt"))
       end
     end
   end
@@ -140,7 +140,7 @@ class ServiceMergeTest < AceGitTestCase
     with_producer("forgejo", lose_reply: true) do |producer, envelope, root, calls|
       assert_raises(Ace::Git::ProviderUnknownOutcomeError) { producer.call(bytes: JSON.generate(envelope), root: root) }
       assert_equal 1, calls.count { |args| mutation?("forgejo", args) }
-      refute File.exist?(File.join(root, "merge-result.txt"))
+      refute File.exist?(File.join(root, "pr-result.txt"))
     end
   end
 

@@ -17,13 +17,13 @@ module Ace
           option :body_file, desc: "PR description file"
           option :tests, desc: "JSON reference to coordinator-accepted test attempt and receipt digest"
           option :review, desc: "JSON reference to coordinator-accepted independent review attempt and receipt digest"
-          option :service_request, desc: "Completed authorized qjx merge request ID (merge consumption only)"
+          option :service_request, desc: "Original authorized PR service request ID"
           option :mapping, desc: "Installed original protected mapping selector"
           option :scope, desc: "Original prepared worker scope"
           option :candidate_head, desc: "Exact original protected candidate SHA"
           option :candidate_generation, type: :integer, desc: "Exact original protected candidate generation"
-          option :input_digest, desc: "Exact original accepted merge input SHA256"
-          option :target, desc: "Exact original merge PR URL"
+          option :input_digest, desc: "Exact original accepted service input SHA256"
+          option :target, desc: "Exact original target repository or PR URL"
           option :artifact_digest, desc: "Original target artifact SHA256, if present"
 
           def initialize(protected_context: nil)
@@ -37,8 +37,8 @@ module Ace
               unless context.protected_worker?
                 raise AttemptErrors::EvidenceUnavailable, "protected delivery is worker-only"
               end
-              unless %w[merge status].include?(options[:operation]) && %i[title body_file tests review].all? { |key| options[key].nil? }
-                raise ArgumentError, "protected delivery accepts canonical merge/status only; local input/evidence flags are unavailable"
+              unless %w[create update ready merge status].include?(options[:operation]) && %i[title body_file tests review].all? { |key| options[key].nil? }
+                raise ArgumentError, "protected delivery accepts canonical PR results/status only; local input/evidence flags are unavailable"
               end
               input = context.resolve(options: options, assignment_id: options[:assignment], scope: options[:scope])
               raise AttemptErrors::EvidenceUnavailable, "original protected prepared input is unavailable" unless input
