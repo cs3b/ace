@@ -1,6 +1,6 @@
 # Protected attempt CLI adoption amendment candidate
 
-Status: pending independent readiness review; no implementation or task promotion.
+Status: specification readiness APPROVED by independent reviewer `/root/audit_runtime_delivery_status` at `0fb0dccbf`. The clarification after `ef5adc8a0` covers all explicit current/retained installed principal inventories. No implementation acceptance or task promotion is implied.
 The bounded handler checkpoint is public Authority::Client/Server evidence only.
 Existing attempt/base.rb unconditionally constructs the local coordinator; finish
 accepts local receipt files and reconcile invokes local cache recovery. Existing
