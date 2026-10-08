@@ -23,3 +23,8 @@ Final frozen-source Herdr rerun after historical supersession precision and expl
 ## Remaining gates
 
 The complete SAME Lab producer -> held Runtime entry -> actual selected child subprocess -> registered CLI composition is still required. The controlled transport fixture does not prove installed native endpoint provenance or actual Codex/Pi queue semantics. Actual stopped-owner/dead-launcher no-writer recovery, maintained initialization ACK/producer publication, protected LiveClient adoption, and the complete family negative matrix remain open. This checkpoint does not mark tasks or SCs done. Installed/native acceptance remains gad.2; Lab service producer remains gad.8.
+# Independent integration review
+
+Root reviewed frozen author commits 029c0dbe1, a39eae653 and 2e81eb051: scoped APPROVE for guarded notification phases, exact queue/wake attribution, issuing-before-IO, unknown replay refusal and guarded original endpoint. Integrated as 2d8e4dbc8, e59bb5a3a and c7e78b752.
+
+Reviewer execution on integrated main: inbox_direct_effects_test.rb plus protected_native_control_test.rb passed 28 tests / 210 assertions (herdr/ae95b017-1390-4b26-9d1d-3bffd4ad455a). Actual canonical supersession/replacement test endcap_inboxes_test.rb:548 passed 1 test / 33 assertions (assign/9c2ee31f-8954-4721-bebd-8860033b28f0). These controlled source checks do not close full producer, recovery or native Lab acceptance.
