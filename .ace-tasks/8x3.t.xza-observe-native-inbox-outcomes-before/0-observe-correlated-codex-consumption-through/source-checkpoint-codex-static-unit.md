@@ -18,3 +18,11 @@ Executed final commands from their package cwd, BUNDLE_PATH=/Users/mc/.codex/wor
 Retained failure174b8708-2c79-4ecb-9662-c148d95260e3:8 tests,2 failures/6 errors because fixture Bootstrap constructor omitted the new native association. Fixed its actual factory wiring, then actual8/95 passed50c80790 and final expanded composition above passed. No production fallback/timeout increase.
 
 Still required: SAME Lab Assembly emits accepted intent/dedicated-unit association; completed installation/static bootstrap resolves original mapping and holds both actual installations; positive exact app-server/UI startup/retirement, dynamic immutable pointer-last output and emitted initial/service context callbacks. Adjacent Lab ThreadTransport is independently approved only as bounded transport. SC1–4 observation/signing/restart consumers and whole task/family acceptance remain open. No task metadata closure.
+
+## Independent review and main integration
+
+Root independently APPROVED author commits `dd3b40d8b` and `28f87d1e2`: reviewed the closed static association, original containment equality, immutable references, dedicated effective-unit validation, and nested owner lifetime. The verifier remains in the base installation owner so context-unit substitution produces a typed refusal. No open findings for this bounded slice.
+
+Directly inspected author receipts: runtime `15ce6f2e-953e-4a5a-be3a-45967612f1bc` (34 tests, 180 assertions) and Herdr `cf7a8e3c-6f36-414d-a581-a42cdd68769c` (27 tests, 177 assertions), all passing without skips. Integrated as `dbc2c9c06` and `0a7dd9a74`. Main composed Inbox service file passed 10 tests / 102 assertions, no failures/errors, receipt `7e27d8de-9c2a-47df-a7f4-3dab2d1a20db`.
+
+Actual Lab startup, dedicated callback producer and immutable runtime output publication remain source-open. This review does not close the task or prove installed/native behavior.
