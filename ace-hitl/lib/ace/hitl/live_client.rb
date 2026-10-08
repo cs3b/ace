@@ -8,8 +8,9 @@ require_relative "providers/lab"
 module Ace
   module Hitl
     # Explicit in-process client. The scoped service owns answer availability
-    # and business callbacks; Herdr owns queue submission, wake and signed
-    # consumption proof. A watcher lives only as long as its requesting agent.
+    # and business callbacks; Herdr owns delivery to the selected live terminal.
+    # A watcher lives only as long as its requesting agent. Delivery status is
+    # read from that original Inbox owner, never a duplicate recovery projection.
     class LiveClient
       def initialize(boundary: nil, coordinator: nil, inbox: nil, root: Dir.pwd)
         @boundary = boundary
@@ -63,9 +64,6 @@ module Ace
         event = event_id(envelope)
         queued = inbox.enqueue(event: event, attempt: envelope["attempt_id"], ref: reverse, payload: answer,
           managed_envelope: delivery, expected_target: target)
-        # A signed supersession authorizes an explicit reconciliation retry,
-        # not another ordinary delivery/watch call.
-        return queued if queued["state"] == "queued" && queued.dig("reconciliation", "outcome") == "superseded"
         coordinator.bind_inbox(attempt_id: envelope["attempt_id"], event_id: event, inbox: inbox)
         inbox.deliver(event: event)
       ensure
@@ -84,36 +82,20 @@ module Ace
           next facts unless facts["native_delivery"] == true
           envelope = envelope_for(facts, facts["id"])
           delivery = delivery_status(envelope)
-          next if delivery["state"] == "completed"
+          next if delivery["state"] == "delivered"
           facts.merge("delivery" => delivery)
         end
-      end
-
-      # Only the existing signed verifier + accepted attempt registration may
-      # settle uncertainty. Explicit retry is admitted solely by verified
-      # supersession, including its verified replacement native target.
-      def reconcile(request:, receipt_path:, retry_delivery: false)
-        facts = boundary.read(request)
-        envelope = envelope_for(facts, request)
-        event = event_id(envelope)
-        result = coordinator.reconcile_inbox(attempt_id: envelope["attempt_id"], event_id: event,
-          receipt_path: receipt_path, inbox: inbox)
-        if retry_delivery && result["state"] == "queued" && !result["reconciliation_refusal"] &&
-            result.dig("reconciliation", "outcome") == "superseded"
-          return inbox.deliver(event: event)
-        end
-        result
       end
 
       private
 
       def delivery_status(envelope)
         event = event_id(envelope)
-        # A requester-writable raw delivery state cannot supply consumption
-        # authority. Recovery's journal-attributed public view owns that fact.
-        snapshot = coordinator.recovery_snapshot(envelope["assignment_id"])
-        snapshot.fetch("inbox_events").find { |record| record["event_id"] == event } ||
-          {"event_id" => event, "state" => "unknown"}
+        # This is transport history from its original owner, not proof that
+        # an agent read an answer or a cached view of the current terminal.
+        inbox.status(event: event)
+      rescue Ace::Herdr::Organisms::Inbox::MissingEventError
+        {"event_id" => event, "state" => "not-submitted"}
       end
 
       def envelope_for(result, request)

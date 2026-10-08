@@ -127,35 +127,22 @@ client.status(request: request_id)
 ```
 
 `deliver` consumes an authorized ordinary answer, enqueues one incarnation-bound
-Herdr event, registers its digest/key with Assign, and attempts exact native
-submission. The accepted owner's terminal, agent and immutable native session ID
-are captured before consumption and checked under the Inbox event lock. A thread
-restart in the same pane refuses delivery rather than changing that original
-identity. Repeated calls reuse the same event and never resubmit an uncertain
-intent. A stopped watcher leaves the request/native intent visible in
-`pending --project ace`; it never chooses a new pane or launches a replacement
-watcher. The configured Hermes transport publishes created requests for its
-explicitly registered project channels and owns their Telegram polling.
+Herdr event, registers its original assignment/attempt attribution with Assign,
+and sends to the exact selected terminal. The accepted owner's terminal, agent
+and native session ID are checked against the live Herdr pane before sending.
+A replaced agent in the same pane refuses rather than selecting another target.
+Repeated calls reuse the same event; uncertain sends are not automatically
+repeated. The configured Hermes transport owns Telegram request/reply routing.
 
-Queue acceptance (`delivered`) and wake are transport facts. Business effects
-run once through the scoped service under the requester's declaration; their
-separate receipt reference cannot be inferred from native delivery. Actual
-consumption requires the existing trusted supervisor/observer signing context:
+A delivered acknowledgement means submitted to the terminal, not read by the
+agent. LiveClient.status reads delivery history from the original Inbox owner;
+delivered answers no longer appear as pending human attention. Current agent
+progress/output comes from direct Herdr/tmux panel capture when needed.
 
-```ruby
-client.reconcile(request: request_id, receipt_path: signed_receipt_path)
-# Explicit retry only after verified supersession/non-consumption:
-client.reconcile(request: request_id, receipt_path: signed_receipt_path, retry_delivery: true)
-```
-
-Herdr verifies the signature, exact event/attempt/digest/generation/native binding
-and accepted registration under the event lock. Assign journals the verified
-observation. Missing authority or signer, wrong key, changed target and stale
-proof stay refused/unknown. Signed supersession leaves ordinary `deliver` and
-`watch` calls queued; only `reconcile(..., retry_delivery: true)` submits again.
-No elapsed-time rule establishes success or retries.
-Keep the original trusted verification/signing context for unresolved events or
-defer key rotation; a replacement fingerprint cannot rebind an existing event.
+Business effects still run through their scoped owner with their own result
+and authorization. Neither a sent message nor panel output replaces verification
+of those effects. No dedicated Codex app-server, message-read signer/key or
+signed consumption/supersession reconciliation API is required.
 
 The shared versioned envelope is semantically owned by HITL and packaged in
 `ace-hitl-contract` to preserve the acyclic HITL → Assign → Herdr → contract
@@ -315,9 +302,9 @@ operation and returns its bytes only over protected IPC. Local event polling
 remains available for ordinary unbound local events. Managed events cannot use
 `update --resume` to launch unscoped session/shell delivery.
 
-Installed acceptance still requires real registered Telegram ingress, native
-owner observation and trusted signer/OS-user evidence in Lab. Controlled local
-transport and synthetic native observations do not satisfy those gates.
+Installed acceptance uses actual registered Telegram ingress, the selected
+live Herdr/tmux terminal and the real scoped users in Lab. Controlled local
+transport tests do not replace launching and observing the actual task.
 
 ## Lifecycle Event Names
 
