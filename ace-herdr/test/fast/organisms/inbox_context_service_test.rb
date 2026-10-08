@@ -3,6 +3,7 @@
 require "test_helper"
 require "ace/herdr/organisms/inbox_context_service"
 require_relative "../../support/inbox_context_service_runtime_fixture"
+require_relative "../../../../ace-runtime/test/support/codex_runtime_installation_fixture"
 
 class InboxContextServiceTest < Minitest::Test
   include InboxContextServiceRuntimeFixture
@@ -13,10 +14,15 @@ class InboxContextServiceTest < Minitest::Test
   # Actual constructor/Store/listener composition with controlled full-owner,
   # kernel, cgroup and installed-file observations. No whole Inbox is injected.
   # The real Lab entry/initialization publication remains a separate source join.
+  class CodexInstallationHarness
+    include CodexRuntimeInstallationFixture
+  end
+
   class Bootstrap
     attr_reader :initial_calls, :normal_calls, :prepared
     attr_accessor :after_prepare
-    def initialize(association)
+    def initialize(association, native = nil)
+      @native = native
       @association, @initial_calls, @normal_calls = association, 0, 0
     end
     def with_initial_inbox_context(configuration:, installation:, codex_runtime:)
@@ -30,6 +36,10 @@ class InboxContextServiceTest < Minitest::Test
     def with_inbox_context_installation(configuration:, installation:)
       raise "unselected installation" unless installation == {"path" => "/selected/installation", "bytes" => 1, "sha256" => "a" * 64}
       yield @association.merge(configuration: configuration).freeze
+    end
+    def with_codex_runtime_installation(configuration:, installation:, static:)
+      raise "unselected original scope" unless static.fetch(:configuration).equal?(configuration) && @native
+      yield @native
     end
     def select(configuration, installation)
       raise "unselected installation" unless installation == {"path" => "/selected/installation", "bytes" => 1, "sha256" => "a" * 64}
@@ -103,6 +113,17 @@ class InboxContextServiceTest < Minitest::Test
     boundary_ref["bytes"], boundary_ref["sha256"] = @files.bytes.fetch(boundary_ref.fetch("path")).bytesize, Digest::SHA256.hexdigest(@files.bytes.fetch(boundary_ref.fetch("path")))
     @scope["boundary_manifest_sha256"] = boundary_ref.fetch("sha256")
     @artifacts.find { |artifact| artifact["role"] == "boundary_manifest" }["sha256"] = boundary_ref.fetch("sha256")
+    @codex_harness = CodexInstallationHarness.new
+    @codex_harness.setup
+    native_installation = @codex_harness.selected_installation(intent_override: intent,
+      authority: data.fetch("authority"), metadata_root: @root)
+    @codex_association = {installation: native_installation, manager: @codex_harness.manager}.freeze
+    data.fetch("native_clients")["codex_runtime_service"] = @codex_harness.selection
+    @codex_harness.selection.values_at("unit_manifest", "boundary_manifest").each do |selected|
+      @files.bytes[selected.fetch("path")] = File.binread(selected.fetch("path"))
+      @artifacts << {"role" => "runtime_dependency", "host_path" => selected.fetch("path"), "view_path" => selected.fetch("path"), "sha256" => selected.fetch("sha256")}
+      @profiles.fetch("ace-slot.service").fetch("BindReadOnlyPaths") << [selected.fetch("path"), selected.fetch("path"), false, 0]
+    end
     config_ref = @configuration.reference
     bytes = JSON.generate(data)
     File.write(config_ref.fetch("path"), bytes)
@@ -146,7 +167,7 @@ class InboxContextServiceTest < Minitest::Test
       {"uid" => 13000, "gid" => 13000, "groups" => [Process.gid], "pid" => 13000, "parent_pid" => 1,
         "host" => "controlled", "started_at" => "linux:#{InboxContextServiceRuntimeFixture::BOOT}:43"}
     end
-    @bootstrap = Bootstrap.new({configuration: @configuration, installation: @installation, manager: @manager, kernel: @kernel, cgroups: @cgroups}.freeze)
+    @bootstrap = Bootstrap.new({configuration: @configuration, installation: @installation, manager: @manager, kernel: @kernel, cgroups: @cgroups}.freeze, @codex_association)
     @codex_listener = UNIXServer.new(@codex_socket)
     @codex_thread = Thread.new do
       loop do
@@ -540,4 +561,36 @@ class InboxContextServiceTest < Minitest::Test
       refute File.exist?(File.join(@state, ".context-control.json"))
     end
   end
+  def test_dedicated_unit_is_verified_inside_original_runtime_scope
+    with_source_observation_seams do
+      Ace::Herdr::Molecules::CodexRuntimeSelection.with(stage_reference: @stage.fetch("codex_runtime"),
+        configuration: @configuration, installation: @document, bootstrap: @bootstrap) do |runtime|
+        profile = @codex_harness.instance_variable_get(:@profiles).fetch("codex.service")
+        original = profile.fetch("ExecStartEx").first[1].dup
+        profile.fetch("ExecStartEx").first[1] << "--foreign"
+        assert_raises(Ace::Runtime::RuntimeUnavailableError) { runtime.verify! }
+        assert_nil @native_adds
+        profile.fetch("ExecStartEx").first[1].replace(original)
+        assert runtime.verify!
+      end
+    end
+  end
+
+  def test_nested_static_factory_cannot_substitute_context_unit_or_foreign_manager
+    original = @codex_association
+    [{installation: @installation, manager: @manager}.freeze,
+     {installation: original.fetch(:installation), manager: @manager}.freeze].each do |foreign|
+      @bootstrap.instance_variable_set(:@native, foreign)
+      with_source_observation_seams do
+        assert_raises(ERROR) do
+          Ace::Herdr::Molecules::CodexRuntimeSelection.with(stage_reference: @stage.fetch("codex_runtime"),
+            configuration: @configuration, installation: @document, bootstrap: @bootstrap) { flunk "foreign dedicated factory accepted" }
+        end
+      end
+      assert_nil @native_adds
+    end
+  ensure
+    @bootstrap.instance_variable_set(:@native, original)
+  end
+
 end

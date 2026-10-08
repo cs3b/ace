@@ -116,15 +116,21 @@ module Ace
                 static.fetch(:installation).is_a?(Ace::Runtime::Molecules::ExecutionUnitInstallation)
               raise ValidationError, "Codex original static installation association differs"
             end
-            artifacts.with do |held|
-              selection = new(stage_reference, configuration, installation, static, held, protection)
-              begin
-                selection.verify!
-                selection.with_connection(deadline: Ace::Runtime::Molecules::ProtectedSocket.deadline(60)) { |_socket| }
-                yield selection
-                selection.verify!
-              ensure
-                selection.send(:close!)
+            bootstrap.with_codex_runtime_installation(configuration: configuration, installation: installation, static: static) do |native|
+              unless native.is_a?(Hash) && native.frozen? && native.keys.sort == %i[installation manager] &&
+                  native.fetch(:installation).is_a?(Ace::Runtime::Molecules::ExecutionUnitInstallation)
+                raise ValidationError, "Codex dedicated installation association differs"
+              end
+              artifacts.with do |held|
+                selection = new(stage_reference, configuration, installation, static, native, held, protection)
+                begin
+                  selection.verify!
+                  selection.with_connection(deadline: Ace::Runtime::Molecules::ProtectedSocket.deadline(60)) { |_socket| }
+                  yield selection
+                  selection.verify!
+                ensure
+                  selection.send(:close!)
+                end
               end
             end
           end
@@ -165,8 +171,11 @@ module Ace
           active!
           @held.verify_unchanged!
           clients = @configuration.data.fetch("native_clients")
+          @native_association.fetch(:installation).verify_codex_runtime_selection!(
+            service: clients.fetch("codex_runtime_service"), intent_reference: clients.fetch("codex_runtime_intent"),
+            manager: @native_association.fetch(:manager))
           @static_association.fetch(:installation).verify_inbox_native_projection!(
-            references: clients.values_at("codex", "pi", "herdr", "codex_runtime_intent") + clients.fetch("dependencies"),
+            references: InboxContextServiceConfiguration.native_references(clients),
             resources: clients.fetch("resources"), manager: @static_association.fetch(:manager))
           unless @static_association.fetch(:installation).inbox_context_configuration_reference == @configuration.reference
             raise ValidationError, "Codex original static configuration changed"
@@ -241,10 +250,10 @@ module Ace
 
         private
 
-        def initialize(reference, configuration, installation, static, held, protection)
+        def initialize(reference, configuration, installation, static, native, held, protection)
           @active, @thread, @closing = true, Thread.current, false
           @mutex, @handlers = Mutex.new, {}
-          @configuration, @static_association, @held, @protection = configuration, static, held, protection
+          @configuration, @static_association, @native_association, @held, @protection = configuration, static, native, held, protection
           ref!(reference)
           ref!(installation, limit: 1_048_576)
           @reference = immutable(reference)

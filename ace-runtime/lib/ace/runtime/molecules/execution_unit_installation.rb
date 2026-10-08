@@ -24,6 +24,8 @@ module Ace
         CONTEXT_REQUIRED_ROLES = %w[slice_fragment service_fragment boundary_manifest bootstrap
           context_executable context_configuration interpreter].freeze
         CONTEXT_ROLES = (CONTEXT_REQUIRED_ROLES + %w[unit_dropin runtime_dependency]).freeze
+        CODEX_REQUIRED_ROLES = %w[slice_fragment service_fragment native_executable native_configuration boundary_manifest].freeze
+        CODEX_ROLES = (CODEX_REQUIRED_ROLES + %w[unit_dropin runtime_dependency]).freeze
         SERVICE_REQUIRED = {"Type" => "exec", "Restart" => "no", "RestartForceExitStatus" => [[], []],
           "KillMode" => "control-group", "SendSIGKILL" => true, "Delegate" => false,
           "ProtectControlGroups" => true, "NoNewPrivileges" => true, "CapabilityBoundingSet" => 0,
@@ -145,6 +147,22 @@ module Ace
           selected
         end
 
+        # Selection only. The original bootstrap authenticates mapping ownership;
+        # verify! still requires the actual fixed manager profile and full topology.
+        def verify_codex_runtime_selection!(service:, intent_reference:, manager:)
+          unless @codex_service && @codex_service == service && @codex_intent_reference == intent_reference
+            raise RuntimeUnavailableError, "Codex dedicated installation selection differs"
+          end
+          verify!(manager: manager)
+        end
+
+        def self.for_codex_runtime(service:, intent_reference:, original_mapping:, mapping_id:, authority:, files: Files.new)
+          require_relative "codex_runtime_installation"
+          selected = allocate
+          selected.send(:initialize_codex_runtime, service, intent_reference, original_mapping, mapping_id, authority, files)
+          selected
+        end
+
         # Descriptor shape only; no effective unit observation or role grant.
         def self.validate_inbox_context_service!(service)
           selected = allocate
@@ -157,10 +175,11 @@ module Ace
           unless slot.is_a?(String) && SystemdScopeManager::UNIT.match?(slot)
             raise RuntimeUnavailableError, "installed slot identity is invalid"
           end
-          path = @context ? @context.fetch("unit_manifest").fetch("path") : "/etc/ace/execution-slots/#{slot}/unit-manifest.json"
+          selected_service = @context || @codex_service
+          path = selected_service ? selected_service.fetch("unit_manifest").fetch("path") : "/etc/ace/execution-slots/#{slot}/unit-manifest.json"
           bytes = @files.read(path, limit: 65_536)
           unless Digest::SHA256.hexdigest(bytes) == @scope.fetch("unit_manifest_sha256") &&
-              (!@context || bytes.bytesize == @context.fetch("unit_manifest").fetch("bytes"))
+              (!selected_service || bytes.bytesize == selected_service.fetch("unit_manifest").fetch("bytes"))
             raise RuntimeUnavailableError, "unit manifest bytes differ from deployment"
           end
           manifest = JSON.parse(bytes)
@@ -301,14 +320,20 @@ module Ace
         end
 
         def verify_artifacts!(artifacts)
-          minimum = @context ? CONTEXT_REQUIRED_ROLES.size : 9
+          minimum = @context ? CONTEXT_REQUIRED_ROLES.size : @codex_service ? CODEX_REQUIRED_ROLES.size : 9
           unless artifacts.is_a?(Array) && artifacts.size.between?(minimum, 512) &&
               artifacts.all? { |a| a.is_a?(Hash) && a.keys.sort == %w[host_path role sha256 view_path] } &&
               artifacts.map { |a| a["host_path"] }.uniq.size == artifacts.size
             raise RuntimeUnavailableError, "installed unit artifact declarations differ"
           end
           roles = artifacts.group_by { |a| a.fetch("role") }
-          required, allowed = @context ? [CONTEXT_REQUIRED_ROLES, CONTEXT_ROLES] : [REQUIRED_ROLES, ROLES]
+          required, allowed = if @context
+            [CONTEXT_REQUIRED_ROLES, CONTEXT_ROLES]
+          elsif @codex_service
+            [CODEX_REQUIRED_ROLES, CODEX_ROLES]
+          else
+            [REQUIRED_ROLES, ROLES]
+          end
           unless required.all? { |role| roles.key?(role) } && (roles.keys - allowed).empty? &&
               required.all? { |role| roles[role].size == 1 }
             raise RuntimeUnavailableError, "installed unit artifacts are incomplete or ambiguous"
@@ -320,6 +345,7 @@ module Ace
             end
           end
           return verify_context_artifacts!(roles) if @context
+          return verify_codex_artifacts!(roles) if @codex_service
           expected = {"native_executable" => @native.fetch("executable"), "bootstrap" => @bootstrap,
             "worker_executable" => @worker_entry.fetch("wrapper").fetch("path"),
             "readiness_configuration" => "/etc/ace/execution-slots/#{@scope.fetch('slot_id')}/readiness.json",
@@ -401,7 +427,7 @@ module Ace
               credential_id(service.fetch("User"), :uid) == @worker_uid &&
               credential_id(service.fetch("Group"), :gid) == @worker_gid &&
               SERVICE_REQUIRED.all? { |key, value| service[key] == value } &&
-              service["SupplementaryGroups"] == (@context ? @context_groups.map(&:to_s) : []) &&
+              service["SupplementaryGroups"] == (@context ? @context_groups.map(&:to_s) : @codex_service ? @codex_groups.map(&:to_s) : []) &&
               service["RestrictAddressFamilies"] == [true, %w[AF_INET AF_INET6 AF_UNIX]] &&
               EMPTY_EXEC.all? { |key| service[key] == [] }
             raise RuntimeUnavailableError, "execution unit lacks the required retained isolation profile"
@@ -410,6 +436,12 @@ module Ace
             verify_context_protocol!(service, artifacts)
             verify_artifact_projection!(service, artifacts)
             verify_boundary_topology!(service, artifacts, authority: @context_authority)
+            return
+          end
+          if @codex_service
+            verify_codex_protocol!(service, artifacts)
+            verify_artifact_projection!(service, artifacts)
+            verify_boundary_topology!(service, artifacts, authority: @codex_authority)
             return
           end
           verify_command!(service.fetch("ExecStartEx"), artifacts.fetch("native_executable").first.fetch("view_path"))
@@ -478,7 +510,7 @@ module Ace
               service["WantsMountsFor"] == [@scope.fetch("root_directory")] &&
               service.fetch("RuntimeDirectory") == [@scope.fetch("runtime_directory").delete_prefix("/run/")] &&
               service["RequiresMountsFor"].sort == service.fetch("RuntimeDirectory").map { |path| "/run/#{path}" }.sort &&
-              service["WorkingDirectory"] == "" && service["DefaultDependencies"] == false &&
+              service["WorkingDirectory"] == (@codex_service ? @codex_intent.fetch("cwd") : "") && service["DefaultDependencies"] == false &&
               %w[RequiredBy RequisiteOf WantedBy BoundBy UpheldBy ConsistsOf].all? { |key| service[key] == [] } &&
               %w[disabled static].include?(service["UnitFileState"]) &&
               EMPTY_ACTIVATION.all? { |key| service[key] == [] }

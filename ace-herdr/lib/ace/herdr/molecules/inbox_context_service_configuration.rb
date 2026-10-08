@@ -117,9 +117,9 @@ module Ace
         # The accepted release owns executable startup bytes and IPC placement;
         # no PATH discovery, inherited HOME or ambient queue-client fallback.
         def self.native_clients!(value)
-          strict!(value, %w[codex codex_runtime_intent cwd dependencies environment herdr pi resources])
+          strict!(value, %w[codex codex_runtime_intent codex_runtime_service cwd dependencies environment herdr pi resources])
           dependencies = value.fetch("dependencies")
-          unless dependencies.is_a?(Array) && dependencies.size <= 508
+          unless dependencies.is_a?(Array) && dependencies.size <= 506
             raise ValidationError, "context native dependency closure exceeds bounds"
           end
           unless value.fetch("codex_runtime_intent").is_a?(Hash) &&
@@ -127,7 +127,9 @@ module Ace
               value.fetch("codex_runtime_intent").fetch("bytes").between?(1, 65_536)
             raise ValidationError, "context Codex runtime intent exceeds bounds"
           end
-          refs = value.values_at("codex", "pi", "herdr", "codex_runtime_intent") + dependencies
+          service = value.fetch("codex_runtime_service")
+          codex_runtime_service!(service)
+          refs = native_references(value)
           refs.each do |ref|
             strict!(ref, %w[bytes path sha256])
             unless path?(ref["path"]) && ref["bytes"].is_a?(Integer) && ref["bytes"].between?(1, 268_435_456) &&
@@ -159,6 +161,35 @@ module Ace
           true
         rescue KeyError, TypeError, NoMethodError
           raise ValidationError, "context native selection is malformed"
+        end
+
+        def self.native_references(value)
+          service = value.fetch("codex_runtime_service")
+          value.values_at("codex", "pi", "herdr", "codex_runtime_intent") +
+            service.values_at("unit_manifest", "boundary_manifest") + value.fetch("dependencies")
+        end
+
+        def self.codex_runtime_service!(service)
+          strict!(service, %w[boundary_manifest execution_scope unit_manifest])
+          %w[unit_manifest boundary_manifest].each do |name|
+            ref = service.fetch(name)
+            strict!(ref, %w[bytes path sha256])
+            unless path?(ref["path"]) && ref["bytes"].is_a?(Integer) && ref["bytes"].between?(1, LIMIT) &&
+                ref["sha256"].is_a?(String) && ref["sha256"].match?(/\A[0-9a-f]{64}\z/)
+              raise ValidationError, "context Codex service reference differs"
+            end
+          end
+          scope = service.fetch("execution_scope")
+          strict!(scope, %w[backend boundary_manifest_sha256 network_namespace_path root_directory runtime_directory service_unit slice_unit slot_id unit_manifest_sha256])
+          unless scope["backend"] == "linux_systemd_cgroup_v2" && token?(scope["slot_id"]) &&
+              %w[root_directory runtime_directory network_namespace_path].all? { |key| path?(scope[key]) } &&
+              scope["runtime_directory"].start_with?("/run/") && !overlap?(scope["root_directory"], scope["runtime_directory"]) &&
+              {"service_unit" => ".service", "slice_unit" => ".slice"}.all? { |key, suffix|
+                token?(scope[key]) && scope[key].end_with?(suffix) && !scope[key].downcase.include?("overseer")
+              } && scope["unit_manifest_sha256"] == service.fetch("unit_manifest").fetch("sha256") &&
+              scope["boundary_manifest_sha256"] == service.fetch("boundary_manifest").fetch("sha256")
+            raise ValidationError, "context Codex service scope differs"
+          end
         end
 
         def self.strict!(value, fields)

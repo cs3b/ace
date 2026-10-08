@@ -6,8 +6,10 @@ require "ace/herdr/molecules/inbox_context_native_process"
 require "ace/herdr/molecules/native_queue_executor"
 require "ace/herdr/molecules/herdr_executor"
 require_relative "../../support/inbox_context_owner_fixture"
+require_relative "../../support/inbox_context_service_selection_fixture"
 
 class InboxContextNativeProcessTest < Minitest::Test
+  include InboxContextServiceSelectionFixture
   ProcessOwner = Ace::Herdr::Molecules::InboxContextNativeProcess
   Configuration = Ace::Herdr::Molecules::InboxContextServiceConfiguration
   ERROR = Ace::Herdr::ValidationError
@@ -45,7 +47,15 @@ class InboxContextNativeProcessTest < Minitest::Test
     File.write(intent_path, "{}")
     File.chmod(0o600, intent_path)
     refs["codex_runtime_intent"] = {"path" => intent_path, "bytes" => 2, "sha256" => Digest::SHA256.hexdigest("{}")}
-    @clients = refs.merge("dependencies" => [], "environment" => {"LANG" => "selected"}, "cwd" => @root,
+    service = native_client_selection.fetch("codex_runtime_service")
+    %w[unit_manifest boundary_manifest].each do |name|
+      path = File.join(@root, name + ".json")
+      File.write(path, "{}")
+      File.chmod(0o600, path)
+      service[name] = {"path" => path, "bytes" => 2, "sha256" => Digest::SHA256.hexdigest("{}")}
+      service.fetch("execution_scope")[name + "_sha256"] = service.fetch(name).fetch("sha256")
+    end
+    @clients = refs.merge("codex_runtime_service" => service,"dependencies" => [], "environment" => {"LANG" => "selected"}, "cwd" => @root,
       "resources" => [{"path" => @root, "kind" => "directory", "access" => "read", "uid" => Process.uid, "gid" => File.stat(@root).gid, "mode" => 0o700}])
     data = {"schema" => "ace.herdr.inbox-context-service/v1", "project_id" => "project", "inbox_context_id" => "ctx",
       "native_mapping_id" => "mapping", "native_clients" => @clients, "control_socket_path" => "/run/ctx/control.sock",

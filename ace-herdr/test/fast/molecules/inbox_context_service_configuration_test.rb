@@ -94,4 +94,22 @@ class InboxContextServiceConfigurationTest < Minitest::Test
       assert_raises(ERROR) { Configuration.native_clients!(value) }
     end
   end
+  def test_static_codex_service_closure_exact_limit_and_substitutions
+    value = native_client_selection
+    value["dependencies"] = Array.new(506) { |index| {"path" => "/opt/dependency/#{index}", "bytes" => 1, "sha256" => "d" * 64} }
+    assert Configuration.native_clients!(value)
+    assert_equal 512, Configuration.native_references(value).size
+    value["dependencies"] << {"path" => "/opt/dependency/extra", "bytes" => 1, "sha256" => "d" * 64}
+    assert_raises(ERROR) { Configuration.native_clients!(value) }
+    [->(v) { v["codex_runtime_service"]["unit_manifest"]["bytes"] = 65_537 },
+     ->(v) { v["codex_runtime_service"]["unit_manifest"] = v["codex_runtime_intent"].dup },
+     ->(v) { v["codex_runtime_service"]["execution_scope"]["unit_manifest_sha256"] = "e" * 64 },
+     ->(v) { v["codex_runtime_service"]["extra"] = true },
+     ->(v) { v.delete("codex_runtime_service") }].each do |change|
+      selected = native_client_selection
+      change.call(selected)
+      assert_raises(ERROR) { Configuration.native_clients!(selected) }
+    end
+  end
+
 end

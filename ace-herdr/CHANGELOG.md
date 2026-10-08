@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Bind static Codex service metadata separately from executable dependencies and retain both context and dedicated app-server installation checks throughout the original runtime/handler scope.
+
+
 - Allow maintenance preview to refuse contended slot, authority and retained Inbox exclusions within its original deadline, releasing partially acquired locks.
 
 ### Fixed

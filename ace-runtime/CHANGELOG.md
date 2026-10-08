@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+- Validate the fixed Codex app-server unit through the original execution installation owner, preserving mapped credentials, containment, artifact bytes and effective manager profile.
+
+
 - Pin and type-check the original native server's network namespace throughout readiness observation; refuse namespace replacement before returning its identity.
 - Verify dedicated Inbox context-service installations with the full existing isolation and activation profile, exact literal HOST-to-same-VIEW references, fixed interpreter commands and a 35-second stop deadline. Require native executable/dependency bytes and IPC resources to be exact members of the same complete installed profile.
 
