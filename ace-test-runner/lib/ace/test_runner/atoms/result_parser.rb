@@ -15,7 +15,7 @@ module Ace
           # Pattern for inline errors - same structure as failures but with ERROR marker
           inline_error: /^\s+(test_[\w_]+).*?ERROR.*?\([\d.]+s\)\n(.*?)(?=^\s+test_[\w_]+.*?(?:PASS|FAIL|ERROR|SKIP)|^Finished in|\z)/m,
           location: /\[(.*?):(\d+)\]/,
-          duration: /Finished in ([\d.]+)s/,
+          duration: /Finished(?: tests)? in ([\d.]+)s/,
           deprecation: /DEPRECATION WARNING: (.+)/,
           # Pattern to capture individual test times from verbose output
           # Matches Minitest::Reporters DefaultReporter format:
