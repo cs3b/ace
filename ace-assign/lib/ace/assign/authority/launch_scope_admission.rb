@@ -97,6 +97,10 @@ module Ace
                     events.none? { |event| event["type"] == "authority_mutation" && event.dig("payload", "operation") == "scope_service_admission" }
                   raise AttemptErrors::Conflict, "native activation was already admitted or launch advanced"
                 end
+                contexts = @deployment.project(map.fetch("project_id")).fetch("inbox_contexts", {}).values
+                if contexts.any? { |context| context.fetch("native_mapping_id") == params.fetch("mapping_id") && context.key?("service") } && !@codex_startup
+                  raise AttemptErrors::EvidenceUnavailable, "Codex original startup owner is unavailable"
+                end
                 observer = scope_observer_for(params.fetch("mapping_id"))
                 installation = observer.native_admission_ready!(lineage)
                 binding = lineage.binding
@@ -148,6 +152,17 @@ module Ace
             elsif issue
               payload = observer.complete_native_readiness!(lineage,
                 @mutex.synchronize { @native_issuers.fetch(native_issuer_key(params, map)).fetch(:report) })
+              contexts = @deployment.project(map.fetch("project_id")).fetch("inbox_contexts", {}).select do |_id, context|
+                context.fetch("native_mapping_id") == params.fetch("mapping_id") && context.key?("service")
+              end
+              unless contexts.empty?
+                raise AttemptErrors::EvidenceUnavailable, "Codex original startup owner is unavailable" unless @codex_startup
+                @codex_startup.call(mapping_id: params.fetch("mapping_id"), contexts: contexts.freeze,
+                  lineage: lineage, observer: observer)
+                # The original worker's ready acknowledgement cannot survive a
+                # changed main process while the dedicated native startup ran.
+                payload = observer.complete_native_readiness!(lineage, payload)
+              end
               @mutex.synchronize { commit_ready_native!(params, map, journal, events, lineage, payload) }
             end
           end

@@ -224,6 +224,7 @@ module Ace
             Molecules::LifecycleExclusion::WorkspaceNativeReader.new(projection: projection)
           }
           @native_workspace_lifetime = nil
+          @codex_native_lifetimes = {}
           @map = deployment.mapping(mapping_id)
           @scope = @map.fetch("execution_scope")
           @manager = manager || Ace::Runtime::Molecules::SystemdScopeManager.new(
@@ -473,15 +474,108 @@ module Ace
           @manager.start_service
         end
 
+        # The original source callback passes the maintained dedicated selection.
+        # It cannot choose a different slot, slice, principal or unit at launch.
+        def start_codex_service!(lineage:, installation:, service:, intent_reference:, manager:)
+          unless installation.is_a?(Ace::Runtime::Molecules::ExecutionUnitInstallation) && @native_workspace_lifetime
+            unavailable!("Codex native startup has no original admission")
+          end
+          changes = %w[service_unit unit_manifest_sha256]
+          scope = service.fetch("execution_scope")
+          unless scope.reject { |key, _| changes.include?(key) } == @scope.reject { |key, _| changes.include?(key) }
+            unavailable!("Codex native startup expands original scope")
+          end
+          unless @native_workspace_lifetime.fetch(:selector) == lineage.binding_event.fetch("digest") && !lineage.sealed?
+            unavailable!("Codex startup differs from the exact open attempt admission")
+          end
+          @native_workspace_lifetime.fetch(:reader).verify_unchanged!
+          observe(lineage)
+          installation.verify_codex_runtime_selection!(service: service, intent_reference: intent_reference, manager: manager)
+          unit = scope.fetch("service_unit")
+          unavailable!("Codex startup was already issued") if @codex_native_lifetimes.key?(unit)
+          activation = manager.inspect_activation
+          state = activation.fetch("service")
+          unless %w[inactive failed].include?(state.fetch("ActiveState")) && state.fetch("MainPID").zero? &&
+              state.fetch("ControlPID").zero? && state.fetch("Job") == [0, "/"]
+            unavailable!("Codex dedicated unit is occupied or pending")
+          end
+          lifetime = {lineage: lineage, manager: manager, installation: installation,
+            service: service, intent_reference: intent_reference, pin: nil, activation: nil}
+          @codex_native_lifetimes[unit] = lifetime
+          manager.start_service
+          installation.verify_codex_runtime_selection!(service: service, intent_reference: intent_reference, manager: manager)
+          activation = manager.inspect_activation
+          state = activation.fetch("service")
+          unavailable!("Codex startup has no exact active main") unless state.fetch("ActiveState") == "active" &&
+            state.fetch("MainPID").positive? && state.fetch("ControlPID").zero? && !state.fetch("InvocationID").empty? && state.fetch("Job") == [0, "/"]
+          peer = @kernel.capture(state.fetch("MainPID"))
+          unless peer.slice("uid", "gid", "groups") == @map.slice("worker_uid", "worker_gid", "worker_groups").transform_keys { |key| key.delete_prefix("worker_") }
+            unavailable!("Codex startup principal differs")
+          end
+          @kernel.live!(peer)
+          pin = @kernel.pin(peer)
+          lifetime.merge!(pin: pin, peer: peer, activation: activation)
+          unless manager.unit_for_pidfd(handle: pin) == {"unit" => unit, "invocation_id" => state.fetch("InvocationID")} && manager.inspect_activation == activation
+            unavailable!("Codex startup unit birth changed")
+          end
+          observe(lineage)
+          @kernel.live!(peer)
+          unavailable!("Codex original startup main exited") if @kernel.exited?(pin)
+          @native_workspace_lifetime.fetch(:reader).verify_unchanged!
+          true
+        end
+
         def sealed_service_stop_required?(lineage)
           unavailable!("service stop requires the canonical original seal") unless lineage.sealed?
           service = observe(lineage).fetch("activation").fetch("service")
+          return true unless @codex_native_lifetimes.empty?
           !(%w[inactive failed].include?(service.fetch("ActiveState")) && service.fetch("Job") == [0, "/"] &&
             service.fetch("MainPID").zero? && service.fetch("ControlPID").zero?)
         end
 
         def stop_sealed_service!
+          @codex_native_lifetimes.each do |unit, lifetime|
+            observe(lifetime.fetch(:lineage))
+            manager = lifetime.fetch(:manager)
+            lifetime.fetch(:installation).verify_codex_runtime_selection!(service: lifetime.fetch(:service),
+              intent_reference: lifetime.fetch(:intent_reference), manager: manager)
+            activation = lifetime.fetch(:activation)
+            # A lost start reply cannot authorize stopping a substituted birth.
+            unavailable!("Codex stop has no authenticated original birth") unless activation && lifetime.fetch(:pin)
+            current = manager.inspect_activation
+            state = current.fetch("service")
+            if state.fetch("InvocationID") == activation.fetch("service").fetch("InvocationID") &&
+                %w[inactive failed].include?(state.fetch("ActiveState")) && state.fetch("MainPID").zero? &&
+                state.fetch("ControlPID").zero? && state.fetch("Job") == [0, "/"] && @kernel.exited?(lifetime.fetch(:pin))
+              lifetime.fetch(:pin).close
+              @codex_native_lifetimes.delete(unit)
+              next
+            end
+            unless current == activation && @kernel.same?(lifetime.fetch(:peer), @kernel.capture(current.fetch("service").fetch("MainPID"))) &&
+                manager.unit_for_pidfd(handle: lifetime.fetch(:pin)) == {"unit" => unit, "invocation_id" => current.fetch("service").fetch("InvocationID")}
+              unavailable!("Codex stop would target a replacement generation")
+            end
+            @kernel.live!(lifetime.fetch(:peer))
+            manager.stop_service
+            after = manager.inspect_activation.fetch("service")
+            unless %w[inactive failed].include?(after.fetch("ActiveState")) && after.fetch("MainPID").zero? &&
+                after.fetch("ControlPID").zero? && after.fetch("Job") == [0, "/"] && @kernel.exited?(lifetime.fetch(:pin))
+              unavailable!("Codex original stop is unconfirmed")
+            end
+            lifetime.fetch(:pin).close
+            @codex_native_lifetimes.delete(unit)
+          end
           @manager.stop_service
+        end
+
+        # Authority shutdown ends observation handles, not canonical closure.
+        # It never manufactures a stop or no-writer proof from scope expiry.
+        def close
+          @codex_native_lifetimes.each_value do |lifetime|
+            pin = lifetime.fetch(:pin)
+            pin.close if pin
+          end
+          @codex_native_lifetimes.clear
         end
 
         # Read-only original owner check used before all-root retirement.

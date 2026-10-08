@@ -33,9 +33,14 @@ module Ace
         OPERATIONS = (MUTATIONS.keys + %w[assignment_inventory stop_attempt prompt_attempt prompt_status launch_review_intent launch_input_inhibit_selection launch_input_inhibit_completion launch_prompt_intent launch_prompt_completion launch_preflight registration_status attempt_status inspect_launch observe_execution_scope close_execution_scope]).freeze
         TERMINAL = %w[succeeded failed stopped].freeze
 
-        attr_reader :mutex, :journals
-        def initialize(deployment:, kernel: Ace::Runtime::Molecules::ProtectedLinux.new, journals: nil, mutex: Mutex.new, scope_observer_factory: nil, deployment_history: nil, control_exclusion_factory: nil)
+        attr_reader :mutex, :journals, :deployment, :deployment_history
+        def initialize(deployment:, kernel: Ace::Runtime::Molecules::ProtectedLinux.new, journals: nil, mutex: Mutex.new, scope_observer_factory: nil, deployment_history: nil, control_exclusion_factory: nil, codex_startup: nil)
           @deployment, @kernel = deployment, kernel
+          unless codex_startup.nil? || codex_startup.is_a?(Method) && codex_startup.name == :with_codex_attempt_startup &&
+              defined?(::LabNativeBootstrap::Owner) && codex_startup.receiver.is_a?(::LabNativeBootstrap::Owner)
+            raise ArgumentError, "Codex startup requires the original bound source owner"
+          end
+          @codex_startup = codex_startup
           if deployment_history && (!deployment_history.is_a?(DeploymentHistory) ||
               !deployment_history.selects?(deployment))
             raise ArgumentError, "protected history transaction does not select installed descriptor"
@@ -358,6 +363,8 @@ module Ace
             @observations.clear
             @control_channels.each_value(&:close)
             @control_channels.clear
+            @scope_observers.each_value { |observer| observer.close if observer.is_a?(ExecutionScopeObservation) }
+            @scope_observers.clear
           end
         end
 
