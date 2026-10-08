@@ -172,6 +172,11 @@ module Ace
                 refute_same old_launch, @launch
                 assert_equal before_restart, @journal.ref_value
                 assert_equal starts_before_restart, @manager.service_starts
+                original_incarnation = @manager.slice.fetch("InvocationID")
+                @manager.slice["InvocationID"] = "e" * 32
+                assert_raises(AttemptErrors::EvidenceUnavailable) { finish.call("replaced-scope-finish") }
+                assert_equal before_restart, @journal.ref_value
+                @manager.slice["InvocationID"] = original_incarnation
                 assert_equal "succeeded", finish.call("finish").dig(:data, "state")
                 @cgroups.populated = 1
                 before = @journal.ref_value
