@@ -31,3 +31,6 @@ Fetch second selection `assign/3f89ecde-1c55-417c-ae44-b68361943a48`: PASS6/67, 
 An attempted `--filter` was rejected as a filename pattern and selected no tests (`b02312c0-b0b4-43bd-8a52-b1a026d2b426`); it supplies no verification. Corrected verification uses existing exact line selection, whose loaded/executed identities are checked by the runner.
 
 Native/installed/process identity and provider boundaries remain controlled as documented in the original fixtures. No Lab probes, external provider calls, publication or root-file edits occur. This is fixture/test-layer repair, not qk0.3 closure or a general performance claim.
+# Independent integration verdict
+
+Root APPROVE `8e0e197af5c2d1ef6258a33b3f964b5831afda84`: reviewed helper-only module extraction, preservation of runnable fetch/worker cases, class composition and the managed worker's existing controlled workspace-reader seam. No production guard or timeout was weakened. Integrated `f9e246602`; full managed-flow file now runs exactly its two scenarios and passed 2 tests / 86 assertions in 43.93s, report `assign/8837d346-e4d2-4f03-a358-5eaef5c77e06`. Earlier 120-second timeout is superseded for this file, not for every package or final suite.
