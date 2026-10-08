@@ -51,9 +51,18 @@ checks recorded below. No timeout was increased and no fake Lab was added.
 - [x] Repair the original-terminal race through existing guarded native control.
 - [x] Coordinate versions, changelogs, dependency floors and root lockfile.
 - [x] Finish the remaining focused Lab service fixture checks.
-- [ ] Final exact-head independent verdict in the same combined code review.
-- [ ] Fast-forward ACE/Lab main and synchronize their authorized remotes.
-- [ ] Build fresh artifacts using the repository publisher's prepare mode.
+- [x] Final exact-head independent verdict in the same combined code review:
+  APPROVE `fed9a8adacce68b4809f1a87f6ecd3521a9b7c83`; the original-terminal
+  P1 is resolved, no confirmed finding remains.
+- [x] Fast-forward ACE/Lab main and synchronize their authorized remotes:
+  ACE source `fed9a8ada` on GitHub and Forgejo; Lab `ced5f99` on Forgejo.
+  Primary Lab network/legacy WIP was preserved and excluded.
+- [x] Build fresh artifacts using the repository publisher's prepare mode:
+  14 newly built, zero reused, eight dependency waves, no publication/OTP.
+  Queue: git 0.30.0, git-forgejo 0.6.2, handbook 0.35.0, herdr 0.5.0,
+  support-items 0.15.14, test-runner 0.28.1, git-commit 0.26.7, task 0.39.2,
+  review 0.60.0, assign 0.66.0, hitl 0.13.0, hitl-hermes 0.2.1,
+  lab 0.5.0, overseer 0.20.1 (all names have the ace- prefix).
 - [ ] Captain publishes interactively with OTP.
 - [ ] Post-publication `TS-MONO-001` verifies installation propagation.
 - [ ] `lab-config 8wl.t.gad.2` installs, launches and observes a real Lab task.
