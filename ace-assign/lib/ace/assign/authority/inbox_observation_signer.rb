@@ -3,6 +3,7 @@
 require "json"
 require "digest"
 require "ace/herdr/molecules/inbox_context_client"
+require "ace/herdr/molecules/inbox_context_effect_binding"
 require_relative "inbox_signing_key"
 require_relative "../molecules/canonical_evidence"
 require_relative "../atoms/evidence_digest"
@@ -64,10 +65,11 @@ module Ace
             end
             params = {"assignment_id" => assignment_id, "attempt_id" => attempt_id,
               "event_id" => event_id, "inbox_context_id" => inbox_context_id, "evidence_id" => evidence_id}
-            fetched = @client.call("fetch_observation", params, download: true, purpose: :artifacts)
+            fetched = @client.call("fetch_observation", params, download: true, purpose: :artifacts, timeout: 30)
             bytes, observation, binding = verify_evidence!(fetched, params, map, fixed, snapshot)
             result = @signing_key_factory.call(uid).with(reference: fixed.fetch("receipt_private_key"), fingerprint: grant.fetch("fingerprint")) do |key, artifacts|
               @kernel.live!(caller)
+              @kernel.live!(binding.fetch("runtime_binding").fetch("runtime_process_binding"))
               current = snapshot!(context, selection, inbox_context_id)
               unavailable!("event changed before signing") unless current == snapshot
               # Revalidate native semantics at the final snapshot, under the
@@ -81,15 +83,17 @@ module Ace
               signed_bytes = JSON.generate(receipt)
               signature = key.sign(OpenSSL::Digest::SHA256.new, signed_bytes)
               artifacts.verify_unchanged!
-              @client.call("reconcile_inbox", params.reject { |field, _| field == "evidence_id" }.merge(
+              accepted = @client.call("reconcile_inbox", params.reject { |field, _| field == "evidence_id" }.merge(
                 "expected_generation" => expected_generation, "expected_registration" => registration,
                 "receipt_sha256" => Digest::SHA256.hexdigest(signed_bytes), "signature_sha256" => Digest::SHA256.hexdigest(signature)),
-                mutation_id: mutation_id, upload_parts: [signed_bytes, signature], purpose: :inbox_proof).data
+                mutation_id: mutation_id, upload_parts: [signed_bytes, signature], purpose: :inbox_proof, timeout: 30).data
+              verify_settlement!(accepted, params: params, map: map, mutation_id: mutation_id,
+                registration: registration, signed_bytes: signed_bytes, signature: signature, key_generation: grant.fetch("key_generation"))
+              accepted
             end
-            result
-          ensure
             ended = context.request("end_context_operation", {"operation_id" => grant.fetch("operation_id")})
             unavailable!("signing admission end is unconfirmed") unless ended == {"operation_id" => grant.fetch("operation_id"), "state" => "ended"}
+            result
           end
         rescue KeyError, TypeError
           unavailable!("installed signing selection is incomplete")
@@ -137,6 +141,7 @@ module Ace
           uid = binding.fetch("observer_uid")
           unless binding.fetch("runtime_binding") == runtime && uid == runtime.fetch("observer_uid") &&
               fixed.fetch("observer_uids").include?(uid) && descriptor.fetch("peer_uid") == uid &&
+              runtime.dig("runtime_process_binding", "uid") != @kernel.capture(Process.pid).fetch("uid") &&
               runtime.values_at("assignment_id", "attempt_id") == params.values_at("assignment_id", "attempt_id") &&
               binding.fetch("registration") == snapshot.slice(*REGISTRATION) &&
               binding.fetch("claim_generation") == snapshot.fetch("claim_generation") &&
@@ -147,6 +152,29 @@ module Ace
           observation = NativeObservation.decode!(bytes, snapshot: snapshot, runtime: runtime)
           unavailable!("unsupported signer observation outcome") unless observation["outcome"] == "consumed"
           [bytes, observation, binding]
+        end
+
+        def verify_settlement!(data, params:, map:, mutation_id:, registration:, signed_bytes:, signature:, key_generation:)
+          unless data.is_a?(Hash) && data.values_at("event_id", "attempt_id", "inbox_context_id", "registration", "state") ==
+              [params.fetch("event_id"), params.fetch("attempt_id"), params.fetch("inbox_context_id"), registration, "completed"]
+            unavailable!("canonical settlement response differs")
+          end
+          %w[receipt_ref signature_ref].zip([signed_bytes, signature]).each do |field, bytes|
+            reference = data[field]
+            unless reference.is_a?(Hash) && reference.keys.sort == %w[artifact_id bytes ref sha256] &&
+                reference["artifact_id"].is_a?(String) && Molecules::CanonicalEvidence::ID.match?(reference["artifact_id"]) &&
+                reference["ref"] == "evidence/imports/#{reference.fetch('artifact_id')}" && reference["bytes"] == bytes.bytesize &&
+                reference["sha256"] == Digest::SHA256.hexdigest(bytes)
+              unavailable!("canonical signed proof reference differs")
+            end
+          end
+          effect = Ace::Herdr::Molecules::InboxContextEffectBinding.verify!(data.fetch("context_operation"))
+          expected = params.reject { |field, _| field == "evidence_id" }.merge("project_id" => map.fetch("project_id"),
+            "mapping_id" => @client.mapping_id, "mutation_id" => mutation_id, "registration" => registration,
+            "key_generation" => key_generation, "receipt_sha256" => Digest::SHA256.hexdigest(signed_bytes),
+            "signature_sha256" => Digest::SHA256.hexdigest(signature))
+          unavailable!("canonical settlement operation differs") unless expected.all? { |field, value| effect[field] == value }
+          true
         end
 
         def unavailable!(message)

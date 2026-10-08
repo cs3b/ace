@@ -38,7 +38,7 @@ module Ace
       end
 
       class Client
-        attr_accessor :data, :bytes, :fail_reply
+        attr_accessor :data, :bytes, :fail_reply, :context, :bad_ack
         attr_reader :uploads
         def initialize(data, bytes)
           @data, @bytes, @uploads = data, bytes, []
@@ -47,12 +47,25 @@ module Ace
         def call(operation, params, **options)
           case operation
           when "fetch_observation"
-            raise "bad fetch mode" unless options == {download: true, purpose: :artifacts}
+            raise "bad fetch mode" unless options == {download: true, purpose: :artifacts, timeout: 30}
             Authority::Client::Reply.new(data: data, parts: [bytes], replayed: false)
           when "reconcile_inbox"
             @uploads << [params, options]
+            context.record["state"] = "completed"
+            proof, signature = options.fetch(:upload_parts)
+            references = [proof, signature].each_with_index.map do |bytes, index|
+              {"ref" => "evidence/imports/proof#{index}", "artifact_id" => "proof#{index}",
+                "bytes" => bytes.bytesize, "sha256" => Digest::SHA256.hexdigest(bytes)}
+            end
+            effect = params.slice("assignment_id", "attempt_id", "event_id", "inbox_context_id", "receipt_sha256", "signature_sha256").merge(
+              "project_id" => "ace", "mapping_id" => "mapping", "mutation_id" => options.fetch(:mutation_id),
+              "schema" => "ace.herdr.inbox-context-effect/v1", "operation_id" => "c" * 32, "key_generation" => 1,
+              "registration" => params.fetch("expected_registration"))
+            response = params.slice("event_id", "attempt_id", "inbox_context_id").merge("registration" => params.fetch("expected_registration"),
+              "state" => "completed", "receipt_ref" => references.first, "signature_ref" => references.last, "context_operation" => effect)
+            response["receipt_ref"]["sha256"] = "0" * 64 if bad_ack
             raise AttemptErrors::EvidenceUnavailable, "reply lost" if fail_reply
-            Authority::Client::Reply.new(data: {"state" => "completed"}, replayed: uploads.size > 1)
+            Authority::Client::Reply.new(data: response, replayed: uploads.size > 1)
           else raise "unexpected authority operation"
           end
         end
@@ -98,6 +111,7 @@ module Ace
         @deployment.define_singleton_method(:project) { |_| {"signer_uids" => [40], "inbox_contexts" => {"context" => fixed}} }
         @deployment.define_singleton_method(:authority) { |_| {"uid" => 12} }
         @context = Context.new(@record, fingerprint)
+        @client.context = @context
         loader = Object.new
         loader.define_singleton_method(:with) do |**_args, &block|
           reader = Object.new
@@ -122,14 +136,16 @@ module Ace
         assert_equal first, second
         assert KEY.verify(OpenSSL::Digest::SHA256.new, first.last, first.first)
         assert_equal @record.slice(*Authority::InboxObservationSigner::REGISTRATION), @client.uploads.last.first["expected_registration"]
-        assert_equal ["begin_context_operation", "snapshot_context", "snapshot_context", "end_context_operation"] * 2, @context.calls
+        assert_equal "completed", @record["state"]
+        assert_equal ["begin_context_operation", "snapshot_context", "snapshot_context",
+          "begin_context_operation", "snapshot_context", "snapshot_context", "end_context_operation"], @context.calls
       end
 
       def test_generation_drift_or_ineligible_evidence_cannot_sign_or_reconcile
         @context.drift = true
         assert_raises(AttemptErrors::EvidenceUnavailable) { settle }
         assert_empty @client.uploads
-        assert_equal "end_context_operation", @context.calls.last
+        refute_includes @context.calls, "end_context_operation"
         @context.drift = false
         @client.data["eligible"] = false
         assert_raises(AttemptErrors::EvidenceUnavailable) { settle }
@@ -144,6 +160,15 @@ module Ace
           assert_empty @client.uploads
           @client.data["descriptor"] = original
         end
+      end
+
+      def test_wrong_canonical_settlement_ack_retains_admission
+        @client.bad_ack = true
+        assert_raises(AttemptErrors::EvidenceUnavailable) { settle }
+        refute_includes @context.calls, "end_context_operation"
+        @client.bad_ack = false
+        assert_equal "completed", settle["state"]
+        assert_equal "end_context_operation", @context.calls.last
       end
 
       def test_worker_observer_and_owner_cannot_act_as_signer

@@ -16,7 +16,8 @@ ace-assign inbox-settle --project PROJECT --mapping MAPPING \
 Every selector is required. Project and mapping must agree with the installed
 map. The context must configure the caller as a signer, distinct from observer,
 worker, launcher, context owner and assignment authority. The retained admission
-excludes key rotation until validation, signing and reconciliation return. The
+excludes key rotation until exact canonical settlement is positively verified.
+Refused or unconfirmed requests retain admission for explicit recovery. The
 context snapshot is checked again immediately before signing; downstream event
 locking still refuses stale generation or registration.
 
