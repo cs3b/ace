@@ -15,3 +15,7 @@ Independent reviewer `/root/review_lab_bootstrap` approved exact `bd1502e19` aft
 ## Authority reconstruction before proof consumption
 
 Independent reviewer `review_lab_bootstrap` approved `822505693`, integrated as `bfa15ab37`: after canonical proof creation, reconstruct actual LaunchLifecycle/Endcap/Router from the retained journal before public finish and release. Assertions require a new owner object, unchanged journal and no replacement service start; existing surviving-writer refusal remains. Executed **1 test / 19 assertions**, 17.87s (`22a768f3-27d3-4c43-8df3-8b7551135479`), then **1/19**, 17.7s after combining the reviewed lifecycle identity repair (`483f0f4f-5bf1-45b6-b74f-e6f57b5def14`). An earlier unchanged-source rerun `3d226151` followed a failed edit command and is not evidence for the reconstruction addition. These are controlled source-owner reconstruction checks, not installed process restart acceptance.
+
+## Replaced incarnation after reconstruction
+
+Independent reviewer `review_lab_bootstrap` approved `b5f55ad8a`, integrated as `da15956b6`. After reconstruction, changing the actual controlled manager observation to a different valid slice InvocationID makes public finish refuse and leaves the canonical ref unchanged. Restoring the original observation preserves the positive finish/release path. Executed **1 test / 21 assertions**, 21.08s, report `745cec3f-2169-4604-8a9b-b24a7f145e00`. This is a controlled SC4 regression, not proof of installed restart behavior or full SC4 completion.
