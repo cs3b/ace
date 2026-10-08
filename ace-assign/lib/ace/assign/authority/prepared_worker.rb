@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "ace/herdr/molecules/codex_runtime_selection"
 require_relative "prepared_input"
 require_relative "prepared_queue"
 require_relative "../molecules/fork_session_launcher"
@@ -11,8 +12,9 @@ module Ace
       # the original issued capability and actual kernel birth decide admission.
       class PreparedWorker
         def initialize(kernel: Ace::Runtime::Molecules::ProtectedLinux.new, client_factory: nil, launcher: nil, env: ENV,
-          workspace_reader_factory: nil)
+          workspace_reader_factory: nil, codex_runtime: nil)
           @kernel, @launcher, @env = kernel, launcher, env
+          @codex_runtime = codex_runtime
           @client_factory = client_factory || ->(mapping) { Client.new(mapping_id: mapping, kernel: @kernel) }
           @workspace_reader_factory = workspace_reader_factory || ->(projection) {
             Molecules::LifecycleExclusion.workspace_reader(projection: projection)
@@ -44,13 +46,12 @@ module Ace
           root = queue.activate_original!
           unless root
             @workspace_lease.verify_unchanged!
-            @workspace_lease.close!
             return {"state" => "completed"}
           end
           launcher = @launcher || Molecules::ForkSessionLauncher.new(config: {})
           result = launcher.launch_provider_session(assignment_id: assignment, fork_root: input.descriptor.fetch("scope"),
             provider: root.fork_provider || Molecules::ForkSessionLauncher::DEFAULT_PROVIDER, cache_dir: queue.directory,
-            prepared_input: input)
+            prepared_input: input, codex_runtime: @codex_runtime)
           queue.with_executor do |executor|
             state = executor.status.fetch(:state)
             unless state.failed.empty? && state.subtree_complete?(input.descriptor.fetch("scope"))
@@ -58,10 +59,11 @@ module Ace
             end
           end
           @workspace_lease.verify_unchanged!
-          @workspace_lease.close!
           result
         rescue SystemCallError, IOError
           raise AttemptErrors::EvidenceUnavailable, "prepared_input_unavailable: published worker queue or provider output is unavailable"
+        ensure
+          @workspace_lease&.close!
         end
       end
     end

@@ -51,6 +51,7 @@ module Ace
           # @param options [Hash] Generation options
           # @return [Hash] Response with text and metadata
           def generate(messages, **options)
+            raise Ace::LLM::ProviderError, "Managed Codex remote runtime requires interactive terminal execution" if options[:codex_runtime]
             validate_codex_availability!
 
             # Convert messages to prompt format
@@ -112,6 +113,7 @@ module Ace
           end
 
           def build_interactive_invocation(messages, **options)
+            return managed_remote_invocation(messages, options) if options[:codex_runtime]
             validate_codex_availability!
 
             prompt = format_messages_as_prompt(messages)
@@ -138,6 +140,25 @@ module Ace
           end
 
           private
+
+          def managed_remote_invocation(messages, options)
+            runtime = options.fetch(:codex_runtime)
+            unless defined?(Ace::Herdr::Molecules::CodexRuntimeSelection) &&
+                runtime.is_a?(Ace::Herdr::Molecules::CodexRuntimeSelection)
+              raise Ace::LLM::ProviderError, "Managed Codex requires the original held runtime"
+            end
+            runtime.verify!
+            unless Array(options[:cli_args]).empty? && !options[:sandbox]
+              raise Ace::LLM::ProviderError, "Managed Codex forbids caller command overrides"
+            end
+            # The retained selection already verifies this immutable intent and
+            # accepted executable closure; no PATH/version/auth probe is used.
+            prompt = format_messages_as_prompt(messages)
+            working_dir = Atoms::ExecutionContext.resolve_working_dir(working_dir: options[:working_dir],
+              subprocess_env: options[:subprocess_env])
+            {command: runtime.remote_resume_arguments(model: @model) + [prompt], env: options[:subprocess_env] || {},
+              working_dir: working_dir, prompt: prompt}
+          end
 
           def format_messages_as_prompt(messages)
             # Handle both array of message hashes and string prompt

@@ -40,3 +40,7 @@ Wrong peer or stale/missing exact binding returns a classified refusal/uncertain
 ## Acceptance
 
 Retain sanitized real add/read/turn evidence and exact installed version/source for idle and busy queues, duplicate identical text and restart.
+
+## Managed prepared worker
+
+The fixed prepared-worker source accepts only a typed, still-held original Codex runtime from installed composition. Its provider resumes the exact published endpoint/thread with the captured drive prompt in the original inherited worker terminal. Headless remote execution, missing terminal, missing runtime, wrong mapping/model, caller flags and ambient session lookup refuse. Terminal exit alone does not complete prepared work: original queue and candidate/result checks still apply. The installed startup factory/runtime handoff and terminal provision remain open source joins; there is no user flag or environment variable to bypass them.

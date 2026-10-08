@@ -10,7 +10,7 @@ module Ace
         end
 
         def build(provider_model:, prompt:, model: nil, preset: nil, system: nil, cli_args: nil,
-          system_append: nil, sandbox: nil, working_dir: nil, subprocess_env: nil)
+          system_append: nil, sandbox: nil, working_dir: nil, subprocess_env: nil, codex_runtime: nil)
           parse_result = @parser.parse(provider_model)
           raise Error, parse_result.error unless parse_result.valid?
 
@@ -40,6 +40,9 @@ module Ace
             subprocess_command_prefix: nil,
             last_message_file: nil
           )
+
+          generation_opts[:codex_runtime] = codex_runtime if codex_runtime
+          raise Error, "Codex runtime requires Codex provider" if codex_runtime && parse_result.provider != "codex"
 
           client = @registry.get_client(parse_result.provider, model: final_model)
           unless client.respond_to?(:interactive_supported?) && client.interactive_supported?
