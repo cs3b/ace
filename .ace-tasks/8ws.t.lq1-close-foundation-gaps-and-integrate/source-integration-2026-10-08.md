@@ -35,9 +35,9 @@ Lab integration branch `codex/lab-source-integration` joins coldboot, selected n
 - [x] `qkc` executable source assets and classified coupling inventory integrated. Final source review remains open; installed execution belongs only to lab-config `gad.2`.
 - [x] Codex read-only completed-turn query (`xza.0`) joined at `a275ee043`. The context owner now selects the retained claim and exposes an authenticated `observe_context` route, rechecking record/admission after the query. Root joined source checks: 117 tests/828 assertions PASS (`a2b1f3f0`), including actual record-to-WebSocket lost-reply flow and scoped socket admission; event-lock deadline check separately 7/41 PASS (`80fc1461`). Candidate observation never signs, imports, settles or resends. The initial new-module NameError is retained in `18e98e68`, corrected before these checks.
 - [x] Public protected `inbox observe` CLI joined at `5407d873d`, using existing original-selection status and authenticated `observe_to_sign` admission, with candidate-only output. The final joined nine-file check passed 129 tests/1255 assertions (`fad9b8e3`) in 5.87s. Lab source Codex producer/static/transport compatibility check passed 4 Python tests in 1.60s; no native or installed probe. `xza.0` is now in-progress, still needs_review, with every whole-slice success criterion open.
-- [ ] Canonical observation import/fetch and independent signer join remain actual implementation work. Query candidates and signed-fixture bytes do not close these paths.
+- [x] Canonical observation import/fetch and distinct signer source are joined through `33b432e6c`. Public `inbox-observe` and `inbox-settle` adoption is committed at `ab5094864`; the actual journal/owner/signature/replay check is joined at `8deb2633b`. This closes the local producer/import/fetch/sign/reconcile path, not deployed permissions or whole-task acceptance.
 - [x] Obsolete fake-native inbox E2E removed at `737c4ef79`; its scripts manufactured native acknowledgement and required the removed argv path. Source responsibility remains in maintained record/socket checks; installed requirements remain in gad.2. No replacement Lab emulation was added.
-- [ ] Managed Codex UI/worker selection (`xza.0`/gad startup): actual PreparedWorker provider path calls QueryInterface and CodexClient builds codex exec. It does not consume the literal remote runtime/thread. This source consumer must be joined; a published stage alone is insufficient.
+- [x] Managed Codex UI/worker consumer is joined at `e293dd435`: an admitted typed runtime reaches the actual QueryInterface/provider and remote resume in the original worker terminal. Missing runtime/TTY and mismatched selectors refuse. The actual original-entry producer supplying that typed runtime remains unfinished below; this is not a working installed startup.
 - [ ] Lab Codex attempt-owned startup: finish original factory/producer/client ownership, exact socket lifetime, contained context startup and whole-slice retirement/recovery. Official Codex uses a native-UID-only physical socket exposed through an advertised symlink; resolving the alias cannot grant the distinct service UIDs access. Literal startup input handoff remains unresolved; no latest-session lookup, unsafe chmod or empty-scope exception is accepted.
 - [x] Canonical protected workflow source adoption: document and verify the actual round/export/submit-result public sequence, preserving ordinary/protected ownership and exact current candidate gates.
 - [ ] One independent review of the final joined source, plus appropriate local unit/integration verification.
@@ -52,5 +52,56 @@ public status deliberately omits native receipts. A proposed duplicate CLI
 check assumed those private fields were present and failed its regression
 (`904c96c8`); that dead check and its assumed-field test were removed without
 widening public status or changing the actual owner validation. The final joined
-check above covers the delivered behavior. No observation is promoted into a
-trusted evidence ID or signed proof by these changes.
+check above covers the delivered behavior. The Herdr query alone still does not
+promote a candidate into a trusted evidence ID or signed proof. The separate
+joined ACE Assign producer and signer below now perform that local source flow
+through the existing canonical owner.
+
+## Latest joined source verification
+
+`8e4488183` makes the private protected context snapshot expose the retained Codex
+submission and queue correlation, leaving ordinary public status unchanged.
+Its focused Herdr checks passed 36 tests/245 assertions (`f737178d`). The authority
+import/fetch, static trust and transfer owner executed 38 tests/263 assertions in
+its worktree before source integration; that count is not a fresh root rerun.
+
+The root joined check at `8deb2633b` plus the exact source subsequently committed
+as `ab5094864` passed **24 tests/183 assertions in 38.67s** (`d41ba772`). It uses
+the maintained real temporary Git journal, Inbox/context owner and RSA proof.
+Native history, installed credentials and protected key-reader admission are
+controlled source seams. Both lost import and lost reconciliation replies keep
+admission; retries use identical original mutation/generation, one canonical
+observation and one reconciliation, without message resend. Uncertain history
+and wrong candidate association create no evidence. The preceding focused CLI,
+key and context check passed 20/136 (`21f628f3`).
+
+These checks found and fixed actual source errors: CLI relative loading,
+mapping-record handoff and runtime target projection using the existing closed
+`ObservationTrust::TARGET`. Held deployment/history references are now checked
+again after the public workflow callback. Initial root loading failure remains
+recorded as `1845b585`; the producer mismatch and fix are documented in the
+child's `joined-observation-source-checkpoint.md`.
+
+`ace-task doctor --check frontmatter --errors-only` scanned 795 records without
+frontmatter errors; it still reports 465 warnings. This is not full doctor
+scope/structure acceptance or repair of the historical backlog.
+
+## Remaining original startup producer, verified in source
+
+Inspection of `LaunchLifecycle.complete_native_start!` confirms that its Codex
+startup callback result is discarded, then `scope_native_bound` retains worker
+readiness alone. Authenticated PreparedInput therefore has no original literal
+completed installation/runtime-stage selection to open in `authority worker`.
+The original selected CLI entry has no such selector either. Adding a factory
+that reads a synthetic or mutable selection would leave a disconnected product;
+that proposed subagent slice was stopped before edits.
+
+The original startup owner must produce those references before gate release,
+retain them in the same native-binding event, export them through authenticated
+PreparedInput and hold the exact runtime around original worker execution.
+Static installation can precede the attempt; the native start/ACL and literal
+handoff contract remains the pending Captain decision in the child's
+`codex-root-start-phase-contract-candidate.md`. No dependent root phase was
+implemented. Native provisioning grants/key installation, whole-source review,
+main integration, fresh gems and installed `gad.2` acceptance remain delivery
+obligations rather than inferred outcomes of these tests.
