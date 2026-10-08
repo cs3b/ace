@@ -72,3 +72,7 @@ Add acceptance scenario SC7: use the installed canonical workflow with distinct 
 ## Merge producer interface precision — pending review
 
 The fixed protected producer input, selected forge/PR/provenance/head/method checks, existing receiver response and uncertainty behavior are specified in delivery-service-adoption.md, section “Fixed merge producer”. This completes the previously unspecified configured executor interface without adding authority, journal or native evidence claims. Original worker protected delivery consumption remains part of this task and cannot use a caller-local receipt/journal fallback.
+
+## Draft public protected request adoption
+
+The bounded original merge consumer is independently accepted through 531963609; its controlled completion/replay/interruption and negative gates are retained in source-checkpoint-protected-merge-consumer.md. This does not make the current caller-local `ace-lab service request/status` valid for protected workers. The minimal public request/status amendment is protected-service-request-cli-contract-candidate.md: explicit original mapping/scope/service/candidate/expected-generation selectors, existing authenticated receiver claim and canonical consumer, no local fallback and no refreshed-generation retry. This amendment remains draft pending independent readiness review. Create/update/ready authorization ordering remains a separate unresolved policy decision; the amendment does not change that gate or whole-task status.
