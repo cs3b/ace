@@ -10,7 +10,7 @@ tags: [ace-hitl, pilot, release, rubygems]
 position: 6o000j
 bundle:
   presets: [project]
-  files: [.ace-bin/ace-rubygems-publish, ace-hitl/lib/ace/hitl/lifecycle/kinds.rb, ace-hitl/lib/ace/hitl/lifecycle/effects.rb]
+  files: [.ace-bin/ace-rubygems-publish, ace-hitl/lib/ace/hitl/lifecycle/kinds.rb, ace-hitl/lib/ace/hitl/lifecycle/effects.rb, .ace-tasks/8wm.t.vs3-pilot-next-ace-release-exclusively/scoped-publication-source-contract-candidate.md, .ace-tasks/8wm.t.vs3-pilot-next-ace-release-exclusively/source-contract-review.md]
   commands: []
 title: Deliver scoped HITL publication workflow and verification fixtures
 ---
