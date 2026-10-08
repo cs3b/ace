@@ -117,11 +117,11 @@ module Ace
             context.fetch("native_mapping_id") == params.fetch("mapping_id") &&
               context.fetch("owner_credentials").values_at("uid", "gid", "groups") == peer.values_at("uid", "gid", "groups")
           end
-          context_query = request["operation"] == "inbox_context_completion"
+          context_query = %w[inbox_context_completion inbox_context_original].include?(request["operation"])
           if context_query || !owner_contexts.empty?
             unless context_query && @composition == "services" && request["mutation_id"].nil? &&
                 owner_contexts.key?(params.fetch("inbox_context_id")) && frame.fetch(:bytesize) <= 16_384
-              raise AttemptErrors::UnauthorizedIdentity, "context owner is exclusive to its completion query"
+              raise AttemptErrors::UnauthorizedIdentity, "context owner is exclusive to its fixed read-only inbox queries"
             end
             role = :context_owner
           end
@@ -163,7 +163,7 @@ module Ace
             return
           end
           if %w[bind_inbox finish recover request_review review_status launch_review_intent cancel_review evidence_fetch assignment_inventory observe_execution_scope close_execution_scope stop_attempt prompt_status launch_input_inhibit_selection launch_input_inhibit_completion launch_prompt_intent launch_prompt_completion claim_service_settlement workspace_prune_preview_context].include?(request["operation"]) ||
-              @composition == "services" && %w[attempt_status inbox_context_completion].include?(request["operation"])
+              @composition == "services" && %w[attempt_status inbox_context_completion inbox_context_original].include?(request["operation"])
             raise ArgumentError, "review control header is oversized" if %w[request_review review_status cancel_review launch_review_intent].include?(request["operation"]) && frame.fetch(:bytesize) > 16_384
             bodyless_read!(socket, deadline)
           end

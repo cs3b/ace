@@ -7,6 +7,7 @@ require "ace/herdr/organisms/inbox"
 require "ace/herdr/organisms/inbox_context_owner"
 require "ace/herdr/organisms/inbox_context_server"
 require "ace/assign/authority/inbox_context_completion"
+require "ace/assign/authority/inbox_context_original"
 require "ace/assign/authority/server"
 require "ace/assign/authority/router"
 require "ace/herdr/cli"
@@ -62,7 +63,45 @@ module Ace
         end
       end
 
-      def fixture(child: false, inbox: true, direct: false)
+      def test_original_query_joins_accepted_guard_and_registration_without_effect_permission
+        fixture(child: true, inbox: false, original_terminal: "term_aa") do
+          @context["owner_credentials"] = @context_peer.slice("uid", "gid", "groups")
+          child = events.find { |event| event["type"] == "scope_child_bound" }.dig("payload", "original_process_binding")
+          guard = {"terminal_id" => child.fetch("terminal_id"), "runtime_incarnation" => BOOT,
+            "child" => child.fetch("process_identity")}
+          data = @params.merge("process_binding" => child, "guarded_origin" => guard)
+          mutate("record_launch", "record-original", 5, {data: data})
+          query = Authority::InboxContextOriginal.new(deployment: @deployment, history: @history,
+            authority_id: "authority", journals: {"project" => @journal}, kernel: @kernel)
+          params = @params.merge("event_id" => "event", "inbox_context_id" => "context", "purpose" => "enqueue",
+            "payload_sha256" => Digest::SHA256.hexdigest("message"), "receipt_key_sha256" => Digest::SHA256.hexdigest(@key.public_to_der))
+          request = {"version" => 1, "operation" => "inbox_context_original", "mutation_id" => nil,
+            "project_id" => "project", "params" => params}
+          before = @journal.ref_value
+          result = query.dispatch(request: request, peer: @context_peer, role: :context_owner).fetch(:data)
+          assert_equal child, result.fetch("process_binding")
+          assert_equal guard, result.fetch("guarded_origin")
+          refute result.fetch("registered")
+          refute result.key?("agent_session")
+          assert result.frozen?
+          assert result.fetch("process_binding").frozen?
+          assert_equal before, @journal.ref_value
+          assert_raises(AttemptErrors::EvidenceUnavailable) do
+            query.dispatch(request: request.merge("params" => params.merge("purpose" => "deliver")), peer: @context_peer, role: :context_owner)
+          end
+          assert_raises(AttemptErrors::UnauthorizedIdentity) { query.dispatch(request: request, peer: @peer, role: :context_owner) }
+          registration = result.fetch("registration")
+          mutate("fixture_registration", "original-registration", 6, {data: {}, events: [{type: "inbox_binding", payload: {
+            "event_id" => "event", "attempt_id" => "attempt", "inbox_context_id" => "context", "registration" => registration}}]})
+          accepted = request.merge("params" => params.merge("purpose" => "deliver"))
+          assert query.dispatch(request: accepted, peer: @context_peer, role: :context_owner).fetch(:data).fetch("registered")
+          assert_raises(AttemptErrors::EvidenceUnavailable) do
+            query.dispatch(request: accepted.merge("params" => accepted.fetch("params").merge("payload_sha256" => "f" * 64)), peer: @context_peer, role: :context_owner)
+          end
+        end
+      end
+
+      def fixture(child: false, inbox: true, direct: false, original_terminal: "terminal")
         @direct_fixture = direct
         Dir.mktmpdir do |root|
           root = File.realpath(root)
@@ -138,7 +177,7 @@ module Ace
             "resource_identities" => parent.fetch("resource_identities").map { |resource| resource.merge("mount_id" => 99) },
             "network_namespace_identity" => parent.fetch("network_namespace_identity"), "network_admission_event_id" => admission.fetch("digest")}}]})
           if child
-            original = {"runtime" => "herdr", "session" => "w1", "pane" => "p1", "terminal_id" => "terminal",
+            original = {"runtime" => "herdr", "session" => "w1", "pane" => "p1", "terminal_id" => original_terminal,
               "process_identity" => process(91, 13001).merge("parent_pid" => 90), "shell_identity" => process(91, 13001).merge("parent_pid" => 90),
               "native_origin" => {"workspace" => "w1", "tab" => "t1", "pane" => "p1", "server_identity" => server,
                 "socket_identity" => [1, 2, 13001], "command" => ["/fixture/gate", "mapping", "ticket"], "cwd" => "/scratch"}}

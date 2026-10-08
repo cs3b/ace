@@ -45,6 +45,9 @@ module Ace
         response, calls = exchange
         assert_equal "ok", response.fetch("status")
         assert_equal :context_owner, calls.fetch(0).fetch(:role)
+        original_response, original_calls = exchange(operation: "inbox_context_original")
+        assert_equal "ok", original_response.fetch("status")
+        assert_equal :context_owner, original_calls.fetch(0).fetch(:role)
         %w[attempt_status native_readiness reserve_attempt].each do |operation|
           response, calls = exchange(operation: operation)
           assert_equal "unauthorized", response.dig("error", "code")
