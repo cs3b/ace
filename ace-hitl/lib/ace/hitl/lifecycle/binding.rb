@@ -16,7 +16,7 @@ module Ace
           raise NotImplementedError
         end
 
-        def reverse_address(attempt:, caller_pid:)
+        def reverse_address(assignment:, attempt:, project:, caller_pid:)
           raise NotImplementedError
         end
 

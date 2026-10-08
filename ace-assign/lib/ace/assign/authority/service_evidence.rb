@@ -4,6 +4,7 @@ require_relative "../molecules/evidence_journal"
 require_relative "../molecules/canonical_evidence"
 require_relative "service_cleanup_evidence"
 require_relative "service_cleanup_dispatch"
+require_relative "service_publication_evidence"
 require_relative "../molecules/execution_scope_lineage"
 
 module Ace
@@ -15,6 +16,7 @@ module Ace
       class ServiceEvidence
         include ServiceCleanupEvidence
         include ServiceCleanupDispatch
+        include ServicePublicationEvidence
         FIELDS = (Molecules::EvidenceJournal::TERMINAL_BINDING_FIELDS +
           %w[dispatch_ticket_id claim_binding candidate_generation claim_generation policy_digest]).freeze
         CHALLENGE_FIELDS = %w[version request_id input_digest claim_binding dispatch_ticket_id no_effect_challenge
@@ -51,6 +53,13 @@ module Ace
             boot = record.fetch("worker_process_binding").fetch("started_at").split(":").fetch(1)
             Molecules::ExecutionScopeLineage.validate_process_identity!(executor, boot_id: boot)
             raise AttemptErrors::EvidenceUnavailable, "original cleanup executor differs" unless executor.fetch("uid") == record.fetch("executor_uid")
+            binding["executor_process_binding"] = executor
+          end
+          if record["operation"] == "publish" && record["dispatch_phase"] != "issued"
+            executor = record.fetch("executor_process_binding")
+            boot = record.fetch("worker_process_binding").fetch("started_at").split(":").fetch(1)
+            Molecules::ExecutionScopeLineage.validate_process_identity!(executor, boot_id: boot)
+            raise AttemptErrors::EvidenceUnavailable, "original publication executor differs" unless executor.fetch("uid") == record.fetch("executor_uid")
             binding["executor_process_binding"] = executor
           end
           unless %w[claim_binding policy_digest].all? { |key| binding[key].is_a?(String) && binding[key].match?(/\A[0-9a-f]{64}\z/) } &&
@@ -186,7 +195,10 @@ module Ace
         end
 
         def call(reference, record, state, pending)
-          return cleanup_collection!(reference, record, state, pending) if reference.is_a?(Array)
+          if reference.is_a?(Array)
+            return publication_collection!(reference, record, state, pending) if record["operation"] == "publish"
+            return cleanup_collection!(reference, record, state, pending)
+          end
           no_effect = state == "failed-settled"
           expected = context(record, no_effect: no_effect, pending: pending)
           bytes = if pending && pending[:pending_events]

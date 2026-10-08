@@ -48,7 +48,9 @@ module ProtectedServiceBoundaryFixture
       call("accept_review", params.merge("candidate_generation" => number, "purpose_id" => review.fetch("review_id")),
         id: "accept-review", peer: @reviewer, role: :reviewer, transfer: input)
     end
-    bytes = JSON.generate("target" => {"resource" => "fixture"})
+    bytes = JSON.generate("target" => {"resource" => "rubygems:ace-hitl:1.2.3", "artifact_digest" => "b" * 64},
+      "publication" => {"gem_name" => "ace-hitl", "version" => "1.2.3", "head" => @head,
+        "registry" => "https://rubygems.org", "artifact_relative_path" => "pkg/ace-hitl-1.2.3.gem"})
     digest = Ace::Lab::Atoms::ServiceInput.digest(JSON.parse(bytes))
     target = Ace::Lab::Atoms::ServiceInput.target(JSON.parse(bytes))
     @document["authorizations"]["decision"] = {"operation" => "publish", "project_id" => "project",

@@ -1,6 +1,6 @@
 ---
 id: 8wm.t.vs3
-status: pending
+status: in-progress
 priority: high
 created_at: "2026-09-23 21:11:14"
 estimate: TBD

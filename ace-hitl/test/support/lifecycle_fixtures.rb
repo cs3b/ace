@@ -73,7 +73,7 @@ module LifecycleFixtures
       yield
     end
 
-    def reverse_address(attempt:, caller_pid:)
+    def reverse_address(assignment:, attempt:, project:, caller_pid:)
       @reverse
     end
 

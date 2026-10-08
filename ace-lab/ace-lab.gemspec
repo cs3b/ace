@@ -45,6 +45,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "ace-support-core", "~> 0.31"
   spec.add_dependency "ace-support-config", "~> 0.18"
   spec.add_dependency "ace-assign", "~> 0.64"
+  spec.add_dependency "ace-hitl", "~> 0.12"
 
   # Development dependencies
   spec.add_development_dependency "ace-support-test-helpers", "~> 0.14"

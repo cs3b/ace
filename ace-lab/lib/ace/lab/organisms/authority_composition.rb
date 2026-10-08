@@ -6,6 +6,10 @@ require "ace/assign/authority/launch_lifecycle"
 require "ace/assign/authority/endcap"
 require "ace/assign/authority/inbox_context_completion"
 require_relative "../molecules/protected_service_policy"
+require "ace/hitl/providers/lab"
+require "ace/hitl/providers/lab/protected_assignment_binding"
+require "ace/hitl/lifecycle/service_publication_binding"
+require "ace/hitl/lifecycle/service"
 
 module Ace
   module Lab
@@ -14,7 +18,7 @@ module Ace
       # and placement; source selects all handlers, policy and evidence readers.
       class AuthorityComposition
         REQUIRED_ENDCAP = %w[submit_candidate export_candidate assign_review accept_review request_service
-          begin_dispatch claim_service_settlement complete_service complete_no_effect submit_result finish recover bind_inbox reconcile_inbox
+          begin_dispatch publication_challenge publication_continue claim_service_settlement complete_service complete_no_effect submit_result finish recover bind_inbox reconcile_inbox
           service_status evidence_fetch].freeze
 
         def initialize(authority_id:, deployment: Ace::Assign::Authority::Deployment.load,
@@ -64,7 +68,21 @@ module Ace
             authority_id: @authority_id, journals: journals, kernel: @kernel)
           router = Ace::Assign::Authority::Router.new(launch: launch, handlers: [endcap, completion])
           Ace::Assign::Authority::Server.new(authority_id: @authority_id, deployment: @deployment, kernel: @kernel,
-            lifecycle: router, composition: "services")
+            lifecycle: router, composition: "services", hitl_service: publication_hitl(endcap, journals))
+        end
+
+        private
+
+        def publication_hitl(endcap, journals)
+          provider = Ace::Hitl::Providers::Lab
+          policy = provider.grants_policy(grants_path: provider::DEFAULT_GRANTS_PATH)
+          unless policy.service_uid == @deployment.authority(@authority_id).fetch("uid")
+            raise InvalidConfigurationError, "protected HITL service principal differs from installed authority"
+          end
+          ordinary = provider::ProtectedAssignmentBinding.new(authority: endcap, kernel: @kernel, journals: journals)
+          binding = Ace::Hitl::Lifecycle::ServicePublicationBinding.new(ordinary: ordinary, authority: endcap, kernel: @kernel)
+          Ace::Hitl::Lifecycle::Service.new(root: provider::DEFAULT_STORE_ROOT,
+            socket_path: provider::DEFAULT_SOCKET_PATH, binding: binding, policy: policy)
         end
       end
     end

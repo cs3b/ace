@@ -10,6 +10,7 @@ require_relative "grant_resolver"
 require_relative "caller_authorizer"
 require_relative "service_policy"
 require_relative "../atoms/protected_workspace_prune_input"
+require_relative "../atoms/protected_publication_input"
 
 module Ace
   module Lab
@@ -30,6 +31,8 @@ module Ace
           end
           input = if operation == "prune-preserved-workspace"
             Atoms::ProtectedWorkspacePruneInput.parse(bytes)
+          elsif operation == "publish"
+            Atoms::ProtectedPublicationInput.decode!(bytes)
           else
             JSON.parse(bytes)
           end
@@ -51,6 +54,9 @@ module Ace
         def prepare!(binding, input_bytes:)
           input = input_binding(input_bytes, expected_digest: binding.fetch("input_digest"),
             expected_target: binding.fetch("target"), operation: binding.fetch("operation"))
+          if binding["operation"] == "publish" && input.fetch(:input).dig("publication", "head") != binding.fetch("candidate_head")
+            raise SecurityError, "publication input head differs from admitted candidate"
+          end
           authorized = authorize!(binding)
           canonical = snapshot(binding).merge("executor_uid" => authorized.fetch(:operation).fetch("executor_uid"), "transport" => "unix")
           deep_freeze(authorized.merge(binding: canonical, input: input.fetch(:input)))

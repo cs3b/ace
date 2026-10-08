@@ -12,9 +12,10 @@ module Ace
       class Server
         CONNECTIONS = 16
         def initialize(authority_id:, lifecycle:, deployment: Deployment.load,
-          kernel: Ace::Runtime::Molecules::ProtectedLinux.new, composition: "launch")
+          kernel: Ace::Runtime::Molecules::ProtectedLinux.new, composition: "launch", hitl_service: nil)
           @authority_id, @lifecycle, @deployment, @kernel = authority_id, lifecycle, deployment, kernel
           @composition = composition
+          @hitl_service = hitl_service
           deployment.verify_composition!(authority_id, composition: composition)
           @service = deployment.authority(authority_id)
           @mutex = Mutex.new
@@ -37,6 +38,7 @@ module Ace
           unless lock.flock(File::LOCK_EX | File::LOCK_NB)
             raise AttemptErrors::Conflict, "assignment authority already owns its listener"
           end
+          start_hitl_service!
           path = @service.fetch("socket_path")
           if File.exist?(path) || File.symlink?(path)
             raise AttemptErrors::Conflict, "existing authority endpoint requires verified installer recovery"
@@ -45,6 +47,9 @@ module Ace
           File.chmod(0o660, path)
           @endpoint = wire.socket_identity(path)
           until @stopped
+            if @hitl_thread && !@hitl_thread.alive?
+              raise Ace::Runtime::RuntimeUnavailableError, "protected HITL boundary stopped before its authority"
+            end
             ready = IO.select([@listener], nil, nil, 0.25)
             next unless ready
             socket = @listener.accept_nonblock(exception: false)
@@ -69,6 +74,7 @@ module Ace
           raise unless @stopped
         ensure
           stop
+          stop_hitl_service!
           # Closing a stream does not cancel a handler already inside dispatch.
           # The owner lock and endpoint remain held until every handler ends.
           @mutex.synchronize { @handlers.dup }.each(&:join)
@@ -90,6 +96,29 @@ module Ace
         end
 
         private
+
+        # The existing HITL boundary is a sibling owned by this listener's
+        # lifetime. It must be ready before assignment ingress is opened.
+        def start_hitl_service!
+          return unless @hitl_service
+          ready = Queue.new
+          @hitl_thread = Thread.new do
+            @hitl_service.run(on_ready: -> { ready << :ready })
+          rescue Exception => error
+            @hitl_failure = error
+            ready << error
+          end
+          @hitl_thread.report_on_exception = false
+          result = ready.pop(timeout: 5)
+          raise Ace::Runtime::RuntimeUnavailableError, "protected HITL boundary startup timed out" if result.nil?
+          raise result if result.is_a?(Exception)
+        end
+
+        def stop_hitl_service!
+          return unless @hitl_thread
+          @hitl_service.stop
+          @hitl_thread.join
+        end
 
         def same_endpoint?(path)
           wire.socket_identity(path) == @endpoint

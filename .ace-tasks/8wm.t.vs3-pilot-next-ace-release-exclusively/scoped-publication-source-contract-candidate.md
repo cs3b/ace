@@ -1,6 +1,6 @@
 # Scoped publication source contract candidate
 
-Source base `818a4f64f`. Draft for independent review; no task promotion or publication authorization. The vs3 behavioral spec remains normative. This document resolves source composition, not installed gad.2 acceptance. Implementation must not start until the continuation and executor-HITL joins below are reviewed.
+Original source base `818a4f64f`; source-readiness review is recorded in `source-contract-review.md`. The vs3 behavioral spec remains normative. The implementation checkpoint below is ready for independent source review; it confers no live publication authorization or installed gad.2 acceptance.
 
 ## Existing owners and concrete gaps
 

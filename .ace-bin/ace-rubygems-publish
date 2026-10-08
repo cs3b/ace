@@ -15,6 +15,9 @@ require "pathname"
 require "rubygems"
 require "rubygems/package"
 require "yaml"
+require "json"
+require "digest"
+require "rubygems/commands/push_command"
 
 ROOT = Pathname.new(__FILE__).dirname.parent.realpath
 MAX_CONCURRENCY = 5
@@ -464,7 +467,134 @@ def publish!(queue)
   results
 end
 
+# One-artifact scoped boundary of this same publisher. RubyGems' maintained
+# push command owns HTTP/upload behavior; its automatic interactive MFA retry
+# is stopped before a second request so the service can obtain a scoped OTP.
+class ScopedPublicationPush < Gem::Commands::PushCommand
+  class Stop < StandardError
+    attr_reader :classification, :code
+    def initialize(classification, code)
+      @classification, @code = classification, code
+      super(code)
+    end
+  end
+
+  def publish_artifact(artifact)
+    options[:args] = [artifact]
+    options[:host] = "https://rubygems.org"
+    @user_defined_host = true
+    options[:attestations] = []
+    execute
+    @scoped_result || {"classification" => "uncertain", "code" => "unclassified_push_result"}
+  rescue Stop => error
+    {"classification" => error.classification, "code" => error.code}
+  rescue StandardError, Gem::SystemExitException
+    {"classification" => "uncertain", "code" => "publisher_interrupted"}
+  end
+
+  def sign_in(*, **)
+    raise Stop.new("failed", "executor_credentials_unavailable") unless api_key && !api_key.empty?
+  end
+
+  def mfa_unauthorized?(response)
+    return false unless super
+    classification = if ENV["GEM_HOST_OTP_CODE"].nil?
+      "otp-required"
+    elsif response.body.match?(/expired/i)
+      "otp-expired"
+    else
+      "otp-rejected"
+    end
+    raise Stop.new(classification, "provider_rejected_before_acceptance")
+  end
+
+  def api_key_forbidden?(response)
+    false # Never initiate a credential/key-scope mutation from publication.
+  end
+
+  def with_response(response, *)
+    if response.is_a?(Gem::Net::HTTPSuccess)
+      @scoped_result = {"classification" => "uncertain", "code" => "registry_verification_required"}
+    elsif response.is_a?(Gem::Net::HTTPClientError) && !response.is_a?(Gem::Net::HTTPRequestTimeout)
+      @scoped_result = {"classification" => "failed", "code" => "provider_rejected_non_otp"}
+    else
+      @scoped_result = {"classification" => "uncertain", "code" => "provider_result_ambiguous"}
+    end
+  end
+
+  def say(*)
+    nil # No provider body, credential or OTP appears in the result stream.
+  end
+
+  def alert_error(*)
+    nil
+  end
+end
+
+# Input is data supplied by the admitted receiver; it cannot authorize a push.
+# Artifact identity and metadata are checked again at the immediate publisher.
+def scoped_artifact_digest(file)
+  file.rewind
+  digest = Digest::SHA256.new
+  while (chunk = file.read(65536))
+    digest.update(chunk)
+  end
+  digest.hexdigest
+end
+
+def scoped_publish_one(input)
+  invoked = false
+  expected = %w[artifact artifact_digest gem_name version]
+  unless input.is_a?(Hash) && input.keys.sort == expected.sort &&
+      input["artifact"].is_a?(String) && input["artifact_digest"].is_a?(String) && input["artifact_digest"].match?(/\A[0-9a-f]{64}\z/)
+    return {"classification" => "failed", "code" => "invalid_artifact_selection"}
+  end
+  path = input.fetch("artifact")
+  File.open(path, File::RDONLY | File::NOFOLLOW | File::NONBLOCK) do |file|
+    before = file.stat
+    unless before.file? && before.size.between?(1, 64 * 1024 * 1024) &&
+        scoped_artifact_digest(file) == input.fetch("artifact_digest")
+      return {"classification" => "failed", "code" => "artifact_identity_mismatch"}
+    end
+    spec = Gem::Package.new(path).spec
+    unless spec.name == input["gem_name"] && spec.version.to_s == input["version"]
+      return {"classification" => "failed", "code" => "artifact_metadata_mismatch"}
+    end
+    identity = ->(stat) { [stat.dev, stat.ino, stat.uid, stat.gid, stat.mode, stat.size, stat.mtime, stat.ctime] }
+    unless identity.call(before) == identity.call(File.lstat(path)) && identity.call(before) == identity.call(file.stat)
+      return {"classification" => "failed", "code" => "artifact_identity_mismatch"}
+    end
+    invoked = true
+    result = ScopedPublicationPush.new.publish_artifact(path)
+    unless identity.call(before) == identity.call(File.lstat(path)) && identity.call(before) == identity.call(file.stat) &&
+        scoped_artifact_digest(file) == input.fetch("artifact_digest")
+      return {"classification" => "uncertain", "code" => "artifact_changed_during_push"}
+    end
+    result
+  end
+rescue StandardError
+  {"classification" => invoked ? "uncertain" : "failed", "code" => invoked ? "publisher_interrupted" : "invalid_artifact_selection"}
+end
+
 # --- main --------------------------------------------------------------------
+
+if $PROGRAM_NAME == __FILE__
+if ARGV == ["--scoped-publication"]
+  begin
+    input_bytes = STDIN.read(65537)
+    raise ArgumentError if input_bytes.bytesize > 65536
+    value = JSON.parse(input_bytes, allow_duplicate_key: false, allow_nan: false, max_nesting: 16)
+    otp = ENV["GEM_HOST_OTP_CODE"]
+    raise ArgumentError if otp && !otp.match?(/\A[0-9]{6}\z/)
+    puts JSON.generate(scoped_publish_one(value))
+  rescue StandardError
+    puts JSON.generate("classification" => "failed", "code" => "invalid_scoped_input")
+  ensure
+    ENV.delete("GEM_HOST_OTP_CODE")
+    otp&.clear
+  end
+  exit 0
+end
 
 if ARGV.include?("--help") || ARGV.include?("-h")
   puts usage
@@ -562,3 +692,5 @@ results = publish!(queue)
 puts
 puts "Published: #{results[:published].size}  Skipped (already published): #{results[:already_published].size}  Waves: #{total_waves} × ≤#{MAX_CONCURRENCY} concurrent  Mode: live"
 puts "Next step: run `ace-test-e2e ace-monorepo-e2e TS-MONO-001` to verify installation propagation."
+
+end

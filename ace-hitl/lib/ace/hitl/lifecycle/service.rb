@@ -48,6 +48,8 @@ module Ace
           @proposal_clock = proposal_clock
           @max_connections = MAX_CONNECTIONS
           @connections = 0
+          @handler_threads = []
+          @handler_sockets = []
           @connections_mutex = Mutex.new
           @stopping = false
           @server = nil
@@ -57,8 +59,9 @@ module Ace
 
         # Serve until #stop. Installs TERM/INT handlers for a clean
         # shutdown that unlinks the socket file.
-        def run
+        def run(on_ready: nil)
           prepare!
+          on_ready.call if on_ready
           if Thread.current == Thread.main
             %i[TERM INT].each do |signal|
               trap(signal) { stop }
@@ -86,12 +89,21 @@ module Ace
               end
               next
             end
-            Thread.new(connection) do |socket|
-              begin
-                serve_connection(socket)
-              ensure
-                @connections_mutex.synchronize { @connections -= 1 }
+            @connections_mutex.synchronize do
+              @handler_sockets << connection
+              @handler_threads.reject! { |thread| !thread.alive? }
+              thread = Thread.new(connection) do |socket|
+                begin
+                  serve_connection(socket)
+                ensure
+                  @connections_mutex.synchronize do
+                    @connections -= 1
+                    @handler_sockets.delete(socket)
+                  end
+                end
               end
+              thread.report_on_exception = false
+              @handler_threads << thread
             end
           end
         ensure
@@ -152,6 +164,16 @@ module Ace
         end
 
         def shutdown!
+          stop
+          @connections_mutex.synchronize { @handler_sockets.dup }.each { |socket| socket.close rescue nil }
+          failures = []
+          @connections_mutex.synchronize { @handler_threads.dup }.each do |thread|
+            begin
+              thread.join
+            rescue Exception => error
+              failures << error
+            end
+          end
           begin
             @server&.close
           rescue SystemCallError, IOError
@@ -167,6 +189,7 @@ module Ace
             @endpoint_lock = nil
           end
           log("stopped")
+          raise failures.first unless failures.empty?
         end
 
         # The socket's parent directory is part of the trust boundary: it
@@ -213,7 +236,7 @@ module Ace
             policy: @policy,
             identity: peer,
             vault: @vault,
-            proposal_clock: @proposal_clock
+            proposal_clock: @proposal_clock, stopping: -> { @stopping }
           )
         end
 

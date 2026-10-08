@@ -23,13 +23,13 @@ module Ace
 
           def validate_request(assignment:, attempt:, project:, requester:, caller_pid: nil)
             with_verified(assignment, attempt, project, requester) do
-              reverse_address(attempt: attempt, caller_pid: caller_pid)
+              reverse_address(assignment: assignment, attempt: attempt, project: project, caller_pid: caller_pid)
             end
           end
 
           # Read-only owner verification can run inside an already-held
           # assignment exclusion without reacquiring that exclusion.
-          def reverse_address(attempt:, caller_pid:)
+          def reverse_address(assignment:, attempt:, project:, caller_pid:)
             unless caller_pid.is_a?(Integer) && caller_pid.positive?
               raise Lifecycle::BindingError, "kernel requester process identity is unavailable"
             end

@@ -66,14 +66,15 @@ module Ace
         end
 
         # @return [Hash] the result frame
-        def request(op, params = {})
+        def request(op, params = {}, deadline: nil)
+          deadline = request_deadline(op, params, deadline)
           verify_endpoint!
-          socket = UNIXSocket.open(@socket_path)
+          socket = Socket.new(Socket::AF_UNIX, Socket::SOCK_STREAM, 0)
           begin
+            connect!(socket, deadline)
             verify_service_peer!(socket)
-            socket.write(Protocol.encode_request(op, params))
-            socket.flush
-            line = read_line(socket, deadline_for(op, params))
+            write_frame!(socket, Protocol.encode_request(op, params), deadline)
+            line = read_line(socket, deadline)
             Protocol.decode_response(line)
           ensure
             socket.close
@@ -84,27 +85,27 @@ module Ace
           raise TransportError, "HITL boundary request is not serializable (#{e.message})"
         end
 
-        def create(**params)
-          request("create", params.transform_keys(&:to_s))
+        def create(deadline: nil, **params)
+          request("create", params.transform_keys(&:to_s), deadline: deadline)
         end
 
-        def read(id)
-          request("read", {"id" => id})
+        def read(id, deadline: nil)
+          request("read", {"id" => id}, deadline: deadline)
         end
 
         def deliver(id, answer)
           request("deliver", {"id" => id, "answer" => answer.to_s})
         end
 
-        def consume(id, timeout: 0, operation: nil, native_delivery: false)
+        def consume(id, timeout: 0, operation: nil, native_delivery: false, deadline: nil)
           params = {"id" => id, "timeout" => Integer(timeout)}
           params["operation"] = operation if operation
           params["native_delivery"] = true if native_delivery
-          request("consume", params)
+          request("consume", params, deadline: deadline)
         end
 
-        def cancel(id, reason: "")
-          request("cancel", {"id" => id, "reason" => reason.to_s})
+        def cancel(id, reason: "", deadline: nil)
+          request("cancel", {"id" => id, "reason" => reason.to_s}, deadline: deadline)
         end
 
         def pending(project: nil)
@@ -177,6 +178,43 @@ module Ace
         # A consume without a timeout waits indefinitely at the client
         # boundary too; every bounded call gets a deadline slightly
         # beyond its own wait so the server result wins the race.
+        def request_deadline(op, params, selected)
+          if !selected.nil? && (!selected.is_a?(Numeric) || !selected.finite?)
+            raise TransportError, "HITL boundary deadline is invalid"
+          end
+          local = deadline_for(op, params)
+          [selected, local].compact.min
+        end
+
+        def await!(socket, direction, deadline)
+          remaining = deadline && deadline - Process.clock_gettime(Process::CLOCK_MONOTONIC)
+          raise TransportError, "HITL boundary deadline exceeded" if remaining && remaining <= 0
+          readable, writable = direction == :read ? [[socket], nil] : [nil, [socket]]
+          raise TransportError, "HITL boundary deadline exceeded" unless IO.select(readable, writable, nil, remaining)
+        end
+
+        def connect!(socket, deadline)
+          if deadline && deadline <= Process.clock_gettime(Process::CLOCK_MONOTONIC)
+            raise TransportError, "HITL boundary deadline exceeded"
+          end
+          result = socket.connect_nonblock(Socket.sockaddr_un(@socket_path), exception: false)
+          return if result == 0
+          await!(socket, :write, deadline)
+          error = socket.getsockopt(Socket::SOL_SOCKET, Socket::SO_ERROR).int
+          raise SystemCallError.new("HITL boundary connection failed", error) unless error.zero?
+        end
+
+        def write_frame!(socket, frame, deadline)
+          offset = 0
+          while offset < frame.bytesize
+            await!(socket, :write, deadline)
+            written = socket.write_nonblock(frame.byteslice(offset..), exception: false)
+            next if written == :wait_writable
+            raise TransportError, "HITL boundary closed before request" unless written.is_a?(Integer) && written.positive?
+            offset += written
+          end
+        end
+
         def deadline_for(op, params)
           if op == "consume" && Integer(params["timeout"]) <= 0
             nil

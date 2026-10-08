@@ -9,6 +9,7 @@ require "ace/assign/authority/evidence_transfer"
 require_relative "../molecules/protected_service_handler"
 require_relative "../molecules/protected_service_policy"
 require_relative "../atoms/protected_workspace_prune_preview"
+require_relative "protected_service_publication"
 
 module Ace
   module Lab
@@ -22,9 +23,11 @@ module Ace
 
         def initialize(mapping_id:, service_id:, deployment: Ace::Assign::Authority::Deployment.load,
           kernel: Ace::Runtime::Molecules::ProtectedLinux.new, client: nil,
-          handler: Molecules::ProtectedServiceHandler.new, cleanup_owner: nil)
+          handler: Molecules::ProtectedServiceHandler.new, cleanup_owner: nil, publication_publisher: nil, publication_hitl: nil)
           @mapping_id, @service_id, @deployment, @kernel, @handler = mapping_id, service_id, deployment, kernel, handler
           @cleanup_owner = cleanup_owner
+          @publication_publisher = publication_publisher || Molecules::ProtectedPublicationPublisher.new
+          @publication_hitl = publication_hitl
           @map = deployment.mapping(mapping_id)
           deployment.verify_composition!(@map.fetch("authority_id"), composition: "services")
           @project = deployment.project(@map.fetch("project_id"))
@@ -141,6 +144,12 @@ module Ace
             "executor_uid" => @receiver.fetch("executor_uid"), "authority_id" => @map.fetch("authority_id"),
             "claim_binding" => claim.data.fetch("claim_binding"), "candidate_generation" => binding.fetch("candidate_generation"),
             "head" => binding.fetch("head"), "staging_id" => File.basename(materialized.fetch("directory"))})
+          if params.fetch("operation") == "publish"
+            return begin_publication!(admitted: {params: params, claim: claim.data, started: started.data,
+              dispatch_event_digest: started.data.fetch("dispatch_event_digest"), operation: immutable(operation), envelope: envelope,
+              staging_identity: staging_identity, mutation_id: mutation_id}, materialized: materialized,
+              deadline: Process.clock_gettime(Process::CLOCK_MONOTONIC) + 30)
+          end
           if cleanup
             artifacts = cleanup_result_evidence!(params, input.fetch(:input), claim.data, started.data)
             response = {"outcome" => "succeeded", "evidence" => artifacts.each_with_index.map do |artifact, index|
@@ -231,7 +240,9 @@ module Ace
         end
 
         def projection(data)
-          data.slice("request_id", "state", "dispatch_phase", "claim", "generation", "journal_commit")
+          data.slice("request_id", "state", "dispatch_phase", "claim", "generation", "journal_commit").tap do |result|
+            result.merge!(data.slice("receipt", "completion_digest")) if data["operation"] == "publish"
+          end
         end
 
         def uncertain(id)

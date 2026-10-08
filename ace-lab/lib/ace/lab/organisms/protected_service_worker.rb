@@ -34,7 +34,7 @@ module Ace
             @worker = Thread.new do
               remaining = deadline - Process.clock_gettime(Process::CLOCK_MONOTONIC)
               next({"state" => "uncertain"}) unless remaining.positive?
-              @receiver.execute(submission: submission, peer: peer, input_bytes: input_bytes,
+              result = @receiver.execute(submission: submission, peer: peer, input_bytes: input_bytes,
                 mutation_id: mutation_id, claim_timeout: [remaining, 5].min,
                 on_claim: lambda do |identity|
                   begin
@@ -45,6 +45,15 @@ module Ace
                     nil
                   end
                 end)
+              if submission.fetch("operation") == "publish"
+                while @receiver.publication_active? && !@mutex.synchronize { @closing }
+                  result = @receiver.tick_publication!(request_id: submission.fetch("request_id"),
+                    deadline: Process.clock_gettime(Process::CLOCK_MONOTONIC) + 30)
+                  sleep 0.25 if @receiver.publication_active?
+                end
+                @receiver.release_publication_lifetime!
+              end
+              result
             end
           end
         end

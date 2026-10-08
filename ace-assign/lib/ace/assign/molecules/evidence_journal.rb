@@ -770,7 +770,8 @@ module Ace
               "Service settlement requires a no-effect attestation artifact"
           end
           if @mode == :protected
-            if current["operation"] == "prune-preserved-workspace" && %w[succeeded failed-settled].include?(state)
+            if (current["operation"] == "prune-preserved-workspace" && %w[succeeded failed-settled].include?(state)) ||
+                (current["operation"] == "publish" && %w[succeeded failed].include?(state))
               # The same installed evidence reader owns the entire imported
               # cleanup pair; individual textual markers cannot authorize it.
               contents = @evidence_reader.call(evidence_items, current, state, pending)
@@ -1144,6 +1145,16 @@ module Ace
                 %w[operation_owner_binding executor_process_binding].none? { |key| existing.key?(key) } &&
                 %w[operation_owner_binding executor_process_binding].all? { |key| replacement.key?(key) }
               mutable.concat(%w[operation_owner_binding executor_process_binding])
+            end
+            if @mode == :protected && pending && existing["operation"] == "publish"
+              if pending[:operation] == "begin_dispatch" && existing["dispatch_phase"] == "issued" &&
+                  replacement["dispatch_phase"] == "dispatch_started" && !existing.key?("executor_process_binding") &&
+                  replacement.key?("executor_process_binding")
+                mutable << "executor_process_binding"
+              elsif %w[publication_challenge publication_continue].include?(pending[:operation])
+                mutable.concat(%w[publication_challenge_digest publication_challenge_ref publication_challenge_event_digest
+                  publication_challenge_generation publication_issuing_event_digest])
+              end
             end
             unless existing.except(*mutable) == replacement.except(*mutable)
               raise AttemptErrors::Conflict, "Service request #{request_id} changed immutable binding"

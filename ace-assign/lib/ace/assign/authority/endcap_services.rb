@@ -102,6 +102,9 @@ module Ace
             raise AttemptErrors::InvalidState, "cleanup owner identity requires fresh dispatch admission"
           end
           begin_dispatch = existing && existing["dispatch_phase"] == "issued" && replacement["dispatch_phase"] == "dispatch_started"
+          if existing && existing["operation"] == "publish" && pending && %w[publication_challenge publication_continue].include?(pending[:operation])
+            return authorize_publication_update!(journal: journal, existing: existing, replacement: replacement, pending: pending)
+          end
           if existing && existing["dispatch_phase"] != replacement["dispatch_phase"] && !begin_dispatch
             raise AttemptErrors::InvalidState, "invalid protected dispatch phase change"
           end
@@ -128,7 +131,7 @@ module Ace
           current = exact_candidate!(candidate(events), params)
           approved_review!(journal, events, params, map, current) unless %w[create update].include?(replacement.fetch("operation"))
           service_policy!.prepare!(replacement, input_bytes: bytes)
-          if begin_dispatch && replacement.fetch("operation") == "prune-preserved-workspace"
+          if begin_dispatch && %w[prune-preserved-workspace publish].include?(replacement.fetch("operation"))
             executor = replacement.fetch("executor_process_binding")
             boot = replacement.fetch("worker_process_binding").fetch("started_at").split(":").fetch(1)
             Molecules::ExecutionScopeLineage.validate_process_identity!(executor, boot_id: boot)
@@ -137,7 +140,7 @@ module Ace
               raise AttemptErrors::UnauthorizedIdentity, "original cleanup executor credentials differ"
             end
             @kernel.live!(executor)
-            unless Atoms::EvidenceDigest.digest(service_policy!.dispatch_owner_binding!(replacement)) ==
+            unless replacement["operation"] != "prune-preserved-workspace" || Atoms::EvidenceDigest.digest(service_policy!.dispatch_owner_binding!(replacement)) ==
                 Atoms::EvidenceDigest.digest(replacement.fetch("operation_owner_binding"))
               raise AttemptErrors::UnauthorizedIdentity, "fixed cleanup owner changed before dispatch acceptance"
             end
@@ -381,7 +384,7 @@ module Ace
               result = result.merge(data: data)
             end
             if %w[request_service begin_dispatch].include?(request.fetch("operation")) &&
-                result.fetch(:data).fetch("operation") == "prune-preserved-workspace"
+                %w[prune-preserved-workspace publish].include?(result.fetch(:data).fetch("operation"))
               selector = request.fetch("operation") == "request_service" ? "request_event_digest" : "dispatch_event_digest"
               digest = cleanup_service_mutation_event!(journal, request, params, result.fetch(:data).fetch("journal_commit"))
               result = result.merge(data: result.fetch(:data).merge(selector => digest))
@@ -421,6 +424,9 @@ module Ace
         def service_executor!(peer, role, record)
           unless record && role == :executor && peer["uid"] == record.fetch("executor_uid")
             raise AttemptErrors::UnauthorizedIdentity, "completion requires the recorded executor"
+          end
+          if record["operation"] == "publish" && record["dispatch_phase"] != "issued" && peer != record["executor_process_binding"]
+            raise AttemptErrors::UnauthorizedIdentity, "publication requires its original receiver birth"
           end
           @kernel.live!(peer)
           true
@@ -496,6 +502,8 @@ module Ace
           replacement = record.merge("dispatch_phase" => "dispatch_started")
           if record.fetch("operation") == "prune-preserved-workspace"
             replacement["operation_owner_binding"] = service_policy!.dispatch_owner_binding!(record)
+          end
+          if %w[prune-preserved-workspace publish].include?(record.fetch("operation"))
             replacement["executor_process_binding"] = JSON.parse(JSON.generate(peer))
           end
           {data: service_projection(replacement).merge("invocation" => "permitted"),
@@ -535,6 +543,12 @@ module Ace
             return {data: service_projection(record)}
           end
           receipt = admitted.fetch(:receipt)
+          if record["operation"] == "publish"
+            unless admitted.fetch(:artifacts).size == 1
+              raise AttemptErrors::ReceiptRejected, "publication requires its one exact result"
+            end
+            ServiceEvidence.new(journal: journal).publication_result!(admitted.fetch(:artifacts).first, record, state: receipt.fetch("outcome"))
+          end
           owner = ServiceEvidence.new(journal: journal)
           canonical = Molecules::CanonicalEvidence.new(journal: journal)
           plan = canonical.import_plan(**owner.context(record), artifacts: admitted.fetch(:artifacts),
@@ -564,7 +578,7 @@ module Ace
           unless receipt.keys.sort == Molecules::EvidenceJournal::TERMINAL_RECEIPT_FIELDS.sort &&
               Molecules::EvidenceJournal::TERMINAL_BINDING_FIELDS.all? { |field| receipt[field] == record[field] } &&
               %w[succeeded failed].include?(receipt["outcome"]) &&
-              (receipt["outcome"] != "succeeded" || record["dispatch_phase"] == "dispatch_started")
+              (receipt["outcome"] != "succeeded" || record["dispatch_phase"] == "dispatch_started" || (record["operation"] == "publish" && record["dispatch_phase"] == "issuing"))
             raise AttemptErrors::ReceiptRejected, "completion must attest the exact dispatched request"
           end
           digest
@@ -572,7 +586,11 @@ module Ace
 
         def service_projection(record)
           record.slice("request_id", "assignment_id", "attempt_id", "project_id", "operation", "service_id", "target",
-            "candidate_head", "candidate_generation", "state", "dispatch_ticket_id", "claim_binding", "claim_generation", "dispatch_phase", "policy_digest", "operation_owner_binding", "executor_process_binding")
+            "candidate_head", "candidate_generation", "state", "dispatch_ticket_id", "claim_binding", "claim_generation", "dispatch_phase", "policy_digest", "operation_owner_binding", "executor_process_binding", *ServicePublicationEvidence::PUBLICATION_FIELDS).tap do |projection|
+              if record["operation"] == "publish" && %w[succeeded failed].include?(record["state"])
+                projection.merge!(record.slice("receipt", "completion_digest", "authorization", "input_digest"))
+              end
+            end
         end
       end
     end

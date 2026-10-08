@@ -229,6 +229,7 @@ PATH
   specs:
     ace-lab (0.4.0)
       ace-assign (~> 0.64)
+      ace-hitl (~> 0.12)
       ace-runtime (~> 0.2)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.18)

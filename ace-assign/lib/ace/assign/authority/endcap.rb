@@ -15,7 +15,7 @@ module Ace
       # Business admission shares the launch origin, lifecycle exclusion and
       # journal CAS. Network transfer is completed outside those locks.
       class Endcap
-        OPERATIONS = %w[submit_candidate export_candidate request_review review_status assign_review cancel_review accept_review request_service begin_dispatch complete_service claim_service_settlement complete_no_effect service_authorization service_status workspace_prune_preview_context submit_result evidence_fetch reconcile_inbox bind_inbox finish recover].freeze
+        OPERATIONS = %w[submit_candidate export_candidate request_review review_status assign_review cancel_review accept_review request_service begin_dispatch complete_service publication_challenge publication_continue claim_service_settlement complete_no_effect service_authorization service_status workspace_prune_preview_context submit_result evidence_fetch reconcile_inbox bind_inbox finish recover].freeze
         TRANSFER_OPERATIONS = {
           "reconcile_inbox" => {direction: :upload, purpose: :inbox_proof, roles: %i[launcher supervisor]},
           "submit_result" => {direction: :upload, purpose: :receipt_artifacts, roles: [:worker]},
@@ -27,6 +27,7 @@ module Ace
           "begin_dispatch" => {direction: :upload, purpose: :service_input, roles: [:executor]},
           "service_authorization" => {direction: :upload, purpose: :service_input, roles: [:executor]},
           "complete_service" => {direction: :upload, purpose: :receipt_artifacts, roles: [:executor]},
+          "publication_challenge" => {direction: :upload, purpose: :receipt_artifacts, roles: [:executor]},
           "complete_no_effect" => {direction: :upload, purpose: :receipt_artifacts, roles: [:executor]}
         }.freeze
         PARAMETERS = {
@@ -46,6 +47,8 @@ module Ace
           "service_authorization" => %w[mapping_id assignment_id attempt_id candidate_generation head request_id claim_binding input_digest transfer],
           "complete_service" => %w[mapping_id assignment_id attempt_id candidate_generation head request_id claim_binding receipt_sha256 transfer],
           "claim_service_settlement" => %w[mapping_id assignment_id attempt_id candidate_generation head request_id expected_generation],
+          "publication_challenge" => %w[mapping_id assignment_id attempt_id candidate_generation head request_id claim_binding input_digest expected_generation receipt_sha256 transfer],
+          "publication_continue" => %w[mapping_id assignment_id attempt_id candidate_generation head request_id claim_binding input_digest expected_generation challenge_digest],
           "complete_no_effect" => %w[mapping_id assignment_id attempt_id candidate_generation head request_id claim_binding reconciliation_challenge receipt_sha256 transfer]
         }.freeze
 
@@ -62,6 +65,7 @@ module Ace
           return authorize_result_transfer!(request: request, peer: peer, role: role) if %w[submit_result evidence_fetch].include?(request.fetch("operation"))
           params, map = validate_request(request)
           return authorize_service_settlement!(request, params, map, peer, role) if request.fetch("operation") == "complete_no_effect"
+          return authorize_publication_transfer!(request, params, map, peer, role) if request.fetch("operation") == "publication_challenge"
           return authorize_service_transfer!(request, params, map, peer, role) if %w[request_service begin_dispatch complete_service service_authorization].include?(request.fetch("operation"))
           @launch.with_assignment(params: params, map: map) do |journal, _registration|
             protected_journal!(journal)
@@ -91,6 +95,7 @@ module Ace
           params, map = validate_request(request)
           return request_review(request, params, map, peer, role, transfer) if request.fetch("operation") == "request_review"
           return cancel_review(request, params, map, peer, role, transfer) if request.fetch("operation") == "cancel_review"
+          return dispatch_publication(request, params, map, peer, role, transfer) if %w[publication_challenge publication_continue].include?(request.fetch("operation"))
           return dispatch_service_settlement(request, params, map, peer, role, transfer) if %w[claim_service_settlement complete_no_effect].include?(request.fetch("operation"))
           return workspace_prune_preview_context(request, params, map, peer, role, transfer) if request.fetch("operation") == "workspace_prune_preview_context"
           return service_status(request, params, map, peer, role) if request.fetch("operation") == "service_status"
@@ -416,3 +421,5 @@ require_relative "endcap_reviews"
 require_relative "endcap_review_requests"
 
 require_relative "endcap_attempts"
+
+require_relative "endcap_publication"
