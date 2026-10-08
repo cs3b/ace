@@ -47,7 +47,11 @@ module Ace
             data.delete("unsupported")
             File.binwrite(receipt, JSON.generate(data))
             File.binwrite(artifact, "changed")
-            assert_raises(Ace::Support::Cli::Error) { CLI.start(["submit-result", *common, "--receipt", receipt, "--artifact", artifact]) }
+            mismatch = assert_raises(AttemptErrors::ReceiptRejected) do
+              CLI.start(["submit-result", *common, "--receipt", receipt, "--artifact", artifact, "--artifact", second])
+            end
+            assert_equal "receipt artifact part differs from declaration", mismatch.message
+            assert_equal 3, calls.size
             File.binwrite(receipt, '{"artifacts":[],"artifacts":[]}')
             assert_raises(Ace::Support::Cli::Error) { CLI.start(["submit-result", *common, "--receipt", receipt]) }
             link = File.join(root, "linked")

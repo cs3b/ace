@@ -35,3 +35,8 @@ repair, now integrated by root. No deadlines were increased.
 Independent source review and integrated verification are pending for this producer
 candidate. Protected prepared delivery adoption, physical cleanup, installed/native
 verification and whole-family closure are not claimed by this checkpoint.
+
+Review correction: the changed-artifact negative now supplies both declared parts,
+so it reaches the exact typed hash/declaration refusal rather than a count mismatch.
+Client calls remain unchanged. Executed 9bb11e3d-9c99-4675-bb7f-465a141097b1:
+1 test / 16 assertions, 20.1ms. This supersedes the hash-specific claim of 37aa43c1.
