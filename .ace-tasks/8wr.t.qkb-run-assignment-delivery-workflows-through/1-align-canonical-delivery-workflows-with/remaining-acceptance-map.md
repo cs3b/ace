@@ -32,3 +32,11 @@ Run the specified affected-package tests and default suite against one integrate
 ## SC4 technical-fault source successor
 
 The actual wrong-provider-SHA and lost-remote-merge cases passed2/57 (`67f57eae`); actual normalized red-CI-only evidence with canonical merge/import/worker consumption passed1/47 (`f6b523fe`). See source-checkpoint-delivery-technical-faults.md for exact boundary ownership, preserved unsuccessful reports and remaining independent review. These are source scenarios, not installed/remote proof. No status promotion or resolution of the protected PR-order question is inferred.
+
+## Current integration reconciliation
+
+The preceding SC4 reference to pending independent review is historical: root approved `0ad629c5271336bdc467f3f3d1c34e2d2ce6d793`, integrated `de83cd57f`, and main passed all three exact cases3/104 (`git/e5216dff-0881-41ae-b10a-7160f7fd02bc`). Publication-blocker and technical-fault source gaps now have integrated evidence; full final-revision verification remains required.
+
+Independent source audit by `audit_runtime_delivery_status` against `460b35859` found no missing merge consumer join for SC3/7: registered Lab request/status, ProtectedServiceRequest, ProtectedDeliveryCoordinator, Assign drive/auto-merge/perform-delivery and Overseer instructions use the canonical succeeded result without a second provider mutation. This does not close all protected delivery: create/update/ready remain unsupported pending the recorded Captain ordering decision, now explicitly requested. Their eventual implementation and consumer adoption remain qkb.1 work.
+
+SC7 still lacks a dedicated composed authority-unavailable scenario proving public request/status/consumer refusal, exact original selectors and no additional effect. That test is being implemented separately; existing stale-selector/lost-reply evidence is not relabelled as authority-loss proof. Protected review-campaign adoption remains downstream R2 work, and ordinary campaign instructions do not prove it. Task status and unchecked criteria remain unchanged.
