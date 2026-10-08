@@ -33,3 +33,17 @@ Bounded diagnosis `9eb63fc1-ac3b-402b-818f-247dac1c80b3` reached actual exact po
 Root independently reviewed the actual contracts and approved the source-scenario interpretation: transport stays explicitly uncertain/routed blocker, never definitive wire refusal. Mandatory actual policy denial plus final post-worker canonical/no-effect evidence proves the authorization gate independently of timeout. An unconfirmed reply alone never establishes denial or effect absence. Helpers project `blocked`, retain the exact closed transport code, and require no effect retry.
 
 Final missing authorization passed 1/33, 27.62s, receipt `1acec390-2dd9-4b62-9af1-c4e1ba4d0e89`, seed4549. Final wrong authorized target passed 1/33, 25.32s, receipt `eff60081-c77d-42a7-957c-141b82a85e37`, seed26240. Raw reports prove exact renamed `blocks_then_creates_exact_pending_proposal` methods and no skips. Value-free diagnostics record actual exact=true/rejected=true in both runs, approximately 0.946ms/1.224ms, and actual claim-unconfirmed transport. These successful final tests retain the same pending-proposal exact-binding and no-grant checks. Independent source review of this successor is required before integration; all original remaining-task boundaries above remain open.
+# Independent integration review — 2026-10-08
+
+Root reviewed `7e3717a25` and correction `e0e4fa906`, including the actual
+listener's worker-join guarantee. Verdict: **APPROVE these controlled source
+scenarios**. Negative acceptance requires delegated real policy rejection of the
+exact binding and unchanged canonical state/no handler after worker termination.
+`service_claim_unconfirmed` remains transport uncertainty, never a definitive
+wire denial or standalone proof of no effect. The previous timeout-only evidence
+is superseded, not counted as acceptance.
+
+Integrated as `01aed46c9` and `fba5b65e7`. Main's selected missing-authorization
+scenario passed **1 test / 33 assertions**, receipt
+`387d7154-0b0e-40ae-bc3b-0a578be08fd9`, 34.95 seconds, no skips. No whole-task,
+worker delivery composition, installed acceptance or publication claim follows.
