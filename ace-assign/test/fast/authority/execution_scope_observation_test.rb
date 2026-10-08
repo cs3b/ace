@@ -284,6 +284,11 @@ module Ace
         assert_equal @lifecycle_identity.merge(selection.slice("host_path", "view_path")), original
         assert_equal 0, @observer.observe(lineage).fetch("populated")
         assert_equal 1, @manager.starts
+        projection = @observer.workspace_exclusion_projection!(lineage)
+        assert_equal original, projection.fetch("root_resource")
+        assert_equal selection.fetch("key"), projection.fetch("key")
+        assert projection.frozen?
+        assert projection.fetch("root_resource").frozen?
       end
 
       def test_lifecycle_parent_exception_never_admits_writable_or_foreign_resources
@@ -324,6 +329,25 @@ module Ace
             challenge: report.slice("challenge_id"))
         end
         assert_equal 0, @manager.service_starts
+      end
+
+      def test_lifecycle_policy_and_alias_must_belong_to_captured_root_inode
+        selection = install_controlled_lifecycle_resource
+        policy = @lifecycle_policies.fetch(selection.fetch("host_path"))
+        policy["inode"] += 1
+        assert_raises(Ace::Runtime::RuntimeUnavailableError) { @observer.activate_parent!(@context) }
+        assert_equal 0, @manager.starts
+        policy["inode"] -= 1
+        alias_path = selection.fetch("host_path") + "/alias"
+        @lifecycle_policies[alias_path] = policy.merge("inode" => policy.fetch("inode") + 1)
+        files = @observer.instance_variable_get(:@files)
+        prior = files.method(:resource_aliases)
+        host = selection.fetch("host_path")
+        files.define_singleton_method(:resource_aliases) do |path, identity:|
+          path == host ? [host, alias_path] : prior.call(path, identity: identity)
+        end
+        assert_raises(Ace::Runtime::RuntimeUnavailableError) { @observer.activate_parent!(@context) }
+        assert_equal 0, @manager.starts
       end
 
       def test_never_admitted_sealed_parent_can_prove_empty_without_network_readiness

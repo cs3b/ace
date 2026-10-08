@@ -137,7 +137,7 @@ module Ace
             end
           end
 
-          def lifecycle_resource_policy!(path, authority:)
+          def lifecycle_resource_policy!(path, authority:, identity:)
             state_root = authority.fetch("state_root")
             unless path.start_with?(state_root + "/lifecycle-exclusion/") && File.expand_path(path) == path
               raise Ace::Runtime::RuntimeUnavailableError, "lifecycle resource ancestry differs"
@@ -155,6 +155,10 @@ module Ace
                 unless policy.values_at("uid", "gid", "mode") == authority.values_at("uid", "gid") + [mode]
                   raise Ace::Runtime::RuntimeUnavailableError, "lifecycle resource selected ownership differs"
                 end
+              end
+              if ancestor == path && policy.values_at("device", "inode", "uid", "gid") !=
+                  identity.values_at("device", "inode", "uid", "gid")
+                raise Ace::Runtime::RuntimeUnavailableError, "lifecycle policy belongs to a replaced object"
               end
             end
             true
@@ -601,6 +605,36 @@ module Ace
           unavailable!("original parent resource declarations are unavailable")
         end
 
+        def workspace_exclusion_projection!(lineage)
+          declarations = maintenance_parent_resource_declarations!(lineage)
+          cwd = maintenance_workspace_resource!(lineage)
+          authority = @deployment.authority(@map.fetch("authority_id"))
+          selection = Molecules::LifecycleExclusion.workspace_selection(mapping_id: @mapping_id,
+            project_id: @map.fetch("project_id"), authority: authority, cwd_resource: cwd)
+          matches = declarations.select do |entry|
+            entry.values_at("host_path", "view_path") == selection.values_at("host_path", "view_path")
+          end
+          roots = lineage.binding.fetch("resource_identities").select do |entry|
+            entry.values_at("host_path", "view_path") == selection.values_at("host_path", "view_path")
+          end
+          unless matches.one? && matches.first.values_at("stage", "worker_visible", "read_only") == ["parent", true, true] &&
+              roots.one? && roots.first.values_at("uid", "gid") == authority.values_at("uid", "gid")
+            unavailable!("original workspace lifecycle exclusion is unavailable")
+          end
+          value = JSON.parse(JSON.generate({"key" => selection.fetch("key"), "root_resource" => roots.first,
+            "worker_cwd_resource" => cwd, "authority_uid" => authority.fetch("uid"), "authority_gid" => authority.fetch("gid")}))
+          pending = [value]
+          until pending.empty?
+            entry = pending.pop
+            pending.concat(entry.values) if entry.is_a?(Hash)
+            pending.concat(entry) if entry.is_a?(Array)
+            entry.freeze
+          end
+          value
+        rescue KeyError, TypeError, ArgumentError
+          unavailable!("original workspace lifecycle projection differs")
+        end
+
         private
 
         def boot_baseline!(binding)
@@ -686,9 +720,9 @@ module Ace
               resource.values_at("uid", "gid") == authority.values_at("uid", "gid")
             unavailable!("lifecycle resource is not selected by original workspace and authority")
           end
-          @files.lifecycle_resource_policy!(expected, authority: authority)
+          @files.lifecycle_resource_policy!(expected, authority: authority, identity: resource)
           @files.resource_aliases(expected, identity: resource).each do |path|
-            @files.lifecycle_resource_policy!(path, authority: authority)
+            @files.lifecycle_resource_policy!(path, authority: authority, identity: resource)
           end
           resource
         end
