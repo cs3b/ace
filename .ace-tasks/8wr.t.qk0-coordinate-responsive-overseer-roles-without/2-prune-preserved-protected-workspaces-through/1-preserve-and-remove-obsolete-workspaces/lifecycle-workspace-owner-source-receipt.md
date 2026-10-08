@@ -11,3 +11,7 @@ Final controlled protected+ordinary primitive targets PASS33/147, report26fc8052
 Retained89b776ab and4138b02d failures exposed RuntimeUnavailableError from the maintained protection owner at the provisioning boundary; the final source translates that exact typed protection refusal to EvidenceUnavailable. No cleanup policy or deadline changed. Earlier separate reader PASS reports are not final-source gates.
 
 Remaining: actual PreparedInput/PreparedWorker lifetime adoption and all protected creator/control-root joins; SAME Installer pre-start provision/publication and physical cleanup/inspection producer composition. These remain uncommitted or domain-owned, no whole qk0.2.1 acceptance.
+
+## Independent integration acceptance
+
+Independent reviewer `review_lab_bootstrap` approved exact `bc9028b53`, including the reader/writer/provisioner and readonly fence reader. Integrated as `6cad16114`. On that main revision, actual protected exclusion, ordinary exclusion and scope observer files passed **59 tests / 274 assertions**, zero failures/errors,937.09ms; report `assign/060b8d30-879e-4a90-8b80-630495ccd87f`. Actual PreparedWorker lifetime and Installer physical wiring remain separate unfinished source requirements. No installed privilege behavior or whole task completion is claimed.
