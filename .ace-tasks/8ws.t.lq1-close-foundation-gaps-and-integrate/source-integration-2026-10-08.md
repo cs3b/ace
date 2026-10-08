@@ -34,10 +34,23 @@ Lab integration branch `codex/lab-source-integration` joins coldboot, selected n
 - [x] R2 canonical local byte/result join and same-held snapshot boundary verified. Actual protected parent-result performance and installed flow remain open centrally in `gad.2`; prior `5dd1b0fc` is not accepted. Older broad compatibility `309ad430` contains 13 errors, not a pass.
 - [x] `qkc` executable source assets and classified coupling inventory integrated. Final source review remains open; installed execution belongs only to lab-config `gad.2`.
 - [x] Codex read-only completed-turn query (`xza.0`) joined at `a275ee043`. The context owner now selects the retained claim and exposes an authenticated `observe_context` route, rechecking record/admission after the query. Root joined source checks: 117 tests/828 assertions PASS (`a2b1f3f0`), including actual record-to-WebSocket lost-reply flow and scoped socket admission; event-lock deadline check separately 7/41 PASS (`80fc1461`). Candidate observation never signs, imports, settles or resends. The initial new-module NameError is retained in `18e98e68`, corrected before these checks.
-- [ ] Public observe CLI consumer and canonical observation import/fetch/signer join remain actual implementation work. Signed-fixture bytes do not close these paths.
+- [x] Public protected `inbox observe` CLI joined at `5407d873d`, using existing original-selection status and authenticated `observe_to_sign` admission, with candidate-only output. The final joined nine-file check passed 129 tests/1255 assertions (`fad9b8e3`) in 5.87s. Lab source Codex producer/static/transport compatibility check passed 4 Python tests in 1.60s; no native or installed probe. `xza.0` is now in-progress, still needs_review, with every whole-slice success criterion open.
+- [ ] Canonical observation import/fetch and independent signer join remain actual implementation work. Query candidates and signed-fixture bytes do not close these paths.
 - [x] Obsolete fake-native inbox E2E removed at `737c4ef79`; its scripts manufactured native acknowledgement and required the removed argv path. Source responsibility remains in maintained record/socket checks; installed requirements remain in gad.2. No replacement Lab emulation was added.
 - [ ] Managed Codex UI/worker selection (`xza.0`/gad startup): actual PreparedWorker provider path calls QueryInterface and CodexClient builds codex exec. It does not consume the literal remote runtime/thread. This source consumer must be joined; a published stage alone is insufficient.
 - [ ] Lab Codex attempt-owned startup: finish original factory/producer/client ownership, exact socket lifetime, contained context startup and whole-slice retirement/recovery. Official Codex uses a native-UID-only physical socket exposed through an advertised symlink; resolving the alias cannot grant the distinct service UIDs access. Literal startup input handoff remains unresolved; no latest-session lookup, unsafe chmod or empty-scope exception is accepted.
 - [x] Canonical protected workflow source adoption: document and verify the actual round/export/submit-result public sequence, preserving ordinary/protected ownership and exact current candidate gates.
 - [ ] One independent review of the final joined source, plus appropriate local unit/integration verification.
 - [ ] Integrate main, synchronize repositories and prepare fresh gem artifacts. Publication remains the Captain's interactive OTP step; actual installed task/observation remains `gad.2`.
+
+## Current query verification clarification
+
+Exact native client/queue/runtime correlation is validated by the Inbox owner
+against its private retained intent and receipt, then the CLI validates original
+scope and candidate shape through the fixed authenticated endpoint. The direct
+public status deliberately omits native receipts. A proposed duplicate CLI
+check assumed those private fields were present and failed its regression
+(`904c96c8`); that dead check and its assumed-field test were removed without
+widening public status or changing the actual owner validation. The final joined
+check above covers the delivered behavior. No observation is promoted into a
+trusted evidence ID or signed proof by these changes.

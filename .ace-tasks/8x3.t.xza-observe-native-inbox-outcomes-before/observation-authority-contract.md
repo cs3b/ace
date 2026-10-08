@@ -13,7 +13,7 @@ the record locks/native query, then revalidates the full record and admission.
 It returns sanitized candidate observation only. It does not import evidence,
 sign, reconcile, authorize worker-owned runtime evidence or mutate the inbox.
 Provider uncertainty remains explicit; missing queue ID after a lost reply stays
-null. The source CLI consumer and canonical import/signer path remain open.
+null. The protected CLI now consumes this endpoint with validated original scope and candidate-only output. Canonical import/signer integration remains open.
 Earlier installed proof requirements remain central gad.2 obligations. The
 pending root-start/ACL contract is separate and unchanged by this read.
 
