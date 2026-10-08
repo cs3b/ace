@@ -9,3 +9,14 @@ Executed source evidence: actual public worker authority status -> registered La
 The normal source bin/ace-bundle invocations wfi://handbook/perform-delivery, wfi://git/pr/create, wfi://git/pr/update and wfi://roles/project-overseer all exited0 and resolved the owning modified source documents. The exact modified wfi://roles/lab-coordinator resolver also exited0 with its new canonical merge/status handoff. Workflow contents are instructions, not LLM behavior attestation; the source composition executes their concrete public merge/status owners. No alias, harness-native skill tree or generated protocol truth is introduced; skills/registration names are unchanged.
 
 Independent exact source review is required. Whole qkb.1 remains open: unresolved create/update/ready policy, the remaining full scenario/accounting audit and central gad.2 installed acceptance remain distinct. No source task status or acceptance checkbox is changed by this checkpoint.
+
+Independent coordinating review, 2026-10-08: APPROVE this bounded workflow
+adoption at `011eb1490`. Checked all five changed workflow bodies against the
+registered Lab request/status options, protected adapter envelopes, public
+authority status and ProtectedDeliveryCoordinator's canonical succeeded gate.
+The ordinary branch remains separate; no local evidence or generation-refresh
+bypass is prescribed. Integrated as `b2b3ed7f7`. Executed neutral payload and
+real skill projection checks passed 2 tests / 42 assertions in 85.26 ms
+(`handbook/2a9260c5-7e7b-46a6-bbad-018a70445ca8`). This approves instructions
+and their existing concrete CLI owners, not autonomous execution by an LLM,
+protected PR creation policy, or whole-family completion.
