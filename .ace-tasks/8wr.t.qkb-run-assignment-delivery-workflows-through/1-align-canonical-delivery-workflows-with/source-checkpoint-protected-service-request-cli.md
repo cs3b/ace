@@ -7,3 +7,5 @@ The existing Lab ServiceInput owner now uses one no-follow, nonblocking read han
 Executed inspected controlled selection: `../bin/ace-test test/atoms/service_input_test.rb --timeout 30` from ace-lab, receipt `0c100ebd-b279-4bee-9fe9-bce86075129d`: PASS 4 tests / 14 assertions, raw seed2538, no skips. Tests cover valid bytes, symlink/directory/size refusal, decoded duplicate collision, comments/nonfinite/depth, and path replacement during the held read. No installed/native/kernel/provider probes were executed.
 
 This prerequisite does not deliver registered protected request/status routing, asynchronous listener composition, canonical replay/recovery or required negative gates. Those remain the next source slice. Independent source review remains required before integration.
+
+Independent reviewer `/root/audit_runtime_delivery_status` APPROVED frozen `bcfb57bdf` for bounded integration, no findings. Integrated as `67e7c6da0`. Post-integration exact same file passed **4 tests / 14 assertions**, seed19369, no skips; raw receipt `lab/60f7d2f8-209f-4127-82e9-9c4439fc12ce`. Public routing and composed acceptance remain open.
