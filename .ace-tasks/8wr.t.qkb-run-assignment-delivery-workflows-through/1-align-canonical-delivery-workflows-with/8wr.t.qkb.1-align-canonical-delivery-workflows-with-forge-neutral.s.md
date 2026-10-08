@@ -55,7 +55,7 @@ Run `ace-test ace-assign all`, affected handbook/nav/overseer package suites and
 
 ## Boundaries and defaults
 
-Single end-to-end adoption slice; advisory size: large. Depends on qkb.0, qk0, qjx and qjz contracts. No new scheduler, ledger, role policy or Lab local deployment ownership; lab-overseer gc0 and lab-config gad.5 install/adopt local charters. No live delivery, release or external message is performed during specification work. No unresolved product question.
+Single end-to-end adoption slice; advisory size: large. Depends on qkb.0, qk0, qjx and qjz contracts. No new scheduler, ledger, role policy or Lab local deployment ownership; lab-overseer gc0 and lab-config gad.5 install/adopt local charters. No live delivery, release or external message is performed during specification work. The protected create/update/ready versus independent-review ordering remains an explicit Captain decision; see the current public-service amendment. Other accepted scope remains unchanged.
 
 ## Atomic delivery constraint
 
@@ -75,4 +75,4 @@ The fixed protected producer input, selected forge/PR/provenance/head/method che
 
 ## Draft public protected request adoption
 
-The bounded original merge consumer is independently accepted through 531963609; its controlled completion/replay/interruption and negative gates are retained in source-checkpoint-protected-merge-consumer.md. This does not make the current caller-local `ace-lab service request/status` valid for protected workers. The minimal public request/status amendment is protected-service-request-cli-contract-candidate.md: explicit original mapping/scope/service/candidate/expected-generation selectors, existing authenticated receiver claim and canonical consumer, no local fallback and no refreshed-generation retry. This amendment remains draft pending independent readiness review. Create/update/ready authorization ordering remains a separate unresolved policy decision; the amendment does not change that gate or whole-task status.
+The bounded original merge consumer is independently accepted through 531963609; its controlled completion/replay/interruption and negative gates are retained in source-checkpoint-protected-merge-consumer.md. This does not make the current caller-local `ace-lab service request/status` valid for protected workers. The minimal public request/status amendment is protected-service-request-cli-contract-candidate.md: explicit original mapping/scope/service/candidate/expected-generation selectors, existing authenticated receiver claim and canonical consumer, no local fallback and no refreshed-generation retry. The bounded merge request/status amendment has independent specification approval at `f74c36a5d`; implementation acceptance remains open. Create/update/ready authorization ordering remains a separate unresolved policy decision; the amendment does not change that gate or whole-task status.
