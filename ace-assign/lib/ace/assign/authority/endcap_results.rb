@@ -322,7 +322,7 @@ module Ace
           origin = retained_origin(events, params)
           kind, id = params.values_at("kind", "purpose_id")
           if (role == :worker && !%w[result service].include?(kind)) || (role == :reviewer && !%w[result review].include?(kind)) ||
-              (role == :executor && kind != "service")
+              (role == :executor && kind != "service") || (role == :signer && kind != "inbox")
             raise AttemptErrors::UnauthorizedIdentity, "canonical evidence kind is unauthorized"
           end
           context, references = case kind

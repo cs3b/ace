@@ -122,7 +122,10 @@ module Ace
           context = @deployment.inbox_context(params.fetch("mapping_id"), params.fetch("inbox_context_id"))
           @kernel.live!(peer)
           service_policy!.visible!(project: map.fetch("project_id"), uid: peer.fetch("uid"))
-          allowed = (role == :supervisor && context.fetch("supervisor_uids").include?(peer["uid"])) ||
+          signer_credentials = @deployment.project(map.fetch("project_id")).fetch("peer_credentials", {})[peer.fetch("uid").to_s]
+          allowed = (role == :signer && context.fetch("signer_uids", []).include?(peer["uid"]) && signer_credentials &&
+            peer.values_at("gid", "groups") == signer_credentials.values_at("gid", "groups")) ||
+            (role == :supervisor && context.fetch("supervisor_uids").include?(peer["uid"])) ||
             (role == :launcher && peer["uid"] == map.fetch("launcher_uid") && @kernel.same?(peer, origin.fetch("launcher_identity")))
           raise AttemptErrors::UnauthorizedIdentity, "inbox requires exact launcher or mapped supervisor" unless allowed
           inbox_environment(events, params, map)
@@ -349,7 +352,7 @@ module Ace
           binding = payload.fetch("binding")
           unless payload.keys.sort == INBOX_PAYLOAD_FIELDS.sort && payload["version"] == 1 && binding.keys.sort == INBOX_BINDING_FIELDS.sort &&
               %w[receipt_sha256 signature_sha256].all? { |key| binding[key].is_a?(String) && DIGEST.match?(binding[key]) } &&
-              binding["submitter_uid"].is_a?(Integer) && binding["submitter_uid"] > 0 && %w[launcher supervisor].include?(binding["submitter_role"]) &&
+              binding["submitter_uid"].is_a?(Integer) && binding["submitter_uid"] > 0 && %w[launcher supervisor signer].include?(binding["submitter_role"]) &&
               payload.values_at("event_id", "attempt_id", "inbox_context_id") == params.values_at("event_id", "attempt_id", "inbox_context_id") &&
               payload["registration"] == registration && payload["claim_generation"] == binding["claim_generation"]
             raise AttemptErrors::EvidenceUnavailable, "canonical inbox fields differ"

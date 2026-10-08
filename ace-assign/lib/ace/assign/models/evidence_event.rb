@@ -17,7 +17,7 @@ module Ace
         TYPES = %w[
           intent process_start receipt_accepted transition attempt_stopped
           candidate_invalidated reconciliation
-          service_claim service_transition service_challenge service_no_effect_challenge service_publication_challenge service_publication_issuing recovery_observation inbox_binding inbox_reconciliation delivery
+          service_claim service_transition service_challenge service_no_effect_challenge service_publication_challenge service_publication_issuing recovery_observation inbox_binding inbox_reconciliation native_observation delivery
           authority_mutation evidence_import proposal_state result_submitted prompt_issued prompt_outcome prompt_completion_observed input_inhibited
           scope_provisioning scope_bound scope_native_bound scope_child_bound scope_sealed scope_closed_no_writers
         ].freeze

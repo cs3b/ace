@@ -21,6 +21,8 @@ module Ace
       def participant_descriptor(base)
         roles = %w[launcher_uids reviewer_uids worker_uids service_executor_uids supervisor_uids]
         project = roles.each_with_index.to_h { |key, index| [key, [base + index]] }
+        project["observer_uids"] = [base + 10]
+        project["signer_uids"] = [base + 11]
         project["service_receivers"] = {"receiver" => {"executor_uid" => base + 5}}
         project["inbox_contexts"] = {"context" => {"owner_credentials" => {"uid" => base + 6}}}
         owner = Object.new
@@ -33,10 +35,10 @@ module Ace
 
       def test_all_current_and_retained_installed_accounts_are_protected_without_granting_a_role
         current, original = participant_descriptor(13000), participant_descriptor(14000)
-        (13000..13009).each do |uid|
+        (13000..13011).each do |uid|
           assert context(current: current, retained: [original], uid: uid).protected_participant?, "current account #{uid}"
         end
-        (14000..14009).each do |uid|
+        (14000..14011).each do |uid|
           assert context(current: current, retained: [original], uid: uid).protected_participant?, "retained account #{uid}"
         end
         refute context(current: current, retained: [original], uid: 15000).protected_participant?

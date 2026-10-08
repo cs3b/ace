@@ -20,6 +20,12 @@ module Ace
         end
 
         def call(operation, params, mutation_id: nil, timeout: nil, upload_parts: nil, download: false, purpose: nil)
+          if operation == "import_observation" && (!upload_parts || purpose != :observation || download || !mutation_id)
+            raise ArgumentError, "observation import requires fixed bounded upload"
+          end
+          if operation == "fetch_observation" && (!download || purpose != :artifacts || upload_parts || mutation_id)
+            raise ArgumentError, "observation fetch requires fixed read-only download"
+          end
           if operation == "register_assignment" && (!upload_parts || purpose != :candidate || download)
             raise ArgumentError, "prepared registration requires fixed candidate upload"
           end
@@ -60,7 +66,7 @@ module Ace
             wire.write(socket, {"version" => 1, "operation" => operation,
               "mutation_id" => mutation_id, "project_id" => @map.fetch("project_id"),
               "params" => parameters.merge("mapping_id" => mapping_id)}, deadline: deadline, limit: upload_parts || download ? 16_384 : wire::LIMIT)
-            if %w[bind_inbox finish recover request_review review_status launch_review_intent cancel_review assignment_inventory evidence_fetch observe_execution_scope close_execution_scope stop_attempt prompt_status launch_input_inhibit_selection launch_input_inhibit_completion launch_prompt_intent launch_prompt_completion claim_service_settlement workspace_prune_preview_context].include?(operation) || (operation == "attempt_status" && params.key?("result_candidate_generation"))
+            if %w[fetch_observation bind_inbox finish recover request_review review_status launch_review_intent cancel_review assignment_inventory evidence_fetch observe_execution_scope close_execution_scope stop_attempt prompt_status launch_input_inhibit_selection launch_input_inhibit_completion launch_prompt_intent launch_prompt_completion claim_service_settlement workspace_prune_preview_context].include?(operation) || (operation == "attempt_status" && params.key?("result_candidate_generation"))
               socket.shutdown(Socket::SHUT_WR)
             end
             if upload_parts
@@ -89,11 +95,48 @@ module Ace
                 Array.new(input.count) { |index| input.bytes(index: index) }
               end
             end
+            validate_observation_reply!(operation, result.fetch("data"), params, parts, transport.fetch("replayed")) if %w[import_observation fetch_observation].include?(operation)
             Reply.new(data: result.fetch("data"), replayed: transport.fetch("replayed"), parts: parts)
           end
         rescue SystemCallError, IOError
           raise AttemptErrors::EvidenceUnavailable, "protected authority connection unavailable; no local fallback"
         end
+        def validate_observation_reply!(operation, data, params, parts, replayed)
+          if operation == "import_observation"
+            unless data.keys.sort == %w[binding claim_generation event_id evidence_id generation journal_commit outcome reference] &&
+                data["event_id"] == params["event_id"] && data["outcome"] == "consumed" &&
+                data["generation"].is_a?(Integer) && data["generation"] >= 0 &&
+                data["journal_commit"].is_a?(String) && data["journal_commit"].match?(/\A[0-9a-f]{40,64}\z/) &&
+                data["claim_generation"].is_a?(Integer) && data["claim_generation"].positive? &&
+                data["evidence_id"].is_a?(String) && data["evidence_id"].match?(/\A[0-9a-f]{32}\z/) &&
+                data["reference"] == {"ref" => "evidence/imports/#{data['evidence_id']}", "sha256" => params["observation_sha256"]}
+              raise AttemptErrors::EvidenceUnavailable, "observation import reply differs"
+            end
+          else
+            descriptor = data["descriptor"]
+            unless !replayed && data.keys.sort == %w[binding current_claim_generation descriptor eligible generation journal_commit transfer] &&
+                Molecules::CanonicalEvidence.valid_descriptor?(descriptor) && descriptor["kind"] == "observation" &&
+                descriptor.values_at("project_id", "assignment_id", "attempt_id", "request_id_or_event_id", "artifact_id") ==
+                  [@map.fetch("project_id"), *params.values_at("assignment_id", "attempt_id", "event_id", "evidence_id")] &&
+                data["journal_commit"].is_a?(String) && data["journal_commit"].match?(/\A[0-9a-f]{40,64}\z/) &&
+                data["generation"].is_a?(Integer) && data["generation"] >= 0 &&
+                data["current_claim_generation"].is_a?(Integer) && data["current_claim_generation"].positive? &&
+                data["eligible"] == (descriptor["candidate_generation_or_claim_generation"] == data["current_claim_generation"]) &&
+                parts.is_a?(Array) && parts.one? && parts.first.bytesize == descriptor["bytes"] && Digest::SHA256.hexdigest(parts.first) == descriptor["sha256"]
+              raise AttemptErrors::EvidenceUnavailable, "observation canonical fetch differs"
+            end
+          end
+          binding = data["binding"]
+          unless binding.is_a?(Hash) && binding.values_at("project_id", "mapping_id", "assignment_id", "attempt_id", "event_id", "inbox_context_id") ==
+              [@map.fetch("project_id"), mapping_id, *params.values_at("assignment_id", "attempt_id", "event_id", "inbox_context_id")]
+            raise AttemptErrors::EvidenceUnavailable, "observation reply selection differs"
+          end
+          if operation == "fetch_observation" && descriptor["binding_digest"] != Atoms::EvidenceDigest.digest(binding)
+            raise AttemptErrors::EvidenceUnavailable, "observation canonical binding digest differs"
+          end
+        end
+        private :validate_observation_reply!
+
         # Fixed original-launcher stream. Public calls retain their existing
         # complete-upload EOF contract; no caller-selected framing flag exists.
         def with_launch_control(state:)

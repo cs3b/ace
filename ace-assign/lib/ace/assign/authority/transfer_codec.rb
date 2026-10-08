@@ -13,7 +13,7 @@ module Ace
       # Server selects purpose from a source handler's fixed operation table,
       # admits a transfer slot before calling, and holds no journal lock here.
       class TransferCodec
-        LIMITS = {prompt_text: [16_384, 1, 16_384], scope_boundary_observation: [65_536, 1, 65_536], candidate: [64 * 1024 * 1024, 1, 64 * 1024 * 1024],
+        LIMITS = {observation: [65_536, 1, 65_536], prompt_text: [16_384, 1, 16_384], scope_boundary_observation: [65_536, 1, 65_536], candidate: [64 * 1024 * 1024, 1, 64 * 1024 * 1024],
                   artifacts: [256 * 1024, 16, 64 * 1024],
                   receipt_artifacts: [272 * 1024, 17, 64 * 1024],
                   service_input: [64 * 1024, 1, 64 * 1024],

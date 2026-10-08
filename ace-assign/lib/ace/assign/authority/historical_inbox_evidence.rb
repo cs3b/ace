@@ -132,7 +132,8 @@ module Ace
                 "receipt_sha256" => binding.fetch("receipt_sha256"), "signature_sha256" => binding.fetch("signature_sha256"),
                 "submitter_uid" => binding.fetch("submitter_uid"), "submitter_role" => binding.fetch("submitter_role"))
               allowed = (binding["submitter_role"] == "launcher" && binding["submitter_uid"] == map.fetch("launcher_uid")) ||
-                (binding["submitter_role"] == "supervisor" && context.fetch("supervisor_uids").include?(binding["submitter_uid"]))
+                (binding["submitter_role"] == "supervisor" && context.fetch("supervisor_uids").include?(binding["submitter_uid"])) ||
+                (binding["submitter_role"] == "signer" && context.fetch("signer_uids", []).include?(binding["submitter_uid"]))
               unless binding.keys.sort == Endcap::INBOX_BINDING_FIELDS.sort && binding == expected && allowed &&
                   native.is_a?(Hash) && native["session"] == lineage.native_event.dig("payload", "workspace_id")
                 raise AttemptErrors::EvidenceUnavailable, "historical inbox native or submitter identity differs"

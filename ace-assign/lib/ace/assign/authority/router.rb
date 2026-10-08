@@ -36,7 +36,7 @@ module Ace
           return nil unless binding
           unless binding.is_a?(Hash) && binding.keys.sort == %i[direction purpose roles] &&
               %i[upload download].include?(binding[:direction]) && TransferCodec::LIMITS.key?(binding[:purpose]) &&
-              binding[:roles].is_a?(Array) && binding[:roles].all? { |role| %i[worker launcher reviewer executor supervisor].include?(role) }
+              binding[:roles].is_a?(Array) && binding[:roles].all? { |role| %i[worker launcher reviewer executor supervisor observer signer].include?(role) }
             raise ArgumentError, "invalid source transfer binding"
           end
           binding

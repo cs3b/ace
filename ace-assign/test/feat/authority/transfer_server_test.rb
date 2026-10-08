@@ -12,8 +12,10 @@ module Ace
         def close; end
       end
       class Handler
-        OPERATIONS = %w[upload export inbox_proof].freeze
+        OPERATIONS = %w[upload export inbox_proof import_observation fetch_observation].freeze
         TRANSFER_OPERATIONS = {
+          "import_observation" => {direction: :upload, purpose: :observation, roles: [:observer]},
+          "fetch_observation" => {direction: :download, purpose: :artifacts, roles: [:signer]},
           "upload" => {direction: :upload, purpose: :artifacts, roles: [:worker]},
           "inbox_proof" => {direction: :upload, purpose: :inbox_proof, roles: [:worker]},
           "export" => {direction: :download, purpose: :artifacts, roles: [:worker]}
@@ -35,7 +37,7 @@ module Ace
         end
       end
 
-      def with_server
+      def with_server(peer_role: :worker)
         Dir.mktmpdir("ace-authority-wire-", Etc.getpwuid(Process.uid).dir) do |root|
           File.chmod(0700, root)
           path = File.join(root, "authority.sock")
@@ -46,11 +48,15 @@ module Ace
           deployment.define_singleton_method(:verify_receiver_paths!) { |_id| true }
           deployment.define_singleton_method(:authority) { |_id| service }
           deployment.define_singleton_method(:verify!) { |*args, **options| map }
-          deployment.define_singleton_method(:project) { |_| {"inbox_contexts" => {}} }
+          deployment.define_singleton_method(:project) do |_|
+            {"inbox_contexts" => {}, "observer_uids" => [13008], "signer_uids" => [13010],
+              "peer_credentials" => {"13008" => {"gid" => 13008, "groups" => [13008]}, "13010" => {"gid" => 13010, "groups" => [13010]}}}
+          end
           kernel = Object.new
           kernel.define_singleton_method(:supported!) { true }
           kernel.define_singleton_method(:capture) { |_pid| service.slice("uid", "gid", "groups") }
-          kernel.define_singleton_method(:peer) { |_socket| {"uid" => 13001, "gid" => 13001, "groups" => [13001]} }
+          uid = {worker: 13001, observer: 13008, signer: 13010}.fetch(peer_role)
+          kernel.define_singleton_method(:peer) { |_socket| {"uid" => uid, "gid" => uid, "groups" => [uid]} }
           handler = Handler.new
           router = Authority::Router.new(launch: Launch.new, handlers: [handler])
           server = Authority::Server.new(authority_id: "authority", lifecycle: router, deployment: deployment, kernel: kernel)
@@ -65,6 +71,44 @@ module Ace
           server&.request_stop
           server&.stop
           assert owner.join(3), "all closed transfer handlers must drain"
+        end
+      end
+
+      def test_observation_transfer_uses_dedicated_kernel_roles_and_source_fixed_bounds
+        with_server(peer_role: :observer) do |path, handler, root|
+          codec = Authority::TransferCodec.new(root: root)
+          assert_raises(AttemptErrors::MalformedTransfer) { codec.descriptor(["x" * 65_537], purpose: :observation) }
+          assert_raises(AttemptErrors::MalformedTransfer) { codec.descriptor(["one", "two"], purpose: :observation) }
+          socket = UNIXSocket.new(path)
+          bytes = '{"sanitized":"native IDs only"}'
+          descriptor = codec.descriptor([bytes], purpose: :observation)
+          request(socket, "import_observation", "transfer" => descriptor)
+          codec.send(socket, parts: [bytes], descriptor: descriptor, purpose: :observation, deadline: WIRE.deadline(2))
+          socket.shutdown(Socket::SHUT_WR)
+          assert_equal bytes.unpack1("H*"), WIRE.read(socket, deadline: WIRE.deadline(2)).dig("data", "accepted")
+          assert_equal ["import_observation"], handler.calls
+          socket.close
+        end
+        with_server(peer_role: :signer) do |path, handler, root|
+          socket = UNIXSocket.new(path)
+          request(socket, "fetch_observation")
+          socket.shutdown(Socket::SHUT_WR)
+          reply = WIRE.read(socket, deadline: WIRE.deadline(2))
+          codec = Authority::TransferCodec.new(root: root)
+          parts = codec.receive(socket, descriptor: reply.dig("data", "transfer"), purpose: :artifacts, deadline: WIRE.deadline(2)) do |input|
+            Array.new(input.count) { |index| input.bytes(index: index) }
+          end
+          assert_equal ["one\x00\n".b, "two\r\n".b], parts
+          assert_equal ["fetch_observation"], handler.calls
+          socket.close
+        end
+        with_server do |path, handler, root|
+          socket = UNIXSocket.new(path)
+          descriptor = Authority::TransferCodec.new(root: root).descriptor(["ignored"], purpose: :observation)
+          request(socket, "import_observation", "transfer" => descriptor)
+          assert_equal "unauthorized", WIRE.read(socket, deadline: WIRE.deadline(2)).dig("error", "code")
+          assert_empty handler.calls
+          socket.close
         end
       end
 

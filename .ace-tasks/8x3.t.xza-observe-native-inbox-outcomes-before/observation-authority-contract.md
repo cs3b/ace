@@ -13,11 +13,64 @@ the record locks/native query, then revalidates the full record and admission.
 It returns sanitized candidate observation only. It does not import evidence,
 sign, reconcile, authorize worker-owned runtime evidence or mutate the inbox.
 Provider uncertainty remains explicit; missing queue ID after a lost reply stays
-null. The protected CLI now consumes this endpoint with validated original scope and candidate-only output. Canonical import/signer integration remains open.
+null. The protected CLI now consumes this endpoint with validated original scope and candidate-only output. Canonical import/fetch now exists as the bounded source amendment below; public producer/signer adoption and installed trust remain open.
 Earlier installed proof requirements remain central gad.2 obligations. The
 pending root-start/ACL contract is separate and unchanged by this read.
 
 ## Codex extraction candidate
+
+### Canonical route source amendment — 2026-10-08
+
+The source routes are `import_observation` (one <=64 KiB upload part, purpose
+`observation`) and `fetch_observation` (read-only artifact download). Import
+parameters: mapping_id, assignment_id, attempt_id, event_id, inbox_context_id,
+expected_registration, expected_generation, observation_sha256, transfer. Fetch
+parameters: mapping_id, assignment_id, attempt_id, event_id, inbox_context_id,
+evidence_id; mutation_id must be null. Import obtains the current snapshot and
+private codex_submission/codex_receipt from the fixed context owner. Current
+registration, full binding, retained client/queue identity and exact native
+process birth must match; caller JSON or a hash alone never grants provenance.
+
+Observation-enabled projects explicitly add observer_uids and signer_uids with
+complete peer_credentials. Each observation-enabled context supplies
+observer_uids, signer_uids and runtime_bindings together; absence grants no trust.
+Runtime bindings are keyed by an immutable installed ID, with exactly
+assignment_id, attempt_id, provider, provider_version, native_target,
+runtime_process_binding, endpoint_reference_sha256, observer_uid. native_target
+has session, pane, terminal_id, agent, thread, thread_kind. Process binding has
+pid, uid, gid, groups, parent_pid, started_at (Linux boot/OS birth) and host.
+Observer and signer principals are dedicated and distinct from worker, launcher,
+executor, authority and context owner. Native runtime UID cannot be worker,
+observer or signer. Trust is selected from the map and current private producer
+correlation, never caller paths or arbitrary supervisor status.
+
+A signer-enabled context may additionally declare receipt_private_key as the closed
+literal protected artifact reference {path, bytes, sha256}, bounded to 16 KiB.
+The signer consumer must load it through protected artifact validation and match
+the installed receipt_public_key fingerprint; merely declaring it grants no key
+access or signing proof. Exact configured signers may use the existing
+reconcile_inbox and inbox evidence_fetch routes. Same immutable evidence and key
+produce the same proof; existing locked accepted-proof verification and mutation
+replay govern recovery, including an already completed same claim. No new
+reconciliation lookup or state-only signing authorization is introduced.
+
+The first positive source route supports only Codex 0.159.3 completed-turn
+consumed evidence. Pi/superseded positives remain unsupported. Observation JSON
+is compact canonical JSON with the v1 fields below. source_bytes is an integer
+byte count of JSON.generate(source_excerpt); source_sha256 covers those exact
+sanitized bytes. source_excerpt has exactly status: completed and native_reference
+(the same sanitized reference). Native reference fields are provider, version,
+thread_id, queued_submission_id (null for retained lost reply),
+client_user_message_id, turn_id, item_id, payload_sha256. No message bodies,
+arbitrary files, evidence IDs or claimed observer authority are imported.
+
+Identical bytes/binding deduplicate; different positives for the same event/claim
+conflict without replacing evidence. Fetch verifies canonical provenance/bytes
+at one immutable commit and rechecks current registration and trust. Historical
+claims remain fetchable under current exact reader grants, with eligibility
+false for current signing. Source routes never sign, reconcile or settle, and
+never count as installed provenance acceptance.
+
 
 Installed primary-checkout research records Codex 0.159.3 experimental app-server schema. `thread/queue/add` accepts clientUserMessageId; queuedSubmission returns id and clientUserMessageId; `thread/read` with includeTurns exposes userMessage.clientId. That earlier CLI submission path could not bind a client ID and has been removed. Current NativeQueueExecutor uses the typed original runtime and persists correlation before queue add; current read-only extraction also exists. These source changes do not establish authority import, signing or installed provenance. The Codex child must own submission plus observation correlation through the version-probed native app-server interface. Record provider/version, immutable thread, queue submission ID and clientUserMessageId equal to a delivery correlation ID bound to event/attempt/generation/digest before submission. A reconnect/lost response does not submit again.
 

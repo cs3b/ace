@@ -8,6 +8,7 @@ require_relative "private_directory"
 require_relative "posix_acl"
 require_relative "task_context_entry"
 require_relative "campaign_consumer_policy"
+require_relative "observation_trust"
 require "ace/runtime/molecules/protected_worker_entry"
 require "ace/runtime/molecules/protected_socket"
 require "ace/runtime/molecules/protected_artifact_set"
@@ -86,6 +87,7 @@ module Ace
             raise ArgumentError, "invalid project mapping" unless project.is_a?(Hash)
             keys = %w[journal_repository evidence_git_ref evidence_checkout_root assignment_root candidate_root campaign_repository campaign_store_root campaign_policy
               launcher_uids reviewer_uids worker_uids service_executor_uids supervisor_uids peer_credentials]
+            %w[observer_uids signer_uids].each { |key| keys << key if project.key?(key) }
             keys << "service_receivers" if project.key?("service_receivers")
             keys << "inbox_contexts" if project.key?("inbox_contexts")
             strict!(project, keys)
@@ -94,7 +96,8 @@ module Ace
             unless project["evidence_git_ref"] == "refs/ace/execution"
               raise ArgumentError, "protected authority uses the canonical execution ref"
             end
-            role_uids = %w[launcher_uids reviewer_uids worker_uids service_executor_uids supervisor_uids].flat_map do |key|
+            role_keys = %w[launcher_uids reviewer_uids worker_uids service_executor_uids supervisor_uids] + %w[observer_uids signer_uids].select { |key| project.key?(key) }
+            role_uids = role_keys.flat_map do |key|
               values = project.fetch(key)
               unless values.is_a?(Array) && values.all? { |id| id.is_a?(Integer) && id.positive? } && values == values.sort.uniq
                 raise ArgumentError, "invalid project principal allowlist"
@@ -243,7 +246,19 @@ module Ace
             contexts.each_value do |context|
               fields = %w[control_socket_path deliveries_dir owner_credentials receipt_public_key native_mapping_id pi_queue_client pi_queue_client_sha256 supervisor_uids]
               fields << "service" if context.key?("service")
+              fields << "receipt_private_key" if context.key?("receipt_private_key")
+              fields += %w[observer_uids signer_uids runtime_bindings] if context.keys.any? { |key| %w[observer_uids signer_uids runtime_bindings].include?(key) }
               strict!(context, fields)
+              ObservationTrust.validate!(context, fixed_project, data.fetch("authorities").values.map { |item| item.fetch("uid") })
+              if context.key?("receipt_private_key")
+                reference = context.fetch("receipt_private_key")
+                strict!(reference, %w[path bytes sha256])
+                path!(reference.fetch("path"))
+                unless context.key?("signer_uids") && reference["bytes"].is_a?(Integer) && reference["bytes"].between?(1, 16_384) &&
+                    reference["sha256"].is_a?(String) && ObservationTrust::SHA.match?(reference["sha256"])
+                  raise ArgumentError, "signer private key reference differs"
+                end
+              end
               credentials = context.fetch("owner_credentials")
               strict!(credentials, %w[gid groups uid])
               principal!(credentials, "uid", "gid", "groups")
