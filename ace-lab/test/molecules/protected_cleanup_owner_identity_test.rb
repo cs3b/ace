@@ -41,7 +41,7 @@ class ProtectedCleanupOwnerIdentityTest < Minitest::Test
       @kernel.define_singleton_method(:peer) { |_socket| [77, 0, 0] }
       @unit = {"Id" => "cleanup.service", "LoadState" => "loaded", "ActiveState" => "active", "SubState" => "running",
         "InvocationID" => "a" * 32, "FragmentPath" => refs.last.fetch("path"), "DropInPaths" => []}
-      @service = Owner::EMPTY_COMMANDS.to_h { |key| [key, []] }.merge("Type" => "exec", "MainPID" => 77, "ControlPID" => 0,
+      @service = Owner::EMPTY_COMMANDS.to_h { |key| [key, []] }.merge("Slice" => "cleanup.slice", "Type" => "exec", "MainPID" => 77, "ControlPID" => 0,
         "ExecStartEx" => [[refs[1].fetch("path"), [refs[1].fetch("path"), Owner::DISABLE, "-I", root, refs[0].fetch("path")],
           [], 1, 1, 0, 0, 77, 0, 0]])
       unit, service = @unit, @service
@@ -55,7 +55,7 @@ class ProtectedCleanupOwnerIdentityTest < Minitest::Test
         {"unit" => "cleanup.service", "invocation_id" => "a" * 32}
       end
       artifacts = Owner::Runtime::ProtectedArtifactSet.new(protection: Protection.new)
-      @owner = Owner.new(unit: "cleanup.service", entry: refs[0], interpreter: refs[1], closure: refs.drop(2),
+      @owner = Owner.new(unit: "cleanup.service", slice_unit: "cleanup.slice", entry: refs[0], interpreter: refs[1], closure: refs.drop(2),
         load_paths: [root], manager: @manager, kernel: @kernel, artifacts: artifacts)
       yield
     ensure
@@ -87,7 +87,7 @@ class ProtectedCleanupOwnerIdentityTest < Minitest::Test
         {"path" => path, "bytes" => 15, "sha256" => Digest::SHA256.hexdigest("selected source")}
       end
       build = lambda do |selected, refs = dependencies|
-        Owner.new(unit: "cleanup.service", entry: @refs[0], interpreter: @refs[1], closure: @refs.drop(2) + refs,
+        Owner.new(unit: "cleanup.service", slice_unit: "cleanup.slice", entry: @refs[0], interpreter: @refs[1], closure: @refs.drop(2) + refs,
           load_paths: selected, manager: @manager, kernel: @kernel,
           artifacts: Owner::Runtime::ProtectedArtifactSet.new(protection: Protection.new))
       end
@@ -129,6 +129,24 @@ class ProtectedCleanupOwnerIdentityTest < Minitest::Test
     ensure
       release << true if release && worker&.alive?
       worker&.join(2)
+    end
+  end
+
+  def test_only_selected_dedicated_slice_can_produce_identity
+    ["system.slice", "other.slice", nil].each do |slice|
+      fixture do
+        @service["Slice"] = slice
+        assert_raises(Unavailable) { @owner.observe!(socket: Object.new) }
+        refute @handle.closed?, "wrong slice must refuse before pin acquisition"
+      end
+    end
+    fixture do
+      ["system.slice", "user.slice", "machine.slice", "cleanup.service", "../cleanup.slice"].each do |slice|
+        assert_raises(ArgumentError) do
+          Owner.new(unit: "cleanup.service", slice_unit: slice, entry: @refs[0], interpreter: @refs[1],
+            closure: @refs.drop(2), load_paths: [File.dirname(@refs.first.fetch("path"))], manager: @manager)
+        end
+      end
     end
   end
 

@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Bind protected cleanup identity to the explicitly selected dedicated systemd slice and reject a different observed service slice.
 - Admit the complete protected cleanup runtime of up to 64 verified load paths, with a 16KiB aggregate startup argument bound matching the installed producer.
 - Reject cleanup previews whose inventory digest differs from the complete preservation manifest digest.
 - Snapshot the original protected effect mutation ID across IO and require the no-effect challenge producer in full-service composition. Verify receiver and authority reconstruction after accepted recovery acknowledgement loss.

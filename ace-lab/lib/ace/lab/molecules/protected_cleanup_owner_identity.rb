@@ -23,7 +23,7 @@ module Ace
           LC_MESSAGES LC_PAPER LC_NAME LC_ADDRESS LC_TELEPHONE LC_MEASUREMENT LC_IDENTIFICATION].freeze
         ENVIRONMENT_FIELDS = {"Environment" => "as", "EnvironmentFiles" => "a(sb)", "PassEnvironment" => "as",
           "UnsetEnvironment" => "as", "PAMName" => "s"}.freeze
-        SERVICE_FIELDS = {**ENVIRONMENT_FIELDS, **EMPTY_COMMANDS.to_h { |key| [key, "a(sasasttttuii)"] }, "Type" => "s", "MainPID" => "u", "ControlPID" => "u", "ExecStartEx" => "a(sasasttttuii)"}.freeze
+        SERVICE_FIELDS = {**ENVIRONMENT_FIELDS, **EMPTY_COMMANDS.to_h { |key| [key, "a(sasasttttuii)"] }, "Slice" => "s", "Type" => "s", "MainPID" => "u", "ControlPID" => "u", "ExecStartEx" => "a(sasasttttuii)"}.freeze
 
         class Kernel
           def initialize(identity: Runtime::ProcessIdentity.new, pidfd_open: nil)
@@ -90,14 +90,17 @@ module Ace
           end
         end
 
-        def initialize(unit:, entry:, interpreter:, closure:, load_paths:, manager:, kernel: Kernel.new, artifacts: nil)
+        def initialize(unit:, slice_unit:, entry:, interpreter:, closure:, load_paths:, manager:, kernel: Kernel.new, artifacts: nil)
           unless unit.is_a?(String) && Runtime::SystemdScopeManager::UNIT.match?(unit) && unit.end_with?(".service") &&
+              slice_unit.is_a?(String) && Runtime::SystemdScopeManager::UNIT.match?(slice_unit) && slice_unit.end_with?(".slice") &&
+              !%w[system.slice user.slice machine.slice].include?(slice_unit) &&
               closure.is_a?(Array) && closure.size.between?(1, 4094) &&
               load_paths.is_a?(Array) && load_paths.size.between?(1, 64) && load_paths.uniq == load_paths &&
               load_paths.all? { |path| path.is_a?(String) && path.start_with?("/") && !path.include?("\0") && !path.include?(":") && File.expand_path(path) == path }
             raise ArgumentError, "cleanup identity requires a fixed accepted-release selection"
           end
           @unit = unit.dup.freeze
+          @slice_unit = slice_unit.dup.freeze
           @references = [entry, interpreter, *closure].map { |ref| reference(ref) }.freeze
           unless @references.map { |ref| ref.fetch("path") }.uniq.size == @references.size
             raise ArgumentError, "cleanup closure has duplicate references"
@@ -194,6 +197,7 @@ module Ace
           start = service.fetch("ExecStartEx")
           unless unit.values_at("Id", "LoadState", "ActiveState", "SubState", "DropInPaths") == [@unit, "loaded", "active", "running", []] &&
               unit.fetch("InvocationID").match?(/\A[0-9a-f]{32}\z/) && unit.fetch("InvocationID") != "0" * 32 &&
+              service.fetch("Slice") == @slice_unit &&
               EMPTY_COMMANDS.all? { |key| service[key] == [] } && service.fetch("Type") == "exec" && service.fetch("MainPID").is_a?(Integer) && service.fetch("MainPID").positive? &&
               service.fetch("ControlPID") == 0 && start.is_a?(Array) && start.size == 1 &&
               start[0][0] == @interpreter.fetch("path") && start[0][1] == @argv && start[0][2] == [] &&
