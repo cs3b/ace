@@ -21,6 +21,8 @@ Output: incomplete matrix with exact blocker; no fallback to default endpoint, n
 ## Mandatory R2/R3 row
 Install the exact R2/R3 versions from the candidate manifest. Exercise completed-stage recovery, conflicting policy, discovery cap, delivery cap and infra retry exhaustion. Observe retained campaign identity and explicit escalation, never an automatic extra review. A missing receipt or a skipped required scenario keeps the full matrix unaccepted. Pilot ig5 is not required.
 
-## Installed protected/native matrix
+## Installed scoped-effect matrix and live task observation
 
-Supply exact xz9/xza package/source receipts and lab-config:gad.8/gad.b deployment evidence to the existing acceptance matrix. Execute real distinct-account service and native Codex/Pi producer/observer/signer rows. Expected: correlated canonical receipts and manifest match; missing endpoint, same-UID-only fixture, queue acknowledgement without consumption, or uncertain cancellation leaves the row failed/unexecuted. qkc supplies the reviewed runnable scenario; gad.2 executes it and records the installed matrix. l2d.8 consumes that gad.2 receipt without a second run.
+Supply exact xz9 source and lab-config:gad.8/gad.b deployment evidence for real scoped effects. Verify actual target/result and the existing authorization boundary. gad.2 owns installed execution; l2d.8 reads its retained result without a second run.
+
+For agent progress, use existing runtime capture of the selected live Herdr/tmux panel and process. Launch through ace-llm and observe real output/result. A send acknowledgement means submitted; no message-read proof, dedicated app-server, observer/signer service or shadow current-state cache is required.

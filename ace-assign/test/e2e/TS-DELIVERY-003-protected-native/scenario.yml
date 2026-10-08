@@ -1,5 +1,5 @@
 test-id: TS-DELIVERY-003
-title: "Installed protected execution and native settlement"
+title: "Installed scoped execution"
 area: delivery
 package: ace-assign
 priority: high
@@ -9,14 +9,11 @@ tags: [installed-acceptance, "use-case:delivery"]
 tool-under-test: ace-assign
 e2e-justification: >
   Requires the actual installed public CLI, disposable provider state or authenticated
-  protected/native producer; deterministic fixtures cannot prove installed outcomes.
+  scoped effect owner; deterministic fixtures cannot prove installed outcomes.
 e2e-evidence-strength: state+content
 unit-coverage-reviewed:
   - ace-assign/test/feat/authority/service_settlement_test.rb
-  - ace-assign/test/feat/endcap_inboxes_test.rb
   - ace-assign/test/feat/endcap_results_test.rb
-  - ace-herdr/test/fast/molecules/native_queue_executor_test.rb
-  - ace-herdr/test/feat/protected_inbox_cli_test.rb
   - ace-lab/test/organisms/protected_service_recovery_test.rb
 requires:
   tools: [ace-assign, ace-git, ace-git-worktree, ace-task, ace-review, ace-bundle, ace-overseer, ace-herdr, git]
