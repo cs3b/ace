@@ -1,2 +1,3 @@
 ---
 BUNDLE_WITH: "development:test"
+BUNDLE_PATH: ".ace-local/vendor/bundle"
