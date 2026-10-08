@@ -22,3 +22,9 @@ Explicit local runner configuration at `.ace-local/test/git-registry-seed.yml` s
 - Complete default-fast package selection in retained single-batch mode `git/4095b43a-e7ce-4aa1-8757-a6f2ffbc8fa6`: PASS571/1624, seed24560. Additional assertions are reached because the six original cases now reach their intended paths. No test is removed or skipped.
 
 All handles are terminal. This repairs the classified package-suite failure only; other suite package failures remain separately owned. No source task criterion or installed acceptance is closed by this checkpoint.
+
+## Independent integration review
+
+Root reviewed frozen `5aa4c8567` against the actual provider registry, both destructive fixtures and retained before/after evidence: APPROVE. The fixture restores both process-wide maps without changing provider resolution or weakening assertions. Integrated as `a9b3a1d9b`.
+
+Main verification: `../bin/ace-test fast --run-in-single-batch --config /Users/mc/.codex/worktrees/service-merge-registry-fixture/ace/.ace-local/test/git-registry-seed.yml` from `ace-git`, with seed24560: PASS571/1624, zero failures/errors. Receipt `.ace-local/test/reports/git/48e12185-1cc0-4f9f-a982-15ca8c7f34ad/`. This is package verification, not final monorepo or installed Lab acceptance.
