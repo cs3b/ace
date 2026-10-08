@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Resolve receiver-side merge provider identity from the authenticated PR URL when the prepared candidate has no remote, refusing mismatched or changed pinned servers.
+
 - Route protected delivery through original worker merge request, canonical status and exact result consumption while preserving ordinary delivery and unresolved protected PR policy.
 
 
