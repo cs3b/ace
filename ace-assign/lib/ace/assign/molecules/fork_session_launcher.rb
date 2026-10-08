@@ -37,13 +37,12 @@ module Ace
         end
 
         def initialize(config: nil, query_interface: Ace::LLM::QueryInterface, runner: nil, interactive_builder: nil,
-          lifecycle_exclusion: nil, terminal_runner: nil)
+          lifecycle_exclusion: nil)
           @config = config || Ace::Assign.config
           @query_interface = query_interface
           @runner = runner || RuntimeControlSurfaceRunner.new
           @interactive_builder = interactive_builder || Ace::LLM::Molecules::InteractiveCommandBuilder.new
           @lifecycle_exclusion = lifecycle_exclusion
-          @terminal_runner = terminal_runner || method(:run_original_terminal)
         end
 
         def launch(assignment_id:, fork_root:, provider: nil, cli_args: nil, timeout: nil, cache_dir: nil, launch_mode: nil, callback_pane: nil)
@@ -86,7 +85,7 @@ module Ace
         end
 
         def launch_provider_session(assignment_id:, fork_root:, provider:, cli_args: nil, timeout: nil, cache_dir: nil,
-          last_message_file: nil, session_meta_file: nil, prepared_input: nil, codex_runtime: nil)
+          last_message_file: nil, session_meta_file: nil, prepared_input: nil)
           ensure_not_same_scoped_refork!(assignment_id: assignment_id, fork_root: fork_root)
           resolved_provider = provider || config.dig("execution", "provider") || DEFAULT_PROVIDER
           resolved_timeout = timeout || config.dig("execution", "timeout") || DEFAULT_TIMEOUT
@@ -102,30 +101,6 @@ module Ace
               "ACE_ASSIGN_ASSIGNMENT_ID" => assignment_id, "ACE_ASSIGN_ATTEMPT_ID" => prepared_input.descriptor.fetch("attempt_id"),
               "ACE_ASSIGN_TASK_CONTEXT_ENTRY" => JSON.generate(prepared_input.descriptor.fetch("task_context_entry").fetch("manifest")))
           end
-
-          prepared_provider = if prepared_input
-            parsed = Ace::LLM::Molecules::ProviderModelParser.new.parse(resolved_provider)
-            raise Error, parsed.error unless parsed.valid?
-            parsed.provider
-          end
-          if prepared_provider == "codex"
-            unless defined?(Ace::Herdr::Molecules::CodexRuntimeSelection) &&
-                codex_runtime.is_a?(Ace::Herdr::Molecules::CodexRuntimeSelection)
-              raise Error, "Managed Codex requires the original held runtime"
-            end
-            codex_runtime.verify!
-            unless codex_runtime.data.values_at("project_id", "native_mapping_id") ==
-                prepared_input.descriptor.values_at("project_id", "mapping_id")
-              raise Error, "Managed Codex runtime differs from prepared worker"
-            end
-            invocation = query_interface.interactive_invocation(provider_model: resolved_provider, prompt: prompt,
-              cli_args: cli_args, working_dir: prepared_input.working_directory,
-              subprocess_env: scope_env, codex_runtime: codex_runtime)
-            @terminal_runner.call(invocation)
-            codex_runtime.verify!
-            return {provider: "codex", metadata: {session_id: codex_runtime.data.fetch("thread_id")}, terminal: true}
-          end
-          raise Error, "Codex runtime supplied to another provider" if codex_runtime
 
           result = query_interface.query(
             resolved_provider,
@@ -153,16 +128,6 @@ module Ace
         end
 
         private
-
-        def run_original_terminal(invocation)
-          unless $stdin.tty? && $stdout.tty?
-            raise Error, "Managed Codex requires the original inherited worker terminal"
-          end
-          pid = Process.spawn(invocation.fetch(:env), *invocation.fetch(:command),
-            chdir: invocation.fetch(:working_dir), in: $stdin, out: $stdout, err: $stderr)
-          _, status = Process.wait2(pid)
-          raise Error, "Managed Codex terminal exited unsuccessfully" unless status.success?
-        end
 
         attr_reader :config, :query_interface, :runner, :interactive_builder
 

@@ -246,15 +246,6 @@ module Ace
           true
         end
 
-        def remote_resume_arguments(model:)
-          verify!
-          unless model == @intent.fetch("thread_configuration").fetch("model")
-            raise ValidationError, "Codex requested model differs from retained thread configuration"
-          end
-          [@intent.fetch("codex").fetch("path"), "resume", "--remote", "unix://" + data.fetch("socket_path"),
-            data.fetch("thread_id")].map { |argument| argument.dup.freeze }.freeze
-        end
-
         def submission(event_id:, attempt_id:, claim_generation:, digest:, thread:)
           verify!
           unless [event_id, attempt_id].all? { |value| InboxContextServiceConfiguration.token?(value) } &&

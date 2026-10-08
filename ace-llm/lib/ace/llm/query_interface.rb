@@ -16,11 +16,6 @@ module Ace
     # QueryInterface provides a simple Ruby API with named parameters matching the CLI
     # This allows direct Ruby calls to LLM providers without subprocess overhead.
     class QueryInterface
-      def self.interactive_invocation(**options)
-        require_relative "molecules/interactive_command_builder"
-        Molecules::InteractiveCommandBuilder.new.build(**options)
-      end
-
       def self.query(provider_model, prompt = nil,
         output: nil,
         format: "text",
