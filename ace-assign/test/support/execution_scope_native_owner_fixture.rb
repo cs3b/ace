@@ -7,15 +7,21 @@ module Ace
       class ExecutionScopeNativeOwnerFixture
         def initialize(map, journal, kernel, owner:, network_selection: ExecutionScopeObservationFixtures::NETWORK_SELECTION,
           boot_baseline_selection: ExecutionScopeObservationFixtures::BOOT_BASELINE_SELECTION,
-          network_installation: ExecutionScopeObservationFixtures::NETWORK_OUTPUT)
+          network_installation: ExecutionScopeObservationFixtures::NETWORK_OUTPUT,
+          workspace_observer: nil, resource_identities: [], parent_declarations: nil)
           @map, @journal, @kernel, @owner = map, journal, kernel, owner
+          @workspace_observer, @resource_identities, @parent_declarations = workspace_observer, resource_identities, parent_declarations
           @network_selection, @boot_baseline_selection, @network_installation = network_selection, boot_baseline_selection, network_installation
+        end
+        def workspace_exclusion_projection!(lineage)
+          raise AttemptErrors::EvidenceUnavailable, "fixture original lifecycle resource missing" unless @workspace_observer
+          @workspace_observer.workspace_exclusion_projection!(lineage)
         end
         def retire_released_parent!(_lineages); true; end
         def activate_parent!(context)
           context.merge("slot_id" => "slot", "deployment_digest" => Digest::SHA256.hexdigest(JSON.generate(canonical(@map))),
             "boot_id" => ExecutionScopeObservationFixtures::BOOT, "slice_invocation_id" => "b" * 32,
-            "resource_mount_namespace_identity" => {"device" => 4, "inode" => 11}, "resource_identities" => [],
+            "resource_mount_namespace_identity" => {"device" => 4, "inode" => 11}, "resource_identities" => @resource_identities,
             "network_namespace_identity" => @network_installation.fetch("namespace_identity"), "boot_baseline_selection" => @boot_baseline_selection, "network_installation_selection" => @network_selection,
             "cgroup_identity" => {"path" => "/sys/fs/cgroup/ace-slot.slice", "mount_id" => 4, "filesystem_type" => "cgroup2", "device" => 5, "inode" => 6})
         end
@@ -29,7 +35,7 @@ module Ace
           admission = events.find { |event| event.dig("payload", "operation") == "scope_service_admission" }
           payload = {"scope_generation" => 2, "scope_binding_event_id" => @lineage.binding_event.fetch("digest"),
             "service_invocation_id" => "c" * 32, "server_identity" => @kernel.capture(90), "socket_identity" => [1, 2, 13001], "workspace_id" => "w1",
-            "mount_namespace_identity" => {"device" => 4, "inode" => 22}, "resource_observer_identity" => @kernel.capture(92), "resource_identities" => [],
+            "mount_namespace_identity" => {"device" => 4, "inode" => 22}, "resource_observer_identity" => @kernel.capture(92), "resource_identities" => @resource_identities,
             "network_namespace_identity" => @network_installation.fetch("namespace_identity"), "network_admission_event_id" => admission.fetch("digest")}
           left, right = UNIXSocket.pair
           codec = Authority::TransferCodec.new(root: File.dirname(@journal.repo_root))
@@ -105,7 +111,7 @@ module Ace
           wire.define_singleton_method(:connect) { |_path, &block| block.call(socket) }
           files = Object.new
           selection = @network_selection
-          declarations = boundary_resources || [{"host_path" => "/private", "view_path" => "/private", "worker_visible" => false, "read_only" => true, "stage" => "parent"}]
+          declarations = boundary_resources || @parent_declarations || [{"host_path" => "/private", "view_path" => "/private", "worker_visible" => false, "read_only" => true, "stage" => "parent"}]
           files.define_singleton_method(:boundary_manifest!) do |_config|
             {"schema" => "ace.execution-boundary-manifest/v1", "slot_id" => "slot", "network_installation" => selection.slice("profile", "installer_artifact").merge("current_selection_path" => "/etc/ace/execution-slots/slot/network-installation-selection.json"),
               "resources" => declarations}

@@ -156,7 +156,7 @@ module Ace
 
         def validate_prepared_download!(data, params)
           descriptor, transfer = data.values_at("descriptor", "transfer")
-          fields = %w[version kind purpose artifact project_id mapping_id assignment_id attempt_id task_id scope definition_digest selection_sha256 prepared_head prepared_tree manifest_bytes manifest_sha256 registration_generation registration_commit original_binding_digest ref bytes sha256 task_context_entry original_worker_identity original_worker_scratch_root].sort
+          fields = %w[version kind purpose artifact project_id mapping_id assignment_id attempt_id task_id scope definition_digest selection_sha256 prepared_head prepared_tree manifest_bytes manifest_sha256 registration_generation registration_commit original_binding_digest ref bytes sha256 task_context_entry original_worker_identity original_worker_scratch_root workspace_exclusion].sort
           valid = data.keys.sort == %w[descriptor generation journal_commit transfer] && descriptor.is_a?(Hash) && descriptor.keys.sort == fields &&
             descriptor["version"].is_a?(Integer) && descriptor["version"] == 1 &&
             params.values_at("kind", "purpose_id", "artifact_id") == %w[prepared_work original_prepared_work prepared_bundle] &&
@@ -178,6 +178,11 @@ module Ace
             transfer.values_at("bytes", "sha256") == descriptor.values_at("bytes", "sha256") && transfer["parts"] == [descriptor.slice("bytes", "sha256")]
           raise AttemptErrors::EvidenceUnavailable, "original prepared download descriptor differs" unless valid
           TaskContextEntry.validate!(descriptor.fetch("task_context_entry"))
+          Molecules::LifecycleExclusion.workspace_reader(projection: descriptor.fetch("workspace_exclusion"))
+          unless descriptor.dig("workspace_exclusion", "root_resource", "view_path") ==
+              "/run/ace/lifecycle-exclusion/#{descriptor.fetch('mapping_id')}"
+            raise AttemptErrors::EvidenceUnavailable, "original prepared lifecycle mapping differs"
+          end
           identity = descriptor.fetch("original_worker_identity")
           birth = identity.is_a?(Hash) && identity["started_at"]
           boot = birth.is_a?(String) && birth.split(":", -1)[1]

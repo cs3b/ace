@@ -43,6 +43,11 @@ module Ace
           query = Object.new
           query.define_singleton_method(:query) do |provider, prompt, **parameters|
             captured << [provider, prompt, parameters]
+            root = owner.instance_variable_get(:@prepared_workspace_resources).last
+            key = Molecules::LifecycleExclusion.workspace_selection(mapping_id: "mapping", project_id: "project",
+              authority: owner.instance_variable_get(:@service), cwd_resource: owner.instance_variable_get(:@prepared_workspace_resources).first).fetch("key")
+            path = File.join(root.fetch("host_path"), "#{Digest::SHA256.hexdigest(key)}.lock")
+            File.open(path, File::RDWR) { |writer| owner.refute writer.flock(File::LOCK_EX | File::LOCK_NB) }
             # No provider FD or environment admission is used: explicit scoped
             # CLI options trigger an independent real original fetch.
             status = CLI::Commands::Status.new
@@ -66,9 +71,15 @@ module Ace
             runner: Object.new, interactive_builder: Object.new)
           launcher.define_singleton_method(:detect_provider_session) { |*| raise "forbidden native session discovery" }
           worker = Authority::PreparedWorker.new(kernel: kernel, env: worker_env,
-            client_factory: ->(_) { @client }, launcher: launcher)
+            client_factory: ->(_) { @client }, launcher: launcher, workspace_reader_factory: method(:controlled_workspace_reader))
           before = @journal.ref_value
           assert_equal "Finished captured subtree.", worker.run.fetch(:text)
+          root = @prepared_workspace_resources.last
+          key = Molecules::LifecycleExclusion.workspace_selection(mapping_id: "mapping", project_id: "project",
+            authority: @service, cwd_resource: @prepared_workspace_resources.first).fetch("key")
+          File.open(File.join(root.fetch("host_path"), "#{Digest::SHA256.hexdigest(key)}.lock"), File::RDWR) do |writer|
+            assert writer.flock(File::LOCK_EX | File::LOCK_NB)
+          end
           assert_equal 1, captured.size
           prompt = captured.first[1]
           assert_includes prompt, "Exact fixture context."
@@ -80,6 +91,62 @@ module Ace
           assert_raises(AttemptErrors::EvidenceUnavailable) { worker.run }
           assert_equal 1, captured.size
           assert_equal before, @journal.ref_value
+        end
+      end
+
+      def test_completed_queue_does_not_release_workspace_when_provider_ownership_is_unconfirmed
+        fixture do
+          issue_original
+          start_server
+          kernel = controlled_worker_kernel(@worker)
+          kernel.peer_identity = @service.slice("uid", "gid", "groups")
+          context = protected_cli_context(kernel)
+          owner = self
+          options = {assignment: "assignment@010", mapping: "mapping", attempt: @attempt}
+          query = Object.new
+          query.define_singleton_method(:query) do |*_, **_|
+            command = CLI::Commands::Finish.new
+            command.instance_variable_set(:@protected_assignment_context, context)
+            command.call(**options, message: "Queue complete; provider ownership still unknown.", quiet: true)
+            raise IOError, "controlled unconfirmed provider child"
+          end
+          launcher = Molecules::ForkSessionLauncher.new(config: {}, query_interface: query,
+            runner: Object.new, interactive_builder: Object.new)
+          worker = Authority::PreparedWorker.new(kernel: kernel, env: worker_env,
+            client_factory: ->(_) { @client }, launcher: launcher, workspace_reader_factory: method(:controlled_workspace_reader))
+          assert_raises(AttemptErrors::EvidenceUnavailable) { worker.run }
+          lease = worker.instance_variable_get(:@workspace_lease)
+          assert lease.verify_unchanged!
+          root = @prepared_workspace_resources.last
+          key = Molecules::LifecycleExclusion.workspace_selection(mapping_id: "mapping", project_id: "project",
+            authority: @service, cwd_resource: @prepared_workspace_resources.first).fetch("key")
+          File.open(File.join(root.fetch("host_path"), "#{Digest::SHA256.hexdigest(key)}.lock"), File::RDWR) do |writer|
+            refute writer.flock(File::LOCK_EX | File::LOCK_NB)
+          end
+          assert_raises(AttemptErrors::EvidenceUnavailable) { worker.run }
+        ensure
+          # Injected child is ended by this controlled fixture owner, not by
+          # queue completion or a production exception cleanup path.
+          lease&.close!
+        end
+      end
+
+      def test_retained_removed_workspace_refuses_before_provider_or_queue_activation
+        fixture do
+          issue_original
+          root = @prepared_workspace_resources.last
+          key = Molecules::LifecycleExclusion.workspace_selection(mapping_id: "mapping", project_id: "project",
+            authority: @service, cwd_resource: @prepared_workspace_resources.first).fetch("key")
+          marker = File.join(root.fetch("host_path"), "#{Digest::SHA256.hexdigest(key)}.state.json")
+          File.write(marker, JSON.generate({"key" => key, "removed" => true, "removed_at" => "2026-10-08T00:00:00Z"}))
+          start_server
+          kernel = controlled_worker_kernel(@worker)
+          launcher = Object.new
+          launcher.define_singleton_method(:launch_provider_session) { |**_| raise "forbidden provider start" }
+          worker = Authority::PreparedWorker.new(kernel: kernel, env: worker_env,
+            client_factory: ->(_) { @client }, launcher: launcher, workspace_reader_factory: method(:controlled_workspace_reader))
+          assert_raises(AttemptErrors::Conflict) { worker.run }
+          refute File.exist?(File.join(@root, "prepared-queues"))
         end
       end
 
@@ -141,7 +208,7 @@ module Ace
           launcher = Molecules::ForkSessionLauncher.new(config: {}, query_interface: query,
             runner: Object.new, interactive_builder: Object.new)
           worker = Authority::PreparedWorker.new(kernel: kernel, env: worker_env,
-            client_factory: ->(_) { @client }, launcher: launcher)
+            client_factory: ->(_) { @client }, launcher: launcher, workspace_reader_factory: method(:controlled_workspace_reader))
           assert_raises(AttemptErrors::EvidenceUnavailable) { worker.run }
           assert_raises(AttemptErrors::EvidenceUnavailable) { worker.run }
           assert_equal 1, calls
@@ -177,7 +244,7 @@ module Ace
           launcher = Molecules::ForkSessionLauncher.new(config: {}, query_interface: query,
             runner: Object.new, interactive_builder: Object.new)
           worker = Authority::PreparedWorker.new(kernel: kernel, env: worker_env,
-            client_factory: ->(_) { @client }, launcher: launcher)
+            client_factory: ->(_) { @client }, launcher: launcher, workspace_reader_factory: method(:controlled_workspace_reader))
           before = @journal.ref_value
           assert_raises(AttemptErrors::EvidenceUnavailable) { worker.run }
           assert_equal before, @journal.ref_value

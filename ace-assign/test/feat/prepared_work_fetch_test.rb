@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 require_relative "../test_helper"
 require_relative "../support/endcap_result_owner_fixture"
+require_relative "../support/protected_workspace_fixture"
 require "ace/assign/authority/server"
 require "ace/assign/authority/client"
 require "ace/assign/authority/deployment_history"
@@ -39,7 +40,10 @@ module Ace
         if @oversized_worker_entry
           @map.fetch("worker_entry").each_value { |reference| reference["path"] = "/" + "\n" * 4094 }
         end
-        return unless @real_history_fixture
+        unless @real_history_fixture
+          configure_original_workspace_resource
+          return
+        end
         @map = @map.merge("worker_entry" => {"interpreter" => {"path" => "/usr/bin/python3", "bytes" => 100, "sha256" => "3" * 64}, "wrapper" => {"path" => "/usr/libexec/ace-worker.py", "bytes" => 200, "sha256" => "4" * 64}}, "worker_env" => {"PATH" => "/usr/bin"},
           "execution_scope" => @map.fetch("execution_scope").merge("backend" => "linux_systemd_cgroup_v2",
             "slice_unit" => "ace-slot.slice", "unit_manifest_sha256" => "b" * 64,
@@ -56,6 +60,43 @@ module Ace
         @deployment = with_artifact_protection { Authority::Deployment.load_artifact(reference) }
         @map = @deployment.mapping("mapping")
         @project = @deployment.project("project")
+        configure_original_workspace_resource
+      end
+
+      def configure_original_workspace_resource
+        authority = @deployment.authority(@map.fetch("authority_id"))
+        cwd = {"host_path" => @map.fetch("worker_cwd"), "view_path" => @map.fetch("worker_cwd"),
+          "device" => 8, "inode" => 42, "mount_id" => 10, "filesystem_type" => "ext4", "uid" => 13001, "gid" => 13001}
+        selection = Molecules::LifecycleExclusion.workspace_selection(mapping_id: "mapping", project_id: "project",
+          authority: authority, cwd_resource: cwd)
+        mounts = ProtectedWorkspaceFixture::Mounts.new(selection.fetch("view_path"), selection.fetch("host_path"))
+        acl = ProtectedWorkspaceFixture::ACL.new
+        protection = Molecules::LifecycleExclusion::WorkspaceProvisioner::Protection.new(
+          projection: {"authority_uid" => authority.fetch("uid"), "authority_gid" => authority.fetch("gid"), "root_resource" => {}},
+          mounts: mounts, acl: acl)
+        association = Molecules::LifecycleExclusion.provision_workspace!(mapping_id: "mapping", project_id: "project",
+          authority: authority, cwd_resource: cwd, protection: protection)
+        root = selection.slice("host_path", "view_path").merge(association.fetch("host_identity"),
+          "mount_id" => 10, "filesystem_type" => "ext4")
+        @prepared_workspace_resources = [cwd, root]
+        @prepared_workspace_declarations = [cwd.merge("stage" => "parent", "worker_visible" => true, "read_only" => false),
+          root.merge("stage" => "parent", "worker_visible" => true, "read_only" => true)].map do |entry|
+          entry.slice("host_path", "view_path", "stage", "worker_visible", "read_only")
+        end
+        declarations = @prepared_workspace_declarations
+        files = Object.new
+        files.define_singleton_method(:boundary_manifest) { |_scope| {"resources" => declarations} }
+        @prepared_workspace_observer = Authority::ExecutionScopeObservation.new(mapping_id: "mapping", deployment: @deployment,
+          kernel: @kernel, files: files, manager: Object.new)
+      end
+
+      def controlled_workspace_reader(projection)
+        root = projection.fetch("root_resource")
+        files = ProtectedWorkspaceFixture::Files.new(root.fetch("host_path"), root.fetch("view_path"))
+        mounts = ProtectedWorkspaceFixture::Mounts.new(root.fetch("view_path"), root.fetch("host_path"))
+        protection = Molecules::LifecycleExclusion::WorkspaceReader::Protection.new(projection: projection, mounts: mounts,
+          acl: ProtectedWorkspaceFixture::ACL.new)
+        Molecules::LifecycleExclusion.workspace_reader(projection: projection, protection: protection, files: files)
       end
 
       def prepared_fetch(**options)
@@ -252,6 +293,9 @@ module Ace
               when :digest then result[:data]["descriptor"]["sha256"] = "f" * 64
               when :identity then result[:data]["descriptor"]["original_worker_identity"]["started_at"] = "reused-worker"
               when :entry then result[:data]["descriptor"]["task_context_entry"]["wrapper"]["bytes"] = 0
+              when :workspace_missing then result[:data]["descriptor"].delete("workspace_exclusion")
+              when :workspace_mapping then result[:data]["descriptor"]["workspace_exclusion"]["root_resource"]["view_path"] = "/run/ace/lifecycle-exclusion/foreign"
+              when :workspace_identity then result[:data]["descriptor"]["workspace_exclusion"]["root_resource"]["inode"] = 1.5
               when :open then result[:data]["descriptor"]["private"] = "must not escape"
               when :extra then result[:transfer_parts] << "extra"
               when :replay then result[:replayed] = true
@@ -269,7 +313,7 @@ module Ace
           end
           @client.define_singleton_method(:prepared_transfer_codec) { |_descriptor| codec }
           before = @journal.ref_value
-          %i[selector purpose ref digest identity entry open extra replay].each do |bad|
+          %i[selector purpose ref digest identity entry workspace_missing workspace_mapping workspace_identity open extra replay].each do |bad|
             corruption = bad
             assert_raises(AttemptErrors::EvidenceUnavailable) { client_fetch }
             assert_equal 0, receives, "#{bad} must refuse before transferred bytes"
@@ -350,7 +394,13 @@ module Ace
           @deployment = current
           restart
           before = @journal.ref_value
-          assert_equal expected, prepared_fetch
+          original_boundary_files = @prepared_workspace_observer.instance_variable_get(:@files)
+          # Only installed boundary file observation is injected. The actual
+          # historical observer still receives the selected original Deployment
+          # and validates original declaration/cwd/resource identity itself.
+          Authority::ExecutionScopeObservation::Files.stub(:new, original_boundary_files) do
+            assert_equal expected, prepared_fetch
+          end
           @history = nil
           restart
           assert_raises(AttemptErrors::EvidenceUnavailable) { prepared_fetch }

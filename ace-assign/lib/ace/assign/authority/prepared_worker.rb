@@ -10,9 +10,13 @@ module Ace
       # Fixed gate target. Environment identifiers are untrusted lookup hints;
       # the original issued capability and actual kernel birth decide admission.
       class PreparedWorker
-        def initialize(kernel: Ace::Runtime::Molecules::ProtectedLinux.new, client_factory: nil, launcher: nil, env: ENV)
+        def initialize(kernel: Ace::Runtime::Molecules::ProtectedLinux.new, client_factory: nil, launcher: nil, env: ENV,
+          workspace_reader_factory: nil)
           @kernel, @launcher, @env = kernel, launcher, env
           @client_factory = client_factory || ->(mapping) { Client.new(mapping_id: mapping, kernel: @kernel) }
+          @workspace_reader_factory = workspace_reader_factory || ->(projection) {
+            Molecules::LifecycleExclusion.workspace_reader(projection: projection)
+          }
           @started = false
         end
 
@@ -33,10 +37,16 @@ module Ace
             raise AttemptErrors::UnauthorizedIdentity, "prepared adapter requires exact original worker self"
           end
           input.drive_prompt
+          @workspace_lease = @workspace_reader_factory.call(input.descriptor.fetch("workspace_exclusion"))
+          @workspace_lease.acquire!
           @started = true
           queue = PreparedQueue.new(work: input.work, descriptor: input.descriptor)
           root = queue.activate_original!
-          return {"state" => "completed"} unless root
+          unless root
+            @workspace_lease.verify_unchanged!
+            @workspace_lease.close!
+            return {"state" => "completed"}
+          end
           launcher = @launcher || Molecules::ForkSessionLauncher.new(config: {})
           result = launcher.launch_provider_session(assignment_id: assignment, fork_root: input.descriptor.fetch("scope"),
             provider: root.fork_provider || Molecules::ForkSessionLauncher::DEFAULT_PROVIDER, cache_dir: queue.directory,
@@ -47,6 +57,8 @@ module Ace
               raise AttemptErrors::EvidenceUnavailable, "prepared provider exited before selected queue completed"
             end
           end
+          @workspace_lease.verify_unchanged!
+          @workspace_lease.close!
           result
         rescue SystemCallError, IOError
           raise AttemptErrors::EvidenceUnavailable, "prepared_input_unavailable: published worker queue or provider output is unavailable"

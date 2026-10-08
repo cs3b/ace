@@ -82,6 +82,7 @@ module Ace
             raise AttemptErrors::EvidenceUnavailable, "original prepared definition differs"
           end
           projection = immutable_maintenance_projection(registration: registration, registration_commit: registration_commit, state: state, map: map, events: chain,
+            workspace_exclusion: maintenance_scope_observer_for(selected, params.fetch("mapping_id")).workspace_exclusion_projection!(lineage),
             original_worker_scratch_root: original_project.fetch("peer_credentials").fetch(map.fetch("worker_uid").to_s).fetch("scratch_root"),
             original_binding_digest: original.fetch("binding_digest"), commit: commit)
           pin = compact_prepared_input(projection)
@@ -110,6 +111,7 @@ module Ace
             "original_binding_digest" => projection.fetch(:original_binding_digest),
             "prepared_work" => registration.fetch("prepared_work"),
             "worker_entry" => Ace::Runtime::Molecules::ProtectedWorkerEntry.validate!(projection.fetch(:map).fetch("worker_entry")),
+            "workspace_exclusion" => projection.fetch(:workspace_exclusion),
             "bundle_ref" => registration.fetch("prepared_bundle_ref"),
             "bundle_bytes" => registration.fetch("prepared_bundle_bytes"),
             "bundle_sha256" => registration.fetch("prepared_bundle_sha256"))

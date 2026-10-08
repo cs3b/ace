@@ -47,8 +47,9 @@ module Ace
       class MaintenanceScopeOwner
         attr_reader :retirements, :checks
         attr_accessor :resources
-        def initialize(map, boot_baseline_selection:, network_selection:)
+        def initialize(map, boot_baseline_selection:, network_selection:, deployment: nil)
           @map, @retirements, @checks = map, 0, 0
+          @deployment = deployment
           @resources = []
           @boot_baseline_selection, @network_selection = boot_baseline_selection, network_selection
         end
@@ -76,8 +77,16 @@ module Ace
         end
         def maintenance_parent_resource_declarations!(lineage)
           lineage.binding.fetch("resource_identities").map do |entry|
-            entry.slice("host_path", "view_path").merge("stage" => "parent", "worker_visible" => true, "read_only" => false)
+            entry.slice("host_path", "view_path").merge("stage" => "parent", "worker_visible" => true,
+              "read_only" => entry.fetch("view_path") == "/run/ace/lifecycle-exclusion/mapping")
           end
+        end
+        def workspace_exclusion_projection!(lineage)
+          declarations = maintenance_parent_resource_declarations!(lineage)
+          files = Object.new
+          files.define_singleton_method(:boundary_manifest) { |_scope| {"resources" => declarations} }
+          Authority::ExecutionScopeObservation.new(mapping_id: "mapping", deployment: @deployment,
+            kernel: Object.new, files: files, manager: Object.new).workspace_exclusion_projection!(lineage)
         end
         def observe(_lineage); {"populated" => 0}; end
         def native_admission_ready!(_lineage)
@@ -172,9 +181,9 @@ module Ace
             mode: :protected, evidence_reader: ->(*) { raise "no service evidence expected" }, service_authorizer: ->(*) { raise "no service mutation expected" })
           installer = ref.call("original-installer", "controlled retained installer")
           network = ExecutionScopeObservationFixtures::NETWORK_SELECTION.merge("installer_artifact" => installer)
-          scope_for = lambda do |map, name|
+          scope_for = lambda do |map, name, source_owner = original|
             proof = retained_boot_baseline_artifact(root: root, name: name, map: map, installer: installer)
-            MaintenanceScopeOwner.new(map, boot_baseline_selection: proof, network_selection: network)
+            MaintenanceScopeOwner.new(map, boot_baseline_selection: proof, network_selection: network, deployment: source_owner)
           end
           owner = fresh = nil
           bad_current = File.join(root, "untrusted-current-boot.json")
@@ -185,6 +194,11 @@ module Ace
             observer = scope_for.call(original.mapping("mapping"), "original-boot.json")
             observer.resources = [{"host_path" => original.mapping("mapping").fetch("worker_cwd"), "view_path" => "/workspace",
               "mount_id" => 4, "filesystem_type" => "ext4", "device" => 8, "inode" => 99, "uid" => 13001, "gid" => 13001}]
+            authority = original.authority(original.mapping("mapping").fetch("authority_id"))
+            lock_selection = Molecules::LifecycleExclusion.workspace_selection(mapping_id: "mapping", project_id: "project",
+              authority: authority, cwd_resource: observer.resources.first)
+            observer.resources << lock_selection.slice("host_path", "view_path").merge("mount_id" => 4,
+              "filesystem_type" => "ext4", "device" => 8, "inode" => 100, "uid" => authority.fetch("uid"), "gid" => authority.fetch("gid"))
             untouched_observer = scope_for.call(original.mapping("untouched"), "untouched-boot.json")
             observers = {"mapping" => observer, "untouched" => untouched_observer}
             owner = Authority::LaunchLifecycle.new(deployment: original, deployment_history: history, kernel: kernel,
@@ -271,9 +285,11 @@ module Ace
               refute_equal candidate.mapping("mapping").fetch("workspace_repository_id"), target.fetch("workspace_repository_id")
               refute_equal candidate.mapping("mapping").fetch("workspace_cleanup_config"), target.fetch("workspace_cleanup_config")
               assert_equal observer.resources, target.fetch("resource_identities")
-              assert_equal [{"host_path" => original.mapping("mapping").fetch("worker_cwd"), "view_path" => "/workspace",
-                "stage" => "parent", "worker_visible" => true, "read_only" => false}], target.fetch("parent_resource_declarations")
-              assert_equal %w[assignment_id attempt_id binding_event_digest descriptor_sha256 journal_commit mapping_id original_mapping_digest parent_resource_declarations project_id proof_event_digest release_event_digest resource_identities worker_cwd workspace_cleanup_config workspace_repository_id workspace_resource], target.keys.sort
+              assert_equal observer.maintenance_parent_resource_declarations!(lineage), target.fetch("parent_resource_declarations")
+              assert_equal lock_selection.fetch("key"), target.dig("workspace_exclusion", "key")
+              assert_equal observer.resources.last, target.dig("workspace_exclusion", "root_resource")
+              assert target.fetch("workspace_exclusion").frozen?
+              assert_equal %w[assignment_id attempt_id binding_event_digest descriptor_sha256 journal_commit mapping_id original_mapping_digest parent_resource_declarations project_id proof_event_digest release_event_digest resource_identities worker_cwd workspace_cleanup_config workspace_exclusion workspace_repository_id workspace_resource], target.keys.sort
               assert_raises(FrozenError) { target.fetch("workspace_cleanup_config")["path"].replace("/wrong") }
               assert_raises(FrozenError) { target.fetch("parent_resource_declarations").first["read_only"] = true }
               assert_raises(FrozenError) { target.fetch("workspace_resource")["inode"] = 0 }
@@ -362,7 +378,7 @@ module Ace
             end
             assert_equal Authority::Deployment::PATH, published_candidate.artifact_reference.fetch("path")
             assert_equal candidate_ref.fetch("sha256"), published_candidate.artifact_reference.fetch("sha256")
-            fresh_observer = scope_for.call(published_candidate.mapping("mapping"), "candidate-boot.json")
+            fresh_observer = scope_for.call(published_candidate.mapping("mapping"), "candidate-boot.json", published_candidate)
             fresh = Authority::LaunchLifecycle.new(deployment: published_candidate, deployment_history: fresh_history, kernel: kernel,
               journals: {"project" => journal}, scope_observer_factory: ->(_) { fresh_observer })
             # Publication selects the immutable candidate; old canonical proofs

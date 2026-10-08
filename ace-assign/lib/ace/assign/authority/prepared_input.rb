@@ -21,6 +21,11 @@ module Ace
 
         def initialize(reply:)
           @descriptor = reply.data.fetch("descriptor")
+          Molecules::LifecycleExclusion.workspace_reader(projection: descriptor.fetch("workspace_exclusion"))
+          unless descriptor.dig("workspace_exclusion", "root_resource", "view_path") ==
+              "/run/ace/lifecycle-exclusion/#{descriptor.fetch('mapping_id')}"
+            raise AttemptErrors::EvidenceUnavailable, "prepared_input_unavailable: original lifecycle mapping differs"
+          end
           unless reply.parts.is_a?(Array) && reply.parts.one?
             raise AttemptErrors::EvidenceUnavailable, "prepared_input_unavailable: one original bundle required"
           end

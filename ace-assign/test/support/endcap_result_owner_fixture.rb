@@ -118,7 +118,9 @@ module Ace
 
       def restart
         @launch = Authority::LaunchLifecycle.new(deployment: @deployment, deployment_history: @history, kernel: @kernel, journals: {"project" => @journal},
-          scope_observer_factory: ->(_id) { ExecutionScopeNativeOwnerFixture.new(@map, @journal, @kernel, owner: @launch) })
+          scope_observer_factory: ->(_id) { ExecutionScopeNativeOwnerFixture.new(@map, @journal, @kernel, owner: @launch,
+            workspace_observer: @prepared_workspace_observer, resource_identities: @prepared_workspace_resources || [],
+            parent_declarations: @prepared_workspace_declarations) })
         @endcap = Authority::Endcap.new(deployment: @deployment, launch: @launch, kernel: @kernel, service_policy: @policy)
         @router = Authority::Router.new(launch: @launch, handlers: [@endcap])
       end

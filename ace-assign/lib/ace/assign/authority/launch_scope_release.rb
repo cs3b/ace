@@ -172,6 +172,7 @@ module Ace
             "binding_event_digest" => binding_event_digest, "release_event_digest" => release_event_digest,
             "proof_event_digest" => lineage.proof_event.fetch("digest"), "worker_cwd" => cwd,
             "workspace_resource" => resource, "workspace_repository_id" => repository, "workspace_cleanup_config" => cleanup_config,
+            "workspace_exclusion" => observer.workspace_exclusion_projection!(lineage),
             "parent_resource_declarations" => declarations, "resource_identities" => lineage.binding.fetch("resource_identities"),
             "original_mapping_digest" => original.mapping_digest(lineage.binding.fetch("mapping_id"))))
           contexts.each_value do |_entry, context|
