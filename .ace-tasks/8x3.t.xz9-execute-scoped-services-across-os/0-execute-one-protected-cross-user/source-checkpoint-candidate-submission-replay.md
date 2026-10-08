@@ -39,3 +39,12 @@ check was corrected to separate raw parameters binding from normalized admission
 Final broader public composition eb9b59e7 passed4/172 in184.325s, but belongs to
 separate producer successor, not this checkpoint. No whole xz9.0/family closure.
 Independent exact source reviewer verdict is required before integration.
+
+Independent coordinator verdict: APPROVE `1daf132a6` for this bounded repair.
+Reviewed both authorization sites, immutable full-parameter replay checks,
+bounded historical bundle validation and actual transfer/counter regression.
+Integrated as `0ccfa9b7a`; the isolated test passed again on integrated source:
+1 test / 19 assertions, 17.4 seconds,
+`assign/9367c308-ca6d-4af9-9dd9-92bbb48f4919`. Package changelog added during
+integration. The larger public producer and complete requester workflow remain
+separate source gates.
