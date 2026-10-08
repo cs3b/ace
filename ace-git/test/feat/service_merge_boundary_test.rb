@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 require_relative "../test_helper"
 require_relative "../support/protected_merge_flow_fixture"
+require_relative "../../../ace-assign/test/support/prepared_workspace_resource_fixture"
 require "ace/git/cli"
 require "ace/git/forgejo"
 require "ace/git/github"
@@ -14,6 +15,28 @@ require_relative "../../../ace-hitl/test/support/lifecycle_fixtures"
 # execution and remote provider transport are controlled excluded boundaries.
 class ServiceMergeBoundaryTest < AceGitTestCase
   include ProtectedMergeFlowFixture
+  include Ace::Assign::PreparedWorkspaceResourceFixture
+
+  def configure_result_owner_fixture
+    super
+    configure_original_workspace_resource
+  end
+
+  def test_actual_wrong_provider_sha_retains_uncertainty_without_merge_or_delivery
+    @wrong_provider_head = true
+    exercise_completion
+  end
+
+  def test_lost_remote_merge_reply_never_becomes_delivery_or_retry
+    @uncertain_provider_merge = true
+    exercise_completion
+  end
+
+  def test_actual_red_ci_only_does_not_veto_reviewed_authorized_merge
+    @red_ci, @merge_provider = true, "github"
+    exercise_completion
+  end
+
   def test_public_merge_uses_canonical_silence_proposal_without_another_proposal
     @public_lab, @authorization_mode = true, :proposal
     exercise_completion

@@ -25,6 +25,10 @@ Publisher primitive audit on main 7d12934ae: actual script fixture `ace-handbook
 
 Source `fa3d045eb` received independent APPROVE from `audit_runtime_delivery_status` and was integrated as `6a1e9e7ae`. The integrated original prepared-worker composition passed 2 tests / 65 assertions in 37.8 seconds, report `assign/e09dfb94-b191-460b-8511-3385e2a23bda`. Author publisher regressions passed 12/100 (`handbook/44682aa7`). This supersedes the missing bounded publication-blocker composition above, not the remaining SC4 audit or positive downstream publication.
 
-Missing-publisher proof includes actual policy denial, joined listener, unchanged canonical ref, absent request and no handler effects. Missing OTP exercises the ordinary script without push and routes failure through original protected assignment fail/status. The fixture captures the actual publication section only; full-workflow literal JSON rendering remains a separate known defect. No task closure is inferred.
+Missing-publisher proof includes actual policy denial, joined listener, unchanged canonical ref, absent request and no handler effects. Missing OTP exercises the ordinary script without push and routes failure through original protected assignment fail/status. The fixture captures the actual publication section only; full-workflow literal JSON rendering was subsequently corrected at PreparedInput (approved `eade5ed55`, main regression4/40 `88ef2029`). No task closure is inferred.
 
 Run the specified affected-package tests and default suite against one integrated revision; record exact source receipts and independent review. No full task checkbox is newly completed by this audit.
+
+## SC4 technical-fault source successor
+
+The actual wrong-provider-SHA and lost-remote-merge cases passed2/57 (`67f57eae`); actual normalized red-CI-only evidence with canonical merge/import/worker consumption passed1/47 (`f6b523fe`). See source-checkpoint-delivery-technical-faults.md for exact boundary ownership, preserved unsuccessful reports and remaining independent review. These are source scenarios, not installed/remote proof. No status promotion or resolution of the protected PR-order question is inferred.

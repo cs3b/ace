@@ -158,8 +158,22 @@ module ProtectedMergeFlowFixture
       configure_merge_authorization(submission, input)
       submission["expected_generation"] = generation if @authorization_mode
       calls, merged = [], false
+      observed_head = @wrong_provider_head ? "f" * 40 : @head
+      remote_reply_lost = @uncertain_provider_merge
       runner = lambda do |args:, **|
         calls << args
+        if @red_ci && args[0, 2] == %w[gh api]
+          assert_equal "forge.example.com", args.fetch(args.index("--hostname") + 1)
+          payload = case args[2]
+          when "repos/owner/repo/commits/#{@head}/check-runs?per_page=100"
+            {"total_count" => 1, "check_runs" => [{"name" => "advisory-ci", "status" => "completed", "conclusion" => "failure", "html_url" => "#{URL}/checks/1"}]}
+          when "repos/owner/repo/commits/#{@head}/status"
+            {"total_count" => 0, "statuses" => []}
+          else
+            flunk "unexpected CI read #{args.inspect}"
+          end
+          next {success: true, status: 200, stdout: JSON.generate(payload), stderr: "", exit_code: 0}
+        end
         if provider == "github"
           assert_equal "forge.example.com/owner/repo", args.fetch(args.index("--repo") + 1)
         end
@@ -173,12 +187,15 @@ module ProtectedMergeFlowFixture
             assert_equal "squash", args[3].fetch("Do")
           end
           merged = true
+          if remote_reply_lost
+            next {success: false, status: 0, stdout: "", stderr: "controlled lost mutation reply", exit_code: 1}
+          end
           nil
         elsif provider == "github"
           assert_equal %w[gh pr view 25], args[0, 4]
           {"number" => 25, "title" => "Ship", "body" => "", "state" => merged ? "MERGED" : "OPEN",
             "isDraft" => false, "author" => {"login" => "worker"}, "headRefName" => "feature/x", "baseRefName" => "main",
-            "url" => resource, "headRefOid" => @head, "headRepositoryOwner" => {"login" => head_owner},
+            "url" => resource, "headRefOid" => observed_head, "headRepositoryOwner" => {"login" => head_owner},
             "headRepository" => {"name" => "repo"}, "mergeCommit" => merged ? {"oid" => "d" * 40} : nil,
             "mergedAt" => merged ? "2026-10-07T12:00:00Z" : nil}
         elsif args[2].end_with?("/version")
@@ -190,13 +207,20 @@ module ProtectedMergeFlowFixture
           {"number" => 25, "title" => "Ship", "body" => "", "state" => merged ? "closed" : "open", "draft" => false,
             "merged" => merged, "merged_at" => merged ? "2026-10-07T12:00:00Z" : nil,
             "merge_commit_sha" => merged ? "d" * 40 : nil, "user" => {"login" => "worker"},
-            "head" => branch.call("feature/x", @head, head_owner), "base" => branch.call("main", "e" * 40, "owner")}
+            "head" => branch.call("feature/x", observed_head, head_owner), "base" => branch.call("main", "e" * 40, "owner")}
         end
         {success: true, status: 200, stdout: payload ? JSON.generate(payload) : "", stderr: "", exit_code: 0}
       end
       producer = Ace::Git::Organisms::ServiceMerge.new(lifecycle_factory: ->(**selection) {
         Ace::Git::Organisms::PullRequestLifecycle.new(**selection, runner: runner) })
+      if @red_ci
+        selected = Ace::Git::ResolvedServer.new(name: "selected", provider: :github, url: URL)
+        checks = Ace::Git::Providers.for(selected, runner: runner).pull_request_checks(number: 25, head_sha: @head)
+        assert_equal [:failure], checks.map(&:conclusion)
+        assert_equal ["selected"], checks.map(&:server_name)
+      end
       effects = 0
+      handler_errors = []
       original_process = Ace::Herdr::Molecules::BoundedProcess.method(:call)
       read_metrics = Hash.new { |hash, key| hash[key] = {"calls" => 0, "seconds" => 0.0} }
       @read_metrics = read_metrics
@@ -213,12 +237,20 @@ module ProtectedMergeFlowFixture
         end
         assert_equal @document.fetch("operations").fetch("merge").fetch("argv"), argv
         effects += 1
+        successful = true
         out, err = capture_io do
-          Ace::Git::CLI::Commands::ServiceMerge.new(input: StringIO.new(options.fetch(:stdin_data)),
-            producer: producer, root: options.fetch(:chdir)).call
+          begin
+            Ace::Git::CLI::Commands::ServiceMerge.new(input: StringIO.new(options.fetch(:stdin_data)),
+              producer: producer, root: options.fetch(:chdir)).call
+          rescue Ace::Support::Cli::Error => error
+            raise unless @wrong_provider_head || @uncertain_provider_merge
+            handler_errors << [error.cause.class, error.message]
+            successful = false
+            warn error.message
+          end
         end
         status = Object.new
-        status.define_singleton_method(:success?) { true }
+        status.define_singleton_method(:success?) { successful }
         Struct.new(:stdout, :stderr, :status, :oversized).new(out, err, status, false)
       end
       client = delivery_authority_client
@@ -289,6 +321,42 @@ module ProtectedMergeFlowFixture
               submission: submission, peer: @worker, input_bytes: bytes, mutation_id: "merge-original")
           end
         end
+      end
+      if @wrong_provider_head || @uncertain_provider_merge
+        @server.stop
+        assert @owner.join(10)
+        @owner.value
+        assert_equal "uncertain", result.fetch("state")
+        assert_equal 1, handler_errors.size
+        assert_equal(@wrong_provider_head ? Ace::Git::ProviderExpectedHeadConflictError : Ace::Git::ProviderUnknownOutcomeError, handler_errors.first.fetch(0))
+        expected_mutations = @wrong_provider_head ? 0 : 1
+        assert_equal expected_mutations, calls.count { |args| merge_mutation?(provider, args) }
+        assert_equal !!@uncertain_provider_merge, merged
+        record = @journal.service_request("service-request")
+        assert_equal "uncertain", record.fetch("state")
+        assert_nil record["completion_digest"]
+        events = @journal.read_events("assignment")
+        refute events.any? { |event| event["type"] == "delivery" || event["type"] == "evidence_import" && event.dig("payload", "kind") == "service" }
+        refute phases.include?("complete_service")
+        # Inspect/consume through the original worker. Neither read nor refused
+        # consumption can dispatch another effect or manufacture a receipt.
+        start_service_server
+        @kernel.peer_identity = @worker
+        identity = @worker
+        kernel = Ace::Assign::EndcapResultOwnerFixture::Kernel.new
+        kernel.define_singleton_method(:capture) { |_| identity }
+        kernel.peer_identity = @service.slice("uid", "gid", "groups")
+        worker_client = Ace::Assign::Authority::Client.new(mapping_id: "mapping", deployment: @deployment, kernel: kernel)
+        consumer = Ace::Assign::Organisms::ProtectedDeliveryCoordinator.new(client: worker_client, project_id: "project")
+        selectors = {assignment_id: "assignment", attempt_id: @attempt, service_request_id: "service-request",
+          candidate_head: @head, candidate_generation: submission.fetch("candidate_generation"), input_digest: digest, target: target}
+        before_read = @journal.ref_value
+        assert_equal "uncertain", consumer.perform(**selectors.merge(operation: "status")).fetch("state")
+        error = assert_raises(Ace::Assign::AttemptErrors::EvidenceUnavailable) { consumer.perform(**selectors.merge(operation: "merge")) }
+        assert_includes error.message, "inspect its status without retry"
+        assert_equal before_read, @journal.ref_value
+        assert_equal expected_mutations, calls.count { |args| merge_mutation?(provider, args) }
+        next
       end
       if %i[missing out_of_scope].include?(@authorization_mode)
         assert_equal "blocked", result.fetch("state")
