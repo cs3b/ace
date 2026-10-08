@@ -91,7 +91,8 @@ Input corruption at admission/consumption is a visible prepared_input_mismatch r
 
 ## Success criteria
 
-- [ ] SC1: Actual default managed leaf preparation → bounded artifact/register JournalMutation → reservation/original release → fixed adapter authenticated fetch → scoped executor consumes only the unique reviewed subtree and captured task context, exposing the exact selection digest.
+- [x] SC1: Actual default managed leaf preparation → bounded artifact/register JournalMutation → reservation/original release → fixed adapter authenticated fetch → scoped executor consumes only the unique reviewed subtree and captured task context, exposing the exact selection digest.
+  Evidence: independently approved public composition `6f23952f`, integrated `de2591f8b`; complete 9/435 PASS `ccac5774`, including actual scoped worker consumption of all eight captured leaves and exact prepared fetch. Preparation/register/fetch/queue/worker batch 64/653 PASS `0333b4f0` is retained in source-integration-audit-2026-10-08.md. This checkbox covers controlled source behavior only; whole-task dependencies and installed acceptance remain open.
 - [ ] SC2: Wrong/changed/extra job, step, workflow, task/dependency context, scope, task/project, definition, artifact or authenticated input refuses before affected consumption. Legitimate status/report updates continue; later-step mutation after activation and retry/add/renumber cannot bypass the guard.
 - [ ] SC3: Lost transfer/register/release response retains original attribution; replay cannot issue another permission. Recovery uses exact canonical refs and performs zero rebuilding, worker starts or authority mutations. Existing failure/uncertainty/settlement rules remain intact.
 - [ ] SC4: Existing local mode, candidate/result transport and qk0.0 inventory remain intact; qk0.1 consumes this delivered source handoff. Existing 32KiB/16KiB/64KiB/64MiB bounds all remain unchanged.
