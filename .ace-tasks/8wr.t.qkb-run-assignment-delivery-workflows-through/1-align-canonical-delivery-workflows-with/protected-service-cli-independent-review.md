@@ -63,6 +63,14 @@ unchanged thereafter. The full composition ran at `ddf732e91`.
 Workflow adoption and the family gates above remain open; these controlled
 fixtures do not prove installed Lab or release readiness.
 
+The coordinating reviewer also approved `381d22144`, integrated as `2fb9dd8df`:
+the public authority status request now supplies the existing required null
+candidate selector. The controlled full composition reads its actual returned
+generation before the first service request and verifies the journal stays
+unchanged. Integrated test `git/74d97f3e-bccf-44ff-8170-89fab55ab469` passed
+1 test / 69 assertions in 40.98 seconds. Candidate generation remains distinct
+from authority generation; no arithmetic replaces the public status read.
+
 At main `0c191d366`, Lab command/adapter/cleanup owner tests passed27/200 (`lab/842849fc-7ba5-42fd-a690-da3c49dd1acd`), Assign context passed7/47 (`assign/3f599c6d-8a4a-422c-a8fe-7bfb2bd5ecb7`), and actual public lost-claim response/status/exact replay passed1/67 in35.51s (`git/4d558680-5481-4a11-ab87-0185545cc515`). No source changed while these checks ran. Existing held-input evidence was retained when merging task documentation; changelog conflict resolution preserved both source entries.
 
 The separate cleanup runtime-bound repair `d0e5b52ea` was independently approved by `/root/wave_412` and integrated as `0c191d366`:64 selected unique paths with16,384 aggregate argv bytes including terminators. Actual Lab producer measured45 paths/10,091 argv bytes and503,317 entry bytes, within unchanged1MiB entry cap. This proves bounded source composition, not installed root execution or full physical cleanup.
