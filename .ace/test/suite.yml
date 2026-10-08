@@ -31,11 +31,6 @@ test_suite:
       group: foundation
       priority: 2
 
-    - name: ace-lab
-      path: ace-lab
-      group: foundation
-      priority: 2
-
     - name: ace-bundle
       path: ace-bundle
       group: tools
