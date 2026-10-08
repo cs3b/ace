@@ -92,3 +92,31 @@ zero failures/errors. Herdr/Hermes full green receipts above remain applicable
 because their source and tests are byte-identical across the rebase. The source
 head has been handed to the independent reviewer; this report-only amendment
 does not claim their verdict or installed acceptance.
+
+## Joined LiveClient fixture contract repair — 2026-10-08
+
+The joined HITL run at `090d851f9` reported 240 tests, 1364 assertions, and
+five errors (`d74ff6d5-9b77-4ec2-b7e0-bebdac3c2e4b`). All five originated
+from the maintained LiveClient integration fixture's obsolete Native adapter:
+it lacked the current Inbox `prepare_submission` producer method. Its generic
+acceptance response also omitted Codex submission correlation. The watcher
+exception accounted for a subsequent 60-second wait; it is not native proof.
+
+Repair scope at base `d772ea74a` is only `ace-hitl/test/feat/live_client_test.rb`:
+provide explicit Codex producer/submission correlation in the named adapter seam
+and keep the real Store, durable Inbox, signed receipt verifier, restart, key
+rotation, uncertainty and watcher assertions. No production fallback, agent
+substitution or installed/native acceptance claim is authorized. Verification
+is limited to this relevant file; combined final review remains open.
+
+Focused terminal verification: `bin/ace-test ace-hitl feat
+ace-hitl/test/feat/live_client_test.rb` selected 1/26 files and passed **11 tests,
+93 assertions, zero failures/errors, 254.38 ms**, report
+`fb44aad4-520a-4f1e-a646-31d0fc621491`. Added assertions join the actual retained
+Inbox receipt to the producer's event/attempt/generation/digest/client message
+and queue UUID, and verify explicit supersession retry keeps the event while
+advancing generation and allocating a distinct client message ID. Signed fixture
+observations name that retained client message rather than an unrelated log token.
+These fixture correlations do not authenticate an installed Codex endpoint or
+prove native consumption. Existing installed SC2/gad obligations and combined
+independent review remain open; no task status or production source was changed.

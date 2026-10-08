@@ -12,15 +12,39 @@ class LiveClientTest < AceHitlTestCase
   KEY = OpenSSL::PKey::RSA.generate(2048)
 
   class Native
-    attr_reader :calls
-    attr_accessor :result
+    attr_reader :calls, :prepared
+    attr_accessor :uncertain
     def initialize
       @calls = []
-      @result = {"accepted" => true, "stdout" => "{}"}
+      @prepared = []
     end
-    def submit(**args)
-      @calls << args
-      result
+
+    # Named producer seam: models the current Codex queue correlation, never
+    # installed endpoint authentication or actual native consumption.
+    def prepare_submission(agent:, thread:, event_id:, attempt_id:, claim_generation:, digest:)
+      raise Ace::Herdr::ValidationError, "fixture requires original Codex thread" unless agent == "codex" && thread == THREAD
+      submission = {"schema" => "ace.herdr.codex-submission/v1", "provider_version" => "rust-v0.159.3",
+        "endpoint_reference_sha256" => "a" * 64, "thread_id" => thread,
+        "server_process_binding" => {"pid" => 42, "parent_pid" => 1, "uid" => 1001, "gid" => 1001,
+          "groups" => [1001], "host" => "fixture", "started_at" => "linux:0123abcd-0000-4000-8000-000000000001:42"},
+        "event_id" => event_id, "attempt_id" => attempt_id, "claim_generation" => claim_generation,
+        "payload_sha256" => digest, "client_user_message_id" => "ace-#{SecureRandom.hex(16)}"}
+      @prepared << submission
+      submission
+    end
+
+    def submit(agent:, thread:, event_id:, digest:, payload:, submission:)
+      unless agent == "codex" && @prepared.include?(submission) &&
+          submission.values_at("thread_id", "event_id", "payload_sha256") == [thread, event_id, digest] &&
+          Digest::SHA256.hexdigest(payload) == digest
+        raise Ace::Herdr::ValidationError, "fixture submission correlation differs"
+      end
+      @calls << {agent: agent, thread: thread, event_id: event_id, digest: digest, payload: payload.dup, submission: submission}
+      return {"accepted" => false, "error" => "lost response"} if uncertain
+
+      submission.slice("provider_version", "endpoint_reference_sha256", "thread_id",
+        "client_user_message_id", "payload_sha256", "server_process_binding").merge(
+          "accepted" => true, "queued_submission_id" => SecureRandom.uuid)
     end
   end
 
@@ -114,7 +138,8 @@ class LiveClientTest < AceHitlTestCase
     value = record.slice("event_id", "attempt_id", "claim_generation", "payload_sha256", "binding")
       .merge("outcome" => outcome, "observer" => {"role" => "supervisor", "id" => "ops1"},
         "evidence" => {"kind" => outcome == "consumed" ? "consumed_acknowledged" : "queue_evicted",
-          "native_reference" => "session-log:42", "observation" => "verified native observation"})
+          "native_reference" => "codex-client-message:#{@native.calls.last.fetch(:submission).fetch("client_user_message_id")}",
+          "observation" => "fixture observer outcome for the retained Codex submission"})
     yield value if block_given?
     path = File.join(@dir, "receipt.json")
     bytes = JSON.generate(value)
@@ -166,6 +191,14 @@ class LiveClientTest < AceHitlTestCase
     assert_equal "delivered", first["state"]
     assert_equal "approved", @native.calls.first[:payload]
     assert_equal 1, @native.calls.size
+    submission = @native.prepared.fetch(0)
+    assert_equal first.values_at("event_id", "attempt_id", "claim_generation", "payload_sha256"),
+      submission.values_at("event_id", "attempt_id", "claim_generation", "payload_sha256")
+    durable = Ace::Herdr::Molecules::DeliveryRecordStore.load(File.join(@dir, "deliveries"), first.fetch("event_id"))
+    accepted = durable.inbox.fetch("receipt").fetch("codex_submission")
+    assert_equal submission.fetch("client_user_message_id"), accepted.fetch("client_user_message_id")
+    assert_equal THREAD, accepted.fetch("thread_id")
+    assert_match(Ace::Herdr::Molecules::CodexAppServerTransport::UUID, accepted.fetch("queued_submission_id"))
     assert_equal "unknown", @client.status(request: "live001")["delivery"]["state"]
     assert_equal ["live001"], @client.pending.map { |v| v["id"] }
     assert_equal first, @client.deliver(request: "live001", timeout: 1)
@@ -208,7 +241,7 @@ class LiveClientTest < AceHitlTestCase
   def test_uncertain_delivery_never_retries_on_elapsed_time_and_supersession_requires_explicit_retry
     request
     answer
-    @native.result = {"accepted" => nil, "error" => "lost response"}
+    @native.uncertain = true
     record = @client.deliver(request: "live001", timeout: 1)
     assert_equal "uncertain", record["state"]
     assert_equal "uncertain", @client.deliver(request: "live001", timeout: 1)["state"]
@@ -218,9 +251,13 @@ class LiveClientTest < AceHitlTestCase
     assert_equal 1, @native.calls.size
     assert_equal "queued", @client.deliver(request: "live001", timeout: 1)["state"]
     assert_equal 1, @native.calls.size
-    @native.result = {"accepted" => true}
+    @native.uncertain = false
     assert_equal "delivered", @client.reconcile(request: "live001", receipt_path: path, retry_delivery: true)["state"]
     assert_equal 2, @native.calls.size
+    original, replacement = @native.calls.map { |call| call.fetch(:submission) }
+    assert_equal original.fetch("event_id"), replacement.fetch("event_id")
+    assert_operator replacement.fetch("claim_generation"), :>, original.fetch("claim_generation")
+    refute_equal original.fetch("client_user_message_id"), replacement.fetch("client_user_message_id")
   end
 
   def test_otp_never_enters_native_envelope_and_pane_less_wait_remains_independent
