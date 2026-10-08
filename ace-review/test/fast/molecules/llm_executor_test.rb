@@ -115,6 +115,36 @@ class LlmExecutorTest < AceReviewTest
     assert_equal 900, captured_kwargs[:timeout]
   end
 
+  def test_campaign_single_attempt_disables_hidden_fallback_and_retains_terminal_failure
+    calls = []
+    query = lambda do |_model, _prompt, **options|
+      calls << options
+      raise Ace::LLM::AuthenticationError, "authentication refused"
+    end
+    Ace::LLM::QueryInterface.stub(:query, query) do
+      result = @executor.execute(system_prompt: "system", user_prompt: "user", model: "claude:opus@ro",
+        session_dir: @test_dir, single_attempt: true)
+      refute result[:success]
+      assert_equal({status: "failed", failure: "authentication"}, result[:campaign_attempt])
+    end
+    assert_equal 1, calls.size
+    assert_equal false, calls.first[:fallback]
+  end
+
+  def test_campaign_provider_statuses_are_typed_and_unknown_errors_stop
+    {401 => "authentication", 403 => "authorization", 404 => "model_unavailable",
+      429 => "rate_limit", 503 => "transport"}.each do |code, expected|
+      error = Ace::LLM::ProviderError.new("selected provider error (#{code}): refused")
+      assert_equal({status: "failed", failure: expected}, @executor.send(:campaign_failure, error))
+    end
+    assert_equal({status: "failed", failure: "unclassified"},
+      @executor.send(:campaign_failure, RuntimeError.new("unknown source fault")))
+    error = Ace::LLM::ProviderError.new("transport failed (503)")
+    error.execution_evidence = Ace::LLM::Models::ExecutionEvidence.new(outcome: :transport_failure,
+      invocation_id: "original-call", execution_began: true)
+    assert_equal({status: "uncertain", failure: nil}, @executor.send(:campaign_failure, error))
+  end
+
   def test_empty_model_output_is_not_a_completed_review
     Ace::LLM::QueryInterface.stub(:query, {text: "  ", execution: {provider: "pi", model: "zai/glm-5.3"}}) do
       result = @executor.execute(system_prompt: "system", user_prompt: "user",
