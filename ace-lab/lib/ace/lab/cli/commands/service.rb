@@ -21,7 +21,8 @@ module Ace
 
             def protected_refusal(error)
               code = error.is_a?(ArgumentError) || error.is_a?(SecurityError) ? "protected_service_refused" : "protected_service_unavailable"
-              emit({"status" => "error", "error" => {"code" => code, "message" => error.message.to_s.scrub[0, 512]}})
+              message = error.is_a?(JSON::ParserError) ? "protected installed selection unavailable" : error.message.to_s.scrub[0, 512]
+              emit({"status" => "error", "error" => {"code" => code, "message" => message}})
             end
 
             def emit(envelope)
@@ -66,7 +67,7 @@ module Ace
               emit(service.request(project: project, assignment: assignment, attempt: attempt,
                 operation: operation, input_path: input, authorization: authorization,
                 request_id: request_id, dry_run: options[:dry_run]))
-            rescue ArgumentError, Ace::Assign::Error, Ace::Git::Error, Ace::Runtime::RuntimeUnavailableError, SecurityError, KeyError, SystemCallError => error
+            rescue ArgumentError, Ace::Assign::Error, Ace::Git::Error, Ace::Runtime::RuntimeUnavailableError, JSON::ParserError, SecurityError, KeyError, SystemCallError => error
               raise if selected == false
               protected_refusal(error)
             end
@@ -100,7 +101,7 @@ module Ace
                 return emit(protected_service.status(request_id: request, **options))
               end
               emit(service.status(request_id: request))
-            rescue ArgumentError, Ace::Assign::Error, Ace::Git::Error, Ace::Runtime::RuntimeUnavailableError, SecurityError, KeyError, SystemCallError => error
+            rescue ArgumentError, Ace::Assign::Error, Ace::Git::Error, Ace::Runtime::RuntimeUnavailableError, JSON::ParserError, SecurityError, KeyError, SystemCallError => error
               raise if selected == false
               protected_refusal(error)
             end

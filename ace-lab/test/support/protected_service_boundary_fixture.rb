@@ -28,7 +28,7 @@ module ProtectedServiceBoundaryFixture
     owner = Ace::Assign::Authority::ServiceEvidence.new(journal: @journal)
   end
 
-  def prepared_submission
+  def prepared_submission(accept_review: true)
     path = File.join(@root, "original.bundle")
     git(@journal.repo_root, "bundle", "create", path, "HEAD")
     bundle = File.binread(path)
@@ -37,15 +37,17 @@ module ProtectedServiceBoundaryFixture
     candidate = call("submit_candidate", {"head" => @head, "candidate_generation" => 1,
       "expected_generation" => generation, "transfer" => descriptor}, id: "real-candidate", transfer: transfer).fetch(:data)
     number = candidate.fetch("candidate_generation")
-    review = call("assign_review", {"head" => @head, "candidate_generation" => number,
-      "expected_generation" => generation, "reviewer_uid" => @reviewer.fetch("uid"),
-      "reviewer_process_binding" => @reviewer}, id: "review", peer: @launcher, role: :launcher).fetch(:data)
-    _, _, receipt = upload(parts: ["review report"])
-    receipt.merge!("operation" => "review", "review" => {"head" => @head, "verdict" => "approved",
-      "reviewer" => {"actor" => review.fetch("reviewer_actor")}})
-    params, input, = upload(parts: ["review report"], receipt: receipt)
-    call("accept_review", params.merge("candidate_generation" => number, "purpose_id" => review.fetch("review_id")),
-      id: "accept-review", peer: @reviewer, role: :reviewer, transfer: input)
+    if accept_review
+      review = call("assign_review", {"head" => @head, "candidate_generation" => number,
+        "expected_generation" => generation, "reviewer_uid" => @reviewer.fetch("uid"),
+        "reviewer_process_binding" => @reviewer}, id: "review", peer: @launcher, role: :launcher).fetch(:data)
+      _, _, receipt = upload(parts: ["review report"])
+      receipt.merge!("operation" => "review", "review" => {"head" => @head, "verdict" => "approved",
+        "reviewer" => {"actor" => review.fetch("reviewer_actor")}})
+      params, input, = upload(parts: ["review report"], receipt: receipt)
+      call("accept_review", params.merge("candidate_generation" => number, "purpose_id" => review.fetch("review_id")),
+        id: "accept-review", peer: @reviewer, role: :reviewer, transfer: input)
+    end
     bytes = JSON.generate("target" => {"resource" => "fixture"})
     digest = Ace::Lab::Atoms::ServiceInput.digest(JSON.parse(bytes))
     target = Ace::Lab::Atoms::ServiceInput.target(JSON.parse(bytes))

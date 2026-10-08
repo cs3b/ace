@@ -53,6 +53,19 @@ class ServiceMergeBoundaryTest < AceGitTestCase
     exercise_completion
   end
 
+  def test_public_lab_request_refuses_candidate_without_accepted_review
+    @public_lab = true
+    @missing_review = true
+    @public_refusals = [:missing_review]
+    exercise_completion
+  end
+
+  def test_public_lab_pending_status_refuses_changed_input_and_foreign_birth
+    @public_lab = true
+    @public_status_refusals = true
+    exercise_completion
+  end
+
   def test_real_receiver_fixed_cli_neutral_merge_and_canonical_receipt_import
     exercise_completion
   end
@@ -85,7 +98,7 @@ class ServiceMergeBoundaryTest < AceGitTestCase
   def exercise_completion
     fixture do
       issue_original
-      submission, = prepared_submission
+      submission, = prepared_submission(accept_review: !@missing_review)
       input = {"target" => {"resource" => "#{URL}/pulls/25", "artifact_digest" => nil}, "method" => "squash",
         "delivery" => {"forge_server" => "selected", "forge_default" => false,
           "pr_provenance" => {"mode" => "canonical", "head_repository_url" => URL, "head_ref" => "feature/x",
@@ -388,7 +401,7 @@ class ServiceMergeBoundaryTest < AceGitTestCase
       end
     end
     [["--candidate-head", "f" * 40, :stale_head], ["--candidate-generation", (original[original.index("--candidate-generation") + 1].to_i + 1).to_s, :stale_generation],
-      ["--authorization", "missing-decision", :missing_authorization]].each do |flag, value, selected|
+      ["--authorization", "missing-decision", :missing_authorization], ["--authorization", "decision", :missing_review]].each do |flag, value, selected|
       next unless controls.include?(selected)
       @kernel.peer_identity = worker
       output = capture_io do
@@ -541,6 +554,30 @@ class ServiceMergeBoundaryTest < AceGitTestCase
           "--assignment", "assignment", "--attempt", @attempt, "--mapping", "mapping", "--scope", "010", "--candidate-head", @head,
           "--candidate-generation", submission.fetch("candidate_generation").to_s,
           "--input-digest", submission.fetch("input_digest"), "--target", submission.fetch("target").fetch("resource")])
+      end
+      if @public_status_refusals
+        status_arguments = ["--request", "service-request", "--project", "project", "--assignment", "assignment",
+          "--attempt", @attempt, "--mapping", "mapping", "--scope", "010", "--candidate-head", @head,
+          "--candidate-generation", submission.fetch("candidate_generation").to_s,
+          "--input-digest", submission.fetch("input_digest"), "--target", submission.fetch("target").fetch("resource")]
+        [["--input-digest", "f" * 64], ["--candidate-head", "f" * 40], ["--target", "foreign"]].each do |flag, value|
+          changed = status_arguments.dup
+          changed[changed.index(flag) + 1] = value
+          refused_out, refused_err = capture_io do
+            assert_raises(Ace::Support::Cli::Error) { registered_lab_call("service status", status_command, changed) }
+          end
+          assert_empty refused_err
+          assert_equal "error", JSON.parse(refused_out).fetch("status")
+          assert_equal before_status, @journal.ref_value, "wrong status selection cannot write or repair"
+        end
+        @kernel.peer_identity = worker.merge("started_at" => "linux:#{Ace::Assign::ExecutionScopeObservationFixtures::BOOT}:999")
+        refused_out, refused_err = capture_io do
+          assert_raises(Ace::Support::Cli::Error) { registered_lab_call("service status", status_command, status_arguments) }
+        end
+        assert_empty refused_err
+        assert_equal "error", JSON.parse(refused_out).fetch("status")
+        assert_equal before_status, @journal.ref_value
+        @kernel.peer_identity = worker
       end
       assert_empty status_err
       assert_equal "uncertain", JSON.parse(status_out).dig("data", "state")

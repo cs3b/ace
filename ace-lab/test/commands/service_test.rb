@@ -112,6 +112,43 @@ module Ace
             assert_equal "protected_service_unavailable", JSON.parse(output).dig("error", "code")
           end
 
+          def test_registered_removed_or_corrupt_installed_descriptor_never_uses_local_status
+            deployment = Ace::Assign::Authority::Deployment
+            history = Ace::Assign::Authority::DeploymentHistory
+            original_lstat = File.method(:lstat)
+            %i[removed corrupt].each do |mode|
+              owner = Object.new
+              owner.define_singleton_method(:read_path!) do |path, limit:|
+                raise "wrong installed descriptor" unless path == deployment::PATH && limit == 65_536
+                raise Errno::ENOENT, path if mode == :removed
+                raw = "PRIVATE_DESCRIPTOR_MARKER_invalid_json"
+                [raw, {"path" => path, "bytes" => raw.bytesize, "sha256" => Digest::SHA256.hexdigest(raw)}]
+              end
+              owner.define_singleton_method(:with) { |&block| block.call(owner) }
+              presence = lambda do |path|
+                if path == deployment::PATH
+                  raise Errno::ENOENT, path if mode == :removed
+                  next Object.new
+                end
+                next Object.new if path == history::PATH
+                original_lstat.call(path)
+              end
+              command = Service::Status.new
+              command.instance_variable_set(:@service, Object.new) # no local status method
+              output, stderr = capture_io do
+                File.stub(:lstat, presence) do
+                  Ace::Runtime::Molecules::ProtectedArtifactSet.stub(:new, owner) do
+                    assert_raises(Ace::Support::Cli::Error) { registered_call("service status", command, %w[--request request]) }
+                  end
+                end
+              end
+              assert_empty stderr
+              assert_equal "protected_service_unavailable", JSON.parse(output).dig("error", "code")
+              refute_includes output + stderr, "PRIVATE_DESCRIPTOR_MARKER"
+              assert_equal "protected installed selection unavailable", JSON.parse(output).dig("error", "message") if mode == :corrupt
+            end
+          end
+
           def test_status_prints_classified_error_and_exits_nonzero
             fake = Object.new
             fake.define_singleton_method(:status) do |request_id:|
