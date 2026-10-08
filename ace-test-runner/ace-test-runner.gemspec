@@ -46,6 +46,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "ace-b36ts", "~> 0.14"
   spec.add_dependency "minitest", "~> 5.0"
   spec.add_dependency "minitest-reporters", "~> 1.8"
+  spec.add_dependency "prism", "~> 1.9"
   spec.add_dependency "ostruct"
 
   # Development dependencies

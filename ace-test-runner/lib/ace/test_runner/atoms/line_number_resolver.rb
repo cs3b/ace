@@ -1,85 +1,92 @@
 # frozen_string_literal: true
 
+require "prism"
+
 module Ace
   module TestRunner
     module Atoms
-      # Resolves line numbers to test method names
       module LineNumberResolver
+        class SelectionError < ArgumentError; end
         module_function
 
-        # Given a file and line number, find the test method name
-        # Returns the test name or nil if not found
-        def resolve_test_at_line(file_path, line_number)
-          return nil unless File.exist?(file_path)
-
-          content = File.read(file_path)
-          lines = content.split("\n")
-
-          # Find all test methods and their line ranges
-          test_methods = extract_test_methods(lines)
-
-          # Find the test that contains the specified line
-          test_methods.find do |test|
-            line_number >= test[:start_line] && line_number <= test[:end_line]
-          end&.fetch(:name)
-        end
-
-        # Extract test method names and their line ranges from file content
-        def extract_test_methods(lines)
-          test_methods = []
-          current_test = nil
-
-          lines.each_with_index do |line, index|
-            line_number = index + 1
-
-            # Match test method definitions: def test_something or test "something"
-            if line =~ /^\s*(def\s+(test_\w+)|test\s+["'](.+)["']\s+do)/
-              test_name = $2 || $3 # Either def test_name or test "name"
-
-              # Convert test "name" to test_name format for minitest --name option
-              test_name = test_name.gsub(/\s+/, "_") if test_name && test_name.include?(" ")
-
-              # Close previous test if any
-              if current_test
-                current_test[:end_line] = line_number - 1
-                test_methods << current_test
-              end
-
-              current_test = {
-                name: test_name,
-                start_line: line_number,
-                end_line: lines.size  # Default to end of file
-              }
-            elsif line =~ /^\s*end\s*(#.*)?$/ && current_test
-              # Found an end keyword - could be end of test method
-              # Simple heuristic: if we're at the same or less indentation level, close the test
-              current_indent = line[/^\s*/].length
-
-              if current_indent <= 2 # Assuming test methods are indented at most 2 spaces
-                current_test[:end_line] = line_number
-                test_methods << current_test
-                current_test = nil
-              end
+        def parse_file_with_line(selector)
+          if (match = /\A(.+\.rb):(.+)\z/.match(selector))
+            unless match[2].match?(/\A[1-9]\d*\z/)
+              raise SelectionError, "Invalid test selector: #{selector}"
             end
-          end
-
-          # Close last test if still open
-          if current_test
-            current_test[:end_line] = lines.size
-            test_methods << current_test
-          end
-
-          test_methods
-        end
-
-        # Given "file.rb:123", split into file and line number
-        def parse_file_with_line(file_with_line)
-          if file_with_line =~ /^(.+):(\d+)$/
-            {file: $1, line: $2.to_i}
+            {file: match[1], line: Integer(match[2], 10)}
           else
-            {file: file_with_line, line: nil}
+            {file: selector, line: nil}
           end
         end
+
+        def resolve_test_at_line(file_path, line_number)
+          resolve_identity(file_path, line_number).fetch(:name)
+        end
+
+        def resolve_identity(file_path, line_number)
+          selector = "#{file_path}:#{line_number}"
+          source = File.read(file_path)
+          unless line_number.is_a?(Integer) && line_number.positive? && line_number <= source.lines.size
+            raise SelectionError, "Invalid test selector: #{selector}"
+          end
+          parsed = Prism.parse(source)
+          raise SelectionError, "Malformed Ruby in test selector: #{selector}" unless parsed.success?
+
+          declarations = []
+          scopes = Hash.new(0)
+          collect(parsed.value, [], false, true, declarations, scopes)
+          matches = declarations.select { |entry| (entry[:start_line]..entry[:end_line]).cover?(line_number) }
+          selected = matches.one? && matches.first
+          valid = selected && selected[:supported] && scopes[selected[:class_name]] == 1 &&
+            declarations.count { |entry| entry.values_at(:class_name, :name) == selected.values_at(:class_name, :name) } == 1
+          raise SelectionError, "Unmatched or ambiguous test selector: #{selector}" unless valid
+
+          selected.reject { |key, _| key == :supported }.merge(file: File.expand_path(file_path)).freeze
+        rescue Errno::ENOENT, Errno::EACCES, Errno::EISDIR => error
+          raise SelectionError, "Cannot read test selector #{selector}: #{error.class}"
+        end
+
+        def collect(node, namespace, in_class, supported, declarations, scopes)
+          return unless node
+          case node
+          when Prism::ProgramNode
+            collect(node.statements, namespace, in_class, supported, declarations, scopes)
+          when Prism::StatementsNode
+            node.body.each { |child| collect(child, namespace, in_class, supported, declarations, scopes) }
+          when Prism::ClassNode, Prism::ModuleNode
+            text = node.constant_path.location.slice
+            static = text.match?(/\A(?:::)?[A-Z]\w*(?:::[A-Z]\w*)*\z/)
+            parts = static ? text.delete_prefix("::").split("::") : []
+            path = text.start_with?("::") ? parts : namespace + parts
+            scopes[path.join("::")] += 1
+            collect(node.body, path, node.is_a?(Prism::ClassNode), supported && static, declarations, scopes)
+          when Prism::DefNode
+            if node.name.to_s.start_with?("test_")
+              add_declaration(node, node.name.to_s, namespace, supported && in_class && node.receiver.nil?,
+                node.def_keyword_loc.start_line, declarations)
+            end
+            # Nested declarations cannot acquire the surrounding static class's identity.
+            collect(node.body, namespace, in_class, false, declarations, scopes)
+          when Prism::CallNode
+            if node.name == :test && node.block.is_a?(Prism::BlockNode)
+              arguments = node.arguments&.arguments || []
+              literal = arguments.one? && arguments.first.is_a?(Prism::StringNode)
+              name = literal ? "test_#{arguments.first.unescaped.gsub(/\s+/, '_')}" : nil
+              static = supported && in_class && node.receiver.nil? && literal && node.block.opening_loc.slice == "do"
+              add_declaration(node, name, namespace, static, node.block.opening_loc.start_line, declarations)
+            end
+            node.compact_child_nodes.each { |child| collect(child, namespace, in_class, false, declarations, scopes) }
+          else
+            node.compact_child_nodes.each { |child| collect(child, namespace, in_class, false, declarations, scopes) }
+          end
+        end
+
+        def add_declaration(node, name, namespace, supported, method_line, declarations)
+          declarations << {name: name, class_name: namespace.join("::"), start_line: node.location.start_line,
+            end_line: node.location.end_line, method_line: method_line, supported: supported}
+        end
+        private_class_method :collect, :add_declaration
       end
     end
   end
