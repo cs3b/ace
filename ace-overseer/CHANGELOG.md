@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Route protected delivery through original worker merge request, canonical status and exact result consumption while preserving ordinary delivery and unresolved protected PR policy.
+
+
 ### Added
 
 - Consume protected prune preview through the fixed service receiver, persist its complete result for explicitly authorized apply, and query canonical service status without repeating cleanup.

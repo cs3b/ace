@@ -11,10 +11,12 @@ receipt with native evidence, through the existing service request journal.
 The handler must not call worker DeliveryCoordinator#perform(operation: "merge"):
 that method consumes a completed receipt and cannot execute its own pending request.
 
-The assignment worker is the consumer. DeliveryCoordinator verifies the completed
-service receipt, exact assignment/attempt/project/head/PR resource and observed merged
-PR, then appends a delivery result to the same qjl evidence ref. No transport journal,
-new grant dialect or credential-derived authorization is introduced.
+The assignment worker is the consumer. ProtectedDeliveryCoordinator verifies the
+completed canonical service receipt, imported executor artifact and exact original
+assignment/attempt/project/head/PR/input association. The existing authority's
+complete_service CAS atomically publishes completion/import and the uniquely bound
+delivery event; worker consumption is read-only and never repeats provider merge.
+No transport journal, new grant dialect or credential-derived authorization exists.
 
 ## Source completion and central installed acceptance
 
@@ -59,4 +61,4 @@ On a verified result, write one bounded immutable artifact under the receiver's 
 
 Controlled source verification uses actual neutral lifecycle/provider adapters with injected provider command responses, and the actual fixed merge CLI stdin/response and receiver handler composition with injected process/UID boundaries. Cover GitHub, default/named Forgejo, canonical/fork provenance, exact-head/resource/method mismatches, malformed/oversized input, ambiguous selection, lost/uncertain merge and evidence publication failure. Red CI alone never blocks. No provider network call, real merge, native/root/installed probe or publication is authorized by these tests.
 
-This amendment supplies the fixed merge producer only. The original protected worker delivery consumer, canonical receipt verification, workflow/role routing and full SC7 composition remain required source work. The current caller-local DeliveryCoordinator cannot substitute for that consumer. Its exact original capability/receipt API join must be reviewed before implementation; no invented RPC or local-journal fallback is authorized here.
+Historical producer amendment scope: this amendment supplied the fixed merge producer only. The original protected worker delivery consumer, canonical receipt verification, workflow/role routing and full SC7 composition remain required source work. The current caller-local DeliveryCoordinator cannot substitute for that consumer. Its exact original capability/receipt API join must be reviewed before implementation; no invented RPC or local-journal fallback is authorized here.

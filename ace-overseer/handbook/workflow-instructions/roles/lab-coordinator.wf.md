@@ -60,6 +60,12 @@ the actual selected project. Do not treat remembered status as current evidence.
    authorization without requesting a duplicate proposal. Otherwise use the
    existing HITL proposal owner and confirmed-delivery policy below. Authorization
    never supplies missing test, review, SHA, receipt, privilege or OTP evidence.
+   For merge, route the original project worker through the configured receiver
+   and exact merge/status contract in `wfi://handbook/perform-delivery`. Retain
+   the request/input/candidate binding and canonical result; accepted claim or
+   coordinator observation is not completed delivery. Do not route protected
+   create/update/ready through a local fallback while its ordering policy remains
+   unresolved, or create a redundant merge proposal for existing authorization.
 6. Track installation and actual system acceptance once in the Lab's designated
    acceptance task. Link producer versions, source reviews and unresolved checks
    there. Preserve distinct source completion, publication, installation and

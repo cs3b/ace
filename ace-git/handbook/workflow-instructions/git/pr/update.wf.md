@@ -14,6 +14,18 @@ Update the recorded PR description for the current candidate and preserve provid
 
 A managed assignment with a recorded PR and active delivery attempt. Reuse the original forge selection and complete fork/canonical provenance; changed configuration or identity is a conflict. A new committed candidate, including task-only changes, requires renewed tests and independent review.
 
+## Protected worker boundary
+
+The steps below are ordinary managed delivery only. An installed protected
+participant cannot use caller-local delivery or direct provider commands as a
+fallback. Protected create/update/ready authorization ordering remains unresolved;
+report the exact policy/capability blocker without performing those effects.
+For an already selected reviewed PR, use the protected merge/status section of
+`wfi://handbook/perform-delivery`: the original worker requests the configured
+receiver with full original selectors and consumes only its canonical completed
+result. Local test/review reference files cannot authorize that protected route.
+Credentials, charter selection and a service acknowledgement do not prove merge.
+
 ## Steps
 
 1. Inspect the committed changes and accepted test/review evidence. Prepare the final description with the concrete behavior, executed test results, independent verdict, and actual limitations. Save it as a local file; do not put credentials or terminal dumps in the attempt journal.

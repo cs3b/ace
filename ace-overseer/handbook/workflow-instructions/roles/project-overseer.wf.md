@@ -55,8 +55,15 @@ the actual selected project. Do not treat remembered status as current evidence.
    state. Report unavailable observations and deferred resolution explicitly;
    neither a report nor exit code zero proves completion.
 4. Route review and integration using the exact current candidate and independent
-   reviewer verdict. The authorized integrator consumes the scoped service claim
-   and emits its receipt; the worker verifies that receipt through Assign.
+   reviewer verdict. Use `wfi://handbook/perform-delivery` for the protected
+   merge/status route: the original worker requests the configured receiver with
+   retained assignment/attempt/mapping/scope, exact candidate and current first-claim
+   authority generation. Claim acceptance is not completion; inspect the original
+   canonical status without refreshed-generation retry. The authorized executor
+   emits its receipt, and the authority atomically accepts the completed result;
+   the worker verifies that canonical result through Assign without local evidence
+   or another provider effect. Protected create/update/ready stays blocked pending
+   its authorization-order decision; ordinary delivery is not a fallback.
    Executed tests and independent review gate merge. CI is advisory. A merged
    change does not authorize publication or prove installation.
 5. When Captain direction changes, create reviewed successor scope or revise the

@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Route protected delivery through original worker merge request, canonical status and exact result consumption while preserving ordinary delivery and unresolved protected PR policy.
+
+
 ## [0.34.0] - 2026-10-05
 
 ### Changed

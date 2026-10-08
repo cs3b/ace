@@ -22,6 +22,18 @@ Use `forge_server` or `forge_default: true`, mutually exclusive. Neither means r
 {"forge_server":"forge-lab","pr_provenance":{"mode":"canonical","head_repository_url":"https://forge.example/team/repo","head_ref":"feature","base_repository_url":"https://forge.example/team/repo","base_ref":"main"}}
 ```
 
+## Protected worker boundary
+
+The steps below are ordinary managed delivery only. An installed protected
+participant cannot use caller-local delivery or direct provider commands as a
+fallback. Protected create/update/ready authorization ordering remains unresolved;
+report the exact policy/capability blocker without performing those effects.
+For an already selected reviewed PR, use the protected merge/status section of
+`wfi://handbook/perform-delivery`: the original worker requests the configured
+receiver with full original selectors and consumes only its canonical completed
+result. Local test/review reference files cannot authorize that protected route.
+Credentials, charter selection and a service acknowledgement do not prove merge.
+
 ## Steps
 
 1. Read the task and actual committed diff; prepare a concrete title and description explaining behavior and executed validation. Save the description as a local file.

@@ -93,7 +93,73 @@ and merge evidence is accepted. Preparation after a completed delivery is a
 separate follow-up candidate/scope and must obtain its own required evidence.
 Publication remains separately authorized and gated, including OTP when required.
 
-## Managed delivery steps
+## Protected worker merge and status
+
+An installed protected worker uses its original prepared assignment, attempt,
+mapping and hierarchical scope. A role charter or selector is not an authority
+capability: the public owners authenticate the actual worker descendant and
+original birth. Other installed participants must delegate to the provisioned
+worker/executor; they cannot select local delivery. Do not run the ordinary
+managed create/update/ready commands below from this protected route. Their
+protected authorization ordering remains unresolved; report that policy blocker
+without creating a PR or changing readiness through another account or command.
+
+1. Retain the exact accepted candidate head and candidate generation, original
+   assignment/attempt/mapping/scope, configured receiver ID, authorization and
+   request ID. Use the reviewed retained delivery parameters, explicit authorized
+   merge method and exact PR URL. Accepted independent review for this candidate
+   remains a canonical authority gate; local report files cannot replace it.
+2. Before the first claim, read
+   `ace-assign authority status --mapping MAPPING --assignment ID --attempt ATTEMPT`.
+   Its `generation` is the current authority generation and
+   `result_candidate_generation` is the candidate generation. They are distinct;
+   never increment or substitute one for the other. Verify the candidate generation
+   matches the accepted candidate. Unavailable or changed selection blocks the
+   request. Keep the exact returned generation for this invocation; a conflict
+   is not permission to refresh it and resend.
+3. Save one nonsecret input file containing exactly `target`, `delivery` and
+   `method`. Target contains the exact PR URL as `resource` and nullable
+   `artifact_digest`; delivery is the retained `forge_server`/`forge_default` and
+   complete `pr_provenance` mapping. Method is explicitly squash, merge or rebase.
+   The maintained owner reads one unchanged bounded regular file and computes its
+   canonical input digest. It does not accept a caller-supplied digest for request.
+
+   ```json
+   {"target":{"resource":"https://forge.example/team/repo/pulls/25","artifact_digest":null},"delivery":{"forge_server":"forge-lab","forge_default":false,"pr_provenance":{"mode":"canonical","head_repository_url":"https://forge.example/team/repo","head_ref":"work","base_repository_url":"https://forge.example/team/repo","base_ref":"main"}},"method":"squash"}
+   ```
+
+4. Invoke the existing configured receiver through
+   `ace-lab service request --project PROJECT --assignment ID --attempt ATTEMPT --mapping MAPPING --scope SCOPE --service SERVICE --candidate-head SHA --candidate-generation CANDIDATE-GENERATION --expected-generation AUTHORITY-GENERATION --operation merge --authorization AUTHORIZATION --request-id REQUEST --input INPUT.json`.
+   No dry-run or standalone fallback exists here. Retain the returned original
+   `selection` from either `data` or `error`: it includes input_digest and target.
+   `service_claim_accepted` acknowledges a durable claim, not merge completion.
+   `service_claim_unconfirmed` requires inspection of this original request;
+   neither uncertainty nor a timeout authorizes automatic resubmission.
+5. Read exact canonical status without an effect:
+   `ace-lab service status --request REQUEST --project PROJECT --assignment ID --attempt ATTEMPT --mapping MAPPING --scope SCOPE --candidate-head SHA --candidate-generation CANDIDATE-GENERATION --input-digest INPUT-DIGEST --target PR-URL`.
+   Use the original returned selection; omit `--artifact-digest` for null, or
+   supply its exact original SHA256 when present. Status does not use a refreshed
+   expected generation and never repairs or restarts an uncertain service.
+   Missing receiver, review, authorization or installed owner stays a routed
+   blocker. A caller-local journal or remote PR observation is not canonical proof.
+6. Only after canonical succeeded status, consume the exact completed result:
+   `ace-assign delivery --assignment ID --attempt ATTEMPT --mapping MAPPING --scope SCOPE --operation merge --service-request REQUEST --candidate-head SHA --candidate-generation CANDIDATE-GENERATION --input-digest INPUT-DIGEST --target PR-URL`.
+   Apply the same nullable artifact flag rule. Do not supply local `--tests`,
+   `--review`, title/body or parameters. The authority has already verified the
+   original review, completion receipt/import and exact input association, and
+   atomically published the delivery event. Worker consumption verifies that
+   event; it neither appends evidence nor invokes the provider again.
+7. Preserve the original request and result references on resume. Exact read-only
+   status is safe; an explicit identical request may only return its retained
+   canonical claim/result and must not refresh selectors. Never retry an unknown
+   effect to obtain a receipt. Publication, deployment and synchronization still
+   require their separate authorization, evidence and OTP where applicable.
+
+## Ordinary managed delivery steps
+
+These steps retain the existing nonprotected managed workflow. They are not a
+fallback for an installed protected participant or a blocked protected operation.
+
 
 1. Record the requested delivery steps and their owners before implementation.
    Follow the existing task-work plan. Commit the implementation and run appropriate
