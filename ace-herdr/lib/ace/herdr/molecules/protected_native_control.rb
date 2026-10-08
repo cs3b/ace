@@ -69,13 +69,23 @@ module Ace
         # occurred before some observed write; native phase is the only refusal
         # evidence. Never return native agent/message fields or prompt bytes.
         def prompt(binding:, text:)
+          submit_prompt(guarded_origin!(binding), prompt_body!(text, 16_384))
+        end
+
+        # The admitted Inbox keeps its existing bounded payload contract while
+        # sharing the original actor guard and native submission transport.
+        def inbox_prompt(binding:, text:)
+          submit_prompt(guarded_origin!(binding), prompt_body!(text, 65_536))
+        end
+
+        def prompt_body!(text, limit)
           body = text.dup.force_encoding(Encoding::UTF_8) if text.is_a?(String)
-          unless body && body.valid_encoding? && body.bytesize.between?(1, 16_384) && !body.match?(/\A[[:space:]]*\z/)
+          unless body && body.valid_encoding? && body.bytesize.between?(1, limit) && !body.match?(/\A[[:space:]]*\z/)
             raise ArgumentError, "prompt text must be bounded nonblank UTF-8"
           end
-          origin = guarded_origin!(binding)
-          submit_prompt(origin, body)
+          body
         end
+        private :prompt_body!
 
         # Called only by the admitted Inbox owner after durable queue/wake
         # intent; this domain notification accepts no caller text or target.

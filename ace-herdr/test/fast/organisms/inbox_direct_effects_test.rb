@@ -127,6 +127,19 @@ class InboxDirectEffectsTest < Minitest::Test
       expected_claim_generation: expected, original: direct_original, peer: @normal}
   end
 
+  def test_guarded_inbox_prompt_preserves_payload_budget
+    control = guarded_control
+    original = @completion.original!
+    binding = original.fetch("process_binding").merge("guarded_origin" => original.fetch("guarded_origin"))
+    control.response = :sent
+    text = "x" * 65_536
+    assert_equal "submitted", control.inbox_prompt(binding: binding, text: text).fetch("outcome")
+    assert_equal text, control.calls.last.last.fetch("text")
+    assert_raises(ArgumentError) { control.inbox_prompt(binding: binding, text: text + "x") }
+    assert_equal 1, control.calls.size
+    assert_raises(ArgumentError) { control.prompt(binding: binding, text: text) }
+  end
+
   def test_codex_submission_uses_original_guard_and_lost_reply_is_not_reissued
     executor = PaneFixture.new
     pane_read = executor.method(:pane_get_bounded)

@@ -93,7 +93,7 @@ class ProtectedInboxCliTest < Minitest::Test
     @completion.define_singleton_method(:original!) { |**params| original.call(**params).merge("guarded_origin" => {"fixture" => "original"}) }
     restart
     guarded = Object.new
-    guarded.define_singleton_method(:prompt) do |binding:, text:|
+    guarded.define_singleton_method(:inbox_prompt) do |binding:, text:|
       terminal.agent_prompt_bounded(pane: binding.fetch("pane"), text: text, timeout_ms: 10_000)
       {"outcome" => "submitted"}
     end
