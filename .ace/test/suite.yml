@@ -1,8 +1,9 @@
 test_suite:
   # Maximum parallel processes (10 balances speed vs resource contention)
   max_parallel: 12
-  # Per-package ceiling; ace-assign's evidence suite needs >30s
-  timeout: 120
+  # Whole-package ceiling: Lab's complete evidence scenarios measured 762s.
+  # Individual operation deadlines remain unchanged; hung packages stay bounded.
+  timeout: 1200
 
   # Packages to test in order of priority
   packages:
