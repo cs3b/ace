@@ -54,6 +54,32 @@ class LifecycleExclusionTest < AceAssignTestCase
     assert_equal "worktree:#{File.expand_path(missing)}", @exclusion.worktree_key(missing)
   end
 
+  def test_workspace_selection_uses_exact_original_identity_and_closed_initial_fence
+    authority = {"state_root" => "/protected/authority", "uid" => 13000, "gid" => 13000}
+    cwd = {"host_path" => "/protected/workspace", "view_path" => "/workspace", "device" => 8,
+      "inode" => 42, "mount_id" => 10, "filesystem_type" => "ext4", "uid" => 13001, "gid" => 13001}
+    owner = Ace::Assign::Molecules::LifecycleExclusion
+    selected = owner.workspace_selection(mapping_id: "mapping", project_id: "project", authority: authority, cwd_resource: cwd)
+    digest = Ace::Assign::Atoms::EvidenceDigest.digest(cwd)
+    assert_equal "workspace:mapping:#{digest}", selected.fetch("key")
+    assert_equal "/protected/authority/lifecycle-exclusion/project/workspaces/mapping/#{digest}", selected.fetch("host_path")
+    assert_equal "/run/ace/lifecycle-exclusion/mapping", selected.fetch("view_path")
+    assert selected.frozen?
+    assert selected.values.all?(&:frozen?)
+    bytes = owner.workspace_initial_marker(key: selected.fetch("key"))
+    assert_equal({"key" => selected.fetch("key"), "removed" => false, "removed_at" => nil}, JSON.parse(bytes))
+    assert_equal Ace::Assign::Atoms::EvidenceDigest.canonical_json(JSON.parse(bytes)), bytes
+    changed = owner.workspace_selection(mapping_id: "mapping", project_id: "project", authority: authority,
+      cwd_resource: cwd.merge("inode" => 43))
+    refute_equal selected.fetch("key"), changed.fetch("key")
+    [cwd.merge("mount_id" => 0), cwd.merge("unknown" => 1), cwd.merge("host_path" => "/protected/../other")].each do |bad|
+      assert_raises(Ace::Assign::AttemptErrors::EvidenceUnavailable) do
+        owner.workspace_selection(mapping_id: "mapping", project_id: "project", authority: authority, cwd_resource: bad)
+      end
+    end
+    assert_raises(Ace::Assign::AttemptErrors::EvidenceUnavailable) { owner.workspace_initial_marker(key: "workspace:foreign") }
+  end
+
   def test_shared_allows_concurrent_holders
     entered = Queue.new
     thread = Thread.new do

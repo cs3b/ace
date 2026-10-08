@@ -9,6 +9,7 @@ require "ace/runtime/molecules/execution_network_selection"
 require "ace/runtime/molecules/execution_boot_baseline"
 require "ace/runtime/molecules/kernel_view_topology"
 require_relative "../molecules/execution_scope_lineage"
+require_relative "../molecules/lifecycle_exclusion"
 require_relative "posix_acl"
 require "digest"
 require "json"
@@ -134,6 +135,33 @@ module Ace
                 mount.fetch("mountpoint")
               end
             end
+          end
+
+          def lifecycle_resource_policy!(path, authority:)
+            state_root = authority.fetch("state_root")
+            unless path.start_with?(state_root + "/lifecycle-exclusion/") && File.expand_path(path) == path
+              raise Ace::Runtime::RuntimeUnavailableError, "lifecycle resource ancestry differs"
+            end
+            parts = path.split("/").reject(&:empty?)
+            paths = ["/"] + parts.each_index.map { |index| "/" + parts.take(index + 1).join("/") }
+            paths.each do |ancestor|
+              policy = resource_boundary_policy(ancestor)
+              unless [0, authority.fetch("uid")].include?(policy.fetch("uid")) &&
+                  (policy.fetch("mode") & 0o7022).zero? && policy.fetch("acl").nil? && resource_default_acl(ancestor).nil?
+                raise Ace::Runtime::RuntimeUnavailableError, "lifecycle resource ancestry is writable"
+              end
+              if ancestor == state_root || ancestor == path
+                mode = ancestor == path ? 0o755 : 0o700
+                unless policy.values_at("uid", "gid", "mode") == authority.values_at("uid", "gid") + [mode]
+                  raise Ace::Runtime::RuntimeUnavailableError, "lifecycle resource selected ownership differs"
+                end
+              end
+            end
+            true
+          end
+
+          def resource_default_acl(path)
+            PosixAcl.new.entries(path, attribute: "system.posix_acl_default")
           end
 
           def worker_uid_quiescent!(uid)
@@ -632,11 +660,42 @@ module Ace
             resource.slice("host_path", "view_path").merge(actual)
           end
           unavailable!("parent resource inventory is empty") if resources.empty?
-          verify_parent_access_boundary!(resources)
+          verify_parent_access_boundary!(resources, declarations: manifest.fetch("resources"))
           resources
         end
 
-        def verify_parent_access_boundary!(resources)
+        def lifecycle_parent_resource!(resources, declarations)
+          view = "/run/ace/lifecycle-exclusion/#{@mapping_id}"
+          selected = declarations.select { |entry| entry.fetch("view_path") == view }
+          return nil if selected.empty?
+          unless selected.one? && selected.first.values_at("stage", "worker_visible", "read_only") == ["parent", true, true]
+            unavailable!("lifecycle resource is not the exact readonly parent view")
+          end
+          cwd = resources.select { |resource| resource.fetch("host_path") == @map.fetch("worker_cwd") }
+          cwd_declarations = declarations.select { |entry| entry.fetch("host_path") == @map.fetch("worker_cwd") }
+          unless cwd.one? && cwd_declarations.one? &&
+              cwd_declarations.first.values_at("stage", "worker_visible", "read_only") == ["parent", true, false]
+            unavailable!("lifecycle resource lacks original writable workspace identity")
+          end
+          authority = @deployment.authority(@map.fetch("authority_id"))
+          selection = Molecules::LifecycleExclusion.workspace_selection(mapping_id: @mapping_id,
+            project_id: @map.fetch("project_id"), authority: authority, cwd_resource: cwd.first)
+          expected = selection.fetch("host_path")
+          resource = resources.find { |entry| entry.values_at("host_path", "view_path") == [expected, view] }
+          unless selected.first.fetch("host_path") == expected && resource &&
+              resource.values_at("uid", "gid") == authority.values_at("uid", "gid")
+            unavailable!("lifecycle resource is not selected by original workspace and authority")
+          end
+          @files.lifecycle_resource_policy!(expected, authority: authority)
+          @files.resource_aliases(expected, identity: resource).each do |path|
+            @files.lifecycle_resource_policy!(path, authority: authority)
+          end
+          resource
+        end
+
+        def verify_parent_access_boundary!(resources, declarations:)
+          lifecycle = lifecycle_parent_resource!(resources, declarations)
+          resources = resources.reject { |resource| resource.equal?(lifecycle) }
           worker = @map.fetch("worker_uid")
           authority = @deployment.authority(@map.fetch("authority_id")).fetch("uid")
           readers = @deployment.project(@map.fetch("project_id")).fetch("supervisor_uids")

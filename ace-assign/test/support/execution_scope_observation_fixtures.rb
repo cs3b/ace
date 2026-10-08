@@ -5,13 +5,13 @@ module Ace
     module ExecutionScopeObservationFixtures
       BOOT = "12345678-1234-1234-1234-123456789abc"
       BOOT_BASELINE_SELECTION = {"path" => "/etc/ace/boot/original.json", "sha256" => "d" * 64, "bytes" => 1}.freeze
-      def self.kernel_topology(resources: [])
+      def self.kernel_topology(resources: [], readonly_views: [])
         verifier = Ace::Runtime::Molecules::KernelViewTopology
         paths = ["/"] + verifier::VIEWS + ["/dev/pts/ptmx"] + resources.map { |entry| entry.fetch("view_path") }
         text = paths.each_with_index.map do |path, index|
           resource = resources.find { |entry| entry.fetch("view_path") == path }
           filesystem = path == "/dev/pts/ptmx" ? "devpts" : resource ? resource.fetch("filesystem_type") : verifier::APIS.fetch(path, path == "/dev" ? "tmpfs" : "ext4")
-          flags = resource || verifier::APIS.key?(path) ? "rw" : "ro"
+          flags = readonly_views.include?(path) ? "ro" : resource || verifier::APIS.key?(path) ? "rw" : "ro"
           root = path == "/dev/pts/ptmx" ? "/ptmx" : resource ? resource.fetch("host_path") : "/"
           "#{index + 1} 0 8:1 #{root} #{path} #{flags} - #{filesystem} fixture #{flags}\n"
         end.join

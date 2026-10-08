@@ -6,6 +6,7 @@ require "json"
 require "open3"
 require "time"
 require "securerandom"
+require_relative "../atoms/evidence_digest"
 
 module Ace
   module Assign
@@ -26,6 +27,42 @@ module Ace
       # present. Legitimate fresh provisioning (a new worktree for a task)
       # clears the marker explicitly via `reset_removed`.
       class LifecycleExclusion
+        def self.workspace_selection(mapping_id:, project_id:, authority:, cwd_resource:)
+          fields = %w[device filesystem_type gid host_path inode mount_id uid view_path]
+          unless authority.is_a?(Hash) && cwd_resource.is_a?(Hash) && cwd_resource.keys.sort == fields &&
+              %w[device gid inode uid].all? { |field| cwd_resource[field].is_a?(Integer) && cwd_resource[field] >= 0 } &&
+              cwd_resource["mount_id"].is_a?(Integer) && cwd_resource["mount_id"].positive? &&
+              %w[host_path view_path].all? { |field| cwd_resource[field].is_a?(String) &&
+                cwd_resource[field].valid_encoding? && cwd_resource[field].bytesize.between?(1, 4096) &&
+                !cwd_resource[field].include?("\0") && cwd_resource[field].start_with?("/") &&
+                File.expand_path(cwd_resource[field]) == cwd_resource[field] } &&
+              %w[ext4 xfs btrfs tmpfs].include?(cwd_resource["filesystem_type"]) &&
+              [mapping_id, project_id].all? { |value| value.is_a?(String) && value.match?(/\A[A-Za-z0-9][A-Za-z0-9._-]{0,127}\z/) } &&
+              %w[uid gid].all? { |field| authority[field].is_a?(Integer) && authority[field].positive? } &&
+              authority["state_root"].is_a?(String) && authority["state_root"].valid_encoding? &&
+              authority["state_root"].bytesize.between?(1, 4096) && !authority["state_root"].include?("\0") &&
+              authority["state_root"].start_with?("/") &&
+              File.expand_path(authority["state_root"]) == authority["state_root"]
+            raise AttemptErrors::EvidenceUnavailable, "Original lifecycle workspace selection is malformed"
+          end
+          digest = Atoms::EvidenceDigest.digest(cwd_resource)
+          selection = {"key" => "workspace:#{mapping_id}:#{digest}",
+            "host_path" => File.join(authority.fetch("state_root"), "lifecycle-exclusion", project_id,
+              "workspaces", mapping_id, digest), "view_path" => "/run/ace/lifecycle-exclusion/#{mapping_id}"}
+          unless selection.fetch("host_path").bytesize <= 4096
+            raise AttemptErrors::EvidenceUnavailable, "Original lifecycle workspace path is oversized"
+          end
+          selection.each_value(&:freeze)
+          selection.freeze
+        end
+
+        def self.workspace_initial_marker(key:)
+          unless key.is_a?(String) && key.match?(/\Aworkspace:[A-Za-z0-9][A-Za-z0-9._-]{0,127}:[0-9a-f]{64}\z/)
+            raise AttemptErrors::EvidenceUnavailable, "Original lifecycle workspace key is malformed"
+          end
+          Atoms::EvidenceDigest.canonical_json({"key" => key, "removed" => false, "removed_at" => nil}).freeze
+        end
+
         # @param repo_root [String, nil] Repository used to resolve the
         #   shared Git common dir (default: project root)
         # @param root [String, nil] Explicit exclusion root (tests)

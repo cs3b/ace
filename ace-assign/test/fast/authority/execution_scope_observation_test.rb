@@ -184,6 +184,7 @@ module Ace
         deployment.define_singleton_method(:verify!) { |*_args, **_options| true }
         deployment.define_singleton_method(:authority) { |_id| {"uid" => 13000, "socket_path" => "/run/authority/socket"} }
         deployment.define_singleton_method(:project) { |_id| {"supervisor_uids" => [13003]} }
+        @deployment = deployment
         network = Object.new
         network.define_singleton_method(:verify!) { |selection:, expected:| ExecutionScopeObservationFixtures::NETWORK_OUTPUT }
         @boot_evidence = ExecutionScopeObservationFixtures::BootEvidence.new
@@ -227,6 +228,101 @@ module Ace
         assert @cgroups.handles.all?(&:closed)
         assert_equal 0, @observer.observe(lineage).fetch("populated")
         assert_equal ExecutionScopeObservationFixtures::NETWORK_OUTPUT, @observer.native_admission_ready!(lineage)
+        assert_equal 0, @manager.service_starts
+      end
+
+      def install_controlled_lifecycle_resource
+        @map["worker_cwd"] = "/private/scratch"
+        authority = {"uid" => 13000, "gid" => 13000, "state_root" => "/authority-state",
+          "socket_path" => "/run/authority/socket"}
+        @deployment.define_singleton_method(:authority) { |_id| authority }
+        cwd = @files.resource.merge("host_path" => "/private/scratch", "view_path" => "/scratch")
+        selection = Molecules::LifecycleExclusion.workspace_selection(mapping_id: "mapping", project_id: "project",
+          authority: authority, cwd_resource: cwd)
+        @lifecycle_identity = @files.resource.merge("uid" => 13000, "gid" => 13000, "inode" => 200)
+        @lifecycle_declaration = selection.slice("host_path", "view_path").merge(
+          "stage" => "parent", "worker_visible" => true, "read_only" => true)
+        fixture = @files
+        fixture.manifest.fetch("resources") << @lifecycle_declaration
+        observed = Authority::ExecutionScopeObservation::Files.new
+        Files.public_instance_methods(false).each do |method|
+          observed.define_singleton_method(method) { |*args, **kwargs| fixture.public_send(method, *args, **kwargs) }
+        end
+        identity = @lifecycle_identity
+        host = selection.fetch("host_path")
+        observed.define_singleton_method(:resource_identity) do |path|
+          path == host ? identity.dup : fixture.resource_identity(path)
+        end
+        @lifecycle_policies = {}
+        paths = ["/"] + host.split("/").reject(&:empty?).each_index.map do |index|
+          "/" + host.split("/").reject(&:empty?).take(index + 1).join("/")
+        end
+        paths.each_with_index do |path, index|
+          owned = path == authority.fetch("state_root") || path.start_with?(authority.fetch("state_root") + "/")
+          @lifecycle_policies[path] = {"device" => 8, "inode" => index + 300, "uid" => owned ? 13000 : 0,
+            "gid" => owned ? 13000 : 0, "mode" => path == host || !owned ? 0o755 : 0o700, "acl" => nil}
+        end
+        @lifecycle_policies[host].merge!(identity.slice("device", "inode", "uid", "gid"))
+        @lifecycle_default_acls = {}
+        default_acls = @lifecycle_default_acls
+        observed.define_singleton_method(:resource_default_acl) { |path| default_acls[path] }
+        policies = @lifecycle_policies
+        observed.define_singleton_method(:resource_boundary_policy) do |path|
+          policies.key?(path) ? policies.fetch(path) : fixture.resource_boundary_policy(path)
+        end
+        observed.define_singleton_method(:resource_aliases) do |path, identity:|
+          path == host ? [host] : fixture.resource_aliases(path, identity: identity)
+        end
+        @observer.instance_variable_set(:@files, observed)
+        selection
+      end
+
+      def test_exact_authority_owned_readonly_lifecycle_parent_joins_original_scope
+        selection = install_controlled_lifecycle_resource
+        bind_parent
+        original = @binding.fetch("resource_identities").find { |entry| entry["view_path"] == selection.fetch("view_path") }
+        assert_equal @lifecycle_identity.merge(selection.slice("host_path", "view_path")), original
+        assert_equal 0, @observer.observe(lineage).fetch("populated")
+        assert_equal 1, @manager.starts
+      end
+
+      def test_lifecycle_parent_exception_never_admits_writable_or_foreign_resources
+        selection = install_controlled_lifecycle_resource
+        @lifecycle_declaration["read_only"] = false
+        assert_raises(Ace::Runtime::RuntimeUnavailableError) { @observer.activate_parent!(@context) }
+        @lifecycle_declaration["read_only"] = true
+        @lifecycle_declaration["host_path"] = "/private/scratch"
+        assert_raises(Ace::Runtime::RuntimeUnavailableError) { @observer.activate_parent!(@context) }
+        @lifecycle_declaration["host_path"] = selection.fetch("host_path")
+        @lifecycle_policies.fetch("/authority-state")["mode"] = 0o770
+        assert_raises(Ace::Runtime::RuntimeUnavailableError) { @observer.activate_parent!(@context) }
+        @lifecycle_policies.fetch("/authority-state")["mode"] = 0o700
+        @lifecycle_default_acls["/authority-state"] = [[1, 7, 0xffffffff]]
+        assert_raises(Ace::Runtime::RuntimeUnavailableError) { @observer.activate_parent!(@context) }
+        @lifecycle_default_acls.clear
+        @lifecycle_identity["uid"] = 13004
+        assert_raises(Ace::Runtime::RuntimeUnavailableError) { @observer.activate_parent!(@context) }
+        assert_equal 0, @manager.starts
+      end
+
+      def test_original_readiness_report_proves_readonly_lifecycle_view_before_native_release
+        selection = install_controlled_lifecycle_resource
+        report = ready_report
+        root = @lifecycle_identity.merge(selection.slice("host_path", "view_path"))
+        report.fetch("resource_identities") << root
+        report.fetch("resource_topology") << selection.slice("host_path", "view_path").merge(
+          "mountpoint" => selection.fetch("view_path"), "root" => selection.fetch("host_path"),
+          "major_minor" => "8:1", "options" => ["ro"])
+        report["kernel_view_topology"] = ExecutionScopeObservationFixtures.kernel_topology(
+          resources: report.fetch("resource_identities"), readonly_views: [selection.fetch("view_path")])
+        value = @observer.verify_readiness_report!(lineage, @kernel.capture(92), report,
+          challenge: report.slice("challenge_id"))
+        assert_includes value.fetch("resource_identities"), root
+        report.fetch("resource_topology").last["options"] = ["rw"]
+        assert_raises(Ace::Runtime::RuntimeUnavailableError) do
+          @observer.verify_readiness_report!(lineage, @kernel.capture(92), report,
+            challenge: report.slice("challenge_id"))
+        end
         assert_equal 0, @manager.service_starts
       end
 

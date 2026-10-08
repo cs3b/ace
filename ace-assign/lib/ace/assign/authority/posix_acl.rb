@@ -7,12 +7,15 @@ module Ace
       # Linux POSIX access ACL evaluation for a fixed unprivileged principal.
       # No credential switching; unsupported or unreadable policy refuses admission.
       class PosixAcl
-        def entries(path)
+        def entries(path, attribute: "system.posix_acl_access")
+          unless %w[system.posix_acl_access system.posix_acl_default].include?(attribute)
+            raise ArgumentError, "unsupported POSIX ACL attribute"
+          end
           raise Ace::Runtime::RuntimeUnavailableError, "receiver ACL inspection requires Linux" unless RUBY_PLATFORM.include?("linux")
           function = Fiddle::Function.new(Fiddle::Handle::DEFAULT["lgetxattr"],
             [Fiddle::TYPE_VOIDP, Fiddle::TYPE_VOIDP, Fiddle::TYPE_VOIDP, Fiddle::TYPE_SIZE_T], Fiddle::TYPE_SSIZE_T)
           buffer = Fiddle::Pointer.malloc(8192, Fiddle::RUBY_FREE)
-          count = function.call(path, "system.posix_acl_access", buffer, 8192)
+          count = function.call(path, attribute, buffer, 8192)
           return nil if count == -1 && Fiddle.last_error == Errno::ENODATA::Errno
           raise Ace::Runtime::RuntimeUnavailableError, "receiver access ACL is unreadable" if count < 4 || (count - 4) % 8 != 0
           bytes = buffer[0, count]
