@@ -12,7 +12,7 @@ Executed source tests from ace-herdr package cwd, with the previously documented
 absolute worktree-only bundle config:
 
 ```text
-../bin/ace-test test/fast/molecules/codex_runtime_endpoint_test.rb test/fast/organisms/inbox_context_service_test.rb -c /Users/mc/.codex/worktrees/xza-codex-queue-producer/ace/.ace-local/test/config/codex-bundle.yml --timeout30
+../bin/ace-test test/fast/molecules/codex_runtime_endpoint_test.rb test/fast/organisms/inbox_context_service_test.rb -c /Users/mc/.codex/worktrees/xza-codex-queue-producer/ace/.ace-local/test/config/codex-bundle.yml --timeout 30
 ```
 
 PASS16tests/123assertions/1.1s, report
