@@ -107,6 +107,7 @@ module Ace
           artifacts: Ace::Runtime::Molecules::ProtectedArtifactSet.new(file_limit: LIMIT, total_limit: 4 * LIMIT),
           protection: EndpointProtection.new)
           unless configuration.is_a?(InboxContextServiceConfiguration) &&
+              configuration.codex_runtime_reference.is_a?(Hash) &&
               stage_reference == configuration.codex_runtime_reference
             raise ValidationError, "Codex static configuration is not selected"
           end

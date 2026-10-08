@@ -21,34 +21,49 @@ module Ace
 
         def self.load(stage:, artifacts: Ace::Runtime::Molecules::ProtectedArtifactSet.new)
           strict!(stage, STAGE_FIELDS)
-          unless stage["schema"] == "ace.herdr.inbox-context-stage/v1" &&
-              %w[project_id inbox_context_id].all? { |key| token?(stage[key]) }
+          unless stage["schema"] == "ace.herdr.inbox-context-stage/v1"
             raise ValidationError, "context service stage differs"
           end
-          reference = stage.fetch("configuration")
+          runtime = stage.fetch("codex_runtime")
+          metadata_reference!(runtime)
+          load_configuration!(reference: stage.fetch("configuration"), project_id: stage.fetch("project_id"),
+            inbox_context_id: stage.fetch("inbox_context_id"), runtime: runtime, artifacts: artifacts)
+        rescue KeyError, TypeError, Ace::Runtime::RuntimeUnavailableError
+          raise ValidationError, "context service configuration unavailable"
+        end
+
+        def self.load_static(configuration_reference:, project_id:, inbox_context_id:,
+          artifacts: Ace::Runtime::Molecules::ProtectedArtifactSet.new)
+          load_configuration!(reference: configuration_reference, project_id: project_id,
+            inbox_context_id: inbox_context_id, runtime: nil, artifacts: artifacts)
+        rescue KeyError, TypeError, Ace::Runtime::RuntimeUnavailableError
+          raise ValidationError, "context service configuration unavailable"
+        end
+
+        def self.metadata_reference!(reference)
           strict!(reference, %w[bytes path sha256])
           unless path?(reference["path"]) && reference["bytes"].is_a?(Integer) && reference["bytes"].between?(1, LIMIT) &&
               reference["sha256"].is_a?(String) && reference["sha256"].match?(/\A[0-9a-f]{64}\z/)
-            raise ValidationError, "context service configuration reference differs"
+            raise ValidationError, "context service metadata reference differs"
           end
-          runtime = stage.fetch("codex_runtime")
-          strict!(runtime, %w[bytes path sha256])
-          unless path?(runtime["path"]) && runtime["bytes"].is_a?(Integer) && runtime["bytes"].between?(1, LIMIT) &&
-              runtime["sha256"].is_a?(String) && runtime["sha256"].match?(/\A[0-9a-f]{64}\z/)
-            raise ValidationError, "context Codex runtime reference differs"
+        end
+
+        def self.load_configuration!(reference:, project_id:, inbox_context_id:, runtime:, artifacts:)
+          unless token?(project_id) && token?(inbox_context_id)
+            raise ValidationError, "context service identity differs"
           end
+          metadata_reference!(reference)
           artifacts.with do |reader|
             data = InboxContextStore.decode(reader.read!(reference), limit: LIMIT)
             validate!(data)
-            unless data.values_at("project_id", "inbox_context_id") == stage.values_at("project_id", "inbox_context_id")
+            unless data.values_at("project_id", "inbox_context_id") == [project_id, inbox_context_id]
               raise ValidationError, "context service configuration association differs"
             end
             reader.verify_unchanged!
             new(data, reference, runtime)
           end
-        rescue KeyError, TypeError, Ace::Runtime::RuntimeUnavailableError
-          raise ValidationError, "context service configuration unavailable"
         end
+        private_class_method :metadata_reference!, :load_configuration!
 
         def self.validate!(data)
           strict!(data, FIELDS)

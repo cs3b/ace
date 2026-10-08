@@ -112,4 +112,37 @@ class InboxContextServiceConfigurationTest < Minitest::Test
     end
   end
 
+  def test_static_startup_uses_same_held_configuration_but_cannot_open_runtime
+    reference = stage.fetch("configuration")
+    selected = Configuration.load_static(configuration_reference: reference, project_id: "project", inbox_context_id: "ctx", artifacts: @artifacts)
+    assert_equal @data, selected.data
+    assert_nil selected.codex_runtime_reference
+    assert selected.frozen?
+    assert selected.reference.frozen?
+    bootstrap = Object.new
+    called = false
+    bootstrap.define_singleton_method(:with_inbox_context_installation) { |**| called = true }
+    assert_raises(ERROR) do
+      Ace::Herdr::Molecules::CodexRuntimeSelection.with(stage_reference: nil, configuration: selected,
+        installation: {}, bootstrap: bootstrap) { flunk "static-only runtime yielded" }
+    end
+    refute called
+    assert_raises(ERROR) { Configuration.load(stage: stage.merge("codex_runtime" => nil), artifacts: @artifacts) }
+  end
+
+  def test_static_startup_refuses_wrong_identity_malformed_or_changed_artifact
+    reference = stage.fetch("configuration")
+    [{project_id: "foreign", inbox_context_id: "ctx"}, {project_id: "project", inbox_context_id: "foreign"},
+     {project_id: "", inbox_context_id: "ctx"}].each do |identity|
+      assert_raises(ERROR) { Configuration.load_static(configuration_reference: reference, **identity, artifacts: @artifacts) }
+    end
+    malformed = reference.merge("bytes" => 65_537)
+    assert_raises(ERROR) { Configuration.load_static(configuration_reference: malformed, project_id: "project", inbox_context_id: "ctx", artifacts: @artifacts) }
+    File.write(@path, JSON.generate(@data.merge("project_id" => "changed")))
+    assert_raises(ERROR) { Configuration.load_static(configuration_reference: reference, project_id: "project", inbox_context_id: "ctx", artifacts: @artifacts) }
+    duplicate = JSON.generate(@data).sub('"project_id":"project"', '"project_id":"project","project\\u005fid":"project"')
+    literal = stage(duplicate)
+    assert_raises(ERROR) { Configuration.load_static(configuration_reference: literal.fetch("configuration"), project_id: "project", inbox_context_id: "ctx", artifacts: @artifacts) }
+  end
+
 end
