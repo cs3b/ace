@@ -32,7 +32,7 @@ by `Ace::Assign::Authority::Deployment`:
 | Installed object | Required fields |
 | --- | --- |
 | `authorities.ID` | `uid`, `gid`, sorted unique `groups`, `socket_path`, `state_root`, `composition` (`launch` or `services`) |
-| `projects.ID` | `journal_repository`, `evidence_git_ref` (`refs/ace/execution`), `evidence_checkout_root`, `assignment_root`, `candidate_root`, `launcher_uids`, `reviewer_uids`, `worker_uids`, `service_executor_uids`, `supervisor_uids`, `peer_credentials`, optional `service_receivers` |
+| `projects.ID` | `journal_repository`, `evidence_git_ref` (`refs/ace/execution`), `evidence_checkout_root`, `assignment_root`, `candidate_root`, `campaign_repository`, `campaign_store_root`, `launcher_uids`, `reviewer_uids`, `worker_uids`, `service_executor_uids`, `supervisor_uids`, `peer_credentials`, optional `service_receivers` |
 | `projects.ID.peer_credentials.UID` | `gid`, sorted unique `groups`, `scratch_root`; every configured role UID has one fixed entry |
 | `launch_mappings.ID` | `project_id`, `authority_id`, `launcher_uid`, `launcher_gid`, `launcher_groups`, `worker_uid`, `worker_gid`, `worker_groups`, `worker_actor`, `worker_cwd`, `worker_entry`, `worker_env`, `bootstrap`, `bootstrap_sha256`, `native`, `execution_scope`, `task_context_entry` |
 | `launch_mappings.ID.native` | `socket_path`, `executable`, `executable_sha256`, `version` (`0.9.3`), `protocol` (`22`), canonical `workspace_id` (`wN`) |

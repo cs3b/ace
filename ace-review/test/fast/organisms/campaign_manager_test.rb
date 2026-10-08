@@ -19,6 +19,43 @@ class CampaignManagerTest < AceReviewTest
     super
   end
 
+  def test_parent_registration_requires_exact_active_contract
+    campaign = start_campaign
+    manager = campaign_manager
+    args = {subject: campaign["subject"], contract_identity: campaign["contract_identity"], policy: campaign["effective_policy"]}
+    id = campaign.fetch("campaign_id")
+    assert_raises(ArgumentError) { manager.with_campaign_registration!(id, **args) }
+    assert_equal id, manager.with_campaign_registration!(id, **args) { |value| assert value.frozen?; value.fetch("campaign_id") }
+    assert_raises(ArgumentError) { manager.with_campaign_registration!(id, **args.merge(contract_identity: "e" * 64)) { flunk } }
+    manager.start(subject: campaign_subject, contract: "New requirements", policy: campaign_policy, reason: "Changed requirement")
+    assert_raises(ArgumentError) { manager.with_campaign_registration!(id, **args) { flunk } }
+  end
+
+  def test_execution_round_guard_requires_current_pinned_incomplete_round
+    campaign = start_campaign
+    id = campaign.fetch("campaign_id")
+    manager = campaign_manager
+    assert_raises(ArgumentError) { manager.with_execution_round!(id, round_id: "round-1") { flunk } }
+    input = round_input(1)
+    manager.record_round(id, input.merge("attempt_id" => "pin-1"))
+    assert_raises(ArgumentError) { manager.with_execution_round!(id, round_id: "round-1") }
+    result = manager.with_execution_round!(id, round_id: "round-1") do |value|
+      assert_equal input.fetch("scope_identity"), value.fetch("binding").fetch("scope_identity")
+      assert value.fetch("binding").frozen?
+      File.open(File.join(manager.store.root, ".lock"), File::RDWR) do |lock|
+        refute lock.flock(File::LOCK_EX | File::LOCK_NB)
+      end
+      :registered
+    end
+    assert_equal :registered, result
+    @head = "e" * 40
+    assert_raises(ArgumentError) { manager.with_execution_round!(id, round_id: "round-1") { flunk } }
+    @head = input.fetch("head")
+    make_campaign_session(campaign, input)
+    manager.record_round(id, input)
+    assert_raises(ArgumentError) { manager.with_execution_round!(id, round_id: "round-1") { flunk } }
+  end
+
   def test_history_survives_heads_restart_and_unresolved_high_absent_from_later_reviews
     campaign = start_campaign
     first = round_input(1)

@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 require_relative "../molecules/protected_control_exclusion"
+require_relative "campaign_execution"
 
 module Ace
   module Assign
@@ -122,12 +123,13 @@ module Ace
             raise ArgumentError, "invalid assignment definition digest or size"
           end
           value = JSON.parse(bytes)
-          allowed = %w[session_id name description created_at updated_at source_config parent task_id project_id prepared_work]
+          allowed = %w[session_id name description created_at updated_at source_config parent task_id project_id prepared_work review_campaign]
           unless value.is_a?(Hash) && (value.keys - allowed).empty? &&
               %w[session_id name created_at source_config task_id project_id].all? { |key| value[key].is_a?(String) && !value[key].empty? } &&
               value["session_id"] == params["assignment_id"] && value["project_id"] == map["project_id"]
             raise ArgumentError, "invalid managed assignment definition"
           end
+          CampaignExecution.validate_parent!(value.fetch("review_campaign")) if value.key?("review_campaign")
           assignment = Models::Assignment.from_h(value)
           raise ArgumentError, "definition is not managed" unless assignment.managed?
           token!(assignment.task_id)

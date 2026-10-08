@@ -20,7 +20,7 @@ module Ace
       # but tests would need to be updated to provide all required fields.
       class Assignment
         attr_reader :id, :name, :description, :created_at, :updated_at, :source_config, :cache_dir, :parent,
-          :task_id, :project_id
+          :task_id, :project_id, :campaign_execution, :review_campaign
 
         # @param id [String] Unique assignment ID (6-char compact timestamp)
         # @param name [String] Human-readable assignment name
@@ -33,7 +33,7 @@ module Ace
         # @param task_id [String, nil] Source task ID attached to this assignment (nil = taskless)
         # @param project_id [String, nil] Project ID this assignment executes in
         def initialize(id:, name:, created_at:, source_config:, description: nil, updated_at: nil, cache_dir: nil,
-          parent: nil, task_id: nil, project_id: nil)
+          parent: nil, task_id: nil, project_id: nil, campaign_execution: nil, review_campaign: nil)
           @id = id.freeze
           @name = name.freeze
           @description = description&.freeze
@@ -44,6 +44,24 @@ module Ace
           @parent = parent&.freeze
           @task_id = task_id&.freeze
           @project_id = project_id&.freeze
+          if !campaign_execution.nil? && !review_campaign.nil?
+            raise ArgumentError, "assignment cannot own both parent campaign and child execution"
+          end
+          @campaign_execution = immutable_campaign_execution(campaign_execution) unless campaign_execution.nil?
+          @review_campaign = immutable_campaign_execution(review_campaign) unless review_campaign.nil?
+        end
+
+        # Keep registered definition bytes stable without retaining caller-owned
+        # mutable objects. Authority validates the closed linkage and provenance.
+        private def immutable_campaign_execution(value)
+          case value
+          when Hash
+            value.to_h { |key, item| [immutable_campaign_execution(key), immutable_campaign_execution(item)] }.freeze
+          when Array then value.map { |item| immutable_campaign_execution(item) }.freeze
+          when String then value.dup.freeze
+          when Integer, NilClass, TrueClass, FalseClass then value
+          else raise ArgumentError, "invalid campaign execution value"
+          end
         end
 
         # @return [Boolean] True when a source task is attached; taskless
@@ -65,7 +83,9 @@ module Ace
             "source_config" => source_config,
             "parent" => parent,
             "task_id" => task_id,
-            "project_id" => project_id
+            "project_id" => project_id,
+            "campaign_execution" => campaign_execution,
+            "review_campaign" => review_campaign
           }.compact
         end
 
@@ -84,7 +104,9 @@ module Ace
             cache_dir: cache_dir,
             parent: data["parent"],
             task_id: data["task_id"],
-            project_id: data["project_id"]
+            project_id: data["project_id"],
+            campaign_execution: data["campaign_execution"],
+            review_campaign: data["review_campaign"]
           )
         end
 

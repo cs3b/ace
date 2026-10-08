@@ -174,7 +174,8 @@ module Ace
             begin
               fresh = false
               released = false
-              result = journal.mutate(assignment_id: params.fetch("assignment_id"), attempt_id: attempt_id,
+              result = with_parent_campaign_registration(params, control_context, replay: !replay.nil?) do
+              journal.mutate(assignment_id: params.fetch("assignment_id"), attempt_id: attempt_id,
                 mutation_id: request.fetch("mutation_id"), operation: operation, parameters_digest: digest,
                 expected_generation: operation == "reserve_attempt" ? 0 : (params.fetch("expected_generation") || 0), with_replay: true) do |events, commit, generation|
                 fresh = true
@@ -196,6 +197,7 @@ module Ace
                 # retries; a competing accepted replay never owns this handle.
                 reservation_handle ||= @kernel.pin(peer) if operation == "reserve_attempt"
                 plan
+              end
               end
               fresh = !result.fetch(:replayed)
               result = result.fetch(:data)
@@ -968,3 +970,5 @@ require_relative "launch_prepared_work"
 require_relative "launch_review"
 require_relative "launch_attempt_consumers"
 require_relative "launch_control_exclusions"
+
+require_relative "launch_campaign_registration"

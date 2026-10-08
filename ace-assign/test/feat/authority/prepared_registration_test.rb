@@ -16,13 +16,26 @@ module Ace
         stdout
       end
 
-      def with_registration
+      def with_registration(review_campaign: false)
         Dir.mktmpdir("prepared-registration-", Etc.getpwuid(Process.uid).dir) do |root|
           File.chmod(0700, root)
           source = File.join(root, "source"); journal_root = File.join(root, "journal"); quarantine = File.join(root, "quarantine")
           FileUtils.mkdir_p([source, journal_root, quarantine], mode: 0700)
           [source, journal_root].each { |directory| git(directory, "init", "-b", "main") }
           definition = {"session_id" => "batch", "name" => "prepared", "created_at" => "2026-10-07T00:00:00Z", "source_config" => "job.yaml", "task_id" => "8wr.t.qk0.3", "project_id" => "ace"}
+          campaign_root = File.join(root, "campaign-repository")
+          campaign_store = File.join(root, "campaign-store")
+          if review_campaign
+            FileUtils.mkdir_p([campaign_root, campaign_store], mode: 0700)
+            manager = Ace::Review::Organisms::CampaignManager.new(repo_root: campaign_root,
+              store: Ace::Review::Molecules::CampaignStore.new(root: campaign_store), revisions: ->(*) { "a" * 40 })
+            campaign = manager.start(subject: {"repository" => "local:#{campaign_root}", "local_candidate_id" => "candidate"},
+              contract: "Reviewed requirements", policy: {"revision" => "v1", "minimum_rounds" => 3,
+                "clean_rounds" => 2, "required_scopes" => ["full"], "required_checks" => ["tests"]})
+            definition["review_campaign"] = {"version" => 1, "campaign_id" => campaign.fetch("campaign_id"),
+              "subject" => campaign.fetch("subject"), "contract_identity" => campaign.fetch("contract_identity"),
+              "policy" => campaign.fetch("effective_policy")}
+          end
           files = {"definition.json" => JSON.generate(definition), "job.yaml" => "steps:\n- number: '010.01'\n  context: fork\n  taskref: 8wr.t.qk0.3\n",
             "steps/010.01-execute.st.md" => "---\nname: execute\nstatus: pending\ncontext: fork\ntaskref: 8wr.t.qk0.3\n---\nDo prepared work.\n",
             "context/8wr.t.qk0.3/spec.md" => "---\nid: 8wr.t.qk0.3\nstatus: pending\nneeds_review: false\ndependencies: []\n---\nReviewed work.\n", "context/8wr.t.qk0.3/bundle.txt" => "Captured exact instructions.\n"}
@@ -48,7 +61,7 @@ module Ace
           deployment.define_singleton_method(:project) { |_id| {"candidate_root" => quarantine, "assignment_root" => File.join(root, "definitions")} }
           deployment.define_singleton_method(:authority) { |_id| {"uid" => 13000, "gid" => 13000, "state_root" => File.join(root, "authority-state")} }
           journal = Molecules::EvidenceJournal.new(repo_root: journal_root, checkout_root: File.join(root, "checkout"))
-          deployment.define_singleton_method(:project) { |_id| {"candidate_root" => quarantine, "assignment_root" => File.join(root, "definitions"), "journal_repository" => journal.repo_root, "evidence_git_ref" => journal.ref, "evidence_checkout_root" => journal.checkout_root} }
+          deployment.define_singleton_method(:project) { |_id| {"candidate_root" => quarantine, "assignment_root" => File.join(root, "definitions"), "journal_repository" => journal.repo_root, "evidence_git_ref" => journal.ref, "evidence_checkout_root" => journal.checkout_root, "campaign_repository" => campaign_root, "campaign_store_root" => campaign_store} }
           ProtectedControlFixture.prepare!(authority: deployment.authority("authority"), project_id: "ace")
           authority = Authority::LaunchLifecycle.new(deployment: deployment, control_exclusion_factory: ProtectedControlFixture.factory, kernel: kernel, journals: {"ace" => journal})
           Tempfile.create("prepared-input", root, binmode: true) do |file|
@@ -61,6 +74,74 @@ module Ace
 
       def dispatch(authority, params, peer, input, mutation: "register")
         authority.dispatch(request: {"version" => 1, "operation" => "register_assignment", "mutation_id" => mutation, "project_id" => "ace", "params" => params}, peer: peer, role: :launcher, transfer: input)
+      end
+
+      def test_parent_campaign_is_retained_in_actual_registered_definition
+        with_registration(review_campaign: true) do |authority, journal, params, peer, input, _bundle, definition|
+          checked = []
+          protection = lambda do |path, directory:, owner:|
+            assert directory
+            assert_equal 13000, owner
+            assert_equal 0, File.stat(path).mode & 0o077
+            checked << path
+          end
+          Ace::Runtime::Molecules::ProtectedSocket.stub(:root_path!, protection) do
+            accepted = dispatch(authority, params, peer, input)
+            data = accepted.fetch(:data)
+            stored = JSON.parse(journal.blob(data.fetch("definition_ref"), commit: data.fetch("journal_commit")))
+            assert_equal JSON.parse(definition).fetch("review_campaign"), stored.fetch("review_campaign")
+            assert dispatch(authority, params, peer, input).fetch(:replayed)
+          end
+          assert_equal 2, checked.uniq.size
+        end
+      end
+
+      def test_superseded_campaign_cannot_register_or_reuse_parent_as_current
+        with_registration(review_campaign: true) do |authority, journal, params, peer, input, _bundle, definition, deployment|
+          protection = ->(path, directory:, owner:) { raise "not private" unless File.directory?(path) && (File.stat(path).mode & 0o077).zero? }
+          Ace::Runtime::Molecules::ProtectedSocket.stub(:root_path!, protection) do
+            accepted = dispatch(authority, params, peer, input)
+            commit = accepted.fetch(:data).fetch("journal_commit")
+            project = deployment.project("ace")
+            selected = JSON.parse(definition).fetch("review_campaign")
+            manager = Ace::Review::Organisms::CampaignManager.new(repo_root: project.fetch("campaign_repository"),
+              store: Ace::Review::Molecules::CampaignStore.new(root: project.fetch("campaign_store_root")), revisions: ->(*) { "a" * 40 })
+            manager.start(subject: selected.fetch("subject"), contract: "Changed requirements", policy: selected.fetch("policy"), reason: "Revised contract")
+            assert_raises(AttemptErrors::EvidenceUnavailable) { dispatch(authority, params, peer, input, mutation: "new-registration") }
+            assert_equal commit, journal.ref_value
+            replay = dispatch(authority, params, peer, input)
+            assert replay.fetch(:replayed)
+            assert_equal accepted.fetch(:data), replay.fetch(:data)
+            assert_equal commit, journal.ref_value
+          end
+        end
+      end
+
+      def test_campaign_registration_keeps_original_store_after_descriptor_rotation
+        with_registration(review_campaign: true) do |authority, journal, params, peer, input, _bundle, _definition, original|
+          protection = ->(path, directory:, owner:) { raise "not private" unless File.directory?(path) && (File.stat(path).mode & 0o077).zero? }
+          Ace::Runtime::Molecules::ProtectedSocket.stub(:root_path!, protection) do
+            accepted = dispatch(authority, params, peer, input)
+            replacement = original.clone
+            replacement.define_singleton_method(:artifact_reference) { {"sha256" => "e" * 64} }
+            replacement.define_singleton_method(:project) do |id|
+              original.project(id).merge("campaign_repository" => "/unavailable/replacement-repository",
+                "campaign_store_root" => "/unavailable/replacement-store")
+            end
+            history = Object.new
+            history.define_singleton_method(:descriptor!) do |sha256:|
+              raise "unexpected original descriptor" unless sha256 == "d" * 64
+              original
+            end
+            authority.instance_variable_set(:@deployment, replacement)
+            authority.instance_variable_set(:@deployment_history, history)
+            result = dispatch(authority, params.merge("expected_generation" => 1), peer, input, mutation: "after-rotation")
+            refute result.fetch(:replayed)
+            assert_equal accepted.fetch(:data).fetch("lifecycle_control"), result.fetch(:data).fetch("lifecycle_control")
+            assert_equal 2, result.fetch(:data).fetch("generation")
+            assert_equal result.fetch(:data).fetch("journal_commit"), journal.ref_value
+          end
+        end
       end
 
       def test_exact_received_bundle_and_derived_definition_share_original_commit_and_replay

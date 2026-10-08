@@ -83,12 +83,12 @@ module Ace
           end
           @data["projects"].each_value do |project|
             raise ArgumentError, "invalid project mapping" unless project.is_a?(Hash)
-            keys = %w[journal_repository evidence_git_ref evidence_checkout_root assignment_root candidate_root
+            keys = %w[journal_repository evidence_git_ref evidence_checkout_root assignment_root candidate_root campaign_repository campaign_store_root
               launcher_uids reviewer_uids worker_uids service_executor_uids supervisor_uids peer_credentials]
             keys << "service_receivers" if project.key?("service_receivers")
             keys << "inbox_contexts" if project.key?("inbox_contexts")
             strict!(project, keys)
-            %w[journal_repository evidence_checkout_root assignment_root candidate_root].each { |key| path!(project.fetch(key)) }
+            %w[journal_repository evidence_checkout_root assignment_root candidate_root campaign_repository campaign_store_root].each { |key| path!(project.fetch(key)) }
             unless project["evidence_git_ref"] == "refs/ace/execution"
               raise ArgumentError, "protected authority uses the canonical execution ref"
             end
@@ -142,9 +142,18 @@ module Ace
             raise ArgumentError, "receiver endpoint must be separate from private staging"
           end
           protected_roots = @data.fetch("authorities").values.map { |service| service.fetch("state_root") } +
-            @data.fetch("projects").values.flat_map { |project| %w[journal_repository evidence_checkout_root assignment_root candidate_root].map { |key| project.fetch(key) } }
+            @data.fetch("projects").values.flat_map { |project| %w[journal_repository evidence_checkout_root assignment_root candidate_root campaign_repository campaign_store_root].map { |key| project.fetch(key) } }
           if staging.any? { |root| protected_roots.any? { |protected| paths_overlap?(root, protected) } }
             raise ArgumentError, "receiver staging overlaps authority state"
+          end
+          campaign_roots = @data.fetch("projects").values.flat_map { |project| project.values_at("campaign_repository", "campaign_store_root") }
+          other_roots = @data.fetch("authorities").values.map { |service| service.fetch("state_root") } +
+            @data.fetch("projects").values.flat_map { |project|
+              project.values_at("journal_repository", "evidence_checkout_root", "assignment_root", "candidate_root") +
+                project.fetch("peer_credentials").values.map { |peer| peer.fetch("scratch_root") } }
+          if campaign_roots.combination(2).any? { |left, right| paths_overlap?(left, right) } ||
+              campaign_roots.any? { |root| other_roots.any? { |other| paths_overlap?(root, other) } }
+            raise ArgumentError, "campaign roots overlap another protected or worker root"
           end
           repositories = @data.fetch("projects").values.map { |project| project.fetch("journal_repository") }
           raise ArgumentError, "canonical project repository has duplicate mappings" unless repositories.uniq.size == repositories.size
@@ -287,7 +296,7 @@ module Ace
           forbidden = data.fetch("projects").values.flat_map do |fixed_project|
             fixed_project.fetch("peer_credentials").values.map { |peer| peer.fetch("scratch_root") } +
               fixed_project.fetch("service_receivers", {}).values.map { |receiver| receiver.fetch("staging_root") } +
-              %w[journal_repository evidence_checkout_root assignment_root candidate_root].map { |key| fixed_project.fetch(key) }
+              %w[journal_repository evidence_checkout_root assignment_root candidate_root campaign_repository campaign_store_root].map { |key| fixed_project.fetch(key) }
           end
           forbidden.concat(data.fetch("authorities").values.map { |service| service.fetch("state_root") })
           if roots.combination(2).any? { |left, right| paths_overlap?(left, right) } ||
@@ -600,7 +609,7 @@ module Ace
           wire.root_path!(File.dirname(service.fetch("socket_path")), directory: true, owner: service.fetch("uid"))
           if authority_state
             fixed = project(map.fetch("project_id"))
-            ([service.fetch("state_root")] + %w[journal_repository evidence_checkout_root assignment_root candidate_root].map { |key| fixed.fetch(key) }).each do |path|
+            ([service.fetch("state_root")] + %w[journal_repository evidence_checkout_root assignment_root candidate_root campaign_repository campaign_store_root].map { |key| fixed.fetch(key) }).each do |path|
               wire.root_path!(path, directory: true, owner: service.fetch("uid"))
               unless (File.stat(path).mode & 0o077).zero?
                 raise Ace::Runtime::RuntimeUnavailableError, "authority state root must remain private"

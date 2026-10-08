@@ -3,6 +3,30 @@
 require_relative "../../test_helper"
 
 class AssignmentTest < AceAssignTestCase
+  def test_parent_campaign_roundtrip_and_child_exclusivity
+    values = {id: "parent", name: "parent", created_at: Time.now, source_config: "job.yaml"}
+    campaign = {"campaign_id" => "campaign", "subject" => {"local_candidate_id" => "candidate"}}
+    assignment = Ace::Assign::Models::Assignment.new(**values, review_campaign: campaign)
+    restored = Ace::Assign::Models::Assignment.from_h(assignment.to_h)
+    assert_equal campaign, restored.review_campaign
+    assert restored.review_campaign.fetch("subject").frozen?
+    assert_raises(ArgumentError) do
+      Ace::Assign::Models::Assignment.new(**values, review_campaign: campaign, campaign_execution: {})
+    end
+  end
+
+  def test_campaign_execution_survives_roundtrip_without_mutable_aliases
+    linkage = {"parent_assignment_id" => "parent", "subject" => {"local_candidate_id" => "candidate".dup}}
+    assignment = Ace::Assign::Models::Assignment.new(id: "child", name: "child", created_at: Time.now,
+      source_config: "job.yaml", parent: "parent", campaign_execution: linkage)
+    linkage["subject"]["local_candidate_id"].replace("changed")
+    restored = Ace::Assign::Models::Assignment.from_h(assignment.to_h)
+    assert_equal "candidate", restored.campaign_execution.dig("subject", "local_candidate_id")
+    assert restored.campaign_execution.frozen?
+    assert restored.campaign_execution["subject"].frozen?
+    assert_raises(FrozenError) { restored.campaign_execution["subject"]["local_candidate_id"].replace("changed") }
+  end
+
   def test_initialization
     now = Time.now.utc
     assignment = Ace::Assign::Models::Assignment.new(

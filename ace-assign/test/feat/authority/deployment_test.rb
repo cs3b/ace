@@ -136,7 +136,7 @@ module Ace
           value.dig("projects", "project", "peer_credentials")["13006"] = {"gid" => 13006, "groups" => [13006], "scratch_root" => "/var/lib/ace-untouched-worker"}
           value["authorities"]["authority"]["state_root"] = File.join(root, "state")
           project = value["projects"]["project"]
-          %w[journal_repository evidence_checkout_root assignment_root candidate_root].each do |field|
+          %w[journal_repository evidence_checkout_root assignment_root candidate_root campaign_repository campaign_store_root].each do |field|
             project[field] = File.join(root, field)
             FileUtils.mkdir_p(project[field], mode: 0o700)
           end
@@ -844,7 +844,7 @@ module Ace
           "state_root" => "/var/lib/ace-authority", "composition" => "launch"}},
          "projects" => {"project" => {"journal_repository" => "/var/lib/ace-journal", "evidence_git_ref" => "refs/ace/execution",
            "evidence_checkout_root" => "/var/lib/ace-checkout", "assignment_root" => "/var/lib/ace-assignments",
-           "candidate_root" => "/var/lib/ace-candidates", "launcher_uids" => [13002], "reviewer_uids" => [],
+           "candidate_root" => "/var/lib/ace-candidates", "campaign_repository" => "/var/lib/ace-campaign-repository", "campaign_store_root" => "/var/lib/ace-campaign-store", "launcher_uids" => [13002], "reviewer_uids" => [],
            "worker_uids" => [13001], "service_executor_uids" => [], "supervisor_uids" => [],
            "peer_credentials" => {"13001" => {"gid" => 13001, "groups" => [13001], "scratch_root" => "/var/lib/ace-worker"},
              "13002" => {"gid" => 13002, "groups" => [13002], "scratch_root" => "/var/lib/ace-launcher"}}}},
@@ -1087,6 +1087,21 @@ module Ace
         value = inbox_data
         value["authorities"]["authority"]["composition"] = "launch"
         assert_raises(ArgumentError) { Authority::Deployment.new(value) }
+      end
+
+      def test_campaign_roots_are_required_and_separate_from_mutable_or_other_authority_state
+        %w[campaign_repository campaign_store_root].each do |field|
+          missing = data
+          missing.fetch("projects").fetch("project").delete(field)
+          assert_raises(ArgumentError) { Authority::Deployment.new(missing) }
+          ["/var/lib/ace-worker/review", "/var/lib/ace-candidates/review", "/var/lib/ace-journal",
+            "/var/lib/ace-authority/review", "/var/lib/ace-campaign-repository", "/var/lib/ace-campaign-store"].each do |root|
+            next if root == data.fetch("projects").fetch("project").fetch(field)
+            changed = data
+            changed.fetch("projects").fetch("project")[field] = root
+            assert_raises(ArgumentError) { Authority::Deployment.new(changed) }
+          end
+        end
       end
 
       def test_fixed_mapping_and_source_composition_match

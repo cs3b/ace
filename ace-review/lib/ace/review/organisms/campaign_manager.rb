@@ -183,14 +183,46 @@ module Ace
                 approval && approval["producer"] == producer && approval["reviewer"] == reviewer
               raise Contract::Invalid, "campaign result does not match current acceptance and expected binding"
             end
-            freeze_projection = lambda do |value|
-              case value
-              when Hash then value.each { |key, item| freeze_projection.call(key); freeze_projection.call(item) }
-              when Array then value.each { |item| freeze_projection.call(item) }
-              end
-              value.freeze
+            yield immutable_projection(current)
+          end
+        end
+
+        def with_campaign_registration!(id, subject:, contract_identity:, policy:)
+          raise ArgumentError, "campaign registration requires a block" unless block_given?
+          subject = Contract.subject!(subject)
+          policy = Contract.policy!(policy)
+          store.transaction(dry_run: true, require_lock: true) do
+            record = store.read(id)
+            unless !record["successor"] && record["subject"] == subject &&
+                record["contract_identity"] == contract_identity && record["policy"] == policy
+              raise Contract::Invalid, "campaign registration differs from active contract"
             end
-            yield freeze_projection.call(current)
+            yield immutable_projection({"campaign_id" => record.fetch("id"), "subject" => record.fetch("subject"),
+              "contract_identity" => record.fetch("contract_identity"), "policy" => record.fetch("policy")})
+          end
+        end
+
+        # Source-owned child registration holds the pinned round while its
+        # canonical definition is accepted. Parent lineage is checked by Assign.
+        def with_execution_round!(id, round_id:)
+          raise ArgumentError, "campaign execution round requires a block" unless block_given?
+          Contract.id!(round_id, "round ID")
+          store.transaction(dry_run: true, require_lock: true) do
+            record = store.read(id)
+            raise Contract::Invalid, "campaign contract is superseded" if record["successor"]
+            attempt = record["attempts"].find { |entry| entry["round_id"] == round_id }
+            unless attempt && record["rounds"].none? { |entry| entry["round_id"] == round_id }
+              raise Contract::Invalid, "campaign execution requires a pinned incomplete round"
+            end
+            head, base = current_revisions(record)
+            binding = attempt.fetch("binding")
+            unless binding.values_at("head", "base") == [head, base] && clean_candidate?
+              raise Contract::Invalid, "campaign execution candidate changed"
+            end
+            value = {"campaign_id" => record.fetch("id"), "subject" => record.fetch("subject"),
+              "contract_identity" => record.fetch("contract_identity"), "policy" => record.fetch("policy"),
+              "round_id" => round_id, "binding" => binding}
+            yield immutable_projection(value)
           end
         end
 
@@ -240,6 +272,14 @@ module Ace
         end
 
         private
+
+        def immutable_projection(value)
+          case value
+          when Hash then value.each { |key, child| immutable_projection(key); immutable_projection(child) }
+          when Array then value.each { |child| immutable_projection(child) }
+          end
+          value.freeze
+        end
 
         def round_binding(input, record)
           required = Contract.strings!(input["required_scopes"], "required_scopes")
