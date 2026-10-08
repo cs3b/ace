@@ -147,9 +147,11 @@ class ProtectedServiceRecoveryTest < Minitest::Test
         assert_equal "uncertain", foreign.recover_no_effect(binding: binding, input_bytes: @body,
           mutation_id: "foreign-service", expected_generation: original_generation).fetch("state")
         assert_equal 1, inspections.size, "same executor cannot adopt a different receiver's settled service"
-        assert_raises(Ace::Assign::AttemptErrors::UnauthorizedIdentity) do
+        error = assert_raises(Ace::Assign::AttemptErrors::EvidenceUnavailable) do
           @endcap.send(:service_status, {}, binding.merge("mapping_id" => "other"), @map, @executor, :executor)
         end
+        assert_equal "Original control reservation is unavailable", error.message
+        assert_equal before, @journal.ref_value
         record = @journal.service_request("service-request")
         context = Ace::Assign::Authority::ServiceEvidence.new(journal: @journal).settlement_context(record)
         assert_raises(FrozenError) { context.fetch("request").fetch("target")["resource"].replace("changed") }
