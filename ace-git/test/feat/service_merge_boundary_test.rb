@@ -121,14 +121,30 @@ class ServiceMergeBoundaryTest < AceGitTestCase
     exercise_completion
   end
 
+  def matrix_phase(stage)
+    return unless name.match?(/test_public_(github_url|forgejo_default|forgejo_named)/)
+
+    @matrix_started ||= Process.clock_gettime(Process::CLOCK_MONOTONIC)
+    directory = File.expand_path("../../../.ace-local/task/8wr.t.qkb.1", __dir__)
+    FileUtils.mkdir_p(directory)
+    File.open(File.join(directory, "#{name}.phases.jsonl"), "a") do |file|
+      file.puts(JSON.generate({"stage" => stage,
+        "elapsed" => Process.clock_gettime(Process::CLOCK_MONOTONIC) - @matrix_started}))
+      file.flush
+    end
+  end
+
   def merge_mutation?(provider, args)
     provider == "github" ? args[0, 3] == %w[gh pr merge] : args[1] == "POST"
   end
 
   def exercise_completion
     fixture do
+      matrix_phase("issue-before")
       issue_original
+      matrix_phase("issue-after")
       submission, = prepared_submission(accept_review: !@missing_review)
+      matrix_phase("submission-after")
       provider, selection = @merge_provider || "forgejo", @merge_selection || :named
       head_owner = @merge_fork ? "fork-owner" : "owner"
       resource = "#{URL}/#{provider == 'github' ? 'pull' : 'pulls'}/25"
@@ -146,11 +162,15 @@ class ServiceMergeBoundaryTest < AceGitTestCase
       calls, merged = [], false
       runner = lambda do |args:, **|
         calls << args
+        if provider == "github"
+          assert_equal "forge.example.com/owner/repo", args.fetch(args.index("--repo") + 1)
+        end
         payload = if merge_mutation?(provider, args)
           if provider == "github"
             assert_includes args, @head
             assert_includes args, "--squash"
           else
+            assert_equal "https://forge.example.com/api/v1/repos/owner/repo/pulls/25/merge", args[2]
             assert_equal @head, args[3].fetch("head_commit_id")
             assert_equal "squash", args[3].fetch("Do")
           end
@@ -237,9 +257,11 @@ class ServiceMergeBoundaryTest < AceGitTestCase
           end
         end
       end
+      phase_callback = method(:matrix_phase)
       traced = Object.new
       traced.define_singleton_method(:call) do |name, params, **options|
         phases << name
+        phase_callback.call("rpc-#{name}-before")
         raise Timeout::Error, "measurement stops before export or provider" if measure_request && name != "request_service"
         if name == "complete_service" && interrupt_before_cas
           completion_call = [params, options]
@@ -248,6 +270,7 @@ class ServiceMergeBoundaryTest < AceGitTestCase
           return journal.stub(:update_ref_cas, fault) { client.call(name, params, **options) }
         end
         response = client.call(name, params, **options)
+        phase_callback.call("rpc-#{name}-after")
         if name == "complete_service"
           completion_call = [params, options]
           lost_reply_reached = true
