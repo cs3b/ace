@@ -1,6 +1,6 @@
 # Maintained context-service constructor source checkpoint
 
-Parent review requested this coherent checkpoint over `b6ae9026d`, not whole xza.3 completion. No metadata/status/SC closure is made. Independent review is pending.
+Parent review requested this coherent checkpoint over `b6ae9026d`, not whole xza.3 completion. No metadata/status/SC closure is made. Independent reviewer review_lab_bootstrap approved exact a2bf3183d against b6ae9026d; the exclusions below remain open.
 
 The source owns a held literal service configuration, dedicated Runtime installation factory/full profile, exact observed service epoch, durable context-control/v3 and direct issuer epochs, exclusive bounded listener, and maintained Service constructor. Initial construction calls only `with_initial_inbox_context`; normal construction calls only `with_inbox_context_service`. Their closed five-key association contains actual configuration/installation/manager/kernel/cgroups. Preparation returns an actual Service with durable v3 and no ingress; the initial installation owner must finish its bounded existing acknowledgement/phase before returning it. Herdr then reobserves the same epoch before opening ingress. Listener stop uses one 35-second deadline and at most8 handlers; unresolved handlers retain service/store ownership rather than becoming completion proof.
 
@@ -32,3 +32,7 @@ Failed receipts are retained: native FD execution denied on the local `/dev/fd` 
 The actual SAME Lab generated entry, acyclic initialization reference, durable existing Installer phase/immutable acknowledgement, normal-versus-initial authenticated disposition, complete native release/source closure and host/view/resource publication belong to existing gad.8 source work and must compose with this constructor. Native consumption/installed acceptance remain gad.2. No constructor collaborator or fixture is substituted for that producer.
 
 Explicit original assignment/mapping direct bindings and original guarded authority admission before native observation/submission/wake remain required next ACE work; this checkpoint cannot authorize deployment of protected native effects. Verified stopped context-service epoch, dead-launcher original guarded drain and no-writer closure, Store owner-preserving root recovery publication, actual selected-child subprocess/registered CLI composition, and maintained protected LiveClient adoption remain open. Existing canonical returned recovery is preserved, but none of these missing gates is inferred from an empty operation map, process absence or a shape-valid epoch.
+
+## Integration verification
+
+Root integration c93d0a3b4 applies the approved delta on main f66a1d258. Only two changelog conflicts required resolution; both sides were retained. Seven Herdr files passed 41 tests / 276 assertions (7f271f4b-3c2c-495b-9655-328dda79ed15); Runtime installation passed 30 / 161 (7a0055f6-4949-459a-8b03-1e89766e0d28). Initial Runtime command used nonexistent test/fast path and exited before execution; only corrected test/molecules path is evidence. Main integration waits for the already-running diagnostic suite to finish on its original revision.
