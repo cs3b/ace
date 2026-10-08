@@ -35,7 +35,7 @@ module Ace
         HISTORY_LIMIT = 100_000
         EVENT_BATCH_BYTES = 1024 * 1024
 
-        # A wire operation may retain one event and one inventory selection, never admission
+        # A wire operation may retain one event, inventory and raw service selection, never admission
         # or current-ref truth. Nested operations own independent selections.
         def self.with_event_read_operation
           previous = Thread.current[:ace_assign_event_read_operation]
@@ -124,8 +124,8 @@ module Ace
           event_commits!(assignment_id: assignment_id, event_digests: [event_digest], commit: commit).fetch(event_digest)
         end
 
-        # Operation-scoped batch of the same provenance proof. No retained
-        # cache: every call authenticates the entire fixed first-parent history.
+        # Operation-scoped batch of the same provenance proof. Reuse only the
+        # already authenticated exact wire inventory; never an owner cache.
         def event_commits!(assignment_id:, event_digests:, commit:)
           event_commits_for_assignments!(selectors: {assignment_id => event_digests}, commit: commit).fetch(assignment_id)
         end
@@ -140,6 +140,12 @@ module Ace
                 digests.uniq.size == digests.size && digests.all? { |digest| digest.is_a?(String) && digest.match?(/\A[0-9a-f]{64}\z/) } } &&
               selectors.values.sum(&:size) <= HISTORY_LIMIT
             raise AttemptErrors::EvidenceUnavailable, "historical event selectors are invalid"
+          end
+          if (inventory = retained_operation_inventory(commit))
+            return selectors.to_h do |id, digests|
+              introductions = inventory.fetch("introductions").fetch(id)
+              [id.dup.freeze, digests.to_h { |digest| [digest.dup.freeze, introductions.fetch(digest)] }.freeze]
+            end.freeze
           end
           nodes = canonical_history_nodes!(commit)
           states = selectors.to_h do |id, digests|
@@ -344,10 +350,7 @@ module Ace
         def canonical_event_inventory!(commit:)
           context = Thread.current[:ace_assign_event_read_operation]
           reusable = context && @mode == :protected && commit.is_a?(String) && commit.match?(/\A[0-9a-f]{40}\z/)
-          selection = if reusable
-            [object_id, @repo_root, @ref, @checkout_root, @mode, @read_boundary&.object_id, commit]
-              .map { |value| value.is_a?(String) ? value.dup.freeze : value }.freeze
-          end
+          selection = operation_inventory_selection(commit) if reusable
           return context.fetch(:inventory) if reusable && context[:inventory_selection] == selection
           context&.delete(:inventory_selection)
           context&.delete(:inventory)
@@ -357,6 +360,21 @@ module Ace
           end
           inventory
         end
+
+        # Query only the exact full history already authenticated in this wire
+        # operation. No historical selector builds or advances this snapshot.
+        def operation_inventory_selection(commit)
+          [object_id, @repo_root, @ref, @checkout_root, @mode, @read_boundary&.object_id, commit]
+            .map { |value| value.is_a?(String) ? value.dup.freeze : value }.freeze
+        end
+
+        def retained_operation_inventory(commit)
+          context = Thread.current[:ace_assign_event_read_operation]
+          return unless context && @mode == :protected && commit.is_a?(String) && commit.match?(/\A[0-9a-f]{40}\z/) &&
+            context[:inventory_selection] == operation_inventory_selection(commit)
+          context[:inventory]
+        end
+        private :operation_inventory_selection, :retained_operation_inventory
 
         def read_canonical_inventory!(commit:)
           nodes = canonical_history_nodes!(commit)
@@ -511,7 +529,12 @@ module Ace
           return context.fetch(:events) if context[:selection] == selection
           context.delete(:selection)
           context.delete(:events)
-          events = read_event_snapshots!([assignment_id], commit: commit).first.fetch(assignment_id)
+          inventory = retained_operation_inventory(commit) if assignment_id.is_a?(String) && assignment_id.match?(JournalMutation::ID)
+          events = if inventory
+            inventory.fetch("events").fetch(assignment_id, [])
+          else
+            read_event_snapshots!([assignment_id], commit: commit).first.fetch(assignment_id)
+          end
           frozen = freeze_inventory_projection(events)
           context[:selection], context[:events] = selection, frozen
           frozen
@@ -749,14 +772,48 @@ module Ace
         end
 
         def read_service_request(request_id, commit:, pending:, terminal: true)
+          context = Thread.current[:ace_assign_event_read_operation]
           validate_request_id!(request_id)
-          value = commit
-          return nil unless value
-          out, stderr, status = git("show", "#{value}:#{service_request_path(request_id)}")
+          reusable = context && @mode == :protected && commit.is_a?(String) && commit.match?(/\A[0-9a-f]{40}\z/)
+          selection = if reusable
+            (operation_inventory_selection(commit) + [@evidence_reader&.object_id, @service_authorizer&.object_id, request_id])
+              .map { |value| value.is_a?(String) ? value.dup.freeze : value }.freeze
+          end
+          if reusable && context[:service_record_selection] == selection
+            retained = context[:service_record]
+          else
+            context&.delete(:service_record_selection)
+            context&.delete(:service_record)
+            retained = read_service_request_record(request_id, commit: commit)
+            if reusable && retained
+              retained = freeze_inventory_projection(retained)
+              context[:service_record_selection], context[:service_record] = selection, retained
+            end
+          end
+          # This memo contains JSON and its immutable accepted event proof,
+          # never terminal evidence admission. Every callback remains fresh;
+          # callers receive their own mutable copy rather than cached state.
+          record = retained && (reusable ? JSON.parse(JSON.generate(retained)) : retained)
+          validate_terminal_receipt!(record, record["state"], record["receipt"], pending: pending) if
+            record && terminal && @mode == :protected && terminal_state?(record["state"])
+          # Historical dependency reads may replace this one slot while the
+          # fresh callback executes. Restore only this successful raw view.
+          if reusable && retained
+            context[:service_record_selection], context[:service_record] = selection, retained
+          end
+          record
+        rescue Exception
+          context&.delete(:service_record_selection)
+          context&.delete(:service_record)
+          raise
+        end
+
+        def read_service_request_record(request_id, commit:)
+          return nil unless commit
+          out, stderr, status = git("show", "#{commit}:#{service_request_path(request_id)}")
           if status.success?
             record = JSON.parse(out)
-            verify_service_record!(record, commit: value) if @mode == :protected
-            validate_terminal_receipt!(record, record["state"], record["receipt"], pending: pending) if terminal && @mode == :protected && terminal_state?(record["state"])
+            verify_service_record!(record, commit: commit) if @mode == :protected
             return record
           end
           return nil if stderr.include?("does not exist") || stderr.include?("exists on disk")
@@ -765,7 +822,7 @@ module Ace
           raise AttemptErrors::EvidenceUnavailable, "Corrupt service request #{request_id}"
         end
 
-        private :read_service_request
+        private :read_service_request, :read_service_request_record
 
         # Every service request recorded in this evidence ref, whatever the
         # owning assignment. Backs the journal-wide request-ID and

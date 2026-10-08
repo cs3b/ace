@@ -180,6 +180,96 @@ class EventReadOperationTest < AceAssignTestCase
     threads&.each { |thread| thread.kill if thread.alive? }
   end
 
+  def test_existing_inventory_answers_only_exact_event_view_and_current_ref_selection
+    journal, counts = inventory_reader
+    Journal.with_event_read_operation do
+      inventory = journal.canonical_event_inventory!(commit: "a" * 40)
+      assert_equal inventory.fetch("events").fetch("assignment"), journal.read_events("assignment")
+      assert_equal 0, counts.fetch(:reads)
+      assert_equal 1, counts.fetch(:refs)
+      journal.instance_variable_set(:@test_ref, "b" * 40)
+      assert_equal "b" * 40, journal.read_events("assignment").first.fetch("commit")
+      assert_equal 1, counts.fetch(:reads)
+      assert_equal inventory.fetch("events").fetch("assignment"), journal.read_events("assignment", commit: "a" * 40)
+      journal.instance_variable_set(:@read_boundary, Object.new)
+      assert_equal "a" * 40, journal.read_events("assignment", commit: "a" * 40).first.fetch("commit")
+      assert_equal 2, counts.fetch(:reads)
+    end
+    journal.read_events("assignment", commit: "a" * 40)
+    assert_equal 3, counts.fetch(:reads), "inventory cannot escape its wire operation"
+  end
+
+  def test_raw_service_record_reuse_keeps_exact_owner_and_never_retains_missing_or_failed_reads
+    journal, _ = reader
+    reads = []
+    journal.define_singleton_method(:read_service_request_record) do |id, commit:|
+      reads << [id, commit]
+      raise Ace::Assign::AttemptErrors::EvidenceUnavailable, "controlled corrupt record" if commit == "f" * 40
+      next nil if id == "missing"
+      {"request_id" => id, "state" => "accepted", "commit" => commit, "nested" => ["original"]}
+    end
+    Journal.with_event_read_operation do
+      first = journal.service_request("request")
+      first.fetch("nested") << "forged"
+      assert_equal ["original"], journal.service_request("request").fetch("nested")
+      assert_equal 1, reads.size
+      journal.instance_variable_set(:@test_ref, "b" * 40)
+      assert_equal "b" * 40, journal.service_request("request").fetch("commit")
+      assert_equal "a" * 40, journal.service_request("request", commit: "a" * 40).fetch("commit")
+      assert_equal 3, reads.size
+      %i[repo_root ref checkout_root read_boundary evidence_reader service_authorizer].each do |field|
+        before = reads.size
+        journal.instance_variable_set(:"@#{field}", field.to_s.end_with?("reader", "authorizer", "boundary") ? Object.new : "/changed/#{field}")
+        journal.service_request("request", commit: "a" * 40)
+        assert_equal before + 1, reads.size
+      end
+      before = reads.size
+      assert_raises(ArgumentError) { journal.service_request("bad/id", commit: "a" * 40) }
+      journal.service_request("request", commit: "a" * 40)
+      assert_equal before + 1, reads.size, "invalid request evicts the old raw slot"
+      before = reads.size
+      2.times { assert_nil journal.service_request("missing", commit: "a" * 40) }
+      assert_equal before + 2, reads.size
+      before = reads.size
+      2.times { assert_raises(Ace::Assign::AttemptErrors::EvidenceUnavailable) { journal.service_request("request", commit: "f" * 40) } }
+      journal.service_request("request", commit: "a" * 40)
+      assert_equal before + 3, reads.size
+      journal.service_request("another", commit: "a" * 40)
+      assert_equal "another", reads.last.first
+    end
+    before = reads.size
+    2.times { journal.service_request("request", commit: "a" * 40) }
+    assert_equal before + 2, reads.size
+  end
+
+  def test_raw_record_nested_and_concurrent_operations_keep_independent_slots
+    journal, _ = reader
+    reads = 0
+    journal.define_singleton_method(:read_service_request_record) do |id, commit:|
+      reads += 1
+      {"request_id" => id, "state" => "accepted", "commit" => commit}
+    end
+    ready, release = Queue.new, Queue.new
+    threads = 2.times.map do
+      Thread.new do
+        Journal.with_event_read_operation do
+          first = journal.service_request("request")
+          Journal.with_event_read_operation { assert_equal first, journal.service_request("request") }
+          ready << first
+          release.pop
+          assert_equal first, journal.service_request("request")
+        end
+      end
+    end
+    2.times { ready.pop }
+    2.times { release << true }
+    threads.each(&:value)
+    assert_equal 4, reads, "each outer/nested operation owns its raw selection"
+    assert_nil Thread.current[:ace_assign_event_read_operation]
+  ensure
+    threads&.each { |thread| thread.kill if thread.alive? }
+  end
+
   private
 
   # Only the memo's maintained decoder boundary is controlled here; actual

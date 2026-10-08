@@ -165,6 +165,17 @@ module Ace
           assert_same inventory, journal.canonical_event_inventory!(commit: tip)
           assert inventory.frozen?
           assert inventory.fetch("events").fetch("alpha").all?(&:frozen?)
+          # The full authenticated immutable inventory already proves these
+          # exact chains and introductions; another history scan is redundant.
+          journal.stub(:read_event_snapshots!, ->(*) { raise "redundant immutable snapshot read" }) do
+            assert_equal inventory.fetch("events").fetch("alpha"), journal.read_events("alpha", commit: tip)
+            assert_equal inventory.fetch("events").fetch("beta"), journal.read_events("beta", commit: tip)
+            selectors = inventory.fetch("events").transform_values { |events| events.map { |event| event.fetch("digest") } }
+            assert_equal inventory.fetch("introductions"), journal.event_commits_for_assignments!(selectors: selectors, commit: tip)
+            assert_raises(AttemptErrors::EvidenceUnavailable) { journal.event_commits!(assignment_id: "alpha", event_digests: ["0" * 64], commit: tip) }
+            assert_raises(AttemptErrors::EvidenceUnavailable) { journal.event_commits!(assignment_id: "absent", event_digests: [first.fetch("digest")], commit: tip) }
+            assert_raises(AttemptErrors::EvidenceUnavailable) { journal.event_commits!(assignment_id: "alpha", event_digests: [first.fetch("digest")] * 2, commit: tip) }
+          end
           checkout = File.join(cache_dir, "co", "journal")
           paths = Dir.glob(File.join(checkout, "execution", "*", "events", "*.json"))
           paths.each do |path|
@@ -403,6 +414,33 @@ module Ace
           reloaded = Molecules::EvidenceJournal.new(repo_root: repo, ref: REF, checkout_root: root)
           assert_equal "succeeded", reloaded.service_request("req-1")["state"]
           assert_equal 3, reloaded.read_events("assignment-1").size
+          reloaded.instance_variable_set(:@mode, :protected)
+          reads, callbacks, corrupt = 0, 0, false
+          original_read = reloaded.method(:read_service_request_record)
+          reloaded.define_singleton_method(:read_service_request_record) do |*args, **options|
+            reads += 1
+            original_read.call(*args, **options)
+          end
+          reloaded.instance_variable_set(:@evidence_reader, ->(item, *_args) {
+            callbacks += 1
+            corrupt ? "changed current callback verdict" : File.binread(File.join(repo, item.fetch("ref")))
+          })
+          Molecules::EvidenceJournal.with_event_read_operation do
+            reloaded.canonical_event_inventory!(commit: reloaded.ref_value)
+            selected = reloaded.service_request("req-1")
+            selected.fetch("target")["resource"] = "poisoned caller copy"
+            assert_equal "gem/ace", reloaded.service_request("req-1").fetch("target").fetch("resource")
+            assert_equal 1, reads, "same immutable accepted JSON is read once"
+            assert_equal 2, callbacks, "terminal callback is fresh even on raw record hit"
+            corrupt = true
+            assert_raises(AttemptErrors::ReceiptRejected) { reloaded.service_request("req-1") }
+            corrupt = false
+            assert_equal "succeeded", reloaded.service_request("req-1").fetch("state")
+            assert_equal 2, reads, "failed callback evicts the raw slot"
+          end
+          reloaded.service_request("req-1")
+          assert_equal 3, reads, "raw record cannot cross a wire operation"
+          reloaded.instance_variable_set(:@mode, :local)
           assert_raises(AttemptErrors::InvalidState) do
             reloaded.transition_service_request("req-1", state: "failed", validated: true)
           end
