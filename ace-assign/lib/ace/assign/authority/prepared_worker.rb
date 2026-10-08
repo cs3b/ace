@@ -44,6 +44,7 @@ module Ace
           root = queue.activate_original!
           unless root
             @workspace_lease.verify_unchanged!
+            @workspace_lease.close!
             return {"state" => "completed"}
           end
           launcher = @launcher || Molecules::ForkSessionLauncher.new(config: {})
@@ -57,11 +58,10 @@ module Ace
             end
           end
           @workspace_lease.verify_unchanged!
+          @workspace_lease.close!
           result
         rescue SystemCallError, IOError
           raise AttemptErrors::EvidenceUnavailable, "prepared_input_unavailable: published worker queue or provider output is unavailable"
-        ensure
-          @workspace_lease&.close!
         end
       end
     end
