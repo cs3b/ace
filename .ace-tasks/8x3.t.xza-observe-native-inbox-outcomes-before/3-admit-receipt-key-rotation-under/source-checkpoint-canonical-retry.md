@@ -15,3 +15,38 @@ Final executed evidence, under this worktree's .ace-local/test/reports:
 - Prior current successor runs b63f665d2/30 and c768b1115/71 passed before later observation/replay refinements; they are retained but do not replace final proof.
 
 No native/root/systemd/installed/process-identity/external probes ran. Actual sockets, signed receipts, private record store, journal/import CAS and fixed query/confirmation owners executed; excluded native/kernel/provisioning observations are controlled seams. Full selected-entry subprocess/producer composition, maintained context service, explicit original guarded assignment association and dead-launcher pre-return recovery remain required. Canonical superseded replacement-target guard admission remains a separate missing guarded-target join. No family or task success condition is closed here.
+
+## Independent review and integrated verification — 2026-10-08
+
+Root inspected the frozen implementation and failure/race tests. Independent
+reviewer `review_lab_bootstrap` approved the protected CLI/context stack after
+reviewing `0d2a44520`, `7278b8e7a`, and `52bab7b62`. This does not derive approval
+from the failed external provider review. Integration commits are `d5e346be3`,
+`9bf82e842`, and `f1a92addc`; the only conflict retained both changelog entries.
+
+On integrated `f1a92addc`, executed from the respective package directories:
+
+- Herdr context-owner/direct-effects files: **22 tests / 144 assertions PASS**,
+  no skips, report `345fe8cc-64d8-4646-b7dd-1a2750dae105`, raw seed34739,
+  0.264911s (the rendered summary rounded duration to zero).
+- Assign `endcap_inboxes_test.rb` selections 418, 450, 500, 533:
+  **4 tests / 60 assertions PASS**, report `4e7d6a76-9c79-4124-9c13-e18d41c560ae`.
+  These exercise nil-claim retirement, explicit superseded retry, marker-save /
+  context-save failure, and reconciliation admission between entry and claim.
+
+### Required source consumer follow-up
+
+The reviewer corrected an initially overbroad caller claim after root and author
+identified `ace-hitl/lib/ace/hitl/live_client.rb`: `reconcile` uses a local
+coordinator and raw `Inbox#deliver`; construction uses `Inbox.from_config`.
+This path does not use protected context admission. Neither this review nor
+socket-owner validation establishes exhaustive store/native access confinement.
+Therefore the approval above is limited to the protected CLI/context stack.
+
+Protected LiveClient adoption is required source work owned by the current
+xza.3/gad.8 integration, not an installed-only gad.2 probe. Preserve the historical
+vs2 result. Route supported protected operations through maintained authenticated
+owners; prove marker-save/context-failure causes zero native dispatch and exact
+canonical replay permits one explicit retry. A permanent refusal of required HITL
+delivery is not completion. This source consumer gap and the earlier listed
+producer/service/recovery gaps remain open before family/program acceptance.
