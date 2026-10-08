@@ -71,8 +71,8 @@ module Ace
             else
               deployment_sha = @launch.send(:protected_descriptor_sha256!)
               CampaignConsumerPolicy.new.with(@deployment.project(original_map.fetch("project_id")).fetch("campaign_policy")) do |profiles, held|
-                manager.with_verified_result!(**binding, consumer_profiles: profiles) do |verified|
-                  unless result == manager.accepted_result_snapshot(selected.fetch("campaign_id"))
+                manager.with_verified_result!(**binding, consumer_profiles: profiles) do |_verified, snapshot|
+                  unless result == snapshot
                     raise AttemptErrors::ReceiptRejected, "exported campaign result bytes differ from verified owner"
                   end
                   held.verify_unchanged!

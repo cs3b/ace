@@ -321,17 +321,21 @@ module Ace
             record = store.read(id)
             current = projection(record)
             raise Contract::Invalid, "campaign result is not accepted" unless current["accepted"]
-            approval = current.fetch("rounds").last.fetch("approval")
-            immutable_projection({"schema" => "ace.review.accepted-result/v1", "campaign_id" => id,
-              "accepted" => true, "dry_run" => false, "subject" => current.fetch("subject"),
-              "contract_identity" => current.fetch("contract_identity"), "effective_policy" => current.fetch("effective_policy"),
-              "head" => current.fetch("evidence").fetch("current_head"), "base" => current.fetch("evidence").fetch("current_base"),
-              "producer" => approval.fetch("producer"), "reviewer" => approval.fetch("reviewer"),
-              "result_identity" => current.fetch("result_identity"), "prefix" => {
-                "attempts" => record.fetch("attempts").length, "rounds" => record.fetch("rounds").length,
-                "assessments" => record.fetch("assessments").length,
-                "phases" => record.fetch("phases").length, "execution_attempts" => record.fetch("execution_attempts").length}})
+            accepted_snapshot(record, current)
           end
+        end
+
+        private def accepted_snapshot(record, current)
+          approval = current.fetch("rounds").last.fetch("approval")
+          immutable_projection({"schema" => "ace.review.accepted-result/v1", "campaign_id" => record.fetch("id"),
+            "accepted" => true, "dry_run" => false, "subject" => current.fetch("subject"),
+            "contract_identity" => current.fetch("contract_identity"), "effective_policy" => current.fetch("effective_policy"),
+            "head" => current.fetch("evidence").fetch("current_head"), "base" => current.fetch("evidence").fetch("current_base"),
+            "producer" => approval.fetch("producer"), "reviewer" => approval.fetch("reviewer"),
+            "result_identity" => current.fetch("result_identity"), "prefix" => {
+              "attempts" => record.fetch("attempts").length, "rounds" => record.fetch("rounds").length,
+              "assessments" => record.fetch("assessments").length,
+              "phases" => record.fetch("phases").length, "execution_attempts" => record.fetch("execution_attempts").length}})
         end
 
         # Hold current campaign authority across the fixed receipt/CAS consumer.
@@ -365,7 +369,7 @@ module Ace
                 approval && approval["producer"] == producer && approval["reviewer"] == reviewer
               raise Contract::Invalid, "campaign result does not match current acceptance and expected binding"
             end
-            yield immutable_projection(current)
+            yield immutable_projection(current), accepted_snapshot(record, current)
           end
         end
 
