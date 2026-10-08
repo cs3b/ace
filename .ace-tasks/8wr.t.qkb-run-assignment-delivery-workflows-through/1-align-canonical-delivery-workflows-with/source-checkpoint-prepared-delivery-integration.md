@@ -1,5 +1,11 @@
 # Prepared delivery integration — 2026-10-08
 
+## Current integration regression — main `65c23e89e`
+
+The earlier `70a391ce2` result below remains evidence for that revision only. After original workspace/control integration, root reran the same complete file with `--timeout 120`: **3 tests / 20 assertions, 1 failure and 1 error**, report `.ace-local/test/reports/assign/0af7c1d7-3364-4c4f-8acf-c3ce0f79efd9/`. Both failures stop at `ExecutionScopeNativeOwnerFixture#workspace_exclusion_projection!` with `fixture original lifecycle resource missing`, reached through `LaunchLifecycle#release` from `ProtectedMergeFlowFixture`; the authorization-denial scenario therefore does not reach its intended boundary. The fixture-adoption owner is repairing this exact original resource join without weakening production release checks. Current-main SC2 integration proof is pending that repair and rerun.
+
+Separate maintained registration/parent-cap regression checks passed **5 tests / 84 assertions**, report `.ace-local/test/reports/assign/b2281831-5d49-4edd-929d-b4183747e8a3/`. These do not substitute for the failed delivery scenario.
+
 Independent reviewer `review_lab_bootstrap` approved frozen `375e69468` and
 `250c55d67`: captured shipped child, original PreparedWorker/queue, actual public
 request/status and canonical delivery consumption, then queue completion. Actual
