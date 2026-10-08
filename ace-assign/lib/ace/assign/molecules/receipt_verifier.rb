@@ -252,19 +252,13 @@ module Ace
             return
           end
           require "ace/review"
-          current = Ace::Review::Organisms::CampaignManager.new(repo_root: repo_root).status(campaign["id"])
-          unless result["campaign_id"] == campaign["id"] && result["accepted"] == true &&
-              result["dry_run"] == false && current["accepted"] == true &&
-              result["result_identity"] == current["result_identity"] &&
-              result.dig("evidence", "current_head") == live_head && current.dig("evidence", "current_head") == live_head
-            reject("campaign result is stale, incomplete, blocked or does not match live authority")
-          end
-          approval = current["rounds"].last["approval"]
-          unless approval["producer"] == data.dig("producer", "actor") &&
-              approval["reviewer"] == data.dig("review", "reviewer", "actor") &&
-              approval["head"] == data["head"]
-            reject("campaign producer/reviewer attribution does not match independently validated receipt")
-          end
+          manager = Ace::Review::Organisms::CampaignManager.new(repo_root: repo_root)
+          current = manager.status(campaign["id"])
+          reject("campaign result ID differs from receipt") unless result["campaign_id"] == campaign["id"]
+          manager.with_verified_result!(result: result, subject: current.fetch("subject"),
+            contract_identity: current.fetch("contract_identity"), policy: current.fetch("effective_policy"),
+            head: live_head, base: current.fetch("evidence").fetch("current_base"),
+            producer: data.dig("producer", "actor"), reviewer: data.dig("review", "reviewer", "actor")) { true }
         rescue JSON::ParserError, ArgumentError, TypeError, KeyError => e
           reject("invalid campaign result: #{e.message}")
         end

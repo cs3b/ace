@@ -77,5 +77,13 @@ campaign:
       revision: delivery-v1
       minimum_rounds: 3
       clean_rounds: 2
+      maximum_rounds: 5
+      required_scopes: [full]
+      required_checks: [tests]
+    discovery:
+      revision: discovery-v1
+      minimum_rounds: 2
+      clean_rounds: 1
+      maximum_rounds: 2
       required_scopes: [full]
       required_checks: [tests]

@@ -437,6 +437,10 @@ class CampaignManagerTest < AceReviewTest
     complete = campaign_manager.record_round(campaign["campaign_id"], partial)
     assert_equal 0, complete["clean_streak"]
     [4, 5].each do |n|
+      if n == 5
+        assert_equal "needs_escalation", campaign_manager.status(campaign["campaign_id"])["outcome"]
+        campaign_manager.resume(campaign["campaign_id"], phase_id: "extra", reason: "Need second clean round", route: "review", additional_rounds: 1)
+      end
       input = round_input(n, scopes: %w[one two])
       %w[one two].each { |scope| make_campaign_session(campaign, input, scope: scope) }
       add_campaign_approval(campaign, input) if n == 5
@@ -545,7 +549,7 @@ class CampaignManagerTest < AceReviewTest
     assert_equal 2, blocked["clean_streak"]
     refute blocked["accepted"]
     refute blocked["evidence"]["valid"]
-    assert_includes blocked["reasons"], "later High/Critical assessment requires a completed current review"
+    assert_includes blocked["reasons"], "later required finding assessment requires a completed current review"
     complete = round_input(4, attempt: "complete-after-resolution")
     make_campaign_session(campaign, complete)
     add_campaign_approval(campaign, complete)

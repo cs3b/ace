@@ -201,4 +201,42 @@ class CampaignCommandTest < AceReviewTest
     assert_equal 0, owner.status(campaign["campaign_id"])["completed_rounds"]
   end
 
+  def test_public_resume_assess_and_finish_share_durable_policy_with_dry_run_and_replay
+    campaign = start_campaign
+    id = campaign.fetch("campaign_id")
+    5.times do |n|
+      input = round_input(n)
+      make_campaign_session(campaign, input)
+      campaign_manager.record_round(id, input)
+    end
+    args = ["campaign", "resume", id, "--phase", "authorized", "--reason", "Current approval needs evidence",
+      "--route", "review", "--additional-rounds", "1"]
+    manager = campaign_manager
+    Ace::Review::Organisms::CampaignManager.stub(:new, manager) do
+      before = JSON.parse(command(["campaign", "status", id]))
+      assert_equal "needs_escalation", before.fetch("outcome")
+      assert_equal 1, JSON.parse(command(args + ["--dry-run"])).fetch("remaining_rounds")
+      assert_equal before, JSON.parse(command(["campaign", "status", id]))
+      resumed = JSON.parse(command(args))
+      replayed = JSON.parse(command(args))
+      assert_equal resumed.fetch("result_identity"), replayed.fetch("result_identity")
+      assert_equal 5, replayed.fetch("completed_rounds")
+      output, = capture_io do
+        assert_raises(Ace::Support::Cli::Error) { Ace::Review::CLI.start(["campaign", "finish", id]) }
+      end
+      refute JSON.parse(output).fetch("accepted")
+      assert_includes command(%w[campaign --help]), "assess"
+      assert_includes command(%w[campaign resume --help]), "--additional-rounds"
+      File.write("assessment.json", JSON.generate("id" => "false", "kind" => "repair_attempt",
+        "source_id" => "unverified", "reason" => "Reject fabricated history"))
+      output, = capture_io do
+        assert_raises(Ace::Support::Cli::Error) do
+          Ace::Review::CLI.start(["campaign", "assess", id, "--input", "assessment.json"])
+        end
+      end
+      refute JSON.parse(output).fetch("accepted")
+      assert_equal replayed.fetch("result_identity"), JSON.parse(command(["campaign", "status", id])).fetch("result_identity")
+    end
+  end
+
 end

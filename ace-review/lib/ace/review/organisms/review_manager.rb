@@ -1327,6 +1327,7 @@ module Ace
 
           # v0.13.0 architecture: only supports system/user prompt format
           execution_options = review_data[:candidate_binding] ? {timeout: 900} : {}
+          execution_options[:campaign_binding] = review_data[:campaign_binding] if review_data[:campaign_binding]
           result = executor.execute(
             **execution_options,
             system_prompt: review_data[:system_prompt],
@@ -1386,6 +1387,7 @@ module Ace
           # Execute all models concurrently
           result = executor.execute(
             models: models,
+            campaign_binding: review_data[:campaign_binding],
             system_prompt: review_data[:system_prompt],
             user_prompt: review_data[:user_prompt],
             session_dir: session_dir

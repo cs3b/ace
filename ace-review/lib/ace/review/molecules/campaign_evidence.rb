@@ -180,15 +180,21 @@ module Ace
           true
         end
 
-        def resolution(previous)
+        def reassessment(previous)
           directory = previous["source_id"].split("#", 2).first
           finding = feedback(File.expand_path(directory, @repo_root)).find do |source|
             source["source_id"] == previous["source_id"]
           end
-          unless finding && %w[done invalid].include?(finding["status"])
+          raise Contract::Invalid, "earlier finding source unavailable" unless finding
+          finding.merge("observed_in_round" => false)
+        end
+
+        def resolution(previous)
+          finding = reassessment(previous)
+          unless %w[done invalid].include?(finding["status"])
             raise Contract::Invalid, "earlier finding needs a verified terminal source disposition"
           end
-          finding.merge("observed_in_round" => false)
+          finding
         end
 
         def approval(reference, record:, binding:, sessions:)

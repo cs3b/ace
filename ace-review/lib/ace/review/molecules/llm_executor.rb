@@ -21,8 +21,29 @@ module Ace
         # @param session_dir [String] the session directory for output
         # @param output_file [String, nil] optional custom output file path
         # @return [Hash] result with success, response, output_file, metadata, and error keys
-        def execute(system_prompt:, user_prompt:, session_dir:, model: nil, output_file: nil, timeout: nil, single_attempt: false)
+        def execute(system_prompt:, user_prompt:, session_dir:, model: nil, output_file: nil, timeout: nil, single_attempt: false, campaign_binding: nil)
           model ||= @default_model
+          if campaign_binding
+            require_relative "../organisms/campaign_manager"
+            repository = campaign_binding.fetch("subject").fetch("repository")
+            root = repository.start_with?("local:") ? repository.delete_prefix("local:") : Dir.pwd
+            manager = Organisms::CampaignManager.new(repo_root: root)
+            campaign_id = campaign_binding.fetch("campaign_id")
+            entry = manager.reserve_execution(campaign_id, round_id: campaign_binding.fetch("round_id"),
+              scope: campaign_binding.fetch("scope"), provider: model)
+            begin
+              result = execute(system_prompt: system_prompt, user_prompt: user_prompt, session_dir: session_dir,
+                model: model, output_file: output_file, timeout: timeout, single_attempt: true)
+              classification = result[:campaign_attempt] || {}
+              manager.complete_execution(campaign_id, execution_id: entry.fetch("id"),
+                status: result[:success] ? "succeeded" : classification.fetch(:status, "failed"),
+                failure: result[:success] ? nil : classification.fetch(:failure, "unclassified"))
+              return result
+            rescue Exception
+              manager.complete_execution(campaign_id, execution_id: entry.fetch("id"), status: "uncertain")
+              raise
+            end
+          end
 
           # Warn if prompt is large
           warn_if_prompt_large(system_prompt, user_prompt, model)

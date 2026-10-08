@@ -4,6 +4,7 @@ require "fileutils"
 require "json"
 require "tempfile"
 require_relative "../atoms/campaign_contract"
+require_relative "../atoms/campaign_policy"
 
 module Ace
   module Review
@@ -67,7 +68,7 @@ module Ace
               envelope["sha256"] == Atoms::CampaignContract.digest(record)
             raise Atoms::CampaignContract::Invalid, "corrupt campaign #{id}: identity or checksum mismatch"
           end
-          %w[subject contract_identity contract policy inherited_findings assessments attempts rounds head_transitions].each do |key|
+          %w[subject contract_identity contract policy profile bounds phases execution_attempts inherited_findings assessments attempts rounds head_transitions].each do |key|
             raise Atoms::CampaignContract::Invalid, "corrupt campaign #{id}: missing #{key}" unless record.key?(key)
           end
           contract = Atoms::CampaignContract
@@ -79,10 +80,52 @@ module Ace
             raise contract::Invalid, "corrupt campaign #{id}: requirements digest mismatch"
           end
           contract.policy!(record["policy"])
-          %w[inherited_findings assessments attempts rounds head_transitions].each do |key|
+          %w[phases execution_attempts inherited_findings assessments attempts rounds head_transitions].each do |key|
             unless record[key].is_a?(Array) && record[key].all? { |entry| entry.is_a?(Hash) }
               raise contract::Invalid, "corrupt campaign #{id}: invalid #{key} records"
             end
+          end
+          bounds = Atoms::CampaignPolicy.bounds!(profile: record.fetch("profile"), policy: record.fetch("policy"))
+          raise contract::Invalid, "stored campaign bounds differ" unless bounds == record.fetch("bounds")
+          phases = record.fetch("phases")
+          initial = {"id" => "initial", "profile" => record.fetch("profile"), "round_start" => 0,
+            "maximum_rounds" => bounds.fetch("maximum_rounds")}
+          raise contract::Invalid, "initial campaign phase differs" unless phases.first == initial
+          phases.each_with_index do |phase, index|
+            contract.id!(phase["id"], "phase ID")
+            unless phase["profile"] == record["profile"] && phase["round_start"].is_a?(Integer) &&
+                phase["round_start"].between?(0, record["rounds"].size) &&
+                phase["maximum_rounds"].is_a?(Integer) && phase["maximum_rounds"].positive?
+              raise contract::Invalid, "invalid campaign phase"
+            end
+            next if index.zero?
+            contract.string!(phase["reason"], "phase reason")
+            contract.string!(phase["route"], "phase route")
+            previous = phases[index - 1]
+            unless phase["round_start"] >= previous["round_start"] &&
+                phase["round_start"] - previous["round_start"] <= previous["maximum_rounds"]
+              raise contract::Invalid, "campaign phase exceeded budget"
+            end
+          end
+          unless phases.map { |phase| phase["id"] }.uniq.size == phases.size &&
+              record["rounds"].size - phases.last["round_start"] <= phases.last["maximum_rounds"]
+            raise contract::Invalid, "campaign phase identity or budget differs"
+          end
+          executions = record.fetch("execution_attempts")
+          executions.each do |entry|
+            contract.id!(entry["id"], "execution ID")
+            unless phases.any? { |phase| phase["id"] == entry["phase_id"] } &&
+                record["attempts"].any? { |attempt| attempt["round_id"] == entry["round_id"] } &&
+                record["policy"]["required_scopes"].include?(entry["scope"])
+              raise contract::Invalid, "execution phase/round/scope differs"
+            end
+            Atoms::CampaignPolicy.retry_decision(attempts: [entry], round_id: entry["round_id"],
+              scope: entry["scope"], provider: entry["provider"])
+          end
+          unless executions.map { |entry| entry["id"] }.uniq.size == executions.size &&
+              executions.group_by { |entry| entry.values_at("phase_id", "round_id", "scope", "provider") }
+                .values.all? { |entries| entries.size <= Atoms::CampaignPolicy::INFRASTRUCTURE_RETRIES + 1 }
+            raise contract::Invalid, "execution identity or retry budget differs"
           end
           (record["attempts"] + record["rounds"]).each do |attempt|
             unless attempt["binding"].is_a?(Hash) && attempt["sessions"].is_a?(Array) &&

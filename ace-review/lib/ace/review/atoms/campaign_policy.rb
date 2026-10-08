@@ -98,7 +98,17 @@ module Ace
               item["observed_in_round"] && %w[high critical].include?(priority) && disposition != "invalid"
             end
             streak = 0 if blocked
-            streak = blocked ? 0 : streak + 1 if rounds.key?(attempt.fetch("attempt_id"))
+            if rounds.key?(attempt.fetch("attempt_id"))
+              round_observations = record.fetch("attempts").select { |item| attempt["round_id"] ? item["round_id"] == attempt["round_id"] : item["attempt_id"] == attempt["attempt_id"] }
+                .flat_map { |item| item.fetch("assessments") }
+              round_blocked = round_observations.any? do |item|
+                correction = corrections[item.fetch("source_id")]
+                priority = correction ? correction.fetch("priority") : item.fetch("priority")
+                disposition = correction ? correction.fetch("disposition") : item.fetch("disposition")
+                item["observed_in_round"] && %w[high critical].include?(priority) && disposition != "invalid"
+              end
+              streak = round_blocked ? 0 : streak + 1
+            end
           end
           streak
         end

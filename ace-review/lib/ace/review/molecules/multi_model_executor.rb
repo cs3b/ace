@@ -35,7 +35,8 @@ module Ace
         # @param user_prompt [String] user prompt
         # @param session_dir [String] session directory for output
         # @return [Hash] results hash with per-model outcomes and summary
-        def execute(models:, system_prompt:, user_prompt:, session_dir:)
+        def execute(models:, system_prompt:, user_prompt:, session_dir:, campaign_binding: nil)
+          @campaign_binding = campaign_binding
           start_time = Time.now
           results = {}
 
@@ -155,6 +156,7 @@ module Ace
                 model: model,
                 session_dir: session_dir,
                 output_file: model_output_file,
+                **(@campaign_binding ? {campaign_binding: @campaign_binding} : {}),
                 timeout: @llm_timeout
               )
             end

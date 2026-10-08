@@ -14,6 +14,7 @@ module Ace
       # owned by ace-assign; finish produces only a validated local result.
       class CampaignManager
         Contract = Atoms::CampaignContract
+        Policy = Atoms::CampaignPolicy
         attr_reader :store
 
         def initialize(repo_root: Dir.pwd, store: nil, revisions: nil, check_evidence: nil, review_evidence: nil, approval_evidence: nil, artifact_paths: {}, candidate_reader: nil)
@@ -32,6 +33,7 @@ module Ace
           effective = policy.nil? ? Ace::Review.get("campaign", "profiles", profile) : policy
           raise Contract::Invalid, "unsupported campaign profile #{profile}" if policy.nil? && effective.nil?
           effective = Contract.policy!(effective)
+          bounds = Policy.bounds!(profile: profile, policy: effective)
           validate_repository({"subject" => subject}, pr_url_for(subject))
           identity = Digest::SHA256.hexdigest(contract)
           store.transaction(dry_run: dry_run) do
@@ -45,7 +47,7 @@ module Ace
             end
             same = active if active && active["contract_identity"] == identity
             if same
-              raise Contract::Invalid, "conflicting policy for existing subject/contract" unless same["policy"] == effective
+              raise Contract::Invalid, "conflicting policy for existing subject/contract" unless same["policy"] == effective && same["profile"] == profile
               raise Contract::Invalid, "conflicting predecessor" if predecessor && same["predecessor"] != predecessor
               next projection(same).merge("dry_run" => dry_run)
             end
@@ -64,7 +66,9 @@ module Ace
             id = allocate_id
             raise Contract::Invalid, "self-referential predecessor" if predecessor == id
             record = {"id" => id, "subject" => subject, "contract_identity" => identity, "contract" => contract,
-              "policy" => effective, "profile" => profile, "created_at" => Time.now.utc.iso8601(6),
+              "policy" => effective, "profile" => profile, "bounds" => bounds,
+              "phases" => [{"id" => "initial", "profile" => profile, "round_start" => 0, "maximum_rounds" => bounds.fetch("maximum_rounds")}],
+              "execution_attempts" => [], "created_at" => Time.now.utc.iso8601(6),
               "predecessor" => previous&.dig("id"), "successor_reason" => reason,
               "inherited_findings" => inherited, "assessments" => [], "attempts" => [], "rounds" => [],
               "head_transitions" => []}
@@ -103,6 +107,7 @@ module Ace
               next projection(record).merge("replayed" => true, "recorded_complete" => prior["completed"])
             end
             raise Contract::Invalid, "campaign contract is superseded" if record["successor"]
+            ensure_review_allowed!(record)
             verify_consumer_policy!(record, consumer_profiles) if consumer_profiles
             before_record.call if before_record
             binding = round_binding(input, record)
@@ -154,15 +159,149 @@ module Ace
           end
         end
 
-        def status(id)
-          store.transaction(dry_run: true) { projection(store.read(id)) }
+        def resume(id, phase_id:, reason:, route:, additional_rounds:, dry_run: false)
+          store.transaction(dry_run: dry_run) do
+            record = store.read(id)
+            raise Contract::Invalid, "campaign contract is superseded" if record["successor"]
+            if record.fetch("execution_attempts").any? { |entry| %w[running uncertain].include?(entry["status"]) }
+              raise Contract::Invalid, "resolve original execution before authorizing a new phase"
+            end
+            phase = Policy.next_phase(record: record, phase_id: phase_id, reason: reason,
+              route: route, additional_rounds: additional_rounds)
+            unless record.fetch("phases").any? { |entry| entry["id"] == phase_id }
+              unless %w[needs_escalation needs_diagnosis execution_failed].include?(projection(record)["outcome"])
+                raise Contract::Invalid, "campaign does not require an authorized next phase"
+              end
+              record.fetch("phases") << phase
+            end
+            store.write(record) unless dry_run
+            projection(record).merge("dry_run" => dry_run)
+          end
+        end
+
+        # Explicit audit events use verified retained finding identity and a
+        # content-addressed supporting artifact; never create review rounds.
+        def assess_finding(id, input, dry_run: false)
+          Contract.object!(input, "assessment")
+          unless (input.keys - %w[id kind source_id reason artifact priority disposition]).empty? &&
+              %w[repair_attempt severity_correction].include?(input["kind"])
+            raise Contract::Invalid, "unsupported assessment fields or kind"
+          end
+          store.transaction(dry_run: dry_run) do
+            record = store.read(id)
+            raise Contract::Invalid, "campaign contract is superseded" if record["successor"]
+            known = record.fetch("assessments").reverse.find { |entry| entry["source_id"] == input["source_id"] }
+            raise Contract::Invalid, "assessment requires an existing source finding" unless known
+            Contract.id!(input["id"], "assessment ID")
+            digest = Contract.digest(input)
+            prior = record.fetch("assessments").find { |entry| entry["assessment_id"] == input["id"] }
+            if prior
+              raise Contract::Invalid, "conflicting assessment replay" unless prior["assessment_digest"] == digest
+              next projection(record).merge("dry_run" => dry_run, "replayed" => true)
+            end
+            Contract.string!(input["reason"], "assessment reason")
+            event = known.merge(input).merge("id" => known.fetch("id"), "observed_in_round" => false,
+              "assessment_id" => input.fetch("id"), "assessment_digest" => digest)
+            if input["kind"] == "severity_correction"
+              verified = @evidence.reassessment(known)
+              unless verified["priority"] == input["priority"] &&
+                  input["disposition"] == (verified["status"] == "invalid" ? "invalid" : (verified["status"] == "done" ? "resolved" : "open"))
+                raise Contract::Invalid, "severity correction requires verified source disposition and priority"
+              end
+              event.merge!(verified).merge!("kind" => "severity_correction", "id" => known.fetch("id"),
+                "reason" => input.fetch("reason"), "disposition" => input.fetch("disposition"))
+            else
+              path, reference = @evidence.artifact(input["artifact"])
+              raise Contract::Invalid, "repair evidence must be nonempty" if File.size(path).zero?
+              event["artifact"] = reference
+            end
+            event["source_artifact"] = event.fetch("artifact")
+            prior = record.fetch("assessments").find { |entry| entry == event }
+            unless prior
+              event["artifact"] = store.snapshot_finding(event.fetch("artifact"), repo_root: @repo_root, dry_run: dry_run)
+              record.fetch("assessments") << event
+            end
+            store.write(record) unless dry_run || prior
+            projection(record).merge("dry_run" => dry_run)
+          end
+        end
+
+        def reserve_execution(id, round_id:, scope:, provider:, dry_run: false)
+          store.transaction(dry_run: dry_run) do
+            record = store.read(id)
+            execution_round_projection!(id, round_id, nil)
+            unless record.fetch("policy").fetch("required_scopes").include?(scope)
+              raise Contract::Invalid, "execution scope is not required"
+            end
+            selected = record.fetch("execution_attempts").select { |entry| entry["phase_id"] == record.fetch("phases").last.fetch("id") }
+            decision = Policy.retry_decision(attempts: selected, round_id: round_id, scope: scope, provider: provider)
+            raise Contract::Invalid, "provider execution blocked: #{decision['next_action']}" unless decision["next_action"] == "execute"
+            entry = {"id" => "execution-#{record.fetch('execution_attempts').size + 1}",
+              "phase_id" => record.fetch("phases").last.fetch("id"), "round_id" => round_id,
+              "scope" => scope, "provider" => provider, "status" => "running"}
+            record.fetch("execution_attempts") << entry
+            store.write(record) unless dry_run
+            entry
+          end
+        end
+
+        def complete_execution(id, execution_id:, status:, failure: nil)
+          unless %w[succeeded failed uncertain].include?(status) &&
+              (status != "failed" || (Policy::TERMINAL_FAILURES + Policy::TRANSIENT_FAILURES).include?(failure))
+            raise Contract::Invalid, "invalid execution completion"
+          end
+          store.transaction do
+            record = store.read(id)
+            entry = record.fetch("execution_attempts").find { |attempt| attempt["id"] == execution_id }
+            raise Contract::Invalid, "original execution unavailable" unless entry
+            if entry["status"] != "running"
+              raise Contract::Invalid, "conflicting execution completion" unless entry.values_at("status", "failure") == [status, failure]
+            else
+              entry.merge!("status" => status, "failure" => failure)
+              store.write(record)
+            end
+            entry
+          end
+        end
+
+        private def execution_failure(record)
+          phase = record.fetch("phases").last.fetch("id")
+          entries = record.fetch("execution_attempts").select { |entry| entry["phase_id"] == phase }
+          entries.group_by { |entry| entry.values_at("round_id", "scope", "provider") }.each do |selection, attempts|
+            round_id, scope, provider = selection
+            state = Policy.retry_decision(attempts: attempts, round_id: round_id, scope: scope, provider: provider)
+            if %w[terminal_failure retries_exhausted resolve_original_attempt].include?(state["next_action"])
+              return "#{state["next_action"]}: #{provider}/#{scope} (#{attempts.last["failure"] || attempts.last["status"]})"
+            end
+          end
+          nil
+        end
+
+        private def ensure_review_allowed!(record)
+          result = Atoms::CampaignProjection.build(record)
+          unless result.fetch("decision").fetch("remaining_rounds").positive?
+            raise Contract::Invalid, "campaign round budget exhausted; authorize a next phase"
+          end
+          unless result.fetch("recurring_blockers").empty?
+            phase = record.fetch("phases").last
+            raise Contract::Invalid, "recurring blocker requires diagnosis" unless phase["route"] == "diagnosis"
+          end
+        end
+
+        def status(id, profile: nil)
+          store.transaction(dry_run: true) do
+            record = store.read(id)
+            raise Contract::Invalid, "campaign profile differs" if profile && record["profile"] != profile
+            projection(record)
+          end
         end
 
         # Produces a stable artifact snapshot without publishing/committing it.
         # Assignment receipt verification rechecks it against live campaign state.
-        def finish(id, dry_run: false)
+        def finish(id, dry_run: false, profile: nil)
           store.transaction(dry_run: dry_run) do
             record = store.read(id)
+            raise Contract::Invalid, "campaign profile differs" if profile && record["profile"] != profile
             begin
               head, base = current_revisions(record)
             rescue Contract::Invalid
@@ -190,7 +329,8 @@ module Ace
               "producer" => approval.fetch("producer"), "reviewer" => approval.fetch("reviewer"),
               "result_identity" => current.fetch("result_identity"), "prefix" => {
                 "attempts" => record.fetch("attempts").length, "rounds" => record.fetch("rounds").length,
-                "assessments" => record.fetch("assessments").length}})
+                "assessments" => record.fetch("assessments").length,
+                "phases" => record.fetch("phases").length, "execution_attempts" => record.fetch("execution_attempts").length}})
           end
         end
 
@@ -210,7 +350,7 @@ module Ace
             compact = result["schema"] == "ace.review.accepted-result/v1"
             if compact
               prefix = accepted_snapshot_prefix!(record, result)
-              unless prefix.values_at("attempts", "rounds", "assessments").map(&:length) == record.values_at("attempts", "rounds", "assessments").map(&:length)
+              unless prefix.values_at("attempts", "rounds", "assessments", "phases", "execution_attempts").map(&:length) == record.values_at("attempts", "rounds", "assessments", "phases", "execution_attempts").map(&:length)
                 raise Contract::Invalid, "campaign result prefix is no longer current"
               end
             end
@@ -265,7 +405,7 @@ module Ace
         private def accepted_snapshot_prefix!(record, result)
           prefix = result["prefix"]
           unless result.keys.sort == ACCEPTED_SNAPSHOT_FIELDS && result["schema"] == "ace.review.accepted-result/v1" &&
-              prefix.is_a?(Hash) && prefix.keys.sort == %w[assessments attempts rounds] &&
+              prefix.is_a?(Hash) && prefix.keys.sort == %w[assessments attempts execution_attempts phases rounds] &&
               prefix.all? { |key, count| count.is_a?(Integer) && count.between?(0, record.fetch(key).length) } &&
               prefix.fetch("rounds").positive? && result["accepted"] == true && result["dry_run"] == false &&
               result.values_at("campaign_id", "subject", "contract_identity", "effective_policy") ==
@@ -286,7 +426,8 @@ module Ace
 
         private def result_identity_for(record, head, base)
           Contract.digest({"campaign_id" => record["id"], "contract_identity" => record["contract_identity"],
-            "policy" => record["policy"], "attempts" => record["attempts"], "assessments" => record["assessments"],
+            "policy" => record["policy"], "profile" => record["profile"], "bounds" => record["bounds"],
+            "phases" => record["phases"], "execution_attempts" => record["execution_attempts"], "attempts" => record["attempts"], "assessments" => record["assessments"],
             "current_head" => head, "current_base" => base, "successor" => record["successor"]})
         end
 
@@ -334,6 +475,7 @@ module Ace
         private def execution_round_projection!(id, round_id, consumer_profiles)
           record = store.read(id)
           raise Contract::Invalid, "campaign contract is superseded" if record["successor"]
+          ensure_review_allowed!(record)
           attempt = record["attempts"].find { |entry| entry["round_id"] == round_id }
           unless attempt && record["rounds"].none? { |entry| entry["round_id"] == round_id }
             raise Contract::Invalid, "campaign execution requires a pinned incomplete round"
@@ -376,6 +518,7 @@ module Ace
           store.transaction(dry_run: true) do
             record = store.read(id)
             raise Contract::Invalid, "campaign contract is superseded" if record["successor"]
+            ensure_review_allowed!(record)
             attempt = record["attempts"].find { |a| a["round_id"] == round_id }
             raise Contract::Invalid, "pin round #{round_id} with record-round before collecting reports" unless attempt
             binding = attempt["binding"]
@@ -559,25 +702,34 @@ module Ace
           source_base = round&.dig("binding", "base")
           later_attempts = round ? record["attempts"].drop_while { |a| a["attempt_id"] != round["attempt_id"] }.drop(1) : []
           blocker_ids = (record["assessments"] + record["inherited_findings"]).select do |finding|
-            %w[high critical].include?(finding["priority"]) && finding["disposition"] != "invalid"
+            %w[high critical medium].include?(finding["priority"]) && finding["disposition"] != "invalid"
           end.map { |finding| finding["id"] }
           later_blocker_update = later_attempts.flat_map { |attempt| attempt["assessments"] }.any? do |finding|
             blocker_ids.include?(finding["id"])
           end
           current_evidence = !!(round && available && head && base && source_head == head && source_base == base &&
             clean_candidate? && !later_blocker_update)
-          blockers = result["open_findings"].select { |f| %w[critical high].include?(f["priority"]) }
+          blockers = result["open_findings"].select { |f| %w[critical high medium].include?(f["priority"]) }
           reasons = []
           reasons << revision_error if revision_error
           reasons << "campaign contract superseded by #{successor}" if successor
           reasons << "search has not converged" unless result["search_converged"]
-          reasons << "unresolved High/Critical findings" unless blockers.empty?
-          reasons << "later High/Critical assessment requires a completed current review" if later_blocker_update
+          reasons << "unresolved required High/Critical/Medium findings" unless blockers.empty?
+          reasons << "later required finding assessment requires a completed current review" if later_blocker_update
           reasons << (error || "review evidence is stale or incomplete") unless current_evidence
           reasons << "independent current-head approval and executed required checks missing" unless round&.dig("approval")
-          result.merge("active_contract" => successor.nil?, "superseded_by" => successor, "evidence" => {"valid" => current_evidence, "available" => available,
+          phase = record.fetch("phases").last
+          decision = Policy.decision(profile: record.fetch("profile"),
+            bounds: record.fetch("bounds").merge("maximum_rounds" => phase.fetch("maximum_rounds")),
+            phase_rounds: record.fetch("rounds").size - phase.fetch("round_start"),
+            completed_rounds: record.fetch("rounds").size, clean_streak: result.fetch("clean_streak"),
+            accepted: reasons.empty?, recurrence: !result.fetch("recurring_blockers").empty?,
+            execution_failure: execution_failure(record))
+          reasons << decision.fetch("execution_failure") if decision["execution_failure"]
+          reasons << "recurring blocker requires diagnosis" unless result.fetch("recurring_blockers").empty?
+          result.merge(decision).merge("decision" => decision, "active_contract" => successor.nil?, "superseded_by" => successor, "evidence" => {"valid" => current_evidence, "available" => available,
             "source_head" => source_head, "current_head" => head, "source_base" => source_base,
-            "current_base" => base, "reason" => error || revision_error}, "accepted" => reasons.empty?, "reasons" => reasons,
+            "current_base" => base, "reason" => error || revision_error}, "accepted" => decision.fetch("accepted"), "reasons" => reasons,
             "result_identity" => result_identity_for(record, head, base))
         end
 

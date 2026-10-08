@@ -251,6 +251,39 @@ module Ace
         verify_raises(data) { |e| assert_includes e.message, "digest mismatch" }
       end
 
+      def test_local_campaign_compact_snapshot_uses_existing_manager_verification
+        require "ace/review"
+        reference = {"path" => "campaign.json", "sha256" => "b" * 64}
+        snapshot = {"schema" => "ace.review.accepted-result/v1", "campaign_id" => "local-campaign", "accepted" => true,
+          "head" => HEAD_B, "base" => HEAD_A, "prefix" => {"attempts" => 3, "rounds" => 3, "assessments" => 0,
+            "phases" => 1, "execution_attempts" => 3}}
+        data = {"operation" => Molecules::ReceiptVerifier::REVIEW_OPERATION, "verdict" => "succeeded",
+          "campaign" => {"id" => "local-campaign", "result" => reference}, "artifacts" => [reference],
+          "producer" => {"actor" => "worker"}, "review" => {"reviewer" => {"actor" => "independent"}}}
+        current = {"subject" => {"repository" => "local:repo", "local_candidate_id" => "candidate"},
+          "contract_identity" => "c" * 64, "effective_policy" => {"revision" => "frozen"},
+          "evidence" => {"current_base" => HEAD_A}}
+        manager = Object.new
+        captured = nil
+        manager.define_singleton_method(:status) { |_id| current }
+        manager.define_singleton_method(:with_verified_result!) do |**args, &block|
+          captured = args
+          block.call
+        end
+        verifier = Molecules::ReceiptVerifier.new
+        verifier.stub(:artifact_bytes, JSON.generate(snapshot)) do
+          Ace::Review::Organisms::CampaignManager.stub(:new, manager) do
+            verifier.send(:verify_campaign, data, repo_root: @repo_root, live_head: HEAD_B)
+          end
+        end
+        assert_equal snapshot, captured.fetch(:result)
+        assert_equal HEAD_B, captured.fetch(:head)
+        assert_equal HEAD_A, captured.fetch(:base)
+        assert_equal "worker", captured.fetch(:producer)
+        assert_equal "independent", captured.fetch(:reviewer)
+        assert_equal current.fetch("effective_policy"), captured.fetch(:policy)
+      end
+
       def test_protected_campaign_uses_exact_source_owner_result_without_ambient_store
         data = review_receipt_data
         result = {"campaign_id" => "source-campaign", "accepted" => true, "result_identity" => "a" * 64}

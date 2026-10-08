@@ -9,8 +9,10 @@ module Ace
             desc "Inspect durable history and current evidence currency"
             argument :id, required: true, desc: "Durable campaign ID"
 
+            option :profile, desc: "Expected frozen campaign profile"
+
             def call(id:, **options)
-              payload = run(options) { |manager| manager.status(id) }
+              payload = run(options) { |manager| manager.status(id, profile: options[:profile]) }
               # Read-only status succeeds for known stale or blocked state.
               0
             end

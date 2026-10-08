@@ -114,13 +114,16 @@ module Ace
           object!(value, "policy")
           required = %w[revision minimum_rounds clean_rounds required_scopes required_checks]
           raise Invalid, "policy requires #{required.join(', ')}" unless (required - value.keys).empty?
-          raise Invalid, "unknown policy fields" unless (value.keys - required).empty?
+          raise Invalid, "unknown policy fields" unless (value.keys - required - ["maximum_rounds"]).empty?
           string!(value["revision"], "policy revision")
           %w[minimum_rounds clean_rounds].each do |key|
             raise Invalid, "#{key} must be a positive integer" unless value[key].is_a?(Integer) && value[key].positive?
           end
           strings!(value["required_scopes"], "required_scopes").each { |v| id!(v, "scope") }
           strings!(value["required_checks"], "required_checks")
+          if value.key?("maximum_rounds") && !(value["maximum_rounds"].is_a?(Integer) && value["maximum_rounds"].positive?)
+            raise Invalid, "maximum_rounds must be a positive integer"
+          end
           canonical(value)
         end
       end
