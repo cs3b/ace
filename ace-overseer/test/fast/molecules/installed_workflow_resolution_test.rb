@@ -105,19 +105,9 @@ class InstalledConsumerEnvironment
   # dependency checking. ace-overseer is installed separately with
   # --ignore-dependencies: the probe only reads its packaged payload (workflow +
   # nav registration) and never activates its deeper runtime closure
-  # (ace-assign, ace-task, ace-llm, ...), which would pull external gems and
-  # break hermeticity.
-  SUPPORT_CLOSURE = %w[
-    ace-support-config
-    ace-support-fs
-    ace-support-cli
-    ace-support-core
-    ace-git
-    ace-git-github
-    ace-compressor
-    ace-support-nav
-    ace-bundle
-  ].freeze
+  # (ace-assign, ace-task, ace-llm, ...). The actual probe closure below is
+  # recursively installed, including isolated copies of external dependencies.
+  PROBE_GEMS = %w[ace-support-nav ace-bundle].freeze
 
   GEM_NAME = "ace-overseer"
 
@@ -153,7 +143,7 @@ class InstalledConsumerEnvironment
     @gem_home = File.join(@root, "gems")
     @home = File.join(@root, "home")
     @probe_cwd = File.join(@root, "cwd")
-    FileUtils.mkdir_p([@gem_home, @home, @probe_cwd])
+    FileUtils.mkdir_p([@gem_home, @home, @probe_cwd, File.join(@root, "tmp")])
     install_closure
   end
 
@@ -197,7 +187,8 @@ class InstalledConsumerEnvironment
   private
 
   def install_closure
-    SUPPORT_CLOSURE.each { |gem_name| install_artifact(build_gem_artifact(gem_name)) }
+    @installed = {}
+    PROBE_GEMS.each { |gem_name| install_dependency(gem_name) }
     install_artifact(build_gem_artifact(GEM_NAME), ignore_dependencies: true)
 
     bin = File.join(gem_home, "bin", "ace-nav")
@@ -216,19 +207,49 @@ class InstalledConsumerEnvironment
     ).install
   end
 
+  def install_dependency(name, requirement = Gem::Requirement.default)
+    if (spec = @installed[name])
+      raise "dependency mismatch #{name}" unless requirement.satisfied_by?(spec.version)
+      return
+    end
+
+    package_root = File.expand_path("../../../..", __dir__)
+    source = File.join(package_root, name)
+    spec = if name.start_with?("ace-")
+      Dir.chdir(source) { Gem::Specification.load("#{name}.gemspec") }
+    else
+      Gem::Specification.find_by_name(name, requirement)
+    end
+    raise "missing/mismatched dependency #{name}" unless spec && requirement.satisfied_by?(spec.version)
+
+    @installed[name] = spec
+    spec.runtime_dependencies.each { |dependency| install_dependency(dependency.name, dependency.requirement) }
+    if name.start_with?("ace-")
+      install_artifact(build_gem_artifact(name))
+    else
+      # Copy complete local dependency payloads; the child never sees host GEM_PATH.
+      FileUtils.mkdir_p(File.join(gem_home, "gems"))
+      FileUtils.cp_r(spec.full_gem_path, File.join(gem_home, "gems", spec.full_name))
+      FileUtils.mkdir_p(File.join(gem_home, "specifications"))
+      File.write(File.join(gem_home, "specifications", "#{spec.full_name}.gemspec"), spec.to_ruby)
+      if File.directory?(spec.extension_dir)
+        destination = File.join(gem_home, "extensions", Gem::Platform.local.to_s, Gem.extension_api_version, spec.full_name)
+        FileUtils.mkdir_p(File.dirname(destination))
+        FileUtils.cp_r(spec.extension_dir, destination)
+      end
+    end
+  end
+
   def build_gem_artifact(gem_name)
     package_root = File.expand_path("../../../..", __dir__)
     gem_root = File.join(package_root, gem_name)
     spec = Dir.chdir(gem_root) { Gem::Specification.load("#{gem_name}.gemspec") }
     raise "could not load gemspec for #{gem_name}" unless spec
 
-    artifact = Dir.chdir(gem_root) { Gem::Package.build(spec, true) }
     staging = File.join(@root, "artifacts")
     FileUtils.mkdir_p(staging)
-    staged_path = File.join(staging, artifact)
-    FileUtils.mv(File.join(gem_root, artifact), staged_path)
+    staged_path = File.join(staging, "#{spec.full_name}.gem")
+    Dir.chdir(gem_root) { Gem::Package.build(spec, true, false, staged_path) }
     staged_path
   end
 end
-
-Minitest.after_run { InstalledConsumerEnvironment.cleanup_all }
