@@ -77,8 +77,9 @@ module Ace
             "payload_sha256" => Digest::SHA256.hexdigest("message"), "receipt_key_sha256" => Digest::SHA256.hexdigest(@key.public_to_der))
           request = {"version" => 1, "operation" => "inbox_context_original", "mutation_id" => nil,
             "project_id" => "project", "params" => params}
+          start_context_pipeline(File.dirname(@context.fetch("deliveries_dir")))
           before = @journal.ref_value
-          result = query.dispatch(request: request, peer: @context_peer, role: :context_owner).fetch(:data)
+          result = @context_completion.original!(**params.reject { |key, _| key == "mapping_id" }.transform_keys(&:to_sym))
           assert_equal child, result.fetch("process_binding")
           assert_equal guard, result.fetch("guarded_origin")
           refute result.fetch("registered")
@@ -86,6 +87,7 @@ module Ace
           assert result.frozen?
           assert result.fetch("process_binding").frozen?
           assert_equal before, @journal.ref_value
+          stop_context_pipeline
           assert_raises(AttemptErrors::EvidenceUnavailable) do
             query.dispatch(request: request.merge("params" => params.merge("purpose" => "deliver")), peer: @context_peer, role: :context_owner)
           end

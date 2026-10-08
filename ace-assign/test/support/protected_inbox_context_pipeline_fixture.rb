@@ -2,6 +2,7 @@
 require "ace/herdr/organisms/inbox_context_owner"
 require "ace/herdr/organisms/inbox_context_server"
 require "ace/assign/authority/inbox_context_completion"
+require "ace/assign/authority/inbox_context_original"
 require "ace/assign/authority/router"
 require "ace/assign/authority/server"
 require_relative "../../../ace-herdr/test/support/inbox_context_owner_fixture"
@@ -67,7 +68,8 @@ module Ace
         @context_clients[context_id] = client
         @query_owner = Authority::InboxContextCompletion.new(deployment: @deployment, history: @history, authority_id: "authority",
           journals: {"project" => @journal}, kernel: @kernel)
-        @query_router = Authority::Router.new(launch: @query_owner)
+        @query_router = Authority::Router.new(launch: @query_owner, handlers: [Authority::InboxContextOriginal.new(
+          deployment: @deployment, history: @history, authority_id: "authority", journals: {"project" => @journal}, kernel: @kernel)])
         unless installed
         @deployment.define_singleton_method(:verify_composition!) { |*args, **keywords| true }
         @deployment.define_singleton_method(:authority) { |_| {"uid" => 13000, "gid" => 13000, "groups" => [13000]} }

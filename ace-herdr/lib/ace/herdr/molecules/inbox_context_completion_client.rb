@@ -3,6 +3,7 @@
 require "ace/runtime/molecules/protected_linux"
 require "ace/runtime/molecules/protected_socket"
 require_relative "inbox_context_effect_binding"
+require_relative "guarded_native_origin"
 
 module Ace
   module Herdr
@@ -23,6 +24,28 @@ module Ace
           unless binding.values_at("project_id", "mapping_id") == [@project_id, @mapping_id] && InboxContextEffectBinding.digest?(reconciliation_digest)
             raise ValidationError, "context completion selection differs"
           end
+          params = binding.slice("mapping_id", "assignment_id", "attempt_id", "inbox_context_id", "event_id")
+            .merge("effect_binding" => binding, "reconciliation_digest" => reconciliation_digest)
+          query!(operation: "inbox_context_completion", params: params) { |data| verify_data!(data, binding, reconciliation_digest) }
+        end
+
+        # Identity evidence only: callers must independently own admission and
+        # exact native context/thread selection before any native effect.
+        def original!(assignment_id:, attempt_id:, event_id:, inbox_context_id:, purpose:, payload_sha256:, receipt_key_sha256:)
+          params = {"mapping_id" => @mapping_id, "assignment_id" => assignment_id, "attempt_id" => attempt_id,
+            "event_id" => event_id, "inbox_context_id" => inbox_context_id, "purpose" => purpose,
+            "payload_sha256" => payload_sha256, "receipt_key_sha256" => receipt_key_sha256}
+          unless %w[assignment_id attempt_id event_id inbox_context_id mapping_id].all? { |key|
+              params[key].is_a?(String) && params[key].match?(/\A[A-Za-z0-9][A-Za-z0-9._-]{0,127}\z/) } &&
+              %w[enqueue deliver].include?(purpose) && %w[payload_sha256 receipt_key_sha256].all? { |key| InboxContextEffectBinding.digest?(params[key]) }
+            raise ValidationError, "original context selection differs"
+          end
+          query!(operation: "inbox_context_original", params: params) { |data| verify_original!(data, params) }
+        end
+
+        private
+
+        def query!(operation:, params:)
           path = @authority.fetch("socket_path")
           @wire.root_path!(File.dirname(path), directory: true, owner: @authority.fetch("uid"))
           endpoint = @wire.socket_identity(path)
@@ -34,9 +57,7 @@ module Ace
               raise ValidationError, "context completion authority principal differs"
             end
             @kernel.live!(original)
-            params = binding.slice("mapping_id", "assignment_id", "attempt_id", "inbox_context_id", "event_id")
-              .merge("effect_binding" => binding, "reconciliation_digest" => reconciliation_digest)
-            @wire.write(socket, {"version" => 1, "project_id" => @project_id, "operation" => "inbox_context_completion",
+            @wire.write(socket, {"version" => 1, "project_id" => @project_id, "operation" => operation,
               "mutation_id" => nil, "params" => params}, deadline: deadline, limit: LIMIT)
             socket.shutdown(Socket::SHUT_WR)
             reply = @wire.read(socket, deadline: deadline, limit: LIMIT)
@@ -48,13 +69,41 @@ module Ace
                 reply["transport"] == {"replayed" => false}
               raise ValidationError, "context completion canonical query refused"
             end
-            verify_data!(reply.fetch("data"), binding, reconciliation_digest)
+            yield reply.fetch("data")
           end
         rescue KeyError, TypeError, ArgumentError, Ace::Runtime::RuntimeUnavailableError, SystemCallError, IOError
-          raise ValidationError, "context completion is unavailable"
+          raise ValidationError, "context canonical query is unavailable"
         end
 
-        private
+        def verify_original!(data, params)
+          fields = %w[assignment_id attempt_id commit event_id guarded_origin inbox_context_id mapping_id native_binding original_binding_digest process_binding project_id purpose registered registration schema]
+          registration = params.slice("event_id", "attempt_id", "payload_sha256", "receipt_key_sha256")
+          unless data.is_a?(Hash) && data.keys.sort == fields && data["schema"] == "ace.assign.inbox-context-original/v1" &&
+              data.slice("assignment_id", "attempt_id", "event_id", "inbox_context_id", "mapping_id", "purpose") ==
+                params.slice("assignment_id", "attempt_id", "event_id", "inbox_context_id", "mapping_id", "purpose") &&
+              data["project_id"] == @project_id && data["registration"] == registration &&
+              [true, false].include?(data["registered"]) && (params.fetch("purpose") != "deliver" || data["registered"]) &&
+              data["commit"].is_a?(String) && data["commit"].match?(/\A[0-9a-f]{40}\z/) &&
+              InboxContextEffectBinding.digest?(data["original_binding_digest"]) &&
+              data["process_binding"].is_a?(Hash) && data["native_binding"].is_a?(Hash)
+            raise ValidationError, "original context projection differs"
+          end
+          process = data.fetch("process_binding")
+          native = data.fetch("native_binding")
+          origin = process["native_origin"]
+          unless process.keys.sort == %w[native_origin pane process_identity runtime session shell_identity terminal_id] &&
+              native.keys.sort == %w[mount_namespace_identity network_admission_event_id network_namespace_identity resource_identities resource_observer_identity scope_binding_event_id scope_generation server_identity service_invocation_id socket_identity workspace_id] &&
+              origin.is_a?(Hash) && origin.keys.sort == %w[command cwd pane server_identity socket_identity tab workspace] &&
+              process["runtime"] == "herdr" && process["shell_identity"] == process["process_identity"] &&
+              process["session"] == native["workspace_id"] && origin["workspace"] == process["session"] &&
+              origin["pane"] == process["pane"] && origin["server_identity"] == native["server_identity"] &&
+              origin["socket_identity"] == native["socket_identity"] && native["server_identity"].is_a?(Hash) &&
+              process.dig("process_identity", "parent_pid") == native.dig("server_identity", "pid")
+            raise ValidationError, "original context native association differs"
+          end
+          GuardedNativeOrigin.verify!(data.fetch("guarded_origin"), terminal_id: process.fetch("terminal_id"), child: process.fetch("process_identity"))
+          immutable(data)
+        end
 
         def verify_data!(data, expected, reconciliation_digest)
           unless data.is_a?(Hash) && data.keys.sort == FIELDS && data["schema"] == "ace.assign.inbox-context-completion/v1" &&
