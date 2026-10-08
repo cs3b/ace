@@ -86,25 +86,49 @@ class ProtectedCleanupOwnerClientTest < Minitest::Test
   end
 
   def test_inspection_actual_original_input_challenge_half_close_and_bounded_result
-    request = execute_request.merge("challenge_ref" => {"challenge_event_digest" => "6" * 64})
-    bytes = "Controlled physical inspection bytes, not an accepted no-effect verdict."
-    ref = {"path" => "/fixed/inspection.json", "bytes" => bytes.bytesize, "sha256" => Digest::SHA256.hexdigest(bytes)}
-    server = lambda do |socket, root|
-      frame = Wire.read(socket, deadline: Wire.deadline(5), limit: 65_536)
-      assert_equal request.merge("schema" => Client::SCHEMA, "kind" => "inspect", "operation_owner_binding_digest" => Ace::Assign::Atoms::EvidenceDigest.digest(binding)), frame
-      assert_equal "", socket.read
-      Wire.write(socket, {"schema" => Client::SCHEMA, "kind" => "inspection", "request_id" => "request",
-        "input_digest" => request.fetch("input_digest"), "inspection_ref" => ref}, deadline: Wire.deadline(5))
-      codec = Ace::Assign::Authority::TransferCodec.new(root: root)
-      codec.send(socket, parts: [bytes], descriptor: codec.descriptor([bytes], purpose: :artifacts), purpose: :artifacts, deadline: Wire.deadline(5))
-      socket.close
+    %w[inspection completed-result].each do |reply_kind|
+      request = execute_request.merge("challenge_ref" => {"challenge_event_digest" => "6" * 64})
+      bytes = "Controlled physical inspection bytes, not an accepted no-effect verdict."
+      ref = {"path" => "/fixed/inspection.json", "bytes" => bytes.bytesize, "sha256" => Digest::SHA256.hexdigest(bytes)}
+      server = lambda do |socket, root|
+        frame = Wire.read(socket, deadline: Wire.deadline(5), limit: 65_536)
+        assert_equal request.merge("schema" => Client::SCHEMA, "kind" => "inspect", "operation_owner_binding_digest" => Ace::Assign::Atoms::EvidenceDigest.digest(binding)), frame
+        assert_equal "", socket.read
+        Wire.write(socket, {"schema" => Client::SCHEMA, "kind" => reply_kind, "request_id" => "request",
+          "input_digest" => request.fetch("input_digest"), (reply_kind == "inspection" ? "inspection_ref" : "receipt_ref") => ref}, deadline: Wire.deadline(5))
+        codec = Ace::Assign::Authority::TransferCodec.new(root: root)
+        codec.send(socket, parts: [bytes], descriptor: codec.descriptor([bytes], purpose: :artifacts), purpose: :artifacts, deadline: Wire.deadline(5))
+        socket.close
+      end
+      exchange(server: server) do |client|
+        result = client.inspect!(request: request, operation_owner_binding: binding)
+        assert_equal(reply_kind == "inspection" ? "failed-no-effect" : "succeeded", result.fetch(:kind))
+        assert_equal bytes, result.fetch(:bytes)
+        assert_equal ref, result.fetch(:receipt_ref)
+        assert result.frozen?
+        assert result.fetch(:receipt_ref).frozen?
+      end
     end
-    exchange(server: server) do |client|
-      result = client.inspect!(request: request, operation_owner_binding: binding)
-      assert_equal bytes, result.fetch(:bytes)
-      assert_equal ref, result.fetch(:inspection_ref)
-      assert result.frozen?
-      assert result.fetch(:inspection_ref).frozen?
+  end
+
+  def test_inspection_unknown_mixed_and_oversized_results_refuse_before_body
+    request = execute_request.merge("challenge_ref" => {"challenge_event_digest" => "6" * 64})
+    ref = {"path" => "/fixed/result.json", "bytes" => 1, "sha256" => "a" * 64}
+    base = {"schema" => Client::SCHEMA, "kind" => "completed-result", "request_id" => "request",
+      "input_digest" => request.fetch("input_digest"), "receipt_ref" => ref}
+    [base.merge("kind" => "unknown"), base.merge("inspection_ref" => ref),
+      base.merge("receipt_ref" => ref.merge("bytes" => 65_537)),
+      base.merge("receipt_ref" => ref.merge("bytes" => 0)), base.merge("input_digest" => "b" * 64)].each do |reply|
+      server = lambda do |socket, _|
+        Wire.read(socket, deadline: Wire.deadline(5), limit: 65_536)
+        assert_equal "", socket.read
+        Wire.write(socket, reply, deadline: Wire.deadline(5))
+        socket.close
+      end
+      exchange(server: server) do |client|
+        error = !reply.dig("receipt_ref", "bytes").between?(1, 65_536) ? ArgumentError : SecurityError
+        assert_raises(error) { client.inspect!(request: request, operation_owner_binding: binding) }
+      end
     end
   end
 

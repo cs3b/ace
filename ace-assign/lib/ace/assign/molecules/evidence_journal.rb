@@ -982,7 +982,11 @@ module Ace
             terminal = %w[succeeded failed rejected failed-settled].include?(existing["state"])
             settlement = replacement["state"] == "failed-settled" &&
               (existing["state"] == "failed" || (existing["state"] == "rejected" && existing["consumed"] != false))
-            if terminal && !settlement && !challenge_update
+            recovered_cleanup = @mode == :protected && pending && pending[:operation] == "complete_service" &&
+              existing["operation"] == "prune-preserved-workspace" && existing["state"] == "failed" &&
+              existing["dispatch_phase"] == "dispatch_started" && existing["completion_digest"].nil? &&
+              replacement["state"] == "succeeded"
+            if terminal && !settlement && !challenge_update && !recovered_cleanup
               raise AttemptErrors::InvalidState, "Service request #{request_id} is terminal"
             end
             mutable = %w[state receipt reason claimed_at failed_at dispatch_phase no_effect_challenge

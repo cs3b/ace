@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Import positively authenticated retained cleanup success through inspection without rerunning removal; replacement root readback cannot manufacture original input inhibition.
+
 - Pass the authenticated receiver process to cleanup execution and inspection so the installer can revalidate the actual caller, including a restarted inspection receiver.
 
 ### Fixed

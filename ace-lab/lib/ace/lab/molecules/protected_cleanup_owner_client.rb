@@ -113,16 +113,19 @@ module Ace
             socket.shutdown(Socket::SHUT_WR)
             guarded = Ace::Runtime::Molecules::ProtectedSocket::Ingress.new(socket)
             reply = @wire.read(guarded, deadline: deadline, limit: LIMIT)
-            unless reply.is_a?(Hash) && reply.keys.sort == %w[input_digest inspection_ref kind request_id schema] &&
-                reply.values_at("schema", "kind", "request_id", "input_digest") == [SCHEMA, "inspection", request.fetch("request_id"), request.fetch("input_digest")]
+            success = reply.is_a?(Hash) && reply["kind"] == "completed-result"
+            ref_key = success ? "receipt_ref" : "inspection_ref"
+            unless reply.is_a?(Hash) && reply.keys.sort == (["input_digest", ref_key, "kind", "request_id", "schema"].sort) &&
+                reply.values_at("schema", "kind", "request_id", "input_digest") ==
+                  [SCHEMA, success ? "completed-result" : "inspection", request.fetch("request_id"), request.fetch("input_digest")]
               raise SecurityError, "cleanup inspection result differs"
             end
-            ref = reply.fetch("inspection_ref")
+            ref = reply.fetch(ref_key)
             Atoms::ProtectedWorkspacePruneInput.reference!(ref)
             descriptor = {"version" => 1, "bytes" => ref.fetch("bytes"), "sha256" => ref.fetch("sha256"), "parts" => [ref.slice("bytes", "sha256")]}
             @codec.receive(guarded, descriptor: descriptor, purpose: :artifacts, deadline: deadline) do |received|
               Atoms::ProtectedWorkspacePruneInput.freeze_value(ref)
-              {inspection_ref: ref, bytes: received.bytes.freeze}.freeze
+              {kind: success ? "succeeded" : "failed-no-effect", receipt_ref: ref, bytes: received.bytes.freeze}.freeze
             end
           end
         end

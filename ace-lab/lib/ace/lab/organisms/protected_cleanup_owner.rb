@@ -226,40 +226,52 @@ module Ace
         private
 
         def inspection(socket, frame, context, original, deadline, receiver_peer:)
-          unless context.fetch("record").fetch("operation_owner_binding") == original
+          original_owner = Ace::Assign::Atoms::EvidenceDigest.digest(context.fetch("record").fetch("operation_owner_binding")) ==
+            Ace::Assign::Atoms::EvidenceDigest.digest(original)
+          if original_owner
+            executable = frame.except("challenge_ref").merge("kind" => "execute")
+            key = Ace::Assign::Atoms::EvidenceDigest.digest(executable)
+            @lock.synchronize do
+              request = context.fetch("record").fetch("request_id")
+              retained = @consumed[request]
+              if retained
+                raise SecurityError, "cleanup original inspection input differs" unless retained.fetch(:key) == key
+              else
+                raise Ace::Runtime::RuntimeUnavailableError, "cleanup lifetime capacity unavailable" if @consumed.size >= MAX_RETAINED
+                retained = @consumed[request] = {key: key, state: :inhibited}
+              end
+              retained[:inhibited] = true
+              retained[:state] = :inhibited if retained[:state] == :invoking
+              while retained[:state] == :invoked
+                remaining = deadline - Process.clock_gettime(Process::CLOCK_MONOTONIC)
+                raise Ace::Runtime::RuntimeUnavailableError, "cleanup original effect remains unconfirmed" unless remaining.positive?
+                @changed.wait(@lock, remaining)
+              end
+            end
+            inhibition = {"operation_owner_binding_digest" => frame.fetch("operation_owner_binding_digest"),
+              "dispatch_event_digest" => frame.fetch("dispatch_event_digest"), "state" => "inhibited", "pending_effects" => 0}
+            context = Atoms::ProtectedWorkspacePruneInput.freeze_value(context.merge("input_inhibition" => inhibition))
+          end
+          unless @observer.observe_self!(deadline: [deadline, Wire.deadline(5)].min) == original
+            raise SecurityError, "cleanup readback owner changed before inspection"
+          end
+          inspected = @installer.inspect_cleanup!(context: context, receiver_peer: receiver_peer, deadline: deadline)
+          unless inspected.is_a?(Hash) && inspected.keys.sort == %i[bytes kind receipt_ref] &&
+              %w[succeeded failed-no-effect].include?(inspected[:kind])
+            raise SecurityError, "cleanup inspection result unavailable"
+          end
+          kind = inspected.fetch(:kind).dup.freeze
+          unless original_owner || kind == "succeeded"
             raise Ace::Runtime::RuntimeUnavailableError, "original cleanup lifetime exclusion unavailable"
           end
-          executable = frame.except("challenge_ref").merge("kind" => "execute")
-          key = Ace::Assign::Atoms::EvidenceDigest.digest(executable)
-          @lock.synchronize do
-            request = context.fetch("record").fetch("request_id")
-            retained = @consumed[request]
-            if retained
-              raise SecurityError, "cleanup original inspection input differs" unless retained.fetch(:key) == key
-            else
-              raise Ace::Runtime::RuntimeUnavailableError, "cleanup lifetime capacity unavailable" if @consumed.size >= MAX_RETAINED
-              retained = @consumed[request] = {key: key, state: :inhibited}
-            end
-            retained[:inhibited] = true
-            retained[:state] = :inhibited if retained[:state] == :invoking
-            while retained[:state] == :invoked
-              remaining = deadline - Process.clock_gettime(Process::CLOCK_MONOTONIC)
-              raise Ace::Runtime::RuntimeUnavailableError, "cleanup original effect remains unconfirmed" unless remaining.positive?
-              @changed.wait(@lock, remaining)
-            end
-          end
-          inhibition = {"operation_owner_binding_digest" => frame.fetch("operation_owner_binding_digest"),
-            "dispatch_event_digest" => frame.fetch("dispatch_event_digest"), "state" => "inhibited", "pending_effects" => 0}
-          context = Atoms::ProtectedWorkspacePruneInput.freeze_value(context.merge("input_inhibition" => inhibition))
+          result = result!(inspected.except(:kind), frame)
           unless @observer.observe_self!(deadline: [deadline, Wire.deadline(5)].min) == original
-            raise SecurityError, "cleanup original owner changed before inspection"
+            raise SecurityError, "cleanup readback owner changed before inspection result"
           end
-          result = result!(@installer.inspect_cleanup!(context: context, receiver_peer: receiver_peer, deadline: deadline), frame)
-          unless @observer.observe_self!(deadline: [deadline, Wire.deadline(5)].min) == original
-            raise SecurityError, "cleanup original owner changed before inspection result"
-          end
-          Wire.write(socket, {"schema" => Client::SCHEMA, "kind" => "inspection", "request_id" => frame.fetch("request_id"),
-            "input_digest" => frame.fetch("input_digest"), "inspection_ref" => result.fetch(:receipt_ref)}, deadline: deadline, limit: Client::LIMIT)
+          success = kind == "succeeded"
+          Wire.write(socket, {"schema" => Client::SCHEMA, "kind" => success ? "completed-result" : "inspection",
+            "request_id" => frame.fetch("request_id"), "input_digest" => frame.fetch("input_digest"),
+            (success ? "receipt_ref" : "inspection_ref") => result.fetch(:receipt_ref)}, deadline: deadline, limit: Client::LIMIT)
           descriptor = @codec.descriptor([result.fetch(:bytes)], purpose: :artifacts)
           @codec.send(socket, parts: [result.fetch(:bytes)], descriptor: descriptor, purpose: :artifacts, deadline: deadline)
         end

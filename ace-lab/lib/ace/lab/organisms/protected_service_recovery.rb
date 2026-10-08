@@ -42,11 +42,26 @@ module Ace
           envelope = immutable("version" => 1, "kind" => "service_no_effect_inspection",
             "request" => context.fetch("request"), "input" => input.fetch(:input),
             "execution" => context.fetch("execution"), "challenge" => context.fetch("challenge"))
-          # The selected domain inspector produces absence observations; this
-          # owner cannot derive them from a timeout or process/scope cleanup.
+          # The selected inspector supplies retained success or positive absence;
+          # neither follows from a timeout or process/scope cleanup.
           if context.dig("request", "operation") == "prune-preserved-workspace"
             return uncertain(request_id) unless @cleanup_owner && context.dig("execution", "dispatch_phase") == "dispatch_started"
-            artifacts = cleanup_inspection_evidence!(context, input.fetch(:input))
+            inspected_kind, artifacts = cleanup_inspection_evidence!(context, input.fetch(:input))
+            if inspected_kind == "succeeded"
+              evidence = artifacts.each_with_index.map do |artifact, index|
+                {"ref" => "cleanup-#{index}", "sha256" => Digest::SHA256.hexdigest(artifact)}
+              end
+              receipt = JSON.generate(context.fetch("request").merge("outcome" => "succeeded", "evidence" => evidence))
+              completion = params.merge("claim_binding" => context.dig("execution", "claim_binding"),
+                "receipt_sha256" => Digest::SHA256.hexdigest(receipt))
+              @client.call("complete_service", completion,
+                mutation_id: Digest::SHA256.hexdigest("cleanup-completed:#{mutation_id}"),
+                upload_parts: [receipt] + artifacts, purpose: :receipt_artifacts)
+              completed, = recovery_status!(params, input_bytes)
+              return uncertain(request_id) unless completed["state"] == "succeeded"
+              cleanup_staging(directory, identity, prefix: "recovery-")
+              return projection(completed)
+            end
             response = {"outcome" => "failed", "request_id" => request_id,
               "input_digest" => context.dig("request", "input_digest"), "evidence" => artifacts.each_with_index.map do |artifact, index|
                 {"ref" => index.zero? ? "cleanup-inspection-no-effect" : "cleanup-inspection-selection", "sha256" => Digest::SHA256.hexdigest(artifact)}
@@ -140,17 +155,22 @@ module Ace
             "dispatch_event_digest" => execution.fetch("dispatch_event_digest"), "input" => input,
             "challenge_ref" => context.fetch("challenge").slice("challenge_event_digest")),
             operation_owner_binding: execution.fetch("operation_owner_binding"))
-          ref, bytes = result.values_at(:inspection_ref, :bytes)
+          unless result.is_a?(Hash) && result.keys.sort == %i[bytes kind receipt_ref] &&
+              %w[succeeded failed-no-effect].include?(result[:kind])
+            raise SecurityError, "original cleanup inspection kind differs"
+          end
+          success = result.fetch(:kind) == "succeeded"
+          ref, bytes = result.values_at(:receipt_ref, :bytes)
           unless ref.is_a?(Hash) && ref.keys.sort == %w[bytes path sha256] && bytes.is_a?(String) &&
               bytes.bytesize.between?(1, 65_536) && ref["bytes"].is_a?(Integer) && ref["bytes"] == bytes.bytesize &&
               ref["sha256"] == Digest::SHA256.hexdigest(bytes)
             raise SecurityError, "original cleanup inspection result differs"
           end
-          selection = {"schema" => Ace::Assign::Authority::ServiceCleanupEvidence::ROOT_INSPECTION_SELECTION_SCHEMA,
+          selection = {"schema" => success ? Ace::Assign::Authority::ServiceCleanupEvidence::ROOT_SELECTION_SCHEMA : Ace::Assign::Authority::ServiceCleanupEvidence::ROOT_INSPECTION_SELECTION_SCHEMA,
             "request_id" => request.fetch("request_id"), "input_digest" => request.fetch("input_digest"),
             "operation_owner_binding_digest" => Ace::Assign::Atoms::EvidenceDigest.digest(execution.fetch("operation_owner_binding")),
-            "inspection_ref" => ref}
-          [bytes, JSON.generate(selection)].freeze
+            (success ? "receipt_ref" : "inspection_ref") => ref}
+          [result.fetch(:kind), [bytes, JSON.generate(selection)].freeze].freeze
         end
 
         def recovery_inspector!(context)

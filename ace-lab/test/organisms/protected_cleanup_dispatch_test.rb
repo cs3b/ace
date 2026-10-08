@@ -270,7 +270,7 @@ class ProtectedCleanupDispatchTest < Minitest::Test
         output = JSON.generate(inspection)
         File.write(path, output)
         File.chmod(0o640, path)
-        {bytes: output, receipt_ref: {"path" => path, "bytes" => output.bytesize, "sha256" => Digest::SHA256.hexdigest(output)}}
+        {kind: "failed-no-effect", bytes: output, receipt_ref: {"path" => path, "bytes" => output.bytesize, "sha256" => Digest::SHA256.hexdigest(output)}}
       end
       endpoint = Ace::Lab::Organisms::ProtectedCleanupOwner.new(observer: observer, admission: admission,
         snapshots: ->(&block) { block.call(Object.new.tap { |view| view.define_singleton_method(:with) { |deadline:, &consume| consume.call(:original) } }) },
@@ -389,6 +389,183 @@ class ProtectedCleanupDispatchTest < Minitest::Test
     end
   end
 
+  def test_replacement_root_readback_imports_original_success_without_inhibition_or_execution
+    exercise_retained_success_recovery
+  end
+
+  def test_dispatch_failure_without_completion_can_import_retained_success
+    exercise_retained_success_recovery(failure: :dispatch)
+  end
+
+  def test_completed_failure_cannot_be_superseded_by_retained_success
+    exercise_retained_success_recovery(failure: :completed)
+  end
+
+  def test_replacement_root_cannot_report_original_no_effect_or_install_inhibition
+    exercise_retained_success_recovery(readback_kind: "failed-no-effect")
+  end
+
+  def test_retained_success_lost_completion_reply_recovers_from_canonical_status_without_readback
+    exercise_retained_success_recovery(lost_reply: true)
+  end
+
+  def exercise_retained_success_recovery(failure: nil, readback_kind: "succeeded", lost_reply: false)
+    fixture do
+      submission, bytes = cleanup_submission
+      original = owner_binding
+      selected = Object.new
+      selected.define_singleton_method(:identity!) { original }
+      @policy.instance_variable_set(:@cleanup_owner, selected)
+      client = start_service_server
+      _, params = request_and_begin(client, submission, bytes)
+      client.call("begin_dispatch", params, mutation_id: "cleanup-begin", upload_parts: [bytes], purpose: :service_input, timeout: 30)
+      @launch.close_execution_scope!(params: {"mapping_id" => "mapping", "assignment_id" => "assignment", "attempt_id" => @attempt,
+        "mutation_id" => "inspection-import-seal", "expected_generation" => generation}, peer: @launcher, role: :launcher)
+      if failure
+        failed_record = @journal.service_request(submission.fetch("request_id"))
+        failure_bytes = "ace-service-attestation request:#{submission.fetch('request_id')} input:#{submission.fetch('input_digest')} outcome:failed\ncontrolled observed failure"
+        failure_receipt = failed_record.slice(*Ace::Assign::Molecules::EvidenceJournal::TERMINAL_BINDING_FIELDS)
+          .merge("outcome" => "failed")
+        if failure == :completed
+          failure_receipt["evidence"] = [{"ref" => "failure", "sha256" => Digest::SHA256.hexdigest(failure_bytes)}]
+          encoded = JSON.generate(failure_receipt)
+          client.call("complete_service", submission.slice("assignment_id", "attempt_id", "candidate_generation", "head", "request_id").merge(
+            "claim_binding" => failed_record.fetch("claim_binding"), "receipt_sha256" => Digest::SHA256.hexdigest(encoded)),
+            mutation_id: "observed-completed-failure", upload_parts: [encoded, failure_bytes], purpose: :receipt_artifacts)
+          refute_nil @journal.service_request(submission.fetch("request_id"))["completion_digest"]
+        else
+          canonical = Ace::Assign::Molecules::CanonicalEvidence.new(journal: @journal)
+          failure_context = Ace::Assign::Authority::ServiceEvidence.new(journal: @journal).context(failed_record)
+          import = canonical.import_plan(**failure_context, artifacts: [failure_bytes],
+            admitted_after_event_digest: @journal.read_events("assignment").last.fetch("digest"))
+          failure_receipt["evidence"] = import.fetch(:references)
+          @journal.mutate(assignment_id: "assignment", attempt_id: @attempt, mutation_id: "observed-dispatch-failure",
+            operation: "fixture-dispatch-failure", parameters_digest: "a" * 64, expected_generation: generation) do
+            import.merge(data: {}, service_updates: [{request_id: submission.fetch("request_id"), expected: failed_record,
+              replacement: failed_record.merge("state" => "failed", "receipt" => failure_receipt,
+                "failed_at" => Time.now.utc.iso8601(9)), event_type: "service_transition"}])
+          end
+          assert_nil @journal.service_request(submission.fetch("request_id"))["completion_digest"]
+        end
+        assert_equal "failed", @journal.service_request(submission.fetch("request_id")).fetch("state")
+      end
+      path = File.join(@root, "root-inspection.json")
+      install_result_reader(path)
+      executor = @executor
+      kernel = Object.new
+      kernel.define_singleton_method(:peer) { |_| executor }
+      kernel.define_singleton_method(:live!) { |_| true }
+      admission = Ace::Lab::Molecules::ProtectedCleanupOwnerAdmission.new(deployment: @deployment,
+        authority_id: @deployment.mapping("mapping").fetch("authority_id"), mapping_id: "mapping", service_id: "executor", kernel: kernel)
+      alive = true
+      readback = original.merge("invocation_id" => "c" * 32, "process_binding" => original.fetch("process_binding").merge("pid" => 78, "started_at" => "linux:boot:901"))
+      observer = Object.new
+      observer.define_singleton_method(:observe!) { |socket:, deadline:| raise Ace::Runtime::RuntimeUnavailableError, "controlled root gone" unless alive; readback }
+      observer.define_singleton_method(:observe_self!) { |deadline:| raise Ace::Runtime::RuntimeUnavailableError, "controlled root gone" unless alive; readback }
+      inspections = []
+      absent = false
+      operation_receipt_for_readback = operation_receipt(submission, bytes)
+      installer = Object.new
+      installer.define_singleton_method(:execute_cleanup!) { |**_| raise "recovery cannot execute physical cleanup" }
+      installer.define_singleton_method(:inspect_cleanup!) do |context:, receiver_peer:, deadline:|
+        inspections << context
+        # Controlled physical facts exercise import plumbing only. The actual
+        # same Installer baseline/exclusion producer remains a delivery gap.
+        raise "replacement cannot inhibit original input" if context.key?("input_inhibition")
+        output = JSON.generate(operation_receipt_for_readback)
+        File.write(path, output)
+        File.chmod(0o640, path)
+        {kind: readback_kind, bytes: output, receipt_ref: {"path" => path, "bytes" => output.bytesize, "sha256" => Digest::SHA256.hexdigest(output)}}
+      end
+      endpoint = Ace::Lab::Organisms::ProtectedCleanupOwner.new(observer: observer, admission: admission,
+        snapshots: ->(&block) { block.call(Object.new.tap { |view| view.define_singleton_method(:with) { |deadline:, &consume| consume.call(:original) } }) },
+        journals: ->(view) { raise "wrong source snapshot" unless view == :original; @journal }, kernel: kernel, installer: installer, scratch_root: @root)
+      wire_class = Ace::Runtime::Molecules::ProtectedSocket
+      client_class = Ace::Lab::Molecules::ProtectedCleanupOwnerClient
+      wire = Object.new
+      wire.define_singleton_method(:deadline) { |seconds| wire_class.deadline(seconds) }
+      wire.define_singleton_method(:root_path!) { |selected, directory:| raise "wrong fixed parent" unless directory && selected == File.dirname(client_class::PATH) }
+      wire.define_singleton_method(:socket_identity) { |selected, mode:| raise "wrong fixed endpoint" unless selected == client_class::PATH && mode == 0o660; [1, 2, 0] }
+      wire.define_singleton_method(:read) { |*args, **options| wire_class.read(*args, **options) }
+      wire.define_singleton_method(:write) { |*args, **options| wire_class.write(*args, **options) }
+      wire.define_singleton_method(:connect) do |selected_path, deadline:, &consume|
+        raise "wrong fixed endpoint" unless selected_path == client_class::PATH
+        local, remote = UNIXSocket.pair
+        worker = Thread.new { endpoint.handle(remote) }
+        begin
+          consume.call(local)
+        ensure
+          local.close unless local.closed?
+          raise "inspection endpoint did not finish" unless worker.join(2)
+          worker.value
+        end
+      end
+      root_client = client_class.new(observer: observer, scratch_root: @root, wire: wire)
+      receiver = cleanup_receiver(client, root_client)
+      binding = submission.slice("assignment_id", "attempt_id", "candidate_generation", "head", "request_id")
+      if lost_reply
+        original_call = client.method(:call)
+        loss_observed = false
+        client.define_singleton_method(:call) do |operation, *arguments, **options|
+          reply = original_call.call(operation, *arguments, **options)
+          if operation == "complete_service" && !loss_observed
+            loss_observed = true
+            raise Ace::Runtime::RuntimeUnavailableError, "controlled accepted completion reply loss"
+          end
+          reply
+        end
+      end
+      before = @journal.ref_value
+      Ace::Lab::Molecules::GrantResolver.stub(:trusted_document, @document) do
+        result = receiver.recover_no_effect(binding: binding, input_bytes: bytes,
+          mutation_id: "retained-success-recovery", expected_generation: generation)
+        if lost_reply
+          assert loss_observed, "fault must occur after actual accepted canonical completion"
+          assert_equal "uncertain", result.fetch("state")
+          assert_equal "succeeded", @journal.service_request(submission.fetch("request_id")).fetch("state")
+          result = receiver.recover_no_effect(binding: binding, input_bytes: bytes,
+            mutation_id: "retained-success-recovery", expected_generation: generation)
+        end
+        if readback_kind == "failed-no-effect"
+          assert_equal "uncertain", result.fetch("state")
+          assert_equal "uncertain", @journal.service_request(submission.fetch("request_id")).fetch("state")
+          assert_equal 1, inspections.size
+          refute inspections.first.key?("input_inhibition")
+          assert_empty endpoint.instance_variable_get(:@consumed)
+          next
+        end
+        if failure == :completed
+          assert_equal "uncertain", result.fetch("state")
+          record = @journal.service_request(submission.fetch("request_id"))
+          assert_equal "failed", record.fetch("state")
+          refute_nil record["completion_digest"]
+          assert_equal original, record.fetch("operation_owner_binding")
+          assert_empty endpoint.instance_variable_get(:@consumed)
+          next
+        end
+        assert_equal "succeeded", result.fetch("state")
+        record = @journal.service_request(submission.fetch("request_id"))
+        assert_equal original, record.fetch("operation_owner_binding")
+        assert_equal @executor, record.fetch("executor_process_binding")
+        assert_equal 1, @journal.read_events("assignment").count { |event|
+          event["type"] == "service_transition" && event.dig("payload", "request_id") == submission.fetch("request_id") &&
+            event.dig("payload", "state") == "succeeded" }
+        assert_equal 1, inspections.size
+        refute inspections.first.key?("input_inhibition")
+        assert_empty endpoint.instance_variable_get(:@consumed)
+        refute_equal before, @journal.ref_value
+        completed = @journal.ref_value
+        File.unlink(path)
+        alive = false
+        replay = receiver.recover_no_effect(binding: binding, input_bytes: bytes,
+          mutation_id: "retained-success-recovery", expected_generation: generation)
+        assert_equal "succeeded", replay.fetch("state")
+        assert_equal completed, @journal.ref_value
+        assert_equal 1, inspections.size
+      end
+    end
+  end
+
   def test_fresh_receiver_root_identity_failure_keeps_unexecuted_claim_without_dispatch
     fixture do
       submission, bytes = cleanup_submission
@@ -465,7 +642,7 @@ class ProtectedCleanupDispatchTest < Minitest::Test
         test.assert receiver_peer.frozen?
         test.assert receiver_peer.fetch("groups").frozen?
         inspected << context
-        {bytes: output, receipt_ref: {"path" => "/fixed/inspection.json", "bytes" => output.bytesize, "sha256" => Digest::SHA256.hexdigest(output)}}
+        {kind: "failed-no-effect", bytes: output, receipt_ref: {"path" => "/fixed/inspection.json", "bytes" => output.bytesize, "sha256" => Digest::SHA256.hexdigest(output)}}
       end
       owner = Ace::Lab::Organisms::ProtectedCleanupOwner.new(observer: observer, admission: admission,
         snapshots: ->(&block) { block.call(Object.new.tap { |view| view.define_singleton_method(:with) { |deadline:, &consume| consume.call(:original) } }) },

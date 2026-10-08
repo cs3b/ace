@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 - Require the authenticated readiness report to match the original server network namespace to both parent selection and canonical installation admission before native binding.
+- Admit authenticated protected cleanup success after dispatch failure only when no immutable completion digest exists; retain terminal completion conflict checks.
 
 - Accept exact candidate-submission replay after its counter advances, revalidating the original live caller, raw upload identity and retained normalized bundle without creating another candidate.
 
