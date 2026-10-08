@@ -32,8 +32,8 @@ d9a2a865 incorrectly required empty stderr despite actual synthesis diagnostics.
 Earlier dc269545 and bdfb4155 established the separately reviewed candidate replay
 repair, now integrated by root. No deadlines were increased.
 
-Independent source review and integrated verification are pending for this producer
-candidate. Protected prepared delivery adoption, physical cleanup, installed/native
+Independent source review and integrated verification for this producer checkpoint
+are recorded below. Protected prepared delivery adoption, physical cleanup, installed/native
 verification and whole-family closure are not claimed by this checkpoint.
 
 Review correction: the changed-artifact negative now supplies both declared parts,
@@ -46,3 +46,23 @@ Client calls remain unchanged. Executed 9bb11e3d-9c99-4675-bb7f-465a141097b1:
 The successor registers both submission commands in public help, derives the local receipt vocabulary from the same ExecutionReceipt model as Endcap, corrects top-level usage prefixes, and tests malformed Inbox registration/receipt/signature inputs before any send or local coordinator construction. Model-known campaign serialization does not grant campaign authority: the maintained public wire test observes the unchanged Endcap campaign refusal before the first accepted result and proves the canonical ref unchanged.
 
 Executed source-only checks: registered fast submission/Inbox cases **3/43 PASS**, report `ea50034a-9ade-40dd-bbb2-b8a30912867e`; actual public succeeded finish/campaign-owner refusal **1/60 PASS in 24.05s**, report `e4b48738-f539-470b-a6cd-bf3cd9c02419`. Retained failures: `37b6ceae` placed the campaign negative after accepted result and incorrectly expected an internal reason through the sanitized wire; `aae6cd39` expected an authority exception for an empty argument rejected earlier by the public parser. Corrections preserve production error disclosure and canonical ownership. Delivery-child composition remains a separate open gate.
+
+### Integrated source checkpoint — 2026-10-08
+
+Root independently inspected the producer and successors against canonical receipt
+and authority owners. Formal review session `review-8x72ij` medium findings
+`8x72ubb8` and `8x72ubb9` were resolved after inspecting `db87e0e64`;
+the intentional protected-mode refusal retains ADR-024 semantics. Integrated
+commits are `d2d8d2112`, `ff6d1a5c2`, and `4c0145263`. The readiness document,
+absent on main, was retained in full during the sole documentation conflict.
+
+Executed on integrated revision `4c0145263`, using the package working directory:
+
+- `../bin/ace-test test/fast/commands/protected_submission_test.rb test/fast/commands/protected_inbox_reconcile_test.rb --timeout 120`:
+  **3 tests / 43 assertions PASS**, report `41305fe6-b934-4d9e-8336-5a630d60cc28`.
+- `../bin/ace-test test/feat/protected_attempt_consumers_test.rb:478 --timeout 120`:
+  **1 test / 60 assertions PASS**, report `1ecf08ae-4e60-48ce-9088-69909da8a236`,
+  21.49s; actual public result path and unchanged canonical campaign-owner refusal.
+
+Both remotes accepted `4c0145263`. These checks do not close the complete xz9/qk0
+families, prepared delivery-child composition, or installed Lab acceptance.
