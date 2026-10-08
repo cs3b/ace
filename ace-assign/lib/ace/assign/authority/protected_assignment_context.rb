@@ -100,6 +100,12 @@ module Ace
           raise AttemptErrors::EvidenceUnavailable, "prepared_input_unavailable: original installed mapping is unavailable"
         end
 
+        def verify_attempt_hints!(assignment_id:, attempt_id:)
+          selected_hint(assignment_id, "ACE_ASSIGN_ASSIGNMENT_ID")
+          selected_hint(attempt_id, "ACE_ASSIGN_ATTEMPT_ID")
+          true
+        end
+
         def client(options:)
           raise AttemptErrors::EvidenceUnavailable, "protected installed authority is unavailable" unless @deployment
           mapping = selected_hint(options[:mapping], "ACE_ASSIGN_LAUNCH_MAPPING")

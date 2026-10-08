@@ -17,9 +17,20 @@ module Ace
             desc "Reconcile an interrupted or uncertain attempt"
 
             option :attempt, desc: "Attempt ID"
+            option :mapping, desc: "Exact installed protected mapping ID"
+            option :assignment, desc: "Exact protected assignment ID"
+            option :mutation, desc: "Stable original authority mutation ID"
+            option :expected_generation, desc: "Original authority mutation generation"
             option :receipt, desc: "Path to the receipt JSON file (required to resolve uncertainty)"
 
             def call(**options)
+              if (context = protected_context(options))
+                raise Ace::Support::Cli::Error, "Protected recovery forbids --receipt" unless options[:receipt].to_s.empty?
+                usage = "reconcile --mapping MAP --assignment ID --attempt ID --mutation ID --expected-generation N"
+                client, params, mutation = protected_attempt_request(context, options, usage)
+                emit_json(protected_call(client, "recover", params, mutation))
+                return
+              end
               attempt_id = require_option(options, :attempt, "reconcile --attempt ID [--receipt FILE]")
               receipt = options[:receipt].to_s.strip
 

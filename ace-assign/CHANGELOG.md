@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Route protected `attempt finish`, `attempt reconcile` and `inbox-bind` through the installed authority with explicit original selectors and retry identity; installed participants cannot fall back to local receipts or local coordination.
+
 - Bind original protected Inbox registrations and finish exact results through the public authority, authenticating independent review, prior no-writers proof and settlement; recover one original attempt with immutable observations or read-only terminal evidence.
 - Expose original prepared installed transport selection and mapping-hint presence through the existing protected context owner, refusing unavailable mappings without local fallback.
 

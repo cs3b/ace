@@ -9,6 +9,11 @@ module Ace
     # classified conservatively and resolved only against a verified,
     # boundary-attributed receipt.
     class AttemptReconcileCommandTest < AceAssignTestCase
+      def with_attempt_cli_env(&block)
+        context = Authority::ProtectedAssignmentContext.new(deployment: nil, history: nil, env: {})
+        Authority::ProtectedAssignmentContext.stub(:load, context) { super(&block) }
+      end
+
       ReceiptAttempt = Struct.new(:attempt_id, :binding, keyword_init: true)
       ReceiptBinding = Struct.new(:assignment_id, :project_id, :scope, keyword_init: true)
 

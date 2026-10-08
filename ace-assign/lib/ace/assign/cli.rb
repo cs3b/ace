@@ -60,6 +60,7 @@ require_relative "cli/commands/create"
 require_relative "cli/commands/status"
 require_relative "cli/commands/resume"
 require_relative "cli/commands/inbox_reconcile"
+require_relative "cli/commands/inbox_bind"
 require_relative "cli/commands/step"
 require_relative "cli/commands/start"
 require_relative "cli/commands/finish"
@@ -118,8 +119,9 @@ module Ace
         ["attempt start", "Start a scoped attempt for an assignment step"],
         ["attempt status", "Show attempt status for an assignment"],
         ["attempt evidence", "Read accepted current-head check evidence"],
-        ["attempt finish", "Finish an attempt with a structured execution receipt"],
-        ["attempt reconcile", "Reconcile an interrupted or uncertain attempt"]
+        ["attempt finish", "Finish a protected canonical result or an ordinary local receipt"],
+        ["attempt reconcile", "Recover an exact protected attempt or reconcile an ordinary attempt"],
+        ["inbox-bind", "Bind an original protected Inbox registration"]
       ].freeze
 
       HELP_EXAMPLES = [
@@ -196,6 +198,7 @@ register "authority task-context-selection", wrap_command(Commands::Authority::T
       register "attempt reconcile", wrap_command(Commands::Attempt::Reconcile)
       register "resume", wrap_command(Commands::Resume)
       register "inbox-reconcile", wrap_command(Commands::InboxReconcile)
+      register "inbox-bind", wrap_command(Commands::InboxBind)
 
       # Register version command
       version_cmd = Ace::Support::Cli::VersionCommand.build(

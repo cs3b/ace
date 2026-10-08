@@ -20,7 +20,8 @@ module Ace
         end
       end
 
-      def fixture(**options, &block)
+      def fixture(pending_service: false, **options, &block)
+        @pending_service_fixture = pending_service
         original = ExecutionScopeNativeOwnerFixture.method(:new)
         scope = ->(*args, **kwargs) do
           original.call(*args, **kwargs.merge(boot_baseline_selection: @retained_boot, network_selection: @retained_network,
@@ -42,8 +43,22 @@ module Ace
         producer = {"path" => producer_path, "sha256" => Digest::SHA256.hexdigest(producer_bytes), "bytes" => producer_bytes.bytesize}
         @retained_network = ExecutionScopeObservationFixtures::NETWORK_SELECTION.merge("installer_artifact" => producer)
         @retained_boot = retained_boot_baseline_artifact(root: File.realpath(@root), name: "retained-boot.json", map: @map, installer: producer)
-        map = @map
+        @project.merge!("launcher_uids" => [@launcher.fetch("uid")], "worker_uids" => [@worker.fetch("uid")])
+        map, project, service = @map, @project, @service
+        @deployment.define_singleton_method(:data) do
+          {"launch_mappings" => {"mapping" => map}, "projects" => {"project" => project}, "authorities" => {"authority" => service}}
+        end
         @deployment.define_singleton_method(:mapping_digest) { |_| Atoms::EvidenceDigest.digest(map) }
+        if @pending_service_fixture
+          @project["service_receivers"] = {"executor" => {"executor_uid" => @executor.fetch("uid"),
+            "socket_path" => "/fixture/service.sock", "staging_root" => "/fixture/staging"}}
+          reader = nil
+          @journal = Molecules::EvidenceJournal.new(repo_root: @journal.repo_root, ref: @journal.ref,
+            checkout_root: @journal.checkout_root, mode: :protected, evidence_reader: ->(*args) { reader.call(*args) },
+            service_authorizer: ->(existing, replacement, pending) {
+              @endcap.authorize_service_update!(journal: @journal, existing: existing, replacement: replacement, pending: pending) })
+          reader = Authority::ServiceEvidence.new(journal: @journal)
+        end
       end
 
       def with_original_inbox
@@ -78,13 +93,24 @@ module Ace
         @box.enqueue(event: "event", attempt: @attempt, ref: {"session" => "w1", "pane" => "p1"}, payload: "message")
         record = @box.deliver(event: "event")
         @registration = record.slice("event_id", "attempt_id", "payload_sha256", "receipt_key_sha256")
+        original, retained_key = @deployment, @key.public_key
+        descriptor_sha256 = original.artifact_reference.fetch("sha256")
+        @history = Object.new
+        @history.define_singleton_method(:descriptor!) do |sha256:|
+          raise AttemptErrors::EvidenceUnavailable unless sha256 == descriptor_sha256
+          original
+        end
+        @history.define_singleton_method(:public_key!) do |sha256:|
+          raise AttemptErrors::EvidenceUnavailable unless sha256 == Digest::SHA256.hexdigest(retained_key.public_to_der)
+          retained_key
+        end
         start_context_pipeline(@root)
         service = @service
         @deployment.define_singleton_method(:authority) { |_| service }
         @launch = Authority::LaunchLifecycle.new(deployment: @deployment, kernel: @kernel, journals: {"project" => @journal},
           scope_observer_factory: ->(_id) { ExecutionScopeNativeOwnerFixture.new(@map, @journal, @kernel, owner: @launch) })
         @endcap = Authority::Endcap.new(deployment: @deployment, launch: @launch, kernel: @kernel,
-          service_policy: @policy, inbox_context_clients: @context_clients)
+          service_policy: @policy, inbox_context_clients: @context_clients, deployment_history: @history)
         @router = Authority::Router.new(launch: @launch, handlers: [@endcap])
         yield
       ensure
@@ -103,9 +129,26 @@ module Ace
         @server.define_singleton_method(:wire) { wire }
         @owner = Thread.new { @server.serve }
         Timeout.timeout(3) { sleep 0.005 until File.socket?(@service.fetch("socket_path")) }
-        client_kernel = Kernel.new
-        client_kernel.peer_identity = @service.slice("uid", "gid", "groups")
-        @client = Authority::Client.new(mapping_id: "mapping", deployment: @deployment, kernel: client_kernel)
+        @client_kernel = Kernel.new
+        @client_kernel.peer_identity = @service.slice("uid", "gid", "groups")
+        @client = Authority::Client.new(mapping_id: "mapping", deployment: @deployment, kernel: @client_kernel)
+      end
+
+      def public_cli_json(args, env: {})
+        history = Object.new
+        history.define_singleton_method(:descriptors) { [] }
+        context = Authority::ProtectedAssignmentContext.new(deployment: @deployment, history: history,
+          uid: @kernel.peer_identity.fetch("uid"), kernel: @client_kernel, env: env)
+        forbidden = ->(*) { raise "local coordinator must not be constructed" }
+        output, error = capture_io do
+          Authority::ProtectedAssignmentContext.stub(:load, context) do
+            Organisms::AttemptCoordinator.stub(:new, forbidden) do
+              assert_equal 0, CLI.start(args)
+            end
+          end
+        end
+        assert_empty error
+        JSON.parse(output)
       end
 
       def terminal_projection!(params, commit)
@@ -126,6 +169,33 @@ module Ace
             start_public_server
             params = {"assignment_id" => "assignment", "attempt_id" => @attempt,
               "expected_generation" => generation, "event_id" => "event", "inbox_context_id" => "context"}
+            original = @journal.ref_value
+            args = ["inbox-bind", "--mapping", "mapping", "--assignment", "assignment", "--attempt", @attempt,
+              "--event", "event", "--inbox-context", "context", "--mutation", "bind-inbox", "--expected-generation", generation.to_s]
+            %w[ACE_ASSIGN_ASSIGNMENT_ID ACE_ASSIGN_ATTEMPT_ID].each do |hint|
+              assert_raises(AttemptErrors::EvidenceUnavailable) { public_cli_json(args, env: {hint => "foreign"}) }
+              assert_equal original, @journal.ref_value
+            end
+            malformed = args.dup
+            malformed[-1] = "1.0"
+            assert_raises(Ace::Support::Cli::Error) { public_cli_json(malformed) }
+            assert_equal original, @journal.ref_value
+            stale = args.dup
+            stale[-1] = (generation + 1).to_s
+            conflict = assert_raises(AttemptErrors::EvidenceUnavailable) { public_cli_json(stale) }
+            assert_match(/\(conflict\)/, conflict.message)
+            assert_equal original, @journal.ref_value
+            foreign = args.dup
+            foreign[2] = "missing-mapping"
+            assert_raises(AttemptErrors::EvidenceUnavailable, AttemptErrors::UnauthorizedIdentity) { public_cli_json(foreign) }
+            assert_equal original, @journal.ref_value
+            @kernel.peer_identity = @supervisor
+            assert_raises(AttemptErrors::EvidenceUnavailable, AttemptErrors::UnauthorizedIdentity) { public_cli_json(args) }
+            assert_equal original, @journal.ref_value
+            @kernel.peer_identity = @worker
+            cli = public_cli_json(["inbox-bind", "--mapping", "mapping", "--assignment", "assignment", "--attempt", @attempt,
+              "--event", "event", "--inbox-context", "context", "--mutation", "bind-inbox", "--expected-generation", generation.to_s])
+            assert_equal @registration, cli.fetch("registration")
             first = @client.call("bind_inbox", params, mutation_id: "bind-inbox", timeout: 30)
             assert_equal @registration, first.data.fetch("registration")
             assert_equal 1, @journal.read_events("assignment").count { |event| event["type"] == "inbox_binding" }
@@ -134,11 +204,35 @@ module Ace
             assert replay.replayed
             assert_equal first.data, replay.data
             assert_equal accepted, @journal.ref_value
+            changed = args.dup
+            changed[8] = "different-event"
+            assert_raises(AttemptErrors::Conflict, AttemptErrors::EvidenceUnavailable) { public_cli_json(changed) }
+            assert_equal accepted, @journal.ref_value
             @kernel.dead << @worker.fetch("pid")
             assert_raises(AttemptErrors::EvidenceUnavailable) do
               @client.call("bind_inbox", params, mutation_id: "bind-inbox", timeout: 30)
             end
             assert_equal accepted, @journal.ref_value
+          end
+        end
+      end
+
+      def test_public_cli_fresh_inbox_binding_refuses_after_original_scope_seal
+        fixture do
+          with_original_inbox do
+            start_public_server
+            @launch.close_execution_scope!(params: {"mapping_id" => "mapping", "assignment_id" => "assignment",
+              "attempt_id" => @attempt, "mutation_id" => "bind-seal", "expected_generation" => generation},
+              peer: @supervisor, role: :supervisor)
+            sealed = @journal.ref_value
+            assert @journal.read_events("assignment").any? { |event| event["type"] == "scope_sealed" }
+            assert_raises(AttemptErrors::Conflict, AttemptErrors::EvidenceUnavailable) do
+              public_cli_json(["inbox-bind", "--mapping", "mapping", "--assignment", "assignment", "--attempt", @attempt,
+                "--event", "event", "--inbox-context", "context", "--mutation", "sealed-binding",
+                "--expected-generation", generation.to_s])
+            end
+            assert_equal sealed, @journal.ref_value
+            refute @journal.read_events("assignment").any? { |event| event["type"] == "inbox_binding" }
           end
         end
       end
@@ -167,6 +261,92 @@ module Ace
           assert replay.replayed
           assert_equal first.data, replay.data
           assert_equal accepted, @journal.ref_value
+        end
+      end
+
+      def test_public_cli_recovery_preserves_authenticated_queued_inbox
+        fixture do
+          with_original_inbox do
+            start_public_server
+            selectors = {"assignment_id" => "assignment", "attempt_id" => @attempt}
+            @client.call("bind_inbox", selectors.merge("expected_generation" => generation, "event_id" => "event",
+              "inbox_context_id" => "context"), mutation_id: "pending-bind", timeout: 30)
+            record = @box.retained_status(event: "event")
+            receipt = record.slice("event_id", "attempt_id", "claim_generation", "payload_sha256", "binding").merge(
+              "outcome" => "superseded", "observer" => {"role" => "supervisor", "id" => "observer"},
+              "evidence" => {"kind" => "queue_evicted", "native_reference" => "native:pending", "observation" => "superseded"})
+            bytes = JSON.generate(receipt)
+            signature = @key.sign(OpenSSL::Digest::SHA256.new, bytes)
+            @kernel.peer_identity = @supervisor
+            reconciled = @client.call("reconcile_inbox", selectors.merge("event_id" => "event", "inbox_context_id" => "context",
+              "expected_registration" => @registration, "expected_generation" => generation,
+              "receipt_sha256" => Digest::SHA256.hexdigest(bytes), "signature_sha256" => Digest::SHA256.hexdigest(signature)),
+              mutation_id: "pending-reconcile", timeout: 30, upload_parts: [bytes, signature], purpose: :inbox_proof).data
+            assert_equal "queued", reconciled.fetch("state")
+            original_generation = generation
+            args = ["attempt", "reconcile", "--mapping", "mapping", "--assignment", "assignment", "--attempt", @attempt,
+              "--mutation", "pending-recovery", "--expected-generation", original_generation.to_s]
+            result = public_cli_json(args)
+            assert_equal "reconcile-required", result.fetch("decision")
+            assert_equal "unresolved_inbox", result.fetch("reason")
+            assert_equal "uncertain", result.fetch("state")
+            accepted = @journal.ref_value
+            assert_equal result, public_cli_json(args)
+            assert_equal accepted, @journal.ref_value
+            assert_equal "queued", @box.retained_status(event: "event").fetch("state")
+          end
+        end
+      end
+
+      def test_public_cli_recovery_preserves_authenticated_started_service
+        fixture(pending_service: true) do
+          start_public_server
+          selectors = {"assignment_id" => "assignment", "attempt_id" => @attempt}
+          @kernel.peer_identity = @launcher
+          review = @client.call("assign_review", selectors.merge("head" => @head, "candidate_generation" => 1,
+            "expected_generation" => generation, "reviewer_uid" => @reviewer.fetch("uid"),
+            "reviewer_process_binding" => @reviewer), mutation_id: "pending-review", timeout: 30).data
+          _, _, receipt = upload(parts: ["review report"])
+          receipt.merge!("operation" => "review", "review" => {"head" => @head, "verdict" => "approved",
+            "reviewer" => {"actor" => review.fetch("reviewer_actor")}})
+          params, input, = upload(parts: ["review report"], receipt: receipt)
+          @kernel.peer_identity = @reviewer
+          @client.call("accept_review", params.except("transfer").merge(selectors).merge("purpose_id" => review.fetch("review_id")),
+            mutation_id: "pending-review-accept", timeout: 30, upload_parts: input.parts, purpose: :receipt_artifacts)
+          body = "exact pending service input"
+          digest = Digest::SHA256.hexdigest(body)
+          @policy.define_singleton_method(:input_binding) do |bytes, expected_digest:, expected_target:, operation:|
+            raise "service input changed" unless bytes == body && expected_digest == digest &&
+              expected_target == {"resource" => "fixture"} && operation == "publish"
+          end
+          @policy.define_singleton_method(:prepare!) do |binding, input_bytes:|
+            raise "service input changed" unless input_bytes == body && binding.fetch("input_digest") == digest
+            {binding: binding.merge("executor_uid" => 13005, "transport" => "unix"), policy_digest: "f" * 64}
+          end
+          @kernel.peer_identity = @executor
+          requested = selectors.merge("head" => @head, "candidate_generation" => 1, "expected_generation" => generation,
+            "request_id" => "pending-service", "operation" => "publish", "input_digest" => digest,
+            "target" => {"resource" => "fixture"}, "authorization" => "review", "service_id" => "executor",
+            "worker_process_binding" => @worker)
+          claim = @client.call("request_service", requested, mutation_id: "pending-service-claim", timeout: 30,
+            upload_parts: [body], purpose: :service_input).data
+          @client.call("begin_dispatch", selectors.merge("head" => @head, "candidate_generation" => 1,
+            "expected_generation" => generation, "request_id" => "pending-service", "claim_binding" => claim.fetch("claim_binding")),
+            mutation_id: "pending-service-begin", timeout: 30, upload_parts: [body], purpose: :service_input)
+          assert_equal "dispatch_started", @journal.service_request("pending-service").fetch("dispatch_phase")
+          assert_equal "uncertain", @journal.service_request("pending-service").fetch("state")
+          @kernel.peer_identity = @supervisor
+          args = ["attempt", "reconcile", "--mapping", "mapping", "--assignment", "assignment", "--attempt", @attempt,
+            "--mutation", "pending-service-recovery", "--expected-generation", generation.to_s]
+          result = public_cli_json(args)
+          assert_equal "reconcile-required", result.fetch("decision")
+          assert_equal "unresolved_effect", result.fetch("reason")
+          assert_equal "uncertain", result.fetch("state")
+          accepted = @journal.ref_value
+          assert_equal result, public_cli_json(args)
+          assert_equal accepted, @journal.ref_value
+          assert_equal "dispatch_started", @journal.service_request("pending-service").fetch("dispatch_phase")
+          assert_equal "uncertain", @journal.service_request("pending-service").fetch("state")
         end
       end
 
@@ -219,6 +399,10 @@ module Ace
           @launch.close_execution_scope!(params: selectors.merge("mutation_id" => "finish-proof", "expected_generation" => generation),
             peer: @supervisor, role: :supervisor)
           params["expected_generation"] = generation
+          cli = public_cli_json(["attempt", "finish", "--mapping", "mapping", "--assignment", "assignment", "--attempt", @attempt,
+            "--result", result.fetch("result_id"), "--head", @head, "--candidate-generation", "1", "--mutation", "finish",
+            "--expected-generation", generation.to_s])
+          assert_equal "failed", cli.fetch("state")
           first = @client.call("finish", params, mutation_id: "finish", timeout: 30)
           assert_equal "failed", first.data.fetch("state")
           assert_equal result.fetch("receipt_digest"), first.data.fetch("receipt_digest")
@@ -245,6 +429,9 @@ module Ace
           assert_equal "released", released.fetch(:data).fetch("reservation")
           accepted = @journal.ref_value
           terminal_projection!(params, accepted)
+          cli_recovery = public_cli_json(["attempt", "reconcile", "--mapping", "mapping", "--assignment", "assignment", "--attempt", @attempt,
+            "--mutation", "released-recovery", "--expected-generation", generation.to_s])
+          assert_equal "restart-required", cli_recovery.fetch("decision")
           released_recovery = @client.call("recover", recovery_params.merge("expected_generation" => generation),
             mutation_id: "released-recovery", timeout: 30)
           assert_equal "restart-required", released_recovery.data.fetch("decision")
@@ -297,13 +484,16 @@ module Ace
           @kernel.dead << @worker.fetch("pid")
           @kernel.peer_identity = @supervisor
           params["expected_generation"] = generation
-          first = @client.call("finish", params, mutation_id: "success-finish", timeout: 30)
-          assert_equal "succeeded", first.data.fetch("state")
+          first = public_cli_json(["attempt", "finish", "--mapping", "mapping", "--assignment", "assignment",
+            "--attempt", @attempt, "--result", params.fetch("result_id"), "--head", @head,
+            "--candidate-generation", "1", "--mutation", "success-finish",
+            "--expected-generation", params.fetch("expected_generation").to_s])
+          assert_equal "succeeded", first.fetch("state")
           accepted = @journal.ref_value
           assert_equal "succeeded", terminal_projection!(params, accepted).fetch("canonical_state")
           replay = @client.call("finish", params, mutation_id: "success-finish", timeout: 30)
           assert replay.replayed
-          assert_equal first.data, replay.data
+          assert_equal first, replay.data
           assert_equal accepted, @journal.ref_value
           terminal_events = @journal.read_events("assignment").select { |event| event["attempt_id"] == @attempt }
           receipt_event = terminal_events.find { |event| event["type"] == "receipt_accepted" }
@@ -315,7 +505,7 @@ module Ace
             parameters_digest: Atoms::EvidenceDigest.digest(params), expected_generation: generation) do
             {events: [{type: "receipt_accepted", payload: receipt_event.fetch("payload")},
               {type: "transition", payload: {"from" => "running", "to" => "succeeded", "reason" => "protected_result_accepted"}}],
-              blobs: {}, data: first.data.except("generation", "journal_commit")}
+              blobs: {}, data: first.except("generation", "journal_commit")}
           end
           assert_equal "succeeded", forged.fetch("state")
           error = assert_raises(AttemptErrors::ReceiptRejected) do

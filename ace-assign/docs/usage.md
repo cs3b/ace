@@ -89,7 +89,7 @@ ace-assign add --yaml .ace-local/assign/jobs/add-task.yml --after 010 --child
 
 Execution evidence lives in assignment attempts, not in reports. An attempt binds an immutable ID to an assignment, step/subtree scope, project, boundary-derived actor/role/runtime, source task, and `base_head`; the deliverable `candidate_head` is pinned only when accepted evidence is submitted, and the evidence journal commit is tracked separately from both.
 
-### Attempt lifecycle
+### Ordinary local attempt lifecycle
 
 ```bash
 ace-assign attempt start --assignment ASSIGNMENT --step STEP --project PROJECT
@@ -102,6 +102,20 @@ ace-assign attempt reconcile --attempt ATTEMPT --receipt receipt.json
 - `attempt status` exposes only state, binding, references, and digests -- never credentials or receipt bytes.
 - `attempt finish` accepts a structured receipt: operation, attributed producer, exact tested/reviewed head, verdict, artifact paths with SHA-256 digests, executed checks, and -- for review operations -- an executed independent reviewer verdict for that head.
 - `attempt reconcile` classifies interrupted attempts (`uncertain` when launch or effect completion cannot be proven either way, still `running` only for verifiably live processes) and resolves uncertainty only against a verified receipt attributed to the recorded execution boundary. Merge, publish, and deploy effects are never replayed automatically.
+
+### Protected completion, recovery and Inbox registration
+
+```bash
+ace-assign attempt finish --mapping MAP --assignment ASSIGNMENT --attempt ATTEMPT --result RESULT --head SHA --candidate-generation N --mutation ID --expected-generation N
+ace-assign attempt reconcile --mapping MAP --assignment ASSIGNMENT --attempt ATTEMPT --mutation ID --expected-generation N
+ace-assign inbox-bind --mapping MAP --assignment ASSIGNMENT --attempt ATTEMPT --event EVENT --inbox-context CONTEXT --mutation ID --expected-generation N
+```
+
+The installed authority authenticates the current caller. Finish and recovery require the original launcher or an authorized mapped supervisor; Inbox binding requires the original worker or its authenticated descendant and an open execution scope. Installed current or retained authority, service and Inbox accounts also stay on the protected path: unsupported roles refuse rather than opening local authority.
+
+Protected finish selects an already submitted canonical result. A succeeded result requires accepted independent review for that exact candidate, prior no-writers proof and complete service/Inbox settlement. It does not close the scope or accept `--receipt`. Protected recovery observes one original attempt; unresolved effects or queued authenticated Inbox claims remain unresolved. Terminal/released recovery returns authenticated retained selectors without creating another mutation or restarting execution. Inbox binding retains the original registration and key identity; fresh binding after scope seal refuses.
+
+Keep the original `--mutation` and `--expected-generation` for exact retries. Authority generation is distinct from `--candidate-generation`; rereading a newer generation changes the request. Assignment, attempt and mapping hints must agree with explicit selection. Commands print canonical JSON metadata and never resend effects during recovery.
 
 ### State machine
 
