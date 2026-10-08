@@ -60,6 +60,35 @@ module Ace
         end
       end
 
+      def test_explicit_reviewed_child_captures_only_its_selected_subtree
+        with_builder do |builder, root, _task_root, tasks, _executor, _loader|
+          child = tasks.create_subtask(TASK, "Selected child", status: "pending")
+          sibling = tasks.create_subtask(TASK, "Unselected sibling", status: "pending")
+          result = builder.call(task_ref: child.id, project_id: "ace", dependency_reports: [])
+          work = Authority::PreparedWork.admit(root: root, bytes: result.fetch("bundle"), size: result.fetch("bytes"),
+            sha256: result.fetch("sha256"), head: result.fetch("head"), tree: result.fetch("tree"))
+          assert_equal child.id, work.definition.fetch("task_id")
+          assert_equal [child.id], work.manifest.fetch("context").map { |entry| entry.fetch("task_id") }
+          assert work.manifest.fetch("steps").all? { |entry|
+            entry.fetch("number") == result.fetch("scope") || entry.fetch("number").start_with?(result.fetch("scope") + ".")
+          }
+          refute work.files.key?("context/#{sibling.id}/spec.md")
+          refute work.files.key?("context/#{TASK}/spec.md")
+        end
+      end
+
+      def test_parent_with_children_refuses_before_creating_an_assignment
+        with_builder do |builder, _root, _task_root, tasks, executor, _loader|
+          tasks.create_subtask(TASK, "First child", status: "pending")
+          tasks.create_subtask(TASK, "Second child", status: "pending")
+          error = assert_raises(AttemptErrors::ReceiptRejected) do
+            builder.call(task_ref: TASK, project_id: "ace", dependency_reports: [])
+          end
+          assert_includes error.message, "not a reviewed leaf"
+          assert_empty executor.assignment_manager.list
+        end
+      end
+
       def test_cycle_refuses_before_managed_creation
         with_builder(dependencies: [DEP]) do |builder, _root, task_root, _tasks, executor, _loader|
           write_task(task_root, DEP, dependencies: [TASK])

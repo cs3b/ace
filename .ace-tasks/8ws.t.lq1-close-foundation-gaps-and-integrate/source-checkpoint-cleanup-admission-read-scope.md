@@ -42,3 +42,6 @@ Preserved unsuccessful observation: `lab/e7f278a9-54bb-484a-b160-694a41441d95`, 
 `EndcapResultOwnerFixture#fixture` unconditionally appends synthetic `candidate(1)` after original binding. `ProtectedServiceBoundaryFixture#prepared_submission` subsequently performs actual candidate generation1 transfer/import before review. This redundant predecessor remains unchanged. A separate explicit fixture preparation option could remove it for actual-import scenarios after checking consumer expectations, but no shared mutable fixture or removal of canonical fault coverage is proposed here.
 
 Independent review remains required; this author receipt is not an approval.
+# Independent integration review
+
+Root APPROVE `3597099ae9f38908dc1b00a19c3b98d5906ee892`: inspected existing immutable event selection key and nested-operation cleanup, all three admission routes, fresh peer checks and memo lifetime ending before Installer invocation. Integrated `90bd23a21`; main lifetime regression 3 tests / 57 assertions PASS, report `lab/84681b10-8f9c-4f5d-99f8-88153708abf0`. This bounded reuse removes ten redundant Git calls in the measured scenario; it is not evidence that aggregate performance or full Lab acceptance is solved.
