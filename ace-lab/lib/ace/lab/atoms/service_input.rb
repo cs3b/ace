@@ -15,16 +15,22 @@ module Ace
         RESOURCE = /\A[a-zA-Z0-9_.:\/-]{1,256}\z/
 
         def self.load(path)
-          raise ArgumentError, "input file is missing" unless File.file?(path)
-          # One handle bounds the read: a file replaced or grown between a
-          # size check and a separate read cannot bypass the limit.
           begin
-            data = File.open(path, "rb") do |file|
-              content = file.read(MAX_BYTES + 1)
-              raise ArgumentError, "input exceeds #{MAX_BYTES} bytes" if content && content.bytesize > MAX_BYTES
-              JSON.parse(content.to_s)
+            flags = File::RDONLY | File::NOFOLLOW | File::NONBLOCK
+            data = File.open(path, flags) do |file|
+              before = file.stat
+              unless before.file? && before.size <= MAX_BYTES && same_file?(before, File.lstat(path))
+                raise ArgumentError, "input must be a bounded regular file"
+              end
+              content = file.read(MAX_BYTES + 1).to_s
+              unless content.bytesize <= MAX_BYTES && same_file?(before, file.stat) &&
+                  same_file?(before, File.lstat(path))
+                raise ArgumentError, "input file changed while reading"
+              end
+              JSON.parse(content, allow_duplicate_key: false, allow_comments: false,
+                allow_nan: false, create_additions: false, max_nesting: 16)
             end
-          rescue Errno::EACCES, Errno::EISDIR
+          rescue SystemCallError, IOError
             raise ArgumentError, "input file is unreadable"
           end
           raise ArgumentError, "input must be a JSON object" unless data.is_a?(Hash)
@@ -33,6 +39,12 @@ module Ace
         rescue JSON::ParserError
           raise ArgumentError, "input must be valid JSON"
         end
+
+        def self.same_file?(left, right)
+          [left.dev, left.ino, left.mode, left.uid, left.gid, left.size, left.mtime, left.ctime] ==
+            [right.dev, right.ino, right.mode, right.uid, right.gid, right.size, right.mtime, right.ctime]
+        end
+        private_class_method :same_file?
 
         def self.digest(data)
           Digest::SHA256.hexdigest(JSON.generate(canonical(data)))
