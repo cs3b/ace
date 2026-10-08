@@ -1,5 +1,9 @@
 # Exact maintenance workspace retirement — source contract candidate
 
+## Independent readiness verdict — 2026-10-08
+
+Root approves exact `f71c60254` atop `e9d2044d6` for implementation. The successor resolves the receipt-publication cycle, identifies the existing nine-field target and separates execution from fresh inspection deadlines. Approval covers the complete target-only held-resource proof, nested resource coverage and active-slice closure path; full initial eligibility and all unaffected checks remain mandatory. ACE generic owners are assigned to wave_n0n, Lab evidence/composition to wave_412. This supersedes pending-readiness wording below, not implementation or installed acceptance.
+
 Base `c6d78c02c`. Draft, not implementation/readiness approval. Fixes the existing cleanup composition: after Git move, original worker_cwd disappears; captured-phase slot_reusable! and restarted inspect currently require that path before retained success can be verified. Missing paths alone never prove cleanup or closure.
 
 ## Owners and unchanged boundaries
