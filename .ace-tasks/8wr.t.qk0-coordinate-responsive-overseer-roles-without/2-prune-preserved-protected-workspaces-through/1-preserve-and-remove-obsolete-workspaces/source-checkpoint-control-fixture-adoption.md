@@ -1,5 +1,9 @@
 # Control callback and maintained fixture adoption successor
 
+## Integrated source verdict — 2026-10-08
+
+Root independently reviewed and approved `d7c87f190` plus `4dc417234`: original authenticated registration/root ownership, ordered old/new task guards, no-replace provisioning, held-identity checks and callback exception preservation. Integrated as `44bd4143c` and `54e86661a`; the reviewed contract candidate was included and all existing changelog entries retained during conflict resolution. Main verification on `54e86661a`: control/workspace primitives plus canonical registration **25 tests / 150 assertions PASS**, report `.ace-local/test/reports/assign/e691cb12-e9cc-425c-8015-2999723ae3b7/`. This supersedes the awaiting-review statement below for this delta only. Native creator SH lifetime and complete physical composition remain open.
+
 Scope: successor to d7c87f190, joined with main d1c31da9a in 21018e256. ControlExclusion preserves the original exception object from owner callbacks while still classifying its own filesystem/protection failures and unwinding all held guards. Maintained positive LaunchLifecycle fixtures explicitly provision the selected original control root and use controlled installed identity/ACL/namespace observations. Production admission is not relaxed.
 
 The constructor audit covers EndcapResultOwnerFixture, deployment, parent-cap, historical rotation, protected attempt consumers, native admission, prepared registration and launch lifecycle fixtures. Pure history readers and non-dispatch Object fixtures need no control adoption. The lifecycle test class was consolidated from three identical reopened scopes into one static scope, preserving all methods, so exact source selectors are valid.
