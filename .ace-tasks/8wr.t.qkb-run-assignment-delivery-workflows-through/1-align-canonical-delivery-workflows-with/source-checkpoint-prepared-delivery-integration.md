@@ -14,6 +14,6 @@ passed **3 tests / 132 assertions**, no skips, seed58553, 70.76409s. Report:
 delivery, authorization-denial, and pre-registration capture methods executed.
 The process remained live during buffered silence and was not restarted.
 
-These results do not close qkb.1: external provider/tool composition, unresolved
-PR-order policy, physical cleanup, and the remaining program contracts still need
-their own evidence. Installed Lab acceptance remains exclusively gad.2.
+These results satisfy the deterministic integrated-assignment proof required by qkb.1 SC2. They do not close qkb.1: unresolved PR-order policy, physical cleanup, and the remaining dependent source contracts still need their own evidence. The controlled Ruby provider is an explicit evidence boundary, not an additional unimplemented source requirement. Actual installed external-agent and cross-user workflow acceptance remains exclusively gad.2.
+
+Independent scope audit by review_lab_bootstrap on 2026-10-08 confirmed that the canonical SC2 permits deterministic workflow fixtures and one integrated assignment run, and that the central acceptance amendment assigns installed scenarios to gad.2. No accepted requirement mandates an extra shipped-LLM-agent/tool-loop source gate. The earlier checkpoint wording incorrectly elevated this evidence limitation into a source blocker; this correction removes that invented gate without claiming installed proof.
