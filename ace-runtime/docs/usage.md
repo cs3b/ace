@@ -286,7 +286,11 @@ remain domain gad.8/gad.b producer obligations.
 namespace descriptors without entering or changing a namespace. It reports the
 complete mount table (at most256 rows), fixed API/tmp view mount IDs obtained from
 contained O_PATH descriptors, server/hook IPC identities and the exact authority
-socket identity. The private report shares a65,536-byte ceiling. Mount path
+socket identity. It also holds the original server’s `/proc/<pid>/ns/net` object,
+requires the nsfs network-namespace type and rechecks its identity after collection.
+The report includes that observed `network_namespace_identity`; it never substitutes
+the hook’s namespace or a configured namespace identity. The private report shares
+a65,536-byte ceiling. Mount path
 prefixes, typed isolation flags and filesystem names alone do not prove live
 isolation. `KernelViewTopology` verifies the fixed supported profile, read-only
 API views, private IPC host difference and exact writable original backing;

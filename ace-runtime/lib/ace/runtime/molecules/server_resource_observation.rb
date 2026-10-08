@@ -31,6 +31,8 @@ module Ace
             supported!
             root = File.open("/proc/#{pid}/root", File::RDONLY)
             namespace = File.open("/proc/#{pid}/ns/mnt", File::RDONLY)
+            network = File.open("/proc/#{pid}/ns/net", File::RDONLY)
+            network_identity = network_identity!(network)
             ipc = File.open("/proc/#{pid}/ns/ipc", File::RDONLY)
             hook_ipc = File.open("/proc/self/ns/ipc", File::RDONLY)
             root_identity, namespace_identity = identity(root.stat), identity(namespace.stat)
@@ -61,6 +63,7 @@ module Ace
             ptmx_identity, ptmx_link = pinned_ptmx(root, table: table)
             repeated = LinuxMountInfo.new(File.read("/proc/#{pid}/mountinfo", LinuxMountInfo::LIMIT + 1))
             unless namespace_identity == self.namespace(pid) && root_identity == identity(File.stat("/proc/#{pid}/root")) &&
+                network_identity == self.namespace(pid, "net") &&
                 ipc_identity == self.namespace(pid, "ipc") && hook_ipc_identity == self.namespace("self", "ipc") &&
                 table.records == repeated.records &&
                 views == VIEW_PATHS.map { |path| pinned_view(root, path, table: repeated) } &&
@@ -68,18 +71,30 @@ module Ace
                 [ptmx_identity, ptmx_link] == pinned_ptmx(root, table: repeated)
               raise RuntimeUnavailableError, "server root or namespace changed during observation"
             end
-            {"mount_namespace_identity" => namespace_identity, "resource_identities" => result, "resource_topology" => topology,
+            {"mount_namespace_identity" => namespace_identity, "network_namespace_identity" => network_identity, "resource_identities" => result, "resource_topology" => topology,
               "kernel_view_topology" => {"ipc_namespace_identity" => ipc_identity, "hook_ipc_namespace_identity" => hook_ipc_identity,
                 "mounts" => table.records.map { |row| row.slice(*MOUNT_FIELDS) }, "views" => views, "authority_socket_identity" => socket_identity,
                 "ptmx_identity" => ptmx_identity, "ptmx_link" => ptmx_link}}
           ensure
             root&.close
             namespace&.close
+            network&.close
             ipc&.close
             hook_ipc&.close
           end
 
           private
+
+          # NS_GET_NSTYPE is an nsfs ioctl. Pin the original server's object,
+          # require CLONE_NEWNET, and retain it across the repeated path read.
+          def network_identity!(handle)
+            unless handle.ioctl(0xb703) == 0x40000000
+              raise RuntimeUnavailableError, "server object is not a network namespace"
+            end
+            identity(handle.stat)
+          rescue SystemCallError, IOError
+            raise RuntimeUnavailableError, "server network namespace type is unavailable"
+          end
 
           def identity(stat) = {"device" => stat.dev, "inode" => stat.ino}
 

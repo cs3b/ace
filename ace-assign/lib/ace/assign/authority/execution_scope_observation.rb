@@ -324,10 +324,17 @@ module Ace
 
         def verify_readiness_report!(lineage, peer, report, challenge:)
           server = readiness_peer!(lineage, peer)
-          unless report.is_a?(Hash) && report.keys.sort == %w[challenge_id kernel_view_topology mount_namespace_identity resource_identities resource_observer_identity resource_topology server_identity version] &&
+          unless report.is_a?(Hash) && report.keys.sort == %w[challenge_id kernel_view_topology mount_namespace_identity network_namespace_identity resource_identities resource_observer_identity resource_topology server_identity version] &&
               report["version"] == 1 && report["challenge_id"] == challenge.fetch("challenge_id") &&
               @kernel.same?(report.fetch("server_identity"), server) && @kernel.same?(report.fetch("resource_observer_identity"), peer)
             unavailable!("private readiness report binding differs")
+          end
+          network = report.fetch("network_namespace_identity")
+          unless network.is_a?(Hash) && network.keys.sort == %w[device inode] &&
+              network.values.all? { |value| value.is_a?(Integer) && value.positive? } &&
+              network == lineage.binding.fetch("network_namespace_identity") &&
+              network == lineage.admission_event.dig("payload", "data", "network_installation", "namespace_identity")
+            unavailable!("original server network namespace differs from admitted installation")
           end
           entries = @files.boundary_manifest(@scope).fetch("resources").select { |entry| entry.fetch("worker_visible") }
           resources = report.fetch("resource_identities")
@@ -375,7 +382,7 @@ module Ace
             "scope_generation" => binding.fetch("scope_generation"), "scope_binding_event_id" => lineage.binding_event.fetch("digest"),
             "service_invocation_id" => @manager.inspect_activation.fetch("service").fetch("InvocationID"),
             "workspace_id" => @map.fetch("native").fetch("workspace_id"),
-            "network_namespace_identity" => binding.fetch("network_namespace_identity"),
+            "network_namespace_identity" => network.dup,
             "network_admission_event_id" => lineage.admission_event.fetch("digest"))
         end
 

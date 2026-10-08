@@ -43,11 +43,11 @@ class ServerResourceObservationTest < AceRuntimeTestCase
     end
   end
 
-  def with_contained_fixture(changed_table: false, changed_ipc: false, changed_ptmx_link: false, changed_ptmx_node: false)
+  def with_contained_fixture(changed_table: false, changed_ipc: false, changed_ptmx_link: false, changed_ptmx_node: false, changed_network: false, wrong_network_type: false)
     Dir.mktmpdir("ace-server-view-") do |root|
       views = Observation::VIEW_PATHS
       (views + ["/scratch", "/authority"]).each { |path| FileUtils.mkdir_p(root + path) }
-      %w[mnt ipc replacement].each { |name| File.write(root + "/#{name}.identity", name) }
+      %w[mnt ipc net replacement].each { |name| File.write(root + "/#{name}.identity", name) }
       endpoint = UNIXServer.new(root + "/authority/socket")
       File.write(root + "/dev/pts/ptmx", "controlled node")
       File.symlink(changed_ptmx_link ? "foreign" : "pts/ptmx", root + "/dev/ptmx")
@@ -89,10 +89,18 @@ class ServerResourceObservationTest < AceRuntimeTestCase
         when "/proc/81/ns/mnt" then root + "/mnt.identity"
         when "/proc/81/ns/ipc"
           root + (changed_ipc && opens[path] > 1 ? "/replacement.identity" : "/ipc.identity")
+        when "/proc/81/ns/net"
+          root + (changed_network && opens[path] > 1 ? "/replacement.identity" : "/net.identity")
         when "/proc/self/ns/ipc" then root + "/ipc.identity"
         else raise "undeclared observation #{path}"
         end
         handle = real_open.call(mapped, *args)
+        if path == "/proc/81/ns/net"
+          handle.define_singleton_method(:ioctl) do |operation|
+            raise "wrong namespace ioctl" unless operation == 0xb703
+            wrong_network_type ? 0x20000 : 0x40000000
+          end
+        end
         if block
           begin; block.call(handle); ensure; handle.close; end
         else
@@ -126,6 +134,8 @@ class ServerResourceObservationTest < AceRuntimeTestCase
     with_contained_fixture do |files, flags|
       result = files.observe(81, [{"host_path" => "/host/scratch", "view_path" => "/scratch"}], authority_socket: "/authority/socket")
       topology = result.fetch("kernel_view_topology")
+      assert_equal %w[device inode], result.fetch("network_namespace_identity").keys.sort
+      assert result.fetch("network_namespace_identity").values.all? { |value| value.is_a?(Integer) && value.positive? }
       assert_equal Observation::VIEW_PATHS.sort, topology.fetch("views").map { |view| view.fetch("path") }.sort
       assert_equal 13, topology.fetch("mounts").size
       assert_equal "pts/ptmx", topology.fetch("ptmx_link")
@@ -134,7 +144,7 @@ class ServerResourceObservationTest < AceRuntimeTestCase
       assert_equal Process.uid, topology.fetch("authority_socket_identity").last
       assert_equal 26, flags.count { |path, bits| path != "/scratch" && bits == 0x200000 | File::NOFOLLOW }
     end
-    [{changed_table: true}, {changed_ipc: true}, {changed_ptmx_link: true}, {changed_ptmx_node: true}].each do |options|
+    [{changed_table: true}, {changed_ipc: true}, {changed_ptmx_link: true}, {changed_ptmx_node: true}, {changed_network: true}, {wrong_network_type: true}].each do |options|
       with_contained_fixture(**options) do |files, _flags|
         assert_raises(Ace::Runtime::RuntimeUnavailableError) { files.observe(81, [], authority_socket: "/authority/socket") }
       end

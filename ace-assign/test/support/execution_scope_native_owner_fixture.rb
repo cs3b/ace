@@ -61,7 +61,7 @@ module Ace
           @kernel.capture(90)
         end
         def verify_readiness_report!(lineage, peer, report, challenge:)
-          raise "wrong controlled callback" unless report.keys.sort == %w[challenge_id kernel_view_topology mount_namespace_identity resource_identities resource_observer_identity resource_topology server_identity version] &&
+          raise "wrong controlled callback" unless report.keys.sort == %w[challenge_id kernel_view_topology mount_namespace_identity network_namespace_identity resource_identities resource_observer_identity resource_topology server_identity version] &&
             report["challenge_id"] == challenge["challenge_id"] && peer == @kernel.capture(92)
           Ace::Runtime::Molecules::KernelViewTopology.new.verify!(topology: report.fetch("kernel_view_topology"),
             host_ipc: {"device" => 4, "inode" => 900}, authority_socket: [1, 2, 13000], writable_resources: [],
@@ -116,6 +116,7 @@ module Ace
             raise "wrong resource observation inputs" unless server == original_kernel.capture(90) &&
               entries == declarations.select { |entry| entry.fetch("worker_visible") } && authority_socket == "/run/authority/socket"
             payload.slice("mount_namespace_identity", "resource_identities").merge("resource_topology" => payload.fetch("resource_topology", []),
+              "network_namespace_identity" => payload.fetch("network_namespace_identity", ExecutionScopeObservationFixtures::NETWORK_OUTPUT.fetch("namespace_identity")),
               "kernel_view_topology" => payload.fetch("kernel_view_topology", ExecutionScopeObservationFixtures.kernel_topology))
           end
           Authority::ReadinessHook.new(slot: "slot", configuration: configuration, kernel: kernel, wire: wire,

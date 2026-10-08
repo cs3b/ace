@@ -271,6 +271,7 @@ module Ace
         {"version" => 1, "challenge_id" => "a" * 64, "server_identity" => @kernel.capture(90),
           "resource_observer_identity" => @kernel.capture(92), "mount_namespace_identity" => {"device" => 4, "inode" => 22},
           "resource_identities" => resources, "resource_topology" => topology,
+          "network_namespace_identity" => @files.network.dup,
           "kernel_view_topology" => ExecutionScopeObservationFixtures.kernel_topology(resources: resources)}
       end
 
@@ -283,6 +284,19 @@ module Ace
         assert_equal lineage.admission_event.fetch("digest"), value.fetch("network_admission_event_id")
         @manager.profile["service"]["ExecStartPostEx"][0][7] = 93
         assert_raises(Ace::Runtime::RuntimeUnavailableError) { @observer.readiness_peer!(lineage, hook) }
+      end
+
+      def test_readiness_refuses_missing_foreign_or_malformed_server_network_namespace
+        report = ready_report
+        peer = @kernel.capture(92)
+        missing = report.reject { |key, _| key == "network_namespace_identity" }
+        invalid = [missing, *[nil, {"device" => 7, "inode" => 89}, {"device" => "7", "inode" => 88},
+          {"device" => 7, "inode" => 88, "untrusted" => true}].map { |value| report.merge("network_namespace_identity" => value) }]
+        invalid.each do |value|
+          assert_raises(Ace::Runtime::RuntimeUnavailableError) do
+            @observer.verify_readiness_report!(lineage, peer, value, challenge: report.slice("challenge_id"))
+          end
+        end
       end
 
       def test_actual_readiness_hook_report_round_trips_into_production_observer

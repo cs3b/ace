@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+- Pin and type-check the original native server's network namespace throughout readiness observation; refuse namespace replacement before returning its identity.
+
 - Expose selected staged boundary topology validation for installer source composition while retaining mandatory live authority socket verification for installed units.
 
 ### Fixed

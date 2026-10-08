@@ -542,7 +542,10 @@ through the authenticated authority connection, closes its write side and waits
 for acknowledgement. The authority joins the exact manager-selected hook/server
 actors, immutable runtime/configuration dependencies, original boot/network
 proofs and complete live mount/IPC/resource observations before binding native
-admission. Unknown writable projections, writable API descendants, changed
+admission. The hook’s observed server network namespace must match both the original
+parent selection and the canonical network installation admission. A missing,
+malformed or different identity refuses native binding before child release.
+Unknown writable projections, writable API descendants, changed
 socket endpoints and incomplete evidence refuse. A read-only socket mount does
 not authorize messages.
 
