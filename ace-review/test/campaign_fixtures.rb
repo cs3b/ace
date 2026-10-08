@@ -164,7 +164,7 @@ module CampaignFixtures
     {"attempt_id" => "accepted-test", "digest" => digest}
   end
 
-  def add_campaign_approval(campaign, input, producer: "worker")
+  def add_campaign_approval(campaign, input, producer: "worker", reviewer: "reviewer")
     check_path = ".ace-local/check-#{input['round_id']}.json"
     File.write(File.join(@test_dir, check_path), JSON.generate("name" => "tests", "head" => input["head"],
       "status" => "succeeded", "exit_code" => 0, "completed_at" => Time.now.utc.iso8601))
@@ -174,8 +174,9 @@ module CampaignFixtures
     approval_path = ".ace-local/approval-#{input['round_id']}.json"
     approval = {"head" => input["head"], "base" => input["base"], "contract_identity" => campaign["contract_identity"],
       "required_scopes" => input["required_scopes"], "verdict" => "approved", "producer" => producer,
-      "reviewer" => "reviewer", "reports" => reports,
-      "receipt" => accepted_approval_reference(reports: reports, producer: producer, reviewer: "reviewer"),
+      "reviewer" => reviewer, "reports" => reports,
+      "report_models" => reports.map { |ref| {"report" => ref, "report_model" => "reviewer"} },
+      "receipt" => accepted_approval_reference(reports: reports, producer: producer, reviewer: reviewer),
       "checks" => [{"name" => "tests", "verdict" => "passed", "receipt" => accepted_check_reference(check_path)}]}
     File.write(File.join(@test_dir, approval_path), JSON.generate(approval))
     input["approval"] = artifact_ref(approval_path)

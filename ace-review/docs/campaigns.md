@@ -103,13 +103,14 @@ The final round may reference an explicit approval artifact with `approval: {"pa
 ```json
 {
   "producer":"IMPLEMENTER_ACTOR",
-  "reviewer":"ACTUAL_EXECUTED_REVIEWER_MODEL",
+  "reviewer":"INDEPENDENT_REVIEWER_ACTOR",
   "verdict":"approved",
   "head":"EXACT_REVIEWED_HEAD_SHA",
   "base":"EXACT_REVIEWED_BASE_SHA",
   "contract_identity":"FROZEN_CONTRACT_SHA256",
   "required_scopes":["full"],
   "reports":[{"path":"SESSION/review-report-MODEL.md","sha256":"REPORT_SHA256"}],
+  "report_models":[{"report":{"path":"SESSION/review-report-MODEL.md","sha256":"REPORT_SHA256"},"report_model":"ACTUAL_EXECUTED_MODEL"}],
   "receipt":{"attempt_id":"ACCEPTED_REVIEW_APPROVAL_ATTEMPT_ID","digest":"ACCEPTED_RECEIPT_SHA256"},
   "checks":[{"name":"tests","verdict":"passed","receipt":{
     "attempt_id":"ACCEPTED_CHECK_ATTEMPT_ID","digest":"ACCEPTED_RECEIPT_SHA256"
@@ -119,7 +120,7 @@ The final round may reference an explicit approval artifact with `approval: {"pa
 
 The approval `receipt` refers to an ordinary managed `operation: "review"` receipt with an executed `review.verdict: "approved"`, the same exact head, producer/reviewer actors and checksummed report artifacts. Submit that attributable outcome through the existing coordinator after the independent reviewer actually approves. Do not include a campaign result in this source receipt; campaign consumption happens afterward. The read-only `attempt evidence --kind review-approval` boundary revalidates its accepted authority. A collection receipt certifies execution even when its report rejects the candidate; it cannot certify approval. Every retained approval remains authority-backed across head changes through explicit historical validation.
 
-Producer and reviewer must differ. Reviewer identity must match the actual completed execution model in the referenced session; approvals must cover every required scope. Required checks refer to a succeeded execution receipt already accepted by the ace-assign coordinator. The receipt operation must match the check: `tests` requires `test`; other explicit check names require the same operation name. An unrelated operation claiming a passed tests field is rejected. Run the check under an existing managed assignment attempt and submit its attributable result, current head, check outcomes and checksummed artifacts through `ace-assign attempt finish`. Use the accepted attempt ID and receipt digest here. A self-authored check JSON file is insufficient. Campaign recording and acceptance consult the read-only `ace-assign attempt evidence --attempt ID --receipt-digest DIGEST --format json --kind check --check-name tests` boundary, which revalidates current head and source artifacts against accepted history. Retain `ace-assign` alongside `ace-review` for this qjl evidence capability; unavailable authority blocks acceptance explicitly. Campaign commands never run the check for you or create a second execution journal. Authenticated producer/reviewer attribution and execution acceptance remain owned by ace-assign.
+Producer and reviewer must differ. Reviewer identifies the authenticated actor, independently of the model. Each report must have exactly one `report_models` entry whose checksummed reference belongs to `reports` and whose `report_model` matches verified session execution metadata. Missing, duplicate, extra or mismatched entries fail; model names do not substitute for actor attribution. Approvals must cover every required scope. Required checks refer to a succeeded execution receipt already accepted by the ace-assign coordinator. The receipt operation must match the check: `tests` requires `test`; other explicit check names require the same operation name. An unrelated operation claiming a passed tests field is rejected. Run the check under an existing managed assignment attempt and submit its attributable result, current head, check outcomes and checksummed artifacts through `ace-assign attempt finish`. Use the accepted attempt ID and receipt digest here. A self-authored check JSON file is insufficient. Campaign recording and acceptance consult the read-only `ace-assign attempt evidence --attempt ID --receipt-digest DIGEST --format json --kind check --check-name tests` boundary, which revalidates current head and source artifacts against accepted history. Retain `ace-assign` alongside `ace-review` for this qjl evidence capability; unavailable authority blocks acceptance explicitly. Campaign commands never run the check for you or create a second execution journal. Authenticated producer/reviewer attribution and execution acceptance remain owned by ace-assign.
 
 ```sh
 ace-review campaign finish CAMPAIGN_ID --format json

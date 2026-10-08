@@ -20,6 +20,39 @@ class CampaignEvidenceTest < AceReviewTest
     super
   end
 
+  def test_review_actor_can_differ_from_verified_report_model
+    campaign = start_campaign
+    input = round_input(1)
+    make_campaign_session(campaign, input)
+    add_campaign_approval(campaign, input, reviewer: "uid-13002")
+    result = campaign_manager.record_round(campaign["campaign_id"], input)
+    assert_equal 1, result["completed_rounds"]
+  end
+
+  def test_approval_requires_complete_unambiguous_verified_report_models
+    campaign = start_campaign
+    mutations = [
+      ->(approval) { approval.delete("report_models") },
+      ->(approval) { approval["report_models"] = [] },
+      ->(approval) { approval["report_models"] *= 2 },
+      ->(approval) { approval["report_models"][0]["report_model"] = "uid-13002" },
+      ->(approval) { approval["report_models"][0]["extra"] = true },
+      ->(approval) { approval["reports"] *= 2 }
+    ]
+    mutations.each_with_index do |mutate, index|
+      input = round_input(index + 1)
+      make_campaign_session(campaign, input)
+      add_campaign_approval(campaign, input, reviewer: "uid-13002")
+      path = File.join(@test_dir, input["approval"]["path"])
+      approval = JSON.parse(File.read(path))
+      mutate.call(approval)
+      File.write(path, JSON.generate(approval))
+      input["approval"] = artifact_ref(input["approval"]["path"])
+      assert_raises(ArgumentError) { campaign_manager.record_round(campaign["campaign_id"], input) }
+      assert_equal 0, campaign_manager.status(campaign["campaign_id"])["completed_rounds"]
+    end
+  end
+
   def test_real_single_runner_metadata_with_relative_session_path_is_consumable
     campaign = start_campaign
     input = round_input(1)

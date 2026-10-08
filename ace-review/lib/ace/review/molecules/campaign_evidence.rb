@@ -192,14 +192,31 @@ module Ace
           unless review_refs.is_a?(Array) && !review_refs.empty?
             raise Contract::Invalid, "approval must reference executed reviewer reports"
           end
-          known = sessions.flat_map { |s| s["reports"] }
-          review_refs.each do |ref|
-            _, validated = artifact(ref)
-            report = known.find { |r| r["artifact"] == validated }
-            unless report && report.dig("execution", "model") == reviewer
-              raise Contract::Invalid, "approval reviewer/report was not executed in this round"
-            end
+          review_refs = review_refs.map { |ref| artifact(ref).last }
+          unless review_refs.uniq.size == review_refs.size
+            raise Contract::Invalid, "approval reports must be unique"
           end
+          model_entries = data["report_models"]
+          unless model_entries.is_a?(Array) && model_entries.size == review_refs.size
+            raise Contract::Invalid, "approval requires one executed model per report"
+          end
+          known = sessions.flat_map { |s| s["reports"] }
+          report_models = model_entries.map do |entry|
+            unless entry.is_a?(Hash) && entry.keys.sort == %w[report report_model]
+              raise Contract::Invalid, "approval report model fields differ"
+            end
+            _, ref = artifact(entry.fetch("report"))
+            model = Contract.string!(entry["report_model"], "approval report model")
+            report = known.find { |item| item["artifact"] == ref }
+            unless review_refs.include?(ref) && report && report.dig("execution", "model") == model
+              raise Contract::Invalid, "approval report model was not executed in this round"
+            end
+            {"report" => ref, "report_model" => model}
+          end
+          unless report_models.map { |entry| entry.fetch("report") }.uniq.size == review_refs.size
+            raise Contract::Invalid, "approval report model coverage differs"
+          end
+          report_models = review_refs.map { |ref| report_models.find { |entry| entry["report"] == ref } }
           approved_scopes = sessions.select do |s|
             s["reports"].any? { |r| review_refs.include?(r["artifact"]) }
           end.map { |s| s["scope"] }.uniq
@@ -223,7 +240,7 @@ module Ace
             raise Contract::Invalid, "missing required checks"
           end
           {"artifact" => normalized, "artifacts" => check_refs + review_refs, "receipt" => approval_receipt,
-           "reports" => review_refs, "producer" => producer,
+           "reports" => review_refs, "report_models" => report_models, "producer" => producer,
            "reviewer" => reviewer, "head" => binding["head"], "base" => binding["base"], "checks" => checks,
            "verdict" => "approved"}
         rescue JSON::ParserError, KeyError => e
