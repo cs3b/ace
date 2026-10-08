@@ -1,6 +1,6 @@
 # Public composition fixture repair
 
-Source checkpoint based on ea6221ae5. Independent review pending; task status and SCs unchanged.
+Source checkpoint based on ea6221ae5. Independent review and integration recorded below; task status and SCs unchanged.
 
 The integrated main verification53f02f18-7742-4332-bcaa-e054c45cd7eb failed all nine scenarios at release/readiness. The composition override discarded the maintained original workspace observer/resources/declarations, so ExecutionScopeNativeOwnerFixture refused the original lifecycle projection. Reuse PreparedWorkspaceResourceFixture: actual private files and provisioning, real ExecutionScopeObservation projection, and its controlled namespace/ACL reader only at PreparedWorker's declared constructor seam. Registration, resource lineage, immutable release, public socket/CLI, queue and terminal proofs remain real.
 
@@ -17,3 +17,15 @@ Executed controlled evidence:
 Final command: bin/ace-test ace-overseer test/feat/protected_work_on_composition_test.rb --timeout1200 --profile9 --config-path /Users/mc/.codex/worktrees/xza-codex-queue-producer/ace/.ace-local/test/config/codex-bundle.yml (with BUNDLE_PATH selecting that checkout's locally installed locked dependency tree). Explicit config contains only the hermetic BUNDLE_PATH override.1200 is the already approved aggregate package ceiling selected for this command; original launch/readiness/authority deadlines remain unchanged. First erroneous --filter method attempt7dda56c7 found zero files and is not proof.
 
 Reports retained in /Users/mc/.codex/worktrees/qk0-composition-repair/ace/.ace-local/test/reports/overseer/. No installed/native/Lab proof or whole qk0 closure claimed.
+
+## Independent integration verdict
+
+Root APPROVE frozen `6f23952f881b632dd0481011fdcb69ada070abe1`: original
+resource provisioning/observer and explicit controlled reader are restored; steering
+uses the maintained asynchronous fork seam with joined child and steering failures.
+Product deadlines and acceptance assertions are unchanged. Verified the full
+9/435 report directly and integrated as `de2591f8b`. Main readiness smoke passed
+1/30 in12.19s, report `overseer/3d6ba8b9-3fc2-40d1-bfbc-23aed7c6eccc`.
+Between author base and integration, Assign/Overseer/Runtime/Bundle product sources
+were unchanged; the lockfile added Herdr WebSocket dependencies only. This is
+scoped source evidence, not the final whole-program revision or installed Lab gate.
