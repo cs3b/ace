@@ -63,8 +63,17 @@ checks recorded below. No timeout was increased and no fake Lab was added.
   support-items 0.15.14, test-runner 0.28.1, git-commit 0.26.7, task 0.39.2,
   review 0.60.0, assign 0.66.0, hitl 0.13.0, hitl-hermes 0.2.1,
   lab 0.5.0, overseer 0.20.1 (all names have the ace- prefix).
-- [ ] Captain publishes interactively with OTP.
+- [x] Captain publishes interactively with OTP: operator report received
+  2026-10-10, 14 published, zero skipped, eight waves, 18.4 seconds.
+  Published versions match the prepared queue above. The publisher
+  dry-run independently confirms all versions on RubyGems, nothing pending.
+  Installation proof is
+  a separate next step; this report does not establish Lab readiness.
 - [ ] Post-publication `TS-MONO-001` verifies installation propagation.
+  Run `8x9nqxx` (2026-10-10): both installs exit 0; wrapper 4/4 PASS,
+  but exact-version acceptance FAIL (130 findings): stale default manifest
+  and real missing Runtime/Contract APIs. Publication is confirmed, installed
+  readiness is not. Correction belongs to `8x9.t.nva`; it includes Bundle.
 - [ ] `lab-config 8wl.t.gad.2` installs, launches and observes a real Lab task.
 
 Publication/propagation/installed acceptance are not claimed by source review
