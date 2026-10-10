@@ -71,3 +71,4 @@ _current
 
 # ZCode local state (plans, session artifacts)
 .zcode/
+.ace-bin/spinel-aot/gemlib/

@@ -25,7 +25,7 @@ module Ace
           end
 
           def add_file(file)
-            self.class.new(
+            ConfigGroup.new(
               name: name,
               source: source,
               config: config,
