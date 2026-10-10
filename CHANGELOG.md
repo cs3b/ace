@@ -16,6 +16,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+- **ace-git-worktree 0.26.1**: Restore task-aware create by exposing the scoped task commit method used by the orchestrator; add red-before/green-after regression coverage.
 - **Release dependency correction, 2026-10-10**: Ship the omitted Runtime 0.3.0, HITL Contract 0.2.1 and Bundle 0.45.0 source, with minimum producer/consumer patch floors in Herdr 0.5.1, Assign 0.66.1, Review 0.60.1, HITL 0.13.1, Hermes 0.2.2, Lab 0.5.1 and Overseer 0.20.2. Published installation receipts exposed missing modules/constants despite successful bundle install. Installed acceptance requires the separate exact-version gate with a current frozen manifest; source tests and wrapper PASS do not replace it.
 
 - **ace-review v0.59.1**: Isolate concurrent review sessions and atomically publish reports without replacing prior findings.

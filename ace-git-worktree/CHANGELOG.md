@@ -7,8 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.26.1] - 2026-10-10
+
 ### Fixed
 
+- Make `TaskCommitter#commit_scoped` public so task-aware worktree creation can commit task bookkeeping through the orchestrator.
 - Describe automatic draft creation through the configured forge provider in the shipped defaults.
 
 ## [0.26.0] - 2026-10-05
