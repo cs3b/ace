@@ -6,7 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
-- Validate the fixed Codex app-server unit through the original execution installation owner, preserving mapped credentials, containment, artifact bytes and effective manager profile.
+## [0.3.0] - 2026-10-10
+
+- Ship the protected task-context/worker entry and readiness source used by the current consumers; these required modules were absent from published 0.2.0. Ordinary agent execution remains the ace-llm terminal CLI, with no additional Codex service.
 
 
 - Pin and type-check the original native server's network namespace throughout readiness observation; refuse namespace replacement before returning its identity.

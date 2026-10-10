@@ -48,7 +48,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "ace-support-config", "~> 0.18"
   spec.add_dependency "ace-b36ts", "~> 0.14"
   spec.add_dependency "ace-support-core", "~> 0.32" # For ProcessTerminator
-  spec.add_dependency "ace-bundle", "~> 0.44"
+  spec.add_dependency "ace-bundle", "~> 0.45"
   spec.add_dependency "ace-compressor", "~> 0.25"
   spec.add_dependency "ace-git", "~> 0.30"
   spec.add_dependency "ace-git-github", "~> 0.3"

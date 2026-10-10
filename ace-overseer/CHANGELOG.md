@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.20.2] - 2026-10-10
+
+### Fixed
+
+- Require the published producer and consumer patch versions containing the protected context and managed-attempt APIs; exclude incompatible prior dependency graphs.
+
 ## [0.20.1] - 2026-10-08
 
 ### Changed

@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.45.0] - 2026-10-10
+
+### Added
+
+- Ship protected task-context loading with the Runtime 0.3 API and held artifact verification.
+
+### Fixed
+
+- Require Runtime 0.3 and Herdr 0.5.1 so installed contexts cannot resolve missing producer modules.
+
 ## [0.44.2] - 2026-09-29
 
 ### Fixed

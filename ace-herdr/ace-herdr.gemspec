@@ -42,8 +42,8 @@ Gem::Specification.new do |spec|
   # Runtime dependencies
   spec.add_dependency "websocket-driver", "~> 0.8.2"
   spec.add_dependency "fiddle", ">= 1.1", "< 2"
-  spec.add_dependency "ace-hitl-contract", "~> 0.2"
-  spec.add_dependency "ace-runtime", "~> 0.2"
+  spec.add_dependency "ace-hitl-contract", "~> 0.2.1"
+  spec.add_dependency "ace-runtime", "~> 0.3"
   spec.add_dependency "ace-support-cli", "~> 0.6"
   spec.add_dependency "ace-support-core", "~> 0.31"
   spec.add_dependency "ace-support-config", "~> 0.18"

@@ -4,7 +4,7 @@ module Ace
   module Hitl
     # Folder-as-interface HITL transport plugin (spec 8wm.t.vs1).
     module Hermes
-      VERSION = "0.2.1"
+      VERSION = "0.2.2"
     end
   end
 end

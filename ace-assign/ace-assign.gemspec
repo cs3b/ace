@@ -50,12 +50,12 @@ Gem::Specification.new do |spec|
   spec.add_dependency "ace-b36ts", "~> 0.14"
   spec.add_dependency "ace-support-markdown", "~> 0.3"
   spec.add_dependency "ace-llm", "~> 0.39"
-  spec.add_dependency "ace-review", "~> 0.60"
+  spec.add_dependency "ace-review", "~> 0.60.1"
   spec.add_dependency "ace-task", "~> 0.37"
-  spec.add_dependency "ace-bundle", "~> 0.44"
-  spec.add_dependency "ace-runtime", "~> 0.2"
+  spec.add_dependency "ace-bundle", "~> 0.45"
+  spec.add_dependency "ace-runtime", "~> 0.3"
   spec.add_dependency "ace-tmux", "~> 0.18"
-  spec.add_dependency "ace-herdr", "~> 0.5"
+  spec.add_dependency "ace-herdr", "~> 0.5.1"
 
   # Development dependencies
   spec.add_development_dependency "ace-support-test-helpers", "~> 0.14"
