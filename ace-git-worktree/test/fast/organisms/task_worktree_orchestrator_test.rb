@@ -65,6 +65,33 @@ class TaskWorktreeOrchestratorTest < Minitest::Test
     assert dirty[:untracked].is_a?(Array)
   end
 
+  def test_commit_task_changes_calls_task_committer_scoped_public_interface
+    task_path = "task.s.md"
+    File.write(task_path, "# Task\n")
+    sha = "a" * 40
+    committed = nil
+    committer = Ace::Git::Worktree::Molecules::TaskCommitter.new(project_root: @temp_dir)
+    @orchestrator.instance_variable_set(:@task_committer, committer)
+
+    committer.stub(:commit_with_message, lambda { |files, message|
+      committed = [files, message]
+      true
+    }) do
+      committer.stub(:execute_git_command, lambda { |*args|
+        output = (args.first == "rev-parse") ? sha : "#{task_path}\n"
+        {success: true, output: output}
+      }) do
+        result = @orchestrator.send(:commit_task_changes,
+          {id: "task-123"}, "in-progress", owned_paths: [task_path], explicit_message: "task bookkeeping")
+
+        assert result[:success]
+        assert_equal sha, result[:commit_sha]
+        assert_equal [task_path], result[:committed_paths]
+        assert_equal [[task_path], "task bookkeeping"], committed
+      end
+    end
+  end
+
   def test_preexisting_target_edit_blocks_worktree_creation
     # Mock task fetcher to return a task path
     mock_data = {id: "8vb.t.vz8", path: ".ace-tasks/test_task.s.md", title: "Test Task"}
