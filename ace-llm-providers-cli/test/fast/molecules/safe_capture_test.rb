@@ -101,11 +101,15 @@ module Ace
               assert_equal 7, error.execution_evidence.exit_status
             end
 
+            # The Linux supervisor converts a killed child into an exit status
+            # (128 + termsig), so signal classification at the capture level is
+            # exercised with an unsupervised direct child.
             def test_transport_disconnect_killed_by_signal_is_typed
               capture = SafeCapture.call(
                 ["ruby", "-e", "STDOUT.print 'working'; Process.kill('KILL', Process.pid)"],
                 timeout: 5,
-                provider_name: "Test"
+                provider_name: "Test",
+                isolate_process_group: false
               )
 
               assert_equal Models::CaptureResult::OUTCOME_TRANSPORT_FAILURE, capture.outcome
@@ -113,17 +117,70 @@ module Ace
               assert_equal "KILL", capture.signal
             end
 
+            # See test_transport_disconnect_killed_by_signal_is_typed: signal
+            # classification is a direct-child (unsupervised) behavior.
             def test_transport_failure_error_carries_signal_evidence
               capture = SafeCapture.call(
                 ["ruby", "-e", "Process.kill('KILL', Process.pid)"],
                 timeout: 5,
-                provider_name: "Test"
+                provider_name: "Test",
+                isolate_process_group: false
               )
               error = capture.provider_error
 
               assert_equal :transport_failure, error.execution_evidence.outcome
               assert_equal "KILL", error.execution_evidence.signal
               assert error.execution_evidence.uncertain_execution?
+            end
+
+            def test_successful_supervised_spawn_with_string_readiness_captures_output
+              skip unless RUBY_PLATFORM.include?("linux")
+
+              capture = SafeCapture.call(
+                ["ruby", "-e", "STDOUT.print 'supervised-ok'"],
+                timeout: 5,
+                provider_name: "Test"
+              )
+
+              assert_equal "supervised-ok", capture.stdout
+              assert_equal Models::CaptureResult::OUTCOME_COMPLETED, capture.outcome
+              assert capture.success?
+            end
+
+            def test_child_spawn_failure_readiness_variants_keep_semantics
+              # Successful supervisor handoff: readiness is a String like "1".
+              setup = build_spawn_setup(supervised: true, readiness: "1")
+              assert_nil setup.child_spawn_failure
+
+              # Supervisor-reported child spawn failure: "S<detail>".
+              setup = build_spawn_setup(supervised: true, readiness: "Sboom")
+              failure = setup.child_spawn_failure
+              assert_instance_of StandardError, failure
+              assert_equal "child process failed to start: boom", failure.message
+
+              # Unsupervised captures never consult readiness.
+              setup = build_spawn_setup(supervised: false, readiness: nil)
+              assert_nil setup.child_spawn_failure
+
+              # Missing readiness (supervisor wrote nothing) is not a spawn
+              # failure: capture falls through to the normal evidence path.
+              setup = build_spawn_setup(supervised: true, readiness: nil)
+              assert_nil setup.child_spawn_failure
+            end
+
+            def test_unsupervised_capture_keeps_typed_failure_evidence
+              capture = SafeCapture.call(
+                ["ruby", "-e", "STDERR.print 'boom'; exit 3"],
+                timeout: 5,
+                provider_name: "Test",
+                isolate_process_group: false
+              )
+
+              refute capture.success?
+              assert_equal Models::CaptureResult::OUTCOME_COMPLETED, capture.outcome
+              error = capture.provider_error
+              assert_equal :nonzero_exit, error.execution_evidence.outcome
+              assert_equal 3, error.execution_evidence.exit_status
             end
 
             def test_spawn_failure_is_typed_and_reports_execution_not_begun
@@ -389,6 +446,14 @@ module Ace
             end
 
             private
+
+            def build_spawn_setup(supervised:, readiness:)
+              spawn_setup_class = SafeCapture.instance_eval("SpawnSetup")
+              spawn_setup_class.new(
+                args: [], opts: {}, supervised: supervised,
+                ready_reader: nil, ready_writer: nil, readiness: readiness
+              )
+            end
 
             def wait_for_stopped_child(pid, timeout: 0.5)
               deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + timeout
