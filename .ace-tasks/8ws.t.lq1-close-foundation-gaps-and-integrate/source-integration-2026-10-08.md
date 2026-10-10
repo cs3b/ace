@@ -69,11 +69,19 @@ checks recorded below. No timeout was increased and no fake Lab was added.
   dry-run independently confirms all versions on RubyGems, nothing pending.
   Installation proof is
   a separate next step; this report does not establish Lab readiness.
-- [ ] Post-publication `TS-MONO-001` verifies installation propagation.
+- [x] Post-publication `TS-MONO-001` verifies installation propagation.
   Run `8x9nqxx` (2026-10-10): both installs exit 0; wrapper 4/4 PASS,
   but exact-version acceptance FAIL (130 findings): stale default manifest
   and real missing Runtime/Contract APIs. Publication is confirmed, installed
-  readiness is not. Correction belongs to `8x9.t.nva`; it includes Bundle.
+  readiness was not. Correction `8x9.t.nva` includes Bundle and is delivered:
+  Captain published all ten corrected gems; fresh run `8x9q6ex` PASS 4/4.
+  Both installs exit 0 and activate 49 exact versions; six consumer graphs
+  pass. Deterministic finalization: pass, zero findings, frozen manifest and
+  host completion verified, SAFE. Receipt:
+  `.ace-local/release/installation-acceptance-8x9q6ex.json`.
+  Original failure and intermediate manifest-only failure `8x9pveb` retained.
+  Corrected manifest includes source runtime dependencies; default updated.
+  No further gem publication is pending for this release.
 - [ ] `lab-config 8wl.t.gad.2` installs, launches and observes a real Lab task.
 
 Publication/propagation/installed acceptance are not claimed by source review
