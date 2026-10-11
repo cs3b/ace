@@ -83,7 +83,7 @@ budget, the command fails cleanly without leaving behind a partial task artifact
 | `--server` | | Named forge server for the issue |
 | `--default-server` | | Select the configured default forge server |
 | `--child-of` | | Parent task reference (creates subtask) |
-| `--in` | `-i` | Target folder (next, maybe) |
+| `--in` | `-i` | Top-level target: next, maybe, anytime, archive, or an existing custom folder |
 | `--dry-run` | `-n` | Preview without writing |
 | `--gc` | | Auto-commit changes |
 
@@ -99,10 +99,12 @@ ace-task create "Track issue" --issue 276 --default-server
 ace-task create "Preview only" --dry-run
 ```
 
-`--in FOLDER` reports success only after exactly one complete task has been
-placed in the requested folder. If validation or placement fails, the command
-returns an actionable error and removes the incomplete task artifacts. Fix the
-destination and retry `create`; the failed attempt leaves no task to recover.
+For top-level tasks, `--in FOLDER` reports success only after exactly one
+complete task has been placed in the requested folder. If validation or
+placement fails, the command returns an actionable error and removes the
+incomplete task artifacts. Fix the destination and retry `create`; the failed
+attempt leaves nothing behind. With `--child-of`, the child remains in its
+parent task and `--in` retains its existing ignored behavior.
 Built-in destinations are `next`, `maybe`, `anytime`, and `archive`; a custom
 destination must already exist under the configured task root using the
 special-folder prefix (for example, `--in backlog` targets `_backlog/`).

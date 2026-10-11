@@ -11,6 +11,7 @@ module Ace
         class Create < Ace::Support::Cli::Command
           include Ace::Support::Cli::Base
 
+          # "next" is a move-to-root alias and is validated separately.
           BUILT_IN_DESTINATIONS = %w[anytime archive maybe].freeze
 
           desc <<~DESC.strip
@@ -41,7 +42,7 @@ module Ace
           option :server, type: :string, desc: "Named forge server"
           option :"default-server", type: :boolean, desc: "Use the configured default forge server"
           option :"child-of", type: :string, desc: "Parent task reference (creates subtask)"
-          option :in, type: :string, aliases: %w[-i], desc: "Target folder (e.g. next, maybe)"
+          option :in, type: :string, aliases: %w[-i], desc: "Top-level target (next, maybe, anytime, archive)"
           option :"dry-run", type: :boolean, aliases: %w[-n], desc: "Preview without writing"
 
           option :git_commit, type: :boolean, aliases: %w[--gc], desc: "Auto-commit changes"
@@ -149,12 +150,12 @@ module Ace
             return if detector.move_to_root?(target_folder)
 
             normalized = detector.normalize(target_folder)
-            configured_path = File.join(manager.root_dir, normalized.to_s)
+            configured_path = File.join(manager.root_dir, normalized)
             normalized_built_ins = BUILT_IN_DESTINATIONS.map { |name| detector.normalize(name) }
-            valid = target_folder && !target_folder.strip.empty? &&
+            valid = !target_folder.strip.empty? &&
               !detector.virtual_filter?(target_folder) &&
-              !normalized.to_s.include?(File::SEPARATOR) &&
-              !normalized.to_s.include?("..") &&
+              !normalized.include?(File::SEPARATOR) &&
+              !normalized.include?("..") &&
               (normalized_built_ins.include?(normalized) || Dir.exist?(configured_path)) &&
               destination_within_root?(manager.root_dir, configured_path)
             return if valid
@@ -185,7 +186,11 @@ module Ace
             end
 
             unless placed_task && placed_task.special_folder == expected_folder
-              actual_folder = placed_task&.special_folder || "root"
+              actual_folder = if placed_task
+                placed_task.special_folder || "root"
+              else
+                "no task returned"
+              end
               raise "placement returned #{actual_folder.inspect}, expected #{expected_folder || "root"}"
             end
 
@@ -228,14 +233,16 @@ module Ace
           def directories_under(root)
             return [] unless Dir.exist?(root)
 
-            Dir.glob(File.join(root, "**", "*")).select { |path| File.directory?(path) }.map { |path| File.expand_path(path) }
+            Dir.glob(File.join(root, "**", "*"))
+              .select { |path| File.directory?(path) }
+              .map { |path| File.expand_path(path) }
           end
 
           def remove_empty_directories_created_since(root, directories_before)
             (directories_under(root) - directories_before).sort_by(&:length).reverse_each do |path|
               Dir.rmdir(path)
             rescue Errno::ENOENT, Errno::ENOTEMPTY
-              nil
+              next
             end
           end
 
