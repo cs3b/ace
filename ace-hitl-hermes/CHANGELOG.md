@@ -19,6 +19,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Qualify request correlation, delivery lookup and reconciliation by channel so independent project authorities cannot overwrite or answer one another's requests.
 - Require `--channel` for delivery and ingress reconciliation status queries.
 
+### Fixed
+
+- Continue proposal reconciliation across healthy project authorities when another channel's lifecycle service is unavailable.
+- Channel-qualify ingress drainage and proposal ordering, preserve existing transport/v1 journals, and atomically surface late-registration coverage generations.
+
 ## [0.2.2] - 2026-10-10
 
 ### Fixed

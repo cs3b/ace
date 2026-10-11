@@ -155,26 +155,29 @@ module Ace
 
         def reconcile_proposals
           @registry.channels.each do |channel|
-            lifecycle = lifecycle_for(channel)
-            channel.fetch("projects").each do |project|
-              after = nil
-              loop do
-                page = lifecycle.proposal_due(project: project, after: after)
-                page.fetch("items").each do |proposal|
-                  @relay.reconcile(channel: channel.fetch("name"), request: proposal.fetch("request_id"),
-                    through: proposal.fetch("deadline"))
+            begin
+              lifecycle = lifecycle_for(channel)
+              channel.fetch("projects").each do |project|
+                after = nil
+                loop do
+                  page = lifecycle.proposal_due(project: project, after: after)
+                  page.fetch("items").each do |proposal|
+                    @relay.reconcile(channel: channel.fetch("name"), request: proposal.fetch("request_id"),
+                      through: proposal.fetch("deadline"))
+                  end
+                  cursor = page.fetch("next")
+                  break unless cursor
+                  unless cursor.is_a?(String) && (!after || cursor > after)
+                    raise ContractError, "proposal deadline cursor did not advance"
+                  end
+                  after = cursor
                 end
-                cursor = page.fetch("next")
-                break unless cursor
-                unless cursor.is_a?(String) && (!after || cursor > after)
-                  raise ContractError, "proposal deadline cursor did not advance"
-                end
-                after = cursor
               end
+            rescue Ace::Hitl::Lifecycle::Error, ContractError => e
+              warn "ace-hitl-hermes: proposal reconciliation unavailable for #{channel['name']} " \
+                "(#{e.class}); deadlines deferred"
             end
           end
-        rescue Ace::Hitl::Lifecycle::Error, ContractError => e
-          warn "ace-hitl-hermes: proposal reconciliation unavailable (#{e.class}); deadlines deferred"
         end
 
         def telegram

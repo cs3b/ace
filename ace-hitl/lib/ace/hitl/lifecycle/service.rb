@@ -237,7 +237,7 @@ module Ace
             policy: @policy,
             identity: peer,
             vault: @vault,
-            proposal_clock: @proposal_clock, stopping: -> { @stopping }
+            proposal_clock: @proposal_clock, stopping: -> { @stopping }, group: @group
           )
         end
 
@@ -372,7 +372,7 @@ module Ace
         end
 
         def root_store
-          Store.new(root: @root, binding: @binding, policy: @policy)
+          Store.new(root: @root, binding: @binding, policy: @policy, group: @group)
         end
 
         def log(message)

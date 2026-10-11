@@ -79,7 +79,8 @@ module Ace
 
         def initialize(root:, binding:, policy: AccessPolicy.new,
           identity: Identity, ownership: AtomicJson::DEFAULT_OWNERSHIP,
-          poll_seconds: CONSUME_POLL_SECONDS, vault: :file, proposal_clock: -> { Time.now.utc }, stopping: -> { false })
+          poll_seconds: CONSUME_POLL_SECONDS, vault: :file, proposal_clock: -> { Time.now.utc },
+          stopping: -> { false }, group: DEFAULT_GROUP)
           raise ArgumentError, "a binding policy is required (fail closed without one)" unless binding
           raise ArgumentError, "an access policy is required (fail closed without one)" unless policy
 
@@ -92,6 +93,7 @@ module Ace
           @vault = vault == :file ? OtpVault::FileVault : vault
           @proposal_clock = proposal_clock
           @stopping = stopping
+          @group = group
         end
 
         # ---- requester side ------------------------------------------------
@@ -1083,7 +1085,7 @@ module Ace
         end
 
         def group_id
-          @group_id ||= @identity.group_id(DEFAULT_GROUP)
+          @group_id ||= @identity.group_id(@group)
         end
       end
     end

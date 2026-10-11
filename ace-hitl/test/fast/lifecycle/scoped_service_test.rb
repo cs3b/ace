@@ -216,6 +216,23 @@ class ScopedServiceTest < AceHitlTestCase
     assert_equal "approved", client.consume("hitl001", timeout: 2)["answer"]
   end
 
+  def test_configured_group_is_passed_to_peer_and_root_stores
+    service = extra_service(File.join(@scratch, "group.sock"), group: "ace-hitl-project")
+    groups = []
+    constructor = lambda do |**options|
+      groups << options.fetch(:group)
+      Object.new
+    end
+    peer = Ace::Hitl::Lifecycle::Peer.for_uid(Process.uid)
+
+    Ace::Hitl::Lifecycle::Store.stub(:new, constructor) do
+      service.send(:root_store)
+      service.send(:store_for, peer)
+    end
+
+    assert_equal ["ace-hitl-project", "ace-hitl-project"], groups
+  end
+
 
   def extra_service(path, **options)
     Ace::Hitl::Lifecycle::Service.new(

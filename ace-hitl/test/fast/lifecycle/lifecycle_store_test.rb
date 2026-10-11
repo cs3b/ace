@@ -518,6 +518,23 @@ class LifecycleStoreTest < AceHitlTestCase
     end
   end
 
+  def test_root_public_projection_uses_configured_control_group
+    with_lifecycle_root do |root|
+      ownership = LifecycleFixtures::RecordingOwnership.new
+      identity = LifecycleFixtures::TestIdentity.new(
+        root: true, group_ids: {"ace-hitl-project" => 977}
+      )
+      store = make_store(
+        root: root, identity: identity, ownership: ownership, group: "ace-hitl-project"
+      )
+      store.create(**request_args)
+
+      public_transition = find_transition(ownership, "public")
+      refute_nil public_transition
+      assert_equal 977, public_transition[2]
+    end
+  end
+
   def test_public_projection_file_mode_is_0440_and_answer_0400
     with_lifecycle_root do |root|
       store = make_store(root: root, identity: unprivileged_identity)
