@@ -23,6 +23,29 @@ class HitlCliTest < AceHitlTestCase
     assert_match(/wait/, result[:stdout])
   end
 
+  def test_serve_passes_dedicated_group_to_boundary_service
+    policy = Object.new
+    policy.define_singleton_method(:service_uid) { Process.uid }
+    service = Object.new
+    service.define_singleton_method(:run) { nil }
+    received = nil
+    constructor = lambda do |**options|
+      received = options
+      service
+    end
+
+    Ace::Hitl::Providers::Lab.stub(:grants_policy, policy) do
+      Ace::Hitl::Providers::Lab.stub(:assignment_binding, Object.new) do
+        Ace::Hitl::Lifecycle::Service.stub(:new, constructor) do
+          result = run_cli(["serve", "--group", "ace-hitl-project"])
+          assert_equal 0, result[:exit_code], result[:stderr]
+        end
+      end
+    end
+
+    assert_equal "ace-hitl-project", received[:group]
+  end
+
   def test_create_basic_hitl_event
     with_hitl_dir do |root|
       with_cli_root(root) do

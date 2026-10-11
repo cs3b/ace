@@ -204,7 +204,8 @@ module Ace
 
           raise TransportError,
             "HITL boundary socket directory is not protected: #{dir} " \
-            "(must be service/root-owned and not world-writable)"
+            "(use a dedicated service/root-owned, non-world-writable directory; " \
+            "do not share a directory containing unrelated service sockets)"
         end
 
         def authenticate!(socket)

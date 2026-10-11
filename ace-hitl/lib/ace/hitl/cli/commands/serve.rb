@@ -19,6 +19,7 @@ module Ace
           desc "Run the authenticated HITL store boundary service (peer-credential access)"
 
           option :socket, type: :string, desc: "Boundary socket path (default: ACE_HITL_SOCKET or /run/lab/hitl.sock)"
+          option :group, type: :string, desc: "Dedicated control group allowed to connect (default: lab-control)"
           option :store_root, type: :string, desc: "Private store root (default: ACE_HITL_STORE_ROOT or /run/lab/hitl)"
           option :grants_path, type: :string, desc: "Trusted grants document (default: ACE_HITL_GRANTS_PATH or /etc/lab/ace-lab/authorization.yml)"
           option :repo_root, type: :string, desc: "Candidate repository for the managed attempt authority"
@@ -41,6 +42,7 @@ module Ace
               binding: binding_policy,
               policy: policy,
               socket_path: socket_path(options),
+              group: options[:group] || Lifecycle::Store::DEFAULT_GROUP,
               logger: options[:verbose] ? ->(message) { warn message } : nil
             )
             service.run

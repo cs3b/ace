@@ -267,7 +267,9 @@ class ScopedServiceTest < AceHitlTestCase
     File.chmod(0o777, dir)
     path = File.join(dir, "endpoint")
     File.write(path, "preserve me")
-    assert_raises(Ace::Hitl::Lifecycle::TransportError) { extra_service(path).run }
+    error = assert_raises(Ace::Hitl::Lifecycle::TransportError) { extra_service(path).run }
+    assert_match(/dedicated service\/root-owned/, error.message)
+    assert_match(/unrelated service sockets/, error.message)
     assert_equal "preserve me", File.read(path)
   end
 
