@@ -26,7 +26,7 @@ class ScopedServiceTest < AceHitlTestCase
       binding: @binding,
       policy: @policy,
       socket_path: @socket_path,
-      group: "staff"
+      group: Etc.getgrgid(Process.gid).name
     )
     @thread = Thread.new { @service.run }
     wait_for_socket
@@ -200,7 +200,7 @@ class ScopedServiceTest < AceHitlTestCase
   def test_a_second_service_refuses_a_live_endpoint
     second = Ace::Hitl::Lifecycle::Service.new(
       root: File.join(@scratch, "store3"), binding: @binding, policy: @policy,
-      socket_path: @socket_path, group: "staff"
+      socket_path: @socket_path, group: Etc.getgrgid(Process.gid).name
     )
     identity = File.lstat(@socket_path).then { |stat| [stat.dev, stat.ino] }
     error = assert_raises(Ace::Hitl::Lifecycle::TransportError) do
@@ -237,7 +237,7 @@ class ScopedServiceTest < AceHitlTestCase
   def extra_service(path, **options)
     Ace::Hitl::Lifecycle::Service.new(
       root: File.join(@scratch, "extra-store"), binding: @binding, policy: @policy,
-      socket_path: path, group: "staff", **options
+      socket_path: path, group: Etc.getgrgid(Process.gid).name, **options
     )
   end
 
@@ -304,6 +304,19 @@ class ScopedServiceTest < AceHitlTestCase
   ensure
     replacement&.stop
     thread&.join(5)
+  end
+
+  def test_failed_socket_group_assignment_refuses_startup_without_exposing_endpoint
+    path = File.join(@scratch, "group-failure.sock")
+    service = extra_service(path, group: Etc.getgrgid(Process.gid).name)
+    failure = ->(*) { raise Errno::EPERM, "injected group assignment failure" }
+
+    error = File.stub(:chown, failure) do
+      assert_raises(Ace::Hitl::Lifecycle::TransportError) { service.run }
+    end
+
+    assert_match(/endpoint is not usable/, error.message)
+    refute File.exist?(path)
   end
 
   def test_normal_stop_releases_socket_and_stale_socket_can_be_recovered
@@ -390,7 +403,7 @@ class ScopedServiceTest < AceHitlTestCase
     vault = Ace::Hitl::Lifecycle::OtpVault::MemoryVault.new
     otp_service = Ace::Hitl::Lifecycle::Service.new(
       root: File.join(@scratch, "store4"), binding: @binding, policy: @policy,
-      socket_path: File.join(@scratch, "hitl4.sock"), group: "staff", vault: vault
+      socket_path: File.join(@scratch, "hitl4.sock"), group: Etc.getgrgid(Process.gid).name, vault: vault
     )
     thread = Thread.new { otp_service.run }
     deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + 5
@@ -462,7 +475,7 @@ class ScopedServiceTest < AceHitlTestCase
     )
     service = Ace::Hitl::Lifecycle::Service.new(
       root: File.join(@scratch, "store2"), binding: failing, policy: @policy,
-      socket_path: File.join(@scratch, "hitl2.sock"), group: "staff"
+      socket_path: File.join(@scratch, "hitl2.sock"), group: Etc.getgrgid(Process.gid).name
     )
     thread = Thread.new { service.run }
     deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + 5

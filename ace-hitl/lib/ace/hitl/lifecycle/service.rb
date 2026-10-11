@@ -139,21 +139,18 @@ module Ace
 
         def prepare!
           begin
+            group_id = Etc.getgrnam(@group).gid
             verify_socket_directory!
             acquire_endpoint_lock!
             recover_stale_endpoint!
             @server = UNIXServer.open(@socket_path)
             @endpoint_identity = endpoint_identity
+            File.chown(nil, group_id, @socket_path)
+            File.chmod(DEFAULT_SOCKET_MODE, @socket_path)
+          rescue ArgumentError => e
+            raise TransportError, "the HITL boundary control group is unavailable (#{e.message})"
           rescue SystemCallError, IOError => e
             raise TransportError, "the HITL boundary endpoint is not usable (#{e.class}: #{e.message})"
-          end
-          File.chmod(DEFAULT_SOCKET_MODE, @socket_path)
-          begin
-            File.chown(nil, Etc.getgrnam(@group).gid, @socket_path)
-          rescue ArgumentError, SystemCallError
-            # A service that cannot set the control group keeps the
-            # owner-only socket; the peer-credential gate still applies.
-            nil
           end
           begin
             root_store.ensure_layout!

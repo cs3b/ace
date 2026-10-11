@@ -587,6 +587,7 @@ module Ace
             FileUtils.mkdir_p(dir)
             File.chmod(mode, dir)
           end
+          retag_public_projections! if @identity.root?
           nil
         end
 
@@ -1086,6 +1087,19 @@ module Ace
 
         def group_id
           @group_id ||= @identity.group_id(@group)
+        end
+
+        def retag_public_projections!
+          public_dir.children.each do |path|
+            next unless path.basename.to_s.end_with?(".json")
+
+            stat = File.lstat(path)
+            unless stat.file? && !stat.symlink?
+              raise StateError, "public lifecycle projection is not a regular file"
+            end
+            File.chmod(PUBLIC_MODE, path)
+            @ownership.chown(path, AtomicJson::Ownership.new(uid: stat.uid, gid: group_id))
+          end
         end
       end
     end

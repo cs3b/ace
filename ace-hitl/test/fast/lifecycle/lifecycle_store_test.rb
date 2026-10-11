@@ -535,6 +535,30 @@ class LifecycleStoreTest < AceHitlTestCase
     end
   end
 
+  def test_root_layout_retags_existing_public_projections_to_configured_group
+    with_lifecycle_root do |root|
+      public_dir = File.join(root, "public")
+      FileUtils.mkdir_p(public_dir)
+      path = File.join(public_dir, "existing.json")
+      File.write(path, "{}")
+      File.chmod(0o440, path)
+      original_uid = File.stat(path).uid
+      ownership = LifecycleFixtures::RecordingOwnership.new
+      identity = LifecycleFixtures::TestIdentity.new(
+        root: true, group_ids: {"ace-hitl-project" => 977}
+      )
+      store = make_store(
+        root: root, identity: identity, ownership: ownership, group: "ace-hitl-project"
+      )
+
+      store.ensure_layout!
+
+      transition = ownership.transitions.find { |candidate| candidate.first == path }
+      assert_equal [path, original_uid, 977], transition
+      assert_equal 0o440, File.stat(path).mode & 0o777
+    end
+  end
+
   def test_public_projection_file_mode_is_0440_and_answer_0400
     with_lifecycle_root do |root|
       store = make_store(root: root, identity: unprivileged_identity)

@@ -18,6 +18,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Direct unsafe socket-directory failures to dedicated service-owned directories that do not contain unrelated service sockets.
 - Apply the configured authority group to root-owned public lifecycle projections as well as the service socket.
 
+### Fixed
+
+- Refuse startup if the configured socket group cannot be resolved or assigned, and retag existing public projections to the configured group before serving.
+
 ## [0.13.1] - 2026-10-10
 
 ### Fixed
