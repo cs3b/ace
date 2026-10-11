@@ -120,7 +120,7 @@ class CreateCommandTest < AceTaskTestCase
     tasks_dir = File.join(@tmpdir, ".ace-tasks")
     assert_empty Dir.glob(File.join(tasks_dir, "**", "*.s.md"))
     assert_empty task_directories(tasks_dir)
-    refute Dir.exist?(File.join(tasks_dir, "_maybe"))
+    refute Dir.exist?(tasks_dir)
 
     output = capture_io do
       Ace::Task::TaskCLI.start(["create", "Atomic task", "--in", "maybe"])
@@ -208,6 +208,21 @@ class CreateCommandTest < AceTaskTestCase
 
     assert_empty Dir.glob(File.join(outside_dir, "**", "*.s.md"))
     assert_empty task_directories(tasks_dir)
+  end
+
+  def test_create_child_keeps_existing_behavior_when_in_is_provided
+    parent_output = capture_io do
+      Ace::Task::TaskCLI.start(["create", "Parent task"])
+    end.first
+    parent_id = parent_output[/Created task ([0-9a-z]{3}\.t\.[0-9a-z]{3})/, 1]
+
+    child_output = capture_io do
+      Ace::Task::TaskCLI.start(["create", "Child task", "--child-of", parent_id, "--in", "maybe"])
+    end.first
+
+    assert_match(/Created task #{Regexp.escape(parent_id)}\.[0-9a-z]/, child_output)
+    refute Dir.exist?(File.join(@tmpdir, ".ace-tasks", "_maybe"))
+    assert_equal 2, Dir.glob(File.join(@tmpdir, ".ace-tasks", "**", "*.s.md")).length
   end
 
   def test_create_dry_run_does_not_write

@@ -12,7 +12,7 @@ module Ace
           include Ace::Support::Cli::Base
 
           # "next" is a move-to-root alias and is validated separately.
-          BUILT_IN_DESTINATIONS = %w[anytime archive maybe].freeze
+          BUILT_IN_DESTINATIONS = %w[maybe anytime archive].freeze
 
           desc <<~DESC.strip
             Create a new task
@@ -42,7 +42,8 @@ module Ace
           option :server, type: :string, desc: "Named forge server"
           option :"default-server", type: :boolean, desc: "Use the configured default forge server"
           option :"child-of", type: :string, desc: "Parent task reference (creates subtask)"
-          option :in, type: :string, aliases: %w[-i], desc: "Top-level target (next, maybe, anytime, archive)"
+          option :in, type: :string, aliases: %w[-i],
+            desc: "Top-level target (next, maybe, anytime, archive, or existing custom folder)"
           option :"dry-run", type: :boolean, aliases: %w[-n], desc: "Preview without writing"
 
           option :git_commit, type: :boolean, aliases: %w[--gc], desc: "Auto-commit changes"
@@ -78,6 +79,7 @@ module Ace
 
             manager = Ace::Task::Organisms::TaskManager.new
             validate_destination!(manager, in_folder) if in_folder && !child_of
+            placement_directories_before = directories_under(manager.root_dir) if in_folder && !child_of
 
             if dry_run
               puts "Would create task:"
@@ -124,7 +126,7 @@ module Ace
 
             # Move to folder if specified
             if in_folder && !child_of
-              task = place_created_task(manager, task, in_folder)
+              task = place_created_task(manager, task, in_folder, placement_directories_before)
             end
 
             puts "Created task #{task.id}"
@@ -148,6 +150,11 @@ module Ace
           def validate_destination!(manager, target_folder)
             detector = Ace::Support::Items::Atoms::SpecialFolderDetector
             return if detector.move_to_root?(target_folder)
+
+            if detector.virtual_filter?(target_folder)
+              raise Ace::Support::Cli::Error,
+                "Destination '#{target_folder}' is a virtual list filter, not a physical folder."
+            end
 
             normalized = detector.normalize(target_folder)
             configured_path = File.join(manager.root_dir, normalized)
@@ -176,8 +183,7 @@ module Ace
             false
           end
 
-          def place_created_task(manager, task, target_folder)
-            directories_before = directories_under(manager.root_dir)
+          def place_created_task(manager, task, target_folder, directories_before)
             placed_task = manager.update(task.id, move_to: target_folder)
             expected_folder = if Ace::Support::Items::Atoms::SpecialFolderDetector.move_to_root?(target_folder)
               nil
@@ -191,6 +197,7 @@ module Ace
               else
                 "no task returned"
               end
+              # This internal signal is wrapped below with rollback and an actionable CLI error.
               raise "placement returned #{actual_folder.inspect}, expected #{expected_folder || "root"}"
             end
 
@@ -233,7 +240,7 @@ module Ace
           def directories_under(root)
             return [] unless Dir.exist?(root)
 
-            Dir.glob(File.join(root, "**", "*"))
+            [File.expand_path(root)] + Dir.glob(File.join(root, "**", "*"))
               .select { |path| File.directory?(path) }
               .map { |path| File.expand_path(path) }
           end
