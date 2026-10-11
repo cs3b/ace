@@ -209,7 +209,8 @@ class ManagedPendingPublicationTest < AceHermesTestCase
     directory = File.join(@tmp, "existing-state")
     FileUtils.mkdir_p(directory, mode: 0o700)
     path = File.join(directory, "journal.json")
-    existing = {"schema" => "ace.hitl.hermes.transport/v1", "requests" => {"retained" => {"status" => "submitted"}},
+    retained = {"request" => "retained", "channel" => "inbox", "status" => "submitted"}
+    existing = {"schema" => "ace.hitl.hermes.transport/v1", "requests" => {"retained" => retained},
                 "ingress" => [], "sequence" => 7, "poll" => {}}
     File.write(path, JSON.generate(existing))
     File.chmod(0o600, path)
@@ -220,7 +221,7 @@ class ManagedPendingPublicationTest < AceHermesTestCase
     )
 
     journal.synchronize do |state, _|
-      assert_equal existing["requests"], state["requests"]
+      assert_equal retained, state["requests"].fetch(JSON.generate(["inbox", "retained"]))
       assert_equal 7, state["sequence"]
       assert_equal 9, state.dig("unregistered_chats", "-999999", "last_update_id")
     end

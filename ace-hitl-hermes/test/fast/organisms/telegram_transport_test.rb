@@ -316,6 +316,21 @@ class TelegramTransportTest < AceHermesTestCase
     assert_empty @boundary.answers
   end
 
+  def test_reply_to_pre_upgrade_bare_request_key_is_delivered_after_restart
+    submit
+    path = File.join(@tmp, "state", "journal.json")
+    state = JSON.parse(File.read(path))
+    record = state["requests"].delete(JSON.generate(["lab", "q-1"]))
+    state["requests"]["q-1"] = record
+    File.write(path, JSON.generate(state))
+    File.chmod(0o600, path)
+    @journal = T::Journal.new(File.join(@tmp, "state"))
+    @relay = relay
+
+    assert_equal "delivered", @relay.receive(event)["status"]
+    assert_equal [["q-1", "yes"]], @boundary.answers
+  end
+
   def test_shared_ingress_examples_match_real_unknown_drained_and_unresolved_semantics
     path = Gem::Specification.find_by_name("ace-hitl-contract").full_gem_path
     examples = JSON.parse(File.read(File.join(path, "lib/ace/hitl/contract/examples/ingress-checkpoints.json"))).fetch("cases")
@@ -395,8 +410,7 @@ class TelegramTransportTest < AceHermesTestCase
 
   def test_poller_durably_records_skipped_unregistered_group_without_message_body
     update = {"update_id" => 23, "message" => {"message_id" => 301,
-      "chat" => {"id" => -999999, "type" => "supergroup"}, "from" => {"id" => 42},
-      "text" => "must not enter journal"}}
+      "chat" => {"id" => -999999, "type" => "supergroup"}, "text" => "must not enter journal"}}
     source = Object.new
     source.define_singleton_method(:updates) { |offset:| [update] }
 

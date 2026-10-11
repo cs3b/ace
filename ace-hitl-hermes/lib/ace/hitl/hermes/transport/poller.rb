@@ -41,14 +41,16 @@ module Ace
             updates.each do |update|
               message = update["message"]
               next unless message.is_a?(Hash)
-              chat, from = message["chat"], message["from"]
-              next unless chat.is_a?(Hash) && from.is_a?(Hash)
+              chat = message["chat"]
+              next unless chat.is_a?(Hash)
               unless @registry.channels.any? { |c| c["chat_id"] == chat["id"].to_s }
                 if %w[group supergroup].include?(chat["type"]) && chat["id"].to_s.match?(/\A-\d{4,32}\z/)
                   unregistered << {"chat_id" => chat["id"].to_s, "update_id" => update.fetch("update_id")}
                 end
                 next
               end
+              from = message["from"]
+              next unless from.is_a?(Hash)
               event = {"platform" => "telegram", "chat_id" => chat["id"].to_s,
                        "chat_type" => chat["type"], "user_id" => from["id"].to_s,
                        "message_id" => message["message_id"].to_s,

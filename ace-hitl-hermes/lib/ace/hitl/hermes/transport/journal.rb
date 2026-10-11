@@ -78,6 +78,7 @@ module Ace
               end
               state = JSON.parse(file.read)
               state["unregistered_chats"] ||= {}
+              state["requests"] = normalize_request_keys(state["requests"])
               unless state["schema"] == "ace.hitl.hermes.transport/v1" && state["requests"].is_a?(Hash) &&
                   state["ingress"].is_a?(Array) && state["sequence"].is_a?(Integer) && state["poll"].is_a?(Hash) &&
                   state["unregistered_chats"].is_a?(Hash)
@@ -87,6 +88,20 @@ module Ace
             end
           rescue JSON::ParserError, SystemCallError
             raise ContractError, "transport journal is unreadable"
+          end
+
+          def normalize_request_keys(requests)
+            return requests unless requests.is_a?(Hash)
+
+            requests.each_value.each_with_object({}) do |record, normalized|
+              unless record.is_a?(Hash) && record["channel"].is_a?(String) && record["request"].is_a?(String)
+                raise ContractError, "transport journal request binding is malformed"
+              end
+              key = JSON.generate([record["channel"], record["request"]])
+              raise ContractError, "transport journal request binding is ambiguous" if normalized.key?(key)
+
+              normalized[key] = record
+            end
           end
 
           def write(state)
