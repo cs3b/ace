@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "ace/support/cli"
+require "fileutils"
 
 module Ace
   module Task
@@ -9,6 +10,8 @@ module Ace
         # ace-support-cli Command class for ace-task create
         class Create < Ace::Support::Cli::Command
           include Ace::Support::Cli::Base
+
+          BUILT_IN_DESTINATIONS = %w[_anytime _archive _maybe].freeze
 
           desc <<~DESC.strip
             Create a new task
@@ -86,6 +89,7 @@ module Ace
             end
 
             manager = Ace::Task::Organisms::TaskManager.new
+            validate_destination!(manager, in_folder) if in_folder && !child_of
 
             task = begin
               if child_of
@@ -119,7 +123,7 @@ module Ace
 
             # Move to folder if specified
             if in_folder && !child_of
-              task = manager.move(task.id, to: in_folder)
+              task = place_created_task(manager, task, in_folder)
             end
 
             puts "Created task #{task.id}"
@@ -139,6 +143,66 @@ module Ace
           end
 
           private
+
+          def validate_destination!(manager, target_folder)
+            detector = Ace::Support::Items::Atoms::SpecialFolderDetector
+            return if detector.move_to_root?(target_folder)
+
+            normalized = detector.normalize(target_folder)
+            configured_path = File.join(manager.root_dir, normalized.to_s)
+            valid = target_folder && !target_folder.strip.empty? &&
+              !detector.virtual_filter?(target_folder) &&
+              !normalized.to_s.include?(File::SEPARATOR) &&
+              !normalized.to_s.include?("..") &&
+              (BUILT_IN_DESTINATIONS.include?(normalized) || Dir.exist?(configured_path))
+            return if valid
+
+            raise Ace::Support::Cli::Error,
+              "Destination '#{target_folder}' does not exist. " \
+                "Use next, maybe, anytime, archive, or an existing custom task folder."
+          end
+
+          def place_created_task(manager, task, target_folder)
+            placed_task = manager.update(task.id, move_to: target_folder)
+            expected_folder = if Ace::Support::Items::Atoms::SpecialFolderDetector.move_to_root?(target_folder)
+              nil
+            else
+              Ace::Support::Items::Atoms::SpecialFolderDetector.normalize(target_folder)
+            end
+
+            unless placed_task && placed_task.special_folder == expected_folder
+              actual_folder = placed_task&.special_folder || "root"
+              raise "placement returned #{actual_folder.inspect}, expected #{expected_folder || "root"}"
+            end
+
+            placed_task
+          rescue StandardError => e
+            remove_created_task_artifacts(manager, task)
+            raise Ace::Support::Cli::Error,
+              "Failed to create task in '#{target_folder}': #{e.message}. " \
+                "No task was created; fix the destination and retry."
+          end
+
+          def remove_created_task_artifacts(manager, task)
+            root = File.expand_path(manager.root_dir)
+            candidates = [task.path]
+            candidates.concat(
+              Dir.glob(File.join(root, "**", "#{task.id}-*")).select { |path| File.directory?(path) }
+            )
+
+            candidates.uniq.each do |path|
+              expanded = File.expand_path(path)
+              next unless expanded.start_with?(root + File::SEPARATOR)
+
+              FileUtils.rm_rf(expanded)
+            end
+
+            remaining = Dir.glob(File.join(root, "**", "#{task.id}-*")).select { |path| File.exist?(path) }
+            return if remaining.empty?
+
+            raise Ace::Support::Cli::Error,
+              "Failed to remove partial task artifacts after placement failure: #{remaining.join(", ")}"
+          end
 
           def resolve_title(positional_title, flag_title)
             positional_present = present_string?(positional_title)

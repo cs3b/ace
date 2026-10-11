@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Route `ace-task create --in FOLDER` through the task manager's relocation API
+  and remove the newly created task artifacts when destination placement fails.
+
 ## [0.39.2] - 2026-10-06
 
 ### Fixed

@@ -93,10 +93,18 @@ ace-task create --title "Fix login bug"
 ace-task create "Fix auth" --priority high --tags auth,security
 ace-task create "Setup DB" --child-of q7w
 ace-task create "Quick task" --in maybe
+ace-task create "Ready for later" --in anytime
 ace-task create "Draft spec" --status draft --estimate TBD
 ace-task create "Track issue" --issue 276 --default-server
 ace-task create "Preview only" --dry-run
 ```
+
+`--in FOLDER` reports success only after exactly one complete task has been
+placed in the requested folder. If validation or placement fails, the command
+returns an actionable error and removes the incomplete task artifacts. Fix the
+destination and retry `create`; the failed attempt leaves no task to recover.
+Built-in destinations are `next`, `maybe`, `anytime`, and `archive`; a custom
+destination must already exist under the configured task root.
 
 ### ace-task show REF
 
