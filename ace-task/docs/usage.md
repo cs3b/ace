@@ -104,7 +104,8 @@ placed in the requested folder. If validation or placement fails, the command
 returns an actionable error and removes the incomplete task artifacts. Fix the
 destination and retry `create`; the failed attempt leaves no task to recover.
 Built-in destinations are `next`, `maybe`, `anytime`, and `archive`; a custom
-destination must already exist under the configured task root.
+destination must already exist under the configured task root using the
+special-folder prefix (for example, `--in backlog` targets `_backlog/`).
 
 ### ace-task show REF
 

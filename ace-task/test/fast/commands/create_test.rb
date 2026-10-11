@@ -81,18 +81,33 @@ class CreateCommandTest < AceTaskTestCase
     assert_equal [task_id], Ace::Task::Organisms::TaskManager.new.list(in_folder: "custom").map(&:id)
   end
 
+  def test_create_in_anytime_and_archive_places_each_task_once
+    %w[anytime archive].each do |folder|
+      output = capture_io do
+        Ace::Task::TaskCLI.start(["create", "#{folder.capitalize} task", "--in", folder])
+      end.first
+
+      task_id = output[/Created task ([0-9a-z]{3}\.t\.[0-9a-z]{3})/, 1]
+      refute_nil task_id
+      task = Ace::Task::Organisms::TaskManager.new.show(task_id)
+      refute_nil task
+      assert_equal "_#{folder}", task.special_folder
+      assert_equal [task_id], Ace::Task::Organisms::TaskManager.new.list(in_folder: folder).map(&:id)
+    end
+
+    tasks_dir = File.join(@tmpdir, ".ace-tasks")
+    assert_equal 2, Dir.glob(File.join(tasks_dir, "**", "*.s.md")).length
+  end
+
   def test_create_in_folder_failure_removes_artifacts_and_retry_is_clean
     manager = Ace::Task::Organisms::TaskManager.new
-    mover = Ace::Support::Items::Molecules::FolderMover.new(manager.root_dir)
     placement_failure = ->(*_args, **_kwargs) { raise Errno::EACCES, "simulated destination write failure" }
 
     error = Ace::Task::Organisms::TaskManager.stub(:new, manager) do
-      Ace::Support::Items::Molecules::FolderMover.stub(:new, mover) do
-        mover.stub(:move, placement_failure) do
-          assert_raises(Ace::Support::Cli::Error) do
-            capture_io do
-              Ace::Task::TaskCLI.start(["create", "Atomic task", "--in", "maybe"])
-            end
+      File.stub(:rename, placement_failure) do
+        assert_raises(Ace::Support::Cli::Error) do
+          capture_io do
+            Ace::Task::TaskCLI.start(["create", "Atomic task", "--in", "maybe"])
           end
         end
       end
@@ -105,6 +120,7 @@ class CreateCommandTest < AceTaskTestCase
     tasks_dir = File.join(@tmpdir, ".ace-tasks")
     assert_empty Dir.glob(File.join(tasks_dir, "**", "*.s.md"))
     assert_empty task_directories(tasks_dir)
+    refute Dir.exist?(File.join(tasks_dir, "_maybe"))
 
     output = capture_io do
       Ace::Task::TaskCLI.start(["create", "Atomic task", "--in", "maybe"])
@@ -114,6 +130,26 @@ class CreateCommandTest < AceTaskTestCase
     refute_nil task_id
     assert_equal 1, Dir.glob(File.join(tasks_dir, "**", "*.s.md")).length
     assert_equal [task_id], Ace::Task::Organisms::TaskManager.new.list(in_folder: "maybe").map(&:id)
+  end
+
+  def test_create_in_folder_mismatch_removes_artifacts
+    manager = Ace::Task::Organisms::TaskManager.new
+    unmoved_update = ->(ref, **_kwargs) { manager.show(ref) }
+
+    error = Ace::Task::Organisms::TaskManager.stub(:new, manager) do
+      manager.stub(:update, unmoved_update) do
+        assert_raises(Ace::Support::Cli::Error) do
+          capture_io do
+            Ace::Task::TaskCLI.start(["create", "Unmoved task", "--in", "maybe"])
+          end
+        end
+      end
+    end
+
+    assert_match(/expected _maybe/, error.message)
+    tasks_dir = File.join(@tmpdir, ".ace-tasks")
+    assert_empty Dir.glob(File.join(tasks_dir, "**", "*.s.md"))
+    assert_empty task_directories(tasks_dir)
   end
 
   def test_create_with_invalid_destination_leaves_no_artifacts
@@ -128,6 +164,49 @@ class CreateCommandTest < AceTaskTestCase
 
     tasks_dir = File.join(@tmpdir, ".ace-tasks")
     assert_empty Dir.glob(File.join(tasks_dir, "**", "*.s.md"))
+    assert_empty task_directories(tasks_dir)
+  end
+
+  def test_create_rejects_empty_virtual_and_traversal_destinations_without_artifacts
+    ["", "all", "../outside"].each do |destination|
+      error = assert_raises(Ace::Support::Cli::Error) do
+        capture_io do
+          Ace::Task::TaskCLI.start(["create", "Rejected task", "--in", destination])
+        end
+      end
+
+      expected_error = destination.empty? ? /invalid argument/i : /Destination/
+      assert_match(expected_error, error.message)
+    end
+
+    tasks_dir = File.join(@tmpdir, ".ace-tasks")
+    assert_empty Dir.glob(File.join(tasks_dir, "**", "*.s.md"))
+    assert_empty task_directories(tasks_dir)
+  end
+
+  def test_create_dry_run_rejects_invalid_destination_without_writing
+    assert_raises(Ace::Support::Cli::Error) do
+      capture_io do
+        Ace::Task::TaskCLI.start(["create", "Invalid preview", "--in", "nonexistent-folder", "--dry-run"])
+      end
+    end
+
+    refute Dir.exist?(File.join(@tmpdir, ".ace-tasks"))
+  end
+
+  def test_create_rejects_custom_destination_symlinked_outside_task_root
+    tasks_dir = File.join(@tmpdir, ".ace-tasks")
+    outside_dir = File.join(@tmpdir, "outside")
+    FileUtils.mkdir_p([tasks_dir, outside_dir])
+    FileUtils.ln_s(outside_dir, File.join(tasks_dir, "_outside"))
+
+    assert_raises(Ace::Support::Cli::Error) do
+      capture_io do
+        Ace::Task::TaskCLI.start(["create", "Escaping task", "--in", "outside"])
+      end
+    end
+
+    assert_empty Dir.glob(File.join(outside_dir, "**", "*.s.md"))
     assert_empty task_directories(tasks_dir)
   end
 

@@ -11,7 +11,7 @@ module Ace
         class Create < Ace::Support::Cli::Command
           include Ace::Support::Cli::Base
 
-          BUILT_IN_DESTINATIONS = %w[_anytime _archive _maybe].freeze
+          BUILT_IN_DESTINATIONS = %w[anytime archive maybe].freeze
 
           desc <<~DESC.strip
             Create a new task
@@ -75,6 +75,9 @@ module Ace
               end
             end
 
+            manager = Ace::Task::Organisms::TaskManager.new
+            validate_destination!(manager, in_folder) if in_folder && !child_of
+
             if dry_run
               puts "Would create task:"
               puts "  Title:    #{title}"
@@ -87,9 +90,6 @@ module Ace
               puts "  Folder:   #{in_folder}" if in_folder
               return
             end
-
-            manager = Ace::Task::Organisms::TaskManager.new
-            validate_destination!(manager, in_folder) if in_folder && !child_of
 
             task = begin
               if child_of
@@ -150,19 +150,33 @@ module Ace
 
             normalized = detector.normalize(target_folder)
             configured_path = File.join(manager.root_dir, normalized.to_s)
+            normalized_built_ins = BUILT_IN_DESTINATIONS.map { |name| detector.normalize(name) }
             valid = target_folder && !target_folder.strip.empty? &&
               !detector.virtual_filter?(target_folder) &&
               !normalized.to_s.include?(File::SEPARATOR) &&
               !normalized.to_s.include?("..") &&
-              (BUILT_IN_DESTINATIONS.include?(normalized) || Dir.exist?(configured_path))
+              (normalized_built_ins.include?(normalized) || Dir.exist?(configured_path)) &&
+              destination_within_root?(manager.root_dir, configured_path)
             return if valid
 
+            choices = (["next"] + BUILT_IN_DESTINATIONS).join(", ")
             raise Ace::Support::Cli::Error,
               "Destination '#{target_folder}' does not exist. " \
-                "Use next, maybe, anytime, archive, or an existing custom task folder."
+                "Use #{choices}, or an existing custom task folder."
+          end
+
+          def destination_within_root?(root, destination)
+            return true unless File.exist?(destination)
+
+            root_path = File.realpath(root)
+            destination_path = File.realpath(destination)
+            destination_path.start_with?(root_path + File::SEPARATOR)
+          rescue Errno::ENOENT, Errno::EACCES
+            false
           end
 
           def place_created_task(manager, task, target_folder)
+            directories_before = directories_under(manager.root_dir)
             placed_task = manager.update(task.id, move_to: target_folder)
             expected_folder = if Ace::Support::Items::Atoms::SpecialFolderDetector.move_to_root?(target_folder)
               nil
@@ -177,7 +191,14 @@ module Ace
 
             placed_task
           rescue StandardError => e
-            remove_created_task_artifacts(manager, task)
+            begin
+              remove_created_task_artifacts(manager, task)
+              remove_empty_directories_created_since(manager.root_dir, directories_before)
+            rescue StandardError => cleanup_error
+              raise Ace::Support::Cli::Error,
+                "Failed to create task in '#{target_folder}': #{e.message}. " \
+                  "Cleanup also failed: #{cleanup_error.message}"
+            end
             raise Ace::Support::Cli::Error,
               "Failed to create task in '#{target_folder}': #{e.message}. " \
                 "No task was created; fix the destination and retry."
@@ -202,6 +223,20 @@ module Ace
 
             raise Ace::Support::Cli::Error,
               "Failed to remove partial task artifacts after placement failure: #{remaining.join(", ")}"
+          end
+
+          def directories_under(root)
+            return [] unless Dir.exist?(root)
+
+            Dir.glob(File.join(root, "**", "*")).select { |path| File.directory?(path) }.map { |path| File.expand_path(path) }
+          end
+
+          def remove_empty_directories_created_since(root, directories_before)
+            (directories_under(root) - directories_before).sort_by(&:length).reverse_each do |path|
+              Dir.rmdir(path)
+            rescue Errno::ENOENT, Errno::ENOTEMPTY
+              nil
+            end
           end
 
           def resolve_title(positional_title, flag_title)
