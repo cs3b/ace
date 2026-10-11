@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.0] - 2026-10-11
+
+### Added
+
+- Add `ace-hitl serve --group` so each repository authority can expose its lifecycle socket through a dedicated control group.
+
+### Changed
+
+- Direct unsafe socket-directory failures to dedicated service-owned directories that do not contain unrelated service sockets.
+
 ## [0.13.1] - 2026-10-10
 
 ### Fixed

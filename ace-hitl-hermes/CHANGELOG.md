@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-11
+
+### Added
+
+- Route each registered Telegram channel through its configured lifecycle socket and explicit service identity, with lazy client reuse per distinct socket.
+- Durably record skipped unregistered group IDs and expose the coverage gap as a new polling generation when a group is registered.
+
+### Changed
+
+- Qualify request correlation, delivery lookup and reconciliation by channel so independent project authorities cannot overwrite or answer one another's requests.
+- Require `--channel` for delivery and ingress reconciliation status queries.
+
 ## [0.2.2] - 2026-10-10
 
 ### Fixed

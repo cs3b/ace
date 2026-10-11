@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.2] - 2026-10-11
+
+### Changed
+
+- Follow the `ace-hitl` 0.14 lifecycle boundary line with dedicated per-authority socket-group configuration.
+
 ## [0.5.1] - 2026-10-10
 
 ### Fixed

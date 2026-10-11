@@ -50,6 +50,8 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- **ace-hitl v0.14.0, ace-hitl-hermes v0.3.0**: Add dedicated lifecycle service groups and channel-scoped lifecycle socket/service identities for one-Hermes multi-project Telegram routing, with channel-qualified correlation and durable late-registration coverage gaps.
+
 - **ace-assign v0.65.0**: Pin original/candidate deployment inventory and shared slot exclusions to immutable journal snapshots. Complete maintenance eligibility and native readiness remain unfinished.
 
 - **ace-hitl-contract v0.1.0**: Single shared provider vocabulary without assignment or privileged lifecycle dependencies.
@@ -137,6 +139,8 @@ All notable changes to this project will be documented in this file.
 - **ace-llm-providers-cli v0.34.0**: Registered Codex Astra, Sol, Terra and Luna with Terra as the generic default and Luna as mini, retaining all existing explicit IDs, and derived Codex client defaults and model listings from provider configuration instead of a separate hardcoded catalog.
 
 ### Technical
+
+- Dependency-following release: **ace-lab v0.5.2** consumes the coordinated `ace-hitl` 0.14 line.
 
 - Dependency-following release: **ace-demo v0.26.2** consumes the coordinated Herdr 0.4 line. The release also declares required direct dependencies and raises verified API/workflow minimums in the owning consumers.
 
