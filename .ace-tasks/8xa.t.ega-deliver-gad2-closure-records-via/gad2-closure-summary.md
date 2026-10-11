@@ -36,9 +36,19 @@ NOT gem publication; no release was published.
 --no-bootstrap --no-auto-navigate` executed on real Lab: worktree created,
 hooks executed, task bookkeeping committed (a2284f897 — the exact
 commit_scoped path that raised `private method 'commit_scoped' called`
-before the fix), exit 0. Push denial by the fj-stored identity is known
-platform state and is recorded non-fatal. Full log: coordinator evidence
-dir (demo-repaired-worktree-create.log).
+before the fix), exit 0. Full log: coordinator evidence dir
+(demo-repaired-worktree-create.log).
+
+Tool-defect disclosure (found in review, reproduced by dry-run): the
+`--no-push` flag was passed but is NOT honored end-to-end in this version —
+the run still attempted the task-changes push and upstream setup
+(`Failed to push task changes` / `Failed to setup upstream` warnings in the
+evidence log; `--dry-run --no-push` still plans "push to origin" and
+"setup upstream tracking"). Both pushes were denied by the fj-stored
+identity (known platform state, non-fatal). Recorded as a NEWace-git-worktree defect for its backlog: `--no-push` accepted but not
+threaded to the orchestrator gate (task_worktree_orchestrator.rb:152);
+dry-run planning contradicts the flag. Not fixed in this closure delivery
+(implementation gated; out of Stage B scope).
 
 ## Corrections and open items
 
