@@ -152,6 +152,30 @@ class CreateCommandTest < AceTaskTestCase
     assert_empty task_directories(tasks_dir)
   end
 
+  def test_create_in_folder_preserves_task_after_post_placement_git_error
+    manager = Ace::Task::Organisms::TaskManager.new
+    update = manager.method(:update)
+    post_placement_failure = lambda do |ref, **options|
+      update.call(ref, **options)
+      raise Ace::Git::ProviderIdentityMismatchError, "simulated post-placement sync failure"
+    end
+
+    error = Ace::Task::Organisms::TaskManager.stub(:new, manager) do
+      manager.stub(:update, post_placement_failure) do
+        assert_raises(Ace::Support::Cli::Error) do
+          capture_io do
+            Ace::Task::TaskCLI.start(["create", "Linked recovery task", "--in", "maybe"])
+          end
+        end
+      end
+    end
+
+    assert_match(/simulated post-placement sync failure/, error.message)
+    tasks = Ace::Task::Organisms::TaskManager.new.list(in_folder: "maybe")
+    assert_equal 1, tasks.length
+    assert_equal "Linked recovery task", tasks.first.title
+  end
+
   def test_create_with_invalid_destination_leaves_no_artifacts
     error = assert_raises(Ace::Support::Cli::Error) do
       capture_io do

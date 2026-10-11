@@ -160,7 +160,6 @@ module Ace
             configured_path = File.join(manager.root_dir, normalized)
             normalized_built_ins = BUILT_IN_DESTINATIONS.map { |name| detector.normalize(name) }
             valid = !target_folder.strip.empty? &&
-              !detector.virtual_filter?(target_folder) &&
               !normalized.include?(File::SEPARATOR) &&
               !normalized.include?("..") &&
               (normalized_built_ins.include?(normalized) || Dir.exist?(configured_path)) &&
@@ -202,6 +201,10 @@ module Ace
             end
 
             placed_task
+          rescue Ace::Git::Error
+            # update retains linked tasks after post-placement sync failures as
+            # recovery records; those are not destination-placement failures.
+            raise
           rescue StandardError => e
             begin
               remove_created_task_artifacts(manager, task)
@@ -246,6 +249,8 @@ module Ace
           end
 
           def remove_empty_directories_created_since(root, directories_before)
+            # Only directories created during this short command transaction
+            # are candidates, and non-empty concurrent directories are retained.
             (directories_under(root) - directories_before).sort_by(&:length).reverse_each do |path|
               Dir.rmdir(path)
             rescue Errno::ENOENT, Errno::ENOTEMPTY
