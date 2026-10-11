@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Add project-adaptable delivery supervision presets for dependency-aware queue decisions, renewed-evidence integration batches, immutable release cuts, and evidence-preserving closure.
+
 ## [0.66.1] - 2026-10-10
 
 ### Fixed
