@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Add the `as-overseer-configure-project` skill and packaged `wfi://overseer/configure-project` workflow for idempotent, customization-preserving delivery supervision adaptation.
+
 ## [0.20.2] - 2026-10-10
 
 ### Fixed
