@@ -18,10 +18,10 @@ module Ace
           end
           @registry = Transport::Registry.load(@config.fetch("registry"))
           @journal = Transport::Journal.new(@config.fetch("state"))
-          @lifecycle = Ace::Hitl::Lifecycle::Client.new(
-            socket_path: @config.fetch("hitl_socket"), service_uid: @config.fetch("hitl_service_uid")
-          )
-          @relay = Transport::Relay.new(registry: @registry, journal: @journal, lifecycle: @lifecycle,
+          @lifecycle_routes = build_lifecycle_routes
+          @lifecycle_clients = {}
+          @relay = Transport::Relay.new(registry: @registry, journal: @journal,
+            lifecycle_for: ->(channel) { lifecycle_for(channel) },
             sender: ->(channel, question) { telegram.call(channel, question) }, clock: @clock)
         rescue JSON::ParserError, KeyError, SystemCallError, ArgumentError
           raise ContractError, "runtime configuration is unavailable or malformed"
@@ -30,6 +30,7 @@ module Ace
         def serve(once: false)
           verify_polling_owner!
           @journal.actor do
+            surface_registration_gaps
             poller = Transport::Poller.new(relay: @relay, telegram: telegram, journal: @journal,
               registry: @registry, clock: @clock)
             # Establish the new coverage epoch before issuing questions, so
@@ -58,7 +59,7 @@ module Ace
                 box.poll.messages.each do |message|
                   next unless message.question?
                   begin
-                    facts = @lifecycle.read(message.id)
+                    facts = lifecycle_for(channel).read(message.id)
                     revision = facts["proposal"] ? facts.fetch("proposal").fetch("revision_id") : facts.fetch("attempt")
                     @relay.submit(channel: channel["name"], request: message.id, revision: revision)
                   rescue StandardError
@@ -93,17 +94,50 @@ module Ace
 
         private
 
+        def build_lifecycle_routes
+          default_socket = @config.fetch("hitl_socket")
+          unless default_socket.is_a?(String) && File.absolute_path?(default_socket)
+            raise ContractError, "runtime requires an absolute default HITL socket"
+          end
+          identities = {}
+          @registry.channels.to_h do |channel|
+            socket = channel.fetch("hitl_socket", default_socket)
+            service_uid = channel.fetch("hitl_service_uid")
+            if identities.key?(socket) && identities[socket] != service_uid
+              raise ContractError, "one HITL socket cannot declare multiple service identities"
+            end
+            identities[socket] = service_uid
+            [channel["name"], {socket_path: socket, service_uid: service_uid}.freeze]
+          end.freeze
+        end
+
+        def lifecycle_for(channel)
+          name = channel.is_a?(Hash) ? channel.fetch("name") : channel.to_s
+          route = @lifecycle_routes.fetch(name)
+          @lifecycle_clients[route.fetch(:socket_path)] ||= Ace::Hitl::Lifecycle::Client.new(**route)
+        end
+
+        def surface_registration_gaps
+          at = @clock.call.utc.iso8601
+          @journal.registration_gaps(channels: @registry.channels, surfaced_at: at).each do |gap|
+            @relay.poll_complete(channel: gap.fetch("channel"), started_at: at, through: at, continuous: false)
+            warn "ace-hitl-hermes: registered #{gap['channel']} after skipped Telegram updates; " \
+              "ingress coverage starts a new generation"
+          end
+        end
+
         # The installed transport owns publication as well as Telegram polling.
         # Ask writes only scoped lifecycle state; no hidden Lab watcher or
         # HITL→Hermes dependency is required to get a question into message.v1.
         def publish_pending(channel, box)
+          lifecycle = lifecycle_for(channel)
           channel["projects"].each do |project|
-            @lifecycle.pending(project: project).each do |facts|
+            lifecycle.pending(project: project).each do |facts|
               next unless facts["state"] == "created"
               envelope = Ace::Hitl::Contract::ManagedEnvelope.load(facts.fetch("envelope"), expected: {
                 request_id: facts["id"], project: project, assignment_id: facts["assignment"], attempt_id: facts["attempt"]
               })
-              status = @relay.delivery(facts["id"])["status"]
+              status = @relay.delivery(channel: channel["name"], request: facts["id"])["status"]
               next unless %w[unknown failed].include?(status)
               existing = box.poll.messages.find { |message| message.id == facts["id"] }
               if existing
@@ -121,17 +155,23 @@ module Ace
         end
 
         def reconcile_proposals
-          @registry.channels.flat_map { |channel| channel.fetch("projects") }.each do |project|
-            after = nil
-            loop do
-              page = @lifecycle.proposal_due(project: project, after: after)
-              page.fetch("items").each do |proposal|
-                @relay.reconcile(request: proposal.fetch("request_id"), through: proposal.fetch("deadline"))
+          @registry.channels.each do |channel|
+            lifecycle = lifecycle_for(channel)
+            channel.fetch("projects").each do |project|
+              after = nil
+              loop do
+                page = lifecycle.proposal_due(project: project, after: after)
+                page.fetch("items").each do |proposal|
+                  @relay.reconcile(channel: channel.fetch("name"), request: proposal.fetch("request_id"),
+                    through: proposal.fetch("deadline"))
+                end
+                cursor = page.fetch("next")
+                break unless cursor
+                unless cursor.is_a?(String) && (!after || cursor > after)
+                  raise ContractError, "proposal deadline cursor did not advance"
+                end
+                after = cursor
               end
-              cursor = page.fetch("next")
-              break unless cursor
-              raise ContractError, "proposal deadline cursor did not advance" unless cursor.is_a?(String) && (!after || cursor > after)
-              after = cursor
             end
           end
         rescue Ace::Hitl::Lifecycle::Error, ContractError => e

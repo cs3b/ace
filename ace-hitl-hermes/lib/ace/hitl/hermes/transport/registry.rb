@@ -23,7 +23,8 @@ module Ace
               raise ContractError, "transport registry requires channels/v1 and registered channels"
             end
             @channels = value["channels"].map do |entry|
-              unless entry.is_a?(Hash) && (entry.keys - %w[name chat_id captain_user_ids machine folder target projects]).empty?
+              unless entry.is_a?(Hash) &&
+                  (entry.keys - %w[name chat_id captain_user_ids machine folder target projects hitl_socket hitl_service_uid]).empty?
                 raise ContractError, "invalid transport channel fields"
               end
               unless entry["projects"].is_a?(Array) && !entry["projects"].empty?
@@ -34,7 +35,10 @@ module Ace
               unless entry["chat_id"].is_a?(String) && entry["chat_id"].match?(/\A-\d{4,32}\z/) &&
                   entry["captain_user_ids"].is_a?(Array) && !entry["captain_user_ids"].empty? &&
                   entry["captain_user_ids"].all? { |id| id.is_a?(String) && id.match?(/\A\d{1,32}\z/) } &&
-                  entry["folder"].is_a?(String) && File.absolute_path?(entry["folder"])
+                  entry["folder"].is_a?(String) && File.absolute_path?(entry["folder"]) &&
+                  entry["hitl_service_uid"].is_a?(Integer) && entry["hitl_service_uid"] >= 0 &&
+                  (!entry.key?("hitl_socket") ||
+                    (entry["hitl_socket"].is_a?(String) && File.absolute_path?(entry["hitl_socket"])))
                 raise ContractError, "channel requires group identity, Captain allowlist and absolute folder"
               end
               entry.transform_values { |v| v.is_a?(Array) ? v.dup.freeze : v }.freeze

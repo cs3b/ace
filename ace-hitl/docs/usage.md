@@ -170,9 +170,15 @@ document — the same file and traversal trust rules as ace-lab
 
 ```bash
 # Deployment (root runs the service under its own account):
-ace-hitl serve                      # ACE_HITL_SOCKET, ACE_HITL_STORE_ROOT,
-                                    # ACE_HITL_GRANTS_PATH override paths
+ace-hitl serve --socket /run/ace-hitl-project/lifecycle.sock \
+  --store-root /var/lib/ace-hitl-project --group ace-hitl-project
+# ACE_HITL_SOCKET, ACE_HITL_STORE_ROOT and ACE_HITL_GRANTS_PATH may supply paths.
 ```
+
+Give each authority a dedicated service/root-owned, non-world-writable socket
+directory and a dedicated control group. Do not place its socket in `/run/lab`
+or another directory containing unrelated service sockets: granting the
+transport access to that directory's shared group can expose those endpoints.
 
 Store layout (all service-owned): `0711` traverse-only root;
 `requests/ answers/ secrets/ effects/ locks/ terminals/` are `0700`;

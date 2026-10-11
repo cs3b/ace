@@ -9,17 +9,18 @@ class TelegramTransportTest < AceHermesTestCase
     attr_reader :answers, :effects
     attr_accessor :unavailable
 
-    def initialize
+    def initialize(project = "lab")
+      @project = project
       @requests, @answers, @effects = {}, [], 0
     end
 
     def add(id, secret: false)
-      @requests[id] = {"id" => id, "attempt" => "attempt651", "assignment" => "assign651", "project" => "lab",
+      @requests[id] = {"id" => id, "attempt" => "attempt651", "assignment" => "assign651", "project" => @project,
                        "requester" => "agent", "kind" => secret ? "otp" : "text",
                        "sensitive" => secret, "question" => "Proceed?", "state" => "created"}
       envelope = {"schema" => Ace::Hitl::Contract::ManagedEnvelope::SCHEMA, "request_id" => id,
         "request_incarnation" => "0123456789abcdef",
-        "project" => "lab", "assignment_id" => "assign651", "attempt_id" => "attempt651", "requester" => "agent",
+        "project" => @project, "assignment_id" => "assign651", "attempt_id" => "attempt651", "requester" => "agent",
         "correlation_id" => id, "kind" => secret ? "otp" : "text", "reverse" => nil}
       envelope["payload_sha256"] = Digest::SHA256.hexdigest("Proceed?") unless secret
       @requests[id]["envelope"] = envelope
@@ -61,11 +62,13 @@ class TelegramTransportTest < AceHermesTestCase
     end
     channels = @folders.map do |name, folder|
       {"name" => name, "chat_id" => name == "lab" ? "-424242" : "-848484",
-       "captain_user_ids" => ["42"], "machine" => "host", "folder" => folder, "target" => "#{name}-overseer", "projects" => [name]}
+       "captain_user_ids" => ["42"], "machine" => "host", "folder" => folder, "target" => "#{name}-overseer",
+       "projects" => [name], "hitl_service_uid" => Process.uid}
     end
     @registry = T::Registry.new({"schema" => "ace.hitl.hermes.channels/v1", "channels" => channels})
     @journal = T::Journal.new(File.join(@tmp, "state"))
-    @boundary = Boundary.new
+    @boundaries = {"lab" => Boundary.new("lab"), "other" => Boundary.new("other")}
+    @boundary = @boundaries.fetch("lab")
     @time = Time.iso8601(QUESTION_TS)
     @sent = []
     @sender = lambda do |channel, question|
@@ -86,16 +89,17 @@ class TelegramTransportTest < AceHermesTestCase
       name: entry["name"], machine: entry["machine"], folder: entry["folder"]
     )
     Ace::Hitl::Hermes::Organisms::HermesBox.new(channel: ch, euid_provider: -> { 4242 },
-      answer_authorizer: authorized ? ->(id) { @boundary.read(id) } : nil)
+      answer_authorizer: authorized ? ->(id) { @boundaries.fetch(channel).read(id) } : nil)
   end
 
   def relay(sender: @sender)
-    T::Relay.new(registry: @registry, journal: @journal, lifecycle: @boundary, sender: sender,
+    T::Relay.new(registry: @registry, journal: @journal,
+      lifecycle_for: ->(channel) { @boundaries.fetch(channel.fetch("name")) }, sender: sender,
       clock: -> { @time }, box_factory: ->(channel) { box(channel["name"]) })
   end
 
   def submit(id = "q-1", secret: false, channel: "lab")
-    @boundary.add(id, secret: secret)
+    @boundaries.fetch(channel).add(id, secret: secret)
     box(channel).publish(kind: :question, id: id, body: "Proceed?", sender: "agent", timestamp: QUESTION_TS)
     @relay.submit(channel: channel, request: id, revision: "rev-1")
   end
@@ -103,6 +107,18 @@ class TelegramTransportTest < AceHermesTestCase
   def event(text = "yes", **changes)
     {"platform" => "telegram", "chat_id" => "-424242", "chat_type" => "supergroup", "user_id" => "42",
      "message_id" => "101", "reply_to_message_id" => "100", "text" => text}.merge(changes.transform_keys(&:to_s))
+  end
+
+  def test_identical_request_ids_remain_isolated_by_channel_authority
+    submit("same-id", channel: "lab")
+    submit("same-id", channel: "other")
+
+    other_event = event("other answer", chat_id: "-848484", message_id: "202")
+    assert_equal "delivered", @relay.receive(other_event)["status"]
+    assert_empty @boundaries.fetch("lab").answers
+    assert_equal [["same-id", "other answer"]], @boundaries.fetch("other").answers
+    assert_equal "submitted", @relay.delivery(channel: "lab", request: "same-id")["status"]
+    assert_equal "submitted", @relay.delivery(channel: "other", request: "same-id")["status"]
   end
 
   def shared_request
@@ -266,12 +282,12 @@ class TelegramTransportTest < AceHermesTestCase
     path = Gem::Specification.find_by_name("ace-hitl-contract").full_gem_path
     examples = JSON.parse(File.read(File.join(path, "lib/ace/hitl/contract/examples/ingress-checkpoints.json"))).fetch("cases")
     submit
-    actual = @relay.reconcile(request: "q-1", through: QUESTION_TS)
+    actual = @relay.reconcile(channel: "lab", request: "q-1", through: QUESTION_TS)
     keys = %w[schema status healthy drained]
     assert_equal examples[0].slice(*keys), actual.slice(*keys)
     assert_nil actual["checkpoint"]
     @relay.poll_complete(channel: "lab", started_at: QUESTION_TS, through: QUESTION_TS, continuous: true)
-    actual = @relay.reconcile(request: "q-1", through: QUESTION_TS)
+    actual = @relay.reconcile(channel: "lab", request: "q-1", through: QUESTION_TS)
     assert_equal examples[1].slice(*keys), actual.slice(*keys)
     assert_equal QUESTION_TS, actual.dig("checkpoint", "through")
     @journal.synchronize do |state, commit|
@@ -279,19 +295,19 @@ class TelegramTransportTest < AceHermesTestCase
         "sequence" => 1, "received_at" => QUESTION_TS, "status" => "unresolved"}
       commit.call
     end
-    actual = @relay.reconcile(request: "q-1", through: QUESTION_TS)
+    actual = @relay.reconcile(channel: "lab", request: "q-1", through: QUESTION_TS)
     assert_equal examples[2].slice(*keys), actual.slice(*keys)
     assert_equal QUESTION_TS, actual["unresolved"].first["received_at"]
   end
 
   def test_reconciliation_requires_real_coverage_and_excludes_untrusted_event_timestamp
     submit
-    assert_equal "unknown", @relay.reconcile(request: "q-1", through: QUESTION_TS)["status"]
+    assert_equal "unknown", @relay.reconcile(channel: "lab", request: "q-1", through: QUESTION_TS)["status"]
     @time += 60
     result = @relay.receive(event("yes", received_at: "2000-01-01T00:00:00Z"))
     assert_equal @time.iso8601, result["received_at"]
     @relay.poll_complete(channel: "lab", started_at: QUESTION_TS, through: @time.iso8601, continuous: true)
-    checkpoint = @relay.reconcile(request: "q-1", through: @time.iso8601)
+    checkpoint = @relay.reconcile(channel: "lab", request: "q-1", through: @time.iso8601)
     assert checkpoint["healthy"]
     assert checkpoint["drained"]
     assert_equal 1, checkpoint["checkpoint"]["sequence"]
@@ -306,12 +322,12 @@ class TelegramTransportTest < AceHermesTestCase
       commit.call
     end
     @relay.poll_complete(channel: "lab", started_at: QUESTION_TS, through: @time.iso8601, continuous: true)
-    result = @relay.reconcile(request: "q-1", through: @time.iso8601)
+    result = @relay.reconcile(channel: "lab", request: "q-1", through: @time.iso8601)
     refute result["drained"]
     assert_equal "queued", result["unresolved"].first["status"]
     @time += 60
     @relay.poll_complete(channel: "lab", started_at: @time.iso8601, through: @time.iso8601, continuous: true)
-    refute @relay.reconcile(request: "q-1", through: @time.iso8601)["healthy"]
+    refute @relay.reconcile(channel: "lab", request: "q-1", through: @time.iso8601)["healthy"]
   end
 
   def test_registry_rejects_ambiguous_chat_and_missing_allowlist
@@ -333,10 +349,30 @@ class TelegramTransportTest < AceHermesTestCase
     source.define_singleton_method(:updates) { |offset:| offsets << offset; batches.shift }
     poller = T::Poller.new(relay: @relay, telegram: source, journal: @journal, registry: @registry, clock: -> { @time })
     assert_equal 1, poller.once
-    refute @relay.reconcile(request: "q-1", through: QUESTION_TS)["healthy"]
+    refute @relay.reconcile(channel: "lab", request: "q-1", through: QUESTION_TS)["healthy"]
     assert_equal 0, poller.once
-    assert @relay.reconcile(request: "q-1", through: QUESTION_TS)["drained"]
+    assert @relay.reconcile(channel: "lab", request: "q-1", through: QUESTION_TS)["drained"]
     assert_equal [0, 9], offsets
+  end
+
+  def test_poller_durably_records_skipped_unregistered_group_without_message_body
+    update = {"update_id" => 23, "message" => {"message_id" => 301,
+      "chat" => {"id" => -999999, "type" => "supergroup"}, "from" => {"id" => 42},
+      "text" => "must not enter journal"}}
+    source = Object.new
+    source.define_singleton_method(:updates) { |offset:| [update] }
+
+    T::Poller.new(relay: @relay, telegram: source, journal: @journal, registry: @registry,
+      clock: -> { @time }).once
+
+    @journal.synchronize do |state, _|
+      record = state["unregistered_chats"]["-999999"]
+      assert_equal 1, record["count"]
+      assert_equal 23, record["first_update_id"]
+      assert_equal 23, record["last_update_id"]
+      assert_equal 24, state["cursor"]["offset"]
+    end
+    refute_includes File.read(File.join(@tmp, "state", "journal.json")), "must not enter journal"
   end
 
   def test_poller_failure_invalidates_checkpoint_and_actor_lease_excludes_competitor
@@ -345,7 +381,7 @@ class TelegramTransportTest < AceHermesTestCase
     source.define_singleton_method(:updates) { |offset:| raise "failure" }
     poller = T::Poller.new(relay: @relay, telegram: source, journal: @journal, registry: @registry, clock: -> { @time })
     assert_raises(Ace::Hitl::Hermes::ContractError) { poller.once }
-    refute @relay.reconcile(request: "q-1", through: QUESTION_TS)["healthy"]
+    refute @relay.reconcile(channel: "lab", request: "q-1", through: QUESTION_TS)["healthy"]
     @journal.actor do
       assert_raises(Ace::Hitl::Hermes::ContractError) { T::Journal.new(File.join(@tmp, "state")).actor {} }
     end
@@ -401,7 +437,7 @@ class TelegramTransportTest < AceHermesTestCase
     @relay.receive(event("987654"))
     @time += 60
     @relay.poll_complete(channel: "lab", started_at: QUESTION_TS, through: @time.iso8601, continuous: true)
-    refute @relay.reconcile(request: "q-1", through: @time.iso8601)["drained"]
+    refute @relay.reconcile(channel: "lab", request: "q-1", through: @time.iso8601)["drained"]
     @journal.synchronize do |state, commit|
       state["cursor"] = {"offset" => 0, "through" => QUESTION_TS, "coverage_from" => QUESTION_TS, "generation" => 0}
       commit.call
@@ -411,7 +447,7 @@ class TelegramTransportTest < AceHermesTestCase
     source.define_singleton_method(:updates) { |offset:| [] }
     T::Poller.new(relay: @relay, telegram: source, journal: @journal, registry: @registry,
       clock: -> { @time }).once
-    refute @relay.reconcile(request: "q-1", through: @time.iso8601)["healthy"]
+    refute @relay.reconcile(channel: "lab", request: "q-1", through: @time.iso8601)["healthy"]
   end
 
   def test_timeout_checkpoint_serializes_with_reply_durable_receipt_and_delivery
@@ -428,7 +464,7 @@ class TelegramTransportTest < AceHermesTestCase
     arrived.pop
     checkpoint = Thread.new do
       checking << true
-      @relay.reconcile(request: "q-1", through: QUESTION_TS)
+      @relay.reconcile(channel: "lab", request: "q-1", through: QUESTION_TS)
     end
     checking.pop
     assert checkpoint.alive?, "checkpoint escaped a pending reply transition"
@@ -456,7 +492,8 @@ class TelegramTransportTest < AceHermesTestCase
     poller.once
     @time += 1
     poller.once
-    refute @relay.reconcile(request: 'q-1', through: @time.iso8601)['healthy'], 'Nonempty first batch after Telegram retention gap erased the gap and certified old coverage'
+    refute @relay.reconcile(channel: "lab", request: "q-1", through: @time.iso8601)["healthy"],
+      "Nonempty first batch after Telegram retention gap erased the gap and certified old coverage"
   end
 
   def test_recovered_empty_polls_restore_healthy_coverage_for_a_new_request
@@ -472,7 +509,8 @@ class TelegramTransportTest < AceHermesTestCase
     @time += 60
     submit('q-new')
     poller.once
-    assert @relay.reconcile(request: 'q-new', through: @time.iso8601)['healthy'], 'A newly submitted request cannot obtain healthy coverage even after successful empty polls'
+    assert @relay.reconcile(channel: "lab", request: "q-new", through: @time.iso8601)["healthy"],
+      "A newly submitted request cannot obtain healthy coverage even after successful empty polls"
   end
 
   def test_queued_secret_after_crash_is_not_confirmed_without_delivery_or_explicit_failure
@@ -502,11 +540,12 @@ class TelegramTransportTest < AceHermesTestCase
     poller.once
     submit("q-fresh")
     poller.once
-    refute @relay.reconcile(request: "q-1", through: @time.iso8601)["healthy"]
-    assert @relay.reconcile(request: "q-fresh", through: @time.iso8601)["healthy"]
+    refute @relay.reconcile(channel: "lab", request: "q-1", through: @time.iso8601)["healthy"]
+    assert @relay.reconcile(channel: "lab", request: "q-fresh", through: @time.iso8601)["healthy"]
     @journal.synchronize do |state, _|
       assert state["poll_history"]["lab"].any? { |epoch| epoch["generation"] == 0 }
-      refute_equal state["requests"]["q-1"]["coverage_generation"], state["poll"]["lab"]["generation"]
+      key = JSON.generate(["lab", "q-1"])
+      refute_equal state["requests"][key]["coverage_generation"], state["poll"]["lab"]["generation"]
     end
   end
 
@@ -532,7 +571,7 @@ class TelegramTransportTest < AceHermesTestCase
     assert_equal "secret-unavailable", @relay.receive(event("123456", message_id: "102"))["status"]
     assert_empty @boundary.answers
     assert_empty box.poll.messages
-    assert_no_secret("987654", @relay.delivery("q-1"))
+    assert_no_secret("987654", @relay.delivery(channel: "lab", request: "q-1"))
   end
 
   def assert_no_secret(secret, projection)

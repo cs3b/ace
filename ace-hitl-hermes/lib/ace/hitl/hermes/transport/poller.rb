@@ -37,12 +37,18 @@ module Ace
               raise ContractError, "malformed Telegram update sequence"
             end
             unresolved = false
+            unregistered = []
             updates.each do |update|
               message = update["message"]
               next unless message.is_a?(Hash)
               chat, from = message["chat"], message["from"]
               next unless chat.is_a?(Hash) && from.is_a?(Hash)
-              next unless @registry.channels.any? { |c| c["chat_id"] == chat["id"].to_s }
+              unless @registry.channels.any? { |c| c["chat_id"] == chat["id"].to_s }
+                if %w[group supergroup].include?(chat["type"]) && chat["id"].to_s.match?(/\A-\d{4,32}\z/)
+                  unregistered << {"chat_id" => chat["id"].to_s, "update_id" => update.fetch("update_id")}
+                end
+                next
+              end
               event = {"platform" => "telegram", "chat_id" => chat["id"].to_s,
                        "chat_type" => chat["type"], "user_id" => from["id"].to_s,
                        "message_id" => message["message_id"].to_s,
@@ -57,6 +63,7 @@ module Ace
               end
             end
             finished = stamp
+            @journal.record_unregistered(updates: unregistered, observed_at: finished)
             continuous = Time.iso8601(started) - Time.iso8601(cursor["through"]) < 24 * 60 * 60
             # The getUpdates backlog is exhausted only on an empty response.
             # A nonempty batch may have more replies queued on Telegram.

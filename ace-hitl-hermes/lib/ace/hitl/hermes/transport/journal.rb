@@ -43,12 +43,51 @@ module Ace
             end
           end
 
+          def record_unregistered(updates:, observed_at:)
+            return if updates.empty?
+
+            synchronize do |state, commit|
+              updates.each do |update|
+                chat_id = update.fetch("chat_id")
+                update_id = update.fetch("update_id")
+                record = (state["unregistered_chats"][chat_id] ||= {
+                  "chat_id" => chat_id, "first_seen_at" => observed_at, "count" => 0
+                })
+                next if record["last_update_id"] && update_id <= record["last_update_id"]
+
+                record["last_seen_at"] = observed_at
+                record["first_update_id"] ||= update_id
+                record["last_update_id"] = update_id
+                record["count"] += 1
+              end
+              commit.call
+            end
+          end
+
+          def registration_gaps(channels:, surfaced_at:)
+            synchronize do |state, commit|
+              gaps = channels.filter_map do |channel|
+                record = state["unregistered_chats"][channel.fetch("chat_id")]
+                next unless record
+                next if record["surfaced_through_update_id"] == record["last_update_id"]
+
+                record["registered_channel"] = channel.fetch("name")
+                record["surfaced_at"] = surfaced_at
+                record["surfaced_through_update_id"] = record["last_update_id"]
+                record.slice("chat_id", "first_seen_at", "last_seen_at", "first_update_id", "last_update_id", "count")
+                  .merge("channel" => channel.fetch("name"))
+              end
+              commit.call unless gaps.empty?
+              gaps
+            end
+          end
+
           private
 
           def read
             path = File.join(@directory, "journal.json")
             return {"schema" => "ace.hitl.hermes.transport/v1", "requests" => {}, "ingress" => [],
-                    "sequence" => 0, "poll" => {}} unless File.exist?(path)
+                    "sequence" => 0, "poll" => {}, "unregistered_chats" => {}} unless File.exist?(path)
 
             File.open(path, File::RDONLY | File::NOFOLLOW) do |file|
               stat = file.stat
@@ -57,7 +96,8 @@ module Ace
               end
               state = JSON.parse(file.read)
               unless state["schema"] == "ace.hitl.hermes.transport/v1" && state["requests"].is_a?(Hash) &&
-                  state["ingress"].is_a?(Array) && state["sequence"].is_a?(Integer) && state["poll"].is_a?(Hash)
+                  state["ingress"].is_a?(Array) && state["sequence"].is_a?(Integer) && state["poll"].is_a?(Hash) &&
+                  state["unregistered_chats"].is_a?(Hash)
                 raise ContractError, "transport journal is malformed"
               end
               state

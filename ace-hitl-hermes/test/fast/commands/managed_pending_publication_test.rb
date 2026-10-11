@@ -32,18 +32,18 @@ class ManagedPendingPublicationTest < AceHermesTestCase
     @config_path = File.join(@tmp, "runtime.json")
     registry = {"schema" => "ace.hitl.hermes.channels/v1", "channels" => [
       {"name" => "inbox", "machine" => "local", "folder" => @folder, "target" => "overseer", "projects" => ["ace"],
-       "chat_id" => "-424242", "captain_user_ids" => ["42"]}
+       "chat_id" => "-424242", "captain_user_ids" => ["42"], "hitl_service_uid" => Process.uid}
     ]}
     @gateway_path = File.join(@tmp, "hermes.yaml")
     File.write(@gateway_path, "platforms:\n  telegram:\n    enabled: false\n")
     @config = {"schema" => "ace.hitl.hermes.runtime/v1", "registry" => @registry_path,
-               "state" => File.join(@tmp, "state"), "hitl_socket" => @socket, "hitl_service_uid" => Process.uid,
+               "state" => File.join(@tmp, "state"), "hitl_socket" => @socket,
                "hermes_gateway_config" => @gateway_path, "polling_owner" => "ace-hitl-hermes"}
     File.write(@registry_path, JSON.generate(registry))
     File.write(@config_path, JSON.generate(@config))
     @registry = T::Registry.load(@registry_path)
     @journal = T::Journal.new(@config["state"])
-    @relay = T::Relay.new(registry: @registry, journal: @journal, lifecycle: @client,
+    @relay = T::Relay.new(registry: @registry, journal: @journal, lifecycle_for: ->(_) { @client },
       sender: ->(channel, _) { {"success" => true, "chat_id" => channel["chat_id"], "message_id" => "100"} })
   end
 
@@ -80,11 +80,12 @@ class ManagedPendingPublicationTest < AceHermesTestCase
     actor.serve(once: true)
     assert_equal %i[poll send poll], calls.map(&:first)
     assert_equal [:send, "inbox", "Proceed?"], calls.find { |v| v.first == :send }
-    assert_equal "submitted", actor.relay.delivery("auto001")["status"]
+    assert_equal "submitted", actor.relay.delivery(channel: "inbox", request: "auto001")["status"]
     assert_empty Dir.children(@folder) # Telegram question ACK removes message.v1.
     actor.serve(once: true)
     assert_equal 1, calls.count { |value| value.first == :send }
-    assert actor.relay.reconcile(request: "auto001", through: actor.relay.delivery("auto001")["submitted_at"])["healthy"]
+    submitted_at = actor.relay.delivery(channel: "inbox", request: "auto001")["submitted_at"]
+    assert actor.relay.reconcile(channel: "inbox", request: "auto001", through: submitted_at)["healthy"]
   end
 
   def test_unregistered_project_is_left_pending_and_never_routed
@@ -111,7 +112,7 @@ class ManagedPendingPublicationTest < AceHermesTestCase
   def test_continuous_publication_retries_transport_outage_and_retains_one_poll_owner
     create(id: "auto001")
     actor, calls = runtime
-    lifecycle = actor.instance_variable_get(:@lifecycle)
+    lifecycle = actor.send(:lifecycle_for, "inbox")
     original_pending = lifecycle.method(:pending)
     attempts = 0
     lifecycle.define_singleton_method(:pending) do |**args|
@@ -134,13 +135,13 @@ class ManagedPendingPublicationTest < AceHermesTestCase
     assert_equal [1], delays
     assert_equal 2, attempts
     assert_equal 1, calls.count { |entry| entry.first == :send }
-    assert_equal "submitted", actor.relay.delivery("auto001")["status"]
+    assert_equal "submitted", actor.relay.delivery(channel: "inbox", request: "auto001")["status"]
   end
 
   def test_once_publication_reports_transport_failure_without_consuming_request
     create(id: "auto001")
     actor, calls = runtime
-    lifecycle = actor.instance_variable_get(:@lifecycle)
+    lifecycle = actor.send(:lifecycle_for, "inbox")
     lifecycle.define_singleton_method(:pending) { |**| raise L::TransportError, "HITL service restarting" }
     assert_raises(L::TransportError) { actor.serve(once: true) }
     assert_equal "created", @client.read("auto001")["state"]
@@ -151,7 +152,7 @@ class ManagedPendingPublicationTest < AceHermesTestCase
   def test_requester_named_captain_still_reaches_telegram
     create(id: "auto001")
     actor, calls = runtime
-    lifecycle = actor.instance_variable_get(:@lifecycle)
+    lifecycle = actor.send(:lifecycle_for, "inbox")
     original_pending = lifecycle.method(:pending)
     original_read = lifecycle.method(:read)
     lifecycle.define_singleton_method(:pending) do |**args|
@@ -177,6 +178,31 @@ class ManagedPendingPublicationTest < AceHermesTestCase
     actor.serve(once: true)
     assert_empty calls.select { |entry| entry.first == :send }
     assert_equal original, JSON.parse(File.read(File.join(@folder, "instruction1.json")))
+  end
+
+  def test_registration_surfaces_durable_unregistered_chat_coverage_gap_once
+    @journal.record_unregistered(
+      updates: [{"chat_id" => "-424242", "update_id" => 17}], observed_at: QUESTION_TS
+    )
+
+    actor = Ace::Hitl::Hermes::Runtime.new(@config_path, clock: -> { Time.iso8601(ANSWER_TS) })
+    transport = Object.new
+    transport.define_singleton_method(:updates) { |offset:| [] }
+    actor.define_singleton_method(:telegram) { transport }
+    _, warning = capture_io { actor.serve(once: true) }
+    assert_match(/registered inbox after skipped Telegram updates/, warning)
+    @journal.synchronize do |state, _|
+      record = state["unregistered_chats"]["-424242"]
+      assert_equal "inbox", record["registered_channel"]
+      assert_equal 17, record["surfaced_through_update_id"]
+      assert_equal 1, state["poll"]["inbox"]["generation"]
+    end
+
+    repeated = Ace::Hitl::Hermes::Runtime.new(@config_path)
+    repeated.define_singleton_method(:telegram) { transport }
+    _, repeated_warning = capture_io { repeated.serve(once: true) }
+    refute_match(/registered inbox after skipped Telegram updates/, repeated_warning)
+    assert actor
   end
 
 end
