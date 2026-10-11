@@ -164,10 +164,11 @@ Missing provisioning (attributable BLOCKED inputs; owners named):
   (candidate: `option :no_push, type: :boolean, aliases: ["--no-push"]`
   alias/parsing behavior). Attributable gaps: (a) `--no-push` vs
   `--no-upstream` semantic split confuses operators — the PR36-era record
-  “push despite --no-push” was the upstream push (misconeption corrected
-  here and in host records per PR37 review F4); (b) dry-run planning
-  contradicts the flag. Owner: ace-git-worktree backlog; investigation+fix
-  gated on spec-approved implementation.
+  "push despite --no-push" was the upstream push (misconeption recorded
+  here; its correction in host records is an OPEN host-owned item per PR37
+  review F4 — pending host action, stays visible until confirmed); (b)
+  dry-run planning contradicts the flag. Owner: ace-git-worktree backlog;
+  investigation+fix gated on spec-approved implementation.
 
 ## Related task refs
 
