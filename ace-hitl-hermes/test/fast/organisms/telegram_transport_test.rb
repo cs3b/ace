@@ -14,14 +14,15 @@ class TelegramTransportTest < AceHermesTestCase
       @requests, @answers, @effects = {}, [], 0
     end
 
-    def add(id, secret: false)
+    def add(id, secret: false, kind: nil)
+      kind ||= secret ? "otp" : "text"
       @requests[id] = {"id" => id, "attempt" => "attempt651", "assignment" => "assign651", "project" => @project,
-                       "requester" => "agent", "kind" => secret ? "otp" : "text",
+                       "requester" => "agent", "kind" => kind,
                        "sensitive" => secret, "question" => "Proceed?", "state" => "created"}
       envelope = {"schema" => Ace::Hitl::Contract::ManagedEnvelope::SCHEMA, "request_id" => id,
         "request_incarnation" => "0123456789abcdef",
         "project" => @project, "assignment_id" => "assign651", "attempt_id" => "attempt651", "requester" => "agent",
-        "correlation_id" => id, "kind" => secret ? "otp" : "text", "reverse" => nil}
+        "correlation_id" => id, "kind" => kind, "reverse" => nil}
       envelope["payload_sha256"] = Digest::SHA256.hexdigest("Proceed?") unless secret
       @requests[id]["envelope"] = envelope
     end
@@ -45,6 +46,13 @@ class TelegramTransportTest < AceHermesTestCase
       @answers << [id, answer.dup]
       @effects += 1
       @requests[id]["state"] = "answer-delivered"
+    end
+
+    def proposal_reply(id, project:, answer:, **)
+      raise "wrong project" unless project == @project
+
+      @answers << [id, answer.dup]
+      @requests.fetch(id)["state"] = "answer-delivered"
     end
 
     def close(id)
@@ -98,8 +106,8 @@ class TelegramTransportTest < AceHermesTestCase
       clock: -> { @time }, box_factory: ->(channel) { box(channel["name"]) })
   end
 
-  def submit(id = "q-1", secret: false, channel: "lab")
-    @boundaries.fetch(channel).add(id, secret: secret)
+  def submit(id = "q-1", secret: false, channel: "lab", kind: nil)
+    @boundaries.fetch(channel).add(id, secret: secret, kind: kind)
     box(channel).publish(kind: :question, id: id, body: "Proceed?", sender: "agent", timestamp: QUESTION_TS)
     @relay.submit(channel: channel, request: id, revision: "rev-1")
   end
@@ -119,6 +127,36 @@ class TelegramTransportTest < AceHermesTestCase
     assert_equal [["same-id", "other answer"]], @boundaries.fetch("other").answers
     assert_equal "submitted", @relay.delivery(channel: "lab", request: "same-id")["status"]
     assert_equal "submitted", @relay.delivery(channel: "other", request: "same-id")["status"]
+  end
+
+  def test_reconciliation_ignores_same_request_revision_ingress_from_another_channel
+    submit("same-id", channel: "lab")
+    submit("same-id", channel: "other")
+    @relay.poll_complete(channel: "lab", started_at: QUESTION_TS, through: QUESTION_TS, continuous: true)
+    @journal.synchronize do |state, commit|
+      state["ingress"] << {"request" => "same-id", "revision" => "rev-1", "channel" => "other",
+        "sequence" => 1, "received_at" => QUESTION_TS, "status" => "unresolved"}
+      commit.call
+    end
+
+    result = @relay.reconcile(channel: "lab", request: "same-id", through: QUESTION_TS)
+    assert result["healthy"]
+    assert result["drained"]
+  end
+
+  def test_proposal_reply_ignores_unresolved_same_identity_ingress_from_another_channel
+    submit("same-proposal", channel: "lab", kind: "proposal")
+    submit("same-proposal", channel: "other", kind: "proposal")
+    @journal.synchronize do |state, commit|
+      state["sequence"] = 1
+      state["ingress"] << {"request" => "same-proposal", "revision" => "rev-1", "channel" => "lab",
+        "message_id" => "101", "sequence" => 1, "received_at" => QUESTION_TS, "status" => "unresolved"}
+      commit.call
+    end
+
+    result = @relay.receive(event("approve", chat_id: "-848484", message_id: "202"))
+    assert_equal "delivered", result["status"]
+    assert_equal [["same-proposal", "approve"]], @boundaries.fetch("other").answers
   end
 
   def shared_request
@@ -373,6 +411,21 @@ class TelegramTransportTest < AceHermesTestCase
       assert_equal 24, state["cursor"]["offset"]
     end
     refute_includes File.read(File.join(@tmp, "state", "journal.json")), "must not enter journal"
+  end
+
+  def test_registration_gap_marker_and_poll_generation_share_one_durable_commit
+    @journal.record_unregistered(
+      updates: [{"chat_id" => "-424242", "update_id" => 31}], observed_at: QUESTION_TS
+    )
+    @journal.define_singleton_method(:write) { |_| raise IOError, "injected commit failure" }
+
+    assert_raises(IOError) { @relay.surface_registration_gaps(at: QUESTION_TS) }
+
+    T::Journal.new(File.join(@tmp, "state")).synchronize do |state, _|
+      record = state["unregistered_chats"]["-424242"]
+      refute record.key?("surfaced_through_update_id")
+      assert_nil state["poll"]["lab"]
+    end
   end
 
   def test_poller_failure_invalidates_checkpoint_and_actor_lease_excludes_competitor

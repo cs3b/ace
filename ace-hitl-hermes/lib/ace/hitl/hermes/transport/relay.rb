@@ -149,24 +149,29 @@ module Ace
             validate_time(through)
             raise ContractError, "invalid poll interval" if started_at > through || through > now
             @journal.synchronize do |state, commit|
-              old = state["poll"][channel]
-              gap = old && started_at > old["through"] && old["healthy"]
-              broken = continuous != true || gap
-              generation = old ? old.fetch("generation", 0) : 0
-              if broken
-                state["poll_history"] ||= {}
-                (state["poll_history"][channel] ||= []) << old.dup if old
-                generation += 1 if !old || old["healthy"]
-                state["poll"][channel] = {"from" => started_at, "through" => through,
-                                          "healthy" => false, "generation" => generation}
-              else
-                recovering = old && !old["healthy"]
-                state["poll"][channel] = {
-                  "from" => recovering ? [old["from"], started_at].max : (old ? old["from"] : started_at),
-                  "through" => through, "healthy" => true, "generation" => generation
-                }
-              end
+              update_poll(state, channel: channel, started_at: started_at, through: through, continuous: continuous)
               commit.call
+            end
+          end
+
+          def surface_registration_gaps(at:)
+            validate_time(at)
+            @journal.synchronize do |state, commit|
+              gaps = @registry.channels.filter_map do |channel|
+                record = state["unregistered_chats"][channel.fetch("chat_id")]
+                next unless record
+                next if record["surfaced_through_update_id"] == record["last_update_id"]
+
+                name = channel.fetch("name")
+                update_poll(state, channel: name, started_at: at, through: at, continuous: false)
+                record["registered_channel"] = name
+                record["surfaced_at"] = at
+                record["surfaced_through_update_id"] = record["last_update_id"]
+                record.slice("chat_id", "first_seen_at", "last_seen_at", "first_update_id", "last_update_id", "count")
+                  .merge("channel" => name)
+              end
+              commit.call unless gaps.empty?
+              gaps
             end
           end
 
@@ -183,7 +188,8 @@ module Ace
                 record["status"] == "submitted" && poll["from"] <= record["submitted_at"] &&
                 poll.fetch("generation", 0) == record.fetch("coverage_generation", 0)
               relevant = state["ingress"].select do |item|
-                item["request"] == request && item["revision"] == record["revision"] && item["received_at"] <= through
+                item["channel"] == channel && item["request"] == request &&
+                  item["revision"] == record["revision"] && item["received_at"] <= through
               end
               unresolved = relevant.reject { |item| TERMINAL.include?(item["status"]) }.map { |i| public_ingress(i) }
               checkpoint = {"schema" => "ace.hitl.hermes.ingress-checkpoint/v1", "request" => request,
@@ -230,6 +236,26 @@ module Ace
             JSON.generate([channel, request])
           end
 
+          def update_poll(state, channel:, started_at:, through:, continuous:)
+            old = state["poll"][channel]
+            gap = old && started_at > old["through"] && old["healthy"]
+            broken = continuous != true || gap
+            generation = old ? old.fetch("generation", 0) : 0
+            if broken
+              state["poll_history"] ||= {}
+              (state["poll_history"][channel] ||= []) << old.dup if old
+              generation += 1 if !old || old["healthy"]
+              state["poll"][channel] = {"from" => started_at, "through" => through,
+                                        "healthy" => false, "generation" => generation}
+            else
+              recovering = old && !old["healthy"]
+              state["poll"][channel] = {
+                "from" => recovering ? [old["from"], started_at].max : (old ? old["from"] : started_at),
+                "through" => through, "healthy" => true, "generation" => generation
+              }
+            end
+          end
+
           def now
             @clock.call.utc.iso8601
           end
@@ -274,7 +300,8 @@ module Ace
           def deliver_reply(record, item, text, channel, commit, state)
             lifecycle = lifecycle_for(channel)
             if proposal?(record) && state["ingress"].any? { |earlier|
-                earlier["request"] == item["request"] && earlier["revision"] == item["revision"] &&
+                earlier["channel"] == item["channel"] && earlier["request"] == item["request"] &&
+                  earlier["revision"] == item["revision"] &&
                   earlier["sequence"] < item["sequence"] && !TERMINAL.include?(earlier["status"]) }
               item["status"] = "unresolved"
               commit.call

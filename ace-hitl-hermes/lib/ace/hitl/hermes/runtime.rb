@@ -119,8 +119,7 @@ module Ace
 
         def surface_registration_gaps
           at = @clock.call.utc.iso8601
-          @journal.registration_gaps(channels: @registry.channels, surfaced_at: at).each do |gap|
-            @relay.poll_complete(channel: gap.fetch("channel"), started_at: at, through: at, continuous: false)
+          @relay.surface_registration_gaps(at: at).each do |gap|
             warn "ace-hitl-hermes: registered #{gap['channel']} after skipped Telegram updates; " \
               "ingress coverage starts a new generation"
           end

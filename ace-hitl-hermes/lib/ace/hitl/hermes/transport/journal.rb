@@ -64,24 +64,6 @@ module Ace
             end
           end
 
-          def registration_gaps(channels:, surfaced_at:)
-            synchronize do |state, commit|
-              gaps = channels.filter_map do |channel|
-                record = state["unregistered_chats"][channel.fetch("chat_id")]
-                next unless record
-                next if record["surfaced_through_update_id"] == record["last_update_id"]
-
-                record["registered_channel"] = channel.fetch("name")
-                record["surfaced_at"] = surfaced_at
-                record["surfaced_through_update_id"] = record["last_update_id"]
-                record.slice("chat_id", "first_seen_at", "last_seen_at", "first_update_id", "last_update_id", "count")
-                  .merge("channel" => channel.fetch("name"))
-              end
-              commit.call unless gaps.empty?
-              gaps
-            end
-          end
-
           private
 
           def read
@@ -95,6 +77,7 @@ module Ace
                 raise ContractError, "transport journal must be owned and private"
               end
               state = JSON.parse(file.read)
+              state["unregistered_chats"] ||= {}
               unless state["schema"] == "ace.hitl.hermes.transport/v1" && state["requests"].is_a?(Hash) &&
                   state["ingress"].is_a?(Array) && state["sequence"].is_a?(Integer) && state["poll"].is_a?(Hash) &&
                   state["unregistered_chats"].is_a?(Hash)
