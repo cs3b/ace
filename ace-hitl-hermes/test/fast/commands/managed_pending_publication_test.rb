@@ -201,7 +201,8 @@ class ManagedPendingPublicationTest < AceHermesTestCase
     transport.define_singleton_method(:updates) { |offset:| [] }
     actor.define_singleton_method(:telegram) { transport }
     _, warning = capture_io { actor.serve(once: true) }
-    assert_match(/registered inbox after skipped Telegram updates/, warning)
+    assert_match(/registered inbox \(chat -424242\) after 1 skipped Telegram updates \(17-17\)/, warning)
+    assert_match(/ingress coverage starts generation 1/, warning)
     @journal.synchronize do |state, _|
       record = state["unregistered_chats"]["-424242"]
       assert_equal "inbox", record["registered_channel"]
@@ -212,7 +213,7 @@ class ManagedPendingPublicationTest < AceHermesTestCase
     repeated = Ace::Hitl::Hermes::Runtime.new(@config_path)
     repeated.define_singleton_method(:telegram) { transport }
     _, repeated_warning = capture_io { repeated.serve(once: true) }
-    refute_match(/registered inbox after skipped Telegram updates/, repeated_warning)
+    refute_match(/registered inbox .* after .* skipped Telegram updates/, repeated_warning)
     assert actor
   end
 

@@ -168,7 +168,7 @@ module Ace
                 record["surfaced_at"] = at
                 record["surfaced_through_update_id"] = record["last_update_id"]
                 record.slice("chat_id", "first_seen_at", "last_seen_at", "first_update_id", "last_update_id", "count")
-                  .merge("channel" => name)
+                  .merge("channel" => name, "coverage_generation" => state["poll"].dig(name, "generation"))
               end
               commit.call unless gaps.empty?
               gaps

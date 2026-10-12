@@ -427,6 +427,66 @@ class TelegramTransportTest < AceHermesTestCase
     refute_includes File.read(File.join(@tmp, "state", "journal.json")), "must not enter journal"
   end
 
+  def test_poller_commits_unregistered_chat_before_advancing_offset
+    update = {"update_id" => 23, "message" => {"message_id" => 301,
+      "chat" => {"id" => -999999, "type" => "supergroup"}, "text" => "unknown group"}}
+    source = Object.new
+    source.define_singleton_method(:updates) { |offset:| [update] }
+    observed_cursor = nil
+    state_directory = File.join(@tmp, "state")
+    original_record = @journal.method(:record_unregistered)
+    @journal.define_singleton_method(:record_unregistered) do |**arguments|
+      original_record.call(**arguments)
+      T::Journal.new(state_directory).synchronize do |state, _|
+        observed_cursor = state["cursor"]
+      end
+    end
+
+    T::Poller.new(relay: @relay, telegram: source, journal: @journal, registry: @registry,
+      clock: -> { @time }).once
+
+    assert_nil observed_cursor, "Telegram offset advanced before the unregistered chat record was durable"
+    @journal.synchronize do |state, _|
+      assert_equal 23, state.dig("unregistered_chats", "-999999", "last_update_id")
+      assert_equal 24, state.dig("cursor", "offset")
+    end
+  end
+
+  def test_poller_gap_survives_restart_and_late_registration_starts_informed_generation
+    updates = [21, 23].map do |update_id|
+      {"update_id" => update_id, "message" => {"message_id" => update_id + 100,
+        "chat" => {"id" => -999999, "type" => "supergroup"}, "text" => "unknown group"}}
+    end
+    source = Object.new
+    source.define_singleton_method(:updates) { |offset:| updates }
+    T::Poller.new(relay: @relay, telegram: source, journal: @journal, registry: @registry,
+      clock: -> { @time }).once
+
+    channels = @registry.channels.map(&:dup)
+    late_folder = File.join(@tmp, "late")
+    FileUtils.mkdir_p(late_folder, mode: 0o750)
+    channels << {"name" => "late", "chat_id" => "-999999", "captain_user_ids" => ["42"],
+      "machine" => "host", "folder" => late_folder, "target" => "late-overseer",
+      "projects" => ["late"], "hitl_service_uid" => Process.uid}
+    restarted_registry = T::Registry.new({"schema" => "ace.hitl.hermes.channels/v1", "channels" => channels})
+    restarted_journal = T::Journal.new(File.join(@tmp, "state"))
+    restarted_relay = T::Relay.new(registry: restarted_registry, journal: restarted_journal,
+      lifecycle_for: ->(_channel) { raise "late channel must not replay an unknown update" }, sender: @sender,
+      clock: -> { @time })
+
+    gap = restarted_relay.surface_registration_gaps(at: @time.iso8601).fetch(0)
+    assert_equal({"chat_id" => "-999999", "first_seen_at" => @time.iso8601,
+      "last_seen_at" => @time.iso8601, "first_update_id" => 21, "last_update_id" => 23,
+      "count" => 2, "channel" => "late", "coverage_generation" => 1}, gap)
+    assert_empty restarted_relay.surface_registration_gaps(at: @time.iso8601)
+    restarted_journal.synchronize do |state, _|
+      assert_equal 1, state.dig("poll", "late", "generation")
+      refute state.dig("poll", "late", "healthy")
+      assert_equal 23, state.dig("unregistered_chats", "-999999", "surfaced_through_update_id")
+    end
+    assert_equal 0, @boundary.effects
+  end
+
   def test_registration_gap_marker_and_poll_generation_share_one_durable_commit
     @journal.record_unregistered(
       updates: [{"chat_id" => "-424242", "update_id" => 31}], observed_at: QUESTION_TS
