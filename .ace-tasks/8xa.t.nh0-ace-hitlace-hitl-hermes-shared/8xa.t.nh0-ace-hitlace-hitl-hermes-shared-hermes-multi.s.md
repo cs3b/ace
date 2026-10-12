@@ -1,0 +1,90 @@
+---
+id: 8xa.t.nh0
+status: in-progress
+priority: high
+created_at: "2026-10-12 00:30:00"
+estimate:
+dependencies: [8x9.t.xz9]
+tags: [ace-hitl, ace-hitl-hermes, gad8, transport]
+---
+
+# ace-hitl/ace-hitl-hermes: shared-Hermes multi-project transport delivery (G-A/G-B/G-D)
+
+## Behavioral Specification
+
+Deliver the smallest ace-hitl + ace-hitl-hermes changes enabling the
+Captain-approved shared-Hermes topology (answer h1a12b713f57-2eea27): ALL
+communication through ONE Hermes bot; each project its own Telegram group,
+bidirectional; migration away from Python. Authoritative design:
+`.ace-local/evidence/gad8-hitl/shared-transport-topology-contract.md`
+(corrected per one-Hermes; G-C dropped).
+
+### G-A (ace-hitl-hermes, required)
+
+Channel→lifecycle-socket mapping with per-project explicit service identity:
+
+- config: per-channel `hitl_socket` override (global `hitl_socket` remains
+  the default); lifecycle clients instantiated per distinct socket, lazily
+  and cached;
+- each channel's requests/replies/instructions resolve ONLY to the project
+  authority bound to that channel's socket — no cross-project leakage in
+  either direction (ask/reply/pending flows all carry the channel's project);
+- locality: a socket crossing the host/Incus boundary MUST use explicit
+  service identity (configured per-project service credential/binding) —
+  never assumed SO_PEERCRED identity; within one runtime the existing peer
+  auth stays.
+
+### G-B (ace-hitl, required)
+
+Serve CLI `--group` option passed through to `Service(group:)`
+(service.rb:36 already parameterized) + dedicated-directory guidance in the
+`verify_socket_directory!` error message. Narrow socket access; no
+lab-control/legacy-labd exposure by default.
+
+### G-D (ace-hitl-hermes, optional if trivial)
+
+Durably record skipped-unregistered chat_ids in the journal; surface them at
+registration time (informed coverage gap via existing generation machinery).
+Cutover MUST NOT silently drop existing Lab/host groups (register both
+before activation).
+
+### Existing protections unchanged
+
+Receipt/restart/unknown-result semantics and OTP protections remain the
+store's existing behavior. `verify_polling_owner!` gateway-Telegram-disabled
+guard stays (one Hermes bot = only polling owner; G-C dropped).
+
+### Release preparation
+
+Version bumps + changelogs for both changed gems (ace-hitl,
+ace-hitl-hermes) in this branch. Publication is separately authorized and
+executed post-integration with exact-artifact manifest; this branch only
+prepares.
+
+### Verification plan
+
+- New tests: per-channel socket mapping (two channels → two sockets, no
+  leakage); explicit service identity across a simulated locality boundary
+  (no peer-uid reliance); `--group` passthrough; G-D journal record if
+  implemented.
+- Full suites: `bin/ace-test ace-hitl all` and `bin/ace-test
+  ace-hitl-hermes all` green at final head.
+
+### Acceptance criteria
+
+- [ ] G-A/G-B implemented with tests; G-D if trivial; G-C absent.
+- [ ] Both suites green at final head.
+- [ ] Release prep (versions/changelogs) included.
+- [ ] Independent exact-head review APPROVED; PR via AGit citing this task
+      + the topology contract; STOP at approved PR.
+
+## Provenance
+
+Captain HITL implementation order (2026-10-11, answer
+h1a12b713f57-2eea27) under 8xa.t.h8x/8xahhp; host-observed activation
+blockers (one lifecycle socket / single-repo AttemptCoordinator, poller
+offset skip, global gateway-disable guard, lab-control group exposure);
+design contract `.ace-local/evidence/gad8-hitl/shared-transport-topology-contract.md`
+(corrected per one-Hermes). Tool-minted after owner reconciliation: no
+existing ACE task owns ace-hitl transport topology (xz9 = protected scope;
+vs3 = publication/HITL behavior; gad.8/gad.b = lab-config deployment side).
