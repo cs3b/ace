@@ -302,13 +302,18 @@ module Ace
         def admit_fixed_merge_request(submission)
           record = stringified(submission).merge("state" => "pending",
             "reference" => Molecules::FixedEffectReference.create)
-          guard = -> { @journal.fixed_authorization_conflict(record) }
-          begin
-            @journal.admit_fixed_merge_request(record, guard: guard)
-          rescue AttemptErrors::Conflict => e
-            raise if e.message.include?("different input") || e.message.include?("already bound")
-            raise AttemptErrors::AuthorizationConflict, "Authorization reference is not currently valid"
+          # The guard raises the distinct error itself, so journal conflicts
+          # never need message-string discrimination: replay/binding conflicts
+          # stay Conflict, a consumed authorization is AuthorizationConflict.
+          guard = lambda do
+            conflict = @journal.fixed_authorization_conflict(record)
+            if conflict
+              raise AttemptErrors::AuthorizationConflict,
+                "Authorization reference is not currently valid"
+            end
+            nil
           end
+          @journal.admit_fixed_merge_request(record, guard: guard)
         end
 
         # Begin the fixed effect (pending -> uncertain). The single CAS

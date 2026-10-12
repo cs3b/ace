@@ -56,7 +56,11 @@ module Ace
           "schema" => "ace.assign.fixed-effect-receipt/v1",
           "reference" => "fmr1-#{"A" * 40}",
           "request_id" => "request-1",
-          "input_digest" => "e" * 64,
+          "input_digest" => Atoms::FixedMergeSchemas.canonical_request_digest(
+            project: "atlas", assignment: "assignment", attempt: "attempt",
+            queue_entry: "010", authorization: "decision-1", request_id: "request-1",
+            input: valid_request
+          ),
           "terminal_status" => "succeeded",
           "request" => {
             "project" => "atlas", "assignment" => "assignment", "attempt" => "attempt",
@@ -91,6 +95,66 @@ module Ace
           end
         end
         receipt
+      end
+
+      def test_canonical_request_digest_follows_spec_ruling_r4
+        document = valid_request
+        base = digest_for(document)
+        # Key-order independence: canonicalization is recursive key sorting,
+        # so a differently ordered (value-identical) document digests equal.
+        shuffled = deep_shuffle(document)
+        assert_equal base, digest_for(shuffled)
+        # Byte-identical input under any different selector, authorization or
+        # request ID yields a different digest.
+        refute_equal base, digest_for(document, request_id: "request-2")
+        refute_equal base, digest_for(document, authorization: "decision-2")
+        refute_equal base, digest_for(document, project: "borealis")
+        refute_equal base, digest_for(document, queue_entry: "020")
+        # Input sensitivity: a changed input document changes the digest.
+        refute_equal base, digest_for(deep_copy(document).merge("forge" => "other"))
+        # Stable and well-formed.
+        assert_equal base, digest_for(document)
+        assert_match(/\A[0-9a-f]{64}\z/, base)
+        # Independent recomputation over the canonical preimage: an inline
+        # recursive key-sort (written separately from the implementation).
+        sort_keys = lambda do |value|
+          case value
+          when Hash
+            value.keys.sort.each_with_object({}) { |key, out| out[key] = sort_keys.call(value[key]) }
+          when Array then value.map { |item| sort_keys.call(item) }
+          else value
+          end
+        end
+        preimage = JSON.generate(sort_keys.call(
+          "assignment" => "assignment", "attempt" => "attempt", "authorization" => "decision-1",
+          "input" => JSON.parse(JSON.generate(document)), "operation" => "merge",
+          "project" => "atlas", "queue_entry" => "010", "request_id" => "request-1"
+        ))
+        assert_equal Digest::SHA256.hexdigest(preimage), base
+      end
+
+      def digest_for(document, overrides = {})
+        Atoms::FixedMergeSchemas.canonical_request_digest(
+          project: overrides.fetch(:project, "atlas"),
+          assignment: overrides.fetch(:assignment, "assignment"),
+          attempt: overrides.fetch(:attempt, "attempt"),
+          queue_entry: overrides.fetch(:queue_entry, "010"),
+          authorization: overrides.fetch(:authorization, "decision-1"),
+          request_id: overrides.fetch(:request_id, "request-1"),
+          input: document
+        )
+      end
+
+      def deep_copy(value)
+        JSON.parse(JSON.generate(value))
+      end
+
+      def deep_shuffle(value)
+        case value
+        when Hash then value.keys.sort.reverse.each_with_object({}) { |key, out| out[key] = deep_shuffle(value[key]) }
+        when Array then value.map { |item| deep_shuffle(item) }
+        else value
+        end
       end
 
       def test_valid_request_is_accepted
@@ -306,7 +370,11 @@ module Ace
           "reference" => "fmr1-#{"A" * 40}",
           "project_id" => "atlas", "assignment_id" => "assignment", "attempt_id" => "attempt",
           "queue_entry" => "010", "operation" => "merge", "authorization" => "decision-1",
-          "input_digest" => "e" * 64,
+          "input_digest" => Atoms::FixedMergeSchemas.canonical_request_digest(
+            project: "atlas", assignment: "assignment", attempt: "attempt",
+            queue_entry: "010", authorization: "decision-1", request_id: "request-1",
+            input: valid_request
+          ),
           "request" => valid_request,
           "principal" => "13005", "receiver_id" => "ordinary-receiver",
           "configuration_sha256" => "f" * 64,

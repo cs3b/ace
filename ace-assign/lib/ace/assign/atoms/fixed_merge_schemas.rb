@@ -35,6 +35,34 @@ module Ace
 
         module_function
 
+        # Canonical request digest — spec ruling r4: lowercase hex SHA-256 over
+        # the canonical JSON (recursively key-sorted by code point, compact
+        # encoder, UTF-8) of the FULL eight-field immutable binding. The digest
+        # covers the binding, never the input document alone: byte-identical
+        # input under any different selector, authorization or request ID
+        # yields a different digest. The producer computes it at admission and
+        # re-derives it for replay and receipt verification; consumers re-derive
+        # the identical digest from their recorded binding. Both packages call
+        # this one implementation so a pair can never diverge.
+        def canonical_request_digest(project:, assignment:, attempt:, queue_entry:,
+          authorization:, request_id:, input:)
+          preimage = canonical({
+            "project" => project, "assignment" => assignment, "attempt" => attempt,
+            "queue_entry" => queue_entry, "operation" => "merge",
+            "authorization" => authorization, "request_id" => request_id, "input" => input
+          })
+          Digest::SHA256.hexdigest(JSON.generate(preimage))
+        end
+
+        # Recursively sort object keys by code point; arrays keep order.
+        def canonical(value)
+          case value
+          when Hash then value.keys.sort.each_with_object({}) { |key, result| result[key] = canonical(value[key]) }
+          when Array then value.map { |item| canonical(item) }
+          else value
+          end
+        end
+
         # The only admitted ordinary merge request document.
         def validate_request!(document)
           require_object!(document, "request")
@@ -241,6 +269,19 @@ module Ace
               receipt.fetch("input_digest") == record.fetch("input_digest") &&
               receipt.fetch("reference") == record.fetch("reference")
             raise SchemaError, "receipt identity does not match the canonical admitted record"
+          end
+          # Ruling r4: receipt verification RE-DERIVES the digest from the
+          # embedded request and the record selectors — an echoed digest that
+          # merely matches a stored value is not sufficient.
+          embedded_binding = request
+          rederived = canonical_request_digest(
+            project: record.fetch("project_id"), assignment: record.fetch("assignment_id"),
+            attempt: record.fetch("attempt_id"), queue_entry: record.fetch("queue_entry"),
+            authorization: record.fetch("authorization"), request_id: record.fetch("request_id"),
+            input: embedded_binding.fetch("input")
+          )
+          unless rederived == record.fetch("input_digest") && rederived == receipt.fetch("input_digest")
+            raise SchemaError, "receipt digest does not re-derive from the embedded request binding"
           end
           selector_map = {
             "project" => "project_id", "assignment" => "assignment_id", "attempt" => "attempt_id",

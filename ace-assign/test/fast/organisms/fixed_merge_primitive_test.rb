@@ -143,6 +143,21 @@ module Ace
           coordinator.settle_fixed_merge_effect(admitted.fetch("request_id"),
             terminal_status: "succeeded", receipt: unbound)
         end
+        # Ruling r4: the terminal digest must RE-DERIVE from the embedded
+        # binding. A record admitted with a stored digest that its own binding
+        # does not derive to can never settle: the echoed stored value passes
+        # the identity checks, but re-derivation rejects it.
+        echo = coordinator.admit_fixed_merge_request(
+          admission(request_id: "request-echo", authorization: "decision-2")
+            .merge("input_digest" => "e" * 64)
+        )
+        coordinator.begin_fixed_merge_effect("request-echo")
+        echo_receipt = terminal_receipt(echo)
+        error = assert_raises(AttemptErrors::ReceiptRejected) do
+          coordinator.settle_fixed_merge_effect("request-echo",
+            terminal_status: "succeeded", receipt: echo_receipt)
+        end
+        assert_includes error.message, "re-derive"
       end
 
       def test_read_only_status_resolves_exact_selectors_only
@@ -246,7 +261,7 @@ module Ace
           "queue_entry" => "010",
           "operation" => "merge",
           "authorization" => "decision-1",
-          "input_digest" => "e" * 64,
+          "input_digest" => canonical_binding_digest(assignment_id, attempt_id),
           "request" => valid_request_document,
           "principal" => "13005",
           "receiver_id" => "ordinary-receiver",
@@ -255,6 +270,17 @@ module Ace
                                    "branch" => "feat/x"},
           "state" => "pending"
         }.merge(overrides)
+      end
+
+      # Spec ruling r4: the admission digest is derived from the full
+      # eight-field binding via the shared canonical implementation.
+      def canonical_binding_digest(assignment_id, attempt_id, request_id: "request-1",
+        authorization: "decision-1", input: valid_request_document)
+        Atoms::FixedMergeSchemas.canonical_request_digest(
+          project: "atlas", assignment: assignment_id, attempt: attempt_id,
+          queue_entry: "010", authorization: authorization,
+          request_id: request_id, input: input
+        )
       end
 
       def valid_request_document

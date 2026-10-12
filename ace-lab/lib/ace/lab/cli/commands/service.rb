@@ -69,9 +69,19 @@ module Ace
                   "unknown service mode", request_id: request_id, input_digest: nil))
               end
               if mode
-                return emit(ordinary_request(project: project, assignment: assignment, attempt: attempt,
-                  queue_entry: options[:queue_entry], operation: operation, input: input,
-                  authorization: authorization, request_id: request_id, **options))
+                begin
+                  return emit(ordinary_request(project: project, assignment: assignment, attempt: attempt,
+                    queue_entry: options[:queue_entry], operation: operation, input: input,
+                    authorization: authorization, request_id: request_id, **options))
+                rescue Ace::Assign::AttemptErrors::EvidenceUnavailable, Ace::Lab::InvalidConfigurationError => e
+                  # Infra failures (unreadable canonical evidence, malformed
+                  # installed configuration, unavailable topology) are the
+                  # caller-side blocker, never a raw crash and never a durable
+                  # reference (review r1 finding B).
+                  return emit(Organisms::OrdinaryMergeRequest.refusal_envelope(
+                    "ordinary_merge_unavailable", e.message, request_id: request_id, input_digest: nil
+                  ))
+                end
               end
               selected = protected_service.selected?(options)
               if selected
@@ -132,9 +142,16 @@ module Ace
               end
               if mode
                 ensure_json_format!(options)
-                return emit(ordinary_producer.status(project: options[:project], assignment: options[:assignment],
-                  attempt: options[:attempt], queue_entry: options[:queue_entry], reference: options[:reference],
-                  request: request, input_digest: options[:input_digest], **options))
+                begin
+                  return emit(ordinary_producer.status(project: options[:project], assignment: options[:assignment],
+                    attempt: options[:attempt], queue_entry: options[:queue_entry], reference: options[:reference],
+                    request: request, input_digest: options[:input_digest], **options))
+                rescue Ace::Assign::AttemptErrors::EvidenceUnavailable, Ace::Lab::InvalidConfigurationError => e
+                  return emit(Organisms::OrdinaryMergeRequest.refusal_envelope(
+                    "ordinary_merge_unavailable", e.message, request_id: request, input_digest: nil,
+                    schema: Ace::Assign::Atoms::FixedMergeSchemas::STATUS_ERROR_SCHEMA_ID
+                  ))
+                end
               end
               selected = protected_service.selected?(options)
               if selected

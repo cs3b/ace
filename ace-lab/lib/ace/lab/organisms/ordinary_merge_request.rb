@@ -95,10 +95,19 @@ module Ace
         rescue OrdinaryMergeRefusal => e
           self.class.refusal_envelope(e.code, e.detail, request_id: e.request_id || request_id,
             input_digest: e.input_digest || digest)
+        rescue Ace::Assign::AttemptErrors::AuthorizationConflict => e
+          self.class.refusal_envelope("ordinary_merge_authorization_invalid", e.message,
+            request_id: request_id, input_digest: digest)
         rescue Ace::Assign::AttemptErrors::Conflict => e
           self.class.refusal_envelope("ordinary_merge_request_conflict", e.message,
             request_id: request_id, input_digest: digest)
         rescue Molecules::OrdinarySocket::OrdinaryUnavailable => e
+          self.class.refusal_envelope("ordinary_merge_unavailable", e.message,
+            request_id: request_id, input_digest: digest)
+        rescue Ace::Assign::AttemptErrors::EvidenceUnavailable, Ace::Lab::InvalidConfigurationError => e
+          # Canonical evidence or installed configuration is unreadable: a
+          # caller-side blocker (endpoint/configuration failed), never a
+          # refusal and never a durable reference.
           self.class.refusal_envelope("ordinary_merge_unavailable", e.message,
             request_id: request_id, input_digest: digest)
         end
@@ -145,6 +154,13 @@ module Ace
         rescue OrdinaryMergeRefusal => e
           status_error(self.class.refusal_envelope(e.code, e.detail, request_id: request, input_digest: nil,
             schema: Ace::Assign::Atoms::FixedMergeSchemas::STATUS_ERROR_SCHEMA_ID))
+        rescue Ace::Assign::AttemptErrors::EvidenceUnavailable, Ace::Lab::InvalidConfigurationError => e
+          # Canonical state or installed configuration unreadable: the status
+          # command degrades to the caller-side blocker envelope, never to a
+          # fabricated state or a raw crash.
+          status_error(self.class.refusal_envelope("ordinary_merge_unavailable", e.message,
+            request_id: request, input_digest: nil,
+            schema: Ace::Assign::Atoms::FixedMergeSchemas::STATUS_ERROR_SCHEMA_ID))
         end
 
         # ---- envelope composition (the adopted ace-lab vocabulary) ---------
@@ -182,17 +198,18 @@ module Ace
 
         private
 
-        # The immutable binding: command selectors plus the canonical input
-        # document, the authorization reference and the request ID, digested
-        # as lowercase SHA-256 over the sorted-key canonical JSON.
+        # The immutable binding digest — spec ruling r4: lowercase hex SHA-256
+        # over the canonical JSON (recursively key-sorted, compact, UTF-8) of
+        # the full eight-field binding. Computed once here at admission; the
+        # same shared implementation re-derives it for replay and receipt
+        # verification, so the pair can never diverge.
         def input_digest(project:, assignment:, attempt:, queue_entry:, authorization:,
           request_id:, document:)
-          canonical = Atoms::ServiceInput.canonical({
-            "project" => project, "assignment" => assignment, "attempt" => attempt,
-            "queue_entry" => queue_entry, "operation" => OPERATION,
-            "authorization" => authorization, "request_id" => request_id, "input" => document
-          })
-          Digest::SHA256.hexdigest(JSON.generate(canonical))
+          Ace::Assign::Atoms::FixedMergeSchemas.canonical_request_digest(
+            project: project, assignment: assignment, attempt: attempt,
+            queue_entry: queue_entry, authorization: authorization,
+            request_id: request_id, input: document
+          )
         end
 
         def validate_document!(document, request_id)
@@ -246,10 +263,13 @@ module Ace
                      "expected_base_head" => document.fetch("expected_base_head")}
           @policy.authorize_ordinary!(authorization, binding)
         rescue SecurityError => e
-          case e.message
-          when /unresolved|expired/ then refused("ordinary_merge_authorization_invalid", e.message)
-          else refused("ordinary_merge_provenance_mismatch", e.message)
-          end
+          # Spec table (ruling r4): the authorization decision or reference is
+          # invalid for this request — missing, expired, revoked, out of scope,
+          # bound to another operation/project/PR/head, or not an ordinary
+          # merge decision at all. Authorization-decision mismatches NEVER use
+          # provenance_mismatch; that code is reserved for registered
+          # provenance drift verified by the receiver (and relayed verbatim).
+          refused("ordinary_merge_authorization_invalid", e.message)
         end
 
         def verify_candidate_head!(document)

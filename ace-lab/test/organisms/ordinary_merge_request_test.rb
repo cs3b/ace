@@ -222,13 +222,30 @@ module Ace
         envelope = new_producer(ingress: controlled_receiver, policy: expired).request(**request_args)
         assert_equal "ordinary_merge_authorization_invalid", envelope.dig("error", "code")
 
-        moved = Molecules::ServicePolicy.new(policy_document.merge("authorizations" =>
+        # Review r1 finding A / ruling r4: a decision bound to another
+        # operation/project/PR/head — and a decision that is not an ordinary
+        # merge decision at all (shape) — is authorization_invalid.
+        # Authorization-decision mismatches never map to provenance_mismatch.
+        {
+          "project_id" => "borealis",
+          "pr_url" => "https://forge.example.com/acme/widget/pulls/8",
+          "head_ref" => "refs/heads/other-branch",
+          "candidate_head" => "9" * 40,
+          "base_repository" => "acme/other",
+          "queue_entry" => "020"
+        }.each do |key, value|
+          decision = Molecules::ServicePolicy.new(policy_document.merge("authorizations" =>
+            policy_document.fetch("authorizations").merge("decision-1" =>
+              policy_document.fetch("authorizations").fetch("decision-1").merge(key => value))))
+          envelope = new_producer(ingress: controlled_receiver, policy: decision).request(**request_args)
+          assert_equal "ordinary_merge_authorization_invalid", envelope.dig("error", "code"), key
+        end
+
+        shape = Molecules::ServicePolicy.new(policy_document.merge("authorizations" =>
           policy_document.fetch("authorizations").merge("decision-1" =>
-            policy_document.fetch("authorizations").fetch("decision-1").merge(
-              "base_repository" => "acme/other"
-            ))))
-        envelope = new_producer(ingress: controlled_receiver, policy: moved).request(**request_args)
-        assert_equal "ordinary_merge_provenance_mismatch", envelope.dig("error", "code")
+            policy_document.fetch("authorizations").fetch("decision-1").except("queue_entry"))))
+        envelope = new_producer(ingress: controlled_receiver, policy: shape).request(**request_args)
+        assert_equal "ordinary_merge_authorization_invalid", envelope.dig("error", "code")
       end
 
       def test_read_only_status_returns_exact_envelope_and_terminal_receipt
@@ -292,6 +309,53 @@ module Ace
         producer = new_producer(ingress: controlled_receiver)
         envelope = producer.request(**request_args)
         assert_equal expected_digest, envelope.dig("data", "input_digest")
+        # Spec ruling r4: key-order independence — a value-identical input
+        # document in any key order digests identically.
+        shuffled = deep_copy(valid_request)
+        shuffled = shuffled.to_a.reverse.to_h
+        File.write(input_path, JSON.generate(shuffled))
+        replay = producer.request(**request_args)
+        assert_equal expected_digest, replay.dig("data", "input_digest")
+        File.write(input_path, JSON.generate(valid_request))
+        # Selector/authorization/request-ID sensitivity via the shared
+        # canonical implementation (the one the consumer re-derives with).
+        refute_equal expected_digest, expected_digest(request_id: "request-2")
+        refute_equal expected_digest, expected_digest(authorization: "decision-2")
+        refute_equal expected_digest, expected_digest(project: "borealis")
+      end
+
+      def test_infra_failures_emit_the_unavailable_envelope_never_a_crash
+        # Review r1 finding B: an unreadable canonical evidence ref is a
+        # caller-side blocker with the exact unavailable envelope.
+        broken = Object.new
+        broken.define_singleton_method(:fixed_merge_record) do |_request_id|
+          raise Ace::Assign::AttemptErrors::EvidenceUnavailable, "canonical evidence ref is unreadable"
+        end
+        broken.define_singleton_method(:fixed_merge_status) do |**_|
+          raise Ace::Assign::AttemptErrors::EvidenceUnavailable, "canonical evidence ref is unreadable"
+        end
+        broken.define_singleton_method(:service_attempt) { |_binding| flunk "must fail before selection" }
+        envelope = Organisms::OrdinaryMergeRequest.new(topology: @topology, policy: @policy,
+          coordinator: broken, repo_root: @repo, ingress: controlled_receiver).request(**request_args)
+        assert_equal "ordinary_merge_unavailable", envelope.dig("error", "code")
+        assert_equal "ace.lab.service.ordinary-merge-refusal/v1", envelope.dig("error", "schema")
+        refute envelope["error"].key?("reference")
+        status = Organisms::OrdinaryMergeRequest.new(topology: @topology, policy: @policy,
+          coordinator: broken, repo_root: @repo, ingress: controlled_receiver).status(
+            format: "json", mode: "ordinary-merge", reference: "fmr1-#{"A" * 40}",
+            request: "request-1", project: "atlas", assignment: @assignment_id,
+            attempt: @attempt_id, queue_entry: "010", input_digest: "e" * 64
+          )
+        assert_equal "ordinary_merge_unavailable", status.dig("error", "code")
+        assert_equal "ace.lab.service.ordinary-merge-status-error/v1", status.dig("error", "schema")
+
+        # A malformed installed ordinary section is configuration failure.
+        malformed = Molecules::ServicePolicy.new(policy_document.merge("ordinary" =>
+          {"projects" => {"atlas" => {"receiver_id" => "r"}}}))
+        envelope = new_producer(ingress: controlled_receiver, policy: malformed).request(**request_args)
+        assert_equal "ordinary_merge_unavailable", envelope.dig("error", "code")
+        assert envelope.dig("error", "message").is_a?(String)
+        refute envelope.dig("error", "message").empty?
       end
 
       private
@@ -347,13 +411,12 @@ module Ace
         path
       end
 
-      def expected_digest(request_id: "request-1", authorization: "decision-1")
-        canonical = Ace::Lab::Atoms::ServiceInput.canonical({
-          "project" => "atlas", "assignment" => @assignment_id, "attempt" => @attempt_id,
-          "queue_entry" => "010", "operation" => "merge", "authorization" => authorization,
-          "request_id" => request_id, "input" => JSON.parse(JSON.generate(valid_request))
-        })
-        Digest::SHA256.hexdigest(JSON.generate(canonical))
+      def expected_digest(request_id: "request-1", authorization: "decision-1", project: "atlas")
+        Ace::Assign::Atoms::FixedMergeSchemas.canonical_request_digest(
+          project: project, assignment: @assignment_id, attempt: @attempt_id,
+          queue_entry: "010", authorization: authorization,
+          request_id: request_id, input: JSON.parse(JSON.generate(valid_request))
+        )
       end
 
       def policy_document
