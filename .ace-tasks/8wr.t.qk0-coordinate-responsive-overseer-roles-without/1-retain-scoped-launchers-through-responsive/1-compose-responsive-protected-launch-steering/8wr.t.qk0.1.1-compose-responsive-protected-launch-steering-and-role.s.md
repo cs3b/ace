@@ -1,6 +1,6 @@
 ---
 id: 8wr.t.qk0.1.1
-status: in-progress
+status: draft
 priority: high
 created_at: "2026-10-07 12:17:05"
 estimate: large
@@ -11,7 +11,7 @@ bundle:
   presets: [project]
   files: [.ace-tasks/8wr.t.qk0-coordinate-responsive-overseer-roles-without/coordinator-source-contract.md, .ace-tasks/8wr.t.qk0-coordinate-responsive-overseer-roles-without/coordinator-admission-draft.md, .ace-tasks/8wr.t.qk0-coordinate-responsive-overseer-roles-without/1-retain-scoped-launchers-through-responsive/cli-selection-and-retry-contract.md, .ace-tasks/8wr.t.qk0-coordinate-responsive-overseer-roles-without/1-retain-scoped-launchers-through-responsive/readiness-review.md, .ace-tasks/8wr.t.qk0-coordinate-responsive-overseer-roles-without/1-retain-scoped-launchers-through-responsive/launch-input-proposal.md, .ace-tasks/8wr.t.qk0-coordinate-responsive-overseer-roles-without/1-retain-scoped-launchers-through-responsive/ux/usage.md, ace-overseer/handbook/workflow-instructions/overseer.wf.md, ace-overseer/lib/ace/overseer/cli/commands/work_on.rb, ace-overseer/lib/ace/overseer/organisms/work_on_orchestrator.rb, ace-overseer/lib/ace/overseer/molecules/proposal_tick.rb, ace-overseer/lib/ace/overseer/molecules/assignment_launcher.rb, ace-assign/lib/ace/assign/organisms/task_assignment_creator.rb, .ace-tasks/8wr.t.qk0-coordinate-responsive-overseer-roles-without/3-deliver-authenticated-prepared-work-to/8wr.t.qk0.3-deliver-authenticated-prepared-work-to-scoped-workers.s.md, ace-assign/lib/ace/assign/organisms/assignment_executor.rb, ace-assign/lib/ace/assign/cli/commands/authority/launch.rb, ace-assign/lib/ace/assign/authority/launch_driver.rb, ace-hitl/lib/ace/hitl/proposals/policy.rb]
   commands: []
-needs_review: false
+needs_review: true
 title: Compose responsive protected launch steering and role coordination
 ---
 
@@ -59,3 +59,52 @@ Owner ace-overseer, maintained Assign/Runtime/HITL producers reused. Advisory si
 ### Prepared handoff review repair
 
 Independent 2026-10-07 review found the original qk0.3 inline-size, unspecified capability/consumer, progress hash and mutable task-context gaps. The revised child owns those exact source producer/consumer repairs. This child consumes them and preserves retained-input/read-only recovery and unchanged-terminal submitted semantics; neither artifact retention nor worker input admission is reported as consumption, task completion or installed acceptance. Independent design review now approves this consumer contract; qk0.3 source delivery remains an explicit dependency.
+
+
+## Draft amendment — project ownership and active supervision
+
+This changed behavioral contract requires fresh independent readiness review.
+Earlier approvals/checkpoints retain their original scope and do not approve this
+amendment. Existing implementation/evidence is preserved; draft is not a claim
+that delivered portions disappeared. Incident provenance: h8x integration/release
+through PR37–42 exposed canonical-checkout drift and repeated waits after accepted
+integration. The contract below stands alone without that history.
+
+Normative role, worktree, canonical-main recovery and heartbeat decisions are
+owned once in `../../coordinator-source-contract.md`, section “Project worktrees
+and active supervision”. This child implements that charter behavior; qkb consumes
+it without becoming a second coordination owner. The following scenarios verify
+that shared contract.
+
+### Additional acceptance scenarios
+- [ ] Two workers finish out of dependency order. The project overseer records
+  readiness/order, integrates the prerequisite first and delegates any changed-head
+  rebase/tests/independent review. Lab overseer does not run this PR queue.
+- [ ] Worker, reviewer and records edits stay in their owned worktrees; canonical
+  main remains clean and is synchronized to freshly observed accepted remote
+  ancestry after integration, with exact receipt references.
+- [ ] Dirty/untracked work plus divergent local commits are preserved and resolved
+  through an owned recovery. No wipe, lost commit, unreviewed main commit or
+  repeated generic WAIT occurs.
+- [ ] A confirmed merged PR is never returned to merge-wait because local main
+  lags. Heartbeat schedules synchronization and then advances the next eligible
+  action from canonical evidence.
+- [ ] Restart/lost merge response retains the same attempt and operation; no blind
+  retries or duplicate writers. Scoped callbacks reach that same project owner.
+- [ ] Pause and capacity stop fresh dispatch/effects; a stable genuine blocker is
+  escalated once, while new evidence triggers an appropriate state transition.
+
+- [ ] A task-only change is authored in an isolated records worktree, independently
+  reviewed with the task/spec prompt, delivered through PR/integration, and leaves
+  canonical main clean at the accepted remote state. Draft approval does not mark
+  its implementation done; any readiness promotion follows explicit task review.
+- [ ] A contradictory specification is rejected, corrected and independently
+  re-reviewed at the new candidate head; a records change with stale SHA/receipt
+  is caught before acceptance. Mixed code/docs/spec content runs all applicable
+  review types and cannot evade code gates by its label.
+
+Verification during implementation: extend the existing coordinator/role and
+workflow scenarios with real Git worktree/ancestry fixtures and attributable
+service/attempt receipts; run relevant ace-overseer/ace-assign suites and obtain
+fresh independent review. Installed scenarios remain under gad.2. This amendment
+runs no package tests and implements no mechanisms.

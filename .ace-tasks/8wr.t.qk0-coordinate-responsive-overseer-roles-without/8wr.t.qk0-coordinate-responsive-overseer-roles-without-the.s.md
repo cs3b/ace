@@ -25,6 +25,7 @@ Kapitan can talk continuously to a project or Lab overseer, inspect progress and
 
 ### Expected Behavior
 
+- Project worktree ownership, clean accepted canonical-main synchronization, preservation/recovery of divergent work and evidence-driven heartbeat integration follow `coordinator-source-contract.md#project-worktrees-and-active-supervision`, implemented by qk0.1.1; its new draft acceptance is not existing installed proof.
 - Canonical generic project-overseer, Lab-coordinator and second-commander charters ship in ACE. lab-overseer:gc0 and lab-config:gad.5/nfe adopt/configure them only. No duplicate domain-owned generic role instructions.
 - On each wake inspect both task/assignment queue and scoped pending HITL. Project overseer handles local technical coordination; unresolved capability/scope is escalated to Lab overseer, then second commander/Captain via explicit proposal policy. Failed callbacks stay visible with attempts; no silent loss or retry loop.
 - Coordinator delegates bounded implementation/review/service work rather than occupying the conversation with long-running tests or blocking sleep. New Captain direction is accepted and reflected in scope/task state; running conflicting work is stopped at a safe boundary with evidence.
