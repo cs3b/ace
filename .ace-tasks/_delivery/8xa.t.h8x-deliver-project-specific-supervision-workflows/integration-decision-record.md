@@ -207,3 +207,19 @@ recommended integration order preserves exact-head binding: PR38 1fbfd1ad
 integrates exactly; PR41 last carries the version preparation for the
 publication manifest). ROUTING FRICTION: REVIEWER41-R2-DONE also relayed
 duplicately — disposition recorded once.
+
+## CORRECTION (2026-10-12, sha-confusion ref operation — host-verified)
+
+ERROR: the queue owner's realignment executed `git reset --hard origin/main`
+while checked out on records/h8x-final-records, rewinding that branch from
+its true head 6a5c8d88448859920f6d612475e84807d7434f2c to 112ca853e; the
+subsequent branch-restore used 6a2eae4f (PR40's head) instead of 6a5c8d88 —
+sha confusion between the two similar prefixes hit an actual ref operation.
+FIXED (verbatim host commands): records/h8x-final-records =
+6a5c8d88448859920f6d612475e84807d7434f2c (rev-parse proof posted). TRUE
+heads: PR43 forge head = 5c755cc29 (was correct in prior text); PR44 forge
+head = 6a5c8d88 (prior texts citing 6a2eae4f as PR44's head were WRONG —
+6a2eae4f is PR40's head). Artifact validity unchanged (host-verified:
+PR43 records/design-only, PR44 records/spec-only → the 6 gems built at
+a922ef914 remain valid; no re-build). DISCIPLINE ADDED: all future ref
+operations use copy-pasted full shas — no manual sha transcription.
