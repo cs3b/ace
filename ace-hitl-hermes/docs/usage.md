@@ -87,3 +87,37 @@ A lifecycle requester named `captain` is handled like every other authenticated
 requester. Submission authority comes from the scoped lifecycle record and its
 exact project/body binding, not the folder sender label. Unmanaged Captain
 instructions remain in the folder for their target and are not sent as requests.
+
+## Remote channels: the host/Incus mTLS crossing (nh0-A)
+
+A transport channel resolves to EXACTLY ONE authority: a local
+`hitl_socket` (with `hitl_service_uid`) or a remote `hitl_endpoint` —
+exactly `tls+tcp://HOST_TAILNET_DNS:PORT` — plus the channel's exact
+`tls_client_credential` (`certificate_file`, `private_key_file`,
+`ca_file`, `expected_server_uri_san`,
+`expected_server_certificate_sha256`; the configured fingerprint pin is
+the sole server trust). Remote channels route exactly their credential
+project and carry no Unix service uid. The runtime requires
+`tls_service_user`/`tls_service_group` when remote channels exist and
+verifies the runtime/registry files (`root:<service-group>` 0640) and
+every referenced credential tree against the exact provisioning layout
+before any connection. Lifecycle clients instantiate lazily and cache
+per endpoint plus credential identity.
+
+Activation is atomic at the poller: `serve` refuses to start unless
+every configured authority — Unix or mTLS — passes an authenticated
+health and project-binding check. Stopping the poller (rollback)
+preserves the durable journal: offsets, coverage generations and
+submitted receipts stay authoritative, calls across a vanished crossing
+stay uncertain or submitted, and nothing replays.
+
+## nh0-A boundary scenario harness
+
+`ace-hitl-boundary-scenario run --manifest FILE --phase
+baseline|uncertainty|recovery [--report PATH]` is the source-side
+scenario the reviewed host fixture `bin/lab-hitl-boundary-fixture run
+--scenario nh0-a-v1` executes against the REAL disposable Incus
+proxies. It prints one closed-schema `nh0_a_source_scenario` receipt
+(JSON line). A loopback-only or mocked run can never substitute for the
+invocation-bound `nh0_real_incus_acceptance` receipt that clears
+nh0-A.

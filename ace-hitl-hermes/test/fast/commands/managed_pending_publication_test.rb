@@ -117,7 +117,9 @@ class ManagedPendingPublicationTest < AceHermesTestCase
     attempts = 0
     lifecycle.define_singleton_method(:pending) do |**args|
       attempts += 1
-      raise L::TransportError, "HITL service restarting" if attempts == 1
+      # Attempt 1 is the activation health probe; the outage hits the
+      # serve loop, which retries after the configured delay.
+      raise L::TransportError, "HITL service restarting" if attempts == 2
       original_pending.call(**args)
     end
     transport = actor.send(:telegram)
@@ -133,7 +135,7 @@ class ManagedPendingPublicationTest < AceHermesTestCase
     _, errors = capture_io { assert_raises(StopLoop) { actor.serve(once: false) } }
     assert_match(/pending publication unavailable/, errors)
     assert_equal [1], delays
-    assert_equal 2, attempts
+    assert_equal 3, attempts
     assert_equal 1, calls.count { |entry| entry.first == :send }
     assert_equal "submitted", actor.relay.delivery(channel: "inbox", request: "auto001")["status"]
   end
@@ -142,7 +144,16 @@ class ManagedPendingPublicationTest < AceHermesTestCase
     create(id: "auto001")
     actor, calls = runtime
     lifecycle = actor.send(:lifecycle_for, "inbox")
-    lifecycle.define_singleton_method(:pending) { |**| raise L::TransportError, "HITL service restarting" }
+    original_pending = lifecycle.method(:pending)
+    attempts = 0
+    lifecycle.define_singleton_method(:pending) do |**args|
+      attempts += 1
+      # Activation (attempt 1) passes; the first loop publication fails
+      # and once-mode propagates it without consuming the request.
+      raise L::TransportError, "HITL service restarting" if attempts > 1
+
+      original_pending.call(**args)
+    end
     assert_raises(L::TransportError) { actor.serve(once: true) }
     assert_equal "created", @client.read("auto001")["state"]
     assert_empty calls.select { |entry| entry.first == :send }

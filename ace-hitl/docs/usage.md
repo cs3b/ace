@@ -472,3 +472,38 @@ Missing local dependency archives fail visibly without network fallback. A faile
 consumer retains diagnostic artifacts; inspect `result.json` and `service.log`
 before retrying. Each invocation retains a new run directory and requires a new
 empty GEM_HOME.
+
+## The host/Incus mTLS crossing (nh0-A)
+
+`ace-hitl serve --tls-authority FILE` runs one lifecycle authority of
+the shared-Hermes topology on a loopback TCP endpoint where the
+project's Incus TCP proxy device connects. The authority config
+(`ace.hitl.tls.authority/v1`, closed fields, root-owned runtime file
+`root:<service-group> 0640`) owns the loopback listen address, the
+project ID, the service account names and the server credential
+reference — never secret bytes:
+
+```json
+{"schema": "ace.hitl.tls.authority/v1",
+ "project_id": "proj-a", "listen": "127.0.0.1", "port": 8443,
+ "service_user": "hitl-proj-a", "service_group": "hitl-proj-a",
+ "tls_server_credential": {
+   "certificate_file": "/etc/ace-hitl/proj-a/server.pem",
+   "private_key_file": "/etc/ace-hitl/proj-a/server-key.pem",
+   "ca_file": "/etc/ace-hitl/proj-a/ca.pem",
+   "server_uri_san": "urn:ace:hitl:proj-a:lifecycle-server",
+   "allowed_client_uri_san": "urn:ace:hitl:proj-a:hermes-client",
+   "allowed_client_certificate_sha256": "<64 lowercase hex>"}}
+```
+
+Startup enforces the exact provisioning layout (ancestors `root:root`
+0755, project directory `root:<service-group>` 0750, private key
+`<service-user>:<service-group>` 0400 and never hard-linked,
+certificate/CA `root:root` 0444) BEFORE any socket opens, validates its
+own certificate identity (single URI SAN, serverAuth EKU, key match),
+speaks TLS 1.3 only, and admits exactly the configured client
+SAN/fingerprint pair — bound to the authority's one project, with
+pending flows and creates refused for any other project. Unix
+peer-credential serving (`serve` without `--tls-authority`) remains the
+same-runtime boundary. lab-config (gad.8/gad.b) owns accounts, file
+provisioning, Incus proxy devices and the tailnet listeners.

@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+require "delegate"
 require "test_helper"
 require "support/lifecycle_fixtures"
 require "ace/assign"
@@ -569,8 +570,13 @@ class ProposalLifecycleTest < AceHitlTestCase
       # service role dispatch; actual cross-UID installation remains acceptance.
       peer = Ace::Hitl::Lifecycle::Peer.new(uid: transport_uid, gid: Process.gid, username: "fixture-transport")
       transport_store = actor.instance_variable_get(:@service_for_test).send(:store_for, peer)
+      # Clients cache per ROUTE (endpoint plus credential identity); the
+      # transport role dispatch swaps the cached client for the
+      # transport peer's store view, with the activation probe surface.
       route = actor.instance_variable_get(:@lifecycle_routes).fetch("inbox")
-      actor.instance_variable_get(:@lifecycle_clients)[route.fetch(:socket_path)] = transport_store
+      transport_client = SimpleDelegator.new(transport_store)
+      transport_client.define_singleton_method(:ping) { {"pong" => true} }
+      actor.instance_variable_get(:@lifecycle_clients)[route] = transport_client
       record = boundary.proposal_create(id: "proposal-#{SecureRandom.hex(12)}", assignment: "assign500", attempt: "attempt500", project: "ace", document: content)
       actor.serve(once: true)
       armed = boundary.proposal_show(record["proposal_id"], project: "ace")

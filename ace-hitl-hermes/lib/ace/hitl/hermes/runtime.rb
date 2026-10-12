@@ -10,8 +10,14 @@ module Ace
       class Runtime
         attr_reader :registry, :journal, :relay, :config
 
-        def initialize(path, clock: -> { Time.now.utc })
+        # @param credential_path_verifier [Object] the provisioning-layout
+        #   verifier for remote-channel deployment facts (production:
+        #   CredentialPathPolicy; tests inject a recording seam, mirroring
+        #   the euid_provider pattern)
+        def initialize(path, clock: -> { Time.now.utc }, credential_path_verifier: nil)
           @clock = clock
+          @config_path = File.expand_path(path)
+          @credential_path_verifier = credential_path_verifier
           @config = JSON.parse(File.read(path))
           unless @config.is_a?(Hash) && @config["schema"] == "ace.hitl.hermes.runtime/v1"
             raise ContractError, "runtime configuration requires runtime/v1"
@@ -19,6 +25,7 @@ module Ace
           @registry = Transport::Registry.load(@config.fetch("registry"))
           @journal = Transport::Journal.new(@config.fetch("state"))
           @lifecycle_routes = build_lifecycle_routes
+          verify_tls_deployment! if @lifecycle_routes.values.any? { |route| route.key?(:endpoint) }
           @lifecycle_clients = {}
           @relay = Transport::Relay.new(registry: @registry, journal: @journal,
             lifecycle_for: ->(channel) { lifecycle_for(channel) },
@@ -29,6 +36,7 @@ module Ace
 
         def serve(once: false)
           verify_polling_owner!
+          verify_authorities!
           @journal.actor do
             surface_registration_gaps
             poller = Transport::Poller.new(relay: @relay, telegram: telegram, journal: @journal,
@@ -94,6 +102,23 @@ module Ace
 
         private
 
+        # Activation is atomic at the poller (spec 8xa.t.nh0): no
+        # channel is enabled until every configured authority passes an
+        # authenticated health and project-binding check through its own
+        # route — Unix peer credentials or the verified mTLS identity.
+        def verify_authorities!
+          @registry.channels.each do |channel|
+            client = lifecycle_for(channel)
+            begin
+              client.ping
+              channel.fetch("projects").each { |project| client.pending(project: project) }
+            rescue Ace::Hitl::Lifecycle::Error => e
+              raise ContractError,
+                "channel #{channel['name']} authority failed the activation health check (#{e.class})"
+            end
+          end
+        end
+
         def build_lifecycle_routes
           default_socket = @config.fetch("hitl_socket")
           unless default_socket.is_a?(String) && File.absolute_path?(default_socket)
@@ -101,20 +126,74 @@ module Ace
           end
           identities = {}
           @registry.channels.to_h do |channel|
-            socket = channel.fetch("hitl_socket", default_socket)
-            service_uid = channel.fetch("hitl_service_uid")
-            if identities.key?(socket) && identities[socket] != service_uid
-              raise ContractError, "one HITL socket cannot declare multiple service identities"
+            route = if (endpoint = channel["hitl_endpoint"])
+              build_remote_route(channel, endpoint)
+            else
+              socket = channel.fetch("hitl_socket", default_socket)
+              service_uid = channel.fetch("hitl_service_uid")
+              if identities.key?(socket) && identities[socket] != service_uid
+                raise ContractError, "one HITL socket cannot declare multiple service identities"
+              end
+              identities[socket] = service_uid
+              {socket_path: socket, service_uid: service_uid}
             end
-            identities[socket] = service_uid
-            [channel["name"], {socket_path: socket, service_uid: service_uid}.freeze]
+            [channel["name"], route.freeze]
           end.freeze
+        end
+
+        # The remote route binds the exact tls+tcp:// endpoint and the
+        # channel's exact resolved client credential; clients cache per
+        # endpoint PLUS credential identity.
+        def build_remote_route(channel, endpoint)
+          dns, port = Ace::Hitl::Lifecycle::TlsCredentials.parse_endpoint(endpoint)
+          {
+            endpoint: {dns: dns, port: port},
+            tls_client_credential: Ace::Hitl::Lifecycle::TlsCredentials.parse_client(
+              channel.fetch("tls_client_credential"))
+          }
+        rescue Ace::Hitl::Lifecycle::Error => e
+          raise ContractError, "remote channel #{channel['name'].inspect}: #{e.message}"
+        end
+
+        # The host deployment of the crossing must match the exact
+        # provisioning layout BEFORE any connection: the runtime and
+        # registry files are root:<service-group> 0640 and every
+        # referenced client credential tree follows the exact
+        # ownership/mode rules. Any violation refuses startup.
+        def verify_tls_deployment!
+          @tls_service_user = @config["tls_service_user"]
+          @tls_service_group = @config["tls_service_group"]
+          unless @tls_service_user.is_a?(String) && @tls_service_user.match?(/\A[a-z_][a-z0-9_-]{0,31}\z/) &&
+              @tls_service_group.is_a?(String) && @tls_service_group.match?(/\A[a-z_][a-z0-9_-]{0,31}\z/)
+            raise ContractError,
+              "the Hermes runtime requires tls_service_user and tls_service_group for remote channels"
+          end
+          begin
+            policy = @credential_path_verifier || Ace::Hitl::Lifecycle::CredentialPathPolicy.new(
+              service_user: @tls_service_user, service_group: @tls_service_group)
+            policy.verify_runtime_file!(@config_path)
+            policy.verify_runtime_file!(@config.fetch("registry"))
+            @lifecycle_routes.values.select { |route| route.key?(:endpoint) }
+              .map { |route| route.fetch(:tls_client_credential) }.uniq.each do |credential|
+              policy.verify_credential_tree!(credential)
+            end
+          rescue Ace::Hitl::Lifecycle::Error => e
+            raise ContractError, "the Hermes TLS deployment is not provisioned (#{e.message})"
+          end
         end
 
         def lifecycle_for(channel)
           name = channel.is_a?(Hash) ? channel.fetch("name") : channel.to_s
           route = @lifecycle_routes.fetch(name)
-          @lifecycle_clients[route.fetch(:socket_path)] ||= Ace::Hitl::Lifecycle::Client.new(**route)
+          @lifecycle_clients[route] ||= build_client(route)
+        end
+
+        def build_client(route)
+          if route.key?(:endpoint)
+            Transport::TlsClient.new(endpoint: route[:endpoint], credential: route.fetch(:tls_client_credential))
+          else
+            Ace::Hitl::Lifecycle::Client.new(**route)
+          end
         end
 
         def surface_registration_gaps

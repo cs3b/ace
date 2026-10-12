@@ -1,0 +1,54 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# The nh0-A source scenario (spec 8xa.t.nh0): invoked by the reviewed
+# host fixture `bin/lab-hitl-boundary-fixture run --scenario nh0-a-v1`
+# against the REAL disposable Incus TCP proxies. One stdout JSON line —
+# the closed nh0_a_source_scenario receipt — plus an optional sanitized
+# per-case report file.
+#
+#   ace-hitl-boundary-scenario run --manifest MANIFEST.json \
+#     --phase baseline|uncertainty|recovery [--report PATH]
+#
+# A loopback-only or mocked run of this command can never substitute
+# for the invocation-bound nh0_real_incus_acceptance receipt.
+
+require "optparse"
+require "json"
+require_relative "../lib/ace/hitl/hermes"
+require_relative "../lib/ace/hitl/hermes/boundary/scenario"
+
+trap("INT") { exit 130 }
+
+options = {}
+parser = OptionParser.new do |o|
+  o.banner = "ace-hitl-boundary-scenario run --manifest FILE --phase PHASE [--report PATH]"
+  o.on("--manifest FILE") { |value| options[:manifest] = value }
+  o.on("--phase PHASE") { |value| options[:phase] = value }
+  o.on("--report PATH") { |value| options[:report] = value }
+end
+parser.parse(ARGV)
+
+if options.values_at(:manifest, :phase).any?(&:nil?)
+  warn(parser.to_s)
+  exit 64
+end
+
+begin
+  manifest = Ace::Hitl::Hermes::Boundary::Scenario::Manifest.load_file(options[:manifest])
+  manifest.verify_credential_paths!
+  scenario = Ace::Hitl::Hermes::Boundary::Scenario.new(
+    manifest: manifest,
+    client_factory: Ace::Hitl::Hermes::Boundary::Scenario::ProductionClientFactory.new,
+    probe_factory: ->(endpoint:) {
+      Ace::Hitl::Hermes::Boundary::Scenario::ProductionProbe.new(endpoint: endpoint)
+    }
+  )
+  receipt = scenario.run(options[:phase], report: options[:report])
+  puts(JSON.generate(receipt))
+  exit(receipt["passed"] ? 0 : 1)
+rescue Ace::Hitl::Hermes::Boundary::Scenario::Error,
+       Ace::Hitl::Lifecycle::Error, Ace::Hitl::Hermes::ContractError, SystemCallError => e
+  warn("ace-hitl-boundary-scenario: #{e.message}")
+  exit 65
+end

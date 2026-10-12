@@ -2,6 +2,7 @@
 
 require "securerandom"
 require "fileutils"
+require "pathname"
 require "ace/hitl/contract"
 require_relative "errors"
 require_relative "identity"

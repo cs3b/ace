@@ -32,6 +32,10 @@ class RuntimeRoutingTest < AceHermesTestCase
       {"items" => [], "next" => nil}
     end
 
+    def ping
+      {"pong" => true}
+    end
+
     private
 
     def request_facts(project)
@@ -127,8 +131,10 @@ class RuntimeRoutingTest < AceHermesTestCase
     end
 
     assert_equal [["lab", "Proceed?"], ["host", "Proceed?"]], sent
-    assert_equal ["lab"], lifecycles.fetch(@default_socket).pending_projects
-    assert_equal ["host"], lifecycles.fetch(@other_socket).pending_projects
+    # The activation health probe also pends once per channel; only the
+    # channel->authority ISOLATION is the assertion here.
+    assert_equal ["lab"], lifecycles.fetch(@default_socket).pending_projects.uniq
+    assert_equal ["host"], lifecycles.fetch(@other_socket).pending_projects.uniq
   end
 
   def test_proposal_reconciliation_continues_after_one_channel_authority_fails
