@@ -16,6 +16,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+- **ace-task v0.39.3**: Make `create --in` placement atomic, fully roll back failed placement, and retain placed tasks as recovery records when post-placement issue synchronization fails.
 - **ace-git-worktree 0.26.1**: Restore task-aware create by exposing the scoped task commit method used by the orchestrator; add red-before/green-after regression coverage.
 - **Release dependency correction, 2026-10-10**: Ship the omitted Runtime 0.3.0, HITL Contract 0.2.1 and Bundle 0.45.0 source, with minimum producer/consumer patch floors in Herdr 0.5.1, Assign 0.66.1, Review 0.60.1, HITL 0.13.1, Hermes 0.2.2, Lab 0.5.1 and Overseer 0.20.2. Published installation receipts exposed missing modules/constants despite successful bundle install. Installed acceptance requires the separate exact-version gate with a current frozen manifest; source tests and wrapper PASS do not replace it.
 
@@ -52,6 +53,8 @@ All notable changes to this project will be documented in this file.
 
 - **ace-hitl v0.14.0, ace-hitl-hermes v0.3.0**: Add dedicated lifecycle service groups and channel-scoped lifecycle socket/service identities for one-Hermes multi-project Telegram routing, with channel-qualified correlation and durable late-registration coverage gaps.
 
+- **ace-assign v0.67.0**: Add `supervise-delivery`, `integrate-batch`, `deliver-release`, and `close-delivery` presets for adaptable delivery supervision.
+- **ace-overseer v0.21.0**: Add the `as-overseer-configure-project` skill and `wfi://overseer/configure-project` workflow for idempotent, customization-preserving project supervision setup.
 - **ace-assign v0.65.0**: Pin original/candidate deployment inventory and shared slot exclusions to immutable journal snapshots. Complete maintenance eligibility and native readiness remain unfinished.
 
 - **ace-hitl-contract v0.1.0**: Single shared provider vocabulary without assignment or privileged lifecycle dependencies.

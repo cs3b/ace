@@ -1,7 +1,7 @@
 PATH
   remote: ace-assign
   specs:
-    ace-assign (0.66.1)
+    ace-assign (0.67.0)
       ace-b36ts (~> 0.14)
       ace-bundle (~> 0.45)
       ace-git (~> 0.30)
@@ -204,7 +204,7 @@ PATH
   remote: ace-hitl
   specs:
     ace-hitl (0.14.0)
-      ace-assign (~> 0.66.1)
+      ace-assign (~> 0.67)
       ace-b36ts (~> 0.14)
       ace-herdr (~> 0.5.1)
       ace-hitl-contract (~> 0.2.1)
@@ -228,7 +228,7 @@ PATH
   remote: ace-lab
   specs:
     ace-lab (0.5.2)
-      ace-assign (~> 0.66.1)
+      ace-assign (~> 0.67)
       ace-hitl (~> 0.14.0)
       ace-runtime (~> 0.3)
       ace-support-cli (~> 0.6)
@@ -269,8 +269,8 @@ PATH
 PATH
   remote: ace-overseer
   specs:
-    ace-overseer (0.20.2)
-      ace-assign (~> 0.66.1)
+    ace-overseer (0.21.0)
+      ace-assign (~> 0.67)
       ace-git (~> 0.30)
       ace-git-worktree (~> 0.26)
       ace-herdr (~> 0.5.1)
@@ -427,7 +427,7 @@ PATH
 PATH
   remote: ace-task
   specs:
-    ace-task (0.39.2)
+    ace-task (0.39.3)
       ace-b36ts (~> 0.14)
       ace-git (~> 0.27)
       ace-git-forgejo (~> 0.5)
