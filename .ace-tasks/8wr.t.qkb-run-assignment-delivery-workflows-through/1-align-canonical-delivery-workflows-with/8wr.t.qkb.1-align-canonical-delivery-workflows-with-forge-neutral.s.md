@@ -119,18 +119,23 @@ The implemented ordinary route must provide one public sequence:
    acceptance acknowledgment returns its original request ID, input digest and a
    receiver-owned durable reference usable after either process restarts. A
    transport/message acknowledgment without that reference is not acceptance.
-3. Read-only status takes the full original binding and durable reference,
-   authenticates the observer, and reports refused, pending, uncertain or the one
-   terminal receipt. It never dispatches, repairs, refreshes authorization or
-   changes selectors.
+3. A pre-admission refusal is returned synchronously by the request call in the
+   closed outer `status:error` / nested `error.code` envelope and has no reference;
+   it is not a status value. Read-only status takes the full original binding and
+   durable reference, authenticates the observer, and reports only pending,
+   uncertain, succeeded or failed, with the one terminal receipt on succeeded or
+   failed. It never dispatches, repairs, refreshes authorization or changes
+   selectors.
 4. The queue accepts success only from the terminal receipt bound to the exact
    request/input and verified remote outcome. It rejects a valid SHA in the wrong
    repository, wrong checkout/worktree/branch, moved remote target, mismatched PR
    provenance, stale review or altered receipt. An already-merged PR with lagging
    local main enters synchronization recovery rather than another merge.
 
-The exact commands, selectors, acknowledgment and receipt schemas are normative in
-`8x3.t.xz9.4`; qkb.1 invokes them without translation or a caller-local journal.
+The exact commands, request evidence shapes, maintained outer success/refusal
+envelopes, closed refusal-code mapping, four status states and embedded-request
+terminal receipt schema are normative in `8x3.t.xz9.4`; qkb.1 invokes and validates
+them without translation, flattening or a caller-local journal.
 Its independently implementable consumer slice is accepted when the canonical
 delivery workflow records the binding, invokes `--mode ordinary-merge`, persists
 the returned opaque reference, restores it after queue-owner restart, and accepts

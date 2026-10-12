@@ -5,6 +5,7 @@ priority: high
 created_at: "2026-10-12 00:30:00"
 estimate:
 dependencies: [8x3.t.xz9]
+external_dependencies: [lab-config:8wl.t.gad.8, lab-config:8wl.t.gad.b]
 tags: [ace-hitl, ace-hitl-hermes, gad8, transport]
 needs_review: true
 ---
@@ -93,18 +94,42 @@ certificate for one project cannot authorize another even when issued by the sam
 CA. Rotation provisions new files and atomically changes the exact configured
 fingerprint; CA membership alone never grants a project.
 
-Configuration contains credential references, never secret bytes:
+Configuration contains credential references, never secret bytes. Both credential
+objects reject unknown fields and nulls. `tls_client_credential` resolves exactly:
 
-- the Hermes channel names one `tls_client_credential` ID; the Hermes-owned runtime
-  config resolves it to absolute `certificate_file`, `private_key_file` and
-  `ca_file` paths plus the expected server URI SAN;
-- the lifecycle endpoint config names one `tls_server_credential` ID resolving to
-  its absolute certificate/private-key/CA paths and a closed list containing the
-  one admitted Hermes client URI SAN and required certificate SHA-256 fingerprint;
-- referenced regular files must have non-symlink, non-group/world-writable ancestry.
-  Private keys are mode 0400 or 0600 and owned by the exact service account that
-  reads them; public cert/CA files are root-owned and non-writable by that account.
-  Missing, unreadable, redirected, over-broad or mismatched files refuse startup.
+```json
+{"certificate_file":"/absolute/path","private_key_file":"/absolute/path","ca_file":"/absolute/path","expected_server_uri_san":"urn:ace:hitl:<project-id>:lifecycle-server","expected_server_certificate_sha256":"<64-lowercase-hex>"}
+```
+
+`tls_server_credential` resolves exactly:
+
+```json
+{"certificate_file":"/absolute/path","private_key_file":"/absolute/path","ca_file":"/absolute/path","server_uri_san":"urn:ace:hitl:<project-id>:lifecycle-server","allowed_client_uri_san":"urn:ace:hitl:<project-id>:hermes-client","allowed_client_certificate_sha256":"<64-lowercase-hex>"}
+```
+
+Every string is non-empty; all three paths are absolute canonical paths; fingerprint
+fields match `^[0-9a-f]{64}$`. The new client-side
+`expected_server_certificate_sha256` is mandatory and is the sole configured server
+pin. The server credential admits exactly one client SAN/fingerprint pair. Lists,
+wildcards, CA-only admission and omitted pins are invalid.
+
+Provisioning and startup enforce one exact ownership/mode layout on both host and
+container; there are no mode alternatives:
+
+- every credential-tree ancestor above the project leaf is `root:root` mode `0755`;
+- the project credential directory is `root:<exact-service-group>` mode `0750`;
+- the referenced private key is `<exact-service-user>:<exact-service-group>` mode
+  `0400`;
+- the referenced certificate and CA bundle are `root:root` mode `0444`;
+- the root-owned runtime file containing endpoint/credential references is
+  `root:<exact-service-group>` mode `0640`;
+- each path component and file is a regular owned object as applicable: no symlink,
+  ACL, group/world-writable component, hard-linked key, mount redirect or ownership
+  substitution is accepted. The service user may traverse only through its exact
+  service group and cannot create, replace or chmod any credential/config file.
+
+Any missing, unreadable, redirected, over-broad, incorrectly owned/mode-set or
+mismatched object refuses startup before a socket is opened.
 
 Host `lab-config` explicitly provisions the project CA material, distinct client
 and server keypairs, parent directories, ownership/modes, Incus proxy device and
@@ -133,10 +158,68 @@ listener check -> complete Hermes channel registry validation -> sole Hermes pol
 Activation is atomic at the poller: no channel is enabled until every configured
 authority passes authenticated health and project-binding checks.
 
+### Reviewed cross-repository real-boundary prerequisite
+
+nh0-A has two explicit external prerequisites in `lab-config`: `8wl.t.gad.8` owns
+the disposable Incus instance, project credential trees, tailnet listeners,
+firewall and TCP proxy devices; `8wl.t.gad.b` owns the two project lifecycle fixture
+services, their start/stop order and effect-free negative-case observation. Their
+reviewed deliverable is the host-owned executable
+`bin/lab-hitl-boundary-fixture`; source agents do not invoke Incus/root commands
+directly. Both prerequisite revisions and the fixture contract require independent
+review before their evidence can clear nh0-A.
+
+The host lab-config owner invokes exactly:
+
+```text
+bin/lab-hitl-boundary-fixture run \
+  --invocation INVOCATION_ID \
+  --ace-container lab \
+  --ace-worktree /lab/projects/ace/.ace-wt/WORKTREE \
+  --ace-head ACE_FULL_SHA \
+  --scenario nh0-a-v1 \
+  --format json
+```
+
+`run` rejects a dirty ACE worktree, a non-matching head, paths outside the declared
+ACE workspace, reused invocation IDs and unreviewed lab-config/fixture revisions.
+For that one invocation it builds the exact-head ACE packages, creates a disposable
+Incus instance, provisions project A/B service accounts and the exact credential
+layout above, starts two loopback TLS lifecycle services, installs distinct host
+tailnet TCP proxy devices/firewall rules, and supplies the host-side test identity
+with only its project-scoped client files. It then executes the nh0-A source scenario
+against the real proxies, including every positive, isolation, credential, restart
+and uncertainty case in this spec. In an ensure/finally phase it stops fixture
+services, removes proxy/firewall devices, destroys the disposable instance and
+removes ephemeral credential files. A failed test still performs teardown and
+returns a failed receipt; incomplete teardown is itself a failure.
+
+The single stdout JSON receipt is closed and contains exactly:
+
+```json
+{"type":"nh0_real_incus_acceptance","version":1,"invocation_id":"<id>","scenario":"nh0-a-v1","ace_head":"<40-hex>","lab_config_head":"<40-hex>","provision":{"instance_id":"<id>","project_ids":["A","B"],"proxy_configuration_sha256":"<64-hex>","credential_layout_sha256":"<64-hex>","server_certificate_sha256s":["<64-hex>","<64-hex>"],"client_certificate_sha256s":["<64-hex>","<64-hex>"],"completed_at":"<date-time>"},"test":{"command":"<exact-command>","receipt_ids":["<id>"],"passed":true,"positive_cases":1,"negative_cases":9,"completed_at":"<date-time>"},"teardown":{"services_stopped":true,"proxy_devices_removed":true,"firewall_removed":true,"instance_destroyed":true,"credential_files_removed":true,"completed_at":"<date-time>"},"evidence_sha256":"<64-hex>"}
+```
+
+All objects reject unknown fields and nulls. `project_ids` and both certificate
+fingerprint arrays contain exactly two distinct strings; `receipt_ids` contains one
+or more distinct non-empty strings. Timestamps assert RFC 3339 `date-time`; counts
+are integers with the shown exact minimums (`positive_cases >= 1`,
+`negative_cases >= 9`). `evidence_sha256` is the
+digest of the separately retained canonical fixture report identified by the
+invocation, not a self-hash of stdout. The report contains command exits and bounded
+sanitized observations but no keys, tokens or message bodies.
+
+The nh0 source task accepts this handoff only when invocation ID, scenario, both
+reviewed repository heads, provision/test/teardown booleans, receipt IDs and evidence
+digest all verify against the retained report and its own test record. Prose, a
+different invocation, a loopback-only run, a mock proxy or gad.2's later installed
+fleet run cannot substitute for this prerequisite receipt.
+
 ### Boundary acceptance and rollback
 
-Source acceptance for this task uses an actual disposable Incus instance and proxy
-device, not a loopback-only or mocked locality test. A host Hermes client certificate
+Source acceptance for this task consumes the reviewed invocation-bound
+`nh0_real_incus_acceptance` receipt above from an actual disposable Incus instance
+and proxy device, not a loopback-only or mocked locality test. A host Hermes client certificate
 for project A must complete bidirectional ask/reply/pending/instruction flows through
 the proxy to lifecycle A. Missing certificate, forged CA, expired certificate,
 wrong SAN/fingerprint, project B certificate, wrong endpoint, cleartext client and
@@ -229,7 +312,7 @@ prepares.
 
 | Slice | Owner | Source acceptance |
 |---|---|---|
-| nh0-A: shared routing + real crossing | 8xa.t.nh0 (`ace-hitl` server and `ace-hitl-hermes` client) | Actual disposable Incus proxy + mTLS project isolation, bidirectional flows, restart/uncertainty and unchanged Unix peer-auth tests above |
+| nh0-A: shared routing + real crossing | 8xa.t.nh0 (`ace-hitl` server and `ace-hitl-hermes` client), after reviewed `lab-config:8wl.t.gad.8` + `8wl.t.gad.b` fixture prerequisite | Invocation-bound actual disposable Incus proxy receipt + mTLS project isolation, bidirectional flows, restart/uncertainty and unchanged Unix peer-auth tests above |
 | nh0-B: narrow lifecycle group | 8xa.t.nh0 (`ace-hitl`) | `--group` reaches `Service(group:)`; dedicated directory/group checks reject broad or legacy-labd exposure |
 | nh0-D: informed registration gap | 8xa.t.nh0 (`ace-hitl-hermes`) | Unknown chat metadata is durable before offset advance; later registration surfaces the gap and starts a new coverage generation |
 
