@@ -4,7 +4,7 @@ status: draft
 priority: high
 created_at: "2026-09-28 17:44:29"
 estimate: TBD
-dependencies: [8wr.t.qkb.0, 8wr.t.qk0, 8wr.t.qjx, 8wr.t.qjz, 8x3.t.xz9]
+dependencies: [8wr.t.qkb.0, 8wr.t.qk0, 8wr.t.qjx, 8wr.t.qjz, 8x3.t.xz9.4]
 tags: [lab-readiness]
 parent: 8wr.t.qkb
 bundle:
@@ -97,12 +97,15 @@ there is no cross-VM HTTP fallback.
 
 qkb.1 owns the canonical delivery-workflow request/status/receipt consumer and its
 exact forge/PR/head/worktree acceptance. qk0/qk0.1.1 owns project-overseer queue
-selection, recovery and wake behavior. xz9 owns the reusable fixed-operation
-authenticated admission, executor and durable-receipt mechanisms required by a
-new ordinary producer, but its current protected request schema is not silently
-generalized or reused as if delivered. iy6 owns the separately admitted arbitrary
-project-command producer and composes shared execution-reference/status primitives;
-it is not the merge producer. `gad.b` installs the reviewed producer/configuration,
+selection, recovery and wake behavior. Tool-minted draft/needs-review child
+`8x3.t.xz9.4` owns the
+authenticated ordinary fixed-operation admission/execution/status producer through
+the explicit `ordinary-merge` mode of `ace-lab service request/status`; ace-assign
+canonical attempt/evidence state is its sole queue/effect record and supplies its
+opaque reference/read-only-status primitive. The four protected xz9 children and
+their receiver/schema remain unchanged. iy6 owns the separately admitted arbitrary
+project-command producer and may compose the shared reference/status primitive; it
+is not the merge producer. `gad.b` installs the reviewed producer/configuration,
 and `gad.2` executes distinct-account installed acceptance after source delivery.
 
 The implemented ordinary route must provide one public sequence:
@@ -125,6 +128,13 @@ The implemented ordinary route must provide one public sequence:
    repository, wrong checkout/worktree/branch, moved remote target, mismatched PR
    provenance, stale review or altered receipt. An already-merged PR with lagging
    local main enters synchronization recovery rather than another merge.
+
+The exact commands, selectors, acknowledgment and receipt schemas are normative in
+`8x3.t.xz9.4`; qkb.1 invokes them without translation or a caller-local journal.
+Its independently implementable consumer slice is accepted when the canonical
+delivery workflow records the binding, invokes `--mode ordinary-merge`, persists
+the returned opaque reference, restores it after queue-owner restart, and accepts
+only the exact terminal receipt across every success and negative case below.
 
 Controlled source acceptance loses the admission acknowledgment after durable
 acceptance, restarts requester and receiver independently, makes the receiver

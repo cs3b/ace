@@ -91,14 +91,15 @@ schema remains unchanged; the ordinary project overseer cannot use its protected
 authority/attempt/mapping or non-root executor as a compatibility path.
 
 Ownership is split once: qkb.1 owns this workflow consumer and exact receipt
-acceptance; qk0/qk0.1.1 owns queue decisions and recovery; xz9 owns reusable
-fixed-operation authenticated admission/execution/receipt primitives that the new
-ordinary producer must actually implement; iy6 owns only the separate arbitrary
-project-command producer while reusing any delivered reference/status primitive.
-Host `gad.b` installs reviewed source/configuration and `gad.2` runs installed
-acceptance. Until the ACE producer and authenticated receiver exist, M2 is
-`BLOCKED(source-producer, qkb.1/xz9)`, not a request to start a socket, copy a token,
-or add a Python/cross-VM HTTP bridge.
+acceptance; qk0/qk0.1.1 owns queue decisions and recovery; tool-minted
+draft/needs-review task `8x3.t.xz9.4` owns the ordinary fixed-operation
+admission/execution/status producer
+and its explicit `ace-lab service request/status --mode ordinary-merge` contract;
+iy6 owns only the separate arbitrary project-command producer while reusing any
+delivered reference/status primitive. Host `gad.b` installs reviewed
+source/configuration and `gad.2` runs installed acceptance. Until that source task
+is delivered, M2 is `BLOCKED(source-producer, 8x3.t.xz9.4)`, not a request to start
+a socket, copy a token, or add a Python/cross-VM HTTP bridge.
 
 ## 2. Requirement — delegation of rebase + REQUIRED RENEWED EVIDENCE
 
@@ -173,7 +174,8 @@ Missing provisioning (attributable BLOCKED inputs; owners named):
   git-credential-lab works; no mapping provision) — owner host/lab-config.
 - M2 integrator result path: coordinator-relay only; no executable ordinary
   project-overseer producer, authenticated durable acknowledgment/status route or
-  exactly bound terminal receipt. Source owners qkb.1/xz9 with qk0 consumer;
+  exactly bound terminal receipt. Implementable producer boundary is
+  `8x3.t.xz9.4`, with qkb.1 as exact merge consumer and qk0 as queue/recovery owner;
   host gad.b/gad.2 installs and verifies only after reviewed source is available.
 - M3 HITL topology gap → gad.8; 16-hour proposal anchor stands meanwhile —
   owner gad.8.
