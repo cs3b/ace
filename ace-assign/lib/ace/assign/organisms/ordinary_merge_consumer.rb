@@ -172,10 +172,10 @@ module Ace
 
         def admit(binding, identity, selectors, input_document, digest, record_intent:)
           record_event(binding, identity, intent_payload(selectors, input_document, digest)) if record_intent
-          envelope = request_admission(binding, selectors, input_document)
-          if envelope["status"] == "ok"
-            begin
-              ack = Molecules::OrdinaryMergeContract.validate_ack!(envelope.fetch("data"),
+          branch = admission_branch(request_admission(binding, selectors, input_document))
+          if branch[:status] == "ok"
+            ack = begin
+              Molecules::OrdinaryMergeContract.validate_ack!(branch[:payload],
                 request_id: selectors[:request_id], input_digest: digest)
             rescue ArgumentError
               raise AttemptErrors::EvidenceUnavailable,
@@ -186,7 +186,20 @@ module Ace
             return {state: "accepted", reference: ack.fetch("reference"),
                     request_id: ack.fetch("request_id"), input_digest: ack.fetch("input_digest")}
           end
-          handle_refusal(binding, identity, envelope.fetch("error"))
+          handle_refusal(binding, identity, branch[:payload])
+        end
+
+        # Closed outer envelope for admission responses: exactly {status,
+        # data} for ok and exactly {status, error} for error, both objects
+        # rejecting unknown fields. Any other outer status or shape —
+        # including a refusal attached to a non-error envelope such as
+        # pending — is malformed, leaves admission unconfirmed, and is never
+        # persisted as a proven refusal.
+        def admission_branch(envelope)
+          Molecules::OrdinaryMergeContract.validate_envelope_branch!(envelope)
+        rescue ArgumentError
+          raise AttemptErrors::EvidenceUnavailable,
+            "ordinary merge response is not the maintained envelope; admission stays unconfirmed"
         end
 
         def request_admission(binding, selectors, input_document)
@@ -237,10 +250,10 @@ module Ace
             project: selectors[:project], assignment: binding.fetch("assignment_id"),
             attempt: binding.fetch("attempt_id"), queue_entry: selectors[:queue_entry],
             input_digest: digest)
-          error = (envelope["status"] == "error") ? envelope.fetch("error") : nil
-          if error
+          branch = status_branch(envelope)
+          if branch[:status] == "error"
             begin
-              validated = Molecules::OrdinaryMergeContract.validate_refusal!(error,
+              validated = Molecules::OrdinaryMergeContract.validate_refusal!(branch[:payload],
                 schema: Molecules::OrdinaryMergeContract::STATUS_ERROR_SCHEMA)
             rescue ArgumentError
               raise AttemptErrors::EvidenceUnavailable, "ordinary merge status error is not the maintained contract"
@@ -256,6 +269,16 @@ module Ace
           end
           return {state: observed[:state]} unless observed[:receipt]
           accept_receipt(binding, selectors, reference, input_document, digest, observed[:receipt])
+        end
+
+        # Closed outer envelope for read-only status responses. A malformed
+        # shape — including a missing branch object — is a classified caller-
+        # side blocker, never a raw internal error and never a durable state.
+        def status_branch(envelope)
+          Molecules::OrdinaryMergeContract.validate_envelope_branch!(envelope)
+        rescue ArgumentError
+          raise AttemptErrors::EvidenceUnavailable,
+            "ordinary merge status response is not the maintained envelope"
         end
 
         def accept_receipt(binding, selectors, reference, input_document, digest, receipt)

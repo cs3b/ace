@@ -141,6 +141,26 @@ module Ace
             data
           end
 
+          # Closed outer response envelope: status "ok" carries exactly the
+          # data object; status "error" carries exactly the error object. The
+          # outer objects reject unknown fields; the returned branch payload
+          # is validated by the inner contract validators. Any other outer
+          # status or shape is malformed. Returns {status:, payload:}.
+          def validate_envelope_branch!(envelope)
+            unless envelope.is_a?(Hash) && %w[ok error].include?(envelope["status"])
+              raise ArgumentError, "response envelope status must be ok or error"
+            end
+            if envelope["status"] == "ok"
+              exact_object!(envelope, %w[status data], "response envelope")
+              payload = envelope.fetch("data")
+            else
+              exact_object!(envelope, %w[status error], "response envelope")
+              payload = envelope.fetch("error")
+            end
+            raise ArgumentError, "response envelope branch must be a JSON object" unless payload.is_a?(Hash)
+            {status: envelope["status"], payload: payload}
+          end
+
           # Pre-admission refusal envelope. Refusal is request-time only; it
           # never carries a reference and is never a read-only status value.
           def validate_refusal!(error, schema: REFUSAL_SCHEMA)

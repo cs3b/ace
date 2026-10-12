@@ -101,6 +101,27 @@ module Ace
             OrdinaryMergeContract.validate_refusal!(valid_refusal("ordinary_merge_invalid_request"))
         end
 
+        def test_outer_envelope_branch_is_closed
+          ack = valid_ack(HEX64)
+          assert_equal({status: "ok", payload: ack},
+            OrdinaryMergeContract.validate_envelope_branch!({"status" => "ok", "data" => ack}))
+          refusal = valid_refusal("ordinary_merge_forbidden")
+          assert_equal({status: "error", payload: refusal},
+            OrdinaryMergeContract.validate_envelope_branch!({"status" => "error", "error" => refusal}))
+          assert_raises(ArgumentError) do
+            OrdinaryMergeContract.validate_envelope_branch!({"status" => "ok", "data" => ack, "error" => refusal})
+          end
+          assert_raises(ArgumentError) do
+            OrdinaryMergeContract.validate_envelope_branch!({"status" => "pending", "error" => refusal})
+          end
+          assert_raises(ArgumentError) { OrdinaryMergeContract.validate_envelope_branch!({"status" => "ok"}) }
+          assert_raises(ArgumentError) { OrdinaryMergeContract.validate_envelope_branch!({"status" => "error"}) }
+          assert_raises(ArgumentError) { OrdinaryMergeContract.validate_envelope_branch!("garbage") }
+          assert_raises(ArgumentError) do
+            OrdinaryMergeContract.validate_envelope_branch!({"status" => "ok", "data" => "scalar"})
+          end
+        end
+
         def test_status_envelope_enforces_the_closed_state_model
           selectors = {reference: REQUEST_REFERENCE, request_id: REQUEST_ID, input_digest: HEX64}
           assert_equal({state: "pending", receipt: nil},

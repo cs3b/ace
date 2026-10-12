@@ -364,6 +364,60 @@ module Ace
             selectors: binding_document), %w[data reference], "receiver/other/ref"))
           assert_raises(AttemptErrors::ReceiptRejected) { poll }
         end
+
+        # Review r1 Finding A shape tests: the closed outer envelope admits
+        # exactly {status, data} for ok and {status, error} for error; every
+        # malformed shape is a classified EvidenceUnavailable blocker with no
+        # journal mutation beyond the recorded intent.
+
+        def test_outer_unknown_field_is_rejected_without_journal_mutation
+          @producer.enqueue(ack_envelope.merge("error" => valid_refusal("ordinary_merge_forbidden")))
+          assert_raises(AttemptErrors::EvidenceUnavailable) { dispatch }
+          assert_equal 1, @producer.requests.length
+          assert_empty delivery_events.select { |event| event.dig("payload", "stage") == OrdinaryMergeConsumer::ACK_STAGE }
+          assert_empty result_events
+          @producer.enqueue(ack_envelope)
+          assert_equal "accepted", dispatch[:state]
+          intents = delivery_events.count { |event| event.dig("payload", "stage") == OrdinaryMergeConsumer::INTENT_STAGE }
+          assert_equal 1, intents
+        end
+
+        def test_ack_data_unknown_field_is_rejected_without_journal_mutation
+          @producer.enqueue({"status" => "ok", "data" => valid_ack(@digest).merge("outcome" => "spurious")})
+          assert_raises(AttemptErrors::EvidenceUnavailable) { dispatch }
+          assert_empty delivery_events.select { |event| event.dig("payload", "stage") == OrdinaryMergeConsumer::ACK_STAGE }
+          assert_empty result_events
+        end
+
+        def test_pending_with_error_is_malformed_and_never_a_proven_refusal
+          @producer.enqueue({"status" => "pending",
+            "error" => valid_refusal("ordinary_merge_forbidden", input_digest: @digest)})
+          assert_raises(AttemptErrors::EvidenceUnavailable) { dispatch }
+          assert_empty result_events
+          @producer.enqueue(ack_envelope)
+          @producer.enqueue(valid_status("pending", selectors: binding_document))
+          assert_equal({state: "pending"}, poll)
+          assert_equal 2, @producer.requests.length
+          assert_equal @producer.requests.first, @producer.requests.last
+        end
+
+        def test_missing_branch_keys_are_classified_blockers
+          @producer.enqueue({"status" => "ok"})
+          assert_raises(AttemptErrors::EvidenceUnavailable) { dispatch }
+          @producer.enqueue({"status" => "error"})
+          assert_raises(AttemptErrors::EvidenceUnavailable) { dispatch }
+          assert_equal 2, @producer.requests.length
+          assert_empty delivery_events.select { |event| event.dig("payload", "stage") == OrdinaryMergeConsumer::ACK_STAGE }
+          assert_empty result_events
+        end
+
+        def test_status_error_branch_requires_the_error_object
+          @producer.enqueue(ack_envelope)
+          dispatch
+          @producer.enqueue({"status" => "error"})
+          assert_raises(AttemptErrors::EvidenceUnavailable) { poll }
+          assert_empty result_events
+        end
       end
     end
   end
