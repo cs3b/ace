@@ -233,6 +233,53 @@ class ScopedServiceTest < AceHitlTestCase
     assert_equal ["ace-hitl-project", "ace-hitl-project"], groups
   end
 
+  def test_broad_control_group_is_refused_before_endpoint_creation
+    path = File.join(@scratch, "broad-group.sock")
+    service = extra_service(path, group: Ace::Hitl::Lifecycle::Store::DEFAULT_GROUP)
+
+    error = assert_raises(Ace::Hitl::Lifecycle::TransportError) { service.run }
+
+    assert_match(/control group is too broad/, error.message)
+    assert_match(/dedicated lifecycle group/, error.message)
+    refute File.exist?(path)
+  end
+
+  def test_root_control_group_is_refused_before_endpoint_creation
+    path = File.join(@scratch, "root-group.sock")
+    group = Struct.new(:name, :gid).new("root-equivalent", 0)
+    service = extra_service(path, group: group.name)
+
+    error = Etc.stub(:getgrnam, group) do
+      assert_raises(Ace::Hitl::Lifecycle::TransportError) { service.run }
+    end
+
+    assert_match(/control group is too broad/, error.message)
+    refute File.exist?(path)
+  end
+
+  def test_legacy_shared_socket_directory_is_refused
+    service = extra_service("/run/lab/hitl.sock")
+
+    error = assert_raises(Ace::Hitl::Lifecycle::TransportError) do
+      service.send(:verify_socket_directory!)
+    end
+
+    assert_match(/shared with legacy labd/, error.message)
+    assert_match(/dedicated lifecycle directory/, error.message)
+  end
+
+  def test_directory_containing_legacy_labd_socket_is_refused
+    dir = File.join(@scratch, "legacy-shared")
+    FileUtils.mkdir_p(dir)
+    File.write(File.join(dir, "labd.sock"), "legacy endpoint placeholder")
+    path = File.join(dir, "lifecycle.sock")
+
+    error = assert_raises(Ace::Hitl::Lifecycle::TransportError) { extra_service(path).run }
+
+    assert_match(/legacy labd/, error.message)
+    refute File.exist?(path)
+  end
+
 
   def extra_service(path, **options)
     Ace::Hitl::Lifecycle::Service.new(

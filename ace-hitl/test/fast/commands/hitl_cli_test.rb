@@ -46,6 +46,13 @@ class HitlCliTest < AceHitlTestCase
     assert_equal "ace-hitl-project", received[:group]
   end
 
+  def test_serve_requires_explicit_dedicated_group
+    result = run_cli(["serve"])
+
+    assert_equal 1, result[:exit_code]
+    assert_match(/--group is required/, result[:stderr])
+  end
+
   def test_create_basic_hitl_event
     with_hitl_dir do |root|
       with_cli_root(root) do

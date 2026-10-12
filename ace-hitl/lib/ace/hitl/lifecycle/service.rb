@@ -26,6 +26,9 @@ module Ace
         include FrameServing
 
         DEFAULT_SOCKET_MODE = 0o660
+        BROAD_CONTROL_GROUPS = [Store::DEFAULT_GROUP].freeze
+        LEGACY_SHARED_SOCKET_DIRECTORIES = ["/run/lab"].freeze
+        LEGACY_LABD_SOCKET = "labd.sock"
         # An idle connection holds a thread; bounded idleness keeps a
         # wedged peer from pinning the service (review 8x327buo).
         DEFAULT_IDLE_SECONDS = 120.0
@@ -128,7 +131,7 @@ module Ace
 
         def prepare!
           begin
-            group_id = Etc.getgrnam(@group).gid
+            group_id = verify_control_group!
             verify_socket_directory!
             acquire_endpoint_lock!
             recover_stale_endpoint!
@@ -182,16 +185,37 @@ module Ace
         # must exist, must not be world-writable, and must be owned by
         # the service identity or root — otherwise anyone who can replace
         # the socket can impersonate the service.
+        def verify_control_group!
+          group = Etc.getgrnam(@group)
+          if group.gid.zero? || BROAD_CONTROL_GROUPS.include?(group.name)
+            raise TransportError,
+              "HITL boundary control group is too broad: #{group.name} " \
+              "(configure a dedicated lifecycle group; root and #{Store::DEFAULT_GROUP} are refused)"
+          end
+
+          group.gid
+        end
+
         def verify_socket_directory!
           dir = File.dirname(@socket_path)
+          expanded_dir = File.expand_path(dir)
+          if LEGACY_SHARED_SOCKET_DIRECTORIES.include?(expanded_dir)
+            raise TransportError,
+              "HITL boundary socket directory is shared with legacy labd: #{dir} " \
+              "(configure a dedicated lifecycle directory)"
+          end
+
           FileUtils.mkdir_p(dir)
           stat = File.lstat(dir)
-          return if (stat.uid.zero? || stat.uid == Process.uid) && (stat.mode & 0o002).zero?
+          protected_directory = (stat.uid.zero? || stat.uid == Process.uid) && (stat.mode & 0o002).zero?
+          legacy_socket = File.join(dir, LEGACY_LABD_SOCKET)
+          legacy_socket_exists = File.exist?(legacy_socket) || File.symlink?(legacy_socket)
+          return if protected_directory && !legacy_socket_exists
 
           raise TransportError,
             "HITL boundary socket directory is not protected: #{dir} " \
             "(use a dedicated service/root-owned, non-world-writable directory; " \
-            "do not share a directory containing unrelated service sockets)"
+            "do not share a directory containing unrelated service sockets or legacy labd)"
         end
 
         def authenticate!(socket)

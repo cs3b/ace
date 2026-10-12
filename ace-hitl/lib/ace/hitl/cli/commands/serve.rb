@@ -19,7 +19,8 @@ module Ace
           desc "Run the authenticated HITL store boundary service (peer-credential access)"
 
           option :socket, type: :string, desc: "Boundary socket path (default: ACE_HITL_SOCKET or /run/lab/hitl.sock)"
-          option :group, type: :string, desc: "Dedicated control group allowed to connect (default: lab-control)"
+          option :group, type: :string,
+            desc: "Dedicated lifecycle group allowed to connect (required; root and lab-control are refused)"
           option :store_root, type: :string, desc: "Private store root (default: ACE_HITL_STORE_ROOT or /run/lab/hitl)"
           option :grants_path, type: :string, desc: "Trusted grants document (default: ACE_HITL_GRANTS_PATH or /etc/lab/ace-lab/authorization.yml)"
           option :repo_root, type: :string, desc: "Candidate repository for the managed attempt authority"
@@ -31,6 +32,7 @@ module Ace
           def call(**options)
             return serve_tls_authority(options) if options[:tls_authority]
 
+            group = dedicated_group(options)
             policy = Providers::Lab.grants_policy(grants_path: grants_path(options))
             unless policy.service_uid
               raise_cli_error(
@@ -45,7 +47,7 @@ module Ace
               binding: binding_policy,
               policy: policy,
               socket_path: socket_path(options),
-              group: options[:group] || Lifecycle::Store::DEFAULT_GROUP,
+              group: group,
               logger: options[:verbose] ? ->(message) { warn message } : nil
             )
             service.run
@@ -76,6 +78,13 @@ module Ace
             service.run
           rescue Lifecycle::Error, Providers::ProviderUnavailableError => e
             raise_cli_error(e.message)
+          end
+
+          def dedicated_group(options)
+            group = options[:group].to_s
+            return group unless group.empty?
+
+            raise_cli_error("--group is required and must name a dedicated lifecycle group")
           end
 
           def socket_path(options)
