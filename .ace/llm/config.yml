@@ -1,8 +1,15 @@
 # ace-llm configuration file
-# Reviewer policy (Captain, 2026-10-02): reviews run ONE reviewer position
-# with a fallback chain — pi glm 5.3 -> codex sol -> agy flash 3.8 — so the
-# round is good if even one returns. gemini is removed everywhere (individual
-# auth tier deprecated Google-side); one astra review per PR via review-astra.
+# Worker/reviewer policy (Captain, 2026-10-12, supersedes 2026-10-02 reviewer
+# chain): worker default = pi zai/glm-5.3-flash:high; independent reviewer
+# default = pi zai/glm-5.3:high. Codex is NOT a default and NOT a silent
+# fallback — it runs only under an explicit Captain exception (retained
+# explicit-exception presets: review-codex, review-astra). Selection
+# precedence: Captain policy defaults > project launch overrides > explicit
+# Captain exception. Every dispatch receipt records the ACTUAL harness,
+# provider/model (incl. thinking level) and agent/pane/session — a documented
+# default without a matching actual launch violates this policy.
+# gemini is removed everywhere (individual auth tier deprecated Google-side);
+# one astra review per PR via review-astra.
 
 llm:
   providers:
@@ -18,37 +25,37 @@ llm:
   roles:
     # --- Reusable candidate lists ---
     _utility: &utility
-      - codex:sol
+      - pi:zai/glm-5.3-flash:high
       - agy:gemini-3.8-flash-medium
       - claude:haiku
     _assign-worker: &assign-worker
-      - codex:sol:medium@yolo
+      - pi:zai/glm-5.3-flash:high@yolo
       - agy:gemini-3.8-flash-medium@yolo
       - claude:sonnet:medium@yolo
 
     # --- Diagnostic ---
     doctor:
-      - codex:sol:low@yolo
+      - pi:zai/glm-5.3-flash:high@yolo
       - agy:gemini-3.8-flash-medium@yolo
       - claude:haiku:low@yolo
 
     # --- Planning ---
     planner:
-      - codex:sol:high@ro
-      - pi:zai/glm-5.3@ro
+      - pi:zai/glm-5.3:high@ro
       - claude:opus:high@ro
 
     # --- Review ---
-    # Reviewer position with fallback chain: pi glm 5.3, then codex sol,
-    # then agy flash 3.8 — the round is good if even one returns.
+    # Reviewer default (Captain 2026-10-12): pi zai/glm-5.3:high. Non-codex
+    # fallbacks only; codex requires an explicit Captain exception.
     review-default:
-      - pi:zai/glm-5.3@ro
-      - codex:sol@ro
-      - agy:gemini-3.8-flash-medium@ro
-    review-synthesizer:
-      - codex:sol:low@ro
+      - pi:zai/glm-5.3:high@ro
       - agy:gemini-3.8-flash-medium@ro
       - claude:sonnet:medium@ro
+    review-synthesizer:
+      - pi:zai/glm-5.3-flash:high@ro
+      - agy:gemini-3.8-flash-medium@ro
+      - claude:sonnet:medium@ro
+    # EXPLICIT Captain-exception preset — never a default or silent fallback.
     review-codex:
       - codex:sol:high@ro
     # Reserved: the single independent astra review for a PR (one session
@@ -60,45 +67,44 @@ llm:
     assign-executor: *assign-worker
     assign-engineer: *assign-worker
     assign-orchestrator:
-      - codex:sol:medium@yolo
-      - pi:zai/glm-5.3@yolo
+      - pi:zai/glm-5.3-flash:high@yolo
+      - pi:zai/glm-5.3:high@yolo
       - claude:opus:medium@yolo
 
     # --- E2E testing ---
     e2e-runner:
-      - codex:sol:low@yolo
+      - pi:zai/glm-5.3-flash:high@yolo
       - agy:gemini-3.8-flash-medium@yolo
       - claude:haiku:low@yolo
     e2e-verifier:
-      - codex:sol:low@ro
+      - pi:zai/glm-5.3:high@ro
       - agy:gemini-3.8-flash-medium@ro
       - claude:haiku:low@ro
     e2e-reporter:
-      - codex:sol:low@ro
+      - pi:zai/glm-5.3-flash:high@ro
       - agy:gemini-3.8-flash-medium@ro
       - claude:haiku:low@ro
 
     # --- Utility ---
     prompt-enhance: *utility
     commit:
-      - codex:sol
+      - pi:zai/glm-5.3-flash:high
       - glite
     # *utility
     docs-analysis: *utility
     compressor: *utility
     idea-enhance:
-      - codex:sol@ro
+      - pi:zai/glm-5.3-flash:high@ro
       - agy:gemini-3.8-flash-medium@ro
       - claude:haiku@ro
 
     # --- Simulation ---
     sim-primary:
-      - codex:sol@ro
+      - pi:zai/glm-5.3-flash:high@ro
       - agy:gemini-3.8-flash-medium@ro
       - claude:haiku@ro
     sim-synthesis:
-      - codex:sol:medium
-      - pi:zai/glm-5.3
+      - pi:zai/glm-5.3:high
       - claude:opus:medium
   fallback:
     enabled: true

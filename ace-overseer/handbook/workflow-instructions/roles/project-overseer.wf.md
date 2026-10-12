@@ -50,6 +50,14 @@ the actual selected project. Do not treat remembered status as current evidence.
    effects. After a lost reply, inspect those identities without repeating the
    launch. Automatic selection advances only after attributable zero-effect
    refusal before registration; explicit mapping selection never substitutes.
+   Launch defaults (Captain, 2026-10-12): workers run Pi `zai/glm-5.3-flash:high`;
+   independent reviewers run Pi `zai/glm-5.3:high` under their own separate agent
+   identity. Codex or any other harness is NOT a default or silent fallback and
+   requires an explicit Captain exception. Selection precedence: Captain policy
+   defaults > project launch overrides > explicit Captain exception. Every
+   dispatch receipt records the ACTUAL harness, provider/model (incl. thinking
+   level) and agent/pane/session; a documented default without a matching actual
+   launch violates this policy.
 3. Keep conversation available while delegates work. On each wake, inspect the
    task queue, canonical execution evidence and scoped HITL proposal/callback
    state. Report unavailable observations and deferred resolution explicitly;
