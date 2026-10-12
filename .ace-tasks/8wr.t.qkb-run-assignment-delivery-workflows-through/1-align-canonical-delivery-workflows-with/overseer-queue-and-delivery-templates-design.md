@@ -68,6 +68,38 @@ next effect.
   `BLOCKED(M2-provision, host)` — never `WAIT` by assertion, never blind
   retry of the effect.
 
+### 1c. M2 executable acknowledgment/status contract — draft, needs review
+
+M2 is ACE source work before it is host provisioning. The queue records the exact
+integration request in its canonical parent/child attempt state, invokes a reviewed
+fixed producer, and receives an authenticated acknowledgment containing the same
+request ID and input digest plus a receiver-owned durable reference. `WAIT` is
+valid only after that acknowledgment. The queue polls read-only status with the
+complete original binding and accepts only the exact terminal receipt and verified
+remote result; status cannot issue or repeat the effect. Lost acknowledgment is
+recovered by the original request identity, receiver restart preserves the durable
+reference, unavailable admission stays `BLOCKED`, and a lost/uncertain effect result
+is reconciled without resubmission.
+
+The binding includes project queue entry, task/attempt, forge identity, normalized
+PR URL, head/base repositories and refs, candidate head, integration method,
+authorization and canonical input digest. Acceptance rejects wrong repository with
+the same SHA, wrong checkout/worktree/branch, moved remote target, altered receipt
+and stale evidence. Confirmed remote merge with lagging local main schedules owned
+synchronization and does not reopen merge. The existing protected worker receipt
+schema remains unchanged; the ordinary project overseer cannot use its protected
+authority/attempt/mapping or non-root executor as a compatibility path.
+
+Ownership is split once: qkb.1 owns this workflow consumer and exact receipt
+acceptance; qk0/qk0.1.1 owns queue decisions and recovery; xz9 owns reusable
+fixed-operation authenticated admission/execution/receipt primitives that the new
+ordinary producer must actually implement; iy6 owns only the separate arbitrary
+project-command producer while reusing any delivered reference/status primitive.
+Host `gad.b` installs reviewed source/configuration and `gad.2` runs installed
+acceptance. Until the ACE producer and authenticated receiver exist, M2 is
+`BLOCKED(source-producer, qkb.1/xz9)`, not a request to start a socket, copy a token,
+or add a Python/cross-VM HTTP bridge.
+
 ## 2. Requirement — delegation of rebase + REQUIRED RENEWED EVIDENCE
 
 Any operation that moves a deliverable's head AFTER exact-head evidence was
@@ -139,8 +171,10 @@ Missing provisioning (attributable BLOCKED inputs; owners named):
 
 - M1 forge push identity split (fj-stored token denied; managed
   git-credential-lab works; no mapping provision) — owner host/lab-config.
-- M2 integrator/host-adapter result path: coordinator-relay only; no
-  durable pollable integration-result record — owner host.
+- M2 integrator result path: coordinator-relay only; no executable ordinary
+  project-overseer producer, authenticated durable acknowledgment/status route or
+  exactly bound terminal receipt. Source owners qkb.1/xz9 with qk0 consumer;
+  host gad.b/gad.2 installs and verifies only after reviewed source is available.
 - M3 HITL topology gap → gad.8; 16-hour proposal anchor stands meanwhile —
   owner gad.8.
 - M4 login-gated identities (interactive claude unusable; identity pools

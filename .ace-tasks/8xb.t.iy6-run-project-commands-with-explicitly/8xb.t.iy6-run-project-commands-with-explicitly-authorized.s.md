@@ -138,3 +138,37 @@ producers before promotion; status remains draft. UX contract: ux/usage.md.
 Environment interface: lab-config docs/lab-interface.md. Existing h8x one-off
 publisher illustrates the user pain, but this task is reusable project execution,
 not expansion of that release authorization or a task to publish more packages.
+
+## Draft producer-composition acceptance — needs review
+
+The identity, all-or-nothing service admission, cwd/environment/secret, literal
+argv, PTY/getpass/signal/exit and uncertain-no-replay criteria above are the single
+acceptance owner for those behaviors; qk0/qkb must cross-reference them and must not
+duplicate a narrower command runner. The open source work is the producer join:
+
+- trusted project configuration owns executor/default-service/command/cwd/env and
+  secret-reference precedence; caller-writable repository configuration cannot
+  override installed admission or choose credentials;
+- the public invocation returns one execution reference only after durable
+  authenticated admission, and a public read-only status path accepts that exact
+  original reference and selectors after requester or receiver restart;
+- lost admission acknowledgment resolves by the original reference, receiver
+  unavailability is a classified no-child blocker, and an uncertain original child
+  result is inspected without resubmitting the command;
+- controlled source composition exercises the maintained CLI through the actual
+  admitted producer/status owner, then the existing identity/env/PTY/no-effect
+  scenarios verify the child. A one-off publisher wrapper, injected callback or
+  configured integer UID does not satisfy this join.
+
+xz9 owns reusable fixed-operation authenticated admission/execution/receipt
+mechanisms, but its current protected receiver is bound to protected
+authority/attempt/mapping, requires a distinct non-root executor and excludes
+arbitrary shell passthrough. iy6 must implement a separately reviewed project-command
+producer that uses its own explicit command policy and cannot borrow the protected
+receiver or turn fixed handlers into caller-selected argv. qkb.1 owns the ordinary
+fixed merge producer/receipt consumer; qk0/qk0.1.1 owns overseer recovery and wake
+behavior. Shared execution-reference/status primitives may be factored to their ACE
+owner only after their authority semantics are explicit. `gad.b` installs reviewed
+configuration and `gad.2` proves real identities/PTY after source availability.
+There is no Python host bridge, raw maintainer-token transfer or cross-VM HTTP
+fallback.

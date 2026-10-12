@@ -80,3 +80,59 @@ The bounded original merge consumer is independently accepted through 531963609;
 ## Overseer delivery-queue + project-adaptable templates design (gad.2-informed, 2026-10-11) — SPEC ONLY
 
 Reconciliation target for the Captain architecture direction (corrected framing, 2026-10-11): the worker/reviewer pipeline ending at PR READY stays CORRECT and unchanged; the MISSING LAYER is the project overseer's HIGH-LEVEL DELIVERY QUEUE defined as assign plans — several ready workers at any time, dependency-aware selection with INTEGRATION ORDER (not completion FIFO), delegation of rebase + REQUIRED RENEWED EVIDENCE at moved heads (generalized from the gad.2 PR36 rebase→R2 discipline), and queue-owner DECISION GUIDES (integrate-more-then-cut-release vs deploy demo/production). Deliverable shape: SEVERAL project-adaptable assign templates + decision guides — explicitly NOT a rigid one-worker→one-release pipeline; implementation-task completion never auto-completes a delivery/release parent. Captured in `overseer-queue-and-delivery-templates-design.md` (this directory): queue-as-assign-parent requirement (canonical state only, no second engine/journal), renewed-evidence rule, template families, standing constraints, and the CURRENT-CAPABILITY vs MISSING-PROVISIONING audit M1–M7 (forge push flag semantics — corrected per lifecycle R2: `--no-push`/`--no-upstream` semantic split + dry-run plan inconsistency + one unresolved run-time anomaly, NOT broken threading; integrator result channel; HITL gap→gad.8; login-gated claude identity; AGit journal gap; worktree remove defect) plus integration decision-record and WAIT/BLOCKED transition rules (§1b). Role-charter aspects (queue-owner decision guides, BLOCKED-vs-WAIT attribution, callback protocol) are reconciled into `8wr.t.qk0`'s task file (cross-referenced, not forked). Related refs: 8wr.t.qkb, 8wr.t.qkb.0, 8wr.t.qk0, 8wr.t.qjx/qjz, 8x3.t.xz9, 8x3.t.3zi, 8x0.t.ig3, gad.2 evidence 8wj.t.vle / 8x9.t.x3o / 8xa.t.ega, gad.8. SPEC-ONLY: implementation gated until Captain/host approval; this slice stays draft/needs_review.
+
+## Draft amendment — ordinary overseer integrator producer and M2 result channel
+
+This amendment requires readiness review and implementation; it does not describe
+an available host socket. The ordinary project-overseer integration route is
+distinct from the protected worker receiver above. Current `ace-lab service
+request/status` configuration cannot express the installed `lab-integrator`
+command through YAML: local execution requires caller UID equal executor UID, Unix
+execution requires an implemented authenticated receipt server, and the protected
+receiver requires protected assignment authority/attempt/mapping plus a distinct
+non-root executor. The ordinary coordinator must not borrow that receiver, copy an
+executor credential or pass a maintainer token. The current integrator's merge
+proof is supporting effect evidence, not a correlated request-to-receipt contract;
+there is no cross-VM HTTP fallback.
+
+qkb.1 owns the canonical delivery-workflow request/status/receipt consumer and its
+exact forge/PR/head/worktree acceptance. qk0/qk0.1.1 owns project-overseer queue
+selection, recovery and wake behavior. xz9 owns the reusable fixed-operation
+authenticated admission, executor and durable-receipt mechanisms required by a
+new ordinary producer, but its current protected request schema is not silently
+generalized or reused as if delivered. iy6 owns the separately admitted arbitrary
+project-command producer and composes shared execution-reference/status primitives;
+it is not the merge producer. `gad.b` installs the reviewed producer/configuration,
+and `gad.2` executes distinct-account installed acceptance after source delivery.
+
+The implemented ordinary route must provide one public sequence:
+
+1. The project overseer records an exact immutable integration request before
+   dispatch, bound to project queue entry, task/attempt, forge server, normalized PR
+   URL, head/base repositories and refs, candidate head, method, authorization and
+   canonical input digest. The producer selects a fixed installed merge operation;
+   callers cannot select an executable, argv, socket path, evidence path or token.
+2. Authenticated admission durably accepts or refuses that same request. An
+   acceptance acknowledgment returns its original request ID, input digest and a
+   receiver-owned durable reference usable after either process restarts. A
+   transport/message acknowledgment without that reference is not acceptance.
+3. Read-only status takes the full original binding and durable reference,
+   authenticates the observer, and reports refused, pending, uncertain or the one
+   terminal receipt. It never dispatches, repairs, refreshes authorization or
+   changes selectors.
+4. The queue accepts success only from the terminal receipt bound to the exact
+   request/input and verified remote outcome. It rejects a valid SHA in the wrong
+   repository, wrong checkout/worktree/branch, moved remote target, mismatched PR
+   provenance, stale review or altered receipt. An already-merged PR with lagging
+   local main enters synchronization recovery rather than another merge.
+
+Controlled source acceptance loses the admission acknowledgment after durable
+acceptance, restarts requester and receiver independently, makes the receiver
+unavailable before admission and after effect start, and loses the original effect
+result. Every accepted/lost case reconciles by the same reference and performs at
+most one merge; an uncertain original result is never resubmitted. Only a proven
+pre-effect refusal may permit a new reviewed request. Tests also cover wrong
+repository despite the same SHA, wrong worktree/branch, remote target movement and
+already-merged remote state with stale local main. Existing review, branch
+protection, exact-head gates and repository scope remain unchanged. No Python host
+bridge, raw maintainer token, second queue/ledger or log-parsed success is allowed.
