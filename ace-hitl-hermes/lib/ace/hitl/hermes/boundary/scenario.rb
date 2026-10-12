@@ -1,10 +1,12 @@
 # frozen_string_literal: true
 
+require "delegate"
 require "json"
 require "socket"
 require "openssl"
 require "securerandom"
 require "time"
+require "etc"
 require "ace/hitl/lifecycle"
 
 module Ace
@@ -12,26 +14,40 @@ module Ace
     module Hermes
       module Boundary
         # The nh0-A source scenario (spec 8xa.t.nh0): the acceptance
-        # harness the reviewed `bin/lab-hitl-boundary-fixture` fixture
-        # invokes against the REAL disposable Incus proxies. The host
-        # lab-config owner provisions the identities, endpoints and
-        # credential trees (gad.8/gad.b); this harness only drives the
-        # declared scenario and reports a closed-schema receipt.
+        # harness the host lab-config gad.8/gad.b fixture contract
+        # executes against the REAL disposable Incus proxies.
         #
-        # It is NEVER a substitute for the invocation-bound
-        # `nh0_real_incus_acceptance` receipt: loopback-only or mocked
-        # runs of this harness cannot clear nh0-A.
+        # Identity and binding are never fabricated here:
+        # - asks are created ONLY through the supported mechanism — a
+        #   local worker actor creating via the authority's Unix
+        #   boundary, where the serve-path binding
+        #   (Providers::Lab::AssignmentBinding →
+        #   AttemptCoordinator#with_verified_attempt) verifies the
+        #   assignment/attempt against the REAL Assign state under the
+        #   kernel requester identity. The TLS crossing never creates
+        #   asks and never supplies requester identity.
+        # - the certificate identity (`urn:ace:hitl:<project>:
+        #   hermes-client`) maps ONLY to the Hermes transport role
+        #   (pending/deliver observation); the requester of record is
+        #   the local worker actor, mapped through kernel peer
+        #   credentials exactly as production maps it.
+        # - the invocation-bound `nh0_real_incus_acceptance` receipt is
+        #   produced by the host fixture and VERIFIED in-slice by
+        #   AcceptanceReceipt; a loopback-only or mocked run can never
+        #   substitute for it.
         class Scenario
           SCHEMA = "ace.hitl.boundary.scenario/v1"
           SCENARIO_NAME = "nh0-a-v1"
           RECEIPT_TYPE = "nh0_a_source_scenario"
-          MANIFEST_FIELDS = %w[schema invocation_id scenario authorities credentials request].freeze
+          MANIFEST_FIELDS = %w[schema invocation_id scenario authorities credentials asks payload].freeze
           AUTHORITY_FIELDS = %w[endpoint project].freeze
           CREDENTIAL_FIELDS = %w[tls_client_credential service_user service_group].freeze
-          REQUEST_FIELDS = %w[assignment attempt_prefix harness question answer].freeze
+          ASK_FIELDS = %w[socket service_uid worker_user assignment attempt].freeze
+          PAYLOAD_FIELDS = %w[question harness answer].freeze
           REQUIRED_CREDENTIALS = %w[client_a client_b client_a_forged client_a_expired
             client_a_wrong_san].freeze
           PHASES = %w[baseline uncertainty recovery].freeze
+          AUTHORITIES = %w[A B].freeze
 
           class Error < StandardError; end
 
@@ -56,11 +72,13 @@ module Ace
           end
 
           # The closed manifest: fixture-declared endpoints, credential
-          # references and the request template. Credential references
-          # only — never secret bytes — and every referenced tree must
-          # follow the exact provisioning layout.
+          # references, and the GENUINE ask bindings the fixture
+          # provisioned from real Assign state (assignment/attempt ids
+          # the serve-path binding verifies at ask time — invented ids
+          # fail the ask, never pass the scenario). Credential
+          # references only — never secret bytes.
           class Manifest
-            attr_reader :invocation_id, :authorities, :credentials, :request
+            attr_reader :invocation_id, :authorities, :credentials, :asks, :payload
 
             def self.load_file(path)
               stat = File.lstat(path)
@@ -90,7 +108,8 @@ module Ace
 
               @authorities = parse_authorities(value.fetch("authorities"))
               @credentials = parse_credentials(value.fetch("credentials"))
-              @request = parse_request(value.fetch("request"))
+              @asks = parse_asks(value.fetch("asks"))
+              @payload = parse_payload(value.fetch("payload"))
               freeze
             end
 
@@ -100,6 +119,10 @@ module Ace
 
             def project(key)
               @authorities.fetch(key).fetch("project")
+            end
+
+            def ask(key)
+              @asks.fetch(key)
             end
 
             # The exact provisioning layout of every referenced
@@ -121,7 +144,7 @@ module Ace
             private
 
             def parse_authorities(value)
-              unless value.is_a?(Hash) && value.keys.sort == %w[A B]
+              unless value.is_a?(Hash) && value.keys.sort == AUTHORITIES
                 raise Error, "the manifest declares exactly authorities A and B (got #{value.keys.sort.inspect})"
               end
 
@@ -160,25 +183,287 @@ module Ace
               end
             end
 
-            def parse_request(value)
-              unless value.is_a?(Hash) && (value.keys - REQUEST_FIELDS).empty? &&
-                  REQUEST_FIELDS.all? { |field| value[field].is_a?(String) && !value[field].empty? } &&
+            # One GENUINE ask binding per authority: the assignment and
+            # attempt are fixture-declared ids from real Assign state;
+            # the ask phase proves them through the serve-path binding.
+            def parse_asks(value)
+              unless value.is_a?(Hash) && value.keys.sort == AUTHORITIES
+                raise Error, "the manifest declares asks exactly for authorities A and B"
+              end
+
+              value.to_h do |key, ask|
+                unless ask.is_a?(Hash) && (ask.keys - ASK_FIELDS).empty? &&
+                    ASK_FIELDS.all? { |field| !ask[field].nil? && !ask[field].to_s.empty? } &&
+                    ask["socket"].is_a?(String) && File.absolute_path?(ask["socket"]) &&
+                    ask["service_uid"].is_a?(Integer) && ask["service_uid"] >= 0 &&
+                    ask["worker_user"].is_a?(String) &&
+                    ask["worker_user"].match?(/\A[a-z_][a-z0-9_-]{0,31}\z/) &&
+                    ask["assignment"].is_a?(String) && ask["assignment"].match?(/\A[A-Za-z0-9_-]{1,128}\z/) &&
+                    ask["attempt"].is_a?(String) && ask["attempt"].match?(/\A[A-Za-z0-9_-]{1,128}\z/)
+                  raise Error, "manifest ask #{key} is malformed"
+                end
+
+                [key, ask.freeze]
+              end
+            end
+
+            def parse_payload(value)
+              unless value.is_a?(Hash) && (value.keys - PAYLOAD_FIELDS).empty? &&
+                  PAYLOAD_FIELDS.all? { |field| value[field].is_a?(String) && !value[field].empty? } &&
                   value.values.all? { |item| item.bytesize <= 256 }
-                raise Error, "manifest request template is malformed"
+                raise Error, "manifest ask payload is malformed"
               end
 
               value.freeze
             end
           end
 
-          # The production client seam: the verified Hermes TLS client.
+          # The durable handoff between the local worker ask steps and
+          # the host TLS phases: REAL created request ids only, written
+          # by the ask step after a binding-verified create.
+          class State
+            SCHEMA = "ace.hitl.boundary.state/v1"
+            FIELDS = %w[schema asks uncertainty settle].freeze
+
+            attr_reader :path
+
+            def self.load(path)
+              value = JSON.parse(File.read(path))
+              unless value.is_a?(Hash) && (value.keys - FIELDS).empty? &&
+                  value.fetch("schema") == SCHEMA && value["asks"].is_a?(Hash)
+                raise Error, "the boundary state file is malformed: #{path}"
+              end
+              value["asks"].each do |key, entry|
+                unless entry.is_a?(Hash) && entry["request_id"].is_a?(String) &&
+                    entry["request_id"].match?(/\A[A-Za-z0-9_-]{6,64}\z/)
+                  raise Error, "the boundary state ask #{key} has no genuine request id"
+                end
+              end
+              new(path, value)
+            rescue JSON::ParserError, SystemCallError, IOError
+              raise Error, "the boundary state file is unavailable: #{path}"
+            end
+
+            def self.empty(path)
+              state = new(path, {"schema" => SCHEMA, "asks" => {}, "uncertainty" => {}, "settle" => {}})
+              state.write_update
+              state
+            end
+
+            def initialize(path, value)
+              @path = path
+              @value = value
+            end
+
+            def request_id(key)
+              @value.dig("asks", key.to_s, "request_id")
+            end
+
+            def uncertainty_request_id
+              @value.dig("uncertainty", "request_id")
+            end
+
+            def write_update
+              temporary = "#{@path}.#{Process.pid}.tmp"
+              File.write(temporary, JSON.generate(@value))
+              File.rename(temporary, @path)
+              self
+            end
+
+            def record_request(key, request_id)
+              (@value["asks"][key.to_s] ||= {})["request_id"] = request_id
+              write_update
+            end
+
+            def record_uncertainty(request_id)
+              @value["uncertainty"] = {"request_id" => request_id}
+              write_update
+            end
+
+            def record_settle(key, consumed:, answer_matches:)
+              (@value["settle"][key.to_s] ||= {}).merge!(
+                "consumed" => consumed, "answer_matches" => answer_matches)
+              write_update
+            end
+          end
+
+          # The invocation-bound acceptance receipt of the host fixture
+          # (spec 8xa.t.nh0): the closed schema the gad.8/gad.b fixture
+          # produces on stdout and the nh0 source task verifies before
+          # accepting the handoff. All objects reject unknown fields and
+          # nulls; counts carry the spec minimums; timestamps are
+          # RFC 3339.
+          class AcceptanceReceipt
+            TYPE = "nh0_real_incus_acceptance"
+            VERSION = 1
+            TOP_FIELDS = %w[type version invocation_id scenario ace_head lab_config_head
+              provision test teardown evidence_sha256].freeze
+            PROVISION_FIELDS = %w[instance_id project_ids proxy_configuration_sha256
+              credential_layout_sha256 server_certificate_sha256s client_certificate_sha256s
+              completed_at].freeze
+            TEST_FIELDS = %w[command receipt_ids passed positive_cases negative_cases
+              completed_at].freeze
+            TEARDOWN_FIELDS = %w[services_stopped proxy_devices_removed firewall_removed
+              instance_destroyed credential_files_removed completed_at].freeze
+            FINGERPRINT = /\A[0-9a-f]{64}\z/
+            HEAD = /\A[0-9a-f]{40}\z/
+            RFC3339 = /\A\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})\z/
+
+            attr_reader :value
+
+            def self.parse(value)
+              new(value)
+            end
+
+            def self.load_file(path)
+              new(JSON.parse(File.read(path)))
+            rescue JSON::ParserError, SystemCallError, IOError
+              raise Error, "the acceptance receipt is unavailable or malformed: #{path}"
+            end
+
+            def initialize(value)
+              unless value.is_a?(Hash) && (value.keys - TOP_FIELDS).empty? &&
+                  TOP_FIELDS.all? { |field| !value[field].nil? }
+                raise Error, "#{TYPE} rejects unknown fields and nulls"
+              end
+              unless value.fetch("type") == TYPE && value.fetch("version") == VERSION
+                raise Error, "the acceptance receipt requires #{TYPE} version #{VERSION}"
+              end
+              @value = value
+              validate_scalar!("invocation_id", bounded_token: true)
+              validate_scenario!
+              validate_scalar!("ace_head", pattern: HEAD)
+              validate_scalar!("lab_config_head", pattern: HEAD)
+              validate_scalar!("evidence_sha256", pattern: FINGERPRINT)
+              validate_object!("provision", PROVISION_FIELDS)
+              validate_object!("test", TEST_FIELDS)
+              validate_object!("teardown", TEARDOWN_FIELDS)
+              validate_provision!
+              validate_test!
+              validate_teardown!
+              freeze
+            end
+
+            # The source-side acceptance: the receipt counts only for
+            # THIS exact reviewed head and scenario.
+            def verify!(ace_head:, scenario: SCENARIO_NAME)
+              unless @value.fetch("ace_head") == ace_head
+                raise Error,
+                  "the acceptance receipt names head #{@value.fetch('ace_head')}, not #{ace_head}"
+              end
+              unless @value.fetch("scenario") == scenario
+                raise Error, "the acceptance receipt names scenario #{@value.fetch('scenario')}"
+              end
+              unless @value.dig("test", "passed") == true
+                raise Error, "the acceptance receipt test phase did not pass"
+              end
+              teardown = @value.fetch("teardown")
+              incomplete = TEARDOWN_FIELDS.grep(/_removed|_stopped|_destroyed/)
+                .select { |field| teardown.fetch(field) != true }
+              unless incomplete.empty?
+                raise Error, "the acceptance receipt teardown is incomplete: #{incomplete.join(", ")}"
+              end
+
+              self
+            end
+
+            private
+
+            def validate_scalar!(field, pattern: nil, bounded_token: false)
+              scalar = @value.fetch(field)
+              ok = if bounded_token
+                scalar.is_a?(String) && !scalar.empty? && scalar.length <= 128 &&
+                  scalar.match?(/\A[A-Za-z0-9][A-Za-z0-9._:-]*\z/)
+              else
+                scalar.is_a?(String) && scalar.match?(pattern)
+              end
+              return if ok
+
+              raise Error, "the acceptance receipt field #{field} is malformed"
+            end
+
+            def validate_scenario!
+              return if @value.fetch("scenario") == SCENARIO_NAME
+
+              raise Error, "the acceptance receipt requires scenario #{SCENARIO_NAME}"
+            end
+
+            def validate_object!(field, fields)
+              object = @value.fetch(field)
+              unless object.is_a?(Hash) && (object.keys - fields).empty? &&
+                  fields.all? { |name| !object[name].nil? }
+                raise Error, "the acceptance receipt #{field} object rejects unknown fields and nulls"
+              end
+            end
+
+            def validate_provision!
+              provision = @value.fetch("provision")
+              unless provision["instance_id"].is_a?(String) && !provision["instance_id"].empty?
+                raise Error, "the acceptance receipt provision.instance_id is malformed"
+              end
+              project_ids = provision["project_ids"]
+              unless project_ids.is_a?(Array) && project_ids.size == 2 &&
+                  project_ids.uniq.size == 2 && project_ids.all? { |entry| entry.is_a?(String) && !entry.empty? }
+                raise Error, "the acceptance receipt provision.project_ids must be two distinct strings"
+              end
+              %w[server_certificate_sha256s client_certificate_sha256s].each do |field|
+                list = provision[field]
+                unless list.is_a?(Array) && list.size == 2 && list.uniq.size == 2 &&
+                    list.all? { |entry| entry.is_a?(String) && entry.match?(FINGERPRINT) }
+                  raise Error,
+                    "the acceptance receipt provision.#{field} must be two distinct 64-hex strings"
+                end
+              end
+              validate_time!(provision, "completed_at", "provision.completed_at")
+            end
+
+            def validate_test!
+              test = @value.fetch("test")
+              unless test["command"].is_a?(String) && !test["command"].empty?
+                raise Error, "the acceptance receipt test.command is malformed"
+              end
+              receipts = test["receipt_ids"]
+              unless receipts.is_a?(Array) && !receipts.empty? && receipts.uniq.size == receipts.size &&
+                  receipts.all? { |entry| entry.is_a?(String) && !entry.empty? }
+                raise Error, "the acceptance receipt test.receipt_ids must be distinct non-empty strings"
+              end
+              unless test["passed"] == true || test["passed"] == false
+                raise Error, "the acceptance receipt test.passed must be a boolean"
+              end
+              unless test["positive_cases"].is_a?(Integer) && test["positive_cases"] >= 1 &&
+                  test["negative_cases"].is_a?(Integer) && test["negative_cases"] >= 9
+                raise Error,
+                  "the acceptance receipt counts must be integers with positive_cases >= 1 and negative_cases >= 9"
+              end
+              validate_time!(test, "completed_at", "test.completed_at")
+            end
+
+            def validate_teardown!
+              teardown = @value.fetch("teardown")
+              TEARDOWN_FIELDS.grep(/_removed|_stopped|_destroyed/).each do |field|
+                unless teardown[field] == true || teardown[field] == false
+                  raise Error, "the acceptance receipt teardown.#{field} must be a boolean"
+                end
+              end
+              validate_time!(teardown, "completed_at", "teardown.completed_at")
+            end
+
+            def validate_time!(object, field, label = field)
+              return if object.fetch(field).is_a?(String) && object.fetch(field).match?(RFC3339)
+
+              raise Error, "the acceptance receipt #{label} must be RFC 3339 date-time"
+            end
+          end
+
+          # The production client seams: the verified Hermes TLS client
+          # and the raw-socket boundary probes used by the credential
+          # negative cases.
           class ProductionClientFactory
             def call(endpoint:, credential:)
               Transport::TlsClient.new(endpoint: endpoint, credential: credential)
             end
           end
 
-          # The raw-socket probes of the credential negative cases.
           class ProductionProbe
             def initialize(endpoint:)
               @dns, @port = Ace::Hitl::Lifecycle::TlsCredentials.parse_endpoint(endpoint)
@@ -248,10 +533,11 @@ module Ace
           end
 
           # @return [Hash] the closed receipt printed as ONE stdout JSON line
-          def run(phase, report: nil)
+          def run(phase, state:, report: nil)
             raise Error, "unknown scenario phase #{phase.inspect}" unless PHASES.include?(phase)
+            raise Error, "the #{phase} phase requires the ask state file" if state.nil?
 
-            cases = send("run_#{phase}_phase")
+            cases = send("run_#{phase}_phase", state)
             receipt = {
               "type" => RECEIPT_TYPE,
               "version" => 1,
@@ -283,43 +569,41 @@ module Ace
               credential: entry.fetch("tls_client_credential"))
           end
 
-          def request_id(authority_key, suffix)
-            "#{@manifest.request.fetch('attempt_prefix')}-#{authority_key.downcase}#{suffix}"
-          end
+          # ---- baseline: real asks through the crossing + credentials + isolation ----
 
-          # ---- baseline: credentials + isolation + bidirectional flows ----
-
-          def run_baseline_phase
+          def run_baseline_phase(state)
             results = []
             client_a = client("client_a")
             client_b = cross_client("client_b", "B")
-            id_a = request_id("A", "1")
-            id_b = request_id("B", "1")
-            create_asks(results, client_a, client_b, id_a, id_b)
-            before = facts_of(client_a, id_a)
+            id_a = genuine_ask!(results, state, "A", client_a, "P0")
+            id_b = genuine_ask!(results, state, "B", client_b, "P1")
+            before_a = id_a ? facts_of(client_a, id_a) : nil
             run_credential_negatives(results)
-            run_isolation_negatives(results, client_a, client_b, id_b)
-            results << negative("N09", "ask facts unchanged across every credential refusal") do
-              facts_of(client_a, id_a) == before
+            run_isolation_negatives(results, client_a, client_b, id_b, state)
+            if id_a && before_a
+              results << negative("N09", "ask facts unchanged across every credential refusal") do
+                facts_of(client_a, id_a) == before_a
+              end
             end
             run_positive_flows(results, client_a, client_b, id_a, id_b)
             results
           end
 
-          def create_asks(results, client_a, client_b, id_a, id_b)
-            template = @manifest.request
-            ask = lambda do |instance, id, key, ordinal|
-              instance.create(
-                "id" => id, "assignment" => template.fetch("assignment"),
-                "attempt" => "#{template.fetch('attempt_prefix')}-#{key.downcase}#{ordinal}",
-                "harness" => template.fetch("harness"), "question" => template.fetch("question"),
-                "plan" => template.fetch("question"), "ace_hitl_id" => "nh0a-boundary-scenario",
-                "project" => @manifest.project(key), "kind" => "text")
+          # P0/P1: the fixture-provided, binding-verified ask of each
+          # authority is visible through its crossing. A missing or
+          # unprovisioned ask is a FAILED case, never a fabricated pass.
+          def genuine_ask!(results, state, key, instance, case_id)
+            request_id = state.request_id(key)
+            project = @manifest.project(key)
+            results << positive(case_id,
+              "the genuine #{key} ask (binding-verified by the fixture ask step) is visible through the crossing") do
+              raise Error, "the fixture ask state has no #{key} request (ask step did not run)" unless request_id
+
+              pending_ids = instance.pending(project: project).map { |facts| facts.fetch("id") }
+              pending_ids.include?(request_id) &&
+                instance.read(request_id).fetch("project") == project
             end
-            results << positive("P0", "asks are created through each crossing") do
-              ask.call(client_a, id_a, "A", "1").fetch("id") == id_a &&
-                ask.call(client_b, id_b, "B", "1").fetch("id") == id_b
-            end
+            request_id
           end
 
           # Every credential negative must refuse BEFORE store access:
@@ -357,37 +641,43 @@ module Ace
             end
           end
 
-          def run_isolation_negatives(results, client_a, client_b, id_b)
-            results << negative("N10", "cross-authority correlation is refused in both directions") do
-              a_reads_b = refused_read?(client_a, id_b)
-              a_answers_b = begin
-                client_a.deliver(id_b, "forged-answer")
+          def run_isolation_negatives(results, client_a, client_b, id_b, state)
+            results << negative("N10", "the other authority's project is unreachable in both directions") do
+              a_pends_b = begin
+                client_a.pending(project: @manifest.project("B"))
                 false
               rescue Ace::Hitl::Lifecycle::Error
                 true
               end
-              b_reads_a = refused_read?(client_b, request_id("A", "1"))
-              a_reads_b && a_answers_b && b_reads_a
+              b_pends_a = begin
+                client_b.pending(project: @manifest.project("A"))
+                false
+              rescue Ace::Hitl::Lifecycle::Error
+                true
+              end
+              a_reads_b = id_b ? refused_read?(client_a, id_b) : true
+              a_pends_b && b_pends_a && a_reads_b
             end
-            results << negative("N11", "the isolated ask is unchanged after cross-authority attempts") do
-              facts = client_b.read(id_b)
-              facts.fetch("state") == "created"
+            results << negative("N11", "the isolated genuine ask is unchanged after cross-authority attempts") do
+              request_id = state.request_id("B")
+              raise Error, "no B ask in state" unless request_id
+
+              client_b.read(request_id).fetch("state") == "created"
             end
           end
 
           def run_positive_flows(results, client_a, client_b, id_a, id_b)
-            template = @manifest.request
-            [["P1", client_a, id_a, "A"], ["P2", client_b, id_b, "B"]].each do |id, instance, request, key|
-              results << positive(id, "bidirectional ask/reply/pending flow through authority #{key}") do
-                pending_ids = instance.pending(project: @manifest.project(key)).map { |facts| facts.fetch("id") }
-                delivered = instance.deliver(request, template.fetch("answer"))
-                consumed = instance.consume(request, timeout: 5)
-                pending_ids.include?(request) && delivered["delivered"] == true &&
-                  consumed.fetch("answer") == template.fetch("answer") &&
-                  instance.read(request).fetch("state") != "created"
+            [["P2", client_a, id_a, "A"], ["P3", client_b, id_b, "B"]].each do |id, instance, request, key|
+              results << positive(id,
+                "the genuine #{key} ask is answered through the crossing (transport role)") do
+                raise Error, "no #{key} ask in state" unless request
+
+                delivered = instance.deliver(request, @manifest.payload.fetch("answer"))
+                facts = instance.read(request)
+                delivered["delivered"] == true && facts.fetch("state") == "answer-delivered"
               end
             end
-            results << positive("P3", "instruction (proposal) surface crosses the boundary") do
+            results << positive("P4", "instruction (proposal) surface crosses the boundary") do
               history = client_a.proposal_history(project: @manifest.project("A"))
               due = client_a.proposal_due(project: @manifest.project("A"))
               history.is_a?(Hash) && history["items"].is_a?(Array) &&
@@ -397,26 +687,24 @@ module Ace
 
           # ---- uncertainty: abrupt disconnect mid-flight, client restart ----
 
-          def run_uncertainty_phase
+          def run_uncertainty_phase(state)
             results = []
-            template = @manifest.request
-            id = request_id("A", "u1")
-            results << positive("U1", "ask is durable before the in-flight answer") do
-              client("client_a").create(
-                "id" => id, "assignment" => template.fetch("assignment"),
-                "attempt" => "#{template.fetch('attempt_prefix')}-au1",
-                "harness" => template.fetch("harness"), "question" => template.fetch("question"),
-                "plan" => template.fetch("question"), "ace_hitl_id" => "nh0a-boundary-scenario",
-                "project" => @manifest.project("A"), "kind" => "text").fetch("id") == id
+            id = state.uncertainty_request_id
+            results << positive("U1", "the genuine uncertainty ask is durable before the in-flight answer") do
+              raise Error, "the fixture ask state has no uncertainty request (ask step did not run)" unless id
+
+              client("client_a").read(id).fetch("state") == "created"
             end
             results << positive("U2", "an answer cut off mid-flight reconciles without replay") do
-              abandon_mid_flight(id, template.fetch("answer"))
+              raise Error, "no uncertainty ask in state" unless id
+
+              abandon_mid_flight(id, @manifest.payload.fetch("answer"))
               # Client restart: a fresh client observes the canonical state.
               restarted = client("client_a")
               if restarted.read(id).fetch("state") == "created"
-                restarted.deliver(id, template.fetch("answer"))
+                restarted.deliver(id, @manifest.payload.fetch("answer"))
               end
-              restarted.consume(id, timeout: 5).fetch("answer") == template.fetch("answer")
+              restarted.read(id).fetch("state") == "answer-delivered"
             end
             results
           end
@@ -443,14 +731,18 @@ module Ace
 
           # ---- recovery: after fixture service/proxy restarts ----
 
-          def run_recovery_phase
+          def run_recovery_phase(state)
             results = []
-            template = @manifest.request
-            id = request_id("A", "u1")
             results << positive("R1", "canonical receipts reconcile after independent restarts") do
               instance = client("client_a")
-              instance.deliver(id, template.fetch("answer")) if instance.read(id).fetch("state") == "created"
-              instance.consume(id, timeout: 5).fetch("answer") == template.fetch("answer")
+              id = state.request_id("A")
+              uncertainty_id = state.uncertainty_request_id
+              raise Error, "no A ask in state" unless id && uncertainty_id
+
+              [id, uncertainty_id].all? do |request_id|
+                facts = instance.read(request_id)
+                facts.fetch("state") == "answer-delivered"
+              end
             end
             results << positive("R2", "pending surface is healthy after restarts") do
               client("client_a").pending(project: @manifest.project("A")).is_a?(Array)
@@ -486,7 +778,7 @@ module Ace
               observation: outcome == true ? nil : "expected outcome not observed")
           rescue StandardError => e
             CaseResult.new(id: id, kind: "positive", name: name, passed: false,
-              observation: "#{e.class}")
+              observation: e.class.to_s)
           end
 
           def negative(id, name)

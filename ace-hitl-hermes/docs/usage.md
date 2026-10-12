@@ -113,11 +113,33 @@ stay uncertain or submitted, and nothing replays.
 
 ## nh0-A boundary scenario harness
 
-`ace-hitl-boundary-scenario run --manifest FILE --phase
-baseline|uncertainty|recovery [--report PATH]` is the source-side
-scenario the reviewed host fixture `bin/lab-hitl-boundary-fixture run
---scenario nh0-a-v1` executes against the REAL disposable Incus
-proxies. It prints one closed-schema `nh0_a_source_scenario` receipt
-(JSON line). A loopback-only or mocked run can never substitute for the
-invocation-bound `nh0_real_incus_acceptance` receipt that clears
-nh0-A.
+`ace-hitl-boundary-scenario` is the source-side scenario the host
+lab-config gad.8/gad.b fixture contract (the reviewed host-owned
+ Incus/TLS provisioning prerequisite — a separate repository and
+separate review) executes against the REAL disposable Incus proxies.
+It has three modes, each printing one closed-schema JSON receipt:
+
+- `run --manifest FILE --phase baseline|uncertainty|recovery --state
+  FILE [--report PATH]` (host side): drives the TLS crossing over its
+  transport role only — pending, deliver, read-back, credential
+  negatives, project isolation — for asks that the fixture created
+  through the supported binding mechanism. Missing or unprovisioned
+  asks fail their case truthfully; nothing is invented.
+- `ask --manifest FILE --authority A|B --stage create|settle --state
+  FILE` (inside the authority container, as the REAL worker actor):
+  creates asks through the authority's Unix boundary where the
+  serve-path binding (`AssignmentBinding` →
+  `with_verified_attempt`) verifies the assignment/attempt against the
+  real Assign state under kernel peer credentials, and consumes the
+  delivered answers. Fabricated attempts fail here, truthfully.
+- `verify-acceptance --receipt FILE --ace-head SHA`: verifies the
+  host fixture's invocation-bound `nh0_real_incus_acceptance` receipt
+  (closed schema defined in `Boundary::AcceptanceReceipt`) against the
+  exact reviewed head, test passage and complete teardown.
+
+Identity mapping is fixed by construction: the certificate identity
+(`urn:ace:hitl:<project>:hermes-client`) maps ONLY to the Hermes
+transport role; the requester of record is the local worker actor,
+mapped through kernel peer credentials. A loopback-only or mocked run
+can never substitute for the verified invocation-bound
+`nh0_real_incus_acceptance` receipt that clears nh0-A.
