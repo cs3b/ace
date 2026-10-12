@@ -14,12 +14,27 @@ module Ace
           assert_same document, OrdinaryMergeContract.validate_request_input!(document)
         end
 
-        def test_input_digest_is_stable_lowercase_sha256_of_canonical_json
-          first = OrdinaryMergeContract.input_digest(valid_input)
-          reordered = deep_dup(valid_input)
-          reordered["test_evidence"] = reordered["test_evidence"].reverse
+        def test_binding_digest_covers_the_full_eight_field_binding
+          base = {project: PROJECT, assignment: "a1", attempt: "t1", queue_entry: QUEUE_ENTRY,
+                  authorization: AUTHORIZATION, request_id: REQUEST_ID, input: valid_input}
+          first = OrdinaryMergeContract.binding_digest(**base)
           assert_match(/\A[0-9a-f]{64}\z/, first)
-          assert_equal first, OrdinaryMergeContract.input_digest(reordered)
+          assert_equal first, OrdinaryMergeContract.binding_digest(**base.merge(input: reverse_keys(valid_input)))
+          assert_equal first, OrdinaryMergeContract.binding_digest(**base)
+        end
+
+        def test_binding_digest_is_sensitive_to_selectors_authorization_and_request_id
+          base = {project: PROJECT, assignment: "a1", attempt: "t1", queue_entry: QUEUE_ENTRY,
+                  authorization: AUTHORIZATION, request_id: REQUEST_ID, input: valid_input}
+          first = OrdinaryMergeContract.binding_digest(**base)
+          {project: "other", assignment: "a2", attempt: "t2", queue_entry: "queue-2",
+           authorization: "auth/other/0002", request_id: "req-0002"}.each do |key, value|
+            refute_equal first, OrdinaryMergeContract.binding_digest(**base.merge(key => value)),
+              "#{key} must change the canonical binding digest"
+          end
+          refute_equal first, OrdinaryMergeContract.binding_digest(**base.merge(
+            input: with_deep_value(valid_input, ["pr_url"], "https://forgejo.example/ace/other/pulls/7")
+          )), "input changes must change the canonical binding digest"
         end
 
         def test_request_input_rejects_unknown_missing_and_invalid_fields
@@ -77,7 +92,7 @@ module Ace
         end
 
         def test_accepts_the_exact_acknowledgment_and_rejects_mismatched_acks
-          digest = OrdinaryMergeContract.input_digest(valid_input)
+          digest = Atoms::EvidenceDigest.digest(valid_input)
           ack = valid_ack(digest)
           assert_same ack, OrdinaryMergeContract.validate_ack!(ack, request_id: REQUEST_ID, input_digest: digest)
           assert_raises(ArgumentError) { OrdinaryMergeContract.validate_ack!(valid_ack(digest, request_id: "other"), request_id: REQUEST_ID, input_digest: digest) }
@@ -139,17 +154,13 @@ module Ace
         def test_terminal_status_requires_the_exact_embedded_receipt
           selectors = {reference: REQUEST_REFERENCE, request_id: REQUEST_ID, input_digest: HEX64}
           assert_raises(ArgumentError) { OrdinaryMergeContract.validate_status!(valid_status("succeeded", receipt: nil, selectors: selectors), **selectors) }
-          binding_document = {reference: REQUEST_REFERENCE, request_id: REQUEST_ID, input_digest: HEX64,
-                              request: {project: PROJECT, assignment: "a1", attempt: "t1", queue_entry: QUEUE_ENTRY,
-                                        authorization: AUTHORIZATION, input: valid_input}}
+          binding_document = receipt_binding
           receipt = valid_receipt(binding_document)
           assert_same receipt, OrdinaryMergeContract.validate_receipt!(receipt, binding: binding_document)
         end
 
         def test_receipt_accepts_merged_already_merged_and_failed_no_effect
-          base = {reference: REQUEST_REFERENCE, request_id: REQUEST_ID, input_digest: HEX64,
-                  request: {project: PROJECT, assignment: "a1", attempt: "t1", queue_entry: QUEUE_ENTRY,
-                            authorization: AUTHORIZATION, input: valid_input}}
+          base = receipt_binding
           %w[merged already_merged failed_no_effect].each do |outcome|
             receipt = valid_receipt(base, outcome: outcome)
             assert_same receipt, OrdinaryMergeContract.validate_receipt!(receipt, binding: base)
@@ -157,9 +168,7 @@ module Ace
         end
 
         def test_receipt_rejects_unknown_flattened_or_missing_fields
-          base = {reference: REQUEST_REFERENCE, request_id: REQUEST_ID, input_digest: HEX64,
-                  request: {project: PROJECT, assignment: "a1", attempt: "t1", queue_entry: QUEUE_ENTRY,
-                            authorization: AUTHORIZATION, input: valid_input}}
+          base = receipt_binding
           flattened = valid_receipt(base)
           flattened["forge"] = flattened["request"]["input"]["forge"]
           assert_raises(ArgumentError) { OrdinaryMergeContract.validate_receipt!(flattened) }
@@ -168,9 +177,7 @@ module Ace
         end
 
         def test_receipt_embedded_request_must_equal_the_recorded_binding
-          base = {reference: REQUEST_REFERENCE, request_id: REQUEST_ID, input_digest: HEX64,
-                  request: {project: PROJECT, assignment: "a1", attempt: "t1", queue_entry: QUEUE_ENTRY,
-                            authorization: AUTHORIZATION, input: valid_input}}
+          base = receipt_binding
           receipt = valid_receipt(base)
           assert_raises(ArgumentError) do
             OrdinaryMergeContract.validate_receipt!(receipt, binding: base.merge(request: base[:request].merge(project: "other")))
@@ -184,10 +191,17 @@ module Ace
           end
         end
 
+        def test_receipt_input_digest_must_be_the_canonical_binding_digest
+          base = receipt_binding
+          document_only = Atoms::EvidenceDigest.digest(base[:request][:input])
+          assert_raises(ArgumentError) { OrdinaryMergeContract.validate_receipt!(valid_receipt(base, input_digest: document_only)) }
+          assert_raises(ArgumentError) { OrdinaryMergeContract.validate_receipt!(valid_receipt(base, input_digest: "e" * 64)) }
+          receipt = valid_receipt(base)
+          assert_same receipt, OrdinaryMergeContract.validate_receipt!(receipt, binding: base)
+        end
+
         def test_succeeded_and_failed_are_mutually_exclusive
-          base = {reference: REQUEST_REFERENCE, request_id: REQUEST_ID, input_digest: HEX64,
-                  request: {project: PROJECT, assignment: "a1", attempt: "t1", queue_entry: QUEUE_ENTRY,
-                            authorization: AUTHORIZATION, input: valid_input}}
+          base = receipt_binding
           succeeded = valid_receipt(base, outcome: "merged")
           assert_raises(ArgumentError) do
             OrdinaryMergeContract.validate_receipt!(with_deep_value(succeeded, %w[effect no_effect_evidence], {"reference" => "x", "sha256" => HEX64}))
@@ -214,9 +228,7 @@ module Ace
         end
 
         def test_remote_observation_must_join_back_to_the_embedded_request
-          base = {reference: REQUEST_REFERENCE, request_id: REQUEST_ID, input_digest: HEX64,
-                  request: {project: PROJECT, assignment: "a1", attempt: "t1", queue_entry: QUEUE_ENTRY,
-                            authorization: AUTHORIZATION, input: valid_input}}
+          base = receipt_binding
           assert_raises(ArgumentError) do
             OrdinaryMergeContract.validate_receipt!(with_deep_value(valid_receipt(base), %w[remote_observation target_repository_identity], "other/repo"))
           end

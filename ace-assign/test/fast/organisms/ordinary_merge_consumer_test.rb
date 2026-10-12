@@ -95,9 +95,9 @@ module Ace
           )
           @attempt = @coordinator.start(assignment_id: assignment.id, step: "010", project_id: PROJECT)
           @input = valid_input
-          @digest = Molecules::OrdinaryMergeContract.input_digest(@input)
           @selectors = {project: PROJECT, assignment: assignment.id, attempt: @attempt.attempt_id,
                         queue_entry: QUEUE_ENTRY, authorization: AUTHORIZATION, request_id: REQUEST_ID}
+          @digest = ruled_digest
           @producer = ScriptedProducer.new
         end
 
@@ -125,8 +125,17 @@ module Ace
           consumer.poll(assignment_id: @selectors[:assignment], attempt_id: @selectors[:attempt])
         end
 
-        def ack_envelope(reference: REQUEST_REFERENCE, request_id: REQUEST_ID)
-          {"status" => "ok", "data" => valid_ack(@digest, request_id: request_id, reference: reference)}
+        def ack_envelope(reference: REQUEST_REFERENCE, request_id: REQUEST_ID, input_digest: @digest)
+          {"status" => "ok", "data" => valid_ack(input_digest, request_id: request_id, reference: reference)}
+        end
+
+        # The canonical request digest per spec ruling r4: the full
+        # eight-field immutable binding, never the input document alone.
+        def ruled_digest(selectors: @selectors, input: @input)
+          Molecules::OrdinaryMergeContract.binding_digest(project: selectors[:project],
+            assignment: selectors[:assignment], attempt: selectors[:attempt],
+            queue_entry: selectors[:queue_entry], authorization: selectors[:authorization],
+            request_id: selectors[:request_id], input: input)
         end
 
         def binding_document
@@ -206,10 +215,11 @@ module Ace
             message: "receiver refused the request"}, result)
           closures = result_events.count { |event| event.dig("payload", "outcome") == "refused_no_effect" }
           assert_equal 1, closures
-          @producer.enqueue(ack_envelope(reference: "receiver/ordinary/ref-2", request_id: "req-0002"))
+          @producer.enqueue(ack_envelope(reference: "receiver/ordinary/ref-2", request_id: "req-0002",
+            input_digest: ruled_digest(selectors: @selectors.merge(request_id: "req-0002"))))
           retried = dispatch(overrides: {request_id: "req-0002"})
           assert_equal({state: "accepted", reference: "receiver/ordinary/ref-2",
-            request_id: "req-0002", input_digest: @digest}, retried)
+            request_id: "req-0002", input_digest: ruled_digest(selectors: @selectors.merge(request_id: "req-0002"))}, retried)
         end
 
         def test_unavailable_receiver_is_a_blocker_and_never_a_proven_refusal
@@ -417,6 +427,52 @@ module Ace
           @producer.enqueue({"status" => "error"})
           assert_raises(AttemptErrors::EvidenceUnavailable) { poll }
           assert_empty result_events
+        end
+
+        # Spec ruling r4: the digest covers the full eight-field binding.
+
+        def test_binding_digest_is_key_order_independent_across_redispatch
+          @producer.enqueue(ack_envelope)
+          dispatch
+          @producer.enqueue(ack_envelope)
+          result = dispatch(overrides: {input: reverse_keys(@input)})
+          assert_equal "accepted", result[:state]
+          assert_equal @digest, result[:input_digest]
+          assert_equal 2, @producer.requests.length
+          intents = delivery_events.count { |event| event.dig("payload", "stage") == OrdinaryMergeConsumer::INTENT_STAGE }
+          assert_equal 1, intents
+        end
+
+        def test_acknowledgment_with_document_only_digest_is_rejected
+          document_only = Atoms::EvidenceDigest.digest(@input)
+          refute_equal @digest, document_only
+          @producer.enqueue(ack_envelope(input_digest: document_only))
+          assert_raises(AttemptErrors::EvidenceUnavailable) { dispatch }
+          assert_empty delivery_events.select { |event| event.dig("payload", "stage") == OrdinaryMergeConsumer::ACK_STAGE }
+        end
+
+        def test_refusal_with_mismatched_digest_echo_is_never_a_proven_refusal
+          document_only = Atoms::EvidenceDigest.digest(@input)
+          @producer.enqueue({"status" => "error",
+            "error" => valid_refusal("ordinary_merge_forbidden", input_digest: document_only)})
+          assert_raises(AttemptErrors::EvidenceUnavailable) { dispatch }
+          assert_empty result_events
+          @producer.enqueue(ack_envelope)
+          @producer.enqueue(valid_status("pending", selectors: binding_document))
+          assert_equal({state: "pending"}, poll)
+          assert_equal 2, @producer.requests.length
+        end
+
+        def test_receipt_with_document_only_digest_is_rejected
+          @producer.enqueue(ack_envelope)
+          dispatch
+          document_only = Atoms::EvidenceDigest.digest(@input)
+          @producer.enqueue(valid_status("succeeded",
+            receipt: valid_receipt(binding_document, input_digest: document_only), selectors: binding_document))
+          assert_raises(AttemptErrors::ReceiptRejected) { poll }
+          assert_empty result_events
+          @producer.enqueue(valid_status("succeeded", receipt: valid_receipt(binding_document), selectors: binding_document))
+          assert_equal "succeeded", poll[:state]
         end
       end
     end

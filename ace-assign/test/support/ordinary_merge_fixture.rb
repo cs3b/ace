@@ -69,9 +69,15 @@ module OrdinaryMergeFixture
     }
   end
 
-  def valid_receipt(selectors, outcome: "merged")
+  def valid_receipt(selectors, outcome: "merged", input_digest: nil)
     request = selectors.fetch(:request)
     input = request.fetch(:input)
+    ruled_digest = input_digest || Ace::Assign::Molecules::OrdinaryMergeContract.binding_digest(
+      project: request.fetch(:project), assignment: request.fetch(:assignment),
+      attempt: request.fetch(:attempt), queue_entry: request.fetch(:queue_entry),
+      authorization: request.fetch(:authorization), request_id: selectors.fetch(:request_id),
+      input: input
+    )
     effect, observation =
       if outcome == "failed_no_effect"
         [{"started_at" => nil, "finished_at" => "2026-10-12T10:30:00Z", "outcome" => "failed_no_effect",
@@ -92,7 +98,7 @@ module OrdinaryMergeFixture
       "schema" => "ace.assign.fixed-effect-receipt/v1",
       "reference" => REQUEST_REFERENCE,
       "request_id" => REQUEST_ID,
-      "input_digest" => selectors.fetch(:input_digest),
+      "input_digest" => input_digest || ruled_digest,
       "terminal_status" => (outcome == "failed_no_effect") ? "failed" : "succeeded",
       "request" => {
         "project" => request.fetch(:project),
@@ -108,6 +114,19 @@ module OrdinaryMergeFixture
       "effect" => effect,
       "remote_observation" => observation
     }
+  end
+
+  # Ruled binding for receipt tests: the recorded digest is the canonical
+  # eight-field binding digest (spec ruling r4), not the input digest alone.
+  def receipt_binding(input: valid_input, request_id: REQUEST_ID, input_digest: nil)
+    request = {project: PROJECT, assignment: "a1", attempt: "t1", queue_entry: QUEUE_ENTRY,
+               authorization: AUTHORIZATION, input: input}
+    digest = input_digest || Ace::Assign::Molecules::OrdinaryMergeContract.binding_digest(
+      project: request[:project], assignment: request[:assignment], attempt: request[:attempt],
+      queue_entry: request[:queue_entry], authorization: request[:authorization],
+      request_id: request_id, input: input
+    )
+    {reference: REQUEST_REFERENCE, request_id: request_id, input_digest: digest, request: request}
   end
 
   def valid_status(state, selectors:, receipt: nil)
@@ -162,6 +181,16 @@ module OrdinaryMergeFixture
   def fetch_segment(container, key)
     key = Integer(key) if container.is_a?(Array)
     container.fetch(key)
+  end
+
+  # Rebuilds a document with every object's keys in reverse insertion order;
+  # canonical digests must be invariant under it (spec ruling r4).
+  def reverse_keys(value)
+    case value
+    when Hash then value.to_a.reverse.to_h { |(key, item)| [key, reverse_keys(item)] }
+    when Array then value.map { |item| reverse_keys(item) }
+    else value
+    end
   end
 
   def deep_dup(value)
