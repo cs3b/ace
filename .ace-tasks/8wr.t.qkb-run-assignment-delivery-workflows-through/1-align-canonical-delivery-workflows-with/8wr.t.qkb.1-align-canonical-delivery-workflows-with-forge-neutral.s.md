@@ -113,7 +113,10 @@ The implemented ordinary route must provide one public sequence:
 1. The project overseer records an exact immutable integration request before
    dispatch, bound to project queue entry, task/attempt, forge server, normalized PR
    URL, head/base repositories and refs, candidate head, method, authorization and
-   canonical input digest. The producer selects a fixed installed merge operation;
+   the canonical input digest — ruled normatively in `8x3.t.xz9.4` as lowercase
+   SHA-256 over the full eight-field immutable binding (command selectors,
+   operation, authorization, request ID and the complete input document), never a
+   document-only digest. The producer selects a fixed installed merge operation;
    callers cannot select an executable, argv, socket path, evidence path or token.
 2. Authenticated admission durably accepts or refuses that same request. An
    acceptance acknowledgment returns its original request ID, input digest and a
