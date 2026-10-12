@@ -118,9 +118,15 @@ module Ace
             base_hash = base.is_a?(Hash) ? base : {}
             overrides_hash = overrides.is_a?(Hash) ? overrides : {}
 
-            new(base_hash, source: source, merge_strategy: merge_strategy)
-              .merge(overrides_hash)
-              .to_h
+            # inline Config#merge (receiver-typed .merge calls are refused by
+            # the AOT compiler, see REPORT.md); same result as
+            # new(base).merge(overrides).to_h
+            merged = Atoms::DeepMerger.merge(
+              base_hash,
+              overrides_hash,
+              array_strategy: merge_strategy
+            )
+            new(merged, source: "#{source}+merged", merge_strategy: merge_strategy).to_h
           end
 
           def ==(other)

@@ -156,7 +156,10 @@ module Ace
               user_config = symbolize_keys(loaded_config.data)
 
               # Merge user config with fallback defaults (user values take precedence)
-              FALLBACK_DEFAULTS.merge(user_config)
+              # (explicit dup+each: Hash#merge is not AOT-compilable, see REPORT.md)
+              merged_defaults = FALLBACK_DEFAULTS.dup
+              user_config.each { |key, value| merged_defaults[key] = value }
+              merged_defaults
             rescue Psych::SyntaxError => e
               config_path = File.join(Dir.pwd, ".ace", "b36ts", "config.yml")
               warn "Error: Failed to parse #{config_path}: #{e.message}" if Ace::B36ts.debug?

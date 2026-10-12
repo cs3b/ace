@@ -12,12 +12,9 @@
 SPINEL = true
 
 require_relative "shims/yaml"
-require_relative "shims/optparse"
 require_relative "shims/compact_date"
 require_relative "shims/date"
 require_relative "shims/rubygems"
-require_relative "shims/timeout"
-require_relative "shims/dir_glob"
 
 require_relative "gemlib/ace-b36ts/lib/ace/b36ts"
 
