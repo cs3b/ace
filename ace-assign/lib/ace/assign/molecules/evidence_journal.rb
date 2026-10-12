@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 require_relative "canonical_attempt_state"
+require_relative "fixed_effect_reference"
+require_relative "../atoms/fixed_merge_schemas"
 
 require "digest"
 require "fileutils"
@@ -32,6 +34,7 @@ module Ace
       class EvidenceJournal
         include JournalMutation
         include ProposalJournal
+
         CAS_ATTEMPTS = 3
         HISTORY_LIMIT = 100_000
         EVENT_BATCH_BYTES = 1024 * 1024
@@ -204,8 +207,10 @@ module Ace
         def event_commits_for_assignments!(selectors:, commit:)
           unless selectors.is_a?(Hash) && !selectors.empty? && selectors.size <= HISTORY_LIMIT &&
               selectors.keys.all? { |id| id.is_a?(String) && id.match?(JournalMutation::ID) } &&
-              selectors.values.all? { |digests| digests.is_a?(Array) && !digests.empty? &&
-                digests.uniq.size == digests.size && digests.all? { |digest| digest.is_a?(String) && digest.match?(/\A[0-9a-f]{64}\z/) } } &&
+              selectors.values.all? { |digests|
+                digests.is_a?(Array) && !digests.empty? &&
+                    digests.uniq.size == digests.size && digests.all? { |digest| digest.is_a?(String) && digest.match?(/\A[0-9a-f]{64}\z/) }
+              } &&
               selectors.values.sum(&:size) <= HISTORY_LIMIT
             raise AttemptErrors::EvidenceUnavailable, "historical event selectors are invalid"
           end
@@ -400,9 +405,12 @@ module Ace
               end
               modes = match.values_at(1, 2)
               unless modes.all? { |mode| %w[000000 100644 100755 120000].include?(mode) } &&
-                  (status == "A" ? old == "0" * 40 && fresh != "0" * 40 && modes.first == "000000" && modes.last != "000000" :
-                    status == "D" ? old != "0" * 40 && fresh == "0" * 40 && modes.first != "000000" && modes.last == "000000" :
-                      old != "0" * 40 && fresh != "0" * 40 && modes.none? { |mode| mode == "000000" })
+                  (if status == "A"
+                     old == "0" * 40 && fresh != "0" * 40 && modes.first == "000000" && modes.last != "000000"
+                   else
+                     (status == "D") ? old != "0" * 40 && fresh == "0" * 40 && modes.first != "000000" && modes.last == "000000" :
+                                           old != "0" * 40 && fresh != "0" * 40 && modes.none? { |mode| mode == "000000" }
+                   end)
                 raise AttemptErrors::EvidenceUnavailable, "historical event object type differs"
               end
               result.fetch(commit) << [path, status, old, fresh]
@@ -815,8 +823,10 @@ module Ace
             rescue Errno::EACCES, Errno::ELOOP
               false
             end
-            raise AttemptErrors::ReceiptRejected,
-              "Service terminal receipt evidence is unverifiable: #{item["ref"]}" unless intact
+            unless intact
+              raise AttemptErrors::ReceiptRejected,
+                "Service terminal receipt evidence is unverifiable: #{item["ref"]}"
+            end
             verify_service_attestation!(File.read(real), current, state)
           end
         end
@@ -1224,13 +1234,13 @@ module Ace
 
         def raise_authorization_conflict!(conflict)
           raise AttemptErrors::Conflict,
-            "Authorization reference already consumed by request #{conflict.fetch('request_id')}"
+            "Authorization reference already consumed by request #{conflict.fetch("request_id")}"
         end
 
         def verify_service_attestation!(content, request, state)
           expression = /^ace-service-attestation request:#{Regexp.escape(request["request_id"])} input:#{Regexp.escape(request["input_digest"])} outcome:(\S+)( no-effect:(\S+))?$/
           attested = content.scan(expression).first
-          outcome = state == "failed-settled" ? "failed" : state
+          outcome = (state == "failed-settled") ? "failed" : state
           unless attested && attested.first == outcome && (state != "failed-settled" || attested[2] == "true")
             raise AttemptErrors::ReceiptRejected, "Service terminal evidence does not attest #{outcome}"
           end
@@ -1244,6 +1254,267 @@ module Ace
           return if request_id.is_a?(String) && request_id.match?(/\A[a-zA-Z0-9][a-zA-Z0-9_.-]{0,127}\z/)
           raise ArgumentError, "invalid service request ID"
         end
+
+        # ---- ordinary fixed merge records (spec 8x3.t.xz9.4) --------------
+        #
+        # The canonical Assign attempt/evidence state is the SOLE queue/effect
+        # record for ordinary fixed merge requests: admitted records live in
+        # this evidence ref, chained to their owning attempt, and the issuing
+        # receiver keeps no journal, mapping database or receipt ledger. The
+        # closed state model is pending -> uncertain -> succeeded/failed;
+        # pre-effect refusals are never durable (a refusal has no reference),
+        # so every recorded request is an admitted one.
+
+        FIXED_MERGE_STATES = %w[pending uncertain succeeded failed].freeze
+        # Immutable binding: a replay under the same request ID must match
+        # every caller-supplied field, or it refuses before effect. The
+        # opaque reference is receiver-issued, never caller-supplied, and
+        # replays return the originally issued one.
+        FIXED_MERGE_BINDING_FIELDS = %w[request_id project_id assignment_id attempt_id
+          queue_entry operation authorization input_digest request principal receiver_id
+          configuration_sha256 execution_identity].freeze
+        FIXED_MERGE_MUTABLE_FIELDS = %w[state receipt reference recorded_at claimed_at finished_at].freeze
+
+        def fixed_merge_request(request_id, commit: ref_value)
+          return nil unless commit
+          out, stderr, status = git("show", "#{commit}:#{fixed_merge_request_path(request_id)}")
+          if status.success?
+            record = JSON.parse(out)
+            verify_fixed_record!(record, commit: commit) if @mode == :protected
+            return record
+          end
+          return nil if stderr.include?("does not exist") || stderr.include?("exists on disk")
+          raise AttemptErrors::EvidenceUnavailable, "Cannot read fixed merge request: #{stderr}"
+        rescue JSON::ParserError
+          raise AttemptErrors::EvidenceUnavailable, "Corrupt fixed merge request #{request_id}"
+        end
+
+        def fixed_merge_request_records(commit: ref_value)
+          value = commit
+          return [] unless value
+          paths, stderr, status = git("ls-tree", "-r", "--name-only", value, "--", "execution/merge-requests/")
+          raise AttemptErrors::EvidenceUnavailable, "Cannot read fixed merge index: #{stderr}" unless status.success?
+          paths.lines.map(&:strip).select { |path| path.end_with?(".json") }.filter_map do |path|
+            content, error, read_status = git("show", "#{value}:#{path}")
+            unless read_status.success?
+              raise AttemptErrors::EvidenceUnavailable, "Cannot read fixed merge request #{path}: #{error}"
+            end
+            record = JSON.parse(content)
+            verify_fixed_record!(record, commit: value) if @mode == :protected
+            record
+          end
+        rescue JSON::ParserError
+          raise AttemptErrors::EvidenceUnavailable, "Corrupt fixed merge request index"
+        end
+
+        # Admit an ordinary fixed merge request: one CAS create that binds the
+        # receiver-issued opaque reference before the record can ever be read
+        # back. An identical binding under the same request ID replays the
+        # original record (the reference is created once); any different
+        # field is a conflict, never a replay. Another live record holding
+        # the same exact authorization is refused: only a terminal record
+        # with proven no-effect evidence frees an authorization.
+        def admit_fixed_merge_request(record, guard: nil)
+          reference = record.fetch("reference")
+          raise ArgumentError, "fixed merge record needs an opaque reference" unless Molecules::FixedEffectReference.valid?(reference)
+          raise ArgumentError, "invalid fixed merge state" unless record.fetch("state") == "pending"
+          update_fixed_merge_request(record.fetch("request_id"), expected: nil,
+            replacement: record, event_type: "merge_admission", guard: guard)
+        end
+
+        # Claim the start of the fixed effect: pending -> uncertain in one
+        # CAS transition, so a receiver restart can never dispatch a second
+        # merge for the same admitted record — begin replays as already
+        # started, and only the owning effect may later settle it.
+        def begin_fixed_merge_request(request_id)
+          current = fixed_merge_request(request_id)
+          raise AttemptErrors::NotFound, "Fixed merge request #{request_id} not found" unless current
+          return current if current["state"] == "uncertain"
+          unless current["state"] == "pending"
+            raise AttemptErrors::InvalidState, "Fixed merge request #{request_id} is terminal"
+          end
+          update_fixed_merge_request(request_id, expected: current,
+            replacement: current.merge("state" => "uncertain", "claimed_at" => Time.now.utc.iso8601(9)),
+            event_type: "merge_transition")
+        end
+
+        # Terminal settlement: succeeded/failed with the exact receipt
+        # validated HERE at the journal boundary — structure, the closed
+        # terminal invariants, and the binding against the current record.
+        # Failure is terminal only with immutable no-effect evidence.
+        def settle_fixed_merge_request(request_id, terminal_status:, receipt:)
+          unless FIXED_MERGE_STATES.include?(terminal_status) && %w[succeeded failed].include?(terminal_status)
+            raise ArgumentError, "invalid fixed merge terminal status"
+          end
+          current = fixed_merge_request(request_id)
+          raise AttemptErrors::NotFound, "Fixed merge request #{request_id} not found" unless current
+          unless %w[pending uncertain].include?(current["state"])
+            raise AttemptErrors::InvalidState, "Fixed merge request #{request_id} is terminal"
+          end
+          validate_fixed_receipt!(current, terminal_status, receipt)
+          update_fixed_merge_request(request_id, expected: current,
+            replacement: current.merge("state" => terminal_status, "receipt" => receipt,
+              "finished_at" => Time.now.utc.iso8601(9)),
+            event_type: "merge_transition")
+        end
+
+        def fixed_merge_request_path(request_id)
+          "execution/merge-requests/#{request_id}.json"
+        end
+
+        def validate_fixed_receipt!(current, terminal_status, receipt)
+          Atoms::FixedMergeSchemas.validate_receipt!(receipt)
+          Atoms::FixedMergeSchemas.validate_receipt_against!(receipt, current)
+          unless receipt.fetch("terminal_status") == terminal_status
+            raise AttemptErrors::ReceiptRejected, "Fixed merge receipt terminal status does not match the settlement"
+          end
+          true
+        rescue Atoms::FixedMergeSchemas::SchemaError => e
+          raise AttemptErrors::ReceiptRejected, "Fixed merge receipt is invalid: #{e.message}"
+        end
+
+        # Another live fixed merge record holding the same exact
+        # authorization. Terminal failure with intact no-effect evidence
+        # proves the effect never happened and frees the reference.
+        def fixed_authorization_conflict(record)
+          authorization = record["authorization"]
+          return nil unless authorization.is_a?(String) && !authorization.empty?
+          fixed_merge_request_records.find do |other|
+            next false if other["request_id"] == record.fetch("request_id")
+            next false if other["state"] == "failed" && fixed_no_effect_intact?(other)
+            other["authorization"] == authorization &&
+              other["operation"] == record.fetch("operation") &&
+              other["project_id"] == record.fetch("project_id")
+          end
+        end
+
+        def fixed_no_effect_intact?(record)
+          receipt = record["receipt"]
+          return false unless receipt.is_a?(Hash)
+          evidence = receipt.dig("effect", "no_effect_evidence")
+          return false unless evidence.is_a?(Hash)
+          repo_root = File.realpath(@repo_root)
+          path = File.expand_path(evidence["reference"].to_s, repo_root)
+          real = begin
+            File.realpath(path)
+          rescue Errno::ENOENT, Errno::EACCES, Errno::ELOOP
+            return false
+          end
+          real.start_with?(repo_root + File::SEPARATOR) &&
+            Digest::SHA256.file(real).hexdigest == evidence.fetch("sha256")
+        rescue Errno::ENOENT, AttemptErrors::EvidenceUnavailable
+          false
+        end
+
+        def update_fixed_merge_request(request_id, expected:, replacement:, event_type:, guard: nil)
+          unless %w[merge_admission merge_transition].include?(event_type)
+            raise ArgumentError, "invalid fixed merge event type"
+          end
+          with_lock do
+            CAS_ATTEMPTS.times do
+              old = ref_value
+              ensure_checkout!
+              old = ref_value if old.nil?
+              sync_checkout(old)
+              prepared = prepare_fixed_update(request_id: request_id, expected: expected,
+                replacement: replacement, event_type: event_type, guard: guard)
+              return prepared.fetch(:record) if prepared[:replayed]
+              path = fixed_merge_request_path(request_id)
+              full = File.join(checkout_dir, path)
+              FileUtils.mkdir_p(File.dirname(full))
+              File.write(full, JSON.pretty_generate(prepared.fetch(:record)))
+              assignment_id = replacement.fetch("assignment_id")
+              attempt_id = replacement.fetch("attempt_id")
+              prior = read_events(assignment_id).reverse
+                .find { |entry| entry["attempt_id"] == attempt_id }&.fetch("digest")
+              event = Models::EvidenceEvent.build(type: event_type, attempt_id: attempt_id,
+                payload: prepared.fetch(:event).fetch(:payload), previous_digest: prior)
+              write_event_files(assignment_id, [event])
+              git!("-C", checkout_dir, "add", "--", path, "execution/#{assignment_id}/events")
+              state = replacement.fetch("state")
+              git!("-C", checkout_dir, "-c", "user.name=ace-assign", "-c", "user.email=ace-assign@localhost",
+                "commit", "-m", "evidence: fixed merge request #{request_id} #{state}")
+              commit = git!("-C", checkout_dir, "rev-parse", "HEAD").first
+              return replacement.merge("journal_commit" => commit) if update_ref_cas(commit, old)
+            end
+            raise AttemptErrors::EvidenceUnavailable, "Fixed merge evidence ref stayed conflicting"
+          end
+        end
+        private :update_fixed_merge_request
+
+        def prepare_fixed_update(request_id:, expected:, replacement:, event_type:, guard: nil)
+          validate_request_id!(request_id)
+          unless replacement.is_a?(Hash) && replacement["request_id"] == request_id &&
+              FIXED_MERGE_STATES.include?(replacement["state"]) &&
+              (replacement.keys - (FIXED_MERGE_BINDING_FIELDS + FIXED_MERGE_MUTABLE_FIELDS + %w[journal_commit])).empty?
+            raise ArgumentError, "invalid fixed merge update plan"
+          end
+          existing = fixed_merge_request(request_id)
+          if expected.nil?
+            unless event_type == "merge_admission" && replacement["state"] == "pending"
+              raise AttemptErrors::InvalidState, "Fixed merge request needs an initial admission"
+            end
+            if existing
+              return {record: existing, replayed: true} if fixed_replay?(existing, replacement)
+              raise AttemptErrors::Conflict, "Fixed merge request #{request_id} has different input"
+            end
+            unless Molecules::FixedEffectReference.valid?(replacement.fetch("reference"))
+              raise ArgumentError, "fixed merge record needs an opaque reference"
+            end
+            if fixed_merge_request_records.any? { |other| other["reference"] == replacement.fetch("reference") }
+              raise AttemptErrors::Conflict, "Fixed merge reference is already bound"
+            end
+          else
+            unless event_type == "merge_transition"
+              raise AttemptErrors::InvalidState, "Admitted fixed merge request needs a transition"
+            end
+            unless existing == expected
+              raise AttemptErrors::Conflict, "Fixed merge request #{request_id} changed during transition"
+            end
+            unless existing.except(*FIXED_MERGE_MUTABLE_FIELDS) == replacement.except(*FIXED_MERGE_MUTABLE_FIELDS)
+              raise AttemptErrors::Conflict, "Fixed merge request #{request_id} changed immutable binding"
+            end
+          end
+          conflict = guard&.call
+          raise_authorization_conflict!(conflict) if conflict
+          payload = {"request_id" => request_id, "state" => replacement.fetch("state"),
+                     "input_digest" => replacement.fetch("input_digest"),
+                     "record_digest" => Atoms::EvidenceDigest.digest(replacement),
+                     "receipt_digest" => replacement["receipt"] && Atoms::EvidenceDigest.digest(replacement["receipt"])}
+          {record: replacement, event: {type: event_type, payload: payload}, replayed: false}
+        end
+        private :prepare_fixed_update
+
+        def fixed_replay?(existing, replacement)
+          FIXED_MERGE_BINDING_FIELDS.all? do |field|
+            existing[field] == replacement.fetch(field)
+          end
+        end
+        private :fixed_replay?
+
+        # Protected-mode parity with service records: the record must match
+        # the latest merge event digest in the owning attempt chain.
+        def verify_fixed_record!(record, commit: ref_value)
+          events = read_events(record.fetch("assignment_id"), commit: commit)
+            .select { |event| event["attempt_id"] == record.fetch("attempt_id") }
+          unless Models::EvidenceEvent.chain_valid?(events)
+            raise AttemptErrors::EvidenceUnavailable, "Canonical fixed merge event chain is unverifiable"
+          end
+          event = events.reverse.find do |entry|
+            %w[merge_admission merge_transition].include?(entry["type"]) &&
+              entry.dig("payload", "request_id") == record["request_id"]
+          end
+          unless event && event.dig("payload", "record_digest") == Atoms::EvidenceDigest.digest(record)
+            raise AttemptErrors::EvidenceUnavailable, "Canonical fixed merge record does not match accepted event"
+          end
+        rescue KeyError, TypeError
+          raise AttemptErrors::EvidenceUnavailable, "Canonical fixed merge record has invalid binding"
+        end
+
+        # The module marks a private region above; the fixed merge primitive
+        # is a public coordinator-facing surface, so it is re-published here.
+        public :fixed_merge_request, :fixed_merge_request_records, :admit_fixed_merge_request,
+          :begin_fixed_merge_request, :settle_fixed_merge_request, :fixed_authorization_conflict
 
         # Latest lifecycle state implied by the events, or nil when the
         # events do not describe a full attempt (intent missing).
@@ -1399,7 +1670,7 @@ module Ace
             lock.flock(File::LOCK_EX)
             begin
               yield
-            rescue StandardError
+            rescue
               # Ordinary mutation rollback is unchanged. Initialization must
               # not adopt/reset a foreign disposable checkout on refusal.
               sync_checkout(ref_value) if cleanup_on_failure && File.exist?(File.join(checkout_dir, ".git"))

@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 require "ace/support/cli/error"
 
 module Ace
@@ -70,6 +71,10 @@ module Ace
         end
       end
 
+      # An exact authorization reference is not currently valid for a new
+      # effect: consumed by another live request, expired, or out of scope.
+      class AuthorizationConflict < Conflict; end
+
       class NotFound < Error
         def initialize(message = "Attempt not found")
           super(message, exit_code: 5)
@@ -134,6 +139,5 @@ module Ace
       class InboxContextPending < EvidenceUnavailable
       end
     end
-
   end
 end
