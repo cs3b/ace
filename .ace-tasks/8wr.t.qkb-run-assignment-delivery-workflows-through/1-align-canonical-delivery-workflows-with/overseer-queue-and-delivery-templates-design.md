@@ -153,6 +153,19 @@ selection. Includes the changed-target recheck before mutation and the
 uncertain-receipt reconciliation path; PR3..N stay untouched until their
 turn.
 
+Queue-owner duty (outcome layer): the queue owner maintains wake/goal duty —
+invoking integration, monitoring the authoritative result, refreshing main
+and continuing to the next item — until the WHOLE delivery completes or an
+actionable true blocker exists. Registration of a wait or relay alone never
+closes an item: a queue item is complete ONLY when the authorized integrator
+confirms the ACTUAL main merge and the owner reconciles the receipt (fresh
+main == merged head); rebase, refreshed review and request-sent remain
+intermediate states, never closure. The sibling acceptance is met only by
+AT LEAST TWO reviewed sibling PRs ACTUALLY MERGED IN ORDER through the full
+cycle — rebased/reviewed-only does NOT satisfy it. A missing callable
+integration route is a tracked delivery blocker to implement/install
+(attributable, named owner), not a permanent lane boundary.
+
 ## 2. Requirement — delegation of rebase + REQUIRED RENEWED EVIDENCE
 
 Any operation that moves a deliverable's head AFTER exact-head evidence was

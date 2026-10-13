@@ -117,3 +117,15 @@ integration):
 6. Uncertain-receipt reconciliation: a lost or ambiguous integration receipt
    for either sibling reconciles by the original durable request reference —
    at most one effect per request, never blind retry.
+
+Outcome acceptance (Captain, final revision): the sibling scenario is
+accepted ONLY when at least TWO reviewed sibling PRs are ACTUALLY MERGED IN
+ORDER through the full cycle — candidate A prepared → reviewed → integration
+requested → merge receipt reconciled (fresh main == A's merged head) →
+candidate B detected diverged → needs-rebase → skill rebase → refreshed
+checks + explicit independent head review → integration requested → receipt
+reconciled (fresh main == B's merged head). A queue item is complete ONLY
+when the authorized integrator confirms the ACTUAL main merge and the queue
+owner reconciles the receipt (fresh main == merged head); rebase, refreshed
+review and request-sent are intermediate states, never closure. Rebased-/
+reviewed-only does NOT satisfy this acceptance; merged-in-order does.

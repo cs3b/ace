@@ -194,6 +194,21 @@ request/receipt.
   → refresh main → select and prepare ONLY the next candidate. Queued later
   PRs retain their existing branches/heads untouched until their turn; no
   rollback/reset of prior batch work.
+- Item-closure definition (Captain outcome acceptance): a queue item is
+  complete ONLY when the authorized integrator confirms the ACTUAL main
+  merge and the queue owner reconciles the receipt — fresh main equals the
+  merged head. Rebase, refreshed review and request-sent are intermediate
+  states, never closure. The acceptance scenario requires at least TWO
+  reviewed sibling PRs ACTUALLY MERGED IN ORDER through the full cycle (A
+  merged with reconciled receipt → B detected diverged → needs-rebase →
+  skill rebase → refreshed checks + explicit independent head review →
+  merged with reconciled receipt); rebased/reviewed-only does NOT satisfy
+  the acceptance — merged-in-order does. The queue owner maintains wake/goal
+  duty — invoking integration, monitoring the authoritative result,
+  refreshing main and continuing to the next item — until the WHOLE delivery
+  completes or an actionable true blocker exists; a missing callable
+  integration route is a tracked delivery blocker to implement/install, not
+  a permanent lane boundary.
 - Queue states ready / needs-rebase / reviewing / integrating / merged /
   blocked / uncertain reconcile against actual forge/process receipts via the
   existing goal/wake/watch primitives; a persisted queue adopts on restart
