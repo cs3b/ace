@@ -101,6 +101,42 @@ source/configuration and `gad.2` runs installed acceptance. Until that source ta
 is delivered, M2 is `BLOCKED(source-producer, 8x3.t.xz9.4)`, not a request to start
 a socket, copy a token, or add a Python/cross-VM HTTP bridge.
 
+### 1d. Typed integration outcomes + entry-point gate coverage (Captain contract, 2026-10-12)
+
+The typed outcomes and gates apply at EVERY integration invocation/entry
+point — native integrate commands, services and assignment integration steps,
+not only the role prose: `ace-lab service` ordinary-merge admission (`8x3.t.xz9.4`
+producer), ace-assign `assignment_executor` + `runtime_control_surface_runner`
+integration steps, and the host `lab-integrator` reached via producer
+request/receipt. Each invocation resolves fresh repository, PR, candidate
+exact head, target base/head, review/test evidence and authorized executor
+before any mutation and rechecks target/head immediately before mutation; a
+race invalidates eligibility. Shared contract/validation so no entry point
+bypasses the gate; where schemas are already closed (`8x3.t.xz9.4`),
+`needs-rebase` maps to the existing closed `moved_target` refusal family;
+remaining surfaces are spec-gated until the staged gate-implementation slice
+closes them.
+
+Queue states ready / needs-rebase / reviewing / integrating / merged /
+blocked / uncertain reconcile against actual forge/process receipts via the
+existing goal/wake/watch primitives (qjy adoption above) — no new heartbeat
+service or alternate scheduler; a persisted queue adopts on restart without
+duplicate execution, and worker PR-ready stays distinct from delivery done.
+A target that is NOT an ancestor of the candidate head yields typed
+`needs-rebase` — never merge, never silent rewrite; the overseer delegates
+as-git-rebase (`wfi://git/rebase`, CHANGELOG preservation) in the candidate's
+isolated worktree, obtains refreshed exact-head checks plus independent
+review of the new head, updates the PR, verifies remote candidate identity
+and resubmits. Uncertain outcomes reconcile by the original durable request
+reference — never blind retry.
+
+Sibling-PR acceptance scenario (detailed in `8wr.t.qkb.1` and the `qk0.1.1`
+readiness record): merge the first reviewed sibling → the second sibling
+fails the ancestry check → typed `needs-rebase` → as-git-rebase in the
+isolated worktree → refreshed exact-head checks + independent review of the
+new head → integrate the second. Includes the changed-target recheck before
+mutation and the uncertain-receipt reconciliation path.
+
 ## 2. Requirement — delegation of rebase + REQUIRED RENEWED EVIDENCE
 
 Any operation that moves a deliverable's head AFTER exact-head evidence was

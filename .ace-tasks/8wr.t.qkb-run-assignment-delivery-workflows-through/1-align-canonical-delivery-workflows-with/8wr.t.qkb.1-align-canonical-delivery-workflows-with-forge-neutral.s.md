@@ -154,3 +154,36 @@ repository despite the same SHA, wrong worktree/branch, remote target movement a
 already-merged remote state with stale local main. Existing review, branch
 protection, exact-head gates and repository scope remain unchanged. No Python host
 bridge, raw maintainer token, second queue/ledger or log-parsed success is allowed.
+
+## Integration-coordination contract — entry-point gates and acceptance (Captain, 2026-10-12) — SPEC
+
+The typed outcomes and gates apply at EVERY integration invocation/entry
+point — native integrate commands, services and assignment integration steps
+— not only the role prose. Known ACE-side surfaces this slice names:
+`ace-lab service` ordinary-merge admission (the `8x3.t.xz9.4` producer), the
+ace-assign `assignment_executor` and `runtime_control_surface_runner`
+integration steps, and the host `lab-integrator` reached via producer
+request/receipt.
+
+- Fresh resolution + recheck-before-mutation with race invalidation is shared
+  contract/validation: no entry point bypasses the gate. Where the wire schema
+  is already closed (`8x3.t.xz9.4` refusal-code mapping), `needs-rebase` maps
+  to the existing closed `moved_target` refusal family; where a surface's
+  schema is not yet closed, the outcome is still typed in canonical queue
+  state and the staged gate-implementation slice closes it — a prose-only
+  gate is not acceptance.
+- Acceptance scenarios (added to this slice's verification):
+  1. Two reviewed sibling PRs: integrate the first; the second's target check
+     fails ancestry → `needs-rebase` typed outcome returned to the queue
+     owner; as-git-rebase (`wfi://git/rebase`, CHANGELOG preservation) in the
+     candidate's isolated worktree; refreshed exact-head checks plus
+     independent review of the NEW head; integrate the second.
+  2. Changed-target recheck immediately before mutation: a detected race
+     voids eligibility — no merge, no silent rewrite.
+  3. Uncertain-receipt reconciliation against the original durable request
+     reference — at most one effect per request, never blind retry.
+- Queue states ready / needs-rebase / reviewing / integrating / merged /
+  blocked / uncertain reconcile against actual forge/process receipts via the
+  existing goal/wake/watch primitives; a persisted queue adopts on restart
+  without duplicate execution. No new heartbeat service or alternate
+  scheduler.

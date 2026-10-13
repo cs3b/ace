@@ -63,3 +63,48 @@ This delta also consumes qkb.1's ordinary integrator acknowledgment/status
 contract: only its durable accepted reference permits `WAIT`; missing producer or
 receiver is attributable `BLOCKED`, and terminal integration is accepted only from
 the exact bound receipt. Implementation and installed acceptance remain open.
+
+### Integration-coordination contract + sibling-PR acceptance (Captain, 2026-10-12)
+
+Codified generically in the project-overseer role charter and the ace-assign
+delivery instructions; this acceptance extends (never replaces) the follow-up
+above. Contract clauses: every integration invocation resolves fresh
+repository, PR, candidate exact head, target base/head, review/test evidence,
+dependencies and authorized executor before any mutation, and rechecks
+target/head immediately before mutation — a race invalidates eligibility; a
+target that is NOT an ancestor of the candidate head yields an actionable
+typed `needs-rebase` outcome — never a merge, never a silent rewrite; the
+overseer delegates as-git-rebase (`wfi://git/rebase`, including CHANGELOG
+preservation) in the candidate's isolated worktree and obtains refreshed
+exact-head checks plus independent review of the NEW head before resubmission;
+the low-level privileged integrator only enforces gates and returns typed
+outcomes (merged / needs-rebase / blocked / uncertain) and never authors,
+rebases or reviews its own candidate; relay alone is not execution — the queue
+owner monitors until receipt and continuation; queue states ready /
+needs-rebase / reviewing / integrating / merged / blocked / uncertain
+reconcile against actual forge/process receipts using existing goal/wake/watch
+primitives (no new heartbeat service), a persisted queue adopts on restart
+without duplicate execution, and worker PR-ready stays distinct from delivery
+done; never push directly to main, never switch the canonical checkout to a
+topic branch, never reuse a stale review as approval for a different or moved
+head.
+
+Acceptance scenario — two reviewed sibling PRs:
+
+1. Two sibling PRs, each independently reviewed off a common base; the queue
+   selects the first by dependency-aware integration order.
+2. The privileged integrator merges the first sibling; the merge receipt and
+   verified remote outcome record that main moved.
+3. Before the second mutation, the fresh target check shows current main is
+   NOT an ancestor of the second candidate head → typed `needs-rebase`
+   returned to the queue owner; no merge, no silent rewrite (a common old
+   base does NOT make the siblings sequentially fast-forwardable).
+4. The overseer delegates as-git-rebase in the second candidate's isolated
+   worktree; refreshed exact-head checks and an INDEPENDENT review bind to
+   the NEW head (the old approval is void); PR updated, remote candidate
+   identity verified, resubmitted.
+5. Changed-target recheck immediately before the second mutation: a race
+   detected there voids eligibility and re-enters `needs-rebase`.
+6. Uncertain-receipt reconciliation: a lost or ambiguous integration receipt
+   for either sibling reconciles by the original durable request reference —
+   at most one effect per request, never blind retry.

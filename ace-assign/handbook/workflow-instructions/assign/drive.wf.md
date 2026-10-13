@@ -747,6 +747,33 @@ ace-assign attempt reconcile --attempt "$ATTEMPT_ID" --receipt /tmp/attempt-rece
 - Running attempts stay running only while their recorded process is verifiably live; anything else becomes `stopped` or `uncertain`.
 - Never replay `merge`, `publish`, or `deploy` automatically. Reconciliation records evidence; it never re-executes effects.
 
+#### Integration Gate and Typed Outcomes (every integration invocation)
+
+These gates apply at EVERY integration entry point — a native integrate
+command, a service invocation, or an assignment integration step — with
+shared contract validation so no entry point bypasses them.
+
+- Before any mutation, resolve FRESH repository, PR, candidate exact head,
+  target base/head, review/test evidence and the authorized executor; recheck
+  target/head immediately before the mutation. A detected race invalidates
+  eligibility for that invocation.
+- The low-level privileged integrator ENFORCES the gates and returns one typed
+  outcome: `merged`, `needs-rebase`, `blocked` or `uncertain`. It never
+  authors, rebases or reviews its own candidate. Relay alone is not
+  execution: the queue owner monitors until receipt and continuation.
+- If the target (current main) is NOT an ancestor of the candidate head, the
+  outcome is `needs-rebase`: never merge and never silently rewrite. The queue
+  owner delegates `wfi://git/rebase` (as-git-rebase, including CHANGELOG
+  preservation) in the candidate's isolated worktree, obtains refreshed
+  exact-head checks plus independent review of the NEW head, updates the PR,
+  verifies remote candidate identity and resubmits. A common old base does
+  NOT make sibling heads sequentially fast-forwardable.
+- `uncertain` triggers reconciliation against the original durable reference;
+  it never permits blind retry.
+- Never push directly to main; never switch the canonical checkout to a topic
+  branch; never reuse a stale review as approval for a different or moved
+  head.
+
 ### Human-in-the-Loop (HITL) Stall Protocol
 
 Canonical source of truth: `wfi://hitl`.

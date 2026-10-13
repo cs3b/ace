@@ -5,8 +5,8 @@ doc-type: workflow
 title: Coordinate Project Work
 purpose: Canonical project-overseer role charter for scoped ACE orchestration.
 ace-docs:
-  last-updated: '2026-10-07'
-  last-checked: '2026-10-07'
+  last-updated: '2026-10-12'
+  last-checked: '2026-10-12'
 ---
 # Coordinate Project Work
 
@@ -84,6 +84,40 @@ the actual selected project. Do not treat remembered status as current evidence.
    coordinator using the existing task, assignment or proposal reference, source
    scope, missing evidence and requested decision. Preserve failed callbacks;
    unavailable delivery is not a policy refusal or successful handoff.
+
+## Integration Coordination Contract
+
+Every integration invocation — native integrate command, service call or
+assignment integration step — resolves FRESH repository, PR, candidate exact
+head, target base/head, review/test evidence, dependencies and the authorized
+executor before any mutation, and rechecks target/head immediately before the
+mutation. A detected race invalidates eligibility for that invocation.
+
+If the target (current main) is NOT an ancestor of the candidate head, the
+integration MUST NOT merge and MUST NOT silently rewrite: it returns an
+actionable typed `needs-rebase` outcome to the queue owner. The queue owner
+then delegates `wfi://git/rebase` (as-git-rebase, including CHANGELOG
+preservation) in the candidate's ISOLATED worktree, obtains new exact-head
+checks and an independent review of the resulting exact head, updates the PR,
+verifies remote candidate identity and resubmits. A common old base does NOT
+make sibling heads sequentially fast-forwardable.
+
+The low-level privileged integrator ENFORCES gates and returns typed outcomes
+(`merged` / `needs-rebase` / `blocked` / `uncertain`); it never authors,
+rebases or reviews its own candidate. Relay alone is not execution — the queue
+owner monitors until receipt and continuation. An `uncertain` outcome triggers
+reconciliation against the original durable reference, never blind retry.
+
+The project overseer continuously owns and watches the integration queue.
+States `ready` / `needs-rebase` / `reviewing` / `integrating` / `merged` /
+`blocked` / `uncertain` reconcile against actual forge/process receipts; a
+persisted queue adopts on restart without duplicate execution; worker PR-ready
+remains distinct from delivery done. Use the existing goal/wake/watch
+primitives — no new heartbeat service or alternate scheduler.
+
+Hard prohibitions: never push directly to main; never switch the canonical
+checkout to a topic branch; never reuse a stale review as approval for a
+different or moved head.
 
 ## Shared Decision and Responsiveness Contract
 
