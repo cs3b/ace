@@ -768,6 +768,18 @@ shared contract validation so no entry point bypasses them.
   exact-head checks plus independent review of the NEW head, updates the PR,
   verifies remote candidate identity and resubmits. A common old base does
   NOT make sibling heads sequentially fast-forwardable.
+- Integration is serial in PREPARATION as well as in effect: the accepted
+  receipt for one candidate causes preparation of ONLY the next selected
+  candidate — never a mass rebase of the remaining queue. Each candidate, on
+  its turn: resolve fresh target main; delegate `wfi://git/rebase` in that
+  candidate's isolated worktree IF needed; run the applicable checks; obtain
+  an INDEPENDENT EXPLICIT review of the resulting exact head (patch identity
+  may support a short delta review but never substitutes the explicit
+  independent head approval); verify the remote PR head/base; issue ONE
+  scoped integrator request; wait/reconcile the actual integration receipt;
+  refresh main; select and prepare ONLY the next candidate. Queued later
+  PRs keep their existing branches/heads untouched until their turn; prior
+  batch work is never rolled back or reset.
 - `uncertain` triggers reconciliation against the original durable reference;
   it never permits blind retry.
 - Never push directly to main; never switch the canonical checkout to a topic

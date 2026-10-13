@@ -115,6 +115,20 @@ persisted queue adopts on restart without duplicate execution; worker PR-ready
 remains distinct from delivery done. Use the existing goal/wake/watch
 primitives — no new heartbeat service or alternate scheduler.
 
+Integration is serial in PREPARATION as well as in effect — not merely a
+serial merge. The accepted receipt for one candidate causes preparation of
+ONLY the next selected candidate — never a mass rebase of the remaining
+queue. Each candidate, on its turn, runs the full cycle: resolve fresh
+target main; delegate `wfi://git/rebase` in that candidate's isolated
+worktree IF the target moved; run the applicable checks; obtain an
+INDEPENDENT EXPLICIT review of the resulting exact head (patch identity may
+support a short delta review but never substitutes the explicit independent
+head approval); verify the remote PR head/base; issue ONE scoped integrator
+request; wait/reconcile the actual integration receipt; refresh main; then
+select and prepare ONLY the next candidate. Queued later PRs keep their
+existing branches and heads untouched until their turn, and prior batch work
+is never rolled back or reset.
+
 Hard prohibitions: never push directly to main; never switch the canonical
 checkout to a topic branch; never reuse a stale review as approval for a
 different or moved head.

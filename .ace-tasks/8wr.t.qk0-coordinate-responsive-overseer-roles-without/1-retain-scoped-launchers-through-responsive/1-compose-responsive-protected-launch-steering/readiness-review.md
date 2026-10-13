@@ -89,22 +89,31 @@ done; never push directly to main, never switch the canonical checkout to a
 topic branch, never reuse a stale review as approval for a different or moved
 head.
 
-Acceptance scenario — two reviewed sibling PRs:
+Acceptance scenario — two reviewed sibling PRs (serial preparation + serial
+integration):
 
 1. Two sibling PRs, each independently reviewed off a common base; the queue
-   selects the first by dependency-aware integration order.
-2. The privileged integrator merges the first sibling; the merge receipt and
-   verified remote outcome record that main moved.
-3. Before the second mutation, the fresh target check shows current main is
-   NOT an ancestor of the second candidate head → typed `needs-rebase`
-   returned to the queue owner; no merge, no silent rewrite (a common old
-   base does NOT make the siblings sequentially fast-forwardable).
+   selects the first by dependency-aware integration order. Any further
+   queued PRs (PR3..N) keep their existing branches and heads untouched.
+2. The privileged integrator merges the first sibling via ONE scoped
+   integration request; the merge receipt and verified remote outcome record
+   that main moved. That receipt causes preparation of ONLY the second
+   sibling — never a mass rebase of the remaining queue.
+3. Preparing the second sibling: the fresh target check shows current main
+   is NOT an ancestor of its candidate head → typed `needs-rebase` returned
+   to the queue owner; no merge, no silent rewrite (a common old base does
+   NOT make the siblings sequentially fast-forwardable).
 4. The overseer delegates as-git-rebase in the second candidate's isolated
-   worktree; refreshed exact-head checks and an INDEPENDENT review bind to
-   the NEW head (the old approval is void); PR updated, remote candidate
-   identity verified, resubmitted.
-5. Changed-target recheck immediately before the second mutation: a race
-   detected there voids eligibility and re-enters `needs-rebase`.
+   worktree; the applicable checks re-run and an INDEPENDENT EXPLICIT review
+   binds to the NEW exact head — patch identity may support a short delta
+   review but never substitutes the explicit independent head approval (the
+   old approval is void); PR updated, remote candidate head/base verified,
+   ONE scoped integrator request resubmitted.
+5. The queue waits/reconciles the actual integration receipt, refreshes
+   main, then selects and prepares ONLY the next candidate. Changed-target
+   recheck immediately before the mutation: a race detected there voids
+   eligibility and re-enters `needs-rebase`. No rollback/reset of the first
+   sibling's merged batch work.
 6. Uncertain-receipt reconciliation: a lost or ambiguous integration receipt
    for either sibling reconciles by the original durable request reference —
    at most one effect per request, never blind retry.

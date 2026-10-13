@@ -182,6 +182,18 @@ request/receipt.
      voids eligibility — no merge, no silent rewrite.
   3. Uncertain-receipt reconciliation against the original durable request
      reference — at most one effect per request, never blind retry.
+- Serialization (Captain correction): integration is serial in PREPARATION,
+  not merely in merge. The accepted receipt for one candidate causes
+  preparation of ONLY the next selected candidate — never a mass rebase of
+  PR2..N. Per-candidate cycle on its turn: resolve fresh target main →
+  as-git-rebase in that candidate's isolated worktree IF needed → applicable
+  checks → INDEPENDENT EXPLICIT review of the resulting exact head (patch
+  identity may support a short delta review but never substitutes the
+  explicit independent head approval) → verify remote PR head/base → ONE
+  scoped integrator request → wait/reconcile the actual integration receipt
+  → refresh main → select and prepare ONLY the next candidate. Queued later
+  PRs retain their existing branches/heads untouched until their turn; no
+  rollback/reset of prior batch work.
 - Queue states ready / needs-rebase / reviewing / integrating / merged /
   blocked / uncertain reconcile against actual forge/process receipts via the
   existing goal/wake/watch primitives; a persisted queue adopts on restart

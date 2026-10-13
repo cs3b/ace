@@ -130,12 +130,28 @@ review of the new head, updates the PR, verifies remote candidate identity
 and resubmits. Uncertain outcomes reconcile by the original durable request
 reference — never blind retry.
 
+Serialization is serial PREPARATION + serial integration, not merely serial
+merge: an accepted integration receipt causes preparation of ONLY the next
+selected candidate — never a mass rebase of the remaining queue. Each
+candidate runs the full cycle on its turn: resolve fresh target main →
+as-git-rebase IF needed in that candidate's isolated worktree → applicable
+checks → INDEPENDENT EXPLICIT review of the resulting exact head (patch
+identity may support a short delta review but never substitutes the explicit
+independent head approval) → verify remote PR head/base → ONE scoped
+integrator request → wait/reconcile the actual integration receipt → refresh
+main → select and prepare ONLY the next candidate. Queued later PRs retain
+their existing branches/heads untouched until their turn; prior batch work is
+never rolled back or reset.
+
 Sibling-PR acceptance scenario (detailed in `8wr.t.qkb.1` and the `qk0.1.1`
-readiness record): merge the first reviewed sibling → the second sibling
-fails the ancestry check → typed `needs-rebase` → as-git-rebase in the
-isolated worktree → refreshed exact-head checks + independent review of the
-new head → integrate the second. Includes the changed-target recheck before
-mutation and the uncertain-receipt reconciliation path.
+readiness record): merge the first reviewed sibling → its receipt prepares
+ONLY the second sibling → the second fails the ancestry check → typed
+`needs-rebase` → as-git-rebase in the isolated worktree → refreshed
+exact-head checks + independent explicit review of the new head → ONE scoped
+integrator request → integrate the second → refresh main before any further
+selection. Includes the changed-target recheck before mutation and the
+uncertain-receipt reconciliation path; PR3..N stay untouched until their
+turn.
 
 ## 2. Requirement — delegation of rebase + REQUIRED RENEWED EVIDENCE
 
