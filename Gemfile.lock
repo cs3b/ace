@@ -1,7 +1,7 @@
 PATH
   remote: ace-assign
   specs:
-    ace-assign (0.67.0)
+    ace-assign (0.68.0)
       ace-b36ts (~> 0.14)
       ace-bundle (~> 0.45)
       ace-git (~> 0.30)
@@ -194,8 +194,8 @@ PATH
 PATH
   remote: ace-hitl-hermes
   specs:
-    ace-hitl-hermes (0.3.0)
-      ace-hitl (~> 0.14.0)
+    ace-hitl-hermes (0.4.0)
+      ace-hitl (~> 0.15)
       ace-hitl-contract (~> 0.2.1)
       ace-support-cli (~> 0.6)
       faraday (~> 2.14)
@@ -203,7 +203,7 @@ PATH
 PATH
   remote: ace-hitl
   specs:
-    ace-hitl (0.14.0)
+    ace-hitl (0.15.0)
       ace-assign (~> 0.67)
       ace-b36ts (~> 0.14)
       ace-herdr (~> 0.5.1)
@@ -227,9 +227,9 @@ PATH
 PATH
   remote: ace-lab
   specs:
-    ace-lab (0.5.2)
-      ace-assign (~> 0.67)
-      ace-hitl (~> 0.14.0)
+    ace-lab (0.6.0)
+      ace-assign (~> 0.68)
+      ace-hitl (~> 0.15)
       ace-runtime (~> 0.3)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.18)
@@ -269,12 +269,12 @@ PATH
 PATH
   remote: ace-overseer
   specs:
-    ace-overseer (0.21.0)
+    ace-overseer (0.21.1)
       ace-assign (~> 0.67)
       ace-git (~> 0.30)
       ace-git-worktree (~> 0.26)
       ace-herdr (~> 0.5.1)
-      ace-lab (~> 0.5.1)
+      ace-lab (~> 0.6)
       ace-review (~> 0.60.1)
       ace-runtime (~> 0.3)
       ace-support-cli (~> 0.6)

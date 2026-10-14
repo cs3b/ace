@@ -4,8 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- **ace-lab v0.6.0, ace-assign v0.68.0**: Add the ordinary fixed merge producer/consumer pair — `ace-lab service request/status --mode ordinary-merge` with durable-once admission, canonical full-binding request digests per spec ruling r4, replay and conflict handling, and exact terminal receipt acceptance consumed through the assign coordinator.
+- **ace-hitl v0.15.0**: Add the host/Incus mTLS crossing authority (`serve --tls-authority`) with TLS 1.3 mutual identity, fail-closed provisioning-layout enforcement, and project-bound access; narrow `serve --group` to dedicated lifecycle groups with broad/legacy exposure refusal.
+- **ace-hitl-hermes v0.4.0**: Route Telegram channels over the mTLS crossing (exact `tls+tcp://` endpoints, pinned server identities, atomic multi-authority activation), add the `ace-hitl-boundary-scenario` acceptance harness, and surface informed unknown-chat coverage generations.
+
 ### Changed
 
+- **ace-overseer v0.21.1**: Follow the ace-lab 0.6 line in the dependency manifest and package the coordination-contract role-guide updates.
 - **ace-handbook 0.35.1**: Clarify guide override candidate discovery and that downstream projects must register their own local workflow source; this monorepo's priority-5 source is not a downstream default.
 - **ACE Lab source release, 2026-10-08**: ace-assign 0.66.0, ace-git 0.30.0, ace-git-forgejo 0.6.2, ace-review 0.60.0 and ace-lab 0.5.0 join exact-candidate protected delivery, bounded canonical review campaigns and scoped HITL publication.
 - **ace-herdr 0.5.0, ace-hitl 0.13.0**: Use the original live terminal for message submission and direct panel/process reads for current state. Remove dedicated Codex app-server and message-read/signed reconciliation requirements; retain actual privileged-effect authorization and result evidence.

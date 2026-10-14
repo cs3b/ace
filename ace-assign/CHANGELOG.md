@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.68.0] - 2026-10-14
+
+### Added
+
+- Admit ordinary fixed merge requests through the maintained `ace-lab service request/status --mode ordinary-merge` producer via the closed-argv `OrdinaryMergeCli`, with opaque-reference recovery, exact terminal receipt acceptance, and the canonical request digest defined as lowercase SHA-256 over the full eight-field immutable binding per spec ruling r4 — re-derived from the recorded binding on every poll and validated against every acknowledgment, refusal, status, and receipt echo.
+- Add fixed merge request schemas, opaque fixed-effect references, evidence-journal records, and coordinator primitives (admit/begin/settle/read-only status) so the canonical Assign attempt/evidence state remains the sole durable record: an identical resubmission replays the original acknowledgment, a reused, consumed, expired, or out-of-scope authorization raises the distinct `AuthorizationConflict`, and a restarted receiver can never begin the effect twice.
+
 ## [0.67.0] - 2026-10-12
 
 ### Added

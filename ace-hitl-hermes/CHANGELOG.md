@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-10-14
+
+### Added
+
+- Route registered Telegram channels over the host/Incus mTLS crossing: channels resolve to exactly one authority (`hitl_socket` XOR `hitl_endpoint`); remote endpoints must be exactly `tls+tcp://` with a DNS host, TLS 1.3 only, and server URI SAN, EKU, and configured fingerprint pin verified before any frame; clients cache per endpoint plus credential identity; activation is atomic at the poller — no channel is enabled until every configured authority passes an authenticated health and project-binding check.
+- Add the `ace-hitl-boundary-scenario` executable (`run`, `ask`, `verify-acceptance`) with the closed `ace.hitl.boundary.scenario/v1` manifest and in-slice acceptance-receipt schema as the source-side harness for the fixture-gated nh0-A boundary handoff; missing or fabricated asks fail truthfully and the certificate identity maps only to the Hermes transport role while the local worker runs as the kernel-verified worker actor.
+- Surface informed unknown-chat coverage gaps at late registration: chat ID, skipped-update count, update-ID range, and the new coverage generation are durably recorded before offset advancement and reported once per gap.
+
+### Changed
+
+- Require `tls_service_user`/`tls_service_group` for remote channels and verify the runtime, registry, and every referenced credential tree against the exact provisioning layout before any connection.
+
 ## [0.3.0] - 2026-10-11
 
 ### Added
