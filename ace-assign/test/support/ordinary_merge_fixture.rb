@@ -72,7 +72,7 @@ module OrdinaryMergeFixture
   def valid_receipt(selectors, outcome: "merged", input_digest: nil)
     request = selectors.fetch(:request)
     input = request.fetch(:input)
-    ruled_digest = input_digest || Ace::Assign::Molecules::OrdinaryMergeContract.binding_digest(
+    ruled_digest = input_digest || Ace::Assign::Atoms::FixedMergeSchemas.canonical_request_digest(
       project: request.fetch(:project), assignment: request.fetch(:assignment),
       attempt: request.fetch(:attempt), queue_entry: request.fetch(:queue_entry),
       authorization: request.fetch(:authorization), request_id: selectors.fetch(:request_id),
@@ -121,7 +121,7 @@ module OrdinaryMergeFixture
   def receipt_binding(input: valid_input, request_id: REQUEST_ID, input_digest: nil)
     request = {project: PROJECT, assignment: "a1", attempt: "t1", queue_entry: QUEUE_ENTRY,
                authorization: AUTHORIZATION, input: input}
-    digest = input_digest || Ace::Assign::Molecules::OrdinaryMergeContract.binding_digest(
+    digest = input_digest || Ace::Assign::Atoms::FixedMergeSchemas.canonical_request_digest(
       project: request[:project], assignment: request[:assignment], attempt: request[:attempt],
       queue_entry: request[:queue_entry], authorization: request[:authorization],
       request_id: request_id, input: input

@@ -17,22 +17,22 @@ module Ace
         def test_binding_digest_covers_the_full_eight_field_binding
           base = {project: PROJECT, assignment: "a1", attempt: "t1", queue_entry: QUEUE_ENTRY,
                   authorization: AUTHORIZATION, request_id: REQUEST_ID, input: valid_input}
-          first = OrdinaryMergeContract.binding_digest(**base)
+          first = Atoms::FixedMergeSchemas.canonical_request_digest(**base)
           assert_match(/\A[0-9a-f]{64}\z/, first)
-          assert_equal first, OrdinaryMergeContract.binding_digest(**base.merge(input: reverse_keys(valid_input)))
-          assert_equal first, OrdinaryMergeContract.binding_digest(**base)
+          assert_equal first, Atoms::FixedMergeSchemas.canonical_request_digest(**base.merge(input: reverse_keys(valid_input)))
+          assert_equal first, Atoms::FixedMergeSchemas.canonical_request_digest(**base)
         end
 
         def test_binding_digest_is_sensitive_to_selectors_authorization_and_request_id
           base = {project: PROJECT, assignment: "a1", attempt: "t1", queue_entry: QUEUE_ENTRY,
                   authorization: AUTHORIZATION, request_id: REQUEST_ID, input: valid_input}
-          first = OrdinaryMergeContract.binding_digest(**base)
+          first = Atoms::FixedMergeSchemas.canonical_request_digest(**base)
           {project: "other", assignment: "a2", attempt: "t2", queue_entry: "queue-2",
            authorization: "auth/other/0002", request_id: "req-0002"}.each do |key, value|
-            refute_equal first, OrdinaryMergeContract.binding_digest(**base.merge(key => value)),
+            refute_equal first, Atoms::FixedMergeSchemas.canonical_request_digest(**base.merge(key => value)),
               "#{key} must change the canonical binding digest"
           end
-          refute_equal first, OrdinaryMergeContract.binding_digest(**base.merge(
+          refute_equal first, Atoms::FixedMergeSchemas.canonical_request_digest(**base.merge(
             input: with_deep_value(valid_input, ["pr_url"], "https://forgejo.example/ace/other/pulls/7")
           )), "input changes must change the canonical binding digest"
         end

@@ -4,6 +4,7 @@ require "time"
 require "uri"
 require "ace/git/atoms/delivery_parameters"
 require_relative "../atoms/evidence_digest"
+require_relative "../atoms/fixed_merge_schemas"
 
 module Ace
   module Assign
@@ -122,22 +123,10 @@ module Ace
           end
 
           # Canonical lowercase SHA-256 input digest of a validated document.
-          # Canonical request digest — spec ruling r4: lowercase hex SHA-256
-          # over canonical JSON (recursive code-point key sort, compact
-          # UTF-8) of the full eight-field immutable binding: project,
-          # assignment, attempt, queue_entry, operation (constant merge),
-          # authorization, request_id and the complete validated input
-          # document. Byte-identical input under any different selector,
-          # authorization or request ID yields a different digest; the
-          # document alone is never the digest.
-          def binding_digest(project:, assignment:, attempt:, queue_entry:, authorization:, request_id:, input:)
-            Atoms::EvidenceDigest.digest(
-              "project" => project, "assignment" => assignment, "attempt" => attempt,
-              "queue_entry" => queue_entry, "operation" => "merge",
-              "authorization" => authorization, "request_id" => request_id,
-              "input" => input
-            )
-          end
+          # Canonical request digest — spec ruling r4: the shared producer/
+          # consumer implementation lives in Atoms::FixedMergeSchemas
+          # (canonical_request_digest); this contract deliberately keeps no
+          # local digest computation so both packages can never diverge.
 
           # Admission acknowledgment: exact keys, exact selector echo, opaque
           # reference with no parseable structure implied.
@@ -253,10 +242,12 @@ module Ace
             bounded!(producer.fetch("receiver_id"), 128, "receipt producer.receiver_id")
             bounded!(producer.fetch("principal"), 256, "receipt producer.principal")
             pattern!(producer.fetch("configuration_sha256"), HEX64, "receipt producer.configuration_sha256")
-            unless binding_digest(project: request.fetch("project"), assignment: request.fetch("assignment"),
+            unless Atoms::FixedMergeSchemas.canonical_request_digest(
+              project: request.fetch("project"), assignment: request.fetch("assignment"),
               attempt: request.fetch("attempt"), queue_entry: request.fetch("queue_entry"),
               authorization: request.fetch("authorization"), request_id: receipt.fetch("request_id"),
-              input: input) == receipt.fetch("input_digest")
+              input: input
+            ) == receipt.fetch("input_digest")
               raise ArgumentError, "receipt input_digest is not the canonical digest of the embedded binding"
             end
             validate_effect!(receipt.fetch("effect"))

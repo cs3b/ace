@@ -131,8 +131,10 @@ module Ace
 
         # The canonical request digest per spec ruling r4: the full
         # eight-field immutable binding, never the input document alone.
+        # The canonical request digest per spec ruling r4, computed by the
+        # SHARED producer/consumer implementation (FixedMergeSchemas).
         def ruled_digest(selectors: @selectors, input: @input)
-          Molecules::OrdinaryMergeContract.binding_digest(project: selectors[:project],
+          Atoms::FixedMergeSchemas.canonical_request_digest(project: selectors[:project],
             assignment: selectors[:assignment], attempt: selectors[:attempt],
             queue_entry: selectors[:queue_entry], authorization: selectors[:authorization],
             request_id: selectors[:request_id], input: input)
@@ -441,6 +443,38 @@ module Ace
           assert_equal 2, @producer.requests.length
           intents = delivery_events.count { |event| event.dig("payload", "stage") == OrdinaryMergeConsumer::INTENT_STAGE }
           assert_equal 1, intents
+        end
+
+        # Byte-compat proof (PR49 unification): the consumer's recorded digest
+        # equals the SHARED producer/consumer implementation
+        # (Atoms::FixedMergeSchemas.canonical_request_digest) for identical
+        # bindings, and matches an independent inline recomputation over the
+        # canonical r4 preimage — the same independent check the producer's
+        # fixed_merge_schemas_test applies to its own vectors.
+        def test_consumer_digest_is_byte_compatible_with_the_producer_digest
+          @producer.enqueue(ack_envelope)
+          result = dispatch
+          binding_args = {project: PROJECT, assignment: @selectors[:assignment],
+                          attempt: @selectors[:attempt], queue_entry: QUEUE_ENTRY,
+                          authorization: AUTHORIZATION, request_id: REQUEST_ID}
+          shared = Atoms::FixedMergeSchemas.canonical_request_digest(**binding_args.merge(input: @input))
+          assert_equal shared, result[:input_digest]
+          intent = delivery_events.find { |event| event.dig("payload", "stage") == OrdinaryMergeConsumer::INTENT_STAGE }
+          assert_equal shared, intent.dig("payload", "input_digest")
+          sort_keys = lambda do |value|
+            case value
+            when Hash then value.keys.sort.each_with_object({}) { |key, out| out[key] = sort_keys.call(value[key]) }
+            when Array then value.map { |item| sort_keys.call(item) }
+            else value
+            end
+          end
+          preimage = JSON.generate(sort_keys.call(
+            "project" => PROJECT, "assignment" => @selectors[:assignment],
+            "attempt" => @selectors[:attempt], "queue_entry" => QUEUE_ENTRY,
+            "operation" => "merge", "authorization" => AUTHORIZATION,
+            "request_id" => REQUEST_ID, "input" => JSON.parse(JSON.generate(@input))
+          ))
+          assert_equal Digest::SHA256.hexdigest(preimage), result[:input_digest]
         end
 
         def test_acknowledgment_with_document_only_digest_is_rejected

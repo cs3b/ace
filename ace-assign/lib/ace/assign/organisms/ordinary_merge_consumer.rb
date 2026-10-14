@@ -52,7 +52,12 @@ module Ace
           input_document = validate_input!(input)
           selectors = validated_selectors(project: project, queue_entry: queue_entry,
             authorization: authorization, request_id: request_id)
-          digest = recorded_binding_digest(binding, selectors, input_document)
+          digest = Atoms::FixedMergeSchemas.canonical_request_digest(
+            project: selectors[:project], assignment: binding.fetch("assignment_id"),
+            attempt: binding.fetch("attempt_id"), queue_entry: selectors[:queue_entry],
+            authorization: selectors[:authorization], request_id: selectors[:request_id],
+            input: input_document
+          )
           recorded = merge_effects(binding)
           if (intent = recorded[:intent])
             unless identical_binding?(intent.fetch("payload"), selectors, digest)
@@ -144,20 +149,20 @@ module Ace
           intent_selectors(intent) == selectors && intent.fetch("input_digest") == digest
         end
 
-        # The canonical request digest (spec ruling r4): lowercase SHA-256
-        # over the canonical JSON of the full eight-field immutable binding,
-        # never the input document alone.
-        def recorded_binding_digest(binding, selectors, input_document)
-          Molecules::OrdinaryMergeContract.binding_digest(project: selectors[:project],
-            assignment: binding.fetch("assignment_id"), attempt: binding.fetch("attempt_id"),
-            queue_entry: selectors[:queue_entry], authorization: selectors[:authorization],
-            request_id: selectors[:request_id], input: input_document)
-        end
+        # The canonical request digest (spec ruling r4) is the SHARED
+        # Atoms::FixedMergeSchemas.canonical_request_digest implementation —
+        # this consumer deliberately keeps no local digest computation.
 
         # Re-derives the identical digest from the recorded binding and
         # verifies it against the stored value before any echo validation.
         def rederive_recorded_digest(binding, intent)
-          derived = recorded_binding_digest(binding, intent_selectors(intent), intent.fetch("input"))
+          selectors = intent_selectors(intent)
+          derived = Atoms::FixedMergeSchemas.canonical_request_digest(
+            project: selectors[:project], assignment: binding.fetch("assignment_id"),
+            attempt: binding.fetch("attempt_id"), queue_entry: selectors[:queue_entry],
+            authorization: selectors[:authorization], request_id: selectors[:request_id],
+            input: intent.fetch("input")
+          )
           unless derived == intent.fetch("input_digest")
             raise AttemptErrors::ReceiptRejected,
               "recorded ordinary merge binding digest does not re-derive from the recorded binding"
