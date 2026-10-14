@@ -37,20 +37,26 @@ Captain approved this ownership split on 2026-10-05. Earlier chronological check
 
 ## Current handoff — 2026-10-08 implementation integration
 
-The current ACE source is on `codex/protected-pr-integration`; Lab source is on
-`codex/lab-source-integration`. Neither branch is delivered to main or a current
-publication candidate. The exact joined commits, test reports, interrupted
-checks and remaining implementation are recorded in
+Reconciliation 2026-10-15: the joined source described below WAS delivered.
+The combined exact-head independent review APPROVED `fed9a8ada` ("the
+original-terminal P1 is resolved, no confirmed finding remains"), ACE main was
+fast-forwarded and synchronized to its authorized remotes, 14 fresh artifacts
+were built and Captain-published (2026-10-10), the corrected ten-gem
+publication passed TS-MONO-001 run `8x9q6ex` (4/4 PASS, 49 exact versions,
+six consumer graphs — receipt
+`.ace-local/release/installation-acceptance-8x9q6ex.json`), and the h8x cut
+followed (see Current release state below). The original joined commits, test
+reports and interrupted checks remain recorded in
 [source-integration-2026-10-08.md](source-integration-2026-10-08.md).
 
 - [x] Integrate protected PR/service operations, scoped publication and explicit project routing source.
 - [x] Integrate R2 canonical round/export/result consumption and R3 bounds/escalation source.
 - [x] Integrate physical cleanup, coldboot/network and static Codex composition source.
 - [x] Adopt public protected campaign handoff in canonical workflow instructions and integrate maintained delivery acceptance assets.
-- [ ] Finish actual original Codex startup/producer/client privilege and literal-input handoff; current source seams refuse without that attachment.
+- [x] Finish actual original Codex startup/producer/client privilege and literal-input handoff; current source seams refuse without that attachment. → CANCELLED, not pending: Captain 2026-10-08 cancelled the xza read-proof/dedicated-startup model (source-integration-2026-10-08.md); no source gate remains.
 - [x] Repair the joined HITL LiveClient fixture against the current correlated Codex submission contract; the affected real Store/Inbox/signature flow passes 11/94 (`46f3cd30`). The preceding full run `d74ff6d5` retains its five errors, not a pass.
-- [ ] Perform one independent final source review, fix findings and verify the affected simple unit/integration flows. Reconcile every remaining child criterion before closing tasks.
-- [ ] Deliver main and build fresh artifacts from that integrated revision; Captain publishes with OTP, then propagation proof and the single installed task/observation in gad.2.
+- [x] Perform one independent final source review, fix findings and verify the affected simple unit/integration flows. Done: combined APPROVE `fed9a8ada`, no confirmed finding remaining (source-integration-2026-10-08.md).
+- [x] Deliver main and build fresh artifacts from that integrated revision; Captain publishes with OTP. Done: ACE `fed9a8ada` on GitHub/Forgejo; 14 published 2026-10-10; corrected ten-gem release passed TS-MONO-001 `8x9q6ex`. Remaining: the single installed task/observation in gad.2 (still open).
 
 The source checkmarks above identify implemented integration slices. They do not
 close parent/child tasks or claim actual OS/native execution. The remaining
@@ -129,6 +135,30 @@ The five newly separated source closures (y24/vs2/1w5/09j/qkb.0) use the retaine
 qkb -> R2 -> R3 -> qkc source assets -> central gad.2 run remains the final dependency join. ig5 is an optional pilot, not a Lab gate. Hygiene work outside this path does not imply Lab acceptance. After any producer contract change, rerun affected consumer checks on the combined source before integration/release; an older isolated producer receipt is insufficient. No work is dispatched by this bookkeeping change.
 
 ## Current publication and propagation
+
+### Current release state — h8x cut (reconciled 2026-10-15)
+
+The current publication reality supersedes the historical waves below: the
+authorized exact5 was published to RubyGems.org on 2026-10-14 —
+ace-assign 0.68.0, ace-hitl 0.15.0, ace-hitl-hermes 0.4.0, ace-lab 0.6.0,
+ace-overseer 0.21.1 — in dependency-safe wave order, remote-verified against
+the RubyGems API (publish timestamps 23:31:36Z–23:31:43Z). Receipts:
+`.ace-local/evidence/8xa.t.h8x/publish-r1.md`. The worker route had failed
+closed at Phase B (LAB-origin OTP ask refused: missing lab-config-owned
+`/etc/lab/ace-lab/authorization.yml`); the Captain published the identical
+prepared set manually. Open lab-config item carried there: provision the
+grants document for future delegated pushes and cancel orphan HITL event
+`8xdyw6`.
+
+Actually remaining umbrella work (this task stays open as the source
+sequencer only; installed acceptance belongs to gad.2):
+
+- [ ] Receiver integration turn — xz94 receiver-executor work joined to main per the coordination contract.
+- [ ] `/goal` capability specification (goal-capability source lane).
+- [ ] Delivery gate implementation (qkb1 ordinary-merge producer/consumer coordination and gates).
+- [ ] `lab-config:8wl.t.gad.2` — the single installed acceptance run (including the native OTP LAB-origin route once the grants document exists).
+
+### Historical waves
 
 Local wave 2026-10-06: n0n/5h5/412 are delivered; a bounded 9c2 inventory checkpoint was integrated while 9c2 remained open. Five gem artifacts were prepared then, not published. That queue predates the subsequent source changes and is historical, not the current publication candidate. Prepare and verify a coherent release from the final integrated revision before the Captain's interactive OTP publication. See local-wave-2026-10-06.md and its exact historical receipts. The prior 16-gem history below remains unchanged.
 

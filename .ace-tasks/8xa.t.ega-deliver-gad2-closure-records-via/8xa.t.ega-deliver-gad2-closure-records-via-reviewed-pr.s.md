@@ -1,6 +1,6 @@
 ---
 id: 8xa.t.ega
-status: in-progress
+status: done
 priority: low
 created_at: "2026-10-11 01:55:00"
 estimate: 
@@ -60,10 +60,31 @@ semantics change. Handbook/test suites stay green.
 
 ### Acceptance criteria
 
-- [ ] Repaired task-aware create demonstrated on real Lab (evidence recorded).
-- [ ] Closure records PR opened via AGit with both archival commits + docs.
-- [ ] Independent exact-head review APPROVED with mandatory callback.
-- [ ] STOP at approved PR; no merge, no publication, no direct main push.
+- [x] Repaired task-aware create demonstrated on real Lab (evidence recorded).
+- [x] Closure records PR opened via AGit with both archival commits + docs.
+- [x] Independent exact-head review APPROVED with mandatory callback.
+- [x] STOP at approved PR; no merge, no publication, no direct main push.
+
+## Closure record — 2026-10-15 (task-hygiene reconciliation)
+
+Both deliverables are delivered and integrated; the task's own scope is closed.
+Not claimed: whole-Lab scope. gad.2 system-acceptance gates remain owned by
+lab-config:8wl.t.gad.2 (rc-status.md disclaims any PASS claim; publication was
+not authorized and did not occur in this delivery).
+
+- Closure records: `gad2-closure-summary.md`, `rc-status.md`,
+  `fullsuite-correction.md` are present on main (verified in a fresh checkout
+  of origin/main 95c98ebb5).
+- PR37 receipt: independent review ran with finding F1; the corrected
+  demonstration record is integrated at `928a128c4` ("correct demonstration
+  record — --no-push accepted but not honored (PR37 review F1)"), an ancestor
+  of origin/main; the integrated lineage continues at `96b575878`.
+- Demonstration record verified on main: repaired
+  `ace-git-worktree create --task 8xa.t.ega` produced bookkeeping commit
+  `a2284f897` (the exact commit_scoped path that crashed pre-fix), exit 0;
+  the PR37-F1 tool-defect disclosure (`--no-push` accepted but not threaded to
+  the orchestrator gate, task_worktree_orchestrator.rb:152) is recorded in the
+  summary and handed to the ace-git-worktree backlog.
 
 ## Provenance
 
