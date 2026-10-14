@@ -6,6 +6,9 @@ require "ace/assign"
 require_relative "support"
 require_relative "../../organisms/protected_service_request"
 require_relative "../../organisms/ordinary_merge_request"
+require_relative "../../organisms/ordinary_merge_receiver"
+require_relative "../../molecules/ordinary_listener"
+require_relative "../../molecules/ordinary_receiver_config"
 
 module Ace
   module Lab
@@ -167,6 +170,68 @@ module Ace
 
             def ordinary_producer
               @ordinary_producer ||= Organisms::OrdinaryMergeRequest.new
+            end
+          end
+
+          # The ordinary receiver serve entrypoint (spec 8x3.t.xz9.4
+          # execution clauses): binds the configured unix socket, mutually
+          # authenticates every connection through SO_PEERCRED, admits
+          # through the canonical Assign coordinator, executes the fixed
+          # fast-forward-only merge as the authorized executor and settles
+          # the exact terminal receipt. Configuration is one explicit
+          # deployment-owned file; the host owns its placement and
+          # credentials. Blocks until stopped.
+          class Listen < Ace::Support::Cli::Command
+            include Ace::Support::Cli::Base
+            include Output
+
+            desc "Serve the ordinary fixed merge receiver on its configured socket"
+            option :mode, type: :string, required: true,
+              desc: "ordinary-merge selects the ordinary fixed merge receiver"
+            option :project, type: :string, required: true, desc: "Project stable ID"
+            option :config, type: :string, required: true,
+              desc: "Deployment-owned receiver configuration file (YAML)"
+
+            def call(mode:, project:, config:, **options)
+              unless options.empty?
+                return emit(Organisms::OrdinaryMergeRequest.refusal_envelope(
+                  "ordinary_merge_invalid_request",
+                  "unknown listen selector: #{(options.keys).sort.join(', ')}",
+                  request_id: "unknown", input_digest: nil
+                ))
+              end
+              unless mode == Organisms::OrdinaryMergeRequest::MODE
+                return emit(Organisms::OrdinaryMergeRequest.refusal_envelope(
+                  "ordinary_merge_invalid_request", "unknown service mode",
+                  request_id: "unknown", input_digest: nil
+                ))
+              end
+              receiver_config = Molecules::OrdinaryReceiverConfig.load(config)
+              unless receiver_config.project == project
+                return emit(Organisms::OrdinaryMergeRequest.refusal_envelope(
+                  "ordinary_merge_selection_mismatch",
+                  "configured project does not match the requested project",
+                  request_id: "unknown", input_digest: nil
+                ))
+              end
+              policy_document = Molecules::GrantResolver.trusted_document(
+                receiver_config.policy_path
+              )
+              receiver = Organisms::OrdinaryMergeReceiver.new(
+                config: receiver_config, policy_document: policy_document
+              )
+              listener = Molecules::OrdinaryListener.new(
+                socket_path: receiver_config.socket_path,
+                peer_uid: receiver_config.principal_uid,
+                handler: receiver
+              )
+              receiver.recover_pending!
+              listener.serve
+            rescue Ace::Lab::InvalidConfigurationError, Ace::Assign::AttemptErrors::EvidenceUnavailable => e
+              emit(Organisms::OrdinaryMergeRequest.refusal_envelope(
+                "ordinary_merge_unavailable", e.message,
+                request_id: "unknown", input_digest: nil
+              ))
             end
           end
         end

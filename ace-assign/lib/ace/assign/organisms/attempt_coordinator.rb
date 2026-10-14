@@ -337,6 +337,13 @@ module Ace
           journal_for.fixed_merge_request(request_id)
         end
 
+        # Read-only listing of every canonical fixed merge record: lets the
+        # receiver restart reconciliation find its own still-pending records
+        # by binding. Read-only; performs no dispatch and owns no state.
+        def fixed_merge_records
+          journal_for.fixed_merge_request_records
+        end
+
         # Read-only status: resolve the opaque reference against the
         # canonical record and verify every selector. Performs no dispatch,
         # retry, authorization refresh or selector repair. Returns the

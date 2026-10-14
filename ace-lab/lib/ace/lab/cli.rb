@@ -26,7 +26,8 @@ module Ace
         ["resolve", "Resolve one lab entry by exact stable ID"],
         ["route", "Select a configured capable service in a project"],
         ["service request", "Request one authorized service operation"],
-        ["service status", "Read a service request outcome"]
+        ["service status", "Read a service request outcome"],
+        ["service listen", "Serve the ordinary fixed merge receiver on its configured socket"]
       ].freeze
 
       HELP_EXAMPLES = [
@@ -52,6 +53,7 @@ module Ace
       register "route", CLI::Commands::Route.new
       register "service request", CLI::Commands::Service::Request.new
       register "service status", CLI::Commands::Service::Status.new
+      register "service listen", CLI::Commands::Service::Listen.new
 
       # Register version command
       version_cmd = Ace::Support::Cli::VersionCommand.build(
