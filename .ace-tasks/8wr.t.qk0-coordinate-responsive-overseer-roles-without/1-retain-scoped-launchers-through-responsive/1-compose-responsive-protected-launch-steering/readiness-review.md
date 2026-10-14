@@ -129,3 +129,42 @@ when the authorized integrator confirms the ACTUAL main merge and the queue
 owner reconciles the receipt (fresh main == merged head); rebase, refreshed
 review and request-sent are intermediate states, never closure. Rebased-/
 reviewed-only does NOT satisfy this acceptance; merged-in-order does.
+
+### Worktree registry — normative (Captain lifecycle audit, 2026-10-12)
+
+The WORKTREE REGISTRY is normative queue state (cross-ref:
+`../../../coordinator-source-contract.md`): each registered worktree records
+owner, task, attempt, branch, PR and state; slot capacity rules apply to
+registry entries. ACTUAL-START ACKNOWLEDGEMENT: a claimed/working entry is
+confirmed only by observed new activity — an output delta or a produced
+artifact; absent observed activity it is STALE-CLAIMED-WORKING and is
+re-dispatched/inspected per the stale rule. Work and evidence are preserved
+BEFORE any accepted cleanup, and canonical main is synchronized safely
+(fresh remote observation, never remerge — aligning with the existing
+recovery-matrix rows above).
+
+Acceptance scenario (idle dispatch, Instance-5 class): a claimed working
+registry entry with no observed new activity is detected stale and
+re-dispatched without duplicate effect — the stale inspection reconciles the
+original attempt/claim reference before any new dispatch, and the re-dispatch
+takes a fresh attempt identity only after the old writer is verifiably gone
+or inert.
+
+### Acceptance list (lifecycle, Captain audit 2026-10-12)
+
+1. ≥2 sibling PRs ACTUALLY MERGED IN ORDER — the outcome-acceptance paragraph
+   above (kept as the binding acceptance; rebased/reviewed-only does not
+   satisfy it).
+2. ONE explicit release batch end-to-end: selection + freeze (exact main
+   commit, artifact list, dependency versions; SELECTED vs DEFERRED with
+   reasons) → release-prep REVIEWED PR (version bumps, changelogs, dependency
+   manifest — never direct-to-main) → authorized publication with
+   receipt/digests reconciled against actual registry/install evidence →
+   installed smoke check → preservation/cleanup closure of the batch's
+   records/worktrees.
+3. Restart/lost-reply: the queue adopts persisted state after restart without
+   duplicate execution; a lost integrator or publication reply triggers
+   same-reference read-only reconciliation — never blind retry.
+4. Idle dispatch: a claimed working dispatch with no observed new activity is
+   detected stale and re-dispatched without duplicate effect (worktree
+   registry ACTUAL-START ACKNOWLEDGEMENT above).

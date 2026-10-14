@@ -6,8 +6,8 @@ doc-type: workflow
 title: Configure Project Delivery Supervision
 purpose: Resolve and safely adapt project delivery supervision without replacing project policy or duplicating canonical work.
 ace-docs:
-  last-updated: '2026-10-11'
-  last-checked: '2026-10-11'
+  last-updated: '2026-10-12'
+  last-checked: '2026-10-12'
 ---
 
 # Configure Project Delivery Supervision
@@ -147,6 +147,20 @@ The adaptation may select and specialize supervision behavior, but it does not g
 permissions, does not publish, and does not exercise merge, deployment, installation,
 or root authority.
 
+Executable population rule (Captain lifecycle audit, 2026-10-12): project
+adaptation must POPULATE an executable project-specific delivery template +
+decision guide -- not prose placeholders -- and ACTUAL service/capability
+checks: every configured service or command is verified to exist and run in
+the project runtime (invoke its status/read-only path and record the
+observed result; a configured-but-nonfunctional entry is `BLOCKED` with the
+observed failure, never shipped as if working). Release and publication
+REUSE the existing canonical skills as the execution mechanisms -- `as-release`,
+`as-release-bump-version`, `as-release-rubygems-publish`,
+`as-github-release-publish` -- the adaptation configures and binds them to
+the project; it never duplicates or re-implements them. Workers stay
+prepare-only (PR-ready terminal); publication remains the separately
+authorized overseer step.
+
 ### 5. Verify resolution and repeatability
 
 Repeat the complete source inventory after edits:
@@ -160,6 +174,10 @@ Repeat the complete source inventory after edits:
    writes and no duplicate paths, steps, mappings, registrations, or task references.
 5. Keep genuine unresolved policy or provisioning as `BLOCKED`; idempotence never
    turns a blocker into assumed success.
+6. For every configured service/command or bound release/publication skill,
+   execute its read-only/status path once and record the observed result as
+   executable evidence; a failed or missing executable is `BLOCKED` with the
+   exact failure and responsible owner.
 
 ## Required Report
 
@@ -195,6 +213,10 @@ installation, deployment, or root-operation gates separately from source adaptat
 - The report names every concrete change and every unresolved blocker with its owner
   and evidence; it claims no permission, publication, deployment, installation, or
   host-owned root effect.
+- The adapted delivery template and decision guide are executable (real steps,
+  bound release/publication skills, verified service/command checks) -- every
+  configured service or command has recorded observed-run evidence, and no
+  release/publication skill is duplicated or re-implemented.
 
 ## Error Handling
 

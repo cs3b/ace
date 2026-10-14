@@ -217,7 +217,10 @@ owner IS the overseer):
 - Design/spec-first; implementation gated until Captain/host approval of
   the spec; no generic rollout.
 - No publication; rubygems-publish remains a separate authority; RC records
-  are preparation-only.
+  are preparation-only. (Scoping, Captain lifecycle audit 2026-10-12: this
+  bullet scoped the SPEC pass and the worker template to prepare-only
+  delivery — it is NOT a permanent prohibition on the overseer lifecycle;
+  see §6 for the release flow through separately authorized publication.)
 - Completion-callback delivery protocol + coordinator JSON verification.
 - Preserve all running work (PR37 loop, drills).
 
@@ -271,6 +274,27 @@ Missing provisioning (attributable BLOCKED inputs; owners named):
   dry-run planning contradicts the flag. Owner: ace-git-worktree backlog;
   investigation+fix gated on spec-approved implementation.
 
+## 6. Release lifecycle — explicit batch selection → authorized publication (Captain lifecycle audit, 2026-10-12)
+
+The overseer lifecycle continues past integration to release; workers remain
+prepare-only (PR-ready terminal). Normative flow, queue-owner owned:
+
+a. EXPLICIT release-batch selection: freeze the exact integrated main
+   commit, artifact list and dependency versions at selection; record
+   SELECTED vs DEFERRED PRs with reasons (extends the §1b decision record).
+b. Release-prep owns a REVIEWED PR (version bumps, changelogs, dependency
+   manifest) — never direct-to-main; it passes the same integration contract.
+c. Publication/deployment is PER PROJECT (gems vs demo vs production) and
+   references the EXISTING skills as execution mechanisms — `as-release`,
+   `as-release-bump-version`, `as-release-rubygems-publish`,
+   `as-github-release-publish` — never duplicated.
+d. AUTHORIZED EXECUTION for publication: artifact-bound request; OTP/HITL
+   when project config demands; merge authorization does not carry over.
+e. PARTIAL/UNCERTAIN publication outcomes reconcile registry/status against
+   actual registry/install evidence — never blind repeat.
+f. Post-publication closure: install verification + acceptance + cleanup of
+   the batch's records/worktrees per the preservation rules.
+
 ## Related task refs
 
 8wr.t.qkb (blocked parent), 8wr.t.qkb.0 (evidence provider, delivered),
@@ -285,4 +309,7 @@ Missing provisioning (attributable BLOCKED inputs; owners named):
 No implementation in this pass; no new orchestration store; no worker
 template extension toward merge/publish/deploy; no publication; no standing
 authorization exercised; no change to Captain-host integration authority
-boundaries.
+boundaries. (Scoping, Captain lifecycle audit 2026-10-12: these non-goals
+bind THIS design/spec pass and the worker template; the overseer release
+lifecycle itself is normative in §6, with publication separately authorized
+— not a blanket grant.)

@@ -209,6 +209,37 @@ request/receipt.
   completes or an actionable true blocker exists; a missing callable
   integration route is a tracked delivery blocker to implement/install, not
   a permanent lane boundary.
+
+## Release lifecycle — batch selection through authorized publication (Captain lifecycle audit, 2026-10-12) — SPEC
+
+Scoping correction first: the earlier "No publication" statements scoped the
+WORKER TEMPLATE (and this slice's spec pass) to prepare-only delivery ending
+at PR-ready. They must NOT be read as a permanent prohibition on the overseer
+lifecycle. The separation is: WORKERS end at PR-ready (prepare-only); the
+OVERSEER lifecycle continues through integration; and PUBLICATION is a
+separately authorized step (project-configured authority + OTP/HITL where the
+project demands it), not a new blanket grant.
+
+Normative release flow, owned by the queue owner:
+
+a. EXPLICIT release-batch selection: freeze the exact integrated main
+   commit, artifact list and dependency versions at selection; record
+   SELECTED vs DEFERRED PRs with reasons.
+b. Release preparation owns a REVIEWED PR (version bumps, changelogs,
+   dependency manifest) — never direct-to-main; it re-enters the same
+   integration contract (fresh-resolution gate, typed outcomes).
+c. Publication/deployment is configured PER PROJECT (gems vs demo vs
+   production) and references the EXISTING skills as execution mechanisms —
+   `as-release`, `as-release-bump-version`, `as-release-rubygems-publish`,
+   `as-github-release-publish` — do NOT duplicate them.
+d. Publication requires AUTHORIZED EXECUTION: an artifact-bound request;
+   OTP/HITL when the project config demands it. Merge authorization alone
+   does not authorize publication.
+e. PARTIAL or UNCERTAIN publication outcomes reconcile registry/status
+   against actual registry/install evidence — never blind repeat.
+f. Post-publication closure: install verification + acceptance + cleanup of
+   the batch's records/worktrees per the preservation rules (work and
+   evidence preserved before any accepted cleanup).
 - Queue states ready / needs-rebase / reviewing / integrating / merged /
   blocked / uncertain reconcile against actual forge/process receipts via the
   existing goal/wake/watch primitives; a persisted queue adopts on restart
