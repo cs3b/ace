@@ -194,6 +194,19 @@ request/receipt.
   → refresh main → select and prepare ONLY the next candidate. Queued later
   PRs retain their existing branches/heads untouched until their turn; no
   rollback/reset of prior batch work.
+- REMOTE-READY GATE (Captain, incident r5): an integration request may be
+  sent ONLY after (a) the forge remote PR head is updated to the reviewed
+  exact head and VERIFIED via fresh ls-remote — `refs/pull/N/head` equals
+  the reviewed head — and (b) the target base is fresh-verified —
+  `ls-remote refs/heads/main` equals the expected base. LOCAL-REVIEWED is
+  NOT REMOTELY-READY: local branch/review completion alone never makes a
+  candidate eligible. A request sent with a mismatched remote head is a
+  process failure, not an eligible invocation.
+- HANDOFF DEFINITION (post-rebase): after an executor rebase, the QUEUE
+  OWNER — never the executor — performs the remote head update (topic push;
+  force-update is sanctioned for reviewed-head moves only), verifies the
+  actual refs per the REMOTE-READY GATE, records previous-head → new-head
+  in the evidence, and only then issues the scoped integrator request.
 - Item-closure definition (Captain outcome acceptance): a queue item is
   complete ONLY when the authorized integrator confirms the ACTUAL main
   merge and the queue owner reconciles the receipt — fresh main equals the

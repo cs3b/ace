@@ -143,6 +143,19 @@ main → select and prepare ONLY the next candidate. Queued later PRs retain
 their existing branches/heads untouched until their turn; prior batch work is
 never rolled back or reset.
 
+REMOTE-READY GATE (Captain, incident r5): an integration request may be sent
+ONLY after (a) the forge remote PR head is updated to the reviewed exact head
+and verified via fresh ls-remote (`refs/pull/N/head` == reviewed head) and
+(b) the target base is fresh-verified (`ls-remote refs/heads/main` ==
+expected base). LOCAL-REVIEWED is NOT REMOTELY-READY: local branch/review
+completion alone never makes a candidate eligible; the `ready` queue state
+means remote-verified, not locally-finished. HANDOFF: after an executor
+rebase the QUEUE OWNER (never the executor) performs the remote head update
+(topic push; force-update sanctioned only for reviewed-head moves), verifies
+the actual refs, records previous-head → new-head in the evidence, and only
+then issues the scoped integrator request. A request with a mismatched
+remote head is a process failure.
+
 Sibling-PR acceptance scenario (detailed in `8wr.t.qkb.1` and the `qk0.1.1`
 readiness record): merge the first reviewed sibling → its receipt prepares
 ONLY the second sibling → the second fails the ancestry check → typed
@@ -151,7 +164,9 @@ exact-head checks + independent explicit review of the new head → ONE scoped
 integrator request → integrate the second → refresh main before any further
 selection. Includes the changed-target recheck before mutation and the
 uncertain-receipt reconciliation path; PR3..N stay untouched until their
-turn.
+turn. Each request step carries the remote-head verification assertion: the
+forge head equals the reviewed head BEFORE the request — a request sent with
+a mismatched remote head is a process failure.
 
 Queue-owner duty (outcome layer): the queue owner maintains wake/goal duty —
 invoking integration, monitoring the authoritative result, refreshing main

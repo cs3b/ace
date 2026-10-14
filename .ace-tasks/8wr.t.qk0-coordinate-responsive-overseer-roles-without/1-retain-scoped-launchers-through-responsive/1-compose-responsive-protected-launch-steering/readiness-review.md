@@ -107,8 +107,14 @@ integration):
    worktree; the applicable checks re-run and an INDEPENDENT EXPLICIT review
    binds to the NEW exact head — patch identity may support a short delta
    review but never substitutes the explicit independent head approval (the
-   old approval is void); PR updated, remote candidate head/base verified,
-   ONE scoped integrator request resubmitted.
+   old approval is void); the QUEUE OWNER (never the executor) updates the
+   remote PR head (topic push; force-update sanctioned only for
+   reviewed-head moves), VERIFIES the actual refs — fresh ls-remote shows
+   `refs/pull/N/head` == reviewed head AND `refs/heads/main` == expected
+   base (LOCAL-REVIEWED is NOT REMOTELY-READY) — records previous-head →
+   new-head in the evidence, and only then resubmits the ONE scoped
+   integrator request. A request sent while the forge PR head still holds a
+   pre-rebase sha is a process failure, not an eligible invocation.
 5. The queue waits/reconciles the actual integration receipt, refreshes
    main, then selects and prepares ONLY the next candidate. Changed-target
    recheck immediately before the mutation: a race detected there voids
@@ -168,3 +174,9 @@ or inert.
 4. Idle dispatch: a claimed working dispatch with no observed new activity is
    detected stale and re-dispatched without duplicate effect (worktree
    registry ACTUAL-START ACKNOWLEDGEMENT above).
+5. REMOTE-READY gate: every integration request in any scenario carries the
+   remote-head verification assertion — forge PR head == reviewed exact head
+   (fresh ls-remote) and target base fresh-verified BEFORE the request; a
+   request with a mismatched remote head is a process failure. The queue
+   owner (never the executor) performs the remote head update and records
+   previous-head → new-head in the evidence.
