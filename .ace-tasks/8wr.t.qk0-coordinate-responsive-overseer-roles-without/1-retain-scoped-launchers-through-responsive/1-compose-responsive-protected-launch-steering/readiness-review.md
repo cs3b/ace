@@ -180,3 +180,14 @@ or inert.
    request with a mismatched remote head is a process failure. The queue
    owner (never the executor) performs the remote head update and records
    previous-head → new-head in the evidence.
+6. Pane/worktab lifecycle (Captain, r6): after an accepted result the owning
+   overseer closes the work pane and the last-pane tab. The e2e observation
+   set: pane gone, last tab gone, results recoverable, and no active work
+   lost. The closure gate reconciled exact pane/session/assignment/attempt
+   identity and ACTUAL process state BEFORE closing, with work/evidence
+   durably preserved first; review-completed pane closure while the PR waits
+   merge is acceptable (the review record persists) while worktree cleanup
+   stays separate and gated on preservation/delivery criteria; an active or
+   uncertain attempt is never closed merely for visual idleness. A bounded
+   reconcile-on-wake/restart pass reports orphan/stale pane/session IDs and
+   never blind-closes.

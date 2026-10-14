@@ -181,6 +181,22 @@ cycle — rebased/reviewed-only does NOT satisfy it. A missing callable
 integration route is a tracked delivery blocker to implement/install
 (attributable, named owner), not a permanent lane boundary.
 
+Pane/worktab lifecycle (Captain, r6): the overseer owns cleanup of its
+worker/reviewer panes and worktabs as a lifecycle duty — the Lab coordinator
+owns only its own coordination panes/routes. The queue folds pane/worktab
+lifecycle into its existing state reconciliation (same goal/wake/watch
+primitives, no new service). CLEANUP-AFTER-ACCEPTED-RESULT: close an accepted
+work pane — and the tab when that was its last pane; keep at most 4 panes per
+tab; never hold an idle tab merely reserved for pending work — only through
+the closure gate: exact pane/session/assignment/attempt identity reconciled
+against ACTUAL process state, the result ACCEPTED, and the work/evidence
+durably preserved first. Review-completed panes MAY close while the PR waits
+merge (the review record persists); WORKTREE cleanup stays SEPARATE and gated
+on preservation/delivery criteria. An active or uncertain attempt is never
+closed merely because it is visually idle. On each wake and after restart a
+BOUNDED reconcile pass reports orphan/stale pane/session IDs — reporting
+only, never blind-closing.
+
 ## 2. Requirement — delegation of rebase + REQUIRED RENEWED EVIDENCE
 
 Any operation that moves a deliverable's head AFTER exact-head evidence was

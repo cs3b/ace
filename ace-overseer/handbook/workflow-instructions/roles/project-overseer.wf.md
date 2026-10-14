@@ -5,8 +5,8 @@ doc-type: workflow
 title: Coordinate Project Work
 purpose: Canonical project-overseer role charter for scoped ACE orchestration.
 ace-docs:
-  last-updated: '2026-10-12'
-  last-checked: '2026-10-12'
+  last-updated: '2026-10-14'
+  last-checked: '2026-10-14'
 ---
 # Coordinate Project Work
 
@@ -128,6 +128,22 @@ request; wait/reconcile the actual integration receipt; refresh main; then
 select and prepare ONLY the next candidate. Queued later PRs keep their
 existing branches and heads untouched until their turn, and prior batch work
 is never rolled back or reset.
+
+Pane and worktab lifecycle is OVERSEER-OWNED cleanup duty — not user or host
+babysitting: the project overseer cleans up its own worker/reviewer panes and
+worktabs as a lifecycle duty; the Lab coordinator owns only its own
+coordination panes/routes. CLOSE-ON-ACCEPT: close an accepted work pane — and
+close the tab when that was its last pane; keep at most 4 panes per tab; and
+never hold an idle tab merely reserved for pending work. The closure gate
+binds to identity and ACTUAL state, never to visual idleness: reconcile the
+exact pane/session/assignment/attempt identity and the actual process state;
+close only after the result is ACCEPTED and the work/evidence is durably
+preserved; never close an active or uncertain attempt merely because it looks
+idle. Review-completed MAY allow pane closure while the PR still waits for
+merge — the review record persists; WORKTREE cleanup is SEPARATE and happens
+only when the preservation/delivery criteria are met. Each wake and restart
+runs a BOUNDED reconcile pass that reports orphan/stale pane/session IDs — it
+never blind-closes.
 
 Hard prohibitions: never push directly to main; never switch the canonical
 checkout to a topic branch; never reuse a stale review as approval for a
