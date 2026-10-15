@@ -97,7 +97,7 @@ module Ace
                 # StandardError describing a supervisor-reported child spawn
                 # failure, or nil when the child group started normally.
                 def child_spawn_failure
-                  return nil if supervised != true || readiness.nil.
+                  return nil if supervised != true || readiness.nil?
 
                   message = readiness.to_s
                   return nil unless message.start_with?("S")

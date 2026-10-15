@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.21.1] - 2026-10-14
+
+### Changed
+
+- Package the coordination-contract role-guide updates in the project-overseer and configure-project workflows: serial preparation and serial integration per delivery candidate, queue-item closure as reconciled merge receipt, release-batch lifecycle with separate publication authority, and overseer-owned close-on-accept for delegated panes and worktabs.
+- Follow the ace-lab 0.6 producer line in the dependency manifest; no code or behavior change (constraint-only correction so the coordinated h8x graph resolves).
+
+## [0.21.0] - 2026-10-12
+
+### Added
+
+- Add the `as-overseer-configure-project` skill and packaged `wfi://overseer/configure-project` workflow for idempotent, customization-preserving delivery supervision adaptation.
+
 ## [0.20.2] - 2026-10-10
 
 ### Fixed

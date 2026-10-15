@@ -34,7 +34,7 @@ per URI.
 
 | Surface | Protocol | Project-local location | Overridable? | Winner of duplicates (shipped defaults) |
 |---------|----------|------------------------|--------------|------------------------------------------|
-| Workflows | `wfi://` | `.ace-handbook/workflow-instructions/<ns>/<name>.wf.md` | Yes | Project-local, when its source priority is lower than the gem source's (e.g. the shipped `local` source at priority 5 vs gem at 10) |
+| Workflows | `wfi://` | `.ace-handbook/workflow-instructions/<ns>/<name>.wf.md` | Yes | Project-local, when its source priority is lower than the gem source's (e.g. this monorepo's checked-in `local` source at priority 5 vs gem at 10) |
 | Cookbooks | `cookbook://` | `.ace-handbook/cookbooks/<name>.cookbook.md` | Yes | The candidate from the source with the lower priority number. The shipped project-local default registers priority 20 and the gem source 10, so **the gem wins by default**; register a project cookbook source with priority < 10 to make project-local win |
 | Guides | `guide://` | `handbook/guides/<name>.g.md` | Yes, with registration | Requires a project source registration (`.ace/nav/protocols/guide-sources/local.yml` → `handbook/guides`); with priority < 10 the project-local guide wins. Without registration the gem wins |
 | Skills | `skill://` | none | **No** | Always the gem. Skills are thin layers; override the workflow the skill calls instead |
@@ -44,9 +44,9 @@ per URI.
 
 Sources for a protocol are scanned in ascending priority order (lower number = higher precedence); the first source
 containing the resource wins and remaining duplicates are ignored. Registration defaults: project sources 10, user
-sources 50, gem defaults 100 — an individual source registration may pin another value (this is why the shipped
-`local` workflow source at priority 5 beats the gem at 10, while the shipped project-local cookbook source at 20 loses
-to the gem at 10).
+sources 50, gem defaults 100 — an individual source registration may pin another value. In this monorepo, the checked-in
+`.ace/nav/protocols/wfi-sources/local.yml` sets priority 5 and beats the gem at 10; downstream projects must register
+their own local workflow source. The shipped project-local cookbook source at 20 loses to the gem at 10.
 
 To answer "why did this candidate win?" for a concrete URI without planting probe files:
 
@@ -73,7 +73,8 @@ are ignored and resolution always returns the gem file. The design rule is: **ov
 2. **Create the project-local file** at the surface's project-local location (see table), keeping the canonical
    frontmatter and structure so tools keep resolving it.
 3. **Ensure the source registration makes your file win:**
-   - workflows: keep `.ace/nav/protocols/wfi-sources/local.yml` priority below the gem source (shipped default: 5).
+   - workflows: register `.ace/nav/protocols/wfi-sources/local.yml` with priority below the gem source; this monorepo's
+     checked-in registration uses 5, but downstream projects do not receive that project-local source by default.
    - cookbooks: register `.ace/nav/protocols/cookbook-sources/local.yml` with priority < 10 (the shipped
      project-local default of 20 loses to the gem's 10).
    - guides: register `.ace/nav/protocols/guide-sources/local.yml` pointing at `handbook/guides` with priority < 10;
@@ -135,8 +136,10 @@ ace-handbook sync                                      # regenerates .agents/ski
 
 - **Override silently loses:** inspect `ace-nav resolve <uri> --why`; the losing candidate's source priority is too
   high — lower it in the source registration.
-- **Guide override not discovered at all:** no project guide source is registered; add
-  `.ace/nav/protocols/guide-sources/local.yml` (see Process Step 3).
+- **Guide override does not win:** a planted guide may be discovered as a losing candidate through the
+  `@ace-support-nav` gem-default example source (`./handbook/guides`, priority 100), or it may be absent from the
+  candidates, depending on source registration. Register `.ace/nav/protocols/guide-sources/local.yml` with priority
+  below the gem source (see Process Step 3), then confirm the project candidate wins with `ace-nav resolve --why`.
 - **Skill edit appears to do nothing:** skills are not overridable; override the workflow the skill calls.
 - **`.agents/skills/` edits keep disappearing:** expected — `ace-handbook sync` regenerates the projection and prunes
   stale entries; edit canonical skills in the owning gem.

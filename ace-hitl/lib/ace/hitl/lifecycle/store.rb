@@ -2,6 +2,7 @@
 
 require "securerandom"
 require "fileutils"
+require "pathname"
 require "ace/hitl/contract"
 require_relative "errors"
 require_relative "identity"
@@ -79,7 +80,8 @@ module Ace
 
         def initialize(root:, binding:, policy: AccessPolicy.new,
           identity: Identity, ownership: AtomicJson::DEFAULT_OWNERSHIP,
-          poll_seconds: CONSUME_POLL_SECONDS, vault: :file, proposal_clock: -> { Time.now.utc }, stopping: -> { false })
+          poll_seconds: CONSUME_POLL_SECONDS, vault: :file, proposal_clock: -> { Time.now.utc },
+          stopping: -> { false }, group: DEFAULT_GROUP)
           raise ArgumentError, "a binding policy is required (fail closed without one)" unless binding
           raise ArgumentError, "an access policy is required (fail closed without one)" unless policy
 
@@ -92,6 +94,7 @@ module Ace
           @vault = vault == :file ? OtpVault::FileVault : vault
           @proposal_clock = proposal_clock
           @stopping = stopping
+          @group = group
         end
 
         # ---- requester side ------------------------------------------------
@@ -585,6 +588,7 @@ module Ace
             FileUtils.mkdir_p(dir)
             File.chmod(mode, dir)
           end
+          retag_public_projections! if @identity.root?
           nil
         end
 
@@ -1083,7 +1087,20 @@ module Ace
         end
 
         def group_id
-          @group_id ||= @identity.group_id(DEFAULT_GROUP)
+          @group_id ||= @identity.group_id(@group)
+        end
+
+        def retag_public_projections!
+          public_dir.children.each do |path|
+            next unless path.basename.to_s.end_with?(".json")
+
+            stat = File.lstat(path)
+            unless stat.file? && !stat.symlink?
+              raise StateError, "public lifecycle projection is not a regular file"
+            end
+            File.chmod(PUBLIC_MODE, path)
+            @ownership.chown(path, AtomicJson::Ownership.new(uid: stat.uid, gid: group_id))
+          end
         end
       end
     end

@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.0] - 2026-10-14
+
+### Added
+
+- Add `ace-hitl serve --tls-authority FILE` for the host/Incus mTLS crossing: a TLS 1.3-only loopback lifecycle authority with mutual X.509 identity (closed-form URI SANs, exact SHA-256 fingerprint pins, configured issuing CA, serverAuth/clientAuth EKU), fail-closed credential provisioning-layout enforcement before any socket opens, and remote peer-to-project binding that refuses pending flows, creates, and proposals for any non-bound project. Unix peer-credential serving is unchanged; shared frame/store logic is extracted without behavior change.
+
+### Changed
+
+- Narrow `ace-hitl serve --group` to dedicated lifecycle groups: a missing group, broad or known-shared control groups (gid 0, `lab-control`), the legacy `/run/lab` directory, and directories containing a legacy `labd.sock` entry now refuse startup fail-closed before any endpoint is created.
+
+## [0.14.0] - 2026-10-11
+
+### Added
+
+- Add `ace-hitl serve --group` so each repository authority can expose its lifecycle socket through a dedicated control group.
+
+### Changed
+
+- Direct unsafe socket-directory failures to dedicated service-owned directories that do not contain unrelated service sockets.
+- Apply the configured authority group to root-owned public lifecycle projections as well as the service socket.
+
+### Fixed
+
+- Refuse startup if the configured socket group cannot be resolved or assigned, and retag existing public projections to the configured group before serving.
+
 ## [0.13.1] - 2026-10-10
 
 ### Fixed

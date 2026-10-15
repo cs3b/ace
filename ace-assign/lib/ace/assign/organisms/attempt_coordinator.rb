@@ -93,7 +93,7 @@ module Ace
             raise AttemptErrors::Conflict, "Terminal recovery is read-only"
           end
           planned = [{type: "recovery_observation", payload: {"decision" => decision,
-            "recovery_reason" => reason, "observation" => observation}}]
+                                                              "recovery_reason" => reason, "observation" => observation}}]
           if state == "running" && decision != "adopt"
             Atoms::AttemptStateMachine.transition!(state, "uncertain")
             planned << {type: "transition", payload: {"from" => state, "to" => "uncertain", "reason" => reason}}
@@ -284,6 +284,90 @@ module Ace
           journal_for.transition_service_request(request_id, state: "failed-settled",
             receipt: receipt, validated: true)
         end
+
+        # ---- ordinary fixed merge primitive (spec 8x3.t.xz9.4) -------------
+        #
+        # The shared creation/resolution/read-only-status primitive the
+        # ordinary receiver composes. Every durable write and read for
+        # ordinary fixed merge requests lives in the canonical evidence
+        # journal — this API never creates a receiver-local record.
+
+        # Admit one ordinary fixed merge request. The opaque reference is
+        # created here and returned only through the durable record; callers
+        # receive the canonical record with its journal commit, so an
+        # acknowledgment is never issued before durability. An identical
+        # resubmission replays the original record; any different field
+        # under the same request ID, or a reused authorization, is a
+        # conflict/refusal — never a second effect.
+        def admit_fixed_merge_request(submission)
+          record = stringified(submission).merge("state" => "pending",
+            "reference" => Molecules::FixedEffectReference.create)
+          # The guard raises the distinct error itself, so journal conflicts
+          # never need message-string discrimination: replay/binding conflicts
+          # stay Conflict, a consumed authorization is AuthorizationConflict.
+          guard = lambda do
+            conflict = @journal.fixed_authorization_conflict(record)
+            if conflict
+              raise AttemptErrors::AuthorizationConflict,
+                "Authorization reference is not currently valid"
+            end
+            nil
+          end
+          @journal.admit_fixed_merge_request(record, guard: guard)
+        end
+
+        # Begin the fixed effect (pending -> uncertain). The single CAS
+        # transition is the at-most-one-merge proof: a restarted receiver
+        # replays "already started" and must not dispatch again.
+        def begin_fixed_merge_effect(request_id)
+          @journal.begin_fixed_merge_request(request_id)
+        end
+
+        # Settle the fixed effect with the exact terminal receipt. The
+        # journal validates the closed receipt schema and its binding to the
+        # admitted record before the transition lands.
+        def settle_fixed_merge_effect(request_id, terminal_status:, receipt:)
+          @journal.settle_fixed_merge_request(request_id, terminal_status: terminal_status, receipt: receipt)
+        end
+
+        # Read-only canonical record lookup by request ID: lets the producer
+        # recognize an exact replay (and return the original acknowledgment)
+        # or a conflicting reuse without any receiver-local state.
+        def fixed_merge_record(request_id)
+          journal_for.fixed_merge_request(request_id)
+        end
+
+        # Read-only status: resolve the opaque reference against the
+        # canonical record and verify every selector. Performs no dispatch,
+        # retry, authorization refresh or selector repair. Returns the
+        # frozen canonical record, or nil when the reference or any selector
+        # does not match — the caller must answer a mismatch identically
+        # without revealing whether another project holds the reference.
+        def fixed_merge_status(reference:, request_id:, project_id:, assignment_id:, attempt_id:,
+          queue_entry:, input_digest:)
+          record = @journal.fixed_merge_request(request_id)
+          return nil unless record
+          matches = reference == record["reference"] && input_digest == record["input_digest"] &&
+            [project_id, assignment_id, attempt_id, queue_entry].zip(
+              %w[project_id assignment_id attempt_id queue_entry].map { |key| record[key] }
+            ).all? { |supplied, canonical| supplied == canonical }
+          matches ? freeze_canonical(record) : nil
+        end
+
+        def freeze_canonical(record)
+          JSON.parse(JSON.generate(record)).freeze
+        end
+        private :freeze_canonical
+
+        def stringified(submission)
+          unless submission.is_a?(Hash)
+            raise ArgumentError, "fixed merge submission must be a mapping"
+          end
+          submission.each_with_object({}) do |(key, value), result|
+            result[key.to_s] = value
+          end
+        end
+        private :stringified
 
         def validate_service_receipt!(request, state, receipt, require_no_effect: false)
           unless receipt.is_a?(Hash) && receipt.keys.sort == SERVICE_RECEIPT_FIELDS.sort
@@ -637,7 +721,7 @@ input:#{Regexp.escape(request.fetch("input_digest"))} outcome:(\S+)( no-effect:(
             elsif unstarted
               ["reconcile-required", "launch binding unavailable; positive no-execution/no-surviving-writer proof required before abort"]
             elsif !assignment || observation["liveness"] != "live"
-              ["reconcile-required", !assignment ? "assignment checkpoint unavailable" : observation["reason"]]
+              ["reconcile-required", (!assignment) ? "assignment checkpoint unavailable" : observation["reason"]]
             else
               ["adopt", "verified owner survives; preserve current attempt"]
             end
@@ -649,7 +733,7 @@ input:#{Regexp.escape(request.fetch("input_digest"))} outcome:(\S+)( no-effect:(
               "accepted_effects" => accepted_effects,
               "accepted_receipt_digests" => receipt_history.map { |receipt| receipt["digest"] },
               "liveness" => observation["liveness"], "last_verified_observation" =>
-                (observation["liveness"] == "live" ? observation : last_verified_observation(attempt)),
+                ((observation["liveness"] == "live") ? observation : last_verified_observation(attempt)),
               "observation" => observation)
           end
           decision = if recovered.empty? || recovered.any? { |item| item["decision"] == "reconcile-required" }
@@ -661,14 +745,14 @@ input:#{Regexp.escape(request.fetch("input_digest"))} outcome:(\S+)( no-effect:(
           end
           {"assignment_id" => assignment_id, "task_id" => assignment&.task_id,
            "latest_attempt_id" => recovered.last&.dig("attempt_id"),
-           "decision" => decision, "liveness" => decision == "adopt" ? "live" : "unknown",
+           "decision" => decision, "liveness" => (decision == "adopt") ? "live" : "unknown",
            "last_verified_observation" => recovered.filter_map { |item| item["last_verified_observation"] }
              .max_by { |item| item["observed_at"].to_s },
            "recovery_reason" => recovered.empty? ? "accepted attempt evidence unavailable" :
              recovered.find { |item| item["decision"] == decision }&.dig("recovery_reason"),
            "goal" => assignment&.description || assignment&.name,
            "checkpoint" => queue && {"state" => queue.assignment_state.to_s,
-             "active_steps" => queue.active_steps.map(&:number), "next_step" => queue.next_workable&.number},
+                                     "active_steps" => queue.active_steps.map(&:number), "next_step" => queue.next_workable&.number},
            "attempts" => recovered, "inbox_events" => inbox_records,
            "pending_hitl" => queue ? queue.steps.filter_map do |step|
              id = step.stall_reason.to_s[/\AHITL:\s*([a-zA-Z0-9_.-]+)/, 1]
@@ -694,7 +778,7 @@ input:#{Regexp.escape(request.fetch("input_digest"))} outcome:(\S+)( no-effect:(
                   previous_digest: last_event_digest(attempt))
                 attempt = append_events(attempt, [event])
                 if attempt.state == "running" && projection["decision"] != "adopt"
-                  target = projection["decision"] == "restart-required" ? "stopped" : "uncertain"
+                  target = (projection["decision"] == "restart-required") ? "stopped" : "uncertain"
                   attempt = append_events(attempt, [transition_event(attempt, target, projection["recovery_reason"])])
                   attempt = attempt.transition(target)
                   @store.release(assignment_id, attempt.binding.scope, attempt.attempt_id) if attempt.terminal?
@@ -709,7 +793,6 @@ input:#{Regexp.escape(request.fetch("input_digest"))} outcome:(\S+)( no-effect:(
         # Inbox delivery is transport evidence, never business-effect proof.
         # Herdr owns signature, pinned key, generation and native identity
         # verification; this consumer records only its verified references.
-
 
         # Register a transport reference in the existing attempt journal so
         # a missing delivery record cannot be mistaken for no pending effect.

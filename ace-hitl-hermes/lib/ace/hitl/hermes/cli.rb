@@ -52,9 +52,10 @@ module Ace
             bytes = input.read(16 * 1024 + 1)
             raise ContractError, "ingress frame too large" if bytes.bytesize > 16 * 1024
             runtime.relay.receive(JSON.parse(bytes))
-          when "delivery" then runtime.relay.delivery(options.fetch(:request))
+          when "delivery" then runtime.relay.delivery(channel: options.fetch(:channel), request: options.fetch(:request))
           when "reconcile"
-            runtime.relay.reconcile(request: options.fetch(:request), through: options.fetch(:through))
+            runtime.relay.reconcile(channel: options.fetch(:channel), request: options.fetch(:request),
+              through: options.fetch(:through))
           else raise ContractError, "choose serve, submit, receive, delivery, ingress reconcile, or plugin install"
           end
           output.puts(JSON.generate(result))

@@ -12,12 +12,13 @@ A registry has no inferred default or legacy-file fallback:
   "channels": [{
     "name": "project", "machine": "lab", "folder": "/run/hermes/project",
     "target": "project-overseer", "projects": ["project"], "chat_id": "-1001234567890",
-    "captain_user_ids": ["123456789"]
+    "captain_user_ids": ["123456789"], "hitl_service_uid": 1200,
+    "hitl_socket": "/run/ace-hitl-project/lifecycle.sock"
   }]
 }
 ```
 
-Every project, group, folder and instruction target maps to exactly one channel. Captain IDs are numeric identities, never usernames. Topics within a group share that registered channel; separate authority requires separate registered groups.
+Every project, group, folder, lifecycle authority and instruction target maps to exactly one channel. `hitl_socket` may be omitted to use the runtime default, while `hitl_service_uid` is mandatory per channel so the endpoint identity is never inferred from the Hermes process or another project. Channels that share one socket must declare the same service identity and reuse one lazy lifecycle client. Captain IDs are numeric identities, never usernames. Topics within a group share that registered channel; separate authority requires separate registered groups.
 
 A runtime file supplies concrete deployment configuration:
 
@@ -27,14 +28,13 @@ A runtime file supplies concrete deployment configuration:
   "registry": "/etc/ace-hitl-hermes/channels.json",
   "state": "/var/lib/ace-hitl-hermes",
   "hitl_socket": "/run/ace-hitl/lifecycle.sock",
-  "hitl_service_uid": 0,
   "token_file": "/run/hermes-secrets/telegram-bot-token",
   "polling_owner": "ace-hitl-hermes",
   "hermes_gateway_config": "/home/hermes/.hermes/gateway.yaml"
 }
 ```
 
-Run the actor as the unprivileged transport identity authorized by the `ace-hitl` service. The state directory and token file must belong to that identity and be private (0700/0600). Folder writes reject root and preserve the existing message.v1 0640 contract. `ace-hitl` authenticates both Unix socket peers and independently enforces project/actor authorization, liveness, OTP scope and expiry.
+Run the actor as the unprivileged transport identity authorized by each `ace-hitl` service. The state directory and token file must belong to that identity and be private (0700/0600). Folder writes reject root and preserve the existing message.v1 0640 contract. Each configured channel selects its own lifecycle socket and explicit service uid; crossing a host/Incus boundary must use the identity configured for that project rather than assuming the runtime's local uid. Within one runtime, the lifecycle client retains its existing Unix endpoint and peer authentication. Each `ace-hitl` authority independently enforces project/actor authorization, liveness, OTP scope and expiry.
 
 Before starting the actor, disable Telegram in the actual Hermes gateway configuration:
 
@@ -57,15 +57,15 @@ The actor sends non-Captain question files only after authenticating their corre
 Use Telegram Reply to the exact submitted request message, or `/hitl-reply REQUEST_ID ANSWER`. The command names an immutable request correlation in the same registered group; a conflicting Reply target is rejected. Plain messages create new instructions and never satisfy a pending request. Unknown Reply, missing registry, bad sender and malformed input fail closed.
 
 ```sh
-ace-hitl-hermes delivery --request REQUEST_ID --config /etc/ace-hitl-hermes/runtime.json
-ace-hitl-hermes ingress reconcile --request REQUEST_ID --through 2026-10-04T22:00:00Z --format json --config /etc/ace-hitl-hermes/runtime.json
+ace-hitl-hermes delivery --channel CHANNEL --request REQUEST_ID --config /etc/ace-hitl-hermes/runtime.json
+ace-hitl-hermes ingress reconcile --channel CHANNEL --request REQUEST_ID --through 2026-10-04T22:00:00Z --format json --config /etc/ace-hitl-hermes/runtime.json
 ```
 
 The `ace.hitl.hermes.delivery/v1` result carries request/revision/channel/chat/message identities, status and trusted `submitted_at` only after Telegram confirms submission. Submission is not a read receipt. `failed` preserves the question and may retry; `uncertain` never automatically resends and starts no decision clock. Investigate uncertain sends before taking any recovery action.
 
 The `ace.hitl.hermes.ingress-checkpoint/v1` result carries `healthy`, `drained`, checkpoint cutoff/sequence and unresolved correlated ingress metadata. Receipt time is stamped by the actor, not copied from Telegram. The actor journals receipt before delivery and advances its durable Telegram offset after processing. Only an empty update batch proves backlog drainage; poll failures, retention gaps, queued replies, uncertain submission and unresolved delivery produce unknown or undrained results. Each coverage break creates a durable generation and retains the prior epoch evidence. A recovered empty poll starts healthy coverage for fresh requests; requests submitted in an older generation remain unknown and cannot gain silence approval across the gap. A silence-based approval consumer must defer on those results and revalidate the checkpoint inside its decision transition.
 
-The private journal retains correlation, ingress and terminal transport metadata for at least 24 hours. Authoritative lifecycle receipts remain in `ace-hitl` beyond that window. A resumed ordinary reply recovers from its protected folder answer; the lifecycle service prevents a repeated effect. Unresolved records remain visible and block drainage.
+The private journal retains correlation, ingress and terminal transport metadata for at least 24 hours. Request correlation is channel-qualified, so equal request IDs from distinct project authorities cannot overwrite or answer each other. Authoritative lifecycle receipts remain in `ace-hitl` beyond that window. A resumed ordinary reply recovers from its protected folder answer; the lifecycle service prevents a repeated effect. Unresolved records remain visible and block drainage. Skipped updates from unregistered groups record only chat/update metadata, never message bodies. If that chat is later registered, `serve` reports the prior gap and starts a new coverage generation before polling.
 
 OTP answers bypass ordinary answer files. The low-level `HermesBox` answer publisher requires an authenticated request-classification callback and rejects OTP/sensitive classification before any file creation. The relay sends the value directly to `ace-hitl` authenticated IPC and records only a sanitized status. No OTP value or derived hash enters the journal, checkpoint, preview logs or target instruction folder. If the endpoint is unavailable or the actor crashes after journaling a secret receipt, `secret-unavailable` discards the transient value and disables further delivery on that original challenge; recover the endpoint and request a fresh authorized challenge/code. Telegram's third-party message history is outside this erasure guarantee.
 
@@ -87,3 +87,59 @@ A lifecycle requester named `captain` is handled like every other authenticated
 requester. Submission authority comes from the scoped lifecycle record and its
 exact project/body binding, not the folder sender label. Unmanaged Captain
 instructions remain in the folder for their target and are not sent as requests.
+
+## Remote channels: the host/Incus mTLS crossing (nh0-A)
+
+A transport channel resolves to EXACTLY ONE authority: a local
+`hitl_socket` (with `hitl_service_uid`) or a remote `hitl_endpoint` —
+exactly `tls+tcp://HOST_TAILNET_DNS:PORT` — plus the channel's exact
+`tls_client_credential` (`certificate_file`, `private_key_file`,
+`ca_file`, `expected_server_uri_san`,
+`expected_server_certificate_sha256`; the configured fingerprint pin is
+the sole server trust). Remote channels route exactly their credential
+project and carry no Unix service uid. The runtime requires
+`tls_service_user`/`tls_service_group` when remote channels exist and
+verifies the runtime/registry files (`root:<service-group>` 0640) and
+every referenced credential tree against the exact provisioning layout
+before any connection. Lifecycle clients instantiate lazily and cache
+per endpoint plus credential identity.
+
+Activation is atomic at the poller: `serve` refuses to start unless
+every configured authority — Unix or mTLS — passes an authenticated
+health and project-binding check. Stopping the poller (rollback)
+preserves the durable journal: offsets, coverage generations and
+submitted receipts stay authoritative, calls across a vanished crossing
+stay uncertain or submitted, and nothing replays.
+
+## nh0-A boundary scenario harness
+
+`ace-hitl-boundary-scenario` is the source-side scenario the host
+lab-config gad.8/gad.b fixture contract (the reviewed host-owned
+ Incus/TLS provisioning prerequisite — a separate repository and
+separate review) executes against the REAL disposable Incus proxies.
+It has three modes, each printing one closed-schema JSON receipt:
+
+- `run --manifest FILE --phase baseline|uncertainty|recovery --state
+  FILE [--report PATH]` (host side): drives the TLS crossing over its
+  transport role only — pending, deliver, read-back, credential
+  negatives, project isolation — for asks that the fixture created
+  through the supported binding mechanism. Missing or unprovisioned
+  asks fail their case truthfully; nothing is invented.
+- `ask --manifest FILE --authority A|B --stage create|settle --state
+  FILE` (inside the authority container, as the REAL worker actor):
+  creates asks through the authority's Unix boundary where the
+  serve-path binding (`AssignmentBinding` →
+  `with_verified_attempt`) verifies the assignment/attempt against the
+  real Assign state under kernel peer credentials, and consumes the
+  delivered answers. Fabricated attempts fail here, truthfully.
+- `verify-acceptance --receipt FILE --ace-head SHA`: verifies the
+  host fixture's invocation-bound `nh0_real_incus_acceptance` receipt
+  (closed schema defined in `Boundary::AcceptanceReceipt`) against the
+  exact reviewed head, test passage and complete teardown.
+
+Identity mapping is fixed by construction: the certificate identity
+(`urn:ace:hitl:<project>:hermes-client`) maps ONLY to the Hermes
+transport role; the requester of record is the local worker actor,
+mapped through kernel peer credentials. A loopback-only or mocked run
+can never substitute for the verified invocation-bound
+`nh0_real_incus_acceptance` receipt that clears nh0-A.

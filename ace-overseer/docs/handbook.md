@@ -17,6 +17,12 @@ ace-docs:
 - Purpose: orchestrate task worktrees through `work-on`, `status`, and `prune`
 - Execution model: workflow-backed skill invoking `wfi://overseer`
 
+### `as-overseer-configure-project`
+
+- Path: `handbook/skills/as-overseer-configure-project/SKILL.md`
+- Purpose: adapt delivery supervision to project-owned presets, workflows, and decision policy without destructive overwrite
+- Execution model: workflow-backed skill invoking `wfi://overseer/configure-project`
+
 ## Workflows
 
 ### `wfi://overseer`
@@ -24,6 +30,12 @@ ace-docs:
 - Path: `handbook/workflow-instructions/overseer.wf.md`
 - Purpose: canonical workflow for working on tasks, checking active worktrees, and safe cleanup
 - Core sequence: 1) run `ace-overseer work-on --task ...`; 2) inspect state with `ace-overseer status`; 3) preview cleanup with `ace-overseer prune --dry-run`, then confirm with `--yes`.
+
+### `wfi://overseer/configure-project`
+
+- Path: `handbook/workflow-instructions/overseer/configure-project.wf.md`
+- Purpose: resolve and review effective delivery presets, workflows, and decision guides, then apply repeatable project-local adaptation while preserving customization
+- Output: per-asset `CREATED`, `UPDATED`, `KEPT`, or `BLOCKED` evidence plus a repeat-run zero-write check
 
 ## Related Documentation
 

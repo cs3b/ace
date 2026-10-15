@@ -4,8 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- **ace-lab v0.6.0, ace-assign v0.68.0**: Add the ordinary fixed merge producer/consumer pair — `ace-lab service request/status --mode ordinary-merge` with durable-once admission, canonical full-binding request digests per spec ruling r4, replay and conflict handling, and exact terminal receipt acceptance consumed through the assign coordinator.
+- **ace-hitl v0.15.0**: Add the host/Incus mTLS crossing authority (`serve --tls-authority`) with TLS 1.3 mutual identity, fail-closed provisioning-layout enforcement, and project-bound access; narrow `serve --group` to dedicated lifecycle groups with broad/legacy exposure refusal.
+- **ace-hitl-hermes v0.4.0**: Route Telegram channels over the mTLS crossing (exact `tls+tcp://` endpoints, pinned server identities, atomic multi-authority activation), add the `ace-hitl-boundary-scenario` acceptance harness, and surface informed unknown-chat coverage generations.
+
 ### Changed
 
+- **ace-overseer v0.21.1**: Follow the ace-lab 0.6 line in the dependency manifest and package the coordination-contract role-guide updates.
+- **ace-handbook 0.35.1**: Clarify guide override candidate discovery and that downstream projects must register their own local workflow source; this monorepo's priority-5 source is not a downstream default.
 - **ACE Lab source release, 2026-10-08**: ace-assign 0.66.0, ace-git 0.30.0, ace-git-forgejo 0.6.2, ace-review 0.60.0 and ace-lab 0.5.0 join exact-candidate protected delivery, bounded canonical review campaigns and scoped HITL publication.
 - **ace-herdr 0.5.0, ace-hitl 0.13.0**: Use the original live terminal for message submission and direct panel/process reads for current state. Remove dedicated Codex app-server and message-read/signed reconciliation requirements; retain actual privileged-effect authorization and result evidence.
 - **ace-handbook 0.35.0, ace-hitl-hermes 0.2.1, ace-overseer 0.20.1**: Align documented delivery, project routing and minimum producer dependencies with the coordinated contract.
@@ -15,6 +23,8 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+- **ace-task v0.39.3**: Make `create --in` placement atomic, fully roll back failed placement, and retain placed tasks as recovery records when post-placement issue synchronization fails.
+- **ace-git-worktree 0.26.1**: Restore task-aware create by exposing the scoped task commit method used by the orchestrator; add red-before/green-after regression coverage.
 - **Release dependency correction, 2026-10-10**: Ship the omitted Runtime 0.3.0, HITL Contract 0.2.1 and Bundle 0.45.0 source, with minimum producer/consumer patch floors in Herdr 0.5.1, Assign 0.66.1, Review 0.60.1, HITL 0.13.1, Hermes 0.2.2, Lab 0.5.1 and Overseer 0.20.2. Published installation receipts exposed missing modules/constants despite successful bundle install. Installed acceptance requires the separate exact-version gate with a current frozen manifest; source tests and wrapper PASS do not replace it.
 
 - **ace-review v0.59.1**: Isolate concurrent review sessions and atomically publish reports without replacing prior findings.
@@ -48,6 +58,10 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- **ace-hitl v0.14.0, ace-hitl-hermes v0.3.0**: Add dedicated lifecycle service groups and channel-scoped lifecycle socket/service identities for one-Hermes multi-project Telegram routing, with channel-qualified correlation and durable late-registration coverage gaps.
+
+- **ace-assign v0.67.0**: Add `supervise-delivery`, `integrate-batch`, `deliver-release`, and `close-delivery` presets for adaptable delivery supervision.
+- **ace-overseer v0.21.0**: Add the `as-overseer-configure-project` skill and `wfi://overseer/configure-project` workflow for idempotent, customization-preserving project supervision setup.
 - **ace-assign v0.65.0**: Pin original/candidate deployment inventory and shared slot exclusions to immutable journal snapshots. Complete maintenance eligibility and native readiness remain unfinished.
 
 - **ace-hitl-contract v0.1.0**: Single shared provider vocabulary without assignment or privileged lifecycle dependencies.
@@ -135,6 +149,8 @@ All notable changes to this project will be documented in this file.
 - **ace-llm-providers-cli v0.34.0**: Registered Codex Astra, Sol, Terra and Luna with Terra as the generic default and Luna as mini, retaining all existing explicit IDs, and derived Codex client defaults and model listings from provider configuration instead of a separate hardcoded catalog.
 
 ### Technical
+
+- Dependency-following release: **ace-lab v0.5.2** consumes the coordinated `ace-hitl` 0.14 line.
 
 - Dependency-following release: **ace-demo v0.26.2** consumes the coordinated Herdr 0.4 line. The release also declares required direct dependencies and raises verified API/workflow minimums in the owning consumers.
 

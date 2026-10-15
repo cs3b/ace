@@ -25,6 +25,7 @@ Kapitan can talk continuously to a project or Lab overseer, inspect progress and
 
 ### Expected Behavior
 
+- Project worktree ownership, clean accepted canonical-main synchronization, preservation/recovery of divergent work and evidence-driven heartbeat integration follow `coordinator-source-contract.md#project-worktrees-and-active-supervision`, implemented by qk0.1.1; its new draft acceptance is not existing installed proof.
 - Canonical generic project-overseer, Lab-coordinator and second-commander charters ship in ACE. lab-overseer:gc0 and lab-config:gad.5/nfe adopt/configure them only. No duplicate domain-owned generic role instructions.
 - On each wake inspect both task/assignment queue and scoped pending HITL. Project overseer handles local technical coordination; unresolved capability/scope is escalated to Lab overseer, then second commander/Captain via explicit proposal policy. Failed callbacks stay visible with attempts; no silent loss or retry loop.
 - Coordinator delegates bounded implementation/review/service work rather than occupying the conversation with long-running tests or blocking sleep. New Captain direction is accepted and reflected in scope/task state; running conflicting work is stopped at a safe boundary with evidence.
@@ -87,6 +88,10 @@ Independent review: wave_n0n APPROVE for the documentation-only findings at `76f
 ### Provenance and Invalidated Assumptions
 
 New generic charter and Lab-engine consumer migration. k86 owns terminal adapter replacement only; this task owns removal of the separate legacy Lab engine and role coordination.
+
+### Delivery-queue role-charter inputs (gad.2-informed, 2026-10-11) — SPEC ONLY
+
+Reconciliation for the Captain architecture direction (design/spec-first; corrected framing supersedes the earlier lifecycle-extension reading): the worker/reviewer pipeline ending at PR READY is the CORRECT completion of a work-on-task-style plan — the worker template is NOT extended toward merge/publish/deploy. The missing layer (overseer-level HIGH-LEVEL delivery queue: several ready workers, dependency-aware selection, INTEGRATION ORDER over completion FIFO, delegation of rebase + REQUIRED RENEWED EVIDENCE at moved heads, and queue-owner decision guides such as integrate-more-then-cut-release vs deploy demo/production) is designed in the delivery-workflows line: see `8wr.t.qkb.1` design document `1-align-canonical-delivery-workflows-with/overseer-queue-and-delivery-templates-design.md` (reconciled, not forked). THIS task's charter carries the queue-OWNER aspects: the overseer operates the queue through canonical assign CLIs, decision guides are role-charter material, BLOCKED-vs-WAIT attribution (missing authority/transport = attributable BLOCKED with named provision, e.g. forge push identity split, integrator result channel, HITL anchor pending gad.8, login-gated claude identity), and the completion-callback delivery protocol with coordinator JSON verification. Current-capability vs missing-provisioning audit (M1–M7) lives in the qkb.1 design document and is cross-referenced here; M7 is the forge push flag-semantics gap (--no-push/--no-upstream split, dry-run plan inconsistency, one unresolved run-time anomaly — UNRESOLVED, not proven unrelated), and the PR36-era host-records misconception remains flagged for host-side correction (PR37 review F4, pending). SPEC-ONLY: implementation gated until Captain/host approval; parent stays draft/needs_review; no conflicts with existing findings — the design reuses the 16-hour HITL proposal anchor pending gad.8 and adds no second orchestration engine/journal.
 
 Earlier text is retained in `history/pre-lab-spec-review.md` as non-normative history. Draft until independent review accepts this revision.
 

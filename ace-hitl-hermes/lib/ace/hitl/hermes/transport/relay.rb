@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "time"
+require "json"
 require "ace/hitl/lifecycle"
 require_relative "registry"
 require_relative "journal"
@@ -17,13 +18,14 @@ module Ace
         class Relay
           TERMINAL = %w[delivered closed rejected].freeze
 
-          def initialize(registry:, journal:, lifecycle:, sender:, clock: -> { Time.now.utc }, box_factory: nil)
-            @registry, @journal, @lifecycle, @sender, @clock = registry, journal, lifecycle, sender, clock
+          def initialize(registry:, journal:, lifecycle_for:, sender:, clock: -> { Time.now.utc }, box_factory: nil)
+            @registry, @journal, @lifecycle_for, @sender, @clock = registry, journal, lifecycle_for, sender, clock
             @box_factory = box_factory || lambda do |channel|
               folder_channel = Molecules::HermesChannels::Channel.new(
                 name: channel["name"], machine: channel["machine"], folder: channel["folder"]
               )
-              Organisms::HermesBox.new(channel: folder_channel, answer_authorizer: ->(id) { @lifecycle.read(id) })
+              lifecycle = lifecycle_for(channel)
+              Organisms::HermesBox.new(channel: folder_channel, answer_authorizer: ->(id) { lifecycle.read(id) })
             end
           end
 
@@ -31,21 +33,22 @@ module Ace
           # mutable text hash. Metadata acknowledges submission, not reading.
           def submit(channel:, request:, revision:)
             entry = @registry.resolve(channel)
+            lifecycle = lifecycle_for(entry)
             Atoms::HermesTokens.validate!(request, "request")
             Atoms::HermesTokens.validate!(revision, "revision")
-            facts = @lifecycle.read(request)
+            facts = lifecycle.read(request)
             unless entry["projects"].include?(facts["project"])
               raise ContractError, "request project is not registered to this channel"
             end
             binding = binding_for(facts)
             @journal.synchronize do |state, commit|
-              previous = state["requests"][request]
+              previous = state["requests"][request_key(channel, request)]
               if previous
                 unless previous.values_at("channel", "revision", "binding") == [channel, revision, binding]
                   raise ContractError, "request correlation binding cannot change"
                 end
                 if previous["status"] == "submitted"
-                  acknowledge_proposal(previous)
+                  acknowledge_proposal(previous, lifecycle)
                   box = @box_factory.call(entry)
                   question = box.poll.messages.find { |m| m.id == request && m.question? }
                   box.ack(request) if question && question.body == facts["question"]
@@ -64,7 +67,7 @@ module Ace
                         "chat_id" => entry["chat_id"], "binding" => binding,
                         "sensitive" => facts["sensitive"] == true, "status" => "uncertain",
                         "coverage_generation" => state["poll"].dig(channel, "generation") || 0}
-              state["requests"][request] = record
+              state["requests"][request_key(channel, request)] = record
               commit.call # crash/send timeout leaves uncertain; no duplicate send
               begin
                 ack = @sender.call(entry, message.body)
@@ -75,7 +78,7 @@ module Ace
                 record.merge!("status" => "submitted", "message_id" => ack["message_id"].to_s,
                   "submitted_at" => now)
                 commit.call
-                acknowledge_proposal(record)
+                acknowledge_proposal(record, lifecycle)
                 box.ack(request)
               rescue SubmitFailed
                 record["status"] = "failed"
@@ -106,7 +109,7 @@ module Ace
               if duplicate
                 if %w[queued unresolved].include?(duplicate["status"])
                   if duplicate["request"]
-                    existing = state["requests"].fetch(duplicate["request"])
+                    existing = state["requests"].fetch(request_key(channel["name"], duplicate["request"]))
                     if existing["sensitive"]
                       duplicate["status"] = "secret-unavailable"
                       existing["secret_delivery"] = "unavailable"
@@ -123,7 +126,7 @@ module Ace
               end
 
               request = correlate(state, channel, event, text)
-              record = request && state["requests"].fetch(request)
+              record = request && state["requests"].fetch(request_key(channel["name"], request))
               item = {"sequence" => state["sequence"] += 1, "channel" => channel["name"],
                       "message_id" => event["message_id"], "received_at" => now, "status" => "queued"}
               item.merge!("request" => request, "revision" => record["revision"]) if record
@@ -146,31 +149,38 @@ module Ace
             validate_time(through)
             raise ContractError, "invalid poll interval" if started_at > through || through > now
             @journal.synchronize do |state, commit|
-              old = state["poll"][channel]
-              gap = old && started_at > old["through"] && old["healthy"]
-              broken = continuous != true || gap
-              generation = old ? old.fetch("generation", 0) : 0
-              if broken
-                state["poll_history"] ||= {}
-                (state["poll_history"][channel] ||= []) << old.dup if old
-                generation += 1 if !old || old["healthy"]
-                state["poll"][channel] = {"from" => started_at, "through" => through,
-                                          "healthy" => false, "generation" => generation}
-              else
-                recovering = old && !old["healthy"]
-                state["poll"][channel] = {
-                  "from" => recovering ? [old["from"], started_at].max : (old ? old["from"] : started_at),
-                  "through" => through, "healthy" => true, "generation" => generation
-                }
-              end
+              update_poll(state, channel: channel, started_at: started_at, through: through, continuous: continuous)
               commit.call
             end
           end
 
-          def reconcile(request:, through:)
+          def surface_registration_gaps(at:)
+            validate_time(at)
+            @journal.synchronize do |state, commit|
+              gaps = @registry.channels.filter_map do |channel|
+                record = state["unregistered_chats"][channel.fetch("chat_id")]
+                next unless record
+                next if record["surfaced_through_update_id"] == record["last_update_id"]
+
+                name = channel.fetch("name")
+                update_poll(state, channel: name, started_at: at, through: at, continuous: false)
+                record["registered_channel"] = name
+                record["surfaced_at"] = at
+                record["surfaced_through_update_id"] = record["last_update_id"]
+                record.slice("chat_id", "first_seen_at", "last_seen_at", "first_update_id", "last_update_id", "count")
+                  .merge("channel" => name, "coverage_generation" => state["poll"].dig(name, "generation"))
+              end
+              commit.call unless gaps.empty?
+              gaps
+            end
+          end
+
+          def reconcile(channel:, request:, through:)
+            entry = @registry.resolve(channel)
+            lifecycle = lifecycle_for(entry)
             validate_time(through)
             @journal.synchronize do |state, _commit|
-              record = state["requests"][request]
+              record = state["requests"][request_key(channel, request)]
               return {"status" => "unknown", "healthy" => false, "drained" => false} unless record
 
               poll = state["poll"][record["channel"]]
@@ -178,7 +188,8 @@ module Ace
                 record["status"] == "submitted" && poll["from"] <= record["submitted_at"] &&
                 poll.fetch("generation", 0) == record.fetch("coverage_generation", 0)
               relevant = state["ingress"].select do |item|
-                item["request"] == request && item["revision"] == record["revision"] && item["received_at"] <= through
+                item["channel"] == channel && item["request"] == request &&
+                  item["revision"] == record["revision"] && item["received_at"] <= through
               end
               unresolved = relevant.reject { |item| TERMINAL.include?(item["status"]) }.map { |i| public_ingress(i) }
               checkpoint = {"schema" => "ace.hitl.hermes.ingress-checkpoint/v1", "request" => request,
@@ -190,16 +201,17 @@ module Ace
               if proposal?(record)
                 # Same ingress lock as receive; no received reply can land
                 # between this checkpoint and the HITL decision transition.
-                checkpoint["proposal"] = @lifecycle.proposal_reconcile(request,
+                checkpoint["proposal"] = lifecycle.proposal_reconcile(request,
                   project: record.fetch("binding").fetch("envelope").fetch("project"), checkpoint: checkpoint)
               end
               checkpoint
             end
           end
 
-          def delivery(request)
+          def delivery(channel:, request:)
+            @registry.resolve(channel)
             @journal.synchronize do |state, _commit|
-              record = state["requests"][request]
+              record = state["requests"][request_key(channel, request)]
               record ? projection(record) : {"request" => request, "status" => "unknown"}
             end
           end
@@ -210,10 +222,38 @@ module Ace
             record.dig("binding", "envelope", "kind") == "proposal"
           end
 
-          def acknowledge_proposal(record)
+          def acknowledge_proposal(record, lifecycle)
             return unless proposal?(record)
-            @lifecycle.proposal_acknowledge(record["request"],
+            lifecycle.proposal_acknowledge(record["request"],
               project: record.fetch("binding").fetch("envelope").fetch("project"), submitted_at: record.fetch("submitted_at"))
+          end
+
+          def lifecycle_for(channel)
+            @lifecycle_for.call(channel)
+          end
+
+          def request_key(channel, request)
+            JSON.generate([channel, request])
+          end
+
+          def update_poll(state, channel:, started_at:, through:, continuous:)
+            old = state["poll"][channel]
+            gap = old && started_at > old["through"] && old["healthy"]
+            broken = continuous != true || gap
+            generation = old ? old.fetch("generation", 0) : 0
+            if broken
+              state["poll_history"] ||= {}
+              (state["poll_history"][channel] ||= []) << old.dup if old
+              generation += 1 if !old || old["healthy"]
+              state["poll"][channel] = {"from" => started_at, "through" => through,
+                                        "healthy" => false, "generation" => generation}
+            else
+              recovering = old && !old["healthy"]
+              state["poll"][channel] = {
+                "from" => recovering ? [old["from"], started_at].max : (old ? old["from"] : started_at),
+                "through" => through, "healthy" => true, "generation" => generation
+              }
+            end
           end
 
           def now
@@ -258,8 +298,10 @@ module Ace
           end
 
           def deliver_reply(record, item, text, channel, commit, state)
+            lifecycle = lifecycle_for(channel)
             if proposal?(record) && state["ingress"].any? { |earlier|
-                earlier["request"] == item["request"] && earlier["revision"] == item["revision"] &&
+                earlier["channel"] == item["channel"] && earlier["request"] == item["request"] &&
+                  earlier["revision"] == item["revision"] &&
                   earlier["sequence"] < item["sequence"] && !TERMINAL.include?(earlier["status"]) }
               item["status"] = "unresolved"
               commit.call
@@ -273,9 +315,9 @@ module Ace
               return
             end
             begin
-              facts = @lifecycle.read(record["request"])
+              facts = lifecycle.read(record["request"])
             rescue Ace::Hitl::Lifecycle::StateError
-              terminal = @lifecycle.states.find { |value| value["id"] == record["request"] }
+              terminal = lifecycle.states.find { |value| value["id"] == record["request"] }
               if terminal && %w[consumed cancelled].include?(terminal["state"])
                 item["status"] = "closed"
                 commit.call
@@ -295,7 +337,7 @@ module Ace
             end
             answer = text.sub(/\A\/hitl-reply(?:@\w+)?\s+\S+\s+/i, "")
             if proposal?(record)
-              @lifecycle.proposal_reply(record["request"], project: record.fetch("binding").fetch("envelope").fetch("project"), answer: answer,
+              lifecycle.proposal_reply(record["request"], project: record.fetch("binding").fetch("envelope").fetch("project"), answer: answer,
                 received_at: item["received_at"], sequence: item["sequence"])
               item["status"] = "delivered"
               commit.call
@@ -311,7 +353,7 @@ module Ace
                   sender: "captain", timestamp: item["received_at"])
               end
             end
-            @lifecycle.deliver(record["request"], answer)
+            lifecycle.deliver(record["request"], answer)
             if record["sensitive"]
               item["status"] = "delivered"
             else

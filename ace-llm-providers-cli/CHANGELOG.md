@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- `SafeCapture`: repair the `readiness.nil.` typo (missing `?`) introduced in
+  0.36.0 that raised `NoMethodError` on every successful supervised CLI
+  capture before any model call, breaking all CLI-delegating providers
+  (codex, agy, claude, pi). Regression tests pin readiness semantics
+  (String/nil/unsupervised); signal-classification tests now exercise an
+  unsupervised direct child, since the Linux supervisor converts child
+  signals to exit status by design.
+
 ## [0.36.1] - 2026-10-01
 
 ### Technical

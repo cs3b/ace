@@ -1,0 +1,67 @@
+# Select and integrate an ordered batch from existing producer tasks.
+# Usage: ace-assign create --task TASK[,TASK...] --preset integrate-batch
+
+name: integrate-batch
+description: Select a dependency-valid integration batch and renew exact-head evidence after candidate movement
+
+parameters:
+  taskrefs:
+    required: true
+    type: array
+    description: Existing producer task references eligible for batch selection
+
+steps:
+  - name: select-integration-batch
+    number: "010"
+    instructions: |
+      Resolve the current project delivery guide and evaluate producer task references
+      {{taskrefs}}. Record the ordered eligible set, selected entries in intended
+      integration order, deferred entries with reasons, decision actor and timestamp,
+      policy/plan revision, and evidence references. Bind each selected entry to its
+      exact candidate head SHA and the current target branch SHA. Do not derive order
+      from completion time and do not reparent producer tasks.
+
+  - name: delegate-candidate-update
+    number: "020"
+    instructions: |
+      When the target branch moved or a selected candidate needs rebase, conflict
+      resolution, or another head-changing update, delegate that update to an
+      attributable executor. Retain the old and new exact candidate head SHA and the
+      declared delta. Do not perform integration from evidence bound to the old head.
+
+  - name: delegate-renewed-evidence
+    number: "030"
+    instructions: |
+      After any candidate movement, delegate renewed evidence for the new exact head:
+      prove replay content identity with range-diff or a stronger project-approved
+      comparison, run fresh relevant tests, and obtain an independent reviewer verdict.
+      The reviewer must be independent of the executor. Content beyond the declared
+      replay delta requires the full project review gate, not a verdict-stands shortcut.
+
+  - name: reevaluate-integration-readiness
+    number: "040"
+    instructions: |
+      Re-read dependency state, candidate and target branch heads, evidence,
+      authorization, transport, and grouping constraints immediately before requesting
+      integration. Any change voids prior eligibility and requires a new complete
+      selection decision record. Defer every candidate whose exact-head evidence is no
+      longer current.
+
+  - name: request-integration
+    number: "050"
+    instructions: |
+      Request integration only through the project's authorized integrator, preserving
+      the exact ordered candidates and target binding. This step grants no merge
+      authority. Missing provision is BLOCKED(provision, owner). After a request is
+      accepted, WAIT requires its durable operation reference and exact reconciliation
+      path. On an uncertain effect, reconcile the original operation and never repeat
+      the merge request blindly.
+
+  - name: record-integration-result
+    number: "060"
+    instructions: |
+      Record the authoritative result and resulting target head for each selected entry,
+      or the attributable blocker. Re-evaluate remaining candidates against the moved
+      target before another effect; successful integration does not select a release cut
+      or authorize publication.
+

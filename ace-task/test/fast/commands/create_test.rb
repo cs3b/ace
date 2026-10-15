@@ -25,6 +25,230 @@ class CreateCommandTest < AceTaskTestCase
     assert_match(/Path:/, output)
   end
 
+  def test_create_in_next_places_task_once
+    output = capture_io do
+      Ace::Task::TaskCLI.start(["create", "Next task", "--in", "next"])
+    end.first
+
+    task_id = output[/Created task ([0-9a-z]{3}\.t\.[0-9a-z]{3})/, 1]
+    refute_nil task_id
+
+    tasks_dir = File.join(@tmpdir, ".ace-tasks")
+    assert_equal 1, Dir.glob(File.join(tasks_dir, "**", "*.s.md")).length
+
+    task = Ace::Task::Organisms::TaskManager.new.show(task_id)
+    refute_nil task
+    assert_nil task.special_folder
+    assert_equal File.join(tasks_dir, File.basename(task.path)), task.path
+
+    next_tasks = Ace::Task::Organisms::TaskManager.new.list(in_folder: "next")
+    assert_equal [task_id], next_tasks.map(&:id)
+  end
+
+  def test_create_in_maybe_places_task_once
+    output = capture_io do
+      Ace::Task::TaskCLI.start(["create", "Maybe task", "--in", "maybe"])
+    end.first
+
+    task_id = output[/Created task ([0-9a-z]{3}\.t\.[0-9a-z]{3})/, 1]
+    refute_nil task_id
+
+    tasks_dir = File.join(@tmpdir, ".ace-tasks")
+    assert_equal 1, Dir.glob(File.join(tasks_dir, "**", "*.s.md")).length
+
+    task = Ace::Task::Organisms::TaskManager.new.show(task_id)
+    refute_nil task
+    assert_equal "_maybe", task.special_folder
+    assert_includes task.path, File.join(".ace-tasks", "_maybe")
+    assert_equal [task_id], Ace::Task::Organisms::TaskManager.new.list(in_folder: "maybe").map(&:id)
+  end
+
+  def test_create_in_configured_custom_folder_places_task_once
+    tasks_dir = File.join(@tmpdir, ".ace-tasks")
+    FileUtils.mkdir_p(File.join(tasks_dir, "_custom"))
+
+    output = capture_io do
+      Ace::Task::TaskCLI.start(["create", "Custom task", "--in", "custom"])
+    end.first
+
+    task_id = output[/Created task ([0-9a-z]{3}\.t\.[0-9a-z]{3})/, 1]
+    refute_nil task_id
+    assert_equal 1, Dir.glob(File.join(tasks_dir, "**", "*.s.md")).length
+
+    task = Ace::Task::Organisms::TaskManager.new.show(task_id)
+    refute_nil task
+    assert_equal "_custom", task.special_folder
+    assert_equal [task_id], Ace::Task::Organisms::TaskManager.new.list(in_folder: "custom").map(&:id)
+  end
+
+  def test_create_in_anytime_and_archive_places_each_task_once
+    %w[anytime archive].each do |folder|
+      output = capture_io do
+        Ace::Task::TaskCLI.start(["create", "#{folder.capitalize} task", "--in", folder])
+      end.first
+
+      task_id = output[/Created task ([0-9a-z]{3}\.t\.[0-9a-z]{3})/, 1]
+      refute_nil task_id
+      task = Ace::Task::Organisms::TaskManager.new.show(task_id)
+      refute_nil task
+      assert_equal "_#{folder}", task.special_folder
+      assert_equal [task_id], Ace::Task::Organisms::TaskManager.new.list(in_folder: folder).map(&:id)
+    end
+
+    tasks_dir = File.join(@tmpdir, ".ace-tasks")
+    assert_equal 2, Dir.glob(File.join(tasks_dir, "**", "*.s.md")).length
+  end
+
+  def test_create_in_folder_failure_removes_artifacts_and_retry_is_clean
+    manager = Ace::Task::Organisms::TaskManager.new
+    placement_failure = ->(*_args, **_kwargs) { raise Errno::EACCES, "simulated destination write failure" }
+
+    error = Ace::Task::Organisms::TaskManager.stub(:new, manager) do
+      File.stub(:rename, placement_failure) do
+        assert_raises(Ace::Support::Cli::Error) do
+          capture_io do
+            Ace::Task::TaskCLI.start(["create", "Atomic task", "--in", "maybe"])
+          end
+        end
+      end
+    end
+
+    assert_match(/simulated destination write failure/, error.message)
+    assert_match(/retry/i, error.message)
+    refute_match(/Created task/, error.message)
+
+    tasks_dir = File.join(@tmpdir, ".ace-tasks")
+    assert_empty Dir.glob(File.join(tasks_dir, "**", "*.s.md"))
+    assert_empty task_directories(tasks_dir)
+    refute Dir.exist?(tasks_dir)
+
+    output = capture_io do
+      Ace::Task::TaskCLI.start(["create", "Atomic task", "--in", "maybe"])
+    end.first
+
+    task_id = output[/Created task ([0-9a-z]{3}\.t\.[0-9a-z]{3})/, 1]
+    refute_nil task_id
+    assert_equal 1, Dir.glob(File.join(tasks_dir, "**", "*.s.md")).length
+    assert_equal [task_id], Ace::Task::Organisms::TaskManager.new.list(in_folder: "maybe").map(&:id)
+  end
+
+  def test_create_in_folder_mismatch_removes_artifacts
+    manager = Ace::Task::Organisms::TaskManager.new
+    unmoved_update = ->(ref, **_kwargs) { manager.show(ref) }
+
+    error = Ace::Task::Organisms::TaskManager.stub(:new, manager) do
+      manager.stub(:update, unmoved_update) do
+        assert_raises(Ace::Support::Cli::Error) do
+          capture_io do
+            Ace::Task::TaskCLI.start(["create", "Unmoved task", "--in", "maybe"])
+          end
+        end
+      end
+    end
+
+    assert_match(/expected _maybe/, error.message)
+    tasks_dir = File.join(@tmpdir, ".ace-tasks")
+    assert_empty Dir.glob(File.join(tasks_dir, "**", "*.s.md"))
+    assert_empty task_directories(tasks_dir)
+  end
+
+  def test_create_in_folder_preserves_task_after_post_placement_git_error
+    manager = Ace::Task::Organisms::TaskManager.new
+    update = manager.method(:update)
+    post_placement_failure = lambda do |ref, **options|
+      update.call(ref, **options)
+      raise Ace::Git::ProviderIdentityMismatchError, "simulated post-placement sync failure"
+    end
+
+    error = Ace::Task::Organisms::TaskManager.stub(:new, manager) do
+      manager.stub(:update, post_placement_failure) do
+        assert_raises(Ace::Support::Cli::Error) do
+          capture_io do
+            Ace::Task::TaskCLI.start(["create", "Linked recovery task", "--in", "maybe"])
+          end
+        end
+      end
+    end
+
+    assert_match(/simulated post-placement sync failure/, error.message)
+    tasks = Ace::Task::Organisms::TaskManager.new.list(in_folder: "maybe")
+    assert_equal 1, tasks.length
+    assert_equal "Linked recovery task", tasks.first.title
+  end
+
+  def test_create_with_invalid_destination_leaves_no_artifacts
+    error = assert_raises(Ace::Support::Cli::Error) do
+      capture_io do
+        Ace::Task::TaskCLI.start(["create", "Invalid destination task", "--in", "nonexistent-folder"])
+      end
+    end
+
+    assert_match(/destination.*does not exist/i, error.message)
+    refute_match(/Created task/, error.message)
+
+    tasks_dir = File.join(@tmpdir, ".ace-tasks")
+    assert_empty Dir.glob(File.join(tasks_dir, "**", "*.s.md"))
+    assert_empty task_directories(tasks_dir)
+  end
+
+  def test_create_rejects_empty_virtual_and_traversal_destinations_without_artifacts
+    ["", "all", "../outside"].each do |destination|
+      error = assert_raises(Ace::Support::Cli::Error) do
+        capture_io do
+          Ace::Task::TaskCLI.start(["create", "Rejected task", "--in", destination])
+        end
+      end
+
+      expected_error = destination.empty? ? /invalid argument/i : /Destination/
+      assert_match(expected_error, error.message)
+    end
+
+    tasks_dir = File.join(@tmpdir, ".ace-tasks")
+    assert_empty Dir.glob(File.join(tasks_dir, "**", "*.s.md"))
+    assert_empty task_directories(tasks_dir)
+  end
+
+  def test_create_dry_run_rejects_invalid_destination_without_writing
+    assert_raises(Ace::Support::Cli::Error) do
+      capture_io do
+        Ace::Task::TaskCLI.start(["create", "Invalid preview", "--in", "nonexistent-folder", "--dry-run"])
+      end
+    end
+
+    refute Dir.exist?(File.join(@tmpdir, ".ace-tasks"))
+  end
+
+  def test_create_rejects_custom_destination_symlinked_outside_task_root
+    tasks_dir = File.join(@tmpdir, ".ace-tasks")
+    outside_dir = File.join(@tmpdir, "outside")
+    FileUtils.mkdir_p([tasks_dir, outside_dir])
+    FileUtils.ln_s(outside_dir, File.join(tasks_dir, "_outside"))
+
+    assert_raises(Ace::Support::Cli::Error) do
+      capture_io do
+        Ace::Task::TaskCLI.start(["create", "Escaping task", "--in", "outside"])
+      end
+    end
+
+    assert_empty Dir.glob(File.join(outside_dir, "**", "*.s.md"))
+    assert_empty task_directories(tasks_dir)
+  end
+
+  def test_create_child_keeps_existing_behavior_when_in_is_provided
+    parent_output = capture_io do
+      Ace::Task::TaskCLI.start(["create", "Parent task"])
+    end.first
+    parent_id = parent_output[/Created task ([0-9a-z]{3}\.t\.[0-9a-z]{3})/, 1]
+
+    child_output = capture_io do
+      Ace::Task::TaskCLI.start(["create", "Child task", "--child-of", parent_id, "--in", "maybe"])
+    end.first
+
+    assert_match(/Created task #{Regexp.escape(parent_id)}\.[0-9a-z]/, child_output)
+    refute Dir.exist?(File.join(@tmpdir, ".ace-tasks", "_maybe"))
+    assert_equal 2, Dir.glob(File.join(@tmpdir, ".ace-tasks", "**", "*.s.md")).length
+  end
+
   def test_create_dry_run_does_not_write
     output = capture_io do
       Ace::Task::TaskCLI.start(["create", "Dry run task", "--dry-run"])
@@ -333,5 +557,12 @@ class CreateCommandTest < AceTaskTestCase
     assert_match(/unable to generate a unique ID after 3 attempts/i, err.message)
     colliding_dirs = Dir.glob(File.join(tasks_dir, "#{colliding_id}-*"))
     assert_equal 1, colliding_dirs.length, "Expected no extra artifacts for exhausted retries"
+  end
+
+  private
+
+  def task_directories(tasks_dir)
+    Dir.glob(File.join(tasks_dir, "**", "[0-9a-z][0-9a-z][0-9a-z].t.[0-9a-z][0-9a-z][0-9a-z]-*"))
+      .select { |path| File.directory?(path) }
   end
 end

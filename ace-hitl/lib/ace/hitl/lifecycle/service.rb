@@ -7,6 +7,7 @@ require_relative "protocol"
 require_relative "peer"
 require_relative "store"
 require_relative "otp_vault"
+require_relative "frame_serving"
 
 module Ace
   module Hitl
@@ -22,7 +23,12 @@ module Ace
       # nowhere, transfer exactly once, and die with the challenge or
       # the service.
       class Service
+        include FrameServing
+
         DEFAULT_SOCKET_MODE = 0o660
+        BROAD_CONTROL_GROUPS = [Store::DEFAULT_GROUP].freeze
+        LEGACY_SHARED_SOCKET_DIRECTORIES = ["/run/lab"].freeze
+        LEGACY_LABD_SOCKET = "labd.sock"
         # An idle connection holds a thread; bounded idleness keeps a
         # wedged peer from pinning the service (review 8x327buo).
         DEFAULT_IDLE_SECONDS = 120.0
@@ -118,42 +124,25 @@ module Ace
         # multi-UID acceptance fixture uses to drive real peers through
         # the real dispatch path.
         def serve_connection(socket)
-          peer = authenticate!(socket)
-          store = store_for(peer)
-          loop do
-            line = read_frame(socket)
-            break if line.nil?
-
-            response = dispatch(store, line)
-            write_frame(socket, response)
-          end
-        rescue Lifecycle::Error => e
-          write_frame(socket, Protocol.encode_error(e)) rescue nil
-        rescue SystemCallError, IOError
-          nil
-        ensure
-          socket.close rescue nil
+          super
         end
 
         private
 
         def prepare!
           begin
+            group_id = verify_control_group!
             verify_socket_directory!
             acquire_endpoint_lock!
             recover_stale_endpoint!
             @server = UNIXServer.open(@socket_path)
             @endpoint_identity = endpoint_identity
+            File.chown(nil, group_id, @socket_path)
+            File.chmod(DEFAULT_SOCKET_MODE, @socket_path)
+          rescue ArgumentError => e
+            raise TransportError, "the HITL boundary control group is unavailable (#{e.message})"
           rescue SystemCallError, IOError => e
             raise TransportError, "the HITL boundary endpoint is not usable (#{e.class}: #{e.message})"
-          end
-          File.chmod(DEFAULT_SOCKET_MODE, @socket_path)
-          begin
-            File.chown(nil, Etc.getgrnam(@group).gid, @socket_path)
-          rescue ArgumentError, SystemCallError
-            # A service that cannot set the control group keeps the
-            # owner-only socket; the peer-credential gate still applies.
-            nil
           end
           begin
             root_store.ensure_layout!
@@ -196,15 +185,37 @@ module Ace
         # must exist, must not be world-writable, and must be owned by
         # the service identity or root — otherwise anyone who can replace
         # the socket can impersonate the service.
+        def verify_control_group!
+          group = Etc.getgrnam(@group)
+          if group.gid.zero? || BROAD_CONTROL_GROUPS.include?(group.name)
+            raise TransportError,
+              "HITL boundary control group is too broad: #{group.name} " \
+              "(configure a dedicated lifecycle group; root and #{Store::DEFAULT_GROUP} are refused)"
+          end
+
+          group.gid
+        end
+
         def verify_socket_directory!
           dir = File.dirname(@socket_path)
+          expanded_dir = File.expand_path(dir)
+          if LEGACY_SHARED_SOCKET_DIRECTORIES.include?(expanded_dir)
+            raise TransportError,
+              "HITL boundary socket directory is shared with legacy labd: #{dir} " \
+              "(configure a dedicated lifecycle directory)"
+          end
+
           FileUtils.mkdir_p(dir)
           stat = File.lstat(dir)
-          return if (stat.uid.zero? || stat.uid == Process.uid) && (stat.mode & 0o002).zero?
+          protected_directory = (stat.uid.zero? || stat.uid == Process.uid) && (stat.mode & 0o002).zero?
+          legacy_socket = File.join(dir, LEGACY_LABD_SOCKET)
+          legacy_socket_exists = File.exist?(legacy_socket) || File.symlink?(legacy_socket)
+          return if protected_directory && !legacy_socket_exists
 
           raise TransportError,
             "HITL boundary socket directory is not protected: #{dir} " \
-            "(must be service/root-owned and not world-writable)"
+            "(use a dedicated service/root-owned, non-world-writable directory; " \
+            "do not share a directory containing unrelated service sockets or legacy labd)"
         end
 
         def authenticate!(socket)
@@ -236,65 +247,8 @@ module Ace
             policy: @policy,
             identity: peer,
             vault: @vault,
-            proposal_clock: @proposal_clock, stopping: -> { @stopping }
+            proposal_clock: @proposal_clock, stopping: -> { @stopping }, group: @group
           )
-        end
-
-        # One request frame per dispatch; lifecycle failures return
-        # classified error frames, transport/frame failures close the
-        # connection (serve_connection's rescues).
-        def dispatch(store, line)
-          request = Protocol.decode_request(line)
-          result = execute(store, request[:op], request[:params])
-          Protocol.encode_result(result)
-        rescue Protocol::FrameError, Lifecycle::Error, ArgumentError, TypeError => e
-          Protocol.encode_error(e)
-        end
-
-        def execute(store, op, params)
-          case op
-          when "ping" then {"pong" => true}
-          when "proposal-create" then store.proposal_create(**symbolize(params))
-          when "proposal-show" then store.proposal_show(required(params, "id"), project: required(params, "project"), history_after: params.fetch("history_after", 0))
-          when "proposal-revise" then store.proposal_revise(required(params, "id"), project: required(params, "project"), expected_revision: required(params, "expected_revision"),
-            operation_id: required(params, "operation_id"), document: required(params, "document"))
-          when "proposal-ack"
-            store.proposal_acknowledge(required(params, "id"), project: required(params, "project"), submitted_at: required(params, "submitted_at"))
-          when "proposal-reply"
-            store.proposal_reply(required(params, "id"), project: required(params, "project"), answer: required(params, "answer"),
-              received_at: required(params, "received_at"), sequence: required(params, "sequence"))
-          when "proposal-reconcile"
-            store.proposal_reconcile(required(params, "id"), project: required(params, "project"), checkpoint: required(params, "checkpoint"))
-          when "proposal-wake" then store.proposal_wake(project: required(params, "project"), after: params["after"])
-          when "proposal-due" then store.proposal_due(project: required(params, "project"), after: params["after"])
-          when "proposal-history" then store.proposal_history(project: required(params, "project"),
-            query: params.fetch("query", ""), after: params["after"])
-          when "create" then store.create(**symbolize(params))
-          when "read" then store.read(required(params, "id"))
-          when "deliver" then store.deliver(required(params, "id"), answer_reader(params))
-          when "consume"
-            store.consume(required(params, "id"), timeout: Integer(params["timeout"] || 0),
-              operation: params["operation"], native_delivery: params.fetch("native_delivery", false))
-          when "cancel" then store.cancel(required(params, "id"), reason: params["reason"].to_s)
-          when "pending" then store.pending_page(project: params["project"], after: params["after"])
-          when "states" then store.states
-          end
-        end
-
-        def symbolize(params)
-          params.transform_keys { |key| key.to_sym }
-        end
-
-        def required(params, key)
-          value = params[key]
-          raise Protocol::FrameError, "boundary parameter '#{key}' is required" if value.nil? || value.to_s.empty?
-
-          value
-        end
-
-        def answer_reader(params)
-          answer = params["answer"].to_s
-          ->(limit) { answer[0, limit] }
         end
 
         # Keep one stable lock inode for the endpoint. Holding the lock
@@ -346,37 +300,10 @@ module Ace
           nil
         end
 
-        def read_frame(socket)
-          data = +""
-          loop do
-            ready = IO.select([socket], nil, nil, @idle_seconds)
-            return nil unless ready
-
-            chunk = socket.read_nonblock(4096, exception: false)
-            return nil if chunk.nil?
-            next sleep(0.01) if chunk == :wait_readable
-
-            data << chunk
-            if data.bytesize > Protocol::MAX_FRAME_BYTES
-              write_frame(socket, Protocol.encode_error(Protocol::FrameError.new("request frame is too large"))) rescue nil
-              return nil
-            end
-            return data if data.include?("\n")
-          end
-        end
-
-        def write_frame(socket, frame)
-          socket.write(frame)
-          socket.flush
-        end
-
         def root_store
-          Store.new(root: @root, binding: @binding, policy: @policy)
+          Store.new(root: @root, binding: @binding, policy: @policy, group: @group)
         end
 
-        def log(message)
-          @logger&.call("[ace-hitl] #{message}")
-        end
       end
     end
   end

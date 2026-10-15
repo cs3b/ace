@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.35.1] - 2026-10-10
+
+### Technical
+
+- Clarify guide candidate discovery and the scope of this monorepo's checked-in priority-5 workflow source in `wfi://handbook/manage-overrides`.
+
 ## [0.35.0] - 2026-10-08
 
 ### Changed

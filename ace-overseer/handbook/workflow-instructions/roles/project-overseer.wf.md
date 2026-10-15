@@ -5,8 +5,8 @@ doc-type: workflow
 title: Coordinate Project Work
 purpose: Canonical project-overseer role charter for scoped ACE orchestration.
 ace-docs:
-  last-updated: '2026-10-07'
-  last-checked: '2026-10-07'
+  last-updated: '2026-10-14'
+  last-checked: '2026-10-14'
 ---
 # Coordinate Project Work
 
@@ -50,6 +50,14 @@ the actual selected project. Do not treat remembered status as current evidence.
    effects. After a lost reply, inspect those identities without repeating the
    launch. Automatic selection advances only after attributable zero-effect
    refusal before registration; explicit mapping selection never substitutes.
+   Launch defaults (Captain, 2026-10-12): workers run Pi `zai/glm-5.3-flash:high`;
+   independent reviewers run Pi `zai/glm-5.3:high` under their own separate agent
+   identity. Codex or any other harness is NOT a default or silent fallback and
+   requires an explicit Captain exception. Selection precedence: Captain policy
+   defaults > project launch overrides > explicit Captain exception. Every
+   dispatch receipt records the ACTUAL harness, provider/model (incl. thinking
+   level) and agent/pane/session; a documented default without a matching actual
+   launch violates this policy.
 3. Keep conversation available while delegates work. On each wake, inspect the
    task queue, canonical execution evidence and scoped HITL proposal/callback
    state. Report unavailable observations and deferred resolution explicitly;
@@ -76,6 +84,70 @@ the actual selected project. Do not treat remembered status as current evidence.
    coordinator using the existing task, assignment or proposal reference, source
    scope, missing evidence and requested decision. Preserve failed callbacks;
    unavailable delivery is not a policy refusal or successful handoff.
+
+## Integration Coordination Contract
+
+Every integration invocation — native integrate command, service call or
+assignment integration step — resolves FRESH repository, PR, candidate exact
+head, target base/head, review/test evidence, dependencies and the authorized
+executor before any mutation, and rechecks target/head immediately before the
+mutation. A detected race invalidates eligibility for that invocation.
+
+If the target (current main) is NOT an ancestor of the candidate head, the
+integration MUST NOT merge and MUST NOT silently rewrite: it returns an
+actionable typed `needs-rebase` outcome to the queue owner. The queue owner
+then delegates `wfi://git/rebase` (as-git-rebase, including CHANGELOG
+preservation) in the candidate's ISOLATED worktree, obtains new exact-head
+checks and an independent review of the resulting exact head, updates the PR,
+verifies remote candidate identity and resubmits. A common old base does NOT
+make sibling heads sequentially fast-forwardable.
+
+The low-level privileged integrator ENFORCES gates and returns typed outcomes
+(`merged` / `needs-rebase` / `blocked` / `uncertain`); it never authors,
+rebases or reviews its own candidate. Relay alone is not execution — the queue
+owner monitors until receipt and continuation. An `uncertain` outcome triggers
+reconciliation against the original durable reference, never blind retry.
+
+The project overseer continuously owns and watches the integration queue.
+States `ready` / `needs-rebase` / `reviewing` / `integrating` / `merged` /
+`blocked` / `uncertain` reconcile against actual forge/process receipts; a
+persisted queue adopts on restart without duplicate execution; worker PR-ready
+remains distinct from delivery done. Use the existing goal/wake/watch
+primitives — no new heartbeat service or alternate scheduler.
+
+Integration is serial in PREPARATION as well as in effect — not merely a
+serial merge. The accepted receipt for one candidate causes preparation of
+ONLY the next selected candidate — never a mass rebase of the remaining
+queue. Each candidate, on its turn, runs the full cycle: resolve fresh
+target main; delegate `wfi://git/rebase` in that candidate's isolated
+worktree IF the target moved; run the applicable checks; obtain an
+INDEPENDENT EXPLICIT review of the resulting exact head (patch identity may
+support a short delta review but never substitutes the explicit independent
+head approval); verify the remote PR head/base; issue ONE scoped integrator
+request; wait/reconcile the actual integration receipt; refresh main; then
+select and prepare ONLY the next candidate. Queued later PRs keep their
+existing branches and heads untouched until their turn, and prior batch work
+is never rolled back or reset.
+
+Pane and worktab lifecycle is OVERSEER-OWNED cleanup duty — not user or host
+babysitting: the project overseer cleans up its own worker/reviewer panes and
+worktabs as a lifecycle duty; the Lab coordinator owns only its own
+coordination panes/routes. CLOSE-ON-ACCEPT: close an accepted work pane — and
+close the tab when that was its last pane; keep at most 4 panes per tab; and
+never hold an idle tab merely reserved for pending work. The closure gate
+binds to identity and ACTUAL state, never to visual idleness: reconcile the
+exact pane/session/assignment/attempt identity and the actual process state;
+close only after the result is ACCEPTED and the work/evidence is durably
+preserved; never close an active or uncertain attempt merely because it looks
+idle. Review-completed MAY allow pane closure while the PR still waits for
+merge — the review record persists; WORKTREE cleanup is SEPARATE and happens
+only when the preservation/delivery criteria are met. Each wake and restart
+runs a BOUNDED reconcile pass that reports orphan/stale pane/session IDs — it
+never blind-closes.
+
+Hard prohibitions: never push directly to main; never switch the canonical
+checkout to a topic branch; never reuse a stale review as approval for a
+different or moved head.
 
 ## Shared Decision and Responsiveness Contract
 

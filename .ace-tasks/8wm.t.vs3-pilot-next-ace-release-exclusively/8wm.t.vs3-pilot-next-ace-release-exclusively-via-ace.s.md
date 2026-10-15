@@ -1,6 +1,6 @@
 ---
 id: 8wm.t.vs3
-status: in-progress
+status: done
 priority: high
 created_at: "2026-09-23 21:11:14"
 estimate: TBD
@@ -45,9 +45,38 @@ Existing tested publisher remains the publication entrypoint. `ace-hitl ask --ki
 
 ### Success Criteria and Verification Plan
 
-- [ ] SC1: Fake publisher: direct success, OTP needed, rejected/expired OTP, non-OTP failure, uncertain result and duplicate delivery; no secret in emitted artifacts.
-- [ ] SC2: Deliver the publication workflow and runnable pilot scenario contract: named artifact/version/head, scoped authority, protected OTP, classified uncertainty and exact receipt. The actual authorized installed release is the sole gad.2 `scoped-publication` row, not this task's completion gate.
-- [ ] SC3: Run affected `ace-test ace-hitl all` and release workflow fixture tests; retain exact-source independent review. gad.2 records the later real pilot receipt against this source/scenario version.
+- [x] SC1: Fake publisher: direct success, OTP needed, rejected/expired OTP, non-OTP failure, uncertain result and duplicate delivery; no secret in emitted artifacts.
+- [x] SC2: Deliver the publication workflow and runnable pilot scenario contract: named artifact/version/head, scoped authority, protected OTP, classified uncertainty and exact receipt. The actual authorized installed release is the sole gad.2 `scoped-publication` row, not this task's completion gate.
+- [x] SC3: Run affected `ace-test ace-hitl all` and release workflow fixture tests; retain exact-source independent review. gad.2 records the later real pilot receipt against this source/scenario version.
+
+### Source closure record — 2026-10-15 (task-hygiene reconciliation)
+
+Scope closed is the SOURCE scope only, per the SC boundary above. The actual
+authorized installed release stays the sole gad.2 `scoped-publication` row.
+
+- Three-package source result integrated at `453f09f0e` (ancestor of
+  origin/main 95c98ebb5): `.ace-bin/ace-rubygems-publish` owner;
+  ace-assign `endcap_publication.rb`/`service_publication_evidence.rb` +
+  `scoped_rubygems_publish_test.rb`; ace-hitl
+  `service_publication_binding.rb` + client/store/service;
+  ace-lab `protected_service_publication.rb` + `protected_publication_*`
+  and `publication_composition_test.rb`.
+- SC1/SC2 evidence: fake-publisher and boundary matrix in
+  `source-checkpoint-scoped-publication.md` (canonical dispatch → challenge →
+  continuation → import/public read 1/14; receiver/input/publisher 20/119;
+  MFA rejection/expiry + uncertainty + lost-ack 10/62; duplicate delivery and
+  persisted-secret absence 2/17; publisher classification/secret cleanup 3/16).
+- SC3 evidence: exact-source checks recorded in lq1
+  `source-integration-2026-10-08.md` (receiver 10/46 `3daf8ad4`, expiry/recovery
+  2/48 `4e0d76ed`, boundary/listener 4/85 `b300aae9`) and the combined exact-head
+  independent APPROVE `fed9a8ada` (also an ancestor of main): "the
+  original-terminal P1 is resolved, no confirmed finding remains".
+- Explicit boundary: the native OTP pilot failure (publish-r1.md Phase B
+  BLOCKED-HITL — LAB-origin ask failed closed on the missing lab-config-owned
+  `/etc/lab/ace-lab/authorization.yml`; the Captain then published the
+  authorized set and remote verification PASSED) belongs to the gad.2
+  installed scoped-publication row, not this source scope. This task is not
+  kept open for it.
 
 ### Scope and Ownership
 

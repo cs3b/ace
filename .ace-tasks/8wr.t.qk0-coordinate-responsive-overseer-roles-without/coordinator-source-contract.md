@@ -32,9 +32,92 @@ Protected execution uses the delivered Herdr owner. `tmux` remains valid for ord
 
 Deliver canonical workflow assets at `ace-overseer/handbook/workflow-instructions/roles/project-overseer.wf.md`, `roles/lab-coordinator.wf.md` and `roles/second-commander.wf.md`, loaded through the existing workflow bundle. Role selection changes instructions only; it does not change OS credentials, project grants, reviewer identity or authority permissions. A launcher-role instance is the project-overseer charter under explicit provisioned launcher credentials, not a fourth role or a native grant obtainable from config. Domain consumers adopt these assets; remove duplicated generic domain charters. The Captain remains the human decision owner.
 
-The project overseer handles reviewed project tasks, attributable assignments and independent reviews; the Lab coordinator handles cross-project capabilities/provisioning dependencies; the second commander presents unresolved cross-project scope/priority/policy choices to the Captain. Every wake reconciles the existing task/assignment queue plus scoped HITL proposals/callbacks. Escalations are existing task/assignment/proposal references with source scope, blocker and evidence, not another execution registry or review acceptance owner. An unreachable coordinator is unavailable; a policy refusal is a distinct visible decision. Failed delivery/callback retains its existing attributable record; no silent success or repeated effect.
+The project overseer owns reviewed project tasks, attributable assignments, independent reviews, integration decisions and worktree/records cleanup. The Lab coordinator owns project routing, priorities, capacity, pause/resume and cross-project capability/dependency resolution, not each project PR queue or cleanup. The second commander presents unresolved cross-project scope/priority/policy choices to the Captain. Every wake reconciles the existing task/assignment queue plus scoped HITL proposals/callbacks. Escalations are existing task/assignment/proposal references with source scope, blocker and evidence, not another execution registry or review acceptance owner. An unreachable coordinator is unavailable; a policy refusal is a distinct visible decision. Failed delivery/callback retains its existing attributable record; no silent success or repeated effect.
 
 Use the existing ace-hitl proposal policy and Hermes delivery owner unchanged: acknowledged delivery starts the sixteen-hour window; silent approval requires the owner's healthy/drained delivery checkpoint. Approve/veto/clarify, revised/superseded proposals and safe stop requests retain their existing meanings. A coordinator tick or elapsed clock is not approval. A new Captain instruction becomes a reviewed task/scope or a revised proposal referencing the old assignment/attempt and accepted candidate/input binding. Stop conflicting work through its actual owner and keep uncertainty visible; never rewrite the old attempt's accepted definition or start replacement work into an occupied slot. Technical work/review is delegated while the conversation accepts further instructions.
+
+## Project worktrees and active supervision
+
+Draft amendment requiring fresh review (provenance: h8x PR37–42). Earlier review applies only to its original scope.
+
+### Ownership and worktree discipline
+The project overseer owns its worker/reviewer/records worktrees, task attempts,
+integration queue and accepted cleanup. Implementation and independently executed
+review use isolated attributable worktrees; task records and supervision changes
+are prepared in a records worktree and reviewed through the existing delivery
+policy. The canonical main checkout stays clean and synchronized to the accepted
+remote after integration. A clean tracking label or unchanged local HEAD is not
+proof that a fresh remote observation matches the accepted merged commit.
+
+Before synchronization, inspect actual local/remote ancestry and dirty/untracked
+work. Preserve divergent local commits and WIP with attributable ownership and
+recovery evidence, then reconcile through the existing review/integration policy.
+Never reset/discard work or place unreviewed commits on canonical main. Dirty or
+diverged main initiates owned recovery with a concrete next action; it cannot
+become a perpetual generic WAIT or erase evidence of a completed remote merge.
+
+The Lab overseer routes projects, cross-project dependencies, priorities, capacity,
+pause/resume and missing capabilities. It does not take over each project's PR
+queue, record updates, worktree cleanup or per-PR integration decisions. A missing
+project capability is routed to its actual owner with exact scope and evidence.
+
+### All authored changes and content-specific review
+
+Every authored repository change, including task creation, specification/status
+updates, supervision records, documentation and configuration, uses an isolated
+attributable worktree. Canonical main is reserved for clean accepted state. This
+is the desired workflow contract; this draft amendment does not itself migrate
+current WIP or claim current sessions already meet it.
+Group authored versioned changes in the existing attributable records/spec
+worktree; a heartbeat does not create a new worktree, task or PR. Operational
+runtime transitions remain with their existing authoritative owner, not a reviewed
+documentation queue or second journal. This rule governs authored repository
+changes, not replacement of native runtime authority.
+
+An independent reviewer (author != reviewer) reviews the exact candidate head.
+Select review prompts/templates explicitly by content using the project's existing
+ace-assign/handbook configuration mechanisms:
+
+- Task/specification: intent clarity, consistency, scope and dependencies,
+  measurable acceptance, implementability and absence of invented capabilities.
+- Documentation/records: truth against actual sources, exact SHAs and operation
+  receipts; no unexecuted effect or stale evidence represented as current fact.
+- Code: the existing executed-test and independent code-review gates.
+
+Mixed changes receive every applicable review type. Relabeling code as docs cannot
+avoid code checks. Later edits invalidate affected verdicts; re-review the changed
+candidate before integration. A task-only review approves the authored specification
+or records, not implementation completion. Drafting stays draft; readiness promotion
+occurs only through the explicit existing task-review workflow. Use existing project
+review selection and evidence owners; add no parallel review engine or journal.
+
+### Heartbeat decisions and integration
+On each heartbeat or scoped watch/callback, the project overseer reconciles actual
+canonical Assign/task/attempt state, current candidate and target ancestry,
+independent exact-head test/review evidence and service execution receipts. These
+are inputs to the same owning overseer, not a second coordinator or queue engine.
+Work remains responsive; no blocked sleep-poll loop or repetitive narrative wake.
+
+Select the ready integration order by dependencies and accepted scope, not worker
+completion FIFO. Record the eligible ordered set, selected/deferred candidates and
+reasons using existing evidence. Delegate rebase and fresh checks/review when the
+candidate changes; re-evaluate target movement before integration. Submit only
+within actual authority, capacity and pause state; accepted service receipts,
+not a callback or CLI exit alone, establish effects. Worker PR-ready remains the
+implementation boundary; delivery may still be open after its parent closes.
+
+A closed/merged PR with accepted receipt advances the delivery state. If canonical
+main lags, open owned synchronization recovery; do not reopen a merge WAIT merely
+because local main is unchanged. Ready work advances without waiting for a new
+human nudge. A genuine blocker is escalated once per unchanged blocker/owner,
+retaining a durable reference and next observation; changed evidence may warrant
+an update. WAIT requires a real pending operation and reconciliation path.
+
+Restart adopts the same original attempt and unresolved effect references.
+Unknown merge/publication outcomes are reconciled read-only; no duplicate launch,
+resubmission or effect retry is inferred from a missing callback. Pause prevents
+new dispatch/effects while observation and safe reconciliation continue; capacity
+accounts for unresolved live/uncertain attempts.
 
 ## Bounded responsiveness and ownership checks
 

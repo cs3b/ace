@@ -1,6 +1,6 @@
 ---
 id: 8wj.t.vle
-status: pending
+status: done
 priority: low
 created_at: "2026-09-20 21:03:46"
 estimate: 
@@ -62,8 +62,8 @@ green.
 
 ### Acceptance criteria
 
-- [ ] N1 and N2 wording landed; old ambiguous phrases removed.
-- [ ] Probes cited; handbook suite green.
+- [x] N1 and N2 wording landed; old ambiguous phrases removed.
+- [x] Probes cited; handbook suite green.
 
 ## Provenance
 

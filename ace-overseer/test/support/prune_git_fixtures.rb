@@ -15,6 +15,11 @@ module PruneGitFixtures
 
     def init
       git!("init", "-q", "-b", "main")
+      configure_identity
+      self
+    end
+
+    def configure_identity
       git!("config", "user.email", "prune-test@example.com")
       git!("config", "user.name", "Prune Tests")
       git!("config", "commit.gpgsign", "false")
@@ -82,7 +87,7 @@ module PruneGitFixtures
 
     def clone_to(destination_path)
       git!("clone", "-q", @path, destination_path)
-      Repo.new(destination_path)
+      Repo.new(destination_path).configure_identity
     end
   end
 end

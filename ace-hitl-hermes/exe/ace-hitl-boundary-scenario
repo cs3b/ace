@@ -1,0 +1,125 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# The nh0-A source scenario (spec 8xa.t.nh0): executed by the host
+# lab-config gad.8/gad.b fixture contract against the REAL disposable
+# Incus TCP proxies. One stdout JSON line per invocation — a closed
+# receipt — plus an optional sanitized per-case report file.
+#
+#   # host side (TLS crossing only; consumes binding-verified asks)
+#   ace-hitl-boundary-scenario run --manifest FILE \
+#     --phase baseline|uncertainty|recovery --state FILE [--report PATH]
+#
+#   # inside the authority container, as the REAL worker actor: creates
+#   # asks through the serve-path binding (with_verified_attempt against
+#   # real Assign state) and consumes the delivered answers
+#   ace-hitl-boundary-scenario ask --manifest FILE --authority A|B \
+#     --stage create|settle --state FILE
+#
+#   # source-side verification of the host fixture's invocation-bound
+#   # acceptance receipt (closed schema nh0_real_incus_acceptance)
+#   ace-hitl-boundary-scenario verify-acceptance --receipt FILE --ace-head SHA
+#
+# Identity and binding are never fabricated: asks are created only by
+# the local worker actor through the verified serve-path binding; the
+# TLS certificate identity maps only to the Hermes transport role. A
+# loopback-only or mocked run can never substitute for the verified
+# invocation-bound nh0_real_incus_acceptance receipt.
+
+require "optparse"
+require "json"
+require_relative "../lib/ace/hitl/hermes"
+require_relative "../lib/ace/hitl/hermes/boundary/scenario"
+require_relative "../lib/ace/hitl/hermes/boundary/local_worker"
+
+trap("INT") { exit 130 }
+
+operation = ARGV.shift
+options = {}
+parser = OptionParser.new do |o|
+  o.banner = "ace-hitl-boundary-scenario run|ask|verify-acceptance [options]"
+  o.on("--manifest FILE") { |value| options[:manifest] = value }
+  o.on("--phase PHASE") { |value| options[:phase] = value }
+  o.on("--authority NAME") { |value| options[:authority] = value }
+  o.on("--stage STAGE") { |value| options[:stage] = value }
+  o.on("--state FILE") { |value| options[:state] = value }
+  o.on("--report PATH") { |value| options[:report] = value }
+  o.on("--receipt FILE") { |value| options[:receipt] = value }
+  o.on("--ace-head SHA") { |value| options[:ace_head] = value }
+end
+parser.parse(ARGV)
+
+def manifest!(path)
+  manifest = Ace::Hitl::Hermes::Boundary::Scenario::Manifest.load_file(path)
+  manifest.verify_credential_paths!
+  manifest
+rescue Ace::Hitl::Hermes::Boundary::Scenario::Error,
+       Ace::Hitl::Lifecycle::Error, SystemCallError => e
+  warn("ace-hitl-boundary-scenario: #{e.message}")
+  exit 65
+end
+
+case operation
+when "run"
+  if options.values_at(:manifest, :phase, :state).any?(&:nil?)
+    warn(parser.to_s)
+    exit 64
+  end
+  begin
+    manifest = manifest!(options[:manifest])
+    state = Ace::Hitl::Hermes::Boundary::Scenario::State.load(options[:state])
+    scenario = Ace::Hitl::Hermes::Boundary::Scenario.new(
+      manifest: manifest,
+      client_factory: Ace::Hitl::Hermes::Boundary::Scenario::ProductionClientFactory.new,
+      probe_factory: ->(endpoint:) {
+        Ace::Hitl::Hermes::Boundary::Scenario::ProductionProbe.new(endpoint: endpoint)
+      }
+    )
+    receipt = scenario.run(options[:phase], state: state, report: options[:report])
+    puts(JSON.generate(receipt))
+    exit(receipt["passed"] ? 0 : 1)
+  rescue Ace::Hitl::Hermes::Boundary::Scenario::Error,
+         Ace::Hitl::Lifecycle::Error, Ace::Hitl::Hermes::ContractError, SystemCallError => e
+    warn("ace-hitl-boundary-scenario: #{e.message}")
+    exit 65
+  end
+when "ask"
+  if options.values_at(:manifest, :authority, :stage, :state).any?(&:nil?)
+    warn(parser.to_s)
+    exit 64
+  end
+  begin
+    manifest = manifest!(options[:manifest])
+    state_path = options[:state]
+    state = File.exist?(state_path) ? Ace::Hitl::Hermes::Boundary::Scenario::State.load(state_path) : Ace::Hitl::Hermes::Boundary::Scenario::State.empty(state_path)
+    worker = Ace::Hitl::Hermes::Boundary::LocalWorker.new(
+      manifest: manifest, state: state, authority: options[:authority], stage: options[:stage])
+    receipt = worker.run
+    puts(JSON.generate(receipt))
+    exit(receipt["passed"] ? 0 : 1)
+  rescue Ace::Hitl::Hermes::Boundary::Scenario::Error,
+         Ace::Hitl::Lifecycle::Error, Ace::Hitl::Hermes::ContractError, SystemCallError => e
+    warn("ace-hitl-boundary-scenario: #{e.message}")
+    exit 65
+  end
+when "verify-acceptance"
+  if options.values_at(:receipt, :ace_head).any?(&:nil?)
+    warn(parser.to_s)
+    exit 64
+  end
+  begin
+    receipt = Ace::Hitl::Hermes::Boundary::Scenario::AcceptanceReceipt.load_file(options[:receipt])
+    receipt.verify!(ace_head: options[:ace_head])
+    puts(JSON.generate({"type" => receipt.value.fetch("type"),
+      "invocation_id" => receipt.value.fetch("invocation_id"),
+      "ace_head" => receipt.value.fetch("ace_head"),
+      "verified" => true}))
+    exit 0
+  rescue Ace::Hitl::Hermes::Boundary::Scenario::Error, SystemCallError => e
+    warn("ace-hitl-boundary-scenario: #{e.message}")
+    exit 65
+  end
+else
+  warn(parser.to_s)
+  exit 64
+end

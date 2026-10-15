@@ -136,7 +136,7 @@ module LifecycleFixtures
   end
 
   def make_store(root:, identity: nil, binding: nil, ownership: nil, poll_seconds: 1, policy: nil,
-    vault: :file)
+    vault: :file, group: Ace::Hitl::Lifecycle::Store::DEFAULT_GROUP)
     Ace::Hitl::Lifecycle::Store.new(
       root: root,
       binding: binding || LifecycleFixtures::TestBinding.new,
@@ -147,7 +147,8 @@ module LifecycleFixtures
       ownership: ownership || LifecycleFixtures::RecordingOwnership.new,
       policy: policy || LifecycleFixtures::AllowTransportPolicy.new,
       poll_seconds: poll_seconds,
-      vault: vault
+      vault: vault,
+      group: group
     )
   end
 

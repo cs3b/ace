@@ -35,3 +35,39 @@ Expected: deferred resolver within five seconds, usable status/conversation, exi
 `ace-overseer review --project ace --agent builder --assignment A --attempt T --head HEAD --candidate-generation 1 --mutation review-001 --expected-generation 12 --accept-mutation review-accept-001`
 
 An already provisioned reviewer-role instance runs this reviewed form. Actual original Driver delegates unchanged Endcap assign_review; the reviewer exports that exact candidate, runs maintained ReviewManager and imports actual receipt via accept_review. No --work forwarding, PR-as-approval or caller-selected reviewer credentials. See child qk0.1.0 ux/usage.md for lost-reply/status boundaries. The command source is integrated at ff284f6ef; actual public protocol tests and independent source verdict are retained in the child. Whole-child verification and installed acceptance remain separate.
+
+
+## Draft: project-owned heartbeat and canonical recovery
+
+This scenario supplements earlier reviewed usage and is awaiting fresh review.
+Start two independent workers in their own worktrees; their completion order is
+opposite to the integration dependency. On heartbeat/callback, the project
+overseer reads canonical attempts, exact-head reviews and current branch ancestry,
+records selected/deferred order, then delegates the authorized integration sequence.
+Record changes occur in the owned records worktree, not canonical main. Lab
+coordination stays at project/priority/capability/pause boundaries.
+
+After a verified merge, leave the canonical checkout temporarily behind and wake
+the same overseer. Expected: the merged PR stays accepted; the overseer owns
+synchronization and advances ready work. Add dirty files and divergent local
+commits: expected preservation and reviewed reconciliation before sync, never
+reset/discard or perpetual WAIT. Restart with an uncertain merge: expected
+same-attempt read-only reconciliation, no repeated effect. Pause/new capacity
+constraints prevent fresh dispatch while observation continues. Stable blockers
+produce one attributable escalation, not repeated asks on every heartbeat.
+
+
+## Draft: task-only and mixed-change review
+
+Create or revise a task in an attributable records worktree. Select the configured
+task/spec review prompt and an independent reviewer; retain exact-head evidence,
+then PR/integrate through the existing policy. Expected: canonical main contains
+only accepted state, and the drafted implementation task remains draft unless the
+explicit readiness-review workflow promotes it. Status edits and docs are not
+exempt authored changes.
+
+Introduce conflicting acceptance requirements or a record citing a stale SHA:
+expected rejection, correction and fresh affected review at the changed head.
+For a mixed code/docs/spec candidate, select all applicable configured review
+prompts and execute the existing code checks. A docs label is not an exemption.
+This is a draft contract, not a claim that current WIP has been migrated.

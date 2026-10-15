@@ -150,10 +150,11 @@ class InstalledProposalScenario
         "binding" => {"kind" => "service", "state" => "active", "instance_id" => "fixture", "attested_instance_id" => "fixture"}}]}})
     FileUtils.mkdir_p(path("inbox"), mode: 0750)
     write("registry.json", {"schema" => "ace.hitl.hermes.channels/v1", "channels" => [{"name" => "fixture", "machine" => "local",
-      "folder" => path("inbox"), "target" => "overseer", "projects" => ["ace"], "chat_id" => "-424242", "captain_user_ids" => ["42"]}]})
+      "folder" => path("inbox"), "target" => "overseer", "projects" => ["ace"], "chat_id" => "-424242",
+      "captain_user_ids" => ["42"], "hitl_service_uid" => Process.uid}]})
     File.write(path("gateway.yml"), "platforms:\n  telegram:\n    enabled: false\n")
     write("runtime.json", {"schema" => "ace.hitl.hermes.runtime/v1", "registry" => path("registry.json"), "state" => path("hermes"),
-      "hitl_socket" => @socket, "hitl_service_uid" => Process.uid, "hermes_gateway_config" => path("gateway.yml"), "polling_owner" => "ace-hitl-hermes"})
+      "hitl_socket" => @socket, "hermes_gateway_config" => path("gateway.yml"), "polling_owner" => "ace-hitl-hermes"})
     start_service
     document = {"operation" => "forge-sync", "target" => Ace::Lab::Atoms::ServiceInput.target(input), "candidate_head" => git("rev-parse", "HEAD"),
       "input_digest" => Ace::Lab::Atoms::ServiceInput.digest(input), "context" => "Installed controlled SC3", "options" => ["yes", "no"],

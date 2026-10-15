@@ -4,7 +4,7 @@ status: draft
 priority: high
 created_at: "2026-09-28 17:44:29"
 estimate: TBD
-dependencies: [8wr.t.qkb.0, 8wr.t.qk0, 8wr.t.qjx, 8wr.t.qjz, 8x3.t.xz9]
+dependencies: [8wr.t.qkb.0, 8wr.t.qk0, 8wr.t.qjx, 8wr.t.qjz, 8x3.t.xz9.4]
 tags: [lab-readiness]
 parent: 8wr.t.qkb
 bundle:
@@ -76,3 +76,185 @@ The fixed protected producer input, selected forge/PR/provenance/head/method che
 ## Draft public protected request adoption
 
 The bounded original merge consumer is independently accepted through 531963609; its controlled completion/replay/interruption and negative gates are retained in source-checkpoint-protected-merge-consumer.md. This does not make the current caller-local `ace-lab service request/status` valid for protected workers. The minimal public request/status amendment is protected-service-request-cli-contract-candidate.md: explicit original mapping/scope/service/candidate/expected-generation selectors, existing authenticated receiver claim and canonical consumer, no local fallback and no refreshed-generation retry. The bounded merge request/status amendment has independent specification approval at `f74c36a5d`; implementation acceptance remains open. The 2026-10-08 Captain decision above resolves PR ordering; implementation of those operations remains required before whole-task completion.
+
+## Overseer delivery-queue + project-adaptable templates design (gad.2-informed, 2026-10-11) — SPEC ONLY
+
+Reconciliation target for the Captain architecture direction (corrected framing, 2026-10-11): the worker/reviewer pipeline ending at PR READY stays CORRECT and unchanged; the MISSING LAYER is the project overseer's HIGH-LEVEL DELIVERY QUEUE defined as assign plans — several ready workers at any time, dependency-aware selection with INTEGRATION ORDER (not completion FIFO), delegation of rebase + REQUIRED RENEWED EVIDENCE at moved heads (generalized from the gad.2 PR36 rebase→R2 discipline), and queue-owner DECISION GUIDES (integrate-more-then-cut-release vs deploy demo/production). Deliverable shape: SEVERAL project-adaptable assign templates + decision guides — explicitly NOT a rigid one-worker→one-release pipeline; implementation-task completion never auto-completes a delivery/release parent. Captured in `overseer-queue-and-delivery-templates-design.md` (this directory): queue-as-assign-parent requirement (canonical state only, no second engine/journal), renewed-evidence rule, template families, standing constraints, and the CURRENT-CAPABILITY vs MISSING-PROVISIONING audit M1–M7 (forge push flag semantics — corrected per lifecycle R2: `--no-push`/`--no-upstream` semantic split + dry-run plan inconsistency + one unresolved run-time anomaly, NOT broken threading; integrator result channel; HITL gap→gad.8; login-gated claude identity; AGit journal gap; worktree remove defect) plus integration decision-record and WAIT/BLOCKED transition rules (§1b). Role-charter aspects (queue-owner decision guides, BLOCKED-vs-WAIT attribution, callback protocol) are reconciled into `8wr.t.qk0`'s task file (cross-referenced, not forked). Related refs: 8wr.t.qkb, 8wr.t.qkb.0, 8wr.t.qk0, 8wr.t.qjx/qjz, 8x3.t.xz9, 8x3.t.3zi, 8x0.t.ig3, gad.2 evidence 8wj.t.vle / 8x9.t.x3o / 8xa.t.ega, gad.8. SPEC-ONLY: implementation gated until Captain/host approval; this slice stays draft/needs_review.
+
+## Draft amendment — ordinary overseer integrator producer and M2 result channel
+
+This amendment requires readiness review and implementation; it does not describe
+an available host socket. The ordinary project-overseer integration route is
+distinct from the protected worker receiver above. Current `ace-lab service
+request/status` configuration cannot express the installed `lab-integrator`
+command through YAML: local execution requires caller UID equal executor UID, Unix
+execution requires an implemented authenticated receipt server, and the protected
+receiver requires protected assignment authority/attempt/mapping plus a distinct
+non-root executor. The ordinary coordinator must not borrow that receiver, copy an
+executor credential or pass a maintainer token. The current integrator's merge
+proof is supporting effect evidence, not a correlated request-to-receipt contract;
+there is no cross-VM HTTP fallback.
+
+qkb.1 owns the canonical delivery-workflow request/status/receipt consumer and its
+exact forge/PR/head/worktree acceptance. qk0/qk0.1.1 owns project-overseer queue
+selection, recovery and wake behavior. Tool-minted draft/needs-review child
+`8x3.t.xz9.4` owns the
+authenticated ordinary fixed-operation admission/execution/status producer through
+the explicit `ordinary-merge` mode of `ace-lab service request/status`; ace-assign
+canonical attempt/evidence state is its sole queue/effect record and supplies its
+opaque reference/read-only-status primitive. The four protected xz9 children and
+their receiver/schema remain unchanged. iy6 owns the separately admitted arbitrary
+project-command producer and may compose the shared reference/status primitive; it
+is not the merge producer. `gad.b` installs the reviewed producer/configuration,
+and `gad.2` executes distinct-account installed acceptance after source delivery.
+
+The implemented ordinary route must provide one public sequence:
+
+1. The project overseer records an exact immutable integration request before
+   dispatch, bound to project queue entry, task/attempt, forge server, normalized PR
+   URL, head/base repositories and refs, candidate head, method, authorization and
+   the canonical input digest — ruled normatively in `8x3.t.xz9.4` as lowercase
+   SHA-256 over the full eight-field immutable binding (command selectors,
+   operation, authorization, request ID and the complete input document), never a
+   document-only digest. The producer selects a fixed installed merge operation;
+   callers cannot select an executable, argv, socket path, evidence path or token.
+2. Authenticated admission durably accepts or refuses that same request. An
+   acceptance acknowledgment returns its original request ID, input digest and a
+   receiver-owned durable reference usable after either process restarts. A
+   transport/message acknowledgment without that reference is not acceptance.
+3. A pre-admission refusal is returned synchronously by the request call in the
+   closed outer `status:error` / nested `error.code` envelope and has no reference;
+   it is not a status value. Read-only status takes the full original binding and
+   durable reference, authenticates the observer, and reports only pending,
+   uncertain, succeeded or failed, with the one terminal receipt on succeeded or
+   failed. It never dispatches, repairs, refreshes authorization or changes
+   selectors.
+4. The queue accepts success only from the terminal receipt bound to the exact
+   request/input and verified remote outcome. It rejects a valid SHA in the wrong
+   repository, wrong checkout/worktree/branch, moved remote target, mismatched PR
+   provenance, stale review or altered receipt. An already-merged PR with lagging
+   local main enters synchronization recovery rather than another merge.
+
+The exact commands, request evidence shapes, maintained outer success/refusal
+envelopes, closed refusal-code mapping, four status states and embedded-request
+terminal receipt schema are normative in `8x3.t.xz9.4`; qkb.1 invokes and validates
+them without translation, flattening or a caller-local journal.
+Its independently implementable consumer slice is accepted when the canonical
+delivery workflow records the binding, invokes `--mode ordinary-merge`, persists
+the returned opaque reference, restores it after queue-owner restart, and accepts
+only the exact terminal receipt across every success and negative case below.
+
+Controlled source acceptance loses the admission acknowledgment after durable
+acceptance, restarts requester and receiver independently, makes the receiver
+unavailable before admission and after effect start, and loses the original effect
+result. Every accepted/lost case reconciles by the same reference and performs at
+most one merge; an uncertain original result is never resubmitted. Only a proven
+pre-effect refusal may permit a new reviewed request. Tests also cover wrong
+repository despite the same SHA, wrong worktree/branch, remote target movement and
+already-merged remote state with stale local main. Existing review, branch
+protection, exact-head gates and repository scope remain unchanged. No Python host
+bridge, raw maintainer token, second queue/ledger or log-parsed success is allowed.
+
+## Integration-coordination contract — entry-point gates and acceptance (Captain, 2026-10-12) — SPEC
+
+The typed outcomes and gates apply at EVERY integration invocation/entry
+point — native integrate commands, services and assignment integration steps
+— not only the role prose. Known ACE-side surfaces this slice names:
+`ace-lab service` ordinary-merge admission (the `8x3.t.xz9.4` producer), the
+ace-assign `assignment_executor` and `runtime_control_surface_runner`
+integration steps, and the host `lab-integrator` reached via producer
+request/receipt.
+
+- Fresh resolution + recheck-before-mutation with race invalidation is shared
+  contract/validation: no entry point bypasses the gate. Where the wire schema
+  is already closed (`8x3.t.xz9.4` refusal-code mapping), `needs-rebase` maps
+  to the existing closed `moved_target` refusal family; where a surface's
+  schema is not yet closed, the outcome is still typed in canonical queue
+  state and the staged gate-implementation slice closes it — a prose-only
+  gate is not acceptance.
+- Acceptance scenarios (added to this slice's verification):
+  1. Two reviewed sibling PRs: integrate the first; the second's target check
+     fails ancestry → `needs-rebase` typed outcome returned to the queue
+     owner; as-git-rebase (`wfi://git/rebase`, CHANGELOG preservation) in the
+     candidate's isolated worktree; refreshed exact-head checks plus
+     independent review of the NEW head; integrate the second.
+  2. Changed-target recheck immediately before mutation: a detected race
+     voids eligibility — no merge, no silent rewrite.
+  3. Uncertain-receipt reconciliation against the original durable request
+     reference — at most one effect per request, never blind retry.
+- Serialization (Captain correction): integration is serial in PREPARATION,
+  not merely in merge. The accepted receipt for one candidate causes
+  preparation of ONLY the next selected candidate — never a mass rebase of
+  PR2..N. Per-candidate cycle on its turn: resolve fresh target main →
+  as-git-rebase in that candidate's isolated worktree IF needed → applicable
+  checks → INDEPENDENT EXPLICIT review of the resulting exact head (patch
+  identity may support a short delta review but never substitutes the
+  explicit independent head approval) → verify remote PR head/base → ONE
+  scoped integrator request → wait/reconcile the actual integration receipt
+  → refresh main → select and prepare ONLY the next candidate. Queued later
+  PRs retain their existing branches/heads untouched until their turn; no
+  rollback/reset of prior batch work.
+- REMOTE-READY GATE (Captain, incident r5): an integration request may be
+  sent ONLY after (a) the forge remote PR head is updated to the reviewed
+  exact head and VERIFIED via fresh ls-remote — `refs/pull/N/head` equals
+  the reviewed head — and (b) the target base is fresh-verified —
+  `ls-remote refs/heads/main` equals the expected base. LOCAL-REVIEWED is
+  NOT REMOTELY-READY: local branch/review completion alone never makes a
+  candidate eligible. A request sent with a mismatched remote head is a
+  process failure, not an eligible invocation.
+- HANDOFF DEFINITION (post-rebase): after an executor rebase, the QUEUE
+  OWNER — never the executor — performs the remote head update (topic push;
+  force-update is sanctioned for reviewed-head moves only), verifies the
+  actual refs per the REMOTE-READY GATE, records previous-head → new-head
+  in the evidence, and only then issues the scoped integrator request.
+- Item-closure definition (Captain outcome acceptance): a queue item is
+  complete ONLY when the authorized integrator confirms the ACTUAL main
+  merge and the queue owner reconciles the receipt — fresh main equals the
+  merged head. Rebase, refreshed review and request-sent are intermediate
+  states, never closure. The acceptance scenario requires at least TWO
+  reviewed sibling PRs ACTUALLY MERGED IN ORDER through the full cycle (A
+  merged with reconciled receipt → B detected diverged → needs-rebase →
+  skill rebase → refreshed checks + explicit independent head review →
+  merged with reconciled receipt); rebased/reviewed-only does NOT satisfy
+  the acceptance — merged-in-order does. The queue owner maintains wake/goal
+  duty — invoking integration, monitoring the authoritative result,
+  refreshing main and continuing to the next item — until the WHOLE delivery
+  completes or an actionable true blocker exists; a missing callable
+  integration route is a tracked delivery blocker to implement/install, not
+  a permanent lane boundary.
+
+## Release lifecycle — batch selection through authorized publication (Captain lifecycle audit, 2026-10-12) — SPEC
+
+Scoping correction first: the earlier "No publication" statements scoped the
+WORKER TEMPLATE (and this slice's spec pass) to prepare-only delivery ending
+at PR-ready. They must NOT be read as a permanent prohibition on the overseer
+lifecycle. The separation is: WORKERS end at PR-ready (prepare-only); the
+OVERSEER lifecycle continues through integration; and PUBLICATION is a
+separately authorized step (project-configured authority + OTP/HITL where the
+project demands it), not a new blanket grant.
+
+Normative release flow, owned by the queue owner:
+
+a. EXPLICIT release-batch selection: freeze the exact integrated main
+   commit, artifact list and dependency versions at selection; record
+   SELECTED vs DEFERRED PRs with reasons.
+b. Release preparation owns a REVIEWED PR (version bumps, changelogs,
+   dependency manifest) — never direct-to-main; it re-enters the same
+   integration contract (fresh-resolution gate, typed outcomes).
+c. Publication/deployment is configured PER PROJECT (gems vs demo vs
+   production) and references the EXISTING skills as execution mechanisms —
+   `as-release`, `as-release-bump-version`, `as-release-rubygems-publish`,
+   `as-github-release-publish` — do NOT duplicate them.
+d. Publication requires AUTHORIZED EXECUTION: an artifact-bound request;
+   OTP/HITL when the project config demands it. Merge authorization alone
+   does not authorize publication.
+e. PARTIAL or UNCERTAIN publication outcomes reconcile registry/status
+   against actual registry/install evidence — never blind repeat.
+f. Post-publication closure: install verification + acceptance + cleanup of
+   the batch's records/worktrees per the preservation rules (work and
+   evidence preserved before any accepted cleanup).
+- Queue states ready / needs-rebase / reviewing / integrating / merged /
+  blocked / uncertain reconcile against actual forge/process receipts via the
+  existing goal/wake/watch primitives; a persisted queue adopts on restart
+  without duplicate execution. No new heartbeat service or alternate
+  scheduler.

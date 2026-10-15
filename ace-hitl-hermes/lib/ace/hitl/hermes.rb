@@ -17,6 +17,9 @@ require_relative "hermes/transport/journal"
 require_relative "hermes/transport/relay"
 require_relative "hermes/transport/telegram"
 require_relative "hermes/transport/poller"
+require_relative "hermes/transport/tls_client"
+require_relative "hermes/boundary/scenario"
+require_relative "hermes/boundary/local_worker"
 
 module Ace
   module Hitl

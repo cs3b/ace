@@ -2,13 +2,18 @@
 
 require "socket"
 require_relative "protocol"
+require_relative "frame_exchange"
+require_relative "lifecycle_requests"
 
 module Ace
   module Hitl
     module Lifecycle
-      # The authenticated client of the scoped store boundary (spec
-      # 8wq.t.34i). The CLI lifecycle operations run through this client;
-      # direct shared-store access is not a client-side option.
+      # The authenticated Unix-socket client of the scoped store
+      # boundary (spec 8wq.t.34i). The CLI lifecycle operations run
+      # through this client; direct shared-store access is not a
+      # client-side option. Cross-runtime clients use the mutual-TLS
+      # Hermes client of the host/Incus crossing (spec 8xa.t.nh0)
+      # instead; both share the request surface and frame exchange.
       #
       # Both endpoint directions are authenticated:
       # - the client authenticates the SERVICE: the socket must be a
@@ -21,43 +26,10 @@ module Ace
       # classified lifecycle errors arrive from the service and are
       # re-raised under their own classes.
       class Client
+        include FrameExchange
+        include LifecycleRequests
+
         attr_reader :socket_path, :service_uid
-
-        def proposal_create(**params)
-          request("proposal-create", params)
-        end
-
-        def proposal_show(id, project:, history_after: 0)
-          request("proposal-show", {"id" => id, "project" => project, "history_after" => history_after})
-        end
-
-        def proposal_revise(id, project:, expected_revision:, operation_id:, document:)
-          request("proposal-revise", {"id" => id, "project" => project, "expected_revision" => expected_revision, "operation_id" => operation_id, "document" => document})
-        end
-
-        def proposal_acknowledge(id, project:, submitted_at:)
-          request("proposal-ack", {"id" => id, "project" => project, "submitted_at" => submitted_at})
-        end
-
-        def proposal_reply(id, project:, **params)
-          request("proposal-reply", {"id" => id, "project" => project}.merge(params))
-        end
-
-        def proposal_reconcile(id, project:, checkpoint:)
-          request("proposal-reconcile", {"id" => id, "project" => project, "checkpoint" => checkpoint})
-        end
-
-        def proposal_wake(project:, after: nil)
-          request("proposal-wake", {"project" => project, "after" => after}.compact)
-        end
-
-        def proposal_due(project:, after: nil)
-          request("proposal-due", {"project" => project, "after" => after}.compact)
-        end
-
-        def proposal_history(project:, query: "", after: nil)
-          request("proposal-history", {"project" => project, "query" => query, "after" => after}.compact)
-        end
 
         def initialize(socket_path:, service_uid:, deadline_seconds: Protocol::DEFAULT_DEADLINE_SECONDS)
           @socket_path = socket_path.to_s
@@ -83,57 +55,6 @@ module Ace
           raise TransportError, "HITL boundary is unavailable (#{e.class}: #{e.message})"
         rescue JSON::GeneratorError => e
           raise TransportError, "HITL boundary request is not serializable (#{e.message})"
-        end
-
-        def create(deadline: nil, **params)
-          request("create", params.transform_keys(&:to_s), deadline: deadline)
-        end
-
-        def read(id, deadline: nil)
-          request("read", {"id" => id}, deadline: deadline)
-        end
-
-        def deliver(id, answer)
-          request("deliver", {"id" => id, "answer" => answer.to_s})
-        end
-
-        def consume(id, timeout: 0, operation: nil, native_delivery: false, deadline: nil)
-          params = {"id" => id, "timeout" => Integer(timeout)}
-          params["operation"] = operation if operation
-          params["native_delivery"] = true if native_delivery
-          request("consume", params, deadline: deadline)
-        end
-
-        def cancel(id, reason: "", deadline: nil)
-          request("cancel", {"id" => id, "reason" => reason.to_s}, deadline: deadline)
-        end
-
-        def pending(project: nil)
-          items = []
-          after = nil
-          loop do
-            page = pending_page(project: project, after: after)
-            items.concat(page.fetch("items"))
-            cursor = page.fetch("next")
-            break unless cursor
-            unless cursor.is_a?(String) && (after.nil? || cursor > after)
-              raise TransportError, "pending cursor did not advance"
-            end
-            after = cursor
-          end
-          items
-        end
-
-        def pending_page(project: nil, after: nil)
-          request("pending", {"project" => project, "after" => after}.compact)
-        end
-
-        def states
-          request("states")
-        end
-
-        def ping
-          request("ping")
         end
 
         private
@@ -175,24 +96,6 @@ module Ace
           socket.getpeereid
         end
 
-        # A consume without a timeout waits indefinitely at the client
-        # boundary too; every bounded call gets a deadline slightly
-        # beyond its own wait so the server result wins the race.
-        def request_deadline(op, params, selected)
-          if !selected.nil? && (!selected.is_a?(Numeric) || !selected.finite?)
-            raise TransportError, "HITL boundary deadline is invalid"
-          end
-          local = deadline_for(op, params)
-          [selected, local].compact.min
-        end
-
-        def await!(socket, direction, deadline)
-          remaining = deadline && deadline - Process.clock_gettime(Process::CLOCK_MONOTONIC)
-          raise TransportError, "HITL boundary deadline exceeded" if remaining && remaining <= 0
-          readable, writable = direction == :read ? [[socket], nil] : [nil, [socket]]
-          raise TransportError, "HITL boundary deadline exceeded" unless IO.select(readable, writable, nil, remaining)
-        end
-
         def connect!(socket, deadline)
           if deadline && deadline <= Process.clock_gettime(Process::CLOCK_MONOTONIC)
             raise TransportError, "HITL boundary deadline exceeded"
@@ -202,49 +105,6 @@ module Ace
           await!(socket, :write, deadline)
           error = socket.getsockopt(Socket::SOL_SOCKET, Socket::SO_ERROR).int
           raise SystemCallError.new("HITL boundary connection failed", error) unless error.zero?
-        end
-
-        def write_frame!(socket, frame, deadline)
-          offset = 0
-          while offset < frame.bytesize
-            await!(socket, :write, deadline)
-            written = socket.write_nonblock(frame.byteslice(offset..), exception: false)
-            next if written == :wait_writable
-            raise TransportError, "HITL boundary closed before request" unless written.is_a?(Integer) && written.positive?
-            offset += written
-          end
-        end
-
-        def deadline_for(op, params)
-          if op == "consume" && Integer(params["timeout"]) <= 0
-            nil
-          else
-            Process.clock_gettime(Process::CLOCK_MONOTONIC) + @deadline_seconds + Integer(params["timeout"])
-          end
-        rescue ArgumentError, TypeError
-          Process.clock_gettime(Process::CLOCK_MONOTONIC) + @deadline_seconds
-        end
-
-        def read_line(socket, deadline)
-          data = +""
-          loop do
-            remaining = deadline && deadline - Process.clock_gettime(Process::CLOCK_MONOTONIC)
-            raise TransportError, "HITL boundary deadline exceeded" if remaining && remaining <= 0
-            ready = IO.select([socket], nil, nil, remaining)
-            raise TransportError, "HITL boundary deadline exceeded" unless ready
-
-            chunk = socket.read_nonblock(4096, exception: false)
-            raise TransportError, "HITL boundary closed before responding" if chunk.nil?
-            # A spurious not-ready result goes back to select; only the
-            # deadline ends the wait (review 8x32r9b4).
-            next if chunk == :wait_readable
-
-            data << chunk
-            if data.bytesize > Protocol::MAX_FRAME_BYTES
-              raise TransportError, "HITL boundary response is too large"
-            end
-            return data if data.include?("\n")
-          end
         end
       end
     end

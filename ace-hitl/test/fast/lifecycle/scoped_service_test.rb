@@ -26,7 +26,7 @@ class ScopedServiceTest < AceHitlTestCase
       binding: @binding,
       policy: @policy,
       socket_path: @socket_path,
-      group: "staff"
+      group: Etc.getgrgid(Process.gid).name
     )
     @thread = Thread.new { @service.run }
     wait_for_socket
@@ -200,7 +200,7 @@ class ScopedServiceTest < AceHitlTestCase
   def test_a_second_service_refuses_a_live_endpoint
     second = Ace::Hitl::Lifecycle::Service.new(
       root: File.join(@scratch, "store3"), binding: @binding, policy: @policy,
-      socket_path: @socket_path, group: "staff"
+      socket_path: @socket_path, group: Etc.getgrgid(Process.gid).name
     )
     identity = File.lstat(@socket_path).then { |stat| [stat.dev, stat.ino] }
     error = assert_raises(Ace::Hitl::Lifecycle::TransportError) do
@@ -216,11 +216,75 @@ class ScopedServiceTest < AceHitlTestCase
     assert_equal "approved", client.consume("hitl001", timeout: 2)["answer"]
   end
 
+  def test_configured_group_is_passed_to_peer_and_root_stores
+    service = extra_service(File.join(@scratch, "group.sock"), group: "ace-hitl-project")
+    groups = []
+    constructor = lambda do |**options|
+      groups << options.fetch(:group)
+      Object.new
+    end
+    peer = Ace::Hitl::Lifecycle::Peer.for_uid(Process.uid)
+
+    Ace::Hitl::Lifecycle::Store.stub(:new, constructor) do
+      service.send(:root_store)
+      service.send(:store_for, peer)
+    end
+
+    assert_equal ["ace-hitl-project", "ace-hitl-project"], groups
+  end
+
+  def test_broad_control_group_is_refused_before_endpoint_creation
+    path = File.join(@scratch, "broad-group.sock")
+    service = extra_service(path, group: Ace::Hitl::Lifecycle::Store::DEFAULT_GROUP)
+
+    error = assert_raises(Ace::Hitl::Lifecycle::TransportError) { service.run }
+
+    assert_match(/control group is too broad/, error.message)
+    assert_match(/dedicated lifecycle group/, error.message)
+    refute File.exist?(path)
+  end
+
+  def test_root_control_group_is_refused_before_endpoint_creation
+    path = File.join(@scratch, "root-group.sock")
+    group = Struct.new(:name, :gid).new("root-equivalent", 0)
+    service = extra_service(path, group: group.name)
+
+    error = Etc.stub(:getgrnam, group) do
+      assert_raises(Ace::Hitl::Lifecycle::TransportError) { service.run }
+    end
+
+    assert_match(/control group is too broad/, error.message)
+    refute File.exist?(path)
+  end
+
+  def test_legacy_shared_socket_directory_is_refused
+    service = extra_service("/run/lab/hitl.sock")
+
+    error = assert_raises(Ace::Hitl::Lifecycle::TransportError) do
+      service.send(:verify_socket_directory!)
+    end
+
+    assert_match(/shared with legacy labd/, error.message)
+    assert_match(/dedicated lifecycle directory/, error.message)
+  end
+
+  def test_directory_containing_legacy_labd_socket_is_refused
+    dir = File.join(@scratch, "legacy-shared")
+    FileUtils.mkdir_p(dir)
+    File.write(File.join(dir, "labd.sock"), "legacy endpoint placeholder")
+    path = File.join(dir, "lifecycle.sock")
+
+    error = assert_raises(Ace::Hitl::Lifecycle::TransportError) { extra_service(path).run }
+
+    assert_match(/legacy labd/, error.message)
+    refute File.exist?(path)
+  end
+
 
   def extra_service(path, **options)
     Ace::Hitl::Lifecycle::Service.new(
       root: File.join(@scratch, "extra-store"), binding: @binding, policy: @policy,
-      socket_path: path, group: "staff", **options
+      socket_path: path, group: Etc.getgrgid(Process.gid).name, **options
     )
   end
 
@@ -267,7 +331,9 @@ class ScopedServiceTest < AceHitlTestCase
     File.chmod(0o777, dir)
     path = File.join(dir, "endpoint")
     File.write(path, "preserve me")
-    assert_raises(Ace::Hitl::Lifecycle::TransportError) { extra_service(path).run }
+    error = assert_raises(Ace::Hitl::Lifecycle::TransportError) { extra_service(path).run }
+    assert_match(/dedicated service\/root-owned/, error.message)
+    assert_match(/unrelated service sockets/, error.message)
     assert_equal "preserve me", File.read(path)
   end
 
@@ -285,6 +351,19 @@ class ScopedServiceTest < AceHitlTestCase
   ensure
     replacement&.stop
     thread&.join(5)
+  end
+
+  def test_failed_socket_group_assignment_refuses_startup_without_exposing_endpoint
+    path = File.join(@scratch, "group-failure.sock")
+    service = extra_service(path, group: Etc.getgrgid(Process.gid).name)
+    failure = ->(*) { raise Errno::EPERM, "injected group assignment failure" }
+
+    error = File.stub(:chown, failure) do
+      assert_raises(Ace::Hitl::Lifecycle::TransportError) { service.run }
+    end
+
+    assert_match(/endpoint is not usable/, error.message)
+    refute File.exist?(path)
   end
 
   def test_normal_stop_releases_socket_and_stale_socket_can_be_recovered
@@ -371,7 +450,7 @@ class ScopedServiceTest < AceHitlTestCase
     vault = Ace::Hitl::Lifecycle::OtpVault::MemoryVault.new
     otp_service = Ace::Hitl::Lifecycle::Service.new(
       root: File.join(@scratch, "store4"), binding: @binding, policy: @policy,
-      socket_path: File.join(@scratch, "hitl4.sock"), group: "staff", vault: vault
+      socket_path: File.join(@scratch, "hitl4.sock"), group: Etc.getgrgid(Process.gid).name, vault: vault
     )
     thread = Thread.new { otp_service.run }
     deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + 5
@@ -443,7 +522,7 @@ class ScopedServiceTest < AceHitlTestCase
     )
     service = Ace::Hitl::Lifecycle::Service.new(
       root: File.join(@scratch, "store2"), binding: failing, policy: @policy,
-      socket_path: File.join(@scratch, "hitl2.sock"), group: "staff"
+      socket_path: File.join(@scratch, "hitl2.sock"), group: Etc.getgrgid(Process.gid).name
     )
     thread = Thread.new { service.run }
     deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + 5

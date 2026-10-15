@@ -1,12 +1,15 @@
-# Project handbook sync: neutral agents projection only.
-# Harness-native trees (.codex/skills, .claude/skills, etc.) are disabled.
+# Project handbook sync: neutral agents projection + pi provider (pi enabled
+# 2026-10-12 per Captain wake-capability order for 8xahhp delivery
+# supervision: projects the bundled ace-wake extension to .pi/extensions —
+# in-process duty/wake for the delivery queue; no cron/daemon). Other
+# harness-native trees (.codex/skills, .claude/skills, etc.) stay disabled.
 sync:
   providers:
     enabled:
       - agents
+      - pi
     disabled:
       - claude
       - codex
       - gemini
       - opencode
-      - pi

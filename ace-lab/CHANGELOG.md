@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-10-14
+
+### Added
+
+- Add the ordinary fixed merge producer mode (`ace-lab service request/status --mode ordinary-merge`) per xz9.4: durable-once admission that issues the opaque reference only through the committed journal record, canonical SHA-256 request digests over the full eight-field binding, identical-replay acknowledgment, authorization/binding conflict refusals, read-only status, and terminal receipts bound to the admitted record and its execution identity.
+
+## [0.5.2] - 2026-10-11
+
+### Changed
+
+- Follow the `ace-hitl` 0.14 lifecycle boundary line with dedicated per-authority socket-group configuration.
+
 ## [0.5.1] - 2026-10-10
 
 ### Fixed

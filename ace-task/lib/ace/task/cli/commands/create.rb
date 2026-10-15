@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "ace/support/cli"
+require "fileutils"
 
 module Ace
   module Task
@@ -9,6 +10,9 @@ module Ace
         # ace-support-cli Command class for ace-task create
         class Create < Ace::Support::Cli::Command
           include Ace::Support::Cli::Base
+
+          # "next" is a move-to-root alias and is validated separately.
+          BUILT_IN_DESTINATIONS = %w[maybe anytime archive].freeze
 
           desc <<~DESC.strip
             Create a new task
@@ -38,7 +42,8 @@ module Ace
           option :server, type: :string, desc: "Named forge server"
           option :"default-server", type: :boolean, desc: "Use the configured default forge server"
           option :"child-of", type: :string, desc: "Parent task reference (creates subtask)"
-          option :in, type: :string, aliases: %w[-i], desc: "Target folder (e.g. next, maybe)"
+          option :in, type: :string, aliases: %w[-i],
+            desc: "Top-level target (next, maybe, anytime, archive, or existing custom folder)"
           option :"dry-run", type: :boolean, aliases: %w[-n], desc: "Preview without writing"
 
           option :git_commit, type: :boolean, aliases: %w[--gc], desc: "Auto-commit changes"
@@ -72,6 +77,10 @@ module Ace
               end
             end
 
+            manager = Ace::Task::Organisms::TaskManager.new
+            validate_destination!(manager, in_folder) if in_folder && !child_of
+            placement_directories_before = directories_under(manager.root_dir) if in_folder && !child_of
+
             if dry_run
               puts "Would create task:"
               puts "  Title:    #{title}"
@@ -84,8 +93,6 @@ module Ace
               puts "  Folder:   #{in_folder}" if in_folder
               return
             end
-
-            manager = Ace::Task::Organisms::TaskManager.new
 
             task = begin
               if child_of
@@ -119,7 +126,7 @@ module Ace
 
             # Move to folder if specified
             if in_folder && !child_of
-              task = manager.move(task.id, to: in_folder)
+              task = place_created_task(manager, task, in_folder, placement_directories_before)
             end
 
             puts "Created task #{task.id}"
@@ -139,6 +146,117 @@ module Ace
           end
 
           private
+
+          def validate_destination!(manager, target_folder)
+            detector = Ace::Support::Items::Atoms::SpecialFolderDetector
+            return if detector.move_to_root?(target_folder)
+
+            if detector.virtual_filter?(target_folder)
+              raise Ace::Support::Cli::Error,
+                "Destination '#{target_folder}' is a virtual list filter, not a physical folder."
+            end
+
+            normalized = detector.normalize(target_folder)
+            configured_path = File.join(manager.root_dir, normalized)
+            normalized_built_ins = BUILT_IN_DESTINATIONS.map { |name| detector.normalize(name) }
+            valid = !target_folder.strip.empty? &&
+              !normalized.include?(File::SEPARATOR) &&
+              !normalized.include?("..") &&
+              (normalized_built_ins.include?(normalized) || Dir.exist?(configured_path)) &&
+              destination_within_root?(manager.root_dir, configured_path)
+            return if valid
+
+            choices = (["next"] + BUILT_IN_DESTINATIONS).join(", ")
+            raise Ace::Support::Cli::Error,
+              "Destination '#{target_folder}' does not exist. " \
+                "Use #{choices}, or an existing custom task folder."
+          end
+
+          def destination_within_root?(root, destination)
+            return true unless File.exist?(destination)
+
+            root_path = File.realpath(root)
+            destination_path = File.realpath(destination)
+            destination_path.start_with?(root_path + File::SEPARATOR)
+          rescue Errno::ENOENT, Errno::EACCES
+            false
+          end
+
+          def place_created_task(manager, task, target_folder, directories_before)
+            placed_task = manager.update(task.id, move_to: target_folder)
+            expected_folder = if Ace::Support::Items::Atoms::SpecialFolderDetector.move_to_root?(target_folder)
+              nil
+            else
+              Ace::Support::Items::Atoms::SpecialFolderDetector.normalize(target_folder)
+            end
+
+            unless placed_task && placed_task.special_folder == expected_folder
+              actual_folder = if placed_task
+                placed_task.special_folder || "root"
+              else
+                "no task returned"
+              end
+              # This internal signal is wrapped below with rollback and an actionable CLI error.
+              raise "placement returned #{actual_folder.inspect}, expected #{expected_folder || "root"}"
+            end
+
+            placed_task
+          rescue Ace::Git::Error
+            # update retains linked tasks after post-placement sync failures as
+            # recovery records; those are not destination-placement failures.
+            raise
+          rescue StandardError => e
+            begin
+              remove_created_task_artifacts(manager, task)
+              remove_empty_directories_created_since(manager.root_dir, directories_before)
+            rescue StandardError => cleanup_error
+              raise Ace::Support::Cli::Error,
+                "Failed to create task in '#{target_folder}': #{e.message}. " \
+                  "Cleanup also failed: #{cleanup_error.message}"
+            end
+            raise Ace::Support::Cli::Error,
+              "Failed to create task in '#{target_folder}': #{e.message}. " \
+                "No task was created; fix the destination and retry."
+          end
+
+          def remove_created_task_artifacts(manager, task)
+            root = File.expand_path(manager.root_dir)
+            candidates = [task.path]
+            candidates.concat(
+              Dir.glob(File.join(root, "**", "#{task.id}-*")).select { |path| File.directory?(path) }
+            )
+
+            candidates.uniq.each do |path|
+              expanded = File.expand_path(path)
+              next unless expanded.start_with?(root + File::SEPARATOR)
+
+              FileUtils.rm_rf(expanded)
+            end
+
+            remaining = Dir.glob(File.join(root, "**", "#{task.id}-*")).select { |path| File.exist?(path) }
+            return if remaining.empty?
+
+            raise Ace::Support::Cli::Error,
+              "Failed to remove partial task artifacts after placement failure: #{remaining.join(", ")}"
+          end
+
+          def directories_under(root)
+            return [] unless Dir.exist?(root)
+
+            [File.expand_path(root)] + Dir.glob(File.join(root, "**", "*"))
+              .select { |path| File.directory?(path) }
+              .map { |path| File.expand_path(path) }
+          end
+
+          def remove_empty_directories_created_since(root, directories_before)
+            # Only directories created during this short command transaction
+            # are candidates, and non-empty concurrent directories are retained.
+            (directories_under(root) - directories_before).sort_by(&:length).reverse_each do |path|
+              Dir.rmdir(path)
+            rescue Errno::ENOENT, Errno::ENOTEMPTY
+              next
+            end
+          end
 
           def resolve_title(positional_title, flag_title)
             positional_present = present_string?(positional_title)

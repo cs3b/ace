@@ -19,14 +19,20 @@ module Ace
           desc "Run the authenticated HITL store boundary service (peer-credential access)"
 
           option :socket, type: :string, desc: "Boundary socket path (default: ACE_HITL_SOCKET or /run/lab/hitl.sock)"
+          option :group, type: :string,
+            desc: "Dedicated lifecycle group allowed to connect (required; root and lab-control are refused)"
           option :store_root, type: :string, desc: "Private store root (default: ACE_HITL_STORE_ROOT or /run/lab/hitl)"
           option :grants_path, type: :string, desc: "Trusted grants document (default: ACE_HITL_GRANTS_PATH or /etc/lab/ace-lab/authorization.yml)"
           option :repo_root, type: :string, desc: "Candidate repository for the managed attempt authority"
+          option :tls_authority, type: :string, desc: "Serve the host/Incus mTLS crossing from this authority config (root:<service-group> 0640; loopback TCP + verified project client identity)"
 
           option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
           option :verbose, type: :boolean, aliases: %w[-v], desc: "Show verbose output"
 
           def call(**options)
+            return serve_tls_authority(options) if options[:tls_authority]
+
+            group = dedicated_group(options)
             policy = Providers::Lab.grants_policy(grants_path: grants_path(options))
             unless policy.service_uid
               raise_cli_error(
@@ -41,6 +47,7 @@ module Ace
               binding: binding_policy,
               policy: policy,
               socket_path: socket_path(options),
+              group: group,
               logger: options[:verbose] ? ->(message) { warn message } : nil
             )
             service.run
@@ -49,6 +56,36 @@ module Ace
           end
 
           private
+
+          # The host/Incus crossing (spec 8xa.t.nh0): authority config,
+          # credential layout and TLS material are verified fail-closed
+          # BEFORE the loopback listener opens; the verified project-
+          # scoped client certificate is the only admitted peer.
+          def serve_tls_authority(options)
+            authority = Lifecycle::TlsAuthority.load(options[:tls_authority])
+            binding_policy = Providers::Lab.assignment_binding(repo_root: options[:repo_root])
+            service = Lifecycle::TlsService.new(
+              root: store_root(options),
+              binding: binding_policy,
+              project: authority.project_id,
+              credential: authority.credential,
+              ssl_context: authority.ssl_context!,
+              listen: authority.listen,
+              port: authority.port,
+              group: authority.service_group,
+              logger: options[:verbose] ? ->(message) { warn message } : nil
+            )
+            service.run
+          rescue Lifecycle::Error, Providers::ProviderUnavailableError => e
+            raise_cli_error(e.message)
+          end
+
+          def dedicated_group(options)
+            group = options[:group].to_s
+            return group unless group.empty?
+
+            raise_cli_error("--group is required and must name a dedicated lifecycle group")
+          end
 
           def socket_path(options)
             options[:socket] || ENV[Providers::Lab::SOCKET_PATH_ENV] || Providers::Lab::DEFAULT_SOCKET_PATH

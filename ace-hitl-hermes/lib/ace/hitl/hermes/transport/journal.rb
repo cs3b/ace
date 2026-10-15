@@ -43,12 +43,33 @@ module Ace
             end
           end
 
+          def record_unregistered(updates:, observed_at:)
+            return if updates.empty?
+
+            synchronize do |state, commit|
+              updates.each do |update|
+                chat_id = update.fetch("chat_id")
+                update_id = update.fetch("update_id")
+                record = (state["unregistered_chats"][chat_id] ||= {
+                  "chat_id" => chat_id, "first_seen_at" => observed_at, "count" => 0
+                })
+                next if record["last_update_id"] && update_id <= record["last_update_id"]
+
+                record["last_seen_at"] = observed_at
+                record["first_update_id"] ||= update_id
+                record["last_update_id"] = update_id
+                record["count"] += 1
+              end
+              commit.call
+            end
+          end
+
           private
 
           def read
             path = File.join(@directory, "journal.json")
             return {"schema" => "ace.hitl.hermes.transport/v1", "requests" => {}, "ingress" => [],
-                    "sequence" => 0, "poll" => {}} unless File.exist?(path)
+                    "sequence" => 0, "poll" => {}, "unregistered_chats" => {}} unless File.exist?(path)
 
             File.open(path, File::RDONLY | File::NOFOLLOW) do |file|
               stat = file.stat
@@ -56,14 +77,31 @@ module Ace
                 raise ContractError, "transport journal must be owned and private"
               end
               state = JSON.parse(file.read)
+              state["unregistered_chats"] ||= {}
+              state["requests"] = normalize_request_keys(state["requests"])
               unless state["schema"] == "ace.hitl.hermes.transport/v1" && state["requests"].is_a?(Hash) &&
-                  state["ingress"].is_a?(Array) && state["sequence"].is_a?(Integer) && state["poll"].is_a?(Hash)
+                  state["ingress"].is_a?(Array) && state["sequence"].is_a?(Integer) && state["poll"].is_a?(Hash) &&
+                  state["unregistered_chats"].is_a?(Hash)
                 raise ContractError, "transport journal is malformed"
               end
               state
             end
           rescue JSON::ParserError, SystemCallError
             raise ContractError, "transport journal is unreadable"
+          end
+
+          def normalize_request_keys(requests)
+            return requests unless requests.is_a?(Hash)
+
+            requests.each_value.each_with_object({}) do |record, normalized|
+              unless record.is_a?(Hash) && record["channel"].is_a?(String) && record["request"].is_a?(String)
+                raise ContractError, "transport journal request binding is malformed"
+              end
+              key = JSON.generate([record["channel"], record["request"]])
+              raise ContractError, "transport journal request binding is ambiguous" if normalized.key?(key)
+
+              normalized[key] = record
+            end
           end
 
           def write(state)
