@@ -133,7 +133,7 @@ module Ace
         listener = Molecules::OrdinaryListener.new(socket_path: @config.fetch("socket_path"),
           peer_uid: Process.uid + 424_242, handler: ->(_submission) { flunk "must not dispatch" })
         peer, local = UNIXSocket.pair
-        envelope = nil
+        nil
         begin
           listener.serve_connection(local)
         rescue Molecules::OrdinaryListener::OrdinaryListenerError
@@ -173,10 +173,22 @@ module Ace
       private
 
       def start_listener!
+        policy_loader = ->(path) { YAML.safe_load_file(path, permitted_classes: [Date, Time], aliases: true) }
+        @forge = SandboxForge.new(repo_path: @repo, prs: {
+          1 => {"head_ref" => "refs/heads/feat/a", "base_ref" => "refs/heads/main"},
+          2 => {"head_ref" => "refs/heads/feat/b", "base_ref" => "refs/heads/main"},
+          3 => {"head_ref" => "refs/heads/feat/c", "base_ref" => "refs/heads/main"}
+        })
         @receiver = Organisms::OrdinaryMergeReceiver.new(
           config: Molecules::OrdinaryReceiverConfig.new(@config),
           coordinator: @coordinator,
-          policy_document: YAML.safe_load_file(policy_path, permitted_classes: [Date])
+          policy_document: YAML.safe_load_file(policy_path, permitted_classes: [Date, Time]),
+          resolver: Molecules::OrdinaryAdmissionResolver.new(
+            YAML.safe_load_file(policy_path, permitted_classes: [Date, Time], aliases: true),
+            path: policy_path, loader: policy_loader
+          ),
+          forge_config: forge_config,
+          forge_factory: ->(_document) { @forge }
         )
         @listener = Molecules::OrdinaryListener.new(socket_path: @config.fetch("socket_path"),
           peer_uid: Process.uid, handler: @receiver)
@@ -184,6 +196,17 @@ module Ace
         deadline = Time.now.utc + 5
         sleep 0.01 until File.exist?(@config.fetch("socket_path")) || Time.now.utc > deadline
         raise "listener did not bind" unless File.exist?(@config.fetch("socket_path"))
+      end
+
+      # The host-installed forge merge configuration this test deployment
+      # provisions (matching the request fixtures' pr_url identities).
+      def forge_config
+        @forge_config ||= Molecules::ForgeMergeConfig.new({
+          "base_url" => "https://forge.example.com", "owner" => "acme", "repo" => "widget",
+          "token" => "test-scoped-token", "merge_timeout_seconds" => 30,
+          "escalation_owner" => "host-integrator",
+          "review_attachment" => {"enabled" => true}
+        })
       end
 
       def wait_for_terminal(producer, request, reference, digest)
@@ -195,7 +218,7 @@ module Ace
             input_digest: digest)
           raise "status failed: #{status}" unless status.fetch("status") == "ok"
           return status.fetch("data") if %w[succeeded failed].include?(status.dig("data", "state"))
-          raise "status did not settle in time: #{status.dig('data', 'state')}" if Time.now.utc > deadline
+          raise "status did not settle in time: #{status.dig("data", "state")}" if Time.now.utc > deadline
           sleep 0.02
         end
       end
@@ -222,6 +245,11 @@ module Ace
 
       AUTHORIZATIONS = {"request-a" => "decision-a", "request-b" => "decision-b",
                         "request-c" => "decision-c"}.freeze
+      PR_INDEXES = {"request-a" => 1, "request-b" => 2, "request-c" => 3}.freeze
+
+      def pr_url(request_id)
+        "https://forge.example.com/acme/widget/pulls/#{PR_INDEXES.fetch(request_id)}"
+      end
 
       def decision(candidate, head_ref, expected_base, request_id)
         {
@@ -235,7 +263,7 @@ module Ace
             input: request_document(candidate, head_ref, expected_base, request_id)
           ),
           "forge" => "forgejo",
-          "pr_url" => "https://forge.example.com/acme/widget/pulls/#{request_id.split("-").last}",
+          "pr_url" => pr_url(request_id),
           "head_repository" => "acme/widget", "head_ref" => head_ref,
           "candidate_head" => candidate, "base_repository" => "acme/widget",
           "base_ref" => "refs/heads/main", "expected_base_head" => expected_base,
@@ -247,7 +275,7 @@ module Ace
         {
           "schema" => "ace.lab.service.ordinary-merge-request/v1",
           "forge" => "forgejo",
-          "pr_url" => "https://forge.example.com/acme/widget/pulls/#{request_id.split("-").last}",
+          "pr_url" => pr_url(request_id),
           "head_repository" => "acme/widget",
           "head_ref" => head_ref,
           "candidate_head" => candidate,
@@ -294,12 +322,74 @@ module Ace
       def branch_exists?(branch)
         git("rev-parse", "--verify", branch)
         true
-      rescue StandardError
+      rescue
         false
       end
 
       def principal
         @principal ||= Ace::Lab::Molecules::CallerAuthorizer.local_identity.first
+      end
+
+      # In-process double standing in for the Forgejo merge adapter at the
+      # receiver boundary — the forge HTTP layer itself is NEVER mocked: the
+      # adapter tests run against the real lab forge. This double simulates
+      # the forge side inside the sandbox repository (including the
+      # fast-forward-only semantics and the real readback documents), so the
+      # executable acceptance loop stays hermetic.
+      class SandboxForge
+        Result = Molecules::ForgejoMergeAdapter::Result
+
+        def initialize(repo_path:, prs:)
+          @repo_path = repo_path
+          @prs = prs
+        end
+
+        def pull_request(owner:, repo:, index:)
+          spec = @prs[index]
+          return nil unless spec
+          base = git("rev-parse", spec.fetch("base_ref"))
+          merged = spec[:merged] == true
+          {"merged" => merged,
+           "merge_commit_sha" => merged ? base : nil,
+           "head" => {"sha" => git("rev-parse", spec.fetch("head_ref"))},
+           "base" => {"sha" => base}}
+        end
+
+        # Fast-forward-only semantics, forge side: the base ref moves to the
+        # head commit only when the head is a descendant of the base.
+        def merge_pull_request!(owner:, repo:, index:)
+          spec = @prs[index]
+          unless spec
+            return Result.new(outcome: :refused, status: 409,
+              reason: "HTTP 409: pull request is absent")
+          end
+          if spec[:merged]
+            return Result.new(outcome: :refused, status: 405,
+              reason: "HTTP 405: pull request is already merged")
+          end
+          current = git("rev-parse", spec.fetch("base_ref"))
+          head = git("rev-parse", spec.fetch("head_ref"))
+          unless system("git", "merge-base", "--is-ancestor", current, head,
+            chdir: @repo_path)
+            return Result.new(outcome: :refused, status: 406,
+              reason: "HTTP 406: fast-forward-only merge is not possible")
+          end
+          git("update-ref", spec.fetch("base_ref"), head, current)
+          spec[:merged] = true
+          Result.new(outcome: :invoked, status: 200, reason: nil)
+        end
+
+        def create_comment(owner:, repo:, index:, body:)
+          Result.new(outcome: :invoked, status: 201, reason: nil)
+        end
+
+        private
+
+        def git(*argv)
+          out, stderr, status = Open3.capture3("git", *argv, chdir: @repo_path)
+          raise "git #{argv.first} failed: #{stderr}" unless status.success?
+          out.strip
+        end
       end
 
       def policy_path

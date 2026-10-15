@@ -64,19 +64,13 @@ module Ace
             parse_grants(content, trusted_path)
           end
 
-          private
-
-          def verify_error(path)
-            "invalid lab configuration: trusted authorization file #{path} failed the deployment " \
-              "ownership verification or could not be read; failing closed " \
-              "(required: every traversed element root-owned and not group/world-writable)"
-          end
-
-          # Read the grants document only after proving the deployment owns
-          # the storage along the original path. Genuine absence is nil
-          # (nobody authorized); every other filesystem failure — including
-          # races between lstat and open — classifies fail-closed
-          # (review rounds 6-7, F2).
+          # Read a deployment-owned file only after proving the deployment
+          # owns the storage along the original path (same trust rules as
+          # `resolve`). Genuine absence is nil; every other filesystem
+          # failure — including races between lstat and open — classifies
+          # fail-closed (review rounds 6-7, F2). Public so other trusted
+          # host-installed documents (e.g. the forge merge service identity)
+          # read through the same verification.
           # @return [String, nil] file content, or nil when absent
           def read_verified(path)
             candidate = begin
@@ -102,6 +96,14 @@ module Ace
             rescue
               raise Ace::Lab::InvalidConfigurationError, verify_error(path)
             end
+          end
+
+          private
+
+          def verify_error(path)
+            "invalid lab configuration: trusted authorization file #{path} failed the deployment " \
+              "ownership verification or could not be read; failing closed " \
+              "(required: every traversed element root-owned and not group/world-writable)"
           end
 
           # Walk the ORIGINAL path component by component. Symlinks are

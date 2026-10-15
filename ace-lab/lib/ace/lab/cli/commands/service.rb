@@ -174,13 +174,16 @@ module Ace
           end
 
           # The ordinary receiver serve entrypoint (spec 8x3.t.xz9.4
-          # execution clauses): binds the configured unix socket, mutually
-          # authenticates every connection through SO_PEERCRED, admits
-          # through the canonical Assign coordinator, executes the fixed
-          # fast-forward-only merge as the authorized executor and settles
-          # the exact terminal receipt. Configuration is one explicit
-          # deployment-owned file; the host owns its placement and
-          # credentials. Blocks until stopped.
+          # execution clauses; 8x3.t.xz9.5 integration handoff): binds the
+          # configured unix socket, mutually authenticates every connection
+          # through SO_PEERCRED, admits through the canonical Assign
+          # coordinator, executes the authorized fixed operation — one REAL
+          # Forgejo merge under the scoped host-installed service identity —
+          # and settles the exact terminal receipt proven by real forge
+          # readback. Configuration is one explicit deployment-owned file
+          # plus the host-installed authorization and forge-merge documents;
+          # the host owns their placement and credentials. Blocks until
+          # stopped.
           class Listen < Ace::Support::Cli::Command
             include Ace::Support::Cli::Base
             include Output
@@ -196,7 +199,7 @@ module Ace
               unless options.empty?
                 return emit(Organisms::OrdinaryMergeRequest.refusal_envelope(
                   "ordinary_merge_invalid_request",
-                  "unknown listen selector: #{(options.keys).sort.join(', ')}",
+                  "unknown listen selector: #{options.keys.sort.join(", ")}",
                   request_id: "unknown", input_digest: nil
                 ))
               end
@@ -217,8 +220,20 @@ module Ace
               policy_document = Molecules::GrantResolver.trusted_document(
                 receiver_config.policy_path
               )
+              # The ONE canonical Assign journal: the coordinator binds the
+              # evidence ref of the canonical repository the receiver is
+              # installed for (config repo_path — the producer project's
+              # canonical checkout, the same authoritative journal the
+              # producer coordinator uses). Never an integration-checkout
+              # duplicate; the service identity's reviewed permissions are
+              # journal ref read/append, evidence checkout and no-effect
+              # attestation writes inside that repository.
+              coordinator = Ace::Assign::Organisms::AttemptCoordinator.new(
+                repo_root: receiver_config.repo_path
+              )
               receiver = Organisms::OrdinaryMergeReceiver.new(
-                config: receiver_config, policy_document: policy_document
+                config: receiver_config, coordinator: coordinator,
+                policy_document: policy_document
               )
               listener = Molecules::OrdinaryListener.new(
                 socket_path: receiver_config.socket_path,

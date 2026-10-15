@@ -3,10 +3,13 @@
 require "digest"
 require "fileutils"
 require "json"
+require "uri"
 require_relative "ordinary_merge_request"
 require_relative "../molecules/ordinary_receiver_config"
 require_relative "../molecules/ordinary_admission_resolver"
 require_relative "../molecules/ordinary_ff_merge"
+require_relative "../molecules/forge_merge_config"
+require_relative "../molecules/forgejo_merge_adapter"
 require "ace/assign/atoms/fixed_merge_schemas"
 
 module Ace
@@ -26,13 +29,26 @@ module Ace
       # producer envelope vocabulary.
       #
       # Merge-method contract: the closed schema's literal `method=merge`
-      # executes fast-forward-only. A candidate that is not a descendant of
-      # the current base head refuses in the moved-target/needs-rebase family
+      # executes FAST-FORWARD-ONLY, on the forge wire as well (`Do:
+      # fast-forward-only`): a candidate that is not a descendant of the
+      # current base head refuses in the moved-target/needs-rebase family
       # (never a silent substitution, never a merge-commit fallback); the
       # terminal receipt proves the strategy by joining `merge_commit ==
-      # resulting_target_head == merged_candidate_head` and records the
-      # post-merge main sha. A non-ff strategy would be a separate reviewed
-      # contract extension.
+      # resulting_target_head == merged_candidate_head`.
+      #
+      # Forge effect contract (spec 8x3.t.xz9.5 integration handoff): the
+      # authorized effect is a REAL Forgejo pull request merge invoked under
+      # the scoped service identity from the host-installed forge merge
+      # configuration, and the terminal receipt records the REAL forge
+      # readback (`merged`, `merge_commit_sha`) — a local git effect is
+      # never presented as a forge result, and the receiver never updates
+      # the checked-out canonical main locally. The local repository
+      # (the producer's canonical checkout) serves read-only pre-effect
+      # verification only. Missing host configuration is an immediate
+      # actionable refusal naming the path and owner; ambiguous outcomes
+      # (timeouts, 5xx, unavailable readback) reconcile by bounded readback
+      # retry — never a blind re-dispatch — and leave the canonical record
+      # uncertain with the escalation owner named when unresolved.
       class OrdinaryMergeReceiver
         SUBMISSION_KEYS = %w[project_id assignment_id attempt_id queue_entry operation
           authorization request_id input_digest request principal receiver_id
@@ -41,7 +57,8 @@ module Ace
         NO_EFFECT_DIR = ".ace/ordinary-no-effect"
 
         def initialize(config:, coordinator:, policy_document:, merge_factory: nil,
-          resolver: nil)
+          forge_config: nil, forge_factory: nil, resolver: nil,
+          readback_attempts: 3, readback_backoff_seconds: 1.0)
           unless config.is_a?(Molecules::OrdinaryReceiverConfig)
             raise ArgumentError, "receiver needs validated OrdinaryReceiverConfig"
           end
@@ -53,10 +70,21 @@ module Ace
             Molecules::OrdinaryFfMerge.new(repo_path: config.repo_path,
               base_ref: document.fetch("base_ref"))
           }
-          @resolver = resolver || Molecules::OrdinaryAdmissionResolver.new(policy_document)
+          # The scoped service identity is host-installed; an absent
+          # configuration refuses construction with the actionable path.
+          @forge_config = forge_config || Molecules::ForgeMergeConfig.load
+          @forge_factory = forge_factory || ->(_document) {
+            Molecules::ForgejoMergeAdapter.new(base_url: @forge_config.base_url,
+              token: @forge_config.token, timeout_seconds: @forge_config.merge_timeout_seconds)
+          }
+          @resolver = resolver || Molecules::OrdinaryAdmissionResolver.new(
+            policy_document, path: config.policy_path
+          )
+          @readback_attempts = readback_attempts
+          @readback_backoff_seconds = readback_backoff_seconds
         end
 
-        attr_reader :config
+        attr_reader :config, :forge_config
 
         # The listener handler entrypoint: admission only; the listener
         # invokes #execute after the acknowledgment is on the wire.
@@ -101,6 +129,11 @@ module Ace
           unless digest == submission.fetch("input_digest")
             invalid!("canonical request digest does not re-derive from the submission", request_id)
           end
+          # Selection and evidence integrity before authorization: the PR
+          # must target THIS receiver's configured forge repository, and the
+          # handed-over review must be independent of the executor.
+          forge_identity!(document, request_id)
+          reviewer_independence!(document, request_id)
           decision = @resolver.decide(submission.fetch("authorization"), authorization_binding(submission))
           unless decision.authorized?
             return OrdinaryMergeRequest.refusal_envelope(decision.code, decision.message,
@@ -130,10 +163,11 @@ module Ace
         # The executor lifecycle for one admitted request: the single
         # pending->uncertain CAS is the at-most-one-merge proof; a record
         # already begun by a lost lifecycle stays uncertain and is NEVER
-        # re-executed or resubmitted. The effect is one atomic ref
-        # compare-and-swap; settlement is one journal CAS validated against
-        # the closed receipt schema. Any crash between begin and settle
-        # leaves the canonical record uncertain with the original reference.
+        # re-executed or resubmitted. The effect is one REAL forge merge
+        # invocation under the scoped service identity; settlement is one
+        # journal CAS validated against the closed receipt schema from the
+        # real forge readback. Any crash between begin and settle leaves the
+        # canonical record uncertain with the original reference.
         def execute(request_id)
           record = @coordinator.fixed_merge_record(request_id)
           return :unknown unless record
@@ -202,8 +236,9 @@ module Ace
           }
         end
 
-        # Pre-effect target verification against the configured canonical
-        # repository: the candidate object must exist and the base head must
+        # Pre-effect target verification before any admission — read-only
+        # against the canonical repository (the producer's canonical
+        # checkout): the candidate object must exist and the base head must
         # still equal the immutable request. Moved targets answer the
         # moved-target/needs-rebase refusal family before any effect.
         def verify_pre_effect_target!(document, request_id)
@@ -243,8 +278,12 @@ module Ace
           }}
         end
 
-        # ---- execution -----------------------------------------------------
-
+        # The effect: re-verify the base head read-only, verify the forge PR
+        # state readback (head == candidate, base == expected), attach the
+        # independent final-head review when the host installed it, invoke
+        # the fast-forward-only merge, and settle from the real readback —
+        # reconciling ambiguity by bounded readback retry, never by
+        # repeating the merge.
         def execute_effect(admitted_record)
           request_id = admitted_record.fetch("request_id")
           document = admitted_record.fetch("request")
@@ -256,49 +295,185 @@ module Ace
             return settle_no_effect(request_id, admitted_record, merge,
               "base head moved before the effect: #{observed[0, 12]}")
           end
-          result = merge.merge!(candidate, expected)
-          case result.outcome
-          when :merged, :already_merged
-            settle_merged(request_id, admitted_record, result)
-          else
-            settle_no_effect(request_id, admitted_record, merge, result.reason.to_s)
+          identity = forge_identity!(document, request_id)
+          forge = @forge_factory.call(document)
+          pr = readback(forge, identity)
+          if pr.nil?
+            return settle_no_effect(request_id, admitted_record, merge,
+              "pull request is absent from the forge")
           end
-        rescue Molecules::OrdinaryFfMerge::GitUnavailable => e
+          if pr["merged"]
+            sha = pr["merge_commit_sha"]
+            if sha == candidate
+              return settle_merged(request_id, admitted_record, document, sha,
+                outcome: "already_merged")
+            end
+            return leave_uncertain(request_id,
+              "forge shows the pull request already merged at #{head_label(sha)}, " \
+                "not the approved candidate #{candidate[0, 12]}",
+              owner: @forge_config.escalation_owner)
+          end
+          unless pr.dig("head", "sha") == candidate
+            return settle_no_effect(request_id, admitted_record, merge,
+              "forge pull request head moved from the approved candidate")
+          end
+          unless pr.dig("base", "sha") == expected
+            return settle_no_effect(request_id, admitted_record, merge,
+              "forge base head moved from the immutable request")
+          end
+          refusal = attach_independent_review!(forge, identity, request_id,
+            admitted_record, merge, document)
+          return refusal if refusal
+          result = forge.merge_pull_request!(owner: identity.fetch("owner"),
+            repo: identity.fetch("repo"), index: identity.fetch("index"))
+          case result.outcome
+          when :invoked
+            reconcile_invoked(forge, identity, request_id, admitted_record, merge,
+              document, candidate)
+          when :refused
+            settle_no_effect(request_id, admitted_record, merge,
+              "forge refused the merge: #{result.reason}")
+          else
+            reconcile_ambiguous(forge, identity, request_id, admitted_record, merge,
+              document, candidate, result.reason)
+          end
+        rescue Molecules::OrdinaryFfMerge::GitUnavailable, Molecules::ForgejoMergeAdapter::Unavailable => e
           # The effect outcome is unprovable: the canonical record stays
           # uncertain with the original reference — never a resubmission.
           leave_uncertain(request_id, e.message)
         end
 
-        def settle_merged(request_id, admitted_record, result)
-          record = @coordinator.fixed_merge_record(request_id)
-          document = record.fetch("request")
+        # The merge invocation was accepted: prove the terminal state by
+        # readback before any settlement. A readback showing a merge at any
+        # head other than the approved candidate is never a success.
+        def reconcile_invoked(forge, identity, request_id, admitted_record, merge,
+          document, candidate)
+          pr = readback(forge, identity)
+          if pr.nil?
+            return settle_no_effect(request_id, admitted_record, merge,
+              "pull request is absent from the forge after the merge invocation")
+          end
+          if pr["merged"]
+            sha = pr["merge_commit_sha"]
+            return settle_merged(request_id, admitted_record, document, sha) if sha == candidate
+            return leave_uncertain(request_id,
+              "forge merged the pull request at #{head_label(sha)}, " \
+                "not the approved candidate #{candidate[0, 12]}",
+              owner: @forge_config.escalation_owner)
+          end
+          leave_uncertain(request_id,
+            "forge accepted the merge invocation but the readback shows the pull request unmerged")
+        end
+
+        # The merge invocation outcome is ambiguous (timeout, reset, 5xx):
+        # reconciliation is readback-only. A readback proving the merge
+        # settles it; anything else stays uncertain — never a blind repeat,
+        # never a fabricated no-effect claim while the forge may still be
+        # applying the invocation.
+        def reconcile_ambiguous(forge, identity, request_id, admitted_record, merge,
+          document, candidate, reason)
+          pr = readback(forge, identity)
+          if pr.nil?
+            return settle_no_effect(request_id, admitted_record, merge,
+              "pull request is absent from the forge: an absent pull request cannot have been merged " \
+                "(invocation ambiguity: #{reason})")
+          end
+          if pr["merged"]
+            sha = pr["merge_commit_sha"]
+            return settle_merged(request_id, admitted_record, document, sha) if sha == candidate
+            return leave_uncertain(request_id,
+              "forge merged the pull request at #{head_label(sha)}, " \
+                "not the approved candidate #{candidate[0, 12]}",
+              owner: @forge_config.escalation_owner)
+          end
+          leave_uncertain(request_id,
+            "merge invocation outcome ambiguous (#{reason}); forge readback after " \
+              "reconciliation shows the pull request unmerged",
+            owner: @forge_config.escalation_owner)
+        end
+
+        # Attach the INDEPENDENT final-head review body to the PR before the
+        # merge when the host enabled review attachment. The body is composed
+        # only of the reviewer-produced evidence handed over in the admitted
+        # request — the receiver never composes an approval of its own. A
+        # refused or ambiguous attachment settles failed_no_effect: the merge
+        # was never invoked, so no effect provably occurred.
+        def attach_independent_review!(forge, identity, request_id, admitted_record,
+          merge, document)
+          return nil unless @forge_config.review_attachment_enabled
+          evidence = document.fetch("review_evidence")
+          body = [
+            "Independent final-head review evidence (reviewer-produced, attached verbatim " \
+              "from the admitted merge request):",
+            "- reviewer: #{evidence.fetch("reviewer")}",
+            "- verdict: #{evidence.fetch("verdict")}",
+            "- reviewed_head: #{evidence.fetch("reviewed_head")}",
+            "- reference: #{evidence.fetch("reference")}",
+            "- recorded_at: #{evidence.fetch("recorded_at")}",
+            "- record_sha256: #{evidence.fetch("record_sha256")}"
+          ].join("\n")
+          result = forge.create_comment(owner: identity.fetch("owner"),
+            repo: identity.fetch("repo"), index: identity.fetch("index"), body: body)
+          case result.outcome
+          when :invoked
+            nil
+          when :refused
+            settle_no_effect(request_id, admitted_record, merge,
+              "forge refused the independent review attachment: #{result.reason}")
+          else
+            settle_no_effect(request_id, admitted_record, merge,
+              "independent review attachment outcome ambiguous; merge not invoked: #{result.reason}")
+          end
+        end
+
+        # One authoritative readback; transient forge unavailability is
+        # retried (reconciliation) a bounded number of times before
+        # surfacing — the merge is never re-dispatched from here.
+        def readback(forge, identity)
+          attempts = @readback_attempts
+          begin
+            attempts -= 1
+            forge.pull_request(owner: identity.fetch("owner"),
+              repo: identity.fetch("repo"), index: identity.fetch("index"))
+          rescue Molecules::ForgejoMergeAdapter::Unavailable
+            raise if attempts.zero?
+            sleep @readback_backoff_seconds
+            retry
+          end
+        end
+
+        def settle_merged(request_id, admitted_record, document, merge_commit_sha,
+          outcome: "merged")
           receipt = {
             "schema" => Ace::Assign::Atoms::FixedMergeSchemas::RECEIPT_SCHEMA_ID,
-            "reference" => record.fetch("reference"),
-            "request_id" => record.fetch("request_id"),
-            "input_digest" => record.fetch("input_digest"),
+            "reference" => admitted_record.fetch("reference"),
+            "request_id" => admitted_record.fetch("request_id"),
+            "input_digest" => admitted_record.fetch("input_digest"),
             "terminal_status" => "succeeded",
             "request" => {
-              "project" => record.fetch("project_id"),
-              "assignment" => record.fetch("assignment_id"),
-              "attempt" => record.fetch("attempt_id"),
-              "queue_entry" => record.fetch("queue_entry"),
-              "operation" => record.fetch("operation"),
-              "authorization" => record.fetch("authorization"),
+              "project" => admitted_record.fetch("project_id"),
+              "assignment" => admitted_record.fetch("assignment_id"),
+              "attempt" => admitted_record.fetch("attempt_id"),
+              "queue_entry" => admitted_record.fetch("queue_entry"),
+              "operation" => admitted_record.fetch("operation"),
+              "authorization" => admitted_record.fetch("authorization"),
               "input" => document
             },
             "producer" => {
-              "receiver_id" => record.fetch("receiver_id"),
-              "principal" => record.fetch("principal"),
-              "configuration_sha256" => record.fetch("configuration_sha256")
+              "receiver_id" => admitted_record.fetch("receiver_id"),
+              "principal" => admitted_record.fetch("principal"),
+              "configuration_sha256" => admitted_record.fetch("configuration_sha256")
             },
             "effect" => {
               "started_at" => Time.now.utc.iso8601,
               "finished_at" => Time.now.utc.iso8601,
-              "outcome" => result.outcome == :merged ? "merged" : "already_merged",
+              "outcome" => outcome,
               "failure_code" => nil,
               "no_effect_evidence" => nil
             },
+            # The REAL forge readback: the merge proof is the forge-reported
+            # merge commit (for the fast-forward-only strategy it equals the
+            # merged candidate head), never a local git observation.
             "remote_observation" => {
               "forge_instance" => document.fetch("forge"),
               "pr_identity_url" => document.fetch("pr_url"),
@@ -306,11 +481,11 @@ module Ace
               "target_ref_observed" => document.fetch("base_ref"),
               "merged_candidate_head" => document.fetch("candidate_head"),
               "admission_target_head" => document.fetch("expected_base_head"),
-              "resulting_target_head" => result.resulting_head,
-              "merge_commit" => result.resulting_head,
-              "checkout_id" => record.dig("execution_identity", "checkout_id"),
-              "worktree_id" => record.dig("execution_identity", "worktree_id"),
-              "branch" => record.dig("execution_identity", "branch")
+              "resulting_target_head" => merge_commit_sha,
+              "merge_commit" => merge_commit_sha,
+              "checkout_id" => admitted_record.dig("execution_identity", "checkout_id"),
+              "worktree_id" => admitted_record.dig("execution_identity", "worktree_id"),
+              "branch" => admitted_record.dig("execution_identity", "branch")
             }
           }
           settle(request_id, "succeeded", receipt)
@@ -381,9 +556,14 @@ module Ace
           :skipped_terminal
         end
 
-        def leave_uncertain(request_id, reason)
+        def leave_uncertain(request_id, reason, owner: @forge_config.escalation_owner)
           # Intentionally no state change: uncertainty is the canonical
-          # unproved-outcome state and reconciliation happens by reference.
+          # unproved-outcome state and reconciliation happens by reference
+          # (never a re-dispatch). What is known is recorded on the service
+          # log with the actionable owner named.
+          warn(JSON.generate({"event" => "ordinary_merge_uncertain",
+            "request_id" => request_id, "reason" => reason.to_s[0, 512],
+            "owner" => owner}))
           nil
         end
 
@@ -399,6 +579,47 @@ module Ace
         def target_changed!(message, request_id)
           raise OrdinaryMergeRefusal.new("ordinary_merge_target_changed", message,
             request_id: request_id)
+        end
+
+        # The forge PR identity from the immutable request's pr_url, validated
+        # against the host-installed forge merge configuration: the PR must
+        # belong to THIS receiver's configured forge, owner and repository —
+        # anything else never targets this receiver (selection mismatch).
+        def forge_identity!(document, request_id)
+          forge_host = URI.parse(@forge_config.base_url).host.to_s.downcase
+          uri = URI.parse(document.fetch("pr_url"))
+          match = %r{\A/([^/]+)/([^/]+)/pulls/(\d+)\z}.match(uri.path.to_s)
+          unless uri.is_a?(URI::HTTPS) && uri.host.to_s.downcase == forge_host && match
+            selection_refusal!("pr_url does not target this receiver's configured forge repository",
+              request_id)
+          end
+          unless match[1] == @forge_config.owner && match[2] == @forge_config.repo
+            selection_refusal!("pr_url repository does not match the configured forge repository",
+              request_id)
+          end
+          {"owner" => match[1], "repo" => match[2], "index" => match[3].to_i}
+        end
+
+        # The independent final-head review is handed over in the request;
+        # the executor's own identity is never an independent reviewer.
+        # Evidence naming the receiver or its principal refuses pre-effect —
+        # it can never be attached as independent review and never grounds
+        # the merge.
+        def reviewer_independence!(document, request_id)
+          reviewer = document.dig("review_evidence", "reviewer")
+          return unless [config.receiver_id, config.principal].include?(reviewer)
+          raise OrdinaryMergeRefusal.new("ordinary_merge_evidence_invalid",
+            "review evidence names the receiver executor, not an independent reviewer",
+            request_id: request_id)
+        end
+
+        def selection_refusal!(message, request_id)
+          raise OrdinaryMergeRefusal.new("ordinary_merge_selection_mismatch", message,
+            request_id: request_id)
+        end
+
+        def head_label(sha)
+          (sha.is_a?(String) && sha.length >= 12) ? sha[0, 12] : sha.to_s
         end
 
         def selection_mismatch(message, request_id)
