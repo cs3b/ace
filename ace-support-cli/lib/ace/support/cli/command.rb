@@ -10,12 +10,30 @@ module Ace
         class << self
           attr_reader :description
 
+          # writers used by .inherited (instance_variable_set/attr_writer are
+          # not AOT-compilable, see REPORT.md)
+          def description=(value)
+            @description = value
+          end
+
+          def options=(value)
+            @options = value
+          end
+
+          def arguments=(value)
+            @arguments = value
+          end
+
+          def examples=(value)
+            @examples = value
+          end
+
           def inherited(subclass)
             super
-            subclass.instance_variable_set(:@description, description)
-            subclass.instance_variable_set(:@options, options.dup)
-            subclass.instance_variable_set(:@arguments, arguments.dup)
-            subclass.instance_variable_set(:@examples, examples.dup)
+            subclass.description = description
+            subclass.options = options.dup
+            subclass.arguments = arguments.dup
+            subclass.examples = examples.dup
           end
 
           def desc(text)

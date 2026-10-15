@@ -298,12 +298,18 @@ module Ace
             return {} if rules.nil?
             return rules if rules.is_a?(Hash)
 
-            Array(rules).each_with_index.each_with_object({}) do |(rule, index), acc|
-              next unless rule.is_a?(Hash)
-
-              name = rule["name"] || rule[:name] || "rule-#{index + 1}"
-              acc[name.to_s] = rule
+            acc = {}
+            rule_list = Array(rules)
+            idx = 0
+            while idx < rule_list.length
+              rule = rule_list[idx]
+              if rule.is_a?(Hash)
+                name = rule["name"] || rule[:name] || "rule-#{idx + 1}"
+                acc[name.to_s] = rule
+              end
+              idx += 1
             end
+            acc
           end
 
           def scope_name_from_config_path(config_path, project_root)

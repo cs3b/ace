@@ -20,15 +20,21 @@ module Ace
           end
 
           # Get configuration value by key path
+          # NOTE: loop instead of reduce-with-return — Spinel's codegen
+          # misboxes non-local returns from blocks.
           # @param keys [Array<String,Symbol>] Path to value
           # @return [Object] Value at path or nil
           def get(*keys)
-            keys = keys.flatten.map(&:to_s)
-            keys.reduce(data) do |current, key|
+            parts = keys.flatten.map(&:to_s)
+            current = data
+            i = 0
+            while i < parts.length
               return nil unless current.is_a?(Hash)
 
-              current[key]
+              current = current[parts[i]]
+              i += 1
             end
+            current
           end
 
           # Check if configuration has key path
@@ -71,7 +77,7 @@ module Ace
               array_strategy: merge_strategy
             )
 
-            self.class.new(
+            Models::Config.new(
               merged_data,
               source: "#{source}+merged",
               merge_strategy: merge_strategy
@@ -112,9 +118,15 @@ module Ace
             base_hash = base.is_a?(Hash) ? base : {}
             overrides_hash = overrides.is_a?(Hash) ? overrides : {}
 
-            new(base_hash, source: source, merge_strategy: merge_strategy)
-              .merge(overrides_hash)
-              .to_h
+            # inline Config#merge (receiver-typed .merge calls are refused by
+            # the AOT compiler, see REPORT.md); same result as
+            # new(base).merge(overrides).to_h
+            merged = Atoms::DeepMerger.merge(
+              base_hash,
+              overrides_hash,
+              array_strategy: merge_strategy
+            )
+            new(merged, source: "#{source}+merged", merge_strategy: merge_strategy).to_h
           end
 
           def ==(other)
