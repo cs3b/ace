@@ -16,6 +16,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Admit ordinary candidates and independently started native reviewers into the canonical journal. Revalidate original review artifacts and root-witnessed test executions before fixed merge admission and effects; preserve strict protected-review attribution.
 - Drive ordinary work through the installed canonical owner with retained requests, accepted context snapshots and result adoption. Record coordinator replacement in the existing definition chain only after positive old-process termination; preserve worker attempts and reject stale supervisor completion.
 
+### Changed
+
+- Keep protected launch identity construction and comparison in its boundary owner while shared fixed service transitions reuse the same checks.
+
 ## [0.70.0] - 2026-10-16
 
 ### Added

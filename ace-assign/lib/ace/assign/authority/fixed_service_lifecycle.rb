@@ -122,8 +122,7 @@ module Ace
           events = pending.fetch(:current_events)
           service_scope_open!(events: events, params: params, map: map)
           origin = service_origin!(events, params)
-          unless replacement["worker_process_binding"] == origin.fetch("process_binding").fetch("process_identity") &&
-              replacement["launch_ticket"] == origin.fetch("launch_ticket") && replacement["reservation_generation"] == origin.fetch("reservation_generation")
+          unless service_origin_matches!(replacement, origin)
             raise AttemptErrors::UnauthorizedIdentity, "protected service origin differs"
           end
           receiver = service_project!(map.fetch("project_id")).fetch("service_receivers").fetch(replacement.fetch("service_id"))
@@ -220,7 +219,7 @@ module Ace
             "journal_commit" => commit,
             "maintenance" => params.slice("mapping_id", "assignment_id", "attempt_id").merge("project_id" => map.fetch("project_id")),
             "head" => selected.fetch("head"), "candidate_generation" => selected.fetch("candidate_generation"),
-            "worker_process_binding" => origin.fetch("process_binding").fetch("process_identity"),
+            "worker_process_binding" => service_origin_fields!(origin).fetch("worker_process_binding"),
             "caller_process_binding" => params.fetch("worker_process_binding")
           }
           raise AttemptErrors::Conflict, "preview canonical selection changed" unless journal.ref_value == commit
@@ -298,8 +297,7 @@ module Ace
             events = attempt_events(journal, params)
             service_scope_open!(events: events, params: params, map: map)
             origin = service_origin!(events, params)
-            unless record["worker_process_binding"] == origin.fetch("process_binding").fetch("process_identity") &&
-                record["launch_ticket"] == origin.fetch("launch_ticket") && record["reservation_generation"] == origin.fetch("reservation_generation")
+            unless service_origin_matches!(record, origin)
               raise AttemptErrors::UnauthorizedIdentity, "authorization launch origin differs"
             end
             current = exact_candidate!(candidate(events), params)
@@ -456,9 +454,8 @@ module Ace
           binding = params.slice("request_id", "assignment_id", "attempt_id", "operation", "input_digest", "target",
             "authorization", "service_id").merge("project_id" => map.fetch("project_id"),
               "caller_uid" => map.fetch("worker_uid"), "mapping_id" => params.fetch("mapping_id"), "candidate_head" => current.fetch("head"),
-              "candidate_generation" => current.fetch("candidate_generation"),
-              "worker_process_binding" => origin.fetch("process_binding").fetch("process_identity"),
-              "launch_ticket" => origin.fetch("launch_ticket"), "reservation_generation" => origin.fetch("reservation_generation"))
+              "candidate_generation" => current.fetch("candidate_generation"))
+            .merge(service_origin_fields!(origin))
           prepared = service_policy!.prepare!(binding, input_bytes: input_bytes)
           binding = prepared.fetch(:binding).merge("policy_digest" => prepared.fetch(:policy_digest))
           unless binding["executor_uid"] == receiver.fetch("executor_uid")
@@ -489,8 +486,7 @@ module Ace
           # lease expiry or terminality. It reports only retained ticket truth.
           return {data: service_projection(record).merge("invocation" => "already_started")} unless record["dispatch_phase"] == "issued"
           origin = service_origin!(events, params)
-          unless record["worker_process_binding"] == origin.fetch("process_binding").fetch("process_identity") &&
-              record["launch_ticket"] == origin.fetch("launch_ticket") && record["reservation_generation"] == origin.fetch("reservation_generation")
+          unless service_origin_matches!(record, origin)
             raise AttemptErrors::UnauthorizedIdentity, "dispatch launch origin differs"
           end
           current = exact_candidate!(candidate(events), params)

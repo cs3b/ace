@@ -156,3 +156,14 @@ remain separate; no service evidence guard was weakened.
 Command detached-child review correction is separately frozen45927f853; root R5
 actual kernel7/64 and public composition40/zero skips passed. Independent configured
 Pi review is pending; no merge/deployment here. Runtime must join final releasecut.
+
+## Native origin composition boundary
+
+The shared fixed service transitions now ask their source-selected boundary for
+`service_origin_fields!` and `service_origin_matches!`. The protected Endcap
+retains its exact worker process, launch ticket and reservation generation
+construction/comparison. No ordinary origin, admission route or capability is
+enabled by this extraction. The next ordinary adapter must return its real
+canonical intent/start/runtime reference; it must not manufacture protected
+launch fields. Existing claim, authorization, pre-dispatch and preview paths
+all use the same boundary owner.

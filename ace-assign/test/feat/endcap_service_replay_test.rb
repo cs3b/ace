@@ -89,6 +89,35 @@ module Ace
         end
       end
 
+      def test_authorization_read_rejects_each_changed_protected_launch_origin_without_effect
+        with_review_replay do |endcap, original, upload, _claim, journal|
+          params = original.fetch("params").slice("mapping_id", "assignment_id", "attempt_id",
+            "candidate_generation", "head", "request_id", "input_digest", "transfer")
+          record = journal.service_request("request-2")
+          params["claim_binding"] = record.fetch("claim_binding")
+          request = original.merge("operation" => "service_authorization", "mutation_id" => nil, "params" => params)
+          origin = {"launch_ticket" => record.fetch("launch_ticket"),
+            "reservation_generation" => record.fetch("reservation_generation"),
+            "process_binding" => {"process_identity" => record.fetch("worker_process_binding")}}
+          selected = nil
+          endcap.define_singleton_method(:active_origin) { |*| selected }
+          endcap.instance_variable_get(:@service_policy).define_singleton_method(:prepare!) do |**_|
+            raise "changed origin must not reach fresh policy preparation"
+          end
+          before = journal.ref_value
+          changed = [origin.merge("launch_ticket" => "different-launch"),
+            origin.merge("reservation_generation" => origin.fetch("reservation_generation") + 1),
+            origin.merge("process_binding" => {"process_identity" => record.fetch("worker_process_binding").merge("pid" => 101)})]
+          changed.each do |value|
+            selected = value
+            assert_raises(AttemptErrors::UnauthorizedIdentity) do
+              endcap.dispatch(request: request, peer: {"uid" => Process.uid}, role: :executor, transfer: upload)
+            end
+            assert_equal before, journal.ref_value
+          end
+        end
+      end
+
       def test_authorization_read_refuses_closed_scope_before_fresh_policy
         with_review_replay do |endcap, original, upload, _claim, journal|
           params = original.fetch("params").slice("mapping_id", "assignment_id", "attempt_id", "candidate_generation", "head", "request_id", "input_digest", "transfer")
