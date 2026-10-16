@@ -1,0 +1,36 @@
+{
+  "red": {
+    "report_id": "b4169dc6-80fa-4122-b938-a70571cae941",
+    "summary": {
+      "execution_id": "b4169dc6-80fa-4122-b938-a70571cae941",
+      "assertions": 6,
+      "passed": 0,
+      "failed": 1,
+      "errors": 0,
+      "skipped": 0,
+      "total": 1,
+      "pass_rate": 0.0,
+      "duration": 21.055018,
+      "success": false,
+      "timestamp": "2026-10-16T20:58:57+01:00"
+    },
+    "raw_output": "\n# Running tests with run options --name \"/\\\\A(?:Ace::Assign::OrdinaryReviewsTest\\\\#test_merge_requires_canonical_successful_test_execution_and_rechecks_before_effect)\\\\z/\" --seed 3700:\n\nF\n\nFinished tests in 21.055018s, 0.0475 tests/s, 0.2850 assertions/s.\n\n\nFailure:\nAce::Assign::OrdinaryReviewsTest#test_merge_requires_canonical_successful_test_execution_and_rechecks_before_effect [/Users/mc/Ps/ace/.ace-wt/ei9-ordinary-review-proof/ace-assign/test/feat/authority/ordinary_reviews_test.rb:91]\nMinitest::Assertion: [Ace::Assign::AttemptErrors::ReceiptRejected] exception expected, not\nClass: <Ace::Assign::AttemptErrors::NotFound>\nMessage: <\"command reference is unknown\">\n---Backtrace---\n/Users/mc/Ps/ace/.ace-wt/ei9-ordinary-review-proof/ace-assign/lib/ace/assign/authority/command_execution.rb:154:in 'Ace::Assign::Authority::CommandExecution#projection'\n/Users/mc/Ps/ace/.ace-wt/ei9-ordinary-review-proof/ace-assign/lib/ace/assign/authority/command_execution.rb:83:in 'Ace::Assign::Authority::CommandExecution#test_evidence_at!'\n/Users/mc/Ps/ace/.ace-wt/ei9-ordinary-review-proof/ace-assign/lib/ace/assign/authority/ordinary_merge_evidence.rb:56:in 'block in Ace::Assign::Authority::OrdinaryMergeEvidence#merge_evidence_at!'\n/Users/mc/Ps/ace/.ace-wt/ei9-ordinary-review-proof/ace-assign/lib/ace/assign/authority/ordinary_merge_evidence.rb:56:in 'Array#map'\n/Users/mc/Ps/ace/.ace-wt/ei9-ordinary-review-proof/ace-assign/lib/ace/assign/authority/ordinary_merge_evidence.rb:56:in 'Ace::Assign::Authority::OrdinaryMergeEvidence#merge_evidence_at!'\n/Users/mc/Ps/ace/.ace-wt/ei9-ordinary-review-proof/ace-assign/lib/ace/assign/authority/ordinary_merge_evidence.rb:34:in 'Ace::Assign::Authority::OrdinaryMergeEvidence#verify_merge_evidence_at!'\n/Users/mc/Ps/ace/.ace-wt/ei9-ordinary-review-proof/ace-assign/lib/ace/assign/organisms/attempt_coordinator.rb:369:in 'Ace::Assign::Organisms::AttemptCoordinator#verify_fixed_merge_evidence!'\n/Users/mc/Ps/ace/.ace-wt/ei9-ordinary-review-proof/ace-assign/lib/ace/assign/organisms/attempt_coordinator.rb:332:in 'block in Ace::Assign::Organisms::AttemptCoordinator#admit_fixed_merge_request'\n/Users/mc/Ps/ace/.ace-wt/ei9-ordinary-review-proof/ace-assign/lib/ace/assign/molecules/evidence_journal.rb:1554:in 'Ace::Assign::Molecules::EvidenceJournal#prepare_fixed_update'\n/Users/mc/Ps/ace/.ace-wt/ei9-ordinary-review-proof/ace-assign/lib/ace/assign/molecules/evidence_journal.rb:1492:in 'block (2 levels) in Ace::Assign::Molecules::EvidenceJournal#update_fixed_merge_request'\n<internal:numeric>:257:in 'Integer#times'\n/Users/mc/Ps/ace/.ace-wt/ei9-ordinary-review-proof/ace-assign/lib/ace/assign/molecules/evidence_journal.rb:1487:in 'block in Ace::Assign::Molecules::EvidenceJournal#update_fixed_merge_request'\n/Users/mc/Ps/ace/.ace-wt/ei9-ordinary-review-proof/ace-assign/lib/ace/assign/molecules/evidence_journal.rb:1783:in 'Ace::Assign::Molecules::EvidenceJournal#with_lock'\n/Users/mc/Ps/ace/.ace-wt/ei9-ordinary-review-proof/ace-assign/lib/ace/assign/molecules/evidence_journal.rb:1486:in 'Ace::Assign::Molecules::EvidenceJournal#update_fixed_merge_request'\n/Users/mc/Ps/ace/.ace-wt/ei9-ordinary-review-proof/ace-assign/lib/ace/assign/molecules/evidence_journal.rb:1355:in 'Ace::Assign::Molecules::EvidenceJournal#admit_fixed_merge_request'\n/Users/mc/Ps/ace/.ace-wt/ei9-ordinary-review-proof/ace-assign/lib/ace/assign/organisms/attempt_coordinator.rb:341:in 'block in Ace::Assign::Organisms::AttemptCoordinator#admit_fixed_merge_request'\n/Users/mc/Ps/ace/.ace-wt/ei9-ordinary-review-proof/ace-assign/lib/ace/assign/authority/ordinary_merge_evidence.rb:21:in 'block (2 levels) in Ace::Assign::Authority::OrdinaryMergeEvidence#with_merge_scope'\n/Users/mc/Ps/ace/.ace-wt/ei9-ordinary-review-proof/ace-assign/lib/ace/assign/molecules/lifecycle_exclusion.rb:245:in 'Ace::Assign::Molecules::LifecycleExclusion#with_shared_multi'\n/Users/mc/Ps/ace/.ace-wt/ei9-ordinary-review-proof/ace-assign/lib/ace/assign/authority/ordinary_merge_evidence.rb:21:in 'block in Ace::Assign::Authority::OrdinaryMergeEvidence#with_merge_scope'\n/Users/mc/Ps/ace/.ace-wt/ei9-ordinary-review-proof/ace-assign/lib/ace/assign/molecules/lifecycle_exclusion.rb:245:in 'Ace::Assign::Molecules::LifecycleExclusion#with_shared_multi'\n/Users/mc/Ps/ace/.ace-wt/ei9-ordinary-review-proof/ace-assign/lib/ace/assign/authority/ordinary_merge_evidence.rb:16:in 'Ace::Assign::Authority::OrdinaryMergeEvidence#with_merge_scope'\n/Users/mc/Ps/ace/.ace-wt/ei9-ordinary-review-proof/ace-assign/lib/ace/assign/organisms/attempt_coordinator.rb:380:in 'Ace::Assign::Organisms::AttemptCoordinator#with_fixed_merge_scope'\n/Users/mc/Ps/ace/.ace-wt/ei9-ordinary-review-proof/ace-assign/lib/ace/assign/organisms/attempt_coordinator.rb:340:in 'Ace::Assign::Organisms::AttemptCoordinator#admit_fixed_merge_request'\n/Users/mc/Ps/ace/.ace-wt/ei9-ordinary-review-proof/ace-assign/test/feat/authority/ordinary_reviews_test.rb:91:in 'block (2 levels) in Ace::Assign::OrdinaryReviewsTest#test_merge_requires_canonical_successful_test_execution_and_rechecks_before_effect'\n---------------\n\n1 tests, 6 assertions, 1 failures, 0 errors, 0 skips\n"
+  },
+  "green": {
+    "report_id": "01ad772d-dde6-49c7-92ce-18baed6f222d",
+    "summary": {
+      "execution_id": "01ad772d-dde6-49c7-92ce-18baed6f222d",
+      "assertions": 13,
+      "passed": 1,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "total": 1,
+      "pass_rate": 100.0,
+      "duration": 31.141442,
+      "success": true,
+      "timestamp": "2026-10-16T21:00:06+01:00"
+    },
+    "raw_output": "\n# Running tests with run options --name \"/\\\\A(?:Ace::Assign::OrdinaryReviewsTest\\\\#test_merge_requires_canonical_successful_test_execution_and_rechecks_before_effect)\\\\z/\" --seed 13143:\n\n.\n\nFinished tests in 31.141442s, 0.0321 tests/s, 0.4175 assertions/s.\n\n\n1 tests, 13 assertions, 0 failures, 0 errors, 0 skips\n"
+  }
+}

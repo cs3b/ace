@@ -369,7 +369,7 @@ module Ace
           @ordinary_merge_evidence.verify_merge_evidence_at!(record: record, commit: journal_for.ref_value,
             deadline: Process.clock_gettime(Process::CLOCK_MONOTONIC) + 30)
           nil
-        rescue AttemptErrors::EvidenceUnavailable, AttemptErrors::UnauthorizedIdentity, AttemptErrors::Conflict
+        rescue AttemptErrors::EvidenceUnavailable, AttemptErrors::UnauthorizedIdentity, AttemptErrors::Conflict, AttemptErrors::NotFound
           raise AttemptErrors::ReceiptRejected, "canonical ordinary review or executed test evidence is unavailable"
         end
 

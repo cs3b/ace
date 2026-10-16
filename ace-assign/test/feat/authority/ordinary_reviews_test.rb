@@ -86,6 +86,10 @@ module Ace
           forged.fetch("request").fetch("review_evidence")["record_sha256"] = "f" * 64
           assert_raises(AttemptErrors::ReceiptRejected) { coordinator.admit_fixed_merge_request(forged) }
           assert_nil coordinator.fixed_merge_record("merge-1")
+          missing = Marshal.load(Marshal.dump(record))
+          missing.fetch("request").fetch("test_evidence").first["reference"] = "missing-command"
+          assert_raises(AttemptErrors::ReceiptRejected) { coordinator.admit_fixed_merge_request(missing) }
+          assert_nil coordinator.fixed_merge_record("merge-1")
           accepted = coordinator.admit_fixed_merge_request(record)
           assert_equal accepted.fetch("reference"), coordinator.admit_fixed_merge_request(record).fetch("reference")
           @command_admission.enabled = false
