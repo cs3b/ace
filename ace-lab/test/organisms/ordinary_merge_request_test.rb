@@ -437,7 +437,7 @@ module Ace
           "ordinary" => {
             "projects" => {
               "atlas" => {"receiver_id" => "ordinary-receiver", "socket_path" => "/fixture/ordinary.sock",
-                          "receiver_uid" => Process.uid, "principal" => "mo", "admission" => "enabled"}
+                          "receiver_uid" => Process.uid, "principal" => Molecules::CallerAuthorizer.local_identity.first, "admission" => "enabled"}
             }
           }
         }

@@ -54,6 +54,16 @@ module Ace
           end
         end
 
+        def test_explicit_project_forge_path_and_socket_group_are_validated
+          config = OrdinaryReceiverConfig.new(valid_document.merge(
+            "socket_gid" => Process.gid, "forge_config_path" => "/etc/lab/ace-lab/atlas-forge.yml"))
+          assert_equal Process.gid, config.socket_gid
+          assert_equal "/etc/lab/ace-lab/atlas-forge.yml", config.forge_config_path
+          [{"socket_gid" => -1}, {"socket_gid" => "staff"}, {"forge_config_path" => "relative.yml"}].each do |bad|
+            assert_raises(Ace::Lab::InvalidConfigurationError) { OrdinaryReceiverConfig.new(valid_document.merge(bad)) }
+          end
+        end
+
         def test_unreadable_file_fails_closed
           assert_raises Ace::Lab::InvalidConfigurationError do
             OrdinaryReceiverConfig.load(File.join(@dir, "missing.yml"))

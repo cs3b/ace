@@ -176,7 +176,7 @@ module Ace
           # The ordinary receiver serve entrypoint (spec 8x3.t.xz9.4
           # execution clauses; 8x3.t.xz9.5 integration handoff): binds the
           # configured unix socket, mutually authenticates every connection
-          # through SO_PEERCRED, admits through the canonical Assign
+          # through OS peer credentials, admits through the canonical Assign
           # coordinator, executes the authorized fixed operation — one REAL
           # Forgejo merge under the scoped host-installed service identity —
           # and settles the exact terminal receipt proven by real forge
@@ -217,6 +217,9 @@ module Ace
                   request_id: "unknown", input_digest: nil
                 ))
               end
+              unless receiver_config.receiver_uid == Process.uid
+                raise Ace::Lab::InvalidConfigurationError, "receiver must run as its configured UID"
+              end
               policy_document = Molecules::GrantResolver.trusted_document(
                 receiver_config.policy_path
               )
@@ -238,6 +241,7 @@ module Ace
               listener = Molecules::OrdinaryListener.new(
                 socket_path: receiver_config.socket_path,
                 peer_uid: receiver_config.principal_uid,
+                socket_gid: receiver_config.socket_gid,
                 handler: receiver
               )
               receiver.recover_pending!

@@ -135,6 +135,19 @@ module Ace
           assert_includes error.message, "trust failed"
         end
 
+        def test_changed_static_configuration_refuses_even_with_a_valid_decision
+          original = {"authorizations" => {"decision-1" => @decision},
+                      "ordinary" => {"projects" => {"atlas" => {"admission" => "enabled"}}}}
+          changed = Marshal.load(Marshal.dump(original))
+          changed["ordinary"]["projects"]["atlas"]["admission"] = "disabled"
+          resolver = OrdinaryAdmissionResolver.new(original, path: "/trusted/policy.yml",
+            loader: ->(_path) { changed })
+          error = assert_raises(Ace::Lab::InvalidConfigurationError) do
+            resolver.decide("decision-1", binding)
+          end
+          assert_includes error.message, "configuration changed"
+        end
+
         def test_without_a_trusted_path_the_boot_snapshot_resolves_unchanged
           loader = ->(_path) { flunk "must not reload without a trusted path" }
           resolver = OrdinaryAdmissionResolver.new({"authorizations" => {"decision-1" => @decision}},

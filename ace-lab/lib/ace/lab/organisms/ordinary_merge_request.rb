@@ -242,7 +242,7 @@ module Ace
             raise Molecules::OrdinarySocket::OrdinaryUnavailable,
               "ordinary merge admission is not available in the installed configuration"
           end
-          receiver.merge("configuration_sha256" => Atoms::ServiceInput.digest(@policy.document))
+          receiver.merge("configuration_sha256" => Molecules::ServicePolicy.configuration_digest(@policy.document))
         end
 
         def resolve_selection!(project:, assignment:, attempt:, queue_entry:)

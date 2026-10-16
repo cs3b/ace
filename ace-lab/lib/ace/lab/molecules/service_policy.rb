@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "../errors"
+require_relative "../atoms/service_input"
 require "ace/assign/errors"
 require "pathname"
 require "time"
@@ -24,9 +25,13 @@ module Ace
           end
         end
 
-        # The trusted installation document as loaded; the ordinary producer
-        # binds its configuration digest to these exact bytes.
+        # The trusted installation document as loaded. Decisions are mutable;
+        # all other configuration remains bound for the receiver lifetime.
         attr_reader :document
+
+        def self.configuration_digest(document)
+          Atoms::ServiceInput.digest(document.except("authorizations"))
+        end
 
         def operation!(name, project:, service_id:)
           raise ArgumentError, "invalid operation name" unless name.to_s.match?(NAME)

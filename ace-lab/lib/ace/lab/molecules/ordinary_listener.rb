@@ -12,7 +12,7 @@ module Ace
       # entrypoint). Binds the configured unix socket and answers the exact
       # framed protocol the OrdinarySocket client speaks: one bounded JSON
       # document each way behind the shared handshake line. Authentication is
-      # MUTUAL through SO_PEERCRED: every connection's peer UID must equal
+      # MUTUAL through OS peer credentials: every connection's peer UID must equal
       # the configured producer principal UID, and the listener itself runs
       # as the configured receiver UID — the identity the client verifies on
       # its side. Every identity, framing, deadline or parse failure is
@@ -24,11 +24,15 @@ module Ace
         LIMIT = OrdinarySocket::LIMIT
         DEADLINE_SECONDS = 30
 
-        def initialize(socket_path:, peer_uid:, handler:, lock_path: nil, logger: nil)
+        def initialize(socket_path:, peer_uid:, handler:, socket_gid: nil, lock_path: nil, logger: nil)
           unless socket_path.is_a?(String) && socket_path.start_with?("/") &&
               peer_uid.is_a?(Integer) && peer_uid >= 0 && handler.respond_to?(:call)
             raise ArgumentError, "ordinary listener needs an absolute socket path, a peer uid and a handler"
           end
+          unless socket_gid.nil? || (socket_gid.is_a?(Integer) && socket_gid >= 0)
+            raise ArgumentError, "ordinary listener socket_gid must be a non-negative integer"
+          end
+          @socket_gid = socket_gid
           @socket_path = socket_path
           @peer_uid = peer_uid
           @handler = handler
@@ -44,8 +48,9 @@ module Ace
           acquire_lock!
           remove_stale_endpoint!
           @listener = UNIXServer.new(@socket_path)
-          File.chmod(0o600, @socket_path)
           @endpoint_identity = File.stat(@socket_path)
+          File.chown(nil, @socket_gid, @socket_path) if @socket_gid
+          File.chmod(@socket_gid ? 0o660 : 0o600, @socket_path)
           until @stopping
             socket = @listener.accept
             serve_connection(socket)
@@ -119,16 +124,15 @@ module Ace
 
         private
 
-        # Mutual half of SO_PEERCRED: the connecting process must run as the
+        # Mutual half of OS peer authentication: the connecting process must run as the
         # configured producer principal UID. Anything else is refused before
         # one byte of request is read.
         def verify_peer!(socket)
-          credentials = socket.getsockopt(:SOCKET, :PEERCRED)
-          _peer_pid, peer_uid, = credentials.unpack("L3")
+          peer_uid, = socket.getpeereid
           return if peer_uid == @peer_uid
           raise OrdinaryRefused, refusal_envelope("ordinary_merge_unauthenticated",
             "connecting principal is not the configured ordinary overseer")
-        rescue SystemCallError, IOError
+        rescue SystemCallError, IOError, SocketError, NotImplementedError
           raise OrdinaryListenerError, "peer credentials are unavailable"
         end
 

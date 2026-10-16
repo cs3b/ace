@@ -130,7 +130,7 @@ module Ace
           loop do
             socket = server.accept
             begin
-              peer = socket.getsockopt(:SOCKET, :PEERCRED).unpack("L3")
+              peer = socket.getpeereid
               handler.call(socket, peer)
             rescue StandardError, NotImplementedError
               close_quietly(socket)

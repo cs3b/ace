@@ -49,6 +49,7 @@ module Ace
               "trusted policy document must contain an authorizations mapping"
           end
           @authorizations = policy_document.fetch("authorizations")
+          @configuration_digest = ServicePolicy.configuration_digest(policy_document)
           @path = path
           @loader = loader || ->(trusted_path) { GrantResolver.trusted_document(trusted_path) }
           freeze
@@ -98,6 +99,10 @@ module Ace
             raise Ace::Lab::InvalidConfigurationError,
               "invalid lab configuration: trusted authorization refresh at #{@path} " \
               "did not yield an authorizations mapping"
+          end
+          unless ServicePolicy.configuration_digest(document) == @configuration_digest
+            raise Ace::Lab::InvalidConfigurationError,
+              "ordinary receiver configuration changed; restart with the installed configuration"
           end
           document.fetch("authorizations")
         end

@@ -81,11 +81,17 @@ module Ace
 
       def teardown
         @listener&.stop
+        @thread&.join(5)
         FileUtils.rm_rf(@dir)
       end
 
       def test_request_executes_real_ff_merge_settles_receipt_and_next_request_advances
+        second_decision = @policy_document.fetch("authorizations").delete("decision-b")
+        File.write(policy_path, YAML.safe_dump(@policy_document))
         start_listener!
+        socket_stat = File.stat(@config.fetch("socket_path"))
+        assert_equal 0o660, socket_stat.mode & 0o777
+        assert_equal Process.gid, socket_stat.gid
         producer = new_producer
 
         # 1. Request candidate A: consumer-side request over the real client,
@@ -105,7 +111,11 @@ module Ace
         assert_equal @head_a, git("rev-parse", "refs/heads/main")
 
         # 2. The next request advances: candidate B (descendant of the new
-        #    main) fast-forwards main from A to B.
+        #    main) fast-forwards main from A to B. Issue its decision only now,
+        #    without restarting the receiver, then construct a fresh producer.
+        @policy_document.fetch("authorizations")["decision-b"] = second_decision
+        File.write(policy_path, YAML.safe_dump(@policy_document))
+        producer = new_producer
         git("checkout", "feat/b")
         ack = producer.request(**request_args("request-b", "decision-b", "feat/b",
           @head_b, @head_a))
@@ -191,7 +201,7 @@ module Ace
           forge_factory: ->(_document) { @forge }
         )
         @listener = Molecules::OrdinaryListener.new(socket_path: @config.fetch("socket_path"),
-          peer_uid: Process.uid, handler: @receiver)
+          peer_uid: Process.uid, socket_gid: Process.gid, handler: @receiver)
         @thread = Thread.new { @listener.serve }
         deadline = Time.now.utc + 5
         sleep 0.01 until File.exist?(@config.fetch("socket_path")) || Time.now.utc > deadline
@@ -228,7 +238,7 @@ module Ace
           topology: Organisms::TopologyService.from_config(
             authorized_for_local(topology_config, ["atlas"])
           ),
-          policy: Molecules::ServicePolicy.new(@policy_document),
+          policy: Molecules::ServicePolicy.new(YAML.safe_load_file(policy_path)),
           coordinator: @coordinator, repo_root: @repo
         )
       end

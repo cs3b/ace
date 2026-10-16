@@ -120,8 +120,7 @@ module Ace
       end
 
       def test_configuration_digest_mismatch_refuses_as_selection_mismatch
-        other_policy = policy_document.merge("authorizations" =>
-          policy_document.fetch("authorizations").merge("extra" => {}))
+        other_policy = policy_document.merge("operations" => {"extra" => {}})
         drifted = build_receiver(policy_document: other_policy)
         envelope = drifted.handle(submission)
         assert_equal "ordinary_merge_selection_mismatch", envelope.dig("error", "code")
@@ -181,6 +180,27 @@ module Ace
         assert @coordinator.fixed_merge_record("request-2")
       end
 
+      def test_revoked_decision_after_acknowledgment_cannot_execute_on_recovery
+        forge = ForgeDouble.new(prs: {7 => open_pr})
+        receiver = build_receiver(forge: forge)
+        assert_equal "ok", receiver.handle(submission)["status"]
+        File.write(policy_path, YAML.safe_dump(policy_document.merge("authorizations" => {})))
+        receiver.recover_pending!
+        record = @coordinator.fixed_merge_record("request-1")
+        assert_equal "failed", record["state"]
+        refute forge.merge_invoked?
+        assert_equal @base_head, git("rev-parse", "refs/heads/main")
+      end
+
+      def test_stale_producer_cannot_submit_after_static_policy_changes
+        receiver = build_receiver
+        changed = policy_document.merge("operations" => {"disabled" => {}})
+        File.write(policy_path, YAML.safe_dump(changed))
+        envelope = receiver.handle(submission)
+        assert_equal "ordinary_merge_unavailable", envelope.dig("error", "code")
+        assert_nil @coordinator.fixed_merge_record("request-1")
+      end
+
       # ---- pre-effect target verification (moved-target refusal family) ----
 
       def test_candidate_absent_from_canonical_repo_refuses_as_target_changed
@@ -203,7 +223,7 @@ module Ace
             )))
         envelope = build_receiver(policy_document: rebound).handle(
           submission_with_document(document).merge("configuration_sha256" =>
-            Ace::Lab::Atoms::ServiceInput.digest(rebound))
+            Molecules::ServicePolicy.configuration_digest(rebound))
         )
         assert_equal "ordinary_merge_target_changed", envelope.dig("error", "code")
         assert_nil @coordinator.fixed_merge_record("request-1")
@@ -699,7 +719,7 @@ module Ace
           "authorization" => "decision-1", "request_id" => "request-1",
           "input_digest" => expected_digest, "request" => valid_request,
           "principal" => "overseer", "receiver_id" => "ordinary-receiver",
-          "configuration_sha256" => Ace::Lab::Atoms::ServiceInput.digest(policy_document)
+          "configuration_sha256" => Molecules::ServicePolicy.configuration_digest(policy_document)
         }
       end
 
@@ -716,7 +736,7 @@ module Ace
       # document (the receiver re-derives the same digest from its own copy).
       def submission_for(policy_document, request_id: "request-1")
         submission.merge("configuration_sha256" =>
-          Ace::Lab::Atoms::ServiceInput.digest(policy_document), "request_id" => request_id)
+          Molecules::ServicePolicy.configuration_digest(policy_document), "request_id" => request_id)
       end
 
       def valid_request

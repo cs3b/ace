@@ -16,6 +16,7 @@ module Ace
       class OrdinaryReceiverConfig
         KEYS = %w[project receiver_id socket_path receiver_uid principal principal_uid
           repo_path policy_path execution_identity].freeze
+        OPTIONAL_KEYS = %w[socket_gid forge_config_path].freeze
         IDENTITY_KEYS = %w[checkout_id worktree_id branch].freeze
         ID = ServicePolicy::ID
 
@@ -28,14 +29,17 @@ module Ace
         end
 
         attr_reader :project, :receiver_id, :socket_path, :receiver_uid, :principal,
-          :principal_uid, :repo_path, :policy_path, :execution_identity, :source
+          :principal_uid, :repo_path, :policy_path, :execution_identity, :source, :socket_gid, :forge_config_path
 
         def initialize(document, source: nil)
-          unless document.is_a?(Hash) && (document.keys - KEYS).empty? &&
+          unless document.is_a?(Hash) && (document.keys - KEYS - OPTIONAL_KEYS).empty? &&
               (KEYS - document.keys).empty?
             raise Ace::Lab::InvalidConfigurationError,
-              "receiver configuration must contain exactly: #{KEYS.join(', ')}"
+              "receiver configuration requires #{KEYS.join(', ')}; optional: #{OPTIONAL_KEYS.join(', ')}"
           end
+          @socket_gid = uid!(document.fetch("socket_gid"), "socket_gid") if document.key?("socket_gid")
+          @forge_config_path = absolute!(document.fetch("forge_config_path"), "forge_config_path") if
+            document.key?("forge_config_path")
           @source = source
           @project = string!(document.fetch("project"), "project")
           @receiver_id = string!(document.fetch("receiver_id"), "receiver_id")

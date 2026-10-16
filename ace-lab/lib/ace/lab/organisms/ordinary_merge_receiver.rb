@@ -69,14 +69,16 @@ module Ace
           @config = config
           @coordinator = coordinator
           @policy_document = policy_document
-          @configuration_sha256 = Ace::Lab::Atoms::ServiceInput.digest(policy_document)
+          @configuration_sha256 = Molecules::ServicePolicy.configuration_digest(policy_document)
           @merge_factory = merge_factory || ->(document) {
             Molecules::OrdinaryFfMerge.new(repo_path: config.repo_path,
               base_ref: document.fetch("base_ref"))
           }
           # The scoped service identity is host-installed; an absent
           # configuration refuses construction with the actionable path.
-          @forge_config = forge_config || Molecules::ForgeMergeConfig.load
+          @forge_config = forge_config || Molecules::ForgeMergeConfig.load(
+            config.forge_config_path || Molecules::ForgeMergeConfig::DEFAULT_PATH
+          )
           @forge_factory = forge_factory || ->(_document) {
             Molecules::ForgejoMergeAdapter.new(base_url: @forge_config.base_url,
               token: @forge_config.token, timeout_seconds: @forge_config.merge_timeout_seconds)
@@ -294,6 +296,18 @@ module Ace
           candidate = document.fetch("candidate_head")
           expected = document.fetch("expected_base_head")
           merge = @merge_factory.call(document)
+          # Admission may precede execution (or receiver recovery). Re-read
+          # authority before any forge effect; revocation never grants a lease
+          # merely because the request was acknowledged earlier.
+          begin
+            decision = @resolver.decide(admitted_record.fetch("authorization"),
+              authorization_binding(admitted_record))
+            unless decision.authorized?
+              return settle_no_effect(request_id, admitted_record, merge, decision.message)
+            end
+          rescue Ace::Lab::InvalidConfigurationError => e
+            return settle_no_effect(request_id, admitted_record, merge, e.message)
+          end
           observed = merge.base_head
           if observed != expected
             return settle_no_effect(request_id, admitted_record, merge,

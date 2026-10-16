@@ -9,7 +9,7 @@ module Ace
       # Admission transport between the ordinary fixed merge producer and the
       # installed ordinary receiver: one bounded JSON document each way over
       # a configured unix stream socket with a fixed deadline. Authentication
-      # is mutual through SO_PEERCRED — the producer verifies the receiver's
+      # is mutual through OS peer credentials — the producer verifies the receiver's
       # configured UID and transmits the verified local caller identity, so
       # no caller-selected credential, token or endpoint exists. This is not
       # an HTTP transport; a lost or unauthenticated response is a
@@ -33,19 +33,19 @@ module Ace
         def submit(document)
           payload = JSON.generate(document)
           raise OrdinaryUnavailable, "request document exceeds the wire bound" if payload.bytesize > LIMIT
-          socket = Socket.new(:UNIX, :STREAM, 0)
+          socket = nil
           begin
-            socket.connect(Addrinfo.unix(@socket_path))
+            socket = UNIXSocket.new(@socket_path)
             verify_peer!(socket)
             write_all!(socket, "#{HANDSHAKE} #{payload.bytesize}\n#{payload}")
             response = read_response!(socket)
           rescue OrdinaryUnavailable
             raise
-          rescue SystemCallError, IOError => e
+          rescue SystemCallError, IOError, SocketError, NotImplementedError => e
             raise OrdinaryUnavailable, "receiver transport failed: #{e.class}"
           ensure
             begin
-              socket.close
+              socket&.close
             rescue IOError
               nil
             end
@@ -58,10 +58,7 @@ module Ace
         private
 
         def verify_peer!(socket)
-          credentials = socket.getsockopt(:SOCKET, :PEERCRED)
-          # struct ucred is {pid, uid, gid} on Linux; the producer binds the
-          # receiver to its installed UID and nothing else.
-          _peer_pid, peer_uid, = credentials.unpack("L3")
+          peer_uid, = socket.getpeereid
           return if peer_uid == @receiver_uid
           raise OrdinaryUnavailable, "receiver endpoint identity is not the installed receiver"
         end

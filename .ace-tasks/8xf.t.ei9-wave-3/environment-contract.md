@@ -101,3 +101,18 @@ execution store. Never include passwords, API tokens, OTP values or private keys
 Question/decision/escalation goes through project's configured HITL route; exact
 Reply correlation and actual actor determine adoption. Captain commands override
 briefs. Failure names actual owner, missing capability and next action, not a global hold.
+
+## Ordinary receiver deployment joins (execution clarification)
+
+Receiver configuration may supply `socket_gid` (numeric dedicated group). The
+listener sets that group and mode 0660 on every bind, preserving peer-UID
+authentication; absent group means same-account 0600. The runtime directory must
+be restricted to the receiver/caller. `forge_config_path` selects a root-owned,
+service-readable project forge document; callers never select credentials. A
+receiver refuses to start as a UID other than its installed receiver UID.
+
+Configuration identity excludes the mutable authorization collection. A trusted
+refresh may add/revoke decisions without changing that identity. Any static
+configuration change requires receiver restart; stale and fresh clients both
+fail closed until it is installed. Pending effects recheck authority before forge
+mutation, including recovery after receiver restart.
