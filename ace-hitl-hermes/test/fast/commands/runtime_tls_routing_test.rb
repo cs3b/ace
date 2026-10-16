@@ -72,7 +72,7 @@ class RuntimeTlsRoutingTest < AceHermesTestCase
   def runtime_config(registry_path)
     path = File.join(@tmp, "runtime-#{@services.object_id}.json")
     File.write(path, JSON.generate({
-      "schema" => "ace.hitl.hermes.runtime/v1", "registry" => registry_path,
+      "schema" => "ace.hitl.hermes.runtime/v2", "registry" => registry_path,
       "state" => File.join(@tmp, "state"),
       "polling_owner" => "ace-hitl-hermes", "hermes_gateway_config" => gateway_path,
       "tls_service_user" => Etc.getpwuid(Process.euid).name,

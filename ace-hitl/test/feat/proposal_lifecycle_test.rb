@@ -620,7 +620,7 @@ class ProposalLifecycleTest < AceHitlTestCase
     gateway = File.join(@dir, "gateway.yml")
     File.write(gateway, "platforms:\n  telegram:\n    enabled: false\n")
     config = File.join(@dir, "runtime.json")
-    File.write(config, JSON.generate({"schema" => "ace.hitl.hermes.runtime/v1", "registry" => registry,
+    File.write(config, JSON.generate({"schema" => "ace.hitl.hermes.runtime/v2", "registry" => registry,
       "state" => File.join(@dir, "hermes"),
       "hermes_gateway_config" => gateway, "polling_owner" => "ace-hitl-hermes"}))
     boundary = Ace::Hitl::Lifecycle::Client.new(socket_path: socket, service_uid: Process.uid)

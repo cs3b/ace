@@ -24,7 +24,7 @@ class OperatorQuestionRoutingTest < AceHermesTestCase
     File.write(File.join(@dir, "channels.json"), JSON.generate(registry))
     File.write(File.join(@dir, "gateway.yml"), "platforms:\n  telegram:\n    enabled: false\n")
     @config = File.join(@dir, "runtime.json")
-    File.write(@config, JSON.generate("schema" => "ace.hitl.hermes.runtime/v1",
+    File.write(@config, JSON.generate("schema" => "ace.hitl.hermes.runtime/v2",
       "registry" => File.join(@dir, "channels.json"), "state" => File.join(@dir, "transport"),
       "hermes_gateway_config" => File.join(@dir, "gateway.yml"), "polling_owner" => "ace-hitl-hermes"))
     @sent = []

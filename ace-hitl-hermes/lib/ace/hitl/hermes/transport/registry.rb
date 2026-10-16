@@ -48,7 +48,7 @@ module Ace
                   entry["folder"].is_a?(String) && File.absolute_path?(entry["folder"]) && !entry["folder"].include?("\0")
                 raise ContractError, "channel requires group identity, Captain allowlist and absolute folder"
               end
-              JSON.parse(JSON.generate(entry), freeze: true)
+              JSON.parse(JSON.generate(entry.merge("captain_user_ids" => entry.fetch("captain_user_ids").uniq.sort)), freeze: true)
             end.freeze
             projects = @channels.flat_map { |channel| channel["projects"].keys }
             raise ContractError, "ambiguous project routing" unless projects.uniq.size == projects.size

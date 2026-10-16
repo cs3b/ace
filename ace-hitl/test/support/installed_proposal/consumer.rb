@@ -154,7 +154,7 @@ class InstalledProposalScenario
       "folder" => path("inbox"), "target" => "overseer", "projects" => {"ace" => {"hitl_socket" => @socket, "hitl_service_uid" => Process.uid}}, "chat_id" => "-424242",
       "captain_user_ids" => ["42"]}]})
     File.write(path("gateway.yml"), "platforms:\n  telegram:\n    enabled: false\n")
-    write("runtime.json", {"schema" => "ace.hitl.hermes.runtime/v1", "registry" => path("registry.json"), "state" => path("hermes"),
+    write("runtime.json", {"schema" => "ace.hitl.hermes.runtime/v2", "registry" => path("registry.json"), "state" => path("hermes"),
       "hermes_gateway_config" => path("gateway.yml"), "polling_owner" => "ace-hitl-hermes"})
     start_service
     document = {"operation" => "forge-sync", "target" => Ace::Lab::Atoms::ServiceInput.target(input), "candidate_head" => git("rev-parse", "HEAD"),

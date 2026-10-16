@@ -16,7 +16,19 @@ module Ace
         # A definite refusal is recoverable. Everything else may have reached
         # Telegram and must be investigated rather than automatically resent.
         class SubmitFailed < Error; end
-        class IngressUnavailable < Error; end
+        class IngressUnavailable < Error
+          REASONS = {
+            private_directory: "ordinary ingress requires an owned private directory",
+            route_changed: "retained ingress authority configuration changed",
+            identity_collision: "ordinary ingress identity collision",
+            persistence_failed: "ordinary ingress could not be persisted; Telegram offset retained",
+            body_unavailable: "retained ordinary ingress is unavailable"
+          }.freeze
+
+          def initialize(reason)
+            super(REASONS.fetch(reason))
+          end
+        end
 
         class Relay
           TERMINAL = %w[delivered closed rejected].freeze
@@ -213,7 +225,8 @@ module Ace
                     deliver_instruction(item, body, channel, commit)
                   end
                   cleanup_ingress(item, channel, record)
-                rescue StandardError
+                rescue StandardError => error
+                  warn "ace-hitl-hermes: #{error.message}" if error.instance_of?(IngressUnavailable)
                   unless TERMINAL.include?(item["status"])
                     item["status"] = "unresolved"
                     commit.call
@@ -309,13 +322,13 @@ module Ace
             folder = File.join(scoped.fetch("folder"), ".ingress")
             begin
               Dir.mkdir(folder, 0o700)
-              File.open(scoped.fetch("folder")) { |directory| directory.fsync }
             rescue Errno::EEXIST
               # Verify the existing object; never follow or repair an alias.
             end
+            Molecules::HermesAtomicWriter.sync_directory(scoped.fetch("folder"))
             stat = File.lstat(folder)
             unless stat.directory? && !stat.symlink? && stat.uid == Process.euid && (stat.mode & 0o077).zero?
-              raise IngressUnavailable, "ordinary ingress requires an owned private directory"
+              raise IngressUnavailable.new(:private_directory)
             end
             entry = scoped.merge("folder" => folder).reject { |key, _| %w[project root_folder].include?(key) }
             self.class.folder_box(entry)
@@ -330,7 +343,7 @@ module Ace
 
           def persist_ingress(item, text, channel, record)
             unless item.fetch("route_identity") == ingress_identity(channel, record)
-              raise IngressUnavailable, "retained ingress authority configuration changed"
+              raise IngressUnavailable.new(:route_changed)
             end
             box = ingress_box(channel, record)
             id = "inb-#{item.fetch('sequence')}"
@@ -340,7 +353,7 @@ module Ace
               message = box.poll.messages.find { |candidate| candidate.id == id }
               unless message && message.question? && message.sender == "captain" &&
                   message.timestamp == item.fetch("received_at")
-                raise IngressUnavailable, "ordinary ingress identity collision"
+                raise IngressUnavailable.new(:identity_collision)
               end
               Molecules::HermesAtomicWriter.sync_directory(box.channel.folder)
               text = message.body
@@ -349,20 +362,22 @@ module Ace
             end
             item["body_sha256"] = Digest::SHA256.hexdigest(text)
             item["route_identity"] = ingress_identity(channel, record)
+          rescue IngressUnavailable
+            raise
           rescue StandardError
-            raise IngressUnavailable, "ordinary ingress could not be persisted; Telegram offset retained"
+            raise IngressUnavailable.new(:persistence_failed)
           end
 
           def retained_ingress(item, channel, record)
             unless item.fetch("route_identity") == ingress_identity(channel, record)
-              raise IngressUnavailable, "retained ingress authority configuration changed"
+              raise IngressUnavailable.new(:route_changed)
             end
             box = ingress_box(channel, record)
             message = box.poll.messages.find { |candidate| candidate.id == "inb-#{item.fetch('sequence')}" }
             unless message && message.question? && message.sender == "captain" &&
                 message.timestamp == item.fetch("received_at") &&
                 Digest::SHA256.hexdigest(message.body) == item.fetch("body_sha256")
-              raise IngressUnavailable, "retained ordinary ingress is unavailable"
+              raise IngressUnavailable.new(:body_unavailable)
             end
             message.body
           end
@@ -370,9 +385,13 @@ module Ace
           def cleanup_ingress(item, channel, record)
             return unless TERMINAL.include?(item["status"])
 
+            scoped = record ? @registry.project_channel(channel.fetch("name"), record.fetch("project")) : channel
+            path = File.join(scoped.fetch("folder"), ".ingress", "inb-#{item.fetch('sequence')}.json")
+            return unless File.exist?(path)
+
             box = ingress_box(channel, record)
             box.ack("inb-#{item.fetch('sequence')}")
-            File.open(box.channel.folder) { |directory| directory.fsync }
+            Molecules::HermesAtomicWriter.sync_directory(box.channel.folder)
           end
 
           def proposal?(record)

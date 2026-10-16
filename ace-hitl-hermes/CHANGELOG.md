@@ -11,6 +11,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Route explicitly authenticated operator questions through existing project correlation and durable ingress; require declared request-context capabilities before activating a project authority.
 
+### Changed
+
+- Require runtime/v2 for project-routed authorities, refusing old runtime configuration without rewriting it.
+
+### Fixed
+
+- Treat Captain allowlists as sets when binding routes; retain other array ordering. Use the hardened shared directory fsync for ingress creation, recovery and cleanup, and avoid recreating already-cleaned terminal folders.
+- Preserve typed static ingress refusal diagnostics without logging lower-level causes or secret bodies. Document exact-backup recovery for intentionally blocked missing bodies and count actual lifecycle delivery calls in crash-replay regressions.
+
 ## [0.5.0] - 2026-10-16
 
 ### Changed

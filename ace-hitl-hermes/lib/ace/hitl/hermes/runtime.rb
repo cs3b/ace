@@ -22,9 +22,9 @@ module Ace
           @config = JSON.parse(File.read(path))
           fields = %w[schema registry state token_file polling_owner hermes_gateway_config
             tls_service_user tls_service_group]
-          unless @config.is_a?(Hash) && @config["schema"] == "ace.hitl.hermes.runtime/v1" &&
+          unless @config.is_a?(Hash) && @config["schema"] == "ace.hitl.hermes.runtime/v2" &&
               (@config.keys - fields).empty?
-            raise ContractError, "runtime configuration requires runtime/v1"
+            raise ContractError, "runtime configuration requires runtime/v2"
           end
           @registry = Transport::Registry.load(@config.fetch("registry"))
           @journal = Transport::Journal.new(@config.fetch("state"))

@@ -45,7 +45,7 @@ class TransportCliTest < AceHermesTestCase
     ]}
     @gateway_path = File.join(@tmp, "hermes.yaml")
     File.write(@gateway_path, "platforms:\n  telegram:\n    enabled: false\n")
-    @config = {"schema" => "ace.hitl.hermes.runtime/v1", "registry" => @registry_path,
+    @config = {"schema" => "ace.hitl.hermes.runtime/v2", "registry" => @registry_path,
                "state" => File.join(@tmp, "state"),
                "hermes_gateway_config" => @gateway_path, "polling_owner" => "ace-hitl-hermes"}
     File.write(@registry_path, JSON.generate(registry))

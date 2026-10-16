@@ -65,7 +65,7 @@ class RuntimeRoutingTest < AceHermesTestCase
     ]
     File.write(@registry_path, JSON.generate({"schema" => "ace.hitl.hermes.channels/v2", "channels" => channels}))
     File.write(@config_path, JSON.generate({
-      "schema" => "ace.hitl.hermes.runtime/v1", "registry" => @registry_path,
+      "schema" => "ace.hitl.hermes.runtime/v2", "registry" => @registry_path,
       "state" => File.join(@tmp, "state"),
       "polling_owner" => "ace-hitl-hermes", "hermes_gateway_config" => File.join(@tmp, "gateway.yml")
     }))
@@ -75,6 +75,16 @@ class RuntimeRoutingTest < AceHermesTestCase
   def teardown
     FileUtils.remove_entry(@tmp)
     super
+  end
+
+  def test_runtime_v1_is_refused_without_rewriting_configuration
+    config = JSON.parse(File.read(@config_path))
+    config["schema"] = "ace.hitl.hermes.runtime/v1"
+    bytes = JSON.generate(config)
+    File.write(@config_path, bytes)
+    error = assert_raises(Ace::Hitl::Hermes::ContractError) { Ace::Hitl::Hermes::Runtime.new(@config_path) }
+    assert_match(/runtime\/v2/, error.message)
+    assert_equal bytes, File.read(@config_path)
   end
 
   def test_clients_are_lazy_cached_per_socket_with_explicit_channel_service_identity

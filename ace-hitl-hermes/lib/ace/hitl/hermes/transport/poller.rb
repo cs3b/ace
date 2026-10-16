@@ -80,7 +80,8 @@ module Ace
               commit.call
             end
             updates.size
-          rescue StandardError
+          rescue StandardError => error
+            warn "ace-hitl-hermes: #{error.message}" if error.instance_of?(IngressUnavailable)
             at = stamp
             invalidate_coverage(at)
             @journal.synchronize do |state, commit|
