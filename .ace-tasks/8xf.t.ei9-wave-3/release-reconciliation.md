@@ -9,7 +9,7 @@ root changelog conflict. Before rebase:
 `124c2a79180c8f653cc42d9363a86a5ae0f4e1f6`; rebased implementation:
 `b21e450174d1cf9b111018e4eac47dc35eb8c4dc`.
 
-## Registry and payload audit
+## Registry and payload audit (before publication)
 
 Direct RubyGems API audit at 2026-10-16T17:13:59.324564+00:00 checked all 50 local
 gemspecs: 42 version matches, eight unpublished higher versions, no lower local
@@ -45,7 +45,7 @@ Audit inputs and full reports are in the retained worktree directory
 `published-payload-comparison.json`, `dependencies.json` and `local-payloads.json`.
 The API source for each package is `https://rubygems.org/api/v1/gems/NAME.json`.
 
-## Superseded artifacts and publication boundary
+## Superseded artifacts and pre-publication boundary (historical)
 
 `initial-runtime-release.json` remains an unchanged historical record of the
 unpublished 5768ec3dd cut. Its exact archives proved disposable installation;
@@ -109,3 +109,20 @@ UID966 readiness probe because root-directory creation obeyed umask077 instead
 of preserving requested traversal modes. Domain bug8wl.t.gad.2.0 owns the repair,
 RED/GREEN regression and deployed reconciliation. Source/runtime publication is
 verified; the ordinary owner is not yet active and installed autonomy remains open.
+
+
+## Evidence retention correction
+
+The former ei9-autonomous-lab worktree was removed after integration; its ignored
+.ace-local rebase audit directory is no longer available at the path named above.
+Tracked reconciliation and independently checked aggregate results survive.
+Post-publication exact-version API/SHA records, complete installation manifest
+and final installation receipt are retained in this task's evidence directory.
+The immutable main-cut artifacts remain under the canonical checkout's
+.ace-local/ei9-release/main-2e9005f39fdd12a5cf3c1d831e3dcad1bfdc4bc0.
+No missing raw audit file is represented as a currently readable artifact.
+
+Actual service45/coordinator59 installation, owner startup, authenticated client
+health, unrelated-user denial and history continuity are now retained separately
+in evidence/installed-ordinary-owner.json. This does not close the autonomous
+publication or two-project delivery gates.

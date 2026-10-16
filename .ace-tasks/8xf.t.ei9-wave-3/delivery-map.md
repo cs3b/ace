@@ -6,16 +6,26 @@ status is not an autonomous delivery receipt.
 
 | Requirement | Outcome owner | Existing implementation / prior owner | Publication | Installation | Acceptance |
 |---|---|---|---|---|---|
-| Exact authorized merge; fresh PR2 decision | ei9.0 | ace-lab ordinary request/receiver; ace-assign journal; ace-git-forgejo; xz9.4/.5 ordinary clauses | lab0.7.0, assign0.69.0, forgejo0.7.0 published; repair pending | Initial cut installed in immutable graphs; coordinator Bash consumer adopted; ordinary receiver pending | Two real sequential PR merges, revocation, head race, uncertain/restart pending |
-| Context, capabilities, start rules | ei9.1 | ace-overseer; qk0 and qkb.1 | New effective source assets await release | Published baseline adopted by canonical coordinator; new role/guide bindings pending | Complete installed role/context/path/digest receipt pending |
-| Local objective queue, canonical attempt adoption | ei9.2 | ace-task root selector; ace-assign; qk0/qkb.1 | Exact --root create/show/update implemented and tested; release pending | No overseer queue verified | Restart/lost answer/duplicate wake without redispatch pending |
+| Exact authorized merge; fresh PR2 decision | ei9.0 | ace-lab ordinary request/receiver; ace-assign journal; ace-git-forgejo; xz9.4/.5 ordinary clauses | lab0.8.0, assign0.70.0, forgejo0.7.0 published | Public-registry exact graphs selected; real ordinary owner active UID966 with three endpoints | Two real sequential PR merges, revocation, head race, uncertain/restart pending |
+| Context, capabilities, start rules | ei9.1 | ace-overseer; qk0 and qkb.1 | overseer0.22.0 / assign0.70.0 assets published | New coordinator graph selected; full effective context receipt pending | Complete installed role/context/path/digest receipt pending |
+| Local objective queue, canonical attempt adoption | ei9.2 | ace-task root selector; ace-assign; qk0/qkb.1 | task0.40.0 published with exact --root create/show/update | No overseer queue verified | Restart/lost answer/duplicate wake without redispatch pending |
 | Dispatch start and correct result attribution | ei9.3 | ace-overseer/Herdr/Assign; qk0/qkb.1 | Existing APIs, join verification pending | Start receipt not yet verified | No-start/wrong callback refused; producer result adoption pending |
-| Native continuation and serial integration | ei9.4 | Pi ace-wake loop/watch; qk0/qkb.1 | Existing native extension; new workflow asset awaits release | Canonical same-session restart preserves exactly two native duties | Native timer/watch/restore proof passed; actual 10-minute audit/hourly cleanup and two merges pending installed workflow |
-| Project command, release, sync, all consumers | ei9.5 | ace-lab run (iy6 missing), existing publisher/Assign/runtime/HITL; qkb.1 | Four previous gems published manually; new cut pending | Published baseline installed in service/coordinator graphs and adopted in canonical coordinator; source delta not installed; legacy pins separate | Partial/unknown publish, wrong OTP, old bundle, complete consumer installation receipts pending |
+| Native continuation and serial integration | ei9.4 | Pi ace-wake loop/watch; qk0/qkb.1 | Existing native extension and assign0.70.0 workflow assets published | Canonical same-session restart preserves exactly two native duties | Native timer/watch/restore proof passed; actual 10-minute audit/hourly cleanup and two merges pending installed workflow |
+| Project command, release, sync, all consumers | ei9.5 | ace-lab run (iy6 missing), existing publisher/Assign/runtime/HITL; qkb.1 | Eight main-built gems published manually, exact archive SHA verified | service45/coordinator59 installed and selected; canonical shell smoke passed; legacy pins separate | TS-MONO-001 PASS4/4 for50 exact versions; autonomous publishing, failure scenarios and remaining consumers pending |
 | Preserve and close accepted work | ei9.6 | Herdr/worktree owners; ordinary qk0 | Existing preservation mechanisms | Exact installed path pending | Commits/files/results survive cleanup; correct pane closes pending |
 | Installed two-project proof | ei9.7 | TS-DELIVERY-* (qkc), lq1 receipts; shared result with lab-config gad.2 | No new framework | Both deployments pending | Two workers → PRs → review → serial merges → one release → install/sync/cleanup; cold isolated second project pending |
-| Accepted-head review and bounded campaigns | ei9.8 | ace-review ig3/ig4/qm6; Assign presets; configure-project | review0.60.2 published; ig3 source repair passes; next cut pending | Source presets aligned; installed asset refresh pending | Exact historical evidence and bounded rounds; moved-head risk/delta review pending |
-| Shared Hermes and delegated decisions | ei9.9 | nh0 implementation; qjz scoped policy; Hermes/HITL mTLS | Existing hitl0.15/hermes0.4 | One poller/all groups/correlation not verified | Project isolation, exact reply, only predelegated 16-hour timeout pending |
+| Accepted-head review and bounded campaigns | ei9.8 | ace-review ig3/ig4/qm6; Assign presets; configure-project | review0.60.3 / assign0.70.0 published with ig3 repair and aligned presets | Exact new runtime graph installed; behavioral acceptance pending | Exact historical evidence and bounded rounds; moved-head risk/delta review pending |
+| Shared Hermes and delegated decisions | ei9.9 | nh0 implementation; qjz scoped policy; Hermes/HITL mTLS | hitl0.16.0 published; Hermes multi-project source delta in progress | Ordinary HITL active and coordinator opt-in selected; shared mTLS/poller binding pending | Project isolation, exact reply, only predelegated 16-hour timeout pending |
+
+
+## Current installed checkpoint
+
+Main2e9005f39 publication and actual Lab adoption supersede the historical
+baselines below. Exact evidence is retained in evidence/published-main-*.json
+and evidence/installed-ordinary-owner.json. Owner PID554643, actual UID1000
+read/ping and UID1001 denial checks passed; matching20-commit history and legacy
+processes preserved. No real new assignment, merge or autonomous release is yet
+claimed. Full two-project acceptance remains open.
 
 ## Adopted obligations and boundaries
 
@@ -28,7 +38,7 @@ status is not an autonomous delivery receipt.
 - Only delivery-used transport issues from 3zi (including timeout process cleanup) join the relevant delivery path. Unrelated transport work remains there.
 - cm3 (/goal), exploratory ig5, full protected boot/network/runtime are outside this program.
 
-## Baseline evidence
+## Historical baseline evidence (before current installed checkpoint)
 
 Source host and Lab checkout: 32f1dd59daf8409804914d1800547e0748869d31.
 RubyGems publication confirmed 2026-10-16 (never republish these versions):
@@ -51,14 +61,14 @@ until their consumers have an accepted replacement.
 Entries below distinguish implemented source, installed prerequisites and final
 acceptance. No child or parent has completed its installed acceptance.
 
-### Publication from main after rebase
+### Pre-publication checkpoint after rebase (historical)
 
 The Captain requested rebasing before publication on 2026-10-16. All 30 completed
 source commits were rebased onto `f653537283410935204fc210d13ce176c66abbb7`;
 the only conflict was the root changelog, preserving both releases. The ongoing
 Hermes per-project routing implementation is retained separately and is not in
 this release. [Release reconciliation](release-reconciliation.md) records the
-50-package registry, payload and dependency audit and the eight pending versions.
+50-package registry, payload and dependency audit and subsequent publication of all eight versions.
 
 `initial-runtime-release.json` describes the historical **unpublished** cut
 `5768ec3ddbb5cb732f67c8acebb49ea8d755203b`, not the next publication. Its archives
