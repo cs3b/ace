@@ -13,7 +13,7 @@ module Ace
           File.binwrite(input, JSON.generate("version" => 1, "round" => round,
             "artifacts" => [{"path" => "report.md", "sha256" => Digest::SHA256.hexdigest("report bytes")}]))
           output = File.join(root, "result.json")
-          bytes = JSON.generate("schema" => "ace.review.accepted-result/v1")
+          bytes = JSON.generate("schema" => "ace.review.accepted-result/v2")
           calls = []
           client = Object.new
           client.define_singleton_method(:call) do |operation, params, **options|

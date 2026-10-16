@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Compare two independently retained candidate bundles through bounded bare Git object reads, including nonancestor rebases, full context inventories, binary patches and historical symlink bytes without executing or materializing candidate code.
+
 ### Fixed
 - Preserve exact lost-response result replay while allowing canonical-generation CAS conflicts to recover without replacing original inputs.
 

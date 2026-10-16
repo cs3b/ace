@@ -7,6 +7,7 @@ require "tmpdir"
 require "tempfile"
 require "ace/herdr/molecules/bounded_process"
 require_relative "private_directory"
+require_relative "candidate_head_comparison"
 
 module Ace
   module Assign
@@ -14,6 +15,7 @@ module Ace
       # Untrusted bundles enter a clean bare quarantine. Only complete verified
       # objects are retained; no uploader configuration or worktree is read.
       class CandidateTransfer
+        include CandidateHeadComparison
         MAX_BYTES = 64 * 1024 * 1024
         DEADLINE = 30
         SHA = /\A[0-9a-f]{40}\z/
@@ -296,10 +298,11 @@ module Ace
           # repository. Strip every inherited Git setting and global config.
           environment = ENV.keys.to_h { |key| [key, nil] }
           environment.merge!("GIT_CONFIG_NOSYSTEM" => "1", "GIT_CONFIG_GLOBAL" => "/dev/null",
+            "GIT_ATTR_NOSYSTEM" => "1",
             "GIT_TERMINAL_PROMPT" => "0", "GIT_ALLOW_PROTOCOL" => "file",
             "GIT_NO_REPLACE_OBJECTS" => "1", "PATH" => "/usr/bin:/bin", "LC_ALL" => "C")
           result = Herdr::Molecules::BoundedProcess.call([environment, "/usr/bin/git", "-C", repository,
-            "-c", "core.hooksPath=/dev/null", "-c", "protocol.file.allow=always", *arguments],
+            "-c", "core.hooksPath=/dev/null", "-c", "core.attributesFile=/dev/null", "-c", "protocol.file.allow=always", *arguments],
             stdin_data: "", timeout_s: remaining, output_limit: limit)
           reject!("Candidate Git verification failed") unless result.status.success? && !result.oversized
           result.stdout

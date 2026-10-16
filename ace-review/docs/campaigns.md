@@ -96,7 +96,7 @@ Expected: complete coverage increments `completed_rounds` once. Identical replay
 
 ## Current approval and finish
 
-Delivery defaults are three completed rounds and two consecutive rounds without confirmed High/Critical. The default scope is `full` and required check name is `tests`. Configure `campaign.profiles.delivery` in `.ace/review/config.yml`, or supply `start --policy FILE` with exactly `revision`, `minimum_rounds`, `clean_rounds`, `required_scopes`, `required_checks`. Explicit false/null or otherwise malformed policy files fail instead of selecting defaults. The campaign freezes that revision and policy. R1 does not implement discovery profiles, round caps, automatic retries or escalation.
+Delivery defaults are three completed rounds and two consecutive rounds without confirmed High/Critical, bounded to five rounds in the initial phase. Discovery is bounded to two rounds. The default scope is `full` and required check name is `tests`. Configure `campaign.profiles.delivery` in `.ace/review/config.yml`, or supply `start --policy FILE` with exactly `revision`, `minimum_rounds`, `clean_rounds`, `required_scopes`, `required_checks`. Explicit false/null or otherwise malformed policy files fail instead of selecting defaults. The campaign freezes that revision and policy. Provider reservations retain the original execution when its outcome is running or uncertain; finite infrastructure retries and an explicit next-phase authorization are enforced by the existing campaign owner.
 
 The final round may reference an explicit approval artifact with `approval: {"path": ..., "sha256": ...}`. An approval binds an independently approved executed review already accepted by the assignment coordinator. Caller-written approval JSON alone cannot supply the verdict. It must contain:
 
@@ -143,6 +143,16 @@ The receipt retains ordinary attempt/assignment/project/scope binding, producer,
 ## Guarded source consumption
 
 Source-owned receipt composition can call `CampaignManager#with_verified_result!(result:, subject:, contract_identity:, policy:, head:, base:, producer:, reviewer:) { |current| ... }`. It requires a block and an existing campaign lock, revalidates current acceptance and the exact expected tuple, and yields a deeply frozen projection while holding one read transaction. Keep the entire receipt/CAS operation inside that block; a retained projection is not a later permission. Do not call public campaign methods from inside the block. Exceptions release the lock, and validation failures never yield. This API does not itself provide protected child linkage or authorize a journal mutation.
+
+### Source-owned head assessment capability
+
+`accepted_result_snapshot` emits `ace.review.accepted-result/v2`. Its `head` and `base` identify current acceptance; `reviewed_head` and `reviewed_base` retain the original independent approval. `head_assessment_digest` and the `head_assessments` prefix count bind the append-only assessment chain. The v1 compact result is refused. A direct approval has equal reviewed and accepted heads and an empty assessment chain.
+
+An installed source owner may supply `head_assessment_evidence` to `CampaignManager` and call `record_head_assessment(id, {"id", "reference", "predecessor"})`. The predecessor must be the exact current accepted prefix. The source callback authenticates the supervisor, derives complete bounded comparison context from retained candidates, and returns the bound assessment proof. The campaign separately revalidates each required current-head check through its existing execution-evidence reader. User-authored labels, hashes, local report files, or a callback-free manager cannot create this authority.
+
+A verified nonsemantic assessment may carry an independent approval across a head/base change. It adds no round, does not reset findings, clean streak, phase limits, provider reservations or retry limits, and does not rewrite historical reports. Substantial, uncertain or nontext changes refuse this carry path and require an actually executed independent delta review. The source comparison reads both complete bundles as Git objects, preserving binary data and symlink targets without following links or executing candidate hooks, filters or scripts. Oversized or incomplete source context refuses acceptance rather than truncating evidence.
+
+This API is a source capability. The ordinary installed Assign campaign composition and independent delta-round ingress are not enabled by adding it; those joins require their separate canonical owner and acceptance proof. The default local/protected actor-independence check stays strict. A composed native owner can supply `review_independence` to verify original process/session provenance for same-account agents; the callback is required again on historical consumption.
 
 ## Restart, contract changes and failures
 

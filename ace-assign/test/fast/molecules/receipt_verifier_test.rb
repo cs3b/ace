@@ -270,7 +270,7 @@ module Ace
       def test_local_campaign_compact_snapshot_uses_existing_manager_verification
         require "ace/review"
         reference = {"path" => "campaign.json", "sha256" => "b" * 64}
-        snapshot = {"schema" => "ace.review.accepted-result/v1", "campaign_id" => "local-campaign", "accepted" => true,
+        snapshot = {"schema" => "ace.review.accepted-result/v2", "campaign_id" => "local-campaign", "accepted" => true,
           "head" => HEAD_B, "base" => HEAD_A, "prefix" => {"attempts" => 3, "rounds" => 3, "assessments" => 0,
             "phases" => 1, "execution_attempts" => 3}}
         data = {"operation" => Molecules::ReceiptVerifier::REVIEW_OPERATION, "verdict" => "succeeded",

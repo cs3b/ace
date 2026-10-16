@@ -107,6 +107,118 @@ module Ace
         end
       end
 
+      def test_head_comparison_reads_both_complete_nonancestor_bundles_and_expires
+        with_fixture do |transfer, root, source, before_base, _bytes|
+          File.write(File.join(source, "code.rb"), "puts :before\n")
+          git(source, "add", ".")
+          git(source, "-c", "user.name=test", "-c", "user.email=test@example.invalid", "commit", "-m", "before")
+          before = comparison_input(root, source, "before")
+          git(source, "checkout", "--orphan", "new-base")
+          File.write(File.join(source, "code.rb"), "puts :base\n")
+          git(source, "add", ".")
+          git(source, "-c", "user.name=test", "-c", "user.email=test@example.invalid", "commit", "-m", "new base")
+          after_base = git(source, "rev-parse", "HEAD").strip
+          File.write(File.join(source, "code.rb"), "puts :after\n")
+          git(source, "add", ".")
+          git(source, "-c", "user.name=test", "-c", "user.email=test@example.invalid", "commit", "-m", "after")
+          after = comparison_input(root, source, "after")
+          contexts = []
+          escaped = nil
+          2.times do
+            transfer.with_head_comparison(before: before, after: after, before_base: before_base, after_base: after_base) do |view|
+              escaped = view
+              context = view.context
+              contexts << context
+              assert_equal before.fetch(:head), context.dig("reviewed", "head")
+              assert_equal after.fetch(:head), context.dig("candidate", "head")
+              assert_equal after_base, context.dig("candidate", "base")
+              assert_equal %w[base_delta candidate_delta current_scope original_scope], context.fetch("changes").keys.sort
+              delta = context.fetch("changes").fetch("candidate_delta")
+              assert_includes delta.fetch("patch").fetch("bytes"), "+puts :after"
+              assert_equal Digest::SHA256.hexdigest(delta.fetch("patch").fetch("bytes")), delta.fetch("patch_sha256")
+              assert_equal ["code.rb"], delta.fetch("paths").map { |value| value.fetch("bytes") }
+              assert_empty delta.fetch("binary_paths")
+              assert_raises(AttemptErrors::EvidenceUnavailable) { Thread.new { view.context }.value }
+            end
+          end
+          assert_equal contexts.first, contexts.last
+          assert_raises(AttemptErrors::EvidenceUnavailable) { escaped.context }
+          assert_empty Dir.children(File.join(root, "authority"))
+          assert_equal after.fetch(:head), git(source, "rev-parse", "HEAD").strip
+          assert_raises(AttemptErrors::ReceiptRejected) do
+            transfer.with_head_comparison(before: before, after: after, before_base: "f" * 40, after_base: after_base) { |view| view.context }
+          end
+          assert_empty Dir.children(File.join(root, "authority"))
+        end
+      end
+
+      def comparison_input(root, source, name)
+        head = git(source, "rev-parse", "HEAD").strip
+        tree = git(source, "rev-parse", "HEAD^{tree}").strip
+        path = File.join(root, "#{name}.bundle")
+        # HEAD alone is deliberate: the later nonancestor bundle cannot lend
+        # the old reviewed objects to a comparison implementation by accident.
+        git(source, "bundle", "create", path, "HEAD")
+        bytes = File.binread(path)
+        {bytes: bytes, size: bytes.bytesize, sha256: Digest::SHA256.hexdigest(bytes), head: head, tree: tree}
+      end
+
+      def test_head_comparison_keeps_binary_and_external_symlink_objects_without_following_or_executing
+        with_fixture do |transfer, root, source, base, _bytes|
+          marker = File.join(root, "unexpected-execution")
+          File.symlink("../../nonexistent-archive", File.join(source, "historic-link"))
+          File.write(File.join(source, ".gitattributes"), "* diff=evil filter=evil\n")
+          File.write(File.join(source, "Gemfile"), "File.write(#{marker.inspect}, 'executed')\n")
+          git(source, "add", ".")
+          git(source, "-c", "user.name=test", "-c", "user.email=test@example.invalid", "commit", "-m", "historical link")
+          before = comparison_input(root, source, "before")
+          File.binwrite(File.join(source, "README"), "new\x00binary\xff".b)
+          File.delete(File.join(source, "historic-link"))
+          File.symlink("/still/nonexistent", File.join(source, "historic-link"))
+          git(source, "add", ".")
+          git(source, "-c", "user.name=test", "-c", "user.email=test@example.invalid", "commit", "-m", "new link and binary")
+          after = comparison_input(root, source, "after")
+          with_env("GIT_EXTERNAL_DIFF" => "touch #{marker}", "GIT_CONFIG_COUNT" => "1",
+            "GIT_CONFIG_KEY_0" => "diff.evil.command", "GIT_CONFIG_VALUE_0" => "touch #{marker}") do
+            transfer.with_head_comparison(before: before, after: after, before_base: base, after_base: base) do |view|
+              context = view.context
+              assert_equal ["README"], context.dig("changes", "candidate_delta", "binary_paths").map { |entry| entry["bytes"] }
+              assert_includes context.dig("changes", "candidate_delta", "patch", "bytes"), "GIT binary patch"
+              entries = context.dig("inventories", "reviewed_head", "entries")
+              link = entries.find { |entry| entry.dig("path", "bytes") == "historic-link" }
+              assert_equal "120000", link.fetch("mode")
+              assert_equal "../../nonexistent-archive", context.dig("objects", link.fetch("oid"), "content", "bytes")
+              current = context.dig("inventories", "candidate_head", "entries").find { |entry| entry.dig("path", "bytes") == "README" }
+              assert_equal "base64", context.dig("objects", current.fetch("oid"), "content", "encoding")
+            end
+          end
+          refute File.exist?(marker)
+          assert_equal "/still/nonexistent", File.readlink(File.join(source, "historic-link"))
+          assert_empty Dir.children(File.join(root, "authority"))
+        end
+      end
+
+      def test_head_comparison_refuses_expanded_content_limit_and_declared_tree_mismatch
+        with_fixture do |transfer, root, source, base, _bytes|
+          before = comparison_input(root, source, "before")
+          File.binwrite(File.join(source, "compressible"), "a" * 4096)
+          git(source, "add", ".")
+          git(source, "-c", "user.name=test", "-c", "user.email=test@example.invalid", "commit", "-m", "large context")
+          after = comparison_input(root, source, "after")
+          bounded = Class.new(Authority::CandidateTransfer)
+          bounded.const_set(:MAX_BYTES, 2048)
+          limited = bounded.new(root: File.join(root, "authority"))
+          error = assert_raises(AttemptErrors::ReceiptRejected) do
+            limited.with_head_comparison(before: before, after: after, before_base: base, after_base: base) { |view| view.context }
+          end
+          assert_match(/oversized/, error.message)
+          assert_raises(AttemptErrors::ReceiptRejected) do
+            transfer.with_head_comparison(before: before.merge(tree: "f" * 40), after: after, before_base: base, after_base: base) { |view| view.context }
+          end
+          assert_empty Dir.children(File.join(root, "authority"))
+        end
+      end
+
       def test_incremental_bundle_cannot_borrow_objects_from_uploader_or_ambient_repository
         with_fixture do |transfer, root, source, first, _bytes|
           File.write(File.join(source, "README"), "second")

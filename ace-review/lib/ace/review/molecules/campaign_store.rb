@@ -68,7 +68,7 @@ module Ace
               envelope["sha256"] == Atoms::CampaignContract.digest(record)
             raise Atoms::CampaignContract::Invalid, "corrupt campaign #{id}: identity or checksum mismatch"
           end
-          %w[subject contract_identity contract policy profile bounds phases execution_attempts inherited_findings assessments attempts rounds head_transitions].each do |key|
+          %w[subject contract_identity contract policy profile bounds phases execution_attempts inherited_findings assessments attempts rounds head_transitions head_assessments].each do |key|
             raise Atoms::CampaignContract::Invalid, "corrupt campaign #{id}: missing #{key}" unless record.key?(key)
           end
           contract = Atoms::CampaignContract
@@ -80,7 +80,7 @@ module Ace
             raise contract::Invalid, "corrupt campaign #{id}: requirements digest mismatch"
           end
           contract.policy!(record["policy"])
-          %w[phases execution_attempts inherited_findings assessments attempts rounds head_transitions].each do |key|
+          %w[phases execution_attempts inherited_findings assessments attempts rounds head_transitions head_assessments].each do |key|
             unless record[key].is_a?(Array) && record[key].all? { |entry| entry.is_a?(Hash) }
               raise contract::Invalid, "corrupt campaign #{id}: invalid #{key} records"
             end

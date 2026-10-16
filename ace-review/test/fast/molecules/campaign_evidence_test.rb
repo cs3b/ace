@@ -29,6 +29,33 @@ class CampaignEvidenceTest < AceReviewTest
     assert_equal 1, result["completed_rounds"]
   end
 
+  def test_source_owned_independence_is_required_for_same_account_and_rechecked_historically
+    campaign = start_campaign
+    input = round_input(1)
+    make_campaign_session(campaign, input)
+    add_campaign_approval(campaign, input, producer: "mo", reviewer: "mo")
+    assert_raises(ArgumentError) { campaign_manager.record_round(campaign.fetch("campaign_id"), input) }
+    calls = []
+    independent = true
+    manager = Ace::Review::Organisms::CampaignManager.new(repo_root: @test_dir,
+      revisions: ->(ref, *_args) { ref == "HEAD" ? @head : @base },
+      check_evidence: fixture_check_evidence, review_evidence: fixture_review_evidence,
+      approval_evidence: fixture_approval_evidence,
+      review_independence: ->(producer:, reviewer:, proof:) {
+        calls << [producer, reviewer, proof]
+        independent
+      })
+    assert_equal 1, manager.record_round(campaign.fetch("campaign_id"), input).fetch("completed_rounds")
+    assert calls.all? { |producer, reviewer, proof| producer == "mo" && reviewer == "mo" && proof["head"] == @head }
+    approval = manager.store.read(campaign.fetch("campaign_id")).fetch("rounds").last.fetch("approval")
+    evidence = manager.instance_variable_get(:@evidence)
+    assert evidence.verify_approval_authority(approval, historical: true)
+    independent = false
+    assert_raises(ArgumentError) { evidence.verify_approval_authority(approval, historical: true) }
+    independent = "true"
+    assert_raises(ArgumentError) { evidence.verify_approval_authority(approval, historical: true) }
+  end
+
   def test_round_retains_and_rechecks_source_child_linkage_for_approval_and_checks
     campaign = start_campaign
     input = round_input(1)
