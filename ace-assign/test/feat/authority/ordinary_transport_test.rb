@@ -29,14 +29,20 @@ module Ace
       end
 
       class Handler
-        OPERATIONS = %w[observe upload].freeze
-        TRANSFER_OPERATIONS = {"upload" => {direction: :upload, purpose: :artifacts, roles: [:worker]}}.freeze
+        OPERATIONS = %w[observe upload download].freeze
+        TRANSFER_OPERATIONS = {"upload" => {direction: :upload, purpose: :artifacts, roles: [:worker]},
+          "download" => {direction: :download, purpose: :artifacts, roles: [:worker]}}.freeze
         attr_reader :calls
+        attr_accessor :before_download
         def initialize = @calls = []
         def authorize_transfer!(**) = true
         def dispatch(request:, peer:, role:, deadline:, transfer: nil)
           raise "ordinary deadline lost" unless deadline > Process.clock_gettime(Process::CLOCK_MONOTONIC)
           @calls << request.fetch("operation")
+          if request.fetch("operation") == "download"
+            before_download&.call
+            return {data: {"kind" => "fixture"}, transfer_parts: ["binary\x00\n\xff".b], replayed: false}
+          end
           {data: {"peer_uid" => peer.fetch("uid"), "role" => role.to_s, "body" => transfer&.bytes&.unpack1("H*")}, replayed: false}
         end
       end
@@ -73,6 +79,21 @@ module Ace
         end
       end
 
+      def test_binary_download_uses_existing_codec_and_drains_disposable_private_scratch
+        with_owner do |service, admission, handler|
+          scratch = File.join(service.fetch("state_root"), "client-scratch")
+          FileUtils.mkdir_p(scratch, mode: 0700)
+          client = Authority::OrdinaryClient.new(project_id: "atlas", service: service, scratch_root: scratch, verify_selection: -> {})
+          result = client.call("download", {}, download: true, purpose: :artifacts)
+          assert_equal ["binary\x00\n\xff".b], result.parts
+          assert_empty Dir.children(scratch)
+          admission.authorized = false
+          assert_raises(AttemptErrors::EvidenceUnavailable) { client.call("download", {}, download: true, purpose: :artifacts) }
+          assert_equal ["download"], handler.calls
+          assert_empty Dir.children(scratch)
+        end
+      end
+
       def test_changed_endpoint_identity_or_selection_never_falls_back
         with_owner do |service, _admission, handler|
           wrong = Authority::OrdinaryClient.new(project_id: "atlas", service: service.merge("uid" => Process.uid + 1), verify_selection: -> {})
@@ -81,6 +102,43 @@ module Ace
             verify_selection: -> { raise AttemptErrors::UnauthorizedIdentity, "grant revoked" })
           assert_raises(AttemptErrors::UnauthorizedIdentity) { revoked.call("observe", {}) }
           assert_empty handler.calls
+        end
+      end
+
+      def test_revocation_or_endpoint_replacement_after_admission_refuses_download_and_drains_scratch
+        %i[selection endpoint].each do |change|
+          with_owner do |service, _admission, handler|
+            scratch = File.join(service.fetch("state_root"), "client-scratch")
+            FileUtils.mkdir_p(scratch, mode: 0700)
+            selected = true
+            admitted, release, outcome = Queue.new, Queue.new, Queue.new
+            handler.before_download = -> { admitted << true; release.pop }
+            client = Authority::OrdinaryClient.new(project_id: "atlas", service: service, scratch_root: scratch,
+              verify_selection: -> { raise AttemptErrors::UnauthorizedIdentity, "selection revoked" unless selected })
+            reader = Thread.new do
+              outcome << client.call("download", {}, download: true, purpose: :artifacts)
+            rescue => error
+              outcome << error
+            end
+            Timeout.timeout(3) { admitted.pop }
+            if change == :selection
+              selected = false
+            else
+              path = service.fetch("socket_path")
+              File.rename(path, "#{path}.retired")
+              replacement = UNIXServer.new(path)
+              File.chmod(0o660, path)
+            end
+            release << true
+            assert reader.join(3), "download must finish after the response barrier"
+            assert_instance_of AttemptErrors::UnauthorizedIdentity, outcome.pop
+            assert_equal ["download"], handler.calls
+            assert_empty Dir.children(scratch)
+          ensure
+            release << true if release
+            reader&.join(3)
+            replacement&.close
+          end
         end
       end
 

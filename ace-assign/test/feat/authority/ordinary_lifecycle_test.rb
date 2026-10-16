@@ -239,6 +239,75 @@ module Ace
         end
       end
 
+      def test_prepared_and_progress_snapshots_recover_canonical_bytes_without_accepting_success
+        with_fixture do
+          with_owner do |client|
+            register(client)
+            before = @journal.ref_value
+            prepared = client.call("assignment_snapshot", {"assignment_id" => "batch", "kind" => "prepared_work"},
+              download: true, purpose: :assignment_snapshot)
+            assert_equal [@bundle], prepared.parts
+            assert_nil prepared.data.fetch("attempt_id")
+            assert_equal before, @journal.ref_value
+            @admission.role = :worker
+            started = start(client)
+            @finish_params = {"assignment_id" => "batch", "attempt_id" => "worker-attempt", "pane" => "w1:p1",
+              "step" => nil, "expected_generation" => started.data.fetch("generation")}
+            @finish_reply = client.call("queue_finish", @finish_params, mutation_id: "finished-step",
+              upload_parts: ["Executed work; independent acceptance remains pending."], purpose: :artifacts)
+            assert @finish_reply.data.fetch("queue_complete")
+            assert_equal "running", @journal.derived_attempts("batch").fetch(0).state
+            snapshot = client.call("assignment_snapshot", {"assignment_id" => "batch", "kind" => "queue"},
+              download: true, purpose: :assignment_snapshot)
+            queue = Authority::OrdinaryQueue.new(work: @artifact.work, root: @inputs, bytes: snapshot.parts.fetch(0))
+            assert_equal :done, queue.status.steps.first.status
+            assert_equal "Executed work; independent acceptance remains pending.", queue.status.steps.first.report
+            assert_equal 2, snapshot.data.fetch("generation")
+          end
+          FileUtils.rm_rf(@journal.checkout_root)
+          FileUtils.mkdir_p(@journal.checkout_root, mode: 0700)
+          with_owner do |client|
+            replay = client.call("queue_finish", @finish_params, mutation_id: "finished-step",
+              upload_parts: ["Executed work; independent acceptance remains pending."], purpose: :artifacts)
+            assert replay.replayed
+            assert_equal @finish_reply.data, replay.data
+            assert_equal @finish_reply.data.fetch("journal_commit"), @journal.ref_value
+          end
+          assert_empty Dir.children(@scratch)
+        end
+      end
+
+      def test_progress_cannot_cross_native_owner_generation_or_terminal_state
+        with_fixture do
+          with_owner do |client|
+            register(client)
+            @admission.role = :worker
+            started = start(client)
+            params = {"assignment_id" => "batch", "attempt_id" => "worker-attempt", "pane" => "w1:p1",
+              "step" => nil, "expected_generation" => started.data.fetch("generation")}
+            original_binding = @admission.execution_binding
+            @admission.execution_binding = original_binding.merge("pane" => "foreign")
+            assert_raises(AttemptErrors::EvidenceUnavailable) do
+              client.call("queue_finish", params, mutation_id: "progress", upload_parts: ["report"], purpose: :artifacts)
+            end
+            assert_equal started.data.fetch("journal_commit"), @journal.ref_value
+            @admission.execution_binding = original_binding
+            assert_raises(AttemptErrors::EvidenceUnavailable) do
+              client.call("queue_finish", params.merge("expected_generation" => 10), mutation_id: "progress",
+                upload_parts: ["report"], purpose: :artifacts)
+            end
+            assert_equal started.data.fetch("journal_commit"), @journal.ref_value
+            @journal.record(assignment_id: "batch", attempt_id: "worker-attempt", type: "transition",
+              payload: {"from" => "running", "to" => "failed", "reason" => "fixture terminal acceptance"})
+            commit = @journal.ref_value
+            assert_raises(AttemptErrors::EvidenceUnavailable) do
+              client.call("queue_finish", params, mutation_id: "progress", upload_parts: ["report"], purpose: :artifacts)
+            end
+            assert_equal commit, @journal.ref_value
+          end
+        end
+      end
+
       private
 
       def register(client, mutation: "original-registration", params: @params)
@@ -256,7 +325,7 @@ module Ace
         server = Authority::OrdinaryServer.new(admission: @admission, lifecycle: Authority::Router.new(handlers: [owner]))
         thread = Thread.new { server.serve }
         Timeout.timeout(3) { sleep 0.005 until File.socket?(@service.fetch("socket_path")) }
-        yield Authority::OrdinaryClient.new(project_id: "atlas", service: @service, verify_selection: -> {})
+        yield Authority::OrdinaryClient.new(project_id: "atlas", service: @service, scratch_root: @scratch, verify_selection: -> {})
       ensure
         server&.request_stop
         server&.stop
@@ -269,7 +338,8 @@ module Ace
           File.chmod(0o700, root)
           repository = File.join(root, "journal")
           @inputs = File.join(root, "inputs")
-          FileUtils.mkdir_p([repository, @inputs], mode: 0700)
+          @scratch = File.join(root, "client-scratch")
+          FileUtils.mkdir_p([repository, @inputs, @scratch], mode: 0700)
           git(repository, "init", "-b", "main")
           git(repository, "-c", "user.name=test", "-c", "user.email=test@example.invalid", "commit", "--allow-empty", "-m", "seed")
           @journal = Molecules::EvidenceJournal.new(repo_root: repository, checkout_root: File.join(root, "checkout"))

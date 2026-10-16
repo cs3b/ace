@@ -9,24 +9,25 @@ module Ace
       # Installed selection is supplied by the caller's trusted composition.
       # This client never selects a journal, local fallback or execution identity.
       class OrdinaryClient
-        Reply = Struct.new(:data, :replayed, keyword_init: true)
+        Reply = Struct.new(:data, :replayed, :parts, keyword_init: true)
 
-        def initialize(project_id:, service:, verify_selection:, peer: OrdinaryPeer.new)
-          @project_id, @service, @verify_selection, @peer = project_id, service, verify_selection, peer
+        def initialize(project_id:, service:, verify_selection:, peer: OrdinaryPeer.new, scratch_root: nil)
+          @project_id, @service, @verify_selection, @peer, @scratch_root = project_id, service, verify_selection, peer, scratch_root
         end
 
-        def call(operation, params, mutation_id: nil, upload_parts: nil, purpose: nil, timeout: 30)
+        def call(operation, params, mutation_id: nil, upload_parts: nil, download: false, purpose: nil, timeout: 30)
           unless operation.is_a?(String) && params.is_a?(Hash) && !params.key?("transfer") &&
               timeout.is_a?(Numeric) && timeout.finite? && timeout.positive?
             raise ArgumentError, "invalid ordinary authority request"
           end
+          raise ArgumentError, "ordinary download needs private scratch and forbids upload" if download && (upload_parts || !@scratch_root)
           @verify_selection.call
           wire = Ace::Runtime::Molecules::ProtectedSocket
           path = @service.fetch("socket_path")
           wire.root_path!(File.dirname(path), directory: true, owner: @service.fetch("uid"))
           before = wire.socket_identity(path, mode: 0o660)
           raise AttemptErrors::UnauthorizedIdentity, "ordinary endpoint owner differs" unless before.last == @service.fetch("uid")
-          codec = TransferCodec.new
+          codec = TransferCodec.new(root: download ? @scratch_root : nil)
           descriptor = codec.descriptor(upload_parts, purpose: purpose) if upload_parts
           parameters = descriptor ? params.merge("transfer" => descriptor) : params
           deadline = wire.deadline([timeout, 30].min)
@@ -40,14 +41,25 @@ module Ace
               "project_id" => @project_id, "params" => parameters}, deadline: deadline, limit: 16_384)
             codec.send(socket, parts: upload_parts, descriptor: descriptor, purpose: purpose, deadline: deadline) if upload_parts
             socket.shutdown(Socket::SHUT_WR)
-            result = wire.read(wire::Ingress.new(socket), deadline: deadline, limit: 16_384)
+            ingress = wire::Ingress.new(socket)
+            result = wire.read(ingress, deadline: deadline, limit: 16_384)
             unless result.is_a?(Hash) && result.keys.sort == %w[data status transport] && result["status"] == "ok" &&
                 result["data"].is_a?(Hash) && result["transport"].is_a?(Hash) &&
                 result["transport"].keys == ["replayed"] && [true, false].include?(result["transport"]["replayed"])
               code = result.is_a?(Hash) && result["error"].is_a?(Hash) ? result["error"]["code"] : nil
               raise AttemptErrors::EvidenceUnavailable, "ordinary authority refused (#{code || 'invalid_response'}); retain original mutation"
             end
-            Reply.new(data: result.fetch("data"), replayed: result.fetch("transport").fetch("replayed"))
+            parts = if download
+              codec.receive(ingress, descriptor: result.fetch("data").fetch("transfer"), purpose: purpose, deadline: deadline) do |input|
+                Array.new(input.count) { |index| input.bytes(index: index) }
+              end
+            end
+            @verify_selection.call
+            @peer.live!(observed, deadline: deadline)
+            unless wire.socket_identity(path, mode: 0o660) == before
+              raise AttemptErrors::UnauthorizedIdentity, "ordinary endpoint changed before response acceptance"
+            end
+            Reply.new(data: result.fetch("data"), replayed: result.fetch("transport").fetch("replayed"), parts: parts)
           end
         rescue SystemCallError, IOError, Ace::Runtime::RuntimeUnavailableError
           raise AttemptErrors::EvidenceUnavailable, "ordinary authority outcome unavailable; retain original mutation; no local fallback"

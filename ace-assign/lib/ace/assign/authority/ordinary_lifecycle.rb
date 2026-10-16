@@ -4,6 +4,7 @@ require_relative "prepared_work"
 require_relative "assignment_definition"
 require_relative "ordinary_queue"
 require_relative "ordinary_attempt_start"
+require_relative "ordinary_progress"
 require_relative "../molecules/lifecycle_exclusion"
 
 module Ace
@@ -14,8 +15,10 @@ module Ace
       # shared with HITL and merge. No requester cache supplies accepted state.
       class OrdinaryLifecycle
         include OrdinaryAttemptStart
-        OPERATIONS = %w[register_assignment registration_status start_attempt].freeze
-        TRANSFER_OPERATIONS = {"register_assignment" => {direction: :upload, purpose: :candidate, roles: [:supervisor]}}.freeze
+        include OrdinaryProgress
+        OPERATIONS = (%w[register_assignment registration_status start_attempt] + OrdinaryProgress::PROGRESS_OPERATIONS).freeze
+        TRANSFER_OPERATIONS = {"register_assignment" => {direction: :upload, purpose: :candidate, roles: [:supervisor]}}
+          .merge(OrdinaryProgress::PROGRESS_TRANSFERS).freeze
         REGISTER_KEYS = %w[assignment_id definition_digest prepared_head prepared_tree manifest_sha256 expected_generation pane transfer].freeze
 
         def initialize(project:, admission:, journal:, exclusion:, input_root:)
@@ -25,6 +28,10 @@ module Ace
 
         def authorize_transfer!(request:, peer:, role:, deadline:)
           authorize!(request, peer, role, deadline)
+          if OrdinaryProgress::PROGRESS_TRANSFERS.key?(request.fetch("operation"))
+            validate_progress!(request)
+            return
+          end
           unless request.fetch("operation") == "register_assignment" && role == :supervisor
             raise AttemptErrors::UnauthorizedIdentity, "ordinary registration requires the installed supervisor"
           end
@@ -48,6 +55,11 @@ module Ace
           when "start_attempt"
             raise ArgumentError, "ordinary start forbids transfer" if transfer
             start_attempt(request, peer, role, deadline)
+          when "assignment_snapshot"
+            raise ArgumentError, "ordinary snapshot forbids upload" if transfer
+            assignment_snapshot(request, peer, role, deadline)
+          when "queue_start", "queue_finish", "queue_fail"
+            progress(request, peer, role, deadline, transfer)
           else
             raise ArgumentError, "unknown ordinary lifecycle operation"
           end
