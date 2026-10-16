@@ -1,0 +1,26 @@
+{
+  "schema": "ei9.command-cleanup-root-verification/v1",
+  "source": "45927f85326810ecb906b1fc6c8b15ec2dd056e0",
+  "source_manifest_sha256": "2d9959837622f00843106d862711cc20ed18b4625bf8b3d2c4d81567bc7e6ddb",
+  "verified_files": 766,
+  "domain_fixture_source": "8dceb27",
+  "domain_manifest_sha256": "32daf8b469c9c2c42218a3a611e966e6156f7213c04b984fcf24daf39b1b2569",
+  "kernel": {
+    "tests": 7,
+    "assertions": 64,
+    "failures": 0,
+    "errors": 0,
+    "skips": 0
+  },
+  "domain_composition": {
+    "tests": 40,
+    "failures": 0,
+    "errors": 0,
+    "skips": 0,
+    "seconds": 5.078
+  },
+  "production_owner_pid": "554643",
+  "production_restart": false,
+  "scope": "Private Linux mount namespace only; actual ordinary CLI/server/router/labd/helper boundary; no production adoption",
+  "independent_cleanup_review": "pending; original command-slice approval does not approve cleanupdelta"
+}

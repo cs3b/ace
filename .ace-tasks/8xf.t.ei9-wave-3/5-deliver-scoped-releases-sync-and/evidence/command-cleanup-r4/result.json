@@ -1,0 +1,13 @@
+{
+  "schema": "ei9.command-cleanup-diagnostic/v1",
+  "production_owner_pid": "554643",
+  "red": "Expected detached descendant leaks reproduced; fixture safely reaped its adopted descendants",
+  "candidate": "FAILED: NoMethodError on empty /proc child inventory; not acceptance",
+  "domain_composition": "40 tests, 1 failure: command_uncertain from same helper error",
+  "ace_candidate_commit": "89ac13798",
+  "domain_fixture_commit": "8dceb27",
+  "ace_red_manifest_sha256": "1591afc2d2bdd0a0fc2b49c5a91ab9382b58c2e9c171894307d34c250a67fa84",
+  "ace_candidate_manifest_sha256": "454da460ba8326ffeaf421e517d40aa559d74de0028fc0c25cdafe866f3f2a94",
+  "domain_manifest_sha256": "32daf8b469c9c2c42218a3a611e966e6156f7213c04b984fcf24daf39b1b2569",
+  "next": "New immutable R5 source freeze with empty-read fix and bounded nonsecret diagnostics; rerun Linux kernel and domain composition"
+}
