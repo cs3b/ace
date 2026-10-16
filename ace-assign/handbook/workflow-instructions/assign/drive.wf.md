@@ -73,8 +73,14 @@ are not fallback routes.
 Each mutation prints its retained original request path. After any lost reply,
 read canonical `status`/`next` first and use `--operation replay --request <path>`
 only for that original input. Preserve assignment, attempt, mutation, candidate
-and pane identities. A conflicting retained operation is a reconciliation blocker;
-do not generate a replacement request or worker to bypass it.
+and pane identities. Never edit an original request's generation or bytes. For a
+result/finish CAS refusal, reread canonical status. An accepted result replays its
+exact original input; an accepted terminal outcome needs no new finish. If no
+result/terminal was accepted and the attempt generation advanced, the original
+CAS can no longer accept: result/finish may retain a separate request at the new
+observed generation. The driver preserves all old inputs and performs these
+checks; unavailable status remains a blocker. Changed content, project or owner
+is not a generation retry, and never authorizes another worker.
 
 A supervisor installs the `watch_command` returned by `ace-overseer ordinary`
 exactly once in its native session, runs a harmless turn to persist it, and uses

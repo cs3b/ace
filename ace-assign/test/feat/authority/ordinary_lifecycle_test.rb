@@ -54,13 +54,14 @@ module Ace
 
       # Same file request interface as Lab; actual canonical wire/server/CAS.
       class DriverTransport
-        attr_accessor :lose_reply
+        attr_accessor :lose_reply, :before_request
         def initialize(client)
           @client = client
         end
         def request(input:, output: nil)
           request = Authority::RetainedInput.json(input)
           operation = request.fetch("operation")
+          @before_request&.call(operation)
           transfer = Authority::OrdinaryLifecycle::TRANSFER_OPERATIONS[operation]
           upload = request.fetch("parts").map { |entry| File.binread(File.join(File.dirname(input), entry.fetch("file"))) }
           response = @client.call(operation, request.fetch("params"), mutation_id: request.fetch("mutation_id"),
@@ -78,6 +79,73 @@ module Ace
             end
           end
           result
+        end
+      end
+
+      def test_driver_reconciles_unaccepted_result_generation_without_rewriting_original
+        with_fixture do
+          with_owner do |client|
+            register(client)
+            driver, transport, root = new_driver(client)
+            @admission.role = :worker
+            driver.start(pane: "w1:p1")
+            report, receipt = File.join(root, "report.md"), File.join(root, "receipt.json")
+            File.write(report, result_artifact)
+            File.write(receipt, JSON.generate(result_receipt))
+            transport.before_request = lambda do |operation|
+              if operation == "submit_result"
+                transport.before_request = nil
+                finish_progress(client, generation: 1)
+              end
+            end
+            assert_raises(AttemptErrors::EvidenceUnavailable) do
+              driver.submit(pane: "w1:p1", generation: 1, receipt: receipt, artifacts: [report])
+            end
+            original = Dir.glob(File.join(root, "requests", "result*", "request.json")).fetch(0)
+            bytes = File.binread(original)
+            observed = driver.status
+            assert_equal 2, observed.fetch("generation")
+            assert_nil observed.fetch("submitted_result")
+            File.write(receipt, JSON.generate(result_receipt(changes: {"operation" => "test"})))
+            assert_raises(ArgumentError) do
+              driver.submit(pane: "w1:p1", generation: observed.fetch("generation"), receipt: receipt, artifacts: [report])
+            end
+            File.write(receipt, JSON.generate(result_receipt))
+            driver.submit(pane: "w1:p1", generation: observed.fetch("generation"), receipt: receipt, artifacts: [report])
+            assert_equal bytes, File.binread(original)
+            assert_equal 1, @journal.read_events("batch").count { |event| event["type"] == "result_submitted" }
+            assert_equal 2, Dir.glob(File.join(root, "requests", "result*", "request.json")).size
+          end
+        end
+      end
+
+      def test_driver_reconciles_unaccepted_finish_generation_without_rewriting_original
+        with_fixture do
+          with_owner do |client|
+            register(client)
+            driver, transport, root = new_driver(client)
+            @admission.role = :worker
+            driver.start(pane: "w1:p1")
+            submit_result(client)
+            @admission.role = :supervisor
+            transport.before_request = lambda do |operation|
+              if operation == "finish"
+                transport.before_request = nil
+                @admission.role = :worker
+                finish_progress(client)
+                @admission.role = :supervisor
+              end
+            end
+            assert_raises(AttemptErrors::EvidenceUnavailable) { driver.adopt(pane: "w1:p1") }
+            original = Dir.glob(File.join(root, "requests", "adopt-*", "request.json")).fetch(0)
+            bytes = File.binread(original)
+            assert_equal 3, driver.status.fetch("generation")
+            assert_equal "succeeded", driver.adopt(pane: "w1:p1").dig("data", "state")
+            assert_equal bytes, File.binread(original)
+            assert_equal "succeeded", driver.adopt(pane: "w1:p1").dig("data", "state")
+            assert_equal 1, @journal.read_events("batch").count { |event| event["type"] == "receipt_accepted" }
+            assert_equal 2, Dir.glob(File.join(root, "requests", "adopt-*", "request.json")).size
+          end
         end
       end
 
@@ -127,7 +195,20 @@ module Ace
               driver.submit(pane: "w1:p1", generation: 2, receipt: receipt, artifacts: [report])
             end
             assert_equal "running", driver.status.fetch("state"), "result submission is not terminal adoption"
-            original = File.join(root, "requests", "result", "request.json")
+            original = File.join(root, "requests", "result-2", "request.json")
+            retained_bytes = File.binread(original)
+            transport.before_request = lambda do |operation|
+              raise AttemptErrors::EvidenceUnavailable, "canonical status unavailable" if operation == "result_status"
+            end
+            assert_raises(AttemptErrors::EvidenceUnavailable) do
+              driver.submit(pane: "w1:p1", generation: 3, receipt: receipt, artifacts: [report])
+            end
+            assert_equal retained_bytes, File.binread(original)
+            refute File.exist?(File.join(root, "requests", "result-3"))
+            transport.before_request = nil
+            assert driver.submit(pane: "w1:p1", generation: driver.status.fetch("generation"), receipt: receipt, artifacts: [report]).dig("transport", "replayed")
+            assert_equal retained_bytes, File.binread(original)
+            refute File.exist?(File.join(root, "requests", "result-3"))
             assert driver.replay(input: original).dig("transport", "replayed")
             assert_equal true, JSON.parse(File.read(File.join(root, "result-hint.json"))).fetch("hint_only")
             @admission.role = :supervisor
@@ -852,9 +933,21 @@ module Ace
           "pane" => "w1:p1", "expected_generation" => generation)
       end
 
-      def finish_progress(client, step: "010.01")
+      def new_driver(client)
+        root = Authority::RetainedInput.create_output(File.join(@root, "driver"))
+        path = File.join(root, "context.json")
+        context = {"version" => 1, "project_id" => "atlas", "assignment_id" => "batch",
+          "attempt_id" => "worker-attempt", "scope" => "010.01", "pane" => "w1:p1",
+          "supervisor_pane" => "w1:p1", "cwd" => "/observed/worker", "head" => @admission.execution_head,
+          "provider" => "pi:zai/glm-5.3-flash"}
+        Authority::RetainedInput.write_file(root, "context.json", JSON.generate(context))
+        transport = DriverTransport.new(client)
+        [Organisms::OrdinaryDriver.new(path: path, project: "atlas", transport: transport), transport, root]
+      end
+
+      def finish_progress(client, step: "010.01", generation: 2)
         client.call("queue_finish", {"assignment_id" => "batch", "attempt_id" => "worker-attempt", "pane" => "w1:p1",
-          "expected_generation" => 2, "step" => step}, mutation_id: "progress-result", upload_parts: [result_artifact], purpose: :artifacts)
+          "expected_generation" => generation, "step" => step}, mutation_id: "progress-result", upload_parts: [result_artifact], purpose: :artifacts)
       end
 
       def result_artifact = "Executed tests: all passed."

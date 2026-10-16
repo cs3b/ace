@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Preserve exact lost-response result replay while allowing canonical-generation CAS conflicts to recover without replacing original inputs.
+
+
 ### Added
 
 - Drive ordinary work through the installed canonical owner with retained requests, accepted context snapshots and result adoption. Record coordinator replacement in the existing definition chain only after positive old-process termination; preserve worker attempts and reject stale supervisor completion.

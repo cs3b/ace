@@ -97,3 +97,7 @@ worktrees; actual start receipts; queue/report/result submission; consumed wake
 and supervisor adoption; restart/repeated wake with original IDs; two serial
 reviewed merges. Keep each worker alive until finish reobserves its binding.
 Historical unknown attempts and w6 legacy execution remain untouched.
+
+## Review F1: reconcile refused generation before new result/finish input
+
+Independent Pi review of c5e43d391 identified retained-request key poisoning: a real canonical generation advance before acceptance leaves constant result / supervisor-only finish keys tied to the refused generation. Record this correction before implementation. Result input keys must include attempted generation; finish keys must include supervisor and attempt generations. Original bytes and mutation IDs remain immutable. Before result retry, canonical status distinguishes an accepted result (replay exact original retained request, including after lost acknowledgment) from a still-running attempt with no result at a later generation (old CAS can no longer accept; permit separate input at the observed generation). Unknown status never authorizes another mutation. Test actual Unix/Git CAS races for result and finish, original-byte retention, accepted lost-ACK replay with newer observed generation, and no second result/start.

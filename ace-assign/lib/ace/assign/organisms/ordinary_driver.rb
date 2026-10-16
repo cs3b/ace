@@ -150,8 +150,27 @@ module Ace
             end
             content
           end
-          reply = mutate("result", "submit_result", selection.merge("expected_generation" => generation,
-            "pane" => pane, "head" => value.fetch("head"), "receipt_sha256" => Digest::SHA256.hexdigest(bytes)), [bytes] + parts)
+          params = selection.merge("expected_generation" => generation,
+            "pane" => pane, "head" => value.fetch("head"), "receipt_sha256" => Digest::SHA256.hexdigest(bytes))
+          verify_result_intent!(params, [bytes] + parts)
+          observed = status
+          if (accepted = observed.fetch("submitted_result"))
+            # An accepted result may have lost its reply. Its generation selects
+            # the original input; never mint a replacement mutation to recover it.
+            original_generation = accepted.fetch("generation") - 1
+            input = File.join(@root, "requests", "result-#{original_generation}", "request.json")
+            original = Files.json(input)
+            expected = document("submit_result", params.merge("expected_generation" => original_generation), nil,
+              inventory([bytes] + parts))
+            unless original.except("mutation_id") == expected.except("mutation_id")
+              raise ArgumentError, "accepted result differs from retained original input"
+            end
+            return replay(input: input).merge("request" => input)
+          end
+          unless observed.fetch("state") == "running" && observed.fetch("generation") == generation
+            raise AttemptErrors::EvidenceUnavailable, "result requires the current canonical generation; retain original inputs"
+          end
+          reply = mutate("result-#{generation}", "submit_result", params, [bytes] + parts)
           signal_result(reply.fetch("data"))
           reply
         end
@@ -163,7 +182,7 @@ module Ace
           return {"status" => "ok", "data" => observed} if %w[succeeded failed].include?(observed.fetch("state"))
           result = observed.fetch("submitted_result")
           raise AttemptErrors::EvidenceUnavailable, "ordinary worker has not submitted a result" unless result
-          mutate("adopt-#{owner.fetch('generation')}", "finish", selection.merge("pane" => pane,
+          mutate("adopt-#{owner.fetch('generation')}-#{observed.fetch('generation')}", "finish", selection.merge("pane" => pane,
             "expected_generation" => observed.fetch("generation"),
             **result.slice("result_id", "receipt_digest", "head")))
         end
@@ -242,9 +261,7 @@ module Ace
           File.open(File.join(directory, ".lock"), File::RDWR | File::CREAT | File::NOFOLLOW, 0o600) do |lock|
             lock.flock(File::LOCK_EX)
             target = File.join(directory, key)
-            inventory = parts.each_with_index.map { |bytes, index|
-              {"file" => "part-#{index}", "bytes" => bytes.bytesize, "sha256" => Digest::SHA256.hexdigest(bytes)} }
-            value = document(operation, params, nil, inventory)
+            value = document(operation, params, nil, inventory(parts))
             if File.exist?(target)
               Authority::PrivateDirectory.verify!(target)
               original = Files.json(File.join(target, "request.json"))
@@ -270,6 +287,22 @@ module Ace
         def document(operation, params, mutation, parts)
           {"version" => 1, "project_id" => context.fetch("project_id"), "operation" => operation,
             "mutation_id" => mutation, "params" => params, "parts" => parts}
+        end
+
+        def inventory(parts)
+          parts.each_with_index.map { |bytes, index|
+            {"file" => "part-#{index}", "bytes" => bytes.bytesize, "sha256" => Digest::SHA256.hexdigest(bytes)} }
+        end
+
+        def verify_result_intent!(params, parts)
+          expected = document("submit_result", params.except("expected_generation"), nil, inventory(parts))
+          Dir.glob(File.join(@root, "requests", "result-*", "request.json")).each do |input|
+            original = Files.json(input)
+            original = original.merge("params" => original.fetch("params").except("expected_generation"))
+            unless original.except("mutation_id") == expected.except("mutation_id")
+              raise ArgumentError, "result retry changed the retained original intent"
+            end
+          end
         end
       end
     end

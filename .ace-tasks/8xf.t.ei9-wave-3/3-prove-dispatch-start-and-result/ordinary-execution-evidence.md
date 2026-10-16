@@ -68,3 +68,11 @@ serial ordinary merges through the existing receiver and decision authority.
 
 Effective installed project overrides and guide/preset path/digest context still
 need live acceptance; no generated prompt or source test proves installed work.
+
+## Review F1 correction and final default-suite receipt
+
+The original full suite (session2778) completed exit0: 51 packages, 12,346 passed tests, 42 skips, 43,160 assertions, 810.09s. It began before the final explicit-checkout/provider change; that final entry delta separately passed4/41 and independent source review passed46/350. This is not a post-F1 broad-suite claim.
+
+Actual configured independent Pi (`pi:zai/glm-5.3:high@ro`) found a real continuation issue despite its APPROVE text: constant result and supervisor-only finish input keys poisoned identical-intent recovery after a preacceptance CAS race. Owning regressions executed through real Unix client/server and Git CAS: RED2 tests/2 errors, report `.ace-local/test/reports/assign/25df1b37-d37b-4a78-8d05-db84fe62887a`; final GREEN3 tests/43 assertions, report `.ace-local/test/reports/assign/40ef5909-819d-4bbb-8c20-7033030a6c64`. Prior invocation using `--filter` selected no files and is not counted; source-line selectors are the supported exact test mechanism.
+
+Correction preserves every old mutation/input. Result keys include attempt generation; finish keys include supervisor and attempt generations. Canonical status is mandatory before result mutation. Accepted results replay their original generation input and exact payload, including lost ACK with a later requested generation. No-result current status permits a distinct generation-keyed input after the prior CAS became impossible. Changed intent or unavailable status refuses. Tests retain original bytes, count exactly one result/terminal acceptance, reject changed intent, and prove unavailable status creates no new mutation. Fresh Pi delta review remains a separate gate. No Lab mutation/publication/deployment.
