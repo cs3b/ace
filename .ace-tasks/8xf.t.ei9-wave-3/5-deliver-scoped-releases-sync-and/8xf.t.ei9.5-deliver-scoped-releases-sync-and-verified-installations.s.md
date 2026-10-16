@@ -53,16 +53,19 @@ owner, not an unbounded wait or a reason to invent a framework.
 
 ## Current publication readiness and ownership (2026-10-16)
 
-Verified source gap: ordinary delivery has real registration/start/results, but
-canonical candidate/review ingress and fixed service/publication admission remain
-protected-only. Existing publication also reads artifacts from a candidate Git
-bundle; independently authorized retained build artifacts need their own canonical
-transfer and staging join. A successful command or result receipt is not accepted
+Ordinary registration/start/results and canonical candidate/review ingress are now
+source-verified, including the canonical fixed merge proof join. The corresponding
+installed acceptance remains open. Fixed service/publication admission still needs
+its ordinary boundary; shared transitions and protected launch-identity hooks have
+been extracted without enabling that capability. Existing publication reads artifacts
+from a candidate Git bundle; independently authorized retained build artifacts still
+need their own canonical transfer and staging join. A successful command or result receipt is not accepted
 review or publication authority. The first complete release uses the REAL ordinary
 delivery assignment/attempt; taskless secret/publish requirements remain OPEN here.
 
-This child owns ordinary submit/export candidate, real-supervisor assign_review,
-independently authenticated accept_review and their shared service/publication join.
+This child owns reuse of ordinary submit/export candidate, real-supervisor
+assign_review and independently authenticated accept_review in the remaining shared
+service/publication join; do not reimplement their delivered canonical owner.
 Child [ei9.8](../8-enforce-package-ownership-and-accepted/) owns review policy,
 accepted-head/convergence behavior and ig3/ig4; candidate admission does not replace
 that policy or independent verdict. Review policy/evidence must be ready before a
@@ -76,6 +79,12 @@ never fake a protected origin, task or attempt. Ordinary service authorizer is
 source-selected without relabelling the whole journal as protected or granting
 all local journals service authority. Full design/test map:
 [ordinary-publication-plan.md](ordinary-publication-plan.md).
+
+Maintained dynamic test-runtime profile preparation is externally blocked by
+automatic platform content review; its exact action and outcome are retained in
+[evidence/test-runtime-preparation-blocker.json](evidence/test-runtime-preparation-blocker.json).
+Do not replace that blocked preparation with another agent/tool or an ad hoc
+per-run installation. Static R6 kernel proof does not satisfy this installation gate.
 
 ## Code sync
 

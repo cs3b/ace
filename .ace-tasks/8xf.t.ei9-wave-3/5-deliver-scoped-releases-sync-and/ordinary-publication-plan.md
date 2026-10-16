@@ -8,16 +8,18 @@ assignment/attempt and its reviewed candidate.
 
 ## Grounded gaps
 
-OrdinaryLifecycle registers real PreparedWork and accepts actual intent/process_start,
-progress and attributable result_submitted, but does not yet expose canonical
-submit_candidate/assign_review/accept_review. Endcap publication
-expects these accepted candidate/review events, a protected LaunchLifecycle origin,
-Deployment mapping, protected journal writer and distinct receiver/reviewer roles.
+OrdinaryLifecycle now admits real PreparedWork, native intent/process_start,
+progress, attributable results and canonical submit_candidate/assign_review/
+accept_review. The ingress and fixed merge proof join are source-verified in
+03dfdb1a2 with the missing-command refusal correction d7a0ee934; they are not yet
+installed. Ordinary publication must consume that owner rather than recreate it.
+Endcap publication still expects a protected LaunchLifecycle origin, Deployment
+mapping, protected journal writer and distinct receiver/reviewer roles.
 OrdinaryOwnerAdmission currently returns worker/supervisor only. Reusing Endcap with
 a fabricated protected origin or changing a result receipt into review is invalid.
 
-Existing protected service and publication transitions live in endcap_services.rb
-and endcap_publication.rb. ServiceEvidence, ServicePublicationEvidence and
+Existing service and publication transitions now live in FixedServiceLifecycle
+and FixedPublicationLifecycle; protected context remains in Endcap. ServiceEvidence, ServicePublicationEvidence and
 EvidenceJournal already own service_claim/service_transition, artifact imports,
 OTP challenge/issuing evidence, terminal receipts and uncertain settlement.
 ServicePublicationBinding verifies original receiver under same-process owner
@@ -153,9 +155,14 @@ Correcting only that generic fixture and matching assertion to verify-artifact
 restored23 tests/249 assertions PASS (fe2d7bf4). Real publication-specific fixtures
 remain separate; no service evidence guard was weakened.
 
-Command detached-child review correction is separately frozen45927f853; root R5
-actual kernel7/64 and public composition40/zero skips passed. Independent configured
-Pi review is pending; no merge/deployment here. Runtime must join final releasecut.
+Command detached-child review correction subsequently reached frozen47466eb0b.
+Root R6 retained both expected inherited-SIGCHLD RED failures and candidate Linux
+9 tests/75 assertions PASS, plus public composition40/zero skips PASS. Configured
+Pi approved the exact source; root retained that verdict and receipts. This remains
+static-source kernel proof, not dynamic candidate/runtime installation acceptance.
+Runtime must join the final release cut. Maintained test-runtime profile preparation
+is separately blocked by platform review; see its retained blocker, not a replacement
+installer or ad hoc per-run graph.
 
 ## Native origin composition boundary
 

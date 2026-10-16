@@ -1,0 +1,11 @@
+{
+  "source_commit": "cf0e8052f7cd069f2e79b8d15c4a4dbd72118d56",
+  "review_session": "review-8xfu57",
+  "actual_provider": "pi",
+  "actual_model": "zai/glm-5.3",
+  "thinking": "high",
+  "preset": "ro",
+  "report_sha256": "5a0ab1b08fa54352d1140ea851d67fc601d13fbd5cb32abcf2016f5533b0d4ca",
+  "verdict": "clean, no blocking finding",
+  "production_changes": false
+}
