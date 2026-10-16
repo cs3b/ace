@@ -250,3 +250,16 @@ Provider-agent skills are reserved for CLI agent integrations and `ace-assign` d
 ---
 
 *Detailed docs: each `ace-*/docs/usage.md`*
+
+## Design exploration and implementation
+
+`ace-design` separates quick direction selection from production engineering. Use `as-design-site` or `as-design-app` for three comparable mockups; their `-implement` and `-audit` skills handle production work. `as-design-look-for-inspiration` prepares contextual improvements for review.
+
+| Command | Purpose |
+| --- | --- |
+| `ace-design preview SESSION` | Loopback gallery of ready variants |
+| `ace-design validate [SESSION]` | Session integrity or shipped catalog validation |
+| `ace-design doctor` | Read-only pinned browser readiness |
+| `ace-design inspect URL --surface site` | Screenshots and automatic findings at three widths |
+
+See [ace-design usage and setup](../ace-design/README.md). In this repository invoke `bin/ace-design`. A clean automatic report is not a full accessibility or design verdict.

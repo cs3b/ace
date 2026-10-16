@@ -64,6 +64,18 @@ PATH
       ace-tmux (~> 0.18)
 
 PATH
+  remote: ace-design
+  specs:
+    ace-design (0.2.0)
+      ace-b36ts (~> 0.14)
+      ace-bundle (~> 0.45)
+      ace-llm (~> 0.42)
+      ace-llm-providers-cli (~> 0.36.2)
+      ace-support-cli (~> 0.6)
+      ace-support-config (~> 0.18)
+      ace-support-core (~> 0.32)
+
+PATH
   remote: ace-docs
   specs:
     ace-docs (0.34.5)
@@ -239,7 +251,7 @@ PATH
 PATH
   remote: ace-lint
   specs:
-    ace-lint (0.30.10)
+    ace-lint (0.30.11)
       ace-b36ts (~> 0.14)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.18)
@@ -251,7 +263,7 @@ PATH
 PATH
   remote: ace-llm-providers-cli
   specs:
-    ace-llm-providers-cli (0.36.1)
+    ace-llm-providers-cli (0.36.2)
       ace-llm (~> 0.42)
 
 PATH
@@ -601,6 +613,7 @@ DEPENDENCIES
   ace-bundle!
   ace-compressor!
   ace-demo!
+  ace-design!
   ace-docs!
   ace-git!
   ace-git-commit!

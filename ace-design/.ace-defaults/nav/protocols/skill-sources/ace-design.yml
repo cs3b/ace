@@ -1,0 +1,8 @@
+name: ace-design
+type: gem
+description: Design skill resources
+priority: 10
+config:
+  relative_path: handbook/skills
+  pattern: "*/SKILL.md"
+  enabled: true

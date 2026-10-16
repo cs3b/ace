@@ -203,6 +203,22 @@ module Ace
                     deadline_seconds: normalized_timeout,
                     elapsed_seconds: elapsed_since(started_at)
                   )
+                ensure
+                  # A caller may cancel a worker thread while it waits on a coding
+                  # agent. Clean up before Open3's block unwinds (which otherwise
+                  # waits for the still-running child). The capture boundary owns
+                  # the process group, so consumers must not duplicate this policy.
+                  if pid && (wait_thr.alive? || $!)
+                    terminate_subprocess_tree(
+                      pid: pid, pgid: pgid, provider_name: provider_name, supervised: spawn_result.supervised?
+                    )
+                    unless wait_thr.join(5)
+                      terminate_group_or_pid("KILL", pid, pgid)
+                      wait_thr.join(5)
+                    end
+                  end
+                  [stdin, stdout, stderr].each { |stream| stream.close unless stream.closed? }
+                  [out_reader, err_reader].compact.each { |reader| reader.join(1) }
                 end
               end
 
@@ -296,7 +312,7 @@ module Ace
               end
 
               def terminate_subprocess_tree(pid:, pgid:, provider_name:, supervised: false)
-                debug_log(provider_name, "timeout cleanup pid=#{pid} pgid=#{pgid || "n/a"}")
+                debug_log(provider_name, "capture cleanup pid=#{pid} pgid=#{pgid || "n/a"}")
                 terminate_group_or_pid("TERM", pid, pgid)
                 terminate_group_or_pid("KILL", pid, pgid) unless supervised
               end

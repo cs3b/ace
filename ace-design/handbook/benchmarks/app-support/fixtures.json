@@ -1,0 +1,41 @@
+{
+  "title": "Support queue",
+  "primary_action": "Triage the next ticket",
+  "description": "Triage incoming customer tickets by priority, ownership and waiting time.",
+  "records": [
+    {
+      "id": "ticket-1042",
+      "title": "Cannot reset account password",
+      "status": "New",
+      "priority": "Urgent",
+      "customer": "Maya Chen",
+      "assignee": null,
+      "waiting_minutes": 18,
+      "channel": "Email",
+      "summary": "Reset link expires before the customer can use it."
+    },
+    {
+      "id": "ticket-1043",
+      "title": "Invoice address needs correction",
+      "status": "Assigned",
+      "priority": "Normal",
+      "customer": "Alex Rivera",
+      "assignee": "Sam Patel",
+      "waiting_minutes": 45,
+      "channel": "Chat",
+      "summary": "Customer requests an updated billing address on the latest invoice."
+    },
+    {
+      "id": "ticket-1044",
+      "title": "Export missing last week of records",
+      "status": "Waiting on customer",
+      "priority": "High",
+      "customer": "Jo Morgan",
+      "assignee": "Lee Kim",
+      "waiting_minutes": 120,
+      "channel": "Email",
+      "summary": "Awaiting the date range and export settings used by the customer."
+    }
+  ],
+  "data_notice": "Fictional benchmark data; fixed across baseline and candidate runs."
+}

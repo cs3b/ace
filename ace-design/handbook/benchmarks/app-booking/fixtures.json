@@ -1,0 +1,46 @@
+{
+  "title": "Team room booking",
+  "primary_action": "Reserve a room",
+  "description": "Compare rooms and available time slots for a small team meeting.",
+  "records": [
+    {
+      "id": "cedar",
+      "title": "Cedar room",
+      "status": "Available",
+      "capacity": 6,
+      "location": "Floor 1",
+      "starts_at": "2026-11-02T09:00:00Z",
+      "ends_at": "2026-11-02T10:00:00Z",
+      "equipment": [
+        "Display",
+        "Whiteboard"
+      ]
+    },
+    {
+      "id": "birch",
+      "title": "Birch room",
+      "status": "Reserved",
+      "capacity": 4,
+      "location": "Floor 2",
+      "starts_at": "2026-11-02T09:00:00Z",
+      "ends_at": "2026-11-02T10:00:00Z",
+      "equipment": [
+        "Whiteboard"
+      ]
+    },
+    {
+      "id": "oak",
+      "title": "Oak room",
+      "status": "Available",
+      "capacity": 12,
+      "location": "Floor 1",
+      "starts_at": "2026-11-02T10:00:00Z",
+      "ends_at": "2026-11-02T11:00:00Z",
+      "equipment": [
+        "Display",
+        "Video conferencing"
+      ]
+    }
+  ],
+  "data_notice": "Fictional benchmark data; fixed across baseline and candidate runs."
+}

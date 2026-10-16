@@ -1,0 +1,8 @@
+name: ace-design
+type: gem
+description: Design guide resources
+priority: 10
+config:
+  relative_path: handbook/guides
+  pattern: "*.g.md"
+  enabled: true

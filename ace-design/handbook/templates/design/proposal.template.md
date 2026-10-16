@@ -1,0 +1,15 @@
+# Inspiration proposal
+- Status: experimental | review-pending | reviewed
+- Sources, checked revisions/dates and licenses:
+- Candidate and user problem:
+- Use / avoid / surface:
+- Exact affected files:
+- Before / after evidence:
+- Executed tests and results:
+- Applicable benchmark cases and exclusions:
+- Observed timing / data compliance / distinctness:
+- Human feedback (separate from model judgment):
+- Tradeoffs and rejected candidates:
+- Independent review verdict / unresolved findings:
+- Proposed accept or reject decision:
+- No merge or publication performed.

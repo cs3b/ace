@@ -36,6 +36,7 @@ known_bash_prefixes:
   - ace-b36ts
   - ace-bundle
   - ace-demo
+  - ace-design
   - ace-docs
   - ace-git
   - ace-git-commit
@@ -55,6 +56,8 @@ known_bash_prefixes:
   - ace-task
   - ace-test
   - ace-test-suite
+  - bin/ace-bundle
+  - bin/ace-design
   - firebase
   - git
   - gh

@@ -1,0 +1,37 @@
+{
+  "description": "Three fast ACE directions and one original Taste v2 direction.",
+  "verification": "candidate",
+  "surfaces": [
+    "site"
+  ],
+  "kinds": [
+    "view"
+  ],
+  "intents": [
+    "explore",
+    "reimagine"
+  ],
+  "concurrency": 4,
+  "timeout": 1800,
+  "variants": [
+    {
+      "id": "a",
+      "preset": "fast",
+      "focus": "Direct action and clear hierarchy"
+    },
+    {
+      "id": "b",
+      "preset": "fast",
+      "focus": "Editorial storytelling and photographic context"
+    },
+    {
+      "id": "c",
+      "preset": "fast",
+      "focus": "Evidence and trustworthy comparison"
+    },
+    {
+      "id": "d",
+      "preset": "taste-v2"
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "presets": [
+    "code-valid"
+  ],
+  "description": "Design runner, browser and provider runtime, with their tests and integration boundaries",
+  "file_patterns": {
+    "include": [
+      "ace-design/lib/**",
+      "ace-design/browser/**",
+      "ace-design/test/**",
+      "ace-llm-providers-cli/**"
+    ]
+  }
+}

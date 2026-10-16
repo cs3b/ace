@@ -1,0 +1,41 @@
+{
+  "title": "Practical cooking course",
+  "primary_action": "Choose a course",
+  "description": "Compare practical cooking courses by skill level, schedule and learning outcome.",
+  "records": [
+    {
+      "id": "weeknight",
+      "title": "Confident weeknight cooking",
+      "status": "Enrolling",
+      "level": "Beginner",
+      "sessions": 4,
+      "price_eur": 160,
+      "instructor": "Nora Silva",
+      "starts_on": "2026-11-09",
+      "outcome": "Plan and prepare three balanced weekday dinners."
+    },
+    {
+      "id": "bread",
+      "title": "Bread from first principles",
+      "status": "Few places left",
+      "level": "Beginner",
+      "sessions": 3,
+      "price_eur": 135,
+      "instructor": "Eli Martin",
+      "starts_on": "2026-11-14",
+      "outcome": "Mix, shape and bake a reliable loaf at home."
+    },
+    {
+      "id": "seasonal",
+      "title": "Seasonal vegetable kitchen",
+      "status": "Waitlist",
+      "level": "Intermediate",
+      "sessions": 5,
+      "price_eur": 210,
+      "instructor": "Amira Khan",
+      "starts_on": "2026-11-18",
+      "outcome": "Build satisfying vegetable dishes using seasonal produce."
+    }
+  ],
+  "data_notice": "Fictional benchmark data; fixed across baseline and candidate runs."
+}

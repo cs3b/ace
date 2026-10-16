@@ -7,7 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.36.2] - 2026-10-16
+
 ### Fixed
+
+- Terminate coding-agent subprocess groups when a caller interrupts a capture, before Open3 waits for the child.
 
 - `SafeCapture`: repair the `readiness.nil.` typo (missing `?`) introduced in
   0.36.0 that raised `NoMethodError` on every successful supervised CLI

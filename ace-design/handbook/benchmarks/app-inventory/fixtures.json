@@ -1,0 +1,38 @@
+{
+  "title": "Inventory management",
+  "primary_action": "Find and adjust an item",
+  "description": "Find stock, inspect reorder needs and adjust a warehouse quantity.",
+  "records": [
+    {
+      "id": "cable-usbc",
+      "title": "USB-C cable, 1 m",
+      "status": "In stock",
+      "sku": "CAB-101",
+      "quantity": 42,
+      "reorder_point": 10,
+      "location": "A-01",
+      "category": "Accessories"
+    },
+    {
+      "id": "adapter-hdmi",
+      "title": "USB-C to HDMI adapter",
+      "status": "Low stock",
+      "sku": "ADP-202",
+      "quantity": 3,
+      "reorder_point": 8,
+      "location": "A-02",
+      "category": "Adapters"
+    },
+    {
+      "id": "hub-desktop",
+      "title": "Desktop USB hub",
+      "status": "Out of stock",
+      "sku": "HUB-303",
+      "quantity": 0,
+      "reorder_point": 5,
+      "location": "B-01",
+      "category": "Accessories"
+    }
+  ],
+  "data_notice": "Fictional benchmark data; fixed across baseline and candidate runs."
+}

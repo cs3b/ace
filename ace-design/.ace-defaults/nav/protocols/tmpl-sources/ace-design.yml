@@ -1,0 +1,8 @@
+name: ace-design
+type: gem
+description: Design tmpl resources
+priority: 10
+config:
+  relative_path: handbook/templates
+  pattern: "*.template.md"
+  enabled: true

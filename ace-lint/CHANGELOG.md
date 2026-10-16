@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.30.11] - 2026-10-16
+
+### Added
+- Recognize ace-design and the bin/ace-design and bin/ace-bundle source invocations in skill command metadata.
+
+### Changed
+- Keep the packaged known-command prefixes alphabetically grouped.
+
 
 ## [0.30.10] - 2026-09-02
 
