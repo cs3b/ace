@@ -248,14 +248,14 @@ module Ace
           end
           source = definition.fetch("source")
           if source.fetch("head") && verify_source
-            result = Ace::Herdr::Molecules::BoundedProcess.call(["/usr/bin/git", "-c", "safe.directory=#{cwd}",
+            result = Ace::Herdr::Molecules::BoundedProcess.call(["/usr/bin/git", "-c", "safe.directory=#{source_root}",
               "-c", "core.hooksPath=/dev/null", "-c", "core.fsmonitor=false", "rev-parse", "HEAD", "HEAD^{tree}"],
               environment: Ace::Assign::Molecules::InstalledJournalRead::ENVIRONMENT.merge("GIT_OPTIONAL_LOCKS" => "0"), chdir: source_root,
               stdin_data: "", timeout_s: deadline - Process.clock_gettime(Process::CLOCK_MONOTONIC), output_limit: 1024, cleanup_group: true)
             unless result.status.success? && result.stdout.lines.map(&:strip) == source.values_at("head", "tree")
               raise InvalidConfigurationError, "command accepted source differs"
             end
-            clean = Ace::Herdr::Molecules::BoundedProcess.call(["/usr/bin/git", "-c", "safe.directory=#{cwd}",
+            clean = Ace::Herdr::Molecules::BoundedProcess.call(["/usr/bin/git", "-c", "safe.directory=#{source_root}",
               "-c", "core.hooksPath=/dev/null", "-c", "core.fsmonitor=false", "status", "--porcelain=v1", "-z", "--untracked-files=all"],
               environment: Ace::Assign::Molecules::InstalledJournalRead::ENVIRONMENT.merge("GIT_OPTIONAL_LOCKS" => "0"), chdir: source_root,
               stdin_data: "", timeout_s: deadline - Process.clock_gettime(Process::CLOCK_MONOTONIC), output_limit: 65_536, cleanup_group: true)

@@ -29,7 +29,9 @@ Router/journal, using existing TransferCodec candidate framing. It does not
 create a second claim or permit. Root uses CandidateTransfer's verified object
 materializer and empty Git administration without evaluating source scripts,
 Gemfiles, gemspecs, hooks or filters. It seals the resulting repository and
-generated configuration before any gated child is created. The accepted source
+generated configuration before any gated child is created. Git context checks
+trust exactly the retained repository root, separately from the selected package
+cwd, so the ordinary owner UID can inspect root-owned candidate views. The accepted source
 is retained through evidence consumption; writable output/tmp/lock state is
 outside it. Existing fresh claim/bind gate, privilege drop, bounded owned-child
 cleanup, canonical terminal status and replay-never-exec rules remain intact.

@@ -1,0 +1,26 @@
+Run options: --seed 46703
+
+# Running:
+
+.E.
+
+Finished in 39.927490s, 0.0751 runs/s, 0.5760 assertions/s.
+
+  1) Error:
+CommandOwnerCandidateIntegrationTest#test_real_git_uses_repository_root_when_kernel_reports_another_owner:
+Ace::Assign::AttemptErrors::ReceiptRejected: executed test command policy or source is unavailable
+    lib/ace/lab/molecules/command_owner_admission.rb:111:in 'Ace::Lab::Molecules::CommandOwnerAdmission#command_test_evidence!'
+    lib/ace/lab/molecules/command_owner_admission.rb:100:in 'block in Ace::Lab::Molecules::CommandOwnerAdmission#command_test_evidence!'
+    lib/ace/lab/molecules/command_owner_admission.rb:73:in 'block in Ace::Lab::Molecules::CommandOwnerAdmission#with_command_scope'
+    /Users/mc/Ps/ace/.ace-wt/ei9-candidate-git-root/ace-assign/lib/ace/assign/authority/ordinary_review_evidence.rb:50:in 'block in Ace::Assign::Authority::OrdinaryReviewEvidence#with_candidate_reference_scope'
+    /Users/mc/Ps/ace/.ace-wt/ei9-candidate-git-root/ace-assign/lib/ace/assign/authority/ordinary_review_evidence.rb:109:in 'block (2 levels) in Ace::Assign::Authority::OrdinaryReviewEvidence#with_scope'
+    /Users/mc/Ps/ace/.ace-wt/ei9-candidate-git-root/ace-assign/lib/ace/assign/authority/ordinary_review_evidence.rb:131:in 'Ace::Assign::Authority::OrdinaryReviewEvidence#with_ordinary_evidence_scope'
+    /Users/mc/Ps/ace/.ace-wt/ei9-candidate-git-root/ace-assign/lib/ace/assign/authority/ordinary_review_evidence.rb:108:in 'block in Ace::Assign::Authority::OrdinaryReviewEvidence#with_scope'
+    /Users/mc/Ps/ace/.ace-wt/ei9-candidate-git-root/ace-assign/lib/ace/assign/molecules/lifecycle_exclusion.rb:245:in 'Ace::Assign::Molecules::LifecycleExclusion#with_shared_multi'
+    /Users/mc/Ps/ace/.ace-wt/ei9-candidate-git-root/ace-assign/lib/ace/assign/authority/ordinary_review_evidence.rb:106:in 'Ace::Assign::Authority::OrdinaryReviewEvidence#with_scope'
+    /Users/mc/Ps/ace/.ace-wt/ei9-candidate-git-root/ace-assign/lib/ace/assign/authority/ordinary_review_evidence.rb:47:in 'Ace::Assign::Authority::OrdinaryReviewEvidence#with_candidate_reference_scope'
+    lib/ace/lab/molecules/command_owner_admission.rb:67:in 'Ace::Lab::Molecules::CommandOwnerAdmission#with_command_scope'
+    lib/ace/lab/molecules/command_owner_admission.rb:99:in 'Ace::Lab::Molecules::CommandOwnerAdmission#command_test_evidence!'
+    test/feat/command_owner_candidate_integration_test.rb:84:in 'block (2 levels) in CommandOwnerCandidateIntegrationTest#test_real_git_uses_repository_root_when_kernel_reports_another_owner'
+
+3 runs, 23 assertions, 0 failures, 1 errors, 0 skips

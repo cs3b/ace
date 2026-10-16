@@ -57,3 +57,24 @@ No full ei9 outcome, installed dynamic pipeline, maintained runtime packaging,
 publication or taskless secret completion is claimed here. The domain maintained
 runtime preparation task remains externally approval-blocked; this work does not
 retry or replace it.
+
+## Exact 2b0925d85 followup verdict
+
+The configured Pi reviewer independently approved exact `1cb4010be..2b0925d85`
+with no critical/high/medium findings. Retained raw report and metadata are under
+`delta-2b`; report SHA256
+`5846ecc689fde91acef17bfb300f5c0493e6b0466648702e13db009b48836290`.
+Feedback listing after successful process exit returned no items (`--no-feedback`).
+The reviewer executed no tests. LOW wording/allocation/test-style suggestions
+are nonblocking; existing typed refusals and explicit fixture boundaries remain
+unchanged. Its inspection wording about the probe does not replace execution.
+
+After that review, source inspection found Git's safe.directory configured to
+the package cwd instead of repository root for dynamic sources. Real Git with
+its explicit different-owner observation switch reproduced the exact refusal;
+the real canonical production-admission host fixture is RED on 2b source with
+that Git observation. The narrow correction trusts only the retained source
+repository root; static source behavior stays the same. A separate source-only
+Linux probe now runs the production filesystem/Git context verifier under actual
+daemon UID against the root-owned retained source. That probe is pending parent
+execution and still creates no canonical successful-test proof.
