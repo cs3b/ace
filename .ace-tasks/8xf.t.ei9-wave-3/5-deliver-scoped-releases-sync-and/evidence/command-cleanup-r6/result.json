@@ -1,0 +1,38 @@
+{
+  "schema": "ei9.command-cleanup-root-verification/v1",
+  "source": "47466eb0be0f183da0958db4e676691d5725b64c",
+  "verified_files": 771,
+  "source_manifest_sha256": "b29eaa54f75e7b713a09f1f75ba8b933f8821f9586eae443a8c317cd40b49203",
+  "red_manifest_sha256": "209e4a59cbed36638f2de033e41944bee1ae222ca733e4efc2c620ec44091717",
+  "red_overlay": "Old459 OwnedChildScope with new incoming ignored/custom SIGCHLD probes",
+  "red": {
+    "tests": 9,
+    "assertions": 73,
+    "failures": 2,
+    "errors": 0
+  },
+  "candidate": {
+    "tests": 9,
+    "assertions": 75,
+    "failures": 0,
+    "errors": 0,
+    "skips": 0
+  },
+  "domain_fixture": "8dceb27, unchanged exact DOMAINR4 export",
+  "domain": {
+    "tests": 40,
+    "failures": 0,
+    "errors": 0,
+    "skips": 0,
+    "seconds": 5.255
+  },
+  "producer_sigchld": {
+    "pid": 1858726,
+    "ignored": false,
+    "caught": false
+  },
+  "production_owner_pid": "554643",
+  "production_restart": false,
+  "scope": "Static command schema in private mount namespace, actual public CLI/authority/labd/helper. Does not prove dynamic candidate/native test materialization.",
+  "independent_delta_review": "Pending exact474 configured Pi verdict; previous459 andf6 reviews approved and retained separately."
+}
