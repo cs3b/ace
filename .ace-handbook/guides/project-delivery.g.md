@@ -4,8 +4,8 @@ title: ACE Project Delivery Guide
 purpose: Canonical project policy for agent-assisted ACE development and delivery
 version: 1
 ace-docs:
-  last-updated: 2026-08-31
-  last-checked: 2026-08-31
+  last-updated: 2026-10-16
+  last-checked: 2026-10-16
 ---
 
 # ACE Project Delivery Guide
@@ -77,10 +77,8 @@ workflow is not the canonical ACE Forgejo path.
 - Review uses a clean, exact PR-head checkout and an independent reviewer.
   Findings, commands, artifact digests, trust boundary, and verdict are stored
   as exact-SHA evidence. The feedback lifecycle belongs to
-  [`wfi://review/run`](wfi://review/run). The current
-  [`wfi://review/pr`](wfi://review/pr) adapter is GitHub-only and uses `gh`;
-  Forgejo review therefore uses `wfi://review/run` against the clean local
-  exact-head diff until ACE gains a Forgejo PR adapter.
+  [`wfi://review/run`](wfi://review/run); the forge-neutral
+  [`wfi://review/pr`](wfi://review/pr) uses the configured forge provider.
 - Forgejo CI must validate the complete registered package inventory and keep
   the protected summary context `Test Suite / Test Summary (pull_request)`.
   Package-level results remain visible even when one shared suite environment
@@ -89,7 +87,15 @@ workflow is not the canonical ACE Forgejo path.
   the Lab test shell; UI behavior requires an operator-accessible preview.
 - Evidence may be reused only when SHA, lockfiles, runtime/toolchain,
   acceptance criteria, artifact digest, and required trust remain compatible.
-  A changed SHA or missing artifact makes the affected claim pending again.
+  A moved head requires a recorded assessment of what changed. Executed
+  range-diff and content checks may carry an independent verdict across an
+  identical rebase; a minor safe correction requires the integrator's assessment
+  and relevant executed tests. Material or uncertain changes, including small
+  security changes, require independent delta review. Historical evidence never
+  certifies the current head by itself. Missing evidence makes its claim pending.
+- The merge gate is executed tests and an independent reviewer verdict under
+  that accepted-head policy. CI is advisory; repair a failing CI signal without
+  replacing the executed checks or blocking an otherwise accepted merge.
 - The integrator receives a single Work/repository-scoped lease only after the
   delivery evidence gate passes. It merges the approved exact PR head into
   Forgejo `main`. Merge is a Delivery outcome; it does not imply Release,
@@ -116,9 +122,10 @@ workflow is not the canonical ACE Forgejo path.
   `ace-test-e2e ace-monorepo-e2e TS-MONO-001` records its post-publish proof and
   classification (`SAFE`, `LAG_DETECTED`, or `METADATA_BROKEN`) according to
   [`ace-handbook/docs/release-rubygems-proof.md`](/ace-handbook/docs/release-rubygems-proof.md).
-- Deployment, when a future ACE service requires it, is another named admin
-  capability and another decision. The current gem-only ACE release has no
-  implicit deployment step.
+- Installation is a named, authorized delivery outcome. The release manifest
+  binds exact package versions and artifact digests; installation verifies every
+  intended consumer, including service bundles and the coordinator. Publication
+  alone does not complete delivery. Preserve intentionally pinned legacy runtimes.
 
 ## Upstream synchronization and closure
 

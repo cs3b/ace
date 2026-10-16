@@ -21,7 +21,7 @@ class ConfigureProjectWorkflowContractTest < AceOverseerTestCase
     assert_includes content, "project-local preset overrides"
     assert_includes content, "wfi://"
     assert_includes content, "guide://delivery-supervision"
-    assert_includes content, "ace-nav explain"
+    assert_includes content, "ace-nav resolve <URI> --why"
     assert_includes content, "ace-nav resolve"
   end
 

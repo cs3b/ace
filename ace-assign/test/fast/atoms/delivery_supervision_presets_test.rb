@@ -41,7 +41,7 @@ class DeliverySupervisionPresetsTest < AceAssignTestCase
     assert_includes content, "never completion order"
     assert_includes content, "transiently empty"
     assert_includes content, "never reparent"
-    assert_includes content, "no second queue"
+    assert_includes content, "no second execution queue"
   end
 
   def test_integrate_batch_requires_fresh_exact_head_evidence_after_movement
@@ -60,16 +60,17 @@ class DeliverySupervisionPresetsTest < AceAssignTestCase
   def test_deliver_release_binds_cut_and_keeps_publication_separate
     content = normalized_preset_content("deliver-release")
     preset = YAML.safe_load_file(File.join(PRESET_ROOT, "deliver-release.yml"))
-    placeholder = preset.fetch("steps").find { |step| step.fetch("name") == "publication-authority-placeholder" }
+    publication = preset.fetch("steps").find { |step| step.fetch("name") == "request-authorized-publication" }
 
     assert_includes content, "exact accepted source set"
     assert_includes content, "package name and version"
     assert_includes content, "artifact digest"
     assert_includes content, "do not add later merges"
-    assert_includes content, "placeholder only"
+    assert_includes content, "executable binding"
+    assert_includes content, "uncertain artifacts"
     assert_includes content, "separate publication authority"
-    refute placeholder.key?("workflow")
-    refute placeholder.key?("skill")
+    refute publication.key?("workflow")
+    refute publication.key?("skill")
   end
 
   def test_close_delivery_preserves_work_and_closes_only_accepted_scope

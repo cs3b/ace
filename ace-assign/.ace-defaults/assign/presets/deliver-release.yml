@@ -2,7 +2,7 @@
 # Usage: ace-assign create --task TASK[,TASK...] --preset deliver-release
 
 name: deliver-release
-description: Prepare and bind a stable release cut without exercising publication authority
+description: Deliver a bound release cut through the project-authorized publisher and installation owners
 
 parameters:
   taskrefs:
@@ -37,15 +37,18 @@ steps:
       final artifact digest, and update the manifest before it is accepted. Preparation
       is not publication, installation, deployment, or proof of any of those effects.
 
-  - name: publication-authority-placeholder
+  - name: request-authorized-publication
     number: "040"
     instructions: |
-      Publication placeholder only. Do not run a publish command in this preset. Route
-      the exact manifest to the separate publication authority named by project policy.
-      Missing credentials, publisher identity, or admission is
-      BLOCKED(provision, owner). If that authority accepts a request and returns a
-      durable operation reference plus reconciliation path, record
-      WAIT(reference, next-check); otherwise preserve uncertainty and do not retry.
+      Resolve the concrete publication workflow and executor from project policy and
+      invoke that existing workflow with the exact accepted manifest through the separate
+      publication authority. This step grants no credentials or permission by itself.
+      Missing publisher identity, executable binding, or admission is BLOCKED(provision, owner).
+      Use the project's existing publisher, dependency order and scoped HITL OTP route.
+      Record the accepted operation reference and reconciliation path before WAIT.
+      Track published, pending and uncertain artifacts separately. Verify registry version
+      and digest before retry; never republish an already matching artifact or repeat an
+      uncertain effect blindly. Keep delivery open after partial or unknown publication.
 
   - name: record-release-outcome
     number: "050"

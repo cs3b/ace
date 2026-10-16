@@ -32,11 +32,16 @@ steps:
   - name: delegate-renewed-evidence
     number: "030"
     instructions: |
-      After any candidate movement, delegate renewed evidence for the new exact head:
-      prove replay content identity with range-diff or a stronger project-approved
-      comparison, run fresh relevant tests, and obtain an independent reviewer verdict.
-      The reviewer must be independent of the executor. Content beyond the declared
-      replay delta requires the full project review gate, not a verdict-stands shortcut.
+      Require an initial independent reviewer verdict, then record an accepted-head
+      assessment after every candidate movement. Retain old/new head and base SHAs,
+      the executed range-diff/content comparison, full repository context, risks and
+      fresh relevant tests. Proven identical rebases may carry the initial review;
+      patch-id alone is insufficient. An integrator may accept a minor safe correction
+      with recorded reasoning and tests. Material or uncertain changes, including small
+      authority/security changes, require independent delta review. Keep the initial
+      review and formal forge approval actor/state/SHA separate from this assessment.
+      Post and read back the evidence before merge; use the exact accepted head in the
+      server-side merge guard. Failed publication of evidence blocks integration.
 
   - name: reevaluate-integration-readiness
     number: "040"

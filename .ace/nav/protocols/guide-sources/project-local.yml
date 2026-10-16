@@ -1,0 +1,5 @@
+name: project-local-guides
+type: directory
+path: .ace-handbook/guides
+priority: 5
+description: Project-owned delivery policy and development guides

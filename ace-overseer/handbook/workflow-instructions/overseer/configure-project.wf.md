@@ -40,7 +40,7 @@ Read existing project-owned sources before proposing a change:
 - Current task, Assign, review, release, and delivery records that already own work.
 - Repository guidance such as `AGENTS.md`, architecture decisions, and delivery docs.
 
-Resolve rather than infer protocol ownership. Run `ace-nav explain <URI>` followed by
+Resolve rather than infer protocol ownership. Run `ace-nav resolve <URI> --why` followed by
 `ace-nav resolve <URI>` for every applicable `wfi://` workflow and for
 `guide://delivery-supervision`. Load resolved workflow content with `ace-bundle <URI>`.
 If the expected project decision guide uses another registered URI, record that URI
@@ -87,21 +87,26 @@ contract. Preserve stronger project requirements. Require these minimum invarian
 
 - Worker and implementation-parent terminal behavior remains PR-ready; delivery stays
   a separate explicit decision scope.
-- One canonical Assign tree and attempt/evidence ledger owns state. No second queue,
-  journal, daemon, timer, or fabricated runtime context is introduced.
+- One canonical Assign tree and attempt/evidence ledger owns state. Local objective queues contain goals, next actions, blockers and references only;
+  no duplicate execution state, journal, daemon, timer, or fabricated runtime context is introduced.
 - Integration decisions record the ordered eligible set, selected entry, every
   deferred entry with reason, actor, timestamp, evidence references, and policy/plan
   revision. Completion order is never integration order.
 - Dependency, candidate head, target head, evidence, authority, or transport movement
-  triggers a fresh decision. A moved candidate receives fresh relevant tests and an
-  independent review bound to its new exact head.
+  triggers a fresh decision. Require an initial independent review and fresh relevant
+  tests. For every moved head, record a delta/context/risk assessment: executed content
+  identity may carry review across an identical rebase; minor safe corrections need
+  integrator reasoning/tests; material or uncertain changes need independent delta
+  review. Patch-id alone cannot carry review. Bind the accepted head to the server-side
+  merge guard, and keep formal forge approval distinct from the assessment.
 - `WAIT(reference, next-check)` requires an existing durable operation reference and
   exact reconciliation path. Missing provision is `BLOCKED(provision, owner)`.
   Uncertain effects are reconciled through the original operation and never replayed
   blindly.
 - Release preparation binds the exact accepted source set, package versions, and
   artifact digests. Later merges cannot enter an accepted cut silently. Publication
-  remains a separate-authority placeholder.
+  invokes the existing project-bound workflow through its separate authorized executor;
+  absent executable binding remains BLOCKED with its owner.
 - Closure preserves evidence and work, positively proves no surviving writers, keeps
   producer references and delivery tags discoverable, and closes only accepted scope.
   Host-owned root effects remain referenced external operations.
@@ -165,7 +170,7 @@ authorized overseer step.
 
 Repeat the complete source inventory after edits:
 
-1. Run `ace-nav explain` and `ace-nav resolve` for every selected `wfi://` and
+1. Run `ace-nav resolve --why` and `ace-nav resolve` for every selected `wfi://` and
    `guide://` URI.
 2. Load every selected workflow with `ace-bundle` and verify it came from the intended
    owner.

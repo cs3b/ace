@@ -20,8 +20,8 @@ steps:
 
       These are references to producer tasks; never reparent, duplicate, reopen, or
       change producer task status. A PR-ready worker remains terminal even while this
-      delivery assignment stays open. No second queue, journal, daemon, or cache may
-      be created. Treat an empty observation as current input only: Transiently empty
+      delivery assignment stays open. A local objective queue may store goals, next actions, blockers and references;
+      no second execution queue, journal, daemon, or cache may be created. Treat an empty observation as current input only: Transiently empty
       is not accepted completion.
 
   - name: supervise-delivery-queue
@@ -42,8 +42,10 @@ steps:
       - policy/plan revision and evidence references used for the decision.
 
       For every entry, evaluate dependency state, exact candidate head SHA, fresh
-      test and independent-review evidence bound to that head, required authority and
-      transport, and grouping constraints. Re-record the decision after dependency,
+      tests, initial independent review and a documented accepted-head assessment.
+      An identical rebase needs executed content-identity proof; a minor safe correction
+      needs integrator reasoning and tests; material or uncertain delta needs independent
+      delta review. Evaluate required authority, transport and grouping constraints. Re-record the decision after dependency,
       candidate head, evidence, authority, transport, or target-branch movement.
 
   - name: reconcile-integration-operation
