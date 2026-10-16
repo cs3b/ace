@@ -334,8 +334,9 @@ module Ace
       # receiver boundary — the forge HTTP layer itself is NEVER mocked: the
       # adapter tests run against the real lab forge. This double simulates
       # the forge side inside the sandbox repository (including the
-      # fast-forward-only semantics and the real readback documents), so the
-      # executable acceptance loop stays hermetic.
+      # fast-forward-only semantics, the server-side exact-head binding,
+      # and the real readback documents), so the executable acceptance loop
+      # stays hermetic.
       class SandboxForge
         Result = Molecules::ForgejoMergeAdapter::Result
 
@@ -356,8 +357,10 @@ module Ace
         end
 
         # Fast-forward-only semantics, forge side: the base ref moves to the
-        # head commit only when the head is a descendant of the base.
-        def merge_pull_request!(owner:, repo:, index:)
+        # head commit only when the head is a descendant of the base — and the
+        # merge must be bound to the PR's current head (server-side
+        # exact-head binding), mirroring the real forge's wire contract.
+        def merge_pull_request!(owner:, repo:, index:, head_commit_id:)
           spec = @prs[index]
           unless spec
             return Result.new(outcome: :refused, status: 409,
@@ -369,6 +372,10 @@ module Ace
           end
           current = git("rev-parse", spec.fetch("base_ref"))
           head = git("rev-parse", spec.fetch("head_ref"))
+          unless head == head_commit_id
+            return Result.new(outcome: :refused, status: 409,
+              reason: "HTTP 409: head_commit_id does not match the pull request head")
+          end
           unless system("git", "merge-base", "--is-ancestor", current, head,
             chdir: @repo_path)
             return Result.new(outcome: :refused, status: 406,

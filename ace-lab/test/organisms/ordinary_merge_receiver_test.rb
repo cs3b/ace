@@ -237,6 +237,8 @@ module Ace
         assert_equal @candidate_head, receipt.dig("remote_observation", "merge_commit")
         assert_equal @candidate_head, receipt.dig("remote_observation", "merged_candidate_head")
         assert_equal @base_head, receipt.dig("remote_observation", "admission_target_head")
+        # Exact-head contract: the merge POST bound the approved candidate.
+        assert_equal @candidate_head, forge.merge_kwargs.fetch(:head_commit_id)
         assert_equal "checkout-1", receipt.dig("remote_observation", "checkout_id")
         assert_equal "https://forge.example.com/acme/widget/pulls/7",
           receipt.dig("remote_observation", "pr_identity_url")
@@ -274,6 +276,58 @@ module Ace
         assert_equal "already_merged", record.dig("receipt", "effect", "outcome")
         assert_equal @candidate_head, record.dig("receipt", "remote_observation", "merge_commit")
         refute forge.merge_invoked?
+      end
+
+      # A 404 readback AFTER an invoked merge is never a no-effect proof:
+      # the merge POST happened, so the PR's absence (permission change,
+      # deletion, visibility loss) cannot prove absence of effect. The
+      # record stays uncertain with the original attempt and reference —
+      # no attestation, no retry, exactly one invocation.
+      def test_invoked_merge_with_absent_readback_leaves_uncertain_never_no_effect
+        forge = ForgeDouble.new(prs: {7 => open_pr}, post_merge_absent: true)
+        receiver = build_receiver(forge: forge)
+        ack = receiver.handle(submission)
+        reference = ack.fetch("data").fetch("reference")
+        _out, err = capture_io { assert_equal :executed, receiver.execute("request-1") }
+        record = @coordinator.fixed_merge_record("request-1")
+        assert_equal "uncertain", record.fetch("state")
+        assert_nil record["receipt"]
+        # The original attempt and reference are preserved: reconciliation
+        # happens by reference, never a resubmission.
+        assert_equal reference, record.fetch("reference")
+        assert_equal deep_copy(valid_request), deep_copy(record.fetch("request"))
+        # NO no-effect attestation was written for an invoked merge.
+        refute Dir.exist?(File.join(@repo, Organisms::OrdinaryMergeReceiver::NO_EFFECT_DIR))
+        event = JSON.parse(err.lines.grep(/ordinary_merge_uncertain/).last)
+        assert_equal "request-1", event.fetch("request_id")
+        assert_equal "host-integrator", event.fetch("owner")
+        assert_includes event.fetch("reason"), "after the merge invocation"
+        assert_includes event.fetch("reason"), "cannot prove no effect"
+        # Exactly one merge invocation: never a retry, never a re-invocation.
+        assert_equal 1, forge.merge_count
+      end
+
+      # Same hard rule for the ambiguous invocation family: a 5xx merge
+      # whose post-invocation readback reports the PR absent stays
+      # uncertain — the forge may still be applying the invocation.
+      def test_ambiguous_invocation_with_absent_readback_stays_uncertain
+        forge = ForgeDouble.new(prs: {7 => open_pr},
+          merge_outcome: ForgeDouble.result(:ambiguous, 502, "HTTP 502: bad gateway"),
+          post_merge_absent: true)
+        receiver = build_receiver(forge: forge)
+        ack = receiver.handle(submission)
+        _out, err = capture_io { assert_equal :executed, receiver.execute("request-1") }
+        record = @coordinator.fixed_merge_record("request-1")
+        assert_equal "uncertain", record.fetch("state")
+        assert_nil record["receipt"]
+        assert_equal ack.fetch("data").fetch("reference"), record.fetch("reference")
+        assert_equal deep_copy(valid_request), deep_copy(record.fetch("request"))
+        refute Dir.exist?(File.join(@repo, Organisms::OrdinaryMergeReceiver::NO_EFFECT_DIR))
+        event = JSON.parse(err.lines.grep(/ordinary_merge_uncertain/).last)
+        assert_equal "request-1", event.fetch("request_id")
+        assert_equal "host-integrator", event.fetch("owner")
+        assert_includes event.fetch("reason"), "cannot prove no effect"
+        assert_equal 1, forge.merge_count
       end
 
       def test_forge_refused_merge_settles_failed_no_effect
@@ -530,11 +584,12 @@ module Ace
 
       # In-process double standing in for the Forgejo merge adapter at the
       # receiver boundary — the forge HTTP layer itself is NEVER mocked: the
-      # adapter tests run against the real lab forge (see
-      # ForgejoMergeAdapterTest). This double mirrors the adapter's closed
-      # interface and simulates the forge side (including the
-      # fast-forward-only semantics) so executor lifecycle tests stay
-      # hermetic.
+      # adapter tests run against the real lab forge and a real local HTTP
+      # binding server (see ForgejoMergeAdapterTest). This double mirrors
+      # the adapter's closed interface and simulates the forge side
+      # (including the fast-forward-only semantics AND the server-side
+      # exact-head binding: a merge bound to any head other than the PR's
+      # current head is refused) so executor lifecycle tests stay hermetic.
       class ForgeDouble
         Unavailable = Molecules::ForgejoMergeAdapter::Unavailable
 
@@ -546,35 +601,46 @@ module Ace
         end
 
         def initialize(prs:, merge_outcome: nil, readback_error: nil, comment_outcome: nil,
-          post_merge_readback: nil, fail_pre_readback: false)
+          post_merge_readback: nil, fail_pre_readback: false, post_merge_absent: false)
           @prs = prs
           @merge_outcome = merge_outcome
           @readback_error = readback_error
           @comment_outcome = comment_outcome
           @post_merge_readback = post_merge_readback
           @fail_pre_readback = fail_pre_readback
+          @post_merge_absent = post_merge_absent
           @comments = []
           @merge_count = 0
+          @merge_kwargs = nil
         end
 
-        attr_reader :comments, :merge_count
+        attr_reader :comments, :merge_count, :merge_kwargs
 
         def pull_request(owner:, repo:, index:)
           raise @readback_error if @readback_error &&
             (@merge_count.positive? || @fail_pre_readback)
+          return nil if @post_merge_absent && @merge_count.positive?
           return @post_merge_readback if @post_merge_readback && @merge_count.positive?
           document = @prs[index]
           return nil unless document
           deep_copy(document)
         end
 
-        def merge_pull_request!(owner:, repo:, index:)
+        def merge_pull_request!(owner:, repo:, index:, head_commit_id:)
           @merge_count += 1
+          @merge_kwargs = {owner: owner, repo: repo, index: index,
+                           head_commit_id: head_commit_id}
           return @merge_outcome if @merge_outcome
           document = @prs[index]
           unless document
             return Result.new(outcome: :refused, status: 409,
               reason: "HTTP 409: pull request is absent")
+          end
+          # The real forge's server-side exact-head binding: a merge bound
+          # to any head other than the PR's current head is refused.
+          unless document.dig("head", "sha") == head_commit_id
+            return Result.new(outcome: :refused, status: 409,
+              reason: "HTTP 409: head_commit_id does not match the pull request head")
           end
           document = document.merge("merged" => true,
             "merge_commit_sha" => document.dig("head", "sha"))

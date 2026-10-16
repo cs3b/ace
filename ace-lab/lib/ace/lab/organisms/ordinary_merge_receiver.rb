@@ -34,7 +34,11 @@ module Ace
       # current base head refuses in the moved-target/needs-rebase family
       # (never a silent substitution, never a merge-commit fallback); the
       # terminal receipt proves the strategy by joining `merge_commit ==
-      # resulting_target_head == merged_candidate_head`.
+      # resulting_target_head == merged_candidate_head`. The merge POST
+      # additionally binds the approved candidate head SERVER-SIDE
+      # (`head_commit_id`): the forge refuses to merge any head other than
+      # the reviewed candidate, so a race between the state readback and
+      # the merge POST can never merge an unreviewed head.
       #
       # Forge effect contract (spec 8x3.t.xz9.5 integration handoff): the
       # authorized effect is a REAL Forgejo pull request merge invoked under
@@ -324,8 +328,13 @@ module Ace
           refusal = attach_independent_review!(forge, identity, request_id,
             admitted_record, merge, document)
           return refusal if refusal
+          # Exact-head contract: the merge POST binds the approved candidate
+          # head server-side — the forge refuses to merge any head other
+          # than the reviewed candidate (race between readback and POST can
+          # never merge an unreviewed head).
           result = forge.merge_pull_request!(owner: identity.fetch("owner"),
-            repo: identity.fetch("repo"), index: identity.fetch("index"))
+            repo: identity.fetch("repo"), index: identity.fetch("index"),
+            head_commit_id: candidate)
           case result.outcome
           when :invoked
             reconcile_invoked(forge, identity, request_id, admitted_record, merge,
@@ -345,13 +354,22 @@ module Ace
 
         # The merge invocation was accepted: prove the terminal state by
         # readback before any settlement. A readback showing a merge at any
-        # head other than the approved candidate is never a success.
+        # head other than the approved candidate is never a success. A 404
+        # AFTER the invocation is never a no-effect proof either: the merge
+        # POST was actually invoked, so the pull request's absence
+        # (permission change, deletion, visibility loss) cannot prove
+        # absence of effect — the record stays uncertain with the original
+        # reference, the escalation owner named, no no-effect attestation
+        # and no retry, never a re-invocation.
         def reconcile_invoked(forge, identity, request_id, admitted_record, merge,
           document, candidate)
           pr = readback(forge, identity)
           if pr.nil?
-            return settle_no_effect(request_id, admitted_record, merge,
-              "pull request is absent from the forge after the merge invocation")
+            return leave_uncertain(request_id,
+              "pull request is absent from the forge after the merge invocation: absence " \
+                "cannot prove no effect (permission change, deletion, or visibility loss " \
+                "may hide an applied merge)",
+              owner: @forge_config.escalation_owner)
           end
           if pr["merged"]
             sha = pr["merge_commit_sha"]
@@ -369,14 +387,16 @@ module Ace
         # reconciliation is readback-only. A readback proving the merge
         # settles it; anything else stays uncertain — never a blind repeat,
         # never a fabricated no-effect claim while the forge may still be
-        # applying the invocation.
+        # applying the invocation. A 404 after the invocation stays in the
+        # same uncertain family: absence cannot prove no effect.
         def reconcile_ambiguous(forge, identity, request_id, admitted_record, merge,
           document, candidate, reason)
           pr = readback(forge, identity)
           if pr.nil?
-            return settle_no_effect(request_id, admitted_record, merge,
-              "pull request is absent from the forge: an absent pull request cannot have been merged " \
-                "(invocation ambiguity: #{reason})")
+            return leave_uncertain(request_id,
+              "merge invocation outcome ambiguous (#{reason}); the pull request is absent " \
+                "from the forge after the invocation and absence cannot prove no effect",
+              owner: @forge_config.escalation_owner)
           end
           if pr["merged"]
             sha = pr["merge_commit_sha"]

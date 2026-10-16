@@ -17,9 +17,13 @@ module Ace
       #
       # Endpoints (forge API):
       # - `POST /api/v1/repos/{owner}/{repo}/pulls/{index}/merge` with
-      #   `{"Do": "fast-forward-only"}` — the merge-method contract's
-      #   literal `method=merge` is FAST-FORWARD-ONLY on the wire too; the
-      #   adapter never silently substitutes another merge strategy.
+      #   `{"Do": "fast-forward-only", "head_commit_id": <approved sha>}` —
+      #   the merge-method contract's literal `method=merge` is
+      #   FAST-FORWARD-ONLY on the wire too, and the body binds the
+      #   approved candidate head SERVER-SIDE: the forge refuses to merge
+      #   any head other than the bound one, so a race between the state
+      #   readback and the merge POST can never merge an unreviewed head.
+      #   The adapter never silently substitutes another merge strategy.
       # - `GET  /api/v1/repos/{owner}/{repo}/pulls/{index}` — the PR state
       #   readback (`merged`, `merge_commit_sha`, head/base shas).
       # - `POST /api/v1/repos/{owner}/{repo}/issues/{index}/comments` —
@@ -52,11 +56,19 @@ module Ace
           freeze
         end
 
-        # Invoke the eligible merge. Returns a Result; never raises for HTTP
-        # outcomes (ambiguity is a result, not an exception).
-        def merge_pull_request!(owner:, repo:, index:)
+        # Invoke the eligible merge bound to the approved candidate head.
+        # `head_commit_id` is required and validated (full 40-character hex
+        # sha): the forge server-side refuses to merge any head other than
+        # the bound one. Returns a Result; never raises for HTTP outcomes
+        # (ambiguity is a result, not an exception).
+        def merge_pull_request!(owner:, repo:, index:, head_commit_id:)
+          unless head_commit_id.is_a?(String) && head_commit_id.match?(/\A[0-9a-f]{40}\z/)
+            raise ArgumentError,
+              "head_commit_id must be a full 40-character lowercase hex sha " \
+                "(got: #{head_commit_id.inspect})"
+          end
           request(:post, "/api/v1/repos/#{e(owner)}/#{e(repo)}/pulls/#{e(index)}/merge",
-            body: JSON.generate("Do" => MERGE_METHOD)) do |response|
+            body: JSON.generate("Do" => MERGE_METHOD, "head_commit_id" => head_commit_id)) do |response|
             classify(response)
           end
         end

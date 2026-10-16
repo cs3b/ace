@@ -3,6 +3,7 @@
 require_relative "../test_helper"
 require "json"
 require "open3"
+require "socket"
 require "uri"
 
 module Ace
@@ -140,6 +141,147 @@ module Ace
           raise "forge #{method} #{path} failed: HTTP #{response.code}" unless
             response.is_a?(Net::HTTPSuccess) || method == :delete
           response.body.to_s
+        end
+      end
+
+      # The adapter's WIRE CONTRACT against a real loopback HTTP server
+      # (hermetic — no forge token needed): the forge HTTP layer is still
+      # never mocked. The adapter performs genuine Net::HTTP exchanges with
+      # a stdlib TCPServer bound on 127.0.0.1, so the exact outgoing merge
+      # payload and the closed refusal classification are proven over real
+      # HTTP wire semantics.
+      class ForgejoMergeAdapterBindingTest < Minitest::Test
+        CANDIDATE = "a" * 40
+        MOVED_HEAD = "c" * 40
+
+        def setup
+          @server = LoopbackForgeServer.new
+          @adapter = ForgejoMergeAdapter.new(
+            base_url: "http://127.0.0.1:#{@server.port}", token: "binding-test-token",
+            timeout_seconds: 5
+          )
+        end
+
+        def teardown
+          @server.stop
+        end
+
+        # The outgoing merge POST carries EXACTLY the merge method plus the
+        # bound candidate head — `{"Do":"fast-forward-only","head_commit_id":
+        # "<candidate>"}` — the payload the real forge enforces server-side.
+        def test_merge_post_carries_exactly_the_head_bound_payload
+          @server.enqueue(200)
+          result = @adapter.merge_pull_request!(owner: "acme", repo: "widget",
+            index: 7, head_commit_id: CANDIDATE)
+          assert_equal :invoked, result.outcome
+          request = @server.requests.first
+          assert_equal "POST", request.method
+          assert_equal "/api/v1/repos/acme/widget/pulls/7/merge", request.path
+          assert_equal "{\"Do\":\"fast-forward-only\",\"head_commit_id\":\"#{CANDIDATE}\"}",
+            request.body
+        end
+
+        # Race regression: the state readback (GET) still reports the
+        # reviewed candidate as the PR head, but by the time the merge POST
+        # arrives the head has moved. The forge's server-side exact-head
+        # binding definitively refuses the stale binding (4xx) — outcome
+        # :refused, no effect, never a false success merging an unreviewed
+        # head, and never a re-dispatch (exactly the two wire exchanges).
+        def test_head_moved_between_readback_and_merge_post_refuses_the_stale_binding
+          @server.enqueue(200, JSON.generate(
+            "merged" => false, "merge_commit_sha" => nil,
+            "head" => {"sha" => CANDIDATE}, "base" => {"sha" => MOVED_HEAD}
+          ))
+          @server.enqueue(409,
+            JSON.generate("message" => "head_commit_id does not match the pull request head"))
+          readback = @adapter.pull_request(owner: "acme", repo: "widget", index: 7)
+          assert_equal CANDIDATE, readback.dig("head", "sha")
+          result = @adapter.merge_pull_request!(owner: "acme", repo: "widget",
+            index: 7, head_commit_id: CANDIDATE)
+          assert_equal :refused, result.outcome
+          assert_equal 409, result.status
+          assert_includes result.reason, "head_commit_id does not match"
+          assert_equal 2, @server.requests.size
+          assert_equal "GET", @server.requests[0].method
+          assert_equal "POST", @server.requests[1].method
+          assert_equal "{\"Do\":\"fast-forward-only\",\"head_commit_id\":\"#{CANDIDATE}\"}",
+            @server.requests[1].body
+        end
+
+        # The binding is required and validated before anything touches the
+        # wire: a missing, truncated, or non-lowercase-hex head never reaches
+        # the forge.
+        def test_merge_without_a_valid_full_sha_binding_never_reaches_the_wire
+          assert_raises(ArgumentError) do
+            @adapter.merge_pull_request!(owner: "acme", repo: "widget", index: 7)
+          end
+          assert_raises(ArgumentError) do
+            @adapter.merge_pull_request!(owner: "acme", repo: "widget", index: 7,
+              head_commit_id: "abc123")
+          end
+          assert_raises(ArgumentError) do
+            @adapter.merge_pull_request!(owner: "acme", repo: "widget", index: 7,
+              head_commit_id: CANDIDATE.upcase)
+          end
+          assert_empty @server.requests
+        end
+      end
+
+      # A minimal but REAL HTTP/1.1 server on the loopback (stdlib TCPServer
+      # only): each accepted connection is one wire exchange — the request
+      # line, headers, and body are captured verbatim and one queued canned
+      # response is written back. This is transport, not a mock: the adapter
+      # runs its genuine Net::HTTP stack against it.
+      class LoopbackForgeServer
+        Request = Struct.new(:method, :path, :body)
+
+        REASONS = {200 => "OK", 401 => "Unauthorized", 404 => "Not Found",
+                   409 => "Conflict", 500 => "Internal Server Error"}.freeze
+
+        attr_reader :port, :requests
+
+        def initialize
+          @listener = TCPServer.new("127.0.0.1", 0)
+          @port = @listener.addr[1]
+          @requests = []
+          @responses = Queue.new
+          @thread = Thread.new do
+            while (session = @listener.accept)
+              serve_one(session)
+            end
+          rescue IOError, Errno::EBADF
+            nil # listener closed: server shutdown
+          end
+        end
+
+        # Queue one canned HTTP response for the next accepted connection.
+        def enqueue(status, body = "{}")
+          @responses << [status, body]
+        end
+
+        def stop
+          @listener.close unless @listener.closed?
+          @thread.join
+        end
+
+        private
+
+        def serve_one(session)
+          request_line = session.gets
+          headers = {}
+          while (line = session.gets) && line != "\r\n"
+            name, value = line.split(":", 2)
+            headers[name.strip.downcase] = value.to_s.strip
+          end
+          body = session.read(headers["content-length"].to_i) if headers["content-length"]
+          @requests << Request.new(method: request_line.split(" ").first,
+            path: request_line.split(" ")[1], body: body)
+          status, response_body = @responses.shift
+          session.write("HTTP/1.1 #{status} #{REASONS.fetch(status)}\r\n" \
+            "Content-Type: application/json\r\n" \
+            "Content-Length: #{response_body.bytesize}\r\n" \
+            "Connection: close\r\n\r\n#{response_body}")
+          session.close
         end
       end
     end
