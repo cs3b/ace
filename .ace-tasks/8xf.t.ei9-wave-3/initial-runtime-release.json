@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "purpose": "8xf.t.ei9 initial ordinary delivery runtime",
+  "source_commit": "5768ec3ddbb5cb732f67c8acebb49ea8d755203b",
+  "artifacts": [
+    {
+      "name": "ace-herdr",
+      "version": "0.6.0",
+      "artifact": "ace-herdr-0.6.0.gem",
+      "sha256": "6b25823fc1fccd89444deb5b57cb04dfb9a3035c5b53fd1e802ec0102c825ebb",
+      "bytes": 144384
+    },
+    {
+      "name": "ace-bundle",
+      "version": "0.45.1",
+      "artifact": "ace-bundle-0.45.1.gem",
+      "sha256": "19fe3b16cb1f5be5d4ca65e31eaedb8da8038b7cc037c9cc867464f760794adc",
+      "bytes": 70656
+    },
+    {
+      "name": "ace-task",
+      "version": "0.40.0",
+      "artifact": "ace-task-0.40.0.gem",
+      "sha256": "19b36f574bdc925a44a8a9edb40c0fa25894da350b462c3dfc988f1c1c2d93b1",
+      "bytes": 125952
+    },
+    {
+      "name": "ace-review",
+      "version": "0.60.3",
+      "artifact": "ace-review-0.60.3.gem",
+      "sha256": "bdc94c75de0c7156f4adee1cacd314079ef89adf86ffdce938c7d79457d73bfd",
+      "bytes": 331264
+    },
+    {
+      "name": "ace-assign",
+      "version": "0.70.0",
+      "artifact": "ace-assign-0.70.0.gem",
+      "sha256": "aa4d1240938b38a34a7cddb3965f17b714d624993fff7bf7a45004a97d7b7859",
+      "bytes": 1355264
+    },
+    {
+      "name": "ace-hitl",
+      "version": "0.16.0",
+      "artifact": "ace-hitl-0.16.0.gem",
+      "sha256": "bafbe0028681c6f57791e59baaeed3a70d66ffa78dab51039d87628d3e08f979",
+      "bytes": 100864
+    },
+    {
+      "name": "ace-lab",
+      "version": "0.8.0",
+      "artifact": "ace-lab-0.8.0.gem",
+      "sha256": "70882a12156cb6176b7329ff4326bd9c7527bd70a62c66ef75890ff866e6d12a",
+      "bytes": 112640
+    },
+    {
+      "name": "ace-overseer",
+      "version": "0.22.0",
+      "artifact": "ace-overseer-0.22.0.gem",
+      "sha256": "73905a344e605f2fe025d432d48a12603f6b71ba3cb0ce02da1dc81a028ee1f5",
+      "bytes": 166912
+    }
+  ]
+}
