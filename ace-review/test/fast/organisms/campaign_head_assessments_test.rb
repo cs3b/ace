@@ -61,6 +61,7 @@ class CampaignHeadAssessmentsTest < AceReviewTest
     input = assessment(campaign, original)
     result = manager.record_head_assessment(id, input)
     assert result.fetch("accepted"), result.fetch("reasons").inspect
+    assert_equal [@head, @base], manager.store.read(id).fetch("head_transitions").last.values_at("head", "base")
     assert_equal before.fetch("counters"), result.fetch("counters")
     assert_equal before.fetch("clean_streak"), result.fetch("clean_streak")
     assert_equal before.fetch("decision").fetch("remaining_rounds"), result.fetch("decision").fetch("remaining_rounds")
@@ -95,6 +96,34 @@ class CampaignHeadAssessmentsTest < AceReviewTest
     assert_raises(ArgumentError) { manager.record_head_assessment(id, assessment(campaign, original, text_only: false)) }
     assert_empty manager.store.read(id).fetch("head_assessments")
     assert_equal 3, manager.status(id).fetch("completed_rounds")
+  end
+
+  def test_dirty_candidate_refuses_assessment_without_observation_or_state_write
+    campaign, original = accepted_campaign
+    id = campaign.fetch("campaign_id")
+    @head = "c" * 40
+    owner = manager
+    before = owner.store.read(id)
+    owner.stub(:clean_candidate?, false) do
+      error = assert_raises(ArgumentError) { owner.record_head_assessment(id, assessment(campaign, original)) }
+      assert_match(/changed clean candidate/, error.message)
+    end
+    assert_equal before, owner.store.read(id)
+  end
+
+  def test_completed_rounds_without_independent_approval_cannot_carry
+    campaign = start_campaign
+    id = campaign.fetch("campaign_id")
+    3.times do |n|
+      input = round_input(n)
+      make_campaign_session(campaign, input)
+      campaign_manager.record_round(id, input)
+    end
+    @head = "c" * 40
+    result = manager.status(id)
+    refute result.fetch("accepted")
+    assert_includes result.fetch("reasons"), "head carry has no independent reviewed round"
+    assert_empty manager.store.read(id).fetch("head_assessments")
   end
 
   def test_stale_prefix_missing_current_checks_conflicting_replay_and_target_mismatch_refuse

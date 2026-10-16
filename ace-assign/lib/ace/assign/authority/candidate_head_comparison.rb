@@ -6,6 +6,8 @@ module Ace
       # Compare retained Git objects in a private bare repository. Historical
       # links are object bytes, never paths to materialize or follow. This view
       # supplies evidence; it does not classify a change or grant acceptance.
+      # Host: CandidateTransfer supplies bounded Git/admission, byte encoding,
+      # private-root storage, monotonic deadlines and rejection helpers.
       module CandidateHeadComparison
         class ReadView
           def initialize(owner:, repository:, reviewed:, candidate:, deadline:)
@@ -99,13 +101,15 @@ module Ace
           # original bytes. No partial inventory or truncated patch is returned.
           reject!("Complete head comparison context is oversized") if JSON.generate(context).bytesize > self.class::MAX_BYTES
           context
+        rescue AttemptErrors::ReceiptRejected => error
+          reject!("Head comparison read failed: #{error.message}")
         end
 
         def head_comparison_inventory(repository, deadline, tree)
           git(repository, deadline, "ls-tree", "-r", "-z", tree, limit: self.class::MAX_BYTES).b.split("\0").map do |entry|
             metadata, path = entry.split("\t", 2)
             mode, kind, oid = metadata.to_s.split(" ")
-            unless path && !path.empty? && kind == "blob" && %w[100644 100755 120000].include?(mode) && oid.match?(self.class::SHA)
+            unless path && !path.empty? && kind == "blob" && %w[100644 100755 120000].include?(mode) && oid&.match?(self.class::SHA)
               reject!("Complete head comparison contains an unsupported Git entry")
             end
             {"path" => review_bytes(path), "mode" => mode, "oid" => oid}

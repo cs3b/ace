@@ -7,6 +7,8 @@ module Ace
       # installed evidence owner can supply the source comparison, supervisor
       # provenance and check receipts. This is the existing campaign history,
       # not another execution or reviewer ledger.
+      # Host: CampaignManager supplies the store, evidence, immutable projection,
+      # exact-prefix verification, revisions, observation and acceptance helpers.
       module CampaignHeadAssessments
         Contract = Atoms::CampaignContract
         SNAPSHOT_PREFIX_FIELDS = %w[assessments attempts execution_attempts head_assessments phases rounds].freeze
@@ -41,6 +43,7 @@ module Ace
               head: head, base: base, historical: false)
             event = immutable_projection(input.merge("input_digest" => digest, "proof" => proof, "checks" => checks))
             record.fetch("head_assessments") << event
+            observe(record, head, base)
             store.write(record) unless dry_run
             projection(record).merge("dry_run" => dry_run)
           end

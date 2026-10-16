@@ -1,0 +1,74 @@
+{
+  "schema": "ace.ei9.source-review/v1",
+  "source": "13a54855d0410ffe26456f438d3cd88bc6db7b8c",
+  "tree": "7a09ed396cd024203d10bd6ff66164aff1ef5aa0",
+  "provider": "pi",
+  "model": "zai/glm-5.3",
+  "thinking": "high",
+  "preset": "ro",
+  "completion": "succeeded",
+  "verdict": "APPROVE with minor follow-ups",
+  "raw_artifacts": {
+    "review-report-review-default.md": {
+      "sha256": "b668e64fdfdb049a88b05497667cc9d4619d53147250f83549b537cec33af30e",
+      "bytes": 10924
+    },
+    "llm_metadata.yml": {
+      "sha256": "c30f51c8ccb5ce730f398e562306b440f01762246520e1e8d8630f80ef4d29c4",
+      "bytes": 978
+    }
+  },
+  "feedback": {
+    "D1": "Fixed: explicit v2 stored-format cut and retained original provenance; no migration or fallback.",
+    "L1": "Reproduced missing head observation; fixed observe before persistence.",
+    "L2": "Reproduced generic comparison-read error; contextualized while preserving ReceiptRejected type.",
+    "L3": "Hardened unreachable malformed Git inventory oid nil to clean refusal.",
+    "L4": "Documented host contracts in module comments.",
+    "T1": "Added bounded-clock deadline-expiry, dirty candidate no-state-write, and completed rounds without independent approval tests.",
+    "R1": "Declined optional cache: historical proof and revocation are revalidated on every read. Performance changes require evidence and must preserve this authority boundary."
+  },
+  "checks": [
+    {
+      "report": "review/96e20cb4-4a08-4e91-b839-147af2a017fc",
+      "tests": 6,
+      "assertions": 36,
+      "failures": 1,
+      "purpose": "RED observation regression"
+    },
+    {
+      "report": "assign/82c2d101-53a8-4d0a-8974-70bfc1bc0ec2",
+      "tests": 16,
+      "assertions": 295,
+      "failures": 1,
+      "purpose": "RED contextual read error regression"
+    },
+    {
+      "report": "review/7fc1575b-97d3-41be-8157-ab3da14c2573",
+      "tests": 21,
+      "assertions": 133,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "report": "assign/3e731389-8990-4f1a-9c8a-78608436d4c0",
+      "tests": 16,
+      "assertions": 297,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "report": "assign/039516c5-7eac-4353-a4e4-0954ae5ba32f",
+      "tests": 12,
+      "assertions": 181,
+      "failures": 0,
+      "errors": 0,
+      "purpose": "Existing protected campaign receipt and registration features"
+    }
+  ],
+  "limitations": [
+    "Pure callback tests do not attest native/installed authority.",
+    "Ordinary campaign owner and independent delta ingress remain unimplemented.",
+    "No publication, installation or complete ei9.8 acceptance.",
+    "Fresh independent delta verdict remains pending."
+  ]
+}

@@ -145,8 +145,23 @@ module Ace
           assert_raises(AttemptErrors::EvidenceUnavailable) { escaped.context }
           assert_empty Dir.children(File.join(root, "authority"))
           assert_equal after.fetch(:head), git(source, "rev-parse", "HEAD").strip
-          assert_raises(AttemptErrors::ReceiptRejected) do
+          error = assert_raises(AttemptErrors::ReceiptRejected) do
             transfer.with_head_comparison(before: before, after: after, before_base: "f" * 40, after_base: after_base) { |view| view.context }
+          end
+          assert_match(/Head comparison read failed/, error.message)
+          assert_empty Dir.children(File.join(root, "authority"))
+        end
+      end
+
+      def test_head_comparison_deadline_expires_without_partial_context
+        with_fixture do |transfer, root, source, base, _bytes|
+          input = comparison_input(root, source, "candidate")
+          transfer.with_head_comparison(before: input, after: input, before_base: base, after_base: base) do |view|
+            expired = Process.clock_gettime(Process::CLOCK_MONOTONIC) + Authority::CandidateTransfer::DEADLINE + 1
+            transfer.stub(:monotonic, expired) do
+              error = assert_raises(AttemptErrors::EvidenceUnavailable) { view.context }
+              assert_equal "head comparison deadline expired", error.message
+            end
           end
           assert_empty Dir.children(File.join(root, "authority"))
         end
