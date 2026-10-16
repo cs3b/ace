@@ -455,3 +455,15 @@ Read-only legacy content inspection found18 informational records requiring no
 decision and one historical broker-restart question whose stated condition is
 no longer current. None was cancelled or treated as approval. The existing
 31-record history and19 correlations remain unchanged.
+
+### Maintained test-runtime profile preparation — external block
+
+A separately assigned local installer/dependency profile task under ei9.5 was
+rejected by automatic platform content review before any plan, changes or tests
+were returned. This assignment explicitly excluded the already blocked
+communication work, root actions, deployment and publication. It is also stopped;
+no retry or reassignment through another tool is authorized by this record.
+The exact action and impact are retained in
+`5-deliver-scoped-releases-sync-and/evidence/test-runtime-preparation-blocker.json`.
+Existing R6 static kernel evidence remains valid for its frozen source; it does
+not establish a maintained installed runtime for dynamic candidate tests.
