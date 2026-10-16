@@ -153,3 +153,37 @@ with the intended restricted service settings. All fixture processes/sockets
 were removed. This is not production-history import, native worker admission or
 artifact-backed installation. Domain evidence:
 lab-config/.ace-local/ei9-native-owner/ordinary-owner-proof-r1.json.
+
+
+## Installed checkpoint — published main cut, 2026-10-16
+
+This supersedes earlier checkpoint statements that publication, production owner
+installation or exact runtime selection were pending. All eight published
+archives match the main2e9005f39 cut. Explicit-manifest TS-MONO-001 run8xfqwqr
+passed4/4 (normal and full-index,50 exact package versions); retained receipts
+live in evidence/published-main-*.json. This verifies consumer installation,
+not autonomous publication by the Lab.
+
+Public-registry service45 and coordinator59 graphs are now installed and selected
+in the actual Lab. Root ordinary owner is active PID554643 under UID966 with
+Assign/HITL/merge endpoints0660. Real participant UID1000 authenticated the Assign
+read and HITL ping; unrelated UID1001 was refused on all three sockets. Canonical
+coordinator shell selected Lab0.8.0/Assign0.70.0/Overseer0.22.0 and the new HITL
+endpoint. Dedicated restricted Forgejo identity passed setup/readback.
+
+Original and imported canonical journal retain the same20-commit tip e621fa01;
+the unresolved historical attempt remains unresolved. Legacy Pi, native Herdr
+and labd were preserved. Root opt-in was installed only after active checks.
+Exact proof: evidence/installed-ordinary-owner.json; domain source8554a7d.
+
+A real installer umask failure was reproduced, repaired at its shared root-
+directory helper, independently approved and verified on real Linux filesystem
+(136 tests,zero skips), then the actual UID966 prepare path passed. Domain full
+suite remains baseline-red: no candidate-only failing cases, not an all-green
+claim. Source/test/recovery proof is retained under domain task gad.2.0.
+
+Remaining gates: real native assignment/start/result, two sequential authorized
+merges, shared multi-group Hermes/mTLS with correct project replies, autonomous
+release/run/sync/cleanup and isolated second-project acceptance. HITL transport
+authority is intentionally unselected until that binding is implemented. No
+program or child completion is inferred from service health.

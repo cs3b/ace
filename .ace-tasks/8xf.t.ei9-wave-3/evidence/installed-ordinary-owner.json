@@ -1,0 +1,86 @@
+{
+  "authenticated_client": {
+    "uid": 1000,
+    "assign": {
+      "assignment_id": "8xahhp",
+      "generation": 0,
+      "journal_commit": "e621fa01a90e6f84089a8ee0377ee0a660cc2d6b"
+    },
+    "hitl": {
+      "pong": true
+    },
+    "loaded": {
+      "ace-review": {
+        "version": "0.60.3",
+        "path": "/usr/local/lib/lab/ace-runtimes/service/72f9936eece66e6eb10a8f829d47cc0b96ce267a64af21e2ce2341f73e1758ad/gems/gems/ace-review-0.60.3"
+      },
+      "ace-assign": {
+        "version": "0.70.0",
+        "path": "/usr/local/lib/lab/ace-runtimes/service/72f9936eece66e6eb10a8f829d47cc0b96ce267a64af21e2ce2341f73e1758ad/gems/gems/ace-assign-0.70.0"
+      },
+      "ace-hitl": {
+        "version": "0.16.0",
+        "path": "/usr/local/lib/lab/ace-runtimes/service/72f9936eece66e6eb10a8f829d47cc0b96ce267a64af21e2ce2341f73e1758ad/gems/gems/ace-hitl-0.16.0"
+      },
+      "ace-lab": {
+        "version": "0.8.0",
+        "path": "/usr/local/lib/lab/ace-runtimes/service/72f9936eece66e6eb10a8f829d47cc0b96ce267a64af21e2ce2341f73e1758ad/gems/gems/ace-lab-0.8.0"
+      }
+    }
+  },
+  "unit": "ActiveState=active\nSubState=running\nMainPID=554643\nCapabilityBoundingSet=\nUser=lab-assign-owner\nGroup=lab-assign-owner\nSupplementaryGroups=\nNoNewPrivileges=yes\n",
+  "outsider": {
+    "uid": 1001,
+    "sockets": {
+      "assign": "permission_denied",
+      "hitl": "permission_denied",
+      "merge": "permission_denied"
+    }
+  },
+  "sockets": {
+    "assign": {
+      "uid": 966,
+      "gid": 964,
+      "mode": "0o660",
+      "inode": 6084337
+    },
+    "hitl": {
+      "uid": 966,
+      "gid": 964,
+      "mode": "0o660",
+      "inode": 6084339
+    },
+    "merge": {
+      "uid": 966,
+      "gid": 964,
+      "mode": "0o660",
+      "inode": 6084341
+    }
+  },
+  "original": {
+    "tip": "e621fa01a90e6f84089a8ee0377ee0a660cc2d6b",
+    "commits": "20"
+  },
+  "canonical": {
+    "tip": "e621fa01a90e6f84089a8ee0377ee0a660cc2d6b",
+    "commits": "20"
+  },
+  "legacy_pids_preserved": {
+    "514709": true,
+    "1858726": true,
+    "207980": true
+  },
+  "domain_source_commit": "8554a7d85a2d944fda191136071d24bb53e52276",
+  "release_source_commit": "2e9005f39fdd12a5cf3c1d831e3dcad1bfdc4bc0",
+  "profiles": {
+    "service": "72f9936eece66e6eb10a8f829d47cc0b96ce267a64af21e2ce2341f73e1758ad",
+    "coordinator": "9d2f818612202c070ee8c0a551428443c484f88c052b0a586f5ccb9d86513f69"
+  },
+  "ordinary_client_env_sha256": "d9b0d0aff808e912c604f66e466595b9a314d611085b0b34e74b6f2c81c42c98",
+  "acceptance_limitations": [
+    "No real new ordinary assignment or merge yet",
+    "HITL transport_uids remains empty; no fabricated decision delegation",
+    "Legacy attempt8xbhrc remains unresolved",
+    "Two-project installed acceptance remains open"
+  ]
+}
