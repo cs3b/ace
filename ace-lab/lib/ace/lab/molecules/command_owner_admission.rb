@@ -219,7 +219,7 @@ module Ace
           GrantResolver.trusted_directory!(home) if File.exist?(home) || File.symlink?(home)
           count = 0
           source_root = dynamic ? File.join(dynamic.fetch("root"), dynamic.fetch("execution_id"), "source") : cwd
-          Find.find(source_root) do |path|
+          Find.find(source_root, ignore_error: false) do |path|
             raise InvalidConfigurationError, "command source exceeds verification bound" if (count += 1) > 20_000 || Process.clock_gettime(Process::CLOCK_MONOTONIC) >= deadline
             stat = File.lstat(path)
             contained_alias = dynamic && stat.symlink? && File.realpath(path).start_with?(source_root + "/")

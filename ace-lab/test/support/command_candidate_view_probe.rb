@@ -156,5 +156,32 @@ Dir.mktmpdir("ace-candidate-view-source-only-", "/run") do |root|
   rescue Ace::Lab::InvalidConfigurationError
     result["runtime_denied"] << "undeclared"
   end
+  File.unlink(File.join(gem_home, "specifications", "undeclared-1.0.0.gemspec"))
+  hidden = File.join(gem_home, "unobservable-to-verifier")
+  Dir.mkdir(hidden, 0o750)
+  File.chown(0, account.gid, hidden)
+  File.write(File.join(hidden, "writable-to-executor"), "fixture")
+  File.chmod(0o666, File.join(hidden, "writable-to-executor"))
+  read, write = IO.pipe
+  verifier = fork do
+    read.close
+    verifier_account = Etc.getpwnam("daemon")
+    Process.groups = []
+    Process::GID.change_privilege(verifier_account.gid)
+    Process::UID.change_privilege(verifier_account.uid)
+    begin
+      compiler.verify_installed!
+      write.write("ACCEPTED")
+    rescue Ace::Lab::InvalidConfigurationError
+      write.write("REFUSED")
+    end
+    write.close
+    exit! 0
+  end
+  write.close
+  result["unobservable_runtime"] = read.read
+  read.close
+  _, verifier_status = Process.waitpid2(verifier)
+  raise "source-only verifier fixture failed" unless verifier_status.success?
   puts JSON.generate(result)
 end

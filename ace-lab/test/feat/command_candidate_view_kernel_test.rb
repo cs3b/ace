@@ -23,5 +23,6 @@ class CommandCandidateViewKernelTest < Minitest::Test
     assert_equal uid, result.fetch("lock_owner")
     assert_equal %w[writable undeclared], result.fetch("runtime_denied")
     assert_equal %w[dangling escaping], result.fetch("link_denied")
+    assert_equal "REFUSED", result.fetch("unobservable_runtime")
   end
 end

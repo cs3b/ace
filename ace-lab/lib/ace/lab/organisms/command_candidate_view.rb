@@ -56,7 +56,7 @@ module Ace
           File.chmod(0o600, File.join(output, "Gemfile.lock"))
           File.symlink(File.join(output, "Gemfile.lock"), File.join(config, "Gemfile.lock"))
           executor = @definition.fetch("executor")
-          Find.find(output) { |path| File.chown(executor.fetch("uid"), executor.fetch("gid"), path) }
+          Find.find(output, ignore_error: false) { |path| File.chown(executor.fetch("uid"), executor.fetch("gid"), path) }
           seal(File.join(root, "source"))
           File.chmod(0o555, config)
           File.chmod(0o555, root)
@@ -76,7 +76,7 @@ module Ace
 
         def seal(root)
           paths = []
-          Find.find(root) do |path|
+          Find.find(root, ignore_error: false) do |path|
             stat = File.lstat(path)
             if stat.symlink?
               unless stat.uid.zero? && File.realpath(path).start_with?(root + "/")

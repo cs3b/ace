@@ -101,7 +101,7 @@ module Ace
             GrantResolver.trusted_directory!(path)
             canonical = File.realpath(path)
             count = 0
-            Find.find(path) do |entry|
+            Find.find(path, ignore_error: false) do |entry|
               if (count += 1) > 100_000 || Process.clock_gettime(Process::CLOCK_MONOTONIC) >= deadline
                 raise InvalidConfigurationError, "selected test runtime exceeds verification bound"
               end
@@ -142,6 +142,8 @@ module Ace
             end
           end
           true
+        rescue SystemCallError
+          raise InvalidConfigurationError, "selected installed test runtime is not fully observable"
         end
 
         private
