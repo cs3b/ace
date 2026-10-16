@@ -18,7 +18,7 @@ module Ace
       class OrdinaryOwnerConfig
         PATH = "/etc/lab/ace-lab/assign-owners.yml"
         ID = /\A[a-zA-Z0-9][a-zA-Z0-9_.-]{0,127}\z/
-        PROJECT_KEYS = %w[service journal assignment_root lifecycle_root runtime_binary native participants].freeze
+        PROJECT_KEYS = %w[service journal assignment_root lifecycle_root runtime_binary native worktrees participants].freeze
         SERVICE_KEYS = %w[uid gid socket_path state_root].freeze
         JOURNAL_KEYS = %w[repository ref checkout_root].freeze
         PARTICIPANT_KEYS = %w[gid actor role runtime workspace].freeze
@@ -38,7 +38,7 @@ module Ace
         end
 
         attr_reader :project, :service, :journal, :assignment_root, :lifecycle_root,
-          :runtime_binary, :native, :participants, :source
+          :runtime_binary, :native, :worktrees, :participants, :source
 
         def initialize(document, project:, source:)
           unless document.is_a?(Hash) && document.keys.sort == %w[projects version] && document["version"] == 1 &&
@@ -72,6 +72,8 @@ module Ace
             %w[host started_at].all? { |key| server[key].is_a?(String) && server[key].bytesize.between?(1, 512) && !server[key].include?("\0") }
           endpoint = @native["socket_identity"]
           invalid! unless endpoint.is_a?(Array) && endpoint.size == 3 && endpoint.all? { |value| value.is_a?(Integer) && value >= 0 } && endpoint.last == server.fetch("uid")
+          @worktrees = selected.fetch("worktrees")
+          invalid! unless @worktrees.is_a?(Hash) && @worktrees.keys.sort == %w[common_dir root] && @worktrees.values.all? { |path| absolute?(path) }
           private_paths = [@assignment_root, @lifecycle_root, @journal.fetch("checkout_root")]
           invalid! unless private_paths.all? { |path| path.start_with?(@service.fetch("state_root") + "/") } &&
             private_paths.uniq.size == private_paths.size && private_paths.combination(2).none? { |a, b| a.start_with?(b + "/") || b.start_with?(a + "/") }

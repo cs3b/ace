@@ -8,6 +8,7 @@ module OrdinaryOwnerFixture
       "assignment_root" => "/var/lib/ace/state/assignments", "lifecycle_root" => "/var/lib/ace/state/lifecycle",
       "runtime_binary" => "/usr/local/bin/herdr", "participants" => {"41001" => {"gid" => 41001, "actor" => "atlas-worker",
         "role" => "worker", "runtime" => "herdr", "workspace" => "w1"}},
+      "worktrees" => {"root" => "/lab/projects/atlas/.ace-wt", "common_dir" => "/lab/projects/atlas/.git"},
       "native" => {"socket_path" => socket_path, "socket_identity" => socket_identity,
         "server_identity" => peer, "version" => "0.9.1", "protocol" => 22}
     }}}

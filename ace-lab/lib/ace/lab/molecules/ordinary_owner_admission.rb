@@ -5,6 +5,7 @@ require "ace/assign/molecules/execution_identity_resolver"
 require "ace/herdr"
 require_relative "ordinary_owner_config"
 require_relative "ordinary_native_read"
+require_relative "ordinary_worktree_read"
 
 module Ace
   module Lab
@@ -34,6 +35,28 @@ module Ace
         end
 
         def identity!(peer:, pane:, deadline: default_deadline)
+          observe_identity(peer: peer, pane: pane, deadline: deadline, with_cwd: false).first
+        end
+
+        # The caller's claimed head is only a comparison. The accepted start
+        # uses the observed worker's checkout and process, never daemon cwd.
+        def execution!(peer:, pane:, head:, deadline: default_deadline)
+          unless head.is_a?(String) && head.match?(/\A[0-9a-f]{40}\z/)
+            raise ArgumentError, "ordinary start HEAD is invalid"
+          end
+          identity, cwd = observe_identity(peer: peer, pane: pane, deadline: deadline, with_cwd: true)
+          checkout = OrdinaryWorktreeRead.new(root: @config.worktrees.fetch("root"),
+            common_dir: @config.worktrees.fetch("common_dir"), deadline: deadline).observe(cwd)
+          after, after_cwd = observe_identity(peer: peer, pane: pane, deadline: deadline, with_cwd: true)
+          unless after == identity && after_cwd == cwd && checkout.fetch("head") == head
+            raise Ace::Assign::AttemptErrors::UnauthorizedIdentity, "ordinary worker process, working directory or HEAD changed"
+          end
+          {identity: identity, checkout: checkout}
+        end
+
+        private
+
+        def observe_identity(peer:, pane:, deadline:, with_cwd:)
           @peer.live!(peer, deadline: deadline)
           participant = @config.participant!(peer)
           unless pane.is_a?(String) && pane.bytesize.between?(1, 128) && !pane.include?("\0")
@@ -41,6 +64,7 @@ module Ace
           end
           observation = Ace::Herdr::Molecules::BoundedObservation.new(deadline: deadline, binary: @config.runtime_binary)
           runtime = @runtime
+          native = runtime
           unless runtime
             native = OrdinaryNativeRead.new(config: @config, deadline: deadline, peer: @peer)
             native.preflight!
@@ -58,12 +82,11 @@ module Ace
           # A reviewer still submits evidence as a worker; independent acceptance
           # is a separately authorized lifecycle transition, never this role label.
           role = participant.fetch("role") == "supervisor" ? "coordinator" : "worker"
-          Ace::Assign::Molecules::ExecutionIdentityResolver::Identity.new(
+          identity = Ace::Assign::Molecules::ExecutionIdentityResolver::Identity.new(
             actor: participant.fetch("actor"), role: role, runtime: participant.fetch("runtime"),
             adapter: "ordinary", process_pid: binding.fetch("process_identity").fetch("pid"), runtime_binding: binding)
+          [identity, with_cwd ? native.process_cwd(identity.process_pid) : nil]
         end
-
-        private
 
         def default_deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + 30
       end
