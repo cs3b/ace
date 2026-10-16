@@ -20,3 +20,12 @@ remain source evidence; exact candidate acceptance must cover later changes.
 The source-complete ordinary execution and operator-question joins are now
 under independent cross-review. Linux command-run source composition passed;
 its source freeze and independent review are separate gates. Keep parent open.
+
+Review scope repair: added the missing `scope-lab-runtime` project preset. It
+selects the coherent Lab/Herdr/Runtime/Assign/Overseer/HITL/contract/Hermes code,
+tests, docs and release metadata. It explicitly omits task evidence, which has
+separate exact hashes, package summaries and independent reports; these omitted
+files must not be described as model-reviewed. This changes packet selection,
+not the gate or its token limits. The actual configured reviewer remains
+`role:review-default` (Captain's Pi default); assistive Codex cross-inspection
+does not replace that configured reviewer execution.
