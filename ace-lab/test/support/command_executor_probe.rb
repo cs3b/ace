@@ -144,6 +144,16 @@ Dir.mktmpdir("ace-command-probe-", "/run") do |directory|
     client.close
     result_read.close
     owner = ProbeOwner.new(definition, mode)
+    Signal.trap("CHLD", "IGNORE") if mode == "sigchld_ignored"
+    if mode == "sigchld_reaper"
+      Signal.trap("CHLD") do
+        begin
+          loop { break unless Process.waitpid(-1, Process::WNOHANG) }
+        rescue Errno::ECHILD
+          nil
+        end
+      end
+    end
     begin
       Ace::Lab::Organisms::CommandExecutor.new(project: "ace", owner: owner).run(socket: server,
         request: {"execution_id" => "fixture", "caller" => {"uid" => 1000}, "tty" => %w[pty getpass].include?(mode), "rows" => 24, "cols" => 80})

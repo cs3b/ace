@@ -17,6 +17,10 @@ module Ace
           end
           @owner = Process.pid
           raise CleanupUncertain, "child scope has preexisting children" unless children.empty?
+          # An inherited ignore/custom reaper could discard a child's wait
+          # status and unpin its PID. This sole ephemeral helper owns the
+          # disposition; establish it while the verified child set is empty.
+          Signal.trap("CHLD", "DEFAULT")
           prctl = Fiddle::Function.new(Fiddle::Handle::DEFAULT["prctl"],
             [Fiddle::TYPE_INT, Fiddle::TYPE_LONG, Fiddle::TYPE_LONG, Fiddle::TYPE_LONG, Fiddle::TYPE_LONG], Fiddle::TYPE_INT)
           raise CleanupUncertain, "cannot establish child subreaper" unless prctl.call(36, 1, 0, 0, 0).zero?
