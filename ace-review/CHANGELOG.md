@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.61.0] - 2026-10-16
+
 ### Added
 
 - Add source-owned nonsemantic head assessments to the existing campaign history, retaining the original reviewed head, fresh checks, and an exact predecessor chain without consuming or resetting review budgets. Accepted-result v2 distinguishes reviewed and accepted heads; unavailable assessment authority keeps acceptance closed.
