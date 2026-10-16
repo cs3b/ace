@@ -9,6 +9,6 @@
     "failures": 0,
     "errors": 0
   },
-  "full_suite_after_correction": "pending; no green full-suite claim",
+  "full_suite_after_correction": "PASS: suite-521-green/receipt.json",
   "installed_acceptance": false
 }
