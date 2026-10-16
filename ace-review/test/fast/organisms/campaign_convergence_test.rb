@@ -114,6 +114,7 @@ class CampaignConvergenceTest < AceReviewTest
     campaign_manager.start(subject: campaign_subject, contract: "Changed contract", policy: campaign_policy, reason: "New requirements")
     assert_raises(ArgumentError) { campaign_manager.reserve_execution(id, **args.merge(request_id: "request-0")) }
   end
+
   def test_severity_correction_is_verified_audited_and_recomputed_without_an_extra_round
     campaign = start_campaign
     first = round_input(1)
