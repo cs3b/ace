@@ -7,15 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
-
-- Optionally serve existing mTLS HITL beside the ordinary Unix listener under the same canonical owner, journal, proposal policy and one-use OTP vault. Validate the configured project and service identity before either listener starts.
-
 ## [0.8.0] - 2026-10-16
 
 ### Added
 
 - Compose ordinary Assign, HITL and Forgejo merge under one installed owner and journal, with readiness barriers and fresh native/project admission.
+- Optionally serve existing mTLS HITL beside the ordinary Unix listener under the same canonical owner, journal, proposal policy and one-use OTP vault. Validate the configured project and service identity before either listener starts.
 - Add retained assignment prepare/request clients and bounded canonical worktree observations. Separate stable configuration identity from changing decisions, preserve no-effect settlement after slow provider calls, and clean delivery handler process groups.
 - This source cut enables initial installation; it does not claim autonomous release or installed two-project acceptance.
 

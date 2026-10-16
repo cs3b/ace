@@ -51,6 +51,28 @@ until their consumers have an accepted replacement.
 Entries below distinguish implemented source, installed prerequisites and final
 acceptance. No child or parent has completed its installed acceptance.
 
+### Publication from main after rebase
+
+The Captain requested rebasing before publication on 2026-10-16. All 30 completed
+source commits were rebased onto `f653537283410935204fc210d13ce176c66abbb7`;
+the only conflict was the root changelog, preserving both releases. The ongoing
+Hermes per-project routing implementation is retained separately and is not in
+this release. [Release reconciliation](release-reconciliation.md) records the
+50-package registry, payload and dependency audit and the eight pending versions.
+
+`initial-runtime-release.json` describes the historical **unpublished** cut
+`5768ec3ddbb5cb732f67c8acebb49ea8d755203b`, not the next publication. Its archives
+and checksum receipts remain unchanged as prior disposable-install evidence.
+The old active publisher queue and package-directory archives have been retired.
+New archives must be built from the reviewed main cut; production adoption of
+the historical cut is on hold. The approved Unix/mTLS join is included in the
+still-unpublished HITL 0.16.0 and Lab 0.8.0 versions.
+
+The installed transport inventory confirms legacy gateway/broker use, not active
+canonical mTLS. The three existing groups and their six project bindings must
+survive the later single-poller handoff. Source mTLS support alone does not prove
+installed decisions, OTP delivery or autonomous publication.
+
 ### Current ordinary execution and installed native checkpoint
 
 Source commits `6a2c93ac3`, `9a3e447cc`, `64e358999` reuse the existing Assign

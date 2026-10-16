@@ -7,15 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Fixed
-
-- Read TLS authority configuration through bounded protected descriptors, rejecting symlinks, unsafe ancestors, special files and concurrent replacement before startup.
-
 ## [0.16.0] - 2026-10-16
 
 ### Added
 
 - Require explicit predelegation for sixteen-hour proposal decisions and bind ordinary project proposals to the selected canonical owner. Refresh project and owner grants at transitions and replay; compose existing Unix/TLS listeners under the authority lifetime.
+
+### Fixed
+
+- Read TLS authority configuration through bounded protected descriptors, rejecting symlinks, unsafe ancestors, special files and concurrent replacement before startup. Declare the direct Runtime dependency used by this reader.
 
 ## [0.15.0] - 2026-10-14
 
