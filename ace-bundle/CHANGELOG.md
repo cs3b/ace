@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.45.1] - 2026-10-16
+
+### Changed
+
+- Follow the Herdr 0.6 dependency line for the coordinated ordinary delivery source cut.
+
 ## [0.45.0] - 2026-10-10
 
 ### Added

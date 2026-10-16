@@ -8,6 +8,9 @@ All notable changes to this project will be documented in this file.
 
 - **ace-design v0.2.0**: Add inherited project design contexts and transactional adjustment, component exploration, preset-driven site/app coding-agent generation, per-variant prompts and models, shared mock data, targeted revision/resume and selection, production/audit workflows, local browser evidence, and reviewed inspiration maintenance.
 - **ace-lint v0.30.11**: Recognize design CLI commands in skill metadata.
+- **ace-assign v0.70.0, ace-lab v0.8.0, ace-hitl v0.16.0, ace-herdr v0.6.0**: Compose canonical ordinary assignment, native admission, retained requests/results, scoped HITL and Forgejo merge under one installed owner. Bound local observations and delivery process cleanup while preserving unknown outcomes. This initial source cut does not certify installed autonomy.
+- **ace-overseer v0.22.0, ace-task v0.40.0**: Package native continuation audits and exact objective queue roots with accepted-head review and serial integration.
+
 - **ace-lab v0.7.0, ace-assign v0.69.0, ace-git-forgejo v0.7.0**: Ship the ordinary merge listener/receiver, canonical restart record listing, and scoped Forgejo provider APIs. Admission and effects bind the approved candidate head; the Lab adapter delegates provider transport and authentication to ace-git-forgejo. This source release does not claim installed autonomous merge acceptance.
 
 - **ace-lab v0.6.0, ace-assign v0.68.0**: Add the ordinary fixed merge producer/consumer pair — `ace-lab service request/status --mode ordinary-merge` with durable-once admission, canonical full-binding request digests per spec ruling r4, replay and conflict handling, and exact terminal receipt acceptance consumed through the assign coordinator.
@@ -15,6 +18,8 @@ All notable changes to this project will be documented in this file.
 - **ace-hitl-hermes v0.4.0**: Route Telegram channels over the mTLS crossing (exact `tls+tcp://` endpoints, pinned server identities, atomic multi-authority activation), add the `ace-hitl-boundary-scenario` acceptance harness, and surface informed unknown-chat coverage generations.
 
 ### Changed
+
+- **ace-bundle v0.45.1**: Follow Herdr 0.6 for the coordinated ordinary delivery dependency graph.
 
 - **ace-review v0.60.2**: Follow ace-git-forgejo 0.7 in the dependency manifest for the coordinated ordinary merge release.
 
@@ -33,6 +38,8 @@ All notable changes to this project will be documented in this file.
 - **ace-design (source)**: Keep fresh context ancestors unchanged during local adjustment and retain published proposals as recovery evidence.
 
 - **ace-llm-providers-cli 0.36.2 (source)**: Repair capture readiness and clean up coding-agent subprocesses on interruption; ace-design requires this patch for cancellation.
+
+- **ace-review v0.60.3**: Preserve stable campaign receipts, historical-head checks and attributable delta reports.
 
 - **ace-task v0.39.3**: Make `create --in` placement atomic, fully roll back failed placement, and retain placed tasks as recovery records when post-placement issue synchronization fails.
 - **ace-git-worktree 0.26.1**: Restore task-aware create by exposing the scoped task commit method used by the orchestrator; add red-before/green-after regression coverage.

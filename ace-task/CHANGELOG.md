@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.40.0] - 2026-10-16
+
+### Added
+
+- Support exact --root selection in create, show and update so project objective queues can use the configured directory without changing the global _folder convention.
+
 ## [0.39.3] - 2026-10-12
 
 ### Fixed

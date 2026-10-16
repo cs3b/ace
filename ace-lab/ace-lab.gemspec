@@ -44,8 +44,9 @@ Gem::Specification.new do |spec|
   spec.add_dependency "ace-support-cli", "~> 0.6"
   spec.add_dependency "ace-support-core", "~> 0.31"
   spec.add_dependency "ace-support-config", "~> 0.18"
-  spec.add_dependency "ace-assign", "~> 0.69"
-  spec.add_dependency "ace-hitl", "~> 0.15"
+  spec.add_dependency "ace-assign", "~> 0.70"
+  spec.add_dependency "ace-herdr", "~> 0.6"
+  spec.add_dependency "ace-hitl", "~> 0.16"
   # The forge merge receiver delegates every Forgejo provider responsibility
   # (HTTP transport, auth, payload, classification) to the forgejo provider.
   spec.add_dependency "ace-git-forgejo", "~> 0.7"

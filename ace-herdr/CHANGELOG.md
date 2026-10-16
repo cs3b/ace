@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-10-16
+
+### Added
+
+- Expose bounded native observations and hold ordinary Inbox delivery settlement through canonical Assign acceptance. Preserve exact targets and unresolved outcomes without repeat sends or alternate execution records.
+
 ## [0.5.1] - 2026-10-10
 
 ### Fixed

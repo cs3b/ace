@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.22.0] - 2026-10-16
+
+### Added
+
+- Package native continuation duties with ten-minute progress and hourly cleanup audits, exact session restoration, independent project progress and explicit unknown outcomes. Align role workflows with canonical Assign ownership and accepted-head review.
+
 ## [0.21.1] - 2026-10-14
 
 ### Changed

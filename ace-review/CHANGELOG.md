@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.60.3] - 2026-10-16
+
+### Fixed
+
+- Keep campaign execution receipts stable across unrelated journal appends, preserve historical-head evidence joins, and make delta reports uniquely attributable without requiring a local branch checkout.
+
 ## [0.60.2] - 2026-10-16
 
 ### Changed

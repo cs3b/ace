@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.70.0] - 2026-10-16
+
+### Added
+
+- Admit ordinary assignments, native starts, progress, submitted results and terminal settlement through the installed canonical owner. Retain original mutations and immutable snapshots across restart, isolate sibling scopes, and join current HITL, service and Inbox evidence.
+- Preserve historical review checks at their recorded head and align delivery presets with accepted-head assessment and serial integration.
+
 ## [0.69.0] - 2026-10-16
 
 ### Changed
