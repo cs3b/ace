@@ -250,3 +250,9 @@ inventory is normal before this helper forks. Normalize only that nil read to th
 empty inventory. Keep invalid/oversized inventories refused. Add isolated real-IO
 regression for empty reads; preserve failed R4 export and reports unchanged. Kernel
 fixture now retains bounded exception message/backtrace for these nonsecret probes.
+
+The sole ephemeral command helper establishes SIGCHLD DEFAULT after verifying its
+child set is empty and before enabling subreaper/fork. An inherited ignored signal
+or custom auto-reaper must not discard child wait status or unpin a PID. Real R6
+ignored/custom incoming-state regressions reproduce both failures on the previous
+code and pass after the reset; reports and Pi delta verdict are retained here.
