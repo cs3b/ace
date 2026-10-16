@@ -17,6 +17,8 @@ class CommandCandidateViewKernelTest < Minitest::Test
     assert_equal uid, result.fetch("evaluated_uid")
     assert result.dig("child", "source_denied")
     assert result.fetch("clean")
+    assert result.dig("different_uid_context", "accepted"), result.fetch("different_uid_context").inspect
+    assert_equal Etc.getpwnam("daemon").uid, result.dig("different_uid_context", "uid")
     assert_equal "lib/value.rb", result.fetch("alias")
     assert_operator result.fetch("lock_bytes"), :>, 0
     assert_equal 0, result.fetch("config_owner")

@@ -2,6 +2,7 @@
 # Source-only Linux root I/O fixture. Installed policy/runtime are controlled;
 # tiny runner is NOT ace-test, no owner/journal/test proof is manufactured.
 require "ace/lab/organisms/command_candidate_view"
+require "ace/lab/molecules/command_owner_admission"
 require "rbconfig"
 require "etc"
 require "open3"
@@ -74,6 +75,7 @@ Dir.mktmpdir("ace-candidate-view-source-only-", "/run") do |root|
     "executable_sha256" => Digest::SHA256.file(RbConfig.ruby).hexdigest, "entrypoint_sha256" => Digest::SHA256.file(runner).hexdigest}
   profile_path = File.join(root, "runtime.json")
   File.write(profile_path, JSON.generate(profile))
+  File.chmod(0o644, profile_path)
   account = Etc.getpwnam("nobody")
   recipe = {"kind" => "ordinary-candidate", "root" => views, "runtime_path" => profile_path, "runtime_sha256" => Digest::SHA256.file(profile_path).hexdigest}
   reference = {"assignment_id" => "fixture-only", "attempt_id" => "not-an-admission", "candidate_generation" => 1, "acceptance_event_digest" => "a" * 64}
@@ -121,6 +123,31 @@ Dir.mktmpdir("ace-candidate-view-source-only-", "/run") do |root|
   result["lock_owner"] = File.stat(File.join(output_root, "Gemfile.lock")).uid
   result["alias"] = File.readlink(File.join(views, "source-only", "source", "fixture-source", "alias"))
   result["clean"] = git(File.join(views, "source-only", "source"), "status", "--porcelain").empty?
+  # Production filesystem/Git context verifier under a genuinely different
+  # owner UID. This is a source-only check, not a canonical test receipt.
+  read, write = IO.pipe
+  context_verifier = fork do
+    read.close
+    verifier_account = Etc.getpwnam("daemon")
+    Process.groups = []
+    Process::GID.change_privilege(verifier_account.gid)
+    Process::UID.change_privilege(verifier_account.uid)
+    begin
+      admission = Ace::Lab::Molecules::CommandOwnerAdmission.new(base: Object.new, project: "fixture")
+      admission.send(:verify_context!, definition, Process.clock_gettime(Process::CLOCK_MONOTONIC) + 10)
+      write.write(JSON.generate("accepted" => true, "uid" => Process.uid))
+    rescue StandardError, SecurityError => error
+      write.write(JSON.generate("accepted" => false, "uid" => Process.uid,
+        "error" => "#{error.class}: #{error.message}", "backtrace" => error.backtrace.first(8)))
+    end
+    write.close
+    exit! 0
+  end
+  write.close
+  result["different_uid_context"] = JSON.parse(read.read)
+  read.close
+  _, context_status = Process.waitpid2(context_verifier)
+  raise "source-only context verifier fixture failed" unless context_status.success?
   begin
     view.prepare! { raise "existing view must not download" }
   rescue SecurityError => error

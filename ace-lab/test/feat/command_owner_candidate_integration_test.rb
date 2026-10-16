@@ -66,6 +66,26 @@ class CommandOwnerCandidateIntegrationTest < Minitest::Test
     end
   end
 
+  def test_real_git_uses_repository_root_when_kernel_reports_another_owner
+    fixture do
+      reference = current_reference
+      definition = scoped(reference) { @admission.command_request!(selection: selection(reference), peer: @peer, execution_id: "test1", deadline: deadline) }
+      materialize(definition)
+      process = Ace::Herdr::Molecules::BoundedProcess
+      original = process.method(:call)
+      # Git's real ownership-check fixture switch models only its UID
+      # observation; actual Git discovery/config/source checks still execute.
+      process.stub(:call, lambda { |argv, **options|
+        if argv.first == "/usr/bin/git" && argv.any? { |item| item.start_with?("safe.directory=") }
+          options = options.merge(environment: options.fetch(:environment).merge("GIT_TEST_ASSUME_DIFFERENT_OWNER" => "1"))
+        end
+        original.call(argv, **options)
+      }) do
+        assert @admission.command_test_evidence!(definition: definition, deadline: deadline)
+      end
+    end
+  end
+
   def test_native_origin_scope_lifetime_and_current_policy_are_not_inferred_from_caller_labels
     fixture do
       reference = current_reference
