@@ -34,6 +34,6 @@ owner with partial/uncertain registry reconciliation. The objective queue stores
 only goals, actions, blockers and references; Assign owns execution state.
 
 BLOCKED for installed acceptance: the actual ordinary authority owner, executable
-publisher selection, coordinator bundle adoption and two-project receipt remain
+publisher selection, installed asset refresh and two-project receipt remain
 unfinished. These source outcomes do not grant runtime authority or prove deployment.
 A second inventory must be byte-identical unless further source edits are intended.

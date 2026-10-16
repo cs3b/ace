@@ -6,15 +6,15 @@ status is not an autonomous delivery receipt.
 
 | Requirement | Outcome owner | Existing implementation / prior owner | Publication | Installation | Acceptance |
 |---|---|---|---|---|---|
-| Exact authorized merge; fresh PR2 decision | ei9.0 | ace-lab ordinary request/receiver; ace-assign journal; ace-git-forgejo; xz9.4/.5 ordinary clauses | lab0.7.0, assign0.69.0, forgejo0.7.0 published; repair pending | Initial cut owned here; old service gems, config missing | Two real sequential PR merges, revocation, head race, uncertain/restart pending |
+| Exact authorized merge; fresh PR2 decision | ei9.0 | ace-lab ordinary request/receiver; ace-assign journal; ace-git-forgejo; xz9.4/.5 ordinary clauses | lab0.7.0, assign0.69.0, forgejo0.7.0 published; repair pending | Initial cut installed in immutable graphs; coordinator Bash consumer adopted; ordinary receiver pending | Two real sequential PR merges, revocation, head race, uncertain/restart pending |
 | Context, capabilities, start rules | ei9.1 | ace-overseer; qk0 and qkb.1 | Inspect effective assets | Coordinator bundle stale | Installed role/context/path/digest receipt pending |
-| Local objective queue, canonical attempt adoption | ei9.2 | ace-task root selector; ace-assign; qk0/qkb.1 | Exact --root CRUD extension pending | No overseer queue verified | Restart/lost answer/duplicate wake without redispatch pending |
+| Local objective queue, canonical attempt adoption | ei9.2 | ace-task root selector; ace-assign; qk0/qkb.1 | Exact --root create/show/update implemented and tested; release pending | No overseer queue verified | Restart/lost answer/duplicate wake without redispatch pending |
 | Dispatch start and correct result attribution | ei9.3 | ace-overseer/Herdr/Assign; qk0/qkb.1 | Existing APIs, join verification pending | Start receipt not yet verified | No-start/wrong callback refused; producer result adoption pending |
 | Native continuation and serial integration | ei9.4 | Pi ace-wake loop/watch; qk0/qkb.1 | Existing source assets | Effective extension not verified | Restore watches; 10-minute progress audit; hourly cleanup; two serial merges pending |
 | Project command, release, sync, all consumers | ei9.5 | ace-lab run (iy6 missing), existing publisher/Assign/runtime/HITL; qkb.1 | Four previous gems published manually; new cut pending | User/service/coordinator consumers stale; legacy pins separate | Partial/unknown publish, wrong OTP, old bundle, installation receipts pending |
 | Preserve and close accepted work | ei9.6 | Herdr/worktree owners; ordinary qk0 | Existing preservation mechanisms | Exact installed path pending | Commits/files/results survive cleanup; correct pane closes pending |
 | Installed two-project proof | ei9.7 | TS-DELIVERY-* (qkc), lq1 receipts; shared result with lab-config gad.2 | No new framework | Both deployments pending | Two workers → PRs → review → serial merges → one release → install/sync/cleanup; cold isolated second project pending |
-| Accepted-head review and bounded campaigns | ei9.8 | ace-review ig3/ig4/qm6; Assign presets; configure-project | review0.60.2 published; ig3 reproduction fails | Effective presets contradict current contract | Exact historical evidence and bounded rounds; moved-head risk/delta review pending |
+| Accepted-head review and bounded campaigns | ei9.8 | ace-review ig3/ig4/qm6; Assign presets; configure-project | review0.60.2 published; ig3 source repair passes; next cut pending | Source presets aligned; installed asset refresh pending | Exact historical evidence and bounded rounds; moved-head risk/delta review pending |
 | Shared Hermes and delegated decisions | ei9.9 | nh0 implementation; qjz scoped policy; Hermes/HITL mTLS | Existing hitl0.15/hermes0.4 | One poller/all groups/correlation not verified | Project isolation, exact reply, only predelegated 16-hour timeout pending |
 
 ## Adopted obligations and boundaries
@@ -50,3 +50,168 @@ until their consumers have an accepted replacement.
 
 Implementation and test entries are added here as each slice is verified. No
 installed acceptance is claimed by this initial ledger.
+
+### Review history contract correction
+
+The ig3 producer already asks Assign to revalidate previous approval checks at
+their recorded head; Assign allowed historical collection/approval but rejected
+all historical check reads. Extend the existing evidence read, preserving exact
+head, succeeded canonical receipt/digest, operation/check-name and immutable
+journal validation. Historical results remain explicitly historical and cannot
+certify the current head. Never infer authority from local report snapshots.
+
+
+### Verified execution checkpoint (2026-10-16)
+
+The host branch is `codex/ei9-autonomous-lab`, based on `32f1dd59d`. Source
+repairs and controlled tests below do not certify installed authority or autonomy.
+
+- Configuration digest excludes only mutable decisions; static changes still
+  require a receiver restart. Fresh PR2 after PR1 passes without that restart.
+- Ordinary admission/claim joins existing HITL proposals inside Assign CAS;
+  generic and fixed operations cannot consume the same proposal, even when IDs
+  have identical text across namespaces. Canonical no-effect evidence releases
+  consumption only after bound evidence is atomically committed. Raw blob staging
+  preserves exact bytes under Git filters, and startup inventories that namespace.
+- Canonical historical checks preserve the exact recorded head, succeeded receipt
+  and digest. An unrelated journal append no longer changes campaign receipt
+  identity. Existing ig4 bounded retry/phase/escalation tests pass; no replacement
+  convergence engine was added.
+- Decisions created on a real UNIX lifecycle endpoint reconcile through real mTLS
+  using the original proposer and fresh trusted grants. A 16-hour expiry requires
+  explicit operation delegation both at creation and reconciliation; later grant
+  additions do not retroactively authorize an old proposal.
+- Two proposals, created sequentially through the existing HITL service, drive
+  two sandbox merges via one ordinary listener and fresh producers without policy
+  edits. Native observation is a controlled boundary in this source test, not a
+  claim about installed Pi identities or distinct-account isolation.
+- Disconnected clients, malformed responses, duplicate concurrent dispatch claims,
+  revocation before the forge POST and startup listener exclusion have regressions.
+
+Executed package evidence: Task 517 tests/1525 assertions (2 skips), Hermes
+165/950, Review 1007/3496 (4 skips), Overseer 310/1918 and Handbook 82/603 passed.
+Subsequent qm6/bounds checks passed 141/624; fixed merge primitives 13/91;
+UNIX-to-mTLS proposal integration 10/55; ordinary sequential integration 5/42.
+Full affected-package checks are being repeated after the final source corrections.
+The first default fast suite passed 48 packages and failed 2 (stale HITL assertions
+and Lab shared fixtures); those causes have focused passing reruns. It is not a
+passing suite receipt until the complete rerun finishes.
+
+Independent source reviewer approved the canonical claim/evidence/transport delta
+following its corrections, with independent 13/91 Assign and 13/50 HITL results.
+This approval does not cover installed sole-writer isolation or two-project delivery.
+
+### Installed baseline, not yet adopted
+
+Domain branch `codex/ei9-service-installer`, code `d1a20d7`, evidence `5fbf8db`:
+48 focused and 10 permission tests, independent approval, root-owned ancestor
+checks, real Linux native builds, full graph checksums, repeated installation and
+unprivileged graph loading passed. The four already-published gems were reused.
+
+- Service: `/usr/local/lib/lab/ace-runtimes/service/b8668ba8ec417cde2ee24657b3f164a61bcdc495cf76b255a823d07e2e02cbf3`.
+- Coordinator: `/usr/local/lib/lab/ace-runtimes/coordinator/0dc9ae6c4b873b9c82c430a3e17624931eee851aa7126feeb5030c7e0a56d92f`.
+- Reviewed root execution source: `/usr/local/lib/lab/install-src/d1a20d79cac9e93dcc21043d77e6547e5006857c`.
+
+`/lab` is user-owned and was refused as an ancestor for root installer execution.
+Foreign coordinator Gemfile/lock edits and all legacy runtimes were preserved.
+At this checkpoint existing Pi and interactive consumers still selected old
+versions; consumer adoption is separate ongoing domain work. No ordinary receiver,
+shared-writable journal, new grant, poller, external message or publication was
+created as part of this baseline installation.
+
+### Next required authority join
+
+A requester-writable canonical Git repository is not a decision authority. Before
+installed `.0` acceptance, one installed service identity must exclusively own
+Assign repository/ref, cache/checkout/exclusion and all ancestors. The existing
+HITL boundary and merge receiver must use that same owner. Every admitted attempt
+mutation must reach it through existing execution ownership, and read-only status
+must select the installed canonical location rather than the caller's cwd. Full
+protected boot/network/native contracts remain intact; they cannot be bypassed
+with a permissive deployment adapter. Installed distinct-user tests remain open.
+
+### Installed consumer adoption and read-only source boundary
+
+Domain commits `82e8036` (maintained selection) and `27dbc12` (reviewed audit)
+add root-owned `/etc/lab/ace-runtime/{service,coordinator}.env` and the native Pi
+Bash shell selection. The idle overseer was restarted through the supported path.
+Its native Bash tool loaded the exact coordinator graph and all eight selected
+versions. The Node parent still inherits the deliberately separate legacy launch
+environment; Ruby command selection is proven at the Bash tool boundary, not
+inferred from the Node parent. Existing legacy services were preserved.
+
+The recovery audit verified that existing claimers select only `queued` records.
+All 12 delivered inbox records and 56 claimed wake rows (40 terminal attempts)
+remained byte-identical across restart. No queued or active work remained, and
+the new native session performed only `lab overseer ready` before becoming idle.
+This proves no repeated dispatch during this adoption; it does not establish
+historical delivery of those 68 records. Their sanitized references and evidence
+are in lab-config gad.2 `ei9-historical-deliveries.{md,json}` and
+`ei9-coordinator-adoption.json`.
+
+The current source producer now selects `journal_repository` and `journal_ref`
+from trusted ordinary installation policy. Status reads a pinned immutable tip
+without the service's private lock/cache, and works during receiver downtime.
+Scrubbed bounded Git reads reject writable ancestors, writable Git children,
+symlinks, alternate storage and included configuration. Protected snapshot reads
+share their existing closed command dialect without relaxing protected checks.
+Service selection cannot fall back to a stale attempt cache when the assignment
+definition is absent. Receiver configuration uses the existing trusted file reader.
+
+Independent verdict: APPROVE for this read-side source slice; 41 tests / 409
+assertions passed. This does not certify installed distinct-UID isolation or the
+still-required owner RPC for all assignment/attempt/evidence mutations.
+
+Latest completed whole package review: 1014 tests / 3523 assertions, four skips,
+PASS (`review/d0eb8431-4b76-40bd-80dd-0c2bd434986d`). Latest completed fast monorepo
+run passed 49 packages; the sole failure used the pre-fix delta resolver, before
+its full passing rerun. Lab in that run passed 422 / 2378 (four skips). An earlier
+isolated organisms run had one transient protected snapshot refusal; focused
+12 / 219 and the subsequent full fast run passed without relaxing validation.
+The cause of the earlier refusal remains unconfirmed. Final source checks continue.
+
+The domain inventory additionally found the published Pi integration package
+missing from the selected graph and therefore no installed ace-wake extension.
+Exact graph augmentation and native continuation verification remain in progress;
+consumer adoption alone is not wake/loop or two-project delivery acceptance.
+
+### Expanded Assign feature verification
+
+The complete Assign run finished after 54m55s with 1478 tests, 9450 assertions,
+5 failures and 46 errors (`assign/3ed63ab0-be25-42a0-9cff-26afd455444f`). It is NOT
+passing acceptance. Independent baseline attribution is in progress; initial
+inspection found unchanged protected fixture/API mismatches and a stale
+publication fixture. No protected validation has been relaxed to make these pass.
+The apparent HITL signature error is the old no-keyword `proposal_journal`
+fixture accessor, not the new silence policy; baseline execution is checking it.
+
+Current focused canonical reader + merge primitive + campaign verification passed
+28 / 193 (`assign/e971b850-2790-4617-8b69-aac380c883bd`); coordinator tests including
+missing-definition/cache fallback rejection passed 53 / 245
+(`assign/dc1eddca-5151-4d85-9388-046781fac4a3`). Current producer/config/listener E2E
+passed 36 / 229 (`lab/7f55eb27-4481-412b-baeb-519f53bdd659`). These focused results
+complement, rather than replace, the recorded expanded-suite failures.
+
+### Completed default suite and expanded-suite attribution
+
+The final default `bin/ace-test-suite --no-color` passed all 50 packages:
+12,237 tests, 42,291 assertions, 42 skips, no failures. Current Assign fast report
+is `assign/923f0f17-51d6-45f0-a5ad-2e7f01329330`; Lab is
+`lab/f2d2374f-cdd6-429a-9345-b502acf7b9ee`; Review is
+`review/acd87896-d1f9-4233-bd0b-8713a8fbfdd3`.
+
+Independent baseline checks against unchanged `32f1dd59d` reproduced all five
+failures and 26 of 46 errors from the expanded Assign run: 31 identical failing
+tests among 34 executed tests, 261 assertions. Remaining errors use the same
+unchanged protected fixtures or retained deployment association. No reviewed-delta
+regression was identified. The HITL signature mismatch predates the new policy.
+The expanded suite remains failing; this attribution is not passing acceptance.
+Baseline reports in the original checkout:
+
+- `assign/0af92171-781f-477a-8101-ccda38e67b1b`: atomic context, obsolete Codex API, exclusion keywords, publication fixture.
+- `assign/bb932387-e942-44b0-8702-e2df8b29fdc5`: project-aware HITL fixture signature.
+- `assign/571252f3-feed-481e-8571-e3b15549e996`: seven protected representatives.
+- `assign/214e0e7e-caa9-4d10-905a-6cc1554cc362`: foreground JSON fixture parses separate newline writes.
+
+Protected validation was preserved. These older fixture repairs do not replace
+the installed two-project delivery acceptance still required by this program.

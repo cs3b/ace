@@ -40,8 +40,13 @@ arbitrary privileged argv. Use configured receiver identity, no worker sudo/toke
 
 - Run the actual CLI with valid configuration and canonical coordinator. Missing
   config gives a precise refusal, never a constructor error or fake success.
-- Producer and executor share ONE authoritative Assign journal and permissions;
-  copying it into an integration checkout is forbidden.
+- Producer and executor bind ONE authoritative Assign journal identity/ref. An
+  installed service identity is its sole writer; the requester cannot modify the
+  repository, ref, checkout, lock or any ancestor. Producer/status reads are
+  read-only. Attempt/proposal mutations must cross admitted existing owner APIs,
+  including recovery. Copying the journal into an integration checkout or granting
+  shared write permissions is forbidden. Source join and installed isolation must
+  both be verified before enabling the receiver.
 - Forgejo provider performs actual PR merge/readback. Local update-ref and
   synthetic observations cannot prove it. Do not mutate checked-out main locally.
 - Send server-side expected accepted head (head_commit_id for Forgejo), then

@@ -10,6 +10,14 @@ tags: [ace-review, review-loop, delta]
 
 # ace-review: fix delta report naming, bare --pr full-round default, and stale-head delta retry
 
+## Current ordinary delivery owner (2026-10-16)
+
+Remaining report/no-op freshness work belongs to `8xf.t.ei9.8`. The existing bare
+PR full-round behavior is retained. Source verification now covers standalone
+`review.md`, role-only reports and stale identical remote reads with a newer local
+PR branch. Installation and complete acceptance remain with ei9; this note does
+not mark the historical task done.
+
 ## Origin
 
 Hit three times during the 8wr.t.t8j review loop (PR #352, 2026-09-29).
