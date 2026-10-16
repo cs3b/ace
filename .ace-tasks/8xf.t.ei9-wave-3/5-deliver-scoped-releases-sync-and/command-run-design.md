@@ -189,28 +189,42 @@ authority join. No versions bumped; task remains in-progress.
 
 ## Next publication/OTP join (design only)
 
+The smallest complete autonomous release uses the REAL ordinary delivery assignment
+and attempt as publication authority. A taskless project command only builds
+nonsecret retained artifacts; it does not need publication authority. iy6's
+interactive publication/secret requirements remain OPEN under ei9.5 and must not
+be claimed delivered by this first release path or moved outside the program.
+
 1. Producer retains accepted gem bytes plus gem/version/platform/SHA256 and accepted
-   source head/tree/project. Use scoped-publication input, without rebuilding inside
-   read-only accepted source or altering accepted bytes.
-2. Existing same-Router/journal service admission needs an explicit command service
-   provenance variant: original command reference/generation, exact artifact/input
-   digest, installed authorization and actual receiver process generation. Extract
-   reusable source-owned Endcap request_service/begin_dispatch/service_status and
-   publication_challenge/publication_continue rules; never fabricate assignments.
-3. Existing HITL RequestEnvelope union/service needs a closed canonical command-
-   publication binding/context. Current ServicePublicationBinding#with_publication!
-   requires protected assignment/same-process Endcap#with_publication_hitl!; ordinary
-   AssignmentBinding cannot authorize it. Validate kernel receiver, project, exact
-   input/challenge digest and command generation under owner exclusion. The unassigned
-   operator-question context cannot authorize effects. Keep OTP in existing vault
-   and channel, never journal, command definition or ambient IDs.
+   source head/tree/project. Use scoped-publication input without rebuilding inside
+   read-only accepted source or altering accepted bytes. Join that artifact to the
+   real delivery attempt's reviewed head and candidate generation.
+2. Extract shared fixed service admission/publication rules from Endcap into the
+   existing ordinary Router/journal owner. Reuse request_service/begin_dispatch/
+   service_status and publication_challenge/publication_continue CAS/effect semantics,
+   backed by the ACTUAL ordinary assignment/attempt and reviewed candidate. Bind
+   exact artifact/input digest, installed service grant and actual receiver process
+   generation. No synthetic assignment, taskless attempt or command effect envelope.
+3. Compose existing ServicePublicationBinding beside that same-process fixed owner
+   and ordinary AssignmentBinding. Reuse current protected selector/envelope fields
+   where they represent the real parent. Its with_publication! currently calls
+   Endcap#with_publication_hitl!: expose that same owner-held authorization contract
+   through the extracted owner, with original receiver/challenge/generation checks.
+   The unassigned operator-question context cannot authorize effects. Keep OTP in
+   the existing vault/channel, never journal, command definition or ambient IDs.
 4. Reuse ProtectedServiceReceiver registry preflight, OTP challenge/consume, fresh
-   publication_continue permit and uncertain-outcome reconciliation with command
-   provenance. ProtectedPublicationPublisher#push! already calls maintained
-   --scoped-publication using retained exact artifact/digest/gem/version. Its verify!
-   independently compares registry SHA. Lost issuing ACK never permits push;
-   ambiguous push reconciles exact registry bytes before any continuation.
-5. Accept one real scoped release with project-correlated OTP. Wrong/revoked
-   command/service/artifact/challenge/project, expired/rejected OTP, lost ACK, partial
-   or uncertain push and restart remain open until canonical exact-artifact proof.
-   This uses existing authority/journal/vault, without another broker or ledger.
+   publication_continue permit and uncertain-outcome reconciliation. Existing
+   ProtectedPublicationPublisher#push! invokes maintained --scoped-publication with
+   retained exact artifact/digest/gem/version; verify! independently compares registry
+   SHA. Lost issuing ACK never permits push; ambiguous push reconciles exact registry
+   bytes before any continuation.
+5. Accept one actual scoped release with project-correlated OTP. Wrong/revoked real
+   delivery attempt/service/artifact/challenge/project, expired/rejected OTP, lost
+   ACK, partial/uncertain push and restart stay open until canonical exact-artifact
+   proof. No new broker, ledger or command-publication schema is needed. A later
+   separately authorized taskless publication feature would require its own real
+   provenance design and cannot borrow this parent authority.
+
+Final namespace-focused verification: ace-test selected ordinary_lifecycle_test.rb
+and command_execution_test.rb;25 tests/214 assertions/zero failures/errors passed.
+Report assign/6c08e10e-f8c0-44a0-835a-ad28cfbe3c86.
