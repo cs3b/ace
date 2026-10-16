@@ -3,6 +3,29 @@
 require_relative "../test_helper"
 
 class AssignmentCommandTest < Minitest::Test
+  def test_drive_uses_installed_transport_and_original_context_for_supervisor_adoption
+    assert Ace::Lab::CLI::REGISTERED_COMMANDS.any? { |name, _| name == "assignment drive" }
+    calls = []
+    transport = Object.new
+    driver = Object.new
+    driver.define_singleton_method(:adopt_supervisor) do |**options|
+      calls << options
+      {"data" => {"generation" => 2}, "request" => "/retained/original/request.json"}
+    end
+    client_factory = ->(project:) { assert_equal "atlas", project; transport }
+    driver_factory = ->(**options) { assert_equal({path: "/retained/context.json", project: "atlas", transport: transport}, options); driver }
+    Ace::Lab::Organisms::OrdinaryAssignmentClient.stub(:new, client_factory) do
+      Ace::Assign::Organisms::OrdinaryDriver.stub(:new, driver_factory) do
+        out, = capture_io do
+          Ace::Lab::CLI::Commands::Assignment::Drive.new.call(project: "atlas", context: "/retained/context.json",
+            operation: "adopt-supervisor", pane: "w1:pS", generation: 1, previous_binding_sha256: "a" * 64)
+        end
+        assert_equal "/retained/original/request.json", JSON.parse(out).fetch("request")
+      end
+    end
+    assert_equal [{pane: "w1:pS", generation: 1, previous_binding_sha256: "a" * 64}], calls
+  end
+
   def test_registered_request_preserves_explicit_selection_and_emits_canonical_reply
     assert Ace::Lab::CLI::REGISTERED_COMMANDS.any? { |name, _| name == "assignment request" }
     assert Ace::Lab::CLI::REGISTERED_COMMANDS.any? { |name, _| name == "assignment prepare" }

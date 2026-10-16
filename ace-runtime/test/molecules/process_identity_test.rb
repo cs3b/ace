@@ -89,6 +89,45 @@ module Ace
         identity = Ace::Runtime::Molecules::ProcessIdentity.new.capture(Process.pid)
         assert_equal "unknown", observer.observe(identity)["liveness"]
       end
+
+      def test_generation_ends_only_after_real_child_is_reaped
+        reader, writer = IO.pipe
+        pid = Process.spawn(RbConfig.ruby, "-e", 'STDOUT.puts("ready"); STDOUT.flush; STDIN.read', out: writer, in: reader)
+        writer.close
+        observer = Ace::Runtime::Molecules::ProcessIdentity.new
+        identity = observer.capture(pid)
+        assert identity
+        assert_equal "live", observer.generation_status(identity).fetch("liveness")
+        Process.kill("TERM", pid)
+        Process.wait(pid)
+        assert_equal "ended", observer.generation_status(identity).fetch("liveness")
+        pid = nil
+      ensure
+        reader&.close
+        writer&.close unless writer&.closed?
+        if pid
+          Process.kill("KILL", pid) rescue Errno::ESRCH
+          Process.wait(pid) rescue Errno::ECHILD
+        end
+      end
+
+      def test_generation_reuse_is_positive_but_unreadable_capture_is_unknown
+        table = ProcessTable.new(10 => {parent: 1, uid: 100, birth: "darwin:42:1"})
+        observer = Ace::Runtime::Molecules::ProcessIdentity.new(executor: table,
+          birth_reader: ->(pid) { table.rows.dig(pid, :birth) })
+        saved = observer.capture(10)
+        table.rows[10][:birth] = "darwin:42:2"
+        assert_equal "ended", observer.generation_status(saved).fetch("liveness")
+        table.rows.clear
+        inaccessible = Object.new
+        inaccessible.define_singleton_method(:kill) { |*_| raise Errno::EPERM }
+        assert_equal "unknown", observer.generation_status(saved, process: inaccessible).fetch("liveness")
+        inaccessible.define_singleton_method(:kill) { |*_| 1 }
+        assert_equal "unknown", observer.generation_status(saved, process: inaccessible).fetch("liveness")
+        inaccessible.define_singleton_method(:kill) { |*_| raise Errno::ESRCH }
+        assert_equal "ended", observer.generation_status(saved, process: inaccessible).fetch("liveness")
+        assert_equal "unknown", observer.generation_status(saved.merge("host" => "other"), process: inaccessible).fetch("liveness")
+      end
     end
   end
 end

@@ -12,6 +12,7 @@ ace-docs:
 ## Command Surface
 
 - `ace-overseer work-on`
+- `ace-overseer ordinary`
 - `ace-overseer status`
 - `ace-overseer prune`
 - `ace-overseer projects`
@@ -53,6 +54,50 @@ Use independent status/steering while it remains foreground. Reap is local
 observation, never canonical terminal/release or physical cleanup permission.
 Recovery reports absent/mismatched local inputs separately from original canonical
 reservation attribution, without upload, reconstruction or retry.
+
+## `ace-overseer ordinary`
+
+Ordinary execution is explicit and uses the root-selected project's Assign owner.
+`work-on --project` keeps its protected contract and never falls back here.
+The native supervisor prepares each reviewed leaf in its own existing worktree
+and prepared pane, registers exact captured inputs, then launches its explicit
+provider profile:
+
+```sh
+ace-overseer ordinary --operation prepare --project atlas --task 8wr.t.abc --checkout /lab/projects/atlas \
+  --provider pi:zai/glm-5.3-flash:high --output /private/ordinary/task-one
+ace-overseer ordinary --operation launch --project atlas --context /private/ordinary/task-one/context.json
+ace-overseer ordinary --operation resume --project atlas --context /private/ordinary/task-one/context.json
+```
+
+Preparation validates the explicit checkout against the installed Git common directory, then uses WorktreeProvisioner, WindowOpener and PreparedWorkBuilder. Project configuration resolves inside the selected checkout/worktree even when the native supervisor runs from another project. The
+provider/model/thinking selection must resolve through the existing LLM builder.
+It retains exact IDs, HEAD, scope and worker pane before registration. If the
+registration reply is lost, inspect canonical status through that original
+context; if registration is absent, replay the original `prepared/request.json`
+with `ace-lab assignment request`. Do not create another preparation to bypass
+uncertainty. Partial preparation errors preserve their files for inspection.
+
+Launch verifies the actual current native supervisor against canonical ownership,
+retains a dispatch intent before native send and sends the worker's ordinary
+`/as-assign-drive` entry. Acknowledgement means accepted send, not process start.
+The worker must register its own actual start through the installed owner.
+An existing dispatch intent plus no start stays `dispatch_uncertain`; neither
+launch nor resume sends a second command. `status` and `resume` are read-only
+observations of the original assignment/attempt and current supervisor selection.
+
+The returned native `/watch add` command watches a result hint file. Install it
+once in the supervisor session, persist through a harmless turn, then resume the
+exact session without replaying add commands or restoring intentional removals.
+A watch is only a wake hint; canonical `ace-lab assignment drive --operation status`
+and `adopt` decide outcome. Existing progress-audit duties also reconcile lost
+hints. A replaced coordinator first performs explicit canonical supervisor
+adoption as documented in Lab usage; worker identities and requests survive it.
+
+For two workers, repeat prepare with two reviewed leaf tasks and separate output
+directories. Verify two distinct panes/attempts, two canonical starts and results,
+and sequential reviewed ordinary merges. This source interface does not claim
+installed watches, real provider turns, review, release or merge acceptance.
 
 ## `ace-overseer status`
 

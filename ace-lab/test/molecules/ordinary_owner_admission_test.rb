@@ -179,6 +179,14 @@ module Ace
               assert_equal :worker, admission.authorize!(request: request, peer: peers.last)
               assert_equal Etc.getpwuid.name, admission.identity!(peer: peers.last, pane: "w1:p1").actor
               assert_equal :worker, admission.authorize!(request: {"project_id" => "atlas"}, peer: peers.first)
+              original = runtime.process_binding(pane: "w1:pS", caller_pid: peers.first.fetch("pid"))
+              assert_raises(Ace::Assign::AttemptErrors::EvidenceUnavailable) { admission.supervisor_ended!(binding: original) }
+              Process.kill("TERM", pids.first)
+              Process.wait(pids.first)
+              pids.shift
+              assert_equal "ended", admission.supervisor_ended!(binding: original).fetch("liveness")
+              remote = original.merge("process_identity" => original.fetch("process_identity").merge("host" => "unknown-host"))
+              assert_raises(Ace::Assign::AttemptErrors::EvidenceUnavailable) { admission.supervisor_ended!(binding: remote) }
             end
           end
         ensure

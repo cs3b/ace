@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Add explicit ordinary preparation/launch/resume using existing worktree, native pane and provider mechanisms. Preserve original identities and dispatch intent on response loss; use native filesystem watches only as canonical-inspection hints.
+
 ## [0.22.0] - 2026-10-16
 
 ### Added

@@ -3,6 +3,7 @@ name: assign-drive
 description: Drive an ace-assign assignment until completion or an explicit blocker.
 allowed-tools:
 - Bash(ace-assign:*)
+- Bash(ace-lab:*)
 - Bash(ace-bundle:*)
 - Read
 - Write
@@ -26,6 +27,76 @@ Drive agent execution through an active assignment by continuously checking stat
 
 - An active assignment exists (created via `ace-assign create` or `/as-assign-create`)
 - Assignment has at least one pending or active step
+
+## Ordinary installed execution
+
+Select this branch **before resolving any local assignment** when invoked with
+`--ordinary <context.json>` or when `ACE_ASSIGN_ORDINARY_CONTEXT` is set. Require
+`ACE_ASSIGN_ORDINARY_PROJECT` and use the exact retained context path throughout.
+Conflicting explicit and environment paths are an error. In this branch every
+execution read and write uses `ace-lab assignment drive --project <project>
+--context <context.json>` against the installed owner. The local assignment
+commands below, `.current`, `.latest`, `fork-run`, and protected `work-on --project`
+are not fallback routes.
+
+1. Run `--operation status`. If `not_started`, run `--operation start` from the
+   actual native worker pane. A launch/send acknowledgement is not a start receipt.
+   Verify canonical status is `running` with the expected assignment, attempt,
+   scope, native binding and producer. Never adopt another pane's execution.
+2. Run `--operation bootstrap --output <new-private-directory>`. Read the returned
+   accepted task/context/report paths and retain their exact manifest and file
+   digests in the work report. These bytes come from canonical prepared work;
+   mutable task files in a checkout cannot replace them. Resolve referenced
+   project workflows/guides with the selected installed packages and record each
+   effective path and digest. A missing or conflicting required asset is a blocker.
+3. Run `--operation next`. Execute the returned current step, or start the returned
+   next step using `--operation step-start --step <number> --generation <observed>`.
+   The accepted root's children run in this already admitted worker; do not fork
+   another execution because a prepared root originated in a batch preset.
+4. After executing a step, write its bounded UTF-8 report and run
+   `--operation step-finish --step <number> --report <path> --generation <observed>`.
+   On an unrecoverable step failure, use `--operation fail --message <reason>
+   --generation <observed>`. Read `next` again after every acknowledged mutation.
+   Do not mark an unexecuted step successful. Nested skills may perform the work,
+   but their local Assign bookkeeping must not replace these canonical operations.
+5. When the scope is complete or failed, prepare an execution receipt and exact
+   artifact files using the receipt contract in the Lab usage documentation.
+   Its producer is the canonical start producer; HEAD is the actual committed
+   candidate; checks describe executed checks. Submit with `--operation result
+   --generation <observed> --receipt <json> --artifact <file>` in receipt order.
+   Submission is not terminal acceptance, merge, publication or installation.
+6. Keep the worker's native process and checkout available until the supervisor
+   accepts the result through `--operation adopt` and canonical `status` becomes
+   terminal. The filesystem watch emits only a hint. Never infer completion from
+   a quiet pane, a hint file, an old message or a send acknowledgement.
+
+Each mutation prints its retained original request path. After any lost reply,
+read canonical `status`/`next` first and use `--operation replay --request <path>`
+only for that original input. Preserve assignment, attempt, mutation, candidate
+and pane identities. A conflicting retained operation is a reconciliation blocker;
+do not generate a replacement request or worker to bypass it.
+
+A supervisor installs the `watch_command` returned by `ace-overseer ordinary`
+exactly once in its native session, runs a harmless turn to persist it, and uses
+exact-session resume thereafter. Do not recreate an intentionally removed watch.
+A watch merely requests canonical inspection; recurring native progress audits
+also find accepted results when a wake or reply is lost. Wrong project/attempt
+hints carry no authority. Existing inbound Inbox settlement remains a separate
+owner configuration: without it, nonempty Inbox references refuse completion.
+
+After replacement of the coordinator process, read `--operation supervisor`.
+A new coordinator uses `--operation adopt-supervisor --pane <actual-pane>
+--generation <old-selection-generation> --previous-binding-sha256 <old-digest>`.
+The installed owner authenticates its actual placement and positively verifies
+that the original process generation ended. Live or unobservable old generations
+refuse adoption. Replay the original adoption request after a lost reply. This
+changes only the canonical supervisor selection; existing workers, uncertain
+launches, attempts, pending results and mutation IDs remain intact. Then resume
+canonical inspection and result adoption. Never re-register or relaunch workers
+because the coordinator restarted.
+
+**End of ordinary branch.** The remaining sections apply only to local assignment
+execution; do not enter them from an ordinary installed context.
 
 ## Assignment Context Propagation
 

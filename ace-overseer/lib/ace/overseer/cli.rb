@@ -10,6 +10,7 @@ require_relative "cli/commands/agents"
 require_relative "cli/commands/prompt"
 require_relative "cli/commands/review"
 require_relative "cli/commands/stop"
+require_relative "cli/commands/ordinary"
 
 module Ace
   module Overseer
@@ -20,6 +21,7 @@ module Ace
 
       REGISTERED_COMMANDS = [
         ["work-on", "Start local task work or one retained protected launch"],
+        ["ordinary", "Prepare, launch, inspect or resume one installed ordinary execution"],
         ["status", "Show status of task worktrees"],
         ["prune", "Remove stale task worktrees"],
         ["projects", "List visible public projects"],
@@ -36,6 +38,7 @@ module Ace
       ].freeze
 
       register "work-on", Commands::WorkOn
+      register "ordinary", Commands::Ordinary
       register "status", Commands::Status
       register "prune", Commands::Prune
       register "projects", Commands::Projects

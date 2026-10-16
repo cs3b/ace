@@ -276,6 +276,83 @@ must read the same canonical status and adopt its original attempt/result IDs.
 Changed owner selection refuses new admission and dispatch until a controlled
 restart. Existing canonical receipts remain the source for reconciliation.
 
+## Ordinary driver and supervisor recovery
+
+`ace-overseer ordinary --operation prepare` retains one context per fresh worker.
+From that worker's native tool process, drive only the installed owner:
+
+```sh
+ace-lab assignment drive --project atlas --context /private/work/context.json --operation status
+ace-lab assignment drive --project atlas --context /private/work/context.json --operation start
+ace-lab assignment drive --project atlas --context /private/work/context.json --operation bootstrap --output /private/work/accepted-context
+ace-lab assignment drive --project atlas --context /private/work/context.json --operation next
+ace-lab assignment drive --project atlas --context /private/work/context.json --operation step-start --generation 1 --step 010.01.01
+ace-lab assignment drive --project atlas --context /private/work/context.json --operation step-finish --generation 2 --step 010.01.01 --report /private/work/check.md
+```
+
+Use returned generations and actual step numbers, not the illustrative values.
+`HERDR_PANE` supplies the caller pane unless `--pane` is explicit; the selected
+owner authenticates actual native ancestry independently. `bootstrap` returns
+accepted context paths, byte counts, SHA256 values and manifest digest. `next`
+reads the canonical queue including reports and returns current/next instructions.
+`fail --generation N --message REASON` records a failed scope; it never fabricates
+successful completion. The workflow `wfi://assign/drive` selects this protocol
+before local assignment resolution when `--ordinary`/the ordinary environment
+is present.
+
+Submit one bounded execution receipt JSON with the following fields, using
+actual observed values (no placeholders in submitted evidence):
+
+```json
+{
+  "assignment_id": "original-assignment", "attempt_id": "original-attempt",
+  "project_id": "atlas", "scope": "010.01", "operation": "check",
+  "producer": {"actor": "actual-user", "role": "worker", "runtime": "herdr"},
+  "head": "0123456789012345678901234567890123456789",
+  "verdict": "succeeded", "checks": [{"name": "tests", "verdict": "passed"}],
+  "artifacts": [{"path": "check.md", "sha256": "actual-64-hex-artifact-digest"}]
+}
+```
+
+The producer comes from canonical start status; checks and artifacts must describe
+executed work. Run `--operation result --generation N --receipt receipt.json
+--artifact check.md` with files in receipt order. The existing receipt verifier
+and canonical import validate attribution, evidence and exact bytes. A result
+submission leaves the worker running until its canonical supervisor executes
+`--operation adopt` and receives terminal status. Keep the actual worker process
+and checkout alive until that acceptance; a terminal pane without the required
+native binding is insufficient.
+
+Mutations retain their exact request and transferred bytes under the original
+context directory before sending. A lost response is recovered with canonical
+`status`/`next`, then `--operation replay --request /original/requests/.../request.json`.
+Never update an existing request's generation, mutation ID or bytes to force a
+retry. The requester directory is not an accepted-state store. The result hint
+file is ignored by canonical reads/adoption, including when forged or stale.
+Inbound Inbox settlement is not provisioned by this driver; nonempty references
+still require the separately selected existing Inbox owner and fail closed otherwise.
+
+A replacement coordinator reads `--operation supervisor`, then from its actual
+installed native supervisor placement uses:
+
+```sh
+ace-lab assignment drive --project atlas --context /private/work/context.json \
+  --operation adopt-supervisor --generation 1 --previous-binding-sha256 EXACT_OLD_DIGEST
+```
+
+The definition chain records old→new bindings under its original generation CAS.
+Only a positively ended old generation (kernel process absence or a different
+exact process birth) permits adoption; live, inaccessible, remote-host and unknown
+identities refuse. A lost adoption response reuses its original retained request.
+No worker is re-registered or relaunched. Existing pending results, uncertain
+operations, attempts and request IDs remain unchanged. Finish, including replay,
+checks the current canonical supervisor binding and rejects the displaced one.
+
+Wire additions are `supervisor_status` (assignment only, null mutation), and
+`adopt_supervisor` (assignment, actual pane, expected definition generation,
+previous_binding_sha256; original mutation). They use the same installed owner,
+project policy, journal and lifecycle exclusion as ordinary execution.
+
 ## Error semantics
 
 Errors are one deterministic JSON document on stdout plus a non-zero exit.

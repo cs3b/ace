@@ -18,15 +18,15 @@ that separately reviewed baseline.
   worker before terminal CAS.
 * Herdr RuntimeAdapter and LLM InteractiveCommandBuilder already own native pane
   handoff and provider invocation. Dispatch acceptance is not process start.
-* Native ace-wake `/watch` persists a selected command and wakes its owning Pi
-  session when the canonical observation changes. A wake is only a hint; reading
+* Native ace-wake `/watch --path` persists a selected existing file path and wakes
+  its owning Pi session when a result hint changes. A wake is only a hint; reading
   the original project/assignment/attempt and successful finish CAS is adoption.
 
 ## Scope and ownership
 
 1. Assign owns a generic ordinary driver over a supplied request transport. It
    retains immutable mutation requests and their exact upload bytes, downloads
-   canonical snapshots, projects existing queue state and assembles attributable
+   canonical snapshots, projects existing queue state and transfers attributable
    execution receipts. Retained input is not an execution ledger. No fallback to
    `.current`, a local assignment store, or protected authority is permitted.
 2. Lab composes that driver with its installed OrdinaryOwnerConfig/client and
@@ -35,16 +35,21 @@ that separately reviewed baseline.
 3. Overseer exposes an explicit ordinary prepare/launch/status/resume path using
    WorktreeProvisioner, WindowOpener, PreparedWorkBuilder and the existing provider
    command builder. An immutable launch selection records project, task, scope,
-   attempt, supervisor pane, worker pane, cwd and provider. A persisted pre-send
+   attempt, supervisor pane, worker pane, cwd and provider. Explicit preparation checkout is verified against the installed
+   common directory; project configuration and provisioning run there, not in
+   the unrelated native coordinator cwd. A persisted pre-send
    intent prevents duplicate launches after crash or lost transport reply.
    Resume observes the original selection and continues its original driver;
    it never creates a replacement worker on uncertainty.
 4. The existing assign/drive workflow branches explicitly for ordinary context
    before any local queue command. Public Lab commands perform canonical work;
    the model executes task instructions and supplies actual check/report bytes.
-5. Callback is the existing native watch over canonical result status, targeted
+5. Callback is the existing native watch over a nonauthoritative result hint, targeted
    to the selected supervisor session. Watch output and stale/foreign hints do
-   not authorize mutation. Persisted watch restoration and live consumption are
+   not authorize mutation. The worker writes the hint only after canonical result
+   submission is acknowledged; a lost signal/reply is recovered by the existing
+   progress-audit600 and read-only resume. The owner always reads canonical status,
+   never the hint contents. Persisted watch restoration and live consumption are
    installed acceptance gates, not inferred from a generated command.
 
 ## Inbox boundary
@@ -55,6 +60,26 @@ domain Pi queue client currently selects an ambient socket and cannot become
 the UID966 authority transport by assumption. This slice uses native watches;
 inbound Inbox remains unconfigured and nonempty references remain fail-closed.
 No legacy transport record is imported, discarded or interpreted as this Inbox.
+
+## Explicit coordinator replacement
+
+The owner-service restart preserves its journal; replacing the actual Pi
+coordinator additionally requires canonical `adopt_supervisor`. The new caller
+must be a real coordinator in the installed project's native placement. Compare
+the original supervisor binding digest and definition-chain generation, positively
+observe the old process generation as ended (kernel ESRCH or a different exact
+birth at that PID), and CAS old→new binding in the same canonical journal. An
+inaccessible observation, EPERM, host mismatch or malformed identity stays
+unknown; a still-live old generation refuses adoption. Recheck actual new caller
+and old-generation evidence at acceptance. Do not alter worker attempts, pending
+requests, accepted results or dispatch intents. Old-supervisor finish/replay
+refuses after adoption; repeated adoption requests replay their original result.
+
+The supervisor reads explicit current owner status before adoption and before
+terminal finish. Native watch restoration is tied to the resumed Pi session;
+its hint does not authorize owner replacement. Tests include a real old process
+that exits/reaps, new coordinator adoption, live/unknown/wrong-project refusal,
+stale generation and lost adoption reply with original IDs.
 
 ## Verification
 

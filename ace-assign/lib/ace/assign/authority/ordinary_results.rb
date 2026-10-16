@@ -44,6 +44,12 @@ module Ace
           registered = registration(params.fetch("assignment_id"), commit: commit)
           raise AttemptErrors::NotFound, "ordinary work is not registered" unless registered
           if request.fetch("operation") != "submit_result"
+            if request.fetch("operation") == "result_status" && @journal.read_events(params.fetch("assignment_id"), commit: commit)
+                .none? { |event| event.fetch("attempt_id") == params.fetch("attempt_id") }
+              authorize!(request, peer, role, deadline)
+              return {data: params.slice("assignment_id", "attempt_id").merge("project_id" => @project,
+                "state" => "not_started", "generation" => 0, "submitted_result" => nil), replayed: false}
+            end
             events = result_events(params, commit)
             result = retained_ordinary_result(params, events, commit)
             if request.fetch("operation") == "result_snapshot"
@@ -60,7 +66,11 @@ module Ace
               return {data: ordinary_result_projection(result).merge("journal_commit" => commit), transfer_parts: parts, replayed: false}
             end
             authorize!(request, peer, role, deadline)
-            return {data: {"assignment_id" => params.fetch("assignment_id"), "attempt_id" => params.fetch("attempt_id"),
+            started = events.find { |event| event["type"] == "process_start" }.fetch("payload")
+            scope = events.find { |event| event["type"] == "intent" }.fetch("payload").fetch("scope")
+            return {data: {"project_id" => @project, "assignment_id" => params.fetch("assignment_id"), "attempt_id" => params.fetch("attempt_id"),
+              "scope" => scope, "producer" => started.slice("actor", "role", "runtime"),
+              "runtime_binding" => started.fetch("runtime_binding"),
               "journal_commit" => commit, "generation" => @journal.authority_generation(events),
               "state" => Molecules::CanonicalAttemptState.derive(events), "submitted_result" => result && ordinary_result_projection(result)}, replayed: false}
           end

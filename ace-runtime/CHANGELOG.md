@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- Distinguish positively ended process generations from inaccessible observations for explicit coordinator adoption; retain conservative unknown liveness for existing recovery observers.
+
 ## [0.3.0] - 2026-10-10
 
 - Ship the protected task-context/worker entry and readiness source used by the current consumers; these required modules were absent from published 0.2.0. Ordinary agent execution remains the ace-llm terminal CLI, with no additional Codex service.

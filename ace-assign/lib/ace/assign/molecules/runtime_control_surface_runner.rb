@@ -12,9 +12,10 @@ module Ace
       # operation delegates to the resolved Ace::Runtime adapter; assign
       # never calls a runtime-native API directly (k86.3 interface rule).
       class RuntimeControlSurfaceRunner
-        def initialize(runtime: nil, env: ENV)
+        def initialize(runtime: nil, env: ENV, adapter: nil)
           @runtime_name = runtime
           @env = env
+          @runtime = adapter
         end
 
         attr_reader :runtime_name, :env

@@ -8,6 +8,7 @@ require_relative "ordinary_attempt_start"
 require_relative "ordinary_progress"
 require_relative "ordinary_results"
 require_relative "ordinary_completion"
+require_relative "ordinary_supervisor"
 require_relative "../molecules/lifecycle_exclusion"
 
 module Ace
@@ -21,7 +22,8 @@ module Ace
         include OrdinaryProgress
         include OrdinaryResults
         include OrdinaryCompletion
-        OPERATIONS = (%w[register_assignment registration_status start_attempt finish] + OrdinaryProgress::PROGRESS_OPERATIONS + OrdinaryResults::RESULT_OPERATIONS).freeze
+        include OrdinarySupervisor
+        OPERATIONS = (%w[register_assignment registration_status start_attempt finish] + OrdinaryProgress::PROGRESS_OPERATIONS + OrdinaryResults::RESULT_OPERATIONS + OrdinarySupervisor::SUPERVISOR_OPERATIONS).freeze
         TRANSFER_OPERATIONS = {"register_assignment" => {direction: :upload, purpose: :candidate, roles: [:supervisor]}}
           .merge(OrdinaryProgress::PROGRESS_TRANSFERS).merge(OrdinaryResults::RESULT_TRANSFERS).freeze
         REGISTER_KEYS = %w[assignment_id definition_digest prepared_head prepared_tree manifest_sha256 expected_generation pane transfer].freeze
@@ -55,6 +57,9 @@ module Ace
         def dispatch(request:, peer:, role:, deadline:, transfer: nil)
           authorize!(request, peer, role, deadline)
           case request.fetch("operation")
+          when "supervisor_status", "adopt_supervisor"
+            raise ArgumentError, "ordinary supervisor operation forbids transfer" if transfer
+            supervisor_operation(request, peer, role, deadline)
           when "registration_status"
             strict!(request.fetch("params"), %w[assignment_id])
             raise ArgumentError, "status mutation must be null" unless request.fetch("mutation_id").nil?
@@ -134,6 +139,7 @@ module Ace
               {events: [], blobs: {definition_path => definition, bundle_path => bytes, queue_path => queue.bytes}, data: {
                 "authority" => "ordinary", "assignment_id" => assignment.id, "project_id" => @project,
                 "task_id" => assignment.task_id, "registered_by" => principal, "phase" => "registered",
+                "supervisor_binding" => identity.runtime_binding,
                 "definition_ref" => definition_path, "definition_digest" => params.fetch("definition_digest"),
                 "queue_ref" => queue_path, "queue_sha256" => queue_sha,
                 "prepared_work" => work.reference(head: params.fetch("prepared_head"), tree: params.fetch("prepared_tree")),

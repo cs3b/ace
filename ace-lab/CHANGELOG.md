@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Expose ordinary driver status, bootstrap, progress, result and exact recovery commands using the selected Assign owner; authenticate coordinator replacement with bounded process-generation observation.
+
 ## [0.8.0] - 2026-10-16
 
 ### Added
