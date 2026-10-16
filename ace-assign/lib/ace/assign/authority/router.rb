@@ -4,10 +4,10 @@ module Ace
     module Authority
       # Source-owned handlers share one listener. Requests never name a method.
       class Router
-        def initialize(launch:, handlers: [])
+        def initialize(launch: nil, handlers: [])
           @launch = launch
           @routes = {}
-          ([launch] + handlers).each do |handler|
+          ([launch].compact + handlers).each do |handler|
             handler.class::OPERATIONS.each do |operation|
               raise ArgumentError, "duplicate authority operation" if @routes.key?(operation)
               @routes[operation] = handler
@@ -60,14 +60,16 @@ module Ace
         private :validate_review_namespace!
 
         def close
-          @launch.close
+          @routes.values.uniq.each { |handler| handler.close if handler.respond_to?(:close) }
         end
 
         def serve_launch_control!(**options)
+          raise AttemptErrors::EvidenceUnavailable, "launch control is unavailable in this composition" unless @launch
           @launch.serve_launch_control!(**options)
         end
 
         def gate_ready(**options)
+          raise AttemptErrors::EvidenceUnavailable, "launch gate is unavailable in this composition" unless @launch
           @launch.gate_ready(**options)
         end
       end
