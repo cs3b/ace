@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Route explicitly authenticated operator questions through existing project correlation and durable ingress; require declared request-context capabilities before activating a project authority.
+
 ## [0.5.0] - 2026-10-16
 
 ### Changed

@@ -4,6 +4,7 @@ require "time"
 require "json"
 require "digest"
 require "ace/hitl/lifecycle"
+require "ace/hitl/contract/request_envelope"
 require_relative "registry"
 require_relative "journal"
 require_relative "../organisms/hermes_box"
@@ -433,10 +434,7 @@ module Ace
                 (facts["kind"] != "otp" || facts["sensitive"] == true)
               raise ContractError, "authoritative request classification is invalid"
             end
-            envelope = Ace::Hitl::Contract::ManagedEnvelope.load(facts.fetch("envelope"), expected: {
-              request_id: facts["id"], correlation_id: facts["id"], assignment_id: facts["assignment"],
-              attempt_id: facts["attempt"], project: facts["project"], requester: facts["requester"], kind: facts["kind"]
-            })
+            envelope = Ace::Hitl::Contract::RequestEnvelope.from_facts(facts)
             {"envelope" => envelope, "sensitive" => facts["sensitive"] == true, "otp" => facts["otp"]}
           rescue KeyError, Ace::Hitl::Contract::InvalidEnvelope => e
             raise ContractError, "authoritative managed binding is invalid (#{e.message})"

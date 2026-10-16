@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- Add a closed operator-question envelope and tagged request union without assignment/attempt claims; ship its schema and example. Keep managed request validation unchanged.
+
 ## [0.2.2] - 2026-10-16
 
 ### Changed

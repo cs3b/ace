@@ -46,6 +46,42 @@ class HitlCliTest < AceHitlTestCase
     assert_equal "ace-hitl-project", received[:group]
   end
 
+  def test_operator_only_serve_does_not_construct_a_managed_assignment_authority
+    policy = Object.new
+    policy.define_singleton_method(:service_uid) { Process.uid }
+    service = Object.new
+    service.define_singleton_method(:run) { nil }
+    selected = nil
+    Ace::Hitl::Providers::Lab.stub(:grants_policy, policy) do
+      Ace::Hitl::Providers::Lab.stub(:assignment_binding, ->(**) { flunk "constructed fake managed authority" }) do
+        Ace::Hitl::Lifecycle::Service.stub(:new, ->(**options) { selected = options; service }) do
+          result = run_cli(["serve", "--operator-only", "--group", "ace-hitl-project"])
+          assert_equal 0, result[:exit_code], result[:stderr]
+        end
+      end
+    end
+    assert_kind_of Ace::Hitl::Lifecycle::OperatorOnlyBinding, selected.fetch(:binding)
+  end
+
+  def test_operator_question_and_read_commands_use_public_authenticated_client
+    client = Object.new
+    captured = nil
+    client.define_singleton_method(:operator_question) do |**params|
+      captured = params
+      {"id" => params.fetch(:id), "requested" => true}
+    end
+    client.define_singleton_method(:read) { |id| {"id" => id, "state" => "created"} }
+    Ace::Hitl::Providers::Lab.stub(:boundary_client, client) do
+      result = run_cli(["operator-question", "operator001", "--project", "ace",
+        "--plan", "Host question", "--question", "Which option?", "--options", "A,B"])
+      assert_equal 0, result[:exit_code], result[:stderr]
+      assert_equal({id: "operator001", project: "ace", plan: "Host question", question: "Which option?", options: ["A", "B"]}, captured)
+      result = run_cli(["read", "operator001"])
+      assert_equal 0, result[:exit_code], result[:stderr]
+      assert_equal "created", JSON.parse(result[:stdout]).fetch("state")
+    end
+  end
+
   def test_serve_requires_explicit_dedicated_group
     result = run_cli(["serve"])
 

@@ -2,6 +2,7 @@
 
 require "yaml"
 require "ace/hitl/lifecycle"
+require "ace/hitl/contract/request_envelope"
 require_relative "../hermes"
 
 module Ace
@@ -105,7 +106,11 @@ module Ace
             channel.fetch("projects").each_key do |project|
               begin
                 client = lifecycle_for(channel, project)
-                client.ping
+                health = client.ping
+                required = channel.fetch("projects").fetch(project).fetch("request_contexts", [])
+                unless (required - Array(health["request_contexts"])).empty?
+                  raise ContractError, "project authority lacks required request contexts"
+                end
                 client.pending(project: project)
               rescue Ace::Hitl::Lifecycle::Error => e
                 raise ContractError,
@@ -209,9 +214,7 @@ module Ace
           box = Transport::Relay.folder_box(scoped)
           lifecycle.pending(project: project).each do |facts|
             next unless facts["state"] == "created"
-            envelope = Ace::Hitl::Contract::ManagedEnvelope.load(facts.fetch("envelope"), expected: {
-              request_id: facts["id"], project: project, assignment_id: facts["assignment"], attempt_id: facts["attempt"]
-            })
+            envelope = Ace::Hitl::Contract::RequestEnvelope.from_facts(facts)
             status = @relay.delivery(channel: channel["name"], project: project, request: facts["id"])["status"]
             next unless %w[unknown failed submitted].include?(status)
             if status != "submitted"
@@ -229,6 +232,8 @@ module Ace
             # state through the selected authority before choosing its revision.
             revision = if facts["kind"] == "proposal"
               lifecycle.read(facts.fetch("id")).fetch("proposal").fetch("revision_id")
+            elsif envelope["schema"] == Ace::Hitl::Contract::OperatorEnvelope::SCHEMA
+              "operator-#{envelope.fetch('request_incarnation')}"
             else
               facts.fetch("attempt")
             end

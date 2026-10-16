@@ -148,3 +148,22 @@ transport role; the requester of record is the local worker actor,
 mapped through kernel peer credentials. A loopback-only or mocked run
 can never substitute for the verified invocation-bound
 `nh0_real_incus_acceptance` receipt that clears nh0-A.
+
+## Operator question routes
+
+A project authority may set `"request_contexts": ["operator-question"]` alongside
+its explicit socket/service UID or TLS credential. Before the sole poller starts,
+Hermes requires every declared context in that authority's authenticated `ping`
+response and verifies scoped pending access. An old service lacking this
+capability refuses activation. The health declaration proves supported API
+contexts, not requester admission or an execution grant.
+
+The relay validates the shared closed `RequestEnvelope` union. Managed requests
+keep their real assignment/attempt binding; operator questions retain their real
+kernel requester UID and immutable incarnation without invented executions.
+Project-qualified folders, exact Telegram Reply, route/Captain fingerprints,
+durable ordinary ingress and terminal recovery apply to both. Operator questions
+are nonsecret and cannot request OTP, effects, proposals or native execution.
+Same request IDs from different authorities remain distinct after restart.
+Legacy host-question adoption and all installed group acceptance remain separate
+domain work; configuring a route does not migrate or erase legacy pending history.

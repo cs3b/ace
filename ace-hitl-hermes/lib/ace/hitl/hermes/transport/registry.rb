@@ -13,7 +13,7 @@ module Ace
         # explicit project authorities. Project identity never comes from reply text.
         class Registry
           CHANNEL_FIELDS = %w[name chat_id captain_user_ids machine folder target projects].freeze
-          AUTHORITY_FIELDS = %w[hitl_socket hitl_endpoint hitl_service_uid tls_client_credential].freeze
+          AUTHORITY_FIELDS = %w[hitl_socket hitl_endpoint hitl_service_uid tls_client_credential request_contexts].freeze
 
           attr_reader :channels
 
@@ -127,6 +127,13 @@ module Ace
             unless entry.is_a?(Hash) && (entry.keys - AUTHORITY_FIELDS).empty? &&
                 entry.key?("hitl_socket") != entry.key?("hitl_endpoint")
               raise ContractError, "project must declare exactly one authority"
+            end
+            if entry.key?("request_contexts")
+              contexts = entry["request_contexts"]
+              unless contexts.is_a?(Array) && !contexts.empty? && contexts.uniq == contexts &&
+                  (contexts - %w[managed operator-question]).empty?
+                raise ContractError, "invalid required request contexts"
+              end
             end
             if entry.key?("hitl_endpoint")
               validate_remote_authority!(entry, project)

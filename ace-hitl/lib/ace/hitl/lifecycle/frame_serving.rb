@@ -42,7 +42,7 @@ module Ace
 
         def execute(store, op, params)
           case op
-          when "ping" then {"pong" => true}
+          when "ping" then store.capabilities
           when "proposal-create" then store.proposal_create(**symbolize(params))
           when "proposal-show" then store.proposal_show(required(params, "id"), project: required(params, "project"), history_after: params.fetch("history_after", 0))
           when "proposal-revise" then store.proposal_revise(required(params, "id"), project: required(params, "project"), expected_revision: required(params, "expected_revision"),
@@ -58,6 +58,7 @@ module Ace
           when "proposal-due" then store.proposal_due(project: required(params, "project"), after: params["after"])
           when "proposal-history" then store.proposal_history(project: required(params, "project"),
             query: params.fetch("query", ""), after: params["after"])
+          when "operator-question" then store.operator_question(**symbolize(params))
           when "create" then store.create(**symbolize(params))
           when "read" then store.read(required(params, "id"))
           when "deliver" then store.deliver(required(params, "id"), answer_reader(params))
