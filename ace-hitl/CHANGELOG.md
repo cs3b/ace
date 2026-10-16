@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Read TLS authority configuration through bounded protected descriptors, rejecting symlinks, unsafe ancestors, special files and concurrent replacement before startup.
+
 ## [0.16.0] - 2026-10-16
 
 ### Added

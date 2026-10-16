@@ -220,6 +220,7 @@ PATH
       ace-b36ts (~> 0.14)
       ace-herdr (~> 0.6)
       ace-hitl-contract (~> 0.2.1)
+      ace-runtime (~> 0.3)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.18)
       ace-support-core (~> 0.31)

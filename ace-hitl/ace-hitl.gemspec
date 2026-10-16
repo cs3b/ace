@@ -52,4 +52,5 @@ Gem::Specification.new do |spec|
   # ace-hitl-contract provider protocol instead).
   spec.add_dependency "ace-assign", "~> 0.70"
   spec.add_dependency "ace-herdr", "~> 0.6"
+  spec.add_dependency "ace-runtime", "~> 0.3"
 end

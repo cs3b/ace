@@ -185,4 +185,77 @@ class OrdinaryAuthorityCompositionTest < Minitest::Test
       end
     end
   end
+
+  def test_remote_hermes_uses_same_binding_decision_policy_and_one_time_vault
+    server = with_tls { construct }
+    unix, tls, merge = server.instance_variable_get(:@services)
+    assert_instance_of Ace::Hitl::Lifecycle::TlsService, tls
+    assert_same unix.instance_variable_get(:@binding), tls.instance_variable_get(:@binding)
+    assert_same unix.instance_variable_get(:@vault), tls.instance_variable_get(:@vault)
+    assert_same @hitl_policy, tls.instance_variable_get(:@policy).instance_variable_get(:@decision_policy)
+    assert_equal unix.instance_variable_get(:@root), tls.instance_variable_get(:@root)
+    assert_equal unix.instance_variable_get(:@group), tls.instance_variable_get(:@group)
+    assert_same merge.instance_variable_get(:@handler).instance_variable_get(:@coordinator),
+      tls.instance_variable_get(:@binding).instance_variable_get(:@coordinator)
+    peer = Ace::Hitl::Lifecycle::RemotePeer.new(project: "atlas", identity: "urn:ace:hitl:atlas:hermes-client")
+    assert_nil peer.uid
+    policy = tls.instance_variable_get(:@policy)
+    assert policy.transport?(peer, project: "atlas")
+    refute policy.transport?(peer, project: "foreign")
+    refute @hitl_policy.transport?(peer, project: "atlas"), "mTLS must not manufacture a Unix transport grant"
+    value = {"id" => "synthetic-challenge", "incarnation" => "one"}
+    tls.instance_variable_get(:@vault).write(nil, value, "123456")
+    assert_equal "123456", unix.instance_variable_get(:@vault).read(nil, value)
+    assert_raises(Ace::Hitl::Lifecycle::OtpVault::MissError) { tls.instance_variable_get(:@vault).read(nil, value) }
+    @owner.revoked = true
+    assert_raises(Ace::Hitl::Lifecycle::BindingError) do
+      tls.instance_variable_get(:@binding).proposal_journal(project: "atlas")
+    end
+    refute File.exist?(File.join(@root, "journal"))
+  end
+
+  def test_tls_requires_selected_project_account_group_and_verified_material_before_build
+    [{project: "foreign"}, {uid: 42000}, {gid: 42000}].each do |selection|
+      assert_raises(L::InvalidConfigurationError) { with_tls(**selection) { construct } }
+    end
+    assert_raises(Ace::Hitl::Lifecycle::TransportError) do
+      with_tls(material: ->(*) { raise Ace::Hitl::Lifecycle::TransportError, "unavailable material" }) { construct }
+    end
+    refute File.exist?(File.join(@root, "journal"))
+    refute File.exist?(File.join(@root, "assign.sock"))
+    refute File.exist?(File.join(@root, "hitl.sock"))
+  end
+
+  def test_tls_selection_is_an_explicit_absolute_reference_without_caller_options
+    [nil, "relative.json", "/etc/../tmp/authority.json", {"port" => 443}].each do |value|
+      @document["projects"]["atlas"]["hitl"]["tls_authority"] = value
+      assert_raises(L::InvalidConfigurationError) { construct }
+    end
+  end
+
+  private
+
+  # Validate the real schema and component graph. Root-owned filesystem and
+  # certificate handshakes are covered by HITL and the installed Linux fixture.
+  def with_tls(project: "atlas", uid: 41000, gid: 41000, material: OpenSSL::SSL::SSLContext.new)
+    path = "/etc/lab/ace-hitl/atlas-tls.json"
+    @document["projects"]["atlas"]["hitl"]["tls_authority"] = path
+    authority = Ace::Hitl::Lifecycle::TlsAuthority.new({
+      "schema" => "ace.hitl.tls.authority/v1", "project_id" => project,
+      "listen" => "127.0.0.1", "port" => 8431, "service_user" => "atlas-owner", "service_group" => "atlas-owner",
+      "tls_server_credential" => {
+        "certificate_file" => "/etc/lab/ace-hitl/tls/server.pem", "private_key_file" => "/etc/lab/ace-hitl/tls/key.pem",
+        "ca_file" => "/etc/lab/ace-hitl/tls/ca.pem", "server_uri_san" => "urn:ace:hitl:#{project}:lifecycle-server",
+        "allowed_client_uri_san" => "urn:ace:hitl:#{project}:hermes-client", "allowed_client_certificate_sha256" => "a" * 64}})
+    loader = ->(actual) { assert_equal path, actual; authority }
+    Ace::Hitl::Lifecycle::TlsAuthority.stub(:load, loader) do
+      Etc.stub(:getpwnam, Struct.new(:uid).new(uid)) do
+        Etc.stub(:getgrnam, Struct.new(:gid).new(gid)) do
+          Ace::Hitl::Lifecycle::CredentialPathPolicy.stub(:verify_credential_tree!, true) do
+            Ace::Hitl::Lifecycle::TlsMaterial.stub(:build_server_context, material) { yield }
+          end
+        end
+      end
+    end
+  end
 end

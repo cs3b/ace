@@ -5,6 +5,8 @@ require "ace/assign/authority/ordinary_server"
 require "ace/assign/authority/router"
 require "ace/hitl/providers/lab"
 require "ace/hitl/lifecycle/service"
+require "ace/hitl/lifecycle/tls_authority"
+require "ace/hitl/lifecycle/tls_service"
 require_relative "../molecules/ordinary_owner_admission"
 require_relative "../molecules/ordinary_listener"
 require_relative "ordinary_merge_receiver"
@@ -54,7 +56,7 @@ module Ace
             peer_uid: @receiver.principal_uid, socket_gid: @receiver.socket_gid, handler: merge,
             logger: ->(message) { warn message })
           Ace::Assign::Authority::OrdinaryServer.new(admission: admission, lifecycle: router,
-            services: [hitl(coordinator), listener])
+            services: hitl_services(coordinator) + [listener])
         end
 
         private
@@ -72,7 +74,7 @@ module Ace
           end
         end
 
-        def hitl(coordinator)
+        def hitl_services(coordinator)
           selected = @config.hitl
           policy = Ace::Hitl::Providers::Lab.grants_policy(grants_path: selected.fetch("grants_path"))
           unless policy.service_uid == @config.service.fetch("uid")
@@ -88,8 +90,32 @@ module Ace
           end
           binding = Ace::Hitl::Providers::Lab::AssignmentBinding.new(coordinator: coordinator,
             project: @config.project, owner_guard: guard)
-          Ace::Hitl::Lifecycle::Service.new(root: selected.fetch("root"), socket_path: selected.fetch("socket_path"),
-            group: selected.fetch("group"), binding: binding, policy: policy)
+          # Unix requesters and the existing Hermes mTLS transport share the
+          # same owner and one in-memory OTP vault. No second daemon opens the
+          # journal and no synthetic Unix principal represents a certificate.
+          vault = Ace::Hitl::Lifecycle::OtpVault::MemoryVault.new
+          services = [Ace::Hitl::Lifecycle::Service.new(root: selected.fetch("root"),
+            socket_path: selected.fetch("socket_path"), group: selected.fetch("group"),
+            binding: binding, policy: policy, vault: vault)]
+          if selected.key?("tls_authority")
+            authority = Ace::Hitl::Lifecycle::TlsAuthority.load(selected.fetch("tls_authority"))
+            verify_tls_identity!(authority)
+            services << Ace::Hitl::Lifecycle::TlsService.new(root: selected.fetch("root"),
+              binding: binding, project: @config.project, credential: authority.credential,
+              ssl_context: authority.ssl_context!, listen: authority.listen, port: authority.port,
+              group: selected.fetch("group"), vault: vault, decision_policy: policy)
+          end
+          services
+        end
+
+        def verify_tls_identity!(authority)
+          unless authority.project_id == @config.project &&
+              Etc.getpwnam(authority.service_user).uid == @config.service.fetch("uid") &&
+              Etc.getgrnam(authority.service_group).gid == @config.service.fetch("gid")
+            raise InvalidConfigurationError, "ordinary HITL TLS project or service identity differs"
+          end
+        rescue ArgumentError
+          raise InvalidConfigurationError, "ordinary HITL TLS service account is unavailable"
         end
       end
     end

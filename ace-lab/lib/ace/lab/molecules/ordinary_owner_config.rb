@@ -26,6 +26,7 @@ module Ace
         PANE = /\A[a-zA-Z0-9][a-zA-Z0-9_.:-]{0,127}\z/
         NATIVE_KEYS = %w[socket_path socket_identity server_identity version protocol].freeze
         HITL_KEYS = %w[root socket_path group grants_path].freeze
+        HITL_OPTIONAL_KEYS = %w[tls_authority].freeze
 
         def self.load(project:, path: PATH)
           reader = Ace::Runtime::Molecules::ProtectedArtifactSet.new(file_limit: 65_536, total_limit: 65_536)
@@ -77,8 +78,10 @@ module Ace
           @worktrees = selected.fetch("worktrees")
           invalid! unless @worktrees.is_a?(Hash) && @worktrees.keys.sort == %w[common_dir root] && @worktrees.values.all? { |path| absolute?(path) }
           @hitl = selected.fetch("hitl")
-          invalid! unless @hitl.is_a?(Hash) && @hitl.keys.sort == HITL_KEYS.sort &&
+          invalid! unless @hitl.is_a?(Hash) && (HITL_KEYS - @hitl.keys).empty? &&
+            (@hitl.keys - HITL_KEYS - HITL_OPTIONAL_KEYS).empty? &&
             %w[root socket_path grants_path].all? { |key| absolute?(@hitl[key]) } &&
+            (!@hitl.key?("tls_authority") || absolute?(@hitl["tls_authority"])) &&
             @hitl["group"].is_a?(String) && ID.match?(@hitl["group"]) &&
             [@service.fetch("socket_path"), @native.fetch("socket_path"), @hitl.fetch("socket_path")].uniq.size == 3
           private_paths = [@assignment_root, @lifecycle_root, @journal.fetch("checkout_root"), @hitl.fetch("root")]

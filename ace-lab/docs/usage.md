@@ -147,7 +147,7 @@ Each project entry in the root-installed assignment document contains:
 | `runtime_binary`, `native` | Installed executable and exact native server/socket generation from the installation receipt |
 | `worktrees` | Allowed worktree root and Git common directory |
 | `participants` | OS UID/GID/actor, native workspace and supervisor panes |
-| `hitl` | Private store root, distinct socket, dedicated group and trusted grants path |
+| `hitl` | Private store root, distinct socket, dedicated group, trusted grants path and optional installed TLS authority reference |
 
 For example, the `hitl` entry inside an already selected project can be:
 
@@ -168,6 +168,29 @@ secret subdirectories. Startup and restart validate the same layout.
 identities come from the installed receipt and live observation, not the project
 configuration cascade. HITL requests, decisions and merge claims use the same
 canonical Assign journal and lifecycle exclusion.
+
+For the existing remote Hermes transport, install its project-scoped mTLS
+authority and add its absolute configuration path to this same `hitl` entry:
+
+```yaml
+  tls_authority: /etc/lab/ace-hitl/atlas-tls.json
+```
+
+The referenced file uses the maintained `ace.hitl.tls.authority/v1` schema and
+credential provisioning layout from `ace-hitl`. Its project must match this
+owner; `service_user` and `service_group` must resolve to the owner's actual UID
+and primary GID. The dedicated Unix control group remains `hitl.group`. Root
+installs the credential references and Incus TCP proxy; callers cannot choose
+them. Invalid ownership, identity, project or TLS material prevents startup.
+
+The TLS listener runs in this same service process and shares its exact HITL
+binding, store, decision policy and in-memory one-time OTP vault. Hermes uses its
+verified project certificate as a remote transport identity; it does not need a
+synthetic Unix transport UID. Keep `transport_uids` empty when no local transport
+is installed. Configure the actual local proposer separately with
+`proposal_uids` and its project grant. A proposer grant never authorizes replies
+or delegates silence-based decisions. Restart the composed service after changing
+its TLS authority or credential selection, retaining the canonical journal.
 
 All selected endpoints must become ready before assignment ingress opens. A
 failed endpoint shuts down the complete owner. A stale assignment endpoint needs

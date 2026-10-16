@@ -2,6 +2,7 @@
 
 require "ipaddr"
 require "json"
+require "ace/runtime/molecules/protected_artifact_set"
 require_relative "tls_credentials"
 require_relative "credential_path_policy"
 require_relative "tls_material"
@@ -22,16 +23,24 @@ module Ace
         SCHEMA = "ace.hitl.tls.authority/v1"
         FIELDS = %w[schema project_id listen port service_user service_group
           tls_server_credential].freeze
+        MAX_BYTES = 65_536
 
         attr_reader :project_id, :listen, :port, :service_user, :service_group,
           :credential, :path
 
         def self.load(path)
-          config = JSON.parse(File.read(path))
-          authority = new(config, path: path)
-          CredentialPathPolicy.verify_runtime_file!(path, authority.service_group)
-          authority
-        rescue JSON::ParserError, SystemCallError, IOError
+          reader = Ace::Runtime::Molecules::ProtectedArtifactSet.new(file_limit: MAX_BYTES, total_limit: MAX_BYTES)
+          reader.with do |held|
+            bytes, = held.read_path!(path)
+            config = JSON.parse(bytes, create_additions: false, allow_duplicate_key: false, max_nesting: 16)
+            authority = new(config, path: path)
+            CredentialPathPolicy.verify_runtime_file!(path, service_group: authority.service_group)
+            # Exact mode/group validation and parsing must refer to the same
+            # bounded protected inode, including every retained ancestor.
+            held.verify_unchanged!
+            authority
+          end
+        rescue JSON::ParserError, SystemCallError, IOError, Ace::Runtime::Error
           raise TransportError, "the HITL TLS authority configuration is unavailable or malformed: #{path}"
         end
 

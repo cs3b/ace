@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Optionally serve existing mTLS HITL beside the ordinary Unix listener under the same canonical owner, journal, proposal policy and one-use OTP vault. Validate the configured project and service identity before either listener starts.
+
 ## [0.8.0] - 2026-10-16
 
 ### Added
