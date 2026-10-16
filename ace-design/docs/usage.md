@@ -35,4 +35,15 @@ Then `/as-design-site-implement SESSION PROJECT` or the app equivalent starts pr
 
 Templates ship in `handbook/templates/design`; benchmark brief/fixture pairs ship in `handbook/benchmarks`. Pass the benchmark brief as the prompt and its JSON through `--fixtures`, then generate variants before previewing the printed session. Never edit packaged benchmark fixtures in a candidate comparison.
 
-See [runner configuration](runner.md) for presets, optional per-variant prompts and CLI lifecycle commands.
+## Inspect a URL
+
+`ace-design inspect URL --surface site|app [--out DIR]` runs the pinned Playwright/axe runtime against an accessible URL and saves JSON and Markdown evidence with explicit coverage limitations.
+
+- Viewports: 390, 768 and 1440 pixels. Checks: screenshots, axe WCAG-tagged rules, document overflow, image loading and JavaScript/page-load errors.
+- Exit codes: 0 clean automatic checks, 1 findings, 2 incomplete execution; invalid input is also an error. Existing evidence is never overwritten.
+- Image checks observe a bounded loading window: an image still loading is a finding, not proof of a permanently broken asset.
+- A timed-out browser operation may leave partial screenshots; only artifacts listed in the final report are evidence.
+- There is no authenticated-session injection: use an accessible local/test URL, or report inaccessible states and verify them separately with an authorized browser session.
+- A clean report does not establish full accessibility, task completion, visual quality, performance or source correctness. `doctor` is read-only and reports missing setup.
+
+See [runner.md](runner.md) for presets, optional per-variant prompts and CLI lifecycle commands, and [getting-started.md](getting-started.md) for browser runtime setup and configuration.
