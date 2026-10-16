@@ -118,7 +118,7 @@ class TlsServiceTest < AceHitlTestCase
     proposals.each_with_index do |record, index|
       document["hitl"]["proposal_uids"] = [] unless index.zero?
       checkpoint = {"schema" => "ace.hitl.hermes.ingress-checkpoint/v1", "request" => record.fetch("request_id"),
-        "revision" => record.fetch("revision_id"), "healthy" => true, "drained" => true,
+        "project" => record.fetch("project_id"), "revision" => record.fetch("revision_id"), "healthy" => true, "drained" => true,
         "checkpoint" => {"through" => record.fetch("deadline"), "sequence" => 0}}
       reconciled = tls.request("proposal-reconcile", {"id" => record.fetch("request_id"), "project" => PROJECT, "checkpoint" => checkpoint})
       assert_equal index.zero? ? "approved-by-silence" : "awaiting-decision", reconciled.fetch("state")

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Require a reconciliation checkpoint to name the canonical proposal project before silence can authorize its effect.
+
 ## [0.16.0] - 2026-10-16
 
 ### Added

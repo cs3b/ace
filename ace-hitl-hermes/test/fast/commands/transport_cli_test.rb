@@ -27,7 +27,8 @@ class TransportCliTest < AceHermesTestCase
   def setup
     super
     @tmp = Dir.mktmpdir("hermes-cli", "/tmp")
-    @folder = File.join(@tmp, "inbox")
+    @root_folder = File.join(@tmp, "inbox")
+    @folder = File.join(@root_folder, "projects", "ace")
     FileUtils.mkdir_p(@folder, mode: 0o750)
     @socket = File.join(@tmp, "hitl.sock")
     @service = L::Service.new(root: File.join(@tmp, "store"), binding: Binding.new, policy: Policy.new,
@@ -38,20 +39,20 @@ class TransportCliTest < AceHermesTestCase
     @client = L::Client.new(socket_path: @socket, service_uid: Process.uid)
     @registry_path = File.join(@tmp, "channels.json")
     @config_path = File.join(@tmp, "runtime.json")
-    registry = {"schema" => "ace.hitl.hermes.channels/v1", "channels" => [
-      {"name" => "inbox", "machine" => "local", "folder" => @folder, "target" => "overseer", "projects" => ["ace"],
-       "chat_id" => "-424242", "captain_user_ids" => ["42"], "hitl_service_uid" => Process.uid}
+    registry = {"schema" => "ace.hitl.hermes.channels/v2", "channels" => [
+      {"name" => "inbox", "machine" => "local", "folder" => @root_folder, "target" => "overseer", "projects" => {"ace" => {"hitl_socket" => @socket, "hitl_service_uid" => Process.uid}},
+       "chat_id" => "-424242", "captain_user_ids" => ["42"]}
     ]}
     @gateway_path = File.join(@tmp, "hermes.yaml")
     File.write(@gateway_path, "platforms:\n  telegram:\n    enabled: false\n")
     @config = {"schema" => "ace.hitl.hermes.runtime/v1", "registry" => @registry_path,
-               "state" => File.join(@tmp, "state"), "hitl_socket" => @socket,
+               "state" => File.join(@tmp, "state"),
                "hermes_gateway_config" => @gateway_path, "polling_owner" => "ace-hitl-hermes"}
     File.write(@registry_path, JSON.generate(registry))
     File.write(@config_path, JSON.generate(@config))
     @registry = T::Registry.load(@registry_path)
     @journal = T::Journal.new(@config["state"])
-    @relay = T::Relay.new(registry: @registry, journal: @journal, lifecycle_for: ->(_) { @client },
+    @relay = T::Relay.new(registry: @registry, journal: @journal, lifecycle_for: ->(_, _project) { @client },
       sender: ->(channel, _) { {"success" => true, "chat_id" => channel["chat_id"], "message_id" => "100"} })
   end
 
@@ -73,7 +74,7 @@ class TransportCliTest < AceHermesTestCase
     ch = Ace::Hitl::Hermes::Molecules::HermesChannels::Channel.new(name: "inbox", machine: "local", folder: @folder)
     Ace::Hitl::Hermes::Organisms::HermesBox.new(channel: ch).publish(kind: :question, id: id,
       body: "Proceed?", sender: "agent", timestamp: Time.now.utc.iso8601)
-    @relay.submit(channel: "inbox", request: id, revision: "rev1")
+    @relay.submit(channel: "inbox", project: "ace", request: id, revision: "rev1")
   end
 
   def event(text)
@@ -96,7 +97,7 @@ class TransportCliTest < AceHermesTestCase
     assert_equal "approved", @client.consume("hitl001", timeout: 1)["answer"]
     late = event("late").merge("message_id" => "102")
     assert_equal "closed", cli("receive", stdin: JSON.generate(late))["status"]
-    assert_equal "submitted", cli("delivery", "--channel", "inbox", "--request", "hitl001")["status"]
+    assert_equal "submitted", cli("delivery", "--channel", "inbox", "--project", "ace", "--request", "hitl001")["status"]
   end
 
   def test_cli_otp_crosses_real_ipc_without_disk_or_projection_value
@@ -106,7 +107,7 @@ class TransportCliTest < AceHermesTestCase
     assert_equal "delivered", result["status"]
     assert_empty Dir.children(@folder)
     assert_equal surrogate, @client.consume("hitl001", timeout: 1, operation: "gem-push")["answer"]
-    public = cli("ingress", "reconcile", "--channel", "inbox", "--request", "hitl001",
+    public = cli("ingress", "reconcile", "--channel", "inbox", "--project", "ace", "--request", "hitl001",
       "--through", Time.now.utc.iso8601)
     refute_includes JSON.generate(public), surrogate
     Dir.glob(File.join(@tmp, "**", "*"), File::FNM_DOTMATCH).select { |p| File.file?(p) }.each do |path|
@@ -141,12 +142,12 @@ class TransportCliTest < AceHermesTestCase
     runtime.define_singleton_method(:telegram) { transport }
     runtime.serve(once: true)
     assert_equal [:poll, :send, :poll], calls
-    submitted_at = runtime.relay.delivery(channel: "inbox", request: "startup1")["submitted_at"]
-    assert runtime.relay.reconcile(channel: "inbox", request: "startup1", through: submitted_at)["healthy"]
+    submitted_at = runtime.relay.delivery(channel: "inbox", project: "ace", request: "startup1")["submitted_at"]
+    assert runtime.relay.reconcile(channel: "inbox", project: "ace", request: "startup1", through: submitted_at)["healthy"]
   end
 
   def test_unknown_request_checkpoint_and_malformed_ingress_errors_are_sanitized
-    checkpoint = cli("ingress", "reconcile", "--channel", "inbox", "--request", "absent1",
+    checkpoint = cli("ingress", "reconcile", "--channel", "inbox", "--project", "ace", "--request", "absent1",
       "--through", Time.now.utc.iso8601)
     refute checkpoint["healthy"]
     refute checkpoint["drained"]

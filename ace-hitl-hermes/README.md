@@ -88,7 +88,7 @@ ace-test            # the whole package suite
 
 The installed `serve` actor also publishes newly created scoped requests from
 authenticated `pending(project:)` into its registered folder channel before
-submitting questions. Ask needs no manual post or hidden Lab watcher. Projects
+submitting questions. One group can serve multiple explicitly configured project authorities with separate project folders and exact Reply correlation. Durable ordinary ingress retries independently per project; OTP remains transient. Ask needs no manual post or hidden Lab watcher. Projects
 without a registered authorized channel remain pending. Folder identity/body
 conflicts refuse publication; repeated runs do not send the same submitted
 question again. This actor remains the sole Telegram polling owner described

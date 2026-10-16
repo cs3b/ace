@@ -111,6 +111,7 @@ module Ace
           return record unless record["silence_delegated"] == true
           return record if timestamp(now) < timestamp(record.fetch("deadline"))
           valid = checkpoint["schema"] == "ace.hitl.hermes.ingress-checkpoint/v1" &&
+            checkpoint["project"].is_a?(String) && checkpoint["project"] == record["project_id"] &&
             checkpoint["request"] == record["request_id"] && checkpoint["revision"] == record["revision_id"] &&
             checkpoint["healthy"] == true && checkpoint["drained"] == true &&
             checkpoint.dig("checkpoint", "through") == record["deadline"] &&

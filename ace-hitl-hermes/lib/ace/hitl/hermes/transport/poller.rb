@@ -18,9 +18,9 @@ module Ace
             @journal.synchronize do |state, _commit|
               cursor = state["cursor"] || {"offset" => 0, "through" => stamp, "generation" => 0, "coverage_from" => stamp}
             end
-            # A durable queued record means a prior actor died with its body
-            # transient. Replay from the unadvanced offset; secret failures
-            # remain status-only and require a fresh challenge.
+            # Ordinary bodies already retained before offset confirmation retry
+            # independently. Secret failures remain status-only and require a
+            # fresh challenge; incomplete receipts replay at the old offset.
             started = stamp
             if Time.iso8601(started) - Time.iso8601(cursor["through"]) >= 24 * 60 * 60
               invalidate_coverage(started)
@@ -31,12 +31,12 @@ module Ace
                 commit.call
               end
             end
+            @relay.drain
             updates = @telegram.updates(offset: cursor["offset"])
             ids = updates.map { |u| u.is_a?(Hash) && u["update_id"] }
             unless ids.all? { |id| id.is_a?(Integer) && id >= cursor["offset"] } && ids == ids.sort && ids.uniq == ids
               raise ContractError, "malformed Telegram update sequence"
             end
-            unresolved = false
             unregistered = []
             updates.each do |update|
               message = update["message"]
@@ -57,8 +57,7 @@ module Ace
                        "reply_to_message_id" => message.dig("reply_to_message", "message_id").to_s,
                        "text" => message["text"]}
               begin
-                result = @relay.receive(event)
-                unresolved ||= %w[queued unresolved].include?(result["status"])
+                @relay.receive(event)
               rescue ContractError
                 # Authority and malformed correlation are rejected, never
                 # forwarded into an agent pipeline or preview log.
@@ -75,7 +74,6 @@ module Ace
                   through: started, continuous: continuous)
               end
             end
-            return updates.size if unresolved # retain Telegram replay until ordinary handling recovers
             @journal.synchronize do |state, commit|
               state["cursor"] = {"offset" => ids.empty? ? cursor["offset"] : ids.last + 1,
                                   "through" => finished, "generation" => cursor["generation"], "coverage_from" => cursor["coverage_from"]}

@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Replace channel-wide authority configuration with channels/v2 project routes, project-qualified correlation and folders, and explicit project CLI selection. Refuse old journals and ambiguous Reply IDs without migrating retained evidence.
+- Persist ordinary ingress through the existing private message.v1 folders before confirming Telegram offsets; retry independently per project across crashes and authority outages, retaining configuration and Captain allowlist bindings. Keep OTP values and hashes out of files.
+
+### Fixed
+
+- Bound DNS lookup and TCP connection as well as TLS handshake/frame deadlines; make positive TLS fixtures independent of host DNS aliases.
+
 ## [0.4.0] - 2026-10-14
 
 ### Added

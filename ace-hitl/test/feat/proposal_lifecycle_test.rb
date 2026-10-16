@@ -99,13 +99,25 @@ class ProposalLifecycleTest < AceHitlTestCase
 
   def checkpoint(record)
     {"schema" => "ace.hitl.hermes.ingress-checkpoint/v1", "request" => record["request_id"],
-     "revision" => record["revision_id"], "healthy" => true, "drained" => true,
+     "project" => record["project_id"], "revision" => record["revision_id"], "healthy" => true, "drained" => true,
      "checkpoint" => {"through" => record["deadline"], "sequence" => 0}}
   end
 
   def binding(record, id = "effect001")
     record.slice(*Ace::Assign::Molecules::ProposalJournal::PROPOSAL_BINDING).merge(
       "request_id" => id, "authorization" => record["revision_id"])
+  end
+
+  def test_wrong_project_checkpoint_cannot_approve_canonical_proposal
+    record = acknowledge(create)
+    @now = Time.iso8601(record.fetch("deadline"))
+    original_ref = @journal.ref_value
+    wrong = checkpoint(record).merge("project" => "other")
+    result = @store.proposal_reconcile(record.fetch("request_id"), project: "ace", checkpoint: wrong)
+    assert_equal "awaiting-decision", result.fetch("state")
+    assert_equal original_ref, @journal.ref_value
+    correct = @store.proposal_reconcile(record.fetch("request_id"), project: "ace", checkpoint: checkpoint(record))
+    assert_equal "approved-by-silence", correct.fetch("state")
   end
 
   def test_creation_returns_immediate_identity_without_a_delivery_deadline
@@ -272,7 +284,7 @@ class ProposalLifecycleTest < AceHitlTestCase
     with_transport do |boundary, actor|
       record = boundary.proposal_create(id: "proposal-#{SecureRandom.hex(12)}", assignment: "assign500", attempt: "attempt500", project: "ace", document: content)
       actor.serve(once: true)
-      transport = actor.send(:lifecycle_for, "inbox")
+      transport = actor.send(:lifecycle_for, "inbox", "ace")
       original = transport.method(:proposal_reply)
       first = true
       transport.define_singleton_method(:proposal_reply) do |request, **params|
@@ -593,7 +605,7 @@ class ProposalLifecycleTest < AceHitlTestCase
 
   def with_transport(policy: DecisionPolicy.new)
     folder = File.join(@dir, "inbox")
-    FileUtils.mkdir_p(folder, mode: 0o750)
+    FileUtils.mkdir_p(File.join(folder, "projects", "ace"), mode: 0o750)
     socket = File.join(@dir, "hitl.sock")
     service = Ace::Hitl::Lifecycle::Service.new(root: File.join(@dir, "boundary"), binding: @binding,
       policy: policy, socket_path: socket, group: Etc.getgrgid(Process.gid).name,
@@ -602,15 +614,14 @@ class ProposalLifecycleTest < AceHitlTestCase
     Timeout.timeout(5) { sleep 0.01 until File.socket?(socket) || !thread.alive? }
     thread.value unless thread.alive?
     registry = File.join(@dir, "registry.json")
-    File.write(registry, JSON.generate({"schema" => "ace.hitl.hermes.channels/v1", "channels" => [
+    File.write(registry, JSON.generate({"schema" => "ace.hitl.hermes.channels/v2", "channels" => [
       {"name" => "inbox", "machine" => "local", "folder" => folder, "target" => "overseer",
-       "projects" => ["ace"], "chat_id" => "-424242", "captain_user_ids" => ["42"],
-       "hitl_service_uid" => Process.uid}]}))
+       "projects" => {"ace" => {"hitl_socket" => socket, "hitl_service_uid" => Process.uid}}, "chat_id" => "-424242", "captain_user_ids" => ["42"]}]}))
     gateway = File.join(@dir, "gateway.yml")
     File.write(gateway, "platforms:\n  telegram:\n    enabled: false\n")
     config = File.join(@dir, "runtime.json")
     File.write(config, JSON.generate({"schema" => "ace.hitl.hermes.runtime/v1", "registry" => registry,
-      "state" => File.join(@dir, "hermes"), "hitl_socket" => socket,
+      "state" => File.join(@dir, "hermes"),
       "hermes_gateway_config" => gateway, "polling_owner" => "ace-hitl-hermes"}))
     boundary = Ace::Hitl::Lifecycle::Client.new(socket_path: socket, service_uid: Process.uid)
     transport = Object.new
@@ -647,7 +658,7 @@ class ProposalLifecycleTest < AceHitlTestCase
       # Clients cache per ROUTE (endpoint plus credential identity); the
       # transport role dispatch swaps the cached client for the
       # transport peer's store view, with the activation probe surface.
-      route = actor.instance_variable_get(:@lifecycle_routes).fetch("inbox")
+      route = actor.instance_variable_get(:@lifecycle_routes).fetch(["inbox", "ace"])
       transport_client = SimpleDelegator.new(transport_store)
       transport_client.define_singleton_method(:ping) { {"pong" => true} }
       actor.instance_variable_get(:@lifecycle_clients)[route] = transport_client
@@ -696,7 +707,7 @@ class ProposalLifecycleTest < AceHitlTestCase
       actor.serve(once: true)
       assert_equal "approved-by-silence", boundary.proposal_show(record["proposal_id"], project: "ace")["decision_state"]
       before = @journal.ref_value
-      actor.relay.reconcile(channel: "inbox", request: record["request_id"], through: armed["deadline"])
+      actor.relay.reconcile(channel: "inbox", project: "ace", request: record["request_id"], through: armed["deadline"])
       assert_equal before, @journal.ref_value, "duplicate wake must not replay ticks"
     end
   end
@@ -711,7 +722,7 @@ class ProposalLifecycleTest < AceHitlTestCase
       result = nil
       threads = [Thread.new { actor.relay.receive(event("veto")) },
         Thread.new do
-          result = actor.relay.reconcile(channel: "inbox", request: record["request_id"], through: armed["deadline"])
+          result = actor.relay.reconcile(channel: "inbox", project: "ace", request: record["request_id"], through: armed["deadline"])
         end]
       Timeout.timeout(10) { threads.each(&:value) }
       assert_equal "denied", @journal.proposal_record(record["proposal_id"])["state"]
@@ -726,11 +737,11 @@ class ProposalLifecycleTest < AceHitlTestCase
       transport = actor.send(:telegram)
       transport.define_singleton_method(:call) { |*| raise Ace::Hitl::Hermes::Transport::SubmitFailed }
       actor.serve(once: true)
-      assert_equal "failed", actor.relay.delivery(channel: "inbox", request: record["request_id"])["status"]
+      assert_equal "failed", actor.relay.delivery(channel: "inbox", project: "ace", request: record["request_id"])["status"]
       refute boundary.proposal_show(record["proposal_id"], project: "ace").key?("deadline")
       transport.define_singleton_method(:call) { |*| raise IOError, "lost acknowledgement" }
       actor.serve(once: true)
-      assert_equal "uncertain", actor.relay.delivery(channel: "inbox", request: record["request_id"])["status"]
+      assert_equal "uncertain", actor.relay.delivery(channel: "inbox", project: "ace", request: record["request_id"])["status"]
       @now += 20 * 3600
       actor.serve(once: true)
       assert_empty boundary.proposal_due(project: "ace")["items"]

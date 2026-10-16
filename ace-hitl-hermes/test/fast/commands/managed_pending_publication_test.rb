@@ -19,7 +19,8 @@ class ManagedPendingPublicationTest < AceHermesTestCase
   def setup
     super
     @tmp = Dir.mktmpdir("hermes-cli", "/tmp")
-    @folder = File.join(@tmp, "inbox")
+    @root_folder = File.join(@tmp, "inbox")
+    @folder = File.join(@root_folder, "projects", "ace")
     FileUtils.mkdir_p(@folder, mode: 0o750)
     @socket = File.join(@tmp, "hitl.sock")
     @service = L::Service.new(root: File.join(@tmp, "store"), binding: Binding.new, policy: Policy.new,
@@ -30,20 +31,20 @@ class ManagedPendingPublicationTest < AceHermesTestCase
     @client = L::Client.new(socket_path: @socket, service_uid: Process.uid)
     @registry_path = File.join(@tmp, "channels.json")
     @config_path = File.join(@tmp, "runtime.json")
-    registry = {"schema" => "ace.hitl.hermes.channels/v1", "channels" => [
-      {"name" => "inbox", "machine" => "local", "folder" => @folder, "target" => "overseer", "projects" => ["ace"],
-       "chat_id" => "-424242", "captain_user_ids" => ["42"], "hitl_service_uid" => Process.uid}
+    registry = {"schema" => "ace.hitl.hermes.channels/v2", "channels" => [
+      {"name" => "inbox", "machine" => "local", "folder" => @root_folder, "target" => "overseer", "projects" => {"ace" => {"hitl_socket" => @socket, "hitl_service_uid" => Process.uid}},
+       "chat_id" => "-424242", "captain_user_ids" => ["42"]}
     ]}
     @gateway_path = File.join(@tmp, "hermes.yaml")
     File.write(@gateway_path, "platforms:\n  telegram:\n    enabled: false\n")
     @config = {"schema" => "ace.hitl.hermes.runtime/v1", "registry" => @registry_path,
-               "state" => File.join(@tmp, "state"), "hitl_socket" => @socket,
+               "state" => File.join(@tmp, "state"),
                "hermes_gateway_config" => @gateway_path, "polling_owner" => "ace-hitl-hermes"}
     File.write(@registry_path, JSON.generate(registry))
     File.write(@config_path, JSON.generate(@config))
     @registry = T::Registry.load(@registry_path)
     @journal = T::Journal.new(@config["state"])
-    @relay = T::Relay.new(registry: @registry, journal: @journal, lifecycle_for: ->(_) { @client },
+    @relay = T::Relay.new(registry: @registry, journal: @journal, lifecycle_for: ->(_, _project) { @client },
       sender: ->(channel, _) { {"success" => true, "chat_id" => channel["chat_id"], "message_id" => "100"} })
   end
 
@@ -80,12 +81,12 @@ class ManagedPendingPublicationTest < AceHermesTestCase
     actor.serve(once: true)
     assert_equal %i[poll send poll], calls.map(&:first)
     assert_equal [:send, "inbox", "Proceed?"], calls.find { |v| v.first == :send }
-    assert_equal "submitted", actor.relay.delivery(channel: "inbox", request: "auto001")["status"]
+    assert_equal "submitted", actor.relay.delivery(channel: "inbox", project: "ace", request: "auto001")["status"]
     assert_empty Dir.children(@folder) # Telegram question ACK removes message.v1.
     actor.serve(once: true)
     assert_equal 1, calls.count { |value| value.first == :send }
-    submitted_at = actor.relay.delivery(channel: "inbox", request: "auto001")["submitted_at"]
-    assert actor.relay.reconcile(channel: "inbox", request: "auto001", through: submitted_at)["healthy"]
+    submitted_at = actor.relay.delivery(channel: "inbox", project: "ace", request: "auto001")["submitted_at"]
+    assert actor.relay.reconcile(channel: "inbox", project: "ace", request: "auto001", through: submitted_at)["healthy"]
   end
 
   def test_unregistered_project_is_left_pending_and_never_routed
@@ -112,7 +113,7 @@ class ManagedPendingPublicationTest < AceHermesTestCase
   def test_continuous_publication_retries_transport_outage_and_retains_one_poll_owner
     create(id: "auto001")
     actor, calls = runtime
-    lifecycle = actor.send(:lifecycle_for, "inbox")
+    lifecycle = actor.send(:lifecycle_for, "inbox", "ace")
     original_pending = lifecycle.method(:pending)
     attempts = 0
     lifecycle.define_singleton_method(:pending) do |**args|
@@ -137,13 +138,13 @@ class ManagedPendingPublicationTest < AceHermesTestCase
     assert_equal [1], delays
     assert_equal 3, attempts
     assert_equal 1, calls.count { |entry| entry.first == :send }
-    assert_equal "submitted", actor.relay.delivery(channel: "inbox", request: "auto001")["status"]
+    assert_equal "submitted", actor.relay.delivery(channel: "inbox", project: "ace", request: "auto001")["status"]
   end
 
   def test_once_publication_reports_transport_failure_without_consuming_request
     create(id: "auto001")
     actor, calls = runtime
-    lifecycle = actor.send(:lifecycle_for, "inbox")
+    lifecycle = actor.send(:lifecycle_for, "inbox", "ace")
     original_pending = lifecycle.method(:pending)
     attempts = 0
     lifecycle.define_singleton_method(:pending) do |**args|
@@ -163,7 +164,7 @@ class ManagedPendingPublicationTest < AceHermesTestCase
   def test_requester_named_captain_still_reaches_telegram
     create(id: "auto001")
     actor, calls = runtime
-    lifecycle = actor.send(:lifecycle_for, "inbox")
+    lifecycle = actor.send(:lifecycle_for, "inbox", "ace")
     original_pending = lifecycle.method(:pending)
     original_read = lifecycle.method(:read)
     lifecycle.define_singleton_method(:pending) do |**args|
@@ -217,7 +218,7 @@ class ManagedPendingPublicationTest < AceHermesTestCase
     assert actor
   end
 
-  def test_existing_transport_v1_journal_gains_additive_registration_state_without_losing_records
+  def test_existing_transport_v1_journal_is_preserved_and_refused
     directory = File.join(@tmp, "existing-state")
     FileUtils.mkdir_p(directory, mode: 0o700)
     path = File.join(directory, "journal.json")
@@ -228,15 +229,11 @@ class ManagedPendingPublicationTest < AceHermesTestCase
     File.chmod(0o600, path)
     journal = T::Journal.new(directory)
 
-    journal.record_unregistered(
-      updates: [{"chat_id" => "-999999", "update_id" => 9}], observed_at: QUESTION_TS
-    )
-
-    journal.synchronize do |state, _|
-      assert_equal retained, state["requests"].fetch(JSON.generate(["inbox", "retained"]))
-      assert_equal 7, state["sequence"]
-      assert_equal 9, state.dig("unregistered_chats", "-999999", "last_update_id")
+    bytes = File.read(path)
+    assert_raises(Ace::Hitl::Hermes::ContractError) do
+      journal.record_unregistered(updates: [{"chat_id" => "-999999", "update_id" => 9}], observed_at: QUESTION_TS)
     end
+    assert_equal bytes, File.read(path)
   end
 
 end

@@ -19,7 +19,10 @@ module Ace
           @config_path = File.expand_path(path)
           @credential_path_verifier = credential_path_verifier
           @config = JSON.parse(File.read(path))
-          unless @config.is_a?(Hash) && @config["schema"] == "ace.hitl.hermes.runtime/v1"
+          fields = %w[schema registry state token_file polling_owner hermes_gateway_config
+            tls_service_user tls_service_group]
+          unless @config.is_a?(Hash) && @config["schema"] == "ace.hitl.hermes.runtime/v1" &&
+              (@config.keys - fields).empty?
             raise ContractError, "runtime configuration requires runtime/v1"
           end
           @registry = Transport::Registry.load(@config.fetch("registry"))
@@ -28,7 +31,7 @@ module Ace
           verify_tls_deployment! if @lifecycle_routes.values.any? { |route| route.key?(:endpoint) }
           @lifecycle_clients = {}
           @relay = Transport::Relay.new(registry: @registry, journal: @journal,
-            lifecycle_for: ->(channel) { lifecycle_for(channel) },
+            lifecycle_for: ->(channel, project) { lifecycle_for(channel, project) },
             sender: ->(channel, question) { telegram.call(channel, question) }, clock: @clock)
         rescue JSON::ParserError, KeyError, SystemCallError, ArgumentError
           raise ContractError, "runtime configuration is unavailable or malformed"
@@ -36,6 +39,7 @@ module Ace
 
         def serve(once: false)
           verify_polling_owner!
+          @registry.verify_folders!
           verify_authorities!
           @journal.actor do
             surface_registration_gaps
@@ -51,30 +55,20 @@ module Ace
             loop do
               # Only an authoritative lifecycle request may be submitted.
               # A sender label is not authority or a reserved OS username.
+              errors = []
               @registry.channels.each do |channel|
-                box_channel = Molecules::HermesChannels::Channel.new(
-                  name: channel["name"], machine: channel["machine"], folder: channel["folder"]
-                )
-                box = Organisms::HermesBox.new(channel: box_channel)
-                begin
-                  publish_pending(channel, box)
-                rescue Ace::Hitl::Lifecycle::TransportError => e
-                  raise if once
-                  warn "ace-hitl-hermes: pending publication unavailable for #{channel['name']} (#{e.class}); retrying"
-                  sleep 1
-                  next
-                end
-                box.poll.messages.each do |message|
-                  next unless message.question?
+                channel.fetch("projects").each_key do |project|
                   begin
-                    facts = lifecycle_for(channel).read(message.id)
-                    revision = facts["proposal"] ? facts.fetch("proposal").fetch("revision_id") : facts.fetch("attempt")
-                    @relay.submit(channel: channel["name"], request: message.id, revision: revision)
-                  rescue StandardError
-                    # Pending folder + visible delivery status are retained.
+                    publish_pending(channel, project)
+                  rescue Ace::Hitl::Lifecycle::Error, ContractError => e
+                    errors << e
+                    warn "ace-hitl-hermes: pending publication unavailable for #{channel['name']}/#{project} " \
+                      "(#{e.class}); retrying"
                   end
                 end
               end
+              raise errors.first if once && !errors.empty?
+              sleep 1 unless errors.empty?
               begin
                 poller.once
               rescue ContractError
@@ -108,36 +102,36 @@ module Ace
         # route — Unix peer credentials or the verified mTLS identity.
         def verify_authorities!
           @registry.channels.each do |channel|
-            client = lifecycle_for(channel)
-            begin
-              client.ping
-              channel.fetch("projects").each { |project| client.pending(project: project) }
-            rescue Ace::Hitl::Lifecycle::Error => e
-              raise ContractError,
-                "channel #{channel['name']} authority failed the activation health check (#{e.class})"
+            channel.fetch("projects").each_key do |project|
+              begin
+                client = lifecycle_for(channel, project)
+                client.ping
+                client.pending(project: project)
+              rescue Ace::Hitl::Lifecycle::Error => e
+                raise ContractError,
+                  "channel #{channel['name']}/#{project} authority failed the activation health check (#{e.class})"
+              end
             end
           end
         end
 
         def build_lifecycle_routes
-          default_socket = @config.fetch("hitl_socket")
-          unless default_socket.is_a?(String) && File.absolute_path?(default_socket)
-            raise ContractError, "runtime requires an absolute default HITL socket"
-          end
           identities = {}
-          @registry.channels.to_h do |channel|
-            route = if (endpoint = channel["hitl_endpoint"])
-              build_remote_route(channel, endpoint)
-            else
-              socket = channel.fetch("hitl_socket", default_socket)
-              service_uid = channel.fetch("hitl_service_uid")
-              if identities.key?(socket) && identities[socket] != service_uid
-                raise ContractError, "one HITL socket cannot declare multiple service identities"
+          @registry.channels.each_with_object({}) do |channel, routes|
+            channel.fetch("projects").each do |project, authority|
+              route = if (endpoint = authority["hitl_endpoint"])
+                build_remote_route(authority, endpoint)
+              else
+                socket = authority.fetch("hitl_socket")
+                service_uid = authority.fetch("hitl_service_uid")
+                if identities.key?(socket) && identities[socket] != service_uid
+                  raise ContractError, "one HITL socket cannot declare multiple service identities"
+                end
+                identities[socket] = service_uid
+                {socket_path: socket, service_uid: service_uid}
               end
-              identities[socket] = service_uid
-              {socket_path: socket, service_uid: service_uid}
+              routes[[channel.fetch("name"), project]] = route.freeze
             end
-            [channel["name"], route.freeze]
           end.freeze
         end
 
@@ -182,9 +176,10 @@ module Ace
           end
         end
 
-        def lifecycle_for(channel)
+        def lifecycle_for(channel, project)
           name = channel.is_a?(Hash) ? channel.fetch("name") : channel.to_s
-          route = @lifecycle_routes.fetch(name)
+          @registry.project_channel(name, project)
+          route = @lifecycle_routes.fetch([name, project])
           @lifecycle_clients[route] ||= build_client(route)
         end
 
@@ -208,26 +203,36 @@ module Ace
         # The installed transport owns publication as well as Telegram polling.
         # Ask writes only scoped lifecycle state; no hidden Lab watcher or
         # HITL→Hermes dependency is required to get a question into message.v1.
-        def publish_pending(channel, box)
-          lifecycle = lifecycle_for(channel)
-          channel["projects"].each do |project|
-            lifecycle.pending(project: project).each do |facts|
-              next unless facts["state"] == "created"
-              envelope = Ace::Hitl::Contract::ManagedEnvelope.load(facts.fetch("envelope"), expected: {
-                request_id: facts["id"], project: project, assignment_id: facts["assignment"], attempt_id: facts["attempt"]
-              })
-              status = @relay.delivery(channel: channel["name"], request: facts["id"])["status"]
-              next unless %w[unknown failed].include?(status)
+        def publish_pending(channel, project)
+          lifecycle = lifecycle_for(channel, project)
+          scoped = @registry.project_channel(channel.fetch("name"), project)
+          box = Transport::Relay.folder_box(scoped)
+          lifecycle.pending(project: project).each do |facts|
+            next unless facts["state"] == "created"
+            envelope = Ace::Hitl::Contract::ManagedEnvelope.load(facts.fetch("envelope"), expected: {
+              request_id: facts["id"], project: project, assignment_id: facts["assignment"], attempt_id: facts["attempt"]
+            })
+            status = @relay.delivery(channel: channel["name"], project: project, request: facts["id"])["status"]
+            next unless %w[unknown failed submitted].include?(status)
+            if status != "submitted"
               existing = box.poll.messages.find { |message| message.id == facts["id"] }
               if existing
                 unless existing.question? && existing.body == facts["question"]
                   raise ContractError, "managed question folder identity conflicts"
                 end
-                next
+              else
+                box.publish(kind: :question, id: facts["id"], body: facts["question"], sender: envelope["requester"],
+                  timestamp: Time.at(Integer(facts["created_at"])).utc.iso8601)
               end
-              box.publish(kind: :question, id: facts["id"], body: facts["question"], sender: envelope["requester"],
-                timestamp: Time.at(Integer(facts["created_at"])).utc.iso8601)
             end
+            # Pending intentionally omits canonical proposal state. Read that
+            # state through the selected authority before choosing its revision.
+            revision = if facts["kind"] == "proposal"
+              lifecycle.read(facts.fetch("id")).fetch("proposal").fetch("revision_id")
+            else
+              facts.fetch("attempt")
+            end
+            @relay.submit(channel: channel.fetch("name"), project: project, request: facts.fetch("id"), revision: revision)
           end
         rescue Ace::Hitl::Contract::InvalidEnvelope, KeyError, ArgumentError => e
           raise ContractError, "managed pending publication binding is invalid (#{e.class})"
@@ -235,14 +240,14 @@ module Ace
 
         def reconcile_proposals
           @registry.channels.each do |channel|
-            begin
-              lifecycle = lifecycle_for(channel)
-              channel.fetch("projects").each do |project|
+            channel.fetch("projects").each_key do |project|
+              begin
+                lifecycle = lifecycle_for(channel, project)
                 after = nil
                 loop do
                   page = lifecycle.proposal_due(project: project, after: after)
                   page.fetch("items").each do |proposal|
-                    @relay.reconcile(channel: channel.fetch("name"), request: proposal.fetch("request_id"),
+                    @relay.reconcile(channel: channel.fetch("name"), project: project, request: proposal.fetch("request_id"),
                       through: proposal.fetch("deadline"))
                   end
                   cursor = page.fetch("next")
@@ -252,10 +257,10 @@ module Ace
                   end
                   after = cursor
                 end
+              rescue Ace::Hitl::Lifecycle::Error, ContractError => e
+                warn "ace-hitl-hermes: proposal reconciliation unavailable for #{channel['name']}/#{project} " \
+                  "(#{e.class}); deadlines deferred"
               end
-            rescue Ace::Hitl::Lifecycle::Error, ContractError => e
-              warn "ace-hitl-hermes: proposal reconciliation unavailable for #{channel['name']} " \
-                "(#{e.class}); deadlines deferred"
             end
           end
         end

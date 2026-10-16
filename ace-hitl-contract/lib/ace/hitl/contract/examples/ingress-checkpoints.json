@@ -9,7 +9,8 @@
       "healthy": false,
       "drained": false,
       "checkpoint": null,
-      "unresolved": []
+      "unresolved": [],
+      "project": "ace"
     },
     {
       "schema": "ace.hitl.hermes.ingress-checkpoint/v1",
@@ -23,7 +24,8 @@
         "through": "2026-10-05T10:00:00Z",
         "sequence": 4
       },
-      "unresolved": []
+      "unresolved": [],
+      "project": "ace"
     },
     {
       "schema": "ace.hitl.hermes.ingress-checkpoint/v1",
@@ -42,9 +44,11 @@
           "request": "hitl-abcdef1234",
           "revision": "def456",
           "received_at": "2026-10-05T09:59:59Z",
-          "status": "unresolved"
+          "status": "unresolved",
+          "project": "ace"
         }
-      ]
+      ],
+      "project": "ace"
     }
   ]
 }
