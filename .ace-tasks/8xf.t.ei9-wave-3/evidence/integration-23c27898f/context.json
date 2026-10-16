@@ -1,0 +1,7 @@
+{
+  "source_head": "23c27898f",
+  "scope": "Focused integration after command cleanup89ac+459 and common coref6d6 cherry-picks. Author source freezes and independent review inputs unchanged.",
+  "full_suite": "Not repeated yet; required after coherent next source freeze.",
+  "independent_reviews": "Cleanup and common-core configured Pi reviews pending.",
+  "installed_acceptance": "No production adoption from these host checks. Linux R5 evidence separately proves cleanup459 only, before new dynamic candidate schema."
+}
