@@ -1,0 +1,48 @@
+{
+  "description": "Design engineering across product UI and sites: hierarchy, typography, responsive behavior and visual quality.",
+  "verification": "candidate",
+  "evidence": [
+    "Pinned upstream instructions inspected; complete ACE integration smoke not yet verified."
+  ],
+  "process": "external",
+  "surfaces": [
+    "site",
+    "app"
+  ],
+  "kinds": [
+    "view",
+    "component"
+  ],
+  "intents": [
+    "explore",
+    "recreate",
+    "reimagine"
+  ],
+  "artifact_types": [
+    "html",
+    "image",
+    "url"
+  ],
+  "timeout": 1800,
+  "requirements": [
+    {
+      "name": "Shell",
+      "executable": "sh"
+    },
+    {
+      "name": "Impeccable launcher and rendered browser checks",
+      "notes": "Original launcher may download its binary; provider policy applies."
+    }
+  ],
+  "limitations": [
+    "Original workflow is not shortened to ACE fast mode. Required checks may need tools unavailable to a provider."
+  ],
+  "skills": [
+    {
+      "source": "https://github.com/pbakaus/impeccable.git",
+      "revision": "6af45ac9a5eb8792f033d3242f52e99812fd91fa",
+      "entry": ".agents/skills/impeccable/SKILL.md",
+      "role": "lead"
+    }
+  ]
+}

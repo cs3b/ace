@@ -1,0 +1,18 @@
+concurrency: 3
+description: Fast runnable ACE mockups with shared data and lightweight checks
+verification: tested
+artifact_types: [html]
+process: ace
+directions:
+  -
+    component: Immediate affordance, visible actions and efficient interaction
+    site: Direct action, clear offer and confident hierarchy
+    app: Fast queue workflow with efficient scanning and actions
+  -
+    component: Clear content hierarchy, contextual detail and explicit state feedback
+    site: Editorial storytelling with a strong reading rhythm
+    app: Contextual detail with a split workspace and supporting history
+  -
+    component: Calm presentation, progressive disclosure and flexible container behavior
+    site: Evidence and proof, concrete outcomes and trustworthy comparison
+    app: Calm overview with progressive disclosure and clear priorities

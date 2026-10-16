@@ -1,0 +1,12 @@
+# Design brief
+- Surface: site | app
+- Audience:
+- Primary action:
+- Representative screen and following section/interaction:
+- One exploration language:
+- Brand constraints:
+- Shared fixture path and assumptions:
+- A — composition / hierarchy / type / density:
+- B — composition / hierarchy / type / density:
+- C — composition / hierarchy / type / density:
+- Mocked behaviors and production follow-up:

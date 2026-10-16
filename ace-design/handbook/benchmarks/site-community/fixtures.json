@@ -1,0 +1,41 @@
+{
+  "title": "Local community garden",
+  "primary_action": "Join a weekend session",
+  "description": "Help neighbors choose a weekend garden activity and join a session.",
+  "records": [
+    {
+      "id": "planting",
+      "title": "Plant winter greens",
+      "status": "Places available",
+      "date": "2026-11-07",
+      "time": "09:00–11:00",
+      "location": "North garden beds",
+      "places_remaining": 12,
+      "activity": "Planting",
+      "experience": "Beginners welcome"
+    },
+    {
+      "id": "compost",
+      "title": "Build a compost bay",
+      "status": "Few places left",
+      "date": "2026-11-07",
+      "time": "13:00–15:00",
+      "location": "Garden tool shed",
+      "places_remaining": 2,
+      "activity": "Workshop",
+      "experience": "No experience required"
+    },
+    {
+      "id": "harvest",
+      "title": "Community harvest morning",
+      "status": "Full",
+      "date": "2026-11-08",
+      "time": "09:00–12:00",
+      "location": "Main garden gate",
+      "places_remaining": 0,
+      "activity": "Harvest",
+      "experience": "All ages welcome"
+    }
+  ],
+  "data_notice": "Fictional benchmark data; fixed across baseline and candidate runs."
+}

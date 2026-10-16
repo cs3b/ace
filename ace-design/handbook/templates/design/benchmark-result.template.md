@@ -1,0 +1,14 @@
+# Benchmark result
+- Brief ID / fixture SHA-256:
+- Baseline revision / candidate revision:
+- Agent/model/tools and environment:
+- Applicable guidance and excluded cases:
+- Baseline / candidate artifact paths:
+- Time to first comparable variants (observed):
+- Same fixture bytes in all variants:
+- Distinct composition and hierarchy:
+- Feedback request / targeted edit time:
+- Executed browser checks:
+- Human judgment:
+- Model judgment (not proof):
+- Failures / unexecuted checks:

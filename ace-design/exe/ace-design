@@ -1,0 +1,19 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+require "ace/design"
+begin
+  exit Ace::Design::CLI.start(ARGV.empty? ? ["--help"] : ARGV)
+rescue Interrupt
+  if ARGV.first == "profile" && %w[adjust refresh].include?(ARGV[1])
+    warn "Design adjustment interrupted. Inspect the printed report directory and rerun profile adjust or profile refresh explicitly."
+  else
+    warn "Design operation interrupted; completed artifacts are preserved. Use status and resume with the printed session path."
+  end
+  exit 130
+rescue Ace::Support::Cli::Error => e
+  warn e.message
+  exit e.exit_code
+rescue Ace::Design::Error, ArgumentError, SystemCallError => e
+  warn e.message
+  exit(ARGV.first == "inspect" ? 2 : 1)
+end

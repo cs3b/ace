@@ -202,6 +202,7 @@ Use `--full-index` only as temporary RubyGems propagation mitigation, then retur
 
 ## The Toolkit
 
+- **Design**: [`ace-design`](ace-design/) for three quick site/app directions, targeted feedback, production handoff and browser evidence.
 - **Plan**: [`ace-idea`](ace-idea/) to capture and shape ideas, [`ace-task`](ace-task/) for markdown task specs with subtasks, [`ace-sim`](ace-sim/) for scenario simulation.
 - **Build**: [`ace-overseer`](ace-overseer/) to orchestrate task pipelines, [`ace-assign`](ace-assign/) for multi-step assignments, [`ace-git-worktree`](ace-git-worktree/) for isolated worktrees.
 - **QA**: [`ace-review`](ace-review/) for multi-model preset reviews, [`ace-test-runner`](ace-test-runner/) for smart test execution, [`ace-lint`](ace-lint/) for linting, [`ace-retro`](ace-retro/) for retrospectives, [`ace-demo`](ace-demo/) for terminal demo recording.

@@ -65,3 +65,7 @@ AI agents should ignore these during normal operations:
 - `node_modules/**/*` # Node.js dependencies
 - `*.bak` # Backup files
 - `_legacy/**/*` # Archived content (dev-handbook, dev-tools)
+
+## ace-design
+
+`ace-design/` owns shared site/app design workflows and source skills, contextual cards and benchmark fixtures. Ruby ATOM layers validate sessions/catalogs and orchestrate CLI commands; `browser/preview.mjs` uses Node HTTP, while the separate pinned Playwright/axe runner produces inspection evidence. The agent owns design generation and feedback. Runtime dependencies and evidence are local under `.ace-local/design/`; native design is future work.

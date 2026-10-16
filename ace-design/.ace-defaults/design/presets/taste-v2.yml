@@ -1,0 +1,46 @@
+{
+  "description": "Distinctive marketing pages with subject inventory, art direction, visual assets and critique.",
+  "verification": "candidate",
+  "evidence": [
+    "Pinned upstream instructions inspected; complete ACE integration smoke not yet verified."
+  ],
+  "process": "external",
+  "surfaces": [
+    "site"
+  ],
+  "kinds": [
+    "view"
+  ],
+  "intents": [
+    "explore",
+    "reimagine"
+  ],
+  "artifact_types": [
+    "html",
+    "image",
+    "url"
+  ],
+  "timeout": 1800,
+  "requirements": [
+    {
+      "name": "Node.js",
+      "executable": "node"
+    },
+    {
+      "name": "Browser inspection and image tools",
+      "notes": "Skill requires rendered checks and visual assets; worker must report unavailable tools."
+    }
+  ],
+  "limitations": [
+    "Original workflow is not shortened to ACE fast mode. Required checks may need tools unavailable to a provider.",
+    "Upstream excludes application UI. Use a separately named explicit adaptation for apps."
+  ],
+  "skills": [
+    {
+      "source": "https://github.com/Leonxlnx/taste-skill.git",
+      "revision": "f624f37a8c650b9cc550253104925efe4c8de246",
+      "entry": "skills/taste-skill/SKILL.md",
+      "role": "lead"
+    }
+  ]
+}

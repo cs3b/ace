@@ -1,0 +1,38 @@
+{
+  "title": "Architecture studio",
+  "primary_action": "Request a consultation",
+  "description": "Explore architectural projects and request a consultation for a similar brief.",
+  "records": [
+    {
+      "id": "courtyard-home",
+      "title": "Courtyard house",
+      "status": "Completed",
+      "project_type": "Residential",
+      "location": "Coastal town",
+      "year": 2024,
+      "area_m2": 180,
+      "summary": "A family home organized around a shaded courtyard and natural ventilation."
+    },
+    {
+      "id": "neighborhood-library",
+      "title": "Neighborhood reading room",
+      "status": "Completed",
+      "project_type": "Community",
+      "location": "City neighborhood",
+      "year": 2025,
+      "area_m2": 320,
+      "summary": "An adaptable reading room with daylight, quiet study and shared meeting space."
+    },
+    {
+      "id": "workshop-reuse",
+      "title": "Workshop conversion",
+      "status": "In progress",
+      "project_type": "Adaptive reuse",
+      "location": "Former industrial district",
+      "year": 2026,
+      "area_m2": 240,
+      "summary": "A former workshop converted into flexible studios while retaining its structure."
+    }
+  ],
+  "data_notice": "Fictional benchmark data; fixed across baseline and candidate runs."
+}

@@ -1,0 +1,48 @@
+{
+  "description": "Searchable UI/UX knowledge for accessibility, interaction, styles, typography and stack-specific implementation.",
+  "verification": "candidate",
+  "evidence": [
+    "Pinned upstream instructions and search scripts exercised in the 2026-10-16 mixed smoke. Browser checks blocked by provider policy; complete integration remains unverified."
+  ],
+  "process": "external",
+  "surfaces": [
+    "site",
+    "app"
+  ],
+  "kinds": [
+    "view",
+    "component"
+  ],
+  "intents": [
+    "explore",
+    "recreate",
+    "reimagine"
+  ],
+  "artifact_types": [
+    "html",
+    "image",
+    "url"
+  ],
+  "timeout": 1800,
+  "requirements": [
+    {
+      "name": "Python 3",
+      "executable": "python3"
+    },
+    {
+      "name": "Rendered browser verification",
+      "notes": "Original delivery checklist requires keyboard, responsive, motion and reflow checks; provider must support browser execution."
+    }
+  ],
+  "limitations": [
+    "Original workflow is not shortened to ACE fast mode. Required checks may need tools unavailable to a provider."
+  ],
+  "skills": [
+    {
+      "source": "https://github.com/nextlevelbuilder/ui-ux-pro-max-skill.git",
+      "revision": "56ea9cf174ed86786187daa9de0e6247cb0747e4",
+      "entry": ".claude/skills/ui-ux-pro-max/SKILL.md",
+      "role": "lead"
+    }
+  ]
+}

@@ -7,6 +7,11 @@ test_suite:
 
   # Packages to test in order of priority
   packages:
+    - name: ace-design
+      path: ace-design
+      group: tools
+      priority: 2
+
     - name: ace-support-core
       path: ace-support-core
       group: foundation

@@ -1,0 +1,8 @@
+name: ace-design
+type: gem
+description: Design wfi resources
+priority: 10
+config:
+  relative_path: handbook/workflow-instructions
+  pattern: "*.wf.md"
+  enabled: true

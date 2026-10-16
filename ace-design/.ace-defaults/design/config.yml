@@ -1,0 +1,9 @@
+design:
+  node: node
+  runtime_dir: .ace-local/design/runtime
+  run_root: .ace-local/design
+  timeout: 45
+  model: role:assign-engineer
+  agent_timeout: 600
+  language: en
+  input: []

@@ -1,0 +1,48 @@
+{
+  "description": "Visual exploration, reproduction and iteration on the Superdesign canvas via its CLI.",
+  "verification": "candidate",
+  "evidence": [
+    "Pinned upstream instructions inspected; complete ACE integration smoke not yet verified."
+  ],
+  "process": "external",
+  "surfaces": [
+    "site",
+    "app"
+  ],
+  "kinds": [
+    "view",
+    "component"
+  ],
+  "intents": [
+    "explore",
+    "recreate",
+    "reimagine"
+  ],
+  "artifact_types": [
+    "html",
+    "image",
+    "url"
+  ],
+  "timeout": 1800,
+  "requirements": [
+    {
+      "name": "Node.js",
+      "executable": "node"
+    },
+    {
+      "name": "Superdesign authentication and service access",
+      "notes": "Original CLI uses its service and may invoke additional models; caller model selects the coding worker only."
+    }
+  ],
+  "limitations": [
+    "Original workflow is not shortened to ACE fast mode. Required checks may need tools unavailable to a provider."
+  ],
+  "skills": [
+    {
+      "source": "https://github.com/superdesigndev/superdesign-skill.git",
+      "revision": "f9f05cd988c247dce6c072eaf9ac6b162f2ffc4b",
+      "entry": "skills/superdesign/SKILL.md",
+      "role": "lead"
+    }
+  ]
+}

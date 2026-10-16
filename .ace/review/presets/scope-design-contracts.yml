@@ -1,0 +1,14 @@
+{
+  "presets": [
+    "code-valid"
+  ],
+  "description": "Design CLI workflow contracts, profiles/presets, packaging, installation and project integration",
+  "file_patterns": {
+    "exclude": [
+      "ace-design/lib/**",
+      "ace-design/browser/**",
+      "ace-design/test/**",
+      "ace-llm-providers-cli/**"
+    ]
+  }
+}

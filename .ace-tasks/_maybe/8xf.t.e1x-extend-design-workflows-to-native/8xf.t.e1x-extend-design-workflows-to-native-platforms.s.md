@@ -8,7 +8,7 @@ dependencies: []
 tags: []
 bundle:
   presets: [project]
-  files: [.ace-tasks/8xf.t.e1q-deliver-fast-web-design-and/design-plan.md]
+  files: [.ace-tasks/_archive/8x/x/8xf.t.e1q-deliver-fast-web-design-and/design-plan.md]
   commands: []
 ---
 
@@ -71,5 +71,5 @@ Native platforms in the web release; mandatory hosted services; automated public
 
 ## References
 
-- Shared plan: .ace-tasks/8xf.t.e1q-deliver-fast-web-design-and/design-plan.md
+- Shared plan: .ace-tasks/_archive/8x/x/8xf.t.e1q-deliver-fast-web-design-and/design-plan.md
 - Usage contract: ux/usage.md
