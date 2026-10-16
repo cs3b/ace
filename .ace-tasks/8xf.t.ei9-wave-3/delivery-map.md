@@ -530,3 +530,21 @@ prepared groups, Review head assessments) are listed in
 `evidence/candidate-batch-limits/`. Not established: independent reviewer verdict
 for this delta, full default suite rerun, canonical campaign execution,
 publication or installed acceptance.
+
+Independent configured review then ran `code-valid` on `diff:214dfbb81..HEAD`
+(session `.ace-local/review/candidate-batch-limits/`): security assessment closed,
+no high/medium vulnerabilities. Follow-up commit `a1be930b5` added the two
+requested negative proofs (oversized-single-blob batching; blob-size selector
+rejects >20k/non-hex oid sets before any Git invocation) and corrected the
+documented 20,000-object bound semantics (per inventory and across the
+comparison's unique-blob union). The load-time `MAX_HEAD_CONTEXT_BYTES`
+dependency finding is sequenced as a hard release-time action recorded in the
+evidence README: the coordinated release must bump ace-review (ships the
+constant), raise the ace-assign floor, raise ace-overseer's ace-review pin and
+regenerate the lock together — an in-branch partial bump was attempted and
+reverted because Bundler enforces cross-gem constraints and the lock is
+release-owned. Readiness wall-clock asserts were deliberately kept: they assert
+the production deadline contract itself. The full default suite then ran on the
+final state and passed 51 packages, 12,429 tests, 43,641 assertions, 42 skips,
+0 failures (755.87s; assign `e18c4e86`, review `fd8342dc`, lab `4b382db4`),
+superseding the 521 freeze for this delta.

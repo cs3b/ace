@@ -154,7 +154,12 @@ closed; no high/medium vulnerabilities. Actionable findings and dispositions:
    would add indirection without removing a real defect.
 
 Not established by this evidence: canonical execution of the comparison path,
-full-suite rerun on the final state, publication or installed acceptance.
-The merge gate (executed tests + independent review) is satisfied for this
-delta by the receipts above plus the session-1 review round; the full default
-suite receipt for the final commit state is recorded in the delivery map.
+publication or installed acceptance. The full default suite on the final state
+(`bin/ace-test-suite --no-color`, this session) passed 51 packages, 12,429
+tests, 43,641 assertions, 42 skips, 0 failures in 755.87s (assign
+`e18c4e86-40ff-4c40-9961-c0fadd4a2bb2`, review
+`fd8342dc-dfb7-4264-a39a-3a57ef34696d`, lab
+`4b382db4-7878-4b14-aded-db4dea93b2b7`). The merge gate for this delta —
+executed tests plus the independent review round above — is closed at source
+level; PR merge still follows the program's sequencing (release coordination,
+fresh registry audit, no publish from worktree).
