@@ -18,6 +18,18 @@ class CommandExecutorKernelTest < Minitest::Test
   def output(result)
     result.fetch("frames").select { |frame| frame["type"] == "output" }.map { |frame| Base64.strict_decode64(frame.fetch("data")) }.join
   end
+  def test_owned_double_fork_setsid_descendant_is_killed_and_reaped_after_normal_exit
+    result = probe("detached")
+    assert_nil result["error"]
+    assert_equal 17, result.dig("result", "exit_status")
+    refute result.dig("detached", "survived_cleanup"), "detached descendant outlived command cleanup"
+  end
+  def test_owned_detached_descendant_is_killed_and_reaped_after_transport_loss
+    result = probe("detached_disconnect")
+    assert_equal "IOError", result["error"]
+    assert_nil result["result"], "lost transport must not produce canonical success"
+    refute result.dig("detached", "survived_cleanup"), "detached descendant outlived disconnected command"
+  end
   def test_real_nonroot_operator_and_trusted_filesystem_context
     result = probe("policy")
     assert_equal "operator", result.fetch("kind")

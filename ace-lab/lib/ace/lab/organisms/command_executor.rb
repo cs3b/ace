@@ -6,6 +6,7 @@ require "etc"
 require "fiddle"
 require "base64"
 require "io/console"
+require "ace/runtime/molecules/owned_child_scope"
 require_relative "command_run_client"
 
 module Ace
@@ -20,7 +21,7 @@ module Ace
         end
 
         def run(socket:, request:)
-          raise SecurityError, "command executor requires Linux root" unless RUBY_PLATFORM.include?("linux") && Process.uid.zero?
+          raise SecurityError, "command executor requires Linux root" unless RUBY_PLATFORM.include?("linux") && Process.uid.zero? && Process.euid.zero?
           strict!(request, %w[execution_id caller tty rows cols])
           id = request.fetch("execution_id")
           raise ArgumentError, "invalid command reference" unless id.is_a?(String) && Molecules::CommandPolicy::ID.match?(id)
@@ -45,6 +46,7 @@ module Ace
 
         def launch(socket, id, definition, interactive, rows, cols)
           raise SecurityError, "command fork requires a single-thread helper" unless Thread.list.count(&:alive?) == 1
+          scope = Ace::Runtime::Molecules::OwnedChildScope.new
           executor = definition.fetch("executor")
           user = Etc.getpwuid(executor.fetch("uid"))
           environment = {"HOME" => executor.fetch("home"), "USER" => user.name, "LOGNAME" => user.name,
@@ -102,7 +104,7 @@ module Ace
           outputs = {parent_output => interactive ? "terminal" : "stdout"}
           outputs[parent_error] = "stderr" if parent_error
           pump(socket, parent_input, outputs, child, interactive)
-          cleanup_group(child)
+          scope.cleanup!(leader: child)
           _, result = Process.waitpid2(child)
           reaped = true
           termination = {"exit_status" => result.exitstatus, "signal" => result.termsig}
@@ -112,7 +114,7 @@ module Ace
         ensure
           [gate_write, ready_read, parent_input, parent_output, parent_error].compact.uniq.each { |io| io.close unless io.closed? }
           if child && !reaped
-            cleanup_group(child)
+            scope.cleanup!(leader: child)
             deadline = monotonic + 5
             loop do
               break if Process.waitpid(child, Process::WNOHANG)
@@ -198,21 +200,6 @@ module Ace
             "capabilities" => %w[CapInh CapPrm CapEff CapAmb].to_h { |key| [key, status.fetch(key).strip] })
         end
 
-        def cleanup_group(pid)
-          # The direct child remains unreaped until group teardown completes;
-          # its PID cannot be recycled into an unrelated process group.
-          Process.kill("TERM", -pid)
-          IO.select(nil, nil, nil, 0.1)
-          Process.kill("KILL", -pid)
-        rescue Errno::ESRCH
-          nil
-        ensure
-          begin
-            Process.kill("KILL", pid)
-          rescue Errno::ESRCH
-            nil
-          end
-        end
         def zombie?(pid) = File.read("/proc/#{pid}/stat").split(")").last.split.first == "Z"
         def monotonic = Process.clock_gettime(Process::CLOCK_MONOTONIC)
         def geometry(value)

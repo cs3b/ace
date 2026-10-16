@@ -568,3 +568,8 @@ capability is supplied. Publication also requires the publisher's writable
 artifact/cache destination outside immutable accepted source, or retained exact
 artifacts. These remaining joins and installed acceptance are tracked by ei9 .5;
 source/kernel fixture success does not assert installed autonomous publication.
+
+In interactive mode, input EOF sends the terminal's conventional Ctrl-D byte; a
+program that changes its terminal to raw mode may interpret that byte itself.
+Noninteractive EOF closes the command input pipe. The dedicated Linux helper owns
+and reaps detached command descendants as well as the original process group.

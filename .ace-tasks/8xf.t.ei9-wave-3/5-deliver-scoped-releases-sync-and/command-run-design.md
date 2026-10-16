@@ -228,3 +228,17 @@ be claimed delivered by this first release path or moved outside the program.
 Final namespace-focused verification: ace-test selected ordinary_lifecycle_test.rb
 and command_execution_test.rb;25 tests/214 assertions/zero failures/errors passed.
 Report assign/6c08e10e-f8c0-44a0-835a-ad28cfbe3c86.
+
+## Review correction: owned detached descendant cleanup
+
+The initial group-only cleanup did not satisfy promised detached descendants.
+Existing BoundedProcess and LLM ProcessSupervisor terminate only their original
+PGID; the latter supplies the established Linux subreaper pattern. The ephemeral
+single-thread command helper now uses a small Runtime OwnedChildScope: assert no
+preexisting children, enable subreaper before fork, signal/reap only unreaped kernel
+direct/adopted children, retain leader status and refuse completion if bounded
+cleanup cannot prove only the zombie leader remains. No global PID/UID scan or
+new process capability. Verify real setsid/double-fork descendants and client loss
+in a fresh root R4 export INCLUDING new Runtime source and runner pins.
+CommandExecutor itself must verify real AND effective UID0 before owner contact.
+Taskless secret/publication remains open.

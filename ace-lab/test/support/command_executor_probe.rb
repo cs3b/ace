@@ -100,7 +100,37 @@ Dir.mktmpdir("ace-command-probe-", "/run") do |directory|
     puts JSON.generate({"kind" => definition["requester_kind"], "caller_uid" => peer["uid"], "executor_uid" => definition.dig("executor", "uid"), "denied" => denied})
     next
   end
+  if %w[detached detached_disconnect].include?(mode)
+    # Fixture owner reaps any escaped process after recording the failure; it
+    # never substitutes for the command helper's own cleanup acceptance.
+    prctl = Fiddle::Function.new(Fiddle::Handle::DEFAULT["prctl"],
+      [Fiddle::TYPE_INT, Fiddle::TYPE_LONG, Fiddle::TYPE_LONG, Fiddle::TYPE_LONG, Fiddle::TYPE_LONG], Fiddle::TYPE_INT)
+    raise "fixture subreaper unavailable" unless prctl.call(36, 1, 0, 0, 0).zero?
+  end
   program = case mode
+  when "detached", "detached_disconnect" then <<~PYTHON
+    import os,time,json
+    r,w=os.pipe()
+    child=os.fork()
+    if child == 0:
+      os.close(r)
+      os.setsid()
+      detached=os.fork()
+      if detached != 0:
+        os._exit(0)
+      pid=os.getpid()
+      birth=open('/proc/self/stat').read().rpartition(')')[2].split()[19]
+      print(json.dumps({'detached_pid':pid,'birth':birth}),flush=True)
+      os.write(w,b'R')
+      os.close(w)
+      time.sleep(60)
+      os._exit(0)
+    os.close(w)
+    os.read(r,1)
+    os.close(r)
+    os.waitpid(child,0)
+    #{mode == "detached_disconnect" ? "time.sleep(60)" : "os._exit(17)"}
+  PYTHON
   when "pty" then "import os,signal; print('TTY='+str(os.isatty(0)),flush=True); os.kill(os.getpid(),signal.SIGTERM)"
   when "getpass" then "import getpass,os,struct,fcntl,termios; x=getpass.getpass('OTP: '); print('GOT='+str(len(x))); print('SIZE='+str(struct.unpack('HHHH',fcntl.ioctl(0,termios.TIOCGWINSZ,bytes(8)))[:2]),flush=True)"
   else "import os,sys,json; print(json.dumps({'uid':os.getuid(),'gid':os.getgid(),'groups':os.getgroups(),'cwd':os.getcwd(),'tty':os.isatty(0),'data':sys.stdin.read()})); sys.exit(17)"
@@ -144,10 +174,29 @@ Dir.mktmpdir("ace-command-probe-", "/run") do |directory|
     if mode == "getpass" && frame["type"] == "output" && Base64.strict_decode64(frame["data"]).include?("OTP:")
       client.write(JSON.generate({"type" => "input", "data" => Base64.strict_encode64("123456\n")}) + "\n")
     end
+    if mode == "detached_disconnect" && frame["type"] == "output" && Base64.strict_decode64(frame.fetch("data")).include?("detached_pid")
+      break # Actual transport loss while leader and detached descendant live.
+    end
     break if frame["type"] == "result"
   end
   client.close
   result = JSON.parse(result_read.read)
   Process.waitpid(helper)
+  if %w[detached detached_disconnect].include?(mode)
+    bytes = frames.select { |frame| frame["type"] == "output" }.map { |frame| Base64.strict_decode64(frame.fetch("data")) }.join
+    observed = JSON.parse(bytes.lines.find { |line| line.include?("detached_pid") })
+    pid = observed.fetch("detached_pid")
+    stat = "/proc/#{pid}/stat"
+    remaining = File.exist?(stat) && File.read(stat).rpartition(")").last.split.fetch(19) == observed.fetch("birth")
+    result["detached"] = observed.merge("survived_cleanup" => remaining)
+    if remaining
+      # Exact original birth and adoption by fixture owner are mandatory. This
+      # cleanup records a product failure; it cannot make the test pass.
+      fields = File.read(stat).rpartition(")").last.split
+      raise "escaped fixture child has foreign owner" unless fields.fetch(1).to_i == Process.pid
+      Process.kill("KILL", pid)
+      Process.waitpid(pid)
+    end
+  end
   puts JSON.generate(result.merge("frames" => frames))
 end
