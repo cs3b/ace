@@ -67,5 +67,17 @@ all 50 registry records, verified the new three published payloads and the LLM
 changelog exception, checked dependency compatibility and all 85 changed
 packaged runtime/assets files. Isolated packaging/workflow checks passed
 14 tests / 145 assertions (`overseer/44566c1e-ee7c-4f68-96e8-5da87687e137`).
-`bundle check` and `git diff --check` passed. The default 51-package suite is
-being executed separately; its final result is required before integration.
+`bundle check` and `git diff --check` passed.
+
+The required default `bin/ace-test-suite --no-color` completed successfully after
+rebase: 51 packages passed, 12,338 tests passed, 42 skipped, 43,091 assertions,
+zero failures/errors (684.13 seconds). Runtime source was unchanged throughout;
+subsequent edits only reconciled release notes and this evidence.
+
+Selected reports: Lab `00485268-79f2-460b-a937-f5d73c39c848` (479 tests,
+2,689 assertions, four skips), Assign `089b7fcd-712c-468c-9cf9-1f5cb9db4ec5`
+(1,078 / 4,746), HITL `86ef3f2a-487a-4e50-82fe-fc00865591cf` (255 / 1,391,
+five skips), Review `2d1cf3e0-5ef8-4972-9c8e-ff984fef62e9` (998 / 3,252),
+and Design `4bf38ee0-6b0a-4c2a-abfd-163d33811fc8` (29 / 425).
+These results satisfy the source integration gate. They do not replace the
+previously documented expanded-suite baseline findings or installed acceptance.
