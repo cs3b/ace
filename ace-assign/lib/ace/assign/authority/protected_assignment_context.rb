@@ -12,7 +12,7 @@ module Ace
       class ProtectedAssignmentContext
         attr_reader :uid
 
-        def self.load
+        def self.load(uid: Process.uid)
           paths = [Deployment::PATH, DeploymentHistory::PATH]
           installed = paths.any? do |path|
             begin
@@ -22,13 +22,13 @@ module Ace
               false
             end
           end
-          return new(deployment: nil, history: nil) unless installed
+          return new(deployment: nil, history: nil, uid: uid) unless installed
           deployment = Deployment.load
           history = DeploymentHistory.load
           unless history.selects?(deployment)
             raise AttemptErrors::EvidenceUnavailable, "installed protected descriptor is not retained"
           end
-          new(deployment: deployment, history: history)
+          new(deployment: deployment, history: history, uid: uid)
         end
 
         def initialize(deployment:, history:, uid: Process.uid, kernel: nil, env: ENV,

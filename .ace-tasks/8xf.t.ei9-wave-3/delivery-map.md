@@ -51,6 +51,34 @@ until their consumers have an accepted replacement.
 Implementation and test entries are added here as each slice is verified. No
 installed acceptance is claimed by this initial ledger.
 
+### Ordinary owner admission and native continuation checkpoint
+
+The shared Assign socket transport now has a separate ordinary composition;
+protected admission still owns its complete original boundary. Installed root
+selection binds project, private owner paths, positive distinct owner/caller UIDs,
+native Herdr workspace and OS actor. Owners cannot also be participants in any
+project from the installed document. Current and retained protected principals
+are refused at startup and fresh admission, including a newly protected owner.
+The actual kernel peer and native process ancestry supply identity; requester
+role labels do not. Native Herdr/ps reads share a bounded deadline and output
+limits, with process-group cleanup. Policy is rechecked after native lookup.
+
+Independent review approved the corrected admission slice: 22 tests, 112
+assertions. Root's Herdr observation/cleanup tests passed 15/77; Lab admission
+8/24; ordinary wire 3/19. This is not an installed sole-writer receipt: canonical
+ordinary lifecycle mutation handlers, deadline propagation to handlers, complete
+CLI routing and the composition joining Assign/HITL/merge are still required.
+Actor lookup assumes locally maintained OS accounts; no hard whole-stack NSS
+deadline is claimed.
+
+Domain native-wake proof passed across three real Pi processes using one saved
+session: one 600-second audit timer, one 3600-second cleanup timer, a real timer
+wake and watch wake, and persisted removal of the temporary probe/watch. This
+proves the existing native extension's persistence and wake path. Effective
+delivery audit execution remains pending the new workflow asset's publication,
+installation and canonical coordinator adoption; no merge/release acceptance is
+inferred from the extension proof.
+
 ### Review history contract correction
 
 The ig3 producer already asks Assign to revalidate previous approval checks at
