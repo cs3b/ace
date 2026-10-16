@@ -9,6 +9,7 @@ require_relative "cli/commands/services"
 require_relative "cli/commands/resolve"
 require_relative "cli/commands/route"
 require_relative "cli/commands/service"
+require_relative "cli/commands/assignment"
 
 module Ace
   module Lab
@@ -27,7 +28,9 @@ module Ace
         ["route", "Select a configured capable service in a project"],
         ["service request", "Request one authorized service operation"],
         ["service status", "Read a service request outcome"],
-        ["service listen", "Serve the ordinary fixed merge receiver on its configured socket"]
+        ["service listen", "Serve the ordinary fixed merge receiver on its configured socket"],
+        ["assignment prepare", "Retain reviewed task input for ordinary Assign registration"],
+        ["assignment request", "Send one retained operation to the installed ordinary Assign owner"]
       ].freeze
 
       HELP_EXAMPLES = [
@@ -54,6 +57,8 @@ module Ace
       register "service request", CLI::Commands::Service::Request.new
       register "service status", CLI::Commands::Service::Status.new
       register "service listen", CLI::Commands::Service::Listen.new
+      register "assignment prepare", CLI::Commands::Assignment::Prepare.new
+      register "assignment request", CLI::Commands::Assignment::Request.new
 
       # Register version command
       version_cmd = Ace::Support::Cli::VersionCommand.build(
