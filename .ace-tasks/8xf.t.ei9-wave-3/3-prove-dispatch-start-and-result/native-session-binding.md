@@ -29,3 +29,8 @@ Native foreground PID ancestry, live peer birth and fixed supervisor placement
 remain checked. Inbox independently compares normalized UUID with its live Pi
 session. Independent review, publication and actual installed native admission
 remain open; no package version or deployed source was changed by these tests.
+
+Independent review APPROVE against31c386ecd: executed Herdr76/408 and Lab14/62,
+no actionable correctness/security findings. Full report retained in
+evidence/native-session-independent-review.md. Source approval does not certify
+installed native admission.
