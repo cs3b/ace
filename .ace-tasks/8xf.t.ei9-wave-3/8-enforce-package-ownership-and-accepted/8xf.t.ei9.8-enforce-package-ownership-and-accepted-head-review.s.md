@@ -69,3 +69,14 @@ Validate effective public interfaces on the selected source/runtime before effec
 missing capability is a precise readiness result, not permission to invent a route.
 Use bin/ace-test or bin/ace-test-suite for focused source checks; installed proofs
 are separately attributed. Captain overrides the brief; report results/conflicts to owner.
+
+
+## Ordinary consumer join
+
+The existing campaign/convergence policy stays here. Reuse its validators and
+accepted receipts through the ordinary owner's real candidate/review ingress,
+shared with .0 and .5; do not fabricate protected launch origins or turn a worker
+result into independent review. The merge consumer must independently dereference
+that canonical approval and executed checks. A closed acceptance-reference schema
+and a reviewer name different from the executor are insufficient proof. This join
+blocks the first installed two-PR merge acceptance, before publication/OTP.

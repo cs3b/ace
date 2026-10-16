@@ -60,6 +60,17 @@ arbitrary privileged argv. Use configured receiver identity, no worker sudo/toke
 - Formal reviewer APPROVED actor/state/SHA and initial independent report remain
   distinct from integrator delta assessment; follow child .8, not self-approval.
 
+## Canonical review prerequisite
+
+Before the first installed merge, dereference review and executed-check references
+through the sole Assign owner. Validate accepted source records, exact report and
+artifact digests, candidate/head association and reviewer independence at admission
+and before effect. Caller-supplied `approved` fields, reviewer names, timestamps
+and plausible SHA strings cannot certify review or execution, even when an exact
+request digest has a separate authorization. Missing/corrupt/revoked records refuse
+without a forge mutation. The ordinary candidate/review ingress shared with .8
+is a prerequisite to this acceptance; it precedes .5 publication/OTP work.
+
 ## Verification and failure acceptance
 
 Execute two real sequential PR merges from the project caller, without host chat;

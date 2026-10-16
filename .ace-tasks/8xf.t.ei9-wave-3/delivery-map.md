@@ -405,3 +405,21 @@ with 42 skips and no failures in 713.54 seconds. Per-package summaries and the
 independent assembly verdict are retained in `evidence/routing-native-release/`.
 This verifies source composition, not the still-open all-group host handoff,
 operator-question adoption, canonical execution joins or two-project delivery.
+
+
+### Ordinary review authority gap and sequencing correction
+
+Direct source inspection confirmed that OrdinaryMergeReceiver checks the closed
+review reference shape, head joins and a reviewer-name inequality, then admits the
+separately authorized request digest. AttemptCoordinator#admit_fixed_merge_request
+does not call the canonical `require_review_evidence` used by its generic service
+claim path. The new ordinary result API also correctly refuses review/campaign
+self-certification. Therefore existing reference metadata is not an independent
+accepted-review record, and source shape tests cannot close installed .0/.8.
+
+Phase the real ordinary candidate/export/reviewer-assignment/accepted-review
+ingress before the first two real merges, and wire merge consumers to its exact
+canonical records/digests/checks. Reuse existing validators with authentic ordinary
+origins; no forged protected origin, journal edit or worker-written approval.
+Publication then reuses this same acceptance core. Root has admitted no new
+production merge or assignment while this prerequisite remains open.
