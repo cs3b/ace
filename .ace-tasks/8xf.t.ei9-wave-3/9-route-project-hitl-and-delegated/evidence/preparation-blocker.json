@@ -1,0 +1,34 @@
+{
+  "schema": "ei9.communication-preparation-blocker/v1",
+  "status": "blocked_external_review",
+  "reason": "Agent content was flagged for possible cybersecurity risk by automatic platform control.",
+  "blocked_actions": [
+    "Requested different-account directory-rename race reproduction; cancelled and not executed.",
+    "Subsequent defensive-only file-layout separation task; also blocked; no retry or rerouting."
+  ],
+  "production_changed": false,
+  "source_concern": "Static review identified that target-writable instruction directory also contains relay-private project/ingress entries. Existing static ACL checks do not establish protection against directory replacement. No race reproduction or exploit proof is claimed.",
+  "preserved_worktree": "/Users/mc/Ps/lab-config/.ace-wt/ei9-hitl-all-groups",
+  "preserved_uncommitted_inventory": [
+    " M lab_ordinary_owner.py",
+    "?? deploy/hitl-transport-source.json",
+    "?? deploy/hitl-transport.json",
+    "?? deploy/hitl-transport/",
+    "?? docs/hitl-transport-preparation.md",
+    "?? lab-hitl-instructions.rb",
+    "?? lab-hitl-transport.rb",
+    "?? lab-install-hitl-transport",
+    "?? lab_hitl_transport.py",
+    "?? tests/fixtures/hitl_instructions.rb",
+    "?? tests/fixtures/hitl_transport_linux.py",
+    "?? tests/test_hitl_transport_preparation.py"
+  ],
+  "legacy_content_classification": {
+    "informational_no_decision": 18,
+    "historical_restart_question": 1,
+    "cancellation_performed": false,
+    "approval_inferred": false,
+    "history_preserved": true
+  },
+  "unrelated_work": "Ordinary candidate/review/test materialization continues independently. Parent and installed two-project acceptance remain open."
+}

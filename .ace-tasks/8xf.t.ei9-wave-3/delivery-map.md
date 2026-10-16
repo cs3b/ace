@@ -440,3 +440,18 @@ repair, and Hermes delta are retained in their outcome owners' evidence folders.
 The eight actionable PR375 findings are resolved in source; the eager-ingress
 folder suggestion remains an explicit design skip. No new version is published
 and draftPR375 is not merged by these records.
+
+### Communication preparation platform blocker
+
+All-group domain preparation remains uncommitted and unactivated. Automatic
+platform control rejected a proposed cross-account filesystem check and then
+also rejected a defensive-only layout change. Neither action is being retried
+or rerouted. Child .9 evidence/preparation-blocker.json records the exact scope
+and preserved worktree. The proposed private/public directory arrangement is
+not installed or accepted; no reproduced exploit is claimed. Ordinary execution,
+review and test-materialization work continues separately.
+
+Read-only legacy content inspection found18 informational records requiring no
+decision and one historical broker-restart question whose stated condition is
+no longer current. None was cancelled or treated as approval. The existing
+31-record history and19 correlations remain unchanged.
