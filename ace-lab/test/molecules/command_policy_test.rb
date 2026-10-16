@@ -39,6 +39,23 @@ module Ace
         assert_equal({}, result.fetch("secret_references"))
         assert_raises(SecurityError) { select(policy, pane: "w1:p1") }
       end
+      def test_dynamic_test_requires_closed_canonical_reference_without_caller_paths_or_head
+        source = document
+        command = source.fetch("projects").fetch("ace").fetch("commands").fetch("probe")
+        command["purpose"] = "test"
+        command["source"] = {"kind" => "ordinary-candidate", "root" => "/var/lib/lab/views",
+          "runtime_path" => "/etc/lab/ace-lab/test-runtime.json", "runtime_sha256" => "c" * 64}
+        policy = Molecules::CommandPolicy.new(source, project: "ace")
+        reference = {"assignment_id" => "delivery", "attempt_id" => "worker1", "candidate_generation" => 1, "acceptance_event_digest" => "d" * 64}
+        assert_equal reference, select(policy, candidate: reference).dig("selection", "candidate")
+        assert_raises(InvalidConfigurationError) { select(policy) }
+        assert_raises(InvalidConfigurationError) { select(policy, candidate: reference.merge("head" => "e" * 40)) }
+        assert_raises(InvalidConfigurationError) { select(policy, candidate: reference.merge("path" => "/caller/source")) }
+        assert_raises(InvalidConfigurationError) { select(policy, candidate: reference.merge("candidate_generation" => 0)) }
+        assert_raises(InvalidConfigurationError) { select(Molecules::CommandPolicy.new(document, project: "ace"), candidate: reference) }
+        command["purpose"] = "command"
+        assert_raises(InvalidConfigurationError) { Molecules::CommandPolicy.new(source, project: "ace") }
+      end
       def test_replacement_deduplication_and_whole_combination
         source = document
         source["projects"]["ace"]["default_services"] = ["forge"]

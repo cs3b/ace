@@ -60,7 +60,7 @@ module Ace
             raise ArgumentError, "retained ordinary request selection is invalid"
           end
           operation = request.fetch("operation")
-          read = %w[registration_status assignment_snapshot result_status result_snapshot supervisor_status export_candidate review_status merge_evidence].include?(operation)
+          read = %w[registration_status assignment_snapshot result_status result_snapshot supervisor_status export_candidate review_status merge_evidence candidate_reference].include?(operation)
           mutation = request.fetch("mutation_id")
           unless read ? mutation.nil? : mutation.is_a?(String) && Ace::Assign::Molecules::JournalMutation::ID.match?(mutation)
             raise ArgumentError, "retained mutation ID must be explicit; read operations require null"

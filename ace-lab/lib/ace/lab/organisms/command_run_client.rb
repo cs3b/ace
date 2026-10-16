@@ -18,18 +18,19 @@ module Ace
           @config = Molecules::OrdinaryOwnerConfig.load(project: project)
         end
 
-        def owner
+        def owner(scratch_root: nil)
           Ace::Assign::Authority::OrdinaryClient.new(project_id: @project, service: @config.service,
-            verify_selection: @config.method(:verify_owner!))
+            verify_selection: @config.method(:verify_owner!), scratch_root: scratch_root)
         end
 
         def status(reference)
           owner.call("command_status", {"execution_id" => reference}).data
         end
 
-        def run(argv:, executor:, services:, pane: nil)
+        def run(argv:, executor:, services:, pane: nil, candidate: nil)
           id = SecureRandom.hex(16)
           selection = {"argv" => argv, "executor" => executor, "services" => services, "pane" => pane}
+          selection["candidate"] = candidate if candidate
           request = {"project" => @project, "execution_id" => id, "selection" => selection,
             "mutation_id" => "command-admit.#{id}"}
           parent = File.expand_path(".ace-local/lab-commands")

@@ -42,7 +42,9 @@ module Ace
             evidence_reader: ->(reference, record, state, pending) { reader.call(reference, record, state, pending) })
           reader = Ace::Assign::Authority::ServiceEvidence.new(journal: journal)
           exclusion = Ace::Assign::Molecules::LifecycleExclusion.new(root: @config.lifecycle_root)
-          command_admission = Molecules::CommandOwnerAdmission.new(base: admission, project: @config.project)
+          lifecycle = nil
+          command_admission = Molecules::CommandOwnerAdmission.new(base: admission, project: @config.project,
+            candidate_owner: -> { lifecycle })
           command = Ace::Assign::Authority::CommandExecution.new(project: @config.project, journal: journal,
             admission: command_admission)
           coordinator = nil

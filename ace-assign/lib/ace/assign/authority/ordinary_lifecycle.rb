@@ -29,13 +29,14 @@ module Ace
         include OrdinaryReviews
         include OrdinaryMergeEvidence
         include OrdinaryReleaseArtifacts
-        OPERATIONS = (%w[register_assignment registration_status start_attempt finish merge_evidence] + OrdinaryProgress::PROGRESS_OPERATIONS + OrdinaryResults::RESULT_OPERATIONS + OrdinarySupervisor::SUPERVISOR_OPERATIONS + OrdinaryReviews::REVIEW_OPERATIONS + OrdinaryReleaseArtifacts::RELEASE_OPERATIONS).freeze
+        OPERATIONS = (%w[register_assignment registration_status start_attempt finish merge_evidence candidate_reference] + OrdinaryProgress::PROGRESS_OPERATIONS + OrdinaryResults::RESULT_OPERATIONS + OrdinarySupervisor::SUPERVISOR_OPERATIONS + OrdinaryReviews::REVIEW_OPERATIONS + OrdinaryReleaseArtifacts::RELEASE_OPERATIONS).freeze
         TRANSFER_OPERATIONS = {"register_assignment" => {direction: :upload, purpose: :candidate, roles: [:supervisor]}}
           .merge(OrdinaryProgress::PROGRESS_TRANSFERS).merge(OrdinaryResults::RESULT_TRANSFERS).merge(OrdinaryReviews::REVIEW_TRANSFERS).merge(OrdinaryReleaseArtifacts::RELEASE_TRANSFERS).freeze
         REGISTER_KEYS = %w[assignment_id definition_digest prepared_head prepared_tree manifest_sha256 expected_generation pane transfer].freeze
 
         def initialize(project:, admission:, journal:, exclusion:, input_root:, inbox: nil, command_evidence: nil, release_authorizer: nil)
           @project, @admission, @journal, @exclusion = project, admission, journal, exclusion
+          @ordinary_scope_mutex, @ordinary_scopes = Mutex.new, {}
           @input_root = PrivateDirectory.verify!(input_root)
           unless inbox.nil? || inbox.is_a?(Ace::Herdr::Organisms::Inbox)
             raise ArgumentError, "ordinary completion requires the installed Inbox owner"
@@ -77,6 +78,9 @@ module Ace
           case request.fetch("operation")
           when "retain_release_artifact"
             retain_release_artifact(request, peer, role, deadline, transfer)
+          when "candidate_reference"
+            raise ArgumentError, "candidate reference read forbids transfer" if transfer
+            ordinary_candidate_reference(request, peer, role, deadline)
           when "merge_evidence"
             raise ArgumentError, "merge evidence read forbids transfer" if transfer
             ordinary_merge_evidence(request, peer, role, deadline)

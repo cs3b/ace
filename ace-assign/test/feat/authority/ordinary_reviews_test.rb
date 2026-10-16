@@ -55,11 +55,29 @@ module Ace
       # Root launcher/policy observation is controlled here; the command
       # state machine, imported candidate and exact-prefix proof are real.
       class CommandAdmission
-        attr_accessor :definition, :enabled
+        attr_accessor :definition, :enabled, :scope_owner, :before_admit
         def initialize = @enabled = true
-        def command_request!(**) = @definition
+        def command_request!(**)
+          @view.read!(reference: @definition.fetch("candidate").fetch("reference")) if @definition["candidate"]
+          hook, @before_admit = @before_admit, nil
+          hook&.call
+          @definition
+        end
+        def with_command_scope(reference:, deadline:)
+          @scope_owner.with_candidate_reference_scope(reference: reference, deadline: deadline) do |view|
+            @view = view
+            begin
+              yield
+            ensure
+              @view = nil
+            end
+          end
+        end
         def command_launcher!(peer:, **) = peer
-        def command_claim!(**) = true
+        def command_claim!(**)
+          command_request!
+          true
+        end
         def command_child!(child:, **) = child
         def command_test_evidence!(definition:, **)
           raise AttemptErrors::ReceiptRejected unless @enabled && definition == @definition
@@ -104,6 +122,99 @@ module Ace
           effects = 0
           assert_raises(AttemptErrors::ReceiptRejected) { coordinator.with_fixed_merge_evidence(accepted) { effects += 1 } }
           assert_equal 0, effects
+        end
+      end
+
+      def test_candidate_reference_resolves_only_current_authentic_canonical_selection
+        fixture do
+          register_and_start
+          submit_candidate
+          prefix = @journal.ref_value
+          events = @journal.read_events("producer", commit: prefix).select { |event| event["attempt_id"] == "producer-run" }
+          reference = @owner.candidate_reference_at!(events: events, commit: prefix, head: @head, generation: 1)
+          response = @client.call("candidate_reference", {"assignment_id" => "producer", "attempt_id" => "producer-run"})
+          assert_equal reference, response.data
+          assert_equal prefix, @journal.ref_value
+          assert_raises(AttemptErrors::EvidenceUnavailable) do
+            @client.call("candidate_reference", {"assignment_id" => "producer", "attempt_id" => "producer-run"}, mutation_id: "not-a-read")
+          end
+          deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + 10
+          @owner.with_candidate_reference(reference: reference, deadline: deadline) do |candidate, origin, commit|
+            assert_equal @head, candidate.fetch("head")
+            assert_equal prefix, commit
+            assert_equal "producer", origin.fetch("assignment_id")
+            bytes = @journal.bounded_blob(candidate.fetch("bundle_ref"), commit: commit, max_bytes: Authority::CandidateTransfer::MAX_BYTES)
+            assert_equal candidate.fetch("sha256"), Digest::SHA256.hexdigest(bytes)
+          end
+          escaped = nil
+          @owner.with_candidate_reference_scope(reference: reference, deadline: deadline) do |view|
+            escaped = view
+            other = Thread.new do
+              assert_raises(AttemptErrors::EvidenceUnavailable) { view.read!(reference: reference) }
+            end
+            assert other.join(2), "reader must refuse another thread without waiting on lifecycle locks"
+            @owner.with_candidate_reference(reference: reference, deadline: deadline) { |candidate, *| assert_equal @head, candidate.fetch("head") }
+            assert_raises(AttemptErrors::EvidenceUnavailable) do
+              @owner.with_merge_scope(record: reference, deadline: deadline, exclusive: true) { flunk }
+            end
+          end
+          assert_raises(AttemptErrors::EvidenceUnavailable) { escaped.read!(reference: reference) }
+          assert_raises(ArgumentError) do
+            @owner.with_candidate_reference(reference: reference.merge("head" => @head), deadline: deadline) { flunk }
+          end
+          assert_raises(AttemptErrors::Conflict) do
+            @owner.with_candidate_reference(reference: reference.merge("acceptance_event_digest" => "f" * 64), deadline: deadline) { flunk }
+          end
+          assert_raises(AttemptErrors::Conflict) do
+            @owner.with_candidate_reference(reference: reference.merge("candidate_generation" => 2), deadline: deadline) { flunk }
+          end
+          @admission.revoked = true
+          assert_raises(AttemptErrors::UnauthorizedIdentity) do
+            @owner.with_candidate_reference(reference: reference, deadline: deadline) { flunk }
+          end
+        end
+      end
+
+      def test_concurrent_candidate_change_refuses_admit_and_later_claim_without_reversed_locks
+        fixture do
+          register_and_start
+          submit_candidate
+          reference = candidate_reference
+          @command_admission.definition = {"candidate" => {"reference" => reference}, "argv" => ["bin/ace-test", "feat"]}
+          entered, proceed = Queue.new, Queue.new
+          @command_admission.before_admit = -> { entered << true; Timeout.timeout(30) { proceed.pop } }
+          request = {"project_id" => "atlas", "operation" => "command_admit", "mutation_id" => "race-admit",
+            "params" => {"execution_id" => "race", "selection" => {"candidate" => reference}}}
+          command = Thread.new do
+            begin
+              @commands.dispatch(request: request, peer: {"uid" => 0}, role: :worker,
+                deadline: Process.clock_gettime(Process::CLOCK_MONOTONIC) + 30)
+            rescue StandardError => error
+              error
+            end
+          end
+          Timeout.timeout(30) { entered.pop }
+          submit_candidate(generation: 2, candidate_generation: 1, mutation: "candidate-race2")
+          proceed << true
+          assert command.join(30), "candidate change and command admission deadlocked"
+          assert_instance_of AttemptErrors::Conflict, command.value
+          assert_empty @journal.read_events("command-race", commit: @journal.ref_value)
+          reference = candidate_reference(generation: 2)
+          @command_admission.definition["candidate"]["reference"] = reference
+          request["params"]["selection"]["candidate"] = reference
+          admitted = @commands.dispatch(request: request, peer: {"uid" => 0}, role: :worker,
+            deadline: Process.clock_gettime(Process::CLOCK_MONOTONIC) + 30)
+          assert_equal "admitted", admitted.fetch(:data).fetch("phase")
+          submit_candidate(generation: 3, candidate_generation: 2, mutation: "candidate-race3")
+          assert_raises(AttemptErrors::Conflict) do
+            @commands.dispatch(request: request.merge("operation" => "command_claim", "mutation_id" => "race-claim",
+              "params" => {"execution_id" => "race", "caller" => {}}), peer: {"uid" => 0}, role: :worker,
+              deadline: Process.clock_gettime(Process::CLOCK_MONOTONIC) + 30)
+          end
+          assert_equal 1, @journal.read_events("command-race", commit: @journal.ref_value).size
+        ensure
+          proceed << true if proceed
+          command&.join(1)
         end
       end
 
@@ -286,14 +397,24 @@ module Ace
 
       private
 
+      def candidate_reference(generation: 1)
+        prefix = @journal.ref_value
+        events = @journal.read_events("producer", commit: prefix).select { |event| event["attempt_id"] == "producer-run" }
+        @owner.candidate_reference_at!(events: events, commit: prefix, head: @head, generation: generation)
+      end
+
       def execute_test_command
+        prefix = @journal.ref_value
+        events = @journal.read_events("producer", commit: prefix).select { |event| event["attempt_id"] == "producer-run" }
+        reference = @owner.candidate_reference_at!(events: events, commit: prefix, head: @head, generation: 1)
         @command_admission.definition = {"purpose" => "test", "source" => {"head" => @head, "tree" => git(@journal.repo_root, "rev-parse", "HEAD^{tree}").strip},
+          "candidate" => {"reference" => reference},
           "argv" => ["bin/ace-test", "fast"], "executable_sha256" => "a" * 64,
           "executor" => {"uid" => 1002, "cwd" => "/immutable/candidate"}}
         launcher = {"pid" => 22, "uid" => 0, "started_at" => "launcher-birth", "host" => "fixture"}
         kernel = {"pid" => 33, "uid" => 1002, "started_at" => "child-birth", "host" => "fixture"}
         child = {"kernel_identity" => kernel, "root_witness" => kernel.merge("cwd" => "/immutable/candidate"), "witnessed_by" => launcher}
-        {"command_admit" => {"selection" => {}}, "command_claim" => {"caller" => {}}, "command_bind" => {"child" => child},
+        {"command_admit" => {"selection" => {"candidate" => reference}}, "command_claim" => {"caller" => {}}, "command_bind" => {"child" => child},
           "command_complete" => {"result" => {"exit_status" => 0, "signal" => nil}}}.each do |operation, extra|
           @commands.dispatch(request: {"project_id" => "atlas", "operation" => operation, "mutation_id" => operation,
             "params" => {"execution_id" => "tests-1"}.merge(extra)}, peer: launcher, role: :worker,
@@ -381,6 +502,7 @@ module Ace
           @commands = Authority::CommandExecution.new(project: "atlas", journal: @journal, admission: @command_admission)
           @owner = Authority::OrdinaryLifecycle.new(project: "atlas", admission: @admission, journal: @journal,
             exclusion: Molecules::LifecycleExclusion.new(root: File.join(root, "exclusion")), input_root: @inputs, command_evidence: @commands, **owner_options)
+          @command_admission.scope_owner = @owner
           server = Authority::OrdinaryServer.new(admission: @admission, lifecycle: Authority::Router.new(handlers: [@owner]))
           thread = Thread.new { server.serve }
           Timeout.timeout(3) { sleep 0.005 until File.socket?(service.fetch("socket_path")) }

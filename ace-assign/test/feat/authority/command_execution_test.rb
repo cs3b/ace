@@ -30,6 +30,7 @@ module Ace
           raise AttemptErrors::UnauthorizedIdentity unless child["uid"] == 1002
           child
         end
+        def command_candidate!(**) = (check!; "controlled candidate transfer bytes")
         def check!
           raise AttemptErrors::UnauthorizedIdentity unless @enabled
         end
@@ -60,7 +61,7 @@ module Ace
 
       def call(operation, extra = {}, mutation: operation, peer: nil)
         @owner.dispatch(request: {"project_id" => "ace", "operation" => operation,
-          "mutation_id" => operation == "command_status" ? nil : mutation,
+          "mutation_id" => %w[command_status command_candidate].include?(operation) ? nil : mutation,
           "params" => {"execution_id" => "run-1"}.merge(extra)},
           peer: peer || (operation == "command_admit" ? @operator : @launcher), role: :worker,
           deadline: Process.clock_gettime(Process::CLOCK_MONOTONIC) + 10)
@@ -89,6 +90,11 @@ module Ace
           proof = read.call
           assert_equal "passed", proof.fetch("result")
           assert_equal "run-1", proof.fetch("reference")
+          assert_raises(AttemptErrors::ReceiptRejected) do
+            @owner.test_evidence_at!(execution_id: "run-1", commit: @journal.ref_value, head: "a" * 40, tree: "b" * 40,
+              candidate_reference: {"assignment_id" => "delivery", "attempt_id" => "native", "candidate_generation" => 1,
+                "acceptance_event_digest" => "c" * 64}, deadline: Process.clock_gettime(Process::CLOCK_MONOTONIC) + 10)
+          end
           assert_raises(AttemptErrors::ReceiptRejected) { read.call("f" * 40) }
           @admission.enabled = false
           assert_raises(AttemptErrors::UnauthorizedIdentity) { read.call }
@@ -104,6 +110,25 @@ module Ace
             @owner.test_evidence_at!(execution_id: "run-1", commit: @journal.ref_value, head: "a" * 40, tree: "b" * 40,
               deadline: Process.clock_gettime(Process::CLOCK_MONOTONIC) + 10)
           end
+        end
+      end
+
+      def test_candidate_download_requires_original_claimed_launcher_and_never_mutates_history
+        with_owner do
+          admit
+          assert_raises(AttemptErrors::Conflict) { call("command_candidate") }
+          claim
+          before = @journal.ref_value
+          result = call("command_candidate")
+          assert_equal ["controlled candidate transfer bytes"], result.fetch(:transfer_parts)
+          assert_equal Digest::SHA256.hexdigest(result.fetch(:transfer_parts).first), result.dig(:data, "transfer", "sha256")
+          assert_equal before, @journal.ref_value
+          assert_raises(AttemptErrors::UnauthorizedIdentity) do
+            call("command_candidate", {}, peer: @launcher.merge("started_at" => "different-generation"))
+          end
+          assert_raises(AttemptErrors::UnauthorizedIdentity) { call("command_candidate", {}, peer: @operator) }
+          bind
+          assert_raises(AttemptErrors::Conflict) { call("command_candidate") }
         end
       end
 
