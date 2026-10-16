@@ -10,8 +10,9 @@ module Ace
       # even when issued by the same CA, and no operation against any
       # other project is reachable through this authority.
       class TlsAccessPolicy < AccessPolicy
-        def initialize(project:)
+        def initialize(project:, decision_policy: AccessPolicy.new)
           @project = project.to_s
+          @decision_policy = decision_policy
         end
 
         def transport?(peer, project: nil)
@@ -20,6 +21,16 @@ module Ace
 
         def proposal?(peer, project:)
           transport?(peer, project: project)
+        end
+
+        def proposal_silence?(caller_uid:, requester:, project:, operation:)
+          return false unless project == @project
+          # The transport peer is authenticated separately. A local proposal
+          # retains its original kernel principal when Hermes reconciles it.
+          return @decision_policy.proposal_silence?(caller_uid: caller_uid, requester: requester,
+            project: project, operation: operation) unless caller_uid.nil?
+          requester == "urn:ace:hitl:#{@project}:hermes-client" &&
+            @decision_policy.silence_operation?(project: project, operation: operation)
         end
 
         # A TLS authority has no Unix service uid; client endpoint

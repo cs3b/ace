@@ -178,7 +178,7 @@ class RuntimeTlsRoutingTest < AceHermesTestCase
     }) do
       runtime.send(:verify_authorities!)
       assert verifier.verified.any? { |entry| entry.first == :credential_tree }
-  
+
       client = runtime.send(:lifecycle_for, "gad")
       assert_kind_of Ace::Hitl::Hermes::Transport::TlsClient, client
       created = client.create("id" => "hitl9001", "assignment" => "8x3test", "attempt" => "a1b2c3",

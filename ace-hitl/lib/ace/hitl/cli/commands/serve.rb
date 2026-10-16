@@ -69,6 +69,7 @@ module Ace
               binding: binding_policy,
               project: authority.project_id,
               credential: authority.credential,
+              decision_policy: Providers::Lab.grants_policy(grants_path: grants_path(options)),
               ssl_context: authority.ssl_context!,
               listen: authority.listen,
               port: authority.port,

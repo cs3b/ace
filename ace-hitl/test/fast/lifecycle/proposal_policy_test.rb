@@ -7,7 +7,7 @@ class ProposalPolicyTest < AceHitlTestCase
 
   def record
     {"proposal_id" => "proposal-#{'a' * 24}", "request_id" => "proposal-#{'a' * 24}-r1",
-     "revision_id" => "proposal-#{'a' * 24}-r1", "state" => "awaiting-delivery"}
+     "revision_id" => "proposal-#{'a' * 24}-r1", "state" => "awaiting-delivery", "silence_delegated" => true}
   end
 
   def checkpoint(value)
@@ -46,14 +46,14 @@ class ProposalPolicyTest < AceHitlTestCase
     assert result["stop_requested"]
   end
 
-  def test_all_precisely_presented_operation_classes_are_eligible
+  def test_presenting_an_operation_never_substitutes_for_predelegation
     %w[publish deploy access privilege-expansion merge].each do |operation|
       content = {"operation" => operation, "target" => {"resource" => "production"},
         "candidate_head" => "a" * 40, "input_digest" => "b" * 64, "context" => "Exact change",
         "options" => ["proceed", "decline"], "recommendation" => "proceed", "prerequisites" => ["tests", "review", "OTP when publisher requests"]}
       assert_equal operation, Policy.document(content)["operation"]
-      value = Policy.acknowledge(record.merge(content), "2026-10-05T01:00:00Z")
-      assert_equal "approved-by-silence", Policy.resolve(value, checkpoint: checkpoint(value), now: value["deadline"])["state"]
+      value = Policy.acknowledge(record.merge(content).except("silence_delegated"), "2026-10-05T01:00:00Z")
+      assert_equal "awaiting-decision", Policy.resolve(value, checkpoint: checkpoint(value), now: value["deadline"])["state"]
     end
   end
 end

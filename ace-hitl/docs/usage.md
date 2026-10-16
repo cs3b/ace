@@ -358,8 +358,11 @@ The JSON proposal requires operation, target (`resource` and optional `artifact_
 candidate_head, input_digest, context, options, recommendation and prerequisites; rationale
 is optional. Contents are bounded and non-secret. Input digest uses the canonical service
 input digest. Candidate head is separate from base head and the evidence journal commit.
-Every precisely presented operation is eligible for sixteen-hour silence, including
-publishing, deployment and access/privilege expansion. Fixed service scope, current head,
+Only operation classes explicitly delegated in trusted project policy are eligible
+for sixteen-hour silence. Delegation must exist when the revision is created and
+remain current at the deadline; a later grant cannot approve an older revision.
+Without delegation the proposal still accepts an explicit correlated decision.
+Fixed service scope, current head,
 independently executed review/tests, bound running attempt and operation-specific OTP gates
 still apply at execution. Proposal authorization never supplies credentials or runs a callback.
 
@@ -423,6 +426,8 @@ hitl:
   service_uid: 1200
   transport_uids: [1201]
   proposal_uids: [1202]
+  silence_operations:
+    ace: [merge]
 authorization:
   principals:
     "1201":
@@ -437,6 +442,11 @@ proposal; proposer admission cannot acknowledge delivery, fabricate ingress, or
 resolve silence. Missing role or project admission refuses the operation,
 including direct library calls. This is a source configuration contract;
 installed deployment adoption remains part of gad.8 acceptance.
+
+`silence_operations` is an exact project-to-operation list, with no wildcards or
+implicit publish/deploy/access grants. It never expands command or credential
+authority. TLS authorities read the same trusted grants document selected by
+`--grants-path`; certificate authentication alone grants no silence decision.
 
 ### Controlled installed proposal verification
 

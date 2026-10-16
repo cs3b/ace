@@ -108,6 +108,7 @@ module Ace
 
         def resolve(record, checkpoint:, now:)
           return record unless record["state"] == "awaiting-decision"
+          return record unless record["silence_delegated"] == true
           return record if timestamp(now) < timestamp(record.fetch("deadline"))
           valid = checkpoint["schema"] == "ace.hitl.hermes.ingress-checkpoint/v1" &&
             checkpoint["request"] == record["request_id"] && checkpoint["revision"] == record["revision_id"] &&

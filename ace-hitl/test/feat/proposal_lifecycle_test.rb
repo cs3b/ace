@@ -24,6 +24,9 @@ class ProposalLifecycleTest < AceHitlTestCase
     def proposal?(_peer, project:)
       project == "ace"
     end
+    def proposal_silence?(caller_uid:, requester:, project:, operation:)
+      project == "ace" && operation == "deploy"
+    end
   end
 
   def setup
@@ -112,6 +115,27 @@ class ProposalLifecycleTest < AceHitlTestCase
     refute record.key?("delivered_at")
     refute record.key?("deadline")
     assert_equal record["request_id"], @store.proposal_show(record["proposal_id"], project: "ace")["request_id"]
+  end
+
+  def test_silence_delegation_must_exist_at_creation_and_still_be_current_at_deadline
+    policy = DecisionPolicy.new
+    delegated = false
+    policy.define_singleton_method(:proposal_silence?) { |**| delegated }
+    @store.instance_variable_set(:@policy, policy)
+    before_grant = acknowledge(create)
+    refute before_grant["silence_delegated"]
+    delegated = true
+    granted = acknowledge(create)
+    assert granted["silence_delegated"]
+    @now += 16 * 3600
+    unchanged = @store.proposal_reconcile(before_grant["request_id"], project: "ace", checkpoint: checkpoint(before_grant))
+    assert_equal "awaiting-decision", unchanged["state"], "later delegation must not approve an old proposal"
+    delegated = false
+    unchanged = @store.proposal_reconcile(granted["request_id"], project: "ace", checkpoint: checkpoint(granted))
+    assert_equal "awaiting-decision", unchanged["state"], "revocation must stop automatic approval"
+    explicit = @store.proposal_reply(granted["request_id"], project: "ace", answer: "approve",
+      received_at: @now.iso8601, sequence: 1)
+    assert_equal "approved-explicitly", explicit["state"]
   end
 
   def test_lower_journal_cannot_rewrite_revision_scope_or_create_approved_revision
@@ -562,7 +586,8 @@ class ProposalLifecycleTest < AceHitlTestCase
   def test_separate_proposer_boundary_only_wakes_existing_transport_actor
     transport_uid = Process.uid + 1000
     policy = Ace::Hitl::Lifecycle::GrantsPolicy.new(document: {
-      "hitl" => {"proposal_uids" => [Process.uid], "transport_uids" => [transport_uid]},
+      "hitl" => {"proposal_uids" => [Process.uid], "transport_uids" => [transport_uid],
+        "silence_operations" => {"ace" => ["deploy"]}},
       "authorization" => {"principals" => {Process.uid.to_s => {"projects" => ["ace"]},
         transport_uid.to_s => {"projects" => ["ace"]}}}})
     with_transport(policy: policy) do |boundary, actor|

@@ -108,7 +108,7 @@ module LifecycleFixtures
   # The boundary access-policy fixture: the configured transport is
   # allowed for broker-side scenarios; requester operations never
   # consult it.
-  class AllowTransportPolicy
+  class AllowTransportPolicy < Ace::Hitl::Lifecycle::AccessPolicy
     def transport?(_peer, project: nil)
       true
     end
@@ -119,7 +119,7 @@ module LifecycleFixtures
 
   # The boundary access-policy fixture that grants nothing: proves the
   # transport operations fail closed without configured authority.
-  class DenyTransportPolicy
+  class DenyTransportPolicy < Ace::Hitl::Lifecycle::AccessPolicy
     def transport?(_peer, project: nil)
       false
     end

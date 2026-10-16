@@ -186,10 +186,12 @@ module Ace
         # the service identity or root — otherwise anyone who can replace
         # the socket can impersonate the service.
         def verify_control_group!
-          group = Etc.getgrnam(@group)
-          if group.gid.zero? || BROAD_CONTROL_GROUPS.include?(group.name)
+          # Named broad groups are forbidden even on a host where that
+          # deployment group has not been created yet.
+          group = Etc.getgrnam(@group) unless BROAD_CONTROL_GROUPS.include?(@group)
+          if group.nil? || group.gid.zero? || BROAD_CONTROL_GROUPS.include?(group.name)
             raise TransportError,
-              "HITL boundary control group is too broad: #{group.name} " \
+              "HITL boundary control group is too broad: #{@group} " \
               "(configure a dedicated lifecycle group; root and #{Store::DEFAULT_GROUP} are refused)"
           end
 

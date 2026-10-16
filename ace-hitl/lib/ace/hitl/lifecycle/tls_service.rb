@@ -35,7 +35,7 @@ module Ace
 
         def initialize(root:, binding:, project:, credential:, ssl_context:,
           listen: "127.0.0.1", port:, group: Store::DEFAULT_GROUP, vault: nil, logger: nil,
-          idle_seconds: DEFAULT_IDLE_SECONDS, proposal_clock: -> { Time.now.utc })
+          idle_seconds: DEFAULT_IDLE_SECONDS, proposal_clock: -> { Time.now.utc }, decision_policy: AccessPolicy.new)
           @root = root
           @binding = binding
           @project = TlsCredentials.project_id(project)
@@ -48,6 +48,7 @@ module Ace
           @logger = logger
           @idle_seconds = idle_seconds
           @proposal_clock = proposal_clock
+          @policy = TlsAccessPolicy.new(project: @project, decision_policy: decision_policy)
           @max_connections = MAX_CONNECTIONS
           @connections = 0
           @handler_threads = []
@@ -223,7 +224,7 @@ module Ace
             Store.new(
               root: @root,
               binding: @binding,
-              policy: TlsAccessPolicy.new(project: @project),
+              policy: @policy,
               identity: peer,
               vault: @vault,
               proposal_clock: @proposal_clock, stopping: -> { @stopping }, group: @group
@@ -233,7 +234,7 @@ module Ace
         end
 
         def root_store
-          Store.new(root: @root, binding: @binding, policy: TlsAccessPolicy.new(project: @project), group: @group)
+          Store.new(root: @root, binding: @binding, policy: @policy, group: @group)
         end
       end
     end

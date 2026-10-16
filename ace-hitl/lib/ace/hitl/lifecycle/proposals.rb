@@ -54,6 +54,7 @@ module Ace
           claims = proposal_journal(project).proposal_claims(record["revision_id"])
           claim = claims.last
           outcome = case claim && claim["state"]
+          when "pending" then "queued"
           when "accepted" then "executing"
           when "succeeded" then "succeeded"
           when "failed", "failed-settled", "rejected" then "failed"
@@ -88,6 +89,7 @@ module Ace
           record = proposal_for_request!(request, project: project)
           require_transport!("proposal reconciliation", {"project" => record["project_id"]})
           proposal_transition(record) do |current|
+            next current unless silence_delegated?(current)
             Ace::Hitl::Proposals::Policy.resolve(current, checkpoint: checkpoint, now: proposal_now)
           end
         end
@@ -135,6 +137,11 @@ module Ace
         end
 
         private
+
+        def silence_delegated?(record)
+          @policy.proposal_silence?(caller_uid: record["caller_uid"], requester: record["requester"],
+            project: record["project_id"], operation: record["operation"])
+        end
 
         def require_proposer!(project)
           unless @policy.respond_to?(:proposal?) && @policy.proposal?(@identity, project: project)
@@ -228,6 +235,8 @@ module Ace
                 "attempt_id" => attempt, "project_id" => project, "requester" => @identity.username,
                 "caller_uid" => @identity.uid, "content_digest" => Digest::SHA256.hexdigest(JSON.generate(content)),
                 "state" => "awaiting-delivery", "created_at" => proposal_now,
+                "silence_delegated" => @policy.proposal_silence?(caller_uid: @identity.uid,
+                  requester: @identity.username, project: project, operation: content.fetch("operation")),
                 "authorization" => request, "lifecycle_request" => projection).tap do |value|
                   if operation_id
                     value["revision_operation_id"] = operation_id
