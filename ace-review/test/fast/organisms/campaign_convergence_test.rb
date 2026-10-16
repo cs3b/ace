@@ -77,6 +77,43 @@ class CampaignConvergenceTest < AceReviewTest
     assert_equal 0, result.fetch("completed_rounds")
     refute result.fetch("accepted")
   end
+
+  def test_source_reservation_replays_original_without_reexecuting_or_resetting_unknown_budget
+    campaign = start_campaign
+    id = campaign.fetch("campaign_id")
+    campaign_manager.record_round(id, round_input(1))
+    args = {round_id: "round-1", scope: "full", provider: "fixture:model", request_id: "native-review-request"}
+    original = campaign_manager.reserve_execution(id, **args)
+    assert_equal original, campaign_manager.reserve_execution(id, **args)
+    assert_equal 1, campaign_manager.status(id).fetch("execution_attempts").size
+    assert_raises(ArgumentError) { campaign_manager.reserve_execution(id, **args.merge(provider: "other:model")) }
+    assert_raises(ArgumentError) { campaign_manager.reserve_execution(id, **args.merge(round_id: "round-2")) }
+    assert_raises(ArgumentError) { campaign_manager.reserve_execution(id, **args.merge(scope: "other")) }
+    campaign_manager.complete_execution(id, execution_id: original.fetch("id"), status: "uncertain")
+    replay = campaign_manager.reserve_execution(id, **args)
+    assert_equal original.fetch("id"), replay.fetch("id")
+    assert_equal "uncertain", replay.fetch("status")
+    assert_raises(ArgumentError) { campaign_manager.reserve_execution(id, **args.merge(request_id: "new-request")) }
+    assert_equal 1, campaign_manager.status(id).fetch("execution_attempts").size
+  end
+
+  def test_source_reservation_replays_after_completion_and_does_not_bypass_retry_or_contract_limits
+    campaign = start_campaign
+    id = campaign.fetch("campaign_id")
+    campaign_manager.record_round(id, round_input(1))
+    args = {round_id: "round-1", scope: "full", provider: "fixture:model"}
+    3.times do |n|
+      request = args.merge(request_id: "request-#{n}")
+      original = campaign_manager.reserve_execution(id, **request)
+      campaign_manager.complete_execution(id, execution_id: original.fetch("id"), status: "failed", failure: "timeout")
+      assert_equal "failed", campaign_manager.reserve_execution(id, **request).fetch("status")
+      assert_equal original.fetch("id"), campaign_manager.reserve_execution(id, **request).fetch("id")
+    end
+    assert_raises(ArgumentError) { campaign_manager.reserve_execution(id, **args.merge(request_id: "fourth")) }
+    assert_equal 3, campaign_manager.status(id).fetch("execution_attempts").size
+    campaign_manager.start(subject: campaign_subject, contract: "Changed contract", policy: campaign_policy, reason: "New requirements")
+    assert_raises(ArgumentError) { campaign_manager.reserve_execution(id, **args.merge(request_id: "request-0")) }
+  end
   def test_severity_correction_is_verified_audited_and_recomputed_without_an_extra_round
     campaign = start_campaign
     first = round_input(1)

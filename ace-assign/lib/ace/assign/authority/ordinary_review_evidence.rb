@@ -2,6 +2,7 @@
 
 require_relative "candidate_transfer"
 require_relative "receipt_transfer"
+require_relative "ordinary_review_collection"
 require_relative "../molecules/canonical_evidence"
 
 module Ace
@@ -11,6 +12,7 @@ module Ace
       # Caller labels, filesystem reports and protected launch tickets are not
       # alternate evidence sources. Service and merge consumers share this owner.
       module OrdinaryReviewEvidence
+        include OrdinaryReviewCollection
         def with_scope(assignment:, attempt:, deadline:)
           token!(assignment)
           token!(attempt)
@@ -49,6 +51,18 @@ module Ace
         def review_at!(events:, commit:, head:, generation:)
           current = candidate_at!(events: events, commit: commit, head: head, generation: generation)
           assigned = ordinary_review_assignment!(events, current)
+          ordinary_review_receipt_at!(events: events, commit: commit, assigned: assigned)
+        end
+
+        # Historical campaign consumption selects the original review without
+        # calling it a current candidate approval. Cancellation is still current.
+        def review_at_reference!(events:, commit:, review_id:, head:)
+          assigned = ordinary_review_selection!(events, review_id).fetch("payload").fetch("data")
+          raise AttemptErrors::ReceiptRejected, "ordinary historical reviewed head differs" unless assigned.fetch("head") == head
+          ordinary_review_receipt_at!(events: events, commit: commit, assigned: assigned)
+        end
+
+        private def ordinary_review_receipt_at!(events:, commit:, assigned:)
           ordinary_review_origins!(events, commit, assigned)
           accepted = events.reverse.find { |event| event["type"] == "authority_mutation" &&
             event.dig("payload", "operation") == "accept_review" && event.dig("payload", "data", "review_id") == assigned.fetch("review_id") }
@@ -124,6 +138,17 @@ module Ace
             raise AttemptErrors::ReceiptRejected, "ordinary independent review assignment is absent or revoked"
           end
           data
+        end
+
+        def ordinary_review_selection!(events, review_id)
+          token!(review_id)
+          selected = events.select { |event| event["type"] == "authority_mutation" &&
+            event.dig("payload", "operation") == "assign_review" && event.dig("payload", "data", "review_id") == review_id }
+          if !selected.one? || events.any? { |event| event["type"] == "authority_mutation" &&
+              event.dig("payload", "operation") == "cancel_review" && event.dig("payload", "data", "review_id") == review_id }
+            raise AttemptErrors::ReceiptRejected, "ordinary review selection is absent or revoked"
+          end
+          selected.first
         end
 
         def ordinary_review_origins!(events, commit, assigned, reviewer_running: false)

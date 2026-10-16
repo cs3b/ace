@@ -114,6 +114,7 @@ module Ace
           executions = record.fetch("execution_attempts")
           executions.each do |entry|
             contract.id!(entry["id"], "execution ID")
+            contract.id!(entry["request_id"], "execution request ID") if entry.key?("request_id")
             unless phases.any? { |phase| phase["id"] == entry["phase_id"] } &&
                 record["attempts"].any? { |attempt| attempt["round_id"] == entry["round_id"] } &&
                 record["policy"]["required_scopes"].include?(entry["scope"])
@@ -122,7 +123,8 @@ module Ace
             Atoms::CampaignPolicy.retry_decision(attempts: [entry], round_id: entry["round_id"],
               scope: entry["scope"], provider: entry["provider"])
           end
-          unless executions.map { |entry| entry["id"] }.uniq.size == executions.size &&
+          request_ids = executions.filter_map { |entry| entry["request_id"] }
+          unless request_ids.uniq.size == request_ids.size && executions.map { |entry| entry["id"] }.uniq.size == executions.size &&
               executions.group_by { |entry| entry.values_at("phase_id", "round_id", "scope", "provider") }
                 .values.all? { |entries| entries.size <= Atoms::CampaignPolicy::INFRASTRUCTURE_RETRIES + 1 }
             raise contract::Invalid, "execution identity or retry budget differs"

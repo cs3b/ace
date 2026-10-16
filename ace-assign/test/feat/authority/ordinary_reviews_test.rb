@@ -199,8 +199,76 @@ module Ace
           assert @client.call("review_status", selection).data.fetch("accepted")
           @admission.selected = "producer"
           submit_candidate(generation: 4, candidate_generation: 1, mutation: "candidate2")
+          prefix = @journal.ref_value
+          events = @journal.read_events("producer", commit: prefix).select { |event| event["attempt_id"] == "producer-run" }
+          historical = @owner.review_at_reference!(events: events, commit: prefix, review_id: assigned.fetch("review_id"), head: @head)
+          assert_equal 1, historical.fetch("candidate_generation")
+          assert_equal accepted.fetch("receipt_digest"), historical.fetch("receipt_digest")
+          assert_raises(AttemptErrors::ReceiptRejected) do
+            @owner.review_at_reference!(events: events, commit: prefix, review_id: assigned.fetch("review_id"), head: "f" * 40)
+          end
           @admission.selected = "reviewer"
           assert_raises(AttemptErrors::EvidenceUnavailable) { accept_review(assigned) }
+          @admission.selected = "supervisor"
+          @client.call("cancel_review", selection.merge("pane" => "w1:pS", "review_id" => assigned.fetch("review_id"),
+            "expected_generation" => 5), mutation_id: "revoke-historical")
+          prefix = @journal.ref_value
+          events = @journal.read_events("producer", commit: prefix).select { |event| event["attempt_id"] == "producer-run" }
+          assert_raises(AttemptErrors::ReceiptRejected) do
+            @owner.review_at_reference!(events: events, commit: prefix, review_id: assigned.fetch("review_id"), head: @head)
+          end
+        end
+      end
+
+      def test_collection_reads_only_assigned_terminal_execution_and_never_implies_approval
+        fixture do
+          register_and_start
+          submit_candidate
+          @admission.selected = "supervisor"
+          assigned = assign_review
+          @admission.selected = "reviewer"
+          own = {"assignment_id" => "reviewer", "attempt_id" => "reviewer-run", "pane" => "w1:p2"}
+          @client.call("queue_finish", own.merge("expected_generation" => 1, "step" => "010.01"),
+            mutation_id: "reviewer-progress", upload_parts: ["Collected independent reports."], purpose: :artifacts)
+          bytes = review_bytes("assignment_id" => "reviewer", "attempt_id" => "reviewer-run", "operation" => "review-collect",
+            "review" => nil, "checks" => [{"name" => "review-execution", "verdict" => "passed"}])
+          submitted = @client.call("submit_result", own.merge("head" => @head, "expected_generation" => 2,
+            "receipt_sha256" => Digest::SHA256.hexdigest(bytes)), mutation_id: "reviewer-result",
+            upload_parts: [bytes, "Independent review report."], purpose: :receipt_artifacts).data
+          reference = assigned.slice("review_id", "reviewer_assignment_id", "reviewer_attempt_id")
+            .merge(submitted.slice("result_id", "receipt_digest"))
+          read = lambda do |&block|
+            prefix = @journal.ref_value
+            events = @journal.read_events("producer", commit: prefix).select { |event| event["attempt_id"] == "producer-run" }
+            @owner.with_review_collection!(events: events, commit: prefix, reference: reference, &block)
+          end
+          assert_raises(AttemptErrors::EvidenceUnavailable) { read.call { flunk } }
+          @admission.selected = "supervisor"
+          @client.call("finish", own.merge("pane" => "w1:pS", "head" => @head, "expected_generation" => 3,
+            "result_id" => submitted.fetch("result_id"), "receipt_digest" => submitted.fetch("receipt_digest")), mutation_id: "finish-reviewer")
+          escaped = nil
+          artifact = nil
+          read.call do |proof, reader|
+            assert_equal "review-collect", proof.fetch("operation")
+            assert_equal assigned.fetch("reviewer_origin"), proof.dig("execution_binding", "reviewer_origin")
+            assert_equal "running", @journal.derived_attempts("producer").first.state
+            artifact = proof.fetch("artifacts").first
+            assert_equal "Independent review report.", reader.call(artifact)
+            assert_raises(AttemptErrors::EvidenceUnavailable) { reader.call(artifact.merge("sha256" => "f" * 64)) }
+            escaped = reader
+          end
+          assert_raises(AttemptErrors::EvidenceUnavailable) { escaped.call(artifact) }
+          refute @client.call("review_status", selection).data.fetch("accepted")
+          original = @journal.method(:blob)
+          @journal.define_singleton_method(:blob) { |name, **options| name == artifact.fetch("path") ? "corrupt" : original.call(name, **options) }
+          assert_raises(AttemptErrors::EvidenceUnavailable) { read.call { flunk } }
+          @journal.define_singleton_method(:blob, original)
+          reference["reviewer_attempt_id"] = "forged"
+          assert_raises(AttemptErrors::ReceiptRejected) { read.call { flunk } }
+          reference["reviewer_attempt_id"] = "reviewer-run"
+          @client.call("cancel_review", selection.merge("pane" => "w1:pS", "review_id" => assigned.fetch("review_id"),
+            "expected_generation" => 3), mutation_id: "cancel-collected")
+          assert_raises(AttemptErrors::ReceiptRejected) { read.call { flunk } }
         end
       end
 
