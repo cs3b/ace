@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "../test_helper"
+require_relative "../../../ace-assign/test/support/fixed_merge_evidence_fixture"
 require "digest"
 require "open3"
 require "ace/assign/atoms/fixed_merge_schemas"
@@ -29,7 +30,7 @@ module Ace
 
         cache = File.join(@dir, "cache")
         @coordinator = Ace::Assign::Organisms::AttemptCoordinator.new(cache_base: cache,
-          repo_root: @repo, journal: Ace::Assign::Molecules::EvidenceJournal.new(repo_root: @repo,
+          repo_root: @repo, ordinary_merge_evidence: (@merge_evidence = Ace::Assign::FixedMergeEvidenceFixture.new), journal: Ace::Assign::Molecules::EvidenceJournal.new(repo_root: @repo,
             checkout_root: File.join(@dir, "journal")),
           lifecycle_exclusion: Ace::Assign::Molecules::LifecycleExclusion.new(
             root: File.join(@dir, "exclusion")
@@ -107,15 +108,17 @@ module Ace
         assert_nil @coordinator.fixed_merge_record("request-1")
       end
 
-      def test_executor_self_review_evidence_refuses_pre_effect
-        self_reviewed = valid_request.merge("review_evidence" =>
-          valid_request.fetch("review_evidence").merge("reviewer" => "ordinary-receiver"))
-        envelope = receiver.handle(submission_with_document(self_reviewed))
-        assert_equal "ordinary_merge_evidence_invalid", envelope.dig("error", "code")
-        principal_reviewed = valid_request.merge("review_evidence" =>
-          valid_request.fetch("review_evidence").merge("reviewer" => "overseer"))
-        envelope = receiver.handle(submission_with_document(principal_reviewed))
-        assert_equal "ordinary_merge_evidence_invalid", envelope.dig("error", "code")
+      def test_canonical_evidence_owner_refusal_prevents_admission
+        @merge_evidence.enabled = false
+        envelope = receiver.handle(submission)
+        assert_equal "ordinary_merge_authorization_invalid", envelope.dig("error", "code")
+        assert_nil @coordinator.fixed_merge_record("request-1")
+      end
+
+      def test_missing_canonical_evidence_owner_fails_closed
+        @coordinator.instance_variable_set(:@ordinary_merge_evidence, nil)
+        envelope = receiver.handle(submission)
+        assert_equal "ordinary_merge_authorization_invalid", envelope.dig("error", "code")
         assert_nil @coordinator.fixed_merge_record("request-1")
       end
 
@@ -274,6 +277,40 @@ module Ace
       end
 
       # ---- execution lifecycle ---------------------------------------------
+
+      def test_evidence_revocation_after_readback_refuses_before_any_forge_write
+        forge = ForgeDouble.new(prs: {7 => open_pr})
+        read = forge.method(:pull_request)
+        proof = @merge_evidence
+        forge.define_singleton_method(:pull_request) do |**options|
+          value = read.call(**options)
+          proof.enabled = false
+          value
+        end
+        selected = build_receiver(forge: forge)
+        selected.handle(submission)
+        quietly { selected.execute("request-1") }
+        assert_empty forge.comments
+        assert_equal 0, forge.merge_count
+        assert_equal "failed", @coordinator.fixed_merge_record("request-1").fetch("state")
+      end
+
+      def test_evidence_revocation_after_review_attachment_refuses_merge_post
+        forge = ForgeDouble.new(prs: {7 => open_pr})
+        comment = forge.method(:create_comment)
+        proof = @merge_evidence
+        forge.define_singleton_method(:create_comment) do |**options|
+          value = comment.call(**options)
+          proof.enabled = false
+          value
+        end
+        selected = build_receiver(forge: forge)
+        selected.handle(submission)
+        quietly { selected.execute("request-1") }
+        assert_equal 1, forge.comments.size
+        assert_equal 0, forge.merge_count
+        assert_equal "failed", @coordinator.fixed_merge_record("request-1").fetch("state")
+      end
 
       def test_execute_invokes_the_forge_merge_and_settles_from_the_real_readback
         forge = ForgeDouble.new(prs: {7 => open_pr})

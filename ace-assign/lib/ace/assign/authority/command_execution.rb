@@ -18,6 +18,8 @@ module Ace
           @project, @journal, @admission = project, journal, admission
         end
 
+        attr_reader :journal
+
         def dispatch(request:, peer:, role:, deadline:)
           operation = request.fetch("operation")
           params = request.fetch("params")
@@ -70,6 +72,40 @@ module Ace
             data = transition(operation, id, params, plan, prior, peer, deadline)
             {events: [], data: data}
           end
+        end
+
+        # Read only the accepted launcher-owned four-stage execution at the
+        # caller's held CAS prefix. Arbitrary allowed commands are not tests.
+        def test_evidence_at!(execution_id:, commit:, head:, tree:, deadline:)
+          unless execution_id.is_a?(String) && ID.match?(execution_id) && commit && @journal.ref_value == commit
+            raise AttemptErrors::EvidenceUnavailable, "test execution prefix or selector differs"
+          end
+          data = projection(execution_id, commit)
+          definition = data.fetch("definition")
+          events = @journal.read_events(namespace(execution_id), commit: commit)
+          accepted = events.select { |event| event["type"] == "authority_mutation" }
+          stages = accepted.map { |event| event.fetch("payload").fetch("data") }
+          unless accepted.size == 4 && data["phase"] == "exited" && data["result"] == {"exit_status" => 0, "signal" => nil} &&
+              definition["purpose"] == "test" && definition["source"] == {"head" => head, "tree" => tree} &&
+              [head, tree].all? { |value| value.is_a?(String) && value.match?(/\A[0-9a-f]{40}\z/) } &&
+              stages.all? { |stage| stage.fetch("definition") == definition } &&
+              stages.map { |stage| stage.fetch("phase") } == %w[admitted claimed running exited] &&
+              stages.drop(1).all? { |stage| stage.fetch("launcher") == data.fetch("launcher") } &&
+              stages[2].fetch("child") == data.fetch("child") && data.dig("launcher", "uid") == 0 &&
+              data.dig("child", "witnessed_by") == data.fetch("launcher") &&
+              data.dig("child", "kernel_identity") == data.dig("child", "root_witness")&.slice("pid", "uid", "started_at", "host") &&
+              data.dig("child", "root_witness", "cwd") == definition.dig("executor", "cwd") &&
+              data.dig("child", "kernel_identity", "uid") == definition.dig("executor", "uid")
+            raise AttemptErrors::ReceiptRejected, "candidate requires an exact successful executed test command"
+          end
+          @admission.command_test_evidence!(definition: definition, deadline: deadline)
+          command = JSON.generate(definition.fetch("argv"))
+          raise AttemptErrors::ReceiptRejected, "executed test command reference is oversized" if command.bytesize > 2048
+          {"schema" => "ace.test.execution-reference/v1", "reference" => execution_id,
+            "candidate_head" => head, "command" => command, "result" => "passed",
+            "recorded_at" => accepted.last.fetch("recorded_at"), "receipt_sha256" => Atoms::EvidenceDigest.digest(data)}
+        rescue KeyError, TypeError
+          raise AttemptErrors::EvidenceUnavailable, "canonical test execution is incomplete"
         end
 
         private

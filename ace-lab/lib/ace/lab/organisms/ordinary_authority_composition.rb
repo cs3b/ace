@@ -41,14 +41,15 @@ module Ace
             evidence_reader: ->(reference, record, state, pending) { reader.call(reference, record, state, pending) })
           reader = Ace::Assign::Authority::ServiceEvidence.new(journal: journal)
           exclusion = Ace::Assign::Molecules::LifecycleExclusion.new(root: @config.lifecycle_root)
-          coordinator = Ace::Assign::Organisms::AttemptCoordinator.new(cache_base: @config.assignment_root,
-            repo_root: @config.journal.fetch("repository"), journal: journal, lifecycle_exclusion: exclusion,
-            recorded_binding_observer: admission.method(:recorded_binding!))
-          lifecycle = Ace::Assign::Authority::OrdinaryLifecycle.new(project: @config.project,
-            admission: admission, journal: journal, exclusion: exclusion, input_root: @config.assignment_root)
           command_admission = Molecules::CommandOwnerAdmission.new(base: admission, project: @config.project)
           command = Ace::Assign::Authority::CommandExecution.new(project: @config.project, journal: journal,
             admission: command_admission)
+          lifecycle = Ace::Assign::Authority::OrdinaryLifecycle.new(project: @config.project,
+            admission: admission, journal: journal, exclusion: exclusion, input_root: @config.assignment_root,
+            command_evidence: command)
+          coordinator = Ace::Assign::Organisms::AttemptCoordinator.new(cache_base: @config.assignment_root,
+            repo_root: @config.journal.fetch("repository"), journal: journal, lifecycle_exclusion: exclusion,
+            recorded_binding_observer: admission.method(:recorded_binding!), ordinary_merge_evidence: lifecycle)
           router = Ace::Assign::Authority::Router.new(handlers: [lifecycle, command])
           merge = OrdinaryMergeReceiver.new(config: @receiver, coordinator: coordinator,
             policy_document: policy_document, owner_guard: -> { @config.selected_principal!(@receiver.principal_uid) },

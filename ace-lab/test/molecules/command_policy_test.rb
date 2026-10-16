@@ -10,12 +10,25 @@ module Ace
           "default_executor" => "publisher", "default_services" => [],
           "executors" => {"publisher" => {"uid" => 1002, "gid" => 1002, "groups" => [], "home" => "/var/empty", "cwd" => "/opt/accepted", "path" => ["/usr/bin", "/bin"], "environment" => {"LANG" => "C.UTF-8"}}},
           "services" => {"forge" => {"environment" => {"FORGE_URL" => "https://forge.invalid"}, "secret_references" => {}}, "rubygems" => {"environment" => {}, "secret_references" => {"GEM_CREDENTIALS" => "/etc/lab/secrets/rubygems"}}},
-          "commands" => {"probe" => {"argv" => ["/usr/bin/id"], "executable_sha256" => "a" * 64, "source" => {"head" => nil, "tree" => nil}}},
+          "commands" => {"probe" => {"purpose" => "command", "argv" => ["/usr/bin/id"], "executable_sha256" => "a" * 64, "source" => {"head" => nil, "tree" => nil}}},
           "grants" => [{"kind" => "operator", "uid" => 1000, "command" => "probe", "executor" => "publisher", "services" => []}, {"kind" => "agent", "uid" => 1000, "command" => "probe", "executor" => "publisher", "services" => %w[forge rubygems]}]}}}
       end
       def select(policy, **options)
         policy.select(selection: {"argv" => ["/usr/bin/id"], "executor" => nil, "services" => nil, "pane" => nil}.merge(options.transform_keys(&:to_s)), peer: {"uid" => 1000, "pid" => 12, "started_at" => "actual"})
       end
+      def test_test_purpose_requires_explicit_policy_and_exact_source
+        source = document
+        command = source.fetch("projects").fetch("ace").fetch("commands").fetch("probe")
+        command.delete("purpose")
+        assert_raises(InvalidConfigurationError) { Molecules::CommandPolicy.new(source, project: "ace") }
+        command["purpose"] = "test"
+        assert_raises(InvalidConfigurationError) { Molecules::CommandPolicy.new(source, project: "ace") }
+        command["source"] = {"head" => "a" * 40, "tree" => "b" * 40}
+        assert_equal "test", select(Molecules::CommandPolicy.new(source, project: "ace")).fetch("purpose")
+        command["purpose"] = "inferred-from-argv"
+        assert_raises(InvalidConfigurationError) { Molecules::CommandPolicy.new(source, project: "ace") }
+      end
+
       def test_defaults_distinguish_operator_and_agent
         policy = Molecules::CommandPolicy.new(document, project: "ace")
         result = select(policy)

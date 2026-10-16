@@ -1360,7 +1360,7 @@ module Ace
         # CAS transition, so a receiver restart can never dispatch a second
         # merge for the same admitted record. An already-started claim refuses;
         # only the winning effect may later settle it.
-        def begin_fixed_merge_request(request_id)
+        def begin_fixed_merge_request(request_id, guard: nil)
           current = fixed_merge_request(request_id)
           raise AttemptErrors::NotFound, "Fixed merge request #{request_id} not found" unless current
           if current["state"] == "uncertain"
@@ -1371,7 +1371,7 @@ module Ace
           end
           update_fixed_merge_request(request_id, expected: current,
             replacement: current.merge("state" => "uncertain", "claimed_at" => Time.now.utc.iso8601(9)),
-            event_type: "merge_transition", guard: -> { verify_fixed_proposal!(current) })
+            event_type: "merge_transition", guard: -> { guard&.call; verify_fixed_proposal!(current) })
         end
 
         # Terminal settlement: succeeded/failed with the exact receipt
@@ -1527,7 +1527,11 @@ module Ace
               raise AttemptErrors::InvalidState, "Fixed merge request needs an initial admission"
             end
             if existing
-              return {record: existing, replayed: true} if fixed_replay?(existing, replacement)
+              if fixed_replay?(existing, replacement)
+                conflict = guard&.call
+                raise_authorization_conflict!(conflict) if conflict
+                return {record: existing, replayed: true}
+              end
               raise AttemptErrors::Conflict, "Fixed merge request #{request_id} has different input"
             end
             unless Molecules::FixedEffectReference.valid?(replacement.fetch("reference"))

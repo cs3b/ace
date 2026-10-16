@@ -24,7 +24,7 @@ module Ace
         # @param identity_resolver [ExecutionIdentityResolver] Trust boundary
         # @param artifact_reader [#call, nil] Source-owned canonical byte
         #   reader for protected composition; nil selects explicit local files
-        def initialize(identity_resolver: nil, artifact_reader: nil, campaign_verifier: nil)
+        def initialize(identity_resolver: nil, artifact_reader: nil, campaign_verifier: nil, review_independence_verifier: nil)
           @identity_resolver = identity_resolver || ExecutionIdentityResolver.new
           unless artifact_reader.nil? || artifact_reader.respond_to?(:call)
             raise ArgumentError, "artifact reader must be a source-owned callable"
@@ -34,6 +34,10 @@ module Ace
             raise ArgumentError, "campaign verifier must be a source-owned callable"
           end
           @campaign_verifier = campaign_verifier
+          unless review_independence_verifier.nil? || review_independence_verifier.respond_to?(:call)
+            raise ArgumentError, "review independence verifier must be a source-owned callable"
+          end
+          @review_independence_verifier = review_independence_verifier
         end
 
         # Validate a submitted receipt against an attempt.
@@ -222,7 +226,9 @@ module Ace
           reject_unless(reviewer.is_a?(Hash) && !reviewer["actor"].to_s.strip.empty?, "review must name an executed reviewer")
 
           producer_actor = data.dig("producer", "actor").to_s.strip
-          if reviewer["actor"].to_s.strip == producer_actor
+          if @review_independence_verifier
+            reject("canonical reviewer independence is unverifiable") unless @review_independence_verifier.call(data) == true
+          elsif reviewer["actor"].to_s.strip == producer_actor
             reject("reviewer and producer must differ (self-approval rejected)")
           end
 

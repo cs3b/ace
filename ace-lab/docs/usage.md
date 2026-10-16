@@ -276,6 +276,66 @@ must read the same canonical status and adopt its original attempt/result IDs.
 Changed owner selection refuses new admission and dispatch until a controlled
 restart. Existing canonical receipts remain the source for reconciliation.
 
+## Ordinary candidate, review and merge evidence
+
+Keep the real delivery attempt running through review, test execution and merge.
+Finish it only after settlement. A completed coder attempt can seed a new real
+registered delivery attempt; never reopen its old authority.
+
+The existing `assignment request --input request.json` interface also supports:
+
+| Operation | Params in addition to assignment_id/attempt_id/head/candidate_generation | Authority / transfer |
+|---|---|---|
+| `submit_candidate` | `pane`, `expected_generation` | Original worker; one complete Git bundle; candidate_generation is the previous generation (0 initially) |
+| `assign_review` | `pane`, `expected_generation`, `reviewer_assignment_id`, `reviewer_attempt_id` | Current canonical supervisor selects an already started independent reviewer |
+| `export_candidate` | `pane`, `review_id` | Assigned reviewer; null mutation; `--output NEW_DIRECTORY` downloads canonical bundle |
+| `accept_review` | `pane`, `expected_generation`, `review_id`, `receipt_sha256` | Assigned reviewer uploads exact receipt followed by its ordered report artifacts |
+| `cancel_review` | `pane`, `expected_generation`, `review_id` | Current supervisor revokes that exact review |
+| `review_status` | None | Null mutation; revalidates accepted original receipt and artifacts |
+| `merge_evidence` | `test_execution_ids` (nonempty array) | Null mutation; projects exact accepted review and canonical executed-test references |
+
+First submit the candidate, retaining its returned head, tree and new generation.
+Prepare/register/start a separate review assignment through the ordinary native
+entry. Its agent must have a different actual process generation, session UUID
+and pane. The supervisor assigns that exact reviewer assignment/attempt at its
+honestly observed starting base. Export gives the assigned agent canonical candidate
+bytes; it then materializes/checks out the candidate. Receipt acceptance requires
+that exact candidate HEAD and the unchanged original native reviewer binding. A receipt uses the delivery attempt's identifiers,
+scope and actual producer; its `review.reviewer.actor` is the real reviewer's
+account. The owner derives independence from authenticated native origins, so
+shared-account agents do not need invented actor aliases.
+
+`accept_review` retains the original receipt and up to 15 report artifacts in
+CanonicalEvidence, verifies their exact digests, and returns the accepted review
+ID/digest. The receipt declares operation review, succeeded, approved at the exact
+candidate head, and executed review checks. These review checks are not test
+execution authority. Missing/corrupt reports, a different caller, terminal delivery
+attempt, changed head/generation or cancellation refuse. Retrying the exact
+accepted mutation cannot accept a second review; changed bytes under that mutation
+refuse. This first ingress accepts direct independent review of the exact candidate
+generation. Campaign receipts and accepted-head carry are deliberately unavailable
+until the existing ace-review campaign/assessment owner is connected; a head change
+currently refuses prior approval. This is a remaining delivery capability, not the
+final policy of requiring a full independent review after every SHA change.
+
+Execute the project's root-selected test command through the existing command
+transport. Only an explicit `purpose: test` definition with exact immutable
+candidate head/tree, root-witnessed child, and canonical exit0/no signal can supply
+test evidence. `merge_evidence` resolves those execution IDs and returns
+`review_evidence` and `test_evidence` for the fixed merge request. Copy those exact
+projections into the retained request before obtaining its digest-bound decision.
+Plain worker check strings or generic allowed commands are not substitutes.
+
+The sole owner revalidates evidence in the merge admission CAS and before each
+Forge effect. Assignment exclusion prevents candidate changes, review cancellation
+or finish racing an executing merge. Policy revocation or missing canonical bytes
+refuses without dispatch. Existing unknown outcomes retain their original merge
+reference and require reconciliation.
+
+The dynamic candidate-to-immutable-command-view binding and installed two-worker
+acceptance remain separate required gates. Static source fixtures do not authorize
+per-PR administrative head/path edits or claim installed autonomous merging.
+
 ## Ordinary driver and supervisor recovery
 
 `ace-overseer ordinary --operation prepare` retains one context per fresh worker.
@@ -538,8 +598,9 @@ source. Project preferences and caller environment cannot create grants. Its
 version1 project entries contain `launcher`, `default_executor`, `default_services`,
 `executors`, `services`, `commands`, and `grants`. Executors declare UID/GID/groups,
 HOME/cwd/PATH and nonsecret environment; services declare nonsecret environment
-and secret references; commands bind exact argv, executable SHA256 and source
-head/tree. Source head/tree are both null for a non-Git probe and both exact
+and secret references; commands bind exact argv, executable SHA256, source
+head/tree and required `purpose: command` or `purpose: test`. Test purpose requires
+nonnull source head/tree and is never inferred from executable name or exit0. Source head/tree are both null for a non-Git probe and both exact
 object IDs for release source. Grants bind requester kind/UID, command, executor
 and the exact service combination. Accepted code/cwd must be root-owned and
 unwritable by the executor. Missing or changed context refuses execution.

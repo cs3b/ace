@@ -1,0 +1,165 @@
+{
+  "scope": "source-only ordinary candidate/review ingress and canonical merge proof",
+  "base": "2289bc25c703293738e1dbd4ce6a2b3dc3f4913d",
+  "installed_acceptance": false,
+  "independent_review": "pending frozen-source Pi review",
+  "remaining": [
+    "dynamic immutable candidate execution view",
+    "existing campaign and accepted-head owner join",
+    "installed two fresh workers, reviews, serial merges"
+  ],
+  "checks": [
+    {
+      "label": "latest candidate/review ingress, reviewer starts at base",
+      "package": "assign",
+      "report_id": "7049520e-d593-4999-acef-0295d3d097bf",
+      "summary_sha256": "19a92db86d1311d5dec443ab78234a896aef8a221390273da8e8c8b5c4bc6ebb",
+      "summary": {
+        "execution_id": "7049520e-d593-4999-acef-0295d3d097bf",
+        "assertions": 40,
+        "passed": 5,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "total": 5,
+        "pass_rate": 100.0,
+        "duration": 90.21168,
+        "success": true,
+        "timestamp": "2026-10-16T20:46:50+01:00"
+      }
+    },
+    {
+      "label": "ordinary lifecycle plus ingress; before last reviewer base fixture refinement",
+      "package": "assign",
+      "report_id": "0a49c93b-207f-42a4-a86d-92a12f8163bd",
+      "summary_sha256": "33a40e07cf5fad926700ec3faec3801a234ab6dcff11c1c1eb69920ff54ff881",
+      "summary": {
+        "execution_id": "0a49c93b-207f-42a4-a86d-92a12f8163bd",
+        "assertions": 303,
+        "passed": 29,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "total": 29,
+        "pass_rate": 100.0,
+        "duration": 264.78279,
+        "success": true,
+        "timestamp": "2026-10-16T20:46:11+01:00"
+      }
+    },
+    {
+      "label": "existing fixed merge, receipt verifier and command execution",
+      "package": "assign",
+      "report_id": "cab99989-bae2-4880-9636-b0fc3e2d25f3",
+      "summary_sha256": "57c4401ae98aed2ca4840f1c39ea538717464695506883a2e20eb28b947ddc9a",
+      "summary": {
+        "execution_id": "cab99989-bae2-4880-9636-b0fc3e2d25f3",
+        "assertions": 229,
+        "passed": 44,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "total": 44,
+        "pass_rate": 100.0,
+        "duration": 57.30468,
+        "success": true,
+        "timestamp": "2026-10-16T20:38:20+01:00"
+      }
+    },
+    {
+      "label": "existing receiver/request/policy/client/composition",
+      "package": "lab",
+      "report_id": "2ff6c4be-5a64-4aaf-ad29-0ff5b5e3c361",
+      "summary_sha256": "3dbf083e0bcf0a3affcc94812b34ed0f96bb622ed7585e783f4b91810ff0af3b",
+      "summary": {
+        "execution_id": "2ff6c4be-5a64-4aaf-ad29-0ff5b5e3c361",
+        "assertions": 480,
+        "passed": 80,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "total": 80,
+        "pass_rate": 100.0,
+        "duration": 90.390678,
+        "success": true,
+        "timestamp": "2026-10-16T20:38:53+01:00"
+      }
+    },
+    {
+      "label": "updated command proof and receipt verifier",
+      "package": "assign",
+      "report_id": "8da7e2c8-7e43-447d-bfdc-78ee9b5e0c69",
+      "summary_sha256": "5862ecc1cd2a274d5d0824603db9fb70ffa66a45cf1c252ab051f917efd897ab",
+      "summary": {
+        "execution_id": "8da7e2c8-7e43-447d-bfdc-78ee9b5e0c69",
+        "assertions": 134,
+        "passed": 29,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "total": 29,
+        "pass_rate": 100.0,
+        "duration": 14.00375,
+        "success": true,
+        "timestamp": "2026-10-16T20:40:52+01:00"
+      }
+    },
+    {
+      "label": "updated policy/client/composition",
+      "package": "lab",
+      "report_id": "39a0f419-323a-49eb-977d-c55804c8f54d",
+      "summary_sha256": "ff90f71364061a51c4688aa91128c98d9c98dd44245ed193507eaefca3720baf",
+      "summary": {
+        "execution_id": "39a0f419-323a-49eb-977d-c55804c8f54d",
+        "assertions": 150,
+        "passed": 22,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "total": 22,
+        "pass_rate": 100.0,
+        "duration": 0.326373,
+        "success": true,
+        "timestamp": "2026-10-16T20:40:40+01:00"
+      }
+    },
+    {
+      "label": "same-owner composition",
+      "package": "lab",
+      "report_id": "fef176da-aeaa-4633-a695-bd10f31d7439",
+      "summary_sha256": "fb9221d9ed7af55a5be26c66b6203e689165424304d5b3e4d955b17dfba8a045",
+      "summary": {
+        "execution_id": "fef176da-aeaa-4633-a695-bd10f31d7439",
+        "assertions": 83,
+        "passed": 10,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "total": 10,
+        "pass_rate": 100.0,
+        "duration": 0.025858,
+        "success": true,
+        "timestamp": "2026-10-16T20:41:53+01:00"
+      }
+    },
+    {
+      "label": "canonical proof revocation before each Forge write",
+      "package": "lab",
+      "report_id": "1bc5eae4-d58c-40f8-82e5-b217992d3ece",
+      "summary_sha256": "93d1934974d421b97a6184ab8e549e4af5e6b584196f145496538ecca0d3ab09",
+      "summary": {
+        "execution_id": "1bc5eae4-d58c-40f8-82e5-b217992d3ece",
+        "assertions": 7,
+        "passed": 2,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "total": 2,
+        "pass_rate": 100.0,
+        "duration": 4.950683,
+        "success": true,
+        "timestamp": "2026-10-16T20:42:29+01:00"
+      }
+    }
+  ]
+}

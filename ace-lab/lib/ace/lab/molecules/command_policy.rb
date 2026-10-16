@@ -57,13 +57,15 @@ module Ace
             invalid! unless references.is_a?(Hash) && references.all? { |key, path| env_key?(key) && absolute?(path) }
           end
           @entry.fetch("commands").each_value do |value|
-            strict!(value, %w[argv executable_sha256 source])
+            strict!(value, %w[argv executable_sha256 source purpose])
+            invalid! unless %w[command test].include?(value["purpose"])
             argv!(value.fetch("argv"))
             invalid! unless sha?(value.fetch("executable_sha256"))
             source = value.fetch("source")
             strict!(source, %w[head tree])
             invalid! unless source.values.all? { |sha| sha.nil? || (sha.is_a?(String) && sha.match?(/\A[0-9a-f]{40}\z/)) } &&
               source.values.all?(&:nil?) == source.values.any?(&:nil?)
+            invalid! if value["purpose"] == "test" && source.values.any?(&:nil?)
           end
           invalid! unless @entry.fetch("executors").key?(@entry["default_executor"])
           services!(@entry.fetch("default_services"))
@@ -112,7 +114,7 @@ module Ace
           end
           definition = {"policy_sha256" => @fingerprint, "project_id" => @project, "command_id" => command_id,
             "argv" => command.fetch("argv"), "executable_sha256" => command.fetch("executable_sha256"),
-            "source" => command.fetch("source"), "executor_id" => executor_id,
+            "source" => command.fetch("source"), "purpose" => command.fetch("purpose"), "executor_id" => executor_id,
             "executor" => executor.merge("environment" => environment, "groups" => executor.fetch("groups").sort), "services" => selected,
             "secret_references" => references, "requester" => peer, "requester_kind" => kind,
             "selection" => selection}

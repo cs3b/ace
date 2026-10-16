@@ -9,6 +9,8 @@ require_relative "ordinary_progress"
 require_relative "ordinary_results"
 require_relative "ordinary_completion"
 require_relative "ordinary_supervisor"
+require_relative "ordinary_reviews"
+require_relative "ordinary_merge_evidence"
 require_relative "../molecules/lifecycle_exclusion"
 
 module Ace
@@ -23,22 +25,28 @@ module Ace
         include OrdinaryResults
         include OrdinaryCompletion
         include OrdinarySupervisor
-        OPERATIONS = (%w[register_assignment registration_status start_attempt finish] + OrdinaryProgress::PROGRESS_OPERATIONS + OrdinaryResults::RESULT_OPERATIONS + OrdinarySupervisor::SUPERVISOR_OPERATIONS).freeze
+        include OrdinaryReviews
+        include OrdinaryMergeEvidence
+        OPERATIONS = (%w[register_assignment registration_status start_attempt finish merge_evidence] + OrdinaryProgress::PROGRESS_OPERATIONS + OrdinaryResults::RESULT_OPERATIONS + OrdinarySupervisor::SUPERVISOR_OPERATIONS + OrdinaryReviews::REVIEW_OPERATIONS).freeze
         TRANSFER_OPERATIONS = {"register_assignment" => {direction: :upload, purpose: :candidate, roles: [:supervisor]}}
-          .merge(OrdinaryProgress::PROGRESS_TRANSFERS).merge(OrdinaryResults::RESULT_TRANSFERS).freeze
+          .merge(OrdinaryProgress::PROGRESS_TRANSFERS).merge(OrdinaryResults::RESULT_TRANSFERS).merge(OrdinaryReviews::REVIEW_TRANSFERS).freeze
         REGISTER_KEYS = %w[assignment_id definition_digest prepared_head prepared_tree manifest_sha256 expected_generation pane transfer].freeze
 
-        def initialize(project:, admission:, journal:, exclusion:, input_root:, inbox: nil)
+        def initialize(project:, admission:, journal:, exclusion:, input_root:, inbox: nil, command_evidence: nil)
           @project, @admission, @journal, @exclusion = project, admission, journal, exclusion
           @input_root = PrivateDirectory.verify!(input_root)
           unless inbox.nil? || inbox.is_a?(Ace::Herdr::Organisms::Inbox)
             raise ArgumentError, "ordinary completion requires the installed Inbox owner"
           end
-          @inbox = inbox
+          @inbox, @command_evidence = inbox, command_evidence
         end
 
         def authorize_transfer!(request:, peer:, role:, deadline:)
           authorize!(request, peer, role, deadline)
+          if OrdinaryReviews::REVIEW_TRANSFERS.key?(request.fetch("operation"))
+            authorize_ordinary_review!(request, peer, role, deadline)
+            return
+          end
           if OrdinaryResults::RESULT_TRANSFERS.key?(request.fetch("operation"))
             validate_result!(request)
             authorize_start_replay!(request, peer, role, deadline) if request.fetch("operation") == "submit_result"
@@ -56,7 +64,11 @@ module Ace
 
         def dispatch(request:, peer:, role:, deadline:, transfer: nil)
           authorize!(request, peer, role, deadline)
+          return ordinary_review_operation(request, peer, role, deadline, transfer) if OrdinaryReviews::REVIEW_OPERATIONS.include?(request.fetch("operation"))
           case request.fetch("operation")
+          when "merge_evidence"
+            raise ArgumentError, "merge evidence read forbids transfer" if transfer
+            ordinary_merge_evidence(request, peer, role, deadline)
           when "supervisor_status", "adopt_supervisor"
             raise ArgumentError, "ordinary supervisor operation forbids transfer" if transfer
             supervisor_operation(request, peer, role, deadline)

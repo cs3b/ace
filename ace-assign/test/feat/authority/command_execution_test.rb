@@ -70,6 +70,43 @@ module Ace
       def claim = call("command_claim", {"caller" => {"uid" => 1000}})
       def bind = call("command_bind", {"child" => {"pid" => 33, "uid" => 1002, "birth" => "child-birth"}})
 
+      def test_candidate_test_reader_rejects_generic_unfinished_failed_and_wrong_source
+        with_owner do
+          @admission.definition = {"argv" => ["bin/ace-test", "fast"], "purpose" => "test",
+            "source" => {"head" => "a" * 40, "tree" => "b" * 40}, "executor" => {"uid" => 1002, "cwd" => "/immutable"}}
+          @admission.define_singleton_method(:command_test_evidence!) { |definition:, **| check!; raise AttemptErrors::ReceiptRejected unless definition == @definition }
+          @admission.define_singleton_method(:command_child!) do |child:, launcher:, **|
+            {"kernel_identity" => child.slice("pid", "uid", "started_at", "host"),
+              "root_witness" => child, "witnessed_by" => launcher}
+          end
+          admit
+          claim
+          call("command_bind", {"child" => {"pid" => 33, "uid" => 1002, "started_at" => "child", "host" => "fixture", "cwd" => "/immutable"}})
+          read = lambda { |head = ("a" * 40)| @owner.test_evidence_at!(execution_id: "run-1", commit: @journal.ref_value,
+            head: head, tree: "b" * 40, deadline: Process.clock_gettime(Process::CLOCK_MONOTONIC) + 10) }
+          assert_raises(AttemptErrors::ReceiptRejected) { read.call }
+          call("command_complete", {"result" => {"exit_status" => 0, "signal" => nil}})
+          proof = read.call
+          assert_equal "passed", proof.fetch("result")
+          assert_equal "run-1", proof.fetch("reference")
+          assert_raises(AttemptErrors::ReceiptRejected) { read.call("f" * 40) }
+          @admission.enabled = false
+          assert_raises(AttemptErrors::UnauthorizedIdentity) { read.call }
+          @admission.enabled = true
+          @admission.definition = @admission.definition.merge("purpose" => "command")
+          assert_raises(AttemptErrors::ReceiptRejected) { read.call }
+        end
+        with_owner do
+          @admission.definition = {"argv" => ["bin/ace-test"], "purpose" => "test", "source" => {"head" => "a" * 40, "tree" => "b" * 40}}
+          admit; claim; bind
+          call("command_complete", {"result" => {"exit_status" => 1, "signal" => nil}})
+          assert_raises(AttemptErrors::ReceiptRejected) do
+            @owner.test_evidence_at!(execution_id: "run-1", commit: @journal.ref_value, head: "a" * 40, tree: "b" * 40,
+              deadline: Process.clock_gettime(Process::CLOCK_MONOTONIC) + 10)
+          end
+        end
+      end
+
       def test_command_is_canonical_without_task_or_prepared_work_and_restart_projects_exact_exit
         with_owner do |root|
           admitted = admit

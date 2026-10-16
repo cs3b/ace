@@ -60,6 +60,19 @@ module Ace
           selected
         end
 
+        # Historical execution can outlive its requester. Current root policy
+        # and immutable source/executable must still grant this exact TEST
+        # command; requester liveness does not invent a new execution.
+        def command_test_evidence!(definition:, deadline:)
+          unless definition["purpose"] == "test" && definition.dig("source", "head") && definition.dig("source", "tree") &&
+              policy.select(selection: definition.fetch("selection"), peer: definition.fetch("requester")) == definition.except("native_binding")
+            raise Ace::Assign::AttemptErrors::ReceiptRejected, "executed test command policy was revoked or changed"
+          end
+          verify_context!(definition, deadline)
+        rescue SecurityError, Ace::Lab::InvalidConfigurationError
+          raise Ace::Assign::AttemptErrors::ReceiptRejected, "executed test command policy or source is unavailable"
+        end
+
         def command_launcher!(peer:, deadline:)
           @peer.live!(peer, deadline: deadline)
           expected = JSON.parse(GrantResolver.read_verified(policy.launcher.fetch("identity_path")) || "null")

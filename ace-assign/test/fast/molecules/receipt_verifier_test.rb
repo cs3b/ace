@@ -76,6 +76,22 @@ module Ace
         )
       end
 
+      def test_source_owned_independence_hook_replaces_only_actor_comparison
+        data = review_receipt_data("reviewer" => {"actor" => "fork-1"})
+        assert_raises(AttemptErrors::ReceiptRejected) { verify(data) }
+        called = []
+        verifier = Molecules::ReceiptVerifier.new(review_independence_verifier: ->(value) { called << value; true })
+        result = verifier.verify!(data, attempt: @attempt, identity: @identity, live_head: HEAD_A, repo_root: @repo_root)
+        assert_equal "succeeded", result.verdict
+        assert_equal [data], called
+        denied = Molecules::ReceiptVerifier.new(review_independence_verifier: ->(_value) { false })
+        assert_raises(AttemptErrors::ReceiptRejected) { denied.verify!(data, attempt: @attempt, identity: @identity, live_head: HEAD_A, repo_root: @repo_root) }
+        assert_raises(AttemptErrors::ReceiptRejected) do
+          verifier.verify!(data.merge("review" => data.fetch("review").merge("verdict" => "rejected")),
+            attempt: @attempt, identity: @identity, live_head: HEAD_A, repo_root: @repo_root)
+        end
+      end
+
       def test_valid_failed_receipt_is_accepted_and_normalized
         receipt = verify(build_receipt_data)
 

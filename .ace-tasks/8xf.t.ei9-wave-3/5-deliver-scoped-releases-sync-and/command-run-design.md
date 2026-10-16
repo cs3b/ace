@@ -83,9 +83,11 @@ current task spec plus this grounded plan is the retained implementation input.
 `launcher {socket_path,identity_path}`, `default_executor`, `default_services`,
 `executors`, `services`, `commands`, and `grants` (all closed mappings).
 Executor: `uid,gid,groups,home,cwd,path,environment`; service:
-`environment,secret_references`; command: exact `argv,executable_sha256,source`
+`environment,secret_references`; command: exact `argv,executable_sha256,source,purpose`
 with source `{head,tree}` (both null for non-Git probes, both exact Git object IDs
-for release source). Grant: exact `kind,uid,command,executor,services`.
+for release source). Required purpose is `command` or `test`; test requires nonnull
+source and is never inferred from argv. Canonical successful test execution can
+supply the merge proof; a generic command cannot. Grant: exact `kind,uid,command,executor,services`.
 Conflicting environment/secret destinations and ambient loader injection refuse.
 
 The installed root daemon publishes its actual birth identity in a root-owned

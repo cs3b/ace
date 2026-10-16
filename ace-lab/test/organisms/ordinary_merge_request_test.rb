@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "../test_helper"
+require_relative "../../../ace-assign/test/support/fixed_merge_evidence_fixture"
 require "digest"
 require "open3"
 require "ace/assign/atoms/fixed_merge_schemas"
@@ -25,7 +26,7 @@ module Ace
 
         cache = File.join(@dir, "cache")
         @coordinator = Ace::Assign::Organisms::AttemptCoordinator.new(cache_base: cache,
-          repo_root: @repo, journal: Ace::Assign::Molecules::EvidenceJournal.new(repo_root: @repo,
+          repo_root: @repo, ordinary_merge_evidence: (@merge_evidence = Ace::Assign::FixedMergeEvidenceFixture.new), journal: Ace::Assign::Molecules::EvidenceJournal.new(repo_root: @repo,
             checkout_root: File.join(@dir, "journal")),
           lifecycle_exclusion: Ace::Assign::Molecules::LifecycleExclusion.new(
             root: File.join(@dir, "exclusion")

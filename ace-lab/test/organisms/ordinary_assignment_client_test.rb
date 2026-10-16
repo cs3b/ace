@@ -65,6 +65,22 @@ class OrdinaryAssignmentClientTest < Minitest::Test
     path
   end
 
+  def test_review_and_merge_reads_keep_null_mutation_and_candidate_download
+    %w[review_status merge_evidence].each do |operation|
+      value = document(operation, {"assignment_id" => "assign1", "attempt_id" => "attempt1"}).merge("mutation_id" => nil)
+      client.request(input: save(value))
+      assert_equal operation, @calls.last[0]
+      assert_nil @calls.last[2][:mutation_id]
+    end
+    value = document("export_candidate", {"assignment_id" => "assign1", "attempt_id" => "attempt1"}).merge("mutation_id" => nil)
+    @transport.define_singleton_method(:call) do |operation, params, **options|
+      raise "wrong transfer" unless operation == "export_candidate" && options[:download] && options[:purpose] == :candidate
+      A::OrdinaryClient::Reply.new(data: {"candidate_generation" => 1}, replayed: false, parts: ["canonical-bundle"])
+    end
+    result = client.request(input: save(value), output: File.join(@root, "candidate"))
+    assert_equal "canonical-bundle", File.binread(result.fetch("files").first.fetch("file"))
+  end
+
   def test_replay_keeps_exact_mutation_and_generation_with_no_local_execution_state
     input = save(document)
     first = client.request(input: input)

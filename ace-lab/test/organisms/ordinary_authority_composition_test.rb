@@ -87,6 +87,7 @@ class OrdinaryAuthorityCompositionTest < Minitest::Test
     journal = hitl.instance_variable_get(:@binding).proposal_journal(project: "atlas")
     assert_same journal, lifecycle.instance_variable_get(:@journal)
     assert_same journal, coordinator.send(:journal_for)
+    assert_same lifecycle, coordinator.instance_variable_get(:@ordinary_merge_evidence)
     assert_same lifecycle.instance_variable_get(:@exclusion), coordinator.send(:lifecycle_exclusion)
     assert_equal File.join(@root, "journal"), journal.repo_root
     refute_equal @receiver.fetch("repo_path"), journal.repo_root
@@ -98,6 +99,8 @@ class OrdinaryAuthorityCompositionTest < Minitest::Test
     assert_same admission.instance_variable_get(:@base), observer.receiver
     assert_same lifecycle.instance_variable_get(:@admission), observer.receiver
     command = server.instance_variable_get(:@lifecycle).instance_variable_get(:@routes).fetch("command_admit")
+    assert_same command, lifecycle.instance_variable_get(:@command_evidence)
+    assert_same journal, command.journal
     assert_instance_of A::Authority::CommandExecution, command
     assert_same journal, command.instance_variable_get(:@journal)
     assert_same admission, command.instance_variable_get(:@admission)

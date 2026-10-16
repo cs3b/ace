@@ -56,7 +56,7 @@ Dir.mktmpdir("ace-command-probe-", "/run") do |directory|
       "default_executor" => "probe", "default_services" => [], "services" => {},
       "executors" => {"probe" => {"uid" => executor.uid, "gid" => executor.gid, "groups" => [], "home" => "/nonexistent",
         "cwd" => accepted, "path" => ["/usr/bin", "/bin"], "environment" => {}}},
-      "commands" => {"probe" => {"argv" => ["./probe"], "executable_sha256" => Digest::SHA256.file(executable).hexdigest,
+      "commands" => {"probe" => {"purpose" => "command", "argv" => ["./probe"], "executable_sha256" => Digest::SHA256.file(executable).hexdigest,
         "source" => {"head" => nil, "tree" => nil}}},
       "grants" => [{"kind" => "operator", "uid" => account.uid, "command" => "probe", "executor" => "probe", "services" => []}]}}}
     path = File.join(directory, "policy.json")
