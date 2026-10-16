@@ -8,6 +8,7 @@ require "ace/hitl/lifecycle/service"
 require "ace/hitl/lifecycle/tls_authority"
 require "ace/hitl/lifecycle/tls_service"
 require_relative "../molecules/ordinary_owner_admission"
+require_relative "../molecules/caller_authorizer"
 require_relative "../molecules/command_owner_admission"
 require_relative "../molecules/ordinary_listener"
 require_relative "ordinary_merge_receiver"
@@ -44,9 +45,11 @@ module Ace
           command_admission = Molecules::CommandOwnerAdmission.new(base: admission, project: @config.project)
           command = Ace::Assign::Authority::CommandExecution.new(project: @config.project, journal: journal,
             admission: command_admission)
+          coordinator = nil
           lifecycle = Ace::Assign::Authority::OrdinaryLifecycle.new(project: @config.project,
             admission: admission, journal: journal, exclusion: exclusion, input_root: @config.assignment_root,
-            command_evidence: command)
+            command_evidence: command,
+            release_authorizer: ->(binding) { authorize_release_artifact!(binding, coordinator) })
           coordinator = Ace::Assign::Organisms::AttemptCoordinator.new(cache_base: @config.assignment_root,
             repo_root: @config.journal.fetch("repository"), journal: journal, lifecycle_exclusion: exclusion,
             recorded_binding_observer: admission.method(:recorded_binding!), ordinary_merge_evidence: lifecycle)
@@ -65,6 +68,28 @@ module Ace
         end
 
         private
+
+        # Retention reads the existing exact release decision. It neither
+        # consumes an authorization nor dispatches a publication effect.
+        def authorize_release_artifact!(binding, coordinator)
+          @config.verify_owner!
+          document = Molecules::GrantResolver.trusted_document(@receiver.policy_path)
+          verify_join!(document)
+          uid = binding.fetch("caller_uid")
+          unless uid.is_a?(Integer) && uid.positive? && binding.fetch("project_id") == @config.project
+            raise SecurityError, "release artifact caller or project differs"
+          end
+          username = begin
+            Etc.getpwuid(uid).name
+          rescue ArgumentError
+            nil
+          end
+          visibility = Molecules::CallerAuthorizer.new(principals: document.fetch("principals", {}),
+            identity: Molecules::CallerAuthorizer.matchable_identities(username, uid))
+          raise SecurityError, "release artifact project grant is unavailable" unless visibility.authorized?(@config.project)
+          Molecules::ServicePolicy.new(document, coordinator.method(:proposal_authorization))
+            .authorize!(binding.fetch("authorization"), binding)
+        end
 
         def verify_join!(document)
           configured = Molecules::ServicePolicy.new(document).ordinary_receiver!(@config.project)

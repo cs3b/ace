@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Wire ordinary artifact retention to fresh installed project visibility and the existing exact service or canonical proposal decision; retention does not select an executor or consume publication authorization.
 - Expose ordinary candidate upload, assigned review export/acceptance and canonical merge evidence through retained assignment requests. Compose their proof owner with the existing merge receiver and command executor journal.
 - Expose ordinary driver status, bootstrap, progress, result and exact recovery commands using the selected Assign owner; authenticate coordinator replacement with bounded process-generation observation.
 

@@ -110,6 +110,48 @@ class OrdinaryAuthorityCompositionTest < Minitest::Test
     refute File.exist?(File.join(@root, "journal")), "constructing owners must not seed or replace accepted history"
   end
 
+  def release_artifact_authorizer
+    server = construct
+    lifecycle = server.instance_variable_get(:@lifecycle).instance_variable_get(:@routes).fetch("finish")
+    lifecycle.instance_variable_get(:@release_authorizer)
+  end
+
+  def release_binding
+    {"authorization" => "release-grant", "operation" => "publish", "project_id" => "atlas",
+      "assignment_id" => "delivery", "attempt_id" => "delivery-run", "input_digest" => "a" * 64,
+      "target" => {"resource" => "rubygems:atlas:1.0.0", "artifact_digest" => "b" * 64},
+      "candidate_head" => "c" * 40, "caller_uid" => 41001}
+  end
+
+  def test_release_retention_reads_fresh_exact_decision_and_visibility_without_requiring_an_executor
+    authorize = release_artifact_authorizer
+    binding = release_binding
+    @policy["principals"] = {"41001" => {"projects" => ["atlas"]}}
+    decision = binding.except("authorization").merge("expires_at" => (Time.now.utc + 3600).iso8601)
+    @policy["authorizations"]["release-grant"] = decision
+    loads = []
+    loader = ->(path) { loads << path; @policy }
+    L::Molecules::GrantResolver.stub(:trusted_document, loader) do
+      assert_equal decision, authorize.call(binding)
+      assert_empty @policy.fetch("operations"), "retention must not select or invoke an executor"
+      assert_raises(SecurityError) { authorize.call(binding.merge("input_digest" => "d" * 64)) }
+      assert_raises(SecurityError) { authorize.call(binding.merge("candidate_head" => "d" * 40)) }
+      assert_raises(SecurityError) { authorize.call(binding.merge("caller_uid" => 42001)) }
+      @policy = Marshal.load(Marshal.dump(@policy))
+      @policy["principals"]["41001"]["projects"] = []
+      assert_raises(SecurityError) { authorize.call(binding) }
+      @policy["principals"]["41001"]["projects"] = ["atlas"]
+      decision = @policy["authorizations"].fetch("release-grant")
+      decision["expires_at"] = (Time.now.utc - 1).iso8601
+      assert_raises(SecurityError) { authorize.call(binding) }
+      decision["expires_at"] = (Time.now.utc + 3600).iso8601
+      @owner.revoked = true
+      assert_raises(L::InvalidConfigurationError) { authorize.call(binding) }
+      assert_equal [@receiver.fetch("policy_path")] * 6, loads, "revoked owner refuses before reading policy"
+    end
+    refute File.exist?(File.join(@root, "journal")), "read-only decision validation creates no history"
+  end
+
   def test_mismatched_canonical_locations_receiver_identity_or_participant_refuse
     ["journal_repository", "journal_ref", "receiver_uid", "principal", "socket_path"].each do |field|
       original = @policy["ordinary"]["projects"]["atlas"][field]

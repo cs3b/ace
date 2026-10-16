@@ -11,6 +11,7 @@ require_relative "ordinary_completion"
 require_relative "ordinary_supervisor"
 require_relative "ordinary_reviews"
 require_relative "ordinary_merge_evidence"
+require_relative "ordinary_release_artifacts"
 require_relative "../molecules/lifecycle_exclusion"
 
 module Ace
@@ -27,22 +28,30 @@ module Ace
         include OrdinarySupervisor
         include OrdinaryReviews
         include OrdinaryMergeEvidence
-        OPERATIONS = (%w[register_assignment registration_status start_attempt finish merge_evidence] + OrdinaryProgress::PROGRESS_OPERATIONS + OrdinaryResults::RESULT_OPERATIONS + OrdinarySupervisor::SUPERVISOR_OPERATIONS + OrdinaryReviews::REVIEW_OPERATIONS).freeze
+        include OrdinaryReleaseArtifacts
+        OPERATIONS = (%w[register_assignment registration_status start_attempt finish merge_evidence] + OrdinaryProgress::PROGRESS_OPERATIONS + OrdinaryResults::RESULT_OPERATIONS + OrdinarySupervisor::SUPERVISOR_OPERATIONS + OrdinaryReviews::REVIEW_OPERATIONS + OrdinaryReleaseArtifacts::RELEASE_OPERATIONS).freeze
         TRANSFER_OPERATIONS = {"register_assignment" => {direction: :upload, purpose: :candidate, roles: [:supervisor]}}
-          .merge(OrdinaryProgress::PROGRESS_TRANSFERS).merge(OrdinaryResults::RESULT_TRANSFERS).merge(OrdinaryReviews::REVIEW_TRANSFERS).freeze
+          .merge(OrdinaryProgress::PROGRESS_TRANSFERS).merge(OrdinaryResults::RESULT_TRANSFERS).merge(OrdinaryReviews::REVIEW_TRANSFERS).merge(OrdinaryReleaseArtifacts::RELEASE_TRANSFERS).freeze
         REGISTER_KEYS = %w[assignment_id definition_digest prepared_head prepared_tree manifest_sha256 expected_generation pane transfer].freeze
 
-        def initialize(project:, admission:, journal:, exclusion:, input_root:, inbox: nil, command_evidence: nil)
+        def initialize(project:, admission:, journal:, exclusion:, input_root:, inbox: nil, command_evidence: nil, release_authorizer: nil)
           @project, @admission, @journal, @exclusion = project, admission, journal, exclusion
           @input_root = PrivateDirectory.verify!(input_root)
           unless inbox.nil? || inbox.is_a?(Ace::Herdr::Organisms::Inbox)
             raise ArgumentError, "ordinary completion requires the installed Inbox owner"
           end
-          @inbox, @command_evidence = inbox, command_evidence
+          unless release_authorizer.nil? || release_authorizer.respond_to?(:call)
+            raise ArgumentError, "release artifact authorization requires its installed policy owner"
+          end
+          @inbox, @command_evidence, @release_authorizer = inbox, command_evidence, release_authorizer
         end
 
         def authorize_transfer!(request:, peer:, role:, deadline:)
           authorize!(request, peer, role, deadline)
+          if OrdinaryReleaseArtifacts::RELEASE_TRANSFERS.key?(request.fetch("operation"))
+            authorize_ordinary_release!(request, peer, role, deadline)
+            return
+          end
           if OrdinaryReviews::REVIEW_TRANSFERS.key?(request.fetch("operation"))
             authorize_ordinary_review!(request, peer, role, deadline)
             return
@@ -66,6 +75,8 @@ module Ace
           authorize!(request, peer, role, deadline)
           return ordinary_review_operation(request, peer, role, deadline, transfer) if OrdinaryReviews::REVIEW_OPERATIONS.include?(request.fetch("operation"))
           case request.fetch("operation")
+          when "retain_release_artifact"
+            retain_release_artifact(request, peer, role, deadline, transfer)
           when "merge_evidence"
             raise ArgumentError, "merge evidence read forbids transfer" if transfer
             ordinary_merge_evidence(request, peer, role, deadline)

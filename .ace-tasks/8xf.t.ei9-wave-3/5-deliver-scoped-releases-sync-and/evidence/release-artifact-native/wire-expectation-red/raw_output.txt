@@ -1,0 +1,110 @@
+Started with run options --seed 18135
+
+Ace::Assign::OrdinaryReviewsTest
+  test_same_agent_session_or_native_process_cannot_be_relabelled_independent PASS (0.29s)
+  test_self_review_missing_agent_session_wrong_attempt_and_wrong_caller_refuse PASS (23.96s)
+  test_release_artifact_retention_imports_real_built_bytes_and_replays_without_second_import PASS (24.66s)
+  test_missing_or_changed_canonical_report_refuses_and_new_candidate_revokes_old_review PASS (19.23s)
+  test_merge_requires_canonical_successful_test_execution_and_rechecks_before_effect PASS (33.19s)
+  test_release_artifact_retention_refuses_changed_bytes_metadata_candidate_or_native_origin_before_write FAIL (17.41s)
+        [Ace::Assign::AttemptErrors::ReceiptRejected] exception expected, not
+        Class: <Ace::Assign::AttemptErrors::EvidenceUnavailable>
+        Message: <"ordinary authority refused (evidence_unavailable); retain original mutation">
+        ---Backtrace---
+        /Users/mc/Ps/ace/.ace-wt/ei9-ordinary-publication/ace-assign/lib/ace/assign/authority/ordinary_client.rb:50:in 'block in Ace::Assign::Authority::OrdinaryClient#call'
+        /Users/mc/Ps/ace/.ace-wt/ei9-ordinary-publication/ace-runtime/lib/ace/runtime/molecules/protected_socket.rb:62:in 'Ace::Runtime::Molecules::ProtectedSocket.connect'
+        /Users/mc/Ps/ace/.ace-wt/ei9-ordinary-publication/ace-assign/lib/ace/assign/authority/ordinary_client.rb:34:in 'Ace::Assign::Authority::OrdinaryClient#call'
+        /Users/mc/Ps/ace/.ace-wt/ei9-ordinary-publication/ace-assign/test/feat/authority/ordinary_release_artifacts_test.rb:39:in 'Ace::Assign::OrdinaryReviewsTest#retain_release'
+        /Users/mc/Ps/ace/.ace-wt/ei9-ordinary-publication/ace-assign/test/feat/authority/ordinary_release_artifacts_test.rb:96:in 'block (3 levels) in Ace::Assign::OrdinaryReviewsTest#test_release_artifact_retention_refuses_changed_bytes_metadata_candidate_or_native_origin_before_write'
+        ---------------
+        /Users/mc/Ps/ace/.ace-wt/ei9-ordinary-publication/ace-assign/test/feat/authority/ordinary_release_artifacts_test.rb:96:in 'block (2 levels) in Ace::Assign::OrdinaryReviewsTest#test_release_artifact_retention_refuses_changed_bytes_metadata_candidate_or_native_origin_before_write'
+        /Users/mc/Ps/ace/.ace-wt/ei9-ordinary-publication/ace-assign/test/feat/authority/ordinary_release_artifacts_test.rb:95:in 'Array#each'
+        /Users/mc/Ps/ace/.ace-wt/ei9-ordinary-publication/ace-assign/test/feat/authority/ordinary_release_artifacts_test.rb:95:in 'block in Ace::Assign::OrdinaryReviewsTest#test_release_artifact_retention_refuses_changed_bytes_metadata_candidate_or_native_origin_before_write'
+        /Users/mc/Ps/ace/.ace-wt/ei9-ordinary-publication/ace-assign/test/feat/authority/ordinary_reviews_test.rb:306:in 'block in Ace::Assign::OrdinaryReviewsTest#fixture'
+        /Users/mc/.local/share/mise/installs/ruby/3.4.8/lib/ruby/3.4.0/tmpdir.rb:105:in 'Dir.mktmpdir'
+        /Users/mc/Ps/ace/.ace-wt/ei9-ordinary-publication/ace-assign/test/feat/authority/ordinary_reviews_test.rb:276:in 'Ace::Assign::OrdinaryReviewsTest#fixture'
+        /Users/mc/Ps/ace/.ace-wt/ei9-ordinary-publication/ace-assign/test/feat/authority/ordinary_release_artifacts_test.rb:90:in 'Ace::Assign::OrdinaryReviewsTest#test_release_artifact_retention_refuses_changed_bytes_metadata_candidate_or_native_origin_before_write'
+        /Users/mc/Ps/ace/.ace-wt/ei9-ordinary-publication/ace-test-runner/lib/ace/test_runner/molecules/in_process_runner.rb:267:in 'Ace::TestRunner::Molecules::InProcessRunner#run_minitest_silent'
+        /Users/mc/Ps/ace/.ace-wt/ei9-ordinary-publication/ace-test-runner/lib/ace/test_runner/molecules/in_process_runner.rb:123:in 'block in Ace::TestRunner::Molecules::InProcessRunner#execute_tests'
+        /Users/mc/Ps/ace/.ace-wt/ei9-ordinary-publication/ace-test-runner/lib/ace/test_runner/molecules/in_process_runner.rb:129:in 'Ace::TestRunner::Molecules::InProcessRunner#execute_tests'
+        /Users/mc/Ps/ace/.ace-wt/ei9-ordinary-publication/ace-test-runner/lib/ace/test_runner/molecules/in_process_runner.rb:181:in 'Ace::TestRunner::Molecules::InProcessRunner#execute_with_progress'
+        /Users/mc/Ps/ace/.ace-wt/ei9-ordinary-publication/ace-test-runner/lib/ace/test_runner/molecules/smart_test_executor.rb:59:in 'Ace::TestRunner::Molecules::SmartTestExecutor#execute_with_progress'
+        /Users/mc/Ps/ace/.ace-wt/ei9-ordinary-publication/ace-test-runner/lib/ace/test_runner/organisms/test_orchestrator.rb:508:in 'Ace::TestRunner::Organisms::TestOrchestrator#execute_tests'
+        /Users/mc/Ps/ace/.ace-wt/ei9-ordinary-publication/ace-test-runner/lib/ace/test_runner/organisms/test_orchestrator.rb:99:in 'Ace::TestRunner::Organisms::TestOrchestrator#run_with_package_context'
+        /Users/mc/Ps/ace/.ace-wt/ei9-ordinary-publication/ace-test-runner/lib/ace/test_runner/organisms/test_orchestrator.rb:50:in 'Ace::TestRunner::Organisms::TestOrchestrator#run'
+        /Users/mc/Ps/ace/.ace-wt/ei9-ordinary-publication/ace-test-runner/lib/ace/test_runner.rb:73:in 'Ace::TestRunner.run'
+        /Users/mc/Ps/ace/.ace-wt/ei9-ordinary-publication/ace-test-runner/lib/ace/test_runner/cli/commands/test.rb:300:in 'Ace::TestRunner::CLI::Commands::Test#run_tests_with_exit_handling'
+        /Users/mc/Ps/ace/.ace-wt/ei9-ordinary-publication/ace-test-runner/lib/ace/test_runner/cli/commands/test.rb:157:in 'Ace::TestRunner::CLI::Commands::Test#call'
+        /Users/mc/Ps/ace/.ace-wt/ei9-ordinary-publication/ace-support-cli/lib/ace/support/cli/runner.rb:24:in 'Ace::Support::Cli::Runner#call'
+        /Users/mc/Ps/ace/.ace-wt/ei9-ordinary-publication/ace-test-runner/exe/ace-test:17:in '<top (required)>'
+        bin/ace-test:17:in 'Kernel#load'
+        bin/ace-test:17:in '<main>'
+
+  test_two_real_starts_same_account_accept_exact_review_and_restart_revalidates_bytes PASS (25.31s)
+  test_release_artifact_replay_rechecks_revoked_release_grant     FAIL (21.01s)
+        [Ace::Assign::AttemptErrors::UnauthorizedIdentity] exception expected, not
+        Class: <Ace::Assign::AttemptErrors::EvidenceUnavailable>
+        Message: <"ordinary authority refused (unauthorized); retain original mutation">
+        ---Backtrace---
+        /Users/mc/Ps/ace/.ace-wt/ei9-ordinary-publication/ace-assign/lib/ace/assign/authority/ordinary_client.rb:50:in 'block in Ace::Assign::Authority::OrdinaryClient#call'
+        /Users/mc/Ps/ace/.ace-wt/ei9-ordinary-publication/ace-runtime/lib/ace/runtime/molecules/protected_socket.rb:62:in 'Ace::Runtime::Molecules::ProtectedSocket.connect'
+        /Users/mc/Ps/ace/.ace-wt/ei9-ordinary-publication/ace-assign/lib/ace/assign/authority/ordinary_client.rb:34:in 'Ace::Assign::Authority::OrdinaryClient#call'
+        /Users/mc/Ps/ace/.ace-wt/ei9-ordinary-publication/ace-assign/test/feat/authority/ordinary_release_artifacts_test.rb:39:in 'Ace::Assign::OrdinaryReviewsTest#retain_release'
+        /Users/mc/Ps/ace/.ace-wt/ei9-ordinary-publication/ace-assign/test/feat/authority/ordinary_release_artifacts_test.rb:124:in 'block (2 levels) in Ace::Assign::OrdinaryReviewsTest#test_release_artifact_replay_rechecks_revoked_release_grant'
+        ---------------
+        /Users/mc/Ps/ace/.ace-wt/ei9-ordinary-publication/ace-assign/test/feat/authority/ordinary_release_artifacts_test.rb:124:in 'block in Ace::Assign::OrdinaryReviewsTest#test_release_artifact_replay_rechecks_revoked_release_grant'
+        /Users/mc/Ps/ace/.ace-wt/ei9-ordinary-publication/ace-assign/test/feat/authority/ordinary_reviews_test.rb:306:in 'block in Ace::Assign::OrdinaryReviewsTest#fixture'
+        /Users/mc/.local/share/mise/installs/ruby/3.4.8/lib/ruby/3.4.0/tmpdir.rb:105:in 'Dir.mktmpdir'
+        /Users/mc/Ps/ace/.ace-wt/ei9-ordinary-publication/ace-assign/test/feat/authority/ordinary_reviews_test.rb:276:in 'Ace::Assign::OrdinaryReviewsTest#fixture'
+        /Users/mc/Ps/ace/.ace-wt/ei9-ordinary-publication/ace-assign/test/feat/authority/ordinary_release_artifacts_test.rb:118:in 'Ace::Assign::OrdinaryReviewsTest#test_release_artifact_replay_rechecks_revoked_release_grant'
+        /Users/mc/Ps/ace/.ace-wt/ei9-ordinary-publication/ace-test-runner/lib/ace/test_runner/molecules/in_process_runner.rb:267:in 'Ace::TestRunner::Molecules::InProcessRunner#run_minitest_silent'
+        /Users/mc/Ps/ace/.ace-wt/ei9-ordinary-publication/ace-test-runner/lib/ace/test_runner/molecules/in_process_runner.rb:123:in 'block in Ace::TestRunner::Molecules::InProcessRunner#execute_tests'
+        /Users/mc/Ps/ace/.ace-wt/ei9-ordinary-publication/ace-test-runner/lib/ace/test_runner/molecules/in_process_runner.rb:129:in 'Ace::TestRunner::Molecules::InProcessRunner#execute_tests'
+        /Users/mc/Ps/ace/.ace-wt/ei9-ordinary-publication/ace-test-runner/lib/ace/test_runner/molecules/in_process_runner.rb:181:in 'Ace::TestRunner::Molecules::InProcessRunner#execute_with_progress'
+        /Users/mc/Ps/ace/.ace-wt/ei9-ordinary-publication/ace-test-runner/lib/ace/test_runner/molecules/smart_test_executor.rb:59:in 'Ace::TestRunner::Molecules::SmartTestExecutor#execute_with_progress'
+        /Users/mc/Ps/ace/.ace-wt/ei9-ordinary-publication/ace-test-runner/lib/ace/test_runner/organisms/test_orchestrator.rb:508:in 'Ace::TestRunner::Organisms::TestOrchestrator#execute_tests'
+        /Users/mc/Ps/ace/.ace-wt/ei9-ordinary-publication/ace-test-runner/lib/ace/test_runner/organisms/test_orchestrator.rb:99:in 'Ace::TestRunner::Organisms::TestOrchestrator#run_with_package_context'
+        /Users/mc/Ps/ace/.ace-wt/ei9-ordinary-publication/ace-test-runner/lib/ace/test_runner/organisms/test_orchestrator.rb:50:in 'Ace::TestRunner::Organisms::TestOrchestrator#run'
+        /Users/mc/Ps/ace/.ace-wt/ei9-ordinary-publication/ace-test-runner/lib/ace/test_runner.rb:73:in 'Ace::TestRunner.run'
+        /Users/mc/Ps/ace/.ace-wt/ei9-ordinary-publication/ace-test-runner/lib/ace/test_runner/cli/commands/test.rb:300:in 'Ace::TestRunner::CLI::Commands::Test#run_tests_with_exit_handling'
+        /Users/mc/Ps/ace/.ace-wt/ei9-ordinary-publication/ace-test-runner/lib/ace/test_runner/cli/commands/test.rb:157:in 'Ace::TestRunner::CLI::Commands::Test#call'
+        /Users/mc/Ps/ace/.ace-wt/ei9-ordinary-publication/ace-support-cli/lib/ace/support/cli/runner.rb:24:in 'Ace::Support::Cli::Runner#call'
+        /Users/mc/Ps/ace/.ace-wt/ei9-ordinary-publication/ace-test-runner/exe/ace-test:17:in '<top (required)>'
+        bin/ace-test:17:in 'Kernel#load'
+        bin/ace-test:17:in '<main>'
+
+  test_release_artifact_requires_installed_authorizer_and_current_independent_review FAIL (14.15s)
+        [Ace::Assign::AttemptErrors::UnauthorizedIdentity] exception expected, not
+        Class: <Ace::Assign::AttemptErrors::EvidenceUnavailable>
+        Message: <"ordinary authority refused (unauthorized); retain original mutation">
+        ---Backtrace---
+        /Users/mc/Ps/ace/.ace-wt/ei9-ordinary-publication/ace-assign/lib/ace/assign/authority/ordinary_client.rb:50:in 'block in Ace::Assign::Authority::OrdinaryClient#call'
+        /Users/mc/Ps/ace/.ace-wt/ei9-ordinary-publication/ace-runtime/lib/ace/runtime/molecules/protected_socket.rb:62:in 'Ace::Runtime::Molecules::ProtectedSocket.connect'
+        /Users/mc/Ps/ace/.ace-wt/ei9-ordinary-publication/ace-assign/lib/ace/assign/authority/ordinary_client.rb:34:in 'Ace::Assign::Authority::OrdinaryClient#call'
+        /Users/mc/Ps/ace/.ace-wt/ei9-ordinary-publication/ace-assign/test/feat/authority/ordinary_release_artifacts_test.rb:39:in 'Ace::Assign::OrdinaryReviewsTest#retain_release'
+        /Users/mc/Ps/ace/.ace-wt/ei9-ordinary-publication/ace-assign/test/feat/authority/ordinary_release_artifacts_test.rb:136:in 'block (2 levels) in Ace::Assign::OrdinaryReviewsTest#test_release_artifact_requires_installed_authorizer_and_current_independent_review'
+        ---------------
+        /Users/mc/Ps/ace/.ace-wt/ei9-ordinary-publication/ace-assign/test/feat/authority/ordinary_release_artifacts_test.rb:136:in 'block in Ace::Assign::OrdinaryReviewsTest#test_release_artifact_requires_installed_authorizer_and_current_independent_review'
+        /Users/mc/Ps/ace/.ace-wt/ei9-ordinary-publication/ace-assign/test/feat/authority/ordinary_reviews_test.rb:306:in 'block in Ace::Assign::OrdinaryReviewsTest#fixture'
+        /Users/mc/.local/share/mise/installs/ruby/3.4.8/lib/ruby/3.4.0/tmpdir.rb:105:in 'Dir.mktmpdir'
+        /Users/mc/Ps/ace/.ace-wt/ei9-ordinary-publication/ace-assign/test/feat/authority/ordinary_reviews_test.rb:276:in 'Ace::Assign::OrdinaryReviewsTest#fixture'
+        /Users/mc/Ps/ace/.ace-wt/ei9-ordinary-publication/ace-assign/test/feat/authority/ordinary_release_artifacts_test.rb:132:in 'Ace::Assign::OrdinaryReviewsTest#test_release_artifact_requires_installed_authorizer_and_current_independent_review'
+        /Users/mc/Ps/ace/.ace-wt/ei9-ordinary-publication/ace-test-runner/lib/ace/test_runner/molecules/in_process_runner.rb:267:in 'Ace::TestRunner::Molecules::InProcessRunner#run_minitest_silent'
+        /Users/mc/Ps/ace/.ace-wt/ei9-ordinary-publication/ace-test-runner/lib/ace/test_runner/molecules/in_process_runner.rb:123:in 'block in Ace::TestRunner::Molecules::InProcessRunner#execute_tests'
+        /Users/mc/Ps/ace/.ace-wt/ei9-ordinary-publication/ace-test-runner/lib/ace/test_runner/molecules/in_process_runner.rb:129:in 'Ace::TestRunner::Molecules::InProcessRunner#execute_tests'
+        /Users/mc/Ps/ace/.ace-wt/ei9-ordinary-publication/ace-test-runner/lib/ace/test_runner/molecules/in_process_runner.rb:181:in 'Ace::TestRunner::Molecules::InProcessRunner#execute_with_progress'
+        /Users/mc/Ps/ace/.ace-wt/ei9-ordinary-publication/ace-test-runner/lib/ace/test_runner/molecules/smart_test_executor.rb:59:in 'Ace::TestRunner::Molecules::SmartTestExecutor#execute_with_progress'
+        /Users/mc/Ps/ace/.ace-wt/ei9-ordinary-publication/ace-test-runner/lib/ace/test_runner/organisms/test_orchestrator.rb:508:in 'Ace::TestRunner::Organisms::TestOrchestrator#execute_tests'
+        /Users/mc/Ps/ace/.ace-wt/ei9-ordinary-publication/ace-test-runner/lib/ace/test_runner/organisms/test_orchestrator.rb:99:in 'Ace::TestRunner::Organisms::TestOrchestrator#run_with_package_context'
+        /Users/mc/Ps/ace/.ace-wt/ei9-ordinary-publication/ace-test-runner/lib/ace/test_runner/organisms/test_orchestrator.rb:50:in 'Ace::TestRunner::Organisms::TestOrchestrator#run'
+        /Users/mc/Ps/ace/.ace-wt/ei9-ordinary-publication/ace-test-runner/lib/ace/test_runner.rb:73:in 'Ace::TestRunner.run'
+        /Users/mc/Ps/ace/.ace-wt/ei9-ordinary-publication/ace-test-runner/lib/ace/test_runner/cli/commands/test.rb:300:in 'Ace::TestRunner::CLI::Commands::Test#run_tests_with_exit_handling'
+        /Users/mc/Ps/ace/.ace-wt/ei9-ordinary-publication/ace-test-runner/lib/ace/test_runner/cli/commands/test.rb:157:in 'Ace::TestRunner::CLI::Commands::Test#call'
+        /Users/mc/Ps/ace/.ace-wt/ei9-ordinary-publication/ace-support-cli/lib/ace/support/cli/runner.rb:24:in 'Ace::Support::Cli::Runner#call'
+        /Users/mc/Ps/ace/.ace-wt/ei9-ordinary-publication/ace-test-runner/exe/ace-test:17:in '<top (required)>'
+        bin/ace-test:17:in 'Kernel#load'
+        bin/ace-test:17:in '<main>'
+
+
+Finished in 179.20021s
+9 tests, 91 assertions, 3 failures, 0 errors, 0 skips

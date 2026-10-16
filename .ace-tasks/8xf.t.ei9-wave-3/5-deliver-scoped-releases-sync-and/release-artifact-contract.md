@@ -58,3 +58,20 @@ mandatory; retention grants no service execution or publication success.
   grant or alternate journal; no missing-authorizer fallback.
 - Execute focused bin/ace-test and obtain actual configured Pi review before
   integrating this source increment. No installed acceptance is claimed here.
+
+## Source freeze scope
+
+The first vertical slice now retains one built gem through the public ordinary
+socket, the existing canonical journal and actual metadata/digest checks. Current
+installed owner selection, project visibility and existing exact ServicePolicy
+or canonical proposal reader supply release authorization. Missing or revoked
+authorizers refuse; retention does not dispatch, consume a grant or create an
+executor claim. A reader verifies imported bytes against the same canonical
+prefix for the later publisher. The protected publication input contract stays
+unchanged; the ordinary fixed publication consumer and immutable artifact staging
+remain the next source increment, rather than an implied installed capability.
+
+Focused source verification: ordinary socket9/112 PASS; manifest/transfer/evidence
+28/167 PASS; installed composition policy11/94 PASS. Raw reports and initial test
+expectation failures are retained in evidence/release-artifact-native. No registry
+push, production installation or two-project acceptance is claimed by these tests.

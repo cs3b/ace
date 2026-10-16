@@ -1,0 +1,15 @@
+Started with run options --seed 34956
+
+Ace::Assign::OrdinaryReviewsTest
+  test_same_agent_session_or_native_process_cannot_be_relabelled_independent PASS (0.29s)
+  test_two_real_starts_same_account_accept_exact_review_and_restart_revalidates_bytes PASS (28.13s)
+  test_missing_or_changed_canonical_report_refuses_and_new_candidate_revokes_old_review PASS (21.37s)
+  test_release_artifact_replay_rechecks_revoked_release_grant     PASS (23.41s)
+  test_release_artifact_requires_installed_authorizer_and_current_independent_review PASS (35.52s)
+  test_release_artifact_retention_refuses_changed_bytes_metadata_candidate_or_native_origin_before_write PASS (32.86s)
+  test_release_artifact_retention_imports_real_built_bytes_and_replays_without_second_import PASS (27.68s)
+  test_self_review_missing_agent_session_wrong_attempt_and_wrong_caller_refuse PASS (28.53s)
+  test_merge_requires_canonical_successful_test_execution_and_rechecks_before_effect PASS (35.94s)
+
+Finished in 233.72869s
+9 tests, 112 assertions, 0 failures, 0 errors, 0 skips

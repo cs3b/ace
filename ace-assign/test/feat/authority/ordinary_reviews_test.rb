@@ -272,7 +272,7 @@ module Ace
         end
         @admission.head = @head
       end
-      def fixture
+      def fixture(**owner_options)
         Dir.mktmpdir("ordinary-review-", Etc.getpwuid(Process.uid).dir) do |root|
           File.chmod(0700, root)
           repository, @inputs, scratch = %w[journal inputs scratch].map { |part| File.join(root, part) }
@@ -298,7 +298,7 @@ module Ace
           @command_admission = CommandAdmission.new
           @commands = Authority::CommandExecution.new(project: "atlas", journal: @journal, admission: @command_admission)
           @owner = Authority::OrdinaryLifecycle.new(project: "atlas", admission: @admission, journal: @journal,
-            exclusion: Molecules::LifecycleExclusion.new(root: File.join(root, "exclusion")), input_root: @inputs, command_evidence: @commands)
+            exclusion: Molecules::LifecycleExclusion.new(root: File.join(root, "exclusion")), input_root: @inputs, command_evidence: @commands, **owner_options)
           server = Authority::OrdinaryServer.new(admission: @admission, lifecycle: Authority::Router.new(handlers: [@owner]))
           thread = Thread.new { server.serve }
           Timeout.timeout(3) { sleep 0.005 until File.socket?(service.fetch("socket_path")) }
