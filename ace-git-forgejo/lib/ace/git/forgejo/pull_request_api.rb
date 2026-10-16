@@ -35,8 +35,8 @@ module Ace
         # success), and the parsed payload when the server returned one.
         MutationOutcome = Data.define(:status, :message, :payload)
 
-        def initialize(server:, timeout:, runner: nil)
-          @http = HttpClient.new(server: server, timeout: timeout, runner: runner)
+        def initialize(server:, timeout:, runner: nil, token: nil)
+          @http = HttpClient.new(server: server, timeout: timeout, runner: runner, token: token)
         end
 
         # Probe and validate the selected server's API version once per
@@ -158,6 +158,19 @@ module Ace
           form = {"Do" => do_method, "head_commit_id" => head_commit_id}
           status, payload, message = @http.exchange(:post, "pulls/#{number}/merge", body: form)
           classify_send!(status, "merge pull request #{number}")
+          MutationOutcome.new(status: status, message: message, payload: payload)
+        end
+
+        # Attach one comment to the pull request thread (Forgejo serves PR
+        # comments on the issue endpoints) — e.g. a reviewer-produced evidence
+        # body handed over by a caller before the merge invocation.
+        #
+        # @return [MutationOutcome] 201 with the created comment payload, or a
+        #   refusal outcome (404 absent pull request, 422 rejected body)
+        def create_comment(number, body)
+          status, payload, message = @http.exchange(:post, "issues/#{number}/comments",
+            body: {"body" => body.to_s})
+          classify_send!(status, "create pull request #{number} comment")
           MutationOutcome.new(status: status, message: message, payload: payload)
         end
 

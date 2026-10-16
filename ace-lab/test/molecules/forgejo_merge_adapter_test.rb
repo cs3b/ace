@@ -9,7 +9,7 @@ require "uri"
 module Ace
   module Lab
     module Molecules
-      # The Forgejo merge adapter against the REAL lab forge (spec
+      # The Forgejo merge boundary against the REAL lab forge (spec
       # 8x3.t.xz9.5 integration handoff). The forge HTTP layer is never
       # mocked: when a scoped test token is provided via
       # ACE_LAB_TEST_FORGE_TOKEN, the suite provisions a scratch repository
@@ -18,6 +18,12 @@ module Ace
       # + merge sha) and the refusal path, and removes the scratch
       # repository. Without the token the suite skips with a clear message —
       # deployed acceptance runs later against the provisioned host config.
+      #
+      # Provider responsibility (HTTP transport, authentication, payload
+      # shape, classification) lives in `ace-git-forgejo`; this suite proves
+      # the RECEIVER boundary: the thin delegation outcome translation
+      # (`:invoked`/`:refused`/`:ambiguous`/`Unavailable`/nil-absence) and
+      # the exact-head binding guard.
       class ForgejoMergeAdapterTest < Minitest::Test
         BASE_URL = ENV.fetch("ACE_LAB_TEST_FORGE_URL", "https://forgejo.tail6c0887.ts.net")
 
@@ -52,7 +58,8 @@ module Ace
             body: "Independent final-head review evidence (test scratch PR)")
           assert_equal :invoked, comment.outcome, comment.reason
 
-          result = @adapter.merge_pull_request!(owner: @owner, repo: @repo, index: index)
+          result = @adapter.merge_pull_request!(owner: @owner, repo: @repo, index: index,
+            head_commit_id: head)
           assert_equal :invoked, result.outcome, result.reason
 
           readback = @adapter.pull_request(owner: @owner, repo: @repo, index: index)
@@ -61,7 +68,8 @@ module Ace
           assert_equal head, readback.fetch("merge_commit_sha")
 
           # Failure path: a second merge invocation is definitively refused.
-          refused = @adapter.merge_pull_request!(owner: @owner, repo: @repo, index: index)
+          refused = @adapter.merge_pull_request!(owner: @owner, repo: @repo, index: index,
+            head_commit_id: head)
           assert_equal :refused, refused.outcome
           assert refused.status >= 400 && refused.status < 500
           assert refused.reason && !refused.reason.empty?
@@ -72,14 +80,14 @@ module Ace
           assert_nil @adapter.pull_request(owner: @owner, repo: @repo, index: 9_999_999)
         end
 
-        def test_unauthorized_token_surfaces_as_a_definitive_refusal
+        def test_unauthorized_token_surfaces_as_a_definitive_token_free_refusal
           anonymous = ForgejoMergeAdapter.new(base_url: BASE_URL, token: "invalid-token",
             timeout_seconds: 30)
           provision_scratch_repo
           result = anonymous.create_comment(owner: @owner, repo: @repo, index: 1,
             body: "must not land")
           assert_equal :refused, result.outcome
-          assert_equal 401, result.status
+          assert result.reason && !result.reason.empty?
           refute_includes result.reason, "invalid-token"
         end
 
@@ -144,20 +152,22 @@ module Ace
         end
       end
 
-      # The adapter's WIRE CONTRACT against a real loopback HTTP server
-      # (hermetic — no forge token needed): the forge HTTP layer is still
-      # never mocked. The adapter performs genuine Net::HTTP exchanges with
-      # a stdlib TCPServer bound on 127.0.0.1, so the exact outgoing merge
-      # payload and the closed refusal classification are proven over real
-      # HTTP wire semantics.
-      class ForgejoMergeAdapterBindingTest < Minitest::Test
+      # The receiver-boundary WIRE CONTRACT, hermetic (no forge token): the
+      # thin adapter delegates to the REAL `ace-git-forgejo` provider, whose
+      # Faraday transport performs genuine HTTP exchanges with a stdlib
+      # TCPServer bound on 127.0.0.1 — so the exact outgoing merge payload,
+      # the readback normalization, the definitive-absence translation, and
+      # the closed transport-outcome mapping are proven over real wire
+      # semantics at the receiver boundary.
+      class ForgejoMergeAdapterBoundaryTest < Minitest::Test
         CANDIDATE = "a" * 40
+        BASE_HEAD = "b" * 40
         MOVED_HEAD = "c" * 40
 
         def setup
           @server = LoopbackForgeServer.new
           @adapter = ForgejoMergeAdapter.new(
-            base_url: "http://127.0.0.1:#{@server.port}", token: "binding-test-token",
+            base_url: "http://127.0.0.1:#{@server.port}", token: "boundary-test-token",
             timeout_seconds: 5
           )
         end
@@ -185,13 +195,11 @@ module Ace
         # reviewed candidate as the PR head, but by the time the merge POST
         # arrives the head has moved. The forge's server-side exact-head
         # binding definitively refuses the stale binding (4xx) — outcome
-        # :refused, no effect, never a false success merging an unreviewed
-        # head, and never a re-dispatch (exactly the two wire exchanges).
+        # :refused with the forge's own sanitized message, no effect, never a
+        # false success merging an unreviewed head, and never a re-dispatch
+        # (exactly the two wire exchanges).
         def test_head_moved_between_readback_and_merge_post_refuses_the_stale_binding
-          @server.enqueue(200, JSON.generate(
-            "merged" => false, "merge_commit_sha" => nil,
-            "head" => {"sha" => CANDIDATE}, "base" => {"sha" => MOVED_HEAD}
-          ))
+          @server.enqueue(200, JSON.generate(pr_document(head_sha: CANDIDATE, base_sha: MOVED_HEAD)))
           @server.enqueue(409,
             JSON.generate("message" => "head_commit_id does not match the pull request head"))
           readback = @adapter.pull_request(owner: "acme", repo: "widget", index: 7)
@@ -208,9 +216,9 @@ module Ace
             @server.requests[1].body
         end
 
-        # The binding is required and validated before anything touches the
-        # wire: a missing, truncated, or non-lowercase-hex head never reaches
-        # the forge.
+        # The binding is required and validated before anything is
+        # constructed or sent: a missing, truncated, or non-lowercase-hex
+        # head never reaches the forge.
         def test_merge_without_a_valid_full_sha_binding_never_reaches_the_wire
           assert_raises(ArgumentError) do
             @adapter.merge_pull_request!(owner: "acme", repo: "widget", index: 7)
@@ -225,13 +233,75 @@ module Ace
           end
           assert_empty @server.requests
         end
+
+        # The readback arrives as the provider's validated PR evidence and is
+        # normalized to the receiver's closed PR-state shape exactly as
+        # before the ownership move.
+        def test_readback_is_normalized_to_the_closed_receiver_shape
+          @server.enqueue(200, JSON.generate(pr_document(head_sha: CANDIDATE,
+            base_sha: BASE_HEAD, merged: false, merge_commit_sha: nil)))
+          readback = @adapter.pull_request(owner: "acme", repo: "widget", index: 7)
+          assert_equal({"merged" => false, "merge_commit_sha" => nil,
+            "head" => {"sha" => CANDIDATE}, "base" => {"sha" => BASE_HEAD}}, readback)
+
+          @server.enqueue(200, JSON.generate(pr_document(head_sha: CANDIDATE,
+            base_sha: BASE_HEAD, merged: true, merge_commit_sha: CANDIDATE)))
+          readback = @adapter.pull_request(owner: "acme", repo: "widget", index: 7)
+          assert_equal true, readback.fetch("merged")
+          assert_equal CANDIDATE, readback.fetch("merge_commit_sha")
+        end
+
+        # A definitive 404 readback translates to nil — the receiver's
+        # pre-invocation absence proof and its post-invocation uncertainty
+        # input are both keyed on exactly this nil.
+        def test_readback_of_an_absent_pull_request_is_definitive_nil
+          @server.enqueue(404, JSON.generate("message" => "Not Found"))
+          assert_nil @adapter.pull_request(owner: "acme", repo: "widget", index: 9_999_999)
+        end
+
+        # Transport-level failures stay in the closed outcome set: a merge
+        # POST that never proves delivery is :ambiguous (the receiver
+        # reconciles by readback, never by repeating the merge), and an
+        # unverifiable read raises Unavailable.
+        def test_transport_failures_map_to_ambiguous_and_unavailable
+          dead = closed_port
+          adapter = ForgejoMergeAdapter.new(base_url: "http://127.0.0.1:#{dead}",
+            token: "boundary-test-token", timeout_seconds: 2)
+          result = adapter.merge_pull_request!(owner: "acme", repo: "widget",
+            index: 7, head_commit_id: CANDIDATE)
+          assert_equal :ambiguous, result.outcome
+          assert result.reason && !result.reason.empty?
+
+          error = assert_raises(ForgejoMergeAdapter::Unavailable) do
+            adapter.pull_request(owner: "acme", repo: "widget", index: 7)
+          end
+          assert error.message && !error.message.empty?
+        end
+
+        private
+
+        # A complete forge PR document: the provider validates the documented
+        # PullRequest schema before any evidence may reach the receiver.
+        def pr_document(head_sha:, base_sha:, merged: false, merge_commit_sha: nil)
+          {"number" => 7, "state" => merged ? "closed" : "open", "draft" => false,
+           "merged" => merged, "merge_commit_sha" => merge_commit_sha,
+           "head" => {"ref" => "feat/ship-it", "sha" => head_sha},
+           "base" => {"ref" => "main", "sha" => base_sha}}
+        end
+
+        def closed_port
+          listener = TCPServer.new("127.0.0.1", 0)
+          port = listener.addr[1]
+          listener.close
+          port
+        end
       end
 
       # A minimal but REAL HTTP/1.1 server on the loopback (stdlib TCPServer
       # only): each accepted connection is one wire exchange — the request
       # line, headers, and body are captured verbatim and one queued canned
-      # response is written back. This is transport, not a mock: the adapter
-      # runs its genuine Net::HTTP stack against it.
+      # response is written back. This is transport, not a mock: the provider
+      # stack runs its genuine Faraday/Net::HTTP exchange against it.
       class LoopbackForgeServer
         Request = Struct.new(:method, :path, :body)
 

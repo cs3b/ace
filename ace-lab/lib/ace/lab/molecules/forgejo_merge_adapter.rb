@@ -1,43 +1,48 @@
 # frozen_string_literal: true
 
-require "json"
-require "net/http"
-require "uri"
+require "ace/git/forgejo"
 
 module Ace
   module Lab
     module Molecules
-      # The Forgejo merge HTTP adapter (spec 8x3.t.xz9.5 integration
-      # handoff): the receiver's one authorized effect is a real pull
-      # request merge on the real forge, invoked under the scoped service
-      # identity from the host-installed forge merge configuration, and
-      # every terminal outcome is proven by a real readback — a local git
-      # effect is never presented as a forge result. Ruby stdlib Net::HTTP
-      # only: no new gem dependency, no queue, no credential bypass.
+      # The receiver's forge merge boundary (spec 8x3.t.xz9.5 integration
+      # handoff): a THIN delegation to the `ace-git-forgejo` provider, which
+      # owns every Forgejo API/PR/review/merge/readback responsibility —
+      # HTTP transport, authentication, payload shape, and failure
+      # classification live behind `Ace::Git::Forgejo::PullRequestApi` and
+      # its `HttpClient`. This molecule holds no HTTP stack of its own: it
+      # binds the host-installed scoped service identity from
+      # {ForgeMergeConfig} to a repository-scoped provider client and
+      # translates the provider's closed outcomes into the receiver's
+      # closed outcome set (`:invoked`/`:refused`/`:ambiguous`/`Unavailable`).
       #
-      # Endpoints (forge API):
-      # - `POST /api/v1/repos/{owner}/{repo}/pulls/{index}/merge` with
-      #   `{"Do": "fast-forward-only", "head_commit_id": <approved sha>}` —
-      #   the merge-method contract's literal `method=merge` is
-      #   FAST-FORWARD-ONLY on the wire too, and the body binds the
-      #   approved candidate head SERVER-SIDE: the forge refuses to merge
-      #   any head other than the bound one, so a race between the state
-      #   readback and the merge POST can never merge an unreviewed head.
-      #   The adapter never silently substitutes another merge strategy.
-      # - `GET  /api/v1/repos/{owner}/{repo}/pulls/{index}` — the PR state
-      #   readback (`merged`, `merge_commit_sha`, head/base shas).
-      # - `POST /api/v1/repos/{owner}/{repo}/issues/{index}/comments` —
-      #   attaches the independent final-head review body to the PR before
-      #   the merge (reviewer-produced content handed over in the request).
+      # The receiver's one authorized effect is a real pull request merge on
+      # the real forge, invoked under the scoped service identity, and every
+      # terminal outcome is proven by a real readback — a local git effect is
+      # never presented as a forge result.
       #
-      # Outcome classification is closed: a 2xx is `:invoked` and a
-      # definitive 4xx refusal is `:refused`. Every unverifiable outcome —
-      # 5xx responses, open or read timeout, connection reset — is either
-      # `:ambiguous` (a returned Result on an HTTP-level 5xx) or an
-      # `Unavailable` exception (transport-level failure), because the forge
-      # may or may not have processed the request. The receiver reconciles
-      # both identically: readback retry, never a blind repeat of the merge.
-      # The token is never rendered in any error.
+      # Outcome translation (provider closed world → receiver closed world):
+      #
+      # - `2xx` mutation outcome → `:invoked`; a provider refusal outcome
+      #   (404/405/409/422 — including the server-side exact-head refusal
+      #   for a moved head) → `:refused`; an authentication error (the
+      #   provider raises the shared taxonomy for 401/403) → `:refused` —
+      #   a definitive refusal can never have merged.
+      # - An unknown mutation outcome (5xx responses and transport failures
+      #   on the POST — the forge may or may not have processed it) →
+      #   `:ambiguous`; the receiver reconciles by readback, never by
+      #   repeating the merge.
+      # - Every unverifiable read outcome (unreachable forge, malformed
+      #   evidence, misrouted payload, unusable endpoint) raises
+      #   `Unavailable`, because the true state cannot be proven. The token
+      #   is never rendered in any error (provider-sanitized messages only).
+      #
+      # The exact-head contract is carried by the provider's native merge
+      # signature: the POST body binds `head_commit_id` to the approved
+      # candidate server-side, so a race between the state readback and the
+      # merge POST can never merge an unreviewed head. This molecule never
+      # substitutes another merge strategy and validates the binding before
+      # the provider is constructed.
       class ForgejoMergeAdapter
         # The single authorized merge strategy on the wire.
         MERGE_METHOD = "fast-forward-only"
@@ -48,122 +53,96 @@ module Ace
         # reason: closed refuse/ambiguity detail (token-free).
         Result = Struct.new(:outcome, :status, :reason, keyword_init: true)
 
-        def initialize(base_url:, token:, timeout_seconds: 900, open_timeout_seconds: 10)
+        def initialize(base_url:, token:, timeout_seconds: 900)
           @base_url = base_url.to_s.sub(%r{/+\z}, "")
           @token = token
           @timeout_seconds = timeout_seconds
-          @open_timeout_seconds = open_timeout_seconds
           freeze
         end
 
         # Invoke the eligible merge bound to the approved candidate head.
         # `head_commit_id` is required and validated (full 40-character hex
-        # sha): the forge server-side refuses to merge any head other than
-        # the bound one. Returns a Result; never raises for HTTP outcomes
-        # (ambiguity is a result, not an exception).
+        # sha) BEFORE any provider construction: the forge server-side
+        # refuses to merge any head other than the bound one. Returns a
+        # Result; never raises for HTTP outcomes (ambiguity is a result, not
+        # an exception).
         def merge_pull_request!(owner:, repo:, index:, head_commit_id:)
           unless head_commit_id.is_a?(String) && head_commit_id.match?(/\A[0-9a-f]{40}\z/)
             raise ArgumentError,
               "head_commit_id must be a full 40-character lowercase hex sha " \
                 "(got: #{head_commit_id.inspect})"
           end
-          request(:post, "/api/v1/repos/#{e(owner)}/#{e(repo)}/pulls/#{e(index)}/merge",
-            body: JSON.generate("Do" => MERGE_METHOD, "head_commit_id" => head_commit_id)) do |response|
-            classify(response)
+          translate_mutation do
+            provider(owner, repo).merge_pull_request(index,
+              do_method: MERGE_METHOD, head_commit_id: head_commit_id)
           end
         end
 
-        # The PR state readback. Returns the closed PR-state hash
-        # (`merged`, `merge_commit_sha`, `head.sha`, `base.sha`) or nil when
-        # the forge definitively reports the PR absent (404). Raises
-        # Unavailable for every unverifiable outcome.
+        # The PR state readback, normalized to the receiver's closed
+        # PR-state shape (`merged`, `merge_commit_sha`, head/base shas) or
+        # nil when the forge definitively reports the PR absent (404 — the
+        # provider raises the absence taxonomy). Raises Unavailable for
+        # every unverifiable outcome.
         def pull_request(owner:, repo:, index:)
-          request(:get, "/api/v1/repos/#{e(owner)}/#{e(repo)}/pulls/#{e(index)}") do |response|
-            case response
-            when Net::HTTPSuccess
-              begin
-                document = JSON.parse(response.body)
-              rescue JSON::ParserError
-                raise Unavailable, "forge PR readback returned an unparseable body"
-              end
-              {
-                "merged" => document["merged"] == true,
-                "merge_commit_sha" => document["merge_commit_sha"].is_a?(String) ?
-                  document["merge_commit_sha"] : nil,
-                "head" => {"sha" => document.dig("head", "sha").is_a?(String) ?
-                  document.dig("head", "sha") : nil},
-                "base" => {"sha" => document.dig("base", "sha").is_a?(String) ?
-                  document.dig("base", "sha") : nil}
-              }
-            when Net::HTTPNotFound
-              nil
-            else
-              raise Unavailable, "forge PR readback failed: #{describe(response)}"
-            end
-          end
+          payload = provider(owner, repo).pull_request(index)
+          {
+            "merged" => payload["merged"] == true,
+            "merge_commit_sha" => payload["merge_commit_sha"].is_a?(String) ?
+              payload["merge_commit_sha"] : nil,
+            "head" => {"sha" => payload.dig("head", "sha").is_a?(String) ?
+              payload.dig("head", "sha") : nil},
+            "base" => {"sha" => payload.dig("base", "sha").is_a?(String) ?
+              payload.dig("base", "sha") : nil}
+          }
+        rescue Ace::Git::ProviderObjectNotFoundError
+          nil
+        rescue Ace::Git::Error => e
+          raise Unavailable, e.message
         end
 
         # Attach one comment to the PR (the independent final-head review
         # body handed over by the request — never the executor's own
         # approval).
         def create_comment(owner:, repo:, index:, body:)
-          request(:post, "/api/v1/repos/#{e(owner)}/#{e(repo)}/issues/#{e(index)}/comments",
-            body: JSON.generate("body" => body.to_s)) do |response|
-            classify(response)
+          translate_mutation do
+            provider(owner, repo).create_comment(index, body)
           end
         end
 
         private
 
-        def e(component)
-          URI.encode_www_form_component(component.to_s)
+        # One repository-scoped provider client per exchange: the origin is
+        # narrowed with the forge identity this receiver already pinned
+        # against the host-installed configuration, and the scoped token
+        # rides the provider transport instead of any local credential.
+        def provider(owner, repo)
+          Ace::Git::Forgejo::PullRequestApi.new(
+            server: Ace::Git::ResolvedServer.new(name: "lab-forge-merge",
+              provider: :forgejo, url: "#{@base_url}/#{owner}/#{repo}"),
+            timeout: @timeout_seconds, token: @token
+          )
         end
 
-        def classify(response)
-          case response
-          when Net::HTTPSuccess
-            Result.new(outcome: :invoked, status: response.code.to_i, reason: nil)
-          when Net::HTTPClientError
-            Result.new(outcome: :refused, status: response.code.to_i,
-              reason: "HTTP #{response.code}: #{snippet(response)}")
+        # Closed mutation translation: the provider returns an outcome only
+        # for statuses whose meaning is endpoint-specific (2xx success and
+        # the refusal family); everything else it raises as the shared
+        # taxonomy, which maps to :refused (authentication — a definitive
+        # refusal), :ambiguous (unknown outcome), or Unavailable (a read
+        # classified as unreachable).
+        def translate_mutation
+          outcome = yield
+          if (200..299).cover?(outcome.status)
+            Result.new(outcome: :invoked, status: outcome.status, reason: nil)
           else
-            Result.new(outcome: :ambiguous, status: response.code.to_i,
-              reason: "HTTP #{response.code}: #{snippet(response)}")
+            Result.new(outcome: :refused, status: outcome.status,
+              reason: outcome.message || "HTTP #{outcome.status}")
           end
-        end
-
-        def describe(response)
-          "HTTP #{response.code}: #{snippet(response)}"
-        end
-
-        def snippet(response)
-          response.body.to_s.scrub.gsub(/\s+/, " ").strip[0, 200]
-        end
-
-        # One HTTP exchange with closed failure semantics: every network
-        # failure — including all timeouts — is ambiguous at the effect
-        # layer, because the forge may or may not have processed it.
-        def request(method, path, body: nil)
-          uri = URI.parse("#{@base_url}#{path}")
-          http = Net::HTTP.new(uri.host, uri.port)
-          http.use_ssl = uri.is_a?(URI::HTTPS)
-          http.open_timeout = @open_timeout_seconds
-          http.read_timeout = @timeout_seconds
-          http.write_timeout = @timeout_seconds
-          message = Net::HTTP.const_get(method.to_s.capitalize).new(uri.request_uri)
-          message["Authorization"] = "token #{@token}"
-          message["Content-Type"] = "application/json"
-          message.body = body if body
-          begin
-            response = http.start { |session| session.request(message) }
-          rescue Net::OpenTimeout, Net::ReadTimeout, Net::WriteTimeout, Errno::ECONNRESET,
-            Errno::ECONNREFUSED, Errno::EHOSTUNREACH, Errno::ETIMEDOUT, IOError,
-            SocketError, OpenSSL::SSL::SSLError => e
-            raise Unavailable, "forge is unreachable: #{e.class}"
-          end
-          yield response
-        rescue URI::Error
-          raise Unavailable, "forge endpoint URL is invalid"
+        rescue Ace::Git::ProviderAuthenticationError => e
+          Result.new(outcome: :refused, status: nil, reason: e.message)
+        rescue Ace::Git::ProviderUnknownOutcomeError => e
+          Result.new(outcome: :ambiguous, status: nil, reason: e.message)
+        rescue Ace::Git::Error => e
+          raise Unavailable, e.message
         end
       end
     end

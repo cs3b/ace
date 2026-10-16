@@ -150,6 +150,69 @@ module Forgejo
       assert_match(/head out of date/, outcome.message)
     end
 
+    # The exact-head contract on the wire: the merge POST carries EXACTLY the
+    # merge method plus the bound candidate head — the payload the real forge
+    # enforces server-side, so a race between the readback and the merge POST
+    # can never merge an unreviewed head.
+    def test_merge_sends_the_fast_forward_only_head_binding_form
+      api = build_api("pulls/7/merge" => {status: 200, body: ""})
+      outcome = api.merge_pull_request(7, do_method: "fast-forward-only", head_commit_id: "a" * 40)
+      assert_equal 200, outcome.status
+      sent = calls.find { |c| c[2] == "#{API}/pulls/7/merge" }[3]
+      assert_equal({"Do" => "fast-forward-only", "head_commit_id" => "a" * 40}, sent)
+    end
+
+    # Endpoint-specific refusal statuses surface as outcomes (never raised):
+    # a definitive refusal mutated nothing and is the caller's evidence.
+    def test_merge_refusal_statuses_stay_outcomes
+      {404 => "pull request absent", 405 => "merge style disabled",
+       409 => "Merge: head out of date", 422 => "invalid merge form"}.each do |status, message|
+        api = build_api("pulls/25/merge" => {status: status, body: {"message" => message}.to_json})
+        outcome = api.merge_pull_request(25, do_method: "merge", head_commit_id: "a" * 40)
+        assert_equal status, outcome.status
+        assert_equal message, outcome.message
+      end
+    end
+
+    def test_merge_authentication_failure_raises_the_shared_taxonomy
+      api = build_api("pulls/25/merge" => {status: 401, body: {"message" => "token required"}.to_json})
+      error = assert_raises(Ace::Git::ProviderAuthenticationError) do
+        api.merge_pull_request(25, do_method: "merge", head_commit_id: "a" * 40)
+      end
+      assert_match(/HTTP 401/, error.message)
+    end
+
+    def test_comment_attaches_to_the_pr_thread_with_the_documented_form
+      api = build_api("issues/25/comments" => {status: 201, body: {"id" => 9, "body" => "review"}.to_json})
+      outcome = api.create_comment(25, "independent final-head review evidence")
+      assert_equal 201, outcome.status
+      assert_equal 9, outcome.payload["id"]
+      comment_call = calls.find { |c| c[2] == "#{API}/issues/25/comments" }
+      assert_equal "POST", comment_call[1]
+      assert_equal({"body" => "independent final-head review evidence"}, comment_call[3])
+    end
+
+    def test_comment_refusals_stay_outcomes_and_transport_stays_unknown
+      api = build_api("issues/25/comments" => {status: 404, body: {"message" => "not found"}.to_json})
+      outcome = api.create_comment(25, "must not land")
+      assert_equal 404, outcome.status
+      assert_equal "not found", outcome.message
+
+      api = build_api("issues/25/comments" => {status: 422, body: {"message" => "rejected"}.to_json})
+      assert_equal 422, api.create_comment(25, "x").status
+
+      api = build_api("issues/25/comments" => -> { raise IOError, "socket closed" })
+      error = assert_raises(Ace::Git::ProviderUnknownOutcomeError) { api.create_comment(25, "x") }
+      assert_match(/outcome unknown/, error.message)
+    end
+
+    def test_explicit_scoped_token_reaches_the_transport
+      api = Ace::Git::Forgejo::PullRequestApi.new(server: SERVER, timeout: 5,
+        token: "host-installed-scoped-token", runner: router({}))
+      assert_equal "host-installed-scoped-token",
+        api.instance_variable_get(:@http).send(:access_token!)
+    end
+
     def test_mutation_server_errors_stay_unknown_outcomes
       api = build_api("pulls/25/merge" => {status: 500, body: {"message" => "boom"}.to_json})
       error = assert_raises(Ace::Git::ProviderUnknownOutcomeError) do

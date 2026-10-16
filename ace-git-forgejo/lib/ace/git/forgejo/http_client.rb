@@ -20,10 +20,15 @@ module Ace
       # limited to the safe GET verb — a mutation is sent at most once per
       # call, so a lost response stays an unknown outcome.
       class HttpClient
-        def initialize(server:, timeout:, runner: nil)
+        # `token:` injects an explicit credential for deployments whose scoped
+        # service identity is host-installed (e.g. a merge receiver reading its
+        # token from root-owned configuration) instead of the `fj` CLI keys
+        # file; when absent the fj credential governs as before.
+        def initialize(server:, timeout:, runner: nil, token: nil)
           @target = RepositoryBinding::Target.resolve(server.url)
           @timeout = timeout
           @runner = runner
+          @token = token.is_a?(String) && !token.empty? ? token : nil
         end
 
         def paginate(suffix)
@@ -145,6 +150,8 @@ module Ace
         end
 
         def access_token!
+          return @token if @token
+
           path = RepositoryBinding.default_keys_path
           data = path && JSON.parse(File.read(path))
           # fj stores credentials under the bare host (or host:port)

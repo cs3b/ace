@@ -229,6 +229,7 @@ PATH
   specs:
     ace-lab (0.6.0)
       ace-assign (~> 0.68)
+      ace-git-forgejo (~> 0.6)
       ace-hitl (~> 0.15)
       ace-runtime (~> 0.3)
       ace-support-cli (~> 0.6)

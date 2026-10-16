@@ -72,6 +72,20 @@ module Forgejo
       assert_nil client.request(:patch, "pulls/25", body: {title: "T"})
     end
 
+    # A host-installed scoped service identity (explicit token) bypasses the
+    # fj keys-file lookup entirely — the deployed merge receiver's credential
+    # never depends on CLI authentication state.
+    def test_explicit_token_bypasses_the_fj_keys_lookup
+      client = Ace::Git::Forgejo::HttpClient.new(server: SERVER, timeout: 5, token: "scoped-token")
+      assert_equal "scoped-token", client.send(:access_token!)
+    end
+
+    def test_blank_explicit_token_falls_back_to_the_fj_keys_lookup
+      client = Ace::Git::Forgejo::HttpClient.new(server: SERVER, timeout: 5, token: "")
+      error = assert_raises(Ace::Git::ProviderAuthenticationError) { client.send(:access_token!) }
+      assert_match(/No fj token for selected host/, error.message)
+    end
+
     private
 
     def route(status:, body:)
