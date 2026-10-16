@@ -480,3 +480,16 @@ before repository mutation. Focused result: 6 tests/46 assertions PASS, retained
 in `evidence/ordinary-transport-fixture-join/`. This is not native candidate
 acceptance or a replacement for the separate real canonical owner coverage.
 A full current suite after correction remains required.
+
+### Current integrated source verification
+
+Exact integration source `521066be3` passed `bin/ace-test-suite`: 51 packages,
+12,412 passed tests, 43,526 assertions, zero failures/errors and 42 skips
+(582.65 seconds). Raw package summaries and scope are retained in
+`evidence/suite-521-green/`. This closes the prior transport-fixture suite
+failures without relaxing canonical merge proof. Actual configured Pi
+`zai/glm-5.3`, high, ro approved the fixture join; original report and low-comment
+dispositions are retained in `evidence/ordinary-transport-fixture-review/`.
+This receipt does not cover subsequent candidate materialization, campaign or
+release-artifact source increments and does not establish installed two-project
+acceptance. Existing external blocks remain open.
