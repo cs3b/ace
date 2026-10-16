@@ -34,6 +34,32 @@ module Ace
           end
         end
 
+        def test_trusted_consumer_rechecks_exact_recorded_binding_and_current_worker_checkout
+          with_worker do |admission, head|
+            original = admission.identity!(peer: @peer, pane: "w1:p1").runtime_binding
+            observed = admission.recorded_execution!(binding: original, head: head)
+            assert_equal original, observed.fetch(:runtime_binding)
+            assert_equal head, observed.fetch(:checkout).fetch("head")
+            assert_raises(Ace::Assign::AttemptErrors::UnauthorizedIdentity) do
+              admission.recorded_execution!(binding: original, head: "f" * 40)
+            end
+            @change = :birth
+            assert_raises(Ace::Assign::AttemptErrors::UnauthorizedIdentity) do
+              admission.recorded_execution!(binding: original, head: head)
+            end
+          end
+        end
+
+        def test_recorded_worker_cannot_be_observed_after_becoming_a_protected_principal
+          with_worker do |admission, _head|
+            original = admission.identity!(peer: @peer, pane: "w1:p1").runtime_binding
+            @protected_uid = @peer.fetch("uid")
+            assert_raises(Ace::Assign::AttemptErrors::UnauthorizedIdentity) do
+              admission.recorded_binding!(binding: original)
+            end
+          end
+        end
+
         private
 
         def with_worker
@@ -50,7 +76,7 @@ module Ace
             kernel = Object.new
             kernel.define_singleton_method(:live!) { |value, **_| value }
             runtime = Object.new
-            @observations, @requested_pids, @change = 0, [], nil
+            @observations, @requested_pids, @change, @protected_uid = 0, [], nil, nil
             observed_binding = -> {
               @observations += 1
               {"runtime" => "herdr", "session" => @observations > 1 && @change == :workspace ? "foreign" : "w1", "pane" => "w1:p1",
@@ -64,7 +90,8 @@ module Ace
             runtime.define_singleton_method(:process_cwd) { |pid| cwd.call(pid) }
             admission = OrdinaryOwnerAdmission.new(config: config, peer: kernel, runtime: runtime)
             OrdinaryOwnerConfig.stub(:load, config) do
-              Ace::Assign::Authority::ProtectedAssignmentContext.stub(:load, Struct.new(:protected_participant?).new(false)) do
+              protection = ->(uid:) { Struct.new(:protected_participant?).new(uid == @protected_uid) }
+              Ace::Assign::Authority::ProtectedAssignmentContext.stub(:load, protection) do
                 Etc.stub(:getpwuid, Struct.new(:name).new("atlas-worker")) { yield admission, head }
               end
             end

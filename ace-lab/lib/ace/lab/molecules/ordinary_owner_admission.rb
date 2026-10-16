@@ -60,7 +60,52 @@ module Ace
           {identity: identity, checkout: checkout}
         end
 
+        # Read the original canonical native owner for a trusted consumer.
+        # The binding must come from accepted history, never requester fields.
+        # This observes ownership; it does not grant the target's privileges to
+        # the caller or manufacture a kernel-authenticated connection identity.
+        def recorded_binding!(binding:, caller_pid: nil, deadline: default_deadline)
+          observe_recorded_binding(binding, caller_pid, deadline).first
+        end
+
+        def recorded_execution!(binding:, head:, deadline: default_deadline)
+          before, cwd = observe_recorded_binding(binding, nil, deadline)
+          checkout = OrdinaryWorktreeRead.new(root: @config.worktrees.fetch("root"),
+            common_dir: @config.worktrees.fetch("common_dir"), deadline: deadline).observe(cwd)
+          after, after_cwd = observe_recorded_binding(binding, nil, deadline)
+          unless before == after && cwd == after_cwd && checkout.fetch("head") == head
+            raise Ace::Assign::AttemptErrors::UnauthorizedIdentity, "ordinary recorded worker or HEAD changed"
+          end
+          {runtime_binding: after, checkout: checkout}
+        end
+
         private
+
+        def observe_recorded_binding(binding, caller_pid, deadline)
+          @config.verify_selection!
+          uid = binding.fetch("process_identity").fetch("uid")
+          participant = @config.selected_principal!(uid)
+          unless participant && binding["runtime"] == participant.fetch("runtime") && binding["session"] == participant.fetch("workspace")
+            raise Ace::Assign::AttemptErrors::UnauthorizedIdentity, "ordinary recorded participant is no longer selected"
+          end
+          native, runtime = native_runtime(deadline)
+          actual = runtime.process_binding(pane: binding.fetch("pane"), caller_pid: caller_pid || binding.fetch("process_identity").fetch("pid"))
+          unless actual == binding
+            raise Ace::Assign::AttemptErrors::UnauthorizedIdentity, "ordinary recorded native owner is unavailable or changed"
+          end
+          cwd = native.process_cwd(binding.fetch("process_identity").fetch("pid"))
+          @config.selected_principal!(uid)
+          [actual, cwd]
+        end
+
+        def native_runtime(deadline)
+          return [@runtime, @runtime] if @runtime
+          observation = Ace::Herdr::Molecules::BoundedObservation.new(deadline: deadline, binary: @config.runtime_binary)
+          native = OrdinaryNativeRead.new(config: @config, deadline: deadline, peer: @peer)
+          native.preflight!
+          [native, Ace::Herdr::Organisms::RuntimeAdapter.new(executor: native, env: {},
+            process_identity: Ace::Runtime::Molecules::ProcessIdentity.new(executor: observation))]
+        end
 
         def observe_identity(peer:, pane:, deadline:, with_cwd:)
           @peer.live!(peer, deadline: deadline)
@@ -68,15 +113,7 @@ module Ace
           unless pane.is_a?(String) && pane.bytesize.between?(1, 128) && !pane.include?("\0")
             raise ArgumentError, "ordinary native pane selector is invalid"
           end
-          observation = Ace::Herdr::Molecules::BoundedObservation.new(deadline: deadline, binary: @config.runtime_binary)
-          runtime = @runtime
-          native = runtime
-          unless runtime
-            native = OrdinaryNativeRead.new(config: @config, deadline: deadline, peer: @peer)
-            native.preflight!
-            runtime = Ace::Herdr::Organisms::RuntimeAdapter.new(executor: native, env: {},
-              process_identity: Ace::Runtime::Molecules::ProcessIdentity.new(executor: observation))
-          end
+          native, runtime = native_runtime(deadline)
           binding = runtime.process_binding(pane: pane, caller_pid: peer.fetch("pid"))
           unless binding && binding["runtime"] == participant.fetch("runtime") &&
               binding["session"] == participant.fetch("workspace") && binding["pane"] == pane &&

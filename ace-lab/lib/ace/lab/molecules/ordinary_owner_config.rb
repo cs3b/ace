@@ -125,16 +125,26 @@ module Ace
         end
 
         def participant!(peer)
+          participant = selected_principal!(peer.fetch("uid"))
+          unless participant.fetch("gid") == peer.fetch("gid")
+            raise Ace::Assign::AttemptErrors::UnauthorizedIdentity, "ordinary participant group differs"
+          end
+          participant
+        end
+
+        # Selection only: consumers of canonical native history have an
+        # observed process UID, not a new authenticated socket from that owner.
+        def selected_principal!(uid)
           verify_selection!
           exclude_protected!(@service.fetch("uid"))
-          exclude_protected!(peer.fetch("uid"))
-          participant = @participants[peer.fetch("uid").to_s]
-          unless participant && participant.fetch("gid") == peer.fetch("gid")
+          exclude_protected!(uid)
+          participant = @participants[uid.to_s]
+          unless participant
             raise Ace::Assign::AttemptErrors::UnauthorizedIdentity, "ordinary participant is not installed for this project"
           end
           # HITL and the canonical coordinator use the authenticated passwd
           # principal. An unrelated display label cannot replace that identity.
-          unless Etc.getpwuid(peer.fetch("uid")).name == participant.fetch("actor")
+          unless Etc.getpwuid(uid).name == participant.fetch("actor")
             raise Ace::Assign::AttemptErrors::UnauthorizedIdentity, "ordinary actor differs from installed OS principal"
           end
           participant
