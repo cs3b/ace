@@ -1,0 +1,21 @@
+{
+  "source_commit": "dbb95a746",
+  "actual_reviewer": "pi / zai/glm-5.3 / high / ro / succeeded / finish stop",
+  "verdict": "APPROVE; no critical/high/medium findings",
+  "report_sha256": "f4e4d14bbbbaca67f4c28470a91baafbd071161568dc5f5bd2b1f92b945cab2d",
+  "low_dispositions": {
+    "remaining_account_lookups": "Different sites require an actual installed account name; no blanket nil propagation into those contracts. Unknown UID on observed Ruby raises ArgumentError.",
+    "rescue_breadth": "Keep only expected ArgumentError rescue, matching explicit optional username handling without swallowing other defects.",
+    "newlines": "Retain original generated evidence bytes and hashes.",
+    "third_table": "No third table exists; existing two-layer limits have an executed cross-check."
+  },
+  "verification": {
+    "native_socket": "9/112 PASS",
+    "manifest_transfer_evidence": "28/167 PASS",
+    "composition_followup": "12/96 PASS",
+    "transfer_followup": "17/96 PASS",
+    "protected_services": "30/310 PASS",
+    "protected_publication": "16/138 PASS"
+  },
+  "limitations": "Only canonical artifact retention is enabled in source. Ordinary publication receiver/staging/OTP/settlement and installed acceptance remain open. No external blocked work resumed."
+}
