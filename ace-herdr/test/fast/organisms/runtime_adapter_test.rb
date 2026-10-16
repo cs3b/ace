@@ -100,6 +100,33 @@ module Ace
           assert_nil adapter.process_binding(pane: "w1:p1", caller_pid: 44)
         end
 
+        def test_process_binding_normalizes_native_pi_session_path_without_mutating_observation
+          uuid = "01a144bd-f8d1-74b1-8ba8-0e131c678b0c"
+          session = {"agent" => "pi", "kind" => "path",
+            "value" => "/home/mo/.pi/agent/sessions/--lab-projects-overseer--/2026-10-16T12-44-23-122Z_#{uuid}.jsonl"}
+          pane = {"pane_id" => "w1:p1", "workspace_id" => "w1", "terminal_id" => "terminal1",
+            "agent" => "pi", "agent_session" => session}
+          @panes << pane
+          @processes = [{"pid" => 43}]
+          process_identity = Object.new
+          process_identity.define_singleton_method(:owner) do |shell_pid:, caller_pid:|
+            {"shell_identity" => {"pid" => 42}, "process_identity" => {"pid" => 43}} if shell_pid == 42 && caller_pid == 44
+          end
+          adapter = RuntimeAdapter.new(executor: @executor, process_identity: process_identity)
+          binding = adapter.process_binding(pane: "w1:p1", caller_pid: 44)
+          refute_nil binding
+          assert_equal({"agent" => "pi", "kind" => "id", "value" => uuid}, binding.fetch("agent_session"))
+          assert_equal "path", session.fetch("kind")
+          [session.merge("value" => "/tmp/not-a-session.jsonl"), session.merge("kind" => "name"),
+            session.merge("agent" => "codex"), session.merge("value" => "relative_#{uuid}.jsonl")].each do |invalid|
+            pane["agent_session"] = invalid
+            assert_nil adapter.process_binding(pane: "w1:p1", caller_pid: 44)
+          end
+          pane["agent_session"] = session
+          @processes = [{"pid" => 42}]
+          assert_nil adapter.process_binding(pane: "w1:p1", caller_pid: 44)
+        end
+
         def test_registration_and_context_map_workspace_tab_and_pane
           assert_instance_of RuntimeAdapter, Runtime.resolve("herdr")
           assert_equal({in_runtime: true, session: "w1", window: "w1:t0", pane: "w1:p0"}, @adapter.context)

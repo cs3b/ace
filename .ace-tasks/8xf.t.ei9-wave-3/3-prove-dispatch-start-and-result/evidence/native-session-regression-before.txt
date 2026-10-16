@@ -1,0 +1,13 @@
+
+# Running tests with run options --seed 57585:
+
+.F................................
+
+Finished tests in 0.230078s, 147.7760 tests/s, 660.6455 assertions/s.
+
+
+Failure:
+Ace::Herdr::Organisms::RuntimeAdapterTest#test_process_binding_normalizes_native_pi_session_path_without_mutating_observation [/Users/mc/Ps/ace/.ace-wt/ei9-native-session/ace-herdr/test/fast/organisms/runtime_adapter_test.rb:117]
+Minitest::Assertion: Expected nil to not be nil.
+
+34 tests, 152 assertions, 1 failures, 0 errors, 0 skips

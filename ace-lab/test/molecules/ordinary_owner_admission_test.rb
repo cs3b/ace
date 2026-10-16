@@ -159,7 +159,8 @@ module Ace
           native.define_singleton_method(:pane_get) do |pane|
             Struct.new(:parsed_json).new({"result" => {"pane" => {"pane_id" => pane, "workspace_id" => "w1",
               "terminal_id" => pane, "agent" => "pi", "agent_session" => {
-                "kind" => "id", "agent" => "pi", "value" => "01a144bd-f8d1-74b1-8ba8-0e131c678b0c"}}}})
+                "kind" => "path", "agent" => "pi",
+                "value" => "/home/mo/.pi/agent/sessions/--lab-projects-overseer--/2026-10-16T12-44-23-122Z_01a144bd-f8d1-74b1-8ba8-0e131c678b0c.jsonl"}}}})
           end
           native.define_singleton_method(:pane_process_info) do |pane|
             Struct.new(:parsed_json).new({"result" => {"process_info" => {

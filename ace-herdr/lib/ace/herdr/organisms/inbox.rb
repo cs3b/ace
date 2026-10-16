@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "../errors"
+require_relative "../atoms/native_agent_session"
 require "digest"
 require "json"
 require "time"
@@ -22,8 +23,6 @@ module Ace
 
         EVENT = /\A[A-Za-z0-9][A-Za-z0-9._-]{0,127}\z/
         TARGET_IDENTITY = %w[session pane terminal_id agent thread thread_kind].freeze
-        THREAD_ID = /\A[0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}\z/
-        PI_PATH = /_([0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12})\.jsonl\z/
         # Single validator for Pi queue event ids, shared by enqueue and
         # delivery observation so the two sites can never disagree again.
         PI_EVENT_ID = /\A(?:inb|wnk)-[a-z0-9-]{8,64}\z/
@@ -577,7 +576,7 @@ module Ace
         def validate_expected_target!(target)
           unless target.is_a?(Hash) && TARGET_IDENTITY.all? { |key| target[key].is_a?(String) && !target[key].empty? } &&
               %w[codex pi].include?(target["agent"]) && target["thread_kind"] == "id" &&
-              THREAD_ID.match?(target["thread"]) && target["terminal_id"].bytesize <= 64
+              Atoms::NativeAgentSession::UUID.match?(target["thread"]) && target["terminal_id"].bytesize <= 64
             raise ValidationError, "accepted original native target is incomplete or invalid"
           end
         end
@@ -627,21 +626,12 @@ module Ace
           raise ValidationError, "unsupported native agent" unless %w[codex pi].include?(agent)
           session = pane["agent_session"]
           raise IdentityDriftError, "native session identity is unavailable" unless session.is_a?(Hash) && session["agent"] == agent
-          thread = session["value"].to_s
-          kind = session["kind"]
-          if agent == "pi" && kind == "path"
-            thread = PI_PATH.match(thread)&.captures&.first.to_s
-            kind = "id"
-          end
-          # Only an immutable session UUID may carry a binding: a name
-          # survives an agent restart in the same pane/terminal, so a reused
-          # session could inherit an old event.
-          unless kind == "id" && THREAD_ID.match?(thread)
+          normalized = Atoms::NativeAgentSession.normalize(session, agent: agent)
+          unless normalized
             raise ValidationError,
-              "native queue binding requires an immutable session id " \
-              "(got #{kind.inspect})"
+              "native queue binding requires an immutable session id (got #{session['kind'].inspect})"
           end
-          raise ValidationError, "Pi queue requires a session ID" if agent == "pi" && kind != "id"
+          thread, kind = normalized.values_at("value", "kind")
           raw_terminal = pane["terminal_id"]
           terminal = raw_terminal.to_s.strip if raw_terminal.is_a?(String) || raw_terminal.is_a?(Integer)
           if terminal.nil? || terminal.empty? || terminal.bytesize > 64
