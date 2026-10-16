@@ -607,7 +607,7 @@ input:#{Regexp.escape(request.fetch("input_digest"))} outcome:(\S+)( no-effect:(
 
               active_scopes = @store.list(assignment_id).select(&:active?).map(&:binding)
               active_scopes.concat(journal_actives.map(&:binding))
-              blocker = active_scopes.find { |binding| scopes_overlap?(binding.scope, scope) }
+              blocker = active_scopes.find { |binding| Atoms::AssignmentScope.overlap?(binding.scope, scope) }
               if blocker
                 raise AttemptErrors::Conflict,
                   "Active attempt scope #{blocker.scope} overlaps requested scope #{scope} on #{assignment_id}; " \
@@ -998,14 +998,6 @@ input:#{Regexp.escape(request.fetch("input_digest"))} outcome:(\S+)( no-effect:(
           raise Error, "Failed to generate a unique attempt ID for #{assignment_id} after 100 attempts"
         end
 
-        # Ancestors and descendants overlap: an active attempt for 010 owns
-        # its 010.01 subtree, and vice versa.
-        def scopes_overlap?(left, right)
-          return true if Atoms::AssignmentScope.equal?(left, right)
-
-          left.start_with?("#{right}.") || right.start_with?("#{left}.")
-        end
-
         # Active attempts derived from the authoritative journal, used when
         # the local record may be missing (lost or wiped cache). Derivation
         # lives in the journal (owner of attempt-state interpretation).
@@ -1063,7 +1055,7 @@ input:#{Regexp.escape(request.fetch("input_digest"))} outcome:(\S+)( no-effect:(
         # merges both). The loser records a stopped transition and refuses.
         def yield_lost_ownership_race(attempt, assignment_id, scope)
           rival = journal_for.active_attempts(assignment_id).find do |other|
-            other.attempt_id != attempt.attempt_id && scopes_overlap?(other.binding.scope, scope)
+            other.attempt_id != attempt.attempt_id && Atoms::AssignmentScope.overlap?(other.binding.scope, scope)
           end
           return attempt if rival.nil?
 

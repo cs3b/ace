@@ -4,7 +4,7 @@ module Ace
   module Assign
     module Authority
       module OrdinaryAttemptStart
-        START_KEYS = %w[assignment_id attempt_id expected_generation head pane].freeze
+        START_KEYS = %w[assignment_id attempt_id expected_generation head pane scope].freeze
 
         private
 
@@ -12,6 +12,9 @@ module Ace
           params = request.fetch("params")
           strict!(params, START_KEYS)
           %w[assignment_id attempt_id].each { |key| token!(params.fetch(key)) }
+          if params.fetch("attempt_id").start_with?("definition-")
+            raise ArgumentError, "ordinary attempt ID uses the registration namespace"
+          end
           token!(request.fetch("mutation_id"))
           unless params.fetch("head").is_a?(String) && params.fetch("head").match?(/\A[0-9a-f]{40}\z/)
             raise ArgumentError, "ordinary start HEAD is invalid"
@@ -23,7 +26,10 @@ module Ace
           registered = registration(params.fetch("assignment_id"), commit: commit)
           raise AttemptErrors::NotFound, "ordinary work is not registered" unless registered
           work = registered_work(registered, commit, deadline)
-          scope = work.manifest.fetch("scope")
+          scope = params.fetch("scope")
+          unless work.manifest.fetch("steps").any? { |step| step.fetch("number") == scope }
+            raise AttemptErrors::InvalidScope, "ordinary scope is not in the accepted work"
+          end
           keys = [@exclusion.task_key(registered.fetch("task_id")), @exclusion.assignment_key(params.fetch("assignment_id"))]
           @exclusion.with_shared_multi(keys, deadline: deadline) do
             if @journal.mutation_result(request.fetch("mutation_id"))
@@ -43,9 +49,6 @@ module Ace
             identity = observed.fetch(:identity)
             principal = {"uid" => peer.fetch("uid"), "actor" => identity.actor}
             digest = start_digest(params, peer, identity)
-            queue = OrdinaryQueue.new(work: work, root: @input_root).transition(operation: :activate)
-            queue_sha = Digest::SHA256.hexdigest(queue.bytes)
-            queue_path = "execution/definitions/#{params.fetch('assignment_id')}-queue-#{queue_sha}.json"
             authorize!(request, peer, role, deadline)
             @journal.mutate(assignment_id: params.fetch("assignment_id"), attempt_id: params.fetch("attempt_id"),
               mutation_id: request.fetch("mutation_id"), operation: "start_attempt", parameters_digest: digest,
@@ -58,12 +61,22 @@ module Ace
               unless events.empty? && registration(params.fetch("assignment_id"), commit: prefix) == registered
                 raise AttemptErrors::Conflict, "ordinary start registration or attempt changed"
               end
-              # A different request ID is not permission to repeat accepted
-              # work, including after a terminal result. Recovery retains the
-              # original attempt; new work needs a new accepted definition.
-              if @journal.derived_attempts(params.fetch("assignment_id"), commit: prefix).any?
+              if @journal.assignment_ids(commit: prefix).any? { |assignment|
+                  assignment != params.fetch("assignment_id") && @journal.read_events(assignment, commit: prefix).any? { |event|
+                    event.fetch("attempt_id") == params.fetch("attempt_id") } }
+                raise AttemptErrors::Conflict, "ordinary attempt ID belongs to another assignment"
+              end
+              # Sibling scopes may run independently. A different request ID
+              # never repeats an already consumed scope or any part of it.
+              if @journal.derived_attempts(params.fetch("assignment_id"), commit: prefix).any? { |attempt|
+                  Atoms::AssignmentScope.overlap?(attempt.binding.scope, scope) }
                 raise AttemptErrors::Conflict, "ordinary scope already has an attempt; reconcile its original execution"
               end
+              record = current_queue_record(registered, prefix)
+              queue = OrdinaryQueue.new(work: work, root: @input_root, bytes: queue_bytes(record, prefix))
+                .transition(operation: :activate, scope: scope)
+              queue_sha = Digest::SHA256.hexdigest(queue.bytes)
+              queue_path = "execution/definitions/#{params.fetch('assignment_id')}-queue-#{queue_sha}.json"
               {events: [
                 {type: "intent", payload: {"assignment_id" => params.fetch("assignment_id"), "scope" => scope,
                   "project_id" => @project, "task_id" => registered.fetch("task_id"), "base_head" => observed.fetch(:checkout).fetch("head")}},

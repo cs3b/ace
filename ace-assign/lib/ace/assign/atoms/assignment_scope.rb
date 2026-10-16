@@ -47,6 +47,11 @@ module Ace
         rescue Ace::Assign::AttemptErrors::InvalidScope
           false
         end
+
+        # An owner of a subtree also owns every descendant scope.
+        def self.overlap?(left, right)
+          equal?(left, right) || left.start_with?("#{right}.") || right.start_with?("#{left}.")
+        end
       end
     end
   end

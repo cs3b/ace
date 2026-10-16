@@ -244,7 +244,7 @@ module Ace
           with_owner do |client|
             register(client)
             before = @journal.ref_value
-            prepared = client.call("assignment_snapshot", {"assignment_id" => "batch", "kind" => "prepared_work"},
+            prepared = client.call("assignment_snapshot", {"assignment_id" => "batch", "attempt_id" => nil, "kind" => "prepared_work"},
               download: true, purpose: :assignment_snapshot)
             assert_equal [@bundle], prepared.parts
             assert_nil prepared.data.fetch("attempt_id")
@@ -257,7 +257,7 @@ module Ace
               upload_parts: ["Executed work; independent acceptance remains pending."], purpose: :artifacts)
             assert @finish_reply.data.fetch("queue_complete")
             assert_equal "running", @journal.derived_attempts("batch").fetch(0).state
-            snapshot = client.call("assignment_snapshot", {"assignment_id" => "batch", "kind" => "queue"},
+            snapshot = client.call("assignment_snapshot", {"assignment_id" => "batch", "attempt_id" => "worker-attempt", "kind" => "queue"},
               download: true, purpose: :assignment_snapshot)
             queue = Authority::OrdinaryQueue.new(work: @artifact.work, root: @inputs, bytes: snapshot.parts.fetch(0))
             assert_equal :done, queue.status.steps.first.status
@@ -374,6 +374,83 @@ module Ace
         end
       end
 
+      def test_sibling_attempts_share_one_queue_without_cross_scope_completion_or_repeated_work
+        scopes = %w[010.01.01 010.01.02 010.01.03]
+        with_fixture(children: scopes) do
+          with_owner do |client|
+            register(client)
+            @admission.role = :worker
+            start(client, scope: scopes.first)
+            start(client, scope: scopes.last, mutation: "integrator-start", attempt: "integrator")
+            before = @journal.ref_value
+            assert_raises(AttemptErrors::EvidenceUnavailable) do
+              start(client, scope: "010.01", mutation: "overlap", attempt: "overlap")
+            end
+            assert_raises(AttemptErrors::EvidenceUnavailable) do
+              start(client, scope: "010.99", mutation: "foreign", attempt: "foreign")
+            end
+            finish_params = {"assignment_id" => "batch", "attempt_id" => "worker-attempt", "pane" => "w1:p1",
+              "step" => scopes.last, "expected_generation" => 1}
+            assert_raises(AttemptErrors::EvidenceUnavailable) do
+              client.call("queue_finish", finish_params, mutation_id: "cross-scope", upload_parts: ["foreign"], purpose: :artifacts)
+            end
+            assert_equal before, @journal.ref_value
+            done = client.call("queue_finish", finish_params.merge("step" => scopes.first), mutation_id: "child-finish",
+              upload_parts: ["Executed check."], purpose: :artifacts)
+            assert done.data.fetch("queue_complete")
+            snapshot = client.call("assignment_snapshot", {"assignment_id" => "batch", "attempt_id" => "integrator", "kind" => "queue"},
+              download: true, purpose: :assignment_snapshot)
+            queue = Authority::OrdinaryQueue.new(work: @artifact.work, root: @inputs, bytes: snapshot.parts.fetch(0))
+            assert_equal :done, queue.status.find_by_number(scopes.first).status
+            assert_equal :active, queue.status.find_by_number(scopes.last).status
+            assert_equal :pending, queue.status.find_by_number(scopes[1]).status
+            assert_equal 1, snapshot.data.fetch("generation"), "other scopes do not advance the integrator's generation"
+            assert_equal scopes.last, snapshot.data.fetch("scope")
+            @journal.record(assignment_id: "batch", attempt_id: "worker-attempt", type: "transition",
+              payload: {"from" => "running", "to" => "succeeded", "reason" => "fixture independent acceptance"})
+            assert_raises(AttemptErrors::EvidenceUnavailable) do
+              start(client, scope: scopes.first, mutation: "repeat", attempt: "repeat")
+            end
+            attempts = @journal.derived_attempts("batch").to_h { |attempt| [attempt.attempt_id, attempt] }
+            assert_equal "running", attempts.fetch("integrator").state
+            assert_equal "succeeded", attempts.fetch("worker-attempt").state
+            assert_equal 2, attempts.size
+          end
+          with_owner do |client|
+            snapshot = client.call("assignment_snapshot", {"assignment_id" => "batch", "attempt_id" => "integrator", "kind" => "queue"},
+              download: true, purpose: :assignment_snapshot)
+            queue = Authority::OrdinaryQueue.new(work: @artifact.work, root: @inputs, bytes: snapshot.parts.fetch(0))
+            assert_equal :done, queue.status.find_by_number(scopes.first).status
+            assert_equal :active, queue.status.find_by_number(scopes.last).status
+          end
+        end
+      end
+
+      def test_attempt_id_cannot_alias_another_registered_assignment
+        with_fixture do
+          other = PreparedRegistrationFixture.build(root: @inputs, scope: "010.01",
+            definition: @artifact.work.definition.merge("session_id" => "other"))
+          with_owner do |client|
+            register(client)
+            client.call("register_assignment", other.header(expected_generation: 0).merge("pane" => "w1:p1"),
+              mutation_id: "register-other", upload_parts: [other.bundle], purpose: :candidate)
+            @admission.role = :worker
+            start(client)
+            before = @journal.ref_value
+            assert_raises(AttemptErrors::EvidenceUnavailable) do
+              start(client, attempt: "definition-future", mutation: "reserved-start")
+            end
+            assert_raises(AttemptErrors::EvidenceUnavailable) do
+              client.call("start_attempt", {"assignment_id" => "other", "attempt_id" => "worker-attempt",
+                "expected_generation" => 0, "scope" => "010.01", "head" => @admission.execution_head,
+                "pane" => "w1:p1"}, mutation_id: "other-start")
+            end
+            assert_equal before, @journal.ref_value
+            assert_empty @journal.derived_attempts("other")
+          end
+        end
+      end
+
       private
 
       def result_artifact = "Executed tests: all passed."
@@ -396,9 +473,9 @@ module Ace
         client.call("register_assignment", params, mutation_id: mutation, upload_parts: [@bundle], purpose: :candidate)
       end
 
-      def start(client, mutation: "original-start", attempt: "worker-attempt", head: @admission.execution_head)
+      def start(client, mutation: "original-start", attempt: "worker-attempt", head: @admission.execution_head, scope: @artifact.work.manifest.fetch("scope"))
         client.call("start_attempt", {"assignment_id" => "batch", "attempt_id" => attempt,
-          "expected_generation" => 0, "head" => head, "pane" => "w1:p1"}, mutation_id: mutation)
+          "expected_generation" => 0, "head" => head, "pane" => "w1:p1", "scope" => scope}, mutation_id: mutation)
       end
 
       def with_owner
@@ -414,7 +491,7 @@ module Ace
         assert thread.join(3), "ordinary owner must drain"
       end
 
-      def with_fixture
+      def with_fixture(children: [])
         Dir.mktmpdir("ordinary-lifecycle-", Etc.getpwuid(Process.uid).dir) do |root|
           @root = root
           File.chmod(0o700, root)
@@ -425,7 +502,7 @@ module Ace
           git(repository, "init", "-b", "main")
           git(repository, "-c", "user.name=test", "-c", "user.email=test@example.invalid", "commit", "--allow-empty", "-m", "seed")
           @journal = Molecules::EvidenceJournal.new(repo_root: repository, checkout_root: File.join(root, "checkout"))
-          @artifact = PreparedRegistrationFixture.build(root: @inputs, scope: "010.01", definition: {
+          @artifact = PreparedRegistrationFixture.build(root: @inputs, scope: "010.01", children: children, definition: {
             "session_id" => "batch", "project_id" => "atlas", "task_id" => "8xf.t.ei9.0",
             "name" => "verified delivery", "created_at" => "2026-10-16T00:00:00Z", "source_config" => "job.yaml"})
           @bundle = @artifact.bundle

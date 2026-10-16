@@ -40,7 +40,8 @@ module Ace
 
         # This returns proposed bytes only. The lifecycle owns authorization,
         # generation, replay and publication together with its attempt events.
-        def transition(operation:, step: nil, report: nil, message: nil)
+        def transition(operation:, scope: @work.manifest.fetch("scope"), step: nil, report: nil, message: nil)
+          invalid! unless @work.manifest.fetch("steps").any? { |entry| entry.fetch("number") == scope }
           value = JSON.parse(@bytes)
           Dir.mktmpdir("ordinary-queue-", @root) do |scratch|
             File.chmod(0o700, scratch)
@@ -53,11 +54,10 @@ module Ace
               value.fetch(group).each { |filename, content| write(File.join(directory, group, filename), content) }
             end
             executor = Organisms::AssignmentExecutor.new(cache_base: scratch, selected_assignment: assignment)
-            scope = @work.manifest.fetch("scope")
             case operation
             when :activate
               state = executor.status.fetch(:state)
-              invalid! unless state.steps.all? { |item| item.status == :pending }
+              invalid! unless state.find_by_number(scope)&.status == :pending
               executor.step_writer.mark_active(state.find_by_number(scope).file_path)
             when :start
               executor.start_step(step_number: step, fork_root: scope)

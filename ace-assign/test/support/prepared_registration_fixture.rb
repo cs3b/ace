@@ -24,7 +24,7 @@ module Ace
         end
       end
 
-      def self.build(root:, definition:, scope:, context_text: "Exact fixture context.\n")
+      def self.build(root:, definition:, scope:, context_text: "Exact fixture context.\n", children: [])
         definition = definition.reject { |key, _| key == "prepared_work" }
         directory = Dir.mktmpdir("prepared-fixture-tree-", root); File.chmod(0700, directory)
         task = definition.fetch("task_id")
@@ -33,9 +33,14 @@ module Ace
           step_path => YAML.dump({"name" => "execute", "status" => "pending", "context" => "fork", "taskref" => task}) + "---\nExact fixture work.\n",
           "context/#{task}/spec.md" => YAML.dump({"id" => task, "status" => "pending", "needs_review" => false, "dependencies" => []}) + "---\nReviewed fixture task.\n",
           "context/#{task}/bundle.txt" => context_text}
+        children.each do |number|
+          files["steps/#{number}-execute.st.md"] = YAML.dump({"name" => "execute", "status" => "pending",
+            "parent" => number.split(".")[0...-1].join(".")}) + "---\nExact child work.\n"
+        end
         record = ->(path) { {"filename" => path, "bytes" => files.fetch(path).bytesize, "sha256" => Digest::SHA256.hexdigest(files.fetch(path))} }
         manifest = {"version" => 1, "assignment_id" => definition.fetch("session_id"), "project_id" => definition.fetch("project_id"), "task_id" => task, "scope" => scope,
-          "job" => record.call("job.yaml"), "steps" => [record.call(step_path).merge("number" => scope, "filename" => File.basename(step_path))],
+          "job" => record.call("job.yaml"), "steps" => ([scope] + children).map { |number|
+            path = "steps/#{number}-execute.st.md"; record.call(path).merge("number" => number, "filename" => File.basename(path)) },
           "context" => [{"uri" => "task://#{task}", "task_id" => task, "spec" => record.call("context/#{task}/spec.md"), "text" => record.call("context/#{task}/bundle.txt"), "reports" => []}]}
         files["manifest.json"] = Authority::PreparedWork.canonical_manifest(manifest) + "\n"
         files.each { |path, bytes| target = File.join(directory, path); FileUtils.mkdir_p(File.dirname(target)); File.binwrite(target, bytes) }

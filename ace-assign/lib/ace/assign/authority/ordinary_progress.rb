@@ -19,7 +19,8 @@ module Ace
           params = request.fetch("params")
           operation = request.fetch("operation")
           if operation == "assignment_snapshot"
-            strict!(params, %w[assignment_id kind])
+            strict!(params, %w[assignment_id attempt_id kind])
+            token!(params.fetch("attempt_id")) unless params.fetch("attempt_id").nil?
             unless request.fetch("mutation_id").nil? && %w[prepared_work queue].include?(params.fetch("kind"))
               raise ArgumentError, "ordinary snapshot must be a read of accepted work or queue"
             end
@@ -53,6 +54,11 @@ module Ace
           registered = registration(params.fetch("assignment_id"), commit: commit)
           raise AttemptErrors::NotFound, "ordinary assignment is not registered" unless registered
           queue_record = current_queue_record(registered, commit)
+          selected_events = if params.fetch("attempt_id")
+            result_events(params, commit)
+          else
+            []
+          end
           kind = params.fetch("kind")
           source = kind == "prepared_work" ? registered : queue_record
           path_key, digest_key, size = if kind == "prepared_work"
@@ -66,7 +72,8 @@ module Ace
           end
           authorize!(request, peer, role, deadline)
           {data: {"project_id" => @project, "assignment_id" => params.fetch("assignment_id"), "kind" => kind,
-            "attempt_id" => queue_record["attempt_id"], "generation" => queue_record.fetch("generation"),
+            "attempt_id" => params.fetch("attempt_id"), "generation" => @journal.authority_generation(selected_events),
+            "scope" => selected_events.find { |event| event["type"] == "intent" }&.dig("payload", "scope"),
             "journal_commit" => commit, "sha256" => source.fetch(digest_key), "bytes" => bytes.bytesize,
             "prepared_work" => registered.fetch("prepared_work"), "definition_digest" => registered.fetch("definition_digest")},
             transfer_parts: [bytes], replayed: false}
@@ -105,48 +112,49 @@ module Ace
                 raise AttemptErrors::Conflict, "ordinary progress requires the original running attempt"
               end
               record = current_queue_record(registered, prefix)
-              unless record["attempt_id"] == params.fetch("attempt_id")
-                raise AttemptErrors::UnauthorizedIdentity, "ordinary queue owner differs"
-              end
-              bytes = @journal.bounded_blob(record.fetch("queue_ref"), commit: prefix, max_bytes: PreparedWork::MAX_TOTAL)
-              unless Digest::SHA256.hexdigest(bytes) == record.fetch("queue_sha256")
-                raise AttemptErrors::EvidenceUnavailable, "ordinary progress snapshot differs"
-              end
-              queue = OrdinaryQueue.new(work: work, root: @input_root, bytes: bytes)
+              scope = events.find { |event| event["type"] == "intent" }.fetch("payload").fetch("scope")
+              queue = OrdinaryQueue.new(work: work, root: @input_root, bytes: queue_bytes(record, prefix))
               next_queue = case operation
-              when "queue_start" then queue.transition(operation: :start, step: params.fetch("step"))
-              when "queue_finish" then queue.transition(operation: :finish, step: params.fetch("step"), report: report)
-              when "queue_fail" then queue.transition(operation: :fail, message: params.fetch("message"))
+              when "queue_start" then queue.transition(operation: :start, scope: scope, step: params.fetch("step"))
+              when "queue_finish" then queue.transition(operation: :finish, scope: scope, step: params.fetch("step"), report: report)
+              when "queue_fail" then queue.transition(operation: :fail, scope: scope, message: params.fetch("message"))
               end
               sha = Digest::SHA256.hexdigest(next_queue.bytes)
               path = "execution/definitions/#{params.fetch('assignment_id')}-queue-#{sha}.json"
               {events: [], blobs: {path => next_queue.bytes}, data: {
                 "authority" => "ordinary", "assignment_id" => params.fetch("assignment_id"), "attempt_id" => params.fetch("attempt_id"),
-                "project_id" => @project, "queue_ref" => path, "queue_sha256" => sha, "state" => "running",
-                "queue_complete" => next_queue.status.subtree_complete?(work.manifest.fetch("scope"))}}
+                "project_id" => @project, "scope" => scope, "queue_ref" => path, "queue_sha256" => sha, "state" => "running",
+                "queue_complete" => next_queue.status.subtree_complete?(scope)}}
             end
           end
         end
 
         def current_queue_record(registered, commit)
           assignment = registered.fetch("assignment_id")
-          attempts = @journal.derived_attempts(assignment, commit: commit)
-          return registered if attempts.empty?
-          raise AttemptErrors::EvidenceUnavailable, "ordinary queue has ambiguous execution owners" unless attempts.one?
-          events = @journal.read_events(assignment, commit: commit).select { |event| event["attempt_id"] == attempts.first.attempt_id }
-          unless Models::EvidenceEvent.chain_valid?(events)
-            raise AttemptErrors::EvidenceUnavailable, "ordinary queue history is corrupt"
+          events = @journal.read_events(assignment, commit: commit)
+          events.group_by { |event| event.fetch("attempt_id") }.each_value do |chain|
+            raise AttemptErrors::EvidenceUnavailable, "ordinary queue history is corrupt" unless Models::EvidenceEvent.chain_valid?(chain)
           end
-          event = events.reverse.find do |entry|
+          updates = events.select do |entry|
             entry["type"] == "authority_mutation" &&
               %w[start_attempt queue_start queue_finish queue_fail].include?(entry.dig("payload", "operation"))
           end
-          record = event&.dig("payload", "data")
+          return registered if updates.empty?
+          event = @journal.latest_event!(assignment_id: assignment, event_digests: updates.map { |entry| entry.fetch("digest") }, commit: commit)
+          record = event.dig("payload", "data")
           unless record && record.values_at("authority", "assignment_id", "attempt_id", "project_id") ==
-              ["ordinary", assignment, attempts.first.attempt_id, @project]
+              ["ordinary", assignment, event.fetch("attempt_id"), @project]
             raise AttemptErrors::EvidenceUnavailable, "ordinary canonical queue is unavailable"
           end
-          record.merge("generation" => @journal.authority_generation(events))
+          record
+        end
+
+        def queue_bytes(record, commit)
+          bytes = @journal.bounded_blob(record.fetch("queue_ref"), commit: commit, max_bytes: PreparedWork::MAX_TOTAL)
+          unless Digest::SHA256.hexdigest(bytes) == record.fetch("queue_sha256")
+            raise AttemptErrors::EvidenceUnavailable, "ordinary canonical queue bytes differ"
+          end
+          bytes
         end
       end
     end

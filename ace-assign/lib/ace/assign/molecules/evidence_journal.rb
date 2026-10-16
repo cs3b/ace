@@ -207,6 +207,21 @@ module Ace
           event_commits_for_assignments!(selectors: {assignment_id => event_digests}, commit: commit).fetch(assignment_id)
         end
 
+        # Cross-attempt projections use canonical publication order, never the
+        # wall-clock timestamps of independently chained attempts. Exactly one
+        # selected event must have been introduced by the latest relevant CAS.
+        def latest_event!(assignment_id:, event_digests:, commit:)
+          introductions = event_commits!(assignment_id: assignment_id, event_digests: event_digests, commit: commit)
+          introduced_commits = introductions.values.to_h { |value| [value, true] }
+          node = canonical_history_nodes!(commit).find { |entry| introduced_commits.key?(entry.first) }
+          selected = node && introductions.select { |_digest, introduced| introduced == node.first }.keys
+          unless selected&.one?
+            raise AttemptErrors::EvidenceUnavailable, "latest canonical event is missing or ambiguous"
+          end
+          read_events(assignment_id, commit: commit).find { |event| event.fetch("digest") == selected.first } ||
+            raise(AttemptErrors::EvidenceUnavailable, "latest canonical event is unavailable")
+        end
+
         # One immutable walk for an operation selecting several assignments.
         # Every selected assignment retains its complete chain and exact raw
         # blob proof; the result is returned, never cached on this owner.

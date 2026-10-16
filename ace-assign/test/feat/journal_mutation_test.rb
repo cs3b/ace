@@ -51,6 +51,27 @@ module Ace
         end
       end
 
+      def test_latest_cross_attempt_event_uses_publication_order_when_wall_clock_moves_backwards
+        with_journal do |journal, _repo|
+          first = Models::EvidenceEvent.build(type: "intent", attempt_id: "first", payload: {}, recorded_at: Time.utc(2027))
+          journal.append(assignment_id: "batch", attempt_id: "first", events: [first])
+          prefix = journal.ref_value
+          second = Models::EvidenceEvent.build(type: "intent", attempt_id: "second", payload: {}, recorded_at: Time.utc(2026))
+          journal.append(assignment_id: "batch", attempt_id: "second", events: [second])
+          assert_equal first, journal.latest_event!(assignment_id: "batch", event_digests: [first.fetch("digest")], commit: prefix)
+          assert_equal second, journal.latest_event!(assignment_id: "batch",
+            event_digests: [first.fetch("digest"), second.fetch("digest")], commit: journal.ref_value)
+          assert_raises(AttemptErrors::EvidenceUnavailable) do
+            journal.latest_event!(assignment_id: "batch", event_digests: [second.fetch("digest")], commit: prefix)
+          end
+          mutate(journal) { plan }
+          simultaneous = journal.read_events("assignment-1").map { |event| event.fetch("digest") }
+          assert_raises(AttemptErrors::EvidenceUnavailable) do
+            journal.latest_event!(assignment_id: "assignment-1", event_digests: simultaneous, commit: journal.ref_value)
+          end
+        end
+      end
+
       def test_candidate_bundle_is_immutable_canonical_bytes_without_widening_service_record_paths
         with_journal do |journal, _repo|
           bytes = "# v2 git bundle\nbinary\x00\r\n".b
