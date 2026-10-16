@@ -128,7 +128,7 @@ module Ace
             paths.each do |path|
               parts = path.split("/", -1)
               event = parts.size == 4 && parts[0] == "execution" && parts[2] == "events" && JournalMutation::ID.match?(parts[1]) && parts[3].end_with?(".json")
-              request = parts.size == 3 && parts[0, 2] == %w[execution requests] && parts[2].end_with?(".json") && JournalMutation::ID.match?(parts[2].delete_suffix(".json"))
+              request = parts.size == 3 && [%w[execution requests], %w[execution merge-requests]].include?(parts[0, 2]) && parts[2].end_with?(".json") && JournalMutation::ID.match?(parts[2].delete_suffix(".json"))
               # Definitions, prepared packets, candidate bundles and imports
               # retain the SAME mutation owner's closed immutable blob dialect.
               validate_blob_path!(path) unless event || request
@@ -138,6 +138,12 @@ module Ace
             unless records.map { |record| record.fetch("request_id") }.sort == expected_requests
               raise AttemptErrors::EvidenceUnavailable, "canonical initialization service inventory differs"
             end
+            fixed_records = fixed_merge_request_records(commit: value)
+            expected_fixed = paths.select { |path| path.start_with?("execution/merge-requests/") }.map { |path| File.basename(path, ".json") }.sort
+            unless fixed_records.map { |record| record.fetch("request_id") }.sort == expected_fixed
+              raise AttemptErrors::EvidenceUnavailable, "canonical initialization fixed merge inventory differs"
+            end
+            fixed_records.each { |record| verify_fixed_record!(record, commit: value) }
             current = File.stat(@repo_root)
             unless !File.symlink?(@repo_root) && [current.dev, current.ino, current.uid, current.gid, current.mode] == identity && ref_value == value
               raise AttemptErrors::EvidenceUnavailable, "canonical initialization selection changed"
@@ -922,6 +928,9 @@ module Ace
         def authorization_conflict(binding)
           authorization = binding["authorization"]
           return nil unless authorization.is_a?(String) && !authorization.empty?
+          if authorization.start_with?("proposal-")
+            return proposal_claim_conflict(authorization, request_id: binding.fetch("request_id"), fixed: false)
+          end
           service_request_records.find do |other|
             next false if other["request_id"] == binding.fetch("request_id")
             next false if other["state"] == "rejected" && other["consumed"] == false
@@ -1271,7 +1280,7 @@ module Ace
         # opaque reference is receiver-issued, never caller-supplied, and
         # replays return the originally issued one.
         FIXED_MERGE_BINDING_FIELDS = %w[request_id project_id assignment_id attempt_id
-          queue_entry operation authorization input_digest request principal receiver_id
+          queue_entry operation authorization input_digest request principal caller_uid receiver_id
           configuration_sha256 execution_identity].freeze
         FIXED_MERGE_MUTABLE_FIELDS = %w[state receipt reference recorded_at claimed_at finished_at].freeze
 
@@ -1324,25 +1333,27 @@ module Ace
 
         # Claim the start of the fixed effect: pending -> uncertain in one
         # CAS transition, so a receiver restart can never dispatch a second
-        # merge for the same admitted record — begin replays as already
-        # started, and only the owning effect may later settle it.
+        # merge for the same admitted record. An already-started claim refuses;
+        # only the winning effect may later settle it.
         def begin_fixed_merge_request(request_id)
           current = fixed_merge_request(request_id)
           raise AttemptErrors::NotFound, "Fixed merge request #{request_id} not found" unless current
-          return current if current["state"] == "uncertain"
+          if current["state"] == "uncertain"
+            raise AttemptErrors::InvalidState, "Fixed merge request #{request_id} was already started"
+          end
           unless current["state"] == "pending"
             raise AttemptErrors::InvalidState, "Fixed merge request #{request_id} is terminal"
           end
           update_fixed_merge_request(request_id, expected: current,
             replacement: current.merge("state" => "uncertain", "claimed_at" => Time.now.utc.iso8601(9)),
-            event_type: "merge_transition")
+            event_type: "merge_transition", guard: -> { verify_fixed_proposal!(current) })
         end
 
         # Terminal settlement: succeeded/failed with the exact receipt
         # validated HERE at the journal boundary — structure, the closed
         # terminal invariants, and the binding against the current record.
         # Failure is terminal only with immutable no-effect evidence.
-        def settle_fixed_merge_request(request_id, terminal_status:, receipt:)
+        def settle_fixed_merge_request(request_id, terminal_status:, receipt:, attestation: nil)
           unless FIXED_MERGE_STATES.include?(terminal_status) && %w[succeeded failed].include?(terminal_status)
             raise ArgumentError, "invalid fixed merge terminal status"
           end
@@ -1351,15 +1362,38 @@ module Ace
           unless %w[pending uncertain].include?(current["state"])
             raise AttemptErrors::InvalidState, "Fixed merge request #{request_id} is terminal"
           end
+          evidence_files = {}
+          if terminal_status == "failed"
+            unless attestation.is_a?(Hash) &&
+                attestation.values_at("request_id", "input_digest", "reference", "outcome") ==
+                  current.values_at("request_id", "input_digest", "reference") + ["no_effect"] &&
+                attestation["candidate_head"] == current.dig("request", "candidate_head") &&
+                attestation["expected_base_head"] == current.dig("request", "expected_base_head")
+              raise AttemptErrors::ReceiptRejected, "Fixed merge no_effect_evidence requires a bound canonical attestation"
+            end
+            content = JSON.generate(attestation)
+            raise AttemptErrors::ReceiptRejected, "Fixed merge attestation exceeds bound" if content.bytesize > 16_384
+            path = fixed_no_effect_path(request_id)
+            evidence_files[path] = content
+            receipt = receipt.merge("effect" => receipt.fetch("effect").merge(
+              "no_effect_evidence" => {"reference" => path, "sha256" => Digest::SHA256.hexdigest(content)}))
+          elsif attestation
+            raise AttemptErrors::ReceiptRejected, "Successful merge cannot carry no-effect attestation"
+          end
           validate_fixed_receipt!(current, terminal_status, receipt)
           update_fixed_merge_request(request_id, expected: current,
             replacement: current.merge("state" => terminal_status, "receipt" => receipt,
               "finished_at" => Time.now.utc.iso8601(9)),
-            event_type: "merge_transition")
+            event_type: "merge_transition", evidence_files: evidence_files)
         end
 
         def fixed_merge_request_path(request_id)
           "execution/merge-requests/#{request_id}.json"
+        end
+
+        def fixed_no_effect_path(request_id)
+          validate_request_id!(request_id)
+          "execution/merge-evidence/#{request_id}.json"
         end
 
         def validate_fixed_receipt!(current, terminal_status, receipt)
@@ -1393,20 +1427,15 @@ module Ace
           return false unless receipt.is_a?(Hash)
           evidence = receipt.dig("effect", "no_effect_evidence")
           return false unless evidence.is_a?(Hash)
-          repo_root = File.realpath(@repo_root)
-          path = File.expand_path(evidence["reference"].to_s, repo_root)
-          real = begin
-            File.realpath(path)
-          rescue Errno::ENOENT, Errno::EACCES, Errno::ELOOP
-            return false
-          end
-          real.start_with?(repo_root + File::SEPARATOR) &&
-            Digest::SHA256.file(real).hexdigest == evidence.fetch("sha256")
-        rescue Errno::ENOENT, AttemptErrors::EvidenceUnavailable
+          path = fixed_no_effect_path(record.fetch("request_id"))
+          return false unless evidence["reference"] == path
+          content = bounded_blob(path, commit: ref_value, max_bytes: 16_384)
+          Digest::SHA256.hexdigest(content) == evidence["sha256"]
+        rescue AttemptErrors::EvidenceUnavailable
           false
         end
 
-        def update_fixed_merge_request(request_id, expected:, replacement:, event_type:, guard: nil)
+        def update_fixed_merge_request(request_id, expected:, replacement:, event_type:, guard: nil, evidence_files: {})
           unless %w[merge_admission merge_transition].include?(event_type)
             raise ArgumentError, "invalid fixed merge event type"
           end
@@ -1419,10 +1448,8 @@ module Ace
               prepared = prepare_fixed_update(request_id: request_id, expected: expected,
                 replacement: replacement, event_type: event_type, guard: guard)
               return prepared.fetch(:record) if prepared[:replayed]
+              write_mutation_blobs(evidence_files, commit: old)
               path = fixed_merge_request_path(request_id)
-              full = File.join(checkout_dir, path)
-              FileUtils.mkdir_p(File.dirname(full))
-              File.write(full, JSON.pretty_generate(prepared.fetch(:record)))
               assignment_id = replacement.fetch("assignment_id")
               attempt_id = replacement.fetch("attempt_id")
               prior = read_events(assignment_id).reverse
@@ -1430,7 +1457,8 @@ module Ace
               event = Models::EvidenceEvent.build(type: event_type, attempt_id: attempt_id,
                 payload: prepared.fetch(:event).fetch(:payload), previous_digest: prior)
               write_event_files(assignment_id, [event])
-              git!("-C", checkout_dir, "add", "--", path, "execution/#{assignment_id}/events")
+              git!("-C", checkout_dir, "add", "--", "execution/#{assignment_id}/events")
+              stage_mutation_blobs(evidence_files.merge(path => JSON.pretty_generate(prepared.fetch(:record))))
               state = replacement.fetch("state")
               git!("-C", checkout_dir, "-c", "user.name=ace-assign", "-c", "user.email=ace-assign@localhost",
                 "commit", "-m", "evidence: fixed merge request #{request_id} #{state}")
@@ -1477,6 +1505,7 @@ module Ace
           end
           conflict = guard&.call
           raise_authorization_conflict!(conflict) if conflict
+          verify_fixed_proposal!(replacement) if event_type == "merge_admission"
           payload = {"request_id" => request_id, "state" => replacement.fetch("state"),
                      "input_digest" => replacement.fetch("input_digest"),
                      "record_digest" => Atoms::EvidenceDigest.digest(replacement),
@@ -1484,6 +1513,21 @@ module Ace
           {record: replacement, event: {type: event_type, payload: payload}, replayed: false}
         end
         private :prepare_fixed_update
+
+        def verify_fixed_proposal!(record)
+          return unless record.fetch("authorization").start_with?("proposal-")
+          proposal_authorize!(record.fetch("authorization"), fixed_proposal_binding(record))
+          conflict = proposal_claim_conflict(record.fetch("authorization"),
+            request_id: record.fetch("request_id"), fixed: true)
+          raise AttemptErrors::AuthorizationConflict, "Proposal already holds an effect claim" if conflict
+          nil
+        end
+
+        def fixed_proposal_binding(record)
+          record.slice("operation", "project_id", "assignment_id", "attempt_id", "input_digest", "caller_uid").merge(
+            "target" => {"resource" => record.fetch("request").fetch("pr_url"), "artifact_digest" => nil},
+            "candidate_head" => record.fetch("request").fetch("candidate_head"))
+        end
 
         def fixed_replay?(existing, replacement)
           FIXED_MERGE_BINDING_FIELDS.all? do |field|

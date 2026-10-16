@@ -120,7 +120,7 @@ module Ace
         # admission flag is rollback: new admission is unavailable while
         # canonical records and read-only status stay preserved.
         ORDINARY_SECTION_KEYS = %w[projects].freeze
-        ORDINARY_PROJECT_KEYS = %w[receiver_id socket_path receiver_uid principal admission].freeze
+        ORDINARY_PROJECT_KEYS = %w[receiver_id socket_path receiver_uid principal admission journal_repository journal_ref].freeze
         ORDINARY_AUTHORIZATION_KEYS = %w[operation project_id assignment_id attempt_id queue_entry
           input_digest forge pr_url head_repository head_ref candidate_head base_repository
           base_ref expected_base_head expires_at].freeze
@@ -165,13 +165,19 @@ module Ace
             end
             unless entry["receiver_id"].is_a?(String) && entry["receiver_id"].match?(ID) &&
                 entry["socket_path"].is_a?(String) && entry["socket_path"].start_with?("/") &&
-                entry["receiver_uid"].is_a?(Integer) && entry["receiver_uid"] >= 0 &&
+                entry["receiver_uid"].is_a?(Integer) && entry["receiver_uid"].positive? &&
                 entry["principal"].is_a?(String) && !entry["principal"].empty?
               raise Ace::Lab::InvalidConfigurationError, "ordinary receiver mapping is incomplete"
             end
             admission = entry.fetch("admission", "enabled")
             unless %w[enabled disabled].include?(admission)
               raise Ace::Lab::InvalidConfigurationError, "ordinary admission flag is invalid"
+            end
+            repository, ref = entry.values_at("journal_repository", "journal_ref")
+            unless repository.is_a?(String) && repository.start_with?("/") && !repository.include?("\0") &&
+                File.expand_path(repository) == repository &&
+                ref.is_a?(String) && ref.match?(%r{\Arefs/[a-zA-Z0-9_-]+(?:/[a-zA-Z0-9_-]+)+\z})
+              raise Ace::Lab::InvalidConfigurationError, "ordinary journal selection is invalid"
             end
           end
           true

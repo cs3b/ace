@@ -7,12 +7,12 @@ module Ace
         module Attempt
           class Evidence < Ace::Support::Cli::Command
             include Attempt::Base
-            desc "Read coordinator-accepted live execution or historical review authority"
+            desc "Read coordinator-accepted live execution or historical execution authority"
             option :attempt, required: true, desc: "Accepted execution attempt ID"
             option :receipt_digest, required: true, desc: "Accepted receipt digest"
             option :kind, default: "check", desc: "Evidence purpose: check, review-collection or review-approval"
             option :check_name, default: "tests", desc: "Required check name (tests binds operation test)"
-            option :historical_head, desc: "Recorded collection/approval head for historical authority only"
+            option :historical_head, desc: "Exact recorded head for historical authority only (never current-head evidence)"
             option :format, default: "json", desc: "JSON evidence projection"
 
             def call(**options)

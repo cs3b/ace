@@ -43,7 +43,7 @@ module Ace
         # @param path [String, nil] trusted policy path to re-read per decision
         # @param loader [Proc, nil] trusted reader (default: GrantResolver);
         #   the only override point, for non-privileged test documents
-        def initialize(policy_document, path: nil, loader: nil)
+        def initialize(policy_document, path: nil, loader: nil, proposal_resolver: nil, caller_uid: nil)
           unless policy_document.is_a?(Hash) && policy_document["authorizations"].is_a?(Hash)
             raise Ace::Lab::InvalidConfigurationError,
               "trusted policy document must contain an authorizations mapping"
@@ -51,6 +51,8 @@ module Ace
           @authorizations = policy_document.fetch("authorizations")
           @configuration_digest = ServicePolicy.configuration_digest(policy_document)
           @path = path
+          @proposal_resolver = proposal_resolver
+          @caller_uid = caller_uid
           @loader = loader || ->(trusted_path) { GrantResolver.trusted_document(trusted_path) }
           freeze
         end
@@ -65,6 +67,18 @@ module Ace
           end
           unless binding.is_a?(Hash) && binding.fetch("operation", nil) == OPERATION
             return refuse("only the ordinary merge operation is resolvable")
+          end
+          if reference.start_with?("proposal-")
+            return refuse("canonical proposal authority is unavailable") unless @proposal_resolver && @caller_uid.is_a?(Integer)
+            begin
+              decision = @proposal_resolver.call(reference, binding.slice(
+                "operation", "project_id", "assignment_id", "attempt_id", "input_digest", "candidate_head").merge(
+                  "target" => {"resource" => binding.fetch("pr_url"), "artifact_digest" => nil},
+                  "caller_uid" => @caller_uid))
+              return Decision.new(authorized?: true, decision: decision, code: nil, message: nil)
+            rescue Ace::Assign::Error
+              return refuse("canonical proposal does not authorize this exact ordinary merge")
+            end
           end
           decision = authorizations[reference]
           return refuse("authorization reference is unresolved") unless decision.is_a?(Hash)

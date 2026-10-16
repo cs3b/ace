@@ -48,7 +48,7 @@ module Ace
         command = CLI::Commands::Service::Listen.new
         error = assert_raises(Ace::Support::Cli::Error) do
           capture_io do
-            command.call(mode: "ordinary-merge", project: "atlas", config: config)
+            with_trusted_config(config) { command.call(mode: "ordinary-merge", project: "atlas", config: config) }
           end
         end
         assert_includes error.message, "ordinary_merge_selection_mismatch"
@@ -85,7 +85,7 @@ module Ace
           ->(_path) { complete_policy_document }) do
           Molecules::ForgeMergeConfig.stub(:load, ->(*_args) { forge_config }) do
             assert_raises(Errno::ENOTDIR) do
-              capture_io { command.call(mode: "ordinary-merge", project: "atlas", config: config) }
+              capture_io { with_trusted_config(config) { command.call(mode: "ordinary-merge", project: "atlas", config: config) } }
             end
           end
         end
@@ -117,7 +117,7 @@ module Ace
         Molecules::GrantResolver.stub(:trusted_document,
           ->(_path) { complete_policy_document }) do
           error = assert_raises(Ace::Support::Cli::Error) do
-            capture_io { command.call(mode: "ordinary-merge", project: "atlas", config: config) }
+            capture_io { with_trusted_config(config) { command.call(mode: "ordinary-merge", project: "atlas", config: config) } }
           end
           assert_includes error.message,
             "config missing: #{Molecules::ForgeMergeConfig::DEFAULT_PATH}"
@@ -160,6 +160,13 @@ module Ace
       end
 
       private
+
+      def with_trusted_config(path)
+        original = Molecules::GrantResolver.method(:read_verified)
+        Molecules::GrantResolver.stub(:read_verified, ->(selected) {
+          selected == path ? File.read(path) : original.call(selected)
+        }) { yield }
+      end
 
       def git_init_with_commit(repo)
         Open3.capture3("git", "init", "-b", "main", chdir: repo)

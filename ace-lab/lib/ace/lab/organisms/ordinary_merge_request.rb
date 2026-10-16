@@ -6,6 +6,7 @@ require "open3"
 require_relative "protected_service_request"
 require_relative "../molecules/ordinary_socket"
 require "ace/assign/atoms/fixed_merge_schemas"
+require "ace/assign/molecules/installed_journal_read"
 
 module Ace
   module Lab
@@ -45,8 +46,7 @@ module Ace
         def initialize(topology: nil, policy: nil, coordinator: nil, repo_root: nil, ingress: nil)
           @topology = topology || TopologyService.from_config
           @repo_root = repo_root || git_toplevel
-          @coordinator = coordinator ||
-            Ace::Assign::Organisms::AttemptCoordinator.new(repo_root: @repo_root)
+          @coordinator = coordinator
           @policy = policy || Molecules::ServicePolicy.new(
             Molecules::GrantResolver.trusted_document(Ace::Lab.authorization_path)
           )
@@ -71,6 +71,11 @@ module Ace
             queue_entry: queue_entry, authorization: authorization, request_id: request_id,
             document: document)
           principal = authenticate!(project)
+          unless @coordinator
+            return with_installed_journal(project) { |producer| producer.request(project: project,
+              assignment: assignment, attempt: attempt, queue_entry: queue_entry, operation: operation,
+              input: input, authorization: authorization, request_id: request_id, **options) }
+          end
           existing = @coordinator.fixed_merge_record(request_id)
           if existing
             return ack_envelope(existing) if exact_replay?(existing, project: project,
@@ -137,6 +142,11 @@ module Ace
             invalid!("invalid input digest", request)
           end
           authenticate!(project)
+          unless @coordinator
+            return with_installed_journal(project) { |producer| producer.status(project: project,
+              assignment: assignment, attempt: attempt, queue_entry: queue_entry, reference: reference,
+              request: request, input_digest: input_digest, **options) }
+          end
           record = @coordinator.fixed_merge_status(reference: reference, request_id: request,
             project_id: project, assignment_id: assignment, attempt_id: attempt,
             queue_entry: queue_entry, input_digest: input_digest)
@@ -197,6 +207,23 @@ module Ace
         end
 
         private
+
+        def with_installed_journal(project)
+          receiver = @policy.ordinary_receiver!(project)
+          unless receiver && %w[journal_repository journal_ref].all? { |key| receiver.key?(key) }
+            raise Ace::Lab::InvalidConfigurationError, "installed ordinary journal selection is missing"
+          end
+          repository, ref = receiver.values_at("journal_repository", "journal_ref")
+          boundary = Ace::Assign::Molecules::InstalledJournalRead.new(repo_root: repository,
+            ref: ref, owner_uid: receiver.fetch("receiver_uid"))
+          boundary.with(deadline: Process.clock_gettime(Process::CLOCK_MONOTONIC) + 30) do |view|
+            journal = Ace::Assign::Molecules::EvidenceJournal.new(repo_root: repository,
+              ref: ref, checkout_root: File.join(repository, ".unused-reader"), read_boundary: view)
+            coordinator = Ace::Assign::Organisms::AttemptCoordinator.new(repo_root: @repo_root, journal: journal)
+            yield self.class.new(topology: @topology, policy: @policy, repo_root: @repo_root,
+              coordinator: coordinator, ingress: @ingress)
+          end
+        end
 
         # The immutable binding digest — spec ruling r4: lowercase hex SHA-256
         # over the canonical JSON (recursively key-sorted, compact, UTF-8) of
@@ -261,8 +288,15 @@ module Ace
                      "head_ref" => document.fetch("head_ref"), "candidate_head" => document.fetch("candidate_head"),
                      "base_repository" => document.fetch("base_repository"), "base_ref" => document.fetch("base_ref"),
                      "expected_base_head" => document.fetch("expected_base_head")}
-          @policy.authorize_ordinary!(authorization, binding)
-        rescue SecurityError => e
+          if authorization.start_with?("proposal-")
+            @coordinator.proposal_authorization(authorization, binding.slice(
+              "operation", "project_id", "assignment_id", "attempt_id", "input_digest", "candidate_head").merge(
+                "target" => {"resource" => document.fetch("pr_url"), "artifact_digest" => nil},
+                "caller_uid" => Process.uid))
+          else
+            @policy.authorize_ordinary!(authorization, binding)
+          end
+        rescue SecurityError, Ace::Assign::AttemptErrors::ReceiptRejected => e
           # Spec table (ruling r4): the authorization decision or reference is
           # invalid for this request — missing, expired, revoked, out of scope,
           # bound to another operation/project/PR/head, or not an ordinary
@@ -306,7 +340,7 @@ module Ace
         def normalize_ack(response, request_id:, input_digest:)
           data = response.fetch("data") { {} }
           expected = %w[schema type request_id input_digest reference]
-          digest = data["input_digest"]
+          digest = data.is_a?(Hash) && data["input_digest"]
           unless data.is_a?(Hash) && (data.keys - expected).empty? &&
               expected.all? { |key| data[key].is_a?(String) && !data[key].empty? } &&
               data.fetch("schema") == Ace::Assign::Atoms::FixedMergeSchemas::ACK_SCHEMA_ID &&
@@ -322,7 +356,7 @@ module Ace
         def normalize_refusal(response, request_id:, input_digest:)
           error = response.fetch("error") { {} }
           expected = %w[schema code message request_id input_digest]
-          valid = error.is_a?(Hash) && (error.keys - expected).empty? &&
+          valid = error.is_a?(Hash) && error.keys.sort == expected.sort &&
             error.fetch("schema") == Ace::Assign::Atoms::FixedMergeSchemas::REFUSAL_SCHEMA_ID &&
             CODES.include?(error.fetch("code")) &&
             error.fetch("message").is_a?(String) && !error.fetch("message").empty? &&

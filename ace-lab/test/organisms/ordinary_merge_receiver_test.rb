@@ -192,6 +192,22 @@ module Ace
         assert_equal @base_head, git("rev-parse", "refs/heads/main")
       end
 
+      def test_revocation_during_review_attachment_prevents_merge_post
+        forge = ForgeDouble.new(prs: {7 => open_pr})
+        policy = policy_document
+        path = policy_path
+        original = forge.method(:create_comment)
+        forge.define_singleton_method(:create_comment) do |**args|
+          File.write(path, YAML.safe_dump(policy.merge("authorizations" => {})))
+          original.call(**args)
+        end
+        receiver = build_receiver(forge: forge)
+        assert_equal "ok", receiver.handle(submission)["status"]
+        receiver.execute("request-1")
+        assert_equal "failed", @coordinator.fixed_merge_record("request-1")["state"]
+        refute forge.merge_invoked?
+      end
+
       def test_stale_producer_cannot_submit_after_static_policy_changes
         receiver = build_receiver
         changed = policy_document.merge("operations" => {"disabled" => {}})
@@ -317,7 +333,7 @@ module Ace
         assert_equal reference, record.fetch("reference")
         assert_equal deep_copy(valid_request), deep_copy(record.fetch("request"))
         # NO no-effect attestation was written for an invoked merge.
-        refute Dir.exist?(File.join(@repo, Organisms::OrdinaryMergeReceiver::NO_EFFECT_DIR))
+        refute_includes git("ls-tree", "-r", "--name-only", "refs/ace/execution"), "execution/merge-evidence/"
         event = JSON.parse(err.lines.grep(/ordinary_merge_uncertain/).last)
         assert_equal "request-1", event.fetch("request_id")
         assert_equal "host-integrator", event.fetch("owner")
@@ -342,7 +358,7 @@ module Ace
         assert_nil record["receipt"]
         assert_equal ack.fetch("data").fetch("reference"), record.fetch("reference")
         assert_equal deep_copy(valid_request), deep_copy(record.fetch("request"))
-        refute Dir.exist?(File.join(@repo, Organisms::OrdinaryMergeReceiver::NO_EFFECT_DIR))
+        refute_includes git("ls-tree", "-r", "--name-only", "refs/ace/execution"), "execution/merge-evidence/"
         event = JSON.parse(err.lines.grep(/ordinary_merge_uncertain/).last)
         assert_equal "request-1", event.fetch("request_id")
         assert_equal "host-integrator", event.fetch("owner")
@@ -360,8 +376,7 @@ module Ace
         assert_equal "failed", record.fetch("state")
         receipt = record.fetch("receipt")
         assert_equal "failed_no_effect", receipt.dig("effect", "outcome")
-        attestation = File.read(File.join(@repo, receipt.dig("effect", "no_effect_evidence",
-          "reference")))
+        attestation = git("show", "refs/ace/execution:#{receipt.dig('effect', 'no_effect_evidence', 'reference')}")
         assert_includes attestation, "not mergeable"
         refute forge.merged?(7)
       end
@@ -519,7 +534,7 @@ module Ace
         evidence = receipt.dig("effect", "no_effect_evidence")
         assert evidence["reference"]
         assert_equal late_head, git("rev-parse", "refs/heads/main")
-        attestation = File.read(File.join(@repo, evidence.fetch("reference")))
+        attestation = git("show", "refs/ace/execution:#{evidence.fetch('reference')}")
         assert_includes attestation, "request-1"
         assert_equal evidence.fetch("sha256"), Digest::SHA256.hexdigest(attestation)
         refute forge.merge_invoked?

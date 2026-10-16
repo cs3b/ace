@@ -70,12 +70,22 @@ module Ace
           end
         end
 
+        def test_requester_owned_configuration_cannot_select_receiver_identity
+          skip "requires an unprivileged requester" if Process.uid.zero?
+          path = File.join(@dir, "receiver.yml")
+          File.write(path, YAML.safe_dump(valid_document))
+          assert_raises(Ace::Lab::InvalidConfigurationError) { OrdinaryReceiverConfig.load(path) }
+        end
+
         private
 
         def write_and_load
           path = File.join(@dir, "receiver.yml")
           File.write(path, YAML.safe_dump(valid_document))
-          OrdinaryReceiverConfig.load(path)
+          GrantResolver.stub(:read_verified, ->(selected) {
+            assert_equal path, selected
+            File.read(selected)
+          }) { OrdinaryReceiverConfig.load(path) }
         end
 
         def valid_document

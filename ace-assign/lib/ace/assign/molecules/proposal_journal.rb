@@ -11,7 +11,7 @@ module Ace
         PROPOSAL_REFERENCE = /\Aproposal-[0-9a-f]{24}-r[1-9][0-9]*\z/
         PROPOSAL_BINDING = %w[operation project_id assignment_id attempt_id input_digest target candidate_head caller_uid].freeze
 
-        PROPOSAL_IMMUTABLE = (PROPOSAL_BINDING + %w[schema proposal_id revision revision_id request_id requester content_digest created_at authorization context options recommendation rationale prerequisites lifecycle_request revision_operation_id expected_source_revision]).freeze
+        PROPOSAL_IMMUTABLE = (PROPOSAL_BINDING + %w[schema proposal_id revision revision_id request_id requester content_digest created_at authorization context options recommendation rationale prerequisites lifecycle_request revision_operation_id expected_source_revision silence_delegated]).freeze
 
         def proposal_history(id)
           assignment_ids.flat_map do |assignment|
@@ -110,8 +110,7 @@ module Ace
             valid &&= updated["revision_operation_id"].nil? && updated["expected_source_revision"].nil?
           end
           unresolved = previous && proposal_claims(previous["revision_id"]).any? do |claim|
-            claim["state"] != "succeeded" &&
-              !(claim["state"] == "failed-settled" && settlement_evidence_intact?(claim))
+            claim["state"] != "succeeded" && !proposal_no_effect?(claim)
           end
           raise AttemptErrors::ReceiptRejected, "Claimed proposal cannot be revised; reconcile the existing effect" if unresolved
           raise AttemptErrors::ReceiptRejected, "Proposal revision must begin with exact immutable delivery scope" unless valid
@@ -119,10 +118,39 @@ module Ace
         private :validate_proposal_revision!
 
         def proposal_claims(reference)
-          service_request_records.select do |request|
+          claims = (service_request_records + fixed_merge_request_records).select do |request|
             request["authorization"] == reference &&
               !(request["state"] == "rejected" && request["consumed"] == false)
           end
+          return claims if claims.empty?
+          events = read_events(claims.first.fetch("assignment_id"))
+          claims.sort_by do |claim|
+            kind = claim.key?("queue_entry") ? "merge_admission" : "service_claim"
+            events.index do |event|
+              event["type"] == kind && event["attempt_id"] == claim.fetch("attempt_id") &&
+                event.dig("payload", "request_id") == claim.fetch("request_id")
+            end || raise(AttemptErrors::EvidenceUnavailable, "Proposal claim has no canonical admission event")
+          end
+        end
+
+        # Request IDs are scoped by record family. A same-text ID in the other
+        # family is another effect, never an idempotent replay.
+        def proposal_claim_conflict(reference, request_id:, fixed:)
+          [[service_request_records, false], [fixed_merge_request_records, true]].each do |records, family|
+            conflict = records.find do |claim|
+              claim["authorization"] == reference &&
+                !(family == fixed && claim["request_id"] == request_id) &&
+                !(claim["state"] == "rejected" && claim["consumed"] == false) &&
+                !proposal_no_effect?(claim)
+            end
+            return conflict if conflict
+          end
+          nil
+        end
+
+        def proposal_no_effect?(claim)
+          (claim["state"] == "failed-settled" && settlement_evidence_intact?(claim)) ||
+            (claim["state"] == "failed" && claim.key?("queue_entry") && fixed_no_effect_intact?(claim))
         end
 
         def proposal_authorize!(reference, binding)

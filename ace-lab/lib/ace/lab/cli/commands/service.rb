@@ -223,14 +223,10 @@ module Ace
               policy_document = Molecules::GrantResolver.trusted_document(
                 receiver_config.policy_path
               )
-              # The ONE canonical Assign journal: the coordinator binds the
-              # evidence ref of the canonical repository the receiver is
-              # installed for (config repo_path — the producer project's
-              # canonical checkout, the same authoritative journal the
-              # producer coordinator uses). Never an integration-checkout
-              # duplicate; the service identity's reviewed permissions are
-              # journal ref read/append, evidence checkout and no-effect
-              # attestation writes inside that repository.
+              # One canonical Assign identity/ref, selected by deployment. Its
+              # repository, checkout and locks must be owned exclusively by the
+              # installed service; requesters must not acquire write access.
+              # No-effect attestations are immutable blobs in the same journal.
               coordinator = Ace::Assign::Organisms::AttemptCoordinator.new(
                 repo_root: receiver_config.repo_path
               )
@@ -242,9 +238,9 @@ module Ace
                 socket_path: receiver_config.socket_path,
                 peer_uid: receiver_config.principal_uid,
                 socket_gid: receiver_config.socket_gid,
+                logger: ->(message) { warn message },
                 handler: receiver
               )
-              receiver.recover_pending!
               listener.serve
             rescue Ace::Lab::InvalidConfigurationError, Ace::Assign::AttemptErrors::EvidenceUnavailable => e
               emit(Organisms::OrdinaryMergeRequest.refusal_envelope(

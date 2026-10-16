@@ -12,7 +12,7 @@ module Ace
       HEAD_B = "b" * 40
 
       def setup
-        @dir = Dir.mktmpdir("ordinary-merge")
+        @dir = File.realpath(Dir.mktmpdir("ordinary-merge", Dir.home))
         @repo = File.join(@dir, "repo")
         FileUtils.mkdir_p(@repo)
         git(@repo, "init", "-b", "main")
@@ -74,6 +74,42 @@ module Ace
         first = producer.request(**request_args)
         second = producer.request(**request_args)
         assert_equal first.fetch("data").fetch("reference"), second.fetch("data").fetch("reference")
+      end
+
+      def test_installed_journal_is_selected_without_requester_cache_and_status_survives_receiver_downtime
+        producer = Organisms::OrdinaryMergeRequest.new(topology: @topology, policy: @policy,
+          repo_root: @repo, ingress: controlled_receiver)
+        accepted = producer.request(**request_args)
+        assert_equal "ok", accepted["status"], accepted.inspect
+        assert_equal accepted, producer.request(**request_args), "new observation sees admission after its prior pinned tip"
+        document = policy_document
+        document["ordinary"]["projects"]["atlas"]["admission"] = "disabled"
+        status_reader = Organisms::OrdinaryMergeRequest.new(topology: @topology,
+          policy: Molecules::ServicePolicy.new(document), repo_root: @dir,
+          ingress: ->(**_) { flunk "status contacted receiver" })
+        original = ENV["GIT_DIR"]
+        ENV["GIT_DIR"] = "/nonexistent/poisoned"
+        status = status_reader.status(project: "atlas", assignment: @assignment_id,
+          attempt: @attempt_id, queue_entry: "010", reference: accepted.dig("data", "reference"),
+          request: "request-1", input_digest: expected_digest, format: "json")
+        assert_equal "ok", status["status"], status.inspect
+        assert_equal "pending", status.dig("data", "state")
+        refute File.exist?(File.join(@repo, ".unused-reader"))
+      ensure
+        ENV["GIT_DIR"] = original
+      end
+
+      def test_missing_installed_journal_never_falls_back_to_cwd_evidence
+        accepted = new_producer(ingress: controlled_receiver).request(**request_args)
+        document = policy_document
+        document["ordinary"]["projects"]["atlas"].delete("journal_repository")
+        producer = Organisms::OrdinaryMergeRequest.new(topology: @topology,
+          policy: Molecules::ServicePolicy.new(document), repo_root: @repo,
+          ingress: ->(**_) { flunk "missing installed source dispatched" })
+        status = producer.status(project: "atlas", assignment: @assignment_id, attempt: @attempt_id,
+          queue_entry: "010", reference: accepted.dig("data", "reference"), request: "request-1",
+          input_digest: expected_digest, format: "json")
+        assert_equal "ordinary_merge_unavailable", status.dig("error", "code")
       end
 
       def test_unknown_or_protected_selectors_refuse_before_effect
@@ -207,6 +243,17 @@ module Ace
         producer = new_producer(ingress: controlled_receiver)
         envelope = producer.request(**request_args.merge(attempt: "atj9999"))
         assert_equal "ordinary_merge_selection_mismatch", envelope.dig("error", "code")
+      end
+
+      def test_malformed_receiver_responses_are_classified_without_crashing
+        [{"status" => "error"}, {"status" => "error", "error" => {}},
+          {"status" => "ok", "data" => nil}, {"status" => "ok", "data" => "invalid"},
+          {"status" => "ok", "data" => []}].each do |response|
+          producer = new_producer(ingress: ->(submission:) { response })
+          envelope = producer.request(**request_args)
+          assert_equal "ordinary_merge_unavailable", envelope.dig("error", "code"), response.inspect
+          refute envelope.key?("data")
+        end
       end
 
       def test_authorization_mapping_is_exhaustive_before_effect
@@ -383,6 +430,7 @@ module Ace
           end
           admitted = coordinator.admit_fixed_merge_request(submission.merge(
             "principal" => receiver.fetch("principal"),
+            "caller_uid" => Process.uid,
             "execution_identity" => {"checkout_id" => "checkout-1",
                                      "worktree_id" => "worktree-1", "branch" => "feat/x"}
           ))
@@ -437,6 +485,7 @@ module Ace
           "ordinary" => {
             "projects" => {
               "atlas" => {"receiver_id" => "ordinary-receiver", "socket_path" => "/fixture/ordinary.sock",
+                          "journal_repository" => @repo, "journal_ref" => "refs/ace/execution",
                           "receiver_uid" => Process.uid, "principal" => Molecules::CallerAuthorizer.local_identity.first, "admission" => "enabled"}
             }
           }

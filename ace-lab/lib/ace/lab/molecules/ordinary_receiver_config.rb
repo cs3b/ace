@@ -3,6 +3,7 @@
 require "yaml"
 require_relative "../errors"
 require_relative "service_policy"
+require_relative "grant_resolver"
 
 module Ace
   module Lab
@@ -22,7 +23,9 @@ module Ace
 
         def self.load(path)
           raise Ace::Lab::InvalidConfigurationError, "receiver config path is required" unless path.is_a?(String) && !path.empty?
-          document = YAML.safe_load_file(path, permitted_classes: [Date], aliases: false)
+          bytes = GrantResolver.read_verified(path)
+          raise Ace::Lab::InvalidConfigurationError, "receiver configuration is missing" unless bytes
+          document = YAML.safe_load(bytes, permitted_classes: [Date], aliases: false)
           new(document, source: path)
         rescue Errno::ENOENT, Errno::EACCES, Psych::Exception
           raise Ace::Lab::InvalidConfigurationError, "receiver configuration is unreadable: #{path}"
@@ -48,6 +51,7 @@ module Ace
           @repo_path = absolute!(document.fetch("repo_path"), "repo_path")
           @policy_path = absolute!(document.fetch("policy_path"), "policy_path")
           @receiver_uid = uid!(document.fetch("receiver_uid"), "receiver_uid")
+          raise Ace::Lab::InvalidConfigurationError, "ordinary receiver must have a non-root owner" if @receiver_uid.zero?
           @principal_uid = uid!(document.fetch("principal_uid"), "principal_uid")
           identity = document.fetch("execution_identity")
           unless identity.is_a?(Hash) && (identity.keys - IDENTITY_KEYS).empty? &&

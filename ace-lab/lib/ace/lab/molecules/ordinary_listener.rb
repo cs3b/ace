@@ -51,6 +51,7 @@ module Ace
           @endpoint_identity = File.stat(@socket_path)
           File.chown(nil, @socket_gid, @socket_path) if @socket_gid
           File.chmod(@socket_gid ? 0o660 : 0o600, @socket_path)
+          @handler.recover_pending! if @handler.respond_to?(:recover_pending!)
           until @stopping
             socket = @listener.accept
             serve_connection(socket)
@@ -80,26 +81,27 @@ module Ace
             verify_peer!(socket)
             submission = read_request!(socket, deadline)
             response = @handler.call(submission)
-            write_response!(socket, response, deadline)
+            write_response_safely(socket, response, deadline)
             if response.is_a?(Hash) && response["status"] == "ok" && @handler.respond_to?(:execute)
               begin
-                # The durable acknowledgment is already on the wire; the
+                # Admission is durable even if the acknowledgment was lost; the
                 # execution lifetime belongs to the canonical record, not
                 # the short connection. A lost lifecycle stays pending or
                 # uncertain and reconciles by the original reference.
                 @handler.execute(response.dig("data", "request_id"))
-              rescue StandardError
-                nil
+              rescue StandardError => error
+                log_failure("effect", error)
               end
             end
           rescue OrdinaryRefused => e
-            write_response!(socket, e.envelope, deadline)
-          rescue OrdinaryListenerError
+            write_response_safely(socket, e.envelope, deadline)
+          rescue OrdinaryListenerError, IOError, SystemCallError => error
             # Fail closed without a fabricated envelope; the client classifies
             # a lost/unreadable response as ordinary_merge_unavailable.
-            nil
-          rescue StandardError
-            write_response!(socket, refusal_envelope("ordinary_merge_unavailable",
+            log_failure("connection", error)
+          rescue StandardError => error
+            log_failure("request", error)
+            write_response_safely(socket, refusal_envelope("ordinary_merge_unavailable",
               "receiver failed to handle the request"), deadline)
           ensure
             begin
@@ -123,6 +125,18 @@ module Ace
         end
 
         private
+
+        def write_response_safely(socket, response, deadline)
+          write_response!(socket, response, deadline)
+        rescue OrdinaryListenerError, IOError, SystemCallError => error
+          log_failure("response", error)
+        end
+
+        def log_failure(phase, error)
+          # Arbitrary exception messages may contain provider credentials or
+          # request bodies. Journal references remain the source of effect state.
+          @logger&.call("ordinary receiver #{phase} failed (#{error.class.name})")
+        end
 
         # Mutual half of OS peer authentication: the connecting process must run as the
         # configured producer principal UID. Anything else is refused before

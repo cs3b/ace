@@ -174,7 +174,10 @@ module Ace
         end
 
         def service_attempt(binding)
-          attempt = authoritative_attempt(binding)
+          # An effect can never acquire authority from a requester cache, even
+          # when the assignment definition is missing from this consumer.
+          attempt = journal_for.derived_attempts(binding.fetch("assignment_id"))
+            .find { |candidate| candidate.attempt_id == binding.fetch("attempt_id") }
           raise AttemptErrors::NotFound, "Attempt not found" unless attempt
           unless attempt.managed? && attempt.active? &&
               attempt.binding.assignment_id == binding["assignment_id"] &&
@@ -306,28 +309,29 @@ module Ace
           # never need message-string discrimination: replay/binding conflicts
           # stay Conflict, a consumed authorization is AuthorizationConflict.
           guard = lambda do
-            conflict = @journal.fixed_authorization_conflict(record)
+            conflict = journal_for.fixed_authorization_conflict(record)
             if conflict
               raise AttemptErrors::AuthorizationConflict,
                 "Authorization reference is not currently valid"
             end
             nil
           end
-          @journal.admit_fixed_merge_request(record, guard: guard)
+          journal_for.admit_fixed_merge_request(record, guard: guard)
         end
 
         # Begin the fixed effect (pending -> uncertain). The single CAS
         # transition is the at-most-one-merge proof: a restarted receiver
-        # replays "already started" and must not dispatch again.
+        # refuses an already-started claim and must not dispatch again.
         def begin_fixed_merge_effect(request_id)
-          @journal.begin_fixed_merge_request(request_id)
+          journal_for.begin_fixed_merge_request(request_id)
         end
 
         # Settle the fixed effect with the exact terminal receipt. The
         # journal validates the closed receipt schema and its binding to the
         # admitted record before the transition lands.
-        def settle_fixed_merge_effect(request_id, terminal_status:, receipt:)
-          @journal.settle_fixed_merge_request(request_id, terminal_status: terminal_status, receipt: receipt)
+        def settle_fixed_merge_effect(request_id, terminal_status:, receipt:, attestation: nil)
+          journal_for.settle_fixed_merge_request(request_id, terminal_status: terminal_status,
+            receipt: receipt, attestation: attestation)
         end
 
         # Read-only canonical record lookup by request ID: lets the producer
@@ -352,7 +356,7 @@ module Ace
         # without revealing whether another project holds the reference.
         def fixed_merge_status(reference:, request_id:, project_id:, assignment_id:, attempt_id:,
           queue_entry:, input_digest:)
-          record = @journal.fixed_merge_request(request_id)
+          record = journal_for.fixed_merge_request(request_id)
           return nil unless record
           matches = reference == record["reference"] && input_digest == record["input_digest"] &&
             [project_id, assignment_id, attempt_id, queue_entry].zip(
@@ -842,9 +846,9 @@ input:#{Regexp.escape(request.fetch("input_digest"))} outcome:(\S+)( no-effect:(
           unless %w[check review-collection review-approval].include?(kind) && check_name.is_a?(String) && !check_name.strip.empty?
             raise AttemptErrors::ReceiptRejected, "Invalid evidence kind or check name"
           end
-          if !historical_head.nil? && (!%w[review-collection review-approval].include?(kind) || !historical_head.is_a?(String) ||
+          if !historical_head.nil? && (!historical_head.is_a?(String) ||
               !historical_head.match?(/\A[0-9a-f]{40,64}\z/))
-            raise AttemptErrors::ReceiptRejected, "Historical evidence requires review collection/approval and an exact recorded head"
+            raise AttemptErrors::ReceiptRejected, "Historical evidence requires an exact recorded head"
           end
           unless attempt_id.to_s.match?(/\A[a-zA-Z0-9][a-zA-Z0-9_.-]{0,127}\z/) &&
               receipt_digest.to_s.match?(/\A[0-9a-f]{64}\z/)

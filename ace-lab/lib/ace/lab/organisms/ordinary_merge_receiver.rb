@@ -58,7 +58,6 @@ module Ace
           authorization request_id input_digest request principal receiver_id
           configuration_sha256].freeze
         ID = Molecules::ServicePolicy::ID
-        NO_EFFECT_DIR = ".ace/ordinary-no-effect"
 
         def initialize(config:, coordinator:, policy_document:, merge_factory: nil,
           forge_config: nil, forge_factory: nil, resolver: nil,
@@ -84,7 +83,8 @@ module Ace
               token: @forge_config.token, timeout_seconds: @forge_config.merge_timeout_seconds)
           }
           @resolver = resolver || Molecules::OrdinaryAdmissionResolver.new(
-            policy_document, path: config.policy_path
+            policy_document, path: config.policy_path,
+            proposal_resolver: coordinator.method(:proposal_authorization), caller_uid: config.principal_uid
           )
           @readback_attempts = readback_attempts
           @readback_backoff_seconds = readback_backoff_seconds
@@ -151,7 +151,7 @@ module Ace
         rescue OrdinaryMergeRefusal => e
           OrdinaryMergeRequest.refusal_envelope(e.code, e.detail,
             request_id: e.request_id, input_digest: e.input_digest)
-        rescue Ace::Assign::AttemptErrors::AuthorizationConflict => e
+        rescue Ace::Assign::AttemptErrors::AuthorizationConflict, Ace::Assign::AttemptErrors::ReceiptRejected => e
           OrdinaryMergeRequest.refusal_envelope("ordinary_merge_authorization_invalid", e.message,
             request_id: submission.is_a?(Hash) ? submission.fetch("request_id", "unknown") : "unknown",
             input_digest: nil)
@@ -178,10 +178,17 @@ module Ace
           record = @coordinator.fixed_merge_record(request_id)
           return :unknown unless record
           return :skipped_terminal unless record.fetch("state") == "pending"
-          @coordinator.begin_fixed_merge_effect(request_id)
+          begin
+            @coordinator.begin_fixed_merge_effect(request_id)
+          rescue Ace::Assign::AttemptErrors::ReceiptRejected, Ace::Assign::AttemptErrors::AuthorizationConflict
+            merge = @merge_factory.call(record.fetch("request"))
+            settle_no_effect(request_id, record, merge, "canonical proposal is no longer authorized before effect")
+            return :refused
+          end
           execute_effect(record)
           :executed
-        rescue Ace::Assign::AttemptErrors::InvalidState, Ace::Assign::AttemptErrors::NotFound
+        rescue Ace::Assign::AttemptErrors::InvalidState, Ace::Assign::AttemptErrors::NotFound,
+          Ace::Assign::AttemptErrors::Conflict
           # Another lifecycle won the CAS or the record is terminal: never a
           # second effect, never a resubmission.
           :skipped_terminal
@@ -269,6 +276,7 @@ module Ace
         def admit(submission)
           record = submission.merge(
             "principal" => @config.principal,
+            "caller_uid" => @config.principal_uid,
             "execution_identity" => @config.execution_identity
           )
           @coordinator.admit_fixed_merge_request(record)
@@ -296,18 +304,8 @@ module Ace
           candidate = document.fetch("candidate_head")
           expected = document.fetch("expected_base_head")
           merge = @merge_factory.call(document)
-          # Admission may precede execution (or receiver recovery). Re-read
-          # authority before any forge effect; revocation never grants a lease
-          # merely because the request was acknowledged earlier.
-          begin
-            decision = @resolver.decide(admitted_record.fetch("authorization"),
-              authorization_binding(admitted_record))
-            unless decision.authorized?
-              return settle_no_effect(request_id, admitted_record, merge, decision.message)
-            end
-          rescue Ace::Lab::InvalidConfigurationError => e
-            return settle_no_effect(request_id, admitted_record, merge, e.message)
-          end
+          refusal = current_authorization_refusal(admitted_record)
+          return settle_no_effect(request_id, admitted_record, merge, refusal) if refusal
           observed = merge.base_head
           if observed != expected
             return settle_no_effect(request_id, admitted_record, merge,
@@ -339,6 +337,8 @@ module Ace
             return settle_no_effect(request_id, admitted_record, merge,
               "forge base head moved from the immutable request")
           end
+          refusal = current_authorization_refusal(admitted_record)
+          return settle_no_effect(request_id, admitted_record, merge, refusal) if refusal
           refusal = attach_independent_review!(forge, identity, request_id,
             admitted_record, merge, document)
           return refusal if refusal
@@ -346,6 +346,8 @@ module Ace
           # head server-side — the forge refuses to merge any head other
           # than the reviewed candidate (race between readback and POST can
           # never merge an unreviewed head).
+          refusal = current_authorization_refusal(admitted_record)
+          return settle_no_effect(request_id, admitted_record, merge, refusal) if refusal
           result = forge.merge_pull_request!(owner: identity.fetch("owner"),
             repo: identity.fetch("repo"), index: identity.fetch("index"),
             head_commit_id: candidate)
@@ -364,6 +366,15 @@ module Ace
           # The effect outcome is unprovable: the canonical record stays
           # uncertain with the original reference — never a resubmission.
           leave_uncertain(request_id, e.message)
+        end
+
+        # Recheck pending/recovered authority and again after slow forge calls,
+        # immediately before each privileged effect. No cached decision is a lease.
+        def current_authorization_refusal(record)
+          decision = @resolver.decide(record.fetch("authorization"), authorization_binding(record))
+          decision.message unless decision.authorized?
+        rescue Ace::Lab::InvalidConfigurationError => e
+          e.message
         end
 
         # The merge invocation was accepted: prove the terminal state by
@@ -526,8 +537,8 @@ module Ace
         end
 
         # Terminal failure requires the immutable no-effect attestation: an
-        # executor-owned file inside the canonical repository whose SHA-256
-        # binds the no-merge proof to this exact request.
+        # blob committed atomically with the terminal receipt in Assign's
+        # canonical evidence ref. No caller checkout path is written.
         def settle_no_effect(request_id, admitted_record, merge, reason)
           record = @coordinator.fixed_merge_record(request_id)
           document = record.fetch("request")
@@ -543,7 +554,6 @@ module Ace
             "reason" => reason[0, 512],
             "recorded_at" => Time.now.utc.iso8601
           }
-          evidence = write_no_effect_attestation(request_id, attestation)
           receipt = {
             "schema" => Ace::Assign::Atoms::FixedMergeSchemas::RECEIPT_SCHEMA_ID,
             "reference" => record.fetch("reference"),
@@ -569,16 +579,16 @@ module Ace
               "finished_at" => Time.now.utc.iso8601,
               "outcome" => "failed_no_effect",
               "failure_code" => "merge_failed_no_effect",
-              "no_effect_evidence" => evidence
+              "no_effect_evidence" => nil
             },
             "remote_observation" => nil
           }
-          settle(request_id, "failed", receipt)
+          settle(request_id, "failed", receipt, attestation: attestation)
         end
 
-        def settle(request_id, terminal_status, receipt)
+        def settle(request_id, terminal_status, receipt, attestation: nil)
           @coordinator.settle_fixed_merge_effect(request_id, terminal_status: terminal_status,
-            receipt: receipt)
+            receipt: receipt, attestation: attestation)
           terminal_status.to_sym
         rescue Ace::Assign::AttemptErrors::ReceiptRejected
           # The journal refused the receipt: the record stays uncertain with
@@ -599,15 +609,6 @@ module Ace
             "request_id" => request_id, "reason" => reason.to_s[0, 512],
             "owner" => owner}))
           nil
-        end
-
-        def write_no_effect_attestation(request_id, attestation)
-          dir = File.join(@config.repo_path, NO_EFFECT_DIR)
-          FileUtils.mkdir_p(dir)
-          path = File.join(dir, "#{request_id}.json")
-          File.write(path, JSON.generate(attestation))
-          {"reference" => "#{NO_EFFECT_DIR}/#{request_id}.json",
-           "sha256" => Digest::SHA256.file(path).hexdigest}
         end
 
         def target_changed!(message, request_id)

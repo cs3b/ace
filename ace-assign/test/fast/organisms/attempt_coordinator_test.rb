@@ -231,6 +231,13 @@ module Ace
             "transport" => "unix"})
         end
         assert_includes error.message, "not found"
+        # A missing assignment definition must not switch this check back to
+        # the stale requester cache and grant it managed effect authority.
+        File.unlink(File.join(@cache_dir, assignment.id, "assignment.yaml"))
+        assert_raises(AttemptErrors::NotFound) do
+          orphan_coordinator.service_attempt({"assignment_id" => assignment.id,
+            "attempt_id" => attempt.attempt_id, "project_id" => "ace"})
+        end
       end
 
       def test_service_receipt_evidence_symlink_outside_repo_is_rejected

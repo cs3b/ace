@@ -76,6 +76,10 @@ class CampaignReceiptTest < AceAssignTestCase
   def test_campaign_consumption_uses_existing_authority_and_does_not_advance_candidate
     attempt = start_attempt
     before = git_in(@test_dir, "rev-parse", "HEAD")
+    saved = JSON.parse(File.read(File.join(@test_dir, @result_path)))
+    current = campaign_manager.status(@campaign["campaign_id"])
+    assert current["accepted"], current["reasons"].inspect
+    assert_equal saved["result_identity"], current["result_identity"]
     finished = @coordinator.finish(attempt_id: attempt.attempt_id, receipt_path: receipt(attempt))
     assert_equal "succeeded", finished.state
     assert_equal before, git_in(@test_dir, "rev-parse", "HEAD")
@@ -157,6 +161,33 @@ class CampaignReceiptTest < AceAssignTestCase
     assert_equal "succeeded", finished.state
     assert_raises(Ace::Assign::AttemptErrors::ReceiptRejected) do
       @coordinator.evidence(attempt_id: local_attempt.attempt_id, receipt_digest: finished.accepted_receipts.last["digest"])
+    end
+  end
+
+  def test_historical_check_requires_accepted_exact_head_and_never_certifies_current_candidate
+    result = campaign_manager.status(@campaign["campaign_id"])
+    ref = result["rounds"].last["approval"]["checks"].first["receipt"]
+    old_head = @head
+    File.write(File.join(@test_dir, "candidate.rb"), "puts :new_candidate\n")
+    git_in(@test_dir, "add", "candidate.rb")
+    git_in(@test_dir, "commit", "-m", "new candidate")
+    args = {attempt_id: ref["attempt_id"], receipt_digest: ref["digest"], kind: "check"}
+    proof = @check_coordinator.evidence(**args, historical_head: old_head)
+    assert proof["historical"]
+    assert_equal old_head, proof["head"]
+    assert_equal "test", proof["operation"]
+    assert_raises(Ace::Assign::AttemptErrors::ReceiptRejected) { @check_coordinator.evidence(**args) }
+    [false, "f" * 40, git_in(@test_dir, "rev-parse", "HEAD")].each do |head|
+      assert_raises(Ace::Assign::AttemptErrors::ReceiptRejected) do
+        @check_coordinator.evidence(**args, historical_head: head)
+      end
+    end
+    assert_raises(Ace::Assign::AttemptErrors::ReceiptRejected) do
+      @check_coordinator.evidence(**args, historical_head: old_head, check_name: "lint")
+    end
+    git_in(@test_dir, "update-ref", "-d", "refs/ace/execution")
+    assert_raises(Ace::Assign::AttemptErrors::ReceiptRejected) do
+      @check_coordinator.evidence(**args, historical_head: old_head)
     end
   end
 

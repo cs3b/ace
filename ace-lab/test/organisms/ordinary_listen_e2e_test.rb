@@ -5,6 +5,10 @@ require "digest"
 require "open3"
 require "tmpdir"
 require "ace/assign/atoms/fixed_merge_schemas"
+require "ace/hitl/lifecycle/service"
+require "ace/hitl/lifecycle/client"
+require "ace/hitl/providers/lab/assignment_binding"
+require "timeout"
 
 module Ace
   module Lab
@@ -62,6 +66,7 @@ module Ace
               "atlas" => {"receiver_id" => "ordinary-receiver",
                           "socket_path" => File.join(@dir, "ordinary.sock"),
                           "receiver_uid" => Process.uid, "principal" => principal,
+                          "journal_repository" => @repo, "journal_ref" => "refs/ace/execution",
                           "admission" => "enabled"}
             }
           }
@@ -139,6 +144,60 @@ module Ace
         assert_equal @head_b, git("rev-parse", "refs/heads/main")
       end
 
+      def test_new_hitl_proposal_after_first_merge_needs_no_policy_edit_or_receiver_restart
+        @policy_document["authorizations"] = {}
+        File.write(policy_path, YAML.safe_dump(@policy_document))
+        policy_bytes = File.binread(policy_path)
+        start_listener!
+        # Native process observation is its existing separate boundary. This
+        # source composition exercises the real managed-attempt exclusion,
+        # kernel socket principal, proposal policy and canonical merge journal.
+        @coordinator.define_singleton_method(:runtime_binding) do |attempt_id:, caller_pid:|
+          raise "missing kernel caller" unless caller_pid == Process.pid
+          {"session" => "source-fixture", "pane" => "source-pane"}
+        end
+        binding = Ace::Hitl::Providers::Lab::AssignmentBinding.new(coordinator: @coordinator)
+        grants = {"hitl" => {"proposal_uids" => [Process.uid], "transport_uids" => [Process.uid]},
+          "authorization" => {"principals" => {Process.uid.to_s => {"projects" => ["atlas"]}}}}
+        socket = File.join(@dir, "hitl.sock")
+        service = Ace::Hitl::Lifecycle::Service.new(root: File.join(@dir, "hitl"), binding: binding,
+          policy: Ace::Hitl::Lifecycle::GrantsPolicy.new(document: grants), socket_path: socket,
+          group: Etc.getgrgid(Process.gid).name)
+        owner = Thread.new { service.run }
+        Timeout.timeout(5) { sleep 0.01 until File.socket?(socket) || !owner.alive? }
+        owner.value unless owner.alive?
+        decisions = Ace::Hitl::Lifecycle::Client.new(socket_path: socket, service_uid: Process.uid)
+        [["request-a", "feat/a", @head_a, @base], ["request-b", "feat/b", @head_b, @head_a]].each do |request, branch, candidate, base|
+          proposal_id = "proposal-#{SecureRandom.hex(12)}"
+          reference = "#{proposal_id}-r1"
+          input = request_document(candidate, "refs/heads/#{branch}", base, request)
+          digest = Ace::Assign::Atoms::FixedMergeSchemas.canonical_request_digest(project: "atlas",
+            assignment: @assignment_id, attempt: @attempt_id, queue_entry: "010", authorization: reference,
+            request_id: request, input: input)
+          created = decisions.proposal_create(id: proposal_id, assignment: @assignment_id, attempt: @attempt_id,
+            project: "atlas", document: {"operation" => "merge", "target" => {"resource" => input.fetch("pr_url")},
+              "candidate_head" => candidate, "input_digest" => digest, "context" => "Merge the reviewed candidate",
+              "options" => ["approve", "deny"], "recommendation" => "approve", "prerequisites" => ["tests and independent review"]})
+          assert_equal "awaiting-delivery", created.fetch("state")
+          decisions.proposal_acknowledge(reference, project: "atlas", submitted_at: Time.now.utc.iso8601)
+          decisions.proposal_reply(reference, project: "atlas", answer: "approve", received_at: Time.now.utc.iso8601, sequence: 1)
+          git("checkout", branch)
+          producer = new_producer
+          ack = producer.request(**request_args(request, reference, branch, candidate, base))
+          assert_equal "ok", ack.fetch("status"), ack
+          terminal = wait_for_terminal(producer, request, ack.dig("data", "reference"), digest)
+          assert_equal "succeeded", terminal.fetch("state")
+          assert_equal candidate, git("rev-parse", "refs/heads/main")
+          assert_equal "succeeded", decisions.proposal_show(proposal_id, project: "atlas").fetch("state")
+          assert_equal policy_bytes, File.binread(policy_path), "decisions must not rewrite installed grants"
+          assert @thread.alive?, "one receiver serves both independent decisions"
+        end
+      ensure
+        service&.stop
+        owner&.join(5)
+        owner&.kill if owner&.alive?
+      end
+
       def test_mutual_peer_identity_is_enforced_fail_closed
         listener = Molecules::OrdinaryListener.new(socket_path: @config.fetch("socket_path"),
           peer_uid: Process.uid + 424_242, handler: ->(_submission) { flunk "must not dispatch" })
@@ -180,6 +239,20 @@ module Ace
         assert_empty records
       end
 
+      def test_second_listener_cannot_recover_pending_work_before_owning_the_lock
+        start_listener!
+        recovery_calls = 0
+        handler = ->(_submission) { flunk "second listener must not dispatch" }
+        handler.define_singleton_method(:recover_pending!) { recovery_calls += 1 }
+        second = Molecules::OrdinaryListener.new(socket_path: @config.fetch("socket_path"),
+          peer_uid: Process.uid, handler: handler)
+        error = assert_raises(Ace::Lab::InvalidConfigurationError) { second.serve }
+        assert_includes error.message, "already active"
+        assert_equal 0, recovery_calls
+        assert File.socket?(@config.fetch("socket_path"))
+        assert @thread.alive?
+      end
+
       private
 
       def start_listener!
@@ -195,7 +268,8 @@ module Ace
           policy_document: YAML.safe_load_file(policy_path, permitted_classes: [Date, Time]),
           resolver: Molecules::OrdinaryAdmissionResolver.new(
             YAML.safe_load_file(policy_path, permitted_classes: [Date, Time], aliases: true),
-            path: policy_path, loader: policy_loader
+            path: policy_path, loader: policy_loader,
+            proposal_resolver: @coordinator.method(:proposal_authorization), caller_uid: Process.uid
           ),
           forge_config: forge_config,
           forge_factory: ->(_document) { @forge }

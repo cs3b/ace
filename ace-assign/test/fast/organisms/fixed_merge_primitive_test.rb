@@ -59,11 +59,12 @@ module Ace
         begun = coordinator.begin_fixed_merge_effect(admitted.fetch("request_id"))
         assert_equal "uncertain", begun.fetch("state")
         # Restart: a fresh coordinator over the same canonical state sees the
-        # same record and replays "already started" — at most one merge.
+        # same record and cannot win a second claim — at most one merge.
         restarted = build_coordinator
-        replayed = restarted.begin_fixed_merge_effect(admitted.fetch("request_id"))
-        assert_equal "uncertain", replayed.fetch("state")
-        assert_equal begun.fetch("claimed_at"), replayed.fetch("claimed_at")
+        assert_raises(AttemptErrors::InvalidState) do
+          restarted.begin_fixed_merge_effect(admitted.fetch("request_id"))
+        end
+        assert_equal begun.fetch("claimed_at"), restarted.fixed_merge_record(admitted.fetch("request_id"))["claimed_at"]
       end
 
       def test_terminal_settlement_binds_the_exact_receipt_and_is_immutable
@@ -86,6 +87,53 @@ module Ace
         assert_includes error.message, "terminal"
       end
 
+      def test_two_receivers_reading_pending_can_claim_only_one_effect
+        admitted = build_coordinator.admit_fixed_merge_request(admission)
+        ready = Queue.new
+        release = Queue.new
+        workers = 2.times.map do
+          reader = Molecules::EvidenceJournal.new(repo_root: @repo, ref: REF,
+            checkout_root: File.join(@cache_dir, "evidence-co"))
+          original_read = reader.method(:fixed_merge_request)
+          first_read = true
+          reader.define_singleton_method(:fixed_merge_request) do |*args, **kwargs|
+            record = original_read.call(*args, **kwargs)
+            if first_read
+              first_read = false
+              ready << record.fetch("state")
+              release.pop
+            end
+            record
+          end
+          Thread.new do
+            reader.begin_fixed_merge_request(admitted.fetch("request_id"))
+          rescue AttemptErrors::Conflict, AttemptErrors::InvalidState => error
+            error
+          end
+        end
+        2.times { assert_equal "pending", ready.pop }
+        2.times { release << true }
+        results = workers.map(&:value)
+        assert_equal 1, results.count { |result| result.is_a?(Hash) && result["state"] == "uncertain" }
+        assert_equal 1, results.count { |result| result.is_a?(AttemptErrors::Conflict) || result.is_a?(AttemptErrors::InvalidState) }
+        assert_equal "uncertain", journal.fixed_merge_request(admitted.fetch("request_id"))["state"]
+      ensure
+        workers&.each { |worker| worker.kill if worker.alive? }
+      end
+
+      def test_fresh_default_coordinator_reads_status_without_a_prior_mutation
+        admitted = build_coordinator.admit_fixed_merge_request(admission)
+        fresh = Organisms::AttemptCoordinator.new(repo_root: @repo,
+          cache_base: File.join(@cache_dir, "unused-reader-cache"))
+        status = fresh.fixed_merge_status(reference: admitted.fetch("reference"),
+          request_id: admitted.fetch("request_id"), project_id: admitted.fetch("project_id"),
+          assignment_id: admitted.fetch("assignment_id"), attempt_id: admitted.fetch("attempt_id"),
+          queue_entry: admitted.fetch("queue_entry"), input_digest: admitted.fetch("input_digest"))
+        assert_equal "pending", status.fetch("state")
+        assert_equal admitted.fetch("reference"), status.fetch("reference")
+        refute File.exist?(File.join(@cache_dir, "unused-reader-cache"))
+      end
+
       def test_failure_is_terminal_only_with_no_effect_evidence
         coordinator = build_coordinator
         admitted = coordinator.admit_fixed_merge_request(admission)
@@ -94,7 +142,7 @@ module Ace
           coordinator.settle_fixed_merge_effect(admitted.fetch("request_id"),
             terminal_status: "failed", receipt: receipt)
         end
-        assert_includes error.message, "invalid"
+        assert_includes error.message, "no_effect_evidence"
         unproven = receipt.merge(
           "effect" => {"started_at" => nil, "finished_at" => "2026-10-12T11:01:00Z",
                        "outcome" => "failed_no_effect", "failure_code" => "merge_failed_no_effect",
@@ -112,8 +160,12 @@ module Ace
           "remote_observation" => nil
         )
         settled = coordinator.settle_fixed_merge_effect(admitted.fetch("request_id"),
-          terminal_status: "failed", receipt: proven)
+          terminal_status: "failed", receipt: proven, attestation: no_effect_attestation(admitted))
         assert_equal "failed", settled.fetch("state")
+        evidence = settled.dig("receipt", "effect", "no_effect_evidence")
+        bytes = git(@repo, "show", "refs/ace/execution:#{evidence.fetch('reference')}")
+        assert_equal evidence.fetch("sha256"), Digest::SHA256.hexdigest(bytes)
+        refute File.exist?(File.join(@repo, evidence.fetch("reference")))
       end
 
       def test_tampered_or_foreign_receipts_are_rejected
@@ -192,20 +244,16 @@ module Ace
         assert_includes error.message, "not currently valid"
         # A terminal record with proven no-effect evidence frees the exact
         # authorization for a new reviewed request.
-        path = File.join(@repo, "evidence", "no-effect-request-1")
-        FileUtils.mkdir_p(File.dirname(path))
-        content = "no merge occurred for request-1\n"
-        File.write(path, content)
         admitted = journal.fixed_merge_request("request-1")
         coordinator.begin_fixed_merge_effect("request-1")
         proven = terminal_receipt(admitted, terminal_status: "failed").merge(
           "effect" => {"started_at" => nil, "finished_at" => "2026-10-12T11:01:00Z",
                        "outcome" => "failed_no_effect", "failure_code" => "merge_failed_no_effect",
-                       "no_effect_evidence" => {"reference" => "evidence/no-effect-request-1",
-                                                "sha256" => Digest::SHA256.hexdigest(content)}},
+                       "no_effect_evidence" => nil},
           "remote_observation" => nil
         )
-        coordinator.settle_fixed_merge_effect("request-1", terminal_status: "failed", receipt: proven)
+        coordinator.settle_fixed_merge_effect("request-1", terminal_status: "failed", receipt: proven,
+          attestation: no_effect_attestation(admitted))
         second = coordinator.admit_fixed_merge_request(admission(request_id: "request-2"))
         assert_equal "pending", second.fetch("state")
         refute_equal second.fetch("reference"), admitted.fetch("reference")
@@ -224,7 +272,120 @@ module Ace
         assert_equal 1, journal.fixed_merge_request_records.size
       end
 
+      def test_fixed_merge_consumes_canonical_proposal_and_revocation_stops_claim
+        coordinator = build_coordinator
+        id = "proposal-#{'a' * 24}"
+        reference = "#{id}-r1"
+        submission = admission("authorization" => reference)
+        submission["input_digest"] = canonical_binding_digest(submission.fetch("assignment_id"),
+          submission.fetch("attempt_id"), authorization: reference)
+        assert_raises(AttemptErrors::ReceiptRejected) { coordinator.admit_fixed_merge_request(submission) }
+        proposal = submission.slice("operation", "project_id", "assignment_id", "attempt_id", "input_digest", "caller_uid").merge(
+          "target" => {"resource" => submission.dig("request", "pr_url"), "artifact_digest" => nil},
+          "candidate_head" => submission.dig("request", "candidate_head")).merge(
+          "proposal_id" => id, "revision" => 1, "revision_id" => reference,
+          "request_id" => reference, "authorization" => reference, "state" => "awaiting-delivery")
+        change = ->(&block) { journal.change_proposal(id, assignment_id: submission.fetch("assignment_id"),
+          attempt_id: submission.fetch("attempt_id"), &block) }
+        change.call { proposal }
+        change.call { |current| current.merge("state" => "approved-explicitly") }
+        assert_raises(AttemptErrors::ReceiptRejected) do
+          coordinator.admit_fixed_merge_request(submission.merge("caller_uid" => 999))
+        end
+        admitted = coordinator.admit_fixed_merge_request(submission)
+        assert_equal [admitted.fetch("request_id")], journal.proposal_claims(reference).map { |claim| claim["request_id"] }
+        change.call { |current| current.merge("stop_requested" => true) }
+        assert_raises(AttemptErrors::ReceiptRejected) { coordinator.begin_fixed_merge_effect("request-1") }
+        assert_equal "pending", coordinator.fixed_merge_record("request-1")["state"]
+        revised = proposal.merge("revision" => 2, "revision_id" => "#{id}-r2", "request_id" => "#{id}-r2",
+          "authorization" => "#{id}-r2", "revision_operation_id" => "revision-#{'b' * 24}", "expected_source_revision" => 1)
+        assert_raises(AttemptErrors::ReceiptRejected) { change.call { revised } }
+        receipt = terminal_receipt(admitted, terminal_status: "failed").merge("remote_observation" => nil,
+          "effect" => {"started_at" => nil, "finished_at" => "2026-10-12T11:01:00Z",
+            "outcome" => "failed_no_effect", "failure_code" => "merge_failed_no_effect", "no_effect_evidence" => nil})
+        coordinator.settle_fixed_merge_effect("request-1", terminal_status: "failed", receipt: receipt,
+          attestation: no_effect_attestation(admitted))
+        assert_equal 2, change.call { revised }.fetch("revision")
+        evidence = coordinator.fixed_merge_record("request-1").dig("receipt", "effect", "no_effect_evidence")
+        assert_equal evidence["sha256"], Digest::SHA256.hexdigest(journal.blob(evidence["reference"]))
+      end
+
+      def test_generic_and_fixed_claims_share_consumption_even_when_request_ids_match
+        [:fixed, :generic].product([true, false]).each_with_index do |(first, same_id), index|
+          coordinator = build_coordinator
+          submission, proposal = approved_proposal(index)
+          generic = proposal.slice(*Molecules::ProposalJournal::PROPOSAL_BINDING).merge(
+            "authorization" => proposal.fetch("revision_id"),
+            "request_id" => same_id ? submission.fetch("request_id") : "generic-#{index}")
+          if first == :fixed
+            admitted = coordinator.admit_fixed_merge_request(submission)
+            assert_raises(AttemptErrors::Conflict) { journal.claim_service_request(generic) }
+            coordinator.settle_fixed_merge_effect(admitted.fetch("request_id"), terminal_status: "failed",
+              receipt: failed_receipt(admitted), attestation: no_effect_attestation(admitted))
+            assert_equal "accepted", journal.claim_service_request(generic).fetch("state"),
+              "canonical proof of no effect releases the same proposal"
+            assert_equal "accepted", journal.proposal_claims(proposal.fetch("revision_id")).last.fetch("state"),
+              "the public outcome follows causal claim order across both record families"
+          else
+            journal.claim_service_request(generic)
+            assert_raises(AttemptErrors::AuthorizationConflict) { coordinator.admit_fixed_merge_request(submission) }
+            assert_nil coordinator.fixed_merge_record(submission.fetch("request_id"))
+          end
+        end
+      end
+
+      def test_no_effect_bytes_and_record_survive_git_filters_and_canonical_inventory
+        coordinator = build_coordinator
+        admitted = coordinator.admit_fixed_merge_request(admission)
+        git(@repo, "config", "filter.evidence.clean", "tr a-z A-Z")
+        git(@repo, "config", "filter.evidence.smudge", "tr A-Z a-z")
+        File.write(File.join(@repo, ".git/info/attributes"),
+          "execution/merge-evidence/* filter=evidence\nexecution/merge-requests/* filter=evidence\n")
+        attestation = no_effect_attestation(admitted)
+        coordinator.settle_fixed_merge_effect("request-1", terminal_status: "failed",
+          receipt: failed_receipt(admitted), attestation: attestation)
+        settled = coordinator.fixed_merge_record("request-1")
+        evidence = settled.dig("receipt", "effect", "no_effect_evidence")
+        assert_equal JSON.generate(attestation), journal.blob(evidence.fetch("reference"))
+        assert_equal Digest::SHA256.hexdigest(JSON.generate(attestation)), evidence.fetch("sha256")
+        assert_equal "failed", settled.fetch("state")
+        assert_equal journal.ref_value, journal.initialize_canonical!(owner_uid: Process.uid,
+          owner_gid: Process.gid, owner_groups: Process.groups)
+      end
+
       private
+
+      def approved_proposal(index)
+        reference = "proposal-#{format('%024x', index + 1)}-r1"
+        request_id = "fixed-#{index}"
+        submission = admission("authorization" => reference, "request_id" => request_id)
+        submission["input_digest"] = canonical_binding_digest(submission.fetch("assignment_id"),
+          submission.fetch("attempt_id"), authorization: reference, request_id: request_id)
+        proposal = submission.slice("operation", "project_id", "assignment_id", "attempt_id", "input_digest", "caller_uid").merge(
+          "target" => {"resource" => submission.dig("request", "pr_url"), "artifact_digest" => nil},
+          "candidate_head" => submission.dig("request", "candidate_head"),
+          "proposal_id" => reference.delete_suffix("-r1"), "revision" => 1, "revision_id" => reference,
+          "request_id" => reference, "authorization" => reference, "state" => "awaiting-delivery")
+        2.times do |step|
+          journal.change_proposal(proposal.fetch("proposal_id"), assignment_id: submission.fetch("assignment_id"),
+            attempt_id: submission.fetch("attempt_id")) do |current|
+            step.zero? ? proposal : current.merge("state" => "approved-explicitly")
+          end
+        end
+        [submission, proposal]
+      end
+
+      def failed_receipt(admitted)
+        terminal_receipt(admitted, terminal_status: "failed").merge("remote_observation" => nil,
+          "effect" => {"started_at" => nil, "finished_at" => "2026-10-12T11:01:00Z",
+            "outcome" => "failed_no_effect", "failure_code" => "merge_failed_no_effect", "no_effect_evidence" => nil})
+      end
+
+      def no_effect_attestation(record)
+        record.slice("request_id", "input_digest", "reference").merge(
+          "outcome" => "no_effect", "candidate_head" => record.dig("request", "candidate_head"),
+          "expected_base_head" => record.dig("request", "expected_base_head"))
+      end
 
       def build_coordinator
         Organisms::AttemptCoordinator.new(
@@ -264,6 +425,7 @@ module Ace
           "input_digest" => canonical_binding_digest(assignment_id, attempt_id),
           "request" => valid_request_document,
           "principal" => "13005",
+          "caller_uid" => 13005,
           "receiver_id" => "ordinary-receiver",
           "configuration_sha256" => "f" * 64,
           "execution_identity" => {"checkout_id" => "checkout-1", "worktree_id" => "worktree-1",
