@@ -341,6 +341,7 @@ module Ace
                   message.timestamp == item.fetch("received_at")
                 raise IngressUnavailable, "ordinary ingress identity collision"
               end
+              Molecules::HermesAtomicWriter.sync_directory(box.channel.folder)
               text = message.body
             else
               box.publish(kind: :question, id: id, body: text, sender: "captain", timestamp: item.fetch("received_at"))

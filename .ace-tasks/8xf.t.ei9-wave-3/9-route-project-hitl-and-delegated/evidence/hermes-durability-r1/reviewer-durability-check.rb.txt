@@ -1,0 +1,31 @@
+require_relative "../../ace-hitl-hermes/test/fast/transport/multi_project_relay_test"
+
+class ReviewerDurabilityTest < MultiProjectRelayTest
+  def test_ingress_directory_is_synced_before_telegram_offset_advances
+    submit("ace")
+    @clients.fetch("ace").unavailable = true
+    calls = []
+    instrumentation = Module.new do
+      define_method(:fsync) do
+        calls << [path, stat.directory?]
+        super()
+      end
+    end
+    File.prepend(instrumentation)
+    telegram = Object.new
+    update = {"update_id" => 10, "message" => {"message_id" => 201,
+      "chat" => {"id" => -424242, "type" => "supergroup"}, "from" => {"id" => 42},
+      "reply_to_message" => {"message_id" => 100}, "text" => "durable answer"}}
+    telegram.define_singleton_method(:updates) { |offset:| [update] }
+    T::Poller.new(relay: @relay, telegram: telegram, journal: @journal, registry: @registry,
+      clock: -> { Time.iso8601(QUESTION_TS) }).once
+    @journal.synchronize do |state, _|
+      assert_equal 11, state.fetch("cursor").fetch("offset")
+      assert_equal "unresolved", state.fetch("ingress").first.fetch("status")
+      assert state.fetch("ingress").first.fetch("body_sha256")
+    end
+    ingress = File.join(@root, "projects", "ace", ".ingress")
+    assert File.file?(File.join(ingress, "inb-1.json"))
+    assert_includes calls, [ingress, true], "offset advanced with an ingress filename that was never directory-fsynced; fsync calls: #{calls.inspect}"
+  end
+end

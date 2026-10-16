@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 require "test_helper"
 require "ace/hitl/hermes/runtime"
+require "support/fsync_probe"
 
 class MultiProjectRelayTest < AceHermesTestCase
   T = Ace::Hitl::Hermes::Transport
@@ -249,6 +250,82 @@ class MultiProjectRelayTest < AceHermesTestCase
       assert_equal bytes, File.read(path)
       assert @clients.values.all? { |client| client.answers.empty? }
     end
+  end
+
+  def durability_poller(text: "durable first body")
+    update = {"update_id" => 10, "message" => {"message_id" => 201,
+      "chat" => {"id" => -424242, "type" => "supergroup"}, "from" => {"id" => 42},
+      "reply_to_message" => {"message_id" => 100}, "text" => text}}
+    telegram = Object.new
+    telegram.define_singleton_method(:updates) { |offset:| offset <= 10 ? [update] : [] }
+    T::Poller.new(relay: @relay, telegram: telegram, journal: @journal, registry: @registry,
+      clock: -> { Time.iso8601(QUESTION_TS) })
+  end
+
+  def observe_ingress_commits(calls)
+    original = @journal.method(:write)
+    @journal.define_singleton_method(:write) do |state|
+      item = state.fetch("ingress").first
+      calls << {metadata: true} if item && item["body_sha256"]
+      calls << {offset: state.dig("cursor", "offset")} if state.dig("cursor", "offset")
+      original.call(state)
+    end
+  end
+
+  def assert_ingress_barrier_before_receipt(calls)
+    folder = File.join(@root, "projects", "ace", ".ingress")
+    barrier = calls.index { |entry| entry == {path: folder, directory: true} }
+    metadata = calls.index { |entry| entry[:metadata] }
+    offset = calls.index { |entry| entry[:offset] == 11 }
+    refute_nil barrier
+    refute_nil metadata
+    refute_nil offset
+    assert_operator barrier, :<, metadata
+    assert_operator metadata, :<, offset
+  end
+
+  def test_fresh_ingress_final_filename_is_durable_before_metadata_and_offset
+    submit("ace")
+    @clients.fetch("ace").unavailable = true
+    calls = []
+    observe_ingress_commits(calls)
+    HermesFsyncProbe.observe(calls: calls) { durability_poller.once }
+    assert_ingress_barrier_before_receipt(calls)
+    @journal.synchronize do |state, _|
+      assert_equal 11, state.dig("cursor", "offset")
+      assert_equal "unresolved", state.fetch("ingress").first.fetch("status")
+    end
+  end
+
+  def test_failed_fresh_and_existing_file_barriers_retain_offset_and_first_body
+    submit("ace")
+    @clients.fetch("ace").unavailable = true
+    folder = File.join(@root, "projects", "ace", ".ingress")
+    path = File.join(folder, "inb-1.json")
+    # First process writes and renames the body, but cannot persist its name.
+    # A second process encounters that existing file and must flush it too.
+    ["durable first body", "edited replay"].each do |text|
+      calls = []
+      HermesFsyncProbe.observe(calls: calls, failure_path: folder) do
+        assert_raises(Ace::Hitl::Hermes::ContractError) { durability_poller(text: text).once }
+      end
+      @journal.synchronize do |state, _|
+        assert_equal 0, state.dig("cursor", "offset")
+        refute state.fetch("ingress").first.key?("body_sha256")
+        assert_equal 1, state.fetch("sequence")
+      end
+      assert_equal "durable first body", JSON.parse(File.read(path)).fetch("question")
+      @journal = T::Journal.new(File.join(@tmp, "state"))
+      @relay = relay
+    end
+    calls = []
+    observe_ingress_commits(calls)
+    HermesFsyncProbe.observe(calls: calls) { durability_poller(text: "third replay").once }
+    assert_ingress_barrier_before_receipt(calls)
+    @clients.fetch("ace").unavailable = false
+    @relay.drain
+    assert_equal [["same-id", "durable first body"]], @clients.fetch("ace").answers
+    assert_empty Dir.children(folder)
   end
 
 end

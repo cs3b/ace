@@ -9,11 +9,22 @@ module Ace
     module Hermes
       module Molecules
         # Atomic write protocol (spec 8wm.t.vs1 §5): same-directory tmp
-        # file (0600) + fsync + chmod 0640 + rename(2) onto the target.
+        # file (0600) + chmod 0640 + file fsync + rename(2) + directory fsync.
         # Readers never observe partial content; no root privileges are
         # required or used - running as root is refused fail closed.
         module HermesAtomicWriter
           module_function
+
+          # A file fsync alone does not persist its final directory entry.
+          # Recovery may encounter the rename from an interrupted writer and
+          # must establish this same barrier before acknowledging the message.
+          def sync_directory(folder)
+            HermesContract.verify_folder!(folder)
+            File.open(folder, File::RDONLY | File::NOFOLLOW) do |directory|
+              raise ContractError, "hermes message parent is not a directory" unless directory.stat.directory?
+              directory.fsync
+            end
+          end
 
           # Writes `bytes` to `final_path` atomically. The target must not
           # exist (CollisionError otherwise); tmp files are removed on
@@ -39,10 +50,11 @@ module Ace
               File.open(tmp_path, File::WRONLY | File::CREAT | File::EXCL,
                 HermesContract::TMP_MODE) do |file|
                 file.write(bytes)
+                file.chmod(HermesContract::FILE_MODE)
                 file.fsync
               end
-              File.chmod(HermesContract::FILE_MODE, tmp_path)
               File.rename(tmp_path, final_path)
+              sync_directory(folder)
             rescue
               File.delete(tmp_path) if File.exist?(tmp_path)
               raise

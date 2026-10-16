@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Fsync message directories after publication and recovery before committing ingress body metadata or advancing Telegram offsets. Preserve the first body and offset when the directory barrier fails.
 - Bound DNS lookup and TCP connection as well as TLS handshake/frame deadlines; make positive TLS fixtures independent of host DNS aliases.
 
 ## [0.4.0] - 2026-10-14
