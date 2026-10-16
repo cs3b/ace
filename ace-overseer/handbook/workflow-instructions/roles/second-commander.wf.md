@@ -69,9 +69,11 @@ the actual selected project. Do not treat remembered status as current evidence.
 
 ## Shared Decision and Responsiveness Contract
 
-Confirmed Hermes delivery starts the sixteen-hour proposal window. Only the
-existing HITL owner's healthy, drained reconciliation and resolved decision admit
-silent approval. Preserve approve/veto/clarify and revised/superseded history.
+Confirmed Hermes delivery starts the sixteen-hour proposal window only for a
+project/operation class delegated before proposal creation. The existing HITL
+owner must recheck that grant during healthy, drained reconciliation; revocation
+or a missing prior delegation prevents silent approval. Elapsed time alone never
+authorizes a decision. Preserve approve/veto/clarify and revised/superseded history.
 A stalled resolver is deferred visibly; keep status and conversation usable and
 coalesce wakes through the existing bounded tick owner. Never wait for long
 implementation or review in the conversation handler. Selecting a role adds no

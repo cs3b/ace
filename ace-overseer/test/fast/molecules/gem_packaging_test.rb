@@ -10,6 +10,7 @@ class GemPackagingTest < AceOverseerTestCase
   PAYLOAD_FILES = [
     "handbook/workflow-instructions/overseer.wf.md",
     "handbook/workflow-instructions/overseer/configure-project.wf.md",
+    "handbook/workflow-instructions/overseer/maintain-continuation.wf.md",
     "handbook/workflow-instructions/roles/project-overseer.wf.md",
     "handbook/workflow-instructions/roles/lab-coordinator.wf.md",
     "handbook/workflow-instructions/roles/second-commander.wf.md",

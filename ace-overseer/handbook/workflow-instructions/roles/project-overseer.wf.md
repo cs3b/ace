@@ -29,6 +29,11 @@ state, applicable scoped service grants, and existing HITL proposal history.
 Use `ace-task show TASK` and the installed public status/history interfaces for
 the actual selected project. Do not treat remembered status as current evidence.
 
+For native progress and cleanup duties, follow
+`wfi://overseer/maintain-continuation`: bootstrap 600-second progress and
+3600-second cleanup loops in a new session, then resume its exact persisted
+session without re-adding definitions. Verify real wake consumption and results.
+
 ## High-Level Execution Plan
 
 - [ ] Reconcile current scope, existing executions and proposals.
@@ -98,7 +103,7 @@ integration MUST NOT merge and MUST NOT silently rewrite: it returns an
 actionable typed `needs-rebase` outcome to the queue owner. The queue owner
 then delegates `wfi://git/rebase` (as-git-rebase, including CHANGELOG
 preservation) in the candidate's ISOLATED worktree, obtains new exact-head
-checks and an independent review of the resulting exact head, updates the PR,
+checks and a recorded assessment of the head change, updates the PR,
 verifies remote candidate identity and resubmits. A common old base does NOT
 make sibling heads sequentially fast-forwardable.
 
@@ -120,10 +125,10 @@ serial merge. The accepted receipt for one candidate causes preparation of
 ONLY the next selected candidate — never a mass rebase of the remaining
 queue. Each candidate, on its turn, runs the full cycle: resolve fresh
 target main; delegate `wfi://git/rebase` in that candidate's isolated
-worktree IF the target moved; run the applicable checks; obtain an
-INDEPENDENT EXPLICIT review of the resulting exact head (patch identity may
-support a short delta review but never substitutes the explicit independent
-head approval); verify the remote PR head/base; issue ONE scoped integrator
+worktree IF the target moved; run the applicable checks; retain the initial independent review and record an assessment of the new head;
+carry acceptance only with executed evidence of an identical rebase; obtain an
+independent delta review for material or uncertain changes, including security
+changes; verify the remote PR head/base; issue ONE scoped integrator
 request; wait/reconcile the actual integration receipt; refresh main; then
 select and prepare ONLY the next candidate. Queued later PRs keep their
 existing branches and heads untouched until their turn, and prior batch work
@@ -147,13 +152,15 @@ never blind-closes.
 
 Hard prohibitions: never push directly to main; never switch the canonical
 checkout to a topic branch; never reuse a stale review as approval for a
-different or moved head.
+different or moved head without the recorded assessment and required evidence.
 
 ## Shared Decision and Responsiveness Contract
 
-Confirmed Hermes delivery starts the sixteen-hour proposal window. Only the
-existing HITL owner's healthy, drained reconciliation and resolved decision admit
-silent approval. Preserve approve/veto/clarify and revised/superseded history.
+Confirmed Hermes delivery starts the sixteen-hour proposal window only for a
+project/operation class delegated before proposal creation. The existing HITL
+owner must recheck that grant during healthy, drained reconciliation; revocation
+or a missing prior delegation prevents silent approval. Elapsed time alone never
+authorizes a decision. Preserve approve/veto/clarify and revised/superseded history.
 A stalled resolver is deferred visibly; keep status and conversation usable and
 coalesce wakes through the existing bounded tick owner. Never wait for long
 implementation or review in the conversation handler. Selecting a role adds no

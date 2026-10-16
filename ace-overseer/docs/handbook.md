@@ -37,6 +37,12 @@ ace-docs:
 - Purpose: resolve and review effective delivery presets, workflows, and decision guides, then apply repeatable project-local adaptation while preserving customization
 - Output: per-asset `CREATED`, `UPDATED`, `KEPT`, or `BLOCKED` evidence plus a repeat-run zero-write check
 
+### `wfi://overseer/maintain-continuation`
+
+- Path: `handbook/workflow-instructions/overseer/maintain-continuation.wf.md`
+- Purpose: bootstrap native 600-second progress and 3600-second cleanup duties, then restore the exact persisted session without duplicate registration
+- Evidence: real model turn, persisted ace-wake entries, exact-session restart and consumed wake; Assign remains execution owner
+
 ## Related Documentation
 
 - [Getting Started](getting-started.md)
