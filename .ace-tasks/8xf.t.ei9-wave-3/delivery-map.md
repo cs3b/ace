@@ -493,3 +493,16 @@ dispositions are retained in `evidence/ordinary-transport-fixture-review/`.
 This receipt does not cover subsequent candidate materialization, campaign or
 release-artifact source increments and does not establish installed two-project
 acceptance. Existing external blocks remain open.
+
+### Accepted-head campaign foundation integrated
+
+Source foundation13a54855d plus follow-up6da63fdf9 is integrated at545ffb68e.
+The existing CampaignManager/Store now retain a source-owned assessment chain and
+v2 accepted results distinguish reviewed from accepted heads. Candidate comparison
+reads bounded bare Git objects from both verified bundles, including historical
+alias bytes without resolving them. Configured Pi approved the foundation and
+follow-up; exact reports and executed focused results are retained in child .8.
+Ordinary native campaign association, genuine collection/result callbacks and
+substantial/uncertain independent delta review remain pending. This is beyond the
+521 suite freeze and requires the eventual combined verification; it does not
+establish installed acceptance or completion of .8.
