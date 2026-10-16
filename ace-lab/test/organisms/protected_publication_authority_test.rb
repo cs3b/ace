@@ -4,9 +4,22 @@ require_relative "../support/protected_service_boundary_fixture"
 class ProtectedPublicationAuthorityTest < Minitest::Test
   include ProtectedServiceBoundaryFixture
 
+  def publication_submission
+    submission, = prepared_submission
+    publication = {"gem_name" => "ace-hitl", "version" => "1.2.3", "head" => @head,
+      "registry" => "https://rubygems.org", "artifact_relative_path" => "ace-hitl-1.2.3.gem"}
+    target = {"resource" => "rubygems:ace-hitl:1.2.3", "artifact_digest" => "b" * 64}
+    input = JSON.generate("publication" => publication, "target" => target)
+    digest = Ace::Lab::Atoms::ServiceInput.digest(JSON.parse(input))
+    operation = @document.fetch("operations").delete(submission.fetch("operation"))
+    @document.fetch("operations")["publish"] = operation
+    @document.fetch("authorizations").fetch("decision").merge!("operation" => "publish", "input_digest" => digest, "target" => target)
+    [submission.merge("operation" => "publish", "input_digest" => digest, "target" => target), input]
+  end
+
   def test_actual_original_dispatch_challenge_and_one_continuation
     fixture do
-      submission, input = prepared_submission
+      submission, input = publication_submission
       transport = start_service_server
       original = Object.new
       original.define_singleton_method(:call) { |name, params, **options| transport.call(name, params, **options.merge(timeout: 60)) }

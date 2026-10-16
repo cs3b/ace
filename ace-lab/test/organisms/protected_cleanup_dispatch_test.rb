@@ -184,7 +184,8 @@ class ProtectedCleanupDispatchTest < Minitest::Test
           error = event.raised_exception
           next unless [Ace::Assign::Error, Ace::Runtime::RuntimeUnavailableError, Ace::Lab::InvalidConfigurationError,
             SecurityError, ArgumentError, KeyError, SystemCallError, Timeout::Error].any? { |type| error.is_a?(type) }
-          failures << "#{File.basename(event.path)}:#{event.lineno} #{error.class}: #{error.message.byteslice(0, 160)}"
+          origin = error.backtrace_locations&.find { |location| location.base_label != "refuse!" }
+          failures << "#{File.basename(event.path)}:#{event.lineno} #{error.class}: #{error.message.byteslice(0, 160)} (#{origin})"
           failures.shift while failures.size > 16
         end
         begin
@@ -780,7 +781,7 @@ class ProtectedCleanupDispatchTest < Minitest::Test
       "publication" => {"descriptor_sha256" => "f" * 64, "installation_ref" => {"path" => "/etc/lab/installation.json", "bytes" => 1, "sha256" => "0" * 64}},
       "preservation" => {"head" => @head, "branch" => nil, "destinations" => [], "manifest_sha256" => "2" * 64}}
     operation = "prune-preserved-workspace"
-    @document.fetch("operations")[operation] = @document.fetch("operations").fetch("publish").dup
+    @document.fetch("operations")[operation] = @document.fetch("operations").fetch(submission.fetch("operation")).dup
     submission = submission.merge("operation" => operation, "input_digest" => Ace::Lab::Atoms::ServiceInput.digest(input),
       "target" => Ace::Lab::Atoms::ServiceInput.target(input))
     @document.fetch("authorizations")["decision"] = @document.fetch("authorizations").fetch("decision").merge(
