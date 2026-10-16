@@ -7,7 +7,7 @@ require "uri"
 require_relative "ordinary_merge_request"
 require_relative "../molecules/ordinary_receiver_config"
 require_relative "../molecules/ordinary_admission_resolver"
-require_relative "../molecules/ordinary_ff_merge"
+require_relative "../molecules/ordinary_merge_read"
 require_relative "../molecules/forge_merge_config"
 require_relative "../molecules/forgejo_merge_adapter"
 require "ace/assign/atoms/fixed_merge_schemas"
@@ -74,7 +74,7 @@ module Ace
           @policy_document = policy_document
           @configuration_sha256 = Molecules::ServicePolicy.configuration_digest(policy_document)
           @merge_factory = merge_factory || ->(document) {
-            Molecules::OrdinaryFfMerge.new(repo_path: config.repo_path,
+            Molecules::OrdinaryMergeRead.new(repo_path: config.repo_path,
               base_ref: document.fetch("base_ref"))
           }
           # The scoped service identity is host-installed; an absent
@@ -164,7 +164,7 @@ module Ace
           OrdinaryMergeRequest.refusal_envelope("ordinary_merge_request_conflict", e.message,
             request_id: submission.is_a?(Hash) ? submission.fetch("request_id", "unknown") : "unknown",
             input_digest: nil)
-        rescue Molecules::OrdinaryFfMerge::GitUnavailable, Ace::Assign::Error,
+        rescue Molecules::OrdinaryMergeRead::GitUnavailable, Ace::Assign::Error,
           Ace::Lab::InvalidConfigurationError => e
           OrdinaryMergeRequest.refusal_envelope("ordinary_merge_unavailable", e.message,
             request_id: submission.is_a?(Hash) ? submission.fetch("request_id", "unknown") : "unknown",
@@ -187,8 +187,7 @@ module Ace
           begin
             @coordinator.begin_fixed_merge_effect(request_id)
           rescue Ace::Assign::AttemptErrors::ReceiptRejected, Ace::Assign::AttemptErrors::AuthorizationConflict
-            merge = @merge_factory.call(record.fetch("request"))
-            settle_no_effect(request_id, record, merge, "canonical proposal is no longer authorized before effect")
+            settle_no_effect(request_id, record, "canonical proposal is no longer authorized before effect")
             return :refused
           end
           execute_effect(record)
@@ -312,17 +311,17 @@ module Ace
           expected = document.fetch("expected_base_head")
           merge = @merge_factory.call(document)
           refusal = current_authorization_refusal(admitted_record)
-          return settle_no_effect(request_id, admitted_record, merge, refusal) if refusal
+          return settle_no_effect(request_id, admitted_record, refusal) if refusal
           observed = merge.base_head
           if observed != expected
-            return settle_no_effect(request_id, admitted_record, merge,
+            return settle_no_effect(request_id, admitted_record,
               "base head moved before the effect: #{observed[0, 12]}")
           end
           identity = forge_identity!(document, request_id)
           forge = @forge_factory.call(document)
           pr = readback(forge, identity)
           if pr.nil?
-            return settle_no_effect(request_id, admitted_record, merge,
+            return settle_no_effect(request_id, admitted_record,
               "pull request is absent from the forge")
           end
           if pr["merged"]
@@ -337,39 +336,39 @@ module Ace
               owner: @forge_config.escalation_owner)
           end
           unless pr.dig("head", "sha") == candidate
-            return settle_no_effect(request_id, admitted_record, merge,
+            return settle_no_effect(request_id, admitted_record,
               "forge pull request head moved from the approved candidate")
           end
           unless pr.dig("base", "sha") == expected
-            return settle_no_effect(request_id, admitted_record, merge,
+            return settle_no_effect(request_id, admitted_record,
               "forge base head moved from the immutable request")
           end
           refusal = current_authorization_refusal(admitted_record)
-          return settle_no_effect(request_id, admitted_record, merge, refusal) if refusal
+          return settle_no_effect(request_id, admitted_record, refusal) if refusal
           refusal = attach_independent_review!(forge, identity, request_id,
-            admitted_record, merge, document)
+            admitted_record, document)
           return refusal if refusal
           # Exact-head contract: the merge POST binds the approved candidate
           # head server-side — the forge refuses to merge any head other
           # than the reviewed candidate (race between readback and POST can
           # never merge an unreviewed head).
           refusal = current_authorization_refusal(admitted_record)
-          return settle_no_effect(request_id, admitted_record, merge, refusal) if refusal
+          return settle_no_effect(request_id, admitted_record, refusal) if refusal
           result = forge.merge_pull_request!(owner: identity.fetch("owner"),
             repo: identity.fetch("repo"), index: identity.fetch("index"),
             head_commit_id: candidate)
           case result.outcome
           when :invoked
-            reconcile_invoked(forge, identity, request_id, admitted_record, merge,
+            reconcile_invoked(forge, identity, request_id, admitted_record,
               document, candidate)
           when :refused
-            settle_no_effect(request_id, admitted_record, merge,
+            settle_no_effect(request_id, admitted_record,
               "forge refused the merge: #{result.reason}")
           else
-            reconcile_ambiguous(forge, identity, request_id, admitted_record, merge,
+            reconcile_ambiguous(forge, identity, request_id, admitted_record,
               document, candidate, result.reason)
           end
-        rescue Molecules::OrdinaryFfMerge::GitUnavailable, Molecules::ForgejoMergeAdapter::Unavailable => e
+        rescue Molecules::OrdinaryMergeRead::GitUnavailable, Molecules::ForgejoMergeAdapter::Unavailable => e
           # The effect outcome is unprovable: the canonical record stays
           # uncertain with the original reference — never a resubmission.
           leave_uncertain(request_id, e.message)
@@ -394,7 +393,7 @@ module Ace
         # absence of effect — the record stays uncertain with the original
         # reference, the escalation owner named, no no-effect attestation
         # and no retry, never a re-invocation.
-        def reconcile_invoked(forge, identity, request_id, admitted_record, merge,
+        def reconcile_invoked(forge, identity, request_id, admitted_record,
           document, candidate)
           pr = readback(forge, identity)
           if pr.nil?
@@ -422,7 +421,7 @@ module Ace
         # never a fabricated no-effect claim while the forge may still be
         # applying the invocation. A 404 after the invocation stays in the
         # same uncertain family: absence cannot prove no effect.
-        def reconcile_ambiguous(forge, identity, request_id, admitted_record, merge,
+        def reconcile_ambiguous(forge, identity, request_id, admitted_record,
           document, candidate, reason)
           pr = readback(forge, identity)
           if pr.nil?
@@ -452,7 +451,7 @@ module Ace
         # refused or ambiguous attachment settles failed_no_effect: the merge
         # was never invoked, so no effect provably occurred.
         def attach_independent_review!(forge, identity, request_id, admitted_record,
-          merge, document)
+          document)
           return nil unless @forge_config.review_attachment_enabled
           evidence = document.fetch("review_evidence")
           body = [
@@ -471,10 +470,10 @@ module Ace
           when :invoked
             nil
           when :refused
-            settle_no_effect(request_id, admitted_record, merge,
+            settle_no_effect(request_id, admitted_record,
               "forge refused the independent review attachment: #{result.reason}")
           else
-            settle_no_effect(request_id, admitted_record, merge,
+            settle_no_effect(request_id, admitted_record,
               "independent review attachment outcome ambiguous; merge not invoked: #{result.reason}")
           end
         end
@@ -547,9 +546,12 @@ module Ace
         # Terminal failure requires the immutable no-effect attestation: an
         # blob committed atomically with the terminal receipt in Assign's
         # canonical evidence ref. No caller checkout path is written.
-        def settle_no_effect(request_id, admitted_record, merge, reason)
+        def settle_no_effect(request_id, admitted_record, reason)
           record = @coordinator.fixed_merge_record(request_id)
           document = record.fetch("request")
+          # Provider I/O has its own lifetime. Settlement needs a fresh bounded
+          # local observation, never the expired pre-effect read deadline.
+          merge = @merge_factory.call(document)
           attestation = {
             "request_id" => request_id,
             "input_digest" => record.fetch("input_digest"),
@@ -557,7 +559,7 @@ module Ace
             "candidate_head" => document.fetch("candidate_head"),
             "expected_base_head" => document.fetch("expected_base_head"),
             "observed_base_head" => merge.base_head,
-            "strategy" => Molecules::OrdinaryFfMerge::STRATEGY,
+            "strategy" => Molecules::OrdinaryMergeRead::STRATEGY,
             "outcome" => "no_effect",
             "reason" => reason[0, 512],
             "recorded_at" => Time.now.utc.iso8601

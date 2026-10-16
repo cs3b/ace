@@ -11,7 +11,7 @@ module Ace
       HEAD_B = "b" * 40
 
       def setup
-        @dir = Dir.mktmpdir("ordinary-receiver")
+        @dir = File.realpath(Dir.mktmpdir("ordinary-receiver"))
         @repo = File.join(@dir, "repo")
         FileUtils.mkdir_p(@repo)
         git("init", "-b", "main")
@@ -399,6 +399,32 @@ module Ace
         refute forge.merged?(7)
       end
 
+      def test_slow_definitive_forge_refusal_starts_a_new_bounded_settlement_read
+        forge = ForgeDouble.new(prs: {7 => open_pr},
+          merge_outcome: ForgeDouble.result(:refused, 405, "HTTP 405: not mergeable"))
+        selected = build_receiver(forge: forge)
+        assert_equal "ok", selected.handle(submission).fetch("status")
+        with_slow_reply(forge, :merge_pull_request!) { quietly { selected.execute("request-1") } }
+        record = @coordinator.fixed_merge_record("request-1")
+        assert_equal "failed", record.fetch("state")
+        assert_equal "failed_no_effect", record.dig("receipt", "effect", "outcome")
+        assert_equal 1, forge.merge_count
+        refute forge.merged?(7)
+      end
+
+      def test_revocation_during_slow_comment_settles_without_invoking_merge
+        forge = ForgeDouble.new(prs: {7 => open_pr})
+        selected = build_receiver(forge: forge)
+        assert_equal "ok", selected.handle(submission).fetch("status")
+        revoke = -> { File.write(policy_path, YAML.safe_dump(policy_document.merge("authorizations" => {}))) }
+        with_slow_reply(forge, :create_comment, after: revoke) { quietly { selected.execute("request-1") } }
+        record = @coordinator.fixed_merge_record("request-1")
+        assert_equal "failed", record.fetch("state")
+        assert_equal "failed_no_effect", record.dig("receipt", "effect", "outcome")
+        assert_equal 0, forge.merge_count
+        assert_equal @base_head, git("rev-parse", "refs/heads/main")
+      end
+
       def test_ambiguous_invocation_with_unavailable_readback_leaves_uncertain_with_owner
         forge = ForgeDouble.new(prs: {7 => open_pr},
           merge_outcome: ForgeDouble.result(:ambiguous, nil, "HTTP 502: bad gateway"),
@@ -601,6 +627,21 @@ module Ace
       end
 
       private
+
+      def with_slow_reply(forge, method, after: -> {})
+        original_clock = Process.method(:clock_gettime)
+        original_reply = forge.method(method)
+        elapsed = 0
+        forge.define_singleton_method(method) do |**options|
+          response = original_reply.call(**options)
+          elapsed = 31
+          after.call
+          response
+        end
+        Process.stub(:clock_gettime, ->(clock, *options) {
+          original_clock.call(clock, *options) + (clock == Process::CLOCK_MONOTONIC ? elapsed : 0)
+        }) { yield }
+      end
 
       # Runs the block capturing its service-log output (warn lines) and
       # returning the block value.

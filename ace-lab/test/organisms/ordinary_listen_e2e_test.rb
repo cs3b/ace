@@ -22,7 +22,7 @@ module Ace
     # fixture-gated/host-owned (gad.b/gad.2).
     class OrdinaryListenEndToEndTest < Minitest::Test
       def setup
-        @dir = Dir.mktmpdir("ordinary-e2e")
+        @dir = File.realpath(Dir.mktmpdir("ordinary-e2e"))
         @repo = File.join(@dir, "repo")
         FileUtils.mkdir_p(@repo)
         git("init", "-b", "main")
@@ -86,7 +86,9 @@ module Ace
 
       def teardown
         @listener&.stop
-        @thread&.join(5)
+        @thread&.join(45)
+        @thread&.kill if @thread&.alive?
+        @thread&.join
         FileUtils.rm_rf(@dir)
       end
 
@@ -294,7 +296,10 @@ module Ace
       end
 
       def wait_for_terminal(producer, request, reference, digest)
-        deadline = Time.now.utc + 10
+        # A bounded repository observation may take up to 30s; do not tear
+        # down its checkout while that valid executor lifetime is still live.
+        deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + 45
+        interval = 0.05
         loop do
           status = producer.status(format: "json", mode: "ordinary-merge",
             reference: reference, request: request, project: "atlas",
@@ -302,8 +307,9 @@ module Ace
             input_digest: digest)
           raise "status failed: #{status}" unless status.fetch("status") == "ok"
           return status.fetch("data") if %w[succeeded failed].include?(status.dig("data", "state"))
-          raise "status did not settle in time: #{status.dig("data", "state")}" if Time.now.utc > deadline
-          sleep 0.02
+          raise "status did not settle in time: #{status.dig("data", "state")}" if Process.clock_gettime(Process::CLOCK_MONOTONIC) > deadline
+          sleep interval
+          interval = [interval * 2, 0.5].min
         end
       end
 

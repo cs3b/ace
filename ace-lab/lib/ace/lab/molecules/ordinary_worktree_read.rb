@@ -33,7 +33,47 @@ module Ace
           unavailable!("worker checkout cannot be observed")
         end
 
+        def ref_head(cwd, ref)
+          unless ref.is_a?(String) && ref.match?(%r{\Arefs/[a-zA-Z0-9_./-]+\z}) && !ref.include?("..")
+            unavailable!("selected Git ref is invalid")
+          end
+          with_selected_read(cwd) do |selected|
+            head = git(selected, "rev-parse", "--verify", "#{ref}^{commit}").strip
+            unavailable!("selected ref is not a commit") unless head.match?(/\A[0-9a-f]{40}\z/)
+            head
+          end
+        end
+
+        def commit?(cwd, head)
+          exact_head!(head)
+          with_selected_read(cwd) do |selected|
+            git(selected, "rev-parse", "--verify", "--quiet", "#{head}^{commit}", allowed_status: [0, 1], result: true).status.success?
+          end
+        end
+
+        def ancestor?(cwd, ancestor, descendant)
+          exact_head!(ancestor); exact_head!(descendant)
+          with_selected_read(cwd) do |selected|
+            git(selected, "merge-base", "--is-ancestor", ancestor, descendant, allowed_status: [0, 1], result: true).status.success?
+          end
+        end
+
         private
+
+        def exact_head!(head)
+          unavailable!("selected Git head is invalid") unless head.is_a?(String) && head.match?(/\A[0-9a-f]{40}\z/)
+        end
+
+        def with_selected_read(cwd)
+          absolute!(cwd)
+          unavailable!("selected repository leaves installed worktrees") unless within?(cwd, @root)
+          before = selection(cwd)
+          value = yield before
+          unavailable!("selected repository changed during read") unless before == selection(cwd)
+          value
+        rescue SystemCallError, IOError, Timeout::Error, Ace::Herdr::Molecules::BoundedProcess::PostLaunchError => error
+          unavailable!("selected repository cannot be observed (#{error.class})")
+        end
 
         def selection(cwd)
           directory!(cwd)
@@ -95,19 +135,24 @@ module Ace
           end
         end
 
-        def git(selected, *argv)
-          run(["--git-dir=#{selected.fetch('git_dir')}", "--work-tree=#{selected.fetch('worktree')}",
+        def git(selected, *argv, allowed_status: [0], result: false)
+          captured = run_result(["--git-dir=#{selected.fetch('git_dir')}", "--work-tree=#{selected.fetch('worktree')}",
             "-c", "safe.directory=#{selected.fetch('worktree')}", "-c", "core.hooksPath=/dev/null",
             "-c", "core.fsmonitor=false", "-c", "protocol.allow=never", *argv],
-            environment: {"GIT_COMMON_DIR" => @common, "GIT_OBJECT_DIRECTORY" => File.join(@common, "objects")})
+            environment: {"GIT_COMMON_DIR" => @common, "GIT_OBJECT_DIRECTORY" => File.join(@common, "objects")}, allowed_status: allowed_status)
+          result ? captured : captured.stdout
         end
 
         def run(argv, stdin: "", environment: {})
+          run_result(argv, stdin: stdin, environment: environment).stdout
+        end
+
+        def run_result(argv, stdin: "", environment: {}, allowed_status: [0])
           result = Ace::Herdr::Molecules::BoundedProcess.call(["/usr/bin/git", "--no-pager", *argv],
             environment: Ace::Assign::Molecules::InstalledJournalRead::ENVIRONMENT.merge(environment), chdir: "/",
             stdin_data: stdin, timeout_s: remaining, output_limit: 65_536, cleanup_group: true)
-          unavailable!("worker Git read failed or exceeded its bound") unless result.status.success? && !result.oversized
-          result.stdout
+          unavailable!("worker Git read failed or exceeded its bound") unless allowed_status.include?(result.status.exitstatus) && !result.oversized
+          result
         end
 
         def regular!(path, metadata, limit)

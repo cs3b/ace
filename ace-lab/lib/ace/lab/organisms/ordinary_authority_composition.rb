@@ -45,7 +45,11 @@ module Ace
             admission: admission, journal: journal, exclusion: exclusion, input_root: @config.assignment_root)
           router = Ace::Assign::Authority::Router.new(handlers: [lifecycle])
           merge = OrdinaryMergeReceiver.new(config: @receiver, coordinator: coordinator,
-            policy_document: policy_document, owner_guard: -> { @config.selected_principal!(@receiver.principal_uid) })
+            policy_document: policy_document, owner_guard: -> { @config.selected_principal!(@receiver.principal_uid) },
+            merge_factory: ->(document) {
+              Molecules::OrdinaryMergeRead.new(repo_path: @receiver.repo_path, base_ref: document.fetch("base_ref"),
+                root: @receiver.repo_path, common_dir: @config.worktrees.fetch("common_dir"))
+            })
           listener = Molecules::OrdinaryListener.new(socket_path: @receiver.socket_path,
             peer_uid: @receiver.principal_uid, socket_gid: @receiver.socket_gid, handler: merge,
             logger: ->(message) { warn message })
