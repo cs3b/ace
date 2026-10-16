@@ -67,6 +67,17 @@ class CommandTestRuntimeTest < Minitest::Test
     end
   end
 
+  def test_compiler_refuses_an_execution_that_cannot_fit_canonical_test_reference
+    profile = document
+    profile["argv"] << "x" * 2048
+    runtime = Ace::Lab::Molecules::CommandTestRuntime.new(profile)
+    assert_raises(Ace::Lab::InvalidConfigurationError) do
+      runtime.compile(definition: {"source" => {"root" => "/var/lib/lab/views"},
+        "executor" => {"environment" => {}}, "executable_sha256" => "b" * 64},
+        execution_id: "bounded", candidate: {"head" => "a" * 40, "tree" => "b" * 40})
+    end
+  end
+
   def test_representative_whole_source_closure_stays_within_wire_bounds_without_truncation
     profile = document
     profile["source_gems"] = Dir.glob(File.expand_path("../../../*/ace-*.gemspec", __dir__)).to_h do |path|

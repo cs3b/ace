@@ -2,6 +2,7 @@
 
 require_relative "../../test_helper"
 require_relative "../../support/prepared_registration_fixture"
+require_relative "../../support/ordinary_native_observation"
 require "ace/assign/authority/ordinary_lifecycle"
 require "ace/assign/authority/ordinary_server"
 require "ace/assign/authority/ordinary_client"
@@ -13,44 +14,7 @@ module Ace
     # ordinary_release_artifacts_test also reopens this class to reuse the
     # real native-start/candidate/review fixture without a second evidence owner.
     class OrdinaryReviewsTest < AceAssignTestCase
-      # Actual Unix/Git/transfer/receipts; only installed native observation is
-      # controlled. Two real OS generations are not an installed agent proof.
-      class Admission
-        attr_reader :service
-        attr_accessor :selected, :bindings, :head, :revoked
-        def initialize(service)
-          @service, @selected, @bindings = service, "supervisor", {}
-          @peer = Authority::OrdinaryPeer.new
-        end
-        def verify_listener! = true
-        def peer(socket, deadline:) = @peer.capture(socket, deadline: deadline)
-        def authorize!(request:, peer:, deadline:)
-          @peer.live!(peer, deadline: deadline)
-          raise AttemptErrors::UnauthorizedIdentity if @revoked || request["project_id"] != "atlas"
-          @selected == "supervisor" ? :supervisor : :worker
-        end
-        def identity!(peer:, pane:, deadline:)
-          authorize!(request: {"project_id" => "atlas"}, peer: peer, deadline: deadline)
-          binding = @bindings.fetch(@selected)
-          raise AttemptErrors::UnauthorizedIdentity unless pane == binding.fetch("pane")
-          Molecules::ExecutionIdentityResolver::Identity.new(actor: Etc.getpwuid(peer.fetch("uid")).name,
-            role: @selected == "supervisor" ? "coordinator" : "worker", runtime: "herdr", adapter: "ordinary",
-            process_pid: binding.dig("process_identity", "pid"), runtime_binding: binding)
-        end
-        def execution!(peer:, pane:, head:, deadline:)
-          identity = identity!(peer: peer, pane: pane, deadline: deadline)
-          raise AttemptErrors::UnauthorizedIdentity unless head == @head
-          {identity: identity, checkout: {"cwd" => "/observed/#{@selected}", "head" => head}}
-        end
-        def recorded_binding!(binding:, deadline:)
-          raise AttemptErrors::UnauthorizedIdentity unless !@revoked && @bindings.values.include?(binding)
-          binding
-        end
-        def recorded_execution!(binding:, head:, deadline:)
-          raise AttemptErrors::UnauthorizedIdentity unless !@revoked && @bindings.values.include?(binding) && head == @head
-          {runtime_binding: binding, checkout: {"cwd" => "/observed/reviewer", "head" => head}}
-        end
-      end
+      Admission = OrdinaryNativeObservation
 
       # Root launcher/policy observation is controlled here; the command
       # state machine, imported candidate and exact-prefix proof are real.
@@ -79,8 +43,12 @@ module Ace
           true
         end
         def command_child!(child:, **) = child
-        def command_test_evidence!(definition:, **)
+        def command_test_evidence!(definition:, deadline:, historical: false)
           raise AttemptErrors::ReceiptRejected unless @enabled && definition == @definition
+          @scope_owner.with_candidate_reference(reference: definition.fetch("candidate").fetch("reference"),
+            deadline: deadline, historical: historical) do |candidate, *|
+            raise AttemptErrors::ReceiptRejected unless candidate.slice("head", "tree") == definition.fetch("source")
+          end
           true
         end
       end
@@ -215,6 +183,46 @@ module Ace
         ensure
           proceed << true if proceed
           command&.join(1)
+        end
+      end
+
+      def test_historical_test_proof_keeps_exact_original_candidate_while_current_merge_refuses_it
+        fixture do
+          register_and_start
+          submit_candidate
+          @admission.selected = "supervisor"
+          assigned = assign_review
+          @admission.selected = "reviewer"
+          accept_review(assigned)
+          execute_test_command
+          original = candidate_reference
+          source = @command_admission.definition.fetch("source")
+          @admission.selected = "supervisor"
+          params = selection.merge("test_execution_ids" => ["tests-1"])
+          assert @client.call("merge_evidence", params).data.fetch("test_evidence").any?
+          submit_candidate(generation: 4, candidate_generation: 1, mutation: "advance-after-test")
+          deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + 30
+          proof = @commands.test_evidence_at!(execution_id: "tests-1", commit: @journal.ref_value,
+            head: source.fetch("head"), tree: source.fetch("tree"), candidate_reference: original,
+            deadline: deadline, historical: true)
+          assert_equal "tests-1", proof.fetch("reference")
+          assert_raises(AttemptErrors::Conflict) do
+            @commands.test_evidence_at!(execution_id: "tests-1", commit: @journal.ref_value,
+              head: source.fetch("head"), tree: source.fetch("tree"), candidate_reference: original, deadline: deadline)
+          end
+          assert_raises(AttemptErrors::ReceiptRejected) do
+            @commands.test_evidence_at!(execution_id: "tests-1", commit: @journal.ref_value,
+              head: source.fetch("head"), tree: source.fetch("tree"), candidate_reference: candidate_reference(generation: 2),
+              deadline: deadline, historical: true)
+          end
+          @admission.selected = "supervisor"
+          assert_raises(AttemptErrors::EvidenceUnavailable) { @client.call("merge_evidence", params) }
+          @admission.revoked = true
+          assert_raises(AttemptErrors::UnauthorizedIdentity) do
+            @commands.test_evidence_at!(execution_id: "tests-1", commit: @journal.ref_value,
+              head: source.fetch("head"), tree: source.fetch("tree"), candidate_reference: original,
+              deadline: deadline, historical: true)
+          end
         end
       end
 

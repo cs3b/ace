@@ -15,6 +15,8 @@ module Ace
         PATH = "/etc/lab/ace-lab/project-commands.yml"
         ID = /\A[a-zA-Z0-9][a-zA-Z0-9_.-]{0,63}\z/
         ENV_KEY = /\A[A-Z][A-Z0-9_]{0,63}\z/
+        MAX_SOURCE_ENTRIES = 20_000
+        MAX_GIT_ADMIN_ENTRIES = 1_000
         RESERVED = %w[HOME USER LOGNAME SHELL PATH RUBYOPT RUBYLIB BUNDLE_GEMFILE GEM_HOME GEM_PATH BASH_ENV ENV PYTHONPATH PYTHONHOME PERL5LIB LD_PRELOAD LD_LIBRARY_PATH].freeze
         attr_reader :project, :launcher
 

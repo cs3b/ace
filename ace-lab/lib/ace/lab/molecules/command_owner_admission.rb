@@ -63,8 +63,8 @@ module Ace
           selected
         end
 
-        def with_command_scope(reference:, deadline:)
-          candidate_owner.with_candidate_reference_scope(reference: reference, deadline: deadline) do |view|
+        def with_command_scope(reference:, deadline:, historical: false)
+          candidate_owner.with_candidate_reference_scope(reference: reference, deadline: deadline, historical: historical) do |view|
             @candidate_mutex.synchronize do
               raise SecurityError, "nested command candidate scope" if @candidate_views.key?(Thread.current)
               @candidate_views[Thread.current] = view
@@ -94,15 +94,16 @@ module Ace
         # Historical execution can outlive its requester. Current root policy
         # and immutable source/executable must still grant this exact TEST
         # command; requester liveness does not invent a new execution.
-        def command_test_evidence!(definition:, deadline:)
+        def command_test_evidence!(definition:, deadline:, historical: false)
           if definition["candidate"] && !@candidate_mutex.synchronize { @candidate_views.key?(Thread.current) }
-            return with_command_scope(reference: definition.fetch("candidate").fetch("reference"), deadline: deadline) do
-              command_test_evidence!(definition: definition, deadline: deadline)
+            return with_command_scope(reference: definition.fetch("candidate").fetch("reference"), deadline: deadline, historical: historical) do
+              command_test_evidence!(definition: definition, deadline: deadline, historical: historical)
             end
           end
           unless definition["purpose"] == "test" && definition.dig("source", "head") && definition.dig("source", "tree") &&
               compile_selection(selection: definition.fetch("selection"), peer: definition.fetch("requester"),
-                execution_id: definition.dig("materialization", "execution_id"), deadline: deadline) == definition.except("native_binding")
+                execution_id: definition.dig("materialization", "execution_id"), deadline: deadline,
+                evidence: true, retained_native: definition["native_binding"], historical: historical) == definition.except("native_binding")
             raise Ace::Assign::AttemptErrors::ReceiptRejected, "executed test command policy was revoked or changed"
           end
           verify_context!(definition, deadline)
@@ -190,15 +191,15 @@ module Ace
           raise InvalidConfigurationError, "candidate command needs its held lifecycle scope"
         end
 
-        def compile_selection(selection:, peer:, execution_id:, deadline:)
+        def compile_selection(selection:, peer:, execution_id:, deadline:, evidence: false, retained_native: nil, historical: false)
           selected = policy.select(selection: selection, peer: peer)
           return selected unless selected.dig("source", "kind") == "ordinary-candidate"
           GrantResolver.trusted_directory!(selected.fetch("source").fetch("root"))
           runtime = CommandTestRuntime.load(selected.fetch("source"))
           runtime.verify_installed!(deadline: deadline)
-          candidate, origin, _commit, _bytes = candidate_view.read!(reference: selection.fetch("candidate"))
+          candidate, origin, _commit, _bytes = candidate_view.read!(reference: selection.fetch("candidate"), historical: historical)
           if selected.fetch("requester_kind") == "agent"
-            native = @base.identity!(peer: peer, pane: selection.fetch("pane"), deadline: deadline).runtime_binding
+            native = evidence ? retained_native : @base.identity!(peer: peer, pane: selection.fetch("pane"), deadline: deadline).runtime_binding
             unless native == origin.fetch("runtime_binding")
               raise Ace::Assign::AttemptErrors::UnauthorizedIdentity, "test candidate belongs to its genuine native producer"
             end
@@ -217,10 +218,14 @@ module Ace
           executor.fetch("path").each { |entry| GrantResolver.trusted_directory!(entry) }
           home = executor.fetch("home")
           GrantResolver.trusted_directory!(home) if File.exist?(home) || File.symlink?(home)
-          count = 0
+          count = Hash.new(0)
           source_root = dynamic ? File.join(dynamic.fetch("root"), dynamic.fetch("execution_id"), "source") : cwd
           Find.find(source_root, ignore_error: false) do |path|
-            raise InvalidConfigurationError, "command source exceeds verification bound" if (count += 1) > 20_000 || Process.clock_gettime(Process::CLOCK_MONOTONIC) >= deadline
+            git_admin = path == File.join(source_root, ".git") || path.start_with?(File.join(source_root, ".git") + "/")
+            limit = git_admin ? CommandPolicy::MAX_GIT_ADMIN_ENTRIES : CommandPolicy::MAX_SOURCE_ENTRIES
+            if (count[git_admin] += 1) > limit || Process.clock_gettime(Process::CLOCK_MONOTONIC) >= deadline
+              raise InvalidConfigurationError, "command source exceeds verification bound"
+            end
             stat = File.lstat(path)
             contained_alias = dynamic && stat.symlink? && File.realpath(path).start_with?(source_root + "/")
             unless stat.uid.zero? && (contained_alias || ((stat.mode & 0o022).zero? && !stat.symlink? && (stat.file? || stat.directory?)))
@@ -259,6 +264,8 @@ module Ace
             end
           end
           true
+        rescue SystemCallError
+          raise InvalidConfigurationError, "command source is not fully observable"
         end
       end
     end

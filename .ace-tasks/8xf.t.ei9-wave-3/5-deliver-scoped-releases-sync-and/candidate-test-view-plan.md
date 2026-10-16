@@ -82,9 +82,22 @@ candidate lifecycle scope before entering journal CAS. A thread/lifetime-bound
 reader revalidates each current prefix without acquiring lifecycle locks under
 the journal writer. Exact registered task/assignment/attempt and shared/exclusive
 rights are retained; a shared scope cannot be promoted to exclusive by reuse.
-Historical merge proof uses the already held merge scope and additionally
-requires exact candidate reference equality; static probe proof cannot satisfy
-ordinary merge.
+Current merge proof uses the already held merge scope and requires the exact
+LATEST candidate reference; static probe proof cannot satisfy ordinary merge.
+A source-only `historical: true` test reader may resolve an earlier exact
+acceptance event/generation at the current held journal prefix for campaign
+checks. There is no wire flag. It still requires the genuine active original
+producer, retained original bundle/view and current installed policy. It compares
+the original admitted native binding with that canonical origin without
+requiring the old requester CLI process to remain alive. Current admission,
+claim, bind, download and merge never opt into historical selection.
+
+Source inventory is bounded to 20,000 entries including directory ancestry,
+checked before source file writes. Generated Git administration has its own
+1,000-entry verification budget. Compiled actual argv must fit the canonical
+2,048-byte test-reference bound. A failed materialization removes only its own
+fresh, exact dev/inode root before a child starts; an existing view is refused
+and preserved. Successful retained source/output is never removed by that path.
 
 ## Test responsibility map
 
@@ -95,14 +108,21 @@ ordinary merge.
 | Only original claimed root launcher can export exact candidate | High | Assign dispatch/transfer integration |
 | Root materializes exact clean head/tree, preserves executable modes | High | Lab real Git/filesystem integration |
 | Source/config sealed; output/tmp/lock writable only after drop | High | Linux distinct-UID public composition |
-| Exact source package closure and installed dependency activation | High | Actual public ace-test in root fixture |
+| Exact source package closure and installed dependency activation | High | Future installed public ace-test acceptance; OPEN |
 | Missing/tampered runtime/candidate and dirty view refuse | High | Filesystem integration + Linux acceptance |
 | Candidate superseded/revoked between claim/materialize/bind | High | Canonical owner integration |
 | Replay/lost ACK/disconnect never executes twice, detached cleanup | High | Existing kernel regressions plus dynamic fixture |
 | Historical proof requires original successful exact candidate execution | High | Existing Assign reader + dynamic admission integration |
 
-Mocks are restricted to external provider/network/native observation where
-explicitly identified. Materialization, permissions, transfer bytes, Git objects,
+The host production-admission integration uses real Assign registration/start,
+Git candidate transfer, Unix candidate-reference reads, canonical held-scope
+resolution and actual Lab policy/runtime selection/compiler/context checks. It
+controls only native observation and named installed-root filesystem ownership,
+configuration/runtime and launcher observation boundaries. It does not execute
+a child or invent a successful-test receipt.
+
+Mocks are restricted to those named boundaries and external provider/network
+observation where explicitly identified. Materialization, permissions, transfer bytes, Git objects,
 child credentials and cleanup need real I/O; Linux acceptance proves actual
 distinct UIDs and public CLI/owner/labd/helper composition. Static R3–R6 receipts
 remain immutable and do not prove this new dynamic path. No broad suite until a

@@ -121,7 +121,14 @@ Dir.mktmpdir("ace-candidate-view-source-only-", "/run") do |root|
   result["lock_owner"] = File.stat(File.join(output_root, "Gemfile.lock")).uid
   result["alias"] = File.readlink(File.join(views, "source-only", "source", "fixture-source", "alias"))
   result["clean"] = git(File.join(views, "source-only", "source"), "status", "--porcelain").empty?
+  begin
+    view.prepare! { raise "existing view must not download" }
+  rescue SecurityError => error
+    result["existing_view_refused"] = error.message == "candidate view already exists"
+  end
+  result["existing_output_preserved"] = File.read(File.join(output_root, "tmp", "writable")) == "output"
   result["link_denied"] = []
+  result["failed_views_removed"] = []
   {"dangling" => "lib/missing.rb", "escaping" => "/etc/passwd"}.each do |kind, target|
     File.unlink(File.join(package, "alias"))
     File.symlink(target, File.join(package, "alias"))
@@ -139,6 +146,7 @@ Dir.mktmpdir("ace-candidate-view-source-only-", "/run") do |root|
         policy_loader: -> { policy }).prepare! { changed_bytes }
     rescue Ace::Assign::AttemptErrors::ReceiptRejected
       result["link_denied"] << kind
+      result["failed_views_removed"] << kind unless File.exist?(File.join(views, "source-only-#{kind}"))
     end
   end
   result["runtime_denied"] = []

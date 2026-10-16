@@ -36,13 +36,19 @@ module Ace
           Molecules::GrantResolver.trusted_directory!(parent)
           root = File.join(parent, recipe.fetch("execution_id"))
           # EXCL directory creation: replay/recovery never reuses another view.
-          Dir.mkdir(root, 0o755)
+          begin
+            Dir.mkdir(root, 0o755)
+          rescue Errno::EEXIST
+            raise SecurityError, "candidate view already exists"
+          end
+          created = File.lstat(root)
           Dir.mktmpdir("input-", root) do |scratch|
             candidate = @definition.fetch("candidate")
             bytes = yield scratch
             materialized = Ace::Assign::Authority::CandidateTransfer.new(root: scratch).materialize_repository(
               bytes: bytes, sha256: candidate.fetch("sha256"), size: candidate.fetch("bytes"),
-              head: candidate.fetch("head"), tree: candidate.fetch("tree"), root: scratch)
+              head: candidate.fetch("head"), tree: candidate.fetch("tree"), root: scratch,
+              max_entries: Molecules::CommandPolicy::MAX_SOURCE_ENTRIES)
             File.rename(materialized.fetch("directory"), File.join(root, "source"))
           end
           config = File.join(root, "config")
@@ -60,7 +66,25 @@ module Ace
           seal(File.join(root, "source"))
           File.chmod(0o555, config)
           File.chmod(0o555, root)
+          prepared = true
           true
+        rescue SystemCallError
+          raise SecurityError, "candidate view is not fully observable"
+        ensure
+          if created && !prepared
+            current = begin
+              File.lstat(root)
+            rescue SystemCallError
+              raise SecurityError, "failed candidate view identity is uncertain"
+            end
+            unless current.directory? && !current.symlink? && current.uid.zero? &&
+                [current.dev, current.ino] == [created.dev, created.ino]
+              raise SecurityError, "failed candidate view identity is uncertain"
+            end
+            # Only our fresh, generated, pre-child view is removed. Accepted
+            # source bytes remain in the canonical journal; EEXIST is untouched.
+            FileUtils.remove_entry_secure(root)
+          end
         end
 
         private

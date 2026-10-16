@@ -117,7 +117,8 @@ module Ace
 
         # Read only the accepted launcher-owned four-stage execution at the
         # caller's held CAS prefix. Arbitrary allowed commands are not tests.
-        def test_evidence_at!(execution_id:, commit:, head:, tree:, deadline:, candidate_reference: nil)
+        def test_evidence_at!(execution_id:, commit:, head:, tree:, deadline:, candidate_reference: nil, historical: false)
+          raise ArgumentError, "invalid historical test proof mode" unless [true, false].include?(historical)
           unless execution_id.is_a?(String) && ID.match?(execution_id) && commit && @journal.ref_value == commit
             raise AttemptErrors::EvidenceUnavailable, "test execution prefix or selector differs"
           end
@@ -140,7 +141,7 @@ module Ace
               data.dig("child", "kernel_identity", "uid") == definition.dig("executor", "uid")
             raise AttemptErrors::ReceiptRejected, "candidate requires an exact successful executed test command"
           end
-          @admission.command_test_evidence!(definition: definition, deadline: deadline)
+          @admission.command_test_evidence!(definition: definition, deadline: deadline, historical: historical)
           command = JSON.generate(definition.fetch("argv"))
           raise AttemptErrors::ReceiptRejected, "executed test command reference is oversized" if command.bytesize > 2048
           {"schema" => "ace.test.execution-reference/v1", "reference" => execution_id,

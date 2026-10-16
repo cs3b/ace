@@ -15,31 +15,32 @@ module Ace
         include OrdinaryReviewCollection
 
         class CandidateReferenceView
-          def initialize(owner, reference, deadline)
-            @owner, @reference, @deadline = owner, JSON.parse(JSON.generate(reference)), deadline
+          def initialize(owner, reference, deadline, historical)
+            @owner, @reference, @deadline, @historical = owner, JSON.parse(JSON.generate(reference)), deadline, historical
             @thread, @active = Thread.current, true
           end
           def close = @active = false
-          def read!(reference:)
-            unless @active && Thread.current.equal?(@thread) && reference == @reference &&
+          def read!(reference:, historical: false)
+            unless @active && Thread.current.equal?(@thread) && reference == @reference && historical == @historical &&
                 Process.clock_gettime(Process::CLOCK_MONOTONIC) < @deadline
               raise AttemptErrors::EvidenceUnavailable, "canonical candidate view escaped its held scope"
             end
-            @owner.send(:resolve_candidate_reference!, reference: @reference, deadline: @deadline)
+            @owner.send(:resolve_candidate_reference!, reference: @reference, deadline: @deadline, historical: @historical)
           end
         end
 
         # Resolve a closed accepted reference without trusting a requester's
         # head/path. Keep the existing scope held while consumers read bytes.
-        def with_candidate_reference(reference:, deadline:)
-          with_candidate_reference_scope(reference: reference, deadline: deadline) do |view|
-            yield(*view.read!(reference: reference))
+        def with_candidate_reference(reference:, deadline:, historical: false)
+          with_candidate_reference_scope(reference: reference, deadline: deadline, historical: historical) do |view|
+            yield(*view.read!(reference: reference, historical: historical))
           end
         end
 
         # Lock order is lifecycle scope → journal writer. The bounded reader
         # may re-resolve a new CAS prefix without reacquiring lifecycle locks.
-        def with_candidate_reference_scope(reference:, deadline:)
+        def with_candidate_reference_scope(reference:, deadline:, historical: false)
+          raise ArgumentError, "invalid historical evidence mode" unless [true, false].include?(historical)
           unless reference.is_a?(Hash) && reference.keys.sort ==
               %w[acceptance_event_digest assignment_id attempt_id candidate_generation] &&
               reference["candidate_generation"].is_a?(Integer) && reference["candidate_generation"].positive? &&
@@ -47,7 +48,7 @@ module Ace
             raise ArgumentError, "invalid canonical candidate reference"
           end
           with_scope(assignment: reference.fetch("assignment_id"), attempt: reference.fetch("attempt_id"), deadline: deadline) do
-            reader = CandidateReferenceView.new(self, reference, deadline)
+            reader = CandidateReferenceView.new(self, reference, deadline, historical)
             begin
               yield reader
             ensure
@@ -56,25 +57,44 @@ module Ace
           end
         end
 
-        private def resolve_candidate_reference!(reference:, deadline:)
+        private def resolve_candidate_reference!(reference:, deadline:, historical: false)
           commit = @journal.ref_value
           events = @journal.read_events(reference.fetch("assignment_id"), commit: commit)
             .select { |event| event["attempt_id"] == reference.fetch("attempt_id") }
-          current = ordinary_candidate_event(events)
+          current = if historical
+            events.find { |event| event["type"] == "authority_mutation" && event.dig("payload", "operation") == "submit_candidate" &&
+              event["digest"] == reference.fetch("acceptance_event_digest") }
+          else
+            ordinary_candidate_event(events)
+          end
           unless current && current.fetch("digest") == reference.fetch("acceptance_event_digest")
             raise AttemptErrors::Conflict, "canonical candidate reference was replaced"
           end
           head = current.fetch("payload").fetch("data").fetch("head")
-          candidate = candidate_at!(events: events, commit: commit, head: head, generation: reference.fetch("candidate_generation"))
-          unless candidate_reference_at!(events: events, commit: commit, head: head,
-              generation: reference.fetch("candidate_generation")) == reference
-            raise AttemptErrors::Conflict, "canonical candidate association differs"
-          end
           origin = origin_at!(events: events, commit: commit)
+          candidate = if historical
+            data = current.fetch("payload").fetch("data")
+            unless data["candidate_generation"] == reference.fetch("candidate_generation") && data["producer_origin"] == origin &&
+                %w[head tree].all? { |key| data[key].is_a?(String) && CandidateTransfer::SHA.match?(data[key]) } &&
+                data["sha256"].is_a?(String) && data["sha256"].match?(/\A[0-9a-f]{64}\z/) &&
+                data["bytes"].is_a?(Integer) && data["bytes"].between?(1, CandidateTransfer::MAX_BYTES)
+              raise AttemptErrors::Conflict, "historical canonical candidate association differs"
+            end
+            data.slice("head", "tree", "candidate_generation", "bundle_ref", "sha256", "bytes")
+          else
+            unless candidate_reference_at!(events: events, commit: commit, head: head,
+                generation: reference.fetch("candidate_generation")) == reference
+              raise AttemptErrors::Conflict, "canonical candidate association differs"
+            end
+            candidate_at!(events: events, commit: commit, head: head, generation: reference.fetch("candidate_generation"))
+          end
           unless @admission.recorded_binding!(binding: origin.fetch("runtime_binding"), deadline: deadline) == origin.fetch("runtime_binding")
             raise AttemptErrors::UnauthorizedIdentity, "candidate producer native binding differs"
           end
           bytes = @journal.bounded_blob(candidate.fetch("bundle_ref"), commit: commit, max_bytes: CandidateTransfer::MAX_BYTES)
+          unless bytes.bytesize == candidate.fetch("bytes") && Digest::SHA256.hexdigest(bytes) == candidate.fetch("sha256")
+            raise AttemptErrors::EvidenceUnavailable, "canonical candidate bytes differ"
+          end
           [candidate, origin, commit, bytes]
         end
 

@@ -65,6 +65,7 @@ module Ace
           # RubyGems binstubs do not activate BUNDLE_GEMFILE themselves. Pin the
           # generated closure before the public runner loads any package code.
           argv.insert(1, "-rbundler/setup")
+          invalid! if JSON.generate(argv).bytesize > 2048
           invalid! unless definition.fetch("executable_sha256") == @document.fetch("executable_sha256")
           result = definition.merge("argv" => argv, "source" => candidate.slice("head", "tree"),
             "candidate" => candidate, "materialization" => recipe.merge("execution_id" => execution_id),

@@ -24,5 +24,8 @@ class CommandCandidateViewKernelTest < Minitest::Test
     assert_equal %w[writable undeclared], result.fetch("runtime_denied")
     assert_equal %w[dangling escaping], result.fetch("link_denied")
     assert_equal "REFUSED", result.fetch("unobservable_runtime")
+    assert result.fetch("existing_view_refused")
+    assert result.fetch("existing_output_preserved")
+    assert_equal %w[dangling escaping], result.fetch("failed_views_removed")
   end
 end
