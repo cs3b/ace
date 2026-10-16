@@ -258,6 +258,12 @@ module Ace
             escaped = reader
           end
           assert_raises(AttemptErrors::EvidenceUnavailable) { escaped.call(artifact) }
+          [KeyError, TypeError].each do |type|
+            error = type.new("consumer contract bug")
+            caught = assert_raises(type) { read.call { |_proof, reader| escaped = reader; raise error } }
+            assert_same error, caught
+            assert_raises(AttemptErrors::EvidenceUnavailable) { escaped.call(artifact) }
+          end
           refute @client.call("review_status", selection).data.fetch("accepted")
           original = @journal.method(:blob)
           @journal.define_singleton_method(:blob) { |name, **options| name == artifact.fetch("path") ? "corrupt" : original.call(name, **options) }
@@ -266,6 +272,12 @@ module Ace
           reference["reviewer_attempt_id"] = "forged"
           assert_raises(AttemptErrors::ReceiptRejected) { read.call { flunk } }
           reference["reviewer_attempt_id"] = "reviewer-run"
+          %w[result_id receipt_digest].each do |key|
+            original_value = reference.fetch(key)
+            reference[key] = key == "receipt_digest" ? "f" * 64 : "wrong-result"
+            assert_raises(AttemptErrors::ReceiptRejected) { read.call { flunk } }
+            reference[key] = original_value
+          end
           @client.call("cancel_review", selection.merge("pane" => "w1:pS", "review_id" => assigned.fetch("review_id"),
             "expected_generation" => 3), mutation_id: "cancel-collected")
           assert_raises(AttemptErrors::ReceiptRejected) { read.call { flunk } }
