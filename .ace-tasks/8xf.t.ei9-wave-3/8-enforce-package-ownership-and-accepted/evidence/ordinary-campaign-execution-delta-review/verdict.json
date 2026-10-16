@@ -1,0 +1,33 @@
+{
+  "reviewed_head": "22dd780f2",
+  "reviewed_base": "d5b11b93e",
+  "provider": "pi",
+  "model": "zai/glm-5.3",
+  "thinking": "high",
+  "preset": "ro",
+  "execution": "succeeded",
+  "verdict": "APPROVE: no Critical/Blocking, High or Medium issues",
+  "files": [
+    {
+      "path": "review-report-review-default.md",
+      "sha256": "f7d8a800ef440864eda7302940d1aa13d7960cb76e4cd9327996bf4c5987426c",
+      "bytes": 12008
+    },
+    {
+      "path": "llm_metadata.yml",
+      "sha256": "0555aa549dfa42191cddbe0eaff5c2c7c2dad04f9e252aa0d811bb3ef50e7c22",
+      "bytes": 976
+    },
+    {
+      "path": "metadata.yml",
+      "sha256": "8568b474a04a58c66260b27f51c99d79006a213cb8987b927f5d448f051fcf77",
+      "bytes": 3704
+    }
+  ],
+  "classification": {
+    "reader_internal_errors": "Retain the narrow boundary. Validated canonical contexts and CanonicalEvidence own internal typed failures; do not mask consumer exceptions again.",
+    "changelog": "Existing unreleased feature entry remains accurate; this is its reviewed internal diagnostic correction.",
+    "raw_artifact_newlines": "Retain original exact bytes and digests. Never rewrite an independent raw report or generated evidence to add cosmetic newlines.",
+    "broad_suite": "Parent owns integrated suite; no new full Assign or installed acceptance claimed."
+  }
+}
