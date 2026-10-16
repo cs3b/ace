@@ -389,3 +389,19 @@ Baseline reports in the original checkout:
 
 Protected validation was preserved. These older fixture repairs do not replace
 the installed two-project delivery acceptance still required by this program.
+
+
+### Reviewed native-session and shared-routing release assembly
+
+Candidate `33bf2efe56cd5d71d39417fc6516e4da509e9afe` combines independently
+approved native Pi session normalization and Hermes channels/v2 routing. The
+directory-fsync durability correction passed a second independent review.
+Herdr0.6.1, HITL0.16.1, contract0.2.2 and Hermes0.5.0 metadata is prepared; these
+versions have not been published or installed. All 50 gemspecs and 246 runtime
+dependency edges validated, including the Hermes minimum HITL0.16.1.
+
+The candidate default suite passed 51 packages, 12,358 tests and 43,216 assertions
+with 42 skips and no failures in 713.54 seconds. Per-package summaries and the
+independent assembly verdict are retained in `evidence/routing-native-release/`.
+This verifies source composition, not the still-open all-group host handoff,
+operator-question adoption, canonical execution joins or two-project delivery.
