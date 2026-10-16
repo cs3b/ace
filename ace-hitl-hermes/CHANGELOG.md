@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-10-16
+
 ### Changed
 
 - Replace channel-wide authority configuration with channels/v2 project routes, project-qualified correlation and folders, and explicit project CLI selection. Refuse old journals and ambiguous Reply IDs without migrating retained evidence.

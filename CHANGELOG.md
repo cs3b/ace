@@ -19,6 +19,8 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+- **ace-hitl-hermes v0.5.0**: Route a group's projects to explicit authorities with project-qualified request identities and durable independent ingress recovery. Preserve OTP transience, exact Captain correlation and configuration revocation; require channels/v2 and refuse old journals without migration. This source cut does not certify the installed all-group handoff.
+
 - **ace-bundle v0.45.1**: Follow Herdr 0.6 for the coordinated ordinary delivery dependency graph.
 
 - **ace-review v0.60.2**: Follow ace-git-forgejo 0.7 in the dependency manifest for the coordinated ordinary merge release.
@@ -33,6 +35,9 @@ All notable changes to this project will be documented in this file.
 
 
 ### Fixed
+
+- **ace-herdr v0.6.1**: Bind real native Pi session paths to immutable session UUIDs for ordinary admission, sharing Inbox normalization and preserving process checks.
+- **ace-hitl v0.16.1**: Refuse proposal reconciliation checkpoints for another project.
 - **ace-design (source)**: Reject runner sessions missing their task kind or frozen design digest with an actionable error and omit empty user-decision sections.
 
 - **ace-design (source)**: Keep fresh context ancestors unchanged during local adjustment and retain published proposals as recovery evidence.
@@ -185,6 +190,10 @@ All notable changes to this project will be documented in this file.
 - Dependency-following patch release after ace-assign 0.60: `ace-overseer v0.18.1`.
 
 - **ace-review v0.54.2**: Updated Codex alias tests for Terra and unknown native limits, retaining explicit legacy-model limit coverage.
+
+### Technical
+
+- **ace-hitl-contract v0.2.2**: Include exact project identity in shared proposal checkpoint examples.
 
 ## [0.9.944] - 2026-09-03
 

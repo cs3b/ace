@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-10-16
+
 ### Changed
 
 - Include exact project identity in shared ingress checkpoint examples for project-scoped proposal authorization.
