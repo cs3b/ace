@@ -3,6 +3,7 @@
 require_relative "prepared_work"
 require_relative "assignment_definition"
 require_relative "ordinary_queue"
+require_relative "ordinary_attempt_start"
 require_relative "../molecules/lifecycle_exclusion"
 
 module Ace
@@ -12,7 +13,8 @@ module Ace
       # The installed Lab composition supplies one journal and exclusion owner
       # shared with HITL and merge. No requester cache supplies accepted state.
       class OrdinaryLifecycle
-        OPERATIONS = %w[register_assignment registration_status].freeze
+        include OrdinaryAttemptStart
+        OPERATIONS = %w[register_assignment registration_status start_attempt].freeze
         TRANSFER_OPERATIONS = {"register_assignment" => {direction: :upload, purpose: :candidate, roles: [:supervisor]}}.freeze
         REGISTER_KEYS = %w[assignment_id definition_digest prepared_head prepared_tree manifest_sha256 expected_generation pane transfer].freeze
 
@@ -43,6 +45,9 @@ module Ace
           when "register_assignment"
             authorize_transfer!(request: request, peer: peer, role: role, deadline: deadline)
             register(request, peer, deadline, transfer)
+          when "start_attempt"
+            raise ArgumentError, "ordinary start forbids transfer" if transfer
+            start_attempt(request, peer, role, deadline)
           else
             raise ArgumentError, "unknown ordinary lifecycle operation"
           end

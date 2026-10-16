@@ -71,7 +71,7 @@ module Ace
             %w[pid uid gid].all? { |key| uid?(server[key]) } &&
             %w[host started_at].all? { |key| server[key].is_a?(String) && server[key].bytesize.between?(1, 512) && !server[key].include?("\0") }
           endpoint = @native["socket_identity"]
-          invalid! unless endpoint.is_a?(Array) && endpoint.size == 3 && endpoint.all? { |value| value.is_a?(Integer) && value >= 0 } && endpoint.last == server.fetch("uid")
+          invalid! unless endpoint.is_a?(Array) && endpoint.size == 3 && endpoint.all? { |value| value.is_a?(Integer) && value >= 0 } && endpoint.last.zero?
           @worktrees = selected.fetch("worktrees")
           invalid! unless @worktrees.is_a?(Hash) && @worktrees.keys.sort == %w[common_dir root] && @worktrees.values.all? { |path| absolute?(path) }
           private_paths = [@assignment_root, @lifecycle_root, @journal.fetch("checkout_root")]

@@ -31,6 +31,7 @@ module Ace
             ->(d) { d["journal"]["repository"] = "/var/lib/ace/state/journal" },
             ->(d) { d["assignment_root"] = "/var/lib/ace/state/checkout/assignments" },
             ->(d) { d["participants"]["41001"]["role"] = "root" },
+            ->(d) { d["native"]["socket_identity"][2] = 41001 },
             ->(d) { d["participants"]["41001"]["argv"] = ["/bin/sh"] }].each do |change|
             modified = document
             change.call(modified.fetch("projects").fetch("atlas"))

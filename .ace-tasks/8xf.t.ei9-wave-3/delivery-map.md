@@ -91,10 +91,28 @@ not a hard deadline for every possible journal I/O stall.
 Ordinary queue transitions use the existing AssignmentExecutor on private,
 temporary files reconstructed from canonical bytes. They remain an internal
 transformer until remote progress is bound to the authenticated attempt,
-generation and accepted result in the lifecycle owner. No start, finish or
-installed completion is inferred from registration. Independent review approved
+generation and accepted result in the lifecycle owner. Registration alone proves
+no start, finish or installed completion. Independent review approved
 45 tests/402 assertions across lifecycle, queue, lock, mutation and protected
 registration paths; root's focused rerun passed 19/214.
+
+The next source increment binds ordinary native reads to a root-owned pinned
+socket inode and exact kernel Herdr peer generation. Native method tags and pane
+IDs are verified; cwd comes only from the exact foreground owner PID. Bounded
+Git reads validate the installed worktree root/common directory, reject redirected
+metadata/objects/refs, and compare HEAD and native ownership across observation.
+This is historical ordinary evidence, not an atomic checkout freeze.
+
+Ordinary `start_attempt` now commits intent, observed process/checkout, queue
+activation and original reply together in Assign. A distinct mutation/attempt
+cannot repeat the accepted scope. Lost-reply recovery after owner restart retains
+the original base HEAD even if work has advanced, while rechecking the original
+live native owner under the canonical lock. Real lock-barrier regressions refuse
+fresh/replayed start after native ownership disappears. Independent review passed
+22 Assign tests/245 assertions and 22 Lab tests/88 assertions; full Assign fast
+verification preceding this increment passed 1073 tests/4727 assertions. Remote
+progress/results, installed CLI/composition and installed start acceptance remain
+open; no child is complete.
 
 Live native installation findings: the current Herdr server runs as `mo` from
 a user-owned mise executable; its socket and parent directories are also
@@ -103,6 +121,11 @@ serve as trusted ordinary authority input. Domain ownership must provide a
 reviewed trusted executable and pinned accessible endpoint using the existing
 native handoff and systemd mechanisms; no broker or protected capability is
 introduced. This prerequisite is open, and no ordinary owner is installed.
+Domain isolated Linux proofs have since preserved shell PID/pgid through native
+handoff, adopted the new MainPID with systemd's existing pidfd mechanism, and
+verified root-owned socket inode plus exact distinct-UID ACL/read-only pin.
+The selected future account is `lab-assign-owner`, with a free system UID recorded
+by the maintained installer. Production native handoff/provisioning has not run.
 
 Domain receipt `ca22cd8` records canonical session adoption: the same saved
 session survived bootstrap and a second ordinary restart, retains exactly two

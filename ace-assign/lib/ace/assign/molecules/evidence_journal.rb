@@ -1003,8 +1003,8 @@ module Ace
         #
         # @param assignment_id [String] Assignment ID
         # @return [Array<Models::Attempt>] Derived attempts
-        def derived_attempts(assignment_id)
-          events = read_events(assignment_id)
+        def derived_attempts(assignment_id, commit: ref_value)
+          events = read_events(assignment_id, commit: commit)
           by_attempt = events.group_by { |event| event["attempt_id"] }
           by_attempt.delete(nil)
 
@@ -1015,7 +1015,7 @@ module Ace
             state = derive_state(attempt_events)
             next if state.nil?
 
-            build_attempt(assignment_id, attempt_id, intent["payload"], attempt_events, state)
+            build_attempt(assignment_id, attempt_id, intent["payload"], attempt_events, state, commit: commit)
           end
         end
 
@@ -1566,7 +1566,7 @@ module Ace
           CanonicalAttemptState.derive(events)
         end
 
-        def build_attempt(assignment_id, attempt_id, intent_payload, events, state)
+        def build_attempt(assignment_id, attempt_id, intent_payload, events, state, commit: ref_value)
           process_start = events.reverse.find do |event|
             event["type"] == "process_start" && event["attempt_id"] == attempt_id
           end
@@ -1596,7 +1596,7 @@ module Ace
             binding: binding,
             state: state,
             candidate_head: candidate_head,
-            journal_commit: ref_value
+            journal_commit: commit
           )
         end
 

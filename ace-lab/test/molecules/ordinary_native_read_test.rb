@@ -94,8 +94,10 @@ module Ace
             path = File.join(root, "native.sock")
             server = UNIXServer.new(path); File.chmod(0600, path)
             identity = Ace::Runtime::Molecules::ProcessIdentity.new.capture(Process.pid).merge("gid" => Process.gid)
+            original_inode = WIRE.method(:socket_identity)
+            installed_inode = ->(selected) { original_inode.call(selected).take(2) + [0] }
             config = OrdinaryOwnerConfig.new(ordinary_owner_document(peer: identity,
-              socket_path: path, socket_identity: WIRE.socket_identity(path)), project: "atlas", source: OrdinaryOwnerConfig::PATH)
+              socket_path: path, socket_identity: installed_inode.call(path)), project: "atlas", source: OrdinaryOwnerConfig::PATH)
             @requests, @wrong_id, @silent = [], false, false
             @inventory_pane, @wrong_type = "w1:p1", false
             @processes = [{"pid" => 123, "cwd" => "/actual-worker"}, {"pid" => 456, "cwd" => "/foreign-worker"}]
@@ -131,10 +133,10 @@ module Ace
             @selected_config = config
             OrdinaryOwnerConfig.stub(:load, ->(**_) { @selected_config }) do
               if trusted_parent_fixture
-                # Only the filesystem installation boundary is controlled;
-                # UNIX credentials, live birth, inode and protocol are real.
+                # Only root installation ownership is controlled. Socket
+                # dev/inode, UNIX credentials, live birth and protocol are real.
                 WIRE.stub(:root_path!, ->(selected, directory:) { raise "wrong endpoint parent" unless selected == root && directory }) do
-                  yield reader, config
+                  WIRE.stub(:socket_identity, installed_inode) { yield reader, config }
                 end
               else
                 yield reader, config

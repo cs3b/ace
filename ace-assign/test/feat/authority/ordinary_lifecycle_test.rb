@@ -14,7 +14,7 @@ module Ace
       # selection is tested in Lab; this is not a distinct-user receipt.
       class Admission
         attr_reader :service
-        attr_accessor :role, :authorized, :native
+        attr_accessor :role, :authorized, :native, :execution_head, :execution_binding
         def initialize(service)
           @service, @role, @authorized, @native = service, :supervisor, true, true
           @peer = Authority::OrdinaryPeer.new
@@ -29,7 +29,14 @@ module Ace
         def identity!(peer:, pane:, deadline:)
           @peer.live!(peer, deadline: deadline)
           raise AttemptErrors::UnauthorizedIdentity unless @native && pane == "w1:p1"
-          Struct.new(:role, :actor).new("coordinator", Etc.getpwuid(peer.fetch("uid")).name)
+          Molecules::ExecutionIdentityResolver::Identity.new(actor: Etc.getpwuid(peer.fetch("uid")).name,
+            role: @role == :supervisor ? "coordinator" : "worker", runtime: "herdr", adapter: "ordinary",
+            process_pid: @execution_binding.dig("process_identity", "pid"), runtime_binding: @execution_binding)
+        end
+        def execution!(peer:, pane:, head:, deadline:)
+          identity = identity!(peer: peer, pane: pane, deadline: deadline)
+          raise AttemptErrors::UnauthorizedIdentity unless @execution_head == head
+          {identity: identity, checkout: {"head" => @execution_head, "cwd" => "/observed/worker"}}
         end
       end
 
@@ -138,10 +145,109 @@ module Ace
         end
       end
 
+      def test_observed_start_and_active_queue_share_one_commit_and_restart_replays_original
+        with_fixture do
+          with_owner do |client|
+            register(client)
+            @admission.role = :worker
+            first = start(client)
+            @accepted_start = first.data
+            commit = @journal.ref_value
+            assert_equal "running", first.data.fetch("state")
+            attempt = @journal.derived_attempts("batch", commit: commit).fetch(0)
+            assert_equal ["running", @admission.execution_head, commit], [attempt.state, attempt.binding.base_head, attempt.journal_commit]
+            queue = Authority::OrdinaryQueue.new(work: @artifact.work, root: @inputs,
+              bytes: @journal.blob(first.data.fetch("queue_ref"), commit: commit))
+            assert_equal :active, queue.status.steps.first.status
+            event = @journal.read_events("batch", commit: commit).find { |value| value["type"] == "process_start" }
+            assert_equal @admission.execution_binding, event.dig("payload", "runtime_binding")
+            assert_equal "/observed/worker", event.dig("payload", "checkout", "cwd")
+            assert_raises(AttemptErrors::EvidenceUnavailable) { start(client, mutation: "second-request", attempt: "second-attempt") }
+            assert_equal commit, @journal.ref_value
+          end
+          FileUtils.rm_rf(@journal.checkout_root)
+          FileUtils.mkdir_p(@journal.checkout_root, mode: 0700)
+          with_owner do |client|
+            @admission.execution_head = "d" * 40
+            repeated = start(client, head: @accepted_start.fetch("base_head"))
+            assert repeated.replayed
+            assert_equal @accepted_start, repeated.data
+            assert_equal @accepted_start.fetch("journal_commit"), @journal.ref_value
+            assert_equal 1, @journal.read_events("batch").count { |event| event["type"] == "process_start" }
+          end
+        end
+      end
+
+      def test_absent_start_wrong_head_wrong_role_and_replaced_native_owner_are_not_accepted
+        with_fixture do
+          with_owner do |client|
+            register(client)
+            commit = @journal.ref_value
+            @admission.role = :worker
+            @admission.native = false
+            assert_raises(AttemptErrors::EvidenceUnavailable) { start(client) }
+            @admission.native = true
+            assert_raises(AttemptErrors::EvidenceUnavailable) { start(client, head: "f" * 40) }
+            @admission.role = :reviewer
+            assert_raises(AttemptErrors::EvidenceUnavailable) { start(client) }
+            assert_empty @journal.derived_attempts("batch")
+            assert_equal commit, @journal.ref_value
+            @admission.role = :worker
+            accepted = start(client)
+            @admission.execution_binding = @admission.execution_binding.merge("pane" => "replacement")
+            assert_raises(AttemptErrors::EvidenceUnavailable) { start(client) }
+            assert_equal accepted.data.fetch("journal_commit"), @journal.ref_value
+            @admission.authorized = false
+            assert_raises(AttemptErrors::EvidenceUnavailable) { start(client) }
+          end
+        end
+      end
+
+      def test_native_owner_is_rechecked_after_journal_wait_for_fresh_start_and_replay
+        with_fixture do
+          with_owner do |client|
+            register(client)
+            @admission.role = :worker
+            [:fresh, :replay].each do |phase|
+              @admission.native = true
+              start(client) if phase == :replay
+              commit = @journal.ref_value
+              lock = File.open(@journal.send(:lock_path), File::RDWR)
+              lock.flock(File::LOCK_EX)
+              entered = Queue.new
+              original = @journal.method(:with_lock)
+              @journal.define_singleton_method(:with_lock) do |**options, &block|
+                entered << true
+                original.call(**options, &block)
+              end
+              waiting = Thread.new do
+                start(client)
+              rescue AttemptErrors::EvidenceUnavailable => error
+                error
+              end
+              Timeout.timeout(5) { entered.pop }
+              @admission.native = false
+              lock.flock(File::LOCK_UN)
+              assert waiting.join(3), "lost native owner must refuse after journal wait"
+              assert_kind_of AttemptErrors::EvidenceUnavailable, waiting.value
+              assert_equal commit, @journal.ref_value
+            ensure
+              lock&.close
+              @journal.define_singleton_method(:with_lock, original) if original
+            end
+          end
+        end
+      end
+
       private
 
       def register(client, mutation: "original-registration", params: @params)
         client.call("register_assignment", params, mutation_id: mutation, upload_parts: [@bundle], purpose: :candidate)
+      end
+
+      def start(client, mutation: "original-start", attempt: "worker-attempt", head: @admission.execution_head)
+        client.call("start_attempt", {"assignment_id" => "batch", "attempt_id" => attempt,
+          "expected_generation" => 0, "head" => head, "pane" => "w1:p1"}, mutation_id: mutation)
       end
 
       def with_owner
@@ -174,6 +280,9 @@ module Ace
           @params = @artifact.header(expected_generation: 0).merge("pane" => "w1:p1")
           @service = {"uid" => Process.uid, "gid" => Process.gid, "socket_path" => File.join(root, "owner.sock"), "state_root" => root}
           @admission = Admission.new(@service)
+          @admission.execution_head = git(repository, "rev-parse", "HEAD").strip
+          @admission.execution_binding = {"runtime" => "herdr", "session" => "w1", "pane" => "w1:p1",
+            "process_identity" => Ace::Runtime::Molecules::ProcessIdentity.new.capture(Process.pid)}
           yield
         end
       end

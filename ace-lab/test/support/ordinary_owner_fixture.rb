@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module OrdinaryOwnerFixture
-  def ordinary_owner_document(peer:, socket_path: "/run/ace/atlas/native.sock", socket_identity: [1, 2, peer.fetch("uid")])
+  def ordinary_owner_document(peer:, socket_path: "/run/ace/atlas/native.sock", socket_identity: [1, 2, 0])
     {"version" => 1, "projects" => {"atlas" => {
       "service" => {"uid" => 41000, "gid" => 41000, "socket_path" => "/run/ace/atlas/assign.sock", "state_root" => "/var/lib/ace/state"},
       "journal" => {"repository" => "/var/lib/ace/journal", "ref" => "refs/ace/execution", "checkout_root" => "/var/lib/ace/state/checkout"},
