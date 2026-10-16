@@ -80,7 +80,7 @@ module Ace
             raise SecurityError, "release artifact caller or project differs"
           end
           username = begin
-            Etc.getpwuid(uid).name
+            Etc.getpwuid(uid)&.name
           rescue ArgumentError
             nil
           end

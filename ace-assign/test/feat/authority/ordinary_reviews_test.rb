@@ -10,6 +10,8 @@ require "ace/assign/authority/command_execution"
 
 module Ace
   module Assign
+    # ordinary_release_artifacts_test also reopens this class to reuse the
+    # real native-start/candidate/review fixture without a second evidence owner.
     class OrdinaryReviewsTest < AceAssignTestCase
       # Actual Unix/Git/transfer/receipts; only installed native observation is
       # controlled. Two real OS generations are not an installed agent proof.

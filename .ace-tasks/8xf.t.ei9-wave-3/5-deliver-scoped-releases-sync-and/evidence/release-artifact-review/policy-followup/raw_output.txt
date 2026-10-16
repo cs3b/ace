@@ -1,0 +1,9 @@
+
+# Running tests with run options --seed 11346:
+
+............
+
+Finished tests in 0.029942s, 400.7748 tests/s, 3206.1987 assertions/s.
+
+
+12 tests, 96 assertions, 0 failures, 0 errors, 0 skips

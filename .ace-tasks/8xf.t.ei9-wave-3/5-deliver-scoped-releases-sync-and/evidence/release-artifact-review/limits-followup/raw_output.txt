@@ -1,0 +1,23 @@
+Started with run options --seed 15714
+
+Ace::Assign::TransferCodecTest
+  test_private_sender_marker_cannot_extend_body_deadline          PASS (0.00s)
+  test_exact_multi_part_binary_upload_is_admitted_only_after_write_eof_and_spool_is_removed PASS (0.00s)
+  test_missing_eof_hits_shared_deadline_without_mutation_or_retained_spool PASS (0.05s)
+  test_receipt_purpose_limits_do_not_widen_generic_artifacts_or_trade_evidence_for_receipt_capacity PASS (0.00s)
+  test_private_prompt_boundary_refuses_extra_bytes_wrong_marker_and_early_eof_before_consumer PASS (0.06s)
+  test_export_uses_exact_binary_bytes_and_refuses_mismatched_descriptor PASS (0.00s)
+  test_consumer_failure_removes_only_new_spool_and_preserves_existing_private_files PASS (0.00s)
+  test_private_body_and_marker_share_the_same_clamped_absolute_deadline PASS (0.00s)
+  test_receipt_purpose_preserves_all_sixteen_artifacts_and_separate_full_capacity PASS (0.00s)
+  test_release_artifact_transport_and_canonical_store_share_the_same_bound PASS (0.00s)
+  test_chunked_and_coalesced_private_body_preserve_next_control_frame PASS (0.00s)
+  test_fixed_purpose_limits_and_descriptor_shape_refuse_before_spool PASS (0.00s)
+  test_private_prompt_frames_support_two_dispatches_and_ack_without_half_close PASS (0.00s)
+  test_release_artifact_transfer_preserves_one_binary_part_and_cleans_scratch PASS (0.00s)
+  test_short_extra_and_changed_payload_never_invoke_consumer_or_leave_spool PASS (0.00s)
+  test_service_input_is_exactly_one_nonempty_bounded_source_part  PASS (0.00s)
+  test_release_artifact_transfer_has_exact_single_nonempty_part_and_size_ceiling PASS (0.00s)
+
+Finished in 0.12905s
+17 tests, 96 assertions, 0 failures, 0 errors, 0 skips

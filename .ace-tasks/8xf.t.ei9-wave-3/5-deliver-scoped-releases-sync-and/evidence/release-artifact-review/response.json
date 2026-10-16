@@ -1,0 +1,21 @@
+{
+  "source_commit": "936a9e7ff60c2d2cff4aa16b4a59034101c1fcc7",
+  "actual_execution": "pi / zai/glm-5.3 / high / ro / succeeded / finish stop",
+  "verdict": "APPROVE with minor follow-ups",
+  "report_sha256": "4198a7055507cdfaa426076af5f458aa78cf835a645acecc6a1558a452f09335",
+  "findings": {
+    "M1": "The reported absent-account nil result was not reproduced: Ruby3.4.8 raises ArgumentError, already rescued. Consistent optional username safe navigation added and tested for both boundary outcomes.",
+    "L1": "Fixed cross-check between codec and canonical evidence bounds using named tuple components; no new storage dependency in transport.",
+    "L2": "Design: one composite admission authorization context uses a generic refusal; no exception grants a permit.",
+    "L3": "Fixed fixture reopener comment.",
+    "L4": "Fixed current-prefix-only readback contract comment.",
+    "coordinator_forward_binding": "No race: graph is not returned/listening until coordinator is assigned. Same intentional pattern as the existing evidence reader."
+  },
+  "checks": {
+    "protected_service": "30/310 PASS",
+    "protected_publication": "16/138 PASS",
+    "policy_followup": "12/96 PASS",
+    "limit_followup": "17/96 PASS"
+  },
+  "limitations": "Source retention only; no publisher dispatch or production installation. Fresh narrow delta review pending."
+}

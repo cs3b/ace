@@ -2,6 +2,7 @@
 
 require_relative "../test_helper"
 require "ace/assign/authority/transfer_codec"
+require "ace/assign/molecules/canonical_evidence"
 
 module Ace
   module Assign
@@ -45,6 +46,13 @@ module Ace
           assert_empty Dir.children(root)
           assert_raises(AttemptErrors::ReceiptRejected) { codec.descriptor([binary], purpose: :artifacts) }
         end
+      end
+
+      def test_release_artifact_transport_and_canonical_store_share_the_same_bound
+        total, count, each = Authority::TransferCodec::LIMITS.fetch(:release_artifact)
+        stored_each, stored_total, stored_count = Molecules::CanonicalEvidence::LIMITS.fetch("release-artifact")
+        assert_equal Molecules::CanonicalEvidence::MAX_RELEASE_ARTIFACT_BYTES, each
+        assert_equal [stored_total, stored_count, stored_each], [total, count, each]
       end
 
       def test_release_artifact_transfer_has_exact_single_nonempty_part_and_size_ceiling

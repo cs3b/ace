@@ -152,6 +152,21 @@ class OrdinaryAuthorityCompositionTest < Minitest::Test
     refute File.exist?(File.join(@root, "journal")), "read-only decision validation creates no history"
   end
 
+  def test_numeric_release_principal_does_not_require_a_passwd_name
+    authorize = release_artifact_authorizer
+    binding = release_binding
+    @policy["principals"] = {"41001" => {"projects" => ["atlas"]}}
+    decision = binding.except("authorization").merge("expires_at" => (Time.now.utc + 3600).iso8601)
+    @policy["authorizations"]["release-grant"] = decision
+    L::Molecules::GrantResolver.stub(:trusted_document, @policy) do
+      # Current Ruby raises ArgumentError for an unknown UID. The optional
+      # username path also tolerates a nil lookup, matching CallerAuthorizer.
+      [->(_uid) { raise ArgumentError, "unknown UID" }, ->(_uid) { nil }].each do |lookup|
+        Etc.stub(:getpwuid, lookup) { assert_equal decision, authorize.call(binding) }
+      end
+    end
+  end
+
   def test_mismatched_canonical_locations_receiver_identity_or_participant_refuse
     ["journal_repository", "journal_ref", "receiver_uid", "principal", "socket_path"].each do |field|
       original = @policy["ordinary"]["projects"]["atlas"][field]

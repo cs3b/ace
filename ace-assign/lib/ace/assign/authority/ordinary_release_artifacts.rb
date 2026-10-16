@@ -15,7 +15,8 @@ module Ace
         RELEASE_PARAMETERS = %w[assignment_id attempt_id head candidate_generation pane expected_generation
           authorization manifest transfer].freeze
 
-        # Read only an accepted import from one immutable canonical prefix.
+        # Read an accepted import at the current immutable canonical prefix only.
+        # Historical commit selection is not supported by the native origin reader.
         # The later effect consumer must independently admit its fresh scope,
         # candidate, review, authorization and fixed executor before dispatch.
         def release_artifact_at!(events:, commit:, artifact_id:)
