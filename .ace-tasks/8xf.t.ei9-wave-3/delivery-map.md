@@ -548,3 +548,31 @@ the production deadline contract itself. The full default suite then ran on the
 final state and passed 51 packages, 12,429 tests, 43,641 assertions, 42 skips,
 0 failures (755.87s; assign `e18c4e86`, review `fd8342dc`, lab `4b382db4`),
 superseding the 521 freeze for this delta.
+
+### Wave-3 coordinated release prepared, merged and published
+
+The integration branch merged into local main (`79b035ab0`, 69 commits, no
+conflicts; post-merge ace-design package tests passed). Coordinated release
+prepared via the local release workflow with a fresh registry audit:
+ace-assign 0.71.0, ace-review 0.61.0, ace-lab 0.9.0, ace-overseer 0.23.0,
+ace-hitl 0.17.0, ace-hitl-contract 0.3.0, ace-hitl-hermes 0.6.0,
+ace-runtime 0.4.0, ace-herdr 0.6.1 (amended unpublished cut). The four
+prepared-but-unpublished routing-candidate versions were consolidated with the
+newer wave-3 changes into single versions so no phantom skipped versions ship.
+Dependency floors moved together: ace-assign/ace-overseer require
+ace-review 0.61 (the load-time `MAX_HEAD_CONTEXT_BYTES` dependency), ace-hitl
+and ace-hitl-hermes require ace-hitl-contract 0.3, ace-hitl-hermes requires
+ace-hitl 0.17, ace-herdr follows contract 0.3; Gemfile.lock resynced.
+All nine versions were then published live by the Captain on 2026-10-16
+(~22:09 UTC; registry-verified for ace-review 0.61.0
+`2a3de1e0c36834116296ae4a4d79d224ccd8928a09e790c1a8229dd9aaf9078f` and
+ace-assign 0.71.0
+`92df594791194fffb9a319c407d30c02f6e6491b7a26a83550adc997996d6db0`;
+rubygems `latest.json` briefly serves stale pointers via CDN — the versions
+endpoints are authoritative). Never republish these versions.
+
+Still open after this publication: local main (merge + four release commits,
+65 commits ahead of origin) is not pushed; the PR375 decision is pending. The
+Lab still runs the previously selected graphs — exact new-graph selection
+(50-version style verification), installation and every installed acceptance
+item (.0 onward) remain, as do both external platform blocks.
