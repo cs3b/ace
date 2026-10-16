@@ -95,3 +95,12 @@ requires separate preservation/no-writer proof, including untracked valuable dat
 Cold-onboard second project with same generic assets, config-only differences and
 an explicitly authorized demo release if appropriate. One project's denial/restart
 cannot mutate or freeze the other's queue. Parent closes only on installed outcomes.
+
+## Exact local queue root
+
+Use `ace-task create "Deliver objective" --root .ace-tasks/overseer`, then
+`ace-task show REF --root .ace-tasks/overseer` and
+`ace-task update REF --root .ace-tasks/overseer --set next_action=integrate`.
+`list --root` uses the same selector. In an ACE source checkout use `bin/ace-task`.
+This selects the exact queue directory; `--in overseer` still follows the normal
+special-folder convention and is not the selector for this runtime queue.

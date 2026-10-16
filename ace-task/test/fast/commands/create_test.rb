@@ -39,7 +39,7 @@ class CreateCommandTest < AceTaskTestCase
     task = Ace::Task::Organisms::TaskManager.new.show(task_id)
     refute_nil task
     assert_nil task.special_folder
-    assert_equal File.join(tasks_dir, File.basename(task.path)), task.path
+    assert_equal File.realpath(File.join(tasks_dir, File.basename(task.path))), File.realpath(task.path)
 
     next_tasks = Ace::Task::Organisms::TaskManager.new.list(in_folder: "next")
     assert_equal [task_id], next_tasks.map(&:id)

@@ -1,6 +1,6 @@
 ---
 id: 8xf.t.ei9.2
-status: pending
+status: in-progress
 priority: high
 created_at: "2026-10-16 10:57:18"
 tags: []

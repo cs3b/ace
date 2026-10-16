@@ -46,6 +46,8 @@ module Ace
 
           option :git_commit, type: :boolean, aliases: %w[--gc], desc: "Auto-commit changes"
 
+          option :root, type: :string, aliases: %w[-r], desc: "Exact task root directory (overrides project config)"
+
           option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
           option :verbose, type: :boolean, aliases: %w[-v], desc: "Show verbose output"
           option :debug, type: :boolean, aliases: %w[-d], desc: "Show debug output"
@@ -75,7 +77,11 @@ module Ace
             add_hash = parse_kv_pairs(add_args)
             remove_hash = parse_kv_pairs(remove_args)
 
-            manager = Ace::Task::Organisms::TaskManager.new
+            manager = if options[:root]
+              Ace::Task::Organisms::TaskManager.new(root_dir: File.expand_path(options[:root]))
+            else
+              Ace::Task::Organisms::TaskManager.new
+            end
 
             # Resolve --position into a set or remove operation
             if position_arg

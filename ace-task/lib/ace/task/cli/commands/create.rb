@@ -48,6 +48,8 @@ module Ace
 
           option :git_commit, type: :boolean, aliases: %w[--gc], desc: "Auto-commit changes"
 
+          option :root, type: :string, aliases: %w[-r], desc: "Exact task root directory (overrides project config)"
+
           option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
           option :verbose, type: :boolean, aliases: %w[-v], desc: "Show verbose output"
           option :debug, type: :boolean, aliases: %w[-d], desc: "Show debug output"
@@ -77,7 +79,11 @@ module Ace
               end
             end
 
-            manager = Ace::Task::Organisms::TaskManager.new
+            manager = if options[:root]
+              Ace::Task::Organisms::TaskManager.new(root_dir: File.expand_path(options[:root]))
+            else
+              Ace::Task::Organisms::TaskManager.new
+            end
             validate_destination!(manager, in_folder) if in_folder && !child_of
             placement_directories_before = directories_under(manager.root_dir) if in_folder && !child_of
 
