@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Add source-owned nonsemantic head assessments to the existing campaign history, retaining the original reviewed head, fresh checks, and an exact predecessor chain without consuming or resetting review budgets. Accepted-result v2 distinguishes reviewed and accepted heads; unavailable assessment authority keeps acceptance closed.
 - Let an installed campaign evidence owner verify real reviewer independence for agents sharing an account, while preserving the default distinct-actor requirement.
+- Expose the closed 128MiB complete-head-context ceiling as `CampaignContract::MAX_HEAD_CONTEXT_BYTES` so campaign head assessments and the Assign-side candidate comparison share one explicit bound; ace-assign consumes this constant directly.
 
 ## [0.60.3] - 2026-10-16
 

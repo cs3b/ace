@@ -83,6 +83,19 @@ class CampaignHeadAssessmentsTest < AceReviewTest
     assert_raises(ArgumentError) { manager.accepted_result_snapshot(id) }
   end
 
+  def test_head_context_bound_is_explicit_and_oversized_proof_cannot_change_store
+    campaign, original = accepted_campaign
+    @head = "c" * 40
+    input = assessment(campaign, original)
+    proof = @head_proofs.fetch(input.fetch("reference").fetch("digest"))
+    proof["context"]["bytes"] = Ace::Review::Atoms::CampaignContract::MAX_HEAD_CONTEXT_BYTES + 1
+    before = manager.store.read(campaign.fetch("campaign_id"))
+    assert_raises(ArgumentError) { manager.record_head_assessment(campaign.fetch("campaign_id"), input) }
+    assert_equal before, manager.store.read(campaign.fetch("campaign_id"))
+    proof["context"]["bytes"] -= 1
+    assert manager.record_head_assessment(campaign.fetch("campaign_id"), input).fetch("accepted")
+  end
+
   def test_no_default_authority_and_no_label_only_carry_for_material_or_nontext_changes
     campaign, original = accepted_campaign
     id = campaign.fetch("campaign_id")

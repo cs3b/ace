@@ -67,7 +67,7 @@ module Ace
           context = proof["context"]
           unless context.is_a?(Hash) && context.keys.sort == %w[bytes sha256 text_only] &&
               context["sha256"].is_a?(String) && context["sha256"].match?(/\A[0-9a-f]{64}\z/) &&
-              context["bytes"].is_a?(Integer) && context["bytes"].between?(1, 64 * 1024 * 1024) &&
+              context["bytes"].is_a?(Integer) && context["bytes"].between?(1, Contract::MAX_HEAD_CONTEXT_BYTES) &&
               [true, false].include?(context["text_only"])
             raise Contract::Invalid, "complete canonical head context is unavailable"
           end

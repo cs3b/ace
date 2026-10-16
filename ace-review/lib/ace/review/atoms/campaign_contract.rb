@@ -11,6 +11,7 @@ module Ace
       # Pure campaign input contracts and canonical identities.
       module CampaignContract
         class Invalid < ArgumentError; end
+        MAX_HEAD_CONTEXT_BYTES = 128 * 1024 * 1024
         SHA = /\A[0-9a-f]{40}(?:[0-9a-f]{24})?\z/.freeze
         ID = /\A[a-zA-Z0-9][a-zA-Z0-9_.-]{0,127}\z/.freeze
 
