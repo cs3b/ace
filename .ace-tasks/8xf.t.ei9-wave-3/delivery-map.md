@@ -9,13 +9,13 @@ status is not an autonomous delivery receipt.
 | Exact authorized merge; fresh PR2 decision | ei9.0 | ace-lab ordinary request/receiver; ace-assign journal; ace-git-forgejo; xz9.4/.5 ordinary clauses | lab0.8.0, assign0.70.0, forgejo0.7.0 published | Public-registry exact graphs selected; real ordinary owner active UID966 with three endpoints | Two real sequential PR merges, revocation, head race, uncertain/restart pending |
 | Context, capabilities, start rules | ei9.1 | ace-overseer; qk0 and qkb.1 | overseer0.22.0 / assign0.70.0 assets published | New coordinator graph selected; full effective context receipt pending | Complete installed role/context/path/digest receipt pending |
 | Local objective queue, canonical attempt adoption | ei9.2 | ace-task root selector; ace-assign; qk0/qkb.1 | task0.40.0 published with exact --root create/show/update | No overseer queue verified | Restart/lost answer/duplicate wake without redispatch pending |
-| Dispatch start and correct result attribution | ei9.3 | ace-overseer/Herdr/Assign; qk0/qkb.1 | Existing APIs, join verification pending | Start receipt not yet verified | No-start/wrong callback refused; producer result adoption pending |
+| Dispatch start and correct result attribution | ei9.3 | ace-overseer/Herdr/Assign; qk0/qkb.1 | Ordinary canonical execution source reviewed; release pending | Ordinary dispatch/result source and generation-conflict repair reviewed; not installed | No-start/wrong callback and restart adoption still require installed workflow |
 | Native continuation and serial integration | ei9.4 | Pi ace-wake loop/watch; qk0/qkb.1 | Existing native extension and assign0.70.0 workflow assets published | Canonical same-session restart preserves exactly two native duties | Native timer/watch/restore proof passed; actual 10-minute audit/hourly cleanup and two merges pending installed workflow |
-| Project command, release, sync, all consumers | ei9.5 | ace-lab run (iy6 missing), existing publisher/Assign/runtime/HITL; qkb.1 | Eight main-built gems published manually, exact archive SHA verified | service45/coordinator59 installed and selected; canonical shell smoke passed; legacy pins separate | TS-MONO-001 PASS4/4 for50 exact versions; autonomous publishing, failure scenarios and remaining consumers pending |
+| Project command, release, sync, all consumers | ei9.5 | ace-lab run nonsecret source slice (iy6 secrets/publication still open), existing publisher/Assign/runtime/HITL; qkb.1 | Eight main-built gems published manually, exact archive SHA verified | service45/coordinator59 installed and selected; canonical shell smoke passed; legacy pins separate | TS-MONO-001 PASS4/4 for50 exact versions; autonomous publishing, failure scenarios and remaining consumers pending |
 | Preserve and close accepted work | ei9.6 | Herdr/worktree owners; ordinary qk0 | Existing preservation mechanisms | Exact installed path pending | Commits/files/results survive cleanup; correct pane closes pending |
 | Installed two-project proof | ei9.7 | TS-DELIVERY-* (qkc), lq1 receipts; shared result with lab-config gad.2 | No new framework | Both deployments pending | Two workers → PRs → review → serial merges → one release → install/sync/cleanup; cold isolated second project pending |
 | Accepted-head review and bounded campaigns | ei9.8 | ace-review ig3/ig4/qm6; Assign presets; configure-project | review0.60.3 / assign0.70.0 published with ig3 repair and aligned presets | Exact new runtime graph installed; behavioral acceptance pending | Exact historical evidence and bounded rounds; moved-head risk/delta review pending |
-| Shared Hermes and delegated decisions | ei9.9 | nh0 implementation; qjz scoped policy; Hermes/HITL mTLS | hitl0.16.0 published; Hermes multi-project source delta in progress | Ordinary HITL active and coordinator opt-in selected; shared mTLS/poller binding pending | Project isolation, exact reply, only predelegated 16-hour timeout pending |
+| Shared Hermes and delegated decisions | ei9.9 | nh0 implementation; qjz scoped policy; Hermes/HITL mTLS | hitl0.16.0 published; operator-question and Hermes runtime/v2 source reviewed, unpublished | Ordinary HITL active and coordinator opt-in selected; shared mTLS/poller binding pending | Project isolation, exact reply, only predelegated 16-hour timeout pending |
 
 
 ## Current installed checkpoint
@@ -423,3 +423,20 @@ canonical records/digests/checks. Reuse existing validators with authentic ordin
 origins; no forged protected origin, journal edit or worker-written approval.
 Publication then reuses this same acceptance core. Root has admitted no new
 production merge or assignment while this prerequisite remains open.
+
+### Command cleanup and source review checkpoint
+
+The nonsecret project-command slice is implemented and independently reviewed;
+secret and taskless publication capability remains open. Private Linux R5
+acceptance executed the real CLI → ordinary authority → labd → short-lived helper
+boundary: seven kernel scenarios (64 assertions) and40 domain checks pass. The
+preceding R4 candidate failed on an empty procfs inventory; both its failure and
+the corrected run are retained in child .5 evidence. Production ownerPID554643
+was unchanged. These fixtures do not certify production adoption or two-project
+delivery, and the cleanup delta still needs its own independent verdict.
+
+Actual configured Pi reports for the original command slice, ordinary generation
+repair, and Hermes delta are retained in their outcome owners' evidence folders.
+The eight actionable PR375 findings are resolved in source; the eager-ingress
+folder suggestion remains an explicit design skip. No new version is published
+and draftPR375 is not merged by these records.
