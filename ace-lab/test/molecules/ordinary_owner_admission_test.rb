@@ -1,12 +1,14 @@
 # frozen_string_literal: true
 
 require_relative "../test_helper"
+require_relative "../support/ordinary_owner_fixture"
 require "ace/lab/molecules/ordinary_owner_admission"
 
 module Ace
   module Lab
     module Molecules
       class OrdinaryOwnerAdmissionTest < Minitest::Test
+        include OrdinaryOwnerFixture
         def setup
           @peer = {"uid" => 41001, "gid" => 41001, "pid" => 123, "host" => "lab", "started_at" => "birth"}
           @context = Object.new
@@ -155,13 +157,7 @@ module Ace
         end
 
         def document
-          {"version" => 1, "projects" => {"atlas" => {
-            "service" => {"uid" => 41000, "gid" => 41000, "socket_path" => "/run/ace/atlas/assign.sock", "state_root" => "/var/lib/ace/state"},
-            "journal" => {"repository" => "/var/lib/ace/journal", "ref" => "refs/ace/execution", "checkout_root" => "/var/lib/ace/state/checkout"},
-            "assignment_root" => "/var/lib/ace/state/assignments", "lifecycle_root" => "/var/lib/ace/state/lifecycle",
-            "runtime_binary" => "/usr/local/bin/herdr", "participants" => {"41001" => {"gid" => 41001, "actor" => "atlas-worker",
-              "role" => "worker", "runtime" => "herdr", "workspace" => "w1"}}
-          }}}
+          ordinary_owner_document(peer: @peer)
         end
       end
     end

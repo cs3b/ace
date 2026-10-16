@@ -4,6 +4,7 @@ require "ace/assign/authority/ordinary_peer"
 require "ace/assign/molecules/execution_identity_resolver"
 require "ace/herdr"
 require_relative "ordinary_owner_config"
+require_relative "ordinary_native_read"
 
 module Ace
   module Lab
@@ -18,7 +19,10 @@ module Ace
         end
 
         def service = @config.service
-        def verify_listener! = @config.verify_listener!
+        def verify_listener!
+          @config.verify_listener!
+          OrdinaryNativeRead.new(config: @config, deadline: default_deadline, peer: @peer).preflight!
+        end
         def peer(socket, deadline:) = @peer.capture(socket, deadline: deadline)
 
         def authorize!(request:, peer:, deadline: default_deadline)
@@ -36,8 +40,13 @@ module Ace
             raise ArgumentError, "ordinary native pane selector is invalid"
           end
           observation = Ace::Herdr::Molecules::BoundedObservation.new(deadline: deadline, binary: @config.runtime_binary)
-          runtime = @runtime || Ace::Herdr::Organisms::RuntimeAdapter.new(executor: observation, env: {},
-            process_identity: Ace::Runtime::Molecules::ProcessIdentity.new(executor: observation))
+          runtime = @runtime
+          unless runtime
+            native = OrdinaryNativeRead.new(config: @config, deadline: deadline, peer: @peer)
+            native.preflight!
+            runtime = Ace::Herdr::Organisms::RuntimeAdapter.new(executor: native, env: {},
+              process_identity: Ace::Runtime::Molecules::ProcessIdentity.new(executor: observation))
+          end
           binding = runtime.process_binding(pane: pane, caller_pid: peer.fetch("pid"))
           unless binding && binding["runtime"] == participant.fetch("runtime") &&
               binding["session"] == participant.fetch("workspace") && binding["pane"] == pane &&
