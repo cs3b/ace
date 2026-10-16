@@ -1,0 +1,28 @@
+{
+  "source_commit": "2174d5bda",
+  "scope": "focused integration of canonical ordinary review/merge and command child ownership; not full installed acceptance",
+  "reports": {
+    "assign": {
+      "source_report": ".ace-local/test/reports/assign/adcb5e2f-cd1c-4d73-9ff0-043b3b1d7a24/report.md",
+      "sha256": "0344b07de283b33485237363f337f1b3b0e51f1fdfbb9160dfe366bb1bf98884"
+    },
+    "lab": {
+      "source_report": ".ace-local/test/reports/lab/3166264d-7722-4bbe-883e-0748b38b971a/report.md",
+      "sha256": "d75a46b58a1d43c5dbc55c72a380f40af8fd707b46ef41fdec59b7d441619d66"
+    }
+  },
+  "assign": {
+    "tests": 36,
+    "assertions": 338,
+    "failures": 0,
+    "errors": 0
+  },
+  "lab": {
+    "tests": 58,
+    "assertions": 311,
+    "failures": 0,
+    "errors": 0
+  },
+  "publication": false,
+  "production_restart": false
+}
