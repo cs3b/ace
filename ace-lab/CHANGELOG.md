@@ -7,7 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-10-16
+
+### Added
+
+- Run the ordinary merge listener and receiver through `service listen`, with authenticated admission, canonical Assign acknowledgement/status/receipts, restart reconciliation and bounded fixed execution.
+- Invoke and inspect real Forgejo merges under the installed scoped service identity; revalidate authorization per request and bind the provider mutation to the approved candidate head.
+
 ### Changed
+
+- Require ace-assign 0.69 and ace-git-forgejo 0.7 for the receiver record-listing and scoped provider APIs.
 
 - Move the Forgejo merge provider ownership out of ace-lab (xz9.5): `ForgejoMergeAdapter` is now a thin delegation to the `ace-git-forgejo` provider (`Ace::Git::Forgejo::PullRequestApi` over its `HttpClient`, under the host-installed scoped service identity) — HTTP transport, authentication, payload shape, and failure classification live in the provider package, while the adapter keeps the receiver's closed outcome translation (`:invoked`/`:refused`/`:ambiguous`/`Unavailable`), the exact-head binding guard, and the normalized readback/nil-absence contract unchanged.
 

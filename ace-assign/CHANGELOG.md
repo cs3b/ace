@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.69.0] - 2026-10-16
+
+### Changed
+
+- Require ace-review 0.60.2 to keep the coordinated Forgejo 0.7 dependency graph compatible.
+
+### Added
+
+- Expose read-only `AttemptCoordinator#fixed_merge_records` so the ordinary merge receiver can reconcile its pending canonical records after restart without another journal or repeated effect.
+
 ## [0.68.0] - 2026-10-14
 
 ### Added

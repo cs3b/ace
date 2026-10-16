@@ -1,14 +1,14 @@
 PATH
   remote: ace-assign
   specs:
-    ace-assign (0.68.0)
+    ace-assign (0.69.0)
       ace-b36ts (~> 0.14)
       ace-bundle (~> 0.45)
       ace-git (~> 0.30)
       ace-herdr (~> 0.5.1)
       ace-llm (~> 0.39)
       ace-llm-providers-cli (~> 0.36.1)
-      ace-review (~> 0.60.1)
+      ace-review (~> 0.60.2)
       ace-runtime (~> 0.3)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.18)
@@ -92,7 +92,7 @@ PATH
 PATH
   remote: ace-git-forgejo
   specs:
-    ace-git-forgejo (0.6.2)
+    ace-git-forgejo (0.7.0)
       ace-git (~> 0.30)
       faraday (~> 2.14)
       faraday-retry (~> 2.4)
@@ -227,9 +227,9 @@ PATH
 PATH
   remote: ace-lab
   specs:
-    ace-lab (0.6.0)
-      ace-assign (~> 0.68)
-      ace-git-forgejo (~> 0.6)
+    ace-lab (0.7.0)
+      ace-assign (~> 0.69)
+      ace-git-forgejo (~> 0.7)
       ace-hitl (~> 0.15)
       ace-runtime (~> 0.3)
       ace-support-cli (~> 0.6)
@@ -312,12 +312,12 @@ PATH
 PATH
   remote: ace-review
   specs:
-    ace-review (0.60.1)
+    ace-review (0.60.2)
       ace-b36ts (~> 0.14)
       ace-bundle (~> 0.45)
       ace-compressor (~> 0.25)
       ace-git (~> 0.30)
-      ace-git-forgejo (~> 0.6.2)
+      ace-git-forgejo (~> 0.7)
       ace-git-github (~> 0.3)
       ace-llm (~> 0.41)
       ace-support-cli (~> 0.6)

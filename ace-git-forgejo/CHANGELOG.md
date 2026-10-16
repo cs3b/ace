@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-10-16
+
 ### Added
 
 - Repository-bound API surface for scoped service identities: `HttpClient`/`PullRequestApi` accept an explicit `token:` (a host-installed merge receiver credential) with the `fj` keys-file lookup unchanged as the fallback, and `PullRequestApi#create_comment` attaches one PR-thread comment (the issue-served Forgejo endpoint) with the same `MutationOutcome` refusal classification as the other lifecycle mutations.

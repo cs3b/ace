@@ -6,11 +6,15 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- **ace-lab v0.7.0, ace-assign v0.69.0, ace-git-forgejo v0.7.0**: Ship the ordinary merge listener/receiver, canonical restart record listing, and scoped Forgejo provider APIs. Admission and effects bind the approved candidate head; the Lab adapter delegates provider transport and authentication to ace-git-forgejo. This source release does not claim installed autonomous merge acceptance.
+
 - **ace-lab v0.6.0, ace-assign v0.68.0**: Add the ordinary fixed merge producer/consumer pair — `ace-lab service request/status --mode ordinary-merge` with durable-once admission, canonical full-binding request digests per spec ruling r4, replay and conflict handling, and exact terminal receipt acceptance consumed through the assign coordinator.
 - **ace-hitl v0.15.0**: Add the host/Incus mTLS crossing authority (`serve --tls-authority`) with TLS 1.3 mutual identity, fail-closed provisioning-layout enforcement, and project-bound access; narrow `serve --group` to dedicated lifecycle groups with broad/legacy exposure refusal.
 - **ace-hitl-hermes v0.4.0**: Route Telegram channels over the mTLS crossing (exact `tls+tcp://` endpoints, pinned server identities, atomic multi-authority activation), add the `ace-hitl-boundary-scenario` acceptance harness, and surface informed unknown-chat coverage generations.
 
 ### Changed
+
+- **ace-review v0.60.2**: Follow ace-git-forgejo 0.7 in the dependency manifest for the coordinated ordinary merge release.
 
 - **ace-overseer v0.21.1**: Follow the ace-lab 0.6 line in the dependency manifest and package the coordination-contract role-guide updates.
 - **ace-handbook 0.35.1**: Clarify guide override candidate discovery and that downstream projects must register their own local workflow source; this monorepo's priority-5 source is not a downstream default.

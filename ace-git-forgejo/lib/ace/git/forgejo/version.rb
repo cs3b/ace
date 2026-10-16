@@ -3,7 +3,7 @@
 module Ace
   module Git
     module Forgejo
-      VERSION = "0.6.2"
+      VERSION = "0.7.0"
     end
   end
 end

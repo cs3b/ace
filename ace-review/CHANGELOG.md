@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.60.2] - 2026-10-16
+
+### Changed
+
+- Follow ace-git-forgejo 0.7 so review and the ordinary merge receiver resolve the same scoped provider API; no review behavior change.
+
 ## [0.60.1] - 2026-10-10
 
 ### Fixed
