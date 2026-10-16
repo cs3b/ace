@@ -68,7 +68,10 @@ module Ace
               data["head"] == head && data["kind"] == kind && data["historical"] == historical
             raise Atoms::CampaignContract::Invalid, "accepted execution receipt identity/head/kind mismatch"
           end
-          data
+          # The journal tip is a read cursor, not the identity of an accepted
+          # receipt. Unrelated attempts advance it without changing this proof.
+          # Keep the receipt digest, exact head and canonical ref in the proof.
+          data.except("journal_commit")
         rescue Gem::LoadError, JSON::ParserError, SystemCallError => e
           raise Atoms::CampaignContract::Invalid, "ace-assign execution authority unavailable: #{e.message}"
         end

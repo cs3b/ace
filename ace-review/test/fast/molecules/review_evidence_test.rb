@@ -29,10 +29,19 @@ class ReviewEvidenceTest < AceReviewTest
 
   def test_cli_provider_report_naming_is_accepted
     dir = make_session("cli-named")
+    File.delete(File.join(dir, "review-report-model.md"))
     File.write(File.join(dir, "review-role-review-codex.md"), "CLI provider review body")
     result = evidence(dir)
     assert result[:success], result[:error]
     assert_includes result[:content], "CLI provider review body"
+  end
+
+  def test_noop_report_is_available_to_the_next_delta_without_an_alias
+    dir = make_session("noop-round")
+    File.rename(File.join(dir, "review-report-model.md"), File.join(dir, "review.md"))
+    result = evidence(dir)
+    assert result[:success], result[:error]
+    assert_includes result[:content], "Review of noop-round"
   end
 
   def test_prompt_and_feedback_files_are_not_reports

@@ -24,10 +24,14 @@ module Ace
           git("add", ".")
           git("commit", "-q", "-m", "head")
           @head = head_sha
+          git("remote", "add", "origin", "git@github.com:example/repo.git")
+          git("config", "branch.feature.remote", "origin")
+          git("config", "branch.feature.merge", "refs/heads/feature")
         end
 
         def metadata(head: @head, url: "https://github.com/example/repo/pull/7")
-          {"headRefOid" => head, "baseRefOid" => @base, "url" => url}
+          {"headRefOid" => head, "baseRefOid" => @base, "url" => url,
+           "head_repository_url" => "https://github.com/example/repo"}
         end
 
         def test_explicit_reference_returns_intermediate_diff
@@ -42,6 +46,66 @@ module Ace
         def test_reference_equal_to_head_yields_empty_delta
           result = DeltaResolver.resolve(@head, metadata, project_root: @repo)
 
+          assert result[:success]
+          assert_equal "", result[:diff]
+        end
+
+        def test_stale_provider_head_cannot_certify_empty_delta_after_local_push
+          git("branch", "feature", @head)
+          write_session("review-prior", head: @mid, url: metadata["url"], mtime: Time.now)
+          [:auto, @mid].each do |reference|
+            result = DeltaResolver.resolve(reference, metadata(head: @mid).merge("headRefName" => "feature"), project_root: @repo)
+            refute result[:success]
+            assert_match(/local PR branch is newer/, result[:error])
+            refute result.key?(:diff)
+          end
+          fresh = DeltaResolver.resolve(:auto, metadata.merge("headRefName" => "feature"), project_root: @repo)
+          assert fresh[:success]
+          assert_includes fresh[:diff], "b.txt"
+        end
+
+        def test_missing_branch_or_other_fork_cannot_infer_pr_freshness_from_local_head
+          git("branch", "feature", @head)
+          [metadata(head: @mid), metadata(head: @mid).merge("headRefName" => "feature",
+            "head_repository_url" => "https://github.com/another-fork/repo")].each do |facts|
+            result = DeltaResolver.resolve(@mid, facts, project_root: @repo)
+            assert result[:success], result[:error]
+            assert_equal "", result[:diff]
+          end
+        end
+
+        def test_differently_named_push_destination_is_not_the_pr_source
+          git("branch", "feature", @head)
+          git("config", "remote.origin.push", "refs/heads/feature:refs/heads/another-feature")
+          result = DeltaResolver.resolve(@mid, metadata(head: @mid).merge("headRefName" => "feature"), project_root: @repo)
+          assert result[:success], result[:error]
+          assert_equal "", result[:diff]
+        end
+
+        def test_upstream_push_to_another_branch_does_not_imply_stale_pr
+          git("branch", "feature", @head)
+          git("config", "push.default", "upstream")
+          git("config", "branch.feature.merge", "refs/heads/another-feature")
+          result = DeltaResolver.resolve(@mid, metadata(head: @mid).merge("headRefName" => "feature"), project_root: @repo)
+          assert result[:success], result[:error]
+          assert_equal "", result[:diff]
+        end
+
+        def test_simple_push_to_fork_uses_current_branch_despite_differently_named_upstream
+          git("branch", "feature", @head)
+          git("remote", "add", "upstream", "git@github.com:upstream/repo.git")
+          git("config", "branch.feature.remote", "upstream")
+          git("config", "branch.feature.merge", "refs/heads/main")
+          git("config", "branch.feature.pushRemote", "origin")
+          git("config", "push.default", "simple")
+          result = DeltaResolver.resolve(@mid, metadata(head: @mid).merge("headRefName" => "feature"), project_root: @repo)
+          refute result[:success]
+          assert_match(/local PR branch is newer/, result[:error])
+        end
+
+        def test_unrelated_checkout_does_not_override_named_pr_branch
+          git("branch", "feature", @mid)
+          result = DeltaResolver.resolve(@mid, metadata(head: @mid).merge("headRefName" => "feature"), project_root: @repo)
           assert result[:success]
           assert_equal "", result[:diff]
         end

@@ -23,8 +23,9 @@ module Ace
             end
             # Reviewer reports are written as review-report-<model>.md (Ruby API
             # path) or review-<model>.md (CLI provider path); prompt/context and
-            # dev-feedback files are not reports.
-            reports = Dir.glob(File.join(dir, "review-*.md")).select do |path|
+            # dev-feedback files are not reports. Single-model and no-op rounds
+            # use the maintained review.md output.
+            reports = Dir.glob(File.join(dir, "{review-*,review}.md")).select do |path|
               base = File.basename(path)
               !base.end_with?(".prompt.md", ".context.md") &&
                 !%w[review-dev-feedback.md].include?(base)

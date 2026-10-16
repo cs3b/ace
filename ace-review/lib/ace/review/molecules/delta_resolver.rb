@@ -2,6 +2,7 @@
 
 require "open3"
 require "yaml"
+require "ace/git/atoms/server_url"
 
 module Ace
   module Review
@@ -46,12 +47,58 @@ module Ace
           return {success: false, error: "Delta reference '#{reference}' is not a commit SHA"} unless reference_head.match?(SHA_PATTERN)
           return {success: false, error: "Delta reference head #{reference_head} is not an ancestor of the current PR head #{head}; history was likely rewritten — re-run a full review round"} unless ancestor?(reference_head, head, project_root: project_root)
 
+          if reference_head == head && newer_local_head?(head, pr_metadata, project_root: project_root)
+            return {success: false, error: "PR metadata still reports the reviewed head #{head}, but the local PR branch is newer; reconcile the push and refresh PR metadata before recording an empty delta"}
+          end
+
           diff = run_git(["diff", "#{reference_head}..#{head}"], project_root: project_root)
           return diff unless diff[:success]
 
           {success: true, reference_head: reference_head, source: source,
            session_dir: session_dir, diff: diff[:stdout]}
         end
+
+        # Repeated provider reads can return the same stale snapshot after a
+        # push. A local descendant is evidence against certifying that no code
+        # changed. Select the PR branch explicitly; an unrelated checkout does
+        # not define that PR's head.
+        def self.newer_local_head?(head, metadata, project_root:)
+          branch = metadata["headRefName"].to_s
+          repository = metadata["head_repository_url"].to_s
+          return false if branch.empty? || repository.empty?
+          remote = run_git(["for-each-ref", "--format=%(push:remotename)%00%(push:remoteref)", "refs/heads/#{branch}"], project_root: project_root)
+          return false unless remote[:success]
+          remote_name, remote_ref = remote[:stdout].strip.split("\0", -1)
+          return false if remote_name.to_s.empty?
+          remote_ref = default_push_ref(branch, remote_name, project_root: project_root) if remote_ref.to_s.empty?
+          return false unless remote_ref == "refs/heads/#{branch}"
+          urls = run_git(["remote", "get-url", "--push", "--all", remote_name], project_root: project_root)
+          return false unless urls[:success] && urls[:stdout].lines.any? do |url|
+            Ace::Git::Atoms::ServerUrl.match?(repository, url.strip)
+          end
+          local = rev_parse("refs/heads/#{branch}", project_root: project_root)
+          local[:success] && local[:stdout] != head && ancestor?(head, local[:stdout], project_root: project_root)
+        end
+        private_class_method :newer_local_head?
+
+        # Git exposes push:remoteref for explicit push refspecs only. Its
+        # default policies use branch names/upstream, not that empty atom.
+        def self.default_push_ref(branch, remote, project_root:)
+          explicit = run_git(["config", "--get-all", "remote.#{remote}.push"], project_root: project_root)
+          return nil if explicit[:success] && !explicit[:stdout].empty?
+          policy = run_git(["config", "--get", "push.default"], project_root: project_root)
+          upstream = run_git(["config", "--get", "branch.#{branch}.merge"], project_root: project_root)
+          case policy[:stdout].to_s.strip
+          when "", "simple"
+            target = upstream[:stdout].to_s.strip
+            fetch = run_git(["config", "--get", "branch.#{branch}.remote"], project_root: project_root)
+            triangular = fetch[:success] && fetch[:stdout].strip != remote
+            "refs/heads/#{branch}" if triangular || target.empty? || target == "refs/heads/#{branch}"
+          when "current", "matching" then "refs/heads/#{branch}"
+          when "upstream" then upstream[:stdout].to_s.strip
+          end
+        end
+        private_class_method :default_push_ref
 
         # Find the head SHA recorded by the most recent prior session of this PR.
         #
