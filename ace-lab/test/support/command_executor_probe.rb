@@ -148,10 +148,12 @@ Dir.mktmpdir("ace-command-probe-", "/run") do |directory|
       Ace::Lab::Organisms::CommandExecutor.new(project: "ace", owner: owner).run(socket: server,
         request: {"execution_id" => "fixture", "caller" => {"uid" => 1000}, "tty" => %w[pty getpass].include?(mode), "rows" => 24, "cols" => 80})
       error = nil
+      error_details = nil
     rescue Exception => exception
       error = exception.class.name
+      error_details = {"message" => exception.message, "backtrace" => exception.backtrace.first(8)}
     ensure
-      result_write.write(JSON.generate({"events" => owner.events, "child" => owner.child, "result" => owner.result, "error" => error}))
+      result_write.write(JSON.generate({"events" => owner.events, "child" => owner.child, "result" => owner.result, "error" => error, "error_details" => error_details}))
       result_write.close
       server.close
     end

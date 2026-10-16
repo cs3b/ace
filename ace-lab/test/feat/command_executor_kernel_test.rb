@@ -20,7 +20,7 @@ class CommandExecutorKernelTest < Minitest::Test
   end
   def test_owned_double_fork_setsid_descendant_is_killed_and_reaped_after_normal_exit
     result = probe("detached")
-    assert_nil result["error"]
+    assert_nil result["error"], result["error_details"].inspect
     assert_equal 17, result.dig("result", "exit_status")
     refute result.dig("detached", "survived_cleanup"), "detached descendant outlived command cleanup"
   end
@@ -39,7 +39,7 @@ class CommandExecutorKernelTest < Minitest::Test
   end
   def test_real_identity_pipes_eof_and_nonzero
     result = probe("pipes")
-    assert_nil result["error"]
+    assert_nil result["error"], result["error_details"].inspect
     actual = JSON.parse(output(result))
     assert_equal Etc.getpwnam("nobody").uid, actual.fetch("uid")
     assert_equal Etc.getpwnam("nobody").gid, actual.fetch("gid")
@@ -63,13 +63,13 @@ class CommandExecutorKernelTest < Minitest::Test
   end
   def test_real_pty_and_signal
     result = probe("pty")
-    assert_nil result["error"]
+    assert_nil result["error"], result["error_details"].inspect
     assert_includes output(result), "TTY=True"
     assert_equal 15, result.dig("result", "signal")
   end
   def test_getpass_no_echo_and_exact_resize
     result = probe("getpass")
-    assert_nil result["error"]
+    assert_nil result["error"], result["error_details"].inspect
     bytes = output(result)
     assert_includes bytes, "GOT=6"
     assert_includes bytes, "SIZE=(31, 97)"

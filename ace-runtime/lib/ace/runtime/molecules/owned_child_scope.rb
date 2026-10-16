@@ -53,7 +53,7 @@ module Ace
 
         def children
           File.open("/proc/self/task/#{@owner}/children", "r") do |file|
-            bytes = file.read(65_537)
+            bytes = file.read(65_537) || ""
             raise CleanupUncertain, "owned child inventory exceeds bound" if bytes.bytesize > 65_536
             values = bytes.split.map { |value| Integer(value, 10) }
             unless values.uniq == values && values.all?(&:positive?)

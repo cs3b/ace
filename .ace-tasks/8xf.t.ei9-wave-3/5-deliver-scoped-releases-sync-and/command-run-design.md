@@ -242,3 +242,11 @@ new process capability. Verify real setsid/double-fork descendants and client lo
 in a fresh root R4 export INCLUDING new Runtime source and runner pins.
 CommandExecutor itself must verify real AND effective UID0 before owner contact.
 Taskless secret/publication remains open.
+
+R4 acceptance friction: RED baseline correctly reproduced2 detached-child failures
+(7 tests/64 assertions). GREEN unexpectedly failed6/7 with NoMethodError before
+fork. Source diagnosis: IO#read(length) returns nil at EOF; an empty /proc children
+inventory is normal before this helper forks. Normalize only that nil read to the
+empty inventory. Keep invalid/oversized inventories refused. Add isolated real-IO
+regression for empty reads; preserve failed R4 export and reports unchanged. Kernel
+fixture now retains bounded exception message/backtrace for these nonsecret probes.
