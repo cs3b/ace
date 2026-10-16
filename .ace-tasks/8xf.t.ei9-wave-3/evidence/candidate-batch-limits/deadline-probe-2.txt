@@ -1,0 +1,31 @@
+{"probe":"ei9-deadline","loadavg":"{ 6.18 8.29 9.17 }","candidate_bytes":82809675,"before_bytes":82066639,"deadline_s":60}
+materialize_repository: OK 19.24s
+context: OK bytes=96720212 sha256=c8d3a6bd8e218c7992d7c6b47a67eecfa8aa13fffccd288061456123b104b997
+comparison wall: 23.81s
+
+PER-CALL (offset from comparison start; >=0.20s):
+  +   0.14    2.89s admit:fetch-candidate fetch --no-tags /Users/mc/ace-deadline-20261016-8249-mnajs9/quarantine-20261016-8249-marzeo/candidat
+  +   3.08    3.86s admit:fsck            fsck --full --strict --no-reflogs
+  +   6.97    0.80s admit:bundle-create   bundle create /Users/mc/ace-deadline-20261016-8249-mnajs9/quarantine-20261016-8249-marzeo/verified.b
+  +   7.96    3.16s admit:fetch-candidate fetch --no-tags /Users/mc/ace-deadline-20261016-8249-mnajs9/quarantine-20261016-8249-fdbxxt/candidat
+  +  11.14    3.99s admit:fsck            fsck --full --strict --no-reflogs
+  +  15.17    0.70s admit:bundle-create   bundle create /Users/mc/ace-deadline-20261016-8249-mnajs9/quarantine-20261016-8249-fdbxxt/verified.b
+
+BY LABEL (comparison phase only, offset >= 0):
+  admit:fsck            calls=2    total=   7.86s max=  3.99s
+  admit:fetch-candidate calls=2    total=   6.05s max=  3.16s
+  ctx:batch-check       calls=141  total=   5.30s max=  0.08s
+  admit:bundle-create   calls=2    total=   1.50s max=  0.80s
+  ctx:cat-file-batch    calls=20   total=   1.16s max=  0.12s
+  ctx:diff              calls=12   total=   0.40s max=  0.08s
+  ctx:ls-tree           calls=4    total=   0.18s max=  0.06s
+  ctx:rev-parse-tree    calls=6    total=   0.17s max=  0.04s
+  ctx:cat-file-e        calls=4    total=   0.09s max=  0.02s
+  admit:init-bare       calls=2    total=   0.07s max=  0.05s
+  other                 calls=2    total=   0.07s max=  0.04s
+  admit:bundle-verify   calls=2    total=   0.06s max=  0.04s
+  admit:bundle-heads    calls=2    total=   0.04s max=  0.02s
+  cmp:fetch-reviewed    calls=1    total=   0.04s max=  0.04s
+
+materialize git-cpu total: 17.52s across 173 calls
+probe total: 43.08s

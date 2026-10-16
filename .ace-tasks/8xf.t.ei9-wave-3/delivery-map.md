@@ -506,3 +506,27 @@ Ordinary native campaign association, genuine collection/result callbacks and
 substantial/uncertain independent delta review remain pending. This is beyond the
 521 suite freeze and requires the eventual combined verification; it does not
 establish installed acceptance or completion of .8.
+
+### Candidate batch limits, path bounds and measured deadline
+
+Uncommitted-at-handoff WIP completed at integration `214dfbb81`+WIP: the real
+82,809,675-byte candidate did not fit the old 64MiB ceilings, so candidate and
+assignment-snapshot wire/expansion limits moved to closed 128MiB budgets
+(`Atoms::CandidateLimits`), a 20,000-object inventory bound and a shared fixed
+`cat-file --batch` codec (`Atoms::GitBlobBatch`, reused by the canonical journal)
+replaced one Git process per blob. The RED `assign/7993070e` "head comparison
+deadline expired" is explained by measurement, not weakened: two full admits plus
+the complete comparison legitimately need 23–27s on a loaded host (probe receipts
+and a 27.01s passing run), so `DEADLINE` moved 30→60 as an explicitly measured
+decision; the RED receipt is retained. Hostile tree paths are now bounded to
+4096/255 bytes total/component before inventory, delta or filesystem prefix work
+in materialize, prepared_files, PreparedWork and the comparison inventory, with
+mktree-built negative proofs (macOS git refuses deep names, so fixtures are
+nested trees). `CampaignContract::MAX_HEAD_CONTEXT_BYTES` (Review) is now an
+Assign dependency; the release must raise the `~> 0.60.3` floor — no installed
+fallback. Executed focused receipts (candidate_transfer 21/416 incl. three new
+negative tests, real-project readiness 1/16 at 52.65s, codec/atoms/journal/
+prepared groups, Review head assessments) are listed in
+`evidence/candidate-batch-limits/`. Not established: independent reviewer verdict
+for this delta, full default suite rerun, canonical campaign execution,
+publication or installed acceptance.
