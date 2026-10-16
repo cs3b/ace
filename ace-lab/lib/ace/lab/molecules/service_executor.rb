@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require "json"
-require "open3"
+require "ace/herdr/molecules/bounded_process"
 require "socket"
 require "timeout"
 require "time"
@@ -40,7 +40,8 @@ module Ace
           return nil unless valid_response?(response, request)
           {"outcome" => response.fetch("outcome"), "evidence" => response.fetch("evidence"),
            "executor_uid" => current.fetch("executor_uid")}
-        rescue JSON::ParserError, Timeout::Error, SystemCallError, IOError
+        rescue JSON::ParserError, Timeout::Error, SystemCallError, IOError,
+          Ace::Herdr::Molecules::BoundedProcess::PostLaunchError
           # Transport failures after the claim (broken pipe, connection
           # reset, socket loss) leave the effect unknown: uncertainty, not a
           # classified crash, is the honest outcome.
@@ -49,48 +50,17 @@ module Ace
 
         private
 
-        # Handler output is bounded DURING execution: a noisy handler is
-        # killed and reaped once its response exceeds the receipt limit
-        # instead of being buffered without bound in this process.
+        # The existing process owner bounds both streams and the whole run,
+        # and cleans the owned process group on timeout and normal exit.
         def invoke_local(operation, request, input)
           unless Process.uid == operation.fetch("executor_uid") && Process.euid == operation.fetch("executor_uid")
             raise SecurityError, "current OS identity is not the configured executor"
           end
-          out = nil
-          status = nil
-          Open3.popen3(*operation.fetch("argv")) do |stdin, stdout, stderr, waiter|
-            pid = waiter.pid
-            begin
-              Timeout.timeout(30) do
-                stdin.write(JSON.generate({"request" => request, "input" => input}))
-                stdin.close
-                errors = Thread.new { bounded_read(stderr, 8192) }
-                out = bounded_read(stdout, 16 * 1024 + 1)
-                errors.join
-                Process.kill("KILL", pid) if out && out.bytesize > 16 * 1024
-                status = waiter.value
-              end
-            rescue Timeout::Error
-              Process.kill("KILL", pid) rescue nil
-              waiter.value
-              raise
-            end
-          end
-          out if out && out.bytesize <= 16 * 1024 && status&.success?
+          result = Ace::Herdr::Molecules::BoundedProcess.call(operation.fetch("argv"),
+            stdin_data: JSON.generate({"request" => request, "input" => input}),
+            timeout_s: 30, output_limit: 16 * 1024, stderr_limit: 8192, cleanup_group: true)
+          result.stdout if result.status.success? && !result.oversized
         end
-
-        def bounded_read(io, limit)
-          io.read(limit).to_s
-        rescue IOError, Errno::EBADF
-          ""
-        ensure
-          begin
-            io.close
-          rescue IOError, Errno::EBADF
-            nil
-          end
-        end
-
 
         def invoke_unix(operation, request, input)
           path = operation.fetch("socket_path")

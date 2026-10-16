@@ -2,6 +2,7 @@
 
 require_relative "../test_helper"
 require "socket"
+require "rbconfig"
 
 module Ace
   module Lab
@@ -130,6 +131,107 @@ module Ace
               head_loader: -> { "c" * 40 }, authorization: "decision-1")
           end
           assert_includes error.message, "candidate head changed"
+        end
+      end
+
+      def test_timeout_preserves_uncertainty_and_closes_descendant_resources
+        with_descendant_handler(stall: true) do |operation, port_file|
+          started = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+          assert_nil execute_local(operation)
+          assert_operator Process.clock_gettime(Process::CLOCK_MONOTONIC) - started, :<, 5
+          assert_descendant_closed(port_file)
+        end
+      end
+
+      def test_successful_handler_does_not_leave_its_descendant_running
+        with_descendant_handler(stall: false) do |operation, port_file|
+          receipt = execute_local(operation)
+          assert_equal "succeeded", receipt.fetch("outcome")
+          assert_descendant_closed(port_file)
+        end
+      end
+
+      def test_excess_stdout_or_stderr_cannot_be_accepted_as_a_receipt
+        ["STDOUT", "STDERR"].each do |stream|
+          operation = local_operation([RbConfig.ruby, "-e",
+            "STDIN.read; #{stream}.write('x' * 20000); puts #{JSON.generate(response).inspect}"])
+          assert_nil execute_local(operation)
+        end
+      end
+
+      def test_post_launch_cleanup_failure_is_an_unknown_outcome
+        process = Ace::Herdr::Molecules::BoundedProcess
+        operation = local_operation([RbConfig.ruby, "-e", "exit 0"])
+        process.stub(:call, ->(*) { raise process::PostLaunchError, "cleanup unconfirmed" }) do
+          assert_nil execute_operation(operation)
+        end
+      end
+
+      private
+
+      def local_operation(argv)
+        {"project" => "ace", "service_id" => "executor", "argv" => argv,
+         "executor_uid" => Process.uid, "lease_expires_at" => (Time.now.utc + 3600).iso8601}
+      end
+
+      def execute_operation(operation)
+        policy = policy_for(operation)
+        Molecules::ServiceExecutor.new.execute(operation: operation, request: request, input: {},
+          policy_loader: -> { policy }, head_loader: -> { request.fetch("candidate_head") }, authorization: "decision-1")
+      end
+
+      def execute_local(operation)
+        process = Ace::Herdr::Molecules::BoundedProcess
+        original = process.method(:call)
+        process.stub(:call, ->(argv, **options) {
+          assert_equal 30, options.fetch(:timeout_s)
+          assert_equal true, options.fetch(:cleanup_group)
+          original.call(argv, **options.merge(timeout_s: 1.0))
+        }) { execute_operation(operation) }
+      end
+
+      def with_descendant_handler(stall:)
+        Dir.mktmpdir do |dir|
+          port_file = File.join(dir, "descendant-port")
+          script = File.join(dir, "handler.rb")
+          File.write(script, <<~RUBY)
+            require "socket"
+            STDIN.read
+            ready, announce = IO.pipe
+            fork do
+              ready.close
+              STDOUT.reopen(File::NULL, "w")
+              STDERR.reopen(File::NULL, "w")
+              server = TCPServer.new("127.0.0.1", 0)
+              File.write(#{port_file.inspect}, server.addr[1].to_s)
+              announce.write("ready")
+              announce.close
+              sleep 30
+            end
+            announce.close
+            ready.read
+            ready.close
+            #{stall ? 'sleep 30' : "puts #{JSON.generate(response).inspect}"}
+          RUBY
+          yield local_operation([RbConfig.ruby, script]), port_file
+        end
+      end
+
+      def assert_descendant_closed(port_file)
+        port = Integer(File.read(port_file))
+        deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + 1
+        loop do
+          begin
+            TCPSocket.open("127.0.0.1", port) { |socket| socket.close }
+          rescue Errno::ECONNREFUSED
+            assert true
+            return
+          rescue Errno::ECONNRESET
+            # The kernel may reset an in-flight connect while the killed
+            # descendant is closing; require the subsequent refused connect.
+          end
+          flunk "handler descendant still owns its listening socket" if Process.clock_gettime(Process::CLOCK_MONOTONIC) >= deadline
+          sleep 0.005
         end
       end
     end
