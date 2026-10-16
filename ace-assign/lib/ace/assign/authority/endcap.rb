@@ -294,7 +294,7 @@ module Ace
               data.fetch("head") == params.fetch("head")
             raise AttemptErrors::EvidenceUnavailable, "candidate replay provenance differs"
           end
-          bytes = journal.bounded_blob(data.fetch("bundle_ref"), commit: replay.fetch("journal_commit"), max_bytes: 64 * 1024 * 1024)
+          bytes = journal.bounded_blob(data.fetch("bundle_ref"), commit: replay.fetch("journal_commit"), max_bytes: CandidateTransfer::MAX_BYTES)
           unless bytes.bytesize == data.fetch("bytes") && Digest::SHA256.hexdigest(bytes) == data.fetch("sha256")
             raise AttemptErrors::EvidenceUnavailable, "candidate replay bundle differs"
           end

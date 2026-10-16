@@ -23,7 +23,7 @@ module Ace
             head = require_option(options, :head, usage)
             raise Ace::Support::Cli::Error, "Head must be an exact SHA-1" unless head.match?(/\A[0-9a-f]{40}\z/)
             params.merge!("head" => head, "candidate_generation" => integer_option(options, :candidate_generation, usage))
-            bytes = input_bytes(require_option(options, :bundle, usage), limit: 64 * 1024 * 1024)
+            bytes = input_bytes(require_option(options, :bundle, usage), limit: Ace::Assign::Authority::CandidateTransfer::MAX_BYTES)
             parts = [bytes]
             emit_json(upload_call(client, "submit_candidate", params, mutation, parts, :candidate))
           end

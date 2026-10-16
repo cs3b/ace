@@ -65,7 +65,7 @@ module Ace
         def head_comparison_context(repository, deadline, reviewed, candidate)
           context = {"schema" => "ace.candidate-head-comparison/v1", "reviewed" => reviewed,
             "candidate" => candidate, "inventories" => {}, "objects" => {}, "changes" => {}}
-          remaining = self.class::MAX_BYTES
+          remaining = self.class::MAX_REVIEW_BYTES
           {"reviewed_head" => reviewed["head"], "reviewed_base" => reviewed["base"],
             "candidate_head" => candidate["head"], "candidate_base" => candidate["base"]}.each do |label, commit|
             git(repository, deadline, "cat-file", "-e", "#{commit}^{commit}")
@@ -74,19 +74,15 @@ module Ace
             remaining -= JSON.generate(inventory).bytesize
             reject!("Complete head comparison context is oversized") if remaining.negative?
             context.fetch("inventories")[label] = {"tree" => tree, "entries" => inventory}
-            inventory.each do |entry|
-              oid = entry.fetch("oid")
-              next if context.fetch("objects").key?(oid)
-              size = git(repository, deadline, "cat-file", "-s", oid).strip
-              unless size.match?(/\A\d+\z/) && size.to_i <= remaining
-                reject!("Complete head comparison object content is oversized")
-              end
-              content = git(repository, deadline, "cat-file", "blob", oid, limit: [remaining, 1].max).b
-              object = {"size" => content.bytesize, "sha256" => Digest::SHA256.hexdigest(content), "content" => review_bytes(content)}
-              remaining -= JSON.generate(object).bytesize
-              reject!("Complete head comparison context is oversized") if remaining.negative?
-              context.fetch("objects")[oid] = object
-            end
+          end
+          oids = context.fetch("inventories").values.flat_map { |inventory| inventory.fetch("entries").map { |entry| entry.fetch("oid") } }.uniq
+          sizes = oids.zip(candidate_blob_sizes(repository, deadline, oids)).to_h
+          reject!("Complete head comparison object content is oversized") if sizes.values.sum > remaining
+          each_candidate_blob(repository, deadline, sizes.to_a) do |oid, content|
+            object = {"size" => content.bytesize, "sha256" => Digest::SHA256.hexdigest(content), "content" => review_bytes(content)}
+            remaining -= JSON.generate(object).bytesize
+            reject!("Complete head comparison context is oversized") if remaining.negative?
+            context.fetch("objects")[oid] = object
           end
           {"candidate_delta" => [reviewed["head"], candidate["head"]],
             "base_delta" => [reviewed["base"], candidate["base"]],
@@ -99,17 +95,23 @@ module Ace
           end
           # Include structural JSON overhead in the final bound as well as all
           # original bytes. No partial inventory or truncated patch is returned.
-          reject!("Complete head comparison context is oversized") if JSON.generate(context).bytesize > self.class::MAX_BYTES
+          reject!("Complete head comparison context is oversized") if JSON.generate(context).bytesize > self.class::MAX_REVIEW_BYTES
           context
         rescue AttemptErrors::ReceiptRejected => error
           reject!("Head comparison read failed: #{error.message}")
         end
 
         def head_comparison_inventory(repository, deadline, tree)
-          git(repository, deadline, "ls-tree", "-r", "-z", tree, limit: self.class::MAX_BYTES).b.split("\0").map do |entry|
+          entries = git(repository, deadline, "ls-tree", "-r", "-z", tree, limit: self.class::MAX_BYTES).b.split("\0")
+          reject!("Complete head comparison inventory is oversized") if entries.size > self.class::MAX_OBJECTS
+          entries.map do |entry|
             metadata, path = entry.split("\t", 2)
             mode, kind, oid = metadata.to_s.split(" ")
-            unless path && !path.empty? && kind == "blob" && %w[100644 100755 120000].include?(mode) && oid&.match?(self.class::SHA)
+            # Inventory entries carry whole paths only; bound their bytes
+            # before JSON encoding or delta cross-checks consume them.
+            reject!("Complete head comparison path exceeds bounded length") unless path && !path.empty? &&
+              path.bytesize <= Atoms::CandidateLimits::PATH_BYTES
+            unless kind == "blob" && %w[100644 100755 120000].include?(mode) && oid&.match?(self.class::SHA)
               reject!("Complete head comparison contains an unsupported Git entry")
             end
             {"path" => review_bytes(path), "mode" => mode, "oid" => oid}

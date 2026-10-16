@@ -3,6 +3,7 @@
 require_relative "../test_helper"
 require "ace/assign/authority/transfer_codec"
 require "ace/assign/molecules/canonical_evidence"
+require "ace/assign/authority/candidate_transfer"
 
 module Ace
   module Assign
@@ -228,7 +229,11 @@ module Ace
       def test_fixed_purpose_limits_and_descriptor_shape_refuse_before_spool
         with_codec do |codec, root|
           descriptor = codec.descriptor(["accepted"], purpose: :candidate)
-          oversized = descriptor.merge("bytes" => 64 * 1024 * 1024 + 1)
+          ceiling = Atoms::CandidateLimits::BYTES
+          exact = descriptor.merge("bytes" => ceiling, "parts" => [descriptor.fetch("parts").first.merge("bytes" => ceiling)])
+          assert codec.validate!(exact, :candidate)
+          assert_equal Authority::CandidateTransfer::MAX_BYTES, ceiling
+          oversized = exact.merge("bytes" => ceiling + 1, "parts" => [exact.fetch("parts").first.merge("bytes" => ceiling + 1)])
           assert_raises(AttemptErrors::ReceiptRejected) { codec.validate!(oversized, :candidate) }
           assert_raises(AttemptErrors::ReceiptRejected) { codec.validate!(descriptor.merge("path" => "/tmp/override"), :candidate) }
           assert_raises(AttemptErrors::ReceiptRejected) { codec.descriptor(["x" * (64 * 1024 + 1)], purpose: :artifacts) }

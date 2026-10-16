@@ -97,6 +97,35 @@ module Ace
         end
       end
 
+      def test_batched_materialization_preserves_path_order_and_duplicate_blob_bytes
+        with_fixture do |transfer, root, source, _head, _bytes|
+          File.write(File.join(source, "a"), "duplicate")
+          File.write(File.join(source, "b"), "other")
+          File.write(File.join(source, "c"), "duplicate")
+          git(source, "add", ".")
+          git(source, "-c", "user.name=test", "-c", "user.email=test@example.invalid", "commit", "-m", "duplicates")
+          input = comparison_input(root, source, "duplicate-input")
+          selected = []
+          result = transfer.materialize(**input, root: File.join(root, "authority")) do |path, _mode, _oid, content|
+            selected << [path, content]
+          end
+          assert_equal %w[README a b c], selected.map(&:first)
+          assert_equal "duplicate", File.binread(File.join(result.fetch("directory"), "a"))
+          assert_equal "duplicate", File.binread(File.join(result.fetch("directory"), "c"))
+          assert_equal "other", File.binread(File.join(result.fetch("directory"), "b"))
+        end
+      end
+
+      def test_batched_materialization_accepts_an_empty_tree
+        with_fixture do |transfer, root, source, _head, _bytes|
+          git(source, "rm", "README")
+          git(source, "-c", "user.name=test", "-c", "user.email=test@example.invalid", "commit", "-m", "empty")
+          input = comparison_input(root, source, "empty-input")
+          result = transfer.materialize(**input, root: File.join(root, "authority"))
+          assert_empty Dir.children(result.fetch("directory"))
+        end
+      end
+
       def test_refuses_size_digest_and_unadvertised_head_without_retained_objects
         with_fixture do |transfer, root, _source, head, bytes|
           assert_raises(AttemptErrors::ReceiptRejected) { admit(transfer, head, bytes, size: bytes.bytesize + 1) }
@@ -221,7 +250,7 @@ module Ace
           git(source, "-c", "user.name=test", "-c", "user.email=test@example.invalid", "commit", "-m", "large context")
           after = comparison_input(root, source, "after")
           bounded = Class.new(Authority::CandidateTransfer)
-          bounded.const_set(:MAX_BYTES, 2048)
+          bounded.const_set(:MAX_REVIEW_BYTES, 2048)
           limited = bounded.new(root: File.join(root, "authority"))
           error = assert_raises(AttemptErrors::ReceiptRejected) do
             limited.with_head_comparison(before: before, after: after, before_base: base, after_base: base) { |view| view.context }
@@ -229,6 +258,105 @@ module Ace
           assert_match(/oversized/, error.message)
           assert_raises(AttemptErrors::ReceiptRejected) do
             transfer.with_head_comparison(before: before.merge(tree: "f" * 40), after: after, before_base: base, after_base: base) { |view| view.context }
+          end
+          assert_empty Dir.children(File.join(root, "authority"))
+        end
+      end
+
+      # Trees are built with hash-object/mktree/commit-tree because the host
+      # filesystem refuses the oversized names these proofs must contain.
+      # mktree is single-level: deep paths need bottom-up nested trees.
+      def blob_oid(source, content = "content\n")
+        output, _, status = Open3.capture3("/usr/bin/git", "-C", source, "hash-object", "-w", "--stdin", stdin_data: content)
+        assert status.success?, status.inspect
+        output.strip
+      end
+
+      def nested_tree(source, entries)
+        output, error, status = Open3.capture3("/usr/bin/git", "-C", source, "mktree",
+          stdin_data: entries.map { |mode, type, sha, name| "#{mode} #{type} #{sha}\t#{name}\n" }.join)
+        assert status.success?, error
+        output.strip
+      end
+
+      def deep_blob_tree(source, segments)
+        sha, type = blob_oid(source), "blob"
+        segments.reverse.each do |component|
+          sha = nested_tree(source, [[type == "blob" ? "100644" : "040000", type, sha, component]])
+          type = "tree"
+        end
+        sha
+      end
+
+      def commit_bounded_tree(source, tree)
+        head, _, status = Open3.capture3("/usr/bin/git", "-C", source,
+          "-c", "user.name=test", "-c", "user.email=test@example.invalid",
+          "commit-tree", tree, "-m", "oversized path shape")
+        assert status.success?
+        git(source, "update-ref", "refs/heads/oversized", head.strip)
+        head.strip
+      end
+
+      def bound_input(root, source, name, tree)
+        head = commit_bounded_tree(source, tree)
+        path = File.join(root, "#{name}.bundle")
+        git(source, "bundle", "create", path, "refs/heads/oversized")
+        bytes = File.binread(path)
+        {bytes: bytes, size: bytes.bytesize, sha256: Digest::SHA256.hexdigest(bytes), head: head, tree: tree}
+      end
+
+      def test_materialization_refuses_unbounded_component_and_total_path_lengths
+        with_fixture do |transfer, root, source, base, _bytes|
+          component = bound_input(root, source, "component",
+            deep_blob_tree(source, ["d" * (Atoms::CandidateLimits::PATH_COMPONENT_BYTES + 1)]))
+          error = assert_raises(AttemptErrors::ReceiptRejected) do
+            transfer.materialize(**component, root: File.join(root, "authority"))
+          end
+          assert_match(/unsafe filesystem entry/, error.message)
+          segments = Array.new((Atoms::CandidateLimits::PATH_BYTES / Atoms::CandidateLimits::PATH_COMPONENT_BYTES) + 2,
+            "c" * Atoms::CandidateLimits::PATH_COMPONENT_BYTES)
+          total = bound_input(root, source, "total", deep_blob_tree(source, segments))
+          error = assert_raises(AttemptErrors::ReceiptRejected) do
+            transfer.materialize(**total, root: File.join(root, "authority"))
+          end
+          assert_match(/Candidate path exceeds bounded length/, error.message)
+          assert_empty Dir.children(File.join(root, "authority"))
+          assert_equal base, git(source, "rev-parse", "HEAD").strip
+        end
+      end
+
+      def test_head_comparison_refuses_unbounded_inventory_paths
+        with_fixture do |transfer, root, source, base, _bytes|
+          before = comparison_input(root, source, "before")
+          segments = Array.new((Atoms::CandidateLimits::PATH_BYTES / Atoms::CandidateLimits::PATH_COMPONENT_BYTES) + 2,
+            "c" * Atoms::CandidateLimits::PATH_COMPONENT_BYTES)
+          after = bound_input(root, source, "total", deep_blob_tree(source, segments))
+          error = assert_raises(AttemptErrors::ReceiptRejected) do
+            transfer.with_head_comparison(before: before, after: after, before_base: base, after_base: base) { |view| view.context }
+          end
+          assert_match(/Complete head comparison path exceeds bounded length/, error.message)
+          assert_empty Dir.children(File.join(root, "authority"))
+        end
+      end
+
+      def test_prepared_files_refuse_unbounded_paths_before_any_prefix_work
+        with_fixture do |transfer, root, source, _base, _bytes|
+          blob = blob_oid(source)
+          long = "d" * (Atoms::CandidateLimits::PATH_COMPONENT_BYTES + 1)
+          tree = nested_tree(source, [["100644", "blob", blob, "manifest.json"],
+            ["100644", "blob", blob, "one"], ["100644", "blob", blob, "two"],
+            ["100644", "blob", blob, long]])
+          head = commit_bounded_tree(source, tree)
+          path = File.join(root, "prepared.bundle")
+          git(source, "bundle", "create", path, "refs/heads/oversized")
+          bytes = File.binread(path)
+          transfer.admit(bytes: bytes, size: bytes.bytesize, sha256: Digest::SHA256.hexdigest(bytes),
+            head: head) do |repository, deadline, result|
+            assert_equal tree, result.fetch("tree")
+            error = assert_raises(AttemptErrors::ReceiptRejected) do
+              transfer.prepared_files(repository: repository, deadline: deadline, head: head)
+            end
+            assert_match(/Prepared tree contains unsafe entry/, error.message)
           end
           assert_empty Dir.children(File.join(root, "authority"))
         end

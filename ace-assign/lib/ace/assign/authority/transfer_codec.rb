@@ -5,6 +5,7 @@ require "tempfile"
 require "timeout"
 require "ace/runtime/molecules/protected_socket"
 require_relative "private_directory"
+require_relative "../atoms/candidate_limits"
 
 module Ace
   module Assign
@@ -13,11 +14,11 @@ module Ace
       # Server selects purpose from a source handler's fixed operation table,
       # admits a transfer slot before calling, and holds no journal lock here.
       class TransferCodec
-        LIMITS = {prompt_text: [16_384, 1, 16_384], scope_boundary_observation: [65_536, 1, 65_536], candidate: [64 * 1024 * 1024, 1, 64 * 1024 * 1024],
+        LIMITS = {prompt_text: [16_384, 1, 16_384], scope_boundary_observation: [65_536, 1, 65_536], candidate: [Atoms::CandidateLimits::BYTES, 1, Atoms::CandidateLimits::BYTES],
                   release_artifact: [64 * 1024 * 1024, 1, 64 * 1024 * 1024],
                   artifacts: [256 * 1024, 16, 64 * 1024],
                   receipt_artifacts: [272 * 1024, 17, 64 * 1024],
-                  service_input: [64 * 1024, 1, 64 * 1024], assignment_snapshot: [64 * 1024 * 1024, 1, 64 * 1024 * 1024]}.freeze
+                  service_input: [64 * 1024, 1, 64 * 1024], assignment_snapshot: [Atoms::CandidateLimits::BYTES, 1, Atoms::CandidateLimits::BYTES]}.freeze
         SHA256 = /\A[0-9a-f]{64}\z/
 
         class Input

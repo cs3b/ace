@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Compare two independently retained candidate bundles through bounded bare Git object reads, including nonancestor rebases, full context inventories, binary patches and historical symlink bytes without executing or materializing candidate code.
+- Ground candidate and assignment-snapshot wire/expansion ceilings in closed 128MiB budgets backed by a shared fixed `cat-file --batch` codec, an explicit 20,000-object inventory bound, and chunked batch reads instead of one Git process per blob; historical journal reads reuse the same codec.
+- Bound candidate, prepared and head-comparison tree paths to finite total/component lengths (4096/255 bytes) before any inventory, delta or filesystem prefix work, so a hostile tree cannot push unbounded path bytes into inventories or directory creation.
+- Raise the candidate transfer deadline from 30s to a measured 60s: two full admits plus the complete comparison of the real 82,809,675-byte candidate legitimately need 23–27s on a loaded host and 30s failed closed under recorded load; inputs remain byte/count-bounded independently of the wall clock.
 
 ### Fixed
 - Preserve exact lost-response result replay while allowing canonical-generation CAS conflicts to recover without replacing original inputs.

@@ -4,6 +4,7 @@ require "json"
 require "digest"
 require "ace/herdr/molecules/bounded_process"
 require_relative "journal_prompt_mutation"
+require_relative "../atoms/candidate_limits"
 require_relative "journal_input_inhibition"
 
 module Ace
@@ -192,7 +193,7 @@ module Ace
         def bounded_blob(path, commit:, max_bytes:)
           validate_blob_path!(path)
           unless commit.is_a?(String) && commit.match?(/\A[0-9a-f]{40}(?:[0-9a-f]{24})?\z/) &&
-              max_bytes.is_a?(Integer) && max_bytes.between?(1, 64 * 1024 * 1024)
+              max_bytes.is_a?(Integer) && max_bytes.between?(1, Atoms::CandidateLimits::BYTES)
             raise AttemptErrors::EvidenceUnavailable, "Canonical prepared blob selector differs"
           end
           return @read_boundary.blob(path, commit: commit, max_bytes: max_bytes) if @read_boundary
