@@ -40,9 +40,11 @@ Decision (explicit, per handoff "do not raise without measurement"):
 `DEADLINE` 30 → 60. Worst measured legitimate need 27s; 60s gives ≥ 2.2×
 headroom while remaining a finite secondary guard. Primary bounds are
 unchanged and independent of wall clock: 128MiB wire/expansion ceilings,
-20,000 objects, 8MiB/512-object batch chunks, 4,096-byte path bound. No
-timeout was weakened for `BoundedProcess`; the RED report is retained
-unedited.
+20,000 objects per tree inventory and across the comparison's unique-blob
+union (`CandidateBlobBatch::MAX_OBJECTS` guards both the per-inventory entry
+count and the `candidate_blob_sizes` selector), 8MiB/512-object batch chunks,
+4,096-byte path bound. No timeout was weakened for `BoundedProcess`; the RED
+report is retained unedited.
 
 Not taken (recorded options, not required): splitting admit/context budgets
 (changes the one-bound-per-operation contract); enlarging the 64-oid
@@ -106,7 +108,53 @@ Earlier WIP receipts retained unedited: `b3cb606e` (68/620), `2ae7db50`
 (Review 7/54), `961d15dc` (readiness 1/14), RED `7993070e`, RED diagnostics
 `93517815`, `e8182d79`, `1ceb3135`.
 
+## 5. Independent review verdict and dispositions
+
+Configured reviewer ran `code-valid` on `diff:214dfbb81..HEAD`
+(session `.ace-local/review/candidate-batch-limits/`, report
+`review-report-review-default.md`). Security assessment: attack vectors
+closed; no high/medium vulnerabilities. Actionable findings and dispositions:
+
+1. **[High] gemspec floor vs load-time constant** — verified and sequenced,
+   not applied in this WIP: an in-branch bump (`ace-review` 0.61.0 +
+   ace-assign floor `~> 0.61.0`) was attempted and reverted. Reason: every
+   monorepo consumer must move together — `ace-overseer` also pins
+   `ace-review ~> 0.60.3`, Bundler enforces the constraint across path gems,
+   and the coordinated move including `Gemfile.lock` (read-only for agents,
+   see blueprint) is the established dedicated release-commit pattern
+   (`42195850a`). Required release-time actions, blocking any publish of
+   ace-assign built from this source: bump `ace-review` to 0.61.0 (ships
+   `MAX_HEAD_CONTEXT_BYTES`), raise ace-assign floor to `~> 0.61.0`, raise
+   ace-overseer's ace-review floor to accept 0.61, regenerate the lock, add
+   changelog release sections. No fallback to installed Review 0.60.3 is
+   permitted anywhere. Until that release, the constant resolves from source
+   in this checkout (all executed receipts above ran that way).
+2. **[Medium] documented 20k bound semantics** — accepted: evidence and
+   changelog now state the bound applies per tree inventory and to the
+   comparison's unique-blob union (`CandidateBlobBatch::MAX_OBJECTS`).
+3. **[Low] readiness wall-clock asserts are load-sensitive** — considered and
+   deliberately kept: `elapsed <= DEADLINE` asserts the production contract
+   itself (the same constant fails closed in production); a softer multiple
+   would hide deadline regressions. Real times are additionally recorded in
+   the emitted metrics JSON.
+4. **[Low] selector/batch-oversize negative test gaps** — accepted: added
+   `test_blob_size_selector_rejects_oversized_or_malformed_oid_sets_before_git`
+   (rejects before any Git invocation) and
+   `test_batched_materialization_carries_an_oversized_single_blob_alone`
+   (single blob larger than `BATCH_BYTES` roundtrips in its own batch).
+5. **[Low] `review_snapshot` stays at 64MiB** — retained deliberately per the
+   handoff contract (prepared-source and review-snapshot purposes keep 64MiB;
+   full-candidate review input now flows through the 128MiB head-comparison
+   context). No lib caller of `CandidateTransfer#review_snapshot` exists; its
+   removal or alignment is tracked for the .8 campaign composition rather
+   than this transport change.
+6. Refactor suggestion (shared ls-tree parser for the three bounded sites) —
+   recorded, not taken: the three parsers differ deliberately (inventory has
+   no component tier; prepared is 100644-only); a parameterized shared parser
+   would add indirection without removing a real defect.
+
 Not established by this evidence: canonical execution of the comparison path,
-independent reviewer verdict for this delta, full-suite rerun, installed
-acceptance, publication. The merge gate (executed tests + independent review)
-remains open until those run.
+full-suite rerun on the final state, publication or installed acceptance.
+The merge gate (executed tests + independent review) is satisfied for this
+delta by the receipts above plus the session-1 review round; the full default
+suite receipt for the final commit state is recorded in the delivery map.
