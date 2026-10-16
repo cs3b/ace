@@ -80,6 +80,17 @@ source-selected without relabelling the whole journal as protected or granting
 all local journals service authority. Full design/test map:
 [ordinary-publication-plan.md](ordinary-publication-plan.md).
 
+The shared candidate/review ingress is now present in source, with independent
+review pending on its exact frozen cut. A successful candidate-bound test still
+needs the dynamic trusted executor join: closed canonical candidate reference →
+root materialized immutable source → explicitly installed test runtime → actual
+successful command receipt. Static source-policy SHA fixtures do not fulfill this
+autonomous path. This is a prerequisite of the first installed merge as well as
+publication, shared with .0/.8. Current contract and test responsibility map:
+[candidate-test-view-plan.md](candidate-test-view-plan.md). Preserve the existing
+contained-symlink verification; dangling/escaping archival source references need
+explicit source metadata repair, never silent candidate filtering.
+
 Maintained dynamic test-runtime profile preparation is externally blocked by
 automatic platform content review; its exact action and outcome are retained in
 [evidence/test-runtime-preparation-blocker.json](evidence/test-runtime-preparation-blocker.json).
