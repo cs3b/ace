@@ -31,7 +31,13 @@ module Ace
           unless request.fetch("project_id") == @config.project
             raise Ace::Assign::AttemptErrors::UnauthorizedIdentity, "ordinary request belongs to another project"
           end
-          @config.participant!(peer).fetch("role").to_sym
+          @config.participant!(peer)
+          pane = request.fetch("params", {})["pane"]
+          # Reads need project visibility only. Every mutating lifecycle route
+          # validates a pane; supervisor authority additionally requires actual
+          # caller ancestry in one of the root-installed native placements.
+          return :worker unless pane
+          identity!(peer: peer, pane: pane, deadline: deadline).role == "coordinator" ? :supervisor : :worker
         end
 
         def identity!(peer:, pane:, deadline: default_deadline)
@@ -79,9 +85,10 @@ module Ace
           end
           @peer.live!(peer, deadline: deadline)
           @config.participant!(peer)
-          # A reviewer still submits evidence as a worker; independent acceptance
-          # is a separately authorized lifecycle transition, never this role label.
-          role = participant.fetch("role") == "supervisor" ? "coordinator" : "worker"
+          # Ordinary native agents may share an OS account. Preserve that actor
+          # for HITL attribution; privilege follows observed native placement,
+          # not a claimed role or an invented per-agent account alias.
+          role = participant.fetch("supervisor_panes").include?(binding.fetch("pane")) ? "coordinator" : "worker"
           identity = Ace::Assign::Molecules::ExecutionIdentityResolver::Identity.new(
             actor: participant.fetch("actor"), role: role, runtime: participant.fetch("runtime"),
             adapter: "ordinary", process_pid: binding.fetch("process_identity").fetch("pid"), runtime_binding: binding)

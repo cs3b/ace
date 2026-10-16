@@ -21,8 +21,8 @@ module Ace
         PROJECT_KEYS = %w[service journal assignment_root lifecycle_root runtime_binary native worktrees participants].freeze
         SERVICE_KEYS = %w[uid gid socket_path state_root].freeze
         JOURNAL_KEYS = %w[repository ref checkout_root].freeze
-        PARTICIPANT_KEYS = %w[gid actor role runtime workspace].freeze
-        ROLES = %w[supervisor worker reviewer].freeze
+        PARTICIPANT_KEYS = %w[gid actor runtime workspace supervisor_panes].freeze
+        PANE = /\A[a-zA-Z0-9][a-zA-Z0-9_.:-]{0,127}\z/
         NATIVE_KEYS = %w[socket_path socket_identity server_identity version protocol].freeze
 
         def self.load(project:, path: PATH)
@@ -84,8 +84,11 @@ module Ace
           @participants.each do |uid, participant|
             invalid! unless uid.is_a?(String) && uid.match?(/\A[1-9][0-9]{0,9}\z/) && uid?(uid.to_i) && uid.to_i != @service.fetch("uid") &&
               participant.is_a?(Hash) && participant.keys.sort == PARTICIPANT_KEYS.sort && uid?(participant["gid"]) &&
-              participant["actor"].is_a?(String) && ID.match?(participant["actor"]) && ROLES.include?(participant["role"]) &&
-              participant["runtime"] == "herdr" && participant["workspace"].is_a?(String) && ID.match?(participant["workspace"])
+              participant["actor"].is_a?(String) && ID.match?(participant["actor"]) &&
+              participant["runtime"] == "herdr" && participant["workspace"].is_a?(String) && ID.match?(participant["workspace"]) &&
+              participant["supervisor_panes"].is_a?(Array) && participant["supervisor_panes"].size <= 16 &&
+              participant["supervisor_panes"].uniq == participant["supervisor_panes"] &&
+              participant["supervisor_panes"].all? { |pane| pane.is_a?(String) && PANE.match?(pane) }
           end
           invalid! unless @participants.values.map { |value| value.fetch("actor") }.uniq.size == @participants.size
           @fingerprint = Digest::SHA256.hexdigest(Ace::Assign::Atoms::EvidenceDigest.canonical_json(selected))

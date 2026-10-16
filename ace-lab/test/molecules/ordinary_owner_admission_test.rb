@@ -23,14 +23,16 @@ module Ace
         def test_closed_owner_selection_is_detached_and_rejects_caller_owned_or_overlapping_state
           original = document
           selected = OrdinaryOwnerConfig.new(original, project: "atlas", source: OrdinaryOwnerConfig::PATH)
-          original["projects"]["atlas"]["participants"]["41001"]["role"] = "supervisor"
-          assert_equal "worker", selected.participants.fetch("41001").fetch("role")
-          assert_raises(FrozenError) { selected.participants.fetch("41001")["role"] = "supervisor" }
+          original["projects"]["atlas"]["participants"]["41001"]["supervisor_panes"] << "w1:p1"
+          assert_equal ["w1:pS"], selected.participants.fetch("41001").fetch("supervisor_panes")
+          assert_raises(FrozenError) { selected.participants.fetch("41001").fetch("supervisor_panes") << "w1:p1" }
           [->(d) { d["service"]["uid"] = 41001 },
             ->(d) { d["service"]["uid"] = 0 },
             ->(d) { d["journal"]["repository"] = "/var/lib/ace/state/journal" },
             ->(d) { d["assignment_root"] = "/var/lib/ace/state/checkout/assignments" },
             ->(d) { d["participants"]["41001"]["role"] = "root" },
+            ->(d) { d["participants"]["41001"]["supervisor_panes"] = ["w1:pS", "w1:pS"] },
+            ->(d) { d["participants"]["41001"]["supervisor_panes"] = ["w1:pS\n"] },
             ->(d) { d["native"]["socket_identity"][2] = 41001 },
             ->(d) { d["participants"]["41001"]["argv"] = ["/bin/sh"] }].each do |change|
             modified = document
@@ -130,7 +132,7 @@ module Ace
         def test_revocation_during_native_probe_cannot_return_an_identity
           current = @config
           modified = document
-          modified["projects"]["atlas"]["participants"]["41001"]["role"] = "reviewer"
+          modified["projects"]["atlas"]["participants"]["41001"]["supervisor_panes"] = []
           revoked = OrdinaryOwnerConfig.new(modified, project: "atlas", source: OrdinaryOwnerConfig::PATH)
           binding = @binding
           @runtime.define_singleton_method(:process_binding) { |**_| current = revoked; binding }
@@ -141,6 +143,49 @@ module Ace
               assert_raises(InvalidConfigurationError) { admission.identity!(peer: @peer, pane: "w1:p1") }
             end
             end
+          end
+        end
+
+        def test_same_os_account_gets_supervisor_only_from_its_actual_installed_native_placement
+          pids = 2.times.map { Process.spawn(RbConfig.ruby, "-e", "sleep 30") }
+          observer = Ace::Runtime::Molecules::ProcessIdentity.new
+          peers = pids.map { |pid| observer.capture(pid).merge("gid" => Process.gid) }
+          configured = ordinary_owner_document(peer: peers.first)
+          participants = configured["projects"]["atlas"]["participants"]
+          participants[Process.uid.to_s] = participants.delete("41001").merge("actor" => Etc.getpwuid.name, "gid" => Process.gid)
+          config = OrdinaryOwnerConfig.new(configured, project: "atlas", source: OrdinaryOwnerConfig::PATH)
+          placements = {"w1:pS" => pids.first, "w1:p1" => pids.last}
+          native = Object.new
+          native.define_singleton_method(:pane_get) do |pane|
+            Struct.new(:parsed_json).new({"result" => {"pane" => {"pane_id" => pane, "workspace_id" => "w1",
+              "terminal_id" => pane, "agent" => "pi", "agent_session" => {
+                "kind" => "id", "agent" => "pi", "value" => "01a144bd-f8d1-74b1-8ba8-0e131c678b0c"}}}})
+          end
+          native.define_singleton_method(:pane_process_info) do |pane|
+            Struct.new(:parsed_json).new({"result" => {"process_info" => {
+              "shell_pid" => Process.pid, "foreground_processes" => [{"pid" => placements.fetch(pane)}]}}})
+          end
+          runtime = Ace::Herdr::Organisms::RuntimeAdapter.new(executor: native, env: {}, process_identity: observer)
+          admission = OrdinaryOwnerAdmission.new(config: config, runtime: runtime)
+          OrdinaryOwnerConfig.stub(:load, config) do
+            Ace::Assign::Authority::ProtectedAssignmentContext.stub(:load, @context) do
+              request = {"project_id" => "atlas", "params" => {"pane" => "w1:pS"}}
+              assert_equal :supervisor, admission.authorize!(request: request, peer: peers.first)
+              assert_raises(Ace::Assign::AttemptErrors::UnauthorizedIdentity) do
+                admission.authorize!(request: request, peer: peers.last)
+              end
+              request["params"]["pane"] = "w1:p1"
+              assert_equal :worker, admission.authorize!(request: request, peer: peers.last)
+              assert_equal Etc.getpwuid.name, admission.identity!(peer: peers.last, pane: "w1:p1").actor
+              assert_equal :worker, admission.authorize!(request: {"project_id" => "atlas"}, peer: peers.first)
+            end
+          end
+        ensure
+          Array(pids).each do |pid|
+            Process.kill("TERM", pid)
+            Process.wait(pid)
+          rescue Errno::ESRCH, Errno::ECHILD
+            nil
           end
         end
 
