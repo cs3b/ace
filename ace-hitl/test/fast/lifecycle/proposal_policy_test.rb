@@ -7,12 +7,12 @@ class ProposalPolicyTest < AceHitlTestCase
 
   def record
     {"proposal_id" => "proposal-#{'a' * 24}", "request_id" => "proposal-#{'a' * 24}-r1",
-     "revision_id" => "proposal-#{'a' * 24}-r1", "state" => "awaiting-delivery", "silence_delegated" => true}
+     "revision_id" => "proposal-#{'a' * 24}-r1", "project_id" => "ace", "state" => "awaiting-delivery", "silence_delegated" => true}
   end
 
   def checkpoint(value)
     {"schema" => "ace.hitl.hermes.ingress-checkpoint/v1", "request" => value["request_id"],
-     "revision" => value["revision_id"], "healthy" => true, "drained" => true,
+     "project" => value["project_id"], "revision" => value["revision_id"], "healthy" => true, "drained" => true,
      "checkpoint" => {"through" => value["deadline"], "sequence" => 0}}
   end
 
@@ -27,7 +27,7 @@ class ProposalPolicyTest < AceHitlTestCase
 
   def test_unknown_backlog_and_wrong_revision_cannot_authorize
     value = Policy.acknowledge(record, "2026-10-05T01:00:00Z")
-    [{"healthy" => false}, {"drained" => false}, {"revision" => "wrong"}, {"checkpoint" => nil}].each do |change|
+    [{"project" => "other"}, {"project" => nil}, {"healthy" => false}, {"drained" => false}, {"revision" => "wrong"}, {"checkpoint" => nil}].each do |change|
       assert_equal value, Policy.resolve(value, checkpoint: checkpoint(value).merge(change), now: value["deadline"])
     end
   end

@@ -136,15 +136,49 @@ class TlsClientTest < AceHermesTestCase
     assert_equal true, request_over_loopback(client)["pong"]
   end
 
+  def test_resolver_and_connect_share_finite_remaining_request_budget
+    @port = 8443
+    client = TlsClient.new(endpoint: "tls+tcp://#{DNS_NAME}:#{@port}", credential: base_credential,
+      deadline_seconds: 0.1, context_builder: ->(_) { client_context })
+    called = false
+    Socket.stub(:tcp, ->(dns, port, resolv_timeout:, connect_timeout:) {
+      called = true
+      assert_equal DNS_NAME, dns
+      assert_equal 8443, port
+      assert_operator resolv_timeout, :>, 0
+      assert_operator resolv_timeout, :<=, 0.1
+      assert_equal resolv_timeout, connect_timeout
+      raise SocketError, "name resolution timed out"
+    }) do
+      assert_raises(Ace::Hitl::Lifecycle::TransportError) { client.request("ping") }
+    end
+    assert called
+  end
+
+  def test_real_connected_peer_that_never_handshakes_obeys_request_deadline
+    @tcp_server = TCPServer.new("::1", 0)
+    @port = @tcp_server.addr[1]
+    peer = nil
+    @server_thread = Thread.new { peer = @tcp_server.accept; IO.select([peer], nil, nil, 2) }
+    client = TlsClient.new(endpoint: "tls+tcp://#{DNS_NAME}:#{@port}", credential: base_credential,
+      deadline_seconds: 0.05, context_builder: ->(_) { client_context })
+    start = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+    error = assert_raises(Ace::Hitl::Lifecycle::TransportError) { request_over_loopback(client) }
+    assert_match(/deadline/, error.message)
+    assert_operator Process.clock_gettime(Process::CLOCK_MONOTONIC) - start, :<, 1.0
+  ensure
+    peer&.close
+  end
+
   # ---- fixtures ----
 
   # Replace DNS resolution only. TCP, TLS, hostname/SAN/EKU/pin verification
   # and lifecycle frames remain real, independent of host resolver aliases.
   def request_over_loopback(client)
-    resolve = Addrinfo.method(:tcp)
-    Addrinfo.stub(:tcp, ->(dns, port) {
+    connect = Socket.method(:tcp)
+    Socket.stub(:tcp, ->(dns, port, **options) {
       assert_equal DNS_NAME, dns
-      resolve.call("::1", port)
+      connect.call("::1", port, **options)
     }) { client.request("ping") }
   end
 

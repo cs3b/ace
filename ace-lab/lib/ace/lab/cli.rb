@@ -10,6 +10,8 @@ require_relative "cli/commands/resolve"
 require_relative "cli/commands/route"
 require_relative "cli/commands/service"
 require_relative "cli/commands/assignment"
+require_relative "cli/commands/command_execute"
+require_relative "cli/commands/run"
 
 module Ace
   module Lab
@@ -21,6 +23,8 @@ module Ace
 
       # Application commands with descriptions (for help output)
       REGISTERED_COMMANDS = [
+        ["run", "Run one explicitly authorized project command"],
+        ["run-status", "Inspect an original command execution without running it"],
         ["projects", "List lab projects visible to the verified caller"],
         ["agents", "List lab agents in a project by stable ID"],
         ["services", "List lab services in a project by stable ID"],
@@ -30,6 +34,7 @@ module Ace
         ["service status", "Read a service request outcome"],
         ["service listen", "Serve the ordinary fixed merge receiver on its configured socket"],
         ["assignment prepare", "Retain reviewed task input for ordinary Assign registration"],
+        ["assignment drive", "Drive one original execution through the installed ordinary owner"],
         ["assignment request", "Send one retained operation to the installed ordinary Assign owner"]
       ].freeze
 
@@ -45,6 +50,7 @@ module Ace
       # @param args [Array<String>] Command-line arguments
       # @return [Integer] Exit code (0 for success, non-zero for failure)
       def self.start(args)
+        return CLI::Commands::Run.invoke(args.drop(1)) if args.first == "run" && !(args.take(args.index("--") || args.size).include?("--help") || args.take(args.index("--") || args.size).include?("-h"))
         Ace::Support::Cli::Runner.new(self).call(args: args)
       end
 
@@ -57,7 +63,11 @@ module Ace
       register "service request", CLI::Commands::Service::Request.new
       register "service status", CLI::Commands::Service::Status.new
       register "service listen", CLI::Commands::Service::Listen.new
+      register "run", CLI::Commands::Run.new
+      register "run-status", CLI::Commands::RunStatus.new
+      register "command execute", CLI::Commands::CommandExecute.new
       register "assignment prepare", CLI::Commands::Assignment::Prepare.new
+      register "assignment drive", CLI::Commands::Assignment::Drive.new
       register "assignment request", CLI::Commands::Assignment::Request.new
 
       # Register version command

@@ -1,0 +1,9 @@
+{
+  "scope": "Source-only canonical artifact retention; no publication dispatch, runtime installation or blocked communication work.",
+  "boundaries": "Native observation and external release decision controlled in real Unix/Git/journal tests. Composition uses actual existing ServicePolicy; no executor is selected.",
+  "red_classification": {
+    "wire-expectation-red": "Three assertions expected server error subclasses; existing OrdinaryClient deliberately normalizes wire refusals to EvidenceUnavailable. Product guards were already refusing.",
+    "policy-load-count-red": "Test expected seven fresh document loads; revoked owner correctly refuses before the seventh. Expected count corrected to six, without product change."
+  },
+  "native_socket_rerun": "PASS 9 tests /112 assertions; five existing ordinary review tests plus four new retention cases"
+}

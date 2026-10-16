@@ -28,9 +28,10 @@ module Ace
             !entry["completed_at"].to_s.empty?
         end
 
-        def initialize(repo_root:, check_evidence: nil, review_evidence: nil, approval_evidence: nil, artifact_paths: {})
+        def initialize(repo_root:, check_evidence: nil, review_evidence: nil, approval_evidence: nil, artifact_paths: {}, review_independence: nil)
           @repo_root = File.realpath(repo_root)
           @artifact_paths = artifact_paths.dup.freeze
+          @review_independence = review_independence
           authority = CampaignExecutionEvidence.new(repo_root: @repo_root)
           @check_evidence = check_evidence || authority.method(:check)
           @review_evidence = review_evidence || authority.method(:review)
@@ -164,6 +165,7 @@ module Ace
           proof = @approval_evidence.call(approval.fetch("receipt"), head: approval.fetch("head"),
             artifacts: approval.fetch("reports"), producer: approval.fetch("producer"),
             reviewer: approval.fetch("reviewer"), historical: historical)
+          verify_independence!(producer: approval.fetch("producer"), reviewer: approval.fetch("reviewer"), proof: proof)
           verify_execution_linkage!(approval["execution_proof"], proof)
           approval.fetch("checks").each do |check|
             accepted = @check_evidence.call(check.fetch("receipt"), head: approval.fetch("head"), name: check.fetch("name"), historical: historical)
@@ -178,6 +180,20 @@ module Ace
             raise Contract::Invalid, "canonical campaign execution linkage changed"
           end
           true
+        end
+
+        def head_checks(checks, head:, required:, historical: false)
+          unless checks.is_a?(Array) && !checks.empty? && checks.all? { |item|
+              item.is_a?(Hash) && item.keys.sort == %w[name receipt] && item["name"].is_a?(String) } &&
+              checks.map { |item| item["name"] }.uniq.size == checks.size &&
+              (required - checks.map { |item| item["name"] }).empty?
+            raise Contract::Invalid, "head assessment requires all executed checks"
+          end
+          checks.map do |check|
+            proof = @check_evidence.call(check.fetch("receipt"), head: head, name: check.fetch("name"), historical: historical)
+            raise Contract::Invalid, "canonical head check evidence is unavailable" unless proof.is_a?(Hash) && !proof.empty?
+            check.merge("execution_proof" => proof)
+          end
         end
 
         def reassessment(previous)
@@ -208,7 +224,6 @@ module Ace
           end
           producer = Contract.string!(data["producer"], "approval producer")
           reviewer = Contract.string!(data["reviewer"], "approval reviewer")
-          raise Contract::Invalid, "independent reviewer required (self-approval)" if producer == reviewer
           # Approval explicitly identifies completed reviewer reports, rather
           # than treating a model response or arbitrary file as a verdict.
           review_refs = data["reports"]
@@ -249,6 +264,7 @@ module Ace
           approval_receipt = data.fetch("receipt")
           approval_proof = @approval_evidence.call(approval_receipt, head: binding["head"], artifacts: review_refs,
             producer: producer, reviewer: reviewer)
+          verify_independence!(producer: producer, reviewer: reviewer, proof: approval_proof)
           checks = data["checks"]
           raise Contract::Invalid, "approval requires executed checks" unless checks.is_a?(Array) && !checks.empty?
           check_refs = []
@@ -281,6 +297,16 @@ module Ace
         end
 
         private
+
+        def verify_independence!(producer:, reviewer:, proof:)
+          accepted = if @review_independence
+            @review_independence.call(producer: producer, reviewer: reviewer, proof: proof) == true
+          else
+            producer != reviewer
+          end
+          raise Contract::Invalid, "independent reviewer required (self-approval)" unless accepted
+          true
+        end
 
         def json_keys(value)
           case value

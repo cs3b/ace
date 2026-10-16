@@ -1,0 +1,141 @@
+{
+  "schema": "ace.task.source-verification/v1",
+  "base": "33bf2efe5",
+  "plan_commit": "cb2110e73",
+  "contract": "Explicit closed nonexecuting operator-question context; actual kernel UID plus exact installed project grant, existing Store request/terminal persistence and public Unix protocol; no managed execution IDs, OTP, effects or grant decisions.",
+  "proof": {
+    "contract_fast": {
+      "path": "/Users/mc/Ps/ace/.ace-wt/ei9-operator-questions/.ace-local/test/reports/hitl-contract/62854428-adc5-4d6a-96cf-823c8b946c84",
+      "summary": {
+        "execution_id": "62854428-adc5-4d6a-96cf-823c8b946c84",
+        "assertions": 161,
+        "passed": 25,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "total": 25,
+        "pass_rate": 100.0,
+        "duration": 0.063122,
+        "success": true,
+        "timestamp": "2026-10-16T19:52:55+01:00"
+      }
+    },
+    "hitl_fast": {
+      "path": "/Users/mc/Ps/ace/.ace-wt/ei9-operator-questions/.ace-local/test/reports/hitl/71408296-33b7-4229-aa08-ddd1bed5e1fa",
+      "summary": {
+        "execution_id": "71408296-33b7-4229-aa08-ddd1bed5e1fa",
+        "assertions": 1445,
+        "passed": 258,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 5,
+        "total": 263,
+        "pass_rate": 98.1,
+        "duration": 58.685964999999996,
+        "success": true,
+        "timestamp": "2026-10-16T19:50:15+01:00"
+      }
+    },
+    "final_operator_and_cli": {
+      "path": "/Users/mc/Ps/ace/.ace-wt/ei9-operator-questions/.ace-local/test/reports/hitl/8dc4ff00-6f2c-40d9-94b0-909ef98f6df2",
+      "summary": {
+        "execution_id": "8dc4ff00-6f2c-40d9-94b0-909ef98f6df2",
+        "assertions": 215,
+        "passed": 40,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "total": 40,
+        "pass_rate": 100.0,
+        "duration": 2.65983,
+        "success": true,
+        "timestamp": "2026-10-16T19:54:39+01:00"
+      }
+    },
+    "final_operator_store": {
+      "path": "/Users/mc/Ps/ace/.ace-wt/ei9-operator-questions/.ace-local/test/reports/hitl/2aeeb868-a7c9-4a0c-8f50-6f4f7e60eee0",
+      "summary": {
+        "execution_id": "2aeeb868-a7c9-4a0c-8f50-6f4f7e60eee0",
+        "assertions": 63,
+        "passed": 9,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "total": 9,
+        "pass_rate": 100.0,
+        "duration": 0.07111,
+        "success": true,
+        "timestamp": "2026-10-16T19:55:33+01:00"
+      }
+    },
+    "managed_proposal_feature": {
+      "path": "/Users/mc/Ps/ace/.ace-wt/ei9-operator-questions/.ace-local/test/reports/hitl/58b299aa-3f58-4f1f-804b-f463bf1e86aa",
+      "summary": {
+        "execution_id": "58b299aa-3f58-4f1f-804b-f463bf1e86aa",
+        "assertions": 186,
+        "passed": 28,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "total": 28,
+        "pass_rate": 100.0,
+        "duration": 206.27892,
+        "success": true,
+        "timestamp": "2026-10-16T19:54:01+01:00"
+      }
+    },
+    "hermes_fast": {
+      "path": "/Users/mc/Ps/ace/.ace-wt/ei9-operator-questions/.ace-local/test/reports/hitl-hermes/41b81f0c-1b44-43db-ad4e-c501b50fcb32",
+      "summary": {
+        "execution_id": "41b81f0c-1b44-43db-ad4e-c501b50fcb32",
+        "assertions": 1085,
+        "passed": 187,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "total": 187,
+        "pass_rate": 100.0,
+        "duration": 39.53912,
+        "success": true,
+        "timestamp": "2026-10-16T19:54:06+01:00"
+      }
+    },
+    "final_real_unix_operator_routes": {
+      "path": "/Users/mc/Ps/ace/.ace-wt/ei9-operator-questions/.ace-local/test/reports/hitl-hermes/80c056b2-9bcd-45c9-a3c6-21d05310d7c5",
+      "summary": {
+        "execution_id": "80c056b2-9bcd-45c9-a3c6-21d05310d7c5",
+        "assertions": 24,
+        "passed": 3,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "total": 3,
+        "pass_rate": 100.0,
+        "duration": 2.14649,
+        "success": true,
+        "timestamp": "2026-10-16T19:55:36+01:00"
+      }
+    }
+  },
+  "source_sha256": {
+    "ace-hitl/lib/ace/hitl/lifecycle/binding.rb": "b87c1b5f9a0b0ed0a4ab41a9bfb67672cb197a0b595a4741fd1fb999ba4426e5",
+    "ace-hitl/lib/ace/hitl/lifecycle/frame_serving.rb": "2d2a1767ac8d2ce2ee540255d3aa041c9b573da8170b488192d56236e15b3efd",
+    "ace-hitl/lib/ace/hitl/lifecycle/policy.rb": "e0ce1ef8abc2d9bb8dddf73f930ebccdbec05f96fa2b51b2e5cd9e8d62af857e",
+    "ace-hitl/lib/ace/hitl/lifecycle/operator_questions.rb": "9acad394bba1a087d0ecf1a29a4c7623fa34f5bba0a01593d79dfba03e2ac3be",
+    "ace-hitl/lib/ace/hitl/lifecycle/store.rb": "f1048c35813c35fe1858c307ca77ae00a21453ebbb7c9fdc658f976242bababd",
+    "ace-hitl/lib/ace/hitl/proposals/policy.rb": "54330a566a85f66a4b42da814edcc40224f6d5b7d6f57a68ce08c32bf5397e12",
+    "ace-hitl/lib/ace/hitl/cli/commands/read.rb": "4ebf638e885f20d152e22fca9c399c16df26880b52288a7b186cc05fa657990b",
+    "ace-hitl/lib/ace/hitl/cli/commands/operator_question.rb": "8805185855227d91b6f10ccd0e7d52c739d906a1b05f95ea05d424ca4febe477",
+    "ace-hitl-contract/lib/ace/hitl/contract/request_envelope.rb": "74f65ebd55c534ad7f78d3b89ee50f6084f940cdacaa2b8d1bc10c0003f1d02b",
+    "ace-hitl-contract/lib/ace/hitl/contract/operator_envelope.rb": "9d94689e321a60109d90d57cbd7d2eb2c6d065e27daa0b63b1f72d75693e501f",
+    "ace-hitl-hermes/lib/ace/hitl/hermes/runtime.rb": "0e603a24b4c5f4b112076ca09dc41019f4f1b367fec5b867997517ae4a7c29ec",
+    "ace-hitl-hermes/lib/ace/hitl/hermes/transport/relay.rb": "d2f45459c903473b74c63c1bbb197cb7e456ba220b911ec24cf4bef4e91c5fb6",
+    "ace-hitl-hermes/lib/ace/hitl/hermes/transport/registry.rb": "d1703d6050f0a9bd6128eae122aa1055768f515a180ec2d7bc36bbd832483761"
+  },
+  "limits": [
+    "Source-only; no publication, version bump, production changes, legacy-record migration or all-group installed acceptance.",
+    "Real Unix tests intentionally use one UID with both operator and transport grants; they do not claim cross-UID Captain isolation.",
+    "Root-installed policy files reuse the existing TrustedFile mechanism; new tests inject the policy document and do not claim a deployed root-owned configuration.",
+    "Broad HITL fast run preceded final operator-only crash-recovery/context-rendering additions, which are covered by final focused Store and real Unix route runs. No new monorepo suite was executed."
+  ]
+}

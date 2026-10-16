@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "../../test_helper"
+require_relative "../../support/fixed_merge_evidence_fixture"
 require "json"
 require "open3"
 require "fileutils"
@@ -463,7 +464,7 @@ module Ace
         Organisms::AttemptCoordinator.new(
           cache_base: @cache_dir,
           repo_root: @repo,
-          journal: journal,
+          journal: journal, ordinary_merge_evidence: FixedMergeEvidenceFixture.new,
           lifecycle_exclusion: Molecules::LifecycleExclusion.new(root: File.join(@cache_dir, ".exclusion"))
         )
       end

@@ -6,7 +6,11 @@ require "fileutils"
 require "tmpdir"
 require "tempfile"
 require "ace/herdr/molecules/bounded_process"
+require "ace/review/atoms/campaign_contract"
 require_relative "private_directory"
+require_relative "../atoms/candidate_limits"
+require_relative "candidate_head_comparison"
+require_relative "candidate_blob_batch"
 
 module Ace
   module Assign
@@ -14,8 +18,17 @@ module Ace
       # Untrusted bundles enter a clean bare quarantine. Only complete verified
       # objects are retained; no uploader configuration or worktree is read.
       class CandidateTransfer
-        MAX_BYTES = 64 * 1024 * 1024
-        DEADLINE = 30
+        include CandidateHeadComparison
+        include CandidateBlobBatch
+        MAX_BYTES = Atoms::CandidateLimits::BYTES
+        MAX_REVIEW_BYTES = Ace::Review::Atoms::CampaignContract::MAX_HEAD_CONTEXT_BYTES
+        # Measured on the real 82,809,675-byte candidate (9,203 entries,
+        # 71,583,200 expanded bytes): two full admits alone need ~14s of
+        # bounded Git work and the complete comparison ~23s on a loaded host
+        # (evidence in .ace-tasks/8xf.t.ei9-wave-3 evidence). 30s failed
+        # closed under legitimate load; 60s keeps a finite secondary guard
+        # with measured headroom. Inputs stay byte/count-bounded separately.
+        DEADLINE = 60
         SHA = /\A[0-9a-f]{40}\z/
 
         class CampaignReadView
@@ -165,20 +178,29 @@ module Ace
             File.chmod(0700, destination)
             begin
               entries = git(repository, deadline, "ls-tree", "-r", "-z", head, limit: MAX_BYTES).b.split("\0")
-              total = 0
-              links = []
-              entries.each do |entry|
+              reject!("Candidate file inventory is oversized") if entries.size > MAX_OBJECTS
+              parsed = entries.map do |entry|
                 metadata, path = entry.split("\t", 2)
                 mode, kind, oid = metadata.to_s.split(" ")
-                parts = path.to_s.split("/", -1)
-                unless path && !path.start_with?("/") &&
-                    parts.none? { |part| part.empty? || %w[. .. .git].include?(part.downcase) } &&
-                    kind == "blob" && %w[100644 100755 120000].include?(mode) && oid.match?(SHA)
+                # Total path bytes are bounded before any component or
+                # filesystem prefix work consumes them.
+                reject!("Candidate path exceeds bounded length") unless path && !path.start_with?("/") &&
+                  path.bytesize <= Atoms::CandidateLimits::PATH_BYTES
+                parts = path.split("/", -1)
+                unless parts.none? { |part| part.empty? || part.bytesize > Atoms::CandidateLimits::PATH_COMPONENT_BYTES ||
+                    %w[. .. .git].include?(part.downcase) } &&
+                    kind == "blob" && %w[100644 100755 120000].include?(mode) && oid&.match?(SHA)
                   reject!("Candidate contains unsafe filesystem entry")
                 end
-                content = git(repository, deadline, "cat-file", "blob", oid, limit: MAX_BYTES).b
-                total += content.bytesize
-                reject!("Candidate expanded content is oversized") if total > MAX_BYTES
+                [path, mode, oid]
+              end
+              by_oid = parsed.group_by(&:last)
+              sizes = by_oid.keys.zip(candidate_blob_sizes(repository, deadline, by_oid.keys)).to_h
+              reject!("Candidate expanded content is oversized") if parsed.sum { |_path, _mode, oid| sizes.fetch(oid) } > MAX_BYTES
+              links = []
+              ordered = parsed.each
+              each_candidate_blob(repository, deadline, parsed.map { |_path, _mode, oid| [oid, sizes.fetch(oid)] }) do |oid, content|
+                path, mode, _oid = ordered.next
                 target = File.join(destination, path)
                 FileUtils.mkdir_p(File.dirname(target), mode: 0700)
                 if mode == "120000"
@@ -242,7 +264,7 @@ module Ace
           result = materialize(bytes: bytes, sha256: sha256, size: size, head: head, tree: tree, root: root) do |path, mode, oid, content|
             entry = JSON.generate("path" => review_bytes(path), "mode" => mode, "oid" => oid, "content" => review_bytes(content))
             separator = first ? "" : ","
-            reject!("Complete candidate review snapshot is oversized") if subject.bytesize + separator.bytesize + entry.bytesize + 2 > MAX_BYTES
+            reject!("Complete candidate review snapshot is oversized") if subject.bytesize + separator.bytesize + entry.bytesize + 2 > Atoms::CandidateLimits::REVIEW_SNAPSHOT_BYTES
             subject << separator << entry
             first = false
           end
@@ -256,19 +278,26 @@ module Ace
         def prepared_files(repository:, deadline:, head:)
           entries = git(repository, deadline, "ls-tree", "-r", "-z", head, limit: MAX_BYTES).b.split("\0")
           reject!("Prepared file inventory is oversized") unless entries.size.between?(4, 4096)
-          total = 0
-          files = entries.to_h do |entry|
+          parsed = entries.map do |entry|
             metadata, path = entry.split("\t", 2)
             mode, kind, oid = metadata.to_s.split(" ")
-            unless path && mode == "100644" && kind == "blob" && oid.match?(SHA) &&
-                !path.start_with?("/") && path.split("/", -1).none? { |part| part.empty? || %w[. .. .git].include?(part.downcase) }
+            reject!("Prepared tree path exceeds bounded length") unless path && !path.start_with?("/") &&
+              path.bytesize <= Atoms::CandidateLimits::PATH_BYTES
+            unless mode == "100644" && kind == "blob" && oid&.match?(SHA) &&
+                path.split("/", -1).none? { |part| part.empty? || part.bytesize > Atoms::CandidateLimits::PATH_COMPONENT_BYTES ||
+                  %w[. .. .git].include?(part.downcase) }
               reject!("Prepared tree contains unsafe entry")
             end
-            size = git(repository, deadline, "cat-file", "-s", oid).strip
-            reject!("Prepared text is oversized") unless size.match?(/\A[0-9]+\z/) && size.to_i.between?(1, 1024 * 1024)
-            total += size.to_i
-            reject!("Prepared expanded content is oversized") if total > MAX_BYTES
-            [path, git(repository, deadline, "cat-file", "blob", oid, limit: 1024 * 1024).b]
+            [path, oid]
+          end
+          by_oid = parsed.group_by(&:last)
+          sizes = by_oid.keys.zip(candidate_blob_sizes(repository, deadline, by_oid.keys)).to_h
+          reject!("Prepared text is oversized") unless sizes.values.all? { |size| size.between?(1, 1024 * 1024) }
+          reject!("Prepared expanded content is oversized") if parsed.sum { |_path, oid| sizes.fetch(oid) } > Atoms::CandidateLimits::PREPARED_BYTES
+          files = {}
+          ordered = parsed.each
+          each_candidate_blob(repository, deadline, parsed.map { |_path, oid| [oid, sizes.fetch(oid)] }) do |_oid, content|
+            files[ordered.next.first] = content
           end
           reject!("Prepared inventory has duplicate paths") unless files.size == entries.size
           files
@@ -289,18 +318,19 @@ module Ace
           PrivateDirectory.verify!(@root)
         end
 
-        def git(repository, deadline, *arguments, limit: 65_536)
+        def git(repository, deadline, *arguments, limit: 65_536, stdin_data: "")
           remaining = deadline - monotonic
           raise Timeout::Error if remaining <= 0
           # Git variables may redirect object/config storage even in a clean
           # repository. Strip every inherited Git setting and global config.
           environment = ENV.keys.to_h { |key| [key, nil] }
           environment.merge!("GIT_CONFIG_NOSYSTEM" => "1", "GIT_CONFIG_GLOBAL" => "/dev/null",
+            "GIT_ATTR_NOSYSTEM" => "1",
             "GIT_TERMINAL_PROMPT" => "0", "GIT_ALLOW_PROTOCOL" => "file",
             "GIT_NO_REPLACE_OBJECTS" => "1", "PATH" => "/usr/bin:/bin", "LC_ALL" => "C")
           result = Herdr::Molecules::BoundedProcess.call([environment, "/usr/bin/git", "-C", repository,
-            "-c", "core.hooksPath=/dev/null", "-c", "protocol.file.allow=always", *arguments],
-            stdin_data: "", timeout_s: remaining, output_limit: limit)
+            "-c", "core.hooksPath=/dev/null", "-c", "core.attributesFile=/dev/null", "-c", "protocol.file.allow=always", *arguments],
+            stdin_data: stdin_data, timeout_s: remaining, output_limit: limit)
           reject!("Candidate Git verification failed") unless result.status.success? && !result.oversized
           result.stdout
         end

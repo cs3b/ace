@@ -31,6 +31,19 @@ module Ace
           raise NotImplementedError
         end
       end
+      # Explicit operator-only authority. Managed requests remain fail closed
+      # without creating or consulting a pretend Assign execution.
+      class OperatorOnlyBinding < Binding
+        def validate_request(**)
+          raise BindingError, "operator-only authority does not admit managed requests"
+        end
+        def reverse_address(**)
+          raise BindingError, "operator questions have no native execution address"
+        end
+        def with_active(**)
+          raise BindingError, "operator-only authority does not admit managed requests"
+        end
+      end
     end
   end
 end

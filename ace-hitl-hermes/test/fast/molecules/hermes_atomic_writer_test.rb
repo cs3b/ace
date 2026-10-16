@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "test_helper"
+require "support/fsync_probe"
 
 module Ace
   module Hitl
@@ -18,6 +19,38 @@ module Ace
               assert_equal %({"id":"m1"}), File.read(final)
               assert_equal 0o640, (File.stat(final).mode & 0o777)
               assert_empty tmp_leftovers(folder)
+            end
+          end
+
+          def test_file_contents_and_final_name_are_synced_before_return
+            with_hermes_dir do |folder|
+              final = File.join(folder, "m1.json")
+              calls = []
+              HermesFsyncProbe.observe(calls: calls) do
+                HermesAtomicWriter.write(final, "first body", euid_provider: -> { 4242 })
+              end
+              assert_equal [false, true], calls.map { |entry| entry.fetch(:directory) }
+              assert_equal folder, calls.last.fetch(:path)
+              assert_equal "first body", File.read(final)
+            end
+          end
+
+          def test_failed_directory_barrier_preserves_final_first_body_and_reports_failure
+            with_hermes_dir do |folder|
+              final = File.join(folder, "m1.json")
+              calls = []
+              HermesFsyncProbe.observe(calls: calls, failure_path: folder) do
+                assert_raises(Errno::EIO) do
+                  HermesAtomicWriter.write(final, "first body", euid_provider: -> { 4242 })
+                end
+              end
+              assert_equal "first body", File.read(final)
+              assert_empty tmp_leftovers(folder)
+              assert_raises(CollisionError) do
+                HermesAtomicWriter.write(final, "replacement", euid_provider: -> { 4242 })
+              end
+              HermesAtomicWriter.sync_directory(folder)
+              assert_equal "first body", File.read(final)
             end
           end
 

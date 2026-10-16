@@ -63,10 +63,10 @@ class RuntimeRoutingTest < AceHermesTestCase
       channel("lab", "-424242", "lab", 4100),
       channel("host", "-848484", "host", 4200, socket: @other_socket)
     ]
-    File.write(@registry_path, JSON.generate({"schema" => "ace.hitl.hermes.channels/v1", "channels" => channels}))
+    File.write(@registry_path, JSON.generate({"schema" => "ace.hitl.hermes.channels/v2", "channels" => channels}))
     File.write(@config_path, JSON.generate({
-      "schema" => "ace.hitl.hermes.runtime/v1", "registry" => @registry_path,
-      "state" => File.join(@tmp, "state"), "hitl_socket" => @default_socket,
+      "schema" => "ace.hitl.hermes.runtime/v2", "registry" => @registry_path,
+      "state" => File.join(@tmp, "state"),
       "polling_owner" => "ace-hitl-hermes", "hermes_gateway_config" => File.join(@tmp, "gateway.yml")
     }))
     File.write(File.join(@tmp, "gateway.yml"), "platforms:\n  telegram:\n    enabled: false\n")
@@ -75,6 +75,16 @@ class RuntimeRoutingTest < AceHermesTestCase
   def teardown
     FileUtils.remove_entry(@tmp)
     super
+  end
+
+  def test_runtime_v1_is_refused_without_rewriting_configuration
+    config = JSON.parse(File.read(@config_path))
+    config["schema"] = "ace.hitl.hermes.runtime/v1"
+    bytes = JSON.generate(config)
+    File.write(@config_path, bytes)
+    error = assert_raises(Ace::Hitl::Hermes::ContractError) { Ace::Hitl::Hermes::Runtime.new(@config_path) }
+    assert_match(/runtime\/v2/, error.message)
+    assert_equal bytes, File.read(@config_path)
   end
 
   def test_clients_are_lazy_cached_per_socket_with_explicit_channel_service_identity
@@ -88,9 +98,9 @@ class RuntimeRoutingTest < AceHermesTestCase
     Ace::Hitl::Lifecycle::Client.stub(:new, constructor) do
       runtime = Ace::Hitl::Hermes::Runtime.new(@config_path)
       assert_empty created
-      lab = runtime.send(:lifecycle_for, "lab")
-      assert_same lab, runtime.send(:lifecycle_for, "lab")
-      host = runtime.send(:lifecycle_for, "host")
+      lab = runtime.send(:lifecycle_for, "lab", "lab")
+      assert_same lab, runtime.send(:lifecycle_for, "lab", "lab")
+      host = runtime.send(:lifecycle_for, "host", "host")
       refute_same lab, host
     end
 
@@ -102,7 +112,7 @@ class RuntimeRoutingTest < AceHermesTestCase
 
   def test_same_socket_cannot_claim_multiple_service_identities
     registry = JSON.parse(File.read(@registry_path))
-    registry["channels"][1].delete("hitl_socket")
+    registry["channels"][1]["projects"]["host"]["hitl_socket"] = @default_socket
     File.write(@registry_path, JSON.generate(registry))
 
     error = assert_raises(Ace::Hitl::Hermes::ContractError) do
@@ -126,8 +136,8 @@ class RuntimeRoutingTest < AceHermesTestCase
       runtime = Ace::Hitl::Hermes::Runtime.new(@config_path, clock: -> { Time.iso8601(QUESTION_TS) })
       runtime.define_singleton_method(:telegram) { telegram }
       runtime.serve(once: true)
-      assert_equal "submitted", runtime.relay.delivery(channel: "lab", request: "shared-request")["status"]
-      assert_equal "submitted", runtime.relay.delivery(channel: "host", request: "shared-request")["status"]
+      assert_equal "submitted", runtime.relay.delivery(channel: "lab", project: "lab", request: "shared-request")["status"]
+      assert_equal "submitted", runtime.relay.delivery(channel: "host", project: "host", request: "shared-request")["status"]
     end
 
     assert_equal [["lab", "Proceed?"], ["host", "Proceed?"]], sent
@@ -154,18 +164,17 @@ class RuntimeRoutingTest < AceHermesTestCase
       assert_match(/unavailable for lab/, warning)
     end
 
-    assert_equal [{channel: "host", request: "host-proposal", through: QUESTION_TS}], reconciled
+    assert_equal [{channel: "host", project: "host", request: "host-proposal", through: QUESTION_TS}], reconciled
   end
 
   private
 
   def channel(name, chat_id, project, service_uid, socket: nil)
     folder = File.join(@tmp, name)
-    FileUtils.mkdir_p(folder, mode: 0o750)
+    FileUtils.mkdir_p(File.join(folder, "projects", project), mode: 0o750)
     value = {"name" => name, "machine" => "local", "folder" => folder, "target" => "#{name}-overseer",
-             "projects" => [project], "chat_id" => chat_id, "captain_user_ids" => ["42"],
-             "hitl_service_uid" => service_uid}
-    value["hitl_socket"] = socket if socket
+             "projects" => {project => {"hitl_socket" => socket || @default_socket, "hitl_service_uid" => service_uid}},
+             "chat_id" => chat_id, "captain_user_ids" => ["42"]}
     value
   end
 end

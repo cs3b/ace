@@ -1,0 +1,17 @@
+
+# Running tests with run options --seed 952:
+
+.F.........
+
+Finished tests in 0.070562s, 155.8913 tests/s, 1317.9899 assertions/s.
+
+
+Failure:
+OrdinaryAuthorityCompositionTest#test_release_retention_reads_fresh_exact_decision_and_visibility_without_requiring_an_executor [/Users/mc/Ps/ace/.ace-wt/ei9-ordinary-publication/ace-lab/test/organisms/ordinary_authority_composition_test.rb:150]
+Minitest::Assertion: --- expected
++++ actual
+@@ -1 +1 @@
+-["/etc/lab/ace-lab/authorization.yml", "/etc/lab/ace-lab/authorization.yml", "/etc/lab/ace-lab/authorization.yml", "/etc/lab/ace-lab/authorization.yml", "/etc/lab/ace-lab/authorization.yml", "/etc/lab/ace-lab/authorization.yml", "/etc/lab/ace-lab/authorization.yml"]
++["/etc/lab/ace-lab/authorization.yml", "/etc/lab/ace-lab/authorization.yml", "/etc/lab/ace-lab/authorization.yml", "/etc/lab/ace-lab/authorization.yml", "/etc/lab/ace-lab/authorization.yml", "/etc/lab/ace-lab/authorization.yml"]
+
+11 tests, 93 assertions, 1 failures, 0 errors, 0 skips

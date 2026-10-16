@@ -4,6 +4,7 @@ require "ace/runtime"
 require "digest"
 require "fileutils"
 require "json"
+require_relative "../atoms/native_agent_session"
 
 module Ace
   module Herdr
@@ -124,12 +125,10 @@ module Ace
               process.is_a?(Hash) && process["pid"] == owner.dig("process_identity", "pid")
             end
 
-            session = native["agent_session"]
+            session = Atoms::NativeAgentSession.normalize(native["agent_session"], agent: native["agent"])
             workspace = native["workspace_id"] || native["session_id"]
             terminal = native["terminal_id"]
-            next nil unless session.is_a?(Hash) && session["kind"] == "id" &&
-              session["value"].is_a?(String) && session["value"].match?(Inbox::THREAD_ID) &&
-              session["agent"] == native["agent"] && native["agent"].is_a?(String) &&
+            next nil unless session &&
               workspace.is_a?(String) && !workspace.empty? &&
               (terminal.is_a?(String) || terminal.is_a?(Integer)) && !terminal.to_s.empty?
 

@@ -9,7 +9,7 @@ class CampaignResultSnapshotTest < AceAssignTestCase
         "subject" => {"repository" => "local:#{root}", "local_candidate_id" => "candidate"},
         "policy" => {"revision" => "delivery", "minimum_rounds" => 3, "clean_rounds" => 2,
           "required_scopes" => ["full"], "required_checks" => ["tests"]}}
-      result = {"schema" => "ace.review.accepted-result/v1", "campaign_id" => "campaign", "accepted" => true}
+      result = {"schema" => "ace.review.accepted-result/v2", "campaign_id" => "campaign", "accepted" => true}
       receipt = {"campaign" => {"id" => "campaign", "result" => {}}, "operation" => "review", "verdict" => "succeeded",
         "head" => "b" * 40, "producer" => {"actor" => "worker"}, "review" => {"reviewer" => {"actor" => "reviewer"}}}
       descriptor = Object.new

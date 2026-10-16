@@ -1,0 +1,47 @@
+{
+  "actual_runner": "/run/ei9-command-run-kernel-r2/.local/share/gem/ruby/3.4.0",
+  "archive_verification": [
+    {
+      "name": "ace-support-test-helpers",
+      "version": "0.14.7",
+      "sha256": "748a4e5b0910f49a53c11b06367ea7a050694f5e6a12364c8d121aad99665441"
+    },
+    {
+      "name": "ace-test-runner",
+      "version": "0.28.1",
+      "sha256": "d74e48ec84e222c2b7c32510c1559d7a27870af3baf1f3d3447d9abd66629126"
+    },
+    {
+      "name": "ansi",
+      "version": "1.6.0",
+      "sha256": "ac9ea0c0ea8d32fb4e271348e609963ac78882f34b73836c2a02b3622e666658"
+    },
+    {
+      "name": "builder",
+      "version": "3.3.0",
+      "sha256": "497918d2f9dca528fdca4b88d84e4ef4387256d984b8154e9d5d3fe5a9c8835f"
+    },
+    {
+      "name": "minitest",
+      "version": "5.27.0",
+      "sha256": "2d3b17f8a36fe7801c1adcffdbc38233b938eb0b4966e97a6739055a45fa77d5"
+    },
+    {
+      "name": "minitest-reporters",
+      "version": "1.8.0",
+      "sha256": "8ce5280fb73ad3178ae525454df169b6f28c1b38b1d088ea91815d3a370ba384"
+    },
+    {
+      "name": "prism",
+      "version": "1.9.0",
+      "sha256": "7b530c6a9f92c24300014919c9dcbc055bf4cdf51ec30aed099b06cd6674ef85"
+    },
+    {
+      "name": "ruby-progressbar",
+      "version": "1.13.0",
+      "sha256": "80fc9c47a9b640d6834e0dc7b3c94c9df37f08cb072b7761e4a71e22cff29b33"
+    }
+  ],
+  "production_owner_pid": "554643",
+  "source_manifest_sha256": "fd57d2bae6969d145ff00054b693a2cfafca1ed3b3270cb964ea249fd2322dd2"
+}

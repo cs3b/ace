@@ -1,0 +1,10 @@
+{
+  "source": "2e9005f39",
+  "bundle_bytes": 82066639,
+  "bundle_sha256": "96410c5767ba479659d50105cf08801cbc25cc21aaf4543274c7260f47b38639",
+  "candidate_transfer_limit": 67108864,
+  "within_existing_bundle_limit": false,
+  "tracked_entries": 8834,
+  "expanded_bytes": 70150301,
+  "within_existing_expanded_limit": false
+}

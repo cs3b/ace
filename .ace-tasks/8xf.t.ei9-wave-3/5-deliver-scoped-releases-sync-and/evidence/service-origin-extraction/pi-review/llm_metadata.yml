@@ -1,0 +1,35 @@
+---
+timestamp: '2026-10-16T21:07:53.685977+01:00'
+completed_at: '2026-10-16T20:07:53.685993Z'
+status: success
+usage:
+  :model: zai/glm-5.3
+  :input_tokens: 642
+  :output_tokens: 2802
+  :cached_tokens: 39104
+  :total_tokens: 42548
+requested_selector: role:review-default
+execution:
+  :provider: pi
+  :model: zai/glm-5.3
+  :preset: ro
+  :thinking_level: high
+  :identity_source: resolved_request
+  :status: succeeded
+output_file: review-report-review-default.md
+report_sha256: 5a0ab1b08fa54352d1140ea851d67fc601d13fbd5cb32abcf2016f5533b0d4ca
+prompt_sha256:
+  system: 2b50fbe005a8caea98a425092cb3e77bd89f3e029b17523446dfbafdd373551d
+  user: 4ccb6323628ed223eaf9714d14cf2429fc00659de6f6a66da0de066a2bb57745
+model_info: zai/glm-5.3
+provider_info: pi
+raw_metadata:
+  :provider: pi
+  :model: zai/glm-5.3
+  :finish_reason: stop
+  :timestamp: '2026-10-16T20:07:53Z'
+  :input_tokens: 642
+  :output_tokens: 2802
+  :cached_tokens: 39104
+  :total_tokens: 42548
+  :usage_status: measured

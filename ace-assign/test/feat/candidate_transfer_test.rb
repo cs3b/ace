@@ -97,12 +97,297 @@ module Ace
         end
       end
 
+      def test_batched_materialization_preserves_path_order_and_duplicate_blob_bytes
+        with_fixture do |transfer, root, source, _head, _bytes|
+          File.write(File.join(source, "a"), "duplicate")
+          File.write(File.join(source, "b"), "other")
+          File.write(File.join(source, "c"), "duplicate")
+          git(source, "add", ".")
+          git(source, "-c", "user.name=test", "-c", "user.email=test@example.invalid", "commit", "-m", "duplicates")
+          input = comparison_input(root, source, "duplicate-input")
+          selected = []
+          result = transfer.materialize(**input, root: File.join(root, "authority")) do |path, _mode, _oid, content|
+            selected << [path, content]
+          end
+          assert_equal %w[README a b c], selected.map(&:first)
+          assert_equal "duplicate", File.binread(File.join(result.fetch("directory"), "a"))
+          assert_equal "duplicate", File.binread(File.join(result.fetch("directory"), "c"))
+          assert_equal "other", File.binread(File.join(result.fetch("directory"), "b"))
+        end
+      end
+
+      def test_batched_materialization_accepts_an_empty_tree
+        with_fixture do |transfer, root, source, _head, _bytes|
+          git(source, "rm", "README")
+          git(source, "-c", "user.name=test", "-c", "user.email=test@example.invalid", "commit", "-m", "empty")
+          input = comparison_input(root, source, "empty-input")
+          result = transfer.materialize(**input, root: File.join(root, "authority"))
+          assert_empty Dir.children(result.fetch("directory"))
+        end
+      end
+
+      def test_batched_materialization_carries_an_oversized_single_blob_alone
+        with_fixture do |transfer, root, source, _head, _bytes|
+          payload = "b" * (Authority::CandidateBlobBatch::BATCH_BYTES + 1)
+          File.binwrite(File.join(source, "large.bin"), payload)
+          git(source, "add", "large.bin")
+          git(source, "-c", "user.name=test", "-c", "user.email=test@example.invalid", "commit", "-m", "oversized blob")
+          input = comparison_input(root, source, "large-input")
+          selected = []
+          result = transfer.materialize(**input, root: File.join(root, "authority")) do |path, _mode, _oid, content|
+            selected << [path, content.bytesize]
+          end
+          assert_equal [["README", 11], ["large.bin", payload.bytesize]], selected
+          assert_equal payload, File.binread(File.join(result.fetch("directory"), "large.bin"))
+        end
+      end
+
+      def test_blob_size_selector_rejects_oversized_or_malformed_oid_sets_before_git
+        with_fixture do |transfer, _root, _source, _head, _bytes|
+          oversized = Array.new(Authority::CandidateBlobBatch::MAX_OBJECTS + 1) { |index| format("%040x", index) }
+          error = assert_raises(AttemptErrors::ReceiptRejected) do
+            transfer.send(:candidate_blob_sizes, "/nonexistent", Process.clock_gettime(Process::CLOCK_MONOTONIC), oversized)
+          end
+          assert_match(/invalid or oversized/, error.message)
+          error = assert_raises(AttemptErrors::ReceiptRejected) do
+            transfer.send(:candidate_blob_sizes, "/nonexistent", Process.clock_gettime(Process::CLOCK_MONOTONIC), ["z" * 40])
+          end
+          assert_match(/invalid or oversized/, error.message)
+        end
+      end
+
       def test_refuses_size_digest_and_unadvertised_head_without_retained_objects
         with_fixture do |transfer, root, _source, head, bytes|
           assert_raises(AttemptErrors::ReceiptRejected) { admit(transfer, head, bytes, size: bytes.bytesize + 1) }
           assert_raises(AttemptErrors::ReceiptRejected) { admit(transfer, head, bytes, sha256: "0" * 64) }
           assert_raises(AttemptErrors::ReceiptRejected) { admit(transfer, "f" * 40, bytes) }
           assert_raises(AttemptErrors::ReceiptRejected) { admit(transfer, head, "not a bundle") }
+          assert_empty Dir.children(File.join(root, "authority"))
+        end
+      end
+
+      def test_head_comparison_reads_both_complete_nonancestor_bundles_and_expires
+        with_fixture do |transfer, root, source, before_base, _bytes|
+          File.write(File.join(source, "code.rb"), "puts :before\n")
+          git(source, "add", ".")
+          git(source, "-c", "user.name=test", "-c", "user.email=test@example.invalid", "commit", "-m", "before")
+          before = comparison_input(root, source, "before")
+          git(source, "checkout", "--orphan", "new-base")
+          File.write(File.join(source, "code.rb"), "puts :base\n")
+          git(source, "add", ".")
+          git(source, "-c", "user.name=test", "-c", "user.email=test@example.invalid", "commit", "-m", "new base")
+          after_base = git(source, "rev-parse", "HEAD").strip
+          File.write(File.join(source, "code.rb"), "puts :after\n")
+          git(source, "add", ".")
+          git(source, "-c", "user.name=test", "-c", "user.email=test@example.invalid", "commit", "-m", "after")
+          after = comparison_input(root, source, "after")
+          contexts = []
+          escaped = nil
+          2.times do
+            transfer.with_head_comparison(before: before, after: after, before_base: before_base, after_base: after_base) do |view|
+              escaped = view
+              context = view.context
+              contexts << context
+              assert_equal before.fetch(:head), context.dig("reviewed", "head")
+              assert_equal after.fetch(:head), context.dig("candidate", "head")
+              assert_equal after_base, context.dig("candidate", "base")
+              assert_equal %w[base_delta candidate_delta current_scope original_scope], context.fetch("changes").keys.sort
+              delta = context.fetch("changes").fetch("candidate_delta")
+              assert_includes delta.fetch("patch").fetch("bytes"), "+puts :after"
+              assert_equal Digest::SHA256.hexdigest(delta.fetch("patch").fetch("bytes")), delta.fetch("patch_sha256")
+              assert_equal ["code.rb"], delta.fetch("paths").map { |value| value.fetch("bytes") }
+              assert_empty delta.fetch("binary_paths")
+              assert_raises(AttemptErrors::EvidenceUnavailable) { Thread.new { view.context }.value }
+            end
+          end
+          assert_equal contexts.first, contexts.last
+          assert_raises(AttemptErrors::EvidenceUnavailable) { escaped.context }
+          assert_empty Dir.children(File.join(root, "authority"))
+          assert_equal after.fetch(:head), git(source, "rev-parse", "HEAD").strip
+          error = assert_raises(AttemptErrors::ReceiptRejected) do
+            transfer.with_head_comparison(before: before, after: after, before_base: "f" * 40, after_base: after_base) { |view| view.context }
+          end
+          assert_match(/Head comparison read failed/, error.message)
+          assert_empty Dir.children(File.join(root, "authority"))
+        end
+      end
+
+      def test_head_comparison_deadline_expires_without_partial_context
+        with_fixture do |transfer, root, source, base, _bytes|
+          input = comparison_input(root, source, "candidate")
+          transfer.with_head_comparison(before: input, after: input, before_base: base, after_base: base) do |view|
+            expired = Process.clock_gettime(Process::CLOCK_MONOTONIC) + Authority::CandidateTransfer::DEADLINE + 1
+            transfer.stub(:monotonic, expired) do
+              error = assert_raises(AttemptErrors::EvidenceUnavailable) { view.context }
+              assert_equal "head comparison deadline expired", error.message
+            end
+          end
+          assert_empty Dir.children(File.join(root, "authority"))
+        end
+      end
+
+      def comparison_input(root, source, name)
+        head = git(source, "rev-parse", "HEAD").strip
+        tree = git(source, "rev-parse", "HEAD^{tree}").strip
+        path = File.join(root, "#{name}.bundle")
+        # HEAD alone is deliberate: the later nonancestor bundle cannot lend
+        # the old reviewed objects to a comparison implementation by accident.
+        git(source, "bundle", "create", path, "HEAD")
+        bytes = File.binread(path)
+        {bytes: bytes, size: bytes.bytesize, sha256: Digest::SHA256.hexdigest(bytes), head: head, tree: tree}
+      end
+
+      def test_head_comparison_keeps_binary_and_external_symlink_objects_without_following_or_executing
+        with_fixture do |transfer, root, source, base, _bytes|
+          marker = File.join(root, "unexpected-execution")
+          File.symlink("../../nonexistent-archive", File.join(source, "historic-link"))
+          File.write(File.join(source, ".gitattributes"), "* diff=evil filter=evil\n")
+          File.write(File.join(source, "Gemfile"), "File.write(#{marker.inspect}, 'executed')\n")
+          git(source, "add", ".")
+          git(source, "-c", "user.name=test", "-c", "user.email=test@example.invalid", "commit", "-m", "historical link")
+          before = comparison_input(root, source, "before")
+          File.binwrite(File.join(source, "README"), "new\x00binary\xff".b)
+          File.delete(File.join(source, "historic-link"))
+          File.symlink("/still/nonexistent", File.join(source, "historic-link"))
+          git(source, "add", ".")
+          git(source, "-c", "user.name=test", "-c", "user.email=test@example.invalid", "commit", "-m", "new link and binary")
+          after = comparison_input(root, source, "after")
+          with_env("GIT_EXTERNAL_DIFF" => "touch #{marker}", "GIT_CONFIG_COUNT" => "1",
+            "GIT_CONFIG_KEY_0" => "diff.evil.command", "GIT_CONFIG_VALUE_0" => "touch #{marker}") do
+            transfer.with_head_comparison(before: before, after: after, before_base: base, after_base: base) do |view|
+              context = view.context
+              assert_equal ["README"], context.dig("changes", "candidate_delta", "binary_paths").map { |entry| entry["bytes"] }
+              assert_includes context.dig("changes", "candidate_delta", "patch", "bytes"), "GIT binary patch"
+              entries = context.dig("inventories", "reviewed_head", "entries")
+              link = entries.find { |entry| entry.dig("path", "bytes") == "historic-link" }
+              assert_equal "120000", link.fetch("mode")
+              assert_equal "../../nonexistent-archive", context.dig("objects", link.fetch("oid"), "content", "bytes")
+              current = context.dig("inventories", "candidate_head", "entries").find { |entry| entry.dig("path", "bytes") == "README" }
+              assert_equal "base64", context.dig("objects", current.fetch("oid"), "content", "encoding")
+            end
+          end
+          refute File.exist?(marker)
+          assert_equal "/still/nonexistent", File.readlink(File.join(source, "historic-link"))
+          assert_empty Dir.children(File.join(root, "authority"))
+        end
+      end
+
+      def test_head_comparison_refuses_expanded_content_limit_and_declared_tree_mismatch
+        with_fixture do |transfer, root, source, base, _bytes|
+          before = comparison_input(root, source, "before")
+          File.binwrite(File.join(source, "compressible"), "a" * 4096)
+          git(source, "add", ".")
+          git(source, "-c", "user.name=test", "-c", "user.email=test@example.invalid", "commit", "-m", "large context")
+          after = comparison_input(root, source, "after")
+          bounded = Class.new(Authority::CandidateTransfer)
+          bounded.const_set(:MAX_REVIEW_BYTES, 2048)
+          limited = bounded.new(root: File.join(root, "authority"))
+          error = assert_raises(AttemptErrors::ReceiptRejected) do
+            limited.with_head_comparison(before: before, after: after, before_base: base, after_base: base) { |view| view.context }
+          end
+          assert_match(/oversized/, error.message)
+          assert_raises(AttemptErrors::ReceiptRejected) do
+            transfer.with_head_comparison(before: before.merge(tree: "f" * 40), after: after, before_base: base, after_base: base) { |view| view.context }
+          end
+          assert_empty Dir.children(File.join(root, "authority"))
+        end
+      end
+
+      # Trees are built with hash-object/mktree/commit-tree because the host
+      # filesystem refuses the oversized names these proofs must contain.
+      # mktree is single-level: deep paths need bottom-up nested trees.
+      def blob_oid(source, content = "content\n")
+        output, _, status = Open3.capture3("/usr/bin/git", "-C", source, "hash-object", "-w", "--stdin", stdin_data: content)
+        assert status.success?, status.inspect
+        output.strip
+      end
+
+      def nested_tree(source, entries)
+        output, error, status = Open3.capture3("/usr/bin/git", "-C", source, "mktree",
+          stdin_data: entries.map { |mode, type, sha, name| "#{mode} #{type} #{sha}\t#{name}\n" }.join)
+        assert status.success?, error
+        output.strip
+      end
+
+      def deep_blob_tree(source, segments)
+        sha, type = blob_oid(source), "blob"
+        segments.reverse.each do |component|
+          sha = nested_tree(source, [[type == "blob" ? "100644" : "040000", type, sha, component]])
+          type = "tree"
+        end
+        sha
+      end
+
+      def commit_bounded_tree(source, tree)
+        head, _, status = Open3.capture3("/usr/bin/git", "-C", source,
+          "-c", "user.name=test", "-c", "user.email=test@example.invalid",
+          "commit-tree", tree, "-m", "oversized path shape")
+        assert status.success?
+        git(source, "update-ref", "refs/heads/oversized", head.strip)
+        head.strip
+      end
+
+      def bound_input(root, source, name, tree)
+        head = commit_bounded_tree(source, tree)
+        path = File.join(root, "#{name}.bundle")
+        git(source, "bundle", "create", path, "refs/heads/oversized")
+        bytes = File.binread(path)
+        {bytes: bytes, size: bytes.bytesize, sha256: Digest::SHA256.hexdigest(bytes), head: head, tree: tree}
+      end
+
+      def test_materialization_refuses_unbounded_component_and_total_path_lengths
+        with_fixture do |transfer, root, source, base, _bytes|
+          component = bound_input(root, source, "component",
+            deep_blob_tree(source, ["d" * (Atoms::CandidateLimits::PATH_COMPONENT_BYTES + 1)]))
+          error = assert_raises(AttemptErrors::ReceiptRejected) do
+            transfer.materialize(**component, root: File.join(root, "authority"))
+          end
+          assert_match(/unsafe filesystem entry/, error.message)
+          segments = Array.new((Atoms::CandidateLimits::PATH_BYTES / Atoms::CandidateLimits::PATH_COMPONENT_BYTES) + 2,
+            "c" * Atoms::CandidateLimits::PATH_COMPONENT_BYTES)
+          total = bound_input(root, source, "total", deep_blob_tree(source, segments))
+          error = assert_raises(AttemptErrors::ReceiptRejected) do
+            transfer.materialize(**total, root: File.join(root, "authority"))
+          end
+          assert_match(/Candidate path exceeds bounded length/, error.message)
+          assert_empty Dir.children(File.join(root, "authority"))
+          assert_equal base, git(source, "rev-parse", "HEAD").strip
+        end
+      end
+
+      def test_head_comparison_refuses_unbounded_inventory_paths
+        with_fixture do |transfer, root, source, base, _bytes|
+          before = comparison_input(root, source, "before")
+          segments = Array.new((Atoms::CandidateLimits::PATH_BYTES / Atoms::CandidateLimits::PATH_COMPONENT_BYTES) + 2,
+            "c" * Atoms::CandidateLimits::PATH_COMPONENT_BYTES)
+          after = bound_input(root, source, "total", deep_blob_tree(source, segments))
+          error = assert_raises(AttemptErrors::ReceiptRejected) do
+            transfer.with_head_comparison(before: before, after: after, before_base: base, after_base: base) { |view| view.context }
+          end
+          assert_match(/Complete head comparison path exceeds bounded length/, error.message)
+          assert_empty Dir.children(File.join(root, "authority"))
+        end
+      end
+
+      def test_prepared_files_refuse_unbounded_paths_before_any_prefix_work
+        with_fixture do |transfer, root, source, _base, _bytes|
+          blob = blob_oid(source)
+          long = "d" * (Atoms::CandidateLimits::PATH_COMPONENT_BYTES + 1)
+          tree = nested_tree(source, [["100644", "blob", blob, "manifest.json"],
+            ["100644", "blob", blob, "one"], ["100644", "blob", blob, "two"],
+            ["100644", "blob", blob, long]])
+          head = commit_bounded_tree(source, tree)
+          path = File.join(root, "prepared.bundle")
+          git(source, "bundle", "create", path, "refs/heads/oversized")
+          bytes = File.binread(path)
+          transfer.admit(bytes: bytes, size: bytes.bytesize, sha256: Digest::SHA256.hexdigest(bytes),
+            head: head) do |repository, deadline, result|
+            assert_equal tree, result.fetch("tree")
+            error = assert_raises(AttemptErrors::ReceiptRejected) do
+              transfer.prepared_files(repository: repository, deadline: deadline, head: head)
+            end
+            assert_match(/Prepared tree contains unsafe entry/, error.message)
+          end
           assert_empty Dir.children(File.join(root, "authority"))
         end
       end

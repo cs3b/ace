@@ -1,0 +1,18 @@
+{
+  "source_commit": "521066be3",
+  "command": "bin/ace-test-suite",
+  "exit_code": 0,
+  "packages": 51,
+  "packages_passed": 51,
+  "packages_failed": 0,
+  "duration_seconds": 582.65,
+  "totals": {
+    "total": 12454,
+    "passed": 12412,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 42,
+    "assertions": 43526
+  },
+  "scope": "Current integration source only; does not include in-flight candidate, campaign or release-artifact source, and is not installed two-project acceptance."
+}

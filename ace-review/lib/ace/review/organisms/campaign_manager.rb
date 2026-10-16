@@ -5,6 +5,7 @@ require "time"
 require_relative "../atoms/campaign_projection"
 require_relative "../molecules/campaign_store"
 require_relative "../molecules/campaign_evidence"
+require_relative "campaign_head_assessments"
 
 module Ace
   module Review
@@ -12,16 +13,18 @@ module Ace
       # Campaign history authority. Assignment attempts and approvals remain
       # owned by ace-assign; finish produces only a validated local result.
       class CampaignManager
+        include CampaignHeadAssessments
         Contract = Atoms::CampaignContract
         Policy = Atoms::CampaignPolicy
         attr_reader :store
 
-        def initialize(repo_root: Dir.pwd, store: nil, revisions: nil, check_evidence: nil, review_evidence: nil, approval_evidence: nil, artifact_paths: {}, candidate_reader: nil)
+        def initialize(repo_root: Dir.pwd, store: nil, revisions: nil, check_evidence: nil, review_evidence: nil, approval_evidence: nil, artifact_paths: {}, candidate_reader: nil, head_assessment_evidence: nil, review_independence: nil)
           @repo_root = File.realpath(repo_root)
           raise ArgumentError, "canonical candidate cannot use a revision override" if candidate_reader && revisions
           @candidate_reader = candidate_reader
+          @head_assessment_evidence = head_assessment_evidence
           @store = store || Molecules::CampaignStore.new(root: File.join(@repo_root, ".ace-local/review/campaigns"))
-          @evidence = Molecules::CampaignEvidence.new(repo_root: @repo_root, check_evidence: check_evidence, review_evidence: review_evidence, approval_evidence: approval_evidence, artifact_paths: artifact_paths)
+          @evidence = Molecules::CampaignEvidence.new(repo_root: @repo_root, check_evidence: check_evidence, review_evidence: review_evidence, approval_evidence: approval_evidence, artifact_paths: artifact_paths, review_independence: review_independence)
           @live_git = revisions.nil?
           @revisions = revisions || method(:git_revision)
         end
@@ -70,7 +73,7 @@ module Ace
               "execution_attempts" => [], "created_at" => Time.now.utc.iso8601(6),
               "predecessor" => previous&.dig("id"), "successor_reason" => reason,
               "inherited_findings" => inherited, "assessments" => [], "attempts" => [], "rounds" => [],
-              "head_transitions" => []}
+              "head_transitions" => [], "head_assessments" => []}
             unless dry_run
               if previous
                 # Publish supersession first: an interrupted successor write
@@ -312,7 +315,7 @@ module Ace
           end
         end
 
-        ACCEPTED_SNAPSHOT_FIELDS = %w[accepted base campaign_id contract_identity dry_run effective_policy head prefix producer result_identity reviewer schema subject].freeze
+        ACCEPTED_SNAPSHOT_FIELDS = %w[accepted base campaign_id contract_identity dry_run effective_policy head head_assessment_digest prefix producer result_identity reviewed_base reviewed_head reviewer schema subject].freeze
 
         # Bounded serialization of the same accepted record, not new authority.
         def accepted_result_snapshot(id)
@@ -326,14 +329,17 @@ module Ace
 
         private def accepted_snapshot(record, current)
           approval = current.fetch("rounds").last.fetch("approval")
-          immutable_projection({"schema" => "ace.review.accepted-result/v1", "campaign_id" => record.fetch("id"),
+          immutable_projection({"schema" => "ace.review.accepted-result/v2", "campaign_id" => record.fetch("id"),
             "accepted" => true, "dry_run" => false, "subject" => current.fetch("subject"),
             "contract_identity" => current.fetch("contract_identity"), "effective_policy" => current.fetch("effective_policy"),
             "head" => current.fetch("evidence").fetch("current_head"), "base" => current.fetch("evidence").fetch("current_base"),
+            "reviewed_head" => approval.fetch("head"), "reviewed_base" => approval.fetch("base"),
+            "head_assessment_digest" => Contract.digest(record.fetch("head_assessments")),
             "producer" => approval.fetch("producer"), "reviewer" => approval.fetch("reviewer"),
             "result_identity" => current.fetch("result_identity"), "prefix" => {
               "attempts" => record.fetch("attempts").length, "rounds" => record.fetch("rounds").length,
               "assessments" => record.fetch("assessments").length,
+              "head_assessments" => record.fetch("head_assessments").length,
               "phases" => record.fetch("phases").length, "execution_attempts" => record.fetch("execution_attempts").length}})
         end
 
@@ -342,6 +348,9 @@ module Ace
         def with_verified_result!(result:, subject:, contract_identity:, policy:, head:, base:, producer:, reviewer:, consumer_profiles: nil)
           raise ArgumentError, "verified campaign result requires a block" unless block_given?
           Contract.object!(result, "campaign result")
+          if result.key?("schema") && result["schema"] != "ace.review.accepted-result/v2"
+            raise Contract::Invalid, "unsupported accepted campaign snapshot schema"
+          end
           subject = Contract.subject!(subject)
           policy = Contract.policy!(policy)
           id = Contract.id!(result["campaign_id"], "campaign ID")
@@ -350,10 +359,10 @@ module Ace
             verify_consumer_policy!(record, consumer_profiles) if consumer_profiles
             current = projection(record)
             approval = current["rounds"].last&.fetch("approval", nil)
-            compact = result["schema"] == "ace.review.accepted-result/v1"
+            compact = result["schema"] == "ace.review.accepted-result/v2"
             if compact
               prefix = accepted_snapshot_prefix!(record, result)
-              unless prefix.values_at("attempts", "rounds", "assessments", "phases", "execution_attempts").map(&:length) == record.values_at("attempts", "rounds", "assessments", "phases", "execution_attempts").map(&:length)
+              unless SNAPSHOT_PREFIX_FIELDS.all? { |field| prefix.fetch(field).size == record.fetch(field).size }
                 raise Contract::Invalid, "campaign result prefix is no longer current"
               end
             end
@@ -392,33 +401,30 @@ module Ace
               raise Contract::Invalid, "retained campaign result differs from original store evidence"
             end
             approval = rounds.last.fetch("approval")
-            unless approval && approval.values_at("producer", "reviewer", "head") == [producer, reviewer, head]
+            unless approval && approval.values_at("producer", "reviewer", "head", "base") ==
+                [producer, reviewer, result.fetch("reviewed_head"), result.fetch("reviewed_base")]
               raise Contract::Invalid, "retained campaign approval actors differ"
             end
-            attempts.each do |attempt|
-              attempt.fetch("sessions").select { |session| session["completed"] }.each do |session|
-                @evidence.verify_session_authority(session, head: attempt.fetch("binding").fetch("head"), historical: true)
-              end
-              @evidence.verify_approval_authority(attempt.fetch("approval"), historical: true) if attempt["approval"]
-            end
+            verify_retained_acceptance!(snapshot, result)
             true
           end
         end
 
         private def accepted_snapshot_prefix!(record, result)
           prefix = result["prefix"]
-          unless result.keys.sort == ACCEPTED_SNAPSHOT_FIELDS && result["schema"] == "ace.review.accepted-result/v1" &&
-              prefix.is_a?(Hash) && prefix.keys.sort == %w[assessments attempts execution_attempts phases rounds] &&
+          unless result.keys.sort == ACCEPTED_SNAPSHOT_FIELDS && result["schema"] == "ace.review.accepted-result/v2" &&
+              prefix.is_a?(Hash) && prefix.keys.sort == SNAPSHOT_PREFIX_FIELDS &&
               prefix.all? { |key, count| count.is_a?(Integer) && count.between?(0, record.fetch(key).length) } &&
               prefix.fetch("rounds").positive? && result["accepted"] == true && result["dry_run"] == false &&
               result.values_at("campaign_id", "subject", "contract_identity", "effective_policy") ==
                 record.values_at("id", "subject", "contract_identity", "policy") &&
-              %w[head base].all? { |key| result[key].is_a?(String) && result[key].match?(/\A[0-9a-f]{40}\z/) }
+              %w[head base reviewed_head reviewed_base].all? { |key| result[key].is_a?(String) && result[key].match?(/\A[0-9a-f]{40}\z/) }
             raise Contract::Invalid, "accepted campaign snapshot selectors differ"
           end
           snapshot = record.merge(prefix.to_h { |key, count| [key, record.fetch(key).first(count)] }, "successor" => nil)
           approval = snapshot.fetch("rounds").last.fetch("approval")
-          unless approval && approval.values_at("producer", "reviewer", "head") == result.values_at("producer", "reviewer", "head") &&
+          unless approval && approval.values_at("producer", "reviewer", "head", "base") == result.values_at("producer", "reviewer", "reviewed_head", "reviewed_base") &&
+              Contract.digest(snapshot.fetch("head_assessments")) == result["head_assessment_digest"] &&
               result_identity_for(snapshot, result.fetch("head"), result.fetch("base")) == result["result_identity"]
             raise Contract::Invalid, "accepted campaign snapshot identity differs from retained prefix"
           end
@@ -431,6 +437,7 @@ module Ace
           Contract.digest({"campaign_id" => record["id"], "contract_identity" => record["contract_identity"],
             "policy" => record["policy"], "profile" => record["profile"], "bounds" => record["bounds"],
             "phases" => record["phases"], "execution_attempts" => record["execution_attempts"], "attempts" => record["attempts"], "assessments" => record["assessments"],
+            "head_assessments" => record.fetch("head_assessments"),
             "current_head" => head, "current_base" => base, "successor" => record["successor"]})
         end
 
@@ -710,7 +717,15 @@ module Ace
           later_blocker_update = later_attempts.flat_map { |attempt| attempt["assessments"] }.any? do |finding|
             blocker_ids.include?(finding["id"])
           end
-          current_evidence = !!(round && available && head && base && source_head == head && source_base == base &&
+          accepted_head = source_head == head && source_base == base
+          if !accepted_head && round && available && head && base
+            begin
+              accepted_head = verify_head_carry!(record, head: head, base: base, historical: false)
+            rescue Contract::Invalid => e
+              error = e.message
+            end
+          end
+          current_evidence = !!(round && available && head && base && accepted_head &&
             clean_candidate? && !later_blocker_update)
           blockers = result["open_findings"].select { |f| %w[critical high medium].include?(f["priority"]) }
           reasons = []

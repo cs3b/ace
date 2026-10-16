@@ -44,6 +44,19 @@ module Ace
           observe_identity(peer: peer, pane: pane, deadline: deadline, with_cwd: false).first
         end
 
+        def supervisor_ended!(binding:, deadline: default_deadline)
+          @config.verify_selection!
+          process = binding.fetch("process_identity")
+          @config.selected_principal!(process.fetch("uid"))
+          observation = Ace::Herdr::Molecules::BoundedObservation.new(deadline: deadline, binary: @config.runtime_binary)
+          result = Ace::Runtime::Molecules::ProcessIdentity.new(executor: observation).generation_status(process)
+          unless result.fetch("liveness") == "ended"
+            raise Ace::Assign::AttemptErrors::EvidenceUnavailable, "original supervisor process generation is live or unknown"
+          end
+          @config.verify_selection!
+          result
+        end
+
         # The caller's claimed head is only a comparison. The accepted start
         # uses the observed worker's checkout and process, never daemon cwd.
         def execution!(peer:, pane:, head:, deadline: default_deadline)

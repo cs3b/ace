@@ -6,16 +6,26 @@ status is not an autonomous delivery receipt.
 
 | Requirement | Outcome owner | Existing implementation / prior owner | Publication | Installation | Acceptance |
 |---|---|---|---|---|---|
-| Exact authorized merge; fresh PR2 decision | ei9.0 | ace-lab ordinary request/receiver; ace-assign journal; ace-git-forgejo; xz9.4/.5 ordinary clauses | lab0.7.0, assign0.69.0, forgejo0.7.0 published; repair pending | Initial cut installed in immutable graphs; coordinator Bash consumer adopted; ordinary receiver pending | Two real sequential PR merges, revocation, head race, uncertain/restart pending |
-| Context, capabilities, start rules | ei9.1 | ace-overseer; qk0 and qkb.1 | New effective source assets await release | Published baseline adopted by canonical coordinator; new role/guide bindings pending | Complete installed role/context/path/digest receipt pending |
-| Local objective queue, canonical attempt adoption | ei9.2 | ace-task root selector; ace-assign; qk0/qkb.1 | Exact --root create/show/update implemented and tested; release pending | No overseer queue verified | Restart/lost answer/duplicate wake without redispatch pending |
-| Dispatch start and correct result attribution | ei9.3 | ace-overseer/Herdr/Assign; qk0/qkb.1 | Existing APIs, join verification pending | Start receipt not yet verified | No-start/wrong callback refused; producer result adoption pending |
-| Native continuation and serial integration | ei9.4 | Pi ace-wake loop/watch; qk0/qkb.1 | Existing native extension; new workflow asset awaits release | Canonical same-session restart preserves exactly two native duties | Native timer/watch/restore proof passed; actual 10-minute audit/hourly cleanup and two merges pending installed workflow |
-| Project command, release, sync, all consumers | ei9.5 | ace-lab run (iy6 missing), existing publisher/Assign/runtime/HITL; qkb.1 | Four previous gems published manually; new cut pending | Published baseline installed in service/coordinator graphs and adopted in canonical coordinator; source delta not installed; legacy pins separate | Partial/unknown publish, wrong OTP, old bundle, complete consumer installation receipts pending |
+| Exact authorized merge; fresh PR2 decision | ei9.0 | ace-lab ordinary request/receiver; ace-assign journal; ace-git-forgejo; xz9.4/.5 ordinary clauses | lab0.8.0, assign0.70.0, forgejo0.7.0 published | Public-registry exact graphs selected; real ordinary owner active UID966 with three endpoints | Two real sequential PR merges, revocation, head race, uncertain/restart pending |
+| Context, capabilities, start rules | ei9.1 | ace-overseer; qk0 and qkb.1 | overseer0.22.0 / assign0.70.0 assets published | New coordinator graph selected; full effective context receipt pending | Complete installed role/context/path/digest receipt pending |
+| Local objective queue, canonical attempt adoption | ei9.2 | ace-task root selector; ace-assign; qk0/qkb.1 | task0.40.0 published with exact --root create/show/update | No overseer queue verified | Restart/lost answer/duplicate wake without redispatch pending |
+| Dispatch start and correct result attribution | ei9.3 | ace-overseer/Herdr/Assign; qk0/qkb.1 | Ordinary canonical execution source reviewed; release pending | Ordinary dispatch/result source and generation-conflict repair reviewed; not installed | No-start/wrong callback and restart adoption still require installed workflow |
+| Native continuation and serial integration | ei9.4 | Pi ace-wake loop/watch; qk0/qkb.1 | Existing native extension and assign0.70.0 workflow assets published | Canonical same-session restart preserves exactly two native duties | Native timer/watch/restore proof passed; actual 10-minute audit/hourly cleanup and two merges pending installed workflow |
+| Project command, release, sync, all consumers | ei9.5 | ace-lab run nonsecret source slice (iy6 secrets/publication still open), existing publisher/Assign/runtime/HITL; qkb.1 | Eight main-built gems published manually, exact archive SHA verified | service45/coordinator59 installed and selected; canonical shell smoke passed; legacy pins separate | TS-MONO-001 PASS4/4 for50 exact versions; autonomous publishing, failure scenarios and remaining consumers pending |
 | Preserve and close accepted work | ei9.6 | Herdr/worktree owners; ordinary qk0 | Existing preservation mechanisms | Exact installed path pending | Commits/files/results survive cleanup; correct pane closes pending |
 | Installed two-project proof | ei9.7 | TS-DELIVERY-* (qkc), lq1 receipts; shared result with lab-config gad.2 | No new framework | Both deployments pending | Two workers → PRs → review → serial merges → one release → install/sync/cleanup; cold isolated second project pending |
-| Accepted-head review and bounded campaigns | ei9.8 | ace-review ig3/ig4/qm6; Assign presets; configure-project | review0.60.2 published; ig3 source repair passes; next cut pending | Source presets aligned; installed asset refresh pending | Exact historical evidence and bounded rounds; moved-head risk/delta review pending |
-| Shared Hermes and delegated decisions | ei9.9 | nh0 implementation; qjz scoped policy; Hermes/HITL mTLS | Existing hitl0.15/hermes0.4 | One poller/all groups/correlation not verified | Project isolation, exact reply, only predelegated 16-hour timeout pending |
+| Accepted-head review and bounded campaigns | ei9.8 | ace-review ig3/ig4/qm6; Assign presets; configure-project | review0.60.3 / assign0.70.0 published with ig3 repair and aligned presets | Exact new runtime graph installed; behavioral acceptance pending | Exact historical evidence and bounded rounds; moved-head risk/delta review pending |
+| Shared Hermes and delegated decisions | ei9.9 | nh0 implementation; qjz scoped policy; Hermes/HITL mTLS | hitl0.16.0 published; operator-question and Hermes runtime/v2 source reviewed, unpublished | Ordinary HITL active and coordinator opt-in selected; shared mTLS/poller binding pending | Project isolation, exact reply, only predelegated 16-hour timeout pending |
+
+
+## Current installed checkpoint
+
+Main2e9005f39 publication and actual Lab adoption supersede the historical
+baselines below. Exact evidence is retained in evidence/published-main-*.json
+and evidence/installed-ordinary-owner.json. Owner PID554643, actual UID1000
+read/ping and UID1001 denial checks passed; matching20-commit history and legacy
+processes preserved. No real new assignment, merge or autonomous release is yet
+claimed. Full two-project acceptance remains open.
 
 ## Adopted obligations and boundaries
 
@@ -28,7 +38,7 @@ status is not an autonomous delivery receipt.
 - Only delivery-used transport issues from 3zi (including timeout process cleanup) join the relevant delivery path. Unrelated transport work remains there.
 - cm3 (/goal), exploratory ig5, full protected boot/network/runtime are outside this program.
 
-## Baseline evidence
+## Historical baseline evidence (before current installed checkpoint)
 
 Source host and Lab checkout: 32f1dd59daf8409804914d1800547e0748869d31.
 RubyGems publication confirmed 2026-10-16 (never republish these versions):
@@ -51,14 +61,14 @@ until their consumers have an accepted replacement.
 Entries below distinguish implemented source, installed prerequisites and final
 acceptance. No child or parent has completed its installed acceptance.
 
-### Publication from main after rebase
+### Pre-publication checkpoint after rebase (historical)
 
 The Captain requested rebasing before publication on 2026-10-16. All 30 completed
 source commits were rebased onto `f653537283410935204fc210d13ce176c66abbb7`;
 the only conflict was the root changelog, preserving both releases. The ongoing
 Hermes per-project routing implementation is retained separately and is not in
 this release. [Release reconciliation](release-reconciliation.md) records the
-50-package registry, payload and dependency audit and the eight pending versions.
+50-package registry, payload and dependency audit and subsequent publication of all eight versions.
 
 `initial-runtime-release.json` describes the historical **unpublished** cut
 `5768ec3ddbb5cb732f67c8acebb49ea8d755203b`, not the next publication. Its archives
@@ -379,3 +389,162 @@ Baseline reports in the original checkout:
 
 Protected validation was preserved. These older fixture repairs do not replace
 the installed two-project delivery acceptance still required by this program.
+
+
+### Reviewed native-session and shared-routing release assembly
+
+Candidate `33bf2efe56cd5d71d39417fc6516e4da509e9afe` combines independently
+approved native Pi session normalization and Hermes channels/v2 routing. The
+directory-fsync durability correction passed a second independent review.
+Herdr0.6.1, HITL0.16.1, contract0.2.2 and Hermes0.5.0 metadata is prepared; these
+versions have not been published or installed. All 50 gemspecs and 246 runtime
+dependency edges validated, including the Hermes minimum HITL0.16.1.
+
+The candidate default suite passed 51 packages, 12,358 tests and 43,216 assertions
+with 42 skips and no failures in 713.54 seconds. Per-package summaries and the
+independent assembly verdict are retained in `evidence/routing-native-release/`.
+This verifies source composition, not the still-open all-group host handoff,
+operator-question adoption, canonical execution joins or two-project delivery.
+
+
+### Ordinary review authority gap and sequencing correction
+
+Direct source inspection confirmed that OrdinaryMergeReceiver checks the closed
+review reference shape, head joins and a reviewer-name inequality, then admits the
+separately authorized request digest. AttemptCoordinator#admit_fixed_merge_request
+does not call the canonical `require_review_evidence` used by its generic service
+claim path. The new ordinary result API also correctly refuses review/campaign
+self-certification. Therefore existing reference metadata is not an independent
+accepted-review record, and source shape tests cannot close installed .0/.8.
+
+Phase the real ordinary candidate/export/reviewer-assignment/accepted-review
+ingress before the first two real merges, and wire merge consumers to its exact
+canonical records/digests/checks. Reuse existing validators with authentic ordinary
+origins; no forged protected origin, journal edit or worker-written approval.
+Publication then reuses this same acceptance core. Root has admitted no new
+production merge or assignment while this prerequisite remains open.
+
+### Command cleanup and source review checkpoint
+
+The nonsecret project-command slice is implemented and independently reviewed;
+secret and taskless publication capability remains open. Private Linux R5
+acceptance executed the real CLI → ordinary authority → labd → short-lived helper
+boundary: seven kernel scenarios (64 assertions) and40 domain checks pass. The
+preceding R4 candidate failed on an empty procfs inventory; both its failure and
+the corrected run are retained in child .5 evidence. Production ownerPID554643
+was unchanged. These fixtures do not certify production adoption or two-project
+delivery, and the cleanup delta still needs its own independent verdict.
+
+Actual configured Pi reports for the original command slice, ordinary generation
+repair, and Hermes delta are retained in their outcome owners' evidence folders.
+The eight actionable PR375 findings are resolved in source; the eager-ingress
+folder suggestion remains an explicit design skip. No new version is published
+and draftPR375 is not merged by these records.
+
+### Communication preparation platform blocker
+
+All-group domain preparation remains uncommitted and unactivated. Automatic
+platform control rejected a proposed cross-account filesystem check and then
+also rejected a defensive-only layout change. Neither action is being retried
+or rerouted. Child .9 evidence/preparation-blocker.json records the exact scope
+and preserved worktree. The proposed private/public directory arrangement is
+not installed or accepted; no reproduced exploit is claimed. Ordinary execution,
+review and test-materialization work continues separately.
+
+Read-only legacy content inspection found18 informational records requiring no
+decision and one historical broker-restart question whose stated condition is
+no longer current. None was cancelled or treated as approval. The existing
+31-record history and19 correlations remain unchanged.
+
+### Maintained test-runtime profile preparation — external block
+
+A separately assigned local installer/dependency profile task under ei9.5 was
+rejected by automatic platform content review before any plan, changes or tests
+were returned. This assignment explicitly excluded the already blocked
+communication work, root actions, deployment and publication. It is also stopped;
+no retry or reassignment through another tool is authorized by this record.
+The exact action and impact are retained in
+`5-deliver-scoped-releases-sync-and/evidence/test-runtime-preparation-blocker.json`.
+Existing R6 static kernel evidence remains valid for its frozen source; it does
+not establish a maintained installed runtime for dynamic candidate tests.
+
+### Combined suite and ordinary transport fixture join
+
+The full default suite at ea6c62c63 completed with 50 packages passing and
+ace-lab failing two positive real-socket transport scenarios: their fixture
+coordinator omitted the newly mandatory canonical merge evidence owner. All
+51 original summaries and the Lab failure report remain in `evidence/suite-ea6-red/`.
+The transport fixture now explicitly supplies the same controlled outside-boundary
+evidence owner as sibling receiver tests. It also proves revoked evidence refuses
+before repository mutation. Focused result: 6 tests/46 assertions PASS, retained
+in `evidence/ordinary-transport-fixture-join/`. This is not native candidate
+acceptance or a replacement for the separate real canonical owner coverage.
+A full current suite after correction remains required.
+
+### Current integrated source verification
+
+Exact integration source `521066be3` passed `bin/ace-test-suite`: 51 packages,
+12,412 passed tests, 43,526 assertions, zero failures/errors and 42 skips
+(582.65 seconds). Raw package summaries and scope are retained in
+`evidence/suite-521-green/`. This closes the prior transport-fixture suite
+failures without relaxing canonical merge proof. Actual configured Pi
+`zai/glm-5.3`, high, ro approved the fixture join; original report and low-comment
+dispositions are retained in `evidence/ordinary-transport-fixture-review/`.
+This receipt does not cover subsequent candidate materialization, campaign or
+release-artifact source increments and does not establish installed two-project
+acceptance. Existing external blocks remain open.
+
+### Accepted-head campaign foundation integrated
+
+Source foundation13a54855d plus follow-up6da63fdf9 is integrated at545ffb68e.
+The existing CampaignManager/Store now retain a source-owned assessment chain and
+v2 accepted results distinguish reviewed from accepted heads. Candidate comparison
+reads bounded bare Git objects from both verified bundles, including historical
+alias bytes without resolving them. Configured Pi approved the foundation and
+follow-up; exact reports and executed focused results are retained in child .8.
+Ordinary native campaign association, genuine collection/result callbacks and
+substantial/uncertain independent delta review remain pending. This is beyond the
+521 suite freeze and requires the eventual combined verification; it does not
+establish installed acceptance or completion of .8.
+
+### Candidate batch limits, path bounds and measured deadline
+
+Uncommitted-at-handoff WIP completed at integration `214dfbb81`+WIP: the real
+82,809,675-byte candidate did not fit the old 64MiB ceilings, so candidate and
+assignment-snapshot wire/expansion limits moved to closed 128MiB budgets
+(`Atoms::CandidateLimits`), a 20,000-object inventory bound and a shared fixed
+`cat-file --batch` codec (`Atoms::GitBlobBatch`, reused by the canonical journal)
+replaced one Git process per blob. The RED `assign/7993070e` "head comparison
+deadline expired" is explained by measurement, not weakened: two full admits plus
+the complete comparison legitimately need 23–27s on a loaded host (probe receipts
+and a 27.01s passing run), so `DEADLINE` moved 30→60 as an explicitly measured
+decision; the RED receipt is retained. Hostile tree paths are now bounded to
+4096/255 bytes total/component before inventory, delta or filesystem prefix work
+in materialize, prepared_files, PreparedWork and the comparison inventory, with
+mktree-built negative proofs (macOS git refuses deep names, so fixtures are
+nested trees). `CampaignContract::MAX_HEAD_CONTEXT_BYTES` (Review) is now an
+Assign dependency; the release must raise the `~> 0.60.3` floor — no installed
+fallback. Executed focused receipts (candidate_transfer 21/416 incl. three new
+negative tests, real-project readiness 1/16 at 52.65s, codec/atoms/journal/
+prepared groups, Review head assessments) are listed in
+`evidence/candidate-batch-limits/`. Not established: independent reviewer verdict
+for this delta, full default suite rerun, canonical campaign execution,
+publication or installed acceptance.
+
+Independent configured review then ran `code-valid` on `diff:214dfbb81..HEAD`
+(session `.ace-local/review/candidate-batch-limits/`): security assessment closed,
+no high/medium vulnerabilities. Follow-up commit `a1be930b5` added the two
+requested negative proofs (oversized-single-blob batching; blob-size selector
+rejects >20k/non-hex oid sets before any Git invocation) and corrected the
+documented 20,000-object bound semantics (per inventory and across the
+comparison's unique-blob union). The load-time `MAX_HEAD_CONTEXT_BYTES`
+dependency finding is sequenced as a hard release-time action recorded in the
+evidence README: the coordinated release must bump ace-review (ships the
+constant), raise the ace-assign floor, raise ace-overseer's ace-review pin and
+regenerate the lock together — an in-branch partial bump was attempted and
+reverted because Bundler enforces cross-gem constraints and the lock is
+release-owned. Readiness wall-clock asserts were deliberately kept: they assert
+the production deadline contract itself. The full default suite then ran on the
+final state and passed 51 packages, 12,429 tests, 43,641 assertions, 42 skips,
+0 failures (755.87s; assign `e18c4e86`, review `fd8342dc`, lab `4b382db4`),
+superseding the 521 freeze for this delta.

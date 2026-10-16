@@ -1,0 +1,73 @@
+{
+  "schema": "ace.task.review-fix-evidence/v1",
+  "reviewed_head": "289411820f77d5b79006700c808a5de661eb076c",
+  "finding": "P1: ingress final filename was not directory-fsynced before receipt metadata and Telegram offset",
+  "review_sha256": "08d86228b23e4b6ca3771f53e7b04400dc7777e683fcfa5cca34663812489b35",
+  "reviewer_check_sha256": "aeeb367c8e01a018a4df8c4e63c9fd7cb4b8b5981c5f5208b6885647bd2537ba",
+  "fix": "Owning HermesAtomicWriter fsyncs chmodded file before rename and directory after rename; existing ingress recovery reuses directory barrier before digest metadata. Failed barriers retain first body, omit body digest and retain offset0.",
+  "verification": {
+    "focused": {
+      "report": "/Users/mc/Ps/ace/.ace-wt/ei9-shared-hermes/.ace-local/test/reports/hitl-hermes/680509da-458f-496a-8857-394addb43865",
+      "summary": {
+        "execution_id": "680509da-458f-496a-8857-394addb43865",
+        "assertions": 121,
+        "passed": 21,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "total": 21,
+        "pass_rate": 100.0,
+        "duration": 0.2198,
+        "success": true,
+        "timestamp": "2026-10-16T19:36:15+01:00"
+      },
+      "summary_sha256": "d9d506c8ef728174fc2697a42828c2fbf9c222826a73902ee6164ffe78020196"
+    },
+    "original_reviewer_check": {
+      "report": "/Users/mc/Ps/ace/.ace-wt/ei9-shared-hermes/.ace-local/test/reports/hitl-hermes/32865f23-10c6-4b3c-b7d5-0d06a546e6c7",
+      "summary": {
+        "execution_id": "32865f23-10c6-4b3c-b7d5-0d06a546e6c7",
+        "assertions": 190,
+        "passed": 31,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "total": 31,
+        "pass_rate": 100.0,
+        "duration": 0.351003,
+        "success": true,
+        "timestamp": "2026-10-16T19:36:28+01:00"
+      },
+      "summary_sha256": "839a2df84998b4043042d804a80b23a14c5140778d7133e5475ddf711236b82a"
+    },
+    "full_hermes": {
+      "report": "/Users/mc/Ps/ace/.ace-wt/ei9-shared-hermes/.ace-local/test/reports/hitl-hermes/ce2cc756-d8fd-45d2-8867-38abc81e1948",
+      "summary": {
+        "execution_id": "ce2cc756-d8fd-45d2-8867-38abc81e1948",
+        "assertions": 1061,
+        "passed": 184,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "total": 184,
+        "pass_rate": 100.0,
+        "duration": 28.21199,
+        "success": true,
+        "timestamp": "2026-10-16T19:36:57+01:00"
+      },
+      "summary_sha256": "c5e5c392ea434700e1eb31785f6c4e12b5f6ca348f624da4f97cf3697585ce35"
+    }
+  },
+  "source_sha256": {
+    "ace-hitl-hermes/lib/ace/hitl/hermes/molecules/hermes_atomic_writer.rb": "512fbcaf63d7930ba9deb2a673d1b75921050087fd0e03942cbafad15e431f02",
+    "ace-hitl-hermes/lib/ace/hitl/hermes/transport/relay.rb": "689776087f62be95daeac5678252c479e7d6a62abcc4c55e64f50efdc1d25607",
+    "ace-hitl-hermes/test/fast/molecules/hermes_atomic_writer_test.rb": "5db292eb28c6616c78c67443b3e38e832e7328f9859146c2ca7fb91ac8abab86",
+    "ace-hitl-hermes/test/fast/transport/multi_project_relay_test.rb": "3720285c706b5265c02384b3273671a525005938feb30fa2defdc3d579b89d00",
+    "ace-hitl-hermes/test/support/fsync_probe.rb": "25dc746353e19b59e592085221a20b3b70844956ed4ed02812ff749488bbea4c"
+  },
+  "limits": [
+    "Fsync ordering and injected failures are exercised on real filesystem calls; no power-loss simulation.",
+    "No version bump, deployment, publication or new independent approval.",
+    "HITL source unchanged; previous 28-test proposal feature acceptance was not repeated."
+  ]
+}

@@ -1,0 +1,271 @@
+{
+  "source_commit": "33bf2efe56cd5d71d39417fc6516e4da509e9afe",
+  "command": "bin/ace-test-suite --no-color",
+  "exit_code": 0,
+  "duration_seconds": 713.54,
+  "packages_passed": 51,
+  "packages_failed": 0,
+  "tests_passed": 12358,
+  "tests_failed": 0,
+  "skipped": 42,
+  "assertions_passed": 43216,
+  "reports": [
+    {
+      "package": "assign",
+      "report_id": "f21fb141-894f-4312-a267-d42bef94832d",
+      "sha256": "f39d6b117e9def6d5b685ffe7ec692bfc66309fb8d795725f293f3fcf1bd85e6"
+    },
+    {
+      "package": "b36ts",
+      "report_id": "4424d6cc-4d90-4cd4-b855-2c42d57c9265",
+      "sha256": "59127ccc81ee68d78edf71e8ef6605ef0121a65b9e3c62fec5571dcf9320f9aa"
+    },
+    {
+      "package": "bundle",
+      "report_id": "e663a5dd-ef16-4b41-9f1b-64847fd792f8",
+      "sha256": "6f8a171899069c844c556667fed98f86b18037720222fa1c14e97db145724720"
+    },
+    {
+      "package": "compressor",
+      "report_id": "d0d4e7db-e32a-44e3-8ad4-30723e42b4e8",
+      "sha256": "84c834a59b576ca0dc25c48ad20597f7737450354df58895cfa938d9cd27e6fa"
+    },
+    {
+      "package": "demo",
+      "report_id": "5feb7c25-02f6-4e92-a8db-901652ca2491",
+      "sha256": "7777f09998ce1e95379e4cc197a861aafb2c8271c8eb48c49b3cf4e4e8eba8c1"
+    },
+    {
+      "package": "design",
+      "report_id": "3debbda8-3ada-47b9-b795-a267a37c248b",
+      "sha256": "b35394d041d6966260be8c128b8fa2ff47f76e8e6151e1f379e1bfd5c8849e7b"
+    },
+    {
+      "package": "docs",
+      "report_id": "0193b659-fe90-455d-b4c8-2fd1e4016f64",
+      "sha256": "cb14cebc23f88904f63d0533b13d1e984011fe836ef4871b038a32eb9e0fd1d2"
+    },
+    {
+      "package": "git",
+      "report_id": "67a87871-fad1-4dfa-aaee-ecfb25320334",
+      "sha256": "b51c39b71f86aa2842c40209faa2b236f6941409e0cfc36ec29aff7c39dfc99f"
+    },
+    {
+      "package": "git-commit",
+      "report_id": "fba06fd9-956d-4ddf-a54b-19c9939704cf",
+      "sha256": "8b4bbdedb546e4307c1ba69fe400bf830338e65c488a318fddbea61597f693ce"
+    },
+    {
+      "package": "git-forgejo",
+      "report_id": "97262d96-caf8-41e4-8e8e-264b5b4c5581",
+      "sha256": "d3690f69037a7b0451139431fbe58c28cc2e8184427fd67d7849afd8a3e754bb"
+    },
+    {
+      "package": "git-github",
+      "report_id": "3fdb0c00-aeae-4abe-85d8-266941a08388",
+      "sha256": "246157c512ca3c2709ca1157c711e45cddacafdf3deb451989e294f246e5727e"
+    },
+    {
+      "package": "git-secrets",
+      "report_id": "d3cb7f77-367e-44e4-a6c9-942fc35ba6b3",
+      "sha256": "bb7aae35f6afc1a064f676fa433faf47ef31cfa2d9608ab6a8f2bede65c63205"
+    },
+    {
+      "package": "git-worktree",
+      "report_id": "c8d6a697-f1f8-4981-bfc9-43cf7332150c",
+      "sha256": "fa8464c44bffae0331ac2c1f9fe21eeba2029c4466c1abb04e224b7af6f13d57"
+    },
+    {
+      "package": "handbook",
+      "report_id": "d60f7331-1947-4313-9eaa-8be837316e3e",
+      "sha256": "d018442278891ed502b63317e3b95c3e1349e88760d0a4ab04226c5b00465ddb"
+    },
+    {
+      "package": "handbook-integration-claude",
+      "report_id": "be179e0a-d34c-42c2-ac49-b18390c7a0fd",
+      "sha256": "3f645e929c46ec5acf34503f5b3fca6695d8d8870642be6afda290e71bdb4e6c"
+    },
+    {
+      "package": "handbook-integration-codex",
+      "report_id": "1bee49c4-ce9d-420c-8102-c470fbaed5e3",
+      "sha256": "f1fd2f30830ee48f4e422e6680a022e499a85f04e5dd280fce47f37dfa7a57f6"
+    },
+    {
+      "package": "handbook-integration-gemini",
+      "report_id": "db7961ee-285d-4bae-9676-74cb943adcdd",
+      "sha256": "ac9e65db0cb03a44c4911534422cf9c0380ec4d38c1a2f8c23f2b413dc761000"
+    },
+    {
+      "package": "handbook-integration-opencode",
+      "report_id": "c94e7aa7-3b42-4bc1-82e9-3e17da223b95",
+      "sha256": "9a35b01ff6292e688567629fa10479550a03035ecd70aefa5bbaea1edf7222c5"
+    },
+    {
+      "package": "handbook-integration-pi",
+      "report_id": "4343cd44-b4b5-47d6-ac5b-b9dbaa1ef8c6",
+      "sha256": "6cb43871e399fdac9711d39c81afd24e780c5ff558d1faeea1dc5fe08ba8cf9c"
+    },
+    {
+      "package": "herdr",
+      "report_id": "1844fe5b-d24a-48bf-8bec-5973eb804df6",
+      "sha256": "72b8cee060df464ee52584821bf8b06e0d2ec45f007831606b1c50c4bf19d841"
+    },
+    {
+      "package": "hitl",
+      "report_id": "eafcbdd0-76df-4fdb-a76c-109e27983d48",
+      "sha256": "6f012ddcb42354ac6f1f1b64835a15a99c7c963a3086ff68ff586a60f0c12acf"
+    },
+    {
+      "package": "hitl-contract",
+      "report_id": "a5554f98-cd5f-4da3-a927-138e0ed740a8",
+      "sha256": "12a82c3abf380415b0b76265435b94691f6ff8aee17e34edc5b08c35bc8abbb5"
+    },
+    {
+      "package": "hitl-hermes",
+      "report_id": "0ee5aa35-83a8-4a12-855c-b08a6a8863a3",
+      "sha256": "a70523948c7e9aceb0ae3e151c43acc7ce6f746deb0e008e02e82a439c7cfbde"
+    },
+    {
+      "package": "idea",
+      "report_id": "5ae868c5-c893-476f-b76d-1faca27197b6",
+      "sha256": "9231b4d6aed98d4df02f7ce942cbba907d0420999b51c1ffcd6027d46992b024"
+    },
+    {
+      "package": "lab",
+      "report_id": "c9fa282d-1be0-47ef-87c1-ff471cb2c5b1",
+      "sha256": "eb899c84b7a435445747d65c36afa977b80cf1e8709873f8a015a2e975613db7"
+    },
+    {
+      "package": "lint",
+      "report_id": "c4b250fb-f76e-4dfd-82d1-e22251d4a2bf",
+      "sha256": "4e1f4d15e2344c2079d200ec54bf14b5f6d44efe8f70185b13021757c86188dd"
+    },
+    {
+      "package": "llm",
+      "report_id": "46fab617-7543-4102-80cc-88f6f6cd32b7",
+      "sha256": "7b2fcc4861256621544c5ad1b0c9c7910e4eb9cac7943ff1b10441dc229042a1"
+    },
+    {
+      "package": "llm-providers-cli",
+      "report_id": "3bfe22d3-8877-43d0-8bcf-49093ec4a315",
+      "sha256": "94555ce1195a700cde6538ac465c44641248a0bf99d08d23473dad50139668d2"
+    },
+    {
+      "package": "monorepo-e2e",
+      "report_id": "1bee2985-9c79-45bc-8643-6991b5ff0d59",
+      "sha256": "98c8272c1811341c1b55f25898b41d4655a3662b3f92849dd3f7c14c0509e0ae"
+    },
+    {
+      "package": "overseer",
+      "report_id": "5b98a6ac-94be-4db4-9425-a003a3d2f83a",
+      "sha256": "400960a1acdcb8d517bd9ea024e5d12f19e88c080665468baa75b603fea6f8b7"
+    },
+    {
+      "package": "prompt-prep",
+      "report_id": "2d60945d-c252-4441-a863-def4464aa278",
+      "sha256": "731eda441bf2345dfadb64f2249c11a141f9f1316f06e34e85d4ba0abadbd07b"
+    },
+    {
+      "package": "retro",
+      "report_id": "43c21e41-b00a-4123-8875-8555f07751f6",
+      "sha256": "ca2600e82d955cedfc00ba51c50b30200d58a7ad7c63cd8364d8969652bd2f30"
+    },
+    {
+      "package": "review",
+      "report_id": "017ebeec-baf6-42d9-81a8-3c48f0fc3933",
+      "sha256": "39c0758bb0b690c4fc53bbda2033475e81477b529c156054d4357368f98ecf27"
+    },
+    {
+      "package": "runtime",
+      "report_id": "8b1c6f21-0ac4-40a8-a310-50470daa3bfe",
+      "sha256": "2b0bc8ff1fb947a219a86b91c9c6a003f4d7f80152cc7715e6b11d3c4bc2cd32"
+    },
+    {
+      "package": "search",
+      "report_id": "d541672b-dae2-4f93-8e4f-d896d3e5679e",
+      "sha256": "134e677e456ea1e36df232eba86bb6728a0e6b75ec32d2352e38853bfdf4e1a3"
+    },
+    {
+      "package": "sim",
+      "report_id": "cd4773d6-41d7-421b-83ec-f186820dbee2",
+      "sha256": "595c0001d602d39b456ded6156bc4179f11cdd3e154704dbf3e224b7769936f8"
+    },
+    {
+      "package": "support-cli",
+      "report_id": "c0607f2e-ef18-4cea-b1de-89158ee34192",
+      "sha256": "4c994022ace5383410be3f7c64a38b389f35aa5826893f59dcaec9ffc4c6e48a"
+    },
+    {
+      "package": "support-config",
+      "report_id": "d6eebf2b-5dc6-44ab-a262-3580677f3779",
+      "sha256": "9884266ce25118b334e27fae9435c7237ba649d5361115c59b2c4a9f9bd13972"
+    },
+    {
+      "package": "support-core",
+      "report_id": "49529273-2ab9-45ca-8314-7b7c0c3cd6b5",
+      "sha256": "34419482363b82bca2713d31cc7c4b357a2ec0709cebdf473708449a3e2402be"
+    },
+    {
+      "package": "support-fs",
+      "report_id": "4fce882c-db74-484e-b76e-65f7d8819a71",
+      "sha256": "3d83a11eae59557a069bf234ff88241ab6811d54ef23e34403cfb721a3eb8754"
+    },
+    {
+      "package": "support-items",
+      "report_id": "d1e0b8b7-152c-4d08-b1e7-1d6dd6cab694",
+      "sha256": "c7b7e85bdeb015e272fcf3946ad30f7b3946e3485c17db6c4adfaa21651f78e4"
+    },
+    {
+      "package": "support-mac-clipboard",
+      "report_id": "cc6ac448-cd9d-459e-9af0-7e1452e46386",
+      "sha256": "edebfe600f210057d3854882ddb13eb29e8fed1c5a1a9dc9124e173577d72f51"
+    },
+    {
+      "package": "support-markdown",
+      "report_id": "fdbb0686-4934-4bed-8379-7b8c6e2b3399",
+      "sha256": "625c26406d38ba74427fd84ff0cdcf672e32b3ec812701208174aee94c30c529"
+    },
+    {
+      "package": "support-models",
+      "report_id": "f892e804-6c86-44fe-b20e-b2e01e4ceae6",
+      "sha256": "b866bcbaa522be1f86f0e5fbf6241c1bed3038b03daf2a3505c79f9f96a92735"
+    },
+    {
+      "package": "support-nav",
+      "report_id": "05ef23fa-ffee-4858-9a8b-178967864952",
+      "sha256": "e5c8c440dcaadea2adb7205e45cb474273cf39780c3889bf120fbaf9633e2de6"
+    },
+    {
+      "package": "support-test-helpers",
+      "report_id": "af897c81-4e91-4fca-bcc7-65267203c949",
+      "sha256": "0bbc702d60b7f0fc9762aa513c9549b2970cd5ba3c9f42f81e59d2f0eaeb55bf"
+    },
+    {
+      "package": "task",
+      "report_id": "2721a479-b873-44af-b69a-4b2f2a9498e1",
+      "sha256": "6bac0e7a93e014f6b6db8e8545d8894be11b554addcda4303a765ffc8627d4d9"
+    },
+    {
+      "package": "test",
+      "report_id": "5118a2b1-7a85-4df6-9736-4d265a10cabd",
+      "sha256": "f00ab1a5629f21c94a75045f83027238f6afab5e3b340fe8f3a06eda371909c7"
+    },
+    {
+      "package": "test-runner",
+      "report_id": "c553ae0b-3e45-488b-9996-29141d278445",
+      "sha256": "3374d9c54e42a7fb7721d926ca00c763f01cc02a49e52b8fc188fc0f282b0960"
+    },
+    {
+      "package": "test-runner-e2e",
+      "report_id": "7076ed69-fd9d-4a9a-a2e0-6de1796ba166",
+      "sha256": "9cd28028e954be7ce27295585893d4825264dbe392906e2818bf157398c243d4"
+    },
+    {
+      "package": "tmux",
+      "report_id": "d9db20e7-c7a9-426b-8551-ee2d50e45ee8",
+      "sha256": "b27b5fb11c1d0701d7db788fac4299de702d032ea12336a82392c3bbd1def26e"
+    }
+  ],
+  "scope": "Host source verification only; no installed autonomous acceptance or publication implied.",
+  "aggregate_tests_including_skips": 12400
+}

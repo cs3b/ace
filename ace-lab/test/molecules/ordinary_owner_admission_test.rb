@@ -159,7 +159,8 @@ module Ace
           native.define_singleton_method(:pane_get) do |pane|
             Struct.new(:parsed_json).new({"result" => {"pane" => {"pane_id" => pane, "workspace_id" => "w1",
               "terminal_id" => pane, "agent" => "pi", "agent_session" => {
-                "kind" => "id", "agent" => "pi", "value" => "01a144bd-f8d1-74b1-8ba8-0e131c678b0c"}}}})
+                "kind" => "path", "agent" => "pi",
+                "value" => "/home/mo/.pi/agent/sessions/--lab-projects-overseer--/2026-10-16T12-44-23-122Z_01a144bd-f8d1-74b1-8ba8-0e131c678b0c.jsonl"}}}})
           end
           native.define_singleton_method(:pane_process_info) do |pane|
             Struct.new(:parsed_json).new({"result" => {"process_info" => {
@@ -178,6 +179,14 @@ module Ace
               assert_equal :worker, admission.authorize!(request: request, peer: peers.last)
               assert_equal Etc.getpwuid.name, admission.identity!(peer: peers.last, pane: "w1:p1").actor
               assert_equal :worker, admission.authorize!(request: {"project_id" => "atlas"}, peer: peers.first)
+              original = runtime.process_binding(pane: "w1:pS", caller_pid: peers.first.fetch("pid"))
+              assert_raises(Ace::Assign::AttemptErrors::EvidenceUnavailable) { admission.supervisor_ended!(binding: original) }
+              Process.kill("TERM", pids.first)
+              Process.wait(pids.first)
+              pids.shift
+              assert_equal "ended", admission.supervisor_ended!(binding: original).fetch("liveness")
+              remote = original.merge("process_identity" => original.fetch("process_identity").merge("host" => "unknown-host"))
+              assert_raises(Ace::Assign::AttemptErrors::EvidenceUnavailable) { admission.supervisor_ended!(binding: remote) }
             end
           end
         ensure

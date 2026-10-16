@@ -276,6 +276,143 @@ must read the same canonical status and adopt its original attempt/result IDs.
 Changed owner selection refuses new admission and dispatch until a controlled
 restart. Existing canonical receipts remain the source for reconciliation.
 
+## Ordinary candidate, review and merge evidence
+
+Keep the real delivery attempt running through review, test execution and merge.
+Finish it only after settlement. A completed coder attempt can seed a new real
+registered delivery attempt; never reopen its old authority.
+
+The existing `assignment request --input request.json` interface also supports:
+
+| Operation | Params in addition to assignment_id/attempt_id/head/candidate_generation | Authority / transfer |
+|---|---|---|
+| `submit_candidate` | `pane`, `expected_generation` | Original worker; one complete Git bundle; candidate_generation is the previous generation (0 initially) |
+| `assign_review` | `pane`, `expected_generation`, `reviewer_assignment_id`, `reviewer_attempt_id` | Current canonical supervisor selects an already started independent reviewer |
+| `export_candidate` | `pane`, `review_id` | Assigned reviewer; null mutation; `--output NEW_DIRECTORY` downloads canonical bundle |
+| `accept_review` | `pane`, `expected_generation`, `review_id`, `receipt_sha256` | Assigned reviewer uploads exact receipt followed by its ordered report artifacts |
+| `cancel_review` | `pane`, `expected_generation`, `review_id` | Current supervisor revokes that exact review |
+| `review_status` | None | Null mutation; revalidates accepted original receipt and artifacts |
+| `merge_evidence` | `test_execution_ids` (nonempty array) | Null mutation; projects exact accepted review and canonical executed-test references |
+
+First submit the candidate, retaining its returned head, tree and new generation.
+Prepare/register/start a separate review assignment through the ordinary native
+entry. Its agent must have a different actual process generation, session UUID
+and pane. The supervisor assigns that exact reviewer assignment/attempt at its
+honestly observed starting base. Export gives the assigned agent canonical candidate
+bytes; it then materializes/checks out the candidate. Receipt acceptance requires
+that exact candidate HEAD and the unchanged original native reviewer binding. A receipt uses the delivery attempt's identifiers,
+scope and actual producer; its `review.reviewer.actor` is the real reviewer's
+account. The owner derives independence from authenticated native origins, so
+shared-account agents do not need invented actor aliases.
+
+`accept_review` retains the original receipt and up to 15 report artifacts in
+CanonicalEvidence, verifies their exact digests, and returns the accepted review
+ID/digest. The receipt declares operation review, succeeded, approved at the exact
+candidate head, and executed review checks. These review checks are not test
+execution authority. Missing/corrupt reports, a different caller, terminal delivery
+attempt, changed head/generation or cancellation refuse. Retrying the exact
+accepted mutation cannot accept a second review; changed bytes under that mutation
+refuse. This first ingress accepts direct independent review of the exact candidate
+generation. Campaign receipts and accepted-head carry are deliberately unavailable
+until the existing ace-review campaign/assessment owner is connected; a head change
+currently refuses prior approval. This is a remaining delivery capability, not the
+final policy of requiring a full independent review after every SHA change.
+
+Execute the project's root-selected test command through the existing command
+transport. Only an explicit `purpose: test` definition with exact immutable
+candidate head/tree, root-witnessed child, and canonical exit0/no signal can supply
+test evidence. `merge_evidence` resolves those execution IDs and returns
+`review_evidence` and `test_evidence` for the fixed merge request. Copy those exact
+projections into the retained request before obtaining its digest-bound decision.
+Plain worker check strings or generic allowed commands are not substitutes.
+
+The sole owner revalidates evidence in the merge admission CAS and before each
+Forge effect. Assignment exclusion prevents candidate changes, review cancellation
+or finish racing an executing merge. Policy revocation or missing canonical bytes
+refuses without dispatch. Existing unknown outcomes retain their original merge
+reference and require reconciliation.
+
+The dynamic candidate-to-immutable-command-view binding and installed two-worker
+acceptance remain separate required gates. Static source fixtures do not authorize
+per-PR administrative head/path edits or claim installed autonomous merging.
+
+## Ordinary driver and supervisor recovery
+
+`ace-overseer ordinary --operation prepare` retains one context per fresh worker.
+From that worker's native tool process, drive only the installed owner:
+
+```sh
+ace-lab assignment drive --project atlas --context /private/work/context.json --operation status
+ace-lab assignment drive --project atlas --context /private/work/context.json --operation start
+ace-lab assignment drive --project atlas --context /private/work/context.json --operation bootstrap --output /private/work/accepted-context
+ace-lab assignment drive --project atlas --context /private/work/context.json --operation next
+ace-lab assignment drive --project atlas --context /private/work/context.json --operation step-start --generation 1 --step 010.01.01
+ace-lab assignment drive --project atlas --context /private/work/context.json --operation step-finish --generation 2 --step 010.01.01 --report /private/work/check.md
+```
+
+Use returned generations and actual step numbers, not the illustrative values.
+`HERDR_PANE` supplies the caller pane unless `--pane` is explicit; the selected
+owner authenticates actual native ancestry independently. `bootstrap` returns
+accepted context paths, byte counts, SHA256 values and manifest digest. `next`
+reads the canonical queue including reports and returns current/next instructions.
+`fail --generation N --message REASON` records a failed scope; it never fabricates
+successful completion. The workflow `wfi://assign/drive` selects this protocol
+before local assignment resolution when `--ordinary`/the ordinary environment
+is present.
+
+Submit one bounded execution receipt JSON with the following fields, using
+actual observed values (no placeholders in submitted evidence):
+
+```json
+{
+  "assignment_id": "original-assignment", "attempt_id": "original-attempt",
+  "project_id": "atlas", "scope": "010.01", "operation": "check",
+  "producer": {"actor": "actual-user", "role": "worker", "runtime": "herdr"},
+  "head": "0123456789012345678901234567890123456789",
+  "verdict": "succeeded", "checks": [{"name": "tests", "verdict": "passed"}],
+  "artifacts": [{"path": "check.md", "sha256": "actual-64-hex-artifact-digest"}]
+}
+```
+
+The producer comes from canonical start status; checks and artifacts must describe
+executed work. Run `--operation result --generation N --receipt receipt.json
+--artifact check.md` with files in receipt order. The existing receipt verifier
+and canonical import validate attribution, evidence and exact bytes. A result
+submission leaves the worker running until its canonical supervisor executes
+`--operation adopt` and receives terminal status. Keep the actual worker process
+and checkout alive until that acceptance; a terminal pane without the required
+native binding is insufficient.
+
+Mutations retain their exact request and transferred bytes under the original
+context directory before sending. A lost response is recovered with canonical
+`status`/`next`, then `--operation replay --request /original/requests/.../request.json`.
+Never update an existing request's generation, mutation ID or bytes to force a
+retry. The requester directory is not an accepted-state store. The result hint
+file is ignored by canonical reads/adoption, including when forged or stale.
+Inbound Inbox settlement is not provisioned by this driver; nonempty references
+still require the separately selected existing Inbox owner and fail closed otherwise.
+
+A replacement coordinator reads `--operation supervisor`, then from its actual
+installed native supervisor placement uses:
+
+```sh
+ace-lab assignment drive --project atlas --context /private/work/context.json \
+  --operation adopt-supervisor --generation 1 --previous-binding-sha256 EXACT_OLD_DIGEST
+```
+
+The definition chain records old→new bindings under its original generation CAS.
+Only a positively ended old generation (kernel process absence or a different
+exact process birth) permits adoption; live, inaccessible, remote-host and unknown
+identities refuse. A lost adoption response reuses its original retained request.
+No worker is re-registered or relaunched. Existing pending results, uncertain
+operations, attempts and request IDs remain unchanged. Finish, including replay,
+checks the current canonical supervisor binding and rejects the displaced one.
+
+Wire additions are `supervisor_status` (assignment only, null mutation), and
+`adopt_supervisor` (assignment, actual pane, expected definition generation,
+previous_binding_sha256; original mutation). They use the same installed owner,
+project policy, journal and lifecycle exclusion as ordinary execution.
+
 ## Error semantics
 
 Errors are one deterministic JSON document on stdout plus a non-zero exit.
@@ -447,3 +584,54 @@ Handlers retain the fixed closed environment and 30-second execution deadline, w
 The existing protected receiver exposes `recover_no_effect(binding:, input_bytes:, mutation_id:, expected_generation:)`. Supply the original assignment/attempt/candidate/head/request binding, original structured input, stable mutation ID and unchanged original positive authority generation. The receiver snapshots those inputs, authenticates canonical status and input before any settled return, and adopts an already accepted current challenge without claiming again. A needed claim uses the supplied generation unchanged. Lost acknowledgements remain uncertain; status retry never repeats the original effect.
 
 Trusted operation configuration must provide a distinct fixed `no_effect_argv` for the original project/service/executor. Inspection may proceed after the effect lease expires, but it never renews effect permission or selects normal effect argv. The selected inspector must produce operation-specific original target/handler/writer observations and existing strict challenge-bound artifacts; only the authority's canonical import can establish `failed-settled`. This source API and controlled composition do not deliver the outstanding gad.b inspector or installed acceptance.
+
+## Project commands
+
+`ace-lab run --project ace -- /usr/bin/id` invokes one exact installed command
+policy. `--as publisher` selects a permitted executor; repeated `--service NAME`
+replaces the configured default set. Every service and the entire combination
+must be granted. Arguments after `--` remain literal, including command options.
+No shell is added. Duplicate `--project`/`--as` or empty argv are usage errors.
+
+The root-owned `/etc/lab/ace-lab/project-commands.yml` is the only command-policy
+source. Project preferences and caller environment cannot create grants. Its
+version1 project entries contain `launcher`, `default_executor`, `default_services`,
+`executors`, `services`, `commands`, and `grants`. Executors declare UID/GID/groups,
+HOME/cwd/PATH and nonsecret environment; services declare nonsecret environment
+and secret references; commands bind exact argv, executable SHA256, source
+head/tree and required `purpose: command` or `purpose: test`. Test purpose requires
+nonnull source head/tree and is never inferred from executable name or exit0.
+With `purpose: command`, source head/tree may both be null for a non-Git probe;
+Git source uses two exact object IDs. Grants bind requester kind/UID, command, executor
+and the exact service combination. Accepted code/cwd must be root-owned and
+unwritable by the executor. Missing or changed context refuses execution.
+
+An operator grant authorizes an OS account. Agents sharing that account share
+its operator authority; an environment hint does not prove human presence.
+Agent-selected invocation additionally checks actual current native ancestry.
+Separate identities are required when operator authority must exclude agents.
+
+The CLI retains an invocation under `.ace-local/lab-commands/` and prints its
+execution reference before contacting the canonical Assign owner. Inspect it with
+`ace-lab run-status --project ace --reference REF`. Inspection starts no command
+and remains available to the original requester account after a grant is revoked.
+After response loss, inspect that original reference before requesting new work.
+An existing claim or a replayed acknowledgment cannot release another child.
+
+Interactive terminals preserve no-echo input, dimensions and signals. Pipe mode
+preserves EOF, separate stdout/stderr and actual exit/signal status. Socket closure
+without the authenticated result is uncertainty. Root launch/exit observations
+remain separate from accepted product delivery evidence; exit0 alone does not
+prove publication, installation or completed delivery.
+
+This implementation slice admits nonsecret commands. A nonempty selected secret
+reference set is explicitly refused before claim until the secret execution
+capability is supplied. Publication also requires the publisher's writable
+artifact/cache destination outside immutable accepted source, or retained exact
+artifacts. These remaining joins and installed acceptance are tracked by ei9 .5;
+source/kernel fixture success does not assert installed autonomous publication.
+
+In interactive mode, input EOF sends the terminal's conventional Ctrl-D byte; a
+program that changes its terminal to raw mode may interpret that byte itself.
+Noninteractive EOF closes the command input pipe. The dedicated Linux helper owns
+and reaps detached command descendants as well as the original process group.

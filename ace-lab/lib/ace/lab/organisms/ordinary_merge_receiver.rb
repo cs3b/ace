@@ -140,11 +140,9 @@ module Ace
           unless digest == submission.fetch("input_digest")
             invalid!("canonical request digest does not re-derive from the submission", request_id)
           end
-          # Selection and evidence integrity before authorization: the PR
-          # must target THIS receiver's configured forge repository, and the
-          # handed-over review must be independent of the executor.
+          # Forge selection precedes authorization. Reviewer independence is
+          # resolved by the canonical owner from native starts, not actor names.
           forge_identity!(document, request_id)
-          reviewer_independence!(document, request_id)
           decision = @resolver.decide(submission.fetch("authorization"), authorization_binding(submission))
           unless decision.authorized?
             return OrdinaryMergeRequest.refusal_envelope(decision.code, decision.message,
@@ -190,7 +188,12 @@ module Ace
             settle_no_effect(request_id, record, "canonical proposal is no longer authorized before effect")
             return :refused
           end
-          execute_effect(record)
+          begin
+            @coordinator.with_fixed_merge_evidence(record) { execute_effect(record) }
+          rescue Ace::Assign::AttemptErrors::ReceiptRejected
+            settle_no_effect(request_id, record, "canonical review or executed test proof changed before effect")
+            return :refused
+          end
           :executed
         rescue Ace::Assign::AttemptErrors::InvalidState, Ace::Assign::AttemptErrors::NotFound,
           Ace::Assign::AttemptErrors::Conflict
@@ -378,6 +381,7 @@ module Ace
         # immediately before each privileged effect. No cached decision is a lease.
         def current_authorization_refusal(record)
           @owner_guard&.call
+          @coordinator.verify_fixed_merge_evidence!(record)
           decision = @resolver.decide(record.fetch("authorization"), authorization_binding(record))
           decision.message unless decision.authorized?
         rescue Ace::Lab::InvalidConfigurationError, Ace::Assign::Error => e
@@ -643,19 +647,6 @@ module Ace
               request_id)
           end
           {"owner" => match[1], "repo" => match[2], "index" => match[3].to_i}
-        end
-
-        # The independent final-head review is handed over in the request;
-        # the executor's own identity is never an independent reviewer.
-        # Evidence naming the receiver or its principal refuses pre-effect —
-        # it can never be attached as independent review and never grounds
-        # the merge.
-        def reviewer_independence!(document, request_id)
-          reviewer = document.dig("review_evidence", "reviewer")
-          return unless [config.receiver_id, config.principal].include?(reviewer)
-          raise OrdinaryMergeRefusal.new("ordinary_merge_evidence_invalid",
-            "review evidence names the receiver executor, not an independent reviewer",
-            request_id: request_id)
         end
 
         def selection_refusal!(message, request_id)

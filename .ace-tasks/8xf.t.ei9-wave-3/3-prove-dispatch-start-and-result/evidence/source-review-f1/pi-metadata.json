@@ -1,0 +1,11 @@
+{
+  "provider": "pi",
+  "model": "zai/glm-5.3",
+  "finish_reason": "stop",
+  "timestamp": "2026-10-16T19:15:49Z",
+  "input_tokens": 74432,
+  "output_tokens": 9515,
+  "cached_tokens": 2688,
+  "total_tokens": 86635,
+  "usage_status": "measured"
+}

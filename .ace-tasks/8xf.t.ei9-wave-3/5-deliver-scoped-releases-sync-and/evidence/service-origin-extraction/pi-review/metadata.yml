@@ -1,0 +1,117 @@
+---
+timestamp: '2026-10-16T21:05:47.621936+01:00'
+preset: scope-lab-runtime
+campaign_binding:
+review_role: scope
+pr_url:
+evidence_sessions: []
+model: role:review-default
+has_context: true
+subject_size: 0
+system_prompt_size: 54258
+user_prompt_size: 74017
+diff_manifest:
+source_manifest:
+  :system:
+    :rendered_sha256: 2b50fbe005a8caea98a425092cb3e77bd89f3e029b17523446dfbafdd373551d
+    :sources:
+    - :section: base
+      :kind: file
+      :path: "/Users/mc/Ps/ace/.ace-wt/ei9-ordinary-publication/ace-review/handbook/prompts/base/system.md"
+      :sha256: 3aac2935cdfcdd0cbe0175c5cac3b891235c2a4864fb7bb5867bea47d0066b9f
+      :estimated_tokens: 840
+    - :section: top-level
+      :kind: file
+      :path: "/Users/mc/Ps/ace/.ace-wt/ei9-ordinary-publication/ace-review/handbook/prompts/base/system.md"
+      :sha256: 3aac2935cdfcdd0cbe0175c5cac3b891235c2a4864fb7bb5867bea47d0066b9f
+      :estimated_tokens: 840
+    - :section: format
+      :kind: file
+      :path: ace-review/handbook/prompts/format/detailed.md
+      :sha256: 7f627596f79a2565b1ba8c6b0ec3ed204321e61b6b2bf675f3c09b0c020841f7
+      :estimated_tokens: 448
+    - :section: correctness_focus
+      :kind: file
+      :path: ace-review/handbook/prompts/focus/phase/correctness.md
+      :sha256: 95468aa12625a80d99e92bb5f58986bdf79238f40fc0117c8698ee7f4b3d0497
+      :estimated_tokens: 535
+    - :section: communication
+      :kind: file
+      :path: ace-review/handbook/prompts/guidelines/tone.md
+      :sha256: '0749b2a107d1fca884f35fdf7a725fcb24d68d3bdc8576a7936a9b6462c087cc'
+      :estimated_tokens: 214
+    - :section: visual_indicators
+      :kind: file
+      :path: ace-review/handbook/prompts/guidelines/icons.md
+      :sha256: 5ead39b59ab55ecaf0dda76d948fa050c68dab5eca806513edce57cd5a773ebb
+      :estimated_tokens: 198
+    - :section: project_context
+      :kind: file
+      :path: docs/vision.md
+      :sha256: b181d4ef577bb0c3cbed557d6446eeffd8ff368d9e4bdc62b86dbf18dd75c710
+      :estimated_tokens: 1319
+    - :section: project_context
+      :kind: file
+      :path: docs/architecture.md
+      :sha256: 0a9811de8015ecbc597a6d3a3bd9fd45e9ab2c52942efe3897ce8d2b6a230ed6
+      :estimated_tokens: 2102
+    - :section: project_context
+      :kind: file
+      :path: docs/decisions.md
+      :sha256: 623521c501dd18ce16655f90f5880af7d349124fac7bc6fd1378a830766f8184
+      :estimated_tokens: 3767
+    - :section: project_context
+      :kind: file
+      :path: docs/ace-gems.g.md
+      :sha256: 56582aaa8ce1beb5e72994a6d93a595b47d256341dbde83ec19f78b5f3558aa9
+      :estimated_tokens: 2937
+    - :section: project_context
+      :kind: file
+      :path: docs/blueprint.md
+      :sha256: 29feb3eab6f2a653c9f50872ae5a0f3d9b11c09e76bde1dc66d5386582793e6f
+      :estimated_tokens: 952
+    - :section: project_context
+      :kind: file
+      :path: docs/tools.md
+      :sha256: f064d471580b4e323976bb5d81de95b73fb4a4b07e8979d045411ca963268e47
+      :estimated_tokens: 3647
+    :input_config_sha256: d4c2002b656a292230cfb2221228ac8017e29785eb9f8c7332188c9565d66daa
+  :user:
+    :rendered_sha256: 4ccb6323628ed223eaf9714d14cf2429fc00659de6f6a66da0de066a2bb57745
+    :sources:
+    - :section: top-level
+      :kind: file
+      :path: ace-assign/lib/ace/assign/authority/fixed_service_lifecycle.rb
+      :sha256: 3704cc8095e29baf65d2022b32a87f32671df0768e874fdab50c798b496e0d1b
+      :estimated_tokens: 12484
+    - :section: top-level
+      :kind: file
+      :path: ace-assign/lib/ace/assign/authority/endcap_service_context.rb
+      :sha256: 6676bb017b89ebac1ecb9bb3f53baae6aadfba5b84e3946162e70fbf1177d550
+      :estimated_tokens: 485
+    - :section: top-level
+      :kind: file
+      :path: ace-assign/test/feat/endcap_service_replay_test.rb
+      :sha256: eb8bf2899254f0db69e6daf7427f9f922c4a61dfb8c3402ee394734a4638e678
+      :estimated_tokens: 5518
+    :input_config_sha256: 285ffe9caab342344e07d1e8971a533491e9e399c56facb65241856596a81343
+  :presets:
+budget:
+  :success: true
+  :errors: []
+  :system_tokens: 17387
+  :user_tokens: 23142
+  :total_tokens: 40529
+  :input_limit: 128000
+  :context_tokens:
+  :context_limit: 30000
+  :instruction_tokens: 17387
+  :eligible_models:
+  - role:review-default
+  :ineligible_models: {}
+head: cf0e8052f7cd069f2e79b8d15c4a4dbd72118d56
+checkout_sha: cf0e8052f7cd069f2e79b8d15c4a4dbd72118d56
+server_name:
+repository_url:
+pr_number:
+tree: d7853bff1c527ef5d36a11c4c4417b42b252bd50

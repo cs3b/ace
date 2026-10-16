@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative "../atoms/candidate_limits"
+
 require "json"
 require "digest"
 require "yaml"
@@ -15,7 +17,7 @@ module Ace
       # byte contract, never a registration, attempt or progress ledger.
       class PreparedWork
         MAX_TEXT = 1024 * 1024
-        MAX_TOTAL = 64 * 1024 * 1024
+        MAX_TOTAL = Atoms::CandidateLimits::PREPARED_BYTES
         MAX_MANIFEST = 32_768
         TOKEN = /\A[a-zA-Z0-9][a-zA-Z0-9._-]{0,199}\z/
         SCOPE = /\A[0-9]+(?:\.[0-9]+)*\z/
@@ -28,7 +30,10 @@ module Ace
         def initialize(files:)
           invalid!("file inventory") unless files.is_a?(Hash) && files.size.between?(4, 4096)
           @files = files.to_h do |path, bytes|
-            invalid!("file path") unless path.is_a?(String) && !path.start_with?("/") && path.split("/", -1).all? { |part| !part.empty? && !%w[. .. .git].include?(part.downcase) }
+            invalid!("file path") unless path.is_a?(String) && !path.start_with?("/") &&
+              path.bytesize <= Atoms::CandidateLimits::PATH_BYTES &&
+              path.split("/", -1).all? { |part| !part.empty? && part.bytesize <= Atoms::CandidateLimits::PATH_COMPONENT_BYTES &&
+                !%w[. .. .git].include?(part.downcase) }
             invalid!("text size") unless bytes.is_a?(String) && bytes.bytesize.between?(1, MAX_TEXT)
             text = bytes.dup.force_encoding(Encoding::UTF_8)
             invalid!("UTF-8") unless text.valid_encoding? && !text.include?("\0")

@@ -2,6 +2,8 @@
 
 require_relative "../test_helper"
 require "ace/assign/authority/transfer_codec"
+require "ace/assign/molecules/canonical_evidence"
+require "ace/assign/authority/candidate_transfer"
 
 module Ace
   module Assign
@@ -30,6 +32,43 @@ module Ace
         reader&.close
         writer&.close
         sender&.join
+      end
+
+      def test_release_artifact_transfer_preserves_one_binary_part_and_cleans_scratch
+        with_codec do |codec, root|
+          binary = "\x00\xff".b * 32_769
+          descriptor = codec.descriptor([binary], purpose: :release_artifact)
+          with_upload(binary) do |socket|
+            codec.receive(socket, descriptor: descriptor, purpose: :release_artifact, deadline: deadline) do |input|
+              assert_equal 1, input.count
+              assert_equal binary, input.bytes
+            end
+          end
+          assert_empty Dir.children(root)
+          assert_raises(AttemptErrors::ReceiptRejected) { codec.descriptor([binary], purpose: :artifacts) }
+        end
+      end
+
+      def test_release_artifact_transport_and_canonical_store_share_the_same_bound
+        total, count, each = Authority::TransferCodec::LIMITS.fetch(:release_artifact)
+        stored_each, stored_total, stored_count = Molecules::CanonicalEvidence::LIMITS.fetch("release-artifact")
+        assert_equal Molecules::CanonicalEvidence::MAX_RELEASE_ARTIFACT_BYTES, each
+        assert_equal [stored_total, stored_count, stored_each], [total, count, each]
+      end
+
+      def test_release_artifact_transfer_has_exact_single_nonempty_part_and_size_ceiling
+        with_codec do |codec, _root|
+          descriptor = codec.descriptor(["gem"], purpose: :release_artifact)
+          ceiling = 64 * 1024 * 1024
+          exact = descriptor.merge("bytes" => ceiling,
+            "parts" => [descriptor.fetch("parts").first.merge("bytes" => ceiling)])
+          assert codec.validate!(exact, :release_artifact)
+          too_large = exact.merge("bytes" => ceiling + 1,
+            "parts" => [exact.fetch("parts").first.merge("bytes" => ceiling + 1)])
+          assert_raises(AttemptErrors::ReceiptRejected) { codec.validate!(too_large, :release_artifact) }
+          assert_raises(AttemptErrors::ReceiptRejected) { codec.descriptor([""], purpose: :release_artifact) }
+          assert_raises(AttemptErrors::ReceiptRejected) { codec.descriptor(["one", "two"], purpose: :release_artifact) }
+        end
       end
 
       def test_private_prompt_frames_support_two_dispatches_and_ack_without_half_close
@@ -190,7 +229,11 @@ module Ace
       def test_fixed_purpose_limits_and_descriptor_shape_refuse_before_spool
         with_codec do |codec, root|
           descriptor = codec.descriptor(["accepted"], purpose: :candidate)
-          oversized = descriptor.merge("bytes" => 64 * 1024 * 1024 + 1)
+          ceiling = Atoms::CandidateLimits::BYTES
+          exact = descriptor.merge("bytes" => ceiling, "parts" => [descriptor.fetch("parts").first.merge("bytes" => ceiling)])
+          assert codec.validate!(exact, :candidate)
+          assert_equal Authority::CandidateTransfer::MAX_BYTES, ceiling
+          oversized = exact.merge("bytes" => ceiling + 1, "parts" => [exact.fetch("parts").first.merge("bytes" => ceiling + 1)])
           assert_raises(AttemptErrors::ReceiptRejected) { codec.validate!(oversized, :candidate) }
           assert_raises(AttemptErrors::ReceiptRejected) { codec.validate!(descriptor.merge("path" => "/tmp/override"), :candidate) }
           assert_raises(AttemptErrors::ReceiptRejected) { codec.descriptor(["x" * (64 * 1024 + 1)], purpose: :artifacts) }

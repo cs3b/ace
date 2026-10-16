@@ -11,6 +11,7 @@ require_relative "policy"
 require_relative "atomic_json"
 require_relative "kinds"
 require_relative "binding"
+require_relative "operator_questions"
 require_relative "effects"
 require_relative "otp_vault"
 require_relative "protocol"
@@ -37,6 +38,7 @@ module Ace
       #   with_active scope (the assignment exclusion), so stale, ended
       #   or replaced attempts cannot acquire new authority.
       class Store
+        include OperatorQuestions
         include Proposals
         MAX_ANSWER = 4096
         # IO#read(limit) is byte-oriented, so the character limit is
@@ -95,6 +97,12 @@ module Ace
           @proposal_clock = proposal_clock
           @stopping = stopping
           @group = group
+        end
+
+        def capabilities
+          contexts = ["operator-question"]
+          contexts.unshift("managed") unless @binding.is_a?(OperatorOnlyBinding)
+          {"pong" => true, "request_contexts" => contexts}
         end
 
         # ---- requester side ------------------------------------------------
@@ -221,7 +229,11 @@ module Ace
 
         def persist_request_locked!(value)
           request_id = value.fetch("id")
-          attempt = value.fetch("attempt")
+          attempt = value["attempt"]
+          terminal = load_terminal(request_id)
+          if terminal && operator_request?(terminal)
+            raise StateError, "operator question identity is terminal and cannot acquire another context"
+          end
           request_path = requests_dir.join("#{request_id}.json")
           raise StateError, "HITL request already exists" if request_path.exist?
 
@@ -251,11 +263,16 @@ module Ace
         # transport). Never carries answer content.
         def read(id)
           request_id = safe_id(id)
+          terminal = load_terminal(request_id)
+          if terminal && operator_request?(terminal)
+            gate_read_access!(terminal)
+            return terminal.slice("id", "project", "requester", "requester_uid", "sensitive", "envelope", "state", "kind")
+          end
           unless request_path(request_id).exist?
             terminal = load_terminal(request_id)
             if terminal
               gate_read_access!(terminal)
-              return terminal.slice("id", "assignment", "attempt", "project", "requester", "sensitive", "envelope", "state", "native_delivery", "effect_receipt_ref", "publication_binding", "publication_requester_peer", "otp")
+              return terminal.slice("id", "assignment", "attempt", "project", "requester", "requester_uid", "sensitive", "envelope", "state", "native_delivery", "effect_receipt_ref", "publication_binding", "publication_requester_peer", "otp")
                 .merge("kind" => terminal.dig("envelope", "kind"))
             end
           end
@@ -276,6 +293,7 @@ module Ace
             "publication_binding" => value["publication_binding"],
             "publication_requester_peer" => value["publication_requester_peer"],
             "requester" => value["requester"],
+            "requester_uid" => value["requester_uid"],
             "envelope" => value["envelope"],
             "state" => public_state(request_id, value),
             "effect_receipt_ref" => effect_receipt_ref(value),
@@ -298,6 +316,8 @@ module Ace
           request_id = safe_id(id)
           replay = replay_terminal!(request_id, "consumed")
           if replay
+            terminal = load_terminal(request_id)
+            verify_operation!(terminal, operation) if operator_request?(terminal)
             if native_delivery
               terminal = load_terminal(request_id)
               raise StateError, "request was consumed locally; it has no native delivery claim" unless terminal["native_delivery"]
@@ -463,7 +483,7 @@ module Ace
               verify_otp_deadline!(value)
               write_answer(value, answer)
               update_public(value, "answer-delivered")
-              unless value["sensitive"] == true
+              unless value["sensitive"] == true || operator_request?(value)
                 requester_uid, requester_gid = @identity.user_ids(value["requester"])
                 Effects.run(self, value, answer,
                   requester_uid: requester_uid, requester_gid: requester_gid, identity: @identity)
@@ -509,6 +529,8 @@ module Ace
           ids = (requests_dir.glob("*.json") + public_dir.glob("*.json")).map { |path| path.basename(".json").to_s }.uniq.sort
           ids.each do |id|
             next if after && id <= after
+            terminal = load_terminal(id)
+            next if terminal && operator_request?(terminal)
             value = AtomicJson.read(requests_dir.join("#{id}.json"))
             active = value.is_a?(Hash)
             value = AtomicJson.read(public_dir.join("#{id}.json")) unless active
@@ -521,7 +543,7 @@ module Ace
             end
             if active
               value = value.slice("id", "assignment", "attempt", "project", "harness", "kind", "sensitive", "plan", "question",
-                "options", "ace_hitl_id", "requester", "created_at", "otp", "envelope")
+                "options", "ace_hitl_id", "requester", "requester_uid", "created_at", "otp", "envelope")
                 .merge("state" => public_state(value["id"], value), "has_effect" => !value["effect"].nil?)
             end
             yield value
@@ -533,7 +555,16 @@ module Ace
         def states
           require_transport!("states")
           public_dir.glob("*.json").sort.filter_map do |path|
-            AtomicJson.read(path)
+            value = AtomicJson.read(path)
+            next unless value.is_a?(Hash)
+            if operator_request?(value)
+              begin
+                require_transport!("states", value)
+              rescue PermissionError
+                next
+              end
+            end
+            value
           end
         end
 
@@ -619,6 +650,13 @@ module Ace
             "envelope" => value["envelope"],
             "updated_at" => Time.now.to_i
           }
+          if operator_request?(value)
+            public.delete("assignment")
+            public.delete("attempt")
+            public["requester"] = value.fetch("requester")
+            public["requester_uid"] = value.fetch("requester_uid")
+            public["sensitive"] = false
+          end
           public["incarnation"] = value["incarnation"] if value["incarnation"]
           public["native_delivery"] = true if value["native_delivery"]
           public["otp"] = public_otp_projection(value["otp"]) if value["otp"]
@@ -771,6 +809,7 @@ module Ace
         end
 
         def verify_native_consumer!(value)
+          raise StateError, "operator question has no native execution claim" if operator_request?(value)
           raise StateError, "OTP requires protected local consume" if value["sensitive"] == true
           reverse = @binding.reverse_address(assignment: value["assignment"], project: value["project"], attempt: value["attempt"],
             caller_pid: @identity.respond_to?(:pid) ? @identity.pid : nil)
@@ -831,6 +870,12 @@ module Ace
         # ---- role gates ------------------------------------------------------
 
         def requester_gate!(value)
+          if operator_request?(value)
+            operator_authority!(value)
+            unless @identity.uid == value.fetch("requester_uid")
+              raise PermissionError, "only the kernel requester UID can consume this question"
+            end
+          end
           unless @identity.username == value["requester"].to_s
             raise PermissionError, "only the requesting role can consume this answer"
           end
@@ -849,6 +894,7 @@ module Ace
         end
 
         def require_transport!(operation, value = nil)
+          operator_authority!(value) if value && operator_request?(value)
           return true if @policy.transport?(@identity, project: value && value["project"])
 
           raise PermissionError, "#{operation} requires the configured transport identity"
@@ -858,6 +904,9 @@ module Ace
         # challenge's authorized operation; anything else fails closed
         # without touching the secret.
         def verify_operation!(value, operation)
+          if operator_request?(value) && operation
+            raise StateError, "operator question has no authorized execution operation"
+          end
           return unless value["otp"]
 
           presented = operation.to_s
@@ -886,7 +935,7 @@ module Ace
             raise PermissionError, "only the requesting role can #{operation == "cancelled" ? "cancel" : "consume"} this request"
           end
 
-          requester_gate!(terminal) if terminal["publication_binding"]
+          requester_gate!(terminal) if terminal["publication_binding"] || operator_request?(terminal)
           case terminal["state"]
           when "cancelled"
             return replayed_cancel(request_id, terminal) if operation == "cancelled"
@@ -947,6 +996,10 @@ module Ace
             "effect_receipt_ref" => effect_receipt_ref(value),
             "at" => Time.now.to_i
           }
+          if operator_request?(value)
+            record["requester_uid"] = value.fetch("requester_uid")
+            record["kind"] = "question"
+          end
           %w[publication_binding publication_requester_peer otp].each do |key|
             record[key] = value[key] if value.key?(key)
           end
@@ -968,7 +1021,13 @@ module Ace
         # the request stays pending and the classified error propagates
         # for retry (review 8x32r9b0).
         def with_live_authority!(value, requester:)
-          if value["publication_binding"]
+          if operator_request?(value)
+            operator_authority!(value)
+            if @identity.uid != value.fetch("requester_uid")
+              require_transport!("operator transition", value)
+            end
+            yield
+          elsif value["publication_binding"]
             unless @binding.respond_to?(:with_publication!)
               raise BindingError, "publication HITL source binding is unavailable"
             end

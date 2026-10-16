@@ -5,3 +5,5 @@ require_relative "contract/errors"
 require_relative "contract/ref"
 require_relative "contract/results"
 require_relative "contract/managed_envelope"
+
+require_relative "contract/request_envelope"

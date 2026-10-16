@@ -19,6 +19,10 @@ module Ace
           bound?(peer) && (project.nil? || project.to_s == @project)
         end
 
+        def operator_question?(uid:, project:)
+          project == @project && @decision_policy.operator_question?(uid: uid, project: project)
+        end
+
         def proposal?(peer, project:)
           transport?(peer, project: project)
         end

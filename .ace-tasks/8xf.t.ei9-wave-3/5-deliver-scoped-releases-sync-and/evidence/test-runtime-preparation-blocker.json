@@ -1,0 +1,10 @@
+{
+  "schema": 1,
+  "status": "external-platform-block",
+  "action": "Prepare a local maintained exact test-runtime dependency profile using the existing domain installer; no deployment, root action, publication, messaging or communication work",
+  "agent": "hermes_completion",
+  "reason": "Automatic content review flagged possible cybersecurity risk and required Daybreak access before retrying.",
+  "outcome": "Agent failed before a plan, changes or test result were returned. No installation or activation is claimed.",
+  "preservation": "Previously blocked communication WIP remains untouched. No retry, rephrasing or transfer of this blocked profile task to another agent or tool.",
+  "impact": "Maintained dynamic candidate test runtime installation readiness remains unverified; independent ongoing candidate interface and campaign source work may continue."
+}

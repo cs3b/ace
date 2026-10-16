@@ -1,0 +1,27 @@
+{
+  "reviewed_head": "d7a0ee934",
+  "verdict": "APPROVE",
+  "actual_provider": "pi",
+  "actual_model": "zai/glm-5.3",
+  "thinking": "high",
+  "preset": "ro",
+  "provider_status": "succeeded",
+  "reports_verified_sha256": {
+    "review-8xftq5": "9728fa27635ef9164fb0141210d00fd7514c0153c38c53cc075104493cc04b5f",
+    "review-8xfu19": "f12325c9a0f7c6e69dea8fd7b9136bf63fa6e41e5ac3c801ee8bdeb27da6d5a3"
+  },
+  "preservation": "Exact original report bytes retained, including absent final newline; changing them would invalidate provider-recorded digest.",
+  "protected_post_delta_regression": {
+    "execution_id": "a7d0107e-24e5-4bd8-99bf-76d03573b49f",
+    "assertions": 121,
+    "passed": 9,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 0,
+    "total": 9,
+    "pass_rate": 100.0,
+    "duration": 96.33415,
+    "success": true,
+    "timestamp": "2026-10-16T21:06:28+01:00"
+  }
+}

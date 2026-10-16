@@ -14,8 +14,12 @@ module Ace
         MAX_TOTAL_BYTES = 256 * 1024
         MAX_ARTIFACTS = 16
         ID = /\A[a-zA-Z0-9][a-zA-Z0-9_.-]{0,127}\z/
+        MAX_RELEASE_ARTIFACT_BYTES = 64 * 1024 * 1024
         ROLES = {"service" => "executor", "review" => "reviewer",
-                 "result" => "worker"}.freeze
+                 "result" => "worker", "release-artifact" => "worker"}.freeze
+        REPORT_LIMITS = [MAX_ARTIFACT_BYTES, MAX_TOTAL_BYTES, MAX_ARTIFACTS].freeze
+        LIMITS = {"service" => REPORT_LIMITS, "review" => REPORT_LIMITS, "result" => REPORT_LIMITS,
+          "release-artifact" => [MAX_RELEASE_ARTIFACT_BYTES, MAX_RELEASE_ARTIFACT_BYTES, 1].freeze}.freeze
         DESCRIPTOR_FIELDS = %w[version artifact_id kind project_id assignment_id attempt_id peer_uid role
           binding_digest sha256 bytes admitted_at admitted_after_event_digest request_id_or_event_id
           candidate_generation_or_claim_generation].freeze
@@ -27,7 +31,8 @@ module Ace
             %w[artifact_id project_id assignment_id attempt_id request_id_or_event_id].all? { |key| descriptor[key].is_a?(String) && descriptor[key].match?(ID) } &&
             %w[binding_digest sha256 admitted_after_event_digest].all? { |key| descriptor[key].is_a?(String) && descriptor[key].match?(/\A[0-9a-f]{64}\z/) } &&
             descriptor["peer_uid"].is_a?(Integer) && descriptor["peer_uid"] >= 0 &&
-            descriptor["bytes"].is_a?(Integer) && descriptor["bytes"].between?(0, MAX_ARTIFACT_BYTES) &&
+            descriptor["bytes"].is_a?(Integer) && descriptor["bytes"].between?(descriptor["kind"] == "release-artifact" ? 1 : 0,
+              LIMITS.fetch(descriptor["kind"]).first) &&
             descriptor["candidate_generation_or_claim_generation"].is_a?(Integer) && descriptor["candidate_generation_or_claim_generation"] >= 0 &&
             descriptor["admitted_at"].is_a?(String)
           Time.iso8601(descriptor.fetch("admitted_at"))
@@ -46,13 +51,15 @@ module Ace
         def import_plan(kind:, project_id:, assignment_id:, attempt_id:, peer_uid:, binding:,
           request_id_or_event_id:, generation:, admitted_after_event_digest:, artifacts:)
           role = ROLES.fetch(kind) { raise ArgumentError, "invalid evidence kind" }
+          max_each, max_total, max_count = LIMITS.fetch(kind)
+          minimum = kind == "release-artifact" ? 1 : 0
           ids = [project_id, assignment_id, attempt_id, request_id_or_event_id]
           unless ids.all? { |id| id.is_a?(String) && id.match?(ID) } && binding.is_a?(Hash) &&
               admitted_after_event_digest.is_a?(String) && admitted_after_event_digest.match?(/\A[0-9a-f]{64}\z/) &&
               peer_uid.is_a?(Integer) && peer_uid >= 0 && generation.is_a?(Integer) && generation >= 0 &&
-              artifacts.is_a?(Array) && !artifacts.empty? && artifacts.length <= MAX_ARTIFACTS &&
-              artifacts.all? { |bytes| bytes.is_a?(String) && bytes.bytesize <= MAX_ARTIFACT_BYTES } &&
-              artifacts.sum(&:bytesize) <= MAX_TOTAL_BYTES
+              artifacts.is_a?(Array) && !artifacts.empty? && artifacts.length <= max_count &&
+              artifacts.all? { |bytes| bytes.is_a?(String) && bytes.bytesize.between?(minimum, max_each) } &&
+              artifacts.sum(&:bytesize) <= max_total
             raise ArgumentError, "invalid or oversized canonical evidence import"
           end
           events = []
@@ -85,7 +92,11 @@ module Ace
           verified_bytes(reference, events: events, kind: kind, project_id: project_id,
             assignment_id: assignment_id, attempt_id: attempt_id, peer_uid: peer_uid, binding: binding,
             request_id_or_event_id: request_id_or_event_id, generation: generation) do |path|
-            @journal.blob(path, commit: commit)
+            if kind == "release-artifact"
+              @journal.bounded_blob(path, commit: commit, max_bytes: MAX_RELEASE_ARTIFACT_BYTES)
+            else
+              @journal.blob(path, commit: commit)
+            end
           end
         end
 
@@ -102,7 +113,13 @@ module Ace
           verified_bytes(reference, events: events, kind: kind, project_id: project_id,
             assignment_id: assignment_id, attempt_id: attempt_id, peer_uid: peer_uid, binding: binding,
             request_id_or_event_id: request_id_or_event_id, generation: generation) do |path|
-            blobs.key?(path) ? blobs.fetch(path) : @journal.blob(path, commit: commit)
+            if blobs.key?(path)
+              blobs.fetch(path)
+            elsif kind == "release-artifact"
+              @journal.bounded_blob(path, commit: commit, max_bytes: MAX_RELEASE_ARTIFACT_BYTES)
+            else
+              @journal.blob(path, commit: commit)
+            end
           end
         end
 
@@ -137,7 +154,7 @@ module Ace
           end
           Time.iso8601(descriptor.fetch("admitted_at"))
           bytes = yield(reference.fetch("ref"))
-          unavailable! unless bytes.is_a?(String) && bytes.bytesize <= MAX_ARTIFACT_BYTES && bytes.bytesize == descriptor["bytes"] &&
+          unavailable! unless bytes.is_a?(String) && bytes.bytesize <= LIMITS.fetch(kind).first && bytes.bytesize == descriptor["bytes"] &&
             Digest::SHA256.hexdigest(bytes) == descriptor["sha256"]
           bytes
         rescue ArgumentError, KeyError, TypeError

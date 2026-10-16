@@ -23,6 +23,8 @@ module Ace
             desc: "Dedicated lifecycle group allowed to connect (required; root and lab-control are refused)"
           option :store_root, type: :string, desc: "Private store root (default: ACE_HITL_STORE_ROOT or /run/lab/hitl)"
           option :grants_path, type: :string, desc: "Trusted grants document (default: ACE_HITL_GRANTS_PATH or /etc/lab/ace-lab/authorization.yml)"
+          option :operator_only, type: :boolean,
+            desc: "Serve explicitly granted nonsecret operator questions without a managed execution authority"
           option :repo_root, type: :string, desc: "Candidate repository for the managed attempt authority"
           option :tls_authority, type: :string, desc: "Serve the host/Incus mTLS crossing from this authority config (root:<service-group> 0640; loopback TCP + verified project client identity)"
 
@@ -30,6 +32,9 @@ module Ace
           option :verbose, type: :boolean, aliases: %w[-v], desc: "Show verbose output"
 
           def call(**options)
+            if options[:tls_authority] && options[:operator_only]
+              raise_cli_error("operator questions require a local kernel requester; operator-only TLS is not supported")
+            end
             return serve_tls_authority(options) if options[:tls_authority]
 
             group = dedicated_group(options)
@@ -41,7 +46,12 @@ module Ace
                 "fail every client endpoint verification"
               )
             end
-            binding_policy = Providers::Lab.assignment_binding(repo_root: options[:repo_root])
+            binding_policy = if options[:operator_only]
+              raise_cli_error("operator-only serve cannot select a managed repository") if options[:repo_root]
+              Lifecycle::OperatorOnlyBinding.new
+            else
+              Providers::Lab.assignment_binding(repo_root: options[:repo_root])
+            end
             service = Lifecycle::Service.new(
               root: store_root(options),
               binding: binding_policy,

@@ -1,0 +1,7 @@
+source "https://rubygems.org"
+gem "ace-test-runner", "= 0.28.1"
+gem "minitest", "= 5.27.0"
+gem "minitest-reporters", "= 1.8.0"
+gem "ace-lab", path: "/run/ei9-command-cleanup-r5/source/ace-lab"
+gem "ace-assign", path: "/run/ei9-command-cleanup-r5/source/ace-assign"
+gem "ace-runtime", path: "/run/ei9-command-cleanup-r5/source/ace-runtime"

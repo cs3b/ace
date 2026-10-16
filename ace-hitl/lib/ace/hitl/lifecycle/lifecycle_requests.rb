@@ -9,6 +9,10 @@ module Ace
       # lifecycle frames are exchanged unchanged on both transports.
       # The includer implements `#request(op, params, deadline:)`.
       module LifecycleRequests
+        def operator_question(**params)
+          request("operator-question", params.transform_keys(&:to_s))
+        end
+
         def proposal_create(**params)
           request("proposal-create", params)
         end

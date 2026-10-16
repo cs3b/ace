@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Route explicitly authenticated operator questions through existing project correlation and durable ingress; require declared request-context capabilities before activating a project authority.
+
+### Changed
+
+- Require runtime/v2 for project-routed authorities, refusing old runtime configuration without rewriting it.
+
+### Fixed
+
+- Treat Captain allowlists as sets when binding routes; retain other array ordering. Use the hardened shared directory fsync for ingress creation, recovery and cleanup, and avoid recreating already-cleaned terminal folders.
+- Preserve typed static ingress refusal diagnostics without logging lower-level causes or secret bodies. Document exact-backup recovery for intentionally blocked missing bodies and count actual lifecycle delivery calls in crash-replay regressions.
+
+## [0.5.0] - 2026-10-16
+
+### Changed
+
+- Replace channel-wide authority configuration with channels/v2 project routes, project-qualified correlation and folders, and explicit project CLI selection. Refuse old journals and ambiguous Reply IDs without migrating retained evidence.
+- Persist ordinary ingress through the existing private message.v1 folders before confirming Telegram offsets; retry independently per project across crashes and authority outages, retaining configuration and Captain allowlist bindings. Keep OTP values and hashes out of files.
+
+### Fixed
+
+- Fsync message directories after publication and recovery before committing ingress body metadata or advancing Telegram offsets. Preserve the first body and offset when the directory barrier fails.
+- Bound DNS lookup and TCP connection as well as TLS handshake/frame deadlines; make positive TLS fixtures independent of host DNS aliases.
+
 ## [0.4.0] - 2026-10-14
 
 ### Added

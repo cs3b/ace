@@ -1,0 +1,38 @@
+Started with run options --seed 55098
+
+Ace::Assign::AtomicServiceMutationTest
+  test_authorization_read_refuses_closed_scope_before_fresh_policy PASS (1.69s)
+  test_ephemeral_original_input_is_bounded_immutable_and_never_persisted PASS (2.64s)
+  test_repeated_dispatch_plan_only_reports_retained_state_without_fresh_permission PASS (2.46s)
+  test_lost_cas_rechecks_owner_policy_before_any_partial_acceptance PASS (2.01s)
+  test_pending_import_record_event_and_reply_share_one_commit_with_exact_bytes PASS (1.94s)
+  test_authorization_read_rejects_each_changed_protected_launch_origin_without_effect PASS (1.96s)
+  test_authenticated_pending_never_masks_later_or_earlier_corrupt_service_record PASS (2.84s)
+  test_executor_status_refuses_absent_and_revoked_current_visibility PASS (1.85s)
+  test_authorization_read_revalidates_body_and_policy_without_mutation_or_permission PASS (2.21s)
+  test_settlement_projection_pending_is_authenticated_and_injected_challenge_refuses PASS (1.77s)
+  test_rejected_staging_cannot_leak_into_later_append             PASS (1.71s)
+  test_review_conflicting_mutation_id_is_rejected_on_request_replay PASS (1.48s)
+  test_status_projects_current_owner_generation_for_begin_without_changing_original_replay PASS (4.69s)
+  test_review_exact_request_replay_keeps_acceptance_metadata      PASS (1.57s)
+  test_record_projection_corruption_cannot_claim_canonical_terminal_truth PASS (1.50s)
+  test_pending_never_masks_changed_terminal_event_history_bytes   PASS (6.05s)
+  test_new_mutation_for_exact_existing_request_retains_truth_without_another_claim PASS (2.59s)
+  test_exact_claim_replay_keeps_original_acceptance_metadata_beside_current_terminal_truth PASS (2.44s)
+  test_raw_blob_plan_cannot_bypass_service_owner_and_cross_attempt_update_is_refused PASS (1.33s)
+  test_settlement_projection_authenticates_exact_terminal_transition_and_imports PASS (2.23s)
+  test_lower_protected_fresh_write_without_original_input_refuses_before_policy_or_origin PASS (1.52s)
+  test_retained_request_refuses_live_same_uid_sibling_of_recorded_native_worker PASS (1.49s)
+  test_completion_plan_imports_exact_executor_truth_without_new_origin_permission PASS (3.65s)
+  test_deleted_import_cannot_be_replaced_by_workspace_evidence_on_terminal_read PASS (1.61s)
+
+ServiceDeliveryEvidenceTest
+  test_decoded_duplicate_artifact_fields_cannot_enter_completion_plan PASS (0.00s)
+  test_cleanup_enrichment_uses_canonical_fresh_or_replayed_projection_without_an_extra_record_read PASS (0.00s)
+  test_pending_completion_reconstructs_original_input_without_any_journal_or_staging_read PASS (0.00s)
+  test_draft_and_ready_results_bind_original_input_and_operation  PASS (0.00s)
+  test_pending_status_requires_original_input_digest_and_exact_commit_length_before_return PASS (0.00s)
+  test_valid_artifact_with_changed_method_or_coherent_provenance_cannot_replace_accepted_input PASS (0.00s)
+
+Finished in 55.25729s
+30 tests, 310 assertions, 0 failures, 0 errors, 0 skips

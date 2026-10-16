@@ -1,0 +1,14 @@
+{
+  "preceding_full_suite": "suite-ea6-red",
+  "change": "Connect existing explicit FixedMergeEvidenceFixture in the real-socket transport/decision/fast-forward fixture; add revoked-evidence refusal before merge.",
+  "boundary": "Native candidate/review/executed-test authority is controlled in this transport test. The real owner has separate canonical lifecycle/composition coverage.",
+  "product_gate_changed": false,
+  "fixture_results": {
+    "tests": 6,
+    "assertions": 46,
+    "failures": 0,
+    "errors": 0
+  },
+  "full_suite_after_correction": "PASS: suite-521-green/receipt.json",
+  "installed_acceptance": false
+}

@@ -1,0 +1,30 @@
+{
+  "base": "99c1d4a2d390a7b89ebd7efb9961407d0fe38dab",
+  "scope": "Protected behavior-preserving origin boundary extraction; no ordinary service admission enabled",
+  "checks": {
+    "protected_replay": {
+      "tests": 23,
+      "assertions": 249,
+      "failures": 0,
+      "errors": 0
+    },
+    "protected_publication_boundary_composition": {
+      "tests": 24,
+      "assertions": 186,
+      "failures": 0,
+      "errors": 0
+    },
+    "changed_ticket_reservation_worker_guard": {
+      "tests": 1,
+      "assertions": 9,
+      "failures": 0,
+      "errors": 0
+    }
+  },
+  "reports": {
+    "assign": ".ace-local/test/reports/assign/5993e03b-d02a-4844-9a88-c1d1c3ccd8f3/report.md",
+    "lab": ".ace-local/test/reports/lab/a261fda9-9ef4-486c-b73b-e8084561d62f/report.md",
+    "changed-origin": ".ace-local/test/reports/assign/73e9a3d2-f250-40c7-9eea-6f4f656ad162/report.md"
+  },
+  "production_changes": false
+}

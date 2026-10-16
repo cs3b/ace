@@ -87,17 +87,84 @@ class OrdinaryAuthorityCompositionTest < Minitest::Test
     journal = hitl.instance_variable_get(:@binding).proposal_journal(project: "atlas")
     assert_same journal, lifecycle.instance_variable_get(:@journal)
     assert_same journal, coordinator.send(:journal_for)
+    assert_same lifecycle, coordinator.instance_variable_get(:@ordinary_merge_evidence)
     assert_same lifecycle.instance_variable_get(:@exclusion), coordinator.send(:lifecycle_exclusion)
     assert_equal File.join(@root, "journal"), journal.repo_root
     refute_equal @receiver.fetch("repo_path"), journal.repo_root
     assert_equal :local, journal.evidence_mode
     assert_equal "refs/ace/execution", journal.ref
     observer = coordinator.instance_variable_get(:@recorded_binding_observer)
-    assert_same server.instance_variable_get(:@admission), observer.receiver
+    admission = server.instance_variable_get(:@admission)
+    assert_instance_of L::Molecules::CommandOwnerAdmission, admission
+    assert_same admission.instance_variable_get(:@base), observer.receiver
+    assert_same lifecycle.instance_variable_get(:@admission), observer.receiver
+    command = server.instance_variable_get(:@lifecycle).instance_variable_get(:@routes).fetch("command_admit")
+    assert_same command, lifecycle.instance_variable_get(:@command_evidence)
+    assert_same journal, command.journal
+    assert_instance_of A::Authority::CommandExecution, command
+    assert_same journal, command.instance_variable_get(:@journal)
+    assert_same admission, command.instance_variable_get(:@admission)
     assert_equal :recorded_binding!, observer.name
     assert_equal File.join(@root, "hitl.sock"), hitl.socket_path
     assert_equal File.join(@root, "state", "hitl"), hitl.instance_variable_get(:@root)
     refute File.exist?(File.join(@root, "journal")), "constructing owners must not seed or replace accepted history"
+  end
+
+  def release_artifact_authorizer
+    server = construct
+    lifecycle = server.instance_variable_get(:@lifecycle).instance_variable_get(:@routes).fetch("finish")
+    lifecycle.instance_variable_get(:@release_authorizer)
+  end
+
+  def release_binding
+    {"authorization" => "release-grant", "operation" => "publish", "project_id" => "atlas",
+      "assignment_id" => "delivery", "attempt_id" => "delivery-run", "input_digest" => "a" * 64,
+      "target" => {"resource" => "rubygems:atlas:1.0.0", "artifact_digest" => "b" * 64},
+      "candidate_head" => "c" * 40, "caller_uid" => 41001}
+  end
+
+  def test_release_retention_reads_fresh_exact_decision_and_visibility_without_requiring_an_executor
+    authorize = release_artifact_authorizer
+    binding = release_binding
+    @policy["principals"] = {"41001" => {"projects" => ["atlas"]}}
+    decision = binding.except("authorization").merge("expires_at" => (Time.now.utc + 3600).iso8601)
+    @policy["authorizations"]["release-grant"] = decision
+    loads = []
+    loader = ->(path) { loads << path; @policy }
+    L::Molecules::GrantResolver.stub(:trusted_document, loader) do
+      assert_equal decision, authorize.call(binding)
+      assert_empty @policy.fetch("operations"), "retention must not select or invoke an executor"
+      assert_raises(SecurityError) { authorize.call(binding.merge("input_digest" => "d" * 64)) }
+      assert_raises(SecurityError) { authorize.call(binding.merge("candidate_head" => "d" * 40)) }
+      assert_raises(SecurityError) { authorize.call(binding.merge("caller_uid" => 42001)) }
+      @policy = Marshal.load(Marshal.dump(@policy))
+      @policy["principals"]["41001"]["projects"] = []
+      assert_raises(SecurityError) { authorize.call(binding) }
+      @policy["principals"]["41001"]["projects"] = ["atlas"]
+      decision = @policy["authorizations"].fetch("release-grant")
+      decision["expires_at"] = (Time.now.utc - 1).iso8601
+      assert_raises(SecurityError) { authorize.call(binding) }
+      decision["expires_at"] = (Time.now.utc + 3600).iso8601
+      @owner.revoked = true
+      assert_raises(L::InvalidConfigurationError) { authorize.call(binding) }
+      assert_equal [@receiver.fetch("policy_path")] * 6, loads, "revoked owner refuses before reading policy"
+    end
+    refute File.exist?(File.join(@root, "journal")), "read-only decision validation creates no history"
+  end
+
+  def test_numeric_release_principal_does_not_require_a_passwd_name
+    authorize = release_artifact_authorizer
+    binding = release_binding
+    @policy["principals"] = {"41001" => {"projects" => ["atlas"]}}
+    decision = binding.except("authorization").merge("expires_at" => (Time.now.utc + 3600).iso8601)
+    @policy["authorizations"]["release-grant"] = decision
+    L::Molecules::GrantResolver.stub(:trusted_document, @policy) do
+      # Current Ruby raises ArgumentError for an unknown UID. The optional
+      # username path also tolerates a nil lookup, matching CallerAuthorizer.
+      [->(_uid) { raise ArgumentError, "unknown UID" }, ->(_uid) { nil }].each do |lookup|
+        Etc.stub(:getpwuid, lookup) { assert_equal decision, authorize.call(binding) }
+      end
+    end
   end
 
   def test_mismatched_canonical_locations_receiver_identity_or_participant_refuse

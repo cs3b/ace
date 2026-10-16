@@ -1,0 +1,19 @@
+{
+  "source_commit": "ea6c62c630b2ca229211603b52ec85abe29ee597",
+  "command": "bin/ace-test-suite",
+  "packages": 51,
+  "packages_passed": 50,
+  "packages_failed": 1,
+  "exit_code": 1,
+  "duration_seconds": 563.25,
+  "totals": {
+    "total": 12453,
+    "passed": 12409,
+    "failed": 2,
+    "errors": 0,
+    "skipped": 42,
+    "assertions": 43498
+  },
+  "failure_scope": "OrdinaryListenEndToEndTest positive transport fixtures omit the now mandatory canonical merge evidence owner; correction pending, product gate stays fail-closed.",
+  "additional_diagnostics": "Original Lab stderr thread-lifetime and duplicate-JSON-key messages retained verbatim in lab-report.md; not erased or reclassified as a green suite."
+}

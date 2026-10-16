@@ -1,0 +1,9 @@
+{
+  "environment": {
+    "overrides": {
+      "GEM_HOME": "/run/ei9-command-run-kernel-r2/.local/share/gem/ruby/3.4.0",
+      "GEM_PATH": "/run/ei9-command-run-kernel-r2/.local/share/gem/ruby/3.4.0:/usr/local/lib/lab/ace-runtimes/coordinator/9d2f818612202c070ee8c0a551428443c484f88c052b0a586f5ccb9d86513f69/gems",
+      "BUNDLE_GEMFILE": "/run/ei9-command-run-kernel-r3/runner.Gemfile"
+    }
+  }
+}

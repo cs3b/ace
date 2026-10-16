@@ -37,7 +37,7 @@ module Ace
         # @param identity_resolver [Molecules::ExecutionIdentityResolver, nil] Trust boundary
         # @param verifier [Molecules::ReceiptVerifier, nil] Receipt verifier
         def initialize(cache_base: nil, repo_root: nil, journal: nil, identity_resolver: nil, verifier: nil,
-          lifecycle_exclusion: nil, recorded_binding_observer: nil)
+          lifecycle_exclusion: nil, recorded_binding_observer: nil, ordinary_merge_evidence: nil)
           unless recorded_binding_observer.nil? || recorded_binding_observer.respond_to?(:call)
             raise ArgumentError, "recorded native binding observer must be callable"
           end
@@ -49,6 +49,7 @@ module Ace
           @verifier = verifier || Molecules::ReceiptVerifier.new(identity_resolver: @identity_resolver)
           @lifecycle_exclusion = lifecycle_exclusion
           @recorded_binding_observer = recorded_binding_observer
+          @ordinary_merge_evidence = ordinary_merge_evidence
         end
 
         attr_reader :store
@@ -328,6 +329,7 @@ module Ace
           # never need message-string discrimination: replay/binding conflicts
           # stay Conflict, a consumed authorization is AuthorizationConflict.
           guard = lambda do
+            verify_fixed_merge_evidence!(record)
             conflict = journal_for.fixed_authorization_conflict(record)
             if conflict
               raise AttemptErrors::AuthorizationConflict,
@@ -335,15 +337,50 @@ module Ace
             end
             nil
           end
-          journal_for.admit_fixed_merge_request(record, guard: guard)
+          with_fixed_merge_scope(record) do
+            journal_for.admit_fixed_merge_request(record, guard: guard)
+          end
         end
 
         # Begin the fixed effect (pending -> uncertain). The single CAS
         # transition is the at-most-one-merge proof: a restarted receiver
         # refuses an already-started claim and must not dispatch again.
         def begin_fixed_merge_effect(request_id)
-          journal_for.begin_fixed_merge_request(request_id)
+          record = journal_for.fixed_merge_request(request_id)
+          raise AttemptErrors::NotFound, "fixed merge record is unavailable" unless record
+          with_fixed_merge_scope(record) do
+            journal_for.begin_fixed_merge_request(request_id, guard: -> { verify_fixed_merge_evidence!(record) })
+          end
         end
+
+        # Hold the existing assignment exclusion through the external effect.
+        # Review cancellation/head changes/finish cannot race this interval.
+        def with_fixed_merge_evidence(record)
+          with_fixed_merge_scope(record, exclusive: true) do
+            verify_fixed_merge_evidence!(record)
+            yield
+          end
+        end
+
+        def verify_fixed_merge_evidence!(record)
+          unless @ordinary_merge_evidence
+            raise AttemptErrors::ReceiptRejected, "canonical ordinary merge evidence owner is not installed"
+          end
+          @ordinary_merge_evidence.verify_merge_evidence_at!(record: record, commit: journal_for.ref_value,
+            deadline: Process.clock_gettime(Process::CLOCK_MONOTONIC) + 30)
+          nil
+        rescue AttemptErrors::EvidenceUnavailable, AttemptErrors::UnauthorizedIdentity, AttemptErrors::Conflict, AttemptErrors::NotFound
+          raise AttemptErrors::ReceiptRejected, "canonical ordinary review or executed test evidence is unavailable"
+        end
+
+        def with_fixed_merge_scope(record, exclusive: false, &block)
+          unless @ordinary_merge_evidence
+            raise AttemptErrors::ReceiptRejected, "canonical ordinary merge evidence owner is not installed"
+          end
+          @ordinary_merge_evidence.with_merge_scope(record: record, exclusive: exclusive,
+            deadline: Process.clock_gettime(Process::CLOCK_MONOTONIC) + 30, &block)
+        end
+        private :with_fixed_merge_scope
 
         # Settle the fixed effect with the exact terminal receipt. The
         # journal validates the closed receipt schema and its binding to the

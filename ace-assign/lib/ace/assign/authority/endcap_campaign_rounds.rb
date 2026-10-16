@@ -37,7 +37,7 @@ module Ace
         end
 
         def with_campaign_receipt!(journal:, commit:, events:, params:, map:, receipt:, result:, historical:)
-          unless result.is_a?(Hash) && result["schema"] == "ace.review.accepted-result/v1" &&
+          unless result.is_a?(Hash) && result["schema"] == "ace.review.accepted-result/v2" &&
               receipt["campaign"].is_a?(Hash) && receipt["campaign"].keys.sort == %w[id result] &&
               receipt["operation"] == "review" && receipt["verdict"] == "succeeded"
             raise AttemptErrors::ReceiptRejected, "parent campaign receipt differs"

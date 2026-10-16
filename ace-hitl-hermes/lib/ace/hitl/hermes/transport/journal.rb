@@ -3,6 +3,8 @@
 require "json"
 require "fileutils"
 require "securerandom"
+require_relative "../atoms/hermes_tokens"
+require_relative "../molecules/hermes_message"
 
 module Ace
   module Hitl
@@ -68,7 +70,7 @@ module Ace
 
           def read
             path = File.join(@directory, "journal.json")
-            return {"schema" => "ace.hitl.hermes.transport/v1", "requests" => {}, "ingress" => [],
+            return {"schema" => "ace.hitl.hermes.transport/v2", "requests" => {}, "ingress" => [],
                     "sequence" => 0, "poll" => {}, "unregistered_chats" => {}} unless File.exist?(path)
 
             File.open(path, File::RDONLY | File::NOFOLLOW) do |file|
@@ -77,31 +79,63 @@ module Ace
                 raise ContractError, "transport journal must be owned and private"
               end
               state = JSON.parse(file.read)
-              state["unregistered_chats"] ||= {}
-              state["requests"] = normalize_request_keys(state["requests"])
-              unless state["schema"] == "ace.hitl.hermes.transport/v1" && state["requests"].is_a?(Hash) &&
-                  state["ingress"].is_a?(Array) && state["sequence"].is_a?(Integer) && state["poll"].is_a?(Hash) &&
+              unless state["schema"] == "ace.hitl.hermes.transport/v2" && state["requests"].is_a?(Hash) &&
+                  state["ingress"].is_a?(Array) && state["sequence"].is_a?(Integer) && state["sequence"] >= 0 &&
+                  state["poll"].is_a?(Hash) &&
                   state["unregistered_chats"].is_a?(Hash)
                 raise ContractError, "transport journal is malformed"
+              end
+              state.fetch("requests").each do |key, record|
+                unless record.is_a?(Hash) &&
+                    %w[channel project request].all? { |field| Atoms::HermesTokens.valid?(record[field]) } &&
+                    key == JSON.generate(record.values_at("channel", "project", "request")) &&
+                    record["route_identity"].is_a?(String) && record["route_identity"].match?(/\A[0-9a-f]{64}\z/)
+                  raise ContractError, "transport request identity is malformed"
+                end
+                binding = record["binding"]
+                unless [true, false].include?(record["sensitive"]) && binding.is_a?(Hash) &&
+                    binding["sensitive"] == record["sensitive"] && binding["envelope"].is_a?(Hash) &&
+                    binding.dig("envelope", "project") == record["project"] &&
+                    (binding.dig("envelope", "kind") != "otp" || record["sensitive"] == true)
+                  raise ContractError, "transport request classification is malformed"
+                end
+              end
+              sequences = []
+              origins = []
+              state.fetch("ingress").each do |item|
+                valid = item.is_a?(Hash) && Atoms::HermesTokens.valid?(item["channel"]) &&
+                  item["message_id"].is_a?(String) && item["message_id"].match?(/\A[0-9]+\z/) &&
+                  item["sequence"].is_a?(Integer) && item["sequence"] > 0 && item["sequence"] <= state["sequence"] &&
+                  item["received_at"].is_a?(String) &&
+                  item["user_id"].is_a?(String) && item["user_id"].match?(/\A[0-9]{1,32}\z/) &&
+                  item["route_identity"].is_a?(String) && item["route_identity"].match?(/\A[0-9a-f]{64}\z/) &&
+                  %w[queued unresolved secret-unavailable delivered closed rejected].include?(item["status"])
+                raise ContractError, "transport ingress identity is malformed" unless valid
+                Molecules::HermesMessage.validate_timestamp!(item["received_at"], "received_at")
+                if item["request"]
+                  record = state["requests"][JSON.generate(item.values_at("channel", "project", "request"))]
+                  unless record && item["revision"] == record["revision"] &&
+                      item["route_identity"] == record["route_identity"] && !(record["sensitive"] && item["body_sha256"])
+                    raise ContractError, "transport ingress request binding is malformed"
+                  end
+                elsif item["project"] || item["revision"]
+                  raise ContractError, "instruction ingress cannot name a request authority"
+                end
+                if item["body_sha256"] && (!item["body_sha256"].is_a?(String) ||
+                    !item["body_sha256"].match?(/\A[0-9a-f]{64}\z/) ||
+                    !item["route_identity"].is_a?(String) || !item["route_identity"].match?(/\A[0-9a-f]{64}\z/))
+                  raise ContractError, "transport ingress body binding is malformed"
+                end
+                sequences << item["sequence"]
+                origins << item.values_at("channel", "message_id")
+              end
+              unless sequences.uniq == sequences && origins.uniq == origins
+                raise ContractError, "transport ingress sequence or origin is duplicated"
               end
               state
             end
           rescue JSON::ParserError, SystemCallError
             raise ContractError, "transport journal is unreadable"
-          end
-
-          def normalize_request_keys(requests)
-            return requests unless requests.is_a?(Hash)
-
-            requests.each_value.each_with_object({}) do |record, normalized|
-              unless record.is_a?(Hash) && record["channel"].is_a?(String) && record["request"].is_a?(String)
-                raise ContractError, "transport journal request binding is malformed"
-              end
-              key = JSON.generate([record["channel"], record["request"]])
-              raise ContractError, "transport journal request binding is ambiguous" if normalized.key?(key)
-
-              normalized[key] = record
-            end
           end
 
           def write(state)

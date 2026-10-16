@@ -1,0 +1,31 @@
+{
+  "stage": "source foundation; not installed acceptance or completion of ei9.8",
+  "base": "8ccd84d50",
+  "plan": "721afd614",
+  "changes": [
+    "CandidateTransfer compares both independently verified full bundles as bare Git objects, with complete bounded inventories, blob bodies and four diff scopes; no filesystem materialization of historical symlinks",
+    "Existing CampaignStore retains source-owned nonsemantic head assessment chains without new rounds or execution ledger",
+    "Accepted-result v2 separates reviewed head/base from accepted head/base, binds the exact assessment prefix and refuses v1",
+    "Explicit native-independence callback preserves strict default actor inequality and is rechecked historically"
+  ],
+  "tests": [
+    {"report": "assign/8f96e377-7a02-485a-81cd-2f1b735f2c1f", "result": "RED", "tests": 1, "assertions": 19, "errors": 1, "reason": "missing two-bundle comparison API"},
+    {"report": "assign/10d1de24-07b4-499a-a6da-24f714273e63", "result": "PASS", "tests": 15, "assertions": 283},
+    {"report": "review/63c630cd-64cf-4f76-891e-b548fb130f7d", "result": "RED", "tests": 3, "assertions": 4, "failures": 1, "errors": 2, "reason": "missing head-assessment capability"},
+    {"report": "review/60efffba-63ed-4b31-996b-b0b98ba8b656", "result": "PASS", "target": "fast", "tests": 1003, "assertions": 3299},
+    {"report": "review/fba7651f-d61d-4bed-a38e-0a7e34ca6d9a", "result": "PASS", "tests": 20, "assertions": 147, "scope": "head chain, independence, real existing canonical result join"},
+    {"report": "assign/0b099c3b-a0c3-4825-99da-6c9030d9e3f8", "result": "PASS", "tests": 24, "assertions": 118, "scope": "protected compact-result command and receipt consumers"}
+  ],
+  "remaining": [
+    "actual configured independent Pi verdict for this frozen source",
+    "ordinary CampaignManager/Store composition and canonical supervisor/context/check callbacks",
+    "actual independent delta review ingress for substantial or uncertain head changes",
+    "ordinary versioned merge reference and installed end-to-end acceptance"
+  ],
+  "limits": [
+    "No versions bumped, no package published, no deployment or external messages",
+    "Pure callback tests do not attest native installed authority",
+    "Blocked Hermes and installed test-runtime profile tasks were not retried",
+    "Root owns the combined default suite after integration"
+  ]
+}

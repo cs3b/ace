@@ -28,6 +28,7 @@ module Ace
           end
           registered = registration(params.fetch("assignment_id"), commit: @journal.ref_value)
           raise AttemptErrors::NotFound, "ordinary work is not registered" unless registered
+          verify_result_owner!(request, peer, role, deadline, registered)
           digest = Atoms::EvidenceDigest.digest({"params" => params, "project_id" => @project, "peer_uid" => peer.fetch("uid")})
           @exclusion.with_shared_multi([@exclusion.task_key(registered.fetch("task_id"))], deadline: deadline) do
             @exclusion.with_exclusive(@exclusion.assignment_key(params.fetch("assignment_id")), deadline: deadline) do
@@ -36,8 +37,8 @@ module Ace
                 @journal.mutate(assignment_id: params.fetch("assignment_id"), attempt_id: params.fetch("attempt_id"),
                   mutation_id: request.fetch("mutation_id"), operation: "finish", parameters_digest: digest,
                   expected_generation: params.fetch("expected_generation"), with_replay: true, deadline: deadline,
-                  replay_authorizer: -> { authorize!(request, peer, role, deadline) }) do |events, prefix, _generation|
-                  authorize!(request, peer, role, deadline)
+                  replay_authorizer: -> { verify_result_owner!(request, peer, role, deadline, registered) }) do |events, prefix, _generation|
+                  verify_result_owner!(request, peer, role, deadline, registered)
                   unless Molecules::CanonicalAttemptState.derive(events) == "running"
                     raise AttemptErrors::Conflict, "ordinary completion requires a running attempt"
                   end
@@ -61,7 +62,7 @@ module Ace
                   raise AttemptErrors::Conflict, "ordinary result scope has unfinished progress" unless complete
                   settlement = OrdinaryEffectSettlement.new(journal: @journal).verify!(project: @project,
                     assignment: params.fetch("assignment_id"), attempt: params.fetch("attempt_id"), events: events, commit: prefix)
-                  authorize!(request, peer, role, deadline)
+                  verify_result_owner!(request, peer, role, deadline, registered)
                   plan = Organisms::AttemptCoordinator.finished_transition_plan(events: events, receipt: result.fetch("receipt"), authority: :ordinary)
                   plan.merge(data: params.slice("assignment_id", "attempt_id", "result_id", "head", "receipt_digest").merge(
                     "authority" => "ordinary", "scope" => scope, "state" => verdict, "settlement" => settlement, "inbox_deliveries" => delivery))
@@ -71,6 +72,15 @@ module Ace
           end
         rescue Ace::Herdr::Error => error
           raise AttemptErrors::EvidenceUnavailable, "ordinary transport settlement is unavailable: #{error.message}"
+        end
+
+        def verify_result_owner!(request, peer, role, deadline, registered)
+          authorize!(request, peer, role, deadline)
+          supervisor = @admission.identity!(peer: peer, pane: request.fetch("params").fetch("pane"), deadline: deadline)
+          unless supervisor.role == "coordinator" &&
+              supervisor.runtime_binding == supervisor_selection(registered, @journal.ref_value).fetch("binding")
+            raise AttemptErrors::UnauthorizedIdentity, "ordinary completion belongs to its original supervisor"
+          end
         end
 
         def with_result_transport(request, deadline)

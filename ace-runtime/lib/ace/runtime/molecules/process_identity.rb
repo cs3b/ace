@@ -3,6 +3,7 @@
 require "open3"
 require "socket"
 require "fiddle"
+require "time"
 
 module Ace
   module Runtime
@@ -115,6 +116,33 @@ module Ace
             # An inaccessible ps result cannot prove death or absence of
             # descendants. Recovery retains the worktree and writer slot.
             {"liveness" => "unknown", "observed_at" => at, "reason" => "process identity no longer observable"}
+          end
+        end
+
+        # Positive evidence that this exact historical generation ended. A
+        # failed capture alone says nothing: EPERM/inaccessible probes remain
+        # unknown. PID reuse is conclusive only when the exact birth differs.
+        def generation_status(identity, process: Process)
+          at = Time.now.utc.iso8601
+          unknown = {"liveness" => "unknown", "observed_at" => at}
+          unless identity.is_a?(Hash) && identity.keys.sort == %w[host pid started_at uid] &&
+              identity["host"] == @hostname && identity["pid"].is_a?(Integer) && identity["pid"].positive? &&
+              identity["uid"].is_a?(Integer) && identity["uid"] >= 0 &&
+              identity["started_at"].is_a?(String) && !identity["started_at"].empty?
+            return unknown.merge("reason" => "verified process generation unavailable")
+          end
+          current = capture(identity.fetch("pid"))
+          return {"liveness" => "live", "observed_at" => at, "identity" => current} if current == identity
+          if current && current.fetch("started_at") != identity.fetch("started_at")
+            return {"liveness" => "ended", "observed_at" => at, "reason" => "pid generation replaced", "identity" => current}
+          end
+          begin
+            process.kill(0, identity.fetch("pid"))
+            unknown.merge("reason" => "process address exists but generation is unobservable")
+          rescue Errno::ESRCH
+            {"liveness" => "ended", "observed_at" => at, "reason" => "kernel reports no process at address"}
+          rescue SystemCallError
+            unknown.merge("reason" => "kernel process presence is unavailable")
           end
         end
       end

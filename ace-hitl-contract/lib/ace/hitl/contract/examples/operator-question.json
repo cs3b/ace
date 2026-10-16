@@ -1,0 +1,13 @@
+{
+  "schema": "ace.hitl.operator-question/v1",
+  "context": "operator-question",
+  "request_id": "operator-abcdef",
+  "request_incarnation": "0123456789abcdef",
+  "project": "lab-config",
+  "requester": "mo",
+  "requester_uid": 1000,
+  "correlation_id": "operator-abcdef",
+  "kind": "question",
+  "payload_sha256": "0cd45088a48787af9eb875a2de1912f5146371da61e69f44f1843ff7a8eb0cb9",
+  "input_sha256": "daad7a6851f6289cae1d2f2088629fd9d00133ad517f0e6ef697c2f36b8dc62d"
+}

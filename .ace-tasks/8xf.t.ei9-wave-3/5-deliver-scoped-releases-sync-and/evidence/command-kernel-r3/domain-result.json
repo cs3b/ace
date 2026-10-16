@@ -1,0 +1,16 @@
+{
+  "schema": "ei9.command-source-acceptance/v1",
+  "ace_manifest_sha256": "721e8e75fd22e8b1c4c8b3568b0be34dd75e6ec7c0943ac0f808eddc1280b332",
+  "domain_manifest_sha256": "1865773eca5a3505dfe061fb7a12e0cb80ce81ad03e5bea2ec31b5f6f26d8fc4",
+  "command": "python3 -m unittest tests.test_command_source_composition tests.test_command_run tests.test_install_contract tests.test_task_ids",
+  "tests": 40,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "elapsed_seconds": 5.468,
+  "exit_code": 0,
+  "source_only": true,
+  "production_owner": "ActiveState=active\nMainPID=554643\n",
+  "warning": "Existing test_install_contract test returns str (Python deprecation); test still passes.",
+  "transport_friction": "macOS tar emitted provenance AppleDouble sidecars; exact inventory refused them. Removed only unlisted ._* entries with existing original, then exact inventory and every manifest SHA passed."
+}

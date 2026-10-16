@@ -24,6 +24,47 @@ module Ace
         assert_equal 256 * 1024, admitted.fetch(:blobs).values.sum(&:bytesize)
       end
 
+      def test_release_artifact_is_one_binary_worker_import_without_lifting_report_caps
+        bytes = "\x00\xff".b * 32_769
+        plan = importer.import_plan(**params.merge(kind: "release-artifact", artifacts: [bytes]))
+        descriptor = plan.fetch(:events).first.fetch(:payload)
+        assert_equal "release-artifact", descriptor.fetch("kind")
+        assert_equal "worker", descriptor.fetch("role")
+        assert_equal bytes.bytesize, descriptor.fetch("bytes")
+        assert_equal bytes, plan.fetch(:blobs).values.first
+        assert Molecules::CanonicalEvidence.valid_descriptor?(descriptor)
+        %w[service review result].each do |kind|
+          assert_raises(ArgumentError) { importer.import_plan(**params.merge(kind: kind, artifacts: [bytes])) }
+        end
+        [[bytes, bytes], [""], ["a" * (64 * 1024 * 1024 + 1)]].each do |artifacts|
+          assert_raises(ArgumentError) { importer.import_plan(**params.merge(kind: "release-artifact", artifacts: artifacts)) }
+        end
+      end
+
+      def test_release_artifact_descriptor_has_its_own_closed_size_and_role
+        plan = importer.import_plan(**params.merge(kind: "release-artifact", artifacts: ["gem"]))
+        descriptor = plan.fetch(:events).first.fetch(:payload)
+        assert Molecules::CanonicalEvidence.valid_descriptor?(descriptor.merge("bytes" => 64 * 1024 * 1024))
+        [descriptor.merge("bytes" => 0), descriptor.merge("bytes" => 64 * 1024 * 1024 + 1),
+          descriptor.merge("role" => "executor"), descriptor.merge("kind" => "service", "bytes" => 65_537)].each do |changed|
+          refute Molecules::CanonicalEvidence.valid_descriptor?(changed)
+        end
+      end
+
+      def test_release_artifact_pending_read_preserves_binary_and_rejects_kind_or_binding_change
+        binary = "\x00\xff".b * 32_769
+        before, events, plan, context = pending_fixture(kind: "release-artifact", artifacts: [binary])
+        reference = plan.fetch(:references).first
+        read = lambda do |changes|
+          importer.read_pending(reference, current_events: [before], pending_events: events,
+            blobs: plan.fetch(:blobs), commit: nil, **context.merge(changes))
+        end
+        assert_equal binary, read.call({})
+        [{kind: "result"}, {binding: {"request_id" => "other"}}, {peer_uid: Process.uid + 1}].each do |changed|
+          assert_raises(AttemptErrors::EvidenceUnavailable) { read.call(changed) }
+        end
+      end
+
       def test_provenance_identity_binding_and_predecessor_are_required
         [{peer_uid: -1}, {peer_uid: "504"}, {generation: -1}, {binding: nil},
          {project_id: "../fixture"}, {admitted_after_event_digest: nil}, {kind: "worker"}].each do |changes|
@@ -42,10 +83,10 @@ module Ace
         assert_equal "evidence/imports/#{descriptor.fetch('artifact_id')}", plan.fetch(:references).first.fetch("ref")
       end
 
-      def pending_fixture
+      def pending_fixture(**changes)
         before = Models::EvidenceEvent.build(type: "authority_mutation", attempt_id: "attempt-1",
           payload: {"operation" => "import-fixture"}, previous_digest: nil)
-        input = params.merge(admitted_after_event_digest: before.fetch("digest"))
+        input = params.merge(changes).merge(admitted_after_event_digest: before.fetch("digest"))
         plan = importer.import_plan(**input)
         previous = before.fetch("digest")
         events = plan.fetch(:events).map do |entry|

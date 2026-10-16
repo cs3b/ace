@@ -1,0 +1,8 @@
+{
+  "product_scope": "isolated test harness only",
+  "failures": [
+    "Raw SSH has no Bundler or ace-test-runner; coordinator has Bundler but no test runner",
+    "RubyGems --config-file is a command option, not global pre-command option; no gem installed by rejected invocation"
+  ],
+  "resolution": "Install exact public ace-test-runner0.28.1 only in protected /run test graph, --norc after install; retain immutable source manifest and package SHA"
+}

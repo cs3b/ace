@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.1] - 2026-10-16
+
+### Fixed
+
+- Share native immutable session normalization between Inbox and process admission so real Pi path selectors bind their session UUID without weakening ancestry, foreground owner or live-session checks.
+
 ## [0.6.0] - 2026-10-16
 
 ### Added

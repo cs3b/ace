@@ -7,6 +7,7 @@ require_relative "../atoms/fixed_merge_schemas"
 require "digest"
 require "fileutils"
 require "json"
+require_relative "../atoms/git_blob_batch"
 require "open3"
 require "pathname"
 require "ace/herdr/molecules/bounded_process"
@@ -375,13 +376,10 @@ module Ace
           else
             bounded_history_read!(%w[cat-file --batch-check], oids.join("\n") + "\n", oids.size * 128)
           end
-          lines = raw.lines
-          raise AttemptErrors::EvidenceUnavailable, "historical blob metadata count differs" unless lines.size == oids.size
-          lines.zip(oids).map do |line, oid|
-            match = /\A([0-9a-f]{40}) blob (0|[1-9][0-9]*)\n\z/.match(line)
-            raise AttemptErrors::EvidenceUnavailable, "historical blob metadata differs" unless match && match[1] == oid
-            match[2].to_i
-          end
+          Atoms::GitBlobBatch.sizes(oids, raw)
+        rescue Atoms::GitBlobBatch::Invalid => error
+          message = error.reason == :count ? "historical blob metadata count differs" : "historical blob metadata differs"
+          raise AttemptErrors::EvidenceUnavailable, message
         end
 
         def bounded_history_read!(argv, stdin, limit)
@@ -1086,26 +1084,11 @@ module Ace
         end
 
         def decode_event_blobs!(entries, output)
-          output = output.b
-          offset = 0
-          entries.map do |oid, size|
-            ending = output.index("\n", offset)
-            unless ending && ending - offset <= 127 && output.byteslice(offset, ending - offset) == "#{oid} blob #{size}"
-              raise AttemptErrors::EvidenceUnavailable, "canonical blob batch header is invalid"
-            end
-            offset = ending + 1
-            content = output.byteslice(offset, size)
-            unless content&.bytesize == size && output.byteslice(offset + size, 1) == "\n" &&
-                Digest::SHA1.hexdigest("blob #{size}\0" + content) == oid
-              raise AttemptErrors::EvidenceUnavailable, "canonical blob batch bytes are invalid"
-            end
-            offset += size + 1
-            content
-          end.tap do
-            unless offset == output.bytesize
-              raise AttemptErrors::EvidenceUnavailable, "canonical blob batch has unexpected trailing bytes"
-            end
-          end
+          Atoms::GitBlobBatch.decode(entries, output)
+        rescue Atoms::GitBlobBatch::Invalid => error
+          message = {header: "canonical blob batch header is invalid", bytes: "canonical blob batch bytes are invalid",
+            trailing: "canonical blob batch has unexpected trailing bytes"}.fetch(error.reason, "canonical blob batch selector is invalid")
+          raise AttemptErrors::EvidenceUnavailable, message
         end
 
         def update_service_request(request_id, expected:, replacement:, event_type:, guard: nil)
@@ -1360,7 +1343,7 @@ module Ace
         # CAS transition, so a receiver restart can never dispatch a second
         # merge for the same admitted record. An already-started claim refuses;
         # only the winning effect may later settle it.
-        def begin_fixed_merge_request(request_id)
+        def begin_fixed_merge_request(request_id, guard: nil)
           current = fixed_merge_request(request_id)
           raise AttemptErrors::NotFound, "Fixed merge request #{request_id} not found" unless current
           if current["state"] == "uncertain"
@@ -1371,7 +1354,7 @@ module Ace
           end
           update_fixed_merge_request(request_id, expected: current,
             replacement: current.merge("state" => "uncertain", "claimed_at" => Time.now.utc.iso8601(9)),
-            event_type: "merge_transition", guard: -> { verify_fixed_proposal!(current) })
+            event_type: "merge_transition", guard: -> { guard&.call; verify_fixed_proposal!(current) })
         end
 
         # Terminal settlement: succeeded/failed with the exact receipt
@@ -1527,7 +1510,11 @@ module Ace
               raise AttemptErrors::InvalidState, "Fixed merge request needs an initial admission"
             end
             if existing
-              return {record: existing, replayed: true} if fixed_replay?(existing, replacement)
+              if fixed_replay?(existing, replacement)
+                conflict = guard&.call
+                raise_authorization_conflict!(conflict) if conflict
+                return {record: existing, replayed: true}
+              end
               raise AttemptErrors::Conflict, "Fixed merge request #{request_id} has different input"
             end
             unless Molecules::FixedEffectReference.valid?(replacement.fetch("reference"))

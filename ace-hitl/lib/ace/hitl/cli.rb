@@ -4,6 +4,8 @@ require "ace/support/cli"
 require_relative "../hitl/version"
 require_relative "cli/commands/create"
 require_relative "cli/commands/ask"
+require_relative "cli/commands/operator_question"
+require_relative "cli/commands/read"
 require_relative "cli/commands/show"
 require_relative "cli/commands/list"
 require_relative "cli/commands/update"
@@ -30,6 +32,8 @@ module Ace
       REGISTERED_COMMANDS = [
         ["proposal", "Create, inspect, revise or resolve an immutable second-commander proposal"],
         ["create", "Create HITL event"],
+        ["operator-question", "Create a nonsecret question under an installed operator project grant"],
+        ["read", "Read authenticated lifecycle request facts"],
         ["ask", "Ask a human via HITL and forward the request to the Lab"],
         ["show", "Show HITL event details"],
         ["list", "List HITL events"],
@@ -58,6 +62,8 @@ module Ace
       register "create", CLI::Commands::Create
       register "proposal", CLI::Commands::Proposal
       register "ask", CLI::Commands::Ask
+      register "operator-question", CLI::Commands::OperatorQuestion
+      register "read", CLI::Commands::Read
       register "show", CLI::Commands::Show
       register "list", CLI::Commands::List
       register "update", CLI::Commands::Update

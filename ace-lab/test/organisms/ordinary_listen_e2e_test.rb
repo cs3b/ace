@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "../test_helper"
+require_relative "../../../ace-assign/test/support/fixed_merge_evidence_fixture"
 require "digest"
 require "open3"
 require "tmpdir"
@@ -18,7 +19,11 @@ module Ace
     # coordinator, executes a REAL fast-forward merge on a sandbox
     # repository, settles the exact terminal receipt into the fixture Assign
     # journal, read-only status resolves it, and the next request advances —
-    # entirely without host chat. Real distinct-account installation stays
+    # entirely without host chat. Native candidate/review/test authority is the
+    # explicit controlled outside boundary here, as in the sibling receiver
+    # tests; ordinary_reviews_test covers its real canonical owner. This test
+    # proves socket/decision/merge/settlement composition, not native acceptance.
+    # Real distinct-account installation stays
     # fixture-gated/host-owned (gad.b/gad.2).
     class OrdinaryListenEndToEndTest < Minitest::Test
       def setup
@@ -41,7 +46,8 @@ module Ace
 
         cache = File.join(@dir, "cache")
         @coordinator = Ace::Assign::Organisms::AttemptCoordinator.new(cache_base: cache,
-          repo_root: @repo, journal: Ace::Assign::Molecules::EvidenceJournal.new(repo_root: @repo,
+          repo_root: @repo, ordinary_merge_evidence: (@merge_evidence = Ace::Assign::FixedMergeEvidenceFixture.new),
+          journal: Ace::Assign::Molecules::EvidenceJournal.new(repo_root: @repo,
             checkout_root: File.join(@dir, "journal")),
           lifecycle_exclusion: Ace::Assign::Molecules::LifecycleExclusion.new(
             root: File.join(@dir, "exclusion")
@@ -198,6 +204,17 @@ module Ace
         service&.stop
         owner&.join(5)
         owner&.kill if owner&.alive?
+      end
+
+      def test_revoked_canonical_evidence_refuses_over_real_socket_before_merge
+        start_listener!
+        git("checkout", "feat/a")
+        @merge_evidence.enabled = false
+        response = new_producer.request(**request_args("request-a", "decision-a", "feat/a", @head_a, @base))
+        assert_equal "error", response.fetch("status")
+        assert_equal "ordinary_merge_authorization_invalid", response.dig("error", "code")
+        assert_nil @coordinator.fixed_merge_record("request-a")
+        assert_equal @base, git("rev-parse", "refs/heads/main")
       end
 
       def test_mutual_peer_identity_is_enforced_fail_closed

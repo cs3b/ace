@@ -1,0 +1,14 @@
+{
+  "head": "f6d6f518f39b6f397baab7808db1790c454cd35d",
+  "base": "2922e2a5b85a768bc47b1923a7cb7bde139b90b1",
+  "files": {
+    ".ace-tasks/8xf.t.ei9-wave-3/5-deliver-scoped-releases-sync-and/8xf.t.ei9.5-deliver-scoped-releases-sync-and-verified-installations.s.md": "2fbb2697250adbefbd0b8a80d6cc8d924d3dc2e357399d7276da70d2ede73eff",
+    ".ace-tasks/8xf.t.ei9-wave-3/5-deliver-scoped-releases-sync-and/ordinary-publication-plan.md": "a78f61dcb66f88886d1e8d5fd15d8c1e631bf7c36bd1633ca22e449a41ab42e7",
+    "ace-assign/lib/ace/assign/authority/endcap.rb": "43dd17e98cad2396c32bc67303a089ad659bcb62263b28bf1c0c901004cff501",
+    "ace-assign/lib/ace/assign/authority/endcap_publication.rb": "b5563b3db20a791870b4fa3946ef86ea413752f176afcedc1964ebc03138b60c",
+    "ace-assign/lib/ace/assign/authority/endcap_service_context.rb": "7725ba07b7160b88b87b727fe614b68ff9ff6aed9d13b789729e22c408d5f9b9",
+    "ace-assign/lib/ace/assign/authority/fixed_publication_lifecycle.rb": "2c5db80f8512c7de4c39f7e6f6c2e84a48b76a52afff2b3400d4fd611f717e3b",
+    "ace-assign/lib/ace/assign/authority/fixed_service_lifecycle.rb": "57c90b3c6600e14c544dbcbf8f0a44b3e72252dc9b2f3a161a8b1d913dc056e6",
+    "ace-assign/test/feat/atomic_service_mutation_test.rb": "ce686b54442e23bb3fc6afbcca6d70645abc8a03e8b679c4f783dc689a13c5b6"
+  }
+}

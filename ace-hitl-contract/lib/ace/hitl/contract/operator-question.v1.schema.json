@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ace.tools/schemas/hitl/operator-question.v1.schema.json",
+  "title": "Unassigned operator question; structure is not authority",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "context",
+    "request_id",
+    "project",
+    "requester",
+    "correlation_id",
+    "request_incarnation",
+    "requester_uid",
+    "kind",
+    "payload_sha256",
+    "input_sha256"
+  ],
+  "properties": {
+    "schema": {
+      "const": "ace.hitl.operator-question/v1"
+    },
+    "context": {
+      "const": "operator-question"
+    },
+    "request_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "project": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "requester": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "correlation_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "request_incarnation": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{16}$"
+    },
+    "requester_uid": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "kind": {
+      "const": "question"
+    },
+    "payload_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "input_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  }
+}

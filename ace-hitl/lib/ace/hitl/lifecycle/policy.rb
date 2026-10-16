@@ -102,6 +102,10 @@ module Ace
       # the contract. The default denies everything — direct-library use
       # gets requester-only semantics and no transport authority.
       class AccessPolicy
+        def operator_question?(uid:, project:)
+          false
+        end
+
         def proposal?(_peer, project:)
           false
         end
@@ -135,6 +139,17 @@ module Ace
         def initialize(grants_path: nil, document: nil)
           @grants_path = grants_path
           @document = document
+        end
+
+        # Operator questions have exact installed project scope, never the
+        # historical empty-list transport wildcard. UID is taken from the kernel
+        # peer on creation and retained in the protected request on transitions.
+        def operator_question?(uid:, project:)
+          current = document
+          uids = hitl_facts(current)["operator_uids"]
+          projects = authorized_projects(uid, current)
+          uid.is_a?(Integer) && uids.is_a?(Array) && uids.include?(uid) &&
+            projects.is_a?(Array) && projects.include?(project)
         end
 
         def transport?(peer, project: nil)

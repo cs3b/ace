@@ -11,13 +11,13 @@ module Ace
           # `folder` is the absolute directory path; the message address
           # is `<machine>/<name>/<id>` where `<name>` is the channel (and
           # folder basename) token.
-          Channel = Struct.new(:name, :machine, :folder) do
+          Channel = Struct.new(:name, :machine, :folder, :project) do
             def path
               folder
             end
 
             def address(id)
-              "#{machine}/#{name}/#{id}"
+              project ? "#{machine}/#{name}/#{project}/#{id}" : "#{machine}/#{name}/#{id}"
             end
           end
 

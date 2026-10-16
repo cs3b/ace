@@ -53,3 +53,16 @@ configuration `environment.overrides.ACE_HITL_SCHEMA_PYTHON`; run the absolute
 test file with `bin/ace-test ace-hitl-contract ... --config-path /absolute/fixture.yml`.
 The default package run skips this external validator check; no runtime gem
 dependency or production configuration is added.
+
+`RequestEnvelope.load` is the closed union of the unchanged managed schema and
+`OperatorEnvelope` (`ace.hitl.operator-question/v1`). The operator variant fixes
+`context: operator-question` and `kind: question`, names the real requester UID,
+project, immutable incarnation/correlation and nonsecret question/input digests.
+It rejects assignment, attempt, reverse, effects, OTP and publication fields.
+`RequestEnvelope.from_facts` also checks the owner's exact attribution, project,
+classification and question payload binding. Its operator schema and example
+ship as `operator-question.v1.schema.json` and `examples/operator-question.json`.
+Structural validation grants no identity or execution authority; generic HITL
+checks the kernel principal and installed grants. A future command context needs
+its own canonical provenance and validator; an operator question cannot stand in
+for command execution or publisher OTP.

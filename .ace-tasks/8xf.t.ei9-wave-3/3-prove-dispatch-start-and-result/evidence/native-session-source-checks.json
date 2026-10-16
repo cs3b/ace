@@ -1,0 +1,28 @@
+{
+  "herdr": {
+    "execution_id": "5db68797-95fd-452d-b972-67a5694f227e",
+    "assertions": 2444,
+    "passed": 591,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 0,
+    "total": 591,
+    "pass_rate": 100.0,
+    "duration": 17.594824,
+    "success": true,
+    "timestamp": "2026-10-16T19:25:49+01:00"
+  },
+  "lab": {
+    "execution_id": "2b36bb57-1f0d-4c58-b83d-5a398e5da8ac",
+    "assertions": 62,
+    "passed": 14,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 0,
+    "total": 14,
+    "pass_rate": 100.0,
+    "duration": 0.926288,
+    "success": true,
+    "timestamp": "2026-10-16T19:25:41+01:00"
+  }
+}

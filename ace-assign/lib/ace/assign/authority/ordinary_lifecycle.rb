@@ -8,6 +8,10 @@ require_relative "ordinary_attempt_start"
 require_relative "ordinary_progress"
 require_relative "ordinary_results"
 require_relative "ordinary_completion"
+require_relative "ordinary_supervisor"
+require_relative "ordinary_reviews"
+require_relative "ordinary_merge_evidence"
+require_relative "ordinary_release_artifacts"
 require_relative "../molecules/lifecycle_exclusion"
 
 module Ace
@@ -21,22 +25,37 @@ module Ace
         include OrdinaryProgress
         include OrdinaryResults
         include OrdinaryCompletion
-        OPERATIONS = (%w[register_assignment registration_status start_attempt finish] + OrdinaryProgress::PROGRESS_OPERATIONS + OrdinaryResults::RESULT_OPERATIONS).freeze
+        include OrdinarySupervisor
+        include OrdinaryReviews
+        include OrdinaryMergeEvidence
+        include OrdinaryReleaseArtifacts
+        OPERATIONS = (%w[register_assignment registration_status start_attempt finish merge_evidence] + OrdinaryProgress::PROGRESS_OPERATIONS + OrdinaryResults::RESULT_OPERATIONS + OrdinarySupervisor::SUPERVISOR_OPERATIONS + OrdinaryReviews::REVIEW_OPERATIONS + OrdinaryReleaseArtifacts::RELEASE_OPERATIONS).freeze
         TRANSFER_OPERATIONS = {"register_assignment" => {direction: :upload, purpose: :candidate, roles: [:supervisor]}}
-          .merge(OrdinaryProgress::PROGRESS_TRANSFERS).merge(OrdinaryResults::RESULT_TRANSFERS).freeze
+          .merge(OrdinaryProgress::PROGRESS_TRANSFERS).merge(OrdinaryResults::RESULT_TRANSFERS).merge(OrdinaryReviews::REVIEW_TRANSFERS).merge(OrdinaryReleaseArtifacts::RELEASE_TRANSFERS).freeze
         REGISTER_KEYS = %w[assignment_id definition_digest prepared_head prepared_tree manifest_sha256 expected_generation pane transfer].freeze
 
-        def initialize(project:, admission:, journal:, exclusion:, input_root:, inbox: nil)
+        def initialize(project:, admission:, journal:, exclusion:, input_root:, inbox: nil, command_evidence: nil, release_authorizer: nil)
           @project, @admission, @journal, @exclusion = project, admission, journal, exclusion
           @input_root = PrivateDirectory.verify!(input_root)
           unless inbox.nil? || inbox.is_a?(Ace::Herdr::Organisms::Inbox)
             raise ArgumentError, "ordinary completion requires the installed Inbox owner"
           end
-          @inbox = inbox
+          unless release_authorizer.nil? || release_authorizer.respond_to?(:call)
+            raise ArgumentError, "release artifact authorization requires its installed policy owner"
+          end
+          @inbox, @command_evidence, @release_authorizer = inbox, command_evidence, release_authorizer
         end
 
         def authorize_transfer!(request:, peer:, role:, deadline:)
           authorize!(request, peer, role, deadline)
+          if OrdinaryReleaseArtifacts::RELEASE_TRANSFERS.key?(request.fetch("operation"))
+            authorize_ordinary_release!(request, peer, role, deadline)
+            return
+          end
+          if OrdinaryReviews::REVIEW_TRANSFERS.key?(request.fetch("operation"))
+            authorize_ordinary_review!(request, peer, role, deadline)
+            return
+          end
           if OrdinaryResults::RESULT_TRANSFERS.key?(request.fetch("operation"))
             validate_result!(request)
             authorize_start_replay!(request, peer, role, deadline) if request.fetch("operation") == "submit_result"
@@ -54,7 +73,16 @@ module Ace
 
         def dispatch(request:, peer:, role:, deadline:, transfer: nil)
           authorize!(request, peer, role, deadline)
+          return ordinary_review_operation(request, peer, role, deadline, transfer) if OrdinaryReviews::REVIEW_OPERATIONS.include?(request.fetch("operation"))
           case request.fetch("operation")
+          when "retain_release_artifact"
+            retain_release_artifact(request, peer, role, deadline, transfer)
+          when "merge_evidence"
+            raise ArgumentError, "merge evidence read forbids transfer" if transfer
+            ordinary_merge_evidence(request, peer, role, deadline)
+          when "supervisor_status", "adopt_supervisor"
+            raise ArgumentError, "ordinary supervisor operation forbids transfer" if transfer
+            supervisor_operation(request, peer, role, deadline)
           when "registration_status"
             strict!(request.fetch("params"), %w[assignment_id])
             raise ArgumentError, "status mutation must be null" unless request.fetch("mutation_id").nil?
@@ -134,6 +162,7 @@ module Ace
               {events: [], blobs: {definition_path => definition, bundle_path => bytes, queue_path => queue.bytes}, data: {
                 "authority" => "ordinary", "assignment_id" => assignment.id, "project_id" => @project,
                 "task_id" => assignment.task_id, "registered_by" => principal, "phase" => "registered",
+                "supervisor_binding" => identity.runtime_binding,
                 "definition_ref" => definition_path, "definition_digest" => params.fetch("definition_digest"),
                 "queue_ref" => queue_path, "queue_sha256" => queue_sha,
                 "prepared_work" => work.reference(head: params.fetch("prepared_head"), tree: params.fetch("prepared_tree")),
@@ -164,6 +193,13 @@ module Ace
           end
           unless request.fetch("project_id") == @project && @admission.authorize!(request: request, peer: peer, deadline: deadline) == role
             raise AttemptErrors::UnauthorizedIdentity, "ordinary lifecycle principal differs"
+          end
+          # Project commands share the canonical journal but never the managed
+          # assignment namespace. Reserve their prefix on every ordinary route,
+          # including transfer admission, status and registration replay.
+          assignment = request.fetch("params")["assignment_id"]
+          if assignment.is_a?(String) && assignment.start_with?("command-")
+            raise ArgumentError, "ordinary assignment uses the reserved project-command namespace"
           end
         end
 

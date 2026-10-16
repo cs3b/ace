@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "securerandom"
+require "ace/assign/authority/retained_input"
 require "ace/assign/authority/ordinary_client"
 require "ace/assign/authority/ordinary_lifecycle"
 require "ace/assign/organisms/prepared_work_builder"
@@ -13,6 +14,7 @@ module Ace
       # Only Assign's installed owner registers, advances and accepts execution.
       class OrdinaryAssignmentClient
         A = Ace::Assign::Authority
+        Files = A::RetainedInput
         REQUEST_KEYS = %w[version project_id operation mutation_id params parts].freeze
 
         def initialize(project:, config: nil, client_factory: nil)
@@ -31,7 +33,7 @@ module Ace
               pane.is_a?(String) && Molecules::OrdinaryOwnerConfig::PANE.match?(pane)
             raise ArgumentError, "preparation requires project and native pane selectors"
           end
-          directory = create_output(output)
+          directory = Files.create_output(output)
           prepared = Ace::Assign::Organisms::PreparedWorkBuilder.new(export_root: directory)
             .call(task_ref: task, project_id: project, dependency_reports: dependency_reports)
           definition = JSON.parse(prepared.fetch("definition_bytes"))
@@ -43,22 +45,22 @@ module Ace
               "prepared_head" => prepared.fetch("head"), "prepared_tree" => prepared.fetch("tree"),
               "manifest_sha256" => reference.fetch("manifest_sha256")},
             "parts" => [{"file" => "prepared.bundle", "bytes" => prepared.fetch("bytes"), "sha256" => prepared.fetch("sha256")}]}
-          write_file(directory, "definition.json", prepared.fetch("definition_bytes"))
-          write_file(directory, "prepared.bundle", prepared.fetch("bundle"))
-          write_file(directory, "request.json", JSON.generate(request) + "\n")
+          Files.write_file(directory, "definition.json", prepared.fetch("definition_bytes"))
+          Files.write_file(directory, "prepared.bundle", prepared.fetch("bundle"))
+          Files.write_file(directory, "request.json", JSON.generate(request) + "\n")
           {"project_id" => project, "assignment_id" => prepared.fetch("assignment_id"),
             "scope" => prepared.fetch("scope"), "request" => File.join(directory, "request.json"), "prepared" => true}
         end
 
         def request(input:, output: nil)
-          request = JSON.parse(self.class.read_file(input, 16_384), allow_duplicate_key: false, create_additions: false, max_nesting: 24)
+          request = JSON.parse(Files.read_file(input, 16_384), allow_duplicate_key: false, create_additions: false, max_nesting: 24)
           unless request.is_a?(Hash) && request.keys.sort == REQUEST_KEYS.sort && request["version"].is_a?(Integer) && request["version"] == 1 &&
               request["project_id"] == @project && A::OrdinaryLifecycle::OPERATIONS.include?(request["operation"]) &&
               request["params"].is_a?(Hash) && !request["params"].key?("transfer") && request["parts"].is_a?(Array)
             raise ArgumentError, "retained ordinary request selection is invalid"
           end
           operation = request.fetch("operation")
-          read = %w[registration_status assignment_snapshot result_status result_snapshot].include?(operation)
+          read = %w[registration_status assignment_snapshot result_status result_snapshot supervisor_status export_candidate review_status merge_evidence].include?(operation)
           mutation = request.fetch("mutation_id")
           unless read ? mutation.nil? : mutation.is_a?(String) && Ace::Assign::Molecules::JournalMutation::ID.match?(mutation)
             raise ArgumentError, "retained mutation ID must be explicit; read operations require null"
@@ -72,7 +74,7 @@ module Ace
           parts = upload && read_parts(request.fetch("parts"), input, transfer.fetch(:purpose))
           # No local metadata is interpreted as successful execution. Download
           # files are merely a projection of the authenticated canonical reply.
-          directory = download && self.class.create_output(output)
+          directory = download && Files.create_output(output)
           client = @client_factory.call(project_id: @project, service: @config.service,
             verify_selection: @config.method(:verify_owner!), scratch_root: directory || nil)
           reply = client.call(operation, request.fetch("params"), mutation_id: request.fetch("mutation_id"),
@@ -81,46 +83,15 @@ module Ace
           if download
             files = reply.parts.each_with_index.map do |bytes, index|
               name = format("part-%02d.bytes", index)
-              self.class.write_file(directory, name, bytes)
+              Files.write_file(directory, name, bytes)
               {"file" => File.join(directory, name), "bytes" => bytes.bytesize, "sha256" => Digest::SHA256.hexdigest(bytes)}
             end
             envelope["files"] = files
-            self.class.write_file(directory, "response.json", JSON.generate(envelope) + "\n")
+            Files.write_file(directory, "response.json", JSON.generate(envelope) + "\n")
           end
           envelope
         rescue JSON::ParserError
           raise ArgumentError, "retained request is not valid bounded JSON"
-        end
-
-        def self.read_file(path, limit)
-          File.open(path, File::RDONLY | File::NOFOLLOW | File::NONBLOCK) do |file|
-            before = file.stat
-            raise ArgumentError, "retained input is not a bounded regular file" unless before.file? && before.size.between?(0, limit)
-            bytes = (file.read(limit + 1) || "").b
-            after, selected = file.stat, File.lstat(path)
-            identity = ->(stat) { [stat.dev, stat.ino, stat.size, stat.mtime, stat.ctime] }
-            unless bytes.bytesize == before.size && identity.call(before) == identity.call(after) &&
-                identity.call(after) == identity.call(selected) && !selected.symlink?
-              raise ArgumentError, "retained input changed during read"
-            end
-            bytes.freeze
-          end
-        end
-
-        def self.create_output(path)
-          raise ArgumentError, "output must be a new directory path" unless path.is_a?(String) && !path.empty?
-          directory = File.expand_path(path)
-          Dir.mkdir(directory, 0o700)
-          A::PrivateDirectory.verify!(directory)
-          directory
-        end
-
-        def self.write_file(directory, name, bytes)
-          File.open(File.join(directory, name), File::WRONLY | File::CREAT | File::EXCL | File::NOFOLLOW, 0o600) do |file|
-            file.write(bytes)
-            file.flush
-            file.fsync
-          end
         end
 
         private
@@ -136,7 +107,7 @@ module Ace
             raise ArgumentError, "retained upload inventory is invalid"
           end
           entries.map do |entry|
-            bytes = self.class.read_file(File.expand_path(entry.fetch("file"), File.dirname(File.expand_path(input))), per_part)
+            bytes = Files.read_file(File.expand_path(entry.fetch("file"), File.dirname(File.expand_path(input))), per_part)
             unless bytes.bytesize == entry.fetch("bytes") && Digest::SHA256.hexdigest(bytes) == entry.fetch("sha256")
               raise ArgumentError, "retained upload bytes changed; preserve the original mutation"
             end

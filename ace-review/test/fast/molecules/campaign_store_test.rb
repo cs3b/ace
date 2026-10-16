@@ -10,7 +10,7 @@ class CampaignStoreTest < AceReviewTest
       "contract_identity" => Digest::SHA256.hexdigest("requirements"), "contract" => "requirements",
       "policy" => {"revision" => "v1", "minimum_rounds" => 3, "clean_rounds" => 2,
         "required_scopes" => ["full"], "required_checks" => ["tests"]}, "inherited_findings" => [], "assessments" => [], "attempts" => [], "rounds" => [],
-      "head_transitions" => [], "profile" => "delivery",
+      "head_transitions" => [], "head_assessments" => [], "profile" => "delivery",
       "bounds" => {"minimum_rounds" => 3, "clean_rounds" => 2, "maximum_rounds" => 5},
       "phases" => [{"id" => "initial", "profile" => "delivery", "round_start" => 0, "maximum_rounds" => 5}],
       "execution_attempts" => []}

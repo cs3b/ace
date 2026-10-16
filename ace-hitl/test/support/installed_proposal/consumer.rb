@@ -138,7 +138,8 @@ class InstalledProposalScenario
     input = {"target" => {"resource" => "controlled-fixture"}, "args" => {"mode" => "sync"}}
     write("input.json", input)
     write("clock.json", "2026-10-05T01:00:00Z")
-    write("policy.json", {"hitl" => {"proposal_uids" => [Process.uid], "transport_uids" => [Process.uid], "service_uid" => Process.uid},
+    write("policy.json", {"hitl" => {"proposal_uids" => [Process.uid], "transport_uids" => [Process.uid], "service_uid" => Process.uid,
+      "silence_operations" => {"ace" => ["forge-sync"]}},
       "authorization" => {"principals" => {Process.uid.to_s => {"projects" => ["ace"]}}},
       "operations" => {"forge-sync" => {"project" => "ace", "service_id" => "fixture-service", "transport" => "local",
         "argv" => [RbConfig.ruby, __FILE__, "executor", @root], "executor_uid" => Process.uid,
@@ -148,13 +149,13 @@ class InstalledProposalScenario
       "topology" => {"projects" => [{"id" => "ace"}], "agents" => [], "services" => [{"id" => "fixture-service", "project" => "ace",
         "capabilities" => ["forge-sync"], "default_for" => ["forge-sync"], "endpoint" => {"kind" => "http", "url" => "http://127.0.0.1:1/fixture"},
         "binding" => {"kind" => "service", "state" => "active", "instance_id" => "fixture", "attested_instance_id" => "fixture"}}]}})
-    FileUtils.mkdir_p(path("inbox"), mode: 0750)
-    write("registry.json", {"schema" => "ace.hitl.hermes.channels/v1", "channels" => [{"name" => "fixture", "machine" => "local",
-      "folder" => path("inbox"), "target" => "overseer", "projects" => ["ace"], "chat_id" => "-424242",
-      "captain_user_ids" => ["42"], "hitl_service_uid" => Process.uid}]})
+    FileUtils.mkdir_p(path("inbox/projects/ace"), mode: 0750)
+    write("registry.json", {"schema" => "ace.hitl.hermes.channels/v2", "channels" => [{"name" => "fixture", "machine" => "local",
+      "folder" => path("inbox"), "target" => "overseer", "projects" => {"ace" => {"hitl_socket" => @socket, "hitl_service_uid" => Process.uid}}, "chat_id" => "-424242",
+      "captain_user_ids" => ["42"]}]})
     File.write(path("gateway.yml"), "platforms:\n  telegram:\n    enabled: false\n")
-    write("runtime.json", {"schema" => "ace.hitl.hermes.runtime/v1", "registry" => path("registry.json"), "state" => path("hermes"),
-      "hitl_socket" => @socket, "hermes_gateway_config" => path("gateway.yml"), "polling_owner" => "ace-hitl-hermes"})
+    write("runtime.json", {"schema" => "ace.hitl.hermes.runtime/v2", "registry" => path("registry.json"), "state" => path("hermes"),
+      "hermes_gateway_config" => path("gateway.yml"), "polling_owner" => "ace-hitl-hermes"})
     start_service
     document = {"operation" => "forge-sync", "target" => Ace::Lab::Atoms::ServiceInput.target(input), "candidate_head" => git("rev-parse", "HEAD"),
       "input_digest" => Ace::Lab::Atoms::ServiceInput.digest(input), "context" => "Installed controlled SC3", "options" => ["yes", "no"],
@@ -163,7 +164,7 @@ class InstalledProposalScenario
     args = {id: id, assignment: assignment.id, attempt: attempt.attempt_id, project: "ace", document: document}
     initial = client.proposal_create(**args)
     check(initial["state"] == "awaiting-delivery" && !initial.key?("deadline"), "creation armed unconfirmed deadline")
-    check(Dir.empty?(path("inbox")), "proposal creation manually populated transport")
+    check(Dir.empty?(path("inbox/projects/ace")), "proposal creation manually populated transport")
     File.write(path("submit-failed"), "fixture")
     invoke_actor
     check(!client.proposal_show(id, project: "ace").key?("deadline"), "failed submission armed deadline")

@@ -48,7 +48,7 @@ module Ace
           # @return [Hash] the result frame
           def request(op, params = {}, deadline: nil)
             deadline = request_deadline(op, params, deadline)
-            ssl = connect!
+            ssl = connect!(deadline)
             begin
               verify_server!(ssl)
               write_frame!(ssl, Ace::Hitl::Lifecycle::Protocol.encode_request(op, params), deadline)
@@ -81,13 +81,13 @@ module Ace
             end
           end
 
-          def connect!
-            tcp = connect_tcp!
+          def connect!(deadline)
+            tcp = connect_tcp!(deadline)
             begin
               ssl = OpenSSL::SSL::SSLSocket.new(tcp, @context)
               ssl.sync_close = true
               ssl.hostname = @dns
-              handshake!(ssl)
+              handshake!(ssl, deadline)
               ssl
             rescue StandardError
               tcp.close rescue nil
@@ -95,27 +95,15 @@ module Ace
             end
           end
 
-          def connect_tcp!
-            address = Addrinfo.tcp(@dns, @port)
-            deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + HANDSHAKE_SECONDS
-            socket = Socket.new(address.pfamily, Socket::SOCK_STREAM, 0)
-            begin
-              result = socket.connect_nonblock(address, exception: false)
-              return socket if result == 0
-
-              await!(socket, :write, deadline)
-              error = socket.getsockopt(Socket::SOL_SOCKET, Socket::SO_ERROR).int
-              raise SystemCallError.new("HITL TLS boundary connection failed", error) unless error.zero?
-
-              socket
-            rescue StandardError
-              socket.close rescue nil
-              raise
-            end
+          def connect_tcp!(deadline)
+            remaining = deadline && deadline - Process.clock_gettime(Process::CLOCK_MONOTONIC)
+            raise Ace::Hitl::Lifecycle::TransportError, "HITL TLS connection deadline exceeded" if remaining && remaining <= 0
+            budget = [remaining, HANDSHAKE_SECONDS].compact.min
+            Socket.tcp(@dns, @port, resolv_timeout: budget, connect_timeout: budget)
           end
 
-          def handshake!(ssl)
-            deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + HANDSHAKE_SECONDS
+          def handshake!(ssl, request_deadline)
+            deadline = [request_deadline, Process.clock_gettime(Process::CLOCK_MONOTONIC) + HANDSHAKE_SECONDS].compact.min
             loop do
               result = ssl.connect_nonblock(exception: false)
               break if result.is_a?(OpenSSL::SSL::SSLSocket)

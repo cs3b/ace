@@ -2,7 +2,9 @@
 
 require "time"
 require "json"
+require "digest"
 require "ace/hitl/lifecycle"
+require "ace/hitl/contract/request_envelope"
 require_relative "registry"
 require_relative "journal"
 require_relative "../organisms/hermes_box"
@@ -14,37 +16,69 @@ module Ace
         # A definite refusal is recoverable. Everything else may have reached
         # Telegram and must be investigated rather than automatically resent.
         class SubmitFailed < Error; end
+        class IngressUnavailable < Error
+          REASONS = {
+            private_directory: "ordinary ingress requires an owned private directory",
+            route_changed: "retained ingress authority configuration changed",
+            identity_collision: "ordinary ingress identity collision",
+            persistence_failed: "ordinary ingress could not be persisted; Telegram offset retained",
+            body_unavailable: "retained ordinary ingress is unavailable"
+          }.freeze
+
+          def initialize(reason)
+            super(REASONS.fetch(reason))
+          end
+        end
 
         class Relay
           TERMINAL = %w[delivered closed rejected].freeze
+          ORDER_RESOLVED = (TERMINAL + ["secret-unavailable"]).freeze
 
           def initialize(registry:, journal:, lifecycle_for:, sender:, clock: -> { Time.now.utc }, box_factory: nil)
             @registry, @journal, @lifecycle_for, @sender, @clock = registry, journal, lifecycle_for, sender, clock
             @box_factory = box_factory || lambda do |channel|
-              folder_channel = Molecules::HermesChannels::Channel.new(
-                name: channel["name"], machine: channel["machine"], folder: channel["folder"]
-              )
-              lifecycle = lifecycle_for(channel)
-              Organisms::HermesBox.new(channel: folder_channel, answer_authorizer: ->(id) { lifecycle.read(id) })
+              lifecycle = channel["project"] && lifecycle_for(channel)
+              self.class.folder_box(channel, answer_authorizer: lifecycle && ->(id) { lifecycle.read(id) })
             end
+          end
+
+          def self.folder_box(channel, answer_authorizer: nil)
+            root = channel.fetch("root_folder", channel.fetch("folder"))
+            raise ContractError, "channel folder cannot be a symlink" if File.lstat(root).symlink?
+            if channel["project"]
+              expected = File.join(File.realpath(channel.fetch("root_folder")), "projects", channel.fetch("project"))
+              unless !File.lstat(channel.fetch("folder")).symlink? &&
+                  !File.lstat(File.dirname(channel.fetch("folder"))).symlink? &&
+                  File.realpath(channel.fetch("folder")) == expected
+                raise ContractError, "project message folder aliases another authority"
+              end
+            end
+            folder_channel = Molecules::HermesChannels::Channel.new(
+              name: channel.fetch("name"), machine: channel.fetch("machine"), folder: channel.fetch("folder"),
+              project: channel["project"])
+            Organisms::HermesBox.new(channel: folder_channel, answer_authorizer: answer_authorizer)
+          rescue SystemCallError
+            raise ContractError, "project message folder is unavailable"
           end
 
           # A request revision names an immutable lifecycle binding, never a
           # mutable text hash. Metadata acknowledges submission, not reading.
-          def submit(channel:, request:, revision:)
-            entry = @registry.resolve(channel)
+          def submit(channel:, project:, request:, revision:)
+            entry = @registry.project_channel(channel, project)
             lifecycle = lifecycle_for(entry)
             Atoms::HermesTokens.validate!(request, "request")
             Atoms::HermesTokens.validate!(revision, "revision")
             facts = lifecycle.read(request)
-            unless entry["projects"].include?(facts["project"])
+            unless facts["project"] == project
               raise ContractError, "request project is not registered to this channel"
             end
             binding = binding_for(facts)
             @journal.synchronize do |state, commit|
-              previous = state["requests"][request_key(channel, request)]
+              previous = state["requests"][request_key(channel, project, request)]
               if previous
-                unless previous.values_at("channel", "revision", "binding") == [channel, revision, binding]
+                verify_route!(previous)
+                unless previous.values_at("channel", "project", "revision", "binding") ==
+                    [channel, project, revision, binding]
                   raise ContractError, "request correlation binding cannot change"
                 end
                 if previous["status"] == "submitted"
@@ -63,11 +97,12 @@ module Ace
               unless message.body == facts["question"]
                 raise ContractError, "folder question differs from authoritative lifecycle request"
               end
-              record = {"request" => request, "revision" => revision, "channel" => channel,
+              record = {"request" => request, "revision" => revision, "channel" => channel, "project" => project,
+                        "route_identity" => @registry.route_identity(channel, project),
                         "chat_id" => entry["chat_id"], "binding" => binding,
                         "sensitive" => facts["sensitive"] == true, "status" => "uncertain",
                         "coverage_generation" => state["poll"].dig(channel, "generation") || 0}
-              state["requests"][request_key(channel, request)] = record
+              state["requests"][request_key(channel, project, request)] = record
               commit.call # crash/send timeout leaves uncertain; no duplicate send
               begin
                 ack = @sender.call(entry, message.body)
@@ -109,35 +144,96 @@ module Ace
               if duplicate
                 if %w[queued unresolved].include?(duplicate["status"])
                   if duplicate["request"]
-                    existing = state["requests"].fetch(request_key(channel["name"], duplicate["request"]))
+                    key = request_key(channel["name"], duplicate.fetch("project"), duplicate["request"])
+                    existing = state["requests"].fetch(key)
                     if existing["sensitive"]
                       duplicate["status"] = "secret-unavailable"
                       existing["secret_delivery"] = "unavailable"
                       commit.call
                       text.clear unless text.frozen?
                     else
+                      unless duplicate["body_sha256"]
+                        persist_ingress(duplicate, text, channel, existing)
+                        commit.call
+                      end
+                      text = retained_ingress(duplicate, channel, existing)
                       deliver_reply(existing, duplicate, text, channel, commit, state)
+                      cleanup_ingress(duplicate, channel, existing)
                     end
                   else
+                    unless duplicate["body_sha256"]
+                      persist_ingress(duplicate, text, channel, nil)
+                      commit.call
+                    end
+                    text = retained_ingress(duplicate, channel, nil)
                     deliver_instruction(duplicate, text, channel, commit)
+                    cleanup_ingress(duplicate, channel, nil)
                   end
                 end
                 return public_ingress(duplicate)
               end
 
-              request = correlate(state, channel, event, text)
-              record = request && state["requests"].fetch(request_key(channel["name"], request))
+              record = correlate(state, channel, event, text)
+              request = record && record.fetch("request")
               item = {"sequence" => state["sequence"] += 1, "channel" => channel["name"],
-                      "message_id" => event["message_id"], "received_at" => now, "status" => "queued"}
-              item.merge!("request" => request, "revision" => record["revision"]) if record
+                      "message_id" => event["message_id"], "user_id" => event["user_id"],
+                      "received_at" => now, "status" => "queued",
+                      "route_identity" => ingress_identity(channel, record)}
+              if record
+                item.merge!("request" => request, "project" => record.fetch("project"), "revision" => record["revision"])
+              end
               state["ingress"] << item
-              commit.call # write no answer, no digest, before any delivery
+              # Ordinary bodies are durable before the Telegram offset may advance.
+              # Secret classification comes from the retained authenticated request;
+              # a secret never enters a folder or a content-derived digest.
+              commit.call # reserve stable sequence/classification before creating its body
+              if !record || !record["sensitive"]
+                persist_ingress(item, text, channel, record)
+              end
+              commit.call
               if record
                 deliver_reply(record, item, text, channel, commit, state)
               else
                 deliver_instruction(item, text, channel, commit)
               end
+              cleanup_ingress(item, channel, record) unless record && record["sensitive"]
               public_ingress(item)
+            end
+          end
+
+          # Retry the original durable body independently for each project. A
+          # failed project never prevents later Telegram pages or another project.
+          def drain
+            @journal.synchronize do |state, commit|
+              blocked = []
+              state["ingress"].sort_by { |item| item.fetch("sequence") }.each do |item|
+                next unless item["body_sha256"]
+                scope = item.values_at("channel", "project")
+                next if blocked.include?(scope)
+                key = request_key(*item.values_at("channel", "project", "request")) if item["request"]
+                record = item["request"] && state["requests"].fetch(key)
+                begin
+                  channel = @registry.resolve(item.fetch("channel"))
+                  if TERMINAL.include?(item["status"])
+                    cleanup_ingress(item, channel, record)
+                    next
+                  end
+                  body = retained_ingress(item, channel, record)
+                  if record
+                    deliver_reply(record, item, body, channel, commit, state)
+                  else
+                    deliver_instruction(item, body, channel, commit)
+                  end
+                  cleanup_ingress(item, channel, record)
+                rescue StandardError => error
+                  warn "ace-hitl-hermes: #{error.message}" if error.instance_of?(IngressUnavailable)
+                  unless TERMINAL.include?(item["status"])
+                    item["status"] = "unresolved"
+                    commit.call
+                  end
+                end
+                blocked << scope unless ORDER_RESOLVED.include?(item["status"])
+              end
             end
           end
 
@@ -175,24 +271,25 @@ module Ace
             end
           end
 
-          def reconcile(channel:, request:, through:)
-            entry = @registry.resolve(channel)
+          def reconcile(channel:, project:, request:, through:)
+            entry = @registry.project_channel(channel, project)
             lifecycle = lifecycle_for(entry)
             validate_time(through)
             @journal.synchronize do |state, _commit|
-              record = state["requests"][request_key(channel, request)]
+              record = state["requests"][request_key(channel, project, request)]
               return {"status" => "unknown", "healthy" => false, "drained" => false} unless record
 
+              verify_route!(record)
               poll = state["poll"][record["channel"]]
               healthy = poll && poll["healthy"] && poll["from"] <= through && poll["through"] >= through &&
                 record["status"] == "submitted" && poll["from"] <= record["submitted_at"] &&
                 poll.fetch("generation", 0) == record.fetch("coverage_generation", 0)
               relevant = state["ingress"].select do |item|
-                item["channel"] == channel && item["request"] == request &&
+                item["channel"] == channel && item["project"] == project && item["request"] == request &&
                   item["revision"] == record["revision"] && item["received_at"] <= through
               end
               unresolved = relevant.reject { |item| TERMINAL.include?(item["status"]) }.map { |i| public_ingress(i) }
-              checkpoint = {"schema" => "ace.hitl.hermes.ingress-checkpoint/v1", "request" => request,
+              checkpoint = {"schema" => "ace.hitl.hermes.ingress-checkpoint/v1", "request" => request, "project" => project,
                "revision" => record["revision"], "channel" => record["channel"],
                "status" => healthy ? "healthy" : "unknown", "healthy" => !!healthy,
                "drained" => !!healthy && unresolved.empty?,
@@ -208,15 +305,94 @@ module Ace
             end
           end
 
-          def delivery(channel:, request:)
-            @registry.resolve(channel)
+          def delivery(channel:, project:, request:)
+            @registry.project_channel(channel, project)
             @journal.synchronize do |state, _commit|
-              record = state["requests"][request_key(channel, request)]
-              record ? projection(record) : {"request" => request, "status" => "unknown"}
+              record = state["requests"][request_key(channel, project, request)]
+              verify_route!(record) if record
+              record ? projection(record) : {"request" => request, "project" => project, "status" => "unknown"}
             end
           end
 
           private
+
+          def ingress_box(channel, record)
+            scoped = record ? @registry.project_channel(channel.fetch("name"), record.fetch("project")) : channel
+            self.class.folder_box(scoped) # reject project aliases before touching private ingress
+            folder = File.join(scoped.fetch("folder"), ".ingress")
+            begin
+              Dir.mkdir(folder, 0o700)
+            rescue Errno::EEXIST
+              # Verify the existing object; never follow or repair an alias.
+            end
+            Molecules::HermesAtomicWriter.sync_directory(scoped.fetch("folder"))
+            stat = File.lstat(folder)
+            unless stat.directory? && !stat.symlink? && stat.uid == Process.euid && (stat.mode & 0o077).zero?
+              raise IngressUnavailable.new(:private_directory)
+            end
+            entry = scoped.merge("folder" => folder).reject { |key, _| %w[project root_folder].include?(key) }
+            self.class.folder_box(entry)
+          end
+
+          def ingress_identity(channel, record)
+            return @registry.route_identity(channel.fetch("name"), record.fetch("project")) if record
+
+            binding = channel.slice("name", "chat_id", "captain_user_ids", "machine", "folder", "target")
+            Digest::SHA256.hexdigest(JSON.generate(binding))
+          end
+
+          def persist_ingress(item, text, channel, record)
+            unless item.fetch("route_identity") == ingress_identity(channel, record)
+              raise IngressUnavailable.new(:route_changed)
+            end
+            box = ingress_box(channel, record)
+            id = "inb-#{item.fetch('sequence')}"
+            if File.exist?(File.join(box.channel.folder, "#{id}.json"))
+              # The actor may have died after the file fsync and before its
+              # metadata commit. Keep the first body, including on edited replay.
+              message = box.poll.messages.find { |candidate| candidate.id == id }
+              unless message && message.question? && message.sender == "captain" &&
+                  message.timestamp == item.fetch("received_at")
+                raise IngressUnavailable.new(:identity_collision)
+              end
+              Molecules::HermesAtomicWriter.sync_directory(box.channel.folder)
+              text = message.body
+            else
+              box.publish(kind: :question, id: id, body: text, sender: "captain", timestamp: item.fetch("received_at"))
+            end
+            item["body_sha256"] = Digest::SHA256.hexdigest(text)
+            item["route_identity"] = ingress_identity(channel, record)
+          rescue IngressUnavailable
+            raise
+          rescue StandardError
+            raise IngressUnavailable.new(:persistence_failed)
+          end
+
+          def retained_ingress(item, channel, record)
+            unless item.fetch("route_identity") == ingress_identity(channel, record)
+              raise IngressUnavailable.new(:route_changed)
+            end
+            box = ingress_box(channel, record)
+            message = box.poll.messages.find { |candidate| candidate.id == "inb-#{item.fetch('sequence')}" }
+            unless message && message.question? && message.sender == "captain" &&
+                message.timestamp == item.fetch("received_at") &&
+                Digest::SHA256.hexdigest(message.body) == item.fetch("body_sha256")
+              raise IngressUnavailable.new(:body_unavailable)
+            end
+            message.body
+          end
+
+          def cleanup_ingress(item, channel, record)
+            return unless TERMINAL.include?(item["status"])
+
+            scoped = record ? @registry.project_channel(channel.fetch("name"), record.fetch("project")) : channel
+            path = File.join(scoped.fetch("folder"), ".ingress", "inb-#{item.fetch('sequence')}.json")
+            return unless File.exist?(path)
+
+            box = ingress_box(channel, record)
+            box.ack("inb-#{item.fetch('sequence')}")
+            Molecules::HermesAtomicWriter.sync_directory(box.channel.folder)
+          end
 
           def proposal?(record)
             record.dig("binding", "envelope", "kind") == "proposal"
@@ -225,15 +401,23 @@ module Ace
           def acknowledge_proposal(record, lifecycle)
             return unless proposal?(record)
             lifecycle.proposal_acknowledge(record["request"],
-              project: record.fetch("binding").fetch("envelope").fetch("project"), submitted_at: record.fetch("submitted_at"))
+              project: record.fetch("binding").fetch("envelope").fetch("project"),
+              submitted_at: record.fetch("submitted_at"))
           end
 
           def lifecycle_for(channel)
-            @lifecycle_for.call(channel)
+            @lifecycle_for.call(channel, channel.fetch("project"))
           end
 
-          def request_key(channel, request)
-            JSON.generate([channel, request])
+          def verify_route!(record)
+            current = @registry.route_identity(record.fetch("channel"), record.fetch("project"))
+            unless record.fetch("route_identity") == current
+              raise ContractError, "retained request authority configuration changed"
+            end
+          end
+
+          def request_key(channel, project, request)
+            JSON.generate([channel, project, request])
           end
 
           def update_poll(state, channel:, started_at:, through:, continuous:)
@@ -265,10 +449,11 @@ module Ace
           end
 
           def binding_for(facts)
-            envelope = Ace::Hitl::Contract::ManagedEnvelope.load(facts.fetch("envelope"), expected: {
-              request_id: facts["id"], correlation_id: facts["id"], assignment_id: facts["assignment"],
-              attempt_id: facts["attempt"], project: facts["project"], requester: facts["requester"], kind: facts["kind"]
-            })
+            unless [true, false].include?(facts["sensitive"]) &&
+                (facts["kind"] != "otp" || facts["sensitive"] == true)
+              raise ContractError, "authoritative request classification is invalid"
+            end
+            envelope = Ace::Hitl::Contract::RequestEnvelope.from_facts(facts)
             {"envelope" => envelope, "sensitive" => facts["sensitive"] == true, "otp" => facts["otp"]}
           rescue KeyError, Ace::Hitl::Contract::InvalidEnvelope => e
             raise ContractError, "authoritative managed binding is invalid (#{e.message})"
@@ -294,23 +479,25 @@ module Ace
             unless records.size == 1 && records.first["status"] == "submitted"
               raise ContractError, "unknown or ambiguous Reply correlation"
             end
-            records.first["request"]
+            verify_route!(records.first)
+            records.first
           end
 
           def deliver_reply(record, item, text, channel, commit, state)
+            verify_route!(record)
+            channel = @registry.project_channel(channel.fetch("name"), record.fetch("project"))
             lifecycle = lifecycle_for(channel)
-            if proposal?(record) && state["ingress"].any? { |earlier|
-                earlier["channel"] == item["channel"] && earlier["request"] == item["request"] &&
-                  earlier["revision"] == item["revision"] &&
-                  earlier["sequence"] < item["sequence"] && !TERMINAL.include?(earlier["status"]) }
-              item["status"] = "unresolved"
-              commit.call
-              return
-            end
             # Durable terminal history in ace-hitl defeats late replies even
             # after transport tombstones expire. Hermes never runs the effect.
             if record["sensitive"] && record["secret_delivery"] == "unavailable"
               item["status"] = "secret-unavailable"
+              commit.call
+              return
+            end
+            if state["ingress"].any? { |earlier|
+                earlier["channel"] == item["channel"] && earlier["project"] == item["project"] &&
+                  earlier["sequence"] < item["sequence"] && !ORDER_RESOLVED.include?(earlier["status"]) }
+              item["status"] = "unresolved"
               commit.call
               return
             end
@@ -337,7 +524,8 @@ module Ace
             end
             answer = text.sub(/\A\/hitl-reply(?:@\w+)?\s+\S+\s+/i, "")
             if proposal?(record)
-              lifecycle.proposal_reply(record["request"], project: record.fetch("binding").fetch("envelope").fetch("project"), answer: answer,
+              lifecycle.proposal_reply(record["request"],
+                project: record.fetch("binding").fetch("envelope").fetch("project"), answer: answer,
                 received_at: item["received_at"], sequence: item["sequence"])
               item["status"] = "delivered"
               commit.call
@@ -392,12 +580,13 @@ module Ace
 
           def projection(record)
             {"schema" => "ace.hitl.hermes.delivery/v1"}.merge(
-              record.slice("request", "revision", "channel", "chat_id", "message_id", "submitted_at", "status")
+              record.slice("request", "project", "revision", "channel", "chat_id", "message_id", "submitted_at", "status")
             )
           end
 
           def public_ingress(item)
-            item.slice("request", "revision", "channel", "message_id", "sequence", "received_at", "status", "target")
+            item.slice("request", "project", "revision", "channel", "message_id", "sequence",
+              "received_at", "status", "target")
           end
         end
       end
