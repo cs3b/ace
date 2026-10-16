@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-10-16
+
 ### Added
 
 - Wire ordinary artifact retention to fresh installed project visibility and the existing exact service or canonical proposal decision; retention does not select an executor or consume publication authorization.

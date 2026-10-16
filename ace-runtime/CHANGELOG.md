@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-10-16
+
 ### Added
 
 - Distinguish positively ended process generations from inaccessible observations for explicit coordinator adoption; retain conservative unknown liveness for existing recovery observers.

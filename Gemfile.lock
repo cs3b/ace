@@ -1,14 +1,14 @@
 PATH
   remote: ace-assign
   specs:
-    ace-assign (0.70.0)
+    ace-assign (0.71.0)
       ace-b36ts (~> 0.14)
       ace-bundle (~> 0.45.1)
       ace-git (~> 0.30)
       ace-herdr (~> 0.6)
       ace-llm (~> 0.39)
       ace-llm-providers-cli (~> 0.36.1)
-      ace-review (~> 0.60.3)
+      ace-review (~> 0.61.0)
       ace-runtime (~> 0.3)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.18)
@@ -190,7 +190,7 @@ PATH
   remote: ace-herdr
   specs:
     ace-herdr (0.6.1)
-      ace-hitl-contract (~> 0.2.1)
+      ace-hitl-contract (~> 0.3.0)
       ace-runtime (~> 0.3)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.18)
@@ -201,25 +201,25 @@ PATH
 PATH
   remote: ace-hitl-contract
   specs:
-    ace-hitl-contract (0.2.2)
+    ace-hitl-contract (0.3.0)
 
 PATH
   remote: ace-hitl-hermes
   specs:
-    ace-hitl-hermes (0.5.0)
-      ace-hitl (~> 0.16.1)
-      ace-hitl-contract (~> 0.2.1)
+    ace-hitl-hermes (0.6.0)
+      ace-hitl (~> 0.17.0)
+      ace-hitl-contract (~> 0.3.0)
       ace-support-cli (~> 0.6)
       faraday (~> 2.14)
 
 PATH
   remote: ace-hitl
   specs:
-    ace-hitl (0.16.1)
+    ace-hitl (0.17.0)
       ace-assign (~> 0.70)
       ace-b36ts (~> 0.14)
       ace-herdr (~> 0.6)
-      ace-hitl-contract (~> 0.2.1)
+      ace-hitl-contract (~> 0.3.0)
       ace-runtime (~> 0.3)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.18)
@@ -240,7 +240,7 @@ PATH
 PATH
   remote: ace-lab
   specs:
-    ace-lab (0.8.0)
+    ace-lab (0.9.0)
       ace-assign (~> 0.70)
       ace-git-forgejo (~> 0.7)
       ace-herdr (~> 0.6)
@@ -284,13 +284,13 @@ PATH
 PATH
   remote: ace-overseer
   specs:
-    ace-overseer (0.22.0)
+    ace-overseer (0.23.0)
       ace-assign (~> 0.70)
       ace-git (~> 0.30)
       ace-git-worktree (~> 0.26)
       ace-herdr (~> 0.6)
       ace-lab (~> 0.8)
-      ace-review (~> 0.60.3)
+      ace-review (~> 0.61.0)
       ace-runtime (~> 0.3)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.18)
@@ -326,7 +326,7 @@ PATH
 PATH
   remote: ace-review
   specs:
-    ace-review (0.60.3)
+    ace-review (0.61.0)
       ace-b36ts (~> 0.14)
       ace-bundle (~> 0.45)
       ace-compressor (~> 0.25)
@@ -345,7 +345,7 @@ PATH
 PATH
   remote: ace-runtime
   specs:
-    ace-runtime (0.3.0)
+    ace-runtime (0.4.0)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.18)
       ace-support-core (~> 0.31)

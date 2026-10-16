@@ -6,6 +6,11 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- **ace-assign v0.71.0, ace-review v0.61.0, ace-lab v0.9.0**: Compose accepted-head campaign comparison, canonical ordinary review/release ingress and retained command evidence. Bound candidate transport at closed 128MiB budgets with batched Git object reads, explicit object/path limits and a measured 60s transfer deadline; share the complete-head-context ceiling between Review and Assign. Add the Lab command kernel (`ace-lab run`) with ordinary driver status/bootstrap/progress/result and exact recovery.
+- **ace-hitl v0.17.0, ace-hitl-contract v0.3.0, ace-hitl-hermes v0.6.0**: Add explicit operator questions with a closed envelope contract, kernel requester identity, exact installed project grants, stable retries and operator-only service bindings that refuse managed execution, secrets and effects; route them through project correlation and durable Hermes ingress under runtime/v2.
+- **ace-overseer v0.23.0**: Add explicit ordinary preparation/launch/resume using existing worktree, native pane and provider mechanisms, preserving original identities and dispatch intent on response loss.
+- **ace-runtime v0.4.0**: Distinguish positively ended process generations from inaccessible observations for explicit coordinator adoption.
+- **ace-herdr v0.6.1**: Share native immutable session normalization between Inbox and process admission so real Pi path selectors bind their session UUID.
 - **ace-design v0.2.0**: Add inherited project design contexts and transactional adjustment, component exploration, preset-driven site/app coding-agent generation, per-variant prompts and models, shared mock data, targeted revision/resume and selection, production/audit workflows, local browser evidence, and reviewed inspiration maintenance.
 - **ace-lint v0.30.11**: Recognize design CLI commands in skill metadata.
 - **ace-assign v0.70.0, ace-lab v0.8.0, ace-hitl v0.16.0, ace-herdr v0.6.0**: Compose canonical ordinary assignment, native admission, retained requests/results, scoped HITL and Forgejo merge under one installed owner. Share Unix/mTLS HITL and its one-use vault with bounded protected configuration reads. Bound local observations and delivery process cleanup while preserving unknown outcomes. This initial source cut does not certify installed autonomy.
@@ -18,6 +23,8 @@ All notable changes to this project will be documented in this file.
 - **ace-hitl-hermes v0.4.0**: Route Telegram channels over the mTLS crossing (exact `tls+tcp://` endpoints, pinned server identities, atomic multi-authority activation), add the `ace-hitl-boundary-scenario` acceptance harness, and surface informed unknown-chat coverage generations.
 
 ### Changed
+
+- Dependency-floor coordination for this release: ace-assign and ace-overseer require ace-review 0.61 for the shared complete-head-context constant; ace-hitl requires ace-hitl-contract 0.3 envelopes; ace-hitl-hermes requires ace-hitl 0.17 operator-question bindings and ace-hitl-contract 0.3 envelopes; ace-herdr follows the ace-hitl-contract 0.3 line.
 
 - **ace-hitl-contract v0.2.2**: Include exact project identity in shared proposal checkpoint examples.
 

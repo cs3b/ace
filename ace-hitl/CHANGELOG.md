@@ -7,11 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.0] - 2026-10-16
+
 ### Added
 
 - Add explicit unassigned operator questions with kernel requester UID, exact installed project grants, stable retries and existing request/terminal recovery. Expose public client/CLI creation/read and an operator-only service binding that refuses managed execution, secrets and effects.
 
-## [0.16.1] - 2026-10-16
+### Changed
+
+- Require the ace-hitl-contract 0.3 operator-question envelope for the tagged request union.
 
 ### Fixed
 
