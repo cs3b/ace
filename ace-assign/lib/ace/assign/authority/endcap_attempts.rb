@@ -179,7 +179,7 @@ module Ace
                 @launch.campaign_children_settled!(journal: selected, commit: prefix, params: params, map: map)
                 @launch.completion_scope!(journal: selected, events: fresh, params: params, map: map, commit: prefix)
                 service_settlement_evidence!(journal: selected, events: fresh, params: params, map: map, commit: prefix)
-                plan = Organisms::AttemptCoordinator.finished_transition_plan(events: fresh, receipt: result.fetch("receipt"))
+                plan = Organisms::AttemptCoordinator.finished_transition_plan(events: fresh, receipt: result.fetch("receipt"), authority: :protected)
                 plan.merge(data: params.slice("attempt_id", "result_id", "head", "candidate_generation").merge(
                   "receipt_digest" => result.fetch("receipt_digest"), "state" => result.dig("receipt", "verdict")))
                 end

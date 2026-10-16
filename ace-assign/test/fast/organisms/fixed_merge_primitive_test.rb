@@ -5,6 +5,7 @@ require "json"
 require "open3"
 require "fileutils"
 require "digest"
+require "ace/assign/authority/ordinary_effect_settlement"
 
 module Ace
   module Assign
@@ -353,7 +354,78 @@ module Ace
           owner_gid: Process.gid, owner_groups: Process.groups)
       end
 
+      def test_ordinary_completion_waits_for_fixed_owner_and_rechecks_immutable_no_effect_proof
+        coordinator = build_coordinator
+        admitted = coordinator.admit_fixed_merge_request(admission)
+        assert_raises(AttemptErrors::ServiceSettlementPending) { ordinary_settlement }
+        coordinator.begin_fixed_merge_effect("request-1")
+        assert_raises(AttemptErrors::ServiceSettlementPending) { ordinary_settlement }
+        coordinator.settle_fixed_merge_effect("request-1", terminal_status: "failed",
+          receipt: failed_receipt(admitted), attestation: no_effect_attestation(admitted))
+        assert_equal ["request-1"], ordinary_settlement.fetch("merge_requests")
+        settled = coordinator.fixed_merge_record("request-1")
+        reference = settled.dig("receipt", "effect", "no_effect_evidence").fetch("reference")
+        # A new immutable commit with altered bytes must not inherit the old
+        # no-effect result merely because its terminal status still says failed.
+        checkout = journal.send(:checkout_dir)
+        File.write(File.join(checkout, reference), "{}")
+        git(checkout, "add", "--", reference)
+        git(checkout, "-c", "user.name=fixture", "-c", "user.email=fixture@example.invalid", "commit", "-m", "corrupt fixture proof")
+        git(@repo, "update-ref", REF, git(checkout, "rev-parse", "HEAD").strip)
+        assert_raises(AttemptErrors::EvidenceUnavailable) { ordinary_settlement }
+      end
+
+      def test_ordinary_completion_accepts_success_only_from_the_canonical_merge_record
+        coordinator = build_coordinator
+        admitted = coordinator.admit_fixed_merge_request(admission)
+        coordinator.begin_fixed_merge_effect("request-1")
+        coordinator.settle_fixed_merge_effect("request-1", terminal_status: "succeeded", receipt: terminal_receipt(admitted))
+        assert_equal ["request-1"], ordinary_settlement.fetch("merge_requests")
+        assignment, attempt = managed_attempt
+        events = journal.read_events(assignment).select { |event| event["attempt_id"] == attempt }
+        assert_raises(AttemptErrors::EvidenceUnavailable) do
+          Authority::OrdinaryEffectSettlement.new(journal: journal).verify!(project: "foreign", assignment: assignment,
+            attempt: attempt, events: events, commit: journal.ref_value)
+        end
+      end
+
+      def test_terminal_attempt_winning_race_prevents_delayed_direct_merge_admission
+        coordinator = build_coordinator
+        submission = admission
+        entered, release = Queue.new, Queue.new
+        original = journal.method(:admit_fixed_merge_request)
+        journal.define_singleton_method(:admit_fixed_merge_request) do |*args, **options|
+          entered << true
+          release.pop
+          original.call(*args, **options)
+        end
+        racing = Thread.new do
+          coordinator.admit_fixed_merge_request(submission)
+        rescue AttemptErrors::ReceiptRejected => error
+          error
+        end
+        Timeout.timeout(5) { entered.pop }
+        assignment, attempt = managed_attempt
+        journal.record(assignment_id: assignment, attempt_id: attempt, type: "transition",
+          payload: {"from" => "running", "to" => "succeeded", "reason" => "fixture terminal acceptance"})
+        release << true
+        assert racing.join(5), "late admission must finish without dispatch"
+        assert_kind_of AttemptErrors::ReceiptRejected, racing.value
+        assert_nil journal.fixed_merge_request("request-1")
+        assert_empty journal.read_events(assignment).select { |event| event["type"] == "merge_admission" }
+      ensure
+        racing&.kill if racing&.alive?
+      end
+
       private
+
+      def ordinary_settlement
+        assignment, attempt = managed_attempt
+        commit = journal.ref_value
+        events = journal.read_events(assignment, commit: commit).select { |event| event["attempt_id"] == attempt }
+        Authority::OrdinaryEffectSettlement.new(journal: journal).verify!(project: "atlas", assignment: assignment,
+          attempt: attempt, events: events, commit: commit)
+      end
 
       def approved_proposal(index)
         reference = "proposal-#{format('%024x', index + 1)}-r1"

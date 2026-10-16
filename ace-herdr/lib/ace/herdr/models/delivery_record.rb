@@ -79,6 +79,15 @@ module Ace
           state == "delivered"
         end
 
+        # Exact native submission receipt, not a business completion verdict.
+        def inbox_delivered?
+          return false unless delivered? && inbox.is_a?(Hash)
+          receipt = inbox["receipt"]
+          inbox["claim_generation"].is_a?(Integer) && inbox["claim_generation"].positive? &&
+            receipt.is_a?(Hash) && receipt.values_at("event_id", "attempt_id", "claim_generation", "payload_sha256", "binding") ==
+              [event_id, inbox["attempt_id"], inbox["claim_generation"], answer_digest, inbox["binding"]]
+        end
+
         # A "submitting" history entry without a matching outcome means the
         # previous run crashed between prompt submission and persistence;
         # resending could duplicate the answer, so the outcome is ambiguous.

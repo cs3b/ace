@@ -212,7 +212,7 @@ module Ace
             return {state: "accepted", reference: ack.fetch("reference"),
                     request_id: ack.fetch("request_id"), input_digest: ack.fetch("input_digest")}
           end
-          handle_refusal(binding, identity, branch[:payload], expected_digest: digest)
+          handle_refusal(binding, identity, branch[:payload], expected_digest: digest, request_id: selectors.fetch(:request_id))
         end
 
         # Closed outer envelope for admission responses: exactly {status,
@@ -241,7 +241,7 @@ module Ace
           end
         end
 
-        def handle_refusal(binding, identity, error, expected_digest:)
+        def handle_refusal(binding, identity, error, expected_digest:, request_id:)
           refusal = begin
             Molecules::OrdinaryMergeContract.validate_refusal!(error)
           rescue ArgumentError
@@ -249,9 +249,9 @@ module Ace
               "ordinary merge refusal is not the maintained contract; admission stays unconfirmed"
           end
           echo = refusal.fetch("input_digest")
-          if echo && echo != expected_digest
+          if refusal.fetch("request_id") != request_id || (echo && echo != expected_digest)
             raise AttemptErrors::EvidenceUnavailable,
-              "ordinary merge refusal echoes a different input digest; admission stays unconfirmed"
+              "ordinary merge refusal echoes a different request; admission stays unconfirmed"
           end
           if refusal.fetch("code") == Molecules::OrdinaryMergeContract::UNAVAILABLE_CODE
             raise AttemptErrors::EvidenceUnavailable,
@@ -259,7 +259,7 @@ module Ace
           end
           record_event(binding, identity, {"stage" => RESULT_STAGE, "outcome" => "refused_no_effect",
             "code" => refusal.fetch("code"), "message" => refusal.fetch("message"),
-            "request_id" => refusal.fetch("request_id"), "input_digest" => refusal.fetch("input_digest")})
+            "request_id" => request_id, "input_digest" => expected_digest})
           {state: "refused", code: refusal.fetch("code"), message: refusal.fetch("message")}
         end
 

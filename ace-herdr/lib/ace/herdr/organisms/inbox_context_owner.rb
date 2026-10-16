@@ -378,12 +378,7 @@ module Ace
         end
 
         def completed_record?(record)
-          return false unless record.state == "delivered" && record.inbox.is_a?(Hash)
-          inbox = record.inbox
-          receipt = inbox["receipt"]
-          inbox["claim_generation"].is_a?(Integer) && inbox["claim_generation"].positive? &&
-            receipt.is_a?(Hash) && receipt.values_at("event_id", "attempt_id", "claim_generation", "payload_sha256", "binding") ==
-              [record.event_id, inbox["attempt_id"], inbox["claim_generation"], record.answer_digest, inbox["binding"]]
+          record.inbox_delivered?
         end
 
         def expected!(state, expected)

@@ -48,8 +48,61 @@ until their consumers have an accepted replacement.
 
 ## Execution evidence
 
-Implementation and test entries are added here as each slice is verified. No
-installed acceptance is claimed by this initial ledger.
+Entries below distinguish implemented source, installed prerequisites and final
+acceptance. No child or parent has completed its installed acceptance.
+
+### Current ordinary execution and installed native checkpoint
+
+Source commits `6a2c93ac3`, `9a3e447cc`, `64e358999` reuse the existing Assign
+journal and queue engine for remote progress, immutable submitted results and
+independently owned sibling scopes. Each attempt has its own generation; shared
+queue recovery uses canonical publication order, not wall-clock timestamps.
+Overlapping consumed scopes and cross-assignment attempt-ID reuse are refused.
+Submitted results remain running until terminal acceptance. Independent tests:
+82/578 for sibling scopes, followed by 13/146 for reserved IDs and selected-scope
+snapshots; submitted-result review passed 25/291.
+
+`946cf19db` derives supervisor authority from installed native pane placement,
+while preserving the real OS actor for HITL. Multiple ordinary agents may share
+that OS account; this is not malicious same-UID isolation. `2ca21297f` reobserves
+canonical recorded worker bindings and checkout HEAD for trusted consumers,
+including fresh protected-principal exclusion. Independent Lab tests passed
+25/100. The complete Lab fast run preceding these observer changes passed
+447/2482 with four skips. Installed lifecycle/CLI/HITL/merge composition and
+terminal execution acceptance remain open.
+
+Terminal ordinary acceptance now consumes the exact submitted result, scoped
+queue outcome, canonical effect settlements and native worker checkout in one
+Assign CAS. An Inbox binding requires the existing Herdr delivery owner; its
+inventory/event locks stay held through that CAS. Delivery evidence and work
+success remain separate. Failed nested scopes settle as failed, sibling scopes
+stay open, uncertain effects remain blockers, and late fixed-merge admission
+cannot attach to an ended attempt. Canonical imported service evidence survives
+loss of local files; reconciliation can consume an exact result from a sibling
+recovery attempt. The coordinator can use the installed native observer without
+ambient runtime fallback. Independent review approved this source slice:
+Assign 73/487 (`87569ce1-fcf1-4da8-9b27-29ec323fd3f1`) and Herdr 57/332
+(`893710fd-1df4-4581-ac67-745d262adea5`); root's broader Assign run passed
+81/493 (`e9e606a8-89a8-4018-b467-3cab2103a31a`). The subsequent shared-service
+composition is a separate unaccepted increment. No ordinary Inbox delivery
+store, Assign owner API or receiver has yet been installed on the Lab.
+
+Domain source `57a09be6bb901a5dc3378c45b1c3a42591e52cce` and production receipt
+commit `d976459a6bfe2636fb4e6c4ff7aef5f33d38f1d1` completed one maintained native
+Herdr handoff. The root-owned 0.9.1 executable now runs as MainPID 514709; root
+receipt `/etc/lab/herdr-native/lab.json` pins protocol 22, exact server birth and
+socket `/run/lab/ordinary-native/48ebd7dcb49ada59b67a8370/herdr.sock` (device 2050,
+inode 6662475, owner root). `lab-assign-owner` is UID 966/GID 964 with no extra
+groups, sudo or capabilities. Real owner ping passed; an unrelated account was
+denied. Four pane processes, both Pi session prefixes, two saved duties and all
+68 existing recovery records survived. Internal terminal handles were reminted
+by native restore; full old runtime-binding equality is not claimed. No active
+canonical attempt existed at handoff. `chief` was left on its separate runtime.
+
+Read-only Git/worktree access for the new owner is a separate domain prerequisite
+under implementation/review. Ordinary Assign and merge services are not yet
+installed. Domain focused Linux fixture passed 89/89; the expanded domain suite
+remains failing on independently checked baseline issues and is not a PASS.
 
 ### Ordinary owner admission and native continuation checkpoint
 
@@ -114,18 +167,20 @@ verification preceding this increment passed 1073 tests/4727 assertions. Remote
 progress/results, installed CLI/composition and installed start acceptance remain
 open; no child is complete.
 
-Live native installation findings: the current Herdr server runs as `mo` from
+Earlier live native installation findings: the Herdr server ran as `mo` from
 a user-owned mise executable; its socket and parent directories are also
 user-owned and inaccessible to a distinct Assign owner. That endpoint cannot
 serve as trusted ordinary authority input. Domain ownership must provide a
 reviewed trusted executable and pinned accessible endpoint using the existing
 native handoff and systemd mechanisms; no broker or protected capability is
-introduced. This prerequisite is open, and no ordinary owner is installed.
+introduced. The current checkpoint above records completion of that native
+prerequisite; no ordinary Assign owner service is installed yet.
 Domain isolated Linux proofs have since preserved shell PID/pgid through native
 handoff, adopted the new MainPID with systemd's existing pidfd mechanism, and
 verified root-owned socket inode plus exact distinct-UID ACL/read-only pin.
 The selected future account is `lab-assign-owner`, with a free system UID recorded
-by the maintained installer. Production native handoff/provisioning has not run.
+by the maintained installer. This isolated proof preceded the production handoff
+recorded above.
 
 Domain receipt `ca22cd8` records canonical session adoption: the same saved
 session survived bootstrap and a second ordinary restart, retains exactly two
@@ -280,7 +335,8 @@ complement, rather than replace, the recorded expanded-suite failures.
 
 ### Completed default suite and expanded-suite attribution
 
-The final default `bin/ace-test-suite --no-color` passed all 50 packages:
+The completed default `bin/ace-test-suite --no-color` at the earlier checkpoint
+passed all 50 packages (it must run again after the final source changes):
 12,237 tests, 42,291 assertions, 42 skips, no failures. Current Assign fast report
 is `assign/923f0f17-51d6-45f0-a5ad-2e7f01329330`; Lab is
 `lab/f2d2374f-cdd6-429a-9345-b502acf7b9ee`; Review is

@@ -232,6 +232,24 @@ module Ace
           assert_equal 1, @producer.requests.length
         end
 
+        def test_closed_refusal_without_digest_is_bound_to_original_intent_before_settlement
+          @producer.enqueue({"status" => "error", "error" => valid_refusal("ordinary_merge_provenance_mismatch", input_digest: nil)})
+          assert_equal "refused", dispatch.fetch(:state)
+          assert_equal @digest, result_events.last.dig("payload", "input_digest")
+          assert_equal REQUEST_ID, result_events.last.dig("payload", "request_id")
+          require "ace/assign/authority/ordinary_effect_settlement"
+          events = @journal.read_events(@selectors.fetch(:assignment))
+          proof = Authority::OrdinaryEffectSettlement.new(journal: @journal).verify!(project: PROJECT,
+            assignment: @selectors.fetch(:assignment), attempt: @selectors.fetch(:attempt), events: events, commit: @journal.ref_value)
+          assert_empty proof.fetch("merge_requests")
+        end
+
+        def test_refusal_for_foreign_request_does_not_settle_original_intent
+          @producer.enqueue({"status" => "error", "error" => valid_refusal("ordinary_merge_provenance_mismatch", request_id: "foreign", input_digest: nil)})
+          assert_raises(AttemptErrors::EvidenceUnavailable) { dispatch }
+          assert_empty result_events
+        end
+
         def test_lost_acknowledgment_after_durable_acceptance_recovers_by_identical_request
           flaky = FlakyJournal.new(@journal) do |keywords|
             keywords.dig(:payload, "stage") == OrdinaryMergeConsumer::ACK_STAGE

@@ -252,6 +252,35 @@ module Ace
           refute File.exist?(missing)
         end
 
+        def test_ordinary_delivery_settlement_holds_original_records_and_binds_exact_native_owner
+          enqueue
+          delivered = @inbox.deliver(event: @event)
+          reference = {"event_id" => @event, "attempt_id" => "att-1", "payload_sha256" => Digest::SHA256.hexdigest("hello")}
+          owner = {"runtime" => "herdr", "session" => "ws1", "pane" => "p1", "terminal_id" => "term-1",
+            "agent" => "pi", "agent_session" => {"agent" => "pi", "kind" => "id", "value" => THREAD}}
+          @inbox.with_delivery_settlement do |verify|
+            result = verify.call(references: [reference], attempt_id: "att-1", owner: owner)
+            assert_equal [reference.merge("claim_generation" => delivered.fetch("claim_generation"))], result
+            File.open(Molecules::DeliveryRecordStore.lock_path(@dir, @event), File::RDWR) do |other|
+              refute other.flock(File::LOCK_EX | File::LOCK_NB), "retained event must remain locked through consumer acceptance"
+            end
+            assert_raises(ValidationError) { verify.call(references: [reference.merge("payload_sha256" => "f" * 64)], attempt_id: "att-1", owner: owner) }
+            assert_raises(ValidationError) { verify.call(references: [], attempt_id: "att-1", owner: owner) }
+            assert_raises(ValidationError) { verify.call(references: [reference], attempt_id: "att-1", owner: owner.merge("terminal_id" => "foreign")) }
+          end
+          %w[pending uncertain].each do |wake|
+            Molecules::DeliveryRecordStore.with_lock(@dir, @event) do
+              record = Molecules::DeliveryRecordStore.load(@dir, @event)
+              Molecules::DeliveryRecordStore.save(record.advance_inbox(state: "delivered", inbox: record.inbox.merge("wake" => {"status" => wake}),
+                detail: {"action" => "wake"}, timestamp: "2026-10-16T00:00:00Z"), @dir)
+            end
+            @inbox.with_delivery_settlement do |verify|
+              assert_raises(ValidationError) { verify.call(references: [reference], attempt_id: "att-1", owner: owner) }
+            end
+          end
+          assert_equal 1, @native.calls.size, "settlement never submits or retries transport"
+        end
+
         def test_exhaustive_retention_refuses_symlink_and_conflicting_archive_copy
           enqueue
           archive = Molecules::DeliveryRecordStore.archive_dir(@dir)

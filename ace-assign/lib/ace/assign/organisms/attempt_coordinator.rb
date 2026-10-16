@@ -37,7 +37,10 @@ module Ace
         # @param identity_resolver [Molecules::ExecutionIdentityResolver, nil] Trust boundary
         # @param verifier [Molecules::ReceiptVerifier, nil] Receipt verifier
         def initialize(cache_base: nil, repo_root: nil, journal: nil, identity_resolver: nil, verifier: nil,
-          lifecycle_exclusion: nil)
+          lifecycle_exclusion: nil, recorded_binding_observer: nil)
+          unless recorded_binding_observer.nil? || recorded_binding_observer.respond_to?(:call)
+            raise ArgumentError, "recorded native binding observer must be callable"
+          end
           @manager = Molecules::AssignmentManager.new(cache_base: cache_base)
           @store = @manager.attempt_store
           @repo_root = repo_root || Ace::Support::Fs::Molecules::ProjectRootFinder.find_or_current
@@ -45,6 +48,7 @@ module Ace
           @identity_resolver = identity_resolver || Molecules::ExecutionIdentityResolver.new
           @verifier = verifier || Molecules::ReceiptVerifier.new(identity_resolver: @identity_resolver)
           @lifecycle_exclusion = lifecycle_exclusion
+          @recorded_binding_observer = recorded_binding_observer
         end
 
         attr_reader :store
@@ -59,16 +63,17 @@ module Ace
           {events: [{type: "attempt_stopped", payload: payload}], blobs: {}}
         end
 
-        # The protected result owner authenticates imported bytes, candidate,
+        # The source-selected result owner authenticates imported bytes, candidate,
         # closure and independent settlements at the same CAS prefix.
-        def self.finished_transition_plan(events:, receipt:)
+        def self.finished_transition_plan(events:, receipt:, authority:)
+          raise ArgumentError, "unknown result authority" unless %i[ordinary protected].include?(authority)
           state = Molecules::CanonicalAttemptState.derive(events)
           unless state == "running" && %w[succeeded failed].include?(receipt.fetch("verdict"))
             raise AttemptErrors::Conflict, "Result finish requires a running attempt"
           end
           Atoms::AttemptStateMachine.transition!(state, receipt.fetch("verdict"))
           {events: [{type: "receipt_accepted", payload: {"receipt" => receipt}},
-            {type: "transition", payload: {"from" => state, "to" => receipt.fetch("verdict"), "reason" => "protected_result_accepted"}}], blobs: {}}
+            {type: "transition", payload: {"from" => state, "to" => receipt.fetch("verdict"), "reason" => "#{authority}_result_accepted"}}], blobs: {}}
         end
 
         def self.protected_recovery_decision(state:, effects_pending:, bound:, live:, checkpoint:)
@@ -113,21 +118,13 @@ module Ace
             raise AttemptErrors::ReceiptRejected, "Native reverse requires an active managed attempt"
           end
           binding = reconciler.recorded_binding(attempt)
-          observation = reconciler.observation(attempt)
-          unless binding && observation["liveness"] == "live" &&
-              binding["process_identity"] == observation["identity"] &&
-              %w[runtime session pane].all? { |key| binding[key].is_a?(String) && !binding[key].empty? }
+          unless binding && %w[runtime session pane].all? { |key| binding[key].is_a?(String) && !binding[key].empty? }
             raise AttemptErrors::ReceiptRejected, "Exact native owner binding is unavailable or changed"
           end
-          unless caller_pid.nil?
-            unless caller_pid.is_a?(Integer) && caller_pid.positive?
-              raise AttemptErrors::UnauthorizedIdentity, "Kernel caller process is unavailable"
-            end
-            caller = Ace::Runtime.resolve(binding["runtime"]).process_binding(pane: binding["pane"], caller_pid: caller_pid)
-            unless caller == binding
-              raise AttemptErrors::UnauthorizedIdentity, "Caller does not descend from the recorded native owner"
-            end
+          unless caller_pid.nil? || (caller_pid.is_a?(Integer) && caller_pid.positive?)
+            raise AttemptErrors::UnauthorizedIdentity, "Kernel caller process is unavailable"
           end
+          observe_runtime_binding!(attempt, binding, caller_pid)
           latest = recover_managed_attempt(attempt.binding.assignment_id, attempt_id)
           unless latest&.active? && latest.binding.to_h == attempt.binding.to_h && reconciler.recorded_binding(latest) == binding
             raise AttemptErrors::ReceiptRejected, "Native owner changed during observation"
@@ -136,6 +133,28 @@ module Ace
         rescue Ace::Runtime::Error => e
           raise AttemptErrors::ReceiptRejected, "Native owner observation unavailable (#{e.class})"
         end
+
+        # An installed consumer selects its own bounded native reader. It must
+        # never fall back to the service process's ambient runtime on failure.
+        def observe_runtime_binding!(attempt, binding, caller_pid)
+          if @recorded_binding_observer
+            actual = @recorded_binding_observer.call(binding: binding, caller_pid: caller_pid)
+            unless actual == binding
+              raise AttemptErrors::UnauthorizedIdentity, "Installed native owner observation differs"
+            end
+            return
+          end
+          observation = reconciler.observation(attempt)
+          unless observation["liveness"] == "live" && binding["process_identity"] == observation["identity"]
+            raise AttemptErrors::ReceiptRejected, "Exact native owner binding is unavailable or changed"
+          end
+          return if caller_pid.nil?
+          caller = Ace::Runtime.resolve(binding["runtime"]).process_binding(pane: binding["pane"], caller_pid: caller_pid)
+          unless caller == binding
+            raise AttemptErrors::UnauthorizedIdentity, "Caller does not descend from the recorded native owner"
+          end
+        end
+        private :observe_runtime_binding!
 
         # Claim an external service effect before dispatch. Only a managed,
         # active attempt for the exact project and candidate may own it. The

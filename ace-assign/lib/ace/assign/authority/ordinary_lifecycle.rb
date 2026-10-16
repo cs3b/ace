@@ -1,11 +1,13 @@
 # frozen_string_literal: true
 
+require "ace/herdr"
 require_relative "prepared_work"
 require_relative "assignment_definition"
 require_relative "ordinary_queue"
 require_relative "ordinary_attempt_start"
 require_relative "ordinary_progress"
 require_relative "ordinary_results"
+require_relative "ordinary_completion"
 require_relative "../molecules/lifecycle_exclusion"
 
 module Ace
@@ -18,14 +20,19 @@ module Ace
         include OrdinaryAttemptStart
         include OrdinaryProgress
         include OrdinaryResults
-        OPERATIONS = (%w[register_assignment registration_status start_attempt] + OrdinaryProgress::PROGRESS_OPERATIONS + OrdinaryResults::RESULT_OPERATIONS).freeze
+        include OrdinaryCompletion
+        OPERATIONS = (%w[register_assignment registration_status start_attempt finish] + OrdinaryProgress::PROGRESS_OPERATIONS + OrdinaryResults::RESULT_OPERATIONS).freeze
         TRANSFER_OPERATIONS = {"register_assignment" => {direction: :upload, purpose: :candidate, roles: [:supervisor]}}
           .merge(OrdinaryProgress::PROGRESS_TRANSFERS).merge(OrdinaryResults::RESULT_TRANSFERS).freeze
         REGISTER_KEYS = %w[assignment_id definition_digest prepared_head prepared_tree manifest_sha256 expected_generation pane transfer].freeze
 
-        def initialize(project:, admission:, journal:, exclusion:, input_root:)
+        def initialize(project:, admission:, journal:, exclusion:, input_root:, inbox: nil)
           @project, @admission, @journal, @exclusion = project, admission, journal, exclusion
           @input_root = PrivateDirectory.verify!(input_root)
+          unless inbox.nil? || inbox.is_a?(Ace::Herdr::Organisms::Inbox)
+            raise ArgumentError, "ordinary completion requires the installed Inbox owner"
+          end
+          @inbox = inbox
         end
 
         def authorize_transfer!(request:, peer:, role:, deadline:)
@@ -69,6 +76,9 @@ module Ace
             progress(request, peer, role, deadline, transfer)
           when "submit_result", "result_status", "result_snapshot"
             ordinary_result(request, peer, role, deadline, transfer)
+          when "finish"
+            raise ArgumentError, "ordinary completion forbids transfer" if transfer
+            finish_result(request, peer, role, deadline)
           else
             raise ArgumentError, "unknown ordinary lifecycle operation"
           end

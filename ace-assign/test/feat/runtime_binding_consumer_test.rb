@@ -101,4 +101,57 @@ class RuntimeBindingConsumerTest < AceAssignTestCase
       assert_raises(A::AttemptErrors::NotFound) { read }
     end
   end
+
+  def installed_consumer(observer)
+    A::Organisms::AttemptCoordinator.new(cache_base: @cache, repo_root: @repo, journal: @journal,
+      lifecycle_exclusion: A::Molecules::LifecycleExclusion.new(root: File.join(@dir, "exclusion")),
+      recorded_binding_observer: observer)
+  end
+
+  def without_ambient_runtime
+    Ace::Runtime.stub(:resolve, ->(*) { flunk "installed reader must not discover an ambient runtime" }) { yield }
+  end
+
+  def test_installed_consumer_observes_canonical_binding_after_cache_loss
+    calls = []
+    consumer = installed_consumer(lambda { |binding:, caller_pid:|
+      calls << [binding, caller_pid]
+      @native.process_binding(pane: binding.fetch("pane"), caller_pid: caller_pid || binding.dig("process_identity", "pid"))
+    })
+    FileUtils.rm_rf(@cache)
+    prefix = @journal.ref_value
+    without_ambient_runtime do
+      assert_equal @binding, consumer.runtime_binding(attempt_id: @attempt.attempt_id, caller_pid: @child)
+      assert_equal @binding, consumer.runtime_binding(attempt_id: @attempt.attempt_id)
+      assert_raises(A::AttemptErrors::UnauthorizedIdentity) do
+        consumer.runtime_binding(attempt_id: @attempt.attempt_id, caller_pid: Process.pid)
+      end
+    end
+    assert_equal [[@binding, @child], [@binding, nil], [@binding, Process.pid]], calls
+    assert_equal prefix, @journal.ref_value
+    refute Dir.exist?(@cache)
+  end
+
+  def test_installed_reader_refusal_never_uses_ambient_runtime
+    consumer = installed_consumer(->(**) { raise A::AttemptErrors::EvidenceUnavailable, "selection revoked" })
+    without_ambient_runtime do
+      error = assert_raises(A::AttemptErrors::EvidenceUnavailable) do
+        consumer.runtime_binding(attempt_id: @attempt.attempt_id, caller_pid: @child)
+      end
+      assert_equal "selection revoked", error.message
+    end
+  end
+
+  def test_installed_observation_does_not_authorize_an_attempt_ended_during_read
+    consumer = installed_consumer(lambda { |binding:, **|
+      events = @journal.read_events(@assignment.id).select { |event| event["attempt_id"] == @attempt.attempt_id }
+      event = A::Models::EvidenceEvent.build(type: "transition", attempt_id: @attempt.attempt_id,
+        payload: {"from" => "running", "to" => "failed", "reason" => "test_terminal_race"}, previous_digest: events.last.fetch("digest"))
+      @journal.append(assignment_id: @assignment.id, attempt_id: @attempt.attempt_id, events: [event])
+      binding
+    })
+    without_ambient_runtime do
+      assert_raises(A::AttemptErrors::ReceiptRejected) { consumer.runtime_binding(attempt_id: @attempt.attempt_id) }
+    end
+  end
 end

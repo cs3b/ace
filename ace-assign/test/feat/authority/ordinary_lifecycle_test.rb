@@ -38,6 +38,12 @@ module Ace
           raise AttemptErrors::UnauthorizedIdentity unless @execution_head == head
           {identity: identity, checkout: {"head" => @execution_head, "cwd" => "/observed/worker"}}
         end
+        def recorded_execution!(binding:, head:, deadline:)
+          unless @native && binding == @execution_binding && @execution_head == head
+            raise AttemptErrors::UnauthorizedIdentity, "recorded worker changed"
+          end
+          {runtime_binding: @execution_binding, checkout: {"head" => @execution_head, "cwd" => "/observed/worker"}}
+        end
       end
 
       def test_registration_replay_survives_owner_restart_and_uses_only_canonical_bytes
@@ -451,7 +457,175 @@ module Ace
         end
       end
 
+      def test_supervisor_accepts_exact_child_result_and_restart_replay_does_not_close_its_sibling
+        scopes = %w[010.01.01 010.01.02]
+        with_fixture(children: scopes) do
+          with_owner do |client|
+            register(client)
+            @admission.role = :worker
+            start(client, scope: scopes.first)
+            start(client, scope: scopes.last, mutation: "integrator-start", attempt: "integrator")
+            result = submit_result(client, changes: {"scope" => scopes.first, "operation" => "test"})
+            @finish_params = completion_params(result, generation: 3)
+            assert_raises(AttemptErrors::EvidenceUnavailable) { client.call("finish", @finish_params, mutation_id: "finish") }
+            finish_progress(client, step: scopes.first)
+            @admission.role = :supervisor
+            @finished = client.call("finish", @finish_params, mutation_id: "finish")
+            assert_equal "succeeded", @finished.data.fetch("state")
+            assert_equal scopes.first, @finished.data.fetch("scope")
+            attempts = @journal.derived_attempts("batch").to_h { |attempt| [attempt.attempt_id, attempt] }
+            assert_equal "succeeded", attempts.fetch("worker-attempt").state
+            assert_equal "running", attempts.fetch("integrator").state
+            assert_equal result.data.fetch("receipt_digest"), @journal.accepted_receipts("batch").first.fetch("digest")
+          end
+          with_owner do |client|
+            # Re-delivery of the original accepted reply is independent of a
+            # worker that has since exited. Current supervisor is still needed.
+            @admission.execution_binding = @admission.execution_binding.merge("pane" => "worker-exited")
+            replay = client.call("finish", @finish_params, mutation_id: "finish")
+            assert replay.replayed
+            assert_equal @finished.data, replay.data
+            @admission.authorized = false
+            assert_raises(AttemptErrors::EvidenceUnavailable) { client.call("finish", @finish_params, mutation_id: "finish") }
+          end
+          events = @journal.read_events("batch")
+          assert_equal 1, events.count { |event| event["type"] == "receipt_accepted" }
+          assert_equal "ordinary_result_accepted", events.find { |event| event["type"] == "transition" }.dig("payload", "reason")
+        end
+      end
+
+      def test_completion_refuses_unfinished_scope_moved_head_wrong_result_and_dead_original_worker
+        with_fixture do
+          with_owner do |client|
+            register(client)
+            @admission.role = :worker
+            start(client)
+            result = submit_result(client)
+            @admission.role = :supervisor
+            assert_raises(AttemptErrors::EvidenceUnavailable) do
+              client.call("finish", completion_params(result, generation: 2), mutation_id: "finish")
+            end
+            @admission.role = :worker
+            finish_progress(client)
+            @admission.role = :supervisor
+            params = completion_params(result, generation: 3)
+            before = @journal.ref_value
+            [{"result_id" => "foreign"}, {"receipt_digest" => "e" * 64}, {"head" => "e" * 40}].each do |changes|
+              assert_raises(AttemptErrors::EvidenceUnavailable) { client.call("finish", params.merge(changes), mutation_id: "finish") }
+            end
+            original = @admission.execution_head
+            @admission.execution_head = "e" * 40
+            assert_raises(AttemptErrors::EvidenceUnavailable) { client.call("finish", params, mutation_id: "finish") }
+            @admission.execution_head = original
+            @admission.native = false
+            assert_raises(AttemptErrors::EvidenceUnavailable) { client.call("finish", params, mutation_id: "finish") }
+            assert_equal before, @journal.ref_value
+            assert_equal "running", @journal.derived_attempts("batch").first.state
+          end
+        end
+      end
+
+      def test_unresolved_delivery_and_wrong_callback_cannot_be_hidden_by_successful_result
+        with_fixture do
+          with_owner do |client|
+            register(client)
+            @admission.role = :worker
+            start(client)
+            result = submit_result(client)
+            finish_progress(client)
+            payload = {"stage" => "intent", "operation" => "create", "head" => @admission.execution_head}
+            @journal.record(assignment_id: "batch", attempt_id: "worker-attempt", type: "delivery", payload: payload)
+            intent = @journal.read_events("batch").last
+            @admission.role = :supervisor
+            params = completion_params(result, generation: 3)
+            assert_raises(AttemptErrors::EvidenceUnavailable) { client.call("finish", params, mutation_id: "finish") }
+            callback = payload.merge("stage" => "result", "outcome" => "succeeded", "intent_digest" => intent.fetch("digest"), "intent_attempt_id" => "foreign")
+            @journal.record(assignment_id: "batch", attempt_id: "worker-attempt", type: "delivery", payload: callback)
+            assert_raises(AttemptErrors::EvidenceUnavailable) { client.call("finish", params, mutation_id: "finish") }
+            @journal.record(assignment_id: "batch", attempt_id: "worker-attempt", type: "delivery", payload: callback.merge("intent_attempt_id" => "worker-attempt"))
+            assert_equal "succeeded", client.call("finish", params, mutation_id: "finish").data.fetch("state")
+          end
+        end
+      end
+
+      def test_failed_nested_step_can_finish_its_scope_without_marking_the_parent_successful
+        with_fixture(children: ["010.01.01"]) do
+          with_owner do |client|
+            register(client)
+            @admission.role = :worker
+            start(client)
+            client.call("queue_start", {"assignment_id" => "batch", "attempt_id" => "worker-attempt", "pane" => "w1:p1",
+              "expected_generation" => 1, "step" => "010.01.01"}, mutation_id: "child-start")
+            client.call("queue_fail", {"assignment_id" => "batch", "attempt_id" => "worker-attempt", "pane" => "w1:p1",
+              "expected_generation" => 2, "message" => "Executed check failed"}, mutation_id: "child-fail")
+            result = submit_result(client, generation: 3, changes: {"verdict" => "failed", "checks" => [{"name" => "tests", "verdict" => "failed"}]})
+            @admission.role = :supervisor
+            accepted = client.call("finish", completion_params(result, generation: 4), mutation_id: "finish")
+            assert_equal "failed", accepted.data.fetch("state")
+            assert_equal "failed", @journal.derived_attempts("batch").first.state
+            snapshot = client.call("assignment_snapshot", {"assignment_id" => "batch", "attempt_id" => "worker-attempt", "kind" => "queue"},
+              download: true, purpose: :assignment_snapshot)
+            queue = Authority::OrdinaryQueue.new(work: @artifact.work, root: @inputs, bytes: snapshot.parts.first)
+            refute queue.status.subtree_complete?("010.01")
+            assert queue.status.subtree_failed?("010.01")
+          end
+        end
+      end
+
+      def test_finish_consumes_delivered_inbox_under_retained_owner_locks_through_cas
+        with_fixture do
+          inbox_root = File.join(@root, "inbox")
+          FileUtils.mkdir_p(inbox_root, mode: 0700)
+          @inbox = Ace::Herdr::Organisms::Inbox.new(executor: nil, deliveries_dir: inbox_root)
+          @admission.execution_binding = @admission.execution_binding.merge("terminal_id" => "terminal", "agent" => "pi",
+            "agent_session" => {"agent" => "pi", "kind" => "id", "value" => "0123abcd-0000-4000-8000-000000000001"})
+          target = @inbox.target_from_owner(@admission.execution_binding)
+          reference = {"event_id" => "inbox-event", "attempt_id" => "worker-attempt", "payload_sha256" => Digest::SHA256.hexdigest("prompt")}
+          binding = target.merge("payload_sha256" => reference.fetch("payload_sha256"), "agent_status" => "busy")
+          metadata = {"attempt_id" => "worker-attempt", "claim_generation" => 1, "origin_target" => target,
+            "binding" => binding, "wake" => {"status" => "none"},
+            "receipt" => reference.merge("claim_generation" => 1, "binding" => binding)}
+          record = Ace::Herdr::Models::DeliveryRecord.new(event_id: "inbox-event", session: "w1", pane: "w1:p1",
+            answer: "prompt", answer_digest: reference.fetch("payload_sha256"), state: "delivered", inbox: metadata)
+          store = Ace::Herdr::Molecules::DeliveryRecordStore
+          store.with_lock(inbox_root, record.event_id) { store.save(record, inbox_root) }
+          with_owner do |client|
+            register(client)
+            @admission.role = :worker
+            start(client)
+            result = submit_result(client)
+            finish_progress(client)
+            @journal.record(assignment_id: "batch", attempt_id: "worker-attempt", type: "inbox_binding", payload: reference)
+            @admission.role = :supervisor
+            original = @journal.method(:mutate)
+            locked = false
+            @journal.define_singleton_method(:mutate) do |**options, &block|
+              original.call(**options) do |*args|
+                File.open(store.lock_path(inbox_root, "inbox-event"), File::RDWR) do |competing|
+                  locked = !competing.flock(File::LOCK_EX | File::LOCK_NB)
+                end
+                block.call(*args)
+              end
+            end
+            completed = client.call("finish", completion_params(result, generation: 3), mutation_id: "finish")
+            assert_equal "succeeded", completed.data.fetch("state")
+            assert_equal [reference.merge("claim_generation" => 1)], completed.data.fetch("inbox_deliveries")
+            assert locked, "native Inbox receipt must stay held through canonical acceptance"
+          end
+        end
+      end
+
       private
+
+      def completion_params(result, generation:)
+        result.data.slice("result_id", "receipt_digest", "head").merge("assignment_id" => "batch", "attempt_id" => "worker-attempt",
+          "pane" => "w1:p1", "expected_generation" => generation)
+      end
+
+      def finish_progress(client, step: "010.01")
+        client.call("queue_finish", {"assignment_id" => "batch", "attempt_id" => "worker-attempt", "pane" => "w1:p1",
+          "expected_generation" => 2, "step" => step}, mutation_id: "progress-result", upload_parts: [result_artifact], purpose: :artifacts)
+      end
 
       def result_artifact = "Executed tests: all passed."
 
@@ -462,10 +636,10 @@ module Ace
           "artifacts" => [{"path" => "caller-report.md", "sha256" => Digest::SHA256.hexdigest(result_artifact)}]}.merge(changes)
       end
 
-      def submit_result(client, head: @admission.execution_head, changes: {})
+      def submit_result(client, head: @admission.execution_head, changes: {}, generation: 1)
         bytes = JSON.generate(result_receipt(head: head, changes: changes))
         client.call("submit_result", {"assignment_id" => "batch", "attempt_id" => "worker-attempt", "pane" => "w1:p1",
-          "head" => head, "expected_generation" => 1, "receipt_sha256" => Digest::SHA256.hexdigest(bytes)},
+          "head" => head, "expected_generation" => generation, "receipt_sha256" => Digest::SHA256.hexdigest(bytes)},
           mutation_id: "worker-result", upload_parts: [bytes, result_artifact], purpose: :receipt_artifacts)
       end
 
@@ -480,7 +654,7 @@ module Ace
 
       def with_owner
         owner = Authority::OrdinaryLifecycle.new(project: "atlas", admission: @admission, journal: @journal,
-          exclusion: Molecules::LifecycleExclusion.new(root: File.join(@root, "exclusion")), input_root: @inputs)
+          exclusion: Molecules::LifecycleExclusion.new(root: File.join(@root, "exclusion")), input_root: @inputs, inbox: @inbox)
         server = Authority::OrdinaryServer.new(admission: @admission, lifecycle: Authority::Router.new(handlers: [owner]))
         thread = Thread.new { server.serve }
         Timeout.timeout(3) { sleep 0.005 until File.socket?(@service.fetch("socket_path")) }
@@ -492,6 +666,7 @@ module Ace
       end
 
       def with_fixture(children: [])
+        @inbox = nil
         Dir.mktmpdir("ordinary-lifecycle-", Etc.getpwuid(Process.uid).dir) do |root|
           @root = root
           File.chmod(0o700, root)

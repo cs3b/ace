@@ -172,6 +172,39 @@ module Ace
 
         def context_root = @deliveries_dir.dup.freeze
 
+        # The installed consumer supplies canonical references and native
+        # owner, while this owner holds every existing record lock through the
+        # consumer's acceptance CAS. No delivery/retry/wake is performed here.
+        def with_delivery_settlement(deadline: nil)
+          self.class.with_retained_records(deliveries_dir: @deliveries_dir, deadline: deadline) do |records|
+            verify = lambda do |references:, attempt_id:, owner:|
+              unless references.is_a?(Array) && references.all? { |reference|
+                reference.is_a?(Hash) && reference.keys.sort == %w[attempt_id event_id payload_sha256] &&
+                  reference["attempt_id"] == attempt_id }
+                raise ValidationError, "canonical Inbox references differ"
+              end
+              selected = records.select { |record| record.inbox.fetch("attempt_id") == attempt_id }
+              ids = references.map { |reference| reference.fetch("event_id") }
+              unless ids.uniq == ids && selected.map(&:event_id).sort == ids.sort
+                raise ValidationError, "canonical Inbox reference inventory differs"
+              end
+              next [] if selected.empty?
+              target = target_from_owner(owner)
+              selected.map do |record|
+                reference = references.find { |item| item.fetch("event_id") == record.event_id }
+                binding = record.inbox.fetch("binding", {})
+                unless !record.inbox["original_context"] && record.inbox_delivered? && record.answer_digest == reference.fetch("payload_sha256") &&
+                    record.inbox["origin_target"] == target && binding.slice(*target.keys) == target &&
+                    binding["payload_sha256"] == record.answer_digest && %w[none sent].include?(record.inbox.dig("wake", "status"))
+                  raise ValidationError, "original Inbox delivery or wake remains unsettled"
+                end
+                reference.merge("claim_generation" => record.inbox.fetch("claim_generation"))
+              end
+            end
+            yield verify
+          end
+        end
+
 
         def enqueue(event:, attempt:, ref:, payload:, managed_envelope: nil, expected_target: nil, original_context: nil, original_binding_digest: nil)
           validate_id!(event, "event")

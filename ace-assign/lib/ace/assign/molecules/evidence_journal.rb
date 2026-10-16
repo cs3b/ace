@@ -62,6 +62,7 @@ module Ace
         def initialize(repo_root:, ref: nil, checkout_root: nil, mode: :local,
           evidence_reader: nil, service_authorizer: nil, read_boundary: nil)
           unless %i[local protected].include?(mode) &&
+              (evidence_reader.nil? || evidence_reader.respond_to?(:call)) &&
               (mode != :protected || [evidence_reader, service_authorizer].all? { |owner| owner.respond_to?(:call) })
             raise ArgumentError, "protected journal requires source-owned evidence and service boundaries"
           end
@@ -781,7 +782,9 @@ module Ace
           %w[succeeded failed failed-settled].include?(state)
         end
 
-        def validate_terminal_receipt!(current, state, receipt, pending: nil)
+        # Shared schema/binding checks; storage interpretation belongs to the
+        # caller's source-selected evidence owner, not this pure validator.
+        def validate_terminal_receipt_structure!(current, state, receipt)
           unless receipt.is_a?(Hash) && receipt.keys.sort == TERMINAL_RECEIPT_FIELDS.sort
             raise AttemptErrors::ReceiptRejected,
               "Service terminal receipt has invalid fields"
@@ -808,7 +811,14 @@ module Ace
             raise AttemptErrors::ReceiptRejected,
               "Service settlement requires a no-effect attestation artifact"
           end
-          if @mode == :protected
+          evidence_items
+        end
+
+        def validate_terminal_receipt!(current, state, receipt, pending: nil)
+          evidence_items = validate_terminal_receipt_structure!(current, state, receipt)
+          # Canonical byte ownership is also usable by the ordinary installed
+          # service. It does not opt that service into protected authority.
+          if @evidence_reader
             if (current["operation"] == "prune-preserved-workspace" && %w[succeeded failed-settled].include?(state)) ||
                 (current["operation"] == "publish" && %w[succeeded failed].include?(state))
               # The same installed evidence reader owns the entire imported
@@ -1437,17 +1447,36 @@ module Ace
           end
         end
 
-        def fixed_no_effect_intact?(record)
+        def fixed_no_effect_intact?(record, commit: ref_value)
           receipt = record["receipt"]
           return false unless receipt.is_a?(Hash)
           evidence = receipt.dig("effect", "no_effect_evidence")
           return false unless evidence.is_a?(Hash)
           path = fixed_no_effect_path(record.fetch("request_id"))
           return false unless evidence["reference"] == path
-          content = bounded_blob(path, commit: ref_value, max_bytes: 16_384)
-          Digest::SHA256.hexdigest(content) == evidence["sha256"]
-        rescue AttemptErrors::EvidenceUnavailable
+          content = bounded_blob(path, commit: commit, max_bytes: 16_384)
+          proof = JSON.parse(content)
+          Digest::SHA256.hexdigest(content) == evidence["sha256"] &&
+            proof.values_at("request_id", "input_digest", "reference", "outcome") == record.values_at("request_id", "input_digest", "reference") + ["no_effect"] &&
+            proof["candidate_head"] == record.dig("request", "candidate_head") && proof["expected_base_head"] == record.dig("request", "expected_base_head")
+        rescue AttemptErrors::EvidenceUnavailable, JSON::ParserError, NoMethodError
           false
+        end
+
+        # Immutable terminal consumption for ordinary completion. It uses the
+        # same receipt and no-effect owners as admission/authorization release.
+        def fixed_merge_settlement!(request_id, commit: ref_value)
+          record = fixed_merge_request(request_id, commit: commit)
+          raise AttemptErrors::EvidenceUnavailable, "canonical fixed merge is missing" unless record
+          verify_fixed_record!(record, commit: commit)
+          unless %w[succeeded failed].include?(record["state"])
+            raise AttemptErrors::ServiceSettlementPending, "canonical fixed merge is unresolved"
+          end
+          validate_fixed_receipt!(record, record.fetch("state"), record.fetch("receipt"))
+          if record["state"] == "failed" && !fixed_no_effect_intact?(record, commit: commit)
+            raise AttemptErrors::EvidenceUnavailable, "canonical fixed merge no-effect proof differs"
+          end
+          record
         end
 
         def update_fixed_merge_request(request_id, expected:, replacement:, event_type:, guard: nil, evidence_files: {})
@@ -1520,6 +1549,12 @@ module Ace
           end
           conflict = guard&.call
           raise_authorization_conflict!(conflict) if conflict
+          if expected.nil? || replacement["state"] == "uncertain"
+            attempt = derived_attempts(replacement.fetch("assignment_id")).find { |item| item.attempt_id == replacement.fetch("attempt_id") }
+            unless attempt&.managed? && attempt.active? && attempt.binding.project_id == replacement.fetch("project_id")
+              raise AttemptErrors::ReceiptRejected, "Fixed merge admission requires its current active canonical attempt"
+            end
+          end
           verify_fixed_proposal!(replacement) if event_type == "merge_admission"
           payload = {"request_id" => request_id, "state" => replacement.fetch("state"),
                      "input_digest" => replacement.fetch("input_digest"),
@@ -1573,7 +1608,8 @@ module Ace
         # The module marks a private region above; the fixed merge primitive
         # is a public coordinator-facing surface, so it is re-published here.
         public :fixed_merge_request, :fixed_merge_request_records, :admit_fixed_merge_request,
-          :begin_fixed_merge_request, :settle_fixed_merge_request, :fixed_authorization_conflict
+          :begin_fixed_merge_request, :settle_fixed_merge_request, :fixed_authorization_conflict, :fixed_merge_settlement!,
+          :verify_service_attestation!
 
         # Latest lifecycle state implied by the events, or nil when the
         # events do not describe a full attempt (intent missing).
