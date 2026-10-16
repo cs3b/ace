@@ -467,3 +467,16 @@ The exact action and impact are retained in
 `5-deliver-scoped-releases-sync-and/evidence/test-runtime-preparation-blocker.json`.
 Existing R6 static kernel evidence remains valid for its frozen source; it does
 not establish a maintained installed runtime for dynamic candidate tests.
+
+### Combined suite and ordinary transport fixture join
+
+The full default suite at ea6c62c63 completed with 50 packages passing and
+ace-lab failing two positive real-socket transport scenarios: their fixture
+coordinator omitted the newly mandatory canonical merge evidence owner. All
+51 original summaries and the Lab failure report remain in `evidence/suite-ea6-red/`.
+The transport fixture now explicitly supplies the same controlled outside-boundary
+evidence owner as sibling receiver tests. It also proves revoked evidence refuses
+before repository mutation. Focused result: 6 tests/46 assertions PASS, retained
+in `evidence/ordinary-transport-fixture-join/`. This is not native candidate
+acceptance or a replacement for the separate real canonical owner coverage.
+A full current suite after correction remains required.
