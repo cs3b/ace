@@ -15,6 +15,16 @@ title: Coordinate responsive overseer roles without the legacy Lab engine
 position: 6o000e
 ---
 
+## Current ordinary delivery owner (2026-10-16)
+
+The approved program `8xf.t.ei9` now owns .1–.4 bootstrap/queue/start/native continuation and .6 ordinary cleanup. Reuse this task’s
+implementation and history; remaining ordinary outcome work is tracked in
+`.ace-tasks/8xf.t.ei9-wave-3/delivery-map.md`. The ordinary program does not
+wait for unrelated protected-runtime work. Requirements below remain historical
+and implementation context where superseded by that current contract. This
+ownership transfer does not mark unfinished work done or reopen archived work.
+
+
 # Coordinate responsive overseer roles without the legacy Lab engine
 
 ## Behavioral Specification

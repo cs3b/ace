@@ -1,6 +1,6 @@
 ---
 id: 8xf.t.ei9
-status: pending
+status: in-progress
 priority: high
 created_at: "2026-10-16 09:40:17"
 estimate: TBD
@@ -10,11 +10,11 @@ bundle:
   presets: [project]
   files: [AGENTS.md, docs/tools.md, .ace-tasks/8xb.t.iy6-run-project-commands-with-explicitly/8xb.t.iy6-run-project-commands-with-explicitly-authorized.s.md, .ace-tasks/8xa.t.nh0-ace-hitlace-hitl-hermes-shared/8xa.t.nh0-ace-hitlace-hitl-hermes-shared-hermes-multi.s.md, .ace-tasks/8x3.t.xz9-execute-scoped-services-across-os/8x3.t.xz9-execute-scoped-services-across-os-users-with.s.md, .ace-tasks/8x0.t.ig3-unify-review-loop-ownership-and/8x0.t.ig3-unify-review-loop-ownership-and-effective-policy.s.md, .ace-tasks/8wr.t.qkb-run-assignment-delivery-workflows-through/8wr.t.qkb-run-assignment-delivery-workflows-through-named-forge.s.md, .ace-tasks/8wr.t.qk0-coordinate-responsive-overseer-roles-without/8wr.t.qk0-coordinate-responsive-overseer-roles-without-the.s.md, .ace-tasks/8x3.t.xz9-execute-scoped-services-across-os/5-make-integration-handoff-actionable-accepted/8x3.t.xz9.5-make-integration-handoff-actionable-accepted-attempts.s.md, ace-overseer/handbook/skills/as-overseer-configure-project/SKILL.md, ace-overseer/handbook/workflow-instructions/overseer/configure-project.wf.md, ace-assign/.ace-defaults/assign/presets/supervise-delivery.yml, ace-assign/.ace-defaults/assign/presets/integrate-batch.yml, ace-assign/.ace-defaults/assign/presets/deliver-release.yml, ace-assign/.ace-defaults/assign/presets/close-delivery.yml, .ace-tasks/8xf.t.ei9-wave-3/environment-contract.md, .ace-tasks/8xf.t.ei9-wave-3/observations-and-acceptance.md, .ace-tasks/8xf.t.ei9-wave-3/ux/usage.md]
   commands: []
-title: Wave 3
+title: Deliver an autonomous Lab through verified installed outcomes
 needs_review: false
 ---
 
-# Wave 3
+# Deliver an autonomous Lab through verified installed outcomes
 
 ## Objective and authority
 
@@ -23,7 +23,7 @@ overseers: responsive conversation, factual queue/state, real scoped delegation,
 ordered integration and project-specific delivery. This supersedes the earlier
 one-task/no-children instruction. Everything needed to implement the generic
 behavior is in this ACE tree; no chat, lab-config checkout or temporary audit file
-is required. Wave 3 is the current acceptance and priority contract. Existing code-owner tasks
+is required. This program is the current acceptance and priority contract. Existing code-owner tasks
 locate implementation APIs and WIP; reconcile/migrate conflicting older instructions
 against this contract instead of treating them as an indefinite blocker;
 children own verifiable outcomes, not duplicate parallel implementations.
@@ -68,6 +68,14 @@ iy6 project commands; nh0 shared HITL; ig3/review/handbook review policy. Archiv
 qjx/qk1 interfaces remain reference contracts, not newly reopened work. Durable
 /goal belongs to existing cm3 future work, not a dependency of native loop/watch.
 
+## Current execution ledger
+
+[Delivery map](delivery-map.md) is the requirement → outcome owner → code →
+publication → installation → acceptance ledger. It records adopted obligations,
+source findings and remaining installed proof. Legacy specifications retain
+history; ordinary delivery obligations below are owned here rather than blocked
+on completion of whole protected-runtime programs.
+
 ## Common invariants
 
 - Project overseer owns full project delivery and service requests; Lab coordinator
@@ -110,10 +118,11 @@ fixes are landed, installed serial/restart/lost-response acceptance remains sepa
 PR64 attempted status-only completion and was closed without merge for missing
 installed acceptance. Do not recreate it or infer done from source status.
 
-The preceding exact release cut prepares ace-assign0.69.0, ace-lab0.7.0,
-ace-git-forgejo0.7.0 and ace-review0.60.2. At this snapshot it is prepared, NOT
-published; registry/receipts must be refreshed before any action. Complete that
-already authorized cut separately; Wave3 does not duplicate or republish it.
+The preceding exact release cut (ace-assign0.69.0, ace-lab0.7.0,
+ace-git-forgejo0.7.0 and ace-review0.60.2) was published by the Captain on
+2026-10-16 and verified in RubyGems. Do not republish these versions. Installation
+is still separate: the initial consumer upgrade belongs to child .0, before .5.
+Subsequent implementation changes require a new reviewed release cut.
 Historical statuses are not permanent future blockers or evidence of present state.
 
 ## Environment and ownership boundary

@@ -14,6 +14,16 @@ bundle:
 needs_review: true
 ---
 
+## Current ordinary delivery owner (2026-10-16)
+
+The approved program `8xf.t.ei9` now owns .1–.4 execution joins and .5 delivery configuration. Reuse this task’s
+implementation and history; remaining ordinary outcome work is tracked in
+`.ace-tasks/8xf.t.ei9-wave-3/delivery-map.md`. The ordinary program does not
+wait for unrelated protected-runtime work. Requirements below remain historical
+and implementation context where superseded by that current contract. This
+ownership transfer does not mark unfinished work done or reopen archived work.
+
+
 ## Central Lab acceptance — Captain decision 2026-10-05
 
 Lab installation and execution of the shared system test belong to **lab-config:8wl.t.gad.2**, checklist row `qkb-delivery`. Installed scenario descriptions below define its referenced obligations, not a second deployment/run owned by this task. This source task must deliver its own implementation, automated package/integration verification and review; missing source behavior cannot be moved to the Lab test or marked done. Any reference below requiring whole installed Lab acceptance before source completion is superseded by this ownership split. Cross-repository acceptance records exact producer versions/source receipts, failures and retest evidence once in gad.2.
