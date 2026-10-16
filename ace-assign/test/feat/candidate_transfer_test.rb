@@ -126,6 +126,36 @@ module Ace
         end
       end
 
+      def test_batched_materialization_carries_an_oversized_single_blob_alone
+        with_fixture do |transfer, root, source, _head, _bytes|
+          payload = "b" * (Authority::CandidateBlobBatch::BATCH_BYTES + 1)
+          File.binwrite(File.join(source, "large.bin"), payload)
+          git(source, "add", "large.bin")
+          git(source, "-c", "user.name=test", "-c", "user.email=test@example.invalid", "commit", "-m", "oversized blob")
+          input = comparison_input(root, source, "large-input")
+          selected = []
+          result = transfer.materialize(**input, root: File.join(root, "authority")) do |path, _mode, _oid, content|
+            selected << [path, content.bytesize]
+          end
+          assert_equal [["README", 11], ["large.bin", payload.bytesize]], selected
+          assert_equal payload, File.binread(File.join(result.fetch("directory"), "large.bin"))
+        end
+      end
+
+      def test_blob_size_selector_rejects_oversized_or_malformed_oid_sets_before_git
+        with_fixture do |transfer, _root, _source, _head, _bytes|
+          oversized = Array.new(Authority::CandidateBlobBatch::MAX_OBJECTS + 1) { |index| format("%040x", index) }
+          error = assert_raises(AttemptErrors::ReceiptRejected) do
+            transfer.send(:candidate_blob_sizes, "/nonexistent", Process.clock_gettime(Process::CLOCK_MONOTONIC), oversized)
+          end
+          assert_match(/invalid or oversized/, error.message)
+          error = assert_raises(AttemptErrors::ReceiptRejected) do
+            transfer.send(:candidate_blob_sizes, "/nonexistent", Process.clock_gettime(Process::CLOCK_MONOTONIC), ["z" * 40])
+          end
+          assert_match(/invalid or oversized/, error.message)
+        end
+      end
+
       def test_refuses_size_digest_and_unadvertised_head_without_retained_objects
         with_fixture do |transfer, root, _source, head, bytes|
           assert_raises(AttemptErrors::ReceiptRejected) { admit(transfer, head, bytes, size: bytes.bytesize + 1) }
