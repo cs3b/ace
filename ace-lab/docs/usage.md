@@ -600,8 +600,9 @@ version1 project entries contain `launcher`, `default_executor`, `default_servic
 HOME/cwd/PATH and nonsecret environment; services declare nonsecret environment
 and secret references; commands bind exact argv, executable SHA256, source
 head/tree and required `purpose: command` or `purpose: test`. Test purpose requires
-nonnull source head/tree and is never inferred from executable name or exit0. Source head/tree are both null for a non-Git probe and both exact
-object IDs for release source. Grants bind requester kind/UID, command, executor
+nonnull source head/tree and is never inferred from executable name or exit0.
+With `purpose: command`, source head/tree may both be null for a non-Git probe;
+Git source uses two exact object IDs. Grants bind requester kind/UID, command, executor
 and the exact service combination. Accepted code/cwd must be root-owned and
 unwritable by the executor. Missing or changed context refuses execution.
 

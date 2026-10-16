@@ -9,7 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Expose ordinary candidate upload, assigned review export/acceptance and canonical merge evidence through retained assignment requests. Compose their proof owner with the existing merge receiver and command executor journal.
 - Expose ordinary driver status, bootstrap, progress, result and exact recovery commands using the selected Assign owner; authenticate coordinator replacement with bounded process-generation observation.
+
+### Changed
+
+- Require an explicit `purpose: command` or `purpose: test` on every installed command-policy entry. Only test commands with exact candidate head/tree and canonical successful execution can authorize merge evidence; previous entries without purpose are refused.
 
 ## [0.8.0] - 2026-10-16
 
