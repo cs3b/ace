@@ -7,26 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.71.0] - 2026-10-16
+
 ### Added
 
 - Compare two independently retained candidate bundles through bounded bare Git object reads, including nonancestor rebases, full context inventories, binary patches and historical symlink bytes without executing or materializing candidate code.
 - Ground candidate and assignment-snapshot wire/expansion ceilings in closed 128MiB budgets backed by a shared fixed `cat-file --batch` codec, explicit 20,000-object bounds (per tree inventory and across the comparison's unique-blob union), and chunked batch reads instead of one Git process per blob; historical journal reads reuse the same codec.
 - Bound candidate, prepared and head-comparison tree paths to finite total/component lengths (4096/255 bytes) before any inventory, delta or filesystem prefix work, so a hostile tree cannot push unbounded path bytes into inventories or directory creation.
-- Raise the candidate transfer deadline from 30s to a measured 60s: two full admits plus the complete comparison of the real 82,809,675-byte candidate legitimately need 23–27s on a loaded host and 30s failed closed under recorded load; inputs remain byte/count-bounded independently of the wall clock.
-
-### Fixed
-- Preserve exact lost-response result replay while allowing canonical-generation CAS conflicts to recover without replacing original inputs.
-
-
-### Added
-
 - Retain built ordinary release gems as canonical binary evidence bound to the actual native producer, current accepted candidate, independent review and exact release decision. Recheck authorization on replay; preserve report limits and keep publication dispatch separate.
 - Admit ordinary candidates and independently started native reviewers into the canonical journal. Revalidate original review artifacts and root-witnessed test executions before fixed merge admission and effects; preserve strict protected-review attribution.
 - Drive ordinary work through the installed canonical owner with retained requests, accepted context snapshots and result adoption. Record coordinator replacement in the existing definition chain only after positive old-process termination; preserve worker attempts and reject stale supervisor completion.
 
+### Fixed
+
+- Preserve exact lost-response result replay while allowing canonical-generation CAS conflicts to recover without replacing original inputs.
+
 ### Changed
 
 - Keep protected launch identity construction and comparison in its boundary owner while shared fixed service transitions reuse the same checks.
+- Require ace-review 0.61 for the shared complete-head-context ceiling; raise the candidate transfer deadline from 30s to a measured 60s with byte/count bounds unchanged (two full admits plus the complete comparison of the real 82,809,675-byte candidate legitimately need 23–27s on a loaded host; 30s failed closed under recorded load).
 
 ## [0.70.0] - 2026-10-16
 
