@@ -16,11 +16,12 @@ module Ace
           @routes.freeze
         end
 
-        def dispatch(request:, peer:, role:, transfer: nil)
+        def dispatch(request:, peer:, role:, transfer: nil, deadline: nil)
           validate_review_namespace!(request)
           handler = @routes.fetch(request.fetch("operation")) { raise ArgumentError, "unknown authority operation" }
           options = {request: request, peer: peer, role: role}
           options[:transfer] = transfer if transfer
+          options[:deadline] = deadline if deadline
           handler.dispatch(**options)
         end
 
@@ -42,10 +43,12 @@ module Ace
           binding
         end
 
-        def authorize_transfer!(request:, peer:, role:)
+        def authorize_transfer!(request:, peer:, role:, deadline: nil)
           validate_review_namespace!(request)
           handler = @routes.fetch(request.fetch("operation"))
-          handler.authorize_transfer!(request: request, peer: peer, role: role)
+          options = {request: request, peer: peer, role: role}
+          options[:deadline] = deadline if deadline
+          handler.authorize_transfer!(**options)
         end
 
         def validate_review_namespace!(request)

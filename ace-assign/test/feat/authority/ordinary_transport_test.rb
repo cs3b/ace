@@ -34,7 +34,8 @@ module Ace
         attr_reader :calls
         def initialize = @calls = []
         def authorize_transfer!(**) = true
-        def dispatch(request:, peer:, role:, transfer: nil)
+        def dispatch(request:, peer:, role:, deadline:, transfer: nil)
+          raise "ordinary deadline lost" unless deadline > Process.clock_gettime(Process::CLOCK_MONOTONIC)
           @calls << request.fetch("operation")
           {data: {"peer_uid" => peer.fetch("uid"), "role" => role.to_s, "body" => transfer&.bytes&.unpack1("H*")}, replayed: false}
         end

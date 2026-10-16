@@ -214,14 +214,25 @@ module Ace
         # given order, released in reverse — callers must use one consistent
         # global order, task before assignment, to avoid deadlock). Fails
         # closed when any identity was pruned.
-        def with_shared_multi(keys, reset_removed: false)
+        def with_shared_multi(keys, reset_removed: false, deadline: nil)
           ordered = Array(keys).compact.reject { |key| key.to_s.empty? }.uniq
           raise ArgumentError, "exclusion keys are required" if ordered.empty?
 
           locks = []
           begin
+            maintenance_deadline!(deadline) if deadline
             ordered.each { |key| locks << open_lock(key) }
-            locks.each { |lock| lock.flock(File::LOCK_SH) }
+            locks.each do |lock|
+              if deadline
+                until lock.flock(File::LOCK_SH | File::LOCK_NB)
+                  maintenance_deadline!(deadline)
+                  sleep 0.01
+                end
+                maintenance_deadline!(deadline)
+              else
+                lock.flock(File::LOCK_SH)
+              end
+            end
             ordered.each do |key|
               if removed?(key)
                 unless reset_removed

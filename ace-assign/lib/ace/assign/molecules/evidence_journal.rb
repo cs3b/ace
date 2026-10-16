@@ -1702,7 +1702,7 @@ module Ace
           File.join(@checkout_root, ".evidence.lock")
         end
 
-        def with_lock(cleanup_on_failure: true, owner_uid: nil, owner_gid: nil)
+        def with_lock(cleanup_on_failure: true, owner_uid: nil, owner_gid: nil, deadline: nil)
           raise AttemptErrors::EvidenceUnavailable, "read-only journal cannot mutate canonical evidence" if @read_boundary
           FileUtils.mkdir_p(@checkout_root)
           lock = if owner_uid
@@ -1711,7 +1711,19 @@ module Ace
             File.open(lock_path, File::RDWR | File::CREAT, 0o600)
           end
           begin
-            lock.flock(File::LOCK_EX)
+            if deadline
+              unless deadline.is_a?(Numeric) && deadline.finite?
+                raise ArgumentError, "canonical lock deadline must be finite"
+              end
+              loop do
+                remaining = deadline - Process.clock_gettime(Process::CLOCK_MONOTONIC)
+                raise AttemptErrors::Conflict, "canonical journal lock deadline elapsed" unless remaining.positive?
+                break if lock.flock(File::LOCK_EX | File::LOCK_NB)
+                sleep [remaining, 0.01].min
+              end
+            else
+              lock.flock(File::LOCK_EX)
+            end
             begin
               yield
             rescue

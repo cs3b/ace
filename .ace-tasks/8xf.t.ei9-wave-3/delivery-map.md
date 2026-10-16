@@ -7,11 +7,11 @@ status is not an autonomous delivery receipt.
 | Requirement | Outcome owner | Existing implementation / prior owner | Publication | Installation | Acceptance |
 |---|---|---|---|---|---|
 | Exact authorized merge; fresh PR2 decision | ei9.0 | ace-lab ordinary request/receiver; ace-assign journal; ace-git-forgejo; xz9.4/.5 ordinary clauses | lab0.7.0, assign0.69.0, forgejo0.7.0 published; repair pending | Initial cut installed in immutable graphs; coordinator Bash consumer adopted; ordinary receiver pending | Two real sequential PR merges, revocation, head race, uncertain/restart pending |
-| Context, capabilities, start rules | ei9.1 | ace-overseer; qk0 and qkb.1 | Inspect effective assets | Coordinator bundle stale | Installed role/context/path/digest receipt pending |
+| Context, capabilities, start rules | ei9.1 | ace-overseer; qk0 and qkb.1 | New effective source assets await release | Published baseline adopted by canonical coordinator; new role/guide bindings pending | Complete installed role/context/path/digest receipt pending |
 | Local objective queue, canonical attempt adoption | ei9.2 | ace-task root selector; ace-assign; qk0/qkb.1 | Exact --root create/show/update implemented and tested; release pending | No overseer queue verified | Restart/lost answer/duplicate wake without redispatch pending |
 | Dispatch start and correct result attribution | ei9.3 | ace-overseer/Herdr/Assign; qk0/qkb.1 | Existing APIs, join verification pending | Start receipt not yet verified | No-start/wrong callback refused; producer result adoption pending |
-| Native continuation and serial integration | ei9.4 | Pi ace-wake loop/watch; qk0/qkb.1 | Existing source assets | Effective extension not verified | Restore watches; 10-minute progress audit; hourly cleanup; two serial merges pending |
-| Project command, release, sync, all consumers | ei9.5 | ace-lab run (iy6 missing), existing publisher/Assign/runtime/HITL; qkb.1 | Four previous gems published manually; new cut pending | User/service/coordinator consumers stale; legacy pins separate | Partial/unknown publish, wrong OTP, old bundle, installation receipts pending |
+| Native continuation and serial integration | ei9.4 | Pi ace-wake loop/watch; qk0/qkb.1 | Existing native extension; new workflow asset awaits release | Canonical same-session restart preserves exactly two native duties | Native timer/watch/restore proof passed; actual 10-minute audit/hourly cleanup and two merges pending installed workflow |
+| Project command, release, sync, all consumers | ei9.5 | ace-lab run (iy6 missing), existing publisher/Assign/runtime/HITL; qkb.1 | Four previous gems published manually; new cut pending | Published baseline installed in service/coordinator graphs and adopted in canonical coordinator; source delta not installed; legacy pins separate | Partial/unknown publish, wrong OTP, old bundle, complete consumer installation receipts pending |
 | Preserve and close accepted work | ei9.6 | Herdr/worktree owners; ordinary qk0 | Existing preservation mechanisms | Exact installed path pending | Commits/files/results survive cleanup; correct pane closes pending |
 | Installed two-project proof | ei9.7 | TS-DELIVERY-* (qkc), lq1 receipts; shared result with lab-config gad.2 | No new framework | Both deployments pending | Two workers → PRs → review → serial merges → one release → install/sync/cleanup; cold isolated second project pending |
 | Accepted-head review and bounded campaigns | ei9.8 | ace-review ig3/ig4/qm6; Assign presets; configure-project | review0.60.2 published; ig3 source repair passes; next cut pending | Source presets aligned; installed asset refresh pending | Exact historical evidence and bounded rounds; moved-head risk/delta review pending |
@@ -78,6 +78,41 @@ proves the existing native extension's persistence and wake path. Effective
 delivery audit execution remains pending the new workflow asset's publication,
 installation and canonical coordinator adoption; no merge/release acceptance is
 inferred from the extension proof.
+
+Canonical ordinary registration now stores the exact prepared bundle, managed
+definition, initial pending queue and original reply in one existing Assign CAS.
+A real UNIX/Git regression deletes the disposable checkout, restarts the owner
+and recovers the same receipt without another mutation. Revocation while a
+duplicate waits for the canonical lock refuses replay. Lifecycle and journal
+lock admission use the original request deadline; native/candidate reads share
+that deadline. Existing journal Git subprocesses remain synchronous, so this is
+not a hard deadline for every possible journal I/O stall.
+
+Ordinary queue transitions use the existing AssignmentExecutor on private,
+temporary files reconstructed from canonical bytes. They remain an internal
+transformer until remote progress is bound to the authenticated attempt,
+generation and accepted result in the lifecycle owner. No start, finish or
+installed completion is inferred from registration. Independent review approved
+45 tests/402 assertions across lifecycle, queue, lock, mutation and protected
+registration paths; root's focused rerun passed 19/214.
+
+Live native installation findings: the current Herdr server runs as `mo` from
+a user-owned mise executable; its socket and parent directories are also
+user-owned and inaccessible to a distinct Assign owner. That endpoint cannot
+serve as trusted ordinary authority input. Domain ownership must provide a
+reviewed trusted executable and pinned accessible endpoint using the existing
+native handoff and systemd mechanisms; no broker or protected capability is
+introduced. This prerequisite is open, and no ordinary owner is installed.
+
+Domain receipt `ca22cd8` records canonical session adoption: the same saved
+session survived bootstrap and a second ordinary restart, retains exactly two
+native duty definitions (600/3600 seconds), and preserves the prior history and
+68 recovery records. The actual coordinator Bash loads Lab0.7.0, Assign0.69.0,
+Forgejo0.7.0, review0.60.2, Overseer0.21.1 and integration-pi0.5.0 from the
+root-selected graph. The new workflow still does not resolve in that published
+graph; duty execution is explicitly pending and cannot dispatch effects. This
+supersedes the earlier adoption-pending checkpoints, without turning native
+persistence into end-to-end delivery acceptance.
 
 ### Review history contract correction
 

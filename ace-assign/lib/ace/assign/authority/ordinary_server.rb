@@ -20,6 +20,14 @@ module Ace
           @admission.verify_listener!
         end
 
+        def authorize_transfer!(request:, peer:, role:, deadline:)
+          @lifecycle.authorize_transfer!(request: request, peer: peer, role: role, deadline: deadline)
+        end
+
+        def dispatch_lifecycle(request:, peer:, role:, deadline:, transfer: nil)
+          @lifecycle.dispatch(request: request, peer: peer, role: role, deadline: deadline, transfer: transfer)
+        end
+
         def receive(socket)
           deadline = wire.deadline(30)
           peer = @admission.peer(socket, deadline: deadline)

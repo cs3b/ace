@@ -131,7 +131,7 @@ module Ace
             if binding
               raise AttemptErrors::UnauthorizedIdentity, "transfer role differs" unless binding.fetch(:roles).include?(role)
               raise ArgumentError, "transfer control header is oversized" if frame_bytes > 16_384
-              @lifecycle.authorize_transfer!(request: request, peer: peer, role: role)
+              authorize_transfer!(request: request, peer: peer, role: role, deadline: deadline)
               admitted_transfer = @mutex.synchronize do
                 if @transfers < 2
                   @transfers += 1
@@ -142,17 +142,17 @@ module Ace
               codec = transfer_codec
               if binding.fetch(:direction) == :upload
                 result = codec.receive(socket, descriptor: params.fetch("transfer"), purpose: binding.fetch(:purpose), deadline: deadline) do |input|
-                  @lifecycle.dispatch(request: request, peer: peer, role: role, transfer: input)
+                  dispatch_lifecycle(request: request, peer: peer, role: role, transfer: input, deadline: deadline)
                 end
               else
-                result = @lifecycle.dispatch(request: request, peer: peer, role: role)
+                result = dispatch_lifecycle(request: request, peer: peer, role: role, deadline: deadline)
                 parts = result.fetch(:transfer_parts)
                 descriptor = codec.descriptor(parts, purpose: binding.fetch(:purpose))
                 result = result.merge(data: result.fetch(:data).merge("transfer" => descriptor))
               end
             else
               raise ArgumentError, "unexpected transfer descriptor" if params.key?("transfer")
-              result = @lifecycle.dispatch(request: request, peer: peer, role: role)
+              result = dispatch_lifecycle(request: request, peer: peer, role: role, deadline: deadline)
             end
             wire.write(socket, {"status" => "ok", "data" => result.fetch(:data),
               "transport" => {"replayed" => result.fetch(:replayed, false)}}, deadline: deadline, limit: 16_384)
@@ -162,6 +162,16 @@ module Ace
           end
         ensure
           @mutex.synchronize { @transfers -= 1 } if admitted_transfer
+        end
+
+        def authorize_transfer!(request:, peer:, role:, deadline:)
+          @lifecycle.authorize_transfer!(request: request, peer: peer, role: role)
+        end
+
+        def dispatch_lifecycle(request:, peer:, role:, deadline:, transfer: nil)
+          options = {request: request, peer: peer, role: role}
+          options[:transfer] = transfer if transfer
+          @lifecycle.dispatch(**options)
         end
 
         # These closed read operations have no request body. Half-close proves

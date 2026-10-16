@@ -69,9 +69,9 @@ module Ace
         # The existing transport verifies complete Git objects before this
         # shared byte contract parses anything. Preserve the original input for
         # the eventual registration journal; CandidateTransfer may reexport it.
-        def self.admit(bytes:, head:, tree:, sha256:, size:, root:)
+        def self.admit(bytes:, head:, tree:, sha256:, size:, root:, deadline: nil)
           transfer = CandidateTransfer.new(root: root)
-          transfer.admit(bytes: bytes, head: head, sha256: sha256, size: size) do |repository, deadline, result|
+          transfer.admit(bytes: bytes, head: head, sha256: sha256, size: size, deadline: deadline) do |repository, deadline, result|
             raise ArgumentError, "prepared_input_invalid: Git tree differs" unless result.fetch("tree") == tree
             new(files: transfer.prepared_files(repository: repository, deadline: deadline, head: head))
           end

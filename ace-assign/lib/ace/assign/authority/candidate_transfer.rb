@@ -115,14 +115,14 @@ module Ace
           reject!("Prepared export filesystem is unavailable")
         end
 
-        def admit(bytes:, sha256:, size:, head:, &consumer)
+        def admit(bytes:, sha256:, size:, head:, deadline: nil, &consumer)
           unless bytes.is_a?(String) && size.is_a?(Integer) && size.positive? && size <= MAX_BYTES &&
               size == bytes.bytesize && sha256.is_a?(String) &&
               Digest::SHA256.hexdigest(bytes.b) == sha256 && head.is_a?(String) && head.match?(SHA)
             reject!("Candidate bundle binding or size is invalid")
           end
           verify_root!
-          deadline = monotonic + DEADLINE
+          deadline = deadline ? [deadline, monotonic + DEADLINE].min : monotonic + DEADLINE
           Dir.mktmpdir("quarantine-", @root) do |directory|
             File.chmod(0700, directory)
             bundle = File.join(directory, "candidate.bundle")

@@ -34,7 +34,7 @@ module Ace
         # returns events [{type:, payload:}], immutable blobs, and public data.
         # Only the authority calls this internal journal API; wire requests
         # cannot select blob paths, event types, or accepted response data.
-        def mutate(assignment_id:, attempt_id:, mutation_id:, operation:, parameters_digest:, expected_generation:, with_replay: false, generation_mode: :expected, prompt_binding: nil, prompt_completion: nil, prompt_observation: nil, input_inhibition: nil)
+        def mutate(assignment_id:, attempt_id:, mutation_id:, operation:, parameters_digest:, expected_generation:, with_replay: false, generation_mode: :expected, prompt_binding: nil, prompt_completion: nil, prompt_observation: nil, input_inhibition: nil, deadline: nil, replay_authorizer: nil)
           unless (generation_mode == :expected && expected_generation.is_a?(Integer) && expected_generation >= 0) ||
               (generation_mode == :recorded_completion && %w[complete_service complete_no_effect].include?(operation) && expected_generation.nil?) ||
               (generation_mode == :prompt_completion && operation == "prompt_attempt" && expected_generation.nil? && prompt_completion.is_a?(Hash)) ||
@@ -71,7 +71,8 @@ module Ace
           unless parameters_digest.is_a?(String) && parameters_digest.match?(/\A[0-9a-f]{64}\z/)
             raise ArgumentError, "invalid mutation parameter digest"
           end
-          with_lock do
+          raise ArgumentError, "replay authorizer must be source owned" if replay_authorizer && !replay_authorizer.respond_to?(:call)
+          with_lock(deadline: deadline) do
             self.class::CAS_ATTEMPTS.times do
               old = ref_value
               ensure_checkout!
@@ -96,6 +97,7 @@ module Ace
                   raise AttemptErrors::Conflict, "Mutation ID is already bound to different input"
                 end
                 result = replay.fetch("data").merge("journal_commit" => replay.fetch("journal_commit"))
+                replay_authorizer&.call
                 return with_replay ? {data: result, replayed: true} : result
               end
               current = read_events(assignment_id, commit: old).select { |event| event["attempt_id"] == attempt_id }
