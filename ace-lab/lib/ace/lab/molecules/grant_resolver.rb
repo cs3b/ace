@@ -43,6 +43,21 @@ module Ace
               "invalid lab configuration: trusted authorization file could not be parsed"
           end
 
+          # Validate an installed directory through the same original-path
+          # traversal as files, including root-owned system symlink aliases.
+          def trusted_directory!(path)
+            candidate = verified_resolve(path)
+            raise Ace::Lab::InvalidConfigurationError, "trusted directory is unavailable" unless candidate
+            File.open(candidate, File::RDONLY | File::NOFOLLOW) do |handle|
+              unless handle.stat.directory? && secure_file_stat?(handle.stat)
+                raise Ace::Lab::InvalidConfigurationError, "trusted directory ownership or mode differs"
+              end
+            end
+            true
+          rescue SystemCallError
+            raise Ace::Lab::InvalidConfigurationError, "trusted directory is unavailable"
+          end
+
           # @param documents [Array<Hash>] {path:, document:, defaults:}
           #   from Ace::Lab.cascade_documents
           # @param topology [Hash] normalized topology (project IDs)

@@ -260,6 +260,22 @@ module Ace
         end
       end
 
+      def test_project_command_namespace_cannot_be_claimed_by_an_ordinary_assignment
+        with_fixture do
+          with_owner do |client|
+            before = @journal.ref_value
+            assert_raises(AttemptErrors::EvidenceUnavailable) do
+              register(client, params: @params.merge("assignment_id" => "command-run-1"))
+            end
+            assert_raises(AttemptErrors::EvidenceUnavailable) do
+              client.call("registration_status", {"assignment_id" => "command-run-1"})
+            end
+            assert_equal before, @journal.ref_value
+            assert_empty @journal.read_events("command-run-1")
+          end
+        end
+      end
+
       def test_registration_replay_survives_owner_restart_and_uses_only_canonical_bytes
         with_fixture do
           first = with_owner { |client| register(client) }

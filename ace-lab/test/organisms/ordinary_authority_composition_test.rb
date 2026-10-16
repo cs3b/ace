@@ -93,7 +93,14 @@ class OrdinaryAuthorityCompositionTest < Minitest::Test
     assert_equal :local, journal.evidence_mode
     assert_equal "refs/ace/execution", journal.ref
     observer = coordinator.instance_variable_get(:@recorded_binding_observer)
-    assert_same server.instance_variable_get(:@admission), observer.receiver
+    admission = server.instance_variable_get(:@admission)
+    assert_instance_of L::Molecules::CommandOwnerAdmission, admission
+    assert_same admission.instance_variable_get(:@base), observer.receiver
+    assert_same lifecycle.instance_variable_get(:@admission), observer.receiver
+    command = server.instance_variable_get(:@lifecycle).instance_variable_get(:@routes).fetch("command_admit")
+    assert_instance_of A::Authority::CommandExecution, command
+    assert_same journal, command.instance_variable_get(:@journal)
+    assert_same admission, command.instance_variable_get(:@admission)
     assert_equal :recorded_binding!, observer.name
     assert_equal File.join(@root, "hitl.sock"), hitl.socket_path
     assert_equal File.join(@root, "state", "hitl"), hitl.instance_variable_get(:@root)

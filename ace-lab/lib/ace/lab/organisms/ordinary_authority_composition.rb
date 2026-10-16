@@ -8,6 +8,7 @@ require "ace/hitl/lifecycle/service"
 require "ace/hitl/lifecycle/tls_authority"
 require "ace/hitl/lifecycle/tls_service"
 require_relative "../molecules/ordinary_owner_admission"
+require_relative "../molecules/command_owner_admission"
 require_relative "../molecules/ordinary_listener"
 require_relative "ordinary_merge_receiver"
 
@@ -45,7 +46,10 @@ module Ace
             recorded_binding_observer: admission.method(:recorded_binding!))
           lifecycle = Ace::Assign::Authority::OrdinaryLifecycle.new(project: @config.project,
             admission: admission, journal: journal, exclusion: exclusion, input_root: @config.assignment_root)
-          router = Ace::Assign::Authority::Router.new(handlers: [lifecycle])
+          command_admission = Molecules::CommandOwnerAdmission.new(base: admission, project: @config.project)
+          command = Ace::Assign::Authority::CommandExecution.new(project: @config.project, journal: journal,
+            admission: command_admission)
+          router = Ace::Assign::Authority::Router.new(handlers: [lifecycle, command])
           merge = OrdinaryMergeReceiver.new(config: @receiver, coordinator: coordinator,
             policy_document: policy_document, owner_guard: -> { @config.selected_principal!(@receiver.principal_uid) },
             merge_factory: ->(document) {
@@ -55,7 +59,7 @@ module Ace
           listener = Molecules::OrdinaryListener.new(socket_path: @receiver.socket_path,
             peer_uid: @receiver.principal_uid, socket_gid: @receiver.socket_gid, handler: merge,
             logger: ->(message) { warn message })
-          Ace::Assign::Authority::OrdinaryServer.new(admission: admission, lifecycle: router,
+          Ace::Assign::Authority::OrdinaryServer.new(admission: command_admission, lifecycle: router,
             services: hitl_services(coordinator) + [listener])
         end
 

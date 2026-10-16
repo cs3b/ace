@@ -171,6 +171,13 @@ module Ace
           unless request.fetch("project_id") == @project && @admission.authorize!(request: request, peer: peer, deadline: deadline) == role
             raise AttemptErrors::UnauthorizedIdentity, "ordinary lifecycle principal differs"
           end
+          # Project commands share the canonical journal but never the managed
+          # assignment namespace. Reserve their prefix on every ordinary route,
+          # including transfer admission, status and registration replay.
+          assignment = request.fetch("params")["assignment_id"]
+          if assignment.is_a?(String) && assignment.start_with?("command-")
+            raise ArgumentError, "ordinary assignment uses the reserved project-command namespace"
+          end
         end
 
         def validate_registration!(request)

@@ -524,3 +524,47 @@ Handlers retain the fixed closed environment and 30-second execution deadline, w
 The existing protected receiver exposes `recover_no_effect(binding:, input_bytes:, mutation_id:, expected_generation:)`. Supply the original assignment/attempt/candidate/head/request binding, original structured input, stable mutation ID and unchanged original positive authority generation. The receiver snapshots those inputs, authenticates canonical status and input before any settled return, and adopts an already accepted current challenge without claiming again. A needed claim uses the supplied generation unchanged. Lost acknowledgements remain uncertain; status retry never repeats the original effect.
 
 Trusted operation configuration must provide a distinct fixed `no_effect_argv` for the original project/service/executor. Inspection may proceed after the effect lease expires, but it never renews effect permission or selects normal effect argv. The selected inspector must produce operation-specific original target/handler/writer observations and existing strict challenge-bound artifacts; only the authority's canonical import can establish `failed-settled`. This source API and controlled composition do not deliver the outstanding gad.b inspector or installed acceptance.
+
+## Project commands
+
+`ace-lab run --project ace -- /usr/bin/id` invokes one exact installed command
+policy. `--as publisher` selects a permitted executor; repeated `--service NAME`
+replaces the configured default set. Every service and the entire combination
+must be granted. Arguments after `--` remain literal, including command options.
+No shell is added. Duplicate `--project`/`--as` or empty argv are usage errors.
+
+The root-owned `/etc/lab/ace-lab/project-commands.yml` is the only command-policy
+source. Project preferences and caller environment cannot create grants. Its
+version1 project entries contain `launcher`, `default_executor`, `default_services`,
+`executors`, `services`, `commands`, and `grants`. Executors declare UID/GID/groups,
+HOME/cwd/PATH and nonsecret environment; services declare nonsecret environment
+and secret references; commands bind exact argv, executable SHA256 and source
+head/tree. Source head/tree are both null for a non-Git probe and both exact
+object IDs for release source. Grants bind requester kind/UID, command, executor
+and the exact service combination. Accepted code/cwd must be root-owned and
+unwritable by the executor. Missing or changed context refuses execution.
+
+An operator grant authorizes an OS account. Agents sharing that account share
+its operator authority; an environment hint does not prove human presence.
+Agent-selected invocation additionally checks actual current native ancestry.
+Separate identities are required when operator authority must exclude agents.
+
+The CLI retains an invocation under `.ace-local/lab-commands/` and prints its
+execution reference before contacting the canonical Assign owner. Inspect it with
+`ace-lab run-status --project ace --reference REF`. Inspection starts no command
+and remains available to the original requester account after a grant is revoked.
+After response loss, inspect that original reference before requesting new work.
+An existing claim or a replayed acknowledgment cannot release another child.
+
+Interactive terminals preserve no-echo input, dimensions and signals. Pipe mode
+preserves EOF, separate stdout/stderr and actual exit/signal status. Socket closure
+without the authenticated result is uncertainty. Root launch/exit observations
+remain separate from accepted product delivery evidence; exit0 alone does not
+prove publication, installation or completed delivery.
+
+This implementation slice admits nonsecret commands. A nonempty selected secret
+reference set is explicitly refused before claim until the secret execution
+capability is supplied. Publication also requires the publisher's writable
+artifact/cache destination outside immutable accepted source, or retained exact
+artifacts. These remaining joins and installed acceptance are tracked by ei9 .5;
+source/kernel fixture success does not assert installed autonomous publication.
