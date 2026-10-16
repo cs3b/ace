@@ -1,0 +1,75 @@
+Started with run options --seed 22918
+
+Ace::Assign::CanonicalEvidenceTest
+  test_artifact_count_individual_and_total_bounds_refuse_before_import PASS (0.00s)
+  test_release_artifact_descriptor_has_its_own_closed_size_and_roleERROR (0.00s)
+Minitest::UnexpectedError:         ArgumentError: invalid evidence kind
+            lib/ace/assign/molecules/canonical_evidence.rb:48:in 'block in Ace::Assign::Molecules::CanonicalEvidence#import_plan'
+            lib/ace/assign/molecules/canonical_evidence.rb:48:in 'Hash#fetch'
+            lib/ace/assign/molecules/canonical_evidence.rb:48:in 'Ace::Assign::Molecules::CanonicalEvidence#import_plan'
+            test/fast/molecules/canonical_evidence_test.rb:45:in 'Ace::Assign::CanonicalEvidenceTest#test_release_artifact_descriptor_has_its_own_closed_size_and_role'
+
+  test_pending_import_uses_same_chain_provenance_and_byte_validator PASS (0.00s)
+  test_provenance_identity_binding_and_predecessor_are_required   PASS (0.00s)
+  test_owner_generated_artifact_ids_and_no_effect_references      PASS (0.00s)
+  test_release_artifact_is_one_binary_worker_import_without_lifting_report_capsERROR (0.00s)
+Minitest::UnexpectedError:         ArgumentError: invalid evidence kind
+            lib/ace/assign/molecules/canonical_evidence.rb:48:in 'block in Ace::Assign::Molecules::CanonicalEvidence#import_plan'
+            lib/ace/assign/molecules/canonical_evidence.rb:48:in 'Hash#fetch'
+            lib/ace/assign/molecules/canonical_evidence.rb:48:in 'Ace::Assign::Molecules::CanonicalEvidence#import_plan'
+            test/fast/molecules/canonical_evidence_test.rb:29:in 'Ace::Assign::CanonicalEvidenceTest#test_release_artifact_is_one_binary_worker_import_without_lifting_report_caps'
+
+  test_release_artifact_pending_read_preserves_binary_and_rejects_kind_or_binding_changeERROR (0.00s)
+Minitest::UnexpectedError:         ArgumentError: invalid evidence kind
+            lib/ace/assign/molecules/canonical_evidence.rb:48:in 'block in Ace::Assign::Molecules::CanonicalEvidence#import_plan'
+            lib/ace/assign/molecules/canonical_evidence.rb:48:in 'Hash#fetch'
+            lib/ace/assign/molecules/canonical_evidence.rb:48:in 'Ace::Assign::Molecules::CanonicalEvidence#import_plan'
+            test/fast/molecules/canonical_evidence_test.rb:90:in 'Ace::Assign::CanonicalEvidenceTest#pending_fixture'
+            test/fast/molecules/canonical_evidence_test.rb:56:in 'Ace::Assign::CanonicalEvidenceTest#test_release_artifact_pending_read_preserves_binary_and_rejects_kind_or_binding_change'
+
+  test_pending_corrupted_bytes_or_chain_cannot_pass_precommit_validation PASS (0.00s)
+
+Ace::Assign::TransferCodecTest
+  test_private_body_and_marker_share_the_same_clamped_absolute_deadline PASS (0.00s)
+  test_chunked_and_coalesced_private_body_preserve_next_control_frame PASS (0.00s)
+  test_service_input_is_exactly_one_nonempty_bounded_source_part  PASS (0.00s)
+  test_export_uses_exact_binary_bytes_and_refuses_mismatched_descriptor PASS (0.00s)
+  test_release_artifact_transfer_preserves_one_binary_part_and_cleans_scratchERROR (0.00s)
+Minitest::UnexpectedError:         Ace::Assign::AttemptErrors::MalformedTransfer: Unknown source transfer purpose
+            lib/ace/assign/authority/transfer_codec.rb:182:in 'Ace::Assign::Authority::TransferCodec#reject!'
+            lib/ace/assign/authority/transfer_codec.rb:143:in 'block in Ace::Assign::Authority::TransferCodec#validate!'
+            lib/ace/assign/authority/transfer_codec.rb:143:in 'Hash#fetch'
+            lib/ace/assign/authority/transfer_codec.rb:143:in 'Ace::Assign::Authority::TransferCodec#validate!'
+            lib/ace/assign/authority/transfer_codec.rb:122:in 'Ace::Assign::Authority::TransferCodec#descriptor'
+            test/feat/transfer_codec_test.rb:38:in 'block in Ace::Assign::TransferCodecTest#test_release_artifact_transfer_preserves_one_binary_part_and_cleans_scratch'
+            test/feat/transfer_codec_test.rb:12:in 'block in Ace::Assign::TransferCodecTest#with_codec'
+            /Users/mc/.local/share/mise/installs/ruby/3.4.8/lib/ruby/3.4.0/tmpdir.rb:105:in 'Dir.mktmpdir'
+            test/feat/transfer_codec_test.rb:10:in 'Ace::Assign::TransferCodecTest#with_codec'
+            test/feat/transfer_codec_test.rb:36:in 'Ace::Assign::TransferCodecTest#test_release_artifact_transfer_preserves_one_binary_part_and_cleans_scratch'
+
+  test_release_artifact_transfer_has_exact_single_nonempty_part_and_size_ceilingERROR (0.00s)
+Minitest::UnexpectedError:         Ace::Assign::AttemptErrors::MalformedTransfer: Unknown source transfer purpose
+            lib/ace/assign/authority/transfer_codec.rb:182:in 'Ace::Assign::Authority::TransferCodec#reject!'
+            lib/ace/assign/authority/transfer_codec.rb:143:in 'block in Ace::Assign::Authority::TransferCodec#validate!'
+            lib/ace/assign/authority/transfer_codec.rb:143:in 'Hash#fetch'
+            lib/ace/assign/authority/transfer_codec.rb:143:in 'Ace::Assign::Authority::TransferCodec#validate!'
+            lib/ace/assign/authority/transfer_codec.rb:122:in 'Ace::Assign::Authority::TransferCodec#descriptor'
+            test/feat/transfer_codec_test.rb:52:in 'block in Ace::Assign::TransferCodecTest#test_release_artifact_transfer_has_exact_single_nonempty_part_and_size_ceiling'
+            test/feat/transfer_codec_test.rb:12:in 'block in Ace::Assign::TransferCodecTest#with_codec'
+            /Users/mc/.local/share/mise/installs/ruby/3.4.8/lib/ruby/3.4.0/tmpdir.rb:105:in 'Dir.mktmpdir'
+            test/feat/transfer_codec_test.rb:10:in 'Ace::Assign::TransferCodecTest#with_codec'
+            test/feat/transfer_codec_test.rb:51:in 'Ace::Assign::TransferCodecTest#test_release_artifact_transfer_has_exact_single_nonempty_part_and_size_ceiling'
+
+  test_private_prompt_frames_support_two_dispatches_and_ack_without_half_close PASS (0.00s)
+  test_private_prompt_boundary_refuses_extra_bytes_wrong_marker_and_early_eof_before_consumer PASS (0.06s)
+  test_fixed_purpose_limits_and_descriptor_shape_refuse_before_spool PASS (0.00s)
+  test_missing_eof_hits_shared_deadline_without_mutation_or_retained_spool PASS (0.06s)
+  test_receipt_purpose_preserves_all_sixteen_artifacts_and_separate_full_capacity PASS (0.00s)
+  test_consumer_failure_removes_only_new_spool_and_preserves_existing_private_files PASS (0.00s)
+  test_private_sender_marker_cannot_extend_body_deadline          PASS (0.00s)
+  test_short_extra_and_changed_payload_never_invoke_consumer_or_leave_spool PASS (0.00s)
+  test_receipt_purpose_limits_do_not_widen_generic_artifacts_or_trade_evidence_for_receipt_capacity PASS (0.00s)
+  test_exact_multi_part_binary_upload_is_admitted_only_after_write_eof_and_spool_is_removed PASS (0.00s)
+
+Finished in 0.13344s
+24 tests, 111 assertions, 0 failures, 5 errors, 0 skips

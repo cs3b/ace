@@ -32,6 +32,36 @@ module Ace
         sender&.join
       end
 
+      def test_release_artifact_transfer_preserves_one_binary_part_and_cleans_scratch
+        with_codec do |codec, root|
+          binary = "\x00\xff".b * 32_769
+          descriptor = codec.descriptor([binary], purpose: :release_artifact)
+          with_upload(binary) do |socket|
+            codec.receive(socket, descriptor: descriptor, purpose: :release_artifact, deadline: deadline) do |input|
+              assert_equal 1, input.count
+              assert_equal binary, input.bytes
+            end
+          end
+          assert_empty Dir.children(root)
+          assert_raises(AttemptErrors::ReceiptRejected) { codec.descriptor([binary], purpose: :artifacts) }
+        end
+      end
+
+      def test_release_artifact_transfer_has_exact_single_nonempty_part_and_size_ceiling
+        with_codec do |codec, _root|
+          descriptor = codec.descriptor(["gem"], purpose: :release_artifact)
+          ceiling = 64 * 1024 * 1024
+          exact = descriptor.merge("bytes" => ceiling,
+            "parts" => [descriptor.fetch("parts").first.merge("bytes" => ceiling)])
+          assert codec.validate!(exact, :release_artifact)
+          too_large = exact.merge("bytes" => ceiling + 1,
+            "parts" => [exact.fetch("parts").first.merge("bytes" => ceiling + 1)])
+          assert_raises(AttemptErrors::ReceiptRejected) { codec.validate!(too_large, :release_artifact) }
+          assert_raises(AttemptErrors::ReceiptRejected) { codec.descriptor([""], purpose: :release_artifact) }
+          assert_raises(AttemptErrors::ReceiptRejected) { codec.descriptor(["one", "two"], purpose: :release_artifact) }
+        end
+      end
+
       def test_private_prompt_frames_support_two_dispatches_and_ack_without_half_close
         with_codec do |codec, root|
           reader, writer = UNIXSocket.pair

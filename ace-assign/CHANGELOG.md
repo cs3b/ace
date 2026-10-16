@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Provide a separate bounded release-artifact transfer and canonical binary evidence kind while preserving existing report limits.
 - Admit ordinary candidates and independently started native reviewers into the canonical journal. Revalidate original review artifacts and root-witnessed test executions before fixed merge admission and effects; preserve strict protected-review attribution.
 - Drive ordinary work through the installed canonical owner with retained requests, accepted context snapshots and result adoption. Record coordinator replacement in the existing definition chain only after positive old-process termination; preserve worker attempts and reject stale supervisor completion.
 
