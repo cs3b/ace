@@ -9,6 +9,8 @@ file_patterns:
     - "ace-herdr/.ace-defaults/**"
     - "ace-runtime/**"
     - "ace-runtime/.ace-defaults/**"
+    - "ace-review/**"
+    - "ace-review/.ace-defaults/**"
     - "ace-assign/**"
     - "ace-assign/.ace-defaults/**"
     - "ace-overseer/**"
