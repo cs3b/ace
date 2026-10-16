@@ -59,6 +59,20 @@ class CommandRunClientTest < Minitest::Test
     end
   end
 
+  def test_actual_herdr_pane_environment_reaches_native_admission_as_a_hint
+    previous_pane, previous_wrong = ENV["HERDR_PANE"], ENV["HERDR_PANE_ID"]
+    ENV["HERDR_PANE"], ENV["HERDR_PANE_ID"] = "w1:p3", "not-exported-by-herdr"
+    captured = nil
+    client = Object.new
+    client.define_singleton_method(:run) { |**options| captured = options; 0 }
+    Ace::Lab::Organisms::CommandRunClient.stub(:new, client) do
+      assert_equal 0, Ace::Lab::CLI::Commands::Run.invoke(%w[--project ace -- bin/ace-test feat])
+    end
+    assert_equal "w1:p3", captured.fetch(:pane)
+  ensure
+    ENV["HERDR_PANE"], ENV["HERDR_PANE_ID"] = previous_pane, previous_wrong
+  end
+
   def with_stream(frames)
     client_socket, server = UNIXSocket.pair
     stdin_read, stdin_write = IO.pipe

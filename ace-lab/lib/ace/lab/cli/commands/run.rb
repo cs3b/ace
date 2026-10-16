@@ -48,7 +48,7 @@ module Ace
             project = options.delete(:project)
             client = Organisms::CommandRunClient.new(project: project)
             begin
-              client.run(**options, pane: ENV["HERDR_PANE_ID"])
+              client.run(**options, pane: ENV["HERDR_PANE"])
             rescue StandardError, SecurityError
               # Once admission may have crossed the owner boundary, even a
               # malformed stream is uncertainty, never a fresh usage refusal.
