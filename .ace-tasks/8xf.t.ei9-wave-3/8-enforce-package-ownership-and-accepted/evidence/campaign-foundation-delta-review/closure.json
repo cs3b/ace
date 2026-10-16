@@ -1,0 +1,35 @@
+{
+  "schema": "ace.ei9.source-review/v1",
+  "source": "6da63fdf964de3a23800f6eae466b94ad758f095",
+  "tree": "d81f21f8c83bf8c54dca242c6043a3d565187c35",
+  "provider": "pi",
+  "model": "zai/glm-5.3",
+  "thinking": "high",
+  "preset": "ro",
+  "completion": "succeeded",
+  "verdict": "APPROVE",
+  "raw_artifacts": {
+    "review-report-review-default.md": {
+      "sha256": "361f2ec1b7f5ca71dba40261597c27c75cf816540dcdb5c4ef9b7f46fd93c104",
+      "bytes": 8476
+    },
+    "llm_metadata.yml": {
+      "sha256": "6c627146e7b41c643268225f6fe6e7f842f9e20d865edd996d441b5291606b91",
+      "bytes": 974
+    }
+  },
+  "checks": [
+    {
+      "report": "review/9d7d2295-b7a9-4013-b8a7-92451aad5c21",
+      "tests": 1,
+      "assertions": 24,
+      "failures": 0,
+      "errors": 0,
+      "purpose": "actual canonical campaign result join after follow-ups"
+    }
+  ],
+  "disposition": {
+    "read_error_prefix_suggestion": "No change: prefix labels the failed complete read operation, including refusal for its bounds; original diagnostic text and ReceiptRejected type remain. No consumer parses a Git-only meaning."
+  },
+  "scope": "Source foundation only. Ordinary canonical campaign association, collection, execution budgets, assessments and merge consumption remain pending. No installed acceptance."
+}
