@@ -6,7 +6,7 @@ created_at: "2026-10-16 10:57:19"
 tags: []
 parent: 8xf.t.ei9
 estimate: large
-dependencies: [8xf.t.ei9.0, 8xf.t.ei9.4, 8xf.t.ei9.9]
+dependencies: [8xf.t.ei9.0, 8xf.t.ei9.4, 8xf.t.ei9.9, 8xf.t.ei9.8]
 bundle:
   presets: [project]
   files: [AGENTS.md, docs/tools.md, .ace-tasks/8xf.t.ei9-wave-3/8xf.t.ei9-wave-3.s.md, .ace-tasks/8xf.t.ei9-wave-3/environment-contract.md, .ace-tasks/8xf.t.ei9-wave-3/observations-and-acceptance.md, .ace-tasks/8xf.t.ei9-wave-3/ux/usage.md, .ace-tasks/8wr.t.qkb-run-assignment-delivery-workflows-through/8wr.t.qkb-run-assignment-delivery-workflows-through-named-forge.s.md, .ace-tasks/8xb.t.iy6-run-project-commands-with-explicitly/8xb.t.iy6-run-project-commands-with-explicitly-authorized.s.md, .ace-tasks/8xa.t.nh0-ace-hitlace-hitl-hermes-shared/8xa.t.nh0-ace-hitlace-hitl-hermes-shared-hermes-multi.s.md, ace-overseer/handbook/skills/as-overseer-configure-project/SKILL.md, ace-overseer/handbook/workflow-instructions/overseer/configure-project.wf.md, ace-assign/.ace-defaults/assign/presets/supervise-delivery.yml, ace-assign/.ace-defaults/assign/presets/integrate-batch.yml, ace-assign/.ace-defaults/assign/presets/deliver-release.yml, ace-assign/.ace-defaults/assign/presets/close-delivery.yml]
@@ -50,6 +50,32 @@ project command and optional scoped services/environment with declared inputs,
 executor identity and canonical result. No arbitrary privileged shell, copied
 credential or legacy Work fabrication. Missing executable binding is blocked with
 owner, not an unbounded wait or a reason to invent a framework.
+
+## Current publication readiness and ownership (2026-10-16)
+
+Verified source gap: ordinary delivery has real registration/start/results, but
+canonical candidate/review ingress and fixed service/publication admission remain
+protected-only. Existing publication also reads artifacts from a candidate Git
+bundle; independently authorized retained build artifacts need their own canonical
+transfer and staging join. A successful command or result receipt is not accepted
+review or publication authority. The first complete release uses the REAL ordinary
+delivery assignment/attempt; taskless secret/publish requirements remain OPEN here.
+
+This child owns ordinary submit/export candidate, real-supervisor assign_review,
+independently authenticated accept_review and their shared service/publication join.
+Child [ei9.8](../8-enforce-package-ownership-and-accepted/) owns review policy,
+accepted-head/convergence behavior and ig3/ig4; candidate admission does not replace
+that policy or independent verdict. Review policy/evidence must be ready before a
+publication permit. Leave protected launch-control request_review unchanged.
+
+Sequence shared core extraction + executed protected regressions, ordinary native
+candidate/review admission and canonical merge proof as a shared .0/.8 prerequisite
+BEFORE actual two-PR merge acceptance, then exact artifact manifest retention and
+same-owner service/HITL/OTP/registry acceptance. Reuse one Router/journal/exclusion;
+never fake a protected origin, task or attempt. Ordinary service authorizer is
+source-selected without relabelling the whole journal as protected or granting
+all local journals service authority. Full design/test map:
+[ordinary-publication-plan.md](ordinary-publication-plan.md).
 
 ## Code sync
 

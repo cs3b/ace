@@ -3,7 +3,7 @@
 module Ace
   module Assign
     module Authority
-      class Endcap
+      module FixedServiceLifecycle
         SERVICE_IDENTITY = %w[request_id assignment_id attempt_id project_id operation input_digest target
           authorization service_id caller_uid candidate_head candidate_generation executor_uid transport policy_digest
           worker_process_binding launch_ticket reservation_generation mapping_id].freeze
@@ -17,7 +17,7 @@ module Ace
         end
 
         def service_settlement_evidence!(journal:, events:, params:, map:, commit:)
-          protected_journal!(journal)
+          service_journal!(journal)
           journal.verify_commit!(commit)
           retained = journal.read_events(params.fetch("assignment_id"), commit: commit)
             .select { |event| event["attempt_id"] == params.fetch("attempt_id") }
@@ -80,7 +80,7 @@ module Ace
         # Called only by the installed journal composition, including lower
         # service writers. It never reacquires lifecycle/authority locks.
         def authorize_service_update!(journal:, existing:, replacement:, pending:)
-          protected_journal!(journal)
+          service_journal!(journal)
           if existing && existing.key?("executor_process_binding") &&
               Atoms::EvidenceDigest.digest(existing.fetch("executor_process_binding")) != Atoms::EvidenceDigest.digest(replacement["executor_process_binding"])
             raise AttemptErrors::InvalidState, "original cleanup executor cannot change"
@@ -114,28 +114,28 @@ module Ace
           end
           bytes = pending && pending.fetch(:service_inputs, {})[replacement.fetch("request_id")]
           raise AttemptErrors::UnauthorizedIdentity, "fresh service effect requires its exact original input" unless bytes.is_a?(String)
-          map = @deployment.mapping(replacement.fetch("mapping_id"))
+          map = service_mapping!(replacement.fetch("mapping_id"))
           unless replacement["project_id"] == map["project_id"] && replacement["caller_uid"] == map["worker_uid"]
             raise AttemptErrors::UnauthorizedIdentity, "protected service mapping differs"
           end
           params = replacement.slice("mapping_id", "assignment_id", "attempt_id", "candidate_generation").merge("head" => replacement.fetch("candidate_head"))
           events = pending.fetch(:current_events)
-          @launch.scope_open_for_effect!(events: events, params: params, map: map)
-          origin = active_origin(events, params)
+          service_scope_open!(events: events, params: params, map: map)
+          origin = service_origin!(events, params)
           unless replacement["worker_process_binding"] == origin.fetch("process_binding").fetch("process_identity") &&
               replacement["launch_ticket"] == origin.fetch("launch_ticket") && replacement["reservation_generation"] == origin.fetch("reservation_generation")
             raise AttemptErrors::UnauthorizedIdentity, "protected service origin differs"
           end
-          receiver = @deployment.project(map.fetch("project_id")).fetch("service_receivers").fetch(replacement.fetch("service_id"))
+          receiver = service_project!(map.fetch("project_id")).fetch("service_receivers").fetch(replacement.fetch("service_id"))
           raise AttemptErrors::UnauthorizedIdentity, "protected service executor differs" unless receiver.fetch("executor_uid") == replacement.fetch("executor_uid")
           current = exact_candidate!(candidate(events), params)
-          approved_review!(journal, events, params, map, current, service_operation: replacement.fetch("operation")) unless %w[create update].include?(replacement.fetch("operation"))
+          service_review!(journal, events, params, map, current, service_operation: replacement.fetch("operation")) unless %w[create update].include?(replacement.fetch("operation"))
           service_policy!.prepare!(replacement, input_bytes: bytes)
           if begin_dispatch && %w[prune-preserved-workspace publish].include?(replacement.fetch("operation"))
             executor = replacement.fetch("executor_process_binding")
             boot = replacement.fetch("worker_process_binding").fetch("started_at").split(":").fetch(1)
             Molecules::ExecutionScopeLineage.validate_process_identity!(executor, boot_id: boot)
-            credentials = @deployment.project(map.fetch("project_id")).fetch("peer_credentials").fetch(receiver.fetch("executor_uid").to_s)
+            credentials = service_project!(map.fetch("project_id")).fetch("peer_credentials").fetch(receiver.fetch("executor_uid").to_s)
             unless executor.slice("uid", "gid", "groups") == credentials.slice("gid", "groups").merge("uid" => receiver.fetch("executor_uid"))
               raise AttemptErrors::UnauthorizedIdentity, "original cleanup executor credentials differ"
             end
@@ -164,8 +164,8 @@ module Ace
         def authorize_service_transfer!(request, params, map, peer, role)
           service_policy!
           service_policy!.visible!(project: map.fetch("project_id"), uid: map.fetch("worker_uid")) unless request.fetch("operation") == "complete_service"
-          @launch.with_assignment(params: params, map: map) do |journal, _registration|
-            protected_journal!(journal)
+          with_service_scope(params: params, map: map) do |journal, _registration|
+            service_journal!(journal)
             if request.fetch("operation") == "request_service"
               existing = journal.service_request(params.fetch("request_id"))
               if existing
@@ -173,8 +173,8 @@ module Ace
                 service_replay_binding!(existing, params, map)
               else
                 events = attempt_events(journal, params)
-                origin = active_origin(events, params)
-                worker_or_launcher!(params.fetch("worker_process_binding"), :worker, map, origin)
+                origin = service_origin!(events, params)
+                service_worker!(params.fetch("worker_process_binding"), :worker, map, origin)
                 service_receiver!(peer, role, map, params.fetch("service_id"))
               end
             else
@@ -191,7 +191,7 @@ module Ace
         # This immutable observation grants no service claim or dispatch permit.
         def workspace_prune_preview_context(_request, params, map, peer, role, transfer)
           raise ArgumentError, "preview context forbids upload" unless transfer.nil?
-          @launch.with_assignment(params: params, map: map) do |journal, _registration|
+          with_service_scope(params: params, map: map) do |journal, _registration|
             {data: workspace_prune_preview_context_at!(journal: journal, params: params, map: map, peer: peer, role: role), replayed: false}
           end
         end
@@ -203,11 +203,11 @@ module Ace
 
         def workspace_prune_preview_context_at!(journal:, params:, map:, peer:, role:)
           service_policy!.visible!(project: map.fetch("project_id"), uid: map.fetch("worker_uid"))
-          protected_journal!(journal)
+          service_journal!(journal)
           commit = journal.ref_value
-          events = @launch.preview_attempt_events!(journal: journal, commit: commit, params: params, map: map)
-          origin = active_origin(events, params)
-          worker_or_launcher!(params.fetch("worker_process_binding"), :worker, map, origin)
+          events = service_preview_events!(journal: journal, commit: commit, params: params, map: map)
+          origin = service_origin!(events, params)
+          service_worker!(params.fetch("worker_process_binding"), :worker, map, origin)
           receiver = service_receiver!(peer, role, map, params.fetch("service_id"))
           service_policy!.workspace_prune_receiver!(project: map.fetch("project_id"), uid: map.fetch("worker_uid"),
             service_id: params.fetch("service_id"), executor_uid: receiver.fetch("executor_uid"))
@@ -232,8 +232,8 @@ module Ace
         private
 
         def service_status(_request, params, map, peer, role)
-          @launch.with_assignment(params: params, map: map) do |journal, _registration|
-            protected_journal!(journal)
+          with_service_scope(params: params, map: map) do |journal, _registration|
+            service_journal!(journal)
             commit = journal.ref_value
             read = role == :executor && journal.service_settlement_read(params.fetch("request_id"), commit: commit)
             record = read ? read.fetch(:record) : journal.service_request(params.fetch("request_id"), commit: commit)
@@ -261,7 +261,7 @@ module Ace
                 review && review["reviewer_uid"] == peer["uid"] && review["head"] == params["head"] &&
                   review["candidate_generation"] == params["candidate_generation"] && @kernel.descendant?(peer, review.fetch("reviewer_process_binding"))
               when :supervisor
-                @deployment.project(map.fetch("project_id")).fetch("supervisor_uids").include?(peer["uid"])
+                service_project!(map.fetch("project_id")).fetch("supervisor_uids").include?(peer["uid"])
               else
                 false
               end
@@ -287,8 +287,8 @@ module Ace
           authorize_service_transfer!(request, params, map, peer, role)
           raise ArgumentError, "structured service input transfer is missing" unless transfer && transfer.count == 1
           bytes = transfer.bytes.dup.freeze
-          @launch.with_assignment(params: params, map: map) do |journal, _registration|
-            protected_journal!(journal)
+          with_service_scope(params: params, map: map) do |journal, _registration|
+            service_journal!(journal)
             record = journal.service_request(params.fetch("request_id"))
             service_executor!(peer, role, record)
             service_ticket!(record, params, map, peer)
@@ -296,8 +296,8 @@ module Ace
               raise AttemptErrors::Conflict, "authorization input binding differs"
             end
             events = attempt_events(journal, params)
-            @launch.scope_open_for_effect!(events: events, params: params, map: map)
-            origin = active_origin(events, params)
+            service_scope_open!(events: events, params: params, map: map)
+            origin = service_origin!(events, params)
             unless record["worker_process_binding"] == origin.fetch("process_binding").fetch("process_identity") &&
                 record["launch_ticket"] == origin.fetch("launch_ticket") && record["reservation_generation"] == origin.fetch("reservation_generation")
               raise AttemptErrors::UnauthorizedIdentity, "authorization launch origin differs"
@@ -307,7 +307,7 @@ module Ace
               raise AttemptErrors::Conflict, "authorization candidate changed"
             end
             service_receiver!(peer, role, map, record.fetch("service_id"))
-            approved_review!(journal, events, params, map, current, service_operation: record.fetch("operation")) unless %w[create update].include?(record.fetch("operation"))
+            service_review!(journal, events, params, map, current, service_operation: record.fetch("operation")) unless %w[create update].include?(record.fetch("operation"))
             prepared = service_policy!.prepare!(record, input_bytes: bytes)
             data = params.slice("request_id", "claim_binding", "head", "candidate_generation").merge(
               "policy_digest" => prepared.fetch(:policy_digest), "operation_digest" => prepared.fetch(:operation_digest))
@@ -324,8 +324,8 @@ module Ace
             raise ArgumentError, "structured service input transfer is missing" unless transfer && transfer.count == 1
             transfer.bytes.dup.freeze
           end
-          @launch.with_assignment(params: params, map: map) do |journal, _registration|
-            protected_journal!(journal)
+          with_service_scope(params: params, map: map) do |journal, _registration|
+            service_journal!(journal)
             unless request.fetch("operation") == "complete_service"
               input_record = request.fetch("operation") == "request_service" ? params : journal.service_request(params.fetch("request_id"))
               # Replay bypasses the mutation callback, never input validation.
@@ -348,8 +348,8 @@ module Ace
               service_ticket!(record, params, map, peer)
               completion_binding!(record, params, admitted) if request.fetch("operation") == "complete_service"
             elsif !retained
-              origin = active_origin(attempt_events(journal, params), params)
-              worker_or_launcher!(params.fetch("worker_process_binding"), :worker, map, origin)
+              origin = service_origin!(attempt_events(journal, params), params)
+              service_worker!(params.fetch("worker_process_binding"), :worker, map, origin)
               service_receiver!(peer, role, map, params.fetch("service_id"))
             end
             result = journal.mutate(assignment_id: params.fetch("assignment_id"), attempt_id: params.fetch("attempt_id"),
@@ -433,7 +433,7 @@ module Ace
         end
 
         def service_receiver!(peer, role, map, service_id)
-          project = @deployment.project(map.fetch("project_id"))
+          project = service_project!(map.fetch("project_id"))
           receiver = project.fetch("service_receivers").fetch(service_id)
           unless role == :executor && peer["uid"] == receiver.fetch("executor_uid") &&
               project.fetch("service_executor_uids").include?(peer["uid"]) &&
@@ -447,11 +447,11 @@ module Ace
         end
 
         def service_claim_plan(journal, events, params, map, peer, role, input_bytes)
-          origin = active_origin(events, params)
+          origin = service_origin!(events, params)
           worker = params.fetch("worker_process_binding")
-          worker_or_launcher!(worker, :worker, map, origin)
+          service_worker!(worker, :worker, map, origin)
           current = exact_candidate!(candidate(events), params)
-          approved_review!(journal, events, params, map, current, service_operation: params.fetch("operation")) unless %w[create update].include?(params.fetch("operation"))
+          service_review!(journal, events, params, map, current, service_operation: params.fetch("operation")) unless %w[create update].include?(params.fetch("operation"))
           receiver = service_receiver!(peer, role, map, params.fetch("service_id"))
           binding = params.slice("request_id", "assignment_id", "attempt_id", "operation", "input_digest", "target",
             "authorization", "service_id").merge("project_id" => map.fetch("project_id"),
@@ -488,7 +488,7 @@ module Ace
           # A repeated begin never grants a second invocation, including after
           # lease expiry or terminality. It reports only retained ticket truth.
           return {data: service_projection(record).merge("invocation" => "already_started")} unless record["dispatch_phase"] == "issued"
-          origin = active_origin(events, params)
+          origin = service_origin!(events, params)
           unless record["worker_process_binding"] == origin.fetch("process_binding").fetch("process_identity") &&
               record["launch_ticket"] == origin.fetch("launch_ticket") && record["reservation_generation"] == origin.fetch("reservation_generation")
             raise AttemptErrors::UnauthorizedIdentity, "dispatch launch origin differs"
@@ -497,7 +497,7 @@ module Ace
           unless record["candidate_head"] == current["head"] && record["candidate_generation"] == current["candidate_generation"]
             raise AttemptErrors::Conflict, "dispatch candidate changed"
           end
-          approved_review!(journal, events, params, map, current, service_operation: record.fetch("operation")) unless %w[create update].include?(record.fetch("operation"))
+          service_review!(journal, events, params, map, current, service_operation: record.fetch("operation")) unless %w[create update].include?(record.fetch("operation"))
           service_policy!.prepare!(record, input_bytes: input_bytes)
           replacement = record.merge("dispatch_phase" => "dispatch_started")
           if record.fetch("operation") == "prune-preserved-workspace"

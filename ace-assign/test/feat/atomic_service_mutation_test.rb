@@ -22,7 +22,7 @@ module Ace
           git(repo, "init", "-b", "main")
           git(repo, "-c", "user.name=test", "-c", "user.email=test@example.invalid", "commit", "--allow-empty", "-m", "candidate")
           binding = {"request_id" => "request-1", "assignment_id" => "assignment-1", "attempt_id" => "attempt-1",
-            "project_id" => "fixture", "operation" => "publish", "input_digest" => "a" * 64,
+            "project_id" => "fixture", "operation" => "verify-artifact", "input_digest" => "a" * 64,
             "target" => {"resource" => "fixture"}, "candidate_head" => git(repo, "rev-parse", "HEAD"),
             "executor_uid" => Process.uid, "transport" => "unix", "dispatch_ticket_id" => "fixture-ticket",
             "claim_binding" => "b" * 64, "candidate_generation" => 1, "claim_generation" => 1, "policy_digest" => "c" * 64}
@@ -224,7 +224,7 @@ module Ace
           policy = Object.new
           policy.define_singleton_method(:visible!) { |**_| true }
           policy.define_singleton_method(:input_binding) do |bytes, expected_digest:, expected_target:, operation:|
-            raise "wrong original operation" unless operation == "publish"
+            raise "wrong original operation" unless operation == "verify-artifact"
             raise SecurityError, "input differs" unless bytes == "unused exact replay input" && expected_digest == "a" * 64 && expected_target == {"resource" => "fixture"}
           end
           input = Object.new

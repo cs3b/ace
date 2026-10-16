@@ -434,7 +434,9 @@ module Ace
   end
 end
 
-require_relative "endcap_services"
+require_relative "fixed_service_lifecycle"
+require_relative "fixed_publication_lifecycle"
+require_relative "endcap_service_context"
 require_relative "endcap_service_settlement"
 
 require_relative "endcap_campaign_results"
