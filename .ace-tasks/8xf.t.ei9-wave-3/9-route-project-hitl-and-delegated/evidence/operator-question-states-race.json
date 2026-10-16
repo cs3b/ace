@@ -1,0 +1,18 @@
+{
+  "schema": "ei9.operator-question-states-race/v1",
+  "base": "b53eedab63fdf74feaba4fdfcbd674647def93f4",
+  "finding": "P2 states classification called operator_request?(nil) after an inventoried public projection disappeared. Supported managed ID reuse unlinks a predecessor before recreating its projection; unreadable/corrupt JSON also returns nil.",
+  "owner_fix": "Store#states ignores non-Hash projections before context classification. Existing per-record authorization remains unchanged.",
+  "regression": "Actual managed cancel and new incarnation enter initialize_projection_locked! unlink/recreate window; a previously captured glob inventory contains the removed projection and another surviving request. states returns the surviving request, then returns both after recreation.",
+  "before": {
+    "report": "hitl/16ae8d8a-970c-4227-b9f8-e58d96687802",
+    "result": "10 tests,65 assertions,1 error: nil.dig in operator_request?"
+  },
+  "after": {
+    "fast_report": "hitl/090a9af7-9cad-4893-89df-76e4c0fc11e5",
+    "fast_result": "267 tests,1467 assertions,0 failures,0 errors,5 skips",
+    "reviewer_reproduction_report": "hitl/51f58ca4-a7bb-44ed-a2ca-764427ebcb2e",
+    "reviewer_reproduction_result": "1 test,2 assertions,PASS"
+  },
+  "review": "Previous Pi source APPROVE noted this guard; fresh exact-head configured Pi delta verdict required. No deployment/publication/version change."
+}

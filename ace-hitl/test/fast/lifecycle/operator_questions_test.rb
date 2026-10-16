@@ -126,6 +126,34 @@ class OperatorQuestionsTest < AceHitlTestCase
     assert_raises(L::StateError) { @store.consume("operator001", timeout: 1, native_delivery: true) }
   end
 
+  def test_states_tolerates_projection_removed_during_managed_id_reuse
+    managed = make_store(root: File.join(@dir, "managed"))
+    managed.create(**request_args)
+    managed.cancel("hitl001")
+    managed.create(**request_args(id: "keep002"))
+    directory = managed.public_dir
+    inventory = directory.glob("*.json")
+    assert_equal 2, inventory.size
+    original = managed.method(:update_public)
+    observed = false
+    test = self
+    managed.define_singleton_method(:update_public) do |value, state, **options|
+      # A states caller has inventoried the old projection before the new
+      # incarnation removes it. Exercise that real unlink/recreate window.
+      test.refute directory.join("hitl001.json").exist?
+      managed.stub(:public_dir, directory) do
+        directory.stub(:glob, inventory) do
+          test.assert_equal ["keep002"], managed.states.map { |entry| entry.fetch("id") }
+        end
+      end
+      observed = true
+      original.call(value, state, **options)
+    end
+    managed.create(**request_args(ace_hitl_id: "ace-hitl-2"))
+    assert observed
+    assert_equal ["hitl001", "keep002"], managed.states.map { |value| value.fetch("id") }
+  end
+
   def test_terminal_commit_before_cleanup_remains_authoritative_on_recovery
     ask
     answer

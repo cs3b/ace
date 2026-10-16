@@ -556,6 +556,7 @@ module Ace
           require_transport!("states")
           public_dir.glob("*.json").sort.filter_map do |path|
             value = AtomicJson.read(path)
+            next unless value.is_a?(Hash)
             if operator_request?(value)
               begin
                 require_transport!("states", value)
