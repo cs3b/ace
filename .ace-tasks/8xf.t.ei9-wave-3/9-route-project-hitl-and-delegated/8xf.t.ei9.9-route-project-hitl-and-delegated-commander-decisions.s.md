@@ -9,7 +9,7 @@ estimate: large
 dependencies: ["8xf.t.ei9.1"]
 bundle:
   presets: [project]
-  files: ["AGENTS.md", "docs/tools.md", ".ace-tasks/8xf.t.ei9-wave-3/8xf.t.ei9-wave-3.s.md", ".ace-tasks/8xf.t.ei9-wave-3/environment-contract.md", ".ace-tasks/8xf.t.ei9-wave-3/observations-and-acceptance.md", ".ace-tasks/8xf.t.ei9-wave-3/ux/usage.md", ".ace-tasks/8xa.t.nh0-ace-hitlace-hitl-hermes-shared/8xa.t.nh0-ace-hitlace-hitl-hermes-shared-hermes-multi.s.md", ".ace-tasks/8wr.t.qk0-coordinate-responsive-overseer-roles-without/8wr.t.qk0-coordinate-responsive-overseer-roles-without-the.s.md", ".ace-tasks/8wr.t.qkb-run-assignment-delivery-workflows-through/8wr.t.qkb-run-assignment-delivery-workflows-through-named-forge.s.md"]
+  files: [".ace-tasks/_archive/8x/v/8wr.t.qjz-resolve-second-commander-proposals-with/8wr.t.qjz-resolve-second-commander-proposals-with-a-sixteen.s.md", "AGENTS.md", "docs/tools.md", ".ace-tasks/8xf.t.ei9-wave-3/8xf.t.ei9-wave-3.s.md", ".ace-tasks/8xf.t.ei9-wave-3/environment-contract.md", ".ace-tasks/8xf.t.ei9-wave-3/observations-and-acceptance.md", ".ace-tasks/8xf.t.ei9-wave-3/ux/usage.md", ".ace-tasks/8xa.t.nh0-ace-hitlace-hitl-hermes-shared/8xa.t.nh0-ace-hitlace-hitl-hermes-shared-hermes-multi.s.md", ".ace-tasks/8wr.t.qk0-coordinate-responsive-overseer-roles-without/8wr.t.qk0-coordinate-responsive-overseer-roles-without-the.s.md", ".ace-tasks/8wr.t.qkb-run-assignment-delivery-workflows-through/8wr.t.qkb-run-assignment-delivery-workflows-through-named-forge.s.md"]
   commands: []
 title: "Route project HITL and delegated commander decisions"
 ---
@@ -48,14 +48,23 @@ environment supplies long-lived credentials; no token grants to workers.
 
 ## SecondCommander decision cycle (in Wave 3)
 
-Reuse existing proposal policy/Assign/HITL owners, not a new learning engine.
+Reuse existing 8wr.t.qjz proposal policy/Assign/HITL implementation, not a new
+learning engine or automatic reopening of that archived owner. Its older all-class
+timeout authorization wording does not override this Wave 3 scoped-delegation
+contract; reconcile the effective policy explicitly.
 For explicitly delegated decision classes, SecondCommander records context, options,
-chosen decision and rationale, sends Captain the full proposal and opens a 16-hour
-override window. Timely Captain reply overrides with recorded what/why; absent reply
+chosen decision and rationale. The 16-hour override window starts ONLY at confirmed
+transport delivery of that unchanged proposal to Captain, not request creation
+or assumed reading. Failed/uncertain notification never arms or consumes the window.
+A material change to proposal/head/input/scope creates a new revision and requires
+new confirmed delivery plus a full new window. Timely Captain reply overrides with recorded what/why; absent reply
 after the deadline executes the scoped proposed decision ONLY within that prior
 delegation. Deadline never grants new credentials, cross-project rights or publication
 permission. Explicit refusal/changed scope wins. Restart preserves deadline/decision
-identity and executes at most once. Uncertain effects still reconcile before retry.
+identity and executes at most once. Resolve Reply-versus-timeout atomically:
+reconcile transport ingress through the deadline and give timely received Reply
+precedence; unavailable/backlogged transport defers resolution. One revision has
+one decision/effect claim. Uncertain effects still reconcile before retry.
 
 Retain sanitized feedback/decision/outcome examples to improve future choices.
 Window shortening is FUTURE explicit policy adjustment based on evidence, not
@@ -68,7 +77,9 @@ Real project group notification and correlated Reply reach correct project owner
 other groups continue functioning. Missing endpoint/trust mapping reports exact
 blocker. Test wrong group/attempt, expired OTP, orphan request and lost reply without
 secret output. Test proposed decision, Captain override, timeout within delegated
-class, timeout outside class→deny, restart across deadline and one resulting effect.
+class, timeout outside class→deny, failed notification→no deadline, changed proposal
+→new acknowledged window, Reply/timeout race→one decision, restart across deadline
+and one resulting effect.
 Controlled clocks may test16h in source; installed route/correlation needs real proof.
 No need to wait16h in a blocking agent turn; native wake schedules reconciliation.
 

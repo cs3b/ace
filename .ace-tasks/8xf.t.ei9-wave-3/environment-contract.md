@@ -74,8 +74,9 @@ or receipt boundary. Source installer tests cannot substitute installed acceptan
 
 NoNewPrivileges may forbid sudo inside a terminal even when discovery names an
 admin role. Do not weaken that protection or copy tokens to work around it. A
-configured scoped executor must actually spawn under its selected identity. Root
-manual execution may diagnose/provision but is recorded as rescue, not autonomy.
+configured scoped executor must actually spawn under its selected identity. Normal designated root-owned provisioning/install through the authorized scoped
+route is intended behavior. Manual per-item executor rescue or host-chat scheduling
+bypass is recorded as failed autonomy; diagnostic work alone is not acceptance.
 Transport must not be added to a broad group merely to obtain a new socket if that
 group also exposes unrelated legacy control sockets.
 
