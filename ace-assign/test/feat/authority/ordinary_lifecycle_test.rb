@@ -308,7 +308,89 @@ module Ace
         end
       end
 
+      def test_result_import_and_restart_replay_preserve_original_bytes_without_accepting_success
+        with_fixture do
+          with_owner do |client|
+            register(client)
+            @admission.role = :worker
+            start(client)
+            @result_reply = submit_result(client)
+            assert_equal "succeeded", @result_reply.data.fetch("verdict")
+            assert_equal "running", @journal.derived_attempts("batch").fetch(0).state
+            events = @journal.read_events("batch")
+            assert_empty events.select { |event| event["type"] == "receipt_accepted" }
+            submitted = events.find { |event| event["type"] == "result_submitted" }
+            reference = submitted.dig("payload", "receipt", "artifacts").fetch(0)
+            assert_equal result_artifact, @journal.blob(reference.fetch("path"))
+            assert_equal Digest::SHA256.hexdigest(result_artifact), reference.fetch("sha256")
+            assert_equal @admission.execution_binding, submitted.dig("payload", "binding", "runtime_binding")
+            status = client.call("result_status", {"assignment_id" => "batch", "attempt_id" => "worker-attempt"})
+            assert_equal @result_reply.data.except("journal_commit"), status.data.fetch("submitted_result")
+            snapshot = client.call("result_snapshot", {"assignment_id" => "batch", "attempt_id" => "worker-attempt",
+              "result_id" => @result_reply.data.fetch("result_id")}, download: true, purpose: :receipt_artifacts)
+            assert_equal submitted.dig("payload", "receipt"), JSON.parse(snapshot.parts.first)
+            assert_equal result_artifact, snapshot.parts.last
+            assert_empty Dir.children(@scratch)
+          end
+          FileUtils.rm_rf(@journal.checkout_root)
+          FileUtils.mkdir_p(@journal.checkout_root, mode: 0700)
+          with_owner do |client|
+            @admission.execution_head = "d" * 40
+            replay = submit_result(client, head: @result_reply.data.fetch("head"))
+            assert replay.replayed
+            assert_equal @result_reply.data, replay.data
+            assert_equal @result_reply.data.fetch("journal_commit"), @journal.ref_value
+            @admission.native = false
+            assert_raises(AttemptErrors::EvidenceUnavailable) { submit_result(client, head: @result_reply.data.fetch("head")) }
+          end
+          assert_equal 1, @journal.read_events("batch").count { |event| event["type"] == "result_submitted" }
+        end
+      end
+
+      def test_result_refuses_wrong_producer_head_failed_checks_and_self_approved_effects_without_partial_import
+        with_fixture do
+          with_owner do |client|
+            register(client)
+            @admission.role = :worker
+            start(client)
+            original = @journal.ref_value
+            padding = "t" * (16_384 - JSON.generate(result_receipt).bytesize + "tests".bytesize)
+            oversized_canonical = {"checks" => [{"name" => padding, "verdict" => "passed"}]}
+            assert_equal 16_384, JSON.generate(result_receipt(changes: oversized_canonical)).bytesize
+            [{"producer" => {"actor" => "foreign", "role" => "worker", "runtime" => "herdr"}},
+              {"head" => "e" * 40}, {"checks" => [{"name" => "tests", "verdict" => "failed"}]},
+              {"operation" => "publish"}, {"operation" => "review"}, oversized_canonical].each do |changes|
+              assert_raises(AttemptErrors::EvidenceUnavailable) { submit_result(client, changes: changes) }
+              assert_equal original, @journal.ref_value
+            end
+            original_binding = @admission.execution_binding
+            @admission.execution_binding = original_binding.merge("pane" => "foreign")
+            assert_raises(AttemptErrors::EvidenceUnavailable) { submit_result(client) }
+            assert_equal original, @journal.ref_value
+            assert_empty @journal.read_events("batch").select { |event| %w[result_submitted evidence_import].include?(event["type"]) }
+            @admission.execution_binding = original_binding
+            assert_equal "succeeded", submit_result(client).data.fetch("verdict")
+          end
+        end
+      end
+
       private
+
+      def result_artifact = "Executed tests: all passed."
+
+      def result_receipt(head: @admission.execution_head, changes: {})
+        {"assignment_id" => "batch", "attempt_id" => "worker-attempt", "project_id" => "atlas", "scope" => "010.01",
+          "operation" => "check", "producer" => {"actor" => Etc.getpwuid.name, "role" => "worker", "runtime" => "herdr"},
+          "head" => head, "verdict" => "succeeded", "checks" => [{"name" => "tests", "verdict" => "passed"}],
+          "artifacts" => [{"path" => "caller-report.md", "sha256" => Digest::SHA256.hexdigest(result_artifact)}]}.merge(changes)
+      end
+
+      def submit_result(client, head: @admission.execution_head, changes: {})
+        bytes = JSON.generate(result_receipt(head: head, changes: changes))
+        client.call("submit_result", {"assignment_id" => "batch", "attempt_id" => "worker-attempt", "pane" => "w1:p1",
+          "head" => head, "expected_generation" => 1, "receipt_sha256" => Digest::SHA256.hexdigest(bytes)},
+          mutation_id: "worker-result", upload_parts: [bytes, result_artifact], purpose: :receipt_artifacts)
+      end
 
       def register(client, mutation: "original-registration", params: @params)
         client.call("register_assignment", params, mutation_id: mutation, upload_parts: [@bundle], purpose: :candidate)

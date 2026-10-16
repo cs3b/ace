@@ -5,6 +5,7 @@ require_relative "assignment_definition"
 require_relative "ordinary_queue"
 require_relative "ordinary_attempt_start"
 require_relative "ordinary_progress"
+require_relative "ordinary_results"
 require_relative "../molecules/lifecycle_exclusion"
 
 module Ace
@@ -16,9 +17,10 @@ module Ace
       class OrdinaryLifecycle
         include OrdinaryAttemptStart
         include OrdinaryProgress
-        OPERATIONS = (%w[register_assignment registration_status start_attempt] + OrdinaryProgress::PROGRESS_OPERATIONS).freeze
+        include OrdinaryResults
+        OPERATIONS = (%w[register_assignment registration_status start_attempt] + OrdinaryProgress::PROGRESS_OPERATIONS + OrdinaryResults::RESULT_OPERATIONS).freeze
         TRANSFER_OPERATIONS = {"register_assignment" => {direction: :upload, purpose: :candidate, roles: [:supervisor]}}
-          .merge(OrdinaryProgress::PROGRESS_TRANSFERS).freeze
+          .merge(OrdinaryProgress::PROGRESS_TRANSFERS).merge(OrdinaryResults::RESULT_TRANSFERS).freeze
         REGISTER_KEYS = %w[assignment_id definition_digest prepared_head prepared_tree manifest_sha256 expected_generation pane transfer].freeze
 
         def initialize(project:, admission:, journal:, exclusion:, input_root:)
@@ -28,6 +30,11 @@ module Ace
 
         def authorize_transfer!(request:, peer:, role:, deadline:)
           authorize!(request, peer, role, deadline)
+          if OrdinaryResults::RESULT_TRANSFERS.key?(request.fetch("operation"))
+            validate_result!(request)
+            authorize_start_replay!(request, peer, role, deadline) if request.fetch("operation") == "submit_result"
+            return
+          end
           if OrdinaryProgress::PROGRESS_TRANSFERS.key?(request.fetch("operation"))
             validate_progress!(request)
             return
@@ -60,6 +67,8 @@ module Ace
             assignment_snapshot(request, peer, role, deadline)
           when "queue_start", "queue_finish", "queue_fail"
             progress(request, peer, role, deadline, transfer)
+          when "submit_result", "result_status", "result_snapshot"
+            ordinary_result(request, peer, role, deadline, transfer)
           else
             raise ArgumentError, "unknown ordinary lifecycle operation"
           end
