@@ -9,10 +9,10 @@ module Ace
       # Protected admission is mandatory for this source-selected composition.
       class Server < SocketServer
         def initialize(authority_id:, lifecycle:, deployment: Deployment.load,
-          kernel: Ace::Runtime::Molecules::ProtectedLinux.new, composition: "launch", hitl_service: nil)
+          kernel: Ace::Runtime::Molecules::ProtectedLinux.new, composition: "launch", services: [])
           @authority_id, @deployment, @kernel, @composition = authority_id, deployment, kernel, composition
           deployment.verify_composition!(authority_id, composition: composition)
-          super(service: deployment.authority(authority_id), lifecycle: lifecycle, hitl_service: hitl_service)
+          super(service: deployment.authority(authority_id), lifecycle: lifecycle, services: services)
         end
 
         private

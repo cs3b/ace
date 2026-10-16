@@ -21,7 +21,7 @@ class PublicationCompositionTest < Minitest::Test
     end
   end
   class Sibling
-    attr_reader :started, :stopped
+    attr_reader :started, :stopped, :activated
     def initialize(failure: false)
       @failure = failure
       @mutex, @condition = Mutex.new, ConditionVariable.new
@@ -30,6 +30,7 @@ class PublicationCompositionTest < Minitest::Test
       @started = true
       raise IOError, "fixture startup failure" if @failure
       on_ready.call
+      @activated = true
       @mutex.synchronize { @condition.wait(@mutex) until @stopped }
     end
     def stop
@@ -59,7 +60,7 @@ class PublicationCompositionTest < Minitest::Test
       end
     end
     assert_instance_of Ace::Assign::Authority::Server, @server
-    service = @server.instance_variable_get(:@hitl_service)
+    service = @server.instance_variable_get(:@services).fetch(0)
     assert_instance_of Ace::Hitl::Lifecycle::Service, service
     assert_equal [{grants_path: provider::DEFAULT_GRANTS_PATH}], selected
     assert_equal provider::DEFAULT_SOCKET_PATH, service.socket_path
@@ -84,7 +85,7 @@ class PublicationCompositionTest < Minitest::Test
     end
   end
 
-  def server_with(sibling)
+  def server_with(*siblings)
     peer = {"uid" => Process.uid, "gid" => Process.gid, "groups" => Process.groups.sort}
     kernel = Object.new
     kernel.define_singleton_method(:supported!) { true }
@@ -92,7 +93,7 @@ class PublicationCompositionTest < Minitest::Test
     lifecycle = Object.new
     lifecycle.define_singleton_method(:close) { @closed = true }
     @server = Ace::Assign::Authority::Server.new(authority_id: "authority", deployment: @deployment,
-      kernel: kernel, lifecycle: lifecycle, composition: "services", hitl_service: sibling)
+      kernel: kernel, lifecycle: lifecycle, composition: "services", services: siblings)
     lifecycle
   end
 
@@ -105,7 +106,7 @@ class PublicationCompositionTest < Minitest::Test
     assert sibling.started
     assert sibling.stopped
     refute File.exist?(File.join(@root, "authority.sock"))
-    refute @server.instance_variable_get(:@hitl_thread).alive?
+    refute @server.instance_variable_get(:@service_threads).any? { |_, thread| thread.alive? }
   end
 
   def test_normal_stop_joins_sibling_before_original_owner_lock_releases
@@ -114,7 +115,7 @@ class PublicationCompositionTest < Minitest::Test
     Ace::Runtime::Molecules::ProtectedSocket.stub(:root_path!, true) do
     @thread = Thread.new { @server.serve }
     deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + 2
-    until File.socket?(File.join(@root, "authority.sock"))
+    until sibling.activated
       raise "fixture authority startup timeout" unless @thread.alive? && Process.clock_gettime(Process::CLOCK_MONOTONIC) < deadline
       sleep 0.005
     end
@@ -122,9 +123,81 @@ class PublicationCompositionTest < Minitest::Test
     @server.stop
     assert @thread.join(2)
     assert sibling.stopped
-    refute @server.instance_variable_get(:@hitl_thread).alive?
+    refute @server.instance_variable_get(:@service_threads).any? { |_, thread| thread.alive? }
     assert lifecycle.instance_variable_get(:@closed)
     refute File.exist?(File.join(@root, "authority.sock"))
     end
+  end
+
+  def test_second_service_start_failure_stops_both_and_leaves_no_partial_ingress
+    hitl, merge = Sibling.new, Sibling.new(failure: true)
+    server_with(hitl, merge)
+    Ace::Runtime::Molecules::ProtectedSocket.stub(:root_path!, true) do
+      assert_raises(IOError) { @server.serve }
+    end
+    assert hitl.started
+    assert merge.started
+    assert hitl.stopped
+    assert merge.stopped
+    refute hitl.activated, "a prepared sibling must not dispatch before every endpoint is ready"
+    refute merge.activated
+    refute @server.instance_variable_get(:@service_threads).any? { |_, thread| thread.alive? }
+    refute File.exist?(File.join(@root, "authority.sock"))
+    File.open(File.join(@root, "listener.lock"), File::RDWR) do |lock|
+      assert lock.flock(File::LOCK_EX | File::LOCK_NB)
+    end
+  end
+
+  def test_existing_endpoint_refuses_before_any_sibling_can_recover_or_dispatch
+    hitl, merge = Sibling.new, Sibling.new
+    server_with(hitl, merge)
+    path = File.join(@root, "authority.sock")
+    File.write(path, "installer must inspect this")
+    Ace::Runtime::Molecules::ProtectedSocket.stub(:root_path!, true) do
+      assert_raises(Ace::Assign::AttemptErrors::Conflict) { @server.serve }
+    end
+    refute hitl.started
+    refute merge.started
+    assert_equal "installer must inspect this", File.read(path)
+  end
+
+  def test_failed_authority_bind_never_starts_recovery_or_dispatch
+    hitl, merge = Sibling.new, Sibling.new
+    server_with(hitl, merge)
+    Ace::Runtime::Molecules::ProtectedSocket.stub(:root_path!, true) do
+      UNIXServer.stub(:new, ->(*) { raise Errno::ENAMETOOLONG, "fixture final bind failure" }) do
+        assert_raises(Errno::ENAMETOOLONG) { @server.serve }
+      end
+    end
+    refute hitl.started
+    refute merge.started
+    refute hitl.activated
+    refute merge.activated
+    refute File.exist?(File.join(@root, "authority.sock"))
+  end
+
+  def test_service_exit_closes_complete_owner_and_waits_for_every_service
+    hitl, merge = Sibling.new, Sibling.new
+    lifecycle = server_with(hitl, merge)
+    failure = Queue.new
+    Ace::Runtime::Molecules::ProtectedSocket.stub(:root_path!, true) do
+      @thread = Thread.new do
+        @server.serve
+      rescue StandardError => error
+        failure << error
+      end
+      deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + 2
+      until hitl.activated && merge.activated
+        raise "fixture startup timeout" unless @thread.alive? && Process.clock_gettime(Process::CLOCK_MONOTONIC) < deadline
+        sleep 0.005
+      end
+      merge.stop
+      assert @thread.join(2)
+    end
+    assert_instance_of Ace::Runtime::RuntimeUnavailableError, failure.pop
+    assert hitl.stopped
+    assert merge.stopped
+    assert lifecycle.instance_variable_get(:@closed)
+    refute File.exist?(File.join(@root, "authority.sock"))
   end
 end

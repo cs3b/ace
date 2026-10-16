@@ -117,6 +117,55 @@ class ProposalLifecycleTest < AceHitlTestCase
     assert_equal record["request_id"], @store.proposal_show(record["proposal_id"], project: "ace")["request_id"]
   end
 
+  def test_installed_owner_revocation_refuses_transport_transitions_and_replay
+    record = acknowledge(create)
+    valid = true
+    coordinator = Object.new
+    journal = @journal
+    coordinator.define_singleton_method(:journal_for) { journal }
+    selected = Ace::Hitl::Providers::Lab::AssignmentBinding.new(coordinator: coordinator, project: "ace",
+      owner_guard: -> { raise Ace::Hitl::Lifecycle::BindingError, "installed owner revoked" unless valid })
+    @store.instance_variable_set(:@binding, selected)
+    args = {project: "ace", answer: "approve", received_at: @now.iso8601, sequence: 1}
+    approved = @store.proposal_reply(record["request_id"], **args)
+    assert_equal "approved-explicitly", approved["state"]
+    original = @journal.ref_value
+    valid = false
+    assert_raises(Ace::Hitl::Lifecycle::BindingError) { @store.proposal_reply(record["request_id"], **args) }
+    assert_raises(Ace::Hitl::Lifecycle::BindingError) { acknowledge(record) }
+    assert_raises(Ace::Hitl::Lifecycle::BindingError) do
+      @store.proposal_reconcile(record["request_id"], project: "ace", checkpoint: checkpoint(record))
+    end
+    assert_equal original, @journal.ref_value
+    valid = true
+    assert_raises(Ace::Hitl::Lifecycle::BindingError) do
+      @store.proposal_history(project: "other")
+    end
+    assert_equal original, @journal.ref_value
+  end
+
+  def test_installed_owner_is_rechecked_inside_canonical_transition
+    record = create
+    valid = true
+    coordinator = Object.new
+    journal = @journal
+    coordinator.define_singleton_method(:journal_for) { journal }
+    selected = Ace::Hitl::Providers::Lab::AssignmentBinding.new(coordinator: coordinator, project: "ace",
+      owner_guard: -> { raise Ace::Hitl::Lifecycle::BindingError, "installed owner revoked" unless valid })
+    @store.instance_variable_set(:@binding, selected)
+    original = @journal.method(:change_proposal)
+    @journal.define_singleton_method(:change_proposal) do |*args, **kwargs, &block|
+      original.call(*args, **kwargs) do |current|
+        valid = false
+        block.call(current)
+      end
+    end
+    before = @journal.ref_value
+    assert_raises(Ace::Hitl::Lifecycle::BindingError) { acknowledge(record) }
+    assert_equal before, @journal.ref_value
+    assert_equal "awaiting-delivery", @journal.proposal_record(record["proposal_id"])["state"]
+  end
+
   def test_silence_delegation_must_exist_at_creation_and_still_be_current_at_deadline
     policy = DecisionPolicy.new
     delegated = false

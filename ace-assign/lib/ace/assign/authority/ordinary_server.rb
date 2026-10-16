@@ -9,9 +9,9 @@ module Ace
       # The Lab composition supplies a trusted installed admission object and
       # closed handlers. No protected Deployment or kernel adapter is replaced.
       class OrdinaryServer < SocketServer
-        def initialize(admission:, lifecycle:, hitl_service: nil)
+        def initialize(admission:, lifecycle:, services: [])
           @admission = admission
-          super(service: admission.service, lifecycle: lifecycle, hitl_service: hitl_service)
+          super(service: admission.service, lifecycle: lifecycle, services: services)
         end
 
         private

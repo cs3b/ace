@@ -121,6 +121,60 @@ Only the original OS caller identity with project visibility can read the
 request. The authoritative state survives loss of the local assignment cache
 because it lives in the separate assignment evidence Git ref.
 
+### `ace-lab service listen --mode ordinary-merge`
+
+The installed ordinary service owns the Assign, HITL and merge endpoints in one
+process. Start it as the configured service account:
+
+```sh
+ace-lab service listen --mode ordinary-merge --project atlas \
+  --config /etc/lab/ace-lab/atlas-receiver.yml
+```
+
+The receiver configuration selects its existing forge, repository, principal and
+merge socket. `/etc/lab/ace-lab/assign-owners.yml` separately selects the canonical
+Assign journal and native execution owner. Both selections must agree with the
+ordinary project mapping in the trusted authorization document. `repo_path` is
+the merge candidate repository; it does not choose the execution journal.
+
+Each project entry in the root-installed assignment document contains:
+
+| Entry | Installed selection |
+|---|---|
+| `service` | Non-root owner UID/GID, assignment socket and private state root |
+| `journal` | Service-owned repository, execution ref and private evidence checkout |
+| `assignment_root`, `lifecycle_root` | Separate private prepared-input and exclusion directories |
+| `runtime_binary`, `native` | Installed executable and exact native server/socket generation from the installation receipt |
+| `worktrees` | Allowed worktree root and Git common directory |
+| `participants` | OS UID/GID/actor, native workspace and supervisor panes |
+| `hitl` | Private store root, distinct socket, dedicated group and trusted grants path |
+
+For example, the `hitl` entry inside an already selected project can be:
+
+```yaml
+hitl:
+  root: /var/lib/lab/assign/atlas/hitl
+  socket_path: /run/lab/assign/atlas/hitl.sock
+  group: atlas-lifecycle
+  grants_path: /etc/lab/ace-lab/authorization.yml
+```
+
+The store must be a separate child of that project's `service.state_root`; the
+installer creates `service.state_root` with mode `0700`, the HITL root with its
+maintained mode `0711`, and socket access before startup. The private parent keeps
+the HITL tree inaccessible to other accounts; Store maintains private request and
+secret subdirectories. Startup and restart validate the same layout.
+`hitl.service_uid` in the grants document must equal the Assign owner UID. Native
+identities come from the installed receipt and live observation, not the project
+configuration cascade. HITL requests, decisions and merge claims use the same
+canonical Assign journal and lifecycle exclusion.
+
+All selected endpoints must become ready before assignment ingress opens. A
+failed endpoint shuts down the complete owner. A stale assignment endpoint needs
+installer inspection; startup does not remove it or recover merge effects first.
+Changed owner selection refuses new admission and dispatch until a controlled
+restart. Existing canonical receipts remain the source for reconciliation.
+
 ## Error semantics
 
 Errors are one deterministic JSON document on stdout plus a non-zero exit.

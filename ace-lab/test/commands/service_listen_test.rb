@@ -58,13 +58,9 @@ module Ace
 
       # ---- startup regression (spec 8x3.t.xz9.5 integration handoff) -----
 
-      # The real serve entrypoint with a complete, valid configuration must
-      # construct the canonical-journal coordinator, recover pending records
-      # and REACH the listener — never the pre-xz9.5 crash where Listen built
-      # the receiver without its coordinator (ArgumentError). The fixture
-      # socket path contains a regular-file component, so the listener bind
-      # itself deterministically fails with ENOTDIR — past construction.
-      def test_startup_with_complete_configuration_reaches_the_listener_never_argument_error
+      # The CLI delegates lifecycle ownership to the installed composition.
+      # Constructor and real transport joins have their separate tests.
+      def test_startup_reaches_the_installed_composition_server
         dir = Dir.mktmpdir("listen-startup")
         repo = File.join(dir, "repo")
         FileUtils.mkdir_p(repo)
@@ -81,24 +77,28 @@ module Ace
         ))
         File.write(File.join(dir, "blocked"), "regular file, not a directory")
         command = CLI::Commands::Service::Listen.new
-        Molecules::GrantResolver.stub(:trusted_document,
-          ->(_path) { complete_policy_document }) do
-          Molecules::ForgeMergeConfig.stub(:load, ->(*_args) { forge_config }) do
-            assert_raises(Errno::ENOTDIR) do
-              capture_io { with_trusted_config(config) { command.call(mode: "ordinary-merge", project: "atlas", config: config) } }
-            end
+        server = Object.new
+        server.define_singleton_method(:serve) { raise Errno::ENOTDIR }
+        server.define_singleton_method(:request_stop) { nil }
+        composition = Object.new
+        composition.define_singleton_method(:build) { server }
+        factory = lambda do |receiver_config:|
+          assert_instance_of Molecules::OrdinaryReceiverConfig, receiver_config
+          assert_equal config, receiver_config.source
+          composition
+        end
+        Organisms::OrdinaryAuthorityComposition.stub(:new, factory) do
+          assert_raises(Errno::ENOTDIR) do
+            capture_io { with_trusted_config(config) { command.call(mode: "ordinary-merge", project: "atlas", config: config) } }
           end
         end
       ensure
         FileUtils.rm_rf(dir)
       end
 
-      # The actionable config-missing refusal: an absent host-installed
-      # forge merge configuration refuses startup naming the path and the
-      # owner — never a silent local fallback (never ArgumentError either).
-      def test_missing_forge_merge_configuration_refuses_naming_path_and_owner
-        skip "host has installed #{Molecules::ForgeMergeConfig::DEFAULT_PATH}" if
-          Molecules::GrantResolver.read_verified(Molecules::ForgeMergeConfig::DEFAULT_PATH)
+      # A receiver cannot start a private daemon-cwd coordinator when the
+      # shared assignment owner has not been installed.
+      def test_missing_owner_configuration_refuses_without_local_fallback
         dir = Dir.mktmpdir("listen-startup")
         repo = File.join(dir, "repo")
         FileUtils.mkdir_p(repo)
@@ -114,14 +114,16 @@ module Ace
                                    "branch" => "main"}
         ))
         command = CLI::Commands::Service::Listen.new
-        Molecules::GrantResolver.stub(:trusted_document,
-          ->(_path) { complete_policy_document }) do
+        loader = lambda do |project:|
+          assert_equal "atlas", project
+          raise InvalidConfigurationError, "ordinary assignment owner configuration is unavailable: #{Molecules::OrdinaryOwnerConfig::PATH}"
+        end
+        Molecules::OrdinaryOwnerConfig.stub(:load, loader) do
           error = assert_raises(Ace::Support::Cli::Error) do
             capture_io { with_trusted_config(config) { command.call(mode: "ordinary-merge", project: "atlas", config: config) } }
           end
-          assert_includes error.message,
-            "config missing: #{Molecules::ForgeMergeConfig::DEFAULT_PATH}"
-          assert_includes error.message, "owner: host-integrator"
+          assert_includes error.message, Molecules::OrdinaryOwnerConfig::PATH
+          refute File.exist?(File.join(repo, ".git", "refs", "ace", "execution"))
         end
       ensure
         FileUtils.rm_rf(dir)

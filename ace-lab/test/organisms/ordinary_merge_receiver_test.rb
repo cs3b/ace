@@ -217,6 +217,24 @@ module Ace
         assert_nil @coordinator.fixed_merge_record("request-1")
       end
 
+      def test_owner_revocation_during_review_attachment_prevents_merge_post
+        valid = true
+        guard = lambda { raise Ace::Lab::InvalidConfigurationError, "installed owner changed" unless valid }
+        forge = ForgeDouble.new(prs: {7 => open_pr})
+        original = forge.method(:create_comment)
+        forge.define_singleton_method(:create_comment) do |**args|
+          valid = false
+          original.call(**args)
+        end
+        selected = build_receiver(forge: forge, owner_guard: guard)
+        assert_equal "ok", selected.handle(submission)["status"]
+        selected.execute("request-1")
+        assert_equal 1, forge.comments.size
+        assert_equal 0, forge.merge_count
+        assert_equal "failed", @coordinator.fixed_merge_record("request-1")["state"]
+        assert_equal @base_head, git("rev-parse", "refs/heads/main")
+      end
+
       # ---- pre-effect target verification (moved-target refusal family) ----
 
       def test_candidate_absent_from_canonical_repo_refuses_as_target_changed
@@ -567,6 +585,21 @@ module Ace
         assert record.fetch("receipt")
       end
 
+      def test_changed_installed_owner_refuses_new_admission_and_pending_dispatch
+        valid = true
+        guard = lambda { raise Ace::Lab::InvalidConfigurationError, "installed owner changed" unless valid }
+        forge = ForgeDouble.new(prs: {7 => open_pr})
+        selected = build_receiver(forge: forge, owner_guard: guard)
+        assert_equal "ok", selected.handle(submission).fetch("status")
+        valid = false
+        refused = selected.handle(submission)
+        assert_equal "ordinary_merge_unavailable", refused.dig("error", "code")
+        assert_raises(Ace::Lab::InvalidConfigurationError) { selected.execute("request-1") }
+        assert_raises(Ace::Lab::InvalidConfigurationError) { selected.recover_pending! }
+        assert_equal 0, forge.merge_count
+        assert_equal "pending", @coordinator.fixed_merge_record("request-1").fetch("state")
+      end
+
       private
 
       # Runs the block capturing its service-log output (warn lines) and
@@ -582,7 +615,7 @@ module Ace
       end
 
       def build_receiver(policy_document: nil, resolver: nil, forge: ForgeDouble.new(prs: {}),
-        config: @config, readback_attempts: 3, readback_backoff_seconds: 0.0)
+        config: @config, readback_attempts: 3, readback_backoff_seconds: 0.0, owner_guard: nil)
         document = policy_document || self.policy_document
         File.write(policy_path, YAML.safe_dump(document))
         Organisms::OrdinaryMergeReceiver.new(config: config, coordinator: @coordinator,
@@ -593,7 +626,7 @@ module Ace
           forge_config: forge_config,
           forge_factory: forge ? ->(_document) { forge } : nil,
           readback_attempts: readback_attempts,
-          readback_backoff_seconds: readback_backoff_seconds)
+          readback_backoff_seconds: readback_backoff_seconds, owner_guard: owner_guard)
       end
 
       # The host-installed forge merge configuration this test deployment

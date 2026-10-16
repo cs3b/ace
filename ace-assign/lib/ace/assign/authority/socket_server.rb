@@ -14,8 +14,14 @@ module Ace
       class SocketServer
         CONNECTIONS = 16
 
-        def initialize(service:, lifecycle:, hitl_service: nil)
-          @service, @lifecycle, @hitl_service = service, lifecycle, hitl_service
+        def initialize(service:, lifecycle:, services: [])
+          unless services.is_a?(Array) && services.uniq.size == services.size &&
+              services.all? { |owned| owned.respond_to?(:run) && owned.respond_to?(:stop) }
+            raise ArgumentError, "authority services require distinct source-owned run/stop lifetimes"
+          end
+          @service, @lifecycle, @services = service, lifecycle, services.dup.freeze
+          @service_threads = []
+          @activation_gates = []
           @mutex = Mutex.new
           @connections = []
           @handlers = []
@@ -31,18 +37,18 @@ module Ace
           unless lock.flock(File::LOCK_EX | File::LOCK_NB)
             raise AttemptErrors::Conflict, "assignment authority already owns its listener"
           end
-          start_hitl_service!
           path = @service.fetch("socket_path")
           if File.exist?(path) || File.symlink?(path)
             raise AttemptErrors::Conflict, "existing authority endpoint requires verified installer recovery"
           end
           @listener = UNIXServer.new(path)
-          File.chmod(0o660, path)
           @endpoint = wire.socket_identity(path)
+          File.chmod(0o660, path)
+          start_services!
+          verify_services!
+          @activation_gates.each { |gate| gate << :activate }
           until @stopped
-            if @hitl_thread && !@hitl_thread.alive?
-              raise Ace::Runtime::RuntimeUnavailableError, "protected HITL boundary stopped before its authority"
-            end
+            verify_services!
             ready = IO.select([@listener], nil, nil, 0.25)
             next unless ready
             socket = @listener.accept_nonblock(exception: false)
@@ -66,16 +72,23 @@ module Ace
         rescue IOError, Errno::EBADF
           raise unless @stopped
         ensure
-          stop
-          stop_hitl_service!
-          # Closing a stream does not cancel a handler already inside dispatch.
-          # The owner lock and endpoint remain held until every handler ends.
-          @mutex.synchronize { @handlers.dup }.each(&:join)
-          @lifecycle.close if @endpoint && @lifecycle.respond_to?(:close)
-          if @endpoint && same_endpoint?(path)
-            File.unlink(path)
+          begin
+            stop
+            stop_services!
+          ensure
+            # Closing a stream does not cancel an admitted transaction. Hold
+            # the owner lock and endpoint until every handler has ended.
+            begin
+              @mutex.synchronize { @handlers.dup }.each(&:join)
+              @lifecycle.close if @endpoint && @lifecycle.respond_to?(:close)
+            ensure
+              begin
+                File.unlink(path) if @endpoint && same_endpoint?(path)
+              ensure
+                lock&.close
+              end
+            end
           end
-          lock&.close
         end
 
         def request_stop
@@ -90,27 +103,54 @@ module Ace
 
         private
 
-        # The existing HITL boundary is a sibling owned by this listener's
-        # lifetime. It must be ready before assignment ingress is opened.
-        def start_hitl_service!
-          return unless @hitl_service
-          ready = Queue.new
-          @hitl_thread = Thread.new do
-            @hitl_service.run(on_ready: -> { ready << :ready })
-          rescue Exception => error
-            @hitl_failure = error
-            ready << error
+        # Installed HITL and merge listeners share the assignment owner lock.
+        # Every selected boundary must be ready before assignment ingress opens;
+        # a stopped boundary closes admission until the complete owner restarts.
+        def start_services!
+          @services.each do |owned|
+            ready = Queue.new
+            activation = Queue.new
+            @activation_gates << activation
+            thread = Thread.new do
+              owned.run(on_ready: lambda do
+                ready << :ready
+                unless activation.pop == :activate
+                  raise Ace::Runtime::RuntimeUnavailableError, "authority startup was cancelled"
+                end
+              end)
+            rescue Exception => error
+              ready << error
+            ensure
+              ready << :stopped
+            end
+            thread.report_on_exception = false
+            @service_threads << [owned, thread]
+            result = ready.pop(timeout: 5)
+            raise Ace::Runtime::RuntimeUnavailableError, "authority service startup did not become ready" unless result == :ready || result.is_a?(Exception)
+            raise result if result.is_a?(Exception)
           end
-          @hitl_thread.report_on_exception = false
-          result = ready.pop(timeout: 5)
-          raise Ace::Runtime::RuntimeUnavailableError, "protected HITL boundary startup timed out" if result.nil?
-          raise result if result.is_a?(Exception)
         end
 
-        def stop_hitl_service!
-          return unless @hitl_thread
-          @hitl_service.stop
-          @hitl_thread.join
+        def verify_services!
+          unless @service_threads.all? { |_, thread| thread.alive? }
+            raise Ace::Runtime::RuntimeUnavailableError, "an owned service stopped before its authority"
+          end
+        end
+
+        def stop_services!
+          errors = []
+          @activation_gates.each { |gate| gate << :cancel }
+          @service_threads.reverse_each do |owned, _|
+            owned.stop
+          rescue Exception => error
+            errors << error
+          end
+          @service_threads.each do |_, thread|
+            thread.join
+          rescue Exception => error
+            errors << error
+          end
+          raise errors.first unless errors.empty?
         end
 
         def same_endpoint?(path)

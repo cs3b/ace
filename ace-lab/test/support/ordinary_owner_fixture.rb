@@ -6,6 +6,8 @@ module OrdinaryOwnerFixture
       "service" => {"uid" => 41000, "gid" => 41000, "socket_path" => "/run/ace/atlas/assign.sock", "state_root" => "/var/lib/ace/state"},
       "journal" => {"repository" => "/var/lib/ace/journal", "ref" => "refs/ace/execution", "checkout_root" => "/var/lib/ace/state/checkout"},
       "assignment_root" => "/var/lib/ace/state/assignments", "lifecycle_root" => "/var/lib/ace/state/lifecycle",
+      "hitl" => {"root" => "/var/lib/ace/state/hitl", "socket_path" => "/run/ace/atlas/hitl.sock",
+        "group" => "atlas-lifecycle", "grants_path" => "/etc/lab/ace-lab/authorization.yml"},
       "runtime_binary" => "/usr/local/bin/herdr", "participants" => {"41001" => {"gid" => 41001, "actor" => "atlas-worker",
         "supervisor_panes" => ["w1:pS"], "runtime" => "herdr", "workspace" => "w1"}},
       "worktrees" => {"root" => "/lab/projects/atlas/.ace-wt", "common_dir" => "/lab/projects/atlas/.git"},

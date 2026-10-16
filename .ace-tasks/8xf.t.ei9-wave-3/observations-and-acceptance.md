@@ -64,3 +64,31 @@ without silently editing statuses or duplicating owners. Initial source baseline
 qk0/iy6/nh0 draft, qkb/ig3 blocked and xz9.5 in-progress are historical observations,
 not automatic global holds. This tree's independent review enables pending work;
 actual missing runtime scope still refuses the corresponding effect.
+
+## Execution checkpoint — shared ordinary service owner
+
+Source implementation now composes Assign, HITL and ordinary merge around one
+explicit journal and lifecycle exclusion. Assign binds first; every sibling waits
+at a readiness barrier before dispatch or recovery. Startup failure drains all
+services. HITL fixes its project and refreshes owner/service identity at canonical
+transitions and replay. Merge repeats owner/caller classification and authorization
+after slow forge calls before POST. Protected classification still denies ordinary
+use. HITL root uses the maintained 0711 layout inside private state_root 0700.
+
+Independent composition verdict: APPROVE against 64261bac5 plus reviewed changes.
+Executed independent checks: Lab57/289, HITL33/214, protected Assign5/29; latest
+graph/receiver/admission53/259. Reports: lab/76b16ee2-0644-4e37-9345-55244233fcb9,
+hitl/47fd26a5-730a-45c7-987d-f10b9de7d623,
+assign/0eae4e93-8618-41c1-8f1e-dc80f3b2a7cf,
+lab/26f06122-41c7-4342-a56a-c1036cc439d6 under .ace-local/test/reports.
+Earlier whole Lab fast:458/2548,4skips,0failures/errors
+(lab/0cc71e7d-71c9-4702-b3c9-c8c411a6f06f); it preceded the final review fixes.
+
+Domain installed read ACL proof is separately retained in lab-config commit
+f1c98a68284b4e82d03877814530a819cfa512ce, receipt SHA-256
+d8d3afc13c57cecb20a4a2a162e2360dde5bee13f4e2142a2525e36797564f2a.
+Actual UID966 can read selected existing/future Git worktrees and cannot write;
+five mask-zero directories remain denied. Recheck planned zero changes. Native
+pin, four panes/session prefixes and 68 historical records were preserved.
+This is installed read access only: the new ordinary owner API, HITL store and
+receiver are not installed. No completed merge/program acceptance is claimed.

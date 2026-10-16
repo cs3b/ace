@@ -8,6 +8,7 @@ require "ace/assign/authority/private_directory"
 require "ace/assign/authority/protected_assignment_context"
 require "ace/assign/molecules/installed_journal_read"
 require "ace/runtime/molecules/protected_artifact_set"
+require "ace/hitl/lifecycle/store"
 require_relative "../errors"
 
 module Ace
@@ -18,12 +19,13 @@ module Ace
       class OrdinaryOwnerConfig
         PATH = "/etc/lab/ace-lab/assign-owners.yml"
         ID = /\A[a-zA-Z0-9][a-zA-Z0-9_.-]{0,127}\z/
-        PROJECT_KEYS = %w[service journal assignment_root lifecycle_root runtime_binary native worktrees participants].freeze
+        PROJECT_KEYS = %w[service journal assignment_root lifecycle_root runtime_binary native worktrees participants hitl].freeze
         SERVICE_KEYS = %w[uid gid socket_path state_root].freeze
         JOURNAL_KEYS = %w[repository ref checkout_root].freeze
         PARTICIPANT_KEYS = %w[gid actor runtime workspace supervisor_panes].freeze
         PANE = /\A[a-zA-Z0-9][a-zA-Z0-9_.:-]{0,127}\z/
         NATIVE_KEYS = %w[socket_path socket_identity server_identity version protocol].freeze
+        HITL_KEYS = %w[root socket_path group grants_path].freeze
 
         def self.load(project:, path: PATH)
           reader = Ace::Runtime::Molecules::ProtectedArtifactSet.new(file_limit: 65_536, total_limit: 65_536)
@@ -34,11 +36,11 @@ module Ace
           end
           new(YAML.safe_load(bytes, aliases: false), project: project, source: path)
         rescue Psych::Exception, Ace::Runtime::Error
-          raise InvalidConfigurationError, "ordinary assignment owner configuration is unavailable"
+          raise InvalidConfigurationError, "ordinary assignment owner configuration is unavailable: #{path}"
         end
 
         attr_reader :project, :service, :journal, :assignment_root, :lifecycle_root,
-          :runtime_binary, :native, :worktrees, :participants, :source
+          :runtime_binary, :native, :worktrees, :participants, :hitl, :source
 
         def initialize(document, project:, source:)
           unless document.is_a?(Hash) && document.keys.sort == %w[projects version] && document["version"] == 1 &&
@@ -74,7 +76,12 @@ module Ace
           invalid! unless endpoint.is_a?(Array) && endpoint.size == 3 && endpoint.all? { |value| value.is_a?(Integer) && value >= 0 } && endpoint.last.zero?
           @worktrees = selected.fetch("worktrees")
           invalid! unless @worktrees.is_a?(Hash) && @worktrees.keys.sort == %w[common_dir root] && @worktrees.values.all? { |path| absolute?(path) }
-          private_paths = [@assignment_root, @lifecycle_root, @journal.fetch("checkout_root")]
+          @hitl = selected.fetch("hitl")
+          invalid! unless @hitl.is_a?(Hash) && @hitl.keys.sort == HITL_KEYS.sort &&
+            %w[root socket_path grants_path].all? { |key| absolute?(@hitl[key]) } &&
+            @hitl["group"].is_a?(String) && ID.match?(@hitl["group"]) &&
+            [@service.fetch("socket_path"), @native.fetch("socket_path"), @hitl.fetch("socket_path")].uniq.size == 3
+          private_paths = [@assignment_root, @lifecycle_root, @journal.fetch("checkout_root"), @hitl.fetch("root")]
           invalid! unless private_paths.all? { |path| path.start_with?(@service.fetch("state_root") + "/") } &&
             private_paths.uniq.size == private_paths.size && private_paths.combination(2).none? { |a, b| a.start_with?(b + "/") || b.start_with?(a + "/") }
           invalid! if @journal.fetch("repository").start_with?(@service.fetch("state_root") + "/") ||
@@ -105,7 +112,7 @@ module Ace
         end
 
         def verify_listener!
-          verify_selection!
+          verify_owner!
           unless [Process.uid, Process.euid, Process.gid, Process.egid] ==
               [@service.fetch("uid"), @service.fetch("uid"), @service.fetch("gid"), @service.fetch("gid")]
             raise InvalidConfigurationError, "ordinary assignment owner process differs"
@@ -114,6 +121,7 @@ module Ace
           [@service.fetch("state_root"), @assignment_root, @lifecycle_root, @journal.fetch("checkout_root")].each do |path|
             Ace::Assign::Authority::PrivateDirectory.verify!(path)
           end
+          verify_hitl_root!
           wire = Ace::Runtime::Molecules::ProtectedSocket
           wire.root_path!(@runtime_binary)
           invalid! unless File.file?(@runtime_binary) && File.executable?(@runtime_binary)
@@ -121,6 +129,12 @@ module Ace
           reader = Ace::Assign::Molecules::InstalledJournalRead.new(repo_root: @journal.fetch("repository"),
             ref: @journal.fetch("ref"), owner_uid: @service.fetch("uid"))
           reader.with(deadline: wire.deadline(30)) { |_snapshot| true }
+          true
+        end
+
+        def verify_owner!
+          verify_selection!
+          exclude_protected!(@service.fetch("uid"))
           true
         end
 
@@ -135,8 +149,7 @@ module Ace
         # Selection only: consumers of canonical native history have an
         # observed process UID, not a new authenticated socket from that owner.
         def selected_principal!(uid)
-          verify_selection!
-          exclude_protected!(@service.fetch("uid"))
+          verify_owner!
           exclude_protected!(uid)
           participant = @participants[uid.to_s]
           unless participant
@@ -157,6 +170,18 @@ module Ace
         attr_reader :fingerprint
 
         private
+
+        # HITL maintains its own layout (root 0711, private request/secret
+        # directories). The already-verified private state_root encloses it.
+        # Requiring a 0700 HITL leaf would reject every normal service restart.
+        def verify_hitl_root!
+          root = @hitl.fetch("root")
+          Ace::Runtime::Molecules::ProtectedSocket.root_path!(root, directory: true, owner: @service.fetch("uid"))
+          unless (File.stat(root).mode & 0o7777) == Ace::Hitl::Lifecycle::Store::ROOT_MODE
+            raise InvalidConfigurationError, "ordinary HITL store root must use the maintained store mode"
+          end
+          true
+        end
 
         def validate_principal_separation!(projects)
           invalid! unless projects.size.between?(1, 64)

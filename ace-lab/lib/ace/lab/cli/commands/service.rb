@@ -7,6 +7,7 @@ require_relative "support"
 require_relative "../../organisms/protected_service_request"
 require_relative "../../organisms/ordinary_merge_request"
 require_relative "../../organisms/ordinary_merge_receiver"
+require_relative "../../organisms/ordinary_authority_composition"
 require_relative "../../molecules/ordinary_listener"
 require_relative "../../molecules/ordinary_receiver_config"
 
@@ -188,7 +189,7 @@ module Ace
             include Ace::Support::Cli::Base
             include Output
 
-            desc "Serve the ordinary fixed merge receiver on its configured socket"
+            desc "Serve ordinary Assign, HITL and fixed merge under the installed journal owner"
             option :mode, type: :string, required: true,
               desc: "ordinary-merge selects the ordinary fixed merge receiver"
             option :project, type: :string, required: true, desc: "Project stable ID"
@@ -220,33 +221,16 @@ module Ace
               unless receiver_config.receiver_uid == Process.uid
                 raise Ace::Lab::InvalidConfigurationError, "receiver must run as its configured UID"
               end
-              policy_document = Molecules::GrantResolver.trusted_document(
-                receiver_config.policy_path
-              )
-              # One canonical Assign identity/ref, selected by deployment. Its
-              # repository, checkout and locks must be owned exclusively by the
-              # installed service; requesters must not acquire write access.
-              # No-effect attestations are immutable blobs in the same journal.
-              coordinator = Ace::Assign::Organisms::AttemptCoordinator.new(
-                repo_root: receiver_config.repo_path
-              )
-              receiver = Organisms::OrdinaryMergeReceiver.new(
-                config: receiver_config, coordinator: coordinator,
-                policy_document: policy_document
-              )
-              listener = Molecules::OrdinaryListener.new(
-                socket_path: receiver_config.socket_path,
-                peer_uid: receiver_config.principal_uid,
-                socket_gid: receiver_config.socket_gid,
-                logger: ->(message) { warn message },
-                handler: receiver
-              )
-              listener.serve
-            rescue Ace::Lab::InvalidConfigurationError, Ace::Assign::AttemptErrors::EvidenceUnavailable => e
+              server = Organisms::OrdinaryAuthorityComposition.new(receiver_config: receiver_config).build
+              signals = %w[INT TERM].to_h { |signal| [signal, Signal.trap(signal) { server.request_stop }] }
+              server.serve
+            rescue Ace::Lab::InvalidConfigurationError, Ace::Assign::Error, Ace::Runtime::Error, Ace::Hitl::Lifecycle::Error => e
               emit(Organisms::OrdinaryMergeRequest.refusal_envelope(
                 "ordinary_merge_unavailable", e.message,
                 request_id: "unknown", input_digest: nil
               ))
+            ensure
+              signals&.each { |signal, handler| Signal.trap(signal, handler) }
             end
           end
         end

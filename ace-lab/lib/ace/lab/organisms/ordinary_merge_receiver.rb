@@ -61,11 +61,15 @@ module Ace
 
         def initialize(config:, coordinator:, policy_document:, merge_factory: nil,
           forge_config: nil, forge_factory: nil, resolver: nil,
-          readback_attempts: 3, readback_backoff_seconds: 1.0)
+          readback_attempts: 3, readback_backoff_seconds: 1.0, owner_guard: nil)
           unless config.is_a?(Molecules::OrdinaryReceiverConfig)
             raise ArgumentError, "receiver needs validated OrdinaryReceiverConfig"
           end
           @config = config
+          unless owner_guard.nil? || owner_guard.respond_to?(:call)
+            raise ArgumentError, "ordinary installed owner guard must be callable"
+          end
+          @owner_guard = owner_guard
           @coordinator = coordinator
           @policy_document = policy_document
           @configuration_sha256 = Molecules::ServicePolicy.configuration_digest(policy_document)
@@ -103,6 +107,7 @@ module Ace
         # Assign record exists, or a closed pre-effect refusal envelope that
         # proves no effect began. Never a receiver-local record.
         def handle(submission)
+          @owner_guard&.call
           invalid!("submission is not a mapping") unless submission.is_a?(Hash)
           invalid!("submission has unknown selectors: #{unknown(submission)}") unless
             (submission.keys - SUBMISSION_KEYS).empty?
@@ -159,7 +164,7 @@ module Ace
           OrdinaryMergeRequest.refusal_envelope("ordinary_merge_request_conflict", e.message,
             request_id: submission.is_a?(Hash) ? submission.fetch("request_id", "unknown") : "unknown",
             input_digest: nil)
-        rescue Molecules::OrdinaryFfMerge::GitUnavailable, Ace::Assign::AttemptErrors::EvidenceUnavailable,
+        rescue Molecules::OrdinaryFfMerge::GitUnavailable, Ace::Assign::Error,
           Ace::Lab::InvalidConfigurationError => e
           OrdinaryMergeRequest.refusal_envelope("ordinary_merge_unavailable", e.message,
             request_id: submission.is_a?(Hash) ? submission.fetch("request_id", "unknown") : "unknown",
@@ -175,6 +180,7 @@ module Ace
         # real forge readback. Any crash between begin and settle leaves the
         # canonical record uncertain with the original reference.
         def execute(request_id)
+          @owner_guard&.call
           record = @coordinator.fixed_merge_record(request_id)
           return :unknown unless record
           return :skipped_terminal unless record.fetch("state") == "pending"
@@ -199,6 +205,7 @@ module Ace
         # a terminal state at most once. Already-uncertain records (a lost
         # lifecycle) are never re-executed — they reconcile by reference.
         def recover_pending!
+          @owner_guard&.call
           records = @coordinator.fixed_merge_records
           records.filter_map do |record|
             next nil unless record.fetch("state") == "pending" &&
@@ -371,9 +378,10 @@ module Ace
         # Recheck pending/recovered authority and again after slow forge calls,
         # immediately before each privileged effect. No cached decision is a lease.
         def current_authorization_refusal(record)
+          @owner_guard&.call
           decision = @resolver.decide(record.fetch("authorization"), authorization_binding(record))
           decision.message unless decision.authorized?
-        rescue Ace::Lab::InvalidConfigurationError => e
+        rescue Ace::Lab::InvalidConfigurationError, Ace::Assign::Error => e
           e.message
         end
 

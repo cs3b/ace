@@ -44,13 +44,14 @@ module Ace
         # Serve until #stop. Excludes a second listener through one owned
         # lock file, removes only its own stale endpoint, and always removes
         # the endpoint it created.
-        def serve
+        def serve(on_ready: nil)
           acquire_lock!
           remove_stale_endpoint!
           @listener = UNIXServer.new(@socket_path)
           @endpoint_identity = File.stat(@socket_path)
           File.chown(nil, @socket_gid, @socket_path) if @socket_gid
           File.chmod(@socket_gid ? 0o660 : 0o600, @socket_path)
+          on_ready.call if on_ready
           @handler.recover_pending! if @handler.respond_to?(:recover_pending!)
           until @stopping
             socket = @listener.accept
@@ -63,6 +64,11 @@ module Ace
           remove_owned_endpoint!
           @lock&.flock(File::LOCK_UN)
           @lock&.close
+        end
+
+        # The existing listener participates in the Assign owner's lifetime.
+        def run(on_ready:)
+          serve(on_ready: on_ready)
         end
 
         def stop

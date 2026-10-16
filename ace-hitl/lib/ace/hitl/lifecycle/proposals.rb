@@ -196,6 +196,8 @@ module Ace
         def proposal_transition(record, &policy)
           proposal_journal(record.fetch("project_id")).change_proposal(record["proposal_id"], assignment_id: record["assignment_id"],
             attempt_id: record["attempt_id"]) do |current|
+            # Selection may change while waiting for the canonical ref lock.
+            proposal_journal(record.fetch("project_id"))
             # A reply to an older revision cannot modify the new decision.
             next current unless current["request_id"] == record["request_id"]
             policy.call(current)
@@ -210,6 +212,7 @@ module Ace
           replay = nil
           record = @binding.with_active(assignment: assignment, attempt: attempt, project: project, requester: @identity.username) do
             proposal_journal(project).change_proposal(id, assignment_id: assignment, attempt_id: attempt) do |previous|
+              proposal_journal(project)
               if operation_id
                 replay = proposal_revision_replay(id, expected_revision, operation_id, content, project: project)
                 next previous if replay

@@ -65,7 +65,7 @@ module Ace
             service_policy: policy, deployment_history: history)
           router = Ace::Assign::Authority::Router.new(launch: launch, handlers: [endcap])
           Ace::Assign::Authority::Server.new(authority_id: @authority_id, deployment: @deployment, kernel: @kernel,
-            lifecycle: router, composition: "services", hitl_service: publication_hitl(endcap, journals))
+            lifecycle: router, composition: "services", services: [publication_hitl(endcap, journals)])
         end
 
         private

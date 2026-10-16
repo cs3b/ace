@@ -32,7 +32,7 @@ class AuthorityCompositionTest < Minitest::Test
         Ace::Assign::Authority::Endcap.stub(:new, endcap) do
           Ace::Assign::Authority::Router.stub(:new, ->(**arguments) { selected_router = arguments; router }) do
             Ace::Assign::Authority::Server.stub(:new, ->(**arguments) {
-              assert_same publication, arguments.fetch(:hitl_service)
+              assert_equal [publication], arguments.fetch(:services)
               server
             }) do
               # This routing unit test controls the existing publication boundary;

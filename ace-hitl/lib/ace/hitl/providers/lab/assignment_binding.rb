@@ -16,9 +16,14 @@ module Ace
         # authority. Every doubt maps to the classified BindingError —
         # unknown identity/authority is an error, never permission.
         class AssignmentBinding < Lifecycle::Binding
-          def initialize(coordinator: nil, repo_root: nil)
+          def initialize(coordinator: nil, repo_root: nil, project: nil, owner_guard: nil)
+            unless (project.nil? && owner_guard.nil?) ||
+                (project.is_a?(String) && !project.empty? && owner_guard.respond_to?(:call))
+              raise ArgumentError, "installed binding needs both a fixed project and its owner guard"
+            end
             @coordinator = coordinator
             @repo_root = repo_root
+            @project, @owner_guard = project, owner_guard
           end
 
           def validate_request(assignment:, attempt:, project:, requester:, caller_pid: nil)
@@ -30,6 +35,7 @@ module Ace
           # Read-only owner verification can run inside an already-held
           # assignment exclusion without reacquiring that exclusion.
           def reverse_address(assignment:, attempt:, project:, caller_pid:)
+            verify_selection!(project)
             unless caller_pid.is_a?(Integer) && caller_pid.positive?
               raise Lifecycle::BindingError, "kernel requester process identity is unavailable"
             end
@@ -49,14 +55,25 @@ module Ace
             unless project.is_a?(String) && !project.empty?
               raise Lifecycle::BindingError, "proposal requires an explicit project"
             end
+            verify_selection!(project)
             coordinator.send(:journal_for)
           end
 
           def proposal_projects
+            if @project
+              verify_selection!(@project)
+              return [@project]
+            end
             coordinator.send(:journal_for).proposals.map { |record| record.fetch("project_id") }.uniq.sort
           end
 
           private
+
+          def verify_selection!(project)
+            return unless @project
+            raise Lifecycle::BindingError, "project differs from installed HITL owner" unless project == @project
+            @owner_guard.call
+          end
 
           def with_verified(assignment_id, attempt_id, project_id, requester)
             # ONLY the authority verification is error-mapped: the
@@ -66,12 +83,14 @@ module Ace
             # failure (review 8x327bud). The exclusion still spans the
             # whole transition, so the phase flag separates the two.
             verifying = true
+            verify_selection!(project_id)
             coordinator.with_verified_attempt(
               assignment_id: assignment_id,
               attempt_id: attempt_id,
               project_id: project_id,
               requester: requester
             ) do |attempt|
+              verify_selection!(project_id)
               verifying = false
               yield attempt
             end
