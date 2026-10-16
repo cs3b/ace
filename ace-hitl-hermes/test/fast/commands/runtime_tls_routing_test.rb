@@ -19,7 +19,7 @@ require "support/tls_fixtures"
 class RuntimeTlsRoutingTest < AceHermesTestCase
   SERVER_SAN = "urn:ace:hitl:proj-a:lifecycle-server"
   CLIENT_SAN = "urn:ace:hitl:proj-a:hermes-client"
-  DNS_NAME = "localhost.localdomain"
+  DNS_NAME = "lifecycle.example.test"
 
   def setup
     @tmp = Dir.mktmpdir("hermes-tls-routing", "/tmp")
@@ -170,19 +170,26 @@ class RuntimeTlsRoutingTest < AceHermesTestCase
     channel_entry = channel(name: "gad", endpoint: "tls+tcp://#{DNS_NAME}:#{port}",
       project: "proj-a", credential: client_credential)
     runtime, verifier = build_runtime([channel_entry])
-    runtime.send(:verify_authorities!)
-    assert verifier.verified.any? { |entry| entry.first == :credential_tree }
-
-    client = runtime.send(:lifecycle_for, "gad")
-    assert_kind_of Ace::Hitl::Hermes::Transport::TlsClient, client
-    created = client.create("id" => "hitl9001", "assignment" => "8x3test", "attempt" => "a1b2c3",
-      "kind" => "text", "project" => "proj-a", "harness" => "agy", "plan" => "test",
-      "question" => "Proceed?", "ace_hitl_id" => "ace-hitl-1")
-    assert_equal "hitl9001", created["id"]
-    delivered = client.deliver("hitl9001", "approved")
-    assert_equal true, delivered["delivered"]
-    consumed = client.consume("hitl9001", timeout: 5)
-    assert_equal "approved", consumed["answer"]
+    # Keep the real mutual TLS/service exchange; only DNS is fixture-owned.
+    resolve = Addrinfo.method(:tcp)
+    Addrinfo.stub(:tcp, ->(dns, target_port) {
+      assert_equal DNS_NAME, dns
+      resolve.call("::1", target_port)
+    }) do
+      runtime.send(:verify_authorities!)
+      assert verifier.verified.any? { |entry| entry.first == :credential_tree }
+  
+      client = runtime.send(:lifecycle_for, "gad")
+      assert_kind_of Ace::Hitl::Hermes::Transport::TlsClient, client
+      created = client.create("id" => "hitl9001", "assignment" => "8x3test", "attempt" => "a1b2c3",
+        "kind" => "text", "project" => "proj-a", "harness" => "agy", "plan" => "test",
+        "question" => "Proceed?", "ace_hitl_id" => "ace-hitl-1")
+      assert_equal "hitl9001", created["id"]
+      delivered = client.deliver("hitl9001", "approved")
+      assert_equal true, delivered["delivered"]
+      consumed = client.consume("hitl9001", timeout: 5)
+      assert_equal "approved", consumed["answer"]
+    end
   end
 
   def test_clients_cache_per_endpoint_plus_credential_identity

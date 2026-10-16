@@ -15,7 +15,7 @@ TlsClient = Ace::Hitl::Hermes::Transport::TlsClient
 # cleartext or another transport.
 class TlsClientTest < AceHermesTestCase
   SERVER_SAN = "urn:ace:hitl:proj-a:lifecycle-server"
-  DNS_NAME = "localhost.localdomain"
+  DNS_NAME = "lifecycle.example.test"
 
   def setup
     @scratch = Dir.mktmpdir("hermes-tls-client", "/tmp")
@@ -37,7 +37,7 @@ class TlsClientTest < AceHermesTestCase
   def test_authenticated_exchange_over_tls_1_3
     start_tls_double
     client = build_client
-    result = client.request("ping")
+    result = request_over_loopback(client)
     assert_equal true, result["pong"]
   end
 
@@ -45,7 +45,7 @@ class TlsClientTest < AceHermesTestCase
     start_tls_double
     credential = base_credential.merge("expected_server_certificate_sha256" => "0" * 64)
     error = assert_raises(Ace::Hitl::Lifecycle::TransportError) do
-      build_client(credential: credential).request("ping")
+      request_over_loopback(build_client(credential: credential))
     end
     assert_match(/fingerprint/, error.message)
   end
@@ -54,7 +54,7 @@ class TlsClientTest < AceHermesTestCase
     start_tls_double
     credential = base_credential.merge("expected_server_uri_san" => "urn:ace:hitl:proj-b:lifecycle-server")
     error = assert_raises(Ace::Hitl::Lifecycle::TransportError) do
-      build_client(credential: credential).request("ping")
+      request_over_loopback(build_client(credential: credential))
     end
     assert_match(/URI SAN/, error.message)
   end
@@ -66,7 +66,7 @@ class TlsClientTest < AceHermesTestCase
     write_material(server_identity: no_dns_server)
     start_tls_double
     error = assert_raises(Ace::Hitl::Lifecycle::TransportError) do
-      build_client.request("ping")
+      request_over_loopback(build_client)
     end
     assert_match(/handshake failed|unavailable/, error.message)
   end
@@ -76,7 +76,7 @@ class TlsClientTest < AceHermesTestCase
     write_material(server_identity: no_eku_server)
     start_tls_double
     error = assert_raises(Ace::Hitl::Lifecycle::TransportError) do
-      build_client.request("ping")
+      request_over_loopback(build_client)
     end
     assert_match(/serverAuth EKU|fingerprint|URI SAN|handshake/, error.message)
   end
@@ -112,7 +112,7 @@ class TlsClientTest < AceHermesTestCase
     @server_thread = legacy
     client = build_client
     error = assert_raises(Ace::Hitl::Lifecycle::TransportError) do
-      client.request("ping")
+      request_over_loopback(client)
     end
     assert_match(/handshake failed|unavailable/, error.message)
   end
@@ -133,10 +133,20 @@ class TlsClientTest < AceHermesTestCase
     start_tls_double
     client = TlsClient.new(endpoint: {dns: DNS_NAME, port: @port},
       credential: base_credential, context_builder: ->(_resolved) { client_context })
-    assert_equal true, client.request("ping")["pong"]
+    assert_equal true, request_over_loopback(client)["pong"]
   end
 
   # ---- fixtures ----
+
+  # Replace DNS resolution only. TCP, TLS, hostname/SAN/EKU/pin verification
+  # and lifecycle frames remain real, independent of host resolver aliases.
+  def request_over_loopback(client)
+    resolve = Addrinfo.method(:tcp)
+    Addrinfo.stub(:tcp, ->(dns, port) {
+      assert_equal DNS_NAME, dns
+      resolve.call("::1", port)
+    }) { client.request("ping") }
+  end
 
   def write_material(server_identity: @server)
     @server = server_identity
