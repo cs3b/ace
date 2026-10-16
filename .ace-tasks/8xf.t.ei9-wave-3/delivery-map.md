@@ -576,3 +576,55 @@ Still open after this publication: local main (merge + four release commits,
 Lab still runs the previously selected graphs — exact new-graph selection
 (50-version style verification), installation and every installed acceptance
 item (.0 onward) remain, as do both external platform blocks.
+
+### Wave-3 nine-gem Lab adoption — installed and selected
+
+The Captain pushed main (origin/main = f3014e2c4) and merged PR375 himself
+(merge content 20b5897d0 is an ancestor of main; remote branch deleted),
+closing both mechanics. Adoption then proceeded end to end.
+
+A fresh frozen 50-package manifest was built from the accepted 2e9005f39
+baseline (`.ace-local/release/coordinated-installation-manifest-f3014e2c4.json`,
+SHA256 816a6dbd…, release context de2cf61d2). Independent adversarial review
+round 1 REJECTED it: ace-hitl 0.17.0 carried only 3 of its 10 gemspec
+dependencies and ace-herdr 0.6.1 was pinned to 33bf2efe5, whose gemspec still
+required contract ~> 0.2.1. Both were fixed (hitl complete; herdr repinned to
+the coordinated cut de2cf61d2); round 2 verified the fixes with executed
+checks and APPROVED. The rejected r1 file is retained beside the approved one;
+TS-MONO-001 run 8xfxkc2, executed against the rejected input, is retained
+without relabelling. The corrected run 8xfxuxj passed 4/4 (normal + full-index,
+50 exact versions, six consumer edges, classification SAFE, zero findings) and
+its finalized receipt is
+`evidence/wave3-publication-installation-acceptance.json` (final: pass).
+
+The Lab graphs were updated on codex/ei9-service-installer (9f9d8e5: manifests,
+gems.lock, coordinator Gemfile/lock; shared support pins deliberately held at
+ace-support-cli 0.6.8 / ace-support-config 0.18.1 via conservative re-lock) and
+the ordinary-owner runtime pin regenerated (c24d1ea: identities + 38 API
+digests rebased onto 0.71.0/0.9.0/0.17.0, byte-verified across both releases).
+Focused suites passed (13 + 25 tests). The reviewed export
+(sha256 b2c68e5c…) was installed root-owned at
+/usr/local/lib/lab/install-src/9f9d8e5; both graphs installed and were
+selected: service 2a900667…, coordinator 51fa643c… under
+/etc/lab/ace-runtime/. healthcheck preserved; no legacy service touched.
+
+The ordinary owner was restarted onto the new cut after live checks (zero
+ordinary lifecycle/prepared entries; legacy W689 ready, W693 reviewing on the
+legacy pipeline). `lab-install-ordinary-owner check` returned
+admission=enabled ready=true; the service now runs PID 597187 executing ruby
+from 2a900667 (ace-lab 0.9.0 line). UID1000 authenticated the Assign read
+(assignment 8xahhp, generation 0, journal_commit e621fa01 — unchanged through
+restart) and the HITL ping; loaded gems are 0.71.0/0.61.0/0.9.0/0.17.0/0.4.0
+from the new release. UID1001 is refused on all three sockets. The
+coordinator wrapper's frozen bundle resolves the nine new versions at the
+Bash-tool boundary. Legacy labd 1858726, native Herdr 514709 and
+herdr-lab-chief 909465 are preserved; both healthcheck timers remain
+not-found/disabled. Complete receipts:
+`evidence/wave3-installed-ordinary-owner.json`.
+
+This closes graph installation and selection for the wave-3 release. It does
+not close ei9.0: no real assignment, attempt or serial merge has executed on
+the new cut yet; HITL transport remains unselected by design; the two external
+platform blocks stand. Four adoption frictions are recorded in the evidence
+file for the gad.2 tooling line (cut-transition prepare gap, dead flock
+artifacts, git-archive umask, bundler float).

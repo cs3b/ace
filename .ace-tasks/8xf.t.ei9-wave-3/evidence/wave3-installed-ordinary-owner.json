@@ -1,0 +1,94 @@
+{
+  "wave3_nine_gem_adoption": {
+    "date": "2026-10-16T23:59Z",
+    "published_versions": {
+      "ace-assign": "0.71.0",
+      "ace-review": "0.61.0",
+      "ace-lab": "0.9.0",
+      "ace-overseer": "0.23.0",
+      "ace-hitl": "0.17.0",
+      "ace-hitl-contract": "0.3.0",
+      "ace-hitl-hermes": "0.6.0",
+      "ace-runtime": "0.4.0",
+      "ace-herdr": "0.6.1"
+    },
+    "propagation_proof": {
+      "scenario": "TS-MONO-001",
+      "run": "8xfxuxj",
+      "verdict": "PASS 4/4",
+      "finalize": "pass",
+      "classification": "SAFE",
+      "findings": 0,
+      "exact_packages_per_mode": 50,
+      "consumer_edges": "ace-bundle/ace-review/ace-task -> ace-git-github, normal + full-index",
+      "manifest": ".ace-local/release/coordinated-installation-manifest-f3014e2c4.json",
+      "manifest_sha256": "816a6dbd668f0078cd129b108688ddcdc99208f7a349de46c895ef98f09a76b2",
+      "manifest_source_sha": "de2cf61d21b2803d138e61c891ea01d802d7e87e",
+      "review": "round 1 REJECT (ace-hitl deps incomplete; ace-herdr provenance pin) -> fixed -> round 2 APPROVE; rejected r1 manifest retained",
+      "superseded_run": "8xfxkc2 executed against the rejected r1 manifest; retained, not relabelled",
+      "receipt": "evidence/wave3-publication-installation-acceptance.json"
+    },
+    "lab_graphs": {
+      "installer_branch": "codex/ei9-service-installer",
+      "graph_commit": "9f9d8e5",
+      "pin_commit": "c24d1ea",
+      "export_sha256": "b2c68e5c3e78474fd5c7513641cbf843886b51a717fff088216cf14de0f268c6",
+      "install_src": "/usr/local/lib/lab/install-src/9f9d8e5",
+      "service_release": "/usr/local/lib/lab/ace-runtimes/service/2a900667e0cc2145bf808e2c71597a705e2e6a419e472f8f0bd0a3cb1c2488f0",
+      "coordinator_release": "/usr/local/lib/lab/ace-runtimes/coordinator/51fa643ca8f6f0b740d0f259622b7545053564de9f3ab63e9412edbfc4474d9a",
+      "selection_envs": "/etc/lab/ace-runtime/{service,coordinator}.env",
+      "shared_pins_held": {"ace-support-cli": "0.6.8", "ace-support-config": "0.18.1"},
+      "focused_tests": "test_ace_runtime_selection + test_pi_wake_install 13 OK; test_ordinary_owner_install 25 OK (4 root-only skips)",
+      "independent_review": "round 1: DELTA 1 clean, DELTA 2 rejected; DELTA 1 proceeded on its own merits"
+    },
+    "ordinary_owner": {
+      "unit": "lab-ordinary-owner-ace.service",
+      "launcher_check_before_start": {"admission": "enabled", "ready": true, "started": false},
+      "pid": 597187,
+      "user": "lab-assign-owner",
+      "cmdline": "/usr/bin/ruby /usr/local/lib/lab/ace-runtimes/service/2a900667e0cc2145bf808e2c71597a705e2e6a419e472f8f0bd0a3cb1c2488f0/bin/ace-lab service listen --mode ordinary-merge --project ace --config /etc/lab/ace-lab/ace-receiver.yml",
+      "runtime_pin": "/etc/lab/ordinary-owner-runtime.json (38 API digests, identities 2a900667/51fa643c, verified identical across both releases)"
+    },
+    "authenticated_client": {
+      "uid": 1000,
+      "assign": {
+        "assignment_id": "8xahhp",
+        "generation": 0,
+        "journal_commit": "e621fa01a90e6f84089a8ee0377ee0a660cc2d6b"
+      },
+      "hitl": {"pong": true},
+      "loaded": {
+        "ace-review": {"version": "0.61.0", "path": "/usr/local/lib/lab/ace-runtimes/service/2a900667e0cc2145bf808e2c71597a705e2e6a419e472f8f0bd0a3cb1c2488f0/gems/gems/ace-review-0.61.0"},
+        "ace-assign": {"version": "0.71.0", "path": "/usr/local/lib/lab/ace-runtimes/service/2a900667e0cc2145bf808e2c71597a705e2e6a419e472f8f0bd0a3cb1c2488f0/gems/gems/ace-assign-0.71.0"},
+        "ace-hitl": {"version": "0.17.0", "path": "/usr/local/lib/lab/ace-runtimes/service/2a900667e0cc2145bf808e2c71597a705e2e6a419e472f8f0bd0a3cb1c2488f0/gems/gems/ace-hitl-0.17.0"},
+        "ace-lab": {"version": "0.9.0", "path": "/usr/local/lib/lab/ace-runtimes/service/2a900667e0cc2145bf808e2c71597a705e2e6a419e472f8f0bd0a3cb1c2488f0/gems/gems/ace-lab-0.9.0"},
+        "ace-runtime": {"version": "0.4.0", "path": "/usr/local/lib/lab/ace-runtimes/service/2a900667e0cc2145bf808e2c71597a705e2e6a419e472f8f0bd0a3cb1c2488f0/gems/gems/ace-runtime-0.4.0"}
+      }
+    },
+    "coordinator_boundary": {
+      "wrapper": "/usr/local/lib/lab/lab-coordinator-shell",
+      "cwd": "/lab/projects/overseer",
+      "bundler": "2.6.9",
+      "selected": {"ace-assign": "0.71.0", "ace-review": "0.61.0", "ace-lab": "0.9.0", "ace-overseer": "0.23.0", "ace-hitl": "0.17.0", "ace-hitl-contract": "0.3.0", "ace-hitl-hermes": "0.6.0", "ace-runtime": "0.4.0", "ace-herdr": "0.6.1"}
+    },
+    "outsider": {
+      "uid": 1001,
+      "sockets": {"assign": "permission_denied", "hitl": "permission_denied", "merge": "permission_denied"}
+    },
+    "journal_continuity": {"ref": "refs/ace/execution", "tip": "e621fa01a90e6f84089a8ee0377ee0a660cc2d6b", "commits": 20},
+    "legacy_pids_preserved": {"labd": 1858726, "native_herdr": 514709, "herdr_lab_chief": 909465},
+    "healthcheck_timers": {"lab-healthcheck.timer": "not-found", "lab-overseer-healthcheck.timer": "disabled"},
+    "adoption_friction_recorded": [
+      "First cut transition had no supported prepare path with an activated authorization.yml: write_exact is creation-only by design; configs proved byte-identical except the accepted activation delta, so check+restart sufficed without prepare/activate",
+      "Supported stop leaves three zero-byte flock artifacts in the endpoints dir; operator cleared own dead locks before checks (sockets were already gone)",
+      "git-archive umask produced group-writable directories under /usr/local/lib/lab; tightened to 0755/0644 root-owned before checks passed",
+      "Bundler plain lock floated ace-support-cli/config beyond reviewed pins; redone with --conservative naming all nine"
+    ],
+    "acceptance_limitations": [
+      "No real new ordinary assignment, attempt or merge executed on the new cut yet (.0 serial-merge gate remains)",
+      "HITL transport_uids remains empty; no fabricated decision delegation",
+      "Legacy attempt 8xbhrc remains unresolved",
+      "Two-project installed acceptance remains open"
+    ]
+  }
+}
