@@ -1,0 +1,1015 @@
+{
+  "schema_version": 1,
+  "source_sha": "2e9005f39fdd12a5cf3c1d831e3dcad1bfdc4bc0",
+  "packages": [
+    {
+      "name": "ace-assign",
+      "artifact_version": "0.70.0",
+      "source_sha": "2e9005f39fdd12a5cf3c1d831e3dcad1bfdc4bc0",
+      "runtime_dependencies": {
+        "ace-b36ts": [
+          "~> 0.14"
+        ],
+        "ace-bundle": [
+          "~> 0.45.1"
+        ],
+        "ace-git": [
+          "~> 0.30"
+        ],
+        "ace-herdr": [
+          "~> 0.6"
+        ],
+        "ace-llm": [
+          "~> 0.39"
+        ],
+        "ace-llm-providers-cli": [
+          "~> 0.36.1"
+        ],
+        "ace-review": [
+          "~> 0.60.3"
+        ],
+        "ace-runtime": [
+          "~> 0.3"
+        ],
+        "ace-support-cli": [
+          "~> 0.6"
+        ],
+        "ace-support-config": [
+          "~> 0.18"
+        ],
+        "ace-support-core": [
+          "~> 0.31"
+        ],
+        "ace-support-fs": [
+          "~> 0.3"
+        ],
+        "ace-support-markdown": [
+          "~> 0.3"
+        ],
+        "ace-support-nav": [
+          "~> 0.28"
+        ],
+        "ace-task": [
+          "~> 0.40"
+        ],
+        "ace-tmux": [
+          "~> 0.18"
+        ]
+      }
+    },
+    {
+      "name": "ace-b36ts",
+      "artifact_version": "0.14.11",
+      "source_sha": "b3b170355826012274cdd7cd418732c297b0db5a",
+      "runtime_dependencies": {
+        "ace-support-cli": [
+          "~> 0.6"
+        ],
+        "ace-support-config": [
+          "~> 0.18"
+        ],
+        "ace-support-core": [
+          "~> 0.31"
+        ]
+      }
+    },
+    {
+      "name": "ace-bundle",
+      "artifact_version": "0.45.1",
+      "source_sha": "2e9005f39fdd12a5cf3c1d831e3dcad1bfdc4bc0",
+      "runtime_dependencies": {
+        "ace-compressor": [
+          "~> 0.25"
+        ],
+        "ace-git": [
+          "~> 0.24"
+        ],
+        "ace-git-github": [
+          "~> 0.2"
+        ],
+        "ace-herdr": [
+          "~> 0.6"
+        ],
+        "ace-runtime": [
+          "~> 0.3"
+        ],
+        "ace-support-cli": [
+          "~> 0.6"
+        ],
+        "ace-support-config": [
+          "~> 0.18"
+        ],
+        "ace-support-core": [
+          "~> 0.32"
+        ],
+        "ace-support-fs": [
+          "~> 0.3"
+        ],
+        "ace-support-nav": [
+          "~> 0.28"
+        ]
+      },
+      "supersedes": [
+        "0.44.1"
+      ]
+    },
+    {
+      "name": "ace-compressor",
+      "artifact_version": "0.25.5",
+      "source_sha": "b3b170355826012274cdd7cd418732c297b0db5a",
+      "runtime_dependencies": {
+        "ace-support-cli": [
+          "~> 0.6"
+        ],
+        "ace-support-config": [
+          "~> 0.18"
+        ],
+        "ace-support-core": [
+          "~> 0.31"
+        ]
+      }
+    },
+    {
+      "name": "ace-demo",
+      "artifact_version": "0.26.2",
+      "source_sha": "5a0c9e05b00fe429dc59f36445ec43507fbefae4",
+      "runtime_dependencies": {
+        "ace-b36ts": [
+          "~> 0.14"
+        ],
+        "ace-herdr": [
+          "~> 0.4"
+        ],
+        "ace-runtime": [
+          "~> 0.1"
+        ],
+        "ace-support-cli": [
+          "~> 0.6"
+        ],
+        "ace-support-config": [
+          "~> 0.18"
+        ],
+        "ace-support-core": [
+          "~> 0.31"
+        ],
+        "ace-tmux": [
+          "~> 0.18"
+        ]
+      }
+    },
+    {
+      "name": "ace-design",
+      "artifact_version": "0.2.0",
+      "source_sha": "f653537283410935204fc210d13ce176c66abbb7",
+      "runtime_dependencies": {
+        "ace-b36ts": [
+          "~> 0.14"
+        ],
+        "ace-bundle": [
+          "~> 0.45"
+        ],
+        "ace-llm": [
+          "~> 0.42"
+        ],
+        "ace-llm-providers-cli": [
+          "~> 0.36.2"
+        ],
+        "ace-support-cli": [
+          "~> 0.6"
+        ],
+        "ace-support-config": [
+          "~> 0.18"
+        ],
+        "ace-support-core": [
+          "~> 0.32"
+        ]
+      }
+    },
+    {
+      "name": "ace-docs",
+      "artifact_version": "0.34.5",
+      "source_sha": "1e868bf84a68cc2edffe6023b0702ab742d25980",
+      "runtime_dependencies": {
+        "ace-b36ts": [
+          "~> 0.14"
+        ],
+        "ace-git": [
+          "~> 0.23"
+        ],
+        "ace-llm": [
+          "~> 0.39"
+        ],
+        "ace-support-cli": [
+          "~> 0.6"
+        ],
+        "ace-support-config": [
+          "~> 0.18"
+        ],
+        "ace-support-core": [
+          "~> 0.31"
+        ],
+        "ace-support-markdown": [
+          "~> 0.3"
+        ]
+      }
+    },
+    {
+      "name": "ace-git-commit",
+      "artifact_version": "0.26.7",
+      "source_sha": "4dbfa03399c01982665f3544ba27009a16dc374a",
+      "runtime_dependencies": {
+        "ace-git": [
+          "~> 0.23"
+        ],
+        "ace-llm": [
+          "~> 0.39"
+        ],
+        "ace-support-cli": [
+          "~> 0.6"
+        ],
+        "ace-support-config": [
+          "~> 0.18"
+        ],
+        "ace-support-core": [
+          "~> 0.31"
+        ]
+      }
+    },
+    {
+      "name": "ace-git-forgejo",
+      "artifact_version": "0.7.0",
+      "source_sha": "e8ea41547071dba82beb0f933885101b9e5a50aa",
+      "runtime_dependencies": {
+        "ace-git": [
+          "~> 0.30"
+        ]
+      }
+    },
+    {
+      "name": "ace-git-github",
+      "artifact_version": "0.4.0",
+      "source_sha": "42f37a320fc514c219346d1bdf3ce60df02cf4d8",
+      "runtime_dependencies": {
+        "ace-git": [
+          "~> 0.26"
+        ]
+      },
+      "supersedes": [
+        "0.1.2"
+      ]
+    },
+    {
+      "name": "ace-git-secrets",
+      "artifact_version": "0.15.11",
+      "source_sha": "b3b170355826012274cdd7cd418732c297b0db5a",
+      "runtime_dependencies": {
+        "ace-b36ts": [
+          "~> 0.14"
+        ],
+        "ace-support-cli": [
+          "~> 0.6"
+        ],
+        "ace-support-config": [
+          "~> 0.18"
+        ],
+        "ace-support-core": [
+          "~> 0.31"
+        ]
+      }
+    },
+    {
+      "name": "ace-git-worktree",
+      "artifact_version": "0.26.1",
+      "source_sha": "2e6bb64697fcfd6e0ac2169bdb7f4ba35246d033",
+      "runtime_dependencies": {
+        "ace-git": [
+          "~> 0.29"
+        ],
+        "ace-herdr": [
+          "~> 0.4"
+        ],
+        "ace-runtime": [
+          "~> 0.1"
+        ],
+        "ace-support-cli": [
+          "~> 0.6"
+        ],
+        "ace-support-config": [
+          "~> 0.18"
+        ],
+        "ace-support-core": [
+          "~> 0.31"
+        ],
+        "ace-task": [
+          "~> 0.37"
+        ],
+        "ace-tmux": [
+          "~> 0.18"
+        ]
+      }
+    },
+    {
+      "name": "ace-git",
+      "artifact_version": "0.30.0",
+      "source_sha": "b7d18fc23ba17e89591d88d3aa367ae24acdc917",
+      "runtime_dependencies": {
+        "ace-support-cli": [
+          "~> 0.6"
+        ],
+        "ace-support-config": [
+          "~> 0.18"
+        ],
+        "ace-support-core": [
+          "~> 0.31"
+        ]
+      }
+    },
+    {
+      "name": "ace-handbook-integration-claude",
+      "artifact_version": "0.3.12",
+      "source_sha": "d30bba22aba5a6c9e7fb99ca904202ac74358f18",
+      "runtime_dependencies": {
+        "ace-handbook": [
+          "~> 0.32"
+        ]
+      }
+    },
+    {
+      "name": "ace-handbook-integration-codex",
+      "artifact_version": "0.3.12",
+      "source_sha": "d30bba22aba5a6c9e7fb99ca904202ac74358f18",
+      "runtime_dependencies": {
+        "ace-handbook": [
+          "~> 0.32"
+        ]
+      }
+    },
+    {
+      "name": "ace-handbook-integration-gemini",
+      "artifact_version": "0.3.11",
+      "source_sha": "d30bba22aba5a6c9e7fb99ca904202ac74358f18",
+      "runtime_dependencies": {
+        "ace-handbook": [
+          "~> 0.32"
+        ]
+      }
+    },
+    {
+      "name": "ace-handbook-integration-opencode",
+      "artifact_version": "0.3.11",
+      "source_sha": "d30bba22aba5a6c9e7fb99ca904202ac74358f18",
+      "runtime_dependencies": {
+        "ace-handbook": [
+          "~> 0.32"
+        ]
+      }
+    },
+    {
+      "name": "ace-handbook-integration-pi",
+      "artifact_version": "0.5.0",
+      "source_sha": "889160007c2e19a6374b3429425e7da4d7d90854",
+      "runtime_dependencies": {
+        "ace-handbook": [
+          "~> 0.33"
+        ]
+      }
+    },
+    {
+      "name": "ace-handbook",
+      "artifact_version": "0.35.1",
+      "source_sha": "b97e7b75f41b173499c09f51008787d4ff8fdeec",
+      "runtime_dependencies": {
+        "ace-support-cli": [
+          "~> 0.6"
+        ],
+        "ace-support-config": [
+          "~> 0.18"
+        ],
+        "ace-support-core": [
+          "~> 0.31"
+        ],
+        "ace-support-nav": [
+          "~> 0.28"
+        ]
+      }
+    },
+    {
+      "name": "ace-herdr",
+      "artifact_version": "0.6.0",
+      "source_sha": "2e9005f39fdd12a5cf3c1d831e3dcad1bfdc4bc0",
+      "runtime_dependencies": {
+        "ace-hitl-contract": [
+          "~> 0.2.1"
+        ],
+        "ace-runtime": [
+          "~> 0.3"
+        ],
+        "ace-support-cli": [
+          "~> 0.6"
+        ],
+        "ace-support-config": [
+          "~> 0.18"
+        ],
+        "ace-support-core": [
+          "~> 0.31"
+        ]
+      }
+    },
+    {
+      "name": "ace-hitl-contract",
+      "artifact_version": "0.2.1",
+      "source_sha": "c7390f0909406ab53054cbcb4f37b4388b9f9744",
+      "runtime_dependencies": {}
+    },
+    {
+      "name": "ace-hitl-hermes",
+      "artifact_version": "0.4.0",
+      "source_sha": "7fd3fbcc7b3ebc7edabaf68caf909beaf56428f0",
+      "runtime_dependencies": {
+        "ace-hitl": [
+          "~> 0.15"
+        ],
+        "ace-hitl-contract": [
+          "~> 0.2.1"
+        ],
+        "ace-support-cli": [
+          "~> 0.6"
+        ]
+      }
+    },
+    {
+      "name": "ace-hitl",
+      "artifact_version": "0.16.0",
+      "source_sha": "2e9005f39fdd12a5cf3c1d831e3dcad1bfdc4bc0",
+      "runtime_dependencies": {
+        "ace-assign": [
+          "~> 0.70"
+        ],
+        "ace-b36ts": [
+          "~> 0.14"
+        ],
+        "ace-herdr": [
+          "~> 0.6"
+        ],
+        "ace-hitl-contract": [
+          "~> 0.2.1"
+        ],
+        "ace-runtime": [
+          "~> 0.3"
+        ],
+        "ace-support-cli": [
+          "~> 0.6"
+        ],
+        "ace-support-config": [
+          "~> 0.18"
+        ],
+        "ace-support-core": [
+          "~> 0.31"
+        ],
+        "ace-support-fs": [
+          "~> 0.3"
+        ],
+        "ace-support-items": [
+          "~> 0.15"
+        ]
+      }
+    },
+    {
+      "name": "ace-idea",
+      "artifact_version": "0.21.6",
+      "source_sha": "b3b170355826012274cdd7cd418732c297b0db5a",
+      "runtime_dependencies": {
+        "ace-b36ts": [
+          "~> 0.14"
+        ],
+        "ace-support-cli": [
+          "~> 0.6"
+        ],
+        "ace-support-core": [
+          "~> 0.31"
+        ],
+        "ace-support-fs": [
+          "~> 0.3"
+        ],
+        "ace-support-items": [
+          "~> 0.15"
+        ]
+      }
+    },
+    {
+      "name": "ace-lab",
+      "artifact_version": "0.8.0",
+      "source_sha": "2e9005f39fdd12a5cf3c1d831e3dcad1bfdc4bc0",
+      "runtime_dependencies": {
+        "ace-assign": [
+          "~> 0.70"
+        ],
+        "ace-git-forgejo": [
+          "~> 0.7"
+        ],
+        "ace-herdr": [
+          "~> 0.6"
+        ],
+        "ace-hitl": [
+          "~> 0.16"
+        ],
+        "ace-runtime": [
+          "~> 0.3"
+        ],
+        "ace-support-cli": [
+          "~> 0.6"
+        ],
+        "ace-support-config": [
+          "~> 0.18"
+        ],
+        "ace-support-core": [
+          "~> 0.31"
+        ]
+      }
+    },
+    {
+      "name": "ace-lint",
+      "artifact_version": "0.30.11",
+      "source_sha": "f653537283410935204fc210d13ce176c66abbb7",
+      "runtime_dependencies": {
+        "ace-b36ts": [
+          "~> 0.14"
+        ],
+        "ace-support-cli": [
+          "~> 0.6"
+        ],
+        "ace-support-config": [
+          "~> 0.18"
+        ],
+        "ace-support-core": [
+          "~> 0.31"
+        ]
+      }
+    },
+    {
+      "name": "ace-llm-providers-cli",
+      "artifact_version": "0.36.2",
+      "source_sha": "f653537283410935204fc210d13ce176c66abbb7",
+      "runtime_dependencies": {
+        "ace-llm": [
+          "~> 0.42"
+        ]
+      },
+      "supersedes": [
+        "0.35.2"
+      ]
+    },
+    {
+      "name": "ace-llm",
+      "artifact_version": "0.42.0",
+      "source_sha": "0036003a67a36da4c7cea0b397d4ead7ce419f58",
+      "runtime_dependencies": {
+        "ace-support-cli": [
+          "~> 0.6"
+        ],
+        "ace-support-config": [
+          "~> 0.18"
+        ],
+        "ace-support-core": [
+          "~> 0.31"
+        ],
+        "ace-support-models": [
+          "~> 0.12"
+        ]
+      },
+      "supersedes": [
+        "0.41.1"
+      ]
+    },
+    {
+      "name": "ace-overseer",
+      "artifact_version": "0.22.0",
+      "source_sha": "2e9005f39fdd12a5cf3c1d831e3dcad1bfdc4bc0",
+      "runtime_dependencies": {
+        "ace-assign": [
+          "~> 0.70"
+        ],
+        "ace-git": [
+          "~> 0.30"
+        ],
+        "ace-git-worktree": [
+          "~> 0.26"
+        ],
+        "ace-herdr": [
+          "~> 0.6"
+        ],
+        "ace-lab": [
+          "~> 0.8"
+        ],
+        "ace-review": [
+          "~> 0.60.3"
+        ],
+        "ace-runtime": [
+          "~> 0.3"
+        ],
+        "ace-support-cli": [
+          "~> 0.6"
+        ],
+        "ace-support-config": [
+          "~> 0.18"
+        ],
+        "ace-support-core": [
+          "~> 0.31"
+        ],
+        "ace-support-fs": [
+          "~> 0.3"
+        ],
+        "ace-task": [
+          "~> 0.40"
+        ],
+        "ace-tmux": [
+          "~> 0.18"
+        ]
+      }
+    },
+    {
+      "name": "ace-prompt-prep",
+      "artifact_version": "0.25.10",
+      "source_sha": "b3b170355826012274cdd7cd418732c297b0db5a",
+      "runtime_dependencies": {
+        "ace-b36ts": [
+          "~> 0.14"
+        ],
+        "ace-bundle": [
+          "~> 0.43"
+        ],
+        "ace-git": [
+          "~> 0.23"
+        ],
+        "ace-llm": [
+          "~> 0.39"
+        ],
+        "ace-support-cli": [
+          "~> 0.6"
+        ],
+        "ace-support-config": [
+          "~> 0.18"
+        ],
+        "ace-support-core": [
+          "~> 0.31"
+        ],
+        "ace-support-nav": [
+          "~> 0.28"
+        ],
+        "ace-task": [
+          "~> 0.37"
+        ]
+      }
+    },
+    {
+      "name": "ace-retro",
+      "artifact_version": "0.18.8",
+      "source_sha": "b3b170355826012274cdd7cd418732c297b0db5a",
+      "runtime_dependencies": {
+        "ace-b36ts": [
+          "~> 0.14"
+        ],
+        "ace-support-cli": [
+          "~> 0.6"
+        ],
+        "ace-support-core": [
+          "~> 0.31"
+        ],
+        "ace-support-fs": [
+          "~> 0.3"
+        ],
+        "ace-support-items": [
+          "~> 0.15"
+        ]
+      }
+    },
+    {
+      "name": "ace-review",
+      "artifact_version": "0.60.3",
+      "source_sha": "2e9005f39fdd12a5cf3c1d831e3dcad1bfdc4bc0",
+      "runtime_dependencies": {
+        "ace-b36ts": [
+          "~> 0.14"
+        ],
+        "ace-bundle": [
+          "~> 0.45"
+        ],
+        "ace-compressor": [
+          "~> 0.25"
+        ],
+        "ace-git": [
+          "~> 0.30"
+        ],
+        "ace-git-forgejo": [
+          "~> 0.7"
+        ],
+        "ace-git-github": [
+          "~> 0.3"
+        ],
+        "ace-llm": [
+          "~> 0.41"
+        ],
+        "ace-support-cli": [
+          "~> 0.6"
+        ],
+        "ace-support-config": [
+          "~> 0.18"
+        ],
+        "ace-support-core": [
+          "~> 0.32"
+        ],
+        "ace-support-fs": [
+          "~> 0.3"
+        ],
+        "ace-support-nav": [
+          "~> 0.28"
+        ],
+        "ace-task": [
+          "~> 0.37"
+        ]
+      },
+      "supersedes": [
+        "0.56.0"
+      ]
+    },
+    {
+      "name": "ace-runtime",
+      "artifact_version": "0.3.0",
+      "source_sha": "c7390f0909406ab53054cbcb4f37b4388b9f9744",
+      "runtime_dependencies": {
+        "ace-support-cli": [
+          "~> 0.6"
+        ],
+        "ace-support-config": [
+          "~> 0.18"
+        ],
+        "ace-support-core": [
+          "~> 0.31"
+        ]
+      }
+    },
+    {
+      "name": "ace-search",
+      "artifact_version": "0.26.6",
+      "source_sha": "b3b170355826012274cdd7cd418732c297b0db5a",
+      "runtime_dependencies": {
+        "ace-git": [
+          "~> 0.23"
+        ],
+        "ace-support-cli": [
+          "~> 0.6"
+        ],
+        "ace-support-config": [
+          "~> 0.18"
+        ],
+        "ace-support-core": [
+          "~> 0.31"
+        ]
+      }
+    },
+    {
+      "name": "ace-sim",
+      "artifact_version": "0.15.8",
+      "source_sha": "b3b170355826012274cdd7cd418732c297b0db5a",
+      "runtime_dependencies": {
+        "ace-b36ts": [
+          "~> 0.14"
+        ],
+        "ace-support-cli": [
+          "~> 0.6"
+        ],
+        "ace-support-config": [
+          "~> 0.18"
+        ],
+        "ace-support-core": [
+          "~> 0.31"
+        ]
+      }
+    },
+    {
+      "name": "ace-support-cli",
+      "artifact_version": "0.6.9",
+      "source_sha": "da11c275623efb6b707af367767b1deb9f8e005a",
+      "runtime_dependencies": {},
+      "supersedes": [
+        "0.6.8"
+      ]
+    },
+    {
+      "name": "ace-support-config",
+      "artifact_version": "0.18.2",
+      "source_sha": "3a1ba603a228bf0c2247290d41cc7000fb7bad42",
+      "runtime_dependencies": {
+        "ace-support-fs": [
+          "~> 0.3"
+        ]
+      }
+    },
+    {
+      "name": "ace-support-core",
+      "artifact_version": "0.32.0",
+      "source_sha": "08f0eaed5d9dc78cb2b251befa1212ccd2ea76f9",
+      "runtime_dependencies": {
+        "ace-support-cli": [
+          "~> 0.6"
+        ],
+        "ace-support-config": [
+          "~> 0.18"
+        ],
+        "ace-support-fs": [
+          "~> 0.3"
+        ]
+      }
+    },
+    {
+      "name": "ace-support-fs",
+      "artifact_version": "0.3.4",
+      "source_sha": "b3b170355826012274cdd7cd418732c297b0db5a",
+      "runtime_dependencies": {}
+    },
+    {
+      "name": "ace-support-items",
+      "artifact_version": "0.15.14",
+      "source_sha": "4dbfa03399c01982665f3544ba27009a16dc374a",
+      "runtime_dependencies": {
+        "ace-b36ts": [
+          "~> 0.14"
+        ],
+        "ace-support-core": [
+          "~> 0.31"
+        ]
+      }
+    },
+    {
+      "name": "ace-support-mac-clipboard",
+      "artifact_version": "0.3.5",
+      "source_sha": "b3b170355826012274cdd7cd418732c297b0db5a",
+      "runtime_dependencies": {}
+    },
+    {
+      "name": "ace-support-markdown",
+      "artifact_version": "0.3.6",
+      "source_sha": "023f13c1715954808d1a14a3ce175ff8f56441e3",
+      "runtime_dependencies": {}
+    },
+    {
+      "name": "ace-support-models",
+      "artifact_version": "0.12.4",
+      "source_sha": "f2088d79db752afd83eeba587709a67bedd58d60",
+      "runtime_dependencies": {
+        "ace-support-cli": [
+          "~> 0.6"
+        ],
+        "ace-support-core": [
+          "~> 0.31"
+        ]
+      }
+    },
+    {
+      "name": "ace-support-nav",
+      "artifact_version": "0.28.7",
+      "source_sha": "3a1ba603a228bf0c2247290d41cc7000fb7bad42",
+      "runtime_dependencies": {
+        "ace-support-cli": [
+          "~> 0.6"
+        ],
+        "ace-support-config": [
+          "~> 0.18"
+        ],
+        "ace-support-core": [
+          "~> 0.31"
+        ],
+        "ace-support-fs": [
+          "~> 0.3"
+        ]
+      }
+    },
+    {
+      "name": "ace-support-test-helpers",
+      "artifact_version": "0.14.7",
+      "source_sha": "f509facd5264098ea3ad18ca13149ee6c57af388",
+      "runtime_dependencies": {}
+    },
+    {
+      "name": "ace-task",
+      "artifact_version": "0.40.0",
+      "source_sha": "2e9005f39fdd12a5cf3c1d831e3dcad1bfdc4bc0",
+      "runtime_dependencies": {
+        "ace-b36ts": [
+          "~> 0.14"
+        ],
+        "ace-git": [
+          "~> 0.27"
+        ],
+        "ace-git-forgejo": [
+          "~> 0.5"
+        ],
+        "ace-git-github": [
+          "~> 0.4"
+        ],
+        "ace-support-cli": [
+          "~> 0.6"
+        ],
+        "ace-support-core": [
+          "~> 0.31"
+        ],
+        "ace-support-fs": [
+          "~> 0.3"
+        ],
+        "ace-support-items": [
+          "~> 0.15"
+        ],
+        "ace-support-markdown": [
+          "~> 0.3"
+        ]
+      },
+      "supersedes": [
+        "0.38.0"
+      ]
+    },
+    {
+      "name": "ace-test-runner-e2e",
+      "artifact_version": "0.43.0",
+      "source_sha": "737c4ef79e1ac220bf463ea9326f39e9df470119",
+      "runtime_dependencies": {
+        "ace-b36ts": [
+          "~> 0.14"
+        ],
+        "ace-llm": [
+          "~> 0.42"
+        ],
+        "ace-support-cli": [
+          "~> 0.6"
+        ],
+        "ace-support-config": [
+          "~> 0.18"
+        ],
+        "ace-support-core": [
+          "~> 0.31"
+        ],
+        "ace-support-test-helpers": [
+          "~> 0.14"
+        ]
+      },
+      "supersedes": [
+        "0.40.6"
+      ]
+    },
+    {
+      "name": "ace-test-runner",
+      "artifact_version": "0.28.1",
+      "source_sha": "b7d18fc23ba17e89591d88d3aa367ae24acdc917",
+      "runtime_dependencies": {
+        "ace-b36ts": [
+          "~> 0.14"
+        ],
+        "ace-support-cli": [
+          "~> 0.6"
+        ],
+        "ace-support-config": [
+          "~> 0.18"
+        ],
+        "ace-support-core": [
+          "~> 0.31"
+        ],
+        "ace-support-fs": [
+          "~> 0.3"
+        ],
+        "ace-support-test-helpers": [
+          "~> 0.14"
+        ]
+      },
+      "supersedes": [
+        "0.27.0"
+      ]
+    },
+    {
+      "name": "ace-test",
+      "artifact_version": "0.7.4",
+      "source_sha": "b6a8c1b7d793a529b675b47d567a706a72b9d1b0",
+      "runtime_dependencies": {}
+    },
+    {
+      "name": "ace-tmux",
+      "artifact_version": "0.19.0",
+      "source_sha": "5a0c9e05b00fe429dc59f36445ec43507fbefae4",
+      "runtime_dependencies": {
+        "ace-runtime": [
+          "~> 0.2"
+        ],
+        "ace-support-cli": [
+          "~> 0.6"
+        ],
+        "ace-support-config": [
+          "~> 0.18"
+        ],
+        "ace-support-core": [
+          "~> 0.31"
+        ],
+        "ace-support-fs": [
+          "~> 0.3"
+        ]
+      }
+    }
+  ]
+}

@@ -81,3 +81,31 @@ five skips), Review `2d1cf3e0-5ef8-4972-9c8e-ff984fef62e9` (998 / 3,252),
 and Design `4bf38ee0-6b0a-4c2a-abfd-163d33811fc8` (29 / 425).
 These results satisfy the source integration gate. They do not replace the
 previously documented expanded-suite baseline findings or installed acceptance.
+
+
+## Published main and propagation proof
+
+The Captain published all eight prepared main archives on 2026-10-16. Direct
+RubyGems version API readback matched all eight exact SHA-256 digests, including
+the final HITL/Lab bytes. The immutable source remains2e9005f39.
+
+The first TS-MONO-001 invocation used the old default installation manifest from
+10 October; it was interrupted and retained as stale verification input, not a
+release metadata failure. A new frozen 50-package manifest was generated from
+current source declarations and explicitly selected with ACE_RELEASE_MANIFEST.
+No failed run input was amended.
+
+Run8xfqwqr completed runner+independent verifier PASS4/4. Normal and full-index
+installs both exited0; classification SAFE. The documented finalize operation
+passed against the exact unchanged source manifest, installed version receipts,
+consumer-only dependency edges and completed pipeline. Generated final evidence
+is retained under `evidence/published-main-installation-acceptance.json`; archive
+readback and the exact installation manifest are retained alongside it.
+
+The Lab separately installed exact service45 and coordinator59 graphs from the
+public registry and selected them without restarting legacy consumers. Actual
+ordinary preparation imported the historical20-commit journal, then refused its
+UID966 readiness probe because root-directory creation obeyed umask077 instead
+of preserving requested traversal modes. Domain bug8wl.t.gad.2.0 owns the repair,
+RED/GREEN regression and deployed reconciliation. Source/runtime publication is
+verified; the ordinary owner is not yet active and installed autonomy remains open.

@@ -1,0 +1,439 @@
+{
+  "checked_at": "2026-10-16T17:52:28.967390+00:00",
+  "source_commit": "2e9005f39fdd12a5cf3c1d831e3dcad1bfdc4bc0",
+  "artifacts": [
+    {
+      "name": "ace-herdr",
+      "version": "0.6.0",
+      "expected_sha256": "6b25823fc1fccd89444deb5b57cb04dfb9a3035c5b53fd1e802ec0102c825ebb",
+      "published_sha256": "6b25823fc1fccd89444deb5b57cb04dfb9a3035c5b53fd1e802ec0102c825ebb",
+      "matches": true,
+      "dependencies": [
+        {
+          "name": "ace-hitl-contract",
+          "requirements": "~> 0.2.1"
+        },
+        {
+          "name": "ace-runtime",
+          "requirements": "~> 0.3"
+        },
+        {
+          "name": "ace-support-cli",
+          "requirements": "~> 0.6"
+        },
+        {
+          "name": "ace-support-config",
+          "requirements": "~> 0.18"
+        },
+        {
+          "name": "ace-support-core",
+          "requirements": "~> 0.31"
+        },
+        {
+          "name": "fiddle",
+          "requirements": ">= 1.1, < 2"
+        },
+        {
+          "name": "websocket-driver",
+          "requirements": "~> 0.8.2"
+        }
+      ],
+      "source": "https://rubygems.org/api/v2/rubygems/ace-herdr/versions/0.6.0.json"
+    },
+    {
+      "name": "ace-bundle",
+      "version": "0.45.1",
+      "expected_sha256": "19fe3b16cb1f5be5d4ca65e31eaedb8da8038b7cc037c9cc867464f760794adc",
+      "published_sha256": "19fe3b16cb1f5be5d4ca65e31eaedb8da8038b7cc037c9cc867464f760794adc",
+      "matches": true,
+      "dependencies": [
+        {
+          "name": "ace-compressor",
+          "requirements": "~> 0.25"
+        },
+        {
+          "name": "ace-git",
+          "requirements": "~> 0.24"
+        },
+        {
+          "name": "ace-git-github",
+          "requirements": "~> 0.2"
+        },
+        {
+          "name": "ace-herdr",
+          "requirements": "~> 0.6"
+        },
+        {
+          "name": "ace-runtime",
+          "requirements": "~> 0.3"
+        },
+        {
+          "name": "ace-support-cli",
+          "requirements": "~> 0.6"
+        },
+        {
+          "name": "ace-support-config",
+          "requirements": "~> 0.18"
+        },
+        {
+          "name": "ace-support-core",
+          "requirements": "~> 0.32"
+        },
+        {
+          "name": "ace-support-fs",
+          "requirements": "~> 0.3"
+        },
+        {
+          "name": "ace-support-nav",
+          "requirements": "~> 0.28"
+        }
+      ],
+      "source": "https://rubygems.org/api/v2/rubygems/ace-bundle/versions/0.45.1.json"
+    },
+    {
+      "name": "ace-task",
+      "version": "0.40.0",
+      "expected_sha256": "19b36f574bdc925a44a8a9edb40c0fa25894da350b462c3dfc988f1c1c2d93b1",
+      "published_sha256": "19b36f574bdc925a44a8a9edb40c0fa25894da350b462c3dfc988f1c1c2d93b1",
+      "matches": true,
+      "dependencies": [
+        {
+          "name": "ace-b36ts",
+          "requirements": "~> 0.14"
+        },
+        {
+          "name": "ace-git",
+          "requirements": "~> 0.27"
+        },
+        {
+          "name": "ace-git-forgejo",
+          "requirements": "~> 0.5"
+        },
+        {
+          "name": "ace-git-github",
+          "requirements": "~> 0.4"
+        },
+        {
+          "name": "ace-support-cli",
+          "requirements": "~> 0.6"
+        },
+        {
+          "name": "ace-support-core",
+          "requirements": "~> 0.31"
+        },
+        {
+          "name": "ace-support-fs",
+          "requirements": "~> 0.3"
+        },
+        {
+          "name": "ace-support-items",
+          "requirements": "~> 0.15"
+        },
+        {
+          "name": "ace-support-markdown",
+          "requirements": "~> 0.3"
+        }
+      ],
+      "source": "https://rubygems.org/api/v2/rubygems/ace-task/versions/0.40.0.json"
+    },
+    {
+      "name": "ace-review",
+      "version": "0.60.3",
+      "expected_sha256": "bdc94c75de0c7156f4adee1cacd314079ef89adf86ffdce938c7d79457d73bfd",
+      "published_sha256": "bdc94c75de0c7156f4adee1cacd314079ef89adf86ffdce938c7d79457d73bfd",
+      "matches": true,
+      "dependencies": [
+        {
+          "name": "ace-b36ts",
+          "requirements": "~> 0.14"
+        },
+        {
+          "name": "ace-bundle",
+          "requirements": "~> 0.45"
+        },
+        {
+          "name": "ace-compressor",
+          "requirements": "~> 0.25"
+        },
+        {
+          "name": "ace-git",
+          "requirements": "~> 0.30"
+        },
+        {
+          "name": "ace-git-forgejo",
+          "requirements": "~> 0.7"
+        },
+        {
+          "name": "ace-git-github",
+          "requirements": "~> 0.3"
+        },
+        {
+          "name": "ace-llm",
+          "requirements": "~> 0.41"
+        },
+        {
+          "name": "ace-support-cli",
+          "requirements": "~> 0.6"
+        },
+        {
+          "name": "ace-support-config",
+          "requirements": "~> 0.18"
+        },
+        {
+          "name": "ace-support-core",
+          "requirements": "~> 0.32"
+        },
+        {
+          "name": "ace-support-fs",
+          "requirements": "~> 0.3"
+        },
+        {
+          "name": "ace-support-nav",
+          "requirements": "~> 0.28"
+        },
+        {
+          "name": "ace-task",
+          "requirements": "~> 0.37"
+        },
+        {
+          "name": "json",
+          "requirements": ">= 2.20, < 3"
+        }
+      ],
+      "source": "https://rubygems.org/api/v2/rubygems/ace-review/versions/0.60.3.json"
+    },
+    {
+      "name": "ace-assign",
+      "version": "0.70.0",
+      "expected_sha256": "aa4d1240938b38a34a7cddb3965f17b714d624993fff7bf7a45004a97d7b7859",
+      "published_sha256": "aa4d1240938b38a34a7cddb3965f17b714d624993fff7bf7a45004a97d7b7859",
+      "matches": true,
+      "dependencies": [
+        {
+          "name": "ace-b36ts",
+          "requirements": "~> 0.14"
+        },
+        {
+          "name": "ace-bundle",
+          "requirements": "~> 0.45.1"
+        },
+        {
+          "name": "ace-git",
+          "requirements": "~> 0.30"
+        },
+        {
+          "name": "ace-herdr",
+          "requirements": "~> 0.6"
+        },
+        {
+          "name": "ace-llm",
+          "requirements": "~> 0.39"
+        },
+        {
+          "name": "ace-llm-providers-cli",
+          "requirements": "~> 0.36.1"
+        },
+        {
+          "name": "ace-review",
+          "requirements": "~> 0.60.3"
+        },
+        {
+          "name": "ace-runtime",
+          "requirements": "~> 0.3"
+        },
+        {
+          "name": "ace-support-cli",
+          "requirements": "~> 0.6"
+        },
+        {
+          "name": "ace-support-config",
+          "requirements": "~> 0.18"
+        },
+        {
+          "name": "ace-support-core",
+          "requirements": "~> 0.31"
+        },
+        {
+          "name": "ace-support-fs",
+          "requirements": "~> 0.3"
+        },
+        {
+          "name": "ace-support-markdown",
+          "requirements": "~> 0.3"
+        },
+        {
+          "name": "ace-support-nav",
+          "requirements": "~> 0.28"
+        },
+        {
+          "name": "ace-task",
+          "requirements": "~> 0.40"
+        },
+        {
+          "name": "ace-tmux",
+          "requirements": "~> 0.18"
+        },
+        {
+          "name": "json",
+          "requirements": ">= 2.20, < 3"
+        }
+      ],
+      "source": "https://rubygems.org/api/v2/rubygems/ace-assign/versions/0.70.0.json"
+    },
+    {
+      "name": "ace-hitl",
+      "version": "0.16.0",
+      "expected_sha256": "f94333e6396d7265ec99e2b0e021ab41435be2ff1a87ce671a224d8ee648b2f8",
+      "published_sha256": "f94333e6396d7265ec99e2b0e021ab41435be2ff1a87ce671a224d8ee648b2f8",
+      "matches": true,
+      "dependencies": [
+        {
+          "name": "ace-assign",
+          "requirements": "~> 0.70"
+        },
+        {
+          "name": "ace-b36ts",
+          "requirements": "~> 0.14"
+        },
+        {
+          "name": "ace-herdr",
+          "requirements": "~> 0.6"
+        },
+        {
+          "name": "ace-hitl-contract",
+          "requirements": "~> 0.2.1"
+        },
+        {
+          "name": "ace-runtime",
+          "requirements": "~> 0.3"
+        },
+        {
+          "name": "ace-support-cli",
+          "requirements": "~> 0.6"
+        },
+        {
+          "name": "ace-support-config",
+          "requirements": "~> 0.18"
+        },
+        {
+          "name": "ace-support-core",
+          "requirements": "~> 0.31"
+        },
+        {
+          "name": "ace-support-fs",
+          "requirements": "~> 0.3"
+        },
+        {
+          "name": "ace-support-items",
+          "requirements": "~> 0.15"
+        }
+      ],
+      "source": "https://rubygems.org/api/v2/rubygems/ace-hitl/versions/0.16.0.json"
+    },
+    {
+      "name": "ace-lab",
+      "version": "0.8.0",
+      "expected_sha256": "0c4e4f52ecdae336e40c6ee5e1dcbfa8185f10250543e9f84c8277d80942a239",
+      "published_sha256": "0c4e4f52ecdae336e40c6ee5e1dcbfa8185f10250543e9f84c8277d80942a239",
+      "matches": true,
+      "dependencies": [
+        {
+          "name": "ace-assign",
+          "requirements": "~> 0.70"
+        },
+        {
+          "name": "ace-git-forgejo",
+          "requirements": "~> 0.7"
+        },
+        {
+          "name": "ace-herdr",
+          "requirements": "~> 0.6"
+        },
+        {
+          "name": "ace-hitl",
+          "requirements": "~> 0.16"
+        },
+        {
+          "name": "ace-runtime",
+          "requirements": "~> 0.3"
+        },
+        {
+          "name": "ace-support-cli",
+          "requirements": "~> 0.6"
+        },
+        {
+          "name": "ace-support-config",
+          "requirements": "~> 0.18"
+        },
+        {
+          "name": "ace-support-core",
+          "requirements": "~> 0.31"
+        }
+      ],
+      "source": "https://rubygems.org/api/v2/rubygems/ace-lab/versions/0.8.0.json"
+    },
+    {
+      "name": "ace-overseer",
+      "version": "0.22.0",
+      "expected_sha256": "73905a344e605f2fe025d432d48a12603f6b71ba3cb0ce02da1dc81a028ee1f5",
+      "published_sha256": "73905a344e605f2fe025d432d48a12603f6b71ba3cb0ce02da1dc81a028ee1f5",
+      "matches": true,
+      "dependencies": [
+        {
+          "name": "ace-assign",
+          "requirements": "~> 0.70"
+        },
+        {
+          "name": "ace-git",
+          "requirements": "~> 0.30"
+        },
+        {
+          "name": "ace-git-worktree",
+          "requirements": "~> 0.26"
+        },
+        {
+          "name": "ace-herdr",
+          "requirements": "~> 0.6"
+        },
+        {
+          "name": "ace-lab",
+          "requirements": "~> 0.8"
+        },
+        {
+          "name": "ace-review",
+          "requirements": "~> 0.60.3"
+        },
+        {
+          "name": "ace-runtime",
+          "requirements": "~> 0.3"
+        },
+        {
+          "name": "ace-support-cli",
+          "requirements": "~> 0.6"
+        },
+        {
+          "name": "ace-support-config",
+          "requirements": "~> 0.18"
+        },
+        {
+          "name": "ace-support-core",
+          "requirements": "~> 0.31"
+        },
+        {
+          "name": "ace-support-fs",
+          "requirements": "~> 0.3"
+        },
+        {
+          "name": "ace-task",
+          "requirements": "~> 0.40"
+        },
+        {
+          "name": "ace-tmux",
+          "requirements": "~> 0.18"
+        }
+      ],
+      "source": "https://rubygems.org/api/v2/rubygems/ace-overseer/versions/0.22.0.json"
+    }
+  ],
+  "success": true
+}
