@@ -1,17 +1,18 @@
 ---
 id: 8xf.t.ei9.4
-status: draft
+status: pending
 priority: high
 created_at: "2026-10-16 10:57:19"
 tags: []
 parent: 8xf.t.ei9
 estimate: large
-dependencies: ["8xf.t.ei9.0", "8xf.t.ei9.1", "8xf.t.ei9.2", "8xf.t.ei9.3"]
+dependencies: [8xf.t.ei9.0, 8xf.t.ei9.1, 8xf.t.ei9.2, 8xf.t.ei9.3]
 bundle:
   presets: [project]
-  files: ["AGENTS.md", "docs/tools.md", ".ace-tasks/8xf.t.ei9-wave-3/8xf.t.ei9-wave-3.s.md", ".ace-tasks/8xf.t.ei9-wave-3/environment-contract.md", ".ace-tasks/8xf.t.ei9-wave-3/observations-and-acceptance.md", ".ace-tasks/8xf.t.ei9-wave-3/ux/usage.md", ".ace-tasks/8wr.t.qk0-coordinate-responsive-overseer-roles-without/8wr.t.qk0-coordinate-responsive-overseer-roles-without-the.s.md", ".ace-tasks/8wr.t.qkb-run-assignment-delivery-workflows-through/8wr.t.qkb-run-assignment-delivery-workflows-through-named-forge.s.md", ".ace-tasks/8x3.t.xz9-execute-scoped-services-across-os/8x3.t.xz9-execute-scoped-services-across-os-users-with.s.md", "ace-overseer/handbook/skills/as-overseer-configure-project/SKILL.md", "ace-overseer/handbook/workflow-instructions/overseer/configure-project.wf.md", "ace-assign/.ace-defaults/assign/presets/supervise-delivery.yml", "ace-assign/.ace-defaults/assign/presets/integrate-batch.yml", "ace-assign/.ace-defaults/assign/presets/deliver-release.yml", "ace-assign/.ace-defaults/assign/presets/close-delivery.yml"]
+  files: [AGENTS.md, docs/tools.md, .ace-tasks/8xf.t.ei9-wave-3/8xf.t.ei9-wave-3.s.md, .ace-tasks/8xf.t.ei9-wave-3/environment-contract.md, .ace-tasks/8xf.t.ei9-wave-3/observations-and-acceptance.md, .ace-tasks/8xf.t.ei9-wave-3/ux/usage.md, .ace-tasks/8wr.t.qk0-coordinate-responsive-overseer-roles-without/8wr.t.qk0-coordinate-responsive-overseer-roles-without-the.s.md, .ace-tasks/8wr.t.qkb-run-assignment-delivery-workflows-through/8wr.t.qkb-run-assignment-delivery-workflows-through-named-forge.s.md, .ace-tasks/8x3.t.xz9-execute-scoped-services-across-os/8x3.t.xz9-execute-scoped-services-across-os-users-with.s.md, ace-overseer/handbook/skills/as-overseer-configure-project/SKILL.md, ace-overseer/handbook/workflow-instructions/overseer/configure-project.wf.md, ace-assign/.ace-defaults/assign/presets/supervise-delivery.yml, ace-assign/.ace-defaults/assign/presets/integrate-batch.yml, ace-assign/.ace-defaults/assign/presets/deliver-release.yml, ace-assign/.ace-defaults/assign/presets/close-delivery.yml]
   commands: []
-title: "Advance serial integration through native wake cycles"
+title: Advance serial integration through native wake cycles
+needs_review: false
 ---
 
 # Advance serial integration through native wake cycles

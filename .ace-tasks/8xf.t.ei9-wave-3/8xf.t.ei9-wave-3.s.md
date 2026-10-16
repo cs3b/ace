@@ -1,6 +1,6 @@
 ---
 id: 8xf.t.ei9
-status: draft
+status: pending
 priority: high
 created_at: "2026-10-16 09:40:17"
 estimate: TBD
@@ -8,9 +8,10 @@ dependencies: []
 tags: [overseer, autonomy, program]
 bundle:
   presets: [project]
-  files: ["AGENTS.md", "docs/tools.md", ".ace-tasks/8xb.t.iy6-run-project-commands-with-explicitly/8xb.t.iy6-run-project-commands-with-explicitly-authorized.s.md", ".ace-tasks/8xa.t.nh0-ace-hitlace-hitl-hermes-shared/8xa.t.nh0-ace-hitlace-hitl-hermes-shared-hermes-multi.s.md", ".ace-tasks/8x3.t.xz9-execute-scoped-services-across-os/8x3.t.xz9-execute-scoped-services-across-os-users-with.s.md", ".ace-tasks/8x0.t.ig3-unify-review-loop-ownership-and/8x0.t.ig3-unify-review-loop-ownership-and-effective-policy.s.md", ".ace-tasks/8wr.t.qkb-run-assignment-delivery-workflows-through/8wr.t.qkb-run-assignment-delivery-workflows-through-named-forge.s.md", ".ace-tasks/8wr.t.qk0-coordinate-responsive-overseer-roles-without/8wr.t.qk0-coordinate-responsive-overseer-roles-without-the.s.md", ".ace-tasks/8x3.t.xz9-execute-scoped-services-across-os/5-make-integration-handoff-actionable-accepted/8x3.t.xz9.5-make-integration-handoff-actionable-accepted-attempts.s.md", "ace-overseer/handbook/skills/as-overseer-configure-project/SKILL.md", "ace-overseer/handbook/workflow-instructions/overseer/configure-project.wf.md", "ace-assign/.ace-defaults/assign/presets/supervise-delivery.yml", "ace-assign/.ace-defaults/assign/presets/integrate-batch.yml", "ace-assign/.ace-defaults/assign/presets/deliver-release.yml", "ace-assign/.ace-defaults/assign/presets/close-delivery.yml", ".ace-tasks/8xf.t.ei9-wave-3/environment-contract.md", ".ace-tasks/8xf.t.ei9-wave-3/observations-and-acceptance.md", ".ace-tasks/8xf.t.ei9-wave-3/ux/usage.md"]
+  files: [AGENTS.md, docs/tools.md, .ace-tasks/8xb.t.iy6-run-project-commands-with-explicitly/8xb.t.iy6-run-project-commands-with-explicitly-authorized.s.md, .ace-tasks/8xa.t.nh0-ace-hitlace-hitl-hermes-shared/8xa.t.nh0-ace-hitlace-hitl-hermes-shared-hermes-multi.s.md, .ace-tasks/8x3.t.xz9-execute-scoped-services-across-os/8x3.t.xz9-execute-scoped-services-across-os-users-with.s.md, .ace-tasks/8x0.t.ig3-unify-review-loop-ownership-and/8x0.t.ig3-unify-review-loop-ownership-and-effective-policy.s.md, .ace-tasks/8wr.t.qkb-run-assignment-delivery-workflows-through/8wr.t.qkb-run-assignment-delivery-workflows-through-named-forge.s.md, .ace-tasks/8wr.t.qk0-coordinate-responsive-overseer-roles-without/8wr.t.qk0-coordinate-responsive-overseer-roles-without-the.s.md, .ace-tasks/8x3.t.xz9-execute-scoped-services-across-os/5-make-integration-handoff-actionable-accepted/8x3.t.xz9.5-make-integration-handoff-actionable-accepted-attempts.s.md, ace-overseer/handbook/skills/as-overseer-configure-project/SKILL.md, ace-overseer/handbook/workflow-instructions/overseer/configure-project.wf.md, ace-assign/.ace-defaults/assign/presets/supervise-delivery.yml, ace-assign/.ace-defaults/assign/presets/integrate-batch.yml, ace-assign/.ace-defaults/assign/presets/deliver-release.yml, ace-assign/.ace-defaults/assign/presets/close-delivery.yml, .ace-tasks/8xf.t.ei9-wave-3/environment-contract.md, .ace-tasks/8xf.t.ei9-wave-3/observations-and-acceptance.md, .ace-tasks/8xf.t.ei9-wave-3/ux/usage.md]
   commands: []
 title: Wave 3
+needs_review: false
 ---
 
 # Wave 3
@@ -153,8 +154,9 @@ parent completion. Worker/source done alone cannot close delivery/installed work
 
 Observations-and-acceptance.md maps incidents and all requested behaviors to child
 checks. ux/usage.md defines proposed semantic surfaces, not invented shell commands.
-This authoring candidate receives independent readiness review now. After approval,
-public CLI promotion to pending/needs_review=false makes parent and children ready
-for implementation; do not repeat the same specification approval as a new gate.
-Actual external effects still require their declared scope/readiness. No code,
-runtime mutation or secret material is included in this specification change.
+Independent readiness review APPROVED the complete tree at source commit
+5cf0d0d3244d50af02a001fd6eb2002030694ef6. Parent and all ten children are now
+pending/needs_review=false through the public CLI and ready for implementation;
+do not repeat the same specification approval as a new gate. Actual external
+effects still require their declared scope/readiness. No code, runtime mutation
+or secret material is included in this specification change.

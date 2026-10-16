@@ -1,6 +1,6 @@
 ---
 id: 8xf.t.ei9.1
-status: draft
+status: pending
 priority: high
 created_at: "2026-10-16 10:57:17"
 tags: []
@@ -9,9 +9,10 @@ estimate: medium
 dependencies: []
 bundle:
   presets: [project]
-  files: ["AGENTS.md", "docs/tools.md", ".ace-tasks/8xf.t.ei9-wave-3/8xf.t.ei9-wave-3.s.md", ".ace-tasks/8xf.t.ei9-wave-3/environment-contract.md", ".ace-tasks/8xf.t.ei9-wave-3/observations-and-acceptance.md", ".ace-tasks/8xf.t.ei9-wave-3/ux/usage.md", ".ace-tasks/8wr.t.qk0-coordinate-responsive-overseer-roles-without/8wr.t.qk0-coordinate-responsive-overseer-roles-without-the.s.md", ".ace-tasks/8wr.t.qkb-run-assignment-delivery-workflows-through/8wr.t.qkb-run-assignment-delivery-workflows-through-named-forge.s.md", "ace-overseer/handbook/skills/as-overseer-configure-project/SKILL.md", "ace-overseer/handbook/workflow-instructions/overseer/configure-project.wf.md", "ace-assign/.ace-defaults/assign/presets/supervise-delivery.yml", "ace-assign/.ace-defaults/assign/presets/integrate-batch.yml", "ace-assign/.ace-defaults/assign/presets/deliver-release.yml", "ace-assign/.ace-defaults/assign/presets/close-delivery.yml"]
+  files: [AGENTS.md, docs/tools.md, .ace-tasks/8xf.t.ei9-wave-3/8xf.t.ei9-wave-3.s.md, .ace-tasks/8xf.t.ei9-wave-3/environment-contract.md, .ace-tasks/8xf.t.ei9-wave-3/observations-and-acceptance.md, .ace-tasks/8xf.t.ei9-wave-3/ux/usage.md, .ace-tasks/8wr.t.qk0-coordinate-responsive-overseer-roles-without/8wr.t.qk0-coordinate-responsive-overseer-roles-without-the.s.md, .ace-tasks/8wr.t.qkb-run-assignment-delivery-workflows-through/8wr.t.qkb-run-assignment-delivery-workflows-through-named-forge.s.md, ace-overseer/handbook/skills/as-overseer-configure-project/SKILL.md, ace-overseer/handbook/workflow-instructions/overseer/configure-project.wf.md, ace-assign/.ace-defaults/assign/presets/supervise-delivery.yml, ace-assign/.ace-defaults/assign/presets/integrate-batch.yml, ace-assign/.ace-defaults/assign/presets/deliver-release.yml, ace-assign/.ace-defaults/assign/presets/close-delivery.yml]
   commands: []
-title: "Bootstrap project context and truthful capability snapshots"
+title: Bootstrap project context and truthful capability snapshots
+needs_review: false
 ---
 
 # Bootstrap project context and truthful capability snapshots

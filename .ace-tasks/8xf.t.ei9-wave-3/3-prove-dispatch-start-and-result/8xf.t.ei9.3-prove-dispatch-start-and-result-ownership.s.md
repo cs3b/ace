@@ -1,17 +1,18 @@
 ---
 id: 8xf.t.ei9.3
-status: draft
+status: pending
 priority: high
 created_at: "2026-10-16 10:57:18"
 tags: []
 parent: 8xf.t.ei9
 estimate: medium
-dependencies: ["8xf.t.ei9.1"]
+dependencies: [8xf.t.ei9.1]
 bundle:
   presets: [project]
-  files: ["AGENTS.md", "docs/tools.md", ".ace-tasks/8xf.t.ei9-wave-3/8xf.t.ei9-wave-3.s.md", ".ace-tasks/8xf.t.ei9-wave-3/environment-contract.md", ".ace-tasks/8xf.t.ei9-wave-3/observations-and-acceptance.md", ".ace-tasks/8xf.t.ei9-wave-3/ux/usage.md", ".ace-tasks/8wr.t.qk0-coordinate-responsive-overseer-roles-without/8wr.t.qk0-coordinate-responsive-overseer-roles-without-the.s.md", ".ace-tasks/8wr.t.qkb-run-assignment-delivery-workflows-through/8wr.t.qkb-run-assignment-delivery-workflows-through-named-forge.s.md", ".ace-tasks/8x3.t.xz9-execute-scoped-services-across-os/8x3.t.xz9-execute-scoped-services-across-os-users-with.s.md"]
+  files: [AGENTS.md, docs/tools.md, .ace-tasks/8xf.t.ei9-wave-3/8xf.t.ei9-wave-3.s.md, .ace-tasks/8xf.t.ei9-wave-3/environment-contract.md, .ace-tasks/8xf.t.ei9-wave-3/observations-and-acceptance.md, .ace-tasks/8xf.t.ei9-wave-3/ux/usage.md, .ace-tasks/8wr.t.qk0-coordinate-responsive-overseer-roles-without/8wr.t.qk0-coordinate-responsive-overseer-roles-without-the.s.md, .ace-tasks/8wr.t.qkb-run-assignment-delivery-workflows-through/8wr.t.qkb-run-assignment-delivery-workflows-through-named-forge.s.md, .ace-tasks/8x3.t.xz9-execute-scoped-services-across-os/8x3.t.xz9-execute-scoped-services-across-os-users-with.s.md]
   commands: []
-title: "Prove dispatch start and result ownership"
+title: Prove dispatch start and result ownership
+needs_review: false
 ---
 
 # Prove dispatch start and result ownership

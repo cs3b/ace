@@ -1,17 +1,18 @@
 ---
 id: 8xf.t.ei9.9
-status: draft
+status: pending
 priority: high
 created_at: "2026-10-16 10:57:20"
 tags: []
 parent: 8xf.t.ei9
 estimate: large
-dependencies: ["8xf.t.ei9.1"]
+dependencies: [8xf.t.ei9.1]
 bundle:
   presets: [project]
-  files: [".ace-tasks/_archive/8x/v/8wr.t.qjz-resolve-second-commander-proposals-with/8wr.t.qjz-resolve-second-commander-proposals-with-a-sixteen.s.md", "AGENTS.md", "docs/tools.md", ".ace-tasks/8xf.t.ei9-wave-3/8xf.t.ei9-wave-3.s.md", ".ace-tasks/8xf.t.ei9-wave-3/environment-contract.md", ".ace-tasks/8xf.t.ei9-wave-3/observations-and-acceptance.md", ".ace-tasks/8xf.t.ei9-wave-3/ux/usage.md", ".ace-tasks/8xa.t.nh0-ace-hitlace-hitl-hermes-shared/8xa.t.nh0-ace-hitlace-hitl-hermes-shared-hermes-multi.s.md", ".ace-tasks/8wr.t.qk0-coordinate-responsive-overseer-roles-without/8wr.t.qk0-coordinate-responsive-overseer-roles-without-the.s.md", ".ace-tasks/8wr.t.qkb-run-assignment-delivery-workflows-through/8wr.t.qkb-run-assignment-delivery-workflows-through-named-forge.s.md"]
+  files: [.ace-tasks/_archive/8x/v/8wr.t.qjz-resolve-second-commander-proposals-with/8wr.t.qjz-resolve-second-commander-proposals-with-a-sixteen.s.md, AGENTS.md, docs/tools.md, .ace-tasks/8xf.t.ei9-wave-3/8xf.t.ei9-wave-3.s.md, .ace-tasks/8xf.t.ei9-wave-3/environment-contract.md, .ace-tasks/8xf.t.ei9-wave-3/observations-and-acceptance.md, .ace-tasks/8xf.t.ei9-wave-3/ux/usage.md, .ace-tasks/8xa.t.nh0-ace-hitlace-hitl-hermes-shared/8xa.t.nh0-ace-hitlace-hitl-hermes-shared-hermes-multi.s.md, .ace-tasks/8wr.t.qk0-coordinate-responsive-overseer-roles-without/8wr.t.qk0-coordinate-responsive-overseer-roles-without-the.s.md, .ace-tasks/8wr.t.qkb-run-assignment-delivery-workflows-through/8wr.t.qkb-run-assignment-delivery-workflows-through-named-forge.s.md]
   commands: []
-title: "Route project HITL and delegated commander decisions"
+title: Route project HITL and delegated commander decisions
+needs_review: false
 ---
 
 # Route project HITL and delegated commander decisions
