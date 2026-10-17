@@ -1,11 +1,11 @@
 ---
 id: 8wr.t.qkb.1
-status: draft
+status: skipped
 priority: high
 created_at: "2026-09-28 17:44:29"
 estimate: TBD
 dependencies: [8wr.t.qkb.0, 8wr.t.qk0, 8wr.t.qjx, 8wr.t.qjz, 8x3.t.xz9.4]
-tags: [lab-readiness]
+tags: [lab-readiness, superseded-no-daemon]
 parent: 8wr.t.qkb
 bundle:
   presets: [project]

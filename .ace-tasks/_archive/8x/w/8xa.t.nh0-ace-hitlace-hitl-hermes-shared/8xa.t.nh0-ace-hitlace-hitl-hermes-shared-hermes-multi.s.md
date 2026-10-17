@@ -1,9 +1,9 @@
 ---
 id: 8xa.t.nh0
-status: draft
+status: skipped
 priority: high
 created_at: "2026-10-12 00:30:00"
-estimate:
+estimate: 
 dependencies: [8x3.t.xz9]
 external_dependencies: [lab-config:8wl.t.gad.8, lab-config:8wl.t.gad.b]
 tags: [ace-hitl, ace-hitl-hermes, gad8, transport]
@@ -336,3 +336,12 @@ design evidence `.ace-local/evidence/gad8-hitl/shared-transport-topology-contrac
 (provenance only; corrected per one-Hermes). Tool-minted after owner reconciliation: no
 existing ACE task owns ace-hitl transport topology (xz9 = protected scope;
 vs3 = publication/HITL behavior; gad.8/gad.b = lab-config deployment side).
+
+## Superseded (2026-10-17, Captain's architecture decision)
+
+The shared-Hermes cross-VM transport model (multi-project groups, mTLS,
+shared poller) assumed per-lab daemons — superseded by the no-daemon,
+file-based decision. ace-hitl-hermes was never deployed and has no
+dependents outside the HITL family (verified against all gemspecs); its
+removal is a follow-up decision. Per-lab HITL configuration continues in
+8xg.t.qn6.5 (ace-lab install).

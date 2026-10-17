@@ -1,6 +1,6 @@
 ---
 id: 8ws.t.lq1
-status: in-progress
+status: done
 priority: high
 created_at: "2026-09-29 14:28:56"
 estimate: large
@@ -195,3 +195,11 @@ Evidence: release-preparation-2026-10-05.md, publication-verification-2026-10-05
 - [ ] gad.3 removes legacy only after gad.2 passes and retests affected paths; gad.4 then verifies cold start. These post-acceptance outcomes remain distinct.
 
 This checklist links the one installed owner; it does not duplicate its row states or run another Lab test. Failure fixes return to source owners without fabricating historic completion evidence. No stopped probe is authorized to run through another agent, model or root route by this ownership change.
+
+## Closure note (2026-10-17)
+
+Foundation integration delivered: published dependency graph verified
+(TS-MONO-001 runs 8x9q6ex/8xfqwqr PASS 4/4), both children done. The
+remaining "installed acceptance in gad.2" residue was superseded by the
+Captain's architecture decision (state on files, no background processes).
+Successor: 8xg.t.qn6.

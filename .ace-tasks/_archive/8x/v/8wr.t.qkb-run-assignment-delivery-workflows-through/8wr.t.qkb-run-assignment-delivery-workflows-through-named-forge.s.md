@@ -1,6 +1,6 @@
 ---
 id: 8wr.t.qkb
-status: blocked
+status: done
 priority: high
 created_at: "2026-09-28 17:42:35"
 estimate: TBD
@@ -72,3 +72,11 @@ The added prerequisite tasks repair observed producer defects, not a change to t
 ## Protected consumer prerequisite
 
 qkb.1 adopts xz9's authenticated authority/receiver mode, including installed distinct-account workflow proof; parent dependencies reflect xz9. qkb.0 retains its existing provider-neutral implementation prerequisites and does not wait for downstream R2/R3 or domain installation. xz9 owns protected mechanisms; qkb.1 owns workflow adoption; qkc/gad.2 own final domain acceptance. Both qkb children still ship one coherent workflow vocabulary. Independent review accepted this amendment; qkb.1 returned to pending while current qkb.0 implementation continues. See protected-consumer-review-2026-10-05.md.
+
+## Closure note (2026-10-17)
+
+Assignment delivery through forge providers was delivered and released (the
+ordinary merge machinery shipped in the nine-gem release; TS-MONO-001
+propagation proof 4/4). Child .1 skipped-superseded: its remaining scope
+assumed the socket-owner model. Forge-merge functionality continues as
+one-shot file operations in 8xg.t.qn6.2.
