@@ -333,3 +333,24 @@ canonical source is the accepted-head assessment records; wiring follows with
 the assessment-join work). Remaining .8: head-assessment wiring,
 CLI/workflow exposure, comprehensive public-path tests + actual Pi review,
 branch re-verification and merge.
+
+### Negative-path suite extended
+
+New adversarial proofs for the review_context ingress: a receipt claiming a
+SUBSTITUTED campaign round reference refuses (the canonical campaign binding
+rejects metadata substitution); CORRUPTED artifact bytes that differ from the
+declared digest refuse at transfer decode; and the honest submission succeeds
+immediately after both refusals (the refusals leave no poisoned state).
+Fixture note: the reviewer's queue completion must precede the submissions
+(generation ordering), and the transport refusal codes carry no server detail
+by design — the assertion pins the refusal class plus the follow-on success.
+Receipt: ordinary_reviews 15 tests / 161 assertions PASS.
+
+Comprehensive public-path coverage now includes: oversized-prompt ingress,
+exact-mutation replay, fresh-second conflict, pre-begin refusal, cancellation
++ reselection, revocation (selection and approval), boundary drift, replayed
+begin, failure-submits-nothing, wrong-head/actor/digest/attempt refusals,
+metadata substitution, artifact corruption, canonical byte reuse at
+ingestion, and finish-through-collection. Remaining .8: head-assessment
+wiring, workflow-surface exposure, actual Pi independent review, branch
+re-verification and merge.
