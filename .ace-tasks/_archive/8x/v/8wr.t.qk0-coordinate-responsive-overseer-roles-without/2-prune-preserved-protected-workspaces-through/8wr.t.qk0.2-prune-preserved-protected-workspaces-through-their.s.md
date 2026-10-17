@@ -1,6 +1,6 @@
 ---
 id: 8wr.t.qk0.2
-status: skipped
+status: done
 priority: high
 created_at: "2026-10-07 05:30:26"
 estimate: large

@@ -1,11 +1,11 @@
 ---
 id: 8wr.t.qk0.1.1
-status: draft
+status: skipped
 priority: high
 created_at: "2026-10-07 12:17:05"
 estimate: large
 dependencies: [8wr.t.qk0.1.0, 8wr.t.qk0.0, 8x3.t.xz9.2, 8wr.t.qjx, 8wr.t.qjy, 8wr.t.qjz, 8wr.t.qk0.3]
-tags: []
+tags: [superseded-no-daemon]
 parent: 8wr.t.qk0.1
 bundle:
   presets: [project]

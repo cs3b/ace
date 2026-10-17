@@ -1,11 +1,11 @@
 ---
 id: 8wr.t.qk0.2.0
-status: in-progress
+status: skipped
 priority: high
 created_at: "2026-10-07 08:01:00"
 estimate: large
 dependencies: [8x3.t.xz9.1, 8x3.t.xz9.2]
-tags: []
+tags: [superseded-no-daemon]
 bundle:
   presets: [project]
   files: [.ace-tasks/8wr.t.qk0-coordinate-responsive-overseer-roles-without/2-prune-preserved-protected-workspaces-through/protected-prune-source-candidate.md, ace-lab/lib/ace/lab/organisms/protected_service_receiver.rb, ace-lab/lib/ace/lab/molecules/protected_service_handler.rb, ace-lab/lib/ace/lab/molecules/protected_service_policy.rb, ace-assign/lib/ace/assign/authority/endcap_services.rb, ace-assign/lib/ace/assign/authority/service_evidence.rb, ace-assign/lib/ace/assign/authority/transfer_codec.rb, ace-runtime/lib/ace/runtime/molecules/protected_linux.rb]
