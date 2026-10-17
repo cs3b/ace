@@ -39,3 +39,22 @@ Remaining .5 source: the executor seam binding to the real iy6 project-command
 channel (credentials resolved only in the child after UID drop per the spec;
 OTP route stays with .9), and all-consumer install/sync which is installed
 acceptance.
+
+## Publisher executor binding (OrdinaryReleasePublisher)
+
+The .5 executor seam: materializes staged artifacts' canonical bytes into the
+staging root the policy's own publish-command argv names (pending/uncertain
+only; published artifacts need no bytes; 0600 files in a 0700 root), then runs
+the configured publish command through the iy6 CommandRunClient under the
+GRANTED executor (uid/gid/groups/home/cwd/path/environment from the validated
+project policy — credentials resolve only in the child after its UID drop per
+the iy6 contract). A lost channel maps to exit_status nil/signal unknown —
+the publication organism's reconciliation treats it as attempted-effect
+unknown, never success. Missing publish command refuses precisely. The policy
+gains read-only commands/grants accessors. Receipts: 4 tests / 13 assertions
+PASS; staging 5/20 and the runner integration 1/3 remain green.
+
+The .5 source chain is now complete end to end: retained artifacts →
+staging/reconciliation → serial publication with per-artifact states → the
+iy6-bound executor. Remaining .5 items are installed acceptance (all-consumer
+install/sync) and the OTP route (.9).
