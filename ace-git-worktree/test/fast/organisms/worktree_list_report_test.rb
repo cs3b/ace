@@ -322,7 +322,7 @@ class WorktreeListReportTest < Minitest::Test
     assert_includes result[:output], "No active worktrees"
   end
 
-  def test_narrow_columns_drop_path_column
+  def test_narrow_columns_shrink_without_path_column
     report = Report.new(
       lister: FakeLister.new(worktrees: [worktree(path: @root)], success: true),
       task_index_builder: Ace::Git::Worktree::Molecules::TaskIndexBuilder.new(project_root: @root),
@@ -334,10 +334,14 @@ class WorktreeListReportTest < Minitest::Test
       env: {"HOME" => HOME, "COLUMNS" => "60"}
     )
     output = report.run[:output]
-    table_lines = output.split("\n\n").first.lines
+    lines = output.lines(chomp: true)
+    header = lines[1] # "Task  Branch  ..." column header
 
-    table_lines.each { |line| assert_operator line.chomp.length, :<=, 60, line.inspect }
-    refute_includes output, "Path"
+    assert_operator header.length, :<=, 60, header.inspect
+    refute_includes header, "Path"
+    assert_includes header, "Branch"
+    # the full path is always present, on its own line, exempt from width limits
+    assert_includes output, @root
   end
 
   def test_repeated_runs_are_identical

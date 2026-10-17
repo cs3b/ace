@@ -292,21 +292,29 @@ association is always inferred.
 
 ```text
 Active worktrees (last 18h) -- 3 of 88:
-Task   Branch                       Age  Commit                    Changes  PR           Path
-----------------------------------------------------------------------------------------------
-k9y    codex/r3-bounded-convergence  17h  feat(review): define bo…        2  #142 draft   …/codex-r3-bounded-convergence
--      codex/ei9-campaign-join        8m  feat(ace-assign): compl…        -  -            …/ei9-campaign-composition-join
+Task   Branch                       Age  Commit                    Changes  PR
+---------------------------------------------------------------------------------------
+k9y    codex/r3-bounded-convergence  17h  feat(review): define bo…        2  #142 draft
+                                         ~/Ps/ace/.ace-wt/codex-r3-bounded-convergence
+
+-      codex/ei9-campaign-join        8m  feat(ace-assign): compl…        -  -
+                                         ~/Ps/ace/.ace-wt/ei9-campaign-composition-join
 
 Inactive: 85  (use --full to list all)
 Task-associated: 14    Usable: 71    Recent branches without worktrees: 4
 ```
 
+Each worktree renders as three lines: the aligned columns, the
+never-truncated path (indented to the `Commit` column, `$HOME` shortened to
+`~` in compact mode, absolute with `--full`), and a blank separator line, so
+every displayed path is directly usable (`cd`, copy/paste).
+
 **Activity:** a worktree is active when the last commit reachable from its
-checked-out HEAD is inside the window **or** it has uncommitted changes (staged,
-unstaged, or untracked). Bare worktrees are never active. Filters apply before
-the active/inactive split, so the header and footer counts always describe the
-filtered set. `Recent branches without worktrees` is branch-based and is not
-affected by worktree filters.
+checked-out HEAD is inside the window **or** it has uncommitted changes
+(staged, unstaged, or untracked under `.ace-tasks/`). Bare worktrees are never
+active. Filters apply before the active/inactive split, so the header and
+footer counts always describe the filtered set. `Recent branches without
+worktrees` is branch-based and is not affected by worktree filters.
 
 **Columns:**
 
@@ -316,11 +324,11 @@ affected by worktree filters.
 * `Age` - last commit age in one unit (`8m`, `3h`, `9d`, `3w`, `2mo`, `1y`);
   `never` when the branch has no commits; future timestamps render `0m`.
 * `Commit` - last commit subject, right-truncated with `…`.
-* `Changes` - uncommitted file count (staged + unstaged + untracked); `-` when
-  clean.
+* `Changes` - uncommitted file count (staged + unstaged + untracked files
+  under `.ace-tasks/`); `-` when clean. Untracked files outside the task tree
+  are not scanned: the deep untracked walk dominates listing time on large
+  repositories, and stray artifacts are not an activity signal.
 * `PR` - `#N` (open), `#N draft`, `#N merged`, `#N closed`, or `-`.
-* `Path` - `$HOME` shortened to `~` and left-elided in compact mode; absolute
-  and untruncated with `--full`.
 
 **Task association (name-independent), in precedence order:**
 
@@ -335,15 +343,19 @@ affected by worktree filters.
 name, then by HEAD commit sha, then by a unique task reference in the PR
 title/body. Unconfigured/offline forges render `-` and never fail the command.
 
-**Width behavior:** the table targets `120` columns, shrinks `Path`, then
-`Commit`, then `Branch` down to their minimums, and drops `Path` (then `Commit`)
-on very narrow terminals. Width comes from `COLUMNS`, else the terminal size,
-else `120`. `--full` is exempt from truncation.
+**Width behavior:** the table targets `120` columns, shrinks `Commit`, then
+`Branch` down to their minimums, and drops `Commit` on very narrow terminals.
+Width comes from `COLUMNS`, else the terminal size, else `120`. Path lines are
+never truncated; `--full` is exempt from truncation entirely.
 
-**Probe isolation:** each worktree is probed in its own forked child process
-(one child per worktree, at most 16 alive, hard 5 second budget per probe).
-Probe results are ordered by `git worktree list` order, so output is
-deterministic; a failed or timed-out probe renders `?` in `Age`/`Commit`/
+**Probe isolation and performance:** each worktree is probed in its own forked
+child process (one child per worktree, at most 16 alive, hard 5 second budget
+per probe). The probe reads only cheap signals: HEAD metadata, tracked changes
+(`git status --untracked-files=no`), committed task-file diffs, and the
+`_current` symlink. The expensive deep untracked scan of `.ace-tasks/` runs as
+a selective second round, only for worktrees the cheap association tiers could
+not resolve. Probe results are ordered by `git worktree list` order, so output
+is deterministic; a failed or timed-out probe renders `?` in `Age`/`Commit`/
 `Changes` while the rest of the table renders and the command exits 0. Where
 `fork` is unavailable, probes run sequentially with the same timeouts.
 

@@ -11,13 +11,18 @@ module Ace
       module Molecules
         # Renders the width-aware listing table.
         #
+        # Each worktree renders as three lines: the aligned columns
+        # (Task/Branch/Age/Commit/Changes/PR), the never-truncated path
+        # indented to the Commit column, and a blank separator line, so each
+        # entry is visually grouped and the displayed path is always directly
+        # usable (copy/paste, cd).
+        #
         # Layout targets (two-space gutters): Task = max(task cells, 4),
-        # Branch 25 (min 12), Age 5, Commit 24 (min 10), Changes 7, PR 11,
-        # Path 32 (min 10). When the target total exceeds the detected width,
-        # columns shrink in priority order Path -> Commit -> Branch down to
-        # their minima, then Path is dropped, then Commit. Compact output never
-        # exceeds the detected width; `--full` prints untruncated absolute paths
-        # and is exempt from width limits.
+        # Branch 25 (min 12), Age 5, Commit 24 (min 10), Changes 7, PR 11.
+        # When the target total exceeds the detected width, columns shrink in
+        # priority order Commit -> Branch down to their minima, then Commit is
+        # dropped. Column lines never exceed the detected width; `--full`
+        # prints absolute paths and is exempt from width limits.
         class WorktreeTableFormatter
           GUTTER = "  "
           COLUMNS_MIN_WIDTH = 40
@@ -30,12 +35,11 @@ module Ace
           COMMIT_MIN = 10
           CHANGES_WIDTH = 7
           PR_WIDTH = 11
-          PATH_TARGET = 32
-          PATH_MIN = 10
           TASK_MIN = 4
+          PATH_INDENT = "  "
 
           # @param width [Integer] detected terminal width
-          # @param full [Boolean] exhaustive listing (no truncation)
+          # @param full [Boolean] exhaustive listing (absolute paths)
           # @param env [Hash] environment (HOME shortening, COLUMNS detection)
           def initialize(width: nil, full: false, env: ENV, stdout: $stdout)
             @width = width || self.class.detected_width(env: env, stdout: stdout)
@@ -65,75 +69,66 @@ module Ace
             DEFAULT_WIDTH
           end
 
-          # Render header + separator + rows.
+          # Render header + separator + three lines per worktree (columns,
+          # indented full path, blank separator).
           #
           # @param worktrees [Array<Models::WorktreeInfo>]
           # @return [Array<String>] output lines
           def render(worktrees)
             rows = Array(worktrees)
             layout = compute_layout(rows)
-            [header_line(layout), separator_line(layout), *rows.map { |worktree| row_line(worktree, layout) }]
+            [
+              header_line(layout),
+              separator_line(layout),
+              *rows.flat_map { |worktree| [row_line(worktree, layout), path_line(worktree, layout), ""] }
+            ]
           end
 
           private
 
-          Layout = Struct.new(:task, :branch, :age, :commit, :changes, :pr, :path, :total_width,
+          Layout = Struct.new(:task, :branch, :age, :commit, :changes, :pr, :total_width,
             keyword_init: true)
 
           def compute_layout(worktrees)
             task_width = [TASK_MIN, *worktrees.map { |wt| task_cell(wt).length }].max
             branch_width = BRANCH_TARGET
             commit_width = COMMIT_TARGET
-            path_width = PATH_TARGET
 
-            if @full
-              path_width = [PATH_TARGET, *worktrees.map { |wt| full_path(wt).length }].max
-              return build_layout(task_width, branch_width, commit_width, path_width)
-            end
-
-            while total_width(task_width, branch_width, commit_width, path_width) > @width
-              if path_width > PATH_MIN
-                path_width -= 1
-              elsif commit_width > COMMIT_MIN
-                commit_width -= 1
-              elsif branch_width > BRANCH_MIN
-                branch_width -= 1
-              else
-                break
+            unless @full
+              while total_width(task_width, branch_width, commit_width) > @width
+                if commit_width > COMMIT_MIN
+                  commit_width -= 1
+                elsif branch_width > BRANCH_MIN
+                  branch_width -= 1
+                else
+                  break
+                end
               end
             end
 
-            layout = build_layout(task_width, branch_width, commit_width, path_width)
+            layout = build_layout(task_width, branch_width, commit_width)
             return layout if layout[:total_width] <= @width
 
-            drop_path(layout)
+            drop_commit(layout)
           end
 
-          def build_layout(task_width, branch_width, commit_width, path_width)
-            total = total_width(task_width, branch_width, commit_width, path_width)
+          def build_layout(task_width, branch_width, commit_width)
+            total = total_width(task_width, branch_width, commit_width)
             Layout.new(task: task_width, branch: branch_width, age: AGE_WIDTH, commit: commit_width,
-              changes: CHANGES_WIDTH, pr: PR_WIDTH, path: path_width, total_width: total)
+              changes: CHANGES_WIDTH, pr: PR_WIDTH, total_width: total)
           end
 
-          def total_width(task_width, branch_width, commit_width, path_width)
+          def total_width(task_width, branch_width, commit_width)
             task_width + branch_width + AGE_WIDTH + commit_width + CHANGES_WIDTH + PR_WIDTH +
-              path_width + (GUTTER.length * 6)
+              (GUTTER.length * 5)
           end
 
-          # Drop the Path column when even the minimum layout overflows; then
-          # drop Commit as the last resort.
-          def drop_path(layout)
-            without_path = Layout.new(
-              task: layout[:task], branch: layout[:branch], age: layout[:age], commit: layout[:commit],
-              changes: layout[:changes], pr: layout[:pr], path: 0,
-              total_width: layout[:total_width] - layout[:path] - GUTTER.length
-            )
-            return without_path if without_path[:total_width] <= @width
-
+          # Drop the Commit column when even the minimum layout overflows.
+          def drop_commit(layout)
             Layout.new(
-              task: without_path[:task], branch: without_path[:branch], age: without_path[:age],
-              commit: 0, changes: without_path[:changes], pr: without_path[:pr], path: 0,
-              total_width: without_path[:total_width] - without_path[:commit] - GUTTER.length
+              task: layout[:task], branch: layout[:branch], age: layout[:age],
+              commit: 0, changes: layout[:changes], pr: layout[:pr],
+              total_width: layout[:total_width] - layout[:commit] - GUTTER.length
             )
           end
 
@@ -145,7 +140,6 @@ module Ace
             cells << pad("Commit", layout[:commit], :left) if layout[:commit].positive?
             cells << pad("Changes", layout[:changes], :right)
             cells << pad("PR", layout[:pr], :left)
-            cells << pad("Path", layout[:path], :left) if layout[:path].positive?
             cells.join(GUTTER).rstrip
           end
 
@@ -161,8 +155,26 @@ module Ace
             cells << pad(commit_cell(worktree, layout[:commit]), layout[:commit], :left) if layout[:commit].positive?
             cells << pad(changes_cell(worktree), layout[:changes], :right)
             cells << pad(pr_cell(worktree), layout[:pr], :left)
-            cells << pad(path_cell(worktree, layout[:path]), layout[:path], :left) if layout[:path].positive?
             cells.join(GUTTER).rstrip
+          end
+
+          # The full, never-truncated worktree path on its own line, indented
+          # to the Commit column so it reads as a continuation of the row
+          # (falls back to the Branch column, then a minimal indent).
+          def path_line(worktree, layout)
+            path = @full ? full_path(worktree) : compact_path(worktree)
+            "#{path_indent(layout)}#{path}"
+          end
+
+          def path_indent(layout)
+            if layout[:commit].positive?
+              " " * (layout[:task] + GUTTER.length + layout[:branch] + GUTTER.length +
+                layout[:age] + GUTTER.length)
+            elsif layout[:branch].positive?
+              " " * (layout[:task] + GUTTER.length)
+            else
+              PATH_INDENT
+            end
           end
 
           # --- Cell contents ---
@@ -202,13 +214,6 @@ module Ace
 
           def pr_cell(worktree)
             PrStatusResolver.cell(worktree.pr)
-          end
-
-          def path_cell(worktree, width)
-            return "" if width <= 0
-
-            path = @full ? full_path(worktree) : compact_path(worktree)
-            Atoms::TextTruncator.left(path, width)
           end
 
           def full_path(worktree)

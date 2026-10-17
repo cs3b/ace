@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.0] - 2026-10-18
+
+### Changed
+
+- `list` table rows now print the full, never-truncated worktree path on its
+  own line under the row (indented to the `Commit` column) followed by a blank
+  separator line, replacing the truncated `Path` column. Every displayed path
+  is directly usable (`cd`, copy/paste); `--full` prints absolute paths.
+- `Changes` counts staged + unstaged + untracked files under `.ace-tasks/`;
+  untracked files outside the task tree are no longer scanned or counted.
+
+### Fixed
+
+- Large-repository listing performance: the deep untracked walk
+  (`--untracked-files=all`) dominated runtime and degraded further under
+  parallel probing (88 worktrees: ~18s). Probes now read tracked-only status
+  and run the deep `.ace-tasks/` untracked scan as a selective second round
+  for worktrees the cheap association tiers cannot resolve (~7s).
+- Task index lookups no longer re-`realpath` every task directory on every
+  lookup; canonical paths are resolved once per index.
+
 ## [0.27.0] - 2026-10-17
 
 ### Added

@@ -65,6 +65,7 @@ module Ace
             project_root = task_index.project_root || @project_root
 
             probes = probe_worktrees(raw_worktrees, project_root)
+            supplement_untracked_task_files(raw_worktrees, probes, project_root, task_index)
             enriched = enrich(raw_worktrees, probes, task_index, now, options)
             selected = apply_filters(enriched, options)
             active, inactive = selected.partition { |worktree| worktree.active_within_window }
@@ -109,6 +110,40 @@ module Ace
               base_ref: raw_worktrees.first&.commit
             )
             runner.run(raw_worktrees)
+          end
+
+          # Second probe round, only for worktrees the cheap association tiers
+          # (metadata, `_current` symlink, validated name, tracked task-file
+          # changes, committed task files) could not resolve. The deep
+          # `.ace-tasks/` untracked scan dominates listing time on large
+          # repositories, so it runs selectively and merges its findings back
+          # into the round-one payloads (counts + changed task paths) before
+          # enrichment classifies activity and renders.
+          def supplement_untracked_task_files(raw_worktrees, probes, project_root, task_index)
+            return unless task_index.available?
+
+            resolver = Molecules::TaskAssociationResolver.new(task_index: task_index)
+            unresolved = raw_worktrees.each_index.select do |index|
+              probe = probes[index]
+              probe && resolver.resolve(raw_worktrees[index], probe).task_id.nil?
+            end
+            return if unresolved.empty?
+
+            probe_molecule = Molecules::WorktreeProbe.new(project_root: project_root)
+            supplement = ->(worktree) { {untracked_task_files: probe_molecule.untracked_task_files(worktree.path)} }
+            runner = WorktreeProbeRunner.new(project_root: project_root, probe: supplement)
+            payloads = runner.run(unresolved.map { |index| raw_worktrees[index] })
+
+            unresolved.each_with_index do |probe_index, position|
+              payload = payloads[position]
+              next if payload.nil? || payload[:untracked_task_files].to_a.empty?
+
+              paths = payload[:untracked_task_files]
+              probe = probes[probe_index]
+              probe[:untracked] = probe[:untracked].to_i + paths.length
+              probe[:uncommitted_paths] = Array(probe[:uncommitted_paths]) + paths
+              probe[:changed_task_files] = Array(probe[:changed_task_files]) + paths
+            end
           end
 
           def enrich(raw_worktrees, probes, task_index, now, options)
@@ -252,14 +287,17 @@ module Ace
             end
 
             rows = options[:full] ? (active + inactive) : active
+            table_ended_with_blank = false
             if rows.empty?
               lines << footer.no_active_message
             else
               lines.concat(table.render(rows))
+              table_ended_with_blank = true
             end
 
             unless options[:quiet]
-              lines << ""
+              # The table already ends each entry with a blank separator line.
+              lines << "" unless table_ended_with_blank
               lines.concat(footer.lines(
                 inactive: inactive.length,
                 task_associated: statistics[:task_associated],

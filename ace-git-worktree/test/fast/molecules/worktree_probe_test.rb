@@ -46,7 +46,6 @@ class WorktreeProbeTest < Minitest::Test
 
   def test_uncommitted_changes_are_counted
     wt = create_worktree(@repo, "dirty", branch: "dirty")
-    write_file(wt, "untracked.txt", "x\n")
     write_file(wt, "README.md", "modified\n")
     write_file(wt, "staged.txt", "staged\n")
     git!("-C", wt, "add", "staged.txt")
@@ -55,17 +54,46 @@ class WorktreeProbeTest < Minitest::Test
 
     assert_equal 1, payload[:staged]
     assert_equal 1, payload[:unstaged]
-    assert_equal 1, payload[:untracked]
-    assert_includes payload[:uncommitted_paths], "untracked.txt"
+    assert_equal 0, payload[:untracked]
+    refute_includes payload[:uncommitted_paths], "untracked.txt"
   end
 
-  def test_uncommitted_task_files_are_detected
-    wt = create_worktree(@repo, "task-dirty", branch: "task-dirty")
-    write_file(wt, ".ace-tasks/8xa.t.ega-alpha/notes.md", "note\n")
+  def test_untracked_files_outside_task_tree_are_not_scanned
+    wt = create_worktree(@repo, "dirty", branch: "dirty")
+    write_file(wt, "untracked.txt", "x\n")
 
     payload = probe_for(wt)
 
-    assert_includes payload[:changed_task_files], ".ace-tasks/8xa.t.ega-alpha/notes.md"
+    assert_equal 0, payload[:untracked]
+    assert_empty payload[:uncommitted_paths]
+  end
+
+  def test_untracked_task_files_are_detected_selectively
+    wt = create_worktree(@repo, "task-dirty", branch: "task-dirty")
+    write_file(wt, ".ace-tasks/8xa.t.ega-alpha/notes.md", "note\n")
+    write_file(wt, "stray.txt", "stray\n")
+
+    probe = @probe_class.new(project_root: @repo, base_ref: @main_sha)
+    paths = probe.untracked_task_files(wt)
+
+    assert_includes paths, ".ace-tasks/8xa.t.ega-alpha/notes.md"
+    assert_equal [".ace-tasks/8xa.t.ega-alpha/notes.md"], paths
+  end
+
+  def test_untracked_task_files_on_missing_worktree_is_empty
+    probe = @probe_class.new(project_root: @repo, base_ref: @main_sha)
+
+    assert_empty probe.untracked_task_files(File.join(@repo, "does-not-exist"))
+  end
+
+  def test_modified_tracked_task_files_are_detected
+    wt = create_worktree(@repo, "task-dirty", branch: "task-dirty")
+    commit_file(wt, ".ace-tasks/8xa.t.ega-alpha/spec.md", "base\n", message: "chore: add spec")
+    write_file(wt, ".ace-tasks/8xa.t.ega-alpha/spec.md", "changed\n")
+
+    payload = probe_for(wt)
+
+    assert_includes payload[:changed_task_files], ".ace-tasks/8xa.t.ega-alpha/spec.md"
   end
 
   def test_committed_task_files_are_detected_against_merge_base

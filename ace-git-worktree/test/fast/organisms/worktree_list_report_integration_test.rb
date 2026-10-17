@@ -22,6 +22,7 @@ class WorktreeListReportIntegrationTest < Minitest::Test
 
     @dirty = create_worktree(@repo, "dirty", branch: "codex/dirty")
     write_file(@dirty, "untracked.txt", "x\n")
+    write_file(@dirty, "README.md", "modified\n")
 
     @stale = create_worktree(@repo, "stale", branch: "codex/stale")
     commit_file(@stale, "stale.txt", "stale\n", message: "old: stale", date: Time.now - (36 * 3600))

@@ -36,6 +36,8 @@ module Ace
             @entries = entries.freeze
             @available = available
             @project_root = project_root
+            @canonical_directories = {}
+            @canonical_worktree_paths = {}
           end
 
           attr_reader :entries, :project_root
@@ -92,7 +94,7 @@ module Ace
 
             expanded = canonical_path(path)
             @entries.find do |entry|
-              entry.worktree_path && canonical_path(entry.worktree_path) == expanded
+              entry.worktree_path && canonical_worktree_path(entry) == expanded
             end
           end
 
@@ -114,7 +116,7 @@ module Ace
             return nil if directory.to_s.empty?
 
             expanded = canonical_path(directory)
-            @entries.find { |entry| canonical_path(entry.directory) == expanded }
+            @entries.find { |entry| canonical_directory(entry) == expanded }
           end
 
           # Map changed file paths to task candidates.
@@ -146,8 +148,21 @@ module Ace
           # under the task directory, including nested spec/artifact folders).
           def find_by_enclosing_directory(absolute_path)
             @entries.find do |entry|
-              directory = canonical_path(entry.directory)
+              directory = canonical_directory(entry)
               absolute_path == directory || absolute_path.start_with?("#{directory}/")
+            end
+          end
+
+          # Canonical forms are compared on every lookup; resolve each entry's
+          # directory / recorded worktree path exactly once (realpath is a
+          # syscall per path component and dominates lookup time otherwise).
+          def canonical_directory(entry)
+            @canonical_directories.fetch(entry) { @canonical_directories[entry] = canonical_path(entry.directory) }
+          end
+
+          def canonical_worktree_path(entry)
+            @canonical_worktree_paths.fetch(entry) do
+              @canonical_worktree_paths[entry] = entry.worktree_path ? canonical_path(entry.worktree_path) : nil
             end
           end
 

@@ -86,6 +86,24 @@ module Ace
             File.expand_path(value)
           end
 
+          # Deep-scan fallback for the task tree only: untracked files under
+          # `.ace-tasks/`. This walk is expensive on large trees, so the probe
+          # itself never performs it; callers run it selectively (second round)
+          # for worktrees the cheap association tiers could not resolve.
+          #
+          # @param path [String] worktree directory
+          # @return [Array<String>] repo-relative untracked task paths
+          def untracked_task_files(path)
+            return [] unless path && File.directory?(path)
+
+            output = git(path, "ls-files", "--others", "--exclude-standard", "--", TASK_TREE_PREFIX)
+            return [] if output.nil?
+
+            output.lines.map { |line| scrub(line.chomp) }.reject(&:empty?).select { |p| task_tree_path?(p) }
+          rescue StandardError
+            []
+          end
+
           private
 
           # @return [Hash, nil] `{sha:, committer_epoch:, subject:}` for HEAD
@@ -101,9 +119,11 @@ module Ace
             nil
           end
 
-          # @return [Hash, nil] staged/unstaged/untracked counts and changed paths
+          # @return [Hash, nil] staged/unstaged counts and changed paths
+          # (tracked files only; untracked discovery is opt-in via
+          # {#untracked_task_files})
           def status_snapshot(path)
-            output = git(path, "status", "--porcelain=v1", "-z", "--untracked-files=all")
+            output = git(path, "status", "--porcelain=v1", "-z", "--untracked-files=no")
             return nil if output.nil?
 
             staged = 0
