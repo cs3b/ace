@@ -656,72 +656,20 @@ Follow the instructions directly, performing the described work:
 
 **Agent Action:** Execute each instruction line as a task.
 
-### 4. External Action Rule (Attempt-First)
+### 4. Execute the Active Step Directly
 
-Every external-facing step (implement, verify, review, merge, publish, deploy, release) runs inside a scoped attempt. The attempt -- not the report and not exit status -- is the delivery record.
+Execute the active step's instructions directly, run the checks it requires, and
+record the real results in the step report.
 
-**Step 1: Start the attempt before executing the step.** Actor identity is derived from the execution boundary; never pass actor flags.
-
-```bash
-ATTEMPT_JSON=$(ace-assign attempt start --assignment "$ASSIGNMENT_ID" --step "$STEP_NUMBER" --project "$PROJECT_ID")
-echo "$ATTEMPT_JSON"
-```
-
-- A repeated identical start returns the same attempt; a conflicting start fails (exit 5). Never launch a second writer for an owned subtree.
-- `base_head` is captured exactly once at start. Record the `attempt_id`.
-
-**Step 2: Execute the step command(s).** If blocked, capture concrete evidence:
-
-- command attempted
-- exact error output
-- why the step cannot proceed
-
-Mark the step failed with evidence (do not report synthetic completion):
-
-```bash
-ace-assign fail --message "Command failed: <cmd>. Error: <exact stderr>" --assignment "$ASSIGNMENT_TARGET"
-```
-
-**Step 3: Submit a structured receipt -- never prose -- to close the attempt.**
-
-```bash
-cat > /tmp/attempt-receipt.json << 'EOF'
-{
-  "attempt_id": "<ATTEMPT_ID>",
-  "assignment_id": "<ASSIGNMENT_ID>",
-  "project_id": "<PROJECT_ID>",
-  "scope": "<STEP_NUMBER>",
-  "operation": "implement",
-  "producer": {"actor": "<boundary-actor>", "role": "worker", "runtime": "<boundary-runtime>"},
-  "head": "<exact tested/reviewed HEAD sha>",
-  "verdict": "succeeded",
-  "artifacts": [{"path": "report.md", "sha256": "<sha256>"}],
-  "checks": [{"name": "ace-test", "verdict": "passed"}],
-  "review": {"reviewer": {"actor": "<independent-reviewer>", "runtime": "<reviewer-runtime>"}, "verdict": "approved", "head": "<same HEAD sha>"}
-}
-EOF
-
-ace-assign attempt finish --attempt "$ATTEMPT_ID" --receipt /tmp/attempt-receipt.json
-```
-
-Receipt rules enforced by the coordinator:
-
-- `succeeded` verdicts require verifiable artifact digests, passing checks, and an executed independent reviewer verdict; worker runtimes may submit attributable results but cannot self-approve.
-- Review approval requires an executed independent reviewer verdict for the exact current head; same author/reviewer and report-only existence are rejected.
-- Receipts carrying credentials, environment dumps, or terminal output are rejected outright.
-- External effects (`merge`, `publish`, `deploy`, `release`) additionally require an accepted independent review receipt for the current head. Taskless assignments cannot record external effects.
-
-**Step 4: Handle interruptions by classifying and reconciling -- never by assuming.**
-
-```bash
-ace-assign attempt status --assignment "$ASSIGNMENT_ID" --format json
-ace-assign attempt reconcile --attempt "$ATTEMPT_ID"
-ace-assign attempt reconcile --attempt "$ATTEMPT_ID" --receipt /tmp/attempt-receipt.json
-```
-
-- A lost receipt after a possible effect is `uncertain`; it resolves only against a verified receipt attributed to the recorded execution boundary.
-- Running attempts stay running only while their recorded process is verifiably live; anything else becomes `stopped` or `uncertain`.
-- Never replay `merge`, `publish`, or `deploy` automatically. Reconciliation records evidence; it never re-executes effects.
+- If the work is blocked, capture the command you ran, the exact error output,
+  and why the step cannot proceed, then fail the step with that evidence (see
+  [Handle Failures](#7-handle-failures)).
+- Record actual test and review results for the exact candidate head in the
+  assignment report (or the project task folder) before advancing. A report or
+  exit code alone is not proof by itself; report only what was actually run.
+- Never replay `merge`, `publish`, or `deploy` automatically. An uncertain
+  external effect is reconciled against the authoritative remote/owner first;
+  reconciliation never re-executes the effect by itself.
 
 #### Integration Gate and Typed Outcomes (every integration invocation)
 
@@ -733,29 +681,29 @@ no entry point bypasses them.
   target base/head, review/test evidence and the authorized executor; recheck
   target/head immediately before the mutation. A detected race invalidates
   eligibility for that invocation.
-- The low-level privileged integrator ENFORCES the gates and returns one typed
+- The low-level integrator ENFORCES the gates and returns one typed
   outcome: `merged`, `needs-rebase`, `blocked` or `uncertain`. It never
   authors, rebases or reviews its own candidate. Relay alone is not
-  execution: the queue owner monitors until receipt and continuation.
+  execution: the integrating agent monitors the actual result and continuation.
 - If the target (current main) is NOT an ancestor of the candidate head, the
-  outcome is `needs-rebase`: never merge and never silently rewrite. The queue
-  owner delegates `wfi://git/rebase` (as-git-rebase, including CHANGELOG
-  preservation) in the candidate's isolated worktree, obtains refreshed
-  exact-head checks plus independent review of the NEW head, updates the PR,
-  verifies remote candidate identity and resubmits. A common old base does
-  NOT make sibling heads sequentially fast-forwardable.
-- Integration is serial in PREPARATION as well as in effect: the accepted
-  receipt for one candidate causes preparation of ONLY the next selected
-  candidate — never a mass rebase of the remaining queue. Each candidate, on
-  its turn: resolve fresh target main; delegate `wfi://git/rebase` in that
-  candidate's isolated worktree IF needed; run the applicable checks; obtain
-  an INDEPENDENT EXPLICIT review of the resulting exact head (patch identity
-  may support a short delta review but never substitutes the explicit
-  independent head approval); verify the remote PR head/base; issue ONE
-  scoped integrator request; wait/reconcile the actual integration receipt;
-  refresh main; select and prepare ONLY the next candidate. Queued later
-  PRs keep their existing branches/heads untouched until their turn; prior
-  batch work is never rolled back or reset.
+  outcome is `needs-rebase`: never merge and never silently rewrite. The
+  integrating agent delegates `wfi://git/rebase` (as-git-rebase, including
+  CHANGELOG preservation) in the candidate's isolated worktree, obtains
+  refreshed exact-head checks plus independent review of the NEW head, updates
+  the PR, verifies remote candidate identity and resubmits. A common old base
+  does NOT make sibling heads sequentially fast-forwardable.
+- Integration is serial in PREPARATION as well as in effect: the confirmed
+  integration result for one candidate causes preparation of ONLY the next
+  selected candidate — never a mass rebase of the remaining queue. Each
+  candidate, on its turn: resolve fresh target main; delegate `wfi://git/rebase`
+  in that candidate's isolated worktree IF needed; run the applicable checks;
+  obtain an INDEPENDENT EXPLICIT review of the resulting exact head (patch
+  identity may support a short delta review but never substitutes the explicit
+  independent head approval); verify the remote PR head/base; issue ONE scoped
+  integrator request; wait/reconcile the actual integration outcome; refresh
+  main; select and prepare ONLY the next candidate. Queued later PRs keep their
+  existing branches/heads untouched until their turn; prior batch work is never
+  rolled back or reset.
 - `uncertain` triggers reconciliation against the original durable reference;
   it never permits blind retry.
 - Never push directly to main; never switch the canonical checkout to a topic
@@ -807,7 +755,7 @@ For a blocked step:
 
 ### 5. Write Report (Only After Real Execution)
 
-After the attempt accepted a receipt (or the step was failed with evidence), write a brief report summarizing what was accomplished. The report advances the queue; the accepted attempt receipt carries the delivery evidence:
+After executing the step (or failing it with concrete evidence), write a brief report summarizing what was accomplished. The report is the local record: state what was actually run and link or paste the actual test/review evidence for the exact head.
 
 ```bash
 # Write report content to a temp file
@@ -818,7 +766,7 @@ Completed the setup step successfully:
 
 - Installed all dependencies via npm install
 - Configured PostgreSQL database connection
-- Verified installation with health check
+- Verified installation with health check (command + observed output)
 
 All setup prerequisites are now satisfied.
 EOF
@@ -829,9 +777,9 @@ ace-assign finish --message /tmp/step-report.md --assignment "$ASSIGNMENT_TARGET
 
 Prohibited:
 
-- Advancing a step when its attempt has no accepted receipt (or recorded failure evidence).
-- Treating a written report, exit 0, or prose as proof of completion. Check `ace-assign attempt status --assignment "$ASSIGNMENT_ID" --format json` for accepted evidence and unresolved effects.
-- Reporting `uncertain` attempts as complete; reconcile them first.
+- Advancing a step that was not executed or whose result has no recorded evidence.
+- Treating a written report, exit 0, or prose as proof when the required tests or review were not run.
+- Reporting an uncertain external effect as complete; reconcile the original effect first.
 
 ### 6. Verify State Transition (Required)
 
@@ -979,7 +927,7 @@ When executing a step with a `skill:` field:
 | Step fails | Attempt first, then use `fail` with command/error evidence; decide retry/add/ask |
 | Skill not found | Execute instructions directly without skill |
 | Unclear instructions | Ask user for clarification |
-| Provider/tool unavailable | For fork steps: see Provider-Unavailability Recovery. For inline steps: attempt with alternate model, then fail with evidence |
+| Provider/tool unavailable | For fork steps: see Provider-Unavailability Recovery. For inline steps: retry with an alternate model, then fail with evidence |
 
 ## Assignment State Reference
 

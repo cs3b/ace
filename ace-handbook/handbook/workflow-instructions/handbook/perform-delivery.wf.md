@@ -1,10 +1,10 @@
 ---
 doc-type: workflow
-title: Perform attempt-bound delivery
+title: Perform delivery
 purpose: Coordinate implementation, exact-head review and authorized delivery on the selected forge
 ---
 
-# Perform attempt-bound delivery
+# Perform delivery
 
 ## Goal
 
@@ -21,16 +21,15 @@ tests and independent review.
 
 Choose standalone mode for ordinary local task/inline implementation, tests, review
 and optional requested version/changelog preparation. Local-only implementation
-needs no forge selection or scoped attempt. If remote delivery is requested,
+needs no forge selection or assignment scope. If remote delivery is requested,
 use forge_server or forge_default: true, mutually exclusive; otherwise use the
 repository remote. Preserve the first resolved server/repository/PR identity
-throughout the work. Managed attempt-bound delivery and its role handoff land in
-L5.5; this workflow does not invent grants or impersonate an integrator.
+throughout the work. Managed delivery and its role handoff land in L5.5; this workflow does not invent grants or impersonate an integrator.
 
 ## Project context loading
 
 Read the task or inline scope and actual committed diff. When the work belongs to
-an assignment, also read assignment status and the current attempt. If a PR
+an assignment, also read assignment status and its step reports. If a PR
 is recorded, inspect it with
 `ace-git pr show IDENTIFIER --format json --server NAME` using the retained selection
 (or `--default-server`, otherwise remote resolution). Inside ACE use source
@@ -57,7 +56,7 @@ and test it on the combined candidate before declaring that result delivered.
 Implement and commit the requested local task/inline scope using existing task
 and Git tools. Execute appropriate tests and independent review, retain their
 actual artifact references and candidate SHA, and record unfinished criteria.
-No managed assignment or canonical receipt boundary is claimed by this route.
+No managed assignment boundary is claimed by this route.
 Local scope may end here.
 
 For an explicitly authorized standalone remote scope, use existing neutral
@@ -88,13 +87,12 @@ Publication remains separately authorized and gated, including OTP when required
 
 ## Managed delivery (planned L5.5)
 
-Attempt-bound managed delivery — assignment-scoped attempts, exact-head evidence
-and the reviewer/integrator role handoff — lands with the role workflow in L5.5.
-Until then, standalone delivery above is the active path. Attempt evidence remains
-local to the assignment: use `ace-assign attempt start`/`attempt finish` for the
-exact execution scope and record actual artifacts, executed checks and the
-independent reviewer verdict for the same head. Never substitute a written report
-or exit code for accepted evidence.
+Managed delivery — assignment-scoped evidence and the reviewer/integrator
+role handoff — lands with the role workflow in L5.5. Until then, standalone
+delivery above is the active path. When the work belongs to an assignment, record
+actual artifacts, executed checks and the independent reviewer verdict for the
+exact head in the assignment step report (or the project task folder). Never
+substitute a written report or exit code for evidence that was not produced.
 
 ## Unavailable publication prerequisite
 
@@ -108,14 +106,14 @@ existing assignment failure owner:
 `ace-assign fail --assignment ID@SCOPE --message "publication blocked: prerequisite unavailable"`.
 Use the actual assignment selectors; standalone work omits them and uses its
 existing target. Read `ace-assign status` for that same scope afterward. The step
-remains failed/unfinished, with no publication receipt or task completion. Preserve
+remains failed/unfinished, with no publication evidence or task completion. Preserve
 an uncertain effect separately: a failure report must not claim a definitive denial
 or effect absence from a lost reply.
 
 ## Uncertainty and resume
 
-When the work belongs to an assignment, read assignment status and retained attempt
-events before resuming. Repeat read/check operations safely. On an interrupted
+When the work belongs to an assignment, read assignment status and its step
+reports before resuming. Repeat read/check operations safely. On an interrupted
 create, update or readiness, use the same forge command for exact-selector
 reconciliation. One matching draft may be adopted; zero remains unresolved and
 multiple matches conflict. A different requested effect cannot be reported complete
@@ -130,8 +128,7 @@ unverified direct provider commands.
 - The requested scope has real artifact, current test and independent review
   evidence for its exact candidate.
 - Remote identity and explicit provenance remain fixed with honest unresolved
-  outcomes preserved; assignment-backed work records them in its local attempt
-  evidence.
+  outcomes preserved; assignment-backed work records them in its step report.
 - Readiness and authorized integration consume current evidence. CI alone neither
   grants nor vetoes acceptance.
 - Optional publication remains separately authorized and unfinished criteria

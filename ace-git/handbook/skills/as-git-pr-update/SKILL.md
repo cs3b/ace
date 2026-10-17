@@ -1,6 +1,6 @@
 ---
 name: as-git-pr-update
-description: Update an attempt-bound forge-neutral pull request
+description: Update a forge-neutral pull request
 user-invocable: true
 source: ace-git
 allowed-tools:
@@ -13,7 +13,7 @@ assign:
     - name: update-pr-desc
       description: Update the exact assignment pull request
       produces: [pull-request]
-      consumes: [code-changes, execution-attempt]
+      consumes: [code-changes]
 skill:
   kind: workflow
   execution:

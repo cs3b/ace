@@ -1,6 +1,6 @@
 ---
 name: as-git-pr-create
-description: Create an attempt-bound forge-neutral pull request
+description: Create a forge-neutral pull request
 user-invocable: true
 source: ace-git
 allowed-tools:
@@ -16,7 +16,6 @@ assign:
     - pull-request
     consumes:
     - code-changes
-    - execution-attempt
 skill:
   kind: workflow
   execution:

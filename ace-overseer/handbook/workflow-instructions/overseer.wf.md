@@ -109,11 +109,10 @@ candidate:
       content) between separate bases. Never fetch proof refs into shared
       repositories or worktrees, and never interpret diff-tool
       output, commit titles, PR reports, or CI status as content proof.
-   3. Patch-range proof additionally requires the independently recorded
-      attempt baseline (`base_head`), and that baseline itself must be
-      preserved on a surviving accepted ref; without it only full-tree
-      equality or accepted ancestry proves preservation. Empty or
-      caller-truncated ranges are not evidence.
+   3. Patch-range proof additionally requires an independently recorded base
+      commit, and that base itself must be preserved on a surviving accepted
+      ref; without it only full-tree equality or accepted ancestry proves
+      preservation. Empty or caller-truncated ranges are not evidence.
    4. Ambiguity preserves: conflicting hashes, an unverifiable destination,
       or a failed equivalence check means no proof -- block the prune per
       step 5.
@@ -126,7 +125,7 @@ candidate:
    ```
 
    For assignment-backed candidates also check `ace-assign status`. A running
-   assignment, an active or uncertain attempt, or any unaccounted writer blocks
+   assignment, unresolved or uncertain work, or any unaccounted writer blocks
    the prune. Missing or unreadable lifecycle
    state counts as an active writer -- preserve. `ace-overseer prune`
    enforces this itself: apply holds a durable exclusion shared with every
@@ -147,7 +146,7 @@ candidate:
 
 | Contract     | Claim | Executed proof |
 |--------------|-------|----------------|
-| Prune safety | "The work is preserved and nothing is actively writing" | `git merge-base --is-ancestor <work-head> <base>` (rc=0), or a verified declared destination (--preservation) with tree/artifact or exact content-transition equivalence; plus the executed no-writer reconciliation (overseer/assignment canonical status, terminal attempts, durable prune/start exclusion) |
+| Prune safety | "The work is preserved and nothing is actively writing" | `git merge-base --is-ancestor <work-head> <base>` (rc=0), or a verified declared destination (--preservation) with tree/artifact or exact content-transition equivalence; plus the executed no-writer reconciliation (overseer/assignment status, unresolved work, durable prune/start exclusion) |
 | Status truth | "The task is blocked on the owner" | An executable non-secret check run in this session; stale tasks closed/corrected in the same change |
 
 ## Success Criteria
