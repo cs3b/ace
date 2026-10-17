@@ -148,3 +148,30 @@ replay/authorize path sees a different chain shape in the new test's
 sequencing — compare the register event's attempt linkage and the mutate
 replay authorizer ordering before the begin call. All instrumentation has
 been reverted; the tree is syntax-clean with the red test intact.
+
+### Round 7 debugging addendum (review_context red test)
+
+Fixed a real handler bug: ordinary_review_context_submission read the producer
+assignment's events UNFILTERED (mixing the definition-producer register chain
+into the origin check); it now selects the producer attempt from the selected
+review's producer_origin before origins validation.
+
+Narrowed the remaining campaign_begin failure decisively:
+- register-event linkage is IDENTICAL in the existing (green) campaign test
+  and the new test (attempt_id "definition-<name>"; excluded by the
+  producer-run filter in both).
+- campaign_status immediately before begin returns a HEALTHY campaign at the
+  CURRENT journal commit (campaign_id, rounds, journal_commit), so the journal
+  state including the campaign mutations is fully visible to read paths.
+- Yet begin's authorize receives a producer-run-filtered chain of
+  [intent, process_start, start_attempt, submit_candidate, assign_review] —
+  WITHOUT campaign_start/campaign_pin. That list cannot be a valid historical
+  prefix (assign_review follows the campaign mutations), so it is a FILTER
+  exclusion, not a stale read: suspicion is now the attempt_id carried by the
+  campaign_start/campaign_pin mutation events themselves (chained to a
+  different attempt id than "producer-run") or the mutate-block event filter.
+- Next session entry point: one debug line printing each campaign_start/
+  campaign_pin event's attempt_id at write time and at begin's read.
+
+Existing 10 tests / 121 assertions remain green; all instrumentation removed;
+the new test remains the only red.
