@@ -32,6 +32,11 @@ bundle:
       files:
         - docs/tools.md
 
+    lab_flow:
+      title: Lab State Owners and Local Flow
+      files:
+        - docs/lab-flow.md
+
 ---
 
 # Project Context

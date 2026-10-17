@@ -442,7 +442,7 @@ PATH
 PATH
   remote: ace-task
   specs:
-    ace-task (0.40.0)
+    ace-task (0.41.0)
       ace-b36ts (~> 0.14)
       ace-git (~> 0.27)
       ace-git-forgejo (~> 0.5)

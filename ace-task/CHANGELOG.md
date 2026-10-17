@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.41.0] - 2026-10-17
+
+### Added
+
+- Support named task stores selected with `--in NAME`. A store is its own task root configured under `task.stores`; the private untracked `_overseer` store at `.ace-local/overseer/tasks` is created on demand, resolved before destination validation in create/list/show/update, and is never scanned by the project task list or `show`.
+- Reject combining `--in STORE` with `--root` or `--gc`, and report unknown store names with the configured store hint.
+
+### Changed
+
+- Replace the obsolete `root_cli_test` expectation that `.ace-tasks/_overseer` must not exist with the named-store isolation contract.
+
 ## [0.40.0] - 2026-10-16
 
 ### Added

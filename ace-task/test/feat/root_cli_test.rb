@@ -13,7 +13,6 @@ class RootCLITest < AceTaskTestCase
         refute_nil id
         path = invoke("show", id, "--root", File.expand_path(root), "--path").strip
         assert path.start_with?(File.realpath(root) + File::SEPARATOR)
-        refute Dir.exist?(".ace-tasks/_overseer")
         assert_includes invoke("list", "--root", root), id
         invoke("update", id, "--root", root, "--set", "status=in-progress,next_action=integrate")
         shown = invoke("show", id, "--root", root, "--content")
@@ -37,6 +36,26 @@ class RootCLITest < AceTaskTestCase
       root = File.join(dir, "queue")
       invoke("create", "Preview", "--root", root, "--dry-run")
       refute Dir.exist?(root)
+    end
+  end
+
+  def test_overseer_store_is_selected_with_in_and_isolated_from_project_root
+    Dir.mktmpdir("task-root-store") do |dir|
+      Dir.chdir(dir) do
+        output = invoke("create", "Overseer queue task", "--in", "_overseer")
+        store_id = output[/Created task ([0-9a-z]{3}\.t\.[0-9a-z]{3})/, 1]
+        refute_nil store_id
+
+        store_path = invoke("show", store_id, "--in", "_overseer", "--path").strip
+        store_root = File.join(File.realpath(dir), ".ace-local", "overseer", "tasks")
+        assert store_path.start_with?(store_root + File::SEPARATOR)
+        assert_includes invoke("list", "--in", "_overseer"), store_id
+
+        # The private store is not visible to the project task scope.
+        refute_includes invoke("list"), store_id
+        refute_includes invoke("list", "--in", "all"), store_id
+        assert_nil Ace::Task::Organisms::TaskManager.new.show(store_id)
+      end
     end
   end
 
