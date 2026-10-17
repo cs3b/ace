@@ -628,3 +628,24 @@ the new cut yet; HITL transport remains unselected by design; the two external
 platform blocks stand. Four adoption frictions are recorded in the evidence
 file for the gad.2 tooling line (cut-transition prepare gap, dead flock
 artifacts, git-archive umask, bundler float).
+
+### ei9.8 campaign join merged to main
+
+The two independently reviewed lines (campaign reviewer execution @54096540f;
+candidate git-root @9d33acd5a) were joined onto main in worktree
+ei9-campaign-join and merged as ac80393b4. Four conflict resolutions preserve
+both sides: release artifacts + candidate_reference lifecycle operations,
+review collection + candidate reference views, and the candidate-transfer
+max_entries preflight ahead of the shipped batch codec. Independent
+adversarial review returned APPROVE (scope statement and receipt-count
+findings corrected; the transient worktree-WIP finding verified clean and
+recorded as a process lesson); the full default suite on the branch passed
+51 packages / 12,439 tests / 43,716 assertions / 0 failures. The Captain
+approved the pending review_context large-prompt ingress design (closed kind,
+owner-selected review-collect only, shared 128MiB cap, small limits retained).
+The composition WIP is ported onto the joined cut on branch
+codex/ei9-campaign-composition-join (05e8aa967; ported receipts 10/120, 10/45,
+16/57 green) with its remaining joins — merge gate, public driver, round
+ingestion, cancellation, historical wiring, review_context implementation,
+comprehensive tests and actual Pi review — still open. Local main is 20
+commits ahead of origin; the push remains with the Captain.
