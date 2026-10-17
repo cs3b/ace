@@ -21,16 +21,28 @@ Worktree `.ace-wt/ei9-campaign-join` (branch codex/ei9-campaign-join) from main
      signatures carry max_entries.
   Plus CHANGELOG unions (ace-assign, ace-lab).
 
-## Current state: RED baseline (expected join work)
+## Current state: focused receipts GREEN; feat-group RED is pre-existing
 
-`bin/ace-test assign feat` fails fast with 19 failures
-(report `.ace-local/test/reports/assign/03190763-c68f-4f28-8cb6-a903992ec100`).
-First diagnosed root cause: `LaunchLifecycle#close` (launch_lifecycle.rb:361)
-calls `.close` on every registered scope; the two lines register different
-scope objects and `ExecutionScopeObservation` does not implement `close`
-(NoMethodError). The two lines were developed in parallel worktrees and were
-never exercised together — the handoff's predicted "complete review execution
-authority join" work, not a pick error.
+Executed on the joined tree (all green):
+
+| File | Result |
+|---|---|
+| assign feat/candidate_transfer_test.rb | 41 tests / 594 assertions PASS (max_entries preflight + batch codec + campaign read views) |
+| assign feat/authority/ordinary_reviews_test.rb | 9 / 98 PASS (union resolution incl. collection + candidate reference) |
+| assign feat/authority/command_execution_test.rb | 8 / 42 PASS |
+| lab molecules/command_policy_test.rb | 6 / 33 PASS |
+| lab molecules/command_test_runtime_test.rb | 5 / 37 PASS |
+| lab organisms/command_run_client_test.rb | 8 / 31 PASS |
+| assign feat/installed_journal_read_test.rb | 4 / 23 PASS (historical reader) |
+| assign feat/canonical_receipt_reader_test.rb | 3 / 17 PASS (historical reader) |
+
+The full `feat` group fails fast with 19 failures on the joined tree — but the
+SAME group on unmodified main ALSO fails fast with 19 (different first-seven;
+e.g. `test_production_parent_observer_driver_abort…` NoMethodError close is
+reproduced on main standalone). The feat group is systemically red on this
+macOS host (Linux-native fixtures) and is not a usable join gate; the merge
+gate remains the default fast suite plus focused groups and independent
+review, per policy.
 
 ## Remaining for the join
 
