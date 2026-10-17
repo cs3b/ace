@@ -4,6 +4,7 @@ require "digest"
 require "tmpdir"
 
 require_relative "../molecules/task_config_loader"
+require_relative "../molecules/task_scope"
 require_relative "../molecules/task_scanner"
 require_relative "../molecules/task_resolver"
 require_relative "../molecules/task_loader"
@@ -337,7 +338,15 @@ module Ace
               current_special = result[:special_folder]
               current_id = result[:id]
             else
-              mover = Ace::Support::Items::Molecules::FolderMover.new(@root_dir)
+              # Archive relocation stays inside the task's own scope: a
+              # private _overseer family archives in _overseer/_archive/ and
+              # never enters the tracked task tree. Other explicit moves keep
+              # their ordinary project-root destination.
+              archive_move = Ace::Support::Items::Atoms::SpecialFolderDetector.normalize(move_to) ==
+                Molecules::TaskScope::ARCHIVE_FOLDER
+              mover = Ace::Support::Items::Molecules::FolderMover.new(
+                archive_move ? Molecules::TaskScope.archive_root(task.path, root_dir: @root_dir) : @root_dir
+              )
               new_path = if Ace::Support::Items::Atoms::SpecialFolderDetector.move_to_root?(move_to)
                 mover.move_to_root(task)
               else
@@ -861,7 +870,7 @@ module Ace
           return unless task.subtask?
 
           current = show(task.id)
-          return unless current && current.special_folder != "_archive"
+          return unless current && !Molecules::TaskScope.archived?(current.path, root_dir: @root_dir)
 
           parent = show(current.parent_id)
           return unless parent && family_completion.complete?(parent.path, id: parent.id)

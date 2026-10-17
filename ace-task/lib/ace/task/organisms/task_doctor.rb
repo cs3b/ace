@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "../molecules/task_scanner"
+require_relative "../molecules/task_scope"
 require_relative "../molecules/task_frontmatter_validator"
 require_relative "../molecules/task_structure_validator"
 require_relative "../molecules/task_doctor_fixer"
@@ -125,7 +126,7 @@ module Ace
 
             issues = Molecules::TaskFrontmatterValidator.validate(
               spec_file,
-              special_folder: scan_result.special_folder
+              special_folder: effective_special_folder(scan_result)
             )
 
             # Filter out scope issues here (handled separately in run_scope_check)
@@ -154,12 +155,27 @@ module Ace
             next unless frontmatter.is_a?(Hash)
 
             status = frontmatter["status"]
-            special_folder = scan_result.special_folder
+            special_folder = effective_special_folder(scan_result)
 
             scope_issues = Atoms::TaskValidationRules.scope_consistent?(status, special_folder)
             scope_issues.each do |issue|
               add_issue(issue[:type], issue[:message], spec_file)
             end
+          end
+        end
+
+        # The scope rules reason about archive buckets. A private task keeps
+        # its _overseer privacy classification (detect_in_path returns the
+        # first special component), but its archive bucket is
+        # _overseer/_archive/, so scope checks see it as archived.
+        def effective_special_folder(scan_result)
+          folder = scan_result.special_folder
+          return folder unless folder == Molecules::TaskScanner::PRIVATE_FOLDER
+
+          if Molecules::TaskScope.archived?(scan_result.dir_path, root_dir: @root_path)
+            Molecules::TaskScope::ARCHIVE_FOLDER
+          else
+            folder
           end
         end
 

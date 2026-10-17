@@ -37,9 +37,18 @@ scope or into version control.
 - `.ace-tasks/_overseer/` is an ordinary special folder under the task root and
   is listed in `.gitignore`, so its tasks never enter commits.
 - `ace-task create "..." --in _overseer` creates the folder when missing and
-  `list --in _overseer` narrows the scope. The default `ace-task list` is the
-  shared view of project root tasks plus `_overseer` tasks; `_maybe`,
-  `_archive`, and other special folders stay hidden by default.
+  `list --in _overseer` narrows the scope, including private archive history.
+  The default `ace-task list` is the shared view of project root tasks plus
+  active `_overseer` tasks; archived private tasks live in
+  `_overseer/_archive/`, and `_maybe`, `_archive`, and other project special
+  folders stay hidden by default.
+- Archive relocation stays inside the task's own scope: a terminal private
+  family archives to `.ace-tasks/_overseer/_archive/<date>/`, keeps its
+  `_overseer` classification, and remains inside the gitignored tree. The
+  tracked `.ace-tasks/_archive/` never receives an `_overseer` family, and
+  `ace-task doctor --auto-fix` uses the same private archive destination. This
+  preserves the single-write-location invariant: private management state never
+  leaks into the tracked project task tree.
 - `show`, `update`, subtasks, dependencies, `status`, and `plan` handle
   `_overseer` refs like any other task; `update --move-to overseer` and
   `--move-to next` move tasks in and out of the folder. `--git-commit` is
@@ -67,9 +76,10 @@ built in L2 rather than as a new shared state service.
 
 ## Consequences
 
-- The shared `ace-task list` shows project root tasks and `_overseer` tasks
-  together, and `--in _overseer` narrows the scope; the private folder stays
-  untracked and never enters commits.
+- The shared `ace-task list` shows project root tasks and active `_overseer`
+  tasks together, and `--in _overseer` narrows the scope; the private folder
+  stays untracked and never enters commits, including when its terminal
+  families auto-archive inside `_overseer/_archive/`.
 - Worktree and implementation-assignment guards keep management tasks with the
   overseer, while subagent delegation for planning, analysis, and verification
   remains allowed.

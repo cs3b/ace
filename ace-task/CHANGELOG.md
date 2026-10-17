@@ -16,8 +16,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `ace-task create ... --in _overseer`, and narrowed with
   `ace-task list --in _overseer`.
 - Make the default `ace-task list` the shared view: project root tasks plus
-  `_overseer` tasks together; `_maybe`, `_archive`, and other special folders
-  remain hidden by default.
+  active `_overseer` tasks together; archived private tasks stay in
+  `_overseer/_archive/`, and `_maybe`, `_archive`, and other project special
+  folders remain hidden by default.
 - Support `_overseer` tasks in `show`, `update`, subtasks, dependencies,
   `status`, and `plan`, and support moving tasks in and out with
   `update --move-to overseer|next`.
@@ -27,6 +28,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Reject `--gc` for `_overseer` tasks and reject worktrees/implementation
   assignments for them in the owning tools: management tasks stay with the
   overseer while subagent delegation remains allowed.
+- Keep archive relocation inside the task's own scope: a terminal private
+  family auto-archives (and is auto-fixed by `ace-task doctor`) to
+  `.ace-tasks/_overseer/_archive/`, keeps its `_overseer` classification, and
+  never enters the tracked `.ace-tasks/_archive/` tree.
 - Resolve the project task root from the project root (not the current
   directory) for `list --in FOLDER` validation and for the plan cache/context
   resolution, so `ace-task list --in _maybe` and `plan` work from a

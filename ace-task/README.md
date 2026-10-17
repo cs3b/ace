@@ -18,8 +18,9 @@
 > owned by `ace-task`. Each project task gets one worktree under `.ace-wt/`.
 > The private overseer task list is the special folder `.ace-tasks/_overseer/`:
 > gitignored, shared with project tasks in the default `list`, and narrowed with
-> `ace-task --in _overseer`. `_overseer` tasks never get a worktree or an
-> implementation assignment. The canonical flow is
+> `ace-task --in _overseer`. It archives terminal management families inside
+> `_overseer/_archive/`, never in the tracked `_archive/`. `_overseer` tasks
+> never get a worktree or an implementation assignment. The canonical flow is
 > [docs/lab-flow.md](../docs/lab-flow.md).
 
 [Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
