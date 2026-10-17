@@ -1,35 +1,36 @@
 ---
 doc-type: user
 title: ace-hitl Usage Guide
-purpose: Practical CLI usage reference for ace-hitl event creation, triage, and resolution
-  flows.
+purpose: Practical CLI reference for local HITL event creation, triage, and answer flows.
 ace-docs:
-  last-updated: '2026-04-02'
-  last-checked: '2026-04-02'
+  last-updated: 2026-10-17
+  last-checked: 2026-10-17
 ---
 
 # ace-hitl Usage
+
+> **State owner:** `.ace-local/hitl/` -- HITL event markdown files owned by
+> `ace-hitl`. See [docs/lab-flow.md](../../docs/lab-flow.md).
 
 Canonical handbook resources:
 
 - Workflow: `wfi://hitl`
 - Skill: `as-hitl`
 
-Runtime store default: `.ace-local/hitl/` (legacy `.ace-hitl/` is no longer used as default).
+Runtime store default: `.ace-local/hitl/`.
 
-## Testing
+## Event files
 
-`ace-hitl` includes isolated fast tests and deterministic scoped integration tests.
+Each event is a markdown file with frontmatter (`id`, `title`, `kind`,
+`status`, `tags`, `assignment`, `step`, `resume`) and the question/answer
+sections. Folders:
 
-- Deterministic coverage lives under `test/fast/`.
-- This package does not introduce `test/feat/` or `test/e2e/` in this migration.
+- `.ace-local/hitl/` -- active events (`next`)
+- `.ace-local/hitl/archive/` -- archived events
 
-Verification commands:
-
-```bash
-ace-test ace-hitl
-ace-test ace-hitl all
-```
+`--scope current` reads only the current worktree's events; `--scope all` reads
+the main checkout's operator view. Without `--scope`, lookup is local-first and
+falls back across worktrees when smart scope is active.
 
 ## Create
 
@@ -38,31 +39,23 @@ ace-hitl create "Which auth strategy?" \
   --kind decision \
   --question "JWT or sessions?" \
   --question "Refresh token storage?" \
-  --assignment 8qr5kx \
+  --assignment abc123 \
   --step 020 \
   --step-name implement-auth \
-  --resume "/as-assign-drive 8qr5kx"
+  --resume "/as-assign-drive abc123"
 ```
 
-Common completion-attention handoff:
+Kinds: `clarification`, `decision`, `approval`. Completion handoff uses
+`--step completion`:
 
 ```bash
 ace-hitl create "Review completed assignment results" \
   --kind approval \
-  --question "Please confirm next action for 8qr5kx." \
-  --assignment 8qr5kx \
-  --step completion \
-  --step-name assignment-complete \
-  --resume "/as-assign-drive 8qr5kx"
+  --question "Please confirm next action for abc123." \
+  --assignment abc123 --step completion
 ```
 
 ## List
-
-`ace-hitl list` is local-first by default:
-
-- in a linked worktree: behaves like `--scope current`
-- in the main checkout: behaves like `--scope all`
-- if `--status` is omitted: includes all statuses in the selected folder scope
 
 ```bash
 ace-hitl list
@@ -70,25 +63,24 @@ ace-hitl list --scope current
 ace-hitl list --scope all
 ace-hitl list --status pending
 ace-hitl list --kind decision
-ace-hitl list --kind clarification --status pending
 ace-hitl list --tags auth,security
 ace-hitl list --in archive
 ```
 
-## Show
+With no `--status`, all statuses in the selected folder scope are listed.
 
-`ace-hitl show` also accepts `--scope current|all`.
-Without `--scope`, lookup is local-first; if not found and smart scope is active, it retries across all worktrees.
-When lookup resolves outside the current worktree, output includes an explicit `Resolved Location:` line.
-When using `--scope all`, ambiguous matches return an error with candidate paths so the operator can select the intended event explicitly.
+## Show
 
 ```bash
 ace-hitl show abc123
-ace-hitl show abc123 --scope current
 ace-hitl show abc123 --scope all
 ace-hitl show abc123 --path
 ace-hitl show abc123 --content
 ```
+
+When lookup resolves outside the current worktree, output includes an explicit
+`Resolved Location:` line. Ambiguous matches under `--scope all` list candidate
+paths instead of guessing.
 
 ## Update
 
@@ -97,195 +89,17 @@ ace-hitl update abc123 --set status=in-progress
 ace-hitl update abc123 --add tags=reviewed
 ace-hitl update abc123 --remove tags=stale
 ace-hitl update abc123 --answer "Use JWT with server-side refresh tokens."
+ace-hitl update abc123 --answer "close the assignment" --resume
 ace-hitl update abc123 --move-to archive
 ace-hitl update abc123 --move-to next
-ace-hitl update abc123 --answer "close the assignment" --resume
 ```
 
-## Ask and scoped live client
+`--answer` writes the `## Answer` body and marks the event answered. `--resume`
+optionally dispatches the event's resume instructions after the answer.
 
-```bash
-ace-hitl ask --question "Proceed with deploy?" \
-  --assignment assign685 --attempt attempt685 --project ace \
-  --effect-arg /usr/bin/notify-send --effect-arg "{answer}" --effect-cwd /tmp
-```
+## Wait
 
-Assignment and attempt are required compact managed IDs. The coordinator verifies
-an active owner and its exact native reverse binding, using the kernel peer PID
-and Runtime's existing process ancestry/birth authority. Missing peer PID or
-native evidence refuses an exact-owner claim. Darwin uses LOCAL_PEERPID; Linux
-uses SO_PEERCRED. UID equality alone never selects another attempt. There is no
-Work binding, Lab daemon socket or environment-derived reverse target.
-
-An agent explicitly hosts its watcher in its own process:
-
-```ruby
-client = Ace::Hitl::LiveClient.new(root: checkout_root)
-watcher = client.watch(request: request_id) { |delivery| handle_queue_result(delivery) }
-watcher.value
-client.status(request: request_id)
-```
-
-`deliver` consumes an authorized ordinary answer, enqueues one incarnation-bound
-Herdr event, registers its original assignment/attempt attribution with Assign,
-and sends to the exact selected terminal. The accepted owner's terminal, agent
-and native session ID are checked against the live Herdr pane before sending.
-A replaced agent in the same pane refuses rather than selecting another target.
-Repeated calls reuse the same event; uncertain sends are not automatically
-repeated. The configured Hermes transport owns Telegram request/reply routing.
-
-A delivered acknowledgement means submitted to the terminal, not read by the
-agent. LiveClient.status reads delivery history from the original Inbox owner;
-delivered answers no longer appear as pending human attention. Current agent
-progress/output comes from direct Herdr/tmux panel capture when needed.
-
-Business effects still run through their scoped owner with their own result
-and authorization. Neither a sent message nor panel output replaces verification
-of those effects. No dedicated Codex app-server, message-read signer/key or
-signed consumption/supersession reconciliation API is required.
-
-The shared versioned envelope is semantically owned by HITL and packaged in
-`ace-hitl-contract` to preserve the acyclic HITL → Assign → Herdr → contract
-graph. Its nested Hermes message and reverse reference are distinct schemas.
-OTP answers and their hashes are excluded from the envelope and native delivery.
-
-## Scoped Store Boundary (spec 8wq.t.34i)
-
-The relay request store is the PRIVATE state of one authenticated
-boundary service. `ace-hitl serve` owns the store and speaks a bounded
-JSON protocol over a UNIX socket; every client operation
-(`ask`/`deliver`/`consume`/`cancel`/`pending`/`states`/`duty`/`read`)
-runs through the authenticated boundary client — the CLI never touches
-shared store files directly.
-
-Identity is a kernel fact: the service resolves each connection's peer
-uid from the OS (`getpeereid`), and payload fields or environment
-variables can never name a requester. Clients authenticate the
-endpoint back: the socket must be owned by the trusted service uid,
-must not be world-writable, and the connected peer must BE the service
-uid. Authorization facts (service uid, transport uids, per-project
-Captain visibility) come only from the trusted deployment grants
-document — the same file and traversal trust rules as ace-lab
-(default `ACE_HITL_GRANTS_PATH`, `/etc/lab/ace-lab/authorization.yml`).
-
-```bash
-# Deployment (root runs the service under its own account):
-ace-hitl serve --socket /run/ace-hitl-project/lifecycle.sock \
-  --store-root /var/lib/ace-hitl-project --group ace-hitl-project
-# ACE_HITL_SOCKET, ACE_HITL_STORE_ROOT and ACE_HITL_GRANTS_PATH may supply paths.
-```
-
-Give each authority a dedicated service/root-owned, non-world-writable socket
-directory and a dedicated control group. Do not place its socket in `/run/lab`
-or another directory containing unrelated service sockets: granting the
-transport access to that directory's shared group can expose those endpoints.
-
-Store layout (all service-owned): `0711` traverse-only root;
-`requests/ answers/ secrets/ effects/ locks/ terminals/` are `0700`;
-`public/` is `0755` with `0440` non-secret projections. There is no
-chmod-to-world-writable mode: requesters receive answer bytes over the
-authenticated connection, never through file ownership.
-
-Roles:
-
-- requester: create, consume and cancel its OWN requests (request
-  facts come back from `ask`/`consume`; the boundary `read` protocol
-  operation is available to library clients);
-- configured transport (grants `hitl.transport_uids` + principals):
-  `deliver`, `pending`, `states`, `duty`;
-- unknown identity is an error, never permission.
-
-Failures are classified end to end: `PermissionError`,
-`BindingError`, `StateError`, `AnswerError`, and `TransportError`
-(unavailable/untrusted boundary, deadline, malformed frame) — transport
-failures are visible and recoverable, and duplicate consume/cancel are
-idempotent (the committed receipt replays; a conflicting transition is
-an error).
-
-## Relay Lifecycle (Generic HITL Request Store)
-
-The generic relay request lifecycle is native to the gem
-(`Ace::Hitl::Lifecycle`; migration spec 8wm.t.y21, scoped by
-8wq.t.34i). Requests never expire on a timer, every terminal
-transition shares one stable per-request lock, and the store root is
-`ACE_HITL_STORE_ROOT` (default `/run/lab/hitl`); the Overseer channel
-root is `ACE_HITL_OVERSEER_CHANNEL_ROOT` (default
-`/lab/state/overseer-channel`). Machine output is one JSON line.
-
-Managed binding (the default authority):
-
-```bash
-ace-hitl ask --question "Choose the next scope" \
-  --assignment 8x3abc --attempt a1b2c3 --project ace
-```
-
-The request binds to the exact ACTIVE MANAGED attempt of the calling
-identity, verified through the ace-assign coordinator under the
-assignment exclusion: a stale, ended, replaced, or uncertain attempt
-cannot acquire authority, and the exclusion is HELD across every
-consume/deliver transition so an attempt cannot end between the
-liveness check and the commit. Assignment and attempt identity are always explicit;
-there is no legacy Work-only contract.
-
-Transport side:
-
-```bash
-ace-hitl pending                    # answerable requests
-ace-hitl states                     # all public lifecycle projections
-ace-hitl duty                       # pending + escalated projection
-ace-hitl deliver hitl-0a1b2c3d4e5f6708 <<< "approved"
-```
-
-`deliver` reads the answer from stdin and relays it unchanged. OTP
-bytes go to the service's memory vault; plain answers to the
-service-owned `0600` answers file. Liveness is re-verified under the
-lock, and the declared effect callback (non-OTP kinds only) executes:
-exec-style argv (never a shell), `{answer}` substituted once per
-element, optional fullmatch regex gate, bounded timeout, attempts
-logged redacted in the effects log, and one deduped escalation with
-`effect_state: callback-escalated` in the public projection on failure
-(`callback-ok` on success). Duplicate deliveries are idempotent: the
-committed answer is reported without re-running any effect.
-
-Requester side:
-
-```bash
-ace-hitl consume hitl-0a1b2c3d4e5f6708
-ace-hitl consume hitl-0a1b2c3d4e5f6708 --timeout 600
-ace-hitl cancel hitl-0a1b2c3d4e5f6708 --reason "operator stopped the work"
-```
-
-A consume timeout bounds ONLY the local wait — the request stays
-pending and answerable. OTP consumption requires the challenge's
-authorized operation (`--operation <name>`); the secret transfers
-exactly once and a consumed retry replays the receipt WITHOUT the
-bytes. The persisted challenge deadline is checked at the locked handoff;
-consumption at or after that deadline refuses with an expired error and
-discards the pending secret. Memory retention ends at the earlier of the
-challenge deadline and the vault TTL. Delivery, duplicate delivery, waits,
-and service restarts cannot extend the authorized window. Request a fresh
-authorized challenge after expiry. Cancel is the ONLY way to abandon a request, requester-only;
-it records `cancelled_by` and the `reason` in the public projection,
-and late answers/consumes fail closed against the committed receipt.
-
-Overseer reverse address (bounded, type-tagged responses):
-
-```bash
-ace-hitl overseer-send --reply-to 321 <<< "[decyzja] Rekomendacja: A."
-ace-hitl overseer-pending
-ace-hitl overseer-ack msg-0123456789abcdef
-```
-
-Responses are 1..1200 characters and must open with a type tag
-(`[decyzja]`, `[pytanie]`, or `[info]`); full SHAs, Work/Attempt/task
-IDs, or the word "SHA" are rejected. `overseer-send` is the overseer
-user's operation; `overseer-pending`/`overseer-ack` are host-broker
-(root) operations used by the transport to drain and acknowledge
-relayed responses.
-
-## Wait (Polling Default)
-
-Wait only for a specific HITL id. This is the default reliability path for the requester agent.
+Poll one specific event until it is answered:
 
 ```bash
 ace-hitl wait abc123
@@ -293,28 +107,12 @@ ace-hitl wait abc123 --poll-every 600 --timeout 14400
 ace-hitl wait abc123 --scope current
 ```
 
-Managed event waits resolve `lab_request_id` and consume through authenticated
-IPC. They never read folder projections or persist returned answers into the
-local event. Explicit pane-less scripts can wait without any local event:
+The default wait is indefinite; a positive `--timeout` bounds only this call
+and never expires the request. `wait` never invents an answer.
 
-```bash
-ace-hitl wait --request hitl001 --timeout 30
-ace-hitl wait --request otp001 --operation gem-push
-```
+## Lifecycle event names
 
-The default managed wait is indefinite; a positive timeout bounds only this
-call. It never expires the request. OTP consumption requires the authorized
-operation and returns its bytes only over protected IPC. Local event polling
-remains available for ordinary unbound local events. Managed events cannot use
-`update --resume` to launch unscoped session/shell delivery.
-
-Installed acceptance uses actual registered Telegram ingress, the selected
-live Herdr/tmux terminal and the real scoped users in Lab. Controlled local
-transport tests do not replace launching and observing the actual task.
-
-## Lifecycle Event Names
-
-Canonical namespace for HITL lifecycle signaling:
+HITL lifecycle signals use this namespace:
 
 - `hitl.event.created`
 - `hitl.event.answered`
@@ -325,195 +123,18 @@ Canonical namespace for HITL lifecycle signaling:
 - `hitl.event.resume_failed`
 - `hitl.event.archived`
 
-## Pending recovery history across bounded IPC pages
+## Planned waves
 
-`ace-hitl pending --project ace` continues to show unresolved native delivery
-claims even after their answers have been consumed. A large retained history
-must not prevent newly created questions from reaching Telegram.
+> **Planned (L2):** one unified report/question/reply interface with
+> configurable provider adapters -- not available yet. The authenticated service
+> boundary (`serve`), OTP/TLS, scoped multi-user stores, relay
+> request/answer/consume commands, and the immutable proposal flow belong to
+> L2. Adapters (`ace-hitl-hermes`) and transports (tmux, Herdr) are not
+> additional state owners.
 
-The lifecycle wire `pending` operation returns `{items, next}`. `next` is an
-exclusive request-ID cursor; send it as `after` with the same project for the
-next page. Each response, including framing, fits the IPC byte limit. Every
-page rechecks transport/project authorization. `Lifecycle::Client#pending`
-collects the pages for existing Ruby/CLI callers; `pending_page(project:, after:)`
-exposes a single bounded page. `read(id)` remains available for exact recovery.
-No consumed claim is deleted to make the list fit. A record too large for one
-page produces a classified error, never a successful truncated list.
-
-This is a live keyset scan, not a frozen snapshot: a newly inserted ID before
-the current cursor appears on the next scan. Repeated polling therefore remains
-required; a cursor is not proof of delivery or native consumption.
-
-## Immutable second-commander proposals
-
-`ace-hitl proposal create proposal-0123456789abcdef01234567 --assignment ID --attempt ID --project ID --file proposal.json`
-returns persisted immutable proposal/revision/request IDs and current awaiting-delivery state immediately, even with unavailable transport. delivered_at and deadline are absent until acknowledged submission; show exposes them afterward. The sole Hermes
-polling actor publishes the full precise proposal and records confirmed submission before
-HITL persists delivered_at and a deadline exactly sixteen hours later. Failed or uncertain
-submission cannot arm the window. A Telegram Reply `approve [rationale]`, `veto [rationale]`
-or `clarify [rationale]` applies only to the correlated immutable revision; other replies
-stop automatic approval and require revision. Missing rationale remains absent.
-
-The JSON proposal requires operation, target (`resource` and optional `artifact_digest`),
-candidate_head, input_digest, context, options, recommendation and prerequisites; rationale
-is optional. Contents are bounded and non-secret. Input digest uses the canonical service
-input digest. Candidate head is separate from base head and the evidence journal commit.
-Only operation classes explicitly delegated in trusted project policy are eligible
-for sixteen-hour silence. Delegation must exist when the revision is created and
-remain current at the deadline; a later grant cannot approve an older revision.
-Without delegation the proposal still accepts an explicit correlated decision.
-Fixed service scope, current head,
-independently executed review/tests, bound running attempt and operation-specific OTP gates
-still apply at execution. Proposal authorization never supplies credentials or runs a callback.
-
-All proposal reads, revisions and transport acknowledgements/replies carry an explicit project.
-The authority selects that project's canonical Assign journal; a proposal ID does not select a journal.
-The managed request's existing project supplies this selector for ordinary `read`; Hermes uses the
-accepted envelope's project for acknowledgement, reply and reconciliation. Missing selectors are
-rejected, and an ID from another project's journal cannot be read or changed through the selected project.
-
-`ace-hitl proposal show ID --project PROJECT --format json` shows decision, deadline, actual Assign claim/outcome
-and a bounded history page; continue with `--history-after HISTORY_NEXT`.
-`ace-hitl proposal history --project ID --query TEXT` retrieves relevant prior decisions;
-continue with `--after NEXT`. Current project grants and exact requester identity gate history and show; losing project access refuses reads and excludes history, including lifecycle proposal request reads.
-`ace-hitl proposal revise ID --project PROJECT --expected-revision N --operation-id revision-abcdef0123456789abcdef01 --file changed.json` supersedes the prior decision and creates a
-new request with a fresh full window after acknowledgement. An unresolved claimed effect
-must be reconciled before revision; known successful or proven no-effect settlement can be
-followed by a new revision. Persist the proposal ID, expected source revision, stable revision operation ID and exact file before invocation. The operation ID is `revision-` followed by 24 lowercase hex digits and is unique across proposals. Exact retry returns that committed revision, including after acknowledged delivery, approval or a later revision, without creating another request or resetting the window. Changed proposal/source/content/caller bindings and stale-source new operations are refused. Supersession and new prepared revision commit atomically against effect claims. Generic lifecycle `create` rejects proposal kind; use this canonical proposal interface.
-
-Set ACE_HITL_SOCKET and ACE_HITL_PROJECT for the living overseer. It calls
-`ace-hitl proposal resolve-due --project PROJECT` on start/status/watch ticks.
-The authenticated proposer queues an idempotent reconciliation wake in the
-canonical Assign proposal; the command returns `queued-for-transport`, never an
-approval claim. The existing installed Hermes `serve` loop polls Telegram under
-its own configured transport UID and reconciles queued deadlines after polling.
-No proposer subprocess opens transport configuration or impersonates transport.
-Hermes holds its ingress lock across checkpoint and HITL decision transition;
-unknown health/backlog defers resolution. Failed ticks remain visible while
-watch/status continues. Production `--now` is rejected.
-
-Creation requires an explicit stable ID (`proposal-` followed by 24 lowercase
-hex digits). Persist that ID before invocation and retry the exact same ID,
-assignment, attempt, caller and document after failure or a lost reply. Changed
-binding/content is refused. Assign commits the immutable prepared lifecycle
-request first; exact retry or the transport pending scan materializes it after
-restart. No pending lifecycle orphan exists before canonical commit. Concurrent
-materialization creates once and preserves current delivered/answered state.
-
-Unresolved earlier same-request ingress blocks later approval delivery. Exact
-reply sequence/content/time deduplication uses canonical decision history;
-unseen lower sequence is applied, and changed duplicate content is refused.
-History grows in the existing canonical event chain, while public responses use
-bounded pages. Hermes metadata never stores message bodies.
-
-The immutable authorization reference is the revision ID, passed to `ace-lab service request`.
-Assign atomically checks the canonical proposal under its sole journal claim lock/CAS;
-a forged prefix/YAML string or changed operation/target/head/input/caller cannot authorize.
-A late veto before claim denies execution. After claim it records stop_requested without
-rewriting performed effects; the service rechecks it before safely stoppable invocation.
-An uncertain claim remains uncertain on restart and is never automatically dispatched again.
-Canonical sanitized decision history shares the qjl evidence ref; no parallel executor or
-execution ledger exists in HITL. This source workflow is not installed/native/Telegram or
-multi-UID acceptance proof.
-
-### Proposal admission configuration
-
-The protected HITL service reads proposer admission from the same trusted grants
-policy as transport and project authorization. For example:
-
-```yaml
-hitl:
-  service_uid: 1200
-  transport_uids: [1201]
-  proposal_uids: [1202]
-  silence_operations:
-    ace: [merge]
-authorization:
-  principals:
-    "1201":
-      projects: [ace]
-    "1202":
-      projects: [ace]
-```
-
-`proposal_uids` admits authenticated kernel peers to create and revise proposals
-only for their configured projects. Transport admission alone cannot create a
-proposal; proposer admission cannot acknowledge delivery, fabricate ingress, or
-resolve silence. Missing role or project admission refuses the operation,
-including direct library calls. This is a source configuration contract;
-installed deployment adoption remains part of gad.8 acceptance.
-
-`silence_operations` is an exact project-to-operation list, with no wildcards or
-implicit publish/deploy/access grants. It never expands command or credential
-authority. TLS authorities read the same trusted grants document selected by
-`--grants-path`; certificate authentication alone grants no silence decision.
-
-### Controlled installed proposal verification
-
-From an ACE checkout with Ruby, tmux and the complete dependency archives cached locally:
+## Testing
 
 ```bash
-bin/ace-test ace-hitl edge --filter installed_proposal_test --config-path "$PWD/ace-hitl/test/support/installed_proposal/runner.yml"
+bin/ace-test ace-hitl
+bin/ace-test ace-hitl all
 ```
-
-The explicit fixture configuration activates the installed scenario without changing
-test deadlines. Default package runs skip it. The run builds the current runtime
-gem closure and installs it into an empty GEM_HOME, using local archives only.
-It prints `Installed SC3 artifacts: /tmp/ace-installed-sc3/run-...`; read the
-reported test receipt and that directory's `result.json`, `artifacts.json`,
-`build-provenance.json`, `processes.jsonl` and `canonical-evidence.json`. A manifest/result pointer is
-retained under checkout `.ace-local/installed-sc3/`.
-
-The expected terminal result is one passing test with no failures/errors. Its
-consumer asserts confirmed submission + sixteen hours, actual service/actor
-process restarts, one effective authorization and one executor invocation with
-a canonical verified receipt. Failed submission does not arm a deadline; lost
-poll coverage stays blocked, including after fresh polling. Changed technical
-scope remains refused after approval. No inbox record is manually inserted.
-
-UTC and Telegram are test-only injected adapters. Assignment binding, kernel peer
-authentication, policy, claim, execution and receipt verification remain real.
-The fixture uses one host and the current UID, with an isolated tmux process and
-the existing local service mode. It does not prove live Telegram, protected Herdr
-launch, installed root-owned grants, or multiUID privilege separation. There is
-no production `--now` or transport-override option.
-
-Missing local dependency archives fail visibly without network fallback. A failed
-consumer retains diagnostic artifacts; inspect `result.json` and `service.log`
-before retrying. Each invocation retains a new run directory and requires a new
-empty GEM_HOME.
-
-## The host/Incus mTLS crossing (nh0-A)
-
-`ace-hitl serve --tls-authority FILE` runs one lifecycle authority of
-the shared-Hermes topology on a loopback TCP endpoint where the
-project's Incus TCP proxy device connects. The authority config
-(`ace.hitl.tls.authority/v1`, closed fields, root-owned runtime file
-`root:<service-group> 0640`) owns the loopback listen address, the
-project ID, the service account names and the server credential
-reference — never secret bytes:
-
-```json
-{"schema": "ace.hitl.tls.authority/v1",
- "project_id": "proj-a", "listen": "127.0.0.1", "port": 8443,
- "service_user": "hitl-proj-a", "service_group": "hitl-proj-a",
- "tls_server_credential": {
-   "certificate_file": "/etc/ace-hitl/proj-a/server.pem",
-   "private_key_file": "/etc/ace-hitl/proj-a/server-key.pem",
-   "ca_file": "/etc/ace-hitl/proj-a/ca.pem",
-   "server_uri_san": "urn:ace:hitl:proj-a:lifecycle-server",
-   "allowed_client_uri_san": "urn:ace:hitl:proj-a:hermes-client",
-   "allowed_client_certificate_sha256": "<64 lowercase hex>"}}
-```
-
-Startup enforces the exact provisioning layout (ancestors `root:root`
-0755, project directory `root:<service-group>` 0750, private key
-`<service-user>:<service-group>` 0400 and never hard-linked,
-certificate/CA `root:root` 0444) BEFORE any socket opens, validates its
-own certificate identity (single URI SAN, serverAuth EKU, key match),
-speaks TLS 1.3 only, and admits exactly the configured client
-SAN/fingerprint pair — bound to the authority's one project, with
-pending flows and creates refused for any other project. Unix
-peer-credential serving (`serve` without `--tls-authority`) remains the
-same-runtime boundary. lab-config (gad.8/gad.b) owns accounts, file
-provisioning, Incus proxy devices and the tailnet listeners.

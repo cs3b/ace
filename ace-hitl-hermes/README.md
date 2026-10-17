@@ -1,45 +1,49 @@
 # ace-hitl-hermes
 
-Folder-as-interface HITL transport plugin for the hermes relay
-(specs `8wm.t.vs1` and `8wm.t.y24`). The shared folder between the lab and hermes **is**
-the transport:
+Folder-as-interface HITL transport plugin for the hermes relay. The shared
+folder between the lab and hermes **is** the transport:
 
 - a **message** is a file `<id>.json` in the channel folder;
 - the **address** is `<machine>/<folder>/<id>`;
-- **delivery** is push — the consuming side picks the validated file up
-  and takes it to its target (the explicit HITL live client queues ordinary
-  answers to the exact native owner; Hermes surfaces questions to the Captain);
+- **delivery** is push -- the consuming side picks the validated file up and
+
+  takes it to its target;
+
 - **ACK** is the deletion of the file after delivery.
 
-The Captain's answer is a file `<folder>/<id>.json` with the fields
-`answer` / `sender` / `received_at`, written atomically (same-directory
-tmp file + rename) without root.
+> **State owner:** none for task, assignment, or HITL-event state. HITL events
+> are owned by `ace-hitl` in `.ace-local/hitl/`; this package owns only its
+> folder protocol and private transport state (journal/offsets) under its
+> configured state directory. See [docs/lab-flow.md](../docs/lab-flow.md).
+
+The Captain's answer is a file `<folder>/<id>.json` with the fields `answer` /
+`sender` / `received_at`, written atomically (same-directory tmp file + rename)
+without root.
 
 ## Contract
 
-- Folder contract: `ace.hitl.hermes.folder/v1` (specs `8wm.t.vs1` and `8wm.t.y24`).
-- Message schema: `ace.hitl.hermes.message/v1`; the machine-readable
-  JSON Schema ships at
+- Folder contract: `ace.hitl.hermes.folder/v1`.
+- Message schema: `ace.hitl.hermes.message/v1`; the JSON Schema ships at
+
   `lib/ace/hitl/hermes/schemas/message.v1.schema.json`.
-- State machine: write -> validate -> deliver -> ACK deletion, with
-  bounded retries (collision at write time, undeleted after delivery)
-  and quarantine as the terminal branch for invalid files.
-- Canonical shared-contract file location/ownership is settled by A4
-  (`8wm.t.vs2`); the lab-config consumer side is `8wm.t.vp9` (separate
-  repository, intentional cross-repo reference).
+
+- State machine: write → validate → deliver → ACK deletion, with bounded
+
+  retries (collision at write time, undeleted after delivery) and quarantine as
+  the terminal branch for invalid files.
 
 ## Surface
 
 | Piece | Responsibility |
-|---|---|
-| `Hermes::Molecules::HermesChannels::Registry` | channel registry + `<machine>/<folder>/<id>` addressing, fail closed |
-| `Hermes::Molecules::HermesFormats` | decode gate: UTF-8, 64 KiB bound, JSON object, known schema only |
-| `Hermes::Molecules::HermesMessage` | typed envelope, fail-closed validation, canonical JSON |
-| `Hermes::Molecules::HermesAtomicWriter` | same-directory tmp + rename, no root (euid 0 refused) |
-| `Hermes::Molecules::HermesQuarantine` | quarantine moves + reason sidecars |
-| `Hermes::Molecules::HermesRetryPolicy` | collision + undeleted-file retry decisions |
-| `Hermes::Molecules::HermesNotifications` | deterministic single-line notification texts |
-| `Hermes::Organisms::HermesBox` | folder interface per channel: `publish`, `poll`, `ack`, `age`, `identical?` |
+|-------|----------------|
+| `HermesChannels::Registry` | channel registry + `<machine>/<folder>/<id>` addressing, fail closed |
+| `HermesFormats` | decode gate: UTF-8, 64 KiB bound, JSON object, known schema only |
+| `HermesMessage` | typed envelope, fail-closed validation, canonical JSON |
+| `HermesAtomicWriter` | same-directory tmp + rename, no root (euid 0 refused) |
+| `HermesQuarantine` | quarantine moves + reason sidecars |
+| `HermesRetryPolicy` | collision + undeleted-file retry decisions |
+| `HermesNotifications` | deterministic single-line notification texts |
+| `HermesBox` | folder interface per channel: `publish`, `poll`, `ack`, `age`, `identical?` |
 
 ## Usage
 
@@ -73,23 +77,22 @@ end
 
 ## Telegram transport
 
-The installed `ace-hitl-hermes serve` actor owns exact registered-group correlation,
-submission acknowledgements, durable ingress sequencing and conservative checkpoints.
-OTP goes directly through authenticated `ace-hitl` IPC; sensitive folder answers are
-rejected before publication. Ordinary answers require authenticated request classification.
-See [configuration, single polling owner and recovery](docs/usage.md).
+The `ace-hitl-hermes serve` actor is the Telegram polling adapter: it maps
+registered groups to configured project folders, publishes questions,
+correlates replies, and ACKs by deletion. Configure it with an explicit
+channels registry and runtime file; see
+[configuration and recovery](docs/usage.md).
+
+## Planned waves
+
+> **Planned (L2):** one unified report/question/reply interface with
+> configurable adapters (single or set) is not available yet. `ace-hitl-hermes`
+> remains an adapter package; the old authenticated service boundary, OTP
+> handling, and multi-user protected store are not requirements of the local
+> file-based flow.
 
 ## Development
 
 ```sh
-ace-test atoms      # fast unit tests
-ace-test            # the whole package suite
+bin/ace-test ace-hitl-hermes all
 ```
-
-The installed `serve` actor also publishes newly created scoped requests from
-authenticated `pending(project:)` into its registered folder channel before
-submitting questions. One group can serve multiple explicitly configured project authorities with separate project folders and exact Reply correlation. Durable ordinary ingress retries independently per project; OTP remains transient. Ask needs no manual post or hidden Lab watcher. Projects
-without a registered authorized channel remain pending. Folder identity/body
-conflicts refuse publication; repeated runs do not send the same submitted
-question again. This actor remains the sole Telegram polling owner described
-above. Actual installed Telegram acceptance is a separate deployment gate.

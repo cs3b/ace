@@ -1,637 +1,119 @@
 # ace-lab usage
 
-Topology, routing, and scoped service requests for the Lab. Resolves stable
-project, agent, and service IDs without transient pane IDs or shared service
-credentials.
+`ace-lab` currently exposes read-only topology queries and one explicit
+project-command kernel. The lab installer and project onboarding are
+**planned (L8: not available yet)**.
 
-## Commands
+The file-based ownership model is documented once in
+[../../docs/lab-flow.md](../../docs/lab-flow.md).
 
-Topology commands accept `--format json` (the only supported format) and
-`-q/--quiet`. Service status accepts `--format json`; service request always
-emits JSON.
+## Topology
 
-### `ace-lab projects`
-
-List projects visible to the verified caller.
-
-    $ ace-lab projects --format json
-    {"status":"ok","data":{"projects":[{"id":"atlas","label":"Atlas platform"},{"id":"borealis"}]}}
-
-A caller with no configured principal receives:
-
-    {"status":"error","error":{"code":"unauthorized","message":"caller has no configured authorization for any lab project"}}
-
-### `ace-lab agents --project PROJECT`
-
-List agents in one project.
-
-    $ ace-lab agents --project atlas --format json
-    {"status":"ok","data":{"agents":[{"id":"atlas-planner","project":"atlas","role":"planner","capabilities":["planning"],"binding":{"kind":"runtime","state":"available"}}]}}
-
-`binding.state` is `available` when the configured runtime binding is active
-and its instance identity matches the attestation; otherwise `stale`.
-
-### `ace-lab services --project PROJECT`
-
-List services in one project.
-
-    $ ace-lab services --project atlas --format json
-    {"status":"ok","data":{"services":[{"id":"atlas-search","project":"atlas","capabilities":["search"],"default_for":["search"],"binding":{"kind":"service","state":"available","endpoint":{"kind":"http","url":"https://search.example.internal:8443"}}}]}}
-
-The endpoint is a sanitized identity: scheme, host, and explicit port only.
-
-### `ace-lab resolve --id ID`
-
-Resolve one entry by exact stable ID.
-
-    $ ace-lab resolve --id atlas-planner --format json
-    {"status":"ok","data":{"entry":{"id":"atlas-planner","project":"atlas","role":"planner","capabilities":["planning"],"binding":{"kind":"runtime","state":"available"}}}}
-
-Labels are display values and never resolve: `resolve "Atlas platform"` is a
-`missing` error.
-
-### `ace-lab route --project PROJECT --capability CAPABILITY`
-
-Select a configured capable service in the requested project.
-
-    $ ace-lab route --project atlas --capability search --format json
-    {"status":"ok","data":{"entry":{"id":"atlas-search","project":"atlas","capabilities":["search"],"default_for":["search"],"binding":{"kind":"service","state":"available","endpoint":{"kind":"http","url":"https://search.example.internal:8443"}}}}}
-
-Routing never invokes the service and never grants credentials.
-
-### `ace-lab service request`
-
-**Goal:** Ask a configured service to perform one named operation for an
-active, task-attached assignment attempt. First create a JSON input file:
-
-```json
-{"target":{"resource":"release/1.2.3","artifact_digest":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},"arguments":{"version":"1.2.3"}}
-```
-
-Run a preview, then submit the exact request:
-
-```sh
-ace-lab service request --project atlas --assignment A --attempt ATT \
-  --operation publish --input release.json --authorization DECISION \
-  --request-id REQUEST --dry-run
-ace-lab service request --project atlas --assignment A --attempt ATT \
-  --operation publish --input release.json --authorization DECISION \
-  --request-id REQUEST
-```
-
-The preview reports `outcome: accepted` with `dry_run: true` and the selected
-service ID, target, and candidate head. It creates no request claim or effect.
-The second command returns `succeeded`, `failed`, or `uncertain` with a
-non-secret receipt when the executor confirms an outcome. A missing response
-leaves `uncertain` in the assignment evidence ref; do not retry with a new ID
-until the external outcome is reconciled. Repeating the same ID and input
-returns its stored state without dispatching again. A changed binding under
-the same ID is a `conflict` error.
-
-Input must be a JSON object of at most 64 KiB. `target.resource` is a stable
-resource ID; `target.artifact_digest`, when supplied, is a SHA-256 hex digest.
-Credential, password, secret, token, private-key, authorization, and env keys
-are rejected recursively. Operation arguments remain structured JSON sent to
-the executor; no caller-provided shell command or argv is accepted.
-
-| Option | Purpose |
-|--------|---------|
-| `--project` | Project stable ID |
-| `--assignment` | Assignment ID |
-| `--attempt` | Active managed attempt ID |
-| `--operation` | Configured named operation |
-| `--input` | Structured JSON file |
-| `--authorization` | Exact decision or configured automation reference |
-| `--request-id` | Idempotency key; use the same ID for retries/status |
-| `--dry-run` | Validate and show scope without an effect |
-
-### `ace-lab service status`
-
-```sh
-ace-lab service status --request REQUEST --format json
-```
-
-Expected output after a lost executor receipt:
-
-```json
-{"status":"ok","data":{"request_id":"REQUEST","outcome":"uncertain","state":"uncertain"}}
-```
-
-Only the original OS caller identity with project visibility can read the
-request. The authoritative state survives loss of the local assignment cache
-because it lives in the separate assignment evidence Git ref.
-
-### `ace-lab service listen --mode ordinary-merge`
-
-The installed ordinary service owns the Assign, HITL and merge endpoints in one
-process. Start it as the configured service account:
-
-```sh
-ace-lab service listen --mode ordinary-merge --project atlas \
-  --config /etc/lab/ace-lab/atlas-receiver.yml
-```
-
-The receiver configuration selects its existing forge, repository, principal and
-merge socket. `/etc/lab/ace-lab/assign-owners.yml` separately selects the canonical
-Assign journal and native execution owner. Both selections must agree with the
-ordinary project mapping in the trusted authorization document. `repo_path` is
-the merge candidate repository; it does not choose the execution journal.
-
-Each project entry in the root-installed assignment document contains:
-
-| Entry | Installed selection |
-|---|---|
-| `service` | Non-root owner UID/GID, assignment socket and private state root |
-| `journal` | Service-owned repository, execution ref and private evidence checkout |
-| `assignment_root`, `lifecycle_root` | Separate private prepared-input and exclusion directories |
-| `runtime_binary`, `native` | Installed executable and exact native server/socket generation from the installation receipt |
-| `worktrees` | Allowed worktree root and Git common directory |
-| `participants` | OS UID/GID/actor, native workspace and supervisor panes |
-| `hitl` | Private store root, distinct socket, dedicated group, trusted grants path and optional installed TLS authority reference |
-
-For example, the `hitl` entry inside an already selected project can be:
+Topology configuration is read from `~/.ace/lab/config.yml` or
+`.ace/lab/config.yml` through the normal ACE configuration cascade. All
+topology commands accept `--format json` (the only supported format) and
+`-q/--quiet`.
 
 ```yaml
-hitl:
-  root: /var/lib/lab/assign/atlas/hitl
-  socket_path: /run/lab/assign/atlas/hitl.sock
-  group: atlas-lifecycle
-  grants_path: /etc/lab/ace-lab/authorization.yml
-```
-
-The store must be a separate child of that project's `service.state_root`; the
-installer creates `service.state_root` with mode `0700`, the HITL root with its
-maintained mode `0711`, and socket access before startup. The private parent keeps
-the HITL tree inaccessible to other accounts; Store maintains private request and
-secret subdirectories. Startup and restart validate the same layout.
-`hitl.service_uid` in the grants document must equal the Assign owner UID. Native
-identities come from the installed receipt and live observation, not the project
-configuration cascade. HITL requests, decisions and merge claims use the same
-canonical Assign journal and lifecycle exclusion.
-
-For the existing remote Hermes transport, install its project-scoped mTLS
-authority and add its absolute configuration path to this same `hitl` entry:
-
-```yaml
-  tls_authority: /etc/lab/ace-hitl/atlas-tls.json
-```
-
-The referenced file uses the maintained `ace.hitl.tls.authority/v1` schema and
-credential provisioning layout from `ace-hitl`. Its project must match this
-owner; `service_user` and `service_group` must resolve to the owner's actual UID
-and primary GID. The dedicated Unix control group remains `hitl.group`. Root
-installs the credential references and Incus TCP proxy; callers cannot choose
-them. Invalid ownership, identity, project or TLS material prevents startup.
-
-The TLS listener runs in this same service process and shares its exact HITL
-binding, store, decision policy and in-memory one-time OTP vault. Hermes uses its
-verified project certificate as a remote transport identity; it does not need a
-synthetic Unix transport UID. Keep `transport_uids` empty when no local transport
-is installed. Configure the actual local proposer separately with
-`proposal_uids` and its project grant. A proposer grant never authorizes replies
-or delegates silence-based decisions. Restart the composed service after changing
-its TLS authority or credential selection, retaining the canonical journal.
-
-All selected endpoints must become ready before assignment ingress opens. A
-failed endpoint shuts down the complete owner. A stale assignment endpoint needs
-installer inspection; startup does not remove it or recover merge effects first.
-
-## Ordinary assignment client
-
-`ace-lab assignment` selects the root-installed project owner and uses the
-existing Assign protocol. Assign remains the only accepted execution journal.
-Preparation captures reviewed task context and the existing managed assignment
-graph; it does not start a worker or register accepted work.
-
-```sh
-ace-lab assignment prepare --project atlas --task 8wr.t.abc --pane w1:pS \
-  --output .ace-local/prepared-task
-ace-lab assignment request --project atlas --input .ace-local/prepared-task/request.json
-```
-
-The output directory must not exist. Preparation retains the definition, bundle,
-and registration request with one stable mutation ID. `--dependency-reports FILE`
-selects an explicit JSON array of `{task_id, assignment_id, number}` entries for
-dependency reports. A failed preparation keeps partial files for inspection;
-it never rebuilds an existing directory. In this source checkout use
-`bundle exec ace-lab` because no `bin/ace-lab` binstub is committed.
-
-Every request file has exactly these fields:
-
-```json
-{
-  "version": 1,
-  "project_id": "atlas",
-  "operation": "start_attempt",
-  "mutation_id": "original-start-001",
-  "params": {
-    "assignment_id": "assignment-id",
-    "attempt_id": "attempt-id",
-    "expected_generation": 0,
-    "scope": "010",
-    "head": "0123456789012345678901234567890123456789",
-    "pane": "w1:p2"
-  },
-  "parts": []
-}
-```
-
-Use actual retained IDs, scope, head and native pane. The actual worker executes
-its start request: the owner verifies caller ancestry, live process and checkout.
-A supervisor cannot impersonate another pane by changing `pane`. A new terminal
-or prompt acknowledgement alone is not running proof.
-
-| Operation | `params` beyond `assignment_id` | Transfer / authority |
-|---|---|---|
-| `register_assignment` | Generated by prepare | Exact prepared bundle; supervisor |
-| `registration_status` | None | Read; `mutation_id: null` |
-| `start_attempt` | `attempt_id`, `expected_generation: 0`, `scope`, `head`, `pane` | Actual worker start |
-| `assignment_snapshot` | `attempt_id` (or null), `kind: queue` or `prepared_work` | Download; `mutation_id: null` |
-| `queue_start` | `attempt_id`, `expected_generation`, `pane`, `step` (or null for next) | Original worker |
-| `queue_finish` | Same as queue_start | One UTF-8 report part |
-| `queue_fail` | `attempt_id`, `expected_generation`, `pane`, `message` | Original worker; unfinished work stays failed |
-| `submit_result` | `attempt_id`, `expected_generation`, `pane`, `head`, `receipt_sha256` | Receipt first, then its ordered artifacts; original worker |
-| `result_status` | `attempt_id` | Read; `mutation_id: null` |
-| `result_snapshot` | `attempt_id`, `result_id` | Canonical receipt/artifacts download; `mutation_id: null` |
-| `finish` | `attempt_id`, `expected_generation`, `pane`, `head`, `result_id`, `receipt_digest` | Supervisor accepts exact submitted result after settlement |
-
-Upload `parts` are ordered `{file, bytes, sha256}` entries. Relative files resolve
-beside the retained request. Changed, oversized or symlinked inputs refuse before
-connection. Requesters never supply a wire `transfer` descriptor. Downloads require
-`--output NEW_DIRECTORY`; numbered byte files and `response.json` are private
-projections of the authenticated reply, not another execution store. For queue
-snapshots, the first byte file contains the current step instructions and reports
-as JSON; prepared-work snapshots contain the original Git bundle.
-
-Retain each request and its exact parts before invoking it. On response loss,
-inspect `registration_status` or `result_status` and reuse the same original
-mutation when replay is appropriate. Never refresh its generation, replace its
-bytes, or create a second worker because a reply was lost. Queue completion and
-`submit_result` keep the attempt running; only the canonical accepted `finish`
-reply proves terminal completion. Unknown effect or Inbox settlement refuses it.
-
-These commands do not silently route to a local `ace-assign` cache. Missing or
-changed installed owner selection is an explicit failure. Native wake consumers
-must read the same canonical status and adopt its original attempt/result IDs.
-Changed owner selection refuses new admission and dispatch until a controlled
-restart. Existing canonical receipts remain the source for reconciliation.
-
-## Ordinary candidate, review and merge evidence
-
-Keep the real delivery attempt running through review, test execution and merge.
-Finish it only after settlement. A completed coder attempt can seed a new real
-registered delivery attempt; never reopen its old authority.
-
-The existing `assignment request --input request.json` interface also supports:
-
-| Operation | Params in addition to assignment_id/attempt_id/head/candidate_generation | Authority / transfer |
-|---|---|---|
-| `submit_candidate` | `pane`, `expected_generation` | Original worker; one complete Git bundle; candidate_generation is the previous generation (0 initially) |
-| `assign_review` | `pane`, `expected_generation`, `reviewer_assignment_id`, `reviewer_attempt_id` | Current canonical supervisor selects an already started independent reviewer |
-| `export_candidate` | `pane`, `review_id` | Assigned reviewer; null mutation; `--output NEW_DIRECTORY` downloads canonical bundle |
-| `accept_review` | `pane`, `expected_generation`, `review_id`, `receipt_sha256` | Assigned reviewer uploads exact receipt followed by its ordered report artifacts |
-| `cancel_review` | `pane`, `expected_generation`, `review_id` | Current supervisor revokes that exact review |
-| `review_status` | None | Null mutation; revalidates accepted original receipt and artifacts |
-| `merge_evidence` | `test_execution_ids` (nonempty array) | Null mutation; projects exact accepted review and canonical executed-test references |
-
-First submit the candidate, retaining its returned head, tree and new generation.
-Prepare/register/start a separate review assignment through the ordinary native
-entry. Its agent must have a different actual process generation, session UUID
-and pane. The supervisor assigns that exact reviewer assignment/attempt at its
-honestly observed starting base. Export gives the assigned agent canonical candidate
-bytes; it then materializes/checks out the candidate. Receipt acceptance requires
-that exact candidate HEAD and the unchanged original native reviewer binding. A receipt uses the delivery attempt's identifiers,
-scope and actual producer; its `review.reviewer.actor` is the real reviewer's
-account. The owner derives independence from authenticated native origins, so
-shared-account agents do not need invented actor aliases.
-
-`accept_review` retains the original receipt and up to 15 report artifacts in
-CanonicalEvidence, verifies their exact digests, and returns the accepted review
-ID/digest. The receipt declares operation review, succeeded, approved at the exact
-candidate head, and executed review checks. These review checks are not test
-execution authority. Missing/corrupt reports, a different caller, terminal delivery
-attempt, changed head/generation or cancellation refuse. Retrying the exact
-accepted mutation cannot accept a second review; changed bytes under that mutation
-refuse. This first ingress accepts direct independent review of the exact candidate
-generation. Campaign receipts and accepted-head carry are deliberately unavailable
-until the existing ace-review campaign/assessment owner is connected; a head change
-currently refuses prior approval. This is a remaining delivery capability, not the
-final policy of requiring a full independent review after every SHA change.
-
-Execute the project's root-selected test command through the existing command
-transport. Only an explicit `purpose: test` definition with exact immutable
-candidate head/tree, root-witnessed child, and canonical exit0/no signal can supply
-test evidence. `merge_evidence` resolves those execution IDs and returns
-`review_evidence` and `test_evidence` for the fixed merge request. Copy those exact
-projections into the retained request before obtaining its digest-bound decision.
-Plain worker check strings or generic allowed commands are not substitutes.
-
-The sole owner revalidates evidence in the merge admission CAS and before each
-Forge effect. Assignment exclusion prevents candidate changes, review cancellation
-or finish racing an executing merge. Policy revocation or missing canonical bytes
-refuses without dispatch. Existing unknown outcomes retain their original merge
-reference and require reconciliation.
-
-The dynamic candidate-to-immutable-command-view binding and installed two-worker
-acceptance remain separate required gates. Static source fixtures do not authorize
-per-PR administrative head/path edits or claim installed autonomous merging.
-
-## Ordinary driver and supervisor recovery
-
-`ace-overseer ordinary --operation prepare` retains one context per fresh worker.
-From that worker's native tool process, drive only the installed owner:
-
-```sh
-ace-lab assignment drive --project atlas --context /private/work/context.json --operation status
-ace-lab assignment drive --project atlas --context /private/work/context.json --operation start
-ace-lab assignment drive --project atlas --context /private/work/context.json --operation bootstrap --output /private/work/accepted-context
-ace-lab assignment drive --project atlas --context /private/work/context.json --operation next
-ace-lab assignment drive --project atlas --context /private/work/context.json --operation step-start --generation 1 --step 010.01.01
-ace-lab assignment drive --project atlas --context /private/work/context.json --operation step-finish --generation 2 --step 010.01.01 --report /private/work/check.md
-```
-
-Use returned generations and actual step numbers, not the illustrative values.
-`HERDR_PANE` supplies the caller pane unless `--pane` is explicit; the selected
-owner authenticates actual native ancestry independently. `bootstrap` returns
-accepted context paths, byte counts, SHA256 values and manifest digest. `next`
-reads the canonical queue including reports and returns current/next instructions.
-`fail --generation N --message REASON` records a failed scope; it never fabricates
-successful completion. The workflow `wfi://assign/drive` selects this protocol
-before local assignment resolution when `--ordinary`/the ordinary environment
-is present.
-
-Submit one bounded execution receipt JSON with the following fields, using
-actual observed values (no placeholders in submitted evidence):
-
-```json
-{
-  "assignment_id": "original-assignment", "attempt_id": "original-attempt",
-  "project_id": "atlas", "scope": "010.01", "operation": "check",
-  "producer": {"actor": "actual-user", "role": "worker", "runtime": "herdr"},
-  "head": "0123456789012345678901234567890123456789",
-  "verdict": "succeeded", "checks": [{"name": "tests", "verdict": "passed"}],
-  "artifacts": [{"path": "check.md", "sha256": "actual-64-hex-artifact-digest"}]
-}
-```
-
-The producer comes from canonical start status; checks and artifacts must describe
-executed work. Run `--operation result --generation N --receipt receipt.json
---artifact check.md` with files in receipt order. The existing receipt verifier
-and canonical import validate attribution, evidence and exact bytes. A result
-submission leaves the worker running until its canonical supervisor executes
-`--operation adopt` and receives terminal status. Keep the actual worker process
-and checkout alive until that acceptance; a terminal pane without the required
-native binding is insufficient.
-
-Mutations retain their exact request and transferred bytes under the original
-context directory before sending. A lost response is recovered with canonical
-`status`/`next`, then `--operation replay --request /original/requests/.../request.json`.
-Never update an existing request's generation, mutation ID or bytes to force a
-retry. The requester directory is not an accepted-state store. The result hint
-file is ignored by canonical reads/adoption, including when forged or stale.
-Inbound Inbox settlement is not provisioned by this driver; nonempty references
-still require the separately selected existing Inbox owner and fail closed otherwise.
-
-A replacement coordinator reads `--operation supervisor`, then from its actual
-installed native supervisor placement uses:
-
-```sh
-ace-lab assignment drive --project atlas --context /private/work/context.json \
-  --operation adopt-supervisor --generation 1 --previous-binding-sha256 EXACT_OLD_DIGEST
-```
-
-The definition chain records old→new bindings under its original generation CAS.
-Only a positively ended old generation (kernel process absence or a different
-exact process birth) permits adoption; live, inaccessible, remote-host and unknown
-identities refuse. A lost adoption response reuses its original retained request.
-No worker is re-registered or relaunched. Existing pending results, uncertain
-operations, attempts and request IDs remain unchanged. Finish, including replay,
-checks the current canonical supervisor binding and rejects the displaced one.
-
-Wire additions are `supervisor_status` (assignment only, null mutation), and
-`adopt_supervisor` (assignment, actual pane, expected definition generation,
-previous_binding_sha256; original mutation). They use the same installed owner,
-project policy, journal and lifecycle exclusion as ordinary execution.
-
-## Error semantics
-
-Errors are one deterministic JSON document on stdout plus a non-zero exit.
-
-| Code | Meaning |
-|------|---------|
-| `missing` | No entry with that stable ID, or no capable service in the project |
-| `ambiguous` | Several equally capable services without a configured `default_for` |
-| `stale` | Binding is inactive, unattested, or the instance identity was replaced |
-| `unauthorized` | Caller's verified local identity has no principal for the project |
-| `invalid_configuration` | Topology config violates the schema; message is actionable |
-| `invalid_input` | Service input or request ID is malformed |
-| `invalid_attempt` | Assignment attempt is absent, unmanaged, terminal, or has a stale candidate head |
-| `conflict` | Request ID is already bound to different input or scope |
-| `evidence_unavailable` | Assignment evidence ref cannot be written or read |
-
-Example:
-
-    $ ace-lab resolve --id atlas-coder --format json; echo $?
-    {"status":"error","error":{"code":"stale","message":"stable ID \"atlas-coder\" has a stale runtime binding; a replaced process must re-attest before routing","id":"atlas-coder","project":"atlas"}}
-    1
-
-## Configuration
-
-Schema version 1, resolved through the ADR-022 cascade (project `.ace/lab/`
-over user `~/.ace/lab/` over gem defaults; gem defaults are an empty, safe
-topology). Cascade documents carry **topology only**:
-
-```yaml
+# .ace/lab/config.yml -- topology only
 schema_version: 1
 topology:
   projects:
-    - id: atlas               # globally unique across all entries
-      label: Display name     # display only; never resolves
+    - { id: atlas, label: Atlas platform }
   agents:
     - id: atlas-planner
-      project: atlas          # must reference an existing project
+      project: atlas
       role: planner
-      capabilities: [planning]  # non-empty; normalized (stripped, lowercased)
-      binding:
-        kind: runtime           # agents bind to runtimes, services to services
-        state: active           # routeable only when active
-        instance_id: i1         # runtime identity fact
-        attested_instance_id: i1  # must equal instance_id to be fresh
+      capabilities: [planning]
   services:
     - id: atlas-search
       project: atlas
       capabilities: [search]
-      default_for: [search]     # exactly one default may win among candidates
-      endpoint:
-        kind: http              # http or https
-        url: "https://search.example.internal/query?token=secret"  # stored, never published
-      binding: { kind: service, state: active, instance_id: i2, attested_instance_id: i2 }
+      default_for: [search]
+      endpoint: { kind: http, url: "https://search.example.internal/query" }
 ```
 
-### Authorization grants
+### `ace-lab projects`
 
-Grants never live in the cascade: project and user documents are
-caller-writable, so an `authorization` section there is rejected as
-`invalid_configuration`. Grants come from a single deployment-controlled
-file at the **fixed path** `/etc/lab/ace-lab/authorization.yml` (installed
-by the `lab-config` deployment). The location is not caller-selectable --
-there is no flag or environment override. At every query the tool verifies
-the file and every directory on its real path are root-owned and not
-group/world-writable, and opens the file `O_NOFOLLOW`; any failed
-verification fails closed:
-
-```yaml
-principals:
-  "<verified-local-uid>":     # passwd username or numeric uid of the caller
-    projects: ["atlas"]
+```bash
+ace-lab projects --format json
+# {"status":"ok","data":{"projects":[{"id":"atlas","label":"Atlas platform"}]}}
 ```
 
-The grants file is machine-global: it is validated structurally only, so a
-principal may reference projects absent from the current directory's
-topology. Such grants are valid but never match a locally configured
-project. All-digit principal keys are matched as uids only -- an all-digit
-passwd username is authorized solely through its uid, so it can never
-consume a different account's numeric-uid grant.
+### `ace-lab agents --project PROJECT`
 
-A missing trusted file means nobody is authorized (fail closed).
-
-### Trusted service policy
-
-The same deployment-owned file may contain `operations` and
-`authorizations`. An operation names one exact project and stable service ID,
-an executor OS UID, a valid lease, and either a fixed local argv or an absolute
-Unix socket path. The domain deployment owns actual handlers and credentials.
-The Unix service must authenticate the client's OS peer identity, validate
-the exact authorization and current lease itself, and return a structured
-receipt; ACE verifies the service peer UID before accepting that response.
-
-```yaml
-operations:
-  forge-sync:
-    project: atlas
-    service_id: atlas-sync
-    transport: unix
-    socket_path: /run/lab/atlas-sync.sock
-    executor_uid: 997
-    lease_expires_at: '2026-10-02T16:00:00Z'
-authorizations:
-  DECISION:
-    operation: forge-sync
-    project_id: atlas
-    assignment_id: A
-    attempt_id: ATT
-    input_digest: <sha256-of-canonical-json>
-    target: { resource: forge/repository, artifact_digest: null }
-    candidate_head: <exact-git-head>
-    caller_uid: 1000
-    expires_at: '2026-10-02T16:00:00Z'
+```bash
+ace-lab agents --project atlas --format json
 ```
 
-The decision must match every listed field exactly and remain valid. A
-decision never supplies missing executor capability or credentials. For
-authenticated host maintenance, the policy also identifies an executable and
-evidence sink outside the deployment being replaced; its domain handler must
-enforce quiescence for all other product work. Environment `review-approval`
-is a named operation and never substitutes for an independent code review.
+`binding.state` is `available` when the configured runtime binding is active;
+otherwise `stale`.
 
-Validation of the topology cascade rejects duplicate IDs (globally unique
-across projects, agents, services), unknown project references, malformed
-capabilities, defaults for undeclared capabilities, unusable endpoints
-(absolute http(s) URL with a host and a port in 1–65535; `endpoint.kind` is
-`http` or `https`), unsupported binding kinds, and principals referencing
-unknown projects.
+### `ace-lab services --project PROJECT`
 
-**Error messages are value-free by design:** validation runs before
-authorization, so messages use positional field locations
-(`topology.agents[0].project references an unknown project`) and never echo
-configured IDs, project names, or principal names -- configuration defects
-cannot disclose topology to unauthorized callers.
+```bash
+ace-lab services --project atlas --format json
+```
 
-**Ownership:** deployed topology and authorization values are maintained by
-the `lab-config` repository (`8wl.t.gad`). `ace-lab` defines the schema and
-reads; it never provisions.
+The endpoint in public output is a sanitized identity: scheme, host and an
+explicit port only. Query parameters, userinfo, fragments and credentials are
+never printed.
 
-## Guarantees and boundaries
+### `ace-lab resolve --id ID`
 
-- Public output is built from a strict allowlist: `id`, `project`, `label`,
+```bash
+ace-lab resolve --id atlas-planner --format json
+```
 
-  `role`, `capabilities`, `default_for`, binding `kind` + availability state,
-  and a sanitized endpoint identity. Tokens, auth-file paths, URL userinfo,
-  paths, query parameters, fragments, pane/session IDs, and instance
-  identities never appear in any command output.
+Labels are display values and never resolve: resolving `"Atlas platform"` is a
+`missing` error.
 
-- Caller identity comes from the verified local process owner
+### `ace-lab route --project PROJECT --capability CAPABILITY`
 
-  (username or uid). `--role`, `--principal`, and `--caller` flags are
-  rejected: authorization is a property of the caller, not an input.
+```bash
+ace-lab route --project atlas --capability search --format json
+```
 
-- A replaced process keeps its stable ID; until re-attested, queries
+Routing selects a capable service in the requested project. It never invokes
+the service and never grants credentials.
 
-  classify it `stale` -- an explicit unavailable result, never a routeable
-  answer.
+## Explicit project commands
 
-- No Works or scheduling. Service request claims and receipts use
+### `ace-lab run`
 
-  `ace-assign`'s evidence journal. The Lab execution binary
-  (`/usr/local/bin/lab`) is never invoked or required.
+Run one command with an explicit project selection. Pass the argv after `--`;
+no shell interpretation happens.
 
-### Protected handler cleanup boundary
+```bash
+ace-lab run --project atlas -- /usr/local/bin/publish-release 1.2.3
+```
 
-Handlers retain the fixed closed environment and 30-second execution deadline, with 16KiB stdout and 8KiB stderr caps. Owned cleanup adds at most one second of confirmed reaping; unresolved cleanup remains uncertain and cannot return a service receipt. It cannot establish an arbitrary domain target or surviving writer is absent. The gad.b operation-specific fresh inspector remains required source work; installed verification is centralized in gad.2.
+### `ace-lab run-status`
 
-### Selected receiver no-effect recovery
+Inspect an original command execution without running it again.
 
-The existing protected receiver exposes `recover_no_effect(binding:, input_bytes:, mutation_id:, expected_generation:)`. Supply the original assignment/attempt/candidate/head/request binding, original structured input, stable mutation ID and unchanged original positive authority generation. The receiver snapshots those inputs, authenticates canonical status and input before any settled return, and adopts an already accepted current challenge without claiming again. A needed claim uses the supplied generation unchanged. Lost acknowledgements remain uncertain; status retry never repeats the original effect.
+```bash
+ace-lab run-status --project atlas --reference REFERENCE --format json
+```
 
-Trusted operation configuration must provide a distinct fixed `no_effect_argv` for the original project/service/executor. Inspection may proceed after the effect lease expires, but it never renews effect permission or selects normal effect argv. The selected inspector must produce operation-specific original target/handler/writer observations and existing strict challenge-bound artifacts; only the authority's canonical import can establish `failed-settled`. This source API and controlled composition do not deliver the outstanding gad.b inspector or installed acceptance.
+## Planned waves
 
-## Project commands
+> **Planned (L7):** topology values and status integration for the file-based
+> flow are not available yet.
+>
+> **Planned (L8):** installer (accounts, directories, keys), project onboarding,
+> resuming an interrupted install, and readiness verification are not available
+> yet.
 
-`ace-lab run --project ace -- /usr/bin/id` invokes one exact installed command
-policy. `--as publisher` selects a permitted executor; repeated `--service NAME`
-replaces the configured default set. Every service and the entire combination
-must be granted. Arguments after `--` remain literal, including command options.
-No shell is added. Duplicate `--project`/`--as` or empty argv are usage errors.
+## Boundaries
 
-The root-owned `/etc/lab/ace-lab/project-commands.yml` is the only command-policy
-source. Project preferences and caller environment cannot create grants. Its
-version1 project entries contain `launcher`, `default_executor`, `default_services`,
-`executors`, `services`, `commands`, and `grants`. Executors declare UID/GID/groups,
-HOME/cwd/PATH and nonsecret environment; services declare nonsecret environment
-and secret references; commands bind exact argv, executable SHA256, source
-head/tree and required `purpose: command` or `purpose: test`. Test purpose requires
-nonnull source head/tree and is never inferred from executable name or exit0.
-With `purpose: command`, source head/tree may both be null for a non-Git probe;
-Git source uses two exact object IDs. Grants bind requester kind/UID, command, executor
-and the exact service combination. Accepted code/cwd must be root-owned and
-unwritable by the executor. Missing or changed context refuses execution.
+`ace-lab` owns no task, assignment, HITL, or worktree state. There is no
+journal, authority/admission service, daemon, queue engine, or extra state
+cache in this package. The old protected service-request/executor path is
+removed (L1); a missing old listener does not block ordinary work.
 
-An operator grant authorizes an OS account. Agents sharing that account share
-its operator authority; an environment hint does not prove human presence.
-Agent-selected invocation additionally checks actual current native ancestry.
-Separate identities are required when operator authority must exclude agents.
-
-The CLI retains an invocation under `.ace-local/lab-commands/` and prints its
-execution reference before contacting the canonical Assign owner. Inspect it with
-`ace-lab run-status --project ace --reference REF`. Inspection starts no command
-and remains available to the original requester account after a grant is revoked.
-After response loss, inspect that original reference before requesting new work.
-An existing claim or a replayed acknowledgment cannot release another child.
-
-Interactive terminals preserve no-echo input, dimensions and signals. Pipe mode
-preserves EOF, separate stdout/stderr and actual exit/signal status. Socket closure
-without the authenticated result is uncertainty. Root launch/exit observations
-remain separate from accepted product delivery evidence; exit0 alone does not
-prove publication, installation or completed delivery.
-
-This implementation slice admits nonsecret commands. A nonempty selected secret
-reference set is explicitly refused before claim until the secret execution
-capability is supplied. Publication also requires the publisher's writable
-artifact/cache destination outside immutable accepted source, or retained exact
-artifacts. These remaining joins and installed acceptance are tracked by ei9 .5;
-source/kernel fixture success does not assert installed autonomous publication.
-
-In interactive mode, input EOF sends the terminal's conventional Ctrl-D byte; a
-program that changes its terminal to raw mode may interpret that byte itself.
-Noninteractive EOF closes the command input pipe. The dedicated Linux helper owns
-and reaps detached command descendants as well as the original process group.
+The ordinary fixed-merge producer/receiver (`service listen|request|status
+--mode ordinary-merge`) and the `ace-lab assignment …` ordinary-owner commands
+are retained as internal transports for planned L3/L6 work. They are not
+required by the local flow and are intentionally not documented here as a user
+path.

@@ -1,122 +1,74 @@
-## ace-lab
+# ace-lab
 
-Topology, routing, and scoped service request CLI for the Lab. Part of ACE
-(Agentic Coding Environment).
+Environment and project preparation for the local, file-based ACE Lab. Part of
+ACE (Agentic Coding Environment).
 
-`ace-lab` answers one question -- *what is the stable ID of the project, agent,
-or service I mean, and what is it authorized and able to do?* -- from
-configuration. Topology queries never invoke a service. The `service`
-commands submit configured operations through a verified executor and use
-`ace-assign` for durable request evidence. No command hands credentials to
-the caller or guesses transient pane or session identifiers.
+> **State owner:** none for task work. `ace-lab` prepares lab environments and
+> projects; task/assignment state belongs to `.ace-tasks/` (ace-task) and the
+> local stores under `.ace-local/`. The canonical flow is
+> [docs/lab-flow.md](../docs/lab-flow.md).
 
-### Install
+> **Planned (L8):** lab installer, project onboarding, and readiness
+> verification are not available yet.
 
-    gem install ace-lab
+## What exists today
 
-### Usage
+`ace-lab` is the Lab environment package. Its installer and project-onboarding
+capabilities are the L8 target; today the package ships read-only topology
+queries and one explicit project-command kernel. Neither capability runs a
+queue, daemon, journal, or authorization service.
 
-Configure topology via the ADR-022 cascade (`~/.ace/lab/config.yml` or
-`.ace/lab/config.yml`; deployed values are owned by the `lab-config`
-repository). Authorization grants live in a separate deployment-controlled
-file at the fixed path `/etc/lab/ace-lab/authorization.yml` -- root-owned and
-not group/world-writable, verified at every query -- never in the
-caller-writable cascade and never at a caller-selected location:
+### Topology queries
 
-```yaml
-# .ace/lab/config.yml -- topology only
-schema_version: 1
-topology:
-  projects:
-    - { id: atlas, label: Atlas platform }
-  agents:
-    - id: atlas-planner
-      project: atlas
-      role: planner
-      capabilities: [planning]
-      binding: { kind: runtime, state: active, instance_id: i1, attested_instance_id: i1 }
-  services:
-    - id: atlas-search
-      project: atlas
-      capabilities: [search]
-      default_for: [search]
-      endpoint: { kind: http, url: "https://search.example.internal/query?token=secret" }
-      binding: { kind: service, state: active, instance_id: i2, attested_instance_id: i2 }
+Topology configuration uses the ACE configuration cascade
+(`~/.ace/lab/config.yml` or `.ace/lab/config.yml`). Queries never invoke a
+service and never hand credentials to the caller.
+
+```bash
+ace-lab projects --format json
+ace-lab agents --project atlas --format json
+ace-lab services --project atlas --format json
+ace-lab resolve --id atlas-planner --format json
+ace-lab route --project atlas --capability search --format json
 ```
 
-```yaml
-# trusted grants file (deployment-owned)
-principals:
-  "<verified-local-uid>": { projects: ["atlas"] }
+Every query prints one deterministic JSON document. Failures are classified
+(`missing`, `ambiguous`, `stale`, `unauthorized`, `invalid_configuration`).
+Stable IDs are canonical; labels are display values and never resolve.
+
+> **Planned (L7):** topology values and status integration for the new flow are
+> not available yet. Existing queries are read-only building blocks.
+
+### Explicit project commands
+
+```bash
+ace-lab run --project atlas -- /usr/local/bin/publish-release 1.2.3
+ace-lab run-status --project atlas --reference REFERENCE --format json
 ```
 
-Query it:
+`run` executes exactly the argv it is given under the configured project. It
+does not interpret a shell string and does not retry an uncertain execution.
 
-    ace-lab projects --format json
-    ace-lab agents --project atlas --format json
-    ace-lab services --project atlas --format json
-    ace-lab resolve --id atlas-planner --format json
-    ace-lab route --project atlas --capability search --format json
+## Not owners of the flow
 
-Request a configured operation for an active, managed assignment attempt:
+`ace-lab` does not own task state, assignment plans, HITL events, worktrees, or
+a queue. There is no journal, no authority/admission service, no listener that
+blocks ordinary work, and no second state store. The old protected
+service-request/executor stack was removed in L1.
 
-    ace-lab service request --project atlas --assignment A --attempt ATT \
-      --operation publish --input release.json --authorization DECISION \
-      --request-id REQUEST --dry-run
-    ace-lab service status --request REQUEST --format json
+The ordinary fixed-merge producer/receiver (`ace-lab service listen|request|
+status --mode ordinary-merge`) and the `ace-lab assignment …` ordinary-owner
+commands are retained as internal transports for the planned L3/L6 work. They
+are not part of the local flow documented here and are not required by it.
 
-The trusted grants file may also contain exact `operations` and
-`authorizations` mappings. See [usage](docs/usage.md) for the request schema,
-executor transport, and uncertain-state recovery.
+## Install
 
-Every command prints one deterministic JSON document:
+```bash
+gem install ace-lab
+```
 
-    {"status":"ok","data":{"entry":{"id":"atlas-search","project":"atlas",
-     "capabilities":["search"],"default_for":["search"],
-     "binding":{"kind":"service","state":"available",
-     "endpoint":{"kind":"http","url":"https://search.example.internal"}}}}}
+## Development
 
-Failures are classified: `missing`, `ambiguous`, `stale`, `unauthorized`,
-`invalid_configuration` -- for example a replaced agent process:
-
-    {"status":"error","error":{"code":"stale","message":"stable ID
-     \"atlas-planner\" has a stale runtime binding; ...","id":"atlas-planner",
-     "project":"atlas"}}
-
-### Guarantees
-
-- **Stable IDs are canonical.** Labels are display values and never resolve.
-
-  Exact match or a classified `missing` error.
-
-- **Public output never leaks.** Tokens, auth-file paths, endpoint userinfo,
-
-  query parameters, fragments, pane/session identifiers, and instance
-  identities are excluded by an allowlist projection, not field redaction.
-
-- **Authorization comes from the verified local process owner**, matched
-
-  against configured principals. There is no `--role` or `--principal` flag;
-  identity flags are rejected outright.
-
-- **Routing is project-local.** Candidates are capable services of the
-
-  requested project with fresh (active + attested) bindings. Zero candidates
-  are `missing`; several equal candidates need a configured `default_for`, or
-  the result is `ambiguous`. Another project's service is never picked.
-
-- **Execution evidence is separate from topology.** `ace-lab service` uses a
-
-  managed `ace-assign` attempt and its evidence ref. A lost executor receipt
-  remains uncertain and a repeated request ID never replays the effect.
-
-### Non-goals
-
-`ace-lab` does not track Works or schedule anything. `ace-assign` owns attempt
-state; deployed operation handlers and topology values are owned by `lab-config`
-(`8wl.t.gad`); this package defines and validates the schema.
-
-### Development
-
-    bundle install
-    bin/ace-test ace-lab all
+```bash
+bin/ace-test ace-lab all
+```
