@@ -35,9 +35,9 @@ Operacje istniejących ace-task i ace-assign działają lokalnie na ich plikach;
 
 ## Kryteria odbioru
 
-- [ ] W przykładzie task → assignment → raport można wskazać plik i właściciela każdej zmiany; _overseer nie jest śledzony przez Git.
-- [ ] Task i assignment można utworzyć, odczytać i prowadzić bez uruchamiania starej usługi admission i właściciela journala.
-- [ ] Świeża sesja czytająca aktywne instrukcje potrafi przejść plikowy przepływ bez dokumentacji starego laba.
+- [x] W przykładzie task → assignment → raport można wskazać plik i właściciela każdej zmiany; _overseer nie jest śledzony przez Git.
+- [x] Task i assignment można utworzyć, odczytać i prowadzić bez uruchamiania starej usługi admission i właściciela journala.
+- [x] Świeża sesja czytająca aktywne instrukcje potrafi przejść plikowy przepływ bez dokumentacji starego laba.
 
 ## Weryfikacja i scenariusze błędów
 

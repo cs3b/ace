@@ -279,7 +279,7 @@ Create retro or update test helper comments:
 # - with_mock_lint_context helper stubs all validators
 # - Real CLI tests moved to test/e2e/
 #
-# See: .ace-task/.../retros/<timestamp>-<package>-test-optimization.md
+# See: .ace-retros/<id>/retro.md
 ```
 
 ## Common Optimization Patterns

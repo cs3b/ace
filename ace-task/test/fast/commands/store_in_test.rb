@@ -109,6 +109,15 @@ class StoreInCommandTest < AceTaskTestCase
     assert_match(/Unknown task store '_unknown'/, error.message)
   end
 
+  def test_list_with_root_allows_underscore_folder_under_override
+    root = File.join(@tmpdir, "queue-root")
+    FileUtils.mkdir_p(File.join(root, "_custom"))
+
+    output = invoke("list", "--root", root, "--in", "_custom")
+
+    refute_nil output
+  end
+
   def test_dry_run_does_not_create_store_root
     output = invoke("create", "Preview", "--in", "_overseer", "--dry-run")
 

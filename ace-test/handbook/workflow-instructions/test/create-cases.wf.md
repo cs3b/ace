@@ -372,7 +372,7 @@ end
    ```
 
    ```
-   .ace-task/v.X.Y.Z/test-cases/
+   .ace-tasks/<task-folder>/test-cases/
    ├── feature-authentication-tests.md
    ├── api-endpoint-tests.md
    └── performance-benchmarks.md
