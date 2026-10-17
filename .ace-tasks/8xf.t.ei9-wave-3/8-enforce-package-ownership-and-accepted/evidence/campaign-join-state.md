@@ -175,3 +175,27 @@ Narrowed the remaining campaign_begin failure decisively:
 
 Existing 10 tests / 121 assertions remain green; all instrumentation removed;
 the new test remains the only red.
+
+### review_context ingress COMPLETE (d0f05eb1a)
+
+The focused test is green: ordinary_reviews 11 tests / 135 assertions PASS
+(includes the full campaign flow through begin, a >64KiB prompt artifact under
+the review_context purpose, exact-mutation replay, and fresh-second-submission
+conflict). Neighboring regressions green: candidate_transfer 24/454,
+command_execution 8/42. Fixes landed during the final push:
+- ReceiptTransfer.decode parameterized (max_artifact_bytes/max_total_bytes);
+  the review-context path passes the shared cap, ordinary results unchanged.
+- ReceiptVerifier sees a review-nil projection of the campaign collection
+  receipt (its self-approval semantics apply to producer review verdicts, not
+  reviewer-produced collections); the canonical stored receipt keeps the
+  campaign review reference with its own consistent digest, and
+  validate_review_context_receipt! enforces the binding.
+- EvidenceEvent registers the review_context_submitted type.
+- Test receipt shape carries the verifier-required review fields plus the
+  campaign reference; reviewer generations follow register+start (no queue op).
+
+Remaining .8 joins: public retained driver, round ingestion proofs (consume
+the stored review-context result into campaign rounds with byte reuse),
+cancellation resolution, historical test-evidence wiring, comprehensive
+public-path tests + actual Pi independent review, then the joined branch
+re-verification and merge.
