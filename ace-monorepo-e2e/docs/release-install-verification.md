@@ -15,9 +15,11 @@ install behavior using real RubyGems installs as one of:
 
 Registry classification, exact-version acceptance against the frozen release
 manifest, and scenario completion are three separate results. None of them
-alone — and none of the install goals themselves — proves the Lab is
-installed or ready; Lab deployment and full system acceptance belong to the
-lab-config gad.a/gad.2 line.
+alone -- and none of the install goals themselves -- proves the Lab is installed
+or ready. Lab installation and project onboarding belong to the planned L8
+wave; full pre-release acceptance belongs to the planned L9 wave; the RubyGems
+release and fresh-lab acceptance belong to the planned L10 wave. None of those
+waves is available yet.
 
 ## Run The Verification
 
@@ -63,14 +65,19 @@ the immutable final verdict retained with the task evidence.
 Setup reads an exact-version manifest before any install can happen:
 
 - Input: `ACE_RELEASE_MANIFEST` in the invoking process, an absolute JSON file
+
   path. This is the only host environment variable the runner carries into
   scenario setup. Without it, setup defaults to
   `<ACE_E2E_SOURCE_ROOT>/.ace-local/release/installation-manifest.json`.
+
 - Setup validates the manifest and copies the exact bytes to
+
   `results/tc/01/release-manifest.json` before network installation. Missing,
   unreadable, malformed, or conflicting input is a setup failure with no
   install attempt.
+
 - The generated manifest lives under `.ace-local/release/`; the immutable
+
   acceptance copy belongs with the task evidence.
 
 Schema (`schema_version: 1`):
@@ -121,7 +128,7 @@ never amend a failed run's input to make its old acceptance green.
 
 `supersedes` records explicit replacement: the artifact version supersedes the
 listed older releases. Acceptance requires the chosen exact versions to be
-installed — old-but-compatible versions do not satisfy the contract, and a
+installed -- old-but-compatible versions do not satisfy the contract, and a
 superseded version still present in any lockfile or activated receipt is a
 finding. Absence of a version is never proof of replacement. Count packages
 from the manifest, not from reported bundle totals.
@@ -132,7 +139,8 @@ Each install mode records machine-readable evidence (never console output):
 
 - `<mode dir>/Gemfile.lock` plus `lockfile-receipt.json` (resolved versions)
 - `<mode dir>/install-receipt.json` (activated versions and gem paths)
-- `<mode dir>/consumer/<gem>/` — for `ace-bundle`, `ace-review`, and
+- `<mode dir>/consumer/<gem>/` -- for `ace-bundle`, `ace-review`, and
+
   `ace-task`, an isolated consumer-only resolution whose Gemfile names only
   that consumer at its exact manifest version. With no direct
   `ace-git-github` entry, the provider version in the resolved graph can only

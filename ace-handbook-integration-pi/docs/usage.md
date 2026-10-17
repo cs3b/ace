@@ -2,6 +2,12 @@
 
 PI provider integration: canonical ACE skills project to `.pi/skills`, prompt templates to `.pi/prompts`, and the bundled **ace-wake** extension to `.pi/extensions` -- all via `ace-handbook sync --provider pi`.
 
+This package owns no task, assignment, or queue state. The ace-wake timers/watch
+are a local in-process utility: no cron, daemon, or delivery-queue engine.
+Continuation of already delegated work from pi is planned (L7.3: not available
+yet); the bounded wake contract below is the transport behavior, not a work
+queue.
+
 ## Waking agents with ace-wake (`/loop`, `/watch`)
 
 The `ace-wake` extension runs inside the live Pi process. It lets an agent sleep while idle and receive a bounded wake message when a timer fires or a watched file changes. Wake means `queue/sendUserMessage` only: the agent decides what to do after waking. No cron, systemd, external heartbeat, or automatic task execution.
@@ -42,11 +48,14 @@ Pi's `sendUserMessage` returns before delivery resolves, and some refusals (no m
 
 - Definitions persist as session entries and survive reload, compaction, restart, and branch switches. Each live-session subscription is re-registered exactly once -- a reload never duplicates timers, and a restart never replays missed ticks.
 - A watch whose path becomes unreadable deactivates with a visible error and does not retry-spin; remove and re-add it explicitly once the path is readable.
-- The extension never claims to wake a dead process. Overseer liveness detection and restart decisions belong to the session-liveness layer (task `8wq.t.1w5`).
+- The extension never claims to wake a dead process. Overseer liveness detection and restart decisions belong to the planned L7 status/continuation wave, not to ace-wake.
 
 ## Running the backlog with `/work-backlog`
 
-The `/work-backlog` prompt template (`.pi/prompts/work-backlog.md`) runs the ACE overseer loop in-process: pick a backlog task, execute it via `as-task-work`, verify, report, and continue until the backlog drains or a stop condition fires. This is the prompt formerly published as `/loop`; the `/loop` name now belongs to the ace-wake timer command.
+> **Planned (L7.3):** pi continuation of already delegated work is not available
+> yet. The template below is projected for that planned wave.
+
+The `/work-backlog` prompt template (`.pi/prompts/work-backlog.md`) is intended to run the ACE overseer loop in-process: pick a backlog task, execute it via `as-task-work`, verify, report, and continue until the backlog drains or a stop condition fires. This is the prompt formerly published as `/loop`; the `/loop` name now belongs to the ace-wake timer command.
 
 ## Sync
 
