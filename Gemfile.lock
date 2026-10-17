@@ -129,7 +129,7 @@ PATH
 PATH
   remote: ace-git-worktree
   specs:
-    ace-git-worktree (0.27.0)
+    ace-git-worktree (0.28.0)
       ace-git (~> 0.29)
       ace-herdr (~> 0.4)
       ace-runtime (~> 0.1)
