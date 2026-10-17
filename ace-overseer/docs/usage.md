@@ -1,262 +1,137 @@
 ---
 doc-type: user
 title: ace-overseer Usage
-purpose: Full CLI reference for ace-overseer commands and options.
+purpose: CLI reference for local overseer worktrees, assignments, and cleanup.
 ace-docs:
-  last-updated: 2026-08-30
-  last-checked: 2026-08-30
+  last-updated: 2026-10-17
+  last-checked: 2026-10-17
 ---
 
 # Usage
 
+> **State owner:** `.ace-local/overseer/tasks/` (private, untracked `_overseer`
+> list via `ace-task --in _overseer`) and `.ace-wt/` (one worktree per project
+> task). Assignment plans live in `.ace-local/assign/` and are not copied here.
+> See [docs/lab-flow.md](../../docs/lab-flow.md).
+
 ## Command Surface
 
-- `ace-overseer work-on`
-- `ace-overseer ordinary`
-- `ace-overseer status`
-- `ace-overseer prune`
-- `ace-overseer projects`
-- `ace-overseer agents`
-- `ace-overseer prompt`
-- `ace-overseer review`
-- `ace-overseer stop`
+Local work uses three commands:
+
+- `ace-overseer work-on` - prepare a worktree, assignment, and terminal.
+- `ace-overseer status` - show active task worktrees and assignment progress.
+- `ace-overseer prune` - remove completed task worktrees safely.
+
+`--project`/`--agent` protected execution is removed in L1 and is not a normal
+path. tmux and Herdr are transports, never state owners.
 
 ## `ace-overseer work-on`
 
-Without `--project`, create/reuse local worktrees and prepare assignments.
-With `--project`, prepare exactly one reviewed leaf and retain its original
-foreground protected launcher; no local fallback occurs on protected refusal.
+Create or reuse local worktrees and prepare one assignment.
 
-- `--task`, `-t`: local repeatable/comma-separated task refs; protected mode requires one leaf.
-- `--preset`, `-p`: local assignment preset; forbidden in protected mode.
-- `--runtime`: terminal backend `auto`, `tmux` or `herdr`; overrides existing config. Protected tmux refuses before allocation.
-- `--project`: explicit protected project ID.
-- `--agent`: exact visible protected mapping ID, requiring project. Automatic selection is ordered and advances only after attributable readonly preflight denial.
-- `--mutation`: stable invocation ID; otherwise generated once and printed before effects.
-- `--base-head`: optional explicit reviewed code HEAD; must match the captured source HEAD, which is rechecked after preparation and before fork.
-- `--dependency-report`: repeatable `task:assignment:step` identities for selected dependency reports; omission is an explicit empty selection.
-- `--recover-request FILE`: readonly original canonical attribution from retained inputs; rejects all launch/mode overrides.
-- `--quiet`, `-q`: suppress nonessential output; retained input identity and original child observation remain visible.
-- `--debug`, `-d`, `--help`, `-h`: diagnostics/help.
+| Option | Purpose |
+|--------|---------|
+| `--task`, `-t` | Task ref(s); repeatable and comma-separated |
+| `--preset`, `-p` | Assignment preset name (default `work-on-task`) |
+| `--runtime` | Terminal backend: `auto`, `tmux` or `herdr` |
+| `--quiet`, `-q` | Suppress non-essential output |
+| `--debug`, `-d` | Show debug output |
 
-Fresh protected start exclusively publishes private request JSON, derived exact
-definition sidecar and original prepared Git bundle, then prints their paths and
-hashes before any child. Missing/corrupt input or changed code HEAD refuses.
-The living coordinator retains and observes the same original child through
-readiness/uncertainty without a lifetime timeout, replacement or cancellation.
-The fixed launch driver uses one 30-second phase budget; each protocol call
-receives only the remaining time. The parent separately retains its earlier
-30-second total readiness deadline, including CLI input reads and canonical
-ready verification; neither deadline refreshes. Late readiness preserves the
-same original child as uncertain, without a retry or replacement.
-
-Use independent status/steering while it remains foreground. Reap is local
-observation, never canonical terminal/release or physical cleanup permission.
-Recovery reports absent/mismatched local inputs separately from original canonical
-reservation attribution, without upload, reconstruction or retry.
-
-## `ace-overseer ordinary`
-
-Ordinary execution is explicit and uses the root-selected project's Assign owner.
-`work-on --project` keeps its protected contract and never falls back here.
-The native supervisor prepares each reviewed leaf in its own existing worktree
-and prepared pane, registers exact captured inputs, then launches its explicit
-provider profile:
-
-```sh
-ace-overseer ordinary --operation prepare --project atlas --task 8wr.t.abc --checkout /lab/projects/atlas \
-  --provider pi:zai/glm-5.3-flash:high --output /private/ordinary/task-one
-ace-overseer ordinary --operation launch --project atlas --context /private/ordinary/task-one/context.json
-ace-overseer ordinary --operation resume --project atlas --context /private/ordinary/task-one/context.json
+```bash
+ace-overseer work-on --task 8q4
+ace-overseer work-on --task t.123,t.124 --preset work-on-task --runtime herdr
 ```
 
-Preparation validates the explicit checkout against the installed Git common directory, then uses WorktreeProvisioner, WindowOpener and PreparedWorkBuilder. Project configuration resolves inside the selected checkout/worktree even when the native supervisor runs from another project. The
-provider/model/thinking selection must resolve through the existing LLM builder.
-It retains exact IDs, HEAD, scope and worker pane before registration. If the
-registration reply is lost, inspect canonical status through that original
-context; if registration is absent, replay the original `prepared/request.json`
-with `ace-lab assignment request`. Do not create another preparation to bypass
-uncertainty. Partial preparation errors preserve their files for inspection.
+Work-on is idempotent: rerunning with the same task refs reuses the existing
+worktree and assignment instead of creating duplicates. Draft tasks are
+blocked until reviewed.
 
-Launch verifies the actual current native supervisor against canonical ownership,
-retains a dispatch intent before native send and sends the worker's ordinary
-`/as-assign-drive` entry. Acknowledgement means accepted send, not process start.
-The worker must register its own actual start through the installed owner.
-An existing dispatch intent plus no start stays `dispatch_uncertain`; neither
-launch nor resume sends a second command. `status` and `resume` are read-only
-observations of the original assignment/attempt and current supervisor selection.
-
-The returned native `/watch add` command watches a result hint file. Install it
-once in the supervisor session, persist through a harmless turn, then resume the
-exact session without replaying add commands or restoring intentional removals.
-A watch is only a wake hint; canonical `ace-lab assignment drive --operation status`
-and `adopt` decide outcome. Existing progress-audit duties also reconcile lost
-hints. A replaced coordinator first performs explicit canonical supervisor
-adoption as documented in Lab usage; worker identities and requests survive it.
-
-For two workers, repeat prepare with two reviewed leaf tasks and separate output
-directories. Verify two distinct panes/attempts, two canonical starts and results,
-and sequential reviewed ordinary merges. This source interface does not claim
-installed watches, real provider turns, review, release or merge acceptance.
+> **Planned (L4):** planner prepares the worktree and the entire assignment
+> sequence -- not available yet.
 
 ## `ace-overseer status`
 
 Show status for active task worktrees.
 
-Invocation: `ace-overseer status [--format table|json] [--watch]`.
+```bash
+ace-overseer status
+ace-overseer status --format json
+ace-overseer status --watch
+```
 
-Options:
+| Option | Purpose |
+|--------|---------|
+| `--format` | `table` (default) or `json` |
+| `--watch`, `-w` | Auto-refresh the dashboard |
+| `--runtime` | Terminal backend used for pane checks |
+| `--quiet`, `-q` | Suppress non-essential output |
+| `--debug`, `-d` | Show debug output |
 
-- `--format`: output format (`table`, `json`)
-- `--watch`, `-w`: auto-refresh dashboard
-- `--runtime`: local backend selection; protected inventory is runtime-independent
-- `--project`: select protected canonical assignment inventory for this explicit project
-- `--quiet`, `-q`: suppress non-essential output
-- `--debug`, `-d`: show debug output
-- `--help`, `-h`: show help
+Status reads local assignments and git state. Missing or unreadable evidence is
+shown as unknown rather than as success.
+
+> **Planned (L7):** configured status aggregation and pi continuation -- not
+> available yet.
 
 ## `ace-overseer prune`
 
-Remove stale or completed task worktrees.
+Remove completed task worktrees. A candidate is removed only when the
+assignment is complete, the task is marked done, and the git working tree is
+clean. `--force`/`--yes` never override those blocks.
 
-Invocation: `ace-overseer prune [TARGETS] [OPTIONS]`.
+```bash
+ace-overseer prune --dry-run
+ace-overseer prune --yes
+ace-overseer prune 8q4 --dry-run
+ace-overseer prune --assignment abc123
+```
 
-Arguments:
+| Option | Purpose |
+|--------|---------|
+| `TARGETS` | Task refs or folder names to prune |
+| `--assignment`, `-a` | Prune a specific assignment by ID |
+| `--dry-run` | Show candidates only; no cleanup side effects |
+| `--yes`, `-y` | Skip the confirmation prompt |
+| `--force`, `-f` | Skip confirmation for already-safe candidates; never bypasses safety blocks |
+| `--preservation FILE` | YAML manifest declaring verified cross-repository destinations |
+| `--quiet`, `-q` | Suppress progress output |
+| `--debug`, `-d` | Show debug output |
 
-- `TARGETS`: optional task refs or folder names to prune
+Dry-run exits 0 even when it lists blocked candidates. Apply exits non-zero
+when any selected candidate is blocked or removal fails; independent safe
+candidates still complete. Unmatched explicit targets are errors.
 
-Options:
+> **Planned (L6):** private queue and worktree handoff between roles -- not
+> available yet.
 
-- `--assignment`, `-a`: prune a specific assignment by ID
-- `--force`, `-f`: skip the interactive confirmation for already-safe candidates; never bypasses preservation, dirtiness, lifecycle or revalidation blocks
-- `--yes`, `-y`: skip interactive confirmation
-- `--dry-run`: run the same proof classification as apply, changing no worktrees, refs, assignment state or metadata (a dry-run receipt is not reusable authorization)
-- `--preservation FILE`: YAML manifest (`version: 1`, `candidates:`) declaring cross-repository destinations for migrated work; a claim to verify, never proof by itself
-- Local prune uses the configured runtime; protected physical cleanup uses its canonical cleanup owner.
-- `--quiet`, `-q`: suppress progress output; blocked/failed results still print and signal through the exit code
-- `--debug`, `-d`: show debug output
-- `--help`, `-h`: show help
+## Terminal runtime configuration
 
-### Prune safety (enforced)
-
-Every candidate is deleted only after executed proofs; missing, failed or
-ambiguous evidence preserves the candidate, and `--force`/`--yes` never
-override a block:
-
-- Preservation: source HEAD is contained in the surviving accepted base branch, or a declared destination is verified -- accepted on its surviving destination branch -- with full-tree equality or an exact content transition (paths, modes, symlinks, binary content) across separate bases. Patch-range proofs additionally require the independently recorded attempt baseline, and that baseline itself must survive on an accepted ref.
-
-- No active writer: recorded attempts must be terminal (active or uncertain attempts block; unreadable attempt state blocks); assignment/driver/start paths and prune share a durable exclusion that survives removal of the target, so no second writer can enter during deletion; dirty tracked or untracked files are work and block deletion, even with `--force`.
-
-- Assignment cache: cleanup removes only the assignment cache directory after the durable journal evidence (`refs/ace/execution`, never deleted) confirms every attempt terminal; the journal checkout is never removed.
-
-- Exit codes: dry-run always exits 0 (blocked candidates are listed); apply exits nonzero when any selected candidate is blocked or removal fails, while independent safe candidates still complete.
-
-- Unmatched explicit targets are errors; empty automatic selection is a no-op; cancelled confirmation deletes nothing.
-
-## Example Flows
-
-Start task work: `ace-overseer work-on --task 8q4.t.umu.1`.
-
-Check dashboard: `ace-overseer status`.
-
-Preview then prune: `ace-overseer prune --dry-run`, then `ace-overseer prune --yes`.
-
-## Terminal Runtime Configuration
-
-Work-on opens the task's terminal window and prune closes it through the
-runtime-neutral `ace-runtime` contract. Select the terminal runtime in
+Work-on opens the task terminal and prune closes its window through the
+runtime-neutral [ace-runtime](../ace-runtime) contract. Select the backend in
 `.ace/overseer/config.yml`:
 
 ```yaml
-# tmux | herdr | auto (default) — auto detects tmux first, then herdr;
-# ACE_RUNTIME env wins over this key; nothing detected fails explicitly
+# tmux | herdr | auto (default): auto detects tmux first, then herdr.
+# ACE_RUNTIME wins over this key; nothing detected fails explicitly.
 runtime: auto
 window_presets:
-  "work-on-task": "work-on-task"   # preset applied to the opened window/tab
+  "work-on-task": "work-on-task"
 ```
 
-The preset key is `window_presets` (renamed from `tmux_window_presets`
-pre-1.0; there is no legacy alias). The same configured runtime closes a
-worktree's window during accepted prunes.
+## Example flows
 
-Prune migrated work with a declared destination:
+Start task work and check the dashboard:
 
 ```bash
-mkdir -p .ace-local/prune
-cat > .ace-local/prune/destinations.yml <<'YAML'
-version: 1
-candidates:
-  - worktree_path: /abs/path/.ace-wt/task.230
-    source_repo: /abs/path
-    source_base: <base-sha>
-    source_head: <head-sha>
-    destination_repo: /abs/successor
-    destination_base: <dest-base-sha>
-    destination_head: <accepted-head-sha>
-    destination_branch: refs/heads/main
-YAML
-ace-overseer prune task.230 --preservation .ace-local/prune/destinations.yml --dry-run
+ace-overseer work-on --task t.123
+ace-overseer status --format json
 ```
 
-## Protected execution and review
-
-The existing Assign authority and installed mapping grant admit execution. Public
-topology supplies visible IDs only. Runtime names and charter selection cannot
-change OS credentials, grants or reviewer identity.
+Preview and prune finished work:
 
 ```bash
-ace-overseer work-on --task TASK --project ace --agent builder --runtime herdr
-ace-overseer status --project ace --agent builder --format json
-ace-overseer work-on --recover-request .ace-local/overseer/launch-requests/INVOCATION.json
+ace-task update t.123 --set status=done
+ace-overseer prune --dry-run
+ace-overseer prune --yes
+ace-overseer prune --dry-run
 ```
-
-Retain the printed input paths/hashes and original mapping/invocation. Missing
-readiness, lost output, child exit or pane state never authorize replacement or
-physical cleanup. Recovery is strictly read-only. Protected physical cleanup
-requires its designated preservation/no-writer owner.
-
-- `ace-overseer review --project PROJECT --agent AGENT --assignment A --attempt T --head HEAD --candidate-generation N --expected-generation G --mutation REQUEST --accept-mutation ACCEPT`: request independent review of the exact canonical candidate and submit its executed receipt. Run under the installed reviewer principal. `accepted` means the authority accepted that receipt; `uncertain` requires explicit status inspection.
-- `ace-overseer review --status --project PROJECT --agent AGENT --assignment A --attempt T --mutation REQUEST`: inspect the original request without rerunning review or uploading anything.
-- `ace-overseer review --cancel --project PROJECT --agent AGENT --assignment A --attempt T --head HEAD --candidate-generation N --review-event EVENT --expected-generation G --mutation CANCEL`: revoke the exact reservation using its status-provided event. Cancellation does not terminate the old reviewer. After cancellation, start a new review explicitly with new mutation IDs and the observed generation.
-
-## Public Verification Paths
-
-Use these user-visible checks when validating behavior end-to-end:
-
-- Preset override path:
-
-  1. `ace-overseer work-on --task <task-ref> --preset <preset-name>`
-  2. `ace-git-worktree list` (confirm worktree exists for `<task-ref>`)
-  3. `ace-overseer status --format json` (confirm the task appears with assignment/preset details)
-
-- Idempotent rerun oracle:
-
-  1. Run `ace-overseer work-on --task <task-ref>` twice
-  2. Verify one task entry remains in `ace-overseer status --format json`
-  3. Verify only one matching worktree exists in `ace-git-worktree list`
-
-- Prune lifecycle minimal flow:
-
-  1. `ace-task done <task-ref>`
-  2. `ace-overseer prune --dry-run`
-  3. `ace-overseer prune --yes`
-  4. `ace-git-worktree list` to confirm removed vs retained task worktrees
-  5. `ace-overseer prune --dry-run` to confirm no remaining safe candidates
-
-Assignment JSON includes `recovery`: current liveness, recovery decision/reason, last verified observation, exact attempt identities, checkpoints and unresolved effect/inbox references. Unreadable evidence is explicitly unknown; dashboard rows needing reconciliation use a question mark instead of a success indicator. An older verified observation remains audit history and does not make a current unknown observation live.
-
-## Exact protected steering (reviewed target interface)
-
-`ace-overseer prompt --project ace --agent builder --assignment A --attempt T --mutation steer-001 --expected-generation 12 --file instruction.txt`
-
-Use exactly one explicit `--file PATH` or `--stdin` input selection. Prompt text remains bounded UTF-8 (16,384 bytes), preserved exactly and omitted from operational output. Redirecting stdin alone does not select input.
-
-`ace-overseer prompt --status --project ace --agent builder --assignment A --attempt T --mutation steer-001`
-
-Status rejects both input selectors and expected generation before reading input; it uses the original prompt mutation and never resends. An explicit identical replay retains the original generation and text; changed input refuses.
-
-`ace-overseer stop --project ace --agent builder --assignment A --attempt T --mutation stop-001 --expected-generation 14`
-
-Exact project/mapping/assignment/attempt selection is mandatory. Immutable stop replay does not refresh settlement. Canonical terminal plus reservation release remains separate from local child exit. Legacy Lab Work forwarding and prepare/prune delegation are removed.
-
-Public topology: `ace-overseer projects` and `ace-overseer agents --project PROJECT` emit the maintained classified topology envelope for the verified caller. Visibility grants no execution authority. Local prune uses the configured runtime and existing preservation/no-writer owner; it accepts no protected cleanup or legacy runtime selector.
