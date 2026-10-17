@@ -4,7 +4,7 @@ status: pending
 priority: critical
 created_at: "2026-10-17 17:45:46"
 estimate: 
-dependencies: []
+dependencies: [8xb.t.iy6]
 tags: [migration, ruby, no-daemon, architecture]
 ---
 

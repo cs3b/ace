@@ -1,12 +1,12 @@
 ---
 id: 8wr.t.qk0.3
 title: Deliver authenticated prepared work to scoped workers
-status: in-progress
+status: skipped
 priority: high
 created_at: "2026-10-07 06:51:55"
 estimate: large
 dependencies: [8wr.t.qk0.0, 8x3.t.xz9.2]
-tags: [protected, assignment]
+tags: [protected, assignment, superseded-no-daemon]
 parent: 8wr.t.qk0
 needs_review: false
 bundle:
