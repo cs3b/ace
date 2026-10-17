@@ -236,3 +236,21 @@ forces engine-side drift (an echoing fake can never mismatch its own begin).
 Remaining .8 joins: cancellation resolution, historical test-evidence wiring,
 CLI/workflow surface exposure of the runner, comprehensive public-path tests +
 actual Pi independent review, branch re-verification and merge.
+
+### Cancellation resolution join COMPLETE
+
+A supervisor-revoked campaign review selection now settles its execution
+reservation as a transient unavailable failure inside the prior-selection
+branch of ordinary_campaign_review_selection!: cancellation is never a
+successful execution (the succeeded path still requires the exact terminal
+collection), and reselection proceeds under the campaign's EXISTING retry
+budget (INFRASTRUCTURE_RETRIES governs; no fresh budget is invented). The
+failure class was deliberately chosen: authorization is TERMINAL in the
+campaign policy and would hard-block the round; unavailable is the transient
+class that permits retry. Focused test: cancel → reassign succeeds with a new
+execution_id under the same campaign; completed_rounds stays 0. Receipt:
+ordinary_reviews 12 tests / 143 assertions PASS.
+
+Remaining .8 joins: historical test-evidence wiring, CLI/workflow surface
+exposure of the runner, comprehensive public-path tests + actual Pi
+independent review, branch re-verification and merge.
