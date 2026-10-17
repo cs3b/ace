@@ -20,3 +20,22 @@ Remaining .5 source: wiring the staged queue into the project publisher's
 run owner (iy6 command execution with the declared inputs/executor identity)
 and the per-artifact partial-success reconciliation loop on the execution
 side; the OTP route stays with child .9 per the spec.
+
+## Publication execution + reconciliation (OrdinaryReleasePublication)
+
+The execution side of the .5 join: publishes the staged queue through the
+authorized project publisher — strictly one artifact at a time in dependency
+order, never parallel — and reconciles every attempted effect against the
+authoritative registry readback. Semantics proven: already-published artifacts
+are skipped (executor never called); a failed push whose registry readback
+shows the exact digest RECONCILES to published and the chain continues (a
+retry that landed); exit-zero with absent/unreachable readback stays UNCERTAIN
+(never assumed published) and halts dependents; conflict artifacts halt the
+chain with no push at all; partial success retains per-artifact
+published/uncertain/dependent_blocked sets with halted_by. Receipts: 5 tests /
+21 assertions PASS.
+
+Remaining .5 source: the executor seam binding to the real iy6 project-command
+channel (credentials resolved only in the child after UID drop per the spec;
+OTP route stays with .9), and all-consumer install/sync which is installed
+acceptance.
