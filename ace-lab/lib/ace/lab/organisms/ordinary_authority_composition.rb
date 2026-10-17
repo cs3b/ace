@@ -48,7 +48,7 @@ module Ace
           command = Ace::Assign::Authority::CommandExecution.new(project: @config.project, journal: journal,
             admission: command_admission)
           coordinator = nil
-          campaign = canonical_campaign_owner(command)
+          campaign = canonical_campaign_owner(command, -> { lifecycle })
           lifecycle = Ace::Assign::Authority::OrdinaryLifecycle.new(project: @config.project,
             admission: admission, journal: journal, exclusion: exclusion, input_root: @config.assignment_root,
             command_evidence: command,
@@ -101,7 +101,7 @@ module Ace
         # purpose-test execution that exited zero at the reviewed head in the
         # ordinary canonical journal. Review/approval readers stay fail-closed
         # until their canonical joins land.
-        def canonical_campaign_owner(command)
+        def canonical_campaign_owner(command, lifecycle_ref)
           selected = @config.campaign
           return unless selected
           default = Ace::Review::Molecules::CampaignExecutionEvidence.new(repo_root: selected.fetch("repository"))
@@ -112,7 +112,13 @@ module Ace
               data = default.check(reference, head: head, name: name, historical: historical)
               command.canonical_check_reference!(execution_id: reference.fetch("attempt_id"), head: head)
               data
-            end})
+            end,
+              review_evidence: ->(reference, head:, artifacts:, historical: false) do
+                data = default.review(reference, head: head, artifacts: artifacts, historical: historical)
+                lifecycle_ref.call.canonical_review_reference!(attempt_id: reference.fetch("attempt_id"),
+                  head: head, digest: reference.fetch("digest"))
+                data
+              end})
         end
 
         def verify_join!(document)
