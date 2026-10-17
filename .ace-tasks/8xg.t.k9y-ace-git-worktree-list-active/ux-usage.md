@@ -21,18 +21,25 @@ ace-git-worktree list
 
 ```
 Active worktrees (last 18h) -- 4 of 88:
-Task   Branch                       Age  Commit                    Changes  PR           Path
-------------------------------------------------------------------------------------------------------------------------
-ace    main                          3h  spec(8xf.t.ei9-wave-3):…        1  -            ~/Ps/ace
--      codex/ei9-ca…osition-join     8m  feat(ace-assign): compl…        -  -            …-campaign-composition-join/ace
-xza.3  codex/ei9-ca…-composition    17h  docs(ei9): specify cano…       13  #142 merged  …ce-wt/ei9-campaign-composition
-k9y+1  codex/r3-bou…-convergence     9d  feat(review): define bo…        2  #142 draft   …t/codex-r3-bounded-convergence
+Task   Branch                       Age  Commit                    Changes  PR
+---------------------------------------------------------------------------------------
+ace    main                          3h  spec(8xf.t.ei9-wave-3):…        1  -
+                                         ~/Ps/ace
+
+-      codex/ei9-ca…osition-join     8m  feat(ace-assign): compl…        -  -
+                                         ~/Ps/ace/.ace-wt/ei9-campaign-composition-join/ace
+
+xza.3  codex/ei9-ca…-composition    17h  docs(ei9): specify cano…       13  #142 merged
+                                         ~/Ps/ace/.ace-wt/ei9-campaign-composition
+
+k9y+1  codex/r3-bou…-convergence     9d  feat(review): define bo…        2  #142 draft
+                                         ~/Ps/ace/.ace-wt/codex-r3-bounded-convergence
 
 Inactive: 84  (use --full to list all)
 Task-associated: 14    Usable: 71    Recent branches without worktrees: 1
 ```
 
-Age and Changes are right-aligned; the `Commit` subject is right-truncated and `Branch`/`Path` preserve their distinguishing tails. `xza.3` and `k9y+1` were inferred from task files modified in those worktrees (`k9y+1` means one additional candidate task was also touched).
+Age and Changes are right-aligned; the `Commit` subject is right-truncated and `Branch` preserves its distinguishing tail. Each row is followed by the full, never-truncated path on its own line (indented to the `Commit` column, `$HOME` shortened to `~`) and a blank separator line, so every displayed path is directly usable (`cd`, copy/paste). `xza.3` and `k9y+1` were inferred from task files modified in those worktrees (`k9y+1` means one additional candidate task was also touched).
 
 ### Scenario 2: Custom activity window
 
@@ -56,7 +63,7 @@ ace-git-worktree list --full
 
 **Expected Output**
 
-One enriched table row per worktree (active and inactive), followed by the two-line footer. `Path` shows the absolute path, untruncated; `--full` lines may be wider than the terminal. No plain legacy table exists.
+One enriched table row per worktree (active and inactive), each followed by its absolute, untruncated path line, followed by the two-line footer. `--full` path lines and rows may be wider than the terminal. No plain legacy table exists.
 
 ### Scenario 4: Worktree with a useless name
 
@@ -97,7 +104,7 @@ COLUMNS=80 ace-git-worktree list
 
 **Expected Output**
 
-No line exceeds 80 columns: columns shrink in priority order (`Path`, then `Commit`, then `Branch`) down to their minimums; `Path` is dropped only when the minimums still overflow (e.g. `COLUMNS=60`). Column alignment holds; paths remain available via `--full`.
+No column line exceeds 80 columns: columns shrink in priority order (`Commit`, then `Branch`) down to their minimums; `Commit` is dropped only when the minimums still overflow (e.g. `COLUMNS=60`). Column alignment holds; path lines are never truncated.
 
 ### Scenario 7: Slow or hung probe
 
@@ -140,7 +147,7 @@ All scenarios above are implemented and covered by `test/fast`:
   and `PrStatusResolver` (`branch` -> `head_sha` -> `task_reference`).
 - Scenario 5 (JSON): additive schema fields `task_id_source`, `task_ids`,
   `active_within_window`, `last_commit`, `uncommitted`, `pr` (state/draft/matched_by).
-- Scenario 6 (narrow terminal): Path columns shrink then drop; `--full` exempt.
+- Scenario 6 (narrow terminal): Commit/Branch columns shrink, Commit drops; path lines never truncate; `--full` exempt.
 - Scenario 7 (slow probe): forked `WorktreeProbeRunner` with 16-child cap, 5s
   per-probe timeout, process-group kill, `?` rendering, deterministic order.
 - Scenario 8 (bad input): one-line actionable errors with non-zero exit;
