@@ -1,256 +1,128 @@
 # ACE Configuration Directory
 
-This directory contains all configuration for the ACE (Agentic Coding Environment) development system.
+This directory contains the project-owned configuration for the ACE (Agentic
+Coding Environment) development system. Files here are tracked in Git; machine
+or user overrides live under `~/.ace/`.
 
-**Important**: All configurations are explicit - there are no hidden defaults in the gems. Each gem provides example configurations in their `ace.example/` directories that should be copied here and customized for your project.
+The canonical state-owner map and local flow are in
+[docs/lab-flow.md](../docs/lab-flow.md). This directory holds configuration
+only; it is not a state store.
 
 ## Directory Structure
 
 ```
 .ace/
-├── core/                  # Core configuration
-│   └── settings.yml       # Cascade settings, environment, paths
-├── context/               # Context loading
-│   ├── config.yml         # Cache settings, output formats
-│   └── presets/           # Context presets
-│       ├── project.md     # Full project context
-│       ├── minimal.md     # Minimal context
-│       └── *.md          # Custom presets
-├── git/                   # Git operations
-│   └── commit.yml         # Commit generation settings
-├── llm/                   # LLM integration
-│   ├── query.yml          # Default models, generation settings
-│   └── providers/         # Provider configurations
-│       ├── openai.yml
-│       ├── anthropic.yml
-│       └── *.yml
-├── nav/                   # Navigation and discovery
-│   ├── config.yml         # Navigation settings
-│   └── protocols/         # Protocol definitions
-│       ├── wfi.yml        # Workflow instructions
-│       ├── guide.yml      # Guides
-│       ├── task.yml       # Tasks
-│       └── sources/       # Protocol sources
-├── taskflow/              # Task management
-│   ├── config.yml         # Task management settings
-│   └── presets/           # Task filter presets
-│       ├── current.yml
-│       ├── next.yml
-│       └── recent.yml
-├── test/                  # Testing
-│   ├── runner.yml         # Test runner configuration
-│   └── suite.yml          # Test suite definitions
-└── README.md              # This file
+├── assign/                # ace-assign (config.yml)
+├── bundle/                # ace-bundle (config.yml, presets/)
+├── core/                  # ace-support-core (settings.yml)
+├── demo/                  # ace-demo (fixtures/, tapes/)
+├── docs/                  # ace-docs
+├── e2e-runner/            # ace-test-runner-e2e
+├── git/                   # ace-git, ace-git-commit, ace-git-worktree
+├── git-secrets/           # ace-git-secrets (config.yml, gitleaks.toml)
+├── handbook/              # ace-handbook (sync providers)
+├── lint/                  # ace-lint (kramdown.yml)
+├── llm/                   # ace-llm (providers/, presets/)
+├── nav/                   # ace-nav (protocols/)
+├── prompt-prep/           # ace-prompt-prep
+├── review/                # ace-review (config.yml, presets/)
+├── task/                  # ace-task (config.yml; task stores)
+├── test/                  # ace-test-runner (runner.yml, suite.yml)
+└── tmux/                  # ace-tmux (panes/, windows/)
 ```
+
+## State owners (not config)
+
+Task and workflow state is never stored in `.ace/`. The owners are:
+
+| Information | Write location | Owner |
+|---|---|---|
+| Project task specs and progress | `.ace-tasks/` | `ace-task` |
+| Private overseer task list | `.ace-local/overseer/tasks/` | overseer via `ace-task --in _overseer` |
+| Assignment plan and step reports | `.ace-local/assign/` | `ace-assign` |
+| Coworker run configuration (L3) | `.ace-local/coworker/` | reserved in L3 |
+| HITL agent events | `.ace-local/hitl/` | `ace-hitl` |
+| Project task worktree | `.ace-wt/<task>/` | `ace-git-worktree` |
+
+The lab does not add a journal, queue engine, authority/admission layer,
+listener/daemon, topology registry, or extra state cache. tmux, Herdr, and
+Hermes are transports only.
 
 ## Configuration Cascade
 
-Configurations are loaded using a cascade system where later values override earlier ones:
+Configuration resolves with nearest-wins precedence:
 
-1. **Gem defaults** (removed - all config must be explicit)
-2. **User home**: `~/.ace/namespace/file.yml`
-3. **Project local**: `./.ace/namespace/file.yml` (highest priority)
-4. **Environment variables**: `ACE_NAMESPACE_KEY=value` (override all)
+1. CLI flags for this invocation
+2. Project `.ace/` (this directory, committed)
+3. User `~/.ace/`
+4. Gem `.ace-defaults/` (shipped defaults)
+5. Environment variables `ACE_NAMESPACE_KEY` override all
 
-### Example Cascade
+```ruby
+resolver = Ace::Support::Config.create
+config = resolver.resolve_namespace("git", filename: "commit")
+```
 
-For the git commit configuration:
-1. Load `~/.ace/git/commit.yml` (user defaults)
-2. Load `./.ace/git/commit.yml` (project specific)
-3. Check `ACE_GIT_MODEL` environment variable
-4. Final value: project overrides user, env overrides all
+```bash
+# Example: project override for commit generation
+# .ace/git/commit.yml
+model: "role:commit"
+```
 
 ## Namespace Conventions
 
-Each ace-* gem owns its configuration namespace:
+Each `ace-*` gem owns its configuration namespace under `.ace/<namespace>/`.
+Overrides are explicit; there is no hidden per-gem fallback file.
 
-| Gem | Namespace | Main Config | Additional Files |
-|-----|-----------|-------------|------------------|
-| ace-core | `core/` | `settings.yml` | - |
-| ace-context | `context/` | `config.yml` | `presets/*.md` |
-| ace-git-commit | `git/` | `commit.yml` | - |
-| ace-llm | `llm/` | `query.yml` | `providers/*.yml` |
-| ace-nav | `nav/` | `config.yml` | `protocols/*.yml` |
-| ace-taskflow | `taskflow/` | `config.yml` | `presets/*.yml` |
-| ace-test-runner | `test/` | `runner.yml` | `suite.yml` |
+| Gem | Namespace | Main file(s) |
+|---|---|---|
+| ace-support-core | `core/` | `settings.yml` |
+| ace-assign | `assign/` | `config.yml` |
+| ace-bundle | `bundle/` | `config.yml`, `presets/` |
+| ace-demo | `demo/` | `fixtures/`, `tapes/` |
+| ace-docs | `docs/` | `config.yml` |
+| ace-git | `git/` | `config.yml`, `commit.yml`, `worktree.yml` |
+| ace-git-secrets | `git-secrets/` | `config.yml`, `gitleaks.toml` |
+| ace-handbook | `handbook/` | `config.yml` |
+| ace-lint | `lint/` | `kramdown.yml` |
+| ace-llm | `llm/` | `config.yml`, `providers/`, `presets/` |
+| ace-nav | `nav/` | `protocols/` |
+| ace-prompt-prep | `prompt-prep/` | `config.yml` |
+| ace-review | `review/` | `config.yml`, `presets/` |
+| ace-task | `task/` | `config.yml` |
+| ace-test-runner | `test/` | `runner.yml`, `suite.yml` |
+| ace-test-runner-e2e | `e2e-runner/` | `config.yml` |
+| ace-tmux | `tmux/` | `panes/`, `windows/` |
 
-## Configuration Loading
+## Task stores
 
-### Ruby API
-
-```ruby
-# Load namespace configuration
-Ace::Core.get("git")           # Loads git/commit.yml
-Ace::Core.get("llm")           # Loads llm/query.yml
-Ace::Core.get("test", file: "runner")  # Loads test/runner.yml
-
-# Access nested values
-Ace::Core.get("git", "conventions", "format")  # "conventional"
-
-# Load all configs in namespace
-Ace::Core.get("test")  # Loads and merges test/*.yml
-```
-
-### Command Line
-
-```bash
-# Most commands automatically load their namespace config
-ace-git-commit          # Uses git/commit.yml
-ace-test               # Uses test/runner.yml
-ace-context project    # Uses context/config.yml and presets/project.md
-```
-
-## Initial Setup
-
-### Quick Setup
-
-Copy all example configurations from gems:
-
-```bash
-bin/setup-ace-config
-```
-
-### Manual Setup
-
-Copy example configs from specific gems:
-
-```bash
-# Copy from a specific gem
-cp -r ace-core/ace.example/* .ace/
-cp -r ace-git-commit/ace.example/* .ace/
-# ... etc
-
-# Or copy all at once
-for gem in ace-*/ace.example; do
-  cp -r "$gem"/* .ace/
-done
-```
-
-### Minimal Setup
-
-For a minimal working configuration:
-
-```bash
-# Core settings (required)
-cp ace-core/ace.example/core/settings.yml .ace/core/
-
-# Add configurations for gems you use
-cp ace-git-commit/ace.example/git/commit.yml .ace/git/
-cp ace-test-runner/ace.example/test/*.yml .ace/test/
-```
-
-## Customization
-
-### Project-Specific Overrides
-
-Edit any configuration file to override defaults. For example, to use a different LLM model:
+`ace-task` roots are configured in `.ace/task/config.yml`. `root_dir` is the
+project store (`.ace-tasks/`); named stores are separate manager roots:
 
 ```yaml
-# .ace/llm/query.yml
-llm:
-  default_model: "gpt-4"  # Override default
-  aliases:
-    fast: "gpt-3.5-turbo"  # Custom alias
+task:
+  root_dir: .ace-tasks
+  stores:
+    _overseer: .ace-local/overseer/tasks
 ```
 
-### User-Wide Defaults
+A store is not scanned by the project task list. `_overseer` is the private,
+untracked list of one overseer, reached with `ace-task --in _overseer`.
 
-Place configurations in `~/.ace/` for user-wide defaults:
+## Usage
 
 ```bash
-# Set user defaults
-mkdir -p ~/.ace/git
-cp .ace/git/commit.yml ~/.ace/git/
-# Edit ~/.ace/git/commit.yml with your preferences
+bin/ace-task status            # project task view (.ace-tasks/)
+bin/ace-task list --in _overseer
+bin/ace-assign status          # assignment plan (.ace-local/assign/)
+bin/ace-review --help          # review config and presets
+bin/ace-test-suite             # root suite configuration
 ```
 
-### Environment Variables
+## Best practices
 
-Override any configuration with environment variables:
-
-```bash
-# Override LLM model
-export ACE_LLM_DEFAULT_MODEL="claude-3"
-
-# Override test runner format
-export ACE_TEST_FORMAT="json"
-```
-
-## Testing Configuration
-
-### Verify Loading
-
-```bash
-# Test namespace loading
-ruby -r ace/core -e "p Ace::Core.get('git')"
-ruby -r ace/core -e "p Ace::Core.get('test', file: 'runner')"
-
-# Test cascade
-mkdir -p ~/.ace/core
-echo "test: home" > ~/.ace/core/settings.yml
-ruby -r ace/core -e "p Ace::Core.get('core')['test']"  # Should show "home"
-```
-
-### Debug Loading
-
-```bash
-# Enable debug output
-export ACE_DEBUG=true
-
-# Run any ace command to see config loading
-ace-git-commit --dry-run
-```
-
-## Troubleshooting
-
-### Config Not Loading
-
-1. Check file exists: `ls -la .ace/namespace/file.yml`
-2. Verify YAML syntax: `ruby -r yaml -e "YAML.load_file('.ace/namespace/file.yml')"`
-3. Check namespace spelling matches exactly
-4. Enable debug mode: `export ACE_DEBUG=true`
-
-### Cascade Not Working
-
-1. Check search paths: `ruby -r ace/core -e "p Ace::Core::Organisms::ConfigResolver.new.search_paths"`
-2. Verify file permissions: `ls -la ~/.ace .ace`
-3. Test with explicit path: `ACE_CONFIG_PATH=/path/to/.ace ace-command`
-
-### Wrong Values
-
-1. Check for environment overrides: `env | grep ACE_`
-2. Verify cascade order (project overrides user)
-3. Look for typos in configuration keys
-
-## Best Practices
-
-1. **Keep configs in version control**: Track `.ace/` in git for team consistency
-2. **Use comments**: Document custom settings in YAML files
-3. **Start minimal**: Only configure what you need to change
-4. **Test changes**: Verify config changes with dry-run options
-5. **Namespace isolation**: Don't mix configs between namespaces
-
-## Migration from Old Structure
-
-If you have old configuration files:
-
-```bash
-# Old → New mappings
-mv .ace/settings.yml .ace/core/settings.yml
-mv .ace/taskflow.yml .ace/taskflow/config.yml
-mv .ace/test.yml .ace/test/runner.yml
-mv .ace/test-suite.yml .ace/test/suite.yml
-mv .ace/git/config/git.yml .ace/git/commit.yml
-mv .ace/protocols/* .ace/nav/protocols/
-```
-
-## Additional Resources
-
-- Each gem's `ace.example/` directory contains fully documented example configs
-- Run `ace-<gem> --help` for gem-specific configuration options
-- See individual gem READMEs for detailed configuration documentation
-
----
-
-*Configuration version: 0.9.0*
-*Last updated: Task 008 completion*
+1. Keep project configuration in version control.
+2. Document custom settings inline in the YAML file.
+3. Start minimal; override only what differs from shipped defaults.
+4. Verify changes with a dry-run option where available.
+5. Do not mix namespaces or put task/HITL/assignment state in `.ace/`.

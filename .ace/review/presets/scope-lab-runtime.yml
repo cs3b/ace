@@ -1,6 +1,6 @@
 presets:
   - code-valid
-description: "Lab delivery runtime: native identity, canonical execution, project commands and HITL transport"
+description: "Lab runtime surface: assignment plans, local overseer, HITL event files, review, and terminal transports"
 file_patterns:
   include:
     - "ace-lab/**"
