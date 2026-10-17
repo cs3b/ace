@@ -70,6 +70,27 @@ module Ace
         rescue KeyError, TypeError
           raise AttemptErrors::EvidenceUnavailable, "ordinary collection evidence is incomplete"
         end
+        # Canonical backstop for campaign review-session proofs: the
+        # referenced reviewer attempt must hold exactly one retained
+        # review-collect result (ordinary or review-context) whose receipt
+        # digest and reviewed head match the campaign reference.
+        def canonical_review_reference!(attempt_id:, head:, digest:)
+          commit = @journal.ref_value
+          assignment = @journal.assignment_ids(commit: commit).find do |id|
+            @journal.read_events(id, commit: commit).any? { |event| event["attempt_id"] == attempt_id }
+          end
+          raise AttemptErrors::EvidenceUnavailable, "canonical review attempt is unknown" unless assignment
+          params = {"assignment_id" => assignment, "attempt_id" => attempt_id}
+          events = result_events(params, commit)
+          result = retained_ordinary_result(params, events, commit) ||
+            retained_review_context_result(params, events, commit)
+          unless result && result.dig("receipt", "digest") == digest &&
+              result.dig("binding", "head") == head && result.dig("receipt", "operation") == "review-collect"
+            raise AttemptErrors::EvidenceUnavailable, "canonical review reference does not prove the collected session at the reviewed head"
+          end
+          {"assignment_id" => assignment, "attempt_id" => attempt_id, "head" => head,
+            "receipt_digest" => digest, "journal_commit" => commit}
+        end
       end
     end
   end

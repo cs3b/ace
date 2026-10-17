@@ -232,6 +232,56 @@ module Ace
         end
       end
 
+      def test_canonical_review_reference_proves_collected_session_at_reviewed_head
+        fixture(campaign: true) do
+          register_and_start(producer_start: @base_head)
+          submit_candidate
+          @admission.selected = "supervisor"
+          @client.call("campaign_start", selection.merge("pane" => "w1:pS", "expected_generation" => 2,
+            "contract" => "Preserve exact candidate and independently review it.", "profile" => "delivery"), mutation_id: "campaign-start")
+          @client.call("campaign_pin", selection.merge("pane" => "w1:pS", "expected_generation" => 3, "round_id" => "round-1",
+            "scope_identity" => {"full" => {"preset" => "code-valid", "subjects" => ["diff:#{@base_head}..#{@head}"]}}), mutation_id: "pin-1")
+          @owner.instance_variable_set(:@campaign, make_campaign_owner)
+          review = selection.merge("pane" => "w1:pS", "expected_generation" => 4,
+            "reviewer_assignment_id" => "reviewer", "reviewer_attempt_id" => "reviewer-run",
+            "campaign" => {"round_id" => "round-1", "scope" => "full"})
+          assigned = @client.call("assign_review", review, mutation_id: "campaign-review").data
+          @admission.selected = "reviewer"
+          @admission.head = @head
+          @client.call("campaign_begin", selection.merge("pane" => "w1:p2", "expected_generation" => 5,
+            "review_id" => assigned.fetch("review_id")), mutation_id: "provider-begin")
+          own = {"assignment_id" => "reviewer", "attempt_id" => "reviewer-run", "pane" => "w1:p2"}
+          prompt = "canonical review session prompt"
+          campaign_ref = assigned.fetch("campaign").slice("campaign_id", "round_id", "scope", "execution_id")
+          bytes = review_bytes("assignment_id" => "reviewer", "attempt_id" => "reviewer-run",
+            "operation" => "review-collect",
+            "review" => {"head" => @head, "verdict" => "approved", "reviewer" => {"actor" => Etc.getpwuid.name},
+              "review_id" => assigned.fetch("review_id"), "campaign" => campaign_ref},
+            "checks" => [{"name" => "review-execution", "verdict" => "passed"}],
+            "artifacts" => [{"path" => "system-prompt.md", "sha256" => Digest::SHA256.hexdigest(prompt)}])
+          context = own.merge("head" => @head, "receipt_sha256" => Digest::SHA256.hexdigest(bytes),
+            "review_id" => assigned.fetch("review_id"), "producer_assignment_id" => "producer")
+          @client.call("queue_finish", own.merge("expected_generation" => 1, "step" => "010.01"),
+            mutation_id: "reviewer-progress", upload_parts: ["Collected."], purpose: :artifacts)
+          submitted = @client.call("submit_review_context", context.merge("expected_generation" => 2),
+            mutation_id: "reviewer-context", upload_parts: [bytes, prompt], purpose: :review_context).data
+          proof = @owner.canonical_review_reference!(attempt_id: "reviewer-run", head: @head,
+            digest: submitted.fetch("receipt_digest"))
+          assert_equal "reviewer", proof.fetch("assignment_id")
+          assert_raises(AttemptErrors::EvidenceUnavailable) do
+            @owner.canonical_review_reference!(attempt_id: "reviewer-run", head: "f" * 40,
+              digest: submitted.fetch("receipt_digest"))
+          end
+          assert_raises(AttemptErrors::EvidenceUnavailable) do
+            @owner.canonical_review_reference!(attempt_id: "reviewer-run", head: @head, digest: "0" * 64)
+          end
+          assert_raises(AttemptErrors::EvidenceUnavailable) do
+            @owner.canonical_review_reference!(attempt_id: "unknown-run", head: @head,
+              digest: submitted.fetch("receipt_digest"))
+          end
+        end
+      end
+
       def test_merge_requires_canonical_successful_test_execution_and_rechecks_before_effect
         fixture do
           register_and_start
