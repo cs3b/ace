@@ -29,37 +29,34 @@ All commands support these flags:
 
 ## Commands
 
-## Task stores
+## Private `_overseer` folder
 
-A task store is a named task root configured under `task.stores` in the project
-config (`.ace/task/config.yml`). ace-task ships this default:
-
-```yaml
-task:
-  stores:
-    _overseer: .ace-local/overseer/tasks
-```
-
-Pass a configured store name to `--in` and the store root replaces the project
-task root before destination validation:
+The private overseer task list is the ordinary special folder
+`.ace-tasks/_overseer/`. It is gitignored (untracked) and is never committed,
+but `ace-task` handles it like any other special folder.
 
 ```bash
 ace-task create "Private overseer item" --in _overseer
 ace-task list --in _overseer
-ace-task show q7w --in _overseer
-ace-task update q7w --in _overseer --set status=done
+ace-task show q7w
+ace-task update q7w --set status=done
+ace-task update q7w --move-to overseer
 ```
 
-- Paths are relative to the project root unless absolute. `create` makes the
-  store root when missing; `--root` cannot be combined with a store selector.
-- A store is its own manager root, not a folder under `task.root_dir`, so the
-  project `list`, `show`, and directory scanner never see its tasks. A
-  configured store name takes precedence over a special folder with the same
-  name.
-- Keep stores under `.ace-local/` so they stay untracked; `--gc` is rejected
-  for store tasks.
-- `ace-task status` and `ace-task plan` stay project-scoped and do not read a
-  private store.
+- `create --in _overseer` creates the folder when missing.
+- The default `ace-task list` is the shared view: project root tasks and
+  `_overseer` tasks together. `--in _overseer` narrows the list; `_maybe`,
+  `_archive`, and other special folders stay hidden unless `--in all` (or their
+  folder) is used.
+- `show`, `update`, subtasks, dependencies, `status`, and `plan` resolve
+  `_overseer` refs like any other task. `update --move-to overseer` and
+  `--move-to next` move tasks in and out of the folder.
+- `--gc` is rejected for `_overseer` tasks because the folder is untracked.
+- An `_overseer` task is a management task: `ace-git-worktree create --task`
+  rejects it and it cannot be used as a project implementation assignment. Keep
+  the management task with the overseer and create a separate project task for
+  implementation; subagents may still be delegated planning, analysis,
+  verification, or dependency analysis.
 - `next`, `maybe`, `anytime`, `archive`, and existing custom folders keep their
   special-folder meaning for `--in`.
 
@@ -117,7 +114,7 @@ budget, the command fails cleanly without leaving behind a partial task artifact
 | `--server` | | Named forge server for the issue |
 | `--default-server` | | Select the configured default forge server |
 | `--child-of` | | Parent task reference (creates subtask) |
-| `--in` | `-i` | Top-level target: next, maybe, anytime, archive, a configured store, or an existing custom folder |
+| `--in` | `-i` | Top-level target: next, maybe, anytime, archive, overseer, or an existing custom folder |
 | `--dry-run` | `-n` | Preview without writing |
 | `--gc` | | Auto-commit changes |
 
@@ -140,9 +137,11 @@ placement fails, the command returns an actionable error and removes the
 incomplete task artifacts. Fix the destination and retry `create`; the failed
 attempt leaves nothing behind. With `--child-of`, the child remains in its
 parent task and `--in` retains its existing ignored behavior.
-Built-in destinations are `next`, `maybe`, `anytime`, and `archive`; a custom
-destination must already exist under the configured task root using the
-special-folder prefix (for example, `--in backlog` targets `_backlog/`).
+Built-in destinations are `next`, `maybe`, `anytime`, `archive`, and `overseer`
+(the private `_overseer/` folder); a custom destination must already exist under
+the configured task root using the special-folder prefix (for example, `--in
+backlog` targets `_backlog/`). `--gc` is rejected when the target folder is
+`_overseer`, because that folder is untracked.
 
 ### ace-task show REF
 
@@ -153,14 +152,12 @@ Display task details by reference (full ID, short ref, or suffix).
 | `--path` | Print file path only |
 | `--content` | Print raw markdown content |
 | `--tree` | Show parent + subtask tree view |
-| `--in STORE` | Select a configured task store (e.g. `_overseer`) |
 
 ```bash
 ace-task show q7w
 ace-task show q7w --tree
 ace-task show q7w --content
 ace-task show q7w --path
-ace-task show q7w --in _overseer
 ```
 
 ### ace-task list
@@ -175,7 +172,7 @@ List tasks with optional filtering by status, tags, or folder.
 |--------|-------|-------------|
 | `--status` | `-s` | Filter by status (pending, in-progress, done, blocked) |
 | `--tags` | `-T` | Filter by tags (comma-separated, any match) |
-| `--in` | `-i` | Folder: next (default), all, maybe, archive; or a configured store name |
+| `--in` | `-i` | Folder: next (default shared view: project + `_overseer`), all, maybe, archive, or an existing special folder |
 | `--root` | `-r` | Override root path (subpath within tasks root) |
 | `--filter` | `-f` | Generic filter: key:value (repeatable, supports key:a\|b and key:!value) |
 | `--sort` | `-S` | Sort: smart (default), id, priority, created |
@@ -200,10 +197,9 @@ Update task metadata, move to folders, or reparent tasks.
 | `--set` | | Set field: key=value (repeatable) |
 | `--add` | | Add to array field: key=value (repeatable) |
 | `--remove` | | Remove from array field: key=value (repeatable) |
-| `--move-to` | `-m` | Move to folder: archive, maybe, anytime, next |
+| `--move-to` | `-m` | Move to folder: archive, maybe, anytime, next, overseer |
 | `--move-as-child-of` | | Reparent: \<ref\>, 'none' (promote), 'self' (orchestrator) |
 | `--position` | `-p` | Set position: first, last, after:\<ref\>, before:\<ref\> |
-| `--in STORE` | | Select a configured task store (e.g. `_overseer`) |
 | `--gc` | | Auto-commit changes |
 
 ```bash
@@ -215,7 +211,7 @@ ace-task update q7w --move-as-child-of abc
 ace-task update q7w --move-as-child-of none       # Promote to standalone
 ace-task update q7w --position first
 ace-task update q7w --position after:abc
-ace-task update q7w --in _overseer --set status=done
+ace-task update q7w --move-to overseer
 ```
 
 ### ace-task status

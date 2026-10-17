@@ -12,7 +12,8 @@ module Ace
           include Ace::Support::Cli::Base
 
           # "next" is a move-to-root alias and is validated separately.
-          BUILT_IN_DESTINATIONS = %w[maybe anytime archive].freeze
+          # "overseer" is the private untracked management folder (_overseer).
+          BUILT_IN_DESTINATIONS = %w[maybe anytime archive overseer].freeze
 
           desc <<~DESC.strip
             Create a new task
@@ -27,7 +28,7 @@ module Ace
             '"Setup DB" --child-of q7w                    # Create as subtask',
             '"Track issue" --issue 276 --server forgejo-lab # Link one exact issue',
             '"Quick task" --in maybe                      # Create in _maybe/ folder',
-            '"Private task" --in _overseer                # Create in the untracked overseer store',
+            '"Private task" --in _overseer                # Create in the private _overseer/ folder',
             '"Draft spec" --status draft --estimate TBD   # Create as draft with estimate',
             '"Preview only" --dry-run                     # Show what would be created'
           ]
@@ -44,7 +45,7 @@ module Ace
           option :"default-server", type: :boolean, desc: "Use the configured default forge server"
           option :"child-of", type: :string, desc: "Parent task reference (creates subtask)"
           option :in, type: :string, aliases: %w[-i],
-            desc: "Top-level target (next, maybe, anytime, archive, a configured store, or existing custom folder)"
+            desc: "Top-level target (next, maybe, anytime, archive, overseer, or existing custom folder)"
           option :"dry-run", type: :boolean, aliases: %w[-n], desc: "Preview without writing"
 
           option :git_commit, type: :boolean, aliases: %w[--gc], desc: "Auto-commit changes"
@@ -72,17 +73,6 @@ module Ace
             )
             child_of = options[:"child-of"]
             in_folder = options[:in]
-            config = Ace::Task::Molecules::TaskConfigLoader.load
-            store_root = in_folder && Ace::Task::Molecules::TaskConfigLoader.store_root(config, in_folder)
-
-            if store_root && options[:root]
-              raise Ace::Support::Cli::Error,
-                "Cannot combine --root with store selector --in #{in_folder}"
-            end
-            if store_root && options[:git_commit]
-              raise Ace::Support::Cli::Error,
-                "Cannot --git-commit the private '#{in_folder}' store; it is untracked and owned by its overseer"
-            end
 
             if status
               valid = Ace::Task::Atoms::TaskValidationRules::VALID_STATUSES
@@ -93,15 +83,12 @@ module Ace
 
             manager = if options[:root]
               Ace::Task::Organisms::TaskManager.new(root_dir: File.expand_path(options[:root]))
-            elsif store_root
-              Ace::Task::Organisms::TaskManager.new(root_dir: store_root, config: config)
             else
-              Ace::Task::Organisms::TaskManager.new(config: config)
+              Ace::Task::Organisms::TaskManager.new
             end
-            place_in_folder = in_folder && !child_of && !store_root
-            validate_destination!(manager, in_folder,
-              store_names: Ace::Task::Molecules::TaskConfigLoader.store_names(config)) if place_in_folder
-            placement_directories_before = directories_under(manager.root_dir) if place_in_folder
+            reject_private_git_commit!(manager, in_folder: in_folder, child_of: child_of) if options[:git_commit]
+            validate_destination!(manager, in_folder) if in_folder && !child_of
+            placement_directories_before = directories_under(manager.root_dir) if in_folder && !child_of
 
             if dry_run
               puts "Would create task:"
@@ -112,8 +99,7 @@ module Ace
               puts "  Issue:    #{remote_issue['url']}" if remote_issue
               puts "  Tags:     #{tags.join(", ")}" if tags.any?
               puts "  Parent:   #{child_of}" if child_of
-              puts "  Store:    #{in_folder} (#{store_root})" if store_root
-              puts "  Folder:   #{in_folder}" if in_folder && !store_root
+              puts "  Folder:   #{in_folder}" if in_folder
               return
             end
 
@@ -148,7 +134,7 @@ module Ace
             end
 
             # Move to folder if specified
-            if place_in_folder
+            if in_folder && !child_of
               task = place_created_task(manager, task, in_folder, placement_directories_before)
             end
 
@@ -170,7 +156,26 @@ module Ace
 
           private
 
-          def validate_destination!(manager, target_folder, store_names: [])
+          # The private _overseer folder is untracked; management tasks must
+          # never be staged. Placement via --in and new subtasks both inherit
+          # the target folder from their parent.
+          def reject_private_git_commit!(manager, in_folder:, child_of:)
+            private_folder = Ace::Task::Molecules::TaskScanner::PRIVATE_FOLDER
+            private_target = if child_of
+              manager.show(child_of)&.special_folder == private_folder
+            elsif in_folder
+              Ace::Support::Items::Atoms::SpecialFolderDetector.normalize(in_folder) == private_folder
+            else
+              false
+            end
+            return unless private_target
+
+            raise Ace::Support::Cli::Error,
+              "Cannot --git-commit an '#{private_folder}' task; that folder is untracked. " \
+                "Keep the management task private, or create the implementation task in a project folder."
+          end
+
+          def validate_destination!(manager, target_folder)
             detector = Ace::Support::Items::Atoms::SpecialFolderDetector
             return if detector.move_to_root?(target_folder)
 
@@ -190,10 +195,9 @@ module Ace
             return if valid
 
             choices = (["next"] + BUILT_IN_DESTINATIONS).join(", ")
-            stores = store_names.empty? ? "" : " a configured store (#{store_names.join(", ")}),"
             raise Ace::Support::Cli::Error,
               "Destination '#{target_folder}' does not exist. " \
-                "Use #{choices},#{stores} or an existing custom task folder."
+                "Use #{choices}, or an existing custom task folder."
           end
 
           def destination_within_root?(root, destination)

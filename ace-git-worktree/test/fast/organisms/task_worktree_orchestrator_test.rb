@@ -105,6 +105,44 @@ class TaskWorktreeOrchestratorTest < Minitest::Test
     end
   end
 
+  def test_overseer_management_task_is_rejected_before_worktree_creation
+    overseer_path = ".ace-tasks/_overseer/8vb.t.vz8-objective/8vb.t.vz8-objective.s.md"
+    mock_data = {id: "8vb.t.vz8", path: overseer_path, title: "Management objective"}
+
+    @orchestrator.stub(:fetch_task_data, mock_data) do
+      result = @orchestrator.create_for_task("8vb.t.vz8")
+
+      refute result[:success]
+      assert_match(/_overseer management task/, result[:error])
+      assert_match(/subagents remain available/i, result[:error])
+      assert_equal ["task_fetched"], result[:steps_completed]
+      refute Dir.exist?(File.join(@temp_dir, ".ace-wt"))
+    end
+  end
+
+  def test_overseer_management_task_is_rejected_for_absolute_task_path
+    absolute_path = File.join(File.realpath(@temp_dir), ".ace-tasks", "_overseer",
+      "8vb.t.vz8-objective", "8vb.t.vz8-objective.s.md")
+    mock_data = {id: "8vb.t.vz8", path: absolute_path, title: "Management objective"}
+
+    @orchestrator.stub(:fetch_task_data, mock_data) do
+      result = @orchestrator.dry_run_create("8vb.t.vz8")
+
+      refute result[:success]
+      assert_match(/_overseer management task/, result[:error])
+      refute result.key?(:would_create)
+    end
+  end
+
+  def test_project_task_is_not_treated_as_overseer_management_task
+    mock_data = {id: "8vb.t.vz8", path: ".ace-tasks/8vb.t.vz8-project/8vb.t.vz8-project.s.md",
+                 title: "Project implementation"}
+
+    refute @orchestrator.send(:private_overseer_task?, mock_data)
+    assert @orchestrator.send(:private_overseer_task?,
+      {path: ".ace-tasks/_overseer/8vb.t.vz8-objective/8vb.t.vz8-objective.s.md"})
+  end
+
   def test_no_pr_task_creation_never_resolves_a_server
     mock_data = {id: "8vb.t.vz8", path: ".ace-tasks/test_task.s.md", title: "Test Task"}
     @orchestrator.stub(:fetch_task_data, mock_data) do

@@ -74,6 +74,11 @@ Created task worktree and branch for 081
 
 **Next steps:** Run `cd "$(ace-git-worktree switch 081)"` to move into the new worktree.
 
+Tasks in the private `.ace-tasks/_overseer/` folder are management tasks, not
+implementation work: `create --task` rejects them with guidance to keep the
+management task with the overseer, create a separate project task for
+implementation, and delegate planning/analysis/verification to subagents instead.
+
 ### Scenario 2: Review a Pull Request in Its Own Worktree
 
 **Goal:** Create a dedicated workspace for PR review or patching, on any
@@ -232,7 +237,8 @@ ace-git-worktree create --task 081 --dry-run
 
 **Options:**
 
-* `--task` - Task ID for a task-aware worktree
+* `--task` - Task ID for a task-aware worktree (project tasks only; a private
+  `_overseer` management task is rejected)
 * `--pr`, `--pull-request` - PR number for a PR-aware worktree
 * `--server <name>` - Named configured forge server for PR and task-PR operations
 * `--default-server` - Use the configured default forge server

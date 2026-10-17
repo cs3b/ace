@@ -11,12 +11,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Support named task stores selected with `--in NAME`. A store is its own task root configured under `task.stores`; the private untracked `_overseer` store at `.ace-local/overseer/tasks` is created on demand, resolved before destination validation in create/list/show/update, and is never scanned by the project task list or `show`.
-- Reject combining `--in STORE` with `--root` or `--gc`, and report unknown store names with the configured store hint.
+- Add the private `_overseer` task scope as an ordinary special folder at
+  `.ace-tasks/_overseer/`. It is gitignored, created on demand by
+  `ace-task create ... --in _overseer`, and narrowed with
+  `ace-task list --in _overseer`.
+- Make the default `ace-task list` the shared view: project root tasks plus
+  `_overseer` tasks together; `_maybe`, `_archive`, and other special folders
+  remain hidden by default.
+- Support `_overseer` tasks in `show`, `update`, subtasks, dependencies,
+  `status`, and `plan`, and support moving tasks in and out with
+  `update --move-to overseer|next`.
 
 ### Changed
 
-- Replace the obsolete `root_cli_test` expectation that `.ace-tasks/_overseer` must not exist with the named-store isolation contract.
+- Reject `--gc` for `_overseer` tasks and reject worktrees/implementation
+  assignments for them in the owning tools: management tasks stay with the
+  overseer while subagent delegation remains allowed.
+- Resolve the project task root from the project root (not the current
+  directory) for `list --in FOLDER` validation and for the plan cache/context
+  resolution, so `ace-task list --in _maybe` and `plan` work from a
+  subdirectory. `--root` remains an explicit path override resolved from the
+  current directory.
 
 ## [0.40.0] - 2026-10-16
 

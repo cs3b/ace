@@ -139,7 +139,8 @@ module Ace
 
         # List tasks with optional filtering and sorting.
         # @param status [String, nil] Filter by status
-        # @param in_folder [String, nil] Filter by special folder (default: "next" = root items only)
+        # @param in_folder [String, nil] Filter by special folder
+        #   (default: "next" = shared view of root tasks plus private _overseer tasks)
         # @param tags [Array<String>] Filter by tags (any match)
         # @param filters [Array<String>, nil] Generic filter strings
         # @param sort [String] Sort order: "smart" (default, dependency-aware), "id", "priority", "created"

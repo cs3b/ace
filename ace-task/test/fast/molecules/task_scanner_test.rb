@@ -89,18 +89,32 @@ class TaskScannerTest < AceTaskTestCase
     assert_equal "_maybe", results.first.special_folder
   end
 
-  def test_scan_in_folder_next_returns_root_items_only
+  def test_scan_in_folder_next_returns_root_and_shared_overseer_items
     create_task_folder("8pp.t.q7w-fix-login")
     maybe_dir = File.join(@tmpdir, "_maybe")
     FileUtils.mkdir_p(maybe_dir)
     create_task_in_dir(maybe_dir, "8pp.t.r8x-maybe-task")
+    overseer_dir = File.join(@tmpdir, "_overseer")
+    FileUtils.mkdir_p(overseer_dir)
+    create_task_in_dir(overseer_dir, "8pp.t.s9z-overseer-task")
 
     scanner = Ace::Task::Molecules::TaskScanner.new(@tmpdir)
     results = scanner.scan_in_folder("next")
 
-    assert_equal 1, results.length
-    assert_equal "8pp.t.q7w", results.first.id
-    assert_nil results.first.special_folder
+    assert_equal %w[8pp.t.q7w 8pp.t.s9z], results.map(&:id).sort
+  end
+
+  def test_scan_in_folder_overseer_returns_private_folder_only
+    create_task_folder("8pp.t.q7w-fix-login")
+    overseer_dir = File.join(@tmpdir, "_overseer")
+    FileUtils.mkdir_p(overseer_dir)
+    create_task_in_dir(overseer_dir, "8pp.t.s9z-overseer-task")
+
+    scanner = Ace::Task::Molecules::TaskScanner.new(@tmpdir)
+    results = scanner.scan_in_folder("_overseer")
+
+    assert_equal ["8pp.t.s9z"], results.map(&:id)
+    assert_equal "_overseer", results.first.special_folder
   end
 
   def test_scan_in_folder_exposes_full_scan_results

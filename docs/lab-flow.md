@@ -18,7 +18,7 @@ point here instead of defining a second queue, journal, cache, or state service.
 | Information | Write location | Owner |
 |---|---|---|
 | Project task specs and their progress | `.ace-tasks/` (tracked) | `ace-task`; one project task per folder |
-| Private overseer task list | `.ace-local/overseer/tasks/` (untracked) | the overseer that owns it, via `ace-task --in _overseer` |
+| Private overseer task list | `.ace-tasks/_overseer/` (untracked via `.gitignore`) | the overseer that owns it, via `ace-task --in _overseer` |
 | Assignment execution plan and step reports | `.ace-local/assign/` | `ace-assign`; steps are not copied into another queue or config |
 | Coworker run configuration (L3) | `.ace-local/coworker/` | reserved in L3: role, instruction source, start prompt, task, assignment reference, overseer address, reporting and error rules |
 | HITL agent events | `.ace-local/hitl/` | `ace-hitl`; a report needs no answer, a question is answered on the exact case |
@@ -27,35 +27,34 @@ point here instead of defining a second queue, journal, cache, or state service.
 Task progress that must survive between turns is written inside that task's own
 folder under `.ace-tasks/`, not in a separate journal.
 
-### Private `_overseer` store
+### Private `_overseer` folder
 
-A task store is a named task root configured under `task.stores` in
-`.ace/task/config.yml` (defaults ship in `ace-task/.ace-defaults/task/config.yml`):
+The private overseer task list is an ordinary special folder in the task tree:
+`.ace-tasks/_overseer/`. It is gitignored, so it never enters commits, while
+`ace-task` treats it like any other special folder.
 
-```yaml
-task:
-  stores:
-    _overseer: .ace-local/overseer/tasks
-```
-
-- `ace-task create "..." --in _overseer` creates the store root when missing.
-- `ace-task list --in _overseer`, `ace-task show REF --in _overseer`, and
-  `ace-task update REF --in _overseer ...` read and write that store.
-- The store root is resolved before destination validation; it is a manager
-  root, not a special folder under `.ace-tasks`. A configured store name takes
-  precedence over a special folder with the same name.
-- The store is untracked because `.ace-local/` is git-ignored. The project
-  `ace-task list`/`show`/scanner never see it.
-- `ace-task status` and `ace-task plan` stay project-scoped and do not read the
-  private store.
-- An `--in` name that is neither a configured store nor an existing task folder
-  is a usage error (create/show/update always; `list` for `_`-prefixed private
-  store names) instead of silently returning an empty list.
+- `ace-task create "..." --in _overseer` creates the folder when missing.
+- `ace-task list --in _overseer` narrows the shared list to private tasks.
+- The default `ace-task list` is the shared view: project root tasks and
+  `_overseer` tasks together. `_maybe`, `_archive`, and other special folders
+  stay hidden unless `--in all` (or their folder) is used.
+- `show`, `update`, subtasks, dependencies, `status`, and `plan` resolve
+  `_overseer` refs the same way as any other task; `update --move-to overseer`
+  and `--move-to next` move tasks in and out of the folder.
+- `--git-commit` is rejected for `_overseer` tasks because the folder is
+  untracked.
+- No worktree is created for an `_overseer` task, and it cannot be used as a
+  project implementation assignment: the management task stays with the
+  overseer, and a separate project task is used for implementation. Subagents may
+  still be delegated planning, analysis, verification, or dependency analysis;
+  the overseer approves their results and updates its own task tree.
+- `ace-task status` includes `_overseer` tasks in the shared totals and
+  recently-done list; up-next remains project-root tasks, like other special
+  folders. `ace-task plan` resolves `_overseer` refs and writes its plan cache
+  under the project root, also when run from a subdirectory.
 - A missing owner configuration is reported as not ready by the owning role
   path; the L3 coworker start/status path reports an absent
   `.ace-local/coworker/` configuration as not ready rather than guessing one.
-- `--in next`, `maybe`, `anytime`, `archive`, and existing custom folders keep
-  their existing meaning.
 
 ## Explicit Non-Owners
 
@@ -69,14 +68,20 @@ broker. Permissions belong to the existing accounts and files. See
 The flow below runs locally with the files above; each step writes only to its
 owner's location.
 
+The overseer's own coordination tasks live in `.ace-tasks/_overseer/`; every
+implementation step below points at a separate project task (`.ace-tasks/`).
+Worktrees and implementation assignments are rejected for `_overseer` tasks,
+while subagents remain available for planning, analysis, verification, and
+dependency analysis.
+
 1. **Write the project task** — `ace-task create "..."` (writes `.ace-tasks/`).
-2. **Plan the work** — `ace-task plan <ref>` (ephemeral plan cache; the task stays in `.ace-tasks/`).
-3. **Provision the worktree** — `ace-git-worktree create --task <ref>` (writes `.ace-wt/<task>/`).
-4. **Create the assignment** — `ace-assign create --task <ref> --preset work-on-task` (writes `.ace-local/assign/`).
+2. **Plan the work** — `ace-task plan <ref>` (ephemeral plan cache under the project root; the task stays in `.ace-tasks/`).
+3. **Provision the worktree** — `ace-git-worktree create --task <ref>` (writes `.ace-wt/<task>/`; project tasks only).
+4. **Create the assignment** — `ace-assign create --task <ref> --preset work-on-task` (writes `.ace-local/assign/`; project tasks only).
 5. **Drive it** — `/as-assign-drive` in the agent session; the steps execute and report under `.ace-local/assign/`.
 6. **Verify** — run package tests and review; results are recorded in the task folder or assignment reports.
-7. **Escalate blockers** — `ace-hitl create`, `ace-hitl list`, `ace-hitl update`, `ace-hitl wait` (writes `.ace-local/hitl/`; the overseer interprets the report/question and updates its own `_overseer` task).
-8. **Ship** — commit with `ace-git-commit`, then open a PR with `ace-git pr create`.
+7. **Escalate blockers** — `ace-hitl create`, `ace-hitl list`, `ace-hitl update`, `ace-hitl wait` (writes `.ace-local/hitl/`; the overseer interprets the report/question and updates its own task in `.ace-tasks/_overseer/`).
+8. **Ship** — commit with `ace-git-commit`, then open a PR with `ace-git pr create` (project tasks only; `_overseer` tasks are never committed).
 9. **Close** — mark the project task done with `ace-task update <ref> --set status=done` (archive when the family is terminal).
 
 `ace-overseer work-on` / `status` / `prune` is local convenience over the same

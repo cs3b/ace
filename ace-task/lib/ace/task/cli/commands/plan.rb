@@ -89,7 +89,8 @@ module Ace
 
           def capture_context_files(task)
             files = Array(task.metadata.dig("bundle", "files"))
-            expanded = files.map { |path| File.expand_path(path, Dir.pwd) }.uniq
+            project_root = Molecules::TaskConfigLoader.project_root
+            expanded = files.map { |path| File.expand_path(path, project_root) }.uniq
             resolved = expanded.select { |path| File.file?(path) }
 
             missing = expanded - resolved

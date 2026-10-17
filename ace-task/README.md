@@ -16,9 +16,10 @@
 
 > **State owner:** `.ace-tasks/` -- project task markdown files and frontmatter
 > owned by `ace-task`. Each project task gets one worktree under `.ace-wt/`.
-> The private overseer list is a separate untracked store,
-> `.ace-local/overseer/tasks/` (`ace-task --in _overseer …`), and is never
-> scanned as project tasks. The canonical flow is
+> The private overseer task list is the special folder `.ace-tasks/_overseer/`:
+> gitignored, shared with project tasks in the default `list`, and narrowed with
+> `ace-task --in _overseer`. `_overseer` tasks never get a worktree or an
+> implementation assignment. The canonical flow is
 > [docs/lab-flow.md](../docs/lab-flow.md).
 
 [Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
