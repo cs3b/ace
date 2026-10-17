@@ -27,9 +27,22 @@ module Ace
               end
               # A new scope/round cannot abandon an unresolved reviewer. The
               # existing terminal collection owner supplies this disposition.
-              result = ordinary_terminal_collection_reference!(previous, commit)
-              with_review_collection!(events: events, commit: commit, reference: result) do |_proof, _reader|
-                manager.complete_execution(selected.fetch("campaign_id"), execution_id: previous.fetch("campaign").fetch("execution_id"), status: "succeeded")
+              # A supervisor-revoked selection settles its reservation as a
+              # transient unavailable failure: cancellation is never a
+              # successful execution, and only the campaign's existing retry
+              # budget governs whether a further selection is admitted.
+              revoked = events.any? do |event|
+                event["type"] == "authority_mutation" && event.dig("payload", "operation") == "cancel_review" &&
+                  event.dig("payload", "data", "review_id") == previous.fetch("review_id")
+              end
+              if revoked
+                manager.complete_execution(selected.fetch("campaign_id"),
+                  execution_id: previous.fetch("campaign").fetch("execution_id"), status: "failed", failure: "unavailable")
+              else
+                result = ordinary_terminal_collection_reference!(previous, commit)
+                with_review_collection!(events: events, commit: commit, reference: result) do |_proof, _reader|
+                  manager.complete_execution(selected.fetch("campaign_id"), execution_id: previous.fetch("campaign").fetch("execution_id"), status: "succeeded")
+                end
               end
             end
             binding = nil

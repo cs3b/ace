@@ -205,6 +205,33 @@ module Ace
         end
       end
 
+      def test_cancelled_campaign_selection_settles_authorization_failure_and_allows_reselection
+        fixture(campaign: true) do
+          register_and_start(producer_start: @base_head)
+          submit_candidate
+          @admission.selected = "supervisor"
+          @client.call("campaign_start", selection.merge("pane" => "w1:pS", "expected_generation" => 2,
+            "contract" => "Preserve exact candidate and independently review it.", "profile" => "delivery"), mutation_id: "campaign-start")
+          @client.call("campaign_pin", selection.merge("pane" => "w1:pS", "expected_generation" => 3, "round_id" => "round-1",
+            "scope_identity" => {"full" => {"preset" => "code-valid", "subjects" => ["diff:#{@base_head}..#{@head}"]}}), mutation_id: "pin-1")
+          @owner.instance_variable_set(:@campaign, make_campaign_owner)
+          review = selection.merge("pane" => "w1:pS", "expected_generation" => 4,
+            "reviewer_assignment_id" => "reviewer", "reviewer_attempt_id" => "reviewer-run",
+            "campaign" => {"round_id" => "round-1", "scope" => "full"})
+          first = @client.call("assign_review", review, mutation_id: "campaign-review").data
+          cancelled = @client.call("cancel_review", selection.merge("pane" => "w1:pS", "expected_generation" => 5,
+            "review_id" => first.fetch("review_id")), mutation_id: "cancel-first").data
+          assert_equal first.fetch("review_id"), cancelled.fetch("review_id")
+          reassigned = @client.call("assign_review", review.merge("expected_generation" => 6), mutation_id: "campaign-review-2").data
+          assert reassigned.fetch("review_id")
+          assert_equal first.fetch("campaign").fetch("campaign_id"), reassigned.fetch("campaign").fetch("campaign_id")
+          refute_equal first.fetch("campaign").fetch("execution_id"), reassigned.fetch("campaign").fetch("execution_id"),
+            "a revoked selection must not inherit the cancelled execution reservation"
+          status = @client.call("campaign_status", selection).data
+          assert_equal 0, status.fetch("completed_rounds")
+        end
+      end
+
       def test_merge_requires_canonical_successful_test_execution_and_rechecks_before_effect
         fixture do
           register_and_start
