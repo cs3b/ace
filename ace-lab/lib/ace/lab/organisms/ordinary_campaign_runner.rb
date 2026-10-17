@@ -65,8 +65,6 @@ module Ace
             return {"begun" => true, "replayed" => false, "dispatched" => false,
               "session_binding" => session_binding,
               "error" => executed.is_a?(Hash) ? executed[:error] : "execution boundary withheld dispatch"}
-            return {"begun" => true, "replayed" => false, "dispatched" => false,
-              "session_binding" => session_binding, "error" => executed[:error]}
           end
           if executed.fetch(:artifacts).length > Ace::Assign::Atoms::CandidateLimits::REVIEW_CONTEXT_ARTIFACTS
             return {"begun" => true, "replayed" => false, "dispatched" => true, "session_binding" => session_binding,
@@ -83,7 +81,7 @@ module Ace
             "version" => 1, "project_id" => @project, "operation" => "submit_review_context",
             "mutation_id" => mutation_id("context", review_id),
             "params" => {"assignment_id" => reviewer.fetch("assignment_id"), "attempt_id" => reviewer.fetch("attempt_id"),
-              "expected_generation" => reviewer.fetch("expected_generation") + 1, "pane" => reviewer.fetch("pane"),
+              "expected_generation" => reviewer.fetch("expected_generation"), "pane" => reviewer.fetch("pane"),
               "head" => candidate.fetch("head"), "receipt_sha256" => receipt.fetch(:sha256),
               "review_id" => review_id, "producer_assignment_id" => producer.fetch("assignment_id")},
             "parts" => ([{"file" => "receipt.json", "bytes" => receipt.fetch(:bytes),
