@@ -62,6 +62,13 @@ module Ace
               execution_ids.size.between?(1, 16) && execution_ids.uniq == execution_ids
             raise AttemptErrors::EvidenceUnavailable, "merge requires the installed canonical executed-test owner"
           end
+          # A campaign-associated candidate cannot satisfy merge admission with
+          # an ordinary direct review: that would bypass CampaignManager
+          # acceptance. Strict refusal applies until canonical complete
+          # campaign acceptance/reference consumption exists.
+          if events.any? { |event| event.dig("payload", "operation") == "campaign_start" }
+            raise AttemptErrors::ReceiptRejected, "campaign-associated candidate requires complete canonical campaign acceptance"
+          end
           candidate = candidate_at!(events: events, commit: commit, head: head, generation: generation)
           review = review_at!(events: events, commit: commit, head: head, generation: generation)
           reference = candidate_reference_at!(events: events, commit: commit, head: head, generation: generation)

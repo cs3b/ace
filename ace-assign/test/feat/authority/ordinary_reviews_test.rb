@@ -81,6 +81,13 @@ module Ace
           @admission.selected = "supervisor"
           started = @client.call("campaign_start", params, mutation_id: "campaign-start")
           assert_equal started.data, @client.call("campaign_start", params, mutation_id: "campaign-start").data
+          # A campaign-associated candidate cannot satisfy merge admission by
+          # consuming an ordinary direct review: strict refusal applies until
+          # complete canonical campaign acceptance exists. The read transport
+          # surfaces the server's rejection as evidence_unavailable.
+          assert_raises(AttemptErrors::EvidenceUnavailable) do
+            @client.call("merge_evidence", selection.merge("test_execution_ids" => ["tests-1"]))
+          end
           pin = selection.merge("pane" => "w1:pS", "expected_generation" => 3, "round_id" => "round-1",
             "scope_identity" => {"full" => {"preset" => "code-valid", "subjects" => ["diff:#{@base_head}..#{@head}"]}})
           pinned = @client.call("campaign_pin", pin, mutation_id: "pin-1")
