@@ -367,3 +367,14 @@ independent review (which itself supplies the executed assessments), rather
 than as a standalone composition join. Check/review/approval canonical
 backstops (composition-side) are complete; the assessment executor lands with
 the Pi review.
+
+### Full default suite on the composition branch (round 17)
+
+50/51 packages passed; 12,443 tests / 43,748 assertions passed; 42 skips; the
+single error was ProtectedServiceBoundaryTest teardown — an Errno::ENOENT
+while Dir.mktmpdir cleanup raced git object deletion in the endcap fixture
+(filesystem race in test cleanup, no assertion involvement, product paths
+untouched by the composition changes). The same test file passes cleanly in
+isolation immediately after (5 tests / 62 assertions PASS). Branch verdict:
+effectively green pending the Pi review; assign 1086/1086 and review
+1008/1008 fully green.
