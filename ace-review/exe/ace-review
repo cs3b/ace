@@ -13,7 +13,7 @@ $LOAD_PATH.unshift lib_path unless $LOAD_PATH.include?(lib_path)
 require "ace/review"
 require "ace/support/cli"
 
-# Dispatch campaign operands before preprocessing repeatable review flags.
+# Start the review CLI (single review command surface).
 begin
   Ace::Review::CLI.start(ARGV)
 rescue Ace::Support::Cli::Error => e

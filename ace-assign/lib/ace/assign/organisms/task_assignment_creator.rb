@@ -21,7 +21,7 @@ module Ace
           @executor = executor || AssignmentExecutor.new
         end
 
-        def call(task_refs:, preset_name: DEFAULT_PRESET, primary_task_ref: nil, delivery_parameters: nil, project_id: nil)
+        def call(task_refs:, preset_name: DEFAULT_PRESET, primary_task_ref: nil, project_id: nil)
           requested_refs = normalize_requested_refs(task_refs)
           raise Ace::Support::Cli::Error, "--task requires at least one task reference" if requested_refs.empty?
 
@@ -48,14 +48,10 @@ module Ace
           validate_parameters!(preset, params)
 
           steps = Atoms::PresetExpander.expand(preset, params)
-          delivery = delivery_parameters && Atoms::DeliveryParameters.validate(delivery_parameters)
-          if delivery && !steps.any? { |step| %w[create-pr update-pr-desc mark-pr-ready].include?(step["name"]) }
-            raise ArgumentError, "Explicit delivery inputs require a remote-capable preset"
-          end
           job_path = write_job_file(
             session_name: "#{preset_name}-#{primary_ref}",
             description: preset["description"],
-            steps: steps, delivery: delivery
+            steps: steps
           )
 
           start_options = {task_id: primary_ref}
@@ -86,6 +82,13 @@ module Ace
             task = @task_manager.show(ref.to_s)
             raise Ace::Support::Cli::Error, "Task not found: #{ref}" unless task
 
+            if overseer_management_task?(task)
+              raise Ace::Support::Cli::Error,
+                "Task #{ref} is an _overseer management task and cannot be delegated as a project assignment. " \
+                "A separate project task is needed for implementation while subagents remain available for " \
+                "planning, analysis and verification."
+            end
+
             if task.status.to_s == "draft"
               raise Ace::Support::Cli::Error,
                 "Task #{ref} has status 'draft' and has not been reviewed. " \
@@ -106,6 +109,13 @@ module Ace
 
         def subtask_ref?(ref)
           ref.to_s.match?(SUBTASK_PATTERN)
+        end
+
+        # The private _overseer store holds management tasks owned by the
+        # overseer. They are never delegated as project assignments; a real
+        # project task must carry the implementation.
+        def overseer_management_task?(task)
+          task.respond_to?(:special_folder) && task.special_folder.to_s == "_overseer"
         end
 
         def preset_supports_taskrefs?(preset)
@@ -153,7 +163,7 @@ module Ace
           raise Ace::Support::Cli::Error, errors.join(", ")
         end
 
-        def write_job_file(session_name:, description:, steps:, delivery: nil)
+        def write_job_file(session_name:, description:, steps:)
           job = {
             "session" => {
               "name" => session_name,
@@ -162,7 +172,6 @@ module Ace
             "steps" => steps
           }
 
-          job["delivery"] = delivery if delivery
           dir = File.join(Ace::Assign.cache_dir, "jobs")
           FileUtils.mkdir_p(dir)
           path = File.join(dir, "#{session_name}-#{SecureRandom.hex(4)}-job.yml")

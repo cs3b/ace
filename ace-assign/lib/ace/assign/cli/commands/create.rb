@@ -1,5 +1,4 @@
 # frozen_string_literal: true
-require "json"
 
 module Ace
   module Assign
@@ -12,7 +11,6 @@ module Ace
 
           desc "Create a new workflow assignment"
 
-          option :delivery_parameters, desc: "JSON file with forge selection and explicit PR provenance (task mode)"
           option :yaml, desc: "Path to job.yaml config file"
           option :task, aliases: ["-t"], type: :array,
             desc: "Task reference(s), repeatable and comma-separated"
@@ -21,17 +19,14 @@ module Ace
           option :debug, aliases: ["-d"], type: :boolean, default: false, desc: "Show debug output"
 
           def call(yaml: nil, task: nil, preset: nil, **options)
-            refuse_protected_graph_mutation!(options)
             validate_modes!(yaml, task, preset)
-            raise Ace::Support::Cli::Error, "--delivery-parameters requires --task" if yaml && options[:delivery_parameters]
 
             result = if yaml
               Organisms::AssignmentExecutor.new.start(yaml)
             else
               Organisms::TaskAssignmentCreator.new.call(
                 task_refs: task,
-                preset_name: preset || Organisms::TaskAssignmentCreator::DEFAULT_PRESET,
-                delivery_parameters: options[:delivery_parameters] && JSON.parse(File.read(options[:delivery_parameters]))
+                preset_name: preset || Organisms::TaskAssignmentCreator::DEFAULT_PRESET
               )
             end
 
@@ -40,8 +35,6 @@ module Ace
               print_assignment_header(result[:assignment])
               print_step_instructions(result[:current] || result[:state]&.next_workable)
             end
-          rescue JSON::ParserError, Errno::ENOENT
-            raise Ace::Support::Cli::Error, "Delivery parameters file unavailable or invalid JSON"
           rescue ArgumentError => e
             raise Ace::Support::Cli::Error, e.message
           end

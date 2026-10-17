@@ -12,7 +12,7 @@ module Ace
           :pr, :post_comment, :pr_metadata, :provider_timeout,
           :server, :default_server,
           :pr_comments, :pr_comment_data,
-          :evidence_sessions, :campaign, :campaign_round, :campaign_scope,
+          :evidence_sessions,
           :delta,
           :no_feedback, :feedback_model,
           :list_presets, :list_prompts, :help
@@ -62,9 +62,6 @@ module Ace
           # PR comment options
           @pr_comments = hash[:pr_comments]  # nil = use default, true/false = explicit
           @pr_comment_data = nil  # Populated during execution
-          @campaign = hash[:campaign]
-          @campaign_round = hash[:campaign_round]
-          @campaign_scope = hash[:campaign_scope]
           @evidence_sessions = Array(hash[:evidence_session]).flat_map { |value| value.to_s.split("\x1F") }.reject(&:empty?)
 
           # Delta round: nil = not requested, :auto = resolve reference from prior

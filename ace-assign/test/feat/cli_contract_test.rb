@@ -19,6 +19,21 @@ class CliContractTest < AceAssignTestCase
     refute_match(/^\s+report\s+#/m, output.first)
     refute_match(/^\s+drive\s+#/m, output.first)
     refute_match(/^\s+prepare\s+#/m, output.first)
+
+    # The installed/protected authority, attempt, journal and delivery surface
+    # is gone: no removed command may remain registered or listed.
+    removed = ["authority serve", "authority launch", "authority status", "authority terminate",
+      "authority worker", "authority task-context", "authority task-context-principal",
+      "authority task-context-selection", "authority inbox-context-principal",
+      "authority inbox-context-selection", "delivery", "submit-candidate", "submit-result",
+      "campaign-export-result", "campaign-record-round", "inbox-bind", "resume",
+      "attempt start", "attempt status", "attempt evidence", "attempt finish", "attempt reconcile"]
+    removed.each do |command|
+      refute_includes registered, command
+      refute_match(/^\s+#{Regexp.escape(command)}\s+#/m, output.first)
+      error = assert_raises(Ace::Support::Cli::Error) { Ace::Assign::CLI.resolve(command.split) }
+      assert_includes error.message, "unknown command"
+    end
   end
 
   def test_cli_lifecycle_contract_with_json_status

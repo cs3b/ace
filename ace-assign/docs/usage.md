@@ -60,7 +60,6 @@ Create an assignment from a preset or a YAML definition.
 | `--yaml` | Path to a job YAML file |
 | `--task`, `-t` | Task reference(s); repeatable and comma-separated |
 | `--preset`, `-p` | Assignment preset name (task mode only) |
-| `--delivery-parameters` | JSON file with forge selection and explicit PR provenance |
 | `--quiet`, `--debug` | Output control |
 
 ```bash
@@ -77,6 +76,10 @@ filtered before the assignment's own step expansion:
 - All requested tasks are already terminal (done/skipped/cancelled): <refs>
 
 The last case creates no assignment and returns that message instead.
+
+An `_overseer` management task cannot be delegated: `create --task` refuses a
+task whose file lives under `.ace-tasks/_overseer/` and asks for a separate
+project task instead.
 
 ### `ace-assign status`
 
@@ -199,6 +202,7 @@ plans. Each plan keeps its own history.
 | 2 | Assignment error (no active/known assignment) |
 | 3 | Configuration not found |
 | 4 | Step not found |
+| 5 | Lifecycle conflict or busy maintenance exclusion (conflicting identity or busy/expired maintenance; the operation is refused, not retried in a loop) |
 | 130 | Interrupted (SIGINT) |
 
 ## Planned waves

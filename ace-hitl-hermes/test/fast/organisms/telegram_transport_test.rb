@@ -14,7 +14,7 @@ class TelegramTransportTest < AceHermesTestCase
       @requests, @answers, @effects = {}, [], 0
     end
 
-    def add(id, secret: false, kind: nil)
+    def add(id, secret: false)
       kind ||= secret ? "otp" : "text"
       @requests[id] = {"id" => id, "attempt" => "attempt651", "assignment" => "assign651", "project" => @project,
                        "requester" => "agent", "kind" => kind,
@@ -46,13 +46,6 @@ class TelegramTransportTest < AceHermesTestCase
       @answers << [id, answer.dup]
       @effects += 1
       @requests[id]["state"] = "answer-delivered"
-    end
-
-    def proposal_reply(id, project:, answer:, **)
-      raise "wrong project" unless project == @project
-
-      @answers << [id, answer.dup]
-      @requests.fetch(id)["state"] = "answer-delivered"
     end
 
     def close(id)
@@ -107,8 +100,8 @@ class TelegramTransportTest < AceHermesTestCase
       clock: -> { @time }, box_factory: ->(channel) { box(channel["name"], project: channel["project"]) })
   end
 
-  def submit(id = "q-1", secret: false, channel: "lab", kind: nil)
-    @boundaries.fetch(channel).add(id, secret: secret, kind: kind)
+  def submit(id = "q-1", secret: false, channel: "lab")
+    @boundaries.fetch(channel).add(id, secret: secret)
     box(channel).publish(kind: :question, id: id, body: "Proceed?", sender: "agent", timestamp: QUESTION_TS)
     @relay.submit(channel: channel, project: channel, request: id, revision: "rev-1")
   end
@@ -145,23 +138,6 @@ class TelegramTransportTest < AceHermesTestCase
     result = @relay.reconcile(channel: "lab", project: "lab", request: "same-id", through: QUESTION_TS)
     assert result["healthy"]
     assert result["drained"]
-  end
-
-  def test_proposal_reply_ignores_unresolved_same_identity_ingress_from_another_channel
-    submit("same-proposal", channel: "lab", kind: "proposal")
-    submit("same-proposal", channel: "other", kind: "proposal")
-    @journal.synchronize do |state, commit|
-      state["sequence"] = 1
-      state["sequence"] = 1
-      state["ingress"] << {"request" => "same-proposal", "revision" => "rev-1", "channel" => "lab", "project" => "lab", "user_id" => "42",
-        "route_identity" => @registry.route_identity("lab", "lab"),
-        "message_id" => "101", "sequence" => 1, "received_at" => QUESTION_TS, "status" => "unresolved"}
-      commit.call
-    end
-
-    result = @relay.receive(event("approve", chat_id: "-848484", message_id: "202"))
-    assert_equal "delivered", result["status"]
-    assert_equal [["same-proposal", "approve"]], @boundaries.fetch("other").answers
   end
 
   def shared_request

@@ -39,16 +39,15 @@ Gem::Specification.new do |spec|
   spec.executables = spec.files.grep(%r{\Aexe/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
 
-  # Runtime dependencies
-  spec.add_dependency "ace-runtime", "~> 0.3"
+  # Runtime dependencies. The installed authority/journal/command kernel and
+  # its ace-assign/ace-runtime/ace-herdr/ace-hitl integrations were removed in
+  # L1; the package ships read-only topology queries plus the retained Forgejo
+  # provider adapter.
   spec.add_dependency "ace-support-cli", "~> 0.6"
   spec.add_dependency "ace-support-core", "~> 0.31"
   spec.add_dependency "ace-support-config", "~> 0.18"
-  spec.add_dependency "ace-assign", "~> 0.70"
-  spec.add_dependency "ace-herdr", "~> 0.6"
-  spec.add_dependency "ace-hitl", "~> 0.16"
-  # The forge merge receiver delegates every Forgejo provider responsibility
-  # (HTTP transport, auth, payload, classification) to the forgejo provider.
+  # The retained Forgejo merge adapter delegates provider transport and
+  # authentication to the forgejo provider.
   spec.add_dependency "ace-git-forgejo", "~> 0.7"
 
   # Development dependencies

@@ -96,9 +96,3 @@ module Ace
     private_class_method :load_gem_defaults_fallback
   end
 end
-
-require_relative "assign/atoms/delivery_parameters"
-require_relative "assign/molecules/ordinary_merge_contract"
-require_relative "assign/molecules/ordinary_merge_cli"
-require_relative "assign/organisms/ordinary_merge_consumer"
-require_relative "assign/organisms/delivery_coordinator"

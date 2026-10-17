@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+- Remove the durable review campaign/round receipt authority surface: the `ace-review campaign` commands, `--campaign`/`--campaign-round`/`--campaign-scope` collection options, and the campaign store/evidence/manager/head-assessment/atomic-contract code that existed only to consume `ace-assign attempt evidence` journal receipts. Review is local session/report recording with feedback files and no second authority store.
+
+### Changed
+
+- Drop the remaining campaign/journal-receipt wording from `wfi://review/pr`: keep review round state in local sessions, feedback files and the PR description or assignment report.
+
 ## [0.61.0] - 2026-10-16
 
 ### Added

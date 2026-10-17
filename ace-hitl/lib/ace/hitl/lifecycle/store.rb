@@ -15,7 +15,6 @@ require_relative "operator_questions"
 require_relative "effects"
 require_relative "otp_vault"
 require_relative "protocol"
-require_relative "proposals"
 
 module Ace
   module Hitl
@@ -39,7 +38,6 @@ module Ace
       #   or replaced attempts cannot acquire new authority.
       class Store
         include OperatorQuestions
-        include Proposals
         MAX_ANSWER = 4096
         # IO#read(limit) is byte-oriented, so the character limit is
         # enforced on a decoded string with this separate byte bound
@@ -82,7 +80,7 @@ module Ace
 
         def initialize(root:, binding:, policy: AccessPolicy.new,
           identity: Identity, ownership: AtomicJson::DEFAULT_OWNERSHIP,
-          poll_seconds: CONSUME_POLL_SECONDS, vault: :file, proposal_clock: -> { Time.now.utc },
+          poll_seconds: CONSUME_POLL_SECONDS, vault: :file,
           stopping: -> { false }, group: DEFAULT_GROUP)
           raise ArgumentError, "a binding policy is required (fail closed without one)" unless binding
           raise ArgumentError, "an access policy is required (fail closed without one)" unless policy
@@ -94,7 +92,6 @@ module Ace
           @ownership = ownership
           @poll_seconds = poll_seconds
           @vault = vault == :file ? OtpVault::FileVault : vault
-          @proposal_clock = proposal_clock
           @stopping = stopping
           @group = group
         end
@@ -113,39 +110,15 @@ module Ace
         # validates its binding — unknown identity/authority is an
         # error, never permission.
         def create(id:, attempt:, plan:, question:, ace_hitl_id:, project: "ace", harness: "lab-admin",
-          assignment:, kind: "text", options: [], effect: nil, otp: nil, publication_binding: nil)
-          raise StateError, "proposal kind must use proposal_create" if kind == "proposal"
+          assignment:, kind: "text", options: [], effect: nil, otp: nil)
           value = prepare_request(id: id, attempt: attempt, plan: plan, question: question,
             ace_hitl_id: ace_hitl_id, project: project, harness: harness, assignment: assignment,
-            kind: kind, options: options, effect: effect, otp: otp, publication_binding: publication_binding)
-          return persist_request(value) unless value["publication_binding"]
-          with_request_lock(value.fetch("id")) do
-            with_live_authority!(value, requester: @identity.username) do
-              if value["publication_binding"]
-                if load_terminal(value.fetch("id"))
-                  raise StateError, "publication HITL id is already terminal"
-                end
-                duplicate = request_path(value.fetch("id")).exist? && load_request(value.fetch("id"))
-                if duplicate
-                  unless duplicate.slice("publication_binding", "publication_requester_peer", "otp") == value.slice("publication_binding", "publication_requester_peer", "otp")
-                    raise StateError, "publication HITL id has different binding"
-                  end
-                  return {"id" => duplicate.fetch("id"), "requested" => true, "replay" => true, "envelope" => duplicate.fetch("envelope")}
-                end
-                requests_dir.glob("*.json").each do |path|
-                  existing = AtomicJson.read(path)
-                  if existing["publication_binding"] == value["publication_binding"]
-                    raise StateError, "publication challenge already has an active HITL request"
-                  end
-                end
-              end
-              persist_request_locked!(value)
-            end
-          end
+            kind: kind, options: options, effect: effect, otp: otp)
+          persist_request(value)
         end
 
         def prepare_request(id:, attempt:, plan:, question:, ace_hitl_id:, project: "ace", harness: "lab-admin",
-          assignment:, kind: "text", options: [], effect: nil, otp: nil, publication_binding: nil)
+          assignment:, kind: "text", options: [], effect: nil, otp: nil)
           requester = @identity.username
           request_id = safe_id(id)
           validate_binding_ids!(assignment, attempt)
@@ -154,8 +127,7 @@ module Ace
           end
           plan = plan.to_s.strip
           question = question.to_s.strip
-          question_too_long = kind == "proposal" ? question.bytesize > 4096 : question.length > MAX_PLAN_QUESTION
-          if plan.empty? || plan.length > MAX_PLAN_QUESTION || question.empty? || question_too_long
+          if plan.empty? || plan.length > MAX_PLAN_QUESTION || question.empty? || question.length > MAX_PLAN_QUESTION
             raise StateError, "plan and question must contain 1-#{MAX_PLAN_QUESTION} characters"
           end
           options = Array(options).map(&:strip)
@@ -168,8 +140,6 @@ module Ace
           unless Kinds.valid?(kind)
             raise StateError, "unknown HITL kind: #{kind}"
           end
-          raise StateError, "proposal effects belong to ace-assign" if kind == "proposal" && effect
-          require_proposer!(project) if kind == "proposal"
           if Kinds.secret?(kind)
             unless options.empty?
               raise StateError, "OTP requests must not offer choices"
@@ -178,13 +148,7 @@ module Ace
             challenge = normalize_otp_challenge!(otp)
           end
 
-          if publication_binding
-            raise StateError, "publication HITL must be OTP" unless kind == "otp"
-            publication_binding = JSON.parse(JSON.generate(publication_binding))
-            reverse = nil
-          else
-            reverse = validate_request_binding(assignment, attempt, project, requester)
-          end
+          reverse = validate_request_binding(assignment, attempt, project, requester)
 
           value = {
             "id" => request_id,
@@ -202,7 +166,6 @@ module Ace
             "created_at" => Time.now.to_i
           }
           value["otp"] = challenge if challenge
-          value["publication_binding"] = publication_binding if publication_binding
           Effects.validate_declaration!(effect) if effect
           value["effect"] = Effects.normalized_declaration(effect) if effect
           value["incarnation"] = SecureRandom.hex(8)
@@ -272,7 +235,7 @@ module Ace
             terminal = load_terminal(request_id)
             if terminal
               gate_read_access!(terminal)
-              return terminal.slice("id", "assignment", "attempt", "project", "requester", "requester_uid", "sensitive", "envelope", "state", "native_delivery", "effect_receipt_ref", "publication_binding", "publication_requester_peer", "otp")
+              return terminal.slice("id", "assignment", "attempt", "project", "requester", "requester_uid", "sensitive", "envelope", "state", "native_delivery", "effect_receipt_ref", "otp")
                 .merge("kind" => terminal.dig("envelope", "kind"))
             end
           end
@@ -290,8 +253,6 @@ module Ace
             "options" => value["options"],
             "plan" => value["plan"],
             "otp" => value["otp"],
-            "publication_binding" => value["publication_binding"],
-            "publication_requester_peer" => value["publication_requester_peer"],
             "requester" => value["requester"],
             "requester_uid" => value["requester_uid"],
             "envelope" => value["envelope"],
@@ -299,7 +260,6 @@ module Ace
             "effect_receipt_ref" => effect_receipt_ref(value),
             "effect" => value["effect_state"]
           }
-          facts["proposal"] = proposal_for_request!(request_id, project: value.fetch("project")) if value["kind"] == "proposal"
           facts
         end
 
@@ -328,7 +288,6 @@ module Ace
 
           value = load_request(request_id)
           requester_gate!(value)
-          raise StateError, "proposal authorization is consumed by the scoped Assign service claim" if value["kind"] == "proposal"
           verify_native_consumer!(value) if native_delivery
           verify_operation!(value, operation)
           deadline = timeout.positive? ? Time.now.to_i + timeout : nil
@@ -409,7 +368,6 @@ module Ace
           locked_value = nil
           with_request_lock(request_id) do
             value = load_request(request_id)
-            raise StateError, "proposal decisions use revise or authenticated Captain veto" if value["kind"] == "proposal"
             # Ownership is re-checked against the LOCKED record: an
             # unlocked check would race a concurrent recreate of the id
             # (review 8wq2zttu on PR#336).
@@ -424,11 +382,7 @@ module Ace
               remove_request(value, keep_public: true)
               locked_value = value
             end
-            if value["publication_binding"]
-              with_live_authority!(value, requester: @identity.username, &cancel)
-            else
-              cancel.call
-            end
+            cancel.call
           end
           {
             "id" => request_id,
@@ -459,7 +413,6 @@ module Ace
           end
           value = load_request(request_id)
           require_transport!("deliver", value)
-          raise StateError, "proposal reply requires authenticated ingress evidence" if value["kind"] == "proposal"
           if value["sensitive"] == true && !Kinds.secret?(value["kind"].to_s)
             raise StateError, "secret HITL answers are forbidden"
           end
@@ -525,7 +478,6 @@ module Ace
         def each_pending(project: nil, after: nil)
           return enum_for(__method__, project: project, after: after) unless block_given?
           require_transport!("pending")
-          recover_proposal_projections(project: project)
           ids = (requests_dir.glob("*.json") + public_dir.glob("*.json")).map { |path| path.basename(".json").to_s }.uniq.sort
           ids.each do |id|
             next if after && id <= after
@@ -879,9 +831,6 @@ module Ace
           unless @identity.username == value["requester"].to_s
             raise PermissionError, "only the requesting role can consume this answer"
           end
-          if value["publication_binding"]
-            @binding.verify_publication_requester!(identity: @identity, original_peer: value.fetch("publication_requester_peer"))
-          end
         end
 
         def gate_read_access!(value)
@@ -935,7 +884,7 @@ module Ace
             raise PermissionError, "only the requesting role can #{operation == "cancelled" ? "cancel" : "consume"} this request"
           end
 
-          requester_gate!(terminal) if terminal["publication_binding"] || operator_request?(terminal)
+          requester_gate!(terminal) if operator_request?(terminal)
           case terminal["state"]
           when "cancelled"
             return replayed_cancel(request_id, terminal) if operation == "cancelled"
@@ -1000,9 +949,7 @@ module Ace
             record["requester_uid"] = value.fetch("requester_uid")
             record["kind"] = "question"
           end
-          %w[publication_binding publication_requester_peer otp].each do |key|
-            record[key] = value[key] if value.key?(key)
-          end
+          record["otp"] = value["otp"] if value.key?("otp")
           record["answer"] = extra[:answer] if extra[:answer]
           record["native_delivery"] = true if extra[:native_delivery]
           record["audit"] = extra["audit"] if extra["audit"]
@@ -1027,17 +974,6 @@ module Ace
               require_transport!("operator transition", value)
             end
             yield
-          elsif value["publication_binding"]
-            unless @binding.respond_to?(:with_publication!)
-              raise BindingError, "publication HITL source binding is unavailable"
-            end
-            @binding.with_publication!(binding: value.fetch("publication_binding"), identity: @identity,
-              assignment: value.fetch("assignment"), attempt: value.fetch("attempt"), project: value.fetch("project"),
-              otp: value.fetch("otp"), original_peer: value["publication_requester_peer"],
-              requester_required: @identity.username == value.fetch("requester")) do |selection|
-              value["publication_requester_peer"] ||= JSON.parse(JSON.generate(selection.fetch("executor_process_binding")))
-              yield
-            end
           else
             @binding.with_active(
               assignment: value["assignment"], attempt: value["attempt"],

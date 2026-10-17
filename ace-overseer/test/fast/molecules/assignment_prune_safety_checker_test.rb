@@ -8,11 +8,13 @@ class AssignmentPruneSafetyCheckerTest < AceOverseerTestCase
       !task_id.nil? && !task_id.to_s.strip.empty?
     end
   end
-  FakeQueueState = Struct.new(:assignment_state) do
+
+  FakeQueueState = Struct.new(:assignment_state, :summary_data) do
     def summary
-      {total: 3, done: 3, failed: 0, active: 0, pending: 0}
+      summary_data
     end
   end
+
   FakeAssignmentInfo = Struct.new(:assignment, :queue_state) do
     def completed?
       queue_state.assignment_state == :completed
@@ -29,76 +31,8 @@ class AssignmentPruneSafetyCheckerTest < AceOverseerTestCase
     end
   end
 
-  class FakeAttempt
-    attr_reader :attempt_id, :state
-
-    def initialize(attempt_id:, state:)
-      @attempt_id = attempt_id
-      @state = state
-    end
-
-    def active?
-      %w[reserved running].include?(state)
-    end
-
-    def uncertain?
-      state == "uncertain"
-    end
-  end
-
-  class FakeJournal
-    def initialize(ref_value:, attempts: [])
-      @ref_value = ref_value
-      @attempts = attempts
-    end
-
-    def ref_value
-      @ref_value
-    end
-
-    def derived_attempts(_assignment_id)
-      @attempts
-    end
-  end
-
-  class FakeManager
-    def initialize(attempts, error)
-      @attempts = attempts
-      @error = error
-    end
-
-    def attempts(_assignment_id)
-      raise @error if @error
-
-      @attempts
-    end
-  end
-
-  class FakeJournalShell
-    def initialize(journal, error)
-      @journal = journal
-      @error = error
-    end
-
-    def ref_value
-      raise @error if @error
-
-      @journal&.ref_value
-    end
-
-    def derived_attempts(assignment_id)
-      raise @error if @error
-
-      @journal&.derived_attempts(assignment_id)
-    end
-  end
-
   def test_completed_assignment_is_safe_to_prune
-    info = FakeAssignmentInfo.new(
-      FakeAssignment.new("abc12", "work-on-task-230", "/cache/abc12"),
-      FakeQueueState.new(:completed)
-    )
-    checker = build_checker(info)
+    checker = build_checker(completed_info)
 
     candidate = checker.check(assignment_id: "abc12")
 
@@ -110,11 +44,7 @@ class AssignmentPruneSafetyCheckerTest < AceOverseerTestCase
   end
 
   def test_running_assignment_is_not_safe_to_prune
-    info = FakeAssignmentInfo.new(
-      FakeAssignment.new("abc12", "work-on-task-230", "/cache/abc12"),
-      FakeQueueState.new(:running)
-    )
-    checker = build_checker(info)
+    checker = build_checker(info(:running))
 
     candidate = checker.check(assignment_id: "abc12")
 
@@ -134,122 +64,62 @@ class AssignmentPruneSafetyCheckerTest < AceOverseerTestCase
     assert_includes candidate.reasons, "assignment not found"
   end
 
-  def test_active_attempt_blocks_completed_assignment
-    checker = build_checker(
-      completed_info,
-      attempts: [FakeAttempt.new(attempt_id: "at1", state: "running")]
-    )
+  def test_active_local_step_blocks_completed_assignment
+    checker = build_checker(completed_info(summary: {total: 3, done: 2, failed: 0, active: 1, pending: 0}))
 
     candidate = checker.check(assignment_id: "abc12")
 
     refute candidate.safe_to_prune?
-    refute candidate.attempts_terminal
-    assert_includes candidate.reasons.join(" "), "attempt at1 is running"
+    refute candidate.work_terminal
+    assert_includes candidate.reasons.join(" "), "1 active and 0 pending"
   end
 
-  def test_uncertain_attempt_blocks_completed_assignment
-    checker = build_checker(
-      completed_info,
-      attempts: [FakeAttempt.new(attempt_id: "at2", state: "uncertain")]
-    )
+  def test_pending_local_step_blocks_completed_assignment
+    checker = build_checker(completed_info(summary: {total: 3, done: 2, failed: 0, active: 0, pending: 1}))
 
     candidate = checker.check(assignment_id: "abc12")
 
     refute candidate.safe_to_prune?
-    assert_includes candidate.reasons.join(" "), "uncertain"
+    assert_includes candidate.reasons.join(" "), "pending step"
   end
 
-  def test_unreadable_attempt_state_blocks
-    checker = build_checker(completed_info, attempts_error: Errno::EACCES.new("/cache/abc12/attempts"))
+  def test_unreadable_local_step_state_blocks
+    checker = build_checker(completed_info(summary: nil))
 
     candidate = checker.check(assignment_id: "abc12")
 
     refute candidate.safe_to_prune?
-    assert_includes candidate.reasons.join(" "), "unreadable"
+    assert_includes candidate.reasons.join(" "), "step state unreadable"
   end
 
-  def test_managed_assignment_requires_durable_evidence_ref
-    checker = build_checker(completed_info("148"), journal: FakeJournal.new(ref_value: nil))
+  def test_unreadable_summary_object_blocks
+    checker = build_checker(completed_info(summary: "not-a-summary"))
 
     candidate = checker.check(assignment_id: "abc12")
 
     refute candidate.safe_to_prune?
-    assert_includes candidate.reasons.join(" "), "no durable evidence ref"
-  end
-
-def test_managed_assignment_with_empty_journal_blocks
-  journal = FakeJournal.new(ref_value: "e" * 40, attempts: [])
-  checker = build_checker(completed_info("148"), journal: journal)
-
-  candidate = checker.check(assignment_id: "abc12")
-
-  refute candidate.safe_to_prune?
-  assert_includes candidate.reasons.join(" "), "no durable attempt evidence"
-end
-
-  def test_managed_assignment_journal_active_attempt_blocks
-    journal = FakeJournal.new(
-      ref_value: "e" * 40,
-      attempts: [FakeAttempt.new(attempt_id: "at9", state: "running")]
-    )
-    checker = build_checker(completed_info("148"), journal: journal)
-
-    candidate = checker.check(assignment_id: "abc12")
-
-    refute candidate.safe_to_prune?
-    assert_includes candidate.reasons.join(" "), "journaled attempt at9"
-  end
-
-  def test_managed_assignment_unreadable_journal_blocks
-    checker = build_checker(
-      completed_info("148"),
-      journal_error: Ace::Assign::AttemptErrors::EvidenceUnavailable.new("broken git")
-    )
-
-    candidate = checker.check(assignment_id: "abc12")
-
-    refute candidate.safe_to_prune?
-    assert_includes candidate.reasons.join(" "), "durable evidence unreadable"
-  end
-
-  def test_managed_assignment_with_terminal_evidence_passes
-    journal = FakeJournal.new(
-      ref_value: "e" * 40,
-      attempts: [FakeAttempt.new(attempt_id: "at5", state: "succeeded")]
-    )
-    checker = build_checker(completed_info("148"), journal: journal)
-
-    candidate = checker.check(assignment_id: "abc12")
-
-    assert candidate.safe_to_prune?
-    assert_empty candidate.reasons
-  end
-
-  def test_taskless_assignment_without_journal_ref_passes_when_attempts_terminal
-    checker = build_checker(completed_info, journal: nil)
-
-    candidate = checker.check(assignment_id: "abc12")
-
-    assert candidate.safe_to_prune?
+    assert_includes candidate.reasons.join(" "), "step state unreadable"
   end
 
   private
 
-  def completed_info(task_id = nil)
+  def completed_info(summary: {total: 3, done: 3, failed: 0, active: 0, pending: 0})
     FakeAssignmentInfo.new(
-      FakeAssignment.new("abc12", "work-on-task-230", "/cache/abc12", task_id),
-      FakeQueueState.new(:completed)
+      FakeAssignment.new("abc12", "work-on-task-230", "/cache/abc12"),
+      FakeQueueState.new(:completed, summary)
     )
   end
 
-  def build_checker(info, attempts: [], journal: nil, attempts_error: nil, journal_error: nil)
-    manager = FakeManager.new(attempts, attempts_error)
-    journal_shell = FakeJournalShell.new(journal, journal_error)
+  def info(state, summary: {total: 3, done: 1, failed: 0, active: 1, pending: 1})
+    FakeAssignmentInfo.new(
+      FakeAssignment.new("abc12", "work-on-task-230", "/cache/abc12"),
+      FakeQueueState.new(state, summary)
+    )
+  end
 
+  def build_checker(assignment_info)
     Ace::Overseer::Molecules::AssignmentPruneSafetyChecker.new(
-      assignment_discoverer_factory: -> { FakeDiscoverer.new([info]) },
-      assignment_manager_factory: -> { manager },
-      journal_factory: -> { journal_shell }
+      assignment_discoverer_factory: -> { FakeDiscoverer.new([assignment_info]) }
     )
   end
 end

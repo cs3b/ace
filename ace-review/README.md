@@ -60,8 +60,9 @@ for task-scoped quality checks.
 
 > **Planned (L5.5):** role rules (worker/reviewer/integrator), independent review
 > rounds with a round limit, and the forge-neutral review/delivery workflow are
-> not available yet. The old durable-campaign/coordinator-receipt path is not a
-> requirement of the file-based flow; see [campaigns](docs/campaigns.md).
+> not available yet. Review is local session/report recording with feedback
+> files; the old durable-campaign/round receipt path was removed with the
+> installed authority model in L1.
 
 ## Testing
 

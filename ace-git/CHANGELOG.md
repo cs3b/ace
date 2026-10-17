@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Document the ordinary local PR create/update/ready path; remove the protected worker boundary and `ace-lab service request/status` requirements from the git PR workflows and guide.
+- Document explicit remote read/compare reconciliation for an interrupted PR update instead of claiming the command compares and accepts the remote description; an interrupted create adopts one exact-head draft but does not compare or rewrite remote title/body.
+- Drop the `attempt-bound`/`execution-attempt` wording from the `as-git-pr-create` and `as-git-pr-update` skills; they wrap the same forge-neutral PR workflows.
 
 ### Removed
 

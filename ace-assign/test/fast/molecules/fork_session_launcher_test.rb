@@ -159,7 +159,7 @@ class ForkSessionLauncherTest < AceAssignTestCase
 
     launcher = build_launcher(config: config, query_interface: fake, lifecycle_exclusion: exclusion)
 
-    error = assert_raises(Ace::Assign::AttemptErrors::Conflict) do
+    error = assert_raises(Ace::Assign::LifecycleErrors::Conflict) do
       launcher.launch(assignment_id: "abc123", fork_root: "010.01")
     end
     assert_includes error.message, "was pruned"

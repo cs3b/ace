@@ -3,7 +3,6 @@
 require "ace/support/cli"
 require_relative "../hitl/version"
 require_relative "cli/commands/create"
-require_relative "cli/commands/ask"
 require_relative "cli/commands/operator_question"
 require_relative "cli/commands/read"
 require_relative "cli/commands/show"
@@ -20,7 +19,6 @@ require_relative "cli/commands/serve"
 require_relative "cli/commands/overseer_send"
 require_relative "cli/commands/overseer_pending"
 require_relative "cli/commands/overseer_ack"
-require_relative "cli/commands/proposal"
 
 module Ace
   module Hitl
@@ -30,11 +28,9 @@ module Ace
       PROGRAM_NAME = "ace-hitl"
 
       REGISTERED_COMMANDS = [
-        ["proposal", "Create, inspect, revise or resolve an immutable second-commander proposal"],
         ["create", "Create HITL event"],
         ["operator-question", "Create a nonsecret question under an installed operator project grant"],
         ["read", "Read authenticated lifecycle request facts"],
-        ["ask", "Ask a human via HITL and forward the request to the Lab"],
         ["show", "Show HITL event details"],
         ["list", "List HITL events"],
         ["update", "Update HITL event metadata or answer"],
@@ -54,14 +50,11 @@ module Ace
         "ace-hitl list --status pending",
         "ace-hitl show abc123 --content",
         "ace-hitl create \"Which auth strategy?\" --kind decision",
-        "ace-hitl ask --question \"Proceed with deploy?\" --assignment assign685 --attempt attempt685 --effect-arg /bin/false --effect-cwd /tmp",
         "ace-hitl update abc123 --answer \"Use JWT with refresh tokens\"",
         "ace-hitl wait abc123 --poll-every 600 --timeout 14400"
       ].freeze
 
       register "create", CLI::Commands::Create
-      register "proposal", CLI::Commands::Proposal
-      register "ask", CLI::Commands::Ask
       register "operator-question", CLI::Commands::OperatorQuestion
       register "read", CLI::Commands::Read
       register "show", CLI::Commands::Show

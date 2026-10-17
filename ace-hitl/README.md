@@ -44,13 +44,18 @@ ace-hitl update abc123 --move-to archive
 ace-hitl wait abc123 --poll-every 600 --timeout 14400
 ```
 
-## Planned waves
+## Transport boundary
 
+> The installed Lab provider and the attempt-bound managed HITL path (`ask`,
+> provider assignment binding, native Herdr delivery, managed/TLS `serve`) were
+> removed with the old authority model. The local file-based HITL events above
+> remain the active path. The lifecycle/relay transport (`Lifecycle::*`) and
+> its commands remain for `ace-hitl-hermes` and other adapters; `serve` supports
+> `--operator-only` only. Second-commander proposals are removed as well.
+>
 > **Planned (L2):** one unified report/question/reply interface with
 > configurable provider adapters is not available yet. `ace-hitl-hermes` remains
-> an adapter package; tmux/Herdr remain transports. The authenticated service
-> boundary (`serve`), OTP/TLS handling, scoped multi-user stores, and the
-> overseer report inbox are not part of the local flow.
+> an adapter package; tmux/Herdr remain transports.
 
 ## Testing
 

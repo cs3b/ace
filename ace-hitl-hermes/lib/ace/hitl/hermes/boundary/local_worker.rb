@@ -9,12 +9,10 @@ module Ace
       module Boundary
         # The local worker ask step of the nh0-A scenario (spec
         # 8xa.t.nh0): runs INSIDE the authority's container as the real
-        # worker actor and creates asks through the SUPPORTED mechanism
-        # — the authority's Unix boundary, where the serve-path binding
-        # (Providers::Lab::AssignmentBinding →
-        # AttemptCoordinator#with_verified_attempt) verifies the
-        # assignment/attempt against the REAL Assign state under the
-        # kernel requester identity.
+        # worker actor and creates asks through the authority's Unix
+        # boundary under its kernel requester identity. The attempt-bound
+        # assignment verification was removed with the old authority model;
+        # this host scenario is unavailable until the L2 boundary replaces it.
         #
         # This step NEVER invents attempts, grants or receipts: the
         # assignment/attempt ids come from the fixture-declared manifest

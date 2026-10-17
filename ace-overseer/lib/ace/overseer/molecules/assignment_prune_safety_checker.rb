@@ -3,38 +3,25 @@
 module Ace
   module Overseer
     module Molecules
-      # Fail-closed safety classification for assignment cache pruning.
+      # Fail-closed safety classification for local assignment cache pruning.
       #
-      # The cache directory of an assignment is disposable only when its
-      # durable evidence survives outside the deletion target and every
-      # attempt is provably terminal:
+      # The cache directory of an assignment is disposable only when the
+      # local assignment record is terminal:
       #
       # - the queue label must read completed (never proof by itself),
-      # - recorded attempts must be terminal — active or uncertain attempts
-      #   block, and unreadable attempt state blocks,
-      # - managed assignments must carry their durable evidence in
-      #   refs/ace/execution; a missing or unreadable evidence ref blocks,
-      #   and journal-derived active/uncertain attempts block even when the
-      #   local records were lost.
+      # - the local step summary must show no active or pending steps; an
+      #   unreadable summary blocks.
       #
-      # The journal checkout and the evidence ref are never deletion targets:
-      # cleanup removes only the assignment cache directory.
+      # Assignment state lives in `.ace-local/assign/`; no journal, attempt or
+      # authority store participates in this decision.
       class AssignmentPruneSafetyChecker
-        def initialize(assignment_discoverer_factory: nil, assignment_manager_factory: nil,
-          journal_factory: nil)
+        def initialize(assignment_discoverer_factory: nil)
           @assignment_discoverer_factory = assignment_discoverer_factory || -> { Ace::Assign::Molecules::AssignmentDiscoverer.new }
-          @assignment_manager_factory = assignment_manager_factory || -> { Ace::Assign::Molecules::AssignmentManager.new }
-          @journal_factory = journal_factory || -> {
-            Ace::Assign::Molecules::EvidenceJournal.new(
-              repo_root: Ace::Support::Fs::Molecules::ProjectRootFinder.find_or_current
-            )
-          }
         end
 
         def check(assignment_id:)
           discoverer = @assignment_discoverer_factory.call
-          all = discoverer.find_all(include_completed: true)
-          info = all.find { |ai| ai.assignment.id == assignment_id }
+          info = discoverer.find_all(include_completed: true).find { |ai| ai.assignment.id == assignment_id }
 
           unless info
             return Models::AssignmentPruneCandidate.new(
@@ -42,7 +29,7 @@ module Ace
               assignment_name: "",
               assignment_state: "not_found",
               location_path: "",
-              attempts_terminal: false,
+              work_terminal: false,
               reasons: ["assignment not found"]
             )
           end
@@ -51,83 +38,34 @@ module Ace
           reasons = []
           reasons << "assignment still #{state}" unless state == "completed"
 
-          attempts_terminal, attempt_reasons = attempts_evidence(info.assignment, assignment_id)
-          reasons.concat(attempt_reasons)
+          work_terminal, work_reasons = terminal_work(info)
+          reasons.concat(work_reasons)
 
           Models::AssignmentPruneCandidate.new(
             assignment_id: assignment_id,
             assignment_name: info.assignment.name,
             assignment_state: state,
             location_path: info.assignment.cache_dir,
-            attempts_terminal: attempts_terminal,
+            work_terminal: work_terminal,
             reasons: reasons
           )
         end
 
         private
 
-        def attempts_evidence(assignment, assignment_id)
-          managed = begin
-            assignment.managed?
-          rescue => e
-            return [false, ["assignment lifecycle state unreadable: #{e.message}"]]
+        def terminal_work(info)
+          summary = info.queue_state.summary
+          unless summary.is_a?(Hash)
+            return [false, ["assignment step state unreadable"]]
           end
 
-          reasons = []
-          local_terminal, local_reasons = local_attempts(assignment_id)
-          reasons.concat(local_reasons)
+          active = summary[:active].to_i
+          pending = summary[:pending].to_i
+          return [true, []] if active.zero? && pending.zero?
 
-          if managed
-            journal_terminal, journal_reasons = journal_evidence(assignment_id)
-            reasons.concat(journal_reasons)
-            [local_terminal && journal_terminal, reasons]
-          else
-            [local_terminal, reasons]
-          end
-        end
-
-        def local_attempts(assignment_id)
-          attempts = @assignment_manager_factory.call.attempts(assignment_id)
-          terminal = true
-          reasons = []
-          attempts.each do |attempt|
-            next unless attempt.active? || attempt.uncertain?
-
-            terminal = false
-            reasons << "attempt #{attempt.attempt_id} is #{attempt.state}"
-          end
-          [terminal, reasons]
+          [false, ["assignment has #{active} active and #{pending} pending step(s)"]]
         rescue => e
-          [false, ["attempt state unreadable: #{e.message}"]]
-        end
-
-        # The journal is the durable evidence outside the deletion target:
-        # managed cleanup requires THIS assignment's journaled attempt
-        # history to exist and to agree that no attempt is active or
-        # uncertain (an empty journal carries no evidence at all).
-        def journal_evidence(assignment_id)
-          journal = @journal_factory.call
-          ref_value = journal.ref_value
-          if ref_value.nil?
-            return [false, ["no durable evidence ref for managed assignment #{assignment_id}"]]
-          end
-
-          derived = journal.derived_attempts(assignment_id)
-          if derived.empty?
-            return [false, ["no durable attempt evidence for managed assignment #{assignment_id} in the journal"]]
-          end
-
-          terminal = true
-          reasons = []
-          derived.each do |attempt|
-            next unless attempt.active? || attempt.uncertain?
-
-            terminal = false
-            reasons << "journaled attempt #{attempt.attempt_id} is #{attempt.state}"
-          end
-          [terminal, reasons]
-        rescue => e
-          [false, ["durable evidence unreadable: #{e.message}"]]
+          [false, ["assignment step state unreadable: #{e.message}"]]
         end
       end
     end

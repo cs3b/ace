@@ -7,11 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+- Remove the installed `ordinary` CLI command and `OrdinaryWorkOn` launcher: the `/as-assign-drive --ordinary` handoff is invalid after the local file-based rework.
+- Remove installed journal/attempt dependencies from local prune and status: `WorktreeContextCollector` no longer reads attempt recovery state, and `PruneSafetyChecker`/`AssignmentPruneSafetyChecker` classify candidates from local assignment records (completed state, no active/pending steps), task state, worktree cleanliness, and executed Git preservation proofs only.
+
+### Changed
+
+- Prune-safety and status guidance no longer refer to attempt baselines or terminal attempts; use assignment status and unresolved-work evidence instead.
+- Rename the prune candidate safety field from `attempts_terminal` to `work_terminal` (local assignment work, not attempts). Patch-range preservation proofs no longer receive an attempt-recorded baseline; full-tree equality or accepted ancestry is required.
+
 ## [0.24.0] - 2026-10-17
 
 ### Removed
 
-- Remove the protected work-on/status/steering/review/prune modes, their launch request/recovery files and CLI commands (`review`, `stop`, `prompt`, protected `work-on --project`, protected `status --project`, protected `prune` options). The local worktree/assignment workflow and the ordinary path remain.
+- Remove the protected work-on/status/steering/review/prune modes, their launch request/recovery files and CLI commands (`review`, `stop`, `prompt`, protected `work-on --project`, protected `status --project`, protected `prune` options). The local worktree/assignment workflow remained at that release; the installed ordinary launcher was removed in the following unreleased change.
 
 ### Changed
 

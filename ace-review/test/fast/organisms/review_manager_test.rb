@@ -2764,7 +2764,7 @@ class ReviewManagerTest < AceReviewTest
       report = File.join(session_dir, "review-role-review-codex.md")
       File.write(report, "substantive review")
       metadata = {
-        campaign_binding: {round_id: "r1"},
+        candidate_binding: {head: "a" * 40},
         models: [
           {status: "failed", output_file: nil, report_sha256: nil, completed_at: Time.now.utc.iso8601,
            execution: {status: "failed", provider: "gemini", model: "gemini"}},
@@ -2775,7 +2775,7 @@ class ReviewManagerTest < AceReviewTest
       }
       File.write(File.join(session_dir, "metadata.yml"), YAML.dump(metadata))
       manager = Ace::Review::Organisms::ReviewManager.new(project_root: dir)
-      manager.send(:save_campaign_feedback_metadata, session_dir,
+      manager.send(:save_feedback_extraction_metadata, session_dir,
         {success: true, paths: [], items_count: 0})
       saved = YAML.safe_load_file(File.join(session_dir, "metadata.yml"), permitted_classes: [Symbol])
       extraction = saved["feedback_extraction"] || saved[:feedback_extraction]

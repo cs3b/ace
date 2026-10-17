@@ -264,7 +264,7 @@ class ExecutionUnitInstallationTest < AceRuntimeTestCase
 
   def test_privileged_failure_ignore_or_other_readiness_command_refuses
     %w[privileged no-setuid ignore-failure].each do |flags|
-      @profiles["ace-slot.service"]["ExecStartPostEx"] = [command("/usr/libexec/ace-scope-ready", args: ["slot"], flags: [flags])]
+      @profiles["ace-slot.service"]["ExecStartPostEx"] = [command("/usr/libexec/ace-slot-readiness", args: ["slot"], flags: [flags])]
       assert_raises(Unavailable) { @installation.verify!(manager: @manager) }
     end
     @profiles["ace-slot.service"]["ExecStartPostEx"] = [command("/usr/bin/other-hook", args: ["slot"])]

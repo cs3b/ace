@@ -21,46 +21,38 @@ class HitlCliTest < AceHitlTestCase
     assert_match(/list/, result[:stdout])
     assert_match(/update/, result[:stdout])
     assert_match(/wait/, result[:stdout])
+    refute_match(/\bask\b/, result[:stdout])
+    refute_match(/proposal/, result[:stdout])
   end
 
-  def test_serve_passes_dedicated_group_to_boundary_service
-    policy = Object.new
-    policy.define_singleton_method(:service_uid) { Process.uid }
-    service = Object.new
-    service.define_singleton_method(:run) { nil }
-    received = nil
-    constructor = lambda do |**options|
-      received = options
-      service
-    end
-
-    Ace::Hitl::Providers::Lab.stub(:grants_policy, policy) do
-      Ace::Hitl::Providers::Lab.stub(:assignment_binding, Object.new) do
-        Ace::Hitl::Lifecycle::Service.stub(:new, constructor) do
-          result = run_cli(["serve", "--group", "ace-hitl-project"])
-          assert_equal 0, result[:exit_code], result[:stderr]
-        end
-      end
-    end
-
-    assert_equal "ace-hitl-project", received[:group]
-  end
-
-  def test_operator_only_serve_does_not_construct_a_managed_assignment_authority
+  def test_operator_only_serve_uses_the_local_operator_binding
     policy = Object.new
     policy.define_singleton_method(:service_uid) { Process.uid }
     service = Object.new
     service.define_singleton_method(:run) { nil }
     selected = nil
     Ace::Hitl::Providers::Lab.stub(:grants_policy, policy) do
-      Ace::Hitl::Providers::Lab.stub(:assignment_binding, ->(**) { flunk "constructed fake managed authority" }) do
-        Ace::Hitl::Lifecycle::Service.stub(:new, ->(**options) { selected = options; service }) do
-          result = run_cli(["serve", "--operator-only", "--group", "ace-hitl-project"])
-          assert_equal 0, result[:exit_code], result[:stderr]
-        end
+      Ace::Hitl::Lifecycle::Service.stub(:new, ->(**options) { selected = options; service }) do
+        result = run_cli(["serve", "--operator-only", "--group", "ace-hitl-project"])
+        assert_equal 0, result[:exit_code], result[:stderr]
       end
     end
+    assert_equal "ace-hitl-project", selected[:group]
     assert_kind_of Ace::Hitl::Lifecycle::OperatorOnlyBinding, selected.fetch(:binding)
+  end
+
+  def test_serve_requires_operator_only
+    result = run_cli(["serve", "--group", "ace-hitl-project"])
+
+    assert_equal 1, result[:exit_code]
+    assert_match(/requires --operator-only/, result[:stderr])
+  end
+
+  def test_removed_managed_and_tls_serve_modes_fail_clearly
+    result = run_cli(["serve", "--operator-only", "--group", "ace-hitl-project", "--tls-authority", "/tmp/x.yml"])
+
+    assert_equal 1, result[:exit_code]
+    assert_match(/removed with the installed attempt authority/, result[:stderr])
   end
 
   def test_operator_question_and_read_commands_use_public_authenticated_client
@@ -83,10 +75,13 @@ class HitlCliTest < AceHitlTestCase
   end
 
   def test_serve_requires_explicit_dedicated_group
-    result = run_cli(["serve"])
-
-    assert_equal 1, result[:exit_code]
-    assert_match(/--group is required/, result[:stderr])
+    policy = Object.new
+    policy.define_singleton_method(:service_uid) { Process.uid }
+    Ace::Hitl::Providers::Lab.stub(:grants_policy, policy) do
+      result = run_cli(["serve", "--operator-only"])
+      assert_equal 1, result[:exit_code]
+      assert_match(/--group is required/, result[:stderr])
+    end
   end
 
   def test_create_basic_hitl_event

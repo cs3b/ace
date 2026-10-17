@@ -23,7 +23,6 @@ module Ace
           option :debug, aliases: ["-d"], type: :boolean, default: false, desc: "Show debug output"
 
           def call(id: nil, **options)
-            refuse_protected_graph_mutation!(options)
             manager = Molecules::AssignmentManager.new
 
             if options[:clear]

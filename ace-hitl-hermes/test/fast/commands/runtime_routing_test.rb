@@ -26,12 +26,6 @@ class RuntimeRoutingTest < AceHermesTestCase
       Marshal.load(Marshal.dump(@facts))
     end
 
-    def proposal_due(project:, after:)
-      raise "wrong authority" unless project == @project
-
-      {"items" => [], "next" => nil}
-    end
-
     def ping
       {"pong" => true}
     end
@@ -145,26 +139,6 @@ class RuntimeRoutingTest < AceHermesTestCase
     # channel->authority ISOLATION is the assertion here.
     assert_equal ["lab"], lifecycles.fetch(@default_socket).pending_projects.uniq
     assert_equal ["host"], lifecycles.fetch(@other_socket).pending_projects.uniq
-  end
-
-  def test_proposal_reconciliation_continues_after_one_channel_authority_fails
-    lifecycles = {@default_socket => Lifecycle.new("lab"), @other_socket => Lifecycle.new("host")}
-    lifecycles.fetch(@default_socket).define_singleton_method(:proposal_due) do |**|
-      raise Ace::Hitl::Lifecycle::TransportError, "unavailable"
-    end
-    lifecycles.fetch(@other_socket).define_singleton_method(:proposal_due) do |project:, after:|
-      {"items" => [{"request_id" => "host-proposal", "deadline" => QUESTION_TS}], "next" => nil}
-    end
-    reconciled = []
-
-    Ace::Hitl::Lifecycle::Client.stub(:new, ->(socket_path:, **) { lifecycles.fetch(socket_path) }) do
-      runtime = Ace::Hitl::Hermes::Runtime.new(@config_path, clock: -> { Time.iso8601(QUESTION_TS) })
-      runtime.relay.define_singleton_method(:reconcile) { |**args| reconciled << args }
-      _, warning = capture_io { runtime.send(:reconcile_proposals) }
-      assert_match(/unavailable for lab/, warning)
-    end
-
-    assert_equal [{channel: "host", project: "host", request: "host-proposal", through: QUESTION_TS}], reconciled
   end
 
   private

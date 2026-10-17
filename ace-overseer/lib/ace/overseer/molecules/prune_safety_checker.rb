@@ -8,26 +8,24 @@ module Ace
       # Classifies one worktree candidate for prune, fail-closed.
       #
       # A candidate is safe only when ALL of the following hold:
-      # - the assignment queue label is completed,
+      # - every local assignment is completed,
       # - the task is done (a missing task record alone proves nothing but
       #   never authorizes removal by itself),
       # - the checkout is clean including untracked files (dirty tracked AND
       #   untracked files are work; --force never overrides this),
-      # - required ignored artifacts are preserved: a local evidence journal
-      #   checkout must already be contained in refs/ace/execution,
-      # - all recorded attempts are terminal (active or uncertain attempts
-      #   and unreadable attempt state block),
+      # - no local assignment step is active or pending (unreadable local
+      #   work state blocks),
       # - an executed preservation proof passes (accepted ancestry or a
       #   verified declared destination).
+      #
+      # Local state only: assignment records under `.ace-local/assign/`, task
+      # records under `.ace-tasks/`, and Git. No journal, attempt or authority
+      # store participates in this classification.
       class PruneSafetyChecker
-        def initialize(context_collector: nil, task_loader_factory: nil, preservation_checker: nil,
-          attempt_store_factory: nil)
+        def initialize(context_collector: nil, task_loader_factory: nil, preservation_checker: nil)
           @context_collector = context_collector || WorktreeContextCollector.new
           @task_loader_factory = task_loader_factory || -> { Ace::Task::Organisms::TaskManager.new }
           @preservation_checker = preservation_checker || GitPreservationChecker.new
-          @attempt_store_factory = attempt_store_factory || ->(cache_base) {
-            Ace::Assign::Molecules::AttemptStore.new(cache_base: cache_base)
-          }
         end
 
         attr_reader :preservation_checker
@@ -41,11 +39,10 @@ module Ace
         def check(worktree_path:, task_ref:, manifest_record: nil, accepted_base: nil)
           context = @context_collector.collect(worktree_path)
 
-          assignment_complete = assignment_complete?(context.assignment_status)
+          assignment_complete = assignment_complete?(context.assignments)
+          work_terminal, work_reasons = work_terminal?(context.assignments)
           task_done = task_done?(worktree_path, task_ref)
           git_clean = git_clean_for_prune?(worktree_path)
-          artifacts_safe, artifact_reasons = required_ignored_artifacts_safe?(worktree_path)
-          attempts_terminal, attempt_reasons, recorded_base = attempts_evidence(worktree_path, context)
           # One branch identity for the whole check: read before the proof,
           # handed to the proof as the candidate's own branch, and verified
           # downstream. A later read could name a switched-to destination.
@@ -54,7 +51,6 @@ module Ace
             worktree_path: worktree_path,
             accepted_base: accepted_base,
             manifest_record: manifest_record,
-            recorded_base: recorded_base,
             candidate_branch: branch_at_check
           )
           # The HEAD and branch whose preservation was actually proven:
@@ -69,8 +65,7 @@ module Ace
           reasons << "assignment not complete" unless assignment_complete
           reasons << "task not done" unless task_done
           reasons << "git not clean" unless git_clean
-          reasons.concat(artifact_reasons)
-          reasons.concat(attempt_reasons)
+          reasons.concat(work_reasons)
           reasons << "preservation not proven: #{proof.reason}" unless proof.preserved?
 
           Models::PruneCandidate.new(
@@ -79,7 +74,7 @@ module Ace
             assignment_complete: assignment_complete,
             task_done: task_done,
             git_clean: git_clean,
-            attempts_terminal: attempts_terminal && artifacts_safe,
+            work_terminal: work_terminal,
             preserved: proof.preserved?,
             verified_head: verified_head,
             verified_branch: verified_branch,
@@ -89,10 +84,35 @@ module Ace
 
         private
 
-        def assignment_complete?(assignment_status)
-          return false unless assignment_status.is_a?(Hash)
+        # Every local assignment must be completed. A missing or unreadable
+        # assignment record never proves terminality.
+        def assignment_complete?(assignments)
+          entries = Array(assignments)
+          return false if entries.empty?
 
-          assignment_status.dig("assignment", "state") == "completed"
+          entries.all? { |entry| entry.dig("assignment", "state") == "completed" }
+        end
+
+        # No local step may be active or pending. A summary that exists but
+        # is unreadable blocks.
+        def work_terminal?(assignments)
+          reasons = []
+          entries = Array(assignments)
+          entries.each do |entry|
+            summary = entry["step_summary"]
+            next if summary.nil?
+
+            unless summary.is_a?(Hash)
+              reasons << "assignment step state unreadable"
+              next
+            end
+            active = summary["active"].to_i
+            pending = summary["pending"].to_i
+            next if active.zero? && pending.zero?
+
+            reasons << "assignment #{entry.dig("assignment", "id")} has #{active} active and #{pending} pending step(s)"
+          end
+          [reasons.empty?, reasons]
         end
 
         def task_done?(worktree_path, task_ref)
@@ -101,7 +121,8 @@ module Ace
         end
 
         # Full cleanliness: untracked files are work too. Ignored files are
-        # not dirt, but required ignored artifacts are checked separately.
+        # not dirt; local assignment state is not a deletion precondition
+        # beyond the assignment-completion check above.
         def git_clean_for_prune?(worktree_path)
           stdout, status = Open3.capture2(
             "git", "-C", worktree_path, "status", "--porcelain"
@@ -113,75 +134,13 @@ module Ace
           false
         end
 
-        # A journal checkout inside the worktree is a required ignored
-        # artifact unless every journaled commit already lives in the
-        # authoritative evidence ref.
-        def required_ignored_artifacts_safe?(worktree_path)
-          checkout = File.join(worktree_path, assign_cache_relative, "evidence-checkout", "journal")
-          return [true, []] unless File.directory?(checkout)
-
-          head, status = Open3.capture2("git", "-C", checkout, "rev-parse", "HEAD")
-          checkout_head = head.to_s.strip
-          if !status.success? || checkout_head.empty?
-            return [false, ["evidence journal checkout unreadable: #{checkout}"]]
-          end
-
-          common_dir = project_git_common_dir(worktree_path)
-          if common_dir.nil?
-            return [false, ["cannot resolve common git dir to verify evidence journal"]]
-          end
-
-          _out, evidence_status = Open3.capture2(
-            "git", "-C", common_dir, "merge-base", "--is-ancestor", checkout_head, "refs/ace/execution"
-          )
-          if evidence_status.success?
-            [true, []]
-          else
-            [false, ["evidence journal checkout has commits not in refs/ace/execution"]]
-          end
-        end
-
-        # Attempt evidence from the worktree's own assignment cache: any
-        # active or uncertain attempt blocks; an unreadable store blocks.
-        # Returns the independently recorded creation baseline (base_head)
-        # for patch-range preservation proofs.
-        def attempts_evidence(worktree_path, context)
-          ids = Array(context.assignments).filter_map { |entry| entry.dig("assignment", "id") }
-          return [true, [], nil] if ids.empty?
-
-          cache_base = File.join(worktree_path, assign_cache_relative)
-          begin
-            store = @attempt_store_factory.call(cache_base)
-          rescue => e
-            return [false, ["attempt state unreadable: #{e.message}"], nil]
-          end
-          reasons = []
-          recorded_base = nil
-          terminal = true
-          ids.each do |assignment_id|
-            attempts = store.list(assignment_id)
-            attempts.each do |attempt|
-              recorded_base ||= attempt.binding.base_head
-              next unless attempt.active? || attempt.uncertain?
-
-              terminal = false
-              reasons << "attempt #{attempt.attempt_id} on assignment #{assignment_id} is #{attempt.state}"
-            end
-          rescue => e
-            terminal = false
-            reasons << "attempt state for assignment #{assignment_id} unreadable: #{e.message}"
-          end
-          [terminal, reasons, recorded_base]
-        end
-
-        def preservation_proof(worktree_path:, accepted_base:, manifest_record:, recorded_base:, candidate_branch: nil)
+        def preservation_proof(worktree_path:, accepted_base:, manifest_record:, candidate_branch: nil)
           return Models::PreservationProof.blocked("no surviving accepted base could be resolved") if accepted_base.nil?
 
           @preservation_checker.proof(
             worktree_path: worktree_path,
             accepted_base: accepted_base,
             manifest_record: manifest_record,
-            recorded_base: recorded_base,
             candidate_branch: candidate_branch
           )
         rescue => e
@@ -200,10 +159,6 @@ module Ace
           branch.empty? ? nil : branch
         rescue
           nil
-        end
-
-        def assign_cache_relative
-          Ace::Assign.config["cache_dir"] || ".ace-local/assign"
         end
 
         def task_done_in_context?(path, task_ref)

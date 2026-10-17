@@ -35,7 +35,7 @@ module Ace
 
         def initialize(root:, binding:, project:, credential:, ssl_context:,
           listen: "127.0.0.1", port:, group: Store::DEFAULT_GROUP, vault: nil, logger: nil,
-          idle_seconds: DEFAULT_IDLE_SECONDS, proposal_clock: -> { Time.now.utc }, decision_policy: AccessPolicy.new)
+          idle_seconds: DEFAULT_IDLE_SECONDS, decision_policy: AccessPolicy.new)
           @root = root
           @binding = binding
           @project = TlsCredentials.project_id(project)
@@ -47,7 +47,6 @@ module Ace
           @vault = vault || OtpVault::MemoryVault.new
           @logger = logger
           @idle_seconds = idle_seconds
-          @proposal_clock = proposal_clock
           @policy = TlsAccessPolicy.new(project: @project, decision_policy: decision_policy)
           @max_connections = MAX_CONNECTIONS
           @connections = 0
@@ -227,7 +226,7 @@ module Ace
               policy: @policy,
               identity: peer,
               vault: @vault,
-              proposal_clock: @proposal_clock, stopping: -> { @stopping }, group: @group
+              stopping: -> { @stopping }, group: @group
             ),
             project: @project
           )

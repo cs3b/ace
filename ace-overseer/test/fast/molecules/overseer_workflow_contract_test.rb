@@ -36,9 +36,9 @@ class OverseerWorkflowContractTest < AceOverseerTestCase
   end
 
   def test_patch_range_proof_requires_independently_recorded_baseline
-    assert_includes workflow_content, "independently recorded\n      attempt baseline"
-    assert_includes workflow_content, "must be\n      preserved on a surviving accepted ref"
-    assert_includes workflow_content, "Empty or\n      caller-truncated ranges are not evidence"
+    assert_includes workflow_content, "independently recorded base"
+    assert_includes workflow_content, "must be preserved on a surviving accepted"
+    assert_includes workflow_content, "Empty or caller-truncated ranges are not evidence"
   end
 
   def test_prune_requires_positive_no_active_writer_check
@@ -46,7 +46,7 @@ class OverseerWorkflowContractTest < AceOverseerTestCase
     assert_includes workflow_content, "ace-overseer status --format json"
     assert_includes workflow_content, "ace-assign status"
     assert_includes workflow_content, "Missing or unreadable lifecycle\n   state counts as an active writer"
-    assert_includes workflow_content, "active or uncertain attempt"
+    assert_includes workflow_content, "unresolved or uncertain work"
     assert_includes workflow_content, "durable exclusion"
     assert_includes workflow_content, "writer cannot start into a candidate being deleted"
   end

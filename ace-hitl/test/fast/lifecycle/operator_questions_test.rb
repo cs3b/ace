@@ -74,7 +74,7 @@ class OperatorQuestionsTest < AceHitlTestCase
   end
 
   def test_operator_cannot_supply_secret_effect_or_managed_authority
-    %i[effect otp assignment attempt requester requester_uid kind publication_binding].each do |field|
+    %i[effect otp assignment attempt requester requester_uid kind].each do |field|
       assert_raises(ArgumentError) { ask(**{field => "forged"}) }
     end
     assert_raises(L::AnswerError) { ask(question: "987654") }

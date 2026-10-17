@@ -50,93 +50,21 @@ module Ace
       class InvalidState < Error; end
     end
 
-    # Attempt/evidence-related errors (exit code 5)
-    module AttemptErrors
-      class InvalidTransition < Error
-        def initialize(message = "Illegal attempt state transition")
-          super(message, exit_code: 5)
-        end
-      end
-
-      class InvalidScope < Error
-        def initialize(message = "Invalid attempt scope")
-          super(message, exit_code: 5)
-        end
-      end
-
-      # Duplicate start with a conflicting binding for an owned subtree
+    # Local prune/start exclusion errors (exit code 5).
+    module LifecycleErrors
+      # The identity was pruned or its exclusion artifacts are unsafe, so a
+      # writer must not be started against it.
       class Conflict < Error
-        def initialize(message = "Conflicting active attempt for scope")
+        def initialize(message = "Conflicting lifecycle identity")
           super(message, exit_code: 5)
         end
       end
 
-      # An exact authorization reference is not currently valid for a new
-      # effect: consumed by another live request, expired, or out of scope.
-      class AuthorizationConflict < Conflict; end
-
-      class NotFound < Error
-        def initialize(message = "Attempt not found")
+      # Maintenance exclusion is busy or its admission deadline expired.
+      class MaintenanceBusy < Error
+        def initialize(message = "Maintenance exclusion is busy")
           super(message, exit_code: 5)
         end
-      end
-
-      # Untrusted or unknown execution identity; authority fails closed
-      class UnauthorizedIdentity < Error
-        def initialize(message = "Unknown or unauthorized execution identity")
-          super(message, exit_code: 5)
-        end
-      end
-
-      # Receipt failed verification (binding, head, digest, artifacts, review)
-      class ReceiptRejected < Error
-        def initialize(message = "Receipt rejected")
-          super(message, exit_code: 5)
-        end
-      end
-
-      # Byte framing failed before any business receipt could be admitted.
-      class MalformedTransfer < ReceiptRejected; end
-
-      # Recovery settled a prior effect, but did not perform this request.
-      class CurrentEffectRequired < ReceiptRejected
-        def initialize(operation:, recovered_operation:)
-          super("Recovered #{recovered_operation}; requested #{operation} still needs execution")
-        end
-      end
-
-      # Attempt state forbids the requested effect (terminal, uncertain, blocked)
-      class InvalidState < Error
-        def initialize(message = "Attempt state forbids the requested operation")
-          super(message, exit_code: 5)
-        end
-      end
-
-      # Evidence storage is missing or unwritable; external effects are blocked
-      class EvidenceUnavailable < Error
-        def initialize(message = "Evidence storage unavailable")
-          super(message, exit_code: 5)
-        end
-      end
-
-      # Complete maintenance exclusions are busy or their admission deadline expired.
-      class MaintenanceBusy < EvidenceUnavailable
-      end
-
-      # One canonical inventory row cannot fit the fixed protocol frame.
-      class BoundedResultUnavailable < EvidenceUnavailable
-      end
-
-      # Exhaustively authenticated service inventory remains unsettled.
-      class ServiceSettlementPending < EvidenceUnavailable
-      end
-
-      # Exhaustively authenticated current Inbox claims remain queued.
-      class InboxSettlementPending < EvidenceUnavailable
-      end
-
-      # Positively admitted original Inbox work remains pending, not corrupt.
-      class InboxContextPending < EvidenceUnavailable
       end
     end
   end

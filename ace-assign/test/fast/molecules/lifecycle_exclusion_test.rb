@@ -23,7 +23,7 @@ class LifecycleExclusionTest < AceAssignTestCase
       @exclusion.with_exclusive("slot:b") { held << true; release.pop(timeout: 5) }
     end
     assert held.pop(timeout: 2)
-    assert_raises(Ace::Assign::AttemptErrors::MaintenanceBusy) do
+    assert_raises(Ace::Assign::LifecycleErrors::MaintenanceBusy) do
       @exclusion.with_exclusive("slot:a", deadline: deadline) do
         @exclusion.with_exclusive("slot:b", deadline: deadline) { flunk "busy inventory entered" }
       end
@@ -32,7 +32,7 @@ class LifecycleExclusionTest < AceAssignTestCase
     [false, Float::INFINITY, "5"].each do |invalid|
       assert_raises(ArgumentError) { @exclusion.with_exclusive("slot:a", deadline: invalid) {} }
     end
-    assert_raises(Ace::Assign::AttemptErrors::MaintenanceBusy) do
+    assert_raises(Ace::Assign::LifecycleErrors::MaintenanceBusy) do
       @exclusion.with_exclusive("slot:a", deadline: 0) {}
     end
   ensure
@@ -52,32 +52,6 @@ class LifecycleExclusionTest < AceAssignTestCase
 
     missing = File.join(@tmp, "not-yet", "task.230")
     assert_equal "worktree:#{File.expand_path(missing)}", @exclusion.worktree_key(missing)
-  end
-
-  def test_workspace_selection_uses_exact_original_identity_and_closed_initial_fence
-    authority = {"state_root" => "/protected/authority", "uid" => 13000, "gid" => 13000}
-    cwd = {"host_path" => "/protected/workspace", "view_path" => "/workspace", "device" => 8,
-      "inode" => 42, "mount_id" => 10, "filesystem_type" => "ext4", "uid" => 13001, "gid" => 13001}
-    owner = Ace::Assign::Molecules::LifecycleExclusion
-    selected = owner.workspace_selection(mapping_id: "mapping", project_id: "project", authority: authority, cwd_resource: cwd)
-    digest = Ace::Assign::Atoms::EvidenceDigest.digest(cwd)
-    assert_equal "workspace:mapping:#{digest}", selected.fetch("key")
-    assert_equal "/protected/authority/lifecycle-exclusion/project/workspaces/mapping/#{digest}", selected.fetch("host_path")
-    assert_equal "/run/ace/lifecycle-exclusion/mapping", selected.fetch("view_path")
-    assert selected.frozen?
-    assert selected.values.all?(&:frozen?)
-    bytes = owner.workspace_initial_marker(key: selected.fetch("key"))
-    assert_equal({"key" => selected.fetch("key"), "removed" => false, "removed_at" => nil}, JSON.parse(bytes))
-    assert_equal Ace::Assign::Atoms::EvidenceDigest.canonical_json(JSON.parse(bytes)), bytes
-    changed = owner.workspace_selection(mapping_id: "mapping", project_id: "project", authority: authority,
-      cwd_resource: cwd.merge("inode" => 43))
-    refute_equal selected.fetch("key"), changed.fetch("key")
-    [cwd.merge("mount_id" => 0), cwd.merge("unknown" => 1), cwd.merge("host_path" => "/protected/../other")].each do |bad|
-      assert_raises(Ace::Assign::AttemptErrors::EvidenceUnavailable) do
-        owner.workspace_selection(mapping_id: "mapping", project_id: "project", authority: authority, cwd_resource: bad)
-      end
-    end
-    assert_raises(Ace::Assign::AttemptErrors::EvidenceUnavailable) { owner.workspace_initial_marker(key: "workspace:foreign") }
   end
 
   def test_shared_allows_concurrent_holders
@@ -118,7 +92,7 @@ class LifecycleExclusionTest < AceAssignTestCase
   def test_removed_marker_blocks_shared_starts
     @exclusion.record_removed!("assignment:abc12")
 
-    error = assert_raises(Ace::Assign::AttemptErrors::Conflict) do
+    error = assert_raises(Ace::Assign::LifecycleErrors::Conflict) do
       @exclusion.with_shared("assignment:abc12") { flake "must not yield" }
     end
     assert_includes error.message, "abc12"
@@ -156,7 +130,7 @@ class LifecycleExclusionTest < AceAssignTestCase
   def test_shared_multi_fails_when_any_identity_was_pruned
     @exclusion.record_removed!("assignment:abc12")
 
-    error = assert_raises(Ace::Assign::AttemptErrors::Conflict) do
+    error = assert_raises(Ace::Assign::LifecycleErrors::Conflict) do
       @exclusion.with_shared_multi(["task:230", "assignment:abc12"]) { flake "must not yield" }
     end
     assert_includes error.message, "abc12"
@@ -214,7 +188,7 @@ class LifecycleExclusionTest < AceAssignTestCase
           Ace::Assign::Molecules::LifecycleExclusion.default_root
       end
     end
-    assert_raises(Ace::Assign::AttemptErrors::Conflict) do
+    assert_raises(Ace::Assign::LifecycleErrors::Conflict) do
       Ace::Assign::Molecules::LifecycleExclusion.default_root(File.join(@tmp, "missing"))
     end
   ensure
@@ -230,7 +204,7 @@ class LifecycleExclusionTest < AceAssignTestCase
       valid.sub('"removed":true', '"removed":true,"removed":true')].each do |bytes|
       File.binwrite(path, bytes)
       [false, true].each do |reset|
-        assert_raises(Ace::Assign::AttemptErrors::Conflict) do
+        assert_raises(Ace::Assign::LifecycleErrors::Conflict) do
           @exclusion.with_shared(key, reset_removed: reset) { flunk "unsafe start" }
         end
       end
@@ -240,17 +214,17 @@ class LifecycleExclusionTest < AceAssignTestCase
     target = File.join(@tmp, "marker")
     File.binwrite(target, valid)
     File.symlink(target, path)
-    assert_raises(Ace::Assign::AttemptErrors::Conflict) { @exclusion.with_shared(key) {} }
+    assert_raises(Ace::Assign::LifecycleErrors::Conflict) { @exclusion.with_shared(key) {} }
     assert_equal valid, File.binread(target)
   end
 
   def test_restart_retains_fence_and_symlink_lock_cannot_admit_writer
     @exclusion.with_exclusive("worktree:original") { @exclusion.record_removed!("worktree:original") }
     restarted = Ace::Assign::Molecules::LifecycleExclusion.new(root: @root)
-    assert_raises(Ace::Assign::AttemptErrors::Conflict) { restarted.with_shared("worktree:original") {} }
+    assert_raises(Ace::Assign::LifecycleErrors::Conflict) { restarted.with_shared("worktree:original") {} }
     path = File.join(@root, "#{Digest::SHA256.hexdigest('worktree:other')}.lock")
     File.symlink(File.join(@tmp, "foreign-lock"), path)
-    assert_raises(Ace::Assign::AttemptErrors::Conflict) { restarted.with_shared("worktree:other") {} }
+    assert_raises(Ace::Assign::LifecycleErrors::Conflict) { restarted.with_shared("worktree:other") {} }
     refute File.exist?(File.join(@tmp, "foreign-lock"))
   end
 
@@ -273,7 +247,7 @@ class LifecycleExclusionTest < AceAssignTestCase
     File.write(target, "", mode: "w", perm: 0600)
     path = File.join(@root, "#{Digest::SHA256.hexdigest(key)}.lock")
     File.link(target, path)
-    assert_raises(Ace::Assign::AttemptErrors::MaintenanceBusy) { @exclusion.with_shared(key) {} }
+    assert_raises(Ace::Assign::LifecycleErrors::MaintenanceBusy) { @exclusion.with_shared(key) {} }
     assert_equal 2, File.stat(target).nlink
   end
 
@@ -308,7 +282,7 @@ class LifecycleExclusionTest < AceAssignTestCase
     end
     restarted = Ace::Assign::Molecules::LifecycleExclusion.new(root: @root)
     assert restarted.removed?(key)
-    assert_raises(Ace::Assign::AttemptErrors::Conflict) { restarted.with_shared(key) {} }
+    assert_raises(Ace::Assign::LifecycleErrors::Conflict) { restarted.with_shared(key) {} }
   end
 
 end

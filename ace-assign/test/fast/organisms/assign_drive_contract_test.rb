@@ -3,14 +3,19 @@
 require_relative "../../test_helper"
 
 class AssignDriveContractTest < AceAssignTestCase
-  def test_drive_workflow_enforces_no_skip_and_attempt_first_policy
+  def test_drive_workflow_enforces_no_skip_and_local_execution_policy
     content = drive_workflow
 
     assert_includes content, "Planned steps are mandatory work items. Do not skip them by judgment."
     assert_includes content, 'Never use report text to "skip" or synthesize completion for planned steps.'
-    assert_includes content, "### 4. External Action Rule (Attempt-First)"
+    assert_includes content, "### 4. Execute the Active Step Directly"
+    assert_includes content, "ace-assign finish --message"
     assert_includes content, "exact error output"
     refute_includes content, "Skip Assessment"
+    refute_includes content, "Attempt-First"
+    refute_includes content, "attempt start"
+    refute_includes content, "refs/ace/execution"
+    refute_includes content, "journal"
   end
 
   def test_drive_workflow_documents_status_and_callback_fork_resume_paths

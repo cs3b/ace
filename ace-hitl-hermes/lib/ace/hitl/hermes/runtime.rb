@@ -76,7 +76,6 @@ module Ace
                 raise if once
                 sleep 1
               end
-              reconcile_proposals
               break if once
             end
           end
@@ -228,11 +227,7 @@ module Ace
                   timestamp: Time.at(Integer(facts["created_at"])).utc.iso8601)
               end
             end
-            # Pending intentionally omits canonical proposal state. Read that
-            # state through the selected authority before choosing its revision.
-            revision = if facts["kind"] == "proposal"
-              lifecycle.read(facts.fetch("id")).fetch("proposal").fetch("revision_id")
-            elsif envelope["schema"] == Ace::Hitl::Contract::OperatorEnvelope::SCHEMA
+            revision = if envelope["schema"] == Ace::Hitl::Contract::OperatorEnvelope::SCHEMA
               "operator-#{envelope.fetch('request_incarnation')}"
             else
               facts.fetch("attempt")
@@ -241,33 +236,6 @@ module Ace
           end
         rescue Ace::Hitl::Contract::InvalidEnvelope, KeyError, ArgumentError => e
           raise ContractError, "managed pending publication binding is invalid (#{e.class})"
-        end
-
-        def reconcile_proposals
-          @registry.channels.each do |channel|
-            channel.fetch("projects").each_key do |project|
-              begin
-                lifecycle = lifecycle_for(channel, project)
-                after = nil
-                loop do
-                  page = lifecycle.proposal_due(project: project, after: after)
-                  page.fetch("items").each do |proposal|
-                    @relay.reconcile(channel: channel.fetch("name"), project: project, request: proposal.fetch("request_id"),
-                      through: proposal.fetch("deadline"))
-                  end
-                  cursor = page.fetch("next")
-                  break unless cursor
-                  unless cursor.is_a?(String) && (!after || cursor > after)
-                    raise ContractError, "proposal deadline cursor did not advance"
-                  end
-                  after = cursor
-                end
-              rescue Ace::Hitl::Lifecycle::Error, ContractError => e
-                warn "ace-hitl-hermes: proposal reconciliation unavailable for #{channel['name']}/#{project} " \
-                  "(#{e.class}); deadlines deferred"
-              end
-            end
-          end
         end
 
         def telegram

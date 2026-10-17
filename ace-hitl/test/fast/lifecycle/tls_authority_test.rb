@@ -5,7 +5,7 @@ require "timeout"
 require "ace/hitl/lifecycle/tls_authority"
 
 class TlsAuthorityTest < AceHitlTestCase
-  Authority = Ace::Hitl::Lifecycle::TlsAuthority
+  TlsAuth = Ace::Hitl::Lifecycle::TlsAuthority
   Artifacts = Ace::Runtime::Molecules::ProtectedArtifactSet
   Error = Ace::Hitl::Lifecycle::TransportError
 
@@ -25,7 +25,7 @@ class TlsAuthorityTest < AceHitlTestCase
   def setup
     @root = File.realpath(Dir.mktmpdir("hitl-tls-authority"))
     @path = File.join(@root, "authority.json")
-    @document = {"schema" => Authority::SCHEMA, "project_id" => "atlas", "listen" => "127.0.0.1",
+    @document = {"schema" => TlsAuth::SCHEMA, "project_id" => "atlas", "listen" => "127.0.0.1",
       "port" => 8431, "service_user" => "atlas-owner", "service_group" => "atlas-owner",
       "tls_server_credential" => {
         "certificate_file" => "/etc/ace-hitl/atlas/server.pem", "private_key_file" => "/etc/ace-hitl/atlas/key.pem",
@@ -40,8 +40,8 @@ class TlsAuthorityTest < AceHitlTestCase
   end
 
   def load_fixture(path = @path, during_mode_check: nil)
-    reader = Artifacts.new(protection: FixtureProtection.new(@root), file_limit: Authority::MAX_BYTES,
-      total_limit: Authority::MAX_BYTES)
+    reader = Artifacts.new(protection: FixtureProtection.new(@root), file_limit: TlsAuth::MAX_BYTES,
+      total_limit: TlsAuth::MAX_BYTES)
     check = lambda do |selected, service_group:|
       assert_equal path, selected
       assert_equal "atlas-owner", service_group
@@ -49,7 +49,7 @@ class TlsAuthorityTest < AceHitlTestCase
       during_mode_check&.call
     end
     Artifacts.stub(:new, reader) do
-      Ace::Hitl::Lifecycle::CredentialPathPolicy.stub(:verify_runtime_file!, check) { Authority.load(path) }
+      Ace::Hitl::Lifecycle::CredentialPathPolicy.stub(:verify_runtime_file!, check) { TlsAuth.load(path) }
     end
   end
 
@@ -61,7 +61,7 @@ class TlsAuthorityTest < AceHitlTestCase
   end
 
   def test_regular_file_size_is_bounded_before_json_parsing
-    File.write(@path, " " * (Authority::MAX_BYTES + 1))
+    File.write(@path, " " * (TlsAuth::MAX_BYTES + 1))
     assert_raises(Error) { load_fixture }
   end
 
@@ -109,6 +109,6 @@ class TlsAuthorityTest < AceHitlTestCase
 
   def test_default_reader_refuses_caller_owned_runtime_without_a_test_seam
     skip "requires unprivileged caller" if Process.uid.zero?
-    assert_raises(Error) { Authority.load(@path) }
+    assert_raises(Error) { TlsAuth.load(@path) }
   end
 end

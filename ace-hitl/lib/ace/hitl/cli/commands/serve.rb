@@ -2,40 +2,51 @@
 
 require "ace/support/cli"
 require_relative "../../lifecycle"
-require_relative "../../providers/providers"
+require_relative "../../providers/lab"
 
 module Ace
   module Hitl
     module CLI
       module Commands
-        # The installed scoped store boundary (spec 8wq.t.34i): serves
-        # the private HITL store over a peer-authenticated UNIX socket.
-        # Authorization facts come only from the trusted grants
-        # document; the store root and socket paths come from the
-        # deployment (options/environment), never from caller payloads.
+        # The operator-only local scoped store boundary: serves explicitly
+        # granted nonsecret operator questions over a peer-authenticated
+        # UNIX socket. Authorization facts come only from the trusted grants
+        # document; the store root and socket paths come from the deployment
+        # (options/environment), never from caller payloads.
+        #
+        # The installed managed-attempt authority and the host/Incus mTLS
+        # crossing were removed with the old authority model.
         class Serve < Ace::Support::Cli::Command
           include Ace::Support::Cli::Base
 
-          desc "Run the authenticated HITL store boundary service (peer-credential access)"
+          desc "Run the operator-only HITL store boundary service (peer-credential access)"
 
           option :socket, type: :string, desc: "Boundary socket path (default: ACE_HITL_SOCKET or /run/lab/hitl.sock)"
           option :group, type: :string,
             desc: "Dedicated lifecycle group allowed to connect (required; root and lab-control are refused)"
           option :store_root, type: :string, desc: "Private store root (default: ACE_HITL_STORE_ROOT or /run/lab/hitl)"
-          option :grants_path, type: :string, desc: "Trusted grants document (default: ACE_HITL_GRANTS_PATH or /etc/lab/ace-lab/authorization.yml)"
+          option :grants_path, type: :string,
+            desc: "Trusted grants document (default: ACE_HITL_GRANTS_PATH or /etc/lab/ace-lab/authorization.yml)"
           option :operator_only, type: :boolean,
             desc: "Serve explicitly granted nonsecret operator questions without a managed execution authority"
-          option :repo_root, type: :string, desc: "Candidate repository for the managed attempt authority"
-          option :tls_authority, type: :string, desc: "Serve the host/Incus mTLS crossing from this authority config (root:<service-group> 0640; loopback TCP + verified project client identity)"
+          option :repo_root, type: :string, desc: "(removed) managed attempt authority repository"
+          option :tls_authority, type: :string, desc: "(removed) host/Incus mTLS crossing authority"
 
           option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
           option :verbose, type: :boolean, aliases: %w[-v], desc: "Show verbose output"
 
           def call(**options)
-            if options[:tls_authority] && options[:operator_only]
-              raise_cli_error("operator questions require a local kernel requester; operator-only TLS is not supported")
+            if options[:repo_root] || options[:tls_authority]
+              raise_cli_error(
+                "managed and TLS serve were removed with the installed attempt authority; " \
+                "serve supports --operator-only only"
+              )
             end
-            return serve_tls_authority(options) if options[:tls_authority]
+            unless options[:operator_only]
+              raise_cli_error(
+                "the installed managed attempt authority is removed; serve requires --operator-only"
+              )
+            end
 
             group = dedicated_group(options)
             policy = Providers::Lab.grants_policy(grants_path: grants_path(options))
@@ -46,15 +57,9 @@ module Ace
                 "fail every client endpoint verification"
               )
             end
-            binding_policy = if options[:operator_only]
-              raise_cli_error("operator-only serve cannot select a managed repository") if options[:repo_root]
-              Lifecycle::OperatorOnlyBinding.new
-            else
-              Providers::Lab.assignment_binding(repo_root: options[:repo_root])
-            end
             service = Lifecycle::Service.new(
               root: store_root(options),
-              binding: binding_policy,
+              binding: Lifecycle::OperatorOnlyBinding.new,
               policy: policy,
               socket_path: socket_path(options),
               group: group,
@@ -66,30 +71,6 @@ module Ace
           end
 
           private
-
-          # The host/Incus crossing (spec 8xa.t.nh0): authority config,
-          # credential layout and TLS material are verified fail-closed
-          # BEFORE the loopback listener opens; the verified project-
-          # scoped client certificate is the only admitted peer.
-          def serve_tls_authority(options)
-            authority = Lifecycle::TlsAuthority.load(options[:tls_authority])
-            binding_policy = Providers::Lab.assignment_binding(repo_root: options[:repo_root])
-            service = Lifecycle::TlsService.new(
-              root: store_root(options),
-              binding: binding_policy,
-              project: authority.project_id,
-              credential: authority.credential,
-              decision_policy: Providers::Lab.grants_policy(grants_path: grants_path(options)),
-              ssl_context: authority.ssl_context!,
-              listen: authority.listen,
-              port: authority.port,
-              group: authority.service_group,
-              logger: options[:verbose] ? ->(message) { warn message } : nil
-            )
-            service.run
-          rescue Lifecycle::Error, Providers::ProviderUnavailableError => e
-            raise_cli_error(e.message)
-          end
 
           def dedicated_group(options)
             group = options[:group].to_s

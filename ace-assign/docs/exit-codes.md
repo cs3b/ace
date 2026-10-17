@@ -20,6 +20,7 @@ Exit codes returned by the local `ace-assign` lifecycle commands.
 | 2 | Assignment error | No active assignment or unknown assignment ID |
 | 3 | Configuration not found | Required config file is missing during `create` |
 | 4 | Step not found | `retry` or another command references a step that does not exist |
+| 5 | Lifecycle conflict or busy maintenance | A prune/start exclusion blocks the operation: conflicting lifecycle identity, unsafe exclusion artifacts, or a busy/expired maintenance exclusion |
 | 130 | Interrupted | SIGINT during a command |
 
 ## Exit Code Details
@@ -43,6 +44,18 @@ Exit codes returned by the local `ace-assign` lifecycle commands.
 ### Exit Code 4: Step Not Found
 
 The requested step reference does not exist in the target assignment.
+
+### Exit Code 5: Lifecycle Conflict or Busy Maintenance
+
+A local prune/start exclusion refused the operation:
+
+- `LifecycleErrors::Conflict` -- the lifecycle identity was pruned or its
+  exclusion artifacts are unsafe, so a writer must not be started against it.
+- `LifecycleErrors::MaintenanceBusy` -- the maintenance exclusion is busy or its
+  admission deadline expired.
+
+The command is refused; there is no retry loop. Inspect and clear the exclusion
+state, then rerun the operation explicitly.
 
 ## See Also
 

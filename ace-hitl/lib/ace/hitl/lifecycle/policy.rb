@@ -106,17 +106,6 @@ module Ace
           false
         end
 
-        def proposal?(_peer, project:)
-          false
-        end
-
-        def proposal_silence?(caller_uid:, requester:, project:, operation:)
-          false
-        end
-
-        def silence_operation?(project:, operation:)
-          false
-        end
         # @return [Boolean] true when the peer may deliver answers and
         #   observe pending/states for the given project
         def transport?(_peer, project: nil)
@@ -170,40 +159,7 @@ module Ace
           uid.is_a?(Integer) ? uid : nil
         end
 
-        # Decision admission is explicitly installed, never inferred from
-        # an ordinary requester or transport grant.
-        def proposal?(peer, project:)
-          current = document
-          proposal_principal?(peer.uid, project, current)
-        end
-
-        # A proposer grant allows asking. Only this separate, exact project
-        # operation list delegates a decision after the acknowledged window.
-        def proposal_silence?(caller_uid:, requester:, project:, operation:)
-          current = document
-          proposal_principal?(caller_uid, project, current) &&
-            delegated_operation?(project, operation, current)
-        end
-
-        def silence_operation?(project:, operation:)
-          delegated_operation?(project, operation, document)
-        end
-
         private
-
-        def proposal_principal?(uid, project, current)
-          uids = hitl_facts(current)["proposal_uids"]
-          projects = authorized_projects(uid, current)
-          uid.is_a?(Integer) && uids.is_a?(Array) && uids.include?(uid) && projects &&
-            (projects.empty? || projects.include?(project.to_s))
-        end
-
-        def delegated_operation?(project, operation, current)
-          delegations = hitl_facts(current)["silence_operations"]
-          operations = delegations.is_a?(Hash) && delegations[project]
-          operations.is_a?(Array) && operation.is_a?(String) &&
-            operation.match?(/\A[a-z][a-z0-9-]{0,63}\z/) && operations.include?(operation)
-        end
 
         def document
           @document || TrustedFile.read_yaml(@grants_path) || {}

@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+- Remove second-commander proposal reconciliation from the runtime, relay and boundary scenario: `proposal_due`/`reconcile_proposals`, proposal acknowledge/reconcile/reply paths, and the proposal boundary-surface positive case. The proposal model is removed with the old installed authority; Hermes now handles only local HITL/relay traffic (pending publication, delivery, ingress reconciliation).
+
+### Changed
+
+- The nh0-A host boundary scenario documents that attempt-bound managed ask creation is unavailable until the L2 boundary replaces the removed installed authority; package tests continue to use the relay transport only.
+
 ## [0.6.0] - 2026-10-16
 
 ### Added
