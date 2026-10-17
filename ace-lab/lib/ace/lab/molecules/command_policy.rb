@@ -20,6 +20,16 @@ module Ace
         RESERVED = %w[HOME USER LOGNAME SHELL PATH RUBYOPT RUBYLIB BUNDLE_GEMFILE GEM_HOME GEM_PATH BASH_ENV ENV PYTHONPATH PYTHONHOME PERL5LIB LD_PRELOAD LD_LIBRARY_PATH].freeze
         attr_reader :project, :launcher
 
+        # The validated command table (name -> pinned argv/purpose/source).
+        def commands
+          @entry.fetch("commands")
+        end
+
+        # The validated grants (uid -> command+executor+services bindings).
+        def grants
+          @entry.fetch("grants")
+        end
+
         def self.load(project:)
           bytes = GrantResolver.read_verified(PATH)
           raise InvalidConfigurationError, "project commands are not installed" unless bytes && bytes.bytesize <= 65_536
