@@ -199,3 +199,22 @@ the stored review-context result into campaign rounds with byte reuse),
 cancellation resolution, historical test-evidence wiring, comprehensive
 public-path tests + actual Pi independent review, then the joined branch
 re-verification and merge.
+
+### Round ingestion join COMPLETE (2c02a67d0)
+
+The campaign collection terminal now accepts the retained review-context
+result: retained_review_context_result validates the review_context_submitted
+event and its binding (including the campaign review reference); finish
+completes from either result kind; with_review_collection! reads context
+artifacts under the review-context canonical kind. Focused test extended
+through the full join: queue_finish → submit_review_context (oversized prompt)
+→ exact-mutation replay → fresh-second conflict → supervisor finish →
+collection proof + canonical reader, asserting the EXACT prompt bytes are
+reused from the canonical store (no re-upload). Receipt: ordinary_reviews
+11 tests / 137 assertions PASS. Fixes en route: reviewer queue completion is
+required before finish (scope subtree); the collection proof requires the
+hyphenated review-execution check name.
+
+Remaining .8 joins: public retained driver, cancellation resolution,
+historical test-evidence wiring, comprehensive public-path tests + actual Pi
+independent review, branch re-verification and merge.
