@@ -42,14 +42,14 @@ ace-task create "Implement webhook retry" --priority high
 **One command from task to shipped PR**
 
 - Provision an isolated worktree.
-- Open a tmux window for focused execution.
-- Kick off a multi-step assignment that runs implement, test, review, and ship.
+- Open a terminal window (tmux or Herdr) for focused execution.
+- Prepare a multi-step assignment covering implement, test, review, and ship.
 
 ```bash
 ace-overseer work-on --task 8r3
 ```
 
-[`ace-overseer`](ace-overseer/) orchestrates [`ace-assign`](ace-assign/), [`ace-git-worktree`](ace-git-worktree/), and [`ace-tmux`](ace-tmux/)
+[`ace-overseer`](ace-overseer/) composes [`ace-assign`](ace-assign/), [`ace-git-worktree`](ace-git-worktree/), and the selected terminal transport ([`ace-tmux`](ace-tmux/) or [`ace-herdr`](ace-herdr/)).
 
 The local file-based flow is explicit: project task → plan → worktree → assignment → `/as-assign-drive` → tests/review → HITL blockers → commit/PR → done. State owners and the exact command order are in [Lab Flow](docs/lab-flow.md); `ace-overseer work-on` is local convenience over the same files.
 
@@ -60,7 +60,7 @@ The local file-based flow is explicit: project task → plan → worktree → as
 - Track suggestions through a verified, pending, and resolved lifecycle.
 
 ```bash
-ace-review --preset code-deep --pr 123
+ace-review --preset code-valid --pr 123
 ```
 
 [`ace-review`](ace-review/)
@@ -198,7 +198,7 @@ Use `--full-index` only as temporary RubyGems propagation mitigation, then retur
 ## Principles
 
 - **CLI-first, agent-agnostic** — every tool is a standard CLI command; if it can run bash, it can use ACE
-- **Everything in git** — tasks, workflows, configs, and review sessions are markdown and YAML files in your repo
+- **Files over services** — tasks, workflows, and configs are markdown and YAML files in your repo; local sessions stay under `.ace-local/`
 - **Transparent and inspectable** — dry-run support, readable configs, saved sessions; when something breaks, you can trace it
 - **Customizable cascade** — each package ships defaults; override at user (`~/.ace/`) or project (`.ace/`) level without forking
 

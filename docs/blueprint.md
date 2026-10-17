@@ -24,9 +24,10 @@ ace-*/          # Ruby gems following ATOM architecture (25+ production gems)
                 # ace-review, ace-docs, ace-lint, ace-search, ace-llm,
                 # ace-test (documentation), ace-test-runner (CLI), ace-runtime
 .ace-tasks/     # Project task specs and release history (tracked; ace-task)
+.ace-tasks/_overseer/ # Private overseer tasks (gitignored; ace-task --in _overseer)
 .ace/           # Project configuration cascade root (tracked; configuration only)
 .ace-handbook/  # Project-owned handbook overrides (guides/workflows/skills)
-.ace-local/     # Local untracked state (assignments, HITL events, review sessions, private _overseer)
+.ace-local/     # Local untracked state (assignments, HITL events, review sessions)
 .ace-wt/        # Task worktrees, one per project task
 .agents/skills/ # Default generated ACE skill projection
 .claude/        # Claude Code integration (explicit provider sync only)
@@ -42,10 +43,9 @@ _legacy/        # Archived content (dev-handbook, dev-tools)
 Persisted lab state has one write location and one owner:
 
 - `.ace-tasks/` -- project tasks (ace-task).
-- `.ace-local/overseer/tasks/` -- private untracked `_overseer` list
-
-  (`ace-task --in _overseer`).
-
+- `.ace-tasks/_overseer/` -- private overseer tasks in the shared task tree:
+  a gitignored special folder reached with `ace-task --in _overseer`, not a
+  separate task store.
 - `.ace-local/assign/` -- assignment plan and step state (ace-assign).
 - `.ace-local/coworker/` -- reserved L3 coworker configuration.
 - `.ace-local/hitl/` -- HITL event files (ace-hitl).
@@ -72,7 +72,8 @@ AI agents should treat these as read-only unless explicitly instructed to modify
 AI agents should ignore these during normal operations:
 
 - `.ace-tasks/_archive/**/*` # Archived task history (history only, not current owners)
-- `.ace-local/**/*` # Local untracked state (assignments, HITL, review, private _overseer)
+- `.ace-tasks/_overseer/**/*` # Private overseer tasks (gitignored)
+- `.ace-local/**/*` # Local untracked state (assignments, HITL, review)
 - `.ace-wt/**/*` # Task worktrees
 - `ace-*/coverage/**/*` # Test coverage reports
 - `**/test-reports/**/*` # Test report files

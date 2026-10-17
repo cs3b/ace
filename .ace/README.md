@@ -26,7 +26,7 @@ only; it is not a state store.
 ├── nav/                   # ace-nav (protocols/)
 ├── prompt-prep/           # ace-prompt-prep
 ├── review/                # ace-review (config.yml, presets/)
-├── task/                  # ace-task (config.yml; task stores)
+├── task/                  # ace-task (config.yml; task root and special folders)
 ├── test/                  # ace-test-runner (runner.yml, suite.yml)
 └── tmux/                  # ace-tmux (panes/, windows/)
 ```
@@ -38,7 +38,7 @@ Task and workflow state is never stored in `.ace/`. The owners are:
 | Information | Write location | Owner |
 |---|---|---|
 | Project task specs and progress | `.ace-tasks/` | `ace-task` |
-| Private overseer task list | `.ace-local/overseer/tasks/` | overseer via `ace-task --in _overseer` |
+| Private overseer task list | `.ace-tasks/_overseer/` (gitignored) | overseer via `ace-task --in _overseer` |
 | Assignment plan and step reports | `.ace-local/assign/` | `ace-assign` |
 | Coworker run configuration (L3) | `.ace-local/coworker/` | reserved in L3 |
 | HITL agent events | `.ace-local/hitl/` | `ace-hitl` |
@@ -94,20 +94,21 @@ Overrides are explicit; there is no hidden per-gem fallback file.
 | ace-test-runner-e2e | `e2e-runner/` | `config.yml` |
 | ace-tmux | `tmux/` | `panes/`, `windows/` |
 
-## Task stores
+## Task root and the private `_overseer` folder
 
-`ace-task` roots are configured in `.ace/task/config.yml`. `root_dir` is the
-project store (`.ace-tasks/`); named stores are separate manager roots:
+`ace-task` roots tasks at `root_dir` in `.ace/task/config.yml` (`.ace-tasks/`):
 
 ```yaml
 task:
   root_dir: .ace-tasks
-  stores:
-    _overseer: .ace-local/overseer/tasks
 ```
 
-A store is not scanned by the project task list. `_overseer` is the private,
-untracked list of one overseer, reached with `ace-task --in _overseer`.
+The private overseer list is an ordinary special folder inside that same task
+tree: `.ace-tasks/_overseer/`. It is gitignored, so it never enters commits, and
+`ace-task` treats it like any other special folder:
+
+- `ace-task list --in _overseer` narrows the shared list to private tasks.
+- The default `ace-task list` shows project root tasks and `_overseer` tasks together.
 
 ## Usage
 

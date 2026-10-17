@@ -21,7 +21,7 @@ See `docs/tools.md#agent-engineering-practices` for expanded day-to-day agent pr
 ## State owners
 
 Every piece of persisted lab state has one write location and one owner; the canonical map is [docs/lab-flow.md](docs/lab-flow.md).
-Project tasks live in `.ace-tasks/` (ace-task); the private overseer list lives untracked in `.ace-local/overseer/tasks/` and is reached with `ace-task --in _overseer`.
+Project tasks live in `.ace-tasks/` (ace-task); the private overseer task list lives untracked in `.ace-tasks/_overseer/` (gitignored) and is reached with `ace-task --in _overseer`.
 Do not add a journal, queue engine, authority/admission layer, topology registry, or extra state cache.
 
 ## Commands

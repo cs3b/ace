@@ -18,12 +18,13 @@ interfaces.
 ## State ownership
 
 Persisted lab state has one write location and one owner; the canonical map and
-executable local flow are in [lab-flow.md](lab-flow.md). Tasks live in
-`.ace-tasks/`, the private overseer list in `.ace-local/overseer/tasks/`,
-assignment plans in `.ace-local/assign/`, HITL events in `.ace-local/hitl/`,
-and task worktrees in `.ace-wt/`. There is no journal, queue engine,
-authority/admission layer, listener/daemon, topology registry, or extra state
-cache; tmux, Herdr, and Hermes are transports only.
+executable local flow are in [lab-flow.md](lab-flow.md). Project tasks live in
+`.ace-tasks/`; the private overseer list is the gitignored `_overseer` special
+folder inside that same task tree (`.ace-tasks/_overseer/`, reached with
+`ace-task --in _overseer`). Assignment plans live in `.ace-local/assign/`, HITL
+events in `.ace-local/hitl/`, and task worktrees in `.ace-wt/`. There is no
+journal, queue engine, authority/admission layer, listener/daemon, topology
+registry, or extra state cache; tmux, Herdr, and Hermes are transports only.
 
 ## Scope
 
@@ -98,7 +99,7 @@ Modular Ruby gems providing focused CLI functionality:
 * **ace-test**: Test execution and reporting
 * **ace-test-runner** / **ace-test-runner-e2e**: CLI test execution and E2E scenarios
 * **ace-runtime**, **ace-tmux**, **ace-herdr**: Terminal transport contract and adapters
-* **ace-lab**: Lab environment preparation (L8 installer planned)
+* **ace-lab**: Read-only lab topology queries today; environment preparation and the installer are planned (L8)
 
 All gems follow ATOM architecture with `handbook/` for agents/workflows. See [ace-gems.g.md](ace-gems.g.md) for
 development guide.
