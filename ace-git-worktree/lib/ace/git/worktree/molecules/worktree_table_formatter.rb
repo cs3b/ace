@@ -75,11 +75,6 @@ module Ace
             [header_line(layout), separator_line(layout), *rows.map { |worktree| row_line(worktree, layout) }]
           end
 
-          # @return [Integer] computed table width (separator length)
-          def table_width(worktrees)
-            compute_layout(Array(worktrees))[:total_width]
-          end
-
           private
 
           Layout = Struct.new(:task, :branch, :age, :commit, :changes, :pr, :path, :total_width,

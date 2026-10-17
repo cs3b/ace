@@ -32,7 +32,6 @@ module Ace
           # @param pr_resolver [Molecules::PrStatusResolver, nil] injectable
           # @param branch_counter [Molecules::RecentBranchCounter, nil] injectable
           # @param clock [Proc, nil] injectable clock (`-> { Time }`) for tests
-          # @param clock [Proc, nil]
           # @param project_root [String, nil]
           # @param env [Hash]
           # @param stdout [IO]
