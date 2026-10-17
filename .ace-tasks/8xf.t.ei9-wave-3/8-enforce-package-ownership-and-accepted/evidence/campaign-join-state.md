@@ -1,5 +1,19 @@
 # ei9.8 campaign join state — 2026-10-17
 
+## Captain decision — review_context large-prompt ingress: APPROVED
+
+Decided 2026-10-17 by the Captain (this session, direct question): the
+composition's pending context-size proposal is APPROVED as proposed — a closed
+purpose-specific canonical `review_context` kind/transfer, permitted ONLY for
+an actual owner-selected campaign review-collect attempt with a matching
+canonical begin; capped by the existing shared complete-context limit
+(`Review::Atoms::CampaignContract::MAX_HEAD_CONTEXT_BYTES`, 128MiB); metadata,
+reports and feedback stay at their current small limits; aggregate bytes/count
+bounded; exact descriptor provenance retained; already-canonical prompt bytes
+are reused during round ingestion instead of re-upload. No arbitrary result may
+select the larger kind. Implementation happens with the composition
+completion, after the reviewed join lands.
+
 Worktree `.ace-wt/ei9-campaign-join` (branch codex/ei9-campaign-join) from main
 `6a18dc11a`. Both reviewed lines cherry-picked:
 
