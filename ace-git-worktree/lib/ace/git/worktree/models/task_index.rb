@@ -90,9 +90,9 @@ module Ace
           def find_by_worktree_path(path)
             return nil if path.to_s.empty?
 
-            expanded = File.expand_path(path)
+            expanded = canonical_path(path)
             @entries.find do |entry|
-              entry.worktree_path && File.expand_path(entry.worktree_path) == expanded
+              entry.worktree_path && canonical_path(entry.worktree_path) == expanded
             end
           end
 
@@ -113,8 +113,8 @@ module Ace
           def find_by_directory(directory)
             return nil if directory.to_s.empty?
 
-            expanded = File.expand_path(directory)
-            @entries.find { |entry| entry.directory == expanded }
+            expanded = canonical_path(directory)
+            @entries.find { |entry| canonical_path(entry.directory) == expanded }
           end
 
           # Map changed file paths to task candidates.
@@ -131,7 +131,7 @@ module Ace
             Array(paths).each do |relative_path|
               next if relative_path.to_s.empty?
 
-              absolute = File.expand_path(relative_path, @project_root || Dir.pwd)
+              absolute = canonical_path(File.expand_path(relative_path, @project_root || Dir.pwd))
               entry = find_by_enclosing_directory(absolute)
               counts[entry] += 1 if entry
             end
@@ -146,8 +146,23 @@ module Ace
           # under the task directory, including nested spec/artifact folders).
           def find_by_enclosing_directory(absolute_path)
             @entries.find do |entry|
-              absolute_path == entry.directory || absolute_path.start_with?("#{entry.directory}/")
+              directory = canonical_path(entry.directory)
+              absolute_path == directory || absolute_path.start_with?("#{directory}/")
             end
+          end
+
+          # Canonical comparison form for paths that may be reached through a
+          # symlinked root (e.g. macOS /var -> /private/var).
+          def canonical_path(value)
+            expanded = File.expand_path(value)
+            return File.realpath(expanded) if File.exist?(expanded)
+
+            parent = File.dirname(expanded)
+            return expanded if parent == expanded
+
+            File.join(canonical_path(parent), File.basename(expanded))
+          rescue StandardError
+            File.expand_path(value)
           end
         end
       end
