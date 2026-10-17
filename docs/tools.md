@@ -20,7 +20,7 @@ state cache. tmux, Herdr, and Hermes are transports only.
 | Information | Owner | Location |
 |---|---|---|
 | Project tasks | `ace-task` | `.ace-tasks/` |
-| Private overseer list | overseer via `ace-task --in _overseer` | `.ace-local/overseer/tasks/` |
+| Private overseer task list | overseer via `ace-task --in _overseer` | `.ace-tasks/_overseer/` (gitignored) |
 | Assignment plan and steps | `ace-assign` | `.ace-local/assign/` |
 | Coworker configuration (L3) | `ace-coworker` | `.ace-local/coworker/` |
 | HITL events | `ace-hitl` | `.ace-local/hitl/` |
@@ -156,7 +156,7 @@ Always use `ace-test` instead of `bundle exec rake test` or raw `bundle exec rub
 | `ace-task create "Title"` | Create a new task in `.ace-tasks/` |
 | `ace-task show 047` | View task details |
 | `ace-task list` | List project tasks |
-| `ace-task list --in _overseer` | List the private untracked overseer store |
+| `ace-task list --in _overseer` | List tasks in the private `_overseer` folder |
 | `ace-task update 047 --move-to archive` | Move a task to a special folder |
 | `ace-task update 047 --set status=done` | Update task frontmatter fields |
 | `ace-task plan 047` | Resolve or generate an implementation plan |
@@ -206,7 +206,7 @@ Always use `ace-test` instead of `bundle exec rake test` or raw `bundle exec rub
 
 | Tool | Purpose |
 |------|---------|
-| `ace-review --preset code-deep --pr 123` | Review PR with preset |
+| `ace-review --preset code-valid --pr 123` | Review PR with preset |
 | `ace-review --task 121` | Review task implementation |
 | `ace-review --list-presets` | Show available presets |
 

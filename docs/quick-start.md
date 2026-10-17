@@ -1,6 +1,6 @@
 # Quick Start
 
-By the end of this walkthrough you will have captured an idea, turned it into a task spec, run a full implement-test-review-ship pipeline in an isolated worktree, and understood how to customize every part of it. Total time: about 15 minutes of reading, then one command to start real work.
+By the end of this walkthrough you will have captured an idea, turned it into a task spec, prepared and driven an implement-to-PR pipeline in an isolated worktree, and understood how to customize every part of it. Total time: about 15 minutes of reading, then one command to start real work.
 
 ## Install
 
@@ -238,7 +238,7 @@ ace-task create "Implement backoff calculator" --child-of 8r3
 ```bash
 ace-task list                      # list all tasks
 ace-task show 8r3                  # show task details
-ace-task show 8r3 --format full    # show with full spec content
+ace-task show 8r3 --content        # show raw spec content
 ```
 
 ## 3. Review the spec
@@ -271,10 +271,10 @@ ace-overseer work-on -t 8r3
 This does three things:
 
 1. **Creates an isolated worktree** via `ace-git-worktree` — a separate checkout so your main branch stays clean
-2. **Opens a tmux window** via `ace-tmux` — a dedicated terminal session for the task
-3. **Starts an assignment** via `ace-assign` — loads the `work-on-task` preset and begins stepping through it
+2. **Opens a terminal window** via the selected transport (`ace-tmux` or `ace-herdr`) — a dedicated session for the task
+3. **Prepares an assignment** via `ace-assign` — expands the `work-on-task` preset into concrete steps under `.ace-local/assign/`
 
-Inside the tmux session, use `/as-assign-drive` in Claude Code to walk through each assignment step.
+The assignment is prepared, not auto-started. Inside the terminal session, run `/as-assign-drive` in Claude Code (or the equivalent skill in your harness) to execute each prepared step.
 
 Check on active worktrees:
 
@@ -285,42 +285,36 @@ ace-overseer prune     # clean up finished worktrees
 
 ## 5. What happens inside the pipeline
 
-The `work-on-task` preset ([source](../ace-assign/.ace-defaults/assign/presets/work-on-task.yml)) runs a 15-step pipeline. Here is what each phase does:
+The `work-on-task` preset ([source](../ace-assign/.ace-defaults/assign/presets/work-on-task.yml)) defines the step sequence. Here is what each phase does:
 
 ### Implement
 
-- **onboard** — Load project context via `wfi://onboard`. Orients the agent on repo structure, conventions, and the task spec.
-- **work-on-{task}** — For each task in the batch, fork a sub-agent context and run `wfi://task/work`. This is where the actual code gets written.
+- **onboard** (000) -- Load project context via `wfi://onboard`. Orients the agent on repo structure, conventions, and the task spec.
+- **batch-tasks / work-on-{task}** (010) -- For each task in the batch, fork a sub-agent context and run `wfi://task/work`. This is where the actual code gets written; the batch parent auto-completes when all children are done.
 
-### Verify
+### Verify and release
 
-- **verify-test-suite** — Run `wfi://test/verify-suite` across affected packages. Skipped for docs-only changes.
-- **verify-e2e** — Run E2E tests for modified packages. Auto-detects which packages changed.
-
-### Release
-
-- **release-minor** — Bump versions and update CHANGELOGs for all modified packages.
-- **update-docs** — Run `wfi://docs/update` if any public API contracts changed.
+- **verify-test-suite** (012) -- Run `wfi://assign/verify-test-suite` across affected packages. Skipped for docs-only changes.
+- **release-minor** (020) -- Bump versions and update package and root CHANGELOGs for modified packages only. Publishing remains a separate operation.
+- **update-docs** (025) -- Run `wfi://docs/update` when public contracts changed.
 
 ### Ship
 
-- **create-pr** — Create a pull request summarizing all tasks in the batch.
+- **create-pr** (030) -- Create a draft pull request summarizing all tasks in the batch. The draft is marked ready only after the review completion rule is met.
 
-### Review cycles
+### Review
 
-Three progressively focused review rounds, each running review → apply-feedback → release:
-
-- **review-valid** — Correctness. Catches bugs, logic errors, missing edge cases. Uses `code-valid` preset.
-- **review-fit** — Quality. Checks architecture, performance, standards compliance. Uses `code-fit` preset.
-- **review-shine** — Polish. Simplifies code, improves naming, tightens documentation. Uses `code-shine` preset.
+- **review-pr** (170) -- Follow `wfi://review/pr`: at least 3 completed review rounds, the last 2 without confirmed P0/P1 findings. The reviewer fixes concrete defects, records rounds and dispositions, and commits do not reset the counters.
+- **update-pr-desc** (180) -- Update the PR description with the final diff summary.
+- **mark-pr-ready** (190) -- After review and required tests pass on the exact head, mark the draft PR ready.
 
 ### Finalize
 
-- **reorganize-commits** — Rewrite history to group changes by concern (one commit per logical change).
-- **push-to-remote** — Force-push (with lease) the cleaned-up history.
-- **update-pr-desc** — Update the PR description with the final diff summary.
-- **mark-tasks-done** — Archive completed tasks.
-- **create-retro** — Generate a retrospective capturing what went well and what to improve.
+- **reorganize-commits** (130) -- Rewrite history to group changes by concern (one commit per logical change).
+- **push-to-remote** (140) -- Force-push (with lease) the cleaned-up history.
+- **record-demo** (145) -- Record and attach a demo when the task has a demo scenario and VHS/FFmpeg are available; otherwise the step is skipped.
+- **mark-tasks-done** (155) -- Mark completed tasks done and archive them.
+- **create-retro** (160) -- Generate a retrospective capturing what went well and what to improve.
 
 Other presets are available for different workflows: `fix-bug`, `quick-implement`, `release-only`, and `work-on-docs`.
 
