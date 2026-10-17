@@ -7,7 +7,7 @@ doc-type: workflow
 purpose: RubyGems publishing workflow
 update:
   frequency: on-change
-  last-updated: "2026-09-05"
+  last-updated: "2026-10-17"
 ---
 
 # RubyGems Publish Workflow
@@ -37,6 +37,8 @@ fail before any build.
 
 Configure RubyGems authentication through `GEM_HOST_API_KEY` or the standard
 RubyGems credentials file without printing or reading the credential value.
+Agent shells often do not hold these credentials; in that case skip prepare and
+use the Agent Execution Contract handoff instead of asking for credential setup.
 Then prepare every artifact:
 
 ```bash
@@ -52,7 +54,7 @@ gem names publishes exactly the prepared set.
 
 ## OTP HITL Handoff
 
-Only after prepare succeeds, use exactly one of these paths. Do not mix them.
+Use exactly one of these paths. Do not mix them.
 
 ### Interactive prompt (default)
 
@@ -111,6 +113,66 @@ The publisher still never writes the value into its own output, errors, or
 reports, and long-lived secrets (API keys, PATs, passwords, private keys,
 recovery codes) remain forbidden in argv and chat.
 
+## Agent Execution Contract
+
+The agent shell is not the operator shell. An absent `GEM_HOST_API_KEY` or
+`~/.gem/credentials` in agent subprocesses does not mean the operator is
+unconfigured: credentials and the OTP belong to the operator's terminal. Never
+ask the operator to create credentials that already exist there, and never print
+or read credential values.
+
+Choose exactly ONE path:
+
+| Situation | Agent action |
+|-----------|--------------|
+| Credential resolves in the agent shell (agent can run `--prepare`) | `--dry-run` -> `--prepare` -> hand off the single live command |
+| No credential or no TTY in the agent shell | `--dry-run` only -> state the wave plan -> hand off the single live command. `--prepare` is optional: `--interactive` re-resolves a stale prepared queue itself |
+| Operator explicitly authorizes agent-driven publishing | request ONE fresh OTP (see below), wait, then run the live publisher yourself |
+| Requested versions are already live on RubyGems | do not re-run the publisher; go to post-publish verification |
+
+### Operator handoff (default)
+
+Send exactly this one command, and do not bundle it with credential-setup
+instructions:
+
+```text
+Everything is ready — run in your terminal:
+  .ace-bin/ace-rubygems-publish --interactive
+
+It builds any missing artifacts, then prompts once (silent) for the OTP.
+```
+
+`--interactive` requires an operator terminal: it refuses to run under agents or
+CI, which is expected. When the agent has no TTY, the handoff above IS the
+correct completion of the agent's part.
+
+### Agent-driven OTP (operator-authorized)
+
+The owner permits short-lived OTP values in operator chat/HITL. When the
+operator explicitly authorizes the agent to run the publish itself, request one
+fresh OTP, wait for it, then run the live publisher immediately with the OTP in
+the environment (never in argv):
+
+```bash
+# 1. Ask for exactly one fresh OTP (do not persist it anywhere else)
+ace-hitl create "RubyGems publish OTP" \
+  --kind approval \
+  --question "Reply with one fresh six-digit RubyGems OTP (valid ~30-45s)." \
+  --tags release,rubygems,security
+
+# 2. Wait for / consume the answer (or read the operator chat reply)
+ace-hitl wait <ref>
+
+# 3. Publish immediately; RubyGems reads GEM_HOST_OTP_CODE from the environment
+GEM_HOST_OTP_CODE=<otp> .ace-bin/ace-rubygems-publish [gem-name...]
+```
+
+The OTP is single-use and expires in roughly 30-45 seconds. Never write it to
+files, logs, reports, retros, task records, evidence, commits, or shell history;
+if the HITL transport persists the answer, clear or archive that event right
+after use. Long-lived credentials (API keys, PATs, passwords, private keys,
+recovery codes) remain forbidden in chat, argv, and HITL.
+
 ## Live Publish
 
 After the operator confirms readiness, run the publisher without a mode flag:
@@ -159,6 +221,12 @@ Use `ace-handbook/docs/release-rubygems-proof.md` to classify the result as
 `SAFE`, `LAG_DETECTED`, or `METADATA_BROKEN`. Do not claim onboarding safety
 without this proof.
 
+The proof belongs to the e2e runner. If the agent runner is unavailable (for
+example, no LLM provider is configured), report the blocked verification command
+and hand it off; do not substitute the scenario with hand-rolled
+`bundle install` runs. A completed release is confirmed by a fresh dry-run
+report plus RubyGems metadata, never by re-running the publisher.
+
 ## Success Criteria
 
 - The dry-run is credential-free and non-mutating.
@@ -169,3 +237,7 @@ without this proof.
 - Partial releases resume without rebuilding retained artifacts.
 - Only proven-published artifacts are removed.
 - Credential and OTP values never enter argv, output, reports, fixtures, or HITL records.
+- When the agent lacks a credential or a TTY, it hands off exactly one live
+  command instead of requesting credential setup.
+- Agent-driven publishing (when authorized) consumes one fresh OTP through the
+  environment and leaves no OTP in files, logs, or retros.
