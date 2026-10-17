@@ -354,3 +354,16 @@ metadata substitution, artifact corruption, canonical byte reuse at
 ingestion, and finish-through-collection. Remaining .8: head-assessment
 wiring, workflow-surface exposure, actual Pi independent review, branch
 re-verification and merge.
+
+### Head-assessment wiring — correctly sequenced with the Pi review phase
+
+Reading campaign_head_assessments#head_assessment_proof! settles the design:
+the head_assessment_evidence callable is an ASSESSMENT EXECUTOR — it produces
+the strict-schema proof (authority/rationale/complete-context digest) by
+actually executing the delta assessment, with material/uncertain changes
+requiring an executed delta round. That is runtime reviewer behavior, not
+composition wiring: it is sequenced together with the actual configured Pi
+independent review (which itself supplies the executed assessments), rather
+than as a standalone composition join. Check/review/approval canonical
+backstops (composition-side) are complete; the assessment executor lands with
+the Pi review.
