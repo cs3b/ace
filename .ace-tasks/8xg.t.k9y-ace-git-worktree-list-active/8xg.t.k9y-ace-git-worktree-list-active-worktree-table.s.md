@@ -1,6 +1,6 @@
 ---
 id: 8xg.t.k9y
-status: in-progress
+status: done
 priority: medium
 needs_review: false
 created_at: "2026-10-17 13:31:03"
