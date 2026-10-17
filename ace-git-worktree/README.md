@@ -14,6 +14,10 @@
 
 > Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
 
+> **State owner:** `.ace-wt/` -- one worktree per project task, owning only the
+> Git checkout and branch. Task metadata stays in `.ace-tasks/`; assignment
+> plans stay in `.ace-local/assign/`. See [docs/lab-flow.md](../docs/lab-flow.md).
+
 [Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
 
 ![ace-git-worktree demo](docs/demo/ace-git-worktree-getting-started.gif)
@@ -35,6 +39,9 @@
 **Manage worktree lifecycle across a team** - use the `as-git-worktree-manage` workflow with configurable naming, hooks, upstream push, and draft-PR automation to standardize workflows across the team.
 
 **Orchestrate parallel task work with ace-overseer** - pair with [ace-overseer](../ace-overseer) to spin up worktrees per task, drive agents in parallel, and prune finished worktrees automatically.
+
+> **Planned (L6):** the private overseer queue that hands one worktree between
+> worker, reviewer, and integrator -- not available yet.
 
 ## Testing Contract
 
