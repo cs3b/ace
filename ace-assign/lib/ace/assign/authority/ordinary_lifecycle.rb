@@ -114,6 +114,8 @@ module Ace
             progress(request, peer, role, deadline, transfer)
           when "submit_result", "result_status", "result_snapshot"
             ordinary_result(request, peer, role, deadline, transfer)
+          when "submit_review_context"
+            ordinary_review_context_submission(request, peer, role, deadline, transfer)
           when "finish"
             raise ArgumentError, "ordinary completion forbids transfer" if transfer
             finish_result(request, peer, role, deadline)

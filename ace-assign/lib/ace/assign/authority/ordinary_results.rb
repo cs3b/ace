@@ -147,7 +147,9 @@ module Ace
           end
           start_replay_owner!(params, observed.fetch(:identity))
           admitted = ReceiptTransfer.decode(input: transfer, receipt_sha256: params.fetch("receipt_sha256"),
-            artifact_field: "artifacts", reference_key: "path")
+            artifact_field: "artifacts", reference_key: "path",
+            max_artifact_bytes: Atoms::CandidateLimits::REVIEW_CONTEXT_BYTES,
+            max_total_bytes: Atoms::CandidateLimits::REVIEW_CONTEXT_BYTES)
           digest = Atoms::EvidenceDigest.digest({"params" => params, "project_id" => @project, "peer_uid" => peer.fetch("uid")})
           keys = [@exclusion.task_key(registered.fetch("task_id")), @exclusion.assignment_key(params.fetch("assignment_id"))]
           @exclusion.with_shared_multi(keys, deadline: deadline) do
@@ -194,12 +196,18 @@ module Ace
           pending = @journal.send(:chain_mutation_events, params.fetch("attempt_id"), events.last.fetch("digest"), plan.fetch(:events))
           reader = ->(_data, artifact) { canonical.read_pending({"ref" => artifact.fetch("path"), "sha256" => artifact.fetch("sha256")},
             **context, current_events: events, pending_events: pending, blobs: plan.fetch(:blobs), commit: commit) }
-          verified = verify_ordinary_result_receipt(params, receipt, binding, commit, reader,
-            validator: ->(original, producer) { validate_review_context_receipt!(original, producer, review) })
-          if JSON.generate(verified.to_h).bytesize > 16_384
+          # ReceiptVerifier's review-independence semantics apply to producer
+          # review verdicts; this campaign collection receipt is produced BY the
+          # selected reviewer, so the verifier sees a review-nil projection and
+          # the campaign binding is enforced by validate_review_context_receipt!
+          verifier_view = receipt.merge("review" => nil)
+          verify_ordinary_result_receipt(params, verifier_view, binding, commit, reader,
+            validator: ->(_view, producer) { validate_review_context_receipt!(receipt, producer, review) })
+          stored = Models::ExecutionReceipt.from_h(receipt)
+          if JSON.generate(stored.to_h).bytesize > 16_384
             raise AttemptErrors::ReceiptRejected, "canonical ordinary receipt exceeds its transfer limit"
           end
-          payload = {"authority" => "ordinary", "result_id" => id, "binding" => binding, "receipt" => verified.to_h}
+          payload = {"authority" => "ordinary", "result_id" => id, "binding" => binding, "receipt" => stored.to_h}
           plan.merge(events: plan.fetch(:events) + [{type: "review_context_submitted", payload: payload}],
             data: ordinary_result_projection(payload))
         end

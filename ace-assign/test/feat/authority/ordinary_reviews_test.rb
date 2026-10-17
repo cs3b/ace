@@ -131,6 +131,62 @@ module Ace
         end
       end
 
+      def test_review_context_ingestion_binds_campaign_selection_and_matching_begin
+        fixture(campaign: true) do
+          register_and_start(producer_start: @base_head)
+          submit_candidate
+          params = selection.merge("pane" => "w1:pS", "expected_generation" => 2,
+            "contract" => "Preserve exact candidate and independently review it.", "profile" => "delivery")
+          @admission.selected = "producer"
+          assert_raises(AttemptErrors::EvidenceUnavailable) { @client.call("campaign_start", params, mutation_id: "campaign-start") }
+          @admission.selected = "supervisor"
+          started = @client.call("campaign_start", params, mutation_id: "campaign-start")
+          assert_equal started.data, @client.call("campaign_start", params, mutation_id: "campaign-start").data
+          pin = selection.merge("pane" => "w1:pS", "expected_generation" => 3, "round_id" => "round-1",
+            "scope_identity" => {"full" => {"preset" => "code-valid", "subjects" => ["diff:#{@base_head}..#{@head}"]}})
+          pinned = @client.call("campaign_pin", pin, mutation_id: "pin-1")
+          assert_equal false, pinned.data.fetch("recorded_complete")
+          @owner.instance_variable_set(:@campaign, make_campaign_owner)
+          status = @client.call("campaign_status", selection).data
+          refute status.fetch("accepted")
+          review = selection.merge("pane" => "w1:pS", "expected_generation" => 4,
+            "reviewer_assignment_id" => "reviewer", "reviewer_attempt_id" => "reviewer-run")
+          assert_raises(AttemptErrors::EvidenceUnavailable) { @client.call("assign_review", review, mutation_id: "unbudgeted-review") }
+          assigned = @client.call("assign_review", review.merge("campaign" => {"round_id" => "round-1", "scope" => "full"}),
+            mutation_id: "campaign-review").data
+          start = selection.merge("pane" => "w1:p2", "expected_generation" => 5, "review_id" => assigned.fetch("review_id"))
+          assert_raises(AttemptErrors::EvidenceUnavailable) { @client.call("campaign_begin", start, mutation_id: "provider-begin") }
+          @admission.selected = "reviewer"
+          @admission.head = @base_head
+          assert_raises(AttemptErrors::EvidenceUnavailable) { @client.call("campaign_begin", start, mutation_id: "provider-begin") }
+          @admission.head = @head
+          @client.call("campaign_begin", start, mutation_id: "provider-begin")
+          own = {"assignment_id" => "reviewer", "attempt_id" => "reviewer-run", "pane" => "w1:p2"}
+          prompt = "complete campaign context " * 20_000
+          assert prompt.bytesize > 64 * 1024, "fixture prompt must exceed the ordinary artifact budget"
+          campaign_ref = assigned.fetch("campaign").slice("campaign_id", "round_id", "scope", "execution_id")
+          bytes = review_bytes("assignment_id" => "reviewer", "attempt_id" => "reviewer-run",
+            "operation" => "review-collect",
+            "review" => {"head" => @head, "verdict" => "approved", "reviewer" => {"actor" => Etc.getpwuid.name},
+              "review_id" => assigned.fetch("review_id"), "campaign" => campaign_ref},
+            "artifacts" => [{"path" => "system-prompt.md", "sha256" => Digest::SHA256.hexdigest(prompt)}])
+          context = own.merge("head" => @head, "receipt_sha256" => Digest::SHA256.hexdigest(bytes),
+            "review_id" => assigned.fetch("review_id"), "producer_assignment_id" => "producer")
+          submitted = @client.call("submit_review_context", context.merge("expected_generation" => 1),
+            mutation_id: "reviewer-context", upload_parts: [bytes, prompt], purpose: :review_context).data
+          assert submitted.fetch("result_id")
+          assert_equal "running", submitted.fetch("state")
+          duplicate = @client.call("submit_review_context", context.merge("expected_generation" => 1),
+            mutation_id: "reviewer-context", upload_parts: [bytes, prompt], purpose: :review_context)
+          assert duplicate.replayed
+          refused = assert_raises(AttemptErrors::EvidenceUnavailable) do
+            @client.call("submit_review_context", context.merge("expected_generation" => 2),
+              mutation_id: "second-context", upload_parts: [bytes, prompt], purpose: :review_context)
+          end
+          assert refused.message.include?("conflict"), "fresh second submission must conflict, got: #{refused.message}"
+        end
+      end
+
       def test_merge_requires_canonical_successful_test_execution_and_rechecks_before_effect
         fixture do
           register_and_start
