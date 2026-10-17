@@ -27,7 +27,7 @@ module Ace
         attr_accessor :executions, :boundary_binding
 
         def initialize(result = nil)
-          @result = result || {success: true, artifacts: [
+          @result = result || {success: true, verdict: "approved", artifacts: [
             {path: "system-prompt.md", bytes: "x" * 300, sha256: Digest::SHA256.hexdigest("x" * 300)}]}
           @executions = []
         end
@@ -36,7 +36,7 @@ module Ace
         def execute_prepared_campaign(candidate:, subject:, session_dir:, campaign_binding:, execution_boundary:)
           @executions << {candidate: candidate, subject: subject, campaign_binding: campaign_binding}
           @boundary_binding = campaign_binding
-          engine_binding = @boundary_drift ? campaign_binding.merge("session_binding" => "drifted") : campaign_binding
+          engine_binding = @boundary_drift ? campaign_binding.merge("round_id" => "drifted") : campaign_binding
           execution_boundary.call(binding: engine_binding, model: "role:review-default") { :dispatched }
           @result
         rescue ArgumentError, KeyError, TypeError => error
@@ -46,10 +46,13 @@ module Ace
 
       def setup
         @dir = Dir.mktmpdir("campaign-runner-")
+        @producer = {"assignment_id" => "producer", "attempt_id" => "producer-run", "expected_generation" => 5}
         @reviewer = {"assignment_id" => "reviewer", "attempt_id" => "reviewer-run",
           "expected_generation" => 6, "pane" => "w1:p2", "actor" => "rev", "role" => "worker",
           "runtime" => "herdr", "scope" => "010.01"}
         @candidate = {"head" => "a" * 40, "candidate_generation" => 1}
+        @campaign = {"base" => "b" * 40, "contract_identity" => "c" * 64,
+          "scope_identity" => {"preset" => "code-valid", "subjects" => ["diff:#{"b" * 40}..#{"a" * 40}"]}}
         @begin_reply = {"data" => {"campaign_id" => "camp-1", "round_id" => "round-1", "scope" => "full",
           "execution_id" => "execution-1", "session_binding" => "binding-1"}, "transport" => {"replayed" => false}}
       end
@@ -63,9 +66,9 @@ module Ace
       end
 
       def run_with(client, review)
-        runner(client, review).run(review_id: "review-1", producer_assignment_id: "producer",
+        runner(client, review).run(review_id: "review-1", producer: @producer,
           reviewer: @reviewer, candidate: @candidate, subject: "diff:#{'b' * 40}..#{'a' * 40}",
-          session_dir: tap_dir("session"), output: tap_dir("out"))
+          session_dir: tap_dir("session"), output: tap_dir("out"), campaign: @campaign)
       end
 
       def tap_dir(name)
@@ -82,14 +85,21 @@ module Ace
         assert result.fetch("dispatched")
         assert_equal "binding-1", result.fetch("session_binding")
         assert_equal 1, review.executions.length, "model execution must run exactly once"
+        begin_request = client.requests.fetch(0)
+        assert_equal "producer", begin_request.dig("params", "assignment_id"),
+          "campaign_begin mutates the producer chain"
+        assert_equal "w1:p2", begin_request.dig("params", "pane"), "begin runs as the reviewer pane"
         submit = client.requests.fetch(1)
         assert_equal "submit_review_context", submit.fetch("operation")
+        assert_equal "reviewer", submit.dig("params", "assignment_id"), "submission mutates the reviewer chain"
         assert_equal "producer", submit.dig("params", "producer_assignment_id")
         assert_equal "review-1", submit.dig("params", "review_id")
         receipt = JSON.parse(File.read(File.join(@dir, "out", "receipt.json")))
         assert_equal "review-collect", receipt.fetch("operation")
         assert_equal "camp-1", receipt.dig("review", "campaign", "campaign_id")
-        assert_equal "binding-1", review.executions.first.fetch(:campaign_binding).fetch("session_binding")
+        assert_equal @campaign.fetch("base"), review.executions.first.fetch(:campaign_binding).fetch("base")
+        refute review.executions.first.fetch(:campaign_binding).key?("session_binding"),
+          "the validated binding schema forbids a session_binding key"
       end
 
       def test_replayed_begin_never_dispatches

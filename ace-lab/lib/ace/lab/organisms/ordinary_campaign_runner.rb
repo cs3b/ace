@@ -4,6 +4,7 @@ require "securerandom"
 require_relative "../molecules/ordinary_owner_config"
 require_relative "ordinary_assignment_client"
 require "ace/review/organisms/prepared_candidate_review"
+require "ace/assign/atoms/candidate_limits"
 
 module Ace
   module Lab
@@ -28,15 +29,15 @@ module Ace
         # reviewer: identity mapping with actor/role/runtime/pane; candidate:
         # the canonical candidate reference view (head/tree + reader); identity
         # of the reviewer supplies the receipt producer.
-        def run(review_id:, producer_assignment_id:, reviewer:, candidate:, subject:,
-                session_dir:, output:, campaign: nil, deadline: nil)
+        def run(review_id:, producer:, reviewer:, candidate:, subject:,
+                session_dir:, output:, campaign:, deadline: nil)
           require_dir!(session_dir)
           require_dir!(output)
           begin_request = retain_request(output, "campaign-begin", {
             "version" => 1, "project_id" => @project, "operation" => "campaign_begin",
             "mutation_id" => mutation_id("begin", review_id),
-            "params" => {"assignment_id" => reviewer.fetch("assignment_id"), "attempt_id" => reviewer.fetch("attempt_id"),
-              "expected_generation" => reviewer.fetch("expected_generation"), "pane" => reviewer.fetch("pane"),
+            "params" => {"assignment_id" => producer.fetch("assignment_id"), "attempt_id" => producer.fetch("attempt_id"),
+              "expected_generation" => producer.fetch("expected_generation"), "pane" => reviewer.fetch("pane"),
               "head" => candidate.fetch("head"), "candidate_generation" => candidate.fetch("candidate_generation"),
               "review_id" => review_id}, "parts" => []
           }, [])
@@ -45,18 +46,36 @@ module Ace
           if begun.fetch("transport").fetch("replayed")
             return {"begun" => false, "replayed" => true, "session_binding" => session_binding, "dispatched" => false}
           end
+          expected = {"campaign_id" => begun.fetch("data").fetch("campaign_id"),
+            "round_id" => begun.fetch("data").fetch("round_id"), "scope" => begun.fetch("data").fetch("scope")}
+          dispatched = false
           boundary = ->(binding:, model:, &dispatch) do
-            unless binding.is_a?(Hash) && binding.fetch("session_binding") == session_binding
+            unless binding.is_a?(Hash) && binding.values_at("campaign_id", "round_id", "scope") ==
+                expected.values_at("campaign_id", "round_id", "scope") &&
+                binding.fetch("head") == candidate.fetch("head") && binding.fetch("base") == campaign.fetch("base")
               raise ArgumentError, "campaign execution boundary binding differs from its canonical begin"
             end
+            dispatched = true
             dispatch.call
           end
           executed = @review.execute_prepared_campaign(candidate: candidate, subject: subject,
-            session_dir: session_dir, campaign_binding: binding_for(begun.fetch("data"), candidate),
+            session_dir: session_dir, campaign_binding: binding_for(begun.fetch("data"), candidate, campaign, subject),
             execution_boundary: boundary)
-          unless executed[:success]
+          unless dispatched && executed.is_a?(Hash) && executed[:success]
+            return {"begun" => true, "replayed" => false, "dispatched" => false,
+              "session_binding" => session_binding,
+              "error" => executed.is_a?(Hash) ? executed[:error] : "execution boundary withheld dispatch"}
             return {"begun" => true, "replayed" => false, "dispatched" => false,
               "session_binding" => session_binding, "error" => executed[:error]}
+          end
+          if executed.fetch(:artifacts).length > Ace::Assign::Atoms::CandidateLimits::REVIEW_CONTEXT_ARTIFACTS
+            return {"begun" => true, "replayed" => false, "dispatched" => true, "session_binding" => session_binding,
+              "error" => "campaign context exceeds the review-context artifact count "                 "(#{executed.fetch(:artifacts).length} > #{Ace::Assign::Atoms::CandidateLimits::REVIEW_CONTEXT_ARTIFACTS}); "                 "reduce the feedback inventory for this round"}
+          end
+          verdict = executed[:verdict]
+          unless verdict == "approved"
+            return {"begun" => true, "replayed" => false, "dispatched" => true, "session_binding" => session_binding,
+              "error" => "campaign review verdict was not approved: #{verdict.inspect}"}
           end
           artifacts = executed.fetch(:artifacts)
           receipt = reviewer_receipt(review_id, reviewer, candidate, begun.fetch("data"), artifacts)
@@ -66,7 +85,7 @@ module Ace
             "params" => {"assignment_id" => reviewer.fetch("assignment_id"), "attempt_id" => reviewer.fetch("attempt_id"),
               "expected_generation" => reviewer.fetch("expected_generation") + 1, "pane" => reviewer.fetch("pane"),
               "head" => candidate.fetch("head"), "receipt_sha256" => receipt.fetch(:sha256),
-              "review_id" => review_id, "producer_assignment_id" => producer_assignment_id},
+              "review_id" => review_id, "producer_assignment_id" => producer.fetch("assignment_id")},
             "parts" => ([{"file" => "receipt.json", "bytes" => receipt.fetch(:bytes),
               "sha256" => receipt.fetch(:sha256)}] + artifacts.map { |entry|
               {"file" => entry.fetch(:path), "bytes" => entry.fetch(:bytes), "sha256" => entry.fetch(:sha256)} })
@@ -78,10 +97,11 @@ module Ace
 
         private
 
-        def binding_for(begin_data, candidate)
+        def binding_for(begin_data, candidate, campaign, subject)
           {"campaign_id" => begin_data.fetch("campaign_id"), "round_id" => begin_data.fetch("round_id"),
-            "scope" => begin_data.fetch("scope"), "session_binding" => begin_data.fetch("session_binding"),
-            "head" => candidate.fetch("head"), "candidate_generation" => candidate.fetch("candidate_generation")}
+            "scope" => begin_data.fetch("scope"), "head" => candidate.fetch("head"),
+            "base" => campaign.fetch("base"), "contract_identity" => campaign.fetch("contract_identity"),
+            "scope_identity" => campaign.fetch("scope_identity"), "subject" => subject}.freeze
         end
 
         def reviewer_receipt(review_id, reviewer, candidate, begin_data, artifacts)
