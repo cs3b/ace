@@ -667,3 +667,20 @@ drift paths. Remaining before merge: the actual configured Pi independent
 review (which also supplies the executed head-assessment proofs — the
 assessment executor is runtime reviewer behavior, sequenced with that phase),
 the full default suite on the branch, and the merged delivery-map row update.
+
+### ei9.8 composition joins merged to main
+
+Branch codex/ei9-campaign-composition-join merged as a70a46a10 after dual
+review closure: the configured Pi review (17 findings — the three highs being
+real driver-seam defects hidden by loose fakes: reviewer-chain begin, binding
+schema mismatch, self-contradictory boundary — all fixed with schema-enforcing
+tests) and an independent adversarial review (APPROVE, receipts re-executed,
+residuals fixed or recorded). The full default suite on the final branch state
+passed 51 packages / 12,444 tests / 43,752 assertions / 0 failures. Local main
+is now 50+ commits ahead of origin; the push remains with the Captain.
+Remaining .8 follow-ups recorded in the evidence: driver-vs-real-authority
+integration receipt (with the CLI/workflow exposure), read-path verifier
+defense-in-depth, boundary session-binding literal pinning, and the executed
+head-assessment path which is sequenced with real campaign rounds. No gem
+versions were bumped on this branch; floors/CHANGELOG land at the next
+coordinated release.
