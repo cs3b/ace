@@ -408,3 +408,33 @@ lows + 2 tracked items (workflow exposure, provenance refactor). The
 independent adversarial subagent review of the same delta is running; its
 verdict will be appended. Receipts: runner 4 tests / 24 assertions PASS
 post-fix.
+
+### Independent adversarial review — VERDICT: APPROVE
+
+Fresh-context adversarial reviewer over diff ac80393b4..tip (report
+.local/review-composition-joins/review-report.md): scope clean (only
+ace-assign/ace-lab/ace-review + docs, no lockfiles); ruby -c on all 26 changed
+product files; all nine focused receipts re-executed and matching. It
+independently identified the same two REJECT-level driver defects the
+configured Pi review found (reviewer-chain begin; binding schema mismatch) and
+verified the mid-review fix (5152b09d8) directly — producer-chain begin with
+reviewer pane, 8-field schema-conforming binding with session_binding
+forbidden, artifact-count and verdict gates, dispatched-flag check.
+Adversarial items verified with quoted lines: submit_result can never select
+the review_context purpose (server-derived); widened decode bounds at exactly
+one call site; the verifier's review-nil projection cannot leak into the
+stored receipt; replayed-begin early return precedes the engine; revoked
+settlement is transient-unavailable while success demands the exact terminal
+collection; canonical backstops scan the whole journal.
+
+Residual advisories fixed this round: the dead duplicate return removed; the
+submit's expected_generation now uses the reviewer chain's own expected
+generation (begin bumps the producer chain, not the reviewer's — the +1
+heuristic had no server-side justification). Remaining advisories recorded:
+read-path ReceiptVerifier asymmetry (defense-in-depth), boundary pins
+campaign/round/scope/head/base rather than the literal session_binding
+(equivalent under deterministic derivation), and the driver-vs-real-authority
+integration receipt (the next .8 item). Runner receipts: 4/24 PASS.
+
+Both gates closed: configured Pi review (17 findings, all fixed/sequenced) +
+independent adversarial APPROVE.
