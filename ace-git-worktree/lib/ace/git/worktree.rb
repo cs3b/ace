@@ -198,6 +198,8 @@ module Ace
       require_relative "worktree/molecules/task_index_builder"
       require_relative "worktree/molecules/worktree_probe"
       require_relative "worktree/molecules/task_association_resolver"
+      require_relative "worktree/molecules/pr_status_resolver"
+      require_relative "worktree/molecules/recent_branch_counter"
       require_relative "worktree/molecules/task_fetcher"
       require_relative "worktree/molecules/pull_request_creator"
       require_relative "worktree/molecules/pull_request_evidence_resolver"
