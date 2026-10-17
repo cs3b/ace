@@ -2,8 +2,8 @@
 doc-type: user
 purpose: CLI reference for ace-task commands and options
 ace-docs:
-  last-updated: '2026-04-13'
-  last-checked: '2026-04-13'
+  last-updated: '2026-10-17'
+  last-checked: '2026-10-17'
 ---
 
 # ace-task CLI Reference
@@ -28,6 +28,40 @@ All commands support these flags:
 | `--help` | Show help for any command |
 
 ## Commands
+
+## Task stores
+
+A task store is a named task root configured under `task.stores` in the project
+config (`.ace/task/config.yml`). ace-task ships this default:
+
+```yaml
+task:
+  stores:
+    _overseer: .ace-local/overseer/tasks
+```
+
+Pass a configured store name to `--in` and the store root replaces the project
+task root before destination validation:
+
+```bash
+ace-task create "Private overseer item" --in _overseer
+ace-task list --in _overseer
+ace-task show q7w --in _overseer
+ace-task update q7w --in _overseer --set status=done
+```
+
+- Paths are relative to the project root unless absolute. `create` makes the
+  store root when missing; `--root` cannot be combined with a store selector.
+- A store is its own manager root, not a folder under `task.root_dir`, so the
+  project `list`, `show`, and directory scanner never see its tasks. A
+  configured store name takes precedence over a special folder with the same
+  name.
+- Keep stores under `.ace-local/` so they stay untracked; `--gc` is rejected
+  for store tasks.
+- `ace-task status` and `ace-task plan` stay project-scoped and do not read a
+  private store.
+- `next`, `maybe`, `anytime`, `archive`, and existing custom folders keep their
+  special-folder meaning for `--in`.
 
 ## Linked Issues
 
@@ -83,7 +117,7 @@ budget, the command fails cleanly without leaving behind a partial task artifact
 | `--server` | | Named forge server for the issue |
 | `--default-server` | | Select the configured default forge server |
 | `--child-of` | | Parent task reference (creates subtask) |
-| `--in` | `-i` | Top-level target: next, maybe, anytime, archive, or an existing custom folder |
+| `--in` | `-i` | Top-level target: next, maybe, anytime, archive, a configured store, or an existing custom folder |
 | `--dry-run` | `-n` | Preview without writing |
 | `--gc` | | Auto-commit changes |
 
@@ -93,6 +127,7 @@ ace-task create --title "Fix login bug"
 ace-task create "Fix auth" --priority high --tags auth,security
 ace-task create "Setup DB" --child-of q7w
 ace-task create "Quick task" --in maybe
+ace-task create "Private task" --in _overseer
 ace-task create "Ready for later" --in anytime
 ace-task create "Draft spec" --status draft --estimate TBD
 ace-task create "Track issue" --issue 276 --default-server
@@ -118,12 +153,14 @@ Display task details by reference (full ID, short ref, or suffix).
 | `--path` | Print file path only |
 | `--content` | Print raw markdown content |
 | `--tree` | Show parent + subtask tree view |
+| `--in STORE` | Select a configured task store (e.g. `_overseer`) |
 
 ```bash
 ace-task show q7w
 ace-task show q7w --tree
 ace-task show q7w --content
 ace-task show q7w --path
+ace-task show q7w --in _overseer
 ```
 
 ### ace-task list
@@ -138,7 +175,7 @@ List tasks with optional filtering by status, tags, or folder.
 |--------|-------|-------------|
 | `--status` | `-s` | Filter by status (pending, in-progress, done, blocked) |
 | `--tags` | `-T` | Filter by tags (comma-separated, any match) |
-| `--in` | `-i` | Folder: next (default), all, maybe, archive |
+| `--in` | `-i` | Folder: next (default), all, maybe, archive; or a configured store name |
 | `--root` | `-r` | Override root path (subpath within tasks root) |
 | `--filter` | `-f` | Generic filter: key:value (repeatable, supports key:a\|b and key:!value) |
 | `--sort` | `-S` | Sort: smart (default), id, priority, created |
@@ -148,6 +185,7 @@ ace-task list
 ace-task list --status pending
 ace-task list --in all
 ace-task list --in maybe
+ace-task list --in _overseer
 ace-task list --tags ux,design
 ace-task list --sort priority
 ace-task list --filter status:pending --filter tags:ux|design
@@ -165,6 +203,7 @@ Update task metadata, move to folders, or reparent tasks.
 | `--move-to` | `-m` | Move to folder: archive, maybe, anytime, next |
 | `--move-as-child-of` | | Reparent: \<ref\>, 'none' (promote), 'self' (orchestrator) |
 | `--position` | `-p` | Set position: first, last, after:\<ref\>, before:\<ref\> |
+| `--in STORE` | | Select a configured task store (e.g. `_overseer`) |
 | `--gc` | | Auto-commit changes |
 
 ```bash
@@ -176,6 +215,7 @@ ace-task update q7w --move-as-child-of abc
 ace-task update q7w --move-as-child-of none       # Promote to standalone
 ace-task update q7w --position first
 ace-task update q7w --position after:abc
+ace-task update q7w --in _overseer --set status=done
 ```
 
 ### ace-task status

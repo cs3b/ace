@@ -18,6 +18,12 @@ See `docs/tools.md#agent-engineering-practices` for expanded day-to-day agent pr
 - Make architectural decisions for the long term. Do not accept intentional stopgaps meant to be replaced later.
 - Study how established products solve the problem before designing. Adopt proven patterns rather than inventing from scratch.
 
+## State owners
+
+Every piece of persisted lab state has one write location and one owner; the canonical map is [docs/lab-flow.md](docs/lab-flow.md).
+Project tasks live in `.ace-tasks/` (ace-task); the private overseer list lives untracked in `.ace-local/overseer/tasks/` and is reached with `ace-task --in _overseer`.
+Do not add a journal, queue engine, authority/admission layer, topology registry, or extra state cache.
+
 ## Commands
 
 | Type | Where | Prefix | Examples |
