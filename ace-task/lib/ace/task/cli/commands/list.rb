@@ -20,10 +20,10 @@ module Ace
           remove_const(:C)
 
           example [
-            "                           # Shared view: project + _overseer tasks",
+            "                           # Shared view: project + active _overseer tasks",
             "--in all                   # All tasks including archived/maybe",
             "--in maybe                 # Tasks in _maybe/",
-            "--in _overseer             # Private overseer tasks only",
+            "--in _overseer             # All private management tasks (incl. their archive)",
             "--status pending           # Filter by status",
             "--tags ux,design           # Tasks matching any tag",
             "--in next --status pending # Combined filters",
@@ -35,7 +35,7 @@ module Ace
           option :status, type: :string, aliases: %w[-s], desc: "Filter by status (pending, in-progress, done, blocked)"
           option :tags, type: :string, aliases: %w[-T], desc: "Filter by tags (comma-separated, any match)"
           option :in, type: :string, aliases: %w[-i],
-            desc: "Folder (next [default: project + _overseer], all, maybe, archive, or an existing special folder)"
+            desc: "Folder (next [default: project + active _overseer], all, maybe, archive, or an existing special folder)"
           option :root, type: :string, aliases: %w[-r], desc: "Override root path (subpath within tasks root)"
           option :filter, type: :array, aliases: %w[-f], desc: "Filter by key:value (repeatable, supports key:a|b and key:!value)"
           option :sort, type: :string, aliases: %w[-S], desc: "Sort order: smart (default, dependency-aware), id, priority, created"

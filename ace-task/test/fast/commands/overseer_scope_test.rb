@@ -163,6 +163,77 @@ class OverseerScopeTest < AceTaskTestCase
     end
   end
 
+  def test_auto_archive_keeps_private_family_inside_overseer
+    parent_id = create_in_overseer("Management objective")
+    child_output = invoke("create", "Management subtask", "--child-of", parent_id)
+    child_id = child_output[/Created task ([0-9a-z]{3}\.t\.[0-9a-z]{3}\.[0-9a-z])/, 1]
+    refute_nil child_id
+
+    invoke("update", child_id, "--set", "status=done")
+
+    private_archive = File.join(File.realpath(@tmpdir), OVERSEER_DIR, "_archive")
+    parent_path = invoke("show", parent_id, "--path").strip
+    assert parent_path.start_with?(private_archive + File::SEPARATOR)
+    refute Dir.exist?(File.join(@tmpdir, ".ace-tasks", "_archive")),
+      "a private family must never be archived into the tracked task tree"
+
+    # Classification stays _overseer: the family is still a private task.
+    assert_equal "_overseer", Ace::Task::Organisms::TaskManager.new.show(parent_id).special_folder
+
+    # The archived family stays inside the gitignored private scope.
+    assert_git_ignored("#{OVERSEER_DIR}/_archive/")
+    status_output, = Open3.capture3("git", "status", "--porcelain", "--untracked-files=all", chdir: @tmpdir)
+    refute_includes status_output, "_overseer"
+
+    # The default shared view hides archived private work; the private view
+    # and `all` keep it reachable.
+    refute_includes invoke("list"), parent_id
+    assert_includes invoke("list", "--in", "_overseer"), parent_id
+    assert_includes invoke("list", "--in", "all"), parent_id
+
+    # Doctor accepts the privately archived family.
+    diagnosis = Ace::Task::Organisms::TaskDoctor.new(File.join(@tmpdir, ".ace-tasks")).run_diagnosis
+    assert diagnosis[:valid], diagnosis[:issues].inspect
+  end
+
+  def test_doctor_auto_fix_archives_standalone_private_task_inside_overseer
+    id = create_in_overseer("Standalone management task")
+    invoke("update", id, "--set", "status=done")
+
+    tasks_root = File.join(@tmpdir, ".ace-tasks")
+    doctor = Ace::Task::Organisms::TaskDoctor.new(tasks_root)
+    results = doctor.run_diagnosis
+    scope_warning = results[:issues].find { |issue| issue[:message].include?("not in _archive") }
+    refute_nil scope_warning, "a terminal private task outside its archive must be reported"
+
+    fixable = results[:issues].select { |issue| doctor.auto_fixable?(issue) }
+    fixer = Ace::Task::Molecules::TaskDoctorFixer.new(root_dir: tasks_root)
+    fixer.fix_issues(fixable)
+
+    private_archive = File.join(File.realpath(@tmpdir), OVERSEER_DIR, "_archive")
+    archived_path = invoke("show", id, "--path").strip
+    assert archived_path.start_with?(private_archive + File::SEPARATOR)
+    refute Dir.exist?(File.join(tasks_root, "_archive")),
+      "doctor must not move private tasks into the tracked archive"
+    assert_git_ignored("#{OVERSEER_DIR}/_archive/")
+  end
+
+  def test_explicit_archive_of_private_task_stays_inside_overseer
+    id = create_in_overseer("Standalone management task")
+    invoke("update", id, "--set", "status=done", "--move-to", "archive")
+
+    private_archive = File.join(File.realpath(@tmpdir), OVERSEER_DIR, "_archive")
+    archived_path = invoke("show", id, "--path").strip
+    assert archived_path.start_with?(private_archive + File::SEPARATOR)
+    refute Dir.exist?(File.join(@tmpdir, ".ace-tasks", "_archive")),
+      "an explicit private archive must not enter the tracked task tree"
+
+    # The archived private task is still a private management task.
+    assert_equal "_overseer", Ace::Task::Organisms::TaskManager.new.show(id).special_folder
+    refute_includes invoke("list"), id
+    assert_includes invoke("list", "--in", "_overseer"), id
+  end
+
   private
 
   def init_git_repo

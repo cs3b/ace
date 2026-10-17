@@ -2,6 +2,7 @@
 
 require "ace/support/cli"
 require "ace/support/items"
+require_relative "../../molecules/task_scope"
 
 module Ace
   module Task
@@ -134,16 +135,17 @@ module Ace
           # never be staged. Both the current location and the requested
           # destination/parent count as private.
           def reject_private_git_commit!(manager, ref:, move_to:, move_as_child_of:)
-            private_folder = Ace::Task::Molecules::TaskScanner::PRIVATE_FOLDER
+            scope = Ace::Task::Molecules::TaskScope
+            private_folder = scope::PRIVATE_FOLDER
             task = manager.show(ref)
-            private_target = task&.special_folder == private_folder
+            private_target = task && scope.private?(task.path, root_dir: manager.root_dir)
             if move_to
               private_target ||= Ace::Support::Items::Atoms::SpecialFolderDetector.normalize(move_to) ==
                 private_folder
             end
             if move_as_child_of && !%w[none self].include?(move_as_child_of)
               parent = manager.show(move_as_child_of)
-              private_target ||= parent&.special_folder == private_folder
+              private_target ||= parent && scope.private?(parent.path, root_dir: manager.root_dir)
             end
             return unless private_target
 

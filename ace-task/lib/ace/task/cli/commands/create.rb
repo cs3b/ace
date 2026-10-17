@@ -2,6 +2,7 @@
 
 require "ace/support/cli"
 require "fileutils"
+require_relative "../../molecules/task_scope"
 
 module Ace
   module Task
@@ -160,9 +161,11 @@ module Ace
           # never be staged. Placement via --in and new subtasks both inherit
           # the target folder from their parent.
           def reject_private_git_commit!(manager, in_folder:, child_of:)
-            private_folder = Ace::Task::Molecules::TaskScanner::PRIVATE_FOLDER
+            scope = Ace::Task::Molecules::TaskScope
+            private_folder = scope::PRIVATE_FOLDER
             private_target = if child_of
-              manager.show(child_of)&.special_folder == private_folder
+              parent = manager.show(child_of)
+              parent && scope.private?(parent.path, root_dir: manager.root_dir)
             elsif in_folder
               Ace::Support::Items::Atoms::SpecialFolderDetector.normalize(in_folder) == private_folder
             else

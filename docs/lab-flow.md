@@ -34,10 +34,18 @@ The private overseer task list is an ordinary special folder in the task tree:
 `ace-task` treats it like any other special folder.
 
 - `ace-task create "..." --in _overseer` creates the folder when missing.
-- `ace-task list --in _overseer` narrows the shared list to private tasks.
-- The default `ace-task list` is the shared view: project root tasks and
-  `_overseer` tasks together. `_maybe`, `_archive`, and other special folders
-  stay hidden unless `--in all` (or their folder) is used.
+- `ace-task list --in _overseer` narrows the shared list to private tasks,
+  including the private archive history.
+- The default `ace-task list` is the shared view: project root tasks and active
+  `_overseer` tasks together. Archived private tasks live in
+  `_overseer/_archive/` and stay hidden from the default view; `_maybe`,
+  `_archive`, and other project special folders stay hidden unless `--in all`
+  (or their folder) is used.
+- Auto-archive keeps a private family private: when the last child reaches a
+  terminal status, the family moves to `.ace-tasks/_overseer/_archive/<date>/`,
+  keeps its `_overseer` classification, and stays inside the gitignored tree.
+  The tracked `.ace-tasks/_archive/` never receives an `_overseer` family, and
+  `ace-task doctor --auto-fix` uses the same private archive destination.
 - `show`, `update`, subtasks, dependencies, `status`, and `plan` resolve
   `_overseer` refs the same way as any other task; `update --move-to overseer`
   and `--move-to next` move tasks in and out of the folder.
