@@ -3,7 +3,8 @@
 require "digest"
 require "json"
 require "open3"
-require_relative "protected_service_request"
+require_relative "../molecules/ordinary_merge_policy"
+require_relative "../atoms/ordinary_merge_input"
 require_relative "../molecules/ordinary_socket"
 require "ace/assign/atoms/fixed_merge_schemas"
 require "ace/assign/molecules/installed_journal_read"
@@ -41,13 +42,13 @@ module Ace
         STATUS_KEYS = %i[project assignment attempt queue_entry reference request input_digest
           mode format].freeze
 
-        ID = Molecules::ServicePolicy::ID
+        ID = Molecules::OrdinaryMergePolicy::ID
 
         def initialize(topology: nil, policy: nil, coordinator: nil, repo_root: nil, ingress: nil)
           @topology = topology || TopologyService.from_config
           @repo_root = repo_root || git_toplevel
           @coordinator = coordinator
-          @policy = policy || Molecules::ServicePolicy.new(
+          @policy = policy || Molecules::OrdinaryMergePolicy.new(
             Molecules::GrantResolver.trusted_document(Ace::Lab.authorization_path)
           )
           @ingress = ingress
@@ -269,7 +270,7 @@ module Ace
             raise Molecules::OrdinarySocket::OrdinaryUnavailable,
               "ordinary merge admission is not available in the installed configuration"
           end
-          receiver.merge("configuration_sha256" => Molecules::ServicePolicy.configuration_digest(@policy.document))
+          receiver.merge("configuration_sha256" => Molecules::OrdinaryMergePolicy.configuration_digest(@policy.document))
         end
 
         def resolve_selection!(project:, assignment:, attempt:, queue_entry:)
@@ -388,7 +389,7 @@ module Ace
         end
 
         def load_request_document(input, request_id)
-          Atoms::ServiceInput.load(input)
+          Atoms::OrdinaryMergeInput.load(input)
         rescue ArgumentError => e
           invalid!(e.message, request_id)
         end

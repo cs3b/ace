@@ -335,7 +335,7 @@ module Ace
           topology: Organisms::TopologyService.from_config(
             authorized_for_local(topology_config, ["atlas"])
           ),
-          policy: Molecules::ServicePolicy.new(YAML.safe_load_file(policy_path)),
+          policy: Molecules::OrdinaryMergePolicy.new(YAML.safe_load_file(policy_path)),
           coordinator: @coordinator, repo_root: @repo
         )
       end

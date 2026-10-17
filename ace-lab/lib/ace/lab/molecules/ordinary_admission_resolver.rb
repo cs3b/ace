@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require "time"
-require_relative "service_policy"
+require_relative "ordinary_merge_policy"
 
 module Ace
   module Lab
@@ -32,8 +32,8 @@ module Ace
       # re-validates the exact-request grant only; it never broadens
       # authorization beyond the resolved reference.
       class OrdinaryAdmissionResolver
-        BINDING_KEYS = ServicePolicy::ORDINARY_BINDING_KEYS.freeze
-        DECISION_KEYS = ServicePolicy::ORDINARY_AUTHORIZATION_KEYS.freeze
+        BINDING_KEYS = OrdinaryMergePolicy::ORDINARY_BINDING_KEYS.freeze
+        DECISION_KEYS = OrdinaryMergePolicy::ORDINARY_AUTHORIZATION_KEYS.freeze
         OPERATION = "merge"
 
         Decision = Struct.new(:authorized?, :decision, :code, :message, keyword_init: true)
@@ -49,7 +49,7 @@ module Ace
               "trusted policy document must contain an authorizations mapping"
           end
           @authorizations = policy_document.fetch("authorizations")
-          @configuration_digest = ServicePolicy.configuration_digest(policy_document)
+          @configuration_digest = OrdinaryMergePolicy.configuration_digest(policy_document)
           @path = path
           @proposal_resolver = proposal_resolver
           @caller_uid = caller_uid
@@ -62,7 +62,7 @@ module Ace
         # for an exact, unexpired, ordinary-merge-shaped match.
         def decide(reference, binding)
           authorizations = current_authorizations
-          unless reference.is_a?(String) && reference.match?(ServicePolicy::ID)
+          unless reference.is_a?(String) && reference.match?(OrdinaryMergePolicy::ID)
             return refuse("invalid authorization reference")
           end
           unless binding.is_a?(Hash) && binding.fetch("operation", nil) == OPERATION
@@ -114,7 +114,7 @@ module Ace
               "invalid lab configuration: trusted authorization refresh at #{@path} " \
               "did not yield an authorizations mapping"
           end
-          unless ServicePolicy.configuration_digest(document) == @configuration_digest
+          unless OrdinaryMergePolicy.configuration_digest(document) == @configuration_digest
             raise Ace::Lab::InvalidConfigurationError,
               "ordinary receiver configuration changed; restart with the installed configuration"
           end
