@@ -37,11 +37,12 @@ Worktree `.ace-wt/ei9-campaign-join` (branch codex/ei9-campaign-join) from main
 
 ## Current state: focused receipts GREEN; feat-group RED is pre-existing
 
-Executed on the joined tree (all green):
+Executed on the joined tree (all green; per-file counts corrected per the
+independent review — an earlier table row misattributed a 3-file aggregate):
 
 | File | Result |
 |---|---|
-| assign feat/candidate_transfer_test.rb | 41 tests / 594 assertions PASS (max_entries preflight + batch codec + campaign read views) |
+| assign feat/candidate_transfer_test.rb | 24 tests / 454 assertions PASS (max_entries preflight + batch codec + campaign read views) |
 | assign feat/authority/ordinary_reviews_test.rb | 9 / 98 PASS (union resolution incl. collection + candidate reference) |
 | assign feat/authority/command_execution_test.rb | 8 / 42 PASS |
 | lab molecules/command_policy_test.rb | 6 / 33 PASS |
@@ -70,3 +71,31 @@ review, per policy.
    review_context 128MiB prompt-cap decision (closed kind/purpose, owner-only
    selection, full prompt bytes + digests, no global limit raises).
 4. Independent review of the joined delta before any merge to main.
+
+## Independent review — VERDICT: APPROVE (2026-10-17)
+
+Independent adversarial review executed at HEAD f0be9eed8 (isolated git-archive
+extraction; report at .ace-local/review-campaign-join/review-report.md):
+16 commits = 3 spec + 13 picks, subjects and patch-ids reconciled against both
+origin worktrees (9/13 byte-exact; the 4 differing picks differ only at the
+four conflict sites); all 8 focused receipts re-run and passing with matching
+counts; all four conflict resolutions verified line-quoted; no duplicate
+definitions; lockfiles untouched; ace-review fast suite 1008/3330 PASS at HEAD.
+
+Findings disposition:
+1. MEDIUM — scope statement corrected: picks e7ed2210a and a4e0da1a8 DO carry
+   five ace-review files (+58/-4: reserve_execution replay request-id in
+   campaign_manager.rb, request_id validation in campaign_store.rb, docs,
+   CHANGELOG, tests), byte-identical to Line A's independently reviewed HEAD.
+2. MEDIUM operational — the worktree transiently held composition-port WIP
+   during review; the WIP is committed on branch
+   codex/ei9-campaign-composition-join (05e8aa967) and the join branch
+   worktree is verified clean (`git status --porcelain` empty at f0be9eed8).
+   Lesson recorded: never switch a reviewed worktree's branch mid-review.
+3. LOW — receipt table corrected above (24/454 per-file; 41/594 was a 3-file
+   aggregate invocation).
+
+Merge gate status: independent verdict APPROVE retained. Remaining before
+merge to main: the mandatory full default suite on this branch, then merge
+(no republish of existing versions; version bumps/floors only at the next
+coordinated release).
