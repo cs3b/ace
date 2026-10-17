@@ -35,8 +35,9 @@ class OverseerWorkflowContractTest < AceOverseerTestCase
     assert_includes workflow_content, "Never fetch proof refs into shared"
   end
 
-  def test_patch_range_proof_requires_independently_recorded_baseline
-    assert_includes workflow_content, "independently recorded base"
+  def test_patch_range_proof_requires_the_git_derived_fork_point
+    assert_includes workflow_content, "Git-derived fork point"
+    assert_includes workflow_content, "newer than the fork point could hide candidate work"
     assert_includes workflow_content, "must be preserved on a surviving accepted"
     assert_includes workflow_content, "Empty or caller-truncated ranges are not evidence"
   end

@@ -273,4 +273,66 @@ class PruneSafetyCheckerTest < AceOverseerTestCase
     refute candidate.safe_to_prune?
     assert_includes candidate.reasons.join(" "), "no surviving accepted base"
   end
+  # Regression (PR #379 / Astra P2-3): the real PruneSafetyChecker path must
+  # authorize a --preservation manifest whose work was squash-landed into a
+  # destination that also carries unrelated content. The creation baseline is
+  # derived from Git (the branch fork point); no attempt/journal record exists.
+  def test_manifest_squash_landing_with_true_fork_point_preserves_through_prune_checker
+    source = PruneGitFixtures::Repo.new(File.join(Dir.mktmpdir("prune-manifest"), "source")).init
+    source.write("base.txt", "base\n")
+    source.commit("base")
+    fork_point = source.rev("main")
+
+    worktree = source.add_worktree(File.join(source.path, "..", "wt-task"), "task-work")
+    worktree.write("feature.txt", "1\n")
+    worktree.commit("task work")
+
+    # Advance the accepted base after branch creation: the honest fork point
+    # remains the branch point, never the new main tip.
+    source.checkout("main")
+    source.write("later.txt", "later\n")
+    source.commit("accepted base advanced")
+
+    successor = source.clone_to(File.join(source.path, "..", "successor"))
+    successor.checkout("main")
+    successor.write("successor-only.txt", "successor\n")
+    successor.commit("successor-only content")
+    destination_base = successor.rev("main")
+    successor.checkout("landing", create: true)
+    successor.git!("cherry-pick", "--no-commit", worktree.rev("HEAD"))
+    successor.git!("commit", "-q", "-m", "squashed task work")
+    destination_head = successor.rev("refs/heads/landing")
+
+    record = Ace::Overseer::Molecules::PreservationManifest::Record.new(
+      worktree_path: File.realpath(worktree.path),
+      source_repo: source.path,
+      source_base: fork_point,
+      source_head: worktree.rev("HEAD"),
+      destination_repo: successor.path,
+      destination_base: destination_base,
+      destination_head: destination_head,
+      destination_branch: "refs/heads/landing",
+      resolved_source_base: fork_point,
+      resolved_source_head: worktree.rev("HEAD"),
+      resolved_destination_base: destination_base,
+      resolved_destination_head: destination_head,
+      resolved_destination_branch_tip: successor.rev("refs/heads/landing")
+    )
+
+    checker = Ace::Overseer::Molecules::PruneSafetyChecker.new(
+      context_collector: FakeCollector.new(build_context(worktree_path: worktree.path)),
+      task_loader_factory: -> { FakeTaskManager.new({status: "done"}) },
+      preservation_checker: Ace::Overseer::Molecules::GitPreservationChecker.new
+    )
+
+    candidate = checker.check(
+      worktree_path: worktree.path, task_ref: "230", manifest_record: record,
+      accepted_base: accepted_base_for(source)
+    )
+
+    assert candidate.safe_to_prune?, "expected safe candidate, reasons: #{candidate.reasons.inspect}"
+    assert candidate.preserved
+    assert_equal [], candidate.reasons
+  end
+
 end

@@ -86,8 +86,7 @@ class GitPreservationCheckerTest < AceOverseerTestCase
     proof = @checker.proof(
       worktree_path: worktree.path,
       accepted_base: accepted_base_for(source),
-      manifest_record: record,
-      recorded_base: record.resolved_source_base
+      manifest_record: record
     )
 
     assert_predicate proof, :preserved?
@@ -109,8 +108,7 @@ class GitPreservationCheckerTest < AceOverseerTestCase
     proof = @checker.proof(
       worktree_path: worktree.path,
       accepted_base: accepted_base_for(source),
-      manifest_record: record,
-      recorded_base: record.resolved_source_base
+      manifest_record: record
     )
 
     assert_predicate proof, :preserved?
@@ -131,8 +129,7 @@ class GitPreservationCheckerTest < AceOverseerTestCase
     proof = @checker.proof(
       worktree_path: worktree.path,
       accepted_base: accepted_base_for(source),
-      manifest_record: record,
-      recorded_base: record.resolved_source_base
+      manifest_record: record
     )
 
     refute_predicate proof, :preserved?
@@ -154,8 +151,7 @@ class GitPreservationCheckerTest < AceOverseerTestCase
     proof = @checker.proof(
       worktree_path: worktree.path,
       accepted_base: accepted_base_for(source),
-      manifest_record: record,
-      recorded_base: record.resolved_source_base
+      manifest_record: record
     )
 
     refute_predicate proof, :preserved?
@@ -177,8 +173,7 @@ class GitPreservationCheckerTest < AceOverseerTestCase
     proof = @checker.proof(
       worktree_path: worktree.path,
       accepted_base: accepted_base_for(source),
-      manifest_record: record,
-      recorded_base: record.resolved_source_base
+      manifest_record: record
     )
 
     refute_predicate proof, :preserved?
@@ -202,72 +197,89 @@ class GitPreservationCheckerTest < AceOverseerTestCase
     proof = @checker.proof(
       worktree_path: worktree.path,
       accepted_base: accepted_base_for(source),
-      manifest_record: record,
-      recorded_base: record.resolved_source_base
+      manifest_record: record
     )
 
     refute_predicate proof, :preserved?
     assert_includes proof.reason, "is not the candidate's common repository"
   end
 
-  def test_missing_independent_baseline_disables_patch_range_proof
+  def test_declared_source_base_newer_than_fork_point_blocks_patch_range_proof
     source, worktree = build_source
     commit_work(worktree, {"feature.txt" => "1\n"})
+    worktree.write("late.txt", "2\n")
+    worktree.commit("second task commit")
+    # A declared base between the fork point and the head could exclude the
+    # second candidate commit from the range; only the true fork point may
+    # authorize the patch-range proof.
+    declared_inner_base = worktree.rev("HEAD~1")
 
     successor = build_successor(source)
+    successor.git!("cherry-pick", worktree.rev("HEAD~1"))
     successor.git!("cherry-pick", worktree.rev("HEAD"))
 
     record = build_record(source, worktree, successor,
-      destination_base: successor.rev("main"), destination_head: successor.rev("HEAD"))
+      destination_base: successor.rev("main"), destination_head: successor.rev("HEAD"),
+      source_base: declared_inner_base)
 
     proof = @checker.proof(
       worktree_path: worktree.path,
       accepted_base: accepted_base_for(source),
-      manifest_record: record,
-      recorded_base: nil
+      manifest_record: record
     )
 
     refute_predicate proof, :preserved?
-    assert_includes proof.reason, "no independently recorded creation baseline"
+    assert_includes proof.reason, "not the Git-derived fork point"
+    assert_includes proof.reason, "hide candidate work"
   end
 
-  def test_baseline_mismatch_blocks_patch_range_proof
+  # Regression (PR #379 / Astra P2-3): the accepted base advanced after the
+  # candidate branch was created. The prerecorded attempt baseline is gone, so
+  # the proof must derive the fork point from Git and accept the declared true
+  # fork point even though the current accepted base tip is newer.
+  def test_advanced_accepted_base_with_true_fork_point_preserves_by_content_transition
     source, worktree = build_source
+    commit_work(worktree, {"feature.txt" => "1\n"})
+    fork_point = worktree.rev("HEAD~1")
+
     source.checkout("main")
     source.write("distractor.txt", "d\n")
-    source.commit("distractor")
-    commit_work(worktree, {"feature.txt" => "1\n"})
+    source.commit("distractor after branch creation")
+    refute_equal fork_point, source.rev("main")
 
     successor = build_successor(source)
     successor.git!("cherry-pick", worktree.rev("HEAD"))
 
     record = build_record(source, worktree, successor,
-      destination_base: successor.rev("main"), destination_head: successor.rev("HEAD"))
+      destination_base: successor.rev("main"), destination_head: successor.rev("HEAD"),
+      source_base: fork_point)
 
     proof = @checker.proof(
       worktree_path: worktree.path,
       accepted_base: accepted_base_for(source),
-      manifest_record: record,
-      recorded_base: source.rev("main")
+      manifest_record: record
     )
 
-    refute_predicate proof, :preserved?
-    assert_includes proof.reason, "does not match the recorded creation baseline"
+    assert_predicate proof, :preserved?
+    assert_equal :content_transition, proof.method
   end
 
-  def test_unpreserved_baseline_blocks_even_with_matching_content
+  # A declared source_base off the honest fork point blocks even when the
+  # destination content matches: it could exclude unpreserved candidate work.
+  def test_declared_baseline_off_the_fork_point_blocks_even_with_matching_content
     source = PruneGitFixtures::Repo.new(File.join(@tmp, "source")).init
     source.write("base.txt", "base\n")
     base = source.commit("base")
 
-    # The baseline carries unique committed work and is NOT on main.
+    # The declared baseline carries unique committed work and is NOT on main.
     source.branch("baseline-line", base)
     baseline_repo = source.add_worktree(File.join(@tmp, "wt-baseline"), nil, "baseline-line")
     baseline_repo.write("unique.txt", "unique\n")
-    baseline = baseline_repo.commit("baseline with unique work")
+    declared_base = baseline_repo.commit("baseline with unique work")
 
-    # The task branches from that baseline, so its range starts there.
-    worktree = source.add_worktree(File.join(@tmp, "wt-task"), "task-work", baseline)
+    # The task branches from that commit, so the honest fork point vs main is
+    # still `base`; declaring the inner baseline would hide the unique work.
+    worktree = source.add_worktree(File.join(@tmp, "wt-task"), "task-work", declared_base)
     commit_work(worktree, {"feature.txt" => "1\n"})
 
     successor = source.clone_to(File.join(@tmp, "successor"))
@@ -277,18 +289,17 @@ class GitPreservationCheckerTest < AceOverseerTestCase
 
     record = build_record(source, worktree, successor,
       destination_base: successor.rev("main"), destination_head: successor.rev("HEAD"),
-      source_base: baseline)
+      source_base: declared_base)
 
     proof = @checker.proof(
       worktree_path: worktree.path,
       accepted_base: {branch: "main", head: source.rev("main")},
-      manifest_record: record,
-      recorded_base: baseline
+      manifest_record: record
     )
 
     refute_predicate proof, :preserved?
-    assert_includes proof.reason, "baseline"
-    assert_includes proof.reason, "not preserved"
+    assert_includes proof.reason, "not the Git-derived fork point"
+    assert_includes proof.reason, "hide candidate work"
   end
 
   def test_empty_range_identity_is_not_proof
@@ -307,8 +318,7 @@ class GitPreservationCheckerTest < AceOverseerTestCase
     proof = @checker.proof(
       worktree_path: worktree.path,
       accepted_base: accepted_base_for(source),
-      manifest_record: record,
-      recorded_base: head
+      manifest_record: record
     )
 
     refute_predicate proof, :preserved?
@@ -339,7 +349,6 @@ def test_squash_with_unrelated_destination_content_preserves_by_transition
     worktree_path: worktree.path,
     accepted_base: accepted_base_for(source),
     manifest_record: record,
-    recorded_base: record.resolved_source_base,
     candidate_branch: "task-work"
   )
 
@@ -364,7 +373,6 @@ def test_destination_on_the_candidate_branch_is_rejected
     worktree_path: worktree.path,
     accepted_base: {branch: "main", head: source.rev("main")},
     manifest_record: record,
-    recorded_base: record.resolved_source_base,
     candidate_branch: "task-work"
   )
 
@@ -389,7 +397,6 @@ def test_distinct_destination_branch_at_same_tip_is_accepted
     worktree_path: worktree.path,
     accepted_base: {branch: "main", head: source.rev("main")},
     manifest_record: record,
-    recorded_base: record.resolved_source_base,
     candidate_branch: "task-work"
   )
 
@@ -411,7 +418,6 @@ def test_commit_sha_destination_branch_is_rejected
     worktree_path: worktree.path,
     accepted_base: accepted_base_for(source),
     manifest_record: record,
-    recorded_base: record.resolved_source_base,
     candidate_branch: "task-work"
   )
 
@@ -437,8 +443,7 @@ end
     proof = @checker.proof(
       worktree_path: worktree.path,
       accepted_base: accepted_base_for(source),
-      manifest_record: record,
-      recorded_base: record.resolved_source_base
+      manifest_record: record
     )
     assert_predicate proof, :preserved?
 
@@ -459,8 +464,7 @@ end
     proof = @checker.proof(
       worktree_path: worktree.path,
       accepted_base: accepted_base_for(source),
-      manifest_record: record,
-      recorded_base: record.resolved_source_base
+      manifest_record: record
     )
     refute_predicate proof, :preserved?
     assert_includes proof.reason, "differs from the source transition"
@@ -481,8 +485,7 @@ end
     proof = @checker.proof(
       worktree_path: worktree.path,
       accepted_base: accepted_base_for(source),
-      manifest_record: record,
-      recorded_base: record.resolved_source_base
+      manifest_record: record
     )
 
     assert_predicate proof, :preserved?
