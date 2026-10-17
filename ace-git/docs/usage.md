@@ -86,6 +86,7 @@ ace-git diff --raw
 ```
 
 **Options:**
+
 - `--format, -f` - Output format: `diff` (default), `summary`, `grouped-stats`
 - `--since, -s` - Changes since date/duration (e.g., "7d", "1 week ago")
 - `--paths, -p` - Include only these glob patterns
@@ -118,12 +119,14 @@ ace-git status --with-diff
 ```
 
 **Options:**
+
 - `--format, -f` - Output format: `markdown` (default), `json`
 - `--no-pr, -n` - Skip PR metadata and activity lookups (faster)
 - `--commits N` - Number of recent commits to show (default: 3 from config)
 - `--with-diff` - Include PR diff in output
 
 **Output includes:**
+
 - Current branch name with git status -sb output
 - Remote tracking status (ahead/behind)
 - Detected task pattern (from branch name)
@@ -153,6 +156,7 @@ ace-git branch --format json
 ```
 
 **Options:**
+
 - `--format, -f` - Output format: `text` (default), `json`
 
 ### `ace-git pr`
@@ -191,16 +195,24 @@ ace-git pr merge 25 --expected-head SHA --method squash
 ```
 
 **Behavior guarantees:**
+
 - Create is idempotent: one exact open base/head match returns the existing
+
   PR (`idempotency: existing`); multiple matches are a conflict.
+
 - `merge` requires the provider to enforce `--expected-head` atomically;
+
   providers without that capability return an unsupported-capability failure
   instead of racing.
+
 - A create request whose outcome is unknown (transport failure after send)
+
   reports an unknown outcome with the exact identity to reconcile; it never
   retries automatically.
+
 - With `--format json`, a failed operation prints the classified error as
-  JSON on stdout (`{"error": {"category": ..., "message": ...}}` — e.g.
+
+  JSON on stdout (`{"error": {"category": ..., "message": ...}}` -- e.g.
   `expected_head_conflict`, `unsupported_capability`, `unknown_outcome`)
   before the nonzero exit; text mode explains the same failure on stderr.
 
@@ -256,9 +268,10 @@ diff:
 | `grouped_stats.layers` | Array | `["lib","test","handbook"]` | Preferred layer grouping order |
 | `grouped_stats.collapse_above` | Integer | `5` | Collapse markdown groups above this file count |
 | `grouped_stats.show_full_tree` | String | `collapsible` | Tree rendering strategy hint |
-| `grouped_stats.dotfile_groups` | Array | `[".ace-task",".ace"]` | Dot-directories to prioritize in grouping |
+| `grouped_stats.dotfile_groups` | Array | `[".ace-tasks",".ace"]` | Dot-directories to prioritize in grouping |
 
 **Default exclude_patterns** (from `.ace-defaults/git/config.yml`):
+
 - Lock files: `**/*.lock`, `package-lock.json`, `yarn.lock`, `Gemfile.lock`
 - Vendored deps: `vendor/**/*`, `node_modules/**/*`
 - Build artifacts: `coverage/**/*`, `dist/**/*`, `build/**/*`, `.cache/**/*`
@@ -289,30 +302,24 @@ Note: `test/**/*` and `spec/**/*` are NOT excluded by default - test changes are
 
 ## Provider Packages
 
-`ace-git service create`, `service update`, `service ready` and `service merge`
-are fixed protected receiver handlers. It accepts no
-options; the receiver supplies its claimed JSON envelope on stdin and its
-private materialized candidate directory as the working directory. The handler
-checks the exact input digest, executor, candidate and forge provenance, calls
-the selected neutral operation once, and emits the existing bounded evidence
-response only after verifying the exact PR outcome (and merge commit for merge). An unverified or lost
-outcome emits no success and never retries. This command does not authorize a
-operation or replace the protected worker's canonical receipt acceptance.
-Create/update use an exact `{target,delivery,title,body}` input and remain draft;
-ready uses `{target,delivery}`, merge uses `{target,delivery,method}`. Create targets
-the base repository; all other operations target the exact PR URL. The original
-title remains part of the accepted input; the provider owns its draft encoding
-(Forgejo's WIP prefix). Updating a draft preserves that encoding. Each handler
-publishes the fixed `pr-result.txt` evidence only after its observed content,
-identity, head and draft/merge outcome agree.
+> **Planned (L5.5):** the forge-neutral worker/integrator role rules and the
+> attempt-bound PR delivery workflow are not available yet. The old protected
+> `service create|update|ready|merge` receiver handlers are not part of the
+> file-based flow and are not a requirement for opening or reviewing a PR.
+>
+> Use the ordinary `ace-git pr` commands documented above for now; they create
+> or reconcile a PR for the pushed branch.
 
 `ace-git` is forge-neutral. It defines the server registry (`Ace::Git::ServerRegistry`),
 the provider contract (`Ace::Git::Providers::Base`), and normalized evidence types;
 provider packages own all forge CLI behavior:
 
 - **ace-git-github** - GitHub behavior via the `gh` CLI (PR lookups, diffs, issue
+
   tracking operations). Registers under the `github` provider type.
+
 - **ace-git-forgejo** - Forgejo behavior via the `fj` CLI. Registers under the
+
   `forgejo` provider type.
 
 Both providers implement the same issue-tracking contract (issue lookup, comment
