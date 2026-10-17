@@ -649,3 +649,21 @@ codex/ei9-campaign-composition-join (05e8aa967; ported receipts 10/120, 10/45,
 ingestion, cancellation, historical wiring, review_context implementation,
 comprehensive tests and actual Pi review — still open. Local main is 20
 commits ahead of origin; the push remains with the Captain.
+
+### ei9.8 composition joins on the branch (pre-review state)
+
+Branch codex/ei9-campaign-composition-join (rebased on merged main) carries the
+completed composition joins with focused receipts, in order: the campaign merge
+gate (an ordinary direct review can no longer bypass CampaignManager
+acceptance); the review_context large-prompt ingress under the Captain-approved
+closed-kind design; round ingestion consuming review-context results with exact
+canonical byte reuse; the public retained driver (OrdinaryCampaignRunner:
+replayed begin never dispatches, boundary-bound single dispatch, failure submits
+nothing); cancellation resolution (revoked selections settle as transient
+unavailable failures under the existing retry budget); and canonical evidence
+backstops for check, review-session and approval proofs. The adversarial suite
+covers substitution, corruption, revocation, replay, conflict and boundary
+drift paths. Remaining before merge: the actual configured Pi independent
+review (which also supplies the executed head-assessment proofs — the
+assessment executor is runtime reviewer behavior, sequenced with that phase),
+the full default suite on the branch, and the merged delivery-map row update.
