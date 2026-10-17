@@ -68,3 +68,64 @@ class WorktreeInfoTest < Minitest::Test
     refute info2.task_associated?
   end
 end
+
+class WorktreeInfoEnrichmentTest < Minitest::Test
+  WorktreeInfo = Ace::Git::Worktree::Models::WorktreeInfo
+
+  def build(**overrides)
+    WorktreeInfo.new(path: "/p/wt", commit: "abc", branch: "main", **overrides)
+  end
+
+  def test_defaults_preserve_existing_shape
+    info = build
+    hash = info.to_h
+
+    assert_nil hash[:task_id_source]
+    assert_equal [], hash[:task_ids]
+    assert_nil hash[:active_within_window]
+    assert_nil hash[:last_commit]
+    assert_nil hash[:uncommitted]
+    assert_nil hash[:pr]
+    refute info.probe_failed?
+  end
+
+  def test_json_includes_existing_and_enrichment_keys
+    info = build.with_enrichment(
+      task_id: "k9y",
+      task_id_source: "task_files",
+      task_ids: %w[k9y xza],
+      active_within_window: true,
+      last_commit: {sha: "abc1234", age_hours: 2.1, committed_at: "2026-10-17T11:20:00Z", subject: "fix"},
+      uncommitted: {staged: 2, unstaged: 4, untracked: 1, total: 7},
+      pr: {number: 142, state: "open", draft: false, matched_by: "branch"}
+    )
+    hash = info.to_h
+
+    assert_equal "/p/wt", hash[:path]
+    assert_equal "main", hash[:branch]
+    assert_equal "abc", hash[:commit]
+    assert_equal "k9y", hash[:task_id]
+    assert_equal "task_files", hash[:task_id_source]
+    assert_equal %w[k9y xza], hash[:task_ids]
+    assert_equal true, hash[:active_within_window]
+    assert_equal 142, hash[:pr][:number]
+    refute hash.key?(:probe_error)
+  end
+
+  def test_with_enrichment_returns_new_instance
+    info = build
+    enriched = info.with_enrichment(task_id: "k9y", task_id_source: "symlink")
+
+    assert_nil info.task_id
+    assert_equal "k9y", enriched.task_id
+    assert_equal "symlink", enriched.task_id_source
+    assert_equal "/p/wt", enriched.path
+  end
+
+  def test_probe_failure_flag
+    info = build.with_enrichment(probe_error: true)
+
+    assert info.probe_failed?
+    assert_nil info.last_commit
+  end
+end

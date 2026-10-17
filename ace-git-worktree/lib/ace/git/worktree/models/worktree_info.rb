@@ -22,7 +22,9 @@ module Ace
         #     task_id: "081"
         #   )
         class WorktreeInfo
-          attr_reader :path, :branch, :commit, :task_id, :bare, :detached, :created_at
+          attr_reader :path, :branch, :commit, :task_id, :bare, :detached, :created_at,
+            :task_id_source, :task_ids, :active_within_window, :last_commit,
+            :uncommitted, :pr, :probe_error
 
           # Initialize a new WorktreeInfo
           #
@@ -33,7 +35,17 @@ module Ace
           # @param bare [Boolean] Whether this is a bare worktree
           # @param detached [Boolean] Whether worktree is in detached HEAD state
           # @param created_at [Time, nil] When the worktree was created
-          def initialize(path:, commit:, branch: nil, task_id: nil, bare: false, detached: false, created_at: nil)
+          # @param task_id_source [String, nil] How the task id was resolved
+          #   (metadata|symlink|path|branch|task_files)
+          # @param task_ids [Array<String>] All inferred candidate task ids
+          # @param active_within_window [Boolean, nil] activity classification
+          # @param last_commit [Hash, nil] `{sha:, age_hours:, committed_at:, subject:}`
+          # @param uncommitted [Hash, nil] `{staged:, unstaged:, untracked:, total:}`
+          # @param pr [Hash, nil] `{number:, state:, draft:, matched_by:}`
+          # @param probe_error [Boolean] whether the per-worktree probe failed
+          def initialize(path:, commit:, branch: nil, task_id: nil, bare: false, detached: false, created_at: nil,
+            task_id_source: nil, task_ids: [], active_within_window: nil, last_commit: nil,
+            uncommitted: nil, pr: nil, probe_error: false)
             @path = path
             @branch = branch
             @commit = commit
@@ -41,6 +53,37 @@ module Ace
             @bare = bare
             @detached = detached
             @created_at = created_at
+            @task_id_source = task_id_source
+            @task_ids = Array(task_ids).freeze
+            @active_within_window = active_within_window
+            @last_commit = last_commit
+            @uncommitted = uncommitted
+            @pr = pr
+            @probe_error = probe_error
+          end
+
+          # Return a copy with enrichment fields applied.
+          #
+          # @param fields [Hash] enrichment overrides
+          # @return [WorktreeInfo]
+          def with_enrichment(**fields)
+            self.class.new(
+              path: @path, branch: @branch, commit: @commit, bare: @bare, detached: @detached,
+              created_at: @created_at,
+              task_id: fields.fetch(:task_id, @task_id),
+              task_id_source: fields.fetch(:task_id_source, @task_id_source),
+              task_ids: fields.fetch(:task_ids, @task_ids),
+              active_within_window: fields.fetch(:active_within_window, @active_within_window),
+              last_commit: fields.fetch(:last_commit, @last_commit),
+              uncommitted: fields.fetch(:uncommitted, @uncommitted),
+              pr: fields.fetch(:pr, @pr),
+              probe_error: fields.fetch(:probe_error, @probe_error)
+            )
+          end
+
+          # @return [Boolean] true when the per-worktree probe could not run
+          def probe_failed?
+            @probe_error
           end
 
           # Check if the worktree is associated with a task
@@ -231,13 +274,19 @@ module Ace
               branch: @branch,
               commit: @commit,
               task_id: @task_id,
+              task_id_source: @task_id_source,
+              task_ids: @task_ids,
               bare: @bare,
               detached: @detached,
               created_at: @created_at,
               usable: usable?,
               task_associated: task_associated?,
               exists: exists?,
-              empty: empty?
+              empty: empty?,
+              active_within_window: @active_within_window,
+              last_commit: @last_commit,
+              uncommitted: @uncommitted,
+              pr: @pr
             }
           end
 
