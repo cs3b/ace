@@ -279,3 +279,22 @@ review records), each validating the provided receipt bytes against the
 canonical journal at the bound head — material/uncertain changes require the
 real independent delta review, and the original reviewed head stays separate
 from the accepted head.
+
+### Historical check-evidence wiring (first half) COMPLETE
+
+CommandExecution gains canonical_check_reference!(execution_id:, head:) — the
+canonical backstop for campaign check proofs: the referenced execution must
+exist in the ordinary journal as a purpose-test command that exited zero with
+the recorded source head (historical references validate against real records
+without requiring the current candidate binding). The Lab authority
+composition wires the campaign owner's check_evidence dependency: the
+campaign-repo receipt read (CampaignExecutionEvidence#check, unchanged
+semantics incl. historical mode) now ALSO backstops canonically through the
+installed command owner. Review/approval/head-assessment readers stay
+fail-closed until their canonical joins land. Receipts: command_execution
+9 tests / 49 assertions PASS (passing proof + wrong-head/unknown-id/exit-1/
+non-test refusals); owner admission 10/45 PASS.
+
+Remaining .8 joins: review/approval/head-assessment canonical readers,
+CLI/workflow surface exposure of the runner, comprehensive public-path tests +
+actual Pi independent review, branch re-verification and merge.
