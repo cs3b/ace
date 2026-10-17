@@ -378,3 +378,33 @@ untouched by the composition changes). The same test file passes cleanly in
 isolation immediately after (5 tests / 62 assertions PASS). Branch verdict:
 effectively green pending the Pi review; assign 1086/1086 and review
 1008/1008 fully green.
+
+### Configured Pi independent review — round 18
+
+ace-review (review-default) on diff:ac80393b4..HEAD produced 17 findings
+(session .ace-local/review/sessions/review-8xgmz0): 3 high, 6 medium, 8 low.
+All highs and mediums-actionable were verified VALID and FIXED:
+
+- HIGH runner begin used the REVIEWER chain — begin mutates the producer
+  chain; the runner now takes producer:{assignment_id, attempt_id,
+  expected_generation} with the reviewer pane/head, and the tightened test
+  asserts both chains.
+- HIGH binding_for keys mismatched prepared_campaign_binding's exact schema —
+  the binding now carries base/contract_identity/scope_identity/subject from
+  caller-supplied campaign inputs; no session_binding key (schema forbids it).
+- HIGH the boundary fetched the schema-forbidden session_binding — the
+  expected campaign identity (campaign/round/scope/head/base) is
+  closure-captured and compared against the validated binding.
+- MEDIUM a withheld (non-yielding) boundary crashed the driver — invocation is
+  tracked; clean {dispatched: false, error} instead.
+- MEDIUM the receipt hardcoded an approved verdict — the executed verdict is
+  checked; non-approved verdicts never submit.
+- MEDIUM silent artifact-count failure — the runner preflights the count with
+  an actionable bound-naming error.
+
+The test fakes now ENFORCE the server/organism schemas (the root cause of all
+three highs: loose fakes hid seam drift). Remaining findings: 8 sequenced
+lows + 2 tracked items (workflow exposure, provenance refactor). The
+independent adversarial subagent review of the same delta is running; its
+verdict will be appended. Receipts: runner 4 tests / 24 assertions PASS
+post-fix.
