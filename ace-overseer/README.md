@@ -1,7 +1,7 @@
 <div align="center">
   <h1> ACE - Overseer </h1>
 
-  One command surface for local tmux work and isolated Lab workers.
+  Local task worktrees, assignments, and cleanup in one command surface.
 
   <img src="../docs/brand/AgenticCodingEnvironment.Logo.XS.jpg" alt="ACE Logo" width="480">
   <br><br>
@@ -14,69 +14,78 @@
 
 > Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
 
+> **State owner:** the private, untracked overseer list in
+> `.ace-local/overseer/tasks/`, managed only through
+> `ace-task --in _overseer …`. Task worktrees live in `.ace-wt/`; assignment
+> plans and steps stay in `.ace-local/assign/` (ace-assign) and are never
+> copied into the overseer list. The canonical flow is
+> [docs/lab-flow.md](../docs/lab-flow.md).
+
 [Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
 
-![ace-overseer demo](docs/demo/ace-overseer-getting-started.gif)
-
-Starting task work means creating a worktree, opening a terminal window, and preparing an assignment - three manual steps before you even begin coding. ace-overseer collapses that into a single command, tracks what is running where, and cleans up finished worktrees so nothing lingers. You can jump straight to a focused worktree any time with a single invocation.
-
-Explicit `--project` selects provisioned protected Assign execution. Omitting it
-preserves ordinary local worktree/assignment mode. Runtime selects a terminal
-backend; it cannot select credentials or execution authority.
+Starting task work means creating a worktree, opening a terminal, and preparing
+an assignment. ace-overseer collapses that into one command, shows what runs
+where, and cleans up finished worktrees so nothing lingers.
 
 ## How It Works
 
-1. Resolve task refs and create a scoped worktree.
-2. Route assignment creation through `ace-assign create --task ...`, which expands the assignment preset into concrete steps under `.ace-local/assign/`, then open a dedicated terminal window mapped to that worktree.
-3. Instruct the agent inside the terminal window to act as an orchestrator and drive the assignment step-by-step.
+1. Resolve task refs and create a scoped worktree under `.ace-wt/`.
+2. Prepare an assignment through `ace-assign create --task ...`; the plan and
+   its steps live in `.ace-local/assign/`.
+3. Open a terminal (tmux or Herdr) mapped to the worktree and point the agent
+   at `/as-assign-drive`.
+
+tmux and Herdr are transports only. They do not own task, assignment, or HITL
+state. The old protected execution path (`--project/--agent`, protected
+status/review/stop/prompt/prune) is removed (L1) and is not a normal path.
 
 ## Use Cases
 
-**Kick off task work** - provisions an isolated worktree via [ace-git-worktree](../ace-git-worktree), opens a dedicated [ace-tmux](../ace-tmux) window, and prepares an [ace-assign](../ace-assign) assignment - all in one shot. Supports regular tasks and subtask trees. Draft tasks are blocked until reviewed. Use `/as-overseer` or from the CLI:
+**Kick off task work** - provisions an isolated worktree via
+[ace-git-worktree](../ace-git-worktree), opens a dedicated terminal, and
+prepares an [ace-assign](../ace-assign) assignment. Draft tasks are blocked
+until reviewed.
 
 ```bash
 ace-overseer work-on --task 8q4 --preset work-on-task
 ```
 
-**Bundle related tasks** - pass multiple task refs or a task with subtasks and they all land in a single worktree. The refs are expanded and forwarded to the assignment preset, so every step for every task is prepared in one assignment. Drive through them with `/as-assign-drive`.
+**Bundle related tasks** - pass multiple task refs or a task with subtasks and
+they land in a single worktree. The refs are expanded and forwarded to the
+assignment preset, so every step is prepared in one assignment.
 
-**Monitor active work** - [`ace-overseer status`](docs/usage.md#ace-overseer-status) shows a dashboard of all task worktrees with assignment progress, git state, and PR links. Add `--watch` for a live-refreshing view that updates assignments every 15 seconds and git status every 5 minutes.
+**Monitor active work** - `ace-overseer status` shows task worktrees with
+assignment progress and git state. Add `--watch` for a live-refreshing view.
 
 ```bash
 ace-overseer status --watch
 ```
 
-**Start protected work** - prepare one reviewed leaf under the explicit project,
-retain exact inputs, and keep its original foreground launcher:
+**Clean up finished work** - `ace-overseer prune` removes completed worktrees
+safely after assignment completion, task completion, and a clean working tree.
+Use `--dry-run` to preview candidates, `--yes` to skip confirmation, or
+`--assignment` to prune a single assignment.
 
-```bash
-ace-overseer work-on --task TASK --project ace --agent builder --runtime herdr
-ace-overseer status --project ace --agent builder --format json
-ace-overseer work-on --recover-request .ace-local/overseer/launch-requests/INVOCATION.json
-```
+**Customize the workflow** - the assignment preset controls which steps run and
+in what order; each step references a workflow instruction that defines how it
+executes. Browse [available presets](../ace-assign/.ace-defaults/assign/presets/)
+or create your own.
 
-The start command prints and flushes retained request, definition and bundle
-identity even under `--quiet`. It observes the same original child through
-uncertainty; use independent status/steering invocations while that foreground
-owner remains alive. Recovery is read-only and never rebuilds inputs or relaunches.
-Domain installation supplies credentials and fixed entries; ACE's existing
-Assign authority owns admission, execution evidence and progress.
+## Planned waves
 
-**Clean up finished work** - [`ace-overseer prune`](docs/usage.md#ace-overseer-prune) removes completed worktrees safely. It checks three conditions before removing: assignment completed, task marked done, and git working tree clean. Use `--dry-run` to preview what would be pruned, `--force` for worktrees that fail safety checks, or `--assignment` to prune a single stale assignment.
-
-**Customize the workflow** - the full pipeline is defined in two layers: the [assignment preset](../ace-assign/.ace-defaults/assign/presets/work-on-task.yml) controls which steps run and in what order (onboard, implement, test, release, review, PR), while each step references a [workflow instruction](../ace-task/handbook/workflow-instructions/task/work.wf.md) that defines how it executes. Browse [available presets](../ace-assign/.ace-defaults/assign/presets/) or create your own to tailor the pipeline to your project.
-
-For explicit end-to-end validation paths, see [Public Verification Paths](docs/usage.md#public-verification-paths).
+> **Planned (L4):** planner role that prepares the worktree and the whole
+> assignment sequence -- not available yet.
+>
+> **Planned (L6):** private overseer queue that starts unblocked steps and
+> passes one worktree between roles -- not available yet.
+>
+> **Planned (L7):** aggregated status and pi continuation of already delegated
+> work -- not available yet.
 
 ## Testing
 
-- `ace-test ace-overseer` runs deterministic fast coverage from `test/fast/`.
-- `ace-test ace-overseer feat` runs deterministic feature coverage from `test/feat/` when present.
-- `ace-test ace-overseer all` runs fast + feat deterministic coverage.
-- `ace-test-e2e ace-overseer` runs retained workflow scenarios from `test/e2e/`.
-
-The package no longer uses deterministic `*_test.rb` files under `test/e2e/` and
-does not use `ace-test ace-overseer e2e` as a deterministic test path.
+- `bin/ace-test ace-overseer all` runs deterministic package coverage.
+- `bin/ace-test-e2e ace-overseer` runs retained workflow scenarios.
 
 ---
 [Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md) | Part of [ACE](https://github.com/cs3b/ace)
