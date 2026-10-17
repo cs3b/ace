@@ -8,35 +8,29 @@ purpose: Coordinate implementation, exact-head review and authorized delivery on
 
 ## Goal
 
-Deliver one committed candidate in explicit standalone or managed mode, using
-the selected forge and current executed tests and independent review.
+Deliver one committed candidate, using the selected forge and current executed
+tests and independent review.
 
 ## Prerequisites
 
 - A reviewed task or an explicit implementation scope and project.
-- For managed delivery, a managed assignment and an active scoped attempt for each
-  delivery action; use the actual assignment and
-  attempt IDs from the execution boundary, never caller-invented actor identity.
 - For remote delivery, a pushed candidate and explicit fork/canonical provenance:
   mode, head_repository_url, head_ref, base_repository_url and base_ref.
 - An applicable authorization for each effect. Transport credentials do not grant
   permission to merge, publish, deploy or synchronize.
 
 Choose standalone mode for ordinary local task/inline implementation, tests, review
-and optional requested version/changelog preparation without a managed assignment.
-Choose managed mode when the request supplies an assignment or requires its
-canonical attempt/receipt boundary. Standalone output cannot satisfy managed or
-protected acceptance. Local-only implementation needs no forge selection or
-scoped attempt. If remote delivery is requested,
+and optional requested version/changelog preparation. Local-only implementation
+needs no forge selection or scoped attempt. If remote delivery is requested,
 use forge_server or forge_default: true, mutually exclusive; otherwise use the
 repository remote. Preserve the first resolved server/repository/PR identity
-throughout the assignment. Missing service or authorization yields a specific
-blocker; this workflow does not invent grants or impersonate an integrator.
+throughout the work. Managed attempt-bound delivery and its role handoff land in
+L5.5; this workflow does not invent grants or impersonate an integrator.
 
 ## Project context loading
 
-Read the task or inline scope and actual committed diff. In managed mode also
-read assignment status, current attempt and retained delivery parameters. If a PR
+Read the task or inline scope and actual committed diff. When the work belongs to
+an assignment, also read assignment status and the current attempt. If a PR
 is recorded, inspect it with
 `ace-git pr show IDENTIFIER --format json --server NAME` using the retained selection
 (or `--default-server`, otherwise remote resolution). Inside ACE use source
@@ -63,8 +57,8 @@ and test it on the combined candidate before declaring that result delivered.
 Implement and commit the requested local task/inline scope using existing task
 and Git tools. Execute appropriate tests and independent review, retain their
 actual artifact references and candidate SHA, and record unfinished criteria.
-No managed assignment, protected service receipt or canonical qjl acceptance is
-claimed by this route. Local scope may end here.
+No managed assignment or canonical receipt boundary is claimed by this route.
+Local scope may end here.
 
 For an explicitly authorized standalone remote scope, use existing neutral
 primitives on the chosen base repository/forge. Record actual head/base
@@ -84,7 +78,6 @@ the low-level PR command does not establish these gates itself. Readiness uses
 `ace-git pr ready IDENTIFIER --server NAME --expected-head CANDIDATE-SHA --format json`.
 Only an actually authorized standalone integrator may call
 `ace-git pr merge IDENTIFIER --server NAME --expected-head CANDIDATE-SHA --method METHOD --format json`.
-This is not a worker fallback when a managed/protected service is unavailable.
 Remote errors or uncertain effects remain explicit unresolved outcomes; use
 authoritative reads and existing provider reconciliation, never blind replay.
 
@@ -93,213 +86,53 @@ and merge evidence is accepted. Preparation after a completed delivery is a
 separate follow-up candidate/scope and must obtain its own required evidence.
 Publication remains separately authorized and gated, including OTP when required.
 
-## Protected worker PR operations and status
+## Managed delivery (planned L5.5)
 
-An installed protected worker uses its original prepared assignment, attempt,
-mapping and hierarchical scope. A role charter or selector is not an authority
-capability: the public owners authenticate the actual worker descendant and
-original birth. Other installed participants must delegate to the provisioned
-worker/executor; they cannot select local delivery. Do not run the ordinary
-managed delivery commands below from this protected route. Draft create/update
-may precede independent review, through the same configured receiver. Ready and
-merge require executed checks, current accepted independent review and the exact
-operation authorization. See `wfi://git/pr/create` and `wfi://git/pr/update` for
-the bounded draft input; credentials do not grant those operations.
-
-1. Retain the exact accepted candidate head and candidate generation, original
-   assignment/attempt/mapping/scope, configured receiver ID, authorization and
-   request ID. Use the reviewed retained delivery parameters, explicit authorized
-   merge method and exact PR URL. Accepted independent review for this candidate
-   remains a canonical authority gate; local report files cannot replace it.
-2. Before the first claim, read
-   `ace-assign authority status --mapping MAPPING --assignment ID --attempt ATTEMPT`.
-   Its `generation` is the current authority generation and
-   `result_candidate_generation` is the candidate generation. They are distinct;
-   never increment or substitute one for the other. Verify the candidate generation
-   matches the accepted candidate. Unavailable or changed selection blocks the
-   request. Keep the exact returned generation for this invocation; a conflict
-   is not permission to refresh it and resend.
-3. Select `create`, `update`, `ready` or `merge`. Save one nonsecret input file:
-   create/update contain exactly `target`, `delivery`, `title`, `body`; ready
-   contains `target`, `delivery`; merge contains `target`, `delivery`, `method`.
-   A create target is the selected base repository URL; other operations use
-   the exact PR URL. Target contains that URL as `resource` and nullable
-   `artifact_digest`; delivery is the retained `forge_server`/`forge_default` and
-   complete `pr_provenance` mapping. Method is explicitly squash, merge or rebase.
-   The maintained owner reads one unchanged bounded regular file and computes its
-   canonical input digest. It does not accept a caller-supplied digest for request.
-
-   ```json
-   {"target":{"resource":"https://forge.example/team/repo/pulls/25","artifact_digest":null},"delivery":{"forge_server":"forge-lab","forge_default":false,"pr_provenance":{"mode":"canonical","head_repository_url":"https://forge.example/team/repo","head_ref":"work","base_repository_url":"https://forge.example/team/repo","base_ref":"main"}},"method":"squash"}
-   ```
-
-4. Invoke the existing configured receiver through
-   `ace-lab service request --project PROJECT --assignment ID --attempt ATTEMPT --mapping MAPPING --scope SCOPE --service SERVICE --candidate-head SHA --candidate-generation CANDIDATE-GENERATION --expected-generation AUTHORITY-GENERATION --operation OPERATION --authorization AUTHORIZATION --request-id REQUEST --input INPUT.json`.
-   No dry-run or standalone fallback exists here. Retain the returned original
-   `selection` from either `data` or `error`: it includes input_digest and target.
-   `service_claim_accepted` acknowledges a durable claim, not operation completion.
-   `service_claim_unconfirmed` requires inspection of this original request;
-   neither uncertainty nor a timeout authorizes automatic resubmission.
-5. Read exact canonical status without an effect:
-   `ace-lab service status --request REQUEST --project PROJECT --assignment ID --attempt ATTEMPT --mapping MAPPING --scope SCOPE --candidate-head SHA --candidate-generation CANDIDATE-GENERATION --input-digest INPUT-DIGEST --target ORIGINAL-TARGET`.
-   Use the original returned selection; omit `--artifact-digest` for null, or
-   supply its exact original SHA256 when present. Status does not use a refreshed
-   expected generation and never repairs or restarts an uncertain service.
-   Missing receiver, review, authorization or installed owner stays a routed
-   blocker. A caller-local journal or remote PR observation is not canonical proof.
-6. Only after canonical succeeded status, consume the exact completed result:
-   `ace-assign delivery --assignment ID --attempt ATTEMPT --mapping MAPPING --scope SCOPE --operation OPERATION --service-request REQUEST --candidate-head SHA --candidate-generation CANDIDATE-GENERATION --input-digest INPUT-DIGEST --target ORIGINAL-TARGET`.
-   Apply the same nullable artifact flag rule. Do not supply local `--tests`,
-   `--review`, title/body or parameters. The authority has already verified the
-   original review, completion receipt/import and exact input association, and
-   atomically published the delivery event. Worker consumption verifies that
-   event; it neither appends evidence nor invokes the provider again.
-7. Preserve the original request and result references on resume. Exact read-only
-   status is safe; an explicit identical request may only return its retained
-   canonical claim/result and must not refresh selectors. Never retry an unknown
-   effect to obtain a receipt. Publication, deployment and synchronization still
-   require their separate authorization, evidence and OTP where applicable.
-
-## Protected campaign result before readiness or merge
-
-When the original protected parent registers `review_campaign`, finish the existing
-R1/R2/R3 review policy through its linked, canonically settled collection/check/
-approval children. Follow the protected handoff in `wfi://review/pr`; ordinary
-`ace-review campaign` output and `ace-assign attempt finish` are not substitutes.
-Draft create/update above may run before independent review. Ready and merge wait
-for the current canonical parent campaign result, executed checks and independent
-review acceptance.
-
-1. Upload the documented R1 round input using the closed envelope
-   `{"version":1,"round":ROUND_OBJECT,"artifacts":[{"path":"report.md","sha256":"SHA256"}]}`.
-   Keep the original parent selectors, pinned head/base/scopes and registered
-   campaign/requirements/policy. The round attempt_id equals its stable mutation.
-   `ace-assign campaign-record-round --mapping MAPPING --assignment ID --attempt ATTEMPT --head SHA --candidate-generation N --mutation ROUND-ATTEMPT --input ROUND-ENVELOPE.json --artifact REPORT-BYTES`
-   supplies ordered immutable artifact bytes, not authority-readable worker paths.
-   Repeat the artifact flag in envelope order; settled child receipts establish
-   execution and approval, not editable reports alone.
-2. After policy acceptance, download its verified exact bytes:
-   `ace-assign campaign-export-result --mapping MAPPING --assignment ID --attempt ATTEMPT --head SHA --candidate-generation N --output RESULT.json`.
-   Retain exported sha256/result_identity/journal_commit. The authority owns the
-   campaign store and validates the accepted immutable candidate; the output file
-   is a transfer artifact, not permission to change or bypass policy.
-3. Keep the original parent's succeeded review receipt, independent actors and
-   executed checks. Add `campaign: {id: REGISTERED-CAMPAIGN, result: {path:
-   RESULT.json, sha256: EXPORTED-SHA256}}` and the identical reference in its
-   ordered artifacts. Upload exact exported bytes in that artifact slot with
-   `ace-assign submit-result --mapping MAPPING --assignment ID --attempt ATTEMPT --head SHA --candidate-generation N --expected-generation G --mutation RESULT-MUTATION --receipt PARENT-RECEIPT.json --artifact RESULT.json`.
-   Supply any other receipt artifacts in their declared order. Submission imports
-   evidence; the original reviewer/finish owner still owns acceptance and release.
-   G is persisted authority generation; N is candidate generation, never G.
-
-Restart retains original mutations, envelope/receipt bytes, ordered artifacts and
-selectors. Exact replay preserves the existing round/result; re-export only accepts
-an identical existing file. Changed candidate, policy or missing canonical child
-settlement rejects current acceptance without erasing history. Ready/merge service
-admission rechecks the canonical parent campaign result. Route a missing producer
-to its owner, keeping delivery unfinished; do not build a new receipt generator,
-refresh conflicting generations or use ordinary commands as a protected fallback.
-
-## Ordinary managed delivery steps
-
-These steps retain the existing nonprotected managed workflow. They are not a
-fallback for an installed protected participant or a blocked protected operation.
-
-
-1. Record the requested delivery steps and their owners before implementation.
-   Follow the existing task-work plan. Commit the implementation and run appropriate
-   package tests. If requested, perform local version/changelog preparation with
-   `ace-bundle wfi://release/local` before final evidence and merge; it does not
-   publish. Keep unfinished task criteria open; a bounded source checkpoint
-   cannot mark an entire installed task done.
-2. For remote delivery, prepare a concrete title and description from the changes
-   and executed validation. Load `ace-bundle wfi://git/pr/create` and use the actual
-   managed assignment and active delivery attempt. The executable operation is
-   `ace-assign delivery --assignment ID --attempt ATTEMPT --operation create --title TITLE --body-file DESCRIPTION`.
-   Provide `--parameters FILE` if required for the assignment's explicit delivery
-   mapping. Creation defaults to a draft. Record its returned server, repositories,
-   refs, PR number/URL and exact candidate_head.
-3. Execute the independent review workflow `ace-bundle wfi://review/pr` against that
-   exact PR and retained forge selection. Preserve its actual round completion rule,
-   findings and reviewer identities. Fix confirmed blocking findings and rerun
-   affected tests. Every new committed candidate, including task-only edits,
-   invalidates prior ready/merge evidence. Historical approval remains history.
-4. Obtain coordinator-accepted current-head test and independent review receipts
-   through the existing assignment boundary. File existence, fabricated approval,
-   exit zero or a worker claim cannot replace acceptance. Distinguish base_head,
-   candidate_head, evidence_git_ref and journal_commit; evidence commits do not
-   advance the deliverable branch. CI status is visible and advisory; failed
-   executed tests, stale evidence or unresolved review findings still block.
-5. Prepare the final PR body with the concrete behavior, executed checks,
-   independent verdict and remaining limitations. Load
-   `ace-bundle wfi://git/pr/update` and execute
-   `ace-assign delivery --assignment ID --attempt ATTEMPT --operation update --body-file DESCRIPTION`.
-   Mark ready only with accepted exact-head reference files:
-   `ace-assign delivery --assignment ID --attempt ATTEMPT --operation ready --tests TEST-REF --review REVIEW-REF`.
-   Each reference file contains only attempt_id and receipt_digest.
-6. Hand off merge only to the existing authorized integrator/service for the exact
-   PR, candidate and operation. Its executor uses the neutral provider merge with
-   both required values:
-   `ace-git pr merge IDENTIFIER --server NAME --expected-head CANDIDATE-SHA --method METHOD --format json`.
-   METHOD is the authorized squash, merge or rebase choice, never an implicit
-   default. The assignment worker consumes a completed verified service receipt:
-   `ace-assign delivery --assignment ID --attempt ATTEMPT --operation merge --tests TEST-REF --review REVIEW-REF --service-request REQUEST`.
-   This command does not dispatch or execute its own pending merge. If no actual
-   configured executor or valid receipt is available, retain the routed blocker.
-7. Local version/changelog preparation is optional requested work from step1.
-   It must be included before final exact-head evidence and merge. Preparation
-   requested after a completed merge starts a separate follow-up candidate/scope;
-   the old merge does not accept its amended content.
-   Publication, deployment and synchronization are distinct operations with their
-   own valid authorization, executed technical evidence and any required OTP.
-   Authorized merge does not authorize them. Do not add an unnecessary proposal
-   for an already authorized operation or fabricate an unavailable proposal API.
-8. Record the exact delivered scope, candidate, receipt references, review verdict
-   and remaining gates. A requested delivery-only scope can finish after its
-   authorized merge; publication is not mandatory. Keep the task in progress until
-   all of its actual acceptance criteria are satisfied.
+Attempt-bound managed delivery — assignment-scoped attempts, exact-head evidence
+and the reviewer/integrator role handoff — lands with the role workflow in L5.5.
+Until then, standalone delivery above is the active path. Attempt evidence remains
+local to the assignment: use `ace-assign attempt start`/`attempt finish` for the
+exact execution scope and record actual artifacts, executed checks and the
+independent reviewer verdict for the same head. Never substitute a written report
+or exit code for accepted evidence.
 
 ## Unavailable publication prerequisite
 
 Requested publication is a separate step, never a consequence of merge success.
-Use the existing configured service policy and publisher prerequisites; an absent
-publisher or unavailable required OTP is a routed blocker, not permission to run
-an alternate command/account. The ordinary tested publisher's precondition
-failure is ordinary source evidence only; it does not supply a protected
-publication receipt or positive scoped OTP capability.
+Use the existing configured publisher prerequisites; an absent publisher or
+unavailable required OTP is a routed blocker, not permission to run an alternate
+command or account.
 
 If the requested step cannot proceed, record its value-free cause through the
 existing assignment failure owner:
-`ace-assign fail --assignment ID@SCOPE --attempt ATTEMPT --mapping MAPPING --message "publication blocked: prerequisite unavailable"`.
-Use the actual original protected selectors; ordinary assignments omit protected
-selectors and use their existing target. Read `ace-assign status` for that same
-scope afterward. The step remains failed/unfinished, with no publication receipt
-or task completion. Preserve an uncertain service request separately: a failure
-report must not claim a definitive denial or effect absence from a lost reply.
-Protected recovery requires the reviewed new prepared version/attempt; never
-finish the failed step or retry publication to manufacture success.
+`ace-assign fail --assignment ID@SCOPE --message "publication blocked: prerequisite unavailable"`.
+Use the actual assignment selectors; standalone work omits them and uses its
+existing target. Read `ace-assign status` for that same scope afterward. The step
+remains failed/unfinished, with no publication receipt or task completion. Preserve
+an uncertain effect separately: a failure report must not claim a definitive denial
+or effect absence from a lost reply.
 
 ## Uncertainty and resume
 
-In managed mode, read assignment status and retained qjl delivery events before
-resuming. Repeat read/check operations safely. On interrupted create, update or readiness, use the
-same delivery command for exact-selector reconciliation. One matching draft may
-be adopted; zero remains unresolved and multiple matches conflict. A different
-requested effect cannot be reported complete merely because an earlier effect
-was recovered.
+When the work belongs to an assignment, read assignment status and retained attempt
+events before resuming. Repeat read/check operations safely. On an interrupted
+create, update or readiness, use the same forge command for exact-selector
+reconciliation. One matching draft may be adopted; zero remains unresolved and
+multiple matches conflict. A different requested effect cannot be reported complete
+merely because an earlier effect was recovered.
 
 Unknown merge/publication remains unknown pending its existing owner's
-reconciliation. Never blindly replay an effect, substitute a generic PR result
-for a service receipt or translate a blocker into direct gh/fj commands.
+reconciliation. Never blindly replay an effect or translate a blocker into
+unverified direct provider commands.
 
 ## Success criteria
 
 - The requested scope has real artifact, current test and independent review
   evidence for its exact candidate.
 - Remote identity and explicit provenance remain fixed with honest unresolved
-  outcomes preserved; managed mode records them in the existing attempt journal.
-- Readiness and authorized integration consume current evidence; managed merge
-  additionally consumes exact service receipts. Standalone output cannot satisfy
-  managed/protected acceptance. CI alone neither grants nor vetoes acceptance.
-- Optional publication remains separately authorized and unfinished installed
-  criteria remain visible.
+  outcomes preserved; assignment-backed work records them in its local attempt
+  evidence.
+- Readiness and authorized integration consume current evidence. CI alone neither
+  grants nor vetoes acceptance.
+- Optional publication remains separately authorized and unfinished criteria
+  remain visible.

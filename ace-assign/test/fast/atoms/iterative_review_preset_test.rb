@@ -72,6 +72,10 @@ class IterativeReviewPresetTest < AceAssignTestCase
 
     assert_operator ready_index, :>, review_index
     assert_operator merge_index, :>, ready_index
-    assert_includes Array(steps[ready_index]["instructions"]).join(" "), "ace-assign delivery"
+    instructions = Array(steps[ready_index]["instructions"]).join(" ")
+    assert_includes instructions, "ace-git pr ready"
+    assert_includes instructions, "--expected-head"
+    refute_includes instructions, "ace-assign delivery"
+    refute_includes instructions, "service request"
   end
 end

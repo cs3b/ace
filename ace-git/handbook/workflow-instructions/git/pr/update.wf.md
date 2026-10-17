@@ -1,7 +1,7 @@
 ---
 doc-type: workflow
 title: Update an attempt-bound pull request
-purpose: Update the exact forge-neutral PR and consume current delivery evidence
+purpose: Update the exact forge-neutral PR and record current delivery evidence
 ---
 
 # Update an attempt-bound pull request
@@ -12,51 +12,35 @@ Update the recorded PR description for the current candidate and preserve provid
 
 ## Prerequisites
 
-A managed assignment with a recorded PR and active delivery attempt. Reuse the original forge selection and complete fork/canonical provenance; changed configuration or identity is a conflict. A new committed candidate, including task-only changes, requires renewed tests and independent review.
-
-## Protected worker boundary
-
-The steps below are ordinary managed delivery only. An installed protected
-participant uses the configured receiver and the original canonical authority,
-with no caller-local journal or direct-provider fallback.
-
-The authenticated worker may create/update a draft before independent review.
-Save a nonsecret input object with exactly `target`, `delivery`, `title`, `body`;
-`delivery` is the normalized original forge/provenance mapping. `target` has
-`resource` and nullable `artifact_digest`: the selected base repository URL for
-create, the exact recorded PR URL for update. Title/body are bounded UTF-8 text.
-Request the installed receiver with:
-
-```sh
-ace-lab service request --project PROJECT --assignment ID --attempt ATTEMPT \
-  --mapping MAPPING --scope SCOPE --service SERVICE --operation OPERATION \
-  --candidate-head SHA --candidate-generation CANDIDATE-GENERATION \
-  --expected-generation AUTHORITY-GENERATION --authorization AUTHORIZATION \
-  --request-id REQUEST --input INPUT.json
-```
-
-Use `create` or `update` as OPERATION; each requires its own exact scoped grant.
-The receiver runs the fixed `ace-git service create` or `service update` handler.
-A claim acknowledges admission, not PR success. Retain its complete selection
-and observe `ace-lab service status` as described in
-`wfi://handbook/perform-delivery`. Lost replies stay uncertain; status does not
-repeat an effect. Only canonical completion supplies the created PR URL.
-
-For ready, use the same request with OPERATION `ready` and input containing only
-`target` and `delivery`. Ready and merge require executed checks, accepted
-independent review for the current revision and the matching authorization.
-Local report/reference files cannot replace those canonical proofs. Draft
-creation/update does not grant readiness, merge or publication.
+An assignment with a recorded PR and active attempt, or an explicit local PR scope. Reuse the original forge selection and complete fork/canonical provenance; changed configuration or identity is a conflict. A new committed candidate, including task-only changes, requires renewed tests and independent review.
 
 ## Steps
 
-1. Inspect the committed changes and accepted test/review evidence. Prepare the final description with the concrete behavior, executed test results, independent verdict, and actual limitations. Save it as a local file; do not put credentials or terminal dumps in the attempt journal.
-2. Execute `ace-assign delivery --assignment ID --attempt ATTEMPT --operation update --body-file DESCRIPTION`. Supply `--parameters FILE` only if the assignment source lacks the original `delivery` mapping. In this repository use `bin/ace-assign`.
-3. On interrupted update, repeat the delivery command. It reads the exact remote title/body and compares the requested field digest before accepting; an unmatched or unreadable outcome remains unresolved. Never blindly resend a mutation.
-4. To mark ready, supply two JSON reference files, each containing only `attempt_id` and `receipt_digest`, from coordinator-accepted current-head test and independent review attempts in this assignment/project. Execute `ace-assign delivery --assignment ID --attempt ATTEMPT --operation ready --tests TEST-REF --review REVIEW-REF`. Missing, fabricated, stale, or self-approved evidence cannot authorize readiness. Red CI alone does not veto valid executed tests and review.
-5. Merge is an integrator/service operation under the existing exact qjx authorization policy. The authorized executor calls `ace-git pr merge IDENTIFIER --server NAME --expected-head CANDIDATE-SHA --method METHOD --format json` with the retained selection (or `--default-server`, otherwise remote resolution). Both expected SHA and the authorized squash/merge/rebase method are required; there is no default method. It does not recursively request its own future receipt. The worker consumes the completed, verified service receipt using `ace-assign delivery --assignment ID --attempt ATTEMPT --operation merge --tests TEST-REF --review REVIEW-REF --service-request REQUEST`. The request must bind this assignment, attempt, project, candidate and PR URL. No completed receipt means a routed blocker; credentials or caller assertions grant no authority.
-6. Unknown merge remains pending service reconciliation and is never automatically retried. Inspect the authoritative selected remote and verified executor evidence. Changed head or scope blocks acceptance. Merge does not authorize publication, deployment or synchronization.
+1. Inspect the committed changes and accepted test/review evidence. Prepare the final description with the concrete behavior, executed test results, independent verdict, and actual limitations. Save it as a local file; do not put credentials or terminal dumps in attempt evidence.
+2. Update the PR with the configured forge command:
+
+   ```sh
+   ace-git pr update IDENTIFIER --server NAME --expected-head CANDIDATE-SHA --body-file DESCRIPTION --format json
+   ```
+
+   Use the retained default/remote selection instead of `--server NAME` when applicable. In this repository invoke the source `bin/ace-git` entrypoint.
+3. On an interrupted update, repeat the same command. It reads the exact remote title/body and compares the requested field digest before accepting; an unmatched or unreadable outcome remains unresolved. Never blindly resend a mutation.
+4. Mark ready only after tests and independent review pass on the exact head. Record the executed tests and independent review evidence for that head, then run:
+
+   ```sh
+   ace-git pr ready IDENTIFIER --server NAME --expected-head CANDIDATE-SHA --format json
+   ```
+
+   Missing, stale, or self-approved evidence cannot authorize readiness. Red CI alone does not veto valid executed tests and review.
+5. Merge is a separate authorized operation for the exact candidate. The authorized executor runs:
+
+   ```sh
+   ace-git pr merge IDENTIFIER --server NAME --expected-head CANDIDATE-SHA --method METHOD --format json
+   ```
+
+   with the retained selection (or `--default-server`, otherwise remote resolution). Both the expected SHA and the authorized squash/merge/rebase method are required; there is no default method. Credentials or caller assertions grant no authority.
+6. An unknown merge remains an unresolved effect. Inspect the authoritative selected remote and the actual executor evidence; never retry blindly. Changed head or scope blocks acceptance. Merge does not authorize publication, deployment or synchronization.
 
 ## Success criteria
 
-The exact remote outcome and existing qjl evidence agree. Real artifacts, current executed tests, independent verdict and required authorization gate completion. Preserve unresolved history and distinct candidate_head/journal_commit. qkb.1 supplies installed charter/proposal/service adoption; this workflow does not fabricate that acceptance.
+The exact remote outcome and local attempt evidence agree. Real artifacts, current executed tests and an independent verdict gate completion. Preserve unresolved history and distinguish the candidate head from evidence commits.

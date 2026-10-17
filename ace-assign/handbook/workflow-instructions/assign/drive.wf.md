@@ -3,7 +3,6 @@ name: assign-drive
 description: Drive an ace-assign assignment until completion or an explicit blocker.
 allowed-tools:
 - Bash(ace-assign:*)
-- Bash(ace-lab:*)
 - Bash(ace-bundle:*)
 - Read
 - Write
@@ -27,82 +26,6 @@ Drive agent execution through an active assignment by continuously checking stat
 
 - An active assignment exists (created via `ace-assign create` or `/as-assign-create`)
 - Assignment has at least one pending or active step
-
-## Ordinary installed execution
-
-Select this branch **before resolving any local assignment** when invoked with
-`--ordinary <context.json>` or when `ACE_ASSIGN_ORDINARY_CONTEXT` is set. Require
-`ACE_ASSIGN_ORDINARY_PROJECT` and use the exact retained context path throughout.
-Conflicting explicit and environment paths are an error. In this branch every
-execution read and write uses `ace-lab assignment drive --project <project>
---context <context.json>` against the installed owner. The local assignment
-commands below, `.current`, `.latest`, `fork-run`, and protected `work-on --project`
-are not fallback routes.
-
-1. Run `--operation status`. If `not_started`, run `--operation start` from the
-   actual native worker pane. A launch/send acknowledgement is not a start receipt.
-   Verify canonical status is `running` with the expected assignment, attempt,
-   scope, native binding and producer. Never adopt another pane's execution.
-2. Run `--operation bootstrap --output <new-private-directory>`. Read the returned
-   accepted task/context/report paths and retain their exact manifest and file
-   digests in the work report. These bytes come from canonical prepared work;
-   mutable task files in a checkout cannot replace them. Resolve referenced
-   project workflows/guides with the selected installed packages and record each
-   effective path and digest. A missing or conflicting required asset is a blocker.
-3. Run `--operation next`. Execute the returned current step, or start the returned
-   next step using `--operation step-start --step <number> --generation <observed>`.
-   The accepted root's children run in this already admitted worker; do not fork
-   another execution because a prepared root originated in a batch preset.
-4. After executing a step, write its bounded UTF-8 report and run
-   `--operation step-finish --step <number> --report <path> --generation <observed>`.
-   On an unrecoverable step failure, use `--operation fail --message <reason>
-   --generation <observed>`. Read `next` again after every acknowledged mutation.
-   Do not mark an unexecuted step successful. Nested skills may perform the work,
-   but their local Assign bookkeeping must not replace these canonical operations.
-5. When the scope is complete or failed, prepare an execution receipt and exact
-   artifact files using the receipt contract in the Lab usage documentation.
-   Its producer is the canonical start producer; HEAD is the actual committed
-   candidate; checks describe executed checks. Submit with `--operation result
-   --generation <observed> --receipt <json> --artifact <file>` in receipt order.
-   Submission is not terminal acceptance, merge, publication or installation.
-6. Keep the worker's native process and checkout available until the supervisor
-   accepts the result through `--operation adopt` and canonical `status` becomes
-   terminal. The filesystem watch emits only a hint. Never infer completion from
-   a quiet pane, a hint file, an old message or a send acknowledgement.
-
-Each mutation prints its retained original request path. After any lost reply,
-read canonical `status`/`next` first and use `--operation replay --request <path>`
-only for that original input. Preserve assignment, attempt, mutation, candidate
-and pane identities. Never edit an original request's generation or bytes. For a
-result/finish CAS refusal, reread canonical status. An accepted result replays its
-exact original input; an accepted terminal outcome needs no new finish. If no
-result/terminal was accepted and the attempt generation advanced, the original
-CAS can no longer accept: result/finish may retain a separate request at the new
-observed generation. The driver preserves all old inputs and performs these
-checks; unavailable status remains a blocker. Changed content, project or owner
-is not a generation retry, and never authorizes another worker.
-
-A supervisor installs the `watch_command` returned by `ace-overseer ordinary`
-exactly once in its native session, runs a harmless turn to persist it, and uses
-exact-session resume thereafter. Do not recreate an intentionally removed watch.
-A watch merely requests canonical inspection; recurring native progress audits
-also find accepted results when a wake or reply is lost. Wrong project/attempt
-hints carry no authority. Existing inbound Inbox settlement remains a separate
-owner configuration: without it, nonempty Inbox references refuse completion.
-
-After replacement of the coordinator process, read `--operation supervisor`.
-A new coordinator uses `--operation adopt-supervisor --pane <actual-pane>
---generation <old-selection-generation> --previous-binding-sha256 <old-digest>`.
-The installed owner authenticates its actual placement and positively verifies
-that the original process generation ended. Live or unobservable old generations
-refuse adoption. Replay the original adoption request after a lost reply. This
-changes only the canonical supervisor selection; existing workers, uncertain
-launches, attempts, pending results and mutation IDs remain intact. Then resume
-canonical inspection and result adoption. Never re-register or relaunch workers
-because the coordinator restarted.
-
-**End of ordinary branch.** The remaining sections apply only to local assignment
-execution; do not enter them from an ordinary installed context.
 
 ## Assignment Context Propagation
 
@@ -737,30 +660,6 @@ Follow the instructions directly, performing the described work:
 
 Every external-facing step (implement, verify, review, merge, publish, deploy, release) runs inside a scoped attempt. The attempt -- not the report and not exit status -- is the delivery record.
 
-For an original protected PreparedWorker, use its already admitted assignment,
-attempt and selected scope. Do not run the local `attempt start`/receipt-file
-sequence below, acquire another attempt, or execute an outer preset step. The
-delivery step must already belong to the immutable captured subtree. Submit the
-actual candidate and obtain the installed independent reviewer acceptance through
-the protected commands supplied by the original drive prompt.
-
-For an authorized protected merge, retain the exact approved head/candidate
-generation, structured input file, installed receiver, authorization and stable
-request ID. Read current authority generation for the first new request. Invoke
-`ace-lab service request` with those original mapping/assignment/attempt/scope
-selectors. Inspect `ace-lab service status` with the same request, input digest and
-target, then consume succeeded canonical evidence with `ace-assign delivery
---operation merge --service-request REQUEST` and the same selectors. Include
-`--artifact-digest` on status and consumption when the original target has one.
-Exact retries retain the original generation, mutation/request ID and input bytes;
-uncertainty never permits refreshing or resending an effect. The protected delivery
-consumer verifies the imported receipt and canonical delivery event without another
-provider mutation. Only that succeeded result permits finishing the active queue
-step. Refusal, unavailable evidence or uncertainty leaves it unfinished and reports
-the exact blocker. Credentials and queue completion do not replace authorization
-or canonical evidence. The following local attempt sequence applies only to
-ordinary standalone assignments.
-
 **Step 1: Start the attempt before executing the step.** Actor identity is derived from the execution boundary; never pass actor flags.
 
 ```bash
@@ -807,7 +706,7 @@ ace-assign attempt finish --attempt "$ATTEMPT_ID" --receipt /tmp/attempt-receipt
 
 Receipt rules enforced by the coordinator:
 
-- `succeeded` verdicts require verifiable artifact digests, passing checks, and trusted coordinator/service authority; worker runtimes may submit attributable results but cannot self-approve.
+- `succeeded` verdicts require verifiable artifact digests, passing checks, and an executed independent reviewer verdict; worker runtimes may submit attributable results but cannot self-approve.
 - Review approval requires an executed independent reviewer verdict for the exact current head; same author/reviewer and report-only existence are rejected.
 - Receipts carrying credentials, environment dumps, or terminal output are rejected outright.
 - External effects (`merge`, `publish`, `deploy`, `release`) additionally require an accepted independent review receipt for the current head. Taskless assignments cannot record external effects.
@@ -827,8 +726,8 @@ ace-assign attempt reconcile --attempt "$ATTEMPT_ID" --receipt /tmp/attempt-rece
 #### Integration Gate and Typed Outcomes (every integration invocation)
 
 These gates apply at EVERY integration entry point — a native integrate
-command, a service invocation, or an assignment integration step — with
-shared contract validation so no entry point bypasses them.
+command or an assignment integration step — with shared contract validation so
+no entry point bypasses them.
 
 - Before any mutation, resolve FRESH repository, PR, candidate exact head,
   target base/head, review/test evidence and the authorized executor; recheck

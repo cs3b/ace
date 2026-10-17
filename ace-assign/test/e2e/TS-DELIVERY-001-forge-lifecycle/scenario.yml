@@ -9,11 +9,10 @@ tags: [installed-acceptance, "use-case:delivery"]
 tool-under-test: ace-assign
 e2e-justification: >
   Requires the actual installed public CLI, disposable provider state or authenticated
-  protected/native producer; deterministic fixtures cannot prove installed outcomes.
+  native producer; deterministic fixtures cannot prove installed outcomes.
 e2e-evidence-strength: state+content
 unit-coverage-reviewed:
   - ace-assign/test/feat/delivery_coordinator_test.rb
-  - ace-assign/test/feat/prepared_delivery_flow_test.rb
   - ace-git-worktree/test/feat/worktree_manager_contract_test.rb
   - ace-git/test/fast/providers/server_registry_test.rb
   - ace-git/test/fast/providers/taxonomy_test.rb

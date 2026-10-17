@@ -22,6 +22,13 @@ Create a HITL event in exactly two cases:
 
 Do not create HITL events for routine status updates that do not require user action.
 
+## Planned surface (L2)
+
+The normal local path uses plain event files: `create`, `list`, `show`, `update`,
+`wait` below. A `serve` boundary service, grants, OTP challenges and proposals are
+not required for this path. The richer report-versus-question kinds, reply routing
+to the correct case, and configurable adapters (single or in a set) land in L2.
+
 ## Commands
 
 ### 1) Create a blocker HITL
