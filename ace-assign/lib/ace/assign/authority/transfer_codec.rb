@@ -18,6 +18,8 @@ module Ace
                   release_artifact: [64 * 1024 * 1024, 1, 64 * 1024 * 1024],
                   artifacts: [256 * 1024, 16, 64 * 1024],
                   receipt_artifacts: [272 * 1024, 17, 64 * 1024],
+                  review_context: [Atoms::CandidateLimits::REVIEW_CONTEXT_BYTES, 1 + Atoms::CandidateLimits::REVIEW_CONTEXT_ARTIFACTS,
+                    Atoms::CandidateLimits::REVIEW_CONTEXT_BYTES],
                   service_input: [64 * 1024, 1, 64 * 1024], assignment_snapshot: [Atoms::CandidateLimits::BYTES, 1, Atoms::CandidateLimits::BYTES]}.freeze
         SHA256 = /\A[0-9a-f]{64}\z/
 
@@ -158,6 +160,12 @@ module Ace
             receipt, *evidence = descriptor.fetch("parts")
             unless receipt.fetch("bytes").between?(1, 16 * 1024) && evidence.sum { |part| part.fetch("bytes") } <= 256 * 1024
               reject!("Receipt or evidence exceeds its fixed transfer limit")
+            end
+          end
+          if purpose == :review_context
+            receipt, *_context = descriptor.fetch("parts")
+            unless receipt.fetch("bytes").between?(1, 16 * 1024)
+              reject!("Review context receipt exceeds its fixed transfer limit")
             end
           end
           true

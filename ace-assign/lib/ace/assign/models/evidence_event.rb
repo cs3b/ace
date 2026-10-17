@@ -18,7 +18,7 @@ module Ace
           intent process_start receipt_accepted transition attempt_stopped
           candidate_invalidated reconciliation
           service_claim service_transition service_challenge service_no_effect_challenge service_publication_challenge service_publication_issuing recovery_observation inbox_binding delivery
-          authority_mutation evidence_import proposal_state result_submitted prompt_issued prompt_outcome prompt_completion_observed input_inhibited
+          authority_mutation evidence_import proposal_state result_submitted review_context_submitted prompt_issued prompt_outcome prompt_completion_observed input_inhibited
           scope_provisioning scope_bound scope_native_bound scope_child_bound scope_sealed scope_closed_no_writers
           merge_admission merge_transition
         ].freeze

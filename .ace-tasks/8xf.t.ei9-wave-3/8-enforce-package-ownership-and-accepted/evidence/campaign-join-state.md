@@ -99,3 +99,342 @@ Merge gate status: independent verdict APPROVE retained. Remaining before
 merge to main: the mandatory full default suite on this branch, then merge
 (no republish of existing versions; version bumps/floors only at the next
 coordinated release).
+
+## Composition completion progress (branch codex/ei9-campaign-composition-join)
+
+- Port rebased onto merged main (0115b34f4).
+- Join #1 (campaign merge gate) IMPLEMENTED and proven (3627c8aea):
+  merge_evidence_at! refuses campaign-associated candidates before review
+  resolution — an ordinary direct review can no longer bypass CampaignManager
+  acceptance; the fixed merge admission inherits the refusal through the same
+  projection. The read transport surfaces the server rejection as
+  evidence_unavailable (assertion class adjusted accordingly). Receipt:
+  ordinary_reviews 10 tests / 121 assertions PASS.
+- Next joins in order: review_context large-prompt ingress under the approved
+  decision (TransferCodec purpose + campaign-begin-bound submit_result
+  eligibility + CanonicalEvidence kind + aggregate bounds + tests), public
+  retained driver, round ingestion proofs, cancellation resolution, historical
+  test-evidence wiring, comprehensive tests + actual Pi review.
+
+## review_context ingress implementation (in progress, branch codex/ei9-campaign-composition-join)
+
+Implemented under the Captain-approved decision: CandidateLimits gains
+REVIEW_CONTEXT_BYTES (= CampaignContract::MAX_HEAD_CONTEXT_BYTES) and
+REVIEW_CONTEXT_ARTIFACTS (8); CanonicalEvidence gains the closed
+"review-context" kind (reviewer role, shared cap for each/total, 8 artifacts);
+TransferCodec gains the :review_context purpose (receipt ≤16KiB + up to 8
+context parts under the shared cap) with a fixed receipt-size check;
+OrdinaryResults gains the submit_review_context operation
+(REVIEW_CONTEXT_KEYS; eligibility validated against the PRODUCER assignment's
+real journal events: exactly one non-cancelled assign_review naming this
+reviewer attempt with campaign data, plus a matching canonical campaign_begin
+event; reviewer live identity verified at head; import under the review-context
+kind; event type review_context_submitted; ordinary receipts keep their small
+budgets and can never select this purpose). Fixed en route: method-name
+collision — the handler is ordinary_review_context_submission (the evidence
+module already defines ordinary_review_context(binding)).
+
+Regression state: existing 10 tests / 121 assertions still pass with the
+ingress code in place. The NEW focused test
+(test_review_context_ingestion_binds_campaign_selection_and_matching_begin)
+is RED at its campaign_begin step and the debugging trail is retained here
+for the next session: with temporary instrumentation, the failing
+origin check saw the producer chain INCLUDING a register_assignment event
+inside the producer-run attempt filter AND an already-appended campaign_begin
+event with chain_valid=false on replay, while the existing campaign test's
+identical filter shows no register event and its begin passes. First failed
+attempt surfaced empty events at a stale commit. Lead: the begin mutation's
+replay/authorize path sees a different chain shape in the new test's
+sequencing — compare the register event's attempt linkage and the mutate
+replay authorizer ordering before the begin call. All instrumentation has
+been reverted; the tree is syntax-clean with the red test intact.
+
+### Round 7 debugging addendum (review_context red test)
+
+Fixed a real handler bug: ordinary_review_context_submission read the producer
+assignment's events UNFILTERED (mixing the definition-producer register chain
+into the origin check); it now selects the producer attempt from the selected
+review's producer_origin before origins validation.
+
+Narrowed the remaining campaign_begin failure decisively:
+- register-event linkage is IDENTICAL in the existing (green) campaign test
+  and the new test (attempt_id "definition-<name>"; excluded by the
+  producer-run filter in both).
+- campaign_status immediately before begin returns a HEALTHY campaign at the
+  CURRENT journal commit (campaign_id, rounds, journal_commit), so the journal
+  state including the campaign mutations is fully visible to read paths.
+- Yet begin's authorize receives a producer-run-filtered chain of
+  [intent, process_start, start_attempt, submit_candidate, assign_review] —
+  WITHOUT campaign_start/campaign_pin. That list cannot be a valid historical
+  prefix (assign_review follows the campaign mutations), so it is a FILTER
+  exclusion, not a stale read: suspicion is now the attempt_id carried by the
+  campaign_start/campaign_pin mutation events themselves (chained to a
+  different attempt id than "producer-run") or the mutate-block event filter.
+- Next session entry point: one debug line printing each campaign_start/
+  campaign_pin event's attempt_id at write time and at begin's read.
+
+Existing 10 tests / 121 assertions remain green; all instrumentation removed;
+the new test remains the only red.
+
+### review_context ingress COMPLETE (d0f05eb1a)
+
+The focused test is green: ordinary_reviews 11 tests / 135 assertions PASS
+(includes the full campaign flow through begin, a >64KiB prompt artifact under
+the review_context purpose, exact-mutation replay, and fresh-second-submission
+conflict). Neighboring regressions green: candidate_transfer 24/454,
+command_execution 8/42. Fixes landed during the final push:
+- ReceiptTransfer.decode parameterized (max_artifact_bytes/max_total_bytes);
+  the review-context path passes the shared cap, ordinary results unchanged.
+- ReceiptVerifier sees a review-nil projection of the campaign collection
+  receipt (its self-approval semantics apply to producer review verdicts, not
+  reviewer-produced collections); the canonical stored receipt keeps the
+  campaign review reference with its own consistent digest, and
+  validate_review_context_receipt! enforces the binding.
+- EvidenceEvent registers the review_context_submitted type.
+- Test receipt shape carries the verifier-required review fields plus the
+  campaign reference; reviewer generations follow register+start (no queue op).
+
+Remaining .8 joins: public retained driver, round ingestion proofs (consume
+the stored review-context result into campaign rounds with byte reuse),
+cancellation resolution, historical test-evidence wiring, comprehensive
+public-path tests + actual Pi independent review, then the joined branch
+re-verification and merge.
+
+### Round ingestion join COMPLETE (2c02a67d0)
+
+The campaign collection terminal now accepts the retained review-context
+result: retained_review_context_result validates the review_context_submitted
+event and its binding (including the campaign review reference); finish
+completes from either result kind; with_review_collection! reads context
+artifacts under the review-context canonical kind. Focused test extended
+through the full join: queue_finish → submit_review_context (oversized prompt)
+→ exact-mutation replay → fresh-second conflict → supervisor finish →
+collection proof + canonical reader, asserting the EXACT prompt bytes are
+reused from the canonical store (no re-upload). Receipt: ordinary_reviews
+11 tests / 137 assertions PASS. Fixes en route: reviewer queue completion is
+required before finish (scope subtree); the collection proof requires the
+hyphenated review-execution check name.
+
+Remaining .8 joins: public retained driver, cancellation resolution,
+historical test-evidence wiring, comprehensive public-path tests + actual Pi
+independent review, branch re-verification and merge.
+
+### Public retained driver join COMPLETE
+
+OrdinaryCampaignRunner (ace-lab organism) drives one canonical campaign review
+round: retained campaign_begin mutation — a REPLAYED begin is an observation
+that never dispatches; the execution boundary matches the begin's canonical
+session_binding before the single-attempt model dispatch; a failed execution
+submits nothing; the collected context returns through a retained
+submit_review_context request whose receipt carries the campaign reference and
+exact artifact digests. Contract receipts: 4 tests / 20 assertions PASS
+(fresh-begin dispatch + submission; replay-never-dispatches; failure submits
+nothing; boundary drift refuses). Fixes en route: lambdas cannot yield (block
+parameter), receipt hash key consistency, and the boundary-drift test now
+forces engine-side drift (an echoing fake can never mismatch its own begin).
+
+Remaining .8 joins: cancellation resolution, historical test-evidence wiring,
+CLI/workflow surface exposure of the runner, comprehensive public-path tests +
+actual Pi independent review, branch re-verification and merge.
+
+### Cancellation resolution join COMPLETE
+
+A supervisor-revoked campaign review selection now settles its execution
+reservation as a transient unavailable failure inside the prior-selection
+branch of ordinary_campaign_review_selection!: cancellation is never a
+successful execution (the succeeded path still requires the exact terminal
+collection), and reselection proceeds under the campaign's EXISTING retry
+budget (INFRASTRUCTURE_RETRIES governs; no fresh budget is invented). The
+failure class was deliberately chosen: authorization is TERMINAL in the
+campaign policy and would hard-block the round; unavailable is the transient
+class that permits retry. Focused test: cancel → reassign succeeds with a new
+execution_id under the same campaign; completed_rounds stays 0. Receipt:
+ordinary_reviews 12 tests / 143 assertions PASS.
+
+Remaining .8 joins: historical test-evidence wiring, CLI/workflow surface
+exposure of the runner, comprehensive public-path tests + actual Pi
+independent review, branch re-verification and merge.
+
+### Branch regression sweep GREEN (round 12)
+
+All composition-branch focused receipts re-verified together: ordinary_reviews
+12/143, campaign runner 4/20, owner admission 10/45, prepared candidate review
+16/57, candidate transfer 24/454, command execution 8/42 — zero failures.
+
+### Historical evidence wiring — scoped design (next implementation)
+
+The CampaignManager evidence dependency contracts (campaign_evidence.rb):
+check_evidence.call(receipt, head:, name:, historical:) → executed-test proof;
+review_evidence.call(receipt, head:, artifacts:, historical:) → review session
+proof; approval_evidence.call(receipt, head:, artifacts:, ...) → approval
+proof; manager-level head_assessment_evidence separately. Defaults today are
+the composition's `unavailable` stubs. The wiring joins supply source-owned
+callables in the Lab authority composition (mirroring the existing
+release_authorizer late-binding pattern: closures over the lifecycle variable
+assigned after construction): check_evidence closes over the command evidence
+owner (canonical executed tests incl. the historical candidate_reference
+view), review/approval/head_assessment close over the lifecycle's canonical
+review readers (with_review_collection!/review_at_reference! and the accepted
+review records), each validating the provided receipt bytes against the
+canonical journal at the bound head — material/uncertain changes require the
+real independent delta review, and the original reviewed head stays separate
+from the accepted head.
+
+### Historical check-evidence wiring (first half) COMPLETE
+
+CommandExecution gains canonical_check_reference!(execution_id:, head:) — the
+canonical backstop for campaign check proofs: the referenced execution must
+exist in the ordinary journal as a purpose-test command that exited zero with
+the recorded source head (historical references validate against real records
+without requiring the current candidate binding). The Lab authority
+composition wires the campaign owner's check_evidence dependency: the
+campaign-repo receipt read (CampaignExecutionEvidence#check, unchanged
+semantics incl. historical mode) now ALSO backstops canonically through the
+installed command owner. Review/approval/head-assessment readers stay
+fail-closed until their canonical joins land. Receipts: command_execution
+9 tests / 49 assertions PASS (passing proof + wrong-head/unknown-id/exit-1/
+non-test refusals); owner admission 10/45 PASS.
+
+Remaining .8 joins: review/approval/head-assessment canonical readers,
+CLI/workflow surface exposure of the runner, comprehensive public-path tests +
+actual Pi independent review, branch re-verification and merge.
+
+### Review-session canonical wiring COMPLETE
+
+OrdinaryReviewCollection gains canonical_review_reference!(attempt_id:,
+head:, digest:): the referenced reviewer attempt (located by scanning the
+journal's assignments for the attempt chain) must hold exactly one retained
+review-collect result — ordinary OR review-context — whose receipt digest and
+reviewed head match the campaign reference. The composition's review_evidence
+dependency is wired late-bound over the lifecycle (same closure pattern as
+release_authorizer/coordinator): campaign-repo session read plus the canonical
+backstop. Receipts: ordinary_reviews 13 tests / 148 assertions PASS (proof +
+wrong-head/wrong-digest/unknown-attempt refusals); owner admission 10/45.
+
+Remaining .8 joins: approval/head-assessment canonical readers (approval
+scans for the accepted-review mutation bound to head/actors/digest),
+CLI/workflow surface exposure, comprehensive public-path tests + actual Pi
+independent review, branch re-verification and merge.
+
+### Approval canonical wiring COMPLETE
+
+OrdinaryReviewEvidence gains canonical_approval_reference!(head:,
+reviewer_actor:, digest:): an accepted independent review must exist in this
+journal bound to the reviewed head and reviewer actor with the referenced
+receipt digest, and must not have been revoked (a post-acceptance cancel
+refuses). The composition's approval_evidence dependency is wired late-bound
+like the others: campaign-repo approval read plus the canonical backstop.
+Receipts: ordinary_reviews 14 tests / 155 assertions PASS (proof +
+wrong-head/wrong-actor/wrong-digest/revoked refusals); owner admission 10/45.
+
+Evidence wiring status: check ✅, review-session ✅, approval ✅. The
+manager-level head_assessment_evidence remains fail-closed by default (its
+canonical source is the accepted-head assessment records; wiring follows with
+the assessment-join work). Remaining .8: head-assessment wiring,
+CLI/workflow exposure, comprehensive public-path tests + actual Pi review,
+branch re-verification and merge.
+
+### Negative-path suite extended
+
+New adversarial proofs for the review_context ingress: a receipt claiming a
+SUBSTITUTED campaign round reference refuses (the canonical campaign binding
+rejects metadata substitution); CORRUPTED artifact bytes that differ from the
+declared digest refuse at transfer decode; and the honest submission succeeds
+immediately after both refusals (the refusals leave no poisoned state).
+Fixture note: the reviewer's queue completion must precede the submissions
+(generation ordering), and the transport refusal codes carry no server detail
+by design — the assertion pins the refusal class plus the follow-on success.
+Receipt: ordinary_reviews 15 tests / 161 assertions PASS.
+
+Comprehensive public-path coverage now includes: oversized-prompt ingress,
+exact-mutation replay, fresh-second conflict, pre-begin refusal, cancellation
++ reselection, revocation (selection and approval), boundary drift, replayed
+begin, failure-submits-nothing, wrong-head/actor/digest/attempt refusals,
+metadata substitution, artifact corruption, canonical byte reuse at
+ingestion, and finish-through-collection. Remaining .8: head-assessment
+wiring, workflow-surface exposure, actual Pi independent review, branch
+re-verification and merge.
+
+### Head-assessment wiring — correctly sequenced with the Pi review phase
+
+Reading campaign_head_assessments#head_assessment_proof! settles the design:
+the head_assessment_evidence callable is an ASSESSMENT EXECUTOR — it produces
+the strict-schema proof (authority/rationale/complete-context digest) by
+actually executing the delta assessment, with material/uncertain changes
+requiring an executed delta round. That is runtime reviewer behavior, not
+composition wiring: it is sequenced together with the actual configured Pi
+independent review (which itself supplies the executed assessments), rather
+than as a standalone composition join. Check/review/approval canonical
+backstops (composition-side) are complete; the assessment executor lands with
+the Pi review.
+
+### Full default suite on the composition branch (round 17)
+
+50/51 packages passed; 12,443 tests / 43,748 assertions passed; 42 skips; the
+single error was ProtectedServiceBoundaryTest teardown — an Errno::ENOENT
+while Dir.mktmpdir cleanup raced git object deletion in the endcap fixture
+(filesystem race in test cleanup, no assertion involvement, product paths
+untouched by the composition changes). The same test file passes cleanly in
+isolation immediately after (5 tests / 62 assertions PASS). Branch verdict:
+effectively green pending the Pi review; assign 1086/1086 and review
+1008/1008 fully green.
+
+### Configured Pi independent review — round 18
+
+ace-review (review-default) on diff:ac80393b4..HEAD produced 17 findings
+(session .ace-local/review/sessions/review-8xgmz0): 3 high, 6 medium, 8 low.
+All highs and mediums-actionable were verified VALID and FIXED:
+
+- HIGH runner begin used the REVIEWER chain — begin mutates the producer
+  chain; the runner now takes producer:{assignment_id, attempt_id,
+  expected_generation} with the reviewer pane/head, and the tightened test
+  asserts both chains.
+- HIGH binding_for keys mismatched prepared_campaign_binding's exact schema —
+  the binding now carries base/contract_identity/scope_identity/subject from
+  caller-supplied campaign inputs; no session_binding key (schema forbids it).
+- HIGH the boundary fetched the schema-forbidden session_binding — the
+  expected campaign identity (campaign/round/scope/head/base) is
+  closure-captured and compared against the validated binding.
+- MEDIUM a withheld (non-yielding) boundary crashed the driver — invocation is
+  tracked; clean {dispatched: false, error} instead.
+- MEDIUM the receipt hardcoded an approved verdict — the executed verdict is
+  checked; non-approved verdicts never submit.
+- MEDIUM silent artifact-count failure — the runner preflights the count with
+  an actionable bound-naming error.
+
+The test fakes now ENFORCE the server/organism schemas (the root cause of all
+three highs: loose fakes hid seam drift). Remaining findings: 8 sequenced
+lows + 2 tracked items (workflow exposure, provenance refactor). The
+independent adversarial subagent review of the same delta is running; its
+verdict will be appended. Receipts: runner 4 tests / 24 assertions PASS
+post-fix.
+
+### Independent adversarial review — VERDICT: APPROVE
+
+Fresh-context adversarial reviewer over diff ac80393b4..tip (report
+.local/review-composition-joins/review-report.md): scope clean (only
+ace-assign/ace-lab/ace-review + docs, no lockfiles); ruby -c on all 26 changed
+product files; all nine focused receipts re-executed and matching. It
+independently identified the same two REJECT-level driver defects the
+configured Pi review found (reviewer-chain begin; binding schema mismatch) and
+verified the mid-review fix (5152b09d8) directly — producer-chain begin with
+reviewer pane, 8-field schema-conforming binding with session_binding
+forbidden, artifact-count and verdict gates, dispatched-flag check.
+Adversarial items verified with quoted lines: submit_result can never select
+the review_context purpose (server-derived); widened decode bounds at exactly
+one call site; the verifier's review-nil projection cannot leak into the
+stored receipt; replayed-begin early return precedes the engine; revoked
+settlement is transient-unavailable while success demands the exact terminal
+collection; canonical backstops scan the whole journal.
+
+Residual advisories fixed this round: the dead duplicate return removed; the
+submit's expected_generation now uses the reviewer chain's own expected
+generation (begin bumps the producer chain, not the reviewer's — the +1
+heuristic had no server-side justification). Remaining advisories recorded:
+read-path ReceiptVerifier asymmetry (defense-in-depth), boundary pins
+campaign/round/scope/head/base rather than the literal session_binding
+(equivalent under deterministic derivation), and the driver-vs-real-authority
+integration receipt (the next .8 item). Runner receipts: 4/24 PASS.
+
+Both gates closed: configured Pi review (17 findings, all fixed/sequenced) +
+independent adversarial APPROVE.

@@ -12,12 +12,14 @@ module Ace
           proof, result = ordinary_collection_proof!(events: events, commit: commit, reference: reference)
           canonical = Molecules::CanonicalEvidence.new(journal: @journal)
           active, thread = true, Thread.current
+          context = ordinary_result_context(result.fetch("binding"))
+          context = context.merge(kind: "review-context") if result["kind"] == "review-context"
           reader = lambda do |artifact|
             unless active && Thread.current.equal?(thread) && @journal.ref_value == commit && proof.fetch("artifacts").include?(artifact)
               raise AttemptErrors::EvidenceUnavailable, "ordinary collection artifact escaped its canonical scope"
             end
             canonical.read({"ref" => artifact.fetch("path"), "sha256" => artifact.fetch("sha256")},
-              **ordinary_result_context(result.fetch("binding")), commit: commit)
+              **context, commit: commit)
           end
           yield proof, reader
         ensure
@@ -39,7 +41,8 @@ module Ace
           producer, reviewer = ordinary_review_origins!(events, commit, assigned)
           params = {"assignment_id" => assigned.fetch("reviewer_assignment_id"), "attempt_id" => assigned.fetch("reviewer_attempt_id")}
           reviewer_events = result_events(params, commit)
-          result = retained_ordinary_result(params, reviewer_events, commit)
+          result = retained_ordinary_result(params, reviewer_events, commit) ||
+            retained_review_context_result(params, reviewer_events, commit)
           terminals = reviewer_events.select { |event| event["type"] == "receipt_accepted" }
           completions = reviewer_events.select { |event| event["type"] == "authority_mutation" && event.dig("payload", "operation") == "finish" }
           unless result && Molecules::CanonicalAttemptState.derive(reviewer_events) == "succeeded" && terminals.one? && completions.one? &&
@@ -66,6 +69,27 @@ module Ace
           [proof, result]
         rescue KeyError, TypeError
           raise AttemptErrors::EvidenceUnavailable, "ordinary collection evidence is incomplete"
+        end
+        # Canonical backstop for campaign review-session proofs: the
+        # referenced reviewer attempt must hold exactly one retained
+        # review-collect result (ordinary or review-context) whose receipt
+        # digest and reviewed head match the campaign reference.
+        def canonical_review_reference!(attempt_id:, head:, digest:)
+          commit = @journal.ref_value
+          assignment = @journal.assignment_ids(commit: commit).find do |id|
+            @journal.read_events(id, commit: commit).any? { |event| event["attempt_id"] == attempt_id }
+          end
+          raise AttemptErrors::EvidenceUnavailable, "canonical review attempt is unknown" unless assignment
+          params = {"assignment_id" => assignment, "attempt_id" => attempt_id}
+          events = result_events(params, commit)
+          result = retained_ordinary_result(params, events, commit) ||
+            retained_review_context_result(params, events, commit)
+          unless result && result.dig("receipt", "digest") == digest &&
+              result.dig("binding", "head") == head && result.dig("receipt", "operation") == "review-collect"
+            raise AttemptErrors::EvidenceUnavailable, "canonical review reference does not prove the collected session at the reviewed head"
+          end
+          {"assignment_id" => assignment, "attempt_id" => attempt_id, "head" => head,
+            "receipt_digest" => digest, "journal_commit" => commit}
         end
       end
     end

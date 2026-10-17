@@ -117,6 +117,23 @@ module Ace
 
         # Read only the accepted launcher-owned four-stage execution at the
         # caller's held CAS prefix. Arbitrary allowed commands are not tests.
+        # Canonical backstop for campaign check proofs: the referenced
+        # execution must exist in this canonical journal as a purpose-test
+        # command that exited zero with the recorded source head. This does
+        # not replace the full tree/candidate binding of test_evidence_at!;
+        # it validates historical check references against real records.
+        def canonical_check_reference!(execution_id:, head:)
+          commit = @journal.ref_value
+          data = projection(execution_id, commit)
+          definition = data.fetch("definition")
+          unless definition["purpose"] == "test" && definition.dig("source", "head") == head &&
+              data["phase"] == "exited" && data["result"] == {"exit_status" => 0, "signal" => nil}
+            raise AttemptErrors::EvidenceUnavailable, "canonical check reference does not prove a passing test at the reviewed head"
+          end
+          {"execution_id" => execution_id, "head" => head, "project_id" => @project,
+            "definition" => definition.slice("purpose", "source"), "journal_commit" => commit}
+        end
+
         def test_evidence_at!(execution_id:, commit:, head:, tree:, deadline:, candidate_reference: nil, historical: false)
           raise ArgumentError, "invalid historical test proof mode" unless [true, false].include?(historical)
           unless execution_id.is_a?(String) && ID.match?(execution_id) && commit && @journal.ref_value == commit

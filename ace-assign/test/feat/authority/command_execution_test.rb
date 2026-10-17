@@ -113,6 +113,32 @@ module Ace
         end
       end
 
+      def test_canonical_check_reference_proves_passing_purpose_test_at_reviewed_head
+        with_owner do
+          @admission.definition = {"argv" => ["bin/ace-test"], "purpose" => "test", "source" => {"head" => "a" * 40, "tree" => "b" * 40}}
+          admit; claim; bind
+          call("command_complete", {"result" => {"exit_status" => 0, "signal" => nil}})
+          proof = @owner.canonical_check_reference!(execution_id: "run-1", head: "a" * 40)
+          assert_equal "test", proof.dig("definition", "purpose")
+          assert_equal "a" * 40, proof.dig("definition", "source", "head")
+          assert_equal @journal.ref_value, proof.fetch("journal_commit")
+          assert_raises(AttemptErrors::EvidenceUnavailable) { @owner.canonical_check_reference!(execution_id: "run-1", head: "f" * 40) }
+          assert_raises(AttemptErrors::NotFound) { @owner.canonical_check_reference!(execution_id: "missing", head: "a" * 40) }
+        end
+        with_owner do
+          @admission.definition = {"argv" => ["bin/ace-test"], "purpose" => "test", "source" => {"head" => "a" * 40, "tree" => "b" * 40}}
+          admit; claim; bind
+          call("command_complete", {"result" => {"exit_status" => 1, "signal" => nil}})
+          assert_raises(AttemptErrors::EvidenceUnavailable) { @owner.canonical_check_reference!(execution_id: "run-1", head: "a" * 40) }
+        end
+        with_owner do
+          @admission.definition = {"argv" => ["bin/ace-tool"], "purpose" => "command", "source" => {"head" => "a" * 40, "tree" => "b" * 40}}
+          admit; claim; bind
+          call("command_complete", {"result" => {"exit_status" => 0, "signal" => nil}})
+          assert_raises(AttemptErrors::EvidenceUnavailable) { @owner.canonical_check_reference!(execution_id: "run-1", head: "a" * 40) }
+        end
+      end
+
       def test_candidate_download_requires_original_claimed_launcher_and_never_mutates_history
         with_owner do
           admit

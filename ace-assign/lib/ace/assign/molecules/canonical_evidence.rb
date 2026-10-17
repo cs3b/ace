@@ -16,10 +16,13 @@ module Ace
         ID = /\A[a-zA-Z0-9][a-zA-Z0-9_.-]{0,127}\z/
         MAX_RELEASE_ARTIFACT_BYTES = 64 * 1024 * 1024
         ROLES = {"service" => "executor", "review" => "reviewer",
-                 "result" => "worker", "release-artifact" => "worker"}.freeze
+                 "result" => "worker", "release-artifact" => "worker",
+                 "review-context" => "reviewer"}.freeze
         REPORT_LIMITS = [MAX_ARTIFACT_BYTES, MAX_TOTAL_BYTES, MAX_ARTIFACTS].freeze
         LIMITS = {"service" => REPORT_LIMITS, "review" => REPORT_LIMITS, "result" => REPORT_LIMITS,
-          "release-artifact" => [MAX_RELEASE_ARTIFACT_BYTES, MAX_RELEASE_ARTIFACT_BYTES, 1].freeze}.freeze
+          "release-artifact" => [MAX_RELEASE_ARTIFACT_BYTES, MAX_RELEASE_ARTIFACT_BYTES, 1].freeze,
+          "review-context" => [Atoms::CandidateLimits::REVIEW_CONTEXT_BYTES, Atoms::CandidateLimits::REVIEW_CONTEXT_BYTES,
+            Atoms::CandidateLimits::REVIEW_CONTEXT_ARTIFACTS].freeze}.freeze
         DESCRIPTOR_FIELDS = %w[version artifact_id kind project_id assignment_id attempt_id peer_uid role
           binding_digest sha256 bytes admitted_at admitted_after_event_digest request_id_or_event_id
           candidate_generation_or_claim_generation].freeze

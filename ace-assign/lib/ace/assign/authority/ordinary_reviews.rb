@@ -27,7 +27,9 @@ module Ace
 
         def validate_ordinary_review!(request)
           operation, params = request.values_at("operation", "params")
-          strict!(params, REVIEW_PARAMETERS.fetch(operation))
+          keys = REVIEW_PARAMETERS.fetch(operation)
+          keys = keys + ["campaign"] if operation == "assign_review" && params.key?("campaign")
+          strict!(params, keys)
           %w[assignment_id attempt_id reviewer_assignment_id reviewer_attempt_id review_id].each { |key| token!(params[key]) if params.key?(key) }
           unless params["head"].is_a?(String) && CandidateTransfer::SHA.match?(params["head"]) &&
               params["candidate_generation"].is_a?(Integer) && params["candidate_generation"] >= 0
@@ -118,12 +120,12 @@ module Ace
               expected_generation: params.fetch("expected_generation"), with_replay: true, deadline: deadline,
               replay_authorizer: replay) do |current_events, prefix, _generation|
               authorize_ordinary_review!(request, peer, role, deadline, events: current_events, commit: prefix)
-              ordinary_review_plan(operation, params, peer, deadline, current_events, prefix, admitted, transfer)
+              ordinary_review_plan(operation, params, peer, deadline, current_events, prefix, admitted, transfer, mutation_id: request.fetch("mutation_id"))
             end
           end
         end
 
-        def ordinary_review_plan(operation, params, peer, deadline, events, commit, admitted, transfer)
+        def ordinary_review_plan(operation, params, peer, deadline, events, commit, admitted, transfer, mutation_id:)
           if operation == "submit_candidate"
             current = ordinary_candidate_event(events)&.dig("payload", "data")
             unless (current && current.fetch("candidate_generation") || 0) == params.fetch("candidate_generation")
@@ -149,7 +151,7 @@ module Ace
           if operation == "assign_review"
             prior = events.reverse.find { |event| event["type"] == "authority_mutation" && event.dig("payload", "operation") == "assign_review" &&
               event.dig("payload", "data", "candidate_generation") == current.fetch("candidate_generation") }
-            if prior && !events.any? { |event| event.dig("payload", "operation") == "cancel_review" && event.dig("payload", "data", "review_id") == prior.dig("payload", "data", "review_id") }
+            if prior && !params.key?("campaign") && !events.any? { |event| event.dig("payload", "operation") == "cancel_review" && event.dig("payload", "data", "review_id") == prior.dig("payload", "data", "review_id") }
               raise AttemptErrors::Conflict, "ordinary review is already assigned"
             end
             producer = origin_at!(events: events, commit: commit)
@@ -162,11 +164,15 @@ module Ace
               raise AttemptErrors::UnauthorizedIdentity, "ordinary reviewer native binding changed"
             end
             start = reviewer_events.find { |event| event["type"] == "process_start" }.fetch("payload")
-            return {events: [], data: current.slice("head", "candidate_generation").merge(
+            campaign = ordinary_campaign_review_selection!(params: params, events: events, commit: commit,
+              deadline: deadline, mutation_id: mutation_id, prior: prior)
+            data = current.slice("head", "candidate_generation").merge(
               "review_id" => SecureRandom.hex(16), "reviewer_assignment_id" => params.fetch("reviewer_assignment_id"),
               "reviewer_attempt_id" => params.fetch("reviewer_attempt_id"), "reviewer_actor" => start.fetch("actor"),
               "reviewer_uid" => reviewer.dig("runtime_binding", "process_identity", "uid"),
-              "reviewer_runtime_binding" => reviewer.fetch("runtime_binding"), "producer_origin" => producer, "reviewer_origin" => reviewer)}
+              "reviewer_runtime_binding" => reviewer.fetch("runtime_binding"), "producer_origin" => producer, "reviewer_origin" => reviewer)
+            data["campaign"] = campaign if campaign
+            return {events: [], data: data}
           end
           assigned = ordinary_review_assignment!(events, current)
           raise AttemptErrors::Conflict, "ordinary review selection changed" unless assigned.fetch("review_id") == params.fetch("review_id")

@@ -42,7 +42,8 @@ module Ace
                   unless Molecules::CanonicalAttemptState.derive(events) == "running"
                     raise AttemptErrors::Conflict, "ordinary completion requires a running attempt"
                   end
-                  result = retained_ordinary_result(params, events, prefix)
+                  result = retained_ordinary_result(params, events, prefix) ||
+                    retained_review_context_result(params, events, prefix)
                   unless result && result.fetch("result_id") == params.fetch("result_id") &&
                       result.dig("receipt", "digest") == params.fetch("receipt_digest") && result.dig("binding", "head") == params.fetch("head")
                     raise AttemptErrors::ReceiptRejected, "ordinary completion requires its exact submitted result"

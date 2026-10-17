@@ -26,7 +26,26 @@ module Ace
           an approval. Do not infer another base, live checkout or PR candidate.
         PROMPT
 
+        # The external owner supplies execution permission; this entry never
+        # resolves a local campaign or reserves another provider attempt.
+        def execute_prepared_campaign(candidate:, subject:, session_dir:, campaign_binding:, execution_boundary:)
+          binding = prepared_campaign_binding(campaign_binding, candidate)
+          unless execution_boundary.respond_to?(:call)
+            raise ArgumentError, "Prepared campaign requires its execution owner"
+          end
+          prepared_candidate(candidate: candidate, subject: subject, session_dir: session_dir,
+            campaign_binding: binding, execution_boundary: execution_boundary)
+        rescue ArgumentError, KeyError, TypeError => error
+          {success: false, error: "Prepared campaign review unavailable: #{error.message}"}
+        end
+
         def execute_prepared_candidate(candidate:, subject:, session_dir:)
+          prepared_candidate(candidate: candidate, subject: subject, session_dir: session_dir)
+        end
+
+        private
+
+        def prepared_candidate(candidate:, subject:, session_dir:, campaign_binding: nil, execution_boundary: nil)
           binding = prepared_candidate_binding(candidate)
           unless subject.is_a?(String) && subject.encoding == Encoding::UTF_8 && subject.valid_encoding? &&
               !subject.strip.empty? && !subject.include?("\0") && subject.bytesize <= 64 * 1024 * 1024
@@ -34,7 +53,9 @@ module Ace
           end
           subject = subject.dup.freeze
           subject_digest = Digest::SHA256.hexdigest(subject)
-          packet = JSON.generate("candidate" => binding, "subject_sha256" => subject_digest, "source" => subject)
+          packet_input = {"candidate" => binding, "subject_sha256" => subject_digest, "source" => subject}
+          packet_input["campaign"] = campaign_binding if campaign_binding
+          packet = JSON.generate(packet_input)
           raise ArgumentError, "Prepared review packet is oversized" if packet.bytesize > 64 * 1024 * 1024
           prompt_digests = {"system" => Digest::SHA256.hexdigest(CANDIDATE_INSTRUCTIONS), "user" => Digest::SHA256.hexdigest(packet)}
           budget = Atoms::PromptBudget.check(system_prompt: CANDIDATE_INSTRUCTIONS, user_prompt: packet,
@@ -51,16 +72,39 @@ module Ace
           data = {preset: "protected-candidate", candidate_binding: binding, subject_sha256: subject_digest,
                   system_prompt: CANDIDATE_INSTRUCTIONS, user_prompt: packet, subject: subject,
                   models: [CANDIDATE_MODEL], model: CANDIDATE_MODEL, budget: budget, prompt_digests: prompt_digests}
+          if campaign_binding
+            data.merge!(preset: campaign_binding.fetch("scope_identity").fetch("preset"),
+              campaign_binding: campaign_binding, execution_boundary: execution_boundary)
+          end
           save_session_files(directory, data)
           result = execute_single_model(data, directory, options, CANDIDATE_MODEL)
           return result.merge(session_dir: directory) unless result[:success]
 
-          prepared_candidate_result(directory, binding, subject_digest, prompt_digests)
+          prepared_candidate_result(directory, binding, subject_digest, prompt_digests, campaign_binding: campaign_binding)
         rescue ArgumentError, KeyError, TypeError, JSON::ParserError, Psych::Exception, SystemCallError, IOError => error
           {success: false, error: "Prepared candidate review unavailable: #{error.message}", session_dir: directory}
         end
 
-        private
+        def prepared_campaign_binding(value, candidate)
+          contract = Atoms::CampaignContract
+          fields = %w[base campaign_id contract_identity head round_id scope scope_identity subject]
+          unless value.is_a?(Hash) && value.keys.sort == fields && value["head"] == candidate.fetch("head") &&
+              value["contract_identity"].is_a?(String) && value["contract_identity"].match?(/\A[0-9a-f]{64}\z/)
+            raise ArgumentError, "Prepared campaign binding differs"
+          end
+          %w[campaign_id round_id scope].each { |key| contract.id!(value.fetch(key), key) }
+          %w[head base].each { |key| contract.sha!(value.fetch(key), key) }
+          contract.subject!(value.fetch("subject"))
+          scope = value.fetch("scope_identity")
+          unless scope.is_a?(Hash) && (scope.keys - %w[preset subjects delta_reference_head]).empty? &&
+              scope.keys.include?("preset") && scope.keys.include?("subjects")
+            raise ArgumentError, "Prepared campaign scope differs"
+          end
+          contract.string!(scope.fetch("preset"), "scope preset")
+          contract.strings!(scope.fetch("subjects"), "scope subjects")
+          contract.sha!(scope.fetch("delta_reference_head"), "delta reference") if scope["delta_reference_head"]
+          JSON.parse(JSON.generate(value), freeze: true)
+        end
 
         def prepared_candidate_binding(candidate)
           fields = %w[assignment_id attempt_id candidate_generation head purpose_id tree]
@@ -88,7 +132,7 @@ module Ace
           {digest: Digest::SHA256.hexdigest(bytes), bytes: bytes.freeze}.freeze
         end
 
-        def prepared_candidate_result(directory, binding, subject_digest, prompt_digests)
+        def prepared_candidate_result(directory, binding, subject_digest, prompt_digests, campaign_binding: nil)
           metadata_bytes = bounded_candidate_artifact(directory, "metadata.yml")
           execution_bytes = bounded_candidate_artifact(directory, "llm_metadata.yml")
           metadata = YAML.safe_load(metadata_bytes, permitted_classes: [Time, Date, Symbol])
@@ -98,7 +142,8 @@ module Ace
           end
           unless metadata.is_a?(Hash) && execution.is_a?(Hash) && metadata["candidate_binding"] == binding &&
               metadata["subject_sha256"] == subject_digest && Molecules::CampaignEvidence.completed_entry?(execution) &&
-              execution["prompt_sha256"] == prompt_digests && actual_prompts == prompt_digests
+              execution["prompt_sha256"] == prompt_digests && actual_prompts == prompt_digests &&
+              metadata["campaign_binding"] == campaign_binding
             raise ArgumentError, "Prepared review execution provenance differs"
           end
           name = execution.fetch("output_file")
@@ -125,6 +170,15 @@ module Ace
             raise ArgumentError, "Prepared approval conflicts with recorded findings"
           end
           artifacts = {"metadata.yml" => metadata_bytes, "llm_metadata.yml" => execution_bytes, name => report}
+          if campaign_binding
+            %w[system.prompt.md user.prompt.md].each do |prompt|
+              artifacts[prompt] = bounded_candidate_artifact(directory, prompt, limit: 64 * 1024 * 1024)
+            end
+            Dir.glob(File.join(directory, "feedback", "*.s.md")).sort.each do |path|
+              relative = path.delete_prefix(directory + "/")
+              artifacts[relative] = bounded_candidate_artifact(directory, relative)
+            end
+          end
           {success: true, verdict: verdict.fetch("verdict"), candidate: binding, session_dir: directory,
            artifacts: artifacts, checks: [{"name" => "exact-candidate-review-execution", "verdict" => "passed"},
              {"name" => "complete-review-feedback-inventory", "verdict" => "passed"}]}

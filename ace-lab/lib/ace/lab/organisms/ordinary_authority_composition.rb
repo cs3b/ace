@@ -48,10 +48,12 @@ module Ace
           command = Ace::Assign::Authority::CommandExecution.new(project: @config.project, journal: journal,
             admission: command_admission)
           coordinator = nil
+          campaign = canonical_campaign_owner(command, -> { lifecycle })
           lifecycle = Ace::Assign::Authority::OrdinaryLifecycle.new(project: @config.project,
             admission: admission, journal: journal, exclusion: exclusion, input_root: @config.assignment_root,
             command_evidence: command,
-            release_authorizer: ->(binding) { authorize_release_artifact!(binding, coordinator) })
+            release_authorizer: ->(binding) { authorize_release_artifact!(binding, coordinator) },
+            campaign: campaign)
           coordinator = Ace::Assign::Organisms::AttemptCoordinator.new(cache_base: @config.assignment_root,
             repo_root: @config.journal.fetch("repository"), journal: journal, lifecycle_exclusion: exclusion,
             recorded_binding_observer: admission.method(:recorded_binding!), ordinary_merge_evidence: lifecycle)
@@ -91,6 +93,39 @@ module Ace
           raise SecurityError, "release artifact project grant is unavailable" unless visibility.authorized?(@config.project)
           Molecules::ServicePolicy.new(document, coordinator.method(:proposal_authorization))
             .authorize!(binding.fetch("authorization"), binding)
+        end
+
+        # The campaign owner's evidence dependencies default to fail-closed
+        # stubs. The check reader is wired to the canonical journal: a check
+        # receipt accepted for a campaign round must also reference a real
+        # purpose-test execution that exited zero at the reviewed head in the
+        # ordinary canonical journal. Review/approval readers stay fail-closed
+        # until their canonical joins land.
+        def canonical_campaign_owner(command, lifecycle_ref)
+          selected = @config.campaign
+          return unless selected
+          default = Ace::Review::Molecules::CampaignExecutionEvidence.new(repo_root: selected.fetch("repository"))
+          Ace::Assign::Authority::OrdinaryCampaignOwner.new(repository: selected.fetch("repository"),
+            store_root: selected.fetch("store_root"), policy: selected.fetch("policy"),
+            verify_selection: @config.method(:verify_owner!),
+            evidence: {check_evidence: ->(reference, head:, name:, historical: false) do
+              data = default.check(reference, head: head, name: name, historical: historical)
+              command.canonical_check_reference!(execution_id: reference.fetch("attempt_id"), head: head)
+              data
+            end,
+              review_evidence: ->(reference, head:, artifacts:, historical: false) do
+                data = default.review(reference, head: head, artifacts: artifacts, historical: historical)
+                lifecycle_ref.call.canonical_review_reference!(attempt_id: reference.fetch("attempt_id"),
+                  head: head, digest: reference.fetch("digest"))
+                data
+              end,
+              approval_evidence: ->(reference, head:, artifacts:, producer:, reviewer:, historical: false) do
+                data = default.approval(reference, head: head, artifacts: artifacts, producer: producer,
+                  reviewer: reviewer, historical: historical)
+                lifecycle_ref.call.canonical_approval_reference!(head: head, reviewer_actor: reviewer,
+                  digest: reference.fetch("digest"))
+                data
+              end})
         end
 
         def verify_join!(document)
