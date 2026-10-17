@@ -701,3 +701,8 @@ runs autonomously; last verified: both assignments registered, worker pane
 executing). Local main carries all program source; the push remains with the
 Captain. The next coordinated release (shipping the .5/.8 additions) is
 sequenced after installed acceptance per the handoff.
+
+Full default suite on main after the post-merge additions (integration
+receipt, CLI exposure, .5 chain): 51 packages / 12,606 tests / 44,429
+assertions / 0 failures. Local main verified green at the source-completion
+checkpoint.
