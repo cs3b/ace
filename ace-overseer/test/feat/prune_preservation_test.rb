@@ -270,7 +270,7 @@ class PruneSafetyCheckerDouble
       assignment_complete: true,
       task_done: true,
       git_clean: true,
-      attempts_terminal: true,
+      work_terminal: true,
       preserved: true,
       verified_head: proven_head,
       verified_branch: proven_branch,

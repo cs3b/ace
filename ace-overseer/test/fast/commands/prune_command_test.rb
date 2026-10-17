@@ -75,12 +75,12 @@ class PruneCommandTest < AceOverseerTestCase
     safe_candidate = Ace::Overseer::Models::PruneCandidate.new(
       task_id: "230", worktree_path: "/wt/task.230",
       assignment_complete: true, task_done: true, git_clean: true,
-      attempts_terminal: true, preserved: true, reasons: []
+      work_terminal: true, preserved: true, reasons: []
     )
     blocked_candidate = Ace::Overseer::Models::PruneCandidate.new(
       task_id: "231", worktree_path: "/wt/task.231",
       assignment_complete: true, task_done: true, git_clean: false,
-      attempts_terminal: true, preserved: false, reasons: ["git not clean"]
+      work_terminal: true, preserved: false, reasons: ["git not clean"]
     )
     orchestrator = FakePruneOrchestrator.new(
       result: {dry_run: true, safe: [safe_candidate], unsafe: [blocked_candidate], forced: [], pruned: [], failed: [], blocked: []}
@@ -107,7 +107,7 @@ class PruneCommandTest < AceOverseerTestCase
     safe_candidate = Ace::Overseer::Models::PruneCandidate.new(
       task_id: "230", worktree_path: "/wt/task.230",
       assignment_complete: true, task_done: true, git_clean: true,
-      attempts_terminal: true, preserved: true, reasons: []
+      work_terminal: true, preserved: true, reasons: []
     )
     orchestrator = FakePruneOrchestrator.new(
       result: {dry_run: false, safe: [], unsafe: [safe_candidate], forced: [],
@@ -129,7 +129,7 @@ class PruneCommandTest < AceOverseerTestCase
     pruned_candidate = Ace::Overseer::Models::PruneCandidate.new(
       task_id: "230", worktree_path: "/wt/task.230",
       assignment_complete: true, task_done: true, git_clean: true,
-      attempts_terminal: true, preserved: true, reasons: []
+      work_terminal: true, preserved: true, reasons: []
     )
     orchestrator = FakePruneOrchestrator.new(
       result: {dry_run: false, safe: [pruned_candidate], unsafe: [], forced: [],
@@ -208,7 +208,7 @@ class PruneCommandTest < AceOverseerTestCase
         assignment_candidate: Ace::Overseer::Models::AssignmentPruneCandidate.new(
           assignment_id: "abc12", assignment_name: "work-on-task-230",
           assignment_state: "running", location_path: "/cache/abc12",
-          attempts_terminal: false, reasons: ["attempt at1 is running"]
+          work_terminal: false, reasons: ["attempt at1 is running"]
         ),
         pruned_assignments: [],
         blocked: true
@@ -248,7 +248,7 @@ class PruneCommandTest < AceOverseerTestCase
     pruned_candidate = Ace::Overseer::Models::PruneCandidate.new(
       task_id: "230", worktree_path: "/wt/task.230",
       assignment_complete: true, task_done: true, git_clean: true,
-      attempts_terminal: true, preserved: true, reasons: []
+      work_terminal: true, preserved: true, reasons: []
     )
     orchestrator = FakePruneOrchestrator.new(
       result: {dry_run: false, safe: [], unsafe: [], forced: [],

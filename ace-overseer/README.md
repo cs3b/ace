@@ -14,12 +14,12 @@
 
 > Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
 
-> **State owner:** the private, untracked overseer list in
-> `.ace-local/overseer/tasks/`, managed only through
-> `ace-task --in _overseer …`. Task worktrees live in `.ace-wt/`; assignment
-> plans and steps stay in `.ace-local/assign/` (ace-assign) and are never
-> copied into the overseer list. The canonical flow is
-> [docs/lab-flow.md](../docs/lab-flow.md).
+> **State owner:** the private, gitignored overseer task list in
+> `.ace-tasks/_overseer/`, a normal task folder reached through
+> `ace-task --in _overseer …` (see [docs/lab-flow.md](../docs/lab-flow.md)).
+> Task worktrees live in `.ace-wt/`; assignment plans and steps stay in
+> `.ace-local/assign/` (ace-assign) and are never copied into the overseer
+> list.
 
 [Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
 
@@ -37,7 +37,10 @@ where, and cleans up finished worktrees so nothing lingers.
 
 tmux and Herdr are transports only. They do not own task, assignment, or HITL
 state. The old protected execution path (`--project/--agent`, protected
-status/review/stop/prompt/prune) is removed (L1) and is not a normal path.
+status/review/stop/prompt/prune) and the installed ordinary launcher
+(`ace-overseer ordinary`, native journal/attempt-handoff preparation and
+launch) are removed (L1) and are not normal paths. Prune and status read local
+assignment, task, worktree and Git state only.
 
 ## Use Cases
 

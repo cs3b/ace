@@ -39,21 +39,6 @@ module Ace
           super
         end
 
-        def proposal_wake(project:, after: nil)
-          require_bound_project!(project)
-          super(project: @project, after: after)
-        end
-
-        def proposal_due(project:, after: nil)
-          require_bound_project!(project)
-          super(project: @project, after: after)
-        end
-
-        def proposal_history(project:, query: "", after: nil)
-          require_bound_project!(project)
-          super(project: @project, query: query, after: after)
-        end
-
         private
 
         def require_bound_project!(project)

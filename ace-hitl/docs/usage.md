@@ -123,14 +123,21 @@ HITL lifecycle signals use this namespace:
 - `hitl.event.resume_failed`
 - `hitl.event.archived`
 
-## Planned waves
+## Transport boundary
+
+The installed Lab provider and the attempt-bound managed HITL path (`ask`, the
+provider assignment binding, native Herdr delivery, managed/TLS `serve`) were
+removed with the old authority model. The local file-based event commands above
+remain the active path. The generic lifecycle/relay transport (`Lifecycle::*`)
+and its commands (read/pending/states/duty/deliver/consume/cancel/overseer-*)
+remain for adapters such as `ace-hitl-hermes`; `serve` supports
+`--operator-only` only. The immutable second-commander proposal flow is
+removed.
 
 > **Planned (L2):** one unified report/question/reply interface with
-> configurable provider adapters -- not available yet. The authenticated service
-> boundary (`serve`), OTP/TLS, scoped multi-user stores, relay
-> request/answer/consume commands, and the immutable proposal flow belong to
-> L2. Adapters (`ace-hitl-hermes`) and transports (tmux, Herdr) are not
-> additional state owners.
+> configurable provider adapters -- not available yet. Adapters
+> (`ace-hitl-hermes`) and transports (tmux, Herdr) are not additional state
+> owners.
 
 ## Testing
 

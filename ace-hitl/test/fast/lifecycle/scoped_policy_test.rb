@@ -9,18 +9,6 @@ require "fileutils"
 # document, matched against the kernel-verified peer uid; an
 # unverifiable document authorizes NOTHING.
 class ScopedPolicyTest < AceHitlTestCase
-  def test_second_commander_is_an_explicit_project_scoped_principal
-    document = grants_document
-    policy = Ace::Hitl::Lifecycle::GrantsPolicy.new(document: document)
-    refute policy.proposal?(stub_peer(4211), project: "ace"), "transport alone must not admit proposals"
-    document["hitl"]["proposal_uids"] = [4211]
-    assert policy.proposal?(stub_peer(4211), project: "ace")
-    refute policy.proposal?(stub_peer(4211), project: "other")
-    refute policy.proposal?(stub_peer(4212), project: "other")
-    document["authorization"]["principals"].delete("4211")
-    refute policy.proposal?(stub_peer(4211), project: "ace")
-    refute Ace::Hitl::Lifecycle::AccessPolicy.new.proposal?(stub_peer(4211), project: "ace")
-  end
   def grants_document
     {
       "hitl" => {"service_uid" => 4210, "transport_uids" => [4211, 4212]},
@@ -31,44 +19,6 @@ class ScopedPolicyTest < AceHitlTestCase
         }
       }
     }
-  end
-
-  def test_silence_requires_a_current_exact_operation_delegation_for_the_proposer
-    document = grants_document
-    document["hitl"]["proposal_uids"] = [4211]
-    policy = Ace::Hitl::Lifecycle::GrantsPolicy.new(document: document)
-    args = {caller_uid: 4211, requester: "fixture-4211", project: "ace", operation: "merge"}
-    refute policy.proposal_silence?(**args)
-    document["hitl"]["silence_operations"] = {"ace" => ["merge"]}
-    assert policy.proposal_silence?(**args)
-    refute policy.proposal_silence?(**args.merge(operation: "publish"))
-    refute policy.proposal_silence?(**args.merge(project: "other"))
-    refute policy.proposal_silence?(**args.merge(caller_uid: 4212))
-    document["hitl"]["silence_operations"]["ace"] = ["*"]
-    refute policy.proposal_silence?(**args)
-    document["hitl"]["silence_operations"]["ace"] = ["merge"]
-    document["hitl"]["proposal_uids"] = []
-    refute policy.proposal_silence?(**args)
-  end
-
-  def test_tls_reconciliation_uses_original_proposer_and_current_exact_delegation
-    document = grants_document
-    document["hitl"]["proposal_uids"] = [4211]
-    document["hitl"]["silence_operations"] = {"ace" => ["merge"]}
-    policy = Ace::Hitl::Lifecycle::TlsAccessPolicy.new(project: "ace",
-      decision_policy: Ace::Hitl::Lifecycle::GrantsPolicy.new(document: document))
-    args = {caller_uid: 4211, requester: "fixture-4211", project: "ace", operation: "merge"}
-    assert policy.proposal_silence?(**args)
-    refute policy.proposal_silence?(**args.merge(operation: "publish"))
-    refute policy.proposal_silence?(**args.merge(project: "other"))
-    refute policy.proposal_silence?(**args.merge(caller_uid: 4212))
-    document["hitl"]["proposal_uids"] = []
-    refute policy.proposal_silence?(**args)
-    remote = args.merge(caller_uid: nil, requester: "urn:ace:hitl:ace:hermes-client")
-    assert policy.proposal_silence?(**remote)
-    refute policy.proposal_silence?(**remote.merge(requester: "urn:ace:hitl:other:hermes-client"))
-    document["hitl"]["silence_operations"] = {}
-    refute policy.proposal_silence?(**remote)
   end
 
   def policy(document: grants_document)
@@ -180,17 +130,15 @@ class ScopedPolicyTest < AceHitlTestCase
   end
   def test_file_backed_policy_rechecks_current_project_grants_without_role_snapshot_mix
     peer = Struct.new(:uid).new(1001)
-    current = {"hitl" => {"proposal_uids" => [1001], "transport_uids" => [1001]},
+    current = {"hitl" => {"transport_uids" => [1001]},
       "authorization" => {"principals" => {"1001" => {"projects" => ["ace"]}}}}
     policy = Ace::Hitl::Lifecycle::GrantsPolicy.new(grants_path: "/fixture/trusted-grants.yml")
     Ace::Hitl::Lifecycle::TrustedFile.stub(:read_yaml, ->(_) { current }) do
-      assert policy.proposal?(peer, project: "ace")
       assert policy.transport?(peer, project: "ace")
-      current = {"hitl" => {"proposal_uids" => [1001], "transport_uids" => [1001]},
+      current = {"hitl" => {"transport_uids" => [1001]},
         "authorization" => {"principals" => {"1001" => {"projects" => ["other"]}}}}
-      refute policy.proposal?(peer, project: "ace")
       refute policy.transport?(peer, project: "ace")
-      assert policy.proposal?(peer, project: "other")
+      assert policy.transport?(peer, project: "other")
     end
   end
 

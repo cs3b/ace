@@ -132,7 +132,7 @@ class PruneOrchestratorTest < AceOverseerTestCase
       assignment_complete: safe,
       task_done: safe,
       git_clean: safe,
-      attempts_terminal: safe,
+      work_terminal: safe,
       preserved: safe,
       verified_head: safe ? ("h" * 40) : nil,
       reasons: reasons

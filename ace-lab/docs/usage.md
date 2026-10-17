@@ -1,8 +1,7 @@
 # ace-lab usage
 
-`ace-lab` currently exposes read-only topology queries and one explicit
-project-command kernel. The lab installer and project onboarding are
-**planned (L8: not available yet)**.
+`ace-lab` currently exposes read-only topology queries only. The lab installer
+and project onboarding are **planned (L8: not available yet)**.
 
 The file-based ownership model is documented once in
 [../../docs/lab-flow.md](../../docs/lab-flow.md).
@@ -77,25 +76,6 @@ ace-lab route --project atlas --capability search --format json
 Routing selects a capable service in the requested project. It never invokes
 the service and never grants credentials.
 
-## Explicit project commands
-
-### `ace-lab run`
-
-Run one command with an explicit project selection. Pass the argv after `--`;
-no shell interpretation happens.
-
-```bash
-ace-lab run --project atlas -- /usr/local/bin/publish-release 1.2.3
-```
-
-### `ace-lab run-status`
-
-Inspect an original command execution without running it again.
-
-```bash
-ace-lab run-status --project atlas --reference REFERENCE --format json
-```
-
 ## Planned waves
 
 > **Planned (L7):** topology values and status integration for the file-based
@@ -108,12 +88,11 @@ ace-lab run-status --project atlas --reference REFERENCE --format json
 ## Boundaries
 
 `ace-lab` owns no task, assignment, HITL, or worktree state. There is no
-journal, authority/admission service, daemon, queue engine, or extra state
-cache in this package. The old protected service-request/executor path is
-removed (L1); a missing old listener does not block ordinary work.
+journal, authority/admission service, daemon, queue engine, command kernel, or
+extra state cache in this package.
 
-The ordinary fixed-merge producer/receiver (`service listen|request|status
---mode ordinary-merge`) and the `ace-lab assignment …` ordinary-owner commands
-are retained as internal transports for planned L3/L6 work. They are not
-required by the local flow and are intentionally not documented here as a user
-path.
+The installed authority/admission/journal/command path is removed in L1: the
+`service request|status|listen`, `ace-lab assignment …`, `run`, `run-status`,
+and `command execute` commands no longer exist. The local file-based flow does
+not use them. The Forgejo merge adapter and its trusted configuration loader
+remain as provider building blocks; the local flow does not invoke them.

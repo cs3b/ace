@@ -23,20 +23,6 @@ module Ace
           project == @project && @decision_policy.operator_question?(uid: uid, project: project)
         end
 
-        def proposal?(peer, project:)
-          transport?(peer, project: project)
-        end
-
-        def proposal_silence?(caller_uid:, requester:, project:, operation:)
-          return false unless project == @project
-          # The transport peer is authenticated separately. A local proposal
-          # retains its original kernel principal when Hermes reconciles it.
-          return @decision_policy.proposal_silence?(caller_uid: caller_uid, requester: requester,
-            project: project, operation: operation) unless caller_uid.nil?
-          requester == "urn:ace:hitl:#{@project}:hermes-client" &&
-            @decision_policy.silence_operation?(project: project, operation: operation)
-        end
-
         # A TLS authority has no Unix service uid; client endpoint
         # verification is certificate-based.
         def service_uid

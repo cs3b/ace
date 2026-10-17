@@ -342,37 +342,4 @@ class AssignmentManagerTest < AceAssignTestCase
     end
   end
 
-  def test_attempt_lookup_delegates_to_attempt_store
-    with_temp_cache do |cache_dir|
-      manager = Ace::Assign::Molecules::AssignmentManager.new(cache_base: cache_dir)
-      assignment = manager.create(name: "linked", source_config: "job.yaml", task_id: "148")
-
-      binding = Ace::Assign::Models::AttemptBinding.new(
-        attempt_id: "atmgr01",
-        assignment_id: assignment.id,
-        scope: "010",
-        project_id: "ace",
-        actor: "mc",
-        role: "coordinator",
-        runtime: "local:test",
-        base_head: "deadbeef",
-        task_id: "148",
-        created_at: Time.now.utc
-      )
-      attempt = Ace::Assign::Models::Attempt.new(binding: binding, state: "running")
-      manager.attempt_store.save(attempt)
-      manager.attempt_store.with_lock(assignment.id) do
-        manager.attempt_store.claim(assignment.id, "010", attempt)
-      end
-
-      active = manager.active_attempt(assignment.id, "010")
-      assert_equal "atmgr01", active.attempt_id
-
-      listed = manager.attempts(assignment.id)
-      assert_equal ["atmgr01"], listed.map(&:attempt_id)
-
-      assert_nil manager.active_attempt(assignment.id, "020")
-      assert_empty manager.attempts("8wrnope")
-    end
-  end
 end

@@ -21,29 +21,8 @@ module Ace
         # @param session_dir [String] the session directory for output
         # @param output_file [String, nil] optional custom output file path
         # @return [Hash] result with success, response, output_file, metadata, and error keys
-        def execute(system_prompt:, user_prompt:, session_dir:, model: nil, output_file: nil, timeout: nil, single_attempt: false, campaign_binding: nil)
+        def execute(system_prompt:, user_prompt:, session_dir:, model: nil, output_file: nil, timeout: nil)
           model ||= @default_model
-          if campaign_binding
-            require_relative "../organisms/campaign_manager"
-            repository = campaign_binding.fetch("subject").fetch("repository")
-            root = repository.start_with?("local:") ? repository.delete_prefix("local:") : Dir.pwd
-            manager = Organisms::CampaignManager.new(repo_root: root)
-            campaign_id = campaign_binding.fetch("campaign_id")
-            entry = manager.reserve_execution(campaign_id, round_id: campaign_binding.fetch("round_id"),
-              scope: campaign_binding.fetch("scope"), provider: model)
-            begin
-              result = execute(system_prompt: system_prompt, user_prompt: user_prompt, session_dir: session_dir,
-                model: model, output_file: output_file, timeout: timeout, single_attempt: true)
-              classification = result[:campaign_attempt] || {}
-              manager.complete_execution(campaign_id, execution_id: entry.fetch("id"),
-                status: result[:success] ? "succeeded" : classification.fetch(:status, "failed"),
-                failure: result[:success] ? nil : classification.fetch(:failure, "unclassified"))
-              return result
-            rescue Exception
-              manager.complete_execution(campaign_id, execution_id: entry.fetch("id"), status: "uncertain")
-              raise
-            end
-          end
 
           # Warn if prompt is large
           warn_if_prompt_large(system_prompt, user_prompt, model)
@@ -64,8 +43,7 @@ module Ace
             model,
             session_dir,
             output_file,
-            timeout,
-            single_attempt
+            timeout
           )
         rescue => e
           {
@@ -110,7 +88,7 @@ module Ace
         end
 
         # Execute using Ruby API with system/user prompts
-        def execute_with_ruby_api(system_prompt, user_prompt, model, session_dir, custom_output_file = nil, timeout = nil, single_attempt = false)
+        def execute_with_ruby_api(system_prompt, user_prompt, model, session_dir, custom_output_file = nil, timeout = nil)
           # Use custom output file if provided, otherwise generate default
           output_file = if custom_output_file
             custom_output_file
@@ -135,8 +113,7 @@ module Ace
             output: output_file,
             format: "text",
             timeout: timeout || Ace::Review.get("defaults", "llm_timeout") || 300,
-            force: true,
-            **(single_attempt ? {fallback: false} : {})
+            force: true
             # Fallback is config-driven (llm.fallback + role candidate
             # chains): the reviewer position tries pi glm 5.3, then codex
             # sol, then agy flash 3.8 — the round is good if even one
@@ -177,40 +154,15 @@ module Ace
             success: false,
             response: nil,
             error: "LLM error: #{e.message}",
-            error_type: e.class.name,
-            **(single_attempt ? {campaign_attempt: campaign_failure(e)} : {})
+            error_type: e.class.name
           }
         rescue => e
           {
             success: false,
             response: nil,
             error: "Unexpected error: #{e.message}",
-            error_type: e.class.name,
-            **(single_attempt ? {campaign_attempt: campaign_failure(e)} : {})
+            error_type: e.class.name
           }
-        end
-
-        def campaign_failure(error)
-          classifier = Ace::LLM::Atoms::ErrorClassifier
-          return {status: "uncertain", failure: nil} if classifier.execution_incomplete?(error)
-          status = classifier.extract_status_code(error)
-          failure = case status
-          when 401 then "authentication"
-          when 403 then "authorization"
-          when 404 then "model_unavailable"
-          when 429 then "rate_limit"
-          else
-            if error.is_a?(Ace::LLM::AuthenticationError)
-              "authentication"
-            elsif classifier.classify(error) == classifier::RETRYABLE_WITH_BACKOFF
-              "transport"
-            elsif classifier.classify(error) == classifier::FALLBACK_IMMEDIATELY
-              "timeout"
-            else
-              "unclassified"
-            end
-          end
-          {status: "failed", failure: failure}
         end
 
         def incomplete_finish_reason?(reason)

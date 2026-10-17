@@ -13,42 +13,6 @@ module Ace
           request("operator-question", params.transform_keys(&:to_s))
         end
 
-        def proposal_create(**params)
-          request("proposal-create", params)
-        end
-
-        def proposal_show(id, project:, history_after: 0)
-          request("proposal-show", {"id" => id, "project" => project, "history_after" => history_after})
-        end
-
-        def proposal_revise(id, project:, expected_revision:, operation_id:, document:)
-          request("proposal-revise", {"id" => id, "project" => project, "expected_revision" => expected_revision, "operation_id" => operation_id, "document" => document})
-        end
-
-        def proposal_acknowledge(id, project:, submitted_at:)
-          request("proposal-ack", {"id" => id, "project" => project, "submitted_at" => submitted_at})
-        end
-
-        def proposal_reply(id, project:, **params)
-          request("proposal-reply", {"id" => id, "project" => project}.merge(params))
-        end
-
-        def proposal_reconcile(id, project:, checkpoint:)
-          request("proposal-reconcile", {"id" => id, "project" => project, "checkpoint" => checkpoint})
-        end
-
-        def proposal_wake(project:, after: nil)
-          request("proposal-wake", {"project" => project, "after" => after}.compact)
-        end
-
-        def proposal_due(project:, after: nil)
-          request("proposal-due", {"project" => project, "after" => after}.compact)
-        end
-
-        def proposal_history(project:, query: "", after: nil)
-          request("proposal-history", {"project" => project, "query" => query, "after" => after}.compact)
-        end
-
         def create(deadline: nil, **params)
           request("create", params.transform_keys(&:to_s), deadline: deadline)
         end

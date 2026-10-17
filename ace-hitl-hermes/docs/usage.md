@@ -7,6 +7,10 @@ transport routing and folder publication; HITL event state stays with
 > **State owner:** none for task, assignment, or HITL-event state. This package
 > keeps only its private transport state (journal/offsets) under the configured
 > state directory. See [docs/lab-flow.md](../../docs/lab-flow.md).
+>
+> **Removed (L1):** second-commander proposal reconciliation was removed with
+> the old installed authority model. The relay handles only local HITL/relay
+> traffic: pending publication, delivery and ingress reconciliation.
 
 ## Configuration
 

@@ -1,8 +1,6 @@
 # frozen_string_literal: true
 
-require "securerandom"
 require "ace/hitl/contract"
-require_relative "lab/assignment_binding"
 require_relative "../lifecycle/store"
 require_relative "../lifecycle/policy"
 require_relative "../lifecycle/client"
@@ -10,47 +8,26 @@ require_relative "../lifecycle/client"
 module Ace
   module Hitl
     module Providers
-      # provider=lab adapter (spec 8wm.t.vrz §1; lifecycle migration
-      # spec 8wm.t.y21 §1; scoped boundary 8wq.t.34i): ONE ask operation
-      # = local HITL event + relay request created through the scoped
-      # store boundary with the lab-backed binding policy. Owns every
-      # lab-specific seam; agent-facing ace-hitl paths must never bypass
-      # it (guard-tested).
+      # Deployment facts for the host-installed HITL lifecycle transport:
+      # the trusted grants policy and the authenticated boundary client.
+      # The managed `ask`/native-delivery path and its attempt-bound
+      # assignment binding were removed with the old authority model; the
+      # local file-based commands and the lifecycle/relay transport remain.
       class Lab
-        DEFAULT_PROJECT = "ace"
-        DEFAULT_HARNESS = "lab-admin"
-        DEFAULT_PLAN = "ace-hitl ask"
         DEFAULT_STORE_ROOT = "/run/lab/hitl"
         STORE_ROOT_ENV = "ACE_HITL_STORE_ROOT"
         DEFAULT_SOCKET_PATH = "/run/lab/hitl.sock"
         SOCKET_PATH_ENV = "ACE_HITL_SOCKET"
-        # The trusted deployment grants document, shared with ace-lab's
-        # GrantResolver (same format, same trust rules). The PATH may be
-        # overridden for tests; the document's trust is verified
-        # absolutely (root-owned, protected traversal), so an override
-        # cannot inject authority.
+        # The trusted deployment grants document, shared with the operator
+        # question and transport authorization facts. The PATH may be
+        # overridden for tests; the document's trust is verified absolutely
+        # (root-owned, protected traversal), so an override cannot inject
+        # authority.
         DEFAULT_GRANTS_PATH = "/etc/lab/ace-lab/authorization.yml"
         GRANTS_PATH_ENV = "ACE_HITL_GRANTS_PATH"
 
-        PROVIDER_NAME = "lab"
-
-        def initialize(manager: nil, store: nil, binding: nil, live_client: nil)
-          @manager = manager
-          # The boundary dependency: an injected store (unit wiring) or
-          # the authenticated boundary client (review 8x333sqz).
-          @boundary = store
-          @binding = binding
-          @live_client = live_client
-        end
-
-        # The managed binding authority (spec 8wq.t.34i): assignment
-        # attempts verified through the ace-assign coordinator.
-        def self.assignment_binding(repo_root: nil)
-          AssignmentBinding.new(repo_root: repo_root)
-        end
-
         # The transport/service authorization policy from the trusted
-        # grants document (ace-lab supplies the deployment facts).
+        # grants document.
         def self.grants_policy(grants_path: nil, document: nil)
           Lifecycle::GrantsPolicy.new(
             grants_path: grants_path || ENV[GRANTS_PATH_ENV] || DEFAULT_GRANTS_PATH,
@@ -58,10 +35,10 @@ module Ace
           )
         end
 
-        # The authenticated boundary client for CLI operations. The
-        # service identity comes ONLY from the trusted grants document;
-        # without it the boundary is unconfigured and every lifecycle
-        # operation fails closed with a visible transport error.
+        # The authenticated boundary client for CLI operations. The service
+        # identity comes ONLY from the trusted grants document; without it
+        # the boundary is unconfigured and every lifecycle operation fails
+        # closed with a visible transport error.
         def self.boundary_client(socket_path: nil, policy: nil)
           policy ||= grants_policy
           service_uid = policy.service_uid
@@ -75,97 +52,6 @@ module Ace
             socket_path: socket_path || ENV[SOCKET_PATH_ENV] || DEFAULT_SOCKET_PATH,
             service_uid: service_uid
           )
-        end
-
-        # Local event + scoped request in ONE operation. The authenticated
-        # managed binding supplies the verified reverse; callers cannot choose it.
-        def ask(question:, attempt:, assignment:, title: nil,
-          kind: "text", otp: nil, project: DEFAULT_PROJECT, harness: DEFAULT_HARNESS,
-          plan: DEFAULT_PLAN, effect: {})
-          effect = effect.to_h
-          request_id = "hitl-#{SecureRandom.hex(8)}"
-          manager = build_manager
-          event = manager.create(title || question, questions: [question])
-
-          # The ask reaches the store through the AUTHENTICATED BOUNDARY
-          # (spec 8wq.t.34i): requesters never write shared store files.
-          # An injected store stays available for unit-level wiring.
-          begin
-            created = boundary.create(
-              id: request_id,
-              assignment: assignment,
-              attempt: attempt,
-              kind: kind,
-              otp: otp,
-              project: project,
-              harness: harness,
-              plan: plan,
-              question: question,
-              ace_hitl_id: event.id,
-              effect: effect_declared?(effect) ? effect : nil
-            )
-            envelope = Contract::ManagedEnvelope.load(created.fetch("envelope"), expected: {
-              request_id: request_id, assignment_id: assignment, attempt_id: attempt, project: project,
-              correlation_id: request_id, kind: kind
-            })
-            address = envelope["reverse"]
-            raise Lifecycle::BindingError, "managed ask has no verified native reverse address" unless address
-            ref = Ref.new(session: address.fetch("session"), pane: address.fetch("pane"))
-          rescue Lifecycle::Error, Contract::InvalidEnvelope, KeyError => e
-            raise ProviderUnavailableError,
-              "#{e.message}; local HITL event #{event.id} was created but never bound to a " \
-              "Lab request (orphan) - inspect it with ace-hitl show #{event.id} and delete " \
-              "or re-ask as needed"
-          end
-
-          manager.update(event.id, set: {
-            "provider" => PROVIDER_NAME,
-            "ref_schema" => ref.to_h[:schema],
-            "ref_session" => ref.session,
-            "ref_pane" => ref.pane,
-            "lab_request_id" => request_id,
-            "lab_request_state" => "created",
-            "lab_request_effect" => effect_declared?(effect) ? "declared" : "none"
-          })
-
-          AskResult.new(event_id: event.id, request_id: request_id, ref: ref)
-        end
-
-        def deliver(request:, timeout: 0)
-          live_client.deliver(request: request, timeout: timeout)
-        end
-
-        def watch(request:, timeout: 0, &observer)
-          live_client.watch(request: request, timeout: timeout, &observer)
-        end
-
-        def wait(request:, timeout: 0, operation: nil)
-          live_client.wait(request: request, timeout: timeout, operation: operation)
-        end
-
-        private
-
-        def live_client
-          require_relative "../live_client"
-          @live_client ||= LiveClient.new(boundary: boundary)
-        end
-
-        def effect_declared?(effect)
-          !!(effect[:match] || effect[:effect_cwd] || effect[:effect_timeout] ||
-            Array(effect[:effect_args]).any?)
-        end
-
-        def boundary
-          @boundary || self.class.boundary_client
-        end
-
-        def build_manager
-          return @manager if @manager
-
-          # Boundary-only consumers use fixed grants and authenticated transport;
-          # local event configuration belongs to the ask operation alone.
-          require_relative "../organisms/hitl_manager"
-          Organisms::HitlManager.new
         end
       end
     end

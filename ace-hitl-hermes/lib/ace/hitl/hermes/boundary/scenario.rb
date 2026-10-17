@@ -20,12 +20,11 @@ module Ace
         # Identity and binding are never fabricated here:
         # - asks are created ONLY through the supported mechanism — a
         #   local worker actor creating via the authority's Unix
-        #   boundary, where the serve-path binding
-        #   (Providers::Lab::AssignmentBinding →
-        #   AttemptCoordinator#with_verified_attempt) verifies the
-        #   assignment/attempt against the REAL Assign state under the
-        #   kernel requester identity. The TLS crossing never creates
-        #   asks and never supplies requester identity.
+        #   boundary under its kernel requester identity. The attempt-bound
+        #   assignment verification was removed with the old authority
+        #   model, so this host scenario is unavailable until the L2
+        #   boundary replaces it. The TLS crossing never creates asks and
+        #   never supplies requester identity.
         # - the certificate identity (`urn:ace:hitl:<project>:
         #   hermes-client`) maps ONLY to the Hermes transport role
         #   (pending/deliver observation); the requester of record is
@@ -676,12 +675,6 @@ module Ace
                 facts = instance.read(request)
                 delivered["delivered"] == true && facts.fetch("state") == "answer-delivered"
               end
-            end
-            results << positive("P4", "instruction (proposal) surface crosses the boundary") do
-              history = client_a.proposal_history(project: @manifest.project("A"))
-              due = client_a.proposal_due(project: @manifest.project("A"))
-              history.is_a?(Hash) && history["items"].is_a?(Array) &&
-                due.is_a?(Hash) && due["items"].is_a?(Array)
             end
           end
 

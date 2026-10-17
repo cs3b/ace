@@ -124,7 +124,7 @@ module ExecutionUnitInstallationFixture
       "root_directory" => "/var/lib/ace-slot/root", "runtime_directory" => "/run/ace-slot", "network_namespace_path" => "/run/netns/ace-slot"}
     paths = {"slice_fragment" => "/etc/systemd/system/ace-slot.slice",
       "service_fragment" => "/etc/systemd/system/ace-slot.service", "native_executable" => "/usr/bin/herdr",
-      "native_configuration" => "/etc/ace/herdr.json", "readiness_executable" => "/usr/libexec/ace-scope-ready",
+      "native_configuration" => "/etc/ace/herdr.json", "readiness_executable" => "/usr/libexec/ace-slot-readiness",
       "bootstrap" => "/usr/libexec/ace-worker-gate", "worker_executable" => "/usr/bin/codex",
       "readiness_configuration" => "/etc/ace/execution-slots/slot/readiness.json",
       "boundary_manifest" => "/etc/ace/execution-slots/slot/boundary-manifest.json",

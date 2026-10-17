@@ -17,10 +17,11 @@ class CreateCommandTest < AceAssignTestCase
   end
 
   class FakeTask
-    attr_reader :status, :subtasks
+    attr_reader :status, :subtasks, :special_folder
 
     def initialize(data)
       @status = data[:status]
+      @special_folder = data[:special_folder]
       @subtasks = Array(data[:subtasks]).map { |entry| FakeSubtask.new(entry[:id], entry[:status]) }
     end
   end
@@ -222,23 +223,35 @@ class CreateCommandTest < AceAssignTestCase
     assert_includes error.message, "403"
   end
 
-  def test_explicit_delivery_parameters_survive_task_preset_generation
+  def test_create_refuses_overseer_management_task
     with_temp_cache do |cache_dir|
       Ace::Assign.config["cache_dir"] = cache_dir
+      manager = FakeTaskManager.new(
+        "406" => {status: "pending", special_folder: "_overseer"},
+        "407" => {status: "done", special_folder: "_overseer"},
+        "408" => {status: "pending"}
+      )
       executor = FakeExecutor.new
-      creator = Ace::Assign::Organisms::TaskAssignmentCreator.new(
-        task_manager: FakeTaskManager.new("405" => {status: "pending"}), executor: executor)
-      params = {"forge_server" => "forge", "pr_provenance" => {"mode" => "canonical",
-        "head_repository_url" => "https://forge.example/team/repo", "head_ref" => "feature",
-        "base_repository_url" => "https://forge.example/team/repo", "base_ref" => "main"}}
-      creator.call(task_refs: ["405"], delivery_parameters: params)
-      assert_equal "forge", YAML.safe_load_file(executor.path).dig("delivery", "forge_server")
-      assert_equal "canonical", YAML.safe_load_file(executor.path).dig("delivery", "pr_provenance", "mode")
-      local = {"parameters" => {"taskrefs" => {"required" => true}}, "steps" => [{"name" => "local"}]}
-      Ace::Assign::Atoms::PresetLoader.stub(:load, local) do
-        assert_raises(ArgumentError) { creator.call(task_refs: ["405"], delivery_parameters: params) }
-        creator.call(task_refs: ["405"])
-        refute YAML.safe_load_file(executor.path).key?("delivery")
+      creator = Ace::Assign::Organisms::TaskAssignmentCreator.new(task_manager: manager, executor: executor)
+
+      error = assert_raises(Ace::Support::Cli::Error) { creator.call(task_refs: ["406"]) }
+      assert_equal 1, error.exit_code
+      assert_includes error.message, "_overseer management task"
+      assert_includes error.message, "cannot be delegated as a project assignment"
+      assert_includes error.message, "A separate project task is needed for implementation"
+      assert_includes error.message, "subagents remain available for planning, analysis and verification"
+      assert_nil executor.path, "an _overseer task must not create an assignment"
+
+      # The guard applies to every resolved ref and runs before any artifact.
+      mixed = assert_raises(Ace::Support::Cli::Error) { creator.call(task_refs: ["408", "406"]) }
+      assert_includes mixed.message, "_overseer management task"
+      assert_nil executor.path
+
+      Ace::Task::Organisms::TaskManager.stub(:new, manager) do
+        cli_error = assert_raises(Ace::Support::Cli::Error) do
+          capture_io { Ace::Assign::CLI::Commands::Create.new.call(task: ["406"]) }
+        end
+        assert_includes cli_error.message, "_overseer management task"
       end
     ensure
       Ace::Assign.reset_config!
@@ -249,6 +262,13 @@ class CreateCommandTest < AceAssignTestCase
     with_temp_cache do |cache_dir|
       Ace::Assign.config["cache_dir"] = cache_dir
       fake_manager = FakeTaskManager.new("405" => {status: "pending"})
+
+      # Preset expansion resolves project workflow sources, so pin the
+      # workspace root explicitly instead of relying on ambient test-runner env.
+      workspace_root = File.expand_path("../../../..", __dir__)
+      previous_root = ENV["PROJECT_ROOT_PATH"]
+      ENV["PROJECT_ROOT_PATH"] = workspace_root
+      Ace::Support::Fs::Molecules::ProjectRootFinder.clear_cache!
 
       output = nil
       Ace::Task::Organisms::TaskManager.stub(:new, fake_manager) do
@@ -269,6 +289,13 @@ class CreateCommandTest < AceAssignTestCase
       assert step_files.any? { |path| File.read(path).include?("work-on-405") }
 
       Ace::Assign.reset_config!
+    ensure
+      if previous_root.nil?
+        ENV.delete("PROJECT_ROOT_PATH")
+      else
+        ENV["PROJECT_ROOT_PATH"] = previous_root
+      end
+      Ace::Support::Fs::Molecules::ProjectRootFinder.clear_cache!
     end
   end
 end

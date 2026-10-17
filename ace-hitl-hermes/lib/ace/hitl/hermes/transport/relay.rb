@@ -82,7 +82,6 @@ module Ace
                   raise ContractError, "request correlation binding cannot change"
                 end
                 if previous["status"] == "submitted"
-                  acknowledge_proposal(previous, lifecycle)
                   box = @box_factory.call(entry)
                   question = box.poll.messages.find { |m| m.id == request && m.question? }
                   box.ack(request) if question && question.body == facts["question"]
@@ -113,7 +112,6 @@ module Ace
                 record.merge!("status" => "submitted", "message_id" => ack["message_id"].to_s,
                   "submitted_at" => now)
                 commit.call
-                acknowledge_proposal(record, lifecycle)
                 box.ack(request)
               rescue SubmitFailed
                 record["status"] = "failed"
@@ -295,12 +293,6 @@ module Ace
                "drained" => !!healthy && unresolved.empty?,
                "checkpoint" => healthy ? {"through" => through, "sequence" => state["sequence"]} : nil,
                "unresolved" => unresolved}
-              if proposal?(record)
-                # Same ingress lock as receive; no received reply can land
-                # between this checkpoint and the HITL decision transition.
-                checkpoint["proposal"] = lifecycle.proposal_reconcile(request,
-                  project: record.fetch("binding").fetch("envelope").fetch("project"), checkpoint: checkpoint)
-              end
               checkpoint
             end
           end
@@ -392,17 +384,6 @@ module Ace
             box = ingress_box(channel, record)
             box.ack("inb-#{item.fetch('sequence')}")
             Molecules::HermesAtomicWriter.sync_directory(box.channel.folder)
-          end
-
-          def proposal?(record)
-            record.dig("binding", "envelope", "kind") == "proposal"
-          end
-
-          def acknowledge_proposal(record, lifecycle)
-            return unless proposal?(record)
-            lifecycle.proposal_acknowledge(record["request"],
-              project: record.fetch("binding").fetch("envelope").fetch("project"),
-              submitted_at: record.fetch("submitted_at"))
           end
 
           def lifecycle_for(channel)
@@ -523,14 +504,6 @@ module Ace
               return
             end
             answer = text.sub(/\A\/hitl-reply(?:@\w+)?\s+\S+\s+/i, "")
-            if proposal?(record)
-              lifecycle.proposal_reply(record["request"],
-                project: record.fetch("binding").fetch("envelope").fetch("project"), answer: answer,
-                received_at: item["received_at"], sequence: item["sequence"])
-              item["status"] = "delivered"
-              commit.call
-              return
-            end
             if !record["sensitive"]
               box = @box_factory.call(channel)
               existing = box.poll.messages.find { |m| m.id == record["request"] && m.answer? }

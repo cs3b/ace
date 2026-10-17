@@ -5,7 +5,6 @@ require "socket"
 require "openssl"
 require "support/lifecycle_fixtures"
 require "support/tls_fixtures"
-require "ace/assign/molecules/evidence_journal"
 require "open3"
 require "timeout"
 
@@ -53,8 +52,7 @@ class TlsServiceTest < AceHitlTestCase
     @service = Ace::Hitl::Lifecycle::TlsService.new(
       root: @store_root, binding: @binding, project: PROJECT, credential: credential,
       ssl_context: context, listen: "127.0.0.1", port: port, group: Etc.getgrgid(Process.gid).name,
-      logger: ->(message) { warn message }, decision_policy: decision_policy,
-      proposal_clock: -> { @now || Time.now.utc }
+      logger: ->(message) { warn message }, decision_policy: decision_policy
     )
     @thread = Thread.new { @service.run }
     wait_for_port
@@ -77,57 +75,6 @@ class TlsServiceTest < AceHitlTestCase
     assert_equal true, delivered["delivered"]
     consumed = client.request("consume", {"id" => "hitl001", "timeout" => 2})
     assert_equal "approved", consumed["answer"]
-  end
-
-  def test_unix_created_proposal_is_reconciled_over_real_tls_with_original_principal
-    repo = File.join(@scratch, "proposal-repo")
-    FileUtils.mkdir_p(repo)
-    system("git", "init", "-q", "-b", "main", repo, exception: true)
-    journal = Ace::Assign::Molecules::EvidenceJournal.new(repo_root: repo,
-      checkout_root: File.join(@scratch, "journal"))
-    intent = Ace::Assign::Models::EvidenceEvent.build(type: "intent", attempt_id: "attempt500",
-      payload: {"scope" => "010", "project_id" => PROJECT, "actor" => Etc.getpwuid.name,
-        "role" => "worker", "runtime" => "fixture"})
-    journal.append(assignment_id: "assign500", attempt_id: "attempt500", events: [intent])
-    @binding.define_singleton_method(:proposal_journal) { |project:| journal }
-    @binding.define_singleton_method(:proposal_projects) { [PROJECT] }
-    document = {"hitl" => {"proposal_uids" => [Process.uid], "silence_operations" => {PROJECT => ["deploy"]}},
-      "authorization" => {"principals" => {Process.uid.to_s => {"projects" => [PROJECT]}}}}
-    policy = Ace::Hitl::Lifecycle::GrantsPolicy.new(document: document)
-    @now = Time.now.utc
-    socket = File.join(@scratch, "proposal.sock")
-    unix = Ace::Hitl::Lifecycle::Service.new(root: @store_root, binding: @binding, policy: policy,
-      socket_path: socket, group: Etc.getgrgid(Process.gid).name, proposal_clock: -> { @now })
-    owner = Thread.new { unix.run }
-    Timeout.timeout(5) { sleep 0.01 until File.socket?(socket) || !owner.alive? }
-    owner.value unless owner.alive?
-    local = Ace::Hitl::Lifecycle::Client.new(socket_path: socket, service_uid: Process.uid)
-    start_service(decision_policy: policy)
-    tls = peer
-    proposals = 2.times.map do
-      record = local.proposal_create(id: "proposal-#{SecureRandom.hex(12)}", assignment: "assign500",
-        attempt: "attempt500", project: PROJECT, document: {"operation" => "deploy",
-          "target" => {"resource" => "test"}, "candidate_head" => "a" * 40, "input_digest" => "b" * 64,
-          "context" => "Exact test scope", "options" => ["yes", "no"], "recommendation" => "yes",
-          "prerequisites" => ["accepted test evidence"]})
-      assert_equal Process.uid, record.fetch("caller_uid")
-      assert record.fetch("silence_delegated")
-      tls.request("proposal-ack", {"id" => record.fetch("request_id"), "project" => PROJECT, "submitted_at" => @now.iso8601})
-    end
-    @now += 16 * 3600
-    proposals.each_with_index do |record, index|
-      document["hitl"]["proposal_uids"] = [] unless index.zero?
-      checkpoint = {"schema" => "ace.hitl.hermes.ingress-checkpoint/v1", "request" => record.fetch("request_id"),
-        "project" => record.fetch("project_id"), "revision" => record.fetch("revision_id"), "healthy" => true, "drained" => true,
-        "checkpoint" => {"through" => record.fetch("deadline"), "sequence" => 0}}
-      reconciled = tls.request("proposal-reconcile", {"id" => record.fetch("request_id"), "project" => PROJECT, "checkpoint" => checkpoint})
-      assert_equal index.zero? ? "approved-by-silence" : "awaiting-decision", reconciled.fetch("state")
-      assert_equal Process.uid, reconciled.fetch("caller_uid")
-    end
-  ensure
-    unix&.stop
-    owner&.join(5)
-    owner&.kill if owner&.alive?
   end
 
   def test_service_admits_exactly_the_pinned_client_identity
@@ -244,11 +191,6 @@ class TlsServiceTest < AceHitlTestCase
       client.request("pending", {"project" => "proj-b"})
     end
     assert_match(/never serves project/, error.message)
-
-    error = assert_raises(Ace::Hitl::Lifecycle::PermissionError) do
-      client.request("proposal-due", {"project" => "proj-b"})
-    end
-    assert_match(/never serves project|transport identity/, error.message)
 
     error = assert_raises(Ace::Hitl::Lifecycle::PermissionError) do
       client.request("states")

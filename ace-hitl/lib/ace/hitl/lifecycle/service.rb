@@ -41,7 +41,7 @@ module Ace
 
         def initialize(root:, binding:, policy:, socket_path:, group: Store::DEFAULT_GROUP,
           deadline_seconds: Protocol::DEFAULT_DEADLINE_SECONDS, vault: nil, logger: nil,
-          idle_seconds: DEFAULT_IDLE_SECONDS, proposal_clock: -> { Time.now.utc })
+          idle_seconds: DEFAULT_IDLE_SECONDS)
           @root = root
           @binding = binding
           @policy = policy
@@ -51,7 +51,6 @@ module Ace
           @vault = vault || OtpVault::MemoryVault.new
           @logger = logger
           @idle_seconds = idle_seconds
-          @proposal_clock = proposal_clock
           @max_connections = MAX_CONNECTIONS
           @connections = 0
           @handler_threads = []
@@ -249,7 +248,7 @@ module Ace
             policy: @policy,
             identity: peer,
             vault: @vault,
-            proposal_clock: @proposal_clock, stopping: -> { @stopping }, group: @group
+            stopping: -> { @stopping }, group: @group
           )
         end
 

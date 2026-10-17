@@ -195,32 +195,6 @@ module Ace
           updated
         end
 
-        # The attempt store sharing this manager's cache base. The store is
-        # the single authority for attempt records and subtree ownership;
-        # assignment metadata never carries attempt history.
-        #
-        # @return [Molecules::AttemptStore] Attempt store
-        def attempt_store
-          @attempt_store ||= Molecules::AttemptStore.new(cache_base: @cache_base)
-        end
-
-        # Assignment-scoped lookup of the active attempt for a scope.
-        #
-        # @param assignment_id [String] Assignment ID
-        # @param scope [String] Step/subtree scope
-        # @return [Models::Attempt, nil] Active attempt or nil
-        def active_attempt(assignment_id, scope)
-          attempt_store.active(assignment_id, scope)
-        end
-
-        # All attempts recorded for an assignment.
-        #
-        # @param assignment_id [String] Assignment ID
-        # @return [Array<Models::Attempt>] Persisted attempts
-        def attempts(assignment_id)
-          attempt_store.list(assignment_id)
-        end
-
         # List all assignments
         #
         # @return [Array<Models::Assignment>] All assignments

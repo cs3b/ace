@@ -41,8 +41,6 @@ module Ace
           option :format, desc: "Output format (table, json)", default: "table"
           option :quiet, aliases: ["-q"], type: :boolean, default: false, desc: "Suppress non-essential output"
           option :debug, aliases: ["-d"], type: :boolean, default: false, desc: "Show debug output"
-          option :mapping, desc: "Installed protected launch mapping ID"
-          option :attempt, desc: "Original protected attempt ID"
           option :assignment, desc: "Show status for specific assignment ID"
           option :all, aliases: ["-a"], type: :boolean, default: false, desc: "Include completed assignments in other assignments section"
 
@@ -87,13 +85,8 @@ module Ace
           def status_to_h(assignment, state, active_steps, next_step, target:, scope_root:)
             # Extract auto_merge config if present in assignment settings or preset
             auto_merge = false
-            preset_name = Ace::Assign::Molecules::PresetInferrer.infer_from_assignment(assignment) unless target.prepared_input
+            preset_name = Ace::Assign::Molecules::PresetInferrer.infer_from_assignment(assignment)
             auto_merge = true if preset_name && preset_name.start_with?("work-on-task-auto-merge")
-
-            evidence = Ace::Assign::Molecules::EvidenceCalculator.calculate(
-              auto_merge: auto_merge,
-              assignment_id: assignment.id
-            )
 
             payload = {
               assignment: {
@@ -108,9 +101,6 @@ module Ace
 
             payload[:next_step] = step_to_h(next_step, effective_fork_provider: effective_fork_provider_for(next_step, scoped_fork_metadata_step(state, next_step, target.scope, scope_root))) if active_steps.empty? && next_step
             
-            # Merge exact head evidence into root payload
-            payload.merge!(evidence)
-
             payload
           end
 
@@ -137,32 +127,12 @@ module Ace
             lines = []
             lines.concat(compact_summary_lines(view.assignment, view.scoped_state, view.active_steps, view.next_step))
 
-            if !target.prepared_input && (attempt_line = compact_attempt_line(view.assignment.id))
-              lines.insert(1, attempt_line)
-            end
-
             unless target.assignment_id
               other_line = compact_other_assignments_line(view.assignment.id, include_completed: include_completed)
               lines << other_line if other_line
             end
 
             puts lines.take(10).join("\n")
-          end
-
-          # Active attempt summary projected from the coordinator authority.
-          def compact_attempt_line(assignment_id)
-            projection = Organisms::AttemptCoordinator.new.status(assignment_id)
-            return nil unless projection
-
-            base = projection["base_head"].to_s[0, 7]
-            candidate = projection["candidate_head"].to_s[0, 7]
-            line = "Attempt: #{projection['attempt_id']} #{projection['state']}"
-            line += " | base:#{base}" unless base.to_s.empty?
-            line += " | cand:#{candidate.empty? ? 'none' : candidate}"
-            line += " | unresolved: #{projection['unresolved_effects'].join(',')}" if projection["unresolved_effects"].any?
-            line
-          rescue Ace::Assign::Error, Ace::Support::Cli::Error
-            nil
           end
 
           def compact_summary_lines(assignment, state, active_steps, next_step)

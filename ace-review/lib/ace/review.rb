@@ -49,7 +49,6 @@ require_relative "review/molecules/exempt_paths"
 require_relative "review/molecules/pr_task_spec_resolver"
 require_relative "review/molecules/goals_brief"
 
-require_relative "review/organisms/campaign_manager"
 require_relative "review/organisms/review_manager"
 require_relative "review/organisms/feedback_manager"
 

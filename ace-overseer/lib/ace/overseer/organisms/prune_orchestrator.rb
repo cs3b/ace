@@ -322,7 +322,7 @@ module Ace
             assignment_complete: false,
             task_done: false,
             git_clean: false,
-            attempts_terminal: false,
+            work_terminal: false,
             preserved: false,
             reasons: [reason]
           )

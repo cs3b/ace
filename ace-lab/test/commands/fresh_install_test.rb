@@ -37,7 +37,6 @@ module Ace
                 env = launch_env(gem_home, project_dir)
                 verify_resolve_contract(env, bin, project_dir)
                 verify_route_contract(env, bin, project_dir)
-                verify_service_contract(env, bin, project_dir)
                 verify_broken_topology_classified(env, bin, project_dir)
               ensure
                 FileUtils.rm_f(gem_file)
@@ -293,37 +292,6 @@ module Ace
             return unless parsed["status"] == "ok"
 
             assert_equal "atlas-search", parsed.dig("data", "entry", "id")
-          end
-
-          def verify_service_contract(env, bin, project_dir)
-            _, err, git_status = Open3.capture3("git", "init", "-b", "main", chdir: project_dir)
-            assert git_status.success?, "service status fixture needs a Git repository: #{err}"
-
-            # The generic request/status path is gone: both commands require
-            # an explicit ordinary-merge mode (and its ordinary selectors).
-            out, usage, status = run_cli(env, bin, project_dir, "service", "status",
-              "--request", "unknown", "--format", "json")
-            refute status.success?, "generic status must be unavailable"
-            assert_empty out
-            assert_includes usage, "--mode"
-
-            out, usage, status = run_cli(env, bin, project_dir, "service", "request",
-              "--project", "atlas", "--assignment", "assignment", "--attempt", "attempt",
-              "--operation", "merge", "--input", File.join(project_dir, "absent.json"),
-              "--authorization", "decision", "--request-id", "request")
-            refute status.success?, "generic request must be unavailable"
-            assert_empty out
-            assert_includes usage, "--mode"
-
-            # A complete ordinary selector set refuses through the adopted
-            # envelope before any effect: the request input is unreadable.
-            out, = run_cli(env, bin, project_dir, "service", "request", "--project", "atlas",
-              "--assignment", "assignment", "--attempt", "attempt", "--operation", "merge",
-              "--input", File.join(project_dir, "absent.json"), "--authorization", "decision",
-              "--request-id", "request", "--mode", "ordinary-merge", "--queue-entry", "010")
-            parsed = JSON.parse(out)
-            assert_equal "error", parsed["status"]
-            assert_equal "ordinary_merge_invalid_request", parsed.dig("error", "code")
           end
 
           # A deliberately broken topology document must classify through the

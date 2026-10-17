@@ -222,22 +222,6 @@ class BoundaryScenarioTest < AceHermesTestCase
           .map { |r| {"id" => r["id"], "project" => r["project"]} }
       end
 
-      def proposal_history(project:, query: "", after: nil)
-        unless project == @project
-          raise Ace::Hitl::Lifecycle::PermissionError, "foreign project is refused"
-        end
-
-        {"items" => [], "next" => nil}
-      end
-
-      def proposal_due(project:, after: nil)
-        unless project == @project
-          raise Ace::Hitl::Lifecycle::PermissionError, "foreign project is refused"
-        end
-
-        {"items" => [], "next" => nil}
-      end
-
       def ping
         {"pong" => true}
       end
@@ -465,7 +449,7 @@ class BoundaryScenarioTest < AceHermesTestCase
     receipt = scenario.run("baseline", state: Ace::Hitl::Hermes::Boundary::Scenario::State.load(state_path))
     ids = receipt["cases"].map { |entry| entry["id"] }
     ["N01", "N02", "N03", "N04", "N05", "N06", "N07", "N08", "N09", "N10", "N11",
-     "P0", "P1", "P2", "P3", "P4"].each do |required|
+     "P0", "P1", "P2", "P3"].each do |required|
       assert_includes ids, required, "the baseline phase must cover #{required}"
     end
   end

@@ -15,8 +15,8 @@ ACE (Agentic Coding Environment).
 
 `ace-lab` is the Lab environment package. Its installer and project-onboarding
 capabilities are the L8 target; today the package ships read-only topology
-queries and one explicit project-command kernel. Neither capability runs a
-queue, daemon, journal, or authorization service.
+queries only. It does not run a queue, daemon, journal, authorization service,
+or command kernel.
 
 ### Topology queries
 
@@ -39,27 +39,17 @@ Stable IDs are canonical; labels are display values and never resolve.
 > **Planned (L7):** topology values and status integration for the new flow are
 > not available yet. Existing queries are read-only building blocks.
 
-### Explicit project commands
-
-```bash
-ace-lab run --project atlas -- /usr/local/bin/publish-release 1.2.3
-ace-lab run-status --project atlas --reference REFERENCE --format json
-```
-
-`run` executes exactly the argv it is given under the configured project. It
-does not interpret a shell string and does not retry an uncertain execution.
-
 ## Not owners of the flow
 
 `ace-lab` does not own task state, assignment plans, HITL events, worktrees, or
 a queue. There is no journal, no authority/admission service, no listener that
-blocks ordinary work, and no second state store. The old protected
-service-request/executor stack was removed in L1.
+blocks ordinary work, and no second state store.
 
-The ordinary fixed-merge producer/receiver (`ace-lab service listen|request|
-status --mode ordinary-merge`) and the `ace-lab assignment …` ordinary-owner
-commands are retained as internal transports for the planned L3/L6 work. They
-are not part of the local flow documented here and are not required by it.
+The installed authority/admission/journal/command path is removed in L1: the
+`service request|status|listen`, `ace-lab assignment …`, `run`, `run-status`,
+and `command execute` commands no longer exist, and the local file-based flow
+does not use them. The Forgejo merge adapter and its trusted configuration
+loader remain as provider building blocks; the local flow does not invoke them.
 
 ## Install
 

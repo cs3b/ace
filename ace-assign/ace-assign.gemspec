@@ -41,6 +41,8 @@ Gem::Specification.new do |spec|
   # Dependencies
   spec.add_dependency "ace-llm-providers-cli", "~> 0.36.1"
   spec.add_dependency "ace-support-fs", "~> 0.3"
+  # Shipped presets/catalog steps execute these CLIs, so they stay runtime
+  # dependencies even though this package never requires their libraries.
   spec.add_dependency "ace-git", "~> 0.30"
   spec.add_dependency "json", ">= 2.20", "< 3"
   spec.add_dependency "ace-support-cli", "~> 0.6"
@@ -48,11 +50,14 @@ Gem::Specification.new do |spec|
   spec.add_dependency "ace-support-config", "~> 0.18"
   spec.add_dependency "ace-support-nav", "~> 0.28"
   spec.add_dependency "ace-b36ts", "~> 0.14"
-  spec.add_dependency "ace-support-markdown", "~> 0.3"
   spec.add_dependency "ace-llm", "~> 0.39"
   spec.add_dependency "ace-review", "~> 0.61.0"
   spec.add_dependency "ace-task", "~> 0.40"
   spec.add_dependency "ace-bundle", "~> 0.45.1"
+  # ace-runtime resolves terminal adapters through its lazy
+  # `ace/runtime/adapters/<name>` entrypoints, so the fork launcher still needs
+  # the tmux and Herdr adapter gems even though this package never references
+  # their constants directly.
   spec.add_dependency "ace-runtime", "~> 0.3"
   spec.add_dependency "ace-tmux", "~> 0.18"
   spec.add_dependency "ace-herdr", "~> 0.6"

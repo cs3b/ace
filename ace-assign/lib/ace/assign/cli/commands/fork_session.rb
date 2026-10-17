@@ -26,7 +26,6 @@ module Ace
           end
 
           def call(**options)
-            refuse_protected_graph_mutation!(options)
             launcher.launch_provider_session(
               assignment_id: options[:assignment],
               fork_root: options[:root],

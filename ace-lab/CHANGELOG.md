@@ -11,12 +11,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
-- Remove the protected authority/admission/receiver/listener/worker/recovery/publication/cleanup stack and the generic service-request admission/journal (`service request/status` without `--mode`), including their CLI selectors and tests.
-- Remove the obsolete protected/generic policy, executor, input and receipt models; the retained fixed-merge behaviour now lives in `OrdinaryMergePolicy` and `OrdinaryMergeInput`.
+- Remove the protected authority/admission/receiver/listener/worker/recovery/publication/cleanup stack and the generic service-request admission/journal (`service request|status` without `--mode`), including their CLI selectors and tests.
+- Remove the retained installed ordinary fixed-merge producer/receiver (`service request|status|listen --mode ordinary-merge`), the `ace-lab assignment …` ordinary-owner commands, and the installed run/command kernel (`run`, `run-status`, `command execute`), including their organisms, molecules, CLI registrations, authorizers, probes and tests.
+- Remove the obsolete protected/generic policy, executor, input and receipt models plus the ordinary merge/assignment owner configuration (ordinary journal/authority/admission wiring) and command admission/policy/runtime helpers.
+- Drop the now-unused runtime gem dependencies `ace-assign`, `ace-runtime`, `ace-herdr` and `ace-hitl`; the package keeps `ace-support-cli`, `ace-support-core`, `ace-support-config` and `ace-git-forgejo`.
 
 ### Changed
 
-- `ace-lab service request/status/listen` serves only the ordinary fixed-merge producer/receiver (`--mode ordinary-merge`); topology, `run`, command execution, assignment clients, release publication, the Forgejo adapter and HITL authorizers are retained.
+- `ace-lab` ships read-only topology queries only. The old installed authority/journal/command path is removed in L1 and the local file-based flow ([docs/lab-flow.md](../docs/lab-flow.md)) does not use it.
+- Retain the Forgejo merge adapter and its trusted configuration loader as provider building blocks; the local flow does not invoke them.
 - Refocus README and usage documentation on environment/project preparation, with the installer marked as planned L8.
 
 ## [0.9.0] - 2026-10-16

@@ -9,10 +9,10 @@ ace-docs:
 
 # Usage
 
-> **State owner:** `.ace-local/overseer/tasks/` (private, untracked `_overseer`
-> list via `ace-task --in _overseer`) and `.ace-wt/` (one worktree per project
-> task). Assignment plans live in `.ace-local/assign/` and are not copied here.
-> See [docs/lab-flow.md](../../docs/lab-flow.md).
+> **State owner:** `.ace-tasks/_overseer/` (private, gitignored task folder
+> reached via `ace-task --in _overseer`) and `.ace-wt/` (one worktree per
+> project task). Assignment plans live in `.ace-local/assign/` and are not
+> copied here. See [docs/lab-flow.md](../../docs/lab-flow.md).
 
 ## Command Surface
 
@@ -22,8 +22,10 @@ Local work uses three commands:
 - `ace-overseer status` - show active task worktrees and assignment progress.
 - `ace-overseer prune` - remove completed task worktrees safely.
 
-`--project`/`--agent` protected execution is removed in L1 and is not a normal
-path. tmux and Herdr are transports, never state owners.
+`--project`/`--agent` protected execution and the installed `ordinary`
+launcher are removed in L1 and are not normal paths. Status and prune read
+local assignment/task/worktree/Git state only; there is no journal, attempt or
+authority execution model. tmux and Herdr are transports, never state owners.
 
 ## `ace-overseer work-on`
 

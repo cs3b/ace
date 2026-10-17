@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+- Remove the installed Lab provider and its attempt-bound managed HITL path: `Providers::Lab::AssignmentBinding`, `ProtectedAssignmentBinding`, the provider `ask`/native-delivery methods, the `ask` CLI command, and the Herdr-native delivery client in `LiveClient` (the old ace-assign `AttemptCoordinator`/journal identity).
+- Remove the second-commander proposal surface: the `proposal` CLI command, `Lifecycle::Proposals`, the proposal policy/evaluator, proposal frames, and the publication HITL binding tied to the removed publication authority.
+- Remove managed and TLS `serve` modes: `serve` requires `--operator-only` and fails clearly otherwise.
+
+### Changed
+
+- `LiveClient` keeps the requester-side authenticated boundary operations (`wait`, `status`, `pending`); the lifecycle/relay transport (`Lifecycle::*`) remains for `ace-hitl-hermes`.
+- Drop the now-unused `ace-assign` and `ace-herdr` runtime dependencies (the managed attempt binding required them); re-lock the workspace Gemfile.lock locally.
+
 ## [0.17.0] - 2026-10-16
 
 ### Added

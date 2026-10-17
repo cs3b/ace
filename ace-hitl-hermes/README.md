@@ -15,6 +15,11 @@ folder between the lab and hermes **is** the transport:
 > are owned by `ace-hitl` in `.ace-local/hitl/`; this package owns only its
 > folder protocol and private transport state (journal/offsets) under its
 > configured state directory. See [docs/lab-flow.md](../docs/lab-flow.md).
+>
+> **Removed (L1):** the second-commander proposal surface was removed with the
+> old installed authority model. Hermes now handles only local HITL/relay
+> traffic (pending publication, delivery, ingress reconciliation); proposal
+> reconciliation no longer runs.
 
 The Captain's answer is a file `<folder>/<id>.json` with the fields `answer` /
 `sender` / `received_at`, written atomically (same-directory tmp file + rename)
