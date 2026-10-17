@@ -1,6 +1,6 @@
 ---
 id: 8xg.t.sbz.0.2
-status: pending
+status: done
 priority: medium
 created_at: "2026-10-17 18:54:10"
 estimate: medium
@@ -31,9 +31,9 @@ Ujednolicić aktywne README, instrukcje, presety i konfigurację wokół przyję
 
 ## Kryteria odbioru
 
-- [ ] Świeża sesja czytająca aktywne instrukcje potrafi przejść plikowy przepływ bez dokumentacji starego laba.
-- [ ] Żadna aktywna instrukcja nowego przepływu nie odsyła do anulowanego taska jako obowiązującego właściciela ani nie wymaga starego journala.
-- [ ] Wynik jest zgodny z kontraktem programu i możliwy do użycia przez następną rolę lub narzędzie.
+- [x] Świeża sesja czytająca aktywne instrukcje potrafi przejść plikowy przepływ bez dokumentacji starego laba.
+- [x] Żadna aktywna instrukcja nowego przepływu nie odsyła do anulowanego taska jako obowiązującego właściciela ani nie wymaga starego journala.
+- [x] Wynik jest zgodny z kontraktem programu i możliwy do użycia przez następną rolę lub narzędzie.
 
 ## Plan weryfikacji
 

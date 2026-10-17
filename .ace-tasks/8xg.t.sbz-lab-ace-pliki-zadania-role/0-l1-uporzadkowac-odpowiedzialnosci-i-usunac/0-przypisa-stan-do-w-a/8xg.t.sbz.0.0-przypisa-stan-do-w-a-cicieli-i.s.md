@@ -1,6 +1,6 @@
 ---
 id: 8xg.t.sbz.0.0
-status: in-progress
+status: done
 priority: medium
 created_at: "2026-10-17 18:54:09"
 estimate: medium
@@ -31,9 +31,9 @@ Zadania projektowe, prywatne _overseer, assignmenty, konfiguracja coworkera i pl
 
 ## Kryteria odbioru
 
-- [ ] W przykładzie task → assignment → raport można wskazać plik i właściciela każdej zmiany; _overseer nie jest śledzony przez Git.
-- [ ] Coworker nie zapisuje do _overseer ani nie utrzymuje kopii kolejki; brak konfiguracji właściciela jest pokazany jako brak gotowości.
-- [ ] Wynik jest zgodny z kontraktem programu i możliwy do użycia przez następną rolę lub narzędzie.
+- [x] W przykładzie task → assignment → raport można wskazać plik i właściciela każdej zmiany; _overseer nie jest śledzony przez Git.
+- [x] Coworker nie zapisuje do _overseer ani nie utrzymuje kopii kolejki; brak konfiguracji właściciela jest pokazany jako brak gotowości.
+- [x] Wynik jest zgodny z kontraktem programu i możliwy do użycia przez następną rolę lub narzędzie.
 
 ## Plan weryfikacji
 

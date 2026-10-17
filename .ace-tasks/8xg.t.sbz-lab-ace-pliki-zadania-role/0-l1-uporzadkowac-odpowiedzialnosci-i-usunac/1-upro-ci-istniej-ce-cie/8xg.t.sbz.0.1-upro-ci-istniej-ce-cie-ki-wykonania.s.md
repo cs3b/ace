@@ -1,6 +1,6 @@
 ---
 id: 8xg.t.sbz.0.1
-status: pending
+status: done
 priority: medium
 created_at: "2026-10-17 18:54:09"
 estimate: medium
@@ -31,9 +31,9 @@ Zastąpić stare labowe authority/listenery/journale bezpośrednią pracą na is
 
 ## Kryteria odbioru
 
-- [ ] Task i assignment można utworzyć, odczytać i prowadzić bez uruchamiania starej usługi admission i właściciela journala.
-- [ ] Brak starego listenera nie blokuje zwykłej pracy; rzeczywisty brak uprawnień do własnych plików jest zgłaszany. Nie usuwać transportu tmux/Herdr lub HITL tylko dlatego, że korzysta z socketu.
-- [ ] Wynik jest zgodny z kontraktem programu i możliwy do użycia przez następną rolę lub narzędzie.
+- [x] Task i assignment można utworzyć, odczytać i prowadzić bez uruchamiania starej usługi admission i właściciela journala.
+- [x] Brak starego listenera nie blokuje zwykłej pracy; rzeczywisty brak uprawnień do własnych plików jest zgłaszany. Nie usuwać transportu tmux/Herdr lub HITL tylko dlatego, że korzysta z socketu.
+- [x] Wynik jest zgodny z kontraktem programu i możliwy do użycia przez następną rolę lub narzędzie.
 
 ## Plan weryfikacji
 
