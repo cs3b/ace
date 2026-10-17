@@ -99,6 +99,7 @@ module Ace
               title: task.title,
               status: task.status,
               path: task.file_path,
+              special_folder: task.respond_to?(:special_folder) ? task.special_folder : nil,
               task_number: Atoms::TaskIDExtractor.extract({id: task.id}),
               metadata: task.respond_to?(:metadata) ? (task.metadata || {}) : {}
             }
@@ -162,6 +163,7 @@ module Ace
               id: nil,
               task_number: nil,
               path: nil,
+              special_folder: nil,
               metadata: {}
             }
 
@@ -186,6 +188,8 @@ module Ace
                 task_data[:metadata]["estimate"] = line.sub(/^Estimate:\s+/, "")
               elsif line.start_with?("Path: ")
                 task_data[:path] = line.sub(/^Path:\s+/, "")
+              elsif line.start_with?("folder: ")
+                task_data[:special_folder] = line.sub(/^folder:\s+/, "")
               elsif line == "--- Content ---"
                 current_section = :content
                 next

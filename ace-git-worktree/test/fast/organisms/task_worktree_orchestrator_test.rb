@@ -107,7 +107,7 @@ class TaskWorktreeOrchestratorTest < Minitest::Test
 
   def test_overseer_management_task_is_rejected_before_worktree_creation
     overseer_path = ".ace-tasks/_overseer/8vb.t.vz8-objective/8vb.t.vz8-objective.s.md"
-    mock_data = {id: "8vb.t.vz8", path: overseer_path, title: "Management objective"}
+    mock_data = {id: "8vb.t.vz8", path: overseer_path, title: "Management objective", special_folder: "_overseer"}
 
     @orchestrator.stub(:fetch_task_data, mock_data) do
       result = @orchestrator.create_for_task("8vb.t.vz8")
@@ -120,10 +120,11 @@ class TaskWorktreeOrchestratorTest < Minitest::Test
     end
   end
 
-  def test_overseer_management_task_is_rejected_for_absolute_task_path
-    absolute_path = File.join(File.realpath(@temp_dir), ".ace-tasks", "_overseer",
+  def test_dry_run_create_rejects_overseer_management_task_by_classification
+    absolute_path = File.join(File.realpath(@temp_dir), "tasks", "_overseer",
       "8vb.t.vz8-objective", "8vb.t.vz8-objective.s.md")
-    mock_data = {id: "8vb.t.vz8", path: absolute_path, title: "Management objective"}
+    mock_data = {id: "8vb.t.vz8", path: absolute_path, title: "Management objective",
+                 special_folder: "_overseer"}
 
     @orchestrator.stub(:fetch_task_data, mock_data) do
       result = @orchestrator.dry_run_create("8vb.t.vz8")
@@ -134,13 +135,83 @@ class TaskWorktreeOrchestratorTest < Minitest::Test
     end
   end
 
-  def test_project_task_is_not_treated_as_overseer_management_task
-    mock_data = {id: "8vb.t.vz8", path: ".ace-tasks/8vb.t.vz8-project/8vb.t.vz8-project.s.md",
-                 title: "Project implementation"}
+  def test_overseer_management_task_is_rejected_when_project_root_is_a_subdirectory
+    nested_root = File.join(@temp_dir, "nested", "deeper")
+    FileUtils.mkdir_p(nested_root)
+    orchestrator = Ace::Git::Worktree::Organisms::TaskWorktreeOrchestrator.new(project_root: nested_root)
+    # Simulate a CLI fetch from a cwd below the project root: ace-task still
+    # classifies the task and returns its real (parent-root) file path.
+    mock_data = {id: "8vb.t.vz8", title: "Management objective", special_folder: "_overseer",
+                 path: File.join(@temp_dir, ".ace-tasks", "_overseer",
+                   "8vb.t.vz8-objective", "8vb.t.vz8-objective.s.md")}
 
-    refute @orchestrator.send(:private_overseer_task?, mock_data)
-    assert @orchestrator.send(:private_overseer_task?,
+    orchestrator.stub(:fetch_task_data, mock_data) do
+      create_result = orchestrator.create_for_task("8vb.t.vz8")
+      refute create_result[:success]
+      assert_match(/_overseer management task/, create_result[:error])
+
+      dry_run_result = orchestrator.dry_run_create("8vb.t.vz8")
+      refute dry_run_result[:success]
+      assert_match(/_overseer management task/, dry_run_result[:error])
+      refute dry_run_result.key?(:would_create)
+    end
+    refute Dir.exist?(File.join(@temp_dir, ".ace-wt"))
+  end
+
+  def test_overseer_management_task_is_rejected_for_custom_task_root
+    custom_path = File.join(@temp_dir, "tasks", "_overseer",
+      "8vb.t.vz8-objective", "8vb.t.vz8-objective.s.md")
+    mock_data = {id: "8vb.t.vz8", path: custom_path, title: "Management objective",
+                 special_folder: "_overseer"}
+
+    @orchestrator.stub(:fetch_task_data, mock_data) do
+      result = @orchestrator.create_for_task("8vb.t.vz8")
+
+      refute result[:success]
+      assert_match(/_overseer management task/, result[:error])
+      assert_match(/create a separate project task for implementation/i, result[:error])
+    end
+    refute Dir.exist?(File.join(@temp_dir, ".ace-wt"))
+  end
+
+  def test_project_task_is_not_treated_as_overseer_management_task
+    refute @orchestrator.send(:private_overseer_task?,
+      {id: "8vb.t.vz8", path: ".ace-tasks/8vb.t.vz8-project/8vb.t.vz8-project.s.md",
+       title: "Project implementation", special_folder: nil})
+    # The classification, not a path prefix, decides: a path that looks like
+    # _overseer without the classification is a project task.
+    refute @orchestrator.send(:private_overseer_task?,
       {path: ".ace-tasks/_overseer/8vb.t.vz8-objective/8vb.t.vz8-objective.s.md"})
+    # Both symbol and string keys carry the classification.
+    assert @orchestrator.send(:private_overseer_task?, {special_folder: "_overseer", path: "tasks/x.s.md"})
+    assert @orchestrator.send(:private_overseer_task?, {"special_folder" => "_overseer", "path" => "tasks/x.s.md"})
+  end
+
+  def test_real_fetch_from_subdirectory_classifies_and_rejects_overseer_task
+    # End-to-end fetch through the real ace-task TaskManager: a cwd below the
+    # project root must still obtain the classification and reject the task.
+    FileUtils.mkdir_p(File.join(@temp_dir, ".git"))
+    task_dir = File.join(@temp_dir, ".ace-tasks", "_overseer", "8vb.t.vz8-objective")
+    FileUtils.mkdir_p(task_dir)
+    File.write(File.join(task_dir, "8vb.t.vz8-objective.s.md"), <<~SPEC)
+      ---
+      id: 8vb.t.vz8
+      title: Management objective
+      status: pending
+      dependencies: []
+      ---
+      Objective body.
+    SPEC
+    nested = File.join(@temp_dir, "nested", "deeper")
+    FileUtils.mkdir_p(nested)
+
+    Dir.chdir(nested) do
+      orchestrator = Ace::Git::Worktree::Organisms::TaskWorktreeOrchestrator.new(project_root: nested)
+      result = orchestrator.create_for_task("8vb.t.vz8")
+
+      refute result[:success]
+      assert_match(/_overseer management task/, result[:error])
+    end
   end
 
   def test_no_pr_task_creation_never_resolves_a_server

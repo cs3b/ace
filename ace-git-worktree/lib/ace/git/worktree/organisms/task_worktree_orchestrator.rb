@@ -19,10 +19,6 @@ module Ace
         #   result = orchestrator.create_for_task("081")
         #   # => { success: true, worktree_path: "/project/.ace-wt/task.081", ... }
         class TaskWorktreeOrchestrator
-          # Private overseer management tasks stay with the overseer: they are
-          # never provisioned as implementation worktrees.
-          PRIVATE_TASK_FOLDER = File.join(".ace-tasks", "_overseer")
-
           # Initialize a new TaskWorktreeOrchestrator
           #
           # @param config [WorktreeConfig, nil] Worktree configuration (loaded if nil)
@@ -659,19 +655,17 @@ module Ace
             path
           end
 
-          # True when the task spec lives in the private _overseer management
-          # folder. Such tasks are not implementation work and must not get a
-          # worktree; subagents may still do planning/analysis/verification.
+          # True when ace-task classifies the task as a private _overseer
+          # management task. The classification is independent of the current
+          # working directory and of a custom task root_dir. Such tasks are not
+          # implementation work and must not get a worktree; subagents may still
+          # do planning/analysis/verification.
           #
           # @param task_data [Hash] Task data hash
           # @return [Boolean]
           def private_overseer_task?(task_data)
-            relative = relative_task_path(task_data[:path])
-            return false if relative.nil? || relative.to_s.empty?
-
-            normalized = relative.to_s.delete_prefix("./")
-            normalized == PRIVATE_TASK_FOLDER ||
-              normalized.start_with?(PRIVATE_TASK_FOLDER + File::SEPARATOR)
+            folder = task_data[:special_folder] || task_data["special_folder"]
+            folder.to_s == "_overseer"
           end
 
           # @param task_id [String, nil] Task ID
