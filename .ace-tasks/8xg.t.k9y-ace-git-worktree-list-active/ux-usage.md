@@ -128,3 +128,22 @@ Actionable one-line errors (`invalid duration 'abc'. Use forms like 30m, 18h, 2d
 - `docs/usage.md` examples that currently use `--show-tasks` must be rewritten (the Task column is always present now).
 - Task-association and PR-match provenance must be documented so agents can decide how much to trust an inferred task id or PR.
 - The probe isolation behavior (fork per worktree, 16-child cap, 5s timeout, deterministic order) must be documented as observable behavior, not just an internal detail.
+
+## Implementation Status (delivered)
+
+All scenarios above are implemented and covered by `test/fast`:
+
+- Scenario 1/2/3 (compact default, custom window, `--full`): `WorktreeListReport`
+  + `WorktreeTableFormatter`/`WorktreeFooterFormatter` (width policy tested with
+  pinned `COLUMNS`).
+- Scenario 4 (useless names): `TaskAssociationResolver` (`task_files` precedence)
+  and `PrStatusResolver` (`branch` -> `head_sha` -> `task_reference`).
+- Scenario 5 (JSON): additive schema fields `task_id_source`, `task_ids`,
+  `active_within_window`, `last_commit`, `uncommitted`, `pr` (state/draft/matched_by).
+- Scenario 6 (narrow terminal): Path columns shrink then drop; `--full` exempt.
+- Scenario 7 (slow probe): forked `WorktreeProbeRunner` with 16-child cap, 5s
+  per-probe timeout, process-group kill, `?` rendering, deterministic order.
+- Scenario 8 (bad input): one-line actionable errors with non-zero exit;
+  `--show-tasks` is an unknown option.
+
+`ace-git-worktree/docs/usage.md` is the authoritative usage reference.
