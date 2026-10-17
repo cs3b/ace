@@ -1,3 +1,3 @@
 name: create-pr
 skill: as-git-pr-create
-instructions: "Use ace-assign delivery --assignment ID --attempt ATTEMPT --operation create --title TITLE --body-file DESCRIPTION. The canonical workflow creates or reconciles a draft by default before independent review."
+instructions: "Create or reconcile a draft PR with the configured forge command: ace-git pr create --head HEAD-REF --base BASE-REF --expected-head CANDIDATE-SHA --title TITLE --body-file DESCRIPTION --format json. Drafts are the default. Record the returned PR identity and keep it draft until tests and independent review pass on the exact head."

@@ -9,7 +9,7 @@ tags: [installed-acceptance, "use-case:delivery"]
 tool-under-test: ace-assign
 e2e-justification: >
   Requires the actual installed public CLI, disposable provider state or authenticated
-  protected/native producer; deterministic fixtures cannot prove installed outcomes.
+  native producer; deterministic fixtures cannot prove installed outcomes.
 e2e-evidence-strength: state+content
 unit-coverage-reviewed:
   - ace-assign/test/edge/installed_herdr_workflows_test.rb

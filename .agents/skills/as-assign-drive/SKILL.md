@@ -4,13 +4,12 @@ description: Drive agent execution through an active assignment
 user-invocable: true
 allowed-tools:
 - Bash(ace-assign:*)
-- Bash(ace-lab:*)
 - Bash(ace-bundle:*)
 - Read
 - Write
 - AskUserQuestion
 - Skill
-argument-hint: "[assignment[@scope] | --ordinary <context.json>]"
+argument-hint: "[assignment[@scope]]"
 last_modified: 2026-04-23
 source: ace-assign
 skill:
@@ -20,8 +19,6 @@ skill:
 ---
 
 Load and run `ace-bundle wfi://assign/drive` in the current project, then follow the loaded workflow as the source of truth and execute it end-to-end instead of only summarizing it.
-
-When `--ordinary` or `ACE_ASSIGN_ORDINARY_CONTEXT` is present, follow the workflow’s ordinary installed branch before resolving local assignment state. Its canonical `ace-lab assignment drive` operations own status, start, progress, results and recovery; local commands below apply only outside that branch.
 
 Hard stop rule:
 
