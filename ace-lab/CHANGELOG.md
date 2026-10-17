@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-10-17
+
+### Removed
+
+- Remove the protected authority/admission/receiver/listener/worker/recovery/publication/cleanup stack and the generic service-request admission/journal (`service request/status` without `--mode`), including their CLI selectors and tests.
+- Remove the obsolete protected/generic policy, executor, input and receipt models; the retained fixed-merge behaviour now lives in `OrdinaryMergePolicy` and `OrdinaryMergeInput`.
+
+### Changed
+
+- `ace-lab service request/status/listen` serves only the ordinary fixed-merge producer/receiver (`--mode ordinary-merge`); topology, `run`, command execution, assignment clients, release publication, the Forgejo adapter and HITL authorizers are retained.
+- Refocus README and usage documentation on environment/project preparation, with the installer marked as planned L8.
+
 ## [0.9.0] - 2026-10-16
 
 ### Added

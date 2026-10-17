@@ -4,7 +4,17 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Removed
+
+- **ace-lab v0.10.0, ace-overseer v0.24.0, ace-assign v0.72.0**: Remove the old protected lab authority/admission/journal/listener model from the active flow. Delete the protected receiver/listener/worker/client/recovery/publication/cleanup stack, the generic service-request admission/journal, the protected overseer modes and proposal tick, the protected delivery/queue presets and protected-only coverage. Retain needed operations and transports: ordinary fixed merge, topology (L7), `ace-lab run`, release publication, Forgejo adapter, HITL/grant authorizers, tmux/Herdr/HITL, and the local task/assignment/worktree flow.
+
+### Changed
+
+- **Documentation and handbook surfaces (ace-lab, ace-overseer, ace-hitl, ace-assign, ace-herdr, ace-runtime, ace-hitl-hermes, ace-hitl-contract, ace-review, ace-git, ace-task, ace-git-worktree)**: Unify active READMEs, usage guides, workflow instructions and presets around one file-based flow and the state owners in `docs/lab-flow.md`; mark L2-L10 features as planned/not available yet and remove old journal/authority/queue requirements. Documentation-only package versions are released in the coordinated L10 wave.
+
 ### Added
+
+- **ace-task v0.41.0**: Support named task stores selected with `--in NAME`; the private untracked `_overseer` store lives at `.ace-local/overseer/tasks`, is resolved before destination validation, and is never scanned by the project task list. Publish `docs/lab-flow.md` and ADR-034 as the canonical state-owner map.
 
 - **ace-assign v0.71.0, ace-review v0.61.0, ace-lab v0.9.0**: Compose accepted-head campaign comparison, canonical ordinary review/release ingress and retained command evidence. Bound candidate transport at closed 128MiB budgets with batched Git object reads, explicit object/path limits and a measured 60s transfer deadline; share the complete-head-context ceiling between Review and Assign. Add the Lab command kernel (`ace-lab run`) with ordinary driver status/bootstrap/progress/result and exact recovery.
 - **ace-hitl v0.17.0, ace-hitl-contract v0.3.0, ace-hitl-hermes v0.6.0**: Add explicit operator questions with a closed envelope contract, kernel requester identity, exact installed project grants, stable retries and operator-only service bindings that refuse managed execution, secrets and effects; route them through project correlation and durable Hermes ingress under runtime/v2.
