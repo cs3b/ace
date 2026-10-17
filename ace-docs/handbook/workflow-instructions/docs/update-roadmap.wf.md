@@ -9,6 +9,13 @@ ace-docs:
 
 # Update Roadmap Workflow
 
+> **Legacy layout notice (L1):** this workflow predates the flat `.ace-tasks/`
+> task layout. The former `.ace-task/v.*/` release-folder tree and
+> `.ace-task/roadmap.md` no longer exist, so the paths and release-folder
+> analysis below are historical context, not current instructions. A roadmap
+> workflow for the current layout is planned (L5.5/L9); until then do not
+> recreate the old tree.
+
 ## Goal
 
 Synchronize the project roadmap (`.ace-task/roadmap.md`) with the current state of releases and tasks in the `.ace-task/` directory structure. This workflow analyzes release folders, updates the Planned Major Releases table, synchronizes cross-release dependencies, and maintains roadmap format compliance per the Roadmap Definition Guide.

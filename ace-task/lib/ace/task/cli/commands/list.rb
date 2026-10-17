@@ -59,6 +59,11 @@ module Ace
               raise Ace::Support::Cli::Error,
                 "Cannot combine --root with store selector --in #{in_folder}"
             end
+            if in_folder && store_root.nil? && in_folder.start_with?("_") && !existing_task_folder?(config, in_folder)
+              raise Ace::Support::Cli::Error,
+                "Unknown task store '#{in_folder}'. Configure it under task.stores in " \
+                ".ace/task/config.yml, or use an existing task folder."
+            end
 
             manager = if root
               Ace::Task::Organisms::TaskManager.new(root_dir: File.expand_path(root))
@@ -77,6 +82,13 @@ module Ace
               global_folder_stats: manager.last_folder_counts,
               cycle_ids: manager.last_list_cycle_ids
             )
+          end
+
+          private
+
+          def existing_task_folder?(config, name)
+            root = config.dig("task", "root_dir") || ".ace-tasks"
+            File.directory?(File.expand_path(File.join(root, name)))
           end
         end
       end
