@@ -45,7 +45,7 @@ module Ace
           progress = on_progress || ->(_msg) {}
 
           progress.call("Scanning worktrees...")
-          result = @worktree_manager.list_all(show_tasks: true)
+          result = @worktree_manager.list_all
           raise Error, result[:error] || "Failed to list worktrees" unless result[:success]
 
           all_worktrees = Array(result[:worktrees]).reject(&:bare)
