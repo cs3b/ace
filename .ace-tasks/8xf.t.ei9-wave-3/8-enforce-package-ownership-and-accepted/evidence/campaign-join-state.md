@@ -115,3 +115,36 @@ coordinated release).
   eligibility + CanonicalEvidence kind + aggregate bounds + tests), public
   retained driver, round ingestion proofs, cancellation resolution, historical
   test-evidence wiring, comprehensive tests + actual Pi review.
+
+## review_context ingress implementation (in progress, branch codex/ei9-campaign-composition-join)
+
+Implemented under the Captain-approved decision: CandidateLimits gains
+REVIEW_CONTEXT_BYTES (= CampaignContract::MAX_HEAD_CONTEXT_BYTES) and
+REVIEW_CONTEXT_ARTIFACTS (8); CanonicalEvidence gains the closed
+"review-context" kind (reviewer role, shared cap for each/total, 8 artifacts);
+TransferCodec gains the :review_context purpose (receipt ≤16KiB + up to 8
+context parts under the shared cap) with a fixed receipt-size check;
+OrdinaryResults gains the submit_review_context operation
+(REVIEW_CONTEXT_KEYS; eligibility validated against the PRODUCER assignment's
+real journal events: exactly one non-cancelled assign_review naming this
+reviewer attempt with campaign data, plus a matching canonical campaign_begin
+event; reviewer live identity verified at head; import under the review-context
+kind; event type review_context_submitted; ordinary receipts keep their small
+budgets and can never select this purpose). Fixed en route: method-name
+collision — the handler is ordinary_review_context_submission (the evidence
+module already defines ordinary_review_context(binding)).
+
+Regression state: existing 10 tests / 121 assertions still pass with the
+ingress code in place. The NEW focused test
+(test_review_context_ingestion_binds_campaign_selection_and_matching_begin)
+is RED at its campaign_begin step and the debugging trail is retained here
+for the next session: with temporary instrumentation, the failing
+origin check saw the producer chain INCLUDING a register_assignment event
+inside the producer-run attempt filter AND an already-appended campaign_begin
+event with chain_valid=false on replay, while the existing campaign test's
+identical filter shows no register event and its begin passes. First failed
+attempt surfaced empty events at a stale commit. Lead: the begin mutation's
+replay/authorize path sees a different chain shape in the new test's
+sequencing — compare the register event's attempt linkage and the mutate
+replay authorizer ordering before the begin call. All instrumentation has
+been reverted; the tree is syntax-clean with the red test intact.
