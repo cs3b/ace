@@ -218,3 +218,21 @@ hyphenated review-execution check name.
 Remaining .8 joins: public retained driver, cancellation resolution,
 historical test-evidence wiring, comprehensive public-path tests + actual Pi
 independent review, branch re-verification and merge.
+
+### Public retained driver join COMPLETE
+
+OrdinaryCampaignRunner (ace-lab organism) drives one canonical campaign review
+round: retained campaign_begin mutation — a REPLAYED begin is an observation
+that never dispatches; the execution boundary matches the begin's canonical
+session_binding before the single-attempt model dispatch; a failed execution
+submits nothing; the collected context returns through a retained
+submit_review_context request whose receipt carries the campaign reference and
+exact artifact digests. Contract receipts: 4 tests / 20 assertions PASS
+(fresh-begin dispatch + submission; replay-never-dispatches; failure submits
+nothing; boundary drift refuses). Fixes en route: lambdas cannot yield (block
+parameter), receipt hash key consistency, and the boundary-drift test now
+forces engine-side drift (an echoing fake can never mismatch its own begin).
+
+Remaining .8 joins: cancellation resolution, historical test-evidence wiring,
+CLI/workflow surface exposure of the runner, comprehensive public-path tests +
+actual Pi independent review, branch re-verification and merge.
