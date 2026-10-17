@@ -15,8 +15,8 @@ module Ace
         @input.instance_variable_set(:@descriptor, @selectors)
       end
 
-      def test_actual_shipped_delivery_workflow_keeps_literal_nested_json
-        source = File.expand_path("../../../../ace-handbook/handbook/workflow-instructions/handbook/perform-delivery.wf.md", __dir__)
+      def test_actual_shipped_pr_workflow_keeps_literal_nested_json
+        source = File.expand_path("../../../../ace-git/handbook/workflow-instructions/git/pr/create.wf.md", __dir__)
         content = Ace::Bundle::Organisms::BundleLoader.new(base_dir: File.dirname(source)).load_file(source).content
         assert_includes content, "}}"
         refute_includes content, "{{"
@@ -61,8 +61,9 @@ module Ace
         assert_includes prompt, "actual lint check"
         assert_includes prompt, "campaign null"
         assert_includes prompt, "Do not edit or advance that candidate"
-        assert_includes prompt, "CURRENT_CANDIDATE"
-        assert_includes prompt, "REVIEWED_CANDIDATE"
+        assert_includes prompt, "local attempt receipt"
+        refute_includes prompt, "ace-lab service request"
+        refute_includes prompt, "submit-candidate"
         assert prompt.frozen?
       end
     end

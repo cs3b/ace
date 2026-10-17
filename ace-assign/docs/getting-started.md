@@ -1,15 +1,20 @@
 ---
 doc-type: user
 title: Getting Started with ace-assign
-purpose: Tutorial for creating, running, and adapting assignment queues with ace-assign.
+purpose: Tutorial for creating, running, and adapting local assignment plans with ace-assign.
 ace-docs:
-  last-updated: 2026-03-22
-  last-checked: 2026-03-22
+  last-updated: 2026-10-17
+  last-checked: 2026-10-17
 ---
 
 # Getting Started with ace-assign
 
-Use `ace-assign` to run multi-step work as a durable queue instead of ad-hoc notes.
+> **State owner:** `.ace-local/assign/` -- assignment plans and step state owned
+> by `ace-assign`. Steps are never copied into a second queue. See
+> [docs/lab-flow.md](../../docs/lab-flow.md).
+
+Use `ace-assign` to run multi-step work as a durable local plan instead of
+ad-hoc notes.
 
 ## Prerequisites
 

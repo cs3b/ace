@@ -21,7 +21,7 @@ This project uses a **mono-repo architecture** with all packages at the reposito
 
 - **ace-*/**: Ruby gems for specific functionality (ace-git, ace-task, ace-docs, etc.)
 - **docs/**: Project documentation and architecture decisions
-- **.ace-task/**: Task management and release coordination
+- **.ace-tasks/**: Task management and release coordination
 - **_legacy/**: Archived content from previous multi-repo structure
 
 #### Common Git Commands
@@ -183,18 +183,19 @@ git remote prune origin
    git push -u origin feature/your-feature
    ```
 
-2. **Create an attempt-bound draft on the selected forge**:
+2. **Create a draft on the selected forge**:
 
    ```bash
    ace-bundle wfi://git/pr/create
    ```
 
-   Use the managed assignment and active delivery attempt with explicit
-   fork/canonical repository and ref provenance. The canonical operation is
-   `ace-assign delivery --assignment ID --attempt ATTEMPT --operation create --title TITLE --body-file DESCRIPTION`.
+   Use the actual assignment and active attempt when the work belongs to an
+   assignment, with explicit fork/canonical repository and ref provenance. The
+   forge command is
+   `ace-git pr create --server NAME --head HEAD-REF --base BASE-REF --expected-head CANDIDATE-SHA --title TITLE --body-file DESCRIPTION --format json`.
    Preserve the resolved forge and exact candidate SHA. Continue through
-   `wfi://git/pr/update` only with accepted current test and independent review
-   receipts; CI status remains advisory. Inside ACE use source `bin/ace-*`.
+   `wfi://git/pr/update` only with current exact-head test and independent review
+   evidence; CI status remains advisory. Inside ACE use source `bin/ace-*`.
 
 3. **Link to relevant issues/tasks**:
 
@@ -225,8 +226,8 @@ git push --force-with-lease origin feature/your-feature
 
 #### Fork-Based Workflow
 
-Provider-specific GitHub clone example for external contributors; canonical
-assignment delivery above uses the explicitly selected forge and provenance:
+Provider-specific GitHub clone example for external contributors; the neutral
+draft/update flow above uses the explicitly selected forge and provenance:
 
 ```bash
 # Fork repository on GitHub, then:

@@ -57,7 +57,7 @@ module Ace
         SUBMISSION_KEYS = %w[project_id assignment_id attempt_id queue_entry operation
           authorization request_id input_digest request principal receiver_id
           configuration_sha256].freeze
-        ID = Molecules::ServicePolicy::ID
+        ID = Molecules::OrdinaryMergePolicy::ID
 
         def initialize(config:, coordinator:, policy_document:, merge_factory: nil,
           forge_config: nil, forge_factory: nil, resolver: nil,
@@ -72,7 +72,7 @@ module Ace
           @owner_guard = owner_guard
           @coordinator = coordinator
           @policy_document = policy_document
-          @configuration_sha256 = Molecules::ServicePolicy.configuration_digest(policy_document)
+          @configuration_sha256 = Molecules::OrdinaryMergePolicy.configuration_digest(policy_document)
           @merge_factory = merge_factory || ->(document) {
             Molecules::OrdinaryMergeRead.new(repo_path: config.repo_path,
               base_ref: document.fetch("base_ref"))

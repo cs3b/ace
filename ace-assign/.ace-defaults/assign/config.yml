@@ -35,11 +35,9 @@ attempt:
   evidence_git_ref: "refs/ace/execution"
   # Disposable isolated audit checkout root (relative to project root)
   evidence_checkout_root: ".ace-local/assign/evidence-checkout"
-  # Trusted execution-boundary identity adapter: local (interactive
-  # coordinator) or service (identity supplied by a trusted service executor
-  # via service_identity_env). Unknown identity fails closed.
+  # Trusted execution-boundary identity adapter. Only the local interactive
+  # coordinator is supported; unknown identity fails closed.
   identity_adapter: "local"
-  service_identity_env: "ACE_ASSIGN_SERVICE_IDENTITY"
 
 # Subtree execution behavior
 subtree:

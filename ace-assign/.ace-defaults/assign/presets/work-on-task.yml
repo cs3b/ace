@@ -149,7 +149,7 @@ steps:
   - name: mark-pr-ready
     number: "190"
     instructions:
-      - "After review completes and appropriate tests pass, run `ace-assign delivery --assignment ID --attempt ATTEMPT --operation ready --tests TEST-REF --review REVIEW-REF` with accepted exact-head test and independent review references."
+      - "After review completes and appropriate tests pass on the exact head, record the executed tests and independent review evidence for that head, then mark the draft PR ready with the configured forge command: `ace-git pr ready IDENTIFIER --expected-head HEAD` using the retained server/default/remote selection."
 
 expansion:
   batch-parent:

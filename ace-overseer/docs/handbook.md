@@ -17,12 +17,6 @@ ace-docs:
 - Purpose: orchestrate task worktrees through `work-on`, `status`, and `prune`
 - Execution model: workflow-backed skill invoking `wfi://overseer`
 
-### `as-overseer-configure-project`
-
-- Path: `handbook/skills/as-overseer-configure-project/SKILL.md`
-- Purpose: adapt delivery supervision to project-owned presets, workflows, and decision policy without destructive overwrite
-- Execution model: workflow-backed skill invoking `wfi://overseer/configure-project`
-
 ## Workflows
 
 ### `wfi://overseer`
@@ -30,18 +24,7 @@ ace-docs:
 - Path: `handbook/workflow-instructions/overseer.wf.md`
 - Purpose: canonical workflow for working on tasks, checking active worktrees, and safe cleanup
 - Core sequence: 1) run `ace-overseer work-on --task ...`; 2) inspect state with `ace-overseer status`; 3) preview cleanup with `ace-overseer prune --dry-run`, then confirm with `--yes`.
-
-### `wfi://overseer/configure-project`
-
-- Path: `handbook/workflow-instructions/overseer/configure-project.wf.md`
-- Purpose: resolve and review effective delivery presets, workflows, and decision guides, then apply repeatable project-local adaptation while preserving customization
-- Output: per-asset `CREATED`, `UPDATED`, `KEPT`, or `BLOCKED` evidence plus a repeat-run zero-write check
-
-### `wfi://overseer/maintain-continuation`
-
-- Path: `handbook/workflow-instructions/overseer/maintain-continuation.wf.md`
-- Purpose: bootstrap native 600-second progress and 3600-second cleanup duties, then restore the exact persisted session without duplicate registration
-- Evidence: real model turn, persisted ace-wake entries, exact-session restart and consumed wake; Assign remains execution owner
+- The coordinator/continuation workflow and project-adaptation skill were removed with the old lab model; the private `_overseer` queue and continuation behavior are planned for L6/L7.
 
 ## Related Documentation
 

@@ -10,7 +10,7 @@
   <a href="https://opensource.org/licenses/MIT"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-blue.svg" /></a>
 </div>
 
-[Quick Start](docs/quick-start.md) | [Vision](docs/vision.md) | [Architecture](docs/architecture.md) | [Tools Reference](docs/tools.md)
+[Quick Start](docs/quick-start.md) | [Lab Flow](docs/lab-flow.md) | [Vision](docs/vision.md) | [Architecture](docs/architecture.md) | [Tools Reference](docs/tools.md)
 > Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
 
 ## The Problem
@@ -50,6 +50,8 @@ ace-overseer work-on --task 8r3
 ```
 
 [`ace-overseer`](ace-overseer/) orchestrates [`ace-assign`](ace-assign/), [`ace-git-worktree`](ace-git-worktree/), and [`ace-tmux`](ace-tmux/)
+
+The local file-based flow is explicit: project task → plan → worktree → assignment → `/as-assign-drive` → tests/review → HITL blockers → commit/PR → done. State owners and the exact command order are in [Lab Flow](docs/lab-flow.md); `ace-overseer work-on` is local convenience over the same files.
 
 **Multi-model code review with tracked feedback**
 
@@ -223,4 +225,4 @@ ACE skills project natively to multiple agent platforms. Install an integration 
 
 ---
 
-[Quick Start](docs/quick-start.md) | [Vision](docs/vision.md) | [Architecture](docs/architecture.md) | [Tools Reference](docs/tools.md)
+[Quick Start](docs/quick-start.md) | [Lab Flow](docs/lab-flow.md) | [Vision](docs/vision.md) | [Architecture](docs/architecture.md) | [Tools Reference](docs/tools.md)

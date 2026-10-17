@@ -9,6 +9,11 @@ ace-docs:
 
 # ACE Taskflow Test Fixture Template
 
+> **Legacy layout notice (L1):** this fixture scaffolds the former release-folder
+> tree (`.ace-task/v.test/tasks/...`). The current repository uses the flat
+> `.ace-tasks/<task-folder>/` layout. Use this template only for legacy-layout
+> fixtures; a current-layout template is a follow-up (L9).
+
 This template provides scaffolding for E2E tests that need valid ace-task structures.
 
 ## Basic Task Fixture

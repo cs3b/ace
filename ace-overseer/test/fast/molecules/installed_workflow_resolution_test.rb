@@ -50,47 +50,6 @@ class InstalledWorkflowResolutionTest < AceOverseerTestCase
       "installed workflow must carry the status-truth lifecycle contract"
   end
 
-  def test_clean_consumer_resolves_configure_project_skill_and_workflow_from_installed_package
-    consumer = build_consumer
-
-    skill_out, skill_err, skill_status = probe(
-      consumer, "ace-nav", "resolve", "skill://as-overseer-configure-project"
-    )
-    assert_predicate skill_status, :success?, <<~MESSAGE
-      ace-nav must resolve the packaged configure-project skill.
-      stdout: #{skill_out}
-      stderr: #{skill_err}
-    MESSAGE
-    skill_path = skill_out.strip
-    assert_equal "SKILL.md", File.basename(skill_path)
-    assert consumer.installed_ace_overseer_path?(skill_path)
-    assert_includes File.read(skill_path), "wfi://overseer/configure-project"
-
-    nav_out, nav_err, nav_status = probe(
-      consumer, "ace-nav", "resolve", "wfi://overseer/configure-project"
-    )
-    assert_predicate nav_status, :success?, <<~MESSAGE
-      ace-nav must resolve the packaged configure-project workflow.
-      stdout: #{nav_out}
-      stderr: #{nav_err}
-    MESSAGE
-    resolved_path = nav_out.strip
-    assert_equal "configure-project.wf.md", File.basename(resolved_path)
-    assert consumer.installed_ace_overseer_path?(resolved_path)
-
-    bundle_out, bundle_err, bundle_status = probe(
-      consumer, "ace-bundle", "wfi://overseer/configure-project"
-    )
-    assert_predicate bundle_status, :success?, <<~MESSAGE
-      ace-bundle must load the packaged configure-project workflow.
-      stdout: #{bundle_out}
-      stderr: #{bundle_err}
-    MESSAGE
-    payload = extract_bundle_payload(bundle_out)
-    assert_includes payload, "handbook/workflow-instructions/overseer/configure-project.wf.md"
-    assert consumer.installed_ace_overseer_path?(payload_path_from_bundle(payload))
-  end
-
   def test_consumer_without_package_registration_fails_both_probes_despite_retained_workflow
     consumer = build_consumer
     consumer.remove_ace_overseer_registration!

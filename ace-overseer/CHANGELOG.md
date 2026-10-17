@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.24.0] - 2026-10-17
+
+### Removed
+
+- Remove the protected work-on/status/steering/review/prune modes, their launch request/recovery files and CLI commands (`review`, `stop`, `prompt`, protected `work-on --project`, protected `status --project`, protected `prune` options). The local worktree/assignment workflow and the ordinary path remain.
+
+### Changed
+
+- Remove the `ProposalTick` policy from local status; status reports the local worktree/assignment state only.
+- Refocus README and usage documentation on the local `work-on`/`status`/`prune` surface, with planner, private overseer queue and status/pi continuation marked planned.
+
 ## [0.23.1] - 2026-10-17
 
 ### Changed

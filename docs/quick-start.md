@@ -259,6 +259,11 @@ Generate an implementation plan:
 
 ## 4. Run it in a worktree
 
+The current lab is file-based: state owners and the exact local command order
+(project task → plan → worktree → assignment → drive → tests/review → HITL
+blockers → commit/PR → done) are documented in [Lab Flow](lab-flow.md). The
+walkthrough below shows the orchestrated convenience path.
+
 ```bash
 ace-overseer work-on -t 8r3
 ```

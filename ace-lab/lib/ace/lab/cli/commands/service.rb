@@ -4,7 +4,6 @@ require "json"
 require "ace/support/cli"
 require "ace/assign"
 require_relative "support"
-require_relative "../../organisms/protected_service_request"
 require_relative "../../organisms/ordinary_merge_request"
 require_relative "../../organisms/ordinary_merge_receiver"
 require_relative "../../organisms/ordinary_authority_composition"
@@ -17,20 +16,6 @@ module Ace
       module Commands
         module Service
           module Output
-            def service
-              @service ||= Organisms::ServiceRequestService.new
-            end
-
-            def protected_service
-              @protected_service ||= Organisms::ProtectedServiceRequest.new
-            end
-
-            def protected_refusal(error)
-              code = (error.is_a?(ArgumentError) || error.is_a?(SecurityError)) ? "protected_service_refused" : "protected_service_unavailable"
-              message = error.is_a?(JSON::ParserError) ? "protected installed selection unavailable" : error.message.to_s.scrub[0, 512]
-              emit({"status" => "error", "error" => {"code" => code, "message" => message}})
-            end
-
             def emit(envelope)
               puts JSON.generate(envelope)
               return if envelope["status"] == "ok"
@@ -46,58 +31,37 @@ module Ace
             include Runtime
             include Output
 
-            desc "Request one authorized, configured service operation"
+            desc "Request one authorized ordinary fixed merge operation"
             option :project, type: :string, required: true, desc: "Project stable ID"
             option :assignment, type: :string, required: true, desc: "Assignment ID"
             option :attempt, type: :string, required: true, desc: "Managed attempt ID"
-            option :operation, type: :string, required: true, desc: "Named operation"
+            option :operation, type: :string, required: true, desc: "Named operation (merge)"
             option :input, type: :string, required: true, desc: "Structured JSON input file"
             option :authorization, type: :string, required: true, desc: "Exact authorization reference"
             option :request_id, type: :string, required: true, desc: "Idempotency key"
-            option :dry_run, type: :boolean, desc: "Validate without claiming or executing"
-            option :mode, type: :string, desc: "ordinary-merge selects the ordinary fixed merge producer"
-            option :queue_entry, type: :string, desc: "Original queue entry (ordinary merge)"
-
-            option :mapping, type: :string, desc: "Original protected mapping ID"
-            option :scope, type: :string, desc: "Original hierarchical prepared scope"
-            option :service, type: :string, desc: "Installed receiver ID"
-            option :candidate_head, type: :string, desc: "Exact approved candidate head"
-            option :candidate_generation, type: :integer, desc: "Original candidate generation"
-            option :expected_generation, type: :integer, desc: "Original authority generation"
+            option :mode, type: :string, required: true,
+              desc: "ordinary-merge selects the ordinary fixed merge producer"
+            option :queue_entry, type: :string, required: true, desc: "Original queue entry (ordinary merge)"
 
             def call(project:, assignment:, attempt:, operation:, input:, authorization:, request_id:, **options)
               reject_identity_flags!(options)
-              mode = options[:mode]
-              if mode && mode != Organisms::OrdinaryMergeRequest::MODE
+              unless options[:mode] == Organisms::OrdinaryMergeRequest::MODE
                 return emit(Organisms::OrdinaryMergeRequest.refusal_envelope("ordinary_merge_invalid_request",
                   "unknown service mode", request_id: request_id, input_digest: nil))
               end
-              if mode
-                begin
-                  return emit(ordinary_request(project: project, assignment: assignment, attempt: attempt,
-                    queue_entry: options[:queue_entry], operation: operation, input: input,
-                    authorization: authorization, request_id: request_id, **options))
-                rescue Ace::Assign::AttemptErrors::EvidenceUnavailable, Ace::Lab::InvalidConfigurationError => e
-                  # Infra failures (unreadable canonical evidence, malformed
-                  # installed configuration, unavailable topology) are the
-                  # caller-side blocker, never a raw crash and never a durable
-                  # reference (review r1 finding B).
-                  return emit(Organisms::OrdinaryMergeRequest.refusal_envelope(
-                    "ordinary_merge_unavailable", e.message, request_id: request_id, input_digest: nil
-                  ))
-                end
+              begin
+                return emit(ordinary_request(project: project, assignment: assignment, attempt: attempt,
+                  queue_entry: options[:queue_entry], operation: operation, input: input,
+                  authorization: authorization, request_id: request_id, **options))
+              rescue Ace::Assign::AttemptErrors::EvidenceUnavailable, Ace::Lab::InvalidConfigurationError => e
+                # Infra failures (unreadable canonical evidence, malformed
+                # installed configuration, unavailable topology) are the
+                # caller-side blocker, never a raw crash and never a durable
+                # reference (review r1 finding B).
+                return emit(Organisms::OrdinaryMergeRequest.refusal_envelope(
+                  "ordinary_merge_unavailable", e.message, request_id: request_id, input_digest: nil
+                ))
               end
-              selected = protected_service.selected?(options)
-              if selected
-                return emit(protected_service.request(project: project, assignment: assignment, attempt: attempt,
-                  operation: operation, input_path: input, authorization: authorization, request_id: request_id, **options))
-              end
-              emit(service.request(project: project, assignment: assignment, attempt: attempt,
-                operation: operation, input_path: input, authorization: authorization,
-                request_id: request_id, dry_run: options[:dry_run]))
-            rescue ArgumentError, Ace::Assign::Error, Ace::Git::Error, Ace::Runtime::RuntimeUnavailableError, JSON::ParserError, SecurityError, KeyError, SystemCallError => error
-              raise if selected == false || mode
-              protected_refusal(error)
             end
 
             private
@@ -118,53 +82,36 @@ module Ace
             include Runtime
             include Output
 
-            desc "Read the authoritative outcome of a service request"
+            desc "Read the authoritative outcome of an ordinary fixed merge request"
             option :request, type: :string, required: true, desc: "Request ID"
             option :format, type: :string, desc: "Output format (json only)"
-            option :mode, type: :string, desc: "ordinary-merge selects the read-only ordinary status"
-            option :reference, type: :string, desc: "Opaque ordinary merge reference"
-            option :queue_entry, type: :string, desc: "Original queue entry (ordinary merge)"
-
-            option :project, type: :string, desc: "Original project ID"
-            option :assignment, type: :string, desc: "Original assignment ID"
-            option :attempt, type: :string, desc: "Original attempt ID"
-            option :mapping, type: :string, desc: "Original protected mapping ID"
-            option :scope, type: :string, desc: "Original hierarchical prepared scope"
-            option :candidate_head, type: :string, desc: "Exact approved candidate head"
-            option :candidate_generation, type: :integer, desc: "Original candidate generation"
-            option :input_digest, type: :string, desc: "Original normalized input SHA-256"
-            option :target, type: :string, desc: "Original target resource ID"
-            option :artifact_digest, type: :string, desc: "Original artifact SHA-256 (omit for null)"
+            option :mode, type: :string, required: true,
+              desc: "ordinary-merge selects the read-only ordinary status"
+            option :reference, type: :string, required: true, desc: "Opaque ordinary merge reference"
+            option :queue_entry, type: :string, required: true, desc: "Original queue entry (ordinary merge)"
+            option :project, type: :string, required: true, desc: "Project ID"
+            option :assignment, type: :string, required: true, desc: "Assignment ID"
+            option :attempt, type: :string, required: true, desc: "Attempt ID"
+            option :input_digest, type: :string, required: true, desc: "Original normalized input SHA-256"
 
             def call(request:, **options)
               reject_identity_flags!(options)
-              mode = options[:mode]
-              if mode && mode != Organisms::OrdinaryMergeRequest::MODE
+              unless options[:mode] == Organisms::OrdinaryMergeRequest::MODE
                 return emit(Organisms::OrdinaryMergeRequest.refusal_envelope("ordinary_merge_invalid_request",
                   "unknown service mode", request_id: request, input_digest: nil,
                   schema: Ace::Assign::Atoms::FixedMergeSchemas::STATUS_ERROR_SCHEMA_ID))
               end
-              if mode
-                ensure_json_format!(options)
-                begin
-                  return emit(ordinary_producer.status(project: options[:project], assignment: options[:assignment],
-                    attempt: options[:attempt], queue_entry: options[:queue_entry], reference: options[:reference],
-                    request: request, input_digest: options[:input_digest], **options))
-                rescue Ace::Assign::AttemptErrors::EvidenceUnavailable, Ace::Lab::InvalidConfigurationError => e
-                  return emit(Organisms::OrdinaryMergeRequest.refusal_envelope(
-                    "ordinary_merge_unavailable", e.message, request_id: request, input_digest: nil,
-                    schema: Ace::Assign::Atoms::FixedMergeSchemas::STATUS_ERROR_SCHEMA_ID
-                  ))
-                end
+              ensure_json_format!(options)
+              begin
+                return emit(ordinary_producer.status(project: options[:project], assignment: options[:assignment],
+                  attempt: options[:attempt], queue_entry: options[:queue_entry], reference: options[:reference],
+                  request: request, input_digest: options[:input_digest], **options))
+              rescue Ace::Assign::AttemptErrors::EvidenceUnavailable, Ace::Lab::InvalidConfigurationError => e
+                return emit(Organisms::OrdinaryMergeRequest.refusal_envelope(
+                  "ordinary_merge_unavailable", e.message, request_id: request, input_digest: nil,
+                  schema: Ace::Assign::Atoms::FixedMergeSchemas::STATUS_ERROR_SCHEMA_ID
+                ))
               end
-              selected = protected_service.selected?(options)
-              if selected
-                return emit(protected_service.status(request_id: request, **options))
-              end
-              emit(service.status(request_id: request))
-            rescue ArgumentError, Ace::Assign::Error, Ace::Git::Error, Ace::Runtime::RuntimeUnavailableError, JSON::ParserError, SecurityError, KeyError, SystemCallError => error
-              raise if selected == false || mode
-              protected_refusal(error)
             end
 
             private
@@ -224,7 +171,8 @@ module Ace
               server = Organisms::OrdinaryAuthorityComposition.new(receiver_config: receiver_config).build
               signals = %w[INT TERM].to_h { |signal| [signal, Signal.trap(signal) { server.request_stop }] }
               server.serve
-            rescue Ace::Lab::InvalidConfigurationError, Ace::Assign::Error, Ace::Runtime::Error, Ace::Hitl::Lifecycle::Error => e
+            rescue Ace::Lab::InvalidConfigurationError, Ace::Assign::Error, Ace::Runtime::Error,
+              Ace::Hitl::Lifecycle::Error => e
               emit(Organisms::OrdinaryMergeRequest.refusal_envelope(
                 "ordinary_merge_unavailable", e.message,
                 request_id: "unknown", input_digest: nil

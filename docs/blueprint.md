@@ -1,17 +1,17 @@
 ---
 doc-type: bundle
 title: 'Project Blueprint: ACE (Agentic Coding Environment)'
-purpose: Documentation for docs/blueprint.md
+purpose: 'Navigation map for the ACE repository: paths, state owners, and read-only areas.'
 ace-docs:
-  last-updated: '2026-04-01'
-  last-checked: '2026-04-01'
+  last-updated: '2026-10-17'
+  last-checked: '2026-10-17'
 ---
 
 # Project Blueprint: ACE (Agentic Coding Environment)
 
 ## What is a Blueprint?
 
-A blueprint is a navigation guide - not architecture documentation. It tells AI agents and developers what paths exist, which to treat carefully, and which to ignore. For architecture decisions and design patterns, see [architecture.md](architecture.md).
+A blueprint is a navigation guide - not architecture documentation. It tells AI agents and developers what paths exist, which to treat carefully, and which to ignore. For architecture decisions and design patterns, see [architecture.md](architecture.md). For the canonical lab state-owner map and executable flow, see [lab-flow.md](lab-flow.md).
 
 ## Repository Structure
 
@@ -19,24 +19,41 @@ A blueprint is a navigation guide - not architecture documentation. It tells AI 
 ace-*/          # Ruby gems following ATOM architecture (25+ production gems)
                 # Each gem includes handbook/ for workflows, guides, templates
                 # Workflow files use namespaced paths: handbook/workflow-instructions/<namespace>/<action>.wf.md
-                # Key gems: ace-handbook, ace-assign, ace-overseer, ace-hitl, ace-idea, ace-bundle, ace-nav,
-                # ace-git, ace-git-commit, ace-review, ace-docs, ace-lint,
-                # ace-search, ace-llm, ace-test (documentation), ace-test-runner (CLI)
-.ace-task/  # Task and release management
-.claude/        # Claude Code integration (commands and agent symlinks)
-.ace/           # Configuration cascade root
+                # Key gems: ace-handbook, ace-task, ace-assign, ace-overseer, ace-hitl,
+                # ace-idea, ace-bundle, ace-nav, ace-git, ace-git-commit, ace-git-worktree,
+                # ace-review, ace-docs, ace-lint, ace-search, ace-llm,
+                # ace-test (documentation), ace-test-runner (CLI), ace-runtime
+.ace-tasks/     # Project task specs and release history (tracked; ace-task)
+.ace/           # Project configuration cascade root (tracked; configuration only)
+.ace-handbook/  # Project-owned handbook overrides (guides/workflows/skills)
+.ace-local/     # Local untracked state (assignments, HITL events, review sessions, private _overseer)
+.ace-wt/        # Task worktrees, one per project task
 .agents/skills/ # Default generated ACE skill projection
-.codex/skills/  # Explicit Codex projection when synced with --provider codex
-.claude/skills/ # Explicit Claude projection when synced with --provider claude
+.claude/        # Claude Code integration (explicit provider sync only)
+.codex/         # Codex integration (explicit provider sync only)
 .ace-bin/       # Shared scripts for non-package CLI helpers
 docs/           # System documentation and ADRs
 .github/        # CI/CD workflows
 _legacy/        # Archived content (dev-handbook, dev-tools)
 ```
 
-Package `handbook/skills/` and project `.ace-handbook/skills/` are authored skill sources. Generated projections live
-under `.agents/skills/` by default; harness-native folders such as `.codex/skills/` and `.claude/skills/` are generated
-only through explicit provider sync.
+## State owners
+
+Persisted lab state has one write location and one owner:
+
+- `.ace-tasks/` -- project tasks (ace-task).
+- `.ace-local/overseer/tasks/` -- private untracked `_overseer` list
+
+  (`ace-task --in _overseer`).
+
+- `.ace-local/assign/` -- assignment plan and step state (ace-assign).
+- `.ace-local/coworker/` -- reserved L3 coworker configuration.
+- `.ace-local/hitl/` -- HITL event files (ace-hitl).
+- `.ace-wt/<task>/` -- one worktree per project task (ace-git-worktree).
+
+Explicit non-owners: no journal, authority/admission service, listener/daemon,
+topology registry, queue engine, or extra state cache/broker. tmux, Herdr, and
+Hermes are transports only.
 
 ## Read-Only Paths
 
@@ -48,15 +65,15 @@ AI agents should treat these as read-only unless explicitly instructed to modify
 - `ace-*/test/**/*` # Gem test files (modify only for test updates)
 - `ace-*/handbook/**/*` # Gem workflows, guides, templates
 - `.github/workflows/**/*` # CI/CD configuration
-- `.ace-task/v.*/retro/**/*` # Development retrospectives
 - `Gemfile.lock` # Root workspace lock file
 
 ## Ignored Paths
 
 AI agents should ignore these during normal operations:
 
-- `.ace-task/done/**/*` # Completed tasks and releases
-- `.ace-local/**/*` # Cached output from ace tools (e.g., .ace-local/review/, .ace-local/lint/)
+- `.ace-tasks/_archive/**/*` # Archived task history (history only, not current owners)
+- `.ace-local/**/*` # Local untracked state (assignments, HITL, review, private _overseer)
+- `.ace-wt/**/*` # Task worktrees
 - `ace-*/coverage/**/*` # Test coverage reports
 - `**/test-reports/**/*` # Test report files
 - `tmp/**/*` # Temporary files

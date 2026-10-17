@@ -7,9 +7,6 @@ require_relative "cli/commands/status"
 require_relative "cli/commands/prune"
 require_relative "cli/commands/projects"
 require_relative "cli/commands/agents"
-require_relative "cli/commands/prompt"
-require_relative "cli/commands/review"
-require_relative "cli/commands/stop"
 require_relative "cli/commands/ordinary"
 
 module Ace
@@ -20,15 +17,12 @@ module Ace
       PROGRAM_NAME = "ace-overseer"
 
       REGISTERED_COMMANDS = [
-        ["work-on", "Start local task work or one retained protected launch"],
+        ["work-on", "Start local task work"],
         ["ordinary", "Prepare, launch, inspect or resume one installed ordinary execution"],
         ["status", "Show status of task worktrees"],
         ["prune", "Remove stale task worktrees"],
         ["projects", "List visible public projects"],
-        ["agents", "List visible public project agents"],
-        ["prompt", "Prompt an exact protected attempt or inspect original prompt status"],
-        ["review", "Review an exact protected candidate under its original capability"],
-        ["stop", "Request proof-authenticated stop of an exact protected attempt"]
+        ["agents", "List visible public project agents"]
       ].freeze
 
       HELP_EXAMPLES = [
@@ -43,9 +37,6 @@ module Ace
       register "prune", Commands::Prune
       register "projects", Commands::Projects
       register "agents", Commands::Agents
-      register "prompt", Commands::Prompt
-      register "review", Commands::Review
-      register "stop", Commands::Stop
 
       version_cmd = Ace::Support::Cli::VersionCommand.build(
         gem_name: "ace-overseer",

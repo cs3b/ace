@@ -12,6 +12,13 @@ task:
   # Prefix used to identify special folders (e.g., "_archive", "_backlog")
   special_folder_prefix: "_"
 
+  # Named task stores selected with `--in NAME`. Paths are relative to the
+  # project root (or absolute). A store is its own manager root: it is not
+  # scanned by the project task list and may live outside root_dir.
+  # `_overseer` is the private, untracked task list owned by one overseer.
+  stores:
+    _overseer: .ace-local/overseer/tasks
+
   # Status command: default limits
   status:
     up_next_limit: 3

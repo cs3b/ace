@@ -42,7 +42,7 @@ Systematically update usage documentation files based on user feedback, task req
      find . -name "usage.md" -path "*/ux/*" -o -name "usage.md" -path "*/docs/*"
 
      # Or check specific task folder
-     ls -la .ace-task/v.*/t/*/ux/usage.md
+     ls -la .ace-tasks/*/ux/usage.md
      ```
    * Extract key requirements:
      - What needs to be documented

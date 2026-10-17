@@ -2,12 +2,30 @@
 doc-type: reference
 purpose: Quick CLI tool reference for ace-* commands. Used by agents to discover available tools and correct invocation patterns.
 ace-docs:
-  last-updated: '2026-03-12'
+  last-updated: '2026-10-17'
+  last-checked: '2026-10-17'
 ---
 
 # ACE CLI Tools Reference
 
 Quick reference for `ace-*` CLI tools. Detailed usage in each gem's `docs/usage.md`.
+
+## State owners and the local flow
+
+Every piece of persisted lab state has one write location and one owner; the
+canonical map and executable flow are in [lab-flow.md](lab-flow.md). Do not add
+a journal, queue engine, authority/admission layer, topology registry, or extra
+state cache. tmux, Herdr, and Hermes are transports only.
+
+| Information | Owner | Location |
+|---|---|---|
+| Project tasks | `ace-task` | `.ace-tasks/` |
+| Private overseer list | overseer via `ace-task --in _overseer` | `.ace-local/overseer/tasks/` |
+| Assignment plan and steps | `ace-assign` | `.ace-local/assign/` |
+| Coworker configuration (L3) | `ace-coworker` | `.ace-local/coworker/` |
+| HITL events | `ace-hitl` | `.ace-local/hitl/` |
+| Project task worktree | `ace-git-worktree` | `.ace-wt/<task>/` |
+
 
 ## Command Integrity Rule
 
@@ -18,7 +36,7 @@ Run `ace-*` commands directly. Do not pipe, redirect, or post-process their outp
 Root agent guidance should stay compact. Keep expanded day-to-day practices in docs or skills so agents can load them
 only when relevant. Add a rule to `AGENTS.md` only after an agent repeatedly gets something wrong; aim to keep the root file under ~80 lines.
 
-**Cost Bias Override:** do not optimize for human work-weeks or token budgets — choose the technically correct path (full coverage, proper refactors, robust design) even when it costs more turns.
+**Cost Bias Override:** do not optimize for human work-weeks or token budgets -- choose the technically correct path (full coverage, proper refactors, robust design) even when it costs more turns.
 
 - `ace-handbook sync` writes generated skills to `.agents/skills/` by default.
 - Use explicit provider sync, such as `ace-handbook sync --provider codex`, only when a harness needs its native folder.
@@ -88,13 +106,13 @@ For full patterns, run `ace-bundle guide://workflow-context-embedding`.
 - **MUST NOT** create extra temp capture files for `ace-*` output unless the user explicitly asks for export/logging
 - If a violation happens, rerun the same `ace-*` command in compliant form immediately and treat that rerun as source of truth
 
-Never reset or discard changes you didn't make — use `ace-git-commit $paths` to commit only your changes. For scoped commit/release requests, treat unrelated modified files as acceptable background state unless the user asks to clean them.
+Never reset or discard changes you didn't make -- use `ace-git-commit $paths` to commit only your changes. For scoped commit/release requests, treat unrelated modified files as acceptable background state unless the user asks to clean them.
 
 ### Skill-first planning and execution
 
 If a user names a skill (for example `/as-git-pr-create`) or the task clearly matches an available skill, that skill is mandatory and takes precedence over ad-hoc/manual flow.
 
-**Planning phase (mandatory load, optional run)** — before drafting or finalizing any substantial plan:
+**Planning phase (mandatory load, optional run)** -- before drafting or finalizing any substantial plan:
 
 1. Match named or clearly relevant skill(s)
 2. Load each selected skill's `SKILL.md`
@@ -104,7 +122,7 @@ If a user names a skill (for example `/as-git-pr-create`) or the task clearly ma
 
 A substantial plan is incomplete if a clearly relevant skill was not loaded. If discovered later, stop and re-plan from skill-informed context.
 
-**Execution phase** — before any non-read command:
+**Execution phase** -- before any non-read command:
 
 1. Run a quick skill check and list candidate skills
 2. Load selected `SKILL.md` instructions
@@ -116,34 +134,53 @@ If manual execution starts and a matching skill is identified later: stop manual
 
 ### Search and research
 
-- `/as-search-run` — code/file search and discovery
-- `/as-search-research` — multi-search analysis and synthesis
-- `/as-search-feature-research` — feature gap analysis and implementation patterns
+- `/as-search-run` -- code/file search and discovery
+- `/as-search-research` -- multi-search analysis and synthesis
+- `/as-search-feature-research` -- feature gap analysis and implementation patterns
 
 ### Testing
 
 Always use `ace-test` instead of `bundle exec rake test` or raw `bundle exec ruby` for package tests:
 
-- `ace-test` — run all tests in current package
-- `ace-test test/file_test.rb` — run a single test file
-- `ace-test atoms` — run a test group
-- `ace-test molecules --profile 10` — profile slowest tests
-- `ace-test-suite` — validate the entire monorepo before commits
+- `ace-test` -- run all tests in current package
+- `ace-test test/file_test.rb` -- run a single test file
+- `ace-test atoms` -- run a test group
+- `ace-test molecules --profile 10` -- profile slowest tests
+- `ace-test-suite` -- validate the entire monorepo before commits
 
 ## Task Management
 
 | Tool | Purpose |
 |------|---------|
 | `ace-task status` | Show current task/release status |
-| `ace-task create "Title"` | Create a new task |
+| `ace-task create "Title"` | Create a new task in `.ace-tasks/` |
 | `ace-task show 047` | View task details |
-| `ace-task list` | List tasks in current release |
-| `ace-task move 047 --to archive` | Move task to special folder |
+| `ace-task list` | List project tasks |
+| `ace-task list --in _overseer` | List the private untracked overseer store |
+| `ace-task update 047 --move-to archive` | Move a task to a special folder |
 | `ace-task update 047 --set status=done` | Update task frontmatter fields |
-| `ace-task plan 047` | Resolve or generate implementation plan |
+| `ace-task plan 047` | Resolve or generate an implementation plan |
 | `ace-task doctor` | Run health checks and auto-fix |
-| `ace-task done 047` | Mark task complete |
-| `ace-task doctor` | Run health checks and auto-fix (legacy) |
+| `ace-task issue-sync 047` | Sync linked forge issues |
+
+## Local Task Work
+
+| Tool | Purpose |
+|------|---------|
+| `ace-overseer work-on --task REF` | Create/reuse a worktree, prepare the assignment, open a terminal |
+| `ace-overseer status` | Show active task worktrees |
+| `ace-overseer prune --dry-run` | Preview removable worktrees |
+| `ace-git-worktree create --task REF` | Create only the worktree |
+
+## HITL Events
+
+| Tool | Purpose |
+|------|---------|
+| `ace-hitl create "Title" --kind decision --question "..."` | Create an event in `.ace-local/hitl/` |
+| `ace-hitl list --status pending` | List events |
+| `ace-hitl show REF --content` | Show event details |
+| `ace-hitl update REF --answer "..."` | Answer an event |
+| `ace-hitl wait REF` | Poll until answered |
 
 ## Assignment Management
 

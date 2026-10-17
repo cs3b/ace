@@ -3,7 +3,8 @@ doc-type: bundle
 title: ACE - System Architecture
 purpose: Documentation for docs/architecture.md
 ace-docs:
-  last-updated: '2026-03-12'
+  last-updated: '2026-10-17'
+  last-checked: '2026-10-17'
 ---
 
 # ACE - System Architecture
@@ -14,9 +15,20 @@ ACE (Agentic Coding Environment) is a mono-repo ecosystem of modular Ruby gems t
 for AI-assisted software development. Both human developers and AI agents use the same tools through consistent
 interfaces.
 
+## State ownership
+
+Persisted lab state has one write location and one owner; the canonical map and
+executable local flow are in [lab-flow.md](lab-flow.md). Tasks live in
+`.ace-tasks/`, the private overseer list in `.ace-local/overseer/tasks/`,
+assignment plans in `.ace-local/assign/`, HITL events in `.ace-local/hitl/`,
+and task worktrees in `.ace-wt/`. There is no journal, queue engine,
+authority/admission layer, listener/daemon, topology registry, or extra state
+cache; tmux, Herdr, and Hermes are transports only.
+
 ## Scope
 
 This document covers the technical architecture of ACE:
+
 - Component organization and ATOM pattern
 - Configuration cascade (ADR-022)
 - Key architectural decisions
@@ -64,6 +76,7 @@ Tests mirror this in `test/{atoms,molecules,organisms,models,commands}/` (flat, 
 Modular Ruby gems providing focused CLI functionality:
 
 * **ace-support-core**: Configuration management foundation
+* **ace-support-***: Shared support packages (`ace-support-config`, `ace-support-fs`, `ace-support-items`, `ace-support-markdown`, `ace-support-models`, `ace-support-nav`, `ace-support-test-helpers`, `ace-support-cli`, `ace-support-mac-clipboard`)
 * **ace-bundle**: Project context loading with protocol support
 * **ace-docs**: Documentation management with frontmatter-based tracking
 * **ace-git**: Unified Git operations and PR context
@@ -78,8 +91,14 @@ Modular Ruby gems providing focused CLI functionality:
 * **ace-search**: Unified file and content search with auto-detected pattern matching
 * **ace-task**: Task and release management with presets
 * **ace-idea**: Standalone idea management with B36TS-based IDs (extracted from ace-task)
+* **ace-assign**: Multi-step assignment plans and step execution
+* **ace-overseer**: Local worktrees, assignments, and status
+* **ace-hitl**, **ace-hitl-contract**, **ace-hitl-hermes**: Human-attention event files and adapters
+* **ace-handbook**: Handbook asset discovery, projection, and provider sync
 * **ace-test**: Test execution and reporting
-* **ace-test-support**: Shared testing infrastructure
+* **ace-test-runner** / **ace-test-runner-e2e**: CLI test execution and E2E scenarios
+* **ace-runtime**, **ace-tmux**, **ace-herdr**: Terminal transport contract and adapters
+* **ace-lab**: Lab environment preparation (L8 installer planned)
 
 All gems follow ATOM architecture with `handbook/` for agents/workflows. See [ace-gems.g.md](ace-gems.g.md) for
 development guide.
@@ -100,7 +119,7 @@ Self-contained instruction documents for complete processes:
 
 Single-purpose, composable agents for focused actions:
 
-* **Location**: `gem/handbook/agents/*.ag.md`, symlinked to `.claude/agents/`
+* **Location**: `gem/handbook/agents/*.ag.md`, projected by provider integration where a harness needs agent files
 * **Design**: Single responsibility, minimal state, standardized responses
 * **Use when**: Single command execution, composable operations
 * **Examples**: `ace-search` has `search.ag.md` (execute search), `research.ag.md` (multi-search analysis)
@@ -119,7 +138,7 @@ Each gem includes `handbook/` with `agents/`, `guides/`, `templates/`, and `work
 * **Provider projections**: default sync projects canonical skills into `.agents/skills/`; explicit provider sync can generate harness-native folders (`.claude/skills/`, `.codex/skills/`, `.gemini/skills/`, `.opencode/skills/`, `.pi/skills/`)
 * **Provider overrides**: provider-specific frontmatter in `integration.providers.<provider>.frontmatter` can carry execution hints such as Claude `model: role:e2e-reporter` and Codex `model: role:assign-executor`
 * **Integration runtime**: `ace-handbook` owns shared provider discovery, projection, sync, and status behavior used by provider packages
-* **Agents**: `.claude/agents/` provides agent access via frontmatter-defined capabilities
+* **Agents**: provider integrations project `.ag.md` resources into the harness tree that needs them
 * **Deterministic CLI**: Predictable, parseable output for autonomous execution
 * **wfi:// Protocol**: Direct workflow access via `ace-bundle`; `ace-nav` remains the discovery layer
 
@@ -156,7 +175,9 @@ config = resolver.resolve_namespace("git", filename: "commit")
 
 ## Future Vision
 
-**ace-handbook gem**: Workflows, guides, templates as installable gem. Every capability becomes a gem with embedded
-prompts, agents, workflows - instantly available via `gem install ace-*`.
+Every capability ships as a gem with embedded prompts, agents, and workflows, so
+`gem install ace-*` provides the same deterministic surface to humans and
+agents. The lab installer and project onboarding are the next planned wave
+(L8); the full pre-release and release acceptance waves follow as L9/L10.
 
 *For detailed decisions, see [docs/decisions.md](decisions.md)*

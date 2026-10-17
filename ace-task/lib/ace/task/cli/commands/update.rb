@@ -26,6 +26,7 @@ module Ace
             "q7w --set worktree.branch=my-branch",
             "q7w --set status=done --move-to archive",
             "q7w --move-to next",
+            "q7w --in _overseer --set status=done  # Update a task in the private overseer store",
             "q7w.a --move-as-child-of none    # Promote subtask to standalone",
             "q7w --move-as-child-of self      # Convert to orchestrator",
             "q7w --move-as-child-of abc       # Demote to subtask of abc",
@@ -47,6 +48,7 @@ module Ace
           option :git_commit, type: :boolean, aliases: %w[--gc], desc: "Auto-commit changes"
 
           option :root, type: :string, aliases: %w[-r], desc: "Exact task root directory (overrides project config)"
+          option :in, type: :string, aliases: %w[-i], desc: "Task store selector (e.g. _overseer)"
 
           option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
           option :verbose, type: :boolean, aliases: %w[-v], desc: "Show verbose output"
@@ -77,10 +79,22 @@ module Ace
             add_hash = parse_kv_pairs(add_args)
             remove_hash = parse_kv_pairs(remove_args)
 
-            manager = if options[:root]
+            config = Ace::Task::Molecules::TaskConfigLoader.load
+            store_root = resolve_store_root(config, options[:in])
+            if store_root && options[:root]
+              raise Ace::Support::Cli::Error,
+                "Cannot combine --root with store selector --in #{options[:in]}"
+            end
+            if store_root && options[:git_commit]
+              raise Ace::Support::Cli::Error,
+                "Cannot --git-commit the private '#{options[:in]}' store; it is untracked and owned by its overseer"
+            end
+            manager = if store_root
+              Ace::Task::Organisms::TaskManager.new(root_dir: store_root, config: config)
+            elsif options[:root]
               Ace::Task::Organisms::TaskManager.new(root_dir: File.expand_path(options[:root]))
             else
-              Ace::Task::Organisms::TaskManager.new
+              Ace::Task::Organisms::TaskManager.new(config: config)
             end
 
             # Resolve --position into a set or remove operation
@@ -125,6 +139,16 @@ module Ace
           end
 
           private
+
+          def resolve_store_root(config, store)
+            return nil unless store
+
+            root = Ace::Task::Molecules::TaskConfigLoader.store_root(config, store)
+            return root if root
+
+            raise Ace::Support::Cli::Error,
+              "Unknown task store '#{store}'. Configure it under task.stores in .ace/task/config.yml"
+          end
 
           # Resolve a --position argument into a B36TS value.
           # Supports: first, last, after:<ref>, before:<ref>

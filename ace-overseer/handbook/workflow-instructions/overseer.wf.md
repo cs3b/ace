@@ -36,9 +36,6 @@ ace-overseer work-on --task <task-ref>
 - Repeatable/comma-separated refs fan out into the same batch: `ace-overseer work-on --task 230 --task 231,232`
 - Optional preset: `ace-overseer work-on --task <task-ref> --preset <preset-name>`
 - After launch, switch to the tmux window and run `/ace-assign-drive`.
-- Protected reviewed leaf: `ace-overseer work-on --task TASK --project PROJECT --agent MAPPING --runtime herdr`.
-- Retain the mandatory printed request/definition/bundle identity even under quiet mode. The original foreground owner remains alive through uncertainty; use independent status/steering invocations, never replace it on a missing reply.
-- Readonly recovery: `ace-overseer work-on --recover-request FILE`; no reconstruction, upload or launch.
 
 Never improvise worktree provisioning by hand when `work-on` exists; ad-hoc
 worktrees bypass the assignment lifecycle that `status` and `prune` rely on.
@@ -49,11 +46,6 @@ worktrees bypass the assignment lifecycle that `status` and `prune` rely on.
 ace-overseer status                     # table dashboard
 ace-overseer status --format json       # machine-readable snapshot
 ```
-
-Protected canonical snapshot: `ace-overseer status --project PROJECT --agent MAPPING --format json` (no `--watch`).
-
-Exact original steering: `ace-overseer prompt --project PROJECT --agent MAPPING --assignment A --attempt T --mutation ID --expected-generation N --file FILE` (or explicit --stdin). Prompt status uses the same tuple/mutation with --status and rejects input selectors/generation before reads. Stop uses the same exact tuple with its own stable mutation/generation. Never infer consumption from submitted; immutable explicit replay never refreshes generation or resends automatically. Canonical terminal plus reservation release is required separately from local child exit. Public projects/agents use maintained topology; no lab/labd forwarding or Work-ID prepare/prune path remains.
-
 
 #### Status truth (non-negotiable executed check)
 
@@ -82,7 +74,6 @@ ace-overseer prune --yes
 ```
 
 - Targeted: `ace-overseer prune <task-ref|folder>...` or `ace-overseer prune --assignment <assignment-id>`
-- Protected physical cleanup belongs to its designated canonical cleanup owner. Local prune, readiness, pane closure and child reap never substitute for its preservation/no-writer proof.
 
 #### Prune safety (non-negotiable executed check)
 
@@ -134,10 +125,9 @@ candidate:
    ace-overseer status --format json
    ```
 
-   For assignment-backed candidates also check `ace-assign status`; for protected
-   work check `ace-overseer status --project PROJECT --agent MAPPING`. A running
-   assignment, an active or uncertain attempt, unreleased protected work, or any
-   unaccounted writer blocks the prune. Missing or unreadable lifecycle
+   For assignment-backed candidates also check `ace-assign status`. A running
+   assignment, an active or uncertain attempt, or any unaccounted writer blocks
+   the prune. Missing or unreadable lifecycle
    state counts as an active writer -- preserve. `ace-overseer prune`
    enforces this itself: apply holds a durable exclusion shared with every
    supported start path from final evidence reads through removal, so a
@@ -162,19 +152,12 @@ candidate:
 
 ## Success Criteria
 
-- Work starts only through `ace-overseer work-on` (with explicit project for protected work), never through ad-hoc manual worktree provisioning.
+- Work starts only through `ace-overseer work-on`, never through ad-hoc manual worktree provisioning.
 - Every status review re-verified pending owner-blocked tasks with an executed check and corrected stale state in the same change.
 - Every pruned worktree/branch had an executed preservation proof (ancestor containment, or a verified destination with tree/artifact or exact content-transition equivalence) and an executed no-active-writer check; candidates without complete proof were reported as blocked, not removed; `--force` and `--yes` never bypassed a safety block.
 
-### Second-commander proposal policy ticks
+## Planned work queue (L6)
 
-With ACE_HITL_SOCKET and ACE_HITL_PROJECT configured, the living overseer invokes
-`ace-hitl proposal resolve-due --project PROJECT` at startup and each watch/status tick, including restart
-after a missed deadline. The authenticated HITL boundary queues a canonical wake;
-the existing Hermes transport actor polls and reconciles under its own UID.
-The installed HITL/Hermes commands own policy/reconciliation;
-overseer does not claim effects, shorten the sixteen-hour window, or replay elapsed ticks.
-A failed tick is visible, defers authorization, and keeps watch/status running. The decision role reviews relevant prior
-`ace-hitl proposal history --project ID --query TEXT`, creates exact proposals, and inspects
-`proposal show` deadline/decision/Assign outcome. Do not mark technical or installed gates
-passed from a proposal's authorization state.
+The private `_overseer` queue per overseer is planned for L6 and is not available
+yet. Until then, the overseer keeps only the local work-on/status/prune lifecycle
+above and records cross-session intent in its own task files.

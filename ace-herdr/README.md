@@ -1,7 +1,7 @@
 <div align="center">
   <h1> ACE - HERDR </h1>
 
-  Zero-token push delivery and agent bootstrap for the Herdr runtime, behind the ace-hitl provider delivery contract.
+  Zero-token terminal transport and agent bootstrap for the Herdr runtime.
 
   <img src="../docs/brand/AgenticCodingEnvironment.Logo.XS.jpg" alt="ACE Logo" width="480">
   <br><br>
@@ -14,44 +14,61 @@
 
 > Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
 
+> **State owner:** none for task, assignment, or HITL state. `ace-herdr` owns
+> only terminal transport and its delivery retry records under
+> `.ace-local/herdr/deliveries/`. tmux/Herdr are transports, not owners of the
+> file-based flow ([docs/lab-flow.md](../docs/lab-flow.md)).
+
 [Usage Guide](docs/usage.md)
 
-`ace-herdr` is to herdr what `ace-tmux` is to tmux: a deterministic, zero-token wrapper over the `herdr` CLI. It implements the ace-hitl push-delivery contract — `deliver(ref, answer)` maps to `herdr agent prompt <pane>`, bootstrapping the agent first (`herdr agent start`) when the pane has none, so an answer is never lost — and adds one-command agent dispatch, noiseless monitoring, and closure on top.
+`ace-herdr` is to herdr what `ace-tmux` is to tmux: a deterministic, zero-token
+wrapper over the `herdr` CLI. It sends text and keys to panes, starts agents,
+captures output, waits for agent state or output, and closes finished panes.
+It also implements the HITL push-delivery transport used by `ace-hitl` adapters.
 
 ## How It Works
 
-1. Every ace-hitl ask captures a reverse address (`HERDR_SESSION` / `HERDR_PANE`, schema `ace.hitl.ref/v1`). `ace-herdr deliver` pushes an answer back to that address.
-2. Delivery is idempotent per event id: write-ahead delivery records under `.ace-local/herdr/deliveries/` make retries safe — identical content is never delivered twice.
-3. If the target pane has no agent, `ace-herdr` bootstraps one (`herdr agent start --kind <kind> --pane <pane>`), waits for readiness, and exports `HERDR_SESSION` / `HERDR_PANE` into the agent's environment.
-4. Retryable failures back off on a fixed deterministic schedule; terminal failures are reported and persisted in the delivery record.
-5. `ace-herdr dispatch`, `wait`, and `close` give agents one-command subagent lifecycle with sensible defaults (same workspace as the caller, label = task id, prompt from file or stdin).
-
-The `inbox` command records one attempt-linked agent message before native submission. It binds the live terminal, agent session, and configured receipt verification key at enqueue, serializes claims by event ID, and exposes uncertain outcomes through `inbox status`. An uncertain event stays uncertain until `inbox reconcile --receipt FILE` receives a matching, signed operator or supervisor observation of consumption or supersession; missing or mismatched proof returns a JSON refusal without resending. See the [usage guide](docs/usage.md#durable-agent-inbox) for states, key configuration, and receipt shape.
+1. Terminal operations address panes through opaque handles; `ace-runtime`
+   selects tmux or Herdr and hides the difference.
+2. `ace-herdr deliver` pushes an answer to the pane that asked, bootstrapping an
+   agent (`herdr agent start`) when the pane has none.
+3. Delivery is idempotent per event id: write-ahead delivery records under
+   `.ace-local/herdr/deliveries/` make retries safe.
+4. `ace-herdr dispatch`, `wait`, and `close` give agents one-command subagent
+   lifecycle with deterministic defaults.
 
 ## Use Cases
 
-- Push an HITL answer to the pane that asked, even if its agent was restarted since.
-- Dispatch a subagent in one command with deterministic defaults and no LLM decisions.
+- Push an answer to the pane that asked, even if its agent restarted.
+- Dispatch a subagent in one command with deterministic defaults.
 - Wait for agent readiness or completion without scraping pane noise.
-- Close out finished agent panes (rename/close) and return their result.
-- Use Herdr through the shared `ace-runtime` Ruby intent API, with workspace/session and tab/window mapping handled by the adapter.
+- Close finished agent panes and return their result.
+- Use Herdr through the shared [ace-runtime](../ace-runtime) API.
 
 ## Installation
-
-Install as part of the ACE toolkit (see the repo README), or add to your Gemfile:
 
 ```ruby
 gem "ace-herdr"
 ```
+
+## Planned waves
+
+> **Planned (L2):** the unified report/question/reply interface and configurable
+> adapter set are not available yet. `ace-herdr` remains a transport/adapter
+> building block; it does not own HITL state.
+>
+> The old durable agent inbox (`inbox`) and guarded native-source requirements
+> belong to the replaced protected model and are not part of the file-based
+> flow.
 
 ## Testing
 
 Fast tests only (no live herdr needed):
 
 ```bash
-ace-test ace-herdr
+bin/ace-test ace-herdr
 ```
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT -- see [LICENSE](LICENSE).

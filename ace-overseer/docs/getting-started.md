@@ -9,11 +9,16 @@ ace-docs:
 
 # Getting Started with ace-overseer
 
+> **State owner:** `.ace-local/overseer/tasks/` (private, untracked `_overseer`
+> list via `ace-task --in _overseer`) and `.ace-wt/` (one worktree per project
+> task). Assignment plans stay in `.ace-local/assign/`. See
+> [docs/lab-flow.md](../../docs/lab-flow.md).
+
 ## Prerequisites
 
-- `tmux` installed and available on your PATH
+- `tmux` or Herdr installed and available on your PATH (one terminal backend)
 - ACE toolkit installed in your repository
-- A task reference (for example `8q4.t.umu.1`) ready to execute
+- A task reference (for example `t.123`) ready to execute
 
 ## Installation
 
@@ -23,9 +28,9 @@ If the command resolves, your environment is ready.
 
 ## Start Work on a Task
 
-Launch a focused task workspace: `ace-overseer work-on --task 8q4.t.umu.1`.
+Launch a focused task workspace: `ace-overseer work-on --task t.123`.
 
-This flow provisions or reuses a task worktree, opens a tmux window, and prepares assignment context.
+This flow provisions or reuses a task worktree, opens a terminal window, and prepares assignment context in `.ace-local/assign/`.
 
 ## Monitor Active Work
 

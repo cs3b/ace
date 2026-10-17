@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.72.0] - 2026-10-17
+
+### Removed
+
+- Remove the protected delivery/queue presets (`supervise-delivery`, `integrate-batch`, `close-delivery`, `deliver-release`) and the protected authority/service-request merge instruction text from prepared inputs.
+
+### Changed
+
+- `create-pr`, `mark-pr-ready` and `auto-merge` now use local forge semantics (`ace-git pr ...`) instead of protected delivery operations; work-on-task variants follow the same local readiness rule.
+- Remove the ordinary-installed/protected branches from the drive workflow and drive skill; keep the local drive loop and HITL stall protocol.
+- Delete obsolete protected-only feature/e2e coverage and refocus README/usage docs on the local assignment plan lifecycle (`.ace-local/assign/` is the only plan store; no second queue).
+
 ## [0.71.0] - 2026-10-16
 
 ### Added
