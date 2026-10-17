@@ -2,6 +2,7 @@
 
 require_relative "candidate_transfer"
 require_relative "receipt_transfer"
+require_relative "ordinary_review_collection"
 require_relative "../molecules/canonical_evidence"
 
 module Ace
@@ -11,14 +12,146 @@ module Ace
       # Caller labels, filesystem reports and protected launch tickets are not
       # alternate evidence sources. Service and merge consumers share this owner.
       module OrdinaryReviewEvidence
+        include OrdinaryReviewCollection
+
+        class CandidateReferenceView
+          def initialize(owner, reference, deadline, historical)
+            @owner, @reference, @deadline, @historical = owner, JSON.parse(JSON.generate(reference)), deadline, historical
+            @thread, @active = Thread.current, true
+          end
+          def close = @active = false
+          def read!(reference:, historical: false)
+            unless @active && Thread.current.equal?(@thread) && reference == @reference && historical == @historical &&
+                Process.clock_gettime(Process::CLOCK_MONOTONIC) < @deadline
+              raise AttemptErrors::EvidenceUnavailable, "canonical candidate view escaped its held scope"
+            end
+            @owner.send(:resolve_candidate_reference!, reference: @reference, deadline: @deadline, historical: @historical)
+          end
+        end
+
+        # Resolve a closed accepted reference without trusting a requester's
+        # head/path. Keep the existing scope held while consumers read bytes.
+        def with_candidate_reference(reference:, deadline:, historical: false)
+          with_candidate_reference_scope(reference: reference, deadline: deadline, historical: historical) do |view|
+            yield(*view.read!(reference: reference, historical: historical))
+          end
+        end
+
+        # Lock order is lifecycle scope → journal writer. The bounded reader
+        # may re-resolve a new CAS prefix without reacquiring lifecycle locks.
+        def with_candidate_reference_scope(reference:, deadline:, historical: false)
+          raise ArgumentError, "invalid historical evidence mode" unless [true, false].include?(historical)
+          unless reference.is_a?(Hash) && reference.keys.sort ==
+              %w[acceptance_event_digest assignment_id attempt_id candidate_generation] &&
+              reference["candidate_generation"].is_a?(Integer) && reference["candidate_generation"].positive? &&
+              reference["acceptance_event_digest"].is_a?(String) && reference["acceptance_event_digest"].match?(/\A[0-9a-f]{64}\z/)
+            raise ArgumentError, "invalid canonical candidate reference"
+          end
+          with_scope(assignment: reference.fetch("assignment_id"), attempt: reference.fetch("attempt_id"), deadline: deadline) do
+            reader = CandidateReferenceView.new(self, reference, deadline, historical)
+            begin
+              yield reader
+            ensure
+              reader.close
+            end
+          end
+        end
+
+        private def resolve_candidate_reference!(reference:, deadline:, historical: false)
+          commit = @journal.ref_value
+          events = @journal.read_events(reference.fetch("assignment_id"), commit: commit)
+            .select { |event| event["attempt_id"] == reference.fetch("attempt_id") }
+          current = if historical
+            events.find { |event| event["type"] == "authority_mutation" && event.dig("payload", "operation") == "submit_candidate" &&
+              event["digest"] == reference.fetch("acceptance_event_digest") }
+          else
+            ordinary_candidate_event(events)
+          end
+          unless current && current.fetch("digest") == reference.fetch("acceptance_event_digest")
+            raise AttemptErrors::Conflict, "canonical candidate reference was replaced"
+          end
+          head = current.fetch("payload").fetch("data").fetch("head")
+          origin = origin_at!(events: events, commit: commit)
+          candidate = if historical
+            data = current.fetch("payload").fetch("data")
+            unless data["candidate_generation"] == reference.fetch("candidate_generation") && data["producer_origin"] == origin &&
+                %w[head tree].all? { |key| data[key].is_a?(String) && CandidateTransfer::SHA.match?(data[key]) } &&
+                data["sha256"].is_a?(String) && data["sha256"].match?(/\A[0-9a-f]{64}\z/) &&
+                data["bytes"].is_a?(Integer) && data["bytes"].between?(1, CandidateTransfer::MAX_BYTES)
+              raise AttemptErrors::Conflict, "historical canonical candidate association differs"
+            end
+            data.slice("head", "tree", "candidate_generation", "bundle_ref", "sha256", "bytes")
+          else
+            unless candidate_reference_at!(events: events, commit: commit, head: head,
+                generation: reference.fetch("candidate_generation")) == reference
+              raise AttemptErrors::Conflict, "canonical candidate association differs"
+            end
+            candidate_at!(events: events, commit: commit, head: head, generation: reference.fetch("candidate_generation"))
+          end
+          unless @admission.recorded_binding!(binding: origin.fetch("runtime_binding"), deadline: deadline) == origin.fetch("runtime_binding")
+            raise AttemptErrors::UnauthorizedIdentity, "candidate producer native binding differs"
+          end
+          bytes = @journal.bounded_blob(candidate.fetch("bundle_ref"), commit: commit, max_bytes: CandidateTransfer::MAX_BYTES)
+          unless bytes.bytesize == candidate.fetch("bytes") && Digest::SHA256.hexdigest(bytes) == candidate.fetch("sha256")
+            raise AttemptErrors::EvidenceUnavailable, "canonical candidate bytes differ"
+          end
+          [candidate, origin, commit, bytes]
+        end
+
         def with_scope(assignment:, attempt:, deadline:)
           token!(assignment)
           token!(attempt)
           selected = registration(assignment, commit: @journal.ref_value)
           raise AttemptErrors::NotFound, "ordinary assignment is not registered" unless selected
+          if ordinary_evidence_scope(assignment: assignment, attempt: attempt, task_id: selected.fetch("task_id"))
+            return yield @journal, selected
+          end
           @exclusion.with_shared_multi([@exclusion.task_key(selected.fetch("task_id")),
             @exclusion.assignment_key(assignment)], deadline: deadline) do
-            yield @journal, selected
+            with_ordinary_evidence_scope(assignment: assignment, attempt: attempt, task_id: selected.fetch("task_id"), mode: :shared) do
+              yield @journal, selected
+            end
+          end
+        end
+
+        private def ordinary_evidence_scope(assignment:, attempt:, task_id:)
+          @ordinary_scope_mutex.synchronize do
+            held = @ordinary_scopes[Thread.current]
+            if held && held.values_at(:assignment, :attempt, :task_id) != [assignment, attempt, task_id]
+              raise AttemptErrors::EvidenceUnavailable, "ordinary evidence scope association differs"
+            end
+            held
+          end
+        end
+
+        private def with_ordinary_evidence_scope(assignment:, attempt:, task_id:, mode:)
+          raise AttemptErrors::EvidenceUnavailable, "ordinary evidence scope already held" if ordinary_evidence_scope(
+            assignment: assignment, attempt: attempt, task_id: task_id)
+          @ordinary_scope_mutex.synchronize do
+            @ordinary_scopes[Thread.current] = {assignment: assignment, attempt: attempt, task_id: task_id, mode: mode}.freeze
+          end
+          begin
+            yield
+          ensure
+            @ordinary_scope_mutex.synchronize { @ordinary_scopes.delete(Thread.current) }
+          end
+        end
+
+        private def ordinary_candidate_reference(request, peer, role, deadline)
+          params = request.fetch("params")
+          strict!(params, %w[assignment_id attempt_id])
+          raise ArgumentError, "candidate reference read mutation must be null" unless request.fetch("mutation_id").nil?
+          with_scope(assignment: params.fetch("assignment_id"), attempt: params.fetch("attempt_id"), deadline: deadline) do
+            commit = @journal.ref_value
+            events = result_events(params, commit)
+            current = ordinary_candidate_event(events)&.dig("payload", "data")
+            raise AttemptErrors::NotFound, "ordinary candidate is unavailable" unless current
+            reference = candidate_reference_at!(events: events, commit: commit, head: current.fetch("head"),
+              generation: current.fetch("candidate_generation"))
+            with_candidate_reference(reference: reference, deadline: deadline) do
+              authorize!(request, peer, role, deadline)
+              {data: reference, replayed: false}
+            end
           end
         end
 
@@ -49,6 +182,18 @@ module Ace
         def review_at!(events:, commit:, head:, generation:)
           current = candidate_at!(events: events, commit: commit, head: head, generation: generation)
           assigned = ordinary_review_assignment!(events, current)
+          ordinary_review_receipt_at!(events: events, commit: commit, assigned: assigned)
+        end
+
+        # Historical campaign consumption selects the original review without
+        # calling it a current candidate approval. Cancellation is still current.
+        def review_at_reference!(events:, commit:, review_id:, head:)
+          assigned = ordinary_review_selection!(events, review_id).fetch("payload").fetch("data")
+          raise AttemptErrors::ReceiptRejected, "ordinary historical reviewed head differs" unless assigned.fetch("head") == head
+          ordinary_review_receipt_at!(events: events, commit: commit, assigned: assigned)
+        end
+
+        private def ordinary_review_receipt_at!(events:, commit:, assigned:)
           ordinary_review_origins!(events, commit, assigned)
           accepted = events.reverse.find { |event| event["type"] == "authority_mutation" &&
             event.dig("payload", "operation") == "accept_review" && event.dig("payload", "data", "review_id") == assigned.fetch("review_id") }
@@ -124,6 +269,17 @@ module Ace
             raise AttemptErrors::ReceiptRejected, "ordinary independent review assignment is absent or revoked"
           end
           data
+        end
+
+        def ordinary_review_selection!(events, review_id)
+          token!(review_id)
+          selected = events.select { |event| event["type"] == "authority_mutation" &&
+            event.dig("payload", "operation") == "assign_review" && event.dig("payload", "data", "review_id") == review_id }
+          if !selected.one? || events.any? { |event| event["type"] == "authority_mutation" &&
+              event.dig("payload", "operation") == "cancel_review" && event.dig("payload", "data", "review_id") == review_id }
+            raise AttemptErrors::ReceiptRejected, "ordinary review selection is absent or revoked"
+          end
+          selected.first
         end
 
         def ordinary_review_origins!(events, commit, assigned, reviewer_running: false)

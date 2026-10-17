@@ -3,6 +3,7 @@
 require "json"
 require "digest"
 require_relative "../molecules/evidence_journal"
+require_relative "transfer_codec"
 
 module Ace
   module Assign
@@ -10,7 +11,9 @@ module Ace
       # Project commands share the installed journal, without manufacturing a
       # managed task or projecting command exit as completed product delivery.
       class CommandExecution
-        OPERATIONS = %w[command_admit command_status command_claim command_bind command_complete].freeze
+        MUTATIONS = %w[command_admit command_claim command_bind command_complete].freeze
+        OPERATIONS = (MUTATIONS + %w[command_status command_candidate]).freeze
+        TRANSFER_OPERATIONS = {"command_candidate" => {direction: :download, purpose: :candidate, roles: [:worker]}}.freeze
         ID = /\A[a-zA-Z0-9][a-zA-Z0-9_.-]{0,63}\z/
         SHA = /\A[0-9a-f]{64}\z/
 
@@ -21,6 +24,24 @@ module Ace
         attr_reader :journal
 
         def dispatch(request:, peer:, role:, deadline:)
+          raise ArgumentError, "invalid command project" unless request.fetch("project_id") == @project
+          operation = request.fetch("operation")
+          raise ArgumentError, "unknown command operation" unless OPERATIONS.include?(operation)
+          id = request.fetch("params").fetch("execution_id")
+          raise ArgumentError, "invalid command reference" unless id.is_a?(String) && ID.match?(id)
+          reference = if operation == "command_admit"
+            selection = request.fetch("params").fetch("selection")
+            raise ArgumentError, "invalid command selection" unless selection.is_a?(Hash)
+            selection["candidate"]
+          elsif operation != "command_status"
+            projection(id, @journal.ref_value).dig("definition", "candidate", "reference")
+          end
+          options = {request: request, peer: peer, role: role, deadline: deadline}
+          return dispatch_scoped(**options) unless reference
+          @admission.with_command_scope(reference: reference, deadline: deadline) { dispatch_scoped(**options) }
+        end
+
+        def dispatch_scoped(request:, peer:, role:, deadline:)
           operation = request.fetch("operation")
           params = request.fetch("params")
           raise ArgumentError, "invalid command project" unless request.fetch("project_id") == @project
@@ -34,6 +55,17 @@ module Ace
             @admission.command_reader!(peer: peer, definition: data.fetch("definition"), deadline: deadline)
             return {data: data.merge("journal_commit" => commit), replayed: false}
           end
+          if operation == "command_candidate"
+            authorize_transfer!(request: request, peer: peer, role: role, deadline: deadline)
+            commit = @journal.ref_value
+            data = projection(id, commit)
+            phase!(data, "claimed")
+            launcher = @admission.command_launcher!(peer: peer, deadline: deadline)
+            launcher!(data, launcher)
+            bytes = @admission.command_candidate!(definition: data.fetch("definition"), peer: peer, deadline: deadline)
+            descriptor = TransferCodec.new.descriptor([bytes], purpose: :candidate)
+            return {data: {"execution_id" => id, "transfer" => descriptor}, replayed: false, transfer_parts: [bytes]}
+          end
           strict!(params, case operation
           when "command_admit" then %w[execution_id selection]
           when "command_claim" then %w[execution_id caller]
@@ -44,14 +76,14 @@ module Ace
           authenticated_peer = peer
           launcher = nil
           plan = if operation == "command_admit"
-            @admission.command_request!(selection: params.fetch("selection"), peer: peer, deadline: deadline)
+            @admission.command_request!(selection: params.fetch("selection"), peer: peer, deadline: deadline, execution_id: id)
           else
             launcher = @admission.command_launcher!(peer: authenticated_peer, deadline: deadline)
             nil
           end
           authenticate = lambda do
             if operation == "command_admit"
-              unless @admission.command_request!(selection: params.fetch("selection"), peer: peer, deadline: deadline) == plan
+              unless @admission.command_request!(selection: params.fetch("selection"), peer: peer, deadline: deadline, execution_id: id) == plan
                 raise AttemptErrors::UnauthorizedIdentity, "command admission changed"
               end
             else
@@ -73,10 +105,20 @@ module Ace
             {events: [], data: data}
           end
         end
+        private :dispatch_scoped
+
+        def authorize_transfer!(request:, peer:, role:, deadline:)
+          unless request.fetch("operation") == "command_candidate" && request.fetch("mutation_id").nil? && role == :worker
+            raise ArgumentError, "invalid command candidate read"
+          end
+          strict!(request.fetch("params"), %w[execution_id])
+          @admission.command_launcher!(peer: peer, deadline: deadline)
+        end
 
         # Read only the accepted launcher-owned four-stage execution at the
         # caller's held CAS prefix. Arbitrary allowed commands are not tests.
-        def test_evidence_at!(execution_id:, commit:, head:, tree:, deadline:)
+        def test_evidence_at!(execution_id:, commit:, head:, tree:, deadline:, candidate_reference: nil, historical: false)
+          raise ArgumentError, "invalid historical test proof mode" unless [true, false].include?(historical)
           unless execution_id.is_a?(String) && ID.match?(execution_id) && commit && @journal.ref_value == commit
             raise AttemptErrors::EvidenceUnavailable, "test execution prefix or selector differs"
           end
@@ -87,6 +129,7 @@ module Ace
           stages = accepted.map { |event| event.fetch("payload").fetch("data") }
           unless accepted.size == 4 && data["phase"] == "exited" && data["result"] == {"exit_status" => 0, "signal" => nil} &&
               definition["purpose"] == "test" && definition["source"] == {"head" => head, "tree" => tree} &&
+              (candidate_reference.nil? || definition.dig("candidate", "reference") == candidate_reference) &&
               [head, tree].all? { |value| value.is_a?(String) && value.match?(/\A[0-9a-f]{40}\z/) } &&
               stages.all? { |stage| stage.fetch("definition") == definition } &&
               stages.map { |stage| stage.fetch("phase") } == %w[admitted claimed running exited] &&
@@ -98,7 +141,7 @@ module Ace
               data.dig("child", "kernel_identity", "uid") == definition.dig("executor", "uid")
             raise AttemptErrors::ReceiptRejected, "candidate requires an exact successful executed test command"
           end
-          @admission.command_test_evidence!(definition: definition, deadline: deadline)
+          @admission.command_test_evidence!(definition: definition, deadline: deadline, historical: historical)
           command = JSON.generate(definition.fetch("argv"))
           raise AttemptErrors::ReceiptRejected, "executed test command reference is oversized" if command.bytesize > 2048
           {"schema" => "ace.test.execution-reference/v1", "reference" => execution_id,
@@ -154,7 +197,7 @@ module Ace
             raise AttemptErrors::NotFound, "command reference is unknown"
           end
           operations = accepted.map { |event| event.dig("payload", "operation") }
-          unless operations == OPERATIONS.reject { |name| name == "command_status" }.take(operations.size) && operations.size <= 4
+          unless operations == MUTATIONS.take(operations.size) && operations.size <= 4
             raise AttemptErrors::EvidenceUnavailable, "command lifecycle is corrupt"
           end
           data = accepted.last.fetch("payload").fetch("data")

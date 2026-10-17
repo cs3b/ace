@@ -1,0 +1,46 @@
+{
+  "schema": "ace.ei9.source-slice/v1",
+  "base": "69c2ea054",
+  "scope": "Existing ordinary terminal review collection and historical approval readers; durable CampaignManager reservation IDs.",
+  "checks": [
+    {
+      "report": "review/fbf31dd1-cf35-47fe-97d4-5c70738dc68b",
+      "tests": 9,
+      "assertions": 65,
+      "errors": 2,
+      "purpose": "RED missing stable request ID API"
+    },
+    {
+      "report": "review/89a20cad-7d35-4a4c-9ac1-65c33f859349",
+      "tests": 16,
+      "assertions": 108,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "report": "assign/55df5cd0-5798-400b-939e-909f158ffb8c",
+      "tests": 6,
+      "assertions": 54,
+      "failures": 0,
+      "errors": 0,
+      "scope": "Original collection reader before later historical refactor"
+    },
+    {
+      "report": "assign/1d333c01-0392-4fb7-a2a4-75c81c364ccf",
+      "tests": 2,
+      "assertions": 20,
+      "failures": 0,
+      "errors": 0,
+      "scope": "Final historical approval/revocation and terminal collection join"
+    }
+  ],
+  "evidence_boundary": "Actual Unix framing, Git journal, canonical imports, registration/start/progress/result/finish are executed. Native observation is controlled in this source fixture; this is not installed acceptance. Canonical collection does not grant approval or count a campaign round by itself.",
+  "remaining": [
+    "Install-selected CampaignManager composition and canonical association",
+    "Pinned ordinary campaign review selection and actual provider reservation join",
+    "Full canonical session/approval ingestion and head assessment operations",
+    "Independent delta context execution and v2 ordinary merge reference consumption",
+    "Configured Pi independent verdict for this exact source",
+    "Installed outcomes and complete ei9.8 acceptance"
+  ]
+}

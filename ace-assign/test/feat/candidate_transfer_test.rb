@@ -70,6 +70,26 @@ module Ace
         end
       end
 
+      def test_selected_entry_bound_counts_ancestor_directories_before_writing_source_files
+        with_fixture do |transfer, root, source, _head, _bytes|
+          FileUtils.mkdir_p(File.join(source, "nested"))
+          File.write(File.join(source, "nested", "file"), "bounded")
+          git(source, "add", ".")
+          git(source, "-c", "user.name=test", "-c", "user.email=test@example.invalid", "commit", "-m", "nested")
+          head, tree = git(source, "rev-parse", "HEAD", "HEAD^{tree}").lines.map(&:strip)
+          bundle = File.join(root, "bounded.bundle")
+          git(source, "bundle", "create", bundle, "--all")
+          bytes = File.binread(bundle)
+          options = {bytes: bytes, sha256: Digest::SHA256.hexdigest(bytes), size: bytes.bytesize,
+            head: head, tree: tree, root: File.join(root, "authority")}
+          assert_raises(AttemptErrors::ReceiptRejected) { transfer.materialize_repository(**options, max_entries: 3) }
+          assert_empty Dir.children(File.join(root, "authority"))
+          materialized = transfer.materialize_repository(**options, max_entries: 4)
+          assert_equal "bounded", File.read(File.join(materialized.fetch("directory"), "nested", "file"))
+          assert_equal head, git(materialized.fetch("directory"), "rev-parse", "HEAD").strip
+        end
+      end
+
       def test_campaign_read_view_uses_exact_bundle_and_expires_without_changing_source
         with_fixture do |transfer, root, source, base, _bytes|
           File.binwrite(File.join(source, "README"), "second candidate\n")

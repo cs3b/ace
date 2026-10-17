@@ -138,6 +138,13 @@ module Ace
               "bundle_ref" => path, "candidate_generation" => params.fetch("candidate_generation") + 1,
               "producer_origin" => origin_at!(events: events, commit: commit))}
           end
+          if operation == "cancel_review"
+            assigned = ordinary_review_selection!(events, params.fetch("review_id")).fetch("payload").fetch("data")
+            unless assigned.values_at("head", "candidate_generation") == params.values_at("head", "candidate_generation")
+              raise AttemptErrors::Conflict, "ordinary revocation must select the original review candidate"
+            end
+            return {events: [], data: assigned.slice("head", "candidate_generation", "review_id")}
+          end
           current = candidate_at!(events: events, commit: commit, head: params.fetch("head"), generation: params.fetch("candidate_generation"))
           if operation == "assign_review"
             prior = events.reverse.find { |event| event["type"] == "authority_mutation" && event.dig("payload", "operation") == "assign_review" &&
@@ -163,7 +170,6 @@ module Ace
           end
           assigned = ordinary_review_assignment!(events, current)
           raise AttemptErrors::Conflict, "ordinary review selection changed" unless assigned.fetch("review_id") == params.fetch("review_id")
-          return {events: [], data: current.slice("head", "candidate_generation").merge("review_id" => assigned.fetch("review_id"))} if operation == "cancel_review"
           if events.any? { |event| event.dig("payload", "operation") == "accept_review" && event.dig("payload", "data", "review_id") == assigned.fetch("review_id") }
             raise AttemptErrors::Conflict, "ordinary review already accepted; retain original request"
           end

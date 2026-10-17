@@ -11,11 +11,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Read canonical terminal review collection separately from approval, preserving actual assigned native origins and historical review references. Supervisor revocation can target an original review after the candidate advances.
 - Compare two independently retained candidate bundles through bounded bare Git object reads, including nonancestor rebases, full context inventories, binary patches and historical symlink bytes without executing or materializing candidate code.
 - Ground candidate and assignment-snapshot wire/expansion ceilings in closed 128MiB budgets backed by a shared fixed `cat-file --batch` codec, explicit 20,000-object bounds (per tree inventory and across the comparison's unique-blob union), and chunked batch reads instead of one Git process per blob; historical journal reads reuse the same codec.
 - Bound candidate, prepared and head-comparison tree paths to finite total/component lengths (4096/255 bytes) before any inventory, delta or filesystem prefix work, so a hostile tree cannot push unbounded path bytes into inventories or directory creation.
 - Retain built ordinary release gems as canonical binary evidence bound to the actual native producer, current accepted candidate, independent review and exact release decision. Recheck authorization on replay; preserve report limits and keep publication dispatch separate.
 - Admit ordinary candidates and independently started native reviewers into the canonical journal. Revalidate original review artifacts and root-witnessed test executions before fixed merge admission and effects; preserve strict protected-review attribution.
+- Resolve dynamic command candidates from the canonical ordinary journal under a held lifecycle scope, bind test evidence to exact candidate references, and expose historical test proof only to source-owned campaign consumers. Bound materialized source inventory before writing files.
+
 - Drive ordinary work through the installed canonical owner with retained requests, accepted context snapshots and result adoption. Record coordinator replacement in the existing definition chain only after positive old-process termination; preserve worker attempts and reject stale supervisor completion.
 
 ### Fixed

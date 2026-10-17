@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 require "optparse"
+require "ace/assign/authority/retained_input"
 require_relative "../../organisms/command_run_client"
 module Ace
   module Lab
@@ -10,6 +11,7 @@ module Ace
           option :project, required: true, desc: "Installed project ID"
           option :as, desc: "Configured permitted executor"
           option :service, repeat: true, desc: "Replace default services with this complete set"
+          option :candidate, desc: "JSON file containing the exact canonical candidate reference"
           argument :argv, type: :array, desc: "Literal command argv after --"
 
           def self.parse(args)
@@ -27,10 +29,17 @@ module Ace
               end
             end
             parser.on("--service VALUE") { |value| (options[:services] ||= []) << value }
+            parser.on("--candidate FILE") do |path|
+              raise ArgumentError, "duplicate --candidate" if seen["candidate"]
+              seen["candidate"] = true
+              value = Ace::Assign::Authority::RetainedInput.json(path)
+              raise ArgumentError, "candidate reference must be an object" unless value.is_a?(Hash)
+              options[:candidate] = value
+            end
             parser.parse!(switches)
             raise ArgumentError, "run requires one --project and no extra options" unless seen["project"] && switches.empty?
             options.merge(argv: argv)
-          rescue OptionParser::ParseError, ArgumentError
+          rescue OptionParser::ParseError, ArgumentError, JSON::ParserError, SystemCallError
             raise Ace::Support::Cli::Error, "usage_error: run requires unique project/executor options and literal argv after --"
           end
 
@@ -39,7 +48,7 @@ module Ace
             project = options.delete(:project)
             client = Organisms::CommandRunClient.new(project: project)
             begin
-              client.run(**options, pane: ENV["HERDR_PANE_ID"])
+              client.run(**options, pane: ENV["HERDR_PANE"])
             rescue StandardError, SecurityError
               # Once admission may have crossed the owner boundary, even a
               # malformed stream is uncertainty, never a fresh usage refusal.

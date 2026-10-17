@@ -228,9 +228,19 @@ module Ace
           end
         end
 
-        def reserve_execution(id, round_id:, scope:, provider:, dry_run: false)
+        def reserve_execution(id, round_id:, scope:, provider:, dry_run: false, request_id: nil)
+          Contract.id!(request_id, "execution request ID") if request_id
           store.transaction(dry_run: dry_run) do
             record = store.read(id)
+            raise Contract::Invalid, "campaign contract is superseded" if record["successor"]
+            if request_id && (prior = record.fetch("execution_attempts").find { |entry| entry["request_id"] == request_id })
+              unless prior.values_at("round_id", "scope", "provider") == [round_id, scope, provider]
+                raise Contract::Invalid, "execution request is bound to different input"
+              end
+              # A retained reservation is an observation, never another launch
+              # authorization. Return its actual running/terminal/unknown state.
+              next prior
+            end
             execution_round_projection!(id, round_id, nil)
             unless record.fetch("policy").fetch("required_scopes").include?(scope)
               raise Contract::Invalid, "execution scope is not required"
@@ -241,6 +251,7 @@ module Ace
             entry = {"id" => "execution-#{record.fetch('execution_attempts').size + 1}",
               "phase_id" => record.fetch("phases").last.fetch("id"), "round_id" => round_id,
               "scope" => scope, "provider" => provider, "status" => "running"}
+            entry["request_id"] = request_id if request_id
             record.fetch("execution_attempts") << entry
             store.write(record) unless dry_run
             entry

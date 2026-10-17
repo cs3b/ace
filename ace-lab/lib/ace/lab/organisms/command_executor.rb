@@ -8,6 +8,7 @@ require "base64"
 require "io/console"
 require "ace/runtime/molecules/owned_child_scope"
 require_relative "command_run_client"
+require_relative "command_candidate_view"
 
 module Ace
   module Lab
@@ -39,6 +40,12 @@ module Ace
           end
           claimed = @owner.call("command_claim", params.merge("caller" => request.fetch("caller")), mutation_id: "command-claim.#{id}")
           raise SecurityError, "claim replay cannot execute" if claimed.replayed
+          if definition["materialization"]
+            CommandCandidateView.new(project: @project, definition: definition).prepare! do |scratch|
+              client = CommandRunClient.new(project: @project).owner(scratch_root: scratch)
+              client.call("command_candidate", params, download: true, purpose: :candidate).parts.fetch(0)
+            end
+          end
           launch(socket, id, definition, interactive, rows, cols)
         end
 

@@ -1,0 +1,96 @@
+{
+  "source": "d5b11b93ebb384ebe04d6f4c6ae57e4ea2c29bef",
+  "base": "69c2ea054",
+  "reviewer": {
+    "provider": "pi",
+    "model": "zai/glm-5.3",
+    "thinking": "high",
+    "preset": "ro",
+    "status": "succeeded"
+  },
+  "files": [
+    {
+      "path": "review-report-review-default.md",
+      "sha256": "ad91da3c3a65e1ba55bd2cea4c3fe0032e8c8e7538277d44e7c8bf9d9e39d139",
+      "bytes": 11996
+    },
+    {
+      "path": "llm_metadata.yml",
+      "sha256": "c3b156ec301392e7f28ee728201367a82ce6a7cc1bad16cc71698974cc515e59",
+      "bytes": 976
+    },
+    {
+      "path": "metadata.yml",
+      "sha256": "16f88203984cb43ba517b73ef7d1eb1573fe924cd8789fc675c32c7a929b9de1",
+      "bytes": 3704
+    }
+  ],
+  "checks": [
+    {
+      "label": "rescue_red",
+      "source": ".ace-local/test/reports/assign/36ce4d2f-26e9-4b10-8df2-bbd4822be31a/report.json",
+      "sha256": "edee00d752be41bad817740f2423a032f959b33c756cae5a18b0a1ee64888479",
+      "summary": {
+        "status": "failure",
+        "passed": 0,
+        "failed": 1,
+        "errors": 0,
+        "skipped": 0,
+        "total": 1,
+        "pass_rate": 0.0,
+        "duration": 18.843978,
+        "timestamp": "2026-10-16T21:53:11+01:00"
+      }
+    },
+    {
+      "label": "rescue_green",
+      "source": ".ace-local/test/reports/assign/1a513989-b42d-4e08-8b51-81e7a867d453/report.json",
+      "sha256": "de7f1a98f139939d2a49768bdc8d2a668ce8c4bc2cc707513fecffcf348cb66f",
+      "summary": {
+        "status": "success",
+        "passed": 1,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "total": 1,
+        "pass_rate": 100.0,
+        "duration": 23.068776,
+        "timestamp": "2026-10-16T21:54:20+01:00"
+      }
+    },
+    {
+      "label": "campaign_focused",
+      "source": ".ace-local/test/reports/review/fb5bdc33-af4b-44b9-b425-c11a4b4563be/report.json",
+      "sha256": "51c8b6d226d3298fd69a3339cf4f05dad99153967f5d1b6625643a295c7d7a0f",
+      "summary": {
+        "status": "success",
+        "passed": 16,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "total": 16,
+        "pass_rate": 100.0,
+        "duration": 0.27927,
+        "timestamp": "2026-10-16T21:54:21+01:00"
+      }
+    },
+    {
+      "label": "full_review_fast_before_diagnostic_fix",
+      "source": ".ace-local/test/reports/review/d89feb95-ae98-41b0-b11a-0a7960555f3c/report.json",
+      "sha256": "f81842561445a3269e41a324f3650787ec71d4da85093a6129d3b098292d473b",
+      "summary": {
+        "status": "success",
+        "passed": 1007,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "total": 1007,
+        "pass_rate": 100.0,
+        "duration": 16.632834999999996,
+        "timestamp": "2026-10-16T21:47:43+01:00"
+      }
+    }
+  ],
+  "verdict": "No Critical/Blocking issues; Medium rescue scope fixed after reproduced RED, delta review pending",
+  "installed_acceptance": false
+}

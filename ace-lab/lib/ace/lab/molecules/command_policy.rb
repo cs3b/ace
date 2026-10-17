@@ -15,6 +15,8 @@ module Ace
         PATH = "/etc/lab/ace-lab/project-commands.yml"
         ID = /\A[a-zA-Z0-9][a-zA-Z0-9_.-]{0,63}\z/
         ENV_KEY = /\A[A-Z][A-Z0-9_]{0,63}\z/
+        MAX_SOURCE_ENTRIES = 20_000
+        MAX_GIT_ADMIN_ENTRIES = 1_000
         RESERVED = %w[HOME USER LOGNAME SHELL PATH RUBYOPT RUBYLIB BUNDLE_GEMFILE GEM_HOME GEM_PATH BASH_ENV ENV PYTHONPATH PYTHONHOME PERL5LIB LD_PRELOAD LD_LIBRARY_PATH].freeze
         attr_reader :project, :launcher
 
@@ -62,10 +64,16 @@ module Ace
             argv!(value.fetch("argv"))
             invalid! unless sha?(value.fetch("executable_sha256"))
             source = value.fetch("source")
-            strict!(source, %w[head tree])
-            invalid! unless source.values.all? { |sha| sha.nil? || (sha.is_a?(String) && sha.match?(/\A[0-9a-f]{40}\z/)) } &&
-              source.values.all?(&:nil?) == source.values.any?(&:nil?)
-            invalid! if value["purpose"] == "test" && source.values.any?(&:nil?)
+            if source.is_a?(Hash) && source["kind"] == "ordinary-candidate"
+              strict!(source, %w[kind root runtime_path runtime_sha256])
+              invalid! unless value["purpose"] == "test" && absolute?(source["root"]) &&
+                absolute?(source["runtime_path"]) && sha?(source["runtime_sha256"])
+            else
+              strict!(source, %w[head tree])
+              invalid! unless source.values.all? { |sha| sha.nil? || (sha.is_a?(String) && sha.match?(/\A[0-9a-f]{40}\z/)) } &&
+                source.values.all?(&:nil?) == source.values.any?(&:nil?)
+              invalid! if value["purpose"] == "test" && source.values.any?(&:nil?)
+            end
           end
           invalid! unless @entry.fetch("executors").key?(@entry["default_executor"])
           services!(@entry.fetch("default_services"))
@@ -86,7 +94,8 @@ module Ace
         end
 
         def select(selection:, peer:)
-          strict!(selection, %w[argv executor services pane])
+          invalid! unless selection.is_a?(Hash)
+          strict!(selection, %w[argv executor services pane] + (selection.key?("candidate") ? ["candidate"] : []))
           argv!(selection.fetch("argv"))
           executor_id = selection["executor"] || @entry.fetch("default_executor")
           executor = @entry.fetch("executors")[executor_id]
@@ -97,6 +106,14 @@ module Ace
           matches = @entry.fetch("commands").select { |_name, value| value.fetch("argv") == selection["argv"] }
           deny! unless matches.size == 1
           command_id, command = matches.first
+          reference = selection["candidate"]
+          if command.dig("source", "kind") == "ordinary-candidate"
+            strict!(reference, %w[assignment_id attempt_id candidate_generation acceptance_event_digest])
+            invalid! unless %w[assignment_id attempt_id].all? { |key| reference[key].is_a?(String) && ID.match?(reference[key]) } &&
+              reference["candidate_generation"].is_a?(Integer) && reference["candidate_generation"].positive? && sha?(reference["acceptance_event_digest"])
+          else
+            invalid! unless reference.nil?
+          end
           kind = selection["pane"].nil? ? "operator" : "agent"
           deny! unless @entry.fetch("grants").any? { |grant|
             grant.values_at("kind", "uid", "command", "executor") == [kind, peer.fetch("uid"), command_id, executor_id] &&

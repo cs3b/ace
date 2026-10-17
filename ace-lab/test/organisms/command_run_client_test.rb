@@ -27,6 +27,28 @@ class CommandRunClientTest < Minitest::Test
     end
   end
 
+  def test_candidate_file_is_explicit_bounded_data_and_literal_selector_stays_unchanged
+    Dir.mktmpdir do |directory|
+      path = File.join(directory, "candidate.json")
+      reference = {"assignment_id" => "delivery", "attempt_id" => "native1", "candidate_generation" => 2, "acceptance_event_digest" => "a" * 64}
+      File.write(path, JSON.generate(reference))
+      calls = []
+      client = Object.new
+      client.define_singleton_method(:run) { |**options| calls << options; 0 }
+      Ace::Lab::Organisms::CommandRunClient.stub(:new, client) do
+        assert_equal 0, Ace::Lab::CLI::Commands::Run.invoke(["--project", "ace", "--candidate", path, "--", "bin/ace-test", "feat"])
+      end
+      assert_equal reference, calls.first.fetch(:candidate)
+      assert_equal ["bin/ace-test", "feat"], calls.first.fetch(:argv)
+      ["null" * 5000, "{invalid", "null", "[]"].each do |bytes|
+        File.write(path, bytes)
+        assert_raises(Ace::Support::Cli::Error) do
+          Ace::Lab::CLI::Commands::Run.parse(["--project", "ace", "--candidate", path, "--", "bin/ace-test"])
+        end
+      end
+    end
+  end
+
   def test_malformed_runtime_data_is_uncertainty_and_never_a_usage_refusal
     fake = Object.new
     fake.define_singleton_method(:run) { |**| raise ArgumentError, "malformed runtime frame" }
@@ -35,6 +57,20 @@ class CommandRunClientTest < Minitest::Test
       assert_includes error.message, "command_uncertain"
       refute_includes error.message, "usage_error"
     end
+  end
+
+  def test_actual_herdr_pane_environment_reaches_native_admission_as_a_hint
+    previous_pane, previous_wrong = ENV["HERDR_PANE"], ENV["HERDR_PANE_ID"]
+    ENV["HERDR_PANE"], ENV["HERDR_PANE_ID"] = "w1:p3", "not-exported-by-herdr"
+    captured = nil
+    client = Object.new
+    client.define_singleton_method(:run) { |**options| captured = options; 0 }
+    Ace::Lab::Organisms::CommandRunClient.stub(:new, client) do
+      assert_equal 0, Ace::Lab::CLI::Commands::Run.invoke(%w[--project ace -- bin/ace-test feat])
+    end
+    assert_equal "w1:p3", captured.fetch(:pane)
+  ensure
+    ENV["HERDR_PANE"], ENV["HERDR_PANE_ID"] = previous_pane, previous_wrong
   end
 
   def with_stream(frames)

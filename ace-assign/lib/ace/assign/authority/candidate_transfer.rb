@@ -5,6 +5,7 @@ require "json"
 require "fileutils"
 require "tmpdir"
 require "tempfile"
+require "set"
 require "ace/herdr/molecules/bounded_process"
 require "ace/review/atoms/campaign_contract"
 require_relative "private_directory"
@@ -170,7 +171,10 @@ module Ace
         # root is selected from installed peer credentials by the receiver,
         # never a request field. Materialization reads objects rather than Git
         # checkout, so .gitattributes, filters and uploader hooks cannot run.
-        def materialize(bytes:, sha256:, size:, head:, tree:, root:)
+        def materialize(bytes:, sha256:, size:, head:, tree:, root:, max_entries: nil)
+          unless max_entries.nil? || (max_entries.is_a?(Integer) && max_entries.positive?)
+            raise ArgumentError, "invalid materialized source entry bound"
+          end
           self.class.new(root: root)
           admit(bytes: bytes, sha256: sha256, size: size, head: head) do |repository, deadline, result|
             reject!("Candidate tree differs from accepted tree") unless result["tree"] == tree
@@ -178,6 +182,18 @@ module Ace
             File.chmod(0700, destination)
             begin
               entries = git(repository, deadline, "ls-tree", "-r", "-z", head, limit: MAX_BYTES).b.split("\0")
+              if max_entries
+                inventory = Set.new([""])
+                entries.each do |entry|
+                  path = entry.split("\t", 2).last
+                  path.to_s.split("/").each_with_object(+"") do |part, parent|
+                    parent << "/" unless parent.empty?
+                    parent << part
+                    inventory.add(parent.dup)
+                    reject!("Candidate source entry count exceeds selected bound") if inventory.size > max_entries
+                  end
+                end
+              end
               reject!("Candidate file inventory is oversized") if entries.size > MAX_OBJECTS
               parsed = entries.map do |entry|
                 metadata, path = entry.split("\t", 2)
@@ -236,9 +252,9 @@ module Ace
         # Executing campaign children need local Git history as well as files.
         # Create only our own empty administration; no uploader configuration,
         # checkout filters or hooks enter this private repository.
-        def materialize_repository(bytes:, sha256:, size:, head:, tree:, root:)
+        def materialize_repository(bytes:, sha256:, size:, head:, tree:, root:, max_entries: nil)
           deadline = monotonic + DEADLINE
-          result = materialize(bytes: bytes, sha256: sha256, size: size, head: head, tree: tree, root: root)
+          result = materialize(bytes: bytes, sha256: sha256, size: size, head: head, tree: tree, root: root, max_entries: max_entries)
           directory = result.fetch("directory")
           Tempfile.create(["campaign-candidate-", ".bundle"], root) do |file|
             file.binmode

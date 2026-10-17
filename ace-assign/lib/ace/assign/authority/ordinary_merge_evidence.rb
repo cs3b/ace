@@ -13,12 +13,23 @@ module Ace
           token!(attempt)
           registered = registration(assignment, commit: @journal.ref_value)
           raise AttemptErrors::EvidenceUnavailable, "merge assignment is unregistered" unless registered
+          held = ordinary_evidence_scope(assignment: assignment, attempt: attempt, task_id: registered.fetch("task_id"))
+          if held
+            if exclusive && held.fetch(:mode) != :exclusive
+              raise AttemptErrors::EvidenceUnavailable, "shared merge evidence scope cannot become exclusive"
+            end
+            return yield
+          end
+          selected = lambda do
+            with_ordinary_evidence_scope(assignment: assignment, attempt: attempt, task_id: registered.fetch("task_id"),
+              mode: exclusive ? :exclusive : :shared) { yield }
+          end
           @exclusion.with_shared_multi([@exclusion.task_key(registered.fetch("task_id"))], deadline: deadline) do
             key = @exclusion.assignment_key(assignment)
             if exclusive
-              @exclusion.with_exclusive(key, deadline: deadline) { yield }
+              @exclusion.with_exclusive(key, deadline: deadline) { selected.call }
             else
-              @exclusion.with_shared_multi([key], deadline: deadline) { yield }
+              @exclusion.with_shared_multi([key], deadline: deadline) { selected.call }
             end
           end
         end
@@ -53,8 +64,9 @@ module Ace
           end
           candidate = candidate_at!(events: events, commit: commit, head: head, generation: generation)
           review = review_at!(events: events, commit: commit, head: head, generation: generation)
+          reference = candidate_reference_at!(events: events, commit: commit, head: head, generation: generation)
           tests = execution_ids.map { |id| @command_evidence.test_evidence_at!(execution_id: id, commit: commit,
-            head: head, tree: candidate.fetch("tree"), deadline: deadline) }
+            head: head, tree: candidate.fetch("tree"), candidate_reference: reference, deadline: deadline) }
           {"review_evidence" => {"schema" => "ace.review.acceptance-reference/v1", "reference" => review.fetch("review_id"),
             "reviewer" => review.fetch("reviewer_actor"), "verdict" => "approved", "reviewed_head" => head,
             "recorded_at" => review.fetch("recorded_at"), "record_sha256" => review.fetch("acceptance_event_digest")},

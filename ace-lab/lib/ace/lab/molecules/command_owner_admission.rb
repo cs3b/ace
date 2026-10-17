@@ -5,6 +5,7 @@ require "ace/assign/authority/command_execution"
 require "ace/herdr/molecules/bounded_observation"
 require "ace/runtime/molecules/process_identity"
 require_relative "command_policy"
+require_relative "command_test_runtime"
 
 module Ace
   module Lab
@@ -12,8 +13,10 @@ module Ace
       # Adds the project-command principals to the same installed listener.
       # Root launch facts do not impersonate a participant/native agent.
       class CommandOwnerAdmission
-        def initialize(base:, project:, policy_loader: nil)
+        def initialize(base:, project:, policy_loader: nil, candidate_owner: nil)
           @base, @project = base, project
+          @candidate_owner = candidate_owner
+          @candidate_views, @candidate_mutex = {}, Mutex.new
           @policy_loader = policy_loader || -> { CommandPolicy.load(project: @project) }
           @peer = Ace::Assign::Authority::OrdinaryPeer.new
         end
@@ -23,7 +26,7 @@ module Ace
         def authorize!(request:, peer:, deadline:)
           return @base.authorize!(request: request, peer: peer, deadline: deadline) unless Ace::Assign::Authority::CommandExecution::OPERATIONS.include?(request["operation"])
           raise Ace::Assign::AttemptErrors::UnauthorizedIdentity unless request["project_id"] == @project
-          if %w[command_claim command_bind command_complete].include?(request["operation"])
+          if %w[command_claim command_bind command_complete command_candidate].include?(request["operation"])
             command_launcher!(peer: peer, deadline: deadline)
           elsif request["operation"] == "command_status"
             @peer.live!(peer, deadline: deadline) # Handler checks original requester before exposing data.
@@ -50,22 +53,57 @@ module Ace
           document.reader!(peer.fetch("uid"))
         end
 
-        def command_request!(selection:, peer:, deadline:)
+        def command_request!(selection:, peer:, deadline:, execution_id: nil)
           @peer.live!(peer, deadline: deadline)
-          selected = policy.select(selection: selection, peer: peer)
+          selected = compile_selection(selection: selection, peer: peer, execution_id: execution_id, deadline: deadline)
           if selected.fetch("requester_kind") == "agent"
             selected["native_binding"] = @base.identity!(peer: peer, pane: selection.fetch("pane"), deadline: deadline).runtime_binding
           end
-          verify_context!(selected, deadline)
+          verify_context!(selected, deadline, materialized: false)
           selected
+        end
+
+        def with_command_scope(reference:, deadline:, historical: false)
+          candidate_owner.with_candidate_reference_scope(reference: reference, deadline: deadline, historical: historical) do |view|
+            @candidate_mutex.synchronize do
+              raise SecurityError, "nested command candidate scope" if @candidate_views.key?(Thread.current)
+              @candidate_views[Thread.current] = view
+            end
+            begin
+              yield
+            ensure
+              @candidate_mutex.synchronize { @candidate_views.delete(Thread.current) }
+            end
+          end
+        end
+
+        def command_candidate!(definition:, peer:, deadline:)
+          command_launcher!(peer: peer, deadline: deadline)
+          unless definition["candidate"] && command_request!(selection: definition.fetch("selection"),
+              peer: definition.fetch("requester"), execution_id: definition.dig("materialization", "execution_id"),
+              deadline: deadline) == definition
+            raise Ace::Assign::AttemptErrors::UnauthorizedIdentity, "original candidate command admission changed"
+          end
+          candidate, _origin, _commit, bytes = candidate_view.read!(reference: definition.fetch("candidate").fetch("reference"))
+          unless candidate == definition.fetch("candidate").except("reference")
+            raise Ace::Assign::AttemptErrors::Conflict, "original command candidate changed"
+          end
+          bytes
         end
 
         # Historical execution can outlive its requester. Current root policy
         # and immutable source/executable must still grant this exact TEST
         # command; requester liveness does not invent a new execution.
-        def command_test_evidence!(definition:, deadline:)
+        def command_test_evidence!(definition:, deadline:, historical: false)
+          if definition["candidate"] && !@candidate_mutex.synchronize { @candidate_views.key?(Thread.current) }
+            return with_command_scope(reference: definition.fetch("candidate").fetch("reference"), deadline: deadline, historical: historical) do
+              command_test_evidence!(definition: definition, deadline: deadline, historical: historical)
+            end
+          end
           unless definition["purpose"] == "test" && definition.dig("source", "head") && definition.dig("source", "tree") &&
-              policy.select(selection: definition.fetch("selection"), peer: definition.fetch("requester")) == definition.except("native_binding")
+              compile_selection(selection: definition.fetch("selection"), peer: definition.fetch("requester"),
+                execution_id: definition.dig("materialization", "execution_id"), deadline: deadline,
+                evidence: true, retained_native: definition["native_binding"], historical: historical) == definition.except("native_binding")
             raise Ace::Assign::AttemptErrors::ReceiptRejected, "executed test command policy was revoked or changed"
           end
           verify_context!(definition, deadline)
@@ -103,7 +141,8 @@ module Ace
 
         def command_claim!(definition:, caller:, launcher:, deadline:)
           command_launcher!(peer: launcher, deadline: deadline)
-          unless caller == definition.fetch("requester") && command_request!(selection: definition.fetch("selection"), peer: caller, deadline: deadline) == definition
+          unless caller == definition.fetch("requester") && command_request!(selection: definition.fetch("selection"), peer: caller,
+              execution_id: definition.dig("materialization", "execution_id"), deadline: deadline) == definition
             raise Ace::Assign::AttemptErrors::UnauthorizedIdentity, "command requester or policy changed"
           end
           true
@@ -111,9 +150,11 @@ module Ace
 
         def command_child!(definition:, child:, launcher:, deadline:)
           command_launcher!(peer: launcher, deadline: deadline)
-          unless command_request!(selection: definition.fetch("selection"), peer: definition.fetch("requester"), deadline: deadline) == definition
+          unless command_request!(selection: definition.fetch("selection"), peer: definition.fetch("requester"),
+              execution_id: definition.dig("materialization", "execution_id"), deadline: deadline) == definition
             raise Ace::Assign::AttemptErrors::UnauthorizedIdentity, "command admission changed before exec"
           end
+          verify_context!(definition, deadline)
           # The authenticated root daemon witnesses cwd/identity after dropping
           # the gated child. Owner independently captures its kernel generation.
           keys = %w[pid uid gid groups started_at host cwd process_group no_new_privs capabilities]
@@ -136,20 +177,67 @@ module Ace
 
         def policy = @policy_loader.call
 
-        def verify_context!(definition, deadline)
+        def candidate_owner
+          selected = @candidate_owner&.call
+          unless selected.is_a?(Ace::Assign::Authority::OrdinaryLifecycle)
+            raise InvalidConfigurationError, "canonical candidate owner is unavailable"
+          end
+          selected
+        end
+
+        def candidate_view
+          @candidate_mutex.synchronize { @candidate_views.fetch(Thread.current) }
+        rescue KeyError
+          raise InvalidConfigurationError, "candidate command needs its held lifecycle scope"
+        end
+
+        def compile_selection(selection:, peer:, execution_id:, deadline:, evidence: false, retained_native: nil, historical: false)
+          selected = policy.select(selection: selection, peer: peer)
+          return selected unless selected.dig("source", "kind") == "ordinary-candidate"
+          GrantResolver.trusted_directory!(selected.fetch("source").fetch("root"))
+          runtime = CommandTestRuntime.load(selected.fetch("source"))
+          runtime.verify_installed!(deadline: deadline)
+          candidate, origin, _commit, _bytes = candidate_view.read!(reference: selection.fetch("candidate"), historical: historical)
+          if selected.fetch("requester_kind") == "agent"
+            native = evidence ? retained_native : @base.identity!(peer: peer, pane: selection.fetch("pane"), deadline: deadline).runtime_binding
+            unless native == origin.fetch("runtime_binding")
+              raise Ace::Assign::AttemptErrors::UnauthorizedIdentity, "test candidate belongs to its genuine native producer"
+            end
+          end
+          runtime.compile(definition: selected, execution_id: execution_id,
+            candidate: candidate.merge("reference" => selection.fetch("candidate")))
+        end
+
+        def verify_context!(definition, deadline, materialized: true)
           executor = definition.fetch("executor")
           cwd = executor.fetch("cwd")
           wire = Ace::Runtime::Molecules::ProtectedSocket
-          wire.root_path!(cwd, directory: true)
+          dynamic = definition["materialization"]
+          verify_source = !dynamic || materialized
+          wire.root_path!(cwd, directory: true) if verify_source
           executor.fetch("path").each { |entry| GrantResolver.trusted_directory!(entry) }
           home = executor.fetch("home")
           GrantResolver.trusted_directory!(home) if File.exist?(home) || File.symlink?(home)
-          count = 0
-          Find.find(cwd) do |path|
-            raise InvalidConfigurationError, "command source exceeds verification bound" if (count += 1) > 20_000 || Process.clock_gettime(Process::CLOCK_MONOTONIC) >= deadline
+          count = Hash.new(0)
+          source_root = dynamic ? File.join(dynamic.fetch("root"), dynamic.fetch("execution_id"), "source") : cwd
+          Find.find(source_root, ignore_error: false) do |path|
+            git_admin = path == File.join(source_root, ".git") || path.start_with?(File.join(source_root, ".git") + "/")
+            limit = git_admin ? CommandPolicy::MAX_GIT_ADMIN_ENTRIES : CommandPolicy::MAX_SOURCE_ENTRIES
+            if (count[git_admin] += 1) > limit || Process.clock_gettime(Process::CLOCK_MONOTONIC) >= deadline
+              raise InvalidConfigurationError, "command source exceeds verification bound"
+            end
             stat = File.lstat(path)
-            unless stat.uid.zero? && (stat.mode & 0o022).zero? && !stat.symlink? && (stat.file? || stat.directory?)
+            contained_alias = dynamic && stat.symlink? && File.realpath(path).start_with?(source_root + "/")
+            unless stat.uid.zero? && (contained_alias || ((stat.mode & 0o022).zero? && !stat.symlink? && (stat.file? || stat.directory?)))
               raise InvalidConfigurationError, "command source must be an immutable installed view"
+            end
+          end if verify_source
+          if dynamic && materialized
+            root = File.dirname(source_root)
+            runtime = CommandTestRuntime.load(dynamic)
+            unless GrantResolver.read_verified(File.join(root, "config", "Gemfile")) == runtime.gemfile(root) &&
+                GrantResolver.read_verified(File.join(root, "config", "runner.json")) == runtime.configuration(root)
+              raise InvalidConfigurationError, "materialized test configuration differs"
             end
           end
           executable = File.expand_path(definition.fetch("argv").first, cwd)
@@ -159,23 +247,25 @@ module Ace
             raise InvalidConfigurationError, "command executable differs"
           end
           source = definition.fetch("source")
-          if source.fetch("head")
-            result = Ace::Herdr::Molecules::BoundedProcess.call(["/usr/bin/git", "-c", "safe.directory=#{cwd}",
+          if source.fetch("head") && verify_source
+            result = Ace::Herdr::Molecules::BoundedProcess.call(["/usr/bin/git", "-c", "safe.directory=#{source_root}",
               "-c", "core.hooksPath=/dev/null", "-c", "core.fsmonitor=false", "rev-parse", "HEAD", "HEAD^{tree}"],
-              environment: Ace::Assign::Molecules::InstalledJournalRead::ENVIRONMENT, chdir: cwd,
+              environment: Ace::Assign::Molecules::InstalledJournalRead::ENVIRONMENT.merge("GIT_OPTIONAL_LOCKS" => "0"), chdir: source_root,
               stdin_data: "", timeout_s: deadline - Process.clock_gettime(Process::CLOCK_MONOTONIC), output_limit: 1024, cleanup_group: true)
             unless result.status.success? && result.stdout.lines.map(&:strip) == source.values_at("head", "tree")
               raise InvalidConfigurationError, "command accepted source differs"
             end
-            clean = Ace::Herdr::Molecules::BoundedProcess.call(["/usr/bin/git", "-c", "safe.directory=#{cwd}",
+            clean = Ace::Herdr::Molecules::BoundedProcess.call(["/usr/bin/git", "-c", "safe.directory=#{source_root}",
               "-c", "core.hooksPath=/dev/null", "-c", "core.fsmonitor=false", "status", "--porcelain=v1", "-z", "--untracked-files=all"],
-              environment: Ace::Assign::Molecules::InstalledJournalRead::ENVIRONMENT, chdir: cwd,
+              environment: Ace::Assign::Molecules::InstalledJournalRead::ENVIRONMENT.merge("GIT_OPTIONAL_LOCKS" => "0"), chdir: source_root,
               stdin_data: "", timeout_s: deadline - Process.clock_gettime(Process::CLOCK_MONOTONIC), output_limit: 65_536, cleanup_group: true)
             unless clean.status.success? && clean.stdout.empty? && !clean.oversized
               raise InvalidConfigurationError, "command accepted source is dirty"
             end
           end
           true
+        rescue SystemCallError
+          raise InvalidConfigurationError, "command source is not fully observable"
         end
       end
     end
