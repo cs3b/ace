@@ -106,96 +106,50 @@ class WorktreeManagerTest < Minitest::Test
     assert result.key?(:success)
   end
 
-  def test_list_all_uses_task_resolved_listing_when_task_filter_requested
-    calls = []
+  def build_fake_lister(calls:)
     fake_lister = Object.new
     worktrees = []
-
-    fake_lister.define_singleton_method(:list_all) do
-      calls << :list_all
-      worktrees
+    fake_lister.define_singleton_method(:inventory) do
+      calls << :inventory
+      {success: true, worktrees: worktrees}
     end
-
-    fake_lister.define_singleton_method(:list_with_tasks) do
-      calls << :list_with_tasks
-      worktrees
-    end
-
-    fake_lister.define_singleton_method(:filter) do |items, task_associated:, usable:, branch_pattern:, task_id: nil, pr_number: nil|
-      calls << [:filter, task_associated, usable, branch_pattern, task_id, pr_number]
+    fake_lister.define_singleton_method(:filter) do |items, **kwargs|
+      calls << [:filter, kwargs]
       items
     end
-
     fake_lister.define_singleton_method(:format_for_display) do |_items, _format|
+      calls << :format_for_display
       ""
     end
-
     fake_lister.define_singleton_method(:get_statistics) do |_items|
-      {
-        total: 0,
-        task_associated: 0,
-        non_task_associated: 0,
-        usable: 0,
-        unusable: 0,
-        bare: 0,
-        detached: 0,
-        branches: [],
-        task_ids: []
-      }
+      {total: 0, task_associated: 0, non_task_associated: 0, usable: 0, unusable: 0,
+       bare: 0, detached: 0, branches: [], task_ids: []}
     end
+    fake_lister
+  end
 
-    @manager.instance_variable_set(:@worktree_lister, fake_lister)
+  def test_list_all_uses_inventory_and_applies_filters
+    calls = []
+    @manager.instance_variable_set(:@worktree_lister, build_fake_lister(calls: calls))
+
     result = @manager.list_all(task_associated: false)
 
     assert result[:success]
-    assert_includes calls, :list_with_tasks
-    refute_includes calls, :list_all
+    assert_includes calls, :inventory
+    filter_call = calls.find { |entry| entry.is_a?(Array) && entry.first == :filter }
+    refute_nil filter_call
+    assert_equal false, filter_call[1][:task_associated]
   end
 
-  def test_list_all_uses_plain_listing_when_no_task_filter_and_show_tasks_disabled
+  def test_list_all_skips_formatting_when_no_format_requested
     calls = []
-    fake_lister = Object.new
-    worktrees = []
+    @manager.instance_variable_set(:@worktree_lister, build_fake_lister(calls: calls))
 
-    fake_lister.define_singleton_method(:list_all) do
-      calls << :list_all
-      worktrees
-    end
-
-    fake_lister.define_singleton_method(:list_with_tasks) do
-      calls << :list_with_tasks
-      worktrees
-    end
-
-    fake_lister.define_singleton_method(:filter) do |items, task_associated:, usable:, branch_pattern:, task_id: nil, pr_number: nil|
-      calls << [:filter, task_associated, usable, branch_pattern, task_id, pr_number]
-      items
-    end
-
-    fake_lister.define_singleton_method(:format_for_display) do |_items, _format|
-      ""
-    end
-
-    fake_lister.define_singleton_method(:get_statistics) do |_items|
-      {
-        total: 0,
-        task_associated: 0,
-        non_task_associated: 0,
-        usable: 0,
-        unusable: 0,
-        bare: 0,
-        detached: 0,
-        branches: [],
-        task_ids: []
-      }
-    end
-
-    @manager.instance_variable_set(:@worktree_lister, fake_lister)
-    result = @manager.list_all(format: :table)
+    result = @manager.list_all
 
     assert result[:success]
-    assert_includes calls, :list_all
-    refute_includes calls, :list_with_tasks
+    assert_nil result[:formatted_output]
+    refute_includes calls, :format_for_display
   end
 
   def test_get_status_api_exists

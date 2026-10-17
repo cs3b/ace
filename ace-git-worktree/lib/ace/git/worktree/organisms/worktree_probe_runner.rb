@@ -94,6 +94,7 @@ module Ace
           def start_children(pending, active)
             index, worktree = pending.shift
             pipe_read, pipe_write = IO.pipe
+            flush_standard_streams
             pid = fork do
               child_process(pipe_read, pipe_write, worktree)
               exit!(0)
@@ -271,7 +272,7 @@ module Ace
             if @probe
               @probe.call(worktree)
             else
-              WorktreeProbe.new(project_root: @project_root, base_ref: @base_ref).probe(worktree.path)
+              Molecules::WorktreeProbe.new(project_root: @project_root, base_ref: @base_ref).probe(worktree.path)
             end
           end
 
@@ -298,6 +299,15 @@ module Ace
             else
               value
             end
+          end
+
+          # Flush buffered parent output before forking so children never
+          # inherit (and re-emit) unflushed terminal output.
+          def flush_standard_streams
+            $stdout.flush
+            $stderr.flush
+          rescue StandardError
+            nil
           end
 
           def monotonic_now

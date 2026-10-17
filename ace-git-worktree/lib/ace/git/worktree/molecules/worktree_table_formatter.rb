@@ -37,8 +37,8 @@ module Ace
           # @param width [Integer] detected terminal width
           # @param full [Boolean] exhaustive listing (no truncation)
           # @param env [Hash] environment (HOME shortening, COLUMNS detection)
-          def initialize(width: nil, full: false, env: ENV)
-            @width = width || self.class.detected_width(env: env)
+          def initialize(width: nil, full: false, env: ENV, stdout: $stdout)
+            @width = width || self.class.detected_width(env: env, stdout: stdout)
             @full = full
             @env = env
           end

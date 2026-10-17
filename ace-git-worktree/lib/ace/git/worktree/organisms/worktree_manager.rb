@@ -270,24 +270,33 @@ module Ace
           #
           # @example
           #   result = manager.list_all
-          #   result = manager.list_all(format: :json, show_tasks: true)
+          #   result = manager.list_all(format: :json)
           #
-          # @option options [Symbol] :format Output format (:table, :json, :simple)
-          # @option options [Boolean] :show_tasks Include task associations
+          # Programmatic inventory for internal consumers (overseer, prune,
+          # switch/remove hints). The user-facing enriched table is rendered by
+          # {WorktreeListReport}, not here.
+          #
+          # @option options [Symbol] :format Optional formatting (:simple, :json)
           # @option options [Boolean] :task_associated Filter by task association
           # @option options [Boolean] :usable Filter by usability
           # @option options [String] :search Filter by search pattern
           def list_all(options = {})
-            task_filter_requested = !options[:task_associated].nil?
-
-            # Get worktrees
-            worktrees = if options[:show_tasks] || task_filter_requested
-              @worktree_lister.list_with_tasks
-            else
-              @worktree_lister.list_all
+            inventory = @worktree_lister.inventory
+            unless inventory[:success]
+              # Programmatic inventory keeps its historical tolerant contract:
+              # outside a repository it returns an empty list, not an error.
+              return {
+                success: true,
+                worktrees: [],
+                formatted_output: nil,
+                statistics: @worktree_lister.get_statistics([]),
+                count: 0,
+                warning: inventory[:error]
+              }
             end
 
-            # Apply filters
+            worktrees = inventory[:worktrees]
+
             if !options[:task_associated].nil? || !options[:usable].nil? || options[:search] || options[:task_id] || options[:pr_number]
               worktrees = @worktree_lister.filter(
                 worktrees,
@@ -299,13 +308,7 @@ module Ace
               )
             end
 
-            # Format output
-            formatted_output = @worktree_lister.format_for_display(
-              worktrees,
-              options[:format] || :table
-            )
-
-            # Get statistics
+            formatted_output = options[:format] && @worktree_lister.format_for_display(worktrees, options[:format])
             stats = @worktree_lister.get_statistics(worktrees)
 
             {
@@ -441,8 +444,7 @@ module Ace
           #   status = manager.get_status
           #   puts "Total worktrees: #{status[:statistics][:total]}"
           def get_status
-            # Get all worktrees with task associations
-            worktrees = @worktree_lister.list_with_tasks
+            worktrees = @worktree_lister.list_all
             stats = @worktree_lister.get_statistics
 
             # Get task worktree status

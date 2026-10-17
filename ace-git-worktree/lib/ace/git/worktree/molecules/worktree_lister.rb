@@ -15,9 +15,6 @@ module Ace
         #
         # @example Find worktree by task ID
         #   worktree = lister.find_by_task_id("081")
-        #
-        # @example List with task associations
-        #   worktrees = lister.list_with_tasks
         class WorktreeLister
           # Fallback timeout for git commands
           # Used only when config is unavailable
@@ -42,6 +39,18 @@ module Ace
 
           public
 
+          # Read the worktree inventory.
+          #
+          # @return [Hash] `{success:, worktrees:}` or `{success: false, error:}`
+          def inventory
+            result = Atoms::GitCommand.worktree("list", "--porcelain", timeout: @timeout)
+            unless result[:success]
+              return {success: false, error: result[:error].to_s.empty? ? "git worktree list failed" : result[:error]}
+            end
+
+            {success: true, worktrees: Models::WorktreeInfo.from_git_output_list(result[:output])}
+          end
+
           # List all worktrees in the repository
           #
           # @return [Array<WorktreeInfo>] Array of worktree information
@@ -51,22 +60,8 @@ module Ace
           #   worktrees = lister.list_all
           #   worktrees.each { |wt| puts "#{wt.branch} at #{wt.path}" }
           def list_all
-            output = execute_git_worktree_list
-            return [] unless output
-
-            Models::WorktreeInfo.from_git_output_list(output)
-          end
-
-          # List worktrees with task associations resolved
-          #
-          # @return [Array<WorktreeInfo>] Array of worktree information with task IDs
-          #
-          # @example
-          #   worktrees = lister.list_with_tasks
-          #   worktrees.each { |wt| puts "Task #{wt.task_id}: #{wt.branch}" if wt.task_associated? }
-          def list_with_tasks
-            worktrees = list_all
-            resolve_task_associations(worktrees)
+            result = inventory
+            result[:success] ? result[:worktrees] : []
           end
 
           # Find worktree by task ID
@@ -80,7 +75,7 @@ module Ace
           #     puts "Found worktree for task 081: #{worktree.path}"
           #   end
           def find_by_task_id(task_id)
-            worktrees = list_with_tasks
+            worktrees = list_all
             Models::WorktreeInfo.find_by_task_id(worktrees, task_id.to_s)
           end
 
@@ -191,7 +186,7 @@ module Ace
           def search(query, search_in: [:branch, :path, :task_id])
             return [] if query.nil? || query.empty?
 
-            worktrees = list_with_tasks
+            worktrees = list_all
             pattern = Regexp.new(query, Regexp::IGNORECASE)
 
             worktrees.select do |worktree|
@@ -221,7 +216,7 @@ module Ace
           #   puts "Task-associated: #{stats[:task_associated]}"
           #   puts "Usable: #{stats[:usable]}"
           def get_statistics(worktrees = nil)
-            worktrees = worktrees ? Array(worktrees) : list_with_tasks
+            worktrees = worktrees ? Array(worktrees) : list_all
 
             {
               total: worktrees.length,
@@ -236,91 +231,25 @@ module Ace
             }
           end
 
-          # Format worktree list for display
+          # Format worktree list for non-report consumers.
           #
           # @param worktrees [Array<WorktreeInfo>] Worktrees to format
-          # @param format [Symbol] Output format (:table, :json, :simple)
+          # @param format [Symbol] Output format (:json, :simple)
           # @return [String] Formatted output
           #
           # @example
-          #   output = lister.format_for_display(worktrees, :table)
+          #   output = lister.format_for_display(worktrees, :simple)
           #   puts output
-          def format_for_display(worktrees, format = :table)
+          def format_for_display(worktrees, format = :simple)
             case format
-            when :table
-              format_as_table(worktrees)
             when :json
               format_as_json(worktrees)
-            when :simple
-              format_as_simple(worktrees)
             else
-              format_as_table(worktrees)
+              format_as_simple(worktrees)
             end
           end
 
           private
-
-          # Execute git worktree list command
-          #
-          # @return [String, nil] Command output or nil if failed
-          def execute_git_worktree_list
-            require_relative "../atoms/git_command"
-            result = Atoms::GitCommand.worktree("list", "--porcelain", timeout: @timeout)
-            result[:success] ? result[:output] : nil
-          end
-
-          # Resolve task associations for worktrees
-          #
-          # @param worktrees [Array<WorktreeInfo>] Worktrees to process
-          # @return [Array<WorktreeInfo>] Worktrees with resolved task associations
-          def resolve_task_associations(worktrees)
-            return worktrees if worktrees.empty?
-
-            # Try to resolve task associations from worktree metadata
-            # This would typically involve looking up task files
-            # For now, we'll use the automatic extraction from WorktreeInfo
-
-            worktrees
-          end
-
-          # Format worktrees as a table
-          #
-          # @param worktrees [Array<WorktreeInfo>] Worktrees to format
-          # @return [String] Table-formatted string
-          def format_as_table(worktrees)
-            return "No worktrees found.\n" if worktrees.empty?
-
-            # Calculate column widths
-            max_path_width = [worktrees.map { |wt| wt.path.length }.max, 40].max
-            max_branch_width = [worktrees.map { |wt| (wt.branch || "detached").length }.max, 15].max
-            max_task_width = [worktrees.map { |wt| (wt.task_id || "-").length }.max, 8].max
-
-            # Build header
-            header = sprintf("%-#{max_task_width}s %-#{max_branch_width}s %-#{max_path_width}s %s",
-              "Task", "Branch", "Path", "Status")
-            separator = "-" * header.length
-
-            # Build table rows
-            rows = worktrees.map do |wt|
-              status = if wt.bare
-                "bare"
-              elsif wt.detached
-                "detached"
-              elsif wt.task_associated?
-                "task"
-              else
-                "normal"
-              end
-
-              sprintf("%-#{max_task_width}s %-#{max_branch_width}s %-#{max_path_width}s %s",
-                wt.task_id || "-",
-                wt.branch || "detached",
-                wt.path,
-                status)
-            end
-
-            [header, separator, *rows].join("\n") + "\n"
-          end
 
           # Format worktrees as JSON
           #
