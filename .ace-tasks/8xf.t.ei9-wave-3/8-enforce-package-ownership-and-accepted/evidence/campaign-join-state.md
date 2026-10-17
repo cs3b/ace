@@ -438,3 +438,18 @@ integration receipt (the next .8 item). Runner receipts: 4/24 PASS.
 
 Both gates closed: configured Pi review (17 findings, all fixed/sequenced) +
 independent adversarial APPROVE.
+
+### Driver-vs-real-authority integration receipt (post-merge follow-up) GREEN
+
+OrdinaryCampaignRunnerIntegrationTest drives the REAL ordinary owner — real
+socket server, real journal CAS, real transfer codec and retained-request
+files — from campaign begin through submit_review_context; only the model
+execution is the schema-enforcing engine fake. The receipt asserts the real
+journal retains the review_context_submitted event for the reviewer attempt.
+This permanently closes the review's "loose fakes hid seam drift" finding
+family at the strongest available level. Fixture lessons: the producer starts
+at the campaign base (the candidate advances the head), the admission head
+must be reset before supervisor operations, and the adapter captures the
+client locally (singleton-method ivar binding). Receipt: 1 test / 3
+assertions PASS (31s). Remaining .8 follow-ups: CLI/workflow exposure and the
+executed head-assessment path with real rounds.
