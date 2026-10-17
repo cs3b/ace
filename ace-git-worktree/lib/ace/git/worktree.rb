@@ -188,6 +188,10 @@ module Ace
       require_relative "worktree/atoms/git_command"
       require_relative "worktree/atoms/path_expander"
       require_relative "worktree/atoms/slug_generator"
+      require_relative "worktree/atoms/task_id_extractor"
+      require_relative "worktree/atoms/duration_parser"
+      require_relative "worktree/atoms/relative_age_formatter"
+      require_relative "worktree/atoms/text_truncator"
 
       require_relative "worktree/molecules/config_loader"
       require_relative "worktree/molecules/task_fetcher"

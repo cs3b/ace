@@ -53,6 +53,22 @@ module Ace
             task_data[:task_number]&.to_s || "unknown"
           end
 
+          # Derive the short form of a full Base36 task id.
+          #
+          # The short form is the three-character suffix plus an optional
+          # subtask segment (numeric or single character).
+          #
+          # @param full_id [String, nil] formatted task id (e.g. "8xg.t.k9y",
+          #   "8wr.t.qk0.3")
+          # @return [String, nil] short id (e.g. "k9y", "qk0.3") or nil when the
+          #   argument is not a full task id
+          def self.short_id(full_id)
+            match = full_id.to_s.strip.match(/\A[0-9a-z]{3}\.[a-z]\.([0-9a-z]{3})(?:\.([0-9a-z]+))?\z/)
+            return nil unless match
+
+            match[2] ? "#{match[1]}.#{match[2]}" : match[1]
+          end
+
           # Normalize a task reference string to simple ID format
           #
           # @param task_ref [String] Task reference (e.g., "121.01", "v.0.9.0+task.121.01")
@@ -63,7 +79,7 @@ module Ace
 
             # Regex patterns for recognized ACE task ID formats
             # B36TS full ID: "8pp.t.hy4" -> "hy4", or subtask "8pp.t.hy4.a" -> "hy4.a"
-            if match = ref.match(/\A[0-9a-z]{3}\.[a-z]\.([0-9a-z]{3}(?:\.[a-z0-9])?)\z/)
+            if match = ref.match(/\A[0-9a-z]{3}\.[a-z]\.([0-9a-z]{3}(?:\.[0-9a-z]+)?)\z/)
               match[1]
             # B36TS short ref: exactly 3 lowercase alphanumeric chars (e.g., "hy4")
             elsif match = ref.match(/\A([0-9a-z]{3})\z/)
@@ -71,6 +87,9 @@ module Ace
             # ACE task IDs are 3-digit zero-padded (081, 121, etc.)
             # Try hierarchical pattern first (e.g., "121.01", "task.121.01")
             elsif match = ref.match(/(\d{3})\.(\d{2})(?:\b|$)/)
+              "#{match[1]}.#{match[2]}"
+            # B36TS short ref with subtask segment (e.g., "qk0.3", "hy4.a")
+            elsif match = ref.match(/\A([0-9a-z]{3})\.([0-9a-z]+)\z/)
               "#{match[1]}.#{match[2]}"
             # Try ace-task/ace-t or task/t directory at end of path (e.g., "ace-task.hy4", "/path/to/task.121")
             elsif match = ref.match(/(?:ace-)?(?:task|t)\.([0-9a-z]{3})\/?$/)

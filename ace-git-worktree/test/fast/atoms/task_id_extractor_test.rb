@@ -217,3 +217,36 @@ class TaskIDExtractorTest < Minitest::Test
     assert_equal "261", @extractor.normalize("ace-task.261")
   end
 end
+
+class TaskIDExtractorShortIdTest < Minitest::Test
+  def extractor
+    Ace::Git::Worktree::Atoms::TaskIDExtractor
+  end
+
+  def test_short_id_of_full_task_id
+    assert_equal "k9y", extractor.short_id("8xg.t.k9y")
+  end
+
+  def test_short_id_of_numeric_subtask
+    assert_equal "qk0.3", extractor.short_id("8wr.t.qk0.3")
+  end
+
+  def test_short_id_of_single_char_subtask
+    assert_equal "hy4.a", extractor.short_id("8pp.t.hy4.a")
+  end
+
+  def test_short_id_rejects_non_task_ids
+    assert_nil extractor.short_id("k9y")
+    assert_nil extractor.short_id("ace")
+    assert_nil extractor.short_id(nil)
+    assert_nil extractor.short_id("8xg.t.k9y-ace-git-worktree")
+  end
+
+  def test_normalize_numeric_subtask
+    assert_equal "qk0.3", extractor.normalize("8wr.t.qk0.3")
+  end
+
+  def test_normalize_short_numeric_subtask_reference
+    assert_equal "qk0.3", extractor.normalize("qk0.3")
+  end
+end
