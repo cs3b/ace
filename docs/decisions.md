@@ -38,8 +38,8 @@ This document provides actionable decisions from Architecture Decision Records (
 **Details**: [ADR-005](decisions/ADR-005-universal-document-embedding-system.md)
 
 ### File-Based Lab State Ownership
-**Decision**: Every piece of persisted lab state has exactly one write location and one owner. Project tasks live in `.ace-tasks/` (ace-task); the private overseer list lives untracked in `.ace-local/overseer/tasks/` and is reached only with `ace-task --in _overseer`; assignments live in `.ace-local/assign/` (ace-assign); HITL events in `.ace-local/hitl/` (ace-hitl); one worktree per project task under `.ace-wt/` (ace-git-worktree). The canonical map and local flow are in `docs/lab-flow.md`.
-**Impact**: Do not add a journal, authority/admission layer, listener/daemon, topology registry, queue engine, extra state cache, or mutation authorization broker. The private store is selected through `task.stores` in `.ace/task/config.yml` and never appears in project `list`/`show`/scanner output; `status` and `plan` stay project-scoped.
+**Decision**: Every piece of persisted lab state has exactly one write location and one owner. Project tasks live in `.ace-tasks/` (ace-task); the private overseer task list is the untracked `.ace-tasks/_overseer/` special folder reached with `ace-task --in _overseer`; assignments live in `.ace-local/assign/` (ace-assign); HITL events in `.ace-local/hitl/` (ace-hitl); one worktree per project task under `.ace-wt/` (ace-git-worktree). The canonical map and local flow are in `docs/lab-flow.md`.
+**Impact**: Do not add a journal, authority/admission layer, listener/daemon, topology registry, queue engine, extra state cache, or mutation authorization broker. The default `ace-task list` is the shared view of project and `_overseer` tasks (`--in _overseer` narrows it); `_overseer` tasks are gitignored and never committed, and they are rejected for worktrees and implementation assignments while subagent delegation stays allowed.
 **Details**: [ADR-034](decisions/ADR-034-file-based-lab-state-ownership.md)
 
 ## Architecture Decisions

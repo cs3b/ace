@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- `create --task` now rejects tasks in the private `_overseer` management folder
+  (`.ace-tasks/_overseer/`): management tasks stay with the overseer, a separate
+  project task carries implementation, and subagents remain available for
+  planning, analysis, and verification. The rejection message states this
+  contract and no worktree or task mutation is performed.
+
 ## [0.27.1] - 2026-10-18
 
 ### Changed

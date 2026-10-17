@@ -19,6 +19,10 @@ module Ace
         #   result = orchestrator.create_for_task("081")
         #   # => { success: true, worktree_path: "/project/.ace-wt/task.081", ... }
         class TaskWorktreeOrchestrator
+          # Private overseer management tasks stay with the overseer: they are
+          # never provisioned as implementation worktrees.
+          PRIVATE_TASK_FOLDER = File.join(".ace-tasks", "_overseer")
+
           # Initialize a new TaskWorktreeOrchestrator
           #
           # @param config [WorktreeConfig, nil] Worktree configuration (loaded if nil)
@@ -68,6 +72,10 @@ module Ace
               workflow_result[:task_id] = task_id
               workflow_result[:task_title] = task_data[:title]
               workflow_result[:steps_completed] << "task_fetched"
+
+              if private_overseer_task?(task_data)
+                return error_workflow_result(private_overseer_task_error(task_id), workflow_result)
+              end
 
               # Step 2: Check if worktree already exists
               existing_worktree = check_existing_worktree(task_data)
@@ -344,6 +352,10 @@ module Ace
               workflow_result[:task_id] = task_id
               workflow_result[:task_title] = task_data[:title]
               workflow_result[:steps_completed] << "task_fetched"
+
+              if private_overseer_task?(task_data)
+                return error_workflow_result(private_overseer_task_error(task_id), workflow_result)
+              end
 
               # Step 2: Check what would be created
               directory_name = @config.format_directory(task_data)
@@ -645,6 +657,30 @@ module Ace
             end
           rescue
             path
+          end
+
+          # True when the task spec lives in the private _overseer management
+          # folder. Such tasks are not implementation work and must not get a
+          # worktree; subagents may still do planning/analysis/verification.
+          #
+          # @param task_data [Hash] Task data hash
+          # @return [Boolean]
+          def private_overseer_task?(task_data)
+            relative = relative_task_path(task_data[:path])
+            return false if relative.nil? || relative.to_s.empty?
+
+            normalized = relative.to_s.delete_prefix("./")
+            normalized == PRIVATE_TASK_FOLDER ||
+              normalized.start_with?(PRIVATE_TASK_FOLDER + File::SEPARATOR)
+          end
+
+          # @param task_id [String, nil] Task ID
+          # @return [String] Prohibition message
+          def private_overseer_task_error(task_id)
+            "Task #{task_id} is an _overseer management task; worktrees are created only for project " \
+              "implementation tasks. Keep the management task with the overseer and create a separate " \
+              "project task for implementation. Subagents remain available for planning, analysis, and " \
+              "verification."
           end
 
           # Load configuration

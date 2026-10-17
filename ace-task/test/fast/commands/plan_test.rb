@@ -126,6 +126,26 @@ class TaskPlanCommandTest < AceTaskTestCase
     assert_includes result[:stderr], "not found"
   end
 
+  def test_plans_overseer_task_from_subdirectory_using_project_root
+    FileUtils.mkdir_p(File.join(@tmpdir, ".git"))
+    create_task_fixture(File.join(@tasks_dir, "_overseer"), id: "8pp.t.s9z", slug: "overseer-plan",
+      status: "pending")
+    @task_file = File.join(@tasks_dir, "_overseer", "8pp.t.s9z-overseer-plan", "8pp.t.s9z-overseer-plan.s.md")
+    inject_bundle_files(@task_file, ["README.md"])
+    subdir = File.join(@tmpdir, "nested", "deeper")
+    FileUtils.mkdir_p(subdir)
+
+    Dir.chdir(subdir) do
+      result = run_cli(%w[plan 8pp.t.s9z])
+
+      assert_equal 0, result[:exit_code], result[:stderr]
+      plan_path = result[:stdout].strip
+      project_cache = File.join(File.realpath(@tmpdir), ".ace-local", "task", "8pp.t.s9z")
+      assert plan_path.start_with?(project_cache + File::SEPARATOR)
+      assert File.exist?(plan_path)
+    end
+  end
+
   def test_backend_failure_is_reported
     failing_class = Class.new do
       def initialize(model:, cli_args: nil, timeout: nil)

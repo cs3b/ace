@@ -39,22 +39,26 @@ class RootCLITest < AceTaskTestCase
     end
   end
 
-  def test_overseer_store_is_selected_with_in_and_isolated_from_project_root
-    Dir.mktmpdir("task-root-store") do |dir|
+  def test_overseer_folder_is_shared_with_project_tasks_and_narrowable_with_in
+    Dir.mktmpdir("task-root-overseer") do |dir|
       Dir.chdir(dir) do
-        output = invoke("create", "Overseer queue task", "--in", "_overseer")
-        store_id = output[/Created task ([0-9a-z]{3}\.t\.[0-9a-z]{3})/, 1]
-        refute_nil store_id
+        project_id = invoke("create", "Project task")[/Created task ([0-9a-z]{3}\.t\.[0-9a-z]{3})/, 1]
+        refute_nil project_id
+        output = invoke("create", "Overseer management task", "--in", "_overseer")
+        overseer_id = output[/Created task ([0-9a-z]{3}\.t\.[0-9a-z]{3})/, 1]
+        refute_nil overseer_id
 
-        store_path = invoke("show", store_id, "--in", "_overseer", "--path").strip
-        store_root = File.join(File.realpath(dir), ".ace-local", "overseer", "tasks")
-        assert store_path.start_with?(store_root + File::SEPARATOR)
-        assert_includes invoke("list", "--in", "_overseer"), store_id
+        overseer_path = invoke("show", overseer_id, "--path").strip
+        overseer_root = File.join(File.realpath(dir), ".ace-tasks", "_overseer")
+        assert overseer_path.start_with?(overseer_root + File::SEPARATOR)
 
-        # The private store is not visible to the project task scope.
-        refute_includes invoke("list"), store_id
-        refute_includes invoke("list", "--in", "all"), store_id
-        assert_nil Ace::Task::Organisms::TaskManager.new.show(store_id)
+        # Default list is the shared view; --in _overseer narrows the scope.
+        shared = invoke("list")
+        assert_includes shared, project_id
+        assert_includes shared, overseer_id
+        narrowed = invoke("list", "--in", "_overseer")
+        assert_includes narrowed, overseer_id
+        refute_includes narrowed, project_id
       end
     end
   end

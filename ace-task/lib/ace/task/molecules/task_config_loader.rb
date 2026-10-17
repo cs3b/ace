@@ -31,6 +31,12 @@ module Ace
           deep_merge(config, load_project_config)
         end
 
+        # Project root used to resolve relative configuration and file paths.
+        # @return [String] Absolute project root (current directory when no marker is found)
+        def self.project_root
+          Ace::Support::Fs::Molecules::ProjectRootFinder.find_or_current
+        end
+
         # Get the root directory for tasks
         # @param config [Hash] Configuration hash
         # @return [String] Absolute path to tasks root directory
@@ -41,38 +47,8 @@ module Ace
           if dir.start_with?("/")
             dir
           else
-            File.join(Ace::Support::Fs::Molecules::ProjectRootFinder.find_or_current, dir)
+            File.join(project_root, dir)
           end
-        end
-
-        # Resolve a named task store selected with `--in NAME`.
-        # Stores are configured under task.stores; paths are relative to the
-        # project root unless absolute. The store root becomes the manager
-        # root, so it is resolved before any folder/destination validation.
-        # @param config [Hash] Configuration hash
-        # @param name [String] Store name from `--in`
-        # @param project_root [String, nil] Base for relative paths (default: project root)
-        # @return [String, nil] Absolute store root, or nil when the name is not configured
-        def self.store_root(config, name, project_root: nil)
-          stores = config.dig("task", "stores")
-          return nil unless stores.is_a?(Hash)
-
-          path = stores[name.to_s]
-          return nil if path.nil? || path.to_s.strip.empty?
-
-          path = path.to_s
-          return File.expand_path(path) if path.start_with?("/")
-
-          base = project_root || Ace::Support::Fs::Molecules::ProjectRootFinder.find_or_current
-          File.expand_path(path, base)
-        end
-
-        # Names of all configured stores, used in CLI error hints.
-        # @param config [Hash] Configuration hash
-        # @return [Array<String>] Sorted store names
-        def self.store_names(config)
-          stores = config.dig("task", "stores")
-          stores.is_a?(Hash) ? stores.keys.sort : []
         end
 
         private

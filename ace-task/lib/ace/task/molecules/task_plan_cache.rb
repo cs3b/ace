@@ -6,6 +6,7 @@ require "time"
 require "ace/support/items"
 require "ace/b36ts"
 require_relative "path_utils"
+require_relative "task_config_loader"
 
 module Ace
   module Task
@@ -20,7 +21,7 @@ module Ace
         end
 
         def cache_dir
-          File.join(Dir.pwd, @cache_root, @task_id)
+          File.join(project_root, @cache_root, @task_id)
         end
 
         def prompts_dir
@@ -162,7 +163,11 @@ module Ace
           return "" if path.nil? || path.to_s.empty?
           return path if path.start_with?("/")
 
-          File.expand_path(path, Dir.pwd)
+          File.expand_path(path, project_root)
+        end
+
+        def project_root
+          Ace::Task::Molecules::TaskConfigLoader.project_root
         end
 
         def relative_path(path)

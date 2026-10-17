@@ -23,6 +23,12 @@ module Ace
 
         FILE_PATTERN = "*.s.md"
 
+        # Private management scope. The folder is an ordinary special folder
+        # under root_dir, but it is untracked and shared with the project view:
+        # the overseer sees project and _overseer tasks in one list.
+        PRIVATE_FOLDER = "_overseer"
+        SHARED_FOLDERS = [PRIVATE_FOLDER].freeze
+
         # @param root_dir [String] Root directory containing tasks (e.g., ".ace-tasks")
         def initialize(root_dir)
           @root_dir = root_dir
@@ -39,7 +45,9 @@ module Ace
           @scanner.scan.reject { |sr| subtask_folder?(sr.folder_name) }
         end
 
-        # Scan and filter by special folder or virtual filter
+        # Scan and filter by special folder or virtual filter.
+        # `next` is the shared default view: root tasks plus the private
+        # _overseer tasks; `all` includes every special folder.
         # @param folder [String, nil] Folder name, virtual filter ("next", "all"), or nil for all
         # @return [Array<ScanResult>] Filtered scan results
         def scan_in_folder(folder)
@@ -52,7 +60,10 @@ module Ace
           virtual = Ace::Support::Items::Atoms::SpecialFolderDetector.virtual_filter?(folder)
           case virtual
           when :all then results
-          when :next then results.select { |r| r.special_folder.nil? }
+          when :next
+            results.select do |r|
+              r.special_folder.nil? || SHARED_FOLDERS.include?(r.special_folder)
+            end
           else
             normalized = Ace::Support::Items::Atoms::SpecialFolderDetector.normalize(folder)
             results.select { |r| r.special_folder == normalized }

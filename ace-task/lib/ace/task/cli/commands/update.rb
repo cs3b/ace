@@ -26,7 +26,7 @@ module Ace
             "q7w --set worktree.branch=my-branch",
             "q7w --set status=done --move-to archive",
             "q7w --move-to next",
-            "q7w --in _overseer --set status=done  # Update a task in the private overseer store",
+            "q7w --move-to overseer          # Move to the private _overseer folder",
             "q7w.a --move-as-child-of none    # Promote subtask to standalone",
             "q7w --move-as-child-of self      # Convert to orchestrator",
             "q7w --move-as-child-of abc       # Demote to subtask of abc",
@@ -41,14 +41,14 @@ module Ace
           option :set, type: :array, desc: "Set field: key=value (comma-separated for multiple)"
           option :add, type: :array, desc: "Add to array field: key=value (comma-separated for multiple)"
           option :remove, type: :array, desc: "Remove from array field: key=value (comma-separated for multiple)"
-          option :move_to, type: :string, aliases: %w[-m], desc: "Move to folder (archive, maybe, anytime, next)"
+          option :move_to, type: :string, aliases: %w[-m],
+            desc: "Move to folder (archive, maybe, anytime, next, overseer)"
           option :move_as_child_of, type: :string, desc: "Reparent: <parent_ref>, 'none' (promote), 'self' (orchestrator)"
           option :position, type: :string, aliases: %w[-p], desc: "Set position: first, last, after:<ref>, before:<ref>"
 
           option :git_commit, type: :boolean, aliases: %w[--gc], desc: "Auto-commit changes"
 
           option :root, type: :string, aliases: %w[-r], desc: "Exact task root directory (overrides project config)"
-          option :in, type: :string, aliases: %w[-i], desc: "Task store selector (e.g. _overseer)"
 
           option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
           option :verbose, type: :boolean, aliases: %w[-v], desc: "Show verbose output"
@@ -79,23 +79,13 @@ module Ace
             add_hash = parse_kv_pairs(add_args)
             remove_hash = parse_kv_pairs(remove_args)
 
-            config = Ace::Task::Molecules::TaskConfigLoader.load
-            store_root = resolve_store_root(config, options[:in])
-            if store_root && options[:root]
-              raise Ace::Support::Cli::Error,
-                "Cannot combine --root with store selector --in #{options[:in]}"
-            end
-            if store_root && options[:git_commit]
-              raise Ace::Support::Cli::Error,
-                "Cannot --git-commit the private '#{options[:in]}' store; it is untracked and owned by its overseer"
-            end
-            manager = if store_root
-              Ace::Task::Organisms::TaskManager.new(root_dir: store_root, config: config)
-            elsif options[:root]
+            manager = if options[:root]
               Ace::Task::Organisms::TaskManager.new(root_dir: File.expand_path(options[:root]))
             else
-              Ace::Task::Organisms::TaskManager.new(config: config)
+              Ace::Task::Organisms::TaskManager.new
             end
+            reject_private_git_commit!(manager, ref: ref, move_to: move_to,
+              move_as_child_of: move_as_child) if options[:git_commit]
 
             # Resolve --position into a set or remove operation
             if position_arg
@@ -140,14 +130,26 @@ module Ace
 
           private
 
-          def resolve_store_root(config, store)
-            return nil unless store
-
-            root = Ace::Task::Molecules::TaskConfigLoader.store_root(config, store)
-            return root if root
+          # The private _overseer folder is untracked; management tasks must
+          # never be staged. Both the current location and the requested
+          # destination/parent count as private.
+          def reject_private_git_commit!(manager, ref:, move_to:, move_as_child_of:)
+            private_folder = Ace::Task::Molecules::TaskScanner::PRIVATE_FOLDER
+            task = manager.show(ref)
+            private_target = task&.special_folder == private_folder
+            if move_to
+              private_target ||= Ace::Support::Items::Atoms::SpecialFolderDetector.normalize(move_to) ==
+                private_folder
+            end
+            if move_as_child_of && !%w[none self].include?(move_as_child_of)
+              parent = manager.show(move_as_child_of)
+              private_target ||= parent&.special_folder == private_folder
+            end
+            return unless private_target
 
             raise Ace::Support::Cli::Error,
-              "Unknown task store '#{store}'. Configure it under task.stores in .ace/task/config.yml"
+              "Cannot --git-commit an '#{private_folder}' task; that folder is untracked. " \
+                "Keep the management task private, or create the implementation task in a project folder."
           end
 
           # Resolve a --position argument into a B36TS value.

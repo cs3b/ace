@@ -43,6 +43,9 @@ _current
 .ace-taskflow/**/reviews/
 .ace-tasks/**/reviews/
 
+# Private overseer management tasks (untracked task-tree scope)
+/.ace-tasks/_overseer/
+
 # git - worktree 
 .ace-worktrees
 .ace-wt
