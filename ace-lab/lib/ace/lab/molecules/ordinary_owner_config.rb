@@ -6,6 +6,7 @@ require "digest"
 require "etc"
 require "ace/assign/authority/private_directory"
 require "ace/assign/authority/protected_assignment_context"
+require "ace/assign/authority/campaign_consumer_policy"
 require "ace/assign/molecules/installed_journal_read"
 require "ace/runtime/molecules/protected_artifact_set"
 require "ace/hitl/lifecycle/store"
@@ -20,6 +21,7 @@ module Ace
         PATH = "/etc/lab/ace-lab/assign-owners.yml"
         ID = /\A[a-zA-Z0-9][a-zA-Z0-9_.-]{0,127}\z/
         PROJECT_KEYS = %w[service journal assignment_root lifecycle_root runtime_binary native worktrees participants hitl].freeze
+        PROJECT_OPTIONAL_KEYS = %w[campaign].freeze
         SERVICE_KEYS = %w[uid gid socket_path state_root].freeze
         JOURNAL_KEYS = %w[repository ref checkout_root].freeze
         PARTICIPANT_KEYS = %w[gid actor runtime workspace supervisor_panes].freeze
@@ -41,7 +43,7 @@ module Ace
         end
 
         attr_reader :project, :service, :journal, :assignment_root, :lifecycle_root,
-          :runtime_binary, :native, :worktrees, :participants, :hitl, :source
+          :runtime_binary, :native, :worktrees, :participants, :hitl, :campaign, :source
 
         def initialize(document, project:, source:)
           unless document.is_a?(Hash) && document.keys.sort == %w[projects version] && document["version"] == 1 &&
@@ -51,7 +53,8 @@ module Ace
           end
           selected = document.fetch("projects")[project]
           validate_principal_separation!(document.fetch("projects"))
-          invalid! unless selected.is_a?(Hash) && selected.keys.sort == PROJECT_KEYS.sort
+          invalid! unless selected.is_a?(Hash) && (PROJECT_KEYS - selected.keys).empty? &&
+            (selected.keys - PROJECT_KEYS - PROJECT_OPTIONAL_KEYS).empty?
           invalid! unless absolute?(source)
           @project, @source = project.dup.freeze, source.dup.freeze
           # Validate a detached immutable copy; callers cannot mutate trusted selection.
@@ -85,6 +88,17 @@ module Ace
             @hitl["group"].is_a?(String) && ID.match?(@hitl["group"]) &&
             [@service.fetch("socket_path"), @native.fetch("socket_path"), @hitl.fetch("socket_path")].uniq.size == 3
           private_paths = [@assignment_root, @lifecycle_root, @journal.fetch("checkout_root"), @hitl.fetch("root")]
+          if selected.key?("campaign")
+            @campaign = selected.fetch("campaign")
+            invalid! unless @campaign.is_a?(Hash) && @campaign.keys.sort == %w[policy repository store_root] &&
+              %w[repository store_root].all? { |key| absolute?(@campaign[key]) }
+            begin
+              Ace::Assign::Authority::CampaignConsumerPolicy.reference!(@campaign.fetch("policy"))
+            rescue ArgumentError
+              invalid!
+            end
+            private_paths.concat(@campaign.values_at("repository", "store_root"))
+          end
           invalid! unless private_paths.all? { |path| path.start_with?(@service.fetch("state_root") + "/") } &&
             private_paths.uniq.size == private_paths.size && private_paths.combination(2).none? { |a, b| a.start_with?(b + "/") || b.start_with?(a + "/") }
           invalid! if @journal.fetch("repository").start_with?(@service.fetch("state_root") + "/") ||
@@ -121,7 +135,9 @@ module Ace
             raise InvalidConfigurationError, "ordinary assignment owner process differs"
           end
           ([service.fetch("uid")] + participants.keys.map(&:to_i)).each { |uid| exclude_protected!(uid) }
-          [@service.fetch("state_root"), @assignment_root, @lifecycle_root, @journal.fetch("checkout_root")].each do |path|
+          paths = [@service.fetch("state_root"), @assignment_root, @lifecycle_root, @journal.fetch("checkout_root")]
+          paths.concat(@campaign.values_at("repository", "store_root")) if @campaign
+          paths.each do |path|
             Ace::Assign::Authority::PrivateDirectory.verify!(path)
           end
           verify_hitl_root!

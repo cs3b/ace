@@ -51,7 +51,8 @@ module Ace
           lifecycle = Ace::Assign::Authority::OrdinaryLifecycle.new(project: @config.project,
             admission: admission, journal: journal, exclusion: exclusion, input_root: @config.assignment_root,
             command_evidence: command,
-            release_authorizer: ->(binding) { authorize_release_artifact!(binding, coordinator) })
+            release_authorizer: ->(binding) { authorize_release_artifact!(binding, coordinator) },
+            campaign: campaign_owner)
           coordinator = Ace::Assign::Organisms::AttemptCoordinator.new(cache_base: @config.assignment_root,
             repo_root: @config.journal.fetch("repository"), journal: journal, lifecycle_exclusion: exclusion,
             recorded_binding_observer: admission.method(:recorded_binding!), ordinary_merge_evidence: lifecycle)
@@ -91,6 +92,14 @@ module Ace
           raise SecurityError, "release artifact project grant is unavailable" unless visibility.authorized?(@config.project)
           Molecules::ServicePolicy.new(document, coordinator.method(:proposal_authorization))
             .authorize!(binding.fetch("authorization"), binding)
+        end
+
+        def campaign_owner
+          selected = @config.campaign
+          return unless selected
+          Ace::Assign::Authority::OrdinaryCampaignOwner.new(repository: selected.fetch("repository"),
+            store_root: selected.fetch("store_root"), policy: selected.fetch("policy"),
+            verify_selection: @config.method(:verify_owner!))
         end
 
         def verify_join!(document)

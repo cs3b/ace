@@ -12,6 +12,7 @@ require_relative "ordinary_supervisor"
 require_relative "ordinary_reviews"
 require_relative "ordinary_merge_evidence"
 require_relative "ordinary_release_artifacts"
+require_relative "ordinary_campaigns"
 require_relative "../molecules/lifecycle_exclusion"
 
 module Ace
@@ -29,12 +30,13 @@ module Ace
         include OrdinaryReviews
         include OrdinaryMergeEvidence
         include OrdinaryReleaseArtifacts
-        OPERATIONS = (%w[register_assignment registration_status start_attempt finish merge_evidence candidate_reference] + OrdinaryProgress::PROGRESS_OPERATIONS + OrdinaryResults::RESULT_OPERATIONS + OrdinarySupervisor::SUPERVISOR_OPERATIONS + OrdinaryReviews::REVIEW_OPERATIONS + OrdinaryReleaseArtifacts::RELEASE_OPERATIONS).freeze
+        include OrdinaryCampaigns
+        OPERATIONS = (%w[register_assignment registration_status start_attempt finish merge_evidence candidate_reference] + OrdinaryProgress::PROGRESS_OPERATIONS + OrdinaryResults::RESULT_OPERATIONS + OrdinarySupervisor::SUPERVISOR_OPERATIONS + OrdinaryReviews::REVIEW_OPERATIONS + OrdinaryReleaseArtifacts::RELEASE_OPERATIONS + OrdinaryCampaigns::CAMPAIGN_OPERATIONS).freeze
         TRANSFER_OPERATIONS = {"register_assignment" => {direction: :upload, purpose: :candidate, roles: [:supervisor]}}
           .merge(OrdinaryProgress::PROGRESS_TRANSFERS).merge(OrdinaryResults::RESULT_TRANSFERS).merge(OrdinaryReviews::REVIEW_TRANSFERS).merge(OrdinaryReleaseArtifacts::RELEASE_TRANSFERS).freeze
         REGISTER_KEYS = %w[assignment_id definition_digest prepared_head prepared_tree manifest_sha256 expected_generation pane transfer].freeze
 
-        def initialize(project:, admission:, journal:, exclusion:, input_root:, inbox: nil, command_evidence: nil, release_authorizer: nil)
+        def initialize(project:, admission:, journal:, exclusion:, input_root:, inbox: nil, command_evidence: nil, release_authorizer: nil, campaign: nil)
           @project, @admission, @journal, @exclusion = project, admission, journal, exclusion
           @ordinary_scope_mutex, @ordinary_scopes = Mutex.new, {}
           @input_root = PrivateDirectory.verify!(input_root)
@@ -44,7 +46,10 @@ module Ace
           unless release_authorizer.nil? || release_authorizer.respond_to?(:call)
             raise ArgumentError, "release artifact authorization requires its installed policy owner"
           end
-          @inbox, @command_evidence, @release_authorizer = inbox, command_evidence, release_authorizer
+          unless campaign.nil? || campaign.is_a?(OrdinaryCampaignOwner)
+            raise ArgumentError, "ordinary campaigns require the installed campaign owner"
+          end
+          @inbox, @command_evidence, @release_authorizer, @campaign = inbox, command_evidence, release_authorizer, campaign
         end
 
         def authorize_transfer!(request:, peer:, role:, deadline:)
@@ -74,6 +79,7 @@ module Ace
 
         def dispatch(request:, peer:, role:, deadline:, transfer: nil)
           authorize!(request, peer, role, deadline)
+          return ordinary_campaign_operation(request, peer, role, deadline, transfer) if OrdinaryCampaigns::CAMPAIGN_OPERATIONS.include?(request.fetch("operation"))
           return ordinary_review_operation(request, peer, role, deadline, transfer) if OrdinaryReviews::REVIEW_OPERATIONS.include?(request.fetch("operation"))
           case request.fetch("operation")
           when "retain_release_artifact"

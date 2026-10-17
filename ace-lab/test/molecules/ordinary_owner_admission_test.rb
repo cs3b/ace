@@ -61,6 +61,26 @@ module Ace
           end
         end
 
+        def test_campaign_owner_is_explicit_private_disjoint_and_policy_bound
+          refute @config.campaign
+          selected = {"repository" => "/var/lib/ace/state/campaign-repository", "store_root" => "/var/lib/ace/state/campaign-store",
+            "policy" => {"path" => "/etc/lab/ace-lab/campaign.json", "bytes" => 100, "sha256" => "a" * 64}}
+          modified = document
+          modified.fetch("projects").fetch("atlas")["campaign"] = selected
+          config = OrdinaryOwnerConfig.new(modified, project: "atlas", source: OrdinaryOwnerConfig::PATH)
+          assert_equal selected, config.campaign
+          selected["policy"]["sha256"] = "b" * 64
+          assert_equal "a" * 64, config.campaign.dig("policy", "sha256")
+          [nil, {}, selected.merge("store_root" => selected.fetch("repository")),
+            selected.merge("repository" => "/home/worker/project"),
+            selected.merge("store_root" => "/var/lib/ace/state/assignments/campaigns"),
+            selected.merge("policy" => {"path" => "/etc/lab/policy.json"}),
+            selected.merge("policy" => selected.fetch("policy").merge("fallback" => true))].each do |bad|
+            modified.fetch("projects").fetch("atlas")["campaign"] = bad
+            assert_raises(InvalidConfigurationError) { OrdinaryOwnerConfig.new(modified, project: "atlas", source: OrdinaryOwnerConfig::PATH) }
+          end
+        end
+
         def test_missing_foreign_workspace_or_reused_owner_never_becomes_a_start
           admission = OrdinaryOwnerAdmission.new(config: @config, runtime: @runtime, peer: @kernel)
           [nil, @binding.merge("session" => "w2"), @binding.merge("process_identity" => @peer.merge("uid" => 42000))].each do |binding|

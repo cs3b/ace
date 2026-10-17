@@ -1327,14 +1327,29 @@ module Ace
 
           # v0.13.0 architecture: only supports system/user prompt format
           execution_options = review_data[:candidate_binding] ? {timeout: 900} : {}
-          execution_options[:campaign_binding] = review_data[:campaign_binding] if review_data[:campaign_binding]
-          result = executor.execute(
-            **execution_options,
-            system_prompt: review_data[:system_prompt],
-            user_prompt: review_data[:user_prompt],
-            model: model,
-            session_dir: session_dir
-          )
+          boundary = review_data[:execution_boundary]
+          if boundary
+            raise ArgumentError, "Prepared execution boundary requires candidate and campaign" unless review_data[:candidate_binding] && review_data[:campaign_binding]
+            execution_options[:single_attempt] = true
+          elsif review_data[:campaign_binding]
+            execution_options[:campaign_binding] = review_data[:campaign_binding]
+          end
+          execute = -> do
+            executor.execute(**execution_options, system_prompt: review_data[:system_prompt],
+              user_prompt: review_data[:user_prompt], model: model, session_dir: session_dir)
+          end
+          result = if boundary
+            # A source-composed owner may yield once after consuming the
+            # original permission. Replays/unknown replies must not yield.
+            invoked = false
+            boundary.call(binding: review_data.fetch(:campaign_binding), model: model) do
+              raise ArgumentError, "Prepared execution was already invoked" if invoked
+              invoked = true
+              execute.call
+            end
+          else
+            execute.call
+          end
 
           if result[:success]
             candidate_report = validate_candidate_provider_output!(result, session_dir) if review_data[:candidate_binding]
@@ -1674,10 +1689,12 @@ module Ace
 
         def create_metadata(review_data)
           if review_data[:candidate_binding]
-            return {"preset" => review_data.fetch(:preset), "candidate_binding" => review_data.fetch(:candidate_binding),
+            metadata = {"preset" => review_data.fetch(:preset), "candidate_binding" => review_data.fetch(:candidate_binding),
                     "subject_sha256" => review_data.fetch(:subject_sha256), "budget" => review_data.fetch(:budget),
                     "head" => review_data.fetch(:candidate_binding).fetch("head"),
                     "tree" => review_data.fetch(:candidate_binding).fetch("tree")}
+            metadata["campaign_binding"] = review_data.fetch(:campaign_binding) if review_data[:campaign_binding]
+            return metadata
           end
           root = @project_root || Ace::Support::Fs::Molecules::ProjectRootFinder.find_or_current
           head, _s = Open3.capture2("git", "rev-parse", "HEAD", chdir: root)

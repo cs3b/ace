@@ -53,6 +53,77 @@ module Ace
         end
       end
 
+      class CampaignPolicy
+        attr_accessor :enabled
+        POLICY = {"revision" => "fixture-v1", "minimum_rounds" => 3, "clean_rounds" => 2,
+          "required_scopes" => ["full"], "required_checks" => ["tests"]}.freeze
+        def initialize = @enabled = true
+        def verify_unchanged!
+          raise AttemptErrors::EvidenceUnavailable, "installed campaign policy revoked" unless @enabled
+          true
+        end
+        def with(_reference)
+          verify_unchanged!
+          value = yield({"delivery" => POLICY}, self)
+          verify_unchanged!
+          value
+        end
+      end
+
+      def test_canonical_campaign_start_pin_and_restart_preserve_original_contract_and_budget
+        fixture(campaign: true) do
+          register_and_start(producer_start: @base_head)
+          submit_candidate
+          params = selection.merge("pane" => "w1:pS", "expected_generation" => 2,
+            "contract" => "Preserve exact candidate and independently review it.", "profile" => "delivery")
+          @admission.selected = "producer"
+          assert_raises(AttemptErrors::EvidenceUnavailable) { @client.call("campaign_start", params, mutation_id: "campaign-start") }
+          @admission.selected = "supervisor"
+          started = @client.call("campaign_start", params, mutation_id: "campaign-start")
+          assert_equal started.data, @client.call("campaign_start", params, mutation_id: "campaign-start").data
+          pin = selection.merge("pane" => "w1:pS", "expected_generation" => 3, "round_id" => "round-1",
+            "scope_identity" => {"full" => {"preset" => "code-valid", "subjects" => ["diff:#{@base_head}..#{@head}"]}})
+          pinned = @client.call("campaign_pin", pin, mutation_id: "pin-1")
+          assert_equal false, pinned.data.fetch("recorded_complete")
+          assert_equal 0, pinned.data.fetch("completed_rounds")
+          assert_equal pinned.data, @client.call("campaign_pin", pin, mutation_id: "pin-1").data
+          assert @client.call("campaign_pin", pin, mutation_id: "pin-1").replayed
+          @owner.instance_variable_set(:@campaign, make_campaign_owner)
+          status = @client.call("campaign_status", selection).data
+          assert_equal started.data.fetch("campaign_id"), status.fetch("campaign_id")
+          assert_equal 0, status.fetch("completed_rounds")
+          refute status.fetch("accepted")
+          assert_raises(AttemptErrors::EvidenceUnavailable) do
+            @client.call("campaign_start", params.merge("expected_generation" => 4), mutation_id: "new-campaign")
+          end
+          review = selection.merge("pane" => "w1:pS", "expected_generation" => 4,
+            "reviewer_assignment_id" => "reviewer", "reviewer_attempt_id" => "reviewer-run")
+          assert_raises(AttemptErrors::EvidenceUnavailable) { @client.call("assign_review", review, mutation_id: "unbudgeted-review") }
+          assigned = @client.call("assign_review", review.merge("campaign" => {"round_id" => "round-1", "scope" => "full"}),
+            mutation_id: "campaign-review").data
+          assert_equal "execution-1", assigned.fetch("campaign").fetch("execution_id")
+          start = selection.merge("pane" => "w1:p2", "expected_generation" => 5, "review_id" => assigned.fetch("review_id"))
+          assert_raises(AttemptErrors::EvidenceUnavailable) { @client.call("campaign_begin", start, mutation_id: "provider-begin") }
+          @admission.selected = "reviewer"
+          @admission.head = @base_head
+          assert_raises(AttemptErrors::EvidenceUnavailable) { @client.call("campaign_begin", start, mutation_id: "provider-begin") }
+          @admission.head = @head
+          begun = @client.call("campaign_begin", start, mutation_id: "provider-begin")
+          refute begun.replayed
+          assert_equal assigned.fetch("campaign").fetch("session_binding"), begun.data.fetch("session_binding")
+          replay = @client.call("campaign_begin", start, mutation_id: "provider-begin")
+          assert replay.replayed
+          assert_equal begun.data, replay.data
+          assert_raises(AttemptErrors::EvidenceUnavailable) do
+            @client.call("campaign_begin", start.merge("expected_generation" => 6), mutation_id: "second-provider-begin")
+          end
+          prefix = @journal.ref_value
+          assert_equal 1, @journal.read_events("producer", commit: prefix).count { |event| event.dig("payload", "operation") == "campaign_begin" }
+          @campaign_policy.enabled = false
+          assert_raises(AttemptErrors::EvidenceUnavailable) { @client.call("campaign_status", selection) }
+        end
+      end
+
       def test_merge_requires_canonical_successful_test_execution_and_rechecks_before_effect
         fixture do
           register_and_start
@@ -468,7 +539,7 @@ module Ace
           "expected_generation" => 3, "receipt_sha256" => Digest::SHA256.hexdigest(bytes)), mutation_id: "accept",
           upload_parts: [bytes, "Independent review report."], purpose: :receipt_artifacts)
       end
-      def register_and_start
+      def register_and_start(producer_start: @head)
         %w[producer reviewer].each do |name|
           @admission.selected = "supervisor"
           work = PreparedRegistrationFixture.build(root: @inputs, scope: "010.01", definition: {
@@ -477,13 +548,13 @@ module Ace
           @client.call("register_assignment", work.header(expected_generation: 0).merge("pane" => "w1:pS"),
             mutation_id: "register-#{name}", upload_parts: [work.bundle], purpose: :candidate)
           @admission.selected = name
-          @admission.head = name == "reviewer" ? @base_head : @head
+          @admission.head = name == "reviewer" ? @base_head : producer_start
           @client.call("start_attempt", {"assignment_id" => name, "attempt_id" => "#{name}-run", "expected_generation" => 0,
             "head" => @admission.head, "pane" => @admission.bindings.fetch(name).fetch("pane"), "scope" => "010.01"}, mutation_id: "start-#{name}")
         end
         @admission.head = @head
       end
-      def fixture(**owner_options)
+      def fixture(campaign: false, **owner_options)
         Dir.mktmpdir("ordinary-review-", Etc.getpwuid(Process.uid).dir) do |root|
           File.chmod(0700, root)
           repository, @inputs, scratch = %w[journal inputs scratch].map { |part| File.join(root, part) }
@@ -491,6 +562,10 @@ module Ace
           git(repository, "init", "-b", "main")
           git(repository, "-c", "user.name=test", "-c", "user.email=test@example.invalid", "commit", "--allow-empty", "-m", "candidate")
           @base_head = git(repository, "rev-parse", "HEAD").strip
+          if campaign
+            File.write(File.join(repository, "example.txt"), "Candidate context.\n")
+            git(repository, "add", "example.txt")
+          end
           git(repository, "-c", "user.name=test", "-c", "user.email=test@example.invalid", "commit", "--allow-empty", "-m", "candidate change")
           @head = git(repository, "rev-parse", "HEAD").strip
           git(repository, "bundle", "create", File.join(root, "candidate.bundle"), "refs/heads/main")
@@ -508,8 +583,15 @@ module Ace
           end
           @command_admission = CommandAdmission.new
           @commands = Authority::CommandExecution.new(project: "atlas", journal: @journal, admission: @command_admission)
+          if campaign
+            @campaign_root = File.join(root, "campaign-repository")
+            @campaign_store = File.join(root, "campaign-store")
+            FileUtils.mkdir_p([@campaign_root, @campaign_store], mode: 0o700)
+            @campaign_policy = CampaignPolicy.new
+          end
           @owner = Authority::OrdinaryLifecycle.new(project: "atlas", admission: @admission, journal: @journal,
-            exclusion: Molecules::LifecycleExclusion.new(root: File.join(root, "exclusion")), input_root: @inputs, command_evidence: @commands, **owner_options)
+            exclusion: Molecules::LifecycleExclusion.new(root: File.join(root, "exclusion")), input_root: @inputs, command_evidence: @commands,
+            campaign: campaign ? make_campaign_owner : nil, **owner_options)
           @command_admission.scope_owner = @owner
           server = Authority::OrdinaryServer.new(admission: @admission, lifecycle: Authority::Router.new(handlers: [@owner]))
           thread = Thread.new { server.serve }
@@ -523,6 +605,11 @@ module Ace
           Process.kill("TERM", child) if child
           Process.wait(child) if child
         end
+      end
+      def make_campaign_owner
+        Authority::OrdinaryCampaignOwner.new(repository: @campaign_root, store_root: @campaign_store,
+          policy: {"path" => "/etc/lab/campaign-policy.json", "bytes" => 100, "sha256" => "a" * 64},
+          verify_selection: -> { raise AttemptErrors::UnauthorizedIdentity if @admission.revoked }, consumer: @campaign_policy)
       end
       def git(path, *arguments)
         output, error, status = Open3.capture3("/usr/bin/git", "-C", path, *arguments)
