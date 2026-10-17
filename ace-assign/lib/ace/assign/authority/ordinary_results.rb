@@ -233,6 +233,8 @@ module Ace
           events
         end
 
+        public :result_events
+
         def ordinary_result_plan(params, peer, admitted, observed, events, commit, generation)
           original = admitted.fetch(:receipt)
           original_receipt = Models::ExecutionReceipt.from_h(original)

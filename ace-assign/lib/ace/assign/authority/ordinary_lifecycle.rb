@@ -36,6 +36,8 @@ module Ace
           .merge(OrdinaryProgress::PROGRESS_TRANSFERS).merge(OrdinaryResults::RESULT_TRANSFERS).merge(OrdinaryReviews::REVIEW_TRANSFERS).merge(OrdinaryReleaseArtifacts::RELEASE_TRANSFERS).freeze
         REGISTER_KEYS = %w[assignment_id definition_digest prepared_head prepared_tree manifest_sha256 expected_generation pane transfer].freeze
 
+        attr_reader :journal
+
         def initialize(project:, admission:, journal:, exclusion:, input_root:, inbox: nil, command_evidence: nil, release_authorizer: nil, campaign: nil)
           @project, @admission, @journal, @exclusion = project, admission, journal, exclusion
           @ordinary_scope_mutex, @ordinary_scopes = Mutex.new, {}
