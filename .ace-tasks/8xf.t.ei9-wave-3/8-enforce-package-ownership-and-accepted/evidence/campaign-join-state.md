@@ -99,3 +99,19 @@ Merge gate status: independent verdict APPROVE retained. Remaining before
 merge to main: the mandatory full default suite on this branch, then merge
 (no republish of existing versions; version bumps/floors only at the next
 coordinated release).
+
+## Composition completion progress (branch codex/ei9-campaign-composition-join)
+
+- Port rebased onto merged main (0115b34f4).
+- Join #1 (campaign merge gate) IMPLEMENTED and proven (3627c8aea):
+  merge_evidence_at! refuses campaign-associated candidates before review
+  resolution — an ordinary direct review can no longer bypass CampaignManager
+  acceptance; the fixed merge admission inherits the refusal through the same
+  projection. The read transport surfaces the server rejection as
+  evidence_unavailable (assertion class adjusted accordingly). Receipt:
+  ordinary_reviews 10 tests / 121 assertions PASS.
+- Next joins in order: review_context large-prompt ingress under the approved
+  decision (TransferCodec purpose + campaign-begin-bound submit_result
+  eligibility + CanonicalEvidence kind + aggregate bounds + tests), public
+  retained driver, round ingestion proofs, cancellation resolution, historical
+  test-evidence wiring, comprehensive tests + actual Pi review.
