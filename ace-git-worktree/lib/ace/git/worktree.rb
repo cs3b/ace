@@ -184,6 +184,7 @@ module Ace
       require_relative "worktree/models/worktree_config"
       require_relative "worktree/models/worktree_info"
       require_relative "worktree/models/worktree_metadata"
+      require_relative "worktree/models/task_index"
 
       require_relative "worktree/atoms/git_command"
       require_relative "worktree/atoms/path_expander"
@@ -194,6 +195,7 @@ module Ace
       require_relative "worktree/atoms/text_truncator"
 
       require_relative "worktree/molecules/config_loader"
+      require_relative "worktree/molecules/task_index_builder"
       require_relative "worktree/molecules/task_fetcher"
       require_relative "worktree/molecules/pull_request_creator"
       require_relative "worktree/molecules/pull_request_evidence_resolver"
