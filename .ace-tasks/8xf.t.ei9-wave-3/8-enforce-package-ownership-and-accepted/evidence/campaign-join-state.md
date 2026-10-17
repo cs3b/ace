@@ -315,3 +315,21 @@ Remaining .8 joins: approval/head-assessment canonical readers (approval
 scans for the accepted-review mutation bound to head/actors/digest),
 CLI/workflow surface exposure, comprehensive public-path tests + actual Pi
 independent review, branch re-verification and merge.
+
+### Approval canonical wiring COMPLETE
+
+OrdinaryReviewEvidence gains canonical_approval_reference!(head:,
+reviewer_actor:, digest:): an accepted independent review must exist in this
+journal bound to the reviewed head and reviewer actor with the referenced
+receipt digest, and must not have been revoked (a post-acceptance cancel
+refuses). The composition's approval_evidence dependency is wired late-bound
+like the others: campaign-repo approval read plus the canonical backstop.
+Receipts: ordinary_reviews 14 tests / 155 assertions PASS (proof +
+wrong-head/wrong-actor/wrong-digest/revoked refusals); owner admission 10/45.
+
+Evidence wiring status: check ✅, review-session ✅, approval ✅. The
+manager-level head_assessment_evidence remains fail-closed by default (its
+canonical source is the accepted-head assessment records; wiring follows with
+the assessment-join work). Remaining .8: head-assessment wiring,
+CLI/workflow exposure, comprehensive public-path tests + actual Pi review,
+branch re-verification and merge.
