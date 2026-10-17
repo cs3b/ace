@@ -35,7 +35,8 @@ module Ace
         ["service listen", "Serve the ordinary fixed merge receiver on its configured socket"],
         ["assignment prepare", "Retain reviewed task input for ordinary Assign registration"],
         ["assignment drive", "Drive one original execution through the installed ordinary owner"],
-        ["assignment request", "Send one retained operation to the installed ordinary Assign owner"]
+        ["assignment request", "Send one retained operation to the installed ordinary Assign owner"],
+        ["assignment campaign", "Drive one canonical campaign review round through the installed ordinary owner"]
       ].freeze
 
       HELP_EXAMPLES = [
@@ -67,6 +68,7 @@ module Ace
       register "run-status", CLI::Commands::RunStatus.new
       register "command execute", CLI::Commands::CommandExecute.new
       register "assignment prepare", CLI::Commands::Assignment::Prepare.new
+      register "assignment campaign", CLI::Commands::Assignment::Campaign.new
       register "assignment drive", CLI::Commands::Assignment::Drive.new
       register "assignment request", CLI::Commands::Assignment::Request.new
 

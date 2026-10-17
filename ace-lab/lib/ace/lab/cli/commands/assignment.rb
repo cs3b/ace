@@ -85,6 +85,38 @@ module Ace
               raise Ace::Support::Cli::Error, "ordinary assignment unavailable: #{error.message}; retain the original request; inspect status before new work"
             end
           end
+
+          # Public exposure of the campaign runner: one retained context file
+          # drives begin -> dispatch -> submit_review_context through the
+          # installed owner. The runner's own contracts govern eligibility.
+          class Campaign < Ace::Support::Cli::Command
+            desc "Drive one canonical campaign review round through the installed ordinary owner"
+            option :project, required: true, desc: "Installed project ID"
+            option :context, required: true, desc: "Retained runner context JSON (review_id, producer, reviewer, candidate, campaign, subject)"
+            option :session_dir, required: true, desc: "Existing private session directory for the engine"
+            option :output, required: true, desc: "New private directory for retained requests and artifacts"
+
+            def call(project:, context:, session_dir:, output:, **_options)
+              document = JSON.parse(Ace::Assign::Authority::RetainedInput.read_file(context, 65_536),
+                allow_duplicate_key: false, create_additions: false, max_nesting: 16)
+              required = %w[review_id producer reviewer candidate campaign subject]
+              unless document.is_a?(Hash) && document.keys.sort == required.sort &&
+                  document.values_at("producer", "reviewer", "candidate", "campaign").all?(Hash) &&
+                  document.fetch("subject").is_a?(String)
+                raise ArgumentError, "campaign runner context selection is invalid"
+              end
+              runner = Organisms::OrdinaryCampaignRunner.new(project: project)
+              result = runner.run(review_id: document.fetch("review_id"), producer: document.fetch("producer"),
+                reviewer: document.fetch("reviewer"), candidate: document.fetch("candidate"),
+                subject: document.fetch("subject"), campaign: document.fetch("campaign"),
+                session_dir: session_dir, output: output)
+              puts JSON.generate(result)
+            rescue JSON::ParserError
+              raise Ace::Support::Cli::Error, "campaign runner context is not valid bounded JSON"
+            rescue ArgumentError, KeyError, SystemCallError, Ace::Assign::Error, Ace::Runtime::Error, Ace::Lab::Error => error
+              raise Ace::Support::Cli::Error, "campaign round unavailable: #{error.message}; the runner retained its requests; inspect the output directory before any retry"
+            end
+          end
         end
       end
     end
