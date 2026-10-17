@@ -254,3 +254,28 @@ ordinary_reviews 12 tests / 143 assertions PASS.
 Remaining .8 joins: historical test-evidence wiring, CLI/workflow surface
 exposure of the runner, comprehensive public-path tests + actual Pi
 independent review, branch re-verification and merge.
+
+### Branch regression sweep GREEN (round 12)
+
+All composition-branch focused receipts re-verified together: ordinary_reviews
+12/143, campaign runner 4/20, owner admission 10/45, prepared candidate review
+16/57, candidate transfer 24/454, command execution 8/42 — zero failures.
+
+### Historical evidence wiring — scoped design (next implementation)
+
+The CampaignManager evidence dependency contracts (campaign_evidence.rb):
+check_evidence.call(receipt, head:, name:, historical:) → executed-test proof;
+review_evidence.call(receipt, head:, artifacts:, historical:) → review session
+proof; approval_evidence.call(receipt, head:, artifacts:, ...) → approval
+proof; manager-level head_assessment_evidence separately. Defaults today are
+the composition's `unavailable` stubs. The wiring joins supply source-owned
+callables in the Lab authority composition (mirroring the existing
+release_authorizer late-binding pattern: closures over the lifecycle variable
+assigned after construction): check_evidence closes over the command evidence
+owner (canonical executed tests incl. the historical candidate_reference
+view), review/approval/head_assessment close over the lifecycle's canonical
+review readers (with_review_collection!/review_at_reference! and the accepted
+review records), each validating the provided receipt bytes against the
+canonical journal at the bound head — material/uncertain changes require the
+real independent delta review, and the original reviewed head stays separate
+from the accepted head.
