@@ -453,3 +453,16 @@ must be reset before supervisor operations, and the adapter captures the
 client locally (singleton-method ivar binding). Receipt: 1 test / 3
 assertions PASS (31s). Remaining .8 follow-ups: CLI/workflow exposure and the
 executed head-assessment path with real rounds.
+
+### CLI/workflow exposure of the campaign runner COMPLETE
+
+`ace-lab assignment campaign` is the public retained surface: one bounded
+context JSON (review_id, producer, reviewer, candidate, campaign, subject —
+closed schema, duplicate-key and nesting bounded) drives begin → dispatch →
+submit_review_context through the installed owner via the runner. Precise
+refusals for missing/malformed context; the failure message retains the
+request discipline (inspect the output directory before retry). CLI receipts:
+2 tests / 9 assertions PASS (valid context wiring + malformed-context
+refusals). With the driver-vs-real-authority integration receipt this closes
+the workflow exposure follow-up; the executed head-assessment path remains
+sequenced with real campaign rounds.
