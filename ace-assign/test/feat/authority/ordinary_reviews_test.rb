@@ -232,6 +232,67 @@ module Ace
         end
       end
 
+      def test_review_context_refuses_substituted_campaign_reference_and_corrupted_artifact
+        fixture(campaign: true) do
+          register_and_start(producer_start: @base_head)
+          submit_candidate
+          @admission.selected = "supervisor"
+          @client.call("campaign_start", selection.merge("pane" => "w1:pS", "expected_generation" => 2,
+            "contract" => "Preserve exact candidate and independently review it.", "profile" => "delivery"), mutation_id: "campaign-start")
+          @client.call("campaign_pin", selection.merge("pane" => "w1:pS", "expected_generation" => 3, "round_id" => "round-1",
+            "scope_identity" => {"full" => {"preset" => "code-valid", "subjects" => ["diff:#{@base_head}..#{@head}"]}}), mutation_id: "pin-1")
+          @owner.instance_variable_set(:@campaign, make_campaign_owner)
+          review = selection.merge("pane" => "w1:pS", "expected_generation" => 4,
+            "reviewer_assignment_id" => "reviewer", "reviewer_attempt_id" => "reviewer-run",
+            "campaign" => {"round_id" => "round-1", "scope" => "full"})
+          assigned = @client.call("assign_review", review, mutation_id: "campaign-review").data
+          @admission.selected = "reviewer"
+          @admission.head = @head
+          @client.call("campaign_begin", selection.merge("pane" => "w1:p2", "expected_generation" => 5,
+            "review_id" => assigned.fetch("review_id")), mutation_id: "provider-begin")
+          own = {"assignment_id" => "reviewer", "attempt_id" => "reviewer-run", "pane" => "w1:p2"}
+          prompt = "complete campaign context " * 20_000
+          forged = assigned.fetch("campaign").slice("campaign_id", "round_id", "scope", "execution_id")
+            .merge("round_id" => "round-9")
+          context_base = own.merge("head" => @head, "review_id" => assigned.fetch("review_id"),
+            "producer_assignment_id" => "producer")
+          @client.call("queue_finish", own.merge("expected_generation" => 1, "step" => "010.01"),
+            mutation_id: "reviewer-progress", upload_parts: ["Collected."], purpose: :artifacts)
+          # Metadata substitution: the receipt claims a different campaign round.
+          substituted = review_bytes("assignment_id" => "reviewer", "attempt_id" => "reviewer-run",
+            "operation" => "review-collect",
+            "review" => {"head" => @head, "verdict" => "approved", "reviewer" => {"actor" => Etc.getpwuid.name},
+              "review_id" => assigned.fetch("review_id"), "campaign" => forged},
+            "checks" => [{"name" => "review-execution", "verdict" => "passed"}],
+            "artifacts" => [{"path" => "system-prompt.md", "sha256" => Digest::SHA256.hexdigest(prompt)}])
+          refused = assert_raises(AttemptErrors::EvidenceUnavailable) do
+            @client.call("submit_review_context", context_base.merge("expected_generation" => 2,
+              "receipt_sha256" => Digest::SHA256.hexdigest(substituted)), mutation_id: "substituted-context",
+              upload_parts: [substituted, prompt], purpose: :review_context)
+          end
+          assert refused.message.include?("refused"), refused.message
+          # Corruption: the uploaded artifact bytes differ from the declared digest.
+          honest = review_bytes("assignment_id" => "reviewer", "attempt_id" => "reviewer-run",
+            "operation" => "review-collect",
+            "review" => {"head" => @head, "verdict" => "approved", "reviewer" => {"actor" => Etc.getpwuid.name},
+              "review_id" => assigned.fetch("review_id"),
+              "campaign" => assigned.fetch("campaign").slice("campaign_id", "round_id", "scope", "execution_id")},
+            "checks" => [{"name" => "review-execution", "verdict" => "passed"}],
+            "artifacts" => [{"path" => "system-prompt.md", "sha256" => Digest::SHA256.hexdigest(prompt)}])
+          corrupted = assert_raises(AttemptErrors::EvidenceUnavailable) do
+            @client.call("submit_review_context", context_base.merge("expected_generation" => 2,
+              "receipt_sha256" => Digest::SHA256.hexdigest(honest)), mutation_id: "corrupted-context",
+              upload_parts: [honest, "tampered bytes"], purpose: :review_context)
+          end
+          assert corrupted.message.include?("refused"), corrupted.message
+          # The honest submission still succeeds afterwards.
+          submitted = @client.call("submit_review_context", context_base.merge("expected_generation" => 2,
+            "receipt_sha256" => Digest::SHA256.hexdigest(honest)), mutation_id: "honest-context",
+            upload_parts: [honest, prompt], purpose: :review_context).data
+          assert submitted.fetch("result_id")
+        end
+      end
+
       def test_canonical_review_reference_proves_collected_session_at_reviewed_head
         fixture(campaign: true) do
           register_and_start(producer_start: @base_head)
