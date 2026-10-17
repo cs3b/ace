@@ -210,6 +210,7 @@ module Ace
       require_relative "worktree/molecules/hook_executor"
 
       require_relative "worktree/organisms/task_worktree_orchestrator"
+      require_relative "worktree/organisms/worktree_probe_runner"
       require_relative "worktree/organisms/worktree_manager"
 
       require_relative "worktree/commands/create_command"
