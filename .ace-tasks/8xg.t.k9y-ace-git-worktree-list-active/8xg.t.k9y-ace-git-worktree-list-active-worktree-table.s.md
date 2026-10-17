@@ -1,6 +1,6 @@
 ---
 id: 8xg.t.k9y
-status: pending
+status: in-progress
 priority: medium
 needs_review: false
 created_at: "2026-10-17 13:31:03"
@@ -8,36 +8,9 @@ estimate: TBD
 dependencies: []
 tags: [git-worktree, cli-ux]
 bundle:
-  presets: ["project"]
-  files:
-    - ace-git-worktree/lib/ace/git/worktree/commands/list_command.rb
-    - ace-git-worktree/lib/ace/git/worktree/cli/commands/list.rb
-    - ace-git-worktree/lib/ace/git/worktree/organisms/worktree_manager.rb
-    - ace-git-worktree/lib/ace/git/worktree/molecules/worktree_lister.rb
-    - ace-git-worktree/lib/ace/git/worktree/models/worktree_info.rb
-    - ace-git-worktree/lib/ace/git/worktree/molecules/cleanup_reporter.rb
-    - ace-git-worktree/lib/ace/git/worktree/molecules/current_task_linker.rb
-    - ace-git-worktree/lib/ace/git/worktree/molecules/worktree_creator.rb
-    - ace-git-worktree/lib/ace/git/worktree/models/worktree_metadata.rb
-    - ace-git-worktree/.ace-defaults/git/worktree.yml
-    - ace-git-worktree/test/fast/commands/list_command_test.rb
-    - ace-git-worktree/test/fast/molecules/worktree_lister_test.rb
-    - ace-git-worktree/test/fast/models/worktree_info_test.rb
-    - ace-git-worktree/test/fast/molecules/current_task_linker_test.rb
-    - ace-git-worktree/test/e2e/TS-WORKTREE-001-basic-lifecycle/scenario.yml
-    - ace-git-worktree/test/e2e/TS-WORKTREE-001-basic-lifecycle/TC-002-list-and-create.verify.md
-    - ace-git-worktree/test/e2e/TS-WORKTREE-001-basic-lifecycle/TC-003-switch-and-formats.verify.md
-    - ace-git/lib/ace/git/organisms/repo_status_loader.rb
-    - ace-git/lib/ace/git/providers/base.rb
-    - ace-git/lib/ace/git/providers/evidence.rb
-    - ace-overseer/lib/ace/overseer/organisms/status_collector.rb
-    - .ace-tasks/8xa.t.ega-deliver-gad2-closure-records-via/8xa.t.ega-deliver-gad2-closure-records-via-reviewed-pr.s.md
-    - ace-git-worktree/docs/usage.md
-    - .ace-tasks/8xg.t.k9y-ace-git-worktree-list-active/ux-usage.md
-  commands:
-    - ace-git-worktree list
-    - ace-git-worktree list --format json
-    - ace-git-worktree list --help
+  presets: [project]
+  files: [ace-git-worktree/lib/ace/git/worktree/commands/list_command.rb, ace-git-worktree/lib/ace/git/worktree/cli/commands/list.rb, ace-git-worktree/lib/ace/git/worktree/organisms/worktree_manager.rb, ace-git-worktree/lib/ace/git/worktree/molecules/worktree_lister.rb, ace-git-worktree/lib/ace/git/worktree/models/worktree_info.rb, ace-git-worktree/lib/ace/git/worktree/molecules/cleanup_reporter.rb, ace-git-worktree/lib/ace/git/worktree/molecules/current_task_linker.rb, ace-git-worktree/lib/ace/git/worktree/molecules/worktree_creator.rb, ace-git-worktree/lib/ace/git/worktree/models/worktree_metadata.rb, ace-git-worktree/.ace-defaults/git/worktree.yml, ace-git-worktree/test/fast/commands/list_command_test.rb, ace-git-worktree/test/fast/molecules/worktree_lister_test.rb, ace-git-worktree/test/fast/models/worktree_info_test.rb, ace-git-worktree/test/fast/molecules/current_task_linker_test.rb, ace-git-worktree/test/e2e/TS-WORKTREE-001-basic-lifecycle/scenario.yml, ace-git-worktree/test/e2e/TS-WORKTREE-001-basic-lifecycle/TC-002-list-and-create.verify.md, ace-git-worktree/test/e2e/TS-WORKTREE-001-basic-lifecycle/TC-003-switch-and-formats.verify.md, ace-git/lib/ace/git/organisms/repo_status_loader.rb, ace-git/lib/ace/git/providers/base.rb, ace-git/lib/ace/git/providers/evidence.rb, ace-overseer/lib/ace/overseer/organisms/status_collector.rb, .ace-tasks/8xa.t.ega-deliver-gad2-closure-records-via/8xa.t.ega-deliver-gad2-closure-records-via-reviewed-pr.s.md, ace-git-worktree/docs/usage.md, .ace-tasks/8xg.t.k9y-ace-git-worktree-list-active/ux-usage.md]
+  commands: [ace-git-worktree list, ace-git-worktree list --format json, ace-git-worktree list --help]
 ---
 
 # ace-git-worktree list: active worktree table with compact default
