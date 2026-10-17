@@ -2,7 +2,7 @@
 
 require "yaml"
 require_relative "../errors"
-require_relative "service_policy"
+require_relative "ordinary_merge_policy"
 require_relative "grant_resolver"
 
 module Ace
@@ -19,7 +19,7 @@ module Ace
           repo_path policy_path execution_identity].freeze
         OPTIONAL_KEYS = %w[socket_gid forge_config_path].freeze
         IDENTITY_KEYS = %w[checkout_id worktree_id branch].freeze
-        ID = ServicePolicy::ID
+        ID = OrdinaryMergePolicy::ID
 
         def self.load(path)
           raise Ace::Lab::InvalidConfigurationError, "receiver config path is required" unless path.is_a?(String) && !path.empty?

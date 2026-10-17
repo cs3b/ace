@@ -11,6 +11,7 @@ require_relative "../molecules/ordinary_owner_admission"
 require_relative "../molecules/caller_authorizer"
 require_relative "../molecules/command_owner_admission"
 require_relative "../molecules/ordinary_listener"
+require_relative "../molecules/ordinary_merge_policy"
 require_relative "ordinary_merge_receiver"
 
 module Ace
@@ -91,7 +92,7 @@ module Ace
           visibility = Molecules::CallerAuthorizer.new(principals: document.fetch("principals", {}),
             identity: Molecules::CallerAuthorizer.matchable_identities(username, uid))
           raise SecurityError, "release artifact project grant is unavailable" unless visibility.authorized?(@config.project)
-          Molecules::ServicePolicy.new(document, coordinator.method(:proposal_authorization))
+          Molecules::OrdinaryMergePolicy.new(document, coordinator.method(:proposal_authorization))
             .authorize!(binding.fetch("authorization"), binding)
         end
 
@@ -129,7 +130,7 @@ module Ace
         end
 
         def verify_join!(document)
-          configured = Molecules::ServicePolicy.new(document).ordinary_receiver!(@config.project)
+          configured = Molecules::OrdinaryMergePolicy.new(document).ordinary_receiver!(@config.project)
           expected = {"receiver_id" => @receiver.receiver_id, "socket_path" => @receiver.socket_path,
             "receiver_uid" => @config.service.fetch("uid"), "principal" => @receiver.principal,
             "journal_repository" => @config.journal.fetch("repository"), "journal_ref" => @config.journal.fetch("ref")}

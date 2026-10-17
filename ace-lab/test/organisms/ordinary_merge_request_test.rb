@@ -41,7 +41,7 @@ module Ace
 
         # The installed ordinary receiver mapping and admission policy: the
         # verified local process owner is the configured overseer principal.
-        @policy = Molecules::ServicePolicy.new(policy_document)
+        @policy = Molecules::OrdinaryMergePolicy.new(policy_document)
         config = authorized_for_local(topology_config, ["atlas"])
         @topology = Organisms::TopologyService.from_config(config)
 
@@ -86,7 +86,7 @@ module Ace
         document = policy_document
         document["ordinary"]["projects"]["atlas"]["admission"] = "disabled"
         status_reader = Organisms::OrdinaryMergeRequest.new(topology: @topology,
-          policy: Molecules::ServicePolicy.new(document), repo_root: @dir,
+          policy: Molecules::OrdinaryMergePolicy.new(document), repo_root: @dir,
           ingress: ->(**_) { flunk "status contacted receiver" })
         original = ENV["GIT_DIR"]
         ENV["GIT_DIR"] = "/nonexistent/poisoned"
@@ -105,7 +105,7 @@ module Ace
         document = policy_document
         document["ordinary"]["projects"]["atlas"].delete("journal_repository")
         producer = Organisms::OrdinaryMergeRequest.new(topology: @topology,
-          policy: Molecules::ServicePolicy.new(document), repo_root: @repo,
+          policy: Molecules::OrdinaryMergePolicy.new(document), repo_root: @repo,
           ingress: ->(**_) { flunk "missing installed source dispatched" })
         status = producer.status(project: "atlas", assignment: @assignment_id, attempt: @attempt_id,
           queue_entry: "010", reference: accepted.dig("data", "reference"), request: "request-1",
@@ -172,7 +172,7 @@ module Ace
         document = policy_document
         document["ordinary"]["projects"]["atlas"]["admission"] = "disabled"
         producer = new_producer(ingress: controlled_receiver,
-          policy: Molecules::ServicePolicy.new(document))
+          policy: Molecules::OrdinaryMergePolicy.new(document))
         envelope = producer.request(**request_args.merge(request_id: "request-2"))
         assert_equal "ordinary_merge_unavailable", envelope.dig("error", "code")
         assert_equal "request-2", envelope.dig("error", "request_id")
@@ -234,7 +234,7 @@ module Ace
             policy_document.fetch("authorizations").fetch("decision-1").merge(
               "request_id" => nil, "input_digest" => expected_digest(request_id: "request-9", authorization: "decision-9")
             )))
-        moved_producer = new_producer(ingress: controlled, policy: Molecules::ServicePolicy.new(moved_decision))
+        moved_producer = new_producer(ingress: controlled, policy: Molecules::OrdinaryMergePolicy.new(moved_decision))
         envelope = moved_producer.request(**request_args.merge(request_id: "request-9",
           authorization: "decision-9"))
         assert_equal "ordinary_merge_target_changed", envelope.dig("error", "code")
@@ -262,7 +262,7 @@ module Ace
         envelope = producer.request(**request_args.merge(authorization: "unrecorded"))
         assert_equal "ordinary_merge_authorization_invalid", envelope.dig("error", "code")
 
-        expired = Molecules::ServicePolicy.new(policy_document.merge("authorizations" =>
+        expired = Molecules::OrdinaryMergePolicy.new(policy_document.merge("authorizations" =>
           policy_document.fetch("authorizations").merge("decision-1" =>
             policy_document.fetch("authorizations").fetch("decision-1").merge(
               "expires_at" => "2020-01-01T00:00:00Z"
@@ -282,14 +282,14 @@ module Ace
           "base_repository" => "acme/other",
           "queue_entry" => "020"
         }.each do |key, value|
-          decision = Molecules::ServicePolicy.new(policy_document.merge("authorizations" =>
+          decision = Molecules::OrdinaryMergePolicy.new(policy_document.merge("authorizations" =>
             policy_document.fetch("authorizations").merge("decision-1" =>
               policy_document.fetch("authorizations").fetch("decision-1").merge(key => value))))
           envelope = new_producer(ingress: controlled_receiver, policy: decision).request(**request_args)
           assert_equal "ordinary_merge_authorization_invalid", envelope.dig("error", "code"), key
         end
 
-        shape = Molecules::ServicePolicy.new(policy_document.merge("authorizations" =>
+        shape = Molecules::OrdinaryMergePolicy.new(policy_document.merge("authorizations" =>
           policy_document.fetch("authorizations").merge("decision-1" =>
             policy_document.fetch("authorizations").fetch("decision-1").except("queue_entry"))))
         envelope = new_producer(ingress: controlled_receiver, policy: shape).request(**request_args)
@@ -398,7 +398,7 @@ module Ace
         assert_equal "ace.lab.service.ordinary-merge-status-error/v1", status.dig("error", "schema")
 
         # A malformed installed ordinary section is configuration failure.
-        malformed = Molecules::ServicePolicy.new(policy_document.merge("ordinary" =>
+        malformed = Molecules::OrdinaryMergePolicy.new(policy_document.merge("ordinary" =>
           {"projects" => {"atlas" => {"receiver_id" => "r"}}}))
         envelope = new_producer(ingress: controlled_receiver, policy: malformed).request(**request_args)
         assert_equal "ordinary_merge_unavailable", envelope.dig("error", "code")

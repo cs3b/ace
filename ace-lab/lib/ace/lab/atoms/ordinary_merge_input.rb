@@ -6,13 +6,12 @@ require "json"
 module Ace
   module Lab
     module Atoms
-      # Bounded structured input for a named service operation. Only the
-      # digest enters the request index; input values never enter the journal.
-      module ServiceInput
+      # Bounded structured input for one ordinary fixed-merge request. The
+      # digest binds the exact input bytes; input values never enter the
+      # canonical journal.
+      module OrdinaryMergeInput
         MAX_BYTES = 64 * 1024
         FORBIDDEN_KEYS = /credential|password|secret|token|private.key|authorization|\Aenv\z/i
-        SHA256 = /\A[0-9a-f]{64}\z/
-        RESOURCE = /\A[a-zA-Z0-9_.:\/-]{1,256}\z/
 
         def self.load(path)
           begin
@@ -48,19 +47,6 @@ module Ace
 
         def self.digest(data)
           Digest::SHA256.hexdigest(JSON.generate(canonical(data)))
-        end
-
-        def self.target(data)
-          target = data["target"]
-          raise ArgumentError, "input.target must be an object" unless target.is_a?(Hash)
-          resource = target["resource"]
-          artifact = target["artifact_digest"]
-          raise ArgumentError, "input.target.resource must be a stable resource ID" unless
-            resource.is_a?(String) && resource.match?(RESOURCE)
-          if artifact && (!artifact.is_a?(String) || !artifact.match?(SHA256))
-            raise ArgumentError, "input.target.artifact_digest must be SHA-256"
-          end
-          {"resource" => resource, "artifact_digest" => artifact}
         end
 
         def self.canonical(value)

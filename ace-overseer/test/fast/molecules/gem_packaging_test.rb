@@ -9,12 +9,6 @@ require "tmpdir"
 class GemPackagingTest < AceOverseerTestCase
   PAYLOAD_FILES = [
     "handbook/workflow-instructions/overseer.wf.md",
-    "handbook/workflow-instructions/overseer/configure-project.wf.md",
-    "handbook/workflow-instructions/overseer/maintain-continuation.wf.md",
-    "handbook/workflow-instructions/roles/project-overseer.wf.md",
-    "handbook/workflow-instructions/roles/lab-coordinator.wf.md",
-    "handbook/workflow-instructions/roles/second-commander.wf.md",
-    "handbook/skills/as-overseer-configure-project/SKILL.md",
     ".ace-defaults/nav/protocols/wfi-sources/ace-overseer.yml",
     ".ace-defaults/nav/protocols/skill-sources/ace-overseer.yml"
   ].freeze

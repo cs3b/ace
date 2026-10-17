@@ -260,7 +260,7 @@ module Ace
             )))
         envelope = build_receiver(policy_document: rebound).handle(
           submission_with_document(document).merge("configuration_sha256" =>
-            Molecules::ServicePolicy.configuration_digest(rebound))
+            Molecules::OrdinaryMergePolicy.configuration_digest(rebound))
         )
         assert_equal "ordinary_merge_target_changed", envelope.dig("error", "code")
         assert_nil @coordinator.fixed_merge_record("request-1")
@@ -845,7 +845,7 @@ module Ace
           "authorization" => "decision-1", "request_id" => "request-1",
           "input_digest" => expected_digest, "request" => valid_request,
           "principal" => "overseer", "receiver_id" => "ordinary-receiver",
-          "configuration_sha256" => Molecules::ServicePolicy.configuration_digest(policy_document)
+          "configuration_sha256" => Molecules::OrdinaryMergePolicy.configuration_digest(policy_document)
         }
       end
 
@@ -862,7 +862,7 @@ module Ace
       # document (the receiver re-derives the same digest from its own copy).
       def submission_for(policy_document, request_id: "request-1")
         submission.merge("configuration_sha256" =>
-          Molecules::ServicePolicy.configuration_digest(policy_document), "request_id" => request_id)
+          Molecules::OrdinaryMergePolicy.configuration_digest(policy_document), "request_id" => request_id)
       end
 
       def valid_request
