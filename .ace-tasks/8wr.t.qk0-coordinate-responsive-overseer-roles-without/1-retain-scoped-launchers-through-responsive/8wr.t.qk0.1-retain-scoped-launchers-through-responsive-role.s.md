@@ -1,11 +1,11 @@
 ---
 id: 8wr.t.qk0.1
-status: in-progress
+status: skipped
 priority: high
 created_at: "2026-10-07 05:30:22"
 estimate: large
 dependencies: [8wr.t.qk0.0, 8x3.t.xz9.2, 8wr.t.qjx, 8wr.t.qjy, 8wr.t.qjz, 8wr.t.qk0.3]
-tags: []
+tags: [superseded-no-daemon]
 bundle:
   presets: [project]
   files: [.ace-tasks/8wr.t.qk0-coordinate-responsive-overseer-roles-without/coordinator-source-contract.md, .ace-tasks/8wr.t.qk0-coordinate-responsive-overseer-roles-without/coordinator-admission-draft.md, .ace-tasks/8wr.t.qk0-coordinate-responsive-overseer-roles-without/1-retain-scoped-launchers-through-responsive/cli-selection-and-retry-contract.md, .ace-tasks/8wr.t.qk0-coordinate-responsive-overseer-roles-without/1-retain-scoped-launchers-through-responsive/readiness-review.md, .ace-tasks/8wr.t.qk0-coordinate-responsive-overseer-roles-without/1-retain-scoped-launchers-through-responsive/launch-input-proposal.md, .ace-tasks/8wr.t.qk0-coordinate-responsive-overseer-roles-without/1-retain-scoped-launchers-through-responsive/ux/usage.md, ace-overseer/handbook/workflow-instructions/overseer.wf.md, ace-overseer/lib/ace/overseer/cli/commands/work_on.rb, ace-overseer/lib/ace/overseer/organisms/work_on_orchestrator.rb, ace-overseer/lib/ace/overseer/molecules/proposal_tick.rb, ace-overseer/lib/ace/overseer/molecules/assignment_launcher.rb, ace-assign/lib/ace/assign/organisms/task_assignment_creator.rb, .ace-tasks/8wr.t.qk0-coordinate-responsive-overseer-roles-without/3-deliver-authenticated-prepared-work-to/8wr.t.qk0.3-deliver-authenticated-prepared-work-to-scoped-workers.s.md, ace-assign/lib/ace/assign/organisms/assignment_executor.rb, ace-assign/lib/ace/assign/cli/commands/authority/launch.rb, ace-assign/lib/ace/assign/authority/launch_driver.rb, ace-hitl/lib/ace/hitl/proposals/policy.rb]

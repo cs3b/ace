@@ -1,11 +1,11 @@
 ---
 id: 8wr.t.qk0
-status: draft
+status: skipped
 priority: high
 created_at: "2026-09-28 17:42:14"
 estimate: large
 dependencies: [8wq.t.k86, 8wr.t.qjl, 8wr.t.qjx, 8wr.t.qjy, 8wq.t.1w5, 8wm.t.vs2, 8wr.t.qjz, 8x3.t.xz9.2]
-tags: [lab-readiness]
+tags: [lab-readiness, superseded-no-daemon]
 bundle:
   presets: [project]
   files: [ace-overseer/lib/ace/overseer/molecules/lab_client.rb, ace-overseer/lib/ace/overseer/cli/commands/work_on.rb, ace-overseer/lib/ace/overseer/organisms/status_collector.rb, ace-overseer/handbook/workflow-instructions/overseer.wf.md, ace-assign/handbook/workflow-instructions/assign/drive.wf.md, .ace-tasks/8wr.t.qk0-coordinate-responsive-overseer-roles-without/protected-inventory-contract.md, .ace-tasks/8wr.t.qk0-coordinate-responsive-overseer-roles-without/coordinator-source-contract.md, .ace-tasks/8wr.t.qk0-coordinate-responsive-overseer-roles-without/coordinator-admission-draft.md, .ace-tasks/8wr.t.qk0-coordinate-responsive-overseer-roles-without/3-deliver-authenticated-prepared-work-to/8wr.t.qk0.3-deliver-authenticated-prepared-work-to-scoped-workers.s.md]

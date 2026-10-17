@@ -1,11 +1,11 @@
 ---
 id: 8wr.t.qk0.2
-status: in-progress
+status: skipped
 priority: high
 created_at: "2026-10-07 05:30:26"
 estimate: large
 dependencies: [8wr.t.qk0.0, 8x3.t.xz9.2, 8wr.t.qjx]
-tags: []
+tags: [superseded-no-daemon]
 bundle:
   presets: [project]
   files: [.ace-tasks/8wr.t.qk0-coordinate-responsive-overseer-roles-without/coordinator-source-contract.md, ace-overseer/lib/ace/overseer/organisms/prune_orchestrator.rb, ace-overseer/lib/ace/overseer/molecules/prune_safety_checker.rb, ace-overseer/lib/ace/overseer/molecules/git_preservation_checker.rb, ace-assign/lib/ace/assign/molecules/lifecycle_exclusion.rb, ace-assign/lib/ace/assign/authority/launch_scope_release.rb, ace-assign/lib/ace/assign/authority/deployment_history.rb, ace-lab/lib/ace/lab/organisms/authority_composition.rb]
