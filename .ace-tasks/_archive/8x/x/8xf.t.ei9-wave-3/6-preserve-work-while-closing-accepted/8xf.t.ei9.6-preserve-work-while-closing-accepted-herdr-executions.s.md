@@ -1,9 +1,9 @@
 ---
 id: 8xf.t.ei9.6
-status: pending
+status: skipped
 priority: high
 created_at: "2026-10-16 10:57:19"
-tags: []
+tags: [superseded-no-daemon]
 parent: 8xf.t.ei9
 estimate: medium
 dependencies: []
@@ -64,3 +64,10 @@ Validate effective public interfaces on the selected source/runtime before effec
 missing capability is a precise readiness result, not permission to invent a route.
 Use bin/ace-test or bin/ace-test-suite for focused source checks; installed proofs
 are separately attributed. Captain overrides the brief; report results/conflicts to owner.
+
+## Superseded (2026-10-17, Captain's architecture decision)
+
+Skipped: the remaining work as specified assumed the socket-owner/installed
+acceptance model. Superseded by: state on files, no background processes,
+gems self-service from RubyGems. Reassigned to the successor program
+"Python→Ruby migration: file-based Lab, zero daemons".

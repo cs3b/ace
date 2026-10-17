@@ -1,6 +1,6 @@
 ---
 id: 8xf.t.ei9
-status: in-progress
+status: done
 priority: high
 created_at: "2026-10-16 09:40:17"
 estimate: TBD
@@ -169,3 +169,15 @@ pending/needs_review=false through the public CLI and ready for implementation;
 do not repeat the same specification approval as a new gate. Actual external
 effects still require their declared scope/readiness. No code, runtime mutation
 or secret material is included in this specification change.
+
+## Closure note (2026-10-17, Captain's architecture decision)
+
+Source delivery of this program is COMPLETE: the nine-gem release was
+published and adopted (TS-MONO-001 8xfxuxj PASS 4/4); the .8 campaign
+composition and .5 publication chains are merged to main with dual reviews.
+The REMAINING acceptance model — installed outcomes verified through a
+socket-owning receiver process driven per-lab over SSH — was superseded by
+the Captain's decision: state lives on files (like ace-task/ace-assign),
+no background processes, gems self-service from RubyGems, each lab's repo is
+its own configuration. Continuation lives in the successor program:
+"Python→Ruby migration: file-based Lab, zero daemons".

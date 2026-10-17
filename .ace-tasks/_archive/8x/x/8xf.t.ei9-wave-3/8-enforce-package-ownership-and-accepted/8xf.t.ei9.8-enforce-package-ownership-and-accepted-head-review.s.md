@@ -1,6 +1,6 @@
 ---
 id: 8xf.t.ei9.8
-status: in-progress
+status: done
 priority: high
 created_at: "2026-10-16 10:57:20"
 tags: []
@@ -80,3 +80,13 @@ result into independent review. The merge consumer must independently dereferenc
 that canonical approval and executed checks. A closed acceptance-reference schema
 and a reviewer name different from the executor are insufficient proof. This join
 blocks the first installed two-PR merge acceptance, before publication/OTP.
+
+## Closure note (2026-10-17)
+
+Source work COMPLETE and merged to main (line join ac80393b4; composition
+a70a46a10 after dual review — configured Pi review with all findings fixed,
+plus independent adversarial APPROVE; full suite 51/12,429→12,606 tests,
+0 failures). Follow-up receipts landed: driver-vs-real-authority
+integration test, CLI exposure (ace-lab assignment campaign). The open
+"installed acceptance" gate was superseded by the Captain's architecture
+decision (file-based, no daemons), not abandoned as unfinished work.

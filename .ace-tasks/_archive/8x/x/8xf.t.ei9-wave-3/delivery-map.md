@@ -706,3 +706,16 @@ Full default suite on main after the post-merge additions (integration
 receipt, CLI exposure, .5 chain): 51 packages / 12,606 tests / 44,429
 assertions / 0 failures. Local main verified green at the source-completion
 checkpoint.
+
+## Program closure (2026-10-17, Captain's architecture decision)
+
+The ei9 source program is delivered: nine gems published and adopted,
+propagation proof 4/4, .8 and .5 source chains merged with reviews. The
+remaining "installed acceptance" model (socket-owner receiver driven per-lab
+over SSH) was superseded by the Captain's decision: state on files like
+ace-task/ace-assign, no background processes, gems self-service from
+RubyGems, each lab's repo is its own configuration. The acceptance columns
+above are historical truth of what was verified, not a forward plan.
+Successor program: 8xg.t.qn6 (Python→Ruby migration: file-based Lab, zero
+daemons). Task statuses updated accordingly (.8 and parent done; .0–.7/.9
+skipped-superseded).
