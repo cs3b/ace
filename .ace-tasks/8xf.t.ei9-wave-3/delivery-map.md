@@ -684,3 +684,20 @@ defense-in-depth, boundary session-binding literal pinning, and the executed
 head-assessment path which is sequenced with real campaign rounds. No gem
 versions were bumped on this branch; floors/CHANGELOG land at the next
 coordinated release.
+
+### Program source-completion checkpoint (2026-10-17)
+
+With the .5 publication chain finished (staging/reconciliation, serial
+publication states, iy6-bound executor — evidence under child .5), every
+host-side source item of the ei9 program is complete: the nine-gem release is
+published and adopted; .8's line join and composition joins are merged with
+dual reviews plus the integration and CLI receipts; .5's staging, publication
+and publisher seams are landed with focused receipts; .9's transport pieces
+are source-reviewed awaiting deployment. Everything remaining — .0 receipts
+verification onward through .7, all-consumer install/sync, shared Hermes
+mTLS/poller — is installed acceptance and requires Lab connectivity, which
+has been unreachable from this host for 22 consecutive rounds (the Lab itself
+runs autonomously; last verified: both assignments registered, worker pane
+executing). Local main carries all program source; the push remains with the
+Captain. The next coordinated release (shipping the .5/.8 additions) is
+sequenced after installed acceptance per the handoff.
