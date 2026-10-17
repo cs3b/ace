@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.23.1] - 2026-10-17
+
+### Changed
+
+- Adapt status and prune collection to `ace-git-worktree`'s inventory-based
+  `list_all` (no `show_tasks:` argument) after the 0.27 active-worktree listing
+  rework, and raise the dependency floor to `ace-git-worktree ~> 0.27` so
+  overseer stays aligned with the current worktree minor release line.
+
 ## [0.23.0] - 2026-10-16
 
 ### Added
