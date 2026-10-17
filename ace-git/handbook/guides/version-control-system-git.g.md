@@ -21,7 +21,7 @@ This project uses a **mono-repo architecture** with all packages at the reposito
 
 - **ace-*/**: Ruby gems for specific functionality (ace-git, ace-task, ace-docs, etc.)
 - **docs/**: Project documentation and architecture decisions
-- **.ace-task/**: Task management and release coordination
+- **.ace-tasks/**: Task management and release coordination
 - **_legacy/**: Archived content from previous multi-repo structure
 
 #### Common Git Commands

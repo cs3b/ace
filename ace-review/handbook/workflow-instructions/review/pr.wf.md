@@ -37,25 +37,24 @@ Verify reports against code and requirements. Use `ace-review-feedback list --se
 
 Fix confirmed P0/P1 and run appropriate tests. Verify P2 and lower findings, fix those within the task or defer with rationale; they do not independently require another round. Do not expand the PR to implement speculative improvements. If the same blocker recurs without an effective fix, diagnose the cause or request the needed product/architecture decision instead of repeating the same review.
 
-## 3. Ordinary campaign recording and finish
+## 3. Record rounds locally and finish
 
-Use the durable `ace-review campaign` authority for completed rounds, verified dispositions, required scopes and clean streak. Start/reuse it with explicit subject JSON and a frozen behavioral requirements document; snapshot the applicable delivery policy. Pin an empty round before collection with head/base, scope IDs and presets, then pass `--campaign ID --campaign-round ROUND --campaign-scope SCOPE` to the existing review runner. Have the existing assignment coordinator accept each completed collection as a `review-collect` receipt with a passed review-execution outcome and checksummed metadata/report/prompt artifacts. Include its accepted receipt reference with the session and verified feedback dispositions in `campaign record-round`; editable execution flags alone cannot count. Full PR scopes require the complete unfiltered whole-PR inventory without delta references. Filtered module reviews and delta reviews use explicit module or delta scopes frozen in the campaign policy; pin the delta reference before collection. The default delivery `full` policy requires whole-PR rounds. Record partial attempts without counting them as completed rounds. See `ace-review/docs/campaigns.md` for exact input schemas and examples.
+Keep round state locally: each `ace-review --pr` run produces a review session and `ace-review-feedback` records verified findings and dispositions. Do not require a durable campaign or a coordinator-accepted journal receipt; those belonged to the removed lab authority model. The agent keeps the total round count and the clean-round streak across restarts and context compaction, and records them in the PR description or an assignment report when useful. A round counts only after the needed session reports completed and the agent verified their findings; failed providers and incomplete reports do not count.
 
-Resume with `campaign status ID --format json` after a restart or context compaction. Changed requirements create a linked successor with a reason and retained findings; implementation commits, task lifecycle metadata and completion reports do not change the frozen requirements document. Commits, squash and rebase preserve the total and clean counters. Current evidence validity is separate: changed head/base or missing/corrupt source artifacts block acceptance without erasing historical rounds. Use a new evidenced occurrence to reopen a canonical finding instead of transitioning terminal feedback files back to pending. Later High/Critical assessments, including terminal corrections to earlier findings, require a completed current round before an earlier approval can become acceptable; an empty or partial disposition submission cannot clear that gate.
+Resume after a restart from the PR's review sessions and the current head. Changed requirements or a moved head do not erase historical rounds, but current-head evidence must be renewed. Use a new evidenced occurrence to reopen a finding; do not transition terminal feedback files back to pending. Later High/Critical assessments, including terminal corrections to earlier findings, require a completed current round before an earlier approval can become acceptable; an empty or partial disposition submission cannot clear that gate.
 
 Examples:
 
-- P1 → clean → clean: finish after round 3.
-- clean → clean → clean: finish after round 3.
-- P1 → clean → P1 → clean → clean: finish after round 5.
+- P1 -> clean -> clean: finish after round 3.
+- clean -> clean -> clean: finish after round 3.
+- P1 -> clean -> P1 -> clean -> clean: finish after round 5.
 - An incomplete attempt does not increment either counter and cannot hide an outstanding blocker.
 - A round that finds a confirmed P1 is not clean even if it is fixed immediately afterward.
 
-After the completion rule is met and changes have appropriate test results, update the PR description with actual reviewers, scopes, fixes, deferred findings and limitations, then mark the draft ready. Finish with `ace-review campaign finish ID --format json` after the final round records independent current-head approval backed by an accepted ordinary review receipt and passing required check artifacts. The source approval receipt must bind the approved reviewer verdict, actors, head and report hashes; caller-written approval JSON and collection receipts alone cannot approve the candidate. Search convergence alone cannot approve stale/incomplete evidence or unresolved earlier P0/P1. The result remains a local artifact until ace-assign independently verifies it through its existing attempt receipt boundary. Keep formal merge checks at merge time. Do not merge without explicit user authorization, post replies to people or resolve their threads without authorization. Do not make optional code changes after completion that would unnecessarily reopen review.
-
+After the completion rule is met and changes have appropriate test results, update the PR description with actual reviewers, scopes, fixes, deferred findings and limitations, then mark the draft ready with the local forge command (`ace-git pr ready`). Search convergence alone cannot approve stale/incomplete evidence or unresolved earlier P0/P1. Keep formal merge checks at merge time. Do not merge without explicit user authorization, post replies to people or resolve their threads without authorization. Do not make optional code changes after completion that would unnecessarily reopen review.
 
 ## Role workflow (planned L5.5)
 
 The coworker/reviewer role workflow that connects these review rounds to the new
-role handoff lands in L5.5. Until then, use the local campaign recording above and
+role handoff lands in L5.5. Until then, use the local review rounds above and
 keep the reviewer independent from the worker.

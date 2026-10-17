@@ -48,6 +48,12 @@ task:
   `ace-task list`/`show`/scanner never see it.
 - `ace-task status` and `ace-task plan` stay project-scoped and do not read the
   private store.
+- An `--in` name that is neither a configured store nor an existing task folder
+  is a usage error (create/show/update always; `list` for `_`-prefixed private
+  store names) instead of silently returning an empty list.
+- A missing owner configuration is reported as not ready by the owning role
+  path; the L3 coworker start/status path reports an absent
+  `.ace-local/coworker/` configuration as not ready rather than guessing one.
 - `--in next`, `maybe`, `anytime`, `archive`, and existing custom folders keep
   their existing meaning.
 

@@ -103,6 +103,12 @@ class StoreInCommandTest < AceTaskTestCase
     assert_match(/Unknown task store '_unknown'/, update_error.message)
   end
 
+  def test_list_rejects_unknown_private_store_name
+    error = assert_raises(Ace::Support::Cli::Error) { invoke("list", "--in", "_unknown") }
+
+    assert_match(/Unknown task store '_unknown'/, error.message)
+  end
+
   def test_dry_run_does_not_create_store_root
     output = invoke("create", "Preview", "--in", "_overseer", "--dry-run")
 
