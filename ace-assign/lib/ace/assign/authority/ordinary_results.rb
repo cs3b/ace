@@ -296,6 +296,34 @@ module Ace
             attempt: attempt, live_head: binding.fetch("head"), repo_root: @journal.repo_root)
         end
 
+        def retained_review_context_result(params, events, commit)
+          raise AttemptErrors::EvidenceUnavailable, "ordinary result chain is corrupt" unless Models::EvidenceEvent.chain_valid?(events)
+          records = events.select { |event| event["type"] == "review_context_submitted" }
+          replies = events.select { |event| event["type"] == "authority_mutation" && event.dig("payload", "operation") == "submit_review_context" }
+          return nil if records.empty? && replies.empty?
+          unless records.one? && replies.one?
+            raise AttemptErrors::EvidenceUnavailable, "ordinary review context provenance is missing or duplicated"
+          end
+          payload = records.first.fetch("payload")
+          binding = payload.fetch("binding")
+          start = events.find { |event| event["type"] == "process_start" }.fetch("payload")
+          unless payload.keys.sort == %w[authority binding receipt result_id] && payload["authority"] == "ordinary" &&
+              payload["result_id"].is_a?(String) && payload["result_id"].match?(/\A[0-9a-f]{32}\z/) &&
+              binding.keys.sort == %w[assignment_id attempt_id authority checkout generation head original_receipt_digest producer project_id result_id review runtime_binding uploaded_receipt_sha256 worker_uid] &&
+              binding["authority"] == "ordinary" && binding["result_id"] == payload["result_id"] &&
+              binding["head"] == binding.dig("checkout", "head") &&
+              binding.values_at("project_id", "assignment_id", "attempt_id", "runtime_binding") ==
+              [@project, params.fetch("assignment_id"), params.fetch("attempt_id"), start.fetch("runtime_binding")] &&
+              binding.fetch("producer") == start.slice("actor", "role", "runtime") &&
+              binding.fetch("worker_uid") == start.dig("runtime_binding", "process_identity", "uid") &&
+              payload.fetch("receipt").fetch("producer") == binding.fetch("producer") &&
+              binding.fetch("review").is_a?(Hash) &&
+              replies.first.dig("payload", "data").slice(*ordinary_result_projection(payload).keys) == ordinary_result_projection(payload)
+            raise AttemptErrors::EvidenceUnavailable, "ordinary review context owner differs"
+          end
+          payload.merge("kind" => "review-context")
+        end
+
         def retained_ordinary_result(params, events, commit)
           raise AttemptErrors::EvidenceUnavailable, "ordinary result chain is corrupt" unless Models::EvidenceEvent.chain_valid?(events)
           records = events.select { |event| event["type"] == "result_submitted" }

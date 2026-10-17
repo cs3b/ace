@@ -169,21 +169,39 @@ module Ace
             "operation" => "review-collect",
             "review" => {"head" => @head, "verdict" => "approved", "reviewer" => {"actor" => Etc.getpwuid.name},
               "review_id" => assigned.fetch("review_id"), "campaign" => campaign_ref},
+            "checks" => [{"name" => "review-execution", "verdict" => "passed"}],
             "artifacts" => [{"path" => "system-prompt.md", "sha256" => Digest::SHA256.hexdigest(prompt)}])
           context = own.merge("head" => @head, "receipt_sha256" => Digest::SHA256.hexdigest(bytes),
             "review_id" => assigned.fetch("review_id"), "producer_assignment_id" => "producer")
-          submitted = @client.call("submit_review_context", context.merge("expected_generation" => 1),
+          @client.call("queue_finish", own.merge("expected_generation" => 1, "step" => "010.01"),
+            mutation_id: "reviewer-progress", upload_parts: ["Collected campaign context."], purpose: :artifacts)
+          submitted = @client.call("submit_review_context", context.merge("expected_generation" => 2),
             mutation_id: "reviewer-context", upload_parts: [bytes, prompt], purpose: :review_context).data
           assert submitted.fetch("result_id")
           assert_equal "running", submitted.fetch("state")
-          duplicate = @client.call("submit_review_context", context.merge("expected_generation" => 1),
+          duplicate = @client.call("submit_review_context", context.merge("expected_generation" => 2),
             mutation_id: "reviewer-context", upload_parts: [bytes, prompt], purpose: :review_context)
           assert duplicate.replayed
           refused = assert_raises(AttemptErrors::EvidenceUnavailable) do
-            @client.call("submit_review_context", context.merge("expected_generation" => 2),
+            @client.call("submit_review_context", context.merge("expected_generation" => 3),
               mutation_id: "second-context", upload_parts: [bytes, prompt], purpose: :review_context)
           end
           assert refused.message.include?("conflict"), "fresh second submission must conflict, got: #{refused.message}"
+          @admission.selected = "supervisor"
+          @client.call("finish", own.merge("pane" => "w1:pS", "head" => @head, "expected_generation" => 3,
+            "result_id" => submitted.fetch("result_id"), "receipt_digest" => submitted.fetch("receipt_digest")), mutation_id: "finish-reviewer")
+          reference = {"review_id" => assigned.fetch("review_id"),
+            "reviewer_assignment_id" => "reviewer", "reviewer_attempt_id" => "reviewer-run",
+            "result_id" => submitted.fetch("result_id"), "receipt_digest" => submitted.fetch("receipt_digest")}
+          prefix = @journal.ref_value
+          producer_events = @journal.read_events("producer", commit: prefix).select { |event| event["attempt_id"] == "producer-run" }
+          read_context = nil
+          @owner.with_review_collection!(events: producer_events, commit: prefix, reference: reference) do |proof, reader|
+            assert_equal "review-collect", proof.fetch("operation")
+            artifact = proof.fetch("artifacts").first
+            read_context = reader.call(artifact)
+          end
+          assert_equal prompt, read_context, "round ingestion must reuse the exact canonical prompt bytes"
         end
       end
 
