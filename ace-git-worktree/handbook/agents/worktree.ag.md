@@ -50,8 +50,8 @@ A specialized agent for managing git worktrees with task-aware automation. Handl
 # Create worktree for feature branch
 @worktree create feature-branch
 
-# List all worktrees
-@worktree list --show-tasks
+# List active worktrees (last 18h) with task context
+@worktree list
 
 # Switch to worktree
 @worktree switch feature-branch
@@ -106,10 +106,14 @@ The worktree agent accepts standard CLI parameters:
 - `--no-commit`: Skip committing task changes
 
 ### list
+- `--compact`: Active worktrees only (default)
+- `--full`: List every worktree (including inactive) with absolute paths
+- `--active-within <duration>`: Activity window (`30m`, `18h`, `2d`, or bare hours; default 18h)
 - `--format <format>`: Output format (table, json, simple)
-- `--show-tasks`: Include task associations
-- `--task-associated`: Filter by task association
-- `--search <pattern>`: Filter by search pattern
+- `--task-associated` / `--no-task-associated`: Filter by resolved task id
+- `--usable` / `--no-usable`: Filter by usability
+- `--search <pattern>`: Filter by branch-name pattern
+- `-q`, `--quiet`: Suppress the count footer
 
 ### switch
 - `identifier`: Worktree identifier (task ID, branch name, directory, path)
@@ -179,7 +183,7 @@ The worktree agent provides deterministic output suitable for AI automation:
 WORKTREE_PATH=$(ace-git-worktree switch 081)
 
 # Get worktree status as JSON
-STATUS=$(ace-git-worktree list --format json --show-tasks)
+STATUS=$(ace-git-worktree list --format json)
 
 # Create worktree and verify creation
 RESULT=$(ace-git-worktree create --task 081 --dry-run --format json)

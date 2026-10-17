@@ -35,7 +35,7 @@ $action: Management action (list, switch, remove, prune)
 ace-git-worktree list
 
 # List with task associations
-ace-git-worktree list --show-tasks
+ace-git-worktree list
 
 # List in different formats
 ace-git-worktree list --format json
@@ -158,10 +158,10 @@ ace-git-worktree config --show
 
 ```bash
 # Get worktree status for all tasks
-ace-git-worktree list --format json --show-tasks | jq '.worktrees'
+ace-git-worktree list --format json | jq '.[]'
 
 # Count worktrees by type
-ace-git-worktree list --show-tasks | grep "Task" | wc -l
+ace-git-worktree list --full | grep -c "Task"
 
 # Find worktrees with specific patterns
 ace-git-worktree list --search "bug" --format simple
@@ -184,7 +184,7 @@ ace-git-worktree list | grep -v "bare\|detached"
 
 ```bash
 # Get comprehensive status
-ace-git-worktree list --show-tasks --format json
+ace-git-worktree list --format json
 
 # Check specific worktree
 ace-git-worktree switch 081 --verbose
@@ -199,7 +199,7 @@ ace-git-worktree config --validate
 
 ```bash
 # Get all worktrees as JSON
-WORKTREES=$(ace-git-worktree list --format json --show-tasks)
+WORKTREES=$(ace-git-worktree list --format json)
 
 # Extract specific information
 echo "$WORKTREES" | jq '.worktrees[] | select(.task_id == "081")'
@@ -311,7 +311,7 @@ fi
 
 # 1. Check current worktree status
 echo "=== Current Worktree Status ==="
-ace-git-worktree list --show-tasks --format simple
+ace-git-worktree list --format simple
 
 # 2. Clean up if needed
 echo "=== Cleanup Check ==="

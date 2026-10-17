@@ -15,7 +15,7 @@ Save all output to `results/tc/02/`. Capture:
 
 - Use explicit public commands:
   1. `ace-git-worktree create --task 8pp.t.q7w`
-  2. `ace-git-worktree list --show-tasks`
+  2. `ace-git-worktree list`
 - The sandbox has taskflow fixtures with task 8pp.t.q7w (8pp.t.q7w-test-feature) already defined.
 - All artifacts must come from real tool execution, not fabricated.
 - Use the worktree path printed by the create command when producing `fs-check.txt`; this goal should validate creation directly, not repeat the filter checks covered in Goal 3.

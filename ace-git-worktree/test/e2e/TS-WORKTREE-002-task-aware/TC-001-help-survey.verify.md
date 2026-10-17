@@ -13,7 +13,7 @@ Validation order (impact-first):
 3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
 1. **File exists** — At least one file exists in `results/tc/01/`.
 2. **Substantive content** — The file contains more than 5 lines of non-empty text.
-3. **Mentions task-aware concepts** — The content references task-related flags or options (--task, --show-tasks, --task-associated, --no-task-associated, or --delete-branch).
+3. **Mentions task-aware concepts** — The content references task-related flags or options (--task, --task-associated, --no-task-associated, or --delete-branch) or list-view flags (--full, --active-within).
 4. **Observations present** — The content includes at least one observation about how task flags integrate with worktree operations.
 
 ## Verdict

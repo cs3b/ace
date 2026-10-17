@@ -86,7 +86,7 @@ ace-git-worktree create feature-branch --path ~/dev-work
 
 ```bash
 # List all worktrees
-ace-git-worktree list --show-tasks
+ace-git-worktree list
 
 # Switch to the worktree
 cd $(ace-git-worktree switch 081)
@@ -218,7 +218,7 @@ ace-git-worktree list --task-associated
 ace-git-worktree prune --cleanup-directories
 
 # Get status in JSON for scripts
-ace-git-worktree list --format json --show-tasks
+ace-git-worktree list --format json
 ```
 
 ## Error Handling
@@ -244,7 +244,7 @@ RESULT=$(ace-git-worktree create --task 081 --dry-run --format json)
 echo "$RESULT" | jq '.worktree_path'
 
 # List worktrees with task associations
-STATUS=$(ace-git-worktree list --format json --show-tasks)
+STATUS=$(ace-git-worktree list --format json)
 echo "$STATUS" | jq '.worktrees[] | select(.task_associated == true)'
 ```
 

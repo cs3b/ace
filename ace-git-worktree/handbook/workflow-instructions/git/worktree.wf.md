@@ -72,7 +72,7 @@ ace-git-worktree create feature-branch --no-mise-trust
 ace-git-worktree list
 
 # Show task associations
-ace-git-worktree list --show-tasks
+ace-git-worktree list
 
 # Filter by task association
 ace-git-worktree list --task-associated
@@ -170,7 +170,7 @@ git:
 
 ### list
 - `--format <format>`: Output format (table, json, simple)
-- `--show-tasks`: Include task associations
+- `--full`: List every worktree (including inactive) with absolute paths
 - `--task-associated`: Filter by task association
 - `--search <pattern>`: Filter by search pattern
 

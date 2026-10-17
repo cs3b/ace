@@ -3,8 +3,8 @@ doc-type: user
 title: ace-git-worktree CLI Usage Reference
 purpose: Command reference for ace-git-worktree
 ace-docs:
-  last-updated: 2026-04-14
-  last-checked: 2026-03-22
+  last-updated: 2026-10-17
+  last-checked: 2026-10-17
 ---
 
 # ace-git-worktree CLI Usage Reference
@@ -38,7 +38,7 @@ Create a task worktree, list active worktrees, and resolve the path for shell na
 
 ```bash
 ace-git-worktree create --task 081
-ace-git-worktree list --show-tasks
+ace-git-worktree list
 ace-git-worktree switch 081
 ```
 
@@ -62,14 +62,14 @@ Success looks like a new worktree directory exists and `switch` returns a path y
 
 ```bash
 ace-git-worktree create --task 081
-ace-git-worktree list --show-tasks
+ace-git-worktree list
 ```
 
 **Expected output:**
 
 ```text
 Created task worktree and branch for 081
-... task.081 appears in the worktree list ...
+... task 081 appears in the active worktree table ...
 ```
 
 **Next steps:** Run `cd "$(ace-git-worktree switch 081)"` to move into the new worktree.
@@ -143,7 +143,7 @@ ace-git-worktree cleanup --target main --apply --approved-digest <sha256-digest>
 **Commands:**
 
 ```bash
-ace-git-worktree list --show-tasks
+ace-git-worktree list
 ace-git-worktree list --task-associated
 ace-git-worktree list --no-task-associated
 ```
@@ -151,9 +151,50 @@ ace-git-worktree list --no-task-associated
 **Expected output:**
 
 ```text
-... --show-tasks includes task metadata ...
-... --task-associated excludes the main worktree ...
-... --no-task-associated shows main/non-task entries only ...
+... the default view lists only worktrees active in the last 18h ...
+... --task-associated keeps only worktrees with a resolved task id ...
+... --no-task-associated shows only worktrees without a task id ...
+```
+
+### Scenario 4: Find Work Without Meaningful Worktree Names
+
+**Goal:** A worktree created by another tool has a path/branch that names no
+task. Still identify its task and PR.
+
+**Commands:**
+
+```bash
+ace-git-worktree list
+ace-git-worktree list --format json
+```
+
+**Expected output:**
+
+```text
+... the Task cell shows the task whose .ace-tasks files were modified there ...
+... `ace-git-worktree list --format json` reports task_id_source=task_files ...
+```
+
+The PR cell resolves by branch name, then by HEAD commit, then by a unique task
+reference in the PR title/body; `null`/`-` means no match. The JSON entry exposes
+`pr.matched_by` (`branch`, `head_sha`, or `task_reference`).
+
+### Scenario 5: Exhaustive Listing and Custom Window
+
+**Goal:** Inspect every worktree, or widen the activity window after a weekend.
+
+**Commands:**
+
+```bash
+ace-git-worktree list --full
+ace-git-worktree list --active-within 3d
+```
+
+**Expected output:**
+
+```text
+... --full lists every worktree with absolute paths ...
+... --active-within 3d reads "Active worktrees (last 3d) -- N of M:" ...
 ```
 
 ### Scenario 5: Remove by Task and Delete Branch
@@ -216,33 +257,109 @@ ace-git-worktree create --task 081 --dry-run
 
 ### `ace-git-worktree list`
 
-List active worktrees with optional task metadata and filters.
+List worktrees as an active-worktree table with task, activity, dirty-state, and
+PR context. By default only worktrees active inside the activity window are
+rows; everything else is collapsed into counts.
 
 ```bash
 ace-git-worktree list
-ace-git-worktree list --show-tasks
+ace-git-worktree list --full
+ace-git-worktree list --active-within 3d
 ace-git-worktree list --format json
+ace-git-worktree list --task-associated
 ace-git-worktree list --search auth
 ```
 
 **Options:**
 
-* `--format` - Output format: `table`, `json`, or `simple`
-* `--show-tasks` - Include task associations
-* `--task-associated` - Show only task-associated worktrees
-* `--no-task-associated` - Show only non-task worktrees
-* `--usable` - Show only usable worktrees
-* `--search` - Filter by branch-name pattern
-* `-q`, `--quiet` - Suppress non-essential output
+* `--compact` - Active worktrees only (the default; mutually exclusive with `--full`)
+* `--full` - List every worktree in the same columns with absolute paths
+* `--active-within <duration>` - Activity window: `30m`, `18h`, `2d`, or a bare
+  integer (hours). Default `18h`. Invalid, empty, zero, or negative values fail
+  with a non-zero exit.
+* `--format` - Output format: `table` (default), `json`, or `simple`
+* `--task-associated` / `--no-task-associated` - Filter by resolved task id
+* `--usable` / `--no-usable` - Filter by usable (not bare/detached) state
+* `--search <pattern>` - Filter by branch-name pattern
+* `-q`, `--quiet` - Suppress the count footer
 * `-v`, `--verbose` - Show verbose output
 * `-d`, `--debug` - Show debug output
 
-**Minimal JSON contract (`--format json`):**
+There is no `--show-tasks` flag: the Task column is always present and task
+association is always inferred.
 
-- Output is valid JSON (`array` or object containing worktree entries).
-- Each entry includes a stable path/identity surface usable by scripts (`path` and `branch` fields).
-- Task-associated entries expose `task_id`.
-- Non-task entries either omit `task_id` or set it to `null`.
+**Default output shape:**
+
+```text
+Active worktrees (last 18h) -- 3 of 88:
+Task   Branch                       Age  Commit                    Changes  PR           Path
+----------------------------------------------------------------------------------------------
+k9y    codex/r3-bounded-convergence  17h  feat(review): define bo…        2  #142 draft   …/codex-r3-bounded-convergence
+-      codex/ei9-campaign-join        8m  feat(ace-assign): compl…        -  -            …/ei9-campaign-composition-join
+
+Inactive: 85  (use --full to list all)
+Task-associated: 14    Usable: 71    Recent branches without worktrees: 4
+```
+
+**Activity:** a worktree is active when the last commit reachable from its
+checked-out HEAD is inside the window **or** it has uncommitted changes (staged,
+unstaged, or untracked). Bare worktrees are never active. Filters apply before
+the active/inactive split, so the header and footer counts always describe the
+filtered set. `Recent branches without worktrees` is branch-based and is not
+affected by worktree filters.
+
+**Columns:**
+
+* `Task` - resolved short task id; `<id>+N` when N additional candidate tasks
+  were inferred from modified task files; `-` when unresolved.
+* `Branch` - checked-out branch (middle-elided when truncated); `detached`.
+* `Age` - last commit age in one unit (`8m`, `3h`, `9d`, `3w`, `2mo`, `1y`);
+  `never` when the branch has no commits; future timestamps render `0m`.
+* `Commit` - last commit subject, right-truncated with `…`.
+* `Changes` - uncommitted file count (staged + unstaged + untracked); `-` when
+  clean.
+* `PR` - `#N` (open), `#N draft`, `#N merged`, `#N closed`, or `-`.
+* `Path` - `$HOME` shortened to `~` and left-elided in compact mode; absolute
+  and untruncated with `--full`.
+
+**Task association (name-independent), in precedence order:**
+
+1. recorded task metadata (`worktree.path` / `worktree.branch`);
+2. the `_current` symlink resolving under `.ace-tasks/`;
+3. a validated path/branch name extraction (rejected when it names no task);
+4. task files modified in the worktree (uncommitted first, then commits relative
+   to the merge-base with the primary worktree's branch). The dominant task wins
+   (most changed task files; lexicographic tie-break), rendered `<id>+N`.
+
+**PR resolution:** one bounded forge query per run. A PR is matched by branch
+name, then by HEAD commit sha, then by a unique task reference in the PR
+title/body. Unconfigured/offline forges render `-` and never fail the command.
+
+**Width behavior:** the table targets `120` columns, shrinks `Path`, then
+`Commit`, then `Branch` down to their minimums, and drops `Path` (then `Commit`)
+on very narrow terminals. Width comes from `COLUMNS`, else the terminal size,
+else `120`. `--full` is exempt from truncation.
+
+**Probe isolation:** each worktree is probed in its own forked child process
+(one child per worktree, at most 16 alive, hard 5 second budget per probe).
+Probe results are ordered by `git worktree list` order, so output is
+deterministic; a failed or timed-out probe renders `?` in `Age`/`Commit`/
+`Changes` while the rest of the table renders and the command exits 0. Where
+`fork` is unavailable, probes run sequentially with the same timeouts.
+
+**JSON contract (`--format json`):**
+
+- Output is a top-level array of every selected (post-filter) worktree.
+- Existing keys stay unchanged (`path`, `branch`, `commit`, `task_id`, `bare`,
+  `detached`, `created_at`, `usable`, `task_associated`, `exists`, `empty`).
+- Added keys: `task_id_source` (`metadata|symlink|path|branch|task_files|null`),
+  `task_ids` (all candidates), `active_within_window` (boolean),
+  `last_commit` (`sha`, `age_hours`, `committed_at`, `subject`), `uncommitted`
+  (`staged`, `unstaged`, `untracked`, `total`), and `pr` (`number`, `state` in
+  `open|merged|closed`, `draft`, `matched_by` in
+  `branch|head_sha|task_reference`).
+- Absent sub-objects are `null` rather than omitted. Detail flags do not change
+  JSON output.
 
 ### `ace-git-worktree switch [IDENTIFIER]`
 
@@ -477,7 +594,7 @@ fall back to another provider.
 **Solution:**
 
 ```bash
-ace-git-worktree list --show-tasks
+ace-git-worktree list --full
 ```
 
 Confirm the identifier matches a task ID, branch name, directory name, or path shown in the current worktree list.

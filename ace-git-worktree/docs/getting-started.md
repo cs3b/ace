@@ -53,10 +53,13 @@ This keeps your shell history simple while avoiding hard-coded worktree paths.
 List worktrees with task context when you want a quick overview:
 
 ```bash
-ace-git-worktree list --show-tasks
+ace-git-worktree list
 ```
 
-Use `--search auth` or `--format json` later when you want filtering or machine-readable output.
+The default view shows only worktrees active in the last 18 hours, with task,
+age, last commit, uncommitted changes, and PR context. Use `--full` for an
+exhaustive listing, `--active-within 3d` for a wider window, `--search auth` to
+filter, or `--format json` for machine-readable output.
 
 ## 4. Create a PR Worktree
 
@@ -102,7 +105,7 @@ Add hooks, auto-push, terminal launch, or PR automation only after the basic cre
 | Create a task worktree | `ace-git-worktree create --task 081` |
 | Create a PR worktree | `ace-git-worktree create --pr 26` |
 | Switch into a worktree | `cd "$(ace-git-worktree switch 081)"` |
-| List worktrees with task info | `ace-git-worktree list --show-tasks` |
+| List active worktrees with task info | `ace-git-worktree list` |
 | Remove a task worktree | `ace-git-worktree remove --task 081` |
 | Preview stale cleanup | `ace-git-worktree prune --dry-run` |
 
@@ -128,7 +131,7 @@ ace-git-worktree list
 ### Task filtering behavior
 
 ```bash
-ace-git-worktree list --show-tasks
+ace-git-worktree list
 ace-git-worktree list --task-associated
 ace-git-worktree list --no-task-associated
 ```

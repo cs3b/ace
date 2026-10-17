@@ -2,7 +2,7 @@
 
 ## Goal
 
-Explore `ace-git-worktree --help` and subcommand help, focusing on task-aware features. Discover task-related flags (--task, --show-tasks, --task-associated, --no-task-associated, --delete-branch) and how they integrate with the standard worktree subcommands. Summarize your findings.
+Explore `ace-git-worktree --help` and subcommand help, focusing on task-aware features. Discover task-related flags (--task, --task-associated, --no-task-associated, --delete-branch) and list-view flags (--full, --active-within) and how they integrate with the standard worktree subcommands. Summarize your findings.
 
 ## Workspace
 

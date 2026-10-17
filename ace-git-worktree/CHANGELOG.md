@@ -7,6 +7,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.27.0] - 2026-10-17
+
+### Added
+
+- `ace-git-worktree list` now defaults to a compact active-worktree table: one
+  enriched row per worktree whose last commit or uncommitted changes fall inside
+  the activity window (`--active-within`, default `18h`), plus a two-line count
+  footer. Columns: Task, Branch, Age, Commit, Changes, PR, Path.
+- `--full` lists every worktree in the same columns with absolute, untruncated
+  paths; `--compact` is the explicit default and is mutually exclusive with
+  `--full`.
+- Name-independent task association with provenance: recorded task metadata,
+  the `_current` symlink, validated path/branch names, then task files modified
+  in the worktree (uncommitted first, then commits vs the primary branch
+  merge-base). Ambiguous inference renders `<id>+N` and exposes all candidates.
+- PR resolution through one bounded forge query per run: branch match, then HEAD
+  commit sha, then a unique task reference in the PR title/body.
+- Per-worktree probing in isolated forked children: at most 16 live children,
+  5 second per-probe budget, process-group kill on timeout, deterministic
+  `git worktree list` order, and a sequential fallback where `fork` is
+  unavailable. Probe failures render `?` without failing the command.
+- Width-aware table layout driven by `COLUMNS`/the terminal size: columns shrink
+  in priority order (Path, Commit, Branch) and Path/Commit drop on narrow
+  terminals; compact output never exceeds the detected width.
+- `--format json` additions per selected worktree: `task_id_source`, `task_ids`,
+  `active_within_window`, `last_commit`, `uncommitted`, and `pr` with `state`,
+  `draft`, and `matched_by`. Existing keys are unchanged.
+
+### Changed
+
+- `ace-git-worktree list` output is now the active-worktree table; the legacy
+  plain Task/Branch/Path/Status table and the `Summary:` block are gone.
+- Invalid `--active-within` values, mutually exclusive detail flags, and removed
+  flags fail with actionable one-line errors and a non-zero exit.
+
+### Removed
+
+- `--show-tasks`: the Task column is always present and association is always
+  inferred. Passing `--show-tasks` now fails as an unknown option (ADR-024, no
+  compatibility layer).
+
 ## [0.26.1] - 2026-10-10
 
 ### Fixed

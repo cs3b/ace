@@ -16,7 +16,7 @@ Save all output to `results/tc/05/`. Capture:
 - Use explicit public commands:
   1. `ace-git-worktree create --task 8pp.t.r8x`
   2. `ace-git-worktree list --task-associated`
-  3. `ace-git-worktree list --show-tasks`
+  3. `ace-git-worktree list`
 - The sandbox has taskflow fixtures with task 8pp.t.r8x (8pp.t.r8x-second-task) already defined.
 - After creation, list worktrees to confirm both task worktrees coexist.
 - All artifacts must come from real tool execution, not fabricated.
