@@ -12,7 +12,18 @@ module Ace
           class List < Ace::Support::Cli::Command
             include SharedHelpers
 
-            desc "List active worktrees with optional detail and filters"
+            desc <<~DESC.chomp
+              List active worktrees with task, activity, dirty-state, and PR context
+              Columns: Task, Branch, Age, Commit, Changes, PR, Path. A worktree is
+              active when its last commit is inside --active-within (default 18h) or
+              it has uncommitted changes. Task ids are inferred from recorded task
+              metadata, the _current symlink, validated path/branch names, or
+              .ace-tasks files changed in the worktree; PRs match by branch, then
+              HEAD commit sha, then a unique task reference. Columns shrink to the
+              terminal width and Path drops on very narrow terminals. Probing runs
+              in isolated child processes with a 5 second per-worktree budget;
+              unreadable probes render "?".
+            DESC
 
             example [
               "                          # Worktrees active in the last 18h",
