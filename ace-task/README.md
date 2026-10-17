@@ -1,7 +1,7 @@
 <div align="center">
   <h1> ACE - Task </h1>
 
-  Draft, organize, and tackle tasks — for you and your agents.
+  Draft, organize, and tackle tasks -- for you and your agents.
 
   <img src="../docs/brand/AgenticCodingEnvironment.Logo.XS.jpg" alt="ACE Logo" width="480">
   <br><br>
@@ -13,6 +13,13 @@
 </div>
 
 > Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
+
+> **State owner:** `.ace-tasks/` -- project task markdown files and frontmatter
+> owned by `ace-task`. Each project task gets one worktree under `.ace-wt/`.
+> The private overseer list is a separate untracked store,
+> `.ace-local/overseer/tasks/` (`ace-task --in _overseer …`), and is never
+> scanned as project tasks. The canonical flow is
+> [docs/lab-flow.md](../docs/lab-flow.md).
 
 [Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
 
@@ -41,13 +48,15 @@ Tasks are markdown specs living in git - attached to branches and worktrees, not
 
 **Plan the work** - generate a step-by-step implementation plan with `/as-task-plan` or `ace-task plan`. Define subtasks, configure which agent handles execution, and break scope into assignable units. The plan lives in the task spec so any agent can pick it up.
 
-**Run as dark factory** - hand a task to [ace-overseer](../ace-overseer) and it provisions a worktree, opens a tmux window, creates an assignment, and drives execution through the full lifecycle - onboard, implement, verify, create PR, review, ship. One command kicks it off:
+**Start task work in one command** - hand a task to [ace-overseer](../ace-overseer) and it provisions a worktree under `.ace-wt/`, prepares an assignment in `.ace-local/assign/`, and opens a terminal window (tmux or Herdr). One command kicks it off:
 
 ```bash
 ace-overseer work-on --task t.tt6 --preset work-on-task
 ```
 
-Under the hood this chains [ace-git-worktree](../ace-git-worktree) (isolated branch) -> [ace-tmux](../ace-tmux) (dedicated window and panes layout) -> [ace-assign](../ace-assign) (step-by-step execution). Switch to the tmux window and run `/as-assign-drive` to walk through each step.
+Under the hood this chains [ace-git-worktree](../ace-git-worktree) (isolated branch and worktree) → [ace-tmux](../ace-tmux) or [ace-herdr](../ace-herdr) (terminal) → [ace-assign](../ace-assign) (step-by-step plan). Switch to the window and run `/as-assign-drive` to walk through each step.
+
+> **Planned (L6):** the private overseer queue that automatically continues already delegated, unblocked work is not available yet.
 
 **Track progress** - `ace-task list` shows tasks by status - what is next, what is in progress, and what was recently completed. `ace-task status` gives a focused view of the current task with subtask progress.
 
