@@ -282,6 +282,48 @@ module Ace
         end
       end
 
+      def test_canonical_approval_reference_binds_accepted_review_and_refuses_revoked
+        fixture do
+          register_and_start
+          submit_candidate
+          @admission.selected = "supervisor"
+          assigned = assign_review
+          @admission.selected = "reviewer"
+          accepted = accept_review(assigned).data
+          proof = @owner.canonical_approval_reference!(head: @head,
+            reviewer_actor: accepted.fetch("reviewer_actor"),
+            digest: accepted.fetch("receipt_digest"))
+          assert_equal assigned.fetch("review_id"), proof.fetch("review_id")
+          assert_raises(AttemptErrors::EvidenceUnavailable) do
+            @owner.canonical_approval_reference!(head: "f" * 40,
+              reviewer_actor: accepted.fetch("reviewer_actor"), digest: accepted.fetch("receipt_digest"))
+          end
+          assert_raises(AttemptErrors::EvidenceUnavailable) do
+            @owner.canonical_approval_reference!(head: @head, reviewer_actor: "other",
+              digest: accepted.fetch("receipt_digest"))
+          end
+          assert_raises(AttemptErrors::EvidenceUnavailable) do
+            @owner.canonical_approval_reference!(head: @head,
+              reviewer_actor: accepted.fetch("reviewer_actor"), digest: "0" * 64)
+          end
+        end
+        fixture do
+          register_and_start
+          submit_candidate
+          @admission.selected = "supervisor"
+          assigned = assign_review
+          @admission.selected = "reviewer"
+          accepted = accept_review(assigned).data
+          @admission.selected = "supervisor"
+          @client.call("cancel_review", selection.merge("pane" => "w1:pS", "expected_generation" => 4,
+            "review_id" => assigned.fetch("review_id")), mutation_id: "cancel-after-accept")
+          assert_raises(AttemptErrors::ReceiptRejected) do
+            @owner.canonical_approval_reference!(head: @head,
+              reviewer_actor: accepted.fetch("reviewer_actor"), digest: accepted.fetch("receipt_digest"))
+          end
+        end
+      end
+
       def test_merge_requires_canonical_successful_test_execution_and_rechecks_before_effect
         fixture do
           register_and_start

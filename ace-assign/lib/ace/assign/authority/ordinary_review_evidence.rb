@@ -185,6 +185,34 @@ module Ace
           ordinary_review_receipt_at!(events: events, commit: commit, assigned: assigned)
         end
 
+        # Canonical backstop for campaign approval proofs: an accepted
+        # independent review must exist in this journal bound to the reviewed
+        # head and reviewer actor with the referenced receipt digest, and must
+        # not have been revoked.
+        def canonical_approval_reference!(head:, reviewer_actor:, digest:)
+          commit = @journal.ref_value
+          accepted = @journal.assignment_ids(commit: commit).lazy.flat_map do |assignment|
+            @journal.read_events(assignment, commit: commit).select { |event| event["type"] == "authority_mutation" }
+          end.find do |event|
+            next false unless event.dig("payload", "operation") == "accept_review"
+            data = event.dig("payload", "data")
+            binding = data && data.fetch("review_binding", nil)
+            binding && binding.fetch("head") == head && binding.fetch("reviewer_actor") == reviewer_actor &&
+              data.fetch("receipt_digest") == digest
+          end
+          raise AttemptErrors::EvidenceUnavailable, "canonical approval reference is unknown" unless accepted
+          data = accepted.fetch("payload").fetch("data")
+          review_id = data.fetch("review_binding").fetch("review_id")
+          revoked = @journal.assignment_ids(commit: commit).any? do |assignment|
+            @journal.read_events(assignment, commit: commit).any? { |event|
+              event["type"] == "authority_mutation" && event.dig("payload", "operation") == "cancel_review" &&
+                event.dig("payload", "data", "review_id") == review_id }
+          end
+          raise AttemptErrors::ReceiptRejected, "canonical approval was revoked" if revoked
+          {"review_id" => review_id, "head" => head, "reviewer_actor" => reviewer_actor,
+            "receipt_digest" => digest, "journal_commit" => commit}
+        end
+
         # Historical campaign consumption selects the original review without
         # calling it a current candidate approval. Cancellation is still current.
         def review_at_reference!(events:, commit:, review_id:, head:)
