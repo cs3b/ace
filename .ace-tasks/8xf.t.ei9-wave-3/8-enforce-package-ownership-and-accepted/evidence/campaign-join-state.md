@@ -298,3 +298,20 @@ non-test refusals); owner admission 10/45 PASS.
 Remaining .8 joins: review/approval/head-assessment canonical readers,
 CLI/workflow surface exposure of the runner, comprehensive public-path tests +
 actual Pi independent review, branch re-verification and merge.
+
+### Review-session canonical wiring COMPLETE
+
+OrdinaryReviewCollection gains canonical_review_reference!(attempt_id:,
+head:, digest:): the referenced reviewer attempt (located by scanning the
+journal's assignments for the attempt chain) must hold exactly one retained
+review-collect result — ordinary OR review-context — whose receipt digest and
+reviewed head match the campaign reference. The composition's review_evidence
+dependency is wired late-bound over the lifecycle (same closure pattern as
+release_authorizer/coordinator): campaign-repo session read plus the canonical
+backstop. Receipts: ordinary_reviews 13 tests / 148 assertions PASS (proof +
+wrong-head/wrong-digest/unknown-attempt refusals); owner admission 10/45.
+
+Remaining .8 joins: approval/head-assessment canonical readers (approval
+scans for the accepted-review mutation bound to head/actors/digest),
+CLI/workflow surface exposure, comprehensive public-path tests + actual Pi
+independent review, branch re-verification and merge.
