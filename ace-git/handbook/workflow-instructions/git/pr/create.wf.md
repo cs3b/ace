@@ -8,11 +8,11 @@ purpose: Create or reconcile a forge-neutral draft for the exact candidate
 
 ## Goal
 
-Create one draft PR on the selected forge and retain its exact source/base identity in the assignment attempt evidence.
+Create one draft PR on the selected forge and record its exact source/base identity in the assignment report.
 
 ## Prerequisites
 
-A reviewed task or explicit implementation scope, a committed candidate, and a pushed source ref. Credentials permit transport only; they grant no integration authority.
+A reviewed task or explicit implementation scope, a committed candidate, and a pushed source ref. Credentials permit transport only; they grant no integration permission.
 
 ## Inputs
 
@@ -25,7 +25,7 @@ Use `forge_server` or `forge_default: true`, mutually exclusive. Neither means r
 ## Steps
 
 1. Read the task and actual committed diff; prepare a concrete title and description explaining behavior and executed validation. Save the description as a local file.
-2. Use the existing assignment and active attempt IDs when this work belongs to an assignment. If needed, start the attempt with `ace-assign attempt start --assignment ID --step STEP --project PROJECT`. The execution boundary supplies actor identity; do not impersonate a reviewer or integrator.
+2. When this work belongs to an assignment, use its actual ID and record the PR identity in the assignment report. The execution boundary supplies actor identity; do not impersonate a reviewer or integrator.
 3. Verify the pushed source ref resolves to the candidate SHA. The pushed ref must equal the candidate.
 4. Create the draft with the configured forge command; drafts are the default:
 
@@ -34,9 +34,9 @@ Use `forge_server` or `forge_default: true`, mutually exclusive. Neither means r
    ```
 
    Use the retained default/remote selection instead of `--server NAME` when applicable. In this repository invoke the source `bin/ace-git` entrypoint.
-5. Read the structured result. Verify the retained server/provider/base and head repository/ref, draft PR number/URL, candidate SHA and base head. Record the PR identity in the assignment attempt report/evidence.
-6. On interruption or an unknown create outcome, repeat the same command with the same selectors to reconcile reads. One matching draft at the exact head is adopted without a second create. Zero remains unresolved; multiple matches conflict. Never bypass an uncertain read with a different provider command.
+5. Read the structured result. Verify the retained server/provider/base and head repository/ref, draft PR number/URL, candidate SHA and base head. Record the PR identity and observed candidate head in the assignment report.
+6. On interruption or an unknown create outcome, repeat the same command with the same selectors: the implementation re-reads open PRs and adopts one matching draft at the exact head without a second create. Adoption does not compare or rewrite the remote title/body, so verify the remote content explicitly before relying on it, and use `wfi://git/pr/update` if the description differs. Zero matches remain unresolved; multiple matches conflict. Never bypass an uncertain read with a different provider command.
 
 ## Success criteria
 
-The attempt evidence records exact identity and the proven draft outcome. A report or shell exit alone proves nothing. Continue with actual tests and independent current-head review; keep the PR draft until those results are accepted. CI is visible and advisory. Publication is a separate authorized operation and is not required for delivery.
+The assignment report records exact identity and the proven draft outcome. A report or shell exit alone proves nothing. Continue with actual tests and independent current-head review; keep the PR draft until those results are accepted. CI is visible and advisory. Publication is a separate authorized operation and is not required for delivery.

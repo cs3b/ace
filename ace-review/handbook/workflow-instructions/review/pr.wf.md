@@ -27,7 +27,7 @@ For presets with a goals brief, `--prepare-goals-brief` generates or reuses the 
 
 ## 2. Run a round and verify findings
 
-Run `ace-review --pr IDENTIFIER --server NAME --preset PRESET --auto-execute` with the retained default/remote selection when applicable. Pass selected previous sessions with `--evidence-session <path>` when useful. Earlier commit SHAs are expected: prior reports provide context and dispositions, not current-code certificates. Supply a short summary of fixes and outstanding issues through the preset context when it is more useful than full reports. Every final accepted review and test evidence must bind the current candidate SHA; commits do not reset the round counters. A committed task edit changes the candidate and requires renewed evidence. CI remains visible and advisory; failed execution, unresolved findings or stale receipts block acceptance.
+Run `ace-review --pr IDENTIFIER --server NAME --preset PRESET --auto-execute` with the retained default/remote selection when applicable. Pass selected previous sessions with `--evidence-session <path>` when useful. Earlier commit SHAs are expected: prior reports provide context and dispositions, not current-code certificates. Supply a short summary of fixes and outstanding issues through the preset context when it is more useful than full reports. Every final accepted review and test evidence must bind the current candidate SHA; commits do not reset the round counters. A committed task edit changes the candidate and requires renewed evidence. CI remains visible and advisory; failed execution, unresolved findings or stale evidence block acceptance.
 
 Round N+1 does not need to re-review unchanged code. `--delta` scopes the round to the diff since the reference head recorded by the most recent prior session of that PR (`--delta <head>` names an explicit reference), carries its findings forward as evidence, and completes as a zero-model no-op session when the delta is empty. When the project config declares `exempt_paths` and a delta touches only those paths, the round is recorded as a review-exempt no-op; mixed deltas review only the non-exempt part. Full rounds are never converted into no-ops by exempt paths.
 
@@ -39,7 +39,7 @@ Fix confirmed P0/P1 and run appropriate tests. Verify P2 and lower findings, fix
 
 ## 3. Record rounds locally and finish
 
-Keep round state locally: each `ace-review --pr` run produces a review session and `ace-review-feedback` records verified findings and dispositions. Do not require a durable campaign or a coordinator-accepted journal receipt; those belonged to the removed lab authority model. The agent keeps the total round count and the clean-round streak across restarts and context compaction, and records them in the PR description or an assignment report when useful. A round counts only after the needed session reports completed and the agent verified their findings; failed providers and incomplete reports do not count.
+Keep round state locally: each `ace-review --pr` run produces a review session and `ace-review-feedback` records verified findings and dispositions. Do not require a durable campaign store beyond these local files; that belonged to the removed lab model. The agent keeps the total round count and the clean-round streak across restarts and context compaction, and records them in the PR description or an assignment report when useful. A round counts only after the needed session reports completed and the agent verified their findings; failed providers and incomplete reports do not count.
 
 Resume after a restart from the PR's review sessions and the current head. Changed requirements or a moved head do not erase historical rounds, but current-head evidence must be renewed. Use a new evidenced occurrence to reopen a finding; do not transition terminal feedback files back to pending. Later High/Critical assessments, including terminal corrections to earlier findings, require a completed current round before an earlier approval can become acceptable; an empty or partial disposition submission cannot clear that gate.
 
@@ -48,7 +48,7 @@ Examples:
 - P1 -> clean -> clean: finish after round 3.
 - clean -> clean -> clean: finish after round 3.
 - P1 -> clean -> P1 -> clean -> clean: finish after round 5.
-- An incomplete attempt does not increment either counter and cannot hide an outstanding blocker.
+- An incomplete round does not increment either counter and cannot hide an outstanding blocker.
 - A round that finds a confirmed P1 is not clean even if it is fixed immediately afterward.
 
 After the completion rule is met and changes have appropriate test results, update the PR description with actual reviewers, scopes, fixes, deferred findings and limitations, then mark the draft ready with the local forge command (`ace-git pr ready`). Search convergence alone cannot approve stale/incomplete evidence or unresolved earlier P0/P1. Keep formal merge checks at merge time. Do not merge without explicit user authorization, post replies to people or resolve their threads without authorization. Do not make optional code changes after completion that would unnecessarily reopen review.
