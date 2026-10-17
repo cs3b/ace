@@ -118,6 +118,13 @@ module Ace
                 lifecycle_ref.call.canonical_review_reference!(attempt_id: reference.fetch("attempt_id"),
                   head: head, digest: reference.fetch("digest"))
                 data
+              end,
+              approval_evidence: ->(reference, head:, artifacts:, producer:, reviewer:, historical: false) do
+                data = default.approval(reference, head: head, artifacts: artifacts, producer: producer,
+                  reviewer: reviewer, historical: historical)
+                lifecycle_ref.call.canonical_approval_reference!(head: head, reviewer_actor: reviewer,
+                  digest: reference.fetch("digest"))
+                data
               end})
         end
 
