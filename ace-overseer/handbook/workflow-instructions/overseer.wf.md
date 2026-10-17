@@ -109,9 +109,12 @@ candidate:
       content) between separate bases. Never fetch proof refs into shared
       repositories or worktrees, and never interpret diff-tool
       output, commit titles, PR reports, or CI status as content proof.
-   3. Patch-range proof additionally requires an independently recorded base
-      commit, and that base itself must be preserved on a surviving accepted
-      ref; without it only full-tree equality or accepted ancestry proves
+   3. Patch-range proof additionally requires the declared source base to be
+      the Git-derived fork point of the candidate branch and accepted base
+      (merge-base of the candidate head and the accepted base tip); a declared
+      base newer than the fork point could hide candidate work and blocks. The
+      declared base itself must be preserved on a surviving accepted ref;
+      without it only full-tree equality or accepted ancestry proves
       preservation. Empty or caller-truncated ranges are not evidence.
    4. Ambiguity preserves: conflicting hashes, an unverifiable destination,
       or a failed equivalence check means no proof -- block the prune per

@@ -15,7 +15,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Prune-safety and status guidance no longer refer to attempt baselines or terminal attempts; use assignment status and unresolved-work evidence instead.
-- Rename the prune candidate safety field from `attempts_terminal` to `work_terminal` (local assignment work, not attempts). Patch-range preservation proofs no longer receive an attempt-recorded baseline; full-tree equality or accepted ancestry is required.
+- Rename the prune candidate safety field from `attempts_terminal` to `work_terminal` (local assignment work, not attempts).
+- Patch-range preservation proofs derive their creation baseline from Git: the declared source base must equal the fork point of the candidate head and the accepted base tip. A declared base newer than the fork point blocks because it could hide candidate work.
+
+### Fixed
+
+- Restore `ace-overseer prune --preservation` patch-range proofs after the attempt/journal removal: squash/cherry-pick transfers into a destination that also carries unrelated content can be proven and cleaned up again without any attempt-recorded baseline.
 
 ## [0.24.0] - 2026-10-17
 

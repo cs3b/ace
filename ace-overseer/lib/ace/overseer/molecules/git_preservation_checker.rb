@@ -16,9 +16,11 @@ module Ace
       #    whose content matches by full-tree equality or by an exact
       #    path-by-path transition (modes, symlinks, binary content) between
       #    separate source and destination bases. Patch-range proof requires
-      #    the independently recorded creation baseline (qjl base_head); a
-      #    missing or mismatching baseline disables it. The baseline itself
-      #    must be preserved on a surviving accepted ref.
+      #    the declared source_base to equal the Git-derived fork point
+      #    (merge-base of the candidate head and the accepted base tip): a
+      #    declared base newer than the fork point could hide candidate work
+      #    and blocks. The declared source_base must also be preserved on a
+      #    surviving accepted ref.
       #
       # Everything else — missing, failed or ambiguous evidence — blocks.
       # All Git access is argv-based; no refs are fetched into any repo.
@@ -63,12 +65,10 @@ module Ace
         # @param accepted_base [Hash, nil] `{branch:, head:}` surviving base
         # @param manifest_record [PreservationManifest::Record, nil] Declared
         #   destination (a claim; verified here)
-        # @param recorded_base [String, nil] Independently recorded creation
-        #   baseline (attempt base_head), outside the manifest
         # @param candidate_branch [String, nil] The candidate's own branch,
         #   scheduled for deletion with the worktree
         # @return [Models::PreservationProof]
-        def proof(worktree_path:, accepted_base:, manifest_record: nil, recorded_base: nil, candidate_branch: nil)
+        def proof(worktree_path:, accepted_base:, manifest_record: nil, candidate_branch: nil)
           live_head = rev_parse(worktree_path, "--verify", "HEAD")
           return blocked("cannot resolve candidate HEAD") if live_head.nil?
 
@@ -82,7 +82,7 @@ module Ace
           return blocked("HEAD #{live_head[0, 12]} is not contained in accepted base " \
             "#{accepted_base[:branch]} (#{accepted_base[:head][0, 12]}) and no destination is declared") if manifest_record.nil?
 
-          proof_via_destination(worktree_path, live_head, accepted_base, manifest_record, recorded_base, candidate_branch)
+          proof_via_destination(worktree_path, live_head, accepted_base, manifest_record, candidate_branch)
         end
 
         # Prove preservation for a static identity that has no local
@@ -108,7 +108,7 @@ module Ace
 
         private
 
-        def proof_via_destination(worktree_path, live_head, accepted_base, record, recorded_base, candidate_branch)
+        def proof_via_destination(worktree_path, live_head, accepted_base, record, candidate_branch)
           identity_failure = verify_source_identity(worktree_path, live_head, record)
           return identity_failure if identity_failure
 
@@ -121,18 +121,11 @@ module Ace
           tree_proof = tree_equality_proof(record)
           return tree_proof if tree_proof&.preserved?
 
-          unless patch_proof_allowed?(record, recorded_base)
-            if recorded_base.nil?
-              return blocked("patch-range proof is disabled: no independently recorded creation baseline " \
-                "(attempt base_head) is available to authorize the declared source range")
-            end
-
-            return blocked("declared source_base does not match the recorded creation baseline " \
-              "#{recorded_base[0, 12]}")
-          end
-
           range_failure = verify_range(record)
           return range_failure if range_failure
+
+          fork_failure = verify_fork_point(record, accepted_base)
+          return fork_failure if fork_failure
 
           unless ancestry?(record.source_repo, record.resolved_source_base, accepted_base[:head])
             return blocked("declared source baseline #{record.source_base[0, 12]} itself is not preserved on " \
@@ -171,10 +164,24 @@ module Ace
           end
         end
 
-        def patch_proof_allowed?(record, recorded_base)
-          return false if recorded_base.nil?
+        # The Git-derived creation baseline: the fork point of the candidate
+        # head and the surviving accepted base tip. A manifest may declare a
+        # patch range only from that exact commit; a newer declared base could
+        # exclude candidate commits from the range and hide unpreserved work.
+        def verify_fork_point(record, accepted_base)
+          fork_point = merge_base(record.source_repo, record.resolved_source_head, accepted_base[:head])
+          if fork_point.nil? || fork_point.empty?
+            return blocked("cannot resolve the Git fork point between candidate head " \
+              "#{record.resolved_source_head[0, 12]} and accepted base #{accepted_base[:branch]} " \
+              "(#{accepted_base[:head][0, 12]}); patch-range proof requires a Git-derived creation baseline")
+          end
 
-          recorded_base == record.resolved_source_base
+          return nil if record.resolved_source_base == fork_point
+
+          blocked("declared source_base #{record.source_base[0, 12]} is not the Git-derived fork point " \
+            "#{fork_point[0, 12]} of candidate head #{record.resolved_source_head[0, 12]} and accepted base " \
+            "#{accepted_base[:branch]}; a declared base newer than the fork point could hide candidate work, " \
+            "so patch-range proof is blocked (use full-tree equality or declare the true fork point)")
         end
 
         # A destination that IS the candidate's own branch ref is scheduled
@@ -287,6 +294,11 @@ module Ace
         def commit_count(repo, base, head)
           stdout, _stderr, status = git_runner.call(repo, "rev-list", "--count", "#{base}..#{head}")
           status.success? ? stdout.to_s.strip.to_i : nil
+        end
+
+        def merge_base(repo, left, right)
+          stdout, _stderr, status = git_runner.call(repo, "merge-base", left, right)
+          status.success? ? stdout.to_s.strip : nil
         end
 
         def ancestry?(repo, revision, base)
