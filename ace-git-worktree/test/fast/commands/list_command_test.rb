@@ -3,210 +3,149 @@
 require_relative "../../test_helper"
 
 class ListCommandTest < Minitest::Test
+  class RecordingReporter
+    attr_reader :options
+
+    def initialize(result: {success: true, output: "rendered"})
+      @result = result
+    end
+
+    def run(options)
+      @options = options
+      @result
+    end
+  end
+
   def setup
-    setup_temp_dir
-    @command = Ace::Git::Worktree::Commands::ListCommand.new
+    @reporter = RecordingReporter.new
+    @command = Ace::Git::Worktree::Commands::ListCommand.new(reporter: @reporter)
   end
 
-  def teardown
-    teardown_temp_dir
-  end
-
-  def test_run_with_help_flag
-    result = @command.run(["--help"])
-    assert_equal 0, result
-  end
-
-  def test_run_lists_worktrees
-    skip "Mock result structure incomplete - display_list_result expects additional fields or methods on result object"
-
-    # Mock worktree manager to return some worktrees
-    mock_worktree_manager = Minitest::Mock.new
-    mock_worktrees = [
-      {
-        path: "/path/to/main",
-        commit: "abc123",
-        branch: "main",
-        bare: false
-      },
-      {
-        path: "/path/to/feature",
-        commit: "def456",
-        branch: "feature-branch",
-        bare: false
-      }
-    ]
-    mock_result = {
-      success: true,
-      worktrees: mock_worktrees,
-      formatted_output: "main (/path/to/main)\nfeature-branch (/path/to/feature)",
-      statistics: {
-        total: 2,
-        task_associated: 0,
-        traditional: 2
-      }
-    }
-    mock_worktree_manager.expect(:list_all, mock_result, [Hash])
-
-    @command.instance_variable_set(:@manager, mock_worktree_manager)
-
-    # Capture output to verify
-    result = nil
-    capture_io do
-      result = @command.run([])
-    end
-
-    assert_equal 0, result
-    mock_worktree_manager.verify
-  end
-
-  def test_run_with_search_option
-    mock_worktree_manager = Minitest::Mock.new
-    mock_worktree_manager.expect(:list_all, {success: true, worktrees: []}, [Hash])
-
-    @command.instance_variable_set(:@manager, mock_worktree_manager)
-
-    result = @command.run(["--search", "feature"])
-    assert_equal 0, result
-    mock_worktree_manager.verify
-  end
-
-  def test_run_with_task_associated_filter
-    mock_worktree_manager = Minitest::Mock.new
-    mock_worktree_manager.expect(:list_all, {success: true, worktrees: []}) do |options|
-      options[:task_associated] == true
-    end
-
-    @command.instance_variable_set(:@manager, mock_worktree_manager)
-
-    result = @command.run(["--task-associated"])
-    assert_equal 0, result
-    mock_worktree_manager.verify
-  end
-
-  def test_run_with_no_task_associated_filter
-    mock_worktree_manager = Minitest::Mock.new
-    mock_worktree_manager.expect(:list_all, {success: true, worktrees: []}) do |options|
-      options[:task_associated] == false
-    end
-
-    @command.instance_variable_set(:@manager, mock_worktree_manager)
-
-    result = @command.run(["--no-task-associated"])
-    assert_equal 0, result
-    mock_worktree_manager.verify
-  end
-
-  def test_handles_list_errors_gracefully
-    # Mock worktree manager throwing an error
-    mock_worktree_manager = Minitest::Mock.new
-    mock_worktree_manager.expect(:list_all, nil) do
-      raise StandardError, "Git command failed"
-    end
-
-    @command.instance_variable_set(:@manager, mock_worktree_manager)
-
-    result = @command.run([])
-    assert_equal 1, result
-    mock_worktree_manager.verify
-  end
-
-  def test_security_validation_on_search_arguments
-    dangerous_searches = [
-      "; rm -rf /",
-      "$(whoami)",
-      "`cat /etc/passwd`",
-      "../etc/passwd"
-    ]
-
-    dangerous_searches.each do |dangerous_search|
-      result = @command.run(["--search", dangerous_search])
-      assert_equal 1, result, "Should reject dangerous search: #{dangerous_search}"
-    end
-  end
-
-  # Tests for format option handling (TC-005 fix)
-  def test_format_option_converted_to_symbol
-    # Mock worktree manager to verify format is passed as symbol
-    mock_worktree_manager = Minitest::Mock.new
-    mock_worktree_manager.expect(:list_all, {success: true, worktrees: []}) do |options|
-      # The format should be a symbol after conversion
-      options[:format] == :json
-    end
-
-    @command.instance_variable_set(:@manager, mock_worktree_manager)
-
-    result = @command.run(["--format", "json"])
-    assert_equal 0, result
-    mock_worktree_manager.verify
-  end
-
-  def test_format_option_json_converted_to_symbol
-    mock_worktree_manager = Minitest::Mock.new
-    mock_worktree_manager.expect(:list_all, {success: true, worktrees: []}) do |options|
-      options[:format] == :json
-    end
-
-    @command.instance_variable_set(:@manager, mock_worktree_manager)
-    result = @command.run(["--format", "json"])
-    assert_equal 0, result
-    mock_worktree_manager.verify
-  end
-
-  def test_format_option_table_converted_to_symbol
-    mock_worktree_manager = Minitest::Mock.new
-    mock_worktree_manager.expect(:list_all, {success: true, worktrees: []}) do |options|
-      options[:format] == :table
-    end
-
-    @command.instance_variable_set(:@manager, mock_worktree_manager)
-    result = @command.run(["--format", "table"])
-    assert_equal 0, result
-    mock_worktree_manager.verify
-  end
-
-  def test_format_option_simple_converted_to_symbol
-    mock_worktree_manager = Minitest::Mock.new
-    mock_worktree_manager.expect(:list_all, {success: true, worktrees: []}) do |options|
-      options[:format] == :simple
-    end
-
-    @command.instance_variable_set(:@manager, mock_worktree_manager)
-    result = @command.run(["--format", "simple"])
-    assert_equal 0, result
-    mock_worktree_manager.verify
-  end
-
-  def test_json_output_does_not_print_summary_footer
-    mock_worktree_manager = Minitest::Mock.new
-    mock_result = {
-      success: true,
-      worktrees: [{path: "/tmp/wt"}],
-      formatted_output: "[{\"path\":\"/tmp/wt\"}]",
-      statistics: {
-        total: 1,
-        task_associated: 0,
-        non_task_associated: 1,
-        usable: 1,
-        unusable: 0,
-        bare: 0,
-        detached: 0,
-        branches: ["main"],
-        task_ids: []
-      }
-    }
-    mock_worktree_manager.expect(:list_all, mock_result) do |options|
-      options[:format] == :json
-    end
-
-    @command.instance_variable_set(:@manager, mock_worktree_manager)
-
+  def run_command(args)
     stdout, = capture_io do
-      result = @command.run(["--format", "json"])
-      assert_equal 0, result
+      @result = @command.run(args)
     end
+    [@result, stdout]
+  end
 
-    assert_equal "[{\"path\":\"/tmp/wt\"}]\n", stdout
-    mock_worktree_manager.verify
+  def test_help_prints_contract_without_show_tasks
+    code, output = run_command(["--help"])
+
+    assert_equal 0, code
+    assert_includes output, "--active-within"
+    assert_includes output, "--full"
+    assert_includes output, "--format"
+    assert_includes output, "Task"
+    refute_includes output, "show-tasks"
+  end
+
+  def test_default_options
+    code, output = run_command([])
+
+    assert_equal 0, code
+    assert_equal "rendered\n", output
+    assert_equal "table", @reporter.options[:format]
+    assert_equal false, @reporter.options[:full]
+    assert_equal false, @reporter.options[:compact]
+    assert_nil @reporter.options[:active_within]
+  end
+
+  def test_detail_and_window_flags_are_passed
+    run_command(["--full", "--active-within", "3d"])
+
+    assert_equal true, @reporter.options[:full]
+    assert_equal "3d", @reporter.options[:active_within]
+  end
+
+  def test_format_is_passed_through
+    run_command(["--format", "json"])
+
+    assert_equal "json", @reporter.options[:format]
+  end
+
+  def test_filters_are_passed_through
+    run_command(["--task-associated", "--no-usable", "--search", "auth"])
+
+    assert_equal true, @reporter.options[:task_associated]
+    assert_equal false, @reporter.options[:usable]
+    assert_equal "auth", @reporter.options[:search]
+  end
+
+  def test_quiet_verbose_debug_flags
+    run_command(["-q", "-v", "-d"])
+
+    assert_equal true, @reporter.options[:quiet]
+    assert_equal true, @reporter.options[:verbose]
+    assert_equal true, @reporter.options[:debug]
+  end
+
+  def test_show_tasks_is_rejected_as_unknown_option
+    code, output = run_command(["--show-tasks"])
+
+    assert_equal 1, code
+    assert_includes output, "Unknown option: --show-tasks"
+    refute_includes output, "USAGE:"
+  end
+
+  def test_invalid_duration_is_actionable_and_non_zero
+    code, output = run_command(["--active-within", "abc"])
+
+    assert_equal 1, code
+    assert_includes output, "invalid duration 'abc'. Use forms like 30m, 18h, 2d, or bare hours."
+    refute_includes output, "USAGE:"
+  end
+
+  def test_zero_duration_is_rejected
+    code, output = run_command(["--active-within", "0"])
+
+    assert_equal 1, code
+    assert_includes output, "invalid duration '0'"
+  end
+
+  def test_compact_and_full_are_mutually_exclusive
+    code, output = run_command(["--compact", "--full"])
+
+    assert_equal 1, code
+    assert_includes output, "--compact and --full are mutually exclusive"
+  end
+
+  def test_invalid_format_is_rejected
+    code, output = run_command(["--format", "yaml"])
+
+    assert_equal 1, code
+    assert_includes output, "Invalid format: yaml"
+  end
+
+  def test_empty_search_is_rejected
+    code, output = run_command(["--search", ""])
+
+    assert_equal 1, code
+    assert_includes output, "Search pattern cannot be empty"
+  end
+
+  def test_dangerous_search_is_rejected
+    ["; rm -rf /", "$(whoami)", "`cat /etc/passwd`", "../etc/passwd"].each do |pattern|
+      code, output = run_command(["--search", pattern])
+
+      assert_equal 1, code
+      assert_includes output, "dangerous"
+    end
+  end
+
+  def test_unexpected_argument_is_rejected
+    code, output = run_command(["extra"])
+
+    assert_equal 1, code
+    assert_includes output, "Unexpected argument: extra"
+  end
+
+  def test_report_failure_is_reported
+    reporter = RecordingReporter.new(result: {success: false, error: "not a git repository"})
+    command = Ace::Git::Worktree::Commands::ListCommand.new(reporter: reporter)
+
+    stdout, = capture_io { @result = command.run([]) }
+
+    assert_equal 1, @result
+    assert_includes stdout, "Failed to list worktrees: not a git repository"
   end
 end

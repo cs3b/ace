@@ -6,21 +6,29 @@ module Ace
       module Commands
         # List command
         #
-        # Lists worktrees with various formatting and filtering options.
-        # Supports task-aware listing and search capabilities.
+        # Prints the active-worktree table: one enriched row per worktree whose
+        # last activity falls inside the activity window (committed or dirty),
+        # plus a two-line count footer. `--full` lists every worktree,
+        # `--format json` is the machine surface, `--format simple` is the
+        # branch-at-path listing.
         #
-        # @example List all worktrees
+        # @example Daily driver (last 18h)
         #   ListCommand.new.run([])
         #
-        # @example List with JSON output
-        #   ListCommand.new.run(["--format", "json"])
+        # @example Wider window in JSON
+        #   ListCommand.new.run(["--active-within", "3d", "--format", "json"])
         #
-        # @example List only task-associated worktrees
-        #   ListCommand.new.run(["--task-associated"])
+        # @example Exhaustive listing
+        #   ListCommand.new.run(["--full"])
         class ListCommand
+          # Supported output formats
+          FORMATS = %w[table json simple].freeze
+
           # Initialize a new ListCommand
-          def initialize
-            @manager = Organisms::WorktreeManager.new
+          #
+          # @param reporter [Organisms::WorktreeListReport, nil] injectable report
+          def initialize(reporter: nil)
+            @reporter = reporter
           end
 
           # Run the list command
@@ -33,13 +41,10 @@ module Ace
 
             validate_options(options)
 
-            # Convert format to symbol for WorktreeLister compatibility
-            options[:format] = options[:format].to_sym if options[:format]
-
-            result = @manager.list_all(options)
+            result = reporter.run(options)
 
             if result[:success]
-              display_list_result(result, options)
+              puts result[:output] unless result[:output].to_s.empty?
               0
             else
               puts "Failed to list worktrees: #{result[:error]}"
@@ -47,8 +52,6 @@ module Ace
             end
           rescue ArgumentError => e
             puts "Error: #{e.message}"
-            puts
-            show_help
             1
           rescue => e
             puts "Error: #{e.message}"
@@ -63,48 +66,60 @@ module Ace
               ace-git-worktree list - List worktrees
 
               USAGE:
-                  ace-git-worktree list [OPTIONS]
+                  ace-git-worktree list [--compact | --full] [--active-within DURATION] [OPTIONS]
 
-              OUTPUT FORMATS:
+              VIEW:
+                  --compact               Active worktrees only (default)
+                  --full                  List every worktree with absolute paths
+                  --active-within <dur>   Activity window: Nm, Nh, Nd, or bare hours (default: 18h)
+
+              OUTPUT:
                   --format <format>       Output format: table, json, simple (default: table)
-                  --show-tasks            Include task associations
+                  -q, --quiet             Suppress the count footer
 
               FILTERING:
-                  --task-associated       Show only task-associated worktrees
-                  --no-task-associated    Show only non-task worktrees
-                  --usable               Show only usable worktrees
-                  --no-usable            Show only unusable worktrees
+                  --task-associated       Show only worktrees with a resolved task id
+                  --no-task-associated    Show only worktrees without a task id
+                  --usable                Show only usable worktrees
+                  --no-usable             Show only unusable worktrees
                   --search <pattern>      Filter by branch name pattern
 
               EXAMPLES:
-                  # List all worktrees in table format
+                  # Worktrees active in the last 18 hours
                   ace-git-worktree list
 
-                  # List with task associations in JSON format
-                  ace-git-worktree list --show-tasks --format json
+                  # Everything, including inactive worktrees
+                  ace-git-worktree list --full
 
-                  # List only task-associated worktrees
-                  ace-git-worktree list --task-associated
+                  # After a weekend
+                  ace-git-worktree list --active-within 3d
 
-                  # Search for worktrees with "auth" in branch name
-                  ace-git-worktree list --search auth
+                  # Machine-readable output
+                  ace-git-worktree list --format json
 
-                  # List only usable worktrees
-                  ace-git-worktree list --usable
+              COLUMNS:
+                  Task     Resolved task id (inferred from metadata, the _current symlink,
+                           validated names, or task files changed in the worktree)
+                  Branch   Checked-out branch (middle-elided when truncated)
+                  Age      Age of the last commit, one compact unit (8m, 3h, 9d, 3w, 2mo, 1y)
+                  Commit   Last commit subject (right-truncated)
+                  Changes  Uncommitted file count (staged + unstaged + untracked)
+                  PR       #N, #N draft, #N merged, #N closed, or - (matched by branch,
+                           HEAD commit, or a unique task reference)
+                  Path     Worktree path (~ shortened; --full prints it absolute)
 
-              OUTPUT:
-                  Table format columns:
-                  - Task: Task ID (or - for non-task worktrees)
-                  - Branch: Git branch name
-                  - Path: Worktree directory path
-                  - Status: worktree status (task, normal, bare, detached, etc.)
-
-                  JSON format includes full worktree details and metadata.
+                  Columns shrink to fit the terminal width; Path is dropped on very
+                  narrow terminals. Probing runs in isolated child processes with a
+                  5 second per-worktree budget; unreadable probes render "?".
             HELP
             0
           end
 
           private
+
+          def reporter
+            @reporter || Organisms::WorktreeListReport.new(env: ENV)
+          end
 
           # Parse command line arguments
           #
@@ -113,10 +128,15 @@ module Ace
           def parse_arguments(args)
             options = {
               format: "table",
-              show_tasks: false,
+              compact: false,
+              full: false,
+              active_within: nil,
               task_associated: nil,
               usable: nil,
               search: nil,
+              quiet: false,
+              verbose: false,
+              debug: false,
               help: false
             }
 
@@ -128,13 +148,17 @@ module Ace
               when "--format"
                 i += 1
                 format = args[i]&.downcase
-                if %w[table json simple].include?(format)
-                  options[:format] = format
-                else
+                unless FORMATS.include?(format)
                   raise ArgumentError, "Invalid format: #{format}. Use: table, json, simple"
                 end
-              when "--show-tasks"
-                options[:show_tasks] = true
+                options[:format] = format
+              when "--compact"
+                options[:compact] = true
+              when "--full"
+                options[:full] = true
+              when "--active-within"
+                i += 1
+                options[:active_within] = args[i]
               when "--task-associated"
                 options[:task_associated] = true
               when "--no-task-associated"
@@ -146,6 +170,12 @@ module Ace
               when "--search"
                 i += 1
                 options[:search] = args[i]
+              when "--quiet", "-q"
+                options[:quiet] = true
+              when "--verbose", "-v"
+                options[:verbose] = true
+              when "--debug", "-d"
+                options[:debug] = true
               when "--help", "-h"
                 options[:help] = true
               when /^--/
@@ -164,12 +194,21 @@ module Ace
           #
           # @param options [Hash] Parsed options
           def validate_options(options)
+            if options[:compact] && options[:full]
+              raise ArgumentError, "--compact and --full are mutually exclusive"
+            end
+
             if options[:search] && options[:search].empty?
               raise ArgumentError, "Search pattern cannot be empty"
             end
 
-            if options[:format] && !%w[table json simple].include?(options[:format])
+            if options[:format] && !FORMATS.include?(options[:format])
               raise ArgumentError, "Invalid format: #{options[:format]}"
+            end
+
+            # Parse eagerly so invalid windows fail before any output.
+            if options[:active_within]
+              Atoms::DurationParser.parse(options[:active_within])
             end
 
             # Security validation for search patterns
@@ -196,49 +235,6 @@ module Ace
             ]
 
             dangerous_patterns.any? { |pattern| value.match?(pattern) }
-          end
-
-          # Display list result
-          #
-          # @param result [Hash] List result
-          # @param options [Hash] Command options
-          def display_list_result(result, options)
-            if result[:worktrees].empty?
-              puts "No worktrees found."
-              return
-            end
-
-            # Display the formatted output
-            puts result[:formatted_output]
-
-            # Display summary if requested or if not JSON format
-            if options[:format] != :json
-              display_summary(result, options)
-            end
-          end
-
-          # Display summary information
-          #
-          # @param result [Hash] List result
-          # @param options [Hash] Command options
-          def display_summary(result, options)
-            stats = result[:statistics]
-            puts "\nSummary:"
-            puts "  Total worktrees: #{stats[:total]}"
-            puts "  Task-associated: #{stats[:task_associated]}"
-            puts "  Usable: #{stats[:usable]}"
-
-            if options[:show_tasks] && stats[:task_ids].any?
-              puts "  Tasks with worktrees: #{stats[:task_ids].join(", ")}"
-            end
-
-            if stats[:branches].any?
-              puts "  Branches: #{stats[:branches].join(", ")}"
-            end
-
-            # Show active worktrees count
-            active_count = result[:worktrees].count { |wt| wt.exists? && wt.usable? }
-            puts "  Active worktrees: #{active_count}"
           end
         end
       end
