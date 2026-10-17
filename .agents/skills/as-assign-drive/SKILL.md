@@ -4,12 +4,13 @@ description: Drive agent execution through an active assignment
 user-invocable: true
 allowed-tools:
 - Bash(ace-assign:*)
+- Bash(ace-lab:*)
 - Bash(ace-bundle:*)
 - Read
 - Write
 - AskUserQuestion
 - Skill
-argument-hint: "[assignment[@scope]]"
+argument-hint: "[assignment[@scope] | --ordinary <context.json>]"
 last_modified: 2026-04-23
 source: ace-assign
 skill:
@@ -20,6 +21,8 @@ skill:
 
 Load and run `ace-bundle wfi://assign/drive` in the current project, then follow the loaded workflow as the source of truth and execute it end-to-end instead of only summarizing it.
 
+When `--ordinary` or `ACE_ASSIGN_ORDINARY_CONTEXT` is present, follow the workflow’s ordinary installed branch before resolving local assignment state. Its canonical `ace-lab assignment drive` operations own status, start, progress, results and recovery; local commands below apply only outside that branch.
+
 Hard stop rule:
 
 - Do not stop after intermediate progress.
@@ -27,7 +30,7 @@ Hard stop rule:
 - Treat `ace-assign status --assignment <id>@<root>` as the source of truth for fork completion; quiet terminal output is not enough reason to stop or declare a stall.
 - If a prior terminal or drive session ended, re-enter from assignment state and continue from the next runnable work instead of depending on the old terminal handle.
 - Before any final response, re-check pinned assignment status. If any runnable `pending` or `active` work remains, continue driving.
-- If unrelated dirty files are generated side effects outside task scope, clean/reset them instead of auto-committing them.
+- Preserve unrelated dirty files; commit only task-owned changes.
 - Use progress updates for partial status only.
 - Return a final user-facing completion response only when the assignment is complete or the workflow reaches an explicit blocker/failure stop condition.
 - If pending work remains runnable, continue driving.
