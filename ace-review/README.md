@@ -14,49 +14,63 @@
 
 > Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
 
+> **State owner:** `.ace-local/review/` -- review sessions and feedback items
+> owned by `ace-review`. Reviews consume an assignment plan but never edit it.
+> The canonical flow is [docs/lab-flow.md](../docs/lab-flow.md).
+
 [Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
 
 ![ace-review demo](docs/demo/ace-review-getting-started.gif)
 
-`ace-review` runs focused, repeatable reviews with configurable presets and parallel model execution via [ace-llm](../ace-llm). Findings are captured as feedback items with a verify, apply, and resolve lifecycle so review outcomes stay actionable.
+`ace-review` runs focused, repeatable reviews with configurable presets and
+parallel model execution via [ace-llm](../ace-llm). Findings are captured as
+feedback items with a verify, apply, and resolve lifecycle so review outcomes
+stay actionable.
 
 ## How It Works
 
-1. Select a review preset (code, security, docs, PR, or custom) and target (diff, file set, or PR number) via [`ace-review`](docs/usage.md).
-2. The review engine executes the prompt across one or more models through [ace-llm](../ace-llm), loading context from [ace-bundle](../ace-bundle) and diffs from [ace-git](../ace-git).
-3. Findings are synthesized into feedback items with a tracked lifecycle (draft, verified, pending, resolved, skipped) and saved as session artifacts.
+1. Select a review preset (code, security, docs, PR, or custom) and target
+   (diff, file set, or PR number) via [`ace-review`](docs/usage.md).
+2. The review engine executes the prompt across one or more models through
+   [ace-llm](../ace-llm), loading context from [ace-bundle](../ace-bundle) and
+   diffs from [ace-git](../ace-git).
+3. Findings are synthesized into feedback items with a tracked lifecycle
+   (draft, verified, pending, resolved, skipped) and saved under
+   `.ace-local/review/`.
 
 ## Use Cases
 
-**Review pull requests with consistent quality gates** - use `/as-review-pr` or [`ace-review --pr`](docs/usage.md) to run preset-driven reviews over PR diffs with optional GitHub comment publication.
+**Review pull requests with consistent quality gates** - use `/as-review-pr` or
+[`ace-review --pr`](docs/usage.md) to run preset-driven reviews over PR diffs.
 
-**Run multi-model analysis in parallel** - execute the same review prompt across multiple [ace-llm](../ace-llm) providers, then synthesize overlapping and conflicting findings.
+**Run multi-model analysis in parallel** - execute the same review prompt
+across multiple [ace-llm](../ace-llm) providers, then synthesize overlapping
+and conflicting findings.
 
-**Manage feedback as tracked work** - use `/as-review-verify-feedback` and `/as-review-apply-feedback` to move findings through draft, verified, pending, resolved, and skipped states, or use [`ace-review-feedback`](docs/usage.md) from the CLI to list, verify, apply, and resolve feedback items directly.
+**Manage feedback as tracked work** - use `/as-review-verify-feedback` and
+`/as-review-apply-feedback` to move findings through draft, verified, pending,
+resolved, and skipped states, or use [`ace-review-feedback`](docs/usage.md) from
+the CLI.
 
-**Scope reviews to packages or tasks** - use `/as-review-package` for package-level analysis or connect reviews to [ace-task](../ace-task) workflows for task-scoped quality checks.
+**Scope reviews to packages or tasks** - use `/as-review-package` for
+package-level analysis or connect reviews to [ace-task](../ace-task) workflows
+for task-scoped quality checks.
 
-**Audit review history through session artifacts** - keep saved review sessions under `.ace-local/` for traceability, comparison, and handoff across contributors.
+## Planned waves
+
+> **Planned (L5.5):** role rules (worker/reviewer/integrator), independent review
+> rounds with a round limit, and the forge-neutral review/delivery workflow are
+> not available yet. The old durable-campaign/coordinator-receipt path is not a
+> requirement of the file-based flow; see [campaigns](docs/campaigns.md).
 
 ## Testing
 
-Run package deterministic checks with:
-
 ```bash
-ace-test ace-review
-ace-test ace-review feat
-ace-test ace-review all
-```
-
-Run retained workflow scenarios with:
-
-```bash
-ace-test-e2e ace-review
+bin/ace-test ace-review
+bin/ace-test ace-review feat
+bin/ace-test ace-review all
+bin/ace-test-e2e ace-review
 ```
 
 ---
 [Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md) | Part of [ACE](https://github.com/cs3b/ace)
-
-### Durable review campaigns
-
-Use `ace-review campaign start|status|record-round|finish` to retain review history independently of current-head evidence. See [campaign usage](docs/campaigns.md) for frozen contracts/policy, pinned scopes, restart/replay and assignment receipt consumption. Existing review and feedback commands remain primary operations.

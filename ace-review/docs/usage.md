@@ -9,6 +9,9 @@ ace-docs:
 
 # ace-review CLI Reference
 
+> **State owner:** `.ace-local/review/` -- review sessions and feedback items
+> owned by `ace-review`. See [docs/lab-flow.md](../../docs/lab-flow.md).
+
 Complete command reference for `ace-review` and `ace-review-feedback`.
 
 ## Installation
