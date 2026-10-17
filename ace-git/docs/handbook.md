@@ -9,6 +9,11 @@ ace-docs:
 
 # ace-git Handbook Catalog
 
+> **Planned (L5.5):** role rules, independent review rounds, and the
+> attempt-bound forge delivery workflow are not available yet. The PR
+> create/update skills below are projections of that planned workflow; the
+> ordinary `ace-git pr` CLI commands remain the supported local path.
+
 Reference for package-owned handbook resources in `ace-git/handbook/`.
 
 ## Skills
