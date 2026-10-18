@@ -16,11 +16,13 @@
 
 > **State owner:** `.ace-tasks/` -- project task markdown files and frontmatter
 > owned by `ace-task`. Each project task gets one worktree under `.ace-wt/`.
-> The private overseer task list is the special folder `.ace-tasks/_overseer/`:
-> gitignored, shared with project tasks in the default `list`, and narrowed with
-> `ace-task --in _overseer`. It archives terminal management families inside
-> `_overseer/_archive/`, never in the tracked `_archive/`. `_overseer` tasks
-> never get a worktree or an implementation assignment. The canonical flow is
+> `ace-task` is folder-name agnostic: behavior that depends on Git tracking
+> comes from Git's ignore rules for the actual path, never from a folder name.
+> `--git-commit` is refused for Git-ignored tasks, and completed ignored tasks
+> are neither auto-archived nor moved by `doctor --auto-fix`. A lab may prepare
+> `.ace-tasks/_overseer/` (gitignored) and manage it with
+> `ace-task --in _overseer`; delegation guards for management tasks live in
+> `ace-git-worktree`/`ace-assign`. The canonical flow is
 > [docs/lab-flow.md](../docs/lab-flow.md).
 
 [Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)

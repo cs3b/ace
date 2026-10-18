@@ -4,10 +4,10 @@ require "test_helper"
 require "ace/task/cli"
 
 class RootCLITest < AceTaskTestCase
-  def test_exact_overseer_root_round_trip_and_project_root_isolation
+  def test_exact_root_round_trip_and_project_root_isolation
     Dir.mktmpdir("task-root") do |dir|
       Dir.chdir(dir) do
-        root = ".ace-tasks/overseer"
+        root = ".ace-tasks/queue"
         created = invoke("create", "Deliver current objective", "--root", root)
         id = created[/Created task ([0-9a-z]{3}\.t\.[0-9a-z]{3})/, 1]
         refute_nil id
@@ -39,25 +39,27 @@ class RootCLITest < AceTaskTestCase
     end
   end
 
-  def test_overseer_folder_is_shared_with_project_tasks_and_narrowable_with_in
-    Dir.mktmpdir("task-root-overseer") do |dir|
+  def test_existing_custom_folder_is_narrowable_with_in
+    Dir.mktmpdir("task-root-custom") do |dir|
       Dir.chdir(dir) do
         project_id = invoke("create", "Project task")[/Created task ([0-9a-z]{3}\.t\.[0-9a-z]{3})/, 1]
         refute_nil project_id
-        output = invoke("create", "Overseer management task", "--in", "_overseer")
-        overseer_id = output[/Created task ([0-9a-z]{3}\.t\.[0-9a-z]{3})/, 1]
-        refute_nil overseer_id
+        custom_root = File.join(dir, ".ace-tasks", "_review")
+        FileUtils.mkdir_p(custom_root)
+        output = invoke("create", "Reviewed task", "--in", "_review")
+        custom_id = output[/Created task ([0-9a-z]{3}\.t\.[0-9a-z]{3})/, 1]
+        refute_nil custom_id
 
-        overseer_path = invoke("show", overseer_id, "--path").strip
-        overseer_root = File.join(File.realpath(dir), ".ace-tasks", "_overseer")
-        assert overseer_path.start_with?(overseer_root + File::SEPARATOR)
+        custom_path = invoke("show", custom_id, "--path").strip
+        assert custom_path.start_with?(
+          File.join(File.realpath(dir), ".ace-tasks", "_review") + File::SEPARATOR
+        )
 
-        # Default list is the shared view; --in _overseer narrows the scope.
-        shared = invoke("list")
-        assert_includes shared, project_id
-        assert_includes shared, overseer_id
-        narrowed = invoke("list", "--in", "_overseer")
-        assert_includes narrowed, overseer_id
+        default_view = invoke("list")
+        assert_includes default_view, project_id
+        refute_includes default_view, custom_id
+        narrowed = invoke("list", "--in", "_review")
+        assert_includes narrowed, custom_id
         refute_includes narrowed, project_id
       end
     end

@@ -43,8 +43,8 @@ policy on top of it.
 
 - State owners are fixed:
 
-  `.ace-tasks/` (project tasks, ace-task; `_overseer/` is a gitignored special
-  folder in the same tree, reached with `ace-task --in _overseer`),
+  `.ace-tasks/` (project tasks, ace-task; `_overseer/` is a lab-prepared,
+  gitignored folder in the same tree, reached with `ace-task --in _overseer`),
   `.ace-local/assign/` (assignment plan and steps, ace-assign),
   `.ace-local/coworker/` (reserved L3 role configuration),
   `.ace-local/hitl/` (HITL event files, ace-hitl), and

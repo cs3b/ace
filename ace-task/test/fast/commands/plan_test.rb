@@ -126,11 +126,11 @@ class TaskPlanCommandTest < AceTaskTestCase
     assert_includes result[:stderr], "not found"
   end
 
-  def test_plans_overseer_task_from_subdirectory_using_project_root
+  def test_plans_custom_folder_task_from_subdirectory_using_project_root
     FileUtils.mkdir_p(File.join(@tmpdir, ".git"))
-    create_task_fixture(File.join(@tasks_dir, "_overseer"), id: "8pp.t.s9z", slug: "overseer-plan",
+    create_task_fixture(File.join(@tasks_dir, "_queue"), id: "8pp.t.s9z", slug: "queued-plan",
       status: "pending")
-    @task_file = File.join(@tasks_dir, "_overseer", "8pp.t.s9z-overseer-plan", "8pp.t.s9z-overseer-plan.s.md")
+    @task_file = File.join(@tasks_dir, "_queue", "8pp.t.s9z-queued-plan", "8pp.t.s9z-queued-plan.s.md")
     inject_bundle_files(@task_file, ["README.md"])
     subdir = File.join(@tmpdir, "nested", "deeper")
     FileUtils.mkdir_p(subdir)

@@ -103,15 +103,16 @@ task:
   root_dir: .ace-tasks
 ```
 
-The private overseer list is an ordinary special folder inside that same task
-tree: `.ace-tasks/_overseer/`. It is gitignored, so it never enters commits, and
-`ace-task` treats it like any other special folder:
+The private overseer list is an ordinary folder inside that same task tree:
+`.ace-tasks/_overseer/`. The lab prepares the folder and its `.gitignore`
+entry; `ace-task` treats it like any other existing folder and has no
+overseer-specific behavior:
 
-- `ace-task list --in _overseer` narrows the shared list to private tasks,
-  including their private archive history.
-- The default `ace-task list` shows project root tasks and active `_overseer`
-  tasks together; archived private families live in
-  `.ace-tasks/_overseer/_archive/` and stay inside the gitignored tree.
+- `ace-task list --in _overseer` lists private tasks; the default `ace-task
+  list` is the ordinary root view.
+- `ace-task` derives tracking behavior from Git's ignore rules for the actual
+  path: `--git-commit` is refused for Git-ignored tasks, and completed ignored
+  tasks are neither auto-archived nor moved by `doctor --auto-fix`.
 
 ## Usage
 

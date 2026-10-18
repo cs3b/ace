@@ -2,7 +2,7 @@
 
 require "ace/support/cli"
 require "ace/support/items"
-require_relative "../../molecules/task_scope"
+require_relative "../../molecules/git_ignored_path"
 
 module Ace
   module Task
@@ -27,7 +27,7 @@ module Ace
             "q7w --set worktree.branch=my-branch",
             "q7w --set status=done --move-to archive",
             "q7w --move-to next",
-            "q7w --move-to overseer          # Move to the private _overseer folder",
+            "q7w --move-to _maybe             # Move to an existing special folder",
             "q7w.a --move-as-child-of none    # Promote subtask to standalone",
             "q7w --move-as-child-of self      # Convert to orchestrator",
             "q7w --move-as-child-of abc       # Demote to subtask of abc",
@@ -43,7 +43,7 @@ module Ace
           option :add, type: :array, desc: "Add to array field: key=value (comma-separated for multiple)"
           option :remove, type: :array, desc: "Remove from array field: key=value (comma-separated for multiple)"
           option :move_to, type: :string, aliases: %w[-m],
-            desc: "Move to folder (archive, maybe, anytime, next, overseer)"
+            desc: "Move to folder (archive, maybe, anytime, next, or an existing custom folder)"
           option :move_as_child_of, type: :string, desc: "Reparent: <parent_ref>, 'none' (promote), 'self' (orchestrator)"
           option :position, type: :string, aliases: %w[-p], desc: "Set position: first, last, after:<ref>, before:<ref>"
 
@@ -85,7 +85,7 @@ module Ace
             else
               Ace::Task::Organisms::TaskManager.new
             end
-            reject_private_git_commit!(manager, ref: ref, move_to: move_to,
+            reject_ignored_git_commit!(manager, ref: ref, move_to: move_to,
               move_as_child_of: move_as_child) if options[:git_commit]
 
             # Resolve --position into a set or remove operation
@@ -131,27 +131,29 @@ module Ace
 
           private
 
-          # The private _overseer folder is untracked; management tasks must
-          # never be staged. Both the current location and the requested
-          # destination/parent count as private.
-          def reject_private_git_commit!(manager, ref:, move_to:, move_as_child_of:)
-            scope = Ace::Task::Molecules::TaskScope
-            private_folder = scope::PRIVATE_FOLDER
+          # --git-commit must not stage a task whose path Git ignores. The
+          # current location and the requested destination/parent are checked:
+          # a move out of an ignored path is still a commit of ignored work.
+          def reject_ignored_git_commit!(manager, ref:, move_to:, move_as_child_of:)
+            detector = Ace::Support::Items::Atoms::SpecialFolderDetector
             task = manager.show(ref)
-            private_target = task && scope.private?(task.path, root_dir: manager.root_dir)
+            targets = [task&.path]
             if move_to
-              private_target ||= Ace::Support::Items::Atoms::SpecialFolderDetector.normalize(move_to) ==
-                private_folder
+              targets << if detector.move_to_root?(move_to)
+                manager.root_dir
+              else
+                File.join(manager.root_dir, detector.normalize(move_to))
+              end
             end
             if move_as_child_of && !%w[none self].include?(move_as_child_of)
-              parent = manager.show(move_as_child_of)
-              private_target ||= parent && scope.private?(parent.path, root_dir: manager.root_dir)
+              targets << manager.show(move_as_child_of)&.path
             end
-            return unless private_target
+            ignored = targets.compact.find { |path| Ace::Task::Molecules::GitIgnoredPath.ignored?(path) }
+            return unless ignored
 
             raise Ace::Support::Cli::Error,
-              "Cannot --git-commit an '#{private_folder}' task; that folder is untracked. " \
-                "Keep the management task private, or create the implementation task in a project folder."
+              "Cannot --git-commit a Git-ignored task path: #{ignored}. " \
+                "Move the task to a tracked folder or omit --git-commit."
           end
 
           # Resolve a --position argument into a B36TS value.
