@@ -1,15 +1,18 @@
 ---
 id: 8xg.t.sbz.3.0
-status: draft
+status: done
 priority: medium
 created_at: "2026-10-17 18:54:14"
 estimate: medium
-dependencies: ["8xg.t.sbz.2.1", "8xg.t.sbz.5.1"]
-tags: ["lab", "lab-l4", "file-based"]
+dependencies: [8xg.t.sbz.2.1, 8xg.t.sbz.5.1]
+tags: [lab, lab-l4, file-based]
 parent: 8xg.t.sbz.3
 needs_review: true
-bundle: {"presets": ["project"], "files": ["AGENTS.md", ".ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/contract.md", ".ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/8xg.t.sbz-lab-ace-pliki-zadania-role-i-komunikacja.s.md", "ace-assign/README.md", "ace-git-worktree/docs/usage.md", "ace-overseer/handbook/workflow-instructions/overseer/configure-project.wf.md", ".ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/3-l4-planner-przygotowuje-worktree-assignmenty/8xg.t.sbz.3-l4-planner-przygotowuje-worktree-assignmenty-i-start.s.md", ".ace-tasks/_archive/8x/x/8xg.t.qn6-python-ruby-migration-file-based/8xg.t.qn6-python-ruby-migration-file-based-lab-zero.s.md", ".ace-tasks/_archive/8x/x/8xg.t.qn6-python-ruby-migration-file-based/4-ace-coworker-gem-worker-loop/8xg.t.qn6.4-ace-coworker-gem-worker-loop-that-takes.s.md", ".ace-tasks/_archive/8x/w/8xa.t.h8x-deliver-project-specific-supervision-workflows/8xa.t.h8x-deliver-project-specific-supervision-workflows-and.s.md", ".ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/3-l4-planner-przygotowuje-worktree-assignmenty/0-przyjmowa-zlecenie-przygotowania-i-zapewnia/ux/usage.md", ".ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/execution-order.md"], "commands": []}
-title: "Przyjmować zlecenie przygotowania i zapewniać worktree"
+bundle:
+  presets: [project]
+  files: [AGENTS.md, .ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/contract.md, .ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/8xg.t.sbz-lab-ace-pliki-zadania-role-i-komunikacja.s.md, ace-assign/README.md, ace-git-worktree/docs/usage.md, ace-overseer/handbook/workflow-instructions/overseer/configure-project.wf.md, .ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/3-l4-planner-przygotowuje-worktree-assignmenty/8xg.t.sbz.3-l4-planner-przygotowuje-worktree-assignmenty-i-start.s.md, .ace-tasks/_archive/8x/x/8xg.t.qn6-python-ruby-migration-file-based/8xg.t.qn6-python-ruby-migration-file-based-lab-zero.s.md, .ace-tasks/_archive/8x/x/8xg.t.qn6-python-ruby-migration-file-based/4-ace-coworker-gem-worker-loop/8xg.t.qn6.4-ace-coworker-gem-worker-loop-that-takes.s.md, .ace-tasks/_archive/8x/w/8xa.t.h8x-deliver-project-specific-supervision-workflows/8xa.t.h8x-deliver-project-specific-supervision-workflows-and.s.md, .ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/3-l4-planner-przygotowuje-worktree-assignmenty/0-przyjmowa-zlecenie-przygotowania-i-zapewnia/ux/usage.md, .ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/execution-order.md]
+  commands: []
+title: Przyjmować zlecenie przygotowania i zapewniać worktree
 ---
 
 # Przyjmować zlecenie przygotowania i zapewniać worktree
@@ -28,9 +31,9 @@ Planner jako coworker przyjmuje task i oczekiwaną sekwencję ról; odnajduje lu
 
 ## Kryteria odbioru
 
-- [ ] Ponowne przygotowanie tego samego zadania używa jego istniejącego worktree, zachowując pracę i powiązanie z taskiem.
-- [ ] Istniejący aktywny wykonawca lub niepasujące worktree powodują zgłoszenie konfliktu do overseera, a nie nadpisanie pracy.
-- [ ] Wynik jest zgodny z kontraktem programu i możliwy do użycia przez następną rolę lub narzędzie.
+- [x] Ponowne przygotowanie tego samego zadania używa jego istniejącego worktree, zachowując pracę i powiązanie z taskiem.
+- [x] Istniejący aktywny wykonawca lub niepasujące worktree powodują zgłoszenie konfliktu do overseera, a nie nadpisanie pracy.
+- [x] Wynik jest zgodny z kontraktem programu i możliwy do użycia przez następną rolę lub narzędzie.
 
 ## Plan weryfikacji
 
