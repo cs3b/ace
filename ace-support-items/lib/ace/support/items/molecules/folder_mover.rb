@@ -17,6 +17,25 @@ module Ace
             @root_dir = root_dir
           end
 
+          # Compute the destination path for an item without moving it.
+          # Used by pre-flight checks (e.g. Git-ignored task guards).
+          #
+          # @param item [#path] Item with a path attribute (directory to move)
+          # @param to [String] Target folder name (short or full, e.g., "maybe", "_archive")
+          # @param date [Time, nil] Date used to compute archive partition (default: Time.now)
+          # @return [String] Destination directory path
+          def destination_path(item, to:, date: nil)
+            if Atoms::SpecialFolderDetector.virtual_filter?(to)
+              raise ArgumentError, "Cannot move to virtual filter '#{to}' — it is not a physical folder"
+            end
+
+            normalized = Atoms::SpecialFolderDetector.normalize(to)
+            target_parent = destination_parent(normalized, date)
+            validate_path_traversal!(target_parent)
+
+            File.join(target_parent, File.basename(item.path))
+          end
+
           # Move an item folder to a target location.
           #
           # @param item [#path] Item with a path attribute (directory to move)
@@ -24,28 +43,12 @@ module Ace
           # @param date [Time, nil] Date used to compute archive partition (default: Time.now)
           # @return [String] New path of the item directory
           def move(item, to:, date: nil)
-            if Atoms::SpecialFolderDetector.virtual_filter?(to)
-              raise ArgumentError, "Cannot move to virtual filter '#{to}' — it is not a physical folder"
-            end
-
-            normalized = Atoms::SpecialFolderDetector.normalize(to)
-
-            target_parent = if normalized == "_archive"
-              partition = Atoms::DatePartitionPath.compute(date || Time.now)
-              File.expand_path(File.join(@root_dir, normalized, partition))
-            else
-              File.expand_path(File.join(@root_dir, normalized))
-            end
-
-            validate_path_traversal!(target_parent)
-            FileUtils.mkdir_p(target_parent)
-
-            folder_name = File.basename(item.path)
-            new_path = File.join(target_parent, folder_name)
+            new_path = destination_path(item, to: to, date: date)
 
             # Same-location no-op check
             return item.path if File.expand_path(item.path) == File.expand_path(new_path)
 
+            FileUtils.mkdir_p(File.dirname(new_path))
             atomic_move(item.path, new_path)
           end
 
@@ -64,6 +67,15 @@ module Ace
           end
 
           private
+
+          def destination_parent(normalized, date)
+            if normalized == "_archive"
+              partition = Atoms::DatePartitionPath.compute(date || Time.now)
+              File.expand_path(File.join(@root_dir, normalized, partition))
+            else
+              File.expand_path(File.join(@root_dir, normalized))
+            end
+          end
 
           def validate_path_traversal!(target_parent)
             root_real = File.expand_path(@root_dir)

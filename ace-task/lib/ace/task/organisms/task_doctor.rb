@@ -154,9 +154,11 @@ module Ace
             frontmatter, _body = Ace::Support::Items::Atoms::FrontmatterParser.parse(content)
             next unless frontmatter.is_a?(Hash)
 
-            # A Git-ignored task path is not part of the committed task tree:
-            # repository archive policy neither applies nor authorizes a move.
-            next if Molecules::GitIgnoredPath.ignored?(scan_result.dir_path)
+            # A Git-ignored task path (folder or spec file) is not part of the
+            # committed task tree: repository archive policy neither applies
+            # nor authorizes a move.
+            next if Molecules::GitIgnoredPath.ignored?(scan_result.dir_path) ||
+              Molecules::GitIgnoredPath.ignored?(scan_result.file_path)
 
             status = frontmatter["status"]
             special_folder = scan_result.special_folder

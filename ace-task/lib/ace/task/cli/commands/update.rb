@@ -131,24 +131,13 @@ module Ace
 
           private
 
-          # --git-commit must not stage a task whose path Git ignores. The
-          # current location and the requested destination/parent are checked:
-          # a move out of an ignored path is still a commit of ignored work.
+          # --git-commit must not stage a task whose path Git ignores. Both the
+          # current paths and the paths the relocation would create are
+          # resolved before mutation: an ignore rule may target the destination
+          # folder, its children, individual spec files, or archive partitions.
           def reject_ignored_git_commit!(manager, ref:, move_to:, move_as_child_of:)
-            detector = Ace::Support::Items::Atoms::SpecialFolderDetector
-            task = manager.show(ref)
-            targets = [task&.path]
-            if move_to
-              targets << if detector.move_to_root?(move_to)
-                manager.root_dir
-              else
-                File.join(manager.root_dir, detector.normalize(move_to))
-              end
-            end
-            if move_as_child_of && !%w[none self].include?(move_as_child_of)
-              targets << manager.show(move_as_child_of)&.path
-            end
-            ignored = targets.compact.find { |path| Ace::Task::Molecules::GitIgnoredPath.ignored?(path) }
+            paths = manager.commit_guard_paths(ref, move_to: move_to, move_as_child_of: move_as_child_of)
+            ignored = paths.find { |path| Ace::Task::Molecules::GitIgnoredPath.ignored?(path) }
             return unless ignored
 
             raise Ace::Support::Cli::Error,

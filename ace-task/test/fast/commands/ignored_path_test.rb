@@ -225,7 +225,107 @@ class IgnoredPathTest < AceTaskTestCase
     end
   end
 
+  def test_child_specific_ignore_rules_block_create_subtask_and_move
+    child_ignored = "_child-scratch"
+    append_gitignore("/.ace-tasks/#{child_ignored}/*")
+    FileUtils.mkdir_p(File.join(@tmpdir, ".ace-tasks", child_ignored))
+
+    create_error = assert_raises(Ace::Support::Cli::Error) do
+      invoke("create", "Ignored child", "--in", child_ignored, "--gc")
+    end
+    assert_match(/Git-ignored task path/, create_error.message)
+    assert_empty Dir.children(File.join(@tmpdir, ".ace-tasks", child_ignored)),
+      "a rejected commit must not leave a created task behind"
+
+    project_id = create_project_task("Project task")
+    project_path = invoke("show", project_id, "--path").strip
+    move_error = assert_raises(Ace::Support::Cli::Error) do
+      invoke("update", project_id, "--move-to", child_ignored, "--gc")
+    end
+    assert_match(/Git-ignored task path/, move_error.message)
+    assert_equal project_path, invoke("show", project_id, "--path").strip,
+      "a rejected commit must not move the task"
+
+    parent_output = invoke("create", "Child-ignored parent", "--in", child_ignored)
+    parent_id = parent_output[/Created task ([0-9a-z]{3}\.t\.[0-9a-z]{3})/, 1]
+    refute_nil parent_id
+    parent_dir = File.dirname(invoke("show", parent_id, "--path").strip)
+    child_error = assert_raises(Ace::Support::Cli::Error) do
+      invoke("create", "Ignored child task", "--child-of", parent_id, "--gc")
+    end
+    assert_match(/Git-ignored task path/, child_error.message)
+    assert_equal [File.basename(parent_dir) + ".s.md"],
+      Dir.children(parent_dir).sort,
+      "a rejected subtask commit must leave the parent unchanged"
+  end
+
+  def test_individually_ignored_spec_blocks_update_doctor_and_auto_archive
+    id = create_project_task("Spec-ignored task")
+    task_dir = File.dirname(invoke("show", id, "--path").strip)
+    append_gitignore("/#{relative_to_project(task_dir)}/*.s.md")
+
+    update_error = assert_raises(Ace::Support::Cli::Error) do
+      invoke("update", id, "--set", "status=done", "--gc")
+    end
+    assert_match(/Git-ignored task path/, update_error.message)
+    assert_equal "pending", Ace::Task::Organisms::TaskManager.new.show(id).status,
+      "a rejected commit must not change task fields"
+
+    invoke("update", id, "--set", "status=done")
+    tasks_root = File.join(@tmpdir, ".ace-tasks")
+    doctor = Ace::Task::Organisms::TaskDoctor.new(tasks_root)
+    results = doctor.run_diagnosis
+    assert_empty results[:issues].select { |issue| issue[:message].include?("not in _archive") },
+      "an individually ignored spec must not be reported as missing an archive"
+    fixer = Ace::Task::Molecules::TaskDoctorFixer.new(root_dir: tasks_root)
+    fixer.fix_issues(results[:issues].select { |issue| doctor.auto_fixable?(issue) })
+    assert_equal task_dir, File.dirname(invoke("show", id, "--path").strip)
+    refute Dir.exist?(File.join(tasks_root, "_archive"))
+
+    parent_id = create_project_task("Spec-ignored objective")
+    child_output = invoke("create", "Spec-ignored subtask", "--child-of", parent_id)
+    child_id = child_output[/Created task ([0-9a-z]{3}\.t\.[0-9a-z]{3}\.[0-9a-z])/, 1]
+    refute_nil child_id
+    parent_dir = File.dirname(invoke("show", parent_id, "--path").strip)
+    append_gitignore("/#{relative_to_project(parent_dir)}/#{File.basename(parent_dir)}.s.md")
+    invoke("update", child_id, "--set", "status=done")
+    refute_includes invoke("show", parent_id, "--path"), "_archive",
+      "an ignored family spec must not trigger automatic archiving"
+  end
+
+  def test_ignored_archive_destination_prevents_automatic_moves
+    append_gitignore("/.ace-tasks/_archive/*")
+    parent_id = create_project_task("Destination-ignored objective")
+    child_output = invoke("create", "Destination-ignored subtask", "--child-of", parent_id)
+    child_id = child_output[/Created task ([0-9a-z]{3}\.t\.[0-9a-z]{3}\.[0-9a-z])/, 1]
+    refute_nil child_id
+
+    invoke("update", child_id, "--set", "status=done")
+    refute_includes invoke("show", parent_id, "--path"), "_archive",
+      "a completed family must not move into an ignored archive destination"
+    refute Dir.exist?(File.join(@tmpdir, ".ace-tasks", "_archive"))
+
+    standalone_id = create_project_task("Destination-ignored standalone")
+    invoke("update", standalone_id, "--set", "status=done")
+    tasks_root = File.join(@tmpdir, ".ace-tasks")
+    doctor = Ace::Task::Organisms::TaskDoctor.new(tasks_root)
+    results = doctor.run_diagnosis
+    fixer = Ace::Task::Molecules::TaskDoctorFixer.new(root_dir: tasks_root)
+    fixer.fix_issues(results[:issues].select { |issue| doctor.auto_fixable?(issue) })
+    assert_equal File.join(File.realpath(@tmpdir), ".ace-tasks"),
+      File.dirname(File.dirname(invoke("show", standalone_id, "--path").strip)),
+      "doctor --auto-fix must not move a task into an ignored archive destination"
+  end
+
   private
+
+  def append_gitignore(pattern)
+    File.open(File.join(@tmpdir, ".gitignore"), "a") { |file| file.puts pattern }
+  end
+
+  def relative_to_project(path)
+    Pathname.new(path).relative_path_from(Pathname.new(File.realpath(@tmpdir))).to_s
+  end
 
   def init_git_repo
     File.write(File.join(@tmpdir, ".gitignore"), "/.ace-tasks/#{IGNORED_FOLDER}/\n")

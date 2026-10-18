@@ -138,6 +138,57 @@ module Ace
             special_folder: scan_result.special_folder)
         end
 
+        # Paths a --git-commit guard must validate for an update: the task's
+        # current paths and the paths the requested relocation would create.
+        # Resolved before mutation so a rejected commit leaves state unchanged.
+        #
+        # @param ref [String] Task reference
+        # @param move_to [String, nil] Requested folder move
+        # @param move_as_child_of [String, nil] Requested reparent target
+        # @return [Array<String>] Directory and spec paths to test with Git
+        def commit_guard_paths(ref, move_to: nil, move_as_child_of: nil)
+          task = show(ref)
+          return [] unless task
+
+          paths = [task.path, task.file_path]
+          if move_to
+            destination = relocation_destination_path(task, move_to)
+            if destination
+              paths << destination
+              paths << File.join(destination, File.basename(task.file_path))
+            end
+          elsif move_as_child_of
+            paths.concat(reparenter_destination_paths(task, move_as_child_of))
+          end
+          paths.compact.uniq
+        end
+
+        # Destination directory a relocation would create, without mutating.
+        # Submitting an archive move of a subtask archives the parent family.
+        #
+        # @param task_or_ref [Models::Task, String]
+        # @param move_to [String]
+        # @return [String, nil]
+        def relocation_destination_path(task_or_ref, move_to)
+          task = task_or_ref.is_a?(Models::Task) ? task_or_ref : show(task_or_ref)
+          return nil unless task
+
+          detector = Ace::Support::Items::Atoms::SpecialFolderDetector
+          return File.join(@root_dir, File.basename(task.path)) if detector.move_to_root?(move_to)
+
+          normalized = detector.normalize(move_to)
+          mover = Ace::Support::Items::Molecules::FolderMover.new(@root_dir)
+          if task.subtask? && normalized == "_archive"
+            parent = show(task.parent_id)
+            return nil unless parent
+
+            archived_parent = mover.destination_path(parent, to: "archive", date: parse_archive_date(parent))
+            File.join(archived_parent, File.basename(task.path))
+          else
+            mover.destination_path(task, to: normalized, date: parse_archive_date(task))
+          end
+        end
+
         # List tasks with optional filtering and sorting.
         # @param status [String, nil] Filter by status
         # @param in_folder [String, nil] Filter by special folder
@@ -868,9 +919,22 @@ module Ace
 
           parent = show(current.parent_id)
           return unless parent && family_completion.complete?(parent.path, id: parent.id)
-          return if Molecules::GitIgnoredPath.ignored?(parent.path)
+          # A Git-ignored family is not part of the committed task tree, and a
+          # relocation into an ignored destination would expose its content to
+          # normal staging: neither case triggers an automatic archive.
+          return if Molecules::GitIgnoredPath.ignored_family?(parent.path)
+
+          destination = relocation_destination_path(parent, "archive")
+          return if destination && Molecules::GitIgnoredPath.ignored_after_relocation?(parent.path, destination)
 
           archive_parent_via_update(parent)
+        end
+
+        def reparenter_destination_paths(task, target)
+          reparenter = Molecules::TaskReparenter.new(root_dir: @root_dir, config: @config)
+          reparenter.destination_paths(task, target: target, resolve_ref: ->(ref) { show(ref) })
+        rescue ArgumentError
+          []
         end
 
         def family_completion

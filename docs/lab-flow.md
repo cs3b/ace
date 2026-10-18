@@ -42,12 +42,15 @@ asks Git about the actual task path — never about the folder's name.
 - `show`, `update`, subtasks, dependencies, `status`, and `plan` work for
   `_overseer` tasks like for any other task; Git tracking does not change the
   task model.
-- `--git-commit` is rejected whenever the task path is Git-ignored — on create,
-  subtask creation, update, and move — because Git would not stage it.
+- `--git-commit` is rejected whenever the task path is Git-ignored — the task
+  folder, its children, its spec file, or a destination a relocation would
+  create — on create, subtask creation, update, and move, because Git would not
+  stage it.
 - Completing a private task (or the last subtask of a private family) does not
   auto-archive it, does not create a private archive folder, and `ace-task
   doctor` neither reports the missing archive nor moves the task with
-  `--auto-fix`. The overseer decides when obsolete private history is deleted.
+  `--auto-fix`; a move into an ignored archive destination is skipped too. The
+  overseer decides when obsolete private history is deleted.
 - No worktree is created for an `_overseer` task, and it cannot be used as a
   project implementation assignment: the management task stays with the
   overseer, and a separate project task is used for implementation. Subagents may

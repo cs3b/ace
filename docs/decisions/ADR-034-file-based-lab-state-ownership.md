@@ -44,11 +44,13 @@ scope or into version control.
   the ordinary root view. A custom `--in` destination must already exist.
 - Rules that depend on Git tracking ask Git about the actual task path
   (`git check-ignore`), from any working directory and with a custom task root:
-  `--git-commit` is rejected for any Git-ignored task path (create, subtask,
-  update, move); completing an ignored task or family does not auto-archive it,
-  and `ace-task doctor` neither reports the missing archive nor moves it with
-  `--auto-fix`. No private archive folder or retention mechanism exists; the
-  overseer decides when obsolete private history is deleted.
+  `--git-commit` is rejected for an ignored task folder, child, spec file, or
+  relocation destination (create, subtask, update, move); completing an ignored
+  task or family does not auto-archive it, and `ace-task doctor` neither
+  reports the missing archive nor moves it with `--auto-fix` (including into an
+  ignored archive destination). No private archive folder or retention
+  mechanism exists; the overseer decides when obsolete private history is
+  deleted.
 - `show`, `update`, subtasks, dependencies, `status`, and `plan` handle
   `_overseer` refs like any other task; Git tracking does not change the task
   model.
