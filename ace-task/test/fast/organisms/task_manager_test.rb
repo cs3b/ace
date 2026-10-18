@@ -53,6 +53,24 @@ class TaskManagerTest < AceTaskTestCase
     assert_equal [placed.path, placed.file_path], preview
   end
 
+  def test_planned_creation_paths_match_the_archive_partition_after_a_local_date_shift
+    original_tz = ENV["TZ"]
+    ENV["TZ"] = "Atlantic/Canary"
+    # 2026-03-30T00:00Z is 2026-03-29 in this zone, so the stored zone-less
+    # created_at parses into the previous B36TS week bucket. A preview using the
+    # raw UTC date would name a different archive partition than the move writes.
+    time = Time.utc(2026, 3, 30, 0, 0, 0)
+
+    preview = @manager.planned_creation_paths("Boundary task", in_folder: "archive", time: time)
+    created = @manager.create("Boundary task", time: time)
+    placed = @manager.update(created.id, move_to: "archive")
+
+    assert_includes placed.path, File.join("_archive", "")
+    assert_equal [placed.path, placed.file_path], preview
+  ensure
+    ENV["TZ"] = original_tz
+  end
+
   # --- show ---
 
   def test_show_by_full_id

@@ -36,11 +36,11 @@ module Ace
         end
 
         # Destination paths a reparent will create, without mutating anything.
-        # Returns the destination directories followed by every generated spec
-        # file: the task's own renamed spec plus each descendant's spec, whose
-        # basename follows the descendant's new ID. Used by pre-flight checks
-        # such as the --git-commit ignored-path guard, which must test the
-        # names the move will actually write.
+        # Returns the destination directories and every generated spec file
+        # (order is not significant): the task's own renamed spec plus each
+        # descendant's spec, whose basename follows the descendant's new ID.
+        # Used by pre-flight checks such as the --git-commit ignored-path
+        # guard, which must test the names the move will actually write.
         #
         # @param task [Models::Task] Task to reparent
         # @param target [String] "none", "self", or a parent ref

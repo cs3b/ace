@@ -14,6 +14,7 @@ require_relative "../molecules/task_family_completion"
 require_relative "../molecules/task_reparenter"
 require_relative "../molecules/issue_link"
 require_relative "../atoms/task_validation_rules"
+require_relative "../atoms/task_frontmatter_defaults"
 module Ace
   module Task
     module Organisms
@@ -22,6 +23,10 @@ module Ace
       class TaskManager
         CREATE_RETRY_LIMIT = 3
         class CreateRetriesExhaustedError < StandardError; end
+
+        # Minimal item shape FolderMover#destination_path reads for a preview;
+        # the guard only needs the destination path, not a loaded task.
+        PlacementItem = Struct.new(:path)
 
         attr_reader :last_list_total, :last_folder_counts, :last_list_cycle_ids
 
@@ -662,7 +667,8 @@ module Ace
           return [dir, spec] unless in_folder && !detector.move_to_root?(in_folder)
 
           mover = Ace::Support::Items::Molecules::FolderMover.new(@root_dir)
-          placed_dir = mover.destination_path(Struct.new(:path).new(dir), to: in_folder, date: time)
+          placed_dir = mover.destination_path(PlacementItem.new(dir), to: in_folder,
+            date: planned_archive_date(time))
           [placed_dir, File.join(placed_dir, File.basename(spec))]
         end
 
@@ -1004,6 +1010,16 @@ module Ace
 
         def family_completion
           Molecules::TaskFamilyCompletion.new(@root_dir)
+        end
+
+        # Archive placement derives its partition from the task's stored
+        # created_at, which frontmatter records as zone-less UTC wall time and
+        # parse_archive_date parses in the local zone. Mirror that parse so the
+        # preview names the bucket the placement actually writes.
+        def planned_archive_date(time)
+          Time.parse(Atoms::TaskFrontmatterDefaults.format_time(time))
+        rescue StandardError
+          time
         end
 
         def parse_archive_date(task)
