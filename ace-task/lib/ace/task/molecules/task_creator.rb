@@ -92,23 +92,18 @@ module Ace
 
         # Non-mutating preview of the directory and spec file a create call
         # with this title would write at the given time. Pre-write checks use
-        # it to inspect the real generated ID and slugs instead of sampling
-        # representative names; create uses the same naming helper.
+        # it to inspect the real generated ID and title-derived slugs instead
+        # of sampling representative names; create uses the same naming helper.
+        # The CLI never requests LLM slugs, so the preview is deterministic.
         #
         # @param title [String] Task title
         # @param time [Time] Creation time used for the generated ID
-        # @param use_llm_slug [Boolean] Whether create would ask the LLM for slugs
         # @return [Array<String>] Task directory and spec file path
-        def destination_paths(title, time: Time.now.utc, use_llm_slug: false)
+        def destination_paths(title, time: Time.now.utc)
           raise ArgumentError, "Title is required" if title.nil? || title.strip.empty?
 
           formatted_id = Atoms::TaskIdFormatter.generate(time).formatted_id
-          slugs = if use_llm_slug
-            generate_llm_slugs(title) || generate_slugs(title)
-          else
-            generate_slugs(title)
-          end
-          paths = destination_paths_for(formatted_id, slugs)
+          paths = destination_paths_for(formatted_id, generate_slugs(title))
           [paths[:dir], paths[:spec]]
         end
 

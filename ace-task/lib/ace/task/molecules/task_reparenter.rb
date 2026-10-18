@@ -317,12 +317,13 @@ module Ace
 
             child_source = File.join(source_dir, entry)
             next unless File.directory?(child_source)
-            next if Dir.glob(File.join(child_source, "*.s.md")).empty?
 
             char = match[1]
             slug = match[2]
             child_destination = File.join(destination_dir, entry)
-            specs << File.join(child_destination, "#{new_parent_id}.#{char}-#{slug}.s.md")
+            unless Dir.glob(File.join(child_source, "*.s.md")).empty?
+              specs << File.join(child_destination, "#{new_parent_id}.#{char}-#{slug}.s.md")
+            end
             specs.concat(descendant_destination_specs(
               child_source, child_destination, new_parent_id: "#{new_parent_id}.#{char}"
             ))
