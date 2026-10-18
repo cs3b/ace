@@ -51,6 +51,16 @@ PATH
       ace-support-core (~> 0.31)
 
 PATH
+  remote: ace-coworker
+  specs:
+    ace-coworker (0.1.0)
+      ace-support-cli (~> 0.6)
+      ace-support-config (~> 0.18)
+      ace-support-core (~> 0.31)
+      ace-support-fs (~> 0.3)
+      ace-task (~> 0.41)
+
+PATH
   remote: ace-demo
   specs:
     ace-demo (0.26.2)
@@ -206,7 +216,7 @@ PATH
   remote: ace-hitl-hermes
   specs:
     ace-hitl-hermes (0.7.0)
-      ace-hitl (~> 0.18.0)
+      ace-hitl (~> 0.19.0)
       ace-hitl-contract (~> 0.3.0)
       ace-support-cli (~> 0.6)
       faraday (~> 2.14)
@@ -214,7 +224,7 @@ PATH
 PATH
   remote: ace-hitl
   specs:
-    ace-hitl (0.18.0)
+    ace-hitl (0.19.0)
       ace-b36ts (~> 0.14)
       ace-hitl-contract (~> 0.3.0)
       ace-runtime (~> 0.3)
@@ -607,6 +617,7 @@ DEPENDENCIES
   ace-b36ts!
   ace-bundle!
   ace-compressor!
+  ace-coworker!
   ace-demo!
   ace-design!
   ace-docs!
