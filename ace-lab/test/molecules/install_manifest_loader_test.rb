@@ -77,6 +77,9 @@ module Molecules
         error = assert_raises(Ace::Lab::InvalidConfigurationError) { load(path: path) }
 
         assert_match(/failed trusted deployment verification or could not be read/, error.message)
+        # the nested authorization-file wording is not embedded — this
+        # is an install-manifest error
+        refute_match(/authorization/, error.message)
       end
     end
 

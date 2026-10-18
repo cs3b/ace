@@ -118,6 +118,18 @@ module Molecules
       assert_equal [["useradd", "-m", "-s", "/bin/zsh", "-d", "/home/ace-worker", "ace-worker"]], calls
     end
 
+    # F-4: a created account whose uid still cannot be resolved reports
+    # a message so JSON consumers can distinguish it from a normal
+    # creation.
+    def test_linux_created_with_unresolvable_uid_carries_message
+      result = provisioner(platform: "linux").call(account: account("create" => true))
+
+      assert_equal "created", result["status"]
+      assert_nil result["uid"]
+      assert_match(/was created but its uid could not be resolved yet/, result["message"])
+      assert_match(/rerun ace-lab prepare to report it/, result["message"])
+    end
+
     def test_unsupported_platform_is_reported_with_manual_remedy
       result = provisioner(platform: "freebsd").call(account: account("create" => true))
 

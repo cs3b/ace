@@ -120,7 +120,13 @@ module Ace
           return failure(username, result["message"]) unless result["ok"]
 
           entry = account_lookup.call(username)
-          created(username, entry ? entry.uid : nil)
+          if entry
+            created(username, entry.uid)
+          else
+            {"username" => username, "status" => "created", "uid" => nil,
+             "message" => "account '#{username}' was created but its uid could not be " \
+               "resolved yet; rerun ace-lab prepare to report it"}
+          end
         end
 
         # @return [Hash] {ok:, out:, message:} — failure message carries

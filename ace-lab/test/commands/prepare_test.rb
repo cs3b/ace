@@ -69,6 +69,9 @@ module Ace
               assert_includes out, "Accounts:"
               assert_includes out, "ace-worker"
               assert_includes out, "exists"
+              # key rows render a truncated fingerprint (F-5): "SHA256:"
+              # plus 20 characters, never the full row-bloating value
+              assert_match(/SHA256:[A-Za-z0-9+\/=]{20}…/, out)
               assert_includes out, "Directories:"
               assert_includes out, "(none declared)"
               assert_includes out, "Result: ok"

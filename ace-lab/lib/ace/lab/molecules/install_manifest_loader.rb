@@ -23,12 +23,16 @@ module Ace
           # @raise [Ace::Lab::InvalidConfigurationError] missing, untrusted,
           #   unparseable or schema-invalid manifest
           def load(path: Ace::Lab.install_manifest_path, platform: nil)
+            # The nested GrantResolver message speaks of the
+            # "authorization file" — a wrong remedy lead inside an
+            # install-manifest error. The wrapper already states the
+            # requirement, so the nested message is not embedded.
             content = begin
               GrantResolver.read_verified(path)
-            rescue Ace::Lab::InvalidConfigurationError => e
+            rescue Ace::Lab::InvalidConfigurationError
               raise Ace::Lab::InvalidConfigurationError,
                 "invalid lab install manifest: #{path} failed trusted deployment verification " \
-                "or could not be read; failing closed (#{e.message})"
+                "or could not be read; failing closed"
             end
 
             if content.nil?
