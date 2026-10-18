@@ -87,6 +87,8 @@ module Ace
               Ace::Task::Organisms::TaskManager.new
             end
             validate_destination!(manager, in_folder) if in_folder && !child_of
+            reject_ignored_creation_target!(manager, in_folder: in_folder, child_of: child_of) if
+              options[:git_commit]
             # Snapshot before any write so a rejected --git-commit can remove
             # exactly the artifacts this command created (including a placed
             # task, a new subtask, or an empty destination folder).
@@ -163,9 +165,31 @@ module Ace
 
           private
 
-          # --git-commit must not stage a task whose path Git ignores. The
-          # target is resolved before creation: a subtask inherits its parent's
-          # folder, --in names a folder, and the default is the task root.
+          # A cheap pre-creation check: resolve the known target (the parent
+          # family or the destination folder) and representative child paths,
+          # so an ignored target fails before any write or remote issue sync.
+          # The post-creation check stays authoritative for generated IDs and
+          # slugs, while this keeps --dry-run behavior faithful.
+          def reject_ignored_creation_target!(manager, in_folder:, child_of:)
+            detector = Ace::Support::Items::Atoms::SpecialFolderDetector
+            target = if child_of
+              manager.show(child_of)&.path
+            elsif in_folder && !detector.move_to_root?(in_folder)
+              File.join(manager.root_dir, detector.normalize(in_folder))
+            else
+              manager.root_dir
+            end
+            return unless target
+
+            probes = [target]
+            %w[task-probe 0-task-probe].each do |child|
+              probes << File.join(target, child)
+              probes << File.join(target, child, "#{child}.s.md")
+            end
+            ignored = probes.find { |probe| Ace::Task::Molecules::GitIgnoredPath.ignored?(probe) }
+            raise_ignored_commit!(ignored) if ignored
+          end
+
           # --git-commit must not stage a task whose directory or spec path Git
           # ignores. The check runs on the created paths (covering generated
           # IDs, subtask folders, and the placed destination) and rolls the
@@ -182,8 +206,12 @@ module Ace
                   "Cleanup also failed: #{cleanup_error.message}"
             end
 
+            raise_ignored_commit!(task.path)
+          end
+
+          def raise_ignored_commit!(path)
             raise Ace::Support::Cli::Error,
-              "Cannot --git-commit a Git-ignored task path: #{task.path}. " \
+              "Cannot --git-commit a Git-ignored task path: #{path}. " \
                 "Move the task to a tracked folder or omit --git-commit."
           end
 
