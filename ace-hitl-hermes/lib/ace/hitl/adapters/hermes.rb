@@ -2,6 +2,7 @@
 
 require "json"
 require "ace/hitl/adapters"
+require "ace/hitl/atoms/hitl_address"
 require "ace/hitl/hermes/errors"
 require "ace/hitl/hermes/organisms/hermes_box"
 require "ace/hitl/hermes/molecules/hermes_channels"
@@ -11,7 +12,11 @@ module Ace
   module Hitl
     module Hermes
       module Organisms
-        # HITL delivery adapter for the hermes folder transport. Translates
+        # HITL delivery adapter for the hermes folder transport. The
+        # channel folder this route publishes to must match the event's
+        # recipient (panel-form address naming this channel on this
+        # machine); anything the route cannot serve is an explicit refusal,
+        # never a silent publish to the fixed channel folder. Translates
         # the shared HITL rendering into an `ace.hitl.hermes.message/v1`
         # outbound question (both HITL questions and reports travel as the
         # outbound kind; the `[HITL report <result>]` body prefix preserves
@@ -43,6 +48,14 @@ module Ace
           end
 
           def deliver(event:, text:, recipient:, reply_to:)
+            unless serves_recipient?(recipient)
+              return Adapters::RouteResult.new(route: @route_name, adapter: "hermes",
+                status: :failed,
+                detail: "hermes route '#{@route_name}' (channel '#{@channel_name}' on " \
+                        "#{@machine}) cannot deliver to recipient " \
+                        "#{Ace::Hitl::Atoms::HitlAddress.to_s(recipient)}")
+            end
+
             message = @box.publish(
               kind: :question, id: event.id, sender: @sender,
               timestamp: timestamp, body: text
@@ -63,6 +76,15 @@ module Ace
           end
 
           private
+
+          # The route serves the recipient when its channel folder IS the
+          # recipient's target (panel-form address naming this channel on
+          # this machine). Legacy recipient-less events use the route's
+          # configured channel; every other recipient is refused.
+          def serves_recipient?(recipient)
+            recipient.nil? ||
+              (recipient["panel"] == @channel_name && recipient["machine"] == @machine)
+          end
 
           def timestamp
             @timestamp ||= Time.now.utc.strftime("%Y-%m-%dT%H:%M:%SZ")

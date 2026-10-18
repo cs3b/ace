@@ -127,6 +127,42 @@ module Ace
             end
           end
 
+          def test_matching_panel_recipient_is_delivered_to_the_channel
+            with_hermes_dir do |folder|
+              adapter = HitlAdapter.new(route(folder, sender: "lab01"))
+              event, text = question_event
+              recipient = {"machine" => "lab01", "panel" => "project"}
+
+              result = adapter.deliver(event: event, text: text,
+                recipient: recipient, reply_to: event.reply_to)
+
+              assert result.delivered?
+              assert File.exist?(File.join(folder, "#{event.id}.json")),
+                "recipient matching the route channel is delivered"
+            end
+          end
+
+          def test_foreign_recipients_are_refused_without_publishing
+            with_hermes_dir do |folder|
+              adapter = HitlAdapter.new(route(folder, sender: "lab01"))
+              event, text = question_event
+              other_channel = {"machine" => "lab01", "panel" => "review"}
+              other_machine = {"machine" => "other-host", "panel" => "project"}
+              folder_form = {"machine" => "lab01", "folder" => ".ace-local/hitl", "id" => event.id}
+
+              [other_channel, other_machine, folder_form].each do |recipient|
+                result = adapter.deliver(event: event, text: text,
+                  recipient: recipient, reply_to: event.reply_to)
+
+                assert_equal :failed, result.status, recipient.inspect
+                assert_includes result.detail, "cannot deliver to recipient"
+              end
+
+              assert_empty Dir.children(folder),
+                "no message may land in the route's channel for a recipient it cannot serve"
+            end
+          end
+
           def test_delivery_and_reply_flow_correlates_by_exact_id
             with_hermes_dir do |folder|
               adapter = HitlAdapter.new(route(folder))

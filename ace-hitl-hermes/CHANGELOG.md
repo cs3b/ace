@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-10-18
+
+### Fixed
+
+- The HITL adapter honors the event's recipient (PR #383 audit F1):
+  the route's channel folder is used only when it IS the recipient's
+  target (panel-form address naming this channel on this machine, or a
+  legacy recipient-less event). Every other recipient is an explicit
+  per-route refusal with a clear reason — never a silent publish to
+  the fixed channel folder.
+
 ## [0.8.1] - 2026-10-18
 
 ### Changed
