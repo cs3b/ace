@@ -1,0 +1,16 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require_relative "../lib/ace/coworker"
+require "ace/support/cli"
+
+args = ARGV.empty? ? ["--help"] : ARGV
+
+begin
+  Ace::Support::Cli::Runner.new(Ace::Coworker::CLI).call(args: args)
+rescue Ace::Support::Cli::Error => e
+  warn e.message
+  exit(e.exit_code)
+rescue Interrupt
+  exit(130)
+end

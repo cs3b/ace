@@ -1,6 +1,6 @@
 ---
 id: 8xg.t.sbz.1.1
-status: pending
+status: done
 priority: medium
 created_at: "2026-10-17 18:54:11"
 estimate: medium
@@ -31,9 +31,9 @@ Zachować adres odbiorcy: maszyna, folder i ID albo maszyna i panel. Odpowiedź 
 
 ## Kryteria odbioru
 
-- [ ] Dwa worktree z różnymi pytaniami otrzymują swoje Reply; raport można powiązać z właściwym taskiem i assignmentem.
-- [ ] Nieznany odbiorca lub niepasujące ID daje jawny błąd i nie zapisuje odpowiedzi w cudzym zadaniu.
-- [ ] Wynik jest zgodny z kontraktem programu i możliwy do użycia przez następną rolę lub narzędzie.
+- [x] Dwa worktree z różnymi pytaniami otrzymują swoje Reply; raport można powiązać z właściwym taskiem i assignmentem.
+- [x] Nieznany odbiorca lub niepasujące ID daje jawny błąd i nie zapisuje odpowiedzi w cudzym zadaniu.
+- [x] Wynik jest zgodny z kontraktem programu i możliwy do użycia przez następną rolę lub narzędzie.
 
 ## Plan weryfikacji
 

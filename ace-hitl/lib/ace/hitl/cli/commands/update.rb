@@ -59,6 +59,8 @@ module Ace
               raise Ace::Support::Cli::Error.new(
                 "HITL event '#{ref}' is ambiguous across scope '#{scope || "all"}'. Candidates: #{candidates}"
               )
+            rescue Ace::Hitl::Organisms::HitlManager::NotAnswerableError => e
+              raise Ace::Support::Cli::Error.new(e.message)
             end
 
             raise Ace::Support::Cli::Error.new("HITL event '#{ref}' not found") unless event
@@ -81,6 +83,8 @@ module Ace
               puts "HITL event archived after successful dispatch."
             when :managed_request
               raise Ace::Support::Cli::Error.new("Managed requests require scoped live delivery; unscoped resume is prohibited")
+            when :report
+              raise Ace::Support::Cli::Error.new("HITL event '#{event.id}' is a report; reports do not await an answer or resume")
             when :no_answer
               raise Ace::Support::Cli::Error.new("Cannot resume '#{event.id}' without an answer")
             when :failed

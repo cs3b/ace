@@ -1,6 +1,6 @@
 ---
 id: 8xg.t.sbz.1.2
-status: pending
+status: done
 priority: medium
 created_at: "2026-10-17 18:54:11"
 estimate: medium
@@ -31,9 +31,9 @@ Wspólny interfejs nadawcy nie zależy od adaptera. Zachować ace-hitl-hermes ja
 
 ## Kryteria odbioru
 
-- [ ] Przełączenie konfiguracji transportu nie wymaga zmiany assignmentu lub logiki coworkera; skonfigurowany zestaw tras raportuje własne wyniki dostarczenia.
-- [ ] Niedostępny adapter nie powoduje cichego wysłania do innego odbiorcy; dodanie przyszłego adaptera Nervus nie wymaga nowego interfejsu HITL.
-- [ ] Wynik jest zgodny z kontraktem programu i możliwy do użycia przez następną rolę lub narzędzie.
+- [x] Przełączenie konfiguracji transportu nie wymaga zmiany assignmentu lub logiki coworkera; skonfigurowany zestaw tras raportuje własne wyniki dostarczenia.
+- [x] Niedostępny adapter nie powoduje cichego wysłania do innego odbiorcy; dodanie przyszłego adaptera Nervus nie wymaga nowego interfejsu HITL.
+- [x] Wynik jest zgodny z kontraktem programu i możliwy do użycia przez następną rolę lub narzędzie.
 
 ## Plan weryfikacji
 

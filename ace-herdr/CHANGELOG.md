@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-10-18
+
+### Added
+
+- `ace-herdr status`: read-only live-layout snapshot composing the existing
+  workspaces/tabs/panes list APIs into one readable tree (or `--format json`).
+  Strictly separates `available` (including a valid empty layout),
+  `unavailable` (missing herdr runtime — never an empty-ready table), and
+  `error` states; snapshot-race orphans land in an `unattached` bucket and
+  stay counted. Starts nothing, writes nothing; exit 0 whenever a report
+  renders (8xg.t.sbz.6.0 / L7.1).
+
 ## [0.6.1] - 2026-10-16
 
 ### Fixed

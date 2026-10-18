@@ -1,0 +1,6 @@
+# Defaults for ace-coworker (ADR-022 gem-defaults tier).
+config_path: .ace-local/coworker/config.yml
+reporting:
+  channel: hitl
+errors:
+  on_failure: report

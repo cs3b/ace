@@ -14,6 +14,8 @@ module Ace
 
           option :status, type: :string, aliases: %w[-s], desc: "Filter by status"
           option :kind, type: :string, aliases: %w[-k], desc: "Filter by kind"
+          option :type, type: :string, desc: "Filter by type (question, report)"
+          option :delivery, type: :string, desc: "Filter by delivery state (undelivered, delivered)"
           option :tags, type: :string, aliases: %w[-T], desc: "Filter by tags (comma-separated)"
           option :in, type: :string, aliases: %w[-i], desc: "Folder filter (next, all, archive)"
           option :scope, type: :string, desc: "Scope (current, all)"
@@ -26,11 +28,16 @@ module Ace
             scope = validate_scope(options[:scope])
             status = options[:status]
             kind = options[:kind]
+            type = options[:type]
+            validate_type!(type) if type
+            delivery = options[:delivery]
+            validate_delivery!(delivery) if delivery
             tags = parse_tags(options[:tags])
             in_folder = options[:in] || "next"
 
             manager = Ace::Hitl::Organisms::HitlManager.new
-            events = manager.list(status: status, kind: kind, tags: tags, in_folder: in_folder, scope: scope)
+            events = manager.list(status: status, kind: kind, type: type, delivery: delivery,
+              tags: tags, in_folder: in_folder, scope: scope)
 
             puts Ace::Hitl::Molecules::HitlDisplayFormatter.format_list(
               events,
@@ -45,6 +52,20 @@ module Ace
             return [] unless raw
 
             raw.split(",").map(&:strip).reject(&:empty?)
+          end
+
+          def validate_type!(type)
+            allowed = %w[question report]
+            return if allowed.include?(type)
+
+            raise Ace::Support::Cli::Error.new("Invalid type '#{type}'. Allowed: #{allowed.join(", ")}")
+          end
+
+          def validate_delivery!(delivery)
+            allowed = %w[undelivered delivered]
+            return if allowed.include?(delivery)
+
+            raise Ace::Support::Cli::Error.new("Invalid delivery filter '#{delivery}'. Allowed: #{allowed.join(", ")}")
           end
 
           def validate_scope(raw_scope)

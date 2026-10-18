@@ -29,7 +29,9 @@ module Ace
           created_at = parse_created_at(frontmatter["created_at"])
 
           known_keys = %w[
-            id status title kind tags questions assignment step step_name
+            id status title kind type result task delivery tags questions assignment step step_name
+            recipient_machine recipient_folder recipient_panel recipient_id
+            reply_to_machine reply_to_folder reply_to_id
             resume_instructions created_at answered answered_at
             requester_provider requester_model requester_session_id
             waiter_state waiter_session_id waiter_provider waiter_last_seen_at
@@ -39,10 +41,16 @@ module Ace
           ]
           extra_metadata = frontmatter.reject { |k, _| known_keys.include?(k) }
 
+          event_type = frontmatter["type"] || "question"
+
           Models::HitlEvent.new(
             id: id || frontmatter["id"],
             status: frontmatter["status"] || "pending",
-            kind: frontmatter["kind"] || "clarification",
+            # Kinds apply to questions only; reports carry no kind so
+            # question-oriented --kind filters never mix them in.
+            kind: event_type == "report" ? nil : (frontmatter["kind"] || "clarification"),
+            type: event_type,
+            result: frontmatter["result"],
             title: title,
             tags: Array(frontmatter["tags"]),
             questions: Array(frontmatter["questions"]),
@@ -53,9 +61,18 @@ module Ace
             special_folder: special_folder,
             created_at: created_at,
             metadata: extra_metadata.merge(
+              "task" => frontmatter["task"],
+              "delivery" => frontmatter["delivery"],
               "assignment" => frontmatter["assignment"],
               "step" => frontmatter["step"],
               "step_name" => frontmatter["step_name"],
+              "recipient_machine" => frontmatter["recipient_machine"],
+              "recipient_folder" => frontmatter["recipient_folder"],
+              "recipient_panel" => frontmatter["recipient_panel"],
+              "recipient_id" => frontmatter["recipient_id"],
+              "reply_to_machine" => frontmatter["reply_to_machine"],
+              "reply_to_folder" => frontmatter["reply_to_folder"],
+              "reply_to_id" => frontmatter["reply_to_id"],
               "resume_instructions" => frontmatter["resume_instructions"],
               "answered" => frontmatter["answered"],
               "answered_at" => frontmatter["answered_at"],

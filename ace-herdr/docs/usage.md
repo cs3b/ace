@@ -88,6 +88,33 @@ ace-herdr tidy --apply  # close eligible panes, archive old delivered records
 before closing; unknown, pending, retryable, and failed resources are never
 touched.
 
+## Status
+
+```bash
+ace-herdr status              # readable tree: workspaces > tabs > panes
+ace-herdr status --format json
+```
+
+`status` composes the live workspaces, tabs, and panes into one read-only
+snapshot. It starts nothing, writes nothing, and exits 0 whenever a report
+renders; only usage errors exit non-zero.
+
+Output states (never conflated):
+
+- `Herdr runtime: available` -- the tree follows, with `*` marking focused
+  entries, `agent:<status>` for agent panes and `plain` otherwise, cwd
+  shortened with `~`. A valid empty layout renders zero counts and
+  `No herdr workspaces, tabs, or panes.`
+- `Herdr runtime: unavailable - <reason>` -- the herdr binary/runtime is
+  missing; never rendered as an empty, ready layout.
+- `Herdr runtime: error - <reason>` -- the runtime answered with an error.
+
+JSON shape: `{"runtime": {"state", "binary", "error"}, "counts":
+{"workspaces", "tabs", "panes"}, "workspaces": [{"workspace": {...},
+"tabs": [{"tab": {...}, "panes": [...]}]}], "unattached": {"tabs": [...],
+"panes": [...]}}`. Snapshot-race orphans (tab without workspace, pane without
+tab) land in `unattached` and stay counted.
+
 ## Planned waves
 
 > **Planned (L2):** the unified HITL report/question/reply interface and

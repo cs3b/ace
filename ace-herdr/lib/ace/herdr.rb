@@ -27,6 +27,7 @@ require_relative "herdr/molecules/inbox_context_client"
 require_relative "herdr/organisms/dispatcher"
 require_relative "herdr/organisms/control_surface"
 require_relative "herdr/organisms/runtime_adapter"
+require_relative "herdr/organisms/status"
 require_relative "herdr/organisms/tidy"
 require_relative "herdr/cli"
 

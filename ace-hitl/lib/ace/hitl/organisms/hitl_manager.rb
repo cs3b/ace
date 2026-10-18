@@ -26,20 +26,45 @@ module Ace
           end
         end
 
-        attr_reader :root_dir, :last_list_total, :last_folder_counts
+        class NotAnswerableError < StandardError; end
 
-        def initialize(root_dir: nil, config: nil, scope_resolver: nil, resume_dispatcher: nil)
+        attr_reader :root_dir, :last_list_total, :last_folder_counts, :config
+
+        def initialize(root_dir: nil, config: nil, scope_resolver: nil, resume_dispatcher: nil,
+          address_resolver: nil)
           @config = config || load_config
           @configured_root_setting = @config.dig("hitl", "root_dir") || Molecules::HitlConfigLoader::DEFAULT_ROOT_DIR
           @root_dir = root_dir || resolve_root_dir
           @scope_resolver = scope_resolver || Molecules::WorktreeScopeResolver.new
           @resume_dispatcher = resume_dispatcher || Molecules::ResumeDispatcher.new
+          @address_resolver = address_resolver || Molecules::HitlAddressResolver.new(config: @config)
         end
 
-        def create(title, **options)
+        def create(title, to: nil, **options)
+          # Resolve the recipient address before any I/O: unknown names and
+          # malformed addresses fail closed with nothing written. The reply
+          # address (sender machine + events folder) applies to questions
+          # only — a report carries the recipient but never awaits a reply,
+          # so hitl.machine is not required for report+--to.
+          recipient = nil
+          reply_to = nil
+          effective_to = to || @address_resolver.default_recipient
+          event_type = options[:type] || "question"
+          if effective_to
+            recipient = @address_resolver.resolve(effective_to)
+            if event_type == "question"
+              # The reply address must identify THIS sender folder: use the
+              # resolved root (absolute), not the configured setting — a
+              # relative value like `.ace-local/hitl` is identical across
+              # worktrees and gives the reply no base to resolve against.
+              reply_to = @address_resolver.sender_address(folder: File.expand_path(@root_dir), id: "pending")
+                .reject { |key, _| key == "id" }
+            end
+          end
+
           ensure_root_dir
           creator = Molecules::HitlCreator.new(root_dir: @root_dir, config: @config)
-          creator.create(title, **options)
+          creator.create(title, **options, recipient: recipient, reply_to: reply_to)
         end
 
         def show(ref, scope: nil)
@@ -68,13 +93,15 @@ module Ace
           }
         end
 
-        def list(status: nil, kind: nil, in_folder: "next", tags: [], scope: nil)
+        def list(status: nil, kind: nil, type: nil, delivery: nil, in_folder: "next", tags: [], scope: nil)
           effective_scope = @scope_resolver.effective_scope(scope)
           scan_results = scan_results_for_scope(effective_scope, in_folder: in_folder)
           events = load_events(scan_results)
 
           events = events.select { |event| event.status == status } if status
           events = events.select { |event| event.kind == kind } if kind
+          events = events.select { |event| event.type == type } if type
+          events = filter_by_delivery(events, delivery) if delivery
           events = filter_by_tags(events, tags) if tags.any?
 
           events
@@ -86,6 +113,11 @@ module Ace
 
           event = resolved[:event]
           hitl_root = resolved[:hitl_root] || @root_dir
+
+          if !answer.nil? && event.report?
+            raise NotAnswerableError,
+              "HITL event '#{event.id}' is a report; reports do not await an answer"
+          end
 
           has_field_updates = [set, add, remove].any? { |h| h && !h.empty? }
           if has_field_updates && !answer.nil?
@@ -137,6 +169,8 @@ module Ace
             return {status: :not_found} unless current
 
             event = current[:event]
+            return {status: :report, event: event} if event.report?
+
             if event.metadata["lab_request_id"]
               raise Lifecycle::StateError, "managed requests require authenticated scoped wait"
             end
@@ -179,6 +213,7 @@ module Ace
           return {status: :not_found} unless current
 
           event = current[:event]
+          return {status: :report, event: event} if event.report?
           return {status: :managed_request, event: event} if event.metadata["lab_request_id"]
 
           answer = event.answer.to_s
@@ -342,6 +377,17 @@ module Ace
 
         def filter_by_tags(events, tags)
           events.select { |event| tags.any? { |tag| event.tags.include?(tag) } }
+        end
+
+        def filter_by_delivery(events, delivery)
+          case delivery.to_s
+          when "undelivered"
+            events.select { |event| Molecules::HitlDeliveryState.undelivered?(event.metadata["delivery"]) }
+          when "delivered"
+            events.select { |event| Molecules::HitlDeliveryState.fully_delivered?(event.metadata["delivery"]) }
+          else
+            raise Error, "invalid delivery filter '#{delivery}' (undelivered, delivered)"
+          end
         end
 
         def apply_answer_update(file_path, answer)

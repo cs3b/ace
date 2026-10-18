@@ -19,6 +19,10 @@ module Ace
 
         def create(title,
           kind: nil,
+          type: nil,
+          result: nil,
+          task: nil,
+          body: [],
           questions: [],
           tags: [],
           assignment: nil,
@@ -26,8 +30,14 @@ module Ace
           step_name: nil,
           resume_instructions: nil,
           move_to: nil,
+          recipient: nil,
+          reply_to: nil,
           time: Time.now.utc)
           raise ArgumentError, "Title is required" if title.nil? || title.strip.empty?
+
+          effective_type = type || "question"
+          validate_type!(effective_type, result: result, body: body, questions: questions,
+            resume_instructions: resume_instructions)
 
           effective_kind = kind || @config.dig("hitl", "default_kind") || "clarification"
           id = generate_unique_id(time)
@@ -41,23 +51,44 @@ module Ace
           item_dir = File.join(target_dir, folder_name)
           FileUtils.mkdir_p(item_dir)
 
-          frontmatter = {
-            "id" => id,
-            "title" => title,
-            "kind" => effective_kind,
-            "status" => "pending",
-            "tags" => tags,
-            "questions" => questions,
-            "assignment" => assignment,
-            "step" => step,
-            "step_name" => step_name,
-            "resume_instructions" => resume_instructions,
-            "answered" => false,
-            "created_at" => time
-          }.merge(infer_requester_context(assignment: assignment, step: step)).compact
+          frontmatter = if effective_type == "report"
+            {
+              "id" => id,
+              "title" => title,
+              "type" => "report",
+              "result" => result,
+              "status" => "recorded",
+              "tags" => tags,
+              "task" => task,
+              "assignment" => assignment,
+              "step" => step,
+              "step_name" => step_name,
+              "created_at" => time
+            }.merge(recipient_keys(recipient, id)).compact
+          else
+            {
+              "id" => id,
+              "title" => title,
+              "type" => "question",
+              "kind" => effective_kind,
+              "status" => "pending",
+              "tags" => tags,
+              "task" => task,
+              "questions" => questions,
+              "assignment" => assignment,
+              "step" => step,
+              "step_name" => step_name,
+              "resume_instructions" => resume_instructions,
+              "answered" => false,
+              "created_at" => time
+            }.merge(recipient_keys(recipient, id))
+              .merge(reply_to_keys(reply_to, id))
+              .merge(infer_requester_context(assignment: assignment, step: step)).compact
+          end
 
-          body = build_body(title: title, questions: questions)
-          content = Ace::Support::Items::Atoms::FrontmatterSerializer.rebuild(frontmatter, body)
+          body_text = build_body(title: title, type: effective_type, result: result,
+            questions: questions, body: body)
+          content = Ace::Support::Items::Atoms::FrontmatterSerializer.rebuild(frontmatter, body_text)
 
           item_file = File.join(item_dir, Atoms::HitlFilePattern.filename(id, file_slug))
           File.write(item_file, content)
@@ -71,6 +102,33 @@ module Ace
         end
 
         private
+
+        # Flat recipient keys; the folder form stamps the new event's ID as
+        # the case id (panel form has none). Returns {} when no recipient.
+        def recipient_keys(recipient, id)
+          return {} unless recipient.is_a?(Hash)
+
+          keys = {
+            "recipient_machine" => recipient["machine"],
+            "recipient_folder" => recipient["folder"],
+            "recipient_panel" => recipient["panel"],
+            "recipient_id" => recipient["id"] || (recipient["folder"] ? id : nil)
+          }
+          keys.compact
+        end
+
+        # Flat reply keys (questions only): original sender + exact case.
+        # When the reply address carries no id, the new event's own ID is
+        # the case id the answer binds to.
+        def reply_to_keys(reply_to, id)
+          return {} unless reply_to.is_a?(Hash)
+
+          {
+            "reply_to_machine" => reply_to["machine"],
+            "reply_to_folder" => reply_to["folder"],
+            "reply_to_id" => reply_to["id"] || id
+          }.compact
+        end
 
         def generate_unique_id(base_time)
           time = base_time
@@ -131,23 +189,64 @@ module Ace
           candidate
         end
 
-        def build_body(title:, questions: [])
-          question_lines = if questions.empty?
-            "- (pending human input)"
-          else
-            questions.map { |q| "- #{q}" }.join("\n")
+        def validate_type!(type, result:, body:, questions:, resume_instructions:)
+          allowed = %w[question report]
+          unless allowed.include?(type)
+            raise ArgumentError, "Invalid type '#{type}'. Allowed: #{allowed.join(", ")}"
           end
 
-          <<~BODY
-            # #{title}
+          if type == "report"
+            unless %w[success error].include?(result.to_s)
+              raise ArgumentError, "Report requires result 'success' or 'error'"
+            end
+            if questions.any?
+              raise ArgumentError, "Reports cannot include questions; use body lines instead"
+            end
+            if resume_instructions
+              raise ArgumentError, "Reports do not carry resume instructions; only questions resume"
+            end
+          else
+            if result
+              raise ArgumentError, "result is only valid for reports (--type report)"
+            end
+            if body.any?
+              raise ArgumentError, "body is only valid for reports (--type report)"
+            end
+          end
+        end
 
-            ## Questions
+        def build_body(title:, type: "question", result: nil, questions: [], body: [])
+          if type == "report"
+            content_lines = body.map(&:strip).reject(&:empty?)
+            content_lines = ["(no content)"] if content_lines.empty?
 
-            #{question_lines}
+            <<~BODY
+              # #{title}
 
-            ## Answer
+              ## Report
 
-          BODY
+              Result: #{result}
+
+              #{content_lines.map { |line| "- #{line}" }.join("\n")}
+            BODY
+          else
+            question_lines = if questions.empty?
+              "- (pending human input)"
+            else
+              questions.map { |q| "- #{q}" }.join("\n")
+            end
+
+            <<~BODY
+              # #{title}
+
+              ## Questions
+
+              #{question_lines}
+
+              ## Answer
+
+            BODY
+          end
         end
 
         def infer_requester_context(assignment:, step:)

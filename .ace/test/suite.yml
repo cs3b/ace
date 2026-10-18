@@ -47,6 +47,11 @@ test_suite:
       group: tools
       priority: 2
 
+    - name: ace-coworker
+      path: ace-coworker
+      group: tools
+      priority: 2
+
     - name: ace-support-nav
       path: ace-support-nav
       group: tools

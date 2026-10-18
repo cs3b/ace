@@ -1,6 +1,6 @@
 ---
 id: 8xg.t.sbz.5
-status: pending
+status: in-progress
 priority: high
 created_at: "2026-10-17 18:53:35"
 estimate: large
@@ -37,8 +37,8 @@ Prywatny ace-task --in _overseer, istniejące subtaski/dependencies oraz raporty
 
 ## Kryteria odbioru
 
-- [ ] Po zapisie i wznowieniu lista jest dostępna dla właściciela; git status nie pokazuje jej jako plików do commitu.
-- [ ] Drzewo pokazuje kolejność i powiązania z zadaniami projektowymi, worktree oraz assignmentami ról.
+- [x] Po zapisie i wznowieniu lista jest dostępna dla właściciela; git status nie pokazuje jej jako plików do commitu.
+- [x] Drzewo pokazuje kolejność i powiązania z zadaniami projektowymi, worktree oraz assignmentami ról.
 - [ ] Zadanie B czeka na integrację A mimo ukończenia workera A, a po potwierdzeniu integracji staje się odblokowane.
 - [ ] Worker kończy, następnie startuje reviewer, potem integrator; dwa różne taski mogą korzystać z różnych worktree.
 - [ ] Jeden realny obieg planner → worker → raport → reviewer działa już w L6; wyniki aktualizują właściwy task nadrzędny.

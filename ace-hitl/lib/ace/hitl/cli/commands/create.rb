@@ -13,7 +13,12 @@ module Ace
 
           argument :title, required: false, desc: "HITL event title"
 
-          option :kind, type: :string, aliases: %w[-k], desc: "Kind: clarification, decision, approval"
+          option :kind, type: :string, aliases: %w[-k], desc: "Kind: clarification, decision, approval (questions only)"
+          option :type, type: :string, aliases: %w[-t], desc: "Type: question (default), report"
+          option :result, type: :string, desc: "Report result: success, error (reports only)"
+          option :to, type: :string, desc: "Configured recipient name (machine+folder+ID or machine+panel)"
+          option :body, type: :string, repeat: true, aliases: %w[-b], desc: "Report content line (repeatable, reports only)"
+          option :task, type: :string, desc: "Task reference"
           option :question, type: :string, repeat: true, aliases: %w[-Q], desc: "Question line (repeatable)"
           option :tags, type: :string, aliases: %w[-T], desc: "Comma-separated tags"
           option :assignment, type: :string, desc: "Assignment reference"
@@ -34,25 +39,50 @@ module Ace
             kind = options[:kind]
             validate_kind!(kind) if kind
 
+            type = options[:type]
+            validate_type!(type) if type
+
             questions = Array(options[:question]).map(&:strip).reject(&:empty?)
+            body = Array(options[:body]).map(&:strip).reject(&:empty?)
+            result = options[:result]
+            validate_combinations!(type, result: result, body: body, questions: questions,
+              resume: options[:resume], kind: kind)
+            validate_result!(result) if result
+
             tags = parse_tags(options[:tags])
 
             manager = Ace::Hitl::Organisms::HitlManager.new
-            event = manager.create(
-              title,
-              kind: kind,
-              questions: questions,
-              tags: tags,
-              assignment: options[:assignment],
-              step: options[:step],
-              step_name: options[:"step-name"],
-              resume_instructions: options[:resume],
-              move_to: options[:"move-to"]
-            )
+            event = begin
+              manager.create(
+                title,
+                to: options[:to],
+                kind: kind,
+                type: type,
+                result: result,
+                task: options[:task],
+                body: body,
+                questions: questions,
+                tags: tags,
+                assignment: options[:assignment],
+                step: options[:step],
+                step_name: options[:"step-name"],
+                resume_instructions: options[:resume],
+                move_to: options[:"move-to"]
+              )
+            rescue Ace::Hitl::Molecules::HitlAddressResolver::UnknownRecipientError,
+              Ace::Hitl::Molecules::HitlAddressResolver::InvalidAddressError => e
+              raise Ace::Support::Cli::Error.new(e.message)
+            end
 
             folder_info = event.special_folder ? " (#{event.special_folder})" : ""
             puts "HITL event created: #{event.id} #{event.title}#{folder_info}"
             puts "  Path: #{event.file_path}"
+            if event.recipient
+              puts "  Recipient: #{Atoms::HitlAddress.to_s(event.recipient)}"
+            end
+            if event.reply_to
+              puts "  Reply-To: #{Atoms::HitlAddress.to_s(event.reply_to)}"
+            end
           end
 
           private
@@ -62,6 +92,45 @@ module Ace
             return if allowed.include?(kind)
 
             raise Ace::Support::Cli::Error.new("Invalid kind '#{kind}'. Allowed: #{allowed.join(", ")}")
+          end
+
+          def validate_type!(type)
+            allowed = %w[question report]
+            return if allowed.include?(type)
+
+            raise Ace::Support::Cli::Error.new("Invalid type '#{type}'. Allowed: #{allowed.join(", ")}")
+          end
+
+          def validate_result!(result)
+            allowed = %w[success error]
+            return if allowed.include?(result)
+
+            raise Ace::Support::Cli::Error.new("Invalid result '#{result}'. Allowed: #{allowed.join(", ")}")
+          end
+
+          def validate_combinations!(type, result:, body:, questions:, resume:, kind: nil)
+            report = type == "report"
+            if report
+              unless result
+                raise Ace::Support::Cli::Error.new("--type report requires --result success|error")
+              end
+              if questions.any?
+                raise Ace::Support::Cli::Error.new("--question cannot be combined with --type report; use --body lines")
+              end
+              if resume
+                raise Ace::Support::Cli::Error.new("--resume cannot be combined with --type report; reports do not resume")
+              end
+              if kind
+                raise Ace::Support::Cli::Error.new("--kind cannot be combined with --type report; kinds apply to questions only")
+              end
+            else
+              if result
+                raise Ace::Support::Cli::Error.new("--result is only valid with --type report")
+              end
+              if body.any?
+                raise Ace::Support::Cli::Error.new("--body is only valid with --type report")
+              end
+            end
           end
 
           def parse_tags(raw)

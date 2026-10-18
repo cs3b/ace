@@ -7,6 +7,137 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.23.1] - 2026-10-18
+
+### Fixed
+
+- Terminal routes are machine-scoped (round-9 review H1): the adapter now
+  reads the route's `machine` (defaults to `hitl.machine`) and refuses a
+  panel recipient on a different machine instead of delivering to a
+  local pane that merely shares the panel name and reporting a false
+  `delivered`. The refusal mirrors the hermes adapter, so both shipped
+  adapters apply the same address check.
+
+### Changed
+
+- Docs only: `docs/usage.md` now documents that route delivery requires
+  a panel-form recipient (folder-form recipients have no shipped delivery
+  route and are refused per-route), the per-route refusal semantics of
+  both shipped adapters, per-route `unavailable` retention for unknown
+  adapters, dotted route-name rejection, and the absolute `reply_to`
+  folder. `HitlConfigLoader.normalize` notes that mixing flat/shaped
+  config documents across tiers can invert cascade precedence.
+
+## [0.23.0] - 2026-10-18
+
+### Fixed
+
+- Adapters deliver to the event's recipient, not just the route's own
+  destination (PR #383 audit F1): the terminal adapter sends to the
+  recipient's `panel` (the route `pane` remains the fallback only for
+  legacy recipient-less events) and explicitly refuses a folder-form
+  recipient it cannot serve — never a silent send to the route pane.
+  Flat hitl config documents are no longer silently dropped (F11):
+  `.ace/hitl/config.yml` without the `hitl:` key now merges over the
+  shipped defaults instead of being shadowed by them. The default reply
+  address is built from the resolved sender folder (F6): an absolute
+  path that identifies the originating worktree, so two worktrees on
+  one machine never share a reply address (the relative `root_dir`
+  setting stays relative in config). Route names containing a dot
+  (e.g. `captain.telegram`) are rejected before any delivery attempt
+  (F10): delivery retention keys route names literally and a dot would
+  nest frontmatter keys, breaking retry/skip — `send` now fails closed
+  with `InvalidRouteError` naming the route.
+
+### Changed
+
+- An unknown adapter on one route no longer aborts the whole send
+  (PR #383 audit F5): the route is retained as `unavailable` with the
+  resolution error as its reason (never a bare `in_flight` marker), the
+  remaining routes still deliver, and the send still reports overall
+  delivery failure.
+
+## [0.22.0] - 2026-10-18
+
+### Added
+
+- Retention and redelivery of undelivered messages (8xg.t.sbz.1.3 / L2.4):
+  `send` now persists each route's last outcome, failure reason, and attempt
+  timestamp on the event's own file (`delivery.<route>` frontmatter — the
+  single state owner per ADR-034; no journal or queue). Default `send`
+  retries only undelivered or unknown-result routes and skips confirmed
+  delivered ones; `--force` redelivers every route and `--dry-run` reports
+  the retry/skip decisions without delivering. A `in_flight` marker written
+  before each attempt means a crashed send leaves an unknown result that the
+  next `send` retries — at-least-once semantics: a retry may duplicate, and
+  every rendering carries the same `(case <ID>)` + task binding so
+  recipients dedup by ID (exactly-once is not promised). Redelivery retries
+  the delivery, never the assignment. `list --delivery undelivered|delivered`
+  discovers retained events; `show` prints a per-route `Delivery:` block
+  with the retained failure reason. Redelivering an all-delivered event is a
+  no-op success (`nothing to retry (use --force to redeliver)`).
+
+## [0.21.0] - 2026-10-18
+
+### Added
+
+- Configurable adapter delivery routes (8xg.t.sbz.1.2 / L2.3): `ace-hitl
+  send <ref>` delivers a persisted event through the routes configured under
+  `hitl.adapters.routes` — the sender interface is adapter-independent, so
+  switching transports is pure configuration (no assignment or coworker
+  change). Every route reports its own result line; one route's success never
+  hides another's failure and an unavailable adapter never silently reroutes
+  (per-route isolation, fail-closed unknown-adapter/no-route errors).
+  Built-in `terminal` adapter pushes the shared event text to a pane via any
+  `ace-runtime` terminal (tmux/herdr); `ace-hitl-hermes` 0.8.0 ships the
+  `hermes` adapter entrypoint (publishes the shared rendering to the channel
+  folder; identical resend is idempotent, different-bytes collision fails
+  without overwrite, missing folder is `unavailable`). New adapters register
+  through the duck-typed `Ace::Hitl::Adapters` registry
+  (`lib/ace/hitl/adapters/<name>.rb` entrypoint — a future Nervus adapter
+  needs no ace-hitl change). Shared rendering (`Atoms::HitlEventText`):
+  `[HITL question]`/`[HITL report <result>]` prefix, `Reply-To:` on questions
+  only, task/assignment/step context. Delivery results are reported, not
+  persisted — retention and redelivery of undelivered messages is
+  8xg.t.sbz.1.3.
+
+## [0.20.0] - 2026-10-18
+
+### Added
+
+- Recipient addressing and Reply binding (8xg.t.sbz.1.1 / L2.2): `ace-hitl
+  create ... --to <name>` resolves a configured recipient into an explicit
+  address — machine + events folder + case ID (folder form, ID stamped from
+  the new event) or machine + panel — read from the `hitl` cascade
+  (`machine`, `default_recipient`, `recipients:<name>:{machine,folder|panel}`).
+  Questions record a `reply_to` address (sender machine + events folder + own
+  case ID) so answers bind to the original case and the right agent;
+  task/assignment/step stay context, never an ID substitute. Local Reply is
+  unchanged: `update <ref> --answer` bound by exact ID with strict ambiguity
+  and explicit not-found — no write to a foreign event. Unknown recipient
+  names, malformed configured addresses, and a missing `hitl.machine` fail
+  closed before anything is written. `show`/create output print
+  `Recipient:`/`Reply-To:`; `HitlEvent#recipient`/`#reply_to` expose the
+  address hashes for adapters (delivery itself lands in 8xg.t.sbz.1.2/.1.3;
+  local write is not delivery).
+
+## [0.19.0] - 2026-10-18
+
+### Fixed (review PR #383, round 3)
+
+- Report events carry no `kind` (loader returns nil), so question-oriented
+  `list --kind` filters never mix reports into a clarification list.
+
+### Added
+
+- Report events: the same `ace-hitl` file interface now records work-done/error notifications alongside questions. `ace-hitl create "..." --type report --result success|error [--body line]... [--task REF]` writes an event with status `recorded`, a `## Report` body, task/assignment/step references, and its own ID. Reports never await an answer: `wait`, `update --answer`, and `update --resume` on a report fail fast with an explicit error (exit 1); generic `--set/--add/--remove/--move-to` still work so an overseer can archive processed reports.
+- `--type question` is now written explicitly on new question events (loader defaults keep existing files without `type` valid questions); `--task` is accepted for both types; `list --type question|report` filters by type; `show` prints `Type:`/`Result:` and list gains the `recorded` status symbol.
+- Library guards: `HitlManager#update(answer:)` raises `NotAnswerableError` on reports before any file mutation; `wait_for_answer` and `dispatch_resume` return `{status: :report}` without sleeping.
+
+### Notes
+
+- Local write is not delivery: `recorded` means the report is persisted in `.ace-local/hitl/`, not that it reached the overseer. Remote addressing, reply routing, and configurable adapters land in 8xg.t.sbz.1.1–.1.3.
+
 ## [0.18.0] - 2026-10-18
 
 ### Removed

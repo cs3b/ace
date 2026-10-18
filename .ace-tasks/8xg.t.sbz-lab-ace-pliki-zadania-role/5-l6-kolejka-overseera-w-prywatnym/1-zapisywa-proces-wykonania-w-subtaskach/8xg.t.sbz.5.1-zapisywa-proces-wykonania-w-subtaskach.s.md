@@ -1,6 +1,6 @@
 ---
 id: 8xg.t.sbz.5.1
-status: pending
+status: done
 priority: medium
 created_at: "2026-10-17 18:54:20"
 estimate: medium
@@ -31,9 +31,9 @@ Otrzymany zakres pracy zapisać jako task zarządzający z subtaskami przygotowa
 
 ## Kryteria odbioru
 
-- [ ] Drzewo pokazuje kolejność i powiązania z zadaniami projektowymi, worktree oraz assignmentami ról.
-- [ ] Samo zakończenie implementacji nie zamyka taska zarządzającego, gdy pozostaje review, integracja lub inny wymagany krok.
-- [ ] Wynik jest zgodny z kontraktem programu i możliwy do użycia przez następną rolę lub narzędzie.
+- [x] Drzewo pokazuje kolejność i powiązania z zadaniami projektowymi, worktree oraz assignmentami ról.
+- [x] Samo zakończenie implementacji nie zamyka taska zarządzającego, gdy pozostaje review, integracja lub inny wymagany krok.
+- [x] Wynik jest zgodny z kontraktem programu i możliwy do użycia przez następną rolę lub narzędzie.
 
 ## Plan weryfikacji
 

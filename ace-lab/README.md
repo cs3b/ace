@@ -36,8 +36,10 @@ Every query prints one deterministic JSON document. Failures are classified
 (`missing`, `ambiguous`, `stale`, `unauthorized`, `invalid_configuration`).
 Stable IDs are canonical; labels are display values and never resolve.
 
-> **Planned (L7):** topology values and status integration for the new flow are
-> not available yet. Existing queries are read-only building blocks.
+> **L7.1 delivered:** `ace-lab status` reports lab configuration state
+> (configured / not configured / error — never conflated) and file-based local
+> state, and points at `ace-git-worktree list` for the worktree view.
+> Aggregated overseer status and pi continuation remain planned.
 
 ## Not owners of the flow
 

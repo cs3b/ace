@@ -1,6 +1,6 @@
 ---
 id: 8xg.t.sbz.1.3
-status: pending
+status: done
 priority: medium
 created_at: "2026-10-17 18:54:12"
 estimate: medium
@@ -31,9 +31,9 @@ Niedostarczona wiadomość oraz powód błędu pozostają w lokalnych plikach HI
 
 ## Kryteria odbioru
 
-- [ ] Po przywróceniu transportu zachowany raport trafia do overseera z tym samym powiązaniem do taska.
-- [ ] Utrata potwierdzenia dostarczenia i ponowienie nie wykonują ponownie assignmentu ani nie odblokowują następnego kroku dwa razy.
-- [ ] Wynik jest zgodny z kontraktem programu i możliwy do użycia przez następną rolę lub narzędzie.
+- [x] Po przywróceniu transportu zachowany raport trafia do overseera z tym samym powiązaniem do taska.
+- [x] Utrata potwierdzenia dostarczenia i ponowienie nie wykonują ponownie assignmentu ani nie odblokowują następnego kroku dwa razy.
+- [x] Wynik jest zgodny z kontraktem programu i możliwy do użycia przez następną rolę lub narzędzie.
 
 ## Plan weryfikacji
 

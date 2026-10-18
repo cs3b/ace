@@ -3,6 +3,7 @@
 require "ace/support/cli"
 require_relative "../hitl/version"
 require_relative "cli/commands/create"
+require_relative "cli/commands/send"
 require_relative "cli/commands/operator_question"
 require_relative "cli/commands/read"
 require_relative "cli/commands/show"
@@ -25,12 +26,13 @@ module Ace
       PROGRAM_NAME = "ace-hitl"
 
       REGISTERED_COMMANDS = [
-        ["create", "Create HITL event"],
+        ["create", "Create HITL event (question or report)"],
         ["operator-question", "Create a nonsecret question under an installed operator project grant"],
         ["read", "Read authenticated lifecycle request facts"],
         ["show", "Show HITL event details"],
         ["list", "List HITL events"],
         ["update", "Update HITL event metadata or answer"],
+        ["send", "Send a HITL event through the configured adapter routes"],
         ["wait", "Wait for an answer on a specific HITL event"],
         ["deliver", "Deliver an answer (stdin) to a pending HITL relay request"],
         ["consume", "Wait for and consume the answer of one own HITL relay request"],
@@ -44,7 +46,10 @@ module Ace
         "ace-hitl list --status pending",
         "ace-hitl show abc123 --content",
         "ace-hitl create \"Which auth strategy?\" --kind decision",
+        "ace-hitl create \"Blocked on auth\" --kind decision --to overseer --task 8xg.t.sbz.1.1",
+        "ace-hitl create \"Work done\" --type report --result success --task 8xg.t.sbz.1.0",
         "ace-hitl update abc123 --answer \"Use JWT with refresh tokens\"",
+        "ace-hitl send 8xhkep",
         "ace-hitl wait abc123 --poll-every 600 --timeout 14400"
       ].freeze
 
@@ -54,6 +59,7 @@ module Ace
       register "show", CLI::Commands::Show
       register "list", CLI::Commands::List
       register "update", CLI::Commands::Update
+      register "send", CLI::Commands::Send
       register "wait", CLI::Commands::Wait
       register "deliver", CLI::Commands::Deliver
       register "consume", CLI::Commands::Consume

@@ -2,6 +2,6 @@
 
 module Ace
   module Hitl
-    VERSION = "0.18.0"
+    VERSION = "0.23.1"
   end
 end

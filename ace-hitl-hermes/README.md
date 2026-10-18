@@ -88,13 +88,27 @@ correlates replies, and ACKs by deletion. Configure it with an explicit
 channels registry and runtime file; see
 [configuration and recovery](docs/usage.md).
 
+## HITL delivery adapter
+
+`lib/ace/hitl/adapters/hermes.rb` registers the `hermes` adapter for
+`ace-hitl send` (route config under `hitl.adapters.routes`: `channel`,
+`machine`, absolute `folder`, optional `sender`). Both HITL questions and
+reports are published as the outbound `question` kind — the shared
+rendering's `[HITL question]` / `[HITL report <result>]` prefix preserves
+the type; only questions carry `Reply-To:`. Identical resends are
+idempotent; different-bytes collisions fail without overwriting; a missing
+channel folder is `unavailable` (never a silent reroute).
+
 ## Planned waves
 
-> **Planned (L2):** one unified report/question/reply interface with
-> configurable adapters (single or set) is not available yet. `ace-hitl-hermes`
-> remains an adapter package; the old authenticated service boundary, OTP
-> handling, and multi-user protected store are not requirements of the local
-> file-based flow.
+> **L2 status:** the `hermes` adapter for `ace-hitl send` is available, and
+> retention/redelivery of undelivered messages is delivered in `ace-hitl`
+> 0.22.0 (per-route records on the event file; `send` retries
+> undelivered/unknown routes). The adapter is unchanged: an identical
+> resend is idempotent; a resend after consumption is a duplicate the
+> recipient dedups by case ID. The old authenticated service boundary, OTP
+> handling, and multi-user protected store are not requirements of the
+> local file-based flow.
 
 ## Development
 

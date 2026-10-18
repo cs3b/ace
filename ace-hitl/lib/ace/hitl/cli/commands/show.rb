@@ -45,10 +45,30 @@ module Ace
               puts "ID: #{event.id}"
               puts "Title: #{event.title}"
               puts "Status: #{event.status}"
-              puts "Kind: #{event.kind}"
+              puts "Type: #{event.type}"
+              puts "Kind: #{event.kind}" if event.question?
+              puts "Result: #{event.result}" if event.report?
               puts "Tags: #{event.tags.join(", ")}"
-              puts "Questions: #{event.questions.join(" | ")}"
-              puts "Answer: #{event.answer || "(none)"}"
+              if event.recipient
+                puts "Recipient: #{Ace::Hitl::Atoms::HitlAddress.to_s(event.recipient)}"
+              end
+              if event.reply_to
+                puts "Reply-To: #{Ace::Hitl::Atoms::HitlAddress.to_s(event.reply_to)}"
+              end
+              if event.report?
+                puts "Report: #{event.content}"
+              else
+                puts "Questions: #{event.questions.join(" | ")}"
+                puts "Answer: #{event.answer || "(none)"}"
+              end
+              delivery = event.metadata["delivery"]
+              if delivery.is_a?(Hash) && !delivery.empty?
+                delivery.sort.each do |route, record|
+                  detail = record["detail"].to_s.empty? ? "" : " - #{record["detail"]}"
+                  attempted = record["attempted_at"] ? " (#{record["attempted_at"]})" : ""
+                  puts "Delivery: #{route} (#{record["adapter"]}): #{record["status"]}#{detail}#{attempted}"
+                end
+              end
               puts resolved_location if resolved_location
               puts "Path: #{event.file_path}"
             end

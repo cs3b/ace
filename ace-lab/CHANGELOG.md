@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-10-18
+
+### Fixed (review PR #383, round 3)
+
+- `ace-lab status` resolves state locations against the git worktree top
+  (falling back to the cwd outside a repository), so running it from a
+  project subdirectory no longer misreports an initialized lab as absent.
+
+### Added
+
+- `ace-lab status`: read-only lab status snapshot with three strictly
+  separated sections. `configuration` distinguishes `configured` (explicit
+  cascade sources plus aggregate topology counts), `not_configured` (no
+  explicit `.ace/lab/config.yml` or `~/.ace/lab/config.yml` — never an
+  empty-ready lab), and `error` (source/parse/schema failure, path-bearing
+  content-free message). `state_files` reports presence and entry counts for
+  the canonical lab-flow locations (`.ace-tasks`, `.ace-tasks/_overseer`,
+  `.ace-local/assign`, `.ace-local/coworker`, `.ace-local/hitl`, `.ace-wt`)
+  with informational notes for absent coworker/overseer state — presence never
+  declares readiness. `worktree_view` points at the existing
+  `ace-git-worktree list` (k9y) instead of duplicating it. Table default,
+  `--format json`; exit 0 whenever a report renders (8xg.t.sbz.6.0 / L7.1).
+
 ## [0.10.0] - 2026-10-17
 
 ### Removed

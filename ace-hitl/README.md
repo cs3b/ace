@@ -16,16 +16,18 @@ Canonical workflow and skill for agents:
 
 `ace-hitl` manages HITL events stored as markdown files under `.ace-local/hitl/`.
 An event records a question or decision, its context (assignment/step), its
-status, and the answer. This is the local, file-based path; it needs no
+status, and the answer — or a report (work done / error) that never awaits an
+answer. This is the local, file-based path; it needs no
 listener, daemon, or database.
 
 | Command | Purpose |
 |---------|---------|
-| `ace-hitl create` | Create an event with kind, questions, assignment/step context, and resume instructions |
-| `ace-hitl list` | List events with status/kind/tag/folder/scope filters |
+| `ace-hitl create` | Create a question event (kind, questions, assignment/step context, resume instructions) or a report event (`--type report --result success\|error --body ... --task ...`) |
+| `ace-hitl list` | List events with status/kind/type/tag/folder/scope filters |
 | `ace-hitl show` | Render event details, path, or raw markdown |
 | `ace-hitl update` | Update frontmatter, write an answer, or move the event |
-| `ace-hitl wait` | Poll one event until it is answered |
+| `ace-hitl wait` | Poll one question event until it is answered (reports are rejected) |
+| `ace-hitl send` | Deliver an event through the configured adapter routes; per-route results retained on the event, redelivery retries undelivered/unknown routes |
 
 `ace-hitl` is a blocker-resolution tool, not a global dashboard: in a linked
 worktree it defaults to local (`--scope current`); in the main checkout it uses
@@ -37,7 +39,10 @@ dashboard.
 ```bash
 ace-hitl create "Which auth strategy?" --kind decision \
   --question "JWT or sessions?" --assignment abc123 --step 020
+ace-hitl create "Work done" --type report --result success \
+  --body "Implemented JWT login" --task 8xg.t.sbz.1.0
 ace-hitl list --status pending
+ace-hitl list --type report
 ace-hitl show abc123 --content
 ace-hitl update abc123 --answer "Use JWT with server-side refresh tokens."
 ace-hitl update abc123 --move-to archive
@@ -53,9 +58,13 @@ ace-hitl wait abc123 --poll-every 600 --timeout 14400
 > its commands remain for `ace-hitl-hermes` and other adapters; `serve` supports
 > `--operator-only` only. Second-commander proposals are removed as well.
 >
-> **Planned (L2):** one unified report/question/reply interface with
-> configurable provider adapters is not available yet. `ace-hitl-hermes` remains
-> an adapter package; tmux/Herdr remain transports.
+> **L2 status:** report/question distinction, recipient addressing
+> (`--to`, `reply_to`), adapter-route delivery (`send` with the built-in
+> terminal adapter and `ace-hitl-hermes` as the hermes adapter), and
+> retention/redelivery of undelivered messages (per-route records on the
+> event; `send` retries undelivered/unknown routes, `--force` redelivers
+> with the same case ID) are available. `ace-hitl-hermes` remains an
+> adapter package; tmux/Herdr remain transports.
 
 ## Testing
 

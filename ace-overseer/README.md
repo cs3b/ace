@@ -79,8 +79,14 @@ or create your own.
 > **Planned (L4):** planner role that prepares the worktree and the whole
 > assignment sequence -- not available yet.
 >
-> **Planned (L6):** private overseer queue that starts unblocked steps and
-> passes one worktree between roles -- not available yet.
+> **L6 (partial):** the private overseer queue is coordinated through the
+> gitignored `.ace-tasks/_overseer/` list (`ace-task --in _overseer`):
+> managing tasks with lifecycle subtasks (prepare, implement, review,
+> integrate), integration-gated dependencies, and one active executor per
+> worktree. See the
+> [Overseer Queue Workflow](handbook/workflow-instructions/overseer/queue.wf.md)
+> (`ace-bundle wfi://overseer/queue`). Role dispatch and report-driven
+> continuation land with the remaining L6 leaves.
 >
 > **Planned (L7):** aggregated status and pi continuation of already delegated
 > work -- not available yet.

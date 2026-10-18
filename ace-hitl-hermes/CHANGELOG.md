@@ -7,6 +7,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-10-18
+
+### Fixed
+
+- The HITL adapter honors the event's recipient (PR #383 audit F1):
+  the route's channel folder is used only when it IS the recipient's
+  target (panel-form address naming this channel on this machine, or a
+  legacy recipient-less event). Every other recipient is an explicit
+  per-route refusal with a clear reason — never a silent publish to
+  the fixed channel folder.
+
+## [0.8.1] - 2026-10-18
+
+### Changed
+
+- Docs only: retention and redelivery of undelivered HITL messages now
+  live in `ace-hitl` 0.22.0 (per-route records on the event file; `send`
+  retries undelivered/unknown routes). The hermes adapter is unchanged:
+  an identical resend is already idempotent, and a resend after the
+  message was consumed is a legitimate duplicate the recipient dedups by
+  the case ID (at-least-once).
+
+## [0.8.0] - 2026-10-18
+
+### Added
+
+- HITL delivery adapter (8xg.t.sbz.1.2 / L2.3): `lib/ace/hitl/adapters/hermes.rb`
+  registers the `hermes` adapter for `ace-hitl send`. Route config
+  (`hitl.adapters.routes`): `channel`, `machine` (defaults to `hitl.machine`),
+  absolute `folder`, optional `sender`. Both HITL questions and reports are
+  published as the outbound `question` kind — the shared rendering's
+  `[HITL question]`/`[HITL report <result>]` prefix preserves the type and
+  only questions carry `Reply-To:`. Explicit event id: an identical resend
+  (same question body and sender) is idempotent `delivered`; a
+  different-bytes collision fails without overwriting; a missing/invalid
+  channel folder is `unavailable` (never a silent reroute).
+
 ## [0.7.0] - 2026-10-18
 
 ### Removed
