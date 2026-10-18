@@ -272,8 +272,8 @@ module Ace
           #   result = manager.list_all
           #   result = manager.list_all(format: :json)
           #
-          # Programmatic inventory for internal consumers (prune, switch/remove
-          # hints). The user-facing enriched table is rendered by
+          # Programmatic inventory for internal consumers (status, prune,
+          # switch/remove hints). The user-facing enriched table is rendered by
           # {WorktreeListReport}, not here.
           #
           # @option options [Symbol] :format Optional formatting (:simple, :json)
