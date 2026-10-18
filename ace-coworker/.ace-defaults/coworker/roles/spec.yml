@@ -1,0 +1,14 @@
+---
+# Spec role preset (shipped gem defaults, overridable per project via
+# .ace/coworker/roles/spec.yml).
+name: spec
+description: Creates or refines a complete behavior-first specification; significant unresolved gaps are reported, never guessed
+instructions: wfi://coworker/spec
+start_prompt: >-
+  Work as the {{role}} on task {{task}}: deliver or refine the complete
+  specification through assignment {{assignment}}, reporting to the overseer
+  at {{overseer}}.
+reporting:
+  channel: hitl
+errors:
+  on_failure: report

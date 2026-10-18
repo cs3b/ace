@@ -7,6 +7,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-10-18
+
+### Added
+
+- Worker and spec roles as configuration and instructions (L5.1): shipped
+  role presets (`.ace-defaults/coworker/roles/worker.yml`, `spec.yml`) with
+  role name, `wfi://coworker/<role>` instruction sources, start-prompt
+  templates (`{{task}}`, `{{assignment}}`, `{{role}}`, `{{overseer}}`
+  placeholders), and reporting/error rules; projects override or extend the
+  catalog via `.ace/coworker/roles/*.yml` (project wins over gem defaults).
+- `ace-coworker roles` — list the preset catalog (name, source, description,
+  instruction source) as a table or JSON; always exit 0, an empty catalog
+  renders an explicit empty state.
+- `ace-coworker commission` — the role-instantiation primitive consumed by
+  the planner (L4.2/L4.3 seam): expand a role preset plus the commission
+  identity (`--role NAME --task REF --assignment ID --overseer ADDR`) into
+  the documented `.ace-local/coworker/config.yml`. Renders the preset's
+  start-prompt template (an explicit `--start-prompt` wins), performs the
+  same identity checks as `start` (task resolves in this worktree;
+  assignment exists and its `task_id` matches), validates the assembled
+  config through the start-grade schema, and writes atomically — overwrite
+  refused without `--force`, `--dry-run` resolves and renders without
+  writing. No sequencing, no active-driver detection, no role policies
+  (those belong to the planner); any role string remains valid config
+  (ADR-034).
+- Self-contained role instruction workflows addressable as
+  `wfi://coworker/worker` and `wfi://coworker/spec`
+  (`handbook/workflow-instructions/coworker/`): the worker drives its
+  pinned assignment via ace-assign and treats failed required tests as a
+  hard completion blocker (fail the step, never a false done; the report
+  outcome stays derived from the assignment verdict); the spec delivers a
+  complete behavior-first specification and escalates significant unresolved
+  requirement gaps as `ace-hitl` questions to the overseer instead of
+  guessing.
+- wfi-source registration (gem defaults plus the tracked project mirror
+  `.ace/nav/protocols/wfi-sources/ace-coworker.yml`); `ace-support-nav ~> 0.28`
+  is a new runtime dependency so `wfi://` instruction sources resolve on
+  fresh installs.
+
 ## [0.4.0] - 2026-10-18
 
 ### Added

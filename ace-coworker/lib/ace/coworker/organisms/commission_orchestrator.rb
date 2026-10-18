@@ -1,0 +1,128 @@
+# frozen_string_literal: true
+
+require "fileutils"
+require "tmpdir"
+
+module Ace
+  module Coworker
+    module Organisms
+      # Orchestrates `ace-coworker commission`: expand a role preset plus the
+      # commission identity (task, assignment, overseer) into the documented
+      # .ace-local/coworker/config.yml. A single-role writer primitive for
+      # the location ace-coworker already owns: no sequencing, no
+      # active-driver detection, no role policies (those belong to the
+      # planner, L4.2/L4.3).
+      class CommissionOrchestrator
+        Commission = Struct.new(
+          :role, :task, :assignment, :overseer, :config_path, :config,
+          :preset_source, :dry_run, :written,
+          keyword_init: true
+        ) do
+            def to_h
+              {
+                "role" => role,
+                "task" => task,
+                "assignment" => assignment,
+                "overseer" => overseer,
+                "config_path" => config_path,
+                "config" => config,
+                "preset_source" => preset_source,
+                "dry_run" => dry_run,
+                "written" => written
+              }
+            end
+          end
+
+        # @param project_root [String] absolute project root
+        # @param preset_loader [Molecules::RolePresetLoader]
+        # @param task_probe [Molecules::TaskProbe]
+        # @param assignment_metadata [Molecules::AssignmentMetadata]
+        # @param config_path [String, nil] explicit target (absolute or
+        #   root-relative); default from the config cascade
+        def initialize(project_root:, preset_loader:, task_probe:, assignment_metadata:,
+          config_path: nil, config_loader: nil)
+          @project_root = project_root
+          @preset_loader = preset_loader
+          @task_probe = task_probe
+          @assignment_metadata = assignment_metadata
+          @config_loader = config_loader ||
+            Molecules::ConfigLoader.new(project_root: project_root, defaults: Ace::Coworker.config)
+          @config_path = config_path
+        end
+
+        # @return [Commission]
+        # @raise [Error] on unknown role, identity mismatch, invalid
+        #   assembly, or a refused overwrite
+        def call(role:, task:, assignment:, overseer:, start_prompt: nil, force: false, dry_run: false)
+          preset = @preset_loader.fetch(role)
+          prompt = start_prompt.to_s.strip.empty? ? render_prompt(preset, role, task, assignment, overseer) : start_prompt
+
+          @task_probe.resolve!(task)
+          @assignment_metadata.verify_task_match!(assignment, task)
+
+          config = build_config(preset, role: role, task: task, assignment: assignment,
+            overseer: overseer, prompt: prompt)
+          errors = Atoms::ConfigSchema.errors(config)
+          unless errors.empty?
+            raise Error, "commissioned config is invalid: #{errors.join('; ')}"
+          end
+
+          target = resolve_target
+          write_config(target, config, force: force) unless dry_run
+
+          Commission.new(
+            role: role, task: task, assignment: assignment, overseer: overseer,
+            config_path: relativize(target), config: config,
+            preset_source: preset["source"], dry_run: dry_run,
+            written: dry_run ? false : true
+          )
+        end
+
+        private
+
+        def render_prompt(preset, role, task, assignment, overseer)
+          Atoms::PromptTemplate.render(preset["start_prompt"],
+            {"task" => task, "assignment" => assignment, "role" => role, "overseer" => overseer})
+        end
+
+        def build_config(preset, role:, task:, assignment:, overseer:, prompt:)
+          config = {
+            "role" => role,
+            "instructions" => preset["instructions"],
+            "start_prompt" => prompt,
+            "task" => task,
+            "assignment" => assignment,
+            "overseer" => overseer
+          }
+          config["reporting"] = {"channel" => preset["reporting"]} unless preset["reporting"].to_s.empty?
+          config["errors"] = {"on_failure" => preset["errors"]} unless preset["errors"].to_s.empty?
+          config
+        end
+
+        def resolve_target
+          return File.expand_path(@config_path, @project_root) if @config_path
+
+          @config_loader.config_path
+        end
+
+        def write_config(target, config, force:)
+          if File.exist?(target) && !force
+            raise Error, "refusing to overwrite '#{relativize(target)}'; use --force"
+          end
+
+          FileUtils.mkdir_p(File.dirname(target))
+          content = YAML.safe_dump(config)
+          Dir.mktmpdir(".commission", File.dirname(target)) do |tmp|
+            temp = File.join(tmp, "config.yml")
+            File.write(temp, content)
+            FileUtils.mv(temp, target)
+          end
+        end
+
+        def relativize(path)
+          path.start_with?(@project_root) ? path.delete_prefix("#{@project_root}/") : path
+        end
+      end
+    end
+  end
+end

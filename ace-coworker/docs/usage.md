@@ -1,7 +1,7 @@
 ---
 doc-type: usage
 title: ace-coworker Usage
-purpose: full command reference and the start-config contract
+purpose: full command reference, role presets, and the start-config contract
 ace-docs:
   last-updated: 2026-10-18
   last-checked: 2026-10-18
@@ -42,6 +42,79 @@ errors:
 Validation is field-specific: every missing or invalid field produces its own
 error, and no substitute commission is guessed. The config never copies
 assignment steps — the plan stays solely with `ace-assign`.
+
+## Roles and presets
+
+`ace-coworker` ships role presets — static YAML assets, not a role allowlist.
+The catalog lives in the gem's `.ace-defaults/coworker/roles/*.yml`; a project
+overrides or extends it via `.ace/coworker/roles/*.yml` (same filename wins,
+project beats gem). Every preset file is validated on load; the `role` field
+of a config is never checked against the catalog (ADR-034: the overseer
+decides roles).
+
+```yaml
+---
+name: worker                            # required, non-empty
+description: Implements and verifies    # optional, non-empty when present
+instructions: wfi://coworker/worker     # required: same sources as the config
+start_prompt: "Drive {{assignment}}…"   # required template; placeholders:
+                                        # {{task}} {{assignment}} {{role}} {{overseer}}
+reporting: {channel: hitl}              # optional, ConfigSchema value sets
+errors: {on_failure: report}            # optional, ConfigSchema value sets
+```
+
+Shipped presets: `worker` (implement and verify; failed required tests block
+success) and `spec` (complete behavior-first specification; significant
+unresolved gaps are reported, never guessed). Their instruction workflows are
+`wfi://coworker/worker` and `wfi://coworker/spec`.
+
+### `ace-coworker roles`
+
+```
+ace-coworker roles [--format table|json] [-q] [-d]
+```
+
+Lists the catalog (name, source `gem`|`project`, description, instruction
+source). Read-only; always exit 0; an empty catalog renders an explicit empty
+state.
+
+### `ace-coworker commission`
+
+```
+ace-coworker commission --role NAME --task REF --assignment ID --overseer ADDR
+                        [--start-prompt TEXT] [--config PATH] [--force]
+                        [--dry-run] [--format table|json] [-q] [-d]
+```
+
+The role-instantiation primitive consumed by the planner (L4.2/L4.3 seam):
+expand a role preset plus the commission identity into the documented
+`.ace-local/coworker/config.yml` (target from the config cascade, or
+`--config PATH` root-relative). `commission` is a single-role writer for the
+location ace-coworker already owns — no sequencing, no active-driver
+detection, no role policies; those belong to the planner, which decides role
+order and guards against overwriting an active driver.
+
+Procedure:
+
+1. fetch and validate the preset (`unknown role '<name>' (available: …)`);
+2. render the preset's `start_prompt` template with the commission identity
+   (`{{task}}`, `{{assignment}}`, `{{role}}`, `{{overseer}}`; unknown
+   placeholders stay literal; an explicit `--start-prompt` wins over the
+   template; `start_prompt_file` is not accepted here — write that config
+   variant by hand);
+3. run the same identity checks as `start`: the task must resolve in this
+   worktree and the assignment must exist under `.ace-local/assign/` with a
+   matching `task_id` (same message vocabulary as `start`);
+4. validate the assembled config through the start-grade schema
+   (round-trip guarantee: what `commission` writes, `start` accepts);
+5. write atomically (temp file + rename in the target directory), creating
+   parent directories; an existing target is refused without `--force`
+   (`refusing to overwrite '<path>'; use --force`);
+6. `--dry-run` resolves and renders the config without writing anything.
+
+Result JSON (table renders the same fields): role, task, assignment,
+overseer, config_path, preset_source (`gem`|`project`), dry_run, written, and
+the resolved config mapping.
 
 ## Commands
 
@@ -238,6 +311,8 @@ would-be outcome.
 | `report` | success outcome recorded (and delivered, or `--no-send`/`--dry-run`) | error outcome; delivery/create failure (outcome still recorded); refused input |
 | `resume` | continue/complete rendered; report redelivered | delegated report failure keeps its exit 1 (plan still rendered) |
 | `prepare` | worktree created/recovered/reused (dry-run: would_create/would_recover) | conflict (active_executor / mismatched_worktree); invalid commission; operational preparation failure |
+| `roles` | catalog rendered any state (including empty) | — |
+| `commission` | config written (dry-run: resolved, nothing written) | unknown role; invalid commission; task/assignment mismatch; refused overwrite; invalid assembly |
 
 ## Boundaries
 
@@ -246,5 +321,6 @@ would-be outcome.
 - No journal, queue, daemon, or second plan store (ADR-034).
 - Delegation to `ace-assign` / `ace-nav` uses argv subprocess calls with an
   explicit working directory (ADR-031).
-- Reporting via `ace-hitl` and resume-after-interruption arrive with leaves
-  8xg.t.sbz.2.2 / 8xg.t.sbz.2.3.
+- Reporting via `ace-hitl` and resume-after-interruption ship with
+  `ace-coworker` 0.4.0+; role presets resolve their `wfi://` instruction
+  sources through `ace-nav` (runtime dependency since 0.5.0).

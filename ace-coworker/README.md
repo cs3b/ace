@@ -21,6 +21,8 @@ ace-coworker status [--config PATH] [--assignment ID] [--format table|json]
 ace-coworker report [--result success|error] [--message TEXT] [--no-send] [--dry-run]
 ace-coworker resume [--dry-run]                # Resume interrupted work in this worktree
 ace-coworker prepare --task REF --roles worker,reviewer [--to ADDR] [--dry-run]
+ace-coworker roles                             # List role presets (gem + project)
+ace-coworker commission --role worker --task REF --assignment ID --overseer ADDR
 ```
 
 - `prepare` — the planner side: accept a preparation commission (task +
@@ -28,6 +30,18 @@ ace-coworker prepare --task REF --roles worker,reviewer [--to ADDR] [--dry-run]
   the task. Re-preparation reuses the existing worktree with zero writes; an
   active executor or a mismatched worktree escalates a decision question to
   the overseer via `ace-hitl` instead of overwriting work.
+
+- `roles` / `commission` — role presets and the role-instantiation primitive
+  consumed by the planner (L4.2/L4.3 seam). Shipped presets: `worker`
+  (implement and verify; failed required tests block success) and `spec`
+  (complete behavior-first specification; significant unresolved gaps are
+  reported via `ace-hitl`, never guessed), backed by the self-contained
+  workflows `wfi://coworker/worker` / `wfi://coworker/spec`. `roles` lists
+  the catalog (gem defaults + project overrides in `.ace/coworker/roles/`);
+  `commission` expands a preset plus the commission identity into
+  `.ace-local/coworker/config.yml` — start-grade identity checks, atomic
+  write, overwrite refused without `--force`, `--dry-run` renders without
+  writing. Sequencing and active-driver guards stay with the planner.
 
 - `start` — validate the prepared config (role, instructions, start prompt,
   task, assignment, overseer, error rules), verify the task resolves in this

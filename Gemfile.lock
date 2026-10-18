@@ -53,7 +53,7 @@ PATH
 PATH
   remote: ace-coworker
   specs:
-    ace-coworker (0.4.0)
+    ace-coworker (0.5.0)
       ace-assign (~> 0.72)
       ace-git-worktree (~> 0.27)
       ace-hitl (~> 0.22)
@@ -61,6 +61,7 @@ PATH
       ace-support-config (~> 0.18)
       ace-support-core (~> 0.31)
       ace-support-fs (~> 0.3)
+      ace-support-nav (~> 0.28)
       ace-task (~> 0.41)
 
 PATH

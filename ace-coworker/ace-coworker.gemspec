@@ -43,13 +43,15 @@ Gem::Specification.new do |spec|
   # `report` additionally requires the ace-hitl CLI at runtime (subprocess
   # argv contract, ADR-031), so both are declared as runtime dependencies to
   # guarantee the executables on fresh installs. `prepare` additionally uses
-  # the ace-git-worktree library (worktree provisioning owner). Protocol
-  # instructions (ace-nav) arrive in a later leaf; missing binaries fail with
-  # an explicit Coworker::Error.
+  # the ace-git-worktree library (worktree provisioning owner). Shipped role
+  # presets reference `wfi://` instruction sources resolved through the
+  # ace-nav CLI, so ace-support-nav is a runtime dependency too; a missing
+  # binary still fails with an explicit Coworker::Error.
   spec.add_dependency "ace-support-cli", "~> 0.6"
   spec.add_dependency "ace-support-core", "~> 0.31"
   spec.add_dependency "ace-support-config", "~> 0.18"
   spec.add_dependency "ace-support-fs", "~> 0.3"
+  spec.add_dependency "ace-support-nav", "~> 0.28"
   spec.add_dependency "ace-task", "~> 0.41"
   spec.add_dependency "ace-assign", "~> 0.72"
   spec.add_dependency "ace-hitl", "~> 0.22"

@@ -1,0 +1,13 @@
+---
+# Worker role preset (shipped gem defaults, overridable per project via
+# .ace/coworker/roles/worker.yml).
+name: worker
+description: Implements the commissioned change and verifies it; failed required tests block success
+instructions: wfi://coworker/worker
+start_prompt: >-
+  Work as the {{role}} on task {{task}}: drive assignment {{assignment}} to a
+  verified change, reporting to the overseer at {{overseer}}.
+reporting:
+  channel: hitl
+errors:
+  on_failure: report
