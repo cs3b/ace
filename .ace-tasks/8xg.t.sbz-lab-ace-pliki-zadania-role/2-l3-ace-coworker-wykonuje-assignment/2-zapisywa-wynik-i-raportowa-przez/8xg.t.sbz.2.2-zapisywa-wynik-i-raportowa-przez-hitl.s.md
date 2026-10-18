@@ -1,6 +1,6 @@
 ---
 id: 8xg.t.sbz.2.2
-status: pending
+status: done
 priority: medium
 created_at: "2026-10-17 18:54:13"
 estimate: medium
@@ -31,9 +31,9 @@ Trwały postęp zapisuje się przy tasku, pomocniczy stan w .ace-local/coworker/
 
 ## Kryteria odbioru
 
-- [ ] Zakończony assignment pozostawia wynik i raport do overseera; błąd zawiera przyczynę i stan umożliwiający dalsze działanie.
-- [ ] Samo zakończenie procesu lub wysłanie raportu nie oznacza wykonania nieukończonych kroków; niedostarczenie raportu nie gubi lokalnego wyniku.
-- [ ] Wynik jest zgodny z kontraktem programu i możliwy do użycia przez następną rolę lub narzędzie.
+- [x] Zakończony assignment pozostawia wynik i raport do overseera; błąd zawiera przyczynę i stan umożliwiający dalsze działanie.
+- [x] Samo zakończenie procesu lub wysłanie raportu nie oznacza wykonania nieukończonych kroków; niedostarczenie raportu nie gubi lokalnego wyniku.
+- [x] Wynik jest zgodny z kontraktem programu i możliwy do użycia przez następną rolę lub narzędzie.
 
 ## Plan weryfikacji
 
