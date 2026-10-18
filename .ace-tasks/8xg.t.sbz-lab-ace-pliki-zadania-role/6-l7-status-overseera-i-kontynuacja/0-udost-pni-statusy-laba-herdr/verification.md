@@ -1,6 +1,7 @@
 # Verification results — 8xg.t.sbz.6.0 (2026-10-18)
 
-Branch: `l7-statuses` (worktree `.ace-wt/l7-statuses`), commits `5118ed51b..517bb356b`.
+Branch: `l7-statuses` (worktree `.ace-wt/l7-statuses`), commits `5118ed51b..3a3db1970`.
+Draft PR: https://github.com/cs3b/ace/pull/382 (head `3a3db1970`, base `main`).
 
 ## Automated tests
 
