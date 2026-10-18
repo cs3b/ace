@@ -67,12 +67,15 @@ hitl:
   machine: lab01                 # this machine's identity for addresses
   default_recipient: overseer    # optional name applied when --to is absent
   recipients:
-    overseer:                    # folder form: machine + events folder (+ case ID)
+    overseer:                    # panel form: machine + panel (route-deliverable)
       machine: lab01
-      folder: .ace-local/hitl
-    captain:                     # panel form: machine + panel
+      panel: overseer            # the pane/channel the recipient reads
+    captain:                     # panel form on another machine
       machine: lab02
       panel: telegram
+    archive:                     # folder form: machine + events folder (+ case ID)
+      machine: lab01
+      folder: .ace-local/hitl
 ```
 
 ```bash
@@ -84,6 +87,20 @@ ace-hitl create "Blocked on auth" --kind decision --to overseer --task 8xg.t.sbz
   (sender machine + events folder + own case ID), so an answer binds to the
   original case and the right agent — task/assignment/step are context,
   never an ID substitute.
+- Route delivery (`send`) requires a panel-form recipient. A folder-form
+  recipient has no shipped delivery route: every route refuses it per-route
+  with a clear `failed` reason (the event file already sitting in a folder
+  is a local write, not a delivery confirmation). Refusal semantics are
+  strict on both axes of the address: the terminal adapter delivers only
+  when the recipient's `machine` matches the route's machine (default
+  `hitl.machine`) and its `panel` names the target pane; the hermes
+  adapter delivers only when its channel folder is the recipient's target
+  (panel equal to the channel name on the route's machine). A route never
+  silently sends to its own configured destination for a recipient it
+  cannot serve.
+- The `reply_to` folder is the resolved absolute sender events folder (not
+  the configured `root_dir` setting, which stays relative), so two
+  worktrees on one machine never share a reply address.
 - Local Reply is unchanged: `update <ref> --answer` binds by exact ID with
   strict ambiguity handling and an explicit not-found error; a transport
   later reads `reply_to` from the answered event instead of searching for the
@@ -145,6 +162,7 @@ hitl:
         adapter: terminal          # built-in: any ace-runtime terminal
         runtime: herdr             # tmux | herdr
         pane: p5                   # opaque pane handle (runtime-owned)
+        machine: lab01             # defaults to hitl.machine; recipient machine must match
       - route: captain-telegram
         adapter: hermes            # ships in ace-hitl-hermes
         channel: project
@@ -168,7 +186,14 @@ Rules:
 - One result line per route; a route's success never hides another route's
   failure. Exit 0 only when every route is `delivered`; exit 1 on any
   `failed`/`unavailable` route, no configured routes (concrete error naming
-  `hitl.adapters.routes`), unknown adapter, or unknown/ambiguous ref.
+  `hitl.adapters.routes`), or unknown/ambiguous ref. An unknown adapter on
+  one route no longer aborts the send: that route is retained as
+  `unavailable` with the resolution error as its reason, the remaining
+  routes still deliver, and the send still exits 1.
+- Route names must be a single token matching `[a-z0-9][a-z0-9_-]*`
+  (no dots): delivery retention keys route names literally, and `send`
+  rejects a dotted name (e.g. `captain.telegram`) before any delivery
+  attempt.
 - Every route receives the identical shared rendering: `[HITL question]`/
   `[HITL report <result>]` prefix, one `Q:` line per question, `Reply-To:`
   on questions only, task/assignment/step context.

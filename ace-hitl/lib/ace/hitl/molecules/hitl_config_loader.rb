@@ -31,6 +31,11 @@ module Ace
         # them into one document, so normalization folds the top-level
         # keys over the shaped subtree — flat project overrides apply and
         # are never silently dropped by the defaults supplying `hitl:`.
+        #
+        # Caveat: the folding happens after the tier merge, so mixing
+        # shapes across tiers can invert cascade precedence (a flat user
+        # document would override a shaped project document). Use the
+        # same shape at every tier.
         def self.normalize(data)
           return {} unless data.is_a?(Hash)
 

@@ -24,13 +24,13 @@ module Ace
           Ace::Runtime.instance_variable_set(:@registry, @original_registry)
         end
 
-        def route(runtime: "fake", pane: "p5", outcome: nil)
+        def route(runtime: "fake", pane: "p5", machine: "lab01", outcome: nil)
           @calls.clear
           Ace::Runtime.register(:fake, -> { FakeRuntime.new(@calls, outcome) })
           TerminalAdapter.new({
             "route" => "lab-terminal", "adapter" => "terminal",
-            "runtime" => runtime, "pane" => pane
-          })
+            "runtime" => runtime, "pane" => pane, "machine" => machine
+          }.compact)
         end
 
         def deliver_event(adapter)
@@ -82,19 +82,31 @@ module Ace
         end
 
         def test_recipient_panel_steers_the_target_pane
-          adapter = route(pane: "wrong-pane")
+          adapter = route(machine: "lab01", pane: "wrong-pane")
           adapter.deliver(event: nil, text: "work done",
-            recipient: {"machine" => "other-host", "panel" => "right-pane"}, reply_to: nil)
+            recipient: {"machine" => "lab01", "panel" => "right-pane"}, reply_to: nil)
 
           assert_equal 1, @calls.size
           assert_equal "right-pane", @calls.first[:pane], "recipient panel must steer delivery"
           refute_includes @calls.map { |c| c[:pane] }, "wrong-pane"
         end
 
+        def test_foreign_machine_recipient_is_refused_without_send
+          adapter = route(machine: "lab01", pane: "wrong-pane")
+          recipient = {"machine" => "other-host", "panel" => "right-pane"}
+
+          result = adapter.deliver(event: nil, text: "work done", recipient: recipient, reply_to: nil)
+
+          assert_equal :failed, result.status
+          assert_includes result.detail, "cannot serve recipient other-host/panel/right-pane"
+          assert_includes result.detail, "machine 'lab01'"
+          assert_empty @calls, "a same-named pane on another machine is not the recipient"
+        end
+
         def test_two_recipients_each_get_their_own_pane_only
-          adapter = route(pane: "wrong-pane")
-          first = {"machine" => "host-a", "panel" => "pane-a"}
-          second = {"machine" => "host-b", "panel" => "pane-b"}
+          adapter = route(machine: "lab01", pane: "wrong-pane")
+          first = {"machine" => "lab01", "panel" => "pane-a"}
+          second = {"machine" => "lab01", "panel" => "pane-b"}
 
           adapter.deliver(event: nil, text: "for a", recipient: first, reply_to: nil)
           adapter.deliver(event: nil, text: "for b", recipient: second, reply_to: nil)
@@ -105,13 +117,14 @@ module Ace
         end
 
         def test_folder_recipient_is_an_explicit_refusal_without_send
-          adapter = route(pane: "wrong-pane")
-          recipient = {"machine" => "other-host", "folder" => ".ace-local/hitl", "id" => "abc123"}
+          adapter = route(machine: "lab01", pane: "wrong-pane")
+          recipient = {"machine" => "lab01", "folder" => ".ace-local/hitl", "id" => "abc123"}
 
           result = adapter.deliver(event: nil, text: "work done", recipient: recipient, reply_to: nil)
 
           assert_equal :failed, result.status
-          assert_includes result.detail, "cannot deliver to folder recipient"
+          assert_includes result.detail, "cannot serve recipient"
+          assert_includes result.detail, "panel-form recipient"
           assert_empty @calls, "a refused recipient must not produce any terminal send"
         end
       end

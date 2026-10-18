@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.23.1] - 2026-10-18
+
+### Fixed
+
+- Terminal routes are machine-scoped (round-9 review H1): the adapter now
+  reads the route's `machine` (defaults to `hitl.machine`) and refuses a
+  panel recipient on a different machine instead of delivering to a
+  local pane that merely shares the panel name and reporting a false
+  `delivered`. The refusal mirrors the hermes adapter, so both shipped
+  adapters apply the same address check.
+
+### Changed
+
+- Docs only: `docs/usage.md` now documents that route delivery requires
+  a panel-form recipient (folder-form recipients have no shipped delivery
+  route and are refused per-route), the per-route refusal semantics of
+  both shipped adapters, per-route `unavailable` retention for unknown
+  adapters, dotted route-name rejection, and the absolute `reply_to`
+  folder. `HitlConfigLoader.normalize` notes that mixing flat/shaped
+  config documents across tiers can invert cascade precedence.
+
 ## [0.23.0] - 2026-10-18
 
 ### Fixed
