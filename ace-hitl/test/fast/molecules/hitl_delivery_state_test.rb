@@ -41,6 +41,12 @@ module Ace
           assert HitlDeliveryState.fully_delivered?(map)
           refute HitlDeliveryState.undelivered?(map)
         end
+
+        def test_malformed_records_are_dropped_not_raised
+          map = {"good" => record("delivered"), "nil_rec" => nil, "scalar_rec" => 42}
+          assert HitlDeliveryState.fully_delivered?(map), "malformed records are not delivery facts"
+          refute HitlDeliveryState.undelivered?(map)
+        end
       end
     end
   end

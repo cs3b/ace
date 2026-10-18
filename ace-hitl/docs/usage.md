@@ -204,6 +204,10 @@ ace-hitl show 8xhkep            # Delivery: <route>: <status> - <reason>
 - Redelivery retries the *delivery of the same case* — same event ID, same
   content, same task/assignment binding — never the assignment or its next
   step.
+- The delivery filters are record-relative: an event that was never sent
+  appears in neither `--delivery` filter, and a route added to the
+  configuration after a full delivery does not flip a `delivered` event
+  back to `undelivered` (the next `send` still attempts the new route).
 
 ## List
 
@@ -297,7 +301,6 @@ transport has no replacement role-specific queue.
 > `list --delivery`, per-route `Delivery:` records) are available. Adapters
 > (`ace-hitl-hermes`) and transports (tmux, Herdr) are not additional state
 > owners.
-> transports (tmux, Herdr) are not additional state owners.
 
 ## Testing
 

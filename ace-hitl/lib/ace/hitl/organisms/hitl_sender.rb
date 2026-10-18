@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "time"
 require "ace/support/items"
 require_relative "../adapters"
 require_relative "../atoms/hitl_event_text"
@@ -64,8 +65,13 @@ module Ace
 
           if dry_run
             results = attempted.map do |route|
-              reason = Molecules::HitlDeliveryState.unknown?(delivery&.dig(route["route"])) ?
-                "unknown result - will retry" : "undelivered - will retry"
+              reason = if force
+                "force - will redeliver"
+              elsif Molecules::HitlDeliveryState.unknown?(delivery&.dig(route["route"]))
+                "unknown result - will retry"
+              else
+                "undelivered - will retry"
+              end
               Adapters::RouteResult.new(route: route["route"], adapter: route["adapter"],
                 status: :dry_run, detail: reason)
             end
@@ -89,7 +95,7 @@ module Ace
           skipped = []
           routes.each do |route|
             record = delivery.is_a?(Hash) ? delivery[route["route"]] : nil
-            if !force && record.is_a?(Hash) && record["status"] == "delivered"
+            if !force && !Molecules::HitlDeliveryState.retry?(record)
               skipped << SkippedRoute.new(route: route["route"], adapter: route["adapter"],
                 status: :delivered, detail: "already delivered (#{record["attempted_at"]})")
             else

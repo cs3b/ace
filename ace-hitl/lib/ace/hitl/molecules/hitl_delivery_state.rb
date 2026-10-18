@@ -44,8 +44,13 @@ module Ace
           map.all? { |_route, record| record["status"] == "delivered" }
         end
 
+        # Malformed entries (nil/scalar records from hand-written YAML) are
+        # dropped, never raised through: a broken record is simply not a
+        # delivery fact.
         def normalized(delivery_map)
-          delivery_map.is_a?(Hash) ? delivery_map : {}
+          return {} unless delivery_map.is_a?(Hash)
+
+          delivery_map.select { |_route, record| record.is_a?(Hash) }
         end
       end
     end
