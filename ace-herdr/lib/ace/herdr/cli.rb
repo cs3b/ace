@@ -10,6 +10,7 @@ require_relative "cli/commands/wait"
 require_relative "cli/commands/close"
 require_relative "cli/commands/tidy"
 require_relative "cli/commands/list"
+require_relative "cli/commands/status"
 require_relative "cli/commands/send"
 require_relative "cli/commands/capture"
 require_relative "cli/commands/workspace"
@@ -32,6 +33,7 @@ module Ace
         ["dispatch", "Start an agent in one command: tab + agent + prompt"],
         ["native-source", "Describe, build, or verify the packaged guarded native source"],
         ["list", "List live panes, tabs, or workspaces as one JSON line"],
+        ["status", "Show the live herdr layout (workspaces > tabs > panes)"],
         ["send", "Send a command, raw text, or named keys to a pane"],
         ["capture", "Print recent pane output as raw text"],
         ["wait", "Wait for an agent state or matching pane output"],
@@ -48,6 +50,8 @@ module Ace
         "echo 'the answer' | ace-herdr deliver --pane p5",
         "ace-herdr dispatch --label 8wm.t.vs0 --kind pi --prompt-file prompt.md",
         "ace-herdr list --workspace w1",
+        "ace-herdr status",
+        "ace-herdr status --format json",
         "ace-herdr send --pane p5 --cmd 'bundle exec rake test'",
         "ace-herdr send --pane p5 --msg 'continue' --key Enter",
         "ace-herdr capture --pane p5 --lines 40",
@@ -73,6 +77,7 @@ module Ace
       register "dispatch", CLI::Commands::Dispatch.new
       register "native-source", CLI::Commands::NativeSource.new
       register "list", CLI::Commands::List.new
+      register "status", CLI::Commands::Status.new
       register "send", CLI::Commands::Send.new
       register "capture", CLI::Commands::Capture.new
       register "wait", CLI::Commands::Wait.new

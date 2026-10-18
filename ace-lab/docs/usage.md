@@ -76,10 +76,37 @@ ace-lab route --project atlas --capability search --format json
 Routing selects a capable service in the requested project. It never invokes
 the service and never grants credentials.
 
+## Status
+
+```bash
+ace-lab status              # table: configuration + local state + worktree pointer
+ace-lab status --format json
+```
+
+Read-only snapshot in three sections; starts nothing, writes nothing, and
+exits 0 whenever a report renders (only usage errors exit non-zero).
+
+- `Lab configuration:` one of `configured` (explicit cascade sources and
+  aggregate projects/agents/services counts — no ids or endpoints),
+  `not configured (no .ace/lab/config.yml or ~/.ace/lab/config.yml)`, or
+  `error - <reason>` (malformed or schema-invalid source; messages carry the
+  path, never content). A not-configured lab is never presented as an empty,
+  ready one.
+- `Local state:` presence and entry counts for the canonical lab-flow
+  locations (`.ace-tasks`, `.ace-tasks/_overseer`, `.ace-local/assign`,
+  `.ace-local/coworker`, `.ace-local/hitl`, `.ace-wt`). Absent coworker or
+  private-overseer state is an informational note, never a readiness claim.
+- `Worktree view:` points at the existing `ace-git-worktree list` (task
+  associations, activity, PR state); this command does not duplicate it.
+
+Unlike the query commands, `status` emits a plain top-level JSON object
+(status never fails; each section carries its own state) rather than the
+`{status, data}` query envelope.
+
 ## Planned waves
 
-> **Planned (L7):** topology values and status integration for the file-based
-> flow are not available yet.
+> **Planned (L7):** configurable aggregated overseer status and pi
+> continuation build on `ace-lab status`; they are not available yet.
 >
 > **Planned (L8):** installer (accounts, directories, keys), project onboarding,
 > resuming an interrupted install, and readiness verification are not available
