@@ -21,8 +21,14 @@ module Ace
           @runner = runner
         end
 
+        # Probes one worktree. Never returns errors: an unreadable config is
+        # reported as Atoms::ActiveExecutorRule::UNPARSEABLE; operational
+        # failures (missing ace-assign CLI, failed listing, unparseable
+        # output) raise Error instead.
+        #
         # @return [Hash] {config: Hash | nil | Atoms::ActiveExecutorRule::UNPARSEABLE,
-        #   assignments: Array<Hash{"id","name","state","progress"}>, error: String | nil}
+        #   assignments: Array<Hash{"id","name","state","progress"}>}
+        # @raise [Error] when the assignment inventory cannot be read
         def probe(worktree_path)
           {
             config: read_config(worktree_path),

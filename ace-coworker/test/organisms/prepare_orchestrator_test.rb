@@ -49,11 +49,19 @@ module Ace
           end
         end
 
-        FakeConfigLoader = Struct.new(:config) do
+        FakeConfigLoader = Struct.new(:config, :lenient_overseer) do
+          def initialize(config, lenient_overseer = nil)
+            super(config, lenient_overseer)
+          end
+
           def load(path: nil)
             raise Error, "not ready: no config" if config.nil?
 
             config
+          end
+
+          def overseer(path: nil)
+            lenient_overseer
           end
         end
 
@@ -63,7 +71,7 @@ module Ace
         end
 
         def orchestrator(provision_decision:, executor_result: {config: nil, assignments: []},
-          hitl: FakeHitl.new, config: nil, task: task_model
+          hitl: FakeHitl.new, config: nil, task: task_model, lenient_overseer: nil
         )
           PrepareOrchestrator.new(
             project_root: "/proj",
@@ -71,7 +79,7 @@ module Ace
             provision_probe: FakeProvisionProbe.new(provision_decision),
             executor_probe: FakeExecutorProbe.new(executor_result),
             hitl_reporter: hitl,
-            config_loader: FakeConfigLoader.new(config))
+            config_loader: FakeConfigLoader.new(config, lenient_overseer))
         end
 
         def created_decision
@@ -122,6 +130,9 @@ module Ace
           assert_equal 1, hitl.create_calls.length
           assert_equal "8xg.t.aaa/t.8xg-t-aaa", hitl.create_calls.first[:title].split(" - ", 2).last
           assert_nil result.worktree
+          assert_equal({"assignment" => "abc123", "state" => "running", "source" => "config"},
+            result.active_executor)
+          assert_equal result.active_executor, result.to_h["active_executor"]
         end
 
         def test_mismatched_worktree_conflict_escalates
@@ -185,6 +196,48 @@ module Ace
           assert_equal "mismatched_worktree", result.conflict["kind"]
           assert_nil result.conflict["hitl_event"]
           assert_empty hitl.create_calls
+        end
+
+        def test_recipient_falls_back_to_lenient_overseer_on_partial_config
+          hitl = FakeHitl.new
+          # Full ConfigSchema validation fails (planner-side partial config),
+          # but the lenient field read still finds the overseer.
+          orchestrator(
+            provision_decision: {disposition: :conflict_mismatch, reason: "foreign", worktree_path: "/w"},
+            hitl: hitl, config: nil, lenient_overseer: "partial-overseer"
+          ).call(task_ref: "8xg.t.aaa", roles: %w[worker])
+
+          assert_equal "partial-overseer", hitl.create_calls.first[:to]
+        end
+
+        def test_conflict_without_any_overseer_surfaces_config_load_error
+          hitl = FakeHitl.new
+          result = orchestrator(
+            provision_decision: {disposition: :conflict_mismatch, reason: "foreign", worktree_path: "/w"},
+            hitl: hitl, config: nil, lenient_overseer: nil
+          ).call(task_ref: "8xg.t.aaa", roles: %w[worker])
+
+          assert result.conflict?
+          assert_includes result.conflict["detail"], "no overseer address"
+          assert_includes result.conflict["detail"], "coworker config load failed: not ready: no config"
+          assert_empty hitl.create_calls
+        end
+
+        def test_missing_hitl_binary_still_renders_conflict
+          hitl = FakeHitl.new
+          def hitl.create_conflict(**)
+            raise Error, "required CLI 'ace-hitl' not found; install the ace-hitl gem"
+          end
+          executor = {config: {"assignment" => "abc123"},
+            assignments: [{"id" => "abc123", "name" => "w", "state" => "running", "progress" => "1/2"}]}
+          result = orchestrator(provision_decision: created_decision.merge(disposition: :reuse),
+            executor_result: executor, hitl: hitl)
+            .call(task_ref: "8xg.t.aaa", roles: %w[worker], to: "overseer@lab")
+
+          assert result.conflict?
+          assert_equal "active_executor", result.conflict["kind"]
+          assert_nil result.conflict["hitl_event"]
+          assert_includes result.conflict["detail"], "required CLI 'ace-hitl' not found"
         end
 
         def test_missing_task_raises_specific_error

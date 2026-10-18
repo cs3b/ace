@@ -74,7 +74,7 @@ module Ace
               kind: "active_executor", detail: active_detail(rule),
               worktree_path: decision[:worktree_path], to: to,
               config_path: config_path, dry_run: dry_run,
-              assignments: executor[:assignments])
+              assignments: executor[:assignments], active_executor: rule[:evidence])
           end
 
           success(task: task_id, task_path: task_path, roles: roles,
@@ -101,31 +101,39 @@ module Ace
         end
 
         def conflict_result(task:, task_path:, roles:, kind:, detail:, worktree_path:,
-          to:, config_path:, dry_run:, assignments: [])
+          to:, config_path:, dry_run:, assignments: [], active_executor: nil)
           hitl_event = nil
           delivered = nil
-          recipient = escalation_recipient(to: to, config_path: config_path)
+          recipient, recipient_note = escalation_recipient(to: to, config_path: config_path)
           detail = detail.dup
 
           unless dry_run
             if recipient.to_s.strip.empty?
               detail << "\ncannot report conflict: no overseer address (--to or coworker config)"
+              detail << "\n#{recipient_note}" if recipient_note
             else
-              result = @hitl_reporter.create_conflict(
-                title: "Preparation conflict - #{task}/#{worktree_dir(worktree_path)}",
-                question_lines: conflict_question(kind: kind, detail: detail, worktree_path: worktree_path),
-                task: task, to: recipient)
-              if result.is_a?(Molecules::HitlReporter::Failure)
-                detail << "\ncannot report conflict: #{result.message}"
-              else
-                hitl_event = result
-                delivered = @hitl_reporter.send_report(hitl_event) == true
+              begin
+                result = @hitl_reporter.create_conflict(
+                  title: "Preparation conflict - #{task}/#{worktree_dir(worktree_path)}",
+                  question_lines: conflict_question(kind: kind, detail: detail, worktree_path: worktree_path),
+                  task: task, to: recipient)
+                if result.is_a?(Molecules::HitlReporter::Failure)
+                  detail << "\ncannot report conflict: #{result.message}"
+                else
+                  hitl_event = result
+                  delivered = @hitl_reporter.send_report(hitl_event) == true
+                end
+              rescue Error => e
+                # e.g. the ace-hitl binary is missing: keep the structured
+                # conflict visible instead of replacing it with a bare error.
+                detail << "\ncannot report conflict: #{e.message}"
               end
             end
           end
 
           Models::Preparation.new(task: task, task_path: task_path, roles: roles,
             worktree: nil, worktree_assignments: assignments,
+            active_executor: active_executor,
             conflict: {"kind" => kind, "detail" => detail,
                        "hitl_event" => hitl_event, "delivered" => delivered},
             dry_run: dry_run)
@@ -140,15 +148,24 @@ module Ace
           ]
         end
 
+        # Resolves the escalation recipient: the --to override, else the
+        # coworker config's overseer. A config that fails full validation is
+        # still consulted leniently (field-only read, mirroring
+        # WorktreeExecutorProbe#read_config) so a partial planner-side config
+        # can name its overseer; a config that supplies no overseer anywhere
+        # yields a nil address plus the load error for the conflict detail
+        # instead of a silent "no address".
+        #
+        # @return [Array<String, String, nil>] recipient address and an
+        #   optional diagnostic note
         def escalation_recipient(to:, config_path:)
-          return to unless to.to_s.strip.empty?
+          return [to, nil] unless to.to_s.strip.empty?
 
-          cfg = begin
-            @config_loader.load(path: config_path)
-          rescue Error
-            nil
-          end
-          cfg&.overseer
+          cfg = @config_loader.load(path: config_path)
+          [cfg&.overseer, nil]
+        rescue Error => e
+          overseer = @config_loader.overseer(path: config_path).to_s
+          overseer.empty? ? [nil, "coworker config load failed: #{e.message}"] : [overseer, nil]
         end
 
         def worktree_dir(worktree_path)

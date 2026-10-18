@@ -28,6 +28,23 @@ module Ace
           assert @loader.ready?
         end
 
+        def test_overseer_reads_partial_config_leniently
+          dir = File.join(@dir, ".ace-local", "coworker")
+          FileUtils.mkdir_p(dir)
+          File.write(File.join(dir, "config.yml"), "overseer: partial-overseer\n")
+
+          assert_equal "partial-overseer", @loader.overseer
+        end
+
+        def test_overseer_lenient_read_returns_nil_without_field_or_file
+          assert_nil @loader.overseer
+
+          dir = File.join(@dir, ".ace-local", "coworker")
+          FileUtils.mkdir_p(dir)
+          File.write(File.join(dir, "config.yml"), "role: worker\n")
+          assert_nil @loader.overseer
+        end
+
         def test_loads_valid_config
           path = CoworkerFixture.build_config(@dir, assignment: "abc123", task: "8xg.t.sbz.2")
           cfg = @loader.load
