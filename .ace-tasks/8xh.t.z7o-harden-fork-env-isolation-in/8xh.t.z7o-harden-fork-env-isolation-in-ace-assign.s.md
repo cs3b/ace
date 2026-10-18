@@ -1,6 +1,6 @@
 ---
 id: 8xh.t.z7o
-status: pending
+status: in-progress
 priority: medium
 created_at: "2026-10-18 23:28:32"
 estimate: TBD
@@ -10,6 +10,12 @@ bundle:
   presets: [project]
   files: []
   commands: []
+worktree:
+  branch: z7o-harden-fork-env-isolation-in-ace-assign-tests-and-drive-guidance
+  path: .ace-wt/ace-t.z7o
+  created_at: "2026-10-19 00:29:27"
+  updated_at: "2026-10-19 00:29:27"
+  target_branch: main
 ---
 
 # Harden fork env isolation in ace-assign tests and drive guidance
