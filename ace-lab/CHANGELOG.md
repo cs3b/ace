@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- `ace-lab status` refined to the reviewed `l7-statuses` implementation
+  (task 8xg.t.sbz.6.0; extracted from the superseded PR #382): tri-state
+  classification moved into a `ConfigStateClassifier` molecule with the
+  corrected config cascade precedence and missing-state classification,
+  ADR-034 state-owner scanning isolated into a `LabStateScanner`
+  (per-location error isolation), and a `StatusReport` model behind a
+  `StatusService` organism — table/json/`-q` output preserved.
+
 ## [0.11.0] - 2026-10-18
 
 ### Fixed (review PR #383, round 3)

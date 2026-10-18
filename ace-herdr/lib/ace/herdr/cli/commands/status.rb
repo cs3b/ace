@@ -4,7 +4,6 @@ require "json"
 require "ace/support/cli"
 require "ace/core"
 require_relative "support"
-require_relative "../../organisms/status"
 
 module Ace
   module Herdr
@@ -14,87 +13,91 @@ module Ace
           include Ace::Support::Cli::Base
           include Runtime
 
-          desc "Show the live herdr layout (workspaces > tabs > panes) as a readable tree"
+          desc <<~DESC.strip
+            Show the live herdr layout: workspaces, tabs, and panes in one view
+
+            Composes workspace/tab/pane lists into a readable tree. A live but
+            empty result is a valid state; an unreachable runtime is reported
+            as an error, never as an empty layout.
+          DESC
 
           example [
-            "                        # Table layout",
-            "--format json           # Machine-readable snapshot"
+            "--workspace w1           # One workspace only",
+            "--format json            # Composed tree as JSON"
           ]
 
-          option :format, type: :string, desc: "Output format (table, json; default: table)"
+          option :workspace, type: :string, desc: "Scope tabs and panes to a workspace id"
+          option :format, type: :string, default: "table", desc: "Output format: table or json"
           option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress output"
 
           def initialize(executor: nil)
-            super()
             @executor = executor
           end
 
           def call(**options)
             translate_errors do
               format = options[:format] || "table"
-              unless %w[table json].include?(format)
-                cli_error("--format \"#{format}\" is not supported; table or json")
-              end
+              cli_error("Invalid format: #{format} (use table or json)") unless %w[table json].include?(format)
 
-              snapshot = Organisms::Status.new(executor: executor).snapshot
+              control = Organisms::ControlSurface.new(executor: executor)
+              scope = options[:workspace]
+              tree = Molecules::StatusComposer.call(
+                workspaces: control.list_workspaces,
+                tabs: control.list_tabs(workspace_id: scope),
+                panes: control.list_panes(workspace_id: scope)
+              )
+
               return if options[:quiet]
 
-              puts format == "json" ? JSON.generate(snapshot) : render(snapshot)
+              if format == "json"
+                puts JSON.generate(tree)
+              else
+                puts render_table(tree)
+              end
             end
           end
 
           private
 
-          def render(snapshot)
-            runtime = snapshot["runtime"]
-            lines = ["Herdr runtime: #{runtime["state"]}#{runtime["error"] ? " - #{runtime["error"]}" : ""}"]
-            if runtime["state"] == "unavailable"
-              lines << "Start or install herdr (#{runtime["binary"]}) to see the live layout."
-              return lines.join("\n")
-            end
-            if runtime["state"] == "error"
-              return lines.join("\n")
-            end
+          def render_table(tree)
+            workspaces = tree[:workspaces]
+            return "No live herdr workspaces." if workspaces.empty?
 
-            counts = snapshot["counts"]
-            lines << "Workspaces: #{counts["workspaces"]}  Tabs: #{counts["tabs"]}  Panes: #{counts["panes"]}"
-            lines << ""
-
-            if snapshot["workspaces"].empty?
-              lines << "No herdr workspaces, tabs, or panes."
-            else
-              snapshot["workspaces"].each do |entry|
-                workspace = entry["workspace"]
-                focus = workspace[:focused] ? " *" : ""
-                lines << "#{workspace[:id]} #{workspace[:title]}#{focus}  (tabs: #{workspace[:tab_count]}, panes: #{workspace[:pane_count]})"
-                entry["tabs"].each do |tab_entry|
-                  tab = tab_entry["tab"]
-                  tab_focus = tab[:focused] ? " *" : ""
-                  lines << "  #{tab[:id]} #{tab[:title]}#{tab_focus}  (panes: #{tab_entry["panes"].size})"
-                  tab_entry["panes"].each do |pane|
-                    lines << "    #{render_pane(pane)}"
-                  end
+            tab_total = workspaces.sum { |workspace| workspace[:tab_count] }
+            pane_total = workspaces.sum { |workspace| workspace[:pane_count] }
+            lines = ["Herdr: #{workspaces.length} workspace(s), #{tab_total} tab(s), #{pane_total} pane(s)"]
+            workspaces.each do |workspace|
+              lines << format(
+                "%s %-14s %-16s %d tab(s), %d pane(s)",
+                workspace[:focused] ? "*" : " ", workspace[:id], workspace[:title].to_s,
+                workspace[:tab_count], workspace[:pane_count]
+              )
+              workspace[:tabs].each do |tab|
+                lines << format(
+                  "    %s %-18s %-14s %d pane(s)",
+                  tab[:focused] ? "*" : " ", tab[:id], tab[:title].to_s, tab[:pane_count]
+                )
+                tab[:panes].each do |pane|
+                  lines << pane_line(pane)
                 end
               end
             end
-
-            unattached = snapshot["unattached"]
-            if unattached && (unattached["tabs"].any? || unattached["panes"].any?)
-              lines << ""
-              lines << "(unattached)"
-              unattached["tabs"].each { |tab| lines << "  #{tab[:id]} #{tab[:title]}" }
-              unattached["panes"].each { |pane| lines << "  #{render_pane(pane)}" }
-            end
-
             lines.join("\n")
           end
 
-          def render_pane(pane)
-            focus = pane[:focused] ? "*" : " "
-            agent = pane[:agent_status] ? "agent:#{pane[:agent_status]}" : "plain"
-            cwd = pane[:cwd].to_s.sub(/\A#{Regexp.escape(Dir.home)}/, "~")
-            title = pane[:title].to_s.empty? ? "-" : pane[:title]
-            "#{focus} #{agent}  #{title}  #{cwd}"
+          def pane_line(pane)
+            title = pane[:title].to_s.empty? ? "—" : pane[:title]
+            line = format(
+              "        %s %-8s %-14s %s",
+              pane[:focused] ? "*" : " ", pane[:id], title, shorten_home(pane[:cwd].to_s)
+            )
+            line += "  agent: #{pane[:agent_status]}" if pane[:agent_status]
+            line
+          end
+
+          def shorten_home(path)
+            home = Dir.home
+            path.start_with?(home) ? path.sub(home, "~") : path
           end
         end
       end

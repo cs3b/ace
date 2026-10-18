@@ -7,113 +7,120 @@ module Ace
   module Herdr
     module CLI
       module Commands
-        class StatusCommandTest < Minitest::Test
+        class StatusTest < Minitest::Test
+          def setup
+            @executor = HerdrTestHelper::FakeExecutor.new(outcomes: {
+              workspace_list: native_result(result: {workspaces: [
+                {"workspace_id" => "w1", "label" => "main", "number" => 1, "focused" => true}
+              ]}),
+              tab_list: native_result(result: {tabs: [
+                {"tab_id" => "w1:t1", "workspace_id" => "w1", "label" => "agent", "number" => 1, "focused" => true}
+              ]}),
+              pane_list: native_result(result: {panes: [
+                {"pane_id" => "p5", "tab_id" => "w1:t1", "workspace_id" => "w1",
+                 "terminal_title" => "pi", "cwd" => Dir.home + "/Ps/ace", "focused" => true,
+                 "agent_status" => "working"},
+                {"pane_id" => "p6", "tab_id" => "w1:t1", "workspace_id" => "w1",
+                 "terminal_title_stripped" => "", "cwd" => "/tmp", "focused" => false}
+              ]})
+            })
+          end
+
           def native_result(payload)
             Molecules::ExecutionResult.new(
               stdout: JSON.generate(payload), stderr: "", success: true, exit_code: 0
             )
           end
 
-          def executor_with_layout
-            HerdrTestHelper::FakeExecutor.new(outcomes: {
-              workspace_list: native_result(result: {workspaces: [
-                {"workspace_id" => "w1", "label" => "development", "number" => 1, "tab_count" => 1, "pane_count" => 2, "focused" => true}
-              ]}),
-              tab_list: native_result(result: {tabs: [
-                {"tab_id" => "w1:t1", "workspace_id" => "w1", "label" => "editor", "number" => 1, "pane_count" => 2, "focused" => true}
-              ]}),
-              pane_list: native_result(result: {panes: [
-                {"pane_id" => "p1", "tab_id" => "w1:t1", "workspace_id" => "w1", "terminal_title" => "agent", "cwd" => Dir.home, "focused" => true, "agent_status" => "working"},
-                {"pane_id" => "p2", "tab_id" => "w1:t1", "workspace_id" => "w1", "terminal_title" => "shell", "cwd" => "/tmp", "focused" => false}
-              ]})
-            })
+          def call_cmd(options = {})
+            cmd = Status.new(executor: @executor)
+            capture_io { cmd.call(**{workspace: nil, format: "table", quiet: nil}.merge(options)) }
           end
 
-          def test_table_shows_runtime_counts_and_tree
-            cmd = Status.new(executor: executor_with_layout)
+          def test_issues_all_three_list_calls
+            call_cmd
 
-            out, = capture_io do
-              cmd.call(format: nil, quiet: nil)
-            end
-
-            assert_includes out, "Herdr runtime: available"
-            assert_includes out, "Workspaces: 1  Tabs: 1  Panes: 2"
-            assert_includes out, "w1 development *"
-            assert_includes out, "w1:t1 editor *"
-            assert_includes out, "agent:working"
-            assert_includes out, "plain"
-            assert_includes out, "agent  ~"
+            assert @executor.calls_of(:workspace_list).length == 1
+            assert @executor.calls_of(:tab_list).length == 1
+            assert @executor.calls_of(:pane_list).length == 1
           end
 
-          def test_json_output_matches_schema
-            cmd = Status.new(executor: executor_with_layout)
+          def test_workspace_scope_reaches_tabs_and_panes
+            call_cmd(workspace: "w1")
 
-            out, = capture_io do
-              cmd.call(format: "json", quiet: nil)
-            end
+            assert_equal({workspace_id: "w1"}, @executor.calls_of(:tab_list).first[:args])
+            assert_equal({workspace_id: "w1"}, @executor.calls_of(:pane_list).first[:args])
+          end
+
+          def test_table_renders_tree_with_focus_marker_agent_and_home_shortening
+            out, = call_cmd
+
+            assert_includes out, "Herdr: 1 workspace(s), 1 tab(s), 2 pane(s)"
+            assert_includes out, "* w1"
+            assert_includes out, "w1:t1"
+            assert_includes out, "~/Ps/ace"
+            assert_includes out, "agent: working"
+            assert_includes out, "—"
+          end
+
+          def test_table_omits_agent_status_when_absent
+            out, = call_cmd
+
+            refute_includes out, "agent: \n"
+            lines = out.split("\n")
+            pane_lines = lines.select { |line| line.include?("p6") }
+            assert pane_lines.one?
+            refute_includes pane_lines.first, "agent:"
+          end
+
+          def test_json_format_emits_composed_tree
+            out, = call_cmd(format: "json")
 
             parsed = JSON.parse(out)
-            assert_equal "available", parsed.dig("runtime", "state")
-            assert_equal 1, parsed.dig("counts", "workspaces")
-            assert_equal "w1", parsed.dig("workspaces", 0, "workspace", "id")
-            assert_equal "p1", parsed.dig("workspaces", 0, "tabs", 0, "panes", 0, "id")
+            workspace = parsed["workspaces"].first
+            assert_equal "w1", workspace["id"]
+            assert_equal 1, workspace["tab_count"]
+            assert_equal 2, workspace["pane_count"]
+            tab = workspace["tabs"].first
+            assert_equal "w1:t1", tab["id"]
+            assert_equal 2, tab["panes"].length
           end
 
-          def test_unavailable_renders_marker_not_empty_table
-            cmd = Status.new(executor: HerdrTestHelper::FakeExecutor.new(outcomes: {
-              workspace_list: ExecutorUnavailableError.new("herdr binary not found")
-            }))
+          def test_empty_live_state_is_not_an_error
+            @executor = HerdrTestHelper::FakeExecutor.new
+            out, = call_cmd
 
-            out, = capture_io do
-              cmd.call(format: nil, quiet: nil)
-            end
-
-            assert_includes out, "Herdr runtime: unavailable"
-            assert_includes out, "Start or install herdr"
-            refute_includes out, "Workspaces: 0"
+            assert_includes out, "No live herdr workspaces."
           end
 
-          def test_error_renders_marker
-            cmd = Status.new(executor: HerdrTestHelper::FakeExecutor.new(outcomes: {
-              workspace_list: CommandError.new("herdr exit 1: boom")
-            }))
+          def test_unavailable_runtime_is_an_error_not_an_empty_table
+            @executor = HerdrTestHelper::FakeExecutor.new(outcomes: {
+              workspace_list: Ace::Herdr::ExecutorUnavailableError.new("herdr CLI or socket unreachable")
+            })
 
-            out, = capture_io do
-              cmd.call(format: nil, quiet: nil)
-            end
-
-            assert_includes out, "Herdr runtime: error - herdr exit 1: boom"
+            error = assert_raises(Ace::Support::Cli::Error) { call_cmd }
+            assert_match(/unreachable/, error.message)
           end
 
-          def test_empty_valid_set_renders_zero_counts
-            cmd = Status.new(executor: HerdrTestHelper::FakeExecutor.new)
+          def test_generic_executor_error_is_surfaced
+            @executor = HerdrTestHelper::FakeExecutor.new(outcomes: {
+              workspace_list: Ace::Herdr::CommandError.new("herdr list failed")
+            })
 
-            out, = capture_io do
-              cmd.call(format: nil, quiet: nil)
-            end
-
-            assert_includes out, "Herdr runtime: available"
-            assert_includes out, "Workspaces: 0  Tabs: 0  Panes: 0"
-            assert_includes out, "No herdr workspaces, tabs, or panes."
+            error = assert_raises(Ace::Support::Cli::Error) { call_cmd }
+            assert_match(/herdr list failed/, error.message)
           end
 
-          def test_quiet_prints_nothing
-            cmd = Status.new(executor: executor_with_layout)
-
-            out, = capture_io do
-              cmd.call(format: nil, quiet: true)
-            end
+          def test_quiet_suppresses_output
+            out, = call_cmd(quiet: true)
 
             assert_equal "", out
           end
 
           def test_invalid_format_is_a_usage_error
-            cmd = Status.new(executor: HerdrTestHelper::FakeExecutor.new)
+            error = assert_raises(Ace::Support::Cli::Error) { call_cmd(format: "xml") }
 
-            error = assert_raises(Ace::Support::Cli::Error) do
-              cmd.call(format: "yaml", quiet: nil)
-            end
-            assert_includes error.message, "table or json"
+            assert_match(/Invalid format/, error.message)
           end
         end
       end

@@ -36,10 +36,17 @@ Every query prints one deterministic JSON document. Failures are classified
 (`missing`, `ambiguous`, `stale`, `unauthorized`, `invalid_configuration`).
 Stable IDs are canonical; labels are display values and never resolve.
 
-> **L7.1 delivered:** `ace-lab status` reports lab configuration state
-> (configured / not configured / error — never conflated) and file-based local
-> state, and points at `ace-git-worktree list` for the worktree view.
-> Aggregated overseer status and pi continuation remain planned.
+### Lab status
+
+```bash
+ace-lab status                 # configuration + local file state (read-only)
+ace-lab status --format json
+```
+
+`ace-lab status` distinguishes a valid empty set, missing configuration, and a
+source error — never presenting an incomplete lab as empty-and-ready. The
+enriched worktree view stays `ace-git-worktree list`; live terminal layout is
+`ace-herdr status`.
 
 ## Not owners of the flow
 

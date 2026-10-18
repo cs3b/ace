@@ -27,6 +27,7 @@ it does not own task, assignment, queue, or HITL event state.
 | `wait` | Wait for an agent state or matching pane output |
 | `close` | Rename and/or close a finished agent pane |
 | `list` | List live panes, tabs, or workspaces as one JSON line |
+| `status` | Show the live layout: workspaces, tabs, and panes in one view |
 | `tidy` | Report cleanable panes/delivery records; close/archive with `--apply` |
 | `tab` / `workspace` | Create a tab/workspace from a preset |
 
@@ -90,30 +91,31 @@ touched.
 
 ## Status
 
+`status` composes the three live lists (`workspace_list`, `tab_list`,
+`pane_list`) into one readable tree: workspaces with their tabs and each tab
+with its panes, focused items marked with `*`, agent panes suffixed with
+`agent: <state>`, and home directories shortened to `~`.
+
 ```bash
-ace-herdr status              # readable tree: workspaces > tabs > panes
-ace-herdr status --format json
+ace-herdr status                  # whole layout as a table
+ace-herdr status --workspace w1   # one workspace
+ace-herdr status --format json    # the composed tree as JSON
 ```
 
-`status` composes the live workspaces, tabs, and panes into one read-only
-snapshot. It starts nothing, writes nothing, and exits 0 whenever a report
-renders; only usage errors exit non-zero.
+Semantics:
 
-Output states (never conflated):
-
-- `Herdr runtime: available` -- the tree follows, with `*` marking focused
-  entries, `agent:<status>` for agent panes and `plain` otherwise, cwd
-  shortened with `~`. A valid empty layout renders zero counts and
-  `No herdr workspaces, tabs, or panes.`
-- `Herdr runtime: unavailable - <reason>` -- the herdr binary/runtime is
-  missing; never rendered as an empty, ready layout.
-- `Herdr runtime: error - <reason>` -- the runtime answered with an error.
-
-JSON shape: `{"runtime": {"state", "binary", "error"}, "counts":
-{"workspaces", "tabs", "panes"}, "workspaces": [{"workspace": {...},
-"tabs": [{"tab": {...}, "panes": [...]}]}], "unattached": {"tabs": [...],
-"panes": [...]}}`. Snapshot-race orphans (tab without workspace, pane without
-tab) land in `unattached` and stay counted.
+- A live but empty result prints `No live herdr workspaces.` and exits 0 —
+  an empty valid set, not an error.
+- An unreachable runtime (`ExecutorUnavailableError` and other executor
+  failures) is reported as an actionable non-zero error, never as an empty
+  layout.
+- Counts are recomputed from the composed nesting, and panes whose tab or
+  workspace vanished between the list calls are kept in a synthetic
+  `(unlinked)` group instead of being dropped.
+- JSON shape: `{"workspaces":[{"id","title","number","focused","tab_count",
+  "pane_count","tabs":[{"id","title","number","focused","pane_count","panes":
+  [{"id","tab","workspace","title","cwd","focused","agent_status"}]}]}]}`
+  with synthetic groups carrying `synthetic: true`.
 
 ## Planned waves
 

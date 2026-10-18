@@ -4,7 +4,6 @@ require "json"
 require "ace/support/cli"
 require "ace/core"
 require_relative "support"
-require_relative "../../organisms/status"
 
 module Ace
   module Lab
@@ -12,69 +11,96 @@ module Ace
       module Commands
         class Status < Ace::Support::Cli::Command
           include Ace::Support::Cli::Base
+          include Runtime
 
-          desc "Show lab configuration and file-based state (read-only)"
+          desc <<~DESC.strip
+            Show lab configuration and local file state (read-only)
 
-          example [
-            "                  # Table layout",
-            "--format json     # Machine-readable snapshot"
-          ]
+            Distinguishes a valid empty set, missing configuration, and a
+            source error. Reads files only: no services are started and no
+            installer is required. The enriched worktree view stays
+            ace-git-worktree list.
+          DESC
 
-          option :format, type: :string, desc: "Output format (table, json; default: table)"
+          example ["--format json    # Full report as JSON"]
+
+          option :format, type: :string, default: "table", desc: "Output format: table or json"
           option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress output"
 
-          def initialize(status: nil)
-            super()
-            @status = status
+          def initialize(status_service: nil)
+            @status_service = status_service
           end
 
           def call(**options)
             format = options[:format] || "table"
-            unless %w[table json].include?(format)
-              raise Ace::Support::Cli::Error,
-                "--format \"#{format}\" is not supported; table or json"
+            cli_error("Invalid format: #{format} (use table or json)") unless %w[table json].include?(format)
+
+            report = status_service.report
+            unless options[:quiet]
+              puts(format == "json" ? JSON.generate(report.to_h) : render_table(report))
             end
-
-            snapshot = (@status || Organisms::Status.new).snapshot
-            return if options[:quiet]
-
-            puts format == "json" ? JSON.generate(snapshot) : render(snapshot)
+            # Full report first; source failures then fail the command
+            unless report.ok?
+              raise Ace::Support::Cli::Error, "lab status reported source errors: #{first_error(report)}"
+            end
           end
 
           private
 
-          def render(snapshot)
-            lines = ["Lab configuration: #{render_configuration(snapshot["configuration"])}"]
-            lines << "Local state:"
-            snapshot["state_files"].each do |entry|
-              lines << "  #{entry["path"].ljust(22)} #{render_state_file(entry)}"
-            end
-            lines << "Worktree view: run `ace-git-worktree list` (task associations, activity, PR state)"
-            lines.join("\n")
+          def status_service
+            @status_service ||= Organisms::StatusService.from_config
           end
 
-          def render_configuration(config)
-            case config["state"]
-            when "configured"
-              sources = config["sources"].join(", ")
-              topology = config["topology"]
-              "configured (#{sources})  projects: #{topology["projects"]}  " \
-                "agents: #{topology["agents"]}  services: #{topology["services"]}"
-            when "not_configured"
-              "not configured (no .ace/lab/config.yml or ~/.ace/lab/config.yml)"
+          def first_error(report)
+            report.config[:error] ||
+              report.runtime_config[:error] ||
+              report.state.find { |location| location[:state] == :error }&.dig(:note) ||
+              "unreadable state location"
+          end
+
+          def render_table(report)
+            [config_line(report), runtime_line(report), "Local state (root: #{report.root}):"]
+              .concat(report.state.map { |location| location_line(location) })
+              .join("\n")
+          end
+
+          def config_line(report)
+            config = report.config
+            case config[:state]
+            when :configured
+              "Lab configuration: configured — #{config[:source_path]} " \
+                "(topology: #{config[:topology][:projects]} project(s), " \
+                "#{config[:topology][:agents]} agent(s), #{config[:topology][:services]} service(s))"
+            when :defaults_only
+              "Lab configuration: missing (defaults only; no .ace/lab/config.yml or ~/.ace/lab/config.yml)"
             else
-              "error - #{config["error"]}"
+              "Lab configuration: invalid — #{config[:error]}"
             end
           end
 
-          def render_state_file(entry)
-            if entry["present"]
-              "present (#{entry["entries"]} entries)"
-            elsif entry["note"]
-              "not present (#{entry["note"]})"
+          def runtime_line(report)
+            runtime = report.runtime_config
+            case runtime[:state]
+            when :valid
+              origin = runtime[:path] || runtime[:source]
+              "Runtime configuration: #{runtime[:runtime] || '(value unset)'} (#{origin})"
+            when :invalid
+              "Runtime configuration: invalid — #{runtime[:error]}"
             else
-              "not present"
+              "Runtime configuration: none (no config file, ACE_RUNTIME unset)"
             end
+          end
+
+          def location_line(location)
+            state =
+              case location[:state]
+              when :present then format("present (%s)", location[:entries])
+              when :prepared then "prepared"
+              when :error then "ERROR"
+              else "not present"
+              end
+            note = location[:note] ? " (#{location[:note]})" : ""
+            format("  %-12s %-16s %s%s", location[:key], state, location[:path], note)
           end
         end
       end
