@@ -36,10 +36,10 @@ ace-hitl: raport lub prośba o odpowiedź, skonfigurowany odbiorca i adaptery, R
 
 ## Kryteria odbioru
 
-- [ ] Raport work done trafia do overseera bez oczekiwania na Reply; pytanie pozostaje oczekujące i może wstrzymać assignment.
-- [ ] Dwa worktree z różnymi pytaniami otrzymują swoje Reply; raport można powiązać z właściwym taskiem i assignmentem.
-- [ ] Przełączenie konfiguracji transportu nie wymaga zmiany assignmentu lub logiki coworkera; skonfigurowany zestaw tras raportuje własne wyniki dostarczenia.
-- [ ] Po przywróceniu transportu zachowany raport trafia do overseera z tym samym powiązaniem do taska.
+- [x] Raport work done trafia do overseera bez oczekiwania na Reply; pytanie pozostaje oczekujące i może wstrzymać assignment.
+- [x] Dwa worktree z różnymi pytaniami otrzymują swoje Reply; raport można powiązać z właściwym taskiem i assignmentem.
+- [x] Przełączenie konfiguracji transportu nie wymaga zmiany assignmentu lub logiki coworkera; skonfigurowany zestaw tras raportuje własne wyniki dostarczenia.
+- [x] Po przywróceniu transportu zachowany raport trafia do overseera z tym samym powiązaniem do taska.
 
 ## Weryfikacja i scenariusze błędów
 
