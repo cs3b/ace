@@ -85,12 +85,44 @@ The completion verdict is deterministic: `complete` iff the assignment state
 is `completed`, the step plan is non-empty, and every step is `done`. Process
 or session end never implies completion.
 
+### `ace-coworker report`
+
+```
+ace-coworker report [--config PATH] [--assignment ID] [--result success|error]
+                    [--message TEXT] [--step N] [--no-send] [--dry-run]
+                    [--format table|json] [-q] [-d]
+```
+
+Records the assignment outcome and reports it through `ace-hitl`:
+
+1. derives the outcome from the ace-assign verdict (`--result` optional;
+   forcing `success` on an incomplete assignment is refused before anything
+   is written; an error outcome requires a cause — `--message` or the failed
+   step's recorded `error:` — and lists the unfinished steps);
+2. writes the durable record into the task's own folder
+   (`<task>/coworker/<assignment>.md`) — the contract-sanctioned per-task
+   progress location;
+3. keeps helper state in `.ace-local/coworker/reports/<assignment>.json`;
+4. creates a HITL report event (`ace-hitl create --type report --result …
+   --task/--assignment/--step --to <overseer>`) and delivers it
+   (`ace-hitl send <id>`).
+
+Outcome and delivery are separated: an undelivered report keeps the recorded
+outcome and exits 1 with an explicit delivery error; a rerun with the same
+result resends the existing event instead of duplicating it (retrying
+delivery never retries the assignment). `--no-send` creates the event
+without delivering; `--dry-run` derives the outcome with zero writes;
+`errors.on_failure: stop` records errors locally without any HITL
+subprocess. The `overseer` config field is the configured `ace-hitl`
+recipient name (resolved via `--to`).
+
 ## Exit codes
 
 | Command | 0 | 1 |
 |---|---|---|
 | `start` | config valid, task+assignment verified, brief rendered | missing/invalid/mismatched input |
 | `status` | query rendered any state (including not-ready) | — |
+| `report` | success outcome recorded (and delivered, or `--no-send`/`--dry-run`) | error outcome; delivery/create failure (outcome still recorded); refused input |
 
 ## Boundaries
 

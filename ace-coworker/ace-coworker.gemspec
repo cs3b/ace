@@ -39,17 +39,19 @@ Gem::Specification.new do |spec|
   spec.executables = spec.files.grep(%r{\Aexe/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
 
-  # Library dependencies. `start`/`status` require the ace-assign CLI at
-  # runtime (subprocess argv contract, ADR-031), so it is declared as a
-  # runtime dependency to guarantee the executable on fresh installs.
-  # ace-hitl reporting and protocol instructions (ace-nav) arrive in later
-  # leaves; missing binaries fail with an explicit Coworker::Error.
+  # Library dependencies. `start`/`status` require the ace-assign CLI and
+  # `report` additionally requires the ace-hitl CLI at runtime (subprocess
+  # argv contract, ADR-031), so both are declared as runtime dependencies to
+  # guarantee the executables on fresh installs. Protocol instructions
+  # (ace-nav) arrive in a later leaf; missing binaries fail with an explicit
+  # Coworker::Error.
   spec.add_dependency "ace-support-cli", "~> 0.6"
   spec.add_dependency "ace-support-core", "~> 0.31"
   spec.add_dependency "ace-support-config", "~> 0.18"
   spec.add_dependency "ace-support-fs", "~> 0.3"
   spec.add_dependency "ace-task", "~> 0.41"
   spec.add_dependency "ace-assign", "~> 0.72"
+  spec.add_dependency "ace-hitl", "~> 0.22"
 
   spec.add_development_dependency "ace-support-test-helpers", "~> 0.14"
   spec.add_development_dependency "bundler", "~> 2.0"

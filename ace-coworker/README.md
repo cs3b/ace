@@ -6,8 +6,8 @@ and assignment in the current worktree, and renders the executor brief that
 pins the assignment to drive. It is a composition tool in the spirit of
 `ace-overseer`: it owns **only** `.ace-local/coworker/` and composes the
 existing owners (`ace-task` ref resolution, `ace-assign` lifecycle via its CLI,
-later `ace-hitl` reporting) without copying their state or adding a second
-queue, journal, or daemon (ADR-034).
+`ace-hitl` reporting via its CLI) without copying their state or adding a
+second queue, journal, or daemon (ADR-034).
 
 This is the new L3 file-based coworker; the historical `ace-coworker` gem was
 renamed to `ace-assign` at v0.6.0 and there is no compatibility with old
@@ -18,6 +18,7 @@ renamed to `ace-assign` at v0.6.0 and there is no compatibility with old
 ```
 ace-coworker start [--config PATH] [--format table|json]
 ace-coworker status [--config PATH] [--assignment ID] [--format table|json]
+ace-coworker report [--result success|error] [--message TEXT] [--no-send] [--dry-run]
 ```
 
 - `start` — validate the prepared config (role, instructions, start prompt,

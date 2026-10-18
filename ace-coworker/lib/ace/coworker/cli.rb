@@ -4,6 +4,7 @@ require "ace/support/cli"
 require "ace/core"
 require_relative "cli/commands/start"
 require_relative "cli/commands/status"
+require_relative "cli/commands/report"
 
 module Ace
   module Coworker
@@ -14,17 +15,21 @@ module Ace
 
       REGISTERED_COMMANDS = [
         ["start", "Validate prepared run config and render the executor brief"],
-        ["status", "Show readiness, identity, and assignment progress"]
+        ["status", "Show readiness, identity, and assignment progress"],
+        ["report", "Record the assignment outcome and report it through ace-hitl"]
       ].freeze
 
       HELP_EXAMPLES = [
         "ace-coworker start                    # Read .ace-local/coworker/config.yml",
         "ace-coworker start --config PATH      # Use an explicit config",
-        "ace-coworker status --format json     # Readiness + assignment verdict"
+        "ace-coworker status --format json     # Readiness + assignment verdict",
+        "ace-coworker report                   # Record outcome + HITL report",
+        "ace-coworker report --result error --message 'cause'"
       ].freeze
 
       register "start", Commands::Start
       register "status", Commands::Status
+      register "report", Commands::Report
 
       version_cmd = Ace::Support::Cli::VersionCommand.build(
         gem_name: "ace-coworker",

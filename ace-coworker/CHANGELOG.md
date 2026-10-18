@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [0.2.0] - 2026-10-18
+
+### Added
+
+- `ace-coworker report` (8xg.t.sbz.2.2 / L3.3): records the assignment
+  outcome and reports it through the ace-hitl interface. The outcome is
+  derived from the ace-assign verdict (a `--result success` on an incomplete
+  assignment is refused before anything is written; an error outcome carries
+  a cause — explicit `--message` or the failed step's recorded error — and
+  the unfinished step, never a false work done). The durable record is
+  written FIRST into the task's own folder (`<task>/coworker/<assignment>.md`);
+  helper state lives under `.ace-local/coworker/reports/`; the report event
+  goes through `ace-hitl create --type report --to <overseer>` and
+  `ace-hitl send`. Outcome and delivery are strictly separated: an
+  undelivered report keeps the recorded outcome and exits 1 with an explicit
+  delivery error, and a rerun resends the same event instead of duplicating
+  it (retrying delivery never retries the assignment). `--no-send` creates
+  the event without delivering; `--dry-run` derives the outcome with zero
+  writes; `errors.on_failure: stop` records errors locally without any HITL
+  subprocess. `ace-hitl ~> 0.22` is now a runtime dependency.
+
 ## [0.1.0] - 2026-10-18
 
 ### Added

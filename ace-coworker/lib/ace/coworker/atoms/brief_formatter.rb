@@ -18,6 +18,7 @@ module Ace
           lines << "  assignment state:  #{h['assignment_state']} (#{h['assignment_progress']})"
           lines << "  overseer:          #{h['overseer']} (channel: #{h['reporting_channel']})"
           lines << "  on failure:        #{h['on_failure']}"
+          lines << "  report with:      ace-coworker report --assignment #{h['assignment']}"
           lines << "  project root:      #{h['project_root']}"
           lines.join("\n")
         end
