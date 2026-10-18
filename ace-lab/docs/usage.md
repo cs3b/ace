@@ -194,7 +194,10 @@ Behavior and guarantees:
   recreated; only mode drift on an owner-matching directory or
   owner-matching key pair is repaired. A pre-existing directory — or
   key pair — owned by a different account is refused (`refusing
-  takeover`), never silently chowned. Symlinks and
+  takeover`), never silently chowned, and that policy covers `.ssh`
+  itself: a pre-existing `.ssh` owned by neither the account nor the
+  installer is refused on both the create and the existing-key path
+  (wet and dry-run). Symlinks and
   non-directories at declared paths are refused. Residual policy:
   symlink refusal applies to the *declared leaf* path only —
   intermediate path components are followed (and created with default
@@ -212,7 +215,11 @@ Behavior and guarantees:
   it).
 - **Secret hygiene.** Key pairs are generated with `ssh-keygen -t
   ed25519`; `.ssh` is 0700, the private key 0600, the public key 0644,
-  ownership assigned to the account. Reports carry the public
+  ownership assigned to the account — and `.ssh` mode/ownership is
+  *converged* on the existing-key path too (drift predicts
+  `would_fix_mode` in dry-run and is repaired in the wet run; a
+  foreign-owned `.ssh` is a takeover refusal, see above). Reports
+  carry the public
   fingerprint only — private key material never appears in any status,
   message, report, or diagnostic argument. Key paths inside a git
   worktree are refused outright. Planted symlinks on the

@@ -170,6 +170,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The copy-pasted `FakeEntry` passwd stub lives in `test_helper.rb`
   once instead of six test files.
 
+### Fixed (review round 4)
+
+- `KeyProvisioner` leaked raw `SystemCallError` past its rescues (CLI
+  backtrace, remaining manifest items unreported): with the manifest
+  home authoritative for key paths, a leftover regular file at the
+  home made `mkdir_p` re-raise `Errno::EEXIST` out of the molecule.
+  The parent-path `mkdir_p` is now rescued (`EEXIST`/`ENOTDIR`) as a
+  classified failed item, and a method-level `rescue SystemCallError`
+  classifier on the provision entry path (mirroring
+  `DirectoryProvisioner`) names the errno class and prescribes a rerun
+  for anything else (e.g. `ELOOP` on the path-based directory chmod in
+  a race).
+- The ".ssh is 0700" guarantee is converged, not just set at creation:
+  the wet existing-key path now chmods/chowns `.ssh` like the create
+  path (path-based, same documented residual), and dry-run predicts
+  the drift as `would_fix_mode` alongside key-file drift.
+- `RoleVerifier#readable_by_account?` now short-circuits per POSIX
+  permission class: a file owned by the account with only the group
+  bit set previously verified through the gid match even though the
+  runtime cannot read it (the owner class does not fall through).
+- A pre-existing `.ssh` owned by neither the declared account nor the
+  installer is refused as a takeover on the generate path, the wet
+  existing-key path and the dry-run prediction (previously chmod
+  0700 + chown silently took over a third party's directory) — the
+  documented "refusing takeover" policy now covers `.ssh` like key
+  files and declared directories.
+- Dry-run fidelity: `AccountProvisioner` classifies unsupported
+  platforms *before* the `would_create` prediction, so `--dry-run` on
+  an unsupported platform predicts the wet failure instead of a
+  creation it cannot perform.
+- An exec-level `SystemCallError` from a provisioning subprocess
+  renders "command could not be executed (`useradd`, `Errno::…`)"
+  instead of the contradictory "command failed (useradd, exit
+  failed)" — in both `AccountProvisioner` and `KeyProvisioner`.
+
 ## [0.11.0] - 2026-10-18
 
 ### Fixed (review PR #383, round 3)
