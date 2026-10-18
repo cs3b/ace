@@ -43,6 +43,16 @@ class TaskManagerTest < AceTaskTestCase
     assert_raises(ArgumentError) { @manager.create(nil) }
   end
 
+  def test_planned_creation_paths_match_the_placed_task
+    time = Time.utc(2026, 1, 15, 12, 0, 0)
+    preview = @manager.planned_creation_paths("Placed task", in_folder: "archive", time: time)
+    created = @manager.create("Placed task", time: time)
+    placed = @manager.update(created.id, move_to: "archive")
+
+    assert_includes placed.path, File.join("_archive", "")
+    assert_equal [placed.path, placed.file_path], preview
+  end
+
   # --- show ---
 
   def test_show_by_full_id
