@@ -50,8 +50,12 @@ module Ace
           end
 
           panes_by_tab.each do |tab_id, orphan_panes|
-            workspace_id = orphan_panes.first[:workspace]
-            tabs_by_workspace[workspace_id] << synthetic_tab(tab_id, workspace_id, orphan_panes)
+            # Panes sharing a vanished tab id may still disagree on their
+            # workspace (snapshot race): each workspace keeps its own
+            # synthetic tab so neither side silently undercounts.
+            orphan_panes.group_by { |pane| pane[:workspace] }.each do |workspace_id, workspace_panes|
+              tabs_by_workspace[workspace_id] << synthetic_tab(tab_id, workspace_id, workspace_panes)
+            end
           end
           tabs_by_workspace
         end

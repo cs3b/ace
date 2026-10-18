@@ -135,11 +135,10 @@ module Ace
         end
 
         def test_runtime_config_from_env_when_no_files
-          result = nil
-          Dir.mktmpdir do |tmp|
-            ENV["ACE_RUNTIME"] = "tmux"
-            result = ConfigStateClassifier.runtime_config(root: tmp)
-            ENV.delete("ACE_RUNTIME")
+          result = with_env("ACE_RUNTIME" => "tmux") do
+            Dir.mktmpdir do |tmp|
+              ConfigStateClassifier.runtime_config(root: tmp)
+            end
           end
 
           assert_equal :valid, result[:state]
@@ -160,14 +159,24 @@ module Ace
         end
 
         def test_runtime_config_absent
-          Dir.mktmpdir do |tmp|
-            ENV.delete("ACE_RUNTIME")
-
-            result = ConfigStateClassifier.runtime_config(root: tmp)
+          with_env("ACE_RUNTIME" => nil) do
+            result = Dir.mktmpdir do |tmp|
+              ConfigStateClassifier.runtime_config(root: tmp)
+            end
 
             assert_equal :absent, result[:state]
             assert_nil result[:runtime]
           end
+        end
+
+        private
+
+        def with_env(overrides)
+          saved = overrides.keys.to_h { |key| [key, ENV[key]] }
+          overrides.each { |key, value| value.nil? ? ENV.delete(key) : ENV[key] = value }
+          yield
+        ensure
+          saved.each { |key, value| value.nil? ? ENV.delete(key) : ENV[key] = value }
         end
       end
     end

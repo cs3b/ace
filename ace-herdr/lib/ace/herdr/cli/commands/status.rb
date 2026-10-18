@@ -46,6 +46,7 @@ module Ace
                 tabs: control.list_tabs(workspace_id: scope),
                 panes: control.list_panes(workspace_id: scope)
               )
+              tree = scope_tree(tree, scope) if scope
 
               return if options[:quiet]
 
@@ -58,6 +59,18 @@ module Ace
           end
 
           private
+
+          # Scoping must never conflate "scoped away" with "empty": the
+          # rendered tree contains only the requested workspace (header
+          # counts included), and an id no live workspace carries is a
+          # concrete error, not a silently full or empty layout.
+          def scope_tree(tree, scope)
+            live_ids = tree[:workspaces].reject { |workspace| workspace[:synthetic] }.map { |workspace| workspace[:id] }
+            cli_error("Unknown workspace: #{scope} (no live workspace with that id)") unless live_ids.include?(scope)
+
+            tree[:workspaces] = tree[:workspaces].select { |workspace| workspace[:id] == scope }
+            tree
+          end
 
           def render_table(tree)
             workspaces = tree[:workspaces]
@@ -96,8 +109,8 @@ module Ace
           end
 
           def shorten_home(path)
-            home = Dir.home
-            path.start_with?(home) ? path.sub(home, "~") : path
+            home = File.join(Dir.home, "")
+            path.start_with?(home) ? path.sub(home, "~/") : path
           end
         end
       end

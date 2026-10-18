@@ -49,13 +49,34 @@ module Ace
 
         def test_from_config_resolves_cascade_per_report
           Dir.mktmpdir do |tmp|
+            saved = ENV["ACE_RUNTIME"]
             ENV.delete("ACE_RUNTIME")
-            Dir.chdir(tmp) do
-              report = StatusService.from_config.report
+            begin
+              Dir.chdir(tmp) do
+                report = StatusService.from_config.report
 
-              assert_equal :defaults_only, report.config[:state]
-              assert report.ok?
+                assert_equal :defaults_only, report.config[:state]
+                assert report.ok?
+              end
+            ensure
+              saved.nil? ? ENV.delete("ACE_RUNTIME") : ENV["ACE_RUNTIME"] = saved
             end
+          end
+        end
+
+        def test_state_locations_resolve_from_subdirectory_of_the_project
+          Dir.mktmpdir("lab-status-root") do |dir|
+            system("git", "-C", dir, "init", "--quiet", out: File::NULL, err: File::NULL)
+            FileUtils.mkdir_p(File.join(dir, ".ace-tasks"))
+            subdir = File.join(dir, "deep", "sub")
+            FileUtils.mkdir_p(subdir)
+
+            report = nil
+            Dir.chdir(subdir) { report = StatusService.from_config.report }
+            entry = report.state.find { |e| e[:key] == "tasks" }
+
+            assert_equal :present, entry[:state],
+              "expected .ace-tasks resolved against the project root, got: #{report.state.inspect}"
           end
         end
       end

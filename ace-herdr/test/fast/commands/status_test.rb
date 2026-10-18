@@ -52,6 +52,34 @@ module Ace
             assert_equal({workspace_id: "w1"}, @executor.calls_of(:pane_list).first[:args])
           end
 
+          def test_workspace_scope_renders_only_the_requested_workspace
+            @executor = HerdrTestHelper::FakeExecutor.new(outcomes: {
+              workspace_list: native_result(result: {workspaces: [
+                {"workspace_id" => "w1", "label" => "main", "number" => 1, "focused" => true},
+                {"workspace_id" => "w2", "label" => "other", "number" => 2, "focused" => false}
+              ]}),
+              tab_list: native_result(result: {tabs: [
+                {"tab_id" => "w1:t1", "workspace_id" => "w1", "label" => "agent", "number" => 1, "focused" => true},
+                {"tab_id" => "w2:t1", "workspace_id" => "w2", "label" => "side", "number" => 1, "focused" => false}
+              ]}),
+              pane_list: native_result(result: {panes: [
+                {"pane_id" => "p5", "tab_id" => "w1:t1", "workspace_id" => "w1",
+                 "terminal_title" => "pi", "cwd" => "/tmp", "focused" => true}
+              ]})
+            })
+            out, = call_cmd(workspace: "w1")
+
+            assert_includes out, "Herdr: 1 workspace(s), 1 tab(s), 1 pane(s)"
+            assert_includes out, "* w1"
+            refute_includes out, "w2"
+          end
+
+          def test_unknown_workspace_scope_is_a_concrete_error
+            error = assert_raises(Ace::Support::Cli::Error) { call_cmd(workspace: "nope") }
+
+            assert_match(/Unknown workspace: nope/, error.message)
+          end
+
           def test_table_renders_tree_with_focus_marker_agent_and_home_shortening
             out, = call_cmd
 
@@ -61,6 +89,25 @@ module Ace
             assert_includes out, "~/Ps/ace"
             assert_includes out, "agent: working"
             assert_includes out, "—"
+          end
+
+          def test_home_shortening_respects_path_boundaries
+            @executor = HerdrTestHelper::FakeExecutor.new(outcomes: {
+              workspace_list: native_result(result: {workspaces: [
+                {"workspace_id" => "w1", "label" => "main", "number" => 1, "focused" => true}
+              ]}),
+              tab_list: native_result(result: {tabs: [
+                {"tab_id" => "w1:t1", "workspace_id" => "w1", "label" => "agent", "number" => 1, "focused" => true}
+              ]}),
+              pane_list: native_result(result: {panes: [
+                {"pane_id" => "p5", "tab_id" => "w1:t1", "workspace_id" => "w1",
+                 "terminal_title" => "sibling", "cwd" => Dir.home + "-tools/x", "focused" => true}
+              ]})
+            })
+            out, = call_cmd
+
+            assert_includes out, "#{Dir.home}-tools/x"
+            refute_includes out, "~-tools/x"
           end
 
           def test_table_omits_agent_status_when_absent

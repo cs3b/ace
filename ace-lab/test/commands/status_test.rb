@@ -92,18 +92,8 @@ module Ace
               state: default_locations
             )
 
-            out, error = nil
-            capture_io do
-              out = begin
-                call_cmd(report)
-                nil
-              rescue Ace::Support::Cli::Error => e
-                error = e
-              end
-              out = $stdout.string if out.nil? && error
-            end
+            error = assert_raises(Ace::Support::Cli::Error) { call_cmd(report) }
 
-            assert error, "expected Ace::Support::Cli::Error"
             assert_includes error.message, "could not be parsed"
           end
 

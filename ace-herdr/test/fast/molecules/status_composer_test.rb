@@ -70,6 +70,20 @@ module Ace
           assert_equal 4, w1[:pane_count]
         end
 
+        def test_orphan_panes_of_one_tab_split_across_claimed_workspaces
+          panes = @panes + [
+            {id: "p9", tab: "race:t1", workspace: "w1", title: nil, cwd: "/tmp", focused: false, agent_status: nil},
+            {id: "p10", tab: "race:t1", workspace: "w2", title: nil, cwd: "/tmp", focused: false, agent_status: nil}
+          ]
+          tree = StatusComposer.call(workspaces: @workspaces, tabs: @tabs, panes: panes)
+
+          by_id = tree[:workspaces].to_h { |workspace| [workspace[:id], workspace] }
+          assert_equal ["p9"], by_id["w1"][:tabs].last[:panes].map { |pane| pane[:id] }
+          assert_equal ["p10"], by_id["w2"][:tabs].last[:panes].map { |pane| pane[:id] }
+          assert_equal 4, by_id["w1"][:pane_count]
+          assert_equal 1, by_id["w2"][:pane_count]
+        end
+
         def test_pane_of_unknown_workspace_lands_in_synthetic_root
           panes = @panes + [{id: "p8", tab: "gone:t1", workspace: "gone", title: nil, cwd: "/tmp", focused: false, agent_status: nil}]
           tree = StatusComposer.call(workspaces: @workspaces, tabs: @tabs, panes: panes)

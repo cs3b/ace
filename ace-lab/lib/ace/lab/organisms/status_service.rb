@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "open3"
+
 module Ace
   module Lab
     module Organisms
@@ -13,14 +15,14 @@ module Ace
           @classifier = classifier || Molecules::ConfigStateClassifier
           @runtime_reader = runtime_reader || Molecules::ConfigStateClassifier
           @scanner = scanner || Molecules::LabStateScanner
-          @root = root || Dir.pwd
+          @root = root || resolve_project_root
         end
 
         # Production factory: a service that resolves the cascade on each
         # call, so every report observes current files. A broken cascade
         # becomes the report's :invalid section instead of an exception.
         def self.from_config(root: nil)
-          new(root: root || Dir.pwd)
+          new(root: root)
         end
 
         # @return [Models::StatusReport]
@@ -45,6 +47,22 @@ module Ace
             state: @scanner.scan(root: @root),
             root: @root
           )
+        end
+
+        private
+
+        # State locations belong to the project root, not the caller's cwd:
+        # running from a subdirectory must not misreport an initialized lab
+        # as absent. Same resolution as ace-coworker's ProjectRoot (git
+        # worktree top), falling back to the cwd outside a repository.
+        def resolve_project_root
+          out, _err, status = Open3.capture3("git", "rev-parse", "--show-toplevel")
+          return Dir.pwd unless status.success?
+
+          root = out.to_s.strip
+          root.empty? ? Dir.pwd : root
+        rescue StandardError
+          Dir.pwd
         end
       end
     end
