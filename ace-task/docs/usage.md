@@ -29,34 +29,42 @@ All commands support these flags:
 
 ## Commands
 
-## Private `_overseer` folder
+## Git-ignored task folders
 
-The private overseer task list is the ordinary special folder
-`.ace-tasks/_overseer/`. It is gitignored (untracked) and is never committed,
-but `ace-task` handles it like any other special folder.
+`ace-task` is a universal task tool; it does not know which folders a lab or a
+role reserves. A folder such as `.ace-tasks/_overseer/` is prepared by its owner
+and listed in `.gitignore`, and `ace-task` handles it like any other existing
+special folder. When behavior has to differ for a path that is not committed,
+the decision comes from Git's own ignore rules for that path — never from the
+folder name.
 
 ```bash
-ace-task create "Private overseer item" --in _overseer
+ace-task create "Private item" --in _overseer   # folder must already exist
 ace-task list --in _overseer
 ace-task show q7w
 ace-task update q7w --set status=done
-ace-task update q7w --move-to overseer
+ace-task update q7w --move-to next
 ```
 
-- `create --in _overseer` creates the folder when missing.
-- The default `ace-task list` is the shared view: project root tasks and
-  `_overseer` tasks together. `--in _overseer` narrows the list; `_maybe`,
-  `_archive`, and other special folders stay hidden unless `--in all` (or their
-  folder) is used.
-- `show`, `update`, subtasks, dependencies, `status`, and `plan` resolve
-  `_overseer` refs like any other task. `update --move-to overseer` and
-  `--move-to next` move tasks in and out of the folder.
-- `--gc` is rejected for `_overseer` tasks because the folder is untracked.
-- An `_overseer` task is a management task: `ace-git-worktree create --task`
-  rejects it and it cannot be used as a project implementation assignment. Keep
-  the management task with the overseer and create a separate project task for
-  implementation; subagents may still be delegated planning, analysis,
-  verification, or dependency analysis.
+- A custom `--in` destination must already exist under the configured task
+  root; the lab (or the role that owns the folder) prepares it.
+- The default `ace-task list` is the ordinary root view. `--in FOLDER` narrows
+  the list to an existing special folder; `_maybe`, `_archive`, and other
+  special folders stay hidden unless their folder or `--in all` is used.
+- `show`, `update`, subtasks, dependencies, `status`, and `plan` work for
+  ignored tasks like any other task; Git tracking does not change the task
+  model.
+- `--gc`/`--git-commit` is rejected when the task path is Git-ignored — on
+  create, on subtask creation, and on update/move — because Git would not stage
+  that path.
+- Completing a Git-ignored task (or the last subtask of an ignored family) does
+  not trigger automatic archiving, and `ace-task doctor` neither reports the
+  missing archive nor moves such a task with `--auto-fix`. The owner of the
+  folder decides when obsolete history is deleted.
+- Delegation guards stay in the delegation tools: `ace-git-worktree create
+  --task` and `ace-assign create --task` reject the lab's management tasks;
+  subagents may still be delegated planning, analysis, verification, or
+  dependency analysis.
 - `next`, `maybe`, `anytime`, `archive`, and existing custom folders keep their
   special-folder meaning for `--in`.
 
@@ -114,7 +122,7 @@ budget, the command fails cleanly without leaving behind a partial task artifact
 | `--server` | | Named forge server for the issue |
 | `--default-server` | | Select the configured default forge server |
 | `--child-of` | | Parent task reference (creates subtask) |
-| `--in` | `-i` | Top-level target: next, maybe, anytime, archive, overseer, or an existing custom folder |
+| `--in` | `-i` | Top-level target: next, maybe, anytime, archive, or an existing custom folder |
 | `--dry-run` | `-n` | Preview without writing |
 | `--gc` | | Auto-commit changes |
 
@@ -137,11 +145,11 @@ placement fails, the command returns an actionable error and removes the
 incomplete task artifacts. Fix the destination and retry `create`; the failed
 attempt leaves nothing behind. With `--child-of`, the child remains in its
 parent task and `--in` retains its existing ignored behavior.
-Built-in destinations are `next`, `maybe`, `anytime`, `archive`, and `overseer`
-(the private `_overseer/` folder); a custom destination must already exist under
-the configured task root using the special-folder prefix (for example, `--in
-backlog` targets `_backlog/`). `--gc` is rejected when the target folder is
-`_overseer`, because that folder is untracked.
+Built-in destinations are `next`, `maybe`, `anytime`, and `archive`; a custom
+destination must already exist under the configured task root using the
+special-folder prefix (for example, `--in backlog` targets `_backlog/`).
+`--gc` is rejected when the target path is Git-ignored, because Git would not
+stage it.
 
 ### ace-task show REF
 
@@ -172,7 +180,7 @@ List tasks with optional filtering by status, tags, or folder.
 |--------|-------|-------------|
 | `--status` | `-s` | Filter by status (pending, in-progress, done, blocked) |
 | `--tags` | `-T` | Filter by tags (comma-separated, any match) |
-| `--in` | `-i` | Folder: next (default shared view: project + `_overseer`), all, maybe, archive, or an existing special folder |
+| `--in` | `-i` | Folder: next (default root view), all, maybe, archive, or an existing special folder |
 | `--root` | `-r` | Override root path (subpath within tasks root) |
 | `--filter` | `-f` | Generic filter: key:value (repeatable, supports key:a\|b and key:!value) |
 | `--sort` | `-S` | Sort: smart (default), id, priority, created |
@@ -197,7 +205,7 @@ Update task metadata, move to folders, or reparent tasks.
 | `--set` | | Set field: key=value (repeatable) |
 | `--add` | | Add to array field: key=value (repeatable) |
 | `--remove` | | Remove from array field: key=value (repeatable) |
-| `--move-to` | `-m` | Move to folder: archive, maybe, anytime, next, overseer |
+| `--move-to` | `-m` | Move to folder: archive, maybe, anytime, next, or an existing custom folder |
 | `--move-as-child-of` | | Reparent: \<ref\>, 'none' (promote), 'self' (orchestrator) |
 | `--position` | `-p` | Set position: first, last, after:\<ref\>, before:\<ref\> |
 | `--gc` | | Auto-commit changes |
@@ -211,7 +219,7 @@ ace-task update q7w --move-as-child-of abc
 ace-task update q7w --move-as-child-of none       # Promote to standalone
 ace-task update q7w --position first
 ace-task update q7w --position after:abc
-ace-task update q7w --move-to overseer
+ace-task update q7w --move-to _review             # Move to a custom folder
 ```
 
 ### ace-task status

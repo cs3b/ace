@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require "ace/support/items"
-require_relative "task_scope"
 
 module Ace
   module Task
@@ -24,12 +23,6 @@ module Ace
 
         FILE_PATTERN = "*.s.md"
 
-        # Private management scope. The folder is an ordinary special folder
-        # under root_dir, but it is untracked and holds its own archive: the
-        # overseer sees project and active _overseer tasks in the shared list.
-        PRIVATE_FOLDER = TaskScope::PRIVATE_FOLDER
-        SHARED_FOLDERS = [PRIVATE_FOLDER].freeze
-
         # @param root_dir [String] Root directory containing tasks (e.g., ".ace-tasks")
         def initialize(root_dir)
           @root_dir = root_dir
@@ -47,9 +40,7 @@ module Ace
         end
 
         # Scan and filter by special folder or virtual filter.
-        # `next` is the shared default view: root tasks plus active private
-        # _overseer tasks (archived private tasks stay in _overseer/_archive/);
-        # `all` includes every special folder.
+        # `next` is the ordinary root view; `all` includes every special folder.
         # @param folder [String, nil] Folder name, virtual filter ("next", "all"), or nil for all
         # @return [Array<ScanResult>] Filtered scan results
         def scan_in_folder(folder)
@@ -62,13 +53,7 @@ module Ace
           virtual = Ace::Support::Items::Atoms::SpecialFolderDetector.virtual_filter?(folder)
           case virtual
           when :all then results
-          when :next
-            results.select do |r|
-              next true if r.special_folder.nil?
-              next false unless SHARED_FOLDERS.include?(r.special_folder)
-
-              !TaskScope.archived?(r.dir_path, root_dir: @root_dir)
-            end
+          when :next then results.select { |r| r.special_folder.nil? }
           else
             normalized = Ace::Support::Items::Atoms::SpecialFolderDetector.normalize(folder)
             results.select { |r| r.special_folder == normalized }

@@ -4,7 +4,7 @@ require "digest"
 require "tmpdir"
 
 require_relative "../molecules/task_config_loader"
-require_relative "../molecules/task_scope"
+require_relative "../molecules/git_ignored_path"
 require_relative "../molecules/task_scanner"
 require_relative "../molecules/task_resolver"
 require_relative "../molecules/task_loader"
@@ -141,7 +141,7 @@ module Ace
         # List tasks with optional filtering and sorting.
         # @param status [String, nil] Filter by status
         # @param in_folder [String, nil] Filter by special folder
-        #   (default: "next" = shared view of root tasks plus private _overseer tasks)
+        #   (default: "next" = ordinary root view)
         # @param tags [Array<String>] Filter by tags (any match)
         # @param filters [Array<String>, nil] Generic filter strings
         # @param sort [String] Sort order: "smart" (default, dependency-aware), "id", "priority", "created"
@@ -338,15 +338,7 @@ module Ace
               current_special = result[:special_folder]
               current_id = result[:id]
             else
-              # Archive relocation stays inside the task's own scope: a
-              # private _overseer family archives in _overseer/_archive/ and
-              # never enters the tracked task tree. Other explicit moves keep
-              # their ordinary project-root destination.
-              archive_move = Ace::Support::Items::Atoms::SpecialFolderDetector.normalize(move_to) ==
-                Molecules::TaskScope::ARCHIVE_FOLDER
-              mover = Ace::Support::Items::Molecules::FolderMover.new(
-                archive_move ? Molecules::TaskScope.archive_root(task.path, root_dir: @root_dir) : @root_dir
-              )
+              mover = Ace::Support::Items::Molecules::FolderMover.new(@root_dir)
               new_path = if Ace::Support::Items::Atoms::SpecialFolderDetector.move_to_root?(move_to)
                 mover.move_to_root(task)
               else
@@ -865,15 +857,18 @@ module Ace
 
         # Auto-archive: if a subtask reaches terminal status and all siblings
         # in the parent directory are also terminal, move the parent to archive.
+        # A Git-ignored family is not part of the committed task tree, so its
+        # completion never triggers a repository relocation.
         def check_auto_archive(task, new_status)
           return unless Atoms::TaskValidationRules.terminal_status?(new_status.to_s.downcase)
           return unless task.subtask?
 
           current = show(task.id)
-          return unless current && !Molecules::TaskScope.archived?(current.path, root_dir: @root_dir)
+          return unless current && current.special_folder != "_archive"
 
           parent = show(current.parent_id)
           return unless parent && family_completion.complete?(parent.path, id: parent.id)
+          return if Molecules::GitIgnoredPath.ignored?(parent.path)
 
           archive_parent_via_update(parent)
         end

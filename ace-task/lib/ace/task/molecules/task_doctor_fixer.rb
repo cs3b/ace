@@ -8,7 +8,7 @@ require_relative "../atoms/task_id_formatter"
 require_relative "../atoms/task_validation_rules"
 require_relative "../atoms/task_frontmatter_defaults"
 require_relative "task_scanner"
-require_relative "task_scope"
+require_relative "git_ignored_path"
 require_relative "task_family_completion"
 
 module Ace
@@ -460,12 +460,12 @@ module Ace
             description = "Moved parent task to _archive/ (all subtasks terminal)"
           end
 
-          if Molecules::TaskScope.private?(source_dir, root_dir: @root_dir)
-            description = if source_dir != task_dir
-              "Moved parent task to #{Molecules::TaskScope::PRIVATE_FOLDER}/_archive/ (all subtasks terminal)"
-            else
-              "Moved to #{Molecules::TaskScope::PRIVATE_FOLDER}/_archive/"
-            end
+          # A Git-ignored task path is not part of the committed tree; the
+          # repository archive policy neither applies nor authorizes a move.
+          if Molecules::GitIgnoredPath.ignored?(source_dir)
+            log_fix(source_dir, "Skipped archive move: Git-ignored task path")
+            @skipped_count += 1
+            return false
           end
 
           source_spec = find_primary_spec(source_dir)
@@ -484,11 +484,7 @@ module Ace
             return true
           end
 
-          # Private management tasks archive inside the private scope; the
-          # project archive is tracked and must stay free of untracked
-          # _overseer families.
-          archive_root = Molecules::TaskScope.archive_root(source_dir, root_dir: @root_dir)
-          mover = Ace::Support::Items::Molecules::FolderMover.new(archive_root)
+          mover = Ace::Support::Items::Molecules::FolderMover.new(@root_dir)
           mover.move(Struct.new(:path).new(source_dir), to: "archive", date: archive_time)
           log_fix(source_dir, description)
           @fixed_count += 1

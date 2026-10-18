@@ -18,7 +18,7 @@ require_relative "task/models/task"
 
 # Molecules
 require_relative "task/molecules/task_config_loader"
-require_relative "task/molecules/task_scope"
+require_relative "task/molecules/git_ignored_path"
 require_relative "task/molecules/task_scanner"
 require_relative "task/molecules/task_resolver"
 require_relative "task/molecules/task_loader"

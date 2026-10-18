@@ -43,9 +43,9 @@ _legacy/        # Archived content (dev-handbook, dev-tools)
 Persisted lab state has one write location and one owner:
 
 - `.ace-tasks/` -- project tasks (ace-task).
-- `.ace-tasks/_overseer/` -- private overseer tasks in the shared task tree:
-  a gitignored special folder reached with `ace-task --in _overseer`, not a
-  separate task store.
+- `.ace-tasks/_overseer/` -- private overseer tasks in the ordinary task tree:
+  a lab-prepared, gitignored folder reached with `ace-task --in _overseer`,
+  not a separate task store and not an ace-task special case.
 - `.ace-local/assign/` -- assignment plan and step state (ace-assign).
 - `.ace-local/coworker/` -- reserved L3 coworker configuration.
 - `.ace-local/hitl/` -- HITL event files (ace-hitl).

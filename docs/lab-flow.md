@@ -29,28 +29,25 @@ folder under `.ace-tasks/`, not in a separate journal.
 
 ### Private `_overseer` folder
 
-The private overseer task list is an ordinary special folder in the task tree:
-`.ace-tasks/_overseer/`. It is gitignored, so it never enters commits, while
-`ace-task` treats it like any other special folder.
+The private overseer task list is the ordinary folder `.ace-tasks/_overseer/`.
+The lab prepares the folder (for example `mkdir -p .ace-tasks/_overseer`) and
+its `.gitignore` entry; `ace-task` itself is folder-name agnostic and handles it
+like any other existing folder. When a rule depends on Git tracking, `ace-task`
+asks Git about the actual task path — never about the folder's name.
 
-- `ace-task create "..." --in _overseer` creates the folder when missing.
-- `ace-task list --in _overseer` narrows the shared list to private tasks,
-  including the private archive history.
-- The default `ace-task list` is the shared view: project root tasks and active
-  `_overseer` tasks together. Archived private tasks live in
-  `_overseer/_archive/` and stay hidden from the default view; `_maybe`,
-  `_archive`, and other project special folders stay hidden unless `--in all`
-  (or their folder) is used.
-- Auto-archive keeps a private family private: when the last child reaches a
-  terminal status, the family moves to `.ace-tasks/_overseer/_archive/<date>/`,
-  keeps its `_overseer` classification, and stays inside the gitignored tree.
-  The tracked `.ace-tasks/_archive/` never receives an `_overseer` family, and
-  `ace-task doctor --auto-fix` uses the same private archive destination.
-- `show`, `update`, subtasks, dependencies, `status`, and `plan` resolve
-  `_overseer` refs the same way as any other task; `update --move-to overseer`
-  and `--move-to next` move tasks in and out of the folder.
-- `--git-commit` is rejected for `_overseer` tasks because the folder is
-  untracked.
+- `ace-task create "..." --in _overseer` places a task in the prepared folder
+  (a custom `--in` destination must already exist).
+- `ace-task list --in _overseer` lists private management tasks; the default
+  `ace-task list` is the ordinary root view.
+- `show`, `update`, subtasks, dependencies, `status`, and `plan` work for
+  `_overseer` tasks like for any other task; Git tracking does not change the
+  task model.
+- `--git-commit` is rejected whenever the task path is Git-ignored — on create,
+  subtask creation, update, and move — because Git would not stage it.
+- Completing a private task (or the last subtask of a private family) does not
+  auto-archive it, does not create a private archive folder, and `ace-task
+  doctor` neither reports the missing archive nor moves the task with
+  `--auto-fix`. The overseer decides when obsolete private history is deleted.
 - No worktree is created for an `_overseer` task, and it cannot be used as a
   project implementation assignment: the management task stays with the
   overseer, and a separate project task is used for implementation. Subagents may

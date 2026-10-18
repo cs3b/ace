@@ -11,27 +11,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Add the private `_overseer` task scope as an ordinary special folder at
-  `.ace-tasks/_overseer/`. It is gitignored, created on demand by
-  `ace-task create ... --in _overseer`, and narrowed with
-  `ace-task list --in _overseer`.
-- Make the default `ace-task list` the shared view: project root tasks plus
-  active `_overseer` tasks together; archived private tasks stay in
-  `_overseer/_archive/`, and `_maybe`, `_archive`, and other project special
-  folders remain hidden by default.
-- Support `_overseer` tasks in `show`, `update`, subtasks, dependencies,
-  `status`, and `plan`, and support moving tasks in and out with
-  `update --move-to overseer|next`.
+- Detect Git-ignored task paths through Git itself (`git check-ignore` on the
+  actual path), from any working directory and with a custom task root, so
+  behavior for uncommitted task folders needs no folder-name knowledge.
 
 ### Changed
 
-- Reject `--gc` for `_overseer` tasks and reject worktrees/implementation
-  assignments for them in the owning tools: management tasks stay with the
-  overseer while subagent delegation remains allowed.
-- Keep archive relocation inside the task's own scope: a terminal private
-  family auto-archives (and is auto-fixed by `ace-task doctor`) to
-  `.ace-tasks/_overseer/_archive/`, keeps its `_overseer` classification, and
-  never enters the tracked `.ace-tasks/_archive/` tree.
+- Remove all folder-name exceptions from `ace-task`: no private/shared scope
+  constants, no special `_overseer` create destination, and no special default
+  listing. The default `ace-task list` is the ordinary root view; any existing
+  special folder stays reachable with `--in FOLDER` or `--in all`.
+- Refuse `--git-commit` when the task path is Git-ignored — on create, subtask
+  creation, update, and move — instead of rejecting a named folder.
+- Do not auto-archive a completed Git-ignored task (or ignored family), and do
+  not report or perform an archive move for it in `ace-task doctor`; the folder
+  owner decides when to delete obsolete history. No private archive folder or
+  retention mechanism is created.
+- Keep delegation guards for management tasks in the delegation tools
+  (`ace-git-worktree create --task`, `ace-assign create --task`); they are not
+  part of `ace-task`.
 - Resolve the project task root from the project root (not the current
   directory) for `list --in FOLDER` validation and for the plan cache/context
   resolution, so `ace-task list --in _maybe` and `plan` work from a

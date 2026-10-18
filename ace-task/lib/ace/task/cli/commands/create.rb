@@ -2,7 +2,7 @@
 
 require "ace/support/cli"
 require "fileutils"
-require_relative "../../molecules/task_scope"
+require_relative "../../molecules/git_ignored_path"
 
 module Ace
   module Task
@@ -13,8 +13,7 @@ module Ace
           include Ace::Support::Cli::Base
 
           # "next" is a move-to-root alias and is validated separately.
-          # "overseer" is the private untracked management folder (_overseer).
-          BUILT_IN_DESTINATIONS = %w[maybe anytime archive overseer].freeze
+          BUILT_IN_DESTINATIONS = %w[maybe anytime archive].freeze
 
           desc <<~DESC.strip
             Create a new task
@@ -29,7 +28,7 @@ module Ace
             '"Setup DB" --child-of q7w                    # Create as subtask',
             '"Track issue" --issue 276 --server forgejo-lab # Link one exact issue',
             '"Quick task" --in maybe                      # Create in _maybe/ folder',
-            '"Private task" --in _overseer                # Create in the private _overseer/ folder',
+            '"Filed task" --in _review                    # Create in an existing custom folder',
             '"Draft spec" --status draft --estimate TBD   # Create as draft with estimate',
             '"Preview only" --dry-run                     # Show what would be created'
           ]
@@ -46,7 +45,7 @@ module Ace
           option :"default-server", type: :boolean, desc: "Use the configured default forge server"
           option :"child-of", type: :string, desc: "Parent task reference (creates subtask)"
           option :in, type: :string, aliases: %w[-i],
-            desc: "Top-level target (next, maybe, anytime, archive, overseer, or existing custom folder)"
+            desc: "Top-level target (next, maybe, anytime, archive, or an existing custom folder)"
           option :"dry-run", type: :boolean, aliases: %w[-n], desc: "Preview without writing"
 
           option :git_commit, type: :boolean, aliases: %w[--gc], desc: "Auto-commit changes"
@@ -87,7 +86,7 @@ module Ace
             else
               Ace::Task::Organisms::TaskManager.new
             end
-            reject_private_git_commit!(manager, in_folder: in_folder, child_of: child_of) if options[:git_commit]
+            reject_ignored_git_commit!(manager, in_folder: in_folder, child_of: child_of) if options[:git_commit]
             validate_destination!(manager, in_folder) if in_folder && !child_of
             placement_directories_before = directories_under(manager.root_dir) if in_folder && !child_of
 
@@ -157,25 +156,23 @@ module Ace
 
           private
 
-          # The private _overseer folder is untracked; management tasks must
-          # never be staged. Placement via --in and new subtasks both inherit
-          # the target folder from their parent.
-          def reject_private_git_commit!(manager, in_folder:, child_of:)
-            scope = Ace::Task::Molecules::TaskScope
-            private_folder = scope::PRIVATE_FOLDER
-            private_target = if child_of
-              parent = manager.show(child_of)
-              parent && scope.private?(parent.path, root_dir: manager.root_dir)
-            elsif in_folder
-              Ace::Support::Items::Atoms::SpecialFolderDetector.normalize(in_folder) == private_folder
+          # --git-commit must not stage a task whose path Git ignores. The
+          # target is resolved before creation: a subtask inherits its parent's
+          # folder, --in names a folder, and the default is the task root.
+          def reject_ignored_git_commit!(manager, in_folder:, child_of:)
+            detector = Ace::Support::Items::Atoms::SpecialFolderDetector
+            target = if child_of
+              manager.show(child_of)&.path
+            elsif in_folder && !detector.move_to_root?(in_folder)
+              File.join(manager.root_dir, detector.normalize(in_folder))
             else
-              false
+              manager.root_dir
             end
-            return unless private_target
+            return unless target && Ace::Task::Molecules::GitIgnoredPath.ignored?(target)
 
             raise Ace::Support::Cli::Error,
-              "Cannot --git-commit an '#{private_folder}' task; that folder is untracked. " \
-                "Keep the management task private, or create the implementation task in a project folder."
+              "Cannot --git-commit a Git-ignored task path: #{target}. " \
+                "Move the task to a tracked folder or omit --git-commit."
           end
 
           def validate_destination!(manager, target_folder)

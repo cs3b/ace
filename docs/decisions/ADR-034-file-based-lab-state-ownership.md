@@ -34,32 +34,31 @@ scope or into version control.
 
 ### Private `_overseer` folder
 
-- `.ace-tasks/_overseer/` is an ordinary special folder under the task root and
-  is listed in `.gitignore`, so its tasks never enter commits.
-- `ace-task create "..." --in _overseer` creates the folder when missing and
-  `list --in _overseer` narrows the scope, including private archive history.
-  The default `ace-task list` is the shared view of project root tasks plus
-  active `_overseer` tasks; archived private tasks live in
-  `_overseer/_archive/`, and `_maybe`, `_archive`, and other project special
-  folders stay hidden by default.
-- Archive relocation stays inside the task's own scope: a terminal private
-  family archives to `.ace-tasks/_overseer/_archive/<date>/`, keeps its
-  `_overseer` classification, and remains inside the gitignored tree. The
-  tracked `.ace-tasks/_archive/` never receives an `_overseer` family, and
-  `ace-task doctor --auto-fix` uses the same private archive destination. This
-  preserves the single-write-location invariant: private management state never
-  leaks into the tracked project task tree.
+- `.ace-tasks/_overseer/` is an ordinary folder under the task root that the lab
+  prepares together with its `.gitignore` entry, so its tasks never enter
+  commits. `ace-task` stays folder-name agnostic: it has no overseer-specific
+  constants, create destinations, listing view, archive relocation, doctor
+  exception, or commit block.
+- `ace-task create "..." --in _overseer` places a task in the prepared folder
+  and `ace-task list --in _overseer` lists it; the default `ace-task list` is
+  the ordinary root view. A custom `--in` destination must already exist.
+- Rules that depend on Git tracking ask Git about the actual task path
+  (`git check-ignore`), from any working directory and with a custom task root:
+  `--git-commit` is rejected for any Git-ignored task path (create, subtask,
+  update, move); completing an ignored task or family does not auto-archive it,
+  and `ace-task doctor` neither reports the missing archive nor moves it with
+  `--auto-fix`. No private archive folder or retention mechanism exists; the
+  overseer decides when obsolete private history is deleted.
 - `show`, `update`, subtasks, dependencies, `status`, and `plan` handle
-  `_overseer` refs like any other task; `update --move-to overseer` and
-  `--move-to next` move tasks in and out of the folder. `--git-commit` is
-  rejected for `_overseer` tasks because the folder is untracked.
-- Prohibition: no worktree is created for an `_overseer` task and it cannot be
-  used as a project implementation assignment (`ace-git-worktree create --task`
-  rejects it; `ace-assign create --task` applies the same rule). The management
-  task stays with the overseer, and a separate project task carries the
-  implementation. Subagents may still be delegated planning, analysis,
-  verification, or dependency analysis; the overseer approves their results and
-  updates its own task tree.
+  `_overseer` refs like any other task; Git tracking does not change the task
+  model.
+- Prohibition stays in the delegation layer: no worktree is created for an
+  `_overseer` task and it cannot be used as a project implementation assignment
+  (`ace-git-worktree create --task` rejects it; `ace-assign create --task`
+  applies the same rule). The management task stays with the overseer, and a
+  separate project task carries the implementation. Subagents may still be
+  delegated planning, analysis, verification, or dependency analysis; the
+  overseer approves their results and updates its own task tree.
 
 ### Canonical owner document
 
@@ -76,10 +75,13 @@ built in L2 rather than as a new shared state service.
 
 ## Consequences
 
-- The shared `ace-task list` shows project root tasks and active `_overseer`
-  tasks together, and `--in _overseer` narrows the scope; the private folder
-  stays untracked and never enters commits, including when its terminal
-  families auto-archive inside `_overseer/_archive/`.
+- The default `ace-task list` stays the ordinary root view; the lab prepares
+  `.ace-tasks/_overseer/` and its ignore entry, `--in _overseer` reaches it, and
+  `ace-task` derives tracking behavior from Git's ignore rules for the actual
+  path rather than from folder names.
+- A Git-ignored task keeps its plain task semantics but is never committed,
+  auto-archived, or moved by `doctor --auto-fix`; its owner decides when to
+  delete obsolete history.
 - Worktree and implementation-assignment guards keep management tasks with the
   overseer, while subagent delegation for planning, analysis, and verification
   remains allowed.
