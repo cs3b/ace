@@ -21,8 +21,10 @@ role: worker                          # required, non-empty role name
 instructions: "roles/worker.md"       # required: file path relative to the
                                       # project root, or wfi:// prompt:// tmpl://
 start_prompt: "Drive assignment <id> for task <ref> as worker."
-                                      # required (or start_prompt_file: path;
-                                      # the two are mutually exclusive)
+                                      # required (or start_prompt_file: path
+                                      # relative to the project root, whose
+                                      # content becomes the prompt; the two
+                                      # are mutually exclusive)
 task: "8xg.t.sbz.2"                   # required: task ref that must resolve
                                       # in this worktree
 assignment: "abc123"                  # required: assignment id that must exist

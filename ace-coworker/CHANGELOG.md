@@ -23,3 +23,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   deterministic completion verdict with remaining-work reasons.
 - Documented start-config contract consumed by the L4 planner
   (`docs/usage.md`).
+
+### Fixed (review PR #383, round 1)
+
+- `start_prompt_file` content is now actually read: the loader resolves the
+  file relative to the project root, rejects missing/empty files with specific
+  errors, and uses the file contents as the start prompt (the filename is no
+  longer printed as the prompt).
+- Relative `--config` paths resolve against the project root in `status` too,
+  not the process working directory.
+- `status --assignment <override>` reports the effective (queried) assignment
+  identity in table and JSON output, not the configured one.
+- Malformed YAML and scalar nested sections (`reporting: hitl`,
+  `errors: stop`) render as documented invalid/not-ready results instead of
+  raising Psych/TypeError through the CLI.
+- `ace-assign` is declared as a runtime dependency (fresh installs get the
+  required CLI); missing subprocess binaries (`ace-assign`, `ace-nav`) fail
+  with explicit actionable errors instead of `Errno::ENOENT` crashes.

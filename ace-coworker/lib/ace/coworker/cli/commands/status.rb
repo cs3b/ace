@@ -40,6 +40,10 @@ module Ace
 
           private
 
+          def effective_assignment(result)
+            result.assignment || result.config.assignment
+          end
+
           def to_h(result)
             if result.is_a?(Organisms::StatusOrchestrator::NotReady)
               {"ready" => false, "message" => result.message}
@@ -49,7 +53,7 @@ module Ace
                 "ready" => true,
                 "role" => cfg.role,
                 "task" => cfg.task,
-                "assignment" => cfg.assignment,
+                "assignment" => effective_assignment(result),
                 "overseer" => cfg.overseer,
                 "on_failure" => cfg.on_failure
               }
@@ -71,7 +75,7 @@ module Ace
             lines = ["Coworker status"]
             lines << "  role:        #{cfg.role}"
             lines << "  task:        #{cfg.task}"
-            lines << "  assignment:  #{cfg.assignment}"
+            lines << "  assignment:  #{effective_assignment(result)}"
             lines << "  overseer:    #{cfg.overseer}"
             if result.snapshot
               snapshot = result.snapshot

@@ -70,6 +70,85 @@ module Ace
           assert @loader.ready?(path: custom)
           assert_equal "zzz", @loader.load(path: custom).assignment
         end
+
+        def test_start_prompt_file_content_is_loaded_as_prompt
+          CoworkerFixture.build_config(@dir, assignment: "abc123", task: "8xg.t.sbz.2")
+          prompt_file = File.join(@dir, "prompts", "start.md")
+          FileUtils.mkdir_p(File.dirname(prompt_file))
+          File.write(prompt_file, "Drive assignment abc123 as worker.\n")
+          path = File.join(@dir, ".ace-local", "coworker", "config.yml")
+          File.write(path, <<~YAML)
+            role: worker
+            instructions: roles/worker.md
+            start_prompt_file: prompts/start.md
+            task: 8xg.t.sbz.2
+            assignment: abc123
+            overseer: overseer@lab
+          YAML
+
+          cfg = @loader.load
+          assert_equal "Drive assignment abc123 as worker.", cfg.start_prompt
+          assert_equal "prompts/start.md", cfg.start_prompt_file
+        end
+
+        def test_missing_start_prompt_file_errors_specifically
+          CoworkerFixture.build_config(@dir, assignment: "abc123", task: "8xg.t.sbz.2")
+          path = File.join(@dir, ".ace-local", "coworker", "config.yml")
+          File.write(path, <<~YAML)
+            role: worker
+            instructions: roles/worker.md
+            start_prompt_file: prompts/missing.md
+            task: 8xg.t.sbz.2
+            assignment: abc123
+            overseer: overseer@lab
+          YAML
+
+          error = assert_raises(Error) { @loader.load }
+          assert_includes error.message, "start_prompt_file 'prompts/missing.md' not found"
+        end
+
+        def test_empty_start_prompt_file_errors_specifically
+          CoworkerFixture.build_config(@dir, assignment: "abc123", task: "8xg.t.sbz.2")
+          prompt_file = File.join(@dir, "prompts", "empty.md")
+          FileUtils.mkdir_p(File.dirname(prompt_file))
+          File.write(prompt_file, "   \n")
+          path = File.join(@dir, ".ace-local", "coworker", "config.yml")
+          File.write(path, <<~YAML)
+            role: worker
+            instructions: roles/worker.md
+            start_prompt_file: prompts/empty.md
+            task: 8xg.t.sbz.2
+            assignment: abc123
+            overseer: overseer@lab
+          YAML
+
+          error = assert_raises(Error) { @loader.load }
+          assert_includes error.message, "start_prompt_file 'prompts/empty.md' is empty"
+        end
+
+        def test_malformed_yaml_errors_as_invalid_config
+          path = File.join(@dir, ".ace-local", "coworker", "config.yml")
+          FileUtils.mkdir_p(File.dirname(path))
+          File.write(path, "role: [unclosed\n")
+          error = assert_raises(Error) { @loader.load }
+          assert_includes error.message, "invalid config"
+        end
+
+        def test_scalar_nested_sections_error_as_invalid_config
+          path = File.join(@dir, ".ace-local", "coworker", "config.yml")
+          FileUtils.mkdir_p(File.dirname(path))
+          File.write(path, <<~YAML)
+            role: worker
+            instructions: roles/worker.md
+            start_prompt: "Drive it."
+            task: t1
+            assignment: a1
+            overseer: overseer@lab
+            errors: stop
+          YAML
+          error = assert_raises(Error) { @loader.load }
+          assert_includes error.message, "'errors' must be a mapping"
+        end
       end
     end
   end

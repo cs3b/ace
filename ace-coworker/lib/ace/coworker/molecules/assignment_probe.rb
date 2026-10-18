@@ -20,7 +20,11 @@ module Ace
         # @raise [Error] when the assignment is unknown or status cannot be read
         def snapshot(assignment_id)
           argv = [assign_binary, "status", "--assignment", assignment_id.to_s, "--format", "json"]
-          out, err, status = run(argv)
+          begin
+            out, err, status = run(argv)
+          rescue Errno::ENOENT
+            raise Error, "required CLI '#{assign_binary}' not found; install the ace-assign gem"
+          end
           unless status.success?
             message = err.to_s.strip.empty? ? out.to_s.strip : err.to_s.strip
             raise Error, "cannot read assignment '#{assignment_id}': #{message}"

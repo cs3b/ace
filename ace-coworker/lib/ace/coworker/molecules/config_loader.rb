@@ -31,7 +31,11 @@ module Ace
           target = path ? File.expand_path(path, @project_root) : config_path
           raise Error, "not ready: #{relativize(target)} not found" unless File.file?(target)
 
-          raw = YAML.safe_load_file(target, permitted_classes: [Date], aliases: true)
+          begin
+            raw = YAML.safe_load_file(target, permitted_classes: [Date], aliases: true)
+          rescue Psych::SyntaxError => e
+            raise Error, "invalid config #{relativize(target)}: #{e.message}"
+          end
           raw = {} if raw.nil?
           unless raw.is_a?(Hash)
             raise Error, "invalid config #{relativize(target)}: expected a mapping, got #{raw.class}"
@@ -56,7 +60,7 @@ module Ace
           Models::Config.new(
             role: normalized["role"],
             instructions: normalized["instructions"],
-            start_prompt: normalized["start_prompt"],
+            start_prompt: start_prompt(normalized),
             start_prompt_file: normalized["start_prompt_file"].to_s.empty? ? nil : normalized["start_prompt_file"],
             task: normalized["task"],
             assignment: normalized["assignment"],
@@ -65,6 +69,23 @@ module Ace
             on_failure: normalized.dig("errors", "on_failure"),
             source_path: target
           )
+        end
+
+        # start_prompt_file content is the prompt; the file must exist and be
+        # readable relative to the project root (same resolution rule as the
+        # config path itself).
+        def start_prompt(normalized)
+          literal = normalized["start_prompt"]
+          return literal unless literal.to_s.empty?
+
+          file = normalized["start_prompt_file"].to_s
+          path = File.expand_path(file, @project_root)
+          raise Error, "start_prompt_file '#{file}' not found in this worktree" unless File.file?(path)
+
+          content = File.read(path).strip
+          raise Error, "start_prompt_file '#{file}' is empty" if content.empty?
+
+          content
         end
 
         def relativize(path)

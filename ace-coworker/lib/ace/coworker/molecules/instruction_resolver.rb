@@ -30,7 +30,11 @@ module Ace
         private
 
         def resolve_protocol(uri)
-          out, err, status = @nav_runner.call([nav_binary, "resolve", uri], @project_root)
+          begin
+            out, err, status = @nav_runner.call([nav_binary, "resolve", uri], @project_root)
+          rescue Errno::ENOENT
+            raise Error, "protocol instructions require the ace-nav CLI ('#{nav_binary}' not found)"
+          end
           unless status.success?
             message = err.to_s.strip.empty? ? out.to_s.strip : err.to_s.strip
             raise Error, "cannot resolve instruction source '#{uri}': #{message}"

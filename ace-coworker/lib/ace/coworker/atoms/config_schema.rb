@@ -28,24 +28,28 @@ module Ace
           end
 
           errors.concat(prompt_errors(raw))
+          errors.concat(nested_mapping_errors(raw, "reporting"))
+          errors.concat(nested_mapping_errors(raw, "errors"))
           errors.concat(reporting_errors(raw))
           errors.concat(error_rules_errors(raw))
           errors
         end
 
         # @param raw [Hash] validated config hash
-        # @return [Hash] normalized hash with defaults applied
+        # @return [Hash] normalized hash with defaults applied.
+        #   start_prompt stays literal; the start_prompt_file CONTENT is read
+        #   by the loader (IO does not belong in this pure atom).
         def self.normalize(raw)
           {
             "role" => str(raw["role"]),
             "instructions" => str(raw["instructions"]),
-            "start_prompt" => start_prompt_value(raw),
+            "start_prompt" => str(raw["start_prompt"]),
             "start_prompt_file" => str(raw["start_prompt_file"]),
             "task" => str(raw["task"]),
             "assignment" => str(raw["assignment"]),
             "overseer" => str(raw["overseer"]),
-            "reporting" => {"channel" => str(raw.dig("reporting", "channel")).empty? ? "hitl" : str(raw.dig("reporting", "channel"))},
-            "errors" => {"on_failure" => str(raw.dig("errors", "on_failure")).empty? ? "report" : str(raw.dig("errors", "on_failure"))}
+            "reporting" => {"channel" => nested_str(raw, "reporting", "channel").empty? ? "hitl" : nested_str(raw, "reporting", "channel")},
+            "errors" => {"on_failure" => nested_str(raw, "errors", "on_failure").empty? ? "report" : nested_str(raw, "errors", "on_failure")}
           }
         end
 
@@ -73,7 +77,7 @@ module Ace
         private_class_method :prompt_errors
 
         def self.reporting_errors(raw)
-          channel = str(raw.dig("reporting", "channel"))
+          channel = nested_str(raw, "reporting", "channel")
           return [] if channel.empty?
 
           CHANNELS.include?(channel) ? [] : ["reporting.channel '#{channel}' is not one of: #{CHANNELS.join(', ')}"]
@@ -81,19 +85,31 @@ module Ace
         private_class_method :reporting_errors
 
         def self.error_rules_errors(raw)
-          on_failure = str(raw.dig("errors", "on_failure"))
+          on_failure = nested_str(raw, "errors", "on_failure")
           return [] if on_failure.empty?
 
           ON_FAILURE.include?(on_failure) ? [] : ["errors.on_failure '#{on_failure}' is not one of: #{ON_FAILURE.join(', ')}"]
         end
         private_class_method :error_rules_errors
 
-        def self.start_prompt_value(raw)
-          prompt = str(raw["start_prompt"])
-          return prompt unless prompt.empty?
+        # Nested sections must be mappings (or absent); scalars such as
+        # `reporting: hitl` would raise TypeError in #dig.
+        def self.nested_mapping_errors(raw, section)
+          value = raw[section]
+          return [] if value.nil? || value.is_a?(Hash)
 
-          str(raw["start_prompt_file"])
+          ["'#{section}' must be a mapping, got #{value.class}"]
         end
+        private_class_method :nested_mapping_errors
+
+        # TypeError-safe nested string read for validated mappings.
+        def self.nested_str(raw, section, key)
+          value = raw[section]
+          return "" unless value.is_a?(Hash)
+
+          str(value[key])
+        end
+        private_class_method :nested_str
 
         def self.str(value)
           value.to_s.strip

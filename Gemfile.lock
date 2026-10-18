@@ -54,6 +54,7 @@ PATH
   remote: ace-coworker
   specs:
     ace-coworker (0.1.0)
+      ace-assign (~> 0.72)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.18)
       ace-support-core (~> 0.31)
