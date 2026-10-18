@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.15] - 2026-10-18
+
 ### Added
 
 - `FolderMover#destination_path` computes the destination a move would create
