@@ -49,6 +49,12 @@ module Ace
               puts "Kind: #{event.kind}" if event.question?
               puts "Result: #{event.result}" if event.report?
               puts "Tags: #{event.tags.join(", ")}"
+              if event.recipient
+                puts "Recipient: #{Ace::Hitl::Atoms::HitlAddress.to_s(event.recipient)}"
+              end
+              if event.reply_to
+                puts "Reply-To: #{Ace::Hitl::Atoms::HitlAddress.to_s(event.reply_to)}"
+              end
               if event.report?
                 puts "Report: #{event.content}"
               else

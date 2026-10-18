@@ -44,6 +44,7 @@ module Ace
         "ace-hitl list --status pending",
         "ace-hitl show abc123 --content",
         "ace-hitl create \"Which auth strategy?\" --kind decision",
+        "ace-hitl create \"Blocked on auth\" --kind decision --to overseer --task 8xg.t.sbz.1.1",
         "ace-hitl create \"Work done\" --type report --result success --task 8xg.t.sbz.1.0",
         "ace-hitl update abc123 --answer \"Use JWT with refresh tokens\"",
         "ace-hitl wait abc123 --poll-every 600 --timeout 14400"

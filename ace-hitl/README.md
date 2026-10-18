@@ -57,11 +57,10 @@ ace-hitl wait abc123 --poll-every 600 --timeout 14400
 > its commands remain for `ace-hitl-hermes` and other adapters; `serve` supports
 > `--operator-only` only. Second-commander proposals are removed as well.
 >
-> **Planned (L2):** the report/question distinction is available locally
-> (`--type report` with `recorded` status; local write is not delivery). Remote
-> addressing, reply routing, and configurable provider adapters are not
-> available yet. `ace-hitl-hermes` remains an adapter package; tmux/Herdr
-> remain transports.
+> **Planned (L2):** the report/question distinction and recipient addressing
+> (`--to`, `reply_to`) are available locally (local write is not delivery).
+> Remote delivery and configurable provider adapters are not available yet.
+> `ace-hitl-hermes` remains an adapter package; tmux/Herdr remain transports.
 
 ## Testing
 

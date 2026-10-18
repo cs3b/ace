@@ -16,6 +16,7 @@ module Ace
           option :kind, type: :string, aliases: %w[-k], desc: "Kind: clarification, decision, approval (questions only)"
           option :type, type: :string, aliases: %w[-t], desc: "Type: question (default), report"
           option :result, type: :string, desc: "Report result: success, error (reports only)"
+          option :to, type: :string, desc: "Configured recipient name (machine+folder+ID or machine+panel)"
           option :body, type: :string, repeat: true, aliases: %w[-b], desc: "Report content line (repeatable, reports only)"
           option :task, type: :string, desc: "Task reference"
           option :question, type: :string, repeat: true, aliases: %w[-Q], desc: "Question line (repeatable)"
@@ -51,25 +52,37 @@ module Ace
             tags = parse_tags(options[:tags])
 
             manager = Ace::Hitl::Organisms::HitlManager.new
-            event = manager.create(
-              title,
-              kind: kind,
-              type: type,
-              result: result,
-              task: options[:task],
-              body: body,
-              questions: questions,
-              tags: tags,
-              assignment: options[:assignment],
-              step: options[:step],
-              step_name: options[:"step-name"],
-              resume_instructions: options[:resume],
-              move_to: options[:"move-to"]
-            )
+            event = begin
+              manager.create(
+                title,
+                to: options[:to],
+                kind: kind,
+                type: type,
+                result: result,
+                task: options[:task],
+                body: body,
+                questions: questions,
+                tags: tags,
+                assignment: options[:assignment],
+                step: options[:step],
+                step_name: options[:"step-name"],
+                resume_instructions: options[:resume],
+                move_to: options[:"move-to"]
+              )
+            rescue Ace::Hitl::Molecules::HitlAddressResolver::UnknownRecipientError,
+              Ace::Hitl::Molecules::HitlAddressResolver::InvalidAddressError => e
+              raise Ace::Support::Cli::Error.new(e.message)
+            end
 
             folder_info = event.special_folder ? " (#{event.special_folder})" : ""
             puts "HITL event created: #{event.id} #{event.title}#{folder_info}"
             puts "  Path: #{event.file_path}"
+            if event.recipient
+              puts "  Recipient: #{Atoms::HitlAddress.to_s(event.recipient)}"
+            end
+            if event.reply_to
+              puts "  Reply-To: #{Atoms::HitlAddress.to_s(event.reply_to)}"
+            end
           end
 
           private

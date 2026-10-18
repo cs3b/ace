@@ -30,6 +30,8 @@ module Ace
 
           known_keys = %w[
             id status title kind type result task tags questions assignment step step_name
+            recipient_machine recipient_folder recipient_panel recipient_id
+            reply_to_machine reply_to_folder reply_to_id
             resume_instructions created_at answered answered_at
             requester_provider requester_model requester_session_id
             waiter_state waiter_session_id waiter_provider waiter_last_seen_at
@@ -63,6 +65,13 @@ module Ace
               "assignment" => frontmatter["assignment"],
               "step" => frontmatter["step"],
               "step_name" => frontmatter["step_name"],
+              "recipient_machine" => frontmatter["recipient_machine"],
+              "recipient_folder" => frontmatter["recipient_folder"],
+              "recipient_panel" => frontmatter["recipient_panel"],
+              "recipient_id" => frontmatter["recipient_id"],
+              "reply_to_machine" => frontmatter["reply_to_machine"],
+              "reply_to_folder" => frontmatter["reply_to_folder"],
+              "reply_to_id" => frontmatter["reply_to_id"],
               "resume_instructions" => frontmatter["resume_instructions"],
               "answered" => frontmatter["answered"],
               "answered_at" => frontmatter["answered_at"],

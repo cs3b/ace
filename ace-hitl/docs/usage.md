@@ -55,6 +55,47 @@ ace-hitl create "Review completed assignment results" \
   --assignment abc123 --step completion
 ```
 
+## Recipient addressing and Reply
+
+Every event can carry an explicit recipient address read from the `hitl`
+configuration cascade (`.ace/hitl/config.yml` project override; HITL reads
+the address config — consumers pass a configured name, no client-side
+routing):
+
+```yaml
+hitl:
+  machine: lab01                 # this machine's identity for addresses
+  default_recipient: overseer    # optional name applied when --to is absent
+  recipients:
+    overseer:                    # folder form: machine + events folder (+ case ID)
+      machine: lab01
+      folder: .ace-local/hitl
+    captain:                     # panel form: machine + panel
+      machine: lab02
+      panel: telegram
+```
+
+```bash
+ace-hitl create "Blocked on auth" --kind decision --to overseer --task 8xg.t.sbz.1.1
+```
+
+- The folder form stamps the new event's ID as the case ID; the panel form
+  carries no case ID. Questions additionally record a `reply_to` address
+  (sender machine + events folder + own case ID), so an answer binds to the
+  original case and the right agent — task/assignment/step are context,
+  never an ID substitute.
+- Local Reply is unchanged: `update <ref> --answer` binds by exact ID with
+  strict ambiguity handling and an explicit not-found error; a transport
+  later reads `reply_to` from the answered event instead of searching for the
+  "last question".
+- Unknown recipient names, malformed configured addresses, and a missing
+  `hitl.machine` (needed for `reply_to`) fail closed before anything is
+  written. Ambiguous shortcuts list candidates instead of guessing.
+- `--to` absent with no `default_recipient` creates a local-only event with
+  no address keys (legacy flow unchanged). `show` prints `Recipient:` and
+  `Reply-To:` when present; local write is not delivery (adapters and
+  redelivery land in the remaining L2 leaves).
+
 ## Reports
 
 The same interface records reports — completion or error notifications that do
@@ -174,10 +215,11 @@ old-lab Root Overseer reverse-address channel (`overseer-*` commands); generic
 transport has no replacement role-specific queue.
 
 > **Planned (L2):** the report/question distinction is available locally
-> (`--type report`; local write is not delivery). Remote addressing, reply
-> routing, and configurable adapters are not available yet. Adapters
-> (`ace-hitl-hermes`) and transports (tmux, Herdr) are not additional state
-> owners.
+> (`--type report`; local write is not delivery). Recipient addressing and
+> Reply binding are recorded locally (`--to`, `reply_to`, fail-closed
+> resolution). Remote delivery and configurable adapters are not available
+> yet. Adapters (`ace-hitl-hermes`) and transports (tmux, Herdr) are not
+> additional state owners.
 
 ## Testing
 

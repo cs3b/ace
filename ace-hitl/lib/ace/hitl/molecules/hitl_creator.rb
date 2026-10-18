@@ -30,6 +30,8 @@ module Ace
           step_name: nil,
           resume_instructions: nil,
           move_to: nil,
+          recipient: nil,
+          reply_to: nil,
           time: Time.now.utc)
           raise ArgumentError, "Title is required" if title.nil? || title.strip.empty?
 
@@ -62,7 +64,7 @@ module Ace
               "step" => step,
               "step_name" => step_name,
               "created_at" => time
-            }.compact
+            }.merge(recipient_keys(recipient, id)).compact
           else
             {
               "id" => id,
@@ -79,7 +81,9 @@ module Ace
               "resume_instructions" => resume_instructions,
               "answered" => false,
               "created_at" => time
-            }.merge(infer_requester_context(assignment: assignment, step: step)).compact
+            }.merge(recipient_keys(recipient, id))
+              .merge(reply_to_keys(reply_to, id))
+              .merge(infer_requester_context(assignment: assignment, step: step)).compact
           end
 
           body_text = build_body(title: title, type: effective_type, result: result,
@@ -98,6 +102,33 @@ module Ace
         end
 
         private
+
+        # Flat recipient keys; the folder form stamps the new event's ID as
+        # the case id (panel form has none). Returns {} when no recipient.
+        def recipient_keys(recipient, id)
+          return {} unless recipient.is_a?(Hash)
+
+          keys = {
+            "recipient_machine" => recipient["machine"],
+            "recipient_folder" => recipient["folder"],
+            "recipient_panel" => recipient["panel"],
+            "recipient_id" => recipient["id"] || (recipient["folder"] ? id : nil)
+          }
+          keys.compact
+        end
+
+        # Flat reply keys (questions only): original sender + exact case.
+        # When the reply address carries no id, the new event's own ID is
+        # the case id the answer binds to.
+        def reply_to_keys(reply_to, id)
+          return {} unless reply_to.is_a?(Hash)
+
+          {
+            "reply_to_machine" => reply_to["machine"],
+            "reply_to_folder" => reply_to["folder"],
+            "reply_to_id" => reply_to["id"] || id
+          }.compact
+        end
 
         def generate_unique_id(base_time)
           time = base_time

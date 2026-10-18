@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.20.0] - 2026-10-18
+
+### Added
+
+- Recipient addressing and Reply binding (8xg.t.sbz.1.1 / L2.2): `ace-hitl
+  create ... --to <name>` resolves a configured recipient into an explicit
+  address — machine + events folder + case ID (folder form, ID stamped from
+  the new event) or machine + panel — read from the `hitl` cascade
+  (`machine`, `default_recipient`, `recipients:<name>:{machine,folder|panel}`).
+  Questions record a `reply_to` address (sender machine + events folder + own
+  case ID) so answers bind to the original case and the right agent;
+  task/assignment/step stay context, never an ID substitute. Local Reply is
+  unchanged: `update <ref> --answer` bound by exact ID with strict ambiguity
+  and explicit not-found — no write to a foreign event. Unknown recipient
+  names, malformed configured addresses, and a missing `hitl.machine` fail
+  closed before anything is written. `show`/create output print
+  `Recipient:`/`Reply-To:`; `HitlEvent#recipient`/`#reply_to` expose the
+  address hashes for adapters (delivery itself lands in 8xg.t.sbz.1.2/.1.3;
+  local write is not delivery).
+
 ## [0.19.0] - 2026-10-18
 
 ### Fixed (review PR #383, round 3)

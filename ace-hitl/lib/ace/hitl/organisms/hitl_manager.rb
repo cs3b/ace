@@ -30,18 +30,33 @@ module Ace
 
         attr_reader :root_dir, :last_list_total, :last_folder_counts
 
-        def initialize(root_dir: nil, config: nil, scope_resolver: nil, resume_dispatcher: nil)
+        def initialize(root_dir: nil, config: nil, scope_resolver: nil, resume_dispatcher: nil,
+          address_resolver: nil)
           @config = config || load_config
           @configured_root_setting = @config.dig("hitl", "root_dir") || Molecules::HitlConfigLoader::DEFAULT_ROOT_DIR
           @root_dir = root_dir || resolve_root_dir
           @scope_resolver = scope_resolver || Molecules::WorktreeScopeResolver.new
           @resume_dispatcher = resume_dispatcher || Molecules::ResumeDispatcher.new
+          @address_resolver = address_resolver || Molecules::HitlAddressResolver.new(config: @config)
         end
 
-        def create(title, **options)
+        def create(title, to: nil, **options)
+          # Resolve the recipient address before any I/O: unknown names and
+          # malformed addresses fail closed with nothing written. The reply
+          # address (sender machine + events folder) is validated here too;
+          # the creator stamps the real case ID once generated.
+          recipient = nil
+          reply_to = nil
+          effective_to = to || @address_resolver.default_recipient
+          if effective_to
+            recipient = @address_resolver.resolve(effective_to)
+            reply_to = @address_resolver.sender_address(folder: @configured_root_setting, id: "pending")
+              .reject { |key, _| key == "id" }
+          end
+
           ensure_root_dir
           creator = Molecules::HitlCreator.new(root_dir: @root_dir, config: @config)
-          creator.create(title, **options)
+          creator.create(title, **options, recipient: recipient, reply_to: reply_to)
         end
 
         def show(ref, scope: nil)
