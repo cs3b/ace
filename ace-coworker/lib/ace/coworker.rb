@@ -40,6 +40,8 @@ module Ace
       autoload :ReportStateStore, "ace/coworker/molecules/report_state_store"
       autoload :StepReportReader, "ace/coworker/molecules/step_report_reader"
       autoload :GitStateProbe, "ace/coworker/molecules/git_state_probe"
+      autoload :WorktreeProvisionProbe, "ace/coworker/molecules/worktree_provision_probe"
+      autoload :WorktreeExecutorProbe, "ace/coworker/molecules/worktree_executor_probe"
     end
 
     module Organisms
