@@ -51,7 +51,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "ace-tmux", "~> 0.18"
   spec.add_dependency "ace-herdr", "~> 0.6"
   spec.add_dependency "ace-lab", "~> 0.8"
-  spec.add_dependency "ace-review", "~> 0.61.0"
+  spec.add_dependency "ace-review", "~> 0.62.0"
 
   spec.add_development_dependency "ace-support-test-helpers", "~> 0.14"
   spec.add_development_dependency "bundler", "~> 2.0"
