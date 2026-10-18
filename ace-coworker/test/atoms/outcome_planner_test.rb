@@ -42,6 +42,14 @@ module Ace
           assert_includes error.message, "1 pending step"
         end
 
+        def test_invalid_result_value_is_refused
+          snap = snapshot(state: "completed", steps: [["010", "impl", "done"]])
+          error = assert_raises(Coworker::Error) do
+            OutcomePlanner.plan(snap, explicit_result: "done")
+          end
+          assert_includes error.message, "invalid --result 'done'"
+        end
+
         def test_error_without_cause_is_refused
           snap = snapshot(state: "running", steps: [["010", "impl", "failed"]])
           error = assert_raises(Coworker::Error) do

@@ -34,16 +34,18 @@ module Ace
               dry_run: options[:"dry-run"] == true
             )
 
+            # Exit semantics first: quiet suppresses output, never the
+            # non-zero exit an error outcome or delivery failure must keep.
+            if result.exit_code != 0
+              raise Ace::Support::Cli::Error, result.message
+            end
+
             return if options[:quiet]
 
             if options[:format] == "json"
               puts JSON.pretty_generate(to_h(result))
             else
               puts render(result)
-            end
-
-            if result.exit_code != 0
-              raise Ace::Support::Cli::Error, result.message
             end
           rescue Ace::Coworker::Error => e
             raise Ace::Support::Cli::Error, e.message

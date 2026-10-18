@@ -97,9 +97,9 @@ module Ace
             run_cli(ASSIGN_BIN, "start", "--assignment", @assignment_id)
             run_cli(ASSIGN_BIN, "fail", "--assignment", @assignment_id, "--message", "verifier crashed with exit 1")
 
-            out, _err, status = run_cli(COWORKER_BIN, "report", "--no-send")
+            out, err, status = run_cli(COWORKER_BIN, "report", "--no-send")
             refute status.success?, "error outcome never exits success"
-            assert_includes out, "outcome recorded: error"
+            assert_includes err, "outcome recorded: error"
 
             assert_equal 1, hitl_events.size
             content = File.read(hitl_events.first)
@@ -123,7 +123,7 @@ module Ace
             # keeps the success.
             out, err, status = run_cli(COWORKER_BIN, "report")
             refute status.success?
-            assert_includes out, "outcome recorded: success"
+            assert_includes err, "outcome recorded: success"
             assert_includes err, "delivery failed"
             assert_equal 1, hitl_events.size, "rerun must not duplicate the event"
             assert_includes File.read(event_path), "result: success"

@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "yaml"
+
 module Ace
   module Coworker
     module Molecules
@@ -35,12 +37,18 @@ module Ace
         private
 
         # The `error:` frontmatter line written by ace-assign fail carries
-        # the operator-visible cause; fall back to the whole file content.
+        # the operator-visible cause. Parse the frontmatter as YAML so
+        # quoted/multiline values survive; fall back to a regex line scan.
         def error_from_step_file(path)
           content = File.read(path)
-          match = content.match(/^error:\s*(.+)$/)
-          cause = match ? match[1].strip : content.strip
+          frontmatter = content.split(/^---\s*$/m)[1].to_s
+          parsed = YAML.safe_load(frontmatter, permitted_classes: [Date, Time], aliases: false)
+          cause = parsed.is_a?(Hash) ? parsed["error"].to_s.strip : ""
+          cause = content.match(/^error:\s*(.+)$/)[1].to_s.strip if cause.empty?
           cause.empty? ? nil : cause
+        rescue StandardError
+          match = content.match(/^error:\s*(.+)$/)
+          match && !match[1].strip.empty? ? match[1].strip : nil
         end
       end
     end

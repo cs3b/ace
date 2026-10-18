@@ -15,6 +15,10 @@ module Ace
         # @return [Models::Outcome]
         # @raise [Coworker::Error] on refused inputs (false success, missing cause)
         def self.plan(snapshot, explicit_result: nil, message: nil, step_evidence: nil, step_override: nil)
+          if explicit_result && !%w[success error].include?(explicit_result)
+            raise Error, "invalid --result '#{explicit_result}': expected success or error"
+          end
+
           complete = snapshot.completion_verdict == :complete
           result = explicit_result || (complete ? "success" : "error")
 

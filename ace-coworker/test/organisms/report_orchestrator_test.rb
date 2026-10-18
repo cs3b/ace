@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 require_relative "../test_helper"
+require "json"
+require "pathname"
 require_relative "../support/coworker_fixture"
 
 module Ace
@@ -181,6 +183,45 @@ module Ace
           assert_equal "8xhq04", result.event_id
           assert_nil result.delivery
           refute @runner_calls.any? { |argv| argv[1] == "send" }
+        end
+
+        def test_on_failure_stop_rerun_with_bound_event_still_skips_hitl
+          # First run reports normally and binds an event...
+          FileUtils.mkdir_p(File.dirname(state_path))
+          File.write(state_path, JSON.generate({"result" => "error", "event_id" => "8xhq09"}))
+          hitl_dir = File.join(@dir, ".ace-local", "hitl")
+          FileUtils.mkdir_p(File.join(hitl_dir, "8xhq09-evt"))
+          File.write(File.join(hitl_dir, "8xhq09-evt", "8xhq09-evt.hitl.s.md"), "x")
+          File.write(@config_path, File.read(@config_path) + "\nerrors:\n  on_failure: stop\n")
+
+          result = orchestrator(json: failed_json).call(config_path: nil, message: "boom")
+
+          assert_equal 1, result.exit_code
+          assert_empty @runner_calls, "stop must gate resends too"
+        end
+
+        def test_send_failure_record_carries_event_and_failure_detail
+          result = orchestrator(json: completed_json,
+            script: [{success: true, out: "HITL event created: 8xhq10 x\n"},
+                     {success: false, err: "no adapter routes"}])
+            .call(config_path: nil)
+
+          assert_equal 1, result.exit_code
+          content = File.read(record_path)
+          assert_includes content, "event_id: 8xhq10"
+          assert_includes content, "failed: no adapter routes"
+        end
+
+        def test_record_evidence_path_points_at_the_real_file
+          result = orchestrator(json: completed_json,
+            script: [{success: true, out: "HITL event created: 8xhq11 x\n"},
+                     {success: true, out: "delivered"}])
+            .call(config_path: nil)
+
+          content = File.read(record_path)
+          expected = Pathname.new(record_path).relative_path_from(Pathname.new(@dir)).to_s
+          assert_includes content, "record: #{expected}"
+          assert File.file?(File.join(@dir, expected)), "evidence path must resolve"
         end
 
         def test_on_failure_stop_skips_hitl_entirely_for_errors

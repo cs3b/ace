@@ -1,5 +1,8 @@
 # frozen_string_literal: true
 
+require "time"
+require "pathname"
+
 require_relative "../molecules/config_loader"
 require_relative "../molecules/task_probe"
 require_relative "../molecules/assignment_metadata"
@@ -36,6 +39,8 @@ module Ace
           @assignment_probe = assignment_probe || Molecules::AssignmentProbe.new(project_root: @project_root)
           @evidence_reader = evidence_reader || Molecules::StepEvidenceReader.new(project_root: @project_root)
           @reporter = reporter || Molecules::HitlReporter.new(project_root: @project_root)
+          @record_writer_factory = record_writer
+          @state_store_factory = state_store
         end
 
         # @param config_path [String, nil]
@@ -60,20 +65,24 @@ module Ace
             explicit_result: result, message: message,
             step_evidence: step_evidence, step_override: step)
 
-          record_writer = Molecules::TaskRecordWriter.new(task_path: @task_probe.resolve!(cfg.task))
-          state_store = Molecules::ReportStateStore.new(project_root: @project_root)
+          task_path = @task_probe.resolve!(cfg.task)
+          record_writer = @record_writer_factory || Molecules::TaskRecordWriter.new(task_path: task_path)
+          state_store = @state_store_factory || Molecules::ReportStateStore.new(project_root: @project_root)
 
           return dry_run_result(outcome, cfg) if dry_run
 
+          relative_record = placeholder_record_path(cfg, assignment_id, task_path)
           record_path = record_writer.write(assignment_id,
-            Atoms::ReportRecordFormatter.format(outcome, cfg, record_path: placeholder_record_path(cfg, assignment_id)))
+            Atoms::ReportRecordFormatter.format(outcome, cfg, record_path: relative_record))
 
           # Rerun rules: same result with an existing event => send-only
           # redelivery (retrying delivery never retries the assignment).
           state = state_store.read(assignment_id) || {}
           event_id = nil
           created_event = false
-          if state["result"] == outcome.result && state["event_id"] && event_exists?(state["event_id"])
+          if !report_via_hitl?(cfg, outcome)
+            # errors.on_failure=stop: never touch HITL, not even a resend.
+          elsif state["result"] == outcome.result && state["event_id"] && event_exists?(state["event_id"])
             event_id = state["event_id"]
           elsif report_via_hitl?(cfg, outcome)
             event_id = @reporter.create(outcome, cfg)
@@ -97,6 +106,10 @@ module Ace
                 "record" => record_path, "delivery" => nil,
                 "updated_at" => Time.now.utc.iso8601
               })
+              record_writer.write(assignment_id,
+                Atoms::ReportRecordFormatter.format(outcome, cfg,
+                  event_id: event_id, delivery: "failed: #{send_result.message}",
+                  record_path: relative_record))
               return failure_result(outcome, cfg, record_path, event_id,
                 "outcome recorded: #{outcome.result} at #{record_path}; delivery failed: #{send_result.message}")
             end
@@ -107,7 +120,7 @@ module Ace
             "record" => record_path, "delivery" => delivery,
             "updated_at" => Time.now.utc.iso8601
           })
-          rewrite_record_with_delivery(record_writer, assignment_id, outcome, cfg, event_id, delivery)
+          rewrite_record_with_delivery(record_writer, assignment_id, outcome, cfg, event_id, delivery, relative_record)
 
           finish_result(outcome, cfg, record_path, event_id, delivery, created_event)
         end
@@ -133,15 +146,20 @@ module Ace
           failed&.number
         end
 
-        def placeholder_record_path(cfg, assignment_id)
-          ".ace-tasks/#{cfg.task}/coworker/#{assignment_id}.md"
+        # The record evidence line must point at the REAL file: derive it
+        # from the resolved task path relative to the project root (task
+        # folders are <ref>-<slug>, never the bare ref).
+        def placeholder_record_path(cfg, assignment_id, task_path = nil)
+          task_path ||= @task_probe.resolve!(cfg.task)
+          relative = Pathname.new(task_path).relative_path_from(Pathname.new(@project_root)).to_s
+          File.join(relative, "coworker", "#{assignment_id}.md")
         end
 
-        def rewrite_record_with_delivery(record_writer, assignment_id, outcome, cfg, event_id, delivery)
+        def rewrite_record_with_delivery(record_writer, assignment_id, outcome, cfg, event_id, delivery, relative_record)
           record_writer.write(assignment_id,
             Atoms::ReportRecordFormatter.format(outcome, cfg,
               event_id: event_id, delivery: delivery || "not attempted",
-              record_path: placeholder_record_path(cfg, assignment_id)))
+              record_path: relative_record))
         end
 
         def dry_run_result(outcome, cfg)
