@@ -181,17 +181,28 @@ module Ace
             end
             return unless target
 
+            # Probes model the shapes a created task can take: the flat task
+            # folder and spec (xxx.t.yyy-slug.s.md), plus a subtask folder and
+            # spec (xxx.t.yyy.0-slug.s.md). The post-creation check stays
+            # authoritative for the exact generated ID and archive partition.
             probes = [target]
-            %w[task-probe 0-task-probe].each do |child|
+            %w[prb.t.000-probe 0-probe].each do |child|
               probes << File.join(target, child)
               probes << File.join(target, child, "#{child}.s.md")
             end
+            probes << File.join(target, "prb.t.000-probe", "prb.t.000.0-probe.s.md")
             ignored = probes.find { |probe| Ace::Task::Molecules::GitIgnoredPath.ignored?(probe) }
             return unless ignored
 
+            if ignored == target
+              raise Ace::Support::Cli::Error,
+                "Cannot --git-commit into a Git-ignored destination: #{target}. " \
+                  "Choose a tracked folder or omit --git-commit."
+            end
+
             raise Ace::Support::Cli::Error,
-              "Cannot --git-commit into a Git-ignored destination: #{target}. " \
-                "Choose a tracked folder or omit --git-commit."
+              "Cannot --git-commit into a destination with Git-ignored child paths: #{ignored}. " \
+                "Choose a tracked folder or adjust the ignore rules."
           end
 
           # --git-commit must not stage a task whose directory or spec path Git
