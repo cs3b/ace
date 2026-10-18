@@ -6,13 +6,23 @@ module Ace
   module Coworker
     module Molecules
       class WorktreeProvisionProbeTest < AceCoworkerTestCase
-        FakeManager = Struct.new(:switch_result, :create_results, :prune_calls) do
-          def initialize(switch_result:, create_results:)
-            super(switch_result, create_results, [])
+        FakeWorktree = Struct.new(:path, :branch, :task_id)
+
+        # Mirrors the real WorktreeManager contract: switch NEVER succeeds
+        # for a worktree whose directory is missing (it fails instead), and
+        # list_all exposes the association inventory for stale detection.
+        FakeManager = Struct.new(:switch_result, :create_results, :prune_calls, :worktrees,
+          :reattach_result) do
+          def initialize(switch_result:, create_results:, worktrees: [], reattach_result: nil)
+            super(switch_result, create_results, [], worktrees, reattach_result)
           end
 
           def switch(_ref)
             switch_result
+          end
+
+          def list_all
+            {success: true, worktrees: worktrees}
           end
 
           def create_task(ref, options = {})
@@ -25,11 +35,19 @@ module Ace
             prune_calls << true
             {success: true}
           end
+
+          attr_reader :reattach_calls
+
+          def create(branch, options = {})
+            (@reattach_calls ||= []) << [branch, options]
+            reattach_result || {success: true, worktree_path: options[:path], branch: branch}
+          end
         end
 
-        def probe(switch_result:, create_results:)
+        def probe(switch_result:, create_results:, worktrees: [])
           WorktreeProvisionProbe.new(project_root: "/proj",
-            manager: FakeManager.new(switch_result: switch_result, create_results: create_results))
+            manager: FakeManager.new(switch_result: switch_result,
+              create_results: create_results, worktrees: worktrees))
         end
 
         def with_directory(existing)
@@ -89,36 +107,88 @@ module Ace
           end
         end
 
-        def test_stale_directory_prunes_and_recovers
-          with_directory(true) do |path|
-            # After prune, the directory exists again (git recreates it).
+        def test_stale_registration_prunes_and_recovers
+          Dir.mktmpdir("coworker-stale") do |dir|
+            missing = File.join(dir, "gone")
+            recreated = {success: true, worktree_path: missing, branch: "8xg-aaa-branch",
+                         message: "recreated"}
             instance = probe(
-              switch_result: {success: true, worktree_path: path, branch: "b", task_id: "8xg.t.aaa"},
-              create_results: [])
-            # Simulate stale: switch resolves, directory missing at decision time.
-            result = nil
-            Dir.mktmpdir("coworker-stale") do |stale_dir|
-              missing = File.join(stale_dir, "gone")
-              instance.instance_variable_get(:@manager).switch_result[:worktree_path] = missing
-              result = instance.ensure_prepared(task_ref: "8xg.t.aaa", expected_task_id: "8xg.t.aaa")
-            end
+              switch_result: {success: false,
+                error: "Worktree directory does not exist: #{missing}"},
+              create_results: [recreated],
+              worktrees: [FakeWorktree.new(missing, "8xg-aaa-branch", "aaa")])
+            result = instance.ensure_prepared(task_ref: "8xg.t.aaa", expected_task_id: "8xg.t.aaa")
 
             assert_equal :recovered, result[:disposition]
             assert_equal 1, instance.instance_variable_get(:@manager).prune_calls.length
           end
         end
 
-        def test_stale_dry_run_reports_would_recover_without_prune
-          Dir.mktmpdir("coworker-stale") do |stale_dir|
-            missing = File.join(stale_dir, "gone")
+        def test_stale_registration_dry_run_reports_would_recover_without_prune
+          Dir.mktmpdir("coworker-stale") do |dir|
+            missing = File.join(dir, "gone")
             instance = probe(
-              switch_result: {success: true, worktree_path: missing, branch: "b", task_id: "8xg.t.aaa"},
-              create_results: [])
+              switch_result: {success: false,
+                error: "Worktree directory does not exist: #{missing}"},
+              create_results: [],
+              worktrees: [FakeWorktree.new(missing, "8xg-aaa-branch", "aaa")])
             result = instance.ensure_prepared(task_ref: "8xg.t.aaa",
               expected_task_id: "8xg.t.aaa", dry_run: true)
 
             assert_equal :would_recover, result[:disposition]
             assert_empty instance.instance_variable_get(:@manager).prune_calls
+          end
+        end
+
+        def test_stale_recovery_reattaches_surviving_branch_when_create_task_trips_on_it
+          # Recreating mints a fresh branch, but the stale worktree's branch
+          # survives its directory; recovery must reattach it.
+          Dir.mktmpdir("coworker-stale") do |dir|
+            missing = File.join(dir, "gone")
+            instance = probe(
+              switch_result: {success: false,
+                error: "Worktree directory does not exist: #{missing}"},
+              create_results: [{success: false,
+                error: "Failed to create worktree: a branch named 'x' already exists"}],
+              worktrees: [FakeWorktree.new(missing, "8xg-aaa-branch", "aaa")])
+            result = instance.ensure_prepared(task_ref: "8xg.t.aaa", expected_task_id: "8xg.t.aaa")
+
+            assert_equal :recovered, result[:disposition]
+            manager = instance.instance_variable_get(:@manager)
+            assert_equal [["8xg-aaa-branch", {path: missing}]], manager.reattach_calls
+          end
+        end
+
+        def test_registration_with_existing_directory_is_not_stale
+          # A failed switch whose registration still points at an existing
+          # directory (e.g. unusable worktree) is not stale metadata; the
+          # idempotent create resolves it without pruning.
+          with_directory(true) do |path|
+            instance = probe(
+              switch_result: {success: false, error: "Worktree is not usable: #{path}"},
+              create_results: [{success: true, existing: true, worktree_path: path, branch: "b"}],
+              worktrees: [FakeWorktree.new(path, "b", "aaa")])
+            result = instance.ensure_prepared(task_ref: "8xg.t.aaa", expected_task_id: "8xg.t.aaa")
+
+            assert_equal :reuse, result[:disposition]
+            assert_empty instance.instance_variable_get(:@manager).prune_calls
+          end
+        end
+
+        def test_foreign_registration_is_ignored_for_stale_detection
+          # Stale recovery only prunes metadata registered to THIS task.
+          Dir.mktmpdir("coworker-stale") do |dir|
+            missing = File.join(dir, "gone")
+            created = File.join(dir, "fresh")
+            FileUtils.mkdir(created)
+            result = probe(
+              switch_result: {success: false, error: "Worktree not found"},
+              create_results: [{success: true, worktree_path: created,
+                                branch: "b", message: "created"}],
+              worktrees: [FakeWorktree.new(missing, "8xg-bbb-branch", "bbb")]
+            ).ensure_prepared(task_ref: "8xg.t.aaa", expected_task_id: "8xg.t.aaa")
+
+            assert_equal :created, result[:disposition]
           end
         end
 

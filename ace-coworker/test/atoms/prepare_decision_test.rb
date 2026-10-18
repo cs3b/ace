@@ -12,8 +12,7 @@ module Ace
         end
 
         def test_switch_hit_matching_task_reuses
-          result = PrepareDecision.from_switch(switch_hit,
-            expected_task_id: "8xg.t.aaa", directory_exists: true)
+          result = PrepareDecision.from_switch(switch_hit, expected_task_id: "8xg.t.aaa")
 
           assert_equal :reuse, result[:disposition]
           assert_equal "/proj/.ace-wt/t.8xg-t-aaa", result[:worktree_path]
@@ -23,30 +22,38 @@ module Ace
         def test_switch_hit_short_id_association_still_reuses
           # ace-git-worktree stores the association under the short id.
           result = PrepareDecision.from_switch(switch_hit(task_id: "aaa"),
-            expected_task_id: "8xg.t.aaa", directory_exists: true)
+            expected_task_id: "8xg.t.aaa")
 
           assert_equal :reuse, result[:disposition]
         end
 
         def test_switch_hit_foreign_task_is_conflict_mismatch
           result = PrepareDecision.from_switch(switch_hit(task_id: "8xg.t.bbb"),
-            expected_task_id: "8xg.t.aaa", directory_exists: true)
+            expected_task_id: "8xg.t.aaa")
 
           assert_equal :conflict_mismatch, result[:disposition]
           assert_includes result[:reason], "belongs to task '8xg.t.bbb'"
         end
 
-        def test_switch_hit_missing_directory_is_stale_recovery
-          result = PrepareDecision.from_switch(switch_hit,
-            expected_task_id: "8xg.t.aaa", directory_exists: false)
+        def test_switch_failure_with_stale_registration_is_stale_recovery
+          # The real owner's switch never resolves a missing directory; the
+          # registration (from the association inventory) carries the truth.
+          result = PrepareDecision.from_switch(
+            {success: false, error: "Worktree directory does not exist: /proj/.ace-wt/t.8xg-t-aaa"},
+            expected_task_id: "8xg.t.aaa",
+            stale_registration: {task_id: "aaa", worktree_path: "/proj/.ace-wt/t.8xg-t-aaa",
+                                 branch: "8xg-aaa-branch"})
 
           assert_equal :stale_recovery, result[:disposition]
+          assert_equal "/proj/.ace-wt/t.8xg-t-aaa", result[:worktree_path]
+          assert_equal "8xg-aaa-branch", result[:branch]
+          assert_equal "aaa", result[:task_id]
           assert_includes result[:reason], "missing directory"
         end
 
-        def test_switch_miss_reports_reason
+        def test_switch_miss_without_registration_reports_reason
           result = PrepareDecision.from_switch({success: false, error: "Worktree not found: 8xg.t.aaa"},
-            expected_task_id: "8xg.t.aaa", directory_exists: false)
+            expected_task_id: "8xg.t.aaa")
 
           assert_equal :miss, result[:disposition]
           assert_equal "Worktree not found: 8xg.t.aaa", result[:reason]

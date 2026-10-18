@@ -35,15 +35,33 @@ module Ace
           end
         end
 
-        # Read-only find: association-aware switch + directory verification.
+        # Read-only find: association-aware switch plus stale detection.
+        # The owner's switch never resolves a worktree whose directory is
+        # missing (it fails instead), so a failed switch is cross-checked
+        # against the association inventory: a registration for this task
+        # pointing at a missing directory is stale metadata, not a miss.
         def locate(task_ref:, expected_task_id:)
           switch = @manager.switch(task_ref.to_s)
-          directory_exists = switch[:success] && path_exists?(switch[:worktree_path])
+          stale = stale_registration(expected_task_id) unless switch[:success]
           Atoms::PrepareDecision.from_switch(switch,
-            expected_task_id: expected_task_id, directory_exists: directory_exists)
+            expected_task_id: expected_task_id, stale_registration: stale)
         end
 
         private
+
+        def stale_registration(expected_task_id)
+          listing = @manager.list_all
+          return nil unless listing[:success]
+
+          expected = Atoms::PrepareDecision.expected_ids(expected_task_id)
+          stale = listing[:worktrees].find do |info|
+            info.respond_to?(:task_id) && expected.include?(info.task_id.to_s) &&
+              !path_exists?(info.path)
+          end
+          return nil unless stale
+
+          {task_id: stale.task_id.to_s, worktree_path: stale.path, branch: stale.branch}
+        end
 
         def prepare(task_ref:, dry_run:)
           return {disposition: :would_create, reason: "no worktree for this task yet",
@@ -64,6 +82,13 @@ module Ace
           if retry_create[:success]
             return Atoms::PrepareDecision.from_create(retry_create.merge(recovered: true))
           end
+
+          # The stale worktree's branch survives its directory (committed
+          # work lives on it): when recreation trips over the surviving
+          # branch, reattach a worktree to it instead of minting a fresh
+          # branch that would orphan that work.
+          reattached = @manager.create(decision[:branch].to_s, path: decision[:worktree_path])
+          return Atoms::PrepareDecision.from_create(reattached.merge(recovered: true)) if reattached[:success]
 
           {disposition: :error,
            reason: "#{retry_create[:error]} (after pruning stale worktree metadata; " \

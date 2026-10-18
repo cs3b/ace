@@ -10,28 +10,36 @@ module Ace
       # (ace-git-worktree switch/create results); outputs are dispositions
       # with reasons. No IO, no writes.
       module PrepareDecision
-        # @param switch_result [Hash] WorktreeManager#switch result
+        # @param switch_result [Hash] WorktreeManager#switch result; with the
+        #   real owner, a worktree whose directory is missing never resolves
+        #   here (switch fails with a "directory does not exist" error).
         # @param expected_task_id [String] id of the task being prepared
-        # @param directory_exists [Boolean] whether the resolved worktree
-        #   directory exists on disk
+        # @param stale_registration [Hash, nil] association-registered
+        #   worktree for the expected task whose directory is missing on
+        #   disk ({task_id:, worktree_path:, branch:}); recovered via prune
+        #   + recreate instead of a plain create
         # @return [Hash] {disposition:, reason:, worktree_path:, branch:, task_id:}
         #   disposition: :reuse | :conflict_mismatch | :stale_recovery | :miss
-        def self.from_switch(switch_result, expected_task_id:, directory_exists:)
-          return {disposition: :miss, reason: switch_result[:error].to_s,
-                  worktree_path: nil, branch: nil, task_id: nil} unless switch_result[:success]
-
-          task_id = switch_result[:task_id].to_s
-          base = {worktree_path: switch_result[:worktree_path],
-                  branch: switch_result[:branch], task_id: task_id}
-          unless directory_exists
-            return base.merge(disposition: :stale_recovery,
-              reason: "worktree metadata resolves to a missing directory: #{switch_result[:worktree_path]}")
-          end
-          if expected_ids(expected_task_id).include?(task_id)
-            base.merge(disposition: :reuse, reason: "worktree already prepared for this task")
+        def self.from_switch(switch_result, expected_task_id:, stale_registration: nil)
+          if switch_result[:success]
+            task_id = switch_result[:task_id].to_s
+            base = {worktree_path: switch_result[:worktree_path],
+                    branch: switch_result[:branch], task_id: task_id}
+            if expected_ids(expected_task_id).include?(task_id)
+              base.merge(disposition: :reuse, reason: "worktree already prepared for this task")
+            else
+              base.merge(disposition: :conflict_mismatch,
+                reason: "resolved worktree belongs to task '#{task_id}', not '#{expected_task_id}'")
+            end
+          elsif stale_registration
+            {disposition: :stale_recovery,
+             reason: "worktree metadata resolves to a missing directory: #{stale_registration[:worktree_path]}",
+             worktree_path: stale_registration[:worktree_path],
+             branch: stale_registration[:branch],
+             task_id: stale_registration[:task_id]}
           else
-            base.merge(disposition: :conflict_mismatch,
-              reason: "resolved worktree belongs to task '#{task_id}', not '#{expected_task_id}'")
+            {disposition: :miss, reason: switch_result[:error].to_s,
+             worktree_path: nil, branch: nil, task_id: nil}
           end
         end
 
@@ -41,9 +49,8 @@ module Ace
         def self.expected_ids(expected_task_id)
           full = expected_task_id.to_s
           [full, Ace::Git::Worktree::Atoms::TaskIDExtractor.short_id(full),
-           Ace::Git::Worktree::Atoms::TaskIDExtractor.normalize(full)].compact.uniq
+            Ace::Git::Worktree::Atoms::TaskIDExtractor.normalize(full)].compact.uniq
         end
-        private_class_method :expected_ids
 
         # @param create_result [Hash] WorktreeManager#create_task result
         # @param occupied_directory [Boolean] whether the task's expected

@@ -112,6 +112,30 @@ module Ace
             assert_equal 1, hitl_events.size
           end
 
+          def test_stale_metadata_dry_run_reports_would_recover_and_real_run_recovers
+            worktree = prepare_worktree(@task_ref)
+            # Stale metadata: the registration survives, the directory is gone.
+            FileUtils.remove_entry(worktree)
+            refute File.directory?(worktree)
+
+            out, err, status = run_cli(COWORKER_BIN, "prepare",
+              "--task", @task_ref, "--roles", "worker", "--dry-run", "--format", "json")
+            assert status.success?, "stale dry-run is a would-be recovery: #{out}#{err}"
+            payload = JSON.parse(out)
+            assert_equal "would_recover", payload["worktree"]["disposition"]
+            assert_equal worktree, payload["worktree"]["path"]
+            refute File.directory?(worktree), "dry-run never materializes the worktree"
+            assert_empty hitl_events
+
+            out, err, status = run_cli(COWORKER_BIN, "prepare",
+              "--task", @task_ref, "--roles", "worker", "--format", "json")
+            assert status.success?, "real prepare recovers stale metadata: #{out}#{err}"
+            payload = JSON.parse(out)
+            assert_equal "recovered", payload["worktree"]["disposition"]
+            assert_equal worktree, payload["worktree"]["path"]
+            assert File.directory?(worktree), "worktree materialized again"
+          end
+
           def test_dry_run_resolves_without_effects
             out, err, status = run_cli(COWORKER_BIN, "prepare",
               "--task", @task_ref, "--roles", "worker", "--dry-run", "--format", "json")
