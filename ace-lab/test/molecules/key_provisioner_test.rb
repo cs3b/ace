@@ -156,15 +156,162 @@ module Molecules
       Dir.mktmpdir do |dir|
         path = File.join(dir, "id_ed25519")
         provisioner.call(key: key(path), account: account, machine: "lab01")
-        File.chmod(0o644, path)
         mtime = File.mtime(path)
 
         result = provisioner(dry_run: true).call(key: key(path), account: account, machine: "lab01")
 
         assert_equal "exists", result["status"]
         assert_match(/\ASHA256:/, result["fingerprint"])
-        assert_equal 0o644, File.stat(path).mode & 0o7777
+        assert_equal 0o600, File.stat(path).mode & 0o7777
         assert_equal mtime, File.mtime(path)
+      end
+    end
+
+    def test_planted_ssh_dir_symlink_is_refused_without_touching_the_target
+      Dir.mktmpdir do |dir|
+        target = File.join(dir, "target-dir")
+        Dir.mkdir(target)
+        home = File.join(dir, "home")
+        Dir.mkdir(home)
+        File.symlink(target, File.join(home, ".ssh"))
+        path = File.join(home, ".ssh", "id_ed25519")
+
+        result = provisioner.call(key: key(path), account: account, machine: "lab01")
+
+        assert_equal "failed", result["status"]
+        assert_match(/key directory .* is a symbolic link; refusing/, result["message"])
+        # zero mutation of the symlink target: no chmod-to-0700, no
+        # chown, no key material written through the link
+        assert_equal 0o755, File.stat(target).mode & 0o7777
+        assert_equal Process.uid, File.stat(target).uid
+        assert_empty Dir.children(target)
+        assert File.symlink?(File.join(home, ".ssh"))
+      end
+    end
+
+    def test_planted_ssh_dir_symlink_is_refused_in_dry_run_too
+      Dir.mktmpdir do |dir|
+        target = File.join(dir, "target-dir")
+        Dir.mkdir(target)
+        home = File.join(dir, "home")
+        Dir.mkdir(home)
+        File.symlink(target, File.join(home, ".ssh"))
+        path = File.join(home, ".ssh", "id_ed25519")
+
+        result = provisioner(dry_run: true).call(key: key(path), account: account, machine: "lab01")
+
+        assert_equal "failed", result["status"]
+        assert_match(/symbolic link; refusing/, result["message"])
+        assert_empty Dir.children(target)
+      end
+    end
+
+    def test_non_directory_at_ssh_dir_path_is_refused
+      Dir.mktmpdir do |dir|
+        home = File.join(dir, "home")
+        Dir.mkdir(home)
+        File.write(File.join(home, ".ssh"), "occupied")
+        path = File.join(home, ".ssh", "id_ed25519")
+
+        result = provisioner.call(key: key(path), account: account, machine: "lab01")
+
+        assert_equal "failed", result["status"]
+        assert_match(/exists but is not a directory; refusing/, result["message"])
+      end
+    end
+
+    def test_dangling_pub_symlink_is_refused_without_arbitrary_write
+      Dir.mktmpdir do |dir|
+        victim = File.join(dir, "victim")
+        path = File.join(dir, "id_ed25519")
+        provisioner.call(key: key(path), account: account, machine: "lab01")
+        File.delete("#{path}.pub")
+        File.symlink(victim, "#{path}.pub")
+
+        result = provisioner.call(key: key(path), account: account, machine: "lab01")
+
+        assert_equal "failed", result["status"]
+        assert_match(/public key .* exists but is not a regular file; refusing/, result["message"])
+        # the regenerated public key must not land on the symlink target
+        refute File.exist?(victim)
+        assert File.symlink?("#{path}.pub")
+      end
+    end
+
+    def test_pub_symlink_to_directory_is_refused
+      Dir.mktmpdir do |dir|
+        victim = File.join(dir, "victim-dir")
+        Dir.mkdir(victim)
+        path = File.join(dir, "id_ed25519")
+        provisioner.call(key: key(path), account: account, machine: "lab01")
+        File.delete("#{path}.pub")
+        File.symlink(victim, "#{path}.pub")
+
+        result = provisioner.call(key: key(path), account: account, machine: "lab01")
+
+        assert_equal "failed", result["status"]
+        assert_match(/not a regular file; refusing/, result["message"])
+        assert_empty Dir.children(victim)
+      end
+    end
+
+    def test_dangling_pub_symlink_is_refused_in_dry_run_too
+      Dir.mktmpdir do |dir|
+        victim = File.join(dir, "victim")
+        path = File.join(dir, "id_ed25519")
+        provisioner.call(key: key(path), account: account, machine: "lab01")
+        File.delete("#{path}.pub")
+        File.symlink(victim, "#{path}.pub")
+
+        result = provisioner(dry_run: true).call(key: key(path), account: account, machine: "lab01")
+
+        assert_equal "failed", result["status"]
+        assert_match(/not a regular file; refusing/, result["message"])
+        refute File.exist?(victim)
+      end
+    end
+
+    def test_dry_run_missing_pub_predicts_repair_not_failure
+      Dir.mktmpdir do |dir|
+        path = File.join(dir, "id_ed25519")
+        provisioner.call(key: key(path), account: account, machine: "lab01")
+        File.delete("#{path}.pub")
+
+        result = provisioner(dry_run: true).call(key: key(path), account: account, machine: "lab01")
+
+        # the wet run regenerates the .pub — the prediction must say so
+        assert_equal "would_repair_public", result["status"]
+        assert_nil result["message"]
+        refute File.exist?("#{path}.pub")
+      end
+    end
+
+    def test_dry_run_mode_drift_on_existing_pair_predicts_fix
+      Dir.mktmpdir do |dir|
+        path = File.join(dir, "id_ed25519")
+        provisioner.call(key: key(path), account: account, machine: "lab01")
+        File.chmod(0o644, path)
+
+        result = provisioner(dry_run: true).call(key: key(path), account: account, machine: "lab01")
+
+        assert_equal "would_fix_mode", result["status"]
+        assert_nil result["message"]
+        assert_equal 0o644, File.stat(path).mode & 0o7777
+      end
+    end
+
+    def test_dry_run_with_unresolvable_account_predicts_creation_instead_of_failing
+      Dir.mktmpdir do |dir|
+        path = File.join(dir, "id_ed25519")
+
+        # production lookup for a not-yet-created account returns nil —
+        # the account phase would create it, so dry-run must predict
+        result = provisioner(lookup: ->(_name) { nil }, dry_run: true)
+          .call(key: key(path), account: account, machine: "lab01")
+
+        assert_equal "would_create", result["status"]
+        assert_nil result["message"]
+        refute File.exist?(path)
       end
     end
 

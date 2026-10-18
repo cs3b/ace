@@ -52,57 +52,101 @@ module Ace
           path = key["path"]
           base = {"account" => username, "path" => path}
 
-          entry = account_lookup.call(username)
-          unless entry
-            return base.merge("status" => "failed", "fingerprint" => nil,
-              "message" => "account '#{username}' is not available on this machine; fix the account phase first")
-          end
-
           if inside_git_worktree?(path)
             return base.merge("status" => "failed", "fingerprint" => nil,
               "message" => "key path '#{path}' is inside a git worktree; secrets must not live in Git")
           end
 
-          stat = begin
-            File.lstat(path)
-          rescue Errno::ENOENT
-            nil
-          end
+          stat = lstat(path)
 
           if stat && !stat.file?
             return base.merge("status" => "failed", "fingerprint" => nil,
               "message" => "key path '#{path}' exists but is not a regular file; refusing to overwrite")
           end
 
-          return existing(base, path, entry) if stat
+          # Dry-run predicts from the filesystem alone, before consulting
+          # live passwd: the account phase may report would_create for an
+          # account that does not exist yet, and a nil lookup must not
+          # turn that prediction into a dependency failure.
+          return predict(base, path, stat) if dry_run
 
-          if dry_run
-            return base.merge("status" => "would_create", "fingerprint" => nil, "message" => nil)
+          entry = account_lookup.call(username)
+          unless entry
+            return base.merge("status" => "failed", "fingerprint" => nil,
+              "message" => "account '#{username}' is not available on this machine; fix the account phase first")
           end
+
+          return existing(base, path, entry) if stat
 
           generate(base, key, account, machine, path, entry)
         end
 
+        # Prediction contract: dry-run must say what the wet run would do.
+        # A missing key pair (behind a safe .ssh) is would_create; an
+        # existing private key with a missing .pub is would_repair_public
+        # (the wet run regenerates it); mode or ownership drift on an
+        # existing pair is would_fix_mode (the wet run enforces 0600/0644
+        # and account ownership).
+        def predict(base, path, stat)
+          unless stat
+            refusal = unsafe_ssh_dir_refusal(base, path)
+            return refusal if refusal
+
+            return base.merge("status" => "would_create", "fingerprint" => nil, "message" => nil)
+          end
+
+          public_path = "#{path}.pub"
+          pub_stat = lstat(public_path)
+          if pub_stat && !pub_stat.file?
+            return non_regular_public_refusal(base, public_path)
+          end
+
+          unless pub_stat
+            return base.merge("status" => "would_repair_public", "fingerprint" => nil, "message" => nil)
+          end
+
+          entry = account_lookup.call(base["account"])
+          if drift?(path, pub_stat, entry)
+            return base.merge("status" => "would_fix_mode", "fingerprint" => nil, "message" => nil)
+          end
+
+          with_fingerprint(base.merge("status" => "exists"), public_path,
+            "fingerprint of '#{public_path}' could not be read; resolve manually")
+        end
+
+        def drift?(path, pub_stat, entry)
+          private_stat = File.stat(path)
+          (private_stat.mode & 0o7777) != PRIVATE_MODE ||
+            (pub_stat.mode & 0o7777) != PUBLIC_MODE ||
+            (entry && (private_stat.uid != entry.uid || pub_stat.uid != entry.uid))
+        end
+
         def existing(base, path, entry)
           public_path = "#{path}.pub"
-          unless File.exist?(public_path)
-            if dry_run
-              return base.merge("status" => "failed", "fingerprint" => nil,
-                "message" => "public key '#{public_path}' is missing; refusing to regenerate over an " \
-                "unverifiable private key — resolve manually")
-            end
+          pub_stat = lstat(public_path)
+          if pub_stat && !pub_stat.file?
+            return non_regular_public_refusal(base, public_path)
+          end
 
+          if pub_stat.nil?
             regenerated = regenerate_public(base, path, public_path, entry)
             return regenerated unless regenerated.nil?
           end
 
-          enforce_modes_and_ownership(path, public_path, entry) unless dry_run
+          enforce_modes_and_ownership(path, public_path, entry)
           with_fingerprint(base.merge("status" => "exists"), public_path,
             "fingerprint of '#{public_path}' could not be read; resolve manually")
         end
 
         def generate(base, key, account, machine, path, entry)
           ssh_dir = File.dirname(path)
+          # An account-controlled home may carry a planted ~/.ssh symlink
+          # or non-directory; mkdir_p/chmod/chown would follow it in the
+          # privileged context (directory-ownership takeover of an
+          # arbitrary path), so refuse before any mutation.
+          refusal = unsafe_ssh_dir_refusal(base, path)
+          return refusal if refusal
+
           FileUtils.mkdir_p(ssh_dir)
           FileUtils.chmod(SSH_DIR_MODE, ssh_dir)
           FileUtils.chown(entry.uid, entry.gid, ssh_dir)
@@ -142,7 +186,17 @@ module Ace
               "(#{command_failure('ssh-keygen', result)})")
           end
 
-          File.write(public_path, result["out"])
+          # O_NOFOLLOW: a dangling .pub symlink planted by the account
+          # must not turn this into an arbitrary privileged write; ELOOP
+          # (symlink raced in after the lstat guard) is refused, not
+          # raised.
+          begin
+            File.open(public_path, File::WRONLY | File::CREAT | File::TRUNC | File::NOFOLLOW) do |file|
+              file.write(result["out"])
+            end
+          rescue Errno::ELOOP
+            return non_regular_public_refusal(base, public_path)
+          end
           FileUtils.chmod(PUBLIC_MODE, public_path)
           FileUtils.chown(entry.uid, entry.gid, public_path)
           nil
@@ -150,9 +204,41 @@ module Ace
 
         def enforce_modes_and_ownership(path, public_path, entry)
           FileUtils.chmod(PRIVATE_MODE, path)
-          FileUtils.chmod(PUBLIC_MODE, public_path) if File.exist?(public_path)
+          FileUtils.chmod(PUBLIC_MODE, public_path) if regular_file?(public_path)
           FileUtils.chown(entry.uid, entry.gid, path)
-          FileUtils.chown(entry.uid, entry.gid, public_path) if File.exist?(public_path)
+          FileUtils.chown(entry.uid, entry.gid, public_path) if regular_file?(public_path)
+        end
+
+        def non_regular_public_refusal(base, public_path)
+          base.merge("status" => "failed", "fingerprint" => nil,
+            "message" => "public key '#{public_path}' exists but is not a regular file; refusing")
+        end
+
+        # lstat-based: File.exist? follows symlinks and must not gate
+        # privileged chmod/chown on account-controlled paths.
+        def regular_file?(path)
+          stat = lstat(path)
+          stat && stat.file?
+        end
+
+        def unsafe_ssh_dir_refusal(base, path)
+          ssh_dir = File.dirname(path)
+          stat = lstat(ssh_dir)
+          return nil unless stat
+
+          if stat.symlink?
+            base.merge("status" => "failed", "fingerprint" => nil,
+              "message" => "key directory '#{ssh_dir}' is a symbolic link; refusing")
+          elsif !stat.directory?
+            base.merge("status" => "failed", "fingerprint" => nil,
+              "message" => "key directory '#{ssh_dir}' exists but is not a directory; refusing")
+          end
+        end
+
+        def lstat(path)
+          File.lstat(path)
+        rescue Errno::ENOENT, Errno::ENOTDIR
+          nil
         end
 
         # @return [String, nil] SHA256 fingerprint from `ssh-keygen -lf`;
