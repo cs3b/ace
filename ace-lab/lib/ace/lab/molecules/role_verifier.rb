@@ -73,9 +73,14 @@ module Ace
             "message" => "instructions file '#{path}' could not be verified (#{e.class.name})")
         end
 
+        # POSIX access checks do not fall through permission classes: a
+        # file owned by the account is governed by the owner bit alone —
+        # group/other readability never applies. Short-circuit per
+        # class so an owner-readable-bit-clear file can never verify
+        # through a gid match.
         def readable_by_account?(stat, entry)
-          return true if stat.uid == entry.uid && (stat.mode & 0o400).nonzero?
-          return true if stat.gid == entry.gid && (stat.mode & 0o040).nonzero?
+          return (stat.mode & 0o400).nonzero? if stat.uid == entry.uid
+          return (stat.mode & 0o040).nonzero? if stat.gid == entry.gid
 
           (stat.mode & 0o004).nonzero?
         end

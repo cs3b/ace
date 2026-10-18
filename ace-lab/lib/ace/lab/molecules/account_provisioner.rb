@@ -59,18 +59,24 @@ module Ace
                 "with sudo or create the account manually")
             end
 
+            # Platform support is classified BEFORE the dry-run
+            # prediction: --dry-run must predict the wet failure on an
+            # unsupported platform, not would_create.
+            creation = case platform
+                       when "darwin" then :create_darwin
+                       when "linux" then :create_linux
+                       end
+            if creation.nil?
+              return failure(username,
+                "unsupported platform '#{platform}' for account creation; create account '#{username}' " \
+                "manually and set create: false in the install manifest")
+            end
+
             if dry_run
               return {"username" => username, "status" => "would_create", "uid" => nil, "message" => nil}
             end
 
-            case platform
-            when "darwin" then create_darwin(account)
-            when "linux" then create_linux(account)
-            else
-              failure(username,
-                "unsupported platform '#{platform}' for account creation; create account '#{username}' " \
-                "manually and set create: false in the install manifest")
-            end
+            send(creation, account)
           end
         end
 
@@ -147,6 +153,11 @@ module Ace
           elsif result["status"] == "enoent"
             {"ok" => false, "out" => result["out"],
              "message" => "#{argv.first} not found in PATH; install it and rerun ace-lab prepare"}
+          elsif result["status"] == "exec_failed"
+            # Exec-level SystemCallError, not a subprocess exit status —
+            # render the errno class so the message never says "exit failed".
+            {"ok" => false, "out" => result["out"],
+             "message" => "command could not be executed (#{argv.first}, #{result['err']})"}
           else
             first_line = result["err"].to_s.lines.map(&:strip).reject(&:empty?).first
             message = "command failed (#{argv.first}, exit #{result['status']})"
@@ -161,7 +172,7 @@ module Ace
         rescue Errno::ENOENT
           {"status" => "enoent", "out" => "", "err" => ""}
         rescue SystemCallError => e
-          {"status" => "failed", "out" => "", "err" => e.class.name}
+          {"status" => "exec_failed", "out" => "", "err" => e.class.name}
         end
 
         def lookup_passwd(username)

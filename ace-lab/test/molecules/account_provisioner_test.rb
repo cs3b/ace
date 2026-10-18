@@ -196,5 +196,30 @@ module Molecules
       assert_equal "failed", result["status"]
       assert_match(/does not exist/, result["message"])
     end
+
+    # Round-4 L1: dry-run fidelity — an unsupported platform must
+    # predict the wet failure, not would_create.
+    def test_dry_run_on_unsupported_platform_predicts_the_wet_failure
+      result = provisioner(platform: "freebsd", dry_run: true).call(account: account("create" => true))
+
+      assert_equal "failed", result["status"]
+      assert_match(/unsupported platform 'freebsd' for account creation/, result["message"])
+      assert_match(/set create: false/, result["message"])
+      assert_empty calls
+    end
+
+    # Round-4 L2: an exec-level SystemCallError is not a subprocess
+    # exit status — the message names the errno class, never "exit
+    # failed".
+    def test_exec_level_systemcallerror_renders_errno_class_not_exit_failed
+      runner = fake_runner("useradd" => {"status" => "exec_failed", "out" => "",
+        "err" => "Errno::EAGAIN"})
+
+      result = provisioner(runner: runner, platform: "linux").call(account: account("create" => true))
+
+      assert_equal "failed", result["status"]
+      assert_match(/command could not be executed \(useradd, Errno::EAGAIN\)/, result["message"])
+      refute_includes result["message"], "exit failed"
+    end
   end
 end

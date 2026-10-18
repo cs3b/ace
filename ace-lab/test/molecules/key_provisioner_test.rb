@@ -542,5 +542,167 @@ module Molecules
         refute_includes rendered, "OPENSSH PRIVATE KEY"
       end
     end
+
+    # Round-4 H1: the manifest home is a leftover regular file —
+    # mkdir_p re-raises EEXIST — which previously escaped the molecule
+    # as a raw backtrace. It must be a classified failed item.
+    def test_regular_file_at_manifest_home_is_classified_failure_not_crash
+      Dir.mktmpdir do |dir|
+        home = File.join(dir, "ace-worker")
+        File.write(home, "leftover")
+        path = File.join(home, ".ssh", "id_ed25519")
+
+        result = provisioner.call(key: key(path), account: account, machine: "lab01")
+
+        assert_equal "failed", result["status"]
+        assert_nil result["fingerprint"]
+        assert_match(/key directory .* could not be created/, result["message"])
+        assert_match(/check the parent path and rerun ace-lab prepare/, result["message"])
+        # the leftover file is untouched
+        assert File.file?(home)
+        assert_equal "leftover", File.read(home)
+      end
+    end
+
+    # Round-4 H1: any other SystemCallError on the provision path
+    # (here ELOOP on the path-based directory chmod in a race) hits the
+    # method-level classifier — classified failed item, errno named.
+    def test_unclassified_systemcallerror_is_classified_with_errno_name
+      Dir.mktmpdir do |dir|
+        path = File.join(dir, ".ssh", "id_ed25519")
+
+        FileUtils.stub :chmod, ->(*_args) { raise Errno::ELOOP } do
+          result = provisioner.call(key: key(path), account: account, machine: "lab01")
+
+          assert_equal "failed", result["status"]
+          assert_match(/key path .* could not be prepared \(Errno::ELOOP\)/, result["message"])
+          assert_match(/rerun ace-lab prepare/, result["message"])
+        end
+      end
+    end
+
+    # Round-4 M1: the ".ssh is 0700" invariant is converged on the
+    # existing-key path, not only at creation.
+    def test_existing_pair_converges_ssh_dir_mode_drift
+      Dir.mktmpdir do |dir|
+        path = File.join(dir, ".ssh", "id_ed25519")
+        provisioner.call(key: key(path), account: account, machine: "lab01")
+        File.chmod(0o755, File.dirname(path))
+
+        result = provisioner.call(key: key(path), account: account, machine: "lab01")
+
+        assert_equal "exists", result["status"]
+        assert_match(/\ASHA256:/, result["fingerprint"])
+        assert_equal 0o700, File.stat(File.dirname(path)).mode & 0o7777
+      end
+    end
+
+    def test_dry_run_predicts_ssh_dir_mode_drift_as_would_fix_mode
+      Dir.mktmpdir do |dir|
+        path = File.join(dir, ".ssh", "id_ed25519")
+        provisioner.call(key: key(path), account: account, machine: "lab01")
+        File.chmod(0o755, File.dirname(path))
+
+        result = provisioner(dry_run: true).call(key: key(path), account: account, machine: "lab01")
+
+        assert_equal "would_fix_mode", result["status"]
+        assert_nil result["message"]
+        assert_equal 0o755, File.stat(File.dirname(path)).mode & 0o7777
+      end
+    end
+
+    # Round-4 M1: an installer-owned .ssh (uid not the account's) is
+    # drift on the existing path, predicted by dry-run like file drift.
+    def test_dry_run_predicts_ssh_dir_ownership_drift_as_would_fix_mode
+      Dir.mktmpdir do |dir|
+        path = File.join(dir, "id_ed25519")
+        provisioner.call(key: key(path), account: account, machine: "lab01")
+        other = FakeEntry.new(name: "ace-worker", uid: Process.uid + 1, gid: Process.gid,
+          dir: "/home/ace-worker")
+
+        result = provisioner(lookup: ->(_name) { other }, dry_run: true)
+          .call(key: key(path), account: account, machine: "lab01")
+
+        # key files and .ssh are installer-owned here, the account owns
+        # nothing yet — the wet run would transfer all of it
+        assert_equal "would_fix_mode", result["status"]
+        assert_nil result["message"]
+      end
+    end
+
+    # Round-4 M3: a pre-existing foreign-uid .ssh plus missing key —
+    # the generate path refuses the takeover (chmod/chown to the
+    # account would silently take over a third party's directory).
+    def test_preexisting_foreign_owned_ssh_dir_is_refused_without_takeover
+      Dir.mktmpdir do |dir|
+        home = File.join(dir, "home")
+        Dir.mkdir(home)
+        ssh_dir = File.join(home, ".ssh")
+        Dir.mkdir(ssh_dir)
+        File.chmod(0o755, ssh_dir)
+        path = File.join(ssh_dir, "id_ed25519")
+        foreign_uid = Process.uid + 999
+        real_lstat = File.method(:lstat)
+
+        File.stub :lstat, ->(p) { p == ssh_dir ? SwappedUidStat.new(real_lstat.call(p), foreign_uid) : real_lstat.call(p) } do
+          result = provisioner.call(key: key(path), account: account, machine: "lab01")
+
+          assert_equal "failed", result["status"]
+          assert_match(/key directory .* is owned by uid #{foreign_uid}/, result["message"])
+          assert_match(/refusing takeover/, result["message"])
+          assert_match(/resolve ownership manually/, result["message"])
+        end
+        # zero mutation: mode and owner unchanged, no key written
+        assert_equal 0o755, File.stat(ssh_dir).mode & 0o7777
+        assert_equal Process.uid, File.stat(ssh_dir).uid
+        assert_empty Dir.children(ssh_dir)
+      end
+    end
+
+    def test_dry_run_foreign_owned_ssh_dir_predicts_the_refusal
+      Dir.mktmpdir do |dir|
+        home = File.join(dir, "home")
+        Dir.mkdir(home)
+        ssh_dir = File.join(home, ".ssh")
+        Dir.mkdir(ssh_dir)
+        File.chmod(0o755, ssh_dir)
+        path = File.join(ssh_dir, "id_ed25519")
+        foreign_uid = Process.uid + 999
+        real_lstat = File.method(:lstat)
+
+        File.stub :lstat, ->(p) { p == ssh_dir ? SwappedUidStat.new(real_lstat.call(p), foreign_uid) : real_lstat.call(p) } do
+          result = provisioner(dry_run: true).call(key: key(path), account: account, machine: "lab01")
+
+          assert_equal "failed", result["status"]
+          assert_match(/owned by uid #{foreign_uid}.*refusing takeover/, result["message"])
+        end
+        assert_equal 0o755, File.stat(ssh_dir).mode & 0o7777
+        assert_empty Dir.children(ssh_dir)
+      end
+    end
+
+    # Round-4 M3 on the existing-key path: a foreign-owned .ssh around
+    # an account-owned pair is refused before any convergence runs.
+    def test_existing_pair_under_foreign_owned_ssh_dir_is_refused
+      Dir.mktmpdir do |dir|
+        path = File.join(dir, ".ssh", "id_ed25519")
+        provisioner.call(key: key(path), account: account, machine: "lab01")
+        ssh_dir = File.dirname(path)
+        File.chmod(0o755, ssh_dir)
+        foreign_uid = Process.uid + 999
+        real_lstat = File.method(:lstat)
+
+        File.stub :lstat, ->(p) { p == ssh_dir ? SwappedUidStat.new(real_lstat.call(p), foreign_uid) : real_lstat.call(p) } do
+          result = provisioner.call(key: key(path), account: account, machine: "lab01")
+
+          assert_equal "failed", result["status"]
+          assert_match(/key directory .* owned by uid #{foreign_uid}/, result["message"])
+          assert_match(/refusing takeover/, result["message"])
+        end
+        # nothing converged while the foreign stat was visible
+        assert_equal 0o755, File.stat(ssh_dir).mode & 0o7777
+        assert_equal Process.uid, File.stat(ssh_dir).uid
+      end
+    end
   end
 end

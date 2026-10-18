@@ -110,5 +110,56 @@ module Molecules
       assert_equal "failed", result["status"]
       assert_match(/does not exist/, result["message"])
     end
+
+    # Round-4 M2: POSIX owner class short-circuits — a file owned by
+    # the account with only the group bit set (0o040) is NOT readable
+    # by that account; the old gid-match fallthrough false-verified it.
+    def test_owner_with_group_readable_only_mode_fails_verification
+      Dir.mktmpdir do |dir|
+        path = File.join(dir, "worker.md")
+        File.write(path, "instructions")
+        File.chmod(0o040, path)
+
+        result = verifier.call(role: role(path))
+
+        assert_equal "failed", result["status"]
+        assert_match(/not readable by account 'ace-worker'/, result["message"])
+      ensure
+        File.chmod(0o600, path) if File.exist?(path)
+      end
+    end
+
+    # Round-4 M2 companions: each non-owner class still verifies
+    # through its own bit when the higher classes do not apply.
+    def test_group_class_verifies_when_owner_is_foreign
+      Dir.mktmpdir do |dir|
+        path = File.join(dir, "worker.md")
+        File.write(path, "instructions")
+        File.chmod(0o040, path)
+        other = FakeEntry.new(name: "ace-other", uid: Process.uid + 1, gid: Process.gid, dir: "/x")
+
+        result = verifier(lookup: ->(_name) { other }).call(role: role(path))
+
+        assert_equal "verified", result["status"]
+      ensure
+        File.chmod(0o600, path) if File.exist?(path)
+      end
+    end
+
+    def test_owner_class_with_owner_bit_clear_fails_even_when_group_bit_set_for_foreign_owner
+      Dir.mktmpdir do |dir|
+        path = File.join(dir, "worker.md")
+        File.write(path, "instructions")
+        # owner bit set, group/other clear; the account matches gid but
+        # not uid — only the (foreign) owner can read it
+        File.chmod(0o400, path)
+        in_group = FakeEntry.new(name: "ace-other", uid: Process.uid + 1, gid: Process.gid, dir: "/x")
+
+        result = verifier(lookup: ->(_name) { in_group }).call(role: role(path))
+
+        assert_equal "failed", result["status"]
+        assert_match(/not readable by account 'ace-other'/, result["message"])
+      end
+    end
   end
 end

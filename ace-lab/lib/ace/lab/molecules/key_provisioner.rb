@@ -46,6 +46,15 @@ module Ace
           {"account" => account["username"], "path" => key["path"], "status" => "failed",
            "fingerprint" => nil,
            "message" => "key path '#{key["path"]}' disappeared while preparing; rerun ace-lab prepare"}
+        # Last-resort classifier mirroring DirectoryProvisioner: any
+        # other syscall failure on the provision path (e.g. ELOOP on
+        # the path-based directory chmod in a race) is a classified
+        # failed item, never a raw backtrace that aborts the report.
+        rescue SystemCallError => e
+          {"account" => account["username"], "path" => key["path"], "status" => "failed",
+           "fingerprint" => nil,
+           "message" => "key path '#{key["path"]}' could not be prepared (#{e.class.name}); " \
+            "rerun ace-lab prepare"}
         end
 
         private
@@ -97,6 +106,19 @@ module Ace
           return refusal if refusal
 
           unless stat
+            # Parity with the wet generate path: a pre-existing
+            # foreign-owned .ssh would be refused, not predicted
+            # would_create (the account must be resolvable for the
+            # ownership check; a would-create account has no uid yet).
+            entry = account_lookup.call(base["account"])
+            if entry
+              ssh_stat = lstat(File.dirname(path))
+              if ssh_stat
+                refusal = ssh_dir_takeover_refusal(base, File.dirname(path), ssh_stat, entry)
+                return refusal if refusal
+              end
+            end
+
             return base.merge("status" => "would_create", "fingerprint" => nil, "message" => nil)
           end
 
@@ -114,6 +136,12 @@ module Ace
           if entry
             refusal = ownership_refusal(base, [stat, pub_stat], entry)
             return refusal if refusal
+
+            ssh_stat = lstat(File.dirname(path))
+            if ssh_stat
+              refusal = ssh_dir_takeover_refusal(base, File.dirname(path), ssh_stat, entry)
+              return refusal if refusal
+            end
           end
 
           if drift?(path, pub_stat, entry)
@@ -128,7 +156,42 @@ module Ace
           private_stat = File.stat(path)
           (private_stat.mode & 0o7777) != PRIVATE_MODE ||
             (pub_stat.mode & 0o7777) != PUBLIC_MODE ||
-            (entry && (private_stat.uid != entry.uid || pub_stat.uid != entry.uid))
+            (entry && (private_stat.uid != entry.uid || pub_stat.uid != entry.uid)) ||
+            (entry && ssh_dir_drift?(File.dirname(path), entry))
+        end
+
+        # The documented ".ssh is 0700" invariant is converged on the
+        # existing-key path too, not only at creation: mode drift (or
+        # an installer-owned .ssh that should belong to the account)
+        # is repaired exactly like key-file drift. Foreign ownership is
+        # NOT drift — it is refused (ssh_dir_takeover_refusal).
+        def ssh_dir_drift?(ssh_dir, entry)
+          stat = File.stat(ssh_dir)
+          (stat.mode & 0o7777) != SSH_DIR_MODE || stat.uid != entry.uid
+        rescue Errno::ENOENT, Errno::ENOTDIR
+          false
+        end
+
+        # Path-based directory convergence — the same accepted residual
+        # as the create path (Ruby stdlib has no fd-based directory
+        # chmod); a mid-flight SystemCallError is classified by the
+        # method-level rescue on call.
+        def converge_ssh_dir(ssh_dir, ssh_stat, entry)
+          return if ssh_stat.nil?
+          return if (ssh_stat.mode & 0o7777) == SSH_DIR_MODE && ssh_stat.uid == entry.uid
+
+          FileUtils.chmod(SSH_DIR_MODE, ssh_dir)
+          FileUtils.chown(entry.uid, entry.gid, ssh_dir)
+        end
+
+        # @return [Hash, nil] refusal when a pre-existing .ssh is owned
+        #   by neither the declared account nor the installer
+        def ssh_dir_takeover_refusal(base, ssh_dir, stat, entry)
+          return nil if stat.uid == entry.uid || stat.uid == Process.euid
+
+          base.merge("status" => "failed", "fingerprint" => nil,
+            "message" => "key directory '#{ssh_dir}' is owned by uid #{stat.uid}, " \
+              "expected account '#{entry.name}'; refusing takeover — resolve ownership manually")
         end
 
         def existing(base, path, stat, entry)
@@ -138,6 +201,13 @@ module Ace
           # final component (cross-account key theft otherwise).
           refusal = unsafe_ssh_dir_refusal(base, path)
           return refusal if refusal
+
+          ssh_dir = File.dirname(path)
+          ssh_stat = lstat(ssh_dir)
+          if ssh_stat
+            refusal = ssh_dir_takeover_refusal(base, ssh_dir, ssh_stat, entry)
+            return refusal if refusal
+          end
 
           public_path = "#{path}.pub"
           pub_stat = lstat(public_path)
@@ -159,6 +229,11 @@ module Ace
           refusal = enforce_modes_and_ownership(base, path, public_path, entry)
           return refusal if refusal
 
+          # Converge the .ssh invariant on the existing path too (M1):
+          # 0700 + account ownership, refused never taken over when
+          # foreign-owned (checked above).
+          converge_ssh_dir(ssh_dir, ssh_stat, entry)
+
           with_fingerprint(base.merge("status" => "exists"), public_path,
             "fingerprint of '#{public_path}' could not be read; resolve manually")
         end
@@ -172,7 +247,7 @@ module Ace
           refusal = unsafe_ssh_dir_refusal(base, path)
           return refusal if refusal
 
-          refusal = ensure_ssh_dir(base, ssh_dir)
+          refusal = ensure_ssh_dir(base, ssh_dir, entry)
           return refusal if refusal
 
           FileUtils.chmod(SSH_DIR_MODE, ssh_dir)
@@ -252,12 +327,22 @@ module Ace
         # refused instead of mutated. The window between this re-lstat
         # and the path-based chmod/chown that follow is a documented
         # accepted residual (usage.md).
-        def ensure_ssh_dir(base, ssh_dir)
+        def ensure_ssh_dir(base, ssh_dir, entry)
           # Intermediates (e.g. the home directory) are created per the
           # documented policy — mkdir_p follows existing components; the
           # leaf .ssh itself is the account-controlled component that
           # must not be created or accepted through a symlink.
-          FileUtils.mkdir_p(File.dirname(ssh_dir))
+          # mkdir_p re-raises EEXIST when an existing component is not
+          # a directory and ENOTDIR for components under a file — both
+          # classified here (a leftover regular file at the manifest
+          # home must fail the item, not abort the report).
+          begin
+            FileUtils.mkdir_p(File.dirname(ssh_dir))
+          rescue Errno::EEXIST, Errno::ENOTDIR
+            return base.merge("status" => "failed", "fingerprint" => nil,
+              "message" => "key directory '#{ssh_dir}' could not be created; " \
+                "check the parent path and rerun ace-lab prepare")
+          end
           created = false
           begin
             Dir.mkdir(ssh_dir)
@@ -269,6 +354,12 @@ module Ace
                 "message" => "key directory '#{ssh_dir}' was replaced while preparing; " \
                   "refusing — rerun ace-lab prepare")
             end
+            # A pre-existing .ssh owned by neither the declared account
+            # nor the installer is foreign principal material: chmod
+            # 0700 + chown would be a takeover, so refuse like key
+            # files (the documented blanket policy).
+            refusal = ssh_dir_takeover_refusal(base, ssh_dir, stat, entry)
+            return refusal if refusal
           rescue Errno::ENOENT, Errno::ENOTDIR
             return base.merge("status" => "failed", "fingerprint" => nil,
               "message" => "key directory '#{ssh_dir}' could not be created; rerun ace-lab prepare")
@@ -378,6 +469,9 @@ module Ace
           if result["status"] == "enoent"
             return "#{command} not found in PATH; install it and rerun ace-lab prepare"
           end
+          if result["status"] == "exec_failed"
+            return "#{command} could not be executed (#{result['err']}); rerun ace-lab prepare"
+          end
 
           message = "#{command} failed (exit #{result['status']})"
           line = result["err"].to_s.lines.map(&:strip).reject(&:empty?).first
@@ -403,7 +497,7 @@ module Ace
         rescue Errno::ENOENT
           {"status" => "enoent", "out" => "", "err" => ""}
         rescue SystemCallError => e
-          {"status" => "failed", "out" => "", "err" => e.class.name}
+          {"status" => "exec_failed", "out" => "", "err" => e.class.name}
         end
 
         def lookup_passwd(username)
