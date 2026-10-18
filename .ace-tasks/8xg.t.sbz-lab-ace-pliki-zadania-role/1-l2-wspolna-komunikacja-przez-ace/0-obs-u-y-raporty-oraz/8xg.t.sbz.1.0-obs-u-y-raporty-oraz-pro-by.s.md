@@ -1,6 +1,6 @@
 ---
 id: 8xg.t.sbz.1.0
-status: pending
+status: in-progress
 priority: medium
 created_at: "2026-10-17 18:54:10"
 estimate: medium
@@ -31,9 +31,9 @@ Ten sam interfejs ace-hitl obsługuje raport zakończenia/błędu oraz pytanie l
 
 ## Kryteria odbioru
 
-- [ ] Raport work done trafia do overseera bez oczekiwania na Reply; pytanie pozostaje oczekujące i może wstrzymać assignment.
-- [ ] Brak odpowiedzi na pytanie nie jest zgodą ani sukcesem; raport bez odpowiedzi nie staje się zablokowanym pytaniem.
-- [ ] Wynik jest zgodny z kontraktem programu i możliwy do użycia przez następną rolę lub narzędzie.
+- [x] Raport work done trafia do overseera bez oczekiwania na Reply; pytanie pozostaje oczekujące i może wstrzymać assignment.
+- [x] Brak odpowiedzi na pytanie nie jest zgodą ani sukcesem; raport bez odpowiedzi nie staje się zablokowanym pytaniem.
+- [x] Wynik jest zgodny z kontraktem programu i możliwy do użycia przez następną rolę lub narzędzie.
 
 ## Plan weryfikacji
 
