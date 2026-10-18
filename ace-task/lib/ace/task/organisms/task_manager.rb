@@ -44,6 +44,9 @@ module Ace
         # @param tags [Array<String>] Tags
         # @param dependencies [Array<String>] Dependency task IDs
         # @param use_llm_slug [Boolean] Whether to attempt LLM slug generation
+        # @param time [Time, nil] Creation time for the generated ID and
+        #   created_at; a caller that pre-flighted generated paths passes the
+        #   same value so the checked paths are the ones create writes
         # @return [Models::Task] Created task
         def create(
           title,
@@ -53,11 +56,13 @@ module Ace
           dependencies: [],
           use_llm_slug: false,
           estimate: nil,
-          remote_issue: nil
+          remote_issue: nil,
+          time: nil
         )
           ensure_root_dir
           creator = Molecules::TaskCreator.new(root_dir: @root_dir, config: @config)
           attempts = 0
+          creation_time = time || Time.now.utc
 
           # Authoritative validation precedes the task write: an offline or
           # conflicting link must not create a task artifact at all. Offline
@@ -82,7 +87,7 @@ module Ace
                   tags: tags,
                   dependencies: dependencies,
                   use_llm_slug: use_llm_slug,
-                  time: Time.now.utc + ((attempts - 1) * 2),
+                  time: creation_time + ((attempts - 1) * 2),
                   estimate: estimate,
                   remote_issue: remote_issue
                 )
@@ -160,11 +165,9 @@ module Ace
             source_roots = [source_root] if source_root
             destination_roots << destination_root if destination_root
           elsif move_as_child_of
-            preview = reparenter_destination_paths(task, move_as_child_of)
-            unless preview.empty?
-              destination_roots << preview[0]
-              extra_paths << preview[1]
-            end
+            # A reparent renames the family's spec files, so the guard must
+            # check the generated destination names, not the pre-move ones.
+            extra_paths.concat(reparenter_destination_paths(task, move_as_child_of))
           end
 
           paths = [task.path, task.file_path]
@@ -632,6 +635,37 @@ module Ace
           show_after_sync(created_subtask) || created_subtask
         end
 
+        # Paths a create call would write, resolved without mutating anything.
+        # The preview uses the real generated ID and title-derived slugs (or the
+        # next subtask character) plus the placement folder, so a pre-write
+        # --git-commit guard judges Git ignore rules against the actual
+        # operation instead of sample names. Pass the same `time` to create so
+        # both resolve the same ID.
+        #
+        # @param title [String] Task or subtask title
+        # @param in_folder [String, nil] Requested placement folder
+        # @param child_of [String, nil] Parent task reference for a subtask
+        # @param time [Time] Creation time used for the generated ID
+        # @return [Array<String>] Task directory and spec file path
+        def planned_creation_paths(title, in_folder: nil, child_of: nil, time: Time.now.utc)
+          if child_of
+            parent = show(child_of)
+            return [] unless parent
+
+            creator = Molecules::SubtaskCreator.new(config: @config)
+            return creator.destination_paths(parent, title)
+          end
+
+          creator = Molecules::TaskCreator.new(root_dir: @root_dir, config: @config)
+          dir, spec = creator.destination_paths(title, time: time)
+          detector = Ace::Support::Items::Atoms::SpecialFolderDetector
+          return [dir, spec] unless in_folder && !detector.move_to_root?(in_folder)
+
+          mover = Ace::Support::Items::Molecules::FolderMover.new(@root_dir)
+          placed_dir = mover.destination_path(Struct.new(:path).new(dir), to: in_folder, date: time)
+          [placed_dir, File.join(placed_dir, File.basename(spec))]
+        end
+
         def issue_sync(ref: nil, all: false, pending: false)
           raise ArgumentError, "Provide --all or a task reference" if !all && !pending && (ref.nil? || ref.strip.empty?)
           raise ArgumentError, "--all and --pending are mutually exclusive" if all && pending
@@ -937,6 +971,8 @@ module Ace
           archive_parent_via_update(parent)
         end
 
+        # Destination directory and generated spec paths a reparent would
+        # create, without mutating. Empty when the reparent itself is invalid.
         def reparenter_destination_paths(task, target)
           reparenter = Molecules::TaskReparenter.new(root_dir: @root_dir, config: @config)
           reparenter.destination_paths(task, target: target, resolve_ref: ->(ref) { show(ref) })

@@ -44,20 +44,9 @@ module Ace
         )
           raise ArgumentError, "Title is required" if title.nil? || title.strip.empty?
 
-          # Find next available subtask character
-          existing_chars = scan_existing_subtask_chars(parent_task.path, parent_task.id)
-          next_char = allocate_next_char(existing_chars)
-
-          # Build subtask ID: parent_id + ".{char}"
-          subtask_id = "#{parent_task.id}.#{next_char}"
-
-          # Generate slugs (folder: 5 words, file: 7 words)
-          folder_slug = generate_folder_slug(title)
-          file_slug = generate_file_slug(title)
-
-          # Build folder and file names
-          folder_name = "#{next_char}-#{folder_slug}"
-          subtask_dir = File.join(parent_task.path, folder_name)
+          paths = destination_paths_for(parent_task, title)
+          subtask_id = paths[:id]
+          subtask_dir = paths[:dir]
           FileUtils.mkdir_p(subtask_dir)
 
           # Build frontmatter
@@ -74,8 +63,7 @@ module Ace
           )
 
           # Write spec file
-          spec_filename = "#{subtask_id}-#{file_slug}.s.md"
-          spec_file = File.join(subtask_dir, spec_filename)
+          spec_file = paths[:spec]
           content = build_spec_content(frontmatter: frontmatter, title: title)
           File.write(spec_file, content)
 
@@ -84,7 +72,32 @@ module Ace
           loader.load(subtask_dir, id: subtask_id, load_subtasks: false)
         end
 
+        # Non-mutating preview of the directory and spec file a subtask create
+        # call would write: the next allocated subtask character and the
+        # title-derived slugs, matching create exactly. Pre-write checks use it
+        # to judge Git ignore rules against the real generated names.
+        #
+        # @param parent_task [Models::Task] Parent task
+        # @param title [String] Subtask title
+        # @return [Array<String>] Subtask directory and spec file path
+        def destination_paths(parent_task, title)
+          raise ArgumentError, "Title is required" if title.nil? || title.strip.empty?
+
+          paths = destination_paths_for(parent_task, title)
+          [paths[:dir], paths[:spec]]
+        end
+
         private
+
+        def destination_paths_for(parent_task, title)
+          existing_chars = scan_existing_subtask_chars(parent_task.path, parent_task.id)
+          next_char = allocate_next_char(existing_chars)
+          subtask_id = "#{parent_task.id}.#{next_char}"
+          folder_slug = generate_folder_slug(title)
+          file_slug = generate_file_slug(title)
+          subtask_dir = File.join(parent_task.path, "#{next_char}-#{folder_slug}")
+          {id: subtask_id, dir: subtask_dir, spec: File.join(subtask_dir, "#{subtask_id}-#{file_slug}.s.md")}
+        end
 
         # Scan parent directory for existing subtask folders and extract their chars.
         def scan_existing_subtask_chars(parent_dir, _parent_id)

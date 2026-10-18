@@ -43,6 +43,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   subdirectory. `--root` remains an explicit path override resolved from the
   current directory.
 
+### Fixed
+
+- Judge the `--git-commit` preflight against the paths create actually writes:
+  the generated ID and title-derived slugs, or the allocated subtask character,
+  including the real placement folder. The previous sample-name probes could
+  reject a valid root task (for example with a `0-*/` ignore rule) even though
+  its generated path is tracked.
+- Check the generated destination names of a reparent's whole family. Demoting
+  or promoting a task renames its own spec and every descendant spec, so a
+  guard using the pre-move names could pass while the new child spec is
+  Git-ignored — the commit then lost the child from the repository. The guard
+  now previews the actual renamed spec paths before mutating.
+
 ## [0.40.0] - 2026-10-16
 
 ### Added

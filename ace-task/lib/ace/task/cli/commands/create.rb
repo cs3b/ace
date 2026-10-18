@@ -87,8 +87,11 @@ module Ace
               Ace::Task::Organisms::TaskManager.new
             end
             validate_destination!(manager, in_folder) if in_folder && !child_of
-            reject_ignored_creation_target!(manager, in_folder: in_folder, child_of: child_of) if
-              options[:git_commit]
+            # The preflight and the write resolve the same creation time, so
+            # the checked paths are exactly the generated paths create writes.
+            creation_time = Time.now.utc
+            reject_ignored_creation_target!(manager, title: title, in_folder: in_folder,
+              child_of: child_of, time: creation_time) if options[:git_commit]
             # Snapshot before any write so a rejected --git-commit can remove
             # exactly the artifacts this command created (including a placed
             # task, a new subtask, or an empty destination folder).
@@ -126,7 +129,8 @@ module Ace
                   priority: priority,
                   tags: tags,
                   estimate: estimate,
-                  remote_issue: remote_issue
+                  remote_issue: remote_issue,
+                  time: creation_time
                 )
               end
             rescue Ace::Task::Organisms::TaskManager::CreateRetriesExhaustedError => e
@@ -165,12 +169,13 @@ module Ace
 
           private
 
-          # A cheap pre-creation check: resolve the known target (the parent
-          # family or the destination folder) and representative child paths,
-          # so an ignored target fails before any write or remote issue sync.
-          # The post-creation check stays authoritative for generated IDs and
-          # slugs, while this keeps --dry-run behavior faithful.
-          def reject_ignored_creation_target!(manager, in_folder:, child_of:)
+          # --git-commit preflight: resolve the known destination (the parent
+          # family or the placement folder) and the exact task paths this
+          # create call would write — generated ID and title-derived slugs, or
+          # the next subtask character — so ignore rules are judged against the
+          # real operation, never against sample names. The post-creation check
+          # stays authoritative for ID-collision retries and concurrent changes.
+          def reject_ignored_creation_target!(manager, title:, in_folder:, child_of:, time:)
             detector = Ace::Support::Items::Atoms::SpecialFolderDetector
             target = if child_of
               manager.show(child_of)&.path
@@ -181,24 +186,15 @@ module Ace
             end
             return unless target
 
-            # Probes model the shapes a created task can take: the flat task
-            # folder and spec (xxx.t.yyy-slug.s.md), plus a subtask folder and
-            # spec (xxx.t.yyy.0-slug.s.md). The post-creation check stays
-            # authoritative for the exact generated ID and archive partition.
-            probes = [target]
-            %w[prb.t.000-probe 0-probe].each do |child|
-              probes << File.join(target, child)
-              probes << File.join(target, child, "#{child}.s.md")
-            end
-            probes << File.join(target, "prb.t.000-probe", "prb.t.000.0-probe.s.md")
-            ignored = probes.find { |probe| Ace::Task::Molecules::GitIgnoredPath.ignored?(probe) }
-            return unless ignored
-
-            if ignored == target
+            if Ace::Task::Molecules::GitIgnoredPath.ignored?(target)
               raise Ace::Support::Cli::Error,
                 "Cannot --git-commit into a Git-ignored destination: #{target}. " \
                   "Choose a tracked folder or omit --git-commit."
             end
+
+            ignored = manager.planned_creation_paths(title, in_folder: in_folder, child_of: child_of, time: time)
+              .find { |path| Ace::Task::Molecules::GitIgnoredPath.ignored?(path) }
+            return unless ignored
 
             raise Ace::Support::Cli::Error,
               "Cannot --git-commit into a destination with Git-ignored child paths: #{ignored}. " \

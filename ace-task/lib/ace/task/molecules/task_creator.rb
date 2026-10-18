@@ -57,12 +57,8 @@ module Ace
             else
               generate_slugs(title)
             end
-            folder_slug = slugs[:folder]
-            file_slug = slugs[:file]
-
-            # Create folder with folder_slug
-            folder_name = Atoms::TaskIdFormatter.folder_name(formatted_id, folder_slug)
-            task_dir = File.join(@root_dir, folder_name)
+            paths = destination_paths_for(formatted_id, slugs)
+            task_dir = paths[:dir]
             FileUtils.mkdir_p(task_dir)
 
             begin
@@ -79,9 +75,8 @@ module Ace
                 remote_issue: remote_issue
               )
 
-              # Write spec file with file_slug
-              spec_filename = Atoms::TaskIdFormatter.spec_filename(formatted_id, file_slug)
-              spec_file = File.join(task_dir, spec_filename)
+              # Write the spec file with the title-derived file slug
+              spec_file = paths[:spec]
               content = build_spec_content(frontmatter: frontmatter, title: title)
               File.write(spec_file, content)
 
@@ -95,7 +90,36 @@ module Ace
           end
         end
 
+        # Non-mutating preview of the directory and spec file a create call
+        # with this title would write at the given time. Pre-write checks use
+        # it to inspect the real generated ID and slugs instead of sampling
+        # representative names; create uses the same naming helper.
+        #
+        # @param title [String] Task title
+        # @param time [Time] Creation time used for the generated ID
+        # @param use_llm_slug [Boolean] Whether create would ask the LLM for slugs
+        # @return [Array<String>] Task directory and spec file path
+        def destination_paths(title, time: Time.now.utc, use_llm_slug: false)
+          raise ArgumentError, "Title is required" if title.nil? || title.strip.empty?
+
+          formatted_id = Atoms::TaskIdFormatter.generate(time).formatted_id
+          slugs = if use_llm_slug
+            generate_llm_slugs(title) || generate_slugs(title)
+          else
+            generate_slugs(title)
+          end
+          paths = destination_paths_for(formatted_id, slugs)
+          [paths[:dir], paths[:spec]]
+        end
+
         private
+
+        def destination_paths_for(formatted_id, slugs)
+          folder_name = Atoms::TaskIdFormatter.folder_name(formatted_id, slugs[:folder])
+          task_dir = File.join(@root_dir, folder_name)
+          spec_filename = Atoms::TaskIdFormatter.spec_filename(formatted_id, slugs[:file])
+          {dir: task_dir, spec: File.join(task_dir, spec_filename)}
+        end
 
         def task_id_exists?(formatted_id)
           Dir.glob(File.join(@root_dir, "**", "#{formatted_id}-*")).any? do |path|
