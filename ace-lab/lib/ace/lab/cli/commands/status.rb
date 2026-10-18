@@ -54,7 +54,8 @@ module Ace
           def first_error(report)
             report.config[:error] ||
               report.runtime_config[:error] ||
-              report.state.find { |location| location[:state] == :error }[:note]
+              report.state.find { |location| location[:state] == :error }&.dig(:note) ||
+              "unreadable state location"
           end
 
           def render_table(report)

@@ -32,11 +32,14 @@ module Ace
             return invalid_config(cascade_error) if cascade_error
 
             documents ||= []
-            overlays = documents.reject { |document| document[:defaults] }
-            return invalid_config("invalid lab configuration: no readable cascade documents") if documents.empty?
+            # No cascade documents at all (not even gem defaults): nothing
+            # is broken, the lab is simply unconfigured.
+            return missing_config if documents.empty?
 
-            project = overlays.find { |document| !document[:path].start_with?(Dir.home) }
-            user = overlays.find { |document| document[:path].start_with?(Dir.home) }
+            overlays = documents.reject { |document| document[:defaults] }
+            user_overlay_dir = File.join(Dir.home, ".ace")
+            project = overlays.find { |document| !document[:path].start_with?(user_overlay_dir) }
+            user = overlays.find { |document| document[:path].start_with?(user_overlay_dir) }
 
             merged = deep_merge_documents(documents)
             begin
@@ -107,13 +110,23 @@ module Ace
             }
           end
 
-          # Nearest-wins deep merge across cascade documents, gem defaults
-          # first. Arrays replace (they are topology inventories, not
+          def missing_config
+            {
+              state: :defaults_only,
+              overlays: {},
+              source_path: nil,
+              error: nil,
+              topology: {projects: 0, agents: 0, services: 0}
+            }
+          end
+
+          # Cascade merge mirroring the canonical ADR-22 resolver:
+          # cascade_documents lists documents highest-priority-first, so
+          # reduce in reverse (defaults first, nearest overlay last — later
+          # wins). Arrays replace (they are topology inventories, not
           # additive sets).
           def deep_merge_documents(documents)
-            documents.sort_by { |document| document[:defaults] ? 0 : 1 }
-              .map { |document| document[:document] }
-              .reduce({}) { |merged, document| deep_merge(merged, document) }
+            documents.reverse.reduce({}) { |merged, document| deep_merge(merged, document[:document]) }
           end
 
           def deep_merge(base, overlay)

@@ -27,8 +27,8 @@ module Ace
 
         def test_empty_overlay_is_configured_with_valid_empty_set
           result = classify([
-            defaults_document,
-            overlay_document(path: "/project/.ace/lab/config.yml", document: {"topology" => {}})
+            overlay_document(path: "/project/.ace/lab/config.yml", document: {"topology" => {}}),
+            defaults_document
           ])
 
           assert_equal :configured, result[:state]
@@ -49,8 +49,8 @@ module Ace
             }
           }
           result = classify([
-            defaults_document,
-            overlay_document(path: "/project/.ace/lab/config.yml", document: overlay)
+            overlay_document(path: "/project/.ace/lab/config.yml", document: overlay),
+            defaults_document
           ])
 
           assert_equal :configured, result[:state]
@@ -67,12 +67,58 @@ module Ace
 
         def test_schema_violation_is_invalid_not_raised
           result = classify([
-            defaults_document,
-            overlay_document(path: "/project/.ace/lab/config.yml", document: {"schema_version" => 99})
+            overlay_document(path: "/project/.ace/lab/config.yml", document: {"schema_version" => 99}),
+            defaults_document
           ])
 
           assert_equal :invalid, result[:state]
           assert_includes result[:error], "schema_version"
+        end
+
+        def test_project_overlay_wins_over_user_overlay
+          # cascade_documents order: highest priority first (project, user,
+          # defaults) — same order the canonical ADR-22 resolver reduces in
+          # reverse. The project topology must be the one in force.
+          project_topology = {
+            "projects" => [{"id" => "p1", "label" => "P1"}],
+            "agents" => [],
+            "services" => []
+          }
+          user_topology = {
+            "projects" => [{"id" => "u1", "label" => "U1"}, {"id" => "u2", "label" => "U2"}],
+            "agents" => [],
+            "services" => []
+          }
+          result = classify([
+            overlay_document(path: "/project/.ace/lab/config.yml", document: {"topology" => project_topology}),
+            overlay_document(path: File.join(Dir.home, ".ace/lab/config.yml"), document: {"topology" => user_topology}),
+            defaults_document
+          ])
+
+          assert_equal :configured, result[:state]
+          assert_equal 1, result[:topology][:projects]
+          assert_equal "/project/.ace/lab/config.yml", result[:source_path]
+          assert_equal "/project/.ace/lab/config.yml", result[:overlays][:project]
+          assert_equal File.join(Dir.home, ".ace/lab/config.yml"), result[:overlays][:user]
+        end
+
+        def test_project_rooted_under_home_is_still_the_project_overlay
+          result = classify([
+            overlay_document(path: File.join(Dir.home, "Ps/ace/.ace/lab/config.yml"),
+                             document: {"topology" => {"projects" => [], "agents" => [], "services" => []}}),
+            defaults_document
+          ])
+
+          assert_equal :configured, result[:state]
+          assert_equal File.join(Dir.home, "Ps/ace/.ace/lab/config.yml"), result[:overlays][:project]
+          assert_nil result[:overlays][:user]
+        end
+
+        def test_no_documents_at_all_is_missing_not_invalid
+          result = classify([])
+
+          assert_equal :defaults_only, result[:state]
+          assert_nil result[:error]
         end
 
         def test_runtime_config_from_project_file
