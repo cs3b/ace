@@ -1,6 +1,6 @@
 ---
 id: 8xh.t.z7o.1
-status: pending
+status: done
 priority: medium
 created_at: "2026-10-18 23:28:35"
 estimate: TBD
@@ -41,3 +41,11 @@ Docs-only — updates to the relevant workflow instruction files / skills (assig
 ## References
 
 - `.ace-retros/8ro1ts-*` (re-read before finish), `.ace-retros/8ro24k-*` and `.ace-retros/8roifd-*` (clean-env verification).
+
+## Outcome Record (2026-10-19)
+
+Implemented in `ace-assign/handbook/workflow-instructions/assign/`:
+
+- `drive.wf.md` §5: re-read-before-finish discipline — re-run `ace-assign status` immediately before every `finish`/`fail` and confirm the target step is still active; re-plan instead of submitting against a moved step.
+- `verify-test-suite.wf.md`: hermetic environment rule — verification must go through `ace-test`/`ace-test-suite` whose environment policy drops ambient `ACE_*`/`LAB_*` (naming all seven `ACE_ASSIGN_*`/`ACE_RUNTIME` fork-runtime variables); manual scrubbing and raw rake/bundle invocation inside forked subtrees are prohibited.
+- `ace-assign/CHANGELOG.md` Unreleased entries added; `ace-handbook sync` run (agent skill projections unchanged: 0 updated; generated `.pi/` output cleaned, not committed).
