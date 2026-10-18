@@ -33,10 +33,15 @@ ace-coworker commission --role worker --task REF --assignment ID --overseer ADDR
 
 - `roles` / `commission` — role presets and the role-instantiation primitive
   consumed by the planner (L4.2/L4.3 seam). Shipped presets: `worker`
-  (implement and verify; failed required tests block success) and `spec`
+  (implement and verify; failed required tests block success), `spec`
   (complete behavior-first specification; significant unresolved gaps are
-  reported via `ace-hitl`, never guessed), backed by the self-contained
-  workflows `wfi://coworker/worker` / `wfi://coworker/spec`. `roles` lists
+  reported via `ace-hitl`, never guessed), and `reviewer` (independent
+  review that fixes confirmed defects itself inside its own assignment,
+  checks each fix diff, and returns to full review rounds under the 3/2/10
+  convergence rule — escalating instead of marking unresolved High/Critical
+  as success), backed by the self-contained
+  workflows `wfi://coworker/worker` / `wfi://coworker/spec` /
+  `wfi://coworker/reviewer`. `roles` lists
   the catalog (gem defaults + project overrides in `.ace/coworker/roles/`);
   `commission` expands a preset plus the commission identity into
   `.ace-local/coworker/config.yml` — start-grade identity checks, atomic

@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Reviewer role (8xg.t.sbz.4.1 / L5.2): shipped preset
+  `.ace-defaults/coworker/roles/reviewer.yml` and the self-contained
+  `wfi://coworker/reviewer` workflow. The reviewer is independent of the
+  worker, fixes confirmed defects itself inside its own single assignment
+  (steps added via `ace-assign add`), checks each fix diff, and returns to
+  full review rounds under the 3/2/10 convergence rule (stated, not yet
+  deterministically enforced — that is 8xg.t.sbz.4.2). No effective fix or a
+  needed product decision is escalated via an `ace-hitl` decision question;
+  unresolved High/Critical is never marked as success.
+
 ### Fixed
 
 - Render start-prompt placeholders in a single pass derived from `PromptTemplate::PLACEHOLDERS`, so substituted values shaped like a later placeholder are never re-expanded.

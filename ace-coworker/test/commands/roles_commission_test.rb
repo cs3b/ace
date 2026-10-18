@@ -31,6 +31,17 @@ module Ace
               instructions: wfi://coworker/spec
               start_prompt: "Specify {{task}}."
             YAML
+            File.write(File.join(@gem_roles, "reviewer.yml"), <<~YAML)
+              ---
+              name: reviewer
+              description: Fixture reviewer
+              instructions: wfi://coworker/reviewer
+              start_prompt: "Review {{assignment}} on {{task}} as {{role}} for {{overseer}}."
+              reporting:
+                channel: hitl
+              errors:
+                on_failure: report
+            YAML
             @loader = Molecules::RolePresetLoader.new(project_root: @dir, gem_roles_dir: @gem_roles)
           end
 
@@ -54,7 +65,7 @@ module Ace
               Roles.new(preset_loader: @loader).call(format: "json")
             end
             payload = JSON.parse(out)
-            assert_equal %w[spec worker], payload["roles"].map { |r| r["name"] }
+            assert_equal %w[reviewer spec worker], payload["roles"].map { |r| r["name"] }
             assert_equal "gem", payload["roles"].first["source"]
           end
 
@@ -147,6 +158,24 @@ module Ace
                 format: "table", force: false, dry_run: false)
             end
             assert_includes error.message, "--task, --assignment, --overseer are required"
+          end
+
+          def test_commission_reviewer_dry_run_renders_substituted_config_without_writing
+            out, = capture_io do
+              commission_command.call(role: "reviewer", task: "8xh.t.ddd", assignment: "asg09",
+                overseer: "overseer@lab", format: "json", force: false, :"dry-run" => true)
+            end
+            payload = JSON.parse(out)
+            assert_equal "reviewer", payload["role"]
+            assert_equal "gem", payload["preset_source"]
+            refute payload["written"]
+            config = payload["config"]
+            assert_equal "wfi://coworker/reviewer", config["instructions"]
+            assert_equal "Review asg09 on 8xh.t.ddd as reviewer for overseer@lab.", config["start_prompt"]
+            refute config["start_prompt"].include?("{{")
+            assert_equal({"channel" => "hitl"}, config["reporting"])
+            assert_equal({"on_failure" => "report"}, config["errors"])
+            refute File.exist?(File.join(@dir, ".ace-local", "coworker", "config.yml"))
           end
         end
       end

@@ -141,6 +141,7 @@ module Ace
           presets = loader.list.map { |p| p["name"] }
           assert_includes presets, "worker"
           assert_includes presets, "spec"
+          assert_includes presets, "reviewer"
 
           loader.list.each do |preset|
             instructions = preset["instructions"]
@@ -149,6 +150,21 @@ module Ace
             role = instructions.delete_prefix("wfi://coworker/")
             workflow = File.join(GEM_ROOT, "handbook", "workflow-instructions", "coworker", "#{role}.wf.md")
             assert File.file?(workflow), "shipped preset '#{preset['name']}' references missing workflow #{workflow}"
+          end
+        end
+
+        def test_shipped_reviewer_preset_contract
+          preset = RolePresetLoader.new(project_root: @dir).fetch("reviewer")
+          assert_equal "gem", preset["source"]
+          assert_equal "reviewer", preset["name"]
+          assert_equal "wfi://coworker/reviewer", preset["instructions"]
+          assert_equal "hitl", preset["reporting"]
+          assert_equal "report", preset["errors"]
+          prompt = preset["start_prompt"]
+          refute_nil prompt
+          refute prompt.empty?
+          %w[{{task}} {{assignment}} {{role}} {{overseer}}].each do |placeholder|
+            assert_includes prompt, placeholder, "reviewer start_prompt must template #{placeholder}"
           end
         end
       end

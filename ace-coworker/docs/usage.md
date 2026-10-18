@@ -66,9 +66,17 @@ errors: {on_failure: report}            # optional, ConfigSchema value sets
 ```
 
 Shipped presets: `worker` (implement and verify; failed required tests block
-success) and `spec` (complete behavior-first specification; significant
-unresolved gaps are reported, never guessed). Their instruction workflows are
-`wfi://coworker/worker` and `wfi://coworker/spec`.
+success), `spec` (complete behavior-first specification; significant
+unresolved gaps are reported, never guessed), and `reviewer` (independent
+review of the delivered change; fixes confirmed defects itself inside its own
+assignment, checks each fix diff, and returns to full review rounds under the
+3/2/10 convergence rule; escalates instead of marking unresolved
+High/Critical as success). Their instruction workflows are
+`wfi://coworker/worker`, `wfi://coworker/spec`, and
+`wfi://coworker/reviewer`. Role assignments are prepared by the planner (L4)
+or commissioned ad hoc via `commission`; the reviewer (like the worker)
+develops its own assignment through `ace-assign add`, so confirmed-defect
+fixes stay inside one assignment without overseer round-trips.
 
 ### `ace-coworker roles`
 
