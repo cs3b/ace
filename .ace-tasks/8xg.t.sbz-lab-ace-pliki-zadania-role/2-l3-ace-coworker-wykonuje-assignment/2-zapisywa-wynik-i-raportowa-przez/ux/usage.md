@@ -21,3 +21,8 @@ Oczekiwany wynik: Samo zakończenie procesu lub wysłanie raportu nie oznacza wy
 ## Reguły wspólne
 
 Reguły wspólne są częścią tej specyfikacji: [kontrakt programu](.ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/contract.md). Obowiązuje zatwierdzony model plikowy; stare materiały są źródłem kontekstu, nie nakazem zachowania ich architektury.
+
+## Doprecyzowanie odbioru po review 2026-10-18
+
+Po integracji .1 i .2.1 raport zawiera ID taska, assignmentu i kroku oraz wynik i odnośnik do lokalnych dowodów. Trwały wynik pracy trafia do folderu taska; pomocniczy stan wykonawcy do `.ace-local/coworker/`, a wiadomość do HITL przez jego interfejs.
+Oddzielić wynik wykonania od dostarczenia: poprawnie ukończony assignment z niedostarczonym raportem zachowuje sukces pracy i jawny błąd dostarczenia. Błąd wykonania zapisuje przyczynę i niedokończony krok, nie fałszywe work done. Sprawdzić oba przypadki z odbiorcą testowym; nie wymagać gotowego .5.

@@ -21,3 +21,8 @@ Oczekiwany wynik: Niedostępny forge, agent lub plik nie jest sukcesem ani sygna
 ## Reguły wspólne
 
 Reguły wspólne są częścią tej specyfikacji: [kontrakt programu](.ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/contract.md). Obowiązuje zatwierdzony model plikowy; stare materiały są źródłem kontekstu, nie nakazem zachowania ich architektury.
+
+## Doprecyzowanie odbioru po review 2026-10-18
+
+Stany widoku: trwa praca, wynik ukończony, oczekiwanie na decyzję, przerwanie, brak danych. To interpretacja istniejących źródeł, nie nowe statusy ace-task. Pokazać konkretny task/assignment, przyczynę i następne działanie.
+Test utraty forge, procesu i pliku podczas pracy oraz powrotu źródła. Odświeżenie/wznowienie nie tworzy nowego wykonawcy. Niespójność między raportem a assignmentem pozostaje jawna do sprawdzenia; widok sam niczego nie zamyka.

@@ -1,15 +1,18 @@
 ---
 id: 8xg.t.sbz.1.0
-status: draft
+status: pending
 priority: medium
 created_at: "2026-10-17 18:54:10"
 estimate: medium
-dependencies: ["8xg.t.sbz.0"]
-tags: ["lab", "lab-l2", "file-based"]
+dependencies: [8xg.t.sbz.0]
+tags: [lab, lab-l2, file-based]
 parent: 8xg.t.sbz.1
-needs_review: true
-bundle: {"presets": ["project"], "files": ["AGENTS.md", ".ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/contract.md", ".ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/8xg.t.sbz-lab-ace-pliki-zadania-role-i-komunikacja.s.md", "ace-hitl/README.md", "ace-hitl/docs/usage.md", "ace-hitl-hermes/README.md", ".ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/1-l2-wspolna-komunikacja-przez-ace/8xg.t.sbz.1-l2-wspolna-komunikacja-przez-ace-hitl-i.s.md", ".ace-tasks/_archive/8x/x/8xg.t.qn6-python-ruby-migration-file-based/8xg.t.qn6-python-ruby-migration-file-based-lab-zero.s.md", ".ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/1-l2-wspolna-komunikacja-przez-ace/0-obs-u-y-raporty-oraz/ux/usage.md", ".ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/execution-order.md"], "commands": []}
-title: "Obsłużyć raporty oraz prośby o odpowiedź"
+needs_review: false
+bundle:
+  presets: [project]
+  files: [AGENTS.md, .ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/contract.md, .ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/8xg.t.sbz-lab-ace-pliki-zadania-role-i-komunikacja.s.md, ace-hitl/README.md, ace-hitl/docs/usage.md, ace-hitl-hermes/README.md, .ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/1-l2-wspolna-komunikacja-przez-ace/8xg.t.sbz.1-l2-wspolna-komunikacja-przez-ace-hitl-i.s.md, .ace-tasks/_archive/8x/x/8xg.t.qn6-python-ruby-migration-file-based/8xg.t.qn6-python-ruby-migration-file-based-lab-zero.s.md, .ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/1-l2-wspolna-komunikacja-przez-ace/0-obs-u-y-raporty-oraz/ux/usage.md, .ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/execution-order.md, docs/lab-flow.md, docs/decisions/ADR-034-file-based-lab-state-ownership.md, ace-hitl/lib/ace/hitl/cli/commands/create.rb]
+  commands: []
+title: Obsłużyć raporty oraz prośby o odpowiedź
 ---
 
 # Obsłużyć raporty oraz prośby o odpowiedź
@@ -47,7 +50,7 @@ Dla zmian implementacji: `bin/ace-test <zmieniony-pakiet> all`, `bin/ace-test-su
 Poprzednik oznacza odebrany i zintegrowany wynik; gotowy PR nie zastępuje merge. [Fale pracy i zasady integracji](.ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/execution-order.md).
 
 To zależności implementacyjne backlogu; nie tworzą runtime'owej kolejki _overseer.
-Status `draft`: specyfikacja zatwierdzona co do kierunku, do późniejszego review gotowości i planowania wykonania.
+Gotowość specyfikacji i możliwość startu są odrębne: po review sprawdzić dependencies konkretnego liścia. Samo pending nie usuwa zależności.
 Rozmiar orientacyjny: medium. Nie otwierać osobnej usługi lub magazynu stanu dla tej funkcji.
 
 ## Przejęty zakres i materiały
@@ -55,3 +58,11 @@ Rozmiar orientacyjny: medium. Nie otwierać osobnej usługi lub magazynu stanu d
 - [8xg.t.qn6](.ace-tasks/_archive/8x/x/8xg.t.qn6-python-ruby-migration-file-based/8xg.t.qn6-python-ruby-migration-file-based-lab-zero.s.md)
 
 Zachować przydatny kod, worktree i dowody z poprzednich zadań. Nie oznaczać ich ponownie jako wykonanych bez sprawdzenia zakresu; nie odtwarzać odrzuconych mechanizmów starego laba.
+
+## Review gotowości — 2026-10-18, po PR #379
+
+Rozszerzyć istniejący plikowy interfejs `ace-hitl create/show/update/wait`, zamiast odtwarzać usunięte `overseer-send`. Rozróżnienie raportu od pytania należy do zdarzenia HITL, nie do roli odbiorcy. Raport zawiera wynik (sukces/błąd), treść i referencje task/assignment/krok, ma własne ID i nie oczekuje odpowiedzi. Pytanie zachowuje istniejący cykl odpowiedzi. Zapis lokalny nie oznacza dostarczenia.
+Pierwszy wycinek odbieramy lokalnie: utworzenie raportu, odczyt i brak oczekiwania na odpowiedź; pytanie pozostaje oczekujące. Zdalne adresowanie i adaptery są kolejnymi liśćmi .1.1–.1.3, nie warunkiem rozpoczęcia .1.0. Publiczną składnię rozszerzenia utrwalić w help/usage przed integracją konsumentów.
+
+Źródła: `docs/lab-flow.md`, ADR-034 i `ace-hitl/lib/ace/hitl/cli/commands/create.rb`.
+Weryfikacja implementacji: powyższe scenariusze pozytywne i błędne, testy zmienionych pakietów i niezależny review. Ten przegląd specyfikacji nie jest odbiorem implementacji.

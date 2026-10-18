@@ -21,3 +21,8 @@ Oczekiwany wynik: Brak instrukcji roli, taska albo assignmentu daje konkretny b�
 ## Reguły wspólne
 
 Reguły wspólne są częścią tej specyfikacji: [kontrakt programu](.ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/contract.md). Obowiązuje zatwierdzony model plikowy; stare materiały są źródłem kontekstu, nie nakazem zachowania ich architektury.
+
+## Doprecyzowanie odbioru po review 2026-10-18
+
+Start w przygotowanym worktree odczytuje `.ace-local/coworker/`: rolę, źródło instrukcji, prompt, task, istniejący assignment, adres raportowania i instrukcję błędów. Rozwiązuje odwołania względem tego worktree i pokazuje wybrane task/assignment/rolę. Brak pliku lub niepasujące zlecenie kończy start błędem, bez tworzenia zastępczego assignmentu/worktree.
+Odbiór tego liścia: walidacja kontekstu i przekazanie go wykonawcy, z lokalnym opisem błędu. Wysyłka HITL należy do .2.2. Fixture może zawierać prostą instrukcję roli i assignment utworzony istniejącym ace-assign; nie czeka na gotowe role .4 ani plannera .3. Ten task jest właścicielem udokumentowanego formatu startowego konsumowanego później przez plannera; nie dodawać kopii kroków assignmentu.

@@ -1,15 +1,18 @@
 ---
 id: 8xg.t.sbz.5.2
-status: draft
+status: pending
 priority: medium
 created_at: "2026-10-17 18:54:20"
 estimate: medium
-dependencies: ["8xg.t.sbz.5.1", "8xg.t.sbz.3"]
-tags: ["lab", "lab-l6", "file-based"]
+dependencies: [8xg.t.sbz.5.1, 8xg.t.sbz.3]
+tags: [lab, lab-l6, file-based]
 parent: 8xg.t.sbz.5
-needs_review: true
-bundle: {"presets": ["project"], "files": ["AGENTS.md", ".ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/contract.md", ".ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/8xg.t.sbz-lab-ace-pliki-zadania-role-i-komunikacja.s.md", "ace-task/docs/usage.md", "ace-overseer/README.md", "ace-overseer/docs/usage.md", ".ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/5-l6-kolejka-overseera-w-prywatnym/8xg.t.sbz.5-l6-kolejka-overseera-w-prywatnym-ace-task.s.md", ".ace-tasks/_archive/8x/x/8xg.t.qn6-python-ruby-migration-file-based/8xg.t.qn6-python-ruby-migration-file-based-lab-zero.s.md", ".ace-tasks/_archive/8x/x/8xg.t.qn6-python-ruby-migration-file-based/2-ace-lab-one-shot-mutations/8xg.t.qn6.2-ace-lab-one-shot-mutations-assignment-operations.s.md", ".ace-tasks/_archive/8x/x/8xg.t.qn6-python-ruby-migration-file-based/4-ace-coworker-gem-worker-loop/8xg.t.qn6.4-ace-coworker-gem-worker-loop-that-takes.s.md", ".ace-tasks/_archive/8x/w/8xa.t.h8x-deliver-project-specific-supervision-workflows/8xa.t.h8x-deliver-project-specific-supervision-workflows-and.s.md", ".ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/5-l6-kolejka-overseera-w-prywatnym/2-uruchamia-wy-cznie-kroki-odblokowane/ux/usage.md", ".ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/execution-order.md"], "commands": []}
-title: "Uruchamiać wyłącznie kroki odblokowane zależnościami"
+needs_review: false
+bundle:
+  presets: [project]
+  files: [AGENTS.md, .ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/contract.md, .ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/8xg.t.sbz-lab-ace-pliki-zadania-role-i-komunikacja.s.md, ace-task/docs/usage.md, ace-overseer/README.md, ace-overseer/docs/usage.md, .ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/5-l6-kolejka-overseera-w-prywatnym/8xg.t.sbz.5-l6-kolejka-overseera-w-prywatnym-ace-task.s.md, .ace-tasks/_archive/8x/x/8xg.t.qn6-python-ruby-migration-file-based/8xg.t.qn6-python-ruby-migration-file-based-lab-zero.s.md, .ace-tasks/_archive/8x/x/8xg.t.qn6-python-ruby-migration-file-based/2-ace-lab-one-shot-mutations/8xg.t.qn6.2-ace-lab-one-shot-mutations-assignment-operations.s.md, .ace-tasks/_archive/8x/x/8xg.t.qn6-python-ruby-migration-file-based/4-ace-coworker-gem-worker-loop/8xg.t.qn6.4-ace-coworker-gem-worker-loop-that-takes.s.md, .ace-tasks/_archive/8x/w/8xa.t.h8x-deliver-project-specific-supervision-workflows/8xa.t.h8x-deliver-project-specific-supervision-workflows-and.s.md, .ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/5-l6-kolejka-overseera-w-prywatnym/2-uruchamia-wy-cznie-kroki-odblokowane/ux/usage.md, .ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/execution-order.md, docs/lab-flow.md, docs/decisions/ADR-034-file-based-lab-state-ownership.md, ace-overseer/lib/ace/overseer/cli/commands/work_on.rb]
+  commands: []
+title: Uruchamiać wyłącznie kroki odblokowane zależnościami
 ---
 
 # Uruchamiać wyłącznie kroki odblokowane zależnościami
@@ -47,7 +50,7 @@ Dla zmian implementacji: `bin/ace-test <zmieniony-pakiet> all`, `bin/ace-test-su
 Poprzednik oznacza odebrany i zintegrowany wynik; gotowy PR nie zastępuje merge. [Fale pracy i zasady integracji](.ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/execution-order.md).
 
 To zależności implementacyjne backlogu; nie tworzą runtime'owej kolejki _overseer.
-Status `draft`: specyfikacja zatwierdzona co do kierunku, do późniejszego review gotowości i planowania wykonania.
+Gotowość specyfikacji i możliwość startu są odrębne: po review sprawdzić dependencies konkretnego liścia. Samo pending nie usuwa zależności.
 Rozmiar orientacyjny: medium. Nie otwierać osobnej usługi lub magazynu stanu dla tej funkcji.
 
 ## Przejęty zakres i materiały
@@ -58,3 +61,11 @@ Rozmiar orientacyjny: medium. Nie otwierać osobnej usługi lub magazynu stanu d
 - [8xa.t.h8x](.ace-tasks/_archive/8x/w/8xa.t.h8x-deliver-project-specific-supervision-workflows/8xa.t.h8x-deliver-project-specific-supervision-workflows-and.s.md)
 
 Zachować przydatny kod, worktree i dowody z poprzednich zadań. Nie oznaczać ich ponownie jako wykonanych bez sprawdzenia zakresu; nie odtwarzać odrzuconych mechanizmów starego laba.
+
+## Review gotowości — 2026-10-18, po PR #379
+
+Wykorzystać istniejącą ścieżkę work-on i zadania _overseer. Decyzja o starcie należy do overseera; kolejność nie jest nowym runtime schedulerem. Potwierdzić wynik wymaganego kroku integracji; cancelled/skipped/archiwum bez dowodu wymaganego wyniku nie są takim potwierdzeniem, nawet jeśli ogólny sorter tasków pokazuje je inaczej.
+Start dopiero po pełnym plannerze .3 i .5.1. Sprawdzić B oczekujące na merge A, B po potwierdzeniu integracji oraz brakujący/cykliczny poprzednik. Nie zmieniać przy tym ogólnych reguł ace-task ani wprowadzać guardów roli do narzędzi delegowania.
+
+Źródła: `docs/lab-flow.md`, ADR-034 i `ace-overseer/lib/ace/overseer/cli/commands/work_on.rb`.
+Weryfikacja implementacji: powyższe scenariusze pozytywne i błędne, testy zmienionych pakietów i niezależny review. Ten przegląd specyfikacji nie jest odbiorem implementacji.

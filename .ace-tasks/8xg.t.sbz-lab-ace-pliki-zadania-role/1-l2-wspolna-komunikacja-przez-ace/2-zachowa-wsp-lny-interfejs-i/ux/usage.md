@@ -21,3 +21,8 @@ Oczekiwany wynik: Niedostępny adapter nie powoduje cichego wysłania do innego 
 ## Reguły wspólne
 
 Reguły wspólne są częścią tej specyfikacji: [kontrakt programu](.ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/contract.md). Obowiązuje zatwierdzony model plikowy; stare materiały są źródłem kontekstu, nie nakazem zachowania ich architektury.
+
+## Doprecyzowanie odbioru po review 2026-10-18
+
+Konsumenci: ace-coworker, ace-overseer, ace-hitl-hermes i istniejące transporty terminalowe. Hermes oraz tmux/Herdr korzystają z tego samego raportu/pytania/Reply; adapter tłumaczy transport, nie reguły roli. Zachować obecne mechanizmy lifecycle/relay i konfigurację transportów, bez przywracania authority/proposals.
+Dla wielu skonfigurowanych tras pokazać wynik każdej. Sukces jednej trasy nie ukrywa błędu drugiej; brak skonfigurowanej trasy daje konkretny błąd. Testy adapterów używają kontrolowanych odbiorców; samo wywołanie mocka nie zastępuje scenariusza przesłania i Reply. Nervus poza zakresem.

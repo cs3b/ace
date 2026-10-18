@@ -1,15 +1,18 @@
 ---
 id: 8xg.t.sbz.2.2
-status: draft
+status: pending
 priority: medium
 created_at: "2026-10-17 18:54:13"
 estimate: medium
-dependencies: ["8xg.t.sbz.2.1", "8xg.t.sbz.1"]
-tags: ["lab", "lab-l3", "file-based"]
+dependencies: [8xg.t.sbz.2.1, 8xg.t.sbz.1]
+tags: [lab, lab-l3, file-based]
 parent: 8xg.t.sbz.2
-needs_review: true
-bundle: {"presets": ["project"], "files": ["AGENTS.md", ".ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/contract.md", ".ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/8xg.t.sbz-lab-ace-pliki-zadania-role-i-komunikacja.s.md", "ace-assign/README.md", "ace-assign/docs/usage.md", "ace-overseer/README.md", ".ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/2-l3-ace-coworker-wykonuje-assignment/8xg.t.sbz.2-l3-ace-coworker-wykonuje-assignment-do-konca.s.md", ".ace-tasks/_archive/8x/x/8xg.t.qn6-python-ruby-migration-file-based/8xg.t.qn6-python-ruby-migration-file-based-lab-zero.s.md", ".ace-tasks/_archive/8x/x/8xg.t.qn6-python-ruby-migration-file-based/2-ace-lab-one-shot-mutations/8xg.t.qn6.2-ace-lab-one-shot-mutations-assignment-operations.s.md", ".ace-tasks/_archive/8x/x/8xg.t.qn6-python-ruby-migration-file-based/4-ace-coworker-gem-worker-loop/8xg.t.qn6.4-ace-coworker-gem-worker-loop-that-takes.s.md", ".ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/2-l3-ace-coworker-wykonuje-assignment/2-zapisywa-wynik-i-raportowa-przez/ux/usage.md", ".ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/execution-order.md"], "commands": []}
-title: "Zapisywać wynik i raportować przez HITL"
+needs_review: false
+bundle:
+  presets: [project]
+  files: [AGENTS.md, .ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/contract.md, .ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/8xg.t.sbz-lab-ace-pliki-zadania-role-i-komunikacja.s.md, ace-assign/README.md, ace-assign/docs/usage.md, ace-overseer/README.md, .ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/2-l3-ace-coworker-wykonuje-assignment/8xg.t.sbz.2-l3-ace-coworker-wykonuje-assignment-do-konca.s.md, .ace-tasks/_archive/8x/x/8xg.t.qn6-python-ruby-migration-file-based/8xg.t.qn6-python-ruby-migration-file-based-lab-zero.s.md, .ace-tasks/_archive/8x/x/8xg.t.qn6-python-ruby-migration-file-based/2-ace-lab-one-shot-mutations/8xg.t.qn6.2-ace-lab-one-shot-mutations-assignment-operations.s.md, .ace-tasks/_archive/8x/x/8xg.t.qn6-python-ruby-migration-file-based/4-ace-coworker-gem-worker-loop/8xg.t.qn6.4-ace-coworker-gem-worker-loop-that-takes.s.md, .ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/2-l3-ace-coworker-wykonuje-assignment/2-zapisywa-wynik-i-raportowa-przez/ux/usage.md, .ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/execution-order.md, docs/lab-flow.md, docs/decisions/ADR-034-file-based-lab-state-ownership.md, ace-hitl/README.md]
+  commands: []
+title: Zapisywać wynik i raportować przez HITL
 ---
 
 # Zapisywać wynik i raportować przez HITL
@@ -47,7 +50,7 @@ Dla zmian implementacji: `bin/ace-test <zmieniony-pakiet> all`, `bin/ace-test-su
 Poprzednik oznacza odebrany i zintegrowany wynik; gotowy PR nie zastępuje merge. [Fale pracy i zasady integracji](.ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/execution-order.md).
 
 To zależności implementacyjne backlogu; nie tworzą runtime'owej kolejki _overseer.
-Status `draft`: specyfikacja zatwierdzona co do kierunku, do późniejszego review gotowości i planowania wykonania.
+Gotowość specyfikacji i możliwość startu są odrębne: po review sprawdzić dependencies konkretnego liścia. Samo pending nie usuwa zależności.
 Rozmiar orientacyjny: medium. Nie otwierać osobnej usługi lub magazynu stanu dla tej funkcji.
 
 ## Przejęty zakres i materiały
@@ -57,3 +60,11 @@ Rozmiar orientacyjny: medium. Nie otwierać osobnej usługi lub magazynu stanu d
 - [8xg.t.qn6.4](.ace-tasks/_archive/8x/x/8xg.t.qn6-python-ruby-migration-file-based/4-ace-coworker-gem-worker-loop/8xg.t.qn6.4-ace-coworker-gem-worker-loop-that-takes.s.md)
 
 Zachować przydatny kod, worktree i dowody z poprzednich zadań. Nie oznaczać ich ponownie jako wykonanych bez sprawdzenia zakresu; nie odtwarzać odrzuconych mechanizmów starego laba.
+
+## Review gotowości — 2026-10-18, po PR #379
+
+Po integracji .1 i .2.1 raport zawiera ID taska, assignmentu i kroku oraz wynik i odnośnik do lokalnych dowodów. Trwały wynik pracy trafia do folderu taska; pomocniczy stan wykonawcy do `.ace-local/coworker/`, a wiadomość do HITL przez jego interfejs.
+Oddzielić wynik wykonania od dostarczenia: poprawnie ukończony assignment z niedostarczonym raportem zachowuje sukces pracy i jawny błąd dostarczenia. Błąd wykonania zapisuje przyczynę i niedokończony krok, nie fałszywe work done. Sprawdzić oba przypadki z odbiorcą testowym; nie wymagać gotowego .5.
+
+Źródła: `docs/lab-flow.md`, ADR-034 i `ace-hitl/README.md`.
+Weryfikacja implementacji: powyższe scenariusze pozytywne i błędne, testy zmienionych pakietów i niezależny review. Ten przegląd specyfikacji nie jest odbiorem implementacji.

@@ -21,3 +21,8 @@ Oczekiwany wynik: Coworker raportuje przez wiadomość i nie zapisuje do listy o
 ## Reguły wspólne
 
 Reguły wspólne są częścią tej specyfikacji: [kontrakt programu](.ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/contract.md). Obowiązuje zatwierdzony model plikowy; stare materiały są źródłem kontekstu, nie nakazem zachowania ich architektury.
+
+## Doprecyzowanie odbioru po review 2026-10-18
+
+PR #379 już dostarczył zwykłą ignorowaną `.ace-tasks/_overseer/` i ogólne zachowanie ace-task. Pozostały zakres tego liścia to przygotowanie/udokumentowanie użycia przez rolę overseera i weryfikacja tego przepływu, nie nowe funkcje ace-task. Utworzenie folderu i wpisu Gitignore odbywa się w konfiguracji projektu; docelowy instalator konsumuje to w .7.
+Użyć `ace-task create ... --in _overseer`, show/update/list i ponownego odczytu po wznowieniu. Wykazać Gitignore i brak zmian trackowanych. Reguła „coworker nie zapisuje listy” jest instrukcją roli; nie dodawać blokad nazw/ścieżek do ace-task, ace-assign ani ace-git-worktree. Subagenci mogą analizować i weryfikować plan; overseer pozostaje właścicielem jego zapisu. Brak HITL/coworkera nie blokuje lokalnego odbioru tego liścia.

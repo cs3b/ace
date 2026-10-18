@@ -1,15 +1,18 @@
 ---
 id: 8xg.t.sbz.6.2
-status: draft
+status: pending
 priority: medium
 created_at: "2026-10-17 18:54:23"
 estimate: medium
-dependencies: ["8xg.t.sbz.5", "8xg.t.sbz.1"]
-tags: ["lab", "lab-l7", "file-based"]
+dependencies: [8xg.t.sbz.5, 8xg.t.sbz.1]
+tags: [lab, lab-l7, file-based]
 parent: 8xg.t.sbz.6
-needs_review: true
-bundle: {"presets": ["project"], "files": ["AGENTS.md", ".ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/contract.md", ".ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/8xg.t.sbz-lab-ace-pliki-zadania-role-i-komunikacja.s.md", "ace-overseer/docs/usage.md", "ace-herdr/README.md", "ace-git-worktree/docs/usage.md", "ace-handbook-integration-pi/handbook/extensions/ace-wake/index.js", ".ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/6-l7-status-overseera-i-kontynuacja/8xg.t.sbz.6-l7-status-overseera-i-kontynuacja-zleconej-pracy.s.md", ".ace-tasks/_archive/8x/x/8xg.t.qn6-python-ruby-migration-file-based/8xg.t.qn6-python-ruby-migration-file-based-lab-zero.s.md", ".ace-tasks/_archive/8x/x/8xg.t.qn6-python-ruby-migration-file-based/0-ace-herdr-status-spaces-tabs/8xg.t.qn6.0-ace-herdr-status-spaces-tabs-and-panes.s.md", ".ace-tasks/_archive/8x/x/8xg.t.qn6-python-ruby-migration-file-based/1-ace-lab-status-lab-configuration/8xg.t.qn6.1-ace-lab-status-lab-configuration-and-state.s.md", ".ace-tasks/_archive/8x/x/8xg.t.qn6-python-ruby-migration-file-based/4-ace-coworker-gem-worker-loop/8xg.t.qn6.4-ace-coworker-gem-worker-loop-that-takes.s.md", ".ace-tasks/_archive/8x/w/8xa.t.h8x-deliver-project-specific-supervision-workflows/8xa.t.h8x-deliver-project-specific-supervision-workflows-and.s.md", ".ace-tasks/_archive/8x/x/8xd.t.cm3-durable-goal-capability-for-pi/8xd.t.cm3-durable-goal-capability-for-pi-agents-objective.s.md", ".ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/6-l7-status-overseera-i-kontynuacja/2-kontynuowa-zlecon-prac-w-pi/ux/usage.md", ".ace-tasks/8xg.t.k9y-ace-git-worktree-list-active/8xg.t.k9y-ace-git-worktree-list-active-worktree-table.s.md", ".ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/execution-order.md"], "commands": []}
-title: "Kontynuować zleconą pracę w pi"
+needs_review: false
+bundle:
+  presets: [project]
+  files: [AGENTS.md, .ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/contract.md, .ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/8xg.t.sbz-lab-ace-pliki-zadania-role-i-komunikacja.s.md, ace-overseer/docs/usage.md, ace-herdr/README.md, ace-git-worktree/docs/usage.md, ace-handbook-integration-pi/handbook/extensions/ace-wake/index.js, .ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/6-l7-status-overseera-i-kontynuacja/8xg.t.sbz.6-l7-status-overseera-i-kontynuacja-zleconej-pracy.s.md, .ace-tasks/_archive/8x/x/8xg.t.qn6-python-ruby-migration-file-based/8xg.t.qn6-python-ruby-migration-file-based-lab-zero.s.md, .ace-tasks/_archive/8x/x/8xg.t.qn6-python-ruby-migration-file-based/0-ace-herdr-status-spaces-tabs/8xg.t.qn6.0-ace-herdr-status-spaces-tabs-and-panes.s.md, .ace-tasks/_archive/8x/x/8xg.t.qn6-python-ruby-migration-file-based/1-ace-lab-status-lab-configuration/8xg.t.qn6.1-ace-lab-status-lab-configuration-and-state.s.md, .ace-tasks/_archive/8x/x/8xg.t.qn6-python-ruby-migration-file-based/4-ace-coworker-gem-worker-loop/8xg.t.qn6.4-ace-coworker-gem-worker-loop-that-takes.s.md, .ace-tasks/_archive/8x/w/8xa.t.h8x-deliver-project-specific-supervision-workflows/8xa.t.h8x-deliver-project-specific-supervision-workflows-and.s.md, .ace-tasks/_archive/8x/x/8xd.t.cm3-durable-goal-capability-for-pi/8xd.t.cm3-durable-goal-capability-for-pi-agents-objective.s.md, .ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/6-l7-status-overseera-i-kontynuacja/2-kontynuowa-zlecon-prac-w-pi/ux/usage.md, .ace-tasks/8xg.t.k9y-ace-git-worktree-list-active/8xg.t.k9y-ace-git-worktree-list-active-worktree-table.s.md, .ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/execution-order.md, docs/lab-flow.md, docs/decisions/ADR-034-file-based-lab-state-ownership.md, ace-herdr/lib/ace/herdr/molecules/native_queue_executor.rb]
+  commands: []
+title: Kontynuować zleconą pracę w pi
 ---
 
 # Kontynuować zleconą pracę w pi
@@ -47,7 +50,7 @@ Dla zmian implementacji: `bin/ace-test <zmieniony-pakiet> all`, `bin/ace-test-su
 Poprzednik oznacza odebrany i zintegrowany wynik; gotowy PR nie zastępuje merge. [Fale pracy i zasady integracji](.ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/execution-order.md).
 
 To zależności implementacyjne backlogu; nie tworzą runtime'owej kolejki _overseer.
-Status `draft`: specyfikacja zatwierdzona co do kierunku, do późniejszego review gotowości i planowania wykonania.
+Gotowość specyfikacji i możliwość startu są odrębne: po review sprawdzić dependencies konkretnego liścia. Samo pending nie usuwa zależności.
 Rozmiar orientacyjny: medium. Nie otwierać osobnej usługi lub magazynu stanu dla tej funkcji.
 
 ## Przejęty zakres i materiały
@@ -62,3 +65,11 @@ Rozmiar orientacyjny: medium. Nie otwierać osobnej usługi lub magazynu stanu d
 Zachować przydatny kod, worktree i dowody z poprzednich zadań. Nie oznaczać ich ponownie jako wykonanych bez sprawdzenia zakresu; nie odtwarzać odrzuconych mechanizmów starego laba.
 
 Status worktree korzysta z ukończonego `8xg.t.k9y`; obecnym publicznym wejściem jest `ace-git-worktree list`. Nie tworzyć drugiej implementacji tylko dla nazwy status. L7.1 może być wykonany wcześniej niż cała rodzina L7.
+
+## Review gotowości — 2026-10-18, po PR #379
+
+Wykorzystać istniejący transport pi wskazany konfiguracją Herdr (`ACE_HERDR_PI_QUEUE_CLIENT` / obecny adapter). Kod integracji pozostaje po stronie istniejącego adaptera/rozszerzenia pi, bez drugiej kolejki w ACE. Dostarczenie podczas aktywnej tury nie uruchamia drugiego overseera; oczekująca sesja podejmuje zlecony proces.
+Po restarcie sesji prompt wznowienia odczytuje zadania _overseer, assignmenty i stan projektu. Test aktywnej i oczekującej sesji, restartu i powtórzonego raportu. Weryfikacja prawdziwego pi jest częścią odbioru; brak dostępnego runtime to niewykonany scenariusz, nie powód do budowania zastępczego serwisu. Nie szukać nowych zadań poza zleceniem.
+
+Źródła: `docs/lab-flow.md`, ADR-034 i `ace-herdr/lib/ace/herdr/molecules/native_queue_executor.rb`.
+Weryfikacja implementacji: powyższe scenariusze pozytywne i błędne, testy zmienionych pakietów i niezależny review. Ten przegląd specyfikacji nie jest odbiorem implementacji.

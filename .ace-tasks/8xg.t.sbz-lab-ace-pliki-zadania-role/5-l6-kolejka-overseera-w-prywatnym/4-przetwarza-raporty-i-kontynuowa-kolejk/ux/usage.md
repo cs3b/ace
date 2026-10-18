@@ -21,3 +21,8 @@ Oczekiwany wynik: Powtórzony raport nie uruchamia następnego kroku dwa razy; r
 ## Reguły wspólne
 
 Reguły wspólne są częścią tej specyfikacji: [kontrakt programu](.ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/contract.md). Obowiązuje zatwierdzony model plikowy; stare materiały są źródłem kontekstu, nie nakazem zachowania ich architektury.
+
+## Doprecyzowanie odbioru po review 2026-10-18
+
+Odbiorca dopasowuje ID wiadomości i referencje task/assignment/krok do bieżącego zlecenia. Wynik i ID przetworzonego raportu zapisuje w istniejącym tasku zarządzającym. Powtórzenie raportu sprawdza zapisany wynik i istniejący przydział zamiast ponownie uruchamiać rolę.
+Niepasujący raport lub błąd pozostaje do wyjaśnienia, nie zamyka kroku sukcesem. Test rzeczywistego obiegu i przerwania między zapisem wyniku a następnym przydziałem; po wznowieniu odczytać zadanie i stan worktree. Bez osobnej tabeli deduplikacji/journala. Automatyczne budzenie pi należy do .6.2, nie jest warunkiem odbioru obiegu z dostarczonym raportem w .5.4.

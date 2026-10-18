@@ -21,3 +21,8 @@ Oczekiwany wynik: Jeżeli nie wiadomo, czy merge/publikacja zaszły, sprawdzić 
 ## Reguły wspólne
 
 Reguły wspólne są częścią tej specyfikacji: [kontrakt programu](.ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/contract.md). Obowiązuje zatwierdzony model plikowy; stare materiały są źródłem kontekstu, nie nakazem zachowania ich architektury.
+
+## Doprecyzowanie odbioru po review 2026-10-18
+
+Wznowienie korzysta z tego samego taska, assignmentu i worktree; ukończone kroki pozostają ukończone. Przerwany krok jest oceniany na podstawie obecnego stanu plików/Gita i swojego raportu przed ponowieniem skutku. Nie resetować lokalnych zmian.
+Dla niejednoznacznego merge/publikacji odczytać faktyczny stan istniejącym narzędziem albo zgłosić blokadę. Jeśli assignment jest już ukończony, a brak jedynie dostarczenia, ponowić wiadomość HITL o tym samym ID. Test przerwania w połowie oraz po wykonaniu skutku przed zapisem wyniku; bez nowego journala/checkpoint store.

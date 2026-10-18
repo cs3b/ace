@@ -21,3 +21,8 @@ Oczekiwany wynik: Błąd, brak wyniku lub anulowanie wymaganego poprzednika nie 
 ## Reguły wspólne
 
 Reguły wspólne są częścią tej specyfikacji: [kontrakt programu](.ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/contract.md). Obowiązuje zatwierdzony model plikowy; stare materiały są źródłem kontekstu, nie nakazem zachowania ich architektury.
+
+## Doprecyzowanie odbioru po review 2026-10-18
+
+Wykorzystać istniejącą ścieżkę work-on i zadania _overseer. Decyzja o starcie należy do overseera; kolejność nie jest nowym runtime schedulerem. Potwierdzić wynik wymaganego kroku integracji; cancelled/skipped/archiwum bez dowodu wymaganego wyniku nie są takim potwierdzeniem, nawet jeśli ogólny sorter tasków pokazuje je inaczej.
+Start dopiero po pełnym plannerze .3 i .5.1. Sprawdzić B oczekujące na merge A, B po potwierdzeniu integracji oraz brakujący/cykliczny poprzednik. Nie zmieniać przy tym ogólnych reguł ace-task ani wprowadzać guardów roli do narzędzi delegowania.

@@ -21,3 +21,8 @@ Oczekiwany wynik: Powtórzone powiadomienia nie tworzą drugiej egzekucji; brak 
 ## Reguły wspólne
 
 Reguły wspólne są częścią tej specyfikacji: [kontrakt programu](.ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/contract.md). Obowiązuje zatwierdzony model plikowy; stare materiały są źródłem kontekstu, nie nakazem zachowania ich architektury.
+
+## Doprecyzowanie odbioru po review 2026-10-18
+
+Wykorzystać istniejący transport pi wskazany konfiguracją Herdr (`ACE_HERDR_PI_QUEUE_CLIENT` / obecny adapter). Kod integracji pozostaje po stronie istniejącego adaptera/rozszerzenia pi, bez drugiej kolejki w ACE. Dostarczenie podczas aktywnej tury nie uruchamia drugiego overseera; oczekująca sesja podejmuje zlecony proces.
+Po restarcie sesji prompt wznowienia odczytuje zadania _overseer, assignmenty i stan projektu. Test aktywnej i oczekującej sesji, restartu i powtórzonego raportu. Weryfikacja prawdziwego pi jest częścią odbioru; brak dostępnego runtime to niewykonany scenariusz, nie powód do budowania zastępczego serwisu. Nie szukać nowych zadań poza zleceniem.

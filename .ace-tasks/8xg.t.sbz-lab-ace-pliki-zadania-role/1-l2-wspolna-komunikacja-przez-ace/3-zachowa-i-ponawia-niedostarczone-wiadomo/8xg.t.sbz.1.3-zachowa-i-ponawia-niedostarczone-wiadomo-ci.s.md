@@ -1,15 +1,18 @@
 ---
 id: 8xg.t.sbz.1.3
-status: draft
+status: pending
 priority: medium
 created_at: "2026-10-17 18:54:12"
 estimate: medium
-dependencies: ["8xg.t.sbz.1.2"]
-tags: ["lab", "lab-l2", "file-based"]
+dependencies: [8xg.t.sbz.1.2]
+tags: [lab, lab-l2, file-based]
 parent: 8xg.t.sbz.1
-needs_review: true
-bundle: {"presets": ["project"], "files": ["AGENTS.md", ".ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/contract.md", ".ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/8xg.t.sbz-lab-ace-pliki-zadania-role-i-komunikacja.s.md", "ace-hitl/README.md", "ace-hitl/docs/usage.md", "ace-hitl-hermes/README.md", ".ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/1-l2-wspolna-komunikacja-przez-ace/8xg.t.sbz.1-l2-wspolna-komunikacja-przez-ace-hitl-i.s.md", ".ace-tasks/_archive/8x/x/8xg.t.qn6-python-ruby-migration-file-based/8xg.t.qn6-python-ruby-migration-file-based-lab-zero.s.md", ".ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/1-l2-wspolna-komunikacja-przez-ace/3-zachowa-i-ponawia-niedostarczone-wiadomo/ux/usage.md", ".ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/execution-order.md"], "commands": []}
-title: "Zachować i ponawiać niedostarczone wiadomości"
+needs_review: false
+bundle:
+  presets: [project]
+  files: [AGENTS.md, .ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/contract.md, .ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/8xg.t.sbz-lab-ace-pliki-zadania-role-i-komunikacja.s.md, ace-hitl/README.md, ace-hitl/docs/usage.md, ace-hitl-hermes/README.md, .ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/1-l2-wspolna-komunikacja-przez-ace/8xg.t.sbz.1-l2-wspolna-komunikacja-przez-ace-hitl-i.s.md, .ace-tasks/_archive/8x/x/8xg.t.qn6-python-ruby-migration-file-based/8xg.t.qn6-python-ruby-migration-file-based-lab-zero.s.md, .ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/1-l2-wspolna-komunikacja-przez-ace/3-zachowa-i-ponawia-niedostarczone-wiadomo/ux/usage.md, .ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/execution-order.md, docs/lab-flow.md, docs/decisions/ADR-034-file-based-lab-state-ownership.md]
+  commands: []
+title: Zachować i ponawiać niedostarczone wiadomości
 ---
 
 # Zachować i ponawiać niedostarczone wiadomości
@@ -47,7 +50,7 @@ Dla zmian implementacji: `bin/ace-test <zmieniony-pakiet> all`, `bin/ace-test-su
 Poprzednik oznacza odebrany i zintegrowany wynik; gotowy PR nie zastępuje merge. [Fale pracy i zasady integracji](.ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/execution-order.md).
 
 To zależności implementacyjne backlogu; nie tworzą runtime'owej kolejki _overseer.
-Status `draft`: specyfikacja zatwierdzona co do kierunku, do późniejszego review gotowości i planowania wykonania.
+Gotowość specyfikacji i możliwość startu są odrębne: po review sprawdzić dependencies konkretnego liścia. Samo pending nie usuwa zależności.
 Rozmiar orientacyjny: medium. Nie otwierać osobnej usługi lub magazynu stanu dla tej funkcji.
 
 ## Przejęty zakres i materiały
@@ -55,3 +58,11 @@ Rozmiar orientacyjny: medium. Nie otwierać osobnej usługi lub magazynu stanu d
 - [8xg.t.qn6](.ace-tasks/_archive/8x/x/8xg.t.qn6-python-ruby-migration-file-based/8xg.t.qn6-python-ruby-migration-file-based-lab-zero.s.md)
 
 Zachować przydatny kod, worktree i dowody z poprzednich zadań. Nie oznaczać ich ponownie jako wykonanych bez sprawdzenia zakresu; nie odtwarzać odrzuconych mechanizmów starego laba.
+
+## Review gotowości — 2026-10-18, po PR #379
+
+Ponowienie zachowuje ID i treść lokalnego zdarzenia; użytkownik/agent ponawia dostarczenie, nie assignment. Przy częściowym sukcesie ponawiane są trasy niedostarczone lub o nieznanym wyniku. Przy nieznanym wyniku możliwy jest duplikat, więc odbiorca rozpoznaje ID; nie obiecujemy exactly-once transportu.
+Test: odbiorca przyjął raport, potwierdzenie zaginęło, ponowienie niesie to samo ID. W tym liściu odbiorca testowy potwierdza identyfikowalność duplikatu; faktyczne nieuruchomienie kolejnego kroku drugi raz odbieramy w .5.4. Brak zależności implementacyjnej od przyszłego overseera.
+
+Źródła: `docs/lab-flow.md`, ADR-034 i `ace-hitl-hermes/README.md`.
+Weryfikacja implementacji: powyższe scenariusze pozytywne i błędne, testy zmienionych pakietów i niezależny review. Ten przegląd specyfikacji nie jest odbiorem implementacji.

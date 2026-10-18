@@ -73,3 +73,12 @@ Zapis tego backlogu nie jest wykonaniem funkcji, testów systemu ani publikacją
 ## Kolejność realizacji backlogu
 
 [Fale pracy i integracja](.ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/execution-order.md) zastępują pierwotny łańcuch L1–L10. Zależności są zapisane na poziomie liści. Zależny liść czeka na odebrany i zintegrowany wynik; overseer odwzorowuje merge w swoim prywatnym procesie. Główne taski grupują odbiór, nie serializują wszystkich prac.
+
+## Doprecyzowanie po review 2026-10-18
+
+`_overseer` jest zwykłym ignorowanym folderem tasków. Politykę własności,
+przydziałów i sekwencji ról realizuje overseer, nie guardy nazw folderów
+w ace-task/ace-assign/ace-git-worktree. Może korzystać z subagentów do planowania,
+analizy i weryfikacji; sam pozostaje właścicielem zapisu procesu.
+W backlogu implementacyjnym jedno worktree może obejmować główny task i jego
+kolejne podtaski. Pośrednie wyniki integrować, gdy odblokowują inny tor.

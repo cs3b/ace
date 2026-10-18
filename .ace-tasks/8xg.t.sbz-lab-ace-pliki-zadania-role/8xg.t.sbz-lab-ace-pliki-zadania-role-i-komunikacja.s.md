@@ -63,7 +63,7 @@ Dla zmian implementacji: `bin/ace-test <zmieniony-pakiet> all`, `bin/ace-test-su
 Hermes pozostaje adapterem; Nervus i rozbudowa proaktywności są poza zakresem.
 Nie migrujemy istniejącego laba przez instalator ani nie budujemy nowych VM.
 Nie tworzymy journala, brokera autoryzacji mutacji ani dodatkowego cache'u stanu.
-Wszystkie 53 specyfikacje mają status draft; zapis backlogu nie oznacza wykonania produktu.
+Stan po review 2026-10-18: L1 i jego dzieci są done po PR #379; grupy 8xg.t.sbz.1, .2, .5, .6 wraz z dziećmi mają gotowe specyfikacje (pending). Pozostałe drafty wymagają osobnego review. Pending nie oznacza wykonania produktu ani spełnienia dependencies.
 
 ## Materiały i zastąpienie poprzedniego programu
 

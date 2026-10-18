@@ -17,7 +17,26 @@ liści. Rodzic jest odebrany dopiero po wszystkich wymaganych dzieciach.
 
 Fale opisują typowy przebieg, a nie globalne bariery. Gdy konkretny poprzednik
 jest zintegrowany, jego następca może ruszyć bez czekania na niezależne tory.
-Wszystkie zadania pozostają draft do review gotowości; dokument nie uruchamia agentów.
+Po review 2026-10-18 grupy 8xg.t.sbz.1, .2, .5, .6 i ich dzieci mają specyfikacje gotowe do wykonania (pending); pozostałe grupy wymagają własnego review. Pending nie znosi dependencies. Dokument nie uruchamia agentów.
+
+
+## Start po merge PR #379 i review 2026-10-18
+
+Przed wykonaniem pobrać aktualny main zawierający `76bc3d4e8` oraz ten review.
+L1 `8xg.t.sbz.0` i jego dzieci są done; nie wykonywać ich ponownie.
+Review specyfikacji jest częścią przygotowania zlecenia, nie powodem pytania
+o zgodę na pominięcie draft. Nie usuwać rzeczywistych zależności.
+
+| Główny task | Pierwszy zakres | Granica integracji |
+|---|---|---|
+| `8xg.t.sbz.1` — HITL | `.1.0` → `.1.1` → `.1.2` → `.1.3` | Całe HITL odblokowuje `.2.2` |
+| `8xg.t.sbz.2` — coworker | `.2.0` → `.2.1` | `.2.2` czeka na `.1`, potem `.2.3` |
+| `8xg.t.sbz.5` — overseer | `.5.0` → `.5.1` | `.5.2` czeka na `.3`; lokalna lista już istnieje po L1 |
+| `8xg.t.sbz.6` — statusy/pi | `.6.0` | `.6.1`/`.6.2` czekają na `.5`; nie blokują `.6.0` |
+
+Skróty `.x.y` w tabeli mają prefiks `8xg.t.sbz`. Nie delegować od razu całego
+rodzica jako niepodzielnej implementacji. Po dojściu do niespełnionej zależności
+zintegrować wykonany fragment i zachować worktree do kontynuacji.
 
 ## Fale pracy
 
@@ -44,8 +63,11 @@ Wszystkie zadania pozostają draft do review gotowości; dokument nie uruchamia 
 
 ## Odpowiedzialność za wspólne pliki
 
-Jednostką zlecenia implementacji jest liść (subtask); główne taski grupują odbiór.
-Każdy uruchomiony liść ma własne worktree z jednym aktywnym wykonawcą.
+Zlecenie może obejmować główny task wraz z podtaskami. Jeden główny zakres
+ma jedno worktree z jednym aktywnym wykonawcą; jego liście są kolejnymi
+krokami, nie obowiązkiem tworzenia nowych worktree. Dependencies nadal
+sprawdzamy na poziomie liści. Zakres może dostarczyć kilka kolejnych PR-ów: np.
+8xg.t.sbz.5.0–.5.1 integrujemy przed plannerem, resztę .5 po plannerze.
 Reviewer przejmuje worktree dopiero po zakończeniu workera; poprawki reviewera
 pozostają częścią jego assignmentu. Nie uruchamiać dwóch niezależnych driverów
 na tym samym worktree.
