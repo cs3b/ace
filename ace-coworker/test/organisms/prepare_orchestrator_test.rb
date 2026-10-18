@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "../test_helper"
+require "ace/task/organisms/task_manager"
 
 module Ace
   module Coworker
