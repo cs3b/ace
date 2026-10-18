@@ -53,7 +53,7 @@ PATH
 PATH
   remote: ace-coworker
   specs:
-    ace-coworker (0.3.1)
+    ace-coworker (0.3.2)
       ace-assign (~> 0.72)
       ace-hitl (~> 0.22)
       ace-support-cli (~> 0.6)
@@ -226,7 +226,7 @@ PATH
 PATH
   remote: ace-hitl
   specs:
-    ace-hitl (0.23.0)
+    ace-hitl (0.23.1)
       ace-b36ts (~> 0.14)
       ace-hitl-contract (~> 0.3.0)
       ace-runtime (~> 0.3)
