@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-10-18
+
+### Added
+
+- `ace-coworker prepare` (planner commission acceptance, L4.1): accepts a
+  preparation commission (`--task REF --roles worker,reviewer [--to ADDR]`)
+  and deterministically finds or prepares exactly one proper worktree for
+  the task via `ace-git-worktree` (association-aware switch, idempotent
+  create, stale-metadata prune/recreate recovery). Re-preparation reuses the
+  existing worktree with zero writes; an active executor (a commissioned
+  assignment that is not completed, or an uncommissioned running/stalled
+  assignment) or a mismatched worktree escalates a decision-type `ace-hitl`
+  question to the overseer instead of overwriting work. `--dry-run` performs
+  the full resolution and conflict detection with zero effects; the result
+  is rendered as a table or the JSON preparation contract (worktree
+  path/branch/disposition, assignments, conflict) consumable by the next
+  role or tool. New runtime dependency: `ace-git-worktree ~> 0.27`.
+
 ## [0.3.2] - 2026-10-18
 
 ### Changed

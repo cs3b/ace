@@ -20,7 +20,14 @@ ace-coworker start [--config PATH] [--format table|json]
 ace-coworker status [--config PATH] [--assignment ID] [--format table|json]
 ace-coworker report [--result success|error] [--message TEXT] [--no-send] [--dry-run]
 ace-coworker resume [--dry-run]                # Resume interrupted work in this worktree
+ace-coworker prepare --task REF --roles worker,reviewer [--to ADDR] [--dry-run]
 ```
+
+- `prepare` — the planner side: accept a preparation commission (task +
+  expected role sequence) and find or prepare exactly one proper worktree for
+  the task. Re-preparation reuses the existing worktree with zero writes; an
+  active executor or a mismatched worktree escalates a decision question to
+  the overseer via `ace-hitl` instead of overwriting work.
 
 - `start` — validate the prepared config (role, instructions, start prompt,
   task, assignment, overseer, error rules), verify the task resolves in this

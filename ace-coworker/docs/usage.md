@@ -146,6 +146,75 @@ Dispositions:
 checkpoint store: the worktree git state, the ace-assign step files, and
 the report helper state ARE the checkpoint (ADR-034).
 
+### `ace-coworker prepare`
+
+```
+ace-coworker prepare --task REF --roles worker,reviewer [--to overseer@addr]
+                     [--config PATH] [--dry-run] [--format table|json] [-q] [-d]
+```
+
+The planner side of the commission: accept a preparation commission (task
+reference + expected role sequence) and find or prepare exactly ONE proper
+worktree for that task. Re-preparing the same task reuses its existing
+worktree with zero writes — work and the task association are preserved.
+Assignments for the role sequence (L4.2), start configs in
+`.ace-local/coworker/` (L4.3), and the readiness report (L4.4) are later
+leaves; this command leaves those seams via the echoed `roles` and the JSON
+result.
+
+Deterministic decision procedure (no new state; ace-git-worktree stays the
+worktree owner):
+
+1. Resolve the project root and the task via ace-task; an unresolvable ref
+   fails with `task '<ref>' not found in this worktree` (invalid commission,
+   no HITL event).
+2. Find the task's worktree (association-aware `ace-git-worktree` switch):
+   a resolved worktree for this task is reused; a resolved worktree for
+   another task is a `mismatched_worktree` conflict; stale metadata
+   (resolved but directory missing) recovers via prune + recreate.
+3. Otherwise create the task worktree (idempotent owner call). A creation
+   failure while the expected location is occupied is a `mismatched_worktree`
+   conflict; any other failure exits 1 with the structured error and its
+   recovery hint (operational error, no HITL event).
+4. Probe the resolved worktree for an active executor: the worktree's
+   `.ace-local/coworker/config.yml` names a commissioned assignment whose
+   state is anything other than `completed` (including unparseable/unknown —
+   never overwrite), or any uncommissioned assignment is `running`/`stalled`,
+   is an `active_executor` conflict. Pending/never-started assignments never
+   block (the up-front role sequence of L4.2 must not self-conflict);
+   uncommissioned `failed` assignments are surfaced as context only.
+5. Reuse performs zero writes: no git effects, no task frontmatter rewrite,
+   no config change.
+
+Conflicts mutate nothing: a decision-type HITL question for the overseer is
+created and sent (`--type question --kind decision`, title
+`Preparation conflict - <task>/<worktree-dir>`); without an escalation
+recipient (`--to` or the `overseer` field of `--config`) the conflict still
+exits 1 with an explicit `cannot report conflict: no overseer address` note.
+An undeliverable event keeps the event id in the output for a later
+`ace-hitl send <id>` retry — retrying delivery never retries preparation.
+
+Result JSON (table renders the same fields):
+
+```json
+{
+  "task": "8xg.t.sbz.3",
+  "task_path": "/abs/.ace-tasks/8xg.t.sbz-lab…/",
+  "roles": ["worker", "reviewer"],
+  "worktree": { "path": "/abs/.ace-wt/t.8xg-t-sbz-3", "branch": "8xg-…", "disposition": "created" },
+  "active_executor": null,
+  "worktree_assignments": [{"id": "abc123", "state": "paused", "progress": "0/2"}],
+  "conflict": null
+}
+```
+
+`disposition` is `created` / `recovered` (stale metadata recovered) / `reused`
+or, with `--dry-run`, `would_create` / `would_recover`. A non-null `conflict`
+(with `kind`, `detail`, `hitl_event`) replaces `worktree`. `--dry-run`
+performs the full resolution and conflict detection with zero writes (no
+create, no prune-recovery, no HITL events); the exit code reflects the
+would-be outcome.
+
 ## Exit codes
 
 | Command | 0 | 1 |
@@ -154,6 +223,7 @@ the report helper state ARE the checkpoint (ADR-034).
 | `status` | query rendered any state (including not-ready) | — |
 | `report` | success outcome recorded (and delivered, or `--no-send`/`--dry-run`) | error outcome; delivery/create failure (outcome still recorded); refused input |
 | `resume` | continue/complete rendered; report redelivered | delegated report failure keeps its exit 1 (plan still rendered) |
+| `prepare` | worktree created/recovered/reused (dry-run: would_create/would_recover) | conflict (active_executor / mismatched_worktree); invalid commission; operational preparation failure |
 
 ## Boundaries
 
