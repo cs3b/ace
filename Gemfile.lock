@@ -57,6 +57,7 @@ PATH
       ace-assign (~> 0.72)
       ace-git-worktree (~> 0.27)
       ace-hitl (~> 0.22)
+      ace-review (~> 0.62)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.18)
       ace-support-core (~> 0.31)

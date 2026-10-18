@@ -57,6 +57,7 @@ module Ace
             assert_includes out, "Coworker roles:"
             assert_includes out, "spec       gem      Fixture spec"
             assert_includes out, "worker     gem      Fixture worker"
+            assert_includes out, "reviewer   gem      Fixture reviewer"
             assert_includes out, "instructions: wfi://coworker/worker"
           end
 

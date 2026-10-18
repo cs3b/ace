@@ -46,7 +46,9 @@ Gem::Specification.new do |spec|
   # the ace-git-worktree library (worktree provisioning owner). Shipped role
   # presets reference `wfi://` instruction sources resolved through the
   # ace-nav CLI, so ace-support-nav is a runtime dependency too; a missing
-  # binary still fails with an explicit Coworker::Error.
+  # binary still fails with an explicit Coworker::Error. The shipped
+  # reviewer role workflow drives `ace-review`/`ace-review-feedback` as its
+  # primary function, so ace-review is a runtime dependency as well.
   spec.add_dependency "ace-support-cli", "~> 0.6"
   spec.add_dependency "ace-support-core", "~> 0.31"
   spec.add_dependency "ace-support-config", "~> 0.18"
@@ -56,6 +58,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "ace-assign", "~> 0.72"
   spec.add_dependency "ace-hitl", "~> 0.22"
   spec.add_dependency "ace-git-worktree", "~> 0.27"
+  spec.add_dependency "ace-review", "~> 0.62"
 
   spec.add_development_dependency "ace-support-test-helpers", "~> 0.14"
   spec.add_development_dependency "bundler", "~> 2.0"

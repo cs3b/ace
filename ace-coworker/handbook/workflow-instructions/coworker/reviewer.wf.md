@@ -85,7 +85,10 @@ product decision is escalated to the overseer instead.
 4. **Fix confirmed defects inside this assignment.**
    No overseer round-trip per fix:
    - Confirmed High/Critical must be fixed. Verified P2: fix within the task
-     or defer with rationale; a deferred P2 never blocks the round.
+     or defer with rationale (`ace-review-feedback skip <id> --reason
+     "<rationale>"`, or verify then skip per the feedback workflow) so the
+     finding has a terminal disposition instead of lingering pending; a
+     deferred P2 never blocks the round.
    - (a) `ace-assign add --step <fix-step> --after <n>` naming the feedback
      id; (b) implement the fix on the task branch in this worktree; (c) run
      the affected checks (`bin/ace-test <package> ...` - a failed required
@@ -103,10 +106,14 @@ product decision is escalated to the overseer instead.
 
 6. **Return to full review.**
    - After fixes, run a FULL round over the whole candidate with the same
-     retained forge selection. `--delta` may scope unchanged parts (it
-     carries findings forward), but any candidate change renews the evidence:
-     every accepted review binds the current candidate SHA; a committed task
-     edit changes the candidate and requires renewed evidence.
+     retained forge selection. With a `--pr` subject, `--delta` may scope
+     later rounds (it carries findings forward); with a local diff subject,
+     re-run the full `diff:<merge-base>..<head>` range (`--delta` requires
+     `--pr`). A delta round counts toward the 3/2/10 rule only when it
+     still reviews every changed part; a fix-diff check never counts. Any
+     candidate change renews the evidence: every accepted review binds the
+     current candidate SHA; a committed task edit changes the candidate and
+     requires renewed evidence.
    - **Convergence rule 3/2/10**: minimum 3 full rounds, the last 2
      consecutive without confirmed High/Critical and with no unresolved
      earlier High/Critical; maximum 10 - if round 10 satisfies the rule,

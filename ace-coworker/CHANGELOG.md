@@ -18,6 +18,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   deterministically enforced — that is 8xg.t.sbz.4.2). No effective fix or a
   needed product decision is escalated via an `ace-hitl` decision question;
   unresolved High/Critical is never marked as success.
+- `ace-review` declared as a runtime dependency: the reviewer role's primary
+  function drives the `ace-review`/`ace-review-feedback` CLIs, matching the
+  gemspec's stated policy of declaring runtime CLI requirements.
 
 ### Fixed
 
