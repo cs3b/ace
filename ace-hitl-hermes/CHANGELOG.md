@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-10-18
+
 ### Removed
 
 - Remove second-commander proposal reconciliation from the runtime, relay and boundary scenario: `proposal_due`/`reconcile_proposals`, proposal acknowledge/reconcile/reply paths, and the proposal boundary-surface positive case. The proposal model is removed with the old installed authority; Hermes now handles only local HITL/relay traffic (pending publication, delivery, ingress reconciliation).

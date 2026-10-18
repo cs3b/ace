@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-10-18
+
 ### Changed
 
 - Validate execution-scope unit names with the existing systemd unit shape, `.slice`/`.service` suffix and effective isolation checks only. A unit name that contains a role word such as `overseer` is no longer rejected: a role label is not a security boundary, and the real checks stay unchanged.
