@@ -17,11 +17,11 @@ class CreateCommandTest < AceAssignTestCase
   end
 
   class FakeTask
-    attr_reader :status, :subtasks, :special_folder
+    attr_reader :status, :subtasks, :path
 
     def initialize(data)
       @status = data[:status]
-      @special_folder = data[:special_folder]
+      @path = data[:path]
       @subtasks = Array(data[:subtasks]).map { |entry| FakeSubtask.new(entry[:id], entry[:status]) }
     end
   end
@@ -50,6 +50,21 @@ class CreateCommandTest < AceAssignTestCase
       current = Struct.new(:number, :name, :status, :instructions).new("010", "onboard", "active", "Load context")
       {assignment: assignment, current: current}
     end
+  end
+
+  def test_task_assignment_creator_does_not_classify_tasks_by_folder_name
+    executor = FakeExecutor.new
+    creator = Ace::Assign::Organisms::TaskAssignmentCreator.new(
+      task_manager: FakeTaskManager.new(
+        "406" => {status: "pending", path: ".ace-tasks/_overseer/8zz.t.aaa-objective/8zz.t.aaa-objective.s.md"}
+      ),
+      executor: executor
+    )
+
+    result = creator.call(task_refs: ["406"])
+
+    assert_equal ["406"], result[:task_refs]
+    refute_nil executor.path, "a task in a gitignored-looking folder must remain delegatable"
   end
 
   def test_create_with_valid_yaml
@@ -221,41 +236,6 @@ class CreateCommandTest < AceAssignTestCase
     assert_includes error.message, "All requested tasks are already terminal"
     assert_includes error.message, "402"
     assert_includes error.message, "403"
-  end
-
-  def test_create_refuses_overseer_management_task
-    with_temp_cache do |cache_dir|
-      Ace::Assign.config["cache_dir"] = cache_dir
-      manager = FakeTaskManager.new(
-        "406" => {status: "pending", special_folder: "_overseer"},
-        "407" => {status: "done", special_folder: "_overseer"},
-        "408" => {status: "pending"}
-      )
-      executor = FakeExecutor.new
-      creator = Ace::Assign::Organisms::TaskAssignmentCreator.new(task_manager: manager, executor: executor)
-
-      error = assert_raises(Ace::Support::Cli::Error) { creator.call(task_refs: ["406"]) }
-      assert_equal 1, error.exit_code
-      assert_includes error.message, "_overseer management task"
-      assert_includes error.message, "cannot be delegated as a project assignment"
-      assert_includes error.message, "A separate project task is needed for implementation"
-      assert_includes error.message, "subagents remain available for planning, analysis and verification"
-      assert_nil executor.path, "an _overseer task must not create an assignment"
-
-      # The guard applies to every resolved ref and runs before any artifact.
-      mixed = assert_raises(Ace::Support::Cli::Error) { creator.call(task_refs: ["408", "406"]) }
-      assert_includes mixed.message, "_overseer management task"
-      assert_nil executor.path
-
-      Ace::Task::Organisms::TaskManager.stub(:new, manager) do
-        cli_error = assert_raises(Ace::Support::Cli::Error) do
-          capture_io { Ace::Assign::CLI::Commands::Create.new.call(task: ["406"]) }
-        end
-        assert_includes cli_error.message, "_overseer management task"
-      end
-    ensure
-      Ace::Assign.reset_config!
-    end
   end
 
   def test_create_task_mode_creates_assignment_and_step_files_end_to_end

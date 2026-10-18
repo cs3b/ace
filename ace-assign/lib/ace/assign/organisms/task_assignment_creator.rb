@@ -82,13 +82,6 @@ module Ace
             task = @task_manager.show(ref.to_s)
             raise Ace::Support::Cli::Error, "Task not found: #{ref}" unless task
 
-            if overseer_management_task?(task)
-              raise Ace::Support::Cli::Error,
-                "Task #{ref} is an _overseer management task and cannot be delegated as a project assignment. " \
-                "A separate project task is needed for implementation while subagents remain available for " \
-                "planning, analysis and verification."
-            end
-
             if task.status.to_s == "draft"
               raise Ace::Support::Cli::Error,
                 "Task #{ref} has status 'draft' and has not been reviewed. " \
@@ -109,13 +102,6 @@ module Ace
 
         def subtask_ref?(ref)
           ref.to_s.match?(SUBTASK_PATTERN)
-        end
-
-        # The private _overseer store holds management tasks owned by the
-        # overseer. They are never delegated as project assignments; a real
-        # project task must carry the implementation.
-        def overseer_management_task?(task)
-          task.respond_to?(:special_folder) && task.special_folder.to_s == "_overseer"
         end
 
         def preset_supports_taskrefs?(preset)

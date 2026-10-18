@@ -54,13 +54,12 @@ scope or into version control.
 - `show`, `update`, subtasks, dependencies, `status`, and `plan` handle
   `_overseer` refs like any other task; Git tracking does not change the task
   model.
-- Prohibition stays in the delegation layer: no worktree is created for an
-  `_overseer` task and it cannot be used as a project implementation assignment
-  (`ace-git-worktree create --task` rejects it; `ace-assign create --task`
-  applies the same rule). The management task stays with the overseer, and a
-  separate project task carries the implementation. Subagents may still be
-  delegated planning, analysis, verification, or dependency analysis; the
-  overseer approves their results and updates its own task tree.
+- The universal tools stay role- and folder-name agnostic. `ace-assign` and
+  `ace-git-worktree` do not classify management tasks and do not inspect
+  `.gitignore`; the overseer decides which tasks it delegates and where the
+  executor starts, and preparing a correct delegation (including a task present
+  in the requested worktree) is the requester's responsibility. A missing task
+  in a worktree is reported by the executor.
 
 ### Canonical owner document
 
@@ -73,7 +72,10 @@ the root `README.md`, and `docs/quick-start.md`.
 The lab does not add a journal, authority/admission layer, listener/daemon,
 topology registry, queue engine, extra state cache, or mutation authorization
 broker. Permissions belong to the existing accounts and files, and adapters are
-built in L2 rather than as a new shared state service.
+built in L2 rather than as a new shared state service. Role-specific policy does
+not live in the universal tools or runtime: the old Root Overseer reverse-address
+channel and systemd unit-name role check were removed, and no replacement role
+policy or queue is added.
 
 ## Consequences
 
@@ -84,9 +86,9 @@ built in L2 rather than as a new shared state service.
 - A Git-ignored task keeps its plain task semantics but is never committed,
   auto-archived, or moved by `doctor --auto-fix`; its owner decides when to
   delete obsolete history.
-- Worktree and implementation-assignment guards keep management tasks with the
-  overseer, while subagent delegation for planning, analysis, and verification
-  remains allowed.
+- Worktree and assignment tools do not keep state about roles: the overseer
+  decides which tasks it delegates and where the executor starts, and a missing
+  task in a requested worktree is reported by the executor.
 - Each package reads and writes only its own location; no consumer mirrors
   assignment steps or the overseer queue.
 - L2-L10 planned waves (HITL interface, coworker, planner, roles, private

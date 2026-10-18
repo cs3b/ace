@@ -9,14 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- `create --task` now rejects tasks that ace-task classifies as private
-  `_overseer` management tasks (the task's `special_folder`, not a cwd-relative
-  path prefix), so the guard works from a subdirectory and with a custom task
-  root. `TaskFetcher` exposes that classification, including the CLI fallback's
-  `folder:` line. Management tasks stay with the overseer, a separate project
-  task carries implementation, and subagents remain available for planning,
-  analysis, and verification. The rejection message states this contract and no
-  worktree or task mutation is performed.
+- Remove the `_overseer` worktree refusal: `create --task` is role- and
+  folder-name-agnostic and no longer inspects a task's `special_folder`.
+  `TaskFetcher` no longer exposes that classification. There is no replacement
+  `.gitignore`/tracking check; a missing task in a requested worktree is
+  reported by the executor and preparing a correct delegation stays with the
+  requester.
 
 ## [0.27.1] - 2026-10-18
 

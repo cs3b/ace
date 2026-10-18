@@ -51,11 +51,11 @@ asks Git about the actual task path — never about the folder's name.
   doctor` neither reports the missing archive nor moves the task with
   `--auto-fix`; a move into an ignored archive destination is skipped too. The
   overseer decides when obsolete private history is deleted.
-- No worktree is created for an `_overseer` task, and it cannot be used as a
-  project implementation assignment: the management task stays with the
-  overseer, and a separate project task is used for implementation. Subagents may
-  still be delegated planning, analysis, verification, or dependency analysis;
-  the overseer approves their results and updates its own task tree.
+- `ace-assign` and `ace-git-worktree` are role- and folder-name-agnostic: they
+  do not classify management tasks and do not inspect `.gitignore`. The overseer
+  decides which tasks it delegates and where the executor starts; preparing a
+  correct delegation (including a task present in the requested worktree) is the
+  requester's responsibility.
 - `ace-task status` includes `_overseer` tasks in the shared totals and
   recently-done list; up-next remains project-root tasks, like other special
   folders. `ace-task plan` resolves `_overseer` refs and writes its plan cache
@@ -77,19 +77,19 @@ The flow below runs locally with the files above; each step writes only to its
 owner's location.
 
 The overseer's own coordination tasks live in `.ace-tasks/_overseer/`; every
-implementation step below points at a separate project task (`.ace-tasks/`).
-Worktrees and implementation assignments are rejected for `_overseer` tasks,
-while subagents remain available for planning, analysis, verification, and
-dependency analysis.
+implementation step below points at the task the overseer selects. Delegation
+tools do not classify tasks by folder or tracking state: the overseer decides
+which tasks it delegates and where the executor starts. If a requested worktree
+does not contain the named task, the executor reports the missing task.
 
 1. **Write the project task** — `ace-task create "..."` (writes `.ace-tasks/`).
 2. **Plan the work** — `ace-task plan <ref>` (ephemeral plan cache under the project root; the task stays in `.ace-tasks/`).
-3. **Provision the worktree** — `ace-git-worktree create --task <ref>` (writes `.ace-wt/<task>/`; project tasks only).
-4. **Create the assignment** — `ace-assign create --task <ref> --preset work-on-task` (writes `.ace-local/assign/`; project tasks only).
+3. **Provision the worktree** — `ace-git-worktree create --task <ref>` (writes `.ace-wt/<task>/`).
+4. **Create the assignment** — `ace-assign create --task <ref> --preset work-on-task` (writes `.ace-local/assign/`).
 5. **Drive it** — `/as-assign-drive` in the agent session; the steps execute and report under `.ace-local/assign/`.
 6. **Verify** — run package tests and review; results are recorded in the task folder or assignment reports.
 7. **Escalate blockers** — `ace-hitl create`, `ace-hitl list`, `ace-hitl update`, `ace-hitl wait` (writes `.ace-local/hitl/`; the overseer interprets the report/question and updates its own task in `.ace-tasks/_overseer/`).
-8. **Ship** — commit with `ace-git-commit`, then open a PR with `ace-git pr create` (project tasks only; `_overseer` tasks are never committed).
+8. **Ship** — commit with `ace-git-commit`, then open a PR with `ace-git pr create` (a private `_overseer` task is never committed because the folder is gitignored).
 9. **Close** — mark the project task done with `ace-task update <ref> --set status=done` (archive when the family is terminal).
 
 `ace-overseer work-on` / `status` / `prune` is local convenience over the same

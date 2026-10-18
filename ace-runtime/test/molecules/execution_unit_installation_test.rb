@@ -55,6 +55,30 @@ class ExecutionUnitInstallationTest < AceRuntimeTestCase
     assert_raises(Unavailable) { installation.verify!(manager: @manager) }
   end
 
+  def test_context_unit_names_are_validated_by_shape_not_by_role_words
+    context_installation
+    changed = Marshal.load(Marshal.dump(@context_selection))
+    changed.fetch("execution_scope")["service_unit"] = "overseer-worker.service"
+    changed.fetch("execution_scope")["slice_unit"] = "overseer.scope.slice"
+    configuration = @artifacts.find { |artifact| artifact["role"] == "context_configuration" }
+    installation = Installation.for_inbox_context(service: changed, configuration: {
+      "path" => configuration.fetch("host_path"), "bytes" => @files.bytes.fetch(configuration.fetch("host_path")).bytesize,
+      "sha256" => configuration.fetch("sha256")},
+      load_paths: ["/usr/lib/ruby"], authority: {"socket_path" => "/run/authority/socket", "uid" => 13000},
+      owner_credentials: {"uid" => 13001, "gid" => 13001, "groups" => [13002]}, files: @files)
+    assert installation
+
+    malformed = Marshal.load(Marshal.dump(changed))
+    malformed.fetch("execution_scope")["service_unit"] = "overseer-worker"
+    assert_raises(Unavailable) do
+      Installation.for_inbox_context(service: malformed, configuration: {
+        "path" => configuration.fetch("host_path"), "bytes" => @files.bytes.fetch(configuration.fetch("host_path")).bytesize,
+        "sha256" => configuration.fetch("sha256")},
+        load_paths: ["/usr/lib/ruby"], authority: {"socket_path" => "/run/authority/socket", "uid" => 13000},
+        owner_credentials: {"uid" => 13001, "gid" => 13001, "groups" => [13002]}, files: @files)
+    end
+  end
+
   def test_context_profile_requires_full_isolation_and_bounded_stop_without_worker_devpts
     %w[ProtectControlGroups Delegate TimeoutStopUSec].each do |key|
       installation = context_installation
