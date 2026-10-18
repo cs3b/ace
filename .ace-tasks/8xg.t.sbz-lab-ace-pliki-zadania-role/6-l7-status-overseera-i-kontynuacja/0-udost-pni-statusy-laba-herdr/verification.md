@@ -64,3 +64,19 @@ Branch: `l7-statuses` (worktree `.ace-wt/l7-statuses`), commits `5118ed51b..517b
   ace-herdr 610 tests / 0 failures.
 - Round 2 verdict recorded below.
 
+## Review round 2 verdict (2026-10-18)
+
+Independent re-review of fix commit `4745fdf90` (fresh-context reviewer agent): **PASS**.
+- Merge order verified against the canonical resolver (`ConfigFinder#find_all` priority sort →
+  `cascade_documents` highest-first; `file_config_resolver.rb` `configs.reverse.reduce` with
+  `:replace` arrays) — semantically identical.
+- The three regression tests verified to fail against the pre-fix classifier (empirically
+  restored `4745fdf90~1` and re-run).
+- Non-blocking fixes (a)(b)(c) confirmed; suites re-run green by the reviewer (ace-lab 214/0,
+  ace-herdr 610/0).
+- Remaining LOW: overlay split `start_with?("~/.ace")` without separator could misclassify a
+  project rooted at `~/.ace-foo` (degenerate). INFO: `source_path = overlays.first` relies on
+  the documented priority ordering.
+
+Merge gate satisfied: executed tests + independent reviewer verdict (AGENTS.md merge policy).
+
