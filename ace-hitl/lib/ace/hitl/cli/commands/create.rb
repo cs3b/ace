@@ -45,7 +45,7 @@ module Ace
             body = Array(options[:body]).map(&:strip).reject(&:empty?)
             result = options[:result]
             validate_combinations!(type, result: result, body: body, questions: questions,
-              resume: options[:resume])
+              resume: options[:resume], kind: kind)
             validate_result!(result) if result
 
             tags = parse_tags(options[:tags])
@@ -95,7 +95,7 @@ module Ace
             raise Ace::Support::Cli::Error.new("Invalid result '#{result}'. Allowed: #{allowed.join(", ")}")
           end
 
-          def validate_combinations!(type, result:, body:, questions:, resume:)
+          def validate_combinations!(type, result:, body:, questions:, resume:, kind: nil)
             report = type == "report"
             if report
               unless result
@@ -106,6 +106,9 @@ module Ace
               end
               if resume
                 raise Ace::Support::Cli::Error.new("--resume cannot be combined with --type report; reports do not resume")
+              end
+              if kind
+                raise Ace::Support::Cli::Error.new("--kind cannot be combined with --type report; kinds apply to questions only")
               end
             else
               if result

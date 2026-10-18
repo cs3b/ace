@@ -75,8 +75,8 @@ ace-hitl create "Step failed" \
 
 Rules:
 
-- `--type report` requires `--result success|error`; `--question` and `--resume`
-  are rejected on reports.
+- `--type report` requires `--result success|error`; `--question`, `--kind`,
+  and `--resume` are rejected on reports.
 - `--result` and `--body` are only valid with `--type report`.
 - Reports are created with status `recorded` and never appear as pending
   questions: `wait <report>`, `update <report> --answer`, and

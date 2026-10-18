@@ -1,14 +1,15 @@
 # frozen_string_literal: true
 
 require "yaml"
+require "ace/support/config"
 require_relative "coworker/version"
 require_relative "coworker/errors"
 
 module Ace
   module Coworker
-require_relative "coworker/models/config"
-require_relative "coworker/models/brief"
-require_relative "coworker/models/assignment_snapshot"
+    require_relative "coworker/models/config"
+    require_relative "coworker/models/brief"
+    require_relative "coworker/models/assignment_snapshot"
 
     autoload :CLI, "ace/coworker/cli"
 
@@ -40,12 +41,13 @@ require_relative "coworker/models/assignment_snapshot"
     end
 
     def self.load_gem_defaults
-      gem_root = ::Gem.loaded_specs["ace-coworker"]&.gem_dir || File.expand_path("..", __dir__)
+      gem_root = ::Gem.loaded_specs["ace-coworker"]&.gem_dir || File.expand_path("../..", __dir__)
       defaults_path = File.join(gem_root, ".ace-defaults", "coworker", "config.yml")
       raise Error, "Default config not found: #{defaults_path}" unless File.exist?(defaults_path)
 
       YAML.safe_load_file(defaults_path, permitted_classes: [Date], aliases: true) || {}
     end
+    private_class_method :load_gem_defaults
 
     def self.reset_config!
       @config = nil

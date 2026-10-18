@@ -647,6 +647,16 @@ class HitlCliTest < AceHitlTestCase
     end
   end
 
+  def test_create_rejects_kind_on_report
+    with_hitl_dir do |root|
+      with_cli_root(root) do
+        result = run_cli(["create", "T", "--type", "report", "--result", "success", "--kind", "decision"])
+        assert_equal 1, result[:exit_code]
+        assert_match(/--kind cannot be combined with --type report/, result[:stderr])
+      end
+    end
+  end
+
   def test_create_rejects_invalid_report_and_question_combinations
     with_hitl_dir do |root|
       with_cli_root(root) do
