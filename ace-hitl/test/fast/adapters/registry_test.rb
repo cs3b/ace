@@ -68,6 +68,15 @@ module Ace
           assert result.delivered?
           refute RouteResult.new(route: "r", adapter: "a", status: :failed, detail: "x").delivered?
         end
+
+        def test_reset_registry_reregisters_built_in_terminal
+          Adapters.reset_registry!
+          assert Adapters.registered?(:terminal), "built-in terminal must survive a registry reset"
+          adapter = Adapters.resolve(:terminal, route: {
+            "route" => "r", "adapter" => "terminal", "runtime" => "tmux", "pane" => "p1"
+          })
+          assert_kind_of Adapters::TerminalAdapter, adapter
+        end
       end
     end
   end

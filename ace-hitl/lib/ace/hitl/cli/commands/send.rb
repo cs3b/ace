@@ -30,10 +30,12 @@ module Ace
             sender = Organisms::HitlSender.new
             report = sender.send(ref, scope: scope)
 
-            puts "HITL event #{report.event_id} sent through #{report.results.size} route(s):"
-            report.results.each do |result|
-              detail = result.detail ? " - #{result.detail}" : ""
-              puts "  #{result.route} (#{result.adapter}): #{result.status}#{detail}"
+            unless options[:quiet]
+              puts "HITL event #{report.event_id} sent through #{report.results.size} route(s):"
+              report.results.each do |result|
+                detail = result.detail ? " - #{result.detail}" : ""
+                puts "  #{result.route} (#{result.adapter}): #{result.status}#{detail}"
+              end
             end
 
             unless report.all_delivered?

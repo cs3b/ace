@@ -28,7 +28,7 @@ module Ace
 
         class NotAnswerableError < StandardError; end
 
-        attr_reader :root_dir, :last_list_total, :last_folder_counts
+        attr_reader :root_dir, :last_list_total, :last_folder_counts, :config
 
         def initialize(root_dir: nil, config: nil, scope_resolver: nil, resume_dispatcher: nil,
           address_resolver: nil)

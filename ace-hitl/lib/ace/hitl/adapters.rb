@@ -53,8 +53,14 @@ module Ace
           @registry ||= Registry.new
         end
 
+        # Resetting re-registers the built-in adapters: a plain Registry.new
+        # would permanently lose :terminal (the entrypoint require is a
+        # no-op once loaded), breaking registry-level resolution in tests
+        # and long-lived processes.
         def reset_registry!
           @registry = Registry.new
+          register(:terminal, ->(route) { TerminalAdapter.new(route) })
+          nil
         end
 
         def available

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative "../atoms/hitl_address"
+require_relative "hitl_address"
 
 module Ace
   module Hitl
@@ -29,6 +29,10 @@ module Ace
           lines.join("\n")
         end
 
+        # Report body = the `## Report` section the creator writes. The
+        # section boundary is the next `## ` heading; reports are created by
+        # HitlCreator with plain `- ` content lines only, so nothing is lost
+        # for creator-written reports (documented boundary).
         def self.body_lines(event)
           body = event.content.to_s
           report_section = body.split(/^## Report\s*$/m, 2)[1].to_s

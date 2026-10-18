@@ -24,7 +24,7 @@ module Ace
 
         def initialize(manager: nil, config: nil, adapters: Adapters)
           @manager = manager || HitlManager.new(config: config)
-          @config = config || @manager.instance_variable_get(:@config)
+          @config = config || @manager.config
           @adapters = adapters
         end
 
