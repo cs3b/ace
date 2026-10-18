@@ -1,6 +1,6 @@
 ---
 id: 8xg.t.sbz.1.0
-status: in-progress
+status: done
 priority: medium
 created_at: "2026-10-17 18:54:10"
 estimate: medium
