@@ -85,6 +85,55 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   intermediate-path-component residual policy (leaf-only symlink
   refusal).
 
+### Fixed (review round 2)
+
+- `KeyProvisioner`'s wet *existing-key* path lacked the `.ssh` symlink
+  guard entirely: with a regular key file already present (found via
+  `lstat`), the run went straight to chmod/chown of the key pair —
+  following a planted intermediate `~/.ssh` symlink and enabling
+  cross-account private-key takeover with default manifests (uniform
+  `<home>/.ssh/id_ed25519` filenames). The guard now runs at the top of
+  the existing path (and in `generate`), and the regenerated `.pub` is
+  chmodded/chowned fd-based on the already-`O_NOFOLLOW`-opened handle,
+  closing the post-open race a path-based chmod/chown would reopen.
+- Create-path TOCTOU window closed as far as stdlib allows: leaf
+  directories (`.ssh` and declared directories) are created with
+  component-wise `Dir.mkdir` (whose `EEXIST` on a planted symlink
+  refuses instead of following it), re-`lstat`ed immediately after
+  creation — refusing chmod/chown unless the leaf is a real directory
+  the installer just created — and the directory mode-fix path re-lstats
+  before chmod so a leaf swapped after the owner check is refused. The
+  microscopic window between that final re-lstat and the path-based
+  directory chmod/chown is documented as accepted in `usage.md` (no
+  fd-based directory chmod in Ruby stdlib). Mid-flight-plant tests stub
+  the mkdir step to plant a symlink and assert refusal with zero
+  chmod/chown.
+- Filesystem `Errno::ENOENT` is no longer blanket-mapped to "ssh-keygen
+  not in PATH" (a missing binary is already classified via the runner's
+  `enoent` status); it now prescribes the correct remedy: "key path …
+  disappeared while preparing; rerun ace-lab prepare".
+- linux account creation reports a message when the post-`useradd` uid
+  lookup fails ("created but its uid could not be resolved yet"), so
+  JSON consumers can distinguish it from a normal creation.
+- The prepare table renders a truncated public fingerprint
+  (`SHA256:` + 20 characters) for created/exists key rows, matching the
+  README's "reports fingerprints" claim outside `--format json`.
+- The install-manifest loader no longer embeds GrantResolver's
+  "authorization file" wording inside install-manifest errors; the
+  wrapper message is value-free and names the manifest path only.
+- Refreshed stale cross-references now that L8.1 ships:
+  `docs/lab-flow.md`'s L8 row (partially shipped), `docs/architecture.md`'s
+  ace-lab bullet, and the gemspec summary/description (no longer
+  "read-only"); the foreign-owner takeover refusal now also names the
+  sudo rerun remedy. `usage.md` documents the dry-run role-file
+  readability prediction limit (would-create accounts) and the symlink
+  hardening/residual-race policy.
+- `Organisms::Prepare#call` no longer mutates `@effective_dry_run` —
+  the effective value is a local threaded explicitly into the
+  per-call provisioner factories (stateless organism across calls); the
+  fingerprint regex dropped a stray duplicate `+` in its character
+  class.
+
 ## [0.11.0] - 2026-10-18
 
 ### Fixed (review PR #383, round 3)

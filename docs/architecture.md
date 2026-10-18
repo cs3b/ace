@@ -99,7 +99,7 @@ Modular Ruby gems providing focused CLI functionality:
 * **ace-test**: Test execution and reporting
 * **ace-test-runner** / **ace-test-runner-e2e**: CLI test execution and E2E scenarios
 * **ace-runtime**, **ace-tmux**, **ace-herdr**: Terminal transport contract and adapters
-* **ace-lab**: Read-only lab topology queries today; environment preparation and the installer are planned (L8)
+* **ace-lab**: Read-only lab topology queries plus the lab status snapshot and `ace-lab prepare` (L8.1: idempotent accounts/directories/keys/roles convergence from the trusted install manifest); `project add` and the full installer are planned (L8)
 
 All gems follow ATOM architecture with `handbook/` for agents/workflows. See [ace-gems.g.md](ace-gems.g.md) for
 development guide.

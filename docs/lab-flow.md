@@ -109,7 +109,7 @@ queue.
 | L5 | Worker/reviewer/integrator/spec roles and unambiguous completion rules (3-10 review rounds) | Planned |
 | L6 | Private overseer queue: execute unblocked steps, hand off the worktree, process reports | Planned |
 | L7 | Overseer status plus pi continuation for already-delegated work | Planned |
-| L8 | Installer and `project add`: prepare accounts, directories, permissions, keys, and a ready project | Planned |
+| L8 | Installer and `project add`: prepare accounts, directories, permissions, keys, and a ready project | Partially shipped — `ace-lab prepare` (L8.1) converges accounts, directories, keys, and roles from the trusted install manifest; `project add` and the full installer remain planned |
 | L9 | Full-flow and failure acceptance scenarios on one candidate | Planned |
 | L10 | Release gems and verify the full flow on a fresh lab from RubyGems | Planned |
 

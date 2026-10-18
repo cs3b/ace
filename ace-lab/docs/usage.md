@@ -175,10 +175,14 @@ phase *would create* are predicted (`would_create` keys, `verified`
 roles) even though the account does not exist in passwd yet; an
 existing private key with a missing `.pub` predicts
 `would_repair_public` (the wet run regenerates it); mode or ownership
-drift on an existing pair predicts `would_fix_mode`. One prediction
-limit: an *existing* directory whose declared owner account does not
+drift on an existing pair predicts `would_fix_mode`. Two prediction
+limits: an *existing* directory whose declared owner account does not
 exist yet cannot have its ownership checked, and is reported as a
-failed item with a rerun hint.
+failed item with a rerun hint; likewise, a role's instruction *file*
+readability cannot be checked against an account that does not exist
+yet (its uid is unknown), so such bindings are predicted `verified`
+from the file's existence and type alone — the wet run performs the
+full readability check.
 
 Behavior and guarantees:
 
@@ -205,9 +209,23 @@ Behavior and guarantees:
   message, report, or diagnostic argument. Key paths inside a git
   worktree are refused outright. Planted symlinks on the
   account-controlled paths — `.ssh` (checked with `lstat` before any
-  `mkdir`/chmod/chown) and `<key>.pub` (checked with `lstat`, written
-  with `O_NOFOLLOW`) — are refused, so a privileged run cannot be
-  turned into an arbitrary chmod/chown/write by the account.
+  `mkdir`/chmod/chown, and on the *existing-key* path too) and
+  `<key>.pub` (checked with `lstat`, written with `O_NOFOLLOW`) — are
+  refused, so a privileged run cannot be turned into an arbitrary
+  chmod/chown/write by the account.
+- **Symlink-race hardening.** Leaf directories (`.ssh` and declared
+  directories) are created with component-wise `Dir.mkdir` — whose
+  `EEXIST` on a planted symlink refuses instead of following it — and
+  re-`lstat`ed immediately after creation: a leaf that is not a real
+  directory the installer just created is refused before any
+  chmod/chown, and a directory swapped between the owner check and a
+  mode fix is re-checked before the chmod. The regenerated `.pub` is
+  chmodded/chowned through the already-`O_NOFOLLOW`-opened file handle,
+  not by path. Accepted residual: a microscopic window remains between
+  that final re-`lstat` and the path-based `chmod`/`chown` on a
+  directory leaf (Ruby stdlib offers no fd-based directory chmod);
+  closing it would require exotic APIs for no practical gain over the
+  guard chain above.
 - **Exit codes.** A wet run with failed items prints the report, then
   exits non-zero enumerating each `<section>/<item>: <message>`;
   `--dry-run` exits 0 whenever a report renders (conflicts appear as
