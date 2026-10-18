@@ -49,6 +49,7 @@ module Ace
       autoload :StatusOrchestrator, "ace/coworker/organisms/status_orchestrator"
       autoload :ReportOrchestrator, "ace/coworker/organisms/report_orchestrator"
       autoload :ResumeOrchestrator, "ace/coworker/organisms/resume_orchestrator"
+      autoload :PrepareOrchestrator, "ace/coworker/organisms/prepare_orchestrator"
     end
 
     def self.config

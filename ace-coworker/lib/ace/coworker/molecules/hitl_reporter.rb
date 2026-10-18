@@ -31,16 +31,25 @@ module Ace
           argv += ["--step-name", outcome.step.name.to_s] if outcome.step&.name && !outcome.step.name.to_s.empty?
           argv += ["--to", cfg.overseer] unless cfg.overseer.to_s.strip.empty?
 
-          out, err, status = run(argv)
-          unless status.success?
-            message = err.to_s.strip.empty? ? out.to_s.strip : err.to_s.strip
-            return Failure.new(stage: "create", message: message)
-          end
+          create_event(argv)
+        end
 
-          out.to_s.match(/HITL event created: ([0-9a-z]{6})/) do |match|
-            return match[1]
-          end
-          Failure.new(stage: "create", message: "could not parse event id from ace-hitl output: #{out.to_s.strip}")
+        # Creates a decision-type question event for a preparation conflict.
+        #
+        # @param title [String] event title
+        # @param question_lines [Array<String>] question body lines
+        # @param task [String] task reference
+        # @param to [String, nil] escalation recipient
+        # @return [String] created event id
+        # @raise [Error] when ace-hitl is not available at all
+        def create_conflict(title:, question_lines:, task:, to: nil)
+          argv = [hitl_binary, "create", title]
+          argv += ["--type", "question", "--kind", "decision"]
+          question_lines.each { |line| argv += ["--question", line] }
+          argv += ["--task", task]
+          argv += ["--to", to] unless to.to_s.strip.empty?
+
+          create_event(argv)
         end
 
         # @return [true, Failure]
@@ -62,6 +71,19 @@ module Ace
         end
 
         private
+
+        def create_event(argv)
+          out, err, status = run(argv)
+          unless status.success?
+            message = err.to_s.strip.empty? ? out.to_s.strip : err.to_s.strip
+            return Failure.new(stage: "create", message: message)
+          end
+
+          out.to_s.match(/HITL event created: ([0-9a-z]{6})/) do |match|
+            return match[1]
+          end
+          Failure.new(stage: "create", message: "could not parse event id from ace-hitl output: #{out.to_s.strip}")
+        end
 
         def run(argv)
           @runner.call(argv, @project_root)
