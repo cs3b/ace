@@ -20,6 +20,14 @@ module Ace
           assert_equal "8xg-aaa-branch", result[:branch]
         end
 
+        def test_switch_hit_short_id_association_still_reuses
+          # ace-git-worktree stores the association under the short id.
+          result = PrepareDecision.from_switch(switch_hit(task_id: "aaa"),
+            expected_task_id: "8xg.t.aaa", directory_exists: true)
+
+          assert_equal :reuse, result[:disposition]
+        end
+
         def test_switch_hit_foreign_task_is_conflict_mismatch
           result = PrepareDecision.from_switch(switch_hit(task_id: "8xg.t.bbb"),
             expected_task_id: "8xg.t.aaa", directory_exists: true)

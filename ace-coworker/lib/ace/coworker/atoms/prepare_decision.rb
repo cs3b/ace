@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "ace/git/worktree/atoms/task_id_extractor"
+
 module Ace
   module Coworker
     module Atoms
@@ -25,13 +27,23 @@ module Ace
             return base.merge(disposition: :stale_recovery,
               reason: "worktree metadata resolves to a missing directory: #{switch_result[:worktree_path]}")
           end
-          if task_id == expected_task_id.to_s
+          if expected_ids(expected_task_id).include?(task_id)
             base.merge(disposition: :reuse, reason: "worktree already prepared for this task")
           else
             base.merge(disposition: :conflict_mismatch,
               reason: "resolved worktree belongs to task '#{task_id}', not '#{expected_task_id}'")
           end
         end
+
+        # ace-git-worktree stores the worktree association under the task's
+        # short id (e.g. "aaa") while ace-task resolves the full id
+        # ("8xh.t.aaa"); accept every recognized form of the expected id.
+        def self.expected_ids(expected_task_id)
+          full = expected_task_id.to_s
+          [full, Ace::Git::Worktree::Atoms::TaskIDExtractor.short_id(full),
+           Ace::Git::Worktree::Atoms::TaskIDExtractor.normalize(full)].compact.uniq
+        end
+        private_class_method :expected_ids
 
         # @param create_result [Hash] WorktreeManager#create_task result
         # @param occupied_directory [Boolean] whether the task's expected
