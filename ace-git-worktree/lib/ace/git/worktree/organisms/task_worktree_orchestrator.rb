@@ -69,10 +69,6 @@ module Ace
               workflow_result[:task_title] = task_data[:title]
               workflow_result[:steps_completed] << "task_fetched"
 
-              if private_overseer_task?(task_data)
-                return error_workflow_result(private_overseer_task_error(task_id), workflow_result)
-              end
-
               # Step 2: Check if worktree already exists
               existing_worktree = check_existing_worktree(task_data)
               if existing_worktree
@@ -348,10 +344,6 @@ module Ace
               workflow_result[:task_id] = task_id
               workflow_result[:task_title] = task_data[:title]
               workflow_result[:steps_completed] << "task_fetched"
-
-              if private_overseer_task?(task_data)
-                return error_workflow_result(private_overseer_task_error(task_id), workflow_result)
-              end
 
               # Step 2: Check what would be created
               directory_name = @config.format_directory(task_data)
@@ -653,28 +645,6 @@ module Ace
             end
           rescue
             path
-          end
-
-          # True when ace-task classifies the task as a private _overseer
-          # management task. The classification is independent of the current
-          # working directory and of a custom task root_dir. Such tasks are not
-          # implementation work and must not get a worktree; subagents may still
-          # do planning/analysis/verification.
-          #
-          # @param task_data [Hash] Task data hash
-          # @return [Boolean]
-          def private_overseer_task?(task_data)
-            folder = task_data[:special_folder] || task_data["special_folder"]
-            folder.to_s == "_overseer"
-          end
-
-          # @param task_id [String, nil] Task ID
-          # @return [String] Prohibition message
-          def private_overseer_task_error(task_id)
-            "Task #{task_id} is an _overseer management task; worktrees are created only for project " \
-              "implementation tasks. Keep the management task with the overseer and create a separate " \
-              "project task for implementation. Subagents remain available for planning, analysis, and " \
-              "verification."
           end
 
           # Load configuration

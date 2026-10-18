@@ -4,9 +4,8 @@
 # 8wq.t.34i): provider-agnostic request store behind an authenticated
 # scoped boundary (peer-credential service, bounded protocol, transport
 # policy), kinds/secrets gates with transient OTP, public projection,
-# effect layer, duty projection, and the Overseer reverse-address
-# surface. Lab coupling lives only in the provider=lab seams (binding
-# policy, store factory, grants deployment).
+# effect layer, and duty projection. Lab coupling lives only in the
+# provider=lab seams (binding policy, store factory, grants deployment).
 require_relative "lifecycle/errors"
 require_relative "lifecycle/identity"
 require_relative "lifecycle/peer"
@@ -32,4 +31,3 @@ require_relative "lifecycle/service"
 require_relative "lifecycle/tls_service"
 require_relative "lifecycle/tls_authority"
 require_relative "lifecycle/duty"
-require_relative "lifecycle/overseer"

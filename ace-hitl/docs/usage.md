@@ -129,10 +129,11 @@ The installed Lab provider and the attempt-bound managed HITL path (`ask`, the
 provider assignment binding, native Herdr delivery, managed/TLS `serve`) were
 removed with the old authority model. The local file-based event commands above
 remain the active path. The generic lifecycle/relay transport (`Lifecycle::*`)
-and its commands (read/pending/states/duty/deliver/consume/cancel/overseer-*)
-remain for adapters such as `ace-hitl-hermes`; `serve` supports
-`--operator-only` only. The immutable second-commander proposal flow is
-removed.
+and its commands (read/pending/states/duty/deliver/consume/cancel) remain for
+adapters such as `ace-hitl-hermes`; `serve` supports `--operator-only` only.
+The immutable second-commander proposal flow is removed, and so is the unused
+old-lab Root Overseer reverse-address channel (`overseer-*` commands); generic
+transport has no replacement role-specific queue.
 
 > **Planned (L2):** one unified report/question/reply interface with
 > configurable provider adapters -- not available yet. Adapters

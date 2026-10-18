@@ -77,9 +77,9 @@ filtered before the assignment's own step expansion:
 
 The last case creates no assignment and returns that message instead.
 
-An `_overseer` management task cannot be delegated: `create --task` refuses a
-task whose file lives under `.ace-tasks/_overseer/` and asks for a separate
-project task instead.
+`ace-assign` is role- and folder-name-agnostic: it delegates any non-terminal
+task the caller names. The caller decides which tasks are appropriate; the
+assignment tool does not classify management tasks or inspect `.gitignore`.
 
 ### `ace-assign status`
 

@@ -16,9 +16,6 @@ require_relative "cli/commands/pending"
 require_relative "cli/commands/states"
 require_relative "cli/commands/duty"
 require_relative "cli/commands/serve"
-require_relative "cli/commands/overseer_send"
-require_relative "cli/commands/overseer_pending"
-require_relative "cli/commands/overseer_ack"
 
 module Ace
   module Hitl
@@ -40,10 +37,7 @@ module Ace
         ["cancel", "Cancel one HITL relay request with an audited reason"],
         ["pending", "List answerable HITL relay requests (transport)"],
         ["states", "List public HITL lifecycle projections (transport)"],
-        ["duty", "Project pending and escalated HITL requests (transport)"],
-        ["overseer-send", "Queue a bounded, type-tagged Overseer response (stdin)"],
-        ["overseer-pending", "List queued Overseer responses (host-broker)"],
-        ["overseer-ack", "Acknowledge one relayed Overseer response"]
+        ["duty", "Project pending and escalated HITL requests (transport)"]
       ].freeze
 
       HELP_EXAMPLES = [
@@ -68,9 +62,6 @@ module Ace
       register "states", CLI::Commands::States
       register "duty", CLI::Commands::Duty
       register "serve", CLI::Commands::Serve
-      register "overseer-send", CLI::Commands::OverseerSend
-      register "overseer-pending", CLI::Commands::OverseerPending
-      register "overseer-ack", CLI::Commands::OverseerAck
 
       version_cmd = Ace::Support::Cli::VersionCommand.build(
         gem_name: "ace-hitl",

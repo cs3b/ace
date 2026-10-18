@@ -25,40 +25,6 @@ class TaskFetcherTest < Minitest::Test
       Open3.stub(:capture3, [task_output, "", mock_status]) do
         task = @fetcher.fetch("081")
         refute_nil task
-        assert_nil task[:special_folder]
-      end
-    end
-  end
-
-  def test_task_to_hash_exposes_special_folder_classification
-    task_struct = Struct.new(:id, :title, :status, :file_path, :special_folder, :metadata)
-    management = task_struct.new("8vb.t.vz8", "Management objective", "pending",
-      ".ace-tasks/_overseer/8vb.t.vz8-objective/8vb.t.vz8-objective.s.md", "_overseer", {})
-    project = task_struct.new("8vb.t.vz9", "Project task", "pending",
-      ".ace-tasks/8vb.t.vz9-project/8vb.t.vz9-project.s.md", nil, {})
-
-    assert_equal "_overseer", @fetcher.send(:task_to_hash, management)[:special_folder]
-    assert_nil @fetcher.send(:task_to_hash, project)[:special_folder]
-  end
-
-  def test_cli_fallback_parses_folder_classification
-    task_output = <<~TASK
-      Task: task.081
-      Title: Management objective
-        folder: _overseer
-      Path: .ace-tasks/_overseer/task.081/task.081.s.md
-      --- Content ---
-      Body
-    TASK
-
-    mock_status = Object.new
-    mock_status.define_singleton_method(:success?) { true }
-
-    @fetcher.stub(:ace_task_available?, false) do
-      Open3.stub(:capture3, [task_output, "", mock_status]) do
-        task = @fetcher.fetch("081")
-        refute_nil task
-        assert_equal "_overseer", task[:special_folder]
       end
     end
   end

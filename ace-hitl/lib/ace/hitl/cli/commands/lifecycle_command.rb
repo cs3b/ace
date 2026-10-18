@@ -20,11 +20,6 @@ module Ace
             Providers::Lab.boundary_client
           end
 
-          def overseer
-            channel_root = ENV.fetch("ACE_HITL_OVERSEER_CHANNEL_ROOT", "/lab/state/overseer-channel")
-            Lifecycle::Overseer.new(outbox_dir: File.join(channel_root, "outbox"))
-          end
-
           def emit(result)
             puts JSON.generate(result)
           end

@@ -299,7 +299,7 @@ module Ace
               %w[root_directory runtime_directory network_namespace_path].all? { |key| path?(scope[key]) } &&
               scope.fetch("runtime_directory").start_with?("/run/") && !overlaps?(scope.fetch("root_directory"), scope.fetch("runtime_directory")) &&
               {"slice_unit" => ".slice", "service_unit" => ".service"}.all? { |key, suffix|
-                scope[key].is_a?(String) && SystemdScopeManager::UNIT.match?(scope[key]) && scope[key].end_with?(suffix) && !scope[key].downcase.include?("overseer")
+                scope[key].is_a?(String) && SystemdScopeManager::UNIT.match?(scope[key]) && scope[key].end_with?(suffix)
               } &&
               scope["unit_manifest_sha256"] == service.fetch("unit_manifest").fetch("sha256") &&
               scope["boundary_manifest_sha256"] == service.fetch("boundary_manifest").fetch("sha256") &&
