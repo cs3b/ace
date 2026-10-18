@@ -54,7 +54,7 @@ module Ace
       end
 
       class StepReportReaderTest < AceCoworkerTestCase
-        def test_finds_report_with_peek
+        def test_finds_report
           Dir.mktmpdir("coworker-resume") do |dir|
             reports = File.join(dir, ".ace-local", "assign", "abc123", "reports")
             FileUtils.mkdir_p(reports)
@@ -63,7 +63,14 @@ module Ace
             reader = StepReportReader.new(project_root: dir)
             result = reader.read("abc123", "020")
             assert_equal File.join(reports, "020-verify.r.md"), result["path"]
-            assert_equal "# Report", result["peek"]
+          end
+        end
+
+        def test_invalid_step_number_is_rejected
+          Dir.mktmpdir("coworker-resume") do |dir|
+            reader = StepReportReader.new(project_root: dir)
+            error = assert_raises(Error) { reader.read("abc123", "../evil") }
+            assert_includes error.message, "invalid step number"
           end
         end
 

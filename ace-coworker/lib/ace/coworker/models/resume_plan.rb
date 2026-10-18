@@ -6,8 +6,6 @@ module Ace
       # Immutable resume plan derived from the assignment snapshot, the
       # worktree git state, and the report helper state. No IO.
       class ResumePlan
-        StepRef = Struct.new(:number, :name, :status, keyword_init: true)
-
         attr_reader :disposition, :preserved_steps, :remaining_steps,
           :in_flight, :in_flight_cause, :step_report_path,
           :effect_caution_steps, :git, :redeliver_event_id

@@ -11,10 +11,14 @@ module Ace
           @project_root = project_root
         end
 
-        # @return [Hash, nil] {path, peek} for the step's report, nil absent
+        # @return [Hash, nil] {path} for the step's report, nil absent
         # @raise [Error] on an invalid assignment id (containment)
         def read(assignment_id, step_number)
-          return nil if step_number.to_s.strip.empty?
+          number = step_number.to_s.strip
+          return nil if number.empty?
+          unless number.match?(/\A[\w.-]+\z/)
+            raise Error, "invalid step number '#{number}'"
+          end
 
           id = assignment_id.to_s
           unless id.match?(/\A[\w.-]+\z/) && !id.match?(/\A\.+\z/)
@@ -27,8 +31,7 @@ module Ace
           path = Dir.glob(File.join(reports_dir, "#{step_number}-*.r.md")).sort.first
           return nil unless path
 
-          peek = File.read(path).lines.map(&:strip).reject(&:empty?).first
-          {"path" => path, "peek" => peek}
+          {"path" => path}
         end
       end
     end

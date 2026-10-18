@@ -36,17 +36,23 @@ module Ace
           end
         end
 
+        # Single source of truth for the in-flight step: last active, else
+        # last failed, else first remaining. The orchestrator uses this to
+        # decide whose evidence to read; the planner renders the same step.
+        def self.in_flight_step(snapshot)
+          remaining = snapshot.steps.reject(&:done?)
+          remaining.reverse.find { |s| s.status == "active" } ||
+            remaining.reverse.find { |s| s.status == "failed" } ||
+            remaining.first
+        end
+
         def self.continue_plan(snapshot, report_state, git_state, step_cause:, step_report_path:)
           preserved = snapshot.steps.select(&:done?).map { |s| "#{s.number} #{s.name}" }
           remaining = snapshot.steps.reject(&:done?)
-          in_flight_step = remaining.reverse.find { |s| s.status == "active" } ||
-            remaining.reverse.find { |s| s.status == "failed" } ||
-            remaining.first
+          in_flight_step = in_flight_step(snapshot)
 
           remaining_lines = remaining.map { |s| "#{s.number} #{s.name} (#{s.status})" }
-          caution = (remaining_lines + [in_flight_step&.name.to_s])
-            .select { |line| line.match?(EFFECT_PATTERN) }
-            .uniq
+          caution = remaining_lines.select { |line| line.match?(EFFECT_PATTERN) }.uniq
 
           Models::ResumePlan.new(disposition: :continue,
             preserved_steps: preserved,

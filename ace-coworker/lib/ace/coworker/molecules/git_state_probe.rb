@@ -44,7 +44,8 @@ module Ace
         def parse_branch(line)
           # "## main...origin/main [ahead 1, behind 2]"
           header = line.sub(/\A##\s+/, "")
-          return [nil, nil] if header.empty? || header.start_with?("No branch")
+          return [nil, nil] if header.empty? || header.include?("no branch")
+          header = header.sub(/\ANo commits yet on /, "")
 
           branch, tracking = header.split("...", 2)
           ahead_behind = tracking.to_s[/\[(.+)\]/, 1]

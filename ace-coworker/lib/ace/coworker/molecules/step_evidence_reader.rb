@@ -18,7 +18,11 @@ module Ace
         # @return [String, nil] the recorded error cause (nil when absent)
         # @raise [Error] on an invalid assignment id (containment)
         def read(assignment_id, step_number)
-          return nil if step_number.to_s.strip.empty?
+          number = step_number.to_s.strip
+          return nil if number.empty?
+          unless number.match?(/\A[\w.-]+\z/)
+            raise Error, "invalid step number '#{number}'"
+          end
 
           id = assignment_id.to_s
           unless id.match?(/\A[\w.-]+\z/) && !id.match?(/\A\.+\z/)

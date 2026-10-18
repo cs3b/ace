@@ -11,7 +11,7 @@ module Ace
         # @return [String]
         def self.format_table(plan, result = nil)
           lines = ["Coworker resume"]
-          if result && result.plan.disposition == :report
+          if plan.disposition == :report
             lines << "  assignment complete; report delivery missing"
             if plan.redeliver_event_id
               lines << "  resend event:      #{plan.redeliver_event_id} (same ID; retrying delivery never retries the assignment)"
@@ -74,7 +74,8 @@ module Ace
 
           ["  effect caution:    uncertain external effect (merge/publish/deploy/release/push)?"] +
             plan.effect_caution_steps.map { |s| "    step: #{s}" } +
-            ["    check the actual state with existing tools (e.g. ace-git status, PR evidence) or report a blocker;"]
+            ["    check the actual state with existing tools (e.g. ace-git status, PR evidence) or report a blocker;",
+             "    never replay blindly; same task, assignment and worktree"]
           # never replay blindly; same task, assignment and worktree
         end
       end

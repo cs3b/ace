@@ -82,11 +82,7 @@ module Ace
         private
 
         def in_flight_step_number(snapshot)
-          remaining = snapshot.steps.reject(&:done?)
-          step = remaining.reverse.find { |s| s.status == "active" } ||
-            remaining.reverse.find { |s| s.status == "failed" } ||
-            remaining.first
-          step&.number
+          Atoms::ResumePlanner.in_flight_step(snapshot)&.number
         end
       end
     end
