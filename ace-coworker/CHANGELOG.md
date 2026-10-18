@@ -18,8 +18,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   placeholders), and reporting/error rules; projects override or extend the
   catalog via `.ace/coworker/roles/*.yml` (project wins over gem defaults).
 - `ace-coworker roles` — list the preset catalog (name, source, description,
-  instruction source) as a table or JSON; always exit 0, an empty catalog
-  renders an explicit empty state.
+  instruction source) as a table or JSON; exit 0 for any valid catalog state
+  (an empty catalog renders an explicit empty state); an invalid preset file
+  fails with a specific error.
 - `ace-coworker commission` — the role-instantiation primitive consumed by
   the planner (L4.2/L4.3 seam): expand a role preset plus the commission
   identity (`--role NAME --task REF --assignment ID --overseer ADDR`) into
@@ -45,6 +46,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `.ace/nav/protocols/wfi-sources/ace-coworker.yml`); `ace-support-nav ~> 0.28`
   is a new runtime dependency so `wfi://` instruction sources resolve on
   fresh installs.
+
+### Fixed
+
+- Review follow-ups on the 0.5.0 roles & commission feature (M1-M3, L4-L7):
+  - preset merge is keyed by filename (as documented), not by the `name`
+    field: the loader now also validates that a preset's `name` matches the
+    file's basename, so a project `worker.yml` declaring `name: builder`
+    fails loudly instead of silently skipping the override (M1);
+  - start-prompt template interpolation uses gsub's block form, so identity
+    values containing backslash escapes (`\1`, `\0`, `\&`, `\\`) render
+    literally instead of being mangled or crashing (M2);
+  - `commission --config` refuses targets that resolve outside the project
+    root (`config path '<path>' escapes the project root`) and refuses a
+    directory target even with `--force` (`--config` must name a file)
+    (M3, L6);
+  - `roles` exit-code documentation now matches the actual behavior: exit 0
+    for any valid catalog state including empty; invalid preset files fail
+    with a specific error (non-zero exit) (L4);
+  - the overwrite refusal's TOCTOU window (exist? → mv) is documented in
+    code as an accepted single-planner assumption (L7).
 
 ## [0.4.0] - 2026-10-18
 

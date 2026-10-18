@@ -48,7 +48,9 @@ assignment steps — the plan stays solely with `ace-assign`.
 `ace-coworker` ships role presets — static YAML assets, not a role allowlist.
 The catalog lives in the gem's `.ace-defaults/coworker/roles/*.yml`; a project
 overrides or extends it via `.ace/coworker/roles/*.yml` (same filename wins,
-project beats gem). Every preset file is validated on load; the `role` field
+project beats gem). Every preset file is validated on load — including that
+the `name` field matches the file's basename — so a project file `worker.yml`
+must declare `name: worker`; the `role` field
 of a config is never checked against the catalog (ADR-034: the overseer
 decides roles).
 
@@ -75,8 +77,9 @@ ace-coworker roles [--format table|json] [-q] [-d]
 ```
 
 Lists the catalog (name, source `gem`|`project`, description, instruction
-source). Read-only; always exit 0; an empty catalog renders an explicit empty
-state.
+source). Read-only; exit 0 for any valid catalog state, including an empty
+catalog (rendered as an explicit empty state); an invalid preset file fails
+with a specific error (non-zero exit).
 
 ### `ace-coworker commission`
 
@@ -108,7 +111,9 @@ Procedure:
 4. validate the assembled config through the start-grade schema
    (round-trip guarantee: what `commission` writes, `start` accepts);
 5. write atomically (temp file + rename in the target directory), creating
-   parent directories; an existing target is refused without `--force`
+   parent directories; the resolved target must stay inside the project root
+   (`config path '<path>' escapes the project root`) and must name a file,
+   not a directory; an existing target is refused without `--force`
    (`refusing to overwrite '<path>'; use --force`);
 6. `--dry-run` resolves and renders the config without writing anything.
 
@@ -311,8 +316,8 @@ would-be outcome.
 | `report` | success outcome recorded (and delivered, or `--no-send`/`--dry-run`) | error outcome; delivery/create failure (outcome still recorded); refused input |
 | `resume` | continue/complete rendered; report redelivered | delegated report failure keeps its exit 1 (plan still rendered) |
 | `prepare` | worktree created/recovered/reused (dry-run: would_create/would_recover) | conflict (active_executor / mismatched_worktree); invalid commission; operational preparation failure |
-| `roles` | catalog rendered any state (including empty) | — |
-| `commission` | config written (dry-run: resolved, nothing written) | unknown role; invalid commission; task/assignment mismatch; refused overwrite; invalid assembly |
+| `roles` | catalog rendered any valid state (including empty) | invalid preset file (specific error) |
+| `commission` | config written (dry-run: resolved, nothing written) | unknown role; invalid commission; task/assignment mismatch; refused overwrite; invalid assembly; config path escaping the project root; directory config target |
 
 ## Boundaries
 
