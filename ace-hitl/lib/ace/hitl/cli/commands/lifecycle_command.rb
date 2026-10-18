@@ -14,8 +14,6 @@ module Ace
         # are one JSON line, byte-compatible with the migrated CLI
         # contract.
         module LifecycleCommand
-          STDIN_READER = ->(limit) { $stdin.read(limit) }.freeze
-
           def lifecycle_client
             Providers::Lab.boundary_client
           end
