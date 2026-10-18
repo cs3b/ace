@@ -120,6 +120,29 @@ window_presets:
   "work-on-task": "work-on-task"
 ```
 
+## Private overseer queue (L6)
+
+The overseer role coordinates delegated work in its own gitignored list,
+separate from project tasks. No queue engine is added: order, dependencies,
+and allocations live in ordinary task files under `.ace-tasks/_overseer/`
+(see ADR-034 and `docs/lab-flow.md`).
+
+```bash
+mkdir -p .ace-tasks/_overseer          # prepared once by project config
+ace-task list --in _overseer            # the overseer's own view
+ace-task create "Manage: <scope>" --in _overseer
+ace-task create "Integrate <scope>" --child-of <manager-ref>
+ace-task update <B-step> --set dependencies=<A-integrate-ref>
+```
+
+Binding rules: cross-task merge requirements depend on the integration step
+(never on worker completion); one active executor per task worktree across
+roles; implementation completion does not close a managing task while review
+or integration remains; coworker reports arrive via ace-hitl and only the
+overseer writes its list.
+
+Full procedure: `ace-bundle wfi://overseer/queue`.
+
 ## Example flows
 
 Start task work and check the dashboard:
