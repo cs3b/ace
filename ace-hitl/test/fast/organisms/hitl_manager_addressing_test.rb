@@ -30,7 +30,8 @@ module Ace
             assert_equal ".ace-local/hitl", event.recipient["folder"]
             assert_equal event.id, event.recipient["id"]
             assert_equal "lab01", event.reply_to["machine"]
-            assert_equal ".ace-local/hitl", event.reply_to["folder"]
+            assert_equal root, event.reply_to["folder"],
+              "reply address carries the resolved sender folder, not the relative setting"
             assert_equal event.id, event.reply_to["id"]
 
             content = File.read(event.file_path)
@@ -148,6 +149,59 @@ module Ace
             reloaded_second = task_manager.show(second.id, scope: "current")[:event]
             assert_equal "answer for main", reloaded_first.answer
             assert_equal "answer for task", reloaded_second.answer
+          end
+        end
+
+        def test_reply_resolved_via_address_from_other_cwd_across_two_worktrees
+          with_multi_worktree_roots do |main_root, task_root|
+            main_hitl = File.join(main_root, ".ace-local", "hitl")
+            task_hitl = File.join(task_root, ".ace-local", "hitl")
+            # Relative root_dir setting — identical in both worktrees.
+            config = address_config
+
+            main_manager = HitlManager.new(root_dir: main_hitl, config: config,
+              scope_resolver: StaticScopeResolver.new(default_scope: "current",
+                current_worktree_root: main_root,
+                roots_by_scope: {"current" => [main_root], "all" => [main_root, task_root]}))
+            task_manager = HitlManager.new(root_dir: task_hitl, config: config,
+              scope_resolver: StaticScopeResolver.new(default_scope: "current",
+                current_worktree_root: task_root,
+                roots_by_scope: {"current" => [task_root], "all" => [main_root, task_root]}))
+
+            question = main_manager.create("Main question", to: "overseer", questions: ["A?"])
+            other = task_manager.create("Task question", to: "overseer", questions: ["B?"])
+
+            # The address carried by the message identifies the sender
+            # worktree unambiguously: absolute folder, different per worktree.
+            address = question.reply_to
+            assert_equal File.expand_path(main_hitl), File.expand_path(address["folder"])
+            assert_equal question.id, address["id"]
+            refute_equal address["folder"], other.reply_to["folder"]
+
+            # Reply from the OTHER worktree's cwd: the address from the
+            # message locates the event (the folder + id are sufficient,
+            # even though the 2-second-resolution case id is shared by the
+            # other worktree's event), and a manager local to the task
+            # worktree applies the answer — no pre-selected main manager.
+            Dir.chdir(task_root) do
+              located = Molecules::HitlScanner.new(address["folder"]).scan
+                .find { |result| result.id == address["id"] }
+              refute_nil located, "reply address folder + id locate the originating event"
+
+              reply_worktree_root = address["folder"].sub(%r{/\.ace-local/hitl\z}, "")
+              answering = HitlManager.new(root_dir: task_hitl, config: config,
+                scope_resolver: StaticScopeResolver.new(default_scope: "current",
+                  current_worktree_root: task_root,
+                  roots_by_scope: {"current" => [task_root], "all" => [reply_worktree_root]}))
+              answered = answering.update(address["id"], scope: "all", answer: "reply via address")
+
+              assert_equal "reply via address", answered.answer
+              assert answered.file_path.start_with?(address["folder"] + File::SEPARATOR),
+                "the answer landed in the folder named by the reply address"
+
+              untouched = task_manager.show(other.id, scope: "current")[:event]
+              assert_nil untouched.answer, "the other worktree's event is untouched"
+            end
           end
         end
 

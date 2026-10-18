@@ -18,13 +18,26 @@ module Ace
             defaults_dir: ".ace-defaults",
             gem_path: gem_root
           )
-          # Config files conventionally start with the namespace key
-          # (see ace-git-commit); accept both shaped and flat documents.
           data = resolver.resolve_namespace("hitl").data
-          {"hitl" => (data.is_a?(Hash) ? data["hitl"] || data : {})}
+          {"hitl" => normalize(data)}
         rescue StandardError => e
           warn "ace-hitl: Could not load config: #{e.class} - #{e.message}" if Ace::Hitl.respond_to?(:debug?) && Ace::Hitl.debug?
           load_defaults_fallback(gem_root: gem_root)
+        end
+
+        # A hitl config document is either shaped (settings under the
+        # `hitl:` key, like the shipped defaults) or flat (settings at the
+        # top level of `.ace/hitl/config.yml`). The cascade merge combines
+        # them into one document, so normalization folds the top-level
+        # keys over the shaped subtree — flat project overrides apply and
+        # are never silently dropped by the defaults supplying `hitl:`.
+        def self.normalize(data)
+          return {} unless data.is_a?(Hash)
+
+          shaped = data["hitl"]
+          base = shaped.is_a?(Hash) ? shaped : {}
+          flat = data.reject { |key, _| key == "hitl" }
+          flat.empty? ? base : Ace::Support::Config::Atoms::DeepMerger.merge(base, flat)
         end
 
         def self.root_dir(config = nil)

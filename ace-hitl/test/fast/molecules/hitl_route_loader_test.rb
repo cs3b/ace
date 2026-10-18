@@ -74,6 +74,21 @@ module Ace
           routes = HitlRouteLoader.load(config([{adapter: "terminal", runtime: "tmux", pane: "p9"}]))
           assert_equal "p9", routes.first["pane"]
         end
+
+        def test_dotted_route_name_is_invalid_before_any_delivery
+          error = assert_raises(HitlRouteLoader::InvalidRouteError) do
+            HitlRouteLoader.load(config([{"route" => "captain.telegram", "adapter" => "hermes", "channel" => "project"}]))
+          end
+          assert_includes error.message, "'captain.telegram' is invalid"
+          assert_includes error.message, "delivery retention keys route names literally"
+        end
+
+        def test_dashed_route_name_remains_supported
+          routes = HitlRouteLoader.load(config([
+            {"route" => "captain-telegram", "adapter" => "hermes", "channel" => "project"}
+          ]))
+          assert_equal "captain-telegram", routes.first["route"]
+        end
       end
     end
   end

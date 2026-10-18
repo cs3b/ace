@@ -80,6 +80,40 @@ module Ace
           end
           assert_includes error.message, "missing required 'pane'"
         end
+
+        def test_recipient_panel_steers_the_target_pane
+          adapter = route(pane: "wrong-pane")
+          adapter.deliver(event: nil, text: "work done",
+            recipient: {"machine" => "other-host", "panel" => "right-pane"}, reply_to: nil)
+
+          assert_equal 1, @calls.size
+          assert_equal "right-pane", @calls.first[:pane], "recipient panel must steer delivery"
+          refute_includes @calls.map { |c| c[:pane] }, "wrong-pane"
+        end
+
+        def test_two_recipients_each_get_their_own_pane_only
+          adapter = route(pane: "wrong-pane")
+          first = {"machine" => "host-a", "panel" => "pane-a"}
+          second = {"machine" => "host-b", "panel" => "pane-b"}
+
+          adapter.deliver(event: nil, text: "for a", recipient: first, reply_to: nil)
+          adapter.deliver(event: nil, text: "for b", recipient: second, reply_to: nil)
+
+          panes = @calls.map { |c| c[:pane] }
+          assert_equal ["pane-a", "pane-b"], panes
+          refute_includes panes, "wrong-pane", "no delivery to an unrelated route pane"
+        end
+
+        def test_folder_recipient_is_an_explicit_refusal_without_send
+          adapter = route(pane: "wrong-pane")
+          recipient = {"machine" => "other-host", "folder" => ".ace-local/hitl", "id" => "abc123"}
+
+          result = adapter.deliver(event: nil, text: "work done", recipient: recipient, reply_to: nil)
+
+          assert_equal :failed, result.status
+          assert_includes result.detail, "cannot deliver to folder recipient"
+          assert_empty @calls, "a refused recipient must not produce any terminal send"
+        end
       end
     end
   end

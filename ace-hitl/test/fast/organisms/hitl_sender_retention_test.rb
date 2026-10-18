@@ -218,22 +218,62 @@ module Ace
           end
         end
 
-        def test_unknown_adapter_abort_retains_attempted_route_records
+        def test_unknown_adapter_is_unavailable_with_reason_and_other_routes_still_run
           with_hitl_dir do |root|
             cfg = config(root,
-              {"route" => "first", "adapter" => "alpha"},
-              {"route" => "second", "adapter" => "nervus"})
+              {"route" => "broken", "adapter" => "nervus"},
+              {"route" => "healthy", "adapter" => "alpha"})
             deliveries, = register_flaky(:alpha)
             manager = HitlManager.new(root_dir: root, config: cfg)
             event = create_report(manager)
 
-            assert_raises(Adapters::UnknownAdapterError) do
+            report = HitlSender.new(manager: manager, config: cfg).send(event.id)
+
+            refute report.all_delivered?, "overall delivery failure is still reported"
+            statuses = report.results.map { |r| [r.route, r.status] }.to_h
+            assert_equal :unavailable, statuses["broken"]
+            unavailable = report.results.find { |r| r.route == "broken" }
+            assert_includes unavailable.detail, "unknown HITL adapter 'nervus'"
+            assert_equal :delivered, statuses["healthy"]
+            assert_equal 1, deliveries.size, "healthy route after the unknown adapter still delivers"
+
+            retained = delivery_map(manager, event.id)
+            assert_equal "unavailable", retained["broken"]["status"]
+            assert_includes retained["broken"]["detail"], "unknown HITL adapter 'nervus'"
+            refute retained["broken"]["detail"].to_s.strip.empty?, "unavailable reason is retained, not blank"
+            assert_equal "delivered", retained["healthy"]["status"]
+          end
+        end
+
+        def test_dotted_route_name_is_refused_before_any_adapter_call
+          with_hitl_dir do |root|
+            cfg = config(root, {"route" => "captain.telegram", "adapter" => "alpha"})
+            deliveries, = register_flaky(:alpha)
+            manager = HitlManager.new(root_dir: root, config: cfg)
+            event = create_report(manager)
+
+            error = assert_raises(Molecules::HitlRouteLoader::InvalidRouteError) do
               HitlSender.new(manager: manager, config: cfg).send(event.id)
             end
+            assert_includes error.message, "'captain.telegram' is invalid"
+            assert_empty deliveries, "invalid route names never reach an adapter"
+          end
+        end
 
-            assert_equal 1, deliveries.size, "first route delivered before the abort"
-            retained = delivery_map(manager, event.id)
-            assert_equal "delivered", retained["first"]["status"], "delivered record survives the abort"
+        def test_dashed_route_name_retention_survives_two_sends
+          with_hitl_dir do |root|
+            cfg = config(root, {"route" => "captain-telegram", "adapter" => "alpha"})
+            deliveries, = register_flaky(:alpha)
+            manager = HitlManager.new(root_dir: root, config: cfg)
+            event = create_report(manager)
+            sender = HitlSender.new(manager: manager, config: cfg)
+
+            sender.send(event.id)
+            report = sender.send(event.id)
+
+            assert report.all_delivered?
+            assert_equal 1, deliveries.size, "delivered dashed route is skipped on the second send"
+            assert_equal "delivered", delivery_map(manager, event.id)["captain-telegram"]["status"]
           end
         end
       end

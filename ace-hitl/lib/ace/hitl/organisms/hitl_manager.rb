@@ -53,7 +53,11 @@ module Ace
           if effective_to
             recipient = @address_resolver.resolve(effective_to)
             if event_type == "question"
-              reply_to = @address_resolver.sender_address(folder: @configured_root_setting, id: "pending")
+              # The reply address must identify THIS sender folder: use the
+              # resolved root (absolute), not the configured setting — a
+              # relative value like `.ace-local/hitl` is identical across
+              # worktrees and gives the reply no base to resolve against.
+              reply_to = @address_resolver.sender_address(folder: File.expand_path(@root_dir), id: "pending")
                 .reject { |key, _| key == "id" }
             end
           end

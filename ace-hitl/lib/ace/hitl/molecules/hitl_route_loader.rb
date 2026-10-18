@@ -13,6 +13,11 @@ module Ace
         class NoRoutesError < StandardError; end
         class InvalidRouteError < StandardError; end
 
+        # Delivery retention persists `delivery.<route>` as nested dot-keys
+        # and reads back the literal route key, so route names must be a
+        # single path segment (no dots).
+        ROUTE_NAME_PATTERN = /\A[a-z0-9][a-z0-9_-]*\z/i.freeze
+
         # @param config [Hash] merged hitl namespace config
         # @return [Array<Hash>] validated string-keyed routes
         # @raise [NoRoutesError, InvalidRouteError]
@@ -50,7 +55,14 @@ module Ace
           end
 
           route = normalized["route"].to_s.strip
-          normalized["route"] = route.empty? ? adapter : route
+          route = adapter if route.empty?
+          unless route.match?(ROUTE_NAME_PATTERN)
+            raise InvalidRouteError,
+              "route name '#{route}' is invalid in #{CONFIG_LOCATION}: must match #{ROUTE_NAME_PATTERN.source} " \
+              "(delivery retention keys route names literally; a dot would nest frontmatter keys and break retry/skip)"
+          end
+
+          normalized["route"] = route
           normalized["adapter"] = adapter
           normalized
         end

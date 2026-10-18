@@ -7,6 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.23.0] - 2026-10-18
+
+### Fixed
+
+- Adapters deliver to the event's recipient, not just the route's own
+  destination (PR #383 audit F1): the terminal adapter sends to the
+  recipient's `panel` (the route `pane` remains the fallback only for
+  legacy recipient-less events) and explicitly refuses a folder-form
+  recipient it cannot serve — never a silent send to the route pane.
+  Flat hitl config documents are no longer silently dropped (F11):
+  `.ace/hitl/config.yml` without the `hitl:` key now merges over the
+  shipped defaults instead of being shadowed by them. The default reply
+  address is built from the resolved sender folder (F6): an absolute
+  path that identifies the originating worktree, so two worktrees on
+  one machine never share a reply address (the relative `root_dir`
+  setting stays relative in config). Route names containing a dot
+  (e.g. `captain.telegram`) are rejected before any delivery attempt
+  (F10): delivery retention keys route names literally and a dot would
+  nest frontmatter keys, breaking retry/skip — `send` now fails closed
+  with `InvalidRouteError` naming the route.
+
+### Changed
+
+- An unknown adapter on one route no longer aborts the whole send
+  (PR #383 audit F5): the route is retained as `unavailable` with the
+  resolution error as its reason (never a bare `in_flight` marker), the
+  remaining routes still deliver, and the send still reports overall
+  delivery failure.
+
 ## [0.22.0] - 2026-10-18
 
 ### Added

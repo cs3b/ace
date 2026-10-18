@@ -131,16 +131,22 @@ module Ace
           end
         end
 
-        def test_unknown_adapter_fails_closed
+        def test_unknown_adapter_records_unavailable_and_reports_failure
           with_hitl_dir do |root|
             config = routes_config(root,
               {"route" => "future", "adapter" => "nervus"})
             manager = HitlManager.new(root_dir: root, config: config)
             event = create_question(manager)
 
-            assert_raises(Adapters::UnknownAdapterError) do
-              HitlSender.new(manager: manager, config: config).send(event.id)
-            end
+            report = HitlSender.new(manager: manager, config: config).send(event.id)
+
+            refute report.all_delivered?
+            result = report.results.first
+            assert_equal "future", result.route
+            assert_equal :unavailable, result.status
+            assert_includes result.detail, "unknown HITL adapter 'nervus'"
+            retained = manager.show(event.id)[:event].metadata["delivery"]["future"]
+            assert_equal "unavailable", retained["status"]
           end
         end
 

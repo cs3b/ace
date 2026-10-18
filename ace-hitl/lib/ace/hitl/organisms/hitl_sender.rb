@@ -49,8 +49,7 @@ module Ace
         # @param dry_run [Boolean] report decisions only; no delivery, no write
         # @return [SendReport]
         # @raise [Molecules::HitlRouteLoader::NoRoutesError,
-        #   Molecules::HitlRouteLoader::InvalidRouteError,
-        #   Adapters::UnknownAdapterError] before any delivery attempt
+        #   Molecules::HitlRouteLoader::InvalidRouteError] before any delivery attempt
         def send(ref, scope: nil, force: false, dry_run: false)
           routes = Molecules::HitlRouteLoader.load(@config)
 
@@ -128,8 +127,14 @@ module Ace
           adapter = @adapters.resolve(adapter_name, route: route)
           adapter.deliver(event: event, text: text,
             recipient: event.recipient, reply_to: event.reply_to)
-        rescue Adapters::UnknownAdapterError
-          raise
+        rescue Adapters::UnknownAdapterError => e
+          # The route's adapter cannot be resolved: record it as
+          # unavailable with the reason (never a bare in_flight marker)
+          # and keep going so healthy routes still deliver.
+          Adapters::RouteResult.new(
+            route: route["route"], adapter: adapter_name,
+            status: :unavailable, detail: e.message
+          )
         rescue StandardError => e
           Adapters::RouteResult.new(
             route: route["route"], adapter: adapter_name,
