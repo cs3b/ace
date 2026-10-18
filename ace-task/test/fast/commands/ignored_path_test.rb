@@ -96,6 +96,71 @@ class IgnoredPathTest < AceTaskTestCase
     assert_nil Ace::Task::Organisms::TaskManager.new.show(project_id).special_folder
   end
 
+  def test_create_preflight_checks_the_generated_path_not_sample_names
+    # Matches a real subtask folder (0-slug) but no root task folder, which
+    # starts with the generated B36TS ID. Sampling a made-up "0-probe" path
+    # would reject the valid root task.
+    append_gitignore("0-*/")
+
+    committed = nil
+    committer = ->(paths:, intention:) {
+      committed = paths
+      true
+    }
+    Ace::Support::Items::Molecules::GitCommitter.stub(:commit, committer) do
+      output = invoke("create", "Ordinary root task", "--gc")
+      id = output[/Created task ([0-9a-z]{3}\.t\.[0-9a-z]{3})/, 1]
+      refute_nil id, "a sample subtask-shaped path must not reject a real root task"
+      path = invoke("show", id, "--path").strip
+      assert_equal [File.dirname(path)], committed
+    end
+
+    # The real generated subtask folder does start with "0-"; the guard must
+    # reject that actual path.
+    parent_id = create_project_task("Tracked parent")
+    error = assert_raises(Ace::Support::Cli::Error) do
+      invoke("create", "Ignored subtask", "--child-of", parent_id, "--gc")
+    end
+    assert_match(/Git-ignored (?:task path|destination|child paths)/, error.message)
+  end
+
+  def test_reparent_guard_checks_the_generated_descendant_spec_names
+    parent_id = create_project_task("Reparent target")
+    moving_id = create_project_task("Moving objective")
+    child_output = invoke("create", "Moving child", "--child-of", moving_id)
+    child_id = child_output[/Created task ([0-9a-z]{3}\.t\.[0-9a-z]{3}\.[0-9a-z])/, 1]
+    refute_nil child_id
+
+    parent_path = invoke("show", parent_id, "--path").strip
+    moving_path = invoke("show", moving_id, "--path").strip
+    child_path = invoke("show", child_id, "--path").strip
+    parent_dir = File.dirname(parent_path)
+    moving_dir = File.dirname(moving_path)
+    child_dir = File.dirname(child_path)
+
+    # Demoting the moving family rewrites its IDs under the target:
+    # moving -> <parent>.0 and its child -> <parent>.0.0. Only that generated
+    # child spec name is ignored; the pre-move name mapping does not contain it.
+    moving_slug = File.basename(moving_dir).delete_prefix("#{moving_id}-")
+    child_slug = File.basename(child_dir).sub(/\A[0-9a-z]-/, "")
+    destination_child_dir = File.join(parent_dir, "0-#{moving_slug}", File.basename(child_dir))
+    generated_child_spec = File.join(destination_child_dir, "#{parent_id}.0.0-#{child_slug}.s.md")
+    append_gitignore("/#{relative_to_project(generated_child_spec)}")
+
+    committer = ->(paths:, intention:) { true }
+    error = Ace::Support::Items::Molecules::GitCommitter.stub(:commit, committer) do
+      assert_raises(Ace::Support::Cli::Error) do
+        invoke("update", moving_id, "--move-as-child-of", parent_id, "--gc")
+      end
+    end
+    assert_match(/Git-ignored (?:task path|destination|child paths)/, error.message)
+    assert_equal moving_path, invoke("show", moving_id, "--path").strip,
+      "a rejected reparent commit must not move the task"
+    assert_equal child_path, invoke("show", child_id, "--path").strip,
+      "a rejected reparent commit must not rename the child"
+    refute File.exist?(generated_child_spec)
+  end
+
   def test_terminal_ignored_family_is_not_auto_archived
     parent_id = create_in_folder(IGNORED_FOLDER, "Ignored objective")
     child_output = invoke("create", "Ignored subtask", "--child-of", parent_id)

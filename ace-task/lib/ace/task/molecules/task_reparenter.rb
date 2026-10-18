@@ -35,28 +35,30 @@ module Ace
           end
         end
 
-        # Paths a reparent will create, without mutating anything. Used by
-        # pre-flight checks such as the --git-commit ignored-path guard.
+        # Destination paths a reparent will create, without mutating anything.
+        # Returns the destination directory followed by every generated spec
+        # file: the task's own renamed spec plus each descendant's spec, whose
+        # basename follows the descendant's new ID. Used by pre-flight checks
+        # such as the --git-commit ignored-path guard, which must test the
+        # names the move will actually write.
         #
         # @param task [Models::Task] Task to reparent
         # @param target [String] "none", "self", or a parent ref
         # @param resolve_ref [Proc] Resolves a parent ref to a Task
         # @return [Array<String>] Destination directory and spec file paths
         def destination_paths(task, target:, resolve_ref:)
-          paths = case target.downcase
+          case target.downcase
           when "none"
-            promoted_paths(task)
+            promoted_destination_paths(task)
           when "self"
-            orchestrator_paths(task)
+            orchestrator_destination_paths(task)
           else
             parent_task = resolve_ref.call(target)
             raise ArgumentError, "Parent task '#{target}' not found" unless parent_task
             raise ArgumentError, "Cannot reparent task to itself" if task.id == parent_task.id
 
-            demoted_paths(task, parent_task)
+            demoted_destination_paths(task, parent_task)
           end
-
-          [paths[:dir], File.join(paths[:dir], paths[:spec_basename])]
         end
 
         private
@@ -269,6 +271,62 @@ module Ace
           folder_name = "#{next_char}-#{slug}"
           dir = File.join(parent_task.path, folder_name)
           {id: new_id, dir: dir, folder_name: folder_name, spec_basename: "#{new_id}-#{slug}.s.md"}
+        end
+
+        # Destination previews pair each naming plan with the spec files the
+        # move will actually write: the task's renamed spec and every
+        # descendant spec renamed to the new ID.
+        def promoted_destination_paths(task)
+          paths = promoted_paths(task)
+          [
+            paths[:dir],
+            File.join(paths[:dir], paths[:spec_basename]),
+            *descendant_destination_specs(task.path, paths[:dir], new_parent_id: paths[:id])
+          ]
+        end
+
+        def orchestrator_destination_paths(task)
+          paths = orchestrator_paths(task)
+          [
+            task.path,
+            File.join(task.path, "#{File.basename(task.path)}.s.md"),
+            File.join(paths[:dir], paths[:spec_basename])
+          ]
+        end
+
+        def demoted_destination_paths(task, parent_task)
+          paths = demoted_paths(task, parent_task)
+          [
+            paths[:dir],
+            File.join(paths[:dir], paths[:spec_basename]),
+            *descendant_destination_specs(task.path, paths[:dir], new_parent_id: paths[:id])
+          ]
+        end
+
+        # Spec paths descendants receive after their ancestor's ID changes.
+        # Folder names stay, spec basenames follow the new IDs, and an entry
+        # without a spec file is not renamed by rewrite_descendants either.
+        def descendant_destination_specs(source_dir, destination_dir, new_parent_id:)
+          specs = []
+          Dir.entries(source_dir).sort.each do |entry|
+            next if entry.start_with?(".")
+
+            match = entry.match(/\A([a-z0-9])-(.+)\z/)
+            next unless match
+
+            child_source = File.join(source_dir, entry)
+            next unless File.directory?(child_source)
+            next if Dir.glob(File.join(child_source, "*.s.md")).empty?
+
+            char = match[1]
+            slug = match[2]
+            child_destination = File.join(destination_dir, entry)
+            specs << File.join(child_destination, "#{new_parent_id}.#{char}-#{slug}.s.md")
+            specs.concat(descendant_destination_specs(
+              child_source, child_destination, new_parent_id: "#{new_parent_id}.#{char}"
+            ))
+          end
+          specs
         end
 
         # Extract the base task ID (without subtask char) from a potentially dotted ID

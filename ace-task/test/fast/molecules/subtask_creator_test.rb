@@ -14,6 +14,15 @@ class SubtaskCreatorTest < AceTaskTestCase
     FileUtils.rm_rf(@tmpdir)
   end
 
+  def test_destination_paths_preview_the_created_paths
+    subtask_creator = Ace::Task::Molecules::SubtaskCreator.new
+
+    preview = subtask_creator.destination_paths(@parent, "Previewed subtask")
+    subtask = subtask_creator.create(@parent, "Previewed subtask")
+
+    assert_equal [subtask.path, subtask.file_path], preview
+  end
+
   def test_creates_subtask_with_correct_id
     subtask_creator = Ace::Task::Molecules::SubtaskCreator.new
     subtask = subtask_creator.create(@parent, "Setup database")

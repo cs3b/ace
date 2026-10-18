@@ -201,6 +201,72 @@ class TaskReparenterTest < AceTaskTestCase
     end
   end
 
+  def test_demote_destination_paths_match_the_generated_family_specs
+    parent_dir = create_task_dir("8pp.t.q7w", "target")
+    create_spec(parent_dir, "8pp.t.q7w-target", status: "pending")
+
+    task_dir = create_task_dir("8pp.t.q9w", "moving-parent")
+    create_spec(task_dir, "8pp.t.q9w-moving-parent", status: "pending")
+
+    child_dir = File.join(task_dir, "a-linked-child")
+    FileUtils.mkdir_p(child_dir)
+    create_spec(child_dir, "8pp.t.q9w.a-linked-child", id: "8pp.t.q9w.a", parent: "8pp.t.q9w")
+    nested_dir = File.join(child_dir, "b-nested")
+    FileUtils.mkdir_p(nested_dir)
+    create_spec(nested_dir, "8pp.t.q9w.a.b-nested", id: "8pp.t.q9w.a.b", parent: "8pp.t.q9w.a")
+
+    task = load_task(task_dir, "8pp.t.q9w")
+    parent_task = load_task(parent_dir, "8pp.t.q7w")
+    reparenter = Ace::Task::Molecules::TaskReparenter.new(root_dir: @tasks_dir)
+
+    preview = reparenter.destination_paths(task, target: "8pp.t.q7w", resolve_ref: ->(_) { parent_task })
+    result = reparenter.reparent(task, target: "8pp.t.q7w", resolve_ref: ->(_) { parent_task })
+
+    assert_equal File.join(parent_dir, "0-moving-parent"), preview[0]
+    assert_includes preview, File.join(result.path, "8pp.t.q7w.0-moving-parent.s.md")
+    assert_includes preview, File.join(result.path, "a-linked-child", "8pp.t.q7w.0.a-linked-child.s.md")
+    assert_includes preview, File.join(result.path, "a-linked-child", "b-nested", "8pp.t.q7w.0.a.b-nested.s.md")
+    preview.each { |path| assert File.exist?(path), "planned path must be written: #{path}" }
+  end
+
+  def test_promote_destination_paths_match_the_generated_family_specs
+    parent_dir = create_task_dir("8pp.t.q7w", "parent")
+    create_spec(parent_dir, "8pp.t.q7w-parent", status: "pending")
+
+    subtask_dir = File.join(parent_dir, "a-child")
+    FileUtils.mkdir_p(subtask_dir)
+    create_spec(subtask_dir, "8pp.t.q7w.a-child", id: "8pp.t.q7w.a", parent: "8pp.t.q7w")
+    nested_dir = File.join(subtask_dir, "b-nested")
+    FileUtils.mkdir_p(nested_dir)
+    create_spec(nested_dir, "8pp.t.q7w.a.b-nested", id: "8pp.t.q7w.a.b", parent: "8pp.t.q7w.a")
+
+    task = load_task(subtask_dir, "8pp.t.q7w.a")
+    reparenter = Ace::Task::Molecules::TaskReparenter.new(root_dir: @tasks_dir)
+
+    preview = reparenter.destination_paths(task, target: "none", resolve_ref: ->(_) {})
+    result = reparenter.reparent(task, target: "none", resolve_ref: ->(_) {})
+
+    assert_equal File.join(@tasks_dir, "8pp.t.q7w-child"), preview[0]
+    assert_includes preview, File.join(result.path, "8pp.t.q7w-child.s.md")
+    assert_includes preview, File.join(result.path, "b-nested", "8pp.t.q7w.b-nested.s.md")
+    preview.each { |path| assert File.exist?(path), "planned path must be written: #{path}" }
+  end
+
+  def test_orchestrator_destination_paths_match_the_written_specs
+    task_dir = create_task_dir("8pp.t.q7w", "my-task")
+    create_spec(task_dir, "8pp.t.q7w-my-task", status: "pending")
+    task = load_task(task_dir, "8pp.t.q7w")
+
+    reparenter = Ace::Task::Molecules::TaskReparenter.new(root_dir: @tasks_dir)
+    preview = reparenter.destination_paths(task, target: "self", resolve_ref: ->(_) {})
+    result = reparenter.reparent(task, target: "self", resolve_ref: ->(_) {})
+
+    assert_equal task_dir, preview[0]
+    assert_includes preview, File.join(result.path, "8pp.t.q7w-my-task.s.md")
+    assert_includes preview, File.join(result.path, "0-my-task", "8pp.t.q7w.0-my-task.s.md")
+    preview.each { |path| assert File.exist?(path), "planned path must be written: #{path}" }
+  end
+
   private
 
   def create_task_dir(id, slug)

@@ -12,6 +12,16 @@ class TaskCreatorTest < AceTaskTestCase
     FileUtils.rm_rf(@tmpdir)
   end
 
+  def test_destination_paths_preview_the_created_paths
+    creator = Ace::Task::Molecules::TaskCreator.new(root_dir: @tmpdir)
+    time = Time.utc(2026, 1, 15, 12, 0, 0)
+
+    preview = creator.destination_paths("Plan a generated path", time: time)
+    task = creator.create("Plan a generated path", time: time)
+
+    assert_equal [task.path, task.file_path], preview
+  end
+
   def test_creates_task_with_correct_folder_structure
     creator = Ace::Task::Molecules::TaskCreator.new(root_dir: @tmpdir)
     task = creator.create("Fix login bug")
