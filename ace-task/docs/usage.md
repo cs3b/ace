@@ -58,7 +58,11 @@ ace-task update q7w --move-to next
   task folder, its children, its spec file, or a destination a relocation would
   create — on create, subtask creation, and update/move, because Git would not
   stage that path. A rejected create rolls back the created task; a rejected
-  move/update leaves the task unchanged.
+  move/update leaves the task unchanged. `--dry-run` uses representative
+  destination probes: common folder/child/spec ignore rules are predicted, but
+  a rule that matches only the generated ID or a date-partitioned archive
+  destination is detected by the authoritative post-creation check (which then
+  rolls back and fails the real command).
 - Completing a Git-ignored task (or the last subtask of an ignored family) does
   not trigger automatic archiving (including into an ignored archive
   destination), and `ace-task doctor` neither reports the missing archive nor

@@ -187,7 +187,11 @@ module Ace
               probes << File.join(target, child, "#{child}.s.md")
             end
             ignored = probes.find { |probe| Ace::Task::Molecules::GitIgnoredPath.ignored?(probe) }
-            raise_ignored_commit!(ignored) if ignored
+            return unless ignored
+
+            raise Ace::Support::Cli::Error,
+              "Cannot --git-commit into a Git-ignored destination: #{target}. " \
+                "Choose a tracked folder or omit --git-commit."
           end
 
           # --git-commit must not stage a task whose directory or spec path Git
