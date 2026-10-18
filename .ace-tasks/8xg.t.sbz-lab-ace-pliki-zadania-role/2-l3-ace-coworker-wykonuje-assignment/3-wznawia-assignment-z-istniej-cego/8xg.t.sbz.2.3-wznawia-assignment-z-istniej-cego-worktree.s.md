@@ -1,6 +1,6 @@
 ---
 id: 8xg.t.sbz.2.3
-status: pending
+status: done
 priority: medium
 created_at: "2026-10-17 18:54:14"
 estimate: medium
@@ -31,9 +31,9 @@ Po przerwaniu odczytać istniejący assignment, task i rzeczywisty stan tego sam
 
 ## Kryteria odbioru
 
-- [ ] Restart w połowie zlecenia zachowuje ukończone kroki i lokalne zmiany oraz wraca do pracy pozostałej do wykonania.
-- [ ] Jeżeli nie wiadomo, czy merge/publikacja zaszły, sprawdzić ich stan lub zgłosić blokadę zamiast ślepo wykonywać je ponownie; nie tworzyć nowego taska/worktree.
-- [ ] Wynik jest zgodny z kontraktem programu i możliwy do użycia przez następną rolę lub narzędzie.
+- [x] Restart w połowie zlecenia zachowuje ukończone kroki i lokalne zmiany oraz wraca do pracy pozostałej do wykonania.
+- [x] Jeżeli nie wiadomo, czy merge/publikacja zaszły, sprawdzić ich stan lub zgłosić blokadę zamiast ślepo wykonywać je ponownie; nie tworzyć nowego taska/worktree.
+- [x] Wynik jest zgodny z kontraktem programu i możliwy do użycia przez następną rolę lub narzędzie.
 
 ## Plan weryfikacji
 
