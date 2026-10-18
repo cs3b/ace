@@ -60,6 +60,19 @@ module Ace
           assert_equal :complete, plan.disposition
         end
 
+        def test_complete_after_delivered_error_report_still_reports_success
+          # F2 regression: assignment failed, the error report was delivered,
+          # then the assignment was fixed and completed. The delivered
+          # report describes a stale outcome — resume must report success,
+          # not declare :complete and leave the overseer with the error.
+          snap = snapshot(state: "completed", steps: [["010", "impl", "done"]])
+          plan = ResumePlanner.plan(snapshot: snap,
+            report_state: {"result" => "error", "event_id" => "old123",
+              "delivery" => "delivered (event old123)"})
+
+          assert_equal :report, plan.disposition
+        end
+
         def test_effect_caution_flags_external_effect_steps
           snap = snapshot(state: "running", steps: [
             ["010", "impl", "done"], ["020", "merge-pr", "active"], ["030", "release-check", "pending"]])

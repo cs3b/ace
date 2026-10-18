@@ -52,6 +52,15 @@ module Ace
           Failure.new(stage: "send", message: message)
         end
 
+        # @return [Boolean] whether ace-hitl knows the event. Delegates to
+        # the ace-hitl CLI so its own configured root_dir (possibly not
+        # .ace-local/hitl) decides; this molecule never reconstructs HITL
+        # storage paths.
+        def event_exists?(event_id)
+          _out, _err, status = run([hitl_binary, "show", event_id, "--path"])
+          status.success?
+        end
+
         private
 
         def run(argv)

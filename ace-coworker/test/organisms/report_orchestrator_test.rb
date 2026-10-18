@@ -3,6 +3,7 @@
 require_relative "../test_helper"
 require "json"
 require "pathname"
+require "yaml"
 require_relative "../support/coworker_fixture"
 
 module Ace
@@ -231,6 +232,95 @@ module Ace
           assert_equal 1, result.exit_code
           assert File.file?(record_path), "outcome still recorded locally"
           assert_empty @runner_calls, "stop means no HITL subprocess at all"
+        end
+
+        def test_interrupt_during_send_keeps_event_binding_for_rerun
+          # F3 regression: create returns, send is interrupted after the
+          # message may already be delivered. The created event ID must be
+          # persisted in helper state BEFORE the send effect, so a rerun
+          # reuses it instead of minting a duplicate event.
+          interrupting_reporter = Object.new
+          interrupting_reporter.define_singleton_method(:create) { |_outcome, _cfg| "evtint1" }
+          interrupting_reporter.define_singleton_method(:event_exists?) { |_id| false }
+          interrupting_reporter.define_singleton_method(:send_report) do |_id|
+            raise Interrupt, "stopped while awaiting delivery confirmation"
+          end
+          orch = ReportOrchestrator.new(project_root: @dir,
+            config: {"config_path" => @config_path},
+            assignment_probe: Molecules::AssignmentProbe.new(project_root: @dir,
+              runner: ->(_argv, _cwd) { [completed_json, "", CoworkerFixture::SuccessStatus.ok] }),
+            reporter: interrupting_reporter)
+
+          assert_raises(Interrupt) { orch.call(config_path: nil) }
+          assert File.file?(state_path), "event ID must be persisted before the send effect"
+          assert_equal "evtint1", JSON.parse(File.read(state_path))["event_id"]
+
+          # Rerun after the interrupt: the bound event still exists (the
+          # interrupted send may have delivered) — resend only, no create.
+          rerun = orchestrator(json: completed_json,
+            script: [{success: true, out: "/custom/root/evtint1-evt.hitl.s.md\n"},
+                     {success: true, out: "delivered"}])
+            .call(config_path: nil)
+
+          assert_equal 0, rerun.exit_code, rerun.message
+          assert_equal 0, @runner_calls.count { |argv| argv[1] == "create" }, "rerun must not create a second event"
+          sends = @runner_calls.select { |argv| argv[1] == "send" }
+          assert_equal ["evtint1"], sends.map { |argv| argv[2] }
+        end
+
+        def test_assignment_override_threads_selected_identity_everywhere
+          # F4 regression: --assignment B must report under B's identity in
+          # the HITL message, the record frontmatter, and helper state —
+          # not the config assignment A.
+          CoworkerFixture.build_assignment(@dir, id: "other1", task_id: "8xh.t.aaa")
+          result = orchestrator(json: completed_json,
+            script: [{success: true, out: "HITL event created: 8xhq20 x\n"}])
+            .call(config_path: nil, assignment: "other1", no_send: true)
+
+          assert_equal 0, result.exit_code, result.message
+          create_argv = @runner_calls.find { |argv| argv[1] == "create" }
+          assert_equal "other1", create_argv[create_argv.index("--assignment") + 1],
+            "HITL create must identify the selected assignment"
+          record = File.join(@task_path, "coworker", "other1.md")
+          assert_includes File.read(record), "assignment: other1",
+            "durable record must carry the selected assignment identity"
+          state = JSON.parse(File.read(File.join(@dir, ".ace-local", "coworker", "reports", "other1.json")))
+          assert_equal "8xhq20", state["event_id"]
+        end
+
+        def test_rerun_reuses_event_resolved_through_hitl_not_constant_path
+          # F7 regression: the existing-event check must go through the
+          # ace-hitl interface (which honors a custom root_dir), never a
+          # glob of the constant .ace-local/hitl path.
+          FileUtils.mkdir_p(File.dirname(state_path))
+          File.write(state_path, JSON.generate({"result" => "success", "event_id" => "8xhq30"}))
+
+          result = orchestrator(json: completed_json,
+            script: [{success: true, out: "/custom-root/8xhq30-evt.hitl.s.md\n"},
+                     {success: true, out: "delivered"}])
+            .call(config_path: nil)
+
+          assert_equal 0, result.exit_code, result.message
+          show_argv = @runner_calls.find { |argv| argv[1] == "show" }
+          refute_nil show_argv, "existing-event check must query ace-hitl"
+          assert_equal "8xhq30", show_argv[2]
+          assert_equal "--path", show_argv[3]
+          assert_equal 0, @runner_calls.count { |argv| argv[1] == "create" },
+            "existing event (wherever HITL keeps it) must be reused, not duplicated"
+        end
+
+        def test_failure_delivery_record_frontmatter_is_valid_yaml
+          # F8 regression: "failed: <free-form cause>" must stay a single
+          # YAML value; the record must read back with YAML.safe_load.
+          result = orchestrator(json: completed_json,
+            script: [{success: true, out: "HITL event created: 8xhq31 x\n"},
+                     {success: false, err: "transport unavailable"}])
+            .call(config_path: nil)
+
+          assert_equal 1, result.exit_code
+          frontmatter = File.read(record_path).split("---", 3)[1]
+          parsed = YAML.safe_load(frontmatter, permitted_classes: [Time])
+          assert_equal "failed: transport unavailable", parsed["delivery"]
         end
       end
     end

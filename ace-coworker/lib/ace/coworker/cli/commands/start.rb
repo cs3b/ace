@@ -29,8 +29,6 @@ module Ace
             else
               puts Atoms::BriefFormatter.format_table(brief)
             end
-          rescue Interrupt
-            nil
           rescue Ace::Coworker::Error, StandardError => e
             raise Ace::Support::Cli::Error, e.message
           end

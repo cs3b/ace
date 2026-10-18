@@ -19,7 +19,9 @@ module Ace
           lines << "result: #{outcome.result}"
           lines << "verdict: #{outcome.verdict}"
           lines << "event_id: #{event_id}" if event_id
-          lines << "delivery: #{delivery}" if delivery
+          # Delivery can carry free-form failure detail ("failed: <cause>");
+          # serialize the value so the frontmatter stays parseable YAML.
+          lines << "delivery: #{delivery.to_s.inspect}" if delivery
           lines << "updated_at: #{Time.now.utc.iso8601}"
           lines << "---"
           lines << ""

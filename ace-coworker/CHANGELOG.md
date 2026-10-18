@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-10-18
+
+### Fixed
+
+- Report/resume correctness after PR #383 audit (F2/F3/F4/F7/F8/F9):
+  - `resume`: a completed assignment whose earlier DELIVERED report was an
+    error (later fixed) no longer resolves to `complete` — only a delivered
+    SUCCESS report matches a completed assignment, so resume reports the
+    success instead of leaving the overseer with the stale error (F2).
+  - `report`: the created HITL event ID is persisted to helper state
+    BEFORE the send effect, so an interrupt/crash during send (after the
+    message may already be delivered) never orphans the event; a rerun
+    reuses the same ID instead of minting a duplicate (F3).
+  - `report --assignment B` now threads B's identity consistently through
+    the durable record, evidence paths, and the HITL message — previously
+    B's result was reported under the config assignment's ID (F4).
+  - the existing-event check on reruns goes through the ace-hitl CLI
+    (`show <id> --path`) instead of globbing the constant `.ace-local/hitl`
+    path, so events stored under a custom `hitl.root_dir` are reused, not
+    duplicated (F7).
+  - report records serialize the delivery value, so a normal delivery
+    failure (`delivery: failed: <free-form cause>`) no longer breaks the
+    frontmatter for `YAML.safe_load` (F8).
+  - `start` and `status` no longer swallow `Interrupt` into a success
+    return; the exe wrapper's exit(130) handles Ctrl-C again (F9).
+
 ## [0.3.0] - 2026-10-18
 
 ### Added

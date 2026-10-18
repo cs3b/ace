@@ -63,6 +63,13 @@ module Ace
           def test_quiet_suppresses_output
             assert_empty capture { command.call(config: nil, format: "table", quiet: true) }
           end
+
+          def test_interrupt_propagates_to_the_exe_wrapper
+            # F9 regression: Ctrl-C during start must reach exe/ace-coworker
+            # (exit 130), not be swallowed into a success return.
+            interrupting = Start.new(orchestrator: ->(*) { raise Interrupt })
+            assert_raises(Interrupt) { interrupting.call(config: nil, format: "table", quiet: false) }
+          end
         end
 
         class StatusTest < AceCoworkerTestCase
@@ -116,6 +123,13 @@ module Ace
             payload = JSON.parse(out)
             assert_equal true, payload["ready"]
             assert_equal true, payload["assignment_status"]["complete"]
+          end
+
+          def test_interrupt_propagates_to_the_exe_wrapper
+            # F9 regression: Ctrl-C during status must reach
+            # exe/ace-coworker (exit 130), not be swallowed into success.
+            interrupting = Status.new(orchestrator: ->(**) { raise Interrupt })
+            assert_raises(Interrupt) { interrupting.call(config: nil, assignment: nil, format: "table", quiet: false) }
           end
         end
       end

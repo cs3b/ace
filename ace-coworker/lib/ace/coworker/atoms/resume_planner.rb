@@ -26,8 +26,13 @@ module Ace
             step_cause: step_cause, step_report_path: step_report_path)
         end
 
+        # Only a DELIVERED SUCCESS report matches a completed assignment:
+        # a delivered error report describes an outcome the assignment has
+        # since left behind, so resume must still report the success.
         def self.complete_plan(report_state, git_state)
-          delivered = report_state.is_a?(Hash) && report_state["delivery"].to_s.start_with?("delivered")
+          delivered = report_state.is_a?(Hash) &&
+            report_state["result"] == "success" &&
+            report_state["delivery"].to_s.start_with?("delivered")
           if delivered
             Models::ResumePlan.new(disposition: :complete, git: git_state)
           else

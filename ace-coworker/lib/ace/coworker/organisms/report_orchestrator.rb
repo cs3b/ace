@@ -55,6 +55,7 @@ module Ace
           step: nil, no_send: false, dry_run: false)
           cfg = @config_loader.load(path: config_path)
           assignment_id = assignment.to_s.strip.empty? ? cfg.assignment : assignment.to_s.strip
+          cfg = with_assignment(cfg, assignment_id)
           @task_probe.resolve!(cfg.task)
           @assignment_metadata ||= Molecules::AssignmentMetadata.new(project_root: @project_root)
           @assignment_metadata.verify_task_match!(assignment_id, cfg.task)
@@ -82,7 +83,7 @@ module Ace
           created_event = false
           if !report_via_hitl?(cfg, outcome)
             # errors.on_failure=stop: never touch HITL, not even a resend.
-          elsif state["result"] == outcome.result && state["event_id"] && event_exists?(state["event_id"])
+          elsif state["result"] == outcome.result && state["event_id"] && @reporter.event_exists?(state["event_id"])
             event_id = state["event_id"]
           elsif report_via_hitl?(cfg, outcome)
             event_id = @reporter.create(outcome, cfg)
@@ -91,6 +92,15 @@ module Ace
                 "outcome recorded: #{outcome.result} at #{record_path}; HITL create failed: #{event_id.message}")
             end
             created_event = true
+            # Bind the event in helper state BEFORE the send effect: an
+            # interrupt/crash during send must not orphan a possibly
+            # delivered message; a rerun reuses this ID instead of
+            # creating a duplicate.
+            state_store.write(assignment_id, {
+              "result" => outcome.result, "event_id" => event_id,
+              "record" => record_path, "delivery" => nil,
+              "updated_at" => Time.now.utc.iso8601
+            })
           end
 
           delivery = nil
@@ -99,13 +109,6 @@ module Ace
             if send_result == true
               delivery = "delivered (event #{event_id})"
             else
-              # Bind the event in helper state even on delivery failure so a
-              # rerun resends instead of duplicating the event.
-              state_store.write(assignment_id, {
-                "result" => outcome.result, "event_id" => event_id,
-                "record" => record_path, "delivery" => nil,
-                "updated_at" => Time.now.utc.iso8601
-              })
               record_writer.write(assignment_id,
                 Atoms::ReportRecordFormatter.format(outcome, cfg,
                   event_id: event_id, delivery: "failed: #{send_result.message}",
@@ -134,9 +137,17 @@ module Ace
           cfg.on_failure != "stop"
         end
 
-        def event_exists?(event_id)
-          pattern = File.join(@project_root, ".ace-local", "hitl", "**", "#{event_id}-*")
-          !Dir.glob(pattern).empty?
+        # The selected assignment (CLI override or config) is the single
+        # identity threaded through record, evidence, and HITL message —
+        # never mix the config assignment with a --assignment override.
+        def with_assignment(cfg, assignment_id)
+          return cfg if cfg.assignment == assignment_id
+
+          Models::Config.new(role: cfg.role, instructions: cfg.instructions,
+            start_prompt: cfg.start_prompt, start_prompt_file: cfg.start_prompt_file,
+            task: cfg.task, assignment: assignment_id, overseer: cfg.overseer,
+            reporting_channel: cfg.reporting_channel, on_failure: cfg.on_failure,
+            source_path: cfg.source_path)
         end
 
         def failed_step_number(snapshot)

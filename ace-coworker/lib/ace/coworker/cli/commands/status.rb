@@ -32,8 +32,6 @@ module Ace
             else
               puts render_table(result)
             end
-          rescue Interrupt
-            nil
           rescue Ace::Coworker::Error, StandardError => e
             raise Ace::Support::Cli::Error, e.message
           end
