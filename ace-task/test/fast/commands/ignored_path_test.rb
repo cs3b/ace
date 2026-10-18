@@ -74,25 +74,25 @@ class IgnoredPathTest < AceTaskTestCase
     create_error = assert_raises(Ace::Support::Cli::Error) do
       invoke("create", "Ignored task", "--in", IGNORED_FOLDER, "--gc")
     end
-    assert_match(/Git-ignored (?:task path|destination)/, create_error.message)
+    assert_match(/Git-ignored (?:task path|destination|child paths)/, create_error.message)
     assert_empty Dir.children(File.join(@tmpdir, ".ace-tasks", IGNORED_FOLDER))
 
     parent_id = create_in_folder(IGNORED_FOLDER, "Ignored objective")
     child_error = assert_raises(Ace::Support::Cli::Error) do
       invoke("create", "Ignored subtask", "--child-of", parent_id, "--gc")
     end
-    assert_match(/Git-ignored (?:task path|destination)/, child_error.message)
+    assert_match(/Git-ignored (?:task path|destination|child paths)/, child_error.message)
 
     update_error = assert_raises(Ace::Support::Cli::Error) do
       invoke("update", parent_id, "--set", "status=done", "--gc")
     end
-    assert_match(/Git-ignored (?:task path|destination)/, update_error.message)
+    assert_match(/Git-ignored (?:task path|destination|child paths)/, update_error.message)
 
     project_id = create_project_task("Project task")
     move_error = assert_raises(Ace::Support::Cli::Error) do
       invoke("update", project_id, "--move-to", IGNORED_FOLDER, "--gc")
     end
-    assert_match(/Git-ignored (?:task path|destination)/, move_error.message)
+    assert_match(/Git-ignored (?:task path|destination|child paths)/, move_error.message)
     assert_nil Ace::Task::Organisms::TaskManager.new.show(project_id).special_folder
   end
 
@@ -158,7 +158,7 @@ class IgnoredPathTest < AceTaskTestCase
       error = assert_raises(Ace::Support::Cli::Error) do
         invoke("update", ignored_id, "--set", "status=done", "--gc")
       end
-      assert_match(/Git-ignored (?:task path|destination)/, error.message)
+      assert_match(/Git-ignored (?:task path|destination|child paths)/, error.message)
       assert_includes invoke("list", "--in", IGNORED_FOLDER), ignored_id
     end
   end
@@ -179,7 +179,7 @@ class IgnoredPathTest < AceTaskTestCase
     error = assert_raises(Ace::Support::Cli::Error) do
       invoke("update", id, "--set", "status=done", "--gc")
     end
-    assert_match(/Git-ignored (?:task path|destination)/, error.message)
+    assert_match(/Git-ignored (?:task path|destination|child paths)/, error.message)
 
     subdir = File.join(@tmpdir, "nested")
     FileUtils.mkdir_p(subdir)
@@ -233,7 +233,7 @@ class IgnoredPathTest < AceTaskTestCase
     create_error = assert_raises(Ace::Support::Cli::Error) do
       invoke("create", "Ignored child", "--in", child_ignored, "--gc")
     end
-    assert_match(/Git-ignored (?:task path|destination)/, create_error.message)
+    assert_match(/Git-ignored (?:task path|destination|child paths)/, create_error.message)
     assert_empty Dir.children(File.join(@tmpdir, ".ace-tasks", child_ignored)),
       "a rejected commit must not leave a created task behind"
 
@@ -242,7 +242,7 @@ class IgnoredPathTest < AceTaskTestCase
     move_error = assert_raises(Ace::Support::Cli::Error) do
       invoke("update", project_id, "--move-to", child_ignored, "--gc")
     end
-    assert_match(/Git-ignored (?:task path|destination)/, move_error.message)
+    assert_match(/Git-ignored (?:task path|destination|child paths)/, move_error.message)
     assert_equal project_path, invoke("show", project_id, "--path").strip,
       "a rejected commit must not move the task"
 
@@ -253,7 +253,7 @@ class IgnoredPathTest < AceTaskTestCase
     child_error = assert_raises(Ace::Support::Cli::Error) do
       invoke("create", "Ignored child task", "--child-of", parent_id, "--gc")
     end
-    assert_match(/Git-ignored (?:task path|destination)/, child_error.message)
+    assert_match(/Git-ignored (?:task path|destination|child paths)/, child_error.message)
     assert_equal [File.basename(parent_dir) + ".s.md"],
       Dir.children(parent_dir).sort,
       "a rejected subtask commit must leave the parent unchanged"
@@ -267,7 +267,7 @@ class IgnoredPathTest < AceTaskTestCase
     update_error = assert_raises(Ace::Support::Cli::Error) do
       invoke("update", id, "--set", "status=done", "--gc")
     end
-    assert_match(/Git-ignored (?:task path|destination)/, update_error.message)
+    assert_match(/Git-ignored (?:task path|destination|child paths)/, update_error.message)
     assert_equal "pending", Ace::Task::Organisms::TaskManager.new.show(id).status,
       "a rejected commit must not change task fields"
 
@@ -324,14 +324,15 @@ class IgnoredPathTest < AceTaskTestCase
     refute_nil child_id
     # Subtask specs carry an extra dotted ID segment
     # (xxx.t.yyy.0-slug.s.md) versus the parent spec (xxx.t.yyy-slug.s.md), so
-    # this pattern ignores only the nested child specs at the destination: the
-    # pre-family-expansion guard (parent destination spec only) passes it.
+    # this pattern ignores only the nested child specs at the destination. It
+    # pins the pre-move every-spec mapping: a guard that checked only the
+    # parent's own destination spec (the previous behavior) would pass it.
     append_gitignore("/.ace-tasks/_archive/**/*.*.*.*.s.md")
 
     error = assert_raises(Ace::Support::Cli::Error) do
       invoke("update", parent_id, "--move-to", "archive", "--gc")
     end
-    assert_match(/Git-ignored (?:task path|destination)/, error.message)
+    assert_match(/Git-ignored (?:task path|destination|child paths)/, error.message)
     refute_includes invoke("show", parent_id, "--path"), "_archive"
     assert_empty Dir.glob(File.join(@tmpdir, ".ace-tasks", "_archive", "**", "*")),
       "a rejected family archive must not create destination content"
@@ -345,7 +346,7 @@ class IgnoredPathTest < AceTaskTestCase
     error = assert_raises(Ace::Support::Cli::Error) do
       invoke("create", "Preview ignored", "--in", child_ignored, "--gc", "--dry-run")
     end
-    assert_match(/Git-ignored (?:task path|destination)/, error.message)
+    assert_match(/Git-ignored (?:task path|destination|child paths)/, error.message)
     assert_empty Dir.children(File.join(@tmpdir, ".ace-tasks", child_ignored))
   end
 
