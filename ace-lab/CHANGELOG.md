@@ -256,6 +256,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   case), and `usage.md` documents this third prediction limit
   alongside the other two.
 
+### Fixed (review round 6)
+
+- Reject unknown top-level and entry keys in the install manifest with value-free messages (a typo like `acounts:` no longer converges nothing while reporting `ok`).
+- Document the fourth dry-run prediction limit (installer-owned existing pair under a would-create account predicts `exists`; the wet-run ownership transfer is not predicted).
+- Add a JSON-format wet-failure CLI test.
+
 ## [0.11.0] - 2026-10-18
 
 ### Fixed (review PR #383, round 3)

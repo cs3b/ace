@@ -180,7 +180,7 @@ symlink is refused in dry-run exactly as the wet run refuses it, and a
 missing directory whose declared owner account *failed* the account
 phase is predicted as the wet run's owner-unavailable failure (the
 orchestrator threads its computed account set into the directory
-stage). Three prediction limits: an *existing* directory whose declared
+stage). Four prediction limits: an *existing* directory whose declared
 owner account does not exist yet cannot have its ownership checked,
 and is reported as a failed item with a rerun hint; likewise, a role's
 instruction *file* readability cannot be checked against an account
@@ -192,7 +192,11 @@ ownership checked either (the future uid is unknown) — a pair owned
 by neither the installer nor the to-be-created account is
 conservatively predicted as the wet run's takeover refusal, which is
 pessimistic only in the pathological case where account creation
-reuses exactly that uid.
+reuses exactly that uid. A fourth, smaller limit: when the account
+phase *would create* the account, an existing installer-owned pair (or
+installer-owned `.ssh`) is predicted as a plain `exists` even though the
+wet run would chown it to the account while converging — the transfer
+itself is not predicted.
 
 Behavior and guarantees:
 

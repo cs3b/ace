@@ -90,6 +90,24 @@ module Atoms
       assert_match(/accounts entry username is declared more than once/, error.message)
     end
 
+    def test_unknown_top_level_key_is_rejected
+      document = manifest("acounts" => [])
+
+      error = assert_raises(Ace::Lab::InvalidConfigurationError) { normalize(document) }
+
+      assert_match(/unknown top-level key 'acounts'/, error.message)
+    end
+
+    def test_unknown_entry_key_is_rejected
+      document = manifest("accounts" => [
+        {"username" => "ace-worker", "role" => "worker", "creat" => true}
+      ])
+
+      error = assert_raises(Ace::Lab::InvalidConfigurationError) { normalize(document) }
+
+      assert_match(/accounts entry #0 has unknown key 'creat'/, error.message)
+    end
+
     def test_invalid_username_format_is_rejected
       ["1worker", "-worker", "Ace-Worker", "w" * 40].each do |username|
         error = assert_raises(Ace::Lab::InvalidConfigurationError) do

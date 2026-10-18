@@ -104,6 +104,21 @@ module Ace
             end
           end
 
+          def test_json_wet_failure_renders_report_then_raises
+            with_manifest(lookup: ->(_name) { nil }) do |cmd, _home|
+              out, = capture_io do
+                error = assert_raises(Ace::Support::Cli::Error) do
+                  cmd.call(format: "json", dry_run: nil, quiet: nil)
+                end
+                assert_match(/prepare failed \(3 item\(s\)\)/, error.message)
+              end
+
+              parsed = JSON.parse(out)
+              assert_equal false, parsed["ok"]
+              assert_equal "failed", parsed["accounts"].first["status"]
+            end
+          end
+
           def test_dry_run_exits_zero_on_predicted_conflicts
             with_manifest(lookup: ->(_name) { nil }) do |cmd, _home|
               out, = capture_io { cmd.call(format: nil, dry_run: true, quiet: nil) }

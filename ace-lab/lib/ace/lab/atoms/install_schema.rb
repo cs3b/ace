@@ -11,6 +11,13 @@ module Ace
       # errors to echo untrusted content back into diagnostics).
       class InstallSchema
         SCHEMA_VERSION = 1
+        TOP_LEVEL_KEYS = %w[schema_version machine accounts directories keys roles].freeze
+        ENTRY_KEYS = {
+          "accounts" => %w[username role create home],
+          "directories" => %w[path owner mode],
+          "keys" => %w[account type path],
+          "roles" => %w[id account instructions]
+        }.freeze
         USERNAME_PATTERN = /\A[a-z_][a-z0-9_-]{0,31}\z/
         ROLE_ID_PATTERN = /\A[a-z][a-z0-9_-]{0,31}\z/
         INSTRUCTION_PROTOCOLS = %w[wfi:// prompt:// tmpl://].freeze
@@ -32,6 +39,11 @@ module Ace
             version = document["schema_version"]
             unless version == SCHEMA_VERSION
               raise_invalid "schema_version must be #{SCHEMA_VERSION}"
+            end
+
+            unknown = document.keys - TOP_LEVEL_KEYS
+            unless unknown.empty?
+              raise_invalid "unknown top-level key '#{unknown.sort.first}'"
             end
 
             machine = document["machine"]
@@ -72,6 +84,12 @@ module Ace
             value.each_with_index do |entry, index|
               unless entry.is_a?(Hash)
                 raise_invalid_entry(name, "##{index} must be a mapping")
+              end
+              next if ENTRY_KEYS[name].nil?
+
+              unknown = entry.keys - ENTRY_KEYS[name]
+              unless unknown.empty?
+                raise_invalid_entry(name, "##{index} has unknown key '#{unknown.sort.first}'")
               end
             end
             value
