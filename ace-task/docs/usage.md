@@ -60,11 +60,14 @@ ace-task update q7w --move-to next
   stage that path. A rejected create rolls back the created task; a rejected
   move/update leaves the task unchanged. The pre-write check resolves the
   operation's real paths: the generated ID and title-derived slugs (or the next
-  subtask character) plus the actual placement folder for create, and the
-  renamed spec files every moving family member receives for a reparent. That
-  also makes `--dry-run` predict the same rejection; the post-creation check
-  stays authoritative for ID-collision retries and concurrent changes (it then
-  rolls back and fails the real command).
+  subtask character) plus the actual placement folder (including the archive
+  partition) for create, and the renamed spec files every moving family member
+  receives for a reparent. That also makes `--dry-run` predict the same
+  rejection. For create and subtask creation the post-creation check stays
+  authoritative for ID-collision retries and concurrent changes (it then rolls
+  back and fails the real command); a reparent preview is resolved immediately
+  before the move and is not revalidated against a concurrent change to the
+  destination family.
 - Completing a Git-ignored task (or the last subtask of an ignored family) does
   not trigger automatic archiving (including into an ignored archive
   destination), and `ace-task doctor` neither reports the missing archive nor

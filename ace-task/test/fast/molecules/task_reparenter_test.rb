@@ -263,8 +263,37 @@ class TaskReparenterTest < AceTaskTestCase
 
     assert_equal task_dir, preview[0]
     assert_includes preview, File.join(result.path, "8pp.t.q7w-my-task.s.md")
+    assert_includes preview, File.join(result.path, "0-my-task")
     assert_includes preview, File.join(result.path, "0-my-task", "8pp.t.q7w.0-my-task.s.md")
     preview.each { |path| assert File.exist?(path), "planned path must be written: #{path}" }
+  end
+
+  def test_destination_paths_include_specs_under_a_spec_less_child
+    parent_dir = create_task_dir("8pp.t.q7w", "target")
+    create_spec(parent_dir, "8pp.t.q7w-target", status: "pending")
+
+    task_dir = create_task_dir("8pp.t.q9w", "moving-parent")
+    create_spec(task_dir, "8pp.t.q9w-moving-parent", status: "pending")
+
+    # rewrite_descendants recurses through a child folder even when that
+    # folder has no spec of its own, so the preview must include the
+    # grandchild spec it renames.
+    child_dir = File.join(task_dir, "a-child")
+    FileUtils.mkdir_p(child_dir)
+    grandchild_dir = File.join(child_dir, "b-nested")
+    FileUtils.mkdir_p(grandchild_dir)
+    create_spec(grandchild_dir, "8pp.t.q9w.a.b-nested", id: "8pp.t.q9w.a.b", parent: "8pp.t.q9w.a")
+
+    task = load_task(task_dir, "8pp.t.q9w")
+    parent_task = load_task(parent_dir, "8pp.t.q7w")
+    reparenter = Ace::Task::Molecules::TaskReparenter.new(root_dir: @tasks_dir)
+
+    preview = reparenter.destination_paths(task, target: "8pp.t.q7w", resolve_ref: ->(_) { parent_task })
+    result = reparenter.reparent(task, target: "8pp.t.q7w", resolve_ref: ->(_) { parent_task })
+
+    generated = File.join(result.path, "a-child", "b-nested", "8pp.t.q7w.0.a.b-nested.s.md")
+    assert_includes preview, generated
+    assert File.exist?(generated), "rewrite_descendants renames the grandchild spec"
   end
 
   private
