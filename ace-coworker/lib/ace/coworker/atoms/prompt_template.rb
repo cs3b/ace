@@ -15,7 +15,10 @@ module Ace
         def self.render(template, context)
           rendered = template.to_s
           PLACEHOLDERS.each do |key|
-            rendered = rendered.gsub("{{#{key}}}", context.fetch(key, "").to_s)
+            # Block form: the replacement is treated literally, so values
+            # containing backslashes or gsub escape sequences (\1, \0, \&)
+            # are interpolated verbatim instead of being expanded.
+            rendered = rendered.gsub("{{#{key}}}") { context.fetch(key, "").to_s }
           end
           rendered.strip
         end

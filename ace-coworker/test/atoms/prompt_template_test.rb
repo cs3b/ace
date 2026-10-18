@@ -36,6 +36,13 @@ module Ace
           assert_equal "  Drive {{task}}.  ", original
           assert_equal "Drive t1.", PromptTemplate.render(original, {"task" => "t1"})
         end
+
+        def test_values_with_gsub_escape_sequences_render_literally
+          sneaky = "back\\slash \\1 \\0 \\& done"
+          rendered = PromptTemplate.render("Drive {{task}} as {{role}}.",
+            {"task" => sneaky, "assignment" => "a1", "role" => "spec", "overseer" => "o1"})
+          assert_equal "Drive back\\slash \\1 \\0 \\& done as spec.", rendered
+        end
       end
     end
   end
