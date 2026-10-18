@@ -45,7 +45,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   spec.add_dependency "ace-hitl-contract", "~> 0.3.0"
-  spec.add_dependency "ace-hitl", "~> 0.18.0"
+  spec.add_dependency "ace-hitl", "~> 0.19.0"
   spec.add_dependency "ace-support-cli", "~> 0.6"
   spec.add_dependency "faraday", "~> 2.14"
 

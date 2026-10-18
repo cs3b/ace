@@ -25,7 +25,7 @@ module Ace
       PROGRAM_NAME = "ace-hitl"
 
       REGISTERED_COMMANDS = [
-        ["create", "Create HITL event"],
+        ["create", "Create HITL event (question or report)"],
         ["operator-question", "Create a nonsecret question under an installed operator project grant"],
         ["read", "Read authenticated lifecycle request facts"],
         ["show", "Show HITL event details"],
@@ -44,6 +44,7 @@ module Ace
         "ace-hitl list --status pending",
         "ace-hitl show abc123 --content",
         "ace-hitl create \"Which auth strategy?\" --kind decision",
+        "ace-hitl create \"Work done\" --type report --result success --task 8xg.t.sbz.1.0",
         "ace-hitl update abc123 --answer \"Use JWT with refresh tokens\"",
         "ace-hitl wait abc123 --poll-every 600 --timeout 14400"
       ].freeze

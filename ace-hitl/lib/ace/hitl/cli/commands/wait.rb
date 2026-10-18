@@ -47,6 +47,9 @@ module Ace
 
             manager = Ace::Hitl::Organisms::HitlManager.new
             event = manager.show(ref, scope: scope)&.dig(:event)
+            if event&.report?
+              raise Ace::Support::Cli::Error.new("HITL event '#{event.id}' is a report; reports do not await an answer")
+            end
             if event && event.metadata["lab_request_id"]
               emit(Ace::Hitl::LiveClient.new(boundary: lifecycle_client).wait(
                 request: event.metadata.fetch("lab_request_id"), timeout: options[:timeout] || 0,
@@ -70,6 +73,8 @@ module Ace
               puts "Resume: #{resume}" if resume
             when :timeout
               raise Ace::Support::Cli::Error.new("Timed out waiting for HITL event '#{ref}'")
+            when :report
+              raise Ace::Support::Cli::Error.new("HITL event '#{ref}' is a report; reports do not await an answer")
             else
               raise Ace::Support::Cli::Error.new("HITL event '#{ref}' not found")
             end

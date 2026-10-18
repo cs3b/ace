@@ -55,6 +55,41 @@ ace-hitl create "Review completed assignment results" \
   --assignment abc123 --step completion
 ```
 
+## Reports
+
+The same interface records reports — completion or error notifications that do
+not await an answer:
+
+```bash
+ace-hitl create "Work done" \
+  --type report --result success \
+  --body "Implemented JWT login" \
+  --body "Tests green" \
+  --task 8xg.t.sbz.1.0 --assignment abc123 --step 010
+
+ace-hitl create "Step failed" \
+  --type report --result error \
+  --body "Verifier crashed after merge" \
+  --task 8xg.t.sbz.1.0 --step 020
+```
+
+Rules:
+
+- `--type report` requires `--result success|error`; `--question` and `--resume`
+  are rejected on reports.
+- `--result` and `--body` are only valid with `--type report`.
+- Reports are created with status `recorded` and never appear as pending
+  questions: `wait <report>`, `update <report> --answer`, and
+  `update <report> --resume` exit 1 with an explicit error. Generic updates
+  (`--set`, `--add`, `--remove`, `--move-to archive`) still work.
+- `--task` is accepted for both questions and reports.
+- Local write is not delivery: `recorded` means the event is persisted under
+  `.ace-local/hitl/`, not that it reached the recipient. Remote addressing and
+  configurable adapters are planned follow-up leaves (8xg.t.sbz.1.1–.1.3).
+
+Questions keep the existing pending → answered cycle; files without a `type`
+frontmatter key load as questions.
+
 ## List
 
 ```bash
@@ -63,6 +98,8 @@ ace-hitl list --scope current
 ace-hitl list --scope all
 ace-hitl list --status pending
 ace-hitl list --kind decision
+ace-hitl list --type question
+ace-hitl list --type report
 ace-hitl list --tags auth,security
 ace-hitl list --in archive
 ```
@@ -80,7 +117,8 @@ ace-hitl show abc123 --content
 
 When lookup resolves outside the current worktree, output includes an explicit
 `Resolved Location:` line. Ambiguous matches under `--scope all` list candidate
-paths instead of guessing.
+paths instead of guessing. Report events print `Type: report`, `Result:`, and
+the report body instead of `Kind:`/`Questions:`/`Answer:`.
 
 ## Update
 
@@ -135,8 +173,9 @@ The immutable second-commander proposal flow is removed, and so is the unused
 old-lab Root Overseer reverse-address channel (`overseer-*` commands); generic
 transport has no replacement role-specific queue.
 
-> **Planned (L2):** one unified report/question/reply interface with
-> configurable provider adapters -- not available yet. Adapters
+> **Planned (L2):** the report/question distinction is available locally
+> (`--type report`; local write is not delivery). Remote addressing, reply
+> routing, and configurable adapters are not available yet. Adapters
 > (`ace-hitl-hermes`) and transports (tmux, Herdr) are not additional state
 > owners.
 

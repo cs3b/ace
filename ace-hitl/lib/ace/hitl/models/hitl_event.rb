@@ -7,6 +7,8 @@ module Ace
         :id,
         :status,
         :kind,
+        :type,
+        :result,
         :title,
         :tags,
         :questions,
@@ -25,6 +27,14 @@ module Ace
 
         def answered?
           status.to_s == "answered" || metadata["answered"] == true
+        end
+
+        def report?
+          type.to_s == "report"
+        end
+
+        def question?
+          !report?
         end
       end
     end

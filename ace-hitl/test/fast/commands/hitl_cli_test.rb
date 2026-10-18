@@ -534,4 +534,186 @@ class HitlCliTest < AceHitlTestCase
       end
     end
   end
+
+  def test_create_report_event
+    with_hitl_dir do |root|
+      with_cli_root(root) do
+        result = run_cli([
+          "create", "Work done on auth",
+          "--type", "report", "--result", "success",
+          "--body", "Implemented JWT login",
+          "--body", "Tests green",
+          "--task", "8xg.t.sbz.1.0", "--assignment", "abc123", "--step", "010"
+        ])
+        assert_equal 0, result[:exit_code], result[:stderr]
+        assert_match(/HITL event created:/, result[:stdout])
+
+        id = result[:stdout].match(/HITL event created: ([0-9a-z]{6})/)[1]
+        content = File.read(Dir.glob(File.join(root, "**", "#{id}-*.hitl.s.md")).first)
+        assert_match(/^type: report/, content)
+        assert_match(/^result: success/, content)
+        assert_match(/^status: recorded/, content)
+        assert_match(/^task: 8xg\.t\.sbz\.1\.0/, content)
+        assert_match(/## Report/, content)
+        refute_match(/## Questions/, content)
+        refute_match(/## Answer/, content)
+
+        show = run_cli(["show", id])
+        assert_equal 0, show[:exit_code], show[:stderr]
+        assert_match(/Type: report/, show[:stdout])
+        assert_match(/Result: success/, show[:stdout])
+        refute_match(/Questions:/, show[:stdout])
+        refute_match(/Answer:/, show[:stdout])
+
+        manager = Ace::Hitl::Organisms::HitlManager.new(root_dir: root)
+        event = manager.list(in_folder: "all", type: "report").first
+        assert_equal "report", event.type
+        assert_equal "success", event.result
+        assert_equal "recorded", event.status
+        assert_equal "8xg.t.sbz.1.0", event.metadata["task"]
+        assert_equal "abc123", event.metadata["assignment"]
+        assert event.report?
+        assert event.question? == false
+        refute event.answered?
+      end
+    end
+  end
+
+  def test_create_question_writes_explicit_type
+    with_hitl_dir do |root|
+      with_cli_root(root) do
+        result = run_cli(["create", "Which auth strategy?", "--kind", "decision", "--question", "JWT?"])
+        assert_equal 0, result[:exit_code], result[:stderr]
+
+        id = result[:stdout].match(/HITL event created: ([0-9a-z]{6})/)[1]
+        content = File.read(Dir.glob(File.join(root, "**", "#{id}-*.hitl.s.md")).first)
+        assert_match(/^type: question/, content)
+      end
+    end
+  end
+
+  def test_report_is_never_a_blocked_question
+    with_hitl_dir do |root|
+      with_cli_root(root) do
+        result = run_cli(["create", "Work done", "--type", "report", "--result", "success"])
+        assert_equal 0, result[:exit_code], result[:stderr]
+        id = result[:stdout].match(/HITL event created: ([0-9a-z]{6})/)[1]
+
+        pending = run_cli(["list", "--status", "pending", "--in", "all"])
+        assert_equal 0, pending[:exit_code], pending[:stderr]
+        refute_match(/#{id}/, pending[:stdout])
+
+        wait = run_cli(["wait", id, "--timeout", "1"])
+        assert_equal 1, wait[:exit_code]
+        assert_match(/report; reports do not await an answer/, wait[:stderr])
+
+        answer = run_cli(["update", id, "--answer", "x"])
+        assert_equal 1, answer[:exit_code]
+        assert_match(/report; reports do not await an answer/, answer[:stderr])
+
+        resume = run_cli(["update", id, "--resume"])
+        assert_equal 1, resume[:exit_code]
+        assert_match(/report; reports do not await an answer or resume/, resume[:stderr])
+
+        show = run_cli(["show", id])
+        assert_equal 0, show[:exit_code], show[:stderr]
+        assert_match(/Status: recorded/, show[:stdout])
+
+        generic = run_cli(["update", id, "--add", "tags=processed"])
+        assert_equal 0, generic[:exit_code], generic[:stderr]
+
+        archived = run_cli(["update", id, "--move-to", "archive"])
+        assert_equal 0, archived[:exit_code], archived[:stderr]
+      end
+    end
+  end
+
+  def test_question_cycle_unchanged_and_silence_is_not_consent
+    with_hitl_dir do |root|
+      with_cli_root(root) do
+        result = run_cli(["create", "Which DB?", "--question", "Postgres or SQLite?"])
+        assert_equal 0, result[:exit_code], result[:stderr]
+        id = result[:stdout].match(/HITL event created: ([0-9a-z]{6})/)[1]
+
+        show = run_cli(["show", id])
+        assert_equal 0, show[:exit_code], show[:stderr]
+        assert_match(/Status: pending/, show[:stdout])
+        assert_match(/Answer: \(none\)/, show[:stdout])
+
+        wait = run_cli(["wait", id, "--timeout", "1"])
+        assert_equal 1, wait[:exit_code]
+        assert_match(/Timed out/, wait[:stderr])
+      end
+    end
+  end
+
+  def test_create_rejects_invalid_report_and_question_combinations
+    with_hitl_dir do |root|
+      with_cli_root(root) do
+        invalid_type = run_cli(["create", "T", "--type", "bogus"])
+        assert_equal 1, invalid_type[:exit_code]
+        assert_match(/Invalid type 'bogus'/, invalid_type[:stderr])
+
+        missing_result = run_cli(["create", "T", "--type", "report"])
+        assert_equal 1, missing_result[:exit_code]
+        assert_match(/requires --result/, missing_result[:stderr])
+
+        invalid_result = run_cli(["create", "T", "--type", "report", "--result", "bogus"])
+        assert_equal 1, invalid_result[:exit_code]
+        assert_match(/Invalid result 'bogus'/, invalid_result[:stderr])
+
+        question_on_report = run_cli(["create", "T", "--type", "report", "--result", "success", "--question", "Q?"])
+        assert_equal 1, question_on_report[:exit_code]
+        assert_match(/--question cannot be combined with --type report/, question_on_report[:stderr])
+
+        resume_on_report = run_cli(["create", "T", "--type", "report", "--result", "success", "--resume", "/x"])
+        assert_equal 1, resume_on_report[:exit_code]
+        assert_match(/--resume cannot be combined with --type report/, resume_on_report[:stderr])
+
+        result_on_question = run_cli(["create", "T", "--result", "success"])
+        assert_equal 1, result_on_question[:exit_code]
+        assert_match(/--result is only valid with --type report/, result_on_question[:stderr])
+
+        body_on_question = run_cli(["create", "T", "--body", "line"])
+        assert_equal 1, body_on_question[:exit_code]
+        assert_match(/--body is only valid with --type report/, body_on_question[:stderr])
+      end
+    end
+  end
+
+  def test_list_filters_by_type
+    with_hitl_dir do |root|
+      create_hitl_fixture(root, id: "qqq111", slug: "question-one", type: "question", status: "pending")
+      create_hitl_fixture(root, id: "rrr222", slug: "report-one", type: "report",
+        result: "error", task: "8xg.t.sbz.1.0", status: "recorded", body: ["step failed"])
+
+      with_cli_root(root) do
+        reports = run_cli(["list", "--type", "report", "--in", "all"])
+        assert_equal 0, reports[:exit_code], reports[:stderr]
+        assert_match(/rrr222/, reports[:stdout])
+        refute_match(/qqq111/, reports[:stdout])
+        assert_match(/▪\s+rrr222/, reports[:stdout])
+
+        questions = run_cli(["list", "--type", "question", "--in", "all"])
+        assert_equal 0, questions[:exit_code], questions[:stderr]
+        assert_match(/qqq111/, questions[:stdout])
+        refute_match(/rrr222/, questions[:stdout])
+
+        invalid = run_cli(["list", "--type", "bogus"])
+        assert_equal 1, invalid[:exit_code]
+        assert_match(/Invalid type 'bogus'/, invalid[:stderr])
+      end
+    end
+  end
+
+  def test_help_includes_report_example
+    with_hitl_dir do |root|
+      with_cli_root(root) do
+        result = run_cli(["--help"])
+        assert_equal 0, result[:exit_code], result[:stderr]
+        assert_match(/--type report --result success --task/, result[:stdout])
+        assert_match(/Create HITL event \(question or report\)/, result[:stdout])
+      end
+    end
+  end
 end

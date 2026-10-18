@@ -86,6 +86,7 @@ class AceHitlTestCase < AceTestCase
   end
 
   def create_hitl_fixture(root_dir, id:, slug:, status: "pending", kind: "clarification",
+    type: "question", result: nil, task: nil, body: [],
     tags: [], questions: [], answer: nil, special_folder: nil, extra_frontmatter: {})
     parent = special_folder ? File.join(root_dir, special_folder) : root_dir
     FileUtils.mkdir_p(parent)
@@ -97,7 +98,7 @@ class AceHitlTestCase < AceTestCase
     question_lines = questions.empty? ? "- Need clarification" : questions.map { |q| "- #{q}" }.join("\n")
     answer_text = answer.to_s
 
-    frontmatter_lines = {
+    frontmatter = {
       "id" => id,
       "title" => slug.tr("-", " ").capitalize,
       "kind" => kind,
@@ -106,22 +107,49 @@ class AceHitlTestCase < AceTestCase
       "questions" => "[#{questions.join(", ")}]",
       "created_at" => "2026-04-01 12:00:00",
       "answered" => !answer.nil? && !answer.empty?
-    }.merge(extra_frontmatter).map { |key, value| "#{key}: #{value}" }.join("\n")
+    }
+    if type == "report"
+      frontmatter["type"] = "report"
+      frontmatter["result"] = result
+      frontmatter["task"] = task
+      frontmatter.delete("questions")
+      frontmatter.delete("answered")
+    end
+    frontmatter_lines = frontmatter.merge(extra_frontmatter).map { |key, value| "#{key}: #{value}" }.join("\n")
+
+    body_text = if type == "report"
+      content_lines = body.map(&:strip).reject(&:empty?)
+      content_lines = ["- (no content)"] if content_lines.empty?
+
+      <<~CONTENT
+        # #{slug.tr("-", " ").capitalize}
+
+        ## Report
+
+        Result: #{result}
+
+        #{content_lines.map { |line| "- #{line}" }.join("\n")}
+      CONTENT
+    else
+      <<~CONTENT
+        # #{slug.tr("-", " ").capitalize}
+
+        ## Questions
+
+        #{question_lines}
+
+        ## Answer
+
+        #{answer_text}
+      CONTENT
+    end
 
     content = <<~CONTENT
       ---
       #{frontmatter_lines}
       ---
 
-      # #{slug.tr("-", " ").capitalize}
-
-      ## Questions
-
-      #{question_lines}
-
-      ## Answer
-
-      #{answer_text}
+      #{body_text}
     CONTENT
 
     spec_file = File.join(item_dir, "#{folder_name}.hitl.s.md")

@@ -9,10 +9,11 @@ module Ace
 
         STATUS_SYMBOLS = {
           "pending" => "○",
-          "answered" => "✓"
+          "answered" => "✓",
+          "recorded" => "▪"
         }.freeze
 
-        STATUS_ORDER = %w[pending answered].freeze
+        STATUS_ORDER = %w[pending answered recorded].freeze
 
         def self.format_list(events, total_count: nil, global_folder_stats: nil)
           body = if events.empty?

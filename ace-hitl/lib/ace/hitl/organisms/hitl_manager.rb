@@ -26,6 +26,8 @@ module Ace
           end
         end
 
+        class NotAnswerableError < StandardError; end
+
         attr_reader :root_dir, :last_list_total, :last_folder_counts
 
         def initialize(root_dir: nil, config: nil, scope_resolver: nil, resume_dispatcher: nil)
@@ -68,13 +70,14 @@ module Ace
           }
         end
 
-        def list(status: nil, kind: nil, in_folder: "next", tags: [], scope: nil)
+        def list(status: nil, kind: nil, type: nil, in_folder: "next", tags: [], scope: nil)
           effective_scope = @scope_resolver.effective_scope(scope)
           scan_results = scan_results_for_scope(effective_scope, in_folder: in_folder)
           events = load_events(scan_results)
 
           events = events.select { |event| event.status == status } if status
           events = events.select { |event| event.kind == kind } if kind
+          events = events.select { |event| event.type == type } if type
           events = filter_by_tags(events, tags) if tags.any?
 
           events
@@ -86,6 +89,11 @@ module Ace
 
           event = resolved[:event]
           hitl_root = resolved[:hitl_root] || @root_dir
+
+          if !answer.nil? && event.report?
+            raise NotAnswerableError,
+              "HITL event '#{event.id}' is a report; reports do not await an answer"
+          end
 
           has_field_updates = [set, add, remove].any? { |h| h && !h.empty? }
           if has_field_updates && !answer.nil?
@@ -137,6 +145,8 @@ module Ace
             return {status: :not_found} unless current
 
             event = current[:event]
+            return {status: :report, event: event} if event.report?
+
             if event.metadata["lab_request_id"]
               raise Lifecycle::StateError, "managed requests require authenticated scoped wait"
             end
@@ -179,6 +189,7 @@ module Ace
           return {status: :not_found} unless current
 
           event = current[:event]
+          return {status: :report, event: event} if event.report?
           return {status: :managed_request, event: event} if event.metadata["lab_request_id"]
 
           answer = event.answer.to_s

@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.0] - 2026-10-18
+
+### Added
+
+- Report events: the same `ace-hitl` file interface now records work-done/error notifications alongside questions. `ace-hitl create "..." --type report --result success|error [--body line]... [--task REF]` writes an event with status `recorded`, a `## Report` body, task/assignment/step references, and its own ID. Reports never await an answer: `wait`, `update --answer`, and `update --resume` on a report fail fast with an explicit error (exit 1); generic `--set/--add/--remove/--move-to` still work so an overseer can archive processed reports.
+- `--type question` is now written explicitly on new question events (loader defaults keep existing files without `type` valid questions); `--task` is accepted for both types; `list --type question|report` filters by type; list/show output gains `Type:`/`Result:` and the `recorded` status symbol.
+- Library guards: `HitlManager#update(answer:)` raises `NotAnswerableError` on reports before any file mutation; `wait_for_answer` and `dispatch_resume` return `{status: :report}` without sleeping.
+
+### Notes
+
+- Local write is not delivery: `recorded` means the report is persisted in `.ace-local/hitl/`, not that it reached the overseer. Remote addressing, reply routing, and configurable adapters land in 8xg.t.sbz.1.1–.1.3.
+
 ## [0.18.0] - 2026-10-18
 
 ### Removed
