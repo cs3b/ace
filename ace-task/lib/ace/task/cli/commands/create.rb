@@ -90,8 +90,10 @@ module Ace
             # The preflight and the write resolve the same creation time, so
             # the checked paths are exactly the generated paths create writes.
             creation_time = Time.now.utc
-            reject_ignored_creation_target!(manager, title: title, in_folder: in_folder,
-              child_of: child_of, time: creation_time) if options[:git_commit]
+            if options[:git_commit]
+              reject_ignored_creation_target!(manager, title: title, in_folder: in_folder,
+                child_of: child_of, time: creation_time)
+            end
             # Snapshot before any write so a rejected --git-commit can remove
             # exactly the artifacts this command created (including a placed
             # task, a new subtask, or an empty destination folder).
