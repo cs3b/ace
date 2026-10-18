@@ -36,10 +36,10 @@ Wejście: .ace-local/coworker/ i wskazany ace-assign. Wyjście: wykonany assignm
 
 ## Kryteria odbioru
 
-- [ ] Wykonawca startuje w przygotowanym worktree z właściwą rolą i dokładnie wskazanym assignmentem.
-- [ ] Dodane sprawdzenie zostaje częścią tego samego planu, jest wykonane i widoczne przez ace-assign.
-- [ ] Zakończony assignment pozostawia wynik i raport do overseera; błąd zawiera przyczynę i stan umożliwiający dalsze działanie.
-- [ ] Restart w połowie zlecenia zachowuje ukończone kroki i lokalne zmiany oraz wraca do pracy pozostałej do wykonania.
+- [x] Wykonawca startuje w przygotowanym worktree z właściwą rolą i dokładnie wskazanym assignmentem.
+- [x] Dodane sprawdzenie zostaje częścią tego samego planu, jest wykonane i widoczne przez ace-assign.
+- [x] Zakończony assignment pozostawia wynik i raport do overseera; błąd zawiera przyczynę i stan umożliwiający dalsze działanie.
+- [x] Restart w połowie zlecenia zachowuje ukończone kroki i lokalne zmiany oraz wraca do pracy pozostałej do wykonania.
 
 ## Weryfikacja i scenariusze błędów
 
