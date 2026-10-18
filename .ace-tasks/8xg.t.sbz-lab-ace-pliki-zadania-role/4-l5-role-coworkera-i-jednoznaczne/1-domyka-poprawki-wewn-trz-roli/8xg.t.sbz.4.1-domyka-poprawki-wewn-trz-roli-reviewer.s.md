@@ -1,15 +1,18 @@
 ---
 id: 8xg.t.sbz.4.1
-status: draft
+status: done
 priority: medium
 created_at: "2026-10-17 18:54:17"
 estimate: medium
-dependencies: ["8xg.t.sbz.2"]
-tags: ["lab", "lab-l5", "file-based"]
+dependencies: [8xg.t.sbz.2]
+tags: [lab, lab-l5, file-based]
 parent: 8xg.t.sbz.4
 needs_review: true
-bundle: {"presets": ["project"], "files": ["AGENTS.md", ".ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/contract.md", ".ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/8xg.t.sbz-lab-ace-pliki-zadania-role-i-komunikacja.s.md", "ace-review/handbook/workflow-instructions/review/pr.wf.md", "ace-review/docs/usage.md", "ace-assign/README.md", ".ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/4-l5-role-coworkera-i-jednoznaczne/8xg.t.sbz.4-l5-role-coworkera-i-jednoznaczne-reguly-ukonczenia.s.md", ".ace-tasks/_archive/8x/x/8xg.t.qn6-python-ruby-migration-file-based/8xg.t.qn6-python-ruby-migration-file-based-lab-zero.s.md", ".ace-tasks/_archive/8x/x/8xg.t.qn6-python-ruby-migration-file-based/4-ace-coworker-gem-worker-loop/8xg.t.qn6.4-ace-coworker-gem-worker-loop-that-takes.s.md", ".ace-tasks/_archive/8x/v/8wr.t.qkc-prove-the-complete-forge-neutral/8wr.t.qkc-prove-the-complete-forge-neutral-delivery-acceptance.s.md", ".ace-tasks/_archive/8x/v/8wr.t.qkc-prove-the-complete-forge-neutral/0-accept-forge-neutral-urls-in/8wr.t.qkc.0-accept-forge-neutral-urls-in-typed-review.s.md", ".ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/4-l5-role-coworkera-i-jednoznaczne/1-domyka-poprawki-wewn-trz-roli/ux/usage.md", ".ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/execution-order.md"], "commands": []}
-title: "Domykać poprawki wewnątrz roli reviewer"
+bundle:
+  presets: [project]
+  files: [AGENTS.md, .ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/contract.md, .ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/8xg.t.sbz-lab-ace-pliki-zadania-role-i-komunikacja.s.md, ace-review/handbook/workflow-instructions/review/pr.wf.md, ace-review/docs/usage.md, ace-assign/README.md, .ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/4-l5-role-coworkera-i-jednoznaczne/8xg.t.sbz.4-l5-role-coworkera-i-jednoznaczne-reguly-ukonczenia.s.md, .ace-tasks/_archive/8x/x/8xg.t.qn6-python-ruby-migration-file-based/8xg.t.qn6-python-ruby-migration-file-based-lab-zero.s.md, .ace-tasks/_archive/8x/x/8xg.t.qn6-python-ruby-migration-file-based/4-ace-coworker-gem-worker-loop/8xg.t.qn6.4-ace-coworker-gem-worker-loop-that-takes.s.md, .ace-tasks/_archive/8x/v/8wr.t.qkc-prove-the-complete-forge-neutral/8wr.t.qkc-prove-the-complete-forge-neutral-delivery-acceptance.s.md, .ace-tasks/_archive/8x/v/8wr.t.qkc-prove-the-complete-forge-neutral/0-accept-forge-neutral-urls-in/8wr.t.qkc.0-accept-forge-neutral-urls-in-typed-review.s.md, .ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/4-l5-role-coworkera-i-jednoznaczne/1-domyka-poprawki-wewn-trz-roli/ux/usage.md, .ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/execution-order.md]
+  commands: []
+title: Domykać poprawki wewnątrz roli reviewer
 ---
 
 # Domykać poprawki wewnątrz roli reviewer
@@ -28,9 +31,9 @@ Niezależny od workera reviewer wykonuje review, sam poprawia potwierdzone błę
 
 ## Kryteria odbioru
 
-- [ ] Wykryty błąd jest naprawiony i ponownie sprawdzony w ramach jednego zlecenia reviewer, bez przełączania każdej poprawki przez overseera.
-- [ ] Brak skutecznej naprawy lub potrzebna decyzja produktowa jest eskalowana; nie wolno oznaczyć nierozwiązanego High/Critical jako sukcesu.
-- [ ] Wynik jest zgodny z kontraktem programu i możliwy do użycia przez następną rolę lub narzędzie.
+- [x] Wykryty błąd jest naprawiony i ponownie sprawdzony w ramach jednego zlecenia reviewer, bez przełączania każdej poprawki przez overseera.
+- [x] Brak skutecznej naprawy lub potrzebna decyzja produktowa jest eskalowana; nie wolno oznaczyć nierozwiązanego High/Critical jako sukcesu.
+- [x] Wynik jest zgodny z kontraktem programu i możliwy do użycia przez następną rolę lub narzędzie.
 
 ## Plan weryfikacji
 
