@@ -7,6 +7,7 @@ module Ace
     module Molecules
       class HitlConfigLoaderTest < AceHitlTestCase
         def test_loads_shaped_project_config_from_cwd
+          previous_test_mode = Ace::Support::Config.test_mode
           Ace::Support::Config.test_mode = false
           Dir.mktmpdir("hitl-cfg") do |dir|
             FileUtils.mkdir_p(File.join(dir, ".ace", "hitl"))
@@ -26,10 +27,11 @@ module Ace
             assert_equal ".ace-local/hitl", config.dig("hitl", "recipients", "overseer", "folder")
           end
         ensure
-          Ace::Support::Config.test_mode = nil
+          Ace::Support::Config.test_mode = previous_test_mode
         end
 
         def test_loads_flat_project_config
+          previous_test_mode = Ace::Support::Config.test_mode
           Ace::Support::Config.test_mode = false
           Dir.mktmpdir("hitl-cfg") do |dir|
             FileUtils.mkdir_p(File.join(dir, ".ace", "hitl"))
@@ -43,7 +45,7 @@ module Ace
             assert_equal "decision", config.dig("hitl", "default_kind")
           end
         ensure
-          Ace::Support::Config.test_mode = nil
+          Ace::Support::Config.test_mode = previous_test_mode
         end
       end
     end

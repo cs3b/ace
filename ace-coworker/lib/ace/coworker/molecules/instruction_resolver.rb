@@ -49,11 +49,13 @@ module Ace
 
         def resolve_file(relative)
           candidate = File.expand_path(relative, @project_root)
-          unless File.file?(candidate)
-            raise Error, "instruction file '#{relative}' not found in this worktree"
-          end
+          # Containment first: an outside-root path must never depend on
+          # whether the outside file exists to pick its error message.
           unless candidate.start_with?("#{@project_root}/")
             raise Error, "instruction file '#{relative}' escapes the project root"
+          end
+          unless File.file?(candidate)
+            raise Error, "instruction file '#{relative}' not found in this worktree"
           end
 
           candidate

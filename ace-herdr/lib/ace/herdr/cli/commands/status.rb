@@ -92,7 +92,7 @@ module Ace
           def render_pane(pane)
             focus = pane[:focused] ? "*" : " "
             agent = pane[:agent_status] ? "agent:#{pane[:agent_status]}" : "plain"
-            cwd = pane[:cwd].to_s.sub(Dir.home, "~")
+            cwd = pane[:cwd].to_s.sub(/\A#{Regexp.escape(Dir.home)}/, "~")
             title = pane[:title].to_s.empty? ? "-" : pane[:title]
             "#{focus} #{agent}  #{title}  #{cwd}"
           end

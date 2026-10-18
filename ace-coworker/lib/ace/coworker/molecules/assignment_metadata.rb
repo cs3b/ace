@@ -16,7 +16,7 @@ module Ace
 
         def assignment_dir(assignment_id)
           id = assignment_id.to_s
-          unless id.match?(/\A[\w.-]+\z/)
+          unless id.match?(/\A[\w.-]+\z/) && !id.match?(/\A\.+\z/)
             raise Error, "invalid assignment id '#{id}': expected letters, digits, dot, dash, or underscore"
           end
 

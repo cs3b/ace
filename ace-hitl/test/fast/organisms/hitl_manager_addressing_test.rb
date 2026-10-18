@@ -106,6 +106,21 @@ module Ace
           end
         end
 
+        def test_report_with_to_does_not_require_machine
+          with_hitl_dir do |root|
+            config = {"hitl" => {
+              "root_dir" => ".ace-local/hitl",
+              "recipients" => {"overseer" => {"machine" => "lab01", "folder" => ".ace-local/hitl"}}
+            }}
+            event = manager(root, config: config).create("Work done",
+              to: "overseer", type: "report", result: "success", body: ["done"])
+
+            assert_equal "lab01", event.recipient["machine"]
+            assert_nil event.reply_to
+            assert_equal "recorded", event.status
+          end
+        end
+
         def test_two_worktrees_each_answer_their_own_event
           with_multi_worktree_roots do |main_root, task_root|
             main_hitl = File.join(main_root, ".ace-local", "hitl")

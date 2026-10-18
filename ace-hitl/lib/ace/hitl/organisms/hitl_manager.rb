@@ -43,15 +43,19 @@ module Ace
         def create(title, to: nil, **options)
           # Resolve the recipient address before any I/O: unknown names and
           # malformed addresses fail closed with nothing written. The reply
-          # address (sender machine + events folder) is validated here too;
-          # the creator stamps the real case ID once generated.
+          # address (sender machine + events folder) applies to questions
+          # only — a report carries the recipient but never awaits a reply,
+          # so hitl.machine is not required for report+--to.
           recipient = nil
           reply_to = nil
           effective_to = to || @address_resolver.default_recipient
+          event_type = options[:type] || "question"
           if effective_to
             recipient = @address_resolver.resolve(effective_to)
-            reply_to = @address_resolver.sender_address(folder: @configured_root_setting, id: "pending")
-              .reject { |key, _| key == "id" }
+            if event_type == "question"
+              reply_to = @address_resolver.sender_address(folder: @configured_root_setting, id: "pending")
+                .reject { |key, _| key == "id" }
+            end
           end
 
           ensure_root_dir
