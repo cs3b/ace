@@ -19,6 +19,7 @@ renamed to `ace-assign` at v0.6.0 and there is no compatibility with old
 ace-coworker start [--config PATH] [--format table|json]
 ace-coworker status [--config PATH] [--assignment ID] [--format table|json]
 ace-coworker report [--result success|error] [--message TEXT] [--no-send] [--dry-run]
+ace-coworker resume [--dry-run]                # Resume interrupted work in this worktree
 ```
 
 - `start` — validate the prepared config (role, instructions, start prompt,

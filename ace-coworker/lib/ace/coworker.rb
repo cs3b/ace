@@ -11,6 +11,7 @@ module Ace
     require_relative "coworker/models/brief"
     require_relative "coworker/models/assignment_snapshot"
     require_relative "coworker/models/outcome"
+    require_relative "coworker/models/resume_plan"
 
     autoload :CLI, "ace/coworker/cli"
 
@@ -19,6 +20,8 @@ module Ace
       autoload :BriefFormatter, "ace/coworker/atoms/brief_formatter"
       autoload :OutcomePlanner, "ace/coworker/atoms/outcome_planner"
       autoload :ReportRecordFormatter, "ace/coworker/atoms/report_record_formatter"
+      autoload :ResumePlanner, "ace/coworker/atoms/resume_planner"
+      autoload :ResumeBriefFormatter, "ace/coworker/atoms/resume_brief_formatter"
     end
 
     module Molecules
@@ -32,12 +35,15 @@ module Ace
       autoload :HitlReporter, "ace/coworker/molecules/hitl_reporter"
       autoload :TaskRecordWriter, "ace/coworker/molecules/task_record_writer"
       autoload :ReportStateStore, "ace/coworker/molecules/report_state_store"
+      autoload :StepReportReader, "ace/coworker/molecules/step_report_reader"
+      autoload :GitStateProbe, "ace/coworker/molecules/git_state_probe"
     end
 
     module Organisms
       autoload :StartOrchestrator, "ace/coworker/organisms/start_orchestrator"
       autoload :StatusOrchestrator, "ace/coworker/organisms/status_orchestrator"
       autoload :ReportOrchestrator, "ace/coworker/organisms/report_orchestrator"
+      autoload :ResumeOrchestrator, "ace/coworker/organisms/resume_orchestrator"
     end
 
     def self.config

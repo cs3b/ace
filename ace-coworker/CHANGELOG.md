@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-18
+
+### Added
+
+- `ace-coworker resume` (8xg.t.sbz.2.3 / L3.4): after an interruption,
+  reads the existing assignment, task, and the REAL state of the same
+  worktree, and renders the resume path. Dispositions: `continue`
+  (preserved done steps, remaining work, in-flight step with its recorded
+  cause/report and verify-before-repeat guidance, preserved local changes —
+  never reset; effect caution for merge/publish/deploy/release/push steps:
+  check actual state with existing tools or report a blocker, never blind
+  replay, never a new task/worktree), `report` (assignment complete but
+  delivery missing — delegates to the existing report flow, resending the
+  SAME HITL event ID; retrying delivery never retries the assignment), and
+  `complete` (informational). `--dry-run` derives the plan with zero writes;
+  resume itself writes nothing on the continue path and never drives
+  assignment steps. No journal/checkpoint store — the worktree git state,
+  ace-assign step files, and report state ARE the checkpoint (ADR-034).
+
 ## [0.2.0] - 2026-10-18
 
 ### Added

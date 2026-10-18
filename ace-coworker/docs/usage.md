@@ -116,6 +116,36 @@ without delivering; `--dry-run` derives the outcome with zero writes;
 subprocess. The `overseer` config field is the configured `ace-hitl`
 recipient name (resolved via `--to`).
 
+### `ace-coworker resume`
+
+```
+ace-coworker resume [--config PATH] [--assignment ID] [--dry-run] [--format table|json] [-q] [-d]
+```
+
+After an interruption: reads the existing assignment, task, and the REAL
+state of the same worktree, and renders the resume path. Same task,
+assignment, and worktree — never a new one; local changes are never reset;
+resume itself never drives assignment steps (the executor does, via
+ace-assign).
+
+Dispositions:
+
+- `continue` — the assignment is incomplete: preserved done steps,
+  remaining work, the in-flight step (active, else failed) with its recorded
+  cause and report plus verify-before-repeat guidance, and the preserved
+  local-change list. Steps named like external effects
+  (merge/publish/deploy/release/push) add an effect-caution block: check the
+  actual state with existing tools (e.g. `ace-git status`, PR evidence) or
+  report a blocker — never replay blindly, never a new task/worktree.
+- `report` — the assignment is complete but the report delivery is missing:
+  delegates to the report flow, resending the SAME HITL event ID (retrying
+  delivery never retries the assignment).
+- `complete` — complete and delivered: informational, nothing to resume.
+
+`--dry-run` derives the plan with zero writes. There is no journal or
+checkpoint store: the worktree git state, the ace-assign step files, and
+the report helper state ARE the checkpoint (ADR-034).
+
 ## Exit codes
 
 | Command | 0 | 1 |
@@ -123,6 +153,7 @@ recipient name (resolved via `--to`).
 | `start` | config valid, task+assignment verified, brief rendered | missing/invalid/mismatched input |
 | `status` | query rendered any state (including not-ready) | — |
 | `report` | success outcome recorded (and delivered, or `--no-send`/`--dry-run`) | error outcome; delivery/create failure (outcome still recorded); refused input |
+| `resume` | continue/complete rendered; report redelivered | delegated report failure keeps its exit 1 (plan still rendered) |
 
 ## Boundaries
 
