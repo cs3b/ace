@@ -29,7 +29,7 @@ module Ace
           created_at = parse_created_at(frontmatter["created_at"])
 
           known_keys = %w[
-            id status title kind type result task tags questions assignment step step_name
+            id status title kind type result task delivery tags questions assignment step step_name
             recipient_machine recipient_folder recipient_panel recipient_id
             reply_to_machine reply_to_folder reply_to_id
             resume_instructions created_at answered answered_at
@@ -62,6 +62,7 @@ module Ace
             created_at: created_at,
             metadata: extra_metadata.merge(
               "task" => frontmatter["task"],
+              "delivery" => frontmatter["delivery"],
               "assignment" => frontmatter["assignment"],
               "step" => frontmatter["step"],
               "step_name" => frontmatter["step_name"],

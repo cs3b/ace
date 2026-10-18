@@ -61,6 +61,14 @@ module Ace
                 puts "Questions: #{event.questions.join(" | ")}"
                 puts "Answer: #{event.answer || "(none)"}"
               end
+              delivery = event.metadata["delivery"]
+              if delivery.is_a?(Hash) && !delivery.empty?
+                delivery.sort.each do |route, record|
+                  detail = record["detail"].to_s.empty? ? "" : " - #{record["detail"]}"
+                  attempted = record["attempted_at"] ? " (#{record["attempted_at"]})" : ""
+                  puts "Delivery: #{route} (#{record["adapter"]}): #{record["status"]}#{detail}#{attempted}"
+                end
+              end
               puts resolved_location if resolved_location
               puts "Path: #{event.file_path}"
             end

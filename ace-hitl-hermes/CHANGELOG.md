@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.1] - 2026-10-18
+
+### Changed
+
+- Docs only: retention and redelivery of undelivered HITL messages now
+  live in `ace-hitl` 0.22.0 (per-route records on the event file; `send`
+  retries undelivered/unknown routes). The hermes adapter is unchanged:
+  an identical resend is already idempotent, and a resend after the
+  message was consumed is a legitimate duplicate the recipient dedups by
+  the case ID (at-least-once).
+
 ## [0.8.0] - 2026-10-18
 
 ### Added

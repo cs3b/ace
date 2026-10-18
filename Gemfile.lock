@@ -216,8 +216,8 @@ PATH
 PATH
   remote: ace-hitl-hermes
   specs:
-    ace-hitl-hermes (0.8.0)
-      ace-hitl (~> 0.21.0)
+    ace-hitl-hermes (0.8.1)
+      ace-hitl (~> 0.22.0)
       ace-hitl-contract (~> 0.3.0)
       ace-support-cli (~> 0.6)
       faraday (~> 2.14)
@@ -225,7 +225,7 @@ PATH
 PATH
   remote: ace-hitl
   specs:
-    ace-hitl (0.21.0)
+    ace-hitl (0.22.0)
       ace-b36ts (~> 0.14)
       ace-hitl-contract (~> 0.3.0)
       ace-runtime (~> 0.3)

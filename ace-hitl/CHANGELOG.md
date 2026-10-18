@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.22.0] - 2026-10-18
+
+### Added
+
+- Retention and redelivery of undelivered messages (8xg.t.sbz.1.3 / L2.4):
+  `send` now persists each route's last outcome, failure reason, and attempt
+  timestamp on the event's own file (`delivery.<route>` frontmatter — the
+  single state owner per ADR-034; no journal or queue). Default `send`
+  retries only undelivered or unknown-result routes and skips confirmed
+  delivered ones; `--force` redelivers every route and `--dry-run` reports
+  the retry/skip decisions without delivering. A `in_flight` marker written
+  before each attempt means a crashed send leaves an unknown result that the
+  next `send` retries — at-least-once semantics: a retry may duplicate, and
+  every rendering carries the same `(case <ID>)` + task binding so
+  recipients dedup by ID (exactly-once is not promised). Redelivery retries
+  the delivery, never the assignment. `list --delivery undelivered|delivered`
+  discovers retained events; `show` prints a per-route `Delivery:` block
+  with the retained failure reason. Redelivering an all-delivered event is a
+  no-op success (`nothing to retry (use --force to redeliver)`).
+
 ## [0.21.0] - 2026-10-18
 
 ### Added

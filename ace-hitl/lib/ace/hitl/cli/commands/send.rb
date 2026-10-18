@@ -19,6 +19,8 @@ module Ace
           argument :ref, required: true, desc: "HITL reference (full ID or shortcut)"
 
           option :scope, type: :string, desc: "Scope (current, all)"
+          option :force, type: :boolean, desc: "Redeliver every configured route (same case ID; recipients dedup)"
+          option :"dry-run", type: :boolean, desc: "Show retry/skip decisions without delivering"
 
           option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
           option :verbose, type: :boolean, aliases: %w[-v], desc: "Show verbose output"
@@ -28,7 +30,9 @@ module Ace
             scope = validate_scope(options[:scope])
 
             sender = Organisms::HitlSender.new
-            report = sender.send(ref, scope: scope)
+            report = sender.send(ref, scope: scope,
+              force: options[:force] == true,
+              dry_run: options[:"dry-run"] == true)
 
             unless options[:quiet]
               puts "HITL event #{report.event_id} sent through #{report.results.size} route(s):"
@@ -36,7 +40,16 @@ module Ace
                 detail = result.detail ? " - #{result.detail}" : ""
                 puts "  #{result.route} (#{result.adapter}): #{result.status}#{detail}"
               end
+              report.skipped.each do |result|
+                detail = result.detail ? " - #{result.detail}" : ""
+                puts "  #{result.route} (#{result.adapter}): skipped#{detail}"
+              end
+              if report.results.empty? && report.skipped.any?
+                puts "already delivered on all routes; nothing to retry (use --force to redeliver)"
+              end
             end
+
+            return if options[:"dry-run"] == true
 
             unless report.all_delivered?
               raise Ace::Support::Cli::Error.new(

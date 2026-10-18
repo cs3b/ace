@@ -114,9 +114,16 @@ silently reroutes to another recipient.
 ace-hitl send <hitl-id>
 ```
 
+Per-route outcomes are retained on the event file: a later `send` retries
+only undelivered or unknown-result routes (a crashed send leaves an unknown
+result that the next `send` retries — at-least-once, recipients dedup by
+the case ID); `--force` redelivers every route; `--dry-run` previews the
+decisions. Discover retained events with `ace-hitl list --delivery
+undelivered` and inspect retained failure reasons with `ace-hitl show`.
+Redelivery retries the delivery of the same case — never the assignment.
+
 An unavailable or failed route is an escalation reason (retry or fix the
 route configuration); the local event file remains the durable record.
-Undelivered-message retention and automatic redelivery are planned (L2.4).
 
 If the waiter is no longer active, operator fallback can dispatch resume:
 

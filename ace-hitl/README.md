@@ -27,7 +27,7 @@ listener, daemon, or database.
 | `ace-hitl show` | Render event details, path, or raw markdown |
 | `ace-hitl update` | Update frontmatter, write an answer, or move the event |
 | `ace-hitl wait` | Poll one question event until it is answered (reports are rejected) |
-| `ace-hitl send` | Deliver an event through the configured adapter routes (terminal/hermes/...; per-route results) |
+| `ace-hitl send` | Deliver an event through the configured adapter routes; per-route results retained on the event, redelivery retries undelivered/unknown routes |
 
 `ace-hitl` is a blocker-resolution tool, not a global dashboard: in a linked
 worktree it defaults to local (`--scope current`); in the main checkout it uses
@@ -59,11 +59,12 @@ ace-hitl wait abc123 --poll-every 600 --timeout 14400
 > `--operator-only` only. Second-commander proposals are removed as well.
 >
 > **L2 status:** report/question distinction, recipient addressing
-> (`--to`, `reply_to`), and adapter-route delivery (`send` with the built-in
-> terminal adapter and `ace-hitl-hermes` as the hermes adapter) are
-> available. Retention/redelivery of undelivered messages is the remaining
-> L2 leaf. `ace-hitl-hermes` remains an adapter package; tmux/Herdr remain
-> transports.
+> (`--to`, `reply_to`), adapter-route delivery (`send` with the built-in
+> terminal adapter and `ace-hitl-hermes` as the hermes adapter), and
+> retention/redelivery of undelivered messages (per-route records on the
+> event; `send` retries undelivered/unknown routes, `--force` redelivers
+> with the same case ID) are available. `ace-hitl-hermes` remains an
+> adapter package; tmux/Herdr remain transports.
 
 ## Testing
 

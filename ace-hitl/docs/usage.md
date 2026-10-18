@@ -173,15 +173,37 @@ Rules:
   `[HITL report <result>]` prefix, one `Q:` line per question, `Reply-To:`
   on questions only, task/assignment/step context.
 - `delivered` means accepted by the route's transport. An unavailable
-  adapter never reroutes to another recipient. Delivery results are
-  reported, not persisted — retaining undelivered messages with failure
-  reasons and redelivering them is the next L2 leaf (8xg.t.sbz.1.3).
+  adapter never reroutes to another recipient.
 - Adding an adapter requires no ace-hitl change: a gem ships
   `lib/ace/hitl/adapters/<name>.rb` calling `Ace::Hitl::Adapters.register`
   (duck contract: `factory.call(route)` → adapter with
   `deliver(event:, text:, recipient:, reply_to:)` returning a
   `RouteResult`; status `:delivered`/`:failed`/`:unavailable`). Nervus is
   the out-of-scope future example.
+
+### Retention and redelivery
+
+Per-route outcomes are persisted on the event's own file
+(`delivery.<route>` frontmatter) — undelivered messages and their failure
+reasons stay in the local HITL files; there is no journal or queue.
+
+```bash
+ace-hitl send 8xhkep            # retries undelivered/unknown routes only
+ace-hitl send 8xhkep --force    # redeliver every route (same case ID)
+ace-hitl send 8xhkep --dry-run  # show retry/skip decisions, no delivery
+ace-hitl list --delivery undelivered
+ace-hitl show 8xhkep            # Delivery: <route>: <status> - <reason>
+```
+
+- Confirmed `delivered` routes are skipped by default; a redelivery of a
+  fully delivered event is a no-op success (`use --force to redeliver`).
+- A crashed `send` leaves an `in_flight` marker = unknown result; the next
+  `send` retries it. This is at-least-once: a retry after an unknown result
+  may duplicate, and every rendering carries the same `(case <ID>)` and task
+  binding so the recipient dedups by ID. Exactly-once is not promised.
+- Redelivery retries the *delivery of the same case* — same event ID, same
+  content, same task/assignment binding — never the assignment or its next
+  step.
 
 ## List
 
@@ -193,6 +215,8 @@ ace-hitl list --status pending
 ace-hitl list --kind decision
 ace-hitl list --type question
 ace-hitl list --type report
+ace-hitl list --delivery undelivered
+ace-hitl list --delivery delivered
 ace-hitl list --tags auth,security
 ace-hitl list --in archive
 ```
@@ -266,12 +290,13 @@ The immutable second-commander proposal flow is removed, and so is the unused
 old-lab Root Overseer reverse-address channel (`overseer-*` commands); generic
 transport has no replacement role-specific queue.
 
-> **Planned (L2):** the report/question distinction is available locally
-> (`--type report`; local write is not delivery — deliver with
-> `ace-hitl send` through the configured adapter routes). Recipient
-> addressing and Reply binding are recorded locally (`--to`, `reply_to`,
-> fail-closed resolution). Retention and redelivery of undelivered
-> messages are not available yet. Adapters (`ace-hitl-hermes`) and
+> **L2 status:** the report/question distinction, recipient addressing
+> (`--to`, `reply_to`), adapter-route delivery (`send` with the built-in
+> terminal adapter and `ace-hitl-hermes` as the hermes adapter), and
+> retention/redelivery of undelivered messages (`send` retry/`--force`,
+> `list --delivery`, per-route `Delivery:` records) are available. Adapters
+> (`ace-hitl-hermes`) and transports (tmux, Herdr) are not additional state
+> owners.
 > transports (tmux, Herdr) are not additional state owners.
 
 ## Testing

@@ -101,11 +101,14 @@ channel folder is `unavailable` (never a silent reroute).
 
 ## Planned waves
 
-> **L2 status:** the `hermes` adapter for `ace-hitl send` is available.
-> Retention and redelivery of undelivered messages across adapters are
-> planned with the remaining L2 leaf. The old authenticated service
-> boundary, OTP handling, and multi-user protected store are not
-> requirements of the local file-based flow.
+> **L2 status:** the `hermes` adapter for `ace-hitl send` is available, and
+> retention/redelivery of undelivered messages is delivered in `ace-hitl`
+> 0.22.0 (per-route records on the event file; `send` retries
+> undelivered/unknown routes). The adapter is unchanged: an identical
+> resend is idempotent; a resend after consumption is a duplicate the
+> recipient dedups by case ID. The old authenticated service boundary, OTP
+> handling, and multi-user protected store are not requirements of the
+> local file-based flow.
 
 ## Development
 

@@ -89,7 +89,7 @@ module Ace
           }
         end
 
-        def list(status: nil, kind: nil, type: nil, in_folder: "next", tags: [], scope: nil)
+        def list(status: nil, kind: nil, type: nil, delivery: nil, in_folder: "next", tags: [], scope: nil)
           effective_scope = @scope_resolver.effective_scope(scope)
           scan_results = scan_results_for_scope(effective_scope, in_folder: in_folder)
           events = load_events(scan_results)
@@ -97,6 +97,7 @@ module Ace
           events = events.select { |event| event.status == status } if status
           events = events.select { |event| event.kind == kind } if kind
           events = events.select { |event| event.type == type } if type
+          events = filter_by_delivery(events, delivery) if delivery
           events = filter_by_tags(events, tags) if tags.any?
 
           events
@@ -372,6 +373,17 @@ module Ace
 
         def filter_by_tags(events, tags)
           events.select { |event| tags.any? { |tag| event.tags.include?(tag) } }
+        end
+
+        def filter_by_delivery(events, delivery)
+          case delivery.to_s
+          when "undelivered"
+            events.select { |event| Molecules::HitlDeliveryState.undelivered?(event.metadata["delivery"]) }
+          when "delivered"
+            events.select { |event| Molecules::HitlDeliveryState.fully_delivered?(event.metadata["delivery"]) }
+          else
+            raise Error, "invalid delivery filter '#{delivery}' (undelivered, delivered)"
+          end
         end
 
         def apply_answer_update(file_path, answer)
