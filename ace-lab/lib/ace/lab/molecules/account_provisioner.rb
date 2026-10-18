@@ -160,15 +160,22 @@ module Ace
              "message" => "command could not be executed (#{argv.first}, #{result['err']})"}
           else
             first_line = result["err"].to_s.lines.map(&:strip).reject(&:empty?).first
-            message = "command failed (#{argv.first}, exit #{result['status']})"
+            # Round 5 (C2): a signal-killed child has no exitstatus —
+            # the runner renders "signal <termsig>" instead of nil.
+            message = "command failed (#{argv.first}, #{exit_detail(result['status'])})"
             message += ": #{first_line}" if first_line
             {"ok" => false, "out" => result["out"], "message" => message}
           end
         end
 
+        def exit_detail(status)
+          status.is_a?(Integer) ? "exit #{status}" : status.to_s
+        end
+
         def run_argv(argv)
           out, err, status = Open3.capture3(*argv)
-          {"status" => status.success? ? "ok" : status.exitstatus, "out" => out, "err" => err}
+          {"status" => status.success? ? "ok" : (status.exitstatus || "signal #{status.termsig}"),
+           "out" => out, "err" => err}
         rescue Errno::ENOENT
           {"status" => "enoent", "out" => "", "err" => ""}
         rescue SystemCallError => e

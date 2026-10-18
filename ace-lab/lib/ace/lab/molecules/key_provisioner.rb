@@ -101,6 +101,12 @@ module Ace
         # .ssh symlink/non-directory refusal runs unconditionally — the
         # wet run refuses on both the create and the existing path, so a
         # planted .ssh symlink must never predict exists/would_*.
+        #
+        # Invariant: EVERY wet-path refusal must have a predict
+        # counterpart here — the wet create/existing/predict tripling of
+        # guard logic means a refusal added to only one branch silently
+        # drifts dry-run fidelity (this happened with the pre-keygen
+        # .pub guard in round 5).
         def predict(base, path, stat)
           refusal = unsafe_ssh_dir_refusal(base, path)
           return refusal if refusal
@@ -118,6 +124,14 @@ module Ace
                 return refusal if refusal
               end
             end
+
+            # Parity with the wet generate path (round 5, S1): a
+            # pre-planted <key>.pub symlink makes the wet run refuse
+            # before invoking ssh-keygen — the prediction must refuse
+            # too, never would_create.
+            public_path = "#{path}.pub"
+            pub_stat = lstat(public_path)
+            return non_regular_public_refusal(base, public_path) if pub_stat && !pub_stat.file?
 
             return base.merge("status" => "would_create", "fingerprint" => nil, "message" => nil)
           end
@@ -141,6 +155,21 @@ module Ace
             if ssh_stat
               refusal = ssh_dir_takeover_refusal(base, File.dirname(path), ssh_stat, entry)
               return refusal if refusal
+            end
+          else
+            # Round 5 (C4): entry is nil only when the account phase
+            # would create the account, so the pair's ownership cannot
+            # be checked against a uid that does not exist yet. A pair
+            # owned by neither the installer nor the to-be-created
+            # account is conservatively predicted as the wet run's
+            # takeover refusal — pessimistic only in the pathological
+            # case where useradd reuses the foreign uid, never unsound.
+            foreign = [stat, pub_stat].compact.find { |candidate| candidate.uid != Process.euid }
+            if foreign
+              return base.merge("status" => "failed", "fingerprint" => nil,
+                "message" => "key path '#{path}' is owned by uid #{foreign.uid}, which is " \
+                  "neither the installer nor the to-be-created account '#{base["account"]}'; " \
+                  "the wet run would refuse takeover — resolve ownership manually")
             end
           end
 
@@ -250,8 +279,26 @@ module Ace
           refusal = ensure_ssh_dir(base, ssh_dir, entry)
           return refusal if refusal
 
+          # Round 5 (S1): a pre-planted <key>.pub symlink must be
+          # refused BEFORE ssh-keygen runs — keygen creates the .pub by
+          # path and would write through the symlink (root-owned file
+          # creation at an account-chosen location). Mirrored in
+          # predict's missing-private branch.
+          public_path = "#{path}.pub"
+          pub_stat = lstat(public_path)
+          return non_regular_public_refusal(base, public_path) if pub_stat && !pub_stat.file?
+
+          # Round 5 (S2): only the mode is enforced before keygen; the
+          # .ssh ownership transfer is deliberately deferred until the
+          # pair is verified below. While ssh-keygen writes by path, a
+          # freshly created .ssh stays root-owned 0700 and unwritable
+          # by the account, so no symlink can be planted inside it
+          # during the keygen window. Remaining residual (documented
+          # in usage.md): on a home the account already owns, the
+          # account can rename the root-owned .ssh mid-flight and
+          # substitute its own (caught by the post-keygen lstat only
+          # after the write).
           FileUtils.chmod(SSH_DIR_MODE, ssh_dir)
-          FileUtils.chown(entry.uid, entry.gid, ssh_dir)
 
           comment = "#{account['username']}@#{machine}"
           result = runner.call(
@@ -265,7 +312,6 @@ module Ace
           # Post-keygen lstat: a keygen writing through a symlink
           # planted after the guards above must be detected and refused
           # before any ownership transfer touches the path.
-          public_path = "#{path}.pub"
           post = lstat(path)
           post_pub = lstat(public_path)
           unless post && post.file? && post_pub && post_pub.file?
@@ -276,6 +322,12 @@ module Ace
 
           refusal = enforce_modes_and_ownership(base, path, public_path, entry)
           return refusal if refusal
+
+          # Deferred .ssh ownership transfer (S2): only now, with the
+          # pair verified as regular files and the key files already
+          # carrying account ownership, does the directory pass to the
+          # account.
+          FileUtils.chown(entry.uid, entry.gid, ssh_dir)
 
           with_fingerprint(base.merge("status" => "created"), public_path,
             "key pair '#{path}' was created but its fingerprint could not be read")
@@ -473,9 +525,16 @@ module Ace
             return "#{command} could not be executed (#{result['err']}); rerun ace-lab prepare"
           end
 
-          message = "#{command} failed (exit #{result['status']})"
+          message = "#{command} failed (#{exit_detail(result['status'])})"
           line = result["err"].to_s.lines.map(&:strip).reject(&:empty?).first
           line ? "#{message}: #{line}" : message
+        end
+
+        # Round 5 (C2): a signal-killed child has no exitstatus (nil) —
+        # render the terminating signal instead of a malformed
+        # "exit " interpolation.
+        def exit_detail(status)
+          status.is_a?(Integer) ? "exit #{status}" : status.to_s
         end
 
         # Walk up from the key path looking for a .git entry: key material
@@ -493,7 +552,8 @@ module Ace
 
         def run_argv(argv)
           out, err, status = Open3.capture3(*argv)
-          {"status" => status.success? ? "ok" : status.exitstatus, "out" => out, "err" => err}
+          {"status" => status.success? ? "ok" : (status.exitstatus || "signal #{status.termsig}"),
+           "out" => out, "err" => err}
         rescue Errno::ENOENT
           {"status" => "enoent", "out" => "", "err" => ""}
         rescue SystemCallError => e

@@ -141,6 +141,35 @@ module Organisms
       end
     end
 
+    # Round-5: the unresolved-uid remedy is threaded into directories
+    # and roles too (mirroring keys) — the account phase succeeded, so
+    # the remedy is a convergence rerun, never "fix the account phase".
+    def test_created_but_unresolved_account_fails_directories_and_roles_with_rerun_message
+      with_manifest(
+        MANIFEST.gsub("create: false", "create: true"),
+        lookup: ->(_name) { nil },
+        privileged: -> { true },
+        runner: ->(_argv) { {"status" => "ok", "out" => "", "err" => ""} }
+      ) do |organism, dir|
+        report = organism.call
+
+        assert_equal "created", report["accounts"].first["status"]
+        assert_nil report["accounts"].first["uid"]
+        directory = report["directories"].first
+        assert_equal "failed", directory["status"]
+        assert_match(/owner account 'ace-worker' was created but its uid is not yet resolvable; rerun ace-lab prepare/,
+          directory["message"])
+        refute_match(/fix the account phase first/, directory["message"])
+        role = report["roles"].first
+        assert_equal "failed", role["status"]
+        assert_match(/account 'ace-worker' was created but its uid is not yet resolvable; rerun ace-lab prepare/,
+          role["message"])
+        refute_match(/fix the account phase first/, role["message"])
+        # nothing was created for an unresolved owner
+        refute File.exist?(File.join(dir, "labs"))
+      end
+    end
+
     # The fresh-machine flow dry-run exists to predict: the account does
     # not exist in passwd yet (lookup nil, exactly what production's
     # Etc.getpwnam returns), the account phase would create it, and the

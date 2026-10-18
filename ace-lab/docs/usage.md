@@ -180,13 +180,19 @@ symlink is refused in dry-run exactly as the wet run refuses it, and a
 missing directory whose declared owner account *failed* the account
 phase is predicted as the wet run's owner-unavailable failure (the
 orchestrator threads its computed account set into the directory
-stage). Two prediction limits: an *existing* directory whose declared
+stage). Three prediction limits: an *existing* directory whose declared
 owner account does not exist yet cannot have its ownership checked,
 and is reported as a failed item with a rerun hint; likewise, a role's
 instruction *file* readability cannot be checked against an account
 that does not exist yet (its uid is unknown), so such bindings are
 predicted `verified` from the file's existence and type alone — the
-wet run performs the full readability check.
+wet run performs the full readability check; and an *existing key
+pair* under an account the phase would create cannot have its
+ownership checked either (the future uid is unknown) — a pair owned
+by neither the installer nor the to-be-created account is
+conservatively predicted as the wet run's takeover refusal, which is
+pessimistic only in the pathological case where account creation
+reuses exactly that uid.
 
 Behavior and guarantees:
 
@@ -225,7 +231,9 @@ Behavior and guarantees:
   worktree are refused outright. Planted symlinks on the
   account-controlled paths — `.ssh` (checked with `lstat` before any
   `mkdir`/chmod/chown, on the *existing-key* path and in dry-run too)
-  and `<key>.pub` (checked with `lstat`, written with `O_NOFOLLOW`) —
+  and `<key>.pub` (checked with `lstat` — including *before*
+  `ssh-keygen` on the create path, since keygen writes the `.pub` by
+  path — and written with `O_NOFOLLOW`) —
   are refused, so a privileged run cannot be turned into an arbitrary
   chmod/chown/write by the account.
 - **Symlink-race hardening.** Leaf directories (`.ssh` and declared
@@ -240,11 +248,26 @@ Behavior and guarantees:
   ownership transfer), and every chmod/chown on the private key and
   the `.pub` — regenerated or not — goes through an
   `O_NOFOLLOW`-opened file handle, so a mid-flight symlink swap
-  surfaces as `ELOOP` and is refused. Accepted residual: a microscopic
+  surfaces as `ELOOP` and is refused. On the create path the `.ssh`
+  ownership transfer is *deferred* until after the post-keygen
+  verification: while `ssh-keygen` writes by path, a freshly created
+  `.ssh` is still installer-owned 0700 and unwritable by the account,
+  so nothing can be planted inside it during the keygen window.
+  Accepted residuals: a microscopic
   window remains between that final re-`lstat` and the path-based
   `chmod`/`chown` on a *directory* leaf (Ruby stdlib offers no fd-based
   directory chmod); closing it would require exotic APIs for no
-  practical gain over the guard chain above.
+  practical gain over the guard chain above — and `ssh-keygen`
+  necessarily writes by path, so the keygen step itself retains the
+  *account-owned-home rename race*: an account that already owns the
+  parent home directory can rename the installer-owned `.ssh`
+  mid-flight and substitute its own (likewise, an `.ssh` that
+  pre-exists account-owned stays writable by the account throughout).
+  The post-keygen re-`lstat` then detects the substitution after the
+  write and refuses before any ownership transfer; whatever was
+  written lands root-owned 0600 — a file-creation primitive at an
+  attacker-chosen location, not an escalation, and inside the same
+  accepted-threat envelope as the directory residual above.
 - **Exit codes.** A wet run with failed items prints the report, then
   exits non-zero enumerating each `<section>/<item>: <message>`;
   `--dry-run` exits 0 whenever a report renders (conflicts appear as

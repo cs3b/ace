@@ -2,6 +2,7 @@
 
 require_relative "../test_helper"
 require "delegate"
+require "rbconfig"
 
 module Molecules
   class KeyProvisionerTest < Minitest::Test
@@ -702,6 +703,130 @@ module Molecules
         # nothing converged while the foreign stat was visible
         assert_equal 0o755, File.stat(ssh_dir).mode & 0o7777
         assert_equal Process.uid, File.stat(ssh_dir).uid
+      end
+    end
+    # Round-5 S1: a pre-planted dangling <key>.pub symlink on the
+    # GENERATE path must be refused before ssh-keygen is invoked —
+    # keygen creates the .pub by path and would write through the
+    # symlink (root-owned file creation at an account-chosen location).
+    def test_preplanted_dangling_pub_symlink_on_generate_is_refused_with_zero_mutation
+      Dir.mktmpdir do |dir|
+        victim = File.join(dir, "victim")
+        home = File.join(dir, "home")
+        FileUtils.mkdir_p(File.join(home, ".ssh"))
+        path = File.join(home, ".ssh", "id_ed25519")
+        File.symlink(victim, "#{path}.pub")
+        runner_calls = []
+        runner = ->(argv) { runner_calls << argv; {"status" => "ok", "out" => "", "err" => ""} }
+
+        result = provisioner(runner: runner).call(key: key(path), account: account, machine: "lab01")
+
+        assert_equal "failed", result["status"]
+        assert_match(/public key .* exists but is not a regular file; refusing/, result["message"])
+        # zero mutation: ssh-keygen never ran, the victim was not
+        # created through the symlink, the private key does not exist
+        assert_empty runner_calls
+        refute File.exist?(victim)
+        refute File.exist?(path)
+        assert File.symlink?("#{path}.pub")
+      end
+    end
+
+    # Round-5 S1 predict parity: dry-run must predict the wet refusal,
+    # not would_create.
+    def test_dry_run_predicts_preplanted_pub_symlink_refusal_on_missing_private
+      Dir.mktmpdir do |dir|
+        victim = File.join(dir, "victim")
+        home = File.join(dir, "home")
+        FileUtils.mkdir_p(File.join(home, ".ssh"))
+        path = File.join(home, ".ssh", "id_ed25519")
+        File.symlink(victim, "#{path}.pub")
+
+        result = provisioner(dry_run: true).call(key: key(path), account: account, machine: "lab01")
+
+        assert_equal "failed", result["status"]
+        assert_match(/not a regular file; refusing/, result["message"])
+        assert_nil result["fingerprint"]
+        refute File.exist?(victim)
+        refute File.exist?(path)
+      end
+    end
+
+    # Round-5 S2: the .ssh ownership transfer is deferred until after
+    # the post-keygen verification — during keygen the directory is
+    # still installer-owned (unwritable by the account).
+    def test_ssh_dir_chown_is_deferred_until_after_keygen_verification
+      Dir.mktmpdir do |dir|
+        path = File.join(dir, ".ssh", "id_ed25519")
+        order = []
+        runner = lambda do |argv|
+          if argv.first == "ssh-keygen" && argv.include?("-q")
+            order << :keygen
+            # fake keygen: materialize the pair so the post-keygen
+            # verification passes
+            File.write(path, "fake private\n")
+            File.write("#{path}.pub", "fake public\n")
+          end
+          {"status" => "ok", "out" => "", "err" => ""}
+        end
+
+        FileUtils.stub :chown, ->(_uid, _gid, p) { order << [:chown, p] } do
+          result = provisioner(runner: runner).call(key: key(path), account: account, machine: "lab01")
+
+          assert_equal "created", result["status"]
+        end
+
+        keygen_at = order.index(:keygen)
+        chown_at = order.index { |entry| entry.is_a?(Array) && entry.last == File.dirname(path) }
+        refute_nil keygen_at
+        refute_nil chown_at
+        assert_operator chown_at, :>, keygen_at
+      end
+    end
+
+    # Round-5 C2: a signal-killed ssh-keygen (nil exitstatus) renders
+    # "signal <termsig>", never a malformed "exit ".
+    def test_signal_killed_keygen_renders_signal_not_malformed_exit
+      Dir.mktmpdir do |dir|
+        path = File.join(dir, "id_ed25519")
+        runner = ->(_argv) { {"status" => "signal 9", "out" => "", "err" => ""} }
+
+        result = provisioner(runner: runner).call(key: key(path), account: account, machine: "lab01")
+
+        assert_equal "failed", result["status"]
+        assert_match(/ssh-keygen failed \(signal 9\)/, result["message"])
+        refute_match(/exit \)/, result["message"])
+      end
+    end
+
+    # Round-5 C2: the default runner maps a real signal death of the
+    # child to "signal <termsig>" (exitstatus is nil there).
+    def test_run_argv_renders_signal_for_signal_killed_child
+      result = provisioner.send(:run_argv,
+        [RbConfig.ruby, "-e", "Process.kill('KILL', Process.pid)"])
+
+      assert_equal "signal 9", result["status"]
+    end
+
+    # Round-5 C4: an existing pair owned by a foreign uid under an
+    # account the phase would create — the wet run (uid resolvable
+    # after creation) would refuse takeover, so dry-run predicts the
+    # refusal conservatively instead of `exists`.
+    def test_dry_run_foreign_owned_pair_with_would_create_account_predicts_takeover_refusal
+      Dir.mktmpdir do |dir|
+        path = File.join(dir, "id_ed25519")
+        provisioner.call(key: key(path), account: account, machine: "lab01")
+
+        with_foreign_owned_private_key(path) do |foreign_uid|
+          result = provisioner(lookup: ->(_name) { nil }, dry_run: true)
+            .call(key: key(path), account: account, machine: "lab01")
+
+          assert_equal "failed", result["status"]
+          assert_match(/owned by uid #{foreign_uid}/, result["message"])
+          assert_match(/refuse takeover/, result["message"])
+          assert_match(/resolve ownership manually/, result["message"])
+          refute_match(/fix the account phase/, result["message"])
+        end
       end
     end
   end

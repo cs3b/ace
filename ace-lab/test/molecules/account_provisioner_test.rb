@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "../test_helper"
+require "rbconfig"
 
 module Molecules
   class AccountProvisionerTest < Minitest::Test
@@ -220,6 +221,29 @@ module Molecules
       assert_equal "failed", result["status"]
       assert_match(/command could not be executed \(useradd, Errno::EAGAIN\)/, result["message"])
       refute_includes result["message"], "exit failed"
+    end
+
+    # Round-5 C2: a signal-killed useradd (nil exitstatus) renders
+    # "signal <termsig>", never a malformed "exit ".
+    def test_signal_killed_useradd_renders_signal_not_malformed_exit
+      runner = fake_runner("useradd" => {"status" => "signal 9", "out" => "", "err" => ""})
+
+      result = provisioner(runner: runner, platform: "linux").call(account: account("create" => true))
+
+      assert_equal "failed", result["status"]
+      assert_match(/command failed \(useradd, signal 9\)/, result["message"])
+      refute_match(/exit \)/, result["message"])
+    end
+
+    # Round-5 C2: the default runner maps a real signal death of the
+    # child to "signal <termsig>" (exitstatus is nil there).
+    def test_run_argv_renders_signal_for_signal_killed_child
+      bare = Ace::Lab::Molecules::AccountProvisioner.new(platform: "linux")
+
+      result = bare.send(:run_argv,
+        [RbConfig.ruby, "-e", "Process.kill('KILL', Process.pid)"])
+
+      assert_equal "signal 9", result["status"]
     end
   end
 end

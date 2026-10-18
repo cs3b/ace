@@ -8,8 +8,10 @@ module Molecules
       FakeEntry.new(name: "ace-worker", uid: Process.uid, gid: Process.gid, dir: Dir.home)
     end
 
-    def verifier(lookup: ->(_name) { self_entry }, dry_run: false)
-      Ace::Lab::Molecules::RoleVerifier.new(account_lookup: lookup, dry_run: dry_run)
+    def verifier(lookup: ->(_name) { self_entry }, group_source: nil, dry_run: false)
+      Ace::Lab::Molecules::RoleVerifier.new(
+        account_lookup: lookup, group_source: group_source, dry_run: dry_run
+      )
     end
 
     def role(instructions)
@@ -159,6 +161,48 @@ module Molecules
 
         assert_equal "failed", result["status"]
         assert_match(/not readable by account 'ace-other'/, result["message"])
+      end
+    end
+
+    # Round-5 C3: the group permission class covers supplementary
+    # groups too — a file group-readable by a group the account holds
+    # beyond its primary gid genuinely is readable by the runtime.
+    # Fake group source stands in for the Etc.group scan (injectable
+    # seam).
+    def test_supplementary_group_membership_verifies_group_readable_file
+      Dir.mktmpdir do |dir|
+        path = File.join(dir, "worker.md")
+        File.write(path, "instructions")
+        File.chmod(0o040, path)
+        other = FakeEntry.new(name: "ace-other", uid: Process.uid + 1, gid: Process.gid + 1, dir: "/x")
+
+        result = verifier(lookup: ->(_name) { other }, group_source: ->(_name) { [Process.gid] })
+          .call(role: role(path))
+
+        assert_equal "verified", result["status"]
+        assert_nil result["message"]
+      ensure
+        File.chmod(0o600, path) if File.exist?(path)
+      end
+    end
+
+    # Round-5 C3 companion: a group-readable file whose gid the
+    # account does NOT hold (primary or supplementary) still fails —
+    # the seam does not weaken the group-class check.
+    def test_group_readable_file_outside_all_account_groups_still_fails
+      Dir.mktmpdir do |dir|
+        path = File.join(dir, "worker.md")
+        File.write(path, "instructions")
+        File.chmod(0o040, path)
+        other = FakeEntry.new(name: "ace-other", uid: Process.uid + 1, gid: Process.gid + 1, dir: "/x")
+
+        result = verifier(lookup: ->(_name) { other }, group_source: ->(_name) { [] })
+          .call(role: role(path))
+
+        assert_equal "failed", result["status"]
+        assert_match(/not readable by account 'ace-other'/, result["message"])
+      ensure
+        File.chmod(0o600, path) if File.exist?(path)
       end
     end
   end

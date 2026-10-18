@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "../errors"
+require "etc"
 
 module Ace
   module Lab
@@ -15,10 +16,16 @@ module Ace
       class RoleVerifier
         PROTOCOL_PREFIXES = %w[wfi:// prompt:// tmpl://].freeze
 
-        attr_reader :account_lookup, :dry_run
+        attr_reader :account_lookup, :group_source, :dry_run
 
-        def initialize(account_lookup: nil, dry_run: false)
+        def initialize(account_lookup: nil, group_source: nil, dry_run: false)
           @account_lookup = account_lookup || method(:lookup_passwd)
+          # Injectable group-membership seam: a callable returning the
+          # gids the named account holds beyond its primary gid
+          # (Etc.group scan in production). Supplementary groups are
+          # ordinary static permission bits — distinct from the ACLs
+          # that are out of scope.
+          @group_source = group_source || method(:supplementary_gids)
           @dry_run = dry_run
         end
 
@@ -77,12 +84,23 @@ module Ace
         # file owned by the account is governed by the owner bit alone —
         # group/other readability never applies. Short-circuit per
         # class so an owner-readable-bit-clear file can never verify
-        # through a gid match.
+        # through a gid match. The group class matches ANY group the
+        # account is a member of — primary gid or supplementary
+        # (round 5): the runtime's group credentials include them, so a
+        # supplementary-group-readable file genuinely is readable.
         def readable_by_account?(stat, entry)
           return (stat.mode & 0o400).nonzero? if stat.uid == entry.uid
-          return (stat.mode & 0o040).nonzero? if stat.gid == entry.gid
+          if stat.gid == entry.gid || group_source.call(entry.name).include?(stat.gid)
+            return (stat.mode & 0o040).nonzero?
+          end
 
           (stat.mode & 0o004).nonzero?
+        end
+
+        def supplementary_gids(username)
+          gids = []
+          Etc.group { |group| gids << group.gid if group.mem.include?(username) }
+          gids
         end
 
         def lookup_passwd(username)

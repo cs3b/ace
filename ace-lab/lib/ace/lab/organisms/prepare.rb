@@ -43,10 +43,11 @@ module Ace
           accounts = prepare_accounts(manifest["accounts"], effective_dry_run)
           available = available_accounts(accounts)
           unresolved = unresolved_accounts(accounts)
-          directories = prepare_directories(manifest["directories"], effective_dry_run, available)
+          directories = prepare_directories(manifest["directories"], effective_dry_run, available,
+            unresolved)
           keys = prepare_keys(manifest["keys"], manifest["machine"], manifest["accounts"], available,
             unresolved, effective_dry_run)
-          roles = prepare_roles(manifest["roles"], available, effective_dry_run)
+          roles = prepare_roles(manifest["roles"], available, unresolved, effective_dry_run)
 
           {
             "ok" => [accounts, directories, keys, roles].flatten.none? { |item| item["status"] == "failed" },
@@ -70,11 +71,24 @@ module Ace
           entries.map { |account| provisioner.call(account: account) }
         end
 
-        def prepare_directories(entries, dry_run, available)
+        def prepare_directories(entries, dry_run, available, unresolved)
           provisioner = Molecules::DirectoryProvisioner.new(
             account_lookup: @account_lookup, dry_run: dry_run, available_accounts: available
           )
-          entries.map { |directory| provisioner.call(directory: directory) }
+          entries.map do |directory|
+            if unresolved.include?(directory["owner"])
+              # linux uid-lag edge, mirroring prepare_keys (round 5):
+              # the account phase created the owner but its uid is not
+              # yet resolvable — the remedy is a convergence rerun,
+              # not "fix the account phase" (that phase did not fail).
+              {"path" => directory["path"], "owner" => directory["owner"],
+               "mode" => directory["mode"], "status" => "failed",
+               "message" => "owner account '#{directory["owner"]}' was created but its uid is " \
+                 "not yet resolvable; rerun ace-lab prepare"}
+            else
+              provisioner.call(directory: directory)
+            end
+          end
         end
 
         def prepare_keys(entries, machine, manifest_accounts, available, unresolved, dry_run)
@@ -104,10 +118,17 @@ module Ace
           end
         end
 
-        def prepare_roles(entries, available, dry_run)
+        def prepare_roles(entries, available, unresolved, dry_run)
           provisioner = Molecules::RoleVerifier.new(account_lookup: @account_lookup, dry_run: dry_run)
           entries.map do |role|
-            if available.include?(role["account"])
+            if unresolved.include?(role["account"])
+              # linux uid-lag edge, mirroring prepare_keys (round 5):
+              # same rerun remedy, not "fix the account phase".
+              {"id" => role["id"], "account" => role["account"], "instructions" => role["instructions"],
+               "status" => "failed",
+               "message" => "account '#{role["account"]}' was created but its uid is not yet " \
+                 "resolvable; rerun ace-lab prepare"}
+            elsif available.include?(role["account"])
               provisioner.call(role: role)
             else
               {"id" => role["id"], "account" => role["account"], "instructions" => role["instructions"],

@@ -205,6 +205,57 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   instead of the contradictory "command failed (useradd, exit
   failed)" — in both `AccountProvisioner` and `KeyProvisioner`.
 
+### Fixed (review round 5)
+
+- Security (S1): the key *generate* path lacked a pre-keygen guard on
+  `<key>.pub` — all guards before `ssh-keygen` covered `.ssh` and the
+  private path only, so a pre-planted dangling `.pub` symlink in an
+  owner-matching `.ssh` passed every check and keygen created the
+  `.pub` *by path through the symlink* (root-owned file creation at an
+  account-chosen location). The generate path now `lstat`s the `.pub`
+  before invoking `ssh-keygen` and refuses non-regular entries
+  (mirroring `regenerate_public`), and `predict`'s missing-private
+  branch mirrors the refusal so dry-run predicts it instead of
+  `would_create`. A pinned comment now states the invariant: every
+  wet-path refusal must have a predict counterpart.
+- Security (S2): the `.ssh` ownership transfer on the generate path is
+  deferred until *after* the post-keygen verification — previously
+  `.ssh` was chowned to the account before keygen ran, letting the
+  account plant a symlink inside its own `.ssh` during the keygen
+  window with the post-keygen lstat catching it only after the write.
+  While keygen writes by path, a freshly created `.ssh` now stays
+  installer-owned 0700 (unwritable by the account). `usage.md`
+  documents the remaining residual explicitly: the account-owned-home
+  rename race (and pre-existing account-owned `.ssh` directories),
+  where a substitution is caught by the post-keygen re-`lstat` after
+  the write — whatever lands is root-owned 0600, a file-creation
+  primitive, not an escalation. A staged-keygen-in-temp-dir +
+  `File.rename` variant was considered and rejected: it does not fit
+  the guard chain more cleanly than the deferred transfer and adds a
+  second write path to verify.
+- The unresolved-uid remedy (linux post-`useradd` passwd lag) is now
+  threaded into the directory and role stages, mirroring keys: items
+  under an account that was created but whose uid is not yet
+  resolvable fail with "was created but its uid is not yet resolvable;
+  rerun ace-lab prepare" instead of the factually wrong "fix the
+  account phase first" (that phase did not fail).
+- A signal-killed provisioning subprocess no longer renders a
+  malformed "command failed (`useradd`, exit )" — the exit status
+  falls back to "signal `<termsig>`" in both provisioners' `run_argv`
+  (exitstatus is `nil` when the child died by signal).
+- `RoleVerifier#readable_by_account?` covers supplementary groups: the
+  group permission class now matches any group the account holds
+  (injectable group-membership seam over an `Etc.group` scan), not
+  only the primary gid — a group-readable instructions file held
+  through a supplementary group no longer false-fails verification.
+- Dry-run fidelity: an existing key pair under an account the account
+  phase *would create* is no longer predicted plain `exists` where the
+  wet run can refuse takeover — a pair owned by neither the installer
+  nor the to-be-created account is conservatively predicted as the
+  takeover refusal (pessimistic only in the pathological uid-reuse
+  case), and `usage.md` documents this third prediction limit
+  alongside the other two.
+
 ## [0.11.0] - 2026-10-18
 
 ### Fixed (review PR #383, round 3)
