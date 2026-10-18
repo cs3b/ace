@@ -1,6 +1,6 @@
 ---
 id: 8xg.t.sbz.6.0
-status: in-progress
+status: done
 priority: medium
 created_at: "2026-10-17 18:54:22"
 estimate: medium
@@ -31,9 +31,9 @@ Dostarczyć ace-herdr status pokazujący spaces/tabs/panes oraz ace-lab status c
 
 ## Kryteria odbioru
 
-- [ ] Bez starego procesu właściciela laba widać konfigurację i lokalny stan; Herdr pokazuje rzeczywisty układ, a worktree zachowują skojarzenia z taskami.
-- [ ] Nieobecny runtime lub niepełna konfiguracja są oznaczone, a nie przedstawione jako pusty i gotowy lab. Nie dublować funkcji k9y.
-- [ ] Wynik jest zgodny z kontraktem programu i możliwy do użycia przez następną rolę lub narzędzie.
+- [x] Bez starego procesu właściciela laba widać konfigurację i lokalny stan; Herdr pokazuje rzeczywisty układ, a worktree zachowują skojarzenia z taskami.
+- [x] Nieobecny runtime lub niepełna konfiguracja są oznaczone, a nie przedstawione jako pusty i gotowy lab. Nie dublować funkcji k9y.
+- [x] Wynik jest zgodny z kontraktem programu i możliwy do użycia przez następną rolę lub narzędzie.
 
 ## Plan weryfikacji
 
