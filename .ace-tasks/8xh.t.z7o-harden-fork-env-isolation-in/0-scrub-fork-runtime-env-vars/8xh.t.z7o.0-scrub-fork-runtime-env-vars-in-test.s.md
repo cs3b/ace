@@ -1,6 +1,6 @@
 ---
 id: 8xh.t.z7o.0
-status: pending
+status: done
 priority: medium
 created_at: "2026-10-18 23:28:35"
 estimate: TBD
@@ -43,3 +43,15 @@ Test-infra only — no CLI/API surface changes.
 ## References
 
 - Closed PR #304 diff (`ace-assign/test/test_helper.rb` hunk).
+
+## Outcome Record (2026-10-19)
+
+**Verified: does not reproduce on 0.72.0 through the sanctioned test path. No code change shipped.**
+
+Evidence gathered in the task worktree:
+
+- The full fork-runtime export set on 0.72.0 is `ACE_ASSIGN_DEFAULT_TARGET`, `ACE_ASSIGN_CURRENT_ASSIGNMENT_ID`, `ACE_ASSIGN_CURRENT_FORK_ROOT`, `ACE_RUNTIME`, `ACE_ASSIGN_LAUNCH_MODE`, `ACE_ASSIGN_FORK_WINDOW`, `ACE_ASSIGN_CALLBACK_PANE` (`ForkSessionLauncher#runtime_subprocess_env`).
+- Running the `ace-assign` fast suite with all seven variables seeded in the shell passes identically (633 tests, 2275 assertions, 0 failures) with and without a candidate helper scrub.
+- Root cause: `ace-test`'s deterministic runner already applies a hermetic environment policy (`Ace::TestRunner::Atoms::EnvironmentSanitizer` + `Models::EnvironmentPolicy`) that drops all ambient `ACE_*`/`LAB_*` keys, and the in-process runner swaps the entire process environment to the sanitized fixture environment before any test executes — including for subprocesses tests spawn.
+
+Per repository principles (simplest implementation, no redundant layers), a duplicate scrub inside `ace-assign/test/test_helper.rb` was rejected. The guarantee is documented for agents instead in the verify-test-suite workflow (see 8xh.t.z7o.1).

@@ -12,8 +12,8 @@ doc-type: workflow
 title: Drive Assignment Workflow
 purpose: workflow instruction for driving ace-assign assignment execution
 ace-docs:
-  last-updated: '2026-04-23'
-  last-checked: '2026-04-23'
+  last-updated: '2026-10-19'
+  last-checked: '2026-10-19'
 ---
 
 # Drive Assignment Workflow
@@ -757,6 +757,8 @@ For a blocked step:
 
 After executing the step (or failing it with concrete evidence), write a brief report summarizing what was accomplished. The report is the local record: state what was actually run and link or paste the actual test/review evidence for the exact head.
 
+**Re-read state before every finish.** In forked assignment subtrees, queued child steps can auto-advance between status checks, and a report submitted against a stale view can land on the wrong step number. Immediately before every `ace-assign finish --message` (and every `ace-assign fail`), re-run `ace-assign status --assignment "$ASSIGNMENT_TARGET"` and confirm the step you are reporting on is still the active step. If the active step moved, re-target or re-plan the report instead of submitting it against the old step.
+
 ```bash
 # Write report content to a temp file
 cat > /tmp/step-report.md << 'EOF'
@@ -770,6 +772,9 @@ Completed the setup step successfully:
 
 All setup prerequisites are now satisfied.
 EOF
+
+# Re-check active state immediately before submitting the report
+ace-assign status --assignment "$ASSIGNMENT_TARGET"
 
 # Submit report to advance the queue
 ace-assign finish --message /tmp/step-report.md --assignment "$ASSIGNMENT_TARGET"
