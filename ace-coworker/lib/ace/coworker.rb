@@ -12,6 +12,7 @@ module Ace
     require_relative "coworker/models/assignment_snapshot"
     require_relative "coworker/models/outcome"
     require_relative "coworker/models/resume_plan"
+    require_relative "coworker/models/preparation"
 
     autoload :CLI, "ace/coworker/cli"
 
@@ -22,6 +23,8 @@ module Ace
       autoload :ReportRecordFormatter, "ace/coworker/atoms/report_record_formatter"
       autoload :ResumePlanner, "ace/coworker/atoms/resume_planner"
       autoload :ResumeBriefFormatter, "ace/coworker/atoms/resume_brief_formatter"
+      autoload :PrepareDecision, "ace/coworker/atoms/prepare_decision"
+      autoload :ActiveExecutorRule, "ace/coworker/atoms/active_executor_rule"
     end
 
     module Molecules
