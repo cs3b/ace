@@ -52,7 +52,8 @@ module Ace
 
         # @return [Commission]
         # @raise [Error] on unknown role, identity mismatch, invalid
-        #   assembly, or a refused overwrite
+        #   assembly, a refused overwrite, a config path escaping the
+        #   project root, or a directory config target
         def call(role:, task:, assignment:, overseer:, start_prompt: nil, force: false, dry_run: false)
           preset = @preset_loader.fetch(role)
           prompt = start_prompt.to_s.strip.empty? ? render_prompt(preset, role, task, assignment, overseer) : start_prompt
@@ -100,12 +101,23 @@ module Ace
         end
 
         def resolve_target
-          return File.expand_path(@config_path, @project_root) if @config_path
+          target = @config_path ? File.expand_path(@config_path, @project_root) : @config_loader.config_path
+          unless target.start_with?("#{@project_root}/")
+            raise Error, "config path '#{relativize(target)}' escapes the project root"
+          end
 
-          @config_loader.config_path
+          target
         end
 
         def write_config(target, config, force:)
+          if File.directory?(target)
+            raise Error, "config path '#{relativize(target)}' is a directory; --config must name a file"
+          end
+
+          # The exist? -> mv sequence below has a TOCTOU window on the
+          # overwrite refusal: commission is a single-planner local write
+          # primitive, so concurrent writers on the same config are out of
+          # scope by design; this check is a guard, not a hard guarantee.
           if File.exist?(target) && !force
             raise Error, "refusing to overwrite '#{relativize(target)}'; use --force"
           end

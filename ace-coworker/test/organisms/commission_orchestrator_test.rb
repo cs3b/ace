@@ -143,6 +143,37 @@ module Ace
           config = Molecules::ConfigLoader.new(project_root: @dir).load(path: ".ace-local/coworker/worker.yml")
           assert_equal "worker", config.role
         end
+
+        def test_config_path_escaping_project_root_is_refused
+          outside = File.expand_path(File.join(@dir, "..", "elsewhere-#{File.basename(@dir)}.yml"))
+          error = assert_raises(Error) do
+            orchestrator(config_path: "../elsewhere-#{File.basename(@dir)}.yml")
+              .call(role: "worker", task: "8xh.t.ccc", assignment: "asg01", overseer: "o@lab")
+          end
+          assert_equal "config path '#{outside}' escapes the project root", error.message
+          refute File.exist?(outside)
+        end
+
+        def test_absolute_config_path_outside_project_root_is_refused
+          outside = File.join(Dir.tmpdir, "coworker-escape-#{Time.now.to_i}-#{$$}.yml")
+          error = assert_raises(Error) do
+            orchestrator(config_path: outside)
+              .call(role: "worker", task: "8xh.t.ccc", assignment: "asg01", overseer: "o@lab")
+          end
+          assert_equal "config path '#{outside}' escapes the project root", error.message
+          refute File.exist?(outside)
+        end
+
+        def test_directory_config_target_is_refused_even_with_force
+          dir_target = File.join(@dir, ".ace-local", "coworker", "nested")
+          FileUtils.mkdir_p(dir_target)
+          error = assert_raises(Error) do
+            orchestrator(config_path: ".ace-local/coworker/nested")
+              .call(role: "worker", task: "8xh.t.ccc", assignment: "asg01", overseer: "o@lab", force: true)
+          end
+          assert_equal "config path '.ace-local/coworker/nested' is a directory; --config must name a file", error.message
+          assert_empty Dir.glob(File.join(dir_target, "*"))
+        end
       end
     end
   end
