@@ -36,7 +36,7 @@ module Ace
         end
 
         # Destination paths a reparent will create, without mutating anything.
-        # Returns the destination directory followed by every generated spec
+        # Returns the destination directories followed by every generated spec
         # file: the task's own renamed spec plus each descendant's spec, whose
         # basename follows the descendant's new ID. Used by pre-flight checks
         # such as the --git-commit ignored-path guard, which must test the
@@ -45,7 +45,7 @@ module Ace
         # @param task [Models::Task] Task to reparent
         # @param target [String] "none", "self", or a parent ref
         # @param resolve_ref [Proc] Resolves a parent ref to a Task
-        # @return [Array<String>] Destination directory and spec file paths
+        # @return [Array<String>] Destination directories and spec file paths
         def destination_paths(task, target:, resolve_ref:)
           case target.downcase
           when "none"
@@ -290,6 +290,7 @@ module Ace
           [
             task.path,
             File.join(task.path, "#{File.basename(task.path)}.s.md"),
+            paths[:dir],
             File.join(paths[:dir], paths[:spec_basename])
           ]
         end
