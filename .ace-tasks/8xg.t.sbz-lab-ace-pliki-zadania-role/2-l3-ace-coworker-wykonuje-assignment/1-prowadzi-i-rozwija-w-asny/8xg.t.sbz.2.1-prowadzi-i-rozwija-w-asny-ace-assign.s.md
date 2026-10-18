@@ -31,9 +31,9 @@ Coworker prowadzi istniejący ace-assign do końca. Po uruchomieniu może dodawa
 
 ## Kryteria odbioru
 
-- [ ] Dodane sprawdzenie zostaje częścią tego samego planu, jest wykonane i widoczne przez ace-assign.
-- [ ] Dodanie kroku nie tworzy drugiej kolejki i nie omija ograniczeń roli ani zależności nadzorowanych przez overseera.
-- [ ] Wynik jest zgodny z kontraktem programu i możliwy do użycia przez następną rolę lub narzędzie.
+- [x] Dodane sprawdzenie zostaje częścią tego samego planu, jest wykonane i widoczne przez ace-assign.
+- [x] Dodanie kroku nie tworzy drugiej kolejki i nie omija ograniczeń roli ani zależności nadzorowanych przez overseera.
+- [x] Wynik jest zgodny z kontraktem programu i możliwy do użycia przez następną rolę lub narzędzie.
 
 ## Plan weryfikacji
 

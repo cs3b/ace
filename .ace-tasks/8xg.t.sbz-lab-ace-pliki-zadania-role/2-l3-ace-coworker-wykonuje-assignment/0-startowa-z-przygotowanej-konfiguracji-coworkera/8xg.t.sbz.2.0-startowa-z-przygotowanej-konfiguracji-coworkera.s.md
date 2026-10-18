@@ -1,6 +1,6 @@
 ---
 id: 8xg.t.sbz.2.0
-status: pending
+status: in-progress
 priority: medium
 created_at: "2026-10-17 18:54:12"
 estimate: medium
@@ -31,9 +31,9 @@ Start coworkera czyta .ace-local/coworker/: rolę, źródło instrukcji, prompt 
 
 ## Kryteria odbioru
 
-- [ ] Wykonawca startuje w przygotowanym worktree z właściwą rolą i dokładnie wskazanym assignmentem.
-- [ ] Brak instrukcji roli, taska albo assignmentu daje konkretny błąd; coworker nie zgaduje innego zlecenia.
-- [ ] Wynik jest zgodny z kontraktem programu i możliwy do użycia przez następną rolę lub narzędzie.
+- [x] Wykonawca startuje w przygotowanym worktree z właściwą rolą i dokładnie wskazanym assignmentem.
+- [x] Brak instrukcji roli, taska albo assignmentu daje konkretny błąd; coworker nie zgaduje innego zlecenia.
+- [x] Wynik jest zgodny z kontraktem programu i możliwy do użycia przez następną rolę lub narzędzie.
 
 ## Plan weryfikacji
 
