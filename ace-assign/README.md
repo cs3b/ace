@@ -70,9 +70,10 @@ lifecycle, [ace-bundle](../ace-bundle) for context loading, and
 
 ## Planned waves
 
-> **Planned (L3):** `ace-coworker` consumes an assignment from
-> `.ace-local/coworker/`, records results, and reports through HITL -- not
-> available yet.
+> **L3 status:** `ace-coworker` consumes an assignment from
+> `.ace-local/coworker/`, drives it through this gem's CLI, records results
+> in the task folder, and reports through `ace-hitl`. Resume after
+> interruption is the remaining L3 leaf.
 >
 > **Planned (L5.5):** role rules, review rounds, and forge delivery workflow --
 > not available yet.

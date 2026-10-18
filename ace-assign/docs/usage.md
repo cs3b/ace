@@ -207,9 +207,10 @@ plans. Each plan keeps its own history.
 
 ## Planned waves
 
-> **Planned (L3):** `ace-coworker` starts from `.ace-local/coworker/`, drives
-> the assignment, records results, and reports through HITL -- not available
-> yet.
+> **L3 status:** `ace-coworker` starts from `.ace-local/coworker/`, drives
+> the assignment through this gem's CLI, records results in the task folder,
+> and reports through `ace-hitl`. Resume after interruption is the remaining
+> L3 leaf.
 >
 > **Planned (L5.5):** role rules, independent review rounds, and forge
 > delivery workflow -- not available yet.
