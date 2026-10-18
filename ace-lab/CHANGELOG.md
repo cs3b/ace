@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- `ace-lab status` (task 8xg.t.sbz.6.0): read-only observability of lab configuration and local file state (default table, `--format json`, `-q`). Distinguishes `configured` (0/0/0 topology is a valid empty set), `missing` (defaults only, exit 0), and `invalid` (path-bearing error) — an incomplete lab is never presented as empty-and-ready. Echoes runtime configuration files/env without runtime detection or an `ace-runtime` dependency. Scans ADR-034 state-owner locations with per-location error isolation (`_overseer`/`coworker` presence-only); a source error prints the full report first, then fails non-zero. No authorization gate, no writes, no services started; the enriched worktree view stays `ace-git-worktree list`.
+
 ## [0.10.0] - 2026-10-17
 
 ### Removed
