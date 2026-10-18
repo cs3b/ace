@@ -79,7 +79,7 @@ module Ace
               "message" => "account '#{username}' is not available on this machine; fix the account phase first")
           end
 
-          return existing(base, path, entry) if stat
+          return existing(base, path, stat, entry) if stat
 
           generate(base, key, account, machine, path, entry)
         end
@@ -87,14 +87,16 @@ module Ace
         # Prediction contract: dry-run must say what the wet run would do.
         # A missing key pair (behind a safe .ssh) is would_create; an
         # existing private key with a missing .pub is would_repair_public
-        # (the wet run regenerates it); mode or ownership drift on an
-        # existing pair is would_fix_mode (the wet run enforces 0600/0644
-        # and account ownership).
+        # (the wet run regenerates it); mode drift on an owner-matching
+        # pair is would_fix_mode (the wet run enforces 0600/0644). The
+        # .ssh symlink/non-directory refusal runs unconditionally — the
+        # wet run refuses on both the create and the existing path, so a
+        # planted .ssh symlink must never predict exists/would_*.
         def predict(base, path, stat)
-          unless stat
-            refusal = unsafe_ssh_dir_refusal(base, path)
-            return refusal if refusal
+          refusal = unsafe_ssh_dir_refusal(base, path)
+          return refusal if refusal
 
+          unless stat
             return base.merge("status" => "would_create", "fingerprint" => nil, "message" => nil)
           end
 
@@ -109,6 +111,11 @@ module Ace
           end
 
           entry = account_lookup.call(base["account"])
+          if entry
+            refusal = ownership_refusal(base, [stat, pub_stat], entry)
+            return refusal if refusal
+          end
+
           if drift?(path, pub_stat, entry)
             return base.merge("status" => "would_fix_mode", "fingerprint" => nil, "message" => nil)
           end
@@ -124,7 +131,7 @@ module Ace
             (entry && (private_stat.uid != entry.uid || pub_stat.uid != entry.uid))
         end
 
-        def existing(base, path, entry)
+        def existing(base, path, stat, entry)
           # Same guard as generate: the wet existing path chmods/chowns
           # both key files, and FileUtils.chmod/chown follow a planted
           # intermediate .ssh symlink — lstat(path) only guards the
@@ -138,12 +145,20 @@ module Ace
             return non_regular_public_refusal(base, public_path)
           end
 
+          # Ownership-drift policy mirrors DirectoryProvisioner: an
+          # existing pair owned by neither the declared account nor the
+          # installer is refused, never silently taken over.
+          refusal = ownership_refusal(base, [stat, pub_stat], entry)
+          return refusal if refusal
+
           if pub_stat.nil?
             regenerated = regenerate_public(base, path, public_path, entry)
             return regenerated unless regenerated.nil?
           end
 
-          enforce_modes_and_ownership(path, public_path, entry)
+          refusal = enforce_modes_and_ownership(base, path, public_path, entry)
+          return refusal if refusal
+
           with_fingerprint(base.merge("status" => "exists"), public_path,
             "fingerprint of '#{public_path}' could not be read; resolve manually")
         end
@@ -172,8 +187,21 @@ module Ace
               "message" => command_failure("ssh-keygen", result))
           end
 
+          # Post-keygen lstat: a keygen writing through a symlink
+          # planted after the guards above must be detected and refused
+          # before any ownership transfer touches the path.
           public_path = "#{path}.pub"
-          enforce_modes_and_ownership(path, public_path, entry)
+          post = lstat(path)
+          post_pub = lstat(public_path)
+          unless post && post.file? && post_pub && post_pub.file?
+            return base.merge("status" => "failed", "fingerprint" => nil,
+              "message" => "key '#{path}' was not written as a regular file; " \
+                "refusing — rerun ace-lab prepare")
+          end
+
+          refusal = enforce_modes_and_ownership(base, path, public_path, entry)
+          return refusal if refusal
+
           with_fingerprint(base.merge("status" => "created"), public_path,
             "key pair '#{path}' was created but its fingerprint could not be read")
         end
@@ -257,11 +285,53 @@ module Ace
           nil
         end
 
-        def enforce_modes_and_ownership(path, public_path, entry)
-          FileUtils.chmod(PRIVATE_MODE, path)
-          FileUtils.chmod(PUBLIC_MODE, public_path) if regular_file?(public_path)
-          FileUtils.chown(entry.uid, entry.gid, path)
-          FileUtils.chown(entry.uid, entry.gid, public_path) if regular_file?(public_path)
+        # fd-based, the same pattern as regenerate_public: chmod/chown
+        # happen on an O_NOFOLLOW-opened handle, so no path
+        # re-resolution can race the open with an account-planted
+        # symlink (arbitrary chown-to-account). ELOOP — a symlink
+        # swapped in after the lstat guards — is refused, not raised.
+        # @return [Hash, nil] a refusal report when the file was
+        #   replaced by a symlink mid-flight
+        def enforce_modes_and_ownership(base, path, public_path, entry)
+          begin
+            File.open(path, File::RDONLY | File::NOFOLLOW) do |file|
+              file.chmod(PRIVATE_MODE)
+              file.chown(entry.uid, entry.gid)
+            end
+          rescue Errno::ELOOP
+            return base.merge("status" => "failed", "fingerprint" => nil,
+              "message" => "key '#{path}' was replaced by a symbolic link while preparing; " \
+                "refusing — rerun ace-lab prepare")
+          end
+
+          begin
+            File.open(public_path, File::RDONLY | File::NOFOLLOW) do |file|
+              file.chmod(PUBLIC_MODE)
+              file.chown(entry.uid, entry.gid)
+            end
+          rescue Errno::ELOOP
+            return non_regular_public_refusal(base, public_path)
+          rescue Errno::ENOENT
+            # Vanished between the lstat guard and here; the next run
+            # regenerates it — not worth failing the whole item.
+            nil
+          end
+          nil
+        end
+
+        # A pre-existing key file owned by neither the declared account
+        # nor the installer is foreign principal material at a
+        # deployment-chosen path (e.g. a reused home directory): refuse
+        # the takeover, mirroring the directory provisioner's policy.
+        # @param stats [Array<File::Stat, nil>] lstats of the pair
+        # @return [Hash, nil]
+        def ownership_refusal(base, stats, entry)
+          foreign = stats.compact.find { |stat| stat.uid != entry.uid && stat.uid != Process.euid }
+          return nil unless foreign
+
+          base.merge("status" => "failed", "fingerprint" => nil,
+            "message" => "key path '#{base["path"]}' is owned by uid #{foreign.uid}, " \
+              "expected account '#{entry.name}'; refusing takeover — resolve ownership manually")
         end
 
         def non_regular_public_refusal(base, public_path)
@@ -269,13 +339,9 @@ module Ace
             "message" => "public key '#{public_path}' exists but is not a regular file; refusing")
         end
 
-        # lstat-based: File.exist? follows symlinks and must not gate
-        # privileged chmod/chown on account-controlled paths.
-        def regular_file?(path)
-          stat = lstat(path)
-          stat && stat.file?
-        end
-
+        # All filesystem probes below are lstat-based: File.exist?
+        # follows symlinks and must not gate privileged chmod/chown on
+        # account-controlled paths.
         def unsafe_ssh_dir_refusal(base, path)
           ssh_dir = File.dirname(path)
           stat = lstat(ssh_dir)

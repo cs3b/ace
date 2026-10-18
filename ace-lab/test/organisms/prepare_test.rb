@@ -4,10 +4,8 @@ require_relative "../test_helper"
 
 module Organisms
   class PrepareTest < Minitest::Test
-    FakeEntry = Struct.new(:name, :uid, :gid, :dir, keyword_init: true)
-
-    def self_entry(username)
-      FakeEntry.new(name: username, uid: Process.uid, gid: Process.gid, dir: "/home/#{username}")
+    def self_entry(username, dir = "/home/#{username}")
+      FakeEntry.new(name: username, uid: Process.uid, gid: Process.gid, dir: dir)
     end
 
     MANIFEST = <<~YAML
@@ -34,10 +32,12 @@ module Organisms
     # The trusted-read seam is stubbed at the GrantResolver boundary: the
     # loader's fail-closed behavior has its own tests. Directories point
     # under a nonexistent root so the real filesystem tests exercise the
-    # tmpdir paths created per test below.
-    def with_manifest(yaml = MANIFEST, lookup: ->(name) { self_entry(name) }, **options, &block)
+    # tmpdir paths created per test below. The passwd entry matches the
+    # gsub'd manifest home so existing accounts report no home drift.
+    def with_manifest(yaml = MANIFEST, lookup: nil, **options, &block)
       Dir.mktmpdir do |dir|
         manifest = yaml.gsub("/srv/nonexistent-labs-root", dir)
+        lookup ||= ->(name) { self_entry(name, File.join(dir, "home", name)) }
         Ace::Lab::Molecules::GrantResolver.stub :read_verified, manifest do
           organism = Ace::Lab::Organisms::Prepare.new(
             manifest_path: "/etc/lab/ace-lab/install.yml",
@@ -99,6 +99,45 @@ module Organisms
         assert_equal "verified", report["roles"].first["status"]
         refute File.exist?(File.join(dir, "labs"))
         refute File.exist?(File.join(dir, "home"))
+      end
+    end
+
+    # Round-3 MEDIUM: a permanently-failed owner account must turn the
+    # missing-directory prediction into the wet run's owner_unavailable
+    # failure — dry-run stays a faithful prediction (QA 4).
+    def test_dry_run_failed_owner_account_predicts_directory_failure_not_would_create
+      with_manifest(lookup: ->(_name) { nil }, dry_run: true) do |organism, dir|
+        report = organism.call
+
+        assert_equal "failed", report["accounts"].first["status"]
+        directory = report["directories"].first
+        assert_equal "failed", directory["status"]
+        assert_match(/owner account 'ace-worker' is not available/, directory["message"])
+        assert_match(/fix the account phase first/, directory["message"])
+        refute File.exist?(File.join(dir, "labs"))
+      end
+    end
+
+    # Round-3 LOW: linux uid-lag edge — an account created whose uid is
+    # not yet resolvable did NOT fail the account phase, so its keys
+    # must not claim "fix the account phase first" (QA wording).
+    def test_created_but_unresolved_account_fails_keys_with_rerun_message
+      with_manifest(
+        MANIFEST.gsub("create: false", "create: true"),
+        lookup: ->(_name) { nil },
+        privileged: -> { true },
+        runner: ->(_argv) { {"status" => "ok", "out" => "", "err" => ""} }
+      ) do |organism, _dir|
+        report = organism.call
+
+        account = report["accounts"].first
+        assert_equal "created", account["status"]
+        assert_nil account["uid"]
+        key = report["keys"].first
+        assert_equal "failed", key["status"]
+        assert_match(/was created but its uid is not yet resolvable; rerun ace-lab prepare/,
+          key["message"])
+        refute_match(/fix the account phase first/, key["message"])
       end
     end
 

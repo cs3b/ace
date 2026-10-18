@@ -1,11 +1,10 @@
 # frozen_string_literal: true
 
 require_relative "../test_helper"
+require "delegate"
 
 module Molecules
   class KeyProvisionerTest < Minitest::Test
-    FakeEntry = Struct.new(:name, :uid, :gid, :dir, keyword_init: true)
-
     def self_entry
       FakeEntry.new(name: "self", uid: Process.uid, gid: Process.gid, dir: Dir.home)
     end
@@ -248,19 +247,75 @@ module Molecules
 
     # F-3: genuine filesystem ENOENT prescribes a convergence rerun,
     # not "install ssh-keygen" (a missing binary is classified through
-    # the runner's enoent status instead).
+    # the runner's enoent status instead). The fd-based enforce opens
+    # the private key with O_NOFOLLOW, so the ENOENT surfaces there.
     def test_filesystem_enoent_is_classified_as_disappeared_not_missing_binary
       Dir.mktmpdir do |dir|
         path = File.join(dir, "id_ed25519")
         provisioner.call(key: key(path), account: account, machine: "lab01")
 
-        FileUtils.stub :chmod, ->(*_args) { raise Errno::ENOENT } do
+        File.stub :open, ->(*_args) { raise Errno::ENOENT } do
           result = provisioner.call(key: key(path), account: account, machine: "lab01")
 
           assert_equal "failed", result["status"]
           assert_match(/disappeared while preparing; rerun ace-lab prepare/, result["message"])
           refute_match(/ssh-keygen not found/, result["message"])
         end
+      end
+    end
+
+    # Round-3 HIGH: the private-key chmod/chown is fd-based
+    # (O_NOFOLLOW); a symlink swapped in at the private-key path after
+    # the lstat guards raises ELOOP, which is refused — never followed.
+    def test_eloop_on_fd_based_enforce_is_refused
+      Dir.mktmpdir do |dir|
+        path = File.join(dir, "id_ed25519")
+        provisioner.call(key: key(path), account: account, machine: "lab01")
+
+        File.stub :open, ->(*_args) { raise Errno::ELOOP } do
+          result = provisioner.call(key: key(path), account: account, machine: "lab01")
+
+          assert_equal "failed", result["status"]
+          assert_match(/replaced by a symbolic link while preparing; refusing/, result["message"])
+          assert_match(/rerun ace-lab prepare/, result["message"])
+        end
+      end
+    end
+
+    # Round-3 HIGH (QA 1): mid-flight symlink swap at the private-key
+    # path between keygen and the mode/ownership transfer — the
+    # post-keygen regular-file lstat check must refuse before any
+    # chmod/chown reaches the swap target.
+    def test_mid_flight_symlink_swap_at_private_key_path_is_refused_without_chmod_chown
+      Dir.mktmpdir do |dir|
+        victim = File.join(dir, "victim-key")
+        File.write(victim, "victim material")
+        home = File.join(dir, "home")
+        FileUtils.mkdir_p(home)
+        path = File.join(home, "id_ed25519")
+        swap_runner = lambda do |argv|
+          if argv.first == "ssh-keygen" && argv.include?("-q")
+            # fake keygen: write the pair, then swap the private key
+            # for a symlink before the provisioner enforces modes
+            File.write(path, "fake private\n")
+            File.write("#{path}.pub", "fake public\n")
+            File.delete(path)
+            File.symlink(victim, path)
+            {"status" => "ok", "out" => "", "err" => ""}
+          else
+            {"status" => "ok", "out" => "", "err" => ""}
+          end
+        end
+
+        result = provisioner(runner: swap_runner).call(key: key(path), account: account, machine: "lab01")
+
+        assert_equal "failed", result["status"]
+        assert_match(/not written as a regular file; refusing/, result["message"])
+        # zero mutation of the swap target: content, mode and owner unchanged
+        assert_equal "victim material", File.read(victim)
+        assert_equal 0o644, File.stat(victim).mode & 0o7777
+        assert_equal Process.uid, File.stat(victim).uid
+        assert File.symlink?(path)
       end
     end
 
@@ -278,6 +333,84 @@ module Molecules
         assert_equal "failed", result["status"]
         assert_match(/symbolic link; refusing/, result["message"])
         assert_empty Dir.children(target)
+      end
+    end
+
+    # Round-3 MEDIUM (QA 3): the wet existing-key path refuses a planted
+    # .ssh symlink — dry-run must predict that refusal, not `exists`.
+    def test_dry_run_existing_key_behind_planted_ssh_symlink_is_refused_not_exists
+      Dir.mktmpdir do |dir|
+        victim_ssh = File.join(dir, "victim-ssh")
+        Dir.mkdir(victim_ssh)
+        victim_key = File.join(victim_ssh, "id_ed25519")
+        provisioner.call(key: key(victim_key), account: account, machine: "lab01")
+        home = File.join(dir, "home")
+        Dir.mkdir(home)
+        File.symlink(victim_ssh, File.join(home, ".ssh"))
+        path = File.join(home, ".ssh", "id_ed25519")
+
+        result = provisioner(dry_run: true).call(key: key(path), account: account, machine: "lab01")
+
+        assert_equal "failed", result["status"]
+        assert_match(/key directory .* is a symbolic link; refusing/, result["message"])
+        assert_nil result["fingerprint"]
+      end
+    end
+
+    # Round-3 MEDIUM (QA 5): ownership-drift policy mirrors directories —
+    # a pre-existing pair owned by a foreign uid is refused, never
+    # silently chowned to the account. A delegator stat simulates the
+    # foreign uid (tests run unprivileged and cannot really chown).
+    class SwappedUidStat < SimpleDelegator
+      def initialize(stat, uid)
+        super(stat)
+        @uid = uid
+      end
+
+      def uid
+        @uid
+      end
+    end
+
+    def with_foreign_owned_private_key(path)
+      foreign_uid = Process.uid + 999
+      real_lstat = File.method(:lstat)
+      File.stub :lstat, ->(p) { p == path ? SwappedUidStat.new(real_lstat.call(p), foreign_uid) : real_lstat.call(p) } do
+        yield foreign_uid
+      end
+    end
+
+    def test_foreign_owned_existing_pair_is_refused_never_taken_over
+      Dir.mktmpdir do |dir|
+        path = File.join(dir, "id_ed25519")
+        provisioner.call(key: key(path), account: account, machine: "lab01")
+        before = File.stat(path).mode & 0o7777
+
+        with_foreign_owned_private_key(path) do |foreign_uid|
+          result = provisioner.call(key: key(path), account: account, machine: "lab01")
+
+          assert_equal "failed", result["status"]
+          assert_match(/owned by uid #{foreign_uid}/, result["message"])
+          assert_match(/expected account 'self'; refusing takeover/, result["message"])
+          assert_match(/resolve ownership manually/, result["message"])
+        end
+        # no mutation happened while the foreign stat was visible
+        assert_equal before, File.stat(path).mode & 0o7777
+        assert_equal Process.uid, File.stat(path).uid
+      end
+    end
+
+    def test_foreign_owned_existing_pair_is_refused_in_dry_run_too
+      Dir.mktmpdir do |dir|
+        path = File.join(dir, "id_ed25519")
+        provisioner.call(key: key(path), account: account, machine: "lab01")
+
+        with_foreign_owned_private_key(path) do |foreign_uid|
+          result = provisioner(dry_run: true).call(key: key(path), account: account, machine: "lab01")
+
+          assert_equal "failed", result["status"]
+          assert_match(/owned by uid #{foreign_uid}.*refusing takeover/, result["message"])
+        end
       end
     end
 

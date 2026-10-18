@@ -4,8 +4,6 @@ require_relative "../test_helper"
 
 module Molecules
   class DirectoryProvisionerTest < Minitest::Test
-    FakeEntry = Struct.new(:name, :uid, :gid, :dir, keyword_init: true)
-
     def self_entry
       FakeEntry.new(name: "self", uid: Process.uid, gid: Process.gid, dir: Dir.home)
     end
@@ -158,6 +156,39 @@ module Molecules
         assert_equal "would_fix_mode", predicted_drift["status"]
         refute File.exist?(missing)
         assert_equal 0o700, File.stat(drifted).mode & 0o7777
+      end
+    end
+
+    # Round-3 MEDIUM (QA 4): a missing directory whose owner account
+    # failed permanently is predicted as the wet run's owner_unavailable
+    # failure, not would_create — the orchestrator threads its computed
+    # available set in (mirroring keys/roles).
+    def test_dry_run_missing_directory_with_failed_owner_predicts_owner_unavailable
+      Dir.mktmpdir do |dir|
+        path = File.join(dir, "labs")
+
+        result = Ace::Lab::Molecules::DirectoryProvisioner.new(
+          account_lookup: ->(_name) { nil }, dry_run: true, available_accounts: []
+        ).call(directory: directory(path))
+
+        assert_equal "failed", result["status"]
+        assert_match(/owner account 'self' is not available/, result["message"])
+        assert_match(/fix the account phase first/, result["message"])
+        refute File.exist?(path)
+      end
+    end
+
+    def test_dry_run_missing_directory_with_available_owner_still_predicts_creation
+      Dir.mktmpdir do |dir|
+        path = File.join(dir, "labs")
+
+        result = Ace::Lab::Molecules::DirectoryProvisioner.new(
+          account_lookup: ->(_name) { nil }, dry_run: true, available_accounts: %w[self]
+        ).call(directory: directory(path))
+
+        assert_equal "would_create", result["status"]
+        assert_nil result["message"]
+        refute File.exist?(path)
       end
     end
 

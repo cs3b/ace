@@ -42,9 +42,10 @@ module Ace
           manifest = Molecules::InstallManifestLoader.load(path: manifest_path, platform: platform)
           accounts = prepare_accounts(manifest["accounts"], effective_dry_run)
           available = available_accounts(accounts)
-          directories = prepare_directories(manifest["directories"], effective_dry_run)
+          unresolved = unresolved_accounts(accounts)
+          directories = prepare_directories(manifest["directories"], effective_dry_run, available)
           keys = prepare_keys(manifest["keys"], manifest["machine"], manifest["accounts"], available,
-            effective_dry_run)
+            unresolved, effective_dry_run)
           roles = prepare_roles(manifest["roles"], available, effective_dry_run)
 
           {
@@ -69,24 +70,36 @@ module Ace
           entries.map { |account| provisioner.call(account: account) }
         end
 
-        def prepare_directories(entries, dry_run)
-          provisioner = Molecules::DirectoryProvisioner.new(account_lookup: @account_lookup, dry_run: dry_run)
+        def prepare_directories(entries, dry_run, available)
+          provisioner = Molecules::DirectoryProvisioner.new(
+            account_lookup: @account_lookup, dry_run: dry_run, available_accounts: available
+          )
           entries.map { |directory| provisioner.call(directory: directory) }
         end
 
-        def prepare_keys(entries, machine, manifest_accounts, available, dry_run)
+        def prepare_keys(entries, machine, manifest_accounts, available, unresolved, dry_run)
           provisioner = Molecules::KeyProvisioner.new(
             runner: @runner, account_lookup: @account_lookup, dry_run: dry_run
           )
           by_username = manifest_accounts.to_h { |account| [account["username"], account] }
           entries.map do |key|
             account = by_username.fetch(key["account"])
-            if available.include?(account["username"])
+            username = account["username"]
+            if unresolved.include?(username)
+              # linux uid-lag edge: the account phase reported created
+              # with a nil uid (post-useradd passwd lookup lag) — the
+              # remedy is a convergence rerun, not "fix the account
+              # phase" (that phase did not fail).
+              {"account" => username, "path" => key["path"], "status" => "failed",
+               "fingerprint" => nil,
+               "message" => "account '#{username}' was created but its uid is not yet " \
+                 "resolvable; rerun ace-lab prepare"}
+            elsif available.include?(username)
               provisioner.call(key: key, account: account, machine: machine)
             else
-              {"account" => account["username"], "path" => key["path"], "status" => "failed",
+              {"account" => username, "path" => key["path"], "status" => "failed",
                "fingerprint" => nil,
-               "message" => "account '#{account['username']}' is not available; fix the account phase first"}
+               "message" => "account '#{username}' is not available; fix the account phase first"}
             end
           end
         end
@@ -106,6 +119,14 @@ module Ace
 
         def available_accounts(account_reports)
           account_reports.reject { |report| report["status"] == "failed" }
+            .map { |report| report["username"] }
+        end
+
+        # Accounts whose creation succeeded but whose uid is not yet
+        # resolvable (linux post-useradd passwd lag): the phase did not
+        # fail, but dependent key provisioning cannot chown to them.
+        def unresolved_accounts(account_reports)
+          account_reports.select { |report| report["status"] == "created" && report["uid"].nil? }
             .map { |report| report["username"] }
         end
       end

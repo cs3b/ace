@@ -44,6 +44,12 @@ module Ace
 
             document = begin
               YAML.safe_load(content, permitted_classes: [], aliases: false)
+            rescue Psych::DisallowedClass
+              # It parsed; it just carries types outside the permitted
+              # set — a different remedy than fixing YAML syntax.
+              raise Ace::Lab::InvalidConfigurationError,
+                "invalid lab install manifest: #{path} contains YAML types outside the " \
+                "permitted set; use plain scalars, sequences and mappings only"
             rescue Psych::Exception
               raise Ace::Lab::InvalidConfigurationError,
                 "invalid lab install manifest: #{path} could not be parsed as YAML"

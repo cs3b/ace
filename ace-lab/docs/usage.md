@@ -174,22 +174,27 @@ statuses, zero mutations): keys and roles of an account the account
 phase *would create* are predicted (`would_create` keys, `verified`
 roles) even though the account does not exist in passwd yet; an
 existing private key with a missing `.pub` predicts
-`would_repair_public` (the wet run regenerates it); mode or ownership
-drift on an existing pair predicts `would_fix_mode`. Two prediction
-limits: an *existing* directory whose declared owner account does not
-exist yet cannot have its ownership checked, and is reported as a
-failed item with a rerun hint; likewise, a role's instruction *file*
-readability cannot be checked against an account that does not exist
-yet (its uid is unknown), so such bindings are predicted `verified`
-from the file's existence and type alone — the wet run performs the
-full readability check.
+`would_repair_public` (the wet run regenerates it); mode drift on an
+owner-matching pair predicts `would_fix_mode`; a planted `.ssh`
+symlink is refused in dry-run exactly as the wet run refuses it, and a
+missing directory whose declared owner account *failed* the account
+phase is predicted as the wet run's owner-unavailable failure (the
+orchestrator threads its computed account set into the directory
+stage). Two prediction limits: an *existing* directory whose declared
+owner account does not exist yet cannot have its ownership checked,
+and is reported as a failed item with a rerun hint; likewise, a role's
+instruction *file* readability cannot be checked against an account
+that does not exist yet (its uid is unknown), so such bindings are
+predicted `verified` from the file's existence and type alone — the
+wet run performs the full readability check.
 
 Behavior and guarantees:
 
 - **Idempotent convergence.** Existing resources are verified, not
-  recreated; only mode drift on an owner-matching directory is repaired.
-  A pre-existing directory owned by a different account is refused
-  (`refusing takeover`), never silently chowned. Symlinks and
+  recreated; only mode drift on an owner-matching directory or
+  owner-matching key pair is repaired. A pre-existing directory — or
+  key pair — owned by a different account is refused (`refusing
+  takeover`), never silently chowned. Symlinks and
   non-directories at declared paths are refused. Residual policy:
   symlink refusal applies to the *declared leaf* path only —
   intermediate path components are followed (and created with default
@@ -201,7 +206,10 @@ Behavior and guarantees:
   argv arrays. Unsupported platforms are reported with a manual remedy
   (`create: false`). Missing administrator privileges are classified
   with an actionable message, as is a missing account without
-  `create: true`.
+  `create: true`. For an *existing* account whose passwd home differs
+  from the manifest home, the drift is reported in the message; the
+  manifest home stays authoritative (key default paths derive from
+  it).
 - **Secret hygiene.** Key pairs are generated with `ssh-keygen -t
   ed25519`; `.ssh` is 0700, the private key 0600, the public key 0644,
   ownership assigned to the account. Reports carry the public
@@ -209,9 +217,9 @@ Behavior and guarantees:
   message, report, or diagnostic argument. Key paths inside a git
   worktree are refused outright. Planted symlinks on the
   account-controlled paths — `.ssh` (checked with `lstat` before any
-  `mkdir`/chmod/chown, and on the *existing-key* path too) and
-  `<key>.pub` (checked with `lstat`, written with `O_NOFOLLOW`) — are
-  refused, so a privileged run cannot be turned into an arbitrary
+  `mkdir`/chmod/chown, on the *existing-key* path and in dry-run too)
+  and `<key>.pub` (checked with `lstat`, written with `O_NOFOLLOW`) —
+  are refused, so a privileged run cannot be turned into an arbitrary
   chmod/chown/write by the account.
 - **Symlink-race hardening.** Leaf directories (`.ssh` and declared
   directories) are created with component-wise `Dir.mkdir` — whose
@@ -219,13 +227,17 @@ Behavior and guarantees:
   re-`lstat`ed immediately after creation: a leaf that is not a real
   directory the installer just created is refused before any
   chmod/chown, and a directory swapped between the owner check and a
-  mode fix is re-checked before the chmod. The regenerated `.pub` is
-  chmodded/chowned through the already-`O_NOFOLLOW`-opened file handle,
-  not by path. Accepted residual: a microscopic window remains between
-  that final re-`lstat` and the path-based `chmod`/`chown` on a
-  directory leaf (Ruby stdlib offers no fd-based directory chmod);
-  closing it would require exotic APIs for no practical gain over the
-  guard chain above.
+  mode fix is re-checked before the chmod. Key *files* never carry a
+  path-based mutation: after `ssh-keygen` the pair is re-`lstat`ed
+  (a keygen writing through a swapped-in symlink is refused before any
+  ownership transfer), and every chmod/chown on the private key and
+  the `.pub` — regenerated or not — goes through an
+  `O_NOFOLLOW`-opened file handle, so a mid-flight symlink swap
+  surfaces as `ELOOP` and is refused. Accepted residual: a microscopic
+  window remains between that final re-`lstat` and the path-based
+  `chmod`/`chown` on a *directory* leaf (Ruby stdlib offers no fd-based
+  directory chmod); closing it would require exotic APIs for no
+  practical gain over the guard chain above.
 - **Exit codes.** A wet run with failed items prints the report, then
   exits non-zero enumerating each `<section>/<item>: <message>`;
   `--dry-run` exits 0 whenever a report renders (conflicts appear as

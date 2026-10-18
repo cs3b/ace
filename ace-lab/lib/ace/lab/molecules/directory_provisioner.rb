@@ -17,9 +17,17 @@ module Ace
       class DirectoryProvisioner
         attr_reader :account_lookup, :dry_run
 
-        def initialize(account_lookup: nil, dry_run: false)
+        # available_accounts [Enumerable<String>, nil] usernames the
+        # account phase will have (exists/created/would_create) — the
+        # orchestrator's already-computed set, threaded in so dry-run
+        # can predict the wet run's owner_unavailable failure for a
+        # directory whose owner account failed permanently (mirroring
+        # keys/roles dependency prediction). nil = predict from live
+        # passwd only (standalone use).
+        def initialize(account_lookup: nil, dry_run: false, available_accounts: nil)
           @account_lookup = account_lookup || method(:lookup_passwd)
           @dry_run = dry_run
+          @available_accounts = available_accounts
         end
 
         # @param directory [Hash] normalized manifest directory entry
@@ -80,6 +88,15 @@ module Ace
 
         def create_missing(path, directory, mode)
           if dry_run
+            # A declared owner whose account phase failed permanently
+            # (not merely would_create) makes the wet run fail with
+            # owner_unavailable — the prediction must say so instead of
+            # would_create.
+            if directory["owner"] && @available_accounts &&
+                !@available_accounts.include?(directory["owner"])
+              return owner_unavailable(path, directory, "fix the account phase first")
+            end
+
             return base(path, directory).merge("status" => "would_create", "message" => nil)
           end
 
@@ -158,8 +175,8 @@ module Ace
           nil
         end
 
-        def owner_unavailable(path, directory)
-          remedy = if dry_run
+        def owner_unavailable(path, directory, remedy = nil)
+          remedy ||= if dry_run
             "the account phase would create it; ownership of existing '#{path}' cannot be " \
               "predicted before the account exists — rerun prepare --dry-run after the account phase"
           else

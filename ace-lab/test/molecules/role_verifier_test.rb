@@ -4,8 +4,6 @@ require_relative "../test_helper"
 
 module Molecules
   class RoleVerifierTest < Minitest::Test
-    FakeEntry = Struct.new(:name, :uid, :gid, :dir, keyword_init: true)
-
     def self_entry
       FakeEntry.new(name: "ace-worker", uid: Process.uid, gid: Process.gid, dir: Dir.home)
     end

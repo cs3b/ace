@@ -4,8 +4,6 @@ require_relative "../test_helper"
 
 module Molecules
   class AccountProvisionerTest < Minitest::Test
-    FakeEntry = Struct.new(:name, :uid, :gid, :dir, keyword_init: true)
-
     attr_reader :calls
 
     def setup
@@ -46,6 +44,23 @@ module Molecules
       assert_equal "exists", result["status"]
       assert_equal 503, result["uid"]
       assert_nil result["message"]
+      assert_empty calls
+    end
+
+    # Round-3 LOW: passwd home drift is reported (manifest stays
+    # authoritative for key paths) — behavior unchanged otherwise.
+    def test_existing_account_home_drift_is_reported_manifest_stays_authoritative
+      provisioner = Ace::Lab::Molecules::AccountProvisioner.new(
+        runner: fake_runner, account_lookup: ->(_name) { FakeEntry.new(name: "ace-worker", uid: 503, gid: 20, dir: "/Users/elsewhere/ace-worker") },
+        privileged: -> { false }, platform: "darwin"
+      )
+
+      result = provisioner.call(account: account)
+
+      assert_equal "exists", result["status"]
+      assert_equal 503, result["uid"]
+      assert_match(/home is '\/Users\/elsewhere\/ace-worker' but the manifest declares '\/home\/ace-worker'/, result["message"])
+      assert_match(/manifest home is authoritative for key paths/, result["message"])
       assert_empty calls
     end
 

@@ -7,12 +7,6 @@ module Ace
     module CLI
       module Commands
         class PrepareCommandTest < Minitest::Test
-          FakeEntry = Struct.new(:name, :uid, :gid, :dir, keyword_init: true)
-
-          def self_entry(name)
-            FakeEntry.new(name: name, uid: Process.uid, gid: Process.gid, dir: "/home/#{name}")
-          end
-
           MANIFEST = <<~YAML
             ---
             schema_version: 1
@@ -31,9 +25,13 @@ module Ace
                 instructions: wfi://assign/work
           YAML
 
-          def with_manifest(yaml = MANIFEST, lookup: ->(name) { self_entry(name) }, &block)
+          def with_manifest(yaml = MANIFEST, lookup: nil, &block)
             home = Dir.mktmpdir("prepare-cmd-home")
             manifest = yaml.gsub("/tmp/prepare-cmd-home", home)
+            # passwd entry matches the manifest home so the existing
+            # account reports no home drift
+            lookup ||= ->(name) { FakeEntry.new(name: name, uid: Process.uid, gid: Process.gid,
+              dir: File.join(home, name)) }
             Ace::Lab::Molecules::GrantResolver.stub :read_verified, manifest do
               organism = Organisms::Prepare.new(
                 manifest_path: "/etc/lab/ace-lab/install.yml",

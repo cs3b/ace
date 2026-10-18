@@ -91,6 +91,18 @@ module Molecules
       end
     end
 
+    # Round-3 LOW: Psych::DisallowedClass parses fine — it must not be
+    # reported as unparseable YAML (different remedy, strictness kept).
+    def test_disallowed_yaml_types_are_distinguished_from_parse_failures
+      Ace::Lab::Molecules::GrantResolver.stub :read_verified, "machine: 2026-10-18\n" do
+        error = assert_raises(Ace::Lab::InvalidConfigurationError) { load }
+
+        assert_match(/YAML types outside the permitted set/, error.message)
+        assert_match(/plain scalars, sequences and mappings only/, error.message)
+        refute_match(/could not be parsed as YAML/, error.message)
+      end
+    end
+
     def test_unparseable_document_never_leaks_content
       Ace::Lab::Molecules::GrantResolver.stub :read_verified, "secret: *private_token_canary\n" do
         error = assert_raises(Ace::Lab::InvalidConfigurationError) { load }

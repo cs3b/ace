@@ -134,6 +134,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   fingerprint regex dropped a stray duplicate `+` in its character
   class.
 
+### Fixed (review round 3)
+
+- The private-key chmod/chown was still path-based (`FileUtils` by
+  path): once `.ssh` was chowned to the account, the account could
+  race-swap the key file for a symlink inside its own `.ssh` and have
+  a privileged rerun chown an arbitrary file to itself. Both key files
+  are now mutated only through `O_NOFOLLOW`-opened handles (the
+  `regenerate_public` pattern): chmod/chown are fd-based, a mid-flight
+  symlink swap surfaces as `ELOOP` and is refused, and a post-keygen
+  re-`lstat` refuses a keygen that wrote through a swapped-in symlink
+  before any ownership transfer. Adversarial tests assert refusal with
+  zero mutation of the swap target.
+- Dry-run fidelity: a planted `.ssh` symlink is now refused by the
+  *existing-key* prediction too (the refusal check runs before the
+  stat branch, matching the wet run), and a missing directory whose
+  declared owner account failed the account phase is predicted as the
+  wet run's `owner_unavailable` failure instead of `would_create`
+  (the organism threads its computed available-account set into the
+  directory stage, mirroring keys/roles).
+- Ownership-drift policy is now symmetric: a pre-existing key pair
+  owned by neither the declared account nor the installer is refused
+  (`refusing takeover`), like directories, instead of being silently
+  chowned — relevant for reused home directories with default key
+  paths.
+- `Psych::DisallowedClass` is reported as "YAML types outside the
+  permitted set" instead of "could not be parsed as YAML" (different
+  remedy; strictness unchanged).
+- An existing account whose passwd home differs from the manifest home
+  now reports the drift in its message; the manifest home stays
+  authoritative for key paths (behavior unchanged).
+- Keys of an account that was created but whose uid is not yet
+  resolvable (linux passwd lag) fail with "rerun ace-lab prepare"
+  instead of the misleading "fix the account phase first".
+- The copy-pasted `FakeEntry` passwd stub lives in `test_helper.rb`
+  once instead of six test files.
+
 ## [0.11.0] - 2026-10-18
 
 ### Fixed (review PR #383, round 3)

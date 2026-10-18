@@ -37,32 +37,40 @@ module Ace
           username = account["username"]
           existing = account_lookup.call(username)
           if existing
-            return {"username" => username, "status" => "exists", "uid" => existing.uid, "message" => nil}
-          end
+            return {"username" => username, "status" => "exists", "uid" => existing.uid,
+              "message" => nil} if existing.dir == account["home"]
 
-          unless account["create"]
-            return failure(username,
-              "account '#{username}' does not exist; create it manually (administrator action) " \
-              "or set create: true in the install manifest")
-          end
-
-          unless privileged.call
-            return failure(username,
-              "creating account '#{username}' requires administrator privileges; rerun ace-lab prepare " \
-              "with sudo or create the account manually")
-          end
-
-          if dry_run
-            return {"username" => username, "status" => "would_create", "uid" => nil, "message" => nil}
-          end
-
-          case platform
-          when "darwin" then create_darwin(account)
-          when "linux" then create_linux(account)
+            # Drift is reported, not repaired: the manifest home stays
+            # authoritative (key default paths derive from it).
+            {"username" => username, "status" => "exists", "uid" => existing.uid,
+             "message" => "account '#{username}' home is '#{existing.dir}' but the manifest " \
+              "declares '#{account["home"]}'; the manifest home is authoritative for key paths"}
           else
-            failure(username,
-              "unsupported platform '#{platform}' for account creation; create account '#{username}' " \
-              "manually and set create: false in the install manifest")
+
+            unless account["create"]
+              return failure(username,
+                "account '#{username}' does not exist; create it manually (administrator action) " \
+                "or set create: true in the install manifest")
+            end
+
+            unless privileged.call
+              return failure(username,
+                "creating account '#{username}' requires administrator privileges; rerun ace-lab prepare " \
+                "with sudo or create the account manually")
+            end
+
+            if dry_run
+              return {"username" => username, "status" => "would_create", "uid" => nil, "message" => nil}
+            end
+
+            case platform
+            when "darwin" then create_darwin(account)
+            when "linux" then create_linux(account)
+            else
+              failure(username,
+                "unsupported platform '#{platform}' for account creation; create account '#{username}' " \
+                "manually and set create: false in the install manifest")
+            end
           end
         end
 
