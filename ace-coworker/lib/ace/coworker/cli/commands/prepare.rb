@@ -13,7 +13,7 @@ module Ace
 
           option :task, desc: "Task reference (required)"
           option :roles, type: :array,
-            desc: "Expected role sequence, repeatable and comma-separated (e.g., worker --roles reviewer,writer)"
+            desc: "Expected role sequence, repeatable and comma-separated (e.g., --roles worker,reviewer)"
           option :to, desc: "Escalation recipient (default: coworker config overseer)"
           option :config, desc: "Path to coworker config for the overseer fallback"
           option :"dry-run", type: :boolean, default: false,
@@ -99,7 +99,7 @@ module Ace
               worktree = result.worktree
               lines << "  worktree:   #{worktree['path']}"
               lines << "  branch:     #{worktree['branch']}"
-              lines << "  disposition: #{worktree['disposition']}"
+              lines << format("  result:     %s", worktree["disposition"])
             end
             result.worktree_assignments.each do |assignment|
               lines << "  assignment: #{assignment['id']} #{assignment['state']} (#{assignment['progress']})"

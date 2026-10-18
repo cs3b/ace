@@ -77,11 +77,25 @@ module Ace
         def recover_stale(task_ref:, decision:, dry_run:)
           return decision.merge(disposition: :would_recover) if dry_run
 
-          @manager.prune
+          prune = @manager.prune
+          unless prune[:success]
+            return {disposition: :error,
+                    reason: "#{prune[:error]} (could not prune stale worktree metadata at " \
+                            "#{decision[:worktree_path]} before recreation)",
+                    worktree_path: decision[:worktree_path], branch: nil}
+          end
+
           retry_create = @manager.create_task(task_ref.to_s)
           if retry_create[:success]
             return Atoms::PrepareDecision.from_create(retry_create.merge(recovered: true))
           end
+
+          # Same occupied-location rule as the miss path: a foreign
+          # occupant of the expected directory is a conflict, never an
+          # operational error.
+          occupied = path_exists?(decision[:worktree_path])
+          mismatch = Atoms::PrepareDecision.from_create(retry_create, occupied_directory: occupied)
+          return mismatch if mismatch[:disposition] == :conflict_mismatch
 
           # The stale worktree's branch survives its directory (committed
           # work lives on it): when recreation trips over the surviving
@@ -91,8 +105,9 @@ module Ace
           return Atoms::PrepareDecision.from_create(reattached.merge(recovered: true)) if reattached[:success]
 
           {disposition: :error,
-           reason: "#{retry_create[:error]} (after pruning stale worktree metadata; " \
-                   "run `ace-git-worktree prune` and retry)",
+           reason: "#{retry_create[:error]} (stale worktree metadata at " \
+                   "#{decision[:worktree_path]} was already pruned and branch reattach " \
+                   "failed too; retry the prepare command)",
            worktree_path: decision[:worktree_path], branch: nil}
         end
 
@@ -102,7 +117,8 @@ module Ace
           return decision if path_exists?(create[:worktree_path])
 
           recover_stale(task_ref: task_ref,
-            decision: {worktree_path: create[:worktree_path]}, dry_run: false)
+            decision: {worktree_path: create[:worktree_path], branch: create[:branch]},
+            dry_run: false)
         end
 
         def expected_directory_exists?(task_ref)

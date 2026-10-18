@@ -52,6 +52,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     result still renders (L3);
   - `WorktreeExecutorProbe#probe` docstring matches the actual return
     contract (failures raise; no `error:` key) (L4).
+- Round-2 review follow-ups on `prepare` (all low severity):
+  - the branch-reattach fallback now also works on the
+    `create_with_verification` recovery sub-path (the known branch is
+    passed through instead of dropped);
+  - an occupied expected directory after prune classifies as
+    `mismatched_worktree` (same rule as the miss path) instead of an
+    operational `error`, and a failed prune surfaces its error instead
+    of being ignored;
+  - the recovery error hint no longer suggests re-running
+    `ace-git-worktree prune` (it already ran in this method); the
+    `--roles` option example and the prepare table's disposition row
+    alignment are fixed.
 
 ## [0.3.2] - 2026-10-18
 

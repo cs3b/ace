@@ -176,7 +176,8 @@ worktree owner):
    recovers via prune + recreate, reattaching the surviving branch so its
    committed work is never orphaned behind a freshly minted branch.
 3. Otherwise create the task worktree (idempotent owner call). A creation
-   failure while the expected location is occupied is a `mismatched_worktree`
+   failure while the expected location is occupied — on either the miss path
+   or the stale-recovery retry — is a `mismatched_worktree`
    conflict; any other failure exits 1 with the structured error and its
    recovery hint (operational error, no HITL event).
 4. Probe the resolved worktree for an active executor: the worktree's

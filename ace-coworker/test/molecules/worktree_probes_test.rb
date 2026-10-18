@@ -12,9 +12,10 @@ module Ace
         # for a worktree whose directory is missing (it fails instead), and
         # list_all exposes the association inventory for stale detection.
         FakeManager = Struct.new(:switch_result, :create_results, :prune_calls, :worktrees,
-          :reattach_result) do
-          def initialize(switch_result:, create_results:, worktrees: [], reattach_result: nil)
-            super(switch_result, create_results, [], worktrees, reattach_result)
+          :reattach_result, :prune_result) do
+          def initialize(switch_result:, create_results:, worktrees: [], reattach_result: nil,
+            prune_result: nil)
+            super(switch_result, create_results, [], worktrees, reattach_result, prune_result)
           end
 
           def switch(_ref)
@@ -33,7 +34,7 @@ module Ace
 
           def prune
             prune_calls << true
-            {success: true}
+            prune_result || {success: true}
           end
 
           attr_reader :reattach_calls
@@ -208,6 +209,71 @@ module Ace
             result = instance.ensure_prepared(task_ref: "8xg.t.aaa", expected_task_id: "8xg.t.aaa")
 
             assert_equal :conflict_mismatch, result[:disposition]
+          end
+        end
+
+        def test_create_with_existing_registration_but_missing_directory_prunes_and_recovers
+          # create_with_verification's recovery sub-path: the idempotent
+          # create reports existing:true, but the directory is gone.
+          Dir.mktmpdir("coworker-recovery") do |dir|
+            missing = File.join(dir, "gone")
+            instance = probe(
+              switch_result: {success: false, error: "Worktree not found"},
+              create_results: [
+                {success: true, existing: true, worktree_path: missing, branch: "8xg-aaa-branch"},
+                {success: true, worktree_path: missing, branch: "8xg-aaa-branch", message: "recreated"}
+              ])
+            result = instance.ensure_prepared(task_ref: "8xg.t.aaa", expected_task_id: "8xg.t.aaa")
+
+            assert_equal :recovered, result[:disposition]
+            manager = instance.instance_variable_get(:@manager)
+            assert_equal 1, manager.prune_calls.length
+            assert_nil manager.reattach_calls
+          end
+        end
+
+        def test_recovery_retry_failure_with_occupied_directory_is_conflict
+          # After pruning, a foreign occupant of the expected directory is
+          # a mismatched_worktree conflict — same rule as the miss path.
+          Dir.mktmpdir("coworker-occupied-recovery") do |dir|
+            occupied = File.join(dir, "wt")
+            FileUtils.mkdir(occupied)
+            instance = probe(
+              switch_result: {success: false, error: "Worktree not found"},
+              create_results: [
+                {success: true, existing: true, worktree_path: occupied, branch: "b"},
+                {success: false, error: "target path already exists"}
+              ])
+            # The registration's directory is missing at the verification
+            # check, then occupied after prune — the foreign-occupant case.
+            checks = 0
+            instance.define_singleton_method(:path_exists?) { |_path| (checks += 1) > 1 }
+            result = instance.ensure_prepared(task_ref: "8xg.t.aaa", expected_task_id: "8xg.t.aaa")
+
+            assert_equal :conflict_mismatch, result[:disposition]
+            manager = instance.instance_variable_get(:@manager)
+            assert_equal 1, manager.prune_calls.length
+            assert_nil manager.reattach_calls
+          end
+        end
+
+        def test_recovery_prune_failure_is_error_without_create
+          Dir.mktmpdir("coworker-prune-fail") do |dir|
+            missing = File.join(dir, "gone")
+            instance = WorktreeProvisionProbe.new(project_root: "/proj",
+              manager: FakeManager.new(
+                switch_result: {success: false, error: "Worktree not found"},
+                create_results: [
+                  {success: true, existing: true, worktree_path: missing, branch: "b"}
+                ],
+                prune_result: {success: false, error: "prune exploded"}))
+            result = instance.ensure_prepared(task_ref: "8xg.t.aaa", expected_task_id: "8xg.t.aaa")
+
+            assert_equal :error, result[:disposition]
+            assert_includes result[:reason], "prune exploded"
+            manager = instance.instance_variable_get(:@manager)
+            assert_equal 1, manager.prune_calls.length
+            assert_empty manager.create_results # retry create never ran
           end
         end
 
