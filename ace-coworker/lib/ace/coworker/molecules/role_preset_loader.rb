@@ -62,7 +62,11 @@ module Ace
         end
 
         def read_preset(path)
-          raw = YAML.safe_load_file(path, permitted_classes: [Date], aliases: true)
+          raw = begin
+            YAML.safe_load_file(path, permitted_classes: [Date], aliases: true)
+          rescue Psych::SyntaxError => e
+            raise Error, "invalid role preset '#{relative(path)}': #{e.message}"
+          end
           errors = @schema.errors(raw)
           unless errors.empty?
             raise Error, "invalid role preset '#{relative(path)}': #{errors.join('; ')}"

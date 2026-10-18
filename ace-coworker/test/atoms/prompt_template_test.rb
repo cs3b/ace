@@ -43,6 +43,14 @@ module Ace
             {"task" => sneaky, "assignment" => "a1", "role" => "spec", "overseer" => "o1"})
           assert_equal "Drive back\\slash \\1 \\0 \\& done as spec.", rendered
         end
+
+        def test_placeholder_shaped_values_are_not_re_expanded
+          rendered = PromptTemplate.render("Drive {{task}} for {{overseer}}.",
+            {"task" => "{{overseer}}", "overseer" => "ov"})
+          # Single pass: the substituted value stays literal instead of
+          # being re-expanded into a later placeholder's value.
+          assert_equal "Drive {{overseer}} for ov.", rendered
+        end
       end
     end
   end

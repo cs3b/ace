@@ -123,6 +123,13 @@ module Ace
           assert_equal "project", presets.find { |p| p["name"] == "worker" }["source"]
         end
 
+        def test_malformed_yaml_preset_raises_specific_error
+          write_preset(@gem_roles, "garbage", "name: [unclosed\n  bad yaml :::")
+          error = assert_raises(Error) { loader.list }
+          assert_includes error.message, "invalid role preset"
+          assert_includes error.message, "garbage.yml"
+        end
+
         def test_empty_catalog_lists_nothing
           empty_dir = File.join(@dir, "empty")
           FileUtils.mkdir_p(empty_dir)

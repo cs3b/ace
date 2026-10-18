@@ -60,9 +60,8 @@ gap named.
      behavior, an acceptance criterion that cannot be made checkable, a
      contradiction in inputs) is escalated:
      - create a question for the overseer:
-       `ace-hitl create --type question --task <ref> --to <overseer>` with the
-       gap stated precisely (options, impact, what is blocked), then
-       `ace-hitl send <id>`;
+       `ace-hitl create "<gap in one line>" --type question --task <ref> --to <overseer> --question "<options, impact, what is blocked>"`,
+       then `ace-hitl send <id>`;
      - record the gap in the task folder next to the spec.
    - Continue only on items that are not blocked by the gap.
    - If the gap blocks completeness of the deliverable, fail the step
