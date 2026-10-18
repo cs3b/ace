@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.21.0] - 2026-10-18
+
+### Added
+
+- Configurable adapter delivery routes (8xg.t.sbz.1.2 / L2.3): `ace-hitl
+  send <ref>` delivers a persisted event through the routes configured under
+  `hitl.adapters.routes` — the sender interface is adapter-independent, so
+  switching transports is pure configuration (no assignment or coworker
+  change). Every route reports its own result line; one route's success never
+  hides another's failure and an unavailable adapter never silently reroutes
+  (per-route isolation, fail-closed unknown-adapter/no-route errors).
+  Built-in `terminal` adapter pushes the shared event text to a pane via any
+  `ace-runtime` terminal (tmux/herdr); `ace-hitl-hermes` 0.8.0 ships the
+  `hermes` adapter entrypoint (publishes the shared rendering to the channel
+  folder; identical resend is idempotent, different-bytes collision fails
+  without overwrite, missing folder is `unavailable`). New adapters register
+  through the duck-typed `Ace::Hitl::Adapters` registry
+  (`lib/ace/hitl/adapters/<name>.rb` entrypoint — a future Nervus adapter
+  needs no ace-hitl change). Shared rendering (`Atoms::HitlEventText`):
+  `[HITL question]`/`[HITL report <result>]` prefix, `Reply-To:` on questions
+  only, task/assignment/step context. Delivery results are reported, not
+  persisted — retention and redelivery of undelivered messages is
+  8xg.t.sbz.1.3.
+
 ## [0.20.0] - 2026-10-18
 
 ### Added

@@ -104,6 +104,20 @@ Polling is the default reliability path for the requesting agent:
 ace-hitl wait <hitl-id>
 ```
 
+### 4b) Remote delivery through configured adapter routes
+
+When `hitl.adapters.routes` is configured, deliver the persisted event
+before waiting. Every route reports its own result; a route failure never
+silently reroutes to another recipient.
+
+```bash
+ace-hitl send <hitl-id>
+```
+
+An unavailable or failed route is an escalation reason (retry or fix the
+route configuration); the local event file remains the durable record.
+Undelivered-message retention and automatic redelivery are planned (L2.4).
+
 If the waiter is no longer active, operator fallback can dispatch resume:
 
 ```bash

@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-10-18
+
+### Added
+
+- HITL delivery adapter (8xg.t.sbz.1.2 / L2.3): `lib/ace/hitl/adapters/hermes.rb`
+  registers the `hermes` adapter for `ace-hitl send`. Route config
+  (`hitl.adapters.routes`): `channel`, `machine` (defaults to `hitl.machine`),
+  absolute `folder`, optional `sender`. Both HITL questions and reports are
+  published as the outbound `question` kind — the shared rendering's
+  `[HITL question]`/`[HITL report <result>]` prefix preserves the type and
+  only questions carry `Reply-To:`. Explicit event id: an identical resend
+  (same question body and sender) is idempotent `delivered`; a
+  different-bytes collision fails without overwriting; a missing/invalid
+  channel folder is `unavailable` (never a silent reroute).
+
 ## [0.7.0] - 2026-10-18
 
 ### Removed

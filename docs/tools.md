@@ -181,6 +181,7 @@ Always use `ace-test` instead of `bundle exec rake test` or raw `bundle exec rub
 | `ace-hitl show REF --content` | Show event details |
 | `ace-hitl update REF --answer "..."` | Answer an event |
 | `ace-hitl wait REF` | Poll until answered |
+| `ace-hitl send REF` | Deliver an event through the configured adapter routes (per-route results) |
 
 ## Assignment Management
 

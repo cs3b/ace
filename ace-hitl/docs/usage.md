@@ -131,6 +131,58 @@ Rules:
 Questions keep the existing pending → answered cycle; files without a `type`
 frontmatter key load as questions.
 
+## Send — delivery routes
+
+`create` persists locally; `send` is the explicit delivery step through the
+configured adapter routes. Switching transports is pure configuration — no
+assignment or coworker logic changes.
+
+```yaml
+hitl:
+  adapters:
+    routes:
+      - route: overseer-terminal   # display name; defaults to the adapter name
+        adapter: terminal          # built-in: any ace-runtime terminal
+        runtime: herdr             # tmux | herdr
+        pane: p5                   # opaque pane handle (runtime-owned)
+      - route: captain-telegram
+        adapter: hermes            # ships in ace-hitl-hermes
+        channel: project
+        machine: lab01             # defaults to hitl.machine
+        folder: /run/hermes/project
+        sender: lab01              # defaults to machine
+```
+
+```bash
+ace-hitl send 8xhkep
+```
+
+```
+HITL event 8xhkep sent through 2 route(s):
+  overseer-terminal (terminal): delivered - text pushed to herdr pane p5
+  captain-telegram (hermes): unavailable - ...
+```
+
+Rules:
+
+- One result line per route; a route's success never hides another route's
+  failure. Exit 0 only when every route is `delivered`; exit 1 on any
+  `failed`/`unavailable` route, no configured routes (concrete error naming
+  `hitl.adapters.routes`), unknown adapter, or unknown/ambiguous ref.
+- Every route receives the identical shared rendering: `[HITL question]`/
+  `[HITL report <result>]` prefix, one `Q:` line per question, `Reply-To:`
+  on questions only, task/assignment/step context.
+- `delivered` means accepted by the route's transport. An unavailable
+  adapter never reroutes to another recipient. Delivery results are
+  reported, not persisted — retaining undelivered messages with failure
+  reasons and redelivering them is the next L2 leaf (8xg.t.sbz.1.3).
+- Adding an adapter requires no ace-hitl change: a gem ships
+  `lib/ace/hitl/adapters/<name>.rb` calling `Ace::Hitl::Adapters.register`
+  (duck contract: `factory.call(route)` → adapter with
+  `deliver(event:, text:, recipient:, reply_to:)` returning a
+  `RouteResult`; status `:delivered`/`:failed`/`:unavailable`). Nervus is
+  the out-of-scope future example.
+
 ## List
 
 ```bash
@@ -215,11 +267,12 @@ old-lab Root Overseer reverse-address channel (`overseer-*` commands); generic
 transport has no replacement role-specific queue.
 
 > **Planned (L2):** the report/question distinction is available locally
-> (`--type report`; local write is not delivery). Recipient addressing and
-> Reply binding are recorded locally (`--to`, `reply_to`, fail-closed
-> resolution). Remote delivery and configurable adapters are not available
-> yet. Adapters (`ace-hitl-hermes`) and transports (tmux, Herdr) are not
-> additional state owners.
+> (`--type report`; local write is not delivery — deliver with
+> `ace-hitl send` through the configured adapter routes). Recipient
+> addressing and Reply binding are recorded locally (`--to`, `reply_to`,
+> fail-closed resolution). Retention and redelivery of undelivered
+> messages are not available yet. Adapters (`ace-hitl-hermes`) and
+> transports (tmux, Herdr) are not additional state owners.
 
 ## Testing
 
