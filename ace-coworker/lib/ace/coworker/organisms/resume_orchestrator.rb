@@ -73,8 +73,9 @@ module Ace
 
             orchestrator = @report_orchestrator || ReportOrchestrator.new(project_root: @project_root, config: @config)
             report_result = orchestrator.call(config_path: config_path, assignment: assignment_id)
+            action = report_result.created_event ? "reporting the outcome" : "redelivering the report"
             ResumeResult.new(plan: plan, report_result: report_result,
-              message: "assignment complete; redelivering the report: #{report_result.message}",
+              message: "assignment complete; #{action}: #{report_result.message}",
               exit_code: report_result.exit_code)
           end
         end

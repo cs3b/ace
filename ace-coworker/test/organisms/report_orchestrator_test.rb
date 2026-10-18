@@ -99,13 +99,11 @@ module Ace
           assert_includes File.read(record_path), "result: success", "work success survives delivery failure"
 
           # Rerun after transport restored: same result + existing event =>
-          # send-only redelivery, no second create, no duplicate event.
+          # send-only redelivery, no second create, no duplicate event. The
+          # existing-event check goes through the fake runner's `show` step.
           orch2 = orchestrator(json: completed_json,
-            script: [{success: true, out: "delivered"}])
-          # Simulate the event file existing (event_exists? check).
-          hitl_dir = File.join(@dir, ".ace-local", "hitl")
-          FileUtils.mkdir_p(File.join(hitl_dir, "8xhq02-evt"))
-          File.write(File.join(hitl_dir, "8xhq02-evt", "8xhq02-evt.hitl.s.md"), "x")
+            script: [{success: true, out: "/fake/hitl/8xhq02-evt.hitl.s.md\n"},
+                     {success: true, out: "delivered"}])
 
           second = orch2.call(config_path: nil)
 
@@ -187,12 +185,11 @@ module Ace
         end
 
         def test_on_failure_stop_rerun_with_bound_event_still_skips_hitl
-          # First run reports normally and binds an event...
+          # A prior run bound an error event in helper state; with
+          # errors.on_failure=stop no HITL subprocess may run at all —
+          # not even the existing-event lookup or a resend.
           FileUtils.mkdir_p(File.dirname(state_path))
           File.write(state_path, JSON.generate({"result" => "error", "event_id" => "8xhq09"}))
-          hitl_dir = File.join(@dir, ".ace-local", "hitl")
-          FileUtils.mkdir_p(File.join(hitl_dir, "8xhq09-evt"))
-          File.write(File.join(hitl_dir, "8xhq09-evt", "8xhq09-evt.hitl.s.md"), "x")
           File.write(@config_path, File.read(@config_path) + "\nerrors:\n  on_failure: stop\n")
 
           result = orchestrator(json: failed_json).call(config_path: nil, message: "boom")
@@ -321,6 +318,37 @@ module Ace
           frontmatter = File.read(record_path).split("---", 3)[1]
           parsed = YAML.safe_load(frontmatter, permitted_classes: [Time])
           assert_equal "failed: transport unavailable", parsed["delivery"]
+        end
+
+        def test_error_to_success_transition_creates_new_event_end_to_end
+          # F2 end-to-end (atom covered, orchestrator path was not): the
+          # assignment fails, its error report is DELIVERED, then the work
+          # is fixed and completed. Reporting the success must create a
+          # NEW event for the new outcome — the delivered error event
+          # describes a stale result and must not be reused or treated as
+          # the assignment's final answer.
+          first = orchestrator(json: failed_json,
+            script: [{success: true, out: "HITL event created: err001 x\n"},
+                     {success: true, out: "delivered"}])
+            .call(config_path: nil, message: "verifier crashed")
+          assert_equal 1, first.exit_code
+          assert_equal "err001", first.event_id
+          first_creates = @runner_calls.count { |argv| argv[1] == "create" }
+          assert_equal 1, first_creates
+
+          second = orchestrator(json: completed_json,
+            script: [{success: true, out: "HITL event created: suc001 x\n"},
+                     {success: true, out: "delivered"}])
+            .call(config_path: nil)
+
+          assert_equal 0, second.exit_code, second.message
+          assert_equal "suc001", second.event_id, "a new outcome needs a new event"
+          assert second.created_event, "the success was created, not redelivered"
+          assert_equal 2, first_creates + @runner_calls.count { |argv| argv[1] == "create" }
+          refute @runner_calls.any? { |argv| argv[1] == "show" },
+            "a result change must not even consult the stale error event"
+          assert_includes File.read(record_path), "result: success"
+          assert_equal "suc001", JSON.parse(File.read(state_path))["event_id"]
         end
       end
     end

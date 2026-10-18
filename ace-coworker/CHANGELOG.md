@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.2] - 2026-10-18
+
+### Changed
+
+- Round-9 review follow-ups (L1/L4/L5 + QA gap):
+  - `Models::Config#with(assignment:)` owns the identity copy for the
+    `--assignment` override (single place, no field-drift between the
+    config assignment and the override); the report orchestrator now
+    calls it instead of copying fields itself (L1).
+  - `resume` says "reporting the outcome" when the delegated report run
+    created a NEW event (the F2 error→success path) and reserves
+    "redelivering the report" for true resends of the same event (L4).
+  - end-to-end regression: reporting a success after a DELIVERED error
+    report creates a new event through the orchestrator (F2 orchestrator
+    path; previously only the atom was covered).
+  - test cleanup: removed dead HITL event-file scaffolding left over
+    from the pre-F7 glob-based existence check (L5).
+
 ## [0.3.1] - 2026-10-18
 
 ### Fixed

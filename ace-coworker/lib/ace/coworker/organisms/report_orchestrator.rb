@@ -55,7 +55,9 @@ module Ace
           step: nil, no_send: false, dry_run: false)
           cfg = @config_loader.load(path: config_path)
           assignment_id = assignment.to_s.strip.empty? ? cfg.assignment : assignment.to_s.strip
-          cfg = with_assignment(cfg, assignment_id)
+          # The selected assignment (CLI override or config) is the single
+          # identity threaded through record, evidence, and HITL message.
+          cfg = cfg.with(assignment: assignment_id)
           @task_probe.resolve!(cfg.task)
           @assignment_metadata ||= Molecules::AssignmentMetadata.new(project_root: @project_root)
           @assignment_metadata.verify_task_match!(assignment_id, cfg.task)
@@ -135,19 +137,6 @@ module Ace
 
           # errors.on_failure=stop: record locally, skip HITL entirely.
           cfg.on_failure != "stop"
-        end
-
-        # The selected assignment (CLI override or config) is the single
-        # identity threaded through record, evidence, and HITL message —
-        # never mix the config assignment with a --assignment override.
-        def with_assignment(cfg, assignment_id)
-          return cfg if cfg.assignment == assignment_id
-
-          Models::Config.new(role: cfg.role, instructions: cfg.instructions,
-            start_prompt: cfg.start_prompt, start_prompt_file: cfg.start_prompt_file,
-            task: cfg.task, assignment: assignment_id, overseer: cfg.overseer,
-            reporting_channel: cfg.reporting_channel, on_failure: cfg.on_failure,
-            source_path: cfg.source_path)
         end
 
         def failed_step_number(snapshot)

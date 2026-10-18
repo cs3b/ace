@@ -98,6 +98,25 @@ module Ace
           assert_includes result.message, "redelivering the report"
         end
 
+        def test_report_disposition_says_reporting_when_new_event_created
+          # L4 regression: after the F2 error→success transition the report
+          # orchestrator creates a NEW event; the resume message must not
+          # claim a redelivery of the old one.
+          report_double = Object.new
+          report_double.define_singleton_method(:call) do |**_options|
+            ReportOrchestrator::ReportResult.new(outcome: nil, record_path: "/rec",
+              event_id: "new001", delivery: "delivered (event new001)",
+              message: "outcome recorded: success at /rec", exit_code: 0,
+              created_event: true)
+          end
+
+          result = orchestrator(json: completed_json, report_orchestrator: report_double)
+            .call(config_path: nil)
+
+          assert_includes result.message, "reporting the outcome"
+          refute_includes result.message, "redelivering"
+        end
+
         def test_report_disposition_dry_run_does_not_delegate
           report_double = Object.new
           report_double.define_singleton_method(:call) { flunk "dry-run must not delegate" }

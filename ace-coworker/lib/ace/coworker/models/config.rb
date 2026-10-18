@@ -22,6 +22,19 @@ module Ace
           @source_path = source_path.freeze
         end
 
+        # A copy with a different assignment, e.g. a --assignment CLI
+        # override threaded through report/resume. Single place so new
+        # fields can never drift between the two identities.
+        def with(assignment:)
+          return self if assignment == @assignment
+
+          self.class.new(role: role, instructions: instructions,
+            start_prompt: start_prompt, start_prompt_file: start_prompt_file,
+            task: task, assignment: assignment, overseer: overseer,
+            reporting_channel: reporting_channel, on_failure: on_failure,
+            source_path: source_path)
+        end
+
         def to_h
           {
             "role" => role,
