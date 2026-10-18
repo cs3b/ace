@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Render start-prompt placeholders in a single pass derived from `PromptTemplate::PLACEHOLDERS`, so substituted values shaped like a later placeholder are never re-expanded.
+- Raise a specific `invalid role preset` error for malformed YAML preset files (all `Psych::Exception` load failures), instead of a raw backtrace.
+- Correct the spec role workflow's escalation command to the required `ace-hitl create "<title>" --type question ... --question "..."` form.
+
 ## [0.5.0] - 2026-10-18
 
 ### Added
