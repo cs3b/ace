@@ -31,9 +31,9 @@ Zapewnić lokalną listę ace-task --in _overseer zarządzaną wyłącznie przez
 
 ## Kryteria odbioru
 
-- [ ] Po zapisie i wznowieniu lista jest dostępna dla właściciela; git status nie pokazuje jej jako plików do commitu.
-- [ ] Coworker raportuje przez wiadomość i nie zapisuje do listy overseera; odczyt/zapis złej lokalizacji nie tworzy ukrytej drugiej listy.
-- [ ] Wynik jest zgodny z kontraktem programu i możliwy do użycia przez następną rolę lub narzędzie.
+- [x] Po zapisie i wznowieniu lista jest dostępna dla właściciela; git status nie pokazuje jej jako plików do commitu.
+- [x] Coworker raportuje przez wiadomość i nie zapisuje do listy overseera; odczyt/zapis złej lokalizacji nie tworzy ukrytej drugiej listy.
+- [x] Wynik jest zgodny z kontraktem programu i możliwy do użycia przez następną rolę lub narzędzie.
 
 ## Plan weryfikacji
 

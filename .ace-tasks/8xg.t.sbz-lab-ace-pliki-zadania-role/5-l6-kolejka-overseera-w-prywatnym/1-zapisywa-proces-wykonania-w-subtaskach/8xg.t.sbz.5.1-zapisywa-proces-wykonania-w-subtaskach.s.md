@@ -31,9 +31,9 @@ Otrzymany zakres pracy zapisać jako task zarządzający z subtaskami przygotowa
 
 ## Kryteria odbioru
 
-- [ ] Drzewo pokazuje kolejność i powiązania z zadaniami projektowymi, worktree oraz assignmentami ról.
-- [ ] Samo zakończenie implementacji nie zamyka taska zarządzającego, gdy pozostaje review, integracja lub inny wymagany krok.
-- [ ] Wynik jest zgodny z kontraktem programu i możliwy do użycia przez następną rolę lub narzędzie.
+- [x] Drzewo pokazuje kolejność i powiązania z zadaniami projektowymi, worktree oraz assignmentami ról.
+- [x] Samo zakończenie implementacji nie zamyka taska zarządzającego, gdy pozostaje review, integracja lub inny wymagany krok.
+- [x] Wynik jest zgodny z kontraktem programu i możliwy do użycia przez następną rolę lub narzędzie.
 
 ## Plan weryfikacji
 
