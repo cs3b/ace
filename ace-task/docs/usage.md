@@ -69,10 +69,10 @@ ace-task update q7w --move-to next
   destination), and `ace-task doctor` neither reports the missing archive nor
   moves such a task with `--auto-fix`. The owner of the
   folder decides when obsolete history is deleted.
-- Delegation guards stay in the delegation tools: `ace-git-worktree create
-  --task` and `ace-assign create --task` reject the lab's management tasks;
-  subagents may still be delegated planning, analysis, verification, or
-  dependency analysis.
+- The delegation tools (`ace-git-worktree`, `ace-assign`) are role- and
+  folder-name agnostic: they do not reject management tasks and do not inspect
+  `.gitignore`. The caller decides which tasks it delegates; a missing task in a
+  requested worktree is reported by the executor.
 - `next`, `maybe`, `anytime`, `archive`, and existing custom folders keep their
   special-folder meaning for `--in`.
 

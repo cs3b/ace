@@ -9,12 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Remove the `_overseer` worktree refusal: `create --task` is role- and
-  folder-name-agnostic and no longer inspects a task's `special_folder`.
-  `TaskFetcher` no longer exposes that classification. There is no replacement
-  `.gitignore`/tracking check; a missing task in a requested worktree is
-  reported by the executor and preparing a correct delegation stays with the
-  requester.
+- `create --task` is role- and folder-name agnostic: it does not refuse
+  `_overseer` tasks and no longer inspects a task's `special_folder`;
+  `TaskFetcher` no longer exposes that classification. It does not inspect
+  `.gitignore` either. A missing task in a requested worktree is reported by
+  the executor and preparing a correct delegation stays with the requester.
 
 ## [0.27.1] - 2026-10-18
 

@@ -15,7 +15,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Remove the installed authority/admission surface (`authority *`), the attempt lifecycle (`attempt *`), the evidence journal/readers, the delivery coordinator and the protected submission/campaign/Inbox/resume commands together with their library modules, CLI registrations, help entries and tests. `ace-assign` keeps only the local file-based plan commands (`create`, `status`, `step`, `start`, `finish`, `fail`, `add`, `retry`, `list`, `select`, `fork-run`, `fork-session`).
 - Remove attempt/journal/evidence projections from `status` and the prepared-work handoff from `fork-session`; a local plan records no attempt, no evidence ref and no journal commit. The default configuration no longer defines the `attempt` evidence ref, evidence checkout or identity adapter.
 - Remove the `--delivery-parameters` forge-provenance input from `create`; a local plan carries no installed delivery parameters or protected delivery steps.
-- Remove the `_overseer` delegation refusal: `ace-assign` is role- and folder-name-agnostic and delegates any non-terminal task the caller names. There is no replacement `.gitignore`/tracking check; choosing appropriate work is the caller's responsibility.
 - Drop the unused runtime gem dependency `ace-support-markdown` (library-only gem with no executable; this package has no require/constant for it and no shipped preset/catalog step invokes it). `ace-git`, `ace-bundle` and `ace-review` remain declared because shipped presets/catalog steps execute their CLIs, and `ace-runtime`, `ace-tmux` and `ace-herdr` remain for the lazy terminal-adapter entrypoints used by the fork launcher.
 
 ### Changed
@@ -24,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Remove the ordinary-installed/protected branches from the drive workflow and drive skill; keep the local drive loop and HITL stall protocol.
 - Delete obsolete protected-only feature/e2e coverage and refocus README/usage docs on the local assignment plan lifecycle (`.ace-local/assign/` is the only plan store; no second queue).
 - Remove the attempt-first external action rule from the drive workflow: active steps execute directly and complete with `ace-assign finish`; actual test/review evidence is recorded in the assignment report instead of attempt receipts.
+- `create --task` is role- and folder-name agnostic: it accepts any non-terminal task the caller names, does not refuse `_overseer` tasks and does not inspect `.gitignore`. Choosing appropriate work remains the caller's responsibility.
 
 ## [0.71.0] - 2026-10-16
 

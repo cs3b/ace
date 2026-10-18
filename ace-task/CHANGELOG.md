@@ -32,9 +32,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   also skipped when the resulting archive destination is Git-ignored. The
   folder owner decides when to delete obsolete history. No private archive
   folder or retention mechanism is created.
-- Keep delegation guards for management tasks in the delegation tools
-  (`ace-git-worktree create --task`, `ace-assign create --task`); they are not
-  part of `ace-task`.
+- The delegation tools (`ace-git-worktree create --task`, `ace-assign
+  create --task`) are role- and folder-name agnostic: they do not reject
+  management tasks and do not inspect `.gitignore`. Preparing a correct
+  delegation stays with the caller; a missing task in a worktree is reported by
+  the executor.
 - Resolve the project task root from the project root (not the current
   directory) for `list --in FOLDER` validation and for the plan cache/context
   resolution, so `ace-task list --in _maybe` and `plan` work from a
