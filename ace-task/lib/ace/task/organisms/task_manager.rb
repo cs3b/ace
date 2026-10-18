@@ -1018,7 +1018,7 @@ module Ace
         # preview names the bucket the placement actually writes.
         def planned_archive_date(time)
           Time.parse(Atoms::TaskFrontmatterDefaults.format_time(time))
-        rescue StandardError
+        rescue
           time
         end
 
