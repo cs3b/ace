@@ -138,9 +138,10 @@ module Ace
             special_folder: scan_result.special_folder)
         end
 
-        # Paths a --git-commit guard must validate for an update: the task's
-        # current paths and the paths the requested relocation would create.
-        # Resolved before mutation so a rejected commit leaves state unchanged.
+        # Paths a --git-commit guard must validate for an update: every spec of
+        # the moving family at its current location and at the destination the
+        # relocation would create. Resolved before mutation, so a rejected
+        # commit leaves state unchanged.
         #
         # @param ref [String] Task reference
         # @param move_to [String, nil] Requested folder move
@@ -150,17 +151,35 @@ module Ace
           task = show(ref)
           return [] unless task
 
-          paths = [task.path, task.file_path]
+          source_roots = [task.path]
+          destination_roots = []
+          extra_paths = []
+
           if move_to
-            destination = relocation_destination_path(task, move_to)
-            if destination
-              paths << destination
-              paths << File.join(destination, File.basename(task.file_path))
-            end
+            source_root, destination_root = relocation_roots(task, move_to)
+            source_roots = [source_root] if source_root
+            destination_roots << destination_root if destination_root
           elsif move_as_child_of
-            paths.concat(reparenter_destination_paths(task, move_as_child_of))
+            preview = reparenter_destination_paths(task, move_as_child_of)
+            unless preview.empty?
+              destination_roots << preview[0]
+              extra_paths << preview[1]
+            end
           end
-          paths.compact.uniq
+
+          paths = [task.path, task.file_path]
+          source_roots.each { |root| paths.concat(task_specs(root)) }
+          destination_roots.each do |destination_root|
+            paths << destination_root
+            source_roots.each do |source_root|
+              source_root_path = File.expand_path(source_root)
+              task_specs(source_root).each do |spec|
+                relative = spec.delete_prefix(source_root_path + File::SEPARATOR)
+                paths << File.join(destination_root, relative)
+              end
+            end
+          end
+          (paths + extra_paths).compact.uniq
         end
 
         # Destination directory a relocation would create, without mutating.
@@ -173,20 +192,8 @@ module Ace
           task = task_or_ref.is_a?(Models::Task) ? task_or_ref : show(task_or_ref)
           return nil unless task
 
-          detector = Ace::Support::Items::Atoms::SpecialFolderDetector
-          return File.join(@root_dir, File.basename(task.path)) if detector.move_to_root?(move_to)
-
-          normalized = detector.normalize(move_to)
-          mover = Ace::Support::Items::Molecules::FolderMover.new(@root_dir)
-          if task.subtask? && normalized == "_archive"
-            parent = show(task.parent_id)
-            return nil unless parent
-
-            archived_parent = mover.destination_path(parent, to: "archive", date: parse_archive_date(parent))
-            File.join(archived_parent, File.basename(task.path))
-          else
-            mover.destination_path(task, to: normalized, date: parse_archive_date(task))
-          end
+          _source_root, destination_root = relocation_roots(task, move_to)
+          destination_root
         end
 
         # List tasks with optional filtering and sorting.
@@ -935,6 +942,28 @@ module Ace
           reparenter.destination_paths(task, target: target, resolve_ref: ->(ref) { show(ref) })
         rescue ArgumentError
           []
+        end
+
+        # Source family root and destination root for a folder move.
+        # A subtask archive move relocates the whole parent family.
+        def relocation_roots(task, move_to)
+          detector = Ace::Support::Items::Atoms::SpecialFolderDetector
+          return [task.path, File.join(@root_dir, File.basename(task.path))] if detector.move_to_root?(move_to)
+
+          normalized = detector.normalize(move_to)
+          mover = Ace::Support::Items::Molecules::FolderMover.new(@root_dir)
+          if task.subtask? && normalized == "_archive"
+            parent = show(task.parent_id)
+            return [nil, nil] unless parent
+
+            [parent.path, mover.destination_path(parent, to: "archive", date: parse_archive_date(parent))]
+          else
+            [task.path, mover.destination_path(task, to: normalized, date: parse_archive_date(task))]
+          end
+        end
+
+        def task_specs(root)
+          Dir.glob(File.join(root.to_s, "**", "*.s.md"))
         end
 
         def family_completion

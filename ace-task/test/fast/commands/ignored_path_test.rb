@@ -317,6 +317,34 @@ class IgnoredPathTest < AceTaskTestCase
       "doctor --auto-fix must not move a task into an ignored archive destination"
   end
 
+  def test_git_commit_guard_checks_every_spec_of_a_moving_family
+    parent_id = create_project_task("Family guard parent")
+    child_output = invoke("create", "Family guard child", "--child-of", parent_id)
+    child_id = child_output[/Created task ([0-9a-z]{3}\.t\.[0-9a-z]{3}\.[0-9a-z])/, 1]
+    refute_nil child_id
+    append_gitignore("/.ace-tasks/_archive/**/*.s.md")
+
+    error = assert_raises(Ace::Support::Cli::Error) do
+      invoke("update", parent_id, "--move-to", "archive", "--gc")
+    end
+    assert_match(/Git-ignored task path/, error.message)
+    refute_includes invoke("show", parent_id, "--path"), "_archive"
+    assert_empty Dir.glob(File.join(@tmpdir, ".ace-tasks", "_archive", "**", "*")),
+      "a rejected family archive must not create destination content"
+  end
+
+  def test_create_dry_run_predicts_git_ignore_commit_rejection
+    child_ignored = "_child-scratch"
+    append_gitignore("/.ace-tasks/#{child_ignored}/*")
+    FileUtils.mkdir_p(File.join(@tmpdir, ".ace-tasks", child_ignored))
+
+    error = assert_raises(Ace::Support::Cli::Error) do
+      invoke("create", "Preview ignored", "--in", child_ignored, "--gc", "--dry-run")
+    end
+    assert_match(/Git-ignored task path/, error.message)
+    assert_empty Dir.children(File.join(@tmpdir, ".ace-tasks", child_ignored))
+  end
+
   private
 
   def append_gitignore(pattern)
