@@ -10,8 +10,8 @@ module Molecules
       FakeEntry.new(name: "ace-worker", uid: Process.uid, gid: Process.gid, dir: Dir.home)
     end
 
-    def verifier(lookup: ->(_name) { self_entry })
-      Ace::Lab::Molecules::RoleVerifier.new(account_lookup: lookup)
+    def verifier(lookup: ->(_name) { self_entry }, dry_run: false)
+      Ace::Lab::Molecules::RoleVerifier.new(account_lookup: lookup, dry_run: dry_run)
     end
 
     def role(instructions)
@@ -88,6 +88,29 @@ module Molecules
         assert_equal "failed", result["status"]
         assert_match(/is not a regular file/, result["message"])
       end
+    end
+
+    def test_dry_run_with_would_create_account_predicts_verified
+      Dir.mktmpdir do |dir|
+        path = File.join(dir, "worker.md")
+        File.write(path, "instructions")
+        File.chmod(0o644, path)
+
+        # the account phase would create the account — live passwd
+        # returns nil, but the prediction must not fail the dependency
+        result = verifier(lookup: ->(_name) { nil }, dry_run: true).call(role: role(path))
+
+        assert_equal "verified", result["status"]
+        assert_nil result["message"]
+      end
+    end
+
+    def test_dry_run_with_would_create_account_still_fails_on_missing_file
+      result = verifier(lookup: ->(_name) { nil }, dry_run: true)
+        .call(role: role("/nonexistent/roles/worker.md"))
+
+      assert_equal "failed", result["status"]
+      assert_match(/does not exist/, result["message"])
     end
   end
 end

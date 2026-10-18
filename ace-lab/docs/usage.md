@@ -164,10 +164,21 @@ roles:                       # optional
 
 Statuses: accounts `created|exists|would_create|failed`; directories
 `created|exists|mode_fixed|would_create|would_fix_mode|failed`; keys
-`created|exists|would_create|failed` (with the public `fingerprint`);
-roles `verified|failed`. `ok` in the JSON report means zero failed
-items. Key/role items whose account failed are reported as dependency
-failures instead of being attempted.
+`created|exists|would_create|would_repair_public|would_fix_mode|failed`
+(with the public `fingerprint`); roles `verified|failed`. `ok` in the
+JSON report means zero failed items. Key/role items whose account
+failed are reported as dependency failures instead of being attempted.
+
+`--dry-run` is a faithful prediction of the wet run (`would_*`
+statuses, zero mutations): keys and roles of an account the account
+phase *would create* are predicted (`would_create` keys, `verified`
+roles) even though the account does not exist in passwd yet; an
+existing private key with a missing `.pub` predicts
+`would_repair_public` (the wet run regenerates it); mode or ownership
+drift on an existing pair predicts `would_fix_mode`. One prediction
+limit: an *existing* directory whose declared owner account does not
+exist yet cannot have its ownership checked, and is reported as a
+failed item with a rerun hint.
 
 Behavior and guarantees:
 
@@ -175,7 +186,12 @@ Behavior and guarantees:
   recreated; only mode drift on an owner-matching directory is repaired.
   A pre-existing directory owned by a different account is refused
   (`refusing takeover`), never silently chowned. Symlinks and
-  non-directories at declared paths are refused.
+  non-directories at declared paths are refused. Residual policy:
+  symlink refusal applies to the *declared leaf* path only —
+  intermediate path components are followed (and created with default
+  mode/ownership, since only the leaf carries declared values); the
+  manifest is root-owned, so this trusts the deployment document, not
+  the account.
 - **Account creation** uses the platform's own tooling (darwin
   `dscl . -create` + `createhomedir`, linux `useradd -m`), always with
   argv arrays. Unsupported platforms are reported with a manual remedy
@@ -187,7 +203,11 @@ Behavior and guarantees:
   ownership assigned to the account. Reports carry the public
   fingerprint only — private key material never appears in any status,
   message, report, or diagnostic argument. Key paths inside a git
-  worktree are refused outright.
+  worktree are refused outright. Planted symlinks on the
+  account-controlled paths — `.ssh` (checked with `lstat` before any
+  `mkdir`/chmod/chown) and `<key>.pub` (checked with `lstat`, written
+  with `O_NOFOLLOW`) — are refused, so a privileged run cannot be
+  turned into an arbitrary chmod/chown/write by the account.
 - **Exit codes.** A wet run with failed items prints the report, then
   exits non-zero enumerating each `<section>/<item>: <message>`;
   `--dry-run` exits 0 whenever a report renders (conflicts appear as

@@ -49,6 +49,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   document, not task state (ADR-034): nothing outside the manifest is
   touched and no journal is written.
 
+### Fixed (review round 1)
+
+- `KeyProvisioner` refused symlinks on the private key path but followed
+  them on the other account-controlled paths: a planted `~/.ssh`
+  symlink was accepted by `mkdir_p` and then chmodded/chowned through
+  (directory-ownership takeover of an arbitrary path in a privileged
+  run), and a dangling `<key>.pub` symlink turned public-key
+  regeneration into an arbitrary privileged write. Both paths are now
+  `lstat`-guarded before any mutation, the `.pub` write uses
+  `O_NOFOLLOW`, and adversarial symlink tests assert refusal with zero
+  mutation of the target.
+- `--dry-run` now predicts the fresh-machine flow it exists to predict:
+  keys and roles of an account the account phase would create render as
+  `would_create`/`verified` instead of `failed` dependency errors
+  (prediction no longer re-consults live passwd for the account), an
+  existing private key with a missing `.pub` predicts
+  `would_repair_public` (matching the wet run's regeneration), and mode
+  or ownership drift on an existing pair predicts `would_fix_mode`. An
+  existing directory whose declared owner would be created reports a
+  prediction limit with a rerun hint instead of a bare dependency
+  failure.
+- `Atoms::InstallSchema` duplicate-declaration messages are value-free,
+  as the class contract already promised (the offending username/path/
+  id is no longer interpolated).
+- darwin account creation sets the complete dscl shape, including
+  `GeneratedUUID` (fresh UUID) and `Password "*"`; `AccountProvisioner`
+  classifies a missing `useradd`/`dscl` binary as `enoent`
+  ("not found in PATH") like `KeyProvisioner` instead of
+  `exit failed`.
+- `DirectoryProvisioner` failed entries always carry the full
+  `{path, owner, mode, status, message}` shape (rescue paths included),
+  and the prepare CLI shares one section-namer map between the table
+  renderer and the failure summary; `usage.md` documents the
+  intermediate-path-component residual policy (leaf-only symlink
+  refusal).
+
 ## [0.11.0] - 2026-10-18
 
 ### Fixed (review PR #383, round 3)

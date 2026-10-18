@@ -15,10 +15,11 @@ module Ace
       class RoleVerifier
         PROTOCOL_PREFIXES = %w[wfi:// prompt:// tmpl://].freeze
 
-        attr_reader :account_lookup
+        attr_reader :account_lookup, :dry_run
 
-        def initialize(account_lookup: nil)
+        def initialize(account_lookup: nil, dry_run: false)
           @account_lookup = account_lookup || method(:lookup_passwd)
+          @dry_run = dry_run
         end
 
         # @param role [Hash] normalized manifest role entry
@@ -28,7 +29,7 @@ module Ace
                   "instructions" => role["instructions"]}
 
           entry = account_lookup.call(role["account"])
-          unless entry
+          if entry.nil? && !dry_run
             return base.merge("status" => "failed",
               "message" => "role '#{role['id']}' account '#{role['account']}' is not available; " \
                 "fix the account phase first")
@@ -46,6 +47,10 @@ module Ace
           PROTOCOL_PREFIXES.any? { |prefix| instructions.start_with?(prefix) }
         end
 
+        # entry is nil only in dry-run for an account the account phase
+        # would create: readability depends on a uid that does not exist
+        # yet, so the binding is predicted verified once the file itself
+        # checks out.
         def verify_file(base, path, entry)
           stat = File.stat(path)
           unless stat.file?
@@ -53,7 +58,7 @@ module Ace
               "message" => "instructions '#{path}' is not a regular file")
           end
 
-          unless readable_by_account?(stat, entry)
+          if entry && !readable_by_account?(stat, entry)
             return base.merge("status" => "failed",
               "message" => "instructions '#{path}' is not readable by account '#{entry.name}' " \
                 "(static permission bits; ACLs are out of scope)")

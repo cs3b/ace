@@ -95,7 +95,7 @@ module Ace
         end
 
         def prepare_roles(entries, available)
-          provisioner = Molecules::RoleVerifier.new(account_lookup: @account_lookup)
+          provisioner = Molecules::RoleVerifier.new(account_lookup: @account_lookup, dry_run: @effective_dry_run)
           entries.map do |role|
             if available.include?(role["account"])
               provisioner.call(role: role)

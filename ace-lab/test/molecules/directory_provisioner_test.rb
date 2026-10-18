@@ -172,5 +172,41 @@ module Molecules
         assert_equal "exists", result["status"]
       end
     end
+
+    # Every failed entry must carry the full {path, owner, mode} shape —
+    # one shape per section for JSON consumers, rescue paths included.
+    def test_refused_entries_carry_owner_and_mode_keys
+      Dir.mktmpdir do |dir|
+        occupied = File.join(dir, "occupied")
+        File.write(occupied, "occupied")
+        link = File.join(dir, "link")
+        File.symlink(occupied, link)
+
+        occupied_result = provisioner.call(directory: directory(occupied))
+        link_result = provisioner.call(directory: directory(link))
+
+        [occupied_result, link_result].each do |result|
+          assert_equal "failed", result["status"]
+          assert_equal "self", result["owner"]
+          assert_equal "0750", result["mode"]
+          assert_equal %w[path owner mode status message].sort, result.keys.sort
+        end
+      end
+    end
+
+    def test_dry_run_existing_directory_with_would_create_owner_reports_prediction_limit
+      Dir.mktmpdir do |dir|
+        path = File.join(dir, "labs")
+        Dir.mkdir(path)
+        File.chmod(0o750, path)
+
+        result = provisioner(lookup: ->(_name) { nil }, dry_run: true).call(directory: directory(path))
+
+        assert_equal "failed", result["status"]
+        assert_match(/the account phase would create it/, result["message"])
+        assert_match(/cannot be predicted before the account exists/, result["message"])
+        assert_equal 0o750, File.stat(path).mode & 0o7777
+      end
+    end
   end
 end

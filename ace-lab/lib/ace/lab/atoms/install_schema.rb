@@ -100,8 +100,8 @@ module Ace
 
               {"username" => username, "role" => role, "create" => create, "home" => home}
             end.tap do |accounts|
-              duplicates_of(accounts.map { |a| a["username"] }) do |username|
-                raise_invalid_entry("accounts", "username is declared more than once: #{username}")
+              duplicates_of(accounts.map { |a| a["username"] }) do |_username|
+                raise_invalid_entry("accounts", "username is declared more than once")
               end
             end
           end
@@ -147,8 +147,8 @@ module Ace
 
               {"account" => account, "type" => type, "path" => path}
             end.tap do |keys|
-              duplicates_of(keys.map { |key| key["path"] }) do |path|
-                raise_invalid_entry("keys", "path is declared more than once: #{path}")
+              duplicates_of(keys.map { |key| key["path"] }) do |_path|
+                raise_invalid_entry("keys", "path is declared more than once")
               end
             end
           end
@@ -173,8 +173,8 @@ module Ace
 
               {"id" => id, "account" => account, "instructions" => instructions}
             end.tap do |roles|
-              duplicates_of(roles.map { |role| role["id"] }) do |id|
-                raise_invalid_entry("roles", "id is declared more than once: #{id}")
+              duplicates_of(roles.map { |role| role["id"] }) do |_id|
+                raise_invalid_entry("roles", "id is declared more than once")
               end
             end
           end

@@ -36,18 +36,18 @@ module Ace
           if stat.nil?
             create_missing(path, directory, mode)
           elsif stat.symlink?
-            refuse_symlink(path)
+            refuse_symlink(path, directory)
           elsif !stat.directory?
-            failure(path, "path '#{path}' is occupied by a non-directory; refusing")
+            failure(path, "path '#{path}' is occupied by a non-directory; refusing", directory)
           else
             ensure_existing(path, directory, stat, mode)
           end
         rescue Errno::EPERM, Errno::EACCES
           failure(path,
             "insufficient permissions while preparing '#{path}'; rerun ace-lab prepare with sudo " \
-            "or adjust ownership manually")
+            "or adjust ownership manually", directory)
         rescue SystemCallError => e
-          failure(path, "path '#{path}' could not be prepared (#{e.class.name})")
+          failure(path, "path '#{path}' could not be prepared (#{e.class.name})", directory)
         end
 
         private
@@ -56,13 +56,15 @@ module Ace
           {"path" => path, "owner" => directory["owner"], "mode" => directory["mode"]}
         end
 
-        def failure(path, message, directory = nil)
-          entry = directory ? base(path, directory) : {"path" => path}
-          entry.merge("status" => "failed", "message" => message)
+        # Every failed entry carries the full {path, owner, mode} shape —
+        # JSON consumers must see one shape per section, including
+        # rescue-path failures.
+        def failure(path, message, directory)
+          base(path, directory).merge("status" => "failed", "message" => message)
         end
 
-        def refuse_symlink(path)
-          failure(path, "path '#{path}' is a symbolic link; refusing")
+        def refuse_symlink(path, directory)
+          failure(path, "path '#{path}' is a symbolic link; refusing", directory)
         end
 
         # Ownership an existing directory must match: the declared owner
@@ -114,9 +116,15 @@ module Ace
         end
 
         def owner_unavailable(path, directory)
+          remedy = if dry_run
+            "the account phase would create it; ownership of existing '#{path}' cannot be " \
+              "predicted before the account exists — rerun prepare --dry-run after the account phase"
+          else
+            "fix the account phase first"
+          end
           failure(path,
             "owner account '#{directory["owner"]}' is not available on this machine; " \
-            "fix the account phase first", directory)
+            "#{remedy}", directory)
         end
 
         def chown_target(directory)

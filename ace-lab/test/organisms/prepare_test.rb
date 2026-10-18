@@ -102,6 +102,29 @@ module Organisms
       end
     end
 
+    # The fresh-machine flow dry-run exists to predict: the account does
+    # not exist in passwd yet (lookup nil, exactly what production's
+    # Etc.getpwnam returns), the account phase would create it, and the
+    # downstream sections must predict would_* instead of failing their
+    # dependencies.
+    def test_dry_run_on_fresh_machine_predicts_would_create_keys_and_verified_roles
+      with_manifest(
+        MANIFEST.gsub("create: false", "create: true"),
+        lookup: ->(_name) { nil }, privileged: -> { true }, dry_run: true
+      ) do |organism, dir|
+        report = organism.call
+
+        assert_equal true, report["ok"]
+        assert_equal "would_create", report["accounts"].first["status"]
+        assert_equal "would_create", report["directories"].first["status"]
+        assert_equal "would_create", report["keys"].first["status"]
+        assert_nil report["keys"].first["message"]
+        assert_equal "verified", report["roles"].first["status"]
+        refute File.exist?(File.join(dir, "labs"))
+        refute File.exist?(File.join(dir, "home"))
+      end
+    end
+
     def test_missing_manifest_raises_invalid_configuration_with_path
       Ace::Lab::Molecules::GrantResolver.stub :read_verified, nil do
         organism = Ace::Lab::Organisms::Prepare.new(

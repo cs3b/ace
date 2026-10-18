@@ -84,6 +84,11 @@ module Molecules
       assert_includes calls, ["dscl", ".", "-create", "/Users/ace-worker", "PrimaryGroupID", "20"]
       assert_includes calls, ["dscl", ".", "-create", "/Users/ace-worker", "UserShell", "/bin/zsh"]
       assert_includes calls, ["dscl", ".", "-create", "/Users/ace-worker", "NFSHomeDirectory", "/home/ace-worker"]
+      # complete dscl account shape: GeneratedUUID + disabled Password
+      guid_step = calls.find { |argv| argv[4] == "GeneratedUID" }
+      assert_equal ["dscl", ".", "-create", "/Users/ace-worker", "GeneratedUID"], guid_step[0, 5]
+      assert_match(/\A[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\z/, guid_step[5])
+      assert_includes calls, ["dscl", ".", "-create", "/Users/ace-worker", "Password", "*"]
       assert_equal ["createhomedir", "-c", "-u", "ace-worker"], calls.last
     end
 
@@ -131,6 +136,24 @@ module Molecules
       assert_equal "failed", result["status"]
       assert_match(/command failed \(useradd, exit 12\): first line of failure/, result["message"])
       refute_includes result["message"], "second line"
+    end
+
+    def test_missing_useradd_binary_is_classified_as_enoent
+      runner = fake_runner("useradd" => {"status" => "enoent", "out" => "", "err" => ""})
+
+      result = provisioner(runner: runner, platform: "linux").call(account: account("create" => true))
+
+      assert_equal "failed", result["status"]
+      assert_match(/useradd not found in PATH; install it and rerun ace-lab prepare/, result["message"])
+    end
+
+    def test_missing_dscl_binary_is_classified_as_enoent
+      runner = fake_runner("dscl" => {"status" => "enoent", "out" => "", "err" => ""})
+
+      result = provisioner(runner: runner, platform: "darwin").call(account: account("create" => true))
+
+      assert_equal "failed", result["status"]
+      assert_match(/dscl not found in PATH/, result["message"])
     end
 
     def test_dry_run_predicts_creation_without_invoking_the_runner

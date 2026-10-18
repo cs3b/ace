@@ -3,6 +3,7 @@
 require_relative "../errors"
 require "open3"
 require "etc"
+require "securerandom"
 
 module Ace
   module Lab
@@ -87,6 +88,8 @@ module Ace
             ["dscl", ".", "-create", "/Users/#{username}", "PrimaryGroupID", DARWIN_PRIMARY_GROUP.to_s],
             ["dscl", ".", "-create", "/Users/#{username}", "UserShell", DEFAULT_SHELL],
             ["dscl", ".", "-create", "/Users/#{username}", "NFSHomeDirectory", account["home"]],
+            ["dscl", ".", "-create", "/Users/#{username}", "GeneratedUID", SecureRandom.uuid],
+            ["dscl", ".", "-create", "/Users/#{username}", "Password", "*"],
             ["createhomedir", "-c", "-u", username]
           ]
           steps.each do |argv|
@@ -127,6 +130,9 @@ module Ace
           result = runner.call(argv)
           if result["status"] == "ok"
             {"ok" => true, "out" => result["out"], "message" => nil}
+          elsif result["status"] == "enoent"
+            {"ok" => false, "out" => result["out"],
+             "message" => "#{argv.first} not found in PATH; install it and rerun ace-lab prepare"}
           else
             first_line = result["err"].to_s.lines.map(&:strip).reject(&:empty?).first
             message = "command failed (#{argv.first}, exit #{result['status']})"
@@ -138,6 +144,8 @@ module Ace
         def run_argv(argv)
           out, err, status = Open3.capture3(*argv)
           {"status" => status.success? ? "ok" : status.exitstatus, "out" => out, "err" => err}
+        rescue Errno::ENOENT
+          {"status" => "enoent", "out" => "", "err" => ""}
         rescue SystemCallError => e
           {"status" => "failed", "out" => "", "err" => e.class.name}
         end

@@ -12,6 +12,15 @@ module Ace
         class Prepare < Ace::Support::Cli::Command
           include Ace::Support::Cli::Base
 
+          # One shared section-namer map: the table renderer and the
+          # failure summary must name items identically.
+          SECTION_NAMERS = {
+            "accounts" => ->(item) { item["username"] },
+            "directories" => ->(item) { item["path"] },
+            "keys" => ->(item) { "#{item['account']}:#{item['path']}" },
+            "roles" => ->(item) { item["id"] }
+          }.freeze
+
           desc "Prepare accounts, directories, permissions, keys and roles from the trusted install manifest"
 
           example [
@@ -61,13 +70,7 @@ module Ace
           def render_table(report)
             lines = ["Machine: #{report['machine']}  manifest: #{report['manifest']}" \
               "#{"  (dry run)" if report['dry_run']}"]
-            sections = {
-              "accounts" => ->(item) { item["username"] },
-              "directories" => ->(item) { item["path"] },
-              "keys" => ->(item) { "#{item['account']}:#{item['path']}" },
-              "roles" => ->(item) { item["id"] }
-            }
-            sections.each do |section, namer|
+            SECTION_NAMERS.each do |section, namer|
               lines << "#{section.capitalize}:"
               items = report[section]
               if items.empty?
@@ -84,13 +87,7 @@ module Ace
           end
 
           def failure_summary(report)
-            names = {
-              "accounts" => ->(item) { item["username"] },
-              "directories" => ->(item) { item["path"] },
-              "keys" => ->(item) { "#{item['account']}:#{item['path']}" },
-              "roles" => ->(item) { item["id"] }
-            }
-            failures = names.flat_map do |section, namer|
+            failures = SECTION_NAMERS.flat_map do |section, namer|
               report[section]
                 .select { |item| item["status"] == "failed" }
                 .map { |item| "#{section}/#{namer.call(item)}: #{item['message']}" }

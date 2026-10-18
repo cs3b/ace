@@ -2,6 +2,7 @@
 
 require_relative "lab/version"
 require "ace/support/config"
+require "rbconfig"
 
 require_relative "lab/errors"
 require_relative "lab/authorization_path"
