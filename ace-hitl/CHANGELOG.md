@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Remove the second-commander proposal surface: the `proposal` CLI command, `Lifecycle::Proposals`, the proposal policy/evaluator, proposal frames, and the publication HITL binding tied to the removed publication authority.
 - Remove managed and TLS `serve` modes: `serve` requires `--operator-only` and fails clearly otherwise.
 - Remove the unused old-lab Root Overseer reverse-address channel: `Lifecycle::Overseer`, the `overseer-send`/`overseer-pending`/`overseer-ack` CLI commands, the default `mo` responder, the `ACE_HITL_OVERSEER_CHANNEL_ROOT`/`/lab/state/overseer-channel` default, and the `[decyzja]`/`[pytanie]`/`[info]` response policy. Generic HITL transport and the ready lifecycle surface are unchanged; there is no replacement queue or relay for this role policy.
+- Remove the now-dead `LifecycleCommand::STDIN_READER` constant (`deliver` reads stdin inline) and add a Duty projection regression test covering the answer-delivered pending state and mixed effect visibility.
 
 ### Changed
 
