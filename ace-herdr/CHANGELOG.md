@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- `ace-herdr status` (task 8xg.t.sbz.6.0): composes `workspace_list`/`tab_list`/`pane_list` into one readable tree (default table, `--format json`, `--workspace` scoping, `-q`). Counts are recomputed from the nesting and panes referencing vanished tabs/workspaces stay visible in a synthetic `(unlinked)` group. A live-but-empty layout prints `No live herdr workspaces.` and exits 0; an unreachable runtime is an actionable non-zero error, never an empty layout.
+
 ## [0.6.1] - 2026-10-16
 
 ### Fixed
