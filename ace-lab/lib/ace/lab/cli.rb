@@ -9,6 +9,7 @@ require_relative "cli/commands/services"
 require_relative "cli/commands/resolve"
 require_relative "cli/commands/route"
 require_relative "cli/commands/status"
+require_relative "cli/commands/prepare"
 
 module Ace
   module Lab
@@ -25,7 +26,8 @@ module Ace
         ["services", "List lab services in a project by stable ID"],
         ["resolve", "Resolve one lab entry by exact stable ID"],
         ["route", "Select a configured capable service in a project"],
-        ["status", "Show lab configuration and local file state (read-only)"]
+        ["status", "Show lab configuration and local file state (read-only)"],
+        ["prepare", "Prepare accounts, directories, permissions, keys and roles from the trusted install manifest"]
       ].freeze
 
       HELP_EXAMPLES = [
@@ -33,7 +35,8 @@ module Ace
         "ace-lab agents --project atlas --format json",
         "ace-lab resolve --id atlas-planner --format json",
         "ace-lab route --project atlas --capability search --format json",
-        "ace-lab status --format json"
+        "ace-lab status --format json",
+        "ace-lab prepare --dry-run"
       ].freeze
 
       # Start the CLI
@@ -51,6 +54,7 @@ module Ace
       register "resolve", CLI::Commands::Resolve.new
       register "route", CLI::Commands::Route.new
       register "status", CLI::Commands::Status.new
+      register "prepare", CLI::Commands::Prepare.new
 
       # Register version command
       version_cmd = Ace::Support::Cli::VersionCommand.build(

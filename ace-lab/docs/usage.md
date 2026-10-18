@@ -1,7 +1,8 @@
 # ace-lab usage
 
-`ace-lab` currently exposes read-only topology queries only. The lab installer
-and project onboarding are **planned (L8: not available yet)**.
+`ace-lab` exposes read-only topology queries, the lab status snapshot, and
+the `prepare` phase of the lab installer. Full installation and project
+onboarding are **planned (L8: not available yet)**.
 
 The file-based ownership model is documented once in
 [../../docs/lab-flow.md](../../docs/lab-flow.md).
@@ -119,15 +120,104 @@ invalid configuration or an unreadable location — prints the **full report
 first**, then fails non-zero with the error, so available results stay visible
 next to the failure.
 
+## Prepare (L8.1)
+
+```bash
+ace-lab prepare              # table: one line per manifest item
+ace-lab prepare --dry-run    # predict (would_*) without mutating anything
+ace-lab prepare --format json
+```
+
+`prepare` reads the trusted install manifest from the fixed deployment
+path `/etc/lab/ace-lab/install.yml` and makes the machine match it,
+idempotently, in a fixed section order: accounts → directories → keys →
+roles. There is deliberately no `--manifest` flag: a caller-selected
+manifest could manufacture privileges (accounts, directories, keys), so
+the manifest is a root-owned deployment document verified through the
+same fail-closed traversal as the authorization file (every element on
+the path root-owned and not group/world-writable, `O_NOFOLLOW` on the
+final component). It is never edited through the `.ace/` cascade and is
+not task state (ADR-034): nothing outside the manifest is touched, and
+no progress journal is written — re-running `prepare` simply converges.
+
+```yaml
+# /etc/lab/ace-lab/install.yml — root-owned deployment document
+schema_version: 1            # required, must be 1
+machine: lab01               # required identity (role/HITL addressing)
+accounts:                    # optional
+  - username: ace-worker     # ^[a-z_][a-z0-9_-]{0,31}$, unique
+    role: worker             # informational binding
+    create: false            # default; true requires administrator privileges
+    home: /home/ace-worker   # default: /Users/<u> (darwin), /home/<u> (linux)
+directories:                 # optional
+  - path: /home/ace-overseer/labs   # absolute
+    owner: ace-overseer      # optional; omitted = installer ownership
+    mode: "0750"             # optional octal string, default "0755"
+keys:                        # optional, ed25519 only (v1)
+  - account: ace-worker      # must reference a declared account
+    path: /home/ace-worker/.ssh/id_ed25519  # optional, default <home>/.ssh/id_ed25519
+roles:                       # optional
+  - id: worker               # ^[a-z][a-z0-9_-]{0,31}$, unique
+    account: ace-worker
+    instructions: wfi://assign/work  # wfi://|prompt://|tmpl:// or an absolute readable file
+```
+
+Statuses: accounts `created|exists|would_create|failed`; directories
+`created|exists|mode_fixed|would_create|would_fix_mode|failed`; keys
+`created|exists|would_create|failed` (with the public `fingerprint`);
+roles `verified|failed`. `ok` in the JSON report means zero failed
+items. Key/role items whose account failed are reported as dependency
+failures instead of being attempted.
+
+Behavior and guarantees:
+
+- **Idempotent convergence.** Existing resources are verified, not
+  recreated; only mode drift on an owner-matching directory is repaired.
+  A pre-existing directory owned by a different account is refused
+  (`refusing takeover`), never silently chowned. Symlinks and
+  non-directories at declared paths are refused.
+- **Account creation** uses the platform's own tooling (darwin
+  `dscl . -create` + `createhomedir`, linux `useradd -m`), always with
+  argv arrays. Unsupported platforms are reported with a manual remedy
+  (`create: false`). Missing administrator privileges are classified
+  with an actionable message, as is a missing account without
+  `create: true`.
+- **Secret hygiene.** Key pairs are generated with `ssh-keygen -t
+  ed25519`; `.ssh` is 0700, the private key 0600, the public key 0644,
+  ownership assigned to the account. Reports carry the public
+  fingerprint only — private key material never appears in any status,
+  message, report, or diagnostic argument. Key paths inside a git
+  worktree are refused outright.
+- **Exit codes.** A wet run with failed items prints the report, then
+  exits non-zero enumerating each `<section>/<item>: <message>`;
+  `--dry-run` exits 0 whenever a report renders (conflicts appear as
+  predicted failures). A missing, untrusted or invalid manifest is a
+  classified error naming the path, never its content.
+
+Boundaries (what `prepare` is not):
+
+- No project onboarding (`ace-lab project add`, L8.2) — the manifest's
+  role catalog declares where each role lives and under which account;
+  the project-add step consumes it.
+- No full `ace-lab install` orchestration (L8.3): no HITL adapter
+  configuration, no foreign-lab refusal, no cross-check of `machine`
+  against the `hitl` cascade.
+- No interrupted-install resume bookkeeping (L8.4): re-running `prepare`
+  is the resume mechanism; install-level resumption composes it.
+- No end-to-end verification under the target accounts (L8.5): real
+  multi-account proof belongs to the readiness verification step.
+
 ## Planned waves
 
 > **L7 remainder:** `ace-lab status` is delivered; the remaining L7 scope
 > (configurable `ace-overseer status` aggregation, pi continuation) lives in
 > its own packages and is not available yet.
 >
-> **Planned (L8):** installer (accounts, directories, keys), project onboarding,
-> resuming an interrupted install, and readiness verification are not available
-> yet.
+> **Planned (L8):** project onboarding, resuming an interrupted install,
+> and readiness verification are not available yet. The preparation
+> phase is delivered as `ace-lab prepare` (L8.1); `ace-lab install`
+> (L8.3) will compose it with configuration, HITL adapters and
+> verification.
 
 ## Boundaries
 

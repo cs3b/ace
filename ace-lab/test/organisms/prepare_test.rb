@@ -1,0 +1,143 @@
+# frozen_string_literal: true
+
+require_relative "../test_helper"
+
+module Organisms
+  class PrepareTest < Minitest::Test
+    FakeEntry = Struct.new(:name, :uid, :gid, :dir, keyword_init: true)
+
+    def self_entry(username)
+      FakeEntry.new(name: username, uid: Process.uid, gid: Process.gid, dir: "/home/#{username}")
+    end
+
+    MANIFEST = <<~YAML
+      ---
+      schema_version: 1
+      machine: lab01
+      accounts:
+        - username: ace-worker
+          role: worker
+          create: false
+          home: /srv/nonexistent-labs-root/home/ace-worker
+      directories:
+        - path: /srv/nonexistent-labs-root/labs
+          owner: ace-worker
+          mode: "0750"
+      keys:
+        - account: ace-worker
+      roles:
+        - id: worker
+          account: ace-worker
+          instructions: wfi://assign/work
+    YAML
+
+    # The trusted-read seam is stubbed at the GrantResolver boundary: the
+    # loader's fail-closed behavior has its own tests. Directories point
+    # under a nonexistent root so the real filesystem tests exercise the
+    # tmpdir paths created per test below.
+    def with_manifest(yaml = MANIFEST, lookup: ->(name) { self_entry(name) }, **options, &block)
+      Dir.mktmpdir do |dir|
+        manifest = yaml.gsub("/srv/nonexistent-labs-root", dir)
+        Ace::Lab::Molecules::GrantResolver.stub :read_verified, manifest do
+          organism = Ace::Lab::Organisms::Prepare.new(
+            manifest_path: "/etc/lab/ace-lab/install.yml",
+            account_lookup: lookup,
+            platform: "linux",
+            **options
+          )
+          block.call(organism, dir)
+        end
+      end
+    end
+
+    def test_full_manifest_aggregates_ok_in_fixed_section_order
+      with_manifest do |organism, dir|
+        report = organism.call
+
+        assert_equal true, report["ok"]
+        assert_equal false, report["dry_run"]
+        assert_equal "lab01", report["machine"]
+        assert_equal "/etc/lab/ace-lab/install.yml", report["manifest"]
+        assert_equal ["ok", "dry_run", "machine", "manifest", "accounts", "directories", "keys", "roles"],
+          report.keys
+        assert_equal [{"username" => "ace-worker", "status" => "exists",
+                       "uid" => Process.uid, "message" => nil}], report["accounts"]
+        assert_equal "created", report["directories"].first["status"]
+        assert_equal "created", report["keys"].first["status"]
+        assert_match(/\ASHA256:/, report["keys"].first["fingerprint"])
+        assert_equal "verified", report["roles"].first["status"]
+        assert File.directory?(File.join(dir, "labs"))
+      end
+    end
+
+    def test_account_failure_fails_dependent_keys_and_roles_not_ok
+      with_manifest(lookup: ->(_name) { nil }) do |organism, dir|
+        report = organism.call
+
+        assert_equal false, report["ok"]
+        assert_equal "failed", report["accounts"].first["status"]
+        assert_match(/does not exist/, report["accounts"].first["message"])
+        key = report["keys"].first
+        assert_equal "failed", key["status"]
+        assert_match(/account 'ace-worker' is not available; fix the account phase first/, key["message"])
+        role = report["roles"].first
+        assert_equal "failed", role["status"]
+        assert_match(/fix the account phase first/, role["message"])
+        # no key material was created for a failed account
+        refute File.exist?(File.join(dir, "home", "ace-worker", ".ssh"))
+      end
+    end
+
+    def test_dry_run_predicts_all_sections_without_filesystem_mutation
+      with_manifest(dry_run: true) do |organism, dir|
+        report = organism.call
+
+        assert_equal "would_create", report["directories"].first["status"]
+        assert_equal "would_create", report["keys"].first["status"]
+        assert_equal true, report["dry_run"]
+        # dry run reports protocol roles as verified (read-only check)
+        assert_equal "verified", report["roles"].first["status"]
+        refute File.exist?(File.join(dir, "labs"))
+        refute File.exist?(File.join(dir, "home"))
+      end
+    end
+
+    def test_missing_manifest_raises_invalid_configuration_with_path
+      Ace::Lab::Molecules::GrantResolver.stub :read_verified, nil do
+        organism = Ace::Lab::Organisms::Prepare.new(
+          manifest_path: "/etc/lab/ace-lab/install.yml", platform: "linux"
+        )
+
+        error = assert_raises(Ace::Lab::InvalidConfigurationError) { organism.call }
+
+        assert_match(%r{/etc/lab/ace-lab/install\.yml not found}, error.message)
+      end
+    end
+
+    def test_schema_invalid_manifest_raises_value_free
+      Ace::Lab::Molecules::GrantResolver.stub :read_verified, YAML.dump("schema_version" => 9) do
+        organism = Ace::Lab::Organisms::Prepare.new(platform: "linux")
+
+        error = assert_raises(Ace::Lab::InvalidConfigurationError) { organism.call }
+
+        assert_match(/schema_version must be 1/, error.message)
+      end
+    end
+
+    def test_report_carries_fingerprint_but_never_private_key_material
+      with_manifest do |organism, dir| # rubocop:disable Lint/UnusedBlockArgument
+        report = organism.call
+
+        rendered = JSON.generate(report)
+        assert_match(/SHA256:/, rendered)
+        refute_includes rendered, "OPENSSH PRIVATE KEY"
+        private_path = File.join(dir, "home", "ace-worker", ".ssh", "id_ed25519")
+        File.readlines(private_path).each do |line|
+          next if line.strip.empty? || line.start_with?("-----")
+
+          refute_includes rendered, line.strip
+        end
+      end
+    end
+  end
+end

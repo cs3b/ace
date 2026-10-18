@@ -1,0 +1,153 @@
+# frozen_string_literal: true
+
+require_relative "../errors"
+require "open3"
+require "etc"
+
+module Ace
+  module Lab
+    module Molecules
+      # Idempotently ensures a lab account exists, per the trusted install
+      # manifest. Existing accounts are reported with their uid; missing
+      # accounts either fail with an actionable message (create: false, or
+      # creation without administrator privileges) or are created through
+      # the platform's own account tooling (darwin dscl / linux useradd),
+      # always with argv arrays (ADR-031) — never a shell string. Every
+      # failure message names the account and the remedy; command failures
+      # surface only the exit status and the first stderr line, never file
+      # content.
+      class AccountProvisioner
+        DEFAULT_SHELL = "/bin/zsh"
+        DARWIN_PRIMARY_GROUP = 20
+
+        attr_reader :runner, :account_lookup, :privileged, :platform, :dry_run
+
+        def initialize(runner: nil, account_lookup: nil, privileged: nil, platform: nil, dry_run: false)
+          @runner = runner || method(:run_argv)
+          @account_lookup = account_lookup || method(:lookup_passwd)
+          @privileged = privileged || -> { Process.euid.zero? }
+          @platform = platform || Ace::Lab.host_platform
+          @dry_run = dry_run
+        end
+
+        # @param account [Hash] normalized manifest account entry
+        # @return [Hash] {username:, status:, uid:, message:}
+        def call(account:)
+          username = account["username"]
+          existing = account_lookup.call(username)
+          if existing
+            return {"username" => username, "status" => "exists", "uid" => existing.uid, "message" => nil}
+          end
+
+          unless account["create"]
+            return failure(username,
+              "account '#{username}' does not exist; create it manually (administrator action) " \
+              "or set create: true in the install manifest")
+          end
+
+          unless privileged.call
+            return failure(username,
+              "creating account '#{username}' requires administrator privileges; rerun ace-lab prepare " \
+              "with sudo or create the account manually")
+          end
+
+          if dry_run
+            return {"username" => username, "status" => "would_create", "uid" => nil, "message" => nil}
+          end
+
+          case platform
+          when "darwin" then create_darwin(account)
+          when "linux" then create_linux(account)
+          else
+            failure(username,
+              "unsupported platform '#{platform}' for account creation; create account '#{username}' " \
+              "manually and set create: false in the install manifest")
+          end
+        end
+
+        private
+
+        def failure(username, message)
+          {"username" => username, "status" => "failed", "uid" => nil, "message" => message}
+        end
+
+        def created(username, uid)
+          {"username" => username, "status" => "created", "uid" => uid, "message" => nil}
+        end
+
+        def create_darwin(account)
+          username = account["username"]
+          listing = invoke(["dscl", ".", "-list", "/Users", "UniqueID"])
+          return failure(username, listing["message"]) unless listing["ok"]
+
+          uid = next_darwin_uid(listing["out"])
+          steps = [
+            ["dscl", ".", "-create", "/Users/#{username}", "RealName", username],
+            ["dscl", ".", "-create", "/Users/#{username}", "UniqueID", uid.to_s],
+            ["dscl", ".", "-create", "/Users/#{username}", "PrimaryGroupID", DARWIN_PRIMARY_GROUP.to_s],
+            ["dscl", ".", "-create", "/Users/#{username}", "UserShell", DEFAULT_SHELL],
+            ["dscl", ".", "-create", "/Users/#{username}", "NFSHomeDirectory", account["home"]],
+            ["createhomedir", "-c", "-u", username]
+          ]
+          steps.each do |argv|
+            result = invoke(argv)
+            return failure(username, result["message"]) unless result["ok"]
+          end
+
+          created(username, uid)
+        end
+
+        # Allocate the next free UniqueID above the current maximum,
+        # ignoring the reserved high sentinel values (darwin's `nobody`
+        # reports 4294967294). Deliberately simple: dscl owns the
+        # directory; concurrent creation is reconciled by the idempotent
+        # re-run.
+        def next_darwin_uid(out)
+          ids = out.scan(/\b(\d+)\b/).flatten.map(&:to_i).reject { |id| id >= 2**31 }
+          return 501 if ids.empty?
+
+          [ids.max + 1, 501].max
+        end
+
+        def create_linux(account)
+          username = account["username"]
+          result = invoke([
+            "useradd", "-m", "-s", DEFAULT_SHELL, "-d", account["home"], username
+          ])
+          return failure(username, result["message"]) unless result["ok"]
+
+          entry = account_lookup.call(username)
+          created(username, entry ? entry.uid : nil)
+        end
+
+        # @return [Hash] {ok:, out:, message:} — failure message carries
+        #   the exit status and the first stderr line only, never command
+        #   output bodies or file content.
+        def invoke(argv)
+          result = runner.call(argv)
+          if result["status"] == "ok"
+            {"ok" => true, "out" => result["out"], "message" => nil}
+          else
+            first_line = result["err"].to_s.lines.map(&:strip).reject(&:empty?).first
+            message = "command failed (#{argv.first}, exit #{result['status']})"
+            message += ": #{first_line}" if first_line
+            {"ok" => false, "out" => result["out"], "message" => message}
+          end
+        end
+
+        def run_argv(argv)
+          out, err, status = Open3.capture3(*argv)
+          {"status" => status.success? ? "ok" : status.exitstatus, "out" => out, "err" => err}
+        rescue SystemCallError => e
+          {"status" => "failed", "out" => "", "err" => e.class.name}
+        end
+
+        def lookup_passwd(username)
+          Etc.getpwnam(username)
+        rescue ArgumentError
+          nil
+        end
+      end
+    end
+  end
+end

@@ -8,15 +8,16 @@ ACE (Agentic Coding Environment).
 > local stores under `.ace-local/`. The canonical flow is
 > [docs/lab-flow.md](../docs/lab-flow.md).
 
-> **Planned (L8):** lab installer, project onboarding, and readiness
-> verification are not available yet.
+> **Planned (L8):** project onboarding and readiness verification are not
+> available yet; the installer's preparation phase is delivered as
+> `ace-lab prepare` (L8.1).
 
 ## What exists today
 
 `ace-lab` is the Lab environment package. Its installer and project-onboarding
 capabilities are the L8 target; today the package ships read-only topology
-queries only. It does not run a queue, daemon, journal, authorization service,
-or command kernel.
+queries, the lab status snapshot, and the `prepare` phase. It does not run a
+queue, daemon, journal, authorization service, or command kernel.
 
 ### Topology queries
 
@@ -47,6 +48,20 @@ ace-lab status --format json
 source error — never presenting an incomplete lab as empty-and-ready. The
 enriched worktree view stays `ace-git-worktree list`; live terminal layout is
 `ace-herdr status`.
+
+### Lab preparation (`prepare`, L8.1)
+
+```bash
+ace-lab prepare --dry-run
+```
+
+Idempotently prepares accounts, directories (mode/ownership), ed25519 key
+pairs and the role catalog from the trusted root-owned install manifest at
+`/etc/lab/ace-lab/install.yml` (verified fail-closed like the authorization
+document; no `--manifest` flag by design). Reports fingerprints, never key
+material; refuses foreign-takeover of existing directories and key paths
+inside git worktrees. See [docs/usage.md](docs/usage.md) for the manifest
+schema, status table and L8.2–L8.5 boundaries.
 
 ## Not owners of the flow
 

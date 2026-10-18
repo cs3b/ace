@@ -17,6 +17,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (per-location error isolation), and a `StatusReport` model behind a
   `StatusService` organism — table/json/`-q` output preserved.
 
+## [0.12.0] - 2026-10-18
+
+### Added
+
+- `ace-lab prepare [--dry-run] [--format table|json] [-q]`: the lab
+  preparation phase (L8.1 / 8xg.t.sbz.7.0). Reads a trusted install
+  manifest from the fixed root-owned deployment path
+  `/etc/lab/ace-lab/install.yml` (verified through the same fail-closed
+  `GrantResolver.read_verified` seam as the authorization document;
+  deliberately no `--manifest` flag — a caller-selected manifest could
+  manufacture privileges) and idempotently prepares accounts →
+  directories → keys → roles in that fixed order, each through its own
+  molecule: `AccountProvisioner` (darwin `dscl`/`createhomedir`, linux
+  `useradd`; argv arrays only), `DirectoryProvisioner` (mode/ownership
+  with symlink and foreign-takeover refusal; only mode drift on an
+  owner-matching directory is repaired), `KeyProvisioner` (ed25519 pairs,
+  `.ssh` 0700 / private 0600 / public 0644 with account ownership,
+  missing-`.pub` regeneration, git-worktree guard) and `RoleVerifier`
+  (account binding plus protocol-or-readable-file instruction sources).
+  `Atoms::InstallSchema` validates the v1 manifest
+  (machine/accounts/directories/keys/roles) with value-free messages;
+  `Organisms::Prepare` aggregates a deterministic JSON report where `ok`
+  means zero failed items, and key/role items whose account failed are
+  reported as dependency failures. Missing permissions are classified
+  with actionable messages; secret hygiene is enforced by tests: reports
+  carry the public fingerprint and never private key material. A wet run
+  with failed items prints the report and exits non-zero naming each
+  `<section>/<item>`; `--dry-run` predicts (`would_*` statuses, zero
+  mutations) and exits 0 on conflicts. The manifest is a deployment
+  document, not task state (ADR-034): nothing outside the manifest is
+  touched and no journal is written.
+
 ## [0.11.0] - 2026-10-18
 
 ### Fixed (review PR #383, round 3)
