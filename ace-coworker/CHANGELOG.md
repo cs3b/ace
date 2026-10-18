@@ -22,8 +22,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   question to the overseer instead of overwriting work. `--dry-run` performs
   the full resolution and conflict detection with zero effects; the result
   is rendered as a table or the JSON preparation contract (worktree
-  path/branch/disposition, assignments, conflict) consumable by the next
-  role or tool. New runtime dependency: `ace-git-worktree ~> 0.27`.
+  path/branch/disposition, assignments, active-executor evidence, conflict)
+  consumable by the next role or tool. New runtime dependency:
+  `ace-git-worktree ~> 0.27`.
+
+### Fixed
+
+- Review follow-ups on `prepare` (M1/M2/L1-L4):
+  - stale-metadata detection is real: the owner's `switch` never resolves a
+    missing directory, so a failed switch is cross-checked against the
+    association inventory — a registration for this task pointing at a
+    missing directory reports `would_recover` under `--dry-run` (matching
+    the real run) and recovers via prune + recreate, reattaching the
+    surviving branch so its committed work is never orphaned behind a
+    freshly minted branch (previously the reattach tripped over the
+    surviving branch and errored) (M1);
+  - a completed commissioned assignment no longer short-circuits the
+    uncommissioned in-flight scan — other running/stalled assignments still
+    block as an `active_executor` conflict (M2);
+  - `active_executor` in the result JSON carries the rule evidence
+    (`assignment`, `state`, `source`) on an `active_executor` conflict
+    instead of always rendering null (L1);
+  - the overseer fallback reads the config's `overseer` field leniently, so
+    a partial planner-side config still names its recipient; a config that
+    fails full validation without any overseer surfaces the load error in
+    the conflict detail instead of a silent "no overseer address" (L2);
+  - a missing `ace-hitl` binary during conflict escalation folds the error
+    into the conflict detail (event id null) so the structured conflict
+    result still renders (L3);
+  - `WorktreeExecutorProbe#probe` docstring matches the actual return
+    contract (failures raise; no `error:` key) (L4).
 
 ## [0.3.2] - 2026-10-18
 

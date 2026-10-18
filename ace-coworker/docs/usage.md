@@ -170,8 +170,11 @@ worktree owner):
    no HITL event).
 2. Find the task's worktree (association-aware `ace-git-worktree` switch):
    a resolved worktree for this task is reused; a resolved worktree for
-   another task is a `mismatched_worktree` conflict; stale metadata
-   (resolved but directory missing) recovers via prune + recreate.
+   another task is a `mismatched_worktree` conflict; stale metadata (an
+   association whose directory is missing — detected via the association
+   inventory, since the owner's switch never resolves a missing directory)
+   recovers via prune + recreate, reattaching the surviving branch so its
+   committed work is never orphaned behind a freshly minted branch.
 3. Otherwise create the task worktree (idempotent owner call). A creation
    failure while the expected location is occupied is a `mismatched_worktree`
    conflict; any other failure exits 1 with the structured error and its
@@ -180,18 +183,27 @@ worktree owner):
    `.ace-local/coworker/config.yml` names a commissioned assignment whose
    state is anything other than `completed` (including unparseable/unknown —
    never overwrite), or any uncommissioned assignment is `running`/`stalled`,
-   is an `active_executor` conflict. Pending/never-started assignments never
-   block (the up-front role sequence of L4.2 must not self-conflict);
-   uncommissioned `failed` assignments are surfaced as context only.
+   is an `active_executor` conflict — a completed commission falls through
+   to the uncommissioned scan, so it never masks another running/stalled
+   assignment. Pending/never-started assignments never block (the up-front
+   role sequence of L4.2 must not self-conflict); uncommissioned `failed`
+   assignments are surfaced as context only. On an `active_executor`
+   conflict the rule evidence (`assignment`, `state`, `source`) is emitted
+   structurally in `active_executor`.
 5. Reuse performs zero writes: no git effects, no task frontmatter rewrite,
    no config change.
 
 Conflicts mutate nothing: a decision-type HITL question for the overseer is
 created and sent (`--type question --kind decision`, title
-`Preparation conflict - <task>/<worktree-dir>`); without an escalation
-recipient (`--to` or the `overseer` field of `--config`) the conflict still
-exits 1 with an explicit `cannot report conflict: no overseer address` note.
-An undeliverable event keeps the event id in the output for a later
+`Preparation conflict - <task>/<worktree-dir>`). The overseer fallback
+reads the `overseer` field of `--config` leniently, so a partial
+(planner-side) config still names its recipient; a config that fails full
+validation AND supplies no overseer surfaces the load error alongside the
+explicit `cannot report conflict: no overseer address` note. If the
+ace-hitl CLI itself is unavailable, the structured conflict result is still
+rendered with the failure folded into its detail. Without any escalation
+recipient the conflict still exits 1. An undeliverable event keeps the
+event id in the output for a later
 `ace-hitl send <id>` retry — retrying delivery never retries preparation.
 
 Result JSON (table renders the same fields):
@@ -209,7 +221,8 @@ Result JSON (table renders the same fields):
 ```
 
 `disposition` is `created` / `recovered` (stale metadata recovered) / `reused`
-or, with `--dry-run`, `would_create` / `would_recover`. A non-null `conflict`
+or, with `--dry-run`, `would_create` / `would_recover` (stale metadata that
+the real run would recover). A non-null `conflict`
 (with `kind`, `detail`, `hitl_event`) replaces `worktree`. `--dry-run`
 performs the full resolution and conflict detection with zero writes (no
 create, no prune-recovery, no HITL events); the exit code reflects the
