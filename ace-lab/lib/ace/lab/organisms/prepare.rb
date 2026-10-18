@@ -38,17 +38,18 @@ module Ace
         # @raise [Ace::Lab::InvalidConfigurationError] missing, untrusted,
         #   unparseable or schema-invalid manifest
         def call(dry_run: nil)
-          @effective_dry_run = dry_run.nil? ? self.dry_run : dry_run
+          effective_dry_run = dry_run.nil? ? self.dry_run : dry_run
           manifest = Molecules::InstallManifestLoader.load(path: manifest_path, platform: platform)
-          accounts = prepare_accounts(manifest["accounts"])
+          accounts = prepare_accounts(manifest["accounts"], effective_dry_run)
           available = available_accounts(accounts)
-          directories = prepare_directories(manifest["directories"])
-          keys = prepare_keys(manifest["keys"], manifest["machine"], manifest["accounts"], available)
-          roles = prepare_roles(manifest["roles"], available)
+          directories = prepare_directories(manifest["directories"], effective_dry_run)
+          keys = prepare_keys(manifest["keys"], manifest["machine"], manifest["accounts"], available,
+            effective_dry_run)
+          roles = prepare_roles(manifest["roles"], available, effective_dry_run)
 
           {
             "ok" => [accounts, directories, keys, roles].flatten.none? { |item| item["status"] == "failed" },
-            "dry_run" => @effective_dry_run,
+            "dry_run" => effective_dry_run,
             "machine" => manifest["machine"],
             "manifest" => manifest_path,
             "accounts" => accounts,
@@ -60,26 +61,22 @@ module Ace
 
         private
 
-        def account_provisioner
-          Molecules::AccountProvisioner.new(
+        def prepare_accounts(entries, dry_run)
+          provisioner = Molecules::AccountProvisioner.new(
             runner: @runner, account_lookup: @account_lookup, privileged: @privileged,
-            platform: @platform, dry_run: @effective_dry_run
+            platform: @platform, dry_run: dry_run
           )
-        end
-
-        def prepare_accounts(entries)
-          provisioner = account_provisioner
           entries.map { |account| provisioner.call(account: account) }
         end
 
-        def prepare_directories(entries)
-          provisioner = Molecules::DirectoryProvisioner.new(account_lookup: @account_lookup, dry_run: @effective_dry_run)
+        def prepare_directories(entries, dry_run)
+          provisioner = Molecules::DirectoryProvisioner.new(account_lookup: @account_lookup, dry_run: dry_run)
           entries.map { |directory| provisioner.call(directory: directory) }
         end
 
-        def prepare_keys(entries, machine, manifest_accounts, available)
+        def prepare_keys(entries, machine, manifest_accounts, available, dry_run)
           provisioner = Molecules::KeyProvisioner.new(
-            runner: @runner, account_lookup: @account_lookup, dry_run: @effective_dry_run
+            runner: @runner, account_lookup: @account_lookup, dry_run: dry_run
           )
           by_username = manifest_accounts.to_h { |account| [account["username"], account] }
           entries.map do |key|
@@ -94,8 +91,8 @@ module Ace
           end
         end
 
-        def prepare_roles(entries, available)
-          provisioner = Molecules::RoleVerifier.new(account_lookup: @account_lookup, dry_run: @effective_dry_run)
+        def prepare_roles(entries, available, dry_run)
+          provisioner = Molecules::RoleVerifier.new(account_lookup: @account_lookup, dry_run: dry_run)
           entries.map do |role|
             if available.include?(role["account"])
               provisioner.call(role: role)
