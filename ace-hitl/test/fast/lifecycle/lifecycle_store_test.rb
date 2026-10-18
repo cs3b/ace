@@ -646,6 +646,37 @@ class LifecycleStoreTest < AceHitlTestCase
     end
   end
 
+  def test_duty_projects_answer_delivered_pending_state_and_mixed_effect_visibility
+    with_lifecycle_root do |root|
+      store = make_store(root: root, identity: unprivileged_identity)
+      store.create(**request_args(id: "hitl001", effect: {
+        match: nil, effect_args: [RbConfig.ruby, "-e", "exit 1"], effect_cwd: root, effect_timeout: 30
+      }))
+      store.create(**request_args(id: "hitl002"))
+
+      root_store = make_store(root: root, identity: root_identity)
+      root_store.deliver("hitl001", stdin_reader("approved"))
+      root_store.deliver("hitl002", stdin_reader("plain answer"))
+      make_store(root: root, identity: unprivileged_identity, poll_seconds: 0.05).consume("hitl002", timeout: 1)
+
+      duty = Ace::Hitl::Lifecycle::Duty.project(pending: root_store.pending, states: root_store.states)
+      # Answer availability stays pending until authorized consumption.
+      assert_equal ["hitl001"], duty["pending"].map { |entry| entry["id"] }
+      assert_equal "answer-delivered", duty["pending"].first["state"]
+      assert_equal ["hitl001"], duty["escalated"].map { |record| record["id"] }
+      assert_equal "callback-escalated", duty["escalated"][0]["effect_state"]
+
+      # A fresh pending request shows its effect visibility in the same view.
+      store.create(**request_args(id: "hitl003", effect: {
+        match: nil, effect_args: ["/bin/true"], effect_cwd: root, effect_timeout: 30
+      }))
+      store.create(**request_args(id: "hitl004"))
+      duty = Ace::Hitl::Lifecycle::Duty.project(pending: root_store.pending, states: root_store.states)
+      assert_equal %w[hitl001 hitl003 hitl004], duty["pending"].map { |entry| entry["id"] }
+      assert_equal [true, true, false], duty["pending"].map { |entry| entry["has_effect"] }
+    end
+  end
+
   def test_transport_operations_reject_callers_without_transport_authority
     with_lifecycle_root do |root|
       store = make_store(
