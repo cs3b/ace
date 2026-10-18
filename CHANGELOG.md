@@ -12,7 +12,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
-- **Documentation and handbook surfaces (ace-lab, ace-overseer, ace-hitl, ace-assign, ace-herdr, ace-runtime, ace-hitl-hermes, ace-hitl-contract, ace-review, ace-git, ace-task, ace-git-worktree)**: Unify active READMEs, usage guides, workflow instructions and presets around one file-based flow and the state owners in `docs/lab-flow.md`; mark L2-L10 features as planned/not available yet and remove old journal/authority/queue requirements. Documentation-only package versions are released in the coordinated L10 wave.
+- **Documentation and handbook surfaces (ace-lab, ace-overseer, ace-hitl, ace-assign, ace-herdr, ace-runtime, ace-hitl-hermes, ace-hitl-contract, ace-review, ace-git, ace-task, ace-git-worktree)**: Unify active READMEs, usage guides, workflow instructions and presets around one file-based flow and the state owners in `docs/lab-flow.md`; mark L2-L10 features as planned/not available yet and remove old journal/authority/queue requirements. Packages whose only changes are documentation or handbook surfaces release in the coordinated L10 wave; packages with runtime changes carry their own version bump in this release.
 
 ### Added
 
