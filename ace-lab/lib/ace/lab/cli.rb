@@ -25,7 +25,7 @@ module Ace
         ["services", "List lab services in a project by stable ID"],
         ["resolve", "Resolve one lab entry by exact stable ID"],
         ["route", "Select a configured capable service in a project"],
-        ["status", "Show lab configuration and file-based state (read-only)"]
+        ["status", "Show lab configuration and local file state (read-only)"]
       ].freeze
 
       HELP_EXAMPLES = [
@@ -33,7 +33,6 @@ module Ace
         "ace-lab agents --project atlas --format json",
         "ace-lab resolve --id atlas-planner --format json",
         "ace-lab route --project atlas --capability search --format json",
-        "ace-lab status",
         "ace-lab status --format json"
       ].freeze
 

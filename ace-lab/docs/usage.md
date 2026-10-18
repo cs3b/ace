@@ -78,35 +78,52 @@ the service and never grants credentials.
 
 ## Status
 
+### `ace-lab status [--format table|json] [-q]`
+
 ```bash
-ace-lab status              # table: configuration + local state + worktree pointer
-ace-lab status --format json
+ace-lab status                 # readable table (default)
+ace-lab status --format json   # full report as JSON
 ```
 
-Read-only snapshot in three sections; starts nothing, writes nothing, and
-exits 0 whenever a report renders (only usage errors exit non-zero).
+`status` is read-only local observability (task 8xg.t.sbz.6.0): it reads the
+ADR-022 lab configuration cascade and the file-based state-owner locations
+(ADR-034) — nothing is started, written, or installed, and there is no
+authorization gate. Live terminal layout belongs to `ace-herdr status`; the
+enriched worktree view with task associations is `ace-git-worktree list`
+(delivered by k9y) — `status` shows only presence/count for worktrees and does
+not duplicate that surface.
 
-- `Lab configuration:` one of `configured` (explicit cascade sources and
-  aggregate projects/agents/services counts — no ids or endpoints),
-  `not configured (no .ace/lab/config.yml or ~/.ace/lab/config.yml)`, or
-  `error - <reason>` (malformed or schema-invalid source; messages carry the
-  path, never content). A not-configured lab is never presented as an empty,
-  ready one.
-- `Local state:` presence and entry counts for the canonical lab-flow
-  locations (`.ace-tasks`, `.ace-tasks/_overseer`, `.ace-local/assign`,
-  `.ace-local/coworker`, `.ace-local/hitl`, `.ace-wt`). Absent coworker or
-  private-overseer state is an informational note, never a readiness claim.
-- `Worktree view:` points at the existing `ace-git-worktree list` (task
-  associations, activity, PR state); this command does not duplicate it.
+Lab configuration is reported in three distinct states — they are never
+conflated:
 
-Unlike the query commands, `status` emits a plain top-level JSON object
-(status never fails; each section carries its own state) rather than the
-`{status, data}` query envelope.
+- `configured` — at least one overlay (`.ace/lab/config.yml` or
+  `~/.ace/lab/config.yml`) present and valid, with topology counts
+  (0/0/0 is a *valid empty set*).
+- `missing` — defaults only: no overlay exists. Informational; exit code 0.
+  Never rendered as a ready-but-empty lab.
+- `invalid` — an unparsable/non-mapping document or a schema violation;
+  carries the path-bearing message.
+
+Runtime *configuration* is echoed (project/user `runtime/config.yml`, then the
+`ACE_RUNTIME` environment variable) with its value and origin. No runtime
+detection and no `ace-runtime` dependency: runtime availability is
+`ace-herdr status`'s dimension.
+
+Local state covers `.ace-tasks/`, `.ace-tasks/_overseer/` (presence only —
+private, never enumerated), `.ace-local/assign/`, `.ace-local/hitl/`,
+`.ace-wt/`, and `.ace-local/coworker/` (presence only — reserved L3). Absence
+of overseer or coworker state is information, not a failure.
+
+Exit codes: 0 for `configured` and `missing` (empty or not); a source error —
+invalid configuration or an unreadable location — prints the **full report
+first**, then fails non-zero with the error, so available results stay visible
+next to the failure.
 
 ## Planned waves
 
-> **Planned (L7):** configurable aggregated overseer status and pi
-> continuation build on `ace-lab status`; they are not available yet.
+> **L7 remainder:** `ace-lab status` is delivered; the remaining L7 scope
+> (configurable `ace-overseer status` aggregation, pi continuation) lives in
+> its own packages and is not available yet.
 >
 > **Planned (L8):** installer (accounts, directories, keys), project onboarding,
 > resuming an interrupted install, and readiness verification are not available

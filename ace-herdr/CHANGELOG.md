@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- `ace-herdr status` refined to the reviewed `l7-statuses` implementation
+  (task 8xg.t.sbz.6.0; extracted from the superseded PR #382): composition
+  moved into a `StatusComposer` molecule, new `--workspace <id>` scoping,
+  counts recomputed from the nesting with panes referencing vanished
+  tabs/workspaces kept visible in a synthetic `(unlinked)` group, and a
+  live-but-empty layout printing `No live herdr workspaces.` (exit 0) while
+  an unreachable runtime stays an actionable non-zero error.
+
 ## [0.7.0] - 2026-10-18
 
 ### Added

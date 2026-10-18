@@ -43,6 +43,7 @@ It also implements the HITL push-delivery transport used by `ace-hitl` adapters.
 - Dispatch a subagent in one command with deterministic defaults.
 - Wait for agent readiness or completion without scraping pane noise.
 - Close finished agent panes and return their result.
+- See the real layout of spaces, tabs, and panes in one command.
 - Use Herdr through the shared [ace-runtime](../ace-runtime) API.
 
 ## Installation
