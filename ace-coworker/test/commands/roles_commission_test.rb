@@ -68,6 +68,19 @@ module Ace
             assert_includes out, "Coworker roles: none found"
           end
 
+          def test_roles_invalid_preset_file_fails_with_specific_cli_error
+            File.write(File.join(@gem_roles, "broken.yml"), <<~YAML)
+              ---
+              description: no identity
+            YAML
+            error = assert_raises(Ace::Support::Cli::Error) do
+              Roles.new(preset_loader: @loader).call(format: "table")
+            end
+            assert_includes error.message, "invalid role preset"
+            assert_includes error.message, "broken.yml"
+            assert_includes error.message, "missing required field 'name'"
+          end
+
           def commission_command
             Commission.new(orchestrator: Organisms::CommissionOrchestrator.new(
               project_root: @dir,
@@ -99,7 +112,6 @@ module Ace
             end
             payload = JSON.parse(out)
             assert_equal "spec", payload["role"]
-            assert_equal "written", payload["written"] == true ? "written" : "other"
             assert payload["written"]
             assert_equal "wfi://coworker/spec", payload["config"]["instructions"]
           end

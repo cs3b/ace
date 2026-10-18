@@ -93,6 +93,36 @@ module Ace
           assert_includes error.message, "missing required field 'name'"
         end
 
+        def test_name_field_mismatching_filename_raises_naming_both
+          write_preset(@gem_roles, "builder", <<~YAML)
+            ---
+            name: worker
+            description: Mislabeled preset
+            instructions: wfi://coworker/worker
+            start_prompt: "Build."
+          YAML
+          error = assert_raises(Error) { loader.list }
+          assert_includes error.message, "invalid role preset"
+          assert_includes error.message, "builder.yml"
+          assert_includes error.message, "name field 'worker' must match the filename 'builder.yml'"
+        end
+
+        def test_project_override_is_keyed_by_filename_not_name_field
+          project_roles = File.join(@dir, ".ace", "coworker", "roles")
+          FileUtils.mkdir_p(project_roles)
+          # Same filename as the gem preset, different name field: this is an
+          # authoring error (caught above), never a silent override bypass.
+          write_preset(project_roles, "worker", <<~YAML)
+            ---
+            name: worker
+            description: Project worker
+            instructions: roles/project-worker.md
+            start_prompt: "Project prompt."
+          YAML
+          presets = loader.list
+          assert_equal "project", presets.find { |p| p["name"] == "worker" }["source"]
+        end
+
         def test_empty_catalog_lists_nothing
           empty_dir = File.join(@dir, "empty")
           FileUtils.mkdir_p(empty_dir)

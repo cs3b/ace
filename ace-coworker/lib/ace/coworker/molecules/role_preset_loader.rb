@@ -57,7 +57,7 @@ module Ace
           Dir.glob(File.join(dir, "*.yml")).sort.each do |path|
             preset = read_preset(path)
             preset["source"] = source
-            merged[preset["name"]] = preset
+            merged[File.basename(path, ".yml")] = preset
           end
         end
 
@@ -68,7 +68,14 @@ module Ace
             raise Error, "invalid role preset '#{relative(path)}': #{errors.join('; ')}"
           end
 
-          @schema.normalize(raw)
+          preset = @schema.normalize(raw)
+          basename = File.basename(path, ".yml")
+          unless preset["name"] == basename
+            raise Error,
+              "invalid role preset '#{relative(path)}': name field '#{preset['name']}' must match the filename '#{basename}.yml'"
+          end
+
+          preset
         end
 
         def relative(path)

@@ -20,8 +20,9 @@ module Ace
             @preset_loader = preset_loader
           end
 
-          # Read-only catalog query; always exit 0 (an empty catalog is a
-          # state, not an error).
+          # Read-only catalog query; exit 0 for any valid catalog state (an
+          # empty catalog is a state, not an error). An invalid preset file
+          # surfaces as a CLI error (non-zero exit).
           def call(**options)
             loader = @preset_loader || begin
               project_root = Molecules::ProjectRoot.new.resolve
