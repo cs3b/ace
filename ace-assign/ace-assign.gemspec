@@ -51,7 +51,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "ace-support-nav", "~> 0.28"
   spec.add_dependency "ace-b36ts", "~> 0.14"
   spec.add_dependency "ace-llm", "~> 0.39"
-  spec.add_dependency "ace-review", "~> 0.61.0"
+  spec.add_dependency "ace-review", "~> 0.62.0"
   spec.add_dependency "ace-task", "~> 0.40"
   spec.add_dependency "ace-bundle", "~> 0.45.1"
   # ace-runtime resolves terminal adapters through its lazy
