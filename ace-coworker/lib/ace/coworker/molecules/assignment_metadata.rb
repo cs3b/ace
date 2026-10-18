@@ -15,7 +15,12 @@ module Ace
         end
 
         def assignment_dir(assignment_id)
-          File.join(@project_root, ASSIGN_DIR, assignment_id.to_s)
+          id = assignment_id.to_s
+          unless id.match?(/\A[\w.-]+\z/)
+            raise Error, "invalid assignment id '#{id}': expected letters, digits, dot, dash, or underscore"
+          end
+
+          File.join(@project_root, ASSIGN_DIR, id)
         end
 
         def assignment_file(assignment_id)

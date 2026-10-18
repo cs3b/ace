@@ -43,6 +43,11 @@ module Ace
           CoworkerFixture.build_assignment(@dir, id: "abc123", task_id: "8xg.t.sbz.2")
           assert_equal "8xg.t.sbz.2", @meta.verify_task_match!("abc123", "8xg.t.sbz.2")
         end
+
+        def test_traversal_assignment_id_is_rejected
+          error = assert_raises(Error) { @meta.task_id!("../escape") }
+          assert_includes error.message, "invalid assignment id"
+        end
       end
     end
   end

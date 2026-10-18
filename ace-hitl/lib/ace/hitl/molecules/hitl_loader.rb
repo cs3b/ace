@@ -39,11 +39,15 @@ module Ace
           ]
           extra_metadata = frontmatter.reject { |k, _| known_keys.include?(k) }
 
+          event_type = frontmatter["type"] || "question"
+
           Models::HitlEvent.new(
             id: id || frontmatter["id"],
             status: frontmatter["status"] || "pending",
-            kind: frontmatter["kind"] || "clarification",
-            type: frontmatter["type"] || "question",
+            # Kinds apply to questions only; reports carry no kind so
+            # question-oriented --kind filters never mix them in.
+            kind: event_type == "report" ? nil : (frontmatter["kind"] || "clarification"),
+            type: event_type,
             result: frontmatter["result"],
             title: title,
             tags: Array(frontmatter["tags"]),

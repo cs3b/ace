@@ -71,15 +71,18 @@ module Ace
           )
         end
 
-        # start_prompt_file content is the prompt; the file must exist and be
-        # readable relative to the project root (same resolution rule as the
-        # config path itself).
+        # start_prompt_file content is the prompt; the file must exist, be
+        # readable, and stay inside the project root (same containment rule
+        # as InstructionResolver: paths never escape the worktree).
         def start_prompt(normalized)
           literal = normalized["start_prompt"]
           return literal unless literal.to_s.empty?
 
           file = normalized["start_prompt_file"].to_s
           path = File.expand_path(file, @project_root)
+          unless path.start_with?("#{@project_root}/")
+            raise Error, "start_prompt_file '#{file}' escapes the project root"
+          end
           raise Error, "start_prompt_file '#{file}' not found in this worktree" unless File.file?(path)
 
           content = File.read(path).strip

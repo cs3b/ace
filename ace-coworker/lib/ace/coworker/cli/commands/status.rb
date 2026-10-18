@@ -86,7 +86,7 @@ module Ace
                 lines.concat(reasons.map { |r| "    remaining: #{r}" })
               end
             elsif result.probe_error
-              lines << "  assignment:  #{result.probe_error}"
+              lines << "  assignment error: #{result.probe_error}"
             end
             lines.join("\n")
           end

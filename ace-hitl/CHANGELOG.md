@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.19.0] - 2026-10-18
 
+### Fixed (review PR #383, round 3)
+
+- Report events carry no `kind` (loader returns nil), so question-oriented
+  `list --kind` filters never mix reports into a clarification list.
+
 ### Added
 
 - Report events: the same `ace-hitl` file interface now records work-done/error notifications alongside questions. `ace-hitl create "..." --type report --result success|error [--body line]... [--task REF]` writes an event with status `recorded`, a `## Report` body, task/assignment/step references, and its own ID. Reports never await an answer: `wait`, `update --answer`, and `update --resume` on a report fail fast with an explicit error (exit 1); generic `--set/--add/--remove/--move-to` still work so an overseer can archive processed reports.

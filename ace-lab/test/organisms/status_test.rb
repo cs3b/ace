@@ -116,6 +116,22 @@ module Ace
             assert_equal "ace-git-worktree list", snapshot["worktree_view"]
           end
         end
+
+        def test_state_files_resolve_from_subdirectory_of_the_project
+          Dir.mktmpdir("lab-status-root") do |dir|
+            system("git", "-C", dir, "init", "--quiet", out: File::NULL, err: File::NULL)
+            FileUtils.mkdir_p(File.join(dir, ".ace-tasks"))
+            subdir = File.join(dir, "deep", "sub")
+            FileUtils.mkdir_p(subdir)
+
+            entries = nil
+            Dir.chdir(subdir) { entries = Status.new.snapshot["state_files"] }
+            by_path = entries.to_h { |e| [e["path"], e] }
+
+            assert by_path[".ace-tasks"]["present"],
+              "expected .ace-tasks resolved against the project root, got: #{entries.inspect}"
+          end
+        end
       end
     end
   end

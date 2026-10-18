@@ -151,4 +151,16 @@ class HitlManagerReportTest < AceHitlTestCase
       assert event.question?
     end
   end
+
+  def test_reports_carry_no_kind_so_kind_filters_exclude_them
+    with_hitl_dir do |root|
+      create_hitl_fixture(root, id: "rrr222", slug: "report-one", type: "report",
+        result: "success", status: "recorded", body: ["done"])
+      create_hitl_fixture(root, id: "qqq111", slug: "question-one", type: "question")
+
+      manager = Ace::Hitl::Organisms::HitlManager.new(root_dir: root, config: {"hitl" => {"root_dir" => root}})
+      assert_nil manager.show("rrr222")[:event].kind
+      assert_equal ["qqq111"], manager.list(kind: "clarification", in_folder: "all").map(&:id)
+    end
+  end
 end

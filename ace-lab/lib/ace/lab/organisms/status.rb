@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "open3"
+
 module Ace
   module Lab
     module Organisms
@@ -17,7 +19,7 @@ module Ace
         ].freeze
 
         def initialize(project_dir: nil, documents: nil, config: nil)
-          @project_dir = project_dir || Dir.pwd
+          @project_dir = project_dir || resolve_project_dir
           @documents = documents
           @config = config
         end
@@ -32,6 +34,20 @@ module Ace
         end
 
         private
+
+        # State locations belong to the project root, not the caller's cwd:
+        # running from a subdirectory must not misreport an initialized lab
+        # as absent. Same resolution as ace-coworker's ProjectRoot (git
+        # worktree top), falling back to the cwd outside a repository.
+        def resolve_project_dir
+          out, _err, status = Open3.capture3("git", "rev-parse", "--show-toplevel")
+          return Dir.pwd unless status.success?
+
+          root = out.to_s.strip
+          root.empty? ? Dir.pwd : root
+        rescue StandardError
+          Dir.pwd
+        end
 
         def configuration_section
           explicit = explicit_documents

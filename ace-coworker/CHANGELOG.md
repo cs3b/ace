@@ -24,6 +24,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Documented start-config contract consumed by the L4 planner
   (`docs/usage.md`).
 
+### Fixed (review PR #383, round 3)
+
+- `start_prompt_file` is containment-checked against the project root (same
+  rule as the instruction source): absolute paths and `..` traversal are
+  rejected instead of read.
+- Assignment ids are validated (`letters/digits/dot/dash/underscore`) before
+  path joining, closing a `..` traversal in the metadata reader.
+- The `status` table labels probe failures `assignment error:` (matching the
+  JSON key) instead of duplicating the `assignment:` row.
+
 ### Fixed (review PR #383, round 1)
 
 - `start_prompt_file` content is now actually read: the loader resolves the

@@ -126,6 +126,26 @@ module Ace
           assert_includes error.message, "start_prompt_file 'prompts/empty.md' is empty"
         end
 
+        def test_start_prompt_file_escaping_project_root_errors
+          outside = Dir.mktmpdir("coworker-outside")
+          File.write(File.join(outside, "notes.md"), "secret prompt\n")
+          CoworkerFixture.build_config(@dir, assignment: "abc123", task: "8xg.t.sbz.2")
+          path = File.join(@dir, ".ace-local", "coworker", "config.yml")
+          File.write(path, <<~YAML)
+            role: worker
+            instructions: roles/worker.md
+            start_prompt_file: #{File.join(outside, "notes.md")}
+            task: 8xg.t.sbz.2
+            assignment: abc123
+            overseer: overseer@lab
+          YAML
+
+          error = assert_raises(Error) { @loader.load }
+          assert_includes error.message, "escapes the project root"
+        ensure
+          FileUtils.remove_entry(outside) if outside
+        end
+
         def test_malformed_yaml_errors_as_invalid_config
           path = File.join(@dir, ".ace-local", "coworker", "config.yml")
           FileUtils.mkdir_p(File.dirname(path))

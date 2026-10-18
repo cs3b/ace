@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.11.0] - 2026-10-18
 
+### Fixed (review PR #383, round 3)
+
+- `ace-lab status` resolves state locations against the git worktree top
+  (falling back to the cwd outside a repository), so running it from a
+  project subdirectory no longer misreports an initialized lab as absent.
+
 ### Added
 
 - `ace-lab status`: read-only lab status snapshot with three strictly
