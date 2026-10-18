@@ -45,6 +45,26 @@ module Ace
           refute result[:active]
         end
 
+        def test_commissioned_completed_with_other_in_flight_assignment_is_active
+          result = rule(config: {"assignment" => "a1"},
+            assignments: [assignment(id: "a1", state: "completed"),
+              assignment(id: "a2", state: "running")])
+
+          assert result[:active]
+          assert_equal "assignment", result[:evidence]["source"]
+          assert_equal "a2", result[:evidence]["assignment"]
+          assert_equal "running", result[:evidence]["state"]
+        end
+
+        def test_commissioned_completed_with_finished_others_is_not_active
+          result = rule(config: {"assignment" => "a1"},
+            assignments: [assignment(id: "a1", state: "completed"),
+              assignment(id: "a2", state: "paused"),
+              assignment(id: "a3", state: "failed")])
+
+          refute result[:active]
+        end
+
         def test_commissioned_assignment_missing_from_list_is_active
           result = rule(config: {"assignment" => "gone"},
             assignments: [assignment(id: "a1", state: "completed")])
