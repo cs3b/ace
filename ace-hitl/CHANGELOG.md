@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.0] - 2026-10-18
+
 ### Removed
 
 - Remove the installed Lab provider and its attempt-bound managed HITL path: `Providers::Lab::AssignmentBinding`, `ProtectedAssignmentBinding`, the provider `ask`/native-delivery methods, the `ask` CLI command, and the Herdr-native delivery client in `LiveClient` (the old ace-assign `AttemptCoordinator`/journal identity).
