@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `FolderMover#destination_path` computes the destination a move would create
+  without touching the filesystem, so callers can run pre-flight checks (for
+  example a Git-ignored destination guard).
+
 ## [0.15.14] - 2026-10-06
 
 ### Fixed

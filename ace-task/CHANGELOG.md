@@ -22,11 +22,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   listing. The default `ace-task list` is the ordinary root view; any existing
   special folder stays reachable with `--in FOLDER` or `--in all`.
 - Refuse `--git-commit` when the task path is Git-ignored — on create, subtask
-  creation, update, and move — instead of rejecting a named folder.
+  creation, update, and move — instead of rejecting a named folder. The check
+  covers the task directory, individual children, the spec file, and the
+  destination paths a relocation would create (including archive partitions);
+  a rejected create rolls back the task artifacts and a rejected move/update
+  leaves the task unchanged.
 - Do not auto-archive a completed Git-ignored task (or ignored family), and do
-  not report or perform an archive move for it in `ace-task doctor`; the folder
-  owner decides when to delete obsolete history. No private archive folder or
-  retention mechanism is created.
+  not report or perform an archive move for it in `ace-task doctor`; a move is
+  also skipped when the resulting archive destination is Git-ignored. The
+  folder owner decides when to delete obsolete history. No private archive
+  folder or retention mechanism is created.
 - Keep delegation guards for management tasks in the delegation tools
   (`ace-git-worktree create --task`, `ace-assign create --task`); they are not
   part of `ace-task`.

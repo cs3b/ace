@@ -54,12 +54,15 @@ ace-task update q7w --move-to next
 - `show`, `update`, subtasks, dependencies, `status`, and `plan` work for
   ignored tasks like any other task; Git tracking does not change the task
   model.
-- `--gc`/`--git-commit` is rejected when the task path is Git-ignored — on
-  create, on subtask creation, and on update/move — because Git would not stage
-  that path.
+- `--gc`/`--git-commit` is rejected when the task path is Git-ignored — the
+  task folder, its children, its spec file, or a destination a relocation would
+  create — on create, subtask creation, and update/move, because Git would not
+  stage that path. A rejected create rolls back the created task; a rejected
+  move/update leaves the task unchanged.
 - Completing a Git-ignored task (or the last subtask of an ignored family) does
-  not trigger automatic archiving, and `ace-task doctor` neither reports the
-  missing archive nor moves such a task with `--auto-fix`. The owner of the
+  not trigger automatic archiving (including into an ignored archive
+  destination), and `ace-task doctor` neither reports the missing archive nor
+  moves such a task with `--auto-fix`. The owner of the
   folder decides when obsolete history is deleted.
 - Delegation guards stay in the delegation tools: `ace-git-worktree create
   --task` and `ace-assign create --task` reject the lab's management tasks;

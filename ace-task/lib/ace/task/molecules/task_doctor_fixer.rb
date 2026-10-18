@@ -462,13 +462,20 @@ module Ace
 
           # A Git-ignored task path is not part of the committed tree; the
           # repository archive policy neither applies nor authorizes a move.
-          if Molecules::GitIgnoredPath.ignored?(source_dir)
+          # The destination is checked too: moving into an ignored archive
+          # bucket would expose the family content to normal staging.
+          source_spec = find_primary_spec(source_dir)
+          mover = Ace::Support::Items::Molecules::FolderMover.new(@root_dir)
+          destination = mover.destination_path(
+            Struct.new(:path).new(source_dir), to: "archive", date: archive_time
+          )
+          if Molecules::GitIgnoredPath.ignored_family?(source_dir) ||
+              Molecules::GitIgnoredPath.ignored_after_relocation?(source_dir, destination)
             log_fix(source_dir, "Skipped archive move: Git-ignored task path")
             @skipped_count += 1
             return false
           end
 
-          source_spec = find_primary_spec(source_dir)
           source_frontmatter, = Ace::Support::Items::Atoms::FrontmatterParser.parse(File.read(source_spec))
           unless TaskFamilyCompletion.new(@root_dir).descendants_terminal?(
             source_dir, id: source_frontmatter["id"]
@@ -484,7 +491,6 @@ module Ace
             return true
           end
 
-          mover = Ace::Support::Items::Molecules::FolderMover.new(@root_dir)
           mover.move(Struct.new(:path).new(source_dir), to: "archive", date: archive_time)
           log_fix(source_dir, description)
           @fixed_count += 1

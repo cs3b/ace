@@ -35,6 +35,30 @@ module Ace
           end
         end
 
+        # Paths a reparent will create, without mutating anything. Used by
+        # pre-flight checks such as the --git-commit ignored-path guard.
+        #
+        # @param task [Models::Task] Task to reparent
+        # @param target [String] "none", "self", or a parent ref
+        # @param resolve_ref [Proc] Resolves a parent ref to a Task
+        # @return [Array<String>] Destination directory and spec file paths
+        def destination_paths(task, target:, resolve_ref:)
+          paths = case target.downcase
+          when "none"
+            promoted_paths(task)
+          when "self"
+            orchestrator_paths(task)
+          else
+            parent_task = resolve_ref.call(target)
+            raise ArgumentError, "Parent task '#{target}' not found" unless parent_task
+            raise ArgumentError, "Cannot reparent task to itself" if task.id == parent_task.id
+
+            demoted_paths(task, parent_task)
+          end
+
+          [paths[:dir], File.join(paths[:dir], paths[:spec_basename])]
+        end
+
         private
 
         # Promote a subtask to a standalone task at root level.
@@ -44,17 +68,10 @@ module Ace
             raise ArgumentError, "Task #{task.id} is already a standalone task"
           end
 
-          # Generate new standalone ID preserving the original timestamp
-          raw_b36ts = Atoms::TaskIdFormatter.reconstruct(base_task_id(task.id))
-          new_item_id = Atoms::TaskIdFormatter.format(raw_b36ts)
-          new_id = new_item_id.formatted_id
-
-          # Extract slug from current folder name
-          slug = extract_slug(task.path, task.id)
-
-          # Build new folder/file names
-          new_folder_name = Atoms::TaskIdFormatter.folder_name(new_id, slug)
-          new_dir = File.join(@root_dir, new_folder_name)
+          paths = promoted_paths(task)
+          new_id = paths[:id]
+          new_dir = paths[:dir]
+          new_folder_name = paths[:folder_name]
 
           raise ArgumentError, "Destination already exists: #{new_dir}" if File.exist?(new_dir)
 
@@ -63,7 +80,7 @@ module Ace
 
           # Rename spec file and update frontmatter
           old_spec_basename = File.basename(task.file_path)
-          new_spec_basename = "#{new_folder_name}.s.md"
+          new_spec_basename = paths[:spec_basename]
           old_spec_in_new_dir = File.join(new_dir, old_spec_basename)
           new_spec_path = File.join(new_dir, new_spec_basename)
 
@@ -91,20 +108,16 @@ module Ace
             raise ArgumentError, "Cannot convert subtask #{task.id} to orchestrator — promote first"
           end
 
-          slug = extract_slug(task.path, task.id)
-
-          # Create subtask ID using first subtask char (0)
-          next_char = SubtaskCreator::SUBTASK_CHARS[0]
-          subtask_id = "#{task.id}.#{next_char}"
-          subtask_folder_name = "#{next_char}-#{slug}"
-          subtask_dir = File.join(task.path, subtask_folder_name)
+          paths = orchestrator_paths(task)
+          subtask_id = paths[:id]
+          subtask_dir = paths[:dir]
+          subtask_spec_name = paths[:spec_basename]
 
           raise ArgumentError, "Subtask directory already exists: #{subtask_dir}" if File.exist?(subtask_dir)
 
           FileUtils.mkdir_p(subtask_dir)
 
           # Move current spec file into subtask dir with renamed filename
-          subtask_spec_name = "#{subtask_id}-#{slug}.s.md"
           subtask_spec_path = File.join(subtask_dir, subtask_spec_name)
           FileUtils.mv(task.file_path, subtask_spec_path)
 
@@ -140,15 +153,10 @@ module Ace
             raise ArgumentError, "Cannot reparent task to itself"
           end
 
-          # Allocate next subtask char
-          existing_chars = scan_existing_subtask_chars(parent_task.path, parent_task.id)
-          next_char = allocate_next_char(existing_chars)
-
-          # Build new subtask ID
-          new_id = "#{parent_task.id}.#{next_char}"
-          slug = extract_slug(task.path, task.id)
-          new_folder_name = "#{next_char}-#{slug}"
-          new_dir = File.join(parent_task.path, new_folder_name)
+          paths = demoted_paths(task, parent_task)
+          new_id = paths[:id]
+          new_dir = paths[:dir]
+          new_spec_basename = paths[:spec_basename]
 
           raise ArgumentError, "Destination already exists: #{new_dir}" if File.exist?(new_dir)
 
@@ -157,7 +165,6 @@ module Ace
 
           # Rename spec file
           old_spec_basename = File.basename(task.file_path)
-          new_spec_basename = "#{new_id}-#{slug}.s.md"
           old_spec_in_new_dir = File.join(new_dir, old_spec_basename)
           new_spec_path = File.join(new_dir, new_spec_basename)
 
@@ -232,6 +239,36 @@ module Ace
 
             rewrite_descendants(child_dir, old_parent_id: old_child_id, new_parent_id: new_child_id, id_map: id_map)
           end
+        end
+
+        # Destination naming shared by the move and its pre-flight preview.
+
+        def promoted_paths(task)
+          raw_b36ts = Atoms::TaskIdFormatter.reconstruct(base_task_id(task.id))
+          new_id = Atoms::TaskIdFormatter.format(raw_b36ts).formatted_id
+          slug = extract_slug(task.path, task.id)
+          folder_name = Atoms::TaskIdFormatter.folder_name(new_id, slug)
+          dir = File.join(@root_dir, folder_name)
+          {id: new_id, dir: dir, folder_name: folder_name, spec_basename: "#{folder_name}.s.md"}
+        end
+
+        def orchestrator_paths(task)
+          slug = extract_slug(task.path, task.id)
+          next_char = SubtaskCreator::SUBTASK_CHARS[0]
+          subtask_id = "#{task.id}.#{next_char}"
+          folder_name = "#{next_char}-#{slug}"
+          dir = File.join(task.path, folder_name)
+          {id: subtask_id, dir: dir, folder_name: folder_name, spec_basename: "#{subtask_id}-#{slug}.s.md"}
+        end
+
+        def demoted_paths(task, parent_task)
+          existing_chars = scan_existing_subtask_chars(parent_task.path, parent_task.id)
+          next_char = allocate_next_char(existing_chars)
+          new_id = "#{parent_task.id}.#{next_char}"
+          slug = extract_slug(task.path, task.id)
+          folder_name = "#{next_char}-#{slug}"
+          dir = File.join(parent_task.path, folder_name)
+          {id: new_id, dir: dir, folder_name: folder_name, spec_basename: "#{new_id}-#{slug}.s.md"}
         end
 
         # Extract the base task ID (without subtask char) from a potentially dotted ID
