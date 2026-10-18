@@ -32,7 +32,7 @@ module Molecules
 
         assert_equal "created", result["status"]
         assert_nil result["message"]
-        assert_match(/\ASHA256:[A-Za-z0-9+\/=+]+\z/, result["fingerprint"])
+        assert_match(/\ASHA256:[A-Za-z0-9+\/=]+\z/, result["fingerprint"])
         ssh_stat = File.stat(File.dirname(path))
         assert_equal 0o700, ssh_stat.mode & 0o7777
         assert_equal Process.uid, ssh_stat.uid
@@ -186,6 +186,81 @@ module Molecules
         assert_equal Process.uid, File.stat(target).uid
         assert_empty Dir.children(target)
         assert File.symlink?(File.join(home, ".ssh"))
+      end
+    end
+
+    # F-1 regression: the wet existing-key path must refuse too. A
+    # regular file at the key path (found through lstat) previously
+    # went straight to chmod/chown — following the planted .ssh
+    # symlink and taking over the victim's private key.
+    def test_wet_existing_key_behind_planted_ssh_symlink_is_refused_victim_untouched
+      Dir.mktmpdir do |dir|
+        victim_ssh = File.join(dir, "victim-ssh")
+        Dir.mkdir(victim_ssh)
+        victim_key = File.join(victim_ssh, "id_ed25519")
+        provisioner.call(key: key(victim_key), account: account, machine: "lab01")
+        File.chmod(0o666, victim_key)
+        File.chmod(0o666, "#{victim_key}.pub")
+        home = File.join(dir, "home")
+        Dir.mkdir(home)
+        File.symlink(victim_ssh, File.join(home, ".ssh"))
+        path = File.join(home, ".ssh", "id_ed25519")
+
+        result = provisioner.call(key: key(path), account: account, machine: "lab01")
+
+        assert_equal "failed", result["status"]
+        assert_match(/key directory .* is a symbolic link; refusing/, result["message"])
+        # the victim's private/public key mode and owner are unchanged
+        assert_equal 0o666, File.stat(victim_key).mode & 0o7777
+        assert_equal 0o666, File.stat("#{victim_key}.pub").mode & 0o7777
+        assert_equal Process.uid, File.stat(victim_key).uid
+      end
+    end
+
+    # F-2: the .ssh leaf is swapped for a symlink mid-flight (after the
+    # lstat guard, at the mkdir step) — the post-creation re-lstat must
+    # refuse before any chmod/chown runs.
+    def test_symlink_planted_mid_flight_at_mkdir_is_refused_without_chmod_chown
+      Dir.mktmpdir do |dir|
+        target = File.join(dir, "target-dir")
+        Dir.mkdir(target)
+        home = File.join(dir, "home")
+        Dir.mkdir(home)
+        path = File.join(home, ".ssh", "id_ed25519")
+        chmod_calls = []
+
+        FileUtils.stub :chmod, ->(*args) { chmod_calls << args } do
+          Dir.stub :mkdir, ->(leaf) { File.symlink(target, leaf) } do
+            result = provisioner.call(key: key(path), account: account, machine: "lab01")
+
+            assert_equal "failed", result["status"]
+            assert_match(/key directory .* changed while preparing; refusing/, result["message"])
+            assert_match(/rerun ace-lab prepare/, result["message"])
+            assert_empty chmod_calls
+          end
+        end
+
+        # the planted symlink's target was not mutated
+        assert_equal 0o755, File.stat(target).mode & 0o7777
+        assert File.symlink?(File.join(home, ".ssh"))
+      end
+    end
+
+    # F-3: genuine filesystem ENOENT prescribes a convergence rerun,
+    # not "install ssh-keygen" (a missing binary is classified through
+    # the runner's enoent status instead).
+    def test_filesystem_enoent_is_classified_as_disappeared_not_missing_binary
+      Dir.mktmpdir do |dir|
+        path = File.join(dir, "id_ed25519")
+        provisioner.call(key: key(path), account: account, machine: "lab01")
+
+        FileUtils.stub :chmod, ->(*_args) { raise Errno::ENOENT } do
+          result = provisioner.call(key: key(path), account: account, machine: "lab01")
+
+          assert_equal "failed", result["status"]
+          assert_match(/disappeared while preparing; rerun ace-lab prepare/, result["message"])
+          refute_match(/ssh-keygen not found/, result["message"])
+        end
       end
     end
 

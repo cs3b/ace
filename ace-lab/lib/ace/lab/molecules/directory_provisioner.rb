@@ -86,10 +86,37 @@ module Ace
           missing = chown_target(directory)
           return owner_unavailable(path, directory) if directory["owner"] && missing.nil?
 
-          FileUtils.mkdir_p(path)
+          refusal = create_leaf(path, directory)
+          return refusal if refusal
+
           FileUtils.chmod(mode, path)
           chown_to_owner(path, directory, missing)
           base(path, directory).merge("status" => "created", "message" => nil)
+        end
+
+        # Close the create-time TOCTOU window as far as stdlib allows:
+        # intermediate components are created per the documented policy
+        # (mkdir_p follows existing components — the manifest is
+        # root-owned and only the leaf carries declared values), but the
+        # leaf uses Dir.mkdir, whose EEXIST on a planted symlink never
+        # follows it, and the leaf is re-lstat'd before any chmod/chown:
+        # a leaf that is not a real directory this process just created
+        # is refused instead of mutated. The window between this
+        # re-lstat and the chmod/chown that follow is a documented
+        # accepted residual (usage.md).
+        def create_leaf(path, directory)
+          FileUtils.mkdir_p(File.dirname(path))
+          Dir.mkdir(path)
+          post = lstat(path)
+          return nil if post && post.directory? && post.uid == Process.euid
+
+          failure(path, "path '#{path}' changed while preparing; refusing — rerun ace-lab prepare",
+            directory)
+        rescue Errno::EEXIST
+          failure(path, "path '#{path}' appeared or was replaced while preparing; " \
+            "refusing — rerun ace-lab prepare", directory)
+        rescue Errno::ENOENT, Errno::ENOTDIR
+          failure(path, "path '#{path}' could not be created; rerun ace-lab prepare", directory)
         end
 
         def ensure_existing(path, directory, stat, mode)
@@ -102,7 +129,8 @@ module Ace
             owner = directory["owner"] || "installer"
             return failure(path,
               "directory '#{path}' exists but is owned by uid #{stat.uid} " \
-              "(expected account '#{owner}'); refusing takeover — resolve manually", directory)
+              "(expected account '#{owner}'); refusing takeover — resolve ownership manually " \
+              "or rerun ace-lab prepare with sudo", directory)
           end
 
           if (stat.mode & 0o7777) == mode
@@ -111,8 +139,23 @@ module Ace
 
           return base(path, directory).merge("status" => "would_fix_mode", "message" => nil) if dry_run
 
+          # Stale-stat re-check: the owner-matching lstat above may be
+          # outdated by the time chmod runs; re-lstat and refuse unless
+          # the leaf is still a real, owner-matching directory.
+          fresh = lstat(path)
+          unless fresh && fresh.directory? && fresh.uid == expected_uid
+            return failure(path,
+              "directory '#{path}' changed while preparing; refusing — rerun ace-lab prepare", directory)
+          end
+
           FileUtils.chmod(mode, path)
           base(path, directory).merge("status" => "mode_fixed", "message" => nil)
+        end
+
+        def lstat(path)
+          File.lstat(path)
+        rescue Errno::ENOENT, Errno::ENOTDIR
+          nil
         end
 
         def owner_unavailable(path, directory)

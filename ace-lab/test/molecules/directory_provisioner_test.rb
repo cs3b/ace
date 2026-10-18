@@ -208,5 +208,87 @@ module Molecules
         assert_equal 0o750, File.stat(path).mode & 0o7777
       end
     end
+
+    # F-2: the declared leaf is swapped for a symlink mid-flight (after
+    # the top-level lstat, at the mkdir step) — the post-creation
+    # re-lstat must refuse before any chmod/chown runs.
+    def test_symlink_planted_mid_flight_at_mkdir_is_refused_without_chmod_chown
+      Dir.mktmpdir do |dir|
+        target = File.join(dir, "target-dir")
+        Dir.mkdir(target)
+        path = File.join(dir, "labs")
+        chmod_calls = []
+
+        FileUtils.stub :chmod, ->(*args) { chmod_calls << args } do
+          Dir.stub :mkdir, ->(leaf) { File.symlink(target, leaf) } do
+            result = provisioner.call(directory: directory(path))
+
+            assert_equal "failed", result["status"]
+            assert_match(/path .* changed while preparing; refusing/, result["message"])
+            assert_match(/rerun ace-lab prepare/, result["message"])
+            assert_empty chmod_calls
+          end
+        end
+
+        # the planted symlink's target was not mutated
+        assert_equal 0o755, File.stat(target).mode & 0o7777
+        assert File.symlink?(path)
+      end
+    end
+
+    # F-2: a leaf appearing in the race window between the guard lstat
+    # and the leaf mkdir (EEXIST) is refused, not adopted and chmodded.
+    def test_leaf_appearing_between_guard_and_mkdir_is_refused
+      Dir.mktmpdir do |dir|
+        path = File.join(dir, "labs")
+
+        Dir.stub :mkdir, ->(leaf) { system("mkdir", leaf) || raise("mkdir failed"); raise Errno::EEXIST } do
+          result = provisioner.call(directory: directory(path))
+
+          assert_equal "failed", result["status"]
+          assert_match(/appeared or was replaced while preparing; refusing/, result["message"])
+        end
+
+        # left exactly as the concurrent creator made it — no chmod to
+        # the declared 0750, no chown
+        assert File.directory?(path)
+        refute_equal 0o750, File.stat(path).mode & 0o7777
+      end
+    end
+
+    # F-2: the mode-fix path re-lstats before chmod — a directory
+    # swapped for a symlink after the owner check is refused instead of
+    # chmodded through the link.
+    def test_directory_swapped_after_owner_check_is_refused_before_mode_fix
+      Dir.mktmpdir do |dir|
+        path = File.join(dir, "labs")
+        Dir.mkdir(path)
+        File.chmod(0o700, path) # drift: ensure_existing takes the mode-fix path
+        swapped_stat = Struct.new(:symlink?, :directory?, :uid, :mode).new(true, false, Process.uid, 0o700)
+        real_lstat = File.method(:lstat)
+        stat_calls = []
+        chmod_called = false
+
+        # first lstat (guard): the real drifted directory; second lstat
+        # (pre-chmod re-check): the swapped symlink
+        File.stub :lstat, ->(candidate) {
+          next real_lstat.call(candidate) unless candidate == path
+
+          stat_calls << candidate
+          stat_calls.count > 1 ? swapped_stat : real_lstat.call(candidate)
+        } do
+          FileUtils.stub :chmod, ->(*_args) { chmod_called = true } do
+            result = provisioner.call(directory: directory(path))
+
+            assert_equal "failed", result["status"]
+            assert_match(/changed while preparing; refusing/, result["message"])
+            assert_match(/rerun ace-lab prepare/, result["message"])
+            refute chmod_called
+          end
+        end
+
+        assert_equal 0o700, File.stat(path).mode & 0o7777
+      end
+    end
   end
 end

@@ -39,10 +39,13 @@ module Ace
            "fingerprint" => nil,
            "message" => "insufficient permissions while preparing '#{key["path"]}'; " \
             "rerun ace-lab prepare with sudo or adjust ownership manually"}
+        # Filesystem ENOENT only: a missing ssh-keygen binary is already
+        # classified via the runner's "enoent" status (command_failure),
+        # so the remedy here is a convergence rerun, not installation.
         rescue Errno::ENOENT
           {"account" => account["username"], "path" => key["path"], "status" => "failed",
            "fingerprint" => nil,
-           "message" => "ssh-keygen not found in PATH; install it and rerun ace-lab prepare"}
+           "message" => "key path '#{key["path"]}' disappeared while preparing; rerun ace-lab prepare"}
         end
 
         private
@@ -122,6 +125,13 @@ module Ace
         end
 
         def existing(base, path, entry)
+          # Same guard as generate: the wet existing path chmods/chowns
+          # both key files, and FileUtils.chmod/chown follow a planted
+          # intermediate .ssh symlink — lstat(path) only guards the
+          # final component (cross-account key theft otherwise).
+          refusal = unsafe_ssh_dir_refusal(base, path)
+          return refusal if refusal
+
           public_path = "#{path}.pub"
           pub_stat = lstat(public_path)
           if pub_stat && !pub_stat.file?
@@ -147,7 +157,9 @@ module Ace
           refusal = unsafe_ssh_dir_refusal(base, path)
           return refusal if refusal
 
-          FileUtils.mkdir_p(ssh_dir)
+          refusal = ensure_ssh_dir(base, ssh_dir)
+          return refusal if refusal
+
           FileUtils.chmod(SSH_DIR_MODE, ssh_dir)
           FileUtils.chown(entry.uid, entry.gid, ssh_dir)
 
@@ -189,16 +201,59 @@ module Ace
           # O_NOFOLLOW: a dangling .pub symlink planted by the account
           # must not turn this into an arbitrary privileged write; ELOOP
           # (symlink raced in after the lstat guard) is refused, not
-          # raised.
+          # raised. chmod/chown are fd-based on the already-verified
+          # open handle, so no path-based re-resolution can race the
+          # open.
           begin
             File.open(public_path, File::WRONLY | File::CREAT | File::TRUNC | File::NOFOLLOW) do |file|
               file.write(result["out"])
+              file.chmod(PUBLIC_MODE)
+              file.chown(entry.uid, entry.gid)
             end
           rescue Errno::ELOOP
             return non_regular_public_refusal(base, public_path)
           end
-          FileUtils.chmod(PUBLIC_MODE, public_path)
-          FileUtils.chown(entry.uid, entry.gid, public_path)
+          nil
+        end
+
+        # Close the create-time TOCTOU window as far as stdlib allows:
+        # the leaf is created with Dir.mkdir, whose EEXIST on a planted
+        # symlink never follows it, and the created leaf is re-lstat'd
+        # before the caller's chmod/chown — a leaf swapped mid-flight
+        # for a symlink or a directory this process did not create is
+        # refused instead of mutated. The window between this re-lstat
+        # and the path-based chmod/chown that follow is a documented
+        # accepted residual (usage.md).
+        def ensure_ssh_dir(base, ssh_dir)
+          # Intermediates (e.g. the home directory) are created per the
+          # documented policy — mkdir_p follows existing components; the
+          # leaf .ssh itself is the account-controlled component that
+          # must not be created or accepted through a symlink.
+          FileUtils.mkdir_p(File.dirname(ssh_dir))
+          created = false
+          begin
+            Dir.mkdir(ssh_dir)
+            created = true
+          rescue Errno::EEXIST
+            stat = lstat(ssh_dir)
+            unless stat && stat.directory?
+              return base.merge("status" => "failed", "fingerprint" => nil,
+                "message" => "key directory '#{ssh_dir}' was replaced while preparing; " \
+                  "refusing — rerun ace-lab prepare")
+            end
+          rescue Errno::ENOENT, Errno::ENOTDIR
+            return base.merge("status" => "failed", "fingerprint" => nil,
+              "message" => "key directory '#{ssh_dir}' could not be created; rerun ace-lab prepare")
+          end
+
+          if created
+            stat = lstat(ssh_dir)
+            unless stat && stat.directory? && stat.uid == Process.euid
+              return base.merge("status" => "failed", "fingerprint" => nil,
+                "message" => "key directory '#{ssh_dir}' changed while preparing; " \
+                  "refusing — rerun ace-lab prepare")
+            end
+          end
           nil
         end
 
@@ -247,7 +302,7 @@ module Ace
           result = runner.call(["ssh-keygen", "-lf", public_path])
           return nil unless result["status"] == "ok"
 
-          match = result["out"].match(/(SHA256:[A-Za-z0-9+\/=+]+)/)
+          match = result["out"].match(/(SHA256:[A-Za-z0-9+\/=]+)/)
           match && match[1]
         end
 
