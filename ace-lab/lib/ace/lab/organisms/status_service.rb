@@ -16,17 +16,21 @@ module Ace
           @root = root || Dir.pwd
         end
 
-        # Production factory: resolves the cascade like the query commands
-        # do, but a broken cascade becomes the report's :invalid section
-        # instead of an exception.
+        # Production factory: a service that resolves the cascade on each
+        # call, so every report observes current files. A broken cascade
+        # becomes the report's :invalid section instead of an exception.
         def self.from_config(root: nil)
-          root ||= Dir.pwd
+          new(root: root || Dir.pwd)
+        end
+
+        # @return [Models::StatusReport]
+        def report
           documents, cascade_error = begin
             [Ace::Lab.cascade_documents, nil]
           rescue Ace::Lab::InvalidConfigurationError => e
             [nil, e.message]
           end
-          new(root: root).build(documents: documents, cascade_error: cascade_error)
+          build(documents: documents, cascade_error: cascade_error)
         end
 
         # @param documents [Array<Hash>, nil]

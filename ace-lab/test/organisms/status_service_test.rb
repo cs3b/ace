@@ -47,11 +47,11 @@ module Ace
           end
         end
 
-        def test_from_config_constructs_on_defaults_only
+        def test_from_config_resolves_cascade_per_report
           Dir.mktmpdir do |tmp|
             ENV.delete("ACE_RUNTIME")
             Dir.chdir(tmp) do
-              report = StatusService.from_config
+              report = StatusService.from_config.report
 
               assert_equal :defaults_only, report.config[:state]
               assert report.ok?
