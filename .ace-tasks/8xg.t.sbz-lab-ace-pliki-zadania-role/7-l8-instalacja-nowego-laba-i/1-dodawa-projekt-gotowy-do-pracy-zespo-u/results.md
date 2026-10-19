@@ -106,3 +106,55 @@ z korzenia projektu (patrz wyżej).
 - Nie wykonano `bin/ace-test-suite` na całym monorepo (poza zakresem tej
   tury; zmiany ograniczone do ace-lab + dokumentów) — do wykonania przed
   merge zgodnie z kontraktem.
+
+## Poprawki po review (runda 1)
+
+Zastosowano 11 zweryfikowanych uwag z
+`.ace-local/review/sessions/review-8xikt0/review-report-review-default.md`
+(all green: `bin/ace-test ace-lab all` → **417 tests, 1744 assertions,
+0 failures, 0 errors, 4 skipped**; +9 testów względem rundy 0):
+
+1. **[High, 8xikzhvh]** `RepositoryProvisioner#repository?` wymaga teraz, by
+   ścieżka BYŁA toplevelem repozytorium (`git rev-parse --show-toplevel`
+   porównane po `realpath` z ścieżką). Niepusty katalog zagnieżdżony wewnątrz
+   obcego repozytorium jest odrzucany jako foreign — nigdy konwergowany,
+   nigdy mutujący origin rodzica (testy: odmowa wet i dry-run, konfig
+   rodzica nietknięta).
+2. **[Med, 8xikzhvi]** `ProjectRegistry` pre-waliduje załadowany dokument
+   przez `TopologySchema.normalize!` przed sprawdzeniem konfliktów:
+   `schema_version: 1` + `projects: [42]` to klasyfikowana odmowa „not this
+   lab's registry", nie `TypeError` (test dodany).
+3. **[Med, 8xikzhvj]** Zaktualizowany dokument jest walidowany PRZED gałęzią
+   `dry_run`: `--dry-run` z nieprawidłowym id prognozuje identyczną porażkę
+   jak uruchomienie wet (test porównuje oba komunikaty).
+4. **[Med, 8xikzhvk]** Atomowy zapis rejestru: plik tymczasowy w tym samym
+   katalogu + `File.rename`; awaria w trakcie nie zostawia uciętego
+   dokumentu kaskady.
+5. **[Med, 8xikzhvl]** Zmiana `--label` przy re-add aktualizuje etykietę
+   (dane prezentacyjne, nie tożsamość) i raportuje nowy status
+   `updated`/`would_update`; brak `--label` zachowuje zapisaną etykietę
+   (3 testy pinują zachowanie).
+6. **[Med, 8xikzhvm]** `usage.md` (krok 3 „registry") i niniejszy plik:
+   widoczność w `ace-lab projects`/`ace-overseer projects` wymaga
+   principal-grant z zaufanej kaskady dla nowego id projektu (konfiguracja
+   należy do instalatora L8.3) ORAZ uruchomienia z korzenia projektu
+   (kaskadowanie tierów).
+7. **[Low, 8xikzhvo]** Redundantny rescue zastąpiony samym `rescue StandardError`.
+8. **[Low, 8xikzhvp]** Wzorzec ignore w `OverseerProvisioner` pomija linie
+   negacji `!...` (test: negacja nie liczy się jako istniejący wpis).
+9. **[Low, 8xikzhvq]** Czytelniejsza odmowa dla pustego, istniejącego pliku
+   rejestru: „exists but is empty" (test dodany).
+10. **[Low, 8xikzhvr]** `usage.md`: pola `path`/`remote` we wpisach rejestru
+    to dane instalatora niewidoczne w publicznej projekcji.
+11. **[Low, 8xikzhvs]** Poprawiona indentacja modułu w
+    `test/commands/project_add_test.rb`.
+
+`ace-lab/CHANGELOG.md` ([Unreleased]/Fixed) dokumentuje zmiany kontraktowe:
+nowe statusy `updated`/`would_update`, zaostrzona semantyka detekcji
+repozytorium (toplevel), spójność dry-run z walidacją, atomowy zapis.
+Zmienione pliki: `molecules/repository_provisioner.rb`,
+`molecules/project_registry.rb`, `molecules/overseer_provisioner.rb`,
+`ace-lab/docs/usage.md`, `ace-lab/CHANGELOG.md` oraz testy
+(`repository_provisioner_test.rb`, `project_registry_test.rb`,
+`overseer_provisioner_test.rb`, `commands/project_add_test.rb` — indentacja).
+`docs/lab-flow.md` bez zmian (wiersz rejestru nadal aktualny).
