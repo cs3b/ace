@@ -123,6 +123,31 @@ module Ace
           end
         end
 
+        # 8xi16mz3: a non-mapping layer (a YAML list) at the NEAREST
+        # cascade tier must be skipped, not wipe the valid mapping from
+        # the farther tier — the probe still honors the farther
+        # config_path override.
+        def test_non_mapping_nearest_cascade_layer_keeps_farther_tier_override
+          Dir.mktmpdir("coworker-exec") do |dir|
+            outer = File.join(dir, ".ace", "coworker")
+            FileUtils.mkdir_p(outer)
+            File.write(File.join(outer, "config.yml"),
+              "config_path: .ace-local/coworker/worker.yml\n")
+            worktree = File.join(dir, "worktree")
+            inner = File.join(worktree, ".ace", "coworker")
+            FileUtils.mkdir_p(inner)
+            File.write(File.join(inner, "config.yml"), "- just\n- a list\n")
+            worker = File.join(worktree, ".ace-local", "coworker", "worker.yml")
+            FileUtils.mkdir_p(File.dirname(worker))
+            File.write(worker, "role: worker\ntask: 8xg.t.aaa\nassignment: abc123\n")
+
+            result = WorktreeExecutorProbe.new(project_root: worktree,
+              runner: FakeRunner.new(out: "[]")).probe(worktree)
+
+            assert_equal "abc123", result[:config]["assignment"]
+          end
+        end
+
         def test_assignments_failure_raises_specific_error
           Dir.mktmpdir("coworker-exec") do |dir|
             probe = WorktreeExecutorProbe.new(project_root: dir,

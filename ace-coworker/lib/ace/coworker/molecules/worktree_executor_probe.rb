@@ -47,6 +47,13 @@ module Ace
         private
 
         def read_config(worktree_path)
+          # Deliberate read-only asymmetry (8xi16mz4): unlike
+          # CommissionOrchestrator#resolve_target, which refuses
+          # paths escaping the project root, the probe follows
+          # whatever config_path the cascade resolves — including an
+          # absolute or ../ path — because it only READS what an
+          # ace-coworker loader process inside that worktree would
+          # read anyway; there is no mutation to contain.
           path = Molecules::ConfigLoader.new(
             project_root: worktree_path,
             defaults: cascade_defaults(worktree_path)
@@ -65,17 +72,21 @@ module Ace
         # worktree (project `.ace` tiers from the worktree up to its root,
         # then the user tier) — the same file set and order
         # ConfigResolver#resolve_file uses, restricted to the tiers that
-        # can override `config_path`. An unreadable cascade falls back to
-        # the loader's default config location.
+        # can override `config_path`. A layer whose YAML is not a
+        # mapping (e.g. a list) is skipped — it cannot contribute
+        # config_path overrides, and wiping the already-merged lower
+        # tiers would silently drop valid configuration. An unreadable
+        # cascade falls back to the loader's default config location.
         def cascade_defaults(worktree_path)
           finder = Ace::Support::Config::Molecules::ConfigFinder.new(
             file_patterns: CASCADE_PATTERNS, start_path: worktree_path)
           layers = finder.find_all.select(&:exists).map(&:path)
-          layers.reverse.reduce({}) do |merged, path|
+          merged = {}
+          layers.reverse_each do |path|
             data = Ace::Support::Config::Molecules::YamlLoader.load_file(path).data
-            merged.is_a?(Hash) && data.is_a?(Hash) ?
-              Ace::Support::Config::Atoms::DeepMerger.merge(merged, data) : {}
+            merged = Ace::Support::Config::Atoms::DeepMerger.merge(merged, data) if data.is_a?(Hash)
           end
+          merged
         rescue StandardError
           {}
         end
