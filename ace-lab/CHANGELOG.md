@@ -136,6 +136,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Review 8xir47 (findings 1, 3, 4): a decidable HITL route failure is
+  no longer masked as UNKNOWN when PATH is unset (route failures take
+  precedence over the PATH-unset probe message and always FAIL
+  readiness); the ownership-skip message names the actually failing
+  step instead of always blaming the repository step; the
+  prepare-dependency project report carries the `hitl` key like every
+  other ProjectAdd report variant.
+
+- Review 8xir47 (findings 5-6) in `HitlRoutes`: the runtime route
+  configuration (`.ace/hitl/config.yml`) is now written ATOMICALLY
+  (exclusive temp file + rename, the ProjectRegistry discipline) — a
+  crash mid-write can no longer truncate the operator-facing config.
+  Convergence is now by route NAME everywhere: on re-install the
+  manifest-declared keys are merged into the existing same-name route
+  (manifest keys win, operator extra keys such as `pane: p5` survive
+  instead of being silently replaced), operator-added routes are kept,
+  and `verify` accepts a same-name route carrying every
+  manifest-declared key/value even when the operator extended it with
+  extra keys — an extended route no longer fails verification until
+  re-install. An unchanged route list is never rewritten (comments
+  survive idempotent no-op installs); a converging write is a YAML
+  round-trip and drops comments, as documented in the class docstring.
+
 - PR #393 final audit (FINAL-LAB1): `ProjectAdd` now resolves declared
   project owners through the REAL system passwd lookup by default (the
   same `Etc.getpwnam` seam `RoleVerifier`/`Verify` use). The previous

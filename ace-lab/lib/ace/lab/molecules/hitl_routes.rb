@@ -25,6 +25,23 @@ module Ace
       # route names — delivery retention persists route names as literal
       # dot-keys — and no duplicate names); the committed suite
       # cross-checks the written document against the real loader.
+      #
+      # Convergence rules (review 8xir47, findings 5-6): routes are
+      # converged BY ROUTE NAME. On re-install the manifest-declared
+      # keys win over the existing same-name route, but operator
+      # extensions SURVIVE: extra keys the operator added to a
+      # same-name route (e.g. `pane: p5` on `console`) are kept and
+      # merged around the manifest keys, and operator-added routes
+      # survive untouched. Verify applies the same rule — a route is
+      # converged when a same-name entry carries every
+      # manifest-declared key/value; operator extra keys never fail
+      # verification. An unchanged route list is never rewritten, so
+      # an idempotent no-op install leaves the file (including any
+      # operator comments) byte-identical. When a write DOES happen
+      # it goes through a YAML round-trip (atomic: exclusive temp
+      # file + rename, the ProjectRegistry pattern), which normalizes
+      # formatting and DROPS comments in the file — comments are not
+      # preserved across a converging write.
       class HitlRoutes
         RELATIVE_CONFIG_PATH = %w[.ace hitl config.yml].freeze
         ROUTE_NAME_PATTERN = /\A[a-z0-9][a-z0-9_-]*\z/i.freeze
@@ -80,8 +97,10 @@ module Ace
 
         # Readiness probe (verify): the project's installed HITL
         # configuration must exist, parse, satisfy the loader contract,
-        # and contain the expected route. nil when ready, otherwise the
-        # concrete reason.
+        # and contain the expected route BY NAME with every
+        # manifest-declared key matching (operator extra keys on the
+        # same-name route are allowed — an extended route is converged,
+        # not drift). nil when ready, otherwise the concrete reason.
         # @param root [String] project root
         # @param expected [Hash] expected route entry
         # @return [String, nil]
@@ -102,9 +121,12 @@ module Ace
           routes = document.dig("hitl", "adapters", "routes")
           reason = validation_reason(routes)
           return "hitl.adapters.routes in '#{path}' is invalid: #{reason}" if reason
-          unless routes.include?(expected)
-            return "route #{expected.inspect} is not configured in '#{path}' " \
-              "(rerun ace-lab install)"
+
+          name = route_name(expected)
+          route = routes.find { |candidate| route_name(candidate) == name }
+          unless route && expected.all? { |key, value| route[key] == value }
+            return "route '#{name}' is not configured in '#{path}' with the declared " \
+              "settings (rerun ace-lab install)"
           end
 
           nil
@@ -138,9 +160,17 @@ module Ace
           document["hitl"]["adapters"] ||= {}
           document["hitl"]["adapters"]["routes"] = merged
           begin
-            FileUtils.mkdir_p(File.dirname(path))
-            File.write(path, YAML.dump(document))
+            dir = File.dirname(path)
+            FileUtils.mkdir_p(dir)
+            # Atomic write (review 8xir47, finding 5, the ProjectRegistry
+            # pattern): a crash mid-write must never truncate the runtime
+            # route configuration. The temp file is created EXCLUSIVELY
+            # (O_CREAT|O_EXCL) under an unguessable name so a planted
+            # symlink can never redirect the write.
+            tmp = write_exclusive(dir, YAML.dump(document))
+            File.rename(tmp, path)
           rescue SystemCallError, IOError => e
+            File.delete(tmp) if defined?(tmp) && tmp && File.exist?(tmp)
             return base.merge("status" => "failed",
               "message" => "writing '#{path}' failed: #{e.class}: #{e.message}")
           end
@@ -168,20 +198,48 @@ module Ace
         end
 
         # Converge the expected routes into the existing list by route
-        # name: a declared route replaces the entry carrying the same
-        # name, a new one is appended; operator-added routes survive.
+        # name: a declared route's keys are MERGED into the entry
+        # carrying the same name (manifest-declared keys win, operator
+        # extra keys like `pane: p5` survive), a route with no
+        # same-name counterpart is appended; operator-added routes and
+        # their order are untouched.
         def merge_routes(routes, expected)
           merged = routes.map(&:dup)
           expected.each do |route|
             name = self.class.route_name(route)
             index = merged.index { |existing| self.class.route_name(existing) == name }
             if index
-              merged[index] = route.dup
+              merged[index] = merged[index].merge(route)
             else
               merged << route.dup
             end
           end
           merged
+        end
+
+        # Create the temp file exclusively (never following a symlink),
+        # write the payload, close, and return the path — the
+        # ProjectRegistry atomic-write discipline. Raises
+        # SystemCallError/IOError on failure so the caller classifies.
+        def write_exclusive(dir, payload)
+          require "securerandom"
+          100.times do
+            candidate = File.join(dir, ".config.yml.tmp.#{Process.pid}.#{SecureRandom.hex(8)}")
+            next if File.exist?(candidate) # includes symlinks (lstat)
+
+            begin
+              file = File.open(candidate, File::RDWR | File::CREAT | File::EXCL, 0o600)
+            rescue Errno::EEXIST
+              next
+            end
+            begin
+              file.write(payload)
+            ensure
+              file.close
+            end
+            return candidate
+          end
+          raise SystemCallError.new("could not create an exclusive temporary file in '#{dir}'", 0)
         end
       end
     end

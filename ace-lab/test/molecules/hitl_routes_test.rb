@@ -94,6 +94,57 @@ module Molecules
       end
     end
 
+    def test_same_name_operator_extension_is_preserved_not_replaced
+      Dir.mktmpdir do |root|
+        path = File.join(root, ".ace", "hitl", "config.yml")
+        FileUtils.mkdir_p(File.dirname(path))
+        File.write(path, YAML.dump({
+          "hitl" => {"adapters" => {"routes" => [{"adapter" => "console", "pane" => "p5"}]}}
+        }))
+
+        report = organism.install(root: root, adapters: adapters)
+
+        # the operator's extra key survives; the unchanged declaration
+        # converges without a rewrite
+        assert_equal "exists", report["status"], report.inspect
+        document = YAML.safe_load_file(path)
+        assert_equal [{"adapter" => "console", "pane" => "p5"}],
+          document.dig("hitl", "adapters", "routes")
+      end
+    end
+
+    def test_re_install_merges_manifest_keys_around_operator_extensions
+      Dir.mktmpdir do |root|
+        path = File.join(root, ".ace", "hitl", "config.yml")
+        FileUtils.mkdir_p(File.dirname(path))
+        File.write(path, YAML.dump({
+          "hitl" => {"adapters" => {"routes" => [
+            {"adapter" => "console", "pane" => "p5", "runtime" => "screen"}
+          ]}}
+        }))
+
+        report = organism.install(root: root, adapters: adapters("runtime" => "tmux"))
+
+        # manifest-declared keys win (runtime), operator extras survive
+        # (pane), the same-name entry is not replaced wholesale
+        assert_equal "created", report["status"], report.inspect
+        document = YAML.safe_load_file(path)
+        assert_equal [{"adapter" => "console", "runtime" => "tmux", "pane" => "p5"}],
+          document.dig("hitl", "adapters", "routes")
+        refute_nil Ace::Hitl::Molecules::HitlRouteLoader.load(document)
+      end
+    end
+
+    def test_install_leaves_no_temporary_files_behind
+      Dir.mktmpdir do |root|
+        report = organism.install(root: root, adapters: adapters("runtime" => "tmux"))
+
+        assert_equal "created", report["status"], report.inspect
+        dir = File.join(root, ".ace", "hitl")
+        assert_equal ["config.yml"], Dir.children(dir).sort
+      end
+    end
+
     def test_without_hitl_adapters_the_step_is_skipped
       Dir.mktmpdir do |root|
         report = organism.install(root: root, adapters: [])
@@ -152,6 +203,20 @@ module Molecules
 
         File.write(path, YAML.dump({"hitl" => {"adapters" => {"routes" => [expected]}}}))
         assert_nil Ace::Lab::Molecules::HitlRoutes.config_reason(root: root, expected: expected)
+
+        # same-name extension: operator extra keys are converged, not drift
+        File.write(path, YAML.dump({"hitl" => {"adapters" => {"routes" => [
+          {"adapter" => "console", "pane" => "p5"}
+        ]}}}))
+        assert_nil Ace::Lab::Molecules::HitlRoutes.config_reason(root: root, expected: expected)
+
+        # a same-name route missing a manifest-declared key is NOT converged
+        File.write(path, YAML.dump({"hitl" => {"adapters" => {"routes" => [
+          {"adapter" => "console", "runtime" => "screen"}
+        ]}}}))
+        assert_match(/route 'console' is not configured/,
+          Ace::Lab::Molecules::HitlRoutes.config_reason(
+            root: root, expected: {"adapter" => "console", "runtime" => "tmux"}))
       end
     end
   end

@@ -745,6 +745,24 @@ end
 # --- review round 2: probe posture under unset PATH, root nav trust ----
 
 class VerifyProbeTest < Minitest::Test
+  def test_route_failure_is_not_masked_by_unset_path
+    manifest = {
+      "projects" => [{"id" => "atlas", "path" => "/nonexistent/atlas", "remote" => nil}],
+      "adapters" => [{"id" => "console", "kind" => "hitl", "command" => "git",
+                      "config" => {"adapter" => "console"}}]
+    }
+    old = ENV["PATH"]
+    ENV["PATH"] = ""
+    begin
+      adapters = organism.send(:check_adapters, manifest)
+      assert_equal "fail", adapters.first["status"], adapters.inspect
+      assert_match(/no HITL adapter routes are configured/, adapters.first["reason"].to_s)
+      refute_match(/PATH is unset/, adapters.first["reason"].to_s)
+    ensure
+      ENV["PATH"] = old
+    end
+  end
+
   def organism
     Ace::Lab::Organisms::Verify.new
   end

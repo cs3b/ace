@@ -207,6 +207,8 @@ module Organisms
           assert_equal false, project["ok"]
           assert_match(/fix the prepare phase first/, project["repository"]["message"])
           assert_equal "failed", project["registry"]["status"]
+          assert_equal "failed", project["hitl"]["status"]
+          assert_match(/hitl/, project["hitl"]["location"])
         end
         assert_equal "failed", report["grants"]["status"]
         assert_match(/fix the failing steps first/, report["grants"]["message"])

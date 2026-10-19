@@ -236,6 +236,22 @@ module Organisms
       assert_equal ".ace-local/hitl", document.dig("hitl", "root_dir")
     end
 
+    def test_ownership_skip_message_names_the_failing_step
+      adapters = [{"id" => "console", "kind" => "hitl", "command" => nil, "config" => {}}]
+      path = File.join(@path, ".ace", "hitl", "config.yml")
+      organism.call(id: "atlas", path: @path, remote: @source)
+      FileUtils.mkdir_p(File.dirname(path))
+      File.write(path, "::not yaml::\n\t- broken")
+
+      report = organism.call(id: "atlas", path: @path, remote: @source,
+        hitl_adapters: adapters, owner: "ace-worker")
+
+      assert_equal "failed", report["hitl"]["status"]
+      assert_equal "failed", report["owner"]["status"]
+      assert_match(/step 'hitl' is not ready/, report["owner"]["message"])
+      refute_match(/repository not ready/, report["owner"]["message"])
+    end
+
     def test_unparseable_hitl_config_is_refused_not_overwritten
       adapters = [{"id" => "console", "kind" => "hitl", "command" => nil, "config" => {}}]
       path = File.join(@path, ".ace", "hitl", "config.yml")

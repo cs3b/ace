@@ -83,8 +83,11 @@ module Ace
             skipped(".ace/hitl/config.yml", "repository not ready; fix the repository step first")
           end
 
-          ownership = if [repository, overseer, registry, hitl].any? { |item| item["status"] == "failed" }
-            skipped_owner(owner, "repository not ready; fix the repository step first")
+          steps = {"repository" => repository, "overseer" => overseer,
+                   "registry" => registry, "hitl" => hitl}
+          ownership = if steps.any? { |_step, item| item["status"] == "failed" }
+            failed_step, = steps.find { |_step, item| item["status"] == "failed" }
+            skipped_owner(owner, "step '#{failed_step}' is not ready; fix that step first")
           else
             propagate_owner(path, owner, effective_dry_run)
           end

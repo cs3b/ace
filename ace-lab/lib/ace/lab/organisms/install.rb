@@ -203,6 +203,7 @@ module Ace
             "repository" => failed.call(project["path"]),
             "overseer" => failed.call(File.join(project["path"], ".ace-tasks", "_overseer")),
             "registry" => failed.call(File.join(project["path"], ".ace", "lab", "config.yml")),
+            "hitl" => failed.call(File.join(project["path"], ".ace", "hitl", "config.yml")),
             "owner" => failed.call(project["path"])
           }
         end

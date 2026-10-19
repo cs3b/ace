@@ -481,9 +481,12 @@ module Ace
             route_reason = if config_reason.nil? && adapter["kind"] == "hitl"
               hitl_route_reason(adapter, manifest)
             end
-            reason = config_reason ||
-              (probe != :pass ? adapter_command_reason(adapter, executors) : nil) ||
-              route_reason
+            # Route failures are decidable regardless of PATH — they
+            # take precedence over the PATH-unset probe message so a
+            # missing/invalid HITL route is never masked as UNKNOWN.
+            reason = route_reason ||
+              config_reason ||
+              (probe != :pass ? adapter_command_reason(adapter, executors) : nil)
             note = if reason.nil? && adapter["command"].nil?
               if adapter["kind"] == "hitl"
                 "configured (route installed in every project; no local command declared; " \
@@ -492,10 +495,10 @@ module Ace
                 "configured (no local command declared; network reachability is out of scope)"
               end
             end
-            # A config-shape failure is decidable regardless of PATH:
-            # it stays FAIL; only the command probe degrades to unknown
-            # under an unset PATH.
-            status = if config_reason
+            # A config-shape or route failure is decidable regardless
+            # of PATH: it stays FAIL; only the command probe degrades
+            # to unknown under an unset PATH.
+            status = if config_reason || route_reason
               FAIL
             elsif probe == :unknown
               UNKNOWN
