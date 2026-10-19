@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Gate `work-on` starts on dependency readiness (L6.3): a step starts only when every recorded `dependencies` predecessor has status `done` (accepted and integrated result). A finished worker or open PR does not unlock a dependent step; cancelled, skipped, missing, or cyclic predecessors block the start with explicit reasons before any worktree/assignment side effect (new pure atom `Atoms::DependencyReadiness`, wired into `WorkOnOrchestrator`).
+
 ### Removed
 
 - Remove the installed `ordinary` CLI command and `OrdinaryWorkOn` launcher: the `/as-assign-drive --ordinary` handoff is invalid after the local file-based rework.

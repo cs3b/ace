@@ -123,7 +123,10 @@ Before starting any step:
    `ace-task update <step-ref> --set status=progress`.
 
 The start decision belongs to the overseer; this is reading dependencies and
-real state, not a new runtime scheduler.
+real state, not a new runtime scheduler. `ace-overseer work-on` enforces the
+same gate mechanically: it refuses to provision a worktree or assignment for
+a step whose recorded dependencies are not satisfied (predecessor status
+`done` = accepted and integrated), and reports the blocking reasons.
 
 ### 4) Hand the worktree to the next role
 

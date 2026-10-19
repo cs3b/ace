@@ -38,6 +38,8 @@ module Ace
           primary_ref = resolved_refs.first[:ref]
           primary_task = resolved_refs.first[:task]
 
+          guard_dependencies_satisfied!(resolved_refs)
+
           preset_name = Atoms::PresetResolver.resolve(
             task_frontmatter: primary_task.respond_to?(:metadata) ? (primary_task.metadata || {}) : {},
             cli_preset: cli_preset,
@@ -115,6 +117,39 @@ module Ace
         end
 
         private
+
+        # Overseer queue rule (L6.3): only steps whose recorded dependencies
+        # are satisfied may start. Satisfaction requires a predecessor status
+        # of "done" (accepted AND integrated result) -- a finished worker or
+        # open PR does not unlock, because merge is modeled by depending on
+        # the predecessor's integration step. Checked from real task-tree
+        # state before any side effect.
+        def guard_dependencies_satisfied!(resolved_refs)
+          lookup = ->(ref) { @task_manager.show(ref) }
+
+          startable = resolved_refs.flat_map do |entry|
+            task = entry[:task]
+            if !entry[:is_subtask] && task.respond_to?(:subtasks) && task.subtasks&.any?
+              task.subtasks.reject { |st| Ace::Task::Atoms::TaskValidationRules.terminal_status?(st.status.to_s) }
+            else
+              [task]
+            end
+          end
+
+          blocked = startable.filter_map do |task|
+            result = Atoms::DependencyReadiness.check(task, lookup: lookup)
+            next unless result[:status] == :blocked
+
+            "#{task.id}: #{result[:reasons].join("; ")}"
+          end
+
+          return if blocked.empty?
+
+          raise Error,
+            "Blocked by unsatisfied dependencies (a predecessor counts only " \
+            "when its accepted+integrated step is done): #{blocked.join(" | ")}. " \
+            "A finished worker or open PR does not unlock a dependent step."
+        end
 
         def extract_subtask_refs(task)
           subtasks = task.respond_to?(:subtasks) ? task.subtasks : nil

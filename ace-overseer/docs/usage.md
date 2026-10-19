@@ -48,6 +48,14 @@ Work-on is idempotent: rerunning with the same task refs reuses the existing
 worktree and assignment instead of creating duplicates. Draft tasks are
 blocked until reviewed.
 
+Work-on only starts steps whose recorded `dependencies` are satisfied by real
+task-tree state: every predecessor must have status `done` (accepted *and*
+integrated result). A finished worker, "work done" message, or open PR does
+not unlock a dependent step -- model merge requirements by depending on the
+predecessor's integration step. Cancelled, skipped, missing, or cyclic
+predecessors block the start with explicit reasons, before any worktree or
+assignment side effect.
+
 > **Planned (L4):** planner prepares the worktree and the entire assignment
 > sequence -- not available yet.
 
