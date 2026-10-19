@@ -142,3 +142,13 @@ sekwencyjnie, bez ponownego komisjonowania preparacji przez overseera:
 - Po commission re-prepare daje konflikt `active_executor` (zachowanie .3.0,
   celowe: jeden aktywny wykonawca) — ponowna kompozycja/dokończenie sekwencji
   wypada przed commission lub po zakończeniu executed roli.
+
+## Poprawki po review (runda 1)
+
+Session `review-8xifmt`, 5 findingów (2 Medium, 3 Low), wszystkie applied:
+1. `definition_errors` zabezpieczone na nil (pusty plik) i non-mapping (lista) — akcjonowalny błąd „process is empty / must be a mapping", nigdy NoMethodError; +2 testy.
+2. Klucze lifecycle (`status`, `added_by`, `parent`) wykluczone z `extra` (RESERVED_STEP_KEYS) — definicja nie nadpisze `:pending`; +test.
+3. Zduplikowana sekcja `### Added` w CHANGELOG scalona.
+4. docs/usage.md: zdokumentowano, że `.latest` wskazuje ostatnio skomponowany leg — driver adresuje po explicit id.
+5. Jawne require ace-assign (assignment_manager, step_writer, number_generator) zamiast transitive.
+Retest: `bin/ace-test ace-coworker all` → 357/1525/0.
