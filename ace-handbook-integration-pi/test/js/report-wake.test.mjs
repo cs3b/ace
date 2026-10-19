@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
 import { createFakeHost } from "./fake-pi-host.mjs";
-import aceWakeFactory from "../../handbook/extensions/ace-wake/index.js";
+import { startSession } from "./session-harness.mjs";
 
 // L7.3 acceptance scenarios (8xg.t.sbz.6.2): a report notification reaches a
 // pi overseer session through the ace-wake watch on the ace-hitl inbox
@@ -11,44 +11,8 @@ import aceWakeFactory from "../../handbook/extensions/ace-wake/index.js";
 // execution) during an active turn, exactly-once re-registration after
 // restart, and idempotence of repeated notifications.
 
-const HOST_PORTS = ["setIntervalFn", "clearIntervalFn", "watchFactory", "statFn"];
 const HITL_DIR = "/fake/project/.ace-local/hitl";
 const WAKE_TEXT = /watch:reports/;
-
-/** Start the real extension against the fake host, as Pi would. */
-async function startSession(host) {
-  const events = [];
-  host.pi.on = (event, handler) => {
-    events.push([event, handler]);
-    return () => {};
-  };
-  aceWakeFactory(host.pi, Object.fromEntries(HOST_PORTS.map((name) => [name, host[name]])));
-
-  const handlerFor = (event) => {
-    const found = events.find(([name]) => name === event);
-    if (!found) {
-      throw new Error(`extension did not register ${event}`);
-    }
-    return found[1];
-  };
-
-  await handlerFor("session_start")({ type: "session_start", reason: "startup" }, host.commandContext);
-
-  return {
-    reload: async () => {
-      await handlerFor("session_shutdown")({ type: "session_shutdown", reason: "reload" }, host.commandContext);
-      const reloadEvents = [];
-      host.pi.on = (event, handler) => {
-        reloadEvents.push([event, handler]);
-        return () => {};
-      };
-      aceWakeFactory(host.pi, Object.fromEntries(HOST_PORTS.map((name) => [name, host[name]])));
-      const found = reloadEvents.find(([name]) => name === "session_start");
-      await found[1]({ type: "session_start", reason: "reload" }, host.commandContext);
-    },
-    settle: () => handlerFor("agent_settled")({ type: "agent_settled" }, host.commandContext),
-  };
-}
 
 /** A session with the report watch configured on the hitl inbox directory. */
 async function overseerSession() {
@@ -86,11 +50,13 @@ describe("report wake (L7.3 continuation transport)", () => {
     // The overseer session is mid-run: Pi accepts the message into its
     // follow-up queue for THIS session instead of starting another run.
     host.setIdle(false);
-    host.setAgentActive(true);
     reportArrives(host, 2);
 
     const sends = reportSends(host);
     assert.equal(sends.length, 1);
+    // This pins the queue-only delivery contract (every wake is a queued
+    // follow-up, never an interrupting send); the single-execution semantics
+    // themselves live in pi's host, which this fake cannot falsify.
     assert.equal(sends[0].deliverAs, "followUp", "active turns receive queued follow-ups");
 
     // Repeated notifications while the wake is still pending coalesce into

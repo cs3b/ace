@@ -99,8 +99,9 @@ export function createFakeHost() {
     commands,
 
     /** Fire the filesystem change callback of the watcher covering path.
-     * The production watchFactory watches the target's parent directory, so
-     * the fake resolves the watcher through the directory too. */
+     * The production watchFactory watches the target itself for directory
+     * targets and the target's parent directory for file targets, so the
+     * fake resolves the watcher through both shapes. */
     triggerWatch(path) {
       watcherFor(path).onChange();
     },

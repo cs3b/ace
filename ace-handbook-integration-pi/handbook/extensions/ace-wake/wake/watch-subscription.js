@@ -302,16 +302,31 @@ function describeError(error) {
 /**
  * Default watchFactory over node:fs.watch.
  *
- * Watches the target's parent directory and filters events to the target's
- * basename: watching the file itself keeps following the original inode, so
- * atomic replacement (write-to-temporary + rename) would silently detach the
- * subscription after one change.
+ * Directory targets are watched directly and accept any child event: on
+ * Linux (inotify) a child file's creation is delivered only to a watch on
+ * the directory itself, never to a watch on its parent. The mtime/size
+ * fingerprint comparison filters noise, so accepting every event is safe.
  *
- * @param {string} path Canonical path of the watched file.
+ * File targets keep watching the parent directory and filter events to the
+ * target's basename: watching the file itself keeps following the original
+ * inode, so atomic replacement (write-to-temporary + rename) would silently
+ * detach the subscription after one change.
+ *
+ * @param {string} path Canonical path of the watched file or directory.
  * @param {{onChange: () => void, onError: (error: Error) => void}} handlers
  * @returns {{close: () => void}}
  */
 export function nodeWatchFactory(path, handlers) {
+  if (nodeFs.statSync(path).isDirectory()) {
+    const watcher = nodeFs.watch(path, { persistent: false }, () => {
+      // Any child event is checked: the fingerprint comparison filters
+      // non-changes, including nested relative paths some platforms report.
+      handlers.onChange();
+    });
+    watcher.on("error", (error) => handlers.onError(error));
+    watcher.unref?.();
+    return watcher;
+  }
   const directory = nodePath.dirname(path);
   const target = nodePath.basename(path);
   const watcher = nodeFs.watch(

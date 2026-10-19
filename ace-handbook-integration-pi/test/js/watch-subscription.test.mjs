@@ -242,6 +242,32 @@ describe("nodeWatchFactory on the real filesystem", { timeout: 20_000 }, () => {
     nodeFs.rmSync(tmp, { recursive: true, force: true });
   });
 
+  it("wakes exactly once when a file is created inside a watched directory", async () => {
+    const tmp = nodeFs.mkdtempSync(nodePath.join(nodeOs.tmpdir(), "wake-dir-"));
+
+    const port = createWatchPort({
+      watchFactory: nodeWatchFactory,
+      statFn: nodeStatFn,
+      baseDir: tmp,
+    });
+    const wakes = [];
+    port.start({ kind: "watch", name: "inbox", path: tmp, message: "m" }, () => wakes.push(1));
+
+    // A child file appearing inside the watched directory (the ace-hitl
+    // inbox wiring) must wake exactly once on every platform: Linux inotify
+    // delivers child-create events only to a watch on the directory itself.
+    nodeFs.writeFileSync(nodePath.join(tmp, "event-1.md"), "report body");
+    await waitFor(() => wakes.length === 1, { timeoutMs: 10_000 });
+    assert.equal(wakes.length, 1, "a file created inside the watched directory must wake");
+
+    // Duplicate platform events for the same state stay filtered.
+    await new Promise((resolve) => setTimeout(resolve, 700));
+    assert.equal(wakes.length, 1, "no extra wakes for the same directory state");
+
+    port.stopAll();
+    nodeFs.rmSync(tmp, { recursive: true, force: true });
+  });
+
   it("rejects existing files whose contents are not readable", () => {
     if (process.platform === "win32") {
       return; // POSIX permission bits do not apply.
