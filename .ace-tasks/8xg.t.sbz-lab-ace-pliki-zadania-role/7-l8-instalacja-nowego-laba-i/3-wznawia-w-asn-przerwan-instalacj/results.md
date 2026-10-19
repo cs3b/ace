@@ -141,3 +141,13 @@ przed merge zgodnie z kontraktem.
 - Zakres graniczny do pilnowania: .7.4 nie powinno dodawać journala ani
   drugiego właściciela stanu — weryfikacja ma czytać te same artefakty,
   z których resume wyprowadza prawdę.
+
+## Poprawki po review (runda 1)
+
+Session `review-8xim0u`, werdykt Approve, 6 findingów (1 Medium, 5 Low; 2 skipped). Applied:
+1. CHANGELOG: sekcja `### Fixed` przywrócona na właściwe miejsce (wpisy Added L8.4/L8.3/L8.2 ponownie razem).
+2. +asercja `kept`/`dry_run` na ścieżce failure (stabilność schematu JSON grants).
+3. Ujednolicony schemat sekcji grants: `dry_run` obecny w report/failure provisionera (jak w gated hashu organizmu).
+4. +test dry-run z obcym dokumentem grants → identyczna twarda odmowa (guard przed dry_run).
+Skipped: pełny ace-test-suite (bramka Lead przed merge), ekstrakcja assert_raises z capture_io (kosmetyka CLI-testu).
+Retest: `bin/ace-test ace-lab all` → 471/2154/0.
