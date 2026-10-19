@@ -45,6 +45,29 @@ echo 'the answer' | ace-herdr deliver --pane p5
 
 These are transport records, not a journal or a state owner.
 
+## Delivering reports to a pi overseer (L7.3)
+
+An ace-hitl report reaches a pi overseer session through the transports Herdr
+already owns — there is no second queue on the ACE side:
+
+- **Pane push (`ace-herdr deliver`):** the report text is prompted into the
+  overseer pane. Delivery is idempotent per event id: a repeated notification
+  of the same event short-circuits against the delivery record instead of
+  prompting again, and concurrent deliveries of one event prompt once. A pane
+  without an agent is bootstrapped and gated on readiness first.
+- **Provider-native queue (`ACE_HERDR_PI_QUEUE_CLIENT`):** the configured pi
+  queue client receives the payload (`--delivery <event-id> --session-id ...`
+  with a digest-bound receipt) and hands it to the session, which accepts it
+  while waiting (immediate turn) and while working (queued follow-up for the
+  active run).
+
+Either way a delivery during an ACTIVE overseer turn never starts a second
+overseer execution: the message joins the one session run, and the woken
+session resumes the commissioned process with the `/continue-work` prompt
+(see ace-handbook-integration-pi). Repetition of a delivery is transport
+noise — work repetition is decided by event state on the receiving side, not
+by the number of deliveries.
+
 ## Dispatch, send, capture, wait, close
 
 ```bash

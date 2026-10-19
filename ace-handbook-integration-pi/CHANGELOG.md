@@ -4,6 +4,13 @@ All notable changes to ace-handbook-integration-pi will be documented in this fi
 
 ## [Unreleased]
 
+### Added
+- L7.3 commissioned-work continuation (task 8xg.t.sbz.6.2): new `/continue-work` resume prompt (`handbook/prompts/continue-work.md`) for a pi overseer session. After a report wake or session restart it reads `_overseer` tasks, `ace-assign` assignments, and current project truth, then continues the SAME commissioned process through the existing `ace-overseer` gates (`process-reports`, `work-on`, `handoff`) with single-execution, delivery-repetition-≠-work-repetition, and no-self-seeking rules. Report wake wiring is documented: a `/watch` on `.ace-local/hitl` wakes a waiting session, active turns receive queued follow-ups, and restarts re-register the watch exactly once.
+- JavaScript acceptance suite for the report wake path (`test/js/report-wake.test.mjs`): wake-on-report for an idle session, queued follow-up (never a second execution) during an active turn with coalesced repeats, exactly-once re-registration after restart without replay, and idempotence of an identical repeated notification.
+
+### Changed
+- Removed the superseded `/work-backlog` prompt template: its self-seeking backlog cycling (pick any pending project task) contradicts the approved file-based lab contract; `/continue-work` replaces it with no alias.
+
 ## [0.5.0] - 2026-09-28
 
 ### Added
