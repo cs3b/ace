@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `ace-lab project add` (L8.2, task 8xg.t.sbz.7.1): registers a project
+  and makes it ready for team work. A `ProjectAdd` organism runs three
+  idempotent steps in a fixed order — `RepositoryProvisioner` (clone the
+  declared origin into the target path, or verify/converge an existing
+  repository's origin; refuse a different origin or a foreign
+  non-repository location), `OverseerProvisioner` (prepare the private
+  gitignored `.ace-tasks/_overseer/` folder plus its `.gitignore` entry,
+  never touching existing content), and `ProjectRegistry` (register the
+  project's id/label/path/remote in the project-tier
+  `.ace/lab/config.yml` cascade document, refusing contradictory
+  registrations, path conflicts, unparseable or foreign documents before
+  any write). Consumers need no change: `ace-lab status` classifies the
+  project as configured through the ordinary cascade and
+  `ace-lab projects` / `ace-overseer projects` list it through the
+  existing topology surface. `--dry-run` predicts with zero mutations;
+  wet failures print the report and exit non-zero naming each step.
+
 ### Changed
 
 - `ace-lab status` refined to the reviewed `l7-statuses` implementation

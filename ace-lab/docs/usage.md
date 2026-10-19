@@ -1,8 +1,8 @@
 # ace-lab usage
 
-`ace-lab` exposes read-only topology queries, the lab status snapshot, and
-the `prepare` phase of the lab installer. Full installation and project
-onboarding are **planned (L8: not available yet)**.
+`ace-lab` exposes read-only topology queries, the lab status snapshot, the
+`prepare` phase of the lab installer (L8.1), and `project add` project
+onboarding (L8.2). The full installer is **planned (L8: not available yet)**.
 
 The file-based ownership model is documented once in
 [../../docs/lab-flow.md](../../docs/lab-flow.md).
@@ -297,9 +297,10 @@ Behavior and guarantees:
 
 Boundaries (what `prepare` is not):
 
-- No project onboarding (`ace-lab project add`, L8.2) — the manifest's
-  role catalog declares where each role lives and under which account;
-  the project-add step consumes it.
+- No project onboarding in `prepare` itself (`ace-lab project add`,
+  L8.2, is the dedicated command) — the manifest's role catalog
+  declares where each role lives and under which account; the
+  project-add step consumes that converged environment.
 - No full `ace-lab install` orchestration (L8.3): no HITL adapter
   configuration, no foreign-lab refusal, no cross-check of `machine`
   against the `hitl` cascade.
@@ -308,16 +309,75 @@ Boundaries (what `prepare` is not):
 - No end-to-end verification under the target accounts (L8.5): real
   multi-account proof belongs to the readiness verification step.
 
+## Project add (L8.2)
+
+```bash
+ace-lab project add atlas --path /Users/ace/lab/atlas --remote git@forge:atlas/atlas.git
+ace-lab project add atlas --path /Users/ace/lab/atlas --dry-run
+ace-lab project add atlas --path /Users/ace/lab/atlas --format json
+```
+
+`project add` makes a project ready for team work (task 8xg.t.sbz.7.1),
+assuming `ace-lab prepare` (L8.1) already converged the machine-level
+accounts, directories, keys and roles. Three steps run in a fixed order:
+
+1. **repository** — the target path becomes a Git repository with the
+   declared origin remote. A missing or empty path is cloned from
+   `--remote`; an existing repository without an origin gets one; an
+   existing repository with a *different* origin is refused as a
+   contradictory registration, and a non-empty non-repository path is
+   refused as a foreign location — never taken over, never overwritten.
+2. **overseer** — the private, untracked `.ace-tasks/_overseer/` folder
+   is created (ADR-034) and its `.gitignore` entry ensured. Existing
+   `.gitignore` content and folder content are never touched; the
+   folder is never enumerated.
+3. **registry** — the project is registered in `<path>/.ace/lab/config.yml`
+   (the project tier of the ordinary ADR-022 lab-config cascade) with
+   its `id`, `label`, absolute `path` and `remote`. Because every
+   consumer already reads that cascade, `ace-lab status` shows the
+   project (`configured`, topology counts) and `ace-lab projects` /
+   `ace-overseer projects` list it — no second registry exists, and
+   `ace-overseer` needed no read-side change.
+
+The planner chain consumes the result directly: `ace-coworker prepare`
+provisions task worktrees from the registered repository, and the
+overseer's private queue lives in the prepared `_overseer` folder —
+no manual directory fixing is needed.
+
+Statuses per step: `created|exists|would_create|failed`. `ok` means
+zero failed steps; a wet run with failures prints the report first,
+then exits non-zero naming each step. `--dry-run` predicts
+(`would_*`) with zero mutations and exits 0.
+
+Idempotence and refusals:
+
+- Re-adding an already-registered project re-validates every step and
+  reports `exists` without rewriting the registry, the `.gitignore`,
+  or anything inside `_overseer`.
+- The same id registered with a different `path` or `remote`, or the
+  same absolute `path` registered under a different id, is refused
+  before any write.
+- An unparseable registry document or a foreign `schema_version` is
+  refused rather than overwritten.
+- A failed repository step fails the overseer and registry steps as
+  dependency failures instead of attempting them.
+
+Boundaries: `project add` does not clone role accounts or keys (L8.1
+owns those), does not configure HITL adapters or run the full install
+(L8.3/`ace-lab install`), and adds no new state owner — the only
+persisted artifact is the project's own lab-config cascade document.
+
 ## Planned waves
 
 > **L7 remainder:** `ace-lab status` is delivered; the remaining L7 scope
 > (configurable `ace-overseer status` aggregation, pi continuation) lives in
 > its own packages and is not available yet.
 >
-> **Planned (L8):** project onboarding, resuming an interrupted install,
-> and readiness verification are not available yet. The preparation
-> phase is delivered as `ace-lab prepare` (L8.1); `ace-lab install`
-> (L8.3) will compose it with configuration, HITL adapters and
+> **Planned (L8):** the full installer (`ace-lab install`), resuming an
+> interrupted install, and readiness verification are not available yet.
+> The preparation phase is delivered as `ace-lab prepare` (L8.1) and
+> project onboarding as `ace-lab project add` (L8.2); `ace-lab install`
+> (L8.3) will compose them with configuration, HITL adapters and
 > verification.
 
 ## Boundaries
