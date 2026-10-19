@@ -49,6 +49,11 @@ module Ace
 
           def tests_flags(tests)
             flags = Array(tests).flat_map { |value| value.to_s.split(",") }.map { |f| f.strip.downcase }.reject(&:empty?)
+            flags.each do |flag|
+              unless %w[executed passed].include?(flag)
+                raise Ace::Support::Cli::Error, "invalid --tests '#{flag}' (expected: executed, passed)"
+              end
+            end
             {"executed" => flags.include?("executed"), "passed" => flags.include?("passed")}
           end
 
@@ -56,9 +61,12 @@ module Ace
             Array(dep).each_with_object({}) do |pair, states|
               name, state = pair.to_s.split("=", 2)
               name = name.to_s.strip
-              raise Ace::Support::Cli::Error, "invalid --dep '#{pair}' (expected name=integrated|missing)" if name.empty?
+              if name.empty? || state.nil?
+                raise Ace::Support::Cli::Error, "invalid --dep '#{pair}' (expected name=integrated|missing)"
+              end
+              raise Ace::Support::Cli::Error, "duplicate --dep '#{name}'" if states.key?(name)
 
-              states[name] = state.to_s.strip.downcase == "integrated"
+              states[name] = state.strip.downcase == "integrated"
             end
           end
 

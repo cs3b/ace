@@ -35,8 +35,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   candidate drift, stale/missing review evidence, executed+passing tests).
   Unknown facts (omitted heads, missing sections) block with an explicit
   verify-instead-of-guess reason rather than being assumed. `blocked` is a
-  legitimate gate outcome (exit 0); only malformed input (e.g. an invalid
-  `--dep` pair) fails. Stateless: readiness only, no writes, no merges.
+  legitimate gate outcome (exit 0); only malformed input fails - an invalid
+  `--dep` pair (missing `=`), a duplicate `--dep` name, or an unknown
+  `--tests` token (expected: executed, passed). Heads are recorded and
+  compared as full lowercase SHAs (case drift is tolerated, length mismatch
+  is not). Stateless: readiness only, no writes, no merges.
 
 - `ace-coworker rounds record --assignment <id> --type full|delta --status
   completed|aborted [--confirmed id:sev,...] [--resolved id,...]`: CLI

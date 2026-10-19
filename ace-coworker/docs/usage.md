@@ -139,13 +139,18 @@ evaluation of the four project-defined checks. `--candidate-head` is the
 current candidate head (omit it when genuinely unknown - the gate then
 blocks on the missing evidence instead of guessing); `--review-head` is the
 candidate head the independent review verdict covers; `--tests` takes the
-`executed,passed` evidence flags; each `--dep NAME=integrated|missing` pair
-states one dependency leaf (`missing` or any other value = not integrated).
+`executed,passed` evidence flags (any other token is an error, not
+silent missing evidence); each `--dep NAME=integrated|missing` pair
+states one dependency leaf (`missing` or any other value = not
+integrated; the pair must contain `=`, and repeating a name is an
+error). Empty or omitted `--dep` means the caller enumerated no
+dependencies - the gate trusts the caller's dependency enumeration.
 Prints `ready` or `blocked` with per-check reasons (dependencies, candidate
 drift, review freshness/verdict, executed+passing tests). `blocked` is a
 legitimate gate outcome (exit 0) - the role withholds the merge and
-escalates; only malformed input (e.g. an invalid `--dep` pair) fails with a
-non-zero exit. Nothing is persisted and no git operation is performed: the
+escalates; only malformed input (an invalid `--dep` pair, a duplicate
+`--dep` name, or an invalid `--tests` token) fails with a non-zero exit.
+Heads are recorded and compared as full lowercase SHAs. Nothing is persisted and no git operation is performed: the
 gate decides readiness only.
 
 ### `ace-coworker commission`
@@ -385,7 +390,7 @@ would-be outcome.
 | `prepare` | worktree created/recovered/reused (dry-run: would_create/would_recover) | conflict (active_executor / mismatched_worktree); invalid commission; operational preparation failure |
 | `roles` | catalog rendered any valid state (including empty) | invalid preset file (specific error) |
 | `rounds` | round recorded, verdict rendered (including escalate) | corrupt history; malformed record |
-| `gate` | verdict rendered (`ready` or `blocked` - a withheld merge is a legitimate outcome) | malformed input (e.g. invalid `--dep` pair) |
+| `gate` | verdict rendered (`ready` or `blocked` - a withheld merge is a legitimate outcome) | malformed input (invalid or duplicate `--dep`, invalid `--tests` token) |
 | `commission` | config written (dry-run: resolved, nothing written) | unknown role; invalid commission; task/assignment mismatch; refused overwrite; invalid assembly; config path escaping the project root; directory config target |
 
 ## Boundaries

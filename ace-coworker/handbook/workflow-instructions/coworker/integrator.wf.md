@@ -26,8 +26,8 @@ the exact candidate head. Otherwise WITHHOLD the merge and report/escalate.
   completed; one active executor per worktree.
 - Integration sequencing, which candidates merge in which order, and the
   dependency map come from the commissioned assignment and the task's
-  `dependencies` fields (leaf-level, per execution-order.md) - never from
-  self-selected extra work.
+  `dependencies` fields (leaf-level, per the lab's execution-order contract) -
+  never from self-selected extra work.
 - This role never performs the review and never re-litigates it: it verifies
   that a fresh accepting review covers the exact candidate head.
 
@@ -58,7 +58,9 @@ the exact candidate head. Otherwise WITHHOLD the merge and report/escalate.
 
 2. **Collect the gate facts (read-only, from their owners).**
    - **Candidate head**: current head of the candidate branch in this
-     worktree (`git rev-parse --short HEAD` after `git status`); the
+     worktree (`git rev-parse HEAD` after `git status`); heads are recorded
+     and compared as full lowercase SHAs (normalize case before comparing,
+     never truncate to a short form); the
      worktree state is the truth, not a remembered sha.
    - **Review evidence**: the reviewer's durable report
      (`<task>/coworker/<assignment>.md`) names the exact reviewed candidate
@@ -99,8 +101,7 @@ the exact candidate head. Otherwise WITHHOLD the merge and report/escalate.
      the result is a NEW candidate: re-run the affected checks
      (`bin/ace-test <package> all`) and RENEW the review for the changed
      result (reviewer role) before treating it as integrated - never mix
-     acceptance of the old candidate with new code (execution-order.md
-     step 4). Then re-evaluate the gate.
+     acceptance of the old candidate with new code (step 4 of the lab's execution-order contract). Then re-evaluate the gate.
    - After merging, verify the actual outcome (branch state, merged head)
      before reporting - an uncertain operation outcome is CHECKED, not
      retried blind: a repeated merge/push is never the verification.

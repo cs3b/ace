@@ -78,6 +78,40 @@ module Ace
             end
             assert_includes error.message, "invalid --dep"
           end
+
+          def test_dep_without_state_fails_with_actionable_error
+            error = assert_raises(Ace::Support::Cli::Error) do
+              Gate.new.call(candidate_head: "1a2b3c4", review_head: "1a2b3c4",
+                            review_verdict: "accept", tests: [], dep: ["foo"])
+            end
+            assert_equal "invalid --dep 'foo' (expected name=integrated|missing)", error.message
+          end
+
+          def test_duplicate_dep_name_fails_with_actionable_error
+            error = assert_raises(Ace::Support::Cli::Error) do
+              Gate.new.call(candidate_head: "1a2b3c4", review_head: "1a2b3c4",
+                            review_verdict: "accept", tests: [],
+                            dep: ["dep-a=integrated", "dep-a=missing"])
+            end
+            assert_equal "duplicate --dep 'dep-a'", error.message
+          end
+
+          def test_unknown_tests_token_fails_with_actionable_error
+            error = assert_raises(Ace::Support::Cli::Error) do
+              Gate.new.call(candidate_head: "1a2b3c4", review_head: "1a2b3c4",
+                            review_verdict: "accept", tests: ["executed", "green"], dep: [])
+            end
+            assert_equal "invalid --tests 'green' (expected: executed, passed)", error.message
+          end
+
+          def test_quiet_suppresses_output
+            out, = capture_io do
+              Gate.new.call(candidate_head: "1a2b3c4", review_head: "1a2b3c4",
+                            review_verdict: "accept", tests: ["executed", "passed"],
+                            dep: ["8xg.t.sbz.4.2=integrated"], quiet: true)
+            end
+            assert_empty out
+          end
         end
       end
     end

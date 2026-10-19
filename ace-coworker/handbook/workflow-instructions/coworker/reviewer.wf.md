@@ -168,7 +168,11 @@ product decision is escalated to the overseer instead.
    - The final report names: the exact candidate head, executed checks,
      per-round dispositions (session paths under `.ace-local/review/`), fix
      commits, and unresolved findings - consumable by the integrator role
-     (8xg.t.sbz.4.3) and the round-limit tooling (8xg.t.sbz.4.2).
+     (8xg.t.sbz.4.3) and the round-limit tooling (8xg.t.sbz.4.2). The
+      reviewed head is recorded as the full lowercase SHA from
+      `git rev-parse HEAD` (never a short form), because the integrator
+      compares it for drift against the candidate head on the same
+      normalization.
 
 9. **Resume.**
    - `ace-coworker resume` after interruption; same task, assignment, and

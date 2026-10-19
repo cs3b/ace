@@ -96,13 +96,28 @@ module Ace
           result = IntegrationGate.evaluate(nil)
           assert_equal :blocked, result[:verdict]
           assert_equal ["gate input must be a Hash with string keys, got NilClass"], result[:reasons]
+          assert_equal [:input], result[:failed_checks]
         end
 
-        def test_symbol_verdict_and_accept_synonym
+        def test_verdict_comparison_is_case_insensitive
           result = IntegrationGate.evaluate(
             ready_input("review" => {"head" => "1a2b3c4", "verdict" => "Accept"})
           )
           assert_equal :ready, result[:verdict]
+        end
+
+        def test_head_comparison_tolerates_case_drift_but_not_length_mismatch
+          drift = IntegrationGate.evaluate(
+            ready_input("candidate_head" => "1A2B3C4", "review" => {"head" => "1a2b3c4", "verdict" => "accept"})
+          )
+          assert_equal :ready, drift[:verdict]
+
+          truncated = IntegrationGate.evaluate(
+            ready_input("review" => {"head" => "1a2b3c", "verdict" => "accept"})
+          )
+          assert_equal :blocked, truncated[:verdict]
+          assert_includes truncated[:reasons],
+                          "stale review: candidate 1a2b3c4 is not the reviewed head 1a2b3c"
         end
 
         def test_multiple_failures_report_all_reasons

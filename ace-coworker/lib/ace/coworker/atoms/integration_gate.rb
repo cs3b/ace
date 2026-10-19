@@ -22,11 +22,12 @@ module Ace
         #   "tests" => {"executed" => bool, "passed" => bool}
         #   "dependencies" => {name => bool (integrated predecessor)}
         # @return [Hash] {verdict: :ready | :blocked, reasons: [String],
-        #   failed_checks: [:dependencies|:candidate|:review|:tests]}
+        #   failed_checks: [:dependencies|:candidate|:review|:tests|:input]}
         def self.evaluate(input)
           unless input.is_a?(Hash) && input.keys.all? { |k| k.is_a?(String) }
-            return {verdict: :blocked, reasons: ["gate input must be a Hash with string keys, got #{input.class}"],
-                    failed_checks: [:candidate]}
+            return {verdict: :blocked,
+                    reasons: ["gate input must be a Hash with string keys, got #{input.class}"],
+                    failed_checks: [:input]}
           end
 
           reasons = []
@@ -51,7 +52,7 @@ module Ace
           if review_head.empty?
             reasons << "review evidence missing: no reviewed head recorded - the verdict covers no verifiable candidate"
             failed << :review
-          elsif !candidate_head.empty? && review_head != candidate_head
+          elsif !candidate_head.empty? && review_head.downcase != candidate_head.downcase
             reasons << "stale review: candidate #{candidate_head} is not the reviewed head #{review_head}"
             failed << :review
           end
