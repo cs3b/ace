@@ -11,6 +11,12 @@ module Ace
       class InstructionResolver
         DEFAULT_NAV_RUNNER = ->(argv, cwd) { Open3.capture3(*argv, chdir: cwd) }
 
+        # The ace-nav CLI itself is missing (ENOENT on exec): the resolver
+        # never ran, so no verdict exists. Prepare treats this distinctly
+        # from a resolver that RUNS and fails — the former is a
+        # non-blocking unknown, the latter a never-ready gap.
+        class NavUnavailableError < Error; end
+
         def initialize(project_root:, nav_runner: DEFAULT_NAV_RUNNER)
           @project_root = project_root
           @nav_runner = nav_runner
@@ -33,7 +39,8 @@ module Ace
           begin
             out, err, status = @nav_runner.call([nav_binary, "resolve", uri], @project_root)
           rescue Errno::ENOENT
-            raise Error, "protocol instructions require the ace-nav CLI ('#{nav_binary}' not found)"
+            raise NavUnavailableError,
+              "protocol instructions require the ace-nav CLI ('#{nav_binary}' not found)"
           end
           unless status.success?
             message = err.to_s.strip.empty? ? out.to_s.strip : err.to_s.strip

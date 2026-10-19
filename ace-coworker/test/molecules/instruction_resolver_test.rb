@@ -53,6 +53,19 @@ module Ace
           error = assert_raises(Error) { resolver.resolve!("wfi://nope/nope") }
           assert_includes error.message, "cannot resolve instruction source 'wfi://nope/nope'"
         end
+
+        def test_missing_nav_cli_is_a_distinct_error
+          # The resolver binary itself being absent is distinguishable from
+          # a resolver that runs and fails: prepare treats the former as a
+          # non-blocking unknown and the latter as a never-ready gap.
+          runner = ->(_argv, _cwd) { raise Errno::ENOENT }
+          resolver = InstructionResolver.new(project_root: @dir, nav_runner: runner)
+          error = assert_raises(InstructionResolver::NavUnavailableError) do
+            resolver.resolve!("wfi://nope/nope")
+          end
+          assert_kind_of Error, error
+          assert_includes error.message, "ace-nav CLI"
+        end
       end
     end
   end

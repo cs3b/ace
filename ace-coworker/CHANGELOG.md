@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- `ace-coworker prepare` no longer reports readiness for a protocol
+  instruction URI (`wfi://`, `prompt://`, `tmpl://`) that the ace-nav
+  resolver rejects in the prepared worktree. Protocol sources now resolve
+  through the SAME `InstructionResolver`/ace-nav path that `start` uses,
+  BEFORE readiness is claimed; a resolver that runs and fails is a
+  `role_instructions` gap (never ready), while a missing ace-nav CLI
+  (`InstructionResolver::NavUnavailableError`, ENOENT) stays a
+  non-blocking unknown consistent with lab verify's posture toward an
+  absent checker.
+
 ### Added
 
 - Readiness / gap reporting to the overseer in `ace-coworker prepare`

@@ -322,6 +322,57 @@ module Ace
               "no leg config is written while any leg's context is missing"
           end
 
+          def test_unresolvable_protocol_instruction_uri_is_never_ready
+            # Real ace-nav: the same resolver `start` uses must also gate
+            # prepare. A wfi:// URI that ace-nav rejects would hand the
+            # executor a start command that fails immediately, so prepare
+            # reports a role_instructions gap instead of readiness.
+            roles_dir = File.join(@dir, ".ace", "coworker", "roles")
+            FileUtils.mkdir_p(roles_dir)
+            File.write(File.join(roles_dir, "worker.yml"), <<~YAML)
+              ---
+              name: worker
+              description: Worker with unresolvable protocol instructions
+              instructions: wfi://not-a-real-provider/no-such-role
+              start_prompt: >-
+                Drive {{assignment}} for {{task}} as {{role}}, reporting to {{overseer}}.
+              reporting:
+                channel: hitl
+              errors:
+                on_failure: report
+            YAML
+            nav = File.join(@dir, "bin", "ace-nav")
+            File.write(nav, <<~SH)
+              #!/bin/sh
+              exec "#{File.join(REPO_ROOT, 'bin', 'ace-nav')}" "$@"
+            SH
+            FileUtils.chmod(0o755, nav)
+            commit_all("unresolvable protocol instructions fixture")
+
+            out, err, status = run_cli(COWORKER_BIN, "prepare", "--task", @task_ref,
+              "--roles", "worker", "--to", "overseer", "--format", "json")
+
+            refute status.success?, "prepare must not report ready: #{out}#{err}"
+            assert_includes err, "preparation conflict: role_instructions"
+            payload = JSON.parse(out)
+            assert_equal "role_instructions", payload["conflict"]["kind"]
+            assert_includes payload["conflict"]["detail"], "wfi://not-a-real-provider/no-such-role"
+            assert_includes payload["conflict"]["detail"], "Resource not found"
+            assert_includes payload["conflict"]["detail"], "NOT ready"
+            assert_nil payload["report"], "a gap never sends a readiness report"
+            worktree = Dir.glob(File.join(@dir, ".ace-wt", "*")).first
+            refute_nil worktree, "the worktree itself stays prepared"
+            refute File.exist?(File.join(worktree, ".ace-local", "coworker", "prepare", "worker.yml")),
+              "no leg config is written for an unresolvable protocol source"
+
+            # The gap reaches the overseer as a decision question.
+            assert_equal 1, hitl_events.size
+            content = File.read(hitl_events.first)
+            assert_includes content, "type: question"
+            assert_includes content, "role_instructions"
+            assert_includes content, "wfi://not-a-real-provider/no-such-role"
+          end
+
           def test_reprepare_before_commission_reuses_composed_sequence
             worktree = prepare_worktree(@task_ref)
             ids = Dir.glob(File.join(worktree, ".ace-local", "assign", "*",

@@ -165,14 +165,17 @@ module Ace
 
         # Never-ready-on-missing-context (L4.4 / 8xg.t.sbz.3.2-.3.3): the
         # instruction source of EVERY leg must resolve through the existing
-        # loader in the prepared worktree before readiness is declared — a
-        # start command that fails immediately ("instruction file not
-        # found") is a gap, never a ready commission. File-path sources
-        # are resolved in-process here; protocol URIs (wfi://, prompt://,
-        # tmpl://) are delegated to ace-nav at start time exactly as
-        # StartOrchestrator does. Unknown roles surface as the
-        # role_sequence gap during composition and are skipped here.
-        # Read-only: this check itself never writes.
+        # loader/resolver in the prepared worktree before readiness is
+        # declared — a start command that fails immediately is a gap,
+        # never a ready commission. File-path sources resolve in-process;
+        # protocol URIs (wfi://, prompt://, tmpl://) resolve through the
+        # SAME ace-nav resolver start uses, in the prepared execution
+        # context. A resolver that runs and fails is a gap; a missing
+        # ace-nav CLI (NavUnavailableError) stays a non-blocking unknown,
+        # consistent with lab verify's posture toward an absent checker.
+        # Unknown roles surface as the role_sequence gap during
+        # composition and are skipped here. Read-only: this check itself
+        # never writes.
         def instruction_gaps(sequence, worktree_path)
           loader = Molecules::RolePresetLoader.new(project_root: worktree_path)
           resolver = Molecules::InstructionResolver.new(project_root: worktree_path)
@@ -185,11 +188,11 @@ module Ace
             end
             next if preset.nil?
 
-            source = preset["instructions"].to_s
-            next if Atoms::ConfigSchema.protocol?(source)
-
             begin
-              resolver.resolve!(source)
+              resolver.resolve!(preset["instructions"].to_s)
+            rescue Molecules::InstructionResolver::NavUnavailableError
+              # No resolver to ask: unknown, not failed.
+              next
             rescue Error => e
               gaps << "role '#{entry['role']}': #{e.message}"
             end
