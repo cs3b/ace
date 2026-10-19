@@ -228,11 +228,20 @@ Behavior and guarantees:
   ownership assigned to the account — and `.ssh` mode/ownership is
   *converged* on the existing-key path too (drift predicts
   `would_fix_mode` in dry-run and is repaired in the wet run; a
-  foreign-owned `.ssh` is a takeover refusal, see above). Reports
+  foreign-owned `.ssh` is a takeover refusal, see above). A pair is
+  ready only when the `.pub` fingerprint matches the public key
+  derived from the private key (`ssh-keygen -y`); unreadable or
+  mismatched pairs are `failed` items, never usable-looking
+  `exists`/`created` with no fingerprint — the unknown pair itself is
+  left untouched for manual resolution. Reports
   carry the public
   fingerprint only — private key material never appears in any status,
-  message, report, or diagnostic argument. Key paths inside a git
-  worktree are refused outright. Planted symlinks on the
+  message, report, or diagnostic argument (the derived public key
+  exists only inside a private tmpdir for the duration of one
+  read-only comparison). Key paths inside a git
+  worktree are refused outright — judged by their PHYSICAL location
+  (existing ancestors resolved with `realpath`), so a symlinked
+  ancestor cannot smuggle a key into a repository. Planted symlinks on the
   account-controlled paths — `.ssh` (checked with `lstat` before any
   `mkdir`/chmod/chown, on the *existing-key* path and in dry-run too)
   and `<key>.pub` (checked with `lstat` — including *before*
@@ -272,6 +281,14 @@ Behavior and guarantees:
   written lands root-owned 0600 — a file-creation primitive at an
   attacker-chosen location, not an escalation, and inside the same
   accepted-threat envelope as the directory residual above.
+- **Role instruction reachability.** A file instruction source is
+  `verified` only when the account can actually reach it: the file's
+  read bits AND the search (`x`) bit of every ancestor directory of
+  the resolved path (ancestor symlinks followed) must grant the
+  account's governing POSIX class — owner, primary or supplementary
+  group, or other. A readable file behind an unsearchable directory
+  (e.g. 0644 inside a 0700 directory owned by someone else) is
+  `failed`, not `verified`. ACLs remain out of scope.
 - **Exit codes.** A wet run with failed items prints the report, then
   exits non-zero enumerating each `<section>/<item>: <message>`;
   `--dry-run` exits 0 whenever a report renders (conflicts appear as

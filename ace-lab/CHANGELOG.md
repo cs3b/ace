@@ -17,6 +17,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (per-location error isolation), and a `StatusReport` model behind a
   `StatusService` organism — table/json/`-q` output preserved.
 
+### Fixed
+
+- Security (PR #392 F2): `KeyProvisioner`'s git-worktree guard now
+  resolves the PHYSICAL ancestors of the key path (realpath of the
+  deepest existing ancestor plus the lexical tail) before any
+  generate/mutation step. Previously the guard walked lexical
+  directories only, so `/outside/alias/.ssh/id_ed25519` with `alias`
+  a symlink into a repository passed and the real key landed inside
+  the worktree — including when `.ssh` did not exist yet behind the
+  alias. Symlinked ancestors resolving outside any worktree remain
+  legitimate.
+- `KeyProvisioner` (PR #392 F4): a pair that cannot be verified as
+  usable is now a `failed` item, never `exists`/`created` with
+  `fingerprint: nil`. Verification requires the `.pub` fingerprint to
+  match the public key derived from the private key via
+  `ssh-keygen -y` (comparing `-lf` on the private file is not sound —
+  ssh-keygen resolves the adjacent `.pub`), so garbage files and a
+  `.pub` belonging to a different private key both fail the prepare
+  aggregate (`ok: false`, non-zero exit). An unknown pair is still
+  never overwritten (takeover-refusal policy).
+- `RoleVerifier` (PR #392 F5): instruction files are verified for
+  reachability, not just read bits — every ancestor directory of the
+  resolved path (realpath follows ancestor symlinks) must grant the
+  account search permission through its governing POSIX class (owner,
+  primary/supplementary group via the `group_source` seam, or other;
+  shared with the file-read check so the two cannot drift). A 0644
+  file behind a 0700 directory owned by another account is now
+  `failed`, not `verified`. ACLs remain out of scope.
+- `AccountProvisioner` (PR #392, macOS UID allocation):
+  `next_darwin_uid` parses only the trailing `UniqueID` column of
+  each `dscl -list` line instead of scanning the whole output, so
+  digits inside account names such as `deploy-2026` can no longer be
+  mistaken for UIDs.
+
 ## [0.12.0] - 2026-10-18
 
 ### Added

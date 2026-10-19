@@ -89,6 +89,100 @@ module Molecules
       end
     end
 
+    # PR #392 F2: an ancestor symlink (alias -> repo/nested) hides the
+    # physical target from a purely lexical walk. The guard must judge
+    # the resolved location, including when `.ssh` does not exist yet
+    # behind the existing alias.
+    def test_ancestor_symlink_into_git_worktree_is_refused_even_without_ssh
+      Dir.mktmpdir do |dir|
+        repo = File.join(dir, "repo")
+        FileUtils.mkdir_p([File.join(repo, ".git"), File.join(repo, "nested")])
+        File.symlink(File.join(repo, "nested"), File.join(dir, "alias"))
+        path = File.join(dir, "alias", ".ssh", "id_ed25519")
+
+        result = provisioner.call(key: key(path), account: account, machine: "lab01")
+
+        assert_equal "failed", result["status"]
+        assert_match(/inside a git worktree; secrets must not live in Git/, result["message"])
+        refute File.exist?(File.join(repo, "nested", ".ssh"))
+      end
+    end
+
+    # F2 with the alias target's `.ssh` already present as a plain
+    # directory: the final-component symlink guard does not apply, only
+    # physical-ancestor resolution catches it.
+    def test_ancestor_symlink_with_existing_ssh_dir_into_git_is_refused
+      Dir.mktmpdir do |dir|
+        repo = File.join(dir, "repo")
+        FileUtils.mkdir_p([File.join(repo, ".git"), File.join(repo, "nested", ".ssh")])
+        File.symlink(File.join(repo, "nested"), File.join(dir, "alias"))
+        path = File.join(dir, "alias", ".ssh", "id_ed25519")
+
+        result = provisioner.call(key: key(path), account: account, machine: "lab01")
+
+        assert_equal "failed", result["status"]
+        assert_match(/inside a git worktree; secrets must not live in Git/, result["message"])
+        refute File.exist?(path)
+      end
+    end
+
+    # A symlinked ancestor that resolves OUTSIDE any git worktree stays
+    # legitimate: the guard resolves, it does not ban symlinks.
+    def test_ancestor_symlink_outside_git_still_creates
+      Dir.mktmpdir do |dir|
+        homes = File.join(dir, "homes")
+        FileUtils.mkdir_p(homes)
+        File.symlink(homes, File.join(dir, "alias"))
+        path = File.join(dir, "alias", ".ssh", "id_ed25519")
+
+        result = provisioner.call(key: key(path), account: account, machine: "lab01")
+
+        assert_equal "created", result["status"]
+        assert_match(/\ASHA256:/, result["fingerprint"])
+        assert File.exist?(File.join(homes, ".ssh", "id_ed25519"))
+      end
+    end
+
+    # PR #392 F4: unreadable garbage at the pair's paths is a failed
+    # item, never exists with fingerprint:nil.
+    def test_existing_broken_pair_files_fail
+      Dir.mktmpdir do |dir|
+        ssh = File.join(dir, ".ssh")
+        Dir.mkdir(ssh, 0o700)
+        path = File.join(ssh, "id_ed25519")
+        File.write(path, "not a private key")
+        File.chmod(0o600, path)
+        File.write("#{path}.pub", "not a public key")
+        File.chmod(0o644, "#{path}.pub")
+
+        result = provisioner.call(key: key(path), account: account, machine: "lab01")
+
+        assert_equal "failed", result["status"]
+        assert_nil result["fingerprint"]
+        assert_match(/not usable/, result["message"])
+        # the unknown pair is never overwritten (takeover-refusal policy)
+        assert_equal "not a private key", File.read(path)
+      end
+    end
+
+    # F4: a public key belonging to a DIFFERENT private key fails the
+    # match check — usable pairs only.
+    def test_mismatched_public_key_fails_pair_verification
+      Dir.mktmpdir do |dir|
+        path = File.join(dir, "id_ed25519")
+        provisioner.call(key: key(path), account: account, machine: "lab01")
+        other_private = File.join(dir, "other_ed25519")
+        provisioner.call(key: key(other_private), account: account, machine: "lab01")
+        FileUtils.cp("#{other_private}.pub", "#{path}.pub")
+
+        result = provisioner.call(key: key(path), account: account, machine: "lab01")
+
+        assert_equal "failed", result["status"]
+        assert_nil result["fingerprint"]
+        assert_match(/not usable/, result["message"])
+      end
+    end
+
     def test_non_file_at_key_path_is_refused
       Dir.mktmpdir do |dir|
         path = File.join(dir, "id_ed25519")
@@ -766,8 +860,15 @@ module Molecules
             # verification passes
             File.write(path, "fake private\n")
             File.write("#{path}.pub", "fake public\n")
+            {"status" => "ok", "out" => "", "err" => ""}
+          elsif argv.first == "ssh-keygen" && argv.include?("-lf")
+            # pair verification: any fingerprint matches itself
+            {"status" => "ok", "out" => "256 SHA256:FAKEFAKEFAKE test (ED25519)\n", "err" => ""}
+          elsif argv.first == "ssh-keygen" && argv.include?("-y")
+            {"status" => "ok", "out" => "ssh-ed25519 fake-derived\n", "err" => ""}
+          else
+            {"status" => "ok", "out" => "", "err" => ""}
           end
-          {"status" => "ok", "out" => "", "err" => ""}
         end
 
         FileUtils.stub :chown, ->(_uid, _gid, p) { order << [:chown, p] } do

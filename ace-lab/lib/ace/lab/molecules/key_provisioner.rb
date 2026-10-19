@@ -3,6 +3,7 @@
 require_relative "../errors"
 require "open3"
 require "fileutils"
+require "tmpdir"
 
 module Ace
   module Lab
@@ -177,8 +178,9 @@ module Ace
             return base.merge("status" => "would_fix_mode", "fingerprint" => nil, "message" => nil)
           end
 
-          with_fingerprint(base.merge("status" => "exists"), public_path,
-            "fingerprint of '#{public_path}' could not be read; resolve manually")
+          verified_result(base, "exists", path, public_path,
+            "key pair '#{path}' is not usable (unreadable or mismatched key files); " \
+            "resolve manually and rerun ace-lab prepare")
         end
 
         def drift?(path, pub_stat, entry)
@@ -263,8 +265,9 @@ module Ace
           # foreign-owned (checked above).
           converge_ssh_dir(ssh_dir, ssh_stat, entry)
 
-          with_fingerprint(base.merge("status" => "exists"), public_path,
-            "fingerprint of '#{public_path}' could not be read; resolve manually")
+          verified_result(base, "exists", path, public_path,
+            "key pair '#{path}' is not usable (unreadable or mismatched key files); " \
+            "resolve manually and rerun ace-lab prepare")
         end
 
         def generate(base, key, account, machine, path, entry)
@@ -329,16 +332,46 @@ module Ace
           # account.
           FileUtils.chown(entry.uid, entry.gid, ssh_dir)
 
-          with_fingerprint(base.merge("status" => "created"), public_path,
-            "key pair '#{path}' was created but its fingerprint could not be read")
+          verified_result(base, "created", path, public_path,
+            "key pair '#{path}' was created but could not be verified as usable; " \
+            "rerun ace-lab prepare")
         end
 
-        def with_fingerprint(base, public_path, failure_message)
-          fingerprint = read_fingerprint(public_path)
+        # A key pair is ready only when it is USABLE: the public file
+        # yields a fingerprint AND the key derived from the private
+        # file matches it. `ssh-keygen -y -f <private>` regenerates the
+        # public half from the private key (garbage files fail here),
+        # and its fingerprint is compared against the `.pub` file's —
+        # note `-lf <private>` cannot be used for that comparison:
+        # ssh-keygen resolves the ADJACENT `.pub` instead of deriving
+        # from the private key, so a swapped `.pub` would compare with
+        # itself. Only the fingerprint — public key material — ever
+        # reaches the report; private bytes stay inside the ssh-keygen
+        # subprocess, and the derived public key lives in a private
+        # tmpdir for the duration of one read-only comparison. A pair
+        # that cannot be verified is a failed item, never exists or
+        # created with fingerprint:nil.
+        def pair_fingerprint(path, public_path)
+          public_fingerprint = read_fingerprint(public_path)
+          return nil unless public_fingerprint
+
+          derived = runner.call(["ssh-keygen", "-y", "-f", path])
+          return nil unless derived["status"] == "ok"
+
+          Dir.mktmpdir("ace-lab-key") do |tmp|
+            derived_path = File.join(tmp, "derived.pub")
+            File.write(derived_path, derived["out"])
+            return nil unless read_fingerprint(derived_path) == public_fingerprint
+          end
+          public_fingerprint
+        end
+
+        def verified_result(base, success_status, path, public_path, failure_message)
+          fingerprint = pair_fingerprint(path, public_path)
           if fingerprint
-            base.merge("fingerprint" => fingerprint, "message" => nil)
+            base.merge("status" => success_status, "fingerprint" => fingerprint, "message" => nil)
           else
-            base.merge("fingerprint" => nil, "message" => failure_message)
+            base.merge("status" => "failed", "fingerprint" => nil, "message" => failure_message)
           end
         end
 
@@ -537,10 +570,15 @@ module Ace
           status.is_a?(Integer) ? "exit #{status}" : status.to_s
         end
 
-        # Walk up from the key path looking for a .git entry: key material
-        # must never live inside a git worktree (acceptance criterion).
+        # Walk up from the key path's PHYSICAL location looking for a
+        # .git entry: key material must never live inside a git worktree
+        # (acceptance criterion). Lexical ancestors are not enough — an
+        # ancestor symlink (alias -> /repo/nested) would land the real
+        # key inside the repository while this walk sees only the alias
+        # spelling. Resolution happens before any generate/mutate step,
+        # like the lstat guards above.
         def inside_git_worktree?(path)
-          current = File.expand_path(File.dirname(path))
+          current = File.dirname(physical_path(File.expand_path(path)))
           while (parent = File.dirname(current))
             return true if File.exist?(File.join(current, ".git"))
             break if parent == current
@@ -548,6 +586,28 @@ module Ace
             current = parent
           end
           false
+        end
+
+        # Resolve where `path` physically lives: realpath the deepest
+        # existing ancestor (following symlinks — the same
+        # resolve-before-mutate discipline as the lstat guards), then
+        # rebuild the not-yet-existing tail on top, so a missing `.ssh`
+        # behind an existing alias is judged by the alias target too.
+        def physical_path(path)
+          current = path
+          tail = []
+          until current == "/"
+            resolved = begin
+              File.realpath(current)
+            rescue Errno::ENOENT, Errno::ENOTDIR, Errno::EACCES
+              nil
+            end
+            return File.join(resolved, *tail) unless resolved.nil?
+
+            tail.unshift(File.basename(current))
+            current = File.dirname(current)
+          end
+          File.join("/", *tail)
         end
 
         def run_argv(argv)

@@ -71,6 +71,17 @@ module Ace
                 "(static permission bits; ACLs are out of scope)")
           end
 
+          # Read bits on the file alone are not enough: POSIX requires
+          # the search (x) bit on EVERY ancestor directory of the
+          # resolved path, or the account cannot reach the file at all
+          # (a 0644 file behind a 0700 directory is unreachable).
+          if entry && !reachable_by_account?(path, entry)
+            return base.merge("status" => "failed",
+              "message" => "instructions '#{path}' is not reachable by account '#{entry.name}' " \
+                "(an ancestor directory denies search permission; static permission bits; " \
+                "ACLs are out of scope)")
+          end
+
           base.merge("status" => "verified", "message" => nil)
         rescue Errno::ENOENT
           base.merge("status" => "failed",
@@ -80,21 +91,47 @@ module Ace
             "message" => "instructions file '#{path}' could not be verified (#{e.class.name})")
         end
 
+        # Reachability: every ancestor of the RESOLVED path (realpath
+        # follows ancestor symlinks, mirroring what open(2) traverses)
+        # must grant the account search permission through its
+        # governing class. An unresolvable or unstattable ancestor is
+        # conservatively unreachable.
+        def reachable_by_account?(path, entry)
+          current = File.realpath(File.dirname(path))
+          loop do
+            stat = File.stat(current)
+            return false if (permission_bits(stat, entry) & 0o1).zero?
+            break if current == "/"
+
+            current = File.dirname(current)
+          end
+          true
+        rescue Errno::ENOENT, Errno::ENOTDIR, Errno::EACCES
+          false
+        end
+
         # POSIX access checks do not fall through permission classes: a
-        # file owned by the account is governed by the owner bit alone —
-        # group/other readability never applies. Short-circuit per
-        # class so an owner-readable-bit-clear file can never verify
-        # through a gid match. The group class matches ANY group the
-        # account is a member of — primary gid or supplementary
-        # (round 5): the runtime's group credentials include them, so a
-        # supplementary-group-readable file genuinely is readable.
-        def readable_by_account?(stat, entry)
-          return (stat.mode & 0o400).nonzero? if stat.uid == entry.uid
+        # file owned by the account is governed by the owner bits alone —
+        # group/other bits never apply. Short-circuit per class so an
+        # owner-permission-bit-clear file can never verify through a
+        # gid match. The group class matches ANY group the account is a
+        # member of — primary gid or supplementary (round 5): the
+        # runtime's group credentials include them, so a
+        # supplementary-group-granted permission genuinely applies.
+        # Returns the governing class's rwx bits normalized to the low
+        # octal (r=4, w=2, x=1), shared by the file-read check and the
+        # ancestor search check so the two can never drift apart.
+        def permission_bits(stat, entry)
+          return (stat.mode >> 6) & 0o7 if stat.uid == entry.uid
           if stat.gid == entry.gid || group_source.call(entry.name).include?(stat.gid)
-            return (stat.mode & 0o040).nonzero?
+            return (stat.mode >> 3) & 0o7
           end
 
-          (stat.mode & 0o004).nonzero?
+          stat.mode & 0o7
+        end
+
+        def readable_by_account?(stat, entry)
+          (permission_bits(stat, entry) & 0o4).nonzero?
         end
 
         def supplementary_gids(username)

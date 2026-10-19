@@ -116,11 +116,14 @@ module Ace
 
         # Allocate the next free UniqueID above the current maximum,
         # ignoring the reserved high sentinel values (darwin's `nobody`
-        # reports 4294967294). Deliberately simple: dscl owns the
-        # directory; concurrent creation is reconciled by the idempotent
-        # re-run.
+        # reports 4294967294). Parse only the trailing UniqueID column
+        # of each `dscl -list` line — digits inside account names such
+        # as `deploy-2026` must never be taken for a UID. Deliberately
+        # simple: dscl owns the directory; concurrent creation is
+        # reconciled by the idempotent re-run.
         def next_darwin_uid(out)
-          ids = out.scan(/\b(\d+)\b/).flatten.map(&:to_i).reject { |id| id >= 2**31 }
+          ids = out.lines.filter_map { |line| line[/\s(\d+)\s*\z/, 1] }
+            .map(&:to_i).reject { |id| id >= 2**31 }
           return 501 if ids.empty?
 
           [ids.max + 1, 501].max

@@ -73,6 +73,46 @@ module Molecules
       end
     end
 
+    # PR #392 F5: read bits on the file are not enough — without the
+    # search (x) bit on an ancestor directory the account cannot reach
+    # the file at all, so the binding is failed, not verified.
+    def test_readable_file_behind_unsearchable_directory_fails
+      Dir.mktmpdir do |dir|
+        path = File.join(dir, "worker.md")
+        File.write(path, "instructions")
+        File.chmod(0o644, path)
+        File.chmod(0o700, dir)
+        other = FakeEntry.new(name: "ace-other", uid: Process.uid + 1, gid: Process.gid + 1, dir: "/x")
+
+        result = verifier(lookup: ->(_name) { other }, group_source: ->(_name) { [] })
+          .call(role: role(path))
+
+        assert_equal "failed", result["status"]
+        assert_match(/not reachable by account 'ace-other'/, result["message"])
+        assert_match(/search permission/, result["message"])
+      end
+    end
+
+    # F5 control: the same foreign account with search-permitted
+    # ancestors all the way up verifies. The fixture lives under /tmp
+    # because the default tmpdir (macOS per-user folder) is itself
+    # 0700-owner-only for the running account.
+    def test_searchable_ancestor_path_verifies_for_other_account
+      Dir.mktmpdir("pr392-f5", "/tmp") do |dir|
+        File.chmod(0o755, dir)
+        path = File.join(dir, "worker.md")
+        File.write(path, "instructions")
+        File.chmod(0o644, path)
+        other = FakeEntry.new(name: "ace-other", uid: Process.uid + 1, gid: Process.gid + 1, dir: "/x")
+
+        result = verifier(lookup: ->(_name) { other }, group_source: ->(_name) { [] })
+          .call(role: role(path))
+
+        assert_equal "verified", result["status"]
+        assert_nil result["message"]
+      end
+    end
+
     def test_unavailable_account_fails_with_dependency_message
       result = verifier(lookup: ->(_name) { nil }).call(role: role("wfi://assign/work"))
 
@@ -133,10 +173,18 @@ module Molecules
 
     # Round-4 M2 companions: each non-owner class still verifies
     # through its own bit when the higher classes do not apply.
+    # The fixture lives under /tmp with 0755 ancestors: the default
+    # tmpdir is 0700-owner-only, legitimately unreachable for the
+    # foreign-uid account (PR #392 F5 checks ancestor search too).
     def test_group_class_verifies_when_owner_is_foreign
-      Dir.mktmpdir do |dir|
+      Dir.mktmpdir("pr392-f5", "/tmp") do |dir|
+        File.chmod(0o755, dir)
         path = File.join(dir, "worker.md")
         File.write(path, "instructions")
+        # /tmp fixtures inherit gid 0 — restore the account's primary
+        # group so the group permission class applies to the fixture
+        File.chown(nil, Process.gid, dir)
+        File.chown(nil, Process.gid, path)
         File.chmod(0o040, path)
         other = FakeEntry.new(name: "ace-other", uid: Process.uid + 1, gid: Process.gid, dir: "/x")
 
@@ -170,9 +218,13 @@ module Molecules
     # Fake group source stands in for the Etc.group scan (injectable
     # seam).
     def test_supplementary_group_membership_verifies_group_readable_file
-      Dir.mktmpdir do |dir|
+      # searchable ancestors + primary-group fixture, see the group-class test above
+      Dir.mktmpdir("pr392-f5", "/tmp") do |dir|
+        File.chmod(0o755, dir)
         path = File.join(dir, "worker.md")
         File.write(path, "instructions")
+        File.chown(nil, Process.gid, dir)
+        File.chown(nil, Process.gid, path)
         File.chmod(0o040, path)
         other = FakeEntry.new(name: "ace-other", uid: Process.uid + 1, gid: Process.gid + 1, dir: "/x")
 

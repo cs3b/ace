@@ -117,6 +117,19 @@ module Molecules
       assert_includes calls, ["dscl", ".", "-create", "/Users/ace-worker", "UniqueID", "501"]
     end
 
+    # PR #392 (UID): digits inside account names (`deploy-2026`) are not
+    # UIDs — only the trailing UniqueID column of each dscl line counts.
+    def test_darwin_uid_allocation_ignores_digits_in_account_names
+      runner = fake_runner("dscl" => {"status" => "ok",
+        "out" => "root 0\ndeploy-2026 510\nace-7-other 300\n", "err" => ""})
+
+      result = provisioner(runner: runner).call(account: account("create" => true))
+
+      assert_equal "created", result["status"]
+      assert_equal 511, result["uid"]
+      assert_includes calls, ["dscl", ".", "-create", "/Users/ace-worker", "UniqueID", "511"]
+    end
+
     def test_privileged_linux_creation_runs_single_useradd
       runner = fake_runner
       lookup_calls = []

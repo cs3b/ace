@@ -88,6 +88,31 @@ module Organisms
       end
     end
 
+    # PR #392 F4: a broken pre-existing key pair must fail the key item
+    # and with it the whole aggregate (`ok` false) — readiness can never
+    # be announced over useless key files.
+    def test_broken_key_pair_fails_key_item_and_aggregate_report
+      with_manifest do |organism, dir|
+        ssh = File.join(dir, "home", "ace-worker", ".ssh")
+        FileUtils.mkdir_p(ssh)
+        private_path = File.join(ssh, "id_ed25519")
+        File.write(private_path, "not a private key")
+        File.chmod(0o600, private_path)
+        File.write("#{private_path}.pub", "not a public key")
+        File.chmod(0o644, "#{private_path}.pub")
+
+        report = organism.call
+
+        assert_equal false, report["ok"]
+        key = report["keys"].first
+        assert_equal "failed", key["status"]
+        assert_nil key["fingerprint"]
+        assert_match(/not usable/, key["message"])
+        # the unknown pair is left untouched for manual resolution
+        assert_equal "not a private key", File.read(private_path)
+      end
+    end
+
     def test_dry_run_predicts_all_sections_without_filesystem_mutation
       with_manifest(dry_run: true) do |organism, dir|
         report = organism.call
