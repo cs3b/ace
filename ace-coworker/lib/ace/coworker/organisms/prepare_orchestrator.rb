@@ -22,8 +22,15 @@ module Ace
       # with zero redundant writes; an active executor or a mismatched
       # worktree escalates to the overseer via ace-hitl instead of
       # overwriting work. dry_run: performs the full resolution and
-      # conflict detection with zero effects (assignments are planned, not
-      # written, because the worktree does not exist yet).
+      # conflict detection with zero effects (assignments are planned,
+      # not written, because the worktree does not exist yet). After a successful preparation the
+      # planner sends a READINESS report to the overseer via ace-hitl
+      # (L4.4: what was prepared — worktree, assignments, start configs
+      # — plus the exact first step; a report expects no reply); role
+      # errors and a missing overseer address are GAPS that never pass
+      # as ready and reach the overseer through the same conflict
+      # escalation path (question = a decision is needed). dry_run
+      # sends nothing.
       class PrepareOrchestrator
         DISPOSITIONS = {
           created: "created", recovered: "recovered", reuse: "reused",
@@ -86,17 +93,46 @@ module Ace
               assignments: executor[:assignments], active_executor: rule[:evidence])
           end
 
-          sequence = compose_sequence(task_id, roles, decision[:worktree_path])
-          leg_overseer = leg_config_overseer(to: to, config_path: config_path)
+          # Role errors are GAPS (L4.4): a sequence that cannot be
+          # composed is never reported as ready; the worktree stays
+          # prepared and the gap escalates to the overseer (question —
+          # a decision is needed), never a silent bare error.
+          sequence = begin
+            compose_sequence(task_id, roles, decision[:worktree_path])
+          rescue Error => e
+            return conflict_result(task: task_id, task_path: task_path, roles: roles,
+              kind: "role_sequence", detail: e.message,
+              worktree_path: decision[:worktree_path], to: to,
+              config_path: config_path, dry_run: dry_run)
+          end
+
+          # A missing overseer address is a GAP too (L4.4): the worktree
+          # and the assignments ARE composed, but no start config is
+          # written and the commission is NOT ready — reported with the
+          # concrete reason, never as a ready order.
+          leg_overseer, leg_note = escalation_recipient(to: to, config_path: config_path)
+          if leg_overseer.to_s.strip.empty?
+            return conflict_result(task: task_id, task_path: task_path, roles: roles,
+              kind: "missing_overseer",
+              detail: missing_overseer_detail(worktree_path: decision[:worktree_path],
+                branch: decision[:branch], disposition: disposition,
+                sequence: sequence, note: leg_note),
+              worktree_path: decision[:worktree_path], to: to,
+              config_path: config_path, dry_run: dry_run)
+          end
+
           start_configs = write_start_configs(task: task_id, sequence: sequence,
             worktree_path: decision[:worktree_path], overseer: leg_overseer,
             dry_run: dry_run)
+          report = dry_run ? nil : readiness_report(task: task_id, to: leg_overseer,
+            worktree_path: decision[:worktree_path], branch: decision[:branch],
+            disposition: disposition, assignments: sequence, start_configs: start_configs)
           success(task: task_id, task_path: task_path, roles: roles,
             disposition: disposition, worktree_path: decision[:worktree_path],
             branch: decision[:branch], assignments: sequence,
             start_configs: start_configs,
             worktree_assignments: executor[:assignments],
-            dry_run: dry_run)
+            report: report, dry_run: dry_run)
         end
 
         private
@@ -111,20 +147,63 @@ module Ace
 
         # The overseer address every leg config carries: the same
         # resolution as conflict escalation (--to, else the coworker
-        # config's overseer, leniently). The start configs are the L4.3
-        # deliverable, so a missing address is a hard error — never a
+        # config's overseer, leniently). Resolved in #call; an empty
+        # address produces the missing_overseer GAP (see #call), never a
         # config with an empty overseer and never a silent skip.
-        def leg_config_overseer(to:, config_path:)
-          overseer, note = escalation_recipient(to: to, config_path: config_path)
-          unless overseer.to_s.strip.empty?
-            return overseer
+
+        # The readiness report body (L4.4): what was prepared — worktree,
+        # per-role assignments, per-leg start configs — plus the exact
+        # first step, so the overseer runs the first leg without
+        # composing any ace-assign detail itself. A REPORT (no reply
+        # expected); delivery is attempted but a delivery failure never
+        # undoes the preparation — the event id stays in the result for
+        # an `ace-hitl send` retry.
+        def readiness_report(task:, to:, worktree_path:, branch:, disposition:,
+          assignments:, start_configs:)
+          event = @hitl_reporter.create_report(
+            title: "Preparation ready - #{task}/#{worktree_dir(worktree_path)}",
+            body_lines: readiness_lines(worktree_path: worktree_path, branch: branch,
+              disposition: disposition, assignments: assignments,
+              start_configs: start_configs),
+            task: task, result: "success", to: to)
+          if event.is_a?(Molecules::HitlReporter::Failure)
+            return {"kind" => "readiness", "error" => event.message}
           end
 
-          raise Error,
-            "cannot prepare start configs: no overseer address (--to or coworker config); " \
-            "the worktree and role-sequence assignments ARE already composed - " \
-            "re-run prepare with --to <address> to write the leg configs (idempotent)" \
-            "#{"\n#{note}" if note}"
+          {"kind" => "readiness", "event" => event,
+           "delivered" => @hitl_reporter.send_report(event) == true}
+        rescue Error => e
+          {"kind" => "readiness", "error" => e.message}
+        end
+
+        def readiness_lines(worktree_path:, branch:, disposition:, assignments:, start_configs:)
+          lines = ["worktree: #{worktree_path} (branch #{branch}, #{disposition})"]
+          assignments.each do |entry|
+            lines << "sequence #{entry['position']}/#{entry['of']} #{entry['role']}: " \
+              "#{entry['assignment']} (#{entry['disposition']}, #{entry['steps']} steps)"
+          end
+          start_configs.each do |entry|
+            lines << "start config #{entry['role']}: #{entry['path']} (#{entry['disposition']})"
+          end
+          first = start_configs.first
+          if first
+            lines << "first leg: ace-coworker start --config #{first['path']} in the worktree"
+          end
+          lines
+        end
+
+        def missing_overseer_detail(worktree_path:, branch:, disposition:, sequence:, note:)
+          detail = +"no overseer address for the start configs (--to or coworker config); " \
+            "the commission is NOT ready - no leg config is written"
+          detail << "\n#{note}" if note
+          detail << "\nprepared: worktree #{worktree_path} (branch #{branch}, #{disposition})"
+          sequence.each do |entry|
+            detail << "\nprepared: assignment #{entry['role']} -> #{entry['assignment']} " \
+              "(#{entry['disposition']})"
+          end
+          detail << "\ndecision needed: supply the overseer address and re-run prepare " \
+            "with --to <address> to write the leg configs (idempotent)"
+          detail
         end
 
         # Writes one start config per sequence leg into the prepared
@@ -223,11 +302,12 @@ module Ace
         end
 
         def success(task:, task_path:, roles:, disposition:, worktree_path:,
-          branch:, assignments: [], start_configs: [], worktree_assignments: [], dry_run:)
+          branch:, assignments: [], start_configs: [], worktree_assignments: [],
+          report: nil, dry_run:)
           Models::Preparation.new(task: task, task_path: task_path, roles: roles,
             worktree: {"path" => worktree_path, "branch" => branch, "disposition" => disposition},
             worktree_assignments: worktree_assignments, assignments: assignments,
-            start_configs: start_configs, dry_run: dry_run)
+            start_configs: start_configs, report: report, dry_run: dry_run)
         end
       end
     end

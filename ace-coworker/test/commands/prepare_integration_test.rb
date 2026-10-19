@@ -41,6 +41,35 @@ module Ace
             FileUtils.remove_entry(@dir)
           end
 
+          def test_prepare_sends_readiness_report_to_the_overseer
+            out, err, status = run_cli(COWORKER_BIN, "prepare",
+              "--task", @task_ref, "--roles", "worker,reviewer", "--to", "overseer", "--format", "json")
+            assert status.success?, "prepare failed: #{out}#{err}"
+            payload = JSON.parse(out)
+
+            # L4.4: the commission ends with a READINESS report (no reply
+            # expected): worktree, per-role assignments, start configs,
+            # and the exact first step — the overseer never composes
+            # ace-assign details itself.
+            report = payload["report"]
+            assert_equal "readiness", report["kind"]
+            assert report["event"], "readiness event created"
+
+            assert_equal 1, hitl_events.size
+            content = hitl_events.map { |p| File.read(p) }.join
+            assert_includes content, "type: report"
+            assert_includes content, "result: success"
+            assert_includes content, "task: #{@task_ref}"
+            assert_includes content, "recipient_machine: lab01", "addressed to the configured overseer recipient"
+            assert_includes content, "Preparation ready"
+            assert_includes content, payload["worktree"]["path"]
+            worker_assignment = payload["assignments"].first["assignment"]
+            assert_includes content, "worker: #{worker_assignment}"
+            assert_includes content, "start config worker: .ace-local/coworker/prepare/worker.yml"
+            assert_includes content, "first leg: ace-coworker start --config " \
+              ".ace-local/coworker/prepare/worker.yml"
+          end
+
           def test_prepare_creates_then_reuses_idempotently
             out, err, status = run_cli(COWORKER_BIN, "prepare",
               "--task", @task_ref, "--roles", "worker,reviewer", "--to", "overseer", "--format", "json")
@@ -174,7 +203,15 @@ module Ace
             out, err, status = run_cli(COWORKER_BIN, "prepare",
               "--task", @task_ref, "--roles", "worker", "--format", "json")
             refute status.success?, "start configs need an overseer address: #{out}#{err}"
-            assert_includes err, "cannot prepare start configs: no overseer address"
+            assert_includes err, "preparation conflict: missing_overseer"
+            assert_includes err, "no overseer address for the start configs"
+
+            payload = JSON.parse(out)
+            assert_equal "missing_overseer", payload["conflict"]["kind"]
+            assert_includes payload["conflict"]["detail"], "NOT ready"
+            assert_includes payload["conflict"]["detail"],
+              "prepared: worktree", "the gap states what IS prepared"
+            assert_nil payload["report"], "a gap never sends a readiness report"
 
             worktree = Dir.glob(File.join(@dir, ".ace-wt", "*")).first
             refute_nil worktree, "the worktree itself is still prepared"
@@ -225,15 +262,27 @@ module Ace
             out, err, status = run_cli(COWORKER_BIN, "prepare",
               "--task", @task_ref, "--roles", "worker,tailor", "--to", "overseer", "--format", "json")
             refute status.success?, "a missing process never exits 0: #{out}#{err}"
+            assert_includes err, "preparation conflict: role_sequence"
             assert_includes err, "role 'tailor' has no assignment process"
             assert_includes err, "refusing to substitute"
+            payload = JSON.parse(out)
+            assert_equal "role_sequence", payload["conflict"]["kind"]
+            assert_nil payload["report"], "a gap never sends a readiness report"
 
             # All-or-nothing: even the worker's assignment was not written.
             worktrees = Dir.glob(File.join(@dir, ".ace-wt", "*"))
             assert_equal 1, worktrees.length, "worktree itself is prepared and kept"
             assert_empty Dir.glob(File.join(worktrees.first, ".ace-local", "assign", "*")),
               "no partial sequence on a missing process"
-            assert_empty hitl_events, "an invalid commission needs no overseer decision"
+
+            # L4.4: the role error reaches the overseer as a decision
+            # question (a decision is needed), with the concrete reason.
+            assert_equal 1, hitl_events.size
+            content = File.read(hitl_events.first)
+            assert_includes content, "type: question"
+            assert_includes content, "kind: decision"
+            assert_includes content, "role_sequence"
+            assert_includes content, "role 'tailor' has no assignment process"
           end
 
           def test_unknown_role_in_sequence_is_reported
@@ -260,9 +309,12 @@ module Ace
             assert_nil payload["worktree"]
             assert payload["conflict"]["hitl_event"], "escalation event created"
 
-            assert_equal 1, hitl_events.size
-            content = File.read(hitl_events.first)
-            assert_includes content, "type: question"
+            # One conflict question on top of the fixture's readiness
+            # report — never the other way around.
+            contents = hitl_events.map { |p| File.read(p) }
+            questions = contents.select { |c| c.include?("type: question") }
+            assert_equal 1, questions.size
+            content = questions.first
             assert_includes content, "kind: decision"
             assert_includes content, "task: #{@task_ref}"
 
@@ -290,6 +342,7 @@ module Ace
 
           def test_stale_metadata_dry_run_reports_would_recover_and_real_run_recovers
             worktree = prepare_worktree(@task_ref)
+            events_before = hitl_events.length
             # Stale metadata: the registration survives, the directory is gone.
             FileUtils.remove_entry(worktree)
             refute File.directory?(worktree)
@@ -301,7 +354,7 @@ module Ace
             assert_equal "would_recover", payload["worktree"]["disposition"]
             assert_equal worktree, payload["worktree"]["path"]
             refute File.directory?(worktree), "dry-run never materializes the worktree"
-            assert_empty hitl_events
+            assert_equal events_before, hitl_events.length, "dry-run sends no readiness report"
 
             out, err, status = run_cli(COWORKER_BIN, "prepare",
               "--task", @task_ref, "--roles", "worker", "--to", "overseer", "--format", "json")

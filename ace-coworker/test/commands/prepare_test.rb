@@ -33,6 +33,7 @@ module Ace
                 {"role" => "reviewer", "assignment" => "seq2",
                  "path" => ".ace-local/coworker/prepare/reviewer.yml", "disposition" => "created"}
               ],
+              report: {"kind" => "readiness", "event" => "rpt001", "delivered" => true},
               worktree_assignments: []}.merge(overrides))
           end
 
@@ -87,6 +88,37 @@ module Ace
               "worker: .ace-local/coworker/prepare/worker.yml (created, assignment seq1)"
             assert_includes out,
               "reviewer: .ace-local/coworker/prepare/reviewer.yml (created, assignment seq2)"
+          end
+
+          def test_success_renders_readiness_report
+            out = capture do
+              command(prep).call(task: "8xg.t.aaa", roles: ["worker,reviewer"],
+                format: "table", quiet: false)
+            end
+
+            assert_includes out, "report:     readiness event rpt001 (delivered)"
+          end
+
+          def test_undelivered_readiness_report_renders_retry_hint
+            result = preparation(report: {"kind" => "readiness", "event" => "rpt001",
+              "delivered" => false})
+            out = capture do
+              command(result).call(task: "8xg.t.aaa", roles: ["worker"],
+                format: "table", quiet: false)
+            end
+
+            assert_includes out, "readiness event rpt001 (not delivered " \
+              "(retry: ace-hitl send rpt001))"
+          end
+
+          def test_readiness_report_error_renders_reason
+            result = preparation(report: {"kind" => "readiness", "error" => "boom"})
+            out = capture do
+              command(result).call(task: "8xg.t.aaa", roles: ["worker"],
+                format: "table", quiet: false)
+            end
+
+            assert_includes out, "report:     not sent (boom)"
           end
 
           def test_success_renders_json_contract

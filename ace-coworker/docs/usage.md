@@ -119,9 +119,10 @@ ace-coworker start --config .ace-local/coworker/prepare/worker.yml
 Leg configs carry no secrets and no assignment steps — only the documented
 config fields with the composed assignment id as the ace-assign reference.
 An overseer address is required for every leg (`--to`, or the coworker
-config's `overseer` read leniently); without one, prepare fails with
-`cannot prepare start configs: no overseer address (--to or coworker
-config)` and writes no leg config. Error precedence is deliberate:
+config's `overseer` read leniently); without one, prepare ends with a
+`missing_overseer` gap — `preparation conflict: missing_overseer - no
+overseer address for the start configs (--to or coworker config)` — and
+writes no leg config. Error precedence is deliberate:
 role-validation errors (unknown role, missing process definition) win
 over the missing-address check, and the check runs AFTER assignment
 composition — the worktree and the L4.2 assignments are a delivered
@@ -361,8 +362,9 @@ also writes the per-role executor start configs (L4.3) — one
 `.ace-local/coworker/prepare/<role>.yml` per leg (see the section above) —
 so `ace-coworker start --config .ace-local/coworker/prepare/<role>.yml`
 inside the worktree begins any leg without ad-hoc setup; `commission`
-stays the single-role writer of the default `config.yml` target. The
-readiness report (L4.4) remains a later leaf. Note:
+stays the single-role writer of the default `config.yml` target. After
+a successful preparation the planner sends the overseer a READINESS
+report via ace-hitl (L4.4, see below). Note:
 composing multi-leg sequences leaves ace-assign's `.ace-local/assign/.latest`
 pointing at the LAST-composed leg (e.g. integrator); drivers must address
 legs by the explicit assignment ids from the prepare result, never via
@@ -389,9 +391,11 @@ the worktree's `.ace-local/assign/`, ADR-034):
   material requirement gaps as `ace-hitl` questions instead of guessing.
 - A role without a preset (`unknown role '<name>'`) or without its own
   process definition (`role '<name>' has no assignment process … refusing
-  to substitute another role's process`) is reported with exit 1 and
-  NOTHING is composed (all-or-nothing): the planner never substitutes
-  another role's process. The worktree itself stays prepared and kept.
+  to substitute another role's process`) is a `role_sequence` GAP
+  reported with exit 1, NOTHING composed (all-or-nothing), and a
+  decision question to the overseer when an escalation recipient
+  resolves: the planner never substitutes another role's process. The
+  worktree itself stays prepared and kept.
 - `--dry-run` composes nothing (the would-be worktree does not exist), so
   the result reports `assignments: []` and `start_configs: []` alongside
   `would_create`/`would_recover`.
@@ -408,10 +412,13 @@ Start-config composition (L4.3; same owner, new artifact kind under
   never touched by prepare.
 - The overseer address resolves like conflict escalation: `--to` wins,
   else the coworker config's `overseer` (lenient field-only read, so a
-  partial planner-side config still names it). No address anywhere:
-  exit 1 with `cannot prepare start configs: no overseer address (--to or
-  coworker config)` and no leg config written — never a config with an
-  empty overseer.
+  partial planner-side config still names it). No address anywhere: a
+  `missing_overseer` GAP — exit 1 with
+  `preparation conflict: missing_overseer - no overseer address for the
+  start configs (--to or coworker config)` and no leg config written —
+  never a config with an empty overseer and never a ready commission.
+  The gap detail states what IS prepared (worktree, assignments) and
+  the decision needed (supply `--to` and re-run prepare, idempotent).
 - Idempotent: re-preparation reports an identical leg config as `reused`
   without a write; changed content (e.g. a different overseer) is
   rewritten as `updated` — prepare is the single writer of these files.
@@ -469,6 +476,35 @@ recipient the conflict still exits 1. An undeliverable event keeps the
 event id in the output for a later
 `ace-hitl send <id>` retry — retrying delivery never retries preparation.
 
+Readiness / gap reporting (L4.4; ace-hitl stays the transport and event
+owner, no new state):
+
+- Every SUCCESSFUL preparation (created / recovered / reused) ends with
+  a READINESS report to the overseer — `--type report --result success`
+  (`Preparation ready - <task>/<worktree-dir>`), a report expects no
+  reply. The body carries the complete set to run the first step:
+  the worktree (path/branch/disposition), every sequence leg
+  (`sequence N/M <role>: <assignment>`), every start config, and the
+  exact first step (`ace-coworker start --config
+  .ace-local/coworker/prepare/<first-role>.yml` in the worktree) — the
+  overseer never composes ace-assign details itself. The report is
+  delivered immediately; the result JSON carries it under `report`
+  (`{"kind": "readiness", "event": <id>, "delivered": …}`). A create or
+  delivery failure never undoes the preparation: the failure (or the
+  event id plus `ace-hitl send` retry hint) is recorded in `report`
+  instead.
+- GAPS never pass as ready: `role_sequence` (role preset/process
+  errors) and `missing_overseer` join the existing
+  `active_executor` / `mismatched_worktree` conflicts — exit 1, nothing
+  unprepared is started, and the gap escalates to the overseer as a
+  decision question (`--type question --kind decision`) with the
+  concrete reasons: what is prepared, what is missing, and the decision
+  needed. Without an escalation recipient the gap stays fully visible
+  in the conflict detail (an undeliverable report is still recorded,
+  never silently dropped).
+- `--dry-run` reports nothing: no readiness report, no escalation
+  (zero effects includes ace-hitl events).
+
 Result JSON (table renders the same fields):
 
 ```json
@@ -487,6 +523,7 @@ Result JSON (table renders the same fields):
   ],
   "active_executor": null,
   "worktree_assignments": [{"id": "abc123", "state": "paused", "progress": "0/2"}],
+  "report": {"kind": "readiness", "event": "8xhkep", "delivered": true},
   "conflict": null
 }
 ```
@@ -507,7 +544,7 @@ would-be outcome.
 | `status` | query rendered any state (including not-ready) | — |
 | `report` | success outcome recorded (and delivered, or `--no-send`/`--dry-run`) | error outcome; delivery/create failure (outcome still recorded); refused input |
 | `resume` | continue/complete rendered; report redelivered | delegated report failure keeps its exit 1 (plan still rendered) |
-| `prepare` | worktree created/recovered/reused with the role-sequence assignments and per-leg start configs composed (dry-run: would_create/would_recover, nothing composed) | conflict (active_executor / mismatched_worktree); invalid commission; missing role preset or role process definition; no overseer address for the start configs; operational preparation failure |
+| `prepare` | worktree created/recovered/reused with the role-sequence assignments and per-leg start configs composed, readiness report sent (or recorded with its event id / failure); dry-run: would_create/would_recover, nothing composed, nothing reported | conflict (active_executor / mismatched_worktree / role_sequence / missing_overseer); invalid commission; operational preparation failure |
 | `roles` | catalog rendered any valid state (including empty) | invalid preset file (specific error) |
 | `rounds` | round recorded, verdict rendered (including escalate) | corrupt history; malformed record |
 | `gate` | verdict rendered (`ready` or `blocked` - a withheld merge is a legitimate outcome) | malformed input (invalid or duplicate `--dep`, invalid `--tests` token) |

@@ -9,6 +9,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Readiness / gap reporting to the overseer in `ace-coworker prepare`
+  (8xg.t.sbz.3.3 / L4.4): every SUCCESSFUL preparation ends with a
+  READINESS report through ace-hitl (`--type report --result success`,
+  title `Preparation ready - <task>/<worktree-dir>`; a report expects
+  no reply) carrying the complete set to run the first step — worktree
+  (path/branch/disposition), every sequence leg, every start config,
+  and the exact first command (`ace-coworker start --config
+  .ace-local/coworker/prepare/<first-role>.yml` in the worktree) — so
+  the overseer never composes ace-assign details itself. Gaps never
+  pass as ready: role errors (unknown role, missing process
+  definition) become a `role_sequence` conflict and a missing overseer
+  address becomes a `missing_overseer` conflict — both exit 1, write
+  no start configs, and escalate to the overseer as a decision
+  question (the existing conflict path; question = a decision is
+  needed) with the concrete reasons: what is prepared, what is
+  missing, and the decision needed. The previous hard error `cannot
+  prepare start configs: no overseer address` is replaced by the
+  structured `missing_overseer` gap. The prepare result JSON/table
+  gained a `report` field (`{"kind": "readiness", "event": <id>,
+  "delivered": …}`, or the create/delivery failure under `error`); a
+  report delivery failure never undoes the preparation — the event id
+  stays available for an `ace-hitl send` retry. `--dry-run` reports
+  nothing (zero effects includes ace-hitl events). No new state owner:
+  events live with ace-hitl, helper state is none (ADR-034).
 - Per-role executor start configs in `ace-coworker prepare`
   (8xg.t.sbz.3.2 / L4.3): after composing the role-sequence assignments,
   the planner also writes ONE start config per sequence leg into the
@@ -23,8 +47,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   construction; `commission` remains the single writer of the default
   config target. The leg configs require an overseer address (`--to`, or
   the coworker config's `overseer` read leniently): a missing address
-  fails with `cannot prepare start configs: no overseer address (--to or
-  coworker config)` instead of writing an incomplete config. Writing leg
+  ends the preparation as a `missing_overseer` gap (see the L4.4 entry
+  above) instead of writing an incomplete config. Writing leg
   configs never touches an active driver: the existing
   active-executor/mismatched-worktree conflicts run first, and the
   default `config.yml` is never written by prepare. Writes are
