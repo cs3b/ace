@@ -124,18 +124,29 @@ ace-overseer process-reports --dry-run  # what would happen, zero effects
 
 Matching and outcome rules (enforced mechanically):
 
-- A report matches the current order by the `assignment` recorded on a step,
-  or by the managing task's `project_task` when exactly one step is
-  non-terminal. A report fitting no open allocation is reported as
-  `unmatched` and kept for clarification — never treated as success.
+- A report matches the current order by the `assignment` recorded on a step.
+  An explicit assignment that matches no step is `unmatched` — there is no
+  task-only fallback, so a stale report for a different assignment never
+  completes whichever step happens to remain. A report WITHOUT an assignment
+  (a planner readiness report) matches only the preparation role: the
+  managing task's `project_task` plus exactly one non-terminal step whose
+  own assignment is blank. A report fitting no open allocation is reported
+  as `unmatched` and kept for clarification — never treated as success.
 - Success records `processed_report`/`report_result` on the step and marks
   it `done`, then continues with the next unblocked step (same
   `DependencyReadiness` gate as `work-on`): `ace-overseer handoff` for the
   next role when the family records a worktree, otherwise the `work-on`
-  gate. A refused continuation is reported as blocked with reasons.
+  gate. A refused continuation is reported as blocked with reasons. The
+  handoff outcome carries the actionable start command (the same one the
+  Handoff CLI prints); the window is ensured, the agent runs the command.
 - A repeated delivery of an already-processed report is `duplicate`: the
   recorded result and existing allocation answer it; nothing re-runs
-  (delivery repetition is never work repetition).
+  (delivery repetition is never work repetition). A duplicate whose
+  recorded result is success still re-checks the continuation from current
+  task/assignment state — the report result is persisted BEFORE dispatch,
+  so a failed handoff (or a crash between the write and the dispatch) must
+  not suppress the next role forever. Duplicate starts stay impossible: the
+  gates read real allocation state.
 - An `error` result records the cause on the step but keeps it open; a
   question surfaces its `ace-hitl update <id> --answer` path. Neither
   advances a step nor triggers a continuation.
@@ -170,9 +181,9 @@ Sources are configured under `status_sources` in the overseer config
 | Source | Information | Owner interface used |
 |--------|-------------|----------------------|
 | `worktrees` | worktrees with assignment progress and git state | `ace-git-worktree` WorktreeManager + worktree assignment context |
-| `forge` | recent forge pull requests | `ace-git` Providers `recent_pull_requests` (forge-neutral) |
-| `project_tasks` | project task ids, statuses, dependencies | `ace-task` TaskManager (`.ace-tasks/`) |
-| `overseer_tree` | private overseer tasks | `ace-task` TaskManager (`.ace-tasks/_overseer/`) |
+| `forge` | recent forge pull requests and issues (explicit unavailable marker when the provider has no issue-listing API) | `ace-git` Providers `recent_pull_requests` / `recent_issues` (forge-neutral) |
+| `project_tasks` | project task ids, statuses, dependencies (full descendant tree) | `ace-task` TaskManager (`.ace-tasks/`) |
+| `overseer_tree` | private overseer tasks including lifecycle steps and their recorded reports | `ace-task` TaskManager (`.ace-tasks/_overseer/`) |
 | `herdr` | live workspaces/tabs/panes | `ace-herdr` ControlSurface + StatusComposer (read-only) |
 | `coworkers` | per-worktree executor truth | `ace-coworker` WorktreeExecutorProbe + ActiveExecutorRule |
 

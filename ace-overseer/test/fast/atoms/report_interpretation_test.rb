@@ -169,4 +169,50 @@ class ReportInterpretationTest < AceOverseerTestCase
 
     assert_equal :unmatched, verdict[:status]
   end
+
+  def test_explicit_unknown_assignment_never_falls_back_to_task_only_matching
+    manager = manager("8xg.t.mgr", steps: [
+      step("8xg.t.mgr.0", status: "done", metadata: {"assignment" => "w1"}),
+      step("8xg.t.mgr.1", status: "pending", metadata: {"assignment" => "r1"})
+    ], metadata: {"project_task" => "8xg.t.prj"})
+
+    # A stale report names an assignment no step records: task matches the
+    # manager, but the report belongs to no open allocation.
+    verdict = Ace::Overseer::Atoms::ReportInterpretation.evaluate(
+      event: report(assignment: "stale-assignment"), managers: [manager])
+
+    assert_equal :unmatched, verdict[:status]
+    assert_includes verdict[:reason], "assignment stale-assignment"
+    assert_equal "pending", manager.subtasks.last.status
+  end
+
+  def test_planner_readiness_report_completes_only_a_preparation_step
+    manager = manager("8xg.t.mgr", steps: [
+      step("8xg.t.mgr.0", status: "progress")
+    ], metadata: {"project_task" => "8xg.t.prj"})
+
+    verdict = Ace::Overseer::Atoms::ReportInterpretation.evaluate(
+      event: report(assignment: nil), managers: [manager])
+
+    assert_equal :success, verdict[:status]
+    assert_equal "8xg.t.mgr.0", verdict[:step_ref]
+  end
+
+  def test_planner_readiness_report_never_completes_a_remaining_role_step
+    manager = manager("8xg.t.mgr", steps: [
+      step("8xg.t.mgr.0", status: "done"),
+      step("8xg.t.mgr.1", status: "done"),
+      step("8xg.t.mgr.2", status: "done"),
+      step("8xg.t.mgr.3", status: "pending", metadata: {"assignment" => "integrator"})
+    ], metadata: {"project_task" => "8xg.t.prj"})
+
+    # An old planner readiness report (task + success, no assignment) must
+    # not complete the sole remaining integration step: absence of an
+    # assignment is not evidence that whichever role remains finished.
+    verdict = Ace::Overseer::Atoms::ReportInterpretation.evaluate(
+      event: report(id: "planner-ready", assignment: nil), managers: [manager])
+
+    assert_equal :unmatched, verdict[:status]
+    assert_equal "pending", manager.subtasks.last.status
+  end
 end

@@ -11,9 +11,12 @@ module Ace
       #
       # Semantics (queue.wf.md rule 5 and the lab contract):
       # - A report matches the current order by its assignment reference
-      #   recorded on a step (non-terminal steps preferred), or by the
+      #   recorded on a step (non-terminal steps preferred; an explicit
+      #   assignment that matches no step is :unmatched), or — only for
+      #   reports without an assignment (planner readiness) — by the
       #   managing task's project_task plus exactly one non-terminal
-      #   step. An event that fits no open allocation is :unmatched, kept
+      #   step whose own assignment is blank (the preparation role). An
+      #   event that fits no open allocation is :unmatched, kept
       #   for clarification, never success (an ambiguous cross-manager
       #   match is also :unmatched).
       # - The processed report ID is recorded on the step; a repeated
@@ -123,11 +126,21 @@ module Ace
         # Matching precedence: an assignment reference recorded on a step
         # is the strongest binding, with non-terminal steps preferred (a
         # terminal match can only ever resolve to :duplicate, never a
-        # fresh advance); otherwise the managing task's project_task must
-        # match the reported task AND leave exactly one non-terminal step
-        # as the report's target. A match that is ambiguous across
-        # managers (or across steps) fits no open allocation and returns
-        # nil.
+        # fresh advance). An explicit assignment that matches no step fits
+        # no open allocation — there is NO fallback to task-only matching,
+        # because a stale report for a different assignment must never
+        # complete whichever step happens to remain.
+        #
+        # Without an assignment (a planner readiness report carries task
+        # + result only) the report binds to the PREPARATION role alone:
+        # the managing task's project_task must match the reported task
+        # AND leave exactly one non-terminal step whose own assignment is
+        # blank (the preparation step). A sole remaining step that is
+        # bound to a role assignment belongs to that role, not to the
+        # report — absence of an assignment is never evidence that
+        # whichever role remains just finished. A match that is ambiguous
+        # across managers (or across steps) fits no open allocation and
+        # returns nil.
         #
         # @return [Hash{manager:, step:, terminal:}, nil]
         def self.match(event, managers)
@@ -138,16 +151,16 @@ module Ace
                 {manager: manager, step: step} if step.metadata["assignment"].to_s == assignment
               end
             end
-            active = matches.reject { |matched| terminal?(matched[:step]) }
-            unless matches.empty?
-              candidates = active.empty? ? matches : active
-              if candidates.size == 1
-                return {manager: candidates.first[:manager], step: candidates.first[:step],
-                        terminal: active.empty?}
-              end
+            # No step records this assignment: unmatched, never a
+            # task-only fallback.
+            return nil if matches.empty?
 
-              return nil
-            end
+            active = matches.reject { |matched| terminal?(matched[:step]) }
+            candidates = active.empty? ? matches : active
+            return nil if candidates.size != 1
+
+            return {manager: candidates.first[:manager], step: candidates.first[:step],
+                    terminal: active.empty?}
           end
 
           task = event["task"].to_s
@@ -155,7 +168,8 @@ module Ace
             next unless manager.metadata["project_task"].to_s == task && task != ""
 
             active = steps_of(manager).reject { |step| terminal?(step) }
-            {manager: manager, step: active.first} if active.size == 1
+            preparation = active.reject { |step| step.metadata["assignment"].to_s != "" }
+            {manager: manager, step: preparation.first} if preparation.size == 1
           end
           return nil if matches.size > 1
           return nil if matches.empty?

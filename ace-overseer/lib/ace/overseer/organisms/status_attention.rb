@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "set"
+
 module Ace
   module Overseer
     module Organisms
@@ -51,12 +53,25 @@ module Ace
             blockers: dependency_blockers(sources),
             failures: source_failures(sources) +
               assignment_failures(sources) +
-              escalations(hitl_events),
+              escalations(hitl_events, processed_report_ids(sources)),
             missing_data: missing_data(snapshot, sources, hitl_error)
           }
         end
 
         private
+
+        # Report IDs the existing owner already recorded: ReportProcessor
+        # writes processed_report on the step's metadata (through the
+        # ace-task update surface), and the overseer-tree source carries
+        # it. A report whose ID is recorded is processed — no second
+        # registry, and no permanent "unprocessed" warning for work that
+        # already happened.
+        def processed_report_ids(sources)
+          tree = sources["overseer_tree"]
+          return [] unless tree && tree[:status] == "ok"
+
+          Array(tree[:data]).filter_map { |row| row[:processed_report].to_s }.reject(&:empty?).to_set
+        end
 
         def default_hitl_events
           -> { Molecules::HitlInbox.new.incoming_events }
@@ -160,7 +175,7 @@ module Ace
           end
         end
 
-        def escalations(hitl_events)
+        def escalations(hitl_events, processed_ids = Set.new)
           Array(hitl_events).filter_map do |event|
             case event["type"]
             when "question"
@@ -175,7 +190,11 @@ module Ace
             when "report"
               # Unprocessed incoming reports equally wait on the overseer
               # (process-reports is the consumer); surface them instead of
-              # leaving them invisible next to healthy progress.
+              # leaving them invisible next to healthy progress. A report
+              # whose ID the owner already recorded on a step is
+              # processed — it is not re-surfaced as pending work.
+              next if processed_ids.include?(event["id"].to_s)
+
               {
                 kind: "unprocessed_report",
                 subject: event["id"],

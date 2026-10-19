@@ -51,9 +51,7 @@ module Ace
             outcome(verdict, event, nil, "kept for clarification - not treated as success")
           when :duplicate
             progress.call("Event #{event['id']}: already processed (result: #{verdict[:recorded_result]}) - re-delivery is not re-execution")
-            outcome(verdict, event, nil,
-              "report #{event['id']} already recorded on #{verdict[:step_ref]} (result: #{verdict[:recorded_result]}); " \
-              "nothing re-run")
+            resume_duplicate_continuation(verdict, event, dry_run: dry_run, progress: progress)
           when :needs_answer
             progress.call("Event #{event['id']}: question on #{verdict[:step_ref]} - answer via ace-hitl update #{event['id']} --answer")
             outcome(verdict, event, nil,
@@ -62,6 +60,30 @@ module Ace
           else
             apply_report(verdict, event, dry_run: dry_run, progress: progress)
           end
+        end
+
+        # A duplicate whose recorded result is success does NOT prove the
+        # queue actually continued: the report result was persisted BEFORE
+        # dispatch, so a handoff failure (or a process death between the
+        # write and the dispatch) leaves a recorded report whose
+        # continuation never ran — and a later run must not let the
+        # recorded duplicate suppress that continuation forever. Recovery
+        # re-checks continuation from the CURRENT task/assignment reality
+        # through the same gates; duplicate starts stay impossible because
+        # the gates read real allocation state (work-on reuses an active
+        # assignment, handoff refuses a busy worktree). A duplicate
+        # without a recorded success (or a dry run) changes nothing.
+        def resume_duplicate_continuation(verdict, event, dry_run:, progress:)
+          unless verdict[:recorded_result] == Atoms::ReportInterpretation::SUCCESS_RESULT && !dry_run
+            return outcome(verdict, event, nil,
+              "report #{event['id']} already recorded on #{verdict[:step_ref]} (result: #{verdict[:recorded_result]}); " \
+              "nothing re-run")
+          end
+
+          continuation = continue_queue(verdict[:manager_ref], progress: progress)
+          outcome(verdict, event, continuation,
+            "report #{event['id']} already recorded on #{verdict[:step_ref]} (result: #{verdict[:recorded_result]}); " \
+            "continuation re-checked - #{continuation_description(continuation)}")
         end
 
         # A report (success or error): record through the existing
@@ -117,16 +139,27 @@ module Ace
             if family_worktree(manager)
               result = @handoff.call(task_ref: manager.metadata["project_task"].to_s)
               {action: "handoff", step_ref: next_step.id.to_s,
-               next: result[:next], status: result[:status], worktree_path: result[:worktree_path]}
+               next: result[:next], status: result[:status], worktree_path: result[:worktree_path],
+               start_command: start_command_of(result[:next])}
             else
               result = @work_on.call(task_ref: next_step.id.to_s)
               {action: "work-on", step_ref: next_step.id.to_s,
-               assignment_id: result[:assignment_id], worktree_path: result[:worktree_path]}
+               assignment_id: result[:assignment_id], worktree_path: result[:worktree_path],
+               assignment_created: result.fetch(:assignment_created, true)}
             end
           rescue Ace::Overseer::Error => e
             progress.call("Continuation blocked: #{e.message}")
             {action: "blocked", step_ref: next_step.id.to_s, reason: e.message}
           end
+        end
+
+        # The actionable start command for the next handoff leg — exactly
+        # what the Handoff CLI prints, never a rebuilt guess. nil when the
+        # leg carries no probed start config (the handoff gate refuses to
+        # guess, and so does this description).
+        def start_command_of(next_leg)
+          config = next_leg.is_a?(Hash) ? next_leg["start_config"].to_s : ""
+          config.empty? ? nil : "ace-coworker start --config #{config}"
         end
 
         # First non-terminal step (id order) whose recorded dependencies
@@ -176,15 +209,28 @@ module Ace
           }
         end
 
+        # Per queue.wf.md section 4 the handoff gate only ENSURES the next
+        # role's window in the worktree; the overseer AGENT runs the
+        # printed start command. The description therefore carries the
+        # command instead of asserting the role already started.
         def continuation_description(continuation)
           case continuation[:action]
           when "handoff"
             if continuation[:status] == "sequence_complete"
               "sequence complete - the worktree has no next role; close the managing task per the queue workflow"
+            elsif continuation[:start_command]
+              "window ensured in #{continuation[:worktree_path]} for the next role " \
+                "(#{continuation.dig(:next, 'role')}); run there: #{continuation[:start_command]}"
             else
-              "worktree handed to the next role (#{continuation.dig(:next, 'role')})"
+              "window ensured in #{continuation[:worktree_path]} for the next role " \
+                "(#{continuation.dig(:next, 'role')}); no probed start config - run ace-overseer handoff to see it"
             end
-          when "work-on" then "next step #{continuation[:step_ref]} started via work-on"
+          when "work-on"
+            if continuation[:assignment_created] == false
+              "next step #{continuation[:step_ref]} already has an active assignment in #{continuation[:worktree_path]}"
+            else
+              "next step #{continuation[:step_ref]} started via work-on"
+            end
           when "blocked" then "continuation blocked: #{continuation[:reason]}"
           when "none" then continuation[:reason]
           end

@@ -169,6 +169,31 @@ class StatusAttentionTest < AceOverseerTestCase
     assert_equal 2, rows.length
   end
 
+  def test_report_recorded_by_process_reports_is_not_permanently_unprocessed
+    # ReportProcessor records processed_report on the step's metadata
+    # through the ace-task owner; the overseer-tree source carries it.
+    # Attention must derive processed state from that metadata instead of
+    # labeling every inbox report unprocessed forever.
+    snap = snapshot(
+      healthy_sources("overseer_tree" => FakeSource.new(data: [
+        {id: "8xg.t.mgr.0", status: "done", title: "Implement", dependencies: [],
+         special_folder: "_overseer", processed_report: "r8"},
+        {id: "8xg.t.mgr.1", status: "pending", title: "Integrate", dependencies: ["8xg.t.mgr.0"],
+         special_folder: "_overseer", processed_report: nil}
+      ])),
+      hitl_events: [
+        {"id" => "r8", "type" => "report", "title" => "Done", "result" => "success",
+         "task" => "8xg.t.prj", "assignment" => "w1"},
+        {"id" => "r9", "type" => "report", "title" => "Later", "result" => "success",
+         "task" => "8xg.t.prj", "assignment" => nil}
+      ]
+    )
+
+    rows = snap[:attention][:failures].select { |row| row[:kind] == "unprocessed_report" }
+    assert_equal ["r9"], rows.map { |row| row[:subject] },
+      "the processed report r8 must not stay a permanent unprocessed warning"
+  end
+
   def test_hitl_inbox_failure_is_missing_data_not_healthy
     collector = Ace::Overseer::Organisms::StatusCollector.new(
       worktree_manager: nil, context_collector: nil, project_root: "/project",

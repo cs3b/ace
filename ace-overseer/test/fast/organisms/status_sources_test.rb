@@ -173,11 +173,48 @@ class StatusSourcesTest < AceOverseerTestCase
 
     data = source.fetch
 
-    assert_equal 1, data.length
-    assert_equal 42, data[0][:number]
-    assert_equal "open", data[0][:state]
-    assert_equal true, data[0][:draft]
+    assert_equal 1, data[:pull_requests].length
+    assert_equal 42, data[:pull_requests][0][:number]
+    assert_equal "open", data[:pull_requests][0][:state]
+    assert_equal true, data[:pull_requests][0][:draft]
     assert_includes source.origin, "ace-git"
+  end
+
+  def test_forge_source_lists_issues_when_the_provider_has_a_listing_api
+    issue = Data.define(:number, :title, :state, :url)
+    provider = FakeProvider.new([])
+    provider.define_singleton_method(:recent_issues) do |limit:|
+      [issue.new(number: 7, title: "Broken build", state: :open, url: "https://x/issues/7")].first(limit)
+    end
+    source = Ace::Overseer::Organisms::StatusSources::ForgeSource.new(
+      server_resolver: -> { "server" },
+      provider_factory: ->(_server) { provider }
+    )
+
+    issues = source.fetch[:issues]
+
+    assert_equal 1, issues.length
+    assert_equal 7, issues[0][:number]
+    assert_equal "open", issues[0][:state]
+  end
+
+  def test_forge_source_marks_issues_unavailable_when_provider_has_no_listing_api
+    # Spec .6.1 promises PRs AND issues; a provider without an issue
+    # listing API must surface an explicit unavailable marker, never a
+    # silent pull-request-only view.
+    provider = FakeProvider.new([])
+    source = Ace::Overseer::Organisms::StatusSources::ForgeSource.new(
+      server_resolver: -> { "server" },
+      provider_factory: ->(_server) { provider }
+    )
+
+    issues = source.fetch[:issues]
+
+    assert_equal({status: "unavailable", reason: Ace::Overseer::Organisms::StatusSources::ForgeSource::ISSUES_UNAVAILABLE}, issues)
+    collector = collector_with(config: {}, sources: healthy_sources("forge" => source))
+    table = collector.to_sources_table(collector.collect_sources)
+    assert_includes table, "issues: UNAVAILABLE"
+    assert_includes table, "no issue-listing API"
   end
 
   def test_forge_source_offline_raises_and_aggregates_as_error
@@ -503,24 +540,82 @@ class StatusSourcesTest < AceOverseerTestCase
   def test_forge_limit_config_is_wired_through
     source = forge_source_with(3, config: {"limit" => 2})
 
-    assert_equal 2, source.fetch.length
+    assert_equal 2, source.fetch[:pull_requests].length
   end
 
   def test_forge_limit_typo_falls_back_to_default
     source = forge_source_with(3, config: {"limit" => "lots"})
 
-    assert_equal 3, source.fetch.length
+    assert_equal 3, source.fetch[:pull_requests].length
   end
 
   def test_forge_explicit_zero_limit_lists_nothing
     source = forge_source_with(3, config: {"limit" => 0})
 
-    assert_empty source.fetch
+    assert_empty source.fetch[:pull_requests]
   end
 
   def test_forge_negative_limit_clamps_to_zero
     source = forge_source_with(3, config: {"limit" => -5})
 
-    assert_empty source.fetch
+    assert_empty source.fetch[:pull_requests]
+  end
+
+  # --- Full descendant tree through the real ace-task owner (PR393 P2) ---
+
+  def with_real_task_tree(&block)
+    require "tmpdir"
+    Dir.mktmpdir("pr393-status") do |root|
+      parent = File.join(root, "_overseer", "8xg.t.mgr-manage")
+      FileUtils.mkdir_p(File.join(parent, "0-implement"))
+      FileUtils.mkdir_p(File.join(parent, "1-integrate"))
+      File.write(File.join(parent, "8xg.t.mgr.s.md"), "---\nstatus: progress\n---\n# Manage\n")
+      File.write(File.join(parent, "0-implement", "8xg.t.mgr.0.s.md"),
+        "---\nstatus: done\nparent: 8xg.t.mgr\nprocessed_report: ab12cd\n---\n# Implement\n")
+      File.write(File.join(parent, "1-integrate", "8xg.t.mgr.1.s.md"),
+        "---\nstatus: pending\nparent: 8xg.t.mgr\ndependencies: [8xg.t.missing]\n---\n# Integrate\n")
+      yield root
+    end
+  end
+
+  def test_overseer_tree_source_includes_lifecycle_steps_and_their_recorded_report
+    with_real_task_tree do |root|
+      tm = Ace::Task::Organisms::TaskManager.new(root_dir: root)
+
+      data = Ace::Overseer::Organisms::StatusSources::OverseerTreeSource.new(manager_factory: -> { tm }).fetch
+
+      ids = data.map { |row| row[:id] }
+      assert_equal %w[8xg.t.mgr 8xg.t.mgr.0 8xg.t.mgr.1], ids,
+        "the source must flatten the manager's full step tree, not only the manager row"
+      blocked = data.find { |row| row[:id] == "8xg.t.mgr.1" }
+      assert_equal ["8xg.t.missing"], blocked[:dependencies],
+        "a blocked child's dependency must survive so attention can resolve it"
+      recorded = data.find { |row| row[:id] == "8xg.t.mgr.0" }
+      assert_equal "ab12cd", recorded[:processed_report],
+        "the step's processed report must travel with the row"
+    end
+  end
+
+  def test_project_tasks_source_flattens_three_level_backlog
+    require "tmpdir"
+    Dir.mktmpdir("pr393-backlog") do |root|
+      primary = File.join(root, "8xg.t.prj-backlog")
+      group = File.join(primary, "6-l7-status")
+      leaf = File.join(group, "1-zebrac-status")
+      FileUtils.mkdir_p(leaf)
+      File.write(File.join(primary, "8xg.t.prj.s.md"), "---\nstatus: progress\n---\n# Backlog\n")
+      File.write(File.join(group, "8xg.t.prj.6.s.md"),
+        "---\nstatus: progress\nparent: 8xg.t.prj\n---\n# Status group\n")
+      File.write(File.join(leaf, "8xg.t.prj.6.1.s.md"),
+        "---\nstatus: pending\nparent: 8xg.t.prj.6\ndependencies: [8xg.t.prj.6]\n---\n# Configure status\n")
+      tm = Ace::Task::Organisms::TaskManager.new(root_dir: root)
+
+      data = Ace::Overseer::Organisms::StatusSources::ProjectTasksSource.new(manager_factory: -> { tm }).fetch
+
+      ids = data.map { |row| row[:id] }
+      assert_includes ids, "8xg.t.prj.6.1",
+        "grandchildren must be flattened through the owner's scanner/loader, not dropped"
+      assert_equal %w[8xg.t.prj 8xg.t.prj.6 8xg.t.prj.6.1], ids
+    end
   end
 end

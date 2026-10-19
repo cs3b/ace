@@ -34,14 +34,21 @@ module Ace
           end
         end
 
-        # Forge pull requests through the forge-neutral ace-git provider
-        # contract (the same registry ace-review/ace-git use). Default OFF
-        # in config; when enabled but unreachable (no server configured,
+        # Forge pull requests AND issues (spec .6.1: "PR/issues GitHub or
+        # Forgejo") through the forge-neutral ace-git provider contract
+        # (the same registry ace-review/ace-git use). Default OFF in
+        # config; when enabled but unreachable (no server configured,
         # provider CLI missing, network down) it raises and is shown as a
-        # per-source error, never as "no open PRs".
+        # per-source error, never as "no open PRs". Issue listing uses the
+        # provider's own listing API when it exposes one; when the
+        # provider package ships no issue-listing API the issues section
+        # carries an EXPLICIT per-source unavailable marker — issues are
+        # never silently substituted with pull-request-only data.
         class ForgeSource
-          ORIGIN = "ace-git Providers#recent_pull_requests"
+          ORIGIN = "ace-git Providers#recent_pull_requests + #recent_issues"
           DEFAULT_LIMIT = 20
+          ISSUES_UNAVAILABLE = "the resolved provider exposes no issue-listing API; " \
+            "issues are unavailable, not empty"
 
           def initialize(config: {}, server_resolver: nil, provider_factory: nil)
             @limit = resolve_limit(config["limit"])
@@ -54,19 +61,35 @@ module Ace
           def fetch
             server = @server_resolver.call
             provider = @provider_factory.call(server)
-            provider.recent_pull_requests(limit: @limit).map do |pr|
-              {
-                number: pr.number,
-                title: pr.title,
-                state: pr.state.to_s,
-                draft: pr.draft,
-                head_ref: pr.head_ref,
-                url: pr.url
-              }
-            end
+            {
+              pull_requests: provider.recent_pull_requests(limit: @limit).map do |pr|
+                {
+                  number: pr.number,
+                  title: pr.title,
+                  state: pr.state.to_s,
+                  draft: pr.draft,
+                  head_ref: pr.head_ref,
+                  url: pr.url
+                }
+              end,
+              issues: issues_of(provider)
+            }
           end
 
           private
+
+          # Issue listing stays the provider's own capability: when no
+          # listing API exists the unavailability is explicit, so the
+          # consumer can never read PR-only data as the full forge view.
+          def issues_of(provider)
+            unless provider.respond_to?(:recent_issues)
+              return {status: "unavailable", reason: ISSUES_UNAVAILABLE}
+            end
+
+            provider.recent_issues(limit: @limit).map do |issue|
+              {number: issue.number, title: issue.title, state: issue.state.to_s, url: issue.url}
+            end
+          end
 
           # Explicit 0 lists nothing; a negative limit clamps to 0; a
           # missing/typo'd value falls back to the default.
@@ -84,7 +107,12 @@ module Ace
         # every special folder, so the special_folder provenance field is
         # carried and the CONSUMER can tell project-root tasks from
         # `_overseer`/`_archive` entries (attention must not double-count
-        # or mislabel them as project blockers).
+        # or mislabel them as project blockers). The FULL descendant tree
+        # is flattened: TaskManager.list attaches direct subtasks, and
+        # deeper levels (a three-level backlog) are re-read through the
+        # owner's own scanner/loader — so blocked children and
+        # dependencies naming subtasks resolve instead of silently
+        # disappearing from status.
         class ProjectTasksSource
           ORIGIN = "ace-task TaskManager (.ace-tasks)"
           TASK_FIELDS = %i[id status title priority dependencies special_folder].freeze
@@ -97,15 +125,16 @@ module Ace
 
           def fetch
             manager = @manager_factory.call
-            manager.list(in_folder: "all", sort: "id").map do |task|
-              TASK_FIELDS.to_h { |field| [field, task.public_send(field)] }
-            end
+            TreeRows.flatten(manager.list(in_folder: "all", sort: "id"), TASK_FIELDS)
           end
         end
 
         # Private overseer tree (`.ace-tasks/_overseer/`) through the same
         # ace-task owner, addressed with the public `--in _overseer`
-        # folder surface.
+        # folder surface. The full descendant tree is flattened (see
+        # ProjectTasksSource), and each row carries the step's recorded
+        # processed report (the owner's task metadata) so consumers can
+        # tell a processed report from one still waiting.
         class OverseerTreeSource
           ORIGIN = "ace-task TaskManager (.ace-tasks/_overseer)"
           TASK_FIELDS = %i[id status title dependencies].freeze
@@ -119,10 +148,51 @@ module Ace
 
           def fetch
             manager = @manager_factory.call
-            manager.list(in_folder: "_overseer", sort: "id").map do |task|
-              entry = TASK_FIELDS.to_h { |field| [field, task.public_send(field)] }
+            TreeRows.flatten(manager.list(in_folder: "_overseer", sort: "id"), TASK_FIELDS).map do |entry|
               entry[:special_folder] = "_overseer"
               entry
+            end
+          end
+        end
+
+        # Depth-first flattening of the task tree through the owner's own
+        # interfaces: attached #subtasks first, and — where the owner's
+        # loader stops (it never attaches children to a parented task) —
+        # a read-only re-scan of the task's directory with the same
+        # TaskScanner/TaskLoader molecules ace-task itself uses. Nothing
+        # is cached or persisted; descendants inherit their parent's
+        # special folder because they live under the parent's directory.
+        module TreeRows
+          module_function
+
+          # @param tasks [Array<Object>] primary tasks from TaskManager#list
+          # @param fields [Array<Symbol>] serialized task fields
+          # @return [Array<Hash>] rows for the primary and every descendant
+          def flatten(tasks, fields)
+            Array(tasks).flat_map { |task| subtree_rows(task, fields) }
+          end
+
+          def subtree_rows(task, fields)
+            row = fields.to_h { |field| [field, task.public_send(field)] }
+            row[:processed_report] = task.metadata["processed_report"] if task.respond_to?(:metadata)
+            [row].concat(descendant_rows(task, fields))
+          end
+
+          def descendant_rows(task, fields)
+            children = task.respond_to?(:subtasks) ? Array(task.subtasks) : []
+            children = linked_descendants(task) if children.empty?
+            children.flat_map { |child| subtree_rows(child, fields) }
+          end
+
+          # @return [Array<Object>] children the owner's loader did not
+          #   attach, read from the task's own directory.
+          def linked_descendants(task)
+            return [] unless task.respond_to?(:path) && task.respond_to?(:id)
+
+            scanner = Ace::Task::Molecules::TaskScanner.new(".ace-tasks")
+            loader = Ace::Task::Molecules::TaskLoader.new
+            scanner.scan_subtasks(task.path.to_s, parent_id: task.id.to_s).filter_map do |result|
+              loader.load(result.dir_path, id: result.id, special_folder: task.special_folder)
             end
           end
         end

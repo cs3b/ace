@@ -264,13 +264,33 @@ module Ace
           end.join("\n")
         end
 
-        def format_forge_rows(pull_requests)
-          return "(no recent pull requests)" if pull_requests.empty?
-
-          pull_requests.map do |pr|
-            draft = pr[:draft] ? " draft" : ""
-            "##{pr[:number]}  #{pr[:state]}#{draft}  #{pr[:title]}  (#{pr[:head_ref]})"
-          end.join("\n")
+        # Forge data carries pull requests plus issues (or an explicit
+        # issues-unavailable marker when the provider has no listing API);
+        # a plain array is accepted for hand-built snapshots that predate
+        # the split shape.
+        def format_forge_rows(data)
+          lines = []
+          pull_requests = data.is_a?(Hash) ? Array(data[:pull_requests]) : Array(data)
+          lines << if pull_requests.empty?
+            "pull requests: (none)"
+          else
+            "pull requests:\n" + pull_requests.map do |pr|
+              draft = pr[:draft] ? " draft" : ""
+              "##{pr[:number]}  #{pr[:state]}#{draft}  #{pr[:title]}  (#{pr[:head_ref]})"
+            end.join("\n")
+          end
+          lines << if !data.is_a?(Hash)
+            "issues: (unverified legacy payload)"
+          elsif data[:issues].is_a?(Hash) && data[:issues][:status] == "unavailable"
+            "issues: UNAVAILABLE - #{data[:issues][:reason]}"
+          elsif Array(data[:issues]).empty?
+            "issues: (none)"
+          else
+            "issues:\n" + Array(data[:issues]).map do |issue|
+              "##{issue[:number]}  #{issue[:state]}  #{issue[:title]}"
+            end.join("\n")
+          end
+          lines.join("\n")
         end
 
         def format_herdr_tree(tree)

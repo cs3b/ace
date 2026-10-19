@@ -66,18 +66,27 @@ class ReportProcessorTest < AceOverseerTestCase
   end
 
   class FakeWorkOn
-    attr_reader :calls
+    attr_reader :calls, :starts
 
     def initialize(error: nil)
       @error = error
       @calls = []
+      @starts = []
     end
 
+    # Models the real work-on gate: launching into a worktree whose
+    # assignment is already active reuses it instead of starting a second
+    # executor, exactly like WorkOnOrchestrator#existing_assignment.
     def call(task_ref:, **)
       @calls << task_ref
       raise @error if @error
 
-      {task_ref: task_ref, assignment_id: "a9", worktree_path: "/wt/step"}
+      if @starts.include?(task_ref)
+        {task_ref: task_ref, assignment_id: "a9", worktree_path: "/wt/step", assignment_created: false}
+      else
+        @starts << task_ref
+        {task_ref: task_ref, assignment_id: "a9", worktree_path: "/wt/step", assignment_created: true}
+      end
     end
   end
 
@@ -137,9 +146,18 @@ class ReportProcessorTest < AceOverseerTestCase
     continuation = result[:outcomes].first[:continuation]
     assert_equal "handoff", continuation[:action]
     assert_equal "reviewer", continuation.dig(:next, "role")
+    # queue.wf.md section 4: the gate ensures the window; the overseer
+    # agent runs the printed command. The message must carry that command
+    # instead of asserting the handoff already started the role.
+    assert_equal "ace-coworker start --config .ace-local/coworker/prepare/reviewer.yml",
+      continuation[:start_command]
+    message = result[:outcomes].first[:message]
+    assert_includes message, "window ensured"
+    assert_includes message, "ace-coworker start --config .ace-local/coworker/prepare/reviewer.yml"
+    refute_includes message, "handed to the next role"
   end
 
-  def test_repeated_report_does_not_start_the_next_step_twice
+  def test_repeated_report_rechecks_continuation_without_second_start
     steps = [
       step("8xg.t.mgr.0", status: "progress", metadata: {"assignment" => "w1"}),
       step("8xg.t.mgr.1", status: "pending", dependencies: ["8xg.t.mgr.0"])
@@ -157,9 +175,46 @@ class ReportProcessorTest < AceOverseerTestCase
 
     assert_equal 1, first[:counts][:success]
     assert_equal 1, second[:counts][:duplicate]
+    # The report is recorded exactly once and never re-run...
     assert_equal 1, task_manager.updates.length
-    assert_equal 1, work_on.calls.length
+    assert_equal 1, work_on.starts.length, "a second executor must never start"
     assert_empty handoff.calls
+    # ...but the duplicate re-checks the continuation from current state
+    # instead of silently assuming it happened.
+    duplicate = second[:outcomes].first
+    assert_equal "work-on", duplicate[:continuation][:action]
+    assert_equal false, duplicate[:continuation][:assignment_created]
+    assert_includes duplicate[:message], "continuation re-checked"
+    assert_includes duplicate[:message], "already has an active assignment"
+  end
+
+  def test_recorded_report_with_failed_continuation_recovers_on_next_run
+    steps = [
+      step("8xg.t.mgr.0", status: "progress", metadata: {"assignment" => "w1"}),
+      step("8xg.t.mgr.1", status: "pending", dependencies: ["8xg.t.mgr.0"])
+    ]
+    task_manager = FakeTaskManager.new([manager(steps: steps,
+      metadata: {"project_task" => "8xg.t.prj", "worktree" => ".ace-wt/prj"})])
+    failed = FakeHandoff.new(error: Ace::Overseer::Error.new("terminal temporarily unavailable"))
+    first = Ace::Overseer::Organisms::ReportProcessor.new(
+      inbox: FakeInbox.new([report]), task_manager: task_manager, handoff: failed).call
+
+    assert_equal 1, first[:counts][:success]
+    assert_equal "blocked", first[:outcomes][0][:continuation][:action]
+
+    # The report result was persisted before the failed dispatch; a later
+    # run must resume the continuation from the recorded duplicate instead
+    # of letting it suppress the next role forever.
+    recovered = FakeHandoff.new
+    second = Ace::Overseer::Organisms::ReportProcessor.new(
+      inbox: FakeInbox.new([report]), task_manager: task_manager, handoff: recovered).call
+
+    assert_equal 1, second[:counts][:duplicate]
+    assert_equal 1, recovered.calls.size, "the next role was never started, yet the recorded report suppressed recovery"
+    continuation = second[:outcomes][0][:continuation]
+    assert_equal "handoff", continuation[:action]
+    assert_equal "ace-coworker start --config .ace-local/coworker/prepare/reviewer.yml",
+      continuation[:start_command]
   end
 
   def test_error_report_keeps_step_open_and_does_not_continue
@@ -203,6 +258,43 @@ class ReportProcessorTest < AceOverseerTestCase
     result = orchestrator.call
 
     assert_equal 1, result[:counts][:unmatched]
+    assert_empty task_manager.updates
+  end
+
+  def test_stale_assignment_report_with_matching_task_falsely_completing_nothing
+    steps = [
+      step("8xg.t.mgr.0", status: "done", metadata: {"assignment" => "w1"}),
+      step("8xg.t.mgr.1", status: "pending", metadata: {"assignment" => "r1"})
+    ]
+    task_manager = FakeTaskManager.new([manager(steps: steps)])
+
+    result = Ace::Overseer::Organisms::ReportProcessor.new(
+      inbox: FakeInbox.new([report(assignment: "stale-assignment")]),
+      task_manager: task_manager, handoff: FakeHandoff.new, work_on: FakeWorkOn.new).call
+
+    # The report's task matches the manager, but its assignment belongs to
+    # no open allocation: task-only matching must not complete the pending
+    # reviewer step.
+    assert_equal 1, result[:counts][:unmatched]
+    assert_equal "pending", steps.last.status
+    assert_empty task_manager.updates
+  end
+
+  def test_planner_readiness_report_never_completes_pending_integration
+    steps = [
+      step("8xg.t.mgr.0", status: "done"),
+      step("8xg.t.mgr.1", status: "done"),
+      step("8xg.t.mgr.2", status: "done"),
+      step("8xg.t.mgr.3", status: "pending", metadata: {"assignment" => "integrator"})
+    ]
+    task_manager = FakeTaskManager.new([manager(steps: steps)])
+
+    result = Ace::Overseer::Organisms::ReportProcessor.new(
+      inbox: FakeInbox.new([report(id: "planner-ready", assignment: nil)]),
+      task_manager: task_manager, handoff: FakeHandoff.new, work_on: FakeWorkOn.new).call
+
+    assert_equal 1, result[:counts][:unmatched]
+    assert_equal "pending", steps.last.status
     assert_empty task_manager.updates
   end
 
@@ -287,11 +379,17 @@ class ReportProcessorTest < AceOverseerTestCase
 
     assert_equal 1, result[:counts][:duplicate]
     assert_equal 0, result[:counts][:success]
+    # The done step is never re-advanced and nothing is re-recorded.
     assert_equal "done", managers.first.subtasks.first.status
     assert_equal "ab12cd", managers.first.subtasks.first.metadata["processed_report"]
-    assert_empty work_on.calls
+    assert_empty orchestrator.instance_variable_get(:@task_manager).updates
     assert_empty handoff.calls
-    assert_nil result[:outcomes].first[:continuation]
+    # The duplicate still resumes the queue: the report was recorded but
+    # step 8xg.t.mgr.1 was never started, so the continuation dispatches.
+    assert_equal ["8xg.t.mgr.1"], work_on.starts
+    continuation = result[:outcomes].first[:continuation]
+    assert_equal "work-on", continuation[:action]
+    assert_equal true, continuation[:assignment_created]
   end
 
   def test_nil_update_return_blocks_and_keeps_report_for_clarification
