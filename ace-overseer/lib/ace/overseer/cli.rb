@@ -3,6 +3,7 @@
 require "ace/support/cli"
 require "ace/core"
 require_relative "cli/commands/work_on"
+require_relative "cli/commands/handoff"
 require_relative "cli/commands/status"
 require_relative "cli/commands/prune"
 require_relative "cli/commands/projects"
@@ -17,6 +18,7 @@ module Ace
 
       REGISTERED_COMMANDS = [
         ["work-on", "Start local task work"],
+        ["handoff", "Hand the task worktree to the next role"],
         ["status", "Show status of task worktrees"],
         ["prune", "Remove stale task worktrees"],
         ["projects", "List visible public projects"],
@@ -25,11 +27,13 @@ module Ace
 
       HELP_EXAMPLES = [
         "ace-overseer work-on 148              # Launch task in worktree",
+        "ace-overseer handoff --task 148       # Hand the worktree to the next role",
         "ace-overseer status                   # All active worktrees",
         "ace-overseer prune                    # Clean up finished tasks"
       ].freeze
 
       register "work-on", Commands::WorkOn
+      register "handoff", Commands::Handoff
       register "status", Commands::Status
       register "prune", Commands::Prune
       register "projects", Commands::Projects

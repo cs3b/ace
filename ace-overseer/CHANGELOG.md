@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Add `ace-overseer handoff --task <ref>` (L6.4): hand the SAME task worktree to the next role in the prepared role sequence. The gate reads only real state — the worktree's role-sequence assignments (ace-assign files, composition order) with their current states, the per-leg start configs from `ace-coworker prepare`, and the worktree's executor truth via the coworker `ActiveExecutorRule` (new runtime dependency `ace-coworker`) — so two active executors are impossible: a failed, in-flight, stalled, or unknown-state predecessor refuses the handoff with reasons (unknown state is never a free resource), and a busy worktree never gets a second executor. On success it opens the next executor's window in the same worktree and prints `ace-coworker start --config .ace-local/coworker/prepare/<role>.yml`; nothing is re-prepared and no worktree is ever created (new pure atom `Atoms::HandoffReadiness`, molecule `Molecules::HandoffProbe`, organism `Organisms::HandoffOrchestrator`).
 - Gate `work-on` starts on dependency readiness (L6.3): a step starts only when every recorded `dependencies` predecessor has status `done` (accepted and integrated result). A finished worker or open PR does not unlock a dependent step; cancelled, skipped, missing, or cyclic predecessors block the start with explicit reasons before any worktree/assignment side effect (new pure atom `Atoms::DependencyReadiness`, wired into `WorkOnOrchestrator`).
 
 ### Removed

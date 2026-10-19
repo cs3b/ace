@@ -16,9 +16,10 @@ ace-docs:
 
 ## Command Surface
 
-Local work uses three commands:
+Local work uses four commands:
 
 - `ace-overseer work-on` - prepare a worktree, assignment, and terminal.
+- `ace-overseer handoff` - hand the task worktree to the next role in the prepared sequence.
 - `ace-overseer status` - show active task worktrees and assignment progress.
 - `ace-overseer prune` - remove completed task worktrees safely.
 
@@ -64,8 +65,43 @@ predecessor as satisfied -- with normal auto-archive the two agree, but on
 archived-non-terminal dirty data `list` may say ready while `work-on`
 blocks (work-on is the authority for starting).
 
-> **Planned (L4):** planner prepares the worktree and the entire assignment
-> sequence -- not available yet.
+> Planner preparation of a worktree and a whole role-sequence (one
+> assignment and start config per role) is delivered by `ace-coworker
+> prepare`; `ace-overseer handoff` walks that sequence leg by leg.
+
+## `ace-overseer handoff`
+
+Hand the SAME task worktree to the next role in the prepared role sequence
+(L6.4). The gate reads only real state: the worktree's role-sequence
+assignments (ace-assign files, in composition order), their current states,
+the per-leg start configs (`ace-coworker prepare`), and the worktree's
+executor truth via the coworker active-executor rule. Nothing is re-prepared;
+the next role starts from the existing start config.
+
+| Option | Purpose |
+|--------|---------|
+| `--task`, `-t` | Task ref whose worktree receives the next role |
+| `--runtime` | Terminal backend: `auto`, `tmux` or `herdr` |
+| `--dry-run` | Check handoff readiness without opening a window |
+| `--quiet`, `-q` | Suppress non-essential output |
+| `--debug`, `-d` | Show debug output |
+
+```bash
+ace-overseer handoff --task 8q4                 # worker finished -> reviewer
+ace-overseer handoff --task 8q4 --dry-run       # check only
+```
+
+Rules enforced mechanically: the handoff is ready only when every earlier leg
+reached ace-assign state `completed` (a failed, in-flight, stalled, paused
+predecessor, or an unknown/unreadable state refuses with reasons); no executor
+may hold the worktree (commissioned, in-flight, or unparseable config all
+block -- a busy worktree never gets a second executor and unknown state is
+never a free resource); the next leg must have its existing start config. On
+success a terminal window opens in the worktree and the exact start command
+is printed (`ace-coworker start --config .ace-local/coworker/prepare/<role>.yml`).
+When every leg is completed the command reports the sequence complete and
+opens nothing. Handoff never creates a worktree; two different tasks hand off
+independently in their own worktrees.
 
 ## `ace-overseer status`
 
@@ -153,9 +189,10 @@ ace-task update <B-step> --set dependencies=<A-integrate-ref>
 
 Binding rules: cross-task merge requirements depend on the integration step
 (never on worker completion); one active executor per task worktree across
-roles; implementation completion does not close a managing task while review
-or integration remains; coworker reports arrive via ace-hitl and only the
-overseer writes its list.
+roles (`ace-overseer handoff` enforces the role-sequence handoff in the same
+worktree mechanically); implementation completion does not close a managing
+task while review or integration remains; coworker reports arrive via ace-hitl
+and only the overseer writes its list.
 
 Full procedure: `ace-bundle wfi://overseer/queue`.
 

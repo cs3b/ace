@@ -135,6 +135,19 @@ Worker finishes → reviewer starts → integrator starts, in the same worktree:
 - The previous assignment's completion (and handover of any fixes) ends the
   previous allocation; only then does the next role begin there.
 
+- `ace-overseer handoff --task <project-task-ref>` enforces this gate
+  mechanically in the prepared worktree: it reads the role-sequence
+  assignments (ace-assign state), the per-leg start configs, and the
+  worktree's executor truth, and hands the worktree to the next role ONLY
+  when every earlier leg reached assignment state `completed` and no
+  executor holds the worktree. A busy, in-flight, failed, or unreadable
+  predecessor refuses with reasons; unknown state is never a free resource.
+  On success it opens the next executor's window in the same worktree and
+  prints `ace-coworker start --config .ace-local/coworker/prepare/<role>.yml`
+  -- the next role starts from the existing start config, nothing is
+  re-prepared. `--dry-run` checks without effects. Use it before every
+  dispatch into a worktree that already served a previous role.
+
 - Two different tasks may run in parallel in two different worktrees; one
   worktree never has two active executors.
 
