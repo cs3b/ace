@@ -121,6 +121,29 @@ module Ace
               "the stray report is recorded nowhere"
           end
 
+          # Crash cut at the FIRST boundary (PR #393 final audit finding
+          # #4): preparation became done and its readiness report was
+          # recorded, but the process died before the handoff dispatch.
+          # The same readiness report (no assignment — planner readiness)
+          # must resolve to the recorded duplicate and re-dispatch the
+          # continuation from current state, not fall out as unmatched
+          # and strand the sequence with no worker ever started.
+          def test_initial_readiness_crash_cut_resumes_worker
+            prepared, _worktree, manager = prepare_sequence
+            prep_step = "#{manager}.0"
+            readiness_event = prepared["report"]["event"]
+            run_cli(TASK_BIN, "update", prep_step, "--set",
+              "status=done,processed_report=#{readiness_event},report_result=success")
+
+            out = process_reports
+            assert_includes out,
+              "duplicate - report #{readiness_event} already recorded on #{prep_step} (result: success); " \
+              "continuation re-checked", "re-delivered readiness must resolve to the recorded duplicate:\n#{out}"
+            assert_includes out, "run there: ace-coworker start --config .ace-local/coworker/prepare/worker.yml",
+              "the never-dispatched handoff must resume and print the worker start command:\n#{out}"
+            assert_equal readiness_event, step_metadata(prep_step)["processed_report"]
+          end
+
           private
 
           def prepare_sequence

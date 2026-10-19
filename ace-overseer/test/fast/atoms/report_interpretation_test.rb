@@ -133,6 +133,27 @@ class ReportInterpretationTest < AceOverseerTestCase
     assert_nil verdict[:set]
   end
 
+  # Crash cut (PR #393 final audit finding #4): preparation became done
+  # with its readiness report recorded, but the continuation never
+  # dispatched. The re-delivered readiness (no assignment) must resolve
+  # to the recorded duplicate instead of unmatched, so the caller can
+  # re-evaluate continuation from current state.
+  def test_redelivered_readiness_on_done_preparation_is_duplicate_not_unmatched
+    manager = manager("8xg.t.mgr", steps: [
+      step("8xg.t.mgr.0", status: "done",
+        metadata: {"processed_report" => "ab12cd", "report_result" => "success"}),
+      step("8xg.t.mgr.1", status: "progress", metadata: {"assignment" => "w1"})
+    ], metadata: {"project_task" => "8xg.t.prj"})
+
+    verdict = Ace::Overseer::Atoms::ReportInterpretation.evaluate(
+      event: report(assignment: nil), managers: [manager])
+
+    assert_equal :duplicate, verdict[:status]
+    assert_equal "8xg.t.mgr.0", verdict[:step_ref]
+    assert_equal "success", verdict[:recorded_result]
+    assert_nil verdict[:set]
+  end
+
   def test_assignment_prefers_non_terminal_step_over_done_step
     manager = manager("8xg.t.mgr", steps: [
       step("8xg.t.mgr.0", status: "done", metadata: {"assignment" => "w1"}),

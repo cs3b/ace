@@ -123,8 +123,19 @@ module Ace
           event["type"] != REPORT_TYPE
         end
 
-        # Matching precedence: an assignment reference recorded on a step
-        # is the strongest binding, with non-terminal steps preferred (a
+        # Matching precedence: an already-RECORDED report identity is the
+        # strongest evidence of all — the step persisted this exact
+        # event id (crash between persisting the report and dispatching
+        # the continuation), so the re-delivery must resolve to the
+        # recorded result and let the caller re-evaluate continuation
+        # from current state, never fall out as unmatched. This check
+        # precedes every open-allocation filter, because a step that
+        # recorded a success report is terminal and would otherwise be
+        # filtered out (planner readiness has no assignment to bind it
+        # any other way).
+        #
+        # Next, an assignment reference recorded on a step is the
+        # strongest binding, with non-terminal steps preferred (a
         # terminal match can only ever resolve to :duplicate, never a
         # fresh advance). An explicit assignment that matches no step fits
         # no open allocation — there is NO fallback to task-only matching,
@@ -144,6 +155,9 @@ module Ace
         #
         # @return [Hash{manager:, step:, terminal:}, nil]
         def self.match(event, managers)
+          recorded = recorded_match(event, managers)
+          return recorded if recorded
+
           assignment = event["assignment"].to_s
           if assignment != ""
             matches = managers.flat_map do |manager|
@@ -175,6 +189,25 @@ module Ace
           return nil if matches.empty?
 
           {manager: matches.first[:manager], step: matches.first[:step], terminal: false}
+        end
+
+        # The single step that already recorded this exact event id, if
+        # any — evidence that this delivery is a re-send of a persisted
+        # report, independent of assignment references and open-allocation
+        # state. An id recorded on more than one step (corrupt tree) is
+        # ambiguous and matches nothing.
+        #
+        # @return [Hash{manager:, step:, terminal:}, nil]
+        def self.recorded_match(event, managers)
+          matches = managers.flat_map do |manager|
+            steps_of(manager).filter_map do |step|
+              {manager: manager, step: step} if step.metadata[PROCESSED_REPORT_KEY] == event["id"]
+            end
+          end
+          return nil if matches.size != 1
+
+          {manager: matches.first[:manager], step: matches.first[:step],
+           terminal: terminal?(matches.first[:step])}
         end
 
         # @return [String] why the event fit no open allocation
