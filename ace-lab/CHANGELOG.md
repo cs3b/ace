@@ -9,6 +9,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `ace-lab verify` (L8.5, task 8xg.t.sbz.7.4): read-only end-of-install
+  readiness verification UNDER THE TARGET ACCOUNTS. For every account,
+  directory, key pair, role, project and grant declared in the trusted
+  install manifest it recomputes the facts from the same artifacts
+  install/resume derive truth from — no journal, no second state
+  owner, nothing written. Checks: account existence/login class
+  (non-login shells block readiness), declared directory mode/owner,
+  key pair usability (0600/0644/`.ssh` 0700 modes, account ownership,
+  and the public fingerprint matching the key derived from the private
+  half — the exact probe `prepare` applies, now exposed as a public
+  read-only `KeyProvisioner#pair_fingerprint`), role instruction
+  readability by the role's account (the `prepare` role verifier),
+  repository structure with origin matching the manifest remote
+  (local origins probed with `git ls-remote`; network origins reported
+  `unknown`, not dialed by the read-only verifier), principal grants
+  resolved through the real read-side mechanics (`CallerAuthorizer`)
+  against the trusted document, per-project registry visibility, and
+  the private `.ace-tasks/_overseer/` folder being present and
+  Git-ignored (`git check-ignore`). Every check reports pass/fail/
+  unknown with a concrete reason; a failure never hides healthy data
+  (the full report renders first) and blocks the `ready` verdict; the
+  command exits non-zero naming every failed check. Output: table or
+  stable JSON (`ready`/`checks`/`counts`) for the overseer or the next
+  tool. A fresh install and a resumed one verify identically.
+
 - Resuming the installer's own interrupted installation (L8.4, task
   8xg.t.sbz.7.3): re-running `ace-lab install` after a mid-run crash
   recognizes the partial state — derived from the real artifacts the
@@ -82,6 +107,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `StatusService` organism — table/json/`-q` output preserved.
 
 ### Fixed
+
+- `KeyProvisioner`'s internal pair-usability probe could return
+  `false` instead of `nil` for an unusable pair (the new public
+  `pair_fingerprint` probe normalizes to `nil`); existing internal
+  callers treated both as falsy and were unaffected.
 
 - `GrantProvisioner` failure reports now carry `kept: []` like every
   other grants status, so machine consumers of the install report see

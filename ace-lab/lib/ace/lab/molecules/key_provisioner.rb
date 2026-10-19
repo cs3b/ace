@@ -63,6 +63,22 @@ module Ace
             "rerun ace-lab prepare"}
         end
 
+        # Public READ-ONLY pair probe (L8.5, task 8xg.t.sbz.7.4): the
+        # exact usability check the provisioner itself applies after
+        # convergence, exposed so the readiness verifier reuses the
+        # same logic instead of reimplementing it. Mutates nothing on
+        # the provisioned path (a mode-drifted private key is probed
+        # via a 0600 copy in a private tmpdir); secret hygiene holds —
+        # only the public fingerprint is ever returned.
+        #
+        # @param path [String] private key path
+        # @param public_path [String] public key path
+        # @return [String, nil] SHA256 fingerprint when the pair is
+        #   usable, nil otherwise
+        def pair_fingerprint(path, public_path)
+          probe_pair_fingerprint(path, public_path)
+        end
+
         private
 
         def provision(key, account, machine)
@@ -217,7 +233,7 @@ module Ace
           # the same repair verdict the wet path would produce.
           return [:repair_public, nil] if lstat(public_path).nil?
 
-          fingerprint = pair_fingerprint(path, public_path)
+          fingerprint = probe_pair_fingerprint(path, public_path)
           fingerprint ? [:verified, fingerprint] : [:unusable, nil]
         end
 
@@ -397,13 +413,14 @@ module Ace
         # tmpdir for the duration of one read-only comparison. A pair
         # that cannot be verified is a failed item, never exists or
         # created with fingerprint:nil.
-        def pair_fingerprint(path, public_path)
+        def probe_pair_fingerprint(path, public_path)
           public_fingerprint = read_fingerprint(public_path)
           return nil unless public_fingerprint
 
-          with_derivable_private(path) do |private_path|
+          usable = with_derivable_private(path) do |private_path|
             derived_matches_public?(private_path, public_fingerprint)
-          end && public_fingerprint
+          end
+          usable ? public_fingerprint : nil
         end
 
         # Whether the public key ssh-keygen derives from the private
@@ -443,7 +460,7 @@ module Ace
         end
 
         def verified_result(base, success_status, path, public_path, failure_message)
-          fingerprint = pair_fingerprint(path, public_path)
+          fingerprint = probe_pair_fingerprint(path, public_path)
           if fingerprint
             base.merge("status" => success_status, "fingerprint" => fingerprint, "message" => nil)
           else

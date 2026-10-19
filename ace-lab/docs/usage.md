@@ -2,9 +2,9 @@
 
 `ace-lab` exposes read-only topology queries, the lab status snapshot, the
 `prepare` phase of the lab installer (L8.1), `project add` project
-onboarding (L8.2), and the full installer `install` (L8.3). Resuming an
-interrupted install beyond idempotent re-runs and end-to-end readiness
-verification under the target accounts are **planned (L8.4/L8.5)**.
+onboarding (L8.2), the full installer `install` (L8.3, which also resumes
+its own interrupted installation, L8.4), and the end-to-end readiness
+verification `verify` (L8.5).
 
 The file-based ownership model is documented once in
 [../../docs/lab-flow.md](../../docs/lab-flow.md).
@@ -495,9 +495,56 @@ concretely (`install failed (N step(s)): <phase>/<item>: <message>`);
 and exits 0.
 
 Boundaries: `install` does not verify readiness under the target
-accounts (L8.5, task 8xg.t.sbz.7.4); HITL adapter configuration beyond
+accounts (that is `verify`, below); HITL adapter configuration beyond
 preserving the existing trusted document sections is not orchestrated
 by this slice.
+
+## Verify (L8.5)
+
+### `ace-lab verify [--format table|json] [-q]`
+
+```bash
+ace-lab verify                 # per-check table; exit 0 only when ready
+ace-lab verify --format json   # stable machine report for the overseer / next tool
+```
+
+`verify` is the read-only end-of-install check that the lab is ready
+UNDER THE TARGET ACCOUNTS — not merely for the installer's account. It
+reads the same artifacts `install`/`prepare` derive truth from (the
+trusted install manifest, the filesystem's permission bits and
+ownership, the repositories, the per-project registry and the trusted
+authorization document) and writes nothing anywhere: no journal, no
+second state owner. Because it judges converged artifacts only, a
+fresh install and a resumed one verify identically — there is no
+hidden gap after resume.
+
+Per-check sections, each reported as `pass` / `fail` / `unknown` with
+a concrete reason (never a bare boolean):
+
+| Section | Checks, as the target account |
+| --- | --- |
+| accounts | account exists; home matches the manifest; login shell is usable (non-login shells block readiness) |
+| directories | declared directory exists with the declared mode and owner |
+| keys | the pair is usable: modes (0600/0644/`.ssh` 0700), account ownership, and the public fingerprint matches the key derived from the private half (the same probe `prepare` applies) |
+| roles | instruction source readable by the role's account (the `prepare` role verifier) |
+| repositories | the path is the repository toplevel, the origin matches the manifest remote; local origins are probed with `git ls-remote`, network origins are reported `unknown` (not dialed by the read-only verifier) |
+| grants | the trusted document is present and verifiable, and every manifest principal's grants resolve through the real read-side mechanics (`CallerAuthorizer`) to the declared projects |
+| registry | each project is registered in its `.ace/lab/config.yml` (visibility through the configuration cascade) |
+| overseer | `.ace-tasks/_overseer/` exists and is ignored by Git (`git check-ignore`) |
+
+The overall verdict is `ready` only when no check failed. A failure
+never hides healthy data: the full report renders first (table or
+JSON), then the command exits non-zero naming every failed check
+concretely (`lab is not ready (N failed check(s)): <section>/<item>:
+<reason>`). `unknown` (a network remote) is reported and counted but
+does not block readiness — it is not a failure, and treating it as one
+would make `verify` unusable offline. The JSON report shape is stable:
+`ready`, `machine`, `manifest`, `authorization_path`, `checks`
+(per-section lists), and `counts` (`pass`/`fail`/`unknown`).
+
+Key material hygiene is inherited from the provisioner: only the
+public fingerprint ever appears in a report; private key bytes stay
+inside the `ssh-keygen` subprocess.
 
 ## Planned waves
 
@@ -505,12 +552,12 @@ by this slice.
 > (configurable `ace-overseer status` aggregation, pi continuation) lives in
 > its own packages and is not available yet.
 >
-> **Planned (L8):** end-to-end readiness verification under the target
-> accounts (L8.5) is not available yet. The preparation phase is
-> delivered as `ace-lab prepare` (L8.1), project onboarding as
-> `ace-lab project add` (L8.2), the full installer as `ace-lab
-> install` (L8.3), and resuming the installer's own interrupted
-> installation as the same `ace-lab install` re-run (L8.4).
+> **Planned (L8):** the preparation phase is delivered as `ace-lab
+> prepare` (L8.1), project onboarding as `ace-lab project add` (L8.2),
+> the full installer as `ace-lab install` (L8.3), resuming the
+> installer's own interrupted installation as the same `ace-lab
+> install` re-run (L8.4), and end-to-end readiness verification under
+> the target accounts as `ace-lab verify` (L8.5).
 
 ## Boundaries
 
