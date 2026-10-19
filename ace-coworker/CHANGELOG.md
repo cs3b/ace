@@ -9,13 +9,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Review-round convergence enforcement (8xg.t.sbz.4.2 / L5.2): the 3/2/10
+  rule is now working code. `Ace::Coworker::Atoms::RoundRule` is a pure
+  evaluator over round records (type full|delta, status
+  completed|aborted, confirmed severities, resolved references) returning
+  an explicit verdict `:continue | :accept | :escalate` plus derived
+  counters (full rounds, completed full rounds, consecutive clean,
+  unresolved High/Critical). Minimum 3 full rounds with the last 2
+  consecutive clean and no unresolved earlier High/Critical accepts
+  (so clean/clean/clean and error/clean/clean both finish at round 3);
+  no acceptance after 10 full rounds escalates as an outcome, never an
+  exception. Delta/fix-diff rounds never advance the counters;
+  interrupted/aborted rounds are not clean and a confirmed High/Critical
+  resets the streak. `Molecules::ReviewRoundStore` persists the round
+  history per assignment in
+  `.ace-local/coworker/review-rounds/<assignment>.json` (the
+  coworker-owned location, following `ReportStateStore`), so a restart
+  reloads the counters and findings history instead of resetting them.
 - Reviewer role (8xg.t.sbz.4.1 / L5.2): shipped preset
   `.ace-defaults/coworker/roles/reviewer.yml` and the self-contained
   `wfi://coworker/reviewer` workflow. The reviewer is independent of the
   worker, fixes confirmed defects itself inside its own single assignment
   (steps added via `ace-assign add`), checks each fix diff, and returns to
-  full review rounds under the 3/2/10 convergence rule (stated, not yet
-  deterministically enforced — that is 8xg.t.sbz.4.2). No effective fix or a
+  full review rounds under the 3/2/10 convergence rule (deterministic
+  enforcement landed as 8xg.t.sbz.4.2, see above). No effective fix or a
   needed product decision is escalated via an `ace-hitl` decision question;
   unresolved High/Critical is never marked as success.
 - `ace-review` declared as a runtime dependency: the reviewer role's primary

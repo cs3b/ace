@@ -70,7 +70,11 @@ success), `spec` (complete behavior-first specification; significant
 unresolved gaps are reported, never guessed), and `reviewer` (independent
 review of the delivered change; fixes confirmed defects itself inside its own
 assignment, checks each fix diff, and returns to full review rounds under the
-3/2/10 convergence rule; escalates instead of marking unresolved
+3/2/10 convergence rule - deterministically enforced by
+`Ace::Coworker::Atoms::RoundRule` (:continue | :accept | :escalate) with the
+persisted round history in `.ace-local/coworker/review-rounds/<assignment>.json`
+(`Molecules::ReviewRoundStore`; a restart reloads the counters instead of
+resetting them); escalates instead of marking unresolved
 High/Critical as success). Their instruction workflows are
 `wfi://coworker/worker`, `wfi://coworker/spec`, and
 `wfi://coworker/reviewer`. Role assignments are prepared by the planner (L4)

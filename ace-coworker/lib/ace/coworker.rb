@@ -27,6 +27,7 @@ module Ace
       autoload :ActiveExecutorRule, "ace/coworker/atoms/active_executor_rule"
       autoload :RolePresetSchema, "ace/coworker/atoms/role_preset_schema"
       autoload :PromptTemplate, "ace/coworker/atoms/prompt_template"
+      autoload :RoundRule, "ace/coworker/atoms/round_rule"
     end
 
     module Molecules
@@ -45,6 +46,7 @@ module Ace
       autoload :WorktreeProvisionProbe, "ace/coworker/molecules/worktree_provision_probe"
       autoload :WorktreeExecutorProbe, "ace/coworker/molecules/worktree_executor_probe"
       autoload :RolePresetLoader, "ace/coworker/molecules/role_preset_loader"
+      autoload :ReviewRoundStore, "ace/coworker/molecules/review_round_store"
     end
 
     module Organisms
