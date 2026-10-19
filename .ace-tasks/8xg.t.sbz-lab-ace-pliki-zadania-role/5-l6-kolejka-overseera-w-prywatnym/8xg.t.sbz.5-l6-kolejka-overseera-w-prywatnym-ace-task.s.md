@@ -1,6 +1,6 @@
 ---
 id: 8xg.t.sbz.5
-status: in-progress
+status: done
 priority: high
 created_at: "2026-10-17 18:53:35"
 estimate: large
