@@ -100,8 +100,15 @@ module Ace
           File.exist?(path) && !(File.directory?(path) && Dir.children(path).empty?)
         end
 
+        # Raw stored remote URL: `git remote get-url` applies
+        # url.<base>.insteadOf rewrites from the invoking user's git
+        # config, so an identical project would false-fail the
+        # idempotent reuse check under a common SSH rewrite (LAB-7).
+        # Connection rewriting is Git transport policy, not a changed
+        # project identity — compare the stored URL the same way the
+        # final verifier does.
         def origin_url(path)
-          result = runner.call(["git", "-C", path, "remote", "get-url", "origin"])
+          result = runner.call(["git", "-C", path, "config", "--get", "remote.origin.url"])
           success?(result) ? result["out"].to_s.strip : nil
         end
 

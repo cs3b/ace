@@ -43,7 +43,8 @@ module Ace
             report = JSON.parse(out)
             assert_equal "atlas", report["project"]
             assert report["ok"]
-            assert_equal %w[repository overseer registry], report.keys - %w[ok dry_run project path remote]
+            assert_equal %w[repository overseer registry owner],
+              report.keys - %w[ok dry_run project path remote]
           end
 
           def test_dry_run_predicts_without_mutating

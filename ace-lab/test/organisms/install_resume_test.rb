@@ -38,6 +38,8 @@ module Organisms
         home = File.join(dir, "home", "ace-worker")
         labs = File.join(dir, "labs")
         key_path = File.join(home, ".ssh", "id_ed25519")
+        instructions = File.join(dir, "instructions.md")
+        File.write(instructions, "# worker instructions\n")
         manifest_path = File.join(dir, "install.yml")
         auth_path = File.join(dir, "authorization.yml")
 
@@ -58,7 +60,7 @@ module Organisms
           roles:
             - id: worker
               account: ace-worker
-              instructions: wfi://lab/worker
+              instructions: #{instructions}
           projects:
             - id: atlas
               path: #{labs}/atlas
@@ -86,10 +88,18 @@ module Organisms
       entry = FakeEntry.new(name: "ace-worker", uid: Process.uid, gid: Process.gid,
         dir: fixture["home"])
       lookup = ->(name) { name == "ace-worker" ? entry : nil }
-      documents = {fixture["manifest"] => File.read(fixture["manifest"])}
-      documents[fixture["auth"]] = File.read(fixture["auth"]) if File.exist?(fixture["auth"])
-      resolver = StubResolver.new(documents)
-      Ace::Lab::Molecules::GrantResolver.stub :read_verified, ->(path) { documents[path] } do
+      # Pre-run snapshot for the grants molecule (convergence decides
+      # against the state it found); the class-method seam reads the
+      # manifest from the snapshot and everything else from DISK, so
+      # install's final verify stage reads the grants document the run
+      # just wrote.
+      snapshot = {fixture["manifest"] => File.read(fixture["manifest"])}
+      snapshot[fixture["auth"]] = File.read(fixture["auth"]) if File.exist?(fixture["auth"])
+      resolver = StubResolver.new(snapshot)
+      Ace::Lab::Molecules::GrantResolver.stub :read_verified,
+        ->(path) do
+          path == fixture["manifest"] ? snapshot[path] : (File.file?(path) ? File.read(path) : nil)
+        end do
         Ace::Lab::Organisms::Install.new(
           manifest_path: fixture["manifest"], account_lookup: lookup, platform: "linux",
           grants: Ace::Lab::Molecules::GrantProvisioner.new(

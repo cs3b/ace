@@ -4,6 +4,7 @@ require "json"
 require "ace/support/cli"
 require "ace/core"
 require_relative "../../organisms/install"
+require_relative "verify"
 
 module Ace
   module Lab
@@ -13,7 +14,7 @@ module Ace
           include Ace::Support::Cli::Base
 
           # Step names inside a per-project report (ProjectAdd shape).
-          PROJECT_STEPS = %w[repository overseer registry].freeze
+          PROJECT_STEPS = %w[repository overseer registry owner].freeze
 
           desc "Perform the full new-lab installation from the trusted install manifest " \
             "(prepare, per-project project add, trusted-tier grants)"
@@ -93,8 +94,30 @@ module Ace
             end
             lines << "  #{grants['message']}" if grants["message"]
 
+            lines.concat(render_verify(report["verify"]))
+
             lines << "Result: #{report['ok'] ? 'ok' : 'FAILED'}"
             lines.join("\n")
+          end
+
+          # Final install verification stage: the readiness verdict with
+          # every failed check named (adapters and tools included).
+          def render_verify(verify_report)
+            return ["Verify: skipped (#{verify_report['message']})"] if verify_report["status"] == "skipped"
+
+            counts = verify_report["counts"] || {}
+            verdict = verify_report["ready"] ? "ready" : "NOT READY"
+            lines = ["Verify: #{verdict} (#{counts.fetch('pass', 0)} pass, " \
+              "#{counts.fetch('fail', 0)} failed, #{counts.fetch('unknown', 0)} unknown)"]
+            Ace::Lab::CLI::Commands::Verify::SECTION_LABELS.each do |section, label_key|
+              Array(verify_report.dig("checks", section)).each do |check|
+                next unless check["status"] == "fail"
+
+                name = check[label_key] || check["path"] || section
+                lines << "  #{section}/#{name}: #{check['reason']}"
+              end
+            end
+            lines
           end
 
           def prepare_failures(prepare_report)
@@ -116,6 +139,18 @@ module Ace
             end
             if report["grants"]["status"] == "failed"
               failures << "grants: #{report['grants']['message']}"
+            end
+            verify_report = report["verify"]
+            if verify_report.is_a?(Hash) && verify_report["ready"] == false
+              Ace::Lab::CLI::Commands::Verify::SECTION_LABELS.each do |section, label_key|
+                Array(verify_report.dig("checks", section)).each do |check|
+                  next unless check["status"] == "fail"
+
+                  name = check[label_key] || check["path"] || section
+                  failures << "verify/#{section}/#{name}: #{check['reason']}"
+                end
+              end
+              failures << "verify: #{verify_report['message']}" if verify_report["message"]
             end
             "install failed (#{failures.size} step(s)): #{failures.join('; ')}"
           end

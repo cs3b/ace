@@ -5,6 +5,7 @@ require_relative "../molecules/install_manifest_loader"
 require_relative "../molecules/key_provisioner"
 require_relative "../molecules/role_verifier"
 require_relative "../molecules/caller_authorizer"
+require_relative "../atoms/topology_schema"
 require "open3"
 require "yaml"
 require "date"
@@ -54,38 +55,46 @@ module Ace
         #   (defaults to GrantResolver.read_verified)
         # @param authorization_path [String, nil] trusted grants
         #   location (defaults to the fixed deployment path)
+        # @param nav_runner [Proc, nil] (argv, cwd) runner seam for
+        #   resolving protocol role instructions through ace-nav
         # @param platform [String, nil] "darwin" / "linux"
         def initialize(manifest_path: nil, runner: nil, account_lookup: nil,
-          group_source: nil, trusted_read: nil, authorization_path: nil, platform: nil)
+          group_source: nil, trusted_read: nil, authorization_path: nil, nav_runner: nil,
+          platform: nil)
           @manifest_path = manifest_path || Ace::Lab.install_manifest_path
           @runner = runner || method(:run_argv)
           @account_lookup = account_lookup || method(:lookup_passwd)
           @group_source = group_source
           @trusted_read = trusted_read || ->(path) { Molecules::GrantResolver.read_verified(path) }
           @authorization_path = authorization_path || Ace::Lab.authorization_path
+          @nav_runner = nav_runner || method(:run_nav)
           @platform = platform
         end
 
         # @return [Hash] {ready:, machine:, manifest:,
         #   authorization_path:, checks: {accounts:, directories:,
         #   keys:, roles:, repositories:, grants:, registry:,
-        #   overseer:}, counts: {pass:, fail:, unknown:}}
+        #   overseer:, adapters:, tools:}, counts: {pass:, fail:,
+        #   unknown:}}
         # @raise [Ace::Lab::InvalidConfigurationError] missing,
         #   untrusted or schema-invalid manifest — same classification
         #   as install/prepare
         def call
           manifest = Molecules::InstallManifestLoader.load(path: manifest_path, platform: platform)
           entries = manifest["accounts"].to_h { |a| [a["username"], @account_lookup.call(a["username"])] }
+          executors = target_executors(manifest, entries)
 
           checks = {
             "accounts" => check_accounts(manifest, entries),
             "directories" => check_directories(manifest, entries),
             "keys" => check_keys(manifest, entries),
             "roles" => check_roles(manifest),
-            "repositories" => check_repositories(manifest),
+            "repositories" => check_repositories(manifest, executors),
             "grants" => check_grants(manifest),
             "registry" => check_registry(manifest),
-            "overseer" => check_overseer(manifest)
+            "overseer" => check_overseer(manifest),
+            "adapters" => check_adapters(manifest),
+            "tools" => check_tools(manifest)
           }
           flat = checks.values.flatten(1)
           {
@@ -173,20 +182,101 @@ module Ace
           end
         end
 
+        # Final verification resolves role instructions through the
+        # ACTUAL resolver for the execution context (LAB-4): prepare's
+        # protocol check is deliberately syntax-only, so reusing it as
+        # readiness would promote a syntactically valid but
+        # nonexistent role (`wfi://does-not-exist/not-a-role`) to
+        # verified readiness. Protocol instructions are resolved with
+        # ace-nav from every declared project root (the execution
+        # contexts the executor works in); a role that fails resolution
+        # is a failed check, an environment without the resolver
+        # reports unknown (offline verifier posture, like network
+        # remotes) and does not block.
         def check_roles(manifest)
           verifier = Molecules::RoleVerifier.new(
             account_lookup: @account_lookup, group_source: @group_source
           )
           manifest["roles"].map do |role|
             report = verifier.call(role: role)
+            if report["status"] == "verified"
+              status, reason = protocol_resolution(role["instructions"], manifest)
+            else
+              status, reason = FAIL, report["message"]
+            end
             {"id" => role["id"], "account" => role["account"],
              "instructions" => role["instructions"],
-             "status" => report["status"] == "verified" ? PASS : FAIL,
-             "reason" => report["message"]}
+             "status" => status, "reason" => reason}
           end
         end
 
-        def check_repositories(manifest)
+        # @return [Array<(String, String, nil)>] pass/fail/unknown with
+        #   reason for protocol instructions; file-path instructions
+        #   were already resolved (readability) by the RoleVerifier.
+        def protocol_resolution(instructions, manifest)
+          unless Molecules::RoleVerifier::PROTOCOL_PREFIXES.any? { |p| instructions.start_with?(p) }
+            return [PASS, nil]
+          end
+
+          contexts = manifest["projects"].map { |project| project["path"] }
+          if contexts.empty?
+            return [PASS, "no project declared as an execution context; syntax verified only"]
+          end
+
+          failures = []
+          unresolved_resolver = false
+          contexts.each do |root|
+            result = @nav_runner.call([nav_binary(root), "resolve", instructions], root)
+            if result["status"] == "ok" && !result["out"].to_s.lines.first.to_s.strip.empty?
+              next
+            end
+
+            if %w[enoent exec_failed].include?(result["status"])
+              unresolved_resolver = true
+            else
+              failures << "project '#{File.basename(root)}': #{resolution_error(result)}"
+            end
+          end
+          return [FAIL, "role instructions '#{instructions}' do not resolve through ace-nav " \
+            "for the execution context (#{failures.join('; ')})"] unless failures.empty?
+          return [UNKNOWN, "ace-nav is not available to resolve role instructions " \
+            "'#{instructions}'; not probed by the read-only verifier"] if unresolved_resolver
+
+          [PASS, nil]
+        end
+
+        def resolution_error(result)
+          detail = result["err"].to_s.lines.map(&:strip).reject(&:empty?).first
+          detail ? detail : "ace-nav exited with status #{result['status']}"
+        end
+
+        # Same binary choice the executor's resolver makes
+        # (Ace::Coworker::Molecules::InstructionResolver): the
+        # project's binstub when present, otherwise the PATH lookup.
+        def nav_binary(project_root)
+          binstub = File.join(project_root, "bin", "ace-nav")
+          File.executable?(binstub) ? binstub : "ace-nav"
+        end
+
+        def run_nav(argv, cwd)
+          out, err, status = Open3.capture3(*argv, chdir: cwd)
+          {"status" => status.success? ? "ok" : (status.exitstatus || "signal #{status.termsig}"),
+           "out" => out, "err" => err}
+        rescue Errno::ENOENT
+          {"status" => "enoent", "out" => "", "err" => ""}
+        rescue SystemCallError, IOError => e
+          {"status" => "exec_failed", "out" => "", "err" => e.class.name}
+        end
+
+        # The declared target executors: the distinct accounts the
+        # manifest binds roles to (nil entries — accounts that failed
+        # lookup — are dropped; the accounts check already fails those).
+        def target_executors(manifest, entries)
+          manifest["roles"].filter_map { |role| entries[role["account"]] }
+            .uniq { |entry| entry.uid }
+        end
+
+        def check_repositories(manifest, executors)
           manifest["projects"].map do |project|
             path = project["path"]
             remote = project["remote"]
@@ -199,6 +289,19 @@ module Ace
               else
                 "'#{path}' origin is '#{origin}' but the manifest declares '#{remote}'"
               end
+            end
+            # Readiness is judged for the target EXECUTOR, not the
+            # invoking installer (LAB-2): a repository behind an
+            # installer-owned 0700 ancestor with a different target UID
+            # is NOT ready even though the installer's git succeeded.
+            if reason.nil?
+              reason = executors.filter_map do |entry|
+                access = Molecules::RoleVerifier.new(
+                  account_lookup: @account_lookup, group_source: @group_source
+                ).directory_access_reason(path, entry)
+                access ? "executor '#{entry.name}': #{access}" : nil
+              end.join("; ")
+              reason = nil if reason.empty?
             end
 
             status, reach = if reason
@@ -225,6 +328,15 @@ module Ace
         # manifest principals' identities.
         def check_grants(manifest)
           document_check = installed_principles
+          if document_check["missing"] && manifest["grants"].empty?
+            # No grants declared: the trusted document is not part of
+            # this lab's contract, and none was written — requiring one
+            # would make a grants-less manifest permanently unready.
+            return [{"principal" => "(document)", "status" => PASS,
+                     "reason" => "no grants declared; no trusted authorization document required",
+                     "projects" => nil}]
+          end
+          document_check.delete("missing") # internal only — keep JSON schema uniform
           return [document_check] if document_check["status"] == FAIL
 
           principals = document_check.delete("principals") # internal only — keep JSON schema uniform
@@ -261,7 +373,7 @@ module Ace
               "projects" => nil}
           end
           if content.nil?
-            return {"principal" => "(document)", "status" => FAIL,
+            return {"principal" => "(document)", "status" => FAIL, "missing" => true,
               "reason" => "trusted authorization file #{path} is missing; no principal can see " \
                 "the installed projects — rerun ace-lab install", "projects" => nil}
           end
@@ -302,6 +414,17 @@ module Ace
           end
           return "'#{path}' must contain a YAML mapping" unless document.is_a?(Hash)
 
+          # Shape validation through the same schema every registry
+          # consumer applies (LAB-6): a syntactically valid but
+          # structurally malformed document (`topology: invalid`) must
+          # become a classified per-project failure, never a TypeError
+          # that kills the whole readiness report.
+          begin
+            Atoms::TopologySchema.normalize!(document)
+          rescue Ace::Lab::InvalidConfigurationError => e
+            return "'#{path}' is not a valid lab configuration: #{e.message}"
+          end
+
           projects = document.dig("topology", "projects")
           entry = projects.is_a?(Array) ? projects.find { |c| c.is_a?(Hash) && c["id"] == project["id"] } : nil
           return "'#{path}' does not register project '#{project["id"]}'" if entry.nil?
@@ -326,6 +449,53 @@ module Ace
         end
 
         # --- shared probes ------------------------------------------------
+
+        # Declared communication/HITL adapters (task 8xg.t.sbz.7.2/.7.4,
+        # LAB-3): configuration validity is re-derived from the trusted
+        # manifest (the single state owner for the declaration) and an
+        # adapter that names a local command is probed for availability
+        # — a broken adapter blocks readiness with a classified failure,
+        # never a crash. Network reachability stays out of scope (L9).
+        def check_adapters(manifest)
+          manifest["adapters"].map do |adapter|
+            reason = if !adapter["config"].is_a?(Hash)
+              "adapter '#{adapter['id']}' configuration is not a mapping"
+            elsif adapter["command"] && !executable_on_path?(adapter["command"])
+              "adapter '#{adapter['id']}' command '#{adapter['command']}' is not available " \
+                "(not found on PATH); fix the adapter installation or the manifest declaration"
+            end
+            note = if reason.nil? && adapter["command"].nil?
+              "configured (no local command declared; network reachability is out of scope)"
+            end
+            {"adapter" => adapter["id"], "kind" => adapter["kind"], "command" => adapter["command"],
+             "status" => reason ? FAIL : PASS, "reason" => reason || note}
+          end
+        end
+
+        # Required tools (task 8xg.t.sbz.7.4, LAB-3): presence check
+        # only — the tool must resolve to an executable; a missing tool
+        # blocks readiness. No execution, no network.
+        def check_tools(manifest)
+          manifest["tools"].map do |tool|
+            reason = "required tool '#{tool}' is not available (not found on PATH)" unless executable_on_path?(tool)
+            {"tool" => tool, "status" => reason ? FAIL : PASS, "reason" => reason}
+          end
+        end
+
+        # Resolve an executable without running it: a name containing a
+        # separator must be executable at that path; a bare name must
+        # resolve through PATH. An unset PATH leaves the probe
+        # undecidable (unknown rather than a false failure).
+        def executable_on_path?(name)
+          if name.include?(File::SEPARATOR)
+            return File.executable?(name) && File.file?(name)
+          end
+
+          (ENV["PATH"].to_s.split(File::PATH_SEPARATOR) - [""]).any? do |directory|
+            candidate = File.join(directory, name)
+            File.file?(candidate) && File.executable?(candidate)
+          end
+        end
 
         def key_pair_reason(path, entry)
           stat = lstat(path)

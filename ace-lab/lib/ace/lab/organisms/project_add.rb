@@ -26,8 +26,9 @@ module Ace
       class ProjectAdd
         attr_reader :dry_run
 
-        def initialize(runner: nil, dry_run: false)
+        def initialize(runner: nil, account_lookup: nil, dry_run: false)
           @runner = runner
+          @account_lookup = account_lookup
           @dry_run = dry_run
         end
 
@@ -35,17 +36,20 @@ module Ace
         # @param path [String] absolute project path
         # @param remote [String, nil] origin remote URL
         # @param label [String, nil] display label
+        # @param owner [String, nil] target executor account the
+        #   project tree must belong to when install runs privileged
+        #   (root); nil leaves ownership untouched
         # @param dry_run [Boolean, nil] per-call override
         # @return [Hash] report: ok / dry_run / project / repository /
-        #   overseer / registry
-        def call(id:, path:, remote: nil, label: nil, dry_run: nil)
+        #   overseer / registry / owner
+        def call(id:, path:, remote: nil, label: nil, owner: nil, dry_run: nil)
           effective_dry_run = dry_run.nil? ? self.dry_run : dry_run
           repository = Molecules::RepositoryProvisioner.new(runner: @runner, dry_run: effective_dry_run)
             .call(path: path, remote: remote)
           ready = repository["status"] != "failed"
 
           overseer = if ready
-            Molecules::OverseerProvisioner.new(dry_run: effective_dry_run).call(root: path)
+            Molecules::OverseerProvisioner.new(runner: @runner, dry_run: effective_dry_run).call(root: path)
           else
             skipped("_overseer", "repository not ready; fix the repository step first")
           end
@@ -60,19 +64,64 @@ module Ace
             skipped(".ace/lab/config.yml", "repository not ready; fix the repository step first")
           end
 
+          converged = [repository, overseer, registry].none? { |item| item["status"] == "failed" }
+          ownership = if !converged
+            skipped_owner(owner, "repository not ready; fix the repository step first")
+          else
+            propagate_owner(path, owner, effective_dry_run)
+          end
+
           {
-            "ok" => [repository, overseer, registry].none? { |item| item["status"] == "failed" },
+            "ok" => [repository, overseer, registry, ownership].none? { |item| item["status"] == "failed" },
             "dry_run" => effective_dry_run,
             "project" => id,
             "path" => path,
             "remote" => remote,
             "repository" => repository,
             "overseer" => overseer,
-            "registry" => registry
+            "registry" => registry,
+            "owner" => ownership
           }
         end
 
         private
+
+        # Root-installed projects must end up owned by the declared
+        # target executor, or the executor cannot work in them (LAB-2).
+        # Chown is a privileged operation: a non-root installer reports
+        # skipped (verify then judges executor access on the real bits).
+        def propagate_owner(path, owner, dry_run)
+          base = {"account" => owner, "path" => path}
+          return base.merge("status" => "skipped", "message" => nil) if owner.nil?
+
+          entry = @account_lookup ? @account_lookup.call(owner) : nil
+          if entry.nil?
+            return base.merge("status" => "failed",
+              "message" => "owner account '#{owner}' does not exist; fix the account phase first")
+          end
+          return base.merge("status" => "would_propagate", "message" => nil) if dry_run
+          unless Process.uid.zero?
+            return base.merge("status" => "skipped",
+              "message" => "installer is not root; ownership left untouched (verify reports " \
+                "the executor's actual access)")
+          end
+
+          current = File.stat(path)
+          return base.merge("status" => "kept", "message" => nil) if current.uid == entry.uid
+
+          begin
+            require "fileutils"
+            FileUtils.chown_R(path, entry.uid, entry.gid)
+          rescue SystemCallError, ArgumentError => e
+            return base.merge("status" => "failed",
+              "message" => "propagating ownership of '#{path}' to '#{owner}' failed: #{e.message}")
+          end
+          base.merge("status" => "propagated", "message" => nil)
+        end
+
+        def skipped_owner(owner, message)
+          {"account" => owner, "path" => nil, "status" => "failed", "message" => message}
+        end
 
         def skipped(location, message)
           {"location" => location, "status" => "failed", "message" => message}

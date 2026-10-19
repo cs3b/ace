@@ -48,7 +48,43 @@ module Ace
           verify_file(base, instructions, entry)
         end
 
+        # Readiness probe for a project/worktree directory used by a
+        # target executor (task 8xg.t.sbz.7.4, LAB-2): every ancestor of
+        # the RESOLVED path must grant the account search (x) permission
+        # and the directory itself must grant read+write (the executor
+        # clones and provisions worktrees inside it). Returns nil when
+        # the account can work in the directory, or a concrete reason.
+        # Same governing-class permission logic as the instruction
+        # checks so the two can never drift apart.
+        def directory_access_reason(path, entry)
+          resolved = File.realpath(path)
+          current = File.dirname(resolved)
+          loop do
+            stat = File.stat(current)
+            return search_denied(current, entry) if (permission_bits(stat, entry) & 0o1).zero?
+            break if current == "/"
+
+            current = File.dirname(current)
+          end
+          stat = File.stat(resolved)
+          return work_denied(resolved, entry) if (permission_bits(stat, entry) & 0o6) != 0o6
+
+          nil
+        rescue Errno::ENOENT, Errno::ENOTDIR, Errno::EACCES
+          "'#{path}' does not exist or cannot be inspected for account '#{entry.name}'"
+        end
+
         private
+
+        def search_denied(directory, entry)
+          "'#{directory}' denies search permission to account '#{entry.name}'; the target " \
+            "executor cannot reach the project through this ancestor"
+        end
+
+        def work_denied(directory, entry)
+          "'#{directory}' denies read/write permission to account '#{entry.name}'; the target " \
+            "executor cannot work inside the project"
+        end
 
         def protocol?(instructions)
           PROTOCOL_PREFIXES.any? { |prefix| instructions.start_with?(prefix) }

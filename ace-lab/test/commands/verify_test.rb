@@ -39,6 +39,8 @@ module Ace
               home = File.join(dir, "home", "ace-worker")
               labs = File.join(dir, "labs")
               key_path = File.join(home, ".ssh", "id_ed25519")
+              instructions = File.join(dir, "instructions.md")
+              File.write(instructions, "# worker instructions\n")
               manifest_path = File.join(dir, "install.yml")
               auth_path = File.join(dir, "authorization.yml")
               File.write(manifest_path, <<~YAML)
@@ -58,7 +60,7 @@ module Ace
                 roles:
                   - id: worker
                     account: ace-worker
-                    instructions: wfi://lab/worker
+                    instructions: #{instructions}
                 projects:
                   - id: atlas
                     path: #{labs}/atlas

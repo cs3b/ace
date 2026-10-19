@@ -64,17 +64,25 @@ module Ace
           # paths under the tmpdir, with a real GrantProvisioner write.
           # A project-add organism that succeeds without touching git.
           class FakeProjectAdd
-            def call(id:, path:, remote:, label:, dry_run:)
+            def call(id:, path:, remote:, label:, owner:, dry_run:)
               {"ok" => true, "dry_run" => dry_run, "project" => id, "path" => path,
                "remote" => remote,
                "repository" => {"path" => path, "status" => "created", "message" => nil},
                "overseer" => {"dir" => "#{path}/_overseer", "status" => "created", "message" => nil},
                "registry" => {"path" => "#{path}/.ace/lab/config.yml", "status" => "created",
-                              "message" => nil}}
+                              "message" => nil},
+               "owner" => {"account" => nil, "path" => path, "status" => "skipped",
+                           "message" => nil}}
             end
           end
 
-          def with_command(authorization: nil)
+          class FakeVerify
+            def call
+              {"ready" => true, "counts" => {"pass" => 1, "fail" => 0, "unknown" => 0}}
+            end
+          end
+
+          def with_command(authorization: nil, verify: FakeVerify.new)
             Dir.mktmpdir do |dir|
               manifest_path = "/etc/lab/ace-lab/install.yml"
               auth_path = File.join(dir, "authorization.yml")
@@ -86,7 +94,8 @@ module Ace
                 project_add: FakeProjectAdd.new,
                 grants: Molecules::GrantProvisioner.new(
                   resolver: resolver, authorization_path: auth_path
-                )
+                ),
+                verify: verify
               )
               Ace::Lab::Molecules::GrantResolver.stub :read_verified,
                 ->(path) { documents[path] } do
@@ -102,8 +111,11 @@ module Ace
               parsed = JSON.parse(out)
               assert_equal true, parsed["ok"]
               assert_equal "lab01", parsed["machine"]
-              assert_equal %w[prepare projects grants],
+              assert_equal %w[prepare projects grants adapters tools verify],
                 parsed.keys - %w[ok dry_run machine manifest]
+              assert_equal true, parsed.dig("verify", "ready")
+              assert_empty parsed["adapters"]
+              assert_empty parsed["tools"]
               assert_equal "atlas", parsed["projects"].first["project"]
               assert_equal "created", parsed["grants"]["status"]
             end
@@ -118,9 +130,11 @@ module Ace
               assert_includes out, "Prepare: ok"
               assert_includes out, "Projects:"
               assert_includes out, "atlas"
-              assert_includes out, "(repository: created, overseer: created, registry: created)"
+              assert_includes out,
+                "(repository: created, overseer: created, registry: created, owner: skipped)"
               assert_includes out, "Grants"
               assert_includes out, "ace-overseer"
+              assert_includes out, "Verify: ready"
               assert_includes out, "Result: ok"
             end
           end
@@ -161,7 +175,8 @@ module Ace
                 manifest_path: manifest_path, platform: "linux", prepare: FailedPrepare.new,
                 grants: Molecules::GrantProvisioner.new(
                   resolver: resolver, authorization_path: auth_path
-                )
+                ),
+                verify: FakeVerify.new
               )
               cmd = Install.new(install: organism)
 
@@ -172,8 +187,9 @@ module Ace
                     cmd.call(format: nil, dry_run: nil, quiet: nil)
                   end
                   # 1 failed prepare item + 3 dependency-failed project
-                  # steps + 1 dependency-failed grants step
-                  assert_match(/install failed \(5 step\(s\)\)/, error.message)
+                  # steps + 1 dependency-failed grants step + 1
+                  # dependency-failed owner step
+                  assert_match(/install failed \(6 step\(s\)\)/, error.message)
                   assert_match(%r{accounts/ace-worker: }, error.message)
                   assert_match(%r{projects/atlas/repository: }, error.message)
                   assert_match(/grants: /, error.message)

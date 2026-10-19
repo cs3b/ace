@@ -120,5 +120,54 @@ module Organisms
       assert_equal "failed", report["registry"]["status"]
       refute File.exist?(File.join(@path, ".ace"))
     end
+
+    # --- LAB-2: executor ownership propagation -------------------------
+
+    def test_non_root_installer_reports_ownership_skipped_but_still_ok
+      entry = LabTestHelper::FakeEntry.new(name: "ace-worker", uid: Process.uid,
+        gid: Process.gid, dir: File.join(@tmp, "home"), shell: "/bin/zsh")
+      organism = Ace::Lab::Organisms::ProjectAdd.new(account_lookup: ->(_) { entry })
+
+      report = organism.call(id: "atlas", path: @path, remote: @source, owner: "ace-worker")
+
+      assert report["ok"], report.inspect
+      assert_equal "skipped", report["owner"]["status"]
+      assert_match(/not root/, report["owner"]["message"])
+      assert_equal Process.uid, File.stat(@path).uid
+    end
+
+    def test_unknown_owner_account_fails_the_owner_step
+      organism = Ace::Lab::Organisms::ProjectAdd.new(account_lookup: ->(_) { nil })
+
+      report = organism.call(id: "atlas", path: @path, remote: @source, owner: "ghost")
+
+      refute report["ok"]
+      assert_equal "failed", report["owner"]["status"]
+      assert_match(/account 'ghost' does not exist/, report["owner"]["message"])
+    end
+
+    def test_no_declared_owner_leaves_ownership_untouched
+      report = add
+
+      assert report["ok"]
+      assert_equal "skipped", report["owner"]["status"]
+      assert_nil report["owner"]["message"]
+    end
+
+    def test_gitignore_symlink_is_refused_without_escaping_the_project
+      Dir.mktmpdir do |dir|
+        repo = File.join(dir, "repo")
+        Open3.capture3("git", "clone", "-q", @source, repo)
+        victim = File.join(dir, "outside")
+        File.write(victim, "outside file\n")
+        File.symlink(victim, File.join(repo, ".gitignore"))
+
+        report = Ace::Lab::Organisms::ProjectAdd.new.call(id: "example", path: repo, remote: @source)
+
+        refute report["ok"], report["overseer"].inspect
+        assert_equal "failed", report["overseer"]["status"]
+        assert_equal "outside file\n", File.read(victim)
+      end
+    end
   end
 end

@@ -15,12 +15,14 @@ module Ace
           SECTION_LABELS = {
             "accounts" => "account", "directories" => "directory", "keys" => "account",
             "roles" => "id", "repositories" => "project", "grants" => "principal",
-            "registry" => "project", "overseer" => "project"
+            "registry" => "project", "overseer" => "project",
+            "adapters" => "adapter", "tools" => "tool"
           }.freeze
 
           desc "Verify the installed lab's readiness under the target accounts (read-only): " \
-            "accounts, directories, key pairs, role instructions, repository origins, " \
-            "grant-based project visibility, private _overseer folders"
+            "accounts, directories, key pairs, role instructions, repository origins and " \
+            "target-executor access, grant-based project visibility, private _overseer " \
+            "folders, configured communication/HITL adapters, required tools"
 
           example [
             "--format json        # Machine-readable report for the overseer / next tool",

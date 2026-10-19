@@ -35,6 +35,10 @@ module Ace
           @authorization_path = authorization_path
         end
 
+        # @return [String] the trusted grants location this molecule
+        #   converges — install threads it into the final Verify stage.
+        attr_reader :authorization_path
+
         # Foreign-lab detection: an existing trusted document that grants
         # projects outside the manifest's declared set belongs to a
         # different lab and must never be overwritten by this install.

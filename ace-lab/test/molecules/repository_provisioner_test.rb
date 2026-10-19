@@ -160,5 +160,19 @@ module Molecules
       out, _err, status = Open3.capture3("git", "-C", path, "remote", "get-url", "origin")
       status.success? ? out.strip : nil
     end
+
+    # --- LAB-7: insteadOf rewrites must not break idempotent reuse -----
+
+    def test_insteadof_rewrite_does_not_break_identical_project_reuse
+      path = clone_atlas
+      remote = "https://forge.example/atlas.git"
+      Open3.capture3("git", "-C", path, "remote", "add", "origin", remote)
+      Open3.capture3("git", "-C", path, "config", "url.ssh://git@forge.example/.insteadOf",
+        "https://forge.example/")
+
+      result = provisioner.call(path: path, remote: remote)
+
+      assert_equal "exists", result["status"], result.inspect
+    end
   end
 end

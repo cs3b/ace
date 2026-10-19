@@ -213,5 +213,47 @@ module Molecules
         refute File.exist?(registry.registry_path(root))
       end
     end
+    # --- LAB-1/F3: privileged registry writes never follow symlinks ---
+
+    def test_preplanted_predictable_temp_symlink_does_not_escape_the_project
+      Dir.mktmpdir do |dir|
+        repo = File.join(dir, "repo")
+        registry_dir = File.join(repo, ".ace", "lab")
+        FileUtils.mkdir_p(registry_dir)
+        victim = File.join(dir, "outside")
+        File.write(victim, "outside sentinel\n")
+        # pre-plant symlinks at every predictable temp name for this pid
+        200.times do |i|
+          File.symlink(victim, File.join(registry_dir, ".config.yml.tmp.#{Process.pid}.#{i}"))
+        rescue Errno::EEXIST
+          nil
+        end
+
+        result = registry.register(root: repo, project: project(path: repo))
+
+        assert_equal "outside sentinel\n", File.read(victim), result.inspect
+        assert_includes %w[created exists], result["status"]
+        # the real registry exists as a regular file and carries the entry
+        doc = YAML.safe_load_file(File.join(repo, ".ace", "lab", "config.yml"))
+        assert_equal "atlas", doc.dig("topology", "projects").first["id"]
+      end
+    end
+
+    def test_ancestor_directory_symlink_is_refused_before_any_write
+      Dir.mktmpdir do |dir|
+        repo = File.join(dir, "repo")
+        FileUtils.mkdir_p(repo)
+        outside = File.join(dir, "outside")
+        FileUtils.mkdir_p(outside)
+        File.symlink(outside, File.join(repo, ".ace"))
+
+        result = registry.register(root: repo, project: project(path: repo))
+
+        assert_equal "failed", result["status"]
+        assert_match(/symbolic link/, result["message"])
+        assert_empty Dir.children(outside)
+      end
+    end
   end
 end
+

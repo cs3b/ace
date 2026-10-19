@@ -29,9 +29,26 @@ module Organisms
         @calls = []
       end
 
-      def call(id:, path:, remote:, label:, dry_run:)
-        @calls << {id: id, path: path, remote: remote, label: label, dry_run: dry_run}
+      def call(id:, path:, remote:, label:, owner:, dry_run:)
+        @calls << {id: id, path: path, remote: remote, label: label, owner: owner, dry_run: dry_run}
         @reports_by_id.fetch(id)
+      end
+    end
+
+    # Final-verify stage stub: the real Verify organism is exercised in
+    # verify_test / install_resume_test; orchestration tests inject a
+    # converged verdict so the fakes' fictional paths are not probed.
+    class FakeVerify
+      attr_reader :calls
+
+      def initialize(report = {"ready" => true, "counts" => {"pass" => 1, "fail" => 0, "unknown" => 0}})
+        @report = report
+        @calls = 0
+      end
+
+      def call
+        @calls += 1
+        @report
       end
     end
 
@@ -84,7 +101,7 @@ module Organisms
     # through the real GrantResolver class method, the grants molecule
     # through an injected resolver.
     def with_install(authorization: nil, manifest: nil, prepare: nil, project_add: nil,
-      platform: "linux", dry_run: nil, &block)
+      verify: FakeVerify.new, platform: "linux", dry_run: nil, &block)
       Dir.mktmpdir do |dir|
         manifest ||= manifest_yaml(dir)
         manifest_path = "/etc/lab/ace-lab/install.yml"
@@ -101,7 +118,7 @@ module Organisms
           ->(path) { documents[path] } do
           organism = Ace::Lab::Organisms::Install.new(
             manifest_path: manifest_path, account_lookup: lookup, platform: platform,
-            prepare: prepare, project_add: project_add, grants: grants
+            prepare: prepare, project_add: project_add, grants: grants, verify: verify
           )
           block.call(organism, dir, auth_path)
         end
@@ -119,13 +136,18 @@ module Organisms
         assert_equal true, report["ok"]
         assert_equal false, report["dry_run"]
         assert_equal "lab01", report["machine"]
-        assert_equal %w[ok dry_run machine manifest prepare projects grants], report.keys
+        assert_equal %w[ok dry_run machine manifest prepare projects grants adapters tools verify],
+          report.keys
         assert_equal [false], prepare.calls
         assert_equal [{id: "atlas", path: File.join(dir, "atlas"),
-                       remote: File.join(dir, "origin.git"), label: "Atlas platform", dry_run: false},
+                       remote: File.join(dir, "origin.git"), label: "Atlas platform", owner: nil,
+                       dry_run: false},
                       {id: "borealis", path: File.join(dir, "borealis"),
-                       remote: File.join(dir, "origin.git"), label: nil, dry_run: false}],
+                       remote: File.join(dir, "origin.git"), label: nil, owner: nil, dry_run: false}],
           project_add.calls
+        assert_equal true, report["verify"]["ready"]
+        assert_empty report["adapters"]
+        assert_empty report["tools"]
         assert_equal "created", report["grants"]["status"]
         assert_equal({"ace-overseer" => "created"}, report["grants"]["principals"])
         assert_equal({"ace-overseer" => {"projects" => %w[atlas borealis]}},
@@ -248,7 +270,7 @@ module Organisms
           ->(path) { path == manifest_path ? manifest : nil } do
           organism = Ace::Lab::Organisms::Install.new(
             manifest_path: manifest_path, platform: "linux",
-            prepare: prepare, project_add: project_add, grants: grants
+            prepare: prepare, project_add: project_add, grants: grants, verify: FakeVerify.new
           )
           report = organism.call
 
@@ -341,9 +363,12 @@ module Organisms
         # for reading (the tmpdir file is not root-owned); every
         # downstream molecule runs for real.
         Ace::Lab::Molecules::GrantResolver.stub :read_verified,
-          ->(path) { path == manifest_path ? File.read(manifest_path) : nil } do
+          ->(path) { File.file?(path) ? File.read(path) : nil } do
           organism = Ace::Lab::Organisms::Install.new(
-            manifest_path: manifest_path, platform: "linux", grants: grants
+            manifest_path: manifest_path, platform: "linux", grants: grants,
+            verify: Ace::Lab::Organisms::Verify.new(
+              manifest_path: manifest_path, platform: "linux", authorization_path: auth_path
+            )
           )
 
           report = organism.call
@@ -359,7 +384,11 @@ module Organisms
             resolver: StubResolver.new(documents), authorization_path: auth_path
           )
           second = Ace::Lab::Organisms::Install.new(
-            manifest_path: manifest_path, platform: "linux", grants: grants
+            manifest_path: manifest_path, platform: "linux", grants: grants,
+            verify: Ace::Lab::Organisms::Verify.new(
+              manifest_path: manifest_path, platform: "linux",
+              authorization_path: auth_path
+            )
           ).call
           assert_equal true, second["ok"]
           assert_equal "exists", second["grants"]["status"]

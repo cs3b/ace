@@ -12,17 +12,20 @@ module Ace
       class InstallSchema
         SCHEMA_VERSION = 1
         TOP_LEVEL_KEYS =
-          %w[schema_version machine accounts directories keys roles projects grants].freeze
+          %w[schema_version machine accounts directories keys roles projects grants
+             adapters tools].freeze
         ENTRY_KEYS = {
           "accounts" => %w[username role create home],
           "directories" => %w[path owner mode],
           "keys" => %w[account type path],
           "roles" => %w[id account instructions],
-          "projects" => %w[id path remote label]
+          "projects" => %w[id path remote label],
+          "adapters" => %w[id kind command config]
         }.freeze
         USERNAME_PATTERN = /\A[a-z_][a-z0-9_-]{0,31}\z/
         ROLE_ID_PATTERN = /\A[a-z][a-z0-9_-]{0,31}\z/
         INSTRUCTION_PROTOCOLS = %w[wfi:// prompt:// tmpl://].freeze
+        ADAPTER_KINDS = %w[communication hitl].freeze
         DEFAULT_MODE = "0755"
         DEFAULT_KEY_TYPE = "ed25519"
         KEY_TYPES = [DEFAULT_KEY_TYPE].freeze
@@ -66,7 +69,9 @@ module Ace
               "keys" => normalize_keys(document["keys"], accounts),
               "roles" => normalize_roles(document["roles"], usernames),
               "projects" => projects,
-              "grants" => normalize_grants(document["grants"], projects.map { |p| p["id"] })
+              "grants" => normalize_grants(document["grants"], projects.map { |p| p["id"] }),
+              "adapters" => normalize_adapters(document["adapters"]),
+              "tools" => normalize_tools(document["tools"])
             }
           end
 
@@ -261,6 +266,55 @@ module Ace
 
               [principal.strip, projects.map(&:strip).uniq]
             end
+          end
+
+          # Selected communication/HITL adapters (task 8xg.t.sbz.7.2):
+          # each declares an id, a kind, an optional local command that
+          # provides the adapter (probed for availability by verify) and
+          # an optional free-form configuration mapping. Real network
+          # traffic stays out of scope (L9) — this is the declaration
+          # surface install validates and verify probes.
+          def normalize_adapters(raw)
+            section(raw, "adapters").map do |entry|
+              id = required_string(entry, "adapters", "id")
+              unless id =~ ROLE_ID_PATTERN
+                raise_invalid_entry("adapters", "id format is invalid")
+              end
+
+              kind = required_string(entry, "adapters", "kind")
+              unless ADAPTER_KINDS.include?(kind)
+                raise_invalid_entry("adapters",
+                  "kind must be one of: #{ADAPTER_KINDS.join(', ')}")
+              end
+
+              command = optional_string(entry, "adapters", "command")
+
+              config = entry["config"].nil? ? {} : entry["config"]
+              unless config.is_a?(Hash)
+                raise_invalid_entry("adapters", "config must be a mapping when present")
+              end
+
+              {"id" => id, "kind" => kind, "command" => command, "config" => config}
+            end.tap do |adapters|
+              duplicates_of(adapters.map { |adapter| adapter["id"] }) do |_id|
+                raise_invalid_entry("adapters", "id is declared more than once")
+              end
+            end
+          end
+
+          # Required tools (task 8xg.t.sbz.7.4): names the lab needs on
+          # PATH for the target accounts; verify probes each one's
+          # presence (no execution, no network).
+          def normalize_tools(raw)
+            tools = raw.nil? ? [] : raw
+            unless tools.is_a?(Array) && tools.all? { |tool| tool.is_a?(String) && !tool.strip.empty? }
+              raise_invalid "tools must be a list of non-empty strings"
+            end
+
+            duplicates_of(tools.map(&:strip)) do |_tool|
+              raise_invalid "tools list a tool more than once"
+            end
+            tools.map(&:strip).uniq
           end
 
           def optional_string(entry, section_name, field)

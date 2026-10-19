@@ -145,18 +145,66 @@ module Ace
           begin
             require "fileutils"
             dir = File.dirname(path)
+            unsafe = unsafe_symlink_reason(path)
+            return failure(path, unsafe) if unsafe
+
             FileUtils.mkdir_p(dir)
             # Atomic write (review 8xikzhvk): a crash mid-write must
-            # never leave a truncated cascade document behind.
-            tmp = File.join(dir, ".config.yml.tmp.#{Process.pid}")
-            File.write(tmp, YAML.dump(updated))
+            # never leave a truncated cascade document behind. The
+            # temporary file is created EXCLUSIVELY (O_CREAT|O_EXCL)
+            # under an unguessable name: a pre-planted symlink at a
+            # predictable `.tmp.<PID>` path must never redirect the
+            # privileged write outside the project (LAB-1/F3) —
+            # O_EXCL refuses to follow an existing symlink, and a
+            # unique random name leaves nothing predictable to plant.
+            tmp = write_exclusive(dir, YAML.dump(updated))
             File.rename(tmp, path)
-          rescue SystemCallError => e
-            File.delete(tmp) if defined?(tmp) && File.exist?(tmp)
+          rescue SystemCallError, IOError => e
+            File.delete(tmp) if defined?(tmp) && tmp && File.exist?(tmp)
             return failure(path, "writing #{path} failed: #{e.message}")
           end
 
           {"path" => path, "status" => wet_status, "message" => nil}
+        end
+
+        # A repository-controlled symlink among the registry's ancestor
+        # directories (`.ace`, `.ace/lab`) must never be followed by a
+        # privileged mkdir/write: refuse before any mutation.
+        def unsafe_symlink_reason(registry_path)
+          [File.dirname(registry_path), File.dirname(File.dirname(registry_path))].each do |ancestor|
+            stat = File.lstat(ancestor)
+            if stat.symlink?
+              return "'#{ancestor}' is a symbolic link; refusing to follow it with installer " \
+                "privileges (remove the link and rerun)"
+            end
+          rescue Errno::ENOENT, Errno::ENOTDIR
+            nil
+          end
+          nil
+        end
+
+        # Create the temp file exclusively (never following a symlink),
+        # write the payload, close, and return the path. Raises
+        # SystemCallError/IOError on failure so the caller classifies.
+        def write_exclusive(dir, payload)
+          require "securerandom"
+          100.times do
+            candidate = File.join(dir, ".config.yml.tmp.#{Process.pid}.#{SecureRandom.hex(8)}")
+            next if File.exist?(candidate) # includes symlinks (lstat)
+
+            begin
+              file = File.open(candidate, File::RDWR | File::CREAT | File::EXCL, 0o600)
+            rescue Errno::EEXIST
+              next
+            end
+            begin
+              file.write(payload)
+            ensure
+              file.close
+            end
+            return candidate
+          end
+          raise SystemCallError.new("could not create an exclusive temporary file in '#{dir}'", 0)
         end
 
         # Contradiction and location-conflict detection, checked before

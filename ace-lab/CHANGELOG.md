@@ -96,6 +96,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   existing topology surface. `--dry-run` predicts with zero mutations;
   wet failures print the report and exit non-zero naming each step.
 
+- Adapter and tool declarations in the install manifest (tasks
+  8xg.t.sbz.7.2/.7.4, LAB-3): the schema (v1) now accepts an
+  `adapters` list (`id`, `kind` `communication`/`hitl`, optional local
+  `command`, optional `config` mapping) and a `tools` list of required
+  executable names. `ace-lab install` validates and normalizes the
+  declarations (the trusted manifest stays their single state owner —
+  no second configuration file), echoes them in its report under
+  `adapters`/`tools`, and finishes with a NEW final `verify` stage over
+  the converged lab whose readiness gates the install's `ok` (dry runs
+  skip the stage — nothing has converged to verify). `ace-lab verify`
+  gained matching checks: every required tool must resolve to an
+  executable on PATH (presence only — no execution, no network), and
+  every declared adapter must have a valid configuration with its
+  command, when declared, resolvable; a missing tool or broken adapter
+  is a classified check failure that blocks readiness, never a crash.
+  Network reachability of communication adapters stays out of scope
+  (L9). The install CLI renders the verify verdict and names every
+  failed check in its non-zero-exit summary.
+
+- Target-executor ownership propagation for installed projects (task
+  8xg.t.sbz.7.4, LAB-2): `ProjectAdd` accepts an `owner` account and,
+  when the installer runs as root, chowns a converged project tree to
+  the declared executor (derived by install from the owning declared
+  directory above the project) so root installs yield
+  executor-writable repositories; non-root installers report the step
+  skipped and `verify` judges the executor's actual access on the real
+  permission bits. The report carries the new `owner` step.
+
 ### Changed
 
 - `ace-lab status` refined to the reviewed `l7-statuses` implementation
@@ -107,6 +135,56 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `StatusService` organism — table/json/`-q` output preserved.
 
 ### Fixed
+
+- Privileged provisioning writes no longer follow repository-controlled
+  symlinks (LAB-1, audit PR #393): `OverseerProvisioner` refuses a
+  symlinked `.gitignore` (checked via lstat before any read/append) or
+  `.ace-tasks` component before creating anything, and
+  `ProjectRegistry` refuses a symlinked `.ace`/`.ace/lab` ancestor and
+  creates its atomic-write temp file EXCLUSIVELY (`O_CREAT|O_EXCL`)
+  under an unguessable random name instead of the predictable
+  `.config.yml.tmp.<PID>` that a pre-planted symlink could capture
+  (F3) — a committed symlink can no longer redirect installer writes
+  outside the project.
+
+- `ace-lab verify` now judges project readiness for the declared
+  TARGET EXECUTOR, not the invoking installer (LAB-2): every account a
+  role binds must be able to reach the project through its ancestors
+  (search permission) and read/write the project directory — a
+  repository behind an installer-owned 0700 ancestor with a different
+  target UID is NOT ready even though the installer's git access
+  succeeded. The check shares the role verifier's governing-class
+  permission logic so the two can never drift apart.
+
+- Final verification resolves protocol role instructions
+  (`wfi://`, `prompt://`, `tmpl://`) through the actual resolver for
+  the execution context (LAB-4): prepare's syntax-only protocol check
+  is no longer reused as proof of readiness, so a syntactically valid
+  but nonexistent role (`wfi://does-not-exist/not-a-role`) fails the
+  check and blocks readiness. Resolution runs `bin/ace-nav resolve`
+  (project binstub, else PATH) from every declared project root; an
+  environment without the resolver reports `unknown` and does not
+  block, mirroring the offline posture for network remotes.
+
+- `_overseer` ignore provisioning decides through REAL Git evaluation
+  (LAB-5): `OverseerProvisioner` uses `git check-ignore` (the same
+  probe verify applies) instead of matching `.gitignore` lines, so a
+  later negation (`!.ace-tasks/_overseer/`) no longer masquerades as
+  an effective ignore rule — the effective rule is appended and the
+  decision re-evaluated to confirm.
+
+- A malformed per-project registry (e.g. `topology: invalid`) is now a
+  classified per-project check failure instead of a `TypeError` from
+  `dig` that killed the entire readiness report (LAB-6): the document
+  is validated through `TopologySchema.normalize!`, and healthy checks
+  beside the failure keep running and stay visible.
+
+- `RepositoryProvisioner` compares project identity against the RAW
+  stored remote URL (`git config --get remote.origin.url`) instead of
+  the `insteadOf`-expanded `git remote get-url` value (LAB-7):
+  idempotent re-add/resume under a common SSH rewrite configuration
+  (`url.<base>.insteadOf`) no longer false-fails an identical project —
+  connection rewriting is Git transport policy, not a changed identity.
 
 - `KeyProvisioner`'s internal pair-usability probe could return
   `false` instead of `nil` for an unusable pair (the new public
