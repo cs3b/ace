@@ -234,6 +234,13 @@ module Ace
               raise_invalid "grants must be a mapping of principal to project ids"
             end
 
+            # Reject duplicates after strip, like the other duplicate
+            # checks (review r1): "admin" and " admin " would otherwise
+            # silently last-wins.
+            duplicates_of(grants.keys.filter_map { |key| key.strip if key.is_a?(String) }) do |_principal|
+              raise_invalid "grants principal name is declared more than once"
+            end
+
             grants.to_h do |principal, projects|
               unless principal.is_a?(String) && !principal.strip.empty?
                 raise_invalid "grants principal name must be a non-empty string"

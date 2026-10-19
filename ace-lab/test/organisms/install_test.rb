@@ -75,8 +75,7 @@ module Organisms
         - id: borealis
           path: /INSTALL-ROOT/borealis
           remote: /INSTALL-ROOT/origin.git
-        #{"grants:" if grants}
-          ace-overseer: [atlas, borealis]
+        #{"grants:" if grants}#{"\n  ace-overseer: [atlas, borealis]" if grants}
       YAML
     end
 
@@ -210,21 +209,87 @@ module Organisms
       end
     end
 
+    def test_dry_run_with_failed_prepare_marks_every_dependency_failed_project
+      prepare = FakePrepare.new(OK_PREPARE.merge("ok" => false))
+      project_add = FakeProjectAdd.new({})
+
+      with_install(prepare: prepare, project_add: project_add) do |organism, _dir, auth_path|
+        report = organism.call(dry_run: true)
+
+        assert_equal false, report["ok"]
+        assert_equal true, report["dry_run"]
+        assert_empty project_add.calls
+        report["projects"].each do |project|
+          assert_equal true, project["dry_run"],
+            "dependency-failed projects must carry the effective dry-run value"
+          assert_equal "failed", project["repository"]["status"]
+        end
+        gated = report["grants"]
+        assert_equal "failed", gated["status"]
+        assert_equal true, gated["dry_run"]
+        assert_empty gated["kept"]
+        refute File.exist?(auth_path)
+      end
+    end
+
+    def test_manifest_without_grants_never_creates_the_authorization_document
+      prepare = FakePrepare.new(OK_PREPARE)
+      project_add = FakeProjectAdd.new("atlas" => ok_project("atlas"),
+        "borealis" => ok_project("borealis"))
+
+      Dir.mktmpdir do |dir|
+        manifest = manifest_yaml(dir, grants: false)
+        auth_path = File.join(dir, "authorization.yml")
+        manifest_path = "/etc/lab/ace-lab/install.yml"
+        grants = Ace::Lab::Molecules::GrantProvisioner.new(
+          resolver: StubResolver.new({}), authorization_path: auth_path
+        )
+        Ace::Lab::Molecules::GrantResolver.stub :read_verified,
+          ->(path) { path == manifest_path ? manifest : nil } do
+          organism = Ace::Lab::Organisms::Install.new(
+            manifest_path: manifest_path, platform: "linux",
+            prepare: prepare, project_add: project_add, grants: grants
+          )
+          report = organism.call
+
+          assert_equal true, report["ok"], report.inspect
+          assert_equal "skipped", report["grants"]["status"]
+          assert_empty report["grants"]["kept"]
+          refute File.exist?(auth_path)
+        end
+      end
+    end
+
     def test_re_run_over_own_converged_lab_converges_without_rewriting
-      authorization = YAML.dump({"principals" => {"ace-overseer" => {"projects" => %w[atlas borealis]}}})
+      # The fixture carries an admin comment and is NOT byte-identical to
+      # what YAML.dump would emit, so a rewrite would be observable in
+      # the inode/mtime and the content — a converged re-run changes
+      # neither.
+      authorization = <<~YAML
+        # managed by ops — do not reformat
+        ---
+        principals:
+          ace-overseer:
+            projects:
+            - atlas
+            - borealis
+      YAML
       prepare = FakePrepare.new(OK_PREPARE)
       project_add = FakeProjectAdd.new("atlas" => ok_project("atlas"),
         "borealis" => ok_project("borealis"))
 
       with_install(authorization: authorization, prepare: prepare,
         project_add: project_add) do |organism, _dir, auth_path|
-        before = File.read(auth_path)
+        before = File.stat(auth_path)
         report = organism.call
 
         assert_equal true, report["ok"]
         assert_equal "exists", report["grants"]["status"]
         assert_equal({"ace-overseer" => "exists"}, report["grants"]["principals"])
-        assert_equal before, File.read(auth_path)
+        after = File.stat(auth_path)
+        assert_equal before.ino, after.ino
+        assert_equal before.mtime, after.mtime
+        assert_equal authorization, File.read(auth_path)
       end
     end
 

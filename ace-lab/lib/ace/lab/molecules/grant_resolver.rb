@@ -113,6 +113,39 @@ module Ace
             end
           end
 
+          # Shared per-principal validation so the read side
+          # (`parse_grants`) and the installer's writer
+          # (`Molecules::GrantProvisioner`) cannot drift (review r1):
+          # principal names are stripped and each policy must be a
+          # mapping with a `projects` array of non-empty strings.
+          # Messages are value-free.
+          # @param principals [Object] parsed principals mapping
+          # @param path [String] trusted file location for messages
+          # @return [Hash] principal => {"projects" => stripped, uniq ids}
+          # @raise [Ace::Lab::InvalidConfigurationError]
+          def validate_principals(principals, path)
+            unless principals.is_a?(Hash)
+              raise Ace::Lab::InvalidConfigurationError,
+                "invalid lab configuration: trusted authorization file #{path} principals must be a mapping"
+            end
+
+            principals.map do |identity, policy|
+              unless identity.is_a?(String) && !identity.strip.empty?
+                raise Ace::Lab::InvalidConfigurationError,
+                  "invalid lab configuration: trusted authorization file #{path} principal name " \
+                  "must be a non-empty string"
+              end
+              unless policy.is_a?(Hash) && policy["projects"].is_a?(Array) &&
+                  policy["projects"].all? { |project| project.is_a?(String) && !project.strip.empty? }
+                raise Ace::Lab::InvalidConfigurationError,
+                  "invalid lab configuration: trusted authorization file #{path} principal projects " \
+                  "must be an array of non-empty strings"
+              end
+
+              [identity.strip, {"projects" => policy["projects"].map(&:strip).uniq}]
+            end.to_h
+          end
+
           private
 
           def verify_error(path)
@@ -183,29 +216,7 @@ module Ace
                 "invalid lab configuration: trusted authorization file #{path} must contain a YAML mapping"
             end
 
-            principals = document["principals"] || {}
-            unless principals.is_a?(Hash)
-              raise Ace::Lab::InvalidConfigurationError,
-                "invalid lab configuration: trusted authorization file #{path} principals must be a mapping"
-            end
-
-            validated = principals.map do |identity, policy|
-              unless identity.is_a?(String) && !identity.strip.empty?
-                raise Ace::Lab::InvalidConfigurationError,
-                  "invalid lab configuration: trusted authorization file #{path} principal name " \
-                  "must be a non-empty string"
-              end
-              unless policy.is_a?(Hash) && policy["projects"].is_a?(Array) &&
-                  policy["projects"].all? { |project| project.is_a?(String) && !project.strip.empty? }
-                raise Ace::Lab::InvalidConfigurationError,
-                  "invalid lab configuration: trusted authorization file #{path} principal projects " \
-                  "must be an array of non-empty strings"
-              end
-
-              [identity.strip, {"projects" => policy["projects"].map(&:strip).uniq}]
-            end
-
-            {"principals" => validated.to_h}
+            {"principals" => validate_principals(document["principals"] || {}, path)}
           rescue Psych::Exception
             raise Ace::Lab::InvalidConfigurationError,
               "invalid lab configuration: trusted authorization file #{path} could not be parsed as YAML"

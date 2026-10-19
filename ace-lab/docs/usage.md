@@ -422,15 +422,25 @@ existing molecules in a fixed order:
    `ace-overseer projects` (see the L8.2 boundary above). Grants only
    grow: a manifest that would remove an existing grant is refused.
    Principals the manifest does not mention and every other section of
-   the document (e.g. HITL adapter policy) are preserved untouched.
+   the document (e.g. HITL adapter policy) are preserved untouched —
+   and a converged re-run writes nothing at all, so the document's
+   admin-authored comments stay byte-identical. A manifest with no
+   `grants` over an absent document is a no-op (`skipped`): no empty
+   authorization file is ever created. Before any write the existing
+   document's principals are validated exactly like the read side
+   (shared validation with the grants resolver): a malformed policy is
+   refused with a classified error instead of silently rewritten, and
+   whitespace-padded principal names are normalized so they cannot
+   coexist with a stripped twin.
    The write is atomic (temp file + rename, mode 0644). Grants are
    configured only when the earlier phases converged — never over a
    partially failed install (no pretend success).
 
 Statuses: `prepare` contributes its own per-item statuses; each project
 contributes `created|exists|updated|would_*|failed` per step; grants
-report `created|updated|exists|would_*|failed` plus a per-principal
-breakdown. `ok` means every phase converged. A wet run with failures
+report `created|updated|exists|skipped|would_*|failed` plus a
+per-principal breakdown and the `kept` list (present and possibly
+empty, so machine consumers see a stable schema). `ok` means every phase converged. A wet run with failures
 prints the report first, then exits non-zero enumerating each
 `<phase>/<item>: <message>`; `--dry-run` predicts with zero mutations
 and exits 0.

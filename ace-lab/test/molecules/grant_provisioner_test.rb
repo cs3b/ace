@@ -61,8 +61,73 @@ module Molecules
 
         assert_equal "exists", report["status"]
         assert_equal({"ace-overseer" => "exists"}, report["principals"])
+        assert_empty report["kept"]
         assert_equal({"ace-overseer" => {"projects" => %w[atlas]}},
           YAML.load_file(path)["principals"])
+      end
+    end
+
+    def test_converged_re_run_does_not_rewrite_the_document
+      # An admin-authored comment and the file identity both survive a
+      # converged wet re-run: the write is skipped, not re-emitted.
+      initial = <<~YAML
+        # managed by ops — do not reformat
+        ---
+        principals:
+          ace-overseer:
+            projects:
+            - atlas
+      YAML
+      with_provisioner(initial) do |provisioner, path|
+        before = File.stat(path)
+
+        report = provisioner.call(desired: {"ace-overseer" => %w[atlas]},
+          declared_projects: %w[atlas])
+
+        assert_equal "exists", report["status"]
+        after = File.stat(path)
+        assert_equal before.ino, after.ino
+        assert_equal before.mtime, after.mtime
+        assert_equal initial, File.read(path)
+      end
+    end
+
+    def test_empty_grants_with_absent_document_is_a_no_op
+      with_provisioner do |provisioner, path|
+        report = provisioner.call(desired: {}, declared_projects: %w[atlas])
+
+        assert_equal "skipped", report["status"]
+        assert_empty report["principals"]
+        assert_empty report["kept"]
+        assert_match(/nothing to write/, report["message"])
+        refute File.exist?(path)
+      end
+    end
+
+    def test_malformed_principal_policy_is_refused_without_writing
+      with_provisioner(grants_document({"operator" => "not-a-mapping"})) do |provisioner, path|
+        report = provisioner.call(desired: {"ace-overseer" => %w[atlas]},
+          declared_projects: %w[atlas])
+
+        assert_equal "failed", report["status"]
+        assert_match(/principal projects must be an array of non-empty strings/,
+          report["message"])
+        assert_equal({"operator" => "not-a-mapping"},
+          YAML.load_file(path)["principals"])
+      end
+    end
+
+    def test_padded_principal_key_is_written_stripped_without_a_twin
+      padded = YAML.dump({"principals" => {" operator " => {"projects" => %w[atlas]}}})
+      with_provisioner(padded) do |provisioner, path|
+        report = provisioner.call(desired: {"operator" => %w[atlas], "ace-overseer" => %w[atlas]},
+          declared_projects: %w[atlas])
+
+        assert_equal "updated", report["status"]
+        assert_equal({"operator" => "exists", "ace-overseer" => "created"}, report["principals"])
+        principals = YAML.load_file(path)["principals"]
+        assert_equal %w[ace-overseer operator], principals.keys.sort
+        assert_equal %w[atlas], principals["operator"]["projects"]
       end
     end
 

@@ -1,8 +1,10 @@
 # frozen_string_literal: true
 
 require_relative "../errors"
+require_relative "grant_resolver"
 require "yaml"
 require "date"
+require "fileutils"
 
 module Ace
   module Lab
@@ -87,6 +89,15 @@ module Ace
           return failure(removal.join("; ")) unless removal.empty?
 
           merged, statuses = merge_principals(existing, desired)
+
+          # An empty grants manifest over an absent document is a no-op
+          # (review r1): nothing is granted, so no empty authorization
+          # document is created.
+          if document.nil? && merged.empty?
+            return report("skipped", {}, "no grants declared and no trusted document present; " \
+              "nothing to write", existing, desired)
+          end
+
           aggregate = if statuses.values.include?("created") && existing.empty?
             "created"
           elsif statuses.values.any? { |status| %w[created updated].include?(status) }
@@ -101,6 +112,15 @@ module Ace
 
           return report(STATUS_DRY.fetch(aggregate, aggregate), statuses, nil, existing,
             desired) if dry_run
+
+          # Converged: the merged principals deep-equal the parsed
+          # existing mapping, so the write is skipped — the trusted
+          # document (admin-authored comments included) stays
+          # byte-identical instead of being round-tripped through YAML
+          # (review r1). An absent document is always created.
+          if document && merged == existing
+            return report(aggregate, statuses, nil, existing, desired)
+          end
 
           write_failure = persist(document, merged)
           return write_failure if write_failure
@@ -140,7 +160,6 @@ module Ace
           updated = document ? deep_copy(document) : {}
           updated["principals"] = merged
 
-          require "fileutils"
           dir = File.dirname(@authorization_path)
           tmp = File.join(dir, ".authorization.yml.tmp.#{Process.pid}")
           begin
@@ -160,10 +179,11 @@ module Ace
             "path" => @authorization_path,
             "status" => status,
             "principals" => statuses,
-            "message" => message
-          }.tap do |rep|
-            rep["kept"] = existing.keys - desired.keys unless existing.empty?
-          end
+            "message" => message,
+            # Always present (empty when nothing is carried over) so
+            # JSON consumers see a stable schema (review r1).
+            "kept" => existing.keys - desired.keys
+          }
         end
 
         def failure(message)
@@ -190,11 +210,16 @@ module Ace
               "#{@authorization_path} must contain a YAML mapping; refusing to overwrite"
           end
           principals = document["principals"]
-          unless principals.nil? || principals.is_a?(Hash)
-            raise Ace::Lab::InvalidConfigurationError,
-              "#{@authorization_path} principals must be a mapping; refusing to overwrite"
-          end
-          document
+          return document if principals.nil?
+
+          # Per-principal validation identical to the read side
+          # (GrantResolver.parse_grants): a malformed policy is refused
+          # with the classified error instead of silently rewritten,
+          # and principal names are stripped so a whitespace-padded
+          # existing principal cannot coexist with its stripped twin
+          # after a write (review r1).
+          document.merge("principals" =>
+            GrantResolver.validate_principals(principals, @authorization_path))
         end
 
         def granted_projects(policy)

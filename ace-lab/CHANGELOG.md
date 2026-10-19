@@ -24,6 +24,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   aborts with a classified error and zero writes, and a manifest that
   would remove an existing grant is refused (grants only grow);
   undeclared principals and every other document section are preserved.
+  A converged wet re-run writes nothing at all — the trusted document
+  (admin-authored comments included) stays byte-identical; a manifest
+  with no `grants` over an absent document is a no-op (`skipped`,
+  nothing created). The existing document's principals are validated
+  exactly like the read side before any write (shared validation with
+  `GrantResolver`; malformed policies are refused with a classified
+  error instead of silently rewritten, whitespace-padded principal
+  names are normalized, and duplicate-after-strip principals are
+  rejected by the manifest schema).
   Idempotent re-runs converge (`exists` statuses); `--dry-run`
   faithfully predicts every phase (`would_*`) with exit 0, wet failures
   render the report then exit non-zero naming each failed step.

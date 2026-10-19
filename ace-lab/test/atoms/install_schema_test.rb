@@ -367,7 +367,10 @@ module Atoms
         [{"ace-overseer" => ["atlas", "atlas"]},
          /list a project more than once/],
         [{"" => ["atlas"]}, /principal name must be a non-empty string/],
-        [["atlas"], /grants must be a mapping of principal to project ids/]
+        [["atlas"], /grants must be a mapping of principal to project ids/],
+        # duplicates after strip are rejected like duplicate project ids
+        [{"ace-overseer" => ["atlas"], " ace-overseer " => ["atlas"]},
+         /grants principal name is declared more than once/]
       ].each do |grants, pattern|
         error = assert_raises(Ace::Lab::InvalidConfigurationError) do
           normalize(manifest(

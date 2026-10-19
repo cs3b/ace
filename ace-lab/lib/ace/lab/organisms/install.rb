@@ -77,7 +77,7 @@ module Ace
               )
             else
               dependency_failed_project(project,
-                "prepare did not converge; fix the prepare phase first")
+                "prepare did not converge; fix the prepare phase first", effective_dry_run)
             end
           end
           projects_ok = projects.all? { |report| report["ok"] }
@@ -89,6 +89,7 @@ module Ace
             )
           else
             {"path" => Ace::Lab.authorization_path, "status" => "failed", "principals" => {},
+              "kept" => [], "dry_run" => effective_dry_run,
               "message" => "install steps did not converge; fix the failing steps first " \
                 "(trusted grants are configured only for a converged install)"}
           end
@@ -123,7 +124,9 @@ module Ace
 
         # Same shape as a ProjectAdd report, with every step failed as a
         # dependency failure — mirroring prepare's dependency pattern.
-        def dependency_failed_project(project, message)
+        # `dry_run` is the effective per-call value, not the constructor
+        # default (review r1).
+        def dependency_failed_project(project, message, dry_run)
           failed = ->(location) { {"location" => location, "status" => "failed", "message" => message} }
           {
             "ok" => false,
