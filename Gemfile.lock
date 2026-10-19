@@ -294,6 +294,7 @@ PATH
   specs:
     ace-overseer (0.24.0)
       ace-assign (~> 0.70)
+      ace-coworker (~> 0.5)
       ace-git (~> 0.30)
       ace-git-worktree (~> 0.27)
       ace-herdr (~> 0.6)
