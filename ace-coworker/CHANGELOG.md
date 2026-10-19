@@ -27,6 +27,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Render start-prompt placeholders in a single pass derived from `PromptTemplate::PLACEHOLDERS`, so substituted values shaped like a later placeholder are never re-expanded.
 - Raise a specific `invalid role preset` error for malformed YAML preset files (all `Psych::Exception` load failures), instead of a raw backtrace.
 - Correct the spec role workflow's escalation command to the required `ace-hitl create "<title>" --type question ... --question "..."` form.
+- `prepare` reads the target worktree's coworker config through the coworker
+  config cascade anchored at that worktree (project `.ace` tiers plus the
+  user tier), so a commission written under a configured `config_path`
+  (e.g. `.ace-local/coworker/worker.yml`) is detected as an active
+  executor instead of being missed because of the hard-coded default
+  location.
+- `commission` canonicalizes the task identity before the assignment match
+  and the config write: a short task ref of the recorded task (e.g. `ccc`
+  for `8xh.t.ccc`) is accepted and the config stores the resolved full id,
+  while an assignment genuinely belonging to another task stays rejected.
+- Reviewer workflow instruction (`wfi://coworker/reviewer`): newly named
+  fix steps are added via `ace-assign add --yaml <file> --assignment <id>`
+  (top-level `steps:` array with `name`/`instructions`, example included);
+  `--step` is documented as selecting an existing preset-catalog step
+  definition only — it cannot mint a new step name.
 
 ## [0.5.0] - 2026-10-18
 
