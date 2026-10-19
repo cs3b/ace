@@ -102,3 +102,14 @@ Dokumentacja: `ace-overseer/CHANGELOG.md` [Unreleased], `ace-overseer/docs/usage
 - Czy reviewer ma własną regułę akceptu 3/2/10 mapowaną na stan assignmentu — w L6.4
   zakończenie nogi to `completed` assignmentu; ewentualne węższe bramy (np. liczniki rund)
   zostają w competencji roli w jej assignmentie (bez nowych semantyk statusów po stronie overseera).
+
+## Poprawki po review (runda 1)
+
+Session `review-8xihst`, werdykt Approve, 9 findingów (1 Medium, 8 Low; 2 skipped). Applied:
+1. (M1) Fail-closed: puste role/brak configu odrzucane przed :ready; probe przenosi WŁAŚCIWIE znalezioną ścieżkę pliku (glob), orchestrator/CLI używają jej zamiast budować zgadywaną.
+2. Guard na `result[:next]` w CLI (odmowa wydruku zgadywanej komendy).
+3. Renderowanie nil evidence ("unknown" zamiast pustego id przy unparseable).
+4. PREPARE_DIR reuse: HandoffProbe używa constanty StartConfigWriter (jedna definicja lokalizacji).
+5. Asercja `handoff` w CLI help test; „four primary commands" w usage.md.
+Skipped: E2E TS scenario (propozycja na kolejną falę), kolekcja wielu powodów (niepotrzebna przy obecnej wielkości).
+Retest: `bin/ace-test ace-overseer all` → 278/1143/0.
