@@ -112,6 +112,9 @@ module Molecules
         assert_equal "failed", report["status"]
         assert_match(/principal projects must be an array of non-empty strings/,
           report["message"])
+        # Schema stability: kept/dry_run are present on failure outcomes too.
+        assert_empty report["kept"]
+        assert_equal false, report["dry_run"]
         assert_equal({"operator" => "not-a-mapping"},
           YAML.load_file(path)["principals"])
       end

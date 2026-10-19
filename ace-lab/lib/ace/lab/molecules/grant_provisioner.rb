@@ -71,6 +71,10 @@ module Ace
         #   would_update / failed and principals carries one entry per
         #   desired principal
         def call(desired:, declared_projects:, dry_run: false)
+          # Exposed on every report/failure so the grants section of the
+          # install JSON has one uniform schema (the top-level report
+          # also carries it; consumers may read either).
+          @dry_run = dry_run
           document = begin
             read_document
           rescue Ace::Lab::InvalidConfigurationError => e
@@ -182,7 +186,10 @@ module Ace
             "message" => message,
             # Always present (empty when nothing is carried over) so
             # JSON consumers see a stable schema (review r1).
-            "kept" => existing.keys - desired.keys
+            "kept" => existing.keys - desired.keys,
+            # Same key set as the gated grants failure in the install
+            # report — one uniform grants-section schema (review L8.4).
+            "dry_run" => @dry_run ? true : false
           }
         end
 
@@ -192,7 +199,7 @@ module Ace
           # nothing, so nothing is carried over (resume/verification
           # readers, tasks 8xg.t.sbz.7.3/.7.4).
           {"path" => @authorization_path, "status" => "failed", "principals" => {},
-            "message" => message, "kept" => []}
+            "message" => message, "kept" => [], "dry_run" => @dry_run ? true : false}
         end
 
         # Read and parse the trusted document through the same

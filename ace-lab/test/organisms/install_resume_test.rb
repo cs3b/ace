@@ -394,6 +394,23 @@ module Organisms
       end
     end
 
+    def test_dry_run_with_a_foreign_grants_document_refuses_identically
+      with_lab do |fixture|
+        done_directories(fixture)
+        foreign = YAML.dump({"principals" => {"operator" => {"projects" => %w[zephyr]}}})
+        File.write(fixture["auth"], foreign)
+
+        # The guard runs before any dry_run branching: the prediction is
+        # the same hard refusal, not a would_* preview.
+        error = assert_raises(Ace::Lab::InvalidConfigurationError) do
+          resume_run(fixture, dry_run: true)
+        end
+
+        assert_match(/refusing to install over a foreign lab/, error.message)
+        assert_equal foreign, File.read(fixture["auth"])
+      end
+    end
+
     # --- Dry-run parity on a partial state -----------------------------
 
     def test_dry_run_on_own_partial_state_predicts_the_exact_resume

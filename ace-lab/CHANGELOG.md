@@ -26,12 +26,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   with a classified, concrete message before any takeover or cleanup,
   wet and in `--dry-run` alike (prediction parity on partial states).
 
-### Fixed
-
-- `GrantProvisioner` failure reports now carry `kept: []` like every
-  other grants status, so machine consumers of the install report see
-  one stable schema for the grants section regardless of outcome.
-
 - `ace-lab install` (L8.3, task 8xg.t.sbz.7.2): the full new-lab
   installation from the trusted install manifest, composing the
   existing molecules in a fixed order — `Prepare` (L8.1: accounts,
@@ -88,6 +82,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `StatusService` organism — table/json/`-q` output preserved.
 
 ### Fixed
+
+- `GrantProvisioner` failure reports now carry `kept: []` like every
+  other grants status, so machine consumers of the install report see
+  one stable schema for the grants section regardless of outcome.
 
 - `project add` review fixes (round 1, task 8xg.t.sbz.7.1):
   `RepositoryProvisioner#repository?` now requires the target path to
