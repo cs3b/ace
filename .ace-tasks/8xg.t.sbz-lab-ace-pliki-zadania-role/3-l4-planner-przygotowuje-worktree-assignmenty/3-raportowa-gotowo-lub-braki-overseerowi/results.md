@@ -99,3 +99,14 @@ raportu gotowości i brak eskalacji (testy unit i integracyjne).
 - Brak blokujących. Ewentualnie (poza zakresem): czy rerun prepare z
   identycznym stanem powinien deduplikować raport gotowości (dziś każdy
   rerun = nowy raport; overseer interpretuje zgodnie z kontraktem).
+
+## Poprawki po review (runda 1)
+
+Session `review-8xigto`, werdykt Approve, 6 findingów (1 Medium, 5 Low) — wszystkie applied:
+1. (+test) dry-run + reuse + brak overseera = GAP bez eskalacji, bez zapisów i zdarzeń HITL.
+2. Usunięty zdublowany note lenient-config w detail `missing_overseer` (note dodaje raz conflict_result).
+3. Usunięty osierocony komentarz po `leg_config_overseer`.
+4. `@return [String, Failure]` w HitlReporter (create/create_report/create_conflict).
+5. Pełny cytat stderr gapu w docs/usage.md (z "; the commission is NOT ready…" i dopiskiem o liniach detail).
+6. Asercja `payload["report"]` (kind/event/delivered) w teście JSON contract.
+Retest: `bin/ace-test ace-coworker all` → 378/1727/0.
