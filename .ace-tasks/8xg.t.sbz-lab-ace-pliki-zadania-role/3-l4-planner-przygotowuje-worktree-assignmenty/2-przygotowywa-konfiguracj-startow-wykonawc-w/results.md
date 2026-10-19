@@ -50,3 +50,13 @@ Dokumentacja:
 - Porządek błędów: brak overseera sygnalizowany jest PO kompozycji assignmentów (assignmenty L4.2 pozostajądeliverable), więc prepare bez `--to` zapisuje assignmenty, ale nie konfigi; re-prepare z `--to` idempotentnie je dopisuje. Jeśli review uzna, że powinno być all-or-nothing przed kompozycją, zmiana jest trywialna, ale odwróciłaby pierwszeństwo błędów ról (unknown role / brak procesu).
 - Raport gotowości (L4.4) pozostaje osobnym liściem, jak w specyfikacji.
 - `bin/ace-test-suite` całego monorepo oraz niezależny review — poza zakresem tego wykonawcy (wg zasad fali).
+
+## Poprawki po review (runda 1)
+
+Session `review-8xig75`, werdykt Approve, 4 Low (1 skipped). Applied:
+1. Błąd braku overseera wzbogacony o hint odzyskiwania (worktree+assignmenty są złożone; re-run z `--to` idempotentnie dopisze configi).
+2. All-or-nothing: wszystkie legi najpierw resolvowane (dry-run pass), dopiero potem zapis — późna awaria nie zostawia częściowych configów; +test.
+3. Jawną walidację nazwy roli (`/\A[\w.-]+\z/`) w StartConfigWriter przed jakąkolwiek pracą; +test path-escape.
+4. Decyzja o precedencji błędów udokumentowana w docs/usage.md (role-errors > brak adresu; check po kompozycji — celowe).
+Skipped: dry-run hard-fail bez overseera — zgodny z udokumentowaną regułą (nota, nie defekt).
+Retest: `bin/ace-test ace-coworker all` → 369/1602/0.
