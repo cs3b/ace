@@ -88,3 +88,15 @@ Dodatkowo (review gotowości): brakujący i cykliczny poprzednik —
   status `done` na kroku integracji jest rejestrowany dopiero po potwierdzeniu
   merge (reguła 5 workflowu), więc nie dodaję drugiego mechanizmu dowodowego.
 - Nie zmieniono ogólnych reguł ace-task (sorter/TaskValidationRules bez zmian).
+
+## Poprawki po review (runda 1)
+
+Session `review-8xih9y`, 7 findingów (1 Medium, 6 Low; 1 skipped). Applied:
+1. (M1) Gate sprawdza też WŁASNE dependencies managera (rodzic z aktywnymi subtaskami = [task] + subtaski); +test manager-own-deps.
+2. (+test) multi-ref z jednym zablokowanym krokiem odmawia ALL-OR-NOTHING (gotowy krok też nie startuje).
+3. Docstring: „DIRECT cycle detection only"; `dependency_reason` → private_class_method.
+4. docs/usage.md: nota o odmowie re-attach do wystartowanego kroku z niespełnionymi deps.
+5. docs/usage.md: nota o rozjazdzie z `ace-task list --sort smart` (archived ≠ done; work-on jest authority).
+6. Wspólny helper `active_subtasks_of` zamiast 3 kopii filtra terminal-subtask.
+Skipped: memoizacja lookupów per inwokacja — wydajność doradcza, poprawna priorytetowo (D×S skanów, akceptowalne).
+Retest: `bin/ace-test ace-overseer all` → 247/1027/0.
