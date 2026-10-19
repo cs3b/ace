@@ -71,3 +71,14 @@ Zgodnie ze specyfikacją: brak runtime to niewykonany scenariusz, nie powód do 
 - Zmiany w `ace-overseer/**` widoczne w worktree należą do równoległego taska 8xg.t.sbz.6.1 — nie były touche'owane przez ten task.
 - `docs/lab-flow.md` (właściciel: task .6.1) powinien po integracji odnotować L7.3 jako shipped (tabela fal wiersz L7) — zalecenie, nie zmiana z tej strony.
 - Realnie brakuje binarnego `pi-overseer-queue-client` w labie, jeśli Lead chce scenariusz 3; po stronie ACE niczego nie brakuje.
+
+## Poprawki po review (runda 1)
+
+Zastosowano 4 zweryfikowane ustalenia z `.ace-local/review/sessions/review-8xij7k/review-report-review-default.md`:
+
+1. **H-1 (HIGH, 8xijeywf)** — `nodeWatchFactory` obsługuje teraz cele katalogowe jawnie: katalog (`np. .ace-local/hitl`) jest watcherowany bezpośrednio, a każdy event dziecka jest akceptowany (filtrowanie szumu zostało w fingerprint mtime/size). Poprzedni schemat (watch rodzica + filtr basename) nie mógł zadziałać na Linuksie (inotify dostarcza eventy utworzenia pliku wyłącznie do watcha na samym katalogu) i był zawodny na macOS (ścieżki zagnieżdżone odrzucane filtrem). Cele plikowe zachowują dotychczasowy watch rodzica odporny na atomowe podmiany. Dodano test na prawdziwym FS w `test/js/watch-subscription.test.mjs`: watch tymczasowego katalogu, utworzenie pliku w środku, dokładnie jedno przebudzenie. Zaktualizowano komentarz `triggerWatch`/`watchedDir` w fake host do nowego kształtu watchera. CHANGELOG [Unreleased] odnotowuje nowy kontrakt watcha katalogów.
+2. **L-1 (Low, 8xijeywg)** — wspólny harness sesji wydzielony do `test/js/session-harness.mjs`; `report-wake.test.mjs` i `installed-wake-extension.test.mjs` korzystają z tej samej implementacji (z guardem `if (shutdown)` w reload) — harnessy nie mogą rozjechać się.
+3. **L-2 (Low, 8xijeywh)** — usunięto martwe wywołanie `host.setAgentActive(true)` w `report-wake.test.mjs`; sterownikiem ścieżki active-turn pozostaje `setIdle(false)`.
+4. **L-3 (Low, 8xijeywi)** — przy asercji `deliverAs: "followUp"` dodano jednolinijkowy komentarz: asercja przypina kontrakt dostarczania wyłącznie przez kolejkę; semantyka pojedynczej egzekucji żyje w hoście pi, którego fake nie może sfalsyfikować.
+
+Weryfikacja: `bin/ace-test ace-handbook-integration-pi all` — 10 testów, 89 asercji, 0 failures (pełny suite JS, w tym nowy test katalogowy na prawdziwym FS, wykonuje się wewnątrz warstwy fast). Zakres zapisów: wyłącznie `ace-handbook-integration-pi/**` plus ten plik results.
