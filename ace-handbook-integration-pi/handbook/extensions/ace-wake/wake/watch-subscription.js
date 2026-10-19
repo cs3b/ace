@@ -500,6 +500,17 @@ export function createWatchPort({ watchFactory, statFn, baseDir = process.cwd(),
    * and every other worktree. The target's disappearance is absorbed into
    * the baseline — a pruned worktree is not a report and must not wake.
    *
+   * The baselines are adjusted by removing ONLY the dropped target's
+   * segment from the recorded fingerprint strings. Re-statting every
+   * remaining target would fold an undelivered change (a deferred wake
+   * left the fingerprint at its pre-change state) into the baseline,
+   * silently losing the pending report; the segment removal keeps every
+   * remaining target at its recorded state, so the settlement boundary
+   * still delivers it. It also never touches the filesystem at all, so a
+   * primary deleted moments earlier cannot throw from inside the native
+   * onError callback (the primary's own watcher error deactivates the
+   * subscription through the documented path).
+   *
    * @param {{watchers: Array<{path: string, watchPath: string, watcher: {close: () => void}}>, paths: string[], primaryPath: string, fingerprint: string, previousFingerprint: string}} entry
    * @param {string} target
    */
@@ -521,9 +532,26 @@ export function createWatchPort({ watchFactory, statFn, baseDir = process.cwd(),
     }
     entry.watchers = remaining;
     entry.paths = remaining.map((each) => each.path);
-    const baseline = aggregateFingerprint(entry.paths, entry.primaryPath);
-    entry.fingerprint = baseline;
-    entry.previousFingerprint = baseline;
+    // The `=` terminator makes the prefix match the segment of exactly this
+    // target, never a target whose path merely extends it.
+    const droppedPrefix = `${target}=`;
+    entry.fingerprint = withoutSegment(entry.fingerprint, droppedPrefix);
+    entry.previousFingerprint = withoutSegment(entry.previousFingerprint, droppedPrefix);
+  }
+
+  /**
+   * Remove one target's `path=fingerprint` segment from an aggregate
+   * fingerprint string, keeping every other segment verbatim.
+   *
+   * @param {string} fingerprint
+   * @param {string} segmentPrefix The exact `path=` prefix of the removed target.
+   * @returns {string}
+   */
+  function withoutSegment(fingerprint, segmentPrefix) {
+    return fingerprint
+      .split("|")
+      .filter((segment) => !segment.startsWith(segmentPrefix))
+      .join("|");
   }
 
   /**

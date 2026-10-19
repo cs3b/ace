@@ -330,6 +330,74 @@ describe("createWatchPort runtime target discovery", () => {
     host.triggerWatch(MAIN_INBOX);
     assert.equal(wakes.length, 1, "the primary target keeps the wake posture");
   });
+
+  it("still delivers a pending undelivered wake when an extra target drops at settlement", () => {
+    const host = createFakeHost();
+    const reconciles = [];
+    const port = createWatchPort({
+      watchFactory: host.watchFactory,
+      statFn: host.statFn,
+      baseDir: "/fake/project",
+      resolveTargets: () => [MAIN_INBOX, WORKTREE_INBOX],
+      scheduleReconcile: (reconcile) => reconciles.push(reconcile),
+    });
+    host.setFile(MAIN_INBOX, { mtimeMs: 1, size: 10 });
+    host.setFile(WORKTREE_INBOX, { mtimeMs: 1, size: 100 });
+    const wakes = [];
+    port.start({ kind: "watch", name: "reports", path: MAIN_INBOX, message: "m" }, () => ({ delivered: false }));
+    reconciles.splice(0).forEach((reconcile) => reconcile());
+
+    // A report lands on the primary while its wake is deferred
+    // (delivered: false): the fingerprint stays at the pre-report state
+    // and the subscription is marked dirty.
+    host.setFile(MAIN_INBOX, { mtimeMs: 20, size: 40 });
+    host.triggerWatch(MAIN_INBOX);
+    assert.equal(wakes.length, 0);
+
+    // At the settlement boundary the extra target's worktree is pruned:
+    // dropTarget runs while the primary's change is still undelivered.
+    host.setFile(WORKTREE_INBOX, { missing: true });
+    host.failWatch(WORKTREE_INBOX, "EPERM: watch lost");
+    assert.equal(port.activeCount(), 1, "the subscription must stay active");
+
+    // Dropping the extra target must NOT absorb the pending primary
+    // change into the baseline: the deferred report wake still delivers.
+    port.flushDirty(() => {
+      wakes.push(1);
+      return { delivered: true };
+    });
+
+    assert.equal(wakes.length, 1, "the pending undelivered wake must survive the extra target drop");
+    assert.equal(port.errorOf("reports"), undefined);
+  });
+
+  it("does not throw from dropTarget when the primary was deleted just before the extra target's watcher error", () => {
+    const host = createFakeHost();
+    const port = createWatchPort({
+      watchFactory: host.watchFactory,
+      statFn: host.statFn,
+      baseDir: "/fake/project",
+      resolveTargets: () => [MAIN_INBOX, WORKTREE_INBOX],
+      scheduleReconcile: () => {},
+    });
+    host.setFile(MAIN_INBOX, { mtimeMs: 1, size: 10 });
+    host.setFile(WORKTREE_INBOX, { mtimeMs: 1, size: 100 });
+    port.start({ kind: "watch", name: "reports", path: MAIN_INBOX, message: "m" }, () => ({ delivered: true }));
+
+    // The primary is deleted right before the extra target's watcher
+    // errors: dropTarget (inside a native onError callback) must not
+    // throw uncaught into the extension host.
+    host.setFile(MAIN_INBOX, { missing: true });
+    host.setFile(WORKTREE_INBOX, { missing: true });
+    host.failWatch(WORKTREE_INBOX, "EPERM: watch lost");
+    assert.equal(port.activeCount(), 1, "the drop itself must not deactivate the subscription");
+
+    // The primary's own watcher error still deactivates with a visible
+    // error through the documented path.
+    host.failWatch(MAIN_INBOX, "ENOENT: primary gone");
+    assert.match(port.errorOf("reports"), /ENOENT/);
+    assert.equal(port.activeCount(), 0);
+  });
 });
 
 describe("nodeWatchFactory on the real filesystem", { timeout: 20_000 }, () => {
