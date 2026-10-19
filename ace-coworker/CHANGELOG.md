@@ -9,6 +9,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Per-role executor start configs in `ace-coworker prepare`
+  (8xg.t.sbz.3.2 / L4.3): after composing the role-sequence assignments,
+  the planner also writes ONE start config per sequence leg into the
+  prepared worktree at `.ace-local/coworker/prepare/<role>.yml` — role,
+  instruction source, start prompt, task, assignment reference, overseer
+  address, and reporting/error rules — so `ace-coworker start --config
+  .ace-local/coworker/prepare/<role>.yml` (run inside the worktree)
+  begins a leg with zero ad-hoc setup. Ownership split stays one writer
+  per file: `prepare` owns `prepare/<role>.yml`, expanded through the
+  SAME commission primitive that writes the default `config.yml`, so the
+  round-trip guarantee ("what commission writes, start accepts") holds by
+  construction; `commission` remains the single writer of the default
+  config target. The leg configs require an overseer address (`--to`, or
+  the coworker config's `overseer` read leniently): a missing address
+  fails with `cannot prepare start configs: no overseer address (--to or
+  coworker config)` instead of writing an incomplete config. Writing leg
+  configs never touches an active driver: the existing
+  active-executor/mismatched-worktree conflicts run first, and the
+  default `config.yml` is never written by prepare. Writes are
+  idempotent: identical leg configs are reported as `reused` without a
+  write, changed content as `updated`; `--dry-run` reports them as
+  `planned` with zero writes. New organism
+  `Ace::Coworker::Organisms::StartConfigWriter`; the prepare result
+  JSON/table gained a `start_configs` list (role, assignment, path,
+  disposition `created`/`reused`/`updated`/`planned`).
 - Role-sequence assignment composition in `ace-coworker prepare`
   (8xg.t.sbz.3.1 / L4.2): after finding or preparing the task worktree,
   the planner composes the assignments for the WHOLE known role sequence in

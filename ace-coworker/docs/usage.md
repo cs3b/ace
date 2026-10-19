@@ -3,8 +3,8 @@ doc-type: usage
 title: ace-coworker Usage
 purpose: full command reference, role presets, and the start-config contract
 ace-docs:
-  last-updated: 2026-10-18
-  last-checked: 2026-10-18
+  last-updated: 2026-10-19
+  last-checked: 2026-10-19
 ---
 
 # ace-coworker Usage
@@ -92,6 +92,39 @@ or commissioned ad hoc via `commission`; the reviewer (like the worker)
 develops its own assignment through `ace-assign add`, so confirmed-defect
 fixes stay inside one assignment without overseer round-trips.
 
+### Start configs per role leg — `.ace-local/coworker/prepare/<role>.yml`
+
+`prepare` writes ONE start config per planned sequence leg, at
+`.ace-local/coworker/prepare/<role>.yml` inside the task worktree, in the
+same documented format as `config.yml` (above). The next role starts from
+its own context with zero ad-hoc setup:
+
+```
+ace-coworker start --config .ace-local/coworker/prepare/worker.yml
+```
+
+(run inside the task worktree). Ownership split — one writer per file:
+
+- `prepare` owns `.ace-local/coworker/prepare/<role>.yml`. Each leg config
+  is expanded through the SAME commission primitive (preset → identity
+  checks → schema validation → atomic write), so the round-trip guarantee
+  "what commission writes, start accepts" holds by construction; the
+  start prompt comes from the role preset's template rendered with the
+  leg's task, assignment, role, and overseer.
+- `commission` remains the single writer of the default config target
+  (`config.yml` or the cascade's `config_path`). `prepare` never writes
+  it and never overwrites an active driver — the active-executor and
+  mismatched-worktree conflicts are detected before any config write.
+
+Leg configs carry no secrets and no assignment steps — only the documented
+config fields with the composed assignment id as the ace-assign reference.
+An overseer address is required for every leg (`--to`, or the coworker
+config's `overseer` read leniently); without one, prepare fails with
+`cannot prepare start configs: no overseer address (--to or coworker
+config)` and writes no leg config. Writes are idempotent: identical
+content is reported as `reused` (no write), changed content as `updated`,
+`--dry-run` reports `planned` with zero writes.
+
 ### `ace-coworker roles`
 
 ```
@@ -167,7 +200,10 @@ expand a role preset plus the commission identity into the documented
 `--config PATH` root-relative). `commission` is a single-role writer for the
 location ace-coworker already owns — no sequencing, no active-driver
 detection, no role policies; those belong to the planner, which decides role
-order and guards against overwriting an active driver.
+order and guards against overwriting an active driver. `prepare` reuses this
+primitive internally for its per-leg configs under
+`.ace-local/coworker/prepare/`, but the default config target written here
+stays `commission`'s alone.
 
 Procedure:
 
@@ -201,7 +237,9 @@ the resolved config mapping.
 ace-coworker start [--config PATH] [--format table|json] [-q] [-d]
 ```
 
-Reads the config (default `.ace-local/coworker/config.yml`), then:
+Reads the config (default `.ace-local/coworker/config.yml`, or a
+planner-prepared leg config via `--config
+.ace-local/coworker/prepare/<role>.yml` — same format, same checks), then:
 
 1. resolves the task ref in this worktree via `ace-task`;
 2. verifies the assignment exists under `.ace-local/assign/` and its
@@ -311,9 +349,13 @@ sequentially without the overseer re-commissioning preparation per step.
 Composition is idempotent: re-preparing the same task reuses its existing
 worktree and the already-composed assignments (matching
 `<task>-<role>` assignment names with a recorded task_id) with zero
-redundant writes; only sequence legs not yet composed are added. Start
-configs in `.ace-local/coworker/` (L4.3) and the readiness report (L4.4)
-remain later leaves — `commission` stays the single-role writer. Note:
+redundant writes; only sequence legs not yet composed are added. Prepare
+also writes the per-role executor start configs (L4.3) — one
+`.ace-local/coworker/prepare/<role>.yml` per leg (see the section above) —
+so `ace-coworker start --config .ace-local/coworker/prepare/<role>.yml`
+inside the worktree begins any leg without ad-hoc setup; `commission`
+stays the single-role writer of the default `config.yml` target. The
+readiness report (L4.4) remains a later leaf. Note:
 composing multi-leg sequences leaves ace-assign's `.ace-local/assign/.latest`
 pointing at the LAST-composed leg (e.g. integrator); drivers must address
 legs by the explicit assignment ids from the prepare result, never via
@@ -344,8 +386,34 @@ the worktree's `.ace-local/assign/`, ADR-034):
   NOTHING is composed (all-or-nothing): the planner never substitutes
   another role's process. The worktree itself stays prepared and kept.
 - `--dry-run` composes nothing (the would-be worktree does not exist), so
-  the result reports `assignments: []` alongside
+  the result reports `assignments: []` and `start_configs: []` alongside
   `would_create`/`would_recover`.
+
+Start-config composition (L4.3; same owner, new artifact kind under
+`.ace-local/coworker/`):
+
+- ONE start config per leg at `.ace-local/coworker/prepare/<role>.yml` in
+  the worktree, expanded through the commission primitive from the same
+  role preset — role, instruction source, preset-rendered start prompt,
+  task, the leg's assignment id, the resolved overseer address, and the
+  preset's reporting/error rules. `start --config` accepts it unchanged
+  (round-trip guarantee); `commission`/the default `config.yml` target is
+  never touched by prepare.
+- The overseer address resolves like conflict escalation: `--to` wins,
+  else the coworker config's `overseer` (lenient field-only read, so a
+  partial planner-side config still names it). No address anywhere:
+  exit 1 with `cannot prepare start configs: no overseer address (--to or
+  coworker config)` and no leg config written — never a config with an
+  empty overseer.
+- Idempotent: re-preparation reports an identical leg config as `reused`
+  without a write; changed content (e.g. a different overseer) is
+  rewritten as `updated` — prepare is the single writer of these files.
+  Conflict checks (active executor, mismatched worktree) run BEFORE any
+  config write, so preparing the next role never disturbs an active
+  driver. Leg configs never copy secrets or assignment steps.
+- `--dry-run` reports each leg config as `planned` with zero writes (for
+  an existing worktree; a not-yet-existing worktree reports
+  `start_configs: []`).
 
 Deterministic decision procedure (no new state; ace-git-worktree stays the
 worktree owner):
@@ -406,6 +474,10 @@ Result JSON (table renders the same fields):
     {"role": "worker", "position": 1, "of": 2, "assignment": "abc123", "disposition": "created", "steps": 2, "outcome": "…"},
     {"role": "reviewer", "position": 2, "of": 2, "assignment": "def456", "disposition": "created", "steps": 1, "outcome": "…"}
   ],
+  "start_configs": [
+    {"role": "worker", "assignment": "abc123", "path": ".ace-local/coworker/prepare/worker.yml", "disposition": "created"},
+    {"role": "reviewer", "assignment": "def456", "path": ".ace-local/coworker/prepare/reviewer.yml", "disposition": "created"}
+  ],
   "active_executor": null,
   "worktree_assignments": [{"id": "abc123", "state": "paused", "progress": "0/2"}],
   "conflict": null
@@ -428,7 +500,7 @@ would-be outcome.
 | `status` | query rendered any state (including not-ready) | — |
 | `report` | success outcome recorded (and delivered, or `--no-send`/`--dry-run`) | error outcome; delivery/create failure (outcome still recorded); refused input |
 | `resume` | continue/complete rendered; report redelivered | delegated report failure keeps its exit 1 (plan still rendered) |
-| `prepare` | worktree created/recovered/reused with the role-sequence assignments composed (dry-run: would_create/would_recover, nothing composed) | conflict (active_executor / mismatched_worktree); invalid commission; missing role preset or role process definition; operational preparation failure |
+| `prepare` | worktree created/recovered/reused with the role-sequence assignments and per-leg start configs composed (dry-run: would_create/would_recover, nothing composed) | conflict (active_executor / mismatched_worktree); invalid commission; missing role preset or role process definition; no overseer address for the start configs; operational preparation failure |
 | `roles` | catalog rendered any valid state (including empty) | invalid preset file (specific error) |
 | `rounds` | round recorded, verdict rendered (including escalate) | corrupt history; malformed record |
 | `gate` | verdict rendered (`ready` or `blocked` - a withheld merge is a legitimate outcome) | malformed input (invalid or duplicate `--dep`, invalid `--tests` token) |

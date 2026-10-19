@@ -109,6 +109,13 @@ module Ace
                 lines << "        expected outcome: #{entry['outcome']}"
               end
             end
+            unless result.start_configs.empty?
+              lines << "  start configs:"
+              result.start_configs.each do |entry|
+                lines << "    #{entry['role']}: #{entry['path']} (#{entry['disposition']}, " \
+                  "assignment #{entry['assignment']})"
+              end
+            end
             result.worktree_assignments.each do |assignment|
               lines << "  assignment: #{assignment['id']} #{assignment['state']} (#{assignment['progress']})"
             end

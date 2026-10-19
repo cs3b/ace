@@ -9,7 +9,7 @@ module Ace
       # evidence collected from the worktree. No IO.
       class Preparation
         attr_reader :task, :task_path, :roles, :worktree, :worktree_assignments,
-          :active_executor, :conflict, :assignments, :dry_run
+          :active_executor, :conflict, :assignments, :start_configs, :dry_run
 
         # worktree: {"path" =>, "branch" =>, "disposition" =>} or nil
         # conflict: {"kind" =>, "detail" =>, "hitl_event" =>, "delivered" =>}
@@ -18,9 +18,12 @@ module Ace
         #   planner (L4.2): {"role", "position", "of", "assignment",
         #   "disposition", "steps", "outcome"} per role, stored by
         #   ace-assign in the worktree.
+        # start_configs: per-role leg configs written by the planner
+        #   (L4.3): {"role", "assignment", "path", "disposition"} per leg,
+        #   at .ace-local/coworker/prepare/<role>.yml in the worktree.
         def initialize(task:, task_path:, roles:, worktree: nil,
           worktree_assignments: [], active_executor: nil, conflict: nil,
-          assignments: [], dry_run: false)
+          assignments: [], start_configs: [], dry_run: false)
           @task = task
           @task_path = task_path
           @roles = roles.map(&:freeze).freeze
@@ -29,6 +32,7 @@ module Ace
           @active_executor = active_executor
           @conflict = conflict
           @assignments = assignments.map(&:freeze).freeze
+          @start_configs = start_configs.map(&:freeze).freeze
           @dry_run = dry_run
         end
 
@@ -42,6 +46,7 @@ module Ace
             "task_path" => task_path,
             "roles" => roles,
             "assignments" => assignments,
+            "start_configs" => start_configs,
             "active_executor" => active_executor,
             "worktree_assignments" => worktree_assignments,
             "conflict" => conflict

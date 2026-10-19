@@ -72,7 +72,7 @@ module Ace
 
         def orchestrator(provision_decision:, executor_result: {config: nil, assignments: []},
           hitl: FakeHitl.new, config: nil, task: task_model, lenient_overseer: nil,
-          sequence_composer: nil
+          sequence_composer: nil, start_config_writer: nil
         )
           PrepareOrchestrator.new(
             project_root: "/proj",
@@ -81,7 +81,24 @@ module Ace
             executor_probe: FakeExecutorProbe.new(executor_result),
             hitl_reporter: hitl,
             config_loader: FakeConfigLoader.new(config, lenient_overseer),
-            sequence_composer: sequence_composer || FakeSequenceComposer.new)
+            sequence_composer: sequence_composer || FakeSequenceComposer.new,
+            start_config_writer: start_config_writer)
+        end
+
+        # Never touches the filesystem: records the leg-config write call.
+        FakeStartConfigWriter = Struct.new(:calls) do
+          def initialize
+            super([])
+          end
+
+          def call(task:, sequence:, overseer:, dry_run:)
+            calls << {task: task, sequence: sequence, overseer: overseer, dry_run: dry_run}
+            sequence.map do |entry|
+              {"role" => entry["role"], "assignment" => entry["assignment"],
+               "path" => ".ace-local/coworker/prepare/#{entry['role']}.yml",
+               "disposition" => dry_run ? "planned" : "created"}
+            end
+          end
         end
 
         # Never touches the filesystem: success path entries only.
@@ -109,7 +126,9 @@ module Ace
 
         def test_happy_create_returns_preparation
           composer = FakeSequenceComposer.new
-          result = orchestrator(provision_decision: created_decision, sequence_composer: composer)
+          config_writer = FakeStartConfigWriter.new
+          result = orchestrator(provision_decision: created_decision, sequence_composer: composer,
+            start_config_writer: config_writer)
             .call(task_ref: "8xg.t.aaa", roles: %w[worker reviewer], to: "overseer@lab")
 
           assert_equal "created", result.worktree["disposition"]
@@ -121,6 +140,53 @@ module Ace
           assert_equal [{task: "8xg.t.aaa", roles: %w[worker reviewer]}], composer.calls
           assert_equal %w[worker reviewer], result.assignments.map { |a| a["role"] }
           assert_equal "created", result.assignments.first["disposition"]
+
+          # L4.3: one start config per leg, written into the worktree
+          # with the resolved overseer, reported in the result payload.
+          assert_equal [{task: "8xg.t.aaa", sequence: result.assignments,
+            overseer: "overseer@lab", dry_run: false}], config_writer.calls
+          assert_equal %w[worker reviewer], result.start_configs.map { |c| c["role"] }
+          assert_equal "created", result.start_configs.first["disposition"]
+          assert_equal ".ace-local/coworker/prepare/worker.yml", result.start_configs.first["path"]
+          assert_equal result.start_configs, result.to_h["start_configs"]
+        end
+
+        def test_start_config_overseer_falls_back_to_config_overseer
+          config = Models::Config.new(role: "planner", instructions: "roles/planner.md",
+            start_prompt: "go", task: "8xg.t.aaa", assignment: "z", overseer: "cfg-overseer",
+            source_path: nil)
+          config_writer = FakeStartConfigWriter.new
+          orchestrator(provision_decision: created_decision, config: config,
+            start_config_writer: config_writer)
+            .call(task_ref: "8xg.t.aaa", roles: %w[worker])
+
+          assert_equal "cfg-overseer", config_writer.calls.first[:overseer]
+        end
+
+        def test_missing_start_config_overseer_raises_after_composition
+          composer = FakeSequenceComposer.new
+          config_writer = FakeStartConfigWriter.new
+          error = assert_raises(Error) do
+            orchestrator(provision_decision: created_decision, sequence_composer: composer,
+              start_config_writer: config_writer)
+              .call(task_ref: "8xg.t.aaa", roles: %w[worker])
+          end
+
+          assert_includes error.message, "cannot prepare start configs: no overseer address"
+          assert_includes error.message, "--to or coworker config"
+          assert_equal 1, composer.calls.length,
+            "assignments are composed first (their own validation errors win)"
+          assert_empty config_writer.calls
+        end
+
+        def test_dry_run_reports_planned_start_configs_without_writes
+          config_writer = FakeStartConfigWriter.new
+          result = orchestrator(provision_decision: created_decision.merge(disposition: :reuse),
+            start_config_writer: config_writer)
+            .call(task_ref: "8xg.t.aaa", roles: %w[worker], to: "overseer@lab", dry_run: true)
+
+          assert_equal ["planned"], result.start_configs.map { |c| c["disposition"] }
+          assert_equal [true], config_writer.calls.map { |c| c[:dry_run] }
         end
 
         def test_sequence_composition_error_is_reported_without_success
@@ -151,8 +217,9 @@ module Ace
           reuse = created_decision.merge(disposition: :reuse)
           executor = {config: nil,
             assignments: [{"id" => "a1", "name" => "w", "state" => "paused", "progress" => "0/2"}]}
-          result = orchestrator(provision_decision: reuse, executor_result: executor, hitl: hitl)
-            .call(task_ref: "8xg.t.aaa", roles: %w[worker])
+          result = orchestrator(provision_decision: reuse, executor_result: executor, hitl: hitl,
+            start_config_writer: FakeStartConfigWriter.new)
+            .call(task_ref: "8xg.t.aaa", roles: %w[worker], to: "overseer@lab")
 
           assert_equal "reused", result.worktree["disposition"]
           assert_empty hitl.create_calls

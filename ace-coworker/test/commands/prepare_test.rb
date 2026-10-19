@@ -27,6 +27,12 @@ module Ace
                 {"role" => "reviewer", "position" => 2, "of" => 2, "assignment" => "seq2",
                  "disposition" => "created", "steps" => 1, "outcome" => "reviewer outcome"}
               ],
+              start_configs: [
+                {"role" => "worker", "assignment" => "seq1",
+                 "path" => ".ace-local/coworker/prepare/worker.yml", "disposition" => "created"},
+                {"role" => "reviewer", "assignment" => "seq2",
+                 "path" => ".ace-local/coworker/prepare/reviewer.yml", "disposition" => "created"}
+              ],
               worktree_assignments: []}.merge(overrides))
           end
 
@@ -70,6 +76,19 @@ module Ace
             assert_includes out, "expected outcome: reviewer outcome"
           end
 
+          def test_success_renders_start_configs
+            out = capture do
+              command(prep).call(task: "8xg.t.aaa", roles: ["worker,reviewer"],
+                format: "table", quiet: false)
+            end
+
+            assert_includes out, "start configs:"
+            assert_includes out,
+              "worker: .ace-local/coworker/prepare/worker.yml (created, assignment seq1)"
+            assert_includes out,
+              "reviewer: .ace-local/coworker/prepare/reviewer.yml (created, assignment seq2)"
+          end
+
           def test_success_renders_json_contract
             out = capture { command(prep).call(task: "8xg.t.aaa", roles: ["worker"],
               format: "json", quiet: false) }
@@ -86,6 +105,12 @@ module Ace
             assert_equal 1, first["position"]
             assert_equal "seq1", first["assignment"]
             assert_equal "worker outcome", first["outcome"]
+            configs = payload["start_configs"]
+            assert_equal 2, configs.length
+            assert_equal "worker", configs.first["role"]
+            assert_equal "seq1", configs.first["assignment"]
+            assert_equal ".ace-local/coworker/prepare/worker.yml", configs.first["path"]
+            assert_equal "created", configs.first["disposition"]
           end
 
           def test_conflict_renders_and_raises_cli_error

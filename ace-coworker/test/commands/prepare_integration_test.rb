@@ -28,6 +28,7 @@ module Ace
             @dir = Dir.mktmpdir("coworker-prepare-e2e")
             FileUtils.mkdir_p(File.join(@dir, ".ace-tasks"))
             run_git("init", "-q", "-b", "main", @dir)
+            File.write(File.join(@dir, ".gitignore"), ".ace-local/\n")
             @task_ref = "8xh.t.aaa"
             CoworkerFixture.build_task(@dir, id: @task_ref)
             write_worktree_config
@@ -42,7 +43,7 @@ module Ace
 
           def test_prepare_creates_then_reuses_idempotently
             out, err, status = run_cli(COWORKER_BIN, "prepare",
-              "--task", @task_ref, "--roles", "worker,reviewer", "--format", "json")
+              "--task", @task_ref, "--roles", "worker,reviewer", "--to", "overseer", "--format", "json")
             assert status.success?, "prepare failed: #{out}#{err}"
             payload = JSON.parse(out)
             assert_equal "created", payload["worktree"]["disposition"]
@@ -56,12 +57,14 @@ module Ace
             bytes_before = File.read(task_file)
 
             out, err, status = run_cli(COWORKER_BIN, "prepare",
-              "--task", @task_ref, "--roles", "worker,reviewer", "--format", "json")
+              "--task", @task_ref, "--roles", "worker,reviewer", "--to", "overseer", "--format", "json")
             assert status.success?, "re-prepare failed: #{out}#{err}"
             payload = JSON.parse(out)
             assert_equal "reused", payload["worktree"]["disposition"]
             assert_equal worktree, payload["worktree"]["path"]
             assert_nil payload["conflict"]
+            assert_equal %w[reused reused], payload["start_configs"].map { |c| c["disposition"] },
+              "identical leg configs are never rewritten"
 
             # Zero writes on reuse: same worktree state, same task file.
             assert_equal status_before, run_git("-C", worktree, "status", "--porcelain")[0]
@@ -70,7 +73,8 @@ module Ace
 
           def test_prepare_composes_the_whole_role_sequence_usable_by_commission
             out, err, status = run_cli(COWORKER_BIN, "prepare",
-              "--task", @task_ref, "--roles", "worker,reviewer,integrator", "--format", "json")
+              "--task", @task_ref, "--roles", "worker,reviewer,integrator",
+              "--to", "overseer", "--format", "json")
             assert status.success?, "prepare failed: #{out}#{err}"
             payload = JSON.parse(out)
             worktree = payload["worktree"]["path"]
@@ -111,6 +115,73 @@ module Ace
             assert File.file?(File.join(worktree, ".ace-local", "coworker", "config.yml"))
           end
 
+          def test_prepare_writes_start_configs_that_start_accepts
+            # Project worker preset with file instructions, so `start`
+            # resolves the instruction source in-process (no ace-nav).
+            roles_dir = File.join(@dir, ".ace", "coworker", "roles")
+            FileUtils.mkdir_p(roles_dir)
+            File.write(File.join(roles_dir, "worker.yml"), <<~YAML)
+              ---
+              name: worker
+              description: Fixture worker with file instructions
+              instructions: roles/worker.md
+              start_prompt: >-
+                Drive assignment {{assignment}} for task {{task}} as {{role}},
+                reporting to {{overseer}}.
+              reporting:
+                channel: hitl
+              errors:
+                on_failure: report
+            YAML
+            FileUtils.mkdir_p(File.join(@dir, "roles"))
+            File.write(File.join(@dir, "roles", "worker.md"), "# Worker instructions\n")
+            commit_all("project worker preset with file instructions")
+
+            out, err, status = run_cli(COWORKER_BIN, "prepare",
+              "--task", @task_ref, "--roles", "worker,reviewer", "--to", "overseer", "--format", "json")
+            assert status.success?, "prepare failed: #{out}#{err}"
+            payload = JSON.parse(out)
+            worktree = payload["worktree"]["path"]
+            worker_assignment = payload["assignments"].first["assignment"]
+
+            configs = payload["start_configs"]
+            assert_equal %w[worker reviewer], configs.map { |c| c["role"] }
+            assert_equal %w[created created], configs.map { |c| c["disposition"] }
+            assert_equal ".ace-local/coworker/prepare/worker.yml", configs.first["path"]
+
+            # The leg config carries exactly the documented fields — no
+            # secrets, no assignment steps — with the composed identity.
+            config_path = File.join(worktree, ".ace-local", "coworker", "prepare", "worker.yml")
+            assert File.file?(config_path)
+            config = YAML.safe_load_file(config_path)
+            assert_equal @task_ref, config["task"]
+            assert_equal worker_assignment, config["assignment"]
+            assert_equal "overseer", config["overseer"]
+            assert_equal "roles/worker.md", config["instructions"]
+            assert_includes config["start_prompt"], worker_assignment
+            assert (config.keys - %w[role instructions start_prompt task assignment overseer
+              reporting errors]).empty?, "no undocumented fields leak into the leg config"
+
+            # Round-trip guarantee: what prepare writes, start accepts —
+            # the next role starts from its own context, no ad-hoc setup.
+            out, err, status = run_cli(COWORKER_BIN, "start",
+              "--config", ".ace-local/coworker/prepare/worker.yml", chdir: worktree)
+            assert status.success?, "start rejected the prepared leg config: #{out}#{err}"
+            assert_includes out, worker_assignment
+          end
+
+          def test_prepare_without_overseer_writes_no_start_configs
+            out, err, status = run_cli(COWORKER_BIN, "prepare",
+              "--task", @task_ref, "--roles", "worker", "--format", "json")
+            refute status.success?, "start configs need an overseer address: #{out}#{err}"
+            assert_includes err, "cannot prepare start configs: no overseer address"
+
+            worktree = Dir.glob(File.join(@dir, ".ace-wt", "*")).first
+            refute_nil worktree, "the worktree itself is still prepared"
+            refute File.exist?(File.join(worktree, ".ace-local", "coworker", "prepare")),
+              "no leg config is written without an overseer address"
+          end
+
           def test_reprepare_before_commission_reuses_composed_sequence
             worktree = prepare_worktree(@task_ref)
             ids = Dir.glob(File.join(worktree, ".ace-local", "assign", "*",
@@ -118,7 +189,7 @@ module Ace
             assert_equal 1, ids.length, "fixture prepare composed the worker assignment"
 
             out, err, status = run_cli(COWORKER_BIN, "prepare",
-              "--task", @task_ref, "--roles", "worker,reviewer", "--format", "json")
+              "--task", @task_ref, "--roles", "worker,reviewer", "--to", "overseer", "--format", "json")
             assert status.success?, "re-prepare failed: #{out}#{err}"
             payload = JSON.parse(out)
             assignments = payload["assignments"]
@@ -233,7 +304,7 @@ module Ace
             assert_empty hitl_events
 
             out, err, status = run_cli(COWORKER_BIN, "prepare",
-              "--task", @task_ref, "--roles", "worker", "--format", "json")
+              "--task", @task_ref, "--roles", "worker", "--to", "overseer", "--format", "json")
             assert status.success?, "real prepare recovers stale metadata: #{out}#{err}"
             payload = JSON.parse(out)
             assert_equal "recovered", payload["worktree"]["disposition"]
@@ -317,7 +388,7 @@ module Ace
 
           def prepare_worktree(task_ref)
             out, err, status = run_cli(COWORKER_BIN, "prepare",
-              "--task", task_ref, "--roles", "worker", "--format", "json")
+              "--task", task_ref, "--roles", "worker", "--to", "overseer", "--format", "json")
             assert status.success?, "fixture prepare failed: #{out}#{err}"
             JSON.parse(out)["worktree"]["path"]
           end

@@ -32,7 +32,7 @@ module Ace
 
         def initialize(project_root: nil, task_probe: nil, provision_probe: nil,
           executor_probe: nil, hitl_reporter: nil, config_loader: nil, config: nil,
-          sequence_composer: nil)
+          sequence_composer: nil, start_config_writer: nil)
           @config = config || Ace::Coworker.config
           @project_root = project_root || Molecules::ProjectRoot.new.resolve
           @task_probe = task_probe || Molecules::TaskProbe.new(project_root: @project_root)
@@ -42,6 +42,7 @@ module Ace
           @config_loader = config_loader ||
             Molecules::ConfigLoader.new(project_root: @project_root, defaults: @config)
           @sequence_composer = sequence_composer
+          @start_config_writer = start_config_writer
         end
 
         # @param task_ref [String] task reference
@@ -86,9 +87,14 @@ module Ace
           end
 
           sequence = compose_sequence(task_id, roles, decision[:worktree_path])
+          leg_overseer = leg_config_overseer(to: to, config_path: config_path)
+          start_configs = write_start_configs(task: task_id, sequence: sequence,
+            worktree_path: decision[:worktree_path], overseer: leg_overseer,
+            dry_run: dry_run)
           success(task: task_id, task_path: task_path, roles: roles,
             disposition: disposition, worktree_path: decision[:worktree_path],
             branch: decision[:branch], assignments: sequence,
+            start_configs: start_configs,
             worktree_assignments: executor[:assignments],
             dry_run: dry_run)
         end
@@ -101,6 +107,28 @@ module Ace
         def compose_sequence(task_id, roles, worktree_path)
           composer = @sequence_composer || Molecules::RoleSequenceComposer.new(project_root: worktree_path)
           composer.call(task: task_id, roles: roles)
+        end
+
+        # The overseer address every leg config carries: the same
+        # resolution as conflict escalation (--to, else the coworker
+        # config's overseer, leniently). The start configs are the L4.3
+        # deliverable, so a missing address is a hard error — never a
+        # config with an empty overseer and never a silent skip.
+        def leg_config_overseer(to:, config_path:)
+          overseer, note = escalation_recipient(to: to, config_path: config_path)
+          unless overseer.to_s.strip.empty?
+            return overseer
+          end
+
+          raise Error, "cannot prepare start configs: no overseer address (--to or coworker config)#{"\n#{note}" if note}"
+        end
+
+        # Writes one start config per sequence leg into the prepared
+        # worktree (.ace-local/coworker/prepare/<role>.yml) via the
+        # commission primitive; dry-run resolves them without writes.
+        def write_start_configs(task:, sequence:, worktree_path:, overseer:, dry_run:)
+          writer = @start_config_writer || Organisms::StartConfigWriter.new(worktree_path: worktree_path)
+          writer.call(task: task, sequence: sequence, overseer: overseer, dry_run: dry_run)
         end
 
         def would_disposition?(disposition)
@@ -191,11 +219,11 @@ module Ace
         end
 
         def success(task:, task_path:, roles:, disposition:, worktree_path:,
-          branch:, assignments: [], worktree_assignments: [], dry_run:)
+          branch:, assignments: [], start_configs: [], worktree_assignments: [], dry_run:)
           Models::Preparation.new(task: task, task_path: task_path, roles: roles,
             worktree: {"path" => worktree_path, "branch" => branch, "disposition" => disposition},
             worktree_assignments: worktree_assignments, assignments: assignments,
-            dry_run: dry_run)
+            start_configs: start_configs, dry_run: dry_run)
         end
       end
     end

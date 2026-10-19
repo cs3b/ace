@@ -21,6 +21,7 @@ point here instead of defining a second queue, journal, cache, or state service.
 | Private overseer task list | `.ace-tasks/_overseer/` (untracked via `.gitignore`) | the overseer that owns it, via `ace-task --in _overseer` |
 | Assignment execution plan and step reports | `.ace-local/assign/` | `ace-assign`; steps are not copied into another queue or config |
 | Coworker run configuration (L3) | `.ace-local/coworker/` | reserved in L3: role, instruction source, start prompt, task, assignment reference, overseer address, reporting and error rules |
+| Per-role executor start configs (L4.3) | `.ace-local/coworker/prepare/<role>.yml` in the task worktree | `ace-coworker` (the planner, via `ace-coworker prepare`); one leg config per planned sequence role, written through the `commission` primitive so `start --config` accepts it; `commission` stays the single writer of the default `config.yml` target |
 | Review-round history per reviewer assignment | `.ace-local/coworker/review-rounds/` | `ace-coworker` (the coworker reviewer role, via `ace-coworker rounds record`); the 3/2/10 convergence evidence — one JSON file per assignment |
 | HITL agent events | `.ace-local/hitl/` | `ace-hitl`; a report needs no answer, a question is answered on the exact case |
 | Project task worktree | `.ace-wt/<task>/` | `ace-git-worktree`; one worktree per project task |

@@ -59,6 +59,7 @@ module Ace
       autoload :ResumeOrchestrator, "ace/coworker/organisms/resume_orchestrator"
       autoload :PrepareOrchestrator, "ace/coworker/organisms/prepare_orchestrator"
       autoload :CommissionOrchestrator, "ace/coworker/organisms/commission_orchestrator"
+      autoload :StartConfigWriter, "ace/coworker/organisms/start_config_writer"
     end
 
     def self.config
