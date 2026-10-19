@@ -11,12 +11,17 @@ module Ace
       #
       # Semantics (queue.wf.md rule 5 and the lab contract):
       # - A report matches the current order by its assignment reference
-      #   recorded on a step, or by the managing task's project_task plus
-      #   exactly one non-terminal step. A report that fits no open
-      #   allocation is :unmatched — kept for clarification, never success.
+      #   recorded on a step (non-terminal steps preferred), or by the
+      #   managing task's project_task plus exactly one non-terminal
+      #   step. An event that fits no open allocation is :unmatched, kept
+      #   for clarification, never success (an ambiguous cross-manager
+      #   match is also :unmatched).
       # - The processed report ID is recorded on the step; a repeated
-      #   delivery of the same ID is :duplicate — re-delivery never retries
-      #   the work or re-runs a role.
+      #   delivery of the same ID is :duplicate: re-delivery never
+      #   retries the work or re-runs a role. So does a success report
+      #   with a NEW id whose only assignment match is a terminal step:
+      #   there is no reopen path, so a re-sent report on a done step
+      #   resolves to the recorded result instead of re-advancing it.
       # - A question (:needs_answer) or a report whose result is not
       #   "success" (:error) never advances a step; the step stays open.
       module ReportInterpretation
@@ -25,7 +30,7 @@ module Ace
         PROCESSED_REPORT_KEY = "processed_report"
         REPORT_RESULT_KEY = "report_result"
 
-        # @param event [Hash] {"id","type","result","task","assignment","step"}
+        # @param event [Hash] {"id","type","result","task","assignment"}
         # @param managers [Array<Object>] private-tree managing tasks
         #   responding to #id, #status, #metadata (Hash), #subtasks
         # @return [Hash] one of:
@@ -44,6 +49,20 @@ module Ace
           step = matched[:step]
 
           if step.metadata[PROCESSED_REPORT_KEY] == event["id"]
+            return {
+              status: :duplicate,
+              manager_ref: manager.id.to_s,
+              step_ref: step.id.to_s,
+              recorded_result: step.metadata[REPORT_RESULT_KEY]
+            }
+          end
+
+          # A success report whose only assignment match is a terminal
+          # step is a re-send under a new id: there is no reopen path,
+          # so resolve to the recorded result instead of re-advancing
+          # the done step (or re-running its continuation).
+          if matched[:terminal] && !question?(event) &&
+              event["result"].to_s == SUCCESS_RESULT
             return {
               status: :duplicate,
               manager_ref: manager.id.to_s,
@@ -88,11 +107,10 @@ module Ace
         end
 
         # @param event [Hash]
-        # @return [String] the report result, normalized: questions and
-        #   missing results are never "success"
+        # @return [String] the report result; questions never consult it
+        #   (they return before any set is built) and a missing result is
+        #   never "success"
         def self.effective_result(event)
-          return "" if question?(event)
-
           event["result"].to_s
         end
 
@@ -103,28 +121,46 @@ module Ace
         end
 
         # Matching precedence: an assignment reference recorded on a step
-        # is the strongest binding; otherwise the managing task's
-        # project_task must match the reported task AND leave exactly one
-        # non-terminal step as the report's target.
+        # is the strongest binding, with non-terminal steps preferred (a
+        # terminal match can only ever resolve to :duplicate, never a
+        # fresh advance); otherwise the managing task's project_task must
+        # match the reported task AND leave exactly one non-terminal step
+        # as the report's target. A match that is ambiguous across
+        # managers (or across steps) fits no open allocation and returns
+        # nil.
         #
-        # @return [Hash{manager:, step:}, nil]
+        # @return [Hash{manager:, step:, terminal:}, nil]
         def self.match(event, managers)
           assignment = event["assignment"].to_s
-          by_assignment = managers.flat_map do |manager|
-            steps_of(manager).filter_map do |step|
-              {manager: manager, step: step} if assignment != "" &&
-                step.metadata["assignment"].to_s == assignment
+          if assignment != ""
+            matches = managers.flat_map do |manager|
+              steps_of(manager).filter_map do |step|
+                {manager: manager, step: step} if step.metadata["assignment"].to_s == assignment
+              end
+            end
+            active = matches.reject { |matched| terminal?(matched[:step]) }
+            unless matches.empty?
+              candidates = active.empty? ? matches : active
+              if candidates.size == 1
+                return {manager: candidates.first[:manager], step: candidates.first[:step],
+                        terminal: active.empty?}
+              end
+
+              return nil
             end
           end
-          return by_assignment.first if by_assignment.any?
 
           task = event["task"].to_s
-          managers.filter_map do |manager|
+          matches = managers.filter_map do |manager|
             next unless manager.metadata["project_task"].to_s == task && task != ""
 
             active = steps_of(manager).reject { |step| terminal?(step) }
             {manager: manager, step: active.first} if active.size == 1
-          end.first
+          end
+          return nil if matches.size > 1
+          return nil if matches.empty?
+
+          {manager: matches.first[:manager], step: matches.first[:step], terminal: false}
         end
 
         # @return [String] why the event fit no open allocation
@@ -134,7 +170,7 @@ module Ace
           refs << "assignment #{event['assignment']}" if event["assignment"].to_s != ""
           refs = ["no references"] if refs.empty?
 
-          "report #{event['id']} (#{refs.join(', ')}) matches no open step in the overseer tree"
+          "event #{event['id']} (#{refs.join(', ')}) matches no open step in the overseer tree"
         end
 
         # Steps of a manager (its subtasks); a manager without subtasks

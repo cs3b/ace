@@ -15,7 +15,9 @@ module Ace
         end
 
         # @return [Array<Hash>] {"id","type","result","task","assignment",
-        #   "step","title"} sorted oldest-first
+        #   "title"} sorted oldest-first. Only the keys the interpretation
+        #   atom matches on are carried: assignment, then the managing
+        #   task's project_task.
         def incoming_events
           reports = @manager.list(in_folder: "next", type: "report")
           questions = @manager.list(in_folder: "next", type: "question", status: "pending")
@@ -32,7 +34,6 @@ module Ace
             "result" => event.result,
             "task" => event.metadata["task"],
             "assignment" => event.metadata["assignment"],
-            "step" => event.metadata["step"],
             "title" => event.title
           }
         end

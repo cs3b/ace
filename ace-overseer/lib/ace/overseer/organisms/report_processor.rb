@@ -73,7 +73,12 @@ module Ace
             return outcome(verdict, event, nil, message)
           end
 
-          @task_manager.update(verdict[:step_ref], set: verdict[:set])
+          unless @task_manager.update(verdict[:step_ref], set: verdict[:set])
+            reason = "task #{verdict[:step_ref]} no longer resolves - moved or archived since the event matched"
+            message = "report #{event['id']} not recorded: #{reason}; kept in ace-hitl for clarification"
+            progress.call("Event #{event['id']}: #{message}")
+            return outcome(verdict, event, {action: "blocked", reason: reason}, message)
+          end
           progress.call("Event #{event['id']}: recorded #{verdict[:status]} on #{verdict[:step_ref]}")
 
           if verdict[:status] == :error
@@ -173,7 +178,12 @@ module Ace
 
         def continuation_description(continuation)
           case continuation[:action]
-          when "handoff" then "worktree handed to the next role (#{continuation.dig(:next, 'role')})"
+          when "handoff"
+            if continuation[:status] == "sequence_complete"
+              "sequence complete - the worktree has no next role; close the managing task per the queue workflow"
+            else
+              "worktree handed to the next role (#{continuation.dig(:next, 'role')})"
+            end
           when "work-on" then "next step #{continuation[:step_ref]} started via work-on"
           when "blocked" then "continuation blocked: #{continuation[:reason]}"
           when "none" then continuation[:reason]

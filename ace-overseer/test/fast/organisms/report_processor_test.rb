@@ -3,11 +3,7 @@
 require_relative "../../test_helper"
 
 class ReportProcessorTest < AceOverseerTestCase
-  FakeTask = Struct.new(:id, :status, :metadata, :subtasks, :dependencies, keyword_init: true) do
-    def dependency_refs
-      dependencies
-    end
-  end
+  FakeTask = Struct.new(:id, :status, :metadata, :subtasks, :dependencies, keyword_init: true)
 
   class FakeInbox
     def initialize(events)
@@ -22,8 +18,9 @@ class ReportProcessorTest < AceOverseerTestCase
   class FakeTaskManager
     attr_reader :updates
 
-    def initialize(managers)
+    def initialize(managers, vanish: nil)
       @managers = managers
+      @vanish = vanish
       @updates = []
     end
 
@@ -37,6 +34,8 @@ class ReportProcessorTest < AceOverseerTestCase
     end
 
     def update(ref, set: {}, **)
+      return nil if ref.to_s == @vanish
+
       @updates << {ref: ref.to_s, set: set}
       task = show(ref)
       set.each do |key, value|
@@ -49,8 +48,10 @@ class ReportProcessorTest < AceOverseerTestCase
   class FakeHandoff
     attr_reader :calls
 
-    def initialize(error: nil)
+    def initialize(error: nil, status: "ready", next_role: "reviewer")
       @error = error
+      @status = status
+      @next_role = next_role
       @calls = []
     end
 
@@ -58,9 +59,9 @@ class ReportProcessorTest < AceOverseerTestCase
       @calls << task_ref
       raise @error if @error
 
-      {task_ref: task_ref, status: "ready", worktree_path: "/wt/prj",
-       next: {"role" => "reviewer", "assignment" => "r1",
-         "start_config" => ".ace-local/coworker/prepare/reviewer.yml"}}
+      {task_ref: task_ref, status: @status, worktree_path: "/wt/prj",
+        next: (@next_role.nil? ? nil : {"role" => @next_role, "assignment" => "r1",
+          "start_config" => ".ace-local/coworker/prepare/#{@next_role}.yml"})}
     end
   end
 
@@ -269,4 +270,61 @@ class ReportProcessorTest < AceOverseerTestCase
     assert_includes continuation[:reason], "close the managing task"
     assert_empty work_on.calls
   end
+
+  def test_distinct_id_success_report_for_done_step_is_not_re_advanced
+    managers = [manager(steps: [
+      step("8xg.t.mgr.0", status: "done",
+        metadata: {"assignment" => "w1", "processed_report" => "ab12cd", "report_result" => "success"}),
+      step("8xg.t.mgr.1", status: "pending", dependencies: ["8xg.t.mgr.0"])
+    ])]
+    handoff = FakeHandoff.new
+    work_on = FakeWorkOn.new
+    orchestrator = Ace::Overseer::Organisms::ReportProcessor.new(
+      inbox: FakeInbox.new([report(id: "ef99xy")]), task_manager: FakeTaskManager.new(managers),
+      handoff: handoff, work_on: work_on)
+
+    result = orchestrator.call
+
+    assert_equal 1, result[:counts][:duplicate]
+    assert_equal 0, result[:counts][:success]
+    assert_equal "done", managers.first.subtasks.first.status
+    assert_equal "ab12cd", managers.first.subtasks.first.metadata["processed_report"]
+    assert_empty work_on.calls
+    assert_empty handoff.calls
+    assert_nil result[:outcomes].first[:continuation]
+  end
+
+  def test_nil_update_return_blocks_and_keeps_report_for_clarification
+    managers = [manager(steps: [
+      step("8xg.t.mgr.0", status: "progress", metadata: {"assignment" => "w1"}),
+      step("8xg.t.mgr.1", status: "pending", dependencies: ["8xg.t.mgr.0"])
+    ])]
+    work_on = FakeWorkOn.new
+    orchestrator = Ace::Overseer::Organisms::ReportProcessor.new(
+      inbox: FakeInbox.new([report]), task_manager: FakeTaskManager.new(managers, vanish: "8xg.t.mgr.0"),
+      handoff: FakeHandoff.new, work_on: work_on)
+
+    result = orchestrator.call
+
+    outcome = result[:outcomes].first
+    assert_equal "blocked", outcome[:continuation][:action]
+    assert_includes outcome[:continuation][:reason], "no longer resolves"
+    assert_includes outcome[:message], "kept in ace-hitl for clarification"
+    assert_empty work_on.calls
+  end
+
+  def test_sequence_complete_handoff_is_not_described_as_next_role
+    managers = [manager(steps: [
+      step("8xg.t.mgr.0", status: "progress", metadata: {"assignment" => "w1"}),
+      step("8xg.t.mgr.1", status: "pending", dependencies: ["8xg.t.mgr.0"])
+    ], metadata: {"project_task" => "8xg.t.prj", "worktree" => ".ace-wt/prj"})]
+    handoff = FakeHandoff.new(status: "sequence_complete", next_role: nil)
+
+    result = processor(events: [report], managers: managers, handoff: handoff).call
+
+    message = result[:outcomes].first[:message]
+    assert_includes message, "sequence complete"
+    refute_includes message, "handed to the next role"
+  end
 end
+

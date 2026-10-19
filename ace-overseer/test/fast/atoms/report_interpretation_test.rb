@@ -95,7 +95,7 @@ class ReportInterpretationTest < AceOverseerTestCase
 
     assert_equal :unmatched, verdict[:status]
     assert_includes verdict[:reason], "matches no open step"
-    assert_includes verdict[:reason], "ab12cd"
+    assert_includes verdict[:reason], "event ab12cd"
   end
 
   def test_ambiguous_project_task_match_is_unmatched
@@ -113,6 +113,59 @@ class ReportInterpretationTest < AceOverseerTestCase
   def test_empty_tree_reports_are_unmatched
     verdict = Ace::Overseer::Atoms::ReportInterpretation.evaluate(
       event: report, managers: [])
+
+    assert_equal :unmatched, verdict[:status]
+  end
+
+  def test_distinct_id_success_report_for_done_step_is_not_re_advanced
+    manager = manager("8xg.t.mgr", steps: [
+      step("8xg.t.mgr.1", status: "done",
+        metadata: {"assignment" => "w1", "processed_report" => "ab12cd", "report_result" => "success"}),
+      step("8xg.t.mgr.2", status: "pending")
+    ], metadata: {"project_task" => "8xg.t.prj"})
+
+    verdict = Ace::Overseer::Atoms::ReportInterpretation.evaluate(
+      event: report(id: "ef99xy"), managers: [manager])
+
+    assert_equal :duplicate, verdict[:status]
+    assert_equal "8xg.t.mgr.1", verdict[:step_ref]
+    assert_equal "success", verdict[:recorded_result]
+    assert_nil verdict[:set]
+  end
+
+  def test_assignment_prefers_non_terminal_step_over_done_step
+    manager = manager("8xg.t.mgr", steps: [
+      step("8xg.t.mgr.0", status: "done", metadata: {"assignment" => "w1"}),
+      step("8xg.t.mgr.1", status: "progress", metadata: {"assignment" => "w1"})
+    ], metadata: {"project_task" => "8xg.t.prj"})
+
+    verdict = Ace::Overseer::Atoms::ReportInterpretation.evaluate(
+      event: report, managers: [manager])
+
+    assert_equal :success, verdict[:status]
+    assert_equal "8xg.t.mgr.1", verdict[:step_ref]
+  end
+
+  def test_ambiguous_cross_manager_assignment_match_is_unmatched
+    managers = [
+      manager("8xg.t.mgr.a", steps: [step("8xg.t.mgr.a.0", metadata: {"assignment" => "w1"})]),
+      manager("8xg.t.mgr.b", steps: [step("8xg.t.mgr.b.0", metadata: {"assignment" => "w1"})])
+    ]
+
+    verdict = Ace::Overseer::Atoms::ReportInterpretation.evaluate(
+      event: report, managers: managers)
+
+    assert_equal :unmatched, verdict[:status]
+  end
+
+  def test_ambiguous_cross_manager_project_task_match_is_unmatched
+    managers = [
+      manager("8xg.t.mgr.a", steps: [step("8xg.t.mgr.a.0")], metadata: {"project_task" => "8xg.t.prj"}),
+      manager("8xg.t.mgr.b", steps: [step("8xg.t.mgr.b.0")], metadata: {"project_task" => "8xg.t.prj"})
+    ]
+
+    verdict = Ace::Overseer::Atoms::ReportInterpretation.evaluate(
+      event: report(assignment: nil), managers: managers)
 
     assert_equal :unmatched, verdict[:status]
   end
