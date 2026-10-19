@@ -44,7 +44,8 @@ class StatusAttentionTest < AceOverseerTestCase
   end
 
   def tasks(*rows)
-    rows.map { |row| {id: row[:id], status: row[:status], title: row.fetch(:title, ""), dependencies: row.fetch(:dependencies, [])} }
+    rows.map { |row| {id: row[:id], status: row[:status], title: row.fetch(:title, ""), dependencies: row.fetch(:dependencies, []),
+                      special_folder: row[:special_folder]} }
   end
 
   # --- blockers (dependencies with concrete reasons) ---
@@ -53,7 +54,7 @@ class StatusAttentionTest < AceOverseerTestCase
     snap = snapshot(healthy_sources(
       "project_tasks" => FakeSource.new(data: tasks(
         {id: "t1", status: "done"},
-        {id: "t2", status: "running"},
+        {id: "t2", status: "in-progress"},
         {id: "t3", status: "pending", dependencies: ["t1", "t2"]}
       ))
     ))
@@ -66,7 +67,7 @@ class StatusAttentionTest < AceOverseerTestCase
     assert_equal "project", row[:tree]
     assert_equal 1, row[:reasons].length
     assert_includes row[:reasons].first, "t2"
-    assert_includes row[:reasons].first, "running"
+    assert_includes row[:reasons].first, "in-progress"
     assert_includes row[:next_action], "t3"
   end
 
@@ -156,11 +157,16 @@ class StatusAttentionTest < AceOverseerTestCase
       {"id" => "r8", "type" => "report", "title" => "Done", "result" => "success"}
     ])
 
-    row = snap[:attention][:failures].first
-    assert_equal "escalation", row[:kind]
-    assert_equal "q7", row[:subject]
-    assert_includes row[:next_action], "ace-hitl"
-    assert_equal 1, snap[:attention][:failures].length
+    rows = snap[:attention][:failures]
+    escalation = rows.find { |row| row[:kind] == "escalation" }
+    assert_equal "q7", escalation[:subject]
+    assert_includes escalation[:next_action], "ace-hitl"
+    # The unprocessed incoming report is surfaced too (waits on the
+    # overseer just like a question), with its consumer as next_action.
+    report = rows.find { |row| row[:kind] == "unprocessed_report" }
+    assert_equal "r8", report[:subject]
+    assert_includes report[:next_action], "process-reports"
+    assert_equal 2, rows.length
   end
 
   def test_hitl_inbox_failure_is_missing_data_not_healthy
@@ -262,7 +268,7 @@ class StatusAttentionTest < AceOverseerTestCase
   def test_json_contract_carries_attention_sections
     snap = collector(healthy_sources(
       "project_tasks" => FakeSource.new(data: tasks(
-        {id: "t1", status: "running"},
+        {id: "t1", status: "in-progress"},
         {id: "t2", status: "pending", dependencies: ["t1"]}
       ))
     ), hitl_events: [
@@ -291,7 +297,7 @@ class StatusAttentionTest < AceOverseerTestCase
     collector_obj = collector(healthy_sources(
       "herdr" => FakeSource.new(error: RuntimeError.new("runtime unreachable")),
       "project_tasks" => FakeSource.new(data: tasks(
-        {id: "t1", status: "running"},
+        {id: "t1", status: "in-progress"},
         {id: "t2", status: "pending", dependencies: ["t1"]}
       ))
     ))
@@ -300,7 +306,7 @@ class StatusAttentionTest < AceOverseerTestCase
 
     assert_operator table.index("-- attention"), :<, table.index("-- herdr")
     assert_includes table, "BLOCKER  dependency  t2 [project]"
-    assert_includes table, "t1: predecessor not integrated yet (status: running)"
+    assert_includes table, "t1: predecessor not integrated yet (status: in-progress)"
     assert_includes table, "next: unblock the predecessor(s), then start or continue t2"
     assert_includes table, "FAILURE  source_error  herdr"
     assert_includes table, "MISSING DATA  source_disabled  forge"
@@ -315,12 +321,33 @@ class StatusAttentionTest < AceOverseerTestCase
 
   def test_blockers_from_overseer_tree_resolve_dependencies_across_trees
     snap = snapshot(healthy_sources(
-      "project_tasks" => FakeSource.new(data: tasks({id: "p1", status: "running"})),
+      "project_tasks" => FakeSource.new(data: tasks({id: "p1", status: "in-progress"})),
       "overseer_tree" => FakeSource.new(data: tasks({id: "o2", status: "pending", dependencies: ["p1"]}))
     ))
 
     row = snap[:attention][:blockers].first
     assert_equal "o2", row[:task_id]
     assert_includes row[:reasons].first, "p1"
+  end
+
+  def test_overseer_task_in_both_trees_yields_one_correctly_labeled_blocker
+    # The real project source lists in_folder: "all", so an _overseer task
+    # appears in BOTH sources' data; provenance (special_folder) must keep
+    # it out of the "project" tree — one row, labeled _overseer.
+    snap = snapshot(healthy_sources(
+      "project_tasks" => FakeSource.new(data: tasks(
+        {id: "p1", status: "in-progress"},
+        {id: "o1", status: "pending", dependencies: ["p1"], special_folder: "_overseer"},
+        {id: "a9", status: "pending", dependencies: ["p1"], special_folder: "_archive"}
+      )),
+      "overseer_tree" => FakeSource.new(data: tasks({id: "o1", status: "pending", dependencies: ["p1"]}))
+    ))
+
+    rows = snap[:attention][:blockers]
+    assert_equal 1, rows.length
+    assert_equal "o1", rows.first[:task_id]
+    assert_equal "_overseer", rows.first[:tree]
+    # The archived stale task never surfaces as a project blocker.
+    refute rows.any? { |r| r[:task_id] == "a9" }
   end
 end

@@ -45,10 +45,15 @@ module Ace
         end
 
         def to_sources_h(snapshot)
+          attention = snapshot[:attention]
           {
             sources: snapshot[:sources],
             unknown_keys: Array(snapshot[:unknown_keys]),
-            attention: snapshot[:attention]
+            # Always the three-array contract (never null), so partial or
+            # hand-built snapshots render consistently with the table.
+            attention: attention && {blockers: Array(attention[:blockers]),
+                                     failures: Array(attention[:failures]),
+                                     missing_data: Array(attention[:missing_data])}
           }
         end
 
@@ -124,12 +129,12 @@ module Ace
         # healthy source sections.
         def render_attention(attention)
           return "-- attention: none (no blockers, failures or missing data)" if attention.nil? ||
-            attention.values.all? { |rows| rows.empty? }
+            ATTENTION_LABELS.keys.all? { |key| Array(attention[key]).empty? }
 
-          counts = ATTENTION_LABELS.keys.map { |key| "#{attention[key].length} #{key}" }.join(", ")
+          counts = ATTENTION_LABELS.keys.map { |key| "#{Array(attention[key]).length} #{key}" }.join(", ")
           lines = ["-- attention: #{counts}"]
           ATTENTION_LABELS.each do |key, label|
-            attention[key].each { |row| lines.concat(render_attention_row(label, row)) }
+            Array(attention[key]).each { |row| lines.concat(render_attention_row(label, row)) }
           end
           lines.join("\n")
         end

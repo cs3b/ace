@@ -195,8 +195,10 @@ inbox — no new fetchers, no second dashboard, nothing persisted
   (`Atoms::DependencyReadiness`: predecessor status, missing or cyclic
   dependency) and the next action.
 - **FAILURE** — a source `error` (with origin), a `failed`/`stalled`
-  assignment, a per-worktree executor probe error, or an escalation: a
-  pending ace-hitl `question` awaiting an answer.
+  assignment, a per-worktree executor probe error, an escalation: a
+  pending ace-hitl `question` awaiting an answer, or an unprocessed
+  incoming ace-hitl `report` (next action: run
+  `ace-overseer process-reports`).
 - **MISSING DATA** — a disabled source, unknown `status_sources` keys,
   an unreadable task tree (dependency readiness unverified), an
   unrecognized task status, an unknown executor state (`unknown`/

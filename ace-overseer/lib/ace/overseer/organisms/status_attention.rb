@@ -78,6 +78,12 @@ module Ace
 
           Array(result[:data]).filter_map do |hash|
             next if hash[:id].to_s.empty?
+            # Provenance: the project source lists EVERY folder
+            # (in_folder: "all"), so special-folder entries (e.g.
+            # _overseer, _archive) do not belong to the "project" tree —
+            # keep them out to avoid duplicated/mislabeled rows. The
+            # private-tree source stamps its own special_folder.
+            next if key == "project_tasks" && !hash[:special_folder].to_s.empty?
 
             TaskEntry.new(hash[:id].to_s, hash[:status].to_s, Array(hash[:dependencies]), hash[:title].to_s)
           end
@@ -156,16 +162,29 @@ module Ace
 
         def escalations(hitl_events)
           Array(hitl_events).filter_map do |event|
-            next unless event["type"] == "question"
-
-            {
-              kind: "escalation",
-              subject: event["id"],
-              task: event["task"],
-              assignment: event["assignment"],
-              detail: event["title"].to_s,
-              next_action: "answer question #{event['id']} via ace-hitl"
-            }
+            case event["type"]
+            when "question"
+              {
+                kind: "escalation",
+                subject: event["id"],
+                task: event["task"],
+                assignment: event["assignment"],
+                detail: event["title"].to_s,
+                next_action: "answer question #{event['id']} via ace-hitl"
+              }
+            when "report"
+              # Unprocessed incoming reports equally wait on the overseer
+              # (process-reports is the consumer); surface them instead of
+              # leaving them invisible next to healthy progress.
+              {
+                kind: "unprocessed_report",
+                subject: event["id"],
+                task: event["task"],
+                assignment: event["assignment"],
+                detail: event["title"].to_s,
+                next_action: "run ace-overseer process-reports to interpret report #{event['id']}"
+              }
+            end
           end
         end
 

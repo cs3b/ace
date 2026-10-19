@@ -196,7 +196,7 @@ class StatusSourcesTest < AceOverseerTestCase
 
   # --- ProjectTasksSource / OverseerTreeSource mapping ---
 
-  FakeTask = Struct.new(:id, :status, :title, :priority, :dependencies, keyword_init: true)
+  FakeTask = Struct.new(:id, :status, :title, :priority, :dependencies, :special_folder, keyword_init: true)
 
   class FakeManager
     def initialize(tasks)

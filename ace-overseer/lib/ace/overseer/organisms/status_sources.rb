@@ -80,10 +80,14 @@ module Ace
 
         # Project task tree through ace-task's TaskManager (the owner of
         # `.ace-tasks/`): ids, statuses, dependencies — the dependency and
-        # finished-work view of the project.
+        # finished-work view of the project. `in_folder: "all"` includes
+        # every special folder, so the special_folder provenance field is
+        # carried and the CONSUMER can tell project-root tasks from
+        # `_overseer`/`_archive` entries (attention must not double-count
+        # or mislabel them as project blockers).
         class ProjectTasksSource
           ORIGIN = "ace-task TaskManager (.ace-tasks)"
-          TASK_FIELDS = %i[id status title priority dependencies].freeze
+          TASK_FIELDS = %i[id status title priority dependencies special_folder].freeze
 
           def initialize(manager_factory: nil)
             @manager_factory = manager_factory || -> { Ace::Task::Organisms::TaskManager.new }
@@ -105,6 +109,7 @@ module Ace
         class OverseerTreeSource
           ORIGIN = "ace-task TaskManager (.ace-tasks/_overseer)"
           TASK_FIELDS = %i[id status title dependencies].freeze
+          PRIVATE_TREE = "_overseer"
 
           def initialize(manager_factory: nil)
             @manager_factory = manager_factory || -> { Ace::Task::Organisms::TaskManager.new }
@@ -115,7 +120,9 @@ module Ace
           def fetch
             manager = @manager_factory.call
             manager.list(in_folder: "_overseer", sort: "id").map do |task|
-              TASK_FIELDS.to_h { |field| [field, task.public_send(field)] }
+              entry = TASK_FIELDS.to_h { |field| [field, task.public_send(field)] }
+              entry[:special_folder] = "_overseer"
+              entry
             end
           end
         end
