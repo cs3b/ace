@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Trust-posture parity with `ace-lab verify`: the instruction resolver
+  never executes the repository-controlled `bin/ace-nav` binstub under
+  a privileged (root) run — only the PATH-installed resolver is used.
+
 - `ace-coworker prepare` no longer reports readiness for a protocol
   instruction URI (`wfi://`, `prompt://`, `tmpl://`) that the ace-nav
   resolver rejects in the prepared worktree. Protocol sources now resolve

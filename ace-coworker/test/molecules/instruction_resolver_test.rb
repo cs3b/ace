@@ -66,6 +66,27 @@ module Ace
           assert_kind_of Error, error
           assert_includes error.message, "ace-nav CLI"
         end
+
+        # Trust-posture parity with ace-lab Verify#nav_binary: a
+        # privileged (root) run never executes the repository-controlled
+        # binstub.
+        def test_root_never_uses_the_project_binstub
+          Dir.mktmpdir do |dir|
+            binstub = File.join(dir, "bin", "ace-nav")
+            FileUtils.mkdir_p(File.join(dir, "bin"))
+            FileUtils.touch(binstub)
+            File.chmod(0o755, binstub)
+
+            resolver = InstructionResolver.new(project_root: dir)
+
+            Process.stub :uid, 501 do
+              assert_equal binstub, resolver.send(:nav_binary)
+            end
+            Process.stub :uid, 0 do
+              assert_equal "ace-nav", resolver.send(:nav_binary)
+            end
+          end
+        end
       end
     end
   end

@@ -68,9 +68,13 @@ module Ace
           candidate
         end
 
+        # Same binary choice as start; a privileged (root) run never
+        # executes the repository-controlled binstub — PATH only
+        # (trust-posture parity with ace-lab Verify#nav_binary).
         def nav_binary
           binstub = File.join(@project_root, "bin", "ace-nav")
-          File.executable?(binstub) ? binstub : "ace-nav"
+          use_binstub = !Process.uid.zero? && File.executable?(binstub)
+          use_binstub ? binstub : "ace-nav"
         end
       end
     end
