@@ -54,3 +54,15 @@ Rozszerzono istniejący `ace-overseer status` (StatusCollector) o konfigurowalne
 - `forge` listuje PR-y przez `recent_pull_requests`; listowanie issues nie istnieje w kontrakcie providera (tylko `issue(number:)` per sztuka), więc sekcja forge = PR-y; pojedyncze issues wchodzą przez tracking ace-task po id.
 - `--watch` pozostaje na dashboardzie worktree (quick-refresh `collect_quick`); pełny widok źródeł to jednorazowy `status`. Pełne odświeżanie źródeł w watch pozostaje poza zakresem.
 - Otwarte (dla fali): czy `ace-lab status` (równoległa .6.x) ma konsumować ten sam JSON `sources` — kontrakt jest gotowy do użycia.
+
+## Poprawki po review (runda 1)
+
+Zastosowano 5 zweryfikowanych ustaleń z `.ace-local/review/sessions/review-8xijh6/review-report-review-default.md`:
+
+1. **(Medium, 8xijm9wp)** Wiersz głównego repozytorium tracił etykietę `main` w tabeli źródeł: `context_to_h`/`context_from_h` serializują i odtwarzają teraz `location_type` (i `tmux_window` dla symetrii). Test: `test_sources_table_keeps_main_label_and_sorts_main_last`, `test_worktrees_payload_serializes_location_type` — main renderuje się z przygaszoną etykietą i sortuje ostatni.
+2. **(Medium, 8xijm9wq)** Nieznane klucze w `status_sources` nie są już cicho ignorowane: literówka w nazwie źródła (`herder:`) renderuje `-- herder: unknown source (ignored)`, literówka w opcji (`enabeld: false`) renderuje `-- forge.enabeld: unknown option (ignored)`; oba trafiają też do `unknown_keys` w JSON (obok `sources`), zgodnie z kontraktem trójstanowym. Testy: `test_unknown_source_and_option_keys_render_warnings`, `test_known_config_keys_are_not_reported_unknown`.
+3. **(Low, 8xijm9wr)** `to_sources_table`: dodano `next if result.nil?` — `filter_map` faktycznie filtruje, a częściowy snapshot (brak wpisu źródła) już nie wybucha. Test: `test_to_sources_table_skips_missing_snapshot_entries`.
+4. **(Low, 8xijm9ws)** CLI `Status#initialize` przekazuje wstrzykiwany `config` do domyślnego kolektora (`Organisms::StatusCollector.new(config: config)`). Test: `status_command_test.rb#test_injected_config_is_forwarded_to_default_collector`.
+5. **(Low, 8xijm9wt)** `ForgeSource` waliduje `limit` przez `Integer(...)` z fallbackiem do `DEFAULT_LIMIT` (literówki/brak), jawne `0` → pusta lista, ujemne → `0`. Testy: `test_forge_limit_config_is_wired_through`, `test_forge_limit_typo_falls_back_to_default`, `test_forge_explicit_zero_limit_lists_nothing`, `test_forge_negative_limit_clamps_to_zero`.
+
+Weryfikacja po poprawkach: `bin/ace-test ace-overseer all` → **337 testów, 1395 asercji, 0 błędów** (+10 testów względem 327 przed rundą). CHANGELOG `[Unreleased]` zaktualizowany (sekcja Fixed).
