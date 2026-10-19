@@ -217,6 +217,11 @@ module Ace
           merged
         end
 
+        # NOTE: merge_routes uses a shallow Hash#merge — manifest keys
+        # win per-key, but a nested manifest value would replace an
+        # operator's nested value wholesale. Current route shapes are
+        # flat (adapter/pane/runtime/route), so shallow is correct.
+
         # Create the temp file exclusively (never following a symlink),
         # write the payload, close, and return the path — the
         # ProjectRegistry atomic-write discipline. Raises
@@ -234,8 +239,18 @@ module Ace
             end
             begin
               file.write(payload)
+            rescue SystemCallError, IOError
+              # A failed write must not leak the exclusive temp file:
+              # close, remove, and let the caller classify the raise.
+              file.close unless file.closed?
+              begin
+                File.delete(candidate)
+              rescue SystemCallError
+                nil
+              end
+              raise
             ensure
-              file.close
+              file.close unless file.closed?
             end
             return candidate
           end

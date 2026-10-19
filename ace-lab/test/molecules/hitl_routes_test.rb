@@ -145,6 +145,29 @@ module Molecules
       end
     end
 
+    def test_failed_write_cleans_up_the_exclusive_temp_file
+      Dir.mktmpdir do |root|
+        dir = File.join(root, ".ace", "hitl")
+        FileUtils.mkdir_p(dir)
+        blowing_file = Class.new do
+          def write(_payload)
+            raise IOError, "simulated ENOSPC"
+          end
+
+          def close; end
+
+          def closed? = false
+        end.new
+        File.stub :open, ->(_path, _flags, _mode) { blowing_file } do
+          error = assert_raises(IOError) do
+            organism.send(:write_exclusive, dir, "payload")
+          end
+          assert_match(/ENOSPC/, error.message)
+        end
+        assert_empty Dir.children(dir), "temp file leaked after a failed write"
+      end
+    end
+
     def test_without_hitl_adapters_the_step_is_skipped
       Dir.mktmpdir do |root|
         report = organism.install(root: root, adapters: [])

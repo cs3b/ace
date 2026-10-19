@@ -136,6 +136,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Review 8xirj8: a failed payload write inside `HitlRoutes`' exclusive
+  temp-file helper no longer leaks the temp file (close + delete +
+  re-raise); the shallow per-key merge semantics are documented.
+
 - Review 8xir47 (findings 1, 3, 4): a decidable HITL route failure is
   no longer masked as UNKNOWN when PATH is unset (route failures take
   precedence over the PATH-unset probe message and always FAIL
