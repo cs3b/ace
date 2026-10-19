@@ -372,6 +372,41 @@ class SubjectExtractorTest < AceReviewTest
     end
   end
 
+  def test_pr_url_parsing_never_rewrites_to_github_or_guesses_a_host
+    # Parsing is purely textual: a forge URL keeps its exact host, port and
+    # base path; nothing is normalized to github.com or another guessed host.
+    %w[
+      http://forge.internal:3000/team/repo/pulls/31
+      https://forge.example/git/team/repo/pull/32
+      https://GITEA.COMPANY.EXAMPLE/Team/Repo/pulls/33
+    ].each do |url|
+      reference = Ace::Git::Atoms::PrReference.parse(url)
+      refute_nil reference
+      refute_match(/github/i, reference.repository_url)
+      assert reference.repository_url.start_with?("forge.internal:3000/", "forge.example/", "gitea.company.example/")
+    end
+  end
+
+  def test_pr_url_parsing_performs_no_network_calls
+    url = "https://unreachable-forge.invalid/team/repo/pulls/40"
+    # Config parsing succeeds offline: it only validates the reference shape.
+    assert_equal({"bundle" => {"pr" => [url]}}, @extractor.parse_typed_subject_config("pr:#{url}"))
+    reference = Ace::Git::Atoms::PrReference.parse(url)
+    assert_equal 40, reference.number
+    assert_equal "unreachable-forge.invalid/team/repo", reference.repository_url
+  end
+
+  def test_pr_reference_shapes_extract_forge_kind_base_url_repo_and_number
+    {
+      "25" => {number: 25, repository_url: nil, owner_repo: nil},
+      "owner/repo#456" => {number: 456, repository_url: nil, owner_repo: "owner/repo"},
+      "https://github.com/owner/repo/pull/789" => {number: 789, repository_url: "github.com/owner/repo", owner_repo: nil},
+      "https://forge.example/team/repo/pulls/25" => {number: 25, repository_url: "forge.example/team/repo", owner_repo: nil}
+    }.each do |input, expected|
+      assert_equal expected, Ace::Git::Atoms::PrReference.parse(input).to_h, "input: #{input}"
+    end
+  end
+
   def test_pr_mixed_formats_accepted
     # Mixed numeric and qualified refs should all be accepted
     config = @extractor.parse_typed_subject_config("pr:123,owner/repo#456,789")
