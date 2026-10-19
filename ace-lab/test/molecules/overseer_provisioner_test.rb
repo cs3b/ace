@@ -57,6 +57,20 @@ module Molecules
       end
     end
 
+    def test_negation_line_does_not_count_as_an_ignore_entry
+      Dir.mktmpdir do |root|
+        FileUtils.mkdir_p(File.join(root, ".ace-tasks", "_overseer"))
+        File.write(File.join(root, ".gitignore"), "!.ace-tasks/_overseer\n")
+
+        result = provisioner.call(root: root)
+
+        assert_equal "created", result["status"]
+        content = File.read(File.join(root, ".gitignore"))
+        assert_includes content, ".ace-tasks/_overseer/\n"
+        assert content.start_with?("!.ace-tasks/_overseer\n")
+      end
+    end
+
     def test_dry_run_predicts_without_writing
       Dir.mktmpdir do |root|
         result = provisioner(dry_run: true).call(root: root)

@@ -327,6 +327,8 @@ accounts, directories, keys and roles. Three steps run in a fixed order:
    existing repository with a *different* origin is refused as a
    contradictory registration, and a non-empty non-repository path is
    refused as a foreign location — never taken over, never overwritten.
+   The path itself must be the repository toplevel: a directory nested
+   inside another repository's work tree is refused as foreign.
 2. **overseer** — the private, untracked `.ace-tasks/_overseer/` folder
    is created (ADR-034) and its `.gitignore` entry ensured. Existing
    `.gitignore` content and folder content are never touched; the
@@ -337,14 +339,23 @@ accounts, directories, keys and roles. Three steps run in a fixed order:
    consumer already reads that cascade, `ace-lab status` shows the
    project (`configured`, topology counts) and `ace-lab projects` /
    `ace-overseer projects` list it — no second registry exists, and
-   `ace-overseer` needed no read-side change.
+   `ace-overseer` needed no read-side change. Two prerequisites for
+   that listing: grants come exclusively from the trusted tier of the
+   cascade, so listing the new project id requires a trusted-tier
+   principal grant covering it — configuration the installer (L8.3)
+   owns, not `project add` — and the project-tier document only enters
+   the cascade when the command runs from the project root (cascade
+   tiering). The `path` and `remote` registry fields are
+   installer-owned deployment data and are not exposed in the public
+   projection.
 
 The planner chain consumes the result directly: `ace-coworker prepare`
 provisions task worktrees from the registered repository, and the
 overseer's private queue lives in the prepared `_overseer` folder —
 no manual directory fixing is needed.
 
-Statuses per step: `created|exists|would_create|failed`. `ok` means
+Statuses per step: `created|exists|updated|would_create|would_update|failed`.
+`ok` means
 zero failed steps; a wet run with failures prints the report first,
 then exits non-zero naming each step. `--dry-run` predicts
 (`would_*`) with zero mutations and exits 0.
@@ -353,7 +364,9 @@ Idempotence and refusals:
 
 - Re-adding an already-registered project re-validates every step and
   reports `exists` without rewriting the registry, the `.gitignore`,
-  or anything inside `_overseer`.
+  or anything inside `_overseer`. A changed `--label` on re-add
+  updates the recorded label (display data, not identity) and reports
+  `updated`; an omitted `--label` keeps the recorded one.
 - The same id registered with a different `path` or `remote`, or the
   same absolute `path` registered under a different id, is refused
   before any write.

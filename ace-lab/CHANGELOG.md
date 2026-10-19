@@ -38,6 +38,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `project add` review fixes (round 1, task 8xg.t.sbz.7.1):
+  `RepositoryProvisioner#repository?` now requires the target path to
+  be the Git repository toplevel (`rev-parse --show-toplevel` compared
+  against the expanded path), so a non-empty directory nested inside a
+  parent repository's work tree is refused as a foreign location
+  instead of converging and mutating the parent's origin (8xikzhvh);
+  `ProjectRegistry` pre-validates the loaded document with
+  `TopologySchema.normalize!` (a malformed `topology.projects` entry is
+  a classified "not this lab's registry" failure, not a `TypeError`
+  crash — 8xikzhvi), validates the updated document before the dry-run
+  branch so `--dry-run` predicts invalid id/label failures exactly like
+  the wet run (8xikzhvj), writes the registry atomically via a temp
+  file plus `File.rename` (8xikzhvk), updates the label on re-add with
+  a changed `--label` and reports the new `updated`/`would_update`
+  statuses (8xikzhvl), refuses an empty-but-existing registry file with
+  a clear message (8xikzhvq), and `OverseerProvisioner` no longer
+  counts a `!` negation line as an existing ignore entry (8xikzhvp).
+  `docs/usage.md` documents the trusted-tier grant and project-root
+  prerequisites for listing the new project (8xikzhvm) and that
+  `path`/`remote` registry fields are installer-owned data outside the
+  public projection (8xikzhvs).
 - Security (8xi1p4z5): when an ancestor of the key path denies search
   permission (`EACCES` on realpath, e.g. an account locking out the
   unprivileged installer), `KeyProvisioner`'s git-worktree guard now

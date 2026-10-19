@@ -118,6 +118,93 @@ module Molecules
       end
     end
 
+    def test_non_mapping_project_entry_is_a_classified_failure_not_a_crash
+      Dir.mktmpdir do |root|
+        file = registry.registry_path(root)
+        FileUtils.mkdir_p(File.dirname(file))
+        File.write(file, {"schema_version" => 1, "topology" => {"projects" => [42]}}.to_yaml)
+
+        result = registry.register(root: root, project: project(path: root))
+
+        assert_equal "failed", result["status"]
+        assert_includes result["message"], "not this lab's registry"
+        assert_equal 42, YAML.safe_load_file(file).dig("topology", "projects").first
+      end
+    end
+
+    def test_dry_run_with_invalid_id_predicts_the_wet_failure
+      Dir.mktmpdir do |root|
+        result = registry.register(root: root,
+          project: project(id: "  ", path: File.join(root, "lab")), dry_run: true)
+
+        assert_equal "failed", result["status"]
+        assert_includes result["message"], "invalid lab configuration"
+        refute File.exist?(registry.registry_path(root))
+
+        wet = registry.register(root: root, project: project(id: "  ", path: File.join(root, "lab")))
+        assert_equal "failed", wet["status"]
+        assert_equal result["message"], wet["message"]
+      end
+    end
+
+    def test_empty_registry_file_is_refused_with_a_clear_message
+      Dir.mktmpdir do |root|
+        file = registry.registry_path(root)
+        FileUtils.mkdir_p(File.dirname(file))
+        File.write(file, "")
+
+        result = registry.register(root: root, project: project(path: root))
+
+        assert_equal "failed", result["status"]
+        assert_includes result["message"], "exists but is empty"
+        assert_equal "", File.read(file)
+      end
+    end
+
+    def test_re_add_with_a_changed_label_updates_the_label
+      Dir.mktmpdir do |root|
+        path = File.join(root, "lab")
+        registry.register(root: root, project: project(path: path))
+
+        result = registry.register(root: root,
+          project: project(path: path, label: "Atlas Prime"))
+
+        assert_equal "updated", result["status"]
+        document = YAML.safe_load_file(registry.registry_path(root))
+        assert_equal "Atlas Prime", document.dig("topology", "projects").first["label"]
+      end
+    end
+
+    def test_re_add_with_a_changed_label_in_dry_run_predicts_update_without_writing
+      Dir.mktmpdir do |root|
+        path = File.join(root, "lab")
+        registry.register(root: root, project: project(path: path))
+        file = registry.registry_path(root)
+        content = File.read(file)
+
+        result = registry.register(root: root,
+          project: project(path: path, label: "Atlas Prime"), dry_run: true)
+
+        assert_equal "would_update", result["status"]
+        assert_equal content, File.read(file)
+      end
+    end
+
+    def test_re_add_without_a_label_keeps_the_recorded_label
+      Dir.mktmpdir do |root|
+        path = File.join(root, "lab")
+        registry.register(root: root, project: project(path: path))
+        file = registry.registry_path(root)
+        content = File.read(file)
+
+        result = registry.register(root: root,
+          project: project(path: path, label: nil))
+
+        assert_equal "exists", result["status"]
+        assert_equal content, File.read(file)
+      end
+    end
+
     def test_dry_run_predicts_without_writing
       Dir.mktmpdir do |root|
         result = registry.register(root: root, project: project(path: root), dry_run: true)

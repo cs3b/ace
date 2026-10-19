@@ -90,6 +90,42 @@ module Molecules
       assert File.file?(File.join(path, "payload", "keep.txt"))
     end
 
+    def test_nested_directory_inside_a_parent_repo_is_refused_as_foreign
+      # A non-empty directory inside an existing repository's work tree
+      # is NOT that repository's toplevel: it must be refused as a
+      # foreign location, never converged and never mutating the
+      # parent's origin (review 8xikzhvh).
+      parent = File.join(@tmp, "parent")
+      Open3.capture3("git", "init", "-q", parent)
+      path = File.join(parent, "nested")
+      FileUtils.mkdir_p(path)
+      File.write(File.join(path, "keep.txt"), "team data\n")
+
+      result = provisioner.call(path: path, remote: @source)
+
+      assert_equal "failed", result["status"]
+      assert_includes result["message"], "refusing to take over"
+      assert File.file?(File.join(path, "keep.txt"))
+      # The parent repository's config was not mutated either.
+      out, _err, status = Open3.capture3("git", "-C", parent, "remote", "get-url", "origin")
+      refute status.success?
+      assert_equal "", out.strip
+    end
+
+    def test_nested_directory_inside_a_parent_repo_is_refused_in_dry_run_too
+      parent = File.join(@tmp, "parent")
+      Open3.capture3("git", "init", "-q", parent)
+      path = File.join(parent, "nested")
+      FileUtils.mkdir_p(path)
+      File.write(File.join(path, "keep.txt"), "team data\n")
+
+      result = provisioner(dry_run: true).call(path: path, remote: @source)
+
+      assert_equal "failed", result["status"]
+      assert_includes result["message"], "refusing to take over"
+      assert File.file?(File.join(path, "keep.txt"))
+    end
+
     def test_missing_path_without_remote_fails_with_actionable_message
       path = File.join(@tmp, "atlas")
 

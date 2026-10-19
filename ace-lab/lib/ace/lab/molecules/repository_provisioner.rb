@@ -75,11 +75,25 @@ module Ace
         # Read-only probes: safe in dry-run (the prediction contract from
         # ace-lab prepare applies — predictions use read-only filesystem
         # and Git queries, effects are suppressed).
+        # The path must BE the repository toplevel, not merely sit inside
+        # one: a subdirectory of a parent work tree also answers
+        # `--is-inside-work-tree` with true, which would let a foreign
+        # directory bypass the takeover refusal and mutate the parent
+        # repository's origin (review 8xikzhvh).
         def repository?(path)
           return false unless File.directory?(path)
 
-          result = runner.call(["git", "-C", path, "rev-parse", "--is-inside-work-tree"])
-          success?(result) && result["out"].to_s.strip == "true"
+          result = runner.call(["git", "-C", path, "rev-parse", "--show-toplevel"])
+          success?(result) && same_location?(result["out"].to_s.strip, path)
+        end
+
+        # Git prints the physical toplevel (symlinks resolved), so the
+        # comparison resolves both sides; a path that cannot be
+        # resolved falls back to the lexical spelling.
+        def same_location?(reported, path)
+          File.realpath(reported) == File.realpath(path)
+        rescue Errno::ENOENT, Errno::ENOTDIR, Errno::EACCES
+          File.expand_path(reported) == File.expand_path(path)
         end
 
         def foreign_directory?(path)

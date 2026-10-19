@@ -60,14 +60,19 @@ module Ace
           path = registry_path(root)
           document = begin
             load(root: root)
-          rescue Ace::Lab::InvalidConfigurationError, StandardError
+          rescue StandardError
             return failure(path, "#{path} could not be read as the lab registry; refusing to overwrite")
           end
 
           if document.nil?
             document = {"schema_version" => SCHEMA_VERSION,
               "topology" => {"projects" => [], "agents" => [], "services" => []}}
-            return write(root, path, document, project, dry_run)
+            return write(path, document, project, dry_run)
+          end
+
+          if document.empty?
+            return failure(path, "#{path} exists but is empty; " \
+              "it is not this lab's registry — refusing to overwrite")
           end
 
           version = document["schema_version"]
@@ -76,20 +81,36 @@ module Ace
               "it is not this lab's registry — refusing to overwrite")
           end
 
+          # Pre-validate the loaded document (review 8xikzhvi): a
+          # malformed entry (e.g. a non-mapping topology.projects item)
+          # is a foreign document and must fail classification here,
+          # never crash with a TypeError mid-iteration.
+          begin
+            Atoms::TopologySchema.normalize!(deep_copy(document))
+          rescue Ace::Lab::InvalidConfigurationError
+            return failure(path, "#{path} is not this lab's registry " \
+              "(invalid lab configuration); refusing to overwrite")
+          end
+
           conflict = conflicting_registration(document, project)
           return failure(path, conflict) if conflict
 
           existing = projects_in(document).find { |entry| entry["id"] == project["id"] }
-          return {"path" => path, "status" => "exists", "message" => nil} if existing
+          if existing
+            # `label` is display data, not identity: a changed label on
+            # re-add updates it in place (review 8xikzhvl). An absent
+            # label leaves the recorded one untouched.
+            return {"path" => path, "status" => "exists", "message" => nil} if !project["label"] || project["label"] == existing["label"]
 
-          write(root, path, document, project, dry_run)
+            return relabel(path, document, project, dry_run)
+          end
+
+          write(path, document, project, dry_run)
         end
 
         private
 
-        def write(root, path, document, project, dry_run)
-          return {"path" => path, "status" => "would_create", "message" => nil} if dry_run
-
+        def write(path, document, project, dry_run)
           updated = deep_copy(document)
           updated["topology"] ||= {}
           updated["topology"]["projects"] ||= []
@@ -98,23 +119,44 @@ module Ace
           entry["path"] = project["path"]
           entry["remote"] = project["remote"] if project["remote"]
           updated["topology"]["projects"] << entry
+          persist(path, updated, project, dry_run, "would_create", "created")
+        end
 
+        def relabel(path, document, project, dry_run)
+          updated = deep_copy(document)
+          entry = projects_in(updated).find { |candidate| candidate["id"] == project["id"] }
+          entry["label"] = project["label"]
+          persist(path, updated, project, dry_run, "would_update", "updated")
+        end
+
+        # Validate the updated document BEFORE the dry-run branch
+        # (review 8xikzhvj): a dry run predicts the wet run's
+        # validation failures instead of a success the wet run cannot
+        # deliver.
+        def persist(path, updated, project, dry_run, dry_status, wet_status)
           begin
             Atoms::TopologySchema.normalize!(updated)
           rescue Ace::Lab::InvalidConfigurationError => e
             return failure(path,
               "registering project '#{project['id']}' would produce an invalid lab configuration: #{e.message}")
           end
+          return {"path" => path, "status" => dry_status, "message" => nil} if dry_run
 
           begin
             require "fileutils"
-            FileUtils.mkdir_p(File.join(root, ".ace", "lab"))
-            File.write(path, YAML.dump(updated))
+            dir = File.dirname(path)
+            FileUtils.mkdir_p(dir)
+            # Atomic write (review 8xikzhvk): a crash mid-write must
+            # never leave a truncated cascade document behind.
+            tmp = File.join(dir, ".config.yml.tmp.#{Process.pid}")
+            File.write(tmp, YAML.dump(updated))
+            File.rename(tmp, path)
           rescue SystemCallError => e
+            File.delete(tmp) if defined?(tmp) && File.exist?(tmp)
             return failure(path, "writing #{path} failed: #{e.message}")
           end
 
-          {"path" => path, "status" => "created", "message" => nil}
+          {"path" => path, "status" => wet_status, "message" => nil}
         end
 
         # Contradiction and location-conflict detection, checked before

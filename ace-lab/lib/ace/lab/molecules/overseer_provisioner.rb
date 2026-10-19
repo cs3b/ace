@@ -55,7 +55,12 @@ module Ace
         def ignore_entry?(gitignore)
           return false unless File.file?(gitignore)
 
-          File.foreach(gitignore).any? { |line| IGNORE_PATTERN.match?(line.strip) }
+          File.foreach(gitignore).any? do |line|
+            line = line.strip
+            # A negation (`!...`) un-ignores the folder; only positive
+            # ignore lines count as "present" (review 8xikzhvp).
+            !line.start_with?("!") && IGNORE_PATTERN.match?(line)
+          end
         end
 
         # Append only — an existing .gitignore is the project's own
