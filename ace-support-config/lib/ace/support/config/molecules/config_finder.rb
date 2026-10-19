@@ -48,8 +48,13 @@ module Ace
             @search_paths.each_with_index do |base_path, index|
               priority = index * 10 # Lower index = higher priority
 
-              @file_patterns.each do |pattern|
-                found = find_in_path(base_path, pattern, priority)
+              # Deterministic per-tier tie order: when several patterns
+              # match in the same tier (e.g. both config.yml and
+              # config.yaml exist), the earlier pattern wins and both
+              # are still merged in a stable order — Array#sort alone
+              # is unstable for equal priorities.
+              @file_patterns.each_with_index do |pattern, pattern_index|
+                found = find_in_path(base_path, pattern, priority + pattern_index)
                 paths.concat(found)
               end
             end
