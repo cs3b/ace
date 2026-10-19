@@ -101,3 +101,12 @@ Zmienione pliki:
 - Brak. Ewentualne przyszłe rozszerzenie: rozróżnienie „praca przerwana"
   (stalled) jako osobnej kategorii zamiast FAILURE — obecnie zgodnie z briefem
   w FAILURE.
+
+## Poprawki po review (runda 1)
+
+Session `review-8xik6u`, 4 findingi (1 High, 3 Low) — wszystkie applied:
+1. (H) Proweniencja drzew: źródła tasków przenoszą `special_folder`; drzewo "project" wyklucza wpisy z folderów specjalnych → task _overseer nie jest dublowany/błędnie etykietowany, a zadnie w _archive nie występuje jako bloker projektu; +test regresyjny (1 wiersz, etykieta _overseer, brak a9).
+2. Nieprawidłowy status "running" w fixture → "in-progress" (5 miejsc + asercje).
+3. render_attention/to_sources_h odporne na nil/częściowy attention (Array(); JSON zawsze 3 tablice, nigdy null).
+4. Nieprzetworzone raporty ace-hitl widoczne jako FAILURE (unprocessed_report, next_action: process-reports); zaktualizowano docs/usage.md i test.
+Retest: `bin/ace-test ace-overseer all` → 357/1494/0.
