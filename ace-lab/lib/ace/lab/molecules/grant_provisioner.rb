@@ -187,8 +187,12 @@ module Ace
         end
 
         def failure(message)
+          # `kept` is present (empty) like in every report so JSON
+          # consumers see one stable schema — a failure merges
+          # nothing, so nothing is carried over (resume/verification
+          # readers, tasks 8xg.t.sbz.7.3/.7.4).
           {"path" => @authorization_path, "status" => "failed", "principals" => {},
-            "message" => message}
+            "message" => message, "kept" => []}
         end
 
         # Read and parse the trusted document through the same

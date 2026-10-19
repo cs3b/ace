@@ -448,9 +448,51 @@ and exits 0.
 Idempotence and resume design: every step is idempotent, so an
 interrupted re-run converges where steps already completed (accounts
 `exists`, repositories `exists`, grants `exists`) without duplicates or
-lost configuration — the per-step record shape the dedicated resume
-work (L8.4, task 8xg.t.sbz.7.3) builds on; no journal exists or is
-needed for convergence.
+lost configuration — the per-step record is the resume mechanism; no
+journal exists or is needed for convergence. See
+[Resuming an interrupted install](#resuming-an-interrupted-install-l84).
+
+### Resuming an interrupted install (L8.4)
+
+```bash
+ace-lab install              # same command: recognizes and finishes its own partial state
+ace-lab install --dry-run    # previews exactly which steps exist and which would run
+```
+
+An installation interrupted mid-run (crash after accounts, directories,
+keys, a project, or part of the grants) is resumed by running the same
+`ace-lab install` command again. Recognition is derived from the real
+artifacts the steps read and write — there is no journal, marker file
+or second state owner:
+
+- already-done steps report `exists`/`verified` and are not reworked:
+  the converged directory and key pair keep their inode and content, an
+  already-cloned repository keeps its worktree (untracked files
+  included) and a converged trusted document stays byte-identical;
+- missing steps complete: a key pair whose public half is missing
+  regenerates only that half from the surviving private key; a project
+  whose repository exists finishes only `_overseer` and the registry;
+  partially granted own principals converge while principals and
+  sections the manifest does not mention are kept;
+- grants are configured only when prepare and every project converged
+  (no pretend success over a partial install).
+
+Own-partial vs foreign is distinguished per step, not only for grants:
+each already-present artifact is checked against what the manifest
+declares before it is touched, and mismatching content is refused —
+never taken over, never cleaned:
+
+| Step | Foreign state | Result |
+| --- | --- | --- |
+| declared directory | symlink, non-directory, or foreign ownership | step fails with a resolve-manually message; projects and grants are gated as dependency failures |
+| key pair | foreign-owned key files or `.ssh`, non-regular file | step fails with a resolve-manually message |
+| project repository | non-empty non-Git directory, or a Git repository with a different origin | step fails: "refusing to take over a foreign location" / "refusing to overwrite an existing registration"; the other projects still run (isolation) |
+| grants | trusted document granting projects outside the manifest, or a document that fails verification/parsing | the whole install refuses before any mutation ("refusing to install over a foreign lab"), wet and in `--dry-run` alike |
+
+When resume is not possible, the wet failure names every blocking step
+concretely (`install failed (N step(s)): <phase>/<item>: <message>`);
+`--dry-run` predicts the same per-step refusals with zero mutations
+and exits 0.
 
 Boundaries: `install` does not verify readiness under the target
 accounts (L8.5, task 8xg.t.sbz.7.4); HITL adapter configuration beyond
@@ -463,13 +505,12 @@ by this slice.
 > (configurable `ace-overseer status` aggregation, pi continuation) lives in
 > its own packages and is not available yet.
 >
-> **Planned (L8):** resuming an interrupted install beyond idempotent
-> re-runs (L8.4) and end-to-end readiness verification under the target
-> accounts (L8.5) are not available yet. The preparation phase is
+> **Planned (L8):** end-to-end readiness verification under the target
+> accounts (L8.5) is not available yet. The preparation phase is
 > delivered as `ace-lab prepare` (L8.1), project onboarding as
-> `ace-lab project add` (L8.2), and the full installer as `ace-lab
-> install` (L8.3), which composes them with the trusted-tier grants
-> configuration and a final report.
+> `ace-lab project add` (L8.2), the full installer as `ace-lab
+> install` (L8.3), and resuming the installer's own interrupted
+> installation as the same `ace-lab install` re-run (L8.4).
 
 ## Boundaries
 

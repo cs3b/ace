@@ -9,6 +9,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Resuming the installer's own interrupted installation (L8.4, task
+  8xg.t.sbz.7.3): re-running `ace-lab install` after a mid-run crash
+  recognizes the partial state — derived from the real artifacts the
+  steps read and write, with no journal or marker file — and finishes
+  it. Steps that already completed report `exists`/`verified` without
+  destructive rework (converged directories and key pairs keep their
+  inode; a converged trusted document stays byte-identical), missing
+  steps complete (a half-written key pair regenerates only the public
+  half; partially granted own principals converge while foreign
+  sections of the document are kept), and grants are still configured
+  only over a converged install. Foreign content is refused at every
+  step: a project directory with foreign content, a repository with a
+  foreign origin, a foreign declared directory (e.g. a symlink) and a
+  trusted document granting undeclared projects each fail their step
+  with a classified, concrete message before any takeover or cleanup,
+  wet and in `--dry-run` alike (prediction parity on partial states).
+
+### Fixed
+
+- `GrantProvisioner` failure reports now carry `kept: []` like every
+  other grants status, so machine consumers of the install report see
+  one stable schema for the grants section regardless of outcome.
+
 - `ace-lab install` (L8.3, task 8xg.t.sbz.7.2): the full new-lab
   installation from the trusted install manifest, composing the
   existing molecules in a fixed order — `Prepare` (L8.1: accounts,
