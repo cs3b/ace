@@ -24,7 +24,7 @@ class Ace::Handbook::Integration::PiSdkAcceptanceTest < Minitest::Test
         config: {}
       )
       result = syncer.sync(provider: "pi").first
-      assert_equal 8, result.fetch(:projected_extensions)
+      assert_equal 9, result.fetch(:projected_extensions)
 
       projected_entry = File.join(project_root, ".pi", "extensions", "ace-wake", "index.js")
       assert File.file?(projected_entry), "sync must project the extension entrypoint"

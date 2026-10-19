@@ -169,6 +169,10 @@ function createRegistry(pi, ctx, ports) {
       watchFactory: ports.watchFactory ?? nodeWatchFactory,
       statFn: ports.statFn ?? nodeStatFn,
       baseDir: ctx.cwd,
+      // The report-inbox watch covers every linked worktree's
+      // .ace-local/hitl by default (the same git worktree discovery
+      // ace-hitl's list uses); injectable for deterministic tests.
+      resolveTargets: ports.resolveTargets,
       scheduleReconcile: ports.scheduleReconcile,
       onDeactivate: () => registry?.refreshStatus(),
     }),

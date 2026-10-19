@@ -1,6 +1,6 @@
 import aceWakeFactory from "../../handbook/extensions/ace-wake/index.js";
 
-const HOST_PORTS = ["setIntervalFn", "clearIntervalFn", "watchFactory", "statFn"];
+const HOST_PORTS = ["setIntervalFn", "clearIntervalFn", "watchFactory", "statFn", "resolveTargets"];
 
 function portsOf(host, extraPorts = {}) {
   return { ...Object.fromEntries(HOST_PORTS.map((name) => [name, host[name]])), ...extraPorts };

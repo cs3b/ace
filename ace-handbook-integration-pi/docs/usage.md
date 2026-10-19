@@ -62,11 +62,11 @@ The `/continue-work` prompt template (`.pi/prompts/continue-work.md`) is the res
 
 A report notification reaches the waiting overseer session through the existing transports — no second queue is introduced:
 
-- **File wake (ace-wake):** the overseer session subscribes to the ace-hitl inbox directory once:
+- **File wake (ace-wake):** the overseer session subscribes to the ace-hitl inbox once:
   ```
   /watch add reports --path .ace-local/hitl --message "new ace-hitl report; run /continue-work"
   ```
-  A new report file wakes an idle session; during an active turn the wake is queued as a follow-up for that same run (never a second overseer execution); repeats coalesce per source; the definition survives restart and re-registers exactly once.
+  `ace-hitl create` writes a coworker's report inside THAT coworker's worktree (its own `.ace-local/hitl`), so the watch expands `.ace-local/hitl` to the inbox of every linked worktree — the same `git worktree list` discovery the HITL list uses; no second inbox or cache is introduced. Expansion runs at registration and at every re-registration (session start/reload/branch switch); worktrees created later are covered at the next re-registration, and a worktree inbox that does not exist yet is watched through its nearest existing ancestor, so the first report into it still wakes. A new report wakes an idle session; during an active turn the wake is queued as a follow-up for that same run (never a second overseer execution); repeats coalesce per source; the definition survives restart and re-registers exactly once.
 - **Herdr push (`ace-herdr deliver`):** the herdr adapter prompts the overseer pane with the report; delivery is idempotent per event id, and a pane without an agent is bootstrapped first.
 
 After a restart the session is started/resumed with `/continue-work`; the prompt re-reads `_overseer`, assignment, and project truth, so the same commissioned process and its assignments continue. When no new commissioned work exists, the session records that state and waits — it never seeks other tasks on its own.

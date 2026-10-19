@@ -112,4 +112,75 @@ describe("report wake (L7.3 continuation transport)", () => {
       assert.match(send.text, WAKE_TEXT);
     }
   });
+
+  // --- Cross-worktree reports (PR393 P2: ace-hitl create writes inside
+  // --- the coworker's worktree, not the main checkout's inbox) ---
+
+  const WORKTREE_INBOX = "/fake/wt/task-9/.ace-local/hitl";
+
+  /**
+   * A session whose report watch expands across the linked worktrees — the
+   * same multi-worktree discovery ace-hitl's list uses (simulated here with
+   * a deterministic resolveTargets port; a real-git scenario lives in
+   * report-wake-worktree.test.mjs).
+   */
+  async function overseerSessionAcrossWorktrees({ worktreeInboxExists = true } = {}) {
+    const host = createFakeHost();
+    host.setFile(HITL_DIR, { mtimeMs: 1, size: 10 });
+    if (worktreeInboxExists) {
+      host.setFile(WORKTREE_INBOX, { mtimeMs: 1, size: 10 });
+    } else {
+      // The worktree inbox does not exist yet; its parent directory does,
+      // so the watch attaches through the parent and the first report
+      // still fires.
+      host.setFile("/fake/wt/task-9/.ace-local", { mtimeMs: 1, size: 10 });
+    }
+    const session = await startSession(host, {
+      resolveTargets: (baseDir, path) => [
+        `${baseDir}/.ace-local/hitl`,
+        WORKTREE_INBOX,
+      ],
+    });
+    await host.runCommand("watch", "add reports --path .ace-local/hitl --message new ace-hitl report; run /continue-work");
+    return { host, session };
+  }
+
+  it("wakes for a report written inside a coworker worktree's inbox", async () => {
+    const { host } = await overseerSessionAcrossWorktrees();
+
+    // ace-hitl create wrote the report into the WORKTREE's inbox; the main
+    // checkout's inbox directory never changed.
+    host.setFile(WORKTREE_INBOX, { mtimeMs: 20, size: 44 });
+    host.triggerWatch(WORKTREE_INBOX);
+
+    const sends = reportSends(host);
+    assert.equal(sends.length, 1, "a worktree report must wake the waiting overseer");
+    assert.match(sends[0].text, /\[ace-wake watch:reports\] new ace-hitl report/);
+  });
+
+  it("wakes for the first report into a worktree inbox that did not exist at registration", async () => {
+    const { host } = await overseerSessionAcrossWorktrees({ worktreeInboxExists: false });
+
+    // The inbox directory appears only now, together with its first report.
+    host.setFile(WORKTREE_INBOX, { mtimeMs: 5, size: 30 });
+    host.triggerWatch(WORKTREE_INBOX);
+
+    assert.equal(reportSends(host).length, 1,
+      "the first report into a freshly created worktree inbox must still wake");
+  });
+
+  it("re-expands the worktree targets exactly once per restart", async () => {
+    const { host, session } = await overseerSessionAcrossWorktrees();
+
+    host.resetSends();
+    await session.reload();
+
+    // One subscription, two targets: main inbox + worktree inbox.
+    assert.equal(host.watcherCount(), 2, "restart re-registers one watcher per discovered inbox");
+    assert.equal(reportSends(host).length, 0, "restart never replays past reports");
+
+    host.setFile(WORKTREE_INBOX, { mtimeMs: 30, size: 60 });
+    host.triggerWatch(WORKTREE_INBOX);
+    assert.equal(reportSends(host).length, 1);
+  });
 });

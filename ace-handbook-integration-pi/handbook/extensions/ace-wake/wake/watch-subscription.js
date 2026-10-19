@@ -1,6 +1,7 @@
 import * as nodeFs from "node:fs";
 import * as nodePath from "node:path";
 import { WakeError } from "./types.js";
+import { expandInboxWatchTargets } from "./inbox-discovery.js";
 
 /**
  * Resolve a configured watch path to the filesystem target: relative paths
@@ -27,7 +28,13 @@ export function canonicalizeWatchPath(baseDir, path) {
  *
  * start() resolves the configured path to a canonical absolute target (relative
  * paths resolve against `baseDir`; symlinks resolve to their target), validates
- * readable metadata, and records a baseline fingerprint. Only later fingerprint
+ * readable metadata, and records a baseline fingerprint. An injected
+ * `resolveTargets` port may expand the configured path to several targets —
+ * the ace-hitl inbox watch expands `.ace-local/hitl` to every linked
+ * worktree's inbox, because `ace-hitl create` writes reports inside the
+ * coworker's worktree, not the main checkout. The fingerprint aggregates all
+ * targets; a target that does not exist yet is a stable "absent" state, so
+ * the first report into a freshly created inbox still wakes. Only later fingerprint
  * changes wake the agent, so registering a watch never produces an initial
  * wake. When a wake coalesces into one already queued, the fingerprint stays
  * at the previously delivered state: the queued wake covers the change, and a
@@ -62,9 +69,12 @@ export function canonicalizeWatchPath(baseDir, path) {
  * }}
  */
 const RECONCILE_DELAY_MS = 500;
+// How far above a not-yet-existing target an ancestor watch may climb
+// (enough for <worktree>/.ace-local/hitl inside any sane worktree layout).
+const MAX_ANCESTOR_CLIMB = 6;
 
-export function createWatchPort({ watchFactory, statFn, baseDir = process.cwd(), canonicalizeFn = canonicalizeWatchPath, scheduleReconcile = defaultScheduleReconcile, onDeactivate }) {
-  /** @type {Map<string, {watcher: {close: () => void}, canonicalPath: string, definition: import("./types.js").WatchDefinition, fingerprint: string, previousFingerprint: string, dirty: boolean}>} */
+export function createWatchPort({ watchFactory, statFn, baseDir = process.cwd(), canonicalizeFn = canonicalizeWatchPath, resolveTargets = expandInboxWatchTargets, scheduleReconcile = defaultScheduleReconcile, onDeactivate }) {
+  /** @type {Map<string, {watchers: Array<{watcher: {close: () => void}}>, paths: string[], definition: import("./types.js").WatchDefinition, fingerprint: string, previousFingerprint: string, dirty: boolean}>} */
   const active = new Map();
   /** @type {Map<string, string>} */
   const errors = new Map();
@@ -78,21 +88,16 @@ export function createWatchPort({ watchFactory, statFn, baseDir = process.cwd(),
       errors.delete(definition.name);
 
       const canonicalPath = canonicalizeFn(baseDir, definition.path);
-      const baseline = readBaseline(canonicalPath);
-      const fingerprint = fingerprintOf(baseline);
-      const watcher = watchFactory(canonicalPath, {
-        onChange: () => handleChange(definition, onWake),
-        onError: (error) => {
-          // A callback from a removed registration must never touch its
-          // replacement.
-          if (active.get(definition.name)?.definition !== definition) {
-            return;
-          }
-          deactivate(definition.name, describeError(error));
-        },
-      });
+      // The configured path itself must be readable; expansion targets may
+      // legitimately not exist yet (an inbox in a worktree that never
+      // received a report), so only the primary is validated strictly.
+      readBaseline(canonicalPath);
+      const targetPaths = resolveTargetsFor(resolveTargets, baseDir, definition.path, canonicalPath);
+      const watchers = targetPaths.flatMap((target) => attachWatcher(target, definition, onWake));
+      const paths = watchers.map((entry) => entry.path);
+      const fingerprint = aggregateFingerprint(paths, canonicalPath);
 
-      active.set(definition.name, { watcher, canonicalPath, definition, fingerprint, previousFingerprint: fingerprint, dirty: false });
+      active.set(definition.name, { watchers, paths, primaryPath: canonicalPath, definition, fingerprint, previousFingerprint: fingerprint, dirty: false });
       // Close the registration gap: a change between baseline capture and
       // watcher effectiveness produces no callback, so re-stat once.
       scheduleReconcile(() => handleChange(definition, onWake));
@@ -124,11 +129,10 @@ export function createWatchPort({ watchFactory, statFn, baseDir = process.cwd(),
         if (!entry.dirty) {
           continue;
         }
-        const current = readBaselineOrError(entry.canonicalPath, entry.definition.name);
-        if (current === undefined) {
+        const next = currentFingerprint(entry, entry.definition.name);
+        if (next === undefined) {
           continue;
         }
-        const next = fingerprintOf(current);
         if (next === entry.fingerprint) {
           entry.dirty = false;
           continue;
@@ -202,10 +206,12 @@ export function createWatchPort({ watchFactory, statFn, baseDir = process.cwd(),
   function stopExisting(name) {
     const entry = active.get(name);
     if (entry !== undefined) {
-      try {
-        entry.watcher.close();
-      } catch {
-        // Closing an already-broken watcher must not mask the original error.
+      for (const { watcher } of entry.watchers) {
+        try {
+          watcher.close();
+        } catch {
+          // Closing an already-broken watcher must not mask the original error.
+        }
       }
       active.delete(name);
     }
@@ -219,11 +225,10 @@ export function createWatchPort({ watchFactory, statFn, baseDir = process.cwd(),
     if (entry === undefined || entry.definition !== definition) {
       return;
     }
-    const current = readBaselineOrError(entry.canonicalPath, definition.name);
-    if (current === undefined) {
+    const next = currentFingerprint(entry, definition.name);
+    if (next === undefined) {
       return;
     }
-    const next = fingerprintOf(current);
     if (next === entry.fingerprint) {
       return;
     }
@@ -268,6 +273,110 @@ export function createWatchPort({ watchFactory, statFn, baseDir = process.cwd(),
       deactivate(name, describeError(error));
       return undefined;
     }
+  }
+
+  /**
+   * Resolve the watch targets for one configured path. An injected
+   * `resolveTargets` port (the ace-hitl inbox expansion) may return several
+   * directories; the validated primary canonical path is always watched,
+   * whatever the port returns.
+   *
+   * @param {((baseDir: string, path: string) => string[]) | undefined} resolveTargets
+   * @param {string} baseDir
+   * @param {string} configuredPath
+   * @param {string} canonicalPath
+   * @returns {string[]}
+   */
+  function resolveTargetsFor(resolveTargets, baseDir, configuredPath, canonicalPath) {
+    if (!resolveTargets) {
+      return [canonicalPath];
+    }
+    const expanded = resolveTargets(baseDir, configuredPath)
+      .filter((path) => typeof path === "string" && path.length > 0)
+      .map((path) => nodePath.resolve(path));
+    return [...new Set([canonicalPath, ...expanded])];
+  }
+
+  /**
+   * Attach one native watcher for a target. A target that does not exist
+   * yet (a worktree inbox with no report so far) is watched through its
+   * nearest EXISTING ancestor directory: the ancestor's events re-stat the
+   * target, so the first report — which creates the inbox — still wakes.
+   * When no ancestor is readable the target is skipped until the next
+   * re-registration.
+   *
+   * @param {string} target
+   * @param {import("./types.js").WatchDefinition} definition
+   * @param {(definition: import("./types.js").WatchDefinition) => unknown} onWake
+   * @returns {Array<{path: string, watcher: {close: () => void}}>}
+   */
+  function attachWatcher(target, definition, onWake) {
+    const handlers = {
+      onChange: () => handleChange(definition, onWake),
+      onError: (error) => {
+        // A callback from a removed registration must never touch its
+        // replacement.
+        if (active.get(definition.name)?.definition !== definition) {
+          return;
+        }
+        deactivate(definition.name, describeError(error));
+      },
+    };
+    let watchPath = target;
+    let attempts = 0;
+    for (;;) {
+      try {
+        statFn(watchPath);
+        break;
+      } catch {
+        if (attempts >= MAX_ANCESTOR_CLIMB || watchPath === nodePath.dirname(watchPath)) {
+          return [];
+        }
+        attempts += 1;
+        watchPath = nodePath.dirname(watchPath);
+      }
+    }
+    return [{ path: target, watcher: watchFactory(watchPath, handlers) }];
+  }
+
+  /**
+   * Current aggregate fingerprint of a subscription. An unreadable
+   * PRIMARY deactivates the subscription (the configured path itself is
+   * the contract); an unreadable extra target is a stable "absent" state
+   * that changes to a real fingerprint once the target appears.
+   *
+   * @param {{paths: string[], primaryPath: string}} entry
+   * @param {string} name
+   * @returns {string | undefined}
+   */
+  function currentFingerprint(entry, name) {
+    try {
+      return aggregateFingerprint(entry.paths, entry.primaryPath);
+    } catch (error) {
+      deactivate(name, describeError(error));
+      return undefined;
+    }
+  }
+
+  /**
+   * @param {string[]} paths sorted target paths
+   * @param {string} primaryPath
+   * @returns {string}
+   */
+  function aggregateFingerprint(paths, primaryPath) {
+    return [...paths]
+      .sort()
+      .map((path) => {
+        if (path === primaryPath) {
+          return `${path}=${fingerprintOf(statFn(path))}`;
+        }
+        try {
+          return `${path}=${fingerprintOf(statFn(path))}`;
+        } catch {
+          return `${path}=absent`;
+        }
+      })
+      .join("|");
   }
 }
 
