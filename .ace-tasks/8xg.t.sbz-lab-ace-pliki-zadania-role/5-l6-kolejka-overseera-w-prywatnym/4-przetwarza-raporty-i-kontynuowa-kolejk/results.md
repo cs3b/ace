@@ -117,3 +117,45 @@ nowa; ponownie dostarczony raport tego samego ID wykrywa zapisany
 - Automatyczne budzenie pi (adresowanie/nervus) należy do .6.2 — poza zakresem.
 - Zamykanie taska zarządzającego przy wszystkich krokach terminalnych
   pozostawione roli overseera (reguła 6 queue.wf.md); komenda tylko raportuje.
+
+## Poprawki po review (runda 1)
+
+Wprowadzono 10 zweryfikowanych uwag z sesji review-8xiihg:
+
+1. Deduplikacja oparta tylko o ID zdarzenia: `ReportInterpretation#match`
+   preferuje kroki nieterminalne; gdy przy dopasowaniu po `assignment`
+   pasuje wyłącznie krok terminalny, a raport sukcesu ma inny ID niż
+   zapisany `processed_report`, wynik to `:duplicate` z zapisanym
+   rezultatem (brak ścieżki reopen). Test:
+   `test_distinct_id_success_report_for_done_step_is_not_re_advanced`
+   (atom + organism).
+2. Test molekuły `HitlInbox` (dotąd zerowe pokrycie): nowy
+   `test/fast/molecules/hitl_inbox_test.rb` - raporty niezależnie od
+   statusu, pytania tylko `pending`, klucze normalizacji
+   (task/assignment), kolejność oldest-first.
+3. Niejednoznaczne dopasowania między managerami (ten sam
+   `project_task` lub to samo `assignment` w dwóch managerach) dają
+   `:unmatched` zamiast cichego `.first`; testy.
+4. `continuation_description` rozróżnia `status: "sequence_complete"`
+   ("sequence complete ...") od faktycznego przekazania worktree;
+   test.
+5. Nil z `@task_manager.update` (task przestaje się rozwiązywać) to
+   wynik blocked/clarification z powodem "task no longer resolves",
+   nie cichy sukces; test.
+6. `event["step"]` usunięty z normalizacji `HitlInbox` i docstringów
+   atomu - udokumentowana pierwszeństwo zostaje assignment, potem
+   project_task.
+7. Usunięto nieosiągalną gałąź pytania w `effective_result`.
+8. Usunięto nieużywany override `dependency_refs` w fake testu
+   organismu.
+9. `unmatched_reason` mówi "event", nie "report" (istnieją też pytania).
+10. `docs/lab-flow.md`: fala L6 w tabeli "Partially shipped" (mechaniki
+    L6.3-L6.5 dostarczone), w stylu L8.1; akapit pod tabelą
+    zaktualizowany zgodnie.
+
+Zaktualizowano też opis kontraktu duplikatów/błędów w
+`ace-overseer/CHANGELOG.md` ([Unreleased]).
+
+Weryfikacja: `bin/ace-test ace-overseer all` - 310 testów, 1270
+asercji, 0 błędów.
+
