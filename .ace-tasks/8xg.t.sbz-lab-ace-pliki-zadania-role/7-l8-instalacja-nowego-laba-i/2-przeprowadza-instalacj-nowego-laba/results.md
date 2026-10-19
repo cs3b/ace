@@ -131,3 +131,49 @@ ace-lab + dokumentów) — do wykonania przed merge zgodnie z kontraktem.
   raportowane jako `kept` i nietykane — admin może legalnie dopisać
   principal ręcznie; usunięcie grantu wymaga ręcznej edycji (manifest nie
   odbiera uprawnień).
+
+## Poprawki po review (runda 1)
+
+Zastosowano 8 zweryfikowanych ustaleń z sesji review
+`.ace-local/review/sessions/review-8xili2/review-report-review-default.md`:
+
+1. **8xilm664 (Med):** `organisms/install.rb` — `dependency_failed_project`
+   otrzymuje teraz efektywną wartość `dry_run` per-wywołanie (nie domyślną
+   z konstruktora); hash odmowy gates dla grants dopisuje `dry_run` i `kept`.
+2. **8xilm665 (Med):** `molecules/grant_provisioner.rb` — zapis jest
+   pomijany, gdy zmergowani principals są głęboko-równi sparsowanym
+   istniejącym (skutek: skonwergowany re-run wet nie przepisuje pliku —
+   komentarze admina i tożsamość pliku (inode/mtime) zostają nietknięte).
+3. **8xilm666 (Med):** pusty manifest `grants` + brak dokumentu → NO-OP
+   (`status: "skipped"`, komunikat „nothing to write"); pusty plik
+   `authorization.yml` nigdy nie jest tworzony.
+4. **8xilm667 (Med):** `read_document` waliduje kształt per-principal
+   identycznie jak strona odczytu — wspólna walidacja wyekstrahowana do
+   `GrantResolver.validate_principals` (używana przez `parse_grants` i
+   provisioner), więc reader/writer nie mogą rozjechać się. Malformed
+   policy → odmowa z zaklasyfikowanym błędem (bez cichego przepisania);
+   klucze principalów są strippowane (padded klucz nie współistnieje ze
+   swoją strippowaną bliźniaczą wersją).
+5. **8xilm668 (Low):** `require "fileutils"` przeniesiony na górę pliku.
+6. **8xilm669 (Low):** klucz `kept` raportu zawsze obecny (pusta tablica,
+   gdy nic) — stabilny schemat dla konsumentów JSON.
+7. **8xilm66a (Low):** `atoms/install_schema.rb` — duplikaty principalów
+   po strip odrzucane (jak duplikaty id projektów).
+8. **8xilm66b (Low):** `test_re_run_over_own_converged_lab_converges_without_rewriting`
+   rzeczywiście dowodzi braku przepisania: fixture z komentarzem admina +
+   asercje stabilności inode/mtime (analogicznie test molekuły
+   `test_converged_re_run_does_not_rewrite_the_document`).
+
+Nowe testy regresyjne: dry-run z przewidywaną porażką prepare (per-project
+`dry_run: true`), skonwergowany re-run bez przepisania (inode/mtime +
+komentarz), pusty `grants` bez dokumentu (brak pliku), malformed policy →
+odmowa, padded klucz → zapis strippowany bez bliźniaka, duplikat
+principalów po strip w schemacie.
+
+Dokumentacja: CHANGELOG [Unreleased] (semantyka no-op, ostrojsza walidacja
+dokumentu, brak przepisywania przy konwergencji) oraz `docs/usage.md`
+(sekcja Install: statusy z `skipped`, `kept` zawsze obecne, opis
+wspólnej walidacji i no-op).
+
+Weryfikacja: `bin/ace-test ace-lab all` → **453 tests, 1999 assertions,
+0 failures, 0 errors, 4 skipped** (baseline po tej turze: 447 → +6 testów).
