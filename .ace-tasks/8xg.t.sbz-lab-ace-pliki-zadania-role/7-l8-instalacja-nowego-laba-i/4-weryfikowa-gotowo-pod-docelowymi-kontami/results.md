@@ -173,3 +173,16 @@ checks/counts` (`test/commands/verify_test.rb`, 3 testy).
 - `ace-overseer projects` jako osobny proces pod kontem docelowym —
   verify potwierdza widoczność przez te same mechanizmy odczytu
   (CallerAuthorizer + registry); pełny e2e z realnym kontem — L9/L10.
+
+## Poprawki po review (runda 1)
+
+Session `review-8ximnw`, werdykt Approve, 10 findingów (2 Medium, 8 Low; 4 skipped). Applied:
+1. (M1) origin_url czyta surowy URL (`git config --get remote.origin.url`) — brak fałszywych mismatchy przez `insteadOf`.
+2. (M2) Odmowa „dubious ownership" git rozpoznawana (stderr) w rev-parse i check-ignore → akcjonowalny powód (safe.directory / konto właściciela), nie „not a Git repository"; +test runner-stub.
+3. (L1) Niezaufany dokument grants → syntetyczny fail checku `(document)` zamiast przerwania całego raportu; +test.
+4. (L2) Przeredagowany UNKNOWN: „not a local-path remote; not probed".
+5. (L3) usage.md: klauzula o efemerycznym tmpdir scratch przy fingerprint probe.
+6. (L4) `principals` usuwany ze syntetycznego checku w JSON (jednolity schemat).
+7. (L5) `out.lines.first` w sprawdzaniu toplevel (odporność na multi-line).
+Skipped: niezależne odpalenie suity (bramka Lead), refaktor label_for, guard SECTION_LABELS (kosmetyka).
+Retest: `bin/ace-test ace-lab all` → 491/2304/0.
