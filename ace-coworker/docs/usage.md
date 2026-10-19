@@ -121,9 +121,16 @@ config fields with the composed assignment id as the ace-assign reference.
 An overseer address is required for every leg (`--to`, or the coworker
 config's `overseer` read leniently); without one, prepare fails with
 `cannot prepare start configs: no overseer address (--to or coworker
-config)` and writes no leg config. Writes are idempotent: identical
+config)` and writes no leg config. Error precedence is deliberate:
+role-validation errors (unknown role, missing process definition) win
+over the missing-address check, and the check runs AFTER assignment
+composition — the worktree and the L4.2 assignments are a delivered
+artifact at that point; re-running prepare with `--to` idempotently adds
+the leg configs. Writes are idempotent: identical
 content is reported as `reused` (no write), changed content as `updated`,
-`--dry-run` reports `planned` with zero writes.
+`--dry-run` reports `planned` with zero writes. All legs are resolved
+and validated before the first file is written, so a late leg failure
+cannot leave a partial set of configs behind.
 
 ### `ace-coworker roles`
 

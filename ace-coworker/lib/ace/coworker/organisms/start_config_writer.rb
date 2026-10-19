@@ -40,35 +40,70 @@ module Ace
         # @raise [Error] when a leg cannot be commissioned (unknown role,
         #   task/assignment mismatch, invalid assembly)
         def call(task:, sequence:, overseer:, dry_run: false)
-          Array(sequence).map do |entry|
-            role = entry["role"]
-            assignment = entry["assignment"]
-            target = File.join(@worktree_path, PREPARE_DIR, "#{role}.yml")
+          validate_role_names!(Array(sequence))
 
-            commission = @commission_factory.call(@worktree_path, target)
-            # dry-run commission call resolves, identity-checks, and
-            # schema-validates the leg config without touching the disk.
-            resolved = commission.call(role: role, task: task, assignment: assignment,
-              overseer: overseer, force: true, dry_run: true)
-            content = YAML.safe_dump(resolved.config)
-
-            existing = File.file?(target) ? File.read(target) : nil
-            disposition = if dry_run
-              "planned"
-            elsif existing == content
-              "reused"
-            else
-              commission.call(role: role, task: task, assignment: assignment,
-                overseer: overseer, force: true, dry_run: false)
-              existing.nil? ? "created" : "updated"
-            end
-
-            {"role" => role, "assignment" => assignment,
-             "path" => File.join(PREPARE_DIR, "#{role}.yml"), "disposition" => disposition}
+          # Pre-resolve EVERY leg first (dry-run commission pass): a late
+          # leg failure must not leave earlier leg configs on disk — the
+          # same all-or-nothing pattern RoleSequenceComposer established.
+          resolved_legs = Array(sequence).map do |entry|
+            entry = entry.dup
+            entry["task"] = task
+            entry["overseer"] = overseer
+            entry["resolved_config"] =
+              resolve_leg(entry)
+            entry
           end
+
+          resolved_legs.map { |entry| write_leg(entry, dry_run: dry_run) }
         end
 
         private
+
+        def validate_role_names!(sequence)
+          sequence.each do |entry|
+            role = entry["role"].to_s
+            unless role.match?(/\A[\w.-]+\z/) && !role.match?(/\A\.+\z/)
+              raise Error, "invalid role name '#{role}' for start config"
+            end
+          end
+        end
+
+        def resolve_leg(entry)
+          commission = @commission_factory.call(@worktree_path,
+            target_path(entry["role"]))
+          # dry-run commission resolves, identity-checks, and schema-validates
+          # the leg config without touching the disk.
+          resolved = commission.call(role: entry["role"], task: entry["task"],
+            assignment: entry["assignment"], overseer: entry["overseer"],
+            force: true, dry_run: true)
+          YAML.safe_dump(resolved.config)
+        end
+
+        def target_path(role)
+          File.join(@worktree_path, PREPARE_DIR, "#{role}.yml")
+        end
+
+        def write_leg(entry, dry_run:)
+          role = entry["role"]
+          content = entry["resolved_config"]
+          target = target_path(role)
+
+          existing = File.file?(target) ? File.read(target) : nil
+          disposition = if dry_run
+            "planned"
+          elsif existing == content
+            "reused"
+          else
+            commission = @commission_factory.call(@worktree_path, target)
+            commission.call(role: role, task: entry["task"],
+              assignment: entry["assignment"], overseer: entry["overseer"],
+              force: true, dry_run: false)
+            existing.nil? ? "created" : "updated"
+          end
+
+          {"role" => role, "assignment" => entry["assignment"],
+           "path" => File.join(PREPARE_DIR, "#{role}.yml"), "disposition" => disposition}
+        end
 
         def default_commission(worktree_path, target)
           CommissionOrchestrator.new(

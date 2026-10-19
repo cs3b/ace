@@ -104,6 +104,48 @@ module Ace
         ensure
           FileUtils.remove_entry(worktree) if worktree
         end
+
+        def test_late_leg_failure_writes_nothing
+          worktree = Dir.mktmpdir("scw")
+          writes = []
+          failing = Struct.new(:worktree_path, :target, :writes) do
+            def call(role:, task:, assignment:, overseer:, force:, dry_run:)
+              raise Error, "invalid assembly for '#{role}'" if role == "reviewer"
+
+              Struct.new(:config).new({"role" => role})
+            end
+          end
+          writer = StartConfigWriter.new(worktree_path: worktree,
+            commission_factory: ->(_wt, _target) { failing.new(nil, nil, writes) })
+
+          error = assert_raises(Error) do
+            writer.call(task: "8xg.t.aaa", sequence: sequence,
+              overseer: "overseer@lab", dry_run: false)
+          end
+
+          assert_includes error.message, "reviewer"
+          # All-or-nothing: the worker leg resolved earlier must NOT be on disk.
+          refute File.directory?(File.join(worktree, ".ace-local", "coworker", "prepare"))
+          assert_empty writes
+        ensure
+          FileUtils.remove_entry(worktree) if worktree
+        end
+
+        def test_invalid_role_name_is_rejected_before_any_work
+          worktree = Dir.mktmpdir("scw")
+          writer, _writes = writer(worktree)
+
+          error = assert_raises(Error) do
+            writer.call(task: "8xg.t.aaa",
+              sequence: [{"role" => "../escape", "assignment" => "seq1"}],
+              overseer: "overseer@lab", dry_run: false)
+          end
+
+          assert_includes error.message, "invalid role name"
+          refute File.directory?(File.join(worktree, ".ace-local"))
+        ensure
+          FileUtils.remove_entry(worktree) if worktree
+        end
       end
     end
   end

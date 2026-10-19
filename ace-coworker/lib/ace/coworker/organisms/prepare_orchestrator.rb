@@ -120,7 +120,11 @@ module Ace
             return overseer
           end
 
-          raise Error, "cannot prepare start configs: no overseer address (--to or coworker config)#{"\n#{note}" if note}"
+          raise Error,
+            "cannot prepare start configs: no overseer address (--to or coworker config); " \
+            "the worktree and role-sequence assignments ARE already composed - " \
+            "re-run prepare with --to <address> to write the leg configs (idempotent)" \
+            "#{"\n#{note}" if note}"
         end
 
         # Writes one start config per sequence leg into the prepared
