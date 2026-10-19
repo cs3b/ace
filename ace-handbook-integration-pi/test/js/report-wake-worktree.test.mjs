@@ -120,4 +120,76 @@ describe("report wake across a real linked worktree (PR393)", () => {
       fs.rmSync(dir, { recursive: true, force: true });
     }
   });
+
+  it("wakes when the linked worktree is created AFTER the watch started (PR393 final)", async () => {
+    // Linked worktrees used to be discovered only at registration: a task
+    // worktree created while the overseer session was already watching was
+    // never watched, so its reports never woke the session. Discovery must
+    // refresh through the existing lifecycle (reconcile/refresh passes).
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "pr393-wake-late-"));
+    const main = path.join(dir, "main");
+    const worker = path.join(dir, "worker");
+    try {
+      run("git", ["init", "-q", main]);
+      run("git", ["-C", main, "-c", "user.name=Review", "-c", "user.email=review@example.invalid",
+        "commit", "--allow-empty", "-qm", "fixture"]);
+      fs.mkdirSync(path.join(main, ".ace-local", "hitl"), { recursive: true });
+
+      let wakes = 0;
+      const port = createWatchPort({
+        watchFactory: nodeWatchFactory,
+        statFn: nodeStatFn,
+        baseDir: main,
+        resolveTargets: (baseDir, configuredPath) => expandInboxWatchTargets(baseDir, configuredPath),
+      });
+      const stopWatch = () => port.stopAll();
+      process.on("exit", stopWatch);
+      try {
+        port.start(
+          { kind: "watch", name: "reports", path: ".ace-local/hitl", message: "new ace-hitl report; run /continue-work" },
+          () => {
+            wakes += 1;
+            return { delivered: true };
+          },
+        );
+
+        // The planner links the coworker worktree while the watch is
+        // already active — no re-registration, no reload.
+        run("git", ["-C", main, "worktree", "add", "-qb", "worker", worker]);
+
+        // The coworker files its report from INSIDE its own worktree; the
+        // main-checkout inbox stays untouched.
+        const report = spawnSync(path.join(REPO_ROOT, "bin", "ace-hitl"),
+          ["create", "Worker complete", "--type", "report", "--result", "success", "--body", "Done"],
+          { cwd: worker, encoding: "utf8" });
+        assert.equal(report.status, 0,
+          `ace-hitl create failed: ${report.error ? report.error.message : ""}\n${report.stdout}\n${report.stderr}`);
+        const workerInbox = path.join(worker, ".ace-local", "hitl");
+        assert.ok(fs.readdirSync(workerInbox).length > 0, "the report must land in the worktree inbox");
+        assert.equal(fs.readdirSync(path.join(main, ".ace-local", "hitl")).length, 0,
+          "the main inbox is untouched: only cross-worktree expansion can wake");
+
+        await waitFor(() => wakes >= 1, "a report in a worktree linked after watch start to wake");
+        const wakesAfterFirst = wakes;
+
+        // The second report proves the refresh pass also re-attached the
+        // now-existing inbox directly (non-recursive watchers would stay
+        // deaf through the ancestor watch alone).
+        const secondReport = spawnSync(path.join(REPO_ROOT, "bin", "ace-hitl"),
+          ["create", "Worker follow-up", "--type", "report", "--result", "success", "--body", "More"],
+          { cwd: worker, encoding: "utf8" });
+        assert.equal(secondReport.status, 0,
+          `second ace-hitl create failed: ${secondReport.error ? secondReport.error.message : ""}\n${secondReport.stdout}\n${secondReport.stderr}`);
+        assert.ok(fs.readdirSync(workerInbox).length > 1, "the second report must land in the worktree inbox");
+
+        await waitFor(() => wakes > wakesAfterFirst, "the second report into the late-linked inbox to wake");
+        assert.ok(wakes > wakesAfterFirst, "the late-linked inbox was never watched directly");
+      } finally {
+        stopWatch();
+        process.off("exit", stopWatch);
+      }
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  });
 });

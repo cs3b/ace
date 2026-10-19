@@ -13,9 +13,10 @@ import * as nodePath from "node:path";
  * SAME discovery (no second inbox, queue, or cache) to expand a configured
  * `.ace-local/hitl` watch to every linked worktree's inbox directory.
  *
- * Expansion happens at watch registration and at every re-registration
- * (session start/reload/branch switch); worktrees created later are picked
- * up at the next re-registration.
+ * Expansion happens at watch registration, at every re-registration
+ * (session start/reload/branch switch), and on every watch refresh pass,
+ * so worktrees linked while the session is already watching are picked
+ * up without waiting for a re-registration.
  */
 
 /** The inbox path suffix that marks a watch as the ace-hitl report inbox. */

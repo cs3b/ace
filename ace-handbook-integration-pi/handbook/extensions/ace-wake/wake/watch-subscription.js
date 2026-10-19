@@ -32,7 +32,10 @@ export function canonicalizeWatchPath(baseDir, path) {
  * `resolveTargets` port may expand the configured path to several targets —
  * the ace-hitl inbox watch expands `.ace-local/hitl` to every linked
  * worktree's inbox, because `ace-hitl create` writes reports inside the
- * coworker's worktree, not the main checkout. The fingerprint aggregates all
+ * coworker's worktree, not the main checkout. Discovery re-runs on every
+ * change/reconcile pass, so worktrees linked AFTER registration are
+ * picked up without a re-registration or session reload. The fingerprint
+ * aggregates all
  * targets; a target that does not exist yet is a stable "absent" state, so
  * the first report into a freshly created inbox still wakes. Only later fingerprint
  * changes wake the agent, so registering a watch never produces an initial
@@ -346,18 +349,32 @@ export function createWatchPort({ watchFactory, statFn, baseDir = process.cwd(),
   }
 
   /**
-   * Re-attach targets that were watched through an ancestor because they
-   * did not exist yet. Linux inotify is non-recursive, so the ancestor's
-   * watch never sees a SECOND report created inside the now-existing
-   * target; once the target exists, close the ancestor watch and watch
-   * the real target directly. Runs on every change/reconcile pass, which
-   * is exactly when a formerly-absent target may have appeared.
+   * Re-run target discovery and re-attach targets that were watched
+   * through an ancestor because they did not exist yet. Runs on every
+   * change/reconcile pass — exactly when a formerly-absent target may
+   * have appeared, and when a worktree linked AFTER registration may have
+   * become discoverable: discovery (the ace-hitl inbox expansion over
+   * `git worktree list`) no longer runs only at registration, so a task
+   * worktree created while the session is already watching gets its
+   * inbox watched without any re-registration or reload.
    *
-   * @param {{watchers: Array<{path: string, watchPath: string, watcher: {close: () => void}}>} } entry
+   * Linux inotify is non-recursive, so an ancestor's watch never sees a
+   * SECOND report created inside the now-existing target; once the target
+   * exists, close the ancestor watch and watch the real target directly.
+   *
+   * A newly discovered target that does not exist yet joins the baseline
+   * fingerprint as its stable "absent" state — its later appearance (the
+   * first report) is the change that wakes, not its discovery.
+   *
+   * @param {{watchers: Array<{path: string, watchPath: string, watcher: {close: () => void}}>, paths: string[], primaryPath: string, fingerprint: string, previousFingerprint: string}} entry
    * @param {import("./types.js").WatchDefinition} definition
    * @param {(definition: import("./types.js").WatchDefinition) => unknown} onWake
    */
   function refreshAttachments(entry, definition, onWake) {
+    refreshDiscoveredTargets(entry, definition, onWake);
+    if (active.get(definition.name)?.definition !== definition) {
+      return;
+    }
     for (let index = 0; index < entry.watchers.length; index += 1) {
       const attached = entry.watchers[index];
       if (attached.watchPath === attached.path) {
@@ -388,6 +405,55 @@ export function createWatchPort({ watchFactory, statFn, baseDir = process.cwd(),
       } catch (error) {
         deactivate(definition.name, `re-attachment failed: ${describeError(error)}`);
         return;
+      }
+    }
+  }
+
+  /**
+   * Re-run target discovery for one subscription and attach watchers for
+   * targets that appeared since the last pass (a worktree linked after
+   * registration, whose inbox the registration-time expansion could not
+   * have seen). A new target that already exists keeps the OLD baseline
+   * fingerprint, so the pass's fingerprint comparison delivers the wake
+   * the missed event never could; a new target that is still absent joins
+   * the baseline as its stable "absent" state, so only its later
+   * appearance (the first report) wakes.
+   *
+   * @param {{watchers: Array<{path: string, watchPath: string, watcher: {close: () => void}}>, paths: string[], primaryPath: string, fingerprint: string, previousFingerprint: string}} entry
+   * @param {import("./types.js").WatchDefinition} definition
+   * @param {(definition: import("./types.js").WatchDefinition) => unknown} onWake
+   */
+  function refreshDiscoveredTargets(entry, definition, onWake) {
+    if (!resolveTargets) {
+      return;
+    }
+    const targetPaths = resolveTargetsFor(resolveTargets, baseDir, definition.path, entry.primaryPath);
+    for (const target of targetPaths) {
+      if (entry.watchers.some((attached) => attached.path === target)) {
+        continue;
+      }
+      let absent = false;
+      try {
+        statFn(target);
+      } catch {
+        absent = true;
+      }
+      let attachedWatcher;
+      try {
+        attachedWatcher = attachWatcher(target, definition, onWake);
+      } catch (error) {
+        deactivate(definition.name, `re-attachment failed: ${describeError(error)}`);
+        return;
+      }
+      if (attachedWatcher.length === 0) {
+        // No readable ancestor yet: retried on the next pass.
+        continue;
+      }
+      entry.watchers.push(attachedWatcher[0]);
+      entry.paths = entry.watchers.map((each) => each.path);
+      if (absent) {
+        entry.previousFingerprint = entry.fingerprint;
+        entry.fingerprint = aggregateFingerprint(entry.paths, entry.primaryPath);
       }
     }
   }

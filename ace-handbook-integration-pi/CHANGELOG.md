@@ -4,6 +4,9 @@ All notable changes to ace-handbook-integration-pi will be documented in this fi
 
 ## [Unreleased]
 
+### Fixed
+- `ace-wake` report watches now discover worktrees linked AFTER the watch started: inbox expansion (`expandInboxWatchTargets` over `git worktree list`) re-runs on every change/reconcile refresh pass instead of only at registration, so a report filed in a task worktree created while the overseer session is already watching still wakes it — no re-registration, reload, or new queue/cache. A newly discovered target that is still absent joins the baseline fingerprint as its stable "absent" state, so only the first report into it wakes.
+
 ### Added
 - L7.3 commissioned-work continuation (task 8xg.t.sbz.6.2): new `/continue-work` resume prompt (`handbook/prompts/continue-work.md`) for a pi overseer session. After a report wake or session restart it reads `_overseer` tasks, `ace-assign` assignments, and current project truth, then continues the SAME commissioned process through the existing `ace-overseer` gates (`process-reports`, `work-on`, `handoff`) with single-execution, delivery-repetition-≠-work-repetition, and no-self-seeking rules. Report wake wiring is documented: a `/watch` on `.ace-local/hitl` wakes a waiting session, active turns receive queued follow-ups, and restarts re-register the watch exactly once.
 - JavaScript acceptance suite for the report wake path (`test/js/report-wake.test.mjs`): wake-on-report for an idle session, queued follow-up (never a second execution) during an active turn with coalesced repeats, exactly-once re-registration after restart without replay, and idempotence of an identical repeated notification. Shared session harness extracted to `test/js/session-harness.mjs`; a real-filesystem test proves a file created inside a watched directory (the `.ace-local/hitl` inbox wiring) wakes exactly once.
