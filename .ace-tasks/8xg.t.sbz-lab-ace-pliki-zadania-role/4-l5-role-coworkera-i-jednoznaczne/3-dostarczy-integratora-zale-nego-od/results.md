@@ -87,3 +87,45 @@ kod nie wykonuje merge.
 - Brak blokujących. Ewentualnie do decyzji Lead/overseera: czy raport integratora
   ma też aktualizować status liści zależnych w `.ace-tasks` (obecnie zgodnie z
   kontraktem robi to overseer we własnym procesie).
+
+## Poprawki po review (runda 1)
+
+Data: 2026-10-19. Zastosowano 9 zweryfikowanych uwag z
+`.ace-local/review/sessions/review-8xiegq/review-report-review-default.md`.
+
+1. (Medium) `gate.rb#dependency_states`: `--dep foo` bez `=` od teraz kończy
+   się błędem `Ace::Support::Cli::Error` "invalid --dep 'foo' (expected
+   name=integrated|missing)" zamiast cichego traktowania jako
+   nie-zintegrowana. Test: `test_dep_without_state_fails_with_actionable_error`.
+2. (Medium) Pełny SHA + normalizacja porównania: `integrator.wf.md` używa
+   `git rev-parse HEAD` (nie `--short`) i stanowi, że heady zapisuje/porównuje
+   się jako pełne lowercase SHA; dopełniające zdanie dodano w `reviewer.wf.md`
+   (raportowany reviewowany head = pełny lowercase SHA). Atom porównuje
+   `review_head.downcase != candidate_head.downcase` (różnica długości nadal
+   blokuje). Testy: `test_head_comparison_tolerates_case_drift_but_not_length_mismatch`.
+3. (Low) `gate.rb#tests_flags`: token spoza {executed, passed} → błąd
+   "invalid --tests '<tok>' (expected: executed, passed)". Test:
+   `test_unknown_tests_token_fails_with_actionable_error`.
+4. (Low) Atom, gałąź nie-Hash: `failed_checks: [:input]` (nowy marker) zamiast
+   `[:candidate]`; powód bez zmian. Zaktualizowano
+   `test_non_hash_input_blocks_with_actionable_reason`.
+5. (Low) `integrator.wf.md` (~29, ~102): usunięto cytowania labowego pliku
+   "execution-order.md" (samowystarczalność ADR-001); reguły zostają inline,
+   odwołanie przeformułowane na "per the lab's execution-order contract".
+6. (Low) Zmiana nazwy testu: `test_symbol_verdict_and_accept_synonym` →
+   `test_verdict_comparison_is_case_insensitive`.
+7. (Low) Zduplikowane nazwy `--dep` odrzucane błędem "duplicate --dep
+   '<name>'". Test: `test_duplicate_dep_name_fails_with_actionable_error`.
+8. (Low) Dodano test ścieżki cichej `gate -q` (`test_quiet_suppresses_output`,
+   lustrzany do pokrycia rounds).
+9. (Low) `docs/usage.md`: zdanie, że puste/pominięte `--dep` oznacza "caller
+   enumerated none" — bramka ufa enumeracji zależności wywołującego.
+
+Aktualizacje dokumentacji towarzyszących: `docs/usage.md` (kontrakt błędów
+gate: nieprawidłowy/duplikat `--dep`, nieznany token `--tests`; pełne
+lowercase SHA), `CHANGELOG.md` [Unreleased] (kontrakt błędów + normalizacja
+SHA). Nie zmieniono glyph kontraktu wyjścia atoms poza markerem `:input`.
+
+Weryfikacja: `bin/ace-test ace-coworker all` → **334 testy, 1355 asercji,
+0 failures, 0 errors** (poprzednio 329; +5 nowych testów). Raport:
+`.ace-local/test/reports/coworker/bc689275-ef69-47a6-92af-0239bd0bddf9/`.
