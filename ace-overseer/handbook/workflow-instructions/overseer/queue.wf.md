@@ -172,6 +172,17 @@ When a report arrives (ace-hitl event or message):
 4. After an interruption between recording a result and the next allocation,
    resume by re-reading the task tree and the real worktree/assignment state.
 
+`ace-overseer process-reports` executes rules 1-3 mechanically: it matches
+each incoming event (assignment recorded on a step, or the managing task's
+project_task with exactly one non-terminal step), records the outcome and
+the processed report ID on the step through the ordinary ace-task update
+surface, and continues with the next unblocked step through the existing
+gates — `ace-overseer handoff` for the next role when the family records a
+worktree, otherwise the `work-on` dependency gate. A repeated delivery is
+answered from the recorded `processed_report` and re-runs nothing; an error
+report or question never advances a step; a report matching no open
+allocation stays for clarification. `--dry-run` interprets without effects.
+
 ### 6) Close
 
 A managing task closes only when every required subtask (preparation,

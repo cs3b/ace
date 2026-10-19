@@ -16,10 +16,11 @@ ace-docs:
 
 ## Command Surface
 
-Local work uses four primary commands (`projects` lists configured lab projects):
+Local work uses five primary commands (`projects` lists configured lab projects):
 
 - `ace-overseer work-on` - prepare a worktree, assignment, and terminal.
 - `ace-overseer handoff` - hand the task worktree to the next role in the prepared sequence.
+- `ace-overseer process-reports` - interpret ace-hitl reports and continue the queue.
 - `ace-overseer status` - show active task worktrees and assignment progress.
 - `ace-overseer prune` - remove completed task worktrees safely.
 
@@ -102,6 +103,42 @@ is printed (`ace-coworker start --config .ace-local/coworker/prepare/<role>.yml`
 When every leg is completed the command reports the sequence complete and
 opens nothing. Handoff never creates a worktree; two different tasks hand off
 independently in their own worktrees.
+
+## `ace-overseer process-reports`
+
+Process incoming ace-hitl reports/questions and continue the overseer queue
+(L6.5). Every event is matched against the private `_overseer` tree, the
+outcome is recorded through the existing `ace-task update` surface, and the
+queue continues by reusing the existing gates — no new state, no dedup table.
+
+| Option | Purpose |
+|--------|---------|
+| `--dry-run` | Interpret events without writes or continuation |
+| `--quiet`, `-q` | Suppress non-essential output |
+| `--debug`, `-d` | Show debug output |
+
+```bash
+ace-overseer process-reports            # interpret, record, continue
+ace-overseer process-reports --dry-run  # what would happen, zero effects
+```
+
+Matching and outcome rules (enforced mechanically):
+
+- A report matches the current order by the `assignment` recorded on a step,
+  or by the managing task's `project_task` when exactly one step is
+  non-terminal. A report fitting no open allocation is reported as
+  `unmatched` and kept for clarification — never treated as success.
+- Success records `processed_report`/`report_result` on the step and marks
+  it `done`, then continues with the next unblocked step (same
+  `DependencyReadiness` gate as `work-on`): `ace-overseer handoff` for the
+  next role when the family records a worktree, otherwise the `work-on`
+  gate. A refused continuation is reported as blocked with reasons.
+- A repeated delivery of an already-processed report is `duplicate`: the
+  recorded result and existing allocation answer it; nothing re-runs
+  (delivery repetition is never work repetition).
+- An `error` result records the cause on the step but keeps it open; a
+  question surfaces its `ace-hitl update <id> --answer` path. Neither
+  advances a step nor triggers a continuation.
 
 ## `ace-overseer status`
 
@@ -192,7 +229,9 @@ Binding rules: cross-task merge requirements depend on the integration step
 roles (`ace-overseer handoff` enforces the role-sequence handoff in the same
 worktree mechanically); implementation completion does not close a managing
 task while review or integration remains; coworker reports arrive via ace-hitl
-and only the overseer writes its list.
+and only the overseer writes its list (`ace-overseer process-reports`
+interprets them mechanically and continues the queue through the work-on and
+handoff gates).
 
 Full procedure: `ace-bundle wfi://overseer/queue`.
 
