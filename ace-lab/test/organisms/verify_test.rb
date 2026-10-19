@@ -710,4 +710,18 @@ class VerifyProbeTest < Minitest::Test
       end
     end
   end
+
+  def test_config_shape_failure_stays_fail_even_with_unset_path
+      old = ENV["PATH"]
+      ENV["PATH"] = ""
+      begin
+        adapters = organism.send(:check_adapters,
+          {"adapters" => [{"id" => "hermes", "kind" => "communication",
+                           "config" => "not-a-mapping", "command" => "git"}]})
+        assert_equal "fail", adapters.first["status"], adapters.inspect
+        assert_match(/configuration is not a mapping/, adapters.first["reason"])
+      ensure
+        ENV["PATH"] = old
+      end
+    end
 end

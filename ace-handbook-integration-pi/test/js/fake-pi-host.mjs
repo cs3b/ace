@@ -185,6 +185,11 @@ export function createFakeHost() {
   }
 
   const watchFactory = (path, handlers) => {
+    const failure = watchFailures.get(path);
+    if (failure) {
+      watchFailures.delete(path);
+      throw failure;
+    }
     const id = nextWatcherId++;
     watchers.set(path, {
       onChange: handlers.onChange,
@@ -204,6 +209,12 @@ export function createFakeHost() {
   };
 
   // Port: statFn backed by caller-managed fake file states.
+  // Synchronous watchFactory failures for the NEXT attach on a path
+  // (EMFILE/EPERM/stat-race shape: throw at attach time, once).
+  const watchFailures = new Map();
+  host.failNextWatchAttach = (path, message = "EMFILE: too many open files") => {
+    watchFailures.set(path, new Error(message));
+  };
   const fakeFiles = new Map();
   host.setFile = (path, { mtimeMs, size, missing = false }) => {
     if (missing) {

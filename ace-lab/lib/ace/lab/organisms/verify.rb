@@ -463,18 +463,28 @@ module Ace
         # never a crash. Network reachability stays out of scope (L9).
         def check_adapters(manifest)
           manifest["adapters"].map do |adapter|
-            reason = if !adapter["config"].is_a?(Hash)
-              "adapter '#{adapter['id']}' configuration is not a mapping"
-            elsif adapter["command"]
+            config_reason = ("adapter '#{adapter['id']}' configuration is not a mapping" \
+              unless adapter["config"].is_a?(Hash))
+            command_reason = if config_reason.nil? && adapter["command"]
               adapter_command_reason(adapter)
             end
+            reason = config_reason || command_reason
             note = if reason.nil? && adapter["command"].nil?
               "configured (no local command declared; network reachability is out of scope)"
             end
-            probe = adapter["command"] ? path_probe(adapter["command"]) : :pass
-            status = if probe == :unknown
+            # A config-shape failure is decidable regardless of PATH:
+            # it stays FAIL; only the command probe degrades to unknown
+            # under an unset PATH.
+            probe = if adapter["command"] && config_reason.nil?
+              path_probe(adapter["command"])
+            else
+              :pass
+            end
+            status = if config_reason
+              FAIL
+            elsif probe == :unknown
               UNKNOWN
-            elsif reason
+            elsif command_reason
               FAIL
             else
               PASS
@@ -518,13 +528,6 @@ module Ace
             candidate = File.join(directory, name)
             File.file?(candidate) && File.executable?(candidate)
           end ? :pass : :fail
-        end
-
-        def tool_reason(tool)
-          case path_probe(tool)
-          when :fail then "required tool '#{tool}' is not available (not found on PATH)"
-          when :unknown then nil
-          end
         end
 
         def adapter_command_reason(adapter)

@@ -226,6 +226,11 @@ export function createWatchPort({ watchFactory, statFn, baseDir = process.cwd(),
       return;
     }
     refreshAttachments(entry, definition, onWake);
+    // Re-attachment failure deactivates the subscription; a deactivated
+    // definition must not deliver a wake from the same pass.
+    if (active.get(definition.name)?.definition !== definition) {
+      return;
+    }
     const next = currentFingerprint(entry, definition.name);
     if (next === undefined) {
       return;
@@ -365,13 +370,24 @@ export function createWatchPort({ watchFactory, statFn, baseDir = process.cwd(),
         continue;
       }
       try {
-        attached.watcher.close();
-      } catch {
-        // Closing an already-broken watcher must not block re-attachment.
-      }
-      const replacement = attachWatcher(attached.path, definition, onWake);
-      if (replacement.length > 0) {
-        entry.watchers[index] = replacement[0];
+        // Attach the replacement BEFORE closing the old watcher:
+        // watchFactory can throw synchronously (EMFILE, EPERM, stat race),
+        // and handleChange runs inside native watcher callbacks — an
+        // uncaught throw here would crash the extension host. On failure
+        // the documented runtime-error posture applies: deactivate and
+        // never retry.
+        const replacement = attachWatcher(attached.path, definition, onWake);
+        if (replacement.length > 0) {
+          try {
+            attached.watcher.close();
+          } catch {
+            // Closing an already-broken watcher must not block re-attachment.
+          }
+          entry.watchers[index] = replacement[0];
+        }
+      } catch (error) {
+        deactivate(definition.name, `re-attachment failed: ${describeError(error)}`);
+        return;
       }
     }
   }

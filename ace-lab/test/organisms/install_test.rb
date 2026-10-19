@@ -397,8 +397,6 @@ module Organisms
         end
       end
     end
-  end
-end
 
   # --- review round 2: verify stage never crashes the install ----------
 
@@ -418,3 +416,5 @@ end
       assert_match(/RuntimeError: boom from verify internals/, report["verify"]["message"])
     end
   end
+  end
+end

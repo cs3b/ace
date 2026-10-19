@@ -156,8 +156,6 @@ module Molecules
         assert File.symlink?(File.join(repo, ".ace-tasks"))
       end
     end
-  end
-end
 
     # Review round 2: a symlinked .gitignore is refused even when the
     # folder would already be considered ignored — no privileged
@@ -181,3 +179,5 @@ end
           "privileged read-through must not accept the link as evidence"
       end
     end
+  end
+end

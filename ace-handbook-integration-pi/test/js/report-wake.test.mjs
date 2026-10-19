@@ -193,6 +193,28 @@ describe("report wake (L7.3 continuation transport)", () => {
       "the second report into a formerly-absent inbox must wake");
   });
 
+  it("deactivates the watch when re-attachment throws synchronously, without crashing the host", async () => {
+    const { host } = await overseerSessionAcrossWorktrees({ worktreeInboxExists: false });
+
+    // The inbox appears (first report would wake), but the direct
+    // re-attachment inside the watcher callback hits a synchronous
+    // watchFactory failure — EMFILE/EPERM/stat race. The old code closed
+    // the ancestor watcher FIRST and let the throw escape into the native
+    // callback (host crash, dead watcher); now the failure deactivates
+    // the definition with a visible error.
+    host.setFile(WORKTREE_INBOX, { mtimeMs: 5, size: 30 });
+    host.failNextWatchAttach(WORKTREE_INBOX, "EMFILE: too many open files, watch");
+    host.triggerWatch(WORKTREE_INBOX);
+
+    assert.equal(reportSends(host).length, 0, "no wake is delivered from the failing pass");
+    // The status line shows the error state; the full message is visible via
+    // errorOf (checked through the fake's recorded status renders).
+    const render = host.statusRenders.at(-1);
+    assert.ok(render, "the deactivation must refresh the visible status");
+    assert.match(render.text, /watch reports error/, `got: ${render?.text}`);
+    assert.equal(host.watcherCount(), 0, "the subscription is fully torn down, never retried");
+  });
+
   it("re-expands the worktree targets exactly once per restart", async () => {
     const { host, session } = await overseerSessionAcrossWorktrees();
 
