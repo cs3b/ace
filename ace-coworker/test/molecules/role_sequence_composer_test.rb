@@ -162,6 +162,78 @@ module Ace
           refute File.directory?(File.join(@root, ".ace-local"))
         end
 
+        def test_non_mapping_steps_are_actionable_process_errors
+          override_dir = File.join(@root, ".ace", "coworker", "sequences")
+          FileUtils.mkdir_p(override_dir)
+          File.write(File.join(override_dir, "worker.yml"), <<~YAML)
+            ---
+            role: worker
+            description: "Malformed step"
+            outcome: "Malformed"
+            steps: [42]
+          YAML
+
+          error = assert_raises(Error) do
+            @composer.call(task: "8xg.t.aaa", roles: %w[worker])
+          end
+
+          assert_includes error.message, "invalid assignment process"
+          assert_includes error.message, "step 1: must be a mapping"
+          assert_includes error.message, "got Integer"
+          refute File.directory?(File.join(@root, ".ace-local"))
+        end
+
+        def test_null_step_is_an_actionable_process_error
+          override_dir = File.join(@root, ".ace", "coworker", "sequences")
+          FileUtils.mkdir_p(override_dir)
+          File.write(File.join(override_dir, "worker.yml"), <<~YAML)
+            ---
+            role: worker
+            description: "Null step"
+            outcome: "Null"
+            steps: [null]
+          YAML
+
+          error = assert_raises(Error) do
+            @composer.call(task: "8xg.t.aaa", roles: %w[worker])
+          end
+
+          assert_includes error.message, "step 1: must be a mapping"
+          assert_includes error.message, "got NilClass"
+          refute File.directory?(File.join(@root, ".ace-local"))
+        end
+
+        def test_dry_run_composes_planned_entries_without_writes
+          entries = @composer.call(task: "8xg.t.aaa", roles: %w[worker reviewer], dry_run: true)
+
+          assert_equal %w[planned planned], entries.map { |e| e["disposition"] }
+          assert_equal [nil, nil], entries.map { |e| e["assignment"] }
+          assert entries.map { |e| e["steps"] }.all? { |n| n.is_a?(Integer) && n.positive? },
+            "planned legs still report their process step count"
+          refute File.directory?(File.join(@root, ".ace-local")),
+            "dry-run composition never creates assignments"
+        end
+
+        def test_dry_run_extension_of_an_existing_sequence_writes_nothing
+          @composer.call(task: "8xg.t.aaa", roles: %w[worker])
+          before = Dir.glob(File.join(@root, ".ace-local", "assign", "*", "assignment.yaml")).sort
+          refute_empty before
+
+          entries = @composer.call(task: "8xg.t.aaa", roles: %w[worker reviewer], dry_run: true)
+
+          assert_equal %w[existing planned], entries.map { |e| e["disposition"] }
+          assert_equal File.basename(File.dirname(before.first)), entries[0]["assignment"]
+          assert_nil entries[1]["assignment"]
+          assert_equal before,
+            Dir.glob(File.join(@root, ".ace-local", "assign", "*", "assignment.yaml")).sort,
+            "dry-run extension writes no reviewer assignment"
+
+          # A subsequent real run still composes the planned leg.
+          real = @composer.call(task: "8xg.t.aaa", roles: %w[worker reviewer])
+          assert_equal %w[existing created], real.map { |e| e["disposition"] }
+          assert File.directory?(File.join(@root, ".ace-local", "assign", real[1]["assignment"]))
+        end
+
         def test_recompose_reuses_existing_assignments_without_writes
           entries = @composer.call(task: "8xg.t.aaa", roles: %w[worker reviewer])
           snapshot = step_files(entries[0]["assignment"]).map { |p| File.mtime(p) }

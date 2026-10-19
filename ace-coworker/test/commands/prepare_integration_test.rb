@@ -219,6 +219,109 @@ module Ace
               "no leg config is written without an overseer address"
           end
 
+          def test_dry_run_on_existing_worktree_writes_no_assignments_or_configs
+            # Reuse AND extension paths: the worker assignment exists from a
+            # real prepare; the dry-run extension with the reviewer leg must
+            # plan everything (zero writes) instead of composing a real
+            # reviewer assignment.
+            worktree = prepare_worktree(@task_ref)
+            assignments_before = Dir.glob(File.join(worktree, ".ace-local", "assign", "*", "assignment.yaml")).sort
+            files_before = Dir.glob(File.join(worktree, ".ace-local", "**", "*")).select { |p| File.file?(p) }.sort
+            events_before = hitl_events.length
+
+            out, err, status = run_cli(COWORKER_BIN, "prepare", "--task", @task_ref,
+              "--roles", "worker,reviewer", "--to", "overseer", "--dry-run", "--format", "json")
+            assert status.success?, "dry-run failed: #{out}#{err}"
+            payload = JSON.parse(out)
+
+            assert_equal "reused", payload["worktree"]["disposition"]
+            assert_equal %w[existing planned], payload["assignments"].map { |a| a["disposition"] },
+              "existing legs are read-only reused, missing legs are planned"
+            assert_equal %w[planned planned], payload["start_configs"].map { |c| c["disposition"] }
+
+            assignments_after = Dir.glob(File.join(worktree, ".ace-local", "assign", "*", "assignment.yaml")).sort
+            assert_equal assignments_before, assignments_after,
+              "dry-run extension must not create the reviewer assignment"
+            files_after = Dir.glob(File.join(worktree, ".ace-local", "**", "*")).select { |p| File.file?(p) }.sort
+            assert_equal files_before, files_after, "dry-run on an existing worktree writes nothing"
+            assert_equal events_before, hitl_events.length, "dry-run sends nothing"
+          end
+
+          def test_missing_role_instruction_source_is_never_ready
+            roles_dir = File.join(@dir, ".ace", "coworker", "roles")
+            FileUtils.mkdir_p(roles_dir)
+            File.write(File.join(roles_dir, "worker.yml"), <<~YAML)
+              ---
+              name: worker
+              description: Worker with missing instruction source
+              instructions: roles/nonexistent.md
+              start_prompt: >-
+                Drive {{assignment}} for {{task}} as {{role}}, reporting to {{overseer}}.
+              reporting:
+                channel: hitl
+              errors:
+                on_failure: report
+            YAML
+            commit_all("missing instructions fixture")
+
+            out, err, status = run_cli(COWORKER_BIN, "prepare", "--task", @task_ref,
+              "--roles", "worker", "--to", "overseer", "--format", "json")
+
+            # Never-ready-on-missing-context: the emitted first-leg start
+            # command would fail immediately ("instruction file not found"),
+            # so prepare reports a role_instructions gap instead of readiness.
+            refute status.success?, "prepare must not report ready: #{out}#{err}"
+            assert_includes err, "preparation conflict: role_instructions"
+            payload = JSON.parse(out)
+            assert_equal "role_instructions", payload["conflict"]["kind"]
+            assert_includes payload["conflict"]["detail"], "roles/nonexistent.md"
+            assert_includes payload["conflict"]["detail"], "not found in this worktree"
+            assert_includes payload["conflict"]["detail"], "NOT ready"
+            assert_nil payload["report"], "a gap never sends a readiness report"
+
+            worktree = Dir.glob(File.join(@dir, ".ace-wt", "*")).first
+            refute_nil worktree, "the worktree itself stays prepared"
+            refute File.exist?(File.join(worktree, ".ace-local", "coworker", "prepare", "worker.yml")),
+              "no leg config is written for an unresolvable instruction source"
+
+            # The gap reaches the overseer as a decision question.
+            assert_equal 1, hitl_events.size
+            content = File.read(hitl_events.first)
+            assert_includes content, "type: question"
+            assert_includes content, "role_instructions"
+            assert_includes content, "roles/nonexistent.md"
+          end
+
+          def test_missing_instruction_source_in_a_later_leg_blocks_readiness
+            roles_dir = File.join(@dir, ".ace", "coworker", "roles")
+            FileUtils.mkdir_p(roles_dir)
+            File.write(File.join(roles_dir, "reviewer.yml"), <<~YAML)
+              ---
+              name: reviewer
+              description: Reviewer with missing instruction source
+              instructions: roles/nonexistent-reviewer.md
+              start_prompt: >-
+                Review {{assignment}} for {{task}} as {{role}}, reporting to {{overseer}}.
+              reporting:
+                channel: hitl
+              errors:
+                on_failure: report
+            YAML
+            commit_all("reviewer with missing instructions fixture")
+
+            out, err, status = run_cli(COWORKER_BIN, "prepare", "--task", @task_ref,
+              "--roles", "worker,reviewer", "--to", "overseer", "--format", "json")
+
+            refute status.success?, "a broken later leg must block readiness: #{out}#{err}"
+            payload = JSON.parse(out)
+            assert_equal "role_instructions", payload["conflict"]["kind"]
+            assert_includes payload["conflict"]["detail"], "role 'reviewer'"
+            assert_includes payload["conflict"]["detail"], "roles/nonexistent-reviewer.md"
+            worktree = Dir.glob(File.join(@dir, ".ace-wt", "*")).first
+            assert_empty Dir.glob(File.join(worktree, ".ace-local", "coworker", "prepare", "*.yml")),
+              "no leg config is written while any leg's context is missing"
+          end
+
           def test_reprepare_before_commission_reuses_composed_sequence
             worktree = prepare_worktree(@task_ref)
             ids = Dir.glob(File.join(worktree, ".ace-local", "assign", "*",

@@ -131,6 +131,59 @@ module Ace
           assert_equal :accept, accept[:verdict]
         end
 
+        def test_delta_confirming_high_invalidates_the_prior_clean_streak
+          # A completed delta that confirms a High finding — even when the
+          # same delta resolves it — must reset the streak: code that just
+          # produced a High defect needs renewed full review evidence, not
+          # the stale clean rounds from before the finding.
+          delta_high_fixed = {"type" => "delta", "status" => "completed",
+            "confirmed" => [{"id" => "H1", "severity" => "high"}], "resolved" => ["H1"]}
+
+          result = RoundRule.evaluate([clean, clean, clean, delta_high_fixed])
+
+          assert_equal :continue, result[:verdict]
+          assert_equal 3, result[:full_rounds]
+          assert_equal 0, result[:consecutive_clean], "the stale clean streak is reset"
+          assert_empty result[:unresolved_high_critical], "the finding itself is resolved"
+        end
+
+        def test_split_delta_finding_and_fix_require_renewed_full_evidence
+          delta_high = delta(confirmed: [{"id" => "H1", "severity" => "High"}])
+          delta_fix = {"type" => "delta", "status" => "completed",
+            "confirmed" => [], "resolved" => ["H1"]}
+
+          still_short = RoundRule.evaluate([clean, clean, clean, delta_high, delta_fix, clean])
+          assert_equal :continue, still_short[:verdict]
+          assert_equal 1, still_short[:consecutive_clean],
+            "one clean full round after the fix delta is not renewed evidence"
+
+          renewed = RoundRule.evaluate(
+            [clean, clean, clean, delta_high, delta_fix, clean, clean])
+          assert_equal :accept, renewed[:verdict]
+          assert_equal 2, renewed[:consecutive_clean],
+            "two clean full rounds after the fix delta renew the evidence"
+        end
+
+        def test_delta_confirming_high_without_fix_keeps_blocking
+          delta_high = delta(confirmed: [{"id" => "H9", "severity" => "Critical"}])
+
+          result = RoundRule.evaluate([clean, clean, clean, delta_high, clean, clean])
+
+          assert_equal :continue, result[:verdict]
+          assert_equal ["H9"], result[:unresolved_high_critical]
+          assert_equal 2, result[:consecutive_clean]
+        end
+
+        def test_delta_confirming_low_severity_stays_transparent
+          delta_low = delta(confirmed: [{"id" => "L1", "severity" => "low"}])
+
+          result = RoundRule.evaluate([clean, clean, delta_low, clean])
+
+          assert_equal :accept, result[:verdict]
+          assert_equal 3, result[:consecutive_clean]
+          assert_empty result[:unresolved_high_critical]
+        end
+
         def test_unresolved_high_confirmed_in_a_delta_round_blocks_accept
           result = RoundRule.evaluate([clean, clean, delta(confirmed: [{"id" => "d-1", "severity" => "Critical"}]), clean])
           assert_equal :continue, result[:verdict]

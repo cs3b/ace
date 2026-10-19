@@ -45,12 +45,20 @@ module Ace
           # Pre-resolve EVERY leg first (dry-run commission pass): a late
           # leg failure must not leave earlier leg configs on disk — the
           # same all-or-nothing pattern RoleSequenceComposer established.
+          # Legs composed under dry_run (a planned sequence, no assignment
+          # id yet) cannot be identity-checked against ace-assign, so they
+          # are planned as-is; a real run requires a composed assignment.
           resolved_legs = Array(sequence).map do |entry|
+            unless dry_run || !entry["assignment"].to_s.strip.empty?
+              raise Error, "role '#{entry['role']}' has no composed assignment; " \
+                "compose the sequence (prepare without --dry-run) before writing its start config"
+            end
+
             entry = entry.dup
             entry["task"] = task
             entry["overseer"] = overseer
             entry["resolved_config"] =
-              resolve_leg(entry)
+              entry["assignment"].to_s.strip.empty? ? nil : resolve_leg(entry)
             entry
           end
 

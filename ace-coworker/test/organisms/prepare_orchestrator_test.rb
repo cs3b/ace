@@ -2,6 +2,7 @@
 
 require_relative "../test_helper"
 require "ace/task/organisms/task_manager"
+require "tmpdir"
 
 module Ace
   module Coworker
@@ -115,13 +116,14 @@ module Ace
             super([], error)
           end
 
-          def call(task:, roles:)
-            calls << {task: task, roles: roles}
+          def call(task:, roles:, dry_run: false)
+            calls << {task: task, roles: roles, dry_run: dry_run}
             raise Error, error if error
 
             roles.each_with_index.map do |role, index|
               {"role" => role, "position" => index + 1, "of" => roles.length,
-               "assignment" => "seq#{index + 1}", "disposition" => "created",
+               "assignment" => "seq#{index + 1}",
+               "disposition" => dry_run ? "planned" : "created",
                "steps" => 1, "outcome" => "#{role} outcome"}
             end
           end
@@ -146,7 +148,7 @@ module Ace
           assert_equal "8xg.t.aaa", result.task
           assert_equal "/proj/.ace-tasks/8xg.t.aaa-fixture", result.task_path
           refute result.conflict?
-          assert_equal [{task: "8xg.t.aaa", roles: %w[worker reviewer]}], composer.calls
+          assert_equal [{task: "8xg.t.aaa", roles: %w[worker reviewer], dry_run: false}], composer.calls
           assert_equal %w[worker reviewer], result.assignments.map { |a| a["role"] }
           assert_equal "created", result.assignments.first["disposition"]
 
@@ -258,6 +260,50 @@ module Ace
           assert_empty hitl.report_calls
           assert_includes result.conflict["detail"], "no overseer address for the start configs"
           assert_includes result.conflict["detail"], "NOT ready"
+        end
+
+        def test_unresolvable_instruction_source_is_a_gap_never_ready
+          dir = Dir.mktmpdir("coworker-instr")
+          roles_dir = File.join(dir, ".ace", "coworker", "roles")
+          FileUtils.mkdir_p(roles_dir)
+          File.write(File.join(roles_dir, "worker.yml"), <<~YAML)
+            ---
+            name: worker
+            description: Fixture worker with a missing instruction source
+            instructions: roles/nonexistent.md
+            start_prompt: "Drive {{assignment}}."
+            reporting:
+              channel: hitl
+            errors:
+              on_failure: report
+          YAML
+
+          composer = FakeSequenceComposer.new
+          config_writer = FakeStartConfigWriter.new
+          hitl = FakeHitl.new
+          result = orchestrator(
+            provision_decision: created_decision.merge(worktree_path: dir),
+            sequence_composer: composer, start_config_writer: config_writer, hitl: hitl)
+            .call(task_ref: "8xg.t.aaa", roles: %w[worker], to: "overseer@lab")
+
+          # Never-ready-on-missing-context: the sequence composes, but the
+          # leg's start command would fail immediately — a gap (decision
+          # question), never a ready commission.
+          assert result.conflict?
+          assert_equal "role_instructions", result.conflict["kind"]
+          assert_includes result.conflict["detail"], "roles/nonexistent.md"
+          assert_includes result.conflict["detail"], "not found in this worktree"
+          assert_includes result.conflict["detail"], "NOT ready"
+          assert_includes result.conflict["detail"], "prepared: worktree #{dir}"
+          assert_nil result.report, "a gap never sends a readiness report"
+          assert_empty config_writer.calls, "no leg config is written"
+          assert_equal 1, composer.calls.length
+          assert_equal "hitl01", result.conflict["hitl_event"]
+          question = hitl.create_calls.first[:question_lines].join("\n")
+          assert_includes question, "role_instructions"
+          assert_includes question, "roles/nonexistent.md"
+        ensure
+          FileUtils.remove_entry(dir)
         end
 
         def test_sequence_composition_error_is_a_gap_escalated_to_the_overseer

@@ -22,6 +22,8 @@ module Ace
       # NOTHING is written: another role's process is never substituted.
       # Composition is idempotent: an existing assignment named
       # "<task>-<role>" with a matching task_id is reused without writes.
+      # dry_run resolves the same sequence with ZERO writes: existing
+      # assignments are read-only reused, missing legs are "planned".
       class RoleSequenceComposer
         GEM_SEQUENCES_DIR = File.join(".ace-defaults", "coworker", "sequences")
         PROJECT_SEQUENCES_DIR = File.join(".ace", "coworker", "sequences")
@@ -43,12 +45,16 @@ module Ace
 
         # @param task [String] canonical task id
         # @param roles [Array<String>] role sequence in dependency order
+        # @param dry_run [Boolean] resolve the whole sequence without any
+        #   writes: existing assignments are reported as "existing" (a
+        #   read-only lookup), missing legs as "planned" with a nil
+        #   assignment id
         # @return [Array<Hash>] ordered entries:
         #   {"role", "position", "of", "assignment", "disposition"
-        #    ("created"|"existing"), "steps", "outcome"}
+        #    ("created"|"existing"|"planned"), "steps", "outcome"}
         # @raise [Error] when any role has no preset or no process
         #   definition; raised BEFORE any assignment is written
-        def call(task:, roles:)
+        def call(task:, roles:, dry_run: false)
           role_list = Array(roles).map(&:to_s).map(&:strip).reject(&:empty?)
           raise Error, "role sequence requires at least one role" if role_list.empty?
 
@@ -60,14 +66,17 @@ module Ace
           role_list.each_with_index.map do |role, index|
             definition = definitions[index]
             existing = find_existing(task, role)
-            if existing
-              entry = entry_for(task: task, role: role, index: index, total: role_list.length,
+            entry = if existing
+              entry_for(task: task, role: role, index: index, total: role_list.length,
                 assignment_id: existing, definition: definition, disposition: "existing")
+            elsif dry_run
+              entry_for(task: task, role: role, index: index, total: role_list.length,
+                assignment_id: nil, definition: definition, disposition: "planned")
             else
               assignment_id = create_assignment(task: task, role: role,
                 definition: definition, index: index, total: role_list.length,
                 previous: previous)
-              entry = entry_for(task: task, role: role, index: index, total: role_list.length,
+              entry_for(task: task, role: role, index: index, total: role_list.length,
                 assignment_id: assignment_id, definition: definition, disposition: "created")
             end
             previous = {"role" => role, "assignment" => entry["assignment"]}
@@ -206,6 +215,14 @@ module Ace
             errors << "at least one step is required"
           else
             steps.each_with_index do |step, index|
+              # A scalar/null step (steps: [42], steps: [null]) must be an
+              # actionable process error, never a TypeError from indexing a
+              # non-mapping — malformed user process data stays inside the
+              # role_sequence gap path.
+              unless step.is_a?(Hash)
+                errors << "step #{index + 1}: must be a mapping with 'name' and 'instructions', got #{step.class}"
+                next
+              end
               errors << "step #{index + 1}: 'name' is required" if step["name"].to_s.strip.empty?
               if Array(step["instructions"]).map(&:to_s).reject(&:empty?).empty?
                 errors << "step #{index + 1}: 'instructions' are required"

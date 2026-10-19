@@ -162,6 +162,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `prepare --dry-run` is now zero-write on EXISTING worktrees too
+  (PR #393 audit): `PrepareOrchestrator` passes `dry_run` through to
+  `RoleSequenceComposer`, which resolves the whole sequence read-only —
+  already-composed legs are reported as `existing`, missing legs as
+  `planned` with no assignment id — and `StartConfigWriter` plans such
+  legs without commissioning them (a real run still requires a composed
+  assignment per leg). Previously a dry-run reuse/extension of an
+  existing worktree created real ace-assign assignments (e.g. a real
+  reviewer `assignment.yaml` after extending `--roles worker` to
+  `--roles worker,reviewer --dry-run`), mutating execution state during
+  a preview.
+- `prepare` never reports readiness when a leg's instruction source does
+  not resolve (never-ready-on-missing-context, 8xg.t.sbz.3.2/.3.3):
+  before any start config is written or readiness reported, the
+  instruction source of EVERY leg is resolved through the existing
+  loader in the prepared worktree (file-path sources in-process; protocol
+  URIs stay delegated to ace-nav at start time). A missing source (e.g.
+  `instructions: roles/nonexistent.md`) is a new `role_instructions`
+  conflict — exit 1, no leg config written, escalated to the overseer as
+  a decision question — instead of a success whose emitted first-leg
+  start command fails immediately with "instruction file not found".
+- `RoundRule` (3/2/10 review convergence): a completed delta round that
+  CONFIRMS a High/Critical finding now invalidates the prior clean
+  streak — even when the same delta (or a separate fix delta) resolves
+  the finding — so renewed clean full-round evidence is required before
+  `accept`. Previously three clean full rounds followed by a
+  High-confirmed delta (even resolved) still yielded `accept` with a
+  stale `consecutive_clean: 3`. Full-round counting (3/2/10 cap) is
+  unchanged; deltas without a confirmed High/Critical stay transparent.
+- `RoleSequenceComposer` raises the actionable
+  `invalid assignment process` `Ace::Coworker::Error` for malformed
+  sequence step entries (e.g. a project override
+  `.ace/coworker/sequences/worker.yml` with `steps: [42]` or
+  `steps: [null]`) instead of a raw `TypeError`/`NoMethodError`, so
+  malformed user process data flows through the intended `role_sequence`
+  gap/HITL escalation in `prepare` instead of crashing it.
 - `WorktreeExecutorProbe` cascade (8xi1p4z2): an unparseable nearest
   cascade layer (e.g. unresolved merge-conflict markers in the
   worktree's own `coworker/config.yml`) is now skipped per-layer,

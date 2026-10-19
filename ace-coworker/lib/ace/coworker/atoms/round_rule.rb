@@ -59,13 +59,21 @@ module Ace
 
         # A record is a clean round only when it is a completed full round
         # with no confirmed High/Critical finding; aborted full rounds and
-        # full rounds with High/Critical reset the streak, delta rounds are
-        # transparent (they neither advance nor break it - the next full
-        # round re-establishes the evidence).
+        # full rounds with High/Critical reset the streak. Delta rounds
+        # never advance the streak, but a delta that CONFIRMS a
+        # High/Critical finding breaks it — even when the same delta (or a
+        # later fix delta) resolves the finding: code that just produced a
+        # High defect needs renewed clean full-round evidence, never the
+        # stale streak from before the finding. Deltas without a confirmed
+        # High/Critical (e.g. a pure fix delta) stay transparent.
         def self.clean_streak(records)
           streak = 0
           records.reverse_each do |record|
-            next unless full?(record)
+            unless full?(record)
+              break if confirmed_high([record]).any?
+
+              next
+            end
 
             break unless completed?(record) && confirmed_high([record]).empty?
 

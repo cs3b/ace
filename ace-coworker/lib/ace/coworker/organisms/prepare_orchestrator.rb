@@ -98,10 +98,25 @@ module Ace
           # prepared and the gap escalates to the overseer (question —
           # a decision is needed), never a silent bare error.
           sequence = begin
-            compose_sequence(task_id, roles, decision[:worktree_path])
+            compose_sequence(task_id, roles, decision[:worktree_path], dry_run)
           rescue Error => e
             return conflict_result(task: task_id, task_path: task_path, roles: roles,
               kind: "role_sequence", detail: e.message,
+              worktree_path: decision[:worktree_path], to: to,
+              config_path: config_path, dry_run: dry_run)
+          end
+
+          # Missing instruction context is a GAP too (never-ready-on-
+          # missing-context): the sequence composes, but a leg whose
+          # instruction source does not resolve would hand the executor a
+          # start command that fails immediately — reported with the
+          # concrete reason, never as a ready order.
+          gaps = instruction_gaps(sequence, decision[:worktree_path])
+          unless gaps.empty?
+            return conflict_result(task: task_id, task_path: task_path, roles: roles,
+              kind: "role_instructions",
+              detail: instruction_gap_detail(worktree_path: decision[:worktree_path],
+                branch: decision[:branch], disposition: disposition, gaps: gaps),
               worktree_path: decision[:worktree_path], to: to,
               config_path: config_path, dry_run: dry_run)
           end
@@ -141,9 +156,56 @@ module Ace
         # Composes the whole role sequence in one go via ace-assign's plan
         # storage in the prepared worktree. A missing role process is
         # reported (Error) — never substituted with another role's.
-        def compose_sequence(task_id, roles, worktree_path)
+        # dry_run resolves the same sequence with zero writes (planned
+        # legs carry no assignment id).
+        def compose_sequence(task_id, roles, worktree_path, dry_run)
           composer = @sequence_composer || Molecules::RoleSequenceComposer.new(project_root: worktree_path)
-          composer.call(task: task_id, roles: roles)
+          composer.call(task: task_id, roles: roles, dry_run: dry_run)
+        end
+
+        # Never-ready-on-missing-context (L4.4 / 8xg.t.sbz.3.2-.3.3): the
+        # instruction source of EVERY leg must resolve through the existing
+        # loader in the prepared worktree before readiness is declared — a
+        # start command that fails immediately ("instruction file not
+        # found") is a gap, never a ready commission. File-path sources
+        # are resolved in-process here; protocol URIs (wfi://, prompt://,
+        # tmpl://) are delegated to ace-nav at start time exactly as
+        # StartOrchestrator does. Unknown roles surface as the
+        # role_sequence gap during composition and are skipped here.
+        # Read-only: this check itself never writes.
+        def instruction_gaps(sequence, worktree_path)
+          loader = Molecules::RolePresetLoader.new(project_root: worktree_path)
+          resolver = Molecules::InstructionResolver.new(project_root: worktree_path)
+          gaps = []
+          sequence.each do |entry|
+            preset = begin
+              loader.fetch(entry["role"])
+            rescue Error
+              nil
+            end
+            next if preset.nil?
+
+            source = preset["instructions"].to_s
+            next if Atoms::ConfigSchema.protocol?(source)
+
+            begin
+              resolver.resolve!(source)
+            rescue Error => e
+              gaps << "role '#{entry['role']}': #{e.message}"
+            end
+          end
+          gaps
+        end
+
+        def instruction_gap_detail(worktree_path:, branch:, disposition:, gaps:)
+          detail = +"instruction source(s) do not resolve in the worktree; " \
+            "the commission is NOT ready - no leg config is written"
+          gaps.each { |gap| detail << "\n#{gap}" }
+          detail << "\nprepared: worktree #{worktree_path} (branch #{branch}, #{disposition})"
+          detail << "\ndecision needed: provide the missing instruction context " \
+            "(or a role preset pointing at an existing source) and re-run " \
+            "prepare (idempotent)"
+          detail
         end
 
         # The readiness report body (L4.4): what was prepared — worktree,

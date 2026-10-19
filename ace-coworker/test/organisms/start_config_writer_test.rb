@@ -105,6 +105,36 @@ module Ace
           FileUtils.remove_entry(worktree) if worktree
         end
 
+        def test_dry_run_plans_a_leg_without_a_composed_assignment
+          worktree = Dir.mktmpdir("scw")
+          writer, writes = writer(worktree)
+          planned = [{"role" => "reviewer", "assignment" => nil}]
+
+          entries = writer.call(task: "8xg.t.aaa", sequence: planned,
+            overseer: "overseer@lab", dry_run: true)
+
+          assert_equal ["planned"], entries.map { |e| e["disposition"] }
+          assert_empty writes
+          refute File.exist?(File.join(worktree, ".ace-local", "coworker", "prepare", "reviewer.yml"))
+        ensure
+          FileUtils.remove_entry(worktree) if worktree
+        end
+
+        def test_real_run_rejects_a_leg_without_a_composed_assignment
+          worktree = Dir.mktmpdir("scw")
+          writer, = writer(worktree)
+          planned = [{"role" => "reviewer", "assignment" => nil}]
+
+          error = assert_raises(Error) do
+            writer.call(task: "8xg.t.aaa", sequence: planned,
+              overseer: "overseer@lab", dry_run: false)
+          end
+
+          assert_includes error.message, "role 'reviewer' has no composed assignment"
+        ensure
+          FileUtils.remove_entry(worktree) if worktree
+        end
+
         def test_late_leg_failure_writes_nothing
           worktree = Dir.mktmpdir("scw")
           writes = []
