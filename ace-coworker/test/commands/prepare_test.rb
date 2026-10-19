@@ -143,6 +143,9 @@ module Ace
             assert_equal "seq1", configs.first["assignment"]
             assert_equal ".ace-local/coworker/prepare/worker.yml", configs.first["path"]
             assert_equal "created", configs.first["disposition"]
+            assert_equal "readiness", payload["report"]["kind"]
+            assert_equal "rpt001", payload["report"]["event"]
+            assert_equal true, payload["report"]["delivered"]
           end
 
           def test_conflict_renders_and_raises_cli_error

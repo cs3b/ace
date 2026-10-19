@@ -415,7 +415,9 @@ Start-config composition (L4.3; same owner, new artifact kind under
   partial planner-side config still names it). No address anywhere: a
   `missing_overseer` GAP — exit 1 with
   `preparation conflict: missing_overseer - no overseer address for the
-  start configs (--to or coworker config)` and no leg config written —
+  start configs (--to or coworker config); the commission is NOT ready -
+  no leg config is written…` (followed by the prepared/decision-needed
+  detail lines) and no leg config written —
   never a config with an empty overseer and never a ready commission.
   The gap detail states what IS prepared (worktree, assignments) and
   the decision needed (supply `--to` and re-run prepare, idempotent).

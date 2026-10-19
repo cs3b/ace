@@ -109,14 +109,15 @@ module Ace
           # A missing overseer address is a GAP too (L4.4): the worktree
           # and the assignments ARE composed, but no start config is
           # written and the commission is NOT ready — reported with the
-          # concrete reason, never as a ready order.
-          leg_overseer, leg_note = escalation_recipient(to: to, config_path: config_path)
+          # concrete reason, never as a ready order. (The lenient
+          # config-load note, if any, is appended once by conflict_result.)
+          leg_overseer, = escalation_recipient(to: to, config_path: config_path)
           if leg_overseer.to_s.strip.empty?
             return conflict_result(task: task_id, task_path: task_path, roles: roles,
               kind: "missing_overseer",
               detail: missing_overseer_detail(worktree_path: decision[:worktree_path],
                 branch: decision[:branch], disposition: disposition,
-                sequence: sequence, note: leg_note),
+                sequence: sequence),
               worktree_path: decision[:worktree_path], to: to,
               config_path: config_path, dry_run: dry_run)
           end
@@ -144,12 +145,6 @@ module Ace
           composer = @sequence_composer || Molecules::RoleSequenceComposer.new(project_root: worktree_path)
           composer.call(task: task_id, roles: roles)
         end
-
-        # The overseer address every leg config carries: the same
-        # resolution as conflict escalation (--to, else the coworker
-        # config's overseer, leniently). Resolved in #call; an empty
-        # address produces the missing_overseer GAP (see #call), never a
-        # config with an empty overseer and never a silent skip.
 
         # The readiness report body (L4.4): what was prepared — worktree,
         # per-role assignments, per-leg start configs — plus the exact
@@ -192,10 +187,9 @@ module Ace
           lines
         end
 
-        def missing_overseer_detail(worktree_path:, branch:, disposition:, sequence:, note:)
+        def missing_overseer_detail(worktree_path:, branch:, disposition:, sequence:)
           detail = +"no overseer address for the start configs (--to or coworker config); " \
             "the commission is NOT ready - no leg config is written"
-          detail << "\n#{note}" if note
           detail << "\nprepared: worktree #{worktree_path} (branch #{branch}, #{disposition})"
           sequence.each do |entry|
             detail << "\nprepared: assignment #{entry['role']} -> #{entry['assignment']} " \

@@ -237,6 +237,29 @@ module Ace
           assert_empty hitl.report_calls
         end
 
+        def test_dry_run_reuse_with_missing_overseer_is_a_gap_without_escalation
+          config_writer = FakeStartConfigWriter.new
+          hitl = FakeHitl.new
+          result = orchestrator(
+            provision_decision: created_decision.merge(disposition: :reuse),
+            start_config_writer: config_writer, hitl: hitl)
+            .call(task_ref: "8xg.t.aaa", roles: %w[worker], dry_run: true)
+
+          # Dry-run does not soften the gap: a missing overseer address on
+          # an existing (reused) worktree is still reported as NOT ready,
+          # without escalation and without any write or HITL event.
+          assert result.conflict?
+          assert_equal "missing_overseer", result.conflict["kind"]
+          assert result.dry_run == true
+          assert_nil result.worktree
+          assert_nil result.report
+          assert_empty config_writer.calls
+          assert_empty hitl.create_calls
+          assert_empty hitl.report_calls
+          assert_includes result.conflict["detail"], "no overseer address for the start configs"
+          assert_includes result.conflict["detail"], "NOT ready"
+        end
+
         def test_sequence_composition_error_is_a_gap_escalated_to_the_overseer
           composer = FakeSequenceComposer.new(error: "role 'planner' has no assignment process")
           hitl = FakeHitl.new

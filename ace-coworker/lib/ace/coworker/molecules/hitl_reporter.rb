@@ -20,7 +20,8 @@ module Ace
 
         # @param outcome [Models::Outcome]
         # @param cfg [Models::Config]
-        # @return [String] created event id
+        # @return [String, Failure] created event id, or Failure when the
+        #   ace-hitl create command fails
         # @raise [Error] when ace-hitl is not available at all
         def create(outcome, cfg)
           argv = [hitl_binary, "create", title(outcome, cfg)]
@@ -43,7 +44,8 @@ module Ace
         # @param task [String] task reference
         # @param result [String] "success" or "error"
         # @param to [String, nil] recipient address
-        # @return [String] created event id
+        # @return [String, Failure] created event id, or Failure when the
+        #   ace-hitl create command fails
         # @raise [Error] when ace-hitl is not available at all
         def create_report(title:, body_lines:, task:, result:, to: nil)
           argv = [hitl_binary, "create", title]
@@ -61,7 +63,8 @@ module Ace
         # @param question_lines [Array<String>] question body lines
         # @param task [String] task reference
         # @param to [String, nil] escalation recipient
-        # @return [String] created event id
+        # @return [String, Failure] created event id, or Failure when the
+        #   ace-hitl create command fails
         # @raise [Error] when ace-hitl is not available at all
         def create_conflict(title:, question_lines:, task:, to: nil)
           argv = [hitl_binary, "create", title]
