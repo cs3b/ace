@@ -145,20 +145,28 @@ describe("report wake across a real linked worktree (PR393)", () => {
       const stopWatch = () => port.stopAll();
       process.on("exit", stopWatch);
       try {
+        const onWake = () => {
+          wakes += 1;
+          return { delivered: true };
+        };
         port.start(
           { kind: "watch", name: "reports", path: ".ace-local/hitl", message: "new ace-hitl report; run /continue-work" },
-          () => {
-            wakes += 1;
-            return { delivered: true };
-          },
+          onWake,
         );
+
+        // Production ordering: the one-shot post-registration reconcile
+        // (~500 ms) has already fired and settled BEFORE the worktree is
+        // linked — its discovery pass can never see the new worktree.
+        await pause(700);
+        assert.equal(wakes, 0);
 
         // The planner links the coworker worktree while the watch is
         // already active — no re-registration, no reload.
         run("git", ["-C", main, "worktree", "add", "-qb", "worker", worker]);
 
         // The coworker files its report from INSIDE its own worktree; the
-        // main-checkout inbox stays untouched.
+        // main-checkout inbox stays untouched, and no watched path changed
+        // — no watcher covers the new inbox, so no event can fire.
         const report = spawnSync(path.join(REPO_ROOT, "bin", "ace-hitl"),
           ["create", "Worker complete", "--type", "report", "--result", "success", "--body", "Done"],
           { cwd: worker, encoding: "utf8" });
@@ -168,8 +176,15 @@ describe("report wake across a real linked worktree (PR393)", () => {
         assert.ok(fs.readdirSync(workerInbox).length > 0, "the report must land in the worktree inbox");
         assert.equal(fs.readdirSync(path.join(main, ".ace-local", "hitl")).length, 0,
           "the main inbox is untouched: only cross-worktree expansion can wake");
+        await pause(200);
+        assert.equal(wakes, 0,
+          "with no watched-path event, only a settlement boundary can discover the late worktree");
 
-        await waitFor(() => wakes >= 1, "a report in a worktree linked after watch start to wake");
+        // The settlement boundary (the wake registry calls this after the
+        // agent settles) is the channel that discovers the worktree and
+        // delivers the missed first report.
+        port.flushDirty(onWake);
+        await waitFor(() => wakes >= 1, "a report in a worktree linked after watch start to wake at the settlement boundary");
         const wakesAfterFirst = wakes;
 
         // The second report proves the refresh pass also re-attached the

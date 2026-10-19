@@ -213,6 +213,125 @@ describe("createWatchPort", () => {
   });
 });
 
+describe("createWatchPort runtime target discovery", () => {
+  const MAIN_INBOX = "/fake/project/.ace-local/hitl";
+  const WORKTREE_INBOX = "/fake/wt/task-9/.ace-local/hitl";
+  const WORKTREE_PARENT = "/fake/wt/task-9/.ace-local";
+
+  function startDiscoveryWatch(host, { targets, onDeactivate, statFn } = {}) {
+    const reconciles = [];
+    const port = createWatchPort({
+      watchFactory: host.watchFactory,
+      statFn: statFn ?? host.statFn,
+      baseDir: "/fake/project",
+      resolveTargets: () => [...targets],
+      scheduleReconcile: (reconcile) => reconciles.push(reconcile),
+      onDeactivate,
+    });
+    const wakes = [];
+    const onWake = () => {
+      wakes.push(1);
+      return { delivered: true };
+    };
+    host.setFile(MAIN_INBOX, { mtimeMs: 1, size: 10 });
+    port.start({ kind: "watch", name: "reports", path: MAIN_INBOX, message: "m" }, onWake);
+    return { port, wakes, onWake, reconciles };
+  }
+
+  it("discovers a late-linked worktree at a settlement boundary with no watched-path event", () => {
+    const host = createFakeHost();
+    const targets = [MAIN_INBOX];
+    const { port, wakes, onWake, reconciles } = startDiscoveryWatch(host, { targets });
+
+    // Production ordering: the one-shot post-registration reconcile has
+    // already run and settled before the worktree is linked.
+    reconciles.splice(0).forEach((reconcile) => reconcile());
+    assert.equal(wakes.length, 0);
+
+    // The worktree is linked long after start and its FIRST report lands
+    // in its own inbox — a path no watcher covers, so no event can fire.
+    targets.push(WORKTREE_INBOX);
+    host.setFile(WORKTREE_INBOX, { mtimeMs: 10, size: 100 });
+    assert.equal(wakes.length, 0, "nothing is watched on the new path yet");
+
+    // The settlement boundary (flushDirty) is the only remaining channel.
+    port.flushDirty(onWake);
+
+    assert.equal(wakes.length, 1,
+      "a late-linked worktree's first report must wake at the settlement boundary");
+    assert.deepEqual(host.watcherPaths().sort(), [MAIN_INBOX, WORKTREE_INBOX].sort(),
+      "the discovered inbox must now be watched directly");
+  });
+
+  it("does not absorb a report created between the discovery stat and the baseline recomputation", () => {
+    const host = createFakeHost();
+    host.setFile(WORKTREE_PARENT, { mtimeMs: 1, size: 1 });
+    // Inject the production micro-race precisely: the report is created at
+    // the moment the discovery stat of the absent inbox throws — after the
+    // proof of absence, before the baseline fingerprint recomputation.
+    let raceInjected = false;
+    const realStatFn = host.statFn;
+    const racingStatFn = (path) => {
+      try {
+        return realStatFn(path);
+      } catch (error) {
+        if (path === WORKTREE_INBOX && !raceInjected) {
+          raceInjected = true;
+          host.setFile(WORKTREE_INBOX, { mtimeMs: 10, size: 100 });
+        }
+        throw error;
+      }
+    };
+    const { port, wakes } = startDiscoveryWatch(host, {
+      targets: [MAIN_INBOX, WORKTREE_INBOX],
+      statFn: racingStatFn,
+    });
+    assert.ok(raceInjected, "the race window must have been exercised");
+    assert.equal(wakes.length, 0, "registration itself never wakes");
+
+    // The registration-time baseline must record the PROVEN absent state,
+    // so the post-registration reconcile (scheduled by start()) delivers
+    // the race-window report instead of silently absorbing it.
+    port.flushDirty(() => {
+      wakes.push(1);
+      return { delivered: true };
+    });
+
+    assert.equal(wakes.length, 1, "the race-window report must not be absorbed into the baseline");
+    assert.ok(host.watcherPaths().includes(WORKTREE_INBOX),
+      `the now-existing inbox must be watched directly, got ${host.watcherPaths()}`);
+  });
+
+  it("drops only the failed extra target's watcher and keeps the subscription", () => {
+    const host = createFakeHost();
+    host.setFile(WORKTREE_INBOX, { mtimeMs: 1, size: 1 });
+    let deactivations = 0;
+    const { port, wakes } = startDiscoveryWatch(host, {
+      targets: [MAIN_INBOX, WORKTREE_INBOX],
+      onDeactivate: () => {
+        deactivations += 1;
+      },
+    });
+    assert.equal(host.watcherCount(), 2);
+
+    // ace-overseer prune removed the watched worktree: its watcher errors
+    // while the primary inbox stays healthy.
+    host.setFile(WORKTREE_INBOX, { missing: true });
+    host.failWatch(WORKTREE_INBOX, "EPERM: watch lost");
+
+    assert.equal(port.activeCount(), 1, "the subscription must stay active");
+    assert.equal(port.errorOf("reports"), undefined, "a dropped target is not a subscription error");
+    assert.equal(deactivations, 0, "onDeactivate must not fire while the subscription lives");
+    assert.equal(host.watcherCount(), 1, "only the failed target's watcher closed");
+    assert.equal(wakes.length, 0, "a pruned worktree must not wake");
+
+    // The surviving primary still wakes on its own changes.
+    host.setFile(MAIN_INBOX, { mtimeMs: 20, size: 40 });
+    host.triggerWatch(MAIN_INBOX);
+    assert.equal(wakes.length, 1, "the primary target keeps the wake posture");
+  });
+});
+
 describe("nodeWatchFactory on the real filesystem", { timeout: 20_000 }, () => {
   it("resolves symlinked watch paths to their filesystem target", async () => {
     const tmp = nodeFs.mkdtempSync(nodePath.join(nodeOs.tmpdir(), "wake-symlink-"));

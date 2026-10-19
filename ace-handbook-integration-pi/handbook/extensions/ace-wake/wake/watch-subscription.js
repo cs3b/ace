@@ -43,12 +43,15 @@ export function canonicalizeWatchPath(baseDir, path) {
  * at the previously delivered state: the queued wake covers the change, and a
  * further change queues a fresh follow-up after settlement.
  *
- * A watcher runtime error (path deleted, permission lost) closes the handle,
- * marks the subscription inactive with a visible error via the injected
- * `onDeactivate` hook, and never retries: the user removes and re-adds the
- * watch explicitly. `fail()` records the same inactive-error state without a
- * native handle, which reconciliation uses for subscriptions that could not
- * be restarted.
+ * A watcher runtime error on the configured (primary) path closes the
+ * handle, marks the subscription inactive with a visible error via the
+ * injected `onDeactivate` hook, and never retries: the user removes and
+ * re-adds the watch explicitly. A runtime error on a DISCOVERED extra
+ * target (e.g. `ace-overseer prune` removed a watched worktree) drops only
+ * that target's watcher and keeps the subscription alive for every other
+ * worktree; discovery re-attaches the target if it reappears. `fail()`
+ * records the same inactive-error state without a native handle, which
+ * reconciliation uses for subscriptions that could not be restarted.
  *
  * @param {object} ports
  * @param {(path: string, handlers: {onChange: () => void, onError: (error: Error) => void}) => {close: () => void}} ports.watchFactory
@@ -98,7 +101,12 @@ export function createWatchPort({ watchFactory, statFn, baseDir = process.cwd(),
       const targetPaths = resolveTargetsFor(resolveTargets, baseDir, definition.path, canonicalPath);
       const watchers = targetPaths.flatMap((target) => attachWatcher(target, definition, onWake));
       const paths = watchers.map((entry) => entry.path);
-      const fingerprint = aggregateFingerprint(paths, canonicalPath);
+      // A target watched through an ancestor was PROVEN absent just now;
+      // its baseline records that fact rather than a re-stat, so a report
+      // created between the proof and this recomputation stays a change
+      // (the scheduled reconcile below delivers it).
+      const provenAbsent = new Set(watchers.filter((each) => each.watchPath !== each.path).map((each) => each.path));
+      const fingerprint = aggregateFingerprint(paths, canonicalPath, provenAbsent);
 
       active.set(definition.name, { watchers, paths, primaryPath: canonicalPath, definition, fingerprint, previousFingerprint: fingerprint, dirty: false });
       // Close the registration gap: a change between baseline capture and
@@ -120,16 +128,26 @@ export function createWatchPort({ watchFactory, statFn, baseDir = process.cwd(),
     },
 
     /**
-     * Re-check subscriptions whose change was absorbed by a pending wake.
-     * Called after the agent settles (pending markers cleared): a subscription
-     * whose current state still differs from its last delivered fingerprint
-     * fires a fresh wake — no new filesystem event required.
+     * Re-check subscriptions after the agent settles (pending markers
+     * cleared). Target discovery refreshes for EVERY active subscription:
+     * a worktree linked while the session was watching whose first report
+     * landed in its own (then-unwatched) inbox produced no watched-path
+     * event, so this settlement boundary is the channel that notices it.
+     * A subscription whose current state still differs from its last
+     * delivered fingerprint fires a fresh wake — no new filesystem event
+     * required.
      *
      * @param {(definition: import("./types.js").WatchDefinition) => {delivered: boolean, reason?: string} | undefined} onWake
      */
     flushDirty(onWake) {
       for (const entry of active.values()) {
-        if (!entry.dirty) {
+        // Settlement boundaries refresh target discovery for EVERY active
+        // subscription, not only dirty ones: a worktree linked long after
+        // start whose first report lands in its own (not yet watched)
+        // inbox produces no watched-path event, so this pass is the only
+        // channel that can notice the new target and wake.
+        refreshAttachments(entry, entry.definition, onWake);
+        if (active.get(entry.definition.name)?.definition !== entry.definition) {
           continue;
         }
         const next = currentFingerprint(entry, entry.definition.name);
@@ -325,7 +343,14 @@ export function createWatchPort({ watchFactory, statFn, baseDir = process.cwd(),
       onError: (error) => {
         // A callback from a removed registration must never touch its
         // replacement.
-        if (active.get(definition.name)?.definition !== definition) {
+        const entry = active.get(definition.name);
+        if (entry === undefined || entry.definition !== definition) {
+          return;
+        }
+        if (target !== entry.primaryPath) {
+          // A discovered extra target died (the worktree was pruned):
+          // drop only this target's watcher, keep the subscription.
+          dropTarget(entry, target);
           return;
         }
         deactivate(definition.name, describeError(error));
@@ -363,8 +388,11 @@ export function createWatchPort({ watchFactory, statFn, baseDir = process.cwd(),
    * exists, close the ancestor watch and watch the real target directly.
    *
    * A newly discovered target that does not exist yet joins the baseline
-   * fingerprint as its stable "absent" state — its later appearance (the
-   * first report) is the change that wakes, not its discovery.
+   * fingerprint as its PROVEN "absent" state (never a re-stat, so a report
+   * created between the discovery stat and the baseline recomputation stays
+   * a pending change) and a follow-up reconcile pass — mirroring start() —
+   * delivers any change that landed in the attach gap; its later appearance
+   * (the first report) is the change that wakes, not its discovery.
    *
    * @param {{watchers: Array<{path: string, watchPath: string, watcher: {close: () => void}}>, paths: string[], primaryPath: string, fingerprint: string, previousFingerprint: string}} entry
    * @param {import("./types.js").WatchDefinition} definition
@@ -428,15 +456,10 @@ export function createWatchPort({ watchFactory, statFn, baseDir = process.cwd(),
       return;
     }
     const targetPaths = resolveTargetsFor(resolveTargets, baseDir, definition.path, entry.primaryPath);
+    let attachedAny = false;
     for (const target of targetPaths) {
       if (entry.watchers.some((attached) => attached.path === target)) {
         continue;
-      }
-      let absent = false;
-      try {
-        statFn(target);
-      } catch {
-        absent = true;
       }
       let attachedWatcher;
       try {
@@ -451,11 +474,56 @@ export function createWatchPort({ watchFactory, statFn, baseDir = process.cwd(),
       }
       entry.watchers.push(attachedWatcher[0]);
       entry.paths = entry.watchers.map((each) => each.path);
-      if (absent) {
-        entry.previousFingerprint = entry.fingerprint;
-        entry.fingerprint = aggregateFingerprint(entry.paths, entry.primaryPath);
+      attachedAny = true;
+      if (attachedWatcher[0].watchPath !== target) {
+        // The baseline records the "absent" state PROVEN by the ancestor
+        // climb, never a re-stat: a report created between the two must
+        // remain a pending change. The follow-up reconcile scheduled
+        // below delivers it without waiting for another event.
+        const baseline = aggregateFingerprint(entry.paths, entry.primaryPath, new Set([target]));
+        entry.previousFingerprint = baseline;
+        entry.fingerprint = baseline;
       }
     }
+    if (attachedAny) {
+      // Mirror start(): a change landing in the attach gap (the race
+      // above, or watcher initialization latency on the new target)
+      // produces no callback, so re-stat once.
+      scheduleReconcile(() => handleChange(definition, onWake));
+    }
+  }
+
+  /**
+   * Drop the watcher of one discovered extra target after a runtime error
+   * (typically `ace-overseer prune` removing the worktree): only that
+   * target's handle closes; the subscription stays active for the primary
+   * and every other worktree. The target's disappearance is absorbed into
+   * the baseline — a pruned worktree is not a report and must not wake.
+   *
+   * @param {{watchers: Array<{path: string, watchPath: string, watcher: {close: () => void}}>, paths: string[], primaryPath: string, fingerprint: string, previousFingerprint: string}} entry
+   * @param {string} target
+   */
+  function dropTarget(entry, target) {
+    const remaining = [];
+    for (const attached of entry.watchers) {
+      if (attached.path === target) {
+        try {
+          attached.watcher.close();
+        } catch {
+          // Closing an already-broken watcher must not mask the original error.
+        }
+      } else {
+        remaining.push(attached);
+      }
+    }
+    if (remaining.length === entry.watchers.length) {
+      return;
+    }
+    entry.watchers = remaining;
+    entry.paths = remaining.map((each) => each.path);
+    const baseline = aggregateFingerprint(entry.paths, entry.primaryPath);
+    entry.fingerprint = baseline;
+    entry.previousFingerprint = baseline;
   }
 
   /**
@@ -480,12 +548,18 @@ export function createWatchPort({ watchFactory, statFn, baseDir = process.cwd(),
   /**
    * @param {string[]} paths sorted target paths
    * @param {string} primaryPath
+   * @param {Set<string>} [forcedAbsent] Targets recorded as "absent" without
+   *   re-statting — the proven-at-discovery baseline of a newly attached
+   *   target, so a report created in the stat/recompute gap stays a change.
    * @returns {string}
    */
-  function aggregateFingerprint(paths, primaryPath) {
+  function aggregateFingerprint(paths, primaryPath, forcedAbsent) {
     return [...paths]
       .sort()
       .map((path) => {
+        if (forcedAbsent?.has(path)) {
+          return `${path}=absent`;
+        }
         if (path === primaryPath) {
           return `${path}=${fingerprintOf(statFn(path))}`;
         }
