@@ -15,13 +15,24 @@ module Ace
         #   TaskIDExtractor.extract({id: "v.0.9.0+task.121"})    # => "121"
         #   TaskIDExtractor.extract({id: "v.0.9.0+ace-t.121.01"}) # => "121.01"
         #   TaskIDExtractor.extract({id: "v.0.9.0+t.121"})       # => "121"
+        #   TaskIDExtractor.extract({id: "8xh.t.ddd.0.0"})      # => "ddd.0.0"
         #
         # @example Normalize a task reference string
         #   TaskIDExtractor.normalize("v.0.9.0+task.121.01") # => "121.01"
         #   TaskIDExtractor.normalize("task.121")       # => "121"
         #   TaskIDExtractor.normalize("ace-t.121")      # => "121"
         #   TaskIDExtractor.normalize("121.01")         # => "121.01"
+        #   TaskIDExtractor.normalize("8xh.t.ddd.0.0")  # => "ddd.0.0"
         class TaskIDExtractor
+          # B36TS full id with an arbitrary chain of subtask segments:
+          # "8xh.t.ddd" -> "ddd", "8xh.t.ddd.0" -> "ddd.0",
+          # "8xh.t.ddd.0.0" -> "ddd.0.0". Every task/subtask segment is
+          # preserved so the derived branch/worktree name is deterministic
+          # and reversible (the segment chain maps 1:1 onto the id).
+          B36TS_FULL_ID = /\A[0-9a-z]{3}\.[a-z]\.([0-9a-z]{3}(?:\.[0-9a-z]+)*)\z/
+          # Short form of the same chain, optionally inside a longer path
+          # (matched at the end): "t.ddd.0.0", "task.hy4", "/x/ace-task.121/".
+          SHORT_TASK_ID = /(?:ace-)?(?:task|t)\.([0-9a-z]{3}(?:\.[0-9a-z]+)*)\/?\z/
           # Extract task ID from task data hash
           #
           # @param task_data [Hash] Task data with :id and/or :task_number
@@ -31,8 +42,9 @@ module Ace
 
             # Regex with subtask support
             if task_data[:id]
-              # B36TS full ID: "8pp.t.hy4" -> "hy4", or subtask "8pp.t.hy4.a" -> "hy4.a"
-              if match = task_data[:id].match(/\A[0-9a-z]{3}\.[a-z]\.([0-9a-z]{3}(?:\.[a-z0-9])?)\z/)
+              # B36TS full ID: "8pp.t.hy4" -> "hy4", subtasks keep every
+              # segment: "8pp.t.hy4.a" -> "hy4.a", "8xh.t.ddd.0.0" -> "ddd.0.0"
+              if (match = task_data[:id].match(B36TS_FULL_ID))
                 return match[1]
               end
               # Try subtask pattern first (e.g., "v.0.9.0+task.121.01" -> "121.01")
@@ -55,18 +67,17 @@ module Ace
 
           # Derive the short form of a full Base36 task id.
           #
-          # The short form is the three-character suffix plus an optional
-          # subtask segment (numeric or single character).
+          # The short form is the three-character suffix plus the complete
+          # subtask segment chain (each segment numeric or alphanumeric,
+          # any depth): "8xh.t.ddd.0.0" -> "ddd.0.0".
           #
           # @param full_id [String, nil] formatted task id (e.g. "8xg.t.k9y",
-          #   "8wr.t.qk0.3")
-          # @return [String, nil] short id (e.g. "k9y", "qk0.3") or nil when the
-          #   argument is not a full task id
+          #   "8wr.t.qk0.3", "8xh.t.ddd.0.0")
+          # @return [String, nil] short id (e.g. "k9y", "qk0.3", "ddd.0.0")
+          #   or nil when the argument is not a full task id
           def self.short_id(full_id)
-            match = full_id.to_s.strip.match(/\A[0-9a-z]{3}\.[a-z]\.([0-9a-z]{3})(?:\.([0-9a-z]+))?\z/)
-            return nil unless match
-
-            match[2] ? "#{match[1]}.#{match[2]}" : match[1]
+            match = full_id.to_s.strip.match(B36TS_FULL_ID)
+            match && match[1]
           end
 
           # Normalize a task reference string to simple ID format
@@ -78,8 +89,9 @@ module Ace
             return nil if ref.empty?
 
             # Regex patterns for recognized ACE task ID formats
-            # B36TS full ID: "8pp.t.hy4" -> "hy4", or subtask "8pp.t.hy4.a" -> "hy4.a"
-            if match = ref.match(/\A[0-9a-z]{3}\.[a-z]\.([0-9a-z]{3}(?:\.[0-9a-z]+)?)\z/)
+            # B36TS full ID: "8pp.t.hy4" -> "hy4", subtasks keep every
+            # segment: "8pp.t.hy4.a" -> "hy4.a", "8xh.t.ddd.0.0" -> "ddd.0.0"
+            if (match = ref.match(B36TS_FULL_ID))
               match[1]
             # B36TS short ref: exactly 3 lowercase alphanumeric chars (e.g., "hy4")
             elsif match = ref.match(/\A([0-9a-z]{3})\z/)
@@ -88,11 +100,14 @@ module Ace
             # Try hierarchical pattern first (e.g., "121.01", "task.121.01")
             elsif match = ref.match(/(\d{3})\.(\d{2})(?:\b|$)/)
               "#{match[1]}.#{match[2]}"
-            # B36TS short ref with subtask segment (e.g., "qk0.3", "hy4.a")
-            elsif match = ref.match(/\A([0-9a-z]{3})\.([0-9a-z]+)\z/)
-              "#{match[1]}.#{match[2]}"
-            # Try ace-task/ace-t or task/t directory at end of path (e.g., "ace-task.hy4", "/path/to/task.121")
-            elsif match = ref.match(/(?:ace-)?(?:task|t)\.([0-9a-z]{3})\/?$/)
+            # B36TS short ref with the whole subtask segment chain
+            # (e.g., "qk0.3", "hy4.a", "ddd.0.0")
+            elsif match = ref.match(/\A([0-9a-z]{3}(?:\.[0-9a-z]+)*)\z/)
+              match[1]
+            # Try task./t. (or ace-task./ace-t.) prefix, keeping the whole
+            # subtask segment chain (e.g. "t.ddd.0.0", "task.hy4.a",
+            # "/path/to/task.121", "ace-task.hy4/")
+            elsif (match = ref.match(SHORT_TASK_ID))
               match[1]
             # Try task./t. prefix in middle of path (e.g., ".cache/test/task.121")
             # Use negative lookbehind to skip ace-task.XXX / ace-t.XXX parent directories

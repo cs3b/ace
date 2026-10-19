@@ -8,10 +8,12 @@ Gem::Specification.new do |spec|
   spec.authors = ["Michal Czyz"]
   spec.email = ["mc@cs3b.com"]
 
-  spec.summary = "Topology and routing CLI for the Lab: address projects, agents, and services by stable IDs"
-  spec.description = "Read-only topology registry and capability router. Resolves stable project, agent, " \
-                     "and service IDs from ADR-022 configuration without invoking Lab, reading credentials, " \
-                     "tracking work, or guessing transient pane/session identifiers."
+  spec.summary = "Lab environment CLI: topology queries, lab status, and prepare-phase convergence from the trusted install manifest"
+  spec.description = "Lab environment package: read-only topology registry and capability router " \
+                     "(stable project, agent, and service IDs from ADR-022 configuration), the lab " \
+                     "status snapshot, and ace-lab prepare — idempotent preparation of accounts, " \
+                     "directories, permissions, ed25519 keys, and role bindings from a root-owned " \
+                     "install manifest. No queue, journal, or command kernel."
   spec.homepage = "https://github.com/cs3b/ace"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.2.0"
@@ -41,8 +43,8 @@ Gem::Specification.new do |spec|
 
   # Runtime dependencies. The installed authority/journal/command kernel and
   # its ace-assign/ace-runtime/ace-herdr/ace-hitl integrations were removed in
-  # L1; the package ships read-only topology queries plus the retained Forgejo
-  # provider adapter.
+  # L1; the package ships read-only topology queries, the lab status snapshot,
+  # the prepare phase (L8.1), and the retained Forgejo provider adapter.
   spec.add_dependency "ace-support-cli", "~> 0.6"
   spec.add_dependency "ace-support-core", "~> 0.31"
   spec.add_dependency "ace-support-config", "~> 0.18"

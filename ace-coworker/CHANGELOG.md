@@ -7,6 +7,177 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Reviewer role (8xg.t.sbz.4.1 / L5.2): shipped preset
+  `.ace-defaults/coworker/roles/reviewer.yml` and the self-contained
+  `wfi://coworker/reviewer` workflow. The reviewer is independent of the
+  worker, fixes confirmed defects itself inside its own single assignment
+  (steps added via `ace-assign add`), checks each fix diff, and returns to
+  full review rounds under the 3/2/10 convergence rule (stated, not yet
+  deterministically enforced — that is 8xg.t.sbz.4.2). No effective fix or a
+  needed product decision is escalated via an `ace-hitl` decision question;
+  unresolved High/Critical is never marked as success.
+- `ace-review` declared as a runtime dependency: the reviewer role's primary
+  function drives the `ace-review`/`ace-review-feedback` CLIs, matching the
+  gemspec's stated policy of declaring runtime CLI requirements.
+
+### Fixed
+
+- `WorktreeExecutorProbe` cascade (8xi1p4z2): an unparseable nearest
+  cascade layer (e.g. unresolved merge-conflict markers in the
+  worktree's own `coworker/config.yml`) is now skipped per-layer,
+  exactly like a non-mapping layer, instead of discarding the whole
+  merge and silently reverting the probe to the default config
+  location — a commissioned executor at a cascade-overridden
+  `config_path` stays detected. The user-tier (`~/.ace`) override is
+  covered by a stubbed-HOME test (8xi1p4z8).
+- `WorktreeExecutorProbe` cascade (8xi16mz3): a non-mapping cascade
+  layer (e.g. a `coworker/config.yml` containing a YAML list) is now
+  skipped instead of wiping the already-merged farther tiers, so valid
+  configuration (including a `config_path` override) from other tiers
+  survives. The probe's deliberate read-only asymmetry — following the
+  cascade-resolved `config_path` without the orchestrator's
+  project-root containment, since it only reads what the worktree's
+  loader process would read anyway — is now documented in the code
+  (8xi16mz4).
+- Render start-prompt placeholders in a single pass derived from `PromptTemplate::PLACEHOLDERS`, so substituted values shaped like a later placeholder are never re-expanded.
+- Raise a specific `invalid role preset` error for malformed YAML preset files (all `Psych::Exception` load failures), instead of a raw backtrace.
+- Correct the spec role workflow's escalation command to the required `ace-hitl create "<title>" --type question ... --question "..."` form.
+- `prepare` reads the target worktree's coworker config through the coworker
+  config cascade anchored at that worktree (project `.ace` tiers plus the
+  user tier), so a commission written under a configured `config_path`
+  (e.g. `.ace-local/coworker/worker.yml`) is detected as an active
+  executor instead of being missed because of the hard-coded default
+  location.
+- `commission` canonicalizes the task identity before the assignment match
+  and the config write: a short task ref of the recorded task (e.g. `ccc`
+  for `8xh.t.ccc`) is accepted and the config stores the resolved full id,
+  while an assignment genuinely belonging to another task stays rejected.
+- Reviewer workflow instruction (`wfi://coworker/reviewer`): newly named
+  fix steps are added via `ace-assign add --yaml <file> --assignment <id>`
+  (top-level `steps:` array with `name`/`instructions`, example included);
+  `--step` is documented as selecting an existing preset-catalog step
+  definition only — it cannot mint a new step name.
+
+## [0.5.0] - 2026-10-18
+
+### Added
+
+- Worker and spec roles as configuration and instructions (L5.1): shipped
+  role presets (`.ace-defaults/coworker/roles/worker.yml`, `spec.yml`) with
+  role name, `wfi://coworker/<role>` instruction sources, start-prompt
+  templates (`{{task}}`, `{{assignment}}`, `{{role}}`, `{{overseer}}`
+  placeholders), and reporting/error rules; projects override or extend the
+  catalog via `.ace/coworker/roles/*.yml` (project wins over gem defaults).
+- `ace-coworker roles` — list the preset catalog (name, source, description,
+  instruction source) as a table or JSON; exit 0 for any valid catalog state
+  (an empty catalog renders an explicit empty state); an invalid preset file
+  fails with a specific error.
+- `ace-coworker commission` — the role-instantiation primitive consumed by
+  the planner (L4.2/L4.3 seam): expand a role preset plus the commission
+  identity (`--role NAME --task REF --assignment ID --overseer ADDR`) into
+  the documented `.ace-local/coworker/config.yml`. Renders the preset's
+  start-prompt template (an explicit `--start-prompt` wins), performs the
+  same identity checks as `start` (task resolves in this worktree;
+  assignment exists and its `task_id` matches), validates the assembled
+  config through the start-grade schema, and writes atomically — overwrite
+  refused without `--force`, `--dry-run` resolves and renders without
+  writing. No sequencing, no active-driver detection, no role policies
+  (those belong to the planner); any role string remains valid config
+  (ADR-034).
+- Self-contained role instruction workflows addressable as
+  `wfi://coworker/worker` and `wfi://coworker/spec`
+  (`handbook/workflow-instructions/coworker/`): the worker drives its
+  pinned assignment via ace-assign and treats failed required tests as a
+  hard completion blocker (fail the step, never a false done; the report
+  outcome stays derived from the assignment verdict); the spec delivers a
+  complete behavior-first specification and escalates significant unresolved
+  requirement gaps as `ace-hitl` questions to the overseer instead of
+  guessing.
+- wfi-source registration (gem defaults plus the tracked project mirror
+  `.ace/nav/protocols/wfi-sources/ace-coworker.yml`); `ace-support-nav ~> 0.28`
+  is a new runtime dependency so `wfi://` instruction sources resolve on
+  fresh installs.
+
+### Fixed
+
+- Review follow-ups on the 0.5.0 roles & commission feature (M1-M3, L4-L7):
+  - preset merge is keyed by filename (as documented), not by the `name`
+    field: the loader now also validates that a preset's `name` matches the
+    file's basename, so a project `worker.yml` declaring `name: builder`
+    fails loudly instead of silently skipping the override (M1);
+  - start-prompt template interpolation uses gsub's block form, so identity
+    values containing backslash escapes (`\1`, `\0`, `\&`, `\\`) render
+    literally instead of being mangled or crashing (M2);
+  - `commission --config` refuses targets that resolve outside the project
+    root (`config path '<path>' escapes the project root`) and refuses a
+    directory target even with `--force` (`--config` must name a file)
+    (M3, L6);
+  - `roles` exit-code documentation now matches the actual behavior: exit 0
+    for any valid catalog state including empty; invalid preset files fail
+    with a specific error (non-zero exit) (L4);
+  - the overwrite refusal's TOCTOU window (exist? → mv) is documented in
+    code as an accepted single-planner assumption (L7).
+
+## [0.4.0] - 2026-10-18
+
+### Added
+
+- `ace-coworker prepare` (planner commission acceptance, L4.1): accepts a
+  preparation commission (`--task REF --roles worker,reviewer [--to ADDR]`)
+  and deterministically finds or prepares exactly one proper worktree for
+  the task via `ace-git-worktree` (association-aware switch, idempotent
+  create, stale-metadata prune/recreate recovery). Re-preparation reuses the
+  existing worktree with zero writes; an active executor (a commissioned
+  assignment that is not completed, or an uncommissioned running/stalled
+  assignment) or a mismatched worktree escalates a decision-type `ace-hitl`
+  question to the overseer instead of overwriting work. `--dry-run` performs
+  the full resolution and conflict detection with zero effects; the result
+  is rendered as a table or the JSON preparation contract (worktree
+  path/branch/disposition, assignments, active-executor evidence, conflict)
+  consumable by the next role or tool. New runtime dependency:
+  `ace-git-worktree ~> 0.27`.
+
+### Fixed
+
+- Review follow-ups on `prepare` (M1/M2/L1-L4):
+  - stale-metadata detection is real: the owner's `switch` never resolves a
+    missing directory, so a failed switch is cross-checked against the
+    association inventory — a registration for this task pointing at a
+    missing directory reports `would_recover` under `--dry-run` (matching
+    the real run) and recovers via prune + recreate, reattaching the
+    surviving branch so its committed work is never orphaned behind a
+    freshly minted branch (previously the reattach tripped over the
+    surviving branch and errored) (M1);
+  - a completed commissioned assignment no longer short-circuits the
+    uncommissioned in-flight scan — other running/stalled assignments still
+    block as an `active_executor` conflict (M2);
+  - `active_executor` in the result JSON carries the rule evidence
+    (`assignment`, `state`, `source`) on an `active_executor` conflict
+    instead of always rendering null (L1);
+  - the overseer fallback reads the config's `overseer` field leniently, so
+    a partial planner-side config still names its recipient; a config that
+    fails full validation without any overseer surfaces the load error in
+    the conflict detail instead of a silent "no overseer address" (L2);
+  - a missing `ace-hitl` binary during conflict escalation folds the error
+    into the conflict detail (event id null) so the structured conflict
+    result still renders (L3);
+  - `WorktreeExecutorProbe#probe` docstring matches the actual return
+    contract (failures raise; no `error:` key) (L4).
+- Round-2 review follow-ups on `prepare` (all low severity):
+  - the branch-reattach fallback now also works on the
+    `create_with_verification` recovery sub-path (the known branch is
+    passed through instead of dropped);
+  - an occupied expected directory after prune classifies as
+    `mismatched_worktree` (same rule as the miss path) instead of an
+    operational `error`, and a failed prune surfaces its error instead
+    of being ignored;
+  - the recovery error hint no longer suggests re-running
+    `ace-git-worktree prune` (it already ran in this method); the
+    `--roles` option example and the prepare table's disposition row
+    alignment are fixed.
+
 ## [0.3.2] - 2026-10-18
 
 ### Changed

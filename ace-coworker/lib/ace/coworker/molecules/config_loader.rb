@@ -54,6 +54,25 @@ module Ace
           File.file?(target)
         end
 
+        # Lenient overseer lookup for escalation fallbacks: reads the raw
+        # file without full-schema validation so a partial (planner-side)
+        # config can still name its overseer. Returns nil when the field is
+        # absent or the file cannot be read.
+        #
+        # @return [String, nil]
+        def overseer(path: nil)
+          target = path ? File.expand_path(path, @project_root) : config_path
+          return nil unless File.file?(target)
+
+          raw = YAML.safe_load_file(target, permitted_classes: [Date], aliases: true)
+          return nil unless raw.is_a?(Hash)
+
+          overseer = raw["overseer"].to_s
+          overseer.strip.empty? ? nil : overseer
+        rescue
+          nil
+        end
+
         private
 
         def build_config(normalized, target)

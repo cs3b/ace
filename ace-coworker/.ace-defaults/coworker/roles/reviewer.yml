@@ -1,0 +1,15 @@
+---
+# Reviewer role preset (shipped gem defaults, overridable per project via
+# .ace/coworker/roles/reviewer.yml).
+name: reviewer
+description: Independent exact-candidate reviewer; fixes confirmed defects itself within its own assignment, checks the fix diff, and returns to full review rounds; escalates instead of marking unresolved High/Critical as success
+instructions: wfi://coworker/reviewer
+start_prompt: >-
+  Work as the {{role}} on task {{task}}: drive assignment {{assignment}} —
+  review the delivered change independently, fix confirmed defects yourself
+  inside this assignment, check each fix diff, and run full review rounds,
+  reporting to the overseer at {{overseer}}.
+reporting:
+  channel: hitl
+errors:
+  on_failure: report

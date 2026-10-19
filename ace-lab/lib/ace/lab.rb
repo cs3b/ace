@@ -2,12 +2,15 @@
 
 require_relative "lab/version"
 require "ace/support/config"
+require "rbconfig"
 
 require_relative "lab/errors"
 require_relative "lab/authorization_path"
+require_relative "lab/install_manifest_path"
 
 # Load all ace-lab components
 require_relative "lab/atoms/topology_schema"
+require_relative "lab/atoms/install_schema"
 require_relative "lab/atoms/binding_freshness"
 require_relative "lab/atoms/public_projection"
 require_relative "lab/models/runtime_binding"
@@ -19,6 +22,12 @@ require_relative "lab/molecules/config_state_classifier"
 require_relative "lab/molecules/lab_state_scanner"
 require_relative "lab/molecules/caller_authorizer"
 require_relative "lab/molecules/grant_resolver"
+require_relative "lab/molecules/install_manifest_loader"
+require_relative "lab/molecules/account_provisioner"
+require_relative "lab/molecules/directory_provisioner"
+require_relative "lab/molecules/key_provisioner"
+require_relative "lab/molecules/role_verifier"
+require_relative "lab/organisms/prepare"
 require_relative "lab/molecules/forge_merge_config"
 require_relative "lab/molecules/forgejo_merge_adapter"
 require_relative "lab/molecules/inventory_query"
@@ -35,6 +44,18 @@ module Ace
     def self.gem_root
       @gem_root ||= Gem.loaded_specs["ace-lab"]&.gem_dir ||
         File.expand_path("../..", __dir__)
+    end
+
+    # Host platform family used for account-provisioning defaults
+    # ("darwin" or "linux"). A method (not a constant) so tests stub the
+    # seam without any caller-controllable production override.
+    # @return [String]
+    def self.host_platform
+      case RbConfig::CONFIG["host_os"]
+      when /darwin/ then "darwin"
+      when /linux/ then "linux"
+      else "unknown"
+      end
     end
 
     # Check if debug mode is enabled

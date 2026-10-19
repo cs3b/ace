@@ -1,7 +1,8 @@
 # ace-lab usage
 
-`ace-lab` currently exposes read-only topology queries only. The lab installer
-and project onboarding are **planned (L8: not available yet)**.
+`ace-lab` exposes read-only topology queries, the lab status snapshot, and
+the `prepare` phase of the lab installer. Full installation and project
+onboarding are **planned (L8: not available yet)**.
 
 The file-based ownership model is documented once in
 [../../docs/lab-flow.md](../../docs/lab-flow.md).
@@ -119,15 +120,205 @@ invalid configuration or an unreadable location — prints the **full report
 first**, then fails non-zero with the error, so available results stay visible
 next to the failure.
 
+## Prepare (L8.1)
+
+```bash
+ace-lab prepare              # table: one line per manifest item
+ace-lab prepare --dry-run    # predict (would_*) without mutating anything
+ace-lab prepare --format json
+```
+
+`prepare` reads the trusted install manifest from the fixed deployment
+path `/etc/lab/ace-lab/install.yml` and makes the machine match it,
+idempotently, in a fixed section order: accounts → directories → keys →
+roles. There is deliberately no `--manifest` flag: a caller-selected
+manifest could manufacture privileges (accounts, directories, keys), so
+the manifest is a root-owned deployment document verified through the
+same fail-closed traversal as the authorization file (every element on
+the path root-owned and not group/world-writable, `O_NOFOLLOW` on the
+final component). It is never edited through the `.ace/` cascade and is
+not task state (ADR-034): nothing outside the manifest is touched, and
+no progress journal is written — re-running `prepare` simply converges.
+
+```yaml
+# /etc/lab/ace-lab/install.yml — root-owned deployment document
+schema_version: 1            # required, must be 1
+machine: lab01               # required identity (role/HITL addressing)
+accounts:                    # optional
+  - username: ace-worker     # ^[a-z_][a-z0-9_-]{0,31}$, unique
+    role: worker             # informational binding
+    create: false            # default; true requires administrator privileges
+    home: /home/ace-worker   # default: /Users/<u> (darwin), /home/<u> (linux)
+directories:                 # optional
+  - path: /home/ace-overseer/labs   # absolute
+    owner: ace-overseer      # optional; omitted = installer ownership
+    mode: "0750"             # optional octal string, default "0755"
+keys:                        # optional, ed25519 only (v1)
+  - account: ace-worker      # must reference a declared account
+    path: /home/ace-worker/.ssh/id_ed25519  # optional, default <home>/.ssh/id_ed25519
+roles:                       # optional
+  - id: worker               # ^[a-z][a-z0-9_-]{0,31}$, unique
+    account: ace-worker
+    instructions: wfi://assign/work  # wfi://|prompt://|tmpl:// or an absolute readable file
+```
+
+Statuses: accounts `created|exists|would_create|failed`; directories
+`created|exists|mode_fixed|would_create|would_fix_mode|failed`; keys
+`created|exists|would_create|would_repair_public|would_fix_mode|failed`
+(with the public `fingerprint`); roles `verified|failed`. `ok` in the
+JSON report means zero failed items. Key/role items whose account
+failed are reported as dependency failures instead of being attempted.
+
+`--dry-run` is a faithful prediction of the wet run (`would_*`
+statuses, zero mutations): keys and roles of an account the account
+phase *would create* are predicted (`would_create` keys, `verified`
+roles) even though the account does not exist in passwd yet; an
+existing private key with a missing `.pub` predicts
+`would_repair_public` (the wet run regenerates it); mode drift on an
+owner-matching pair predicts `would_fix_mode`; a planted `.ssh`
+symlink is refused in dry-run exactly as the wet run refuses it, and a
+missing directory whose declared owner account *failed* the account
+phase is predicted as the wet run's owner-unavailable failure (the
+orchestrator threads its computed account set into the directory
+stage). Four prediction limits: an *existing* directory whose declared
+owner account does not exist yet cannot have its ownership checked,
+and is reported as a failed item with a rerun hint; likewise, a role's
+instruction *file* readability cannot be checked against an account
+that does not exist yet (its uid is unknown), so such bindings are
+predicted `verified` from the file's existence and type alone — the
+wet run performs the full readability check; and an *existing key
+pair* under an account the phase would create cannot have its
+ownership checked either (the future uid is unknown) — a pair owned
+by neither the installer nor the to-be-created account is
+conservatively predicted as the wet run's takeover refusal, which is
+pessimistic only in the pathological case where account creation
+reuses exactly that uid. A fourth, smaller limit: when the account
+phase *would create* the account, an existing installer-owned pair (or
+installer-owned `.ssh`) is predicted as a plain `exists` even though the
+wet run would chown it to the account while converging — the transfer
+itself is not predicted.
+
+Behavior and guarantees:
+
+- **Idempotent convergence.** Existing resources are verified, not
+  recreated; only mode drift on an owner-matching directory or
+  owner-matching key pair is repaired. A pre-existing directory — or
+  key pair — owned by a different account is refused (`refusing
+  takeover`), never silently chowned, and that policy covers `.ssh`
+  itself: a pre-existing `.ssh` owned by neither the account nor the
+  installer is refused on both the create and the existing-key path
+  (wet and dry-run). Symlinks and
+  non-directories at declared paths are refused. Residual policy:
+  symlink refusal applies to the *declared leaf* path only —
+  intermediate path components are followed (and created with default
+  mode/ownership, since only the leaf carries declared values); the
+  manifest is root-owned, so this trusts the deployment document, not
+  the account.
+- **Account creation** uses the platform's own tooling (darwin
+  `dscl . -create` + `createhomedir`, linux `useradd -m`), always with
+  argv arrays. Unsupported platforms are reported with a manual remedy
+  (`create: false`). Missing administrator privileges are classified
+  with an actionable message, as is a missing account without
+  `create: true`. For an *existing* account whose passwd home differs
+  from the manifest home, the drift is reported in the message; the
+  manifest home stays authoritative (key default paths derive from
+  it).
+- **Secret hygiene.** Key pairs are generated with `ssh-keygen -t
+  ed25519`; `.ssh` is 0700, the private key 0600, the public key 0644,
+  ownership assigned to the account — and `.ssh` mode/ownership is
+  *converged* on the existing-key path too (drift predicts
+  `would_fix_mode` in dry-run and is repaired in the wet run; a
+  foreign-owned `.ssh` is a takeover refusal, see above). A pair is
+  ready only when the `.pub` fingerprint matches the public key
+  derived from the private key (`ssh-keygen -y`); unreadable or
+  mismatched pairs are `failed` items, never usable-looking
+  `exists`/`created` with no fingerprint — the unknown pair itself is
+  left untouched for manual resolution. Reports
+  carry the public
+  fingerprint only — private key material never appears in any status,
+  message, report, or diagnostic argument (the derived public key
+  exists only inside a private tmpdir for the duration of one
+  read-only comparison). Key paths inside a git
+  worktree are refused outright — judged by their PHYSICAL location
+  (existing ancestors resolved with `realpath`), so a symlinked
+  ancestor cannot smuggle a key into a repository. Planted symlinks on the
+  account-controlled paths — `.ssh` (checked with `lstat` before any
+  `mkdir`/chmod/chown, on the *existing-key* path and in dry-run too)
+  and `<key>.pub` (checked with `lstat` — including *before*
+  `ssh-keygen` on the create path, since keygen writes the `.pub` by
+  path — and written with `O_NOFOLLOW`) —
+  are refused, so a privileged run cannot be turned into an arbitrary
+  chmod/chown/write by the account.
+- **Symlink-race hardening.** Leaf directories (`.ssh` and declared
+  directories) are created with component-wise `Dir.mkdir` — whose
+  `EEXIST` on a planted symlink refuses instead of following it — and
+  re-`lstat`ed immediately after creation: a leaf that is not a real
+  directory the installer just created is refused before any
+  chmod/chown, and a directory swapped between the owner check and a
+  mode fix is re-checked before the chmod. Key *files* never carry a
+  path-based mutation: after `ssh-keygen` the pair is re-`lstat`ed
+  (a keygen writing through a swapped-in symlink is refused before any
+  ownership transfer), and every chmod/chown on the private key and
+  the `.pub` — regenerated or not — goes through an
+  `O_NOFOLLOW`-opened file handle, so a mid-flight symlink swap
+  surfaces as `ELOOP` and is refused. On the create path the `.ssh`
+  ownership transfer is *deferred* until after the post-keygen
+  verification: while `ssh-keygen` writes by path, a freshly created
+  `.ssh` is still installer-owned 0700 and unwritable by the account,
+  so nothing can be planted inside it during the keygen window.
+  Accepted residuals: a microscopic
+  window remains between that final re-`lstat` and the path-based
+  `chmod`/`chown` on a *directory* leaf (Ruby stdlib offers no fd-based
+  directory chmod); closing it would require exotic APIs for no
+  practical gain over the guard chain above — and `ssh-keygen`
+  necessarily writes by path, so the keygen step itself retains the
+  *account-owned-home rename race*: an account that already owns the
+  parent home directory can rename the installer-owned `.ssh`
+  mid-flight and substitute its own (likewise, an `.ssh` that
+  pre-exists account-owned stays writable by the account throughout).
+  The post-keygen re-`lstat` then detects the substitution after the
+  write and refuses before any ownership transfer; whatever was
+  written lands root-owned 0600 — a file-creation primitive at an
+  attacker-chosen location, not an escalation, and inside the same
+  accepted-threat envelope as the directory residual above.
+- **Role instruction reachability.** A file instruction source is
+  `verified` only when the account can actually reach it: the file's
+  read bits AND the search (`x`) bit of every ancestor directory of
+  the resolved path (ancestor symlinks followed) must grant the
+  account's governing POSIX class — owner, primary or supplementary
+  group, or other. A readable file behind an unsearchable directory
+  (e.g. 0644 inside a 0700 directory owned by someone else) is
+  `failed`, not `verified`. ACLs remain out of scope.
+- **Exit codes.** A wet run with failed items prints the report, then
+  exits non-zero enumerating each `<section>/<item>: <message>`;
+  `--dry-run` exits 0 whenever a report renders (conflicts appear as
+  predicted failures). A missing, untrusted or invalid manifest is a
+  classified error naming the path, never its content.
+
+Boundaries (what `prepare` is not):
+
+- No project onboarding (`ace-lab project add`, L8.2) — the manifest's
+  role catalog declares where each role lives and under which account;
+  the project-add step consumes it.
+- No full `ace-lab install` orchestration (L8.3): no HITL adapter
+  configuration, no foreign-lab refusal, no cross-check of `machine`
+  against the `hitl` cascade.
+- No interrupted-install resume bookkeeping (L8.4): re-running `prepare`
+  is the resume mechanism; install-level resumption composes it.
+- No end-to-end verification under the target accounts (L8.5): real
+  multi-account proof belongs to the readiness verification step.
+
 ## Planned waves
 
 > **L7 remainder:** `ace-lab status` is delivered; the remaining L7 scope
 > (configurable `ace-overseer status` aggregation, pi continuation) lives in
 > its own packages and is not available yet.
 >
-> **Planned (L8):** installer (accounts, directories, keys), project onboarding,
-> resuming an interrupted install, and readiness verification are not available
-> yet.
+> **Planned (L8):** project onboarding, resuming an interrupted install,
+> and readiness verification are not available yet. The preparation
+> phase is delivered as `ace-lab prepare` (L8.1); `ace-lab install`
+> (L8.3) will compose it with configuration, HITL adapters and
+> verification.
 
 ## Boundaries
 

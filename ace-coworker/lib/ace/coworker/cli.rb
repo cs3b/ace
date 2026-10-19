@@ -6,6 +6,9 @@ require_relative "cli/commands/start"
 require_relative "cli/commands/status"
 require_relative "cli/commands/report"
 require_relative "cli/commands/resume"
+require_relative "cli/commands/prepare"
+require_relative "cli/commands/commission"
+require_relative "cli/commands/roles"
 
 module Ace
   module Coworker
@@ -18,7 +21,10 @@ module Ace
         ["start", "Validate prepared run config and render the executor brief"],
         ["status", "Show readiness, identity, and assignment progress"],
         ["report", "Record the assignment outcome and report it through ace-hitl"],
-        ["resume", "Assess interrupted work in this worktree and resume it"]
+        ["resume", "Assess interrupted work in this worktree and resume it"],
+        ["prepare", "Accept a preparation commission and ensure the task worktree"],
+        ["commission", "Instantiate a role preset into the coworker run config"],
+        ["roles", "List the role preset catalog (gem defaults + project overrides)"]
       ].freeze
 
       HELP_EXAMPLES = [
@@ -28,13 +34,21 @@ module Ace
         "ace-coworker report                   # Record outcome + HITL report",
         "ace-coworker report --result error --message 'cause'",
         "ace-coworker resume                   # Resume interrupted work",
-        "ace-coworker resume --dry-run         # Plan only, no redelivery"
+        "ace-coworker resume --dry-run         # Plan only, no redelivery",
+        "ace-coworker prepare --task 148 --roles worker,reviewer",
+        "ace-coworker prepare --task 148 --roles worker --dry-run",
+        "ace-coworker roles                        # List role presets",
+        "ace-coworker commission --role worker --task 148 --assignment abc123 \\",
+        "                    --overseer overseer@lab"
       ].freeze
 
       register "start", Commands::Start
       register "status", Commands::Status
       register "report", Commands::Report
       register "resume", Commands::Resume
+      register "prepare", Commands::Prepare
+      register "commission", Commands::Commission
+      register "roles", Commands::Roles
 
       version_cmd = Ace::Support::Cli::VersionCommand.build(
         gem_name: "ace-coworker",

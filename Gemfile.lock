@@ -53,13 +53,16 @@ PATH
 PATH
   remote: ace-coworker
   specs:
-    ace-coworker (0.3.2)
+    ace-coworker (0.5.0)
       ace-assign (~> 0.72)
+      ace-git-worktree (~> 0.27)
       ace-hitl (~> 0.22)
+      ace-review (~> 0.62)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.18)
       ace-support-core (~> 0.31)
       ace-support-fs (~> 0.3)
+      ace-support-nav (~> 0.28)
       ace-task (~> 0.41)
 
 PATH
@@ -249,7 +252,7 @@ PATH
 PATH
   remote: ace-lab
   specs:
-    ace-lab (0.11.0)
+    ace-lab (0.12.0)
       ace-git-forgejo (~> 0.7)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.18)

@@ -242,11 +242,37 @@ class TaskIDExtractorShortIdTest < Minitest::Test
     assert_nil extractor.short_id("8xg.t.k9y-ace-git-worktree")
   end
 
+  def test_short_id_of_multi_level_subtask_chain
+    assert_equal "ddd.0.0", extractor.short_id("8xh.t.ddd.0.0")
+    assert_equal "ddd.0.0", extractor.short_id(" 8xh.t.ddd.0.0 ")
+    assert_equal "sbz.4.2", extractor.short_id("8xg.t.sbz.4.2")
+  end
+
+  def test_short_id_is_reversible_against_extract
+    # The segment chain survives the full -> short -> normalize round trip.
+    %w[8xh.t.ddd 8xh.t.ddd.0 8xh.t.ddd.0.0 8xg.t.sbz.4.2 8pp.t.hy4.a].each do |full|
+      short = extractor.short_id(full)
+      assert_equal short, extractor.extract({id: full})
+      assert_equal short, extractor.normalize(full)
+      assert_equal short, extractor.normalize(short)
+    end
+  end
+
   def test_normalize_numeric_subtask
     assert_equal "qk0.3", extractor.normalize("8wr.t.qk0.3")
   end
 
   def test_normalize_short_numeric_subtask_reference
     assert_equal "qk0.3", extractor.normalize("qk0.3")
+  end
+
+  def test_normalize_multi_level_short_reference
+    assert_equal "ddd.0.0", extractor.normalize("ddd.0.0")
+  end
+
+  def test_normalize_multi_level_directory_name
+    assert_equal "ddd.0.0", extractor.normalize("t.ddd.0.0")
+    assert_equal "ddd.0.0", extractor.normalize("task.ddd.0.0")
+    assert_equal "sbz.4.2", extractor.normalize("/project/.ace-wt/t.sbz.4.2")
   end
 end

@@ -12,6 +12,7 @@ module Ace
     require_relative "coworker/models/assignment_snapshot"
     require_relative "coworker/models/outcome"
     require_relative "coworker/models/resume_plan"
+    require_relative "coworker/models/preparation"
 
     autoload :CLI, "ace/coworker/cli"
 
@@ -22,6 +23,10 @@ module Ace
       autoload :ReportRecordFormatter, "ace/coworker/atoms/report_record_formatter"
       autoload :ResumePlanner, "ace/coworker/atoms/resume_planner"
       autoload :ResumeBriefFormatter, "ace/coworker/atoms/resume_brief_formatter"
+      autoload :PrepareDecision, "ace/coworker/atoms/prepare_decision"
+      autoload :ActiveExecutorRule, "ace/coworker/atoms/active_executor_rule"
+      autoload :RolePresetSchema, "ace/coworker/atoms/role_preset_schema"
+      autoload :PromptTemplate, "ace/coworker/atoms/prompt_template"
     end
 
     module Molecules
@@ -37,6 +42,9 @@ module Ace
       autoload :ReportStateStore, "ace/coworker/molecules/report_state_store"
       autoload :StepReportReader, "ace/coworker/molecules/step_report_reader"
       autoload :GitStateProbe, "ace/coworker/molecules/git_state_probe"
+      autoload :WorktreeProvisionProbe, "ace/coworker/molecules/worktree_provision_probe"
+      autoload :WorktreeExecutorProbe, "ace/coworker/molecules/worktree_executor_probe"
+      autoload :RolePresetLoader, "ace/coworker/molecules/role_preset_loader"
     end
 
     module Organisms
@@ -44,6 +52,8 @@ module Ace
       autoload :StatusOrchestrator, "ace/coworker/organisms/status_orchestrator"
       autoload :ReportOrchestrator, "ace/coworker/organisms/report_orchestrator"
       autoload :ResumeOrchestrator, "ace/coworker/organisms/resume_orchestrator"
+      autoload :PrepareOrchestrator, "ace/coworker/organisms/prepare_orchestrator"
+      autoload :CommissionOrchestrator, "ace/coworker/organisms/commission_orchestrator"
     end
 
     def self.config

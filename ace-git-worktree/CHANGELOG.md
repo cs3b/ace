@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- `TaskIDExtractor`: preserve the complete subtask segment chain of
+  multi-level task ids. `extract`, `short_id`, and `normalize` now accept
+  any depth (`8xh.t.ddd.0.0` -> `ddd.0.0`), so third/fourth-level tasks
+  get deterministic, reversible worktree directories (`t.ddd.0.0`) and
+  branches (`ddd.0.0-<slug>`) instead of collapsing every deep leaf onto
+  `t.unknown` / `unknown-<slug>`; directory-name normalization
+  (`t.ddd.0.0`) keeps the same chain.
+
 ## [0.27.2] - 2026-10-18
 
 ### Changed

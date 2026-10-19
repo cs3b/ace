@@ -130,6 +130,49 @@ module Ace
           assert_includes result.message, "Unknown HITL recipient"
         end
 
+        def test_create_conflict_builds_question_argv_and_parses_event_id
+          reporter = reporter(->(_argv) {
+            {out: "HITL event created: 8xhk77 Preparation conflict - 8xg.t.aaa/t.8xg-t-aaa\n", err: "", success: true}
+          })
+
+          event_id = reporter.create_conflict(
+            title: "Preparation conflict - 8xg.t.aaa/t.8xg-t-aaa",
+            question_lines: ["kind: active_executor", "assignment abc123 running"],
+            task: "8xg.t.aaa", to: "overseer@lab")
+
+          assert_equal "8xhk77", event_id
+          argv = @calls.first[:argv]
+          assert_equal "create", argv[1]
+          assert_includes argv, "--type"
+          assert_includes argv, "question"
+          assert_includes argv, "--kind"
+          assert_includes argv, "decision"
+          questions = argv.each_cons(2).select { |k, _| k == "--question" }.map(&:last)
+          assert_equal ["kind: active_executor", "assignment abc123 running"], questions
+          assert_includes argv, "--task"
+          assert_includes argv, "8xg.t.aaa"
+          assert_includes argv, "--to"
+          assert_includes argv, "overseer@lab"
+          refute_includes argv, "--body"
+        end
+
+        def test_create_conflict_without_recipient_omits_to
+          reporter = reporter(->(_argv) { {out: "HITL event created: 8xhk77 x\n", err: "", success: true} })
+
+          reporter.create_conflict(title: "t", question_lines: ["q"], task: "8xg.t.aaa")
+
+          refute_includes @calls.first[:argv], "--to"
+        end
+
+        def test_create_conflict_failure_returns_failure_struct
+          reporter = reporter(->(_argv) { {out: "", err: "no route", success: false} })
+
+          result = reporter.create_conflict(title: "t", question_lines: ["q"], task: "8xg.t.aaa")
+
+          assert_kind_of HitlReporter::Failure, result
+          assert_equal "create", result.stage
+        end
+
         def test_send_report_success_and_failure
           ok = reporter(->(_argv) { {out: "delivered", err: "", success: true} })
           assert_equal true, ok.send_report("8xhk99")
