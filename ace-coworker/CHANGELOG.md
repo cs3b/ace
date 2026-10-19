@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `ace-coworker rounds record --assignment <id> --type full|delta --status
+  completed|aborted [--confirmed id:sev,...] [--resolved id,...]`: CLI
+  surface for the 3/2/10 enforcement (8xg.t.sbz.4.2) used by the reviewer
+  workflow. Appends one finished round to the coworker-owned history at
+  `.ace-local/coworker/review-rounds/<assignment>.json`
+  (`Molecules::ReviewRoundStore#record!`, validated at the boundary by
+  `Atoms::RoundRecordSchema`) and prints the resulting verdict with its
+  counters. A corrupt or non-array history file fails with `corrupt round
+  history at <path>` instead of silently resetting the round counters, and
+  the 10-round cap is terminal: a rule-satisfying state at round 11+
+  escalates instead of accepting.
 - Review-round convergence enforcement (8xg.t.sbz.4.2 / L5.2): the 3/2/10
   rule is now working code. `Ace::Coworker::Atoms::RoundRule` is a pure
   evaluator over round records (type full|delta, status

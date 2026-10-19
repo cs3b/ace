@@ -73,7 +73,8 @@ assignment, checks each fix diff, and returns to full review rounds under the
 3/2/10 convergence rule - deterministically enforced by
 `Ace::Coworker::Atoms::RoundRule` (:continue | :accept | :escalate) with the
 persisted round history in `.ace-local/coworker/review-rounds/<assignment>.json`
-(`Molecules::ReviewRoundStore`; a restart reloads the counters instead of
+(`Molecules::ReviewRoundStore`; rounds are recorded through
+`ace-coworker rounds record`, and a restart reloads the counters instead of
 resetting them); escalates instead of marking unresolved
 High/Critical as success). Their instruction workflows are
 `wfi://coworker/worker`, `wfi://coworker/spec`, and
@@ -92,6 +93,28 @@ Lists the catalog (name, source `gem`|`project`, description, instruction
 source). Read-only; exit 0 for any valid catalog state, including an empty
 catalog (rendered as an explicit empty state); an invalid preset file fails
 with a specific error (non-zero exit).
+
+### `ace-coworker rounds record`
+
+```
+ace-coworker rounds record --assignment ID --type full|delta
+                           --status completed|aborted
+                           [--confirmed id:sev[,...]] [--resolved id[,...]]
+                           [--format table|json] [-q] [-d]
+```
+
+The reviewer role's round-recording surface for the 3/2/10 convergence rule
+(8xg.t.sbz.4.2): appends one finished round to the coworker-owned history at
+`.ace-local/coworker/review-rounds/<assignment>.json`
+(`Molecules::ReviewRoundStore#record!`) and prints the resulting
+`Ace::Coworker::Atoms::RoundRule` verdict with its counters
+(verdict `continue | accept | escalate`, full rounds, completed full
+rounds, consecutive clean, unresolved High/Critical ids). `--confirmed`
+takes `id:severity` pairs (e.g. `f-1:high`); `--resolved` takes finding ids
+resolved by this round. A corrupt or non-array history file fails with
+`corrupt round history at <path>` instead of silently resetting the
+counters; the same applies to a malformed record shape (actionable field
+errors, non-zero exit).
 
 ### `ace-coworker commission`
 

@@ -144,7 +144,9 @@ product decision is escalated to the overseer instead.
      (:continue | :accept | :escalate) and `Molecules::ReviewRoundStore`
      persists them in
      `.ace-local/coworker/review-rounds/<assignment>.json` - record each
-     finished round with `record!` and follow the returned verdict
+     finished round with `ace-coworker rounds record --assignment <id>
+     --type full|delta --status completed|aborted [--confirmed id:sev,...]
+     [--resolved id,...]` and follow the printed verdict
      (:escalate means the ace-hitl decision question above, never a
      crashed run). A restart reloads the same file: the round counter and
      findings history are never reset.

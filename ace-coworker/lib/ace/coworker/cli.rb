@@ -9,6 +9,7 @@ require_relative "cli/commands/resume"
 require_relative "cli/commands/prepare"
 require_relative "cli/commands/commission"
 require_relative "cli/commands/roles"
+require_relative "cli/commands/rounds"
 
 module Ace
   module Coworker
@@ -24,7 +25,8 @@ module Ace
         ["resume", "Assess interrupted work in this worktree and resume it"],
         ["prepare", "Accept a preparation commission and ensure the task worktree"],
         ["commission", "Instantiate a role preset into the coworker run config"],
-        ["roles", "List the role preset catalog (gem defaults + project overrides)"]
+        ["roles", "List the role preset catalog (gem defaults + project overrides)"],
+        ["rounds", "Record a review round for an assignment and print the 3/2/10 verdict"]
       ].freeze
 
       HELP_EXAMPLES = [
@@ -39,7 +41,10 @@ module Ace
         "ace-coworker prepare --task 148 --roles worker --dry-run",
         "ace-coworker roles                        # List role presets",
         "ace-coworker commission --role worker --task 148 --assignment abc123 \\",
-        "                    --overseer overseer@lab"
+        "                    --overseer overseer@lab",
+        "ace-coworker rounds record --assignment abc123 --type full --status completed",
+        "ace-coworker rounds record --assignment abc123 --type full --status completed \\",
+        "                    --confirmed f-1:high --resolved f-2"
       ].freeze
 
       register "start", Commands::Start
@@ -49,6 +54,7 @@ module Ace
       register "prepare", Commands::Prepare
       register "commission", Commands::Commission
       register "roles", Commands::Roles
+      register "rounds", Commands::Rounds
 
       version_cmd = Ace::Support::Cli::VersionCommand.build(
         gem_name: "ace-coworker",

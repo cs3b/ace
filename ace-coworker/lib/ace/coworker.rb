@@ -28,6 +28,7 @@ module Ace
       autoload :RolePresetSchema, "ace/coworker/atoms/role_preset_schema"
       autoload :PromptTemplate, "ace/coworker/atoms/prompt_template"
       autoload :RoundRule, "ace/coworker/atoms/round_rule"
+      autoload :RoundRecordSchema, "ace/coworker/atoms/round_record_schema"
     end
 
     module Molecules

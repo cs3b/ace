@@ -38,8 +38,12 @@ module Ace
           completed_full = records.count { |r| full?(r) && completed?(r) }
           streak = clean_streak(records)
 
+          # The 10-round cap is terminal: acceptance is possible only at
+          # or before round 10, so a satisfying state that materializes
+          # at round 11+ escalates instead of flipping back to :accept.
           acceptable = completed_full >= MIN_FULL_ROUNDS &&
-                       streak >= REQUIRED_CLEAN_STREAK && unresolved.empty?
+                       streak >= REQUIRED_CLEAN_STREAK && unresolved.empty? &&
+                       full_rounds <= MAX_FULL_ROUNDS
           verdict = if acceptable
                       :accept
                     elsif full_rounds >= MAX_FULL_ROUNDS
@@ -60,7 +64,7 @@ module Ace
         # round re-establishes the evidence).
         def self.clean_streak(records)
           streak = 0
-          records.reverse_each.each do |record|
+          records.reverse_each do |record|
             next unless full?(record)
 
             break unless completed?(record) && confirmed_high([record]).empty?

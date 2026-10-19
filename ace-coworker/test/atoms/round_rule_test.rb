@@ -74,6 +74,22 @@ module Ace
           assert_equal ["never-fixed"], result[:unresolved_high_critical]
         end
 
+        def test_round_ten_cap_is_terminal_even_when_the_rule_is_later_satisfied
+          # 10 full rounds with an unresolved High escalate; resolving it
+          # in round 11 plus a clean round 12 must not flip :escalate
+          # back to :accept - acceptance is impossible after round 10.
+          rounds = Array.new(10) { with_high(id: "late-fixed") }
+          assert_equal :escalate, RoundRule.evaluate(rounds)[:verdict]
+
+          rounds << resolving(id: "late-fixed")
+          rounds << clean
+          result = RoundRule.evaluate(rounds)
+          assert_equal 12, result[:full_rounds]
+          assert_empty result[:unresolved_high_critical]
+          assert_equal 2, result[:consecutive_clean]
+          assert_equal :escalate, result[:verdict]
+        end
+
         def test_aborted_round_is_not_clean_and_breaks_the_streak
           result = RoundRule.evaluate([clean, clean, aborted, clean])
           assert_equal :continue, result[:verdict]
