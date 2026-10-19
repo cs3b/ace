@@ -109,11 +109,13 @@ queue.
 | L3 | `ace-coworker` starts from prepared config, drives its assignment, reports, and resumes | Planned |
 | L4 | Planner accepts work, provides the worktree, and prepares the assignment sequence | Planned |
 | L5 | Worker/reviewer/integrator/spec roles and unambiguous completion rules (3-10 review rounds) | Planned |
-| L6 | Private overseer queue: execute unblocked steps, hand off the worktree, process reports | Planned |
+| L6 | Private overseer queue: execute unblocked steps, hand off the worktree, process reports | Partially shipped — `ace-overseer work-on` (L6.3) starts only unblocked steps, `ace-overseer handoff` (L6.4) passes the worktree to the next role, and `ace-overseer process-reports` (L6.5) interprets incoming ace-hitl reports and continues the queue; automatic queue wakeup and closing the managing task remain with the overseer role |
 | L7 | Overseer status plus pi continuation for already-delegated work | Planned |
 | L8 | Installer and `project add`: prepare accounts, directories, permissions, keys, and a ready project | Partially shipped — `ace-lab prepare` (L8.1) converges accounts, directories, keys, and roles from the trusted install manifest; `project add` and the full installer remain planned |
 | L9 | Full-flow and failure acceptance scenarios on one candidate | Planned |
 | L10 | Release gems and verify the full flow on a fresh lab from RubyGems | Planned |
 
-`_overseer` can already be used as a private task list; the automated L6 queue
-behavior is not available yet.
+`_overseer` can already be used as a private task list, and the L6.3-L6.5
+gates (`work-on`, `handoff`, `process-reports`) execute the private queue on
+demand; the queue is not yet woken automatically and the managing task is
+closed by the overseer role, not by the tooling.
