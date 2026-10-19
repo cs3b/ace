@@ -1,6 +1,10 @@
 # frozen_string_literal: true
 
 require "ace/assign"
+# Explicit (not transitive) requires for the ace-assign surface used below.
+require "ace/assign/molecules/assignment_manager"
+require "ace/assign/molecules/step_writer"
+require "ace/assign/atoms/number_generator"
 
 module Ace
   module Coworker
@@ -22,6 +26,10 @@ module Ace
         GEM_SEQUENCES_DIR = File.join(".ace-defaults", "coworker", "sequences")
         PROJECT_SEQUENCES_DIR = File.join(".ace", "coworker", "sequences")
         ASSIGN_DIR = File.join(".ace-local", "assign")
+        # Step keys the composer itself owns: lifecycle-reserved frontmatter
+        # (status/added_by/parent) must never be overridable from definition
+        # data, and name/instructions are passed as explicit arguments.
+        RESERVED_STEP_KEYS = %w[name instructions status added_by parent].freeze
 
         # @param project_root [String] absolute root the roles work in (the
         #   prepared worktree)
@@ -100,7 +108,7 @@ module Ace
           definition["steps"].each_with_index do |step, step_index|
             instructions = step_instructions(step, context: context,
               entry_condition: step_index.zero? ? entry_condition : nil)
-            extra = step.reject { |key, _| %w[name instructions].include?(key) }
+            extra = step.reject { |key, _| RESERVED_STEP_KEYS.include?(key) }
             writer.create(
               steps_dir: assignment.steps_dir,
               number: Ace::Assign::Atoms::NumberGenerator.from_index(step_index),
@@ -180,6 +188,12 @@ module Ace
         end
 
         def definition_errors(role, raw)
+          # Mirror the RolePresetSchema raw-YAML guard: an empty file or a
+          # non-mapping document is an actionable process error, never a
+          # NoMethodError/TypeError on raw["role"].
+          return ["process is empty"] if raw.nil?
+          return ["process must be a mapping, got #{raw.class}"] unless raw.is_a?(Hash)
+
           errors = []
           errors << "required 'role' field is missing" if raw["role"].to_s.strip.empty?
           if raw["role"].to_s != role

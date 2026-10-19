@@ -38,8 +38,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   assignment id, disposition `created`/`existing`, step count, expected
   outcome).
 
-### Added
-
 - Integrator role (8xg.t.sbz.4.3 / L5.2): the fourth coworker role preset
   `integrator` (shipped in `.ace-defaults/coworker/roles/integrator.yml`,
   workflow `wfi://coworker/integrator`). It performs the project-defined

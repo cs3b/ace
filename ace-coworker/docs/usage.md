@@ -313,7 +313,11 @@ worktree and the already-composed assignments (matching
 `<task>-<role>` assignment names with a recorded task_id) with zero
 redundant writes; only sequence legs not yet composed are added. Start
 configs in `.ace-local/coworker/` (L4.3) and the readiness report (L4.4)
-remain later leaves — `commission` stays the single-role writer.
+remain later leaves — `commission` stays the single-role writer. Note:
+composing multi-leg sequences leaves ace-assign's `.ace-local/assign/.latest`
+pointing at the LAST-composed leg (e.g. integrator); drivers must address
+legs by the explicit assignment ids from the prepare result, never via
+`.latest`-based resolution.
 
 Sequence composition (no new state owner; `ace-assign` stores the plans in
 the worktree's `.ace-local/assign/`, ADR-034):

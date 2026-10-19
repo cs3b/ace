@@ -196,6 +196,59 @@ module Ace
           assert_includes error.message, "at least one role"
         end
 
+        def test_empty_process_file_is_reported_as_invalid_process
+          override_dir = File.join(@root, ".ace", "coworker", "sequences")
+          FileUtils.mkdir_p(override_dir)
+          File.write(File.join(override_dir, "worker.yml"), "---\n")
+
+          error = assert_raises(Error) do
+            @composer.call(task: "8xg.t.aaa", roles: %w[worker])
+          end
+
+          assert_includes error.message, "invalid assignment process"
+          assert_includes error.message, "process is empty"
+          refute File.directory?(File.join(@root, ".ace-local"))
+        end
+
+        def test_non_mapping_process_file_is_reported_as_invalid_process
+          override_dir = File.join(@root, ".ace", "coworker", "sequences")
+          FileUtils.mkdir_p(override_dir)
+          File.write(File.join(override_dir, "worker.yml"), "- role: worker\n")
+
+          error = assert_raises(Error) do
+            @composer.call(task: "8xg.t.aaa", roles: %w[worker])
+          end
+
+          assert_includes error.message, "invalid assignment process"
+          assert_includes error.message, "process must be a mapping, got Array"
+          refute File.directory?(File.join(@root, ".ace-local"))
+        end
+
+        def test_lifecycle_reserved_step_keys_cannot_override_step_frontmatter
+          override_dir = File.join(@root, ".ace", "coworker", "sequences")
+          FileUtils.mkdir_p(override_dir)
+          File.write(File.join(override_dir, "worker.yml"), <<~YAML)
+            ---
+            role: worker
+            description: "Override attempt"
+            outcome: "Done"
+            steps:
+              - name: do
+                instructions: "work"
+                status: done
+                added_by: attacker
+                parent: something
+          YAML
+
+          entries = @composer.call(task: "8xg.t.aaa", roles: %w[worker])
+          step = YAML.safe_load_file(step_files(entries[0]["assignment"]).first,
+            permitted_classes: [Time, Date], aliases: true)
+
+          assert_equal "pending", step["status"]
+          assert_nil step["added_by"]
+          assert_nil step["parent"]
+        end
+
         def test_steps_are_numbered_and_pending_with_workflow_frontmatter
           entries = @composer.call(task: "8xg.t.aaa", roles: %w[worker])
           files = step_files(entries[0]["assignment"])
