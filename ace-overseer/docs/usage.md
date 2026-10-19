@@ -54,7 +54,15 @@ integrated result). A finished worker, "work done" message, or open PR does
 not unlock a dependent step -- model merge requirements by depending on the
 predecessor's integration step. Cancelled, skipped, missing, or cyclic
 predecessors block the start with explicit reasons, before any worktree or
-assignment side effect.
+assignment side effect. For a manager task with active subtasks, BOTH the
+manager's own `dependencies` and each active subtask's `dependencies` are
+gated. Two intentional edges: re-attaching to an already-started step whose
+dependencies are (now) unsatisfied is refused like any other start -- open
+the existing window directly instead of `work-on`; and the gate is strictly
+`done`, whereas `ace-task list --sort smart` also treats an archived
+predecessor as satisfied -- with normal auto-archive the two agree, but on
+archived-non-terminal dirty data `list` may say ready while `work-on`
+blocks (work-on is the authority for starting).
 
 > **Planned (L4):** planner prepares the worktree and the entire assignment
 > sequence -- not available yet.

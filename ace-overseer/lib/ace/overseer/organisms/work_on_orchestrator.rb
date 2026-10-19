@@ -129,8 +129,11 @@ module Ace
 
           startable = resolved_refs.flat_map do |entry|
             task = entry[:task]
-            if !entry[:is_subtask] && task.respond_to?(:subtasks) && task.subtasks&.any?
-              task.subtasks.reject { |st| Ace::Task::Atoms::TaskValidationRules.terminal_status?(st.status.to_s) }
+            if !entry[:is_subtask] && active_subtasks_of(task).any?
+              # A manager with active subtasks gates on BOTH its own
+              # recorded dependencies and those of every active subtask —
+              # parent-level deps are real ordering data (review M1).
+              [task] + active_subtasks_of(task)
             else
               [task]
             end
@@ -152,11 +155,17 @@ module Ace
         end
 
         def extract_subtask_refs(task)
-          subtasks = task.respond_to?(:subtasks) ? task.subtasks : nil
-          return nil unless subtasks&.any?
-
-          active = subtasks.reject { |st| Ace::Task::Atoms::TaskValidationRules.terminal_status?(st.status.to_s) }
+          active = active_subtasks_of(task)
           active.any? ? active.map(&:id) : nil
+        end
+
+        # Subtasks that have not reached a terminal status yet — the
+        # shared "still active" expression for gating and expansion.
+        def active_subtasks_of(task)
+          subtasks = task.respond_to?(:subtasks) ? task.subtasks : nil
+          return [] unless subtasks&.any?
+
+          subtasks.reject { |st| Ace::Task::Atoms::TaskValidationRules.terminal_status?(st.status.to_s) }
         end
 
         def lifecycle_exclusion
@@ -208,13 +217,9 @@ module Ace
 
             if entry[:is_subtask]
               [ref]
-            elsif task.respond_to?(:subtasks) && task.subtasks&.any?
-              active_subtasks = task.subtasks
-                .reject { |st| Ace::Task::Atoms::TaskValidationRules.terminal_status?(st.status.to_s) }
-                .map(&:id)
-              active_subtasks.empty? ? [ref] : active_subtasks
             else
-              [ref]
+              active_subtasks = active_subtasks_of(task).map(&:id)
+              active_subtasks.empty? ? [ref] : active_subtasks
             end
           end
         end

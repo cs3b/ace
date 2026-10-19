@@ -852,4 +852,70 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
       assert_empty worktree_provisioner.calls
     end
   end
+
+  def test_manager_own_dependencies_gate_the_start_too
+    Dir.mktmpdir("task.manager-own-deps") do |worktree|
+      worktree_provisioner = FakeWorktreeProvisioner.new(
+        {worktree_path: worktree, branch: "manager-own-deps-feature", created: true}
+      )
+      orchestrator = Ace::Overseer::Organisms::WorkOnOrchestrator.new(
+        lifecycle_exclusion: @exclusion,
+        task_loader: FakeTaskManager.new(
+          "700" => {
+            id: "8xh.t.grn", metadata: {}, status: "pending",
+            dependencies: ["8xh.t.gsc.9"],
+            subtasks: [
+              {id: "8xh.t.grn.0", metadata: {}, status: "pending"}
+            ]
+          },
+          "8xh.t.gsc.9" => {id: "8xh.t.gsc.9", metadata: {}, status: "pending"}
+        ),
+        worktree_provisioner: worktree_provisioner,
+        window_opener: FakeWindowOpener.new,
+        assignment_launcher: FakeAssignmentLauncher.new,
+        config: {"default_assign_preset" => "work-on-task"},
+        assignment_detector: ->(_path) {}
+      )
+
+      error = assert_raises(Ace::Overseer::Error) do
+        orchestrator.call(task_ref: "700")
+      end
+
+      # The manager's OWN dependency blocks the whole family start even
+      # though the subtask itself has none.
+      assert_includes error.message, "8xh.t.grn:"
+      assert_includes error.message, "8xh.t.gsc.9: predecessor not integrated yet"
+      assert_empty worktree_provisioner.calls
+    end
+  end
+
+  def test_multi_ref_invocation_with_one_blocked_step_refuses_all
+    Dir.mktmpdir("task.multi-ref-blocked") do |worktree|
+      worktree_provisioner = FakeWorktreeProvisioner.new(
+        {worktree_path: worktree, branch: "multi-ref-feature", created: true}
+      )
+      orchestrator = Ace::Overseer::Organisms::WorkOnOrchestrator.new(
+        lifecycle_exclusion: @exclusion,
+        task_loader: FakeTaskManager.new(
+          "600" => {id: "8xh.t.grn.0", metadata: {}, status: "pending",
+                    dependencies: ["8xh.t.grm.3"]},
+          "601" => {id: "8xh.t.grn.1", metadata: {}, status: "pending"},
+          "8xh.t.grm.3" => {id: "8xh.t.grm.3", metadata: {}, status: "pending"}
+        ),
+        worktree_provisioner: worktree_provisioner,
+        window_opener: FakeWindowOpener.new,
+        assignment_launcher: FakeAssignmentLauncher.new,
+        config: {"default_assign_preset" => "work-on-task"},
+        assignment_detector: ->(_path) {}
+      )
+
+      error = assert_raises(Ace::Overseer::Error) do
+        orchestrator.call(task_ref: "600", task_refs: ["600", "601"])
+      end
+
+      # All-or-nothing: the ready step 601 must not start either.
+      assert_includes error.message, "8xh.t.grn.0"
+      assert_empty worktree_provisioner.calls
+    end
+  end
 end

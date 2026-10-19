@@ -15,7 +15,10 @@ module Ace
 
         # @param task [Object] task responding to #id, #dependencies
         # @param lookup [Proc] ->(ref) returns the dependency task or nil
-        # @param path [Array<String>] ancestor task ids (cycle detection)
+        # @param path [Array<String>] ancestor task ids (DIRECT cycle
+        #   detection only: self/mutual refs one hop away; deeper cycles
+        #   surface as ordinary "not integrated yet" blocks, which yields
+        #   the same start decision)
         # @return [Hash] {status: :ready} or {status: :blocked, reasons: [String]}
         def self.check(task, lookup:, path: [])
           deps = task.respond_to?(:dependencies) ? Array(task.dependencies) : []
@@ -28,7 +31,7 @@ module Ace
         end
 
         # @return [String, nil] nil when the dependency is satisfied
-        def self.dependency_reason(dep_ref, lookup, path)
+        private_class_method def self.dependency_reason(dep_ref, lookup, path)
           dep = lookup.call(dep_ref)
           return "#{dep_ref}: dependency not found" if dep.nil?
           return "#{dep_ref}: cyclic dependency (#{(path + [dep.id]).join(" -> ")})" if path.include?(dep.id)
