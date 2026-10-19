@@ -9,6 +9,11 @@ module Ace
       class StatusCollector
         # Display/aggregation order of the configurable status sources.
         STATUS_SOURCE_ORDER = %w[worktrees forge project_tasks overseer_tree herdr coworkers].freeze
+        # Options each source accepts under `status_sources` in config.
+        STATUS_SOURCE_OPTIONS = {
+          "forge" => %w[enabled limit]
+        }.freeze
+        DEFAULT_SOURCE_OPTIONS = %w[enabled].freeze
 
         def initialize(worktree_manager: nil, context_collector: nil, project_root: nil, config: nil,
           sources: nil)
@@ -33,17 +38,22 @@ module Ace
             source = source_map[key]
             [key, source_result(source, configured[key])]
           end
-          {sources: results}
+          {sources: results, unknown_keys: unknown_keys(configured)}
         end
 
         def to_sources_h(snapshot)
-          {sources: snapshot[:sources]}
+          {sources: snapshot[:sources], unknown_keys: Array(snapshot[:unknown_keys])}
         end
 
         def to_sources_table(snapshot)
-          STATUS_SOURCE_ORDER.filter_map do |key|
-            render_source_section(key, snapshot[:sources][key])
-          end.join("\n\n")
+          sections = STATUS_SOURCE_ORDER.filter_map do |key|
+            result = snapshot[:sources][key]
+            next if result.nil?
+
+            render_source_section(key, result)
+          end
+          sections.concat(unknown_key_warnings(snapshot[:unknown_keys]))
+          sections.join("\n\n")
         end
 
         def collect
@@ -114,6 +124,33 @@ module Ace
           configured.is_a?(Hash) ? configured : {}
         end
 
+        # Unknown keys under `status_sources` are ignored by the closed
+        # source map; surface them explicitly (typo'd source names and
+        # typo'd options like `enabeld: false`) so misconfiguration
+        # never reads as a healthy, respected config.
+        def unknown_keys(configured)
+          keys = configured.keys - STATUS_SOURCE_ORDER
+          STATUS_SOURCE_ORDER.each do |key|
+            options = configured[key]
+            next unless options.is_a?(Hash)
+
+            known = STATUS_SOURCE_OPTIONS.fetch(key, DEFAULT_SOURCE_OPTIONS)
+            (options.keys - known).each { |option| keys << "#{key}.#{option}" }
+          end
+          keys.uniq
+        end
+
+        def unknown_key_warnings(keys)
+          Array(keys).map do |key|
+            if key.include?(".")
+              source, option = key.split(".", 2)
+              "-- #{source}.#{option}: unknown option (ignored)"
+            else
+              "-- #{key}: unknown source (ignored)"
+            end
+          end
+        end
+
         def default_sources
           {
             "worktrees" => StatusSources::WorktreesSource.new(collector: self),
@@ -158,7 +195,9 @@ module Ace
             worktree_path: entry[:worktree_path],
             branch: entry[:branch],
             assignments: entry[:assignments],
-            git_status: entry[:git]
+            git_status: entry[:git],
+            tmux_window: entry[:tmux_window],
+            location_type: entry[:location_type]&.to_sym || :worktree
           )
         end
 
@@ -314,7 +353,9 @@ module Ace
             worktree_path: context.worktree_path,
             branch: context.branch,
             assignments: context.assignments,
-            git: context.git_status
+            git: context.git_status,
+            tmux_window: context.tmux_window,
+            location_type: context.location_type
           }
         end
       end

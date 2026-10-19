@@ -367,4 +367,158 @@ class StatusSourcesTest < AceOverseerTestCase
 
     assert_equal [{task_id: "230"}], data[:worktrees]
   end
+
+  # --- Review round 1: main-repo label survives the sources table ---
+
+  def make_assignment(id:, state:)
+    {
+      "assignment" => {"state" => state, "id" => id, "name" => "work-on-task"},
+      "step_summary" => {"total" => 5, "done" => 2, "failed" => 0, "active" => 1, "pending" => 2}
+    }
+  end
+
+  def make_context(path:, task_id:, assignments:, location_type: :worktree)
+    Ace::Overseer::Models::WorkContext.new(
+      task_id: task_id,
+      worktree_path: path,
+      branch: "#{task_id}-branch",
+      assignments: assignments,
+      git_status: {"clean" => true},
+      location_type: location_type
+    )
+  end
+
+  def worktrees_collector_with_main_assignments
+    worktree_context = make_context(
+      path: "/wt/ace-task.230", task_id: "230",
+      assignments: [make_assignment(id: "8or5kx", state: "running")]
+    )
+    main_context = make_context(
+      path: "/project", task_id: "main",
+      assignments: [make_assignment(id: "xyz99", state: "running")],
+      location_type: :main
+    )
+    inner = Ace::Overseer::Organisms::StatusCollector.new(
+      worktree_manager: FakeWorktreeManager.new([FakeWorktree.new("/wt/ace-task.230", "230")]),
+      context_collector: MainAwareContextCollector.new(worktree_context, main_context),
+      project_root: "/project"
+    )
+    source = Ace::Overseer::Organisms::StatusSources::WorktreesSource.new(collector: inner)
+    collector_with(config: {}, sources: healthy_sources("worktrees" => source))
+  end
+
+  class MainAwareContextCollector
+    def initialize(context, main_context)
+      @context = context
+      @main_context = main_context
+    end
+
+    def collect(_path, location_type: :worktree)
+      location_type == :main ? @main_context : @context
+    end
+  end
+
+  def test_sources_table_keeps_main_label_and_sorts_main_last
+    collector = worktrees_collector_with_main_assignments
+
+    table = collector.to_sources_table(collector.collect_sources)
+    section = table.split("-- worktrees", 2)[1]
+
+    dim_main = "\e[2m#{'main'.ljust(Ace::Overseer::Atoms::StatusFormatter::COL_LOCATION)}\e[0m"
+    assert_includes section, dim_main
+    assert_includes section, "ace-task.230"
+    # The main row sorts last (after the regular worktree row).
+    assert_operator section.index("ace-task.230"), :<, section.index(dim_main)
+  end
+
+  def test_worktrees_payload_serializes_location_type
+    collector = worktrees_collector_with_main_assignments
+
+    snapshot = collector.collect_sources
+    entries = snapshot[:sources]["worktrees"][:data][:worktrees]
+
+    assert_equal :main, entries.first[:location_type]
+    assert_equal :worktree, entries.last[:location_type]
+  end
+
+  # --- Review round 1: unknown status_sources keys are never silent ---
+
+  def test_unknown_source_and_option_keys_render_warnings
+    collector = collector_with(
+      config: {"herder" => {}, "forge" => {"enabeld" => false, "enabled" => false}},
+      sources: healthy_sources
+    )
+
+    snapshot = collector.collect_sources
+    table = collector.to_sources_table(snapshot)
+    payload = collector.to_sources_h(snapshot)
+
+    assert_includes snapshot[:unknown_keys], "herder"
+    assert_includes snapshot[:unknown_keys], "forge.enabeld"
+    assert_includes table, "-- herder: unknown source (ignored)"
+    assert_includes table, "-- forge.enabeld: unknown option (ignored)"
+    parsed = JSON.parse(JSON.generate(payload))
+    assert_includes parsed["unknown_keys"], "herder"
+    assert_includes parsed["unknown_keys"], "forge.enabeld"
+  end
+
+  def test_known_config_keys_are_not_reported_unknown
+    collector = collector_with(
+      config: {"forge" => {"enabled" => false, "limit" => 5}},
+      sources: healthy_sources
+    )
+
+    snapshot = collector.collect_sources
+
+    assert_empty snapshot[:unknown_keys]
+  end
+
+  # --- Review round 1: partial snapshot does not raise ---
+
+  def test_to_sources_table_skips_missing_snapshot_entries
+    collector = collector_with(config: {}, sources: healthy_sources)
+
+    table = collector.to_sources_table({sources: {"worktrees" => {status: "ok", origin: "o", data: {worktrees: []}}}})
+
+    assert_includes table, "-- worktrees"
+    refute_includes table, "-- forge"
+  end
+
+  # --- Review round 1: ForgeSource limit config wiring ---
+
+  def pull_requests(count)
+    Array.new(count) { |i| FakePullRequest.new(number: i + 1, title: "PR #{i + 1}", state: :open, draft: false, head_ref: "b-#{i}", url: "https://x/#{i + 1}") }
+  end
+
+  def forge_source_with(pull_count, config: {})
+    Ace::Overseer::Organisms::StatusSources::ForgeSource.new(
+      config: config,
+      server_resolver: -> { "server" },
+      provider_factory: ->(_server) { FakeProvider.new(pull_requests(pull_count)) }
+    )
+  end
+
+  def test_forge_limit_config_is_wired_through
+    source = forge_source_with(3, config: {"limit" => 2})
+
+    assert_equal 2, source.fetch.length
+  end
+
+  def test_forge_limit_typo_falls_back_to_default
+    source = forge_source_with(3, config: {"limit" => "lots"})
+
+    assert_equal 3, source.fetch.length
+  end
+
+  def test_forge_explicit_zero_limit_lists_nothing
+    source = forge_source_with(3, config: {"limit" => 0})
+
+    assert_empty source.fetch
+  end
+
+  def test_forge_negative_limit_clamps_to_zero
+    source = forge_source_with(3, config: {"limit" => -5})
+
+    assert_empty source.fetch
+  end
 end

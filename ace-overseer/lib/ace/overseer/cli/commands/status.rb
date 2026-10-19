@@ -19,7 +19,7 @@ module Ace
 
           def initialize(collector: nil, config: nil)
             super()
-            @collector = collector || Organisms::StatusCollector.new
+            @collector = collector || Organisms::StatusCollector.new(config: config)
             @config = config
           end
 

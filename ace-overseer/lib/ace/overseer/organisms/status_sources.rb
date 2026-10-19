@@ -44,7 +44,7 @@ module Ace
           DEFAULT_LIMIT = 20
 
           def initialize(config: {}, server_resolver: nil, provider_factory: nil)
-            @limit = config["limit"] || DEFAULT_LIMIT
+            @limit = resolve_limit(config["limit"])
             @server_resolver = server_resolver || -> { Ace::Git::ServerRegistry.resolve_default }
             @provider_factory = provider_factory || ->(server) { Ace::Git::Providers.for(server) }
           end
@@ -64,6 +64,17 @@ module Ace
                 url: pr.url
               }
             end
+          end
+
+          private
+
+          # Explicit 0 lists nothing; a negative limit clamps to 0; a
+          # missing/typo'd value falls back to the default.
+          def resolve_limit(value)
+            limit = Integer(value)
+            limit.negative? ? 0 : limit
+          rescue ArgumentError, TypeError
+            DEFAULT_LIMIT
           end
         end
 

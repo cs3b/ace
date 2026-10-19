@@ -28,6 +28,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Preserve the `main` location label in the new sources-table worktrees section: `context_to_h`/`context_from_h` now round-trip `location_type` (and `tmux_window`), so a main checkout with assignments renders with its dimmed `main` row and sorts last again, like the legacy dashboard.
+- Warn on unknown keys under `status_sources` instead of silently ignoring them: a typo'd source name (`herder:`) renders `-- herder: unknown source (ignored)` and a typo'd option (`enabeld: false`) renders `-- forge.enabeld: unknown option (ignored)`; both also appear as `unknown_keys` in the JSON payload next to `sources`.
+- Forward an injected `config` to the default `StatusCollector` in the `status` CLI command, so source configuration no longer falls back to the global config when a config is injected.
+- Validate the forge source `limit` config: `Integer()` parsing with a fallback to the default (typos, missing values), explicit `0` lists nothing, and negative values clamp to `0`.
 - Restore `ace-overseer prune --preservation` patch-range proofs after the attempt/journal removal: squash/cherry-pick transfers into a destination that also carries unrelated content can be proven and cleaned up again without any attempt-recorded baseline.
 
 ## [0.24.0] - 2026-10-17

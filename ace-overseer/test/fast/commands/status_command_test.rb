@@ -129,4 +129,19 @@ class StatusCommandTest < AceOverseerTestCase
     assert_empty stdout
     assert_empty stderr
   end
+
+  def test_injected_config_is_forwarded_to_default_collector
+    config = {"runtime" => "auto", "status_sources" => {"forge" => {"enabled" => false}}}
+    forwarded = nil
+    fake = FakeCollector.new({sources: {}, unknown_keys: []})
+    Ace::Overseer::Organisms::StatusCollector.stub(:new, ->(*_args, **kwargs) {
+      forwarded = kwargs[:config]
+      fake
+    }) do
+      command = Ace::Overseer::CLI::Commands::Status.new(config: config)
+      capture_io { command.call(format: "json") }
+    end
+
+    assert_equal config, forwarded
+  end
 end
