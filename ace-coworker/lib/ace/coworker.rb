@@ -49,6 +49,7 @@ module Ace
       autoload :WorktreeExecutorProbe, "ace/coworker/molecules/worktree_executor_probe"
       autoload :RolePresetLoader, "ace/coworker/molecules/role_preset_loader"
       autoload :ReviewRoundStore, "ace/coworker/molecules/review_round_store"
+      autoload :RoleSequenceComposer, "ace/coworker/molecules/role_sequence_composer"
     end
 
     module Organisms

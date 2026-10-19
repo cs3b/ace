@@ -1,0 +1,20 @@
+---
+# Integrator role assignment process (shipped gem defaults, overridable
+# per project via .ace/coworker/sequences/integrator.yml). Composed by the
+# planner (ace-coworker prepare) into one ace-assign assignment for the
+# integrator leg of the role sequence. The merge decision goes through
+# the deterministic gate (ace-coworker gate /
+# Ace::Coworker::Atoms::IntegrationGate).
+role: integrator
+description: "Integrator process for task {{task}}"
+outcome: >-
+  The verified candidate for task {{task}} is merged, or the merge is
+  withheld with an explicit blocked gate verdict escalated to the
+  overseer.
+steps:
+  - name: integrate-candidate
+    workflow: wfi://coworker/integrator
+    instructions:
+      - "Work as the integrator on task {{task}}: integrate the verified candidate after the reviewer assignment finished successfully."
+      - "Check `ace-coworker gate` with the candidate head, the reviewed head, the independent review verdict, the executed tests, and the integrated dependencies; an unknown fact is verified, never guessed."
+      - "Acceptance: a ready verdict merges the candidate (a merge that changes the candidate renews the checks and the review); a blocked verdict withholds the merge and escalates to the overseer via ace-hitl - withholding is a legitimate outcome, not a failure."

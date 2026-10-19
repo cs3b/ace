@@ -68,6 +68,111 @@ module Ace
             assert_equal bytes_before, File.read(task_file)
           end
 
+          def test_prepare_composes_the_whole_role_sequence_usable_by_commission
+            out, err, status = run_cli(COWORKER_BIN, "prepare",
+              "--task", @task_ref, "--roles", "worker,reviewer,integrator", "--format", "json")
+            assert status.success?, "prepare failed: #{out}#{err}"
+            payload = JSON.parse(out)
+            worktree = payload["worktree"]["path"]
+
+            # One assignment per role, in dependency order, in the
+            # worktree's ace-assign storage.
+            assignments = payload["assignments"]
+            assert_equal %w[worker reviewer integrator], assignments.map { |a| a["role"] }
+            assert_equal [1, 2, 3], assignments.map { |a| a["position"] }
+            assert_equal %w[created created created], assignments.map { |a| a["disposition"] }
+            ids = assignments.map { |a| a["assignment"] }
+            ids.each do |id|
+              assert File.file?(File.join(worktree, ".ace-local", "assign", id, "assignment.yaml"))
+            end
+
+            # Worker and reviewer get DIFFERENT processes matched to the
+            # same task; reviewer embeds the 3/2/10 round rule.
+            worker_steps = Dir.glob(File.join(worktree, ".ace-local", "assign",
+              ids[0], "steps", "*.md")).map { |p| File.read(p) }.join
+            reviewer_steps = Dir.glob(File.join(worktree, ".ace-local", "assign",
+              ids[1], "steps", "*.md")).map { |p| File.read(p) }.join
+            integrator_steps = Dir.glob(File.join(worktree, ".ace-local", "assign",
+              ids[2], "steps", "*.md")).map { |p| File.read(p) }.join
+            assert_includes worker_steps, "bin/ace-test"
+            assert_includes worker_steps, @task_ref
+            assert_includes reviewer_steps, "3/2/10"
+            assert_includes reviewer_steps, "ace-coworker rounds record"
+            assert_includes reviewer_steps, ids[0], "reviewer entry condition names the worker assignment"
+            assert_includes integrator_steps, "ace-coworker gate"
+            assert_includes integrator_steps, ids[1]
+
+            # The composed assignment is consumable by the next tool:
+            # commission verifies the task match inside the worktree.
+            out, err, status = run_cli(COWORKER_BIN, "commission",
+              "--role", "worker", "--task", @task_ref, "--assignment", ids[0],
+              "--overseer", "overseer", chdir: worktree)
+            assert status.success?, "commission rejected the composed assignment: #{out}#{err}"
+            assert File.file?(File.join(worktree, ".ace-local", "coworker", "config.yml"))
+          end
+
+          def test_reprepare_before_commission_reuses_composed_sequence
+            worktree = prepare_worktree(@task_ref)
+            ids = Dir.glob(File.join(worktree, ".ace-local", "assign", "*",
+              "assignment.yaml")).map { |p| File.basename(File.dirname(p)) }
+            assert_equal 1, ids.length, "fixture prepare composed the worker assignment"
+
+            out, err, status = run_cli(COWORKER_BIN, "prepare",
+              "--task", @task_ref, "--roles", "worker,reviewer", "--format", "json")
+            assert status.success?, "re-prepare failed: #{out}#{err}"
+            payload = JSON.parse(out)
+            assignments = payload["assignments"]
+            assert_equal "existing", assignments[0]["disposition"]
+            assert_equal ids.first, assignments[0]["assignment"]
+            assert_equal "created", assignments[1]["disposition"],
+              "the reviewer leg is composed once its role joins the sequence"
+            assert File.file?(File.join(worktree, ".ace-local", "assign",
+              assignments[1]["assignment"], "assignment.yaml"))
+          end
+
+          def test_missing_role_process_reports_and_writes_no_assignments
+            # A project-defined role preset without a matching sequence
+            # definition: reported, never substituted with another role's
+            # process.
+            roles_dir = File.join(@dir, ".ace", "coworker", "roles")
+            FileUtils.mkdir_p(roles_dir)
+            File.write(File.join(roles_dir, "tailor.yml"), <<~YAML)
+              ---
+              name: tailor
+              description: Project-only role without a shipped process
+              instructions: roles/tailor.md
+              start_prompt: >-
+                Work as the {{role}} on task {{task}}, reporting to the
+                overseer at {{overseer}}.
+              reporting:
+                channel: hitl
+              errors:
+                on_failure: report
+            YAML
+            commit_all("project tailor role preset")
+
+            out, err, status = run_cli(COWORKER_BIN, "prepare",
+              "--task", @task_ref, "--roles", "worker,tailor", "--to", "overseer", "--format", "json")
+            refute status.success?, "a missing process never exits 0: #{out}#{err}"
+            assert_includes err, "role 'tailor' has no assignment process"
+            assert_includes err, "refusing to substitute"
+
+            # All-or-nothing: even the worker's assignment was not written.
+            worktrees = Dir.glob(File.join(@dir, ".ace-wt", "*"))
+            assert_equal 1, worktrees.length, "worktree itself is prepared and kept"
+            assert_empty Dir.glob(File.join(worktrees.first, ".ace-local", "assign", "*")),
+              "no partial sequence on a missing process"
+            assert_empty hitl_events, "an invalid commission needs no overseer decision"
+          end
+
+          def test_unknown_role_in_sequence_is_reported
+            out, err, status = run_cli(COWORKER_BIN, "prepare",
+              "--task", @task_ref, "--roles", "worker,planner", "--format", "json")
+            refute status.success?
+            assert_includes err, "unknown role 'planner'"
+            assert_empty hitl_events
+          end
+
           def test_active_executor_conflict_escalates_without_overwriting
             worktree = prepare_worktree(@task_ref)
             assignment_id = create_running_assignment(worktree)

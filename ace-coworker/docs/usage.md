@@ -305,12 +305,43 @@ ace-coworker prepare --task REF --roles worker,reviewer [--to overseer@addr]
 
 The planner side of the commission: accept a preparation commission (task
 reference + expected role sequence) and find or prepare exactly ONE proper
-worktree for that task. Re-preparing the same task reuses its existing
-worktree with zero writes — work and the task association are preserved.
-Assignments for the role sequence (L4.2), start configs in
-`.ace-local/coworker/` (L4.3), and the readiness report (L4.4) are later
-leaves; this command leaves those seams via the echoed `roles` and the JSON
-result.
+worktree for that task, THEN compose the assignments for the WHOLE known
+role sequence in one go (L4.2), so after start the roles hand off
+sequentially without the overseer re-commissioning preparation per step.
+Composition is idempotent: re-preparing the same task reuses its existing
+worktree and the already-composed assignments (matching
+`<task>-<role>` assignment names with a recorded task_id) with zero
+redundant writes; only sequence legs not yet composed are added. Start
+configs in `.ace-local/coworker/` (L4.3) and the readiness report (L4.4)
+remain later leaves — `commission` stays the single-role writer.
+
+Sequence composition (no new state owner; `ace-assign` stores the plans in
+the worktree's `.ace-local/assign/`, ADR-034):
+
+- ONE assignment per role, in dependency order. Each records the task id
+  (the `commission` task↔assignment match works unchanged), the expected
+  outcome of the leg in its description, and the position
+  (`sequence N/M`). Every leg after the first opens with an explicit entry
+  condition naming the predecessor assignment and role.
+- Each role's process comes from its own sequence definition — shipped
+  `.ace-defaults/coworker/sequences/<role>.yml`, project override
+  `.ace/coworker/sequences/<role>.yml` (whole-file, project wins; the
+  `role` field must match the filename's role). Worker and reviewer get
+  DIFFERENT processes matched to the same task: the worker leg requires
+  passing `bin/ace-test` per modified package, the reviewer leg embeds the
+  3/2/10 round rule (`ace-coworker rounds record`, min 3 completed full
+  rounds with the last 2 consecutive clean and no unresolved earlier
+  High/Critical, max 10, then escalation), the integrator leg runs the
+  `ace-coworker gate` checks before any merge, and the spec leg raises
+  material requirement gaps as `ace-hitl` questions instead of guessing.
+- A role without a preset (`unknown role '<name>'`) or without its own
+  process definition (`role '<name>' has no assignment process … refusing
+  to substitute another role's process`) is reported with exit 1 and
+  NOTHING is composed (all-or-nothing): the planner never substitutes
+  another role's process. The worktree itself stays prepared and kept.
+- `--dry-run` composes nothing (the would-be worktree does not exist), so
+  the result reports `assignments: []` alongside
+  `would_create`/`would_recover`.
 
 Deterministic decision procedure (no new state; ace-git-worktree stays the
 worktree owner):
@@ -341,8 +372,10 @@ worktree owner):
    assignments are surfaced as context only. On an `active_executor`
    conflict the rule evidence (`assignment`, `state`, `source`) is emitted
    structurally in `active_executor`.
-5. Reuse performs zero writes: no git effects, no task frontmatter rewrite,
-   no config change.
+5. Reuse performs zero redundant writes: no git effects, no task frontmatter
+   rewrite, no config change; already-composed sequence assignments are
+   reported as `existing` with their original ids, and only sequence legs
+   not yet composed are created.
 
 Conflicts mutate nothing: a decision-type HITL question for the overseer is
 created and sent (`--type question --kind decision`, title
@@ -365,6 +398,10 @@ Result JSON (table renders the same fields):
   "task_path": "/abs/.ace-tasks/8xg.t.sbz-lab…/",
   "roles": ["worker", "reviewer"],
   "worktree": { "path": "/abs/.ace-wt/t.8xg-t-sbz-3", "branch": "8xg-…", "disposition": "created" },
+  "assignments": [
+    {"role": "worker", "position": 1, "of": 2, "assignment": "abc123", "disposition": "created", "steps": 2, "outcome": "…"},
+    {"role": "reviewer", "position": 2, "of": 2, "assignment": "def456", "disposition": "created", "steps": 1, "outcome": "…"}
+  ],
   "active_executor": null,
   "worktree_assignments": [{"id": "abc123", "state": "paused", "progress": "0/2"}],
   "conflict": null
@@ -387,7 +424,7 @@ would-be outcome.
 | `status` | query rendered any state (including not-ready) | — |
 | `report` | success outcome recorded (and delivered, or `--no-send`/`--dry-run`) | error outcome; delivery/create failure (outcome still recorded); refused input |
 | `resume` | continue/complete rendered; report redelivered | delegated report failure keeps its exit 1 (plan still rendered) |
-| `prepare` | worktree created/recovered/reused (dry-run: would_create/would_recover) | conflict (active_executor / mismatched_worktree); invalid commission; operational preparation failure |
+| `prepare` | worktree created/recovered/reused with the role-sequence assignments composed (dry-run: would_create/would_recover, nothing composed) | conflict (active_executor / mismatched_worktree); invalid commission; missing role preset or role process definition; operational preparation failure |
 | `roles` | catalog rendered any valid state (including empty) | invalid preset file (specific error) |
 | `rounds` | round recorded, verdict rendered (including escalate) | corrupt history; malformed record |
 | `gate` | verdict rendered (`ready` or `blocked` - a withheld merge is a legitimate outcome) | malformed input (invalid or duplicate `--dep`, invalid `--tests` token) |

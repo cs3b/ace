@@ -101,6 +101,14 @@ module Ace
               lines << "  branch:     #{worktree['branch']}"
               lines << format("  result:     %s", worktree["disposition"])
             end
+            unless result.assignments.empty?
+              lines << "  sequence:"
+              result.assignments.each do |entry|
+                lines << "    #{entry['position']}/#{entry['of']} #{entry['role']}: " \
+                  "#{entry['assignment']} (#{entry['disposition']}, #{entry['steps']} steps)"
+                lines << "        expected outcome: #{entry['outcome']}"
+              end
+            end
             result.worktree_assignments.each do |assignment|
               lines << "  assignment: #{assignment['id']} #{assignment['state']} (#{assignment['progress']})"
             end

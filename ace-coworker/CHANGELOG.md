@@ -9,6 +9,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Role-sequence assignment composition in `ace-coworker prepare`
+  (8xg.t.sbz.3.1 / L4.2): after finding or preparing the task worktree,
+  the planner composes the assignments for the WHOLE known role sequence in
+  one go — one `ace-assign` assignment per role in dependency order, stored
+  by ace-assign in the worktree's `.ace-local/assign/` (no second queue;
+  ADR-034) — so after start the roles hand off sequentially without the
+  overseer re-commissioning preparation per step. Each assignment records
+  the task id, its sequence position (`sequence N/M`), the expected outcome
+  of the leg, and — for every leg after the first — an explicit entry
+  condition naming the predecessor assignment and role. Per-role processes
+  come from new shipped sequence definitions overridable per project
+  (`.ace-defaults/coworker/sequences/<role>.yml`, project override
+  `.ace/coworker/sequences/<role>.yml`): worker (implementation plus
+  per-package `bin/ace-test` verification), spec (material requirement gaps
+  become `ace-hitl` questions, never guesses), reviewer (embeds the 3/2/10
+  round rule via `ace-coworker rounds record`: min 3 completed full rounds,
+  last 2 consecutive clean, no unresolved earlier High/Critical, max 10
+  then escalation), and integrator (runs the `ace-coworker gate` checks
+  before any merge; withholding is a legitimate outcome). A role without a
+  preset or without its own process definition is reported with exit 1 and
+  nothing is composed (all-or-nothing) — another role's process is never
+  substituted. Composition is idempotent: re-preparation reuses
+  already-composed assignments (matched by `<task>-<role>` name plus
+  recorded task_id) without writes; `--dry-run` composes nothing. New
+  molecule `Ace::Coworker::Molecules::RoleSequenceComposer`; the prepare
+  result JSON/table gained an ordered `assignments` list (role, position,
+  assignment id, disposition `created`/`existing`, step count, expected
+  outcome).
+
+### Added
+
 - Integrator role (8xg.t.sbz.4.3 / L5.2): the fourth coworker role preset
   `integrator` (shipped in `.ace-defaults/coworker/roles/integrator.yml`,
   workflow `wfi://coworker/integrator`). It performs the project-defined

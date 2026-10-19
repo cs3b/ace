@@ -1,0 +1,16 @@
+---
+# Spec role assignment process (shipped gem defaults, overridable per
+# project via .ace/coworker/sequences/spec.yml). Composed by the planner
+# (ace-coworker prepare) into one ace-assign assignment for the spec leg
+# of the role sequence.
+role: spec
+description: "Spec process for task {{task}}"
+outcome: >-
+  Resolved requirements for task {{task}}: no material requirement gap is
+  left unresolved or guessed.
+steps:
+  - name: clarify-requirements
+    workflow: wfi://coworker/spec
+    instructions:
+      - "Work as the spec role on task {{task}}: collect and resolve the requirement gaps that block implementation."
+      - "Acceptance: every material gap is either resolved from the task material or raised as an ace-hitl question to the overseer; guessing is never success."

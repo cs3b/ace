@@ -71,7 +71,8 @@ module Ace
         end
 
         def orchestrator(provision_decision:, executor_result: {config: nil, assignments: []},
-          hitl: FakeHitl.new, config: nil, task: task_model, lenient_overseer: nil
+          hitl: FakeHitl.new, config: nil, task: task_model, lenient_overseer: nil,
+          sequence_composer: nil
         )
           PrepareOrchestrator.new(
             project_root: "/proj",
@@ -79,7 +80,26 @@ module Ace
             provision_probe: FakeProvisionProbe.new(provision_decision),
             executor_probe: FakeExecutorProbe.new(executor_result),
             hitl_reporter: hitl,
-            config_loader: FakeConfigLoader.new(config, lenient_overseer))
+            config_loader: FakeConfigLoader.new(config, lenient_overseer),
+            sequence_composer: sequence_composer || FakeSequenceComposer.new)
+        end
+
+        # Never touches the filesystem: success path entries only.
+        FakeSequenceComposer = Struct.new(:calls, :error) do
+          def initialize(error: nil)
+            super([], error)
+          end
+
+          def call(task:, roles:)
+            calls << {task: task, roles: roles}
+            raise Error, error if error
+
+            roles.each_with_index.map do |role, index|
+              {"role" => role, "position" => index + 1, "of" => roles.length,
+               "assignment" => "seq#{index + 1}", "disposition" => "created",
+               "steps" => 1, "outcome" => "#{role} outcome"}
+            end
+          end
         end
 
         def created_decision
@@ -88,7 +108,8 @@ module Ace
         end
 
         def test_happy_create_returns_preparation
-          result = orchestrator(provision_decision: created_decision)
+          composer = FakeSequenceComposer.new
+          result = orchestrator(provision_decision: created_decision, sequence_composer: composer)
             .call(task_ref: "8xg.t.aaa", roles: %w[worker reviewer], to: "overseer@lab")
 
           assert_equal "created", result.worktree["disposition"]
@@ -97,6 +118,32 @@ module Ace
           assert_equal "8xg.t.aaa", result.task
           assert_equal "/proj/.ace-tasks/8xg.t.aaa-fixture", result.task_path
           refute result.conflict?
+          assert_equal [{task: "8xg.t.aaa", roles: %w[worker reviewer]}], composer.calls
+          assert_equal %w[worker reviewer], result.assignments.map { |a| a["role"] }
+          assert_equal "created", result.assignments.first["disposition"]
+        end
+
+        def test_sequence_composition_error_is_reported_without_success
+          composer = FakeSequenceComposer.new(error: "role 'planner' has no assignment process")
+          error = assert_raises(Error) do
+            orchestrator(provision_decision: created_decision, sequence_composer: composer)
+              .call(task_ref: "8xg.t.aaa", roles: %w[planner])
+          end
+
+          assert_includes error.message, "no assignment process"
+        end
+
+        def test_conflict_and_dry_run_paths_skip_sequence_composition
+          composer = FakeSequenceComposer.new
+          hitl = FakeHitl.new
+          orchestrator(provision_decision: created_decision.merge(disposition: :would_create),
+            sequence_composer: composer)
+            .call(task_ref: "8xg.t.aaa", roles: %w[worker], dry_run: true)
+          orchestrator(provision_decision: created_decision.merge(disposition: :conflict_mismatch,
+            reason: "other task"), hitl: hitl, sequence_composer: composer)
+            .call(task_ref: "8xg.t.aaa", roles: %w[worker], to: "overseer@lab")
+
+          assert_empty composer.calls
         end
 
         def test_reuse_performs_no_writes_and_no_escalation

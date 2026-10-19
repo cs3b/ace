@@ -29,9 +29,18 @@ ace-coworker gate --candidate-head SHA --review-head SHA --review-verdict accept
 
 - `prepare` — the planner side: accept a preparation commission (task +
   expected role sequence) and find or prepare exactly one proper worktree for
-  the task. Re-preparation reuses the existing worktree with zero writes; an
+  the task, THEN compose the assignments for the whole role sequence in one
+  go (L4.2): one `ace-assign` assignment per role in dependency order, stored
+  in the worktree's `.ace-local/assign/` with explicit entry conditions, the
+  expected outcome of each leg, and the role's process definition (shipped
+  `.ace-defaults/coworker/sequences/<role>.yml`, project override
+  `.ace/coworker/sequences/<role>.yml` — the reviewer leg embeds the 3/2/10
+  round rule, the integrator leg the `ace-coworker gate` checks). Re-preparing
+  reuses the worktree and the already-composed assignments without writes; an
   active executor or a mismatched worktree escalates a decision question to
-  the overseer via `ace-hitl` instead of overwriting work.
+  the overseer via `ace-hitl` instead of overwriting work; a role without its
+  own process is reported and nothing is composed — another role's process is
+  never substituted.
 
 - `roles` / `commission` — role presets and the role-instantiation primitive
   consumed by the planner (L4.2/L4.3 seam). Shipped presets: `worker`

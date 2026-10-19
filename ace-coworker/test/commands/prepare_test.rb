@@ -21,6 +21,12 @@ module Ace
               roles: %w[worker reviewer],
               worktree: {"path" => "/proj/.ace-wt/t.8xg-t-aaa", "branch" => "8xg-aaa-b",
                          "disposition" => "created"},
+              assignments: [
+                {"role" => "worker", "position" => 1, "of" => 2, "assignment" => "seq1",
+                 "disposition" => "created", "steps" => 2, "outcome" => "worker outcome"},
+                {"role" => "reviewer", "position" => 2, "of" => 2, "assignment" => "seq2",
+                 "disposition" => "created", "steps" => 1, "outcome" => "reviewer outcome"}
+              ],
               worktree_assignments: []}.merge(overrides))
           end
 
@@ -52,6 +58,18 @@ module Ace
             assert_equal %w[worker reviewer], fake.calls.first[:roles]
           end
 
+          def test_success_renders_sequence_assignments
+            out = capture do
+              command(prep).call(task: "8xg.t.aaa", roles: ["worker,reviewer"],
+                format: "table", quiet: false)
+            end
+
+            assert_includes out, "sequence:"
+            assert_includes out, "1/2 worker: seq1 (created, 2 steps)"
+            assert_includes out, "2/2 reviewer: seq2 (created, 1 steps)"
+            assert_includes out, "expected outcome: reviewer outcome"
+          end
+
           def test_success_renders_json_contract
             out = capture { command(prep).call(task: "8xg.t.aaa", roles: ["worker"],
               format: "json", quiet: false) }
@@ -62,6 +80,12 @@ module Ace
             assert_equal "created", payload["worktree"]["disposition"]
             assert_nil payload["conflict"]
             assert_nil payload["active_executor"]
+            assert_equal 2, payload["assignments"].length
+            first = payload["assignments"].first
+            assert_equal "worker", first["role"]
+            assert_equal 1, first["position"]
+            assert_equal "seq1", first["assignment"]
+            assert_equal "worker outcome", first["outcome"]
           end
 
           def test_conflict_renders_and_raises_cli_error

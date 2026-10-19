@@ -5,6 +5,7 @@ require_relative "../molecules/task_probe"
 require_relative "../molecules/config_loader"
 require_relative "../molecules/worktree_provision_probe"
 require_relative "../molecules/worktree_executor_probe"
+require_relative "../molecules/role_sequence_composer"
 require_relative "../molecules/hitl_reporter"
 require_relative "../atoms/active_executor_rule"
 
@@ -12,12 +13,17 @@ module Ace
   module Coworker
     module Organisms
       # Orchestrates `ace-coworker prepare`: the planner accepts a
-      # preparation commission (task + expected role sequence) and finds or
-      # prepares exactly one proper worktree for that task. Re-preparation
-      # reuses the existing worktree with zero writes; an active executor or
-      # a mismatched worktree escalates to the overseer via ace-hitl instead
-      # of overwriting work. dry_run: performs the full resolution and
-      # conflict detection with zero effects.
+      # preparation commission (task + expected role sequence), finds or
+      # prepares exactly one proper worktree for that task, and composes
+      # the role-sequence assignments for the WHOLE sequence in one go
+      # (L4.2), so roles hand off sequentially after start without the
+      # overseer re-commissioning preparation per step. Re-preparation
+      # reuses the existing worktree and the already-composed assignments
+      # with zero redundant writes; an active executor or a mismatched
+      # worktree escalates to the overseer via ace-hitl instead of
+      # overwriting work. dry_run: performs the full resolution and
+      # conflict detection with zero effects (assignments are planned, not
+      # written, because the worktree does not exist yet).
       class PrepareOrchestrator
         DISPOSITIONS = {
           created: "created", recovered: "recovered", reuse: "reused",
@@ -25,7 +31,8 @@ module Ace
         }.freeze
 
         def initialize(project_root: nil, task_probe: nil, provision_probe: nil,
-          executor_probe: nil, hitl_reporter: nil, config_loader: nil, config: nil)
+          executor_probe: nil, hitl_reporter: nil, config_loader: nil, config: nil,
+          sequence_composer: nil)
           @config = config || Ace::Coworker.config
           @project_root = project_root || Molecules::ProjectRoot.new.resolve
           @task_probe = task_probe || Molecules::TaskProbe.new(project_root: @project_root)
@@ -34,6 +41,7 @@ module Ace
           @hitl_reporter = hitl_reporter || Molecules::HitlReporter.new(project_root: @project_root)
           @config_loader = config_loader ||
             Molecules::ConfigLoader.new(project_root: @project_root, defaults: @config)
+          @sequence_composer = sequence_composer
         end
 
         # @param task_ref [String] task reference
@@ -77,13 +85,23 @@ module Ace
               assignments: executor[:assignments], active_executor: rule[:evidence])
           end
 
+          sequence = compose_sequence(task_id, roles, decision[:worktree_path])
           success(task: task_id, task_path: task_path, roles: roles,
             disposition: disposition, worktree_path: decision[:worktree_path],
-            branch: decision[:branch], assignments: executor[:assignments],
+            branch: decision[:branch], assignments: sequence,
+            worktree_assignments: executor[:assignments],
             dry_run: dry_run)
         end
 
         private
+
+        # Composes the whole role sequence in one go via ace-assign's plan
+        # storage in the prepared worktree. A missing role process is
+        # reported (Error) — never substituted with another role's.
+        def compose_sequence(task_id, roles, worktree_path)
+          composer = @sequence_composer || Molecules::RoleSequenceComposer.new(project_root: worktree_path)
+          composer.call(task: task_id, roles: roles)
+        end
 
         def would_disposition?(disposition)
           %w[would_create would_recover].include?(disposition)
@@ -173,10 +191,11 @@ module Ace
         end
 
         def success(task:, task_path:, roles:, disposition:, worktree_path:,
-          branch:, assignments:, dry_run:)
+          branch:, assignments: [], worktree_assignments: [], dry_run:)
           Models::Preparation.new(task: task, task_path: task_path, roles: roles,
             worktree: {"path" => worktree_path, "branch" => branch, "disposition" => disposition},
-            worktree_assignments: assignments, dry_run: dry_run)
+            worktree_assignments: worktree_assignments, assignments: assignments,
+            dry_run: dry_run)
         end
       end
     end
