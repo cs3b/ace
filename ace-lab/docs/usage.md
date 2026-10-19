@@ -514,7 +514,9 @@ reads the same artifacts `install`/`prepare` derive truth from (the
 trusted install manifest, the filesystem's permission bits and
 ownership, the repositories, the per-project registry and the trusted
 authorization document) and writes nothing anywhere: no journal, no
-second state owner. Because it judges converged artifacts only, a
+second state owner. (The key fingerprint probe may use an ephemeral
+tmpdir scratch — 0600, removed afterwards — never a durable write.)
+Because it judges converged artifacts only, a
 fresh install and a resumed one verify identically — there is no
 hidden gap after resume.
 

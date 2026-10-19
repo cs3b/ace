@@ -209,7 +209,8 @@ module Ace
               ls_remote(local) ? [PASS, "origin reachable at '#{remote}'"] : [FAIL,
                 "origin '#{remote}' is not reachable (git ls-remote failed)"]
             else
-              [UNKNOWN, "origin '#{remote}' requires network; not probed by the read-only verifier"]
+              [UNKNOWN, "origin '#{remote}' is not a local-path remote; not probed by the " \
+                "read-only verifier"]
             end
 
             {"project" => project["id"], "path" => path, "remote" => remote,
@@ -226,9 +227,10 @@ module Ace
           document_check = installed_principles
           return [document_check] if document_check["status"] == FAIL
 
+          principals = document_check.delete("principals") # internal only — keep JSON schema uniform
           [document_check] + manifest["grants"].map do |principal, projects|
             granted = Molecules::CallerAuthorizer.new(
-              principals: document_check["principals"], identity: [principal]
+              principals: principals, identity: [principal]
             ).authorized_project_ids
             missing = projects - granted
             if missing.empty?
@@ -245,10 +247,19 @@ module Ace
         end
 
         # On failure returns a synthetic failed check carrying the
-        # classified reason (document-level failure).
+        # classified reason (document-level failure). An UNTRUSTED but
+        # present document fails the same synthetic check (a failed
+        # check never hides the healthy data around it) instead of
+        # aborting the whole report.
         def installed_principles
           path = @authorization_path
-          content = @trusted_read.call(path)
+          begin
+            content = @trusted_read.call(path)
+          rescue Ace::Lab::InvalidConfigurationError => e
+            return {"principal" => "(document)", "status" => FAIL,
+              "reason" => "trusted authorization file #{path} failed verification: #{e.message}",
+              "projects" => nil}
+          end
           if content.nil?
             return {"principal" => "(document)", "status" => FAIL,
               "reason" => "trusted authorization file #{path} is missing; no principal can see " \
@@ -306,9 +317,8 @@ module Ace
             dir = File.join(project["path"], ".ace-tasks", "_overseer")
             reason = if !File.directory?(dir)
               "private folder '#{dir}' is missing"
-            elsif !git_ignores?(project["path"], ".ace-tasks/_overseer")
-              "'#{dir}' is not ignored by Git; private overseer tasks would be committed " \
-                "(add '.ace-tasks/_overseer/' to the project .gitignore and rerun ace-lab install)"
+            elsif (ignore_reason = gitignore_reason(project["path"], ".ace-tasks/_overseer"))
+              ignore_reason
             end
             {"project" => project["id"], "dir" => dir,
              "status" => reason ? FAIL : PASS, "reason" => reason}
@@ -364,17 +374,27 @@ module Ace
           return "'#{path}' is not a directory" unless stat.directory?
 
           result = @runner.call(["git", "-C", path, "rev-parse", "--show-toplevel"])
+          if dubious_ownership?(result)
+            return "git refuses to operate on '#{path}' because of dubious ownership — run verify " \
+              "as the account that owns the repository, or configure git safe.directory"
+          end
           return "'#{path}' is not a Git repository" unless result["status"] == "ok"
 
-          reported = result["out"].to_s.strip
+          reported = result["out"].to_s.lines.first.to_s.strip
           return "'#{path}' is a subdirectory of the repository at '#{reported}'" unless same_location?(reported, path)
 
           nil
         end
 
+        # Raw stored URL: `git remote get-url` applies url.<base>.insteadOf
+        # rewrites from the invoking user's git config, which would
+        # false-fail an origin that matches the manifest canonically.
         def origin_url(path)
-          result = @runner.call(["git", "-C", path, "remote", "get-url", "origin"])
-          result["status"] == "ok" ? result["out"].to_s.strip : nil
+          result = @runner.call(["git", "-C", path, "config", "--get", "remote.origin.url"])
+          return nil unless result["status"] == "ok"
+
+          url = result["out"].to_s.lines.first.to_s.strip
+          url.empty? ? nil : url
         end
 
         # A remote the verifier may dial without leaving the machine:
@@ -388,8 +408,28 @@ module Ace
           @runner.call(["git", "ls-remote", remote])["status"] == "ok"
         end
 
-        def git_ignores?(root, relative)
-          @runner.call(["git", "-C", root, "check-ignore", "--", relative])["status"] == "ok"
+        # nil when Git ignores the path; otherwise the concrete reason
+        # (including the dubious-ownership refusal, which must not be
+        # misdiagnosed as "not ignored").
+        def gitignore_reason(root, relative)
+          result = @runner.call(["git", "-C", root, "check-ignore", "--", relative])
+          if dubious_ownership?(result)
+            return "git refuses to operate on '#{root}' because of dubious ownership — run " \
+              "verify as the owning account, or configure git safe.directory"
+          end
+          return nil if result["status"] == "ok"
+
+          "'#{File.join(root, relative)}' is not ignored by Git; private overseer tasks " \
+            "would be committed (add '.ace-tasks/_overseer/' to the project .gitignore " \
+            "and rerun ace-lab install)"
+        end
+
+        # Git's ownership-safety refusal (verify often runs as a different
+        # account than the one that converged the repository — exactly the
+        # under-target-accounts posture). Detected so the reported reason
+        # is actionable instead of "not a Git repository".
+        def dubious_ownership?(result)
+          result["status"] != "ok" && result["err"].to_s.include?("dubious ownership")
         end
 
         def same_location?(reported, path)

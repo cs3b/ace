@@ -339,7 +339,7 @@ module Organisms
 
         repository = check(report, "repositories")
         assert_equal "unknown", repository["status"]
-        assert_match(/requires network; not probed/, repository["reason"])
+        assert_match(/is not a local-path remote; not probed/, repository["reason"])
         assert_equal 1, report["counts"]["unknown"]
         # unknown does not block readiness
         assert_equal true, report["ready"]
@@ -390,6 +390,67 @@ module Organisms
         assert_equal auth_bytes, File.binread(fixture["auth"])
         assert_equal registry_bytes,
           File.binread(File.join(fixture["labs"], "atlas", ".ace", "lab", "config.yml"))
+      end
+    end
+
+    def test_dubious_ownership_refusal_is_reported_with_an_actionable_reason
+      with_lab do |fixture|
+        install_run(fixture, lookup_for(fixture))
+        base = Ace::Lab::Organisms::Verify.new(
+          manifest_path: fixture["manifest"], account_lookup: lookup_for(fixture),
+          authorization_path: fixture["auth"], platform: "linux")
+        runner = lambda do |argv|
+          if argv.include?("rev-parse") || argv.include?("check-ignore")
+            {"status" => "exit 128", "out" => "",
+             "err" => "fatal: detected dubious ownership in repository at '...'"}
+          else
+            base.send(:run_argv, argv)
+          end
+        end
+
+        report = nil
+        Ace::Lab::Molecules::GrantResolver.stub :read_verified,
+          ->(path) { File.file?(path) ? File.read(path) : nil } do
+          report = Ace::Lab::Organisms::Verify.new(
+            manifest_path: fixture["manifest"], account_lookup: lookup_for(fixture),
+            authorization_path: fixture["auth"], platform: "linux", runner: runner
+          ).call
+        end
+
+        repository = check(report, "repositories")
+        assert_equal "fail", repository["status"]
+        assert_match(/dubious ownership/, repository["reason"])
+        assert_match(/safe\.directory/, repository["reason"])
+        overseer = check(report, "overseer")
+        assert_equal "fail", overseer["status"]
+        assert_match(/dubious ownership/, overseer["reason"])
+        assert_equal false, report["ready"]
+      end
+    end
+
+    def test_untrusted_grants_document_fails_the_check_without_aborting
+      with_lab do |fixture|
+        install_run(fixture, lookup_for(fixture))
+
+        report = nil
+        Ace::Lab::Molecules::GrantResolver.stub :read_verified,
+          ->(path) do
+            raise Ace::Lab::InvalidConfigurationError, "ownership verification failed" if path == fixture["auth"]
+
+            File.file?(path) ? File.read(path) : nil
+          end do
+          report = Ace::Lab::Organisms::Verify.new(
+            manifest_path: fixture["manifest"], account_lookup: lookup_for(fixture),
+            authorization_path: fixture["auth"], platform: "linux"
+          ).call
+        end
+
+        document_check = report["checks"]["grants"].first
+        assert_equal "fail", document_check["status"]
+        assert_match(/failed verification: ownership verification failed/, document_check["reason"])
+        # the failure never hides healthy data around it
+        assert_equal "pass", check(report, "repositories")["status"]
+        assert_equal false, report["ready"]
       end
     end
   end
