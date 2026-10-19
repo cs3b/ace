@@ -9,6 +9,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Integrator role (8xg.t.sbz.4.3 / L5.2): the fourth coworker role preset
+  `integrator` (shipped in `.ace-defaults/coworker/roles/integrator.yml`,
+  workflow `wfi://coworker/integrator`). It performs the project-defined
+  integration: before merging it checks (a) dependencies are integrated
+  predecessors (an open PR or "work done" message never substitutes), (b)
+  the candidate head still matches the reviewed head (no drift), (c) tests
+  were executed and passed (real evidence; CI stays advisory), and (d) a
+  fresh independent review verdict accepts the EXACT candidate head. A
+  stale review after a candidate change, an unsatisfied dependency, or
+  missing test evidence WITHHOLDS the merge and escalates to the overseer
+  via `ace-hitl`; an uncertain operation outcome (merge/push) is verified
+  against the real state, never retried blind. A merge that changes the
+  candidate (conflict resolution) renews the checks and the review before
+  the result counts as integrated. The role drives git/ace-git; no merge
+  is performed in code. No new persisted artifact kind: integration
+  decisions persist in the assignment's existing report state.
+- `ace-coworker gate`: deterministic pre-merge gate surface for the
+  integrator role over the new pure atom
+  `Ace::Coworker::Atoms::IntegrationGate`. `ace-coworker gate
+  --candidate-head <sha> --review-head <sha> --review-verdict
+  accept|continue|escalate --tests executed,passed
+  --dep <leaf>=integrated|missing [...]` evaluates the four checks and
+  prints `ready` or `blocked` with per-check reasons (dependencies,
+  candidate drift, stale/missing review evidence, executed+passing tests).
+  Unknown facts (omitted heads, missing sections) block with an explicit
+  verify-instead-of-guess reason rather than being assumed. `blocked` is a
+  legitimate gate outcome (exit 0); only malformed input (e.g. an invalid
+  `--dep` pair) fails. Stateless: readiness only, no writes, no merges.
+
 - `ace-coworker rounds record --assignment <id> --type full|delta --status
   completed|aborted [--confirmed id:sev,...] [--resolved id,...]`: CLI
   surface for the 3/2/10 enforcement (8xg.t.sbz.4.2) used by the reviewer

@@ -29,6 +29,7 @@ module Ace
       autoload :PromptTemplate, "ace/coworker/atoms/prompt_template"
       autoload :RoundRule, "ace/coworker/atoms/round_rule"
       autoload :RoundRecordSchema, "ace/coworker/atoms/round_record_schema"
+      autoload :IntegrationGate, "ace/coworker/atoms/integration_gate"
     end
 
     module Molecules

@@ -1,0 +1,15 @@
+---
+# Integrator role preset (shipped gem defaults, overridable per project via
+# .ace/coworker/roles/integrator.yml).
+name: integrator
+description: Merge gate for ready candidates; checks integrated dependencies, candidate-review head match, executed tests, and a fresh independent review verdict before merge, and withholds blocked merges
+instructions: wfi://coworker/integrator
+start_prompt: >-
+  Work as the {{role}} on task {{task}}: drive assignment {{assignment}} —
+  integrate the verified candidate after checking dependencies, current
+  changes, executed tests, and the independent review verdict, reporting the
+  actual outcome to the overseer at {{overseer}}.
+reporting:
+  channel: hitl
+errors:
+  on_failure: report

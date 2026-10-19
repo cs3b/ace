@@ -76,9 +76,18 @@ persisted round history in `.ace-local/coworker/review-rounds/<assignment>.json`
 (`Molecules::ReviewRoundStore`; rounds are recorded through
 `ace-coworker rounds record`, and a restart reloads the counters instead of
 resetting them); escalates instead of marking unresolved
-High/Critical as success). Their instruction workflows are
-`wfi://coworker/worker`, `wfi://coworker/spec`, and
-`wfi://coworker/reviewer`. Role assignments are prepared by the planner (L4)
+High/Critical as success), and `integrator` (result-dependent integration of
+ready candidates: before merging it checks that dependencies are integrated
+predecessors, the candidate head still matches the reviewed head, tests were
+executed and passed, and a fresh independent review verdict accepts the
+exact candidate head - deterministically enforced by
+`Ace::Coworker::Atoms::IntegrationGate` via `ace-coworker gate`
+(:ready | :blocked with per-check reasons); a stale review, unsatisfied
+dependency, or missing test evidence withholds the merge and escalates to
+the overseer instead of merging past the gate). Their instruction workflows
+are `wfi://coworker/worker`, `wfi://coworker/spec`,
+`wfi://coworker/reviewer`, and `wfi://coworker/integrator`. Role assignments
+are prepared by the planner (L4)
 or commissioned ad hoc via `commission`; the reviewer (like the worker)
 develops its own assignment through `ace-assign add`, so confirmed-defect
 fixes stay inside one assignment without overseer round-trips.
@@ -115,6 +124,29 @@ resolved by this round. A corrupt or non-array history file fails with
 `corrupt round history at <path>` instead of silently resetting the
 counters; the same applies to a malformed record shape (actionable field
 errors, non-zero exit).
+
+### `ace-coworker gate`
+
+```
+ace-coworker gate --review-verdict accept|continue|escalate
+                  [--candidate-head SHA] [--review-head SHA]
+                  [--tests executed,passed] [--dep LEAF=integrated|missing ...]
+                  [--format table|json] [-q] [-d]
+```
+
+The integrator role's pre-merge gate (8xg.t.sbz.4.3): a pure, stateless
+evaluation of the four project-defined checks. `--candidate-head` is the
+current candidate head (omit it when genuinely unknown - the gate then
+blocks on the missing evidence instead of guessing); `--review-head` is the
+candidate head the independent review verdict covers; `--tests` takes the
+`executed,passed` evidence flags; each `--dep NAME=integrated|missing` pair
+states one dependency leaf (`missing` or any other value = not integrated).
+Prints `ready` or `blocked` with per-check reasons (dependencies, candidate
+drift, review freshness/verdict, executed+passing tests). `blocked` is a
+legitimate gate outcome (exit 0) - the role withholds the merge and
+escalates; only malformed input (e.g. an invalid `--dep` pair) fails with a
+non-zero exit. Nothing is persisted and no git operation is performed: the
+gate decides readiness only.
 
 ### `ace-coworker commission`
 
@@ -352,6 +384,8 @@ would-be outcome.
 | `resume` | continue/complete rendered; report redelivered | delegated report failure keeps its exit 1 (plan still rendered) |
 | `prepare` | worktree created/recovered/reused (dry-run: would_create/would_recover) | conflict (active_executor / mismatched_worktree); invalid commission; operational preparation failure |
 | `roles` | catalog rendered any valid state (including empty) | invalid preset file (specific error) |
+| `rounds` | round recorded, verdict rendered (including escalate) | corrupt history; malformed record |
+| `gate` | verdict rendered (`ready` or `blocked` - a withheld merge is a legitimate outcome) | malformed input (e.g. invalid `--dep` pair) |
 | `commission` | config written (dry-run: resolved, nothing written) | unknown role; invalid commission; task/assignment mismatch; refused overwrite; invalid assembly; config path escaping the project root; directory config target |
 
 ## Boundaries
