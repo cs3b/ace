@@ -7,10 +7,43 @@ module Ace
   module Overseer
     module Organisms
       class StatusCollector
-        def initialize(worktree_manager: nil, context_collector: nil, project_root: nil)
+        # Display/aggregation order of the configurable status sources.
+        STATUS_SOURCE_ORDER = %w[worktrees forge project_tasks overseer_tree herdr coworkers].freeze
+
+        def initialize(worktree_manager: nil, context_collector: nil, project_root: nil, config: nil,
+          sources: nil)
           @worktree_manager = worktree_manager || Ace::Git::Worktree::Organisms::WorktreeManager.new
           @context_collector = context_collector || Molecules::WorktreeContextCollector.new
           @project_root = project_root
+          @config = config
+          @sources = sources
+        end
+
+        # Aggregate the configurable status sources (L7.2). Each enabled
+        # source contributes {status: "ok", origin:, data:}; a disabled
+        # source {status: "disabled"}; a failing source {status: "error",
+        # origin:, error:} — rendered next to the healthy results, never
+        # mistaken for empty data. Read-only, computed live, nothing
+        # persisted (ADR-034).
+        def collect_sources
+          source_map = @sources || default_sources
+          configured = status_sources_config
+
+          results = STATUS_SOURCE_ORDER.to_h do |key|
+            source = source_map[key]
+            [key, source_result(source, configured[key])]
+          end
+          {sources: results}
+        end
+
+        def to_sources_h(snapshot)
+          {sources: snapshot[:sources]}
+        end
+
+        def to_sources_table(snapshot)
+          STATUS_SOURCE_ORDER.filter_map do |key|
+            render_source_section(key, snapshot[:sources][key])
+          end.join("\n\n")
         end
 
         def collect
@@ -64,6 +97,124 @@ module Ace
         end
 
         private
+
+        def source_result(source, options)
+          return {status: "disabled"} if source.nil? || options.is_a?(Hash) && options["enabled"] == false
+
+          begin
+            {status: "ok", origin: source.origin, data: source.fetch}
+          rescue StandardError => e
+            {status: "error", origin: source.origin, error: "#{e.class}: #{e.message}"}
+          end
+        end
+
+        def status_sources_config
+          config = @config || Ace::Overseer.config
+          configured = config["status_sources"]
+          configured.is_a?(Hash) ? configured : {}
+        end
+
+        def default_sources
+          {
+            "worktrees" => StatusSources::WorktreesSource.new(collector: self),
+            "forge" => StatusSources::ForgeSource.new(config: status_sources_config["forge"] || {}),
+            "project_tasks" => StatusSources::ProjectTasksSource.new,
+            "overseer_tree" => StatusSources::OverseerTreeSource.new,
+            "herdr" => StatusSources::HerdrSource.new,
+            "coworkers" => StatusSources::CoworkersSource.new(worktree_manager: @worktree_manager)
+          }
+        end
+
+        def render_source_section(key, result)
+          header = "-- #{key}"
+          case result[:status]
+          when "disabled"
+            "#{header}: disabled"
+          when "error"
+            "#{header} [#{result[:origin]}]: ERROR #{result[:error]}"
+          else
+            "#{header} [#{result[:origin]}]\n#{render_source_data(key, result[:data])}"
+          end
+        end
+
+        def render_source_data(key, data)
+          case key
+          when "worktrees" then Atoms::StatusFormatter.format_dashboard(
+            data[:worktrees].map { |entry| context_from_h(entry) }
+          )
+          when "project_tasks", "overseer_tree" then format_task_rows(data)
+          when "forge" then format_forge_rows(data)
+          when "herdr" then format_herdr_tree(data)
+          when "coworkers" then format_coworker_rows(data)
+          else data.inspect
+          end
+        end
+
+        # Rebuild a minimal WorkContext for the shared dashboard formatter
+        # (rendering only; the JSON payload stays the serialized form).
+        def context_from_h(entry)
+          Models::WorkContext.new(
+            task_id: entry[:task_id],
+            worktree_path: entry[:worktree_path],
+            branch: entry[:branch],
+            assignments: entry[:assignments],
+            git_status: entry[:git]
+          )
+        end
+
+        def format_task_rows(tasks)
+          return "(no tasks)" if tasks.empty?
+
+          tasks.map do |task|
+            line = "#{task[:id]}  #{task[:status]}  #{task[:title]}"
+            deps = task[:dependencies]
+            line += "  [deps: #{deps.join(", ")}]" if deps.is_a?(Array) && deps.any?
+            line
+          end.join("\n")
+        end
+
+        def format_forge_rows(pull_requests)
+          return "(no recent pull requests)" if pull_requests.empty?
+
+          pull_requests.map do |pr|
+            draft = pr[:draft] ? " draft" : ""
+            "##{pr[:number]}  #{pr[:state]}#{draft}  #{pr[:title]}  (#{pr[:head_ref]})"
+          end.join("\n")
+        end
+
+        def format_herdr_tree(tree)
+          workspaces = tree[:workspaces]
+          return "(no live herdr workspaces)" if workspaces.empty?
+
+          lines = ["#{workspaces.length} workspace(s), " \
+            "#{workspaces.sum { |ws| ws[:tab_count] }} tab(s), " \
+            "#{workspaces.sum { |ws| ws[:pane_count] }} pane(s)"]
+          workspaces.each do |ws|
+            lines << "  #{ws[:id]}  #{ws[:title]}  (#{ws[:tab_count]} tab(s))"
+            ws[:tabs].each do |tab|
+              lines << "    #{tab[:id]}  #{tab[:title]}  (#{tab[:pane_count]} pane(s))"
+              tab[:panes].each do |pane|
+                lines << "      #{pane[:id]}  #{pane[:title]}"
+              end
+            end
+          end
+          lines.join("\n")
+        end
+
+        def format_coworker_rows(rows)
+          return "(no worktrees)" if rows.empty?
+
+          rows.map do |row|
+            if row[:error]
+              "#{row[:worktree]}  ERROR #{row[:error]}"
+            elsif row[:active]
+              evidence = row[:evidence] || {}
+              "#{row[:worktree]}  busy (#{evidence["assignment"]} #{evidence["state"]}, #{evidence["source"]})"
+            else
+              "#{row[:worktree]}  no active executor"
+            end
+          end.join("\n")
+        end
 
         def collect_main_context
           root = @project_root || resolve_project_root

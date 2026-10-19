@@ -142,7 +142,9 @@ Matching and outcome rules (enforced mechanically):
 
 ## `ace-overseer status`
 
-Show status for active task worktrees.
+Show the overseer's one-view status: every configured source is collected
+live, read-only, into one table or JSON payload. Nothing is persisted — the
+view is always computed from the source owners' current state.
 
 ```bash
 ace-overseer status
@@ -153,16 +155,53 @@ ace-overseer status --watch
 | Option | Purpose |
 |--------|---------|
 | `--format` | `table` (default) or `json` |
-| `--watch`, `-w` | Auto-refresh the dashboard |
+| `--watch`, `-w` | Auto-refresh the worktree dashboard |
 | `--runtime` | Terminal backend used for pane checks |
 | `--quiet`, `-q` | Suppress non-essential output |
 | `--debug`, `-d` | Show debug output |
 
-Status reads local assignments and git state. Missing or unreadable evidence is
-shown as unknown rather than as success.
+### Sources
 
-> **Planned (L7):** configured status aggregation and pi continuation -- not
-> available yet.
+Sources are configured under `status_sources` in the overseer config
+(`.ace/overseer/config.yml`; defaults in the gem's
+`.ace-defaults/overseer/config.yml`). Each key is one source; setting
+`enabled: false` disables it.
+
+| Source | Information | Owner interface used |
+|--------|-------------|----------------------|
+| `worktrees` | worktrees with assignment progress and git state | `ace-git-worktree` WorktreeManager + worktree assignment context |
+| `forge` | recent forge pull requests | `ace-git` Providers `recent_pull_requests` (forge-neutral) |
+| `project_tasks` | project task ids, statuses, dependencies | `ace-task` TaskManager (`.ace-tasks/`) |
+| `overseer_tree` | private overseer tasks | `ace-task` TaskManager (`.ace-tasks/_overseer/`) |
+| `herdr` | live workspaces/tabs/panes | `ace-herdr` ControlSurface + StatusComposer (read-only) |
+| `coworkers` | per-worktree executor truth | `ace-coworker` WorktreeExecutorProbe + ActiveExecutorRule |
+
+`forge` is disabled by default (`enabled: false`). Enable it in project or
+user config when the forge server is configured; with no server, a missing
+provider CLI, or no network it degrades to a per-source error entry, never
+to "no open pull requests".
+
+### JSON contract
+
+```json
+{
+  "sources": {
+    "worktrees": {"status": "ok", "origin": "...", "data": {"worktrees": [...]}},
+    "forge": {"status": "disabled"},
+    "herdr": {"status": "error", "origin": "...", "error": "..."}
+  }
+}
+```
+
+Every entry carries `status` (`ok` | `disabled` | `error`); `ok` entries
+add `origin` (explicit provenance) and `data`; `error` entries add `origin`
+and `error`. A failing or disabled source is rendered next to the healthy
+results — missing data never reads as a free worktree or a finished task.
+In the `coworkers` data an unknown or unparseable commission reports
+`active: true` with state `unknown`/`unparseable` (never free).
+
+`--watch` keeps refreshing the worktree dashboard (the quick-refresh
+section); the full source view is the one-shot `status` run.
 
 ## `ace-overseer prune`
 
