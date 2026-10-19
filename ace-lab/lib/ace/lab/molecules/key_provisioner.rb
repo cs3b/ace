@@ -82,10 +82,13 @@ module Ace
               "message" => "key path '#{path}' exists but is not a regular file; refusing to overwrite")
           end
 
-          # Dry-run predicts from the filesystem alone, before consulting
-          # live passwd: the account phase may report would_create for an
-          # account that does not exist yet, and a nil lookup must not
-          # turn that prediction into a dependency failure.
+          # Dry-run predicts from read-only filesystem probes and
+          # read-only ssh-keygen invocations (-lf/-y in
+          # classify_existing_pair), never mutating the pair or the
+          # account, and without consulting live passwd: the account
+          # phase may report would_create for an account that does not
+          # exist yet, and a nil lookup must not turn that prediction
+          # into a dependency failure.
           return predict(base, path, stat) if dry_run
 
           entry = account_lookup.call(username)
@@ -208,6 +211,10 @@ module Ace
         #   (:verified/:unusable/:repair_public) and the fingerprint
         #   (nil unless :verified).
         def classify_existing_pair(path, public_path)
+          # TOCTOU safety net: callers lstat'd the .pub just before, so
+          # a nil here means the file vanished in between — deliberately
+          # kept (do not remove as "unreachable") so a race degrades to
+          # the same repair verdict the wet path would produce.
           return [:repair_public, nil] if lstat(public_path).nil?
 
           fingerprint = pair_fingerprint(path, public_path)
@@ -395,16 +402,23 @@ module Ace
           return nil unless public_fingerprint
 
           with_derivable_private(path) do |private_path|
-            derived = runner.call(["ssh-keygen", "-y", "-f", private_path])
-            return nil unless derived["status"] == "ok"
+            derived_matches_public?(private_path, public_fingerprint)
+          end && public_fingerprint
+        end
 
-            Dir.mktmpdir("ace-lab-key") do |tmp|
-              derived_path = File.join(tmp, "derived.pub")
-              File.write(derived_path, derived["out"])
-              return nil unless read_fingerprint(derived_path) == public_fingerprint
-            end
+        # Whether the public key ssh-keygen derives from the private
+        # half matches the `.pub` file's fingerprint (see
+        # pair_fingerprint for why the derivation cannot be shortcut).
+        # @return [Boolean]
+        def derived_matches_public?(private_path, public_fingerprint)
+          derived = runner.call(["ssh-keygen", "-y", "-f", private_path])
+          return false unless derived["status"] == "ok"
+
+          Dir.mktmpdir("ace-lab-key") do |tmp|
+            derived_path = File.join(tmp, "derived.pub")
+            File.write(derived_path, derived["out"])
+            read_fingerprint(derived_path) == public_fingerprint
           end
-          public_fingerprint
         end
 
         # ssh-keygen refuses to load a private key whose permission
@@ -638,9 +652,15 @@ module Ace
         # ancestor symlink (alias -> /repo/nested) would land the real
         # key inside the repository while this walk sees only the alias
         # spelling. Resolution happens before any generate/mutate step,
-        # like the lstat guards above.
+        # like the lstat guards above. An unresolvable-for-permission
+        # path (nil physical_path) is judged as INSIDE — fail-closed —
+        # because an ancestor denying search could hide exactly the
+        # symlink the resolution exists to catch.
         def inside_git_worktree?(path)
-          current = File.dirname(physical_path(File.expand_path(path)))
+          physical = physical_path(File.expand_path(path))
+          return true if physical.nil?
+
+          current = File.dirname(physical)
           while (parent = File.dirname(current))
             return true if File.exist?(File.join(current, ".git"))
             break if parent == current
@@ -655,14 +675,20 @@ module Ace
         # resolve-before-mutate discipline as the lstat guards), then
         # rebuild the not-yet-existing tail on top, so a missing `.ssh`
         # behind an existing alias is judged by the alias target too.
+        # Returns nil when an ancestor resolves with EACCES (account
+        # denies search to the unprivileged installer): the tail beyond
+        # it cannot be verified, so callers must fail closed instead of
+        # falling back to the lexical spelling.
         def physical_path(path)
           current = path
           tail = []
           until current == "/"
             resolved = begin
               File.realpath(current)
-            rescue Errno::ENOENT, Errno::ENOTDIR, Errno::EACCES
+            rescue Errno::ENOENT, Errno::ENOTDIR
               nil
+            rescue Errno::EACCES
+              return nil
             end
             return File.join(resolved, *tail) unless resolved.nil?
 

@@ -19,6 +19,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Security (8xi1p4z5): when an ancestor of the key path denies search
+  permission (`EACCES` on realpath, e.g. an account locking out the
+  unprivileged installer), `KeyProvisioner`'s git-worktree guard now
+  fails closed — the path is judged as inside a worktree and refused —
+  instead of falling back to the lexical spelling, which a symlink
+  behind the denied ancestor could fool (the pre-F2 behavior). The
+  `:repair_public` classification branch is documented as a deliberate
+  TOCTOU safety net (8xi1p4z7), and the dry-run contract comment now
+  states that prediction uses read-only filesystem probes plus
+  read-only `ssh-keygen` invocations (8xi1p4z4).
 - `RoleVerifier` (8xi16mz1): the reachability walk now resolves the
   instruction file's OWN symlink too (`File.realpath(path)`), not just
   the ancestors of the link's path. Previously a symlinked instruction

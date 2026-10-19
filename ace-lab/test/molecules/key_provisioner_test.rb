@@ -108,6 +108,28 @@ module Molecules
       end
     end
 
+    # 8xi1p4z5: when an ancestor of the key path denies search (EACCES,
+    # an account locking out the unprivileged installer), realpath cannot
+    # resolve the physical location — the guard must fail closed (judge
+    # as inside a git worktree) rather than fall back to the lexical
+    # spelling, which a symlink behind the denied ancestor could fool.
+    def test_unreadable_ancestor_dir_fails_closed_as_inside_git_worktree
+      Dir.mktmpdir do |dir|
+        secret_dir = File.join(dir, "denied")
+        path = File.join(secret_dir, "id_ed25519")
+        FileUtils.mkdir_p(secret_dir)
+        FileUtils.chmod(0o000, secret_dir)
+        begin
+          result = provisioner.call(key: key(path), account: account, machine: "lab01")
+
+          assert_equal "failed", result["status"]
+          assert_match(/inside a git worktree; secrets must not live in Git/, result["message"])
+        ensure
+          FileUtils.chmod(0o700, secret_dir)
+        end
+      end
+    end
+
     # F2 with the alias target's `.ssh` already present as a plain
     # directory: the final-component symlink guard does not apply, only
     # physical-ancestor resolution catches it.
