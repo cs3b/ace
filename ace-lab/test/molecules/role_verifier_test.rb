@@ -113,6 +113,53 @@ module Molecules
       end
     end
 
+    # 8xi16mz1: the FINAL component is a symlink to a file behind an
+    # unsearchable directory — the read check stats the 0644 target and
+    # passes, so only resolving the symlink itself (not just the
+    # ancestors of the link's own path) can catch the unreachable pair.
+    def test_symlinked_instruction_behind_unsearchable_directory_fails
+      Dir.mktmpdir("mz1", "/tmp") do |dir|
+        File.chmod(0o755, dir)
+        hidden = File.join(dir, "hidden")
+        Dir.mkdir(hidden)
+        target = File.join(hidden, "worker.md")
+        File.write(target, "instructions")
+        File.chmod(0o644, target)
+        File.chmod(0o700, hidden)
+        link = File.join(dir, "worker-link.md")
+        File.symlink(target, link)
+        other = FakeEntry.new(name: "ace-other", uid: Process.uid + 1, gid: Process.gid + 1, dir: "/x")
+
+        result = verifier(lookup: ->(_name) { other }, group_source: ->(_name) { [] })
+          .call(role: role(link))
+
+        assert_equal "failed", result["status"]
+        assert_match(/not reachable by account 'ace-other'/, result["message"])
+      ensure
+        File.chmod(0o755, hidden) if File.directory?(hidden)
+      end
+    end
+
+    # mz1 control: a symlink whose target IS reachable verifies —
+    # resolving the final component does not ban symlinks.
+    def test_symlinked_instruction_with_searchable_target_path_verifies
+      Dir.mktmpdir("mz1", "/tmp") do |dir|
+        File.chmod(0o755, dir)
+        target = File.join(dir, "worker.md")
+        File.write(target, "instructions")
+        File.chmod(0o644, target)
+        link = File.join(dir, "worker-link.md")
+        File.symlink(target, link)
+        other = FakeEntry.new(name: "ace-other", uid: Process.uid + 1, gid: Process.gid + 1, dir: "/x")
+
+        result = verifier(lookup: ->(_name) { other }, group_source: ->(_name) { [] })
+          .call(role: role(link))
+
+        assert_equal "verified", result["status"]
+        assert_nil result["message"]
+      end
+    end
+
     def test_unavailable_account_fails_with_dependency_message
       result = verifier(lookup: ->(_name) { nil }).call(role: role("wfi://assign/work"))
 

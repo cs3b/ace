@@ -19,6 +19,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `RoleVerifier` (8xi16mz1): the reachability walk now resolves the
+  instruction file's OWN symlink too (`File.realpath(path)`), not just
+  the ancestors of the link's path. Previously a symlinked instruction
+  pointing at a file behind an unsearchable directory (e.g. 0700
+  other-owned) verified as reachable because only the symlink's own
+  ancestors were checked; the target's directory chain is what open(2)
+  traverses, so it is what the walk judges now.
+- `KeyProvisioner` (8xi16mz2/8xi16mz5/8xi16mz6): the dry-run
+  prediction and the wet existing path now share one
+  `classify_existing_pair` step (read-only `pair_fingerprint`,
+  including a 0600 tmpdir copy when the private key's mode has drifted
+  and ssh-keygen would refuse to load it), run BEFORE the mode-drift
+  branch. A garbage pair with mode drift now predicts `failed` (not
+  usable) instead of `would_fix_mode` — the wet run converges the
+  modes and then fails verification, and the prediction says exactly
+  that; `would_fix_mode` is only ever predicted for a verified pair.
+  The duplicated not-usable message became the shared
+  `NOT_USABLE_TEMPLATE` constant.
 - Security (PR #392 F2): `KeyProvisioner`'s git-worktree guard now
   resolves the PHYSICAL ancestors of the key path (realpath of the
   deepest existing ancestor plus the lexical tail) before any

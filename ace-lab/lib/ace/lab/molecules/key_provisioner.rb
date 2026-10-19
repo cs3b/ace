@@ -20,6 +20,11 @@ module Ace
         SSH_DIR_MODE = 0o700
         PRIVATE_MODE = 0o600
         PUBLIC_MODE = 0o644
+        # Shared by the wet existing path and the dry-run prediction
+        # (same condition, same message — the two paths must never
+        # report different outcomes for the same pair).
+        NOT_USABLE_TEMPLATE = "key pair '%s' is not usable (unreadable or mismatched key files); " \
+          "resolve manually and rerun ace-lab prepare"
 
         attr_reader :runner, :account_lookup, :dry_run
 
@@ -174,13 +179,39 @@ module Ace
             end
           end
 
+          # Shared pair classification BEFORE the drift branch: the
+          # wet run converges modes first and then fails verification
+          # on a garbage pair, so the prediction must say failed, not
+          # would_fix_mode — mode repair is only ever predicted for a
+          # pair that verifies as usable.
+          kind, fingerprint = classify_existing_pair(path, public_path)
+          case kind
+          when :repair_public
+            return base.merge("status" => "would_repair_public", "fingerprint" => nil, "message" => nil)
+          when :unusable
+            return base.merge("status" => "failed", "fingerprint" => nil,
+              "message" => format(NOT_USABLE_TEMPLATE, path))
+          end
+
           if drift?(path, pub_stat, entry)
             return base.merge("status" => "would_fix_mode", "fingerprint" => nil, "message" => nil)
           end
 
-          verified_result(base, "exists", path, public_path,
-            "key pair '#{path}' is not usable (unreadable or mismatched key files); " \
-            "resolve manually and rerun ace-lab prepare")
+          base.merge("status" => "exists", "fingerprint" => fingerprint, "message" => nil)
+        end
+
+        # Shared classification of an existing key pair, used by BOTH
+        # the wet existing path and the dry-run prediction so the two
+        # can never drift apart: whatever ssh-keygen would verify after
+        # the wet convergence steps, the prediction judges read-only up
+        # front. @return [Array(Symbol, String|nil)] kind
+        #   (:verified/:unusable/:repair_public) and the fingerprint
+        #   (nil unless :verified).
+        def classify_existing_pair(path, public_path)
+          return [:repair_public, nil] if lstat(public_path).nil?
+
+          fingerprint = pair_fingerprint(path, public_path)
+          fingerprint ? [:verified, fingerprint] : [:unusable, nil]
         end
 
         def drift?(path, pub_stat, entry)
@@ -265,9 +296,17 @@ module Ace
           # foreign-owned (checked above).
           converge_ssh_dir(ssh_dir, ssh_stat, entry)
 
-          verified_result(base, "exists", path, public_path,
-            "key pair '#{path}' is not usable (unreadable or mismatched key files); " \
-            "resolve manually and rerun ace-lab prepare")
+          # The same shared classification the prediction runs —
+          # after the wet convergence steps a repair_public outcome is
+          # impossible (regenerate_public ran above), so only the
+          # usable/unusable verdict remains.
+          _kind, fingerprint = classify_existing_pair(path, public_path)
+          if fingerprint
+            base.merge("status" => "exists", "fingerprint" => fingerprint, "message" => nil)
+          else
+            base.merge("status" => "failed", "fingerprint" => nil,
+              "message" => format(NOT_USABLE_TEMPLATE, path))
+          end
         end
 
         def generate(base, key, account, machine, path, entry)
@@ -355,15 +394,38 @@ module Ace
           public_fingerprint = read_fingerprint(public_path)
           return nil unless public_fingerprint
 
-          derived = runner.call(["ssh-keygen", "-y", "-f", path])
-          return nil unless derived["status"] == "ok"
+          with_derivable_private(path) do |private_path|
+            derived = runner.call(["ssh-keygen", "-y", "-f", private_path])
+            return nil unless derived["status"] == "ok"
 
-          Dir.mktmpdir("ace-lab-key") do |tmp|
-            derived_path = File.join(tmp, "derived.pub")
-            File.write(derived_path, derived["out"])
-            return nil unless read_fingerprint(derived_path) == public_fingerprint
+            Dir.mktmpdir("ace-lab-key") do |tmp|
+              derived_path = File.join(tmp, "derived.pub")
+              File.write(derived_path, derived["out"])
+              return nil unless read_fingerprint(derived_path) == public_fingerprint
+            end
           end
           public_fingerprint
+        end
+
+        # ssh-keygen refuses to load a private key whose permission
+        # bits are too open ("bad permissions"), even for a read-only
+        # derivation. The shared pair classification must judge a
+        # mode-drifted pair BEFORE the wet chmod converges it, so the
+        # derivation runs against a 0600 copy in a private tmpdir when
+        # the mode has drifted — read-only with respect to the
+        # provisioned path, and the copy never leaves the tmpdir (a
+        # byte-stream via FileUtils.cp, never printed or rendered).
+        def with_derivable_private(path)
+          if (File.stat(path).mode & 0o7777) == PRIVATE_MODE
+            return yield(path)
+          end
+
+          Dir.mktmpdir("ace-lab-key") do |tmp|
+            copy = File.join(tmp, "private")
+            FileUtils.cp(path, copy)
+            File.chmod(PRIVATE_MODE, copy)
+            yield(copy)
+          end
         end
 
         def verified_result(base, success_status, path, public_path, failure_message)

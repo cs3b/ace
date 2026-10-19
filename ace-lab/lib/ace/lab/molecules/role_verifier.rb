@@ -91,13 +91,16 @@ module Ace
             "message" => "instructions file '#{path}' could not be verified (#{e.class.name})")
         end
 
-        # Reachability: every ancestor of the RESOLVED path (realpath
-        # follows ancestor symlinks, mirroring what open(2) traverses)
-        # must grant the account search permission through its
-        # governing class. An unresolvable or unstattable ancestor is
-        # conservatively unreachable.
+        # Reachability: every ancestor of the RESOLVED path must grant
+        # the account search permission through its governing class.
+        # The final component is resolved too (File.realpath(path)):
+        # realpath follows both ancestor symlinks AND a symlink at the
+        # instruction file itself, mirroring what open(2) traverses —
+        # judging only the symlink's own ancestors would miss an
+        # unsearchable directory on the target's path. An unresolvable
+        # or unstattable ancestor is conservatively unreachable.
         def reachable_by_account?(path, entry)
-          current = File.realpath(File.dirname(path))
+          current = File.dirname(File.realpath(path))
           loop do
             stat = File.stat(current)
             return false if (permission_bits(stat, entry) & 0o1).zero?

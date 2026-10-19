@@ -603,6 +603,33 @@ module Molecules
       end
     end
 
+    # 8xi16mz2: dry-run/wet parity for a garbage pair with mode drift.
+    # The wet run converges the modes and then fails verification, so
+    # the prediction must say failed (not usable) too — never
+    # would_fix_mode, which would green-light a failing prepare.
+    def test_dry_run_wet_parity_for_broken_pair_with_mode_drift
+      Dir.mktmpdir do |dir|
+        ssh = File.join(dir, ".ssh")
+        Dir.mkdir(ssh, 0o700)
+        path = File.join(ssh, "id_ed25519")
+        File.write(path, "not a private key")
+        File.chmod(0o644, path)
+        File.write("#{path}.pub", "not a public key")
+        File.chmod(0o644, "#{path}.pub")
+
+        dry = provisioner(dry_run: true).call(key: key(path), account: account, machine: "lab01")
+        wet = provisioner.call(key: key(path), account: account, machine: "lab01")
+
+        assert_equal wet["status"], dry["status"]
+        assert_equal "failed", dry["status"]
+        assert_match(/not usable/, dry["message"])
+        assert_match(/not usable/, wet["message"])
+        # the wet run converged the modes but never overwrote the pair
+        assert_equal 0o600, File.stat(path).mode & 0o7777
+        assert_equal "not a private key", File.read(path)
+      end
+    end
+
     def test_dry_run_with_unresolvable_account_predicts_creation_instead_of_failing
       Dir.mktmpdir do |dir|
         path = File.join(dir, "id_ed25519")
