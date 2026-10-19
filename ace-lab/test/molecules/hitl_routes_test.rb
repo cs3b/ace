@@ -151,7 +151,7 @@ module Molecules
         FileUtils.mkdir_p(dir)
         blowing_file = Class.new do
           def write(_payload)
-            raise IOError, "simulated ENOSPC"
+            raise Errno::ENOSPC
           end
 
           def close; end
@@ -159,10 +159,10 @@ module Molecules
           def closed? = false
         end.new
         File.stub :open, ->(_path, _flags, _mode) { blowing_file } do
-          error = assert_raises(IOError) do
+          error = assert_raises(Errno::ENOSPC) do
             organism.send(:write_exclusive, dir, "payload")
           end
-          assert_match(/ENOSPC/, error.message)
+          assert_match(/No space left on device/, error.message)
         end
         assert_empty Dir.children(dir), "temp file leaked after a failed write"
       end

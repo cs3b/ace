@@ -239,9 +239,10 @@ module Ace
             end
             begin
               file.write(payload)
-            rescue SystemCallError, IOError
+            rescue StandardError
               # A failed write must not leak the exclusive temp file:
-              # close, remove, and let the caller classify the raise.
+              # close, remove, and re-raise verbatim so the caller
+              # still classifies (encoding failures included).
               file.close unless file.closed?
               begin
                 File.delete(candidate)
