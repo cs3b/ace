@@ -24,6 +24,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `WorktreeExecutorProbe` cascade (8xi1p4z2): an unparseable nearest
+  cascade layer (e.g. unresolved merge-conflict markers in the
+  worktree's own `coworker/config.yml`) is now skipped per-layer,
+  exactly like a non-mapping layer, instead of discarding the whole
+  merge and silently reverting the probe to the default config
+  location — a commissioned executor at a cascade-overridden
+  `config_path` stays detected. The user-tier (`~/.ace`) override is
+  covered by a stubbed-HOME test (8xi1p4z8).
 - `WorktreeExecutorProbe` cascade (8xi16mz3): a non-mapping cascade
   layer (e.g. a `coworker/config.yml` containing a YAML list) is now
   skipped instead of wiping the already-merged farther tiers, so valid

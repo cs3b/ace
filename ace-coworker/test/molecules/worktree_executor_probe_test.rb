@@ -148,6 +148,61 @@ module Ace
           end
         end
 
+        # 8xi1p4z2: a nearest cascade tier with unparseable YAML
+        # (unresolved merge-conflict markers) must be skipped
+        # per-layer, exactly like a non-mapping layer — the farther
+        # tier's config_path override must survive.
+        def test_broken_yaml_nearest_cascade_layer_keeps_farther_tier_override
+          Dir.mktmpdir("coworker-exec") do |dir|
+            outer = File.join(dir, ".ace", "coworker")
+            FileUtils.mkdir_p(outer)
+            File.write(File.join(outer, "config.yml"),
+              "config_path: .ace-local/coworker/worker.yml\n")
+            worktree = File.join(dir, "worktree")
+            inner = File.join(worktree, ".ace", "coworker")
+            FileUtils.mkdir_p(inner)
+            File.write(File.join(inner, "config.yml"),
+              "<<<<<<< HEAD\nrole: worker\n=======\n>>>>>>> other\n")
+            worker = File.join(worktree, ".ace-local", "coworker", "worker.yml")
+            FileUtils.mkdir_p(File.dirname(worker))
+            File.write(worker, "role: worker\ntask: 8xg.t.aaa\nassignment: abc123\n")
+
+            result = WorktreeExecutorProbe.new(project_root: worktree,
+              runner: FakeRunner.new(out: "[]")).probe(worktree)
+
+            assert_equal "abc123", result[:config]["assignment"]
+          end
+        end
+
+        # 8xi1p4z8: the user tier (~/.ace with a stubbed HOME) is the
+        # farthest cascade layer — its config_path override applies when
+        # no nearer project tier carries one.
+        def test_user_tier_config_path_override_with_stubbed_home
+          Dir.mktmpdir("coworker-exec") do |dir|
+            home = File.join(dir, "home")
+            user_tier = File.join(home, ".ace", "coworker")
+            FileUtils.mkdir_p(user_tier)
+            File.write(File.join(user_tier, "config.yml"),
+              "config_path: .ace-local/coworker/worker.yml\n")
+            worktree = File.join(dir, "worktree")
+            FileUtils.mkdir_p(worktree)
+            worker = File.join(worktree, ".ace-local", "coworker", "worker.yml")
+            FileUtils.mkdir_p(File.dirname(worker))
+            File.write(worker, "role: worker\ntask: 8xg.t.aaa\nassignment: abc123\n")
+
+            old_home = ENV["HOME"]
+            ENV["HOME"] = home
+            begin
+              result = WorktreeExecutorProbe.new(project_root: worktree,
+                runner: FakeRunner.new(out: "[]")).probe(worktree)
+            ensure
+              ENV["HOME"] = old_home
+            end
+
+            assert_equal "abc123", result[:config]["assignment"]
+          end
+        end
+
         def test_assignments_failure_raises_specific_error
           Dir.mktmpdir("coworker-exec") do |dir|
             probe = WorktreeExecutorProbe.new(project_root: dir,

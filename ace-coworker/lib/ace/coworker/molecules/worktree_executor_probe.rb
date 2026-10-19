@@ -72,18 +72,26 @@ module Ace
         # worktree (project `.ace` tiers from the worktree up to its root,
         # then the user tier) — the same file set and order
         # ConfigResolver#resolve_file uses, restricted to the tiers that
-        # can override `config_path`. A layer whose YAML is not a
-        # mapping (e.g. a list) is skipped — it cannot contribute
-        # config_path overrides, and wiping the already-merged lower
-        # tiers would silently drop valid configuration. An unreadable
-        # cascade falls back to the loader's default config location.
+        # can override `config_path`. A layer that cannot contribute —
+        # YAML that is not a mapping (e.g. a list) or that fails to
+        # parse (e.g. unresolved merge-conflict markers in the
+        # worktree's own `.ace/coworker/config.yml`) — is skipped
+        # per-layer, mirroring the non-mapping case: wiping the
+        # already-merged lower tiers would silently drop a valid
+        # `config_path` override and hide a commissioned executor.
+        # A cascade that cannot even be enumerated falls back to the
+        # loader's default config location.
         def cascade_defaults(worktree_path)
           finder = Ace::Support::Config::Molecules::ConfigFinder.new(
             file_patterns: CASCADE_PATTERNS, start_path: worktree_path)
           layers = finder.find_all.select(&:exists).map(&:path)
           merged = {}
           layers.reverse_each do |path|
-            data = Ace::Support::Config::Molecules::YamlLoader.load_file(path).data
+            data = begin
+              Ace::Support::Config::Molecules::YamlLoader.load_file(path).data
+            rescue StandardError
+              next
+            end
             merged = Ace::Support::Config::Atoms::DeepMerger.merge(merged, data) if data.is_a?(Hash)
           end
           merged

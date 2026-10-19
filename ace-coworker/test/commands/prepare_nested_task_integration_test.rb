@@ -4,8 +4,6 @@ require_relative "../test_helper"
 require_relative "../support/coworker_fixture"
 require "open3"
 require "json"
-require "digest"
-require "ace/git/worktree"
 
 module Ace
   module Coworker
