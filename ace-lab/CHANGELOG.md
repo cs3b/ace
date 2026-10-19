@@ -136,6 +136,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Review fix: `check_adapters` status precedence — a malformed adapter
+  configuration (not a mapping) stays a decidable FAIL even when PATH
+  is unset (only the command probe may degrade to unknown); the dead
+  `tool_reason` helper introduced with the tri-state probe is removed;
+  and two review-round acceptance scenarios (gitignore-symlink
+  read-through refusal, verify-stage crash classification) were
+  accidentally defined outside their minitest classes and never
+  executed — they now run (and pass) in the package suite.
+
 - Critical review fix: `ProjectAdd`'s privileged ownership propagation
   called `FileUtils.chown_R` with the wrong argument order (path
   passed as the user, the gid Integer as the file list), so every
