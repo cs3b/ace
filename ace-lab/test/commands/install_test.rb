@@ -64,7 +64,7 @@ module Ace
           # paths under the tmpdir, with a real GrantProvisioner write.
           # A project-add organism that succeeds without touching git.
           class FakeProjectAdd
-            def call(id:, path:, remote:, label:, owner:, dry_run:)
+            def call(id:, path:, remote:, label:, owner:, hitl_adapters: [], dry_run:)
               {"ok" => true, "dry_run" => dry_run, "project" => id, "path" => path,
                "remote" => remote,
                "repository" => {"path" => path, "status" => "created", "message" => nil},

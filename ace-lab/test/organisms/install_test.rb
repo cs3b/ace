@@ -29,8 +29,9 @@ module Organisms
         @calls = []
       end
 
-      def call(id:, path:, remote:, label:, owner:, dry_run:)
-        @calls << {id: id, path: path, remote: remote, label: label, owner: owner, dry_run: dry_run}
+      def call(id:, path:, remote:, label:, owner:, hitl_adapters: [], dry_run:)
+        @calls << {id: id, path: path, remote: remote, label: label, owner: owner,
+          hitl_adapters: hitl_adapters, dry_run: dry_run}
         @reports_by_id.fetch(id)
       end
     end
@@ -141,9 +142,10 @@ module Organisms
         assert_equal [false], prepare.calls
         assert_equal [{id: "atlas", path: File.join(dir, "atlas"),
                        remote: File.join(dir, "origin.git"), label: "Atlas platform", owner: nil,
-                       dry_run: false},
+                       hitl_adapters: [], dry_run: false},
                       {id: "borealis", path: File.join(dir, "borealis"),
-                       remote: File.join(dir, "origin.git"), label: nil, owner: nil, dry_run: false}],
+                       remote: File.join(dir, "origin.git"), label: nil, owner: nil,
+                       hitl_adapters: [], dry_run: false}],
           project_add.calls
         assert_equal true, report["verify"]["ready"]
         assert_empty report["adapters"]
@@ -395,6 +397,47 @@ module Organisms
           config = YAML.load_file(File.join(dir, "labs", "atlas", ".ace", "lab", "config.yml"))
           assert_equal 1, config["topology"]["projects"].size
         end
+      end
+    end
+
+    # FINAL-LAB2: the declared adapters are threaded into every project
+    # so the runtime HITL routes are installed per execution context.
+    def test_declared_hitl_adapters_are_passed_to_every_project
+      prepare = FakePrepare.new(OK_PREPARE)
+      project_add = FakeProjectAdd.new("atlas" => ok_project("atlas"),
+        "borealis" => ok_project("borealis"))
+      manifest = manifest_yaml("/tmp/x") + <<~YAML
+        adapters:
+          - id: console
+            kind: hitl
+            config:
+              runtime: tmux
+      YAML
+
+      with_install(manifest: manifest, prepare: prepare, project_add: project_add) do |organism|
+        organism.call
+
+        expected = [{"id" => "console", "kind" => "hitl", "command" => nil,
+                     "config" => {"runtime" => "tmux"}}]
+        assert project_add.calls.all? { |call| call[:hitl_adapters] == expected }
+      end
+    end
+
+    # A directory declared AS the exact project path is that project's
+    # owner too — the longest-prefix match must not exclude equality.
+    def test_exact_project_directory_declares_the_project_owner
+      dir = Dir.mktmpdir
+      begin
+        manifest = {"directories" => [
+          {"path" => File.join(dir, "labs"), "owner" => "parent-owner", "mode" => "0750"},
+          {"path" => File.join(dir, "labs", "atlas"), "owner" => "atlas-owner", "mode" => "0750"}
+        ]}
+        install = Ace::Lab::Organisms::Install.new(manifest_path: "/etc/lab/ace-lab/install.yml")
+
+        assert_equal "atlas-owner", install.send(:project_owner, manifest, File.join(dir, "labs", "atlas"))
+        assert_equal "parent-owner", install.send(:project_owner, manifest, File.join(dir, "labs", "borealis"))
+      ensure
+        FileUtils.remove_entry(dir)
       end
     end
 

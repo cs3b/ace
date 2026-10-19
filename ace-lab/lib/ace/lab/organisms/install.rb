@@ -21,9 +21,11 @@ module Ace
       #      with a classified error and zero writes;
       #   2. `Prepare` (L8.1): accounts → directories → keys → roles;
       #   3. `ProjectAdd` (L8.2) per declared project: repository,
-      #      private `_overseer`, project registry, executor ownership
-      #      propagation — each project is isolated; one failing
-      #      project does not block the others;
+      #      private `_overseer`, project registry, runtime HITL route
+      #      configuration (the manifest's `kind: hitl` adapters
+      #      projected into `.ace/hitl/config.yml`, FINAL-LAB2) and
+      #      executor ownership propagation — each project is isolated;
+      #      one failing project does not block the others;
       #   4. `GrantProvisioner`: trusted-tier principal grants that
       #      make the installed projects visible to `ace-lab projects`
       #      and `ace-overseer projects`;
@@ -86,6 +88,7 @@ module Ace
                 id: project["id"], path: project["path"],
                 remote: project["remote"], label: project["label"],
                 owner: project_owner(manifest, project["path"]),
+                hitl_adapters: manifest["adapters"],
                 dry_run: effective_dry_run
               )
             else
@@ -157,13 +160,15 @@ module Ace
 
         # The project's target executor account: the owner of the
         # declared directory the project lives in (longest prefix
-        # match); projects outside any declared directory are left
-        # ownership-neutral.
+        # match; a directory declared AS the exact project path matches
+        # its own project too); projects outside any declared directory
+        # are left ownership-neutral.
         def project_owner(manifest, path)
           candidates = manifest["directories"].filter_map do |directory|
             owner = directory["owner"]
             prefix = directory["path"].to_s
-            owner && path.start_with?("#{prefix}/") ? [prefix.length, owner] : nil
+            matches = path.start_with?("#{prefix}/") || path == prefix
+            owner && matches ? [prefix.length, owner] : nil
           end
           candidates.max_by(&:first)&.last
         end

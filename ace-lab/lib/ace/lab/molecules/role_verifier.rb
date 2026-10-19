@@ -51,11 +51,12 @@ module Ace
         # Readiness probe for a project/worktree directory used by a
         # target executor (task 8xg.t.sbz.7.4, LAB-2): every ancestor of
         # the RESOLVED path must grant the account search (x) permission
-        # and the directory itself must grant read+write (the executor
-        # clones and provisions worktrees inside it). Returns nil when
-        # the account can work in the directory, or a concrete reason.
-        # Same governing-class permission logic as the instruction
-        # checks so the two can never drift apart.
+        # and the directory itself must grant read+write+search (the
+        # executor clones and provisions worktrees inside it — a
+        # directory without x on itself is unusable however rw it is).
+        # Returns nil when the account can work in the directory, or a
+        # concrete reason. Same governing-class permission logic as the
+        # instruction checks so the two can never drift apart.
         def directory_access_reason(path, entry)
           resolved = File.realpath(path)
           current = File.dirname(resolved)
@@ -67,7 +68,34 @@ module Ace
             current = File.dirname(current)
           end
           stat = File.stat(resolved)
-          return work_denied(resolved, entry) if (permission_bits(stat, entry) & 0o6) != 0o6
+          return work_denied(resolved, entry) if (permission_bits(stat, entry) & 0o7) != 0o7
+
+          nil
+        rescue Errno::ENOENT, Errno::ENOTDIR, Errno::EACCES
+          "'#{path}' does not exist or cannot be inspected for account '#{entry.name}'"
+        end
+
+        # Readiness probe for an executable the target executor must be
+        # able to RUN (PR #393 final audit, FINAL-LAB3): every ancestor
+        # of the RESOLVED path must grant search (x) and the file itself
+        # must be a regular file granting the account execute through
+        # its governing permission class — an installer-owned 0700
+        # executable is NOT available to a different-uid executor.
+        # Returns nil when the account can execute it, or a concrete
+        # reason (same governing-class logic as the other probes).
+        def executable_access_reason(path, entry)
+          resolved = File.realpath(path)
+          current = File.dirname(resolved)
+          loop do
+            stat = File.stat(current)
+            return search_denied(current, entry) if (permission_bits(stat, entry) & 0o1).zero?
+            break if current == "/"
+
+            current = File.dirname(current)
+          end
+          stat = File.stat(resolved)
+          return "'#{resolved}' is not a regular file" unless stat.file?
+          return execute_denied(resolved, entry) if (permission_bits(stat, entry) & 0o1).zero?
 
           nil
         rescue Errno::ENOENT, Errno::ENOTDIR, Errno::EACCES
@@ -82,8 +110,13 @@ module Ace
         end
 
         def work_denied(directory, entry)
-          "'#{directory}' denies read/write permission to account '#{entry.name}'; the target " \
-            "executor cannot work inside the project"
+          "'#{directory}' denies read/write/search permission to account '#{entry.name}'; the " \
+            "target executor cannot work inside the project"
+        end
+
+        def execute_denied(file, entry)
+          "'#{file}' denies execute permission to account '#{entry.name}'; the target " \
+            "executor cannot run it"
         end
 
         def protocol?(instructions)

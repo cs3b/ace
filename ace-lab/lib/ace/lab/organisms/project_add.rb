@@ -4,6 +4,8 @@ require_relative "../errors"
 require_relative "../molecules/repository_provisioner"
 require_relative "../molecules/overseer_provisioner"
 require_relative "../molecules/project_registry"
+require_relative "../molecules/hitl_routes"
+require "etc"
 
 module Ace
   module Lab
@@ -28,7 +30,11 @@ module Ace
 
         def initialize(runner: nil, account_lookup: nil, chown: nil, dry_run: false)
           @runner = runner
-          @account_lookup = account_lookup
+          # Production resolves declared owners through the REAL system
+          # passwd (same seam as RoleVerifier/Verify); only tests inject
+          # a lookup (PR #393 final audit, FINAL-LAB1: a nil default
+          # classified every declared owner as nonexistent).
+          @account_lookup = account_lookup || method(:lookup_passwd)
           @chown = chown
           @dry_run = dry_run
         end
@@ -40,10 +46,13 @@ module Ace
         # @param owner [String, nil] target executor account the
         #   project tree must belong to when install runs privileged
         #   (root); nil leaves ownership untouched
+        # @param hitl_adapters [Array<Hash>] normalized manifest
+        #   adapters; the `kind: hitl` declarations are projected into
+        #   the project's runtime HITL route configuration (FINAL-LAB2)
         # @param dry_run [Boolean, nil] per-call override
         # @return [Hash] report: ok / dry_run / project / repository /
-        #   overseer / registry / owner
-        def call(id:, path:, remote: nil, label: nil, owner: nil, dry_run: nil)
+        #   overseer / registry / hitl / owner
+        def call(id:, path:, remote: nil, label: nil, owner: nil, hitl_adapters: [], dry_run: nil)
           effective_dry_run = dry_run.nil? ? self.dry_run : dry_run
           repository = Molecules::RepositoryProvisioner.new(runner: @runner, dry_run: effective_dry_run)
             .call(path: path, remote: remote)
@@ -66,14 +75,22 @@ module Ace
           end
 
           converged = [repository, overseer, registry].none? { |item| item["status"] == "failed" }
-          ownership = if !converged
+          hitl = if converged
+            Molecules::HitlRoutes.new.install(
+              root: path, adapters: hitl_adapters, dry_run: effective_dry_run
+            )
+          else
+            skipped(".ace/hitl/config.yml", "repository not ready; fix the repository step first")
+          end
+
+          ownership = if [repository, overseer, registry, hitl].any? { |item| item["status"] == "failed" }
             skipped_owner(owner, "repository not ready; fix the repository step first")
           else
             propagate_owner(path, owner, effective_dry_run)
           end
 
           {
-            "ok" => [repository, overseer, registry, ownership].none? { |item| item["status"] == "failed" },
+            "ok" => [repository, overseer, registry, hitl, ownership].none? { |item| item["status"] == "failed" },
             "dry_run" => effective_dry_run,
             "project" => id,
             "path" => path,
@@ -81,6 +98,7 @@ module Ace
             "repository" => repository,
             "overseer" => overseer,
             "registry" => registry,
+            "hitl" => hitl,
             "owner" => ownership
           }
         end
@@ -107,9 +125,11 @@ module Ace
                 "the executor's actual access)")
           end
 
-          current = File.stat(path)
-          return base.merge("status" => "kept", "message" => nil) if current.uid == entry.uid
-
+          # A root uid match on the project root proves nothing about
+          # generated children (root may have just created
+          # `.ace/lab/config.yml` / `.ace/hitl/config.yml` mode 0600
+          # with its own uid inside), so a root installer ALWAYS
+          # converges the whole tree instead of skipping.
           begin
             chown.call(entry.uid, entry.gid, path)
           rescue SystemCallError, ArgumentError, TypeError => e
@@ -134,6 +154,12 @@ module Ace
 
         def skipped(location, message)
           {"location" => location, "status" => "failed", "message" => message}
+        end
+
+        def lookup_passwd(username)
+          Etc.getpwnam(username)
+        rescue ArgumentError
+          nil
         end
       end
     end

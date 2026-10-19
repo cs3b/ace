@@ -495,7 +495,7 @@ module Organisms
 
         repository = check(report, "repositories")
         assert_equal "fail", repository["status"]
-        assert_match(/denies read\/write permission/, repository["reason"])
+        assert_match(/denies read\/write\/search permission/, repository["reason"])
         assert_equal false, report["ready"]
         # the writable sibling project passes its own check — failure
         # never hides healthy data elsewhere in the report
@@ -629,6 +629,97 @@ module Organisms
       end
     end
 
+    # The default macOS tmpdir lives behind a 0700 per-user folder a
+    # different-uid executor cannot search; the FINAL-LAB3 reproduction
+    # needs publicly searchable ancestors (/tmp).
+    def with_public_lab(**args, &block)
+      Dir.stub(:tmpdir, "/tmp") { with_lab(**args, &block) }
+    end
+
+    # --- FINAL-LAB2: declared HITL adapters must be usable installed
+    # configuration, not just schema-checked declarations --------------
+
+    def test_hitl_adapter_declarations_become_runtime_routes_in_every_project
+      with_lab(extra_manifest: "adapters:\n  - id: console\n    kind: hitl\n    config:\n      runtime: tmux") do |fixture|
+        report = install_run(fixture, lookup_for(fixture))
+
+        assert report["ok"], report["verify"].inspect
+        %w[atlas borealis].each do |project|
+          path = File.join(fixture["labs"], project, ".ace", "hitl", "config.yml")
+          assert File.file?(path), "#{path} missing"
+          document = YAML.safe_load_file(path)
+          assert_equal [{"adapter" => "console", "runtime" => "tmux"}],
+            document.dig("hitl", "adapters", "routes")
+          assert_equal "pass", report["verify"]["checks"]["adapters"].first["status"]
+        end
+      end
+    end
+
+    def test_missing_hitl_route_configuration_blocks_readiness
+      with_lab(extra_manifest: "adapters:\n  - id: console\n    kind: hitl\n    config: {}") do |fixture|
+        assert install_run(fixture, lookup_for(fixture))["ok"]
+        File.delete(File.join(fixture["labs"], "atlas", ".ace", "hitl", "config.yml"))
+
+        report = verify_run(fixture)
+
+        assert_equal false, report["ready"]
+        adapter = check(report, "adapters")
+        assert_equal "fail", adapter["status"]
+        assert_match(/no HITL adapter routes are configured/, adapter["reason"])
+        assert_match(/project 'atlas'/, adapter["reason"])
+        # failure beside healthy data
+        assert_equal "pass", check(report, "accounts")["status"]
+        assert_equal "pass", check(report, "repositories")["status"]
+      end
+    end
+
+    def test_hitl_route_configuration_that_violates_the_runtime_contract_fails
+      with_lab(extra_manifest: "adapters:\n  - id: console\n    kind: hitl\n    config: {}") do |fixture|
+        assert install_run(fixture, lookup_for(fixture))["ok"]
+        path = File.join(fixture["labs"], "atlas", ".ace", "hitl", "config.yml")
+        File.write(path, YAML.dump({"hitl" => {"adapters" => {"routes" => [{"route" => "stray"}]}}}))
+
+        report = verify_run(fixture)
+
+        assert_equal false, report["ready"]
+        adapter = check(report, "adapters")
+        assert_equal "fail", adapter["status"]
+        assert_match(/missing required 'adapter'/, adapter["reason"])
+      end
+    end
+
+    # --- FINAL-LAB3: tool availability is judged for the target
+    # executor, never for the installing account alone ---------------
+
+    def test_installer_only_executable_tool_is_not_ready_for_the_target_executor
+      with_public_lab do |fixture|
+        assert install_run(fixture, lookup_for(fixture))["ok"]
+        tool = File.join(fixture["dir"], "installer-tool")
+        File.write(tool, "#!/bin/sh\nexit 0\n")
+        File.chmod(0o700, tool)
+        document = YAML.safe_load_file(fixture["manifest"])
+        document["tools"] = [tool]
+        document["keys"] = []
+        document["directories"] = []
+        File.chmod(0o755, fixture["dir"])
+        File.chmod(0o755, fixture["labs"])
+        %w[atlas borealis].each { |project| File.chmod(0o777, File.join(fixture["labs"], project)) }
+        File.write(fixture["manifest"], YAML.dump(document))
+        entry = FakeEntry.new(name: "ace-worker", uid: Process.uid + 20000, gid: Process.gid,
+          dir: fixture["home"], shell: "/bin/sh")
+
+        report = verify_run(fixture, lookup: ->(_) { entry })
+
+        refute report["ready"], "installer-only executable passed as ready: #{report['checks']['tools'].inspect}"
+        tool_check = report["checks"]["tools"].first
+        assert_equal "fail", tool_check["status"]
+        assert_match(/denies execute permission to account 'ace-worker'/, tool_check["reason"])
+        # every other check still passes for the different-uid executor
+        assert_equal "pass", check(report, "accounts")["status"]
+        assert_equal "pass", check(report, "repositories")["status"]
+      end
+    end
+
     # --- LAB-6: malformed registry is a classified per-project failure --
 
     def test_malformed_registry_must_report_failure_without_killing_the_report
@@ -681,12 +772,12 @@ class VerifyProbeTest < Minitest::Test
     old = ENV["PATH"]
     ENV["PATH"] = ""
     begin
-      assert_equal :unknown, organism.send(:path_probe, "git")
+      assert_equal :unknown, organism.send(:availability_probe, "git", []).first
     ensure
       ENV["PATH"] = old
     end
-    assert_equal :pass, organism.send(:path_probe, "git")
-    assert_equal :fail, organism.send(:path_probe, "definitely-not-a-lab-tool-xyz")
+    assert_equal :pass, organism.send(:availability_probe, "git", []).first
+    assert_equal :fail, organism.send(:availability_probe, "definitely-not-a-lab-tool-xyz", []).first
   end
 
   def test_root_installer_never_executes_the_project_binstub

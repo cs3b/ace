@@ -43,7 +43,7 @@ module Ace
             report = JSON.parse(out)
             assert_equal "atlas", report["project"]
             assert report["ok"]
-            assert_equal %w[repository overseer registry owner],
+            assert_equal %w[repository overseer registry hitl owner],
               report.keys - %w[ok dry_run project path remote]
           end
 

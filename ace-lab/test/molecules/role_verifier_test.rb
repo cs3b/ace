@@ -304,5 +304,96 @@ module Molecules
         File.chmod(0o600, path) if File.exist?(path)
       end
     end
+
+    # --- directory access (LAB-2) and executable access (FINAL-LAB3) --
+
+    # A directory without the search bit on ITSELF is unusable to the
+    # target executor however read/write it is (the audit's secondary
+    # access-mask concern): rw alone must be denied.
+    def test_rw_directory_without_search_bit_is_denied_for_the_executor
+      Dir.mktmpdir("pr393", "/tmp") do |dir|
+        File.chmod(0o755, dir)
+        project = File.join(dir, "atlas")
+        Dir.mkdir(project)
+        File.chown(nil, Process.gid, project)
+        File.chmod(0o666, project)
+        other = FakeEntry.new(name: "ace-other", uid: Process.uid + 1, gid: Process.gid, dir: "/x")
+
+        reason = verifier(lookup: ->(_name) { other }, group_source: ->(_name) { [] })
+          .directory_access_reason(project, other)
+
+        assert_match(/denies read\/write\/search permission to account 'ace-other'/, reason)
+      ensure
+        File.chmod(0o755, project) if File.directory?(project)
+      end
+    end
+
+    def test_searchable_rwx_directory_passes_for_the_executor
+      Dir.mktmpdir("pr393", "/tmp") do |dir|
+        File.chmod(0o755, dir)
+        project = File.join(dir, "atlas")
+        Dir.mkdir(project)
+        File.chmod(0o777, project)
+        other = FakeEntry.new(name: "ace-other", uid: Process.uid + 1, gid: Process.gid + 1, dir: "/x")
+
+        reason = verifier(lookup: ->(_name) { other }, group_source: ->(_name) { [] })
+          .directory_access_reason(project, other)
+
+        assert_nil reason
+      end
+    end
+
+    # FINAL-LAB3: an installer-owned 0700 executable denies the
+    # different-uid executor through its governing class — exactly the
+    # false-readiness the final audit reproduced.
+    def test_installer_only_executable_denies_the_target_executor
+      Dir.mktmpdir("pr393", "/tmp") do |dir|
+        File.chmod(0o755, dir)
+        tool = File.join(dir, "tool")
+        File.write(tool, "#!/bin/sh\n")
+        File.chmod(0o700, tool)
+        other = FakeEntry.new(name: "ace-other", uid: Process.uid + 1, gid: Process.gid + 1, dir: "/x")
+
+        reason = verifier(lookup: ->(_name) { other }, group_source: ->(_name) { [] })
+          .executable_access_reason(tool, other)
+
+        assert_match(/denies execute permission to account 'ace-other'/, reason)
+      end
+    end
+
+    def test_world_executable_tool_passes_for_the_target_executor
+      Dir.mktmpdir("pr393", "/tmp") do |dir|
+        File.chmod(0o755, dir)
+        tool = File.join(dir, "tool")
+        File.write(tool, "#!/bin/sh\n")
+        File.chmod(0o755, tool)
+        other = FakeEntry.new(name: "ace-other", uid: Process.uid + 1, gid: Process.gid + 1, dir: "/x")
+
+        reason = verifier(lookup: ->(_name) { other }, group_source: ->(_name) { [] })
+          .executable_access_reason(tool, other)
+
+        assert_nil reason
+      end
+    end
+
+    def test_executable_behind_unsearchable_directory_is_denied_for_the_executor
+      Dir.mktmpdir("pr393", "/tmp") do |dir|
+        File.chmod(0o755, dir)
+        hidden = File.join(dir, "hidden")
+        Dir.mkdir(hidden)
+        tool = File.join(hidden, "tool")
+        File.write(tool, "#!/bin/sh\n")
+        File.chmod(0o755, tool)
+        File.chmod(0o700, hidden)
+        other = FakeEntry.new(name: "ace-other", uid: Process.uid + 1, gid: Process.gid + 1, dir: "/x")
+
+        reason = verifier(lookup: ->(_name) { other }, group_source: ->(_name) { [] })
+          .executable_access_reason(tool, other)
+
+        assert_match(/denies search permission to account 'ace-other'/, reason)
+      ensure
+        File.chmod(0o755, hidden) if File.directory?(hidden)
+      end
+    end
   end
 end

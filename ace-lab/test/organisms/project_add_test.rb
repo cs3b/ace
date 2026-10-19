@@ -2,6 +2,7 @@
 
 require_relative "../test_helper"
 require "open3"
+require "etc"
 
 module Organisms
   class ProjectAddTest < Minitest::Test
@@ -163,6 +164,109 @@ module Organisms
       assert report["ok"], report.inspect
       assert_equal "propagated", report["owner"]["status"]
       assert_equal [[4242, 1042, @path]], chowned
+    end
+
+    # FINAL-LAB1: the production constructor must resolve a declared
+    # owner through the REAL system passwd — a nil default lookup
+    # classified every existing owner account as nonexistent. Reproduce
+    # with the actual current OS account (no injected lookup seam).
+    def test_production_constructor_resolves_the_real_declared_owner
+      owner = Etc.getpwuid(Process.uid).name
+
+      report = Ace::Lab::Organisms::ProjectAdd.new.call(
+        id: "atlas", path: @path, remote: @source, owner: owner
+      )
+
+      assert report["ok"], report.inspect
+      refute_equal "failed", report["owner"]["status"]
+    end
+
+    # A root uid match on the project root proves nothing about the
+    # generated children (root may have created `.ace/lab/config.yml`
+    # mode 0600 inside with its own uid): propagation must always
+    # converge the tree, never skip on a matching root uid.
+    def test_root_installer_repropagates_even_when_the_root_already_has_the_target_uid
+      entry = LabTestHelper::FakeEntry.new(name: "ace-worker", uid: Process.uid,
+        gid: Process.gid, dir: File.join(@tmp, "home"), shell: "/bin/zsh")
+      chowned = []
+      organism = Ace::Lab::Organisms::ProjectAdd.new(
+        account_lookup: ->(_) { entry },
+        chown: ->(uid, gid, path) { chowned << [uid, gid, path] }
+      )
+
+      report = nil
+      Process.stub :uid, 0 do
+        report = organism.call(id: "atlas", path: @path, remote: @source, owner: "ace-worker")
+      end
+
+      assert report["ok"], report.inspect
+      assert_equal "propagated", report["owner"]["status"]
+      assert_equal [[Process.uid, Process.gid, @path]], chowned
+    end
+
+    # --- FINAL-LAB2: hitl declarations become runtime routes ----------
+
+    def test_hitl_adapter_declarations_install_runtime_routes
+      adapters = [{"id" => "console", "kind" => "hitl", "command" => nil,
+                   "config" => {"runtime" => "tmux"}}]
+
+      report = organism.call(id: "atlas", path: @path, remote: @source, hitl_adapters: adapters)
+
+      assert report["ok"], report.inspect
+      assert_equal "created", report["hitl"]["status"]
+      document = YAML.safe_load_file(File.join(@path, ".ace", "hitl", "config.yml"))
+      assert_equal [{"adapter" => "console", "runtime" => "tmux"}],
+        document.dig("hitl", "adapters", "routes")
+    end
+
+    def test_re_add_keeps_converged_hitl_routes_and_preserves_foreign_settings
+      adapters = [{"id" => "console", "kind" => "hitl", "command" => nil, "config" => {}}]
+      organism.call(id: "atlas", path: @path, remote: @source, hitl_adapters: adapters)
+      path = File.join(@path, ".ace", "hitl", "config.yml")
+      document = YAML.safe_load_file(path)
+      document["hitl"]["root_dir"] = ".ace-local/hitl"
+      File.write(path, YAML.dump(document))
+
+      report = organism.call(id: "atlas", path: @path, remote: @source, hitl_adapters: adapters)
+
+      assert report["ok"], report.inspect
+      assert_equal "exists", report["hitl"]["status"]
+      document = YAML.safe_load_file(path)
+      assert_equal [{"adapter" => "console"}], document.dig("hitl", "adapters", "routes")
+      assert_equal ".ace-local/hitl", document.dig("hitl", "root_dir")
+    end
+
+    def test_unparseable_hitl_config_is_refused_not_overwritten
+      adapters = [{"id" => "console", "kind" => "hitl", "command" => nil, "config" => {}}]
+      path = File.join(@path, ".ace", "hitl", "config.yml")
+      organism.call(id: "atlas", path: @path, remote: @source)
+      FileUtils.mkdir_p(File.dirname(path))
+      File.write(path, "::not yaml::\n\t- broken")
+
+      report = organism.call(id: "atlas", path: @path, remote: @source, hitl_adapters: adapters)
+
+      refute report["ok"], report.inspect
+      assert_equal "failed", report["hitl"]["status"]
+      assert_match(/could not be parsed as YAML/, report["hitl"]["message"])
+    end
+
+    def test_without_hitl_adapters_the_step_is_skipped
+      report = add
+
+      assert report["ok"]
+      assert_equal "skipped", report["hitl"]["status"]
+      assert_nil report["hitl"]["message"]
+    end
+
+    def test_dry_run_predicts_hitl_routes_without_writing
+      adapters = [{"id" => "console", "kind" => "hitl", "command" => nil, "config" => {}}]
+
+      report = organism.call(id: "atlas", path: @path, remote: @source,
+        hitl_adapters: adapters, dry_run: true)
+
+      assert report["ok"]
+      assert_equal "would_create", report["hitl"]["status"]
+      refute File.exist?(File.join(@path, ".ace", "hitl", "config.yml"))
     end
 
     def test_no_declared_owner_leaves_ownership_untouched

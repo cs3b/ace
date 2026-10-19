@@ -4,6 +4,7 @@ require_relative "../errors"
 require_relative "../molecules/install_manifest_loader"
 require_relative "../molecules/key_provisioner"
 require_relative "../molecules/role_verifier"
+require_relative "../molecules/hitl_routes"
 require_relative "../molecules/caller_authorizer"
 require_relative "../atoms/topology_schema"
 require "open3"
@@ -32,9 +33,11 @@ module Ace
       # an unreachable origin, a principal without grants or a
       # committable `_overseer` folder each block lab readiness.
       # `unknown` (a network remote the read-only verifier does not
-      # dial) is reported and counted but does not block: it is not a
-      # failure, and pretending it were one would make `verify`
-      # unusable offline.
+      # dial, an unset PATH, a missing resolver) is reported and
+      # counted but does not block: it is not a failure, and pretending
+      # it were one would make `verify` unusable offline. An unknown is
+      # never a verified pass either — the check reports `unknown`, not
+      # `pass`, so unverified availability never counts as proven.
       #
       # Because verification reads only converged artifacts, a fresh
       # install and a resumed one verify identically — there is no
@@ -93,8 +96,8 @@ module Ace
             "grants" => check_grants(manifest),
             "registry" => check_registry(manifest),
             "overseer" => check_overseer(manifest),
-            "adapters" => check_adapters(manifest),
-            "tools" => check_tools(manifest)
+            "adapters" => check_adapters(manifest, executors),
+            "tools" => check_tools(manifest, executors)
           }
           flat = checks.values.flatten(1)
           {
@@ -457,34 +460,46 @@ module Ace
 
         # Declared communication/HITL adapters (task 8xg.t.sbz.7.2/.7.4,
         # LAB-3): configuration validity is re-derived from the trusted
-        # manifest (the single state owner for the declaration) and an
+        # manifest (the single state owner for the declaration), an
         # adapter that names a local command is probed for availability
-        # — a broken adapter blocks readiness with a classified failure,
-        # never a crash. Network reachability stays out of scope (L9).
-        def check_adapters(manifest)
+        # FOR THE TARGET EXECUTORS (FINAL-LAB3), and a `kind: hitl`
+        # adapter must be projected into the runtime route configuration
+        # (`hitl.adapters.routes` in every declared project's
+        # `.ace/hitl/config.yml`, FINAL-LAB2) — an adapter that is
+        # schema-checked but not usable by the runtime blocks readiness
+        # with a classified failure, never a crash. Network reachability
+        # stays out of scope (L9).
+        def check_adapters(manifest, executors = [])
           manifest["adapters"].map do |adapter|
             config_reason = ("adapter '#{adapter['id']}' configuration is not a mapping" \
               unless adapter["config"].is_a?(Hash))
-            command_reason = if config_reason.nil? && adapter["command"]
-              adapter_command_reason(adapter)
+            probe = if config_reason.nil? && adapter["command"]
+              availability_probe(adapter["command"], executors).first
+            else
+              :pass
             end
-            reason = config_reason || command_reason
+            route_reason = if config_reason.nil? && adapter["kind"] == "hitl"
+              hitl_route_reason(adapter, manifest)
+            end
+            reason = config_reason ||
+              (probe != :pass ? adapter_command_reason(adapter, executors) : nil) ||
+              route_reason
             note = if reason.nil? && adapter["command"].nil?
-              "configured (no local command declared; network reachability is out of scope)"
+              if adapter["kind"] == "hitl"
+                "configured (route installed in every project; no local command declared; " \
+                  "network reachability is out of scope)"
+              else
+                "configured (no local command declared; network reachability is out of scope)"
+              end
             end
             # A config-shape failure is decidable regardless of PATH:
             # it stays FAIL; only the command probe degrades to unknown
             # under an unset PATH.
-            probe = if adapter["command"] && config_reason.nil?
-              path_probe(adapter["command"])
-            else
-              :pass
-            end
             status = if config_reason
               FAIL
             elsif probe == :unknown
               UNKNOWN
-            elsif command_reason
+            elsif reason
               FAIL
             else
               PASS
@@ -494,17 +509,38 @@ module Ace
           end
         end
 
-        # Required tools (task 8xg.t.sbz.7.4, LAB-3): presence check
-        # only — the tool must resolve to an executable; a missing tool
+        # A `kind: hitl` adapter's route must be installed in EVERY
+        # declared execution context and the resulting route list must
+        # satisfy the runtime loader's contract (HitlRoutes validates
+        # the same rules the ace-hitl route loader enforces).
+        def hitl_route_reason(adapter, manifest)
+          return nil if manifest["projects"].empty?
+
+          expected = Molecules::HitlRoutes.expected_routes([adapter]).first
+          failures = manifest["projects"].filter_map do |project|
+            reason = Molecules::HitlRoutes.config_reason(root: project["path"], expected: expected)
+            reason ? "project '#{project['id']}': #{reason}" : nil
+          end
+          failures.empty? ? nil : failures.join("; ")
+        end
+
+        # Required tools (task 8xg.t.sbz.7.4, LAB-3, FINAL-LAB3): the
+        # tool must resolve to an executable the TARGET EXECUTORS can
+        # run — a missing tool, or one only the installer can execute,
         # blocks readiness. No execution, no network.
-        def check_tools(manifest)
+        def check_tools(manifest, executors = [])
           manifest["tools"].map do |tool|
-            case path_probe(tool)
+            status, detail = availability_probe(tool, executors)
+            case status
             when :pass
               {"tool" => tool, "status" => PASS, "reason" => nil}
             when :fail
-              {"tool" => tool, "status" => FAIL,
-               "reason" => "required tool '#{tool}' is not available (not found on PATH)"}
+              reason = if detail
+                "required tool '#{tool}' is not available for the target executor (#{detail})"
+              else
+                "required tool '#{tool}' is not available (not found on PATH)"
+              end
+              {"tool" => tool, "status" => FAIL, "reason" => reason}
             else
               {"tool" => tool, "status" => UNKNOWN,
                "reason" => "PATH is unset; cannot probe tool '#{tool}' availability"}
@@ -512,29 +548,58 @@ module Ace
           end
         end
 
-        # Resolve an executable without running it: a name containing a
-        # separator must be executable at that path; a bare name must
-        # resolve through PATH. An unset or empty PATH leaves the probe
-        # undecidable and yields unknown (never a false failure) — a
-        # minimal-PATH environment must not block readiness.
-        def path_probe(name)
+        # Resolve an executable without running it and judge it for the
+        # TARGET EXECUTORS (FINAL-LAB3): a name containing a separator
+        # must be a file executable at that path; a bare name must
+        # resolve through PATH (the installer's PATH is the best
+        # available locator — candidate files are then permission-checked
+        # per target executor through the same governing-class logic as
+        # the repository access checks). Without declared executors the
+        # installer's own executable bit decides (presence check only).
+        # An unset or empty PATH leaves the probe undecidable and yields
+        # unknown (never a false failure) — reported as UNKNOWN, never
+        # counted as a verified pass, and like every other unknown it
+        # does not block readiness by itself.
+        # @return [Array<(Symbol, String, nil)>] status (:pass/:fail/:
+        #   unknown) and the executor-denial detail for failures
+        def availability_probe(name, executors)
           if name.include?(File::SEPARATOR)
-            return File.executable?(name) && File.file?(name) ? :pass : :fail
+            candidates = File.file?(name) ? [name] : []
+          else
+            directories = (ENV["PATH"].to_s.split(File::PATH_SEPARATOR) - [""])
+            return [:unknown, nil] if directories.empty?
+
+            candidates = directories.filter_map do |directory|
+              candidate = File.join(directory, name)
+              File.file?(candidate) ? candidate : nil
+            end
+          end
+          return [:fail, nil] if candidates.empty?
+          if executors.empty?
+            return [candidates.any? { |candidate| File.executable?(candidate) } ? :pass : :fail, nil]
           end
 
-          directories = (ENV["PATH"].to_s.split(File::PATH_SEPARATOR) - [""])
-          return :unknown if directories.empty?
-          directories.any? do |directory|
-            candidate = File.join(directory, name)
-            File.file?(candidate) && File.executable?(candidate)
-          end ? :pass : :fail
+          verifier = Molecules::RoleVerifier.new(
+            account_lookup: @account_lookup, group_source: @group_source
+          )
+          denials = executors.filter_map do |entry|
+            reasons = candidates.map { |candidate| verifier.executable_access_reason(candidate, entry) }
+            reasons.compact.empty? ? nil : "executor '#{entry.name}': #{reasons.compact.first}"
+          end
+          denials.empty? ? [:pass, nil] : [:fail, denials.join("; ")]
         end
 
-        def adapter_command_reason(adapter)
-          case path_probe(adapter["command"])
+        def adapter_command_reason(adapter, executors = [])
+          status, detail = availability_probe(adapter["command"], executors)
+          case status
           when :fail
-            "adapter '#{adapter['id']}' command '#{adapter['command']}' is not available " \
-              "(not found on PATH); fix the adapter installation or the manifest declaration"
+            if detail
+              "adapter '#{adapter['id']}' command '#{adapter['command']}' is not available " \
+                "for the target executor (#{detail})"
+            else
+              "adapter '#{adapter['id']}' command '#{adapter['command']}' is not available " \
+                "(not found on PATH); fix the adapter installation or the manifest declaration"
+            end
           when :unknown
             "PATH is unset; cannot probe adapter '#{adapter['id']}' command availability"
           end

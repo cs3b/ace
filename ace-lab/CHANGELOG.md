@@ -136,6 +136,51 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- PR #393 final audit (FINAL-LAB1): `ProjectAdd` now resolves declared
+  project owners through the REAL system passwd lookup by default (the
+  same `Etc.getpwnam` seam `RoleVerifier`/`Verify` use). The previous
+  `account_lookup: nil` default made every declared owner
+  "nonexistent" in production installs — only tests injected a lookup,
+  masking the bug. A root installer also no longer skips ownership
+  propagation when the project root already carries the target uid: a
+  root uid match proves nothing about generated children (`.ace/lab/
+  config.yml`, `.ace/hitl/config.yml` may still be root-owned), so the
+  whole tree is always converged. A declared directory matching a
+  project path exactly (not only as a prefix) now selects that
+  project's owner too.
+
+- PR #393 final audit (FINAL-LAB2): `kind: hitl` adapter declarations
+  are now projected into the runtime HITL configuration contract —
+  `hitl.adapters.routes` in every declared project's
+  `.ace/hitl/config.yml`, the exact cascade location the ace-hitl
+  route loader reads (an empty adapter configuration used to yield
+  `ok:true`/`ready:true` while the runtime failed with NoRoutesError).
+  The new `HitlRoutes` molecule installs the routes idempotently
+  (operator-owned routes and settings are preserved; unparseable
+  documents are refused, not overwritten), and `ace-lab verify`
+  re-derives the expected route per adapter and validates the
+  resulting configuration against the runtime loader's rules
+  (non-empty mapping list, required `adapter`, single-segment route
+  names, no duplicates) in every declared project — a missing or
+  invalid route configuration blocks readiness. The committed suite
+  cross-checks the written document against the real
+  `Ace::Hitl::Molecules::HitlRouteLoader` so the mirrored validation
+  cannot drift.
+
+- PR #393 final audit (FINAL-LAB3): required tools and adapter
+  commands are now probed FOR THE TARGET EXECUTORS, not the installing
+  account — an installer-owned mode-0700 executable fails readiness
+  when the declared executor (different uid) cannot run it. The new
+  `RoleVerifier#executable_access_reason` applies the same
+  governing-class permission logic (owner/group/other short-circuit,
+  supplementary groups, ancestor search) as the repository access
+  checks, and the project-directory access mask now requires
+  read+write+search (a directory without x on itself is unusable to
+  the executor however rw it is). Tool/adapter availability that is
+  undecidable (unset PATH) still reports `unknown`; as with every
+  other unknown it does not block readiness by itself and never counts
+  as a verified pass.
+
 - Review fix: `check_adapters` status precedence — a malformed adapter
   configuration (not a mapping) stays a decidable FAIL even when PATH
   is unset (only the command probe may degrade to unknown); the dead
