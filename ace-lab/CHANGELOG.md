@@ -9,6 +9,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `ace-lab install` (L8.3, task 8xg.t.sbz.7.2): the full new-lab
+  installation from the trusted install manifest, composing the
+  existing molecules in a fixed order — `Prepare` (L8.1: accounts,
+  directories, keys, roles), `ProjectAdd` (L8.2) per manifest-declared
+  project, and the new `GrantProvisioner` that writes the trusted-tier
+  principal grants into `/etc/lab/ace-lab/authorization.yml` so the
+  installed projects are visible to `ace-lab projects` and
+  `ace-overseer projects` with no read-side change. The manifest schema
+  (still v1) gains optional `projects` (id/path/remote/label; unique
+  ids and paths) and `grants` (principal → declared project ids)
+  sections. A foreign lab is refused before any mutation: an existing
+  trusted document granting projects the manifest does not declare
+  aborts with a classified error and zero writes, and a manifest that
+  would remove an existing grant is refused (grants only grow);
+  undeclared principals and every other document section are preserved.
+  Idempotent re-runs converge (`exists` statuses); `--dry-run`
+  faithfully predicts every phase (`would_*`) with exit 0, wet failures
+  render the report then exit non-zero naming each failed step.
+
 - `ace-lab project add` (L8.2, task 8xg.t.sbz.7.1): registers a project
   and makes it ready for team work. A `ProjectAdd` organism runs three
   idempotent steps in a fixed order — `RepositoryProvisioner` (clone the

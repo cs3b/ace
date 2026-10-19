@@ -1,8 +1,10 @@
 # ace-lab usage
 
 `ace-lab` exposes read-only topology queries, the lab status snapshot, the
-`prepare` phase of the lab installer (L8.1), and `project add` project
-onboarding (L8.2). The full installer is **planned (L8: not available yet)**.
+`prepare` phase of the lab installer (L8.1), `project add` project
+onboarding (L8.2), and the full installer `install` (L8.3). Resuming an
+interrupted install beyond idempotent re-runs and end-to-end readiness
+verification under the target accounts are **planned (L8.4/L8.5)**.
 
 The file-based ownership model is documented once in
 [../../docs/lab-flow.md](../../docs/lab-flow.md).
@@ -160,6 +162,14 @@ roles:                       # optional
   - id: worker               # ^[a-z][a-z0-9_-]{0,31}$, unique
     account: ace-worker
     instructions: wfi://assign/work  # wfi://|prompt://|tmpl:// or an absolute readable file
+projects:                    # optional (consumed by ace-lab install)
+  - id: atlas                # ^[a-z][a-z0-9_-]{0,31}$, unique
+    path: /Users/ace/lab/atlas         # absolute, unique
+    remote: git@forge:atlas/atlas.git  # optional clone source
+    label: Atlas platform    # optional display label
+grants:                      # optional: trusted-tier principal grants
+  ace-overseer:              # principal → declared project ids
+    - atlas
 ```
 
 Statuses: accounts `created|exists|would_create|failed`; directories
@@ -301,9 +311,10 @@ Boundaries (what `prepare` is not):
   L8.2, is the dedicated command) — the manifest's role catalog
   declares where each role lives and under which account; the
   project-add step consumes that converged environment.
-- No full `ace-lab install` orchestration (L8.3): no HITL adapter
-  configuration, no foreign-lab refusal, no cross-check of `machine`
-  against the `hitl` cascade.
+- No full `ace-lab install` orchestration (L8.3, delivered as
+  `ace-lab install`): no project onboarding, no trusted-tier grants
+  configuration, no foreign-lab refusal — `prepare` converges the
+  machine and leaves the composition to the installer.
 - No interrupted-install resume bookkeeping (L8.4): re-running `prepare`
   is the resume mechanism; install-level resumption composes it.
 - No end-to-end verification under the target accounts (L8.5): real
@@ -380,18 +391,75 @@ owns those), does not configure HITL adapters or run the full install
 (L8.3/`ace-lab install`), and adds no new state owner — the only
 persisted artifact is the project's own lab-config cascade document.
 
+## Install (L8.3)
+
+```bash
+ace-lab install              # full installation from the trusted manifest
+ace-lab install --dry-run    # predict every phase without mutating
+ace-lab install --format json
+```
+
+`install` performs the full new-lab installation (task 8xg.t.sbz.7.2)
+from the same trusted install manifest as `prepare`, by composing the
+existing molecules in a fixed order:
+
+1. **Foreign-lab guard — before any mutation.** The trusted
+   authorization document `/etc/lab/ace-lab/authorization.yml` (when
+   present) must not grant projects the manifest does not declare: a
+   ready or foreign lab is refused with a classified error and zero
+   writes, identically in wet runs and `--dry-run` (prediction parity).
+2. **prepare (L8.1)** — accounts → directories → keys → roles, exactly
+   as `ace-lab prepare` (same organism, same per-item report).
+3. **project add (L8.2) per declared project** — repository, private
+   `_overseer`, project registry, exactly as `ace-lab project add`.
+   Projects are isolated: one failing project does not block the
+   others. When `prepare` did not converge, every project is reported
+   as a dependency failure instead of being attempted.
+4. **grants** — the trusted-tier principal grants from the manifest's
+   `grants` section are converged into the `principals` mapping of the
+   authorization document: this is the installer-owned configuration
+   that makes the installed projects visible to `ace-lab projects` and
+   `ace-overseer projects` (see the L8.2 boundary above). Grants only
+   grow: a manifest that would remove an existing grant is refused.
+   Principals the manifest does not mention and every other section of
+   the document (e.g. HITL adapter policy) are preserved untouched.
+   The write is atomic (temp file + rename, mode 0644). Grants are
+   configured only when the earlier phases converged — never over a
+   partially failed install (no pretend success).
+
+Statuses: `prepare` contributes its own per-item statuses; each project
+contributes `created|exists|updated|would_*|failed` per step; grants
+report `created|updated|exists|would_*|failed` plus a per-principal
+breakdown. `ok` means every phase converged. A wet run with failures
+prints the report first, then exits non-zero enumerating each
+`<phase>/<item>: <message>`; `--dry-run` predicts with zero mutations
+and exits 0.
+
+Idempotence and resume design: every step is idempotent, so an
+interrupted re-run converges where steps already completed (accounts
+`exists`, repositories `exists`, grants `exists`) without duplicates or
+lost configuration — the per-step record shape the dedicated resume
+work (L8.4, task 8xg.t.sbz.7.3) builds on; no journal exists or is
+needed for convergence.
+
+Boundaries: `install` does not verify readiness under the target
+accounts (L8.5, task 8xg.t.sbz.7.4); HITL adapter configuration beyond
+preserving the existing trusted document sections is not orchestrated
+by this slice.
+
 ## Planned waves
 
 > **L7 remainder:** `ace-lab status` is delivered; the remaining L7 scope
 > (configurable `ace-overseer status` aggregation, pi continuation) lives in
 > its own packages and is not available yet.
 >
-> **Planned (L8):** the full installer (`ace-lab install`), resuming an
-> interrupted install, and readiness verification are not available yet.
-> The preparation phase is delivered as `ace-lab prepare` (L8.1) and
-> project onboarding as `ace-lab project add` (L8.2); `ace-lab install`
-> (L8.3) will compose them with configuration, HITL adapters and
-> verification.
+> **Planned (L8):** resuming an interrupted install beyond idempotent
+> re-runs (L8.4) and end-to-end readiness verification under the target
+> accounts (L8.5) are not available yet. The preparation phase is
+> delivered as `ace-lab prepare` (L8.1), project onboarding as
+> `ace-lab project add` (L8.2), and the full installer as `ace-lab
+> install` (L8.3), which composes them with the trusted-tier grants
+> configuration and a final report.
 
 ## Boundaries
 

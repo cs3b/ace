@@ -285,5 +285,99 @@ module Atoms
 
       assert_equal "0750", result["directories"].first["mode"]
     end
+
+    def test_projects_section_normalizes
+      result = normalize(manifest("projects" => [
+        {"id" => "atlas", "path" => "/Users/ace/lab/atlas",
+         "remote" => "git@forge:atlas/atlas.git", "label" => "Atlas platform"},
+        {"id" => "borealis", "path" => "/Users/ace/lab/borealis"}
+      ]))
+
+      atlas = result["projects"].first
+      assert_equal "atlas", atlas["id"]
+      assert_equal "/Users/ace/lab/atlas", atlas["path"]
+      assert_equal "git@forge:atlas/atlas.git", atlas["remote"]
+      assert_equal "Atlas platform", atlas["label"]
+      borealis = result["projects"][1]
+      assert_nil borealis["remote"]
+      assert_nil borealis["label"]
+    end
+
+    def test_projects_and_grants_default_to_empty
+      result = normalize(manifest)
+
+      assert_empty result["projects"]
+      assert_empty result["grants"]
+    end
+
+    def test_project_entry_validation
+      [
+        [{"id" => "Atlas", "path" => "/lab/atlas"}, /projects entry id format is invalid/],
+        [{"id" => "atlas", "path" => "relative"}, /projects entry path must be an absolute path/],
+        [{"id" => "atlas", "path" => "/lab/atlas", "remote" => ""}, /remote must be a non-empty string/],
+        [{"id" => "atlas", "path" => "/lab/atlas", "label" => "  "}, /label must be a non-empty string/],
+        [{"path" => "/lab/atlas"}, /projects entry id is required/],
+        [{"id" => "atlas"}, /projects entry path is required/],
+        [{"id" => "atlas", "path" => "/lab/atlas", "extra" => 1}, /projects entry #\d+ has unknown key/]
+      ].each do |entry, pattern|
+        error = assert_raises(Ace::Lab::InvalidConfigurationError) do
+          normalize(manifest("projects" => [entry]))
+        end
+
+        assert_match(pattern, error.message)
+      end
+    end
+
+    def test_duplicate_project_ids_and_paths_are_rejected
+      error = assert_raises(Ace::Lab::InvalidConfigurationError) do
+        normalize(manifest("projects" => [
+          {"id" => "atlas", "path" => "/lab/atlas"},
+          {"id" => "atlas", "path" => "/lab/other"}
+        ]))
+      end
+      assert_match(/projects entry id is declared more than once/, error.message)
+
+      error = assert_raises(Ace::Lab::InvalidConfigurationError) do
+        normalize(manifest("projects" => [
+          {"id" => "atlas", "path" => "/lab/atlas"},
+          {"id" => "other", "path" => "/lab/atlas"}
+        ]))
+      end
+      assert_match(/projects entry path is declared more than once/, error.message)
+    end
+
+    def test_grants_normalize_and_validate_references
+      result = normalize(manifest(
+        "projects" => [{"id" => "atlas", "path" => "/lab/atlas"}],
+        "grants" => {"ace-overseer" => ["atlas"], " operator " => ["atlas"]}
+      ))
+
+      assert_equal({"ace-overseer" => %w[atlas], "operator" => %w[atlas]}, result["grants"])
+
+      error = assert_raises(Ace::Lab::InvalidConfigurationError) do
+        normalize(manifest("grants" => {"ace-overseer" => ["atlas"]}))
+      end
+      assert_match(/reference project 'atlas' which the manifest does not declare/, error.message)
+    end
+
+    def test_grants_shape_validation
+      [
+        [{"ace-overseer" => "atlas"}, /must be a non-empty list of project ids/],
+        [{"ace-overseer" => []}, /must be a non-empty list of project ids/],
+        [{"ace-overseer" => ["atlas", "atlas"]},
+         /list a project more than once/],
+        [{"" => ["atlas"]}, /principal name must be a non-empty string/],
+        [["atlas"], /grants must be a mapping of principal to project ids/]
+      ].each do |grants, pattern|
+        error = assert_raises(Ace::Lab::InvalidConfigurationError) do
+          normalize(manifest(
+            "projects" => [{"id" => "atlas", "path" => "/lab/atlas"}],
+            "grants" => grants
+          ))
+        end
+
+        assert_match(pattern, error.message)
+      end
+    end
   end
 end

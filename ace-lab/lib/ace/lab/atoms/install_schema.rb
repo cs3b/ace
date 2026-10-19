@@ -11,12 +11,14 @@ module Ace
       # errors to echo untrusted content back into diagnostics).
       class InstallSchema
         SCHEMA_VERSION = 1
-        TOP_LEVEL_KEYS = %w[schema_version machine accounts directories keys roles].freeze
+        TOP_LEVEL_KEYS =
+          %w[schema_version machine accounts directories keys roles projects grants].freeze
         ENTRY_KEYS = {
           "accounts" => %w[username role create home],
           "directories" => %w[path owner mode],
           "keys" => %w[account type path],
-          "roles" => %w[id account instructions]
+          "roles" => %w[id account instructions],
+          "projects" => %w[id path remote label]
         }.freeze
         USERNAME_PATTERN = /\A[a-z_][a-z0-9_-]{0,31}\z/
         ROLE_ID_PATTERN = /\A[a-z][a-z0-9_-]{0,31}\z/
@@ -54,6 +56,7 @@ module Ace
             os = platform || Ace::Lab.host_platform
             accounts = normalize_accounts(document["accounts"], os)
             usernames = accounts.map { |account| account["username"] }
+            projects = normalize_projects(document["projects"])
 
             {
               "schema_version" => SCHEMA_VERSION,
@@ -61,7 +64,9 @@ module Ace
               "accounts" => accounts,
               "directories" => normalize_directories(document["directories"], usernames),
               "keys" => normalize_keys(document["keys"], accounts),
-              "roles" => normalize_roles(document["roles"], usernames)
+              "roles" => normalize_roles(document["roles"], usernames),
+              "projects" => projects,
+              "grants" => normalize_grants(document["grants"], projects.map { |p| p["id"] })
             }
           end
 
@@ -195,6 +200,68 @@ module Ace
                 raise_invalid_entry("roles", "id is declared more than once")
               end
             end
+          end
+
+          def normalize_projects(raw)
+            section(raw, "projects").map do |entry|
+              id = required_string(entry, "projects", "id")
+              unless id =~ ROLE_ID_PATTERN
+                raise_invalid_entry("projects", "id format is invalid")
+              end
+
+              path = required_string(entry, "projects", "path")
+              unless absolute_path?(path)
+                raise_invalid_entry("projects", "path must be an absolute path")
+              end
+
+              remote = optional_string(entry, "projects", "remote")
+              label = optional_string(entry, "projects", "label")
+
+              {"id" => id, "path" => path, "remote" => remote, "label" => label}
+            end.tap do |projects|
+              duplicates_of(projects.map { |project| project["id"] }) do |_id|
+                raise_invalid_entry("projects", "id is declared more than once")
+              end
+              duplicates_of(projects.map { |project| project["path"] }) do |_path|
+                raise_invalid_entry("projects", "path is declared more than once")
+              end
+            end
+          end
+
+          def normalize_grants(raw, project_ids)
+            grants = raw.nil? ? {} : raw
+            unless grants.is_a?(Hash)
+              raise_invalid "grants must be a mapping of principal to project ids"
+            end
+
+            grants.to_h do |principal, projects|
+              unless principal.is_a?(String) && !principal.strip.empty?
+                raise_invalid "grants principal name must be a non-empty string"
+              end
+              unless projects.is_a?(Array) && !projects.empty? &&
+                projects.all? { |project| project.is_a?(String) && !project.strip.empty? }
+                raise_invalid "grants for principal '#{principal.strip}' must be a non-empty " \
+                  "list of project ids"
+              end
+              duplicates_of(projects.map(&:strip)) do |_project|
+                raise_invalid "grants for principal '#{principal.strip}' list a project more than once"
+              end
+              unknown = projects.map(&:strip) - project_ids
+              unless unknown.empty?
+                raise_invalid "grants for principal '#{principal.strip}' reference project " \
+                  "'#{unknown.sort.first}' which the manifest does not declare"
+              end
+
+              [principal.strip, projects.map(&:strip).uniq]
+            end
+          end
+
+          def optional_string(entry, section_name, field)
+            value = entry[field]
+            if !value.nil? && (!value.is_a?(String) || value.strip.empty?)
+              raise_invalid_entry(section_name, "#{field} must be a non-empty string when present")
+            end
+            value.nil? ? nil : value.strip
           end
 
           def required_string(entry, section_name, field)
