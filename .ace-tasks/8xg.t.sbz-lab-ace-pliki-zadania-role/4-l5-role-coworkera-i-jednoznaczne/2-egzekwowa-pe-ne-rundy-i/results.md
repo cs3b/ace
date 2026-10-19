@@ -113,3 +113,55 @@ serię; potwierdzony High/Critical zeruje serię czystych rund.
 4. Rozdzielczość ustaleń: identyfikatory z `ace-review` feedback;
    rozwiązanie = pojawienie się id na liście `resolved` dowolnej
    późniejszej rundy.
+
+## Poprawki po review (runda 1)
+
+Zastosowano wszystkie 7 ustaleń z raportu
+`.ace-local/review/sessions/review-8xidjr/review-report-review-default.md`:
+
+1. **CLI dla `record!` (wysoki)** — nowa komenda
+   `ace-coworker rounds record --assignment <id> --type full|delta
+   --status completed|aborted [--confirmed id:sev,...] [--resolved id,...]`
+   (`lib/ace/coworker/cli/commands/rounds.rb`, zarejestrowana w CLI jako
+   `rounds`), wywołuje `ReviewRoundStore#record!` i wypisuje werdykt
+   (tabela/JSON, konwencje pozostałych komend). Zaktualizowano regułę 6 w
+   `reviewer.wf.md` (odwołanie do komendy zamiast metody Ruby) i
+   `docs/usage.md` (nowa sekcja `ace-coworker rounds record`). Testy:
+   `test/commands/rounds_test.rb`.
+2. **Uszkodzony plik stanu nie resetuje historii (wysoki)** — `record!`
+   czyta plik ściśle (`strict_read`): brak pliku → `[]`; nieparsowalny
+   JSON albo wartość nie-tablicowa → `Ace::Coworker::Error` "corrupt round
+   history at <path>" i plik pozostaje nietknięty na dysku. `read` pozostaje
+   pobłażliwy dla czytelników. Testy: uszkodzony-plik→`record!` rzuca,
+   poprawna historia zachowana.
+3. **Limit 10 rund jest terminalny (średni)** — `RoundRule.acceptable`
+   wymaga dodatkowo `full_rounds <= MAX_FULL_ROUNDS`; spełnienie reguły w
+   rundzie 11+ daje `:escalate`, nie `:accept`. Test regresyjny: 10 rund
+   z nierozwiązanym High + rozwiązująca runda 11 + czysta 12 → `:escalate`;
+   dotychczasowy test sukcesu w rundzie 10 nadal przechodzi.
+4. **Walidacja kształtu rekordu na granicy molekuły (średni)** — nowy czysty
+   atom `Atoms::RoundRecordSchema.errors` (wzorzec `RolePresetSchema`):
+   type ∈ full|delta, status ∈ completed|aborted, confirmed = tablica hashy
+   z niepustymi stringami id+severity, resolved = tablica niepustych
+   stringów; błędy per pole, nigdy `TypeError`. Walidowany jest nowy rekord
+   oraz elementy wczytanej historii. Testy: element nie-Hash, rekord z
+   kluczami symbolicznymi, confirmed jako pojedynczy Hash.
+5. **Mapa właścicieli stanu (średni)** — nowy wiersz
+   `.ace-local/coworker/review-rounds/` (właściciel: rola reviewer w
+   coworkerze) w `docs/lab-flow.md`; `docs/tools.md` ma tabelę
+   state-owners — dodano wiersz również tam.
+6. **Sprzątanie tmp (niski)** — `ReviewRoundStore#write` w
+   `begin/ensure File.delete(tmp_path) if File.exist?(tmp_path)`; test z
+   wymuszonym błędem `rename` potwierdza brak pozostałości `*.tmp.*`.
+7. **Nit `reverse_each.each` (niski)** — `round_rule.rb`: zbędne `.each`
+   usunięte.
+
+Dodatkowo: udokumentowano (komentarz w `record!` + jawny test
+`test_record_is_last_write_wins_under_interleaved_writers`) założenie
+jednego pisarza — `record!` to niezsynchronizowany read-modify-write,
+współbieżne wywołania są last-write-wins; w lab-flow (jeden executor na
+worktree) założenie to jest spełnione z natury. CHANGELOG `[Unreleased]`
+dostał nowy punkt o komendzie CLI.
+
+Weryfikacja: `bin/ace-test ace-coworker all` → **311 testów, 1262 asercji,
+0 błędów, 0 porażek**.
