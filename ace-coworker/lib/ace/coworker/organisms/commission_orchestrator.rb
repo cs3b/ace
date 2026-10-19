@@ -56,12 +56,20 @@ module Ace
         #   project root, or a directory config target
         def call(role:, task:, assignment:, overseer:, start_prompt: nil, force: false, dry_run: false)
           preset = @preset_loader.fetch(role)
-          prompt = start_prompt.to_s.strip.empty? ? render_prompt(preset, role, task, assignment, overseer) : start_prompt
 
-          @task_probe.resolve!(task)
-          @assignment_metadata.verify_task_match!(assignment, task)
+          # Canonicalize the task identity first: the assignment match and
+          # the written config use the resolved full id, so a short ref
+          # (e.g. "ccc") commissioning the recorded task (8xh.t.ccc) is
+          # accepted while a genuinely foreign task stays rejected.
+          resolved = @task_probe.resolve(task)
+          raise Error, "task '#{task}' not found in this worktree" if resolved.nil?
 
-          config = build_config(preset, role: role, task: task, assignment: assignment,
+          canonical_task = resolved.id.to_s
+          @assignment_metadata.verify_task_match!(assignment, canonical_task)
+
+          prompt = start_prompt.to_s.strip.empty? ? render_prompt(preset, role, canonical_task, assignment, overseer) : start_prompt
+
+          config = build_config(preset, role: role, task: canonical_task, assignment: assignment,
             overseer: overseer, prompt: prompt)
           errors = Atoms::ConfigSchema.errors(config)
           unless errors.empty?
@@ -72,7 +80,7 @@ module Ace
           write_config(target, config, force: force) unless dry_run
 
           Commission.new(
-            role: role, task: task, assignment: assignment, overseer: overseer,
+            role: role, task: canonical_task, assignment: assignment, overseer: overseer,
             config_path: relativize(target), config: config,
             preset_source: preset["source"], dry_run: dry_run,
             written: dry_run ? false : true

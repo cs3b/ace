@@ -5,7 +5,7 @@ description: Reviewer role for the file-based lab. Independent of the worker; re
 doc-type: workflow
 purpose: reviewer role workflow instruction
 ace-docs:
-  last-updated: '2026-10-18'
+  last-updated: '2026-10-19'
 ---
 
 # Reviewer - Independent Review with Fixes Inside the Assignment
@@ -51,12 +51,16 @@ product decision is escalated to the overseer instead.
 1. **Drive and develop the assignment.**
    - Use `ace-assign start` / `finish` / `fail` with the pinned assignment.
    - You may develop the assignment: add fix and verification steps with
-     `ace-assign add --step <name> --after <n>` (or `--yaml --after <n>`),
-     naming the feedback id in the step instructions. Added steps stay in the
+     `ace-assign add --step <name> --after <n>` for a step name that EXISTS
+     in the assignment's preset catalog (`--step` selects an existing
+     preset step definition; it never creates a new name), or with
+     `ace-assign add --yaml <file> --after <n> --assignment <id>` for a
+     newly named step (file with a top-level `steps:` array of
+     `name`/`instructions` mappings — see step 4). Added steps stay in the
      SAME plan, visible via `ace-assign status` - that is how a fix remains
      inside this one assignment. Scope stays bounded by the role rules and
-     the commissioned goal; never change the parent goal, task dependencies,
-     or the overseer tree.
+     the commissioned goal; never change the parent goal, task
+     dependencies, or the overseer tree.
 
 2. **Run a review round (forge-neutral).**
    - Subject: local candidate
@@ -89,11 +93,24 @@ product decision is escalated to the overseer instead.
      "<rationale>"`, or verify then skip per the feedback workflow) so the
      finding has a terminal disposition instead of lingering pending; a
      deferred P2 never blocks the round.
-   - (a) `ace-assign add --step <fix-step> --after <n>` naming the feedback
-     id; (b) implement the fix on the task branch in this worktree; (c) run
+   - (a) add a newly named fix step via `ace-assign add --yaml <file>
+     --assignment <id> --after <n>`, where `<file>` is a YAML document
+     with a top-level `steps:` array and the feedback id named in the
+     step instructions, e.g. `.ace-local/fix-<feedback-id>.yaml`:
+     ```yaml
+     steps:
+       - name: fix-feedback-<id>
+         instructions: |
+           Fix the confirmed review finding <feedback-id> in the delivered
+           change. Apply the minimal correct fix, run the affected checks
+           (bin/ace-test <package>), and record what changed.
+     ```
+     (`--step <name>` only selects a step definition that already exists
+     in the preset catalog - it cannot mint a new fix-step name);
+     (b) implement the fix on the task branch in this worktree; (c) run
      the affected checks (`bin/ace-test <package> ...` - a failed required
-     test blocks); (d) commit scoped (`ace-git-commit <paths>` after checking
-     `git status`); (e) only after the fix is verified:
+     test blocks); (d) commit scoped (`ace-git-commit <paths>` after
+     checking `git status`); (e) only after the fix is verified:
      `ace-review-feedback resolve <id> --resolution "Fixed in <sha>"`.
    - A finding is never resolved or verified away without evidence of a fix.
 

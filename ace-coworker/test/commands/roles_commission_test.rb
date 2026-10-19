@@ -153,6 +153,30 @@ module Ace
             assert_includes error.message, "unknown role 'ghost'"
           end
 
+          def test_commission_accepts_short_ref_and_full_ref_of_same_task
+            %w[ddd 8xh.t.ddd].each do |ref|
+              out, = capture_io do
+                commission_command.call(role: "worker", task: ref, assignment: "asg09",
+                  overseer: "overseer@lab", format: "json", force: true, dry_run: false)
+              end
+              payload = JSON.parse(out)
+              assert_equal "8xh.t.ddd", payload["task"], "ref #{ref} canonicalized"
+              assert_equal "8xh.t.ddd", payload["config"]["task"]
+              assert payload["written"], "ref #{ref} commissioned"
+            end
+          end
+
+          def test_commission_rejects_assignment_of_a_foreign_task
+            CoworkerFixture.build_task(@dir, id: "8xh.t.xxx")
+            CoworkerFixture.build_assignment(@dir, id: "asg10", task_id: "8xh.t.xxx")
+
+            error = assert_raises(Ace::Support::Cli::Error) do
+              commission_command.call(role: "worker", task: "8xh.t.ddd", assignment: "asg10",
+                overseer: "overseer@lab", format: "table", force: false, dry_run: false)
+            end
+            assert_includes error.message, "assignment 'asg10' belongs to task '8xh.t.xxx', not '8xh.t.ddd'"
+          end
+
           def test_commission_requires_all_identity_flags
             error = assert_raises(Ace::Support::Cli::Error) do
               commission_command.call(role: "worker", task: "", assignment: "", overseer: "",

@@ -8,11 +8,19 @@ module Ace
   module Coworker
     module Molecules
       # Reads the executor truth of a worktree: its coworker config
-      # (<worktree>/.ace-local/coworker/config.yml, read leniently) and the
-      # assignment inventory via `ace-assign list --all --format json`
-      # (subprocess argv contract with explicit cwd, ADR-031).
+      # (resolved through the coworker config cascade anchored at the
+      # probed worktree — the same resolution an `ace-coworker` process
+      # running inside that worktree performs, so a commissioned
+      # `config_path` such as `.ace-local/coworker/worker.yml` is
+      # honored; read leniently) and the assignment inventory via
+      # `ace-assign list --all --format json` (subprocess argv contract
+      # with explicit cwd, ADR-031).
       class WorktreeExecutorProbe
         DEFAULT_RUNNER = ->(argv, cwd) { Open3.capture3(*argv, chdir: cwd) }
+        # Coworker config cascade files that may carry a `config_path`
+        # override for the probed worktree (project `.ace` and user tiers;
+        # the gem-defaults tier equals the loader's built-in default).
+        CASCADE_PATTERNS = ["coworker/config.yml", "coworker/config.yaml"].freeze
 
         attr_reader :project_root
 
@@ -39,7 +47,10 @@ module Ace
         private
 
         def read_config(worktree_path)
-          path = File.join(worktree_path, ".ace-local", "coworker", "config.yml")
+          path = Molecules::ConfigLoader.new(
+            project_root: worktree_path,
+            defaults: cascade_defaults(worktree_path)
+          ).config_path
           return nil unless File.file?(path)
 
           begin
@@ -48,6 +59,25 @@ module Ace
             return Atoms::ActiveExecutorRule::UNPARSEABLE
           end
           raw.is_a?(Hash) ? raw : Atoms::ActiveExecutorRule::UNPARSEABLE
+        end
+
+        # Merge the coworker config cascade anchored at the probed
+        # worktree (project `.ace` tiers from the worktree up to its root,
+        # then the user tier) — the same file set and order
+        # ConfigResolver#resolve_file uses, restricted to the tiers that
+        # can override `config_path`. An unreadable cascade falls back to
+        # the loader's default config location.
+        def cascade_defaults(worktree_path)
+          finder = Ace::Support::Config::Molecules::ConfigFinder.new(
+            file_patterns: CASCADE_PATTERNS, start_path: worktree_path)
+          layers = finder.find_all.select(&:exists).map(&:path)
+          layers.reverse.reduce({}) do |merged, path|
+            data = Ace::Support::Config::Molecules::YamlLoader.load_file(path).data
+            merged.is_a?(Hash) && data.is_a?(Hash) ?
+              Ace::Support::Config::Atoms::DeepMerger.merge(merged, data) : {}
+          end
+        rescue StandardError
+          {}
         end
 
         def list_assignments(worktree_path)

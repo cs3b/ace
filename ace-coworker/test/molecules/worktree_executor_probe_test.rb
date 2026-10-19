@@ -83,6 +83,26 @@ module Ace
           end
         end
 
+        def test_config_read_through_configured_config_path
+          Dir.mktmpdir("coworker-exec") do |dir|
+            # The worktree's own cascade redirects the coworker config to
+            # a non-default location, as a commission with a configured
+            # config_path writes it.
+            override = File.join(dir, ".ace", "coworker")
+            FileUtils.mkdir_p(override)
+            File.write(File.join(override, "config.yml"),
+              "config_path: .ace-local/coworker/worker.yml\n")
+            worker = File.join(dir, ".ace-local", "coworker", "worker.yml")
+            FileUtils.mkdir_p(File.dirname(worker))
+            File.write(worker, "role: worker\ntask: 8xg.t.aaa\nassignment: abc123\n")
+
+            result = WorktreeExecutorProbe.new(project_root: dir,
+              runner: FakeRunner.new(out: "[]")).probe(dir)
+
+            assert_equal "abc123", result[:config]["assignment"]
+          end
+        end
+
         def test_garbage_config_is_unparseable
           Dir.mktmpdir("coworker-exec") do |dir|
             write_config(dir, "::: not yaml [\n")

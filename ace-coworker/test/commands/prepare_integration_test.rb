@@ -155,7 +155,60 @@ module Ace
             assert_empty hitl_events
           end
 
+          def test_commission_under_custom_config_path_is_seen_by_prepare
+            # The project cascade overrides the coworker config location;
+            # it is committed before the first prepare so the worktree
+            # carries the same override the executor would use.
+            coworker_dir = File.join(@dir, ".ace", "coworker")
+            FileUtils.mkdir_p(coworker_dir)
+            File.write(File.join(coworker_dir, "config.yml"), <<~YAML)
+              config_path: .ace-local/coworker/worker.yml
+            YAML
+            commit_all("coworker config override")
+
+            worktree = prepare_worktree(@task_ref)
+            assignment_id = create_pending_assignment(worktree)
+
+            # Commission runs inside the worktree and must write to the
+            # configured worker.yml, not the default config.yml.
+            out, err, status = run_cli(COWORKER_BIN, "commission",
+              "--role", "worker", "--task", @task_ref, "--assignment", assignment_id,
+              "--overseer", "overseer", chdir: worktree)
+            assert status.success?, "commission failed: #{out}#{err}"
+            custom = File.join(worktree, ".ace-local", "coworker", "worker.yml")
+            assert File.file?(custom), "commission wrote the configured config_path"
+            refute File.exist?(File.join(worktree, ".ace-local", "coworker", "config.yml"))
+
+            # From the project root, prepare must see the commissioned
+            # executor through the same configured path.
+            out, err, status = run_cli(COWORKER_BIN, "prepare",
+              "--task", @task_ref, "--roles", "reviewer", "--dry-run", "--format", "json")
+            refute status.success?, "commissioned worktree never prepares cleanly: #{out}#{err}"
+            assert_includes err, "active_executor"
+            payload = JSON.parse(out)
+            assert_equal "active_executor", payload["conflict"]["kind"]
+            assert_includes payload["conflict"]["detail"], assignment_id
+          end
+
           private
+
+          def create_pending_assignment(worktree)
+            job = File.join(@dir, "job.yaml")
+            File.write(job, <<~YAML)
+              assignment:
+                name: fixture-executor
+                description: Occupy the worktree as a commissioned executor
+                task_id: #{@task_ref}
+              steps:
+                - name: work-step
+                  instructions: |
+                    Do the work.
+            YAML
+            out, err, _status = run_cli(ASSIGN_BIN, "create", "--yaml", job, chdir: worktree)
+            assignment_id = out[/Assignment: .* \((\w+)\)/, 1]
+            refute_nil assignment_id, "ace-assign create returned no id: #{err}#{out}"
+            assignment_id
+          end
 
           def prepare_worktree(task_ref)
             out, err, status = run_cli(COWORKER_BIN, "prepare",
