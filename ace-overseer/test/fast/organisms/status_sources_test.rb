@@ -236,9 +236,12 @@ class StatusSourcesTest < AceOverseerTestCase
   FakeTask = Struct.new(:id, :status, :title, :priority, :dependencies, :special_folder, keyword_init: true)
 
   class FakeManager
-    def initialize(tasks)
+    def initialize(tasks, root_dir: ".ace-tasks")
       @tasks = tasks
+      @root_dir = root_dir
     end
+
+    attr_reader :root_dir
 
     def list(in_folder:, sort:)
       @tasks.select { |t| in_folder == "all" || in_folder == "_overseer" }
@@ -616,6 +619,46 @@ class StatusSourcesTest < AceOverseerTestCase
       assert_includes ids, "8xg.t.prj.6.1",
         "grandchildren must be flattened through the owner's scanner/loader, not dropped"
       assert_equal %w[8xg.t.prj 8xg.t.prj.6 8xg.t.prj.6.1], ids
+    end
+  end
+
+  # --- Descendant re-scan is rooted at the manager's tree (review fix) ---
+
+  def test_descendant_rescan_uses_the_managers_root_dir_not_a_hardcoded_literal
+    require "tmpdir"
+    Dir.mktmpdir("rooted-descendants") do |root|
+      primary = File.join(root, "8xg.t.rtd-rooted")
+      group = File.join(primary, "0-group")
+      leaf = File.join(group, "1-leaf")
+      FileUtils.mkdir_p(leaf)
+      File.write(File.join(primary, "8xg.t.rtd.s.md"), "---\nstatus: progress\n---\n# Rooted\n")
+      File.write(File.join(group, "8xg.t.rtd.0.s.md"),
+        "---\nstatus: progress\nparent: 8xg.t.rtd\n---\n# Group\n")
+      File.write(File.join(leaf, "8xg.t.rtd.0.1.s.md"),
+        "---\nstatus: pending\nparent: 8xg.t.rtd.0\n---\n# Leaf\n")
+      tm = Ace::Task::Organisms::TaskManager.new(root_dir: root)
+
+      scanner_class = Ace::Task::Molecules::TaskScanner
+      scanned_roots = []
+      scanner_class.singleton_class.send(:alias_method, :__original_new, :new)
+      scanner_class.define_singleton_method(:new) do |root_dir, &blk|
+        scanned_roots << root_dir
+        method(:__original_new).call(root_dir, &blk)
+      end
+      begin
+        data = Ace::Overseer::Organisms::StatusSources::ProjectTasksSource.new(manager_factory: -> { tm }).fetch
+      ensure
+        scanner_class.singleton_class.send(:alias_method, :new, :__original_new)
+        scanner_class.singleton_class.send(:remove_method, :__original_new)
+      end
+
+      ids = data.map { |row| row[:id] }
+      assert_includes ids, "8xg.t.rtd.0.1",
+        "grandchildren of a manager rooted outside .ace-tasks must still resolve"
+      assert_includes scanned_roots, root,
+        "the descendant re-scan must be rooted at the manager's root_dir"
+      refute_includes scanned_roots, ".ace-tasks",
+        "the descendant re-scan must never fall back to a CWD-relative .ace-tasks literal"
     end
   end
 end

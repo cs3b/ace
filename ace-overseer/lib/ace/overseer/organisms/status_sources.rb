@@ -125,7 +125,7 @@ module Ace
 
           def fetch
             manager = @manager_factory.call
-            TreeRows.flatten(manager.list(in_folder: "all", sort: "id"), TASK_FIELDS)
+            TreeRows.flatten(manager.list(in_folder: "all", sort: "id"), TASK_FIELDS, root_dir: manager.root_dir)
           end
         end
 
@@ -148,7 +148,8 @@ module Ace
 
           def fetch
             manager = @manager_factory.call
-            TreeRows.flatten(manager.list(in_folder: "_overseer", sort: "id"), TASK_FIELDS).map do |entry|
+            TreeRows.flatten(manager.list(in_folder: "_overseer", sort: "id"), TASK_FIELDS,
+              root_dir: manager.root_dir).map do |entry|
               entry[:special_folder] = "_overseer"
               entry
             end
@@ -167,29 +168,32 @@ module Ace
 
           # @param tasks [Array<Object>] primary tasks from TaskManager#list
           # @param fields [Array<Symbol>] serialized task fields
+          # @param root_dir [String] the manager's task root (e.g.
+          #   TaskManager#root_dir); the descendant re-scan reads the
+          #   actual tree, never a CWD-relative guess
           # @return [Array<Hash>] rows for the primary and every descendant
-          def flatten(tasks, fields)
-            Array(tasks).flat_map { |task| subtree_rows(task, fields) }
+          def flatten(tasks, fields, root_dir:)
+            Array(tasks).flat_map { |task| subtree_rows(task, fields, root_dir) }
           end
 
-          def subtree_rows(task, fields)
+          def subtree_rows(task, fields, root_dir)
             row = fields.to_h { |field| [field, task.public_send(field)] }
             row[:processed_report] = task.metadata["processed_report"] if task.respond_to?(:metadata)
-            [row].concat(descendant_rows(task, fields))
+            [row].concat(descendant_rows(task, fields, root_dir))
           end
 
-          def descendant_rows(task, fields)
+          def descendant_rows(task, fields, root_dir)
             children = task.respond_to?(:subtasks) ? Array(task.subtasks) : []
-            children = linked_descendants(task) if children.empty?
-            children.flat_map { |child| subtree_rows(child, fields) }
+            children = linked_descendants(task, root_dir) if children.empty?
+            children.flat_map { |child| subtree_rows(child, fields, root_dir) }
           end
 
           # @return [Array<Object>] children the owner's loader did not
           #   attach, read from the task's own directory.
-          def linked_descendants(task)
+          def linked_descendants(task, root_dir)
             return [] unless task.respond_to?(:path) && task.respond_to?(:id)
 
-            scanner = Ace::Task::Molecules::TaskScanner.new(".ace-tasks")
+            scanner = Ace::Task::Molecules::TaskScanner.new(root_dir)
             loader = Ace::Task::Molecules::TaskLoader.new
             scanner.scan_subtasks(task.path.to_s, parent_id: task.id.to_s).filter_map do |result|
               loader.load(result.dir_path, id: result.id, special_folder: task.special_folder)
