@@ -34,7 +34,7 @@ module Ace
           if active_executor[:active]
             evidence = active_executor[:evidence] || {}
             return {status: :refused, reasons: [
-              "an executor still holds the worktree: assignment #{evidence["assignment"]} " \
+              "an executor still holds the worktree: assignment #{evidence["assignment"] || "unknown"} " \
                 "(state #{evidence["state"] || "unknown"}, source #{evidence["source"] || "config"})"
             ]}
           end
@@ -61,9 +61,11 @@ module Ace
               "#{state.empty? ? "unknown" : state} - not startable; investigate or resume, " \
               "never start a second executor"
           end
-          return nil if leg["role"]
+          # Fail closed on an empty/blank role exactly like a missing
+          # one, and require the probed start-config path.
+          return nil if leg["role"].to_s.strip != "" && leg["start_config"]
 
-          "assignment #{leg["assignment"]} has no start config " \
+          "assignment #{leg["assignment"]} has no usable start config " \
             "(.ace-local/coworker/prepare/<role>.yml); re-run ace-coworker prepare (idempotent)"
         end
         private_class_method :next_leg_reason

@@ -16,7 +16,9 @@ module Ace
       # nothing; owns no state (ADR-034).
       class HandoffProbe
         ASSIGN_DIR = File.join(".ace-local", "assign")
-        PREPARE_DIR = File.join(".ace-local", "coworker", "prepare")
+        # Reuse the coworker-owned location constant: one definition of
+        # where prepare writes per-role start configs.
+        PREPARE_DIR = Ace::Coworker::Organisms::StartConfigWriter::PREPARE_DIR
 
         # @param executor_probe [#probe] WorktreeExecutorProbe-compatible
         #   seam (defaults to the coworker probe anchored at the probed
@@ -37,8 +39,10 @@ module Ace
           roles = prepare_roles(worktree_path)
 
           legs = sequence_assignments(worktree_path, task_id).map do |record|
+            mapping = roles[record["id"]] || {}
             {
-              "role" => roles[record["id"]],
+              "role" => mapping["role"],
+              "start_config" => mapping["start_config"],
               "assignment" => record["id"],
               "name" => record["name"],
               "state" => states.fetch(record["id"], "")
@@ -66,19 +70,30 @@ module Ace
           end.sort_by { |record| [record["created_at"].to_s, record["id"]] }
         end
 
-        # assignment id -> role, from the per-leg start configs
-        # (.ace-local/coworker/prepare/<role>.yml). An unreadable config
-        # contributes nothing: its leg keeps role nil and the handoff
-        # gate refuses to start it instead of guessing.
+        # assignment id -> {"role" =>, "start_config" => relative path},
+        # from the per-leg start configs
+        # (.ace-local/coworker/prepare/<role>.yml). An unreadable config,
+        # or one without BOTH a non-empty assignment id and a non-empty
+        # role, contributes nothing: its leg keeps role nil and the
+        # handoff gate refuses to start it instead of guessing. The
+        # carried start_config is the actually-globbed file path, so a
+        # ready verdict can never point at a nonexistent config.
         def prepare_roles(worktree_path)
-          Dir.glob(File.join(worktree_path, PREPARE_DIR, "*.yml")).to_h do |path|
+          Dir.glob(File.join(worktree_path, PREPARE_DIR, "*.yml")).filter_map do |path|
             data = begin
               YAML.safe_load_file(path, permitted_classes: [Date], aliases: true)
             rescue StandardError
-              next [nil, nil]
+              next
             end
-            data.is_a?(Hash) ? [data["assignment"].to_s, data["role"].to_s] : [nil, nil]
-          end.compact.reject { |key, _| key.empty? }
+            next unless data.is_a?(Hash)
+
+            assignment = data["assignment"].to_s
+            role = data["role"].to_s
+            next if assignment.empty? || role.strip.empty?
+
+            [assignment, {"role" => role,
+                          "start_config" => File.join(PREPARE_DIR, File.basename(path))}]
+          end.to_h
         end
       end
     end

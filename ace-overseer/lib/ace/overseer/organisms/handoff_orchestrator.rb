@@ -78,7 +78,6 @@ module Ace
 
         def ready_outcome(task:, worktree_path:, branch:, verdict:, dry_run:, runtime:, progress:)
           next_leg = verdict[:next]
-          start_config = next_leg ? start_config_path(next_leg["role"]) : nil
 
           if next_leg
             progress.call("Next leg: role #{next_leg['role']} (assignment #{next_leg['assignment']})")
@@ -99,14 +98,11 @@ module Ace
             next: next_leg && {
               "role" => next_leg["role"],
               "assignment" => next_leg["assignment"],
-              "start_config" => start_config
+              # The actually-probed config path, never a rebuilt guess.
+              "start_config" => next_leg["start_config"]
             },
             dry_run: dry_run
           }
-        end
-
-        def start_config_path(role)
-          File.join(Molecules::HandoffProbe::PREPARE_DIR, "#{role}.yml")
         end
 
         def worktree_finder

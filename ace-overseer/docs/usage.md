@@ -16,7 +16,7 @@ ace-docs:
 
 ## Command Surface
 
-Local work uses four commands:
+Local work uses four primary commands (`projects` lists configured lab projects):
 
 - `ace-overseer work-on` - prepare a worktree, assignment, and terminal.
 - `ace-overseer handoff` - hand the task worktree to the next role in the prepared sequence.

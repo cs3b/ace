@@ -82,7 +82,8 @@ class HandoffOrchestratorTest < AceOverseerTestCase
   end
 
   def leg(role, assignment, state)
-    {"role" => role, "assignment" => assignment, "name" => assignment, "state" => state}
+    {"role" => role, "assignment" => assignment, "name" => assignment, "state" => state,
+     "start_config" => ".ace-local/coworker/prepare/#{role}.yml"}
   end
 
   def test_finished_worker_hands_worktree_to_reviewer_in_same_worktree

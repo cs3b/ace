@@ -3,8 +3,9 @@
 require_relative "../../test_helper"
 
 class HandoffReadinessTest < AceOverseerTestCase
-  def leg(role, assignment, state)
-    {"role" => role, "assignment" => assignment, "name" => "#{assignment}", "state" => state}
+  def leg(role, assignment, state, start_config: role && ".ace-local/coworker/prepare/#{role}.yml")
+    {"role" => role, "assignment" => assignment, "name" => "#{assignment}", "state" => state,
+     "start_config" => start_config}
   end
 
   def test_finished_predecessor_unlocks_next_leg
@@ -93,7 +94,16 @@ class HandoffReadinessTest < AceOverseerTestCase
     result = Ace::Overseer::Atoms::HandoffReadiness.evaluate(legs: legs)
 
     assert_equal :refused, result[:status]
-    assert_includes result[:reasons].join("; "), "no start config"
+    assert_includes result[:reasons].join("; "), "no usable start config"
+  end
+
+  def test_next_leg_with_blank_role_refuses_like_missing_config
+    legs = [leg("worker", "w1", "completed"), leg("", "r1", "paused", start_config: nil)]
+
+    result = Ace::Overseer::Atoms::HandoffReadiness.evaluate(legs: legs)
+
+    assert_equal :refused, result[:status]
+    assert_includes result[:reasons].join("; "), "no usable start config"
   end
 
   def test_empty_sequence_refuses

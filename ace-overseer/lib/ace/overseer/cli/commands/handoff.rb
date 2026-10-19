@@ -49,8 +49,14 @@ module Ace
               return
             end
 
+            next_leg = result[:next]
+            unless next_leg && next_leg["start_config"]
+              raise Ace::Support::Cli::Error,
+                "handoff result is missing the next leg start config - refusing to print a guessed command"
+            end
+
             puts "Handoff ready. In the worktree terminal run:"
-            puts "  ace-coworker start --config #{result[:next]["start_config"]}"
+            puts "  ace-coworker start --config #{next_leg["start_config"]}"
           rescue Ace::Support::Cli::Error
             raise
           rescue => e

@@ -61,6 +61,7 @@ class CliTest < AceOverseerTestCase
     output = result[:stdout] + result[:stderr]
 
     assert_includes output, "ace-overseer work-on"
+    assert_includes output, "ace-overseer handoff"
     assert_includes output, "ace-overseer status"
     assert_includes output, "ace-overseer prune"
   end
