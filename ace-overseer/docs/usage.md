@@ -181,6 +181,33 @@ user config when the forge server is configured; with no server, a missing
 provider CLI, or no network it degrades to a per-source error entry, never
 to "no open pull requests".
 
+### Attention: blockers, failures, missing data
+
+The same one-shot view opens with a derived `-- attention` section that
+splits what needs the overseer's decision from healthy progress. It is
+computed live from the collected sources plus the read-only ace-hitl
+inbox — no new fetchers, no second dashboard, nothing persisted
+(`Organisms::StatusAttention`):
+
+- **BLOCKER** — a startable task (`pending` in the project or `_overseer`
+  tree) whose dependencies are not satisfied, or a task explicitly
+  `blocked`, with the concrete reason per dependency
+  (`Atoms::DependencyReadiness`: predecessor status, missing or cyclic
+  dependency) and the next action.
+- **FAILURE** — a source `error` (with origin), a `failed`/`stalled`
+  assignment, a per-worktree executor probe error, or an escalation: a
+  pending ace-hitl `question` awaiting an answer.
+- **MISSING DATA** — a disabled source, unknown `status_sources` keys,
+  an unreadable task tree (dependency readiness unverified), an
+  unrecognized task status, an unknown executor state (`unknown`/
+  `unparseable` — the worktree cannot be treated as free), or an
+  unreachable hitl inbox.
+
+Every row carries a `next_action`. Absence of data is never success: a
+disabled or errored source confirms neither a free worktree nor a
+finished task (program contract). When nothing needs attention the
+section says so explicitly (`-- attention: none`).
+
 ### JSON contract
 
 ```json
@@ -189,6 +216,23 @@ to "no open pull requests".
     "worktrees": {"status": "ok", "origin": "...", "data": {"worktrees": [...]}},
     "forge": {"status": "disabled"},
     "herdr": {"status": "error", "origin": "...", "error": "..."}
+  },
+  "unknown_keys": ["forg"],
+  "attention": {
+    "blockers": [
+      {"kind": "dependency", "tree": "project", "task_id": "8x1",
+       "title": "...", "reasons": ["8x0: predecessor not integrated yet (status: running)"],
+       "next_action": "unblock the predecessor(s), then start or continue 8x1"}
+    ],
+    "failures": [
+      {"kind": "escalation", "subject": "q7", "task": "8x1", "assignment": "asg1",
+       "detail": "Which branch?", "next_action": "answer question q7 via ace-hitl"}
+    ],
+    "missing_data": [
+      {"kind": "source_disabled", "subject": "forge",
+       "detail": "source disabled: absence of its data does not confirm a free worktree or a finished task",
+       "next_action": "enable 'forge' under status_sources or accept that its view stays unknown"}
+    ]
   }
 }
 ```

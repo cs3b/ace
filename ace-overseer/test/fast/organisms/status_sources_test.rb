@@ -27,7 +27,9 @@ class StatusSourcesTest < AceOverseerTestCase
       context_collector: nil,
       project_root: "/project",
       config: {"status_sources" => config},
-      sources: sources
+      sources: sources,
+      # hermetic attention scan: no real ace-hitl inbox in these tests
+      attention: Ace::Overseer::Organisms::StatusAttention.new(hitl_events: -> { [] })
     )
   end
 

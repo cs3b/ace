@@ -16,12 +16,13 @@ module Ace
         DEFAULT_SOURCE_OPTIONS = %w[enabled].freeze
 
         def initialize(worktree_manager: nil, context_collector: nil, project_root: nil, config: nil,
-          sources: nil)
+          sources: nil, attention: nil)
           @worktree_manager = worktree_manager || Ace::Git::Worktree::Organisms::WorktreeManager.new
           @context_collector = context_collector || Molecules::WorktreeContextCollector.new
           @project_root = project_root
           @config = config
           @sources = sources
+          @attention = attention || Organisms::StatusAttention.new
         end
 
         # Aggregate the configurable status sources (L7.2). Each enabled
@@ -38,20 +39,28 @@ module Ace
             source = source_map[key]
             [key, source_result(source, configured[key])]
           end
-          {sources: results, unknown_keys: unknown_keys(configured)}
+          snapshot = {sources: results, unknown_keys: unknown_keys(configured)}
+          snapshot[:attention] = @attention.scan(snapshot)
+          snapshot
         end
 
         def to_sources_h(snapshot)
-          {sources: snapshot[:sources], unknown_keys: Array(snapshot[:unknown_keys])}
+          {
+            sources: snapshot[:sources],
+            unknown_keys: Array(snapshot[:unknown_keys]),
+            attention: snapshot[:attention]
+          }
         end
 
         def to_sources_table(snapshot)
-          sections = STATUS_SOURCE_ORDER.filter_map do |key|
+          sections = [render_attention(snapshot[:attention])]
+          source_sections = STATUS_SOURCE_ORDER.filter_map do |key|
             result = snapshot[:sources][key]
             next if result.nil?
 
             render_source_section(key, result)
           end
+          sections.concat(source_sections)
           sections.concat(unknown_key_warnings(snapshot[:unknown_keys]))
           sections.join("\n\n")
         end
@@ -107,6 +116,44 @@ module Ace
         end
 
         private
+
+        ATTENTION_LABELS = {blockers: "BLOCKER", failures: "FAILURE", missing_data: "MISSING DATA"}.freeze
+
+        # The L7.4 attention section renders first so blockers, failures
+        # and missing data lead the view instead of hiding between
+        # healthy source sections.
+        def render_attention(attention)
+          return "-- attention: none (no blockers, failures or missing data)" if attention.nil? ||
+            attention.values.all? { |rows| rows.empty? }
+
+          counts = ATTENTION_LABELS.keys.map { |key| "#{attention[key].length} #{key}" }.join(", ")
+          lines = ["-- attention: #{counts}"]
+          ATTENTION_LABELS.each do |key, label|
+            attention[key].each { |row| lines.concat(render_attention_row(label, row)) }
+          end
+          lines.join("\n")
+        end
+
+        def render_attention_row(label, row)
+          lines = ["  #{label}  #{row[:kind]}  #{attention_subject(row)}"]
+          detail = attention_detail(row)
+          lines << "    detail: #{detail}" unless detail.to_s.empty?
+          lines << "    next: #{row[:next_action]}"
+          lines
+        end
+
+        def attention_subject(row)
+          subject = row[:subject] || row[:task_id]
+          subject = "#{subject} [#{row[:tree]}]" if row[:tree]
+          subject
+        end
+
+        def attention_detail(row)
+          return row[:reasons].join("; ") if row[:reasons]
+          return "#{row[:detail]} (#{row[:origin]})" if row[:origin]
+
+          row[:detail]
+        end
 
         def source_result(source, options)
           return {status: "disabled"} if source.nil? || options.is_a?(Hash) && options["enabled"] == false
