@@ -399,3 +399,22 @@ module Organisms
     end
   end
 end
+
+  # --- review round 2: verify stage never crashes the install ----------
+
+  class CrashingVerify
+    def call
+      raise "boom from verify internals"
+    end
+  end
+
+  def test_unexpected_verify_crash_is_a_classified_failed_stage_not_a_raw_error
+    with_install(verify: CrashingVerify.new) do |organism, _dir, _auth|
+      report = organism.call
+
+      refute report["ok"]
+      assert_equal false, report["verify"]["ready"]
+      assert_equal "failed", report["verify"]["status"]
+      assert_match(/RuntimeError: boom from verify internals/, report["verify"]["message"])
+    end
+  end

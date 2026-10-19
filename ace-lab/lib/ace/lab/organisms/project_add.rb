@@ -26,9 +26,10 @@ module Ace
       class ProjectAdd
         attr_reader :dry_run
 
-        def initialize(runner: nil, account_lookup: nil, dry_run: false)
+        def initialize(runner: nil, account_lookup: nil, chown: nil, dry_run: false)
           @runner = runner
           @account_lookup = account_lookup
+          @chown = chown
           @dry_run = dry_run
         end
 
@@ -110,13 +111,21 @@ module Ace
           return base.merge("status" => "kept", "message" => nil) if current.uid == entry.uid
 
           begin
-            require "fileutils"
-            FileUtils.chown_R(path, entry.uid, entry.gid)
-          rescue SystemCallError, ArgumentError => e
+            chown.call(entry.uid, entry.gid, path)
+          rescue SystemCallError, ArgumentError, TypeError => e
             return base.merge("status" => "failed",
               "message" => "propagating ownership of '#{path}' to '#{owner}' failed: #{e.message}")
           end
           base.merge("status" => "propagated", "message" => nil)
+        end
+
+        # Privileged recursive chown; injectable so tests can exercise
+        # the root branch without uid 0.
+        def chown
+          @chown || ->(uid, gid, path) {
+            require "fileutils"
+            FileUtils.chown_R(uid, gid, path)
+          }
         end
 
         def skipped_owner(owner, message)

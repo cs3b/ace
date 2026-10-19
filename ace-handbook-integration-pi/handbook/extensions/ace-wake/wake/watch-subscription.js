@@ -74,7 +74,7 @@ const RECONCILE_DELAY_MS = 500;
 const MAX_ANCESTOR_CLIMB = 6;
 
 export function createWatchPort({ watchFactory, statFn, baseDir = process.cwd(), canonicalizeFn = canonicalizeWatchPath, resolveTargets = expandInboxWatchTargets, scheduleReconcile = defaultScheduleReconcile, onDeactivate }) {
-  /** @type {Map<string, {watchers: Array<{watcher: {close: () => void}}>, paths: string[], definition: import("./types.js").WatchDefinition, fingerprint: string, previousFingerprint: string, dirty: boolean}>} */
+  /** @type {Map<string, {watchers: Array<{path: string, watchPath: string, watcher: {close: () => void}}>, paths: string[], definition: import("./types.js").WatchDefinition, fingerprint: string, previousFingerprint: string, dirty: boolean}>} */
   const active = new Map();
   /** @type {Map<string, string>} */
   const errors = new Map();
@@ -225,6 +225,7 @@ export function createWatchPort({ watchFactory, statFn, baseDir = process.cwd(),
     if (entry === undefined || entry.definition !== definition) {
       return;
     }
+    refreshAttachments(entry, definition, onWake);
     const next = currentFingerprint(entry, definition.name);
     if (next === undefined) {
       return;
@@ -308,7 +309,7 @@ export function createWatchPort({ watchFactory, statFn, baseDir = process.cwd(),
    * @param {string} target
    * @param {import("./types.js").WatchDefinition} definition
    * @param {(definition: import("./types.js").WatchDefinition) => unknown} onWake
-   * @returns {Array<{path: string, watcher: {close: () => void}}>}
+   * @returns {Array<{path: string, watchPath: string, watcher: {close: () => void}}>}
    */
   function attachWatcher(target, definition, onWake) {
     const handlers = {
@@ -336,7 +337,43 @@ export function createWatchPort({ watchFactory, statFn, baseDir = process.cwd(),
         watchPath = nodePath.dirname(watchPath);
       }
     }
-    return [{ path: target, watcher: watchFactory(watchPath, handlers) }];
+    return [{ path: target, watchPath, watcher: watchFactory(watchPath, handlers) }];
+  }
+
+  /**
+   * Re-attach targets that were watched through an ancestor because they
+   * did not exist yet. Linux inotify is non-recursive, so the ancestor's
+   * watch never sees a SECOND report created inside the now-existing
+   * target; once the target exists, close the ancestor watch and watch
+   * the real target directly. Runs on every change/reconcile pass, which
+   * is exactly when a formerly-absent target may have appeared.
+   *
+   * @param {{watchers: Array<{path: string, watchPath: string, watcher: {close: () => void}}>} } entry
+   * @param {import("./types.js").WatchDefinition} definition
+   * @param {(definition: import("./types.js").WatchDefinition) => unknown} onWake
+   */
+  function refreshAttachments(entry, definition, onWake) {
+    for (let index = 0; index < entry.watchers.length; index += 1) {
+      const attached = entry.watchers[index];
+      if (attached.watchPath === attached.path) {
+        continue;
+      }
+      try {
+        statFn(attached.path);
+      } catch {
+        // Still absent: the ancestor watch remains the only channel.
+        continue;
+      }
+      try {
+        attached.watcher.close();
+      } catch {
+        // Closing an already-broken watcher must not block re-attachment.
+      }
+      const replacement = attachWatcher(attached.path, definition, onWake);
+      if (replacement.length > 0) {
+        entry.watchers[index] = replacement[0];
+      }
+    }
   }
 
   /**

@@ -650,3 +650,64 @@ module Organisms
     end
   end
 end
+
+# --- review round 2: probe posture under unset PATH, root nav trust ----
+
+class VerifyProbeTest < Minitest::Test
+  def organism
+    Ace::Lab::Organisms::Verify.new
+  end
+
+  def test_unset_path_makes_tool_and_adapter_probes_unknown_not_failed
+    old = ENV["PATH"]
+    ENV["PATH"] = ""
+    begin
+      tools = organism.send(:check_tools, {"tools" => %w[git]})
+      assert_equal 1, tools.length
+      assert_equal "unknown", tools.first["status"], tools.inspect
+      assert_match(/PATH is unset/, tools.first["reason"])
+
+      adapters = organism.send(:check_adapters,
+        {"adapters" => [{"id" => "hermes", "kind" => "communication",
+                         "config" => {}, "command" => "git"}]})
+      assert_equal "unknown", adapters.first["status"], adapters.inspect
+      assert_match(/PATH is unset/, adapters.first["reason"])
+    ensure
+      ENV["PATH"] = old
+    end
+  end
+
+  def test_path_probe_is_tristate
+    old = ENV["PATH"]
+    ENV["PATH"] = ""
+    begin
+      assert_equal :unknown, organism.send(:path_probe, "git")
+    ensure
+      ENV["PATH"] = old
+    end
+    assert_equal :pass, organism.send(:path_probe, "git")
+    assert_equal :fail, organism.send(:path_probe, "definitely-not-a-lab-tool-xyz")
+  end
+
+  def test_root_installer_never_executes_the_project_binstub
+    argv_seen = []
+    nav_runner = ->(argv, _cwd) { argv_seen << argv; {"status" => "ok", "out" => "resolved", "err" => ""} }
+    verify = Ace::Lab::Organisms::Verify.new(nav_runner: nav_runner)
+
+    Dir.mktmpdir do |dir|
+      binstub = File.join(dir, "bin", "ace-nav")
+      FileUtils.mkdir_p(File.join(dir, "bin"))
+      FileUtils.touch(binstub)
+      File.chmod(0o755, binstub)
+
+      # Non-root keeps the executor's binary choice: the binstub.
+      Process.stub :uid, 501 do
+        assert_equal binstub, verify.send(:nav_binary, dir)
+      end
+      # Root never runs repository-controlled binstubs: PATH only.
+      Process.stub :uid, 0 do
+        assert_equal "ace-nav", verify.send(:nav_binary, dir)
+      end
+    end
+  end
+end

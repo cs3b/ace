@@ -50,6 +50,20 @@ module Ace
           unsafe = unsafe_symlink_reason(root)
           return failed(unsafe) if unsafe
 
+          # A repo-controlled symlink at the ignore path is refused up
+          # front — no privileged read-through either (git check-ignore
+          # would follow the link): same trust posture as the LAB-1
+          # write refusals.
+          gitignore_stat = begin
+            File.lstat(gitignore)
+          rescue Errno::ENOENT, Errno::ENOTDIR
+            nil
+          end
+          if gitignore_stat&.symlink?
+            return failed("'#{gitignore}' is a symbolic link; refusing to follow it with " \
+              "installer privileges (remove the link and rerun)")
+          end
+
           # Dry-run prediction for a repository the clone step would
           # create: no work tree exists to evaluate yet — predict the
           # rule the wet run appends.
@@ -59,20 +73,6 @@ module Ace
             ignore_decision(root)
           end
           return failed(ignore["message"]) if ignore["status"] == "failed"
-
-          unless ignore["ignored"]
-            # A gitignore write is required: a repo-controlled symlink
-            # at that path must be refused BEFORE any mutation (LAB-1).
-            gitignore_stat = begin
-              File.lstat(gitignore)
-            rescue Errno::ENOENT, Errno::ENOTDIR
-              nil
-            end
-            if gitignore_stat&.symlink?
-              return failed("'#{gitignore}' is a symbolic link; refusing to follow it with " \
-                "installer privileges (remove the link and rerun)")
-            end
-          end
 
           dir_present = File.directory?(directory)
           if dir_present && ignore["ignored"]

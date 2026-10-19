@@ -139,6 +139,9 @@ module Ace
         rescue Ace::Lab::InvalidConfigurationError => e
           {"ready" => false, "status" => "failed",
            "message" => "final verification could not run: #{e.message}"}
+        rescue StandardError => e
+          {"ready" => false, "status" => "failed",
+           "message" => "final verification crashed: #{e.class}: #{e.message}"}
         end
 
         def verify_stage_ok?(report)

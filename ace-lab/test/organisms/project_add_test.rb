@@ -146,6 +146,25 @@ module Organisms
       assert_match(/account 'ghost' does not exist/, report["owner"]["message"])
     end
 
+    def test_root_installer_propagates_ownership_with_correct_chown_arguments
+      entry = LabTestHelper::FakeEntry.new(name: "ace-worker", uid: 4242,
+        gid: 1042, dir: File.join(@tmp, "home"), shell: "/bin/zsh")
+      chowned = []
+      organism = Ace::Lab::Organisms::ProjectAdd.new(
+        account_lookup: ->(_) { entry },
+        chown: ->(uid, gid, path) { chowned << [uid, gid, path] }
+      )
+
+      report = nil
+      Process.stub :uid, 0 do
+        report = organism.call(id: "atlas", path: @path, remote: @source, owner: "ace-worker")
+      end
+
+      assert report["ok"], report.inspect
+      assert_equal "propagated", report["owner"]["status"]
+      assert_equal [[4242, 1042, @path]], chowned
+    end
+
     def test_no_declared_owner_leaves_ownership_untouched
       report = add
 

@@ -20,6 +20,29 @@ const REPO_ROOT = path.resolve(PACKAGE_ROOT, "..");
 
 const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+/**
+ * Await a condition instead of sleeping a fixed gap: poll on a short
+ * interval until the predicate holds or the deadline passes. Removes the
+ * flake profile of fixed sleeps (too short on slow disks, needlessly slow
+ * otherwise).
+ *
+ * @param {() => boolean} predicate
+ * @param {string} description
+ * @param {number} timeoutMs
+ */
+async function waitFor(predicate, description, timeoutMs = 5000) {
+  const deadline = Date.now() + timeoutMs;
+  for (;;) {
+    if (predicate()) {
+      return;
+    }
+    if (Date.now() >= deadline) {
+      assert.fail(`timed out waiting for ${description}`);
+    }
+    await pause(25);
+  }
+}
+
 function run(command, args, options = {}) {
   const result = spawnSync(command, args, { encoding: "utf8", ...options });
   assert.equal(result.status, 0, `${command} ${args.join(" ")} failed:\n${result.stdout}\n${result.stderr}`);
@@ -61,9 +84,8 @@ describe("report wake across a real linked worktree (PR393)", () => {
             return { delivered: true };
           },
         );
-        await pause(700);
-
-        // The coworker files its report from INSIDE its own worktree.
+        // The coworker files its report from INSIDE its own worktree. No
+        // fixed pre-sleep: the reconcile pass covers the registration gap.
         const report = spawnSync(path.join(REPO_ROOT, "bin", "ace-hitl"),
           ["create", "Worker complete", "--type", "report", "--result", "success", "--body", "Done"],
           { cwd: worker, encoding: "utf8" });
@@ -74,8 +96,22 @@ describe("report wake across a real linked worktree (PR393)", () => {
         assert.equal(fs.readdirSync(path.join(main, ".ace-local", "hitl")).length, 0,
           "the main inbox is untouched: only cross-worktree expansion can wake");
 
-        await pause(900);
-        assert.ok(wakes > 0, "documented main watch never woke for the task-worktree report");
+        await waitFor(() => wakes >= 1, "the first cross-worktree report to wake");
+        const wakesAfterFirst = wakes;
+
+        // A SECOND report into the now-existing worktree inbox: Linux
+        // inotify is non-recursive, so the ancestor watch the absent inbox
+        // started with can never see it — the refresh pass must have
+        // re-attached the inbox directory directly.
+        const secondReport = spawnSync(path.join(REPO_ROOT, "bin", "ace-hitl"),
+          ["create", "Worker follow-up", "--type", "report", "--result", "success", "--body", "More"],
+          { cwd: worker, encoding: "utf8" });
+        assert.equal(secondReport.status, 0,
+          `second ace-hitl create failed: ${secondReport.error ? secondReport.error.message : ""}\n${secondReport.stdout}\n${secondReport.stderr}`);
+        assert.ok(fs.readdirSync(workerInbox).length > 1, "the second report must land in the worktree inbox");
+
+        await waitFor(() => wakes > wakesAfterFirst, "the second report into the formerly-absent inbox to wake");
+        assert.ok(wakes > wakesAfterFirst, "the ancestor watch alone stayed deaf to the second report");
       } finally {
         stopWatch();
         process.off("exit", stopWatch);

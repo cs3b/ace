@@ -169,6 +169,30 @@ describe("report wake (L7.3 continuation transport)", () => {
       "the first report into a freshly created worktree inbox must still wake");
   });
 
+  it("re-attaches the formerly-absent inbox directly and wakes for the SECOND report", async () => {
+    const { host, session } = await overseerSessionAcrossWorktrees({ worktreeInboxExists: false });
+
+    // First report: the inbox appears; the ancestor watch delivers it and
+    // the refresh pass must swap the ancestor watch for a direct one.
+    host.setFile(WORKTREE_INBOX, { mtimeMs: 5, size: 30 });
+    host.triggerWatch(WORKTREE_INBOX);
+    assert.equal(reportSends(host).length, 1);
+    assert.ok(host.watcherPaths().includes(WORKTREE_INBOX),
+      `the now-existing inbox must be watched directly, got ${host.watcherPaths()}`);
+    assert.ok(!host.watcherPaths().includes("/fake/wt/task-9/.ace-local"),
+      "the ancestor watch must be closed once the real target exists");
+    session.settle();
+
+    // Second report INTO the now-existing inbox: Linux inotify is
+    // non-recursive, so only a direct watch on the inbox directory can
+    // observe this — the ancestor climb alone would stay deaf.
+    host.setFile(WORKTREE_INBOX, { mtimeMs: 7, size: 52 });
+    host.triggerWatch(WORKTREE_INBOX);
+
+    assert.equal(reportSends(host).length, 2,
+      "the second report into a formerly-absent inbox must wake");
+  });
+
   it("re-expands the worktree targets exactly once per restart", async () => {
     const { host, session } = await overseerSessionAcrossWorktrees();
 

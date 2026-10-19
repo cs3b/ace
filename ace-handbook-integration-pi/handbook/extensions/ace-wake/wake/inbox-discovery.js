@@ -1,4 +1,5 @@
 import { execFileSync } from "node:child_process";
+import * as nodeFs from "node:fs";
 import * as nodePath from "node:path";
 
 /**
@@ -58,7 +59,7 @@ export function discoverWorktreeRoots(baseDir, execGit = defaultExecGit) {
  * @returns {string[]} canonical target directories, sorted and unique
  */
 export function expandInboxWatchTargets(baseDir, configuredPath, execGit = defaultExecGit) {
-  const primary = nodePath.resolve(baseDir, configuredPath);
+  const primary = realpathOrSelf(nodePath.resolve(baseDir, configuredPath));
   if (!namesInbox(primary)) {
     return [primary];
   }
@@ -66,9 +67,24 @@ export function expandInboxWatchTargets(baseDir, configuredPath, execGit = defau
   if (roots.length === 0) {
     return [primary];
   }
-  const targets = new Set(roots.map((root) => nodePath.join(root, ...HITL_INBOX_SEGMENTS)));
+  // Realpath the (existing) worktree ROOT, not the not-yet-existing inbox:
+  // /tmp → /private/tmp style symlinked roots would otherwise survive as
+  // separate strings and defeat dedup against the canonicalized primary.
+  const targets = new Set(roots.map((root) => nodePath.join(realpathOrSelf(root), ...HITL_INBOX_SEGMENTS)));
   targets.add(primary);
   return [...targets].sort();
+}
+
+/**
+ * @param {string} path
+ * @returns {string} The realpath when the path exists, the path itself otherwise.
+ */
+function realpathOrSelf(path) {
+  try {
+    return nodeFs.realpathSync(path);
+  } catch {
+    return path;
+  }
 }
 
 /** @param {string} path @returns {boolean} */

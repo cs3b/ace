@@ -158,3 +158,26 @@ module Molecules
     end
   end
 end
+
+    # Review round 2: a symlinked .gitignore is refused even when the
+    # folder would already be considered ignored — no privileged
+    # read-through (git check-ignore follows the link) either.
+    def test_gitignore_symlink_is_refused_even_when_the_rule_already_matches
+      Dir.mktmpdir do |dir|
+        repo = File.join(dir, "repo")
+        Open3.capture3("git", "init", "-q", repo)
+        skip "git unavailable" unless File.directory?(File.join(repo, ".git"))
+
+        FileUtils.mkdir_p(File.join(repo, ".ace-tasks", "_overseer"))
+        victim = File.join(dir, "outside-ignore")
+        File.write(victim, ".ace-tasks/_overseer/\n")
+        File.symlink(victim, File.join(repo, ".gitignore"))
+
+        result = Ace::Lab::Molecules::OverseerProvisioner.new.call(root: repo)
+
+        assert_equal "failed", result["status"], result.inspect
+        assert_match(/symbolic link/, result["message"])
+        assert_equal ".ace-tasks/_overseer/\n", File.read(victim),
+          "privileged read-through must not accept the link as evidence"
+      end
+    end

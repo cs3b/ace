@@ -253,9 +253,13 @@ module Ace
         # Same binary choice the executor's resolver makes
         # (Ace::Coworker::Molecules::InstructionResolver): the
         # project's binstub when present, otherwise the PATH lookup.
+        # A privileged installer never executes repository-controlled
+        # binstubs (same trust posture as the LAB-1 symlink refusals):
+        # under root only the PATH-installed resolver is used.
         def nav_binary(project_root)
           binstub = File.join(project_root, "bin", "ace-nav")
-          File.executable?(binstub) ? binstub : "ace-nav"
+          use_binstub = !Process.uid.zero? && File.executable?(binstub)
+          use_binstub ? binstub : "ace-nav"
         end
 
         def run_nav(argv, cwd)
@@ -277,6 +281,9 @@ module Ace
         end
 
         def check_repositories(manifest, executors)
+          verifier = Molecules::RoleVerifier.new(
+            account_lookup: @account_lookup, group_source: @group_source
+          )
           manifest["projects"].map do |project|
             path = project["path"]
             remote = project["remote"]
@@ -296,9 +303,7 @@ module Ace
             # is NOT ready even though the installer's git succeeded.
             if reason.nil?
               reason = executors.filter_map do |entry|
-                access = Molecules::RoleVerifier.new(
-                  account_lookup: @account_lookup, group_source: @group_source
-                ).directory_access_reason(path, entry)
+                access = verifier.directory_access_reason(path, entry)
                 access ? "executor '#{entry.name}': #{access}" : nil
               end.join("; ")
               reason = nil if reason.empty?
@@ -460,15 +465,22 @@ module Ace
           manifest["adapters"].map do |adapter|
             reason = if !adapter["config"].is_a?(Hash)
               "adapter '#{adapter['id']}' configuration is not a mapping"
-            elsif adapter["command"] && !executable_on_path?(adapter["command"])
-              "adapter '#{adapter['id']}' command '#{adapter['command']}' is not available " \
-                "(not found on PATH); fix the adapter installation or the manifest declaration"
+            elsif adapter["command"]
+              adapter_command_reason(adapter)
             end
             note = if reason.nil? && adapter["command"].nil?
               "configured (no local command declared; network reachability is out of scope)"
             end
+            probe = adapter["command"] ? path_probe(adapter["command"]) : :pass
+            status = if probe == :unknown
+              UNKNOWN
+            elsif reason
+              FAIL
+            else
+              PASS
+            end
             {"adapter" => adapter["id"], "kind" => adapter["kind"], "command" => adapter["command"],
-             "status" => reason ? FAIL : PASS, "reason" => reason || note}
+             "status" => status, "reason" => reason || note}
           end
         end
 
@@ -477,23 +489,51 @@ module Ace
         # blocks readiness. No execution, no network.
         def check_tools(manifest)
           manifest["tools"].map do |tool|
-            reason = "required tool '#{tool}' is not available (not found on PATH)" unless executable_on_path?(tool)
-            {"tool" => tool, "status" => reason ? FAIL : PASS, "reason" => reason}
+            case path_probe(tool)
+            when :pass
+              {"tool" => tool, "status" => PASS, "reason" => nil}
+            when :fail
+              {"tool" => tool, "status" => FAIL,
+               "reason" => "required tool '#{tool}' is not available (not found on PATH)"}
+            else
+              {"tool" => tool, "status" => UNKNOWN,
+               "reason" => "PATH is unset; cannot probe tool '#{tool}' availability"}
+            end
           end
         end
 
         # Resolve an executable without running it: a name containing a
         # separator must be executable at that path; a bare name must
-        # resolve through PATH. An unset PATH leaves the probe
-        # undecidable (unknown rather than a false failure).
-        def executable_on_path?(name)
+        # resolve through PATH. An unset or empty PATH leaves the probe
+        # undecidable and yields unknown (never a false failure) — a
+        # minimal-PATH environment must not block readiness.
+        def path_probe(name)
           if name.include?(File::SEPARATOR)
-            return File.executable?(name) && File.file?(name)
+            return File.executable?(name) && File.file?(name) ? :pass : :fail
           end
 
-          (ENV["PATH"].to_s.split(File::PATH_SEPARATOR) - [""]).any? do |directory|
+          directories = (ENV["PATH"].to_s.split(File::PATH_SEPARATOR) - [""])
+          return :unknown if directories.empty?
+          directories.any? do |directory|
             candidate = File.join(directory, name)
             File.file?(candidate) && File.executable?(candidate)
+          end ? :pass : :fail
+        end
+
+        def tool_reason(tool)
+          case path_probe(tool)
+          when :fail then "required tool '#{tool}' is not available (not found on PATH)"
+          when :unknown then nil
+          end
+        end
+
+        def adapter_command_reason(adapter)
+          case path_probe(adapter["command"])
+          when :fail
+            "adapter '#{adapter['id']}' command '#{adapter['command']}' is not available " \
+              "(not found on PATH); fix the adapter installation or the manifest declaration"
+          when :unknown
+            "PATH is unset; cannot probe adapter '#{adapter['id']}' command availability"
           end
         end
 

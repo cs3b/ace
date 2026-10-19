@@ -120,6 +120,11 @@ export function createFakeHost() {
       return watchers.size;
     },
 
+    /** The exact paths native watchers are registered on (not targets). */
+    watcherPaths() {
+      return [...watchers.keys()];
+    },
+
     /** Invoke a registered slash command. */
     async runCommand(name, args) {
       const command = commands.get(name);

@@ -136,6 +136,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Critical review fix: `ProjectAdd`'s privileged ownership propagation
+  called `FileUtils.chown_R` with the wrong argument order (path
+  passed as the user, the gid Integer as the file list), so every
+  root install with a declared owner failed the `owner` step with a
+  misleading error. The chown is now invoked as
+  `chown_R(uid, gid, path)`, rescued for TypeError as well, and is an
+  injectable seam so the root branch is testable without uid 0.
+- Review fix: an unset or empty `PATH` no longer produces false FAILs
+  for the tools/adapters checks — the probe is tri-state and yields
+  `unknown` ("PATH is unset; cannot probe …") instead of blocking
+  readiness in minimal-PATH environments.
+- Review fix (trust posture): a privileged (root) installer never
+  executes the repository-controlled `bin/ace-nav` binstub during
+  final verification — under root only the PATH-installed resolver is
+  used, consistent with the LAB-1 symlink refusals.
+- Review fix: an unexpected exception from the final verify stage is
+  a classified `verify: failed` install stage, never a raw crash.
+- Review fix: a symlinked `.gitignore` is refused up front even when
+  the ignore rule would already match — no privileged read-through
+  (`git check-ignore` follows the link) either.
+
 - Privileged provisioning writes no longer follow repository-controlled
   symlinks (LAB-1, audit PR #393): `OverseerProvisioner` refuses a
   symlinked `.gitignore` (checked via lstat before any read/append) or
