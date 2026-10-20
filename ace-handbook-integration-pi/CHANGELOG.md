@@ -29,4 +29,3 @@ All notable changes to ace-handbook-integration-pi will be documented in this fi
 - `expandInboxWatchTargets` now realpath-normalizes its results (worktree roots before joining the inbox suffix, since the inbox itself may not exist yet): symlinked roots (`/tmp` → `/private/tmp`) previously survived as distinct strings, defeating the target dedup in `createWatchPort`'s `resolveTargetsFor` and double-watching one physical inbox.
 - `test/js/report-wake-worktree.test.mjs` no longer sleeps fixed 700/900 ms gaps: an awaited-event helper (`waitFor`, 25 ms poll with a 5 s deadline) awaits each expected wake directly, removing slow-machine flake and shortening the fast path.
 
-0.6.0

@@ -28,4 +28,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   live-but-empty layout printing `No live herdr workspaces.` (exit 0) while
   an unreachable runtime stays an actionable non-zero error.
 
-0.8.0

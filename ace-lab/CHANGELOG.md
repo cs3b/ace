@@ -381,4 +381,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   digits inside account names such as `deploy-2026` can no longer be
   mistaken for UIDs.
 
-0.13.0
