@@ -14,4 +14,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Remove the attempt/authority requirement from `wfi://handbook/perform-delivery`: record actual artifacts, executed checks and the independent reviewer verdict in the assignment report instead of attempt receipts; managed delivery remains planned for L5.5.
 
-0.36.0
