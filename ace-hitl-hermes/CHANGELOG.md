@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.1] - 2026-10-20
+
+### Fixed
+
+- Restore the native file-event path for an already running Hermes gateway with
+  no Ruby installed: the packaged `native-folder` plugin uses its authenticated
+  live adapter and pre-dispatch hook, with no lifecycle endpoint or second
+  poller. Existing lifecycle mode remains explicit.
+- Bind exact Reply to the original project/worktree/file/case through private
+  shared-folder frames. `ace-hitl-hermes sync` reconciles receipts and answers
+  into ace-hitl; plain group instructions go only to the configured coordinator.
+- Keep spool acceptance separate from confirmed Telegram delivery. Startup
+  waits before sending; interrupted/ambiguous sends remain unknown without
+  automatic retries. Duplicate Reply imports preserve the first answer.
+- Require ace-hitl >= 0.23.2 within the 0.23 series. The native route is opt-in;
+  see `docs/native-folder.md` for recipient selectors, explicit root allowlists,
+  package asset installation, single-owner cutover and pending installed gates.
+
 ## [0.9.0] - 2026-10-18
 
 ### Fixed

@@ -1,21 +1,37 @@
-"""ACE Hermes pre-dispatch guard: secrets never reach the inbound preview.
+"""ACE pre-dispatch guard and optional native-folder gateway transport.
 
-The supervised ace-hitl-hermes actor owns Telegram polling. This hook is also
-usable with an existing gateway for interception, but cannot prove drainage.
+Native mode uses only the existing gateway; the explicit lifecycle mode keeps
+its published CLI interception contract.
 """
 from __future__ import annotations
 
 import json
 import os
 import subprocess
+import asyncio
+import importlib.util
 from pathlib import Path
+
+_native = None
+
+
+def _native_module():
+    spec = importlib.util.spec_from_file_location(
+        __name__ + ".native_transport", Path(__file__).with_name("native_transport.py"))
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
 
 
 def _handle(_args):
+    if _native is not None:
+        return "Reply to the original ACE question in its registered Telegram group."
     return "Use Telegram Reply or /hitl-reply ID ANSWER in the registered group."
 
 
 def _pre_dispatch(event, **_kwargs):
+    if _native is not None:
+        return _native.receive(event)
     source = getattr(event, "source", None)
     platform = getattr(source, "platform", "")
     if str(getattr(platform, "value", platform)).lower() != "telegram":
@@ -56,7 +72,24 @@ def _pre_dispatch(event, **_kwargs):
 
 
 def register(ctx):
+    global _native
+    config_path = os.environ.get("ACE_HITL_HERMES_CONFIG", "")
+    config = json.loads(Path(config_path).read_text()) if config_path else {}
+    _native = None
+    if config.get("mode") == "native-folder":
+        module = _native_module()
+        # Validate before registering any hook: a rejected native configuration
+        # must not accidentally install the unrelated lifecycle interception.
+        _native = module.NativeTransport(config, module.gateway_send)
     ctx.register_command("hitl-reply", handler=_handle,
                          description="Answer one correlated ACE HITL request.",
                          args_hint="ID ANSWER")
     ctx.register_hook("pre_gateway_dispatch", _pre_dispatch)
+    if _native is not None:
+        # Hermes plugin discovery can also run in a CLI without a live gateway.
+        # Only its existing event loop owns this task; no background process.
+        try:
+            asyncio.get_running_loop()
+        except RuntimeError:
+            return
+        ctx.spawn_task(_native.run(), name="ace-hitl-native-folder")

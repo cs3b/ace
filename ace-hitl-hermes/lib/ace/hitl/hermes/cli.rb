@@ -4,6 +4,7 @@ require "ace/support/cli"
 require "optparse"
 require "fileutils"
 require_relative "runtime"
+require_relative "organisms/native_sync"
 
 module Ace
   module Hitl
@@ -13,7 +14,7 @@ module Ace
           args = argv.dup
           operation = args.shift
           if [nil, "--help", "-h", "help"].include?(operation)
-            output.puts("ace-hitl-hermes serve|submit|receive|delivery|ingress reconcile|plugin install --config FILE")
+            output.puts("ace-hitl-hermes sync|serve|submit|receive|delivery|ingress reconcile|plugin install --config FILE")
             return
           end
           if %w[--version version].include?(operation)
@@ -40,6 +41,14 @@ module Ace
             raise ContractError, "plugin destination already exists" if File.exist?(destination)
             FileUtils.cp_r(File.expand_path("../../../../plugin", __dir__), destination)
             output.puts(JSON.generate({"installed" => true, "path" => destination}))
+            return
+          end
+          if operation == "sync"
+            # This is a native adapter-route JSON object, not lifecycle config.
+            route = JSON.parse(File.read(options.fetch(:config)))
+            result = Organisms::NativeSync.new(route).run
+            output.puts(JSON.generate(result))
+            raise ContractError, "native synchronization incomplete" unless result["errors"].empty?
             return
           end
           runtime = Runtime.new(options.fetch(:config))

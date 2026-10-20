@@ -104,3 +104,52 @@ w niezmienionym teście TLS `test_service_admits_exactly_the_pinned_client_ident
 spodziewany komunikat o fingerprint, otrzymane `ECONNRESET`. To nie jest PASS
 całego pakietu ani dowód wdrożenia. Raport próby:
 `ace-hitl/.ace-local/test/reports/hitl/a0e2359d-eeab-4767-a3b2-e7eb7a2141be/`.
+
+Przy implementacji natywnego transportu sprawdzono rzeczywisty interfejs Hermesa:
+rejestracja pluginów poprzedza połączenie adapterów. Brak aktywnego adaptera
+przed wywołaniem send musi pozostać `waiting_gateway`; nie wolno zaklasyfikować
+go jako niepewnej wysyłki ani oznaczyć jako dostarczone. Dopiero wywołanie send
+przekracza granicę skutku: jego przerwanie daje `unknown`, bez automatycznej
+powtórki. Własny test importerów wykrył też pustą sekcję Answer w nowym zdarzeniu;
+idempotentny import sprawdza zawartość pod blokadą pliku, a nie sam nagłówek.
+
+Pierwszy wycinek `565fb925539bcb7a322b9f0782e74a11a8fb8278` przeszedł
+niezależny review: APPROVE. Reviewer odtworzył również powyższy błąd TLS na
+niezmienionej bazie; pełny HITL nadal nie jest oznaczony jako zielony.
+
+Drugi wycinek dodaje jawny adapter `hermes_native`, pakietowy plugin Pythona
+oraz jednorazowe `ace-hitl-hermes sync`. Przetestowano rzeczywiste prywatne pliki
+Ruby → plugin Python bez Ruby w PATH → Ruby, dwa worktree z takim samym ID,
+dokładne Reply także do części dzielonej wiadomości, duplikaty/restart, odmowę
+innego nadawcy/projektu, symlinki, brak połączonego gatewaya i utraconą odpowiedź
+send bez powtórki. Zwykła instrukcja trafia tylko do koordynatora. Zapis pliku
+nie jest `delivered`; status kanonicznej trasy zmienia dopiero wynik adaptera
+z konkretnymi identyfikatorami wiadomości. Żądania z `lab_request_id` nie mogą
+przejść do tego transportu ani importera — pozostają w uwierzytelnionym lifecycle.
+
+Wykonane testy źródła i artefaktu:
+
+```text
+bin/ace-test hitl-hermes all
+209 tests, 1205 assertions, 0 failures, 0 errors
+report: ace-hitl-hermes/.ace-local/test/reports/hitl-hermes/9fbfd0bf-355a-4236-9000-fc2bc77297a2/
+
+Po końcowym doprecyzowaniu odmowy managed lifecycle:
+bin/ace-test hitl-hermes test/fast/organisms/native_sync_test.rb test/fast/commands/native_plugin_test.rb
+11 tests, 67 assertions, 0 failures, 0 errors
+report: ace-hitl-hermes/.ace-local/test/reports/hitl-hermes/8bae13fb-a53c-46a9-aaf6-3328ea520f74/
+```
+
+Test komend buduje rzeczywisty gem, wyciąga go, porównuje zapakowany
+`plugin/native_transport.py` oraz sprawdza podłogę zależności HITL.
+Publiczne API RubyGems zwróciło 2026-10-20 odpowiednio 0.23.1 i 0.9.0;
+przygotowane wersje to ace-hitl 0.23.2 i ace-hitl-hermes 0.9.1, z wymaganiem
+HITL >= 0.23.2. `bundle check`, kontrola whitespace i gitleaks przeszły.
+Doctor: 860 zadań, 509 ostrzeżeń, 0/100; nie jest to czysta globalna baza.
+
+Konfiguracja, migracja selektorów `recipients`, instalacja pluginu, cutover
+jednego właściciela grupy i granice retencji są opisane w
+`ace-hitl-hermes/docs/native-folder.md`. Drugi wycinek czeka na niezależny review.
+Brak publikacji, instalacji, aktywacji lub wysłania wiadomości Telegram w ramach
+tego wycinka. Rzeczywisty odbiór z wydanych gemów i istniejącego współdzielonego
+folderu pozostaje otwarty; zadanie nadal in-progress.

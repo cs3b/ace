@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.23.2] - 2026-10-20
+
+### Fixed
+
+- Select addressed-event routes by configured recipient names resolved to the
+  exact stored address. Unrelated terminal/Telegram routes no longer send or
+  create false delivery failures. Zero matches fail before adapter IO.
+  **Configuration migration:** add `recipients: [name]` to each addressed route;
+  names must exist in `hitl.recipients`. Recipient-less local events retain their
+  explicitly configured route set.
+- Accept native Herdr panel handles such as `w7:p1` without changing machine or
+  folder validation.
+- Provide first-answer-wins `HitlManager#accept_answer` for native transport
+  imports; exact replays preserve bytes and conflicting answers cannot replace
+  an existing answer under the case write lock.
+
 ## [0.23.1] - 2026-10-18
 
 ### Fixed
