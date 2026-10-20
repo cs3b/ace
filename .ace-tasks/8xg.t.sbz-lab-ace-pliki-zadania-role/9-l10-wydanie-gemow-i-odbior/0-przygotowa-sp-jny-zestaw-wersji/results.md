@@ -39,7 +39,10 @@ rozwiązuje zależności — potwierdzone eksperymentalnie (scenariusz błędu).
   `.ace-local/release/wave4/`. Hasze dotyczą artefaktów przebudowanych PO
   wszystkich naprawach CHANGELOGów (ruch treści pod nagłówki wersji,
   usunięcie stray-line, kategoryzacja root) — 9.1 publikuje wyłącznie te
-  pliki, bez przebudowy między weryfikacją hasha a pushem.
+  pliki, bez przebudowy między weryfikacją hasha a pushem. Przebudowano
+  wszystkie 10 artefaktów spoza floorów (identyczna treść też zmienia hash —
+  stąd nowy hash ace-review bez zmiany źródła w zakresie delty); floory
+  (ace-task, ace-hitl, ace-hitl-hermes) zachowują wcześniejsze buildy.
 
 ## Wykonana weryfikacja
 
@@ -95,4 +98,5 @@ rozwiązuje zależności — potwierdzone eksperymentalnie (scenariusz błędu).
   podsumowanie 52/0 failed w logu fali.
 - Instrukcja dla 9.1 (z review): przed KAŻDYM `gem push` porównać
   `shasum -a 256` pliku z `.ace-local/release/wave4/` z hashem w manifeście
-  i NIE przebudowywać artefaktów między weryfikacją a pushem.
+  i NIE przebudowywać artefaktów między weryfikacją a pushem; wyjścia
+  komend shasum zachować w receiptach 9.1 jako dowód.
