@@ -2,6 +2,6 @@
 
 module Ace
   module Handbook
-    VERSION = "0.35.1"
+    VERSION = "0.36.0"
   end
 end
