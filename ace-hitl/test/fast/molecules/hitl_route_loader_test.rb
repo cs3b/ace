@@ -89,6 +89,23 @@ module Ace
           ]))
           assert_equal "captain-telegram", routes.first["route"]
         end
+
+        def test_invalid_recipient_selector_fails_before_delivery
+          [[], "captain", [""], [false]].each do |invalid|
+            assert_raises(HitlRouteLoader::InvalidRouteError) do
+              HitlRouteLoader.load(config([{"adapter" => "terminal", "recipients" => invalid}]))
+            end
+          end
+        end
+
+        def test_matching_alias_does_not_hide_a_broken_selector
+          cfg = config([{"adapter" => "terminal", "recipients" => ["captain", "missing"]}])
+          address = {"machine" => "lab", "panel" => "captain"}
+          cfg["hitl"]["recipients"] = {"captain" => address}
+          assert_raises(HitlRouteLoader::InvalidRouteError) do
+            HitlRouteLoader.for_recipient(HitlRouteLoader.load(cfg), recipient: address, config: cfg)
+          end
+        end
       end
     end
   end

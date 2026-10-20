@@ -57,6 +57,7 @@ module Ace
           raise Adapters::Error, "HITL event '#{ref}' not found" unless current
 
           event = current[:event]
+          routes = Molecules::HitlRouteLoader.for_recipient(routes, recipient: event.recipient, config: @config)
           text = Atoms::HitlEventText.call(event)
           delivery = event.metadata["delivery"]
 

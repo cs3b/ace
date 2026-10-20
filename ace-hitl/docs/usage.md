@@ -88,7 +88,7 @@ ace-hitl create "Blocked on auth" --kind decision --to overseer --task 8xg.t.sbz
   original case and the right agent — task/assignment/step are context,
   never an ID substitute.
 - Route delivery (`send`) requires a panel-form recipient. A folder-form
-  recipient has no shipped delivery route: every route refuses it per-route
+  recipient has no shipped delivery adapter: selected adapters refuse it per-route
   with a clear `failed` reason (the event file already sitting in a folder
   is a local write, not a delivery confirmation). Refusal semantics are
   strict on both axes of the address: the terminal adapter delivers only
@@ -159,11 +159,13 @@ hitl:
   adapters:
     routes:
       - route: overseer-terminal   # display name; defaults to the adapter name
+        recipients: [overseer]     # configured names resolved to the stored destination
         adapter: terminal          # built-in: any ace-runtime terminal
         runtime: herdr             # tmux | herdr
         pane: p5                   # opaque pane handle (runtime-owned)
         machine: lab01             # defaults to hitl.machine; recipient machine must match
       - route: captain-telegram
+        recipients: [captain]
         adapter: hermes            # ships in ace-hitl-hermes
         channel: project
         machine: lab01             # defaults to hitl.machine
@@ -176,14 +178,20 @@ ace-hitl send 8xhkep
 ```
 
 ```
-HITL event 8xhkep sent through 2 route(s):
+HITL event 8xhkep sent through 1 route(s):
   overseer-terminal (terminal): delivered - text pushed to herdr pane p5
-  captain-telegram (hermes): unavailable - ...
 ```
 
 Rules:
 
-- One result line per route; a route's success never hides another route's
+- For an addressed event, only routes whose `recipients` resolve to its exact
+  stored machine and panel/folder are selected. Changing a configured alias does
+  not redirect an existing case. Missing selectors do not match addressed events;
+  no match fails before adapter invocation or delivery-state writes. Recipient-less
+  events use the explicitly configured route set.
+- Several matching routes deliver to the same intended recipient independently.
+  Unmatched routes are not invoked or recorded as failures. One result line per
+  selected route; a route's success never hides another selected route's
   failure. Exit 0 only when every route is `delivered`; exit 1 on any
   `failed`/`unavailable` route, no configured routes (concrete error naming
   `hitl.adapters.routes`), or unknown/ambiguous ref. An unknown adapter on
@@ -199,6 +207,8 @@ Rules:
   on questions only, task/assignment/step context.
 - `delivered` means accepted by the route's transport. An unavailable
   adapter never reroutes to another recipient.
+- Native terminal handles such as `w7:p1` are accepted unchanged as `panel`.
+  This does not relax the machine-token or folder-traversal rules.
 - Adding an adapter requires no ace-hitl change: a gem ships
   `lib/ace/hitl/adapters/<name>.rb` calling `Ace::Hitl::Adapters.register`
   (duck contract: `factory.call(route)` → adapter with

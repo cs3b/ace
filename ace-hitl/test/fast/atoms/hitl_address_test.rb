@@ -26,6 +26,16 @@ module Ace
           assert_equal "lab02/panel/telegram", HitlAddress.to_s(address)
         end
 
+        def test_native_herdr_handle_round_trips_without_weakening_machine_or_folder_validation
+          address = HitlAddress.validate!(machine: "lab", panel: "w7:p1")
+          assert_equal "w7:p1", address["panel"]
+          assert_equal "lab/panel/w7:p1", HitlAddress.to_s(address)
+          assert_raises(HitlAddress::InvalidAddress) { HitlAddress.validate!(machine: "w7:p1", panel: "p1") }
+          ["../p1", "w7/p1", "w7:p1;sh", "w7:p1\n", "x" * 129].each do |bad|
+            assert_raises(HitlAddress::InvalidAddress) { HitlAddress.validate!(machine: "lab", panel: bad) }
+          end
+        end
+
         def test_panel_form_drops_id
           address = HitlAddress.validate!(machine: "lab02", panel: "telegram", id: "x")
           refute address.key?("id")
