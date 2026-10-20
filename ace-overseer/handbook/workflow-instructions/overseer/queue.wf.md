@@ -123,7 +123,10 @@ Before starting any step:
    `ace-task update <step-ref> --set status=progress`.
 
 The start decision belongs to the overseer; this is reading dependencies and
-real state, not a new runtime scheduler.
+real state, not a new runtime scheduler. `ace-overseer work-on` enforces the
+same gate mechanically: it refuses to provision a worktree or assignment for
+a step whose recorded dependencies are not satisfied (predecessor status
+`done` = accepted and integrated), and reports the blocking reasons.
 
 ### 4) Hand the worktree to the next role
 
@@ -131,6 +134,19 @@ Worker finishes → reviewer starts → integrator starts, in the same worktree:
 
 - The previous assignment's completion (and handover of any fixes) ends the
   previous allocation; only then does the next role begin there.
+
+- `ace-overseer handoff --task <project-task-ref>` enforces this gate
+  mechanically in the prepared worktree: it reads the role-sequence
+  assignments (ace-assign state), the per-leg start configs, and the
+  worktree's executor truth, and hands the worktree to the next role ONLY
+  when every earlier leg reached assignment state `completed` and no
+  executor holds the worktree. A busy, in-flight, failed, or unreadable
+  predecessor refuses with reasons; unknown state is never a free resource.
+  On success it opens the next executor's window in the same worktree and
+  prints `ace-coworker start --config .ace-local/coworker/prepare/<role>.yml`
+  -- the next role starts from the existing start config, nothing is
+  re-prepared. `--dry-run` checks without effects. Use it before every
+  dispatch into a worktree that already served a previous role.
 
 - Two different tasks may run in parallel in two different worktrees; one
   worktree never has two active executors.
@@ -155,6 +171,17 @@ When a report arrives (ace-hitl event or message):
    For error/escalation: keep the step open, escalate via ace-hitl.
 4. After an interruption between recording a result and the next allocation,
    resume by re-reading the task tree and the real worktree/assignment state.
+
+`ace-overseer process-reports` executes rules 1-3 mechanically: it matches
+each incoming event (assignment recorded on a step, or the managing task's
+project_task with exactly one non-terminal step), records the outcome and
+the processed report ID on the step through the ordinary ace-task update
+surface, and continues with the next unblocked step through the existing
+gates — `ace-overseer handoff` for the next role when the family records a
+worktree, otherwise the `work-on` dependency gate. A repeated delivery is
+answered from the recorded `processed_report` and re-runs nothing; an error
+report or question never advances a step; a report matching no open
+allocation stays for clarification. `--dry-run` interprets without effects.
 
 ### 6) Close
 

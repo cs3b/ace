@@ -1,0 +1,21 @@
+---
+# Worker role assignment process (shipped gem defaults, overridable per
+# project via .ace/coworker/sequences/worker.yml). Composed by the planner
+# (ace-coworker prepare) into one ace-assign assignment for the worker leg
+# of the role sequence.
+role: worker
+description: "Worker process for task {{task}}"
+outcome: >-
+  Verified implementation of task {{task}} on the task branch: every
+  modified package passes its required tests (bin/ace-test <pkg> all) and
+  the work is committed.
+steps:
+  - name: work-on-task
+    workflow: wfi://coworker/worker
+    instructions:
+      - "Work as the worker on task {{task}}: implement the commissioned change following the worker role instructions."
+      - "Acceptance: the required tests of every modified package pass; failed required tests block success (ace-assign fail), never a forced done."
+  - name: verify-test
+    instructions:
+      - "Run bin/ace-test <package> all for every modified package and record the real test counts in the task results file."
+      - "Acceptance: 0 failures across all modified packages."

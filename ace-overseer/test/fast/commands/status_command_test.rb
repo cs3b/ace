@@ -5,12 +5,26 @@ require "tmpdir"
 
 class StatusCommandTest < AceOverseerTestCase
   class FakeCollector
-    attr_reader :collect_count, :collect_quick_count
+    attr_reader :collect_count, :collect_quick_count, :collect_sources_count
 
     def initialize(snapshot)
       @snapshot = snapshot
       @collect_count = 0
       @collect_quick_count = 0
+      @collect_sources_count = 0
+    end
+
+    def collect_sources
+      @collect_sources_count += 1
+      @snapshot
+    end
+
+    def to_sources_table(_snapshot)
+      "fake table output"
+    end
+
+    def to_sources_h(_snapshot)
+      @snapshot
     end
 
     def collect
@@ -40,37 +54,26 @@ class StatusCommandTest < AceOverseerTestCase
   end
 
   def test_one_shot_table_output
-    context = Ace::Overseer::Models::WorkContext.new(
-      task_id: "230",
-      worktree_path: "/wt/ace-task.230",
-      branch: "230-feature",
-      assignments: [make_assignment(id: "8or5kx", state: "running")],
-      git_status: {"clean" => true}
-    )
-    collector = FakeCollector.new({contexts: [context]})
+    collector = FakeCollector.new({sources: {"worktrees" => {status: "ok", origin: "test", data: {worktrees: []}}}})
     command = Ace::Overseer::CLI::Commands::Status.new(collector: collector)
 
     output = capture_io { command.call(format: "table") }.first
 
     assert_includes output, "fake table output"
-    assert_equal 1, collector.collect_count
+    assert_equal 1, collector.collect_sources_count
   end
 
   def test_one_shot_json_output
-    context = Ace::Overseer::Models::WorkContext.new(
-      task_id: "230",
-      worktree_path: "/wt/ace-task.230",
-      branch: "230-feature",
-      assignments: [],
-      git_status: {"clean" => true}
-    )
-    collector = FakeCollector.new({contexts: [context]})
+    snapshot = {sources: {"forge" => {status: "disabled"}, "worktrees" => {status: "ok", origin: "test", data: {worktrees: []}}}}
+    collector = FakeCollector.new(snapshot)
     command = Ace::Overseer::CLI::Commands::Status.new(collector: collector)
 
     output = capture_io { command.call(format: "json") }.first
 
     parsed = JSON.parse(output)
-    assert_equal [], parsed["worktrees"]
+    assert_equal "disabled", parsed["sources"]["forge"]["status"]
+    assert_equal "ok", parsed["sources"]["worktrees"]["status"]
+    assert_equal [], parsed["sources"]["worktrees"]["data"]["worktrees"]
   end
 
   def test_quiet_suppresses_output
@@ -84,14 +87,15 @@ class StatusCommandTest < AceOverseerTestCase
   end
 
   def test_watch_option_with_json_format_runs_once
-    collector = FakeCollector.new({contexts: []})
+    snapshot = {sources: {"forge" => {status: "disabled"}}}
+    collector = FakeCollector.new(snapshot)
     command = Ace::Overseer::CLI::Commands::Status.new(collector: collector)
 
     output = capture_io { command.call(format: "json", watch: true) }.first
 
     parsed = JSON.parse(output)
-    assert_equal [], parsed["worktrees"]
-    assert_equal 1, collector.collect_count
+    assert_equal "disabled", parsed["sources"]["forge"]["status"]
+    assert_equal 1, collector.collect_sources_count
   end
 
   def test_requires_git_repo_before_running
@@ -124,5 +128,20 @@ class StatusCommandTest < AceOverseerTestCase
 
     assert_empty stdout
     assert_empty stderr
+  end
+
+  def test_injected_config_is_forwarded_to_default_collector
+    config = {"runtime" => "auto", "status_sources" => {"forge" => {"enabled" => false}}}
+    forwarded = nil
+    fake = FakeCollector.new({sources: {}, unknown_keys: []})
+    Ace::Overseer::Organisms::StatusCollector.stub(:new, ->(*_args, **kwargs) {
+      forwarded = kwargs[:config]
+      fake
+    }) do
+      command = Ace::Overseer::CLI::Commands::Status.new(config: config)
+      capture_io { command.call(format: "json") }
+    end
+
+    assert_equal config, forwarded
   end
 end

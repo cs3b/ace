@@ -24,6 +24,7 @@ module Ace
             @root = File.realpath(@dir)
             FileUtils.mkdir_p(File.join(@dir, ".ace-tasks"))
             run_git("init", "-q", "-b", "main", @dir)
+            File.write(File.join(@dir, ".gitignore"), ".ace-local/\n")
             build_nested_task(root_id: "8xh.t.eee", title: "nested fixture")
             build_nested_task(root_id: "8xh.t.fff", title: "other nested fixture")
             write_worktree_config
@@ -51,7 +52,7 @@ module Ace
             bytes_before = File.read(task_file)
 
             out, err, status = run_cli(COWORKER_BIN, "prepare",
-              "--task", leaf, "--roles", "worker", "--format", "json")
+              "--task", leaf, "--roles", "worker", "--to", "overseer", "--format", "json")
             assert status.success?, "re-prepare failed: #{out}#{err}"
             payload = JSON.parse(out)
             assert_equal "reused", payload["worktree"]["disposition"]
@@ -85,7 +86,7 @@ module Ace
             assert_equal File.join(@root, ".ace-wt", "t.eee.0.0"), worktree
 
             out, err, status = run_cli(COWORKER_BIN, "prepare",
-              "--task", leaf, "--roles", "worker", "--dry-run", "--format", "json")
+              "--task", leaf, "--roles", "worker", "--to", "overseer", "--dry-run", "--format", "json")
             assert status.success?, "second dry-run failed: #{out}#{err}"
             payload = JSON.parse(out)
             assert_equal "reused", payload["worktree"]["disposition"]
@@ -97,7 +98,7 @@ module Ace
 
           def prepare_leaf(task_ref)
             out, err, status = run_cli(COWORKER_BIN, "prepare",
-              "--task", task_ref, "--roles", "worker", "--format", "json")
+              "--task", task_ref, "--roles", "worker", "--to", "overseer", "--format", "json")
             assert status.success?, "prepare of #{task_ref} failed: #{out}#{err}"
             payload = JSON.parse(out)
             assert_equal "created", payload["worktree"]["disposition"]

@@ -72,6 +72,13 @@ module Ace
             text.to_s.lines.first.to_s.strip
           end
 
+          def report_line(report)
+            return "not sent (#{report['error']})" if report["error"]
+
+            delivery = report["delivered"] ? "delivered" : "not delivered (retry: ace-hitl send #{report['event']})"
+            "readiness event #{report['event']} (#{delivery})"
+          end
+
           def render(result, format)
             if format == "json"
               puts JSON.pretty_generate(result.to_h)
@@ -100,6 +107,24 @@ module Ace
               lines << "  worktree:   #{worktree['path']}"
               lines << "  branch:     #{worktree['branch']}"
               lines << format("  result:     %s", worktree["disposition"])
+            end
+            unless result.assignments.empty?
+              lines << "  sequence:"
+              result.assignments.each do |entry|
+                lines << "    #{entry['position']}/#{entry['of']} #{entry['role']}: " \
+                  "#{entry['assignment']} (#{entry['disposition']}, #{entry['steps']} steps)"
+                lines << "        expected outcome: #{entry['outcome']}"
+              end
+            end
+            unless result.start_configs.empty?
+              lines << "  start configs:"
+              result.start_configs.each do |entry|
+                lines << "    #{entry['role']}: #{entry['path']} (#{entry['disposition']}, " \
+                  "assignment #{entry['assignment']})"
+              end
+            end
+            if result.report
+              lines << "  report:     #{report_line(result.report)}"
             end
             result.worktree_assignments.each do |assignment|
               lines << "  assignment: #{assignment['id']} #{assignment['state']} (#{assignment['progress']})"

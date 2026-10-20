@@ -2,6 +2,15 @@ default_assign_preset: "work-on-task"
 runtime: auto # tmux | herdr | auto
 window_presets:
   "work-on-task": "work-on-task"
+  "handoff": "work-on-task"
 watch:
   refresh_interval: 15
   git_refresh_interval: 300
+status_sources:
+  forge:
+    enabled: false # forge PR/issues query: default OFF; enable in project/user config
+  project_tasks: {}
+  overseer_tree: {}
+  worktrees: {}
+  herdr: {}
+  coworkers: {}

@@ -7,10 +7,67 @@ module Ace
   module Overseer
     module Organisms
       class StatusCollector
-        def initialize(worktree_manager: nil, context_collector: nil, project_root: nil)
+        # Display/aggregation order of the configurable status sources.
+        STATUS_SOURCE_ORDER = %w[worktrees forge project_tasks overseer_tree herdr coworkers].freeze
+        # Options each source accepts under `status_sources` in config.
+        STATUS_SOURCE_OPTIONS = {
+          "forge" => %w[enabled limit]
+        }.freeze
+        DEFAULT_SOURCE_OPTIONS = %w[enabled].freeze
+
+        def initialize(worktree_manager: nil, context_collector: nil, project_root: nil, config: nil,
+          sources: nil, attention: nil)
           @worktree_manager = worktree_manager || Ace::Git::Worktree::Organisms::WorktreeManager.new
           @context_collector = context_collector || Molecules::WorktreeContextCollector.new
           @project_root = project_root
+          @config = config
+          @sources = sources
+          @attention = attention || Organisms::StatusAttention.new
+        end
+
+        # Aggregate the configurable status sources (L7.2). Each enabled
+        # source contributes {status: "ok", origin:, data:}; a disabled
+        # source {status: "disabled"}; a failing source {status: "error",
+        # origin:, error:} — rendered next to the healthy results, never
+        # mistaken for empty data. Read-only, computed live, nothing
+        # persisted (ADR-034).
+        def collect_sources
+          source_map = @sources || default_sources
+          configured = status_sources_config
+
+          results = STATUS_SOURCE_ORDER.to_h do |key|
+            source = source_map[key]
+            [key, source_result(source, configured[key])]
+          end
+          snapshot = {sources: results, unknown_keys: unknown_keys(configured)}
+          snapshot[:attention] = @attention.scan(snapshot)
+          snapshot
+        end
+
+        def to_sources_h(snapshot)
+          attention = snapshot[:attention]
+          {
+            sources: snapshot[:sources],
+            unknown_keys: Array(snapshot[:unknown_keys]),
+            # Always the three-array contract (never null), so partial or
+            # hand-built snapshots render consistently with the table.
+            attention: attention && {blockers: Array(attention[:blockers]),
+                                     failures: Array(attention[:failures]),
+                                     missing_data: Array(attention[:missing_data])}
+          }
+        end
+
+        def to_sources_table(snapshot)
+          sections = [render_attention(snapshot[:attention])]
+          source_sections = STATUS_SOURCE_ORDER.filter_map do |key|
+            result = snapshot[:sources][key]
+            next if result.nil?
+
+            render_source_section(key, result)
+          end
+          sections.concat(source_sections)
+          sections.concat(unknown_key_warnings(snapshot[:unknown_keys]))
+          sections.join("\n\n")
         end
 
         def collect
@@ -64,6 +121,211 @@ module Ace
         end
 
         private
+
+        ATTENTION_LABELS = {blockers: "BLOCKER", failures: "FAILURE", missing_data: "MISSING DATA"}.freeze
+
+        # The L7.4 attention section renders first so blockers, failures
+        # and missing data lead the view instead of hiding between
+        # healthy source sections.
+        def render_attention(attention)
+          return "-- attention: none (no blockers, failures or missing data)" if attention.nil? ||
+            ATTENTION_LABELS.keys.all? { |key| Array(attention[key]).empty? }
+
+          counts = ATTENTION_LABELS.keys.map { |key| "#{Array(attention[key]).length} #{key}" }.join(", ")
+          lines = ["-- attention: #{counts}"]
+          ATTENTION_LABELS.each do |key, label|
+            Array(attention[key]).each { |row| lines.concat(render_attention_row(label, row)) }
+          end
+          lines.join("\n")
+        end
+
+        def render_attention_row(label, row)
+          lines = ["  #{label}  #{row[:kind]}  #{attention_subject(row)}"]
+          detail = attention_detail(row)
+          lines << "    detail: #{detail}" unless detail.to_s.empty?
+          lines << "    next: #{row[:next_action]}"
+          lines
+        end
+
+        def attention_subject(row)
+          subject = row[:subject] || row[:task_id]
+          subject = "#{subject} [#{row[:tree]}]" if row[:tree]
+          subject
+        end
+
+        def attention_detail(row)
+          return row[:reasons].join("; ") if row[:reasons]
+          return "#{row[:detail]} (#{row[:origin]})" if row[:origin]
+
+          row[:detail]
+        end
+
+        def source_result(source, options)
+          return {status: "disabled"} if source.nil? || options.is_a?(Hash) && options["enabled"] == false
+
+          begin
+            {status: "ok", origin: source.origin, data: source.fetch}
+          rescue StandardError => e
+            {status: "error", origin: source.origin, error: "#{e.class}: #{e.message}"}
+          end
+        end
+
+        def status_sources_config
+          config = @config || Ace::Overseer.config
+          configured = config["status_sources"]
+          configured.is_a?(Hash) ? configured : {}
+        end
+
+        # Unknown keys under `status_sources` are ignored by the closed
+        # source map; surface them explicitly (typo'd source names and
+        # typo'd options like `enabeld: false`) so misconfiguration
+        # never reads as a healthy, respected config.
+        def unknown_keys(configured)
+          keys = configured.keys - STATUS_SOURCE_ORDER
+          STATUS_SOURCE_ORDER.each do |key|
+            options = configured[key]
+            next unless options.is_a?(Hash)
+
+            known = STATUS_SOURCE_OPTIONS.fetch(key, DEFAULT_SOURCE_OPTIONS)
+            (options.keys - known).each { |option| keys << "#{key}.#{option}" }
+          end
+          keys.uniq
+        end
+
+        def unknown_key_warnings(keys)
+          Array(keys).map do |key|
+            if key.include?(".")
+              source, option = key.split(".", 2)
+              "-- #{source}.#{option}: unknown option (ignored)"
+            else
+              "-- #{key}: unknown source (ignored)"
+            end
+          end
+        end
+
+        def default_sources
+          {
+            "worktrees" => StatusSources::WorktreesSource.new(collector: self),
+            "forge" => StatusSources::ForgeSource.new(config: status_sources_config["forge"] || {}),
+            "project_tasks" => StatusSources::ProjectTasksSource.new,
+            "overseer_tree" => StatusSources::OverseerTreeSource.new,
+            "herdr" => StatusSources::HerdrSource.new,
+            "coworkers" => StatusSources::CoworkersSource.new(worktree_manager: @worktree_manager)
+          }
+        end
+
+        def render_source_section(key, result)
+          header = "-- #{key}"
+          case result[:status]
+          when "disabled"
+            "#{header}: disabled"
+          when "error"
+            "#{header} [#{result[:origin]}]: ERROR #{result[:error]}"
+          else
+            "#{header} [#{result[:origin]}]\n#{render_source_data(key, result[:data])}"
+          end
+        end
+
+        def render_source_data(key, data)
+          case key
+          when "worktrees" then Atoms::StatusFormatter.format_dashboard(
+            data[:worktrees].map { |entry| context_from_h(entry) }
+          )
+          when "project_tasks", "overseer_tree" then format_task_rows(data)
+          when "forge" then format_forge_rows(data)
+          when "herdr" then format_herdr_tree(data)
+          when "coworkers" then format_coworker_rows(data)
+          else data.inspect
+          end
+        end
+
+        # Rebuild a minimal WorkContext for the shared dashboard formatter
+        # (rendering only; the JSON payload stays the serialized form).
+        def context_from_h(entry)
+          Models::WorkContext.new(
+            task_id: entry[:task_id],
+            worktree_path: entry[:worktree_path],
+            branch: entry[:branch],
+            assignments: entry[:assignments],
+            git_status: entry[:git],
+            tmux_window: entry[:tmux_window],
+            location_type: entry[:location_type]&.to_sym || :worktree
+          )
+        end
+
+        def format_task_rows(tasks)
+          return "(no tasks)" if tasks.empty?
+
+          tasks.map do |task|
+            line = "#{task[:id]}  #{task[:status]}  #{task[:title]}"
+            deps = task[:dependencies]
+            line += "  [deps: #{deps.join(", ")}]" if deps.is_a?(Array) && deps.any?
+            line
+          end.join("\n")
+        end
+
+        # Forge data carries pull requests plus issues (or an explicit
+        # issues-unavailable marker when the provider has no listing API);
+        # a plain array is accepted for hand-built snapshots that predate
+        # the split shape.
+        def format_forge_rows(data)
+          lines = []
+          pull_requests = data.is_a?(Hash) ? Array(data[:pull_requests]) : Array(data)
+          lines << if pull_requests.empty?
+            "pull requests: (none)"
+          else
+            "pull requests:\n" + pull_requests.map do |pr|
+              draft = pr[:draft] ? " draft" : ""
+              "##{pr[:number]}  #{pr[:state]}#{draft}  #{pr[:title]}  (#{pr[:head_ref]})"
+            end.join("\n")
+          end
+          lines << if !data.is_a?(Hash)
+            "issues: (unverified legacy payload)"
+          elsif data[:issues].is_a?(Hash) && data[:issues][:status] == "unavailable"
+            "issues: UNAVAILABLE - #{data[:issues][:reason]}"
+          elsif Array(data[:issues]).empty?
+            "issues: (none)"
+          else
+            "issues:\n" + Array(data[:issues]).map do |issue|
+              "##{issue[:number]}  #{issue[:state]}  #{issue[:title]}"
+            end.join("\n")
+          end
+          lines.join("\n")
+        end
+
+        def format_herdr_tree(tree)
+          workspaces = tree[:workspaces]
+          return "(no live herdr workspaces)" if workspaces.empty?
+
+          lines = ["#{workspaces.length} workspace(s), " \
+            "#{workspaces.sum { |ws| ws[:tab_count] }} tab(s), " \
+            "#{workspaces.sum { |ws| ws[:pane_count] }} pane(s)"]
+          workspaces.each do |ws|
+            lines << "  #{ws[:id]}  #{ws[:title]}  (#{ws[:tab_count]} tab(s))"
+            ws[:tabs].each do |tab|
+              lines << "    #{tab[:id]}  #{tab[:title]}  (#{tab[:pane_count]} pane(s))"
+              tab[:panes].each do |pane|
+                lines << "      #{pane[:id]}  #{pane[:title]}"
+              end
+            end
+          end
+          lines.join("\n")
+        end
+
+        def format_coworker_rows(rows)
+          return "(no worktrees)" if rows.empty?
+
+          rows.map do |row|
+            if row[:error]
+              "#{row[:worktree]}  ERROR #{row[:error]}"
+            elsif row[:active]
+              evidence = row[:evidence] || {}
+              "#{row[:worktree]}  busy (#{evidence["assignment"]} #{evidence["state"]}, #{evidence["source"]})"
+            else
+              "#{row[:worktree]}  no active executor"
+            end
+          end.join("\n")
+        end
 
         def collect_main_context
           root = @project_root || resolve_project_root
@@ -163,7 +425,9 @@ module Ace
             worktree_path: context.worktree_path,
             branch: context.branch,
             assignments: context.assignments,
-            git: context.git_status
+            git: context.git_status,
+            tmux_window: context.tmux_window,
+            location_type: context.location_type
           }
         end
       end

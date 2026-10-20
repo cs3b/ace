@@ -1,8 +1,10 @@
 # ace-lab usage
 
-`ace-lab` exposes read-only topology queries, the lab status snapshot, and
-the `prepare` phase of the lab installer. Full installation and project
-onboarding are **planned (L8: not available yet)**.
+`ace-lab` exposes read-only topology queries, the lab status snapshot, the
+`prepare` phase of the lab installer (L8.1), `project add` project
+onboarding (L8.2), the full installer `install` (L8.3, which also resumes
+its own interrupted installation, L8.4), and the end-to-end readiness
+verification `verify` (L8.5).
 
 The file-based ownership model is documented once in
 [../../docs/lab-flow.md](../../docs/lab-flow.md).
@@ -160,6 +162,14 @@ roles:                       # optional
   - id: worker               # ^[a-z][a-z0-9_-]{0,31}$, unique
     account: ace-worker
     instructions: wfi://assign/work  # wfi://|prompt://|tmpl:// or an absolute readable file
+projects:                    # optional (consumed by ace-lab install)
+  - id: atlas                # ^[a-z][a-z0-9_-]{0,31}$, unique
+    path: /Users/ace/lab/atlas         # absolute, unique
+    remote: git@forge:atlas/atlas.git  # optional clone source
+    label: Atlas platform    # optional display label
+grants:                      # optional: trusted-tier principal grants
+  ace-overseer:              # principal → declared project ids
+    - atlas
 ```
 
 Statuses: accounts `created|exists|would_create|failed`; directories
@@ -297,16 +307,246 @@ Behavior and guarantees:
 
 Boundaries (what `prepare` is not):
 
-- No project onboarding (`ace-lab project add`, L8.2) — the manifest's
-  role catalog declares where each role lives and under which account;
-  the project-add step consumes it.
-- No full `ace-lab install` orchestration (L8.3): no HITL adapter
-  configuration, no foreign-lab refusal, no cross-check of `machine`
-  against the `hitl` cascade.
+- No project onboarding in `prepare` itself (`ace-lab project add`,
+  L8.2, is the dedicated command) — the manifest's role catalog
+  declares where each role lives and under which account; the
+  project-add step consumes that converged environment.
+- No full `ace-lab install` orchestration (L8.3, delivered as
+  `ace-lab install`): no project onboarding, no trusted-tier grants
+  configuration, no foreign-lab refusal — `prepare` converges the
+  machine and leaves the composition to the installer.
 - No interrupted-install resume bookkeeping (L8.4): re-running `prepare`
   is the resume mechanism; install-level resumption composes it.
 - No end-to-end verification under the target accounts (L8.5): real
   multi-account proof belongs to the readiness verification step.
+
+## Project add (L8.2)
+
+```bash
+ace-lab project add atlas --path /Users/ace/lab/atlas --remote git@forge:atlas/atlas.git
+ace-lab project add atlas --path /Users/ace/lab/atlas --dry-run
+ace-lab project add atlas --path /Users/ace/lab/atlas --format json
+```
+
+`project add` makes a project ready for team work (task 8xg.t.sbz.7.1),
+assuming `ace-lab prepare` (L8.1) already converged the machine-level
+accounts, directories, keys and roles. Three steps run in a fixed order:
+
+1. **repository** — the target path becomes a Git repository with the
+   declared origin remote. A missing or empty path is cloned from
+   `--remote`; an existing repository without an origin gets one; an
+   existing repository with a *different* origin is refused as a
+   contradictory registration, and a non-empty non-repository path is
+   refused as a foreign location — never taken over, never overwritten.
+   The path itself must be the repository toplevel: a directory nested
+   inside another repository's work tree is refused as foreign.
+2. **overseer** — the private, untracked `.ace-tasks/_overseer/` folder
+   is created (ADR-034) and its `.gitignore` entry ensured. Existing
+   `.gitignore` content and folder content are never touched; the
+   folder is never enumerated.
+3. **registry** — the project is registered in `<path>/.ace/lab/config.yml`
+   (the project tier of the ordinary ADR-022 lab-config cascade) with
+   its `id`, `label`, absolute `path` and `remote`. Because every
+   consumer already reads that cascade, `ace-lab status` shows the
+   project (`configured`, topology counts) and `ace-lab projects` /
+   `ace-overseer projects` list it — no second registry exists, and
+   `ace-overseer` needed no read-side change. Two prerequisites for
+   that listing: grants come exclusively from the trusted tier of the
+   cascade, so listing the new project id requires a trusted-tier
+   principal grant covering it — configuration the installer (L8.3)
+   owns, not `project add` — and the project-tier document only enters
+   the cascade when the command runs from the project root (cascade
+   tiering). The `path` and `remote` registry fields are
+   installer-owned deployment data and are not exposed in the public
+   projection.
+
+The planner chain consumes the result directly: `ace-coworker prepare`
+provisions task worktrees from the registered repository, and the
+overseer's private queue lives in the prepared `_overseer` folder —
+no manual directory fixing is needed.
+
+Statuses per step: `created|exists|updated|would_create|would_update|failed`.
+`ok` means
+zero failed steps; a wet run with failures prints the report first,
+then exits non-zero naming each step. `--dry-run` predicts
+(`would_*`) with zero mutations and exits 0.
+
+Idempotence and refusals:
+
+- Re-adding an already-registered project re-validates every step and
+  reports `exists` without rewriting the registry, the `.gitignore`,
+  or anything inside `_overseer`. A changed `--label` on re-add
+  updates the recorded label (display data, not identity) and reports
+  `updated`; an omitted `--label` keeps the recorded one.
+- The same id registered with a different `path` or `remote`, or the
+  same absolute `path` registered under a different id, is refused
+  before any write.
+- An unparseable registry document or a foreign `schema_version` is
+  refused rather than overwritten.
+- A failed repository step fails the overseer and registry steps as
+  dependency failures instead of attempting them.
+
+Boundaries: `project add` does not clone role accounts or keys (L8.1
+owns those), does not configure HITL adapters or run the full install
+(L8.3/`ace-lab install`), and adds no new state owner — the only
+persisted artifact is the project's own lab-config cascade document.
+
+## Install (L8.3)
+
+```bash
+ace-lab install              # full installation from the trusted manifest
+ace-lab install --dry-run    # predict every phase without mutating
+ace-lab install --format json
+```
+
+`install` performs the full new-lab installation (task 8xg.t.sbz.7.2)
+from the same trusted install manifest as `prepare`, by composing the
+existing molecules in a fixed order:
+
+1. **Foreign-lab guard — before any mutation.** The trusted
+   authorization document `/etc/lab/ace-lab/authorization.yml` (when
+   present) must not grant projects the manifest does not declare: a
+   ready or foreign lab is refused with a classified error and zero
+   writes, identically in wet runs and `--dry-run` (prediction parity).
+2. **prepare (L8.1)** — accounts → directories → keys → roles, exactly
+   as `ace-lab prepare` (same organism, same per-item report).
+3. **project add (L8.2) per declared project** — repository, private
+   `_overseer`, project registry, exactly as `ace-lab project add`.
+   Projects are isolated: one failing project does not block the
+   others. When `prepare` did not converge, every project is reported
+   as a dependency failure instead of being attempted.
+4. **grants** — the trusted-tier principal grants from the manifest's
+   `grants` section are converged into the `principals` mapping of the
+   authorization document: this is the installer-owned configuration
+   that makes the installed projects visible to `ace-lab projects` and
+   `ace-overseer projects` (see the L8.2 boundary above). Grants only
+   grow: a manifest that would remove an existing grant is refused.
+   Principals the manifest does not mention and every other section of
+   the document (e.g. HITL adapter policy) are preserved untouched —
+   and a converged re-run writes nothing at all, so the document's
+   admin-authored comments stay byte-identical. A manifest with no
+   `grants` over an absent document is a no-op (`skipped`): no empty
+   authorization file is ever created. Before any write the existing
+   document's principals are validated exactly like the read side
+   (shared validation with the grants resolver): a malformed policy is
+   refused with a classified error instead of silently rewritten, and
+   whitespace-padded principal names are normalized so they cannot
+   coexist with a stripped twin.
+   The write is atomic (temp file + rename, mode 0644). Grants are
+   configured only when the earlier phases converged — never over a
+   partially failed install (no pretend success).
+
+Statuses: `prepare` contributes its own per-item statuses; each project
+contributes `created|exists|updated|would_*|failed` per step; grants
+report `created|updated|exists|skipped|would_*|failed` plus a
+per-principal breakdown and the `kept` list (present and possibly
+empty, so machine consumers see a stable schema). `ok` means every phase converged. A wet run with failures
+prints the report first, then exits non-zero enumerating each
+`<phase>/<item>: <message>`; `--dry-run` predicts with zero mutations
+and exits 0.
+
+Idempotence and resume design: every step is idempotent, so an
+interrupted re-run converges where steps already completed (accounts
+`exists`, repositories `exists`, grants `exists`) without duplicates or
+lost configuration — the per-step record is the resume mechanism; no
+journal exists or is needed for convergence. See
+[Resuming an interrupted install](#resuming-an-interrupted-install-l84).
+
+### Resuming an interrupted install (L8.4)
+
+```bash
+ace-lab install              # same command: recognizes and finishes its own partial state
+ace-lab install --dry-run    # previews exactly which steps exist and which would run
+```
+
+An installation interrupted mid-run (crash after accounts, directories,
+keys, a project, or part of the grants) is resumed by running the same
+`ace-lab install` command again. Recognition is derived from the real
+artifacts the steps read and write — there is no journal, marker file
+or second state owner:
+
+- already-done steps report `exists`/`verified` and are not reworked:
+  the converged directory and key pair keep their inode and content, an
+  already-cloned repository keeps its worktree (untracked files
+  included) and a converged trusted document stays byte-identical;
+- missing steps complete: a key pair whose public half is missing
+  regenerates only that half from the surviving private key; a project
+  whose repository exists finishes only `_overseer` and the registry;
+  partially granted own principals converge while principals and
+  sections the manifest does not mention are kept;
+- grants are configured only when prepare and every project converged
+  (no pretend success over a partial install).
+
+Own-partial vs foreign is distinguished per step, not only for grants:
+each already-present artifact is checked against what the manifest
+declares before it is touched, and mismatching content is refused —
+never taken over, never cleaned:
+
+| Step | Foreign state | Result |
+| --- | --- | --- |
+| declared directory | symlink, non-directory, or foreign ownership | step fails with a resolve-manually message; projects and grants are gated as dependency failures |
+| key pair | foreign-owned key files or `.ssh`, non-regular file | step fails with a resolve-manually message |
+| project repository | non-empty non-Git directory, or a Git repository with a different origin | step fails: "refusing to take over a foreign location" / "refusing to overwrite an existing registration"; the other projects still run (isolation) |
+| grants | trusted document granting projects outside the manifest, or a document that fails verification/parsing | the whole install refuses before any mutation ("refusing to install over a foreign lab"), wet and in `--dry-run` alike |
+
+When resume is not possible, the wet failure names every blocking step
+concretely (`install failed (N step(s)): <phase>/<item>: <message>`);
+`--dry-run` predicts the same per-step refusals with zero mutations
+and exits 0.
+
+Boundaries: `install` does not verify readiness under the target
+accounts (that is `verify`, below); HITL adapter configuration beyond
+preserving the existing trusted document sections is not orchestrated
+by this slice.
+
+## Verify (L8.5)
+
+### `ace-lab verify [--format table|json] [-q]`
+
+```bash
+ace-lab verify                 # per-check table; exit 0 only when ready
+ace-lab verify --format json   # stable machine report for the overseer / next tool
+```
+
+`verify` is the read-only end-of-install check that the lab is ready
+UNDER THE TARGET ACCOUNTS — not merely for the installer's account. It
+reads the same artifacts `install`/`prepare` derive truth from (the
+trusted install manifest, the filesystem's permission bits and
+ownership, the repositories, the per-project registry and the trusted
+authorization document) and writes nothing anywhere: no journal, no
+second state owner. (The key fingerprint probe may use an ephemeral
+tmpdir scratch — 0600, removed afterwards — never a durable write.)
+Because it judges converged artifacts only, a
+fresh install and a resumed one verify identically — there is no
+hidden gap after resume.
+
+Per-check sections, each reported as `pass` / `fail` / `unknown` with
+a concrete reason (never a bare boolean):
+
+| Section | Checks, as the target account |
+| --- | --- |
+| accounts | account exists; home matches the manifest; login shell is usable (non-login shells block readiness) |
+| directories | declared directory exists with the declared mode and owner |
+| keys | the pair is usable: modes (0600/0644/`.ssh` 0700), account ownership, and the public fingerprint matches the key derived from the private half (the same probe `prepare` applies) |
+| roles | instruction source readable by the role's account (the `prepare` role verifier) |
+| repositories | the path is the repository toplevel, the origin matches the manifest remote; local origins are probed with `git ls-remote`, network origins are reported `unknown` (not dialed by the read-only verifier) |
+| grants | the trusted document is present and verifiable, and every manifest principal's grants resolve through the real read-side mechanics (`CallerAuthorizer`) to the declared projects |
+| registry | each project is registered in its `.ace/lab/config.yml` (visibility through the configuration cascade) |
+| overseer | `.ace-tasks/_overseer/` exists and is ignored by Git (`git check-ignore`) |
+
+The overall verdict is `ready` only when no check failed. A failure
+never hides healthy data: the full report renders first (table or
+JSON), then the command exits non-zero naming every failed check
+concretely (`lab is not ready (N failed check(s)): <section>/<item>:
+<reason>`). `unknown` (a network remote) is reported and counted but
+does not block readiness — it is not a failure, and treating it as one
+would make `verify` unusable offline. The JSON report shape is stable:
+`ready`, `machine`, `manifest`, `authorization_path`, `checks`
+(per-section lists), and `counts` (`pass`/`fail`/`unknown`).
+
+Key material hygiene is inherited from the provisioner: only the
+public fingerprint ever appears in a report; private key bytes stay
+inside the `ssh-keygen` subprocess.
 
 ## Planned waves
 
@@ -314,11 +554,12 @@ Boundaries (what `prepare` is not):
 > (configurable `ace-overseer status` aggregation, pi continuation) lives in
 > its own packages and is not available yet.
 >
-> **Planned (L8):** project onboarding, resuming an interrupted install,
-> and readiness verification are not available yet. The preparation
-> phase is delivered as `ace-lab prepare` (L8.1); `ace-lab install`
-> (L8.3) will compose it with configuration, HITL adapters and
-> verification.
+> **Planned (L8):** the preparation phase is delivered as `ace-lab
+> prepare` (L8.1), project onboarding as `ace-lab project add` (L8.2),
+> the full installer as `ace-lab install` (L8.3), resuming the
+> installer's own interrupted installation as the same `ace-lab
+> install` re-run (L8.4), and end-to-end readiness verification under
+> the target accounts as `ace-lab verify` (L8.5).
 
 ## Boundaries
 

@@ -53,6 +53,40 @@ module Ace
           error = assert_raises(Error) { resolver.resolve!("wfi://nope/nope") }
           assert_includes error.message, "cannot resolve instruction source 'wfi://nope/nope'"
         end
+
+        def test_missing_nav_cli_is_a_distinct_error
+          # The resolver binary itself being absent is distinguishable from
+          # a resolver that runs and fails: prepare treats the former as a
+          # non-blocking unknown and the latter as a never-ready gap.
+          runner = ->(_argv, _cwd) { raise Errno::ENOENT }
+          resolver = InstructionResolver.new(project_root: @dir, nav_runner: runner)
+          error = assert_raises(InstructionResolver::NavUnavailableError) do
+            resolver.resolve!("wfi://nope/nope")
+          end
+          assert_kind_of Error, error
+          assert_includes error.message, "ace-nav CLI"
+        end
+
+        # Trust-posture parity with ace-lab Verify#nav_binary: a
+        # privileged (root) run never executes the repository-controlled
+        # binstub.
+        def test_root_never_uses_the_project_binstub
+          Dir.mktmpdir do |dir|
+            binstub = File.join(dir, "bin", "ace-nav")
+            FileUtils.mkdir_p(File.join(dir, "bin"))
+            FileUtils.touch(binstub)
+            File.chmod(0o755, binstub)
+
+            resolver = InstructionResolver.new(project_root: dir)
+
+            Process.stub :uid, 501 do
+              assert_equal binstub, resolver.send(:nav_binary)
+            end
+            Process.stub :uid, 0 do
+              assert_equal "ace-nav", resolver.send(:nav_binary)
+            end
+          end
+        end
       end
     end
   end

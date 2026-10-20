@@ -1,0 +1,20 @@
+---
+# Reviewer role assignment process (shipped gem defaults, overridable per
+# project via .ace/coworker/sequences/reviewer.yml). Composed by the
+# planner (ace-coworker prepare) into one ace-assign assignment for the
+# reviewer leg of the role sequence. The reviewer is independent of the
+# worker and follows the same 3/2/10 round rule enforced by
+# ace-coworker rounds record (Ace::Coworker::Atoms::RoundRule).
+role: reviewer
+description: "Independent reviewer process for task {{task}}"
+outcome: >-
+  Independent review of the delivered change for task {{task}} accepted
+  under the 3/2/10 round rule, with all confirmed defects fixed and
+  fix diffs checked inside this assignment.
+steps:
+  - name: review-rounds
+    workflow: wfi://coworker/reviewer
+    instructions:
+      - "Work as the reviewer on task {{task}}: review the delivered change independently of the worker; fix confirmed defects yourself inside this assignment and check each fix diff with a delta round."
+      - "Record every full round with `ace-coworker rounds record --type full` and every fix-diff check with `--type delta`; the RoundRule verdict decides the outcome, aborted or incomplete rounds are never clean."
+      - "Acceptance (3/2/10): at least 3 completed full rounds, the last 2 consecutive rounds clean (no confirmed High/Critical), and no unresolved earlier High/Critical; a rule-satisfying round 10 ends in success, no acceptance after 10 full rounds escalates to the overseer via ace-hitl."

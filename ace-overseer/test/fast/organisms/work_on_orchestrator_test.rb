@@ -33,11 +33,13 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
   end
 
   class FakeTask
-    attr_reader :metadata, :subtasks, :status
+    attr_reader :metadata, :subtasks, :status, :id, :dependencies
 
     def initialize(data)
       @metadata = data[:metadata] || {}
       @status = data[:status]
+      @id = data[:id]
+      @dependencies = Array(data[:dependencies])
       @subtasks = if data[:subtasks]
         data[:subtasks].map { |s| FakeTask.new(s) }
       elsif data[:is_orchestrator] && data[:subtask_entries]&.any?
@@ -657,6 +659,263 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
       call = launcher.calls.first
       assert_equal %w[8pp.t.q7w.a 8pp.t.q7w.c], call[:task_refs]
       assert_equal %w[8pp.t.q7w.a 8pp.t.q7w.c], call[:subtask_refs]
+    end
+  end
+
+  def test_rejects_step_whose_dependency_is_not_integrated_before_side_effects
+    Dir.mktmpdir("task.blocked") do |worktree|
+      worktree_provisioner = FakeWorktreeProvisioner.new(
+        {worktree_path: worktree, branch: "blocked-feature", created: true}
+      )
+      opener = FakeWindowOpener.new
+      launcher = FakeAssignmentLauncher.new
+
+      orchestrator = Ace::Overseer::Organisms::WorkOnOrchestrator.new(
+        lifecycle_exclusion: @exclusion,
+        task_loader: FakeTaskManager.new(
+          "600" => {id: "8xh.t.grn.0", metadata: {}, status: "pending",
+                    dependencies: ["8xh.t.grm.3"]},
+          "8xh.t.grm.3" => {id: "8xh.t.grm.3", metadata: {}, status: "in-progress"}
+        ),
+        worktree_provisioner: worktree_provisioner,
+        window_opener: opener,
+        assignment_launcher: launcher,
+        config: {"default_assign_preset" => "work-on-task"},
+        assignment_detector: ->(_path) {}
+      )
+
+      error = assert_raises(Ace::Overseer::Error) do
+        orchestrator.call(task_ref: "600")
+      end
+
+      assert_includes error.message, "unsatisfied dependencies"
+      assert_includes error.message, "8xh.t.grn.0"
+      assert_includes error.message, "8xh.t.grm.3"
+      assert_includes error.message, "not integrated yet"
+      assert_includes error.message, "open PR does not unlock"
+      assert_empty worktree_provisioner.calls
+      assert_empty opener.calls
+      assert_empty launcher.calls
+    end
+  end
+
+  def test_starts_step_after_dependency_integration_confirmed
+    Dir.mktmpdir("task.unblocked") do |worktree|
+      worktree_provisioner = FakeWorktreeProvisioner.new(
+        {worktree_path: worktree, branch: "unblocked-feature", created: true}
+      )
+      opener = FakeWindowOpener.new
+      launcher = FakeAssignmentLauncher.new
+
+      orchestrator = Ace::Overseer::Organisms::WorkOnOrchestrator.new(
+        lifecycle_exclusion: @exclusion,
+        task_loader: FakeTaskManager.new(
+          "600" => {id: "8xh.t.grn.0", metadata: {}, status: "pending",
+                    dependencies: ["8xh.t.grm.3"]},
+          "8xh.t.grm.3" => {id: "8xh.t.grm.3", metadata: {}, status: "done"}
+        ),
+        worktree_provisioner: worktree_provisioner,
+        window_opener: opener,
+        assignment_launcher: launcher,
+        config: {"default_assign_preset" => "work-on-task"},
+        assignment_detector: ->(_path) {}
+      )
+
+      result = orchestrator.call(task_ref: "600")
+
+      assert_equal "600", result[:task_ref]
+      assert_equal "8or5kx", result[:assignment_id]
+      assert_equal 1, worktree_provisioner.calls.length
+      assert_equal 1, launcher.calls.length
+    end
+  end
+
+  def test_finished_worker_does_not_unlock_dependent_step
+    Dir.mktmpdir("task.worker-done") do |worktree|
+      # A's implement step is done ("work done"), but B depends on A's
+      # integration step, which is still pending: B must not start.
+      worktree_provisioner = FakeWorktreeProvisioner.new(
+        {worktree_path: worktree, branch: "worker-done-feature", created: true}
+      )
+      orchestrator = Ace::Overseer::Organisms::WorkOnOrchestrator.new(
+        lifecycle_exclusion: @exclusion,
+        task_loader: FakeTaskManager.new(
+          "600" => {id: "8xh.t.grn.0", metadata: {}, status: "pending",
+                    dependencies: ["8xh.t.grm.3"]},
+          "8xh.t.grm.1" => {id: "8xh.t.grm.1", metadata: {}, status: "done"},
+          "8xh.t.grm.3" => {id: "8xh.t.grm.3", metadata: {}, status: "pending"}
+        ),
+        worktree_provisioner: worktree_provisioner,
+        window_opener: FakeWindowOpener.new,
+        assignment_launcher: FakeAssignmentLauncher.new,
+        config: {"default_assign_preset" => "work-on-task"},
+        assignment_detector: ->(_path) {}
+      )
+
+      error = assert_raises(Ace::Overseer::Error) do
+        orchestrator.call(task_ref: "600")
+      end
+
+      assert_includes error.message, "8xh.t.grm.3: predecessor not integrated yet (status: pending)"
+      assert_empty worktree_provisioner.calls
+    end
+  end
+
+  def test_cancelled_dependency_predecessor_is_not_satisfaction
+    Dir.mktmpdir("task.cancelled-dep") do |worktree|
+      worktree_provisioner = FakeWorktreeProvisioner.new(
+        {worktree_path: worktree, branch: "cancelled-dep-feature", created: true}
+      )
+      orchestrator = Ace::Overseer::Organisms::WorkOnOrchestrator.new(
+        lifecycle_exclusion: @exclusion,
+        task_loader: FakeTaskManager.new(
+          "600" => {id: "8xh.t.grn.0", metadata: {}, status: "pending",
+                    dependencies: ["8xh.t.gsc.0"]},
+          "8xh.t.gsc.0" => {id: "8xh.t.gsc.0", metadata: {}, status: "cancelled"}
+        ),
+        worktree_provisioner: worktree_provisioner,
+        window_opener: FakeWindowOpener.new,
+        assignment_launcher: FakeAssignmentLauncher.new,
+        config: {"default_assign_preset" => "work-on-task"},
+        assignment_detector: ->(_path) {}
+      )
+
+      error = assert_raises(Ace::Overseer::Error) do
+        orchestrator.call(task_ref: "600")
+      end
+
+      assert_includes error.message, "8xh.t.gsc.0: predecessor cancelled (no accepted/integrated result)"
+      assert_empty worktree_provisioner.calls
+    end
+  end
+
+  def test_missing_and_cyclic_dependencies_block_start
+    Dir.mktmpdir("task.bad-deps") do |worktree|
+      worktree_provisioner = FakeWorktreeProvisioner.new(
+        {worktree_path: worktree, branch: "bad-deps-feature", created: true}
+      )
+      orchestrator = Ace::Overseer::Organisms::WorkOnOrchestrator.new(
+        lifecycle_exclusion: @exclusion,
+        task_loader: FakeTaskManager.new(
+          "600" => {id: "8xh.t.grn.0", metadata: {}, status: "pending",
+                    dependencies: ["8xh.t.missing", "8xh.t.grn.0"]},
+          "8xh.t.grn.0" => {id: "8xh.t.grn.0", metadata: {}, status: "pending",
+                            dependencies: ["8xh.t.grn.0"]}
+        ),
+        worktree_provisioner: worktree_provisioner,
+        window_opener: FakeWindowOpener.new,
+        assignment_launcher: FakeAssignmentLauncher.new,
+        config: {"default_assign_preset" => "work-on-task"},
+        assignment_detector: ->(_path) {}
+      )
+
+      error = assert_raises(Ace::Overseer::Error) do
+        orchestrator.call(task_ref: "600")
+      end
+
+      assert_includes error.message, "8xh.t.missing: dependency not found"
+      assert_includes error.message, "cyclic dependency"
+      assert_empty worktree_provisioner.calls
+    end
+  end
+
+  def test_blocked_subtask_blocks_manager_start
+    Dir.mktmpdir("task.blocked-subtask") do |worktree|
+      worktree_provisioner = FakeWorktreeProvisioner.new(
+        {worktree_path: worktree, branch: "blocked-subtask-feature", created: true}
+      )
+      orchestrator = Ace::Overseer::Organisms::WorkOnOrchestrator.new(
+        lifecycle_exclusion: @exclusion,
+        task_loader: FakeTaskManager.new(
+          "700" => {
+            id: "8xh.t.grn", metadata: {}, status: "pending",
+            subtasks: [
+              {id: "8xh.t.grn.0", metadata: {}, status: "pending",
+               dependencies: ["8xh.t.grm.3"]}
+            ]
+          },
+          "8xh.t.grm.3" => {id: "8xh.t.grm.3", metadata: {}, status: "pending"}
+        ),
+        worktree_provisioner: worktree_provisioner,
+        window_opener: FakeWindowOpener.new,
+        assignment_launcher: FakeAssignmentLauncher.new,
+        config: {"default_assign_preset" => "work-on-task"},
+        assignment_detector: ->(_path) {}
+      )
+
+      error = assert_raises(Ace::Overseer::Error) do
+        orchestrator.call(task_ref: "700")
+      end
+
+      assert_includes error.message, "8xh.t.grn.0"
+      assert_includes error.message, "8xh.t.grm.3"
+      assert_empty worktree_provisioner.calls
+    end
+  end
+
+  def test_manager_own_dependencies_gate_the_start_too
+    Dir.mktmpdir("task.manager-own-deps") do |worktree|
+      worktree_provisioner = FakeWorktreeProvisioner.new(
+        {worktree_path: worktree, branch: "manager-own-deps-feature", created: true}
+      )
+      orchestrator = Ace::Overseer::Organisms::WorkOnOrchestrator.new(
+        lifecycle_exclusion: @exclusion,
+        task_loader: FakeTaskManager.new(
+          "700" => {
+            id: "8xh.t.grn", metadata: {}, status: "pending",
+            dependencies: ["8xh.t.gsc.9"],
+            subtasks: [
+              {id: "8xh.t.grn.0", metadata: {}, status: "pending"}
+            ]
+          },
+          "8xh.t.gsc.9" => {id: "8xh.t.gsc.9", metadata: {}, status: "pending"}
+        ),
+        worktree_provisioner: worktree_provisioner,
+        window_opener: FakeWindowOpener.new,
+        assignment_launcher: FakeAssignmentLauncher.new,
+        config: {"default_assign_preset" => "work-on-task"},
+        assignment_detector: ->(_path) {}
+      )
+
+      error = assert_raises(Ace::Overseer::Error) do
+        orchestrator.call(task_ref: "700")
+      end
+
+      # The manager's OWN dependency blocks the whole family start even
+      # though the subtask itself has none.
+      assert_includes error.message, "8xh.t.grn:"
+      assert_includes error.message, "8xh.t.gsc.9: predecessor not integrated yet"
+      assert_empty worktree_provisioner.calls
+    end
+  end
+
+  def test_multi_ref_invocation_with_one_blocked_step_refuses_all
+    Dir.mktmpdir("task.multi-ref-blocked") do |worktree|
+      worktree_provisioner = FakeWorktreeProvisioner.new(
+        {worktree_path: worktree, branch: "multi-ref-feature", created: true}
+      )
+      orchestrator = Ace::Overseer::Organisms::WorkOnOrchestrator.new(
+        lifecycle_exclusion: @exclusion,
+        task_loader: FakeTaskManager.new(
+          "600" => {id: "8xh.t.grn.0", metadata: {}, status: "pending",
+                    dependencies: ["8xh.t.grm.3"]},
+          "601" => {id: "8xh.t.grn.1", metadata: {}, status: "pending"},
+          "8xh.t.grm.3" => {id: "8xh.t.grm.3", metadata: {}, status: "pending"}
+        ),
+        worktree_provisioner: worktree_provisioner,
+        window_opener: FakeWindowOpener.new,
+        assignment_launcher: FakeAssignmentLauncher.new,
+        config: {"default_assign_preset" => "work-on-task"},
+        assignment_detector: ->(_path) {}
+      )
+
+      error = assert_raises(Ace::Overseer::Error) do
+        orchestrator.call(task_ref: "600", task_refs: ["600", "601"])
+      end
+
+      # All-or-nothing: the ready step 601 must not start either.
+      assert_includes error.message, "8xh.t.grn.0"
+      assert_empty worktree_provisioner.calls
     end
   end
 end

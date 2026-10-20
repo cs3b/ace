@@ -99,8 +99,9 @@ export function createFakeHost() {
     commands,
 
     /** Fire the filesystem change callback of the watcher covering path.
-     * The production watchFactory watches the target's parent directory, so
-     * the fake resolves the watcher through the directory too. */
+     * The production watchFactory watches the target itself for directory
+     * targets and the target's parent directory for file targets, so the
+     * fake resolves the watcher through both shapes. */
     triggerWatch(path) {
       watcherFor(path).onChange();
     },
@@ -117,6 +118,11 @@ export function createFakeHost() {
 
     watcherCount() {
       return watchers.size;
+    },
+
+    /** The exact paths native watchers are registered on (not targets). */
+    watcherPaths() {
+      return [...watchers.keys()];
     },
 
     /** Invoke a registered slash command. */
@@ -179,6 +185,11 @@ export function createFakeHost() {
   }
 
   const watchFactory = (path, handlers) => {
+    const failure = watchFailures.get(path);
+    if (failure) {
+      watchFailures.delete(path);
+      throw failure;
+    }
     const id = nextWatcherId++;
     watchers.set(path, {
       onChange: handlers.onChange,
@@ -198,6 +209,12 @@ export function createFakeHost() {
   };
 
   // Port: statFn backed by caller-managed fake file states.
+  // Synchronous watchFactory failures for the NEXT attach on a path
+  // (EMFILE/EPERM/stat-race shape: throw at attach time, once).
+  const watchFailures = new Map();
+  host.failNextWatchAttach = (path, message = "EMFILE: too many open files") => {
+    watchFailures.set(path, new Error(message));
+  };
   const fakeFiles = new Map();
   host.setFile = (path, { mtimeMs, size, missing = false }) => {
     if (missing) {

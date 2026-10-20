@@ -1,0 +1,836 @@
+# frozen_string_literal: true
+
+require_relative "../test_helper"
+require "shellwords"
+
+module Organisms
+  # Task 8xg.t.sbz.7.4 (L8.5): `ace-lab verify` proves the installed
+  # lab is ready UNDER THE TARGET ACCOUNTS — accounts/login class,
+  # directories, key pairs (fingerprint + modes + ownership), role
+  # instruction readability, repository origin access, grant-based
+  # project visibility, private+gitignored _overseer — read-only, from
+  # the same artifacts install/resume derive truth from. These tests
+  # use REAL molecules (install runs for real against a tmpdir lab;
+  # only the trusted-read verification seam and the passwd seam are
+  # stubbed, mirroring install_resume_test) and prove: a fresh install
+  # verifies ready, a RESUMED install verifies with no hidden gaps,
+  # and failures sit beside healthy data without hiding it or
+  # blocking the remaining checks.
+  class VerifyTest < Minitest::Test
+    class StubResolver
+      def initialize(documents)
+        @documents = documents
+      end
+
+      def read_verified(path)
+        @documents[path]
+      end
+    end
+
+    # Full lab fixture: one account, one directory, one key pair, one
+    # file-path role (protocol roles need a resolvable workflow — see
+    # the dedicated resolution tests below), two projects from a real
+    # local origin, manifest grants for both projects.
+    def with_lab(role_instructions: nil, extra_manifest: "")
+      Dir.mktmpdir do |dir|
+        origin = File.join(dir, "origin.git")
+        `git init --bare #{origin.shellescape} >/dev/null 2>&1`
+        skip "git unavailable" unless File.directory?(origin)
+
+        home = File.join(dir, "home", "ace-worker")
+        labs = File.join(dir, "labs")
+        key_path = File.join(home, ".ssh", "id_ed25519")
+        instructions = File.join(dir, "instructions.md")
+        File.write(instructions, "# worker instructions\n")
+        manifest_path = File.join(dir, "install.yml")
+        auth_path = File.join(dir, "authorization.yml")
+        role_instructions ||= instructions
+
+        File.write(manifest_path, <<~YAML)
+          ---
+          schema_version: 1
+          machine: lab01
+          accounts:
+            - username: ace-worker
+              role: worker
+              home: #{home}
+          directories:
+            - path: #{labs}
+              owner: ace-worker
+              mode: "0750"
+          keys:
+            - account: ace-worker
+              path: #{key_path}
+          roles:
+            - id: worker
+              account: ace-worker
+              instructions: #{role_instructions}
+          projects:
+            - id: atlas
+              path: #{labs}/atlas
+              remote: #{origin}
+            - id: borealis
+              path: #{labs}/borealis
+              remote: #{origin}
+          grants:
+            ace-overseer: [atlas, borealis]
+          #{extra_manifest}
+        YAML
+
+        fixture = {
+          "dir" => dir, "origin" => origin, "home" => home, "labs" => labs,
+          "key" => key_path, "manifest" => manifest_path, "auth" => auth_path,
+          "instructions" => instructions
+        }
+        yield fixture
+      end
+    end
+
+    def passwd_entry(fixture, shell: "/bin/zsh")
+      FakeEntry.new(name: "ace-worker", uid: Process.uid, gid: Process.gid,
+        dir: fixture["home"], shell: shell)
+    end
+
+    def lookup_for(fixture, shell: "/bin/zsh")
+      entry = passwd_entry(fixture, shell: shell)
+      ->(name) { name == "ace-worker" ? entry : nil }
+    end
+
+    def install_run(fixture, lookup)
+      documents = {fixture["manifest"] => File.read(fixture["manifest"])}
+      documents[fixture["auth"]] = File.read(fixture["auth"]) if File.exist?(fixture["auth"])
+      Ace::Lab::Molecules::GrantResolver.stub :read_verified,
+        ->(path) { documents.fetch(path) { File.file?(path) ? File.read(path) : nil } } do
+        Ace::Lab::Organisms::Install.new(
+          manifest_path: fixture["manifest"], account_lookup: lookup, platform: "linux",
+          grants: Ace::Lab::Molecules::GrantProvisioner.new(
+            resolver: StubResolver.new(documents), authorization_path: fixture["auth"]
+          )
+        ).call
+      end
+    end
+
+    def verify_run(fixture, lookup: lookup_for(fixture), nav_runner: nil)
+      Ace::Lab::Molecules::GrantResolver.stub :read_verified,
+        ->(path) { File.file?(path) ? File.read(path) : nil } do
+        Ace::Lab::Organisms::Verify.new(
+          manifest_path: fixture["manifest"], account_lookup: lookup,
+          authorization_path: fixture["auth"], nav_runner: nav_runner, platform: "linux"
+        ).call
+      end
+    end
+
+    def check(report, section, index = 0)
+      report["checks"][section][index]
+    end
+
+    def key_fingerprint(path)
+      out = `ssh-keygen -lf #{path.shellescape} 2>/dev/null`
+      out[/SHA256:[A-Za-z0-9+\/=]+/]
+    end
+
+    # --- happy paths --------------------------------------------------
+
+    def test_fresh_install_verifies_ready_under_the_target_account
+      with_lab do |fixture|
+        install_run(fixture, lookup_for(fixture))
+
+        report = verify_run(fixture)
+
+        assert_equal true, report["ready"], report.inspect
+        assert_equal 0, report["counts"]["fail"]
+        assert_equal "pass", check(report, "accounts")["status"]
+        assert_equal "pass", check(report, "directories")["status"]
+        assert_equal "pass", check(report, "keys")["status"]
+        assert_equal key_fingerprint("#{fixture["key"]}.pub"), check(report, "keys")["fingerprint"]
+        assert_equal "pass", check(report, "roles")["status"]
+        assert_equal "pass", check(report, "repositories")["status"]
+        assert_equal fixture["origin"], check(report, "repositories")["origin"]
+        assert_equal "pass", check(report, "grants", 1)["status"]
+        assert_equal %w[atlas borealis], check(report, "grants", 1)["projects"]
+        assert_equal "pass", check(report, "registry")["status"]
+        assert_equal "pass", check(report, "overseer")["status"]
+      end
+    end
+
+    def test_resumed_install_verifies_ready_with_no_hidden_gaps
+      with_lab do |fixture|
+        # crash cut: directories + keys + only atlas cloned, grants absent
+        FileUtils.mkdir_p(fixture["labs"])
+        File.chmod(0o750, fixture["labs"])
+        ssh_dir = File.dirname(fixture["key"])
+        FileUtils.mkdir_p(ssh_dir)
+        File.chmod(0o700, ssh_dir)
+        system("ssh-keygen", "-q", "-t", "ed25519", "-N", "", "-C", "ace-worker@lab01",
+          "-f", fixture["key"], out: File::NULL, err: File::NULL)
+        skip "ssh-keygen unavailable" unless File.file?(fixture["key"])
+        `git clone -q #{fixture['origin'].shellescape} #{File.join(fixture['labs'], 'atlas').shellescape} >/dev/null 2>&1`
+
+        report = install_run(fixture, lookup_for(fixture))
+        assert_equal true, report["ok"]
+
+        verify = verify_run(fixture)
+        assert_equal true, verify["ready"], verify.inspect
+        assert_equal 0, verify["counts"]["fail"]
+      end
+    end
+
+    # --- failure beside healthy data ----------------------------------
+
+    def test_wrong_private_key_mode_fails_only_the_key_check
+      with_lab do |fixture|
+        install_run(fixture, lookup_for(fixture))
+        File.chmod(0o644, fixture["key"])
+
+        report = verify_run(fixture)
+
+        assert_equal false, report["ready"]
+        key = check(report, "keys")
+        assert_equal "fail", key["status"]
+        assert_match(/mode is 0644 but 0600 is required/, key["reason"])
+        # healthy data stays visible and passing
+        assert_equal "pass", check(report, "accounts")["status"]
+        assert_equal "pass", check(report, "roles")["status"]
+        assert_equal "pass", check(report, "repositories")["status"]
+        assert_equal "pass", check(report, "grants", 1)["status"]
+      end
+    end
+
+    def test_swapped_public_key_fails_the_pair_usability_check
+      with_lab do |fixture|
+        install_run(fixture, lookup_for(fixture))
+        # generate a different key and swap only the public half
+        other = File.join(fixture["dir"], "other")
+        system("ssh-keygen", "-q", "-t", "ed25519", "-N", "", "-f", other,
+          out: File::NULL, err: File::NULL)
+        FileUtils.cp("#{other}.pub", "#{fixture["key"]}.pub")
+        File.chmod(0o644, "#{fixture["key"]}.pub")
+
+        report = verify_run(fixture)
+
+        assert_equal "fail", check(report, "keys")["status"]
+        assert_nil check(report, "keys")["fingerprint"]
+        assert_match(/not usable/, check(report, "keys")["reason"])
+        assert_equal false, report["ready"]
+      end
+    end
+
+    def test_missing_instructions_file_fails_only_the_role_check
+      with_lab do |fixture|
+        # switch the role binding to the absolute instructions path
+        manifest = File.read(fixture["manifest"]).gsub("wfi://lab/worker", fixture["instructions"])
+        File.write(fixture["manifest"], manifest)
+        install_run(fixture, lookup_for(fixture))
+        File.delete(fixture["instructions"])
+
+        report = verify_run(fixture)
+
+        role = check(report, "roles")
+        assert_equal "fail", role["status"]
+        assert_match(/does not exist/, role["reason"])
+        assert_equal "pass", check(report, "accounts")["status"]
+        assert_equal "pass", check(report, "keys")["status"]
+        assert_equal false, report["ready"]
+      end
+    end
+
+    def test_missing_account_fails_account_and_dependent_checks
+      with_lab do |fixture|
+        install_run(fixture, lookup_for(fixture))
+        missing = ->(_name) { nil }
+
+        report = verify_run(fixture, lookup: missing)
+
+        assert_equal "fail", check(report, "accounts")["status"]
+        assert_match(/does not exist on this machine/, check(report, "accounts")["reason"])
+        assert_equal "fail", check(report, "keys")["status"]
+        assert_equal "fail", check(report, "roles")["status"]
+        # project-level facts are independent of the passwd seam
+        assert_equal "pass", check(report, "repositories")["status"]
+        assert_equal "pass", check(report, "grants", 1)["status"]
+        assert_equal false, report["ready"]
+      end
+    end
+
+    def test_non_login_shell_blocks_readiness_under_the_target_account
+      with_lab do |fixture|
+        install_run(fixture, lookup_for(fixture))
+
+        report = verify_run(fixture, lookup: lookup_for(fixture, shell: "/usr/sbin/nologin"))
+
+        assert_equal "fail", check(report, "accounts")["status"]
+        assert_match(/non-login shell/, check(report, "accounts")["reason"])
+        assert_equal false, report["ready"]
+      end
+    end
+
+    def test_missing_grants_document_fails_visibility_without_hiding_health
+      with_lab do |fixture|
+        install_run(fixture, lookup_for(fixture))
+        File.delete(fixture["auth"])
+
+        report = verify_run(fixture)
+
+        document_check = report["checks"]["grants"].first
+        assert_equal "fail", document_check["status"]
+        assert_match(/is missing; no principal can see/, document_check["reason"])
+        assert_equal "pass", check(report, "repositories")["status"]
+        assert_equal "pass", check(report, "keys")["status"]
+        assert_equal false, report["ready"]
+      end
+    end
+
+    def test_partial_grants_fail_the_principal_with_the_missing_project
+      with_lab do |fixture|
+        install_run(fixture, lookup_for(fixture))
+        document = YAML.load_file(fixture["auth"])
+        document["principals"]["ace-overseer"]["projects"] = %w[atlas]
+        File.write(fixture["auth"], YAML.dump(document))
+
+        report = verify_run(fixture)
+
+        principal = check(report, "grants", 1)
+        assert_equal "fail", principal["status"]
+        assert_match(/missing: borealis/, principal["reason"])
+        assert_equal %w[atlas], principal["projects"]
+        assert_equal "pass", check(report, "registry", 1)["status"]
+        assert_equal false, report["ready"]
+      end
+    end
+
+    def test_overseer_folder_not_gitignored_fails_the_overseer_check
+      with_lab do |fixture|
+        install_run(fixture, lookup_for(fixture))
+        gitignore = File.join(fixture["labs"], "atlas", ".gitignore")
+        File.write(gitignore, File.readlines(gitignore).reject { |l| l.include?("_overseer") }.join)
+
+        report = verify_run(fixture)
+
+        assert_equal "fail", check(report, "overseer")["status"]
+        assert_match(/not ignored by Git/, check(report, "overseer")["reason"])
+        assert_equal "pass", check(report, "overseer", 1)["status"]
+        assert_equal false, report["ready"]
+      end
+    end
+
+    def test_missing_registry_entry_fails_project_visibility
+      with_lab do |fixture|
+        install_run(fixture, lookup_for(fixture))
+        registry = File.join(fixture["labs"], "atlas", ".ace", "lab", "config.yml")
+        File.delete(registry)
+
+        report = verify_run(fixture)
+
+        assert_equal "fail", check(report, "registry")["status"]
+        assert_match(/is missing; the project is not visible/, check(report, "registry")["reason"])
+        assert_equal "pass", check(report, "registry", 1)["status"]
+        assert_equal false, report["ready"]
+      end
+    end
+
+    def test_network_remote_origin_is_reported_unknown_but_not_a_failure
+      with_lab do |fixture|
+        install_run(fixture, lookup_for(fixture))
+        network = "git@forge.example:atlas/atlas.git"
+        project = File.join(fixture["labs"], "atlas")
+        system("git", "-C", project, "remote", "set-url", "origin", network,
+          out: File::NULL, err: File::NULL)
+        manifest = YAML.load_file(fixture["manifest"])
+        manifest["projects"][0]["remote"] = network
+        File.write(fixture["manifest"], YAML.dump(manifest))
+
+        report = verify_run(fixture)
+
+        repository = check(report, "repositories")
+        assert_equal "unknown", repository["status"]
+        assert_match(/is not a local-path remote; not probed/, repository["reason"])
+        assert_equal 1, report["counts"]["unknown"]
+        # unknown does not block readiness
+        assert_equal true, report["ready"]
+      end
+    end
+
+    def test_foreign_origin_mismatch_is_a_concrete_failure
+      with_lab do |fixture|
+        install_run(fixture, lookup_for(fixture))
+        project = File.join(fixture["labs"], "atlas")
+        system("git", "-C", project, "remote", "set-url", "origin",
+          File.join(fixture["dir"], "elsewhere.git"), out: File::NULL, err: File::NULL)
+
+        report = verify_run(fixture)
+
+        repository = check(report, "repositories")
+        assert_equal "fail", repository["status"]
+        assert_match(/origin is '.*elsewhere\.git' but the manifest declares/, repository["reason"])
+        assert_equal false, report["ready"]
+      end
+    end
+
+    def test_unreachable_local_origin_is_a_concrete_failure
+      with_lab do |fixture|
+        install_run(fixture, lookup_for(fixture))
+        Dir.children(fixture["origin"]).each { |entry| FileUtils.rm_rf(File.join(fixture["origin"], entry)) }
+
+        report = verify_run(fixture)
+
+        repository = check(report, "repositories")
+        assert_equal "fail", repository["status"]
+        assert_match(/is not reachable/, repository["reason"])
+        assert_equal false, report["ready"]
+      end
+    end
+
+    def test_read_only_verification_mutates_nothing
+      with_lab do |fixture|
+        install_run(fixture, lookup_for(fixture))
+        key_inode = File.stat(fixture["key"]).ino
+        auth_bytes = File.binread(fixture["auth"])
+        registry_bytes = File.binread(File.join(fixture["labs"], "atlas", ".ace", "lab", "config.yml"))
+
+        report = verify_run(fixture)
+
+        assert_equal true, report["ready"]
+        assert_equal key_inode, File.stat(fixture["key"]).ino
+        assert_equal auth_bytes, File.binread(fixture["auth"])
+        assert_equal registry_bytes,
+          File.binread(File.join(fixture["labs"], "atlas", ".ace", "lab", "config.yml"))
+      end
+    end
+
+    def test_dubious_ownership_refusal_is_reported_with_an_actionable_reason
+      with_lab do |fixture|
+        install_run(fixture, lookup_for(fixture))
+        base = Ace::Lab::Organisms::Verify.new(
+          manifest_path: fixture["manifest"], account_lookup: lookup_for(fixture),
+          authorization_path: fixture["auth"], platform: "linux")
+        runner = lambda do |argv|
+          if argv.include?("rev-parse") || argv.include?("check-ignore")
+            {"status" => "exit 128", "out" => "",
+             "err" => "fatal: detected dubious ownership in repository at '...'"}
+          else
+            base.send(:run_argv, argv)
+          end
+        end
+
+        report = nil
+        Ace::Lab::Molecules::GrantResolver.stub :read_verified,
+          ->(path) { File.file?(path) ? File.read(path) : nil } do
+          report = Ace::Lab::Organisms::Verify.new(
+            manifest_path: fixture["manifest"], account_lookup: lookup_for(fixture),
+            authorization_path: fixture["auth"], platform: "linux", runner: runner
+          ).call
+        end
+
+        repository = check(report, "repositories")
+        assert_equal "fail", repository["status"]
+        assert_match(/dubious ownership/, repository["reason"])
+        assert_match(/safe\.directory/, repository["reason"])
+        overseer = check(report, "overseer")
+        assert_equal "fail", overseer["status"]
+        assert_match(/dubious ownership/, overseer["reason"])
+        assert_equal false, report["ready"]
+      end
+    end
+
+    def test_untrusted_grants_document_fails_the_check_without_aborting
+      with_lab do |fixture|
+        install_run(fixture, lookup_for(fixture))
+
+        report = nil
+        Ace::Lab::Molecules::GrantResolver.stub :read_verified,
+          ->(path) do
+            raise Ace::Lab::InvalidConfigurationError, "ownership verification failed" if path == fixture["auth"]
+
+            File.file?(path) ? File.read(path) : nil
+          end do
+          report = Ace::Lab::Organisms::Verify.new(
+            manifest_path: fixture["manifest"], account_lookup: lookup_for(fixture),
+            authorization_path: fixture["auth"], platform: "linux"
+          ).call
+        end
+
+        document_check = report["checks"]["grants"].first
+        assert_equal "fail", document_check["status"]
+        assert_match(/failed verification: ownership verification failed/, document_check["reason"])
+        # the failure never hides healthy data around it
+        assert_equal "pass", check(report, "repositories")["status"]
+        assert_equal false, report["ready"]
+      end
+    end
+    # --- LAB-2: executor access, not installer access ------------------
+
+    def test_project_behind_0700_ancestor_is_not_ready_for_a_different_executor
+      with_lab do |fixture|
+        assert install_run(fixture, lookup_for(fixture))["ok"]
+        # a different target executor uid, and an installer-owned 0700
+        # ancestor the executor cannot search
+        other = FakeEntry.new(name: "ace-worker", uid: Process.uid + 10000,
+          gid: Process.gid + 10000, dir: fixture["home"], shell: "/bin/sh")
+        File.chmod(0o700, fixture["labs"])
+
+        report = verify_run(fixture, lookup: ->(_) { other })
+
+        refute report["ready"], "project behind installer-owned 0700 ancestor passed"
+        repository = check(report, "repositories")
+        assert_equal "fail", repository["status"]
+        assert_match(/denies search permission to account 'ace-worker'/, repository["reason"])
+        # healthy data stays visible (keys legitimately fail too: the
+        # files are not owned by the declared account's uid)
+        assert_equal "pass", check(report, "accounts")["status"]
+      ensure
+        File.chmod(0o750, fixture["labs"]) if fixture["labs"]
+      end
+    end
+
+    def test_executor_without_write_access_to_the_project_is_not_ready
+      with_lab do |fixture|
+        assert install_run(fixture, lookup_for(fixture))["ok"]
+        # the project directory itself is read+search only — even its
+        # owner cannot create worktrees inside it
+        File.chmod(0o555, File.join(fixture["labs"], "atlas"))
+        other = FakeEntry.new(name: "ace-worker", uid: Process.uid,
+          gid: Process.gid + 10000, dir: fixture["home"], shell: "/bin/sh")
+
+        report = verify_run(fixture, lookup: ->(_) { other })
+
+        repository = check(report, "repositories")
+        assert_equal "fail", repository["status"]
+        assert_match(/denies read\/write\/search permission/, repository["reason"])
+        assert_equal false, report["ready"]
+        # the writable sibling project passes its own check — failure
+        # never hides healthy data elsewhere in the report
+        assert_equal "pass", check(report, "repositories", 1)["status"]
+        assert_equal "pass", check(report, "accounts")["status"]
+      ensure
+        File.chmod(0o755, File.join(fixture["labs"], "atlas")) if fixture["labs"]
+      end
+    end
+
+    # --- LAB-4: protocol roles must actually resolve --------------------
+
+    def test_protocol_role_that_resolves_passes
+      with_lab(role_instructions: "wfi://lab/worker") do |fixture|
+        install_run(fixture, lookup_for(fixture))
+        nav = ->(argv, _cwd) { {"status" => "ok", "out" => "#{fixture['instructions']}\n", "err" => ""} }
+
+        report = verify_run(fixture, nav_runner: nav)
+
+        assert_equal "pass", check(report, "roles")["status"]
+        assert_equal true, report["ready"]
+      end
+    end
+
+    def test_nonexistent_protocol_role_cannot_be_ready
+      with_lab(role_instructions: "wfi://does-not-exist/not-a-role") do |fixture|
+        install_run(fixture, lookup_for(fixture))
+        nav = ->(argv, _cwd) { {"status" => "1", "out" => "", "err" => "Resource not found: wfi://does-not-exist/not-a-role\n"} }
+
+        report = verify_run(fixture, nav_runner: nav)
+
+        role = check(report, "roles")
+        assert_equal "fail", role["status"]
+        assert_match(/do not resolve through ace-nav/, role["reason"])
+        assert_equal false, report["ready"]
+        # failure beside healthy data
+        assert_equal "pass", check(report, "accounts")["status"]
+        assert_equal "pass", check(report, "repositories")["status"]
+      end
+    end
+
+    def test_missing_resolver_reports_unknown_without_blocking
+      with_lab(role_instructions: "wfi://lab/worker") do |fixture|
+        install_run(fixture, lookup_for(fixture))
+        nav = ->(_argv, _cwd) { {"status" => "enoent", "out" => "", "err" => ""} }
+
+        report = verify_run(fixture, nav_runner: nav)
+
+        assert_equal "unknown", check(report, "roles")["status"]
+        assert_equal true, report["ready"], "an unavailable resolver must not block offline"
+      end
+    end
+
+    def test_nonexistent_protocol_role_fails_with_the_real_resolver
+      with_lab(role_instructions: "wfi://does-not-exist/not-a-role") do |fixture|
+        install_run(fixture, lookup_for(fixture))
+        nav_available = system("ace-nav", "version", out: File::NULL, err: File::NULL)
+        skip "ace-nav unavailable" unless nav_available
+
+        report = verify_run(fixture)
+
+        refute report["ready"], "Nonexistent role accepted: #{report['checks']['roles'].inspect}"
+        assert_equal "fail", check(report, "roles")["status"]
+      end
+    end
+
+    # --- LAB-3: tools and adapters block readiness ----------------------
+
+    def test_missing_required_tool_fails_only_the_tool_check
+      with_lab(extra_manifest: "tools:\n  - git\n  - definitely-not-a-lab-tool-xyz") do |fixture|
+        install_run(fixture, lookup_for(fixture))
+
+        report = verify_run(fixture)
+
+        assert_equal false, report["ready"]
+        assert_equal "pass", report["checks"]["tools"].first["status"]
+        missing = report["checks"]["tools"].last
+        assert_equal "definitely-not-a-lab-tool-xyz", missing["tool"]
+        assert_equal "fail", missing["status"]
+        assert_match(/is not available/, missing["reason"])
+        assert_equal "pass", check(report, "repositories")["status"]
+      end
+    end
+
+    def test_broken_adapter_command_blocks_readiness_with_a_classified_failure
+      with_lab(extra_manifest: "adapters:\n  - id: hermes\n    kind: communication\n    command: not-an-adapter-binary-xyz") do |fixture|
+        install_run(fixture, lookup_for(fixture))
+
+        report = verify_run(fixture)
+
+        assert_equal false, report["ready"]
+        adapter = check(report, "adapters")
+        assert_equal "fail", adapter["status"]
+        assert_match(/command 'not-an-adapter-binary-xyz' is not available/, adapter["reason"])
+        assert_equal "pass", check(report, "accounts")["status"]
+      end
+    end
+
+    def test_configured_adapter_without_a_command_passes_without_network_calls
+      with_lab(extra_manifest: "adapters:\n  - id: hermes\n    kind: hitl\n    config:\n      queue: lab01") do |fixture|
+        install_run(fixture, lookup_for(fixture))
+
+        report = verify_run(fixture)
+
+        adapter = check(report, "adapters")
+        assert_equal "pass", adapter["status"]
+        assert_equal true, report["ready"], report.inspect
+      end
+    end
+
+    def test_install_reports_adapter_and_tool_declarations_and_runs_final_verify
+      with_lab(extra_manifest: "tools:\n  - git\nadapters:\n  - id: hermes\n    kind: communication\n    command: git") do |fixture|
+        report = install_run(fixture, lookup_for(fixture))
+
+        assert report["ok"], report["verify"].inspect
+        assert_equal %w[hermes], report["adapters"].map { |a| a["id"] }
+        assert_equal %w[git], report["tools"]
+        assert_equal true, report["verify"]["ready"]
+        assert_equal "pass", report["verify"]["checks"]["adapters"].first["status"]
+        assert_equal "pass", report["verify"]["checks"]["tools"].first["status"]
+      end
+    end
+
+    def test_install_with_a_missing_tool_reports_not_ok_through_final_verify
+      with_lab(extra_manifest: "tools:\n  - definitely-not-a-lab-tool-xyz") do |fixture|
+        report = install_run(fixture, lookup_for(fixture))
+
+        refute report["ok"], "missing tool must block install success"
+        assert_equal false, report["verify"]["ready"]
+        assert_equal "fail", report["verify"]["checks"]["tools"].first["status"]
+      end
+    end
+
+    # The default macOS tmpdir lives behind a 0700 per-user folder a
+    # different-uid executor cannot search; the FINAL-LAB3 reproduction
+    # needs publicly searchable ancestors (/tmp).
+    def with_public_lab(**args, &block)
+      Dir.stub(:tmpdir, "/tmp") { with_lab(**args, &block) }
+    end
+
+    # --- FINAL-LAB2: declared HITL adapters must be usable installed
+    # configuration, not just schema-checked declarations --------------
+
+    def test_hitl_adapter_declarations_become_runtime_routes_in_every_project
+      with_lab(extra_manifest: "adapters:\n  - id: console\n    kind: hitl\n    config:\n      runtime: tmux") do |fixture|
+        report = install_run(fixture, lookup_for(fixture))
+
+        assert report["ok"], report["verify"].inspect
+        %w[atlas borealis].each do |project|
+          path = File.join(fixture["labs"], project, ".ace", "hitl", "config.yml")
+          assert File.file?(path), "#{path} missing"
+          document = YAML.safe_load_file(path)
+          assert_equal [{"adapter" => "console", "runtime" => "tmux"}],
+            document.dig("hitl", "adapters", "routes")
+          assert_equal "pass", report["verify"]["checks"]["adapters"].first["status"]
+        end
+      end
+    end
+
+    def test_missing_hitl_route_configuration_blocks_readiness
+      with_lab(extra_manifest: "adapters:\n  - id: console\n    kind: hitl\n    config: {}") do |fixture|
+        assert install_run(fixture, lookup_for(fixture))["ok"]
+        File.delete(File.join(fixture["labs"], "atlas", ".ace", "hitl", "config.yml"))
+
+        report = verify_run(fixture)
+
+        assert_equal false, report["ready"]
+        adapter = check(report, "adapters")
+        assert_equal "fail", adapter["status"]
+        assert_match(/no HITL adapter routes are configured/, adapter["reason"])
+        assert_match(/project 'atlas'/, adapter["reason"])
+        # failure beside healthy data
+        assert_equal "pass", check(report, "accounts")["status"]
+        assert_equal "pass", check(report, "repositories")["status"]
+      end
+    end
+
+    def test_hitl_route_configuration_that_violates_the_runtime_contract_fails
+      with_lab(extra_manifest: "adapters:\n  - id: console\n    kind: hitl\n    config: {}") do |fixture|
+        assert install_run(fixture, lookup_for(fixture))["ok"]
+        path = File.join(fixture["labs"], "atlas", ".ace", "hitl", "config.yml")
+        File.write(path, YAML.dump({"hitl" => {"adapters" => {"routes" => [{"route" => "stray"}]}}}))
+
+        report = verify_run(fixture)
+
+        assert_equal false, report["ready"]
+        adapter = check(report, "adapters")
+        assert_equal "fail", adapter["status"]
+        assert_match(/missing required 'adapter'/, adapter["reason"])
+      end
+    end
+
+    # --- FINAL-LAB3: tool availability is judged for the target
+    # executor, never for the installing account alone ---------------
+
+    def test_installer_only_executable_tool_is_not_ready_for_the_target_executor
+      with_public_lab do |fixture|
+        assert install_run(fixture, lookup_for(fixture))["ok"]
+        tool = File.join(fixture["dir"], "installer-tool")
+        File.write(tool, "#!/bin/sh\nexit 0\n")
+        File.chmod(0o700, tool)
+        document = YAML.safe_load_file(fixture["manifest"])
+        document["tools"] = [tool]
+        document["keys"] = []
+        document["directories"] = []
+        File.chmod(0o755, fixture["dir"])
+        File.chmod(0o755, fixture["labs"])
+        %w[atlas borealis].each { |project| File.chmod(0o777, File.join(fixture["labs"], project)) }
+        File.write(fixture["manifest"], YAML.dump(document))
+        entry = FakeEntry.new(name: "ace-worker", uid: Process.uid + 20000, gid: Process.gid,
+          dir: fixture["home"], shell: "/bin/sh")
+
+        report = verify_run(fixture, lookup: ->(_) { entry })
+
+        refute report["ready"], "installer-only executable passed as ready: #{report['checks']['tools'].inspect}"
+        tool_check = report["checks"]["tools"].first
+        assert_equal "fail", tool_check["status"]
+        assert_match(/denies execute permission to account 'ace-worker'/, tool_check["reason"])
+        # every other check still passes for the different-uid executor
+        assert_equal "pass", check(report, "accounts")["status"]
+        assert_equal "pass", check(report, "repositories")["status"]
+      end
+    end
+
+    # --- LAB-6: malformed registry is a classified per-project failure --
+
+    def test_malformed_registry_must_report_failure_without_killing_the_report
+      with_lab do |fixture|
+        assert install_run(fixture, lookup_for(fixture))["ok"]
+        path = File.join(fixture["labs"], "atlas", ".ace/lab/config.yml")
+        File.write(path, "schema_version: 1\ntopology: invalid\n")
+
+        report = verify_run(fixture)
+
+        refute report["ready"]
+        assert_equal "fail", check(report, "registry")["status"]
+        assert_match(/is not a valid lab configuration/, check(report, "registry")["reason"])
+        # the sibling project and the other checks survive
+        assert_equal "pass", check(report, "registry", 1)["status"]
+        assert_equal "pass", check(report, "accounts")["status"]
+        assert_equal "pass", check(report, "repositories")["status"]
+      end
+    end
+  end
+end
+
+# --- review round 2: probe posture under unset PATH, root nav trust ----
+
+class VerifyProbeTest < Minitest::Test
+  def test_route_failure_is_not_masked_by_unset_path
+    manifest = {
+      "projects" => [{"id" => "atlas", "path" => "/nonexistent/atlas", "remote" => nil}],
+      "adapters" => [{"id" => "console", "kind" => "hitl", "command" => "git",
+                      "config" => {"adapter" => "console"}}]
+    }
+    old = ENV["PATH"]
+    ENV["PATH"] = ""
+    begin
+      adapters = organism.send(:check_adapters, manifest)
+      assert_equal "fail", adapters.first["status"], adapters.inspect
+      assert_match(/no HITL adapter routes are configured/, adapters.first["reason"].to_s)
+      refute_match(/PATH is unset/, adapters.first["reason"].to_s)
+    ensure
+      ENV["PATH"] = old
+    end
+  end
+
+  def organism
+    Ace::Lab::Organisms::Verify.new
+  end
+
+  def test_unset_path_makes_tool_and_adapter_probes_unknown_not_failed
+    old = ENV["PATH"]
+    ENV["PATH"] = ""
+    begin
+      tools = organism.send(:check_tools, {"tools" => %w[git]})
+      assert_equal 1, tools.length
+      assert_equal "unknown", tools.first["status"], tools.inspect
+      assert_match(/PATH is unset/, tools.first["reason"])
+
+      adapters = organism.send(:check_adapters,
+        {"adapters" => [{"id" => "hermes", "kind" => "communication",
+                         "config" => {}, "command" => "git"}]})
+      assert_equal "unknown", adapters.first["status"], adapters.inspect
+      assert_match(/PATH is unset/, adapters.first["reason"])
+    ensure
+      ENV["PATH"] = old
+    end
+  end
+
+  def test_path_probe_is_tristate
+    old = ENV["PATH"]
+    ENV["PATH"] = ""
+    begin
+      assert_equal :unknown, organism.send(:availability_probe, "git", []).first
+    ensure
+      ENV["PATH"] = old
+    end
+    assert_equal :pass, organism.send(:availability_probe, "git", []).first
+    assert_equal :fail, organism.send(:availability_probe, "definitely-not-a-lab-tool-xyz", []).first
+  end
+
+  def test_root_installer_never_executes_the_project_binstub
+    argv_seen = []
+    nav_runner = ->(argv, _cwd) { argv_seen << argv; {"status" => "ok", "out" => "resolved", "err" => ""} }
+    verify = Ace::Lab::Organisms::Verify.new(nav_runner: nav_runner)
+
+    Dir.mktmpdir do |dir|
+      binstub = File.join(dir, "bin", "ace-nav")
+      FileUtils.mkdir_p(File.join(dir, "bin"))
+      FileUtils.touch(binstub)
+      File.chmod(0o755, binstub)
+
+      # Non-root keeps the executor's binary choice: the binstub.
+      Process.stub :uid, 501 do
+        assert_equal binstub, verify.send(:nav_binary, dir)
+      end
+      # Root never runs repository-controlled binstubs: PATH only.
+      Process.stub :uid, 0 do
+        assert_equal "ace-nav", verify.send(:nav_binary, dir)
+      end
+    end
+  end
+
+  def test_config_shape_failure_stays_fail_even_with_unset_path
+      old = ENV["PATH"]
+      ENV["PATH"] = ""
+      begin
+        adapters = organism.send(:check_adapters,
+          {"adapters" => [{"id" => "hermes", "kind" => "communication",
+                           "config" => "not-a-mapping", "command" => "git"}]})
+        assert_equal "fail", adapters.first["status"], adapters.inspect
+        assert_match(/configuration is not a mapping/, adapters.first["reason"])
+      ensure
+        ENV["PATH"] = old
+      end
+    end
+end

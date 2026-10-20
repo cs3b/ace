@@ -23,13 +23,24 @@ ace-coworker resume [--dry-run]                # Resume interrupted work in this
 ace-coworker prepare --task REF --roles worker,reviewer [--to ADDR] [--dry-run]
 ace-coworker roles                             # List role presets (gem + project)
 ace-coworker commission --role worker --task REF --assignment ID --overseer ADDR
+ace-coworker gate --candidate-head SHA --review-head SHA --review-verdict accept
+                 --tests executed,passed --dep LEAF=integrated
 ```
 
 - `prepare` — the planner side: accept a preparation commission (task +
   expected role sequence) and find or prepare exactly one proper worktree for
-  the task. Re-preparation reuses the existing worktree with zero writes; an
+  the task, THEN compose the assignments for the whole role sequence in one
+  go (L4.2): one `ace-assign` assignment per role in dependency order, stored
+  in the worktree's `.ace-local/assign/` with explicit entry conditions, the
+  expected outcome of each leg, and the role's process definition (shipped
+  `.ace-defaults/coworker/sequences/<role>.yml`, project override
+  `.ace/coworker/sequences/<role>.yml` — the reviewer leg embeds the 3/2/10
+  round rule, the integrator leg the `ace-coworker gate` checks). Re-preparing
+  reuses the worktree and the already-composed assignments without writes; an
   active executor or a mismatched worktree escalates a decision question to
-  the overseer via `ace-hitl` instead of overwriting work.
+  the overseer via `ace-hitl` instead of overwriting work; a role without its
+  own process is reported and nothing is composed — another role's process is
+  never substituted.
 
 - `roles` / `commission` — role presets and the role-instantiation primitive
   consumed by the planner (L4.2/L4.3 seam). Shipped presets: `worker`
@@ -39,14 +50,26 @@ ace-coworker commission --role worker --task REF --assignment ID --overseer ADDR
   review that fixes confirmed defects itself inside its own assignment,
   checks each fix diff, and returns to full review rounds under the 3/2/10
   convergence rule — escalating instead of marking unresolved High/Critical
-  as success), backed by the self-contained
-  workflows `wfi://coworker/worker` / `wfi://coworker/spec` /
-  `wfi://coworker/reviewer`. `roles` lists
+  as success), and `integrator` (result-dependent integration: merges only
+  candidates whose dependencies are integrated, whose head matches the
+  reviewed head, whose tests were executed and passed, and whose fresh
+  independent review verdict accepts the exact candidate; withheld merges
+  are blocked and escalated, never merged past the gate), backed by the
+  self-contained workflows `wfi://coworker/worker` / `wfi://coworker/spec` /
+  `wfi://coworker/reviewer` / `wfi://coworker/integrator`. `roles` lists
   the catalog (gem defaults + project overrides in `.ace/coworker/roles/`);
   `commission` expands a preset plus the commission identity into
   `.ace-local/coworker/config.yml` — start-grade identity checks, atomic
   write, overwrite refused without `--force`, `--dry-run` renders without
   writing. Sequencing and active-driver guards stay with the planner.
+
+- `gate` — the integrator role's deterministic pre-merge check
+  (`Ace::Coworker::Atoms::IntegrationGate`): evaluates candidate head vs
+  reviewed head (stale review), executed+passing tests, review verdict, and
+  per-dependency integration states, and prints `ready` or `blocked` with
+  per-check reasons. Pure and stateless — it decides readiness only; the
+  integrator role drives git/ace-git. `blocked` is a legitimate gate outcome
+  (exit 0); only invalid input fails.
 
 - `start` — validate the prepared config (role, instructions, start prompt,
   task, assignment, overseer, error rules), verify the task resolves in this

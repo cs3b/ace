@@ -285,5 +285,172 @@ module Atoms
 
       assert_equal "0750", result["directories"].first["mode"]
     end
+
+    def test_projects_section_normalizes
+      result = normalize(manifest("projects" => [
+        {"id" => "atlas", "path" => "/Users/ace/lab/atlas",
+         "remote" => "git@forge:atlas/atlas.git", "label" => "Atlas platform"},
+        {"id" => "borealis", "path" => "/Users/ace/lab/borealis"}
+      ]))
+
+      atlas = result["projects"].first
+      assert_equal "atlas", atlas["id"]
+      assert_equal "/Users/ace/lab/atlas", atlas["path"]
+      assert_equal "git@forge:atlas/atlas.git", atlas["remote"]
+      assert_equal "Atlas platform", atlas["label"]
+      borealis = result["projects"][1]
+      assert_nil borealis["remote"]
+      assert_nil borealis["label"]
+    end
+
+    def test_projects_and_grants_default_to_empty
+      result = normalize(manifest)
+
+      assert_empty result["projects"]
+      assert_empty result["grants"]
+    end
+
+    def test_project_entry_validation
+      [
+        [{"id" => "Atlas", "path" => "/lab/atlas"}, /projects entry id format is invalid/],
+        [{"id" => "atlas", "path" => "relative"}, /projects entry path must be an absolute path/],
+        [{"id" => "atlas", "path" => "/lab/atlas", "remote" => ""}, /remote must be a non-empty string/],
+        [{"id" => "atlas", "path" => "/lab/atlas", "label" => "  "}, /label must be a non-empty string/],
+        [{"path" => "/lab/atlas"}, /projects entry id is required/],
+        [{"id" => "atlas"}, /projects entry path is required/],
+        [{"id" => "atlas", "path" => "/lab/atlas", "extra" => 1}, /projects entry #\d+ has unknown key/]
+      ].each do |entry, pattern|
+        error = assert_raises(Ace::Lab::InvalidConfigurationError) do
+          normalize(manifest("projects" => [entry]))
+        end
+
+        assert_match(pattern, error.message)
+      end
+    end
+
+    def test_duplicate_project_ids_and_paths_are_rejected
+      error = assert_raises(Ace::Lab::InvalidConfigurationError) do
+        normalize(manifest("projects" => [
+          {"id" => "atlas", "path" => "/lab/atlas"},
+          {"id" => "atlas", "path" => "/lab/other"}
+        ]))
+      end
+      assert_match(/projects entry id is declared more than once/, error.message)
+
+      error = assert_raises(Ace::Lab::InvalidConfigurationError) do
+        normalize(manifest("projects" => [
+          {"id" => "atlas", "path" => "/lab/atlas"},
+          {"id" => "other", "path" => "/lab/atlas"}
+        ]))
+      end
+      assert_match(/projects entry path is declared more than once/, error.message)
+    end
+
+    def test_grants_normalize_and_validate_references
+      result = normalize(manifest(
+        "projects" => [{"id" => "atlas", "path" => "/lab/atlas"}],
+        "grants" => {"ace-overseer" => ["atlas"], " operator " => ["atlas"]}
+      ))
+
+      assert_equal({"ace-overseer" => %w[atlas], "operator" => %w[atlas]}, result["grants"])
+
+      error = assert_raises(Ace::Lab::InvalidConfigurationError) do
+        normalize(manifest("grants" => {"ace-overseer" => ["atlas"]}))
+      end
+      assert_match(/reference project 'atlas' which the manifest does not declare/, error.message)
+    end
+
+    def test_grants_shape_validation
+      [
+        [{"ace-overseer" => "atlas"}, /must be a non-empty list of project ids/],
+        [{"ace-overseer" => []}, /must be a non-empty list of project ids/],
+        [{"ace-overseer" => ["atlas", "atlas"]},
+         /list a project more than once/],
+        [{"" => ["atlas"]}, /principal name must be a non-empty string/],
+        [["atlas"], /grants must be a mapping of principal to project ids/],
+        # duplicates after strip are rejected like duplicate project ids
+        [{"ace-overseer" => ["atlas"], " ace-overseer " => ["atlas"]},
+         /grants principal name is declared more than once/]
+      ].each do |grants, pattern|
+        error = assert_raises(Ace::Lab::InvalidConfigurationError) do
+          normalize(manifest(
+            "projects" => [{"id" => "atlas", "path" => "/lab/atlas"}],
+            "grants" => grants
+          ))
+        end
+
+        assert_match(pattern, error.message)
+      end
+    end
+
+    # --- adapters and tools (task 8xg.t.sbz.7.2/.7.4, LAB-3) ----------
+
+    def test_adapters_normalize_with_defaults
+      result = normalize(manifest("adapters" => [
+        {"id" => "hermes", "kind" => "communication", "command" => "ace-hitl-hermes"},
+        {"id" => "console", "kind" => "hitl", "config" => {"prompt" => "tty"}}
+      ]))
+
+      hermes = result["adapters"].first
+      assert_equal "hermes", hermes["id"]
+      assert_equal "communication", hermes["kind"]
+      assert_equal "ace-hitl-hermes", hermes["command"]
+      assert_empty hermes["config"]
+      console = result["adapters"][1]
+      assert_nil console["command"]
+      assert_equal({"prompt" => "tty"}, console["config"])
+    end
+
+    def test_adapter_validation
+      [
+        [{"id" => "Hermes", "kind" => "communication"}, /adapters entry id format is invalid/],
+        [{"kind" => "communication"}, /adapters entry id is required/],
+        [{"id" => "hermes"}, /adapters entry kind is required/],
+        [{"id" => "hermes", "kind" => "transport"}, /adapters entry kind must be one of:/],
+        [{"id" => "hermes", "kind" => "hitl", "config" => "tty"}, /config must be a mapping when present/],
+        [{"id" => "hermes", "kind" => "hitl", "command" => "  "}, /command must be a non-empty string/],
+        [{"id" => "hermes", "kind" => "hitl", "extra" => 1}, /adapters entry #\d+ has unknown key/],
+        [[{"id" => "a", "kind" => "hitl"}, {"id" => "a", "kind" => "communication"}],
+         /adapters entry id is declared more than once/]
+      ].each do |entries, pattern|
+        entries = [entries] if entries.is_a?(Hash)
+        error = assert_raises(Ace::Lab::InvalidConfigurationError) do
+          normalize(manifest("adapters" => entries))
+        end
+
+        assert_match(pattern, error.message)
+      end
+    end
+
+    def test_adapters_and_tools_default_to_empty
+      result = normalize(manifest)
+
+      assert_empty result["adapters"]
+      assert_empty result["tools"]
+    end
+
+    def test_tools_normalize_and_validate
+      result = normalize(manifest("tools" => %w[git ssh-keygen ace-nav]))
+
+      assert_equal %w[git ssh-keygen ace-nav], result["tools"]
+
+      [["git", 1], [" ", "git"]].each do |raw|
+        error = assert_raises(Ace::Lab::InvalidConfigurationError) do
+          normalize(manifest("tools" => raw.is_a?(Array) ? raw : [raw]))
+        end
+
+        assert_match(/tools must be a list of non-empty strings/, error.message)
+      end
+
+      error = assert_raises(Ace::Lab::InvalidConfigurationError) do
+        normalize(manifest("tools" => %w[git git]))
+      end
+      assert_match(/tools list a tool more than once/, error.message)
+
+      error = assert_raises(Ace::Lab::InvalidConfigurationError) do
+        normalize(manifest("tools" => "git"))
+      end
+      assert_match(/tools must be a list of non-empty strings/, error.message)
+    end
   end
 end

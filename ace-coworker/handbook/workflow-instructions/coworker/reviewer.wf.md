@@ -139,8 +139,17 @@ product decision is escalated to the overseer instead.
    - Keep your own round record in the step reports (round number, session
      path, verdict per finding). The review sessions, feedback items, and
      assignment state ARE the checkpoint - there is no separate journal.
-     Deterministic counter enforcement is owned by 8xg.t.sbz.4.2; until it
-     exists, this record is the manual truth.
+     Deterministic counter enforcement exists (8xg.t.sbz.4.2):
+     `Ace::Coworker::Atoms::RoundRule` evaluates the recorded rounds
+     (:continue | :accept | :escalate) and `Molecules::ReviewRoundStore`
+     persists them in
+     `.ace-local/coworker/review-rounds/<assignment>.json` - record each
+     finished round with `ace-coworker rounds record --assignment <id>
+     --type full|delta --status completed|aborted [--confirmed id:sev,...]
+     [--resolved id,...]` and follow the printed verdict
+     (:escalate means the ace-hitl decision question above, never a
+     crashed run). A restart reloads the same file: the round counter and
+     findings history are never reset.
 
 7. **Escalate, never fake success.**
    - No effective fix after a genuine attempt, the same blocker recurring, or
@@ -159,7 +168,11 @@ product decision is escalated to the overseer instead.
    - The final report names: the exact candidate head, executed checks,
      per-round dispositions (session paths under `.ace-local/review/`), fix
      commits, and unresolved findings - consumable by the integrator role
-     (8xg.t.sbz.4.3) and the round-limit tooling (8xg.t.sbz.4.2).
+     (8xg.t.sbz.4.3) and the round-limit tooling (8xg.t.sbz.4.2). The
+      reviewed head is recorded as the full lowercase SHA from
+      `git rev-parse HEAD` (never a short form), because the integrator
+      compares it for drift against the candidate head on the same
+      normalization.
 
 9. **Resume.**
    - `ace-coworker resume` after interruption; same task, assignment, and

@@ -21,6 +21,19 @@ module Ace
               roles: %w[worker reviewer],
               worktree: {"path" => "/proj/.ace-wt/t.8xg-t-aaa", "branch" => "8xg-aaa-b",
                          "disposition" => "created"},
+              assignments: [
+                {"role" => "worker", "position" => 1, "of" => 2, "assignment" => "seq1",
+                 "disposition" => "created", "steps" => 2, "outcome" => "worker outcome"},
+                {"role" => "reviewer", "position" => 2, "of" => 2, "assignment" => "seq2",
+                 "disposition" => "created", "steps" => 1, "outcome" => "reviewer outcome"}
+              ],
+              start_configs: [
+                {"role" => "worker", "assignment" => "seq1",
+                 "path" => ".ace-local/coworker/prepare/worker.yml", "disposition" => "created"},
+                {"role" => "reviewer", "assignment" => "seq2",
+                 "path" => ".ace-local/coworker/prepare/reviewer.yml", "disposition" => "created"}
+              ],
+              report: {"kind" => "readiness", "event" => "rpt001", "delivered" => true},
               worktree_assignments: []}.merge(overrides))
           end
 
@@ -52,6 +65,62 @@ module Ace
             assert_equal %w[worker reviewer], fake.calls.first[:roles]
           end
 
+          def test_success_renders_sequence_assignments
+            out = capture do
+              command(prep).call(task: "8xg.t.aaa", roles: ["worker,reviewer"],
+                format: "table", quiet: false)
+            end
+
+            assert_includes out, "sequence:"
+            assert_includes out, "1/2 worker: seq1 (created, 2 steps)"
+            assert_includes out, "2/2 reviewer: seq2 (created, 1 steps)"
+            assert_includes out, "expected outcome: reviewer outcome"
+          end
+
+          def test_success_renders_start_configs
+            out = capture do
+              command(prep).call(task: "8xg.t.aaa", roles: ["worker,reviewer"],
+                format: "table", quiet: false)
+            end
+
+            assert_includes out, "start configs:"
+            assert_includes out,
+              "worker: .ace-local/coworker/prepare/worker.yml (created, assignment seq1)"
+            assert_includes out,
+              "reviewer: .ace-local/coworker/prepare/reviewer.yml (created, assignment seq2)"
+          end
+
+          def test_success_renders_readiness_report
+            out = capture do
+              command(prep).call(task: "8xg.t.aaa", roles: ["worker,reviewer"],
+                format: "table", quiet: false)
+            end
+
+            assert_includes out, "report:     readiness event rpt001 (delivered)"
+          end
+
+          def test_undelivered_readiness_report_renders_retry_hint
+            result = preparation(report: {"kind" => "readiness", "event" => "rpt001",
+              "delivered" => false})
+            out = capture do
+              command(result).call(task: "8xg.t.aaa", roles: ["worker"],
+                format: "table", quiet: false)
+            end
+
+            assert_includes out, "readiness event rpt001 (not delivered " \
+              "(retry: ace-hitl send rpt001))"
+          end
+
+          def test_readiness_report_error_renders_reason
+            result = preparation(report: {"kind" => "readiness", "error" => "boom"})
+            out = capture do
+              command(result).call(task: "8xg.t.aaa", roles: ["worker"],
+                format: "table", quiet: false)
+            end
+
+            assert_includes out, "report:     not sent (boom)"
+          end
+
           def test_success_renders_json_contract
             out = capture { command(prep).call(task: "8xg.t.aaa", roles: ["worker"],
               format: "json", quiet: false) }
@@ -62,6 +131,21 @@ module Ace
             assert_equal "created", payload["worktree"]["disposition"]
             assert_nil payload["conflict"]
             assert_nil payload["active_executor"]
+            assert_equal 2, payload["assignments"].length
+            first = payload["assignments"].first
+            assert_equal "worker", first["role"]
+            assert_equal 1, first["position"]
+            assert_equal "seq1", first["assignment"]
+            assert_equal "worker outcome", first["outcome"]
+            configs = payload["start_configs"]
+            assert_equal 2, configs.length
+            assert_equal "worker", configs.first["role"]
+            assert_equal "seq1", configs.first["assignment"]
+            assert_equal ".ace-local/coworker/prepare/worker.yml", configs.first["path"]
+            assert_equal "created", configs.first["disposition"]
+            assert_equal "readiness", payload["report"]["kind"]
+            assert_equal "rpt001", payload["report"]["event"]
+            assert_equal true, payload["report"]["delivered"]
           end
 
           def test_conflict_renders_and_raises_cli_error

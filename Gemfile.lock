@@ -252,7 +252,7 @@ PATH
 PATH
   remote: ace-lab
   specs:
-    ace-lab (0.12.0)
+    ace-lab (0.13.0)
       ace-git-forgejo (~> 0.7)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.18)
@@ -294,9 +294,11 @@ PATH
   specs:
     ace-overseer (0.24.0)
       ace-assign (~> 0.70)
+      ace-coworker (~> 0.5)
       ace-git (~> 0.30)
       ace-git-worktree (~> 0.27)
       ace-herdr (~> 0.6)
+      ace-hitl (~> 0.23)
       ace-lab (~> 0.8)
       ace-review (~> 0.62.0)
       ace-runtime (~> 0.3)

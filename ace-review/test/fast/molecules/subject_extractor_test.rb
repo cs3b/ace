@@ -372,6 +372,44 @@ class SubjectExtractorTest < AceReviewTest
     end
   end
 
+  def test_pr_url_parsing_never_rewrites_to_github_or_guesses_a_host
+    # Parsing is purely textual: a forge URL keeps its exact host, port and
+    # base path; nothing is normalized to github.com or another guessed host.
+    # Exact per-URL expectations (not prefix matching) pin host, port AND
+    # base path, so dropping or swapping any of them fails the test.
+    {
+      "http://forge.internal:3000/team/repo/pulls/31" => "forge.internal:3000/team/repo",
+      "https://forge.example/git/team/repo/pull/32" => "forge.example/git/team/repo",
+      "https://GITEA.COMPANY.EXAMPLE/Team/Repo/pulls/33" => "gitea.company.example/team/repo"
+    }.each do |url, expected_repository_url|
+      reference = Ace::Git::Atoms::PrReference.parse(url)
+      refute_nil reference
+      refute_match(/github/i, reference.repository_url)
+      assert_equal expected_repository_url, reference.repository_url, "input: #{url}"
+    end
+  end
+
+  def test_pr_url_parsing_performs_no_network_calls
+    url = "https://unreachable-forge.invalid/team/repo/pulls/40"
+    # Config parsing succeeds offline: it only validates the reference shape.
+    assert_equal({"bundle" => {"pr" => [url]}}, @extractor.parse_typed_subject_config("pr:#{url}"))
+    reference = Ace::Git::Atoms::PrReference.parse(url)
+    assert_equal 40, reference.number
+    assert_equal "unreachable-forge.invalid/team/repo", reference.repository_url
+  end
+
+  def test_pr_reference_shapes_extract_number_and_repository_identity
+    {
+      "25" => {number: 25, repository_url: nil, owner_repo: nil},
+      "owner/repo#456" => {number: 456, repository_url: nil, owner_repo: "owner/repo"},
+      "https://github.com/owner/repo/pull/789" => {number: 789, repository_url: "github.com/owner/repo", owner_repo: nil},
+      "https://forge.example/team/repo/pulls/25" => {number: 25, repository_url: "forge.example/team/repo", owner_repo: nil},
+      "https://forge.example:3443/git/team/repo/pulls/25" => {number: 25, repository_url: "forge.example:3443/git/team/repo", owner_repo: nil}
+    }.each do |input, expected|
+      assert_equal expected, Ace::Git::Atoms::PrReference.parse(input).to_h, "input: #{input}"
+    end
+  end
+
   def test_pr_mixed_formats_accepted
     # Mixed numeric and qualified refs should all be accepted
     config = @extractor.parse_typed_subject_config("pr:123,owner/repo#456,789")

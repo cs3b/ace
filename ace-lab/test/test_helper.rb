@@ -18,8 +18,9 @@ require "json"
 
 module LabTestHelper
   # Shared passwd-entry stub for account_lookup seams (uid/gid/dir as
-  # needed by the provisioners and verifiers).
-  FakeEntry = Struct.new(:name, :uid, :gid, :dir, keyword_init: true)
+  # needed by the provisioners and verifiers; shell for the readiness
+  # verifier's login-class check — nil means "unknown", which passes).
+  FakeEntry = Struct.new(:name, :uid, :gid, :dir, :shell, keyword_init: true)
 
   # Rekey authorization principals to the verified local process identity so
   # services built through TopologyService.from_config authorize this process

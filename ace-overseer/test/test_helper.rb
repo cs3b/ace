@@ -4,10 +4,13 @@ $LOAD_PATH.unshift File.expand_path("../lib", __dir__)
 
 %w[
   ace-assign
+  ace-coworker
+  ace-herdr
   ace-lab
   ace-git
   ace-git-github
   ace-git-worktree
+  ace-hitl
   ace-task
   ace-tmux
   ace-support-config

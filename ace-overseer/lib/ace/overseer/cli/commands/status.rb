@@ -19,7 +19,7 @@ module Ace
 
           def initialize(collector: nil, config: nil)
             super()
-            @collector = collector || Organisms::StatusCollector.new
+            @collector = collector || Organisms::StatusCollector.new(config: config)
             @config = config
           end
 
@@ -46,14 +46,14 @@ module Ace
           private
 
           def run_once(format)
-            snapshot = @collector.collect
+            snapshot = @collector.collect_sources
 
             if format == "json"
-              puts JSON.pretty_generate(@collector.to_h(snapshot))
+              puts JSON.pretty_generate(@collector.to_sources_h(snapshot))
               return
             end
 
-            puts @collector.to_table(snapshot)
+            puts @collector.to_sources_table(snapshot)
           end
 
           def run_watch_loop(format, options)

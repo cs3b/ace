@@ -11,16 +11,21 @@ module Ace
       # errors to echo untrusted content back into diagnostics).
       class InstallSchema
         SCHEMA_VERSION = 1
-        TOP_LEVEL_KEYS = %w[schema_version machine accounts directories keys roles].freeze
+        TOP_LEVEL_KEYS =
+          %w[schema_version machine accounts directories keys roles projects grants
+             adapters tools].freeze
         ENTRY_KEYS = {
           "accounts" => %w[username role create home],
           "directories" => %w[path owner mode],
           "keys" => %w[account type path],
-          "roles" => %w[id account instructions]
+          "roles" => %w[id account instructions],
+          "projects" => %w[id path remote label],
+          "adapters" => %w[id kind command config]
         }.freeze
         USERNAME_PATTERN = /\A[a-z_][a-z0-9_-]{0,31}\z/
         ROLE_ID_PATTERN = /\A[a-z][a-z0-9_-]{0,31}\z/
         INSTRUCTION_PROTOCOLS = %w[wfi:// prompt:// tmpl://].freeze
+        ADAPTER_KINDS = %w[communication hitl].freeze
         DEFAULT_MODE = "0755"
         DEFAULT_KEY_TYPE = "ed25519"
         KEY_TYPES = [DEFAULT_KEY_TYPE].freeze
@@ -54,6 +59,7 @@ module Ace
             os = platform || Ace::Lab.host_platform
             accounts = normalize_accounts(document["accounts"], os)
             usernames = accounts.map { |account| account["username"] }
+            projects = normalize_projects(document["projects"])
 
             {
               "schema_version" => SCHEMA_VERSION,
@@ -61,7 +67,11 @@ module Ace
               "accounts" => accounts,
               "directories" => normalize_directories(document["directories"], usernames),
               "keys" => normalize_keys(document["keys"], accounts),
-              "roles" => normalize_roles(document["roles"], usernames)
+              "roles" => normalize_roles(document["roles"], usernames),
+              "projects" => projects,
+              "grants" => normalize_grants(document["grants"], projects.map { |p| p["id"] }),
+              "adapters" => normalize_adapters(document["adapters"]),
+              "tools" => normalize_tools(document["tools"])
             }
           end
 
@@ -195,6 +205,124 @@ module Ace
                 raise_invalid_entry("roles", "id is declared more than once")
               end
             end
+          end
+
+          def normalize_projects(raw)
+            section(raw, "projects").map do |entry|
+              id = required_string(entry, "projects", "id")
+              unless id =~ ROLE_ID_PATTERN
+                raise_invalid_entry("projects", "id format is invalid")
+              end
+
+              path = required_string(entry, "projects", "path")
+              unless absolute_path?(path)
+                raise_invalid_entry("projects", "path must be an absolute path")
+              end
+
+              remote = optional_string(entry, "projects", "remote")
+              label = optional_string(entry, "projects", "label")
+
+              {"id" => id, "path" => path, "remote" => remote, "label" => label}
+            end.tap do |projects|
+              duplicates_of(projects.map { |project| project["id"] }) do |_id|
+                raise_invalid_entry("projects", "id is declared more than once")
+              end
+              duplicates_of(projects.map { |project| project["path"] }) do |_path|
+                raise_invalid_entry("projects", "path is declared more than once")
+              end
+            end
+          end
+
+          def normalize_grants(raw, project_ids)
+            grants = raw.nil? ? {} : raw
+            unless grants.is_a?(Hash)
+              raise_invalid "grants must be a mapping of principal to project ids"
+            end
+
+            # Reject duplicates after strip, like the other duplicate
+            # checks (review r1): "admin" and " admin " would otherwise
+            # silently last-wins.
+            duplicates_of(grants.keys.filter_map { |key| key.strip if key.is_a?(String) }) do |_principal|
+              raise_invalid "grants principal name is declared more than once"
+            end
+
+            grants.to_h do |principal, projects|
+              unless principal.is_a?(String) && !principal.strip.empty?
+                raise_invalid "grants principal name must be a non-empty string"
+              end
+              unless projects.is_a?(Array) && !projects.empty? &&
+                projects.all? { |project| project.is_a?(String) && !project.strip.empty? }
+                raise_invalid "grants for principal '#{principal.strip}' must be a non-empty " \
+                  "list of project ids"
+              end
+              duplicates_of(projects.map(&:strip)) do |_project|
+                raise_invalid "grants for principal '#{principal.strip}' list a project more than once"
+              end
+              unknown = projects.map(&:strip) - project_ids
+              unless unknown.empty?
+                raise_invalid "grants for principal '#{principal.strip}' reference project " \
+                  "'#{unknown.sort.first}' which the manifest does not declare"
+              end
+
+              [principal.strip, projects.map(&:strip).uniq]
+            end
+          end
+
+          # Selected communication/HITL adapters (task 8xg.t.sbz.7.2):
+          # each declares an id, a kind, an optional local command that
+          # provides the adapter (probed for availability by verify) and
+          # an optional free-form configuration mapping. Real network
+          # traffic stays out of scope (L9) — this is the declaration
+          # surface install validates and verify probes.
+          def normalize_adapters(raw)
+            section(raw, "adapters").map do |entry|
+              id = required_string(entry, "adapters", "id")
+              unless id =~ ROLE_ID_PATTERN
+                raise_invalid_entry("adapters", "id format is invalid")
+              end
+
+              kind = required_string(entry, "adapters", "kind")
+              unless ADAPTER_KINDS.include?(kind)
+                raise_invalid_entry("adapters",
+                  "kind must be one of: #{ADAPTER_KINDS.join(', ')}")
+              end
+
+              command = optional_string(entry, "adapters", "command")
+
+              config = entry["config"].nil? ? {} : entry["config"]
+              unless config.is_a?(Hash)
+                raise_invalid_entry("adapters", "config must be a mapping when present")
+              end
+
+              {"id" => id, "kind" => kind, "command" => command, "config" => config}
+            end.tap do |adapters|
+              duplicates_of(adapters.map { |adapter| adapter["id"] }) do |_id|
+                raise_invalid_entry("adapters", "id is declared more than once")
+              end
+            end
+          end
+
+          # Required tools (task 8xg.t.sbz.7.4): names the lab needs on
+          # PATH for the target accounts; verify probes each one's
+          # presence (no execution, no network).
+          def normalize_tools(raw)
+            tools = raw.nil? ? [] : raw
+            unless tools.is_a?(Array) && tools.all? { |tool| tool.is_a?(String) && !tool.strip.empty? }
+              raise_invalid "tools must be a list of non-empty strings"
+            end
+
+            duplicates_of(tools.map(&:strip)) do |_tool|
+              raise_invalid "tools list a tool more than once"
+            end
+            tools.map(&:strip).uniq
+          end
+
+          def optional_string(entry, section_name, field)
+            value = entry[field]
+            if !value.nil? && (!value.is_a?(String) || value.strip.empty?)
+              raise_invalid_entry(section_name, "#{field} must be a non-empty string when present")
+            end
+            value.nil? ? nil : value.strip
           end
 
           def required_string(entry, section_name, field)

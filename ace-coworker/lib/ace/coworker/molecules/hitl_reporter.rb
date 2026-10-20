@@ -20,7 +20,8 @@ module Ace
 
         # @param outcome [Models::Outcome]
         # @param cfg [Models::Config]
-        # @return [String] created event id
+        # @return [String, Failure] created event id, or Failure when the
+        #   ace-hitl create command fails
         # @raise [Error] when ace-hitl is not available at all
         def create(outcome, cfg)
           argv = [hitl_binary, "create", title(outcome, cfg)]
@@ -34,13 +35,36 @@ module Ace
           create_event(argv)
         end
 
+        # Creates a report-type event (no reply expected): the planner's
+        # readiness report (L4.4) uses this. A report requires a result
+        # ("success"/"error") per the ace-hitl CLI contract.
+        #
+        # @param title [String] event title
+        # @param body_lines [Array<String>] report body lines
+        # @param task [String] task reference
+        # @param result [String] "success" or "error"
+        # @param to [String, nil] recipient address
+        # @return [String, Failure] created event id, or Failure when the
+        #   ace-hitl create command fails
+        # @raise [Error] when ace-hitl is not available at all
+        def create_report(title:, body_lines:, task:, result:, to: nil)
+          argv = [hitl_binary, "create", title]
+          argv += ["--type", "report", "--result", result]
+          body_lines.each { |line| argv += ["--body", line] }
+          argv += ["--task", task]
+          argv += ["--to", to] unless to.to_s.strip.empty?
+
+          create_event(argv)
+        end
+
         # Creates a decision-type question event for a preparation conflict.
         #
         # @param title [String] event title
         # @param question_lines [Array<String>] question body lines
         # @param task [String] task reference
         # @param to [String, nil] escalation recipient
-        # @return [String] created event id
+        # @return [String, Failure] created event id, or Failure when the
+        #   ace-hitl create command fails
         # @raise [Error] when ace-hitl is not available at all
         def create_conflict(title:, question_lines:, task:, to: nil)
           argv = [hitl_binary, "create", title]

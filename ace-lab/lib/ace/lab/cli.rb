@@ -10,6 +10,9 @@ require_relative "cli/commands/resolve"
 require_relative "cli/commands/route"
 require_relative "cli/commands/status"
 require_relative "cli/commands/prepare"
+require_relative "cli/commands/project_add"
+require_relative "cli/commands/install"
+require_relative "cli/commands/verify"
 
 module Ace
   module Lab
@@ -27,7 +30,10 @@ module Ace
         ["resolve", "Resolve one lab entry by exact stable ID"],
         ["route", "Select a configured capable service in a project"],
         ["status", "Show lab configuration and local file state (read-only)"],
-        ["prepare", "Prepare accounts, directories, permissions, keys and roles from the trusted install manifest"]
+        ["prepare", "Prepare accounts, directories, permissions, keys and roles from the trusted install manifest"],
+        ["project add", "Register a project and make it ready for team work (repository, _overseer, lab config)"],
+        ["install", "Perform the full new-lab installation from the trusted install manifest"],
+        ["verify", "Verify the installed lab's readiness under the target accounts (read-only)"]
       ].freeze
 
       HELP_EXAMPLES = [
@@ -36,7 +42,10 @@ module Ace
         "ace-lab resolve --id atlas-planner --format json",
         "ace-lab route --project atlas --capability search --format json",
         "ace-lab status --format json",
-        "ace-lab prepare --dry-run"
+        "ace-lab prepare --dry-run",
+        "ace-lab project add atlas --path /Users/ace/lab/atlas --remote git@forge:atlas/atlas.git",
+        "ace-lab install --dry-run",
+        "ace-lab verify --format json"
       ].freeze
 
       # Start the CLI
@@ -55,6 +64,9 @@ module Ace
       register "route", CLI::Commands::Route.new
       register "status", CLI::Commands::Status.new
       register "prepare", CLI::Commands::Prepare.new
+      register "project add", CLI::Commands::ProjectAdd.new
+      register "install", CLI::Commands::Install.new
+      register "verify", CLI::Commands::Verify.new
 
       # Register version command
       version_cmd = Ace::Support::Cli::VersionCommand.build(

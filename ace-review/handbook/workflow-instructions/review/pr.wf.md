@@ -1,17 +1,17 @@
 ---
 doc-type: workflow
 title: Review PR in converging rounds
-purpose: Review a PR, verify concrete findings and finish after two clean rounds
+purpose: Review a PR, verify concrete findings and finish under the shared 3/2/10 convergence rule
 ace-docs:
-  last-updated: 2026-09-24
-  last-checked: 2026-09-24
+  last-updated: 2026-10-19
+  last-checked: 2026-10-19
 ---
 
 # Review PR
 
 ## Goal and completion rule
 
-The agent runs this workflow; ACE executes individual reviews. Complete at least **3 rounds for the PR**, with the **last 2 consecutive rounds free of confirmed P0/P1 (Critical/High)**. An unresolved earlier P0/P1 remains blocking even if another reviewer does not mention it. A confirmed P0/P1 resets the clean-round streak. There is no additional final review after this rule is satisfied.
+The agent runs this workflow; ACE executes individual reviews. This is the shared **3/2/10 convergence rule**: complete at least **3 full rounds for the PR**, with the **last 2 consecutive rounds free of confirmed P0/P1 (Critical/High)**, and at most **10 full rounds** - if the tenth round satisfies the rule, finish successfully; otherwise stop and escalate to the commissioning overseer instead of running further rounds. An unresolved earlier P0/P1 remains blocking even if another reviewer does not mention it. A confirmed P0/P1 resets the clean-round streak. There is no additional final review after this rule is satisfied.
 
 One round covers the PR's needed scope, including cross-module integration. A large round can use several coherent module sessions; modules do not have separate round counters. A round counts only after the needed reports have completed and the agent has verified their findings. Failed providers and incomplete reports do not count as clean rounds.
 
@@ -53,8 +53,13 @@ Examples:
 
 After the completion rule is met and changes have appropriate test results, update the PR description with actual reviewers, scopes, fixes, deferred findings and limitations, then mark the draft ready with the local forge command (`ace-git pr ready`). Search convergence alone cannot approve stale/incomplete evidence or unresolved earlier P0/P1. Keep formal merge checks at merge time. Do not merge without explicit user authorization, post replies to people or resolve their threads without authorization. Do not make optional code changes after completion that would unnecessarily reopen review.
 
-## Role workflow (planned L5.5)
+## Role workflow and deterministic counters
 
-The coworker/reviewer role workflow that connects these review rounds to the new
-role handoff lands in L5.5. Until then, use the local review rounds above and
-keep the reviewer independent from the worker.
+When the reviewer runs as an ace-coworker role, follow
+`wfi://coworker/reviewer` (ace-coworker handbook): it runs these same local
+review rounds with the fixes-inside-the-assignment and escalation rules, and
+records each finished round with the deterministic 3/2/10 counter tooling
+(`ace-coworker rounds record`, backed by `Ace::Coworker::Atoms::RoundRule`).
+That role workflow is the authority for role handoff and round-limit
+enforcement; this document stays the authority for running the review rounds
+themselves. Do not duplicate or re-implement the counters here.
