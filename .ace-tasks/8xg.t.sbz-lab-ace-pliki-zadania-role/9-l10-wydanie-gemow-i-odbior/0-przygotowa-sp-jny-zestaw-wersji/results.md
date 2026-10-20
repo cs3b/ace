@@ -43,7 +43,7 @@ rozwiązuje zależności — potwierdzone eksperymentalnie (scenariusz błędu).
   wszystkie 10 artefaktów spoza floorów (identyczna treść też zmienia hash —
   stąd nowy hash ace-review bez zmiany źródła w zakresie delty); floory
   (ace-task, ace-hitl, ace-hitl-hermes) zachowują wcześniejsze buildy;
-  żródła pakietów floorów nie zmieniły się po ich buildach (diff
+  źródła pakietów floorów nie zmieniły się po ich buildach (diff
   origin/main..HEAD nie dotyka ace-task/ace-hitl/ace-hitl-hermes).
 
 ## Wykonana weryfikacja
