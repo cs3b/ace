@@ -4,57 +4,7 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
-### Removed
-
-- **ace-assign v0.72.0, ace-lab v0.10.0, ace-overseer v0.24.0, ace-review v0.62.0, ace-hitl v0.18.0, ace-hitl-hermes v0.7.0**: Remove the old installed/protected lab authority/admission/journal/listener model from the active flow. Delete the protected receiver/listener/worker/client/recovery/publication/cleanup stack, the generic service-request admission/journal, the Lab command kernel and ordinary merge/assignment transports, the ace-assign authority/attempt/journal/evidence/delivery/campaign command and library surface, the protected overseer modes, the installed HITL attempt provider and second-commander proposal surfaces, the review campaign/round receipt surface, and the protected delivery/queue presets and protected-only coverage. Retain only the local operations the file-based flow needs: task/assignment/worktree/HITL files, topology queries (L7), the Forgejo adapter and trusted configuration, terminal transports (tmux/Herdr), and the HITL lifecycle/relay transport.
-
-- **ace-assign v0.72.0, ace-git-worktree v0.27.2, ace-hitl v0.18.0, ace-runtime v0.4.1**: Remove role-specific exceptions from universal tools: the `_overseer` delegation refusal in `ace-assign`, the `_overseer` worktree refusal and `special_folder` passthrough in `ace-git-worktree`, the unused old-lab Root Overseer reverse-address HITL channel (`overseer-send`/`overseer-pending`/`overseer-ack`, `Lifecycle::Overseer`, the default `mo` responder, `/lab/state/overseer-channel` and its answer-tag/no-ID policy), and the systemd unit-name `overseer` validity check in `ace-runtime`. No replacement role policy, delegation policy, queue, or `.gitignore`/tracking check is added: the overseer decides which tasks it delegates and where the executor starts, and a missing task in a requested worktree is reported by the executor.
-
-### Changed
-
-- **Documentation and handbook surfaces (ace-lab, ace-overseer, ace-hitl, ace-assign, ace-herdr, ace-runtime, ace-hitl-hermes, ace-hitl-contract, ace-review, ace-git, ace-task, ace-git-worktree)**: Unify active READMEs, usage guides, workflow instructions and presets around one file-based flow and the state owners in `docs/lab-flow.md`; mark L2-L10 features as planned/not available yet and remove old journal/authority/queue requirements. Packages whose only changes are documentation or handbook surfaces release in the coordinated L10 wave; packages with runtime changes carry their own version bump in this release.
-
-### Added
-- **Lab wave 3 + L10 release set (8xg.t.sbz)**: `ace-lab v0.13.0` (installer `ace-lab install` with crash-resume, `project add` ownership/HITL-route convergence, read-only `ace-lab verify` readiness probes), `ace-overseer v0.25.0` (private queue: `work-on` dependency gates, `handoff`, `process-reports` duplicate-safe interpretation, configurable `status` sources with derived attention; removed the installed `ordinary` command and journal/attempt reads), `ace-coworker v0.6.0` (integrator/reviewer role presets, `ace-coworker gate`, `rounds record`, 3/2/10 review-convergence enforcement, prepare readiness via real ace-nav), `ace-handbook-integration-pi v0.6.0` (cross-worktree report wakes, `/continue-work` resume prompt, watcher re-attachment hardening). Dependency-following and fix releases in the same set: `ace-assign v0.73.0` (drive re-reads state before finish/fail), `ace-herdr v0.8.0` (status refinement), `ace-handbook v0.36.0` (perform-delivery rule), `ace-review v0.62.1`, `ace-git-worktree v0.27.3`, `ace-support-config v0.18.3`. Dependency floors required by the set and previously unpublished: `ace-task v0.41.0`, `ace-hitl v0.23.1` (+ `ace-hitl-contract v0.3.0`, `ace-hitl-hermes v0.9.0`).
-
-- **ace-coworker v0.5.0**: Deliver the worker and spec roles as configuration and instructions (L5.1): shipped role presets (`.ace-defaults/coworker/roles/worker.yml`, `spec.yml`, project-overridable via `.ace/coworker/roles/`), the `ace-coworker roles` catalog listing, and `ace-coworker commission` as the role-instantiation primitive consumed by the planner (L4.2/L4.3 seam) — preset + commission identity expanded into the documented `.ace-local/coworker/config.yml` with start-grade identity checks, schema validation, atomic write, `--force`/`--dry-run` semantics. Self-contained role workflows `wfi://coworker/worker` and `wfi://coworker/spec` (failed required tests block worker success; significant unresolved spec gaps are escalated as `ace-hitl` questions, never guessed), wfi-source registration (gem + project mirror), and the new `ace-support-nav ~> 0.28` runtime dependency.
-
-- **ace-support-items v0.15.15**: Add `FolderMover#destination_path`, a non-mutating preview of the destination a move would create, so pre-flight checks (such as the `--git-commit` Git-ignored-path guard) can resolve the real destination before mutating.
-
-- **ace-task v0.41.0, docs**: Keep the private overseer task list in the ordinary gitignored `.ace-tasks/_overseer/` folder prepared by the lab, while making `ace-task` folder-name agnostic: it detects Git-ignored paths through Git itself, so `--git-commit` is refused for an ignored task folder, child, spec file, or relocation destination (create, subtask, update, move; a rejected create rolls back), a completed ignored task or ignored family is not auto-archived (also not into an ignored archive destination), and `doctor` neither requires nor performs an archive move for it. The default `list` stays the ordinary root view; `--in _overseer` reaches the lab-managed folder. Remove the named task-store mechanism, keep the subdirectory root resolution, and publish `docs/lab-flow.md` and ADR-034 as the canonical state-owner map.
-
-- **ace-hitl v0.17.0, ace-hitl-contract v0.3.0, ace-hitl-hermes v0.6.0**: Add explicit operator questions with a closed envelope contract, kernel requester identity, exact installed project grants, stable retries and operator-only service bindings that refuse managed execution, secrets and effects; route them through project correlation and durable Hermes ingress under runtime/v2.
-- **ace-hitl-hermes v0.4.0**: Add the `ace-hitl-boundary-scenario` acceptance harness and surface informed unknown-chat coverage generations.
-- **ace-review v0.58.0**: Review model queries honor the configured ace-llm fallback (role candidate chains + `llm.fallback`) instead of forcing single-leg execution, so a reviewer position survives a dead provider leg.
-- **ace-runtime v0.4.0**: Distinguish positively ended process generations from inaccessible observations for explicit coordinator adoption.
-- **ace-herdr v0.6.1**: Share native immutable session normalization between Inbox and process admission so real Pi path selectors bind their session UUID.
-- **ace-design v0.2.0**: Add inherited project design contexts and transactional adjustment, component exploration, preset-driven site/app coding-agent generation, per-variant prompts and models, shared mock data, targeted revision/resume and selection, production/audit workflows, local browser evidence, and reviewed inspiration maintenance.
-- **ace-lint v0.30.11**: Recognize design CLI commands in skill metadata.
-- **ace-overseer v0.22.0, ace-task v0.40.0**: Package native continuation audits and exact objective queue roots with accepted-head review and serial integration.
-
-### Changed
-
-- Dependency-floor coordination for this release: ace-assign and ace-overseer require ace-review 0.62 (L1 runtime removals); ace-hitl-hermes requires ace-hitl 0.18 and ace-hitl-contract 0.3; ace-hitl requires ace-hitl-contract 0.3; ace-herdr follows the ace-hitl-contract 0.3 line.
-
-- **ace-hitl-contract v0.2.2**: Include exact project identity in shared proposal checkpoint examples.
-
-- **ace-hitl-hermes v0.5.0**: Route a group's projects to explicit authorities with project-qualified request identities and durable independent ingress recovery. Preserve OTP transience, exact Captain correlation and configuration revocation; require channels/v2 and refuse old journals without migration. This source cut does not certify the installed all-group handoff.
-
-- **ace-bundle v0.45.1**: Follow Herdr 0.6 for the coordinated ordinary delivery dependency graph.
-
-- **ace-review v0.60.2**: Follow ace-git-forgejo 0.7 in the dependency manifest for the coordinated ordinary merge release.
-
-- **ace-overseer v0.21.1**: Follow the ace-lab 0.6 line in the dependency manifest and package the coordination-contract role-guide updates.
-- **ace-handbook 0.35.1**: Clarify guide override candidate discovery and that downstream projects must register their own local workflow source; this monorepo's priority-5 source is not a downstream default.
-- **ACE Lab source release, 2026-10-08**: ace-assign 0.66.0, ace-git 0.30.0, ace-git-forgejo 0.6.2, ace-review 0.60.0 and ace-lab 0.5.0 join exact-candidate protected delivery, bounded canonical review campaigns and scoped HITL publication.
-- **ace-herdr 0.5.0, ace-hitl 0.13.0**: Use the original live terminal for message submission and direct panel/process reads for current state. Remove dedicated Codex app-server and message-read/signed reconciliation requirements; retain actual privileged-effect authorization and result evidence.
-- **ace-handbook 0.35.0, ace-hitl-hermes 0.2.1, ace-overseer 0.20.1**: Align documented delivery, project routing and minimum producer dependencies with the coordinated contract.
-- **ace-test-runner 0.28.1**: Reject absent explicit test file selections before execution.
-- This release prepares source implementation for the separate installed Lab task and observation. Source verification does not claim installed acceptance or RubyGems publication.
-
-
 ### Fixed
-
 - **ace-herdr v0.6.1**: Bind real native Pi session paths to immutable session UUIDs for ordinary admission, sharing Inbox normalization and preserving process checks.
 
 - **ace-hitl v0.16.1**: Refuse proposal reconciliation checkpoints for another project.
@@ -100,7 +50,27 @@ All notable changes to this project will be documented in this file.
 
 - **ace-git-forgejo v0.1.1**: Aligned the Forgejo provider with the real `fj` v0.6.0 CLI per independent PR #26 review: strip Unicode bidi isolate/pop-directional marks (U+2066–U+2069 and friends) that real minimal-style output wraps around dynamic fields so PR/issue/repo views parse and URL evidence stays clean, drop the nonexistent `fj pr search --limit` flag (client-side cap after newest-first sort), and probe CLI presence with `fj version` instead of the rejected `fj --version`, keeping classified `ProviderCliMissingError` semantics. Captured real `fj` outputs as test fixtures.
 
+- **ace-llm v0.39.2**: Preserved explicit Codex model targets and native errors without fallback substitution, including Ruby model overrides, while retaining fallback behavior for aliases, roles and other providers.
+- **ace-llm-providers-cli v0.34.0**: Hardened `SafeCapture` process group termination for container PID namespaces where background processes reparent to PID 1, ensuring reliable descendant cleanup without ESRCH failures.
+- **ace-support-models v0.12.4**: Preserved Codex local selections, removals, aliases, limits and default order during provider sync, used the bundled native catalog instead of treating models.dev absence as retirement, discovered provider defaults from their owning gems, and persisted catalog and selection history atomically.
+
 ### Added
+- **Lab wave 3 + L10 release set (8xg.t.sbz)**: `ace-lab v0.13.0` (installer `ace-lab install` with crash-resume, `project add` ownership/HITL-route convergence, read-only `ace-lab verify` readiness probes), `ace-overseer v0.25.0` (private queue: `work-on` dependency gates, `handoff`, `process-reports` duplicate-safe interpretation, configurable `status` sources with derived attention; removed the installed `ordinary` command and journal/attempt reads), `ace-coworker v0.6.0` (integrator/reviewer role presets, `ace-coworker gate`, `rounds record`, 3/2/10 review-convergence enforcement, prepare readiness via real ace-nav), `ace-handbook-integration-pi v0.6.0` (cross-worktree report wakes, `/continue-work` resume prompt, watcher re-attachment hardening). Dependency-following and fix releases in the same set: `ace-assign v0.73.0` (drive re-reads state before finish/fail), `ace-herdr v0.8.0` (status refinement), `ace-handbook v0.36.0` (perform-delivery rule), `ace-review v0.62.1`, `ace-git-worktree v0.27.3`, `ace-support-config v0.18.3`. Dependency floors required by the set and previously unpublished: `ace-task v0.41.0`, `ace-hitl v0.23.1`, `ace-hitl-hermes v0.9.0` (the remaining floor `ace-hitl-contract v0.3.0` is already published on RubyGems).
+
+- **ace-coworker v0.5.0**: Deliver the worker and spec roles as configuration and instructions (L5.1): shipped role presets (`.ace-defaults/coworker/roles/worker.yml`, `spec.yml`, project-overridable via `.ace/coworker/roles/`), the `ace-coworker roles` catalog listing, and `ace-coworker commission` as the role-instantiation primitive consumed by the planner (L4.2/L4.3 seam) — preset + commission identity expanded into the documented `.ace-local/coworker/config.yml` with start-grade identity checks, schema validation, atomic write, `--force`/`--dry-run` semantics. Self-contained role workflows `wfi://coworker/worker` and `wfi://coworker/spec` (failed required tests block worker success; significant unresolved spec gaps are escalated as `ace-hitl` questions, never guessed), wfi-source registration (gem + project mirror), and the new `ace-support-nav ~> 0.28` runtime dependency.
+
+- **ace-support-items v0.15.15**: Add `FolderMover#destination_path`, a non-mutating preview of the destination a move would create, so pre-flight checks (such as the `--git-commit` Git-ignored-path guard) can resolve the real destination before mutating.
+
+- **ace-task v0.41.0, docs**: Keep the private overseer task list in the ordinary gitignored `.ace-tasks/_overseer/` folder prepared by the lab, while making `ace-task` folder-name agnostic: it detects Git-ignored paths through Git itself, so `--git-commit` is refused for an ignored task folder, child, spec file, or relocation destination (create, subtask, update, move; a rejected create rolls back), a completed ignored task or ignored family is not auto-archived (also not into an ignored archive destination), and `doctor` neither requires nor performs an archive move for it. The default `list` stays the ordinary root view; `--in _overseer` reaches the lab-managed folder. Remove the named task-store mechanism, keep the subdirectory root resolution, and publish `docs/lab-flow.md` and ADR-034 as the canonical state-owner map.
+
+- **ace-hitl v0.17.0, ace-hitl-contract v0.3.0, ace-hitl-hermes v0.6.0**: Add explicit operator questions with a closed envelope contract, kernel requester identity, exact installed project grants, stable retries and operator-only service bindings that refuse managed execution, secrets and effects; route them through project correlation and durable Hermes ingress under runtime/v2.
+- **ace-hitl-hermes v0.4.0**: Add the `ace-hitl-boundary-scenario` acceptance harness and surface informed unknown-chat coverage generations.
+- **ace-review v0.58.0**: Review model queries honor the configured ace-llm fallback (role candidate chains + `llm.fallback`) instead of forcing single-leg execution, so a reviewer position survives a dead provider leg.
+- **ace-runtime v0.4.0**: Distinguish positively ended process generations from inaccessible observations for explicit coordinator adoption.
+- **ace-herdr v0.6.1**: Share native immutable session normalization between Inbox and process admission so real Pi path selectors bind their session UUID.
+- **ace-design v0.2.0**: Add inherited project design contexts and transactional adjustment, component exploration, preset-driven site/app coding-agent generation, per-variant prompts and models, shared mock data, targeted revision/resume and selection, production/audit workflows, local browser evidence, and reviewed inspiration maintenance.
+- **ace-lint v0.30.11**: Recognize design CLI commands in skill metadata.
+- **ace-overseer v0.22.0, ace-task v0.40.0**: Package native continuation audits and exact objective queue roots with accepted-head review and serial integration.
 
 - **ace-hitl v0.14.0, ace-hitl-hermes v0.3.0**: Add dedicated lifecycle service groups and channel-scoped lifecycle socket/service identities for one-Hermes multi-project Telegram routing, with channel-qualified correlation and durable late-registration coverage gaps.
 
@@ -129,7 +99,31 @@ All notable changes to this project will be documented in this file.
 - **ace-herdr v0.1.0**: New Herdr runtime wrapper gem (spec 8wm.t.vs0 + 8wq.t.k84 + 8wq.t.1w0): push delivery + agent bootstrap implementing the ace-hitl provider contract (idempotent write-ahead records, per-event locks, resume), one-command dispatch, the ace-tmux terminal-control intent surface (`list`/`send`/`capture`/output waits/preset-driven workspace+tab creation), and dry-run-first `tidy` cleanup of finished panes and delivery records (positive-evidence-only closure with revalidation; retention-based archival that preserves delivery idempotency).
 - **ace-task v0.38.0**: Dependency-aware `--sort=smart` for `ace-task list`: ready tasks list first under the existing priority/position ordering, blocked tasks follow in a topological tail by fewest hops to readiness, and dependency cycles render last with a `↺cycle` marker instead of hiding.
 
+### Removed
+- **ace-assign v0.72.0, ace-lab v0.10.0, ace-overseer v0.24.0, ace-review v0.62.0, ace-hitl v0.18.0, ace-hitl-hermes v0.7.0**: Remove the old installed/protected lab authority/admission/journal/listener model from the active flow. Delete the protected receiver/listener/worker/client/recovery/publication/cleanup stack, the generic service-request admission/journal, the Lab command kernel and ordinary merge/assignment transports, the ace-assign authority/attempt/journal/evidence/delivery/campaign command and library surface, the protected overseer modes, the installed HITL attempt provider and second-commander proposal surfaces, the review campaign/round receipt surface, and the protected delivery/queue presets and protected-only coverage. Retain only the local operations the file-based flow needs: task/assignment/worktree/HITL files, topology queries (L7), the Forgejo adapter and trusted configuration, terminal transports (tmux/Herdr), and the HITL lifecycle/relay transport.
+
+- **ace-assign v0.72.0, ace-git-worktree v0.27.2, ace-hitl v0.18.0, ace-runtime v0.4.1**: Remove role-specific exceptions from universal tools: the `_overseer` delegation refusal in `ace-assign`, the `_overseer` worktree refusal and `special_folder` passthrough in `ace-git-worktree`, the unused old-lab Root Overseer reverse-address HITL channel (`overseer-send`/`overseer-pending`/`overseer-ack`, `Lifecycle::Overseer`, the default `mo` responder, `/lab/state/overseer-channel` and its answer-tag/no-ID policy), and the systemd unit-name `overseer` validity check in `ace-runtime`. No replacement role policy, delegation policy, queue, or `.gitignore`/tracking check is added: the overseer decides which tasks it delegates and where the executor starts, and a missing task in a requested worktree is reported by the executor.
+
 ### Changed
+- **Documentation and handbook surfaces (ace-lab, ace-overseer, ace-hitl, ace-assign, ace-herdr, ace-runtime, ace-hitl-hermes, ace-hitl-contract, ace-review, ace-git, ace-task, ace-git-worktree)**: Unify active READMEs, usage guides, workflow instructions and presets around one file-based flow and the state owners in `docs/lab-flow.md`; mark L2-L10 features as planned/not available yet and remove old journal/authority/queue requirements. Packages whose only changes are documentation or handbook surfaces release in the coordinated L10 wave; packages with runtime changes carry their own version bump in this release.
+
+- Dependency-floor coordination for this release: ace-assign and ace-overseer require ace-review 0.62 (L1 runtime removals); ace-hitl-hermes requires ace-hitl 0.18 and ace-hitl-contract 0.3; ace-hitl requires ace-hitl-contract 0.3; ace-herdr follows the ace-hitl-contract 0.3 line.
+
+- **ace-hitl-contract v0.2.2**: Include exact project identity in shared proposal checkpoint examples.
+
+- **ace-hitl-hermes v0.5.0**: Route a group's projects to explicit authorities with project-qualified request identities and durable independent ingress recovery. Preserve OTP transience, exact Captain correlation and configuration revocation; require channels/v2 and refuse old journals without migration. This source cut does not certify the installed all-group handoff.
+
+- **ace-bundle v0.45.1**: Follow Herdr 0.6 for the coordinated ordinary delivery dependency graph.
+
+- **ace-review v0.60.2**: Follow ace-git-forgejo 0.7 in the dependency manifest for the coordinated ordinary merge release.
+
+- **ace-overseer v0.21.1**: Follow the ace-lab 0.6 line in the dependency manifest and package the coordination-contract role-guide updates.
+- **ace-handbook 0.35.1**: Clarify guide override candidate discovery and that downstream projects must register their own local workflow source; this monorepo's priority-5 source is not a downstream default.
+- **ACE Lab source release, 2026-10-08**: ace-assign 0.66.0, ace-git 0.30.0, ace-git-forgejo 0.6.2, ace-review 0.60.0 and ace-lab 0.5.0 join exact-candidate protected delivery, bounded canonical review campaigns and scoped HITL publication.
+- **ace-herdr 0.5.0, ace-hitl 0.13.0**: Use the original live terminal for message submission and direct panel/process reads for current state. Remove dedicated Codex app-server and message-read/signed reconciliation requirements; retain actual privileged-effect authorization and result evidence.
+- **ace-handbook 0.35.0, ace-hitl-hermes 0.2.1, ace-overseer 0.20.1**: Align documented delivery, project routing and minimum producer dependencies with the coordinated contract.
+- **ace-test-runner 0.28.1**: Reject absent explicit test file selections before execution.
+- This release prepares source implementation for the separate installed Lab task and observation. Source verification does not claim installed acceptance or RubyGems publication.
 
 - **ace-runtime v0.2.0**: Protected process, unit, scope and network-evidence primitives; installed enforcement remains separately gated.
 
@@ -174,18 +168,9 @@ All notable changes to this project will be documented in this file.
 - **ace-bundle, ace-git-worktree, ace-review, ace-task v0.37+**: Repointed PR/issue lookups from the removed ace-git core molecules to the new `ace-git-github` owner classes (mechanical call-site updates ahead of the dedicated consumer-migration chunks).
 - **ace-git-worktree v0.23.0**: Ships the ace-git 0.24 compatibility — PR lookups via the `ace-git-github` provider, gemspec floors `ace-git ~> 0.24` and `ace-git-github ~> 0.1.1` — fixing the require-time LoadError that made released 0.22.1 incompatible with ace-git 0.24 and blocked adopting ace-review 0.55.0.
 
-### Fixed
-
-- **ace-llm v0.39.2**: Preserved explicit Codex model targets and native errors without fallback substitution, including Ruby model overrides, while retaining fallback behavior for aliases, roles and other providers.
-- **ace-llm-providers-cli v0.34.0**: Hardened `SafeCapture` process group termination for container PID namespaces where background processes reparent to PID 1, ensuring reliable descendant cleanup without ESRCH failures.
-- **ace-support-models v0.12.4**: Preserved Codex local selections, removals, aliases, limits and default order during provider sync, used the bundled native catalog instead of treating models.dev absence as retirement, discovered provider defaults from their owning gems, and persisted catalog and selection history atomically.
-
-### Changed
-
 - **ace-llm-providers-cli v0.34.0**: Registered Codex Astra, Sol, Terra and Luna with Terra as the generic default and Luna as mini, retaining all existing explicit IDs, and derived Codex client defaults and model listings from provider configuration instead of a separate hardcoded catalog.
 
 ### Technical
-
 - Dependency-following release: **ace-lab v0.5.2** consumes the coordinated `ace-hitl` 0.14 line.
 
 - Dependency-following release: **ace-demo v0.26.2** consumes the coordinated Herdr 0.4 line. The release also declares required direct dependencies and raises verified API/workflow minimums in the owning consumers.
