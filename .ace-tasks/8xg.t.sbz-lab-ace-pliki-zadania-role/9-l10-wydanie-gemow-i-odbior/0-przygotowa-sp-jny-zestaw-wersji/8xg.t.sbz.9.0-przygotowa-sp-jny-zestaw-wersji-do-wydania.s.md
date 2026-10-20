@@ -1,15 +1,18 @@
 ---
 id: 8xg.t.sbz.9.0
-status: draft
+status: done
 priority: medium
 created_at: "2026-10-17 18:54:29"
 estimate: medium
-dependencies: ["8xg.t.sbz.8"]
-tags: ["lab", "lab-l10", "file-based"]
+dependencies: [8xg.t.sbz.8]
+tags: [lab, lab-l10, file-based]
 parent: 8xg.t.sbz.9
 needs_review: true
-bundle: {"presets": ["project"], "files": ["AGENTS.md", ".ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/contract.md", ".ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/8xg.t.sbz-lab-ace-pliki-zadania-role-i-komunikacja.s.md", "ace-lab/README.md", "ace-handbook/handbook/skills/as-release/SKILL.md", ".ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/9-l10-wydanie-gemow-i-odbior/8xg.t.sbz.9-l10-wydanie-gemow-i-odbior-nowego-laba.s.md", ".ace-tasks/_archive/8x/x/8xg.t.qn6-python-ruby-migration-file-based/8xg.t.qn6-python-ruby-migration-file-based-lab-zero.s.md", ".ace-tasks/_archive/8x/x/8xg.t.qn6-python-ruby-migration-file-based/5-ace-lab-install-complete-new/8xg.t.qn6.5-ace-lab-install-complete-new-lab-setup.s.md", ".ace-tasks/_archive/8x/w/8xa.t.h8x-deliver-project-specific-supervision-workflows/8xa.t.h8x-deliver-project-specific-supervision-workflows-and.s.md", ".ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/9-l10-wydanie-gemow-i-odbior/0-przygotowa-sp-jny-zestaw-wersji/ux/usage.md", ".ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/execution-order.md"], "commands": []}
-title: "Przygotować spójny zestaw wersji do wydania"
+bundle:
+  presets: [project]
+  files: [AGENTS.md, .ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/contract.md, .ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/8xg.t.sbz-lab-ace-pliki-zadania-role-i-komunikacja.s.md, ace-lab/README.md, ace-handbook/handbook/skills/as-release/SKILL.md, .ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/9-l10-wydanie-gemow-i-odbior/8xg.t.sbz.9-l10-wydanie-gemow-i-odbior-nowego-laba.s.md, .ace-tasks/_archive/8x/x/8xg.t.qn6-python-ruby-migration-file-based/8xg.t.qn6-python-ruby-migration-file-based-lab-zero.s.md, .ace-tasks/_archive/8x/x/8xg.t.qn6-python-ruby-migration-file-based/5-ace-lab-install-complete-new/8xg.t.qn6.5-ace-lab-install-complete-new-lab-setup.s.md, .ace-tasks/_archive/8x/w/8xa.t.h8x-deliver-project-specific-supervision-workflows/8xa.t.h8x-deliver-project-specific-supervision-workflows-and.s.md, .ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/9-l10-wydanie-gemow-i-odbior/0-przygotowa-sp-jny-zestaw-wersji/ux/usage.md, .ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/execution-order.md]
+  commands: []
+title: Przygotować spójny zestaw wersji do wydania
 ---
 
 # Przygotować spójny zestaw wersji do wydania
@@ -28,9 +31,9 @@ Po przyjęciu L9 przygotować spójny zestaw wersji gemów, CHANGELOG, minimalne
 
 ## Kryteria odbioru
 
-- [ ] Manifest wskazuje dokładne wersje, źródło i artefakty; instalacja przygotowanych paczek rozwiązuje wymagane zależności.
-- [ ] Niezgodny floor lub paczka spoza przyjętego zestawu zatrzymuje przygotowanie wydania; samo przygotowanie nie oznacza publikacji.
-- [ ] Wynik jest zgodny z kontraktem programu i możliwy do użycia przez następną rolę lub narzędzie.
+- [x] Manifest wskazuje dokładne wersje, źródło i artefakty; instalacja przygotowanych paczek rozwiązuje wymagane zależności.
+- [x] Niezgodny floor lub paczka spoza przyjętego zestawu zatrzymuje przygotowanie wydania; samo przygotowanie nie oznacza publikacji.
+- [x] Wynik jest zgodny z kontraktem programu i możliwy do użycia przez następną rolę lub narzędzie.
 
 ## Plan weryfikacji
 

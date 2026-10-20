@@ -1,7 +1,7 @@
 PATH
   remote: ace-assign
   specs:
-    ace-assign (0.72.0)
+    ace-assign (0.73.0)
       ace-b36ts (~> 0.14)
       ace-bundle (~> 0.45.1)
       ace-git (~> 0.30)
@@ -53,7 +53,7 @@ PATH
 PATH
   remote: ace-coworker
   specs:
-    ace-coworker (0.5.0)
+    ace-coworker (0.6.0)
       ace-assign (~> 0.72)
       ace-git-worktree (~> 0.27)
       ace-hitl (~> 0.22)
@@ -143,7 +143,7 @@ PATH
 PATH
   remote: ace-git-worktree
   specs:
-    ace-git-worktree (0.27.2)
+    ace-git-worktree (0.27.3)
       ace-git (~> 0.29)
       ace-herdr (~> 0.4)
       ace-runtime (~> 0.1)
@@ -188,13 +188,13 @@ PATH
 PATH
   remote: ace-handbook-integration-pi
   specs:
-    ace-handbook-integration-pi (0.5.0)
+    ace-handbook-integration-pi (0.6.0)
       ace-handbook (~> 0.33)
 
 PATH
   remote: ace-handbook
   specs:
-    ace-handbook (0.35.1)
+    ace-handbook (0.36.0)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.18)
       ace-support-core (~> 0.31)
@@ -203,7 +203,7 @@ PATH
 PATH
   remote: ace-herdr
   specs:
-    ace-herdr (0.7.0)
+    ace-herdr (0.8.0)
       ace-hitl-contract (~> 0.3.0)
       ace-runtime (~> 0.3)
       ace-support-cli (~> 0.6)
@@ -292,7 +292,7 @@ PATH
 PATH
   remote: ace-overseer
   specs:
-    ace-overseer (0.24.0)
+    ace-overseer (0.25.0)
       ace-assign (~> 0.70)
       ace-coworker (~> 0.5)
       ace-git (~> 0.30)
@@ -336,7 +336,7 @@ PATH
 PATH
   remote: ace-review
   specs:
-    ace-review (0.62.0)
+    ace-review (0.62.1)
       ace-b36ts (~> 0.14)
       ace-bundle (~> 0.45)
       ace-compressor (~> 0.25)
@@ -388,7 +388,7 @@ PATH
 PATH
   remote: ace-support-config
   specs:
-    ace-support-config (0.18.2)
+    ace-support-config (0.18.3)
       ace-support-fs (~> 0.3)
 
 PATH
