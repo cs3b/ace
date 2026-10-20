@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "parser"
+require_relative "toolchain"
 
 module Ace
   module Support
@@ -12,6 +13,7 @@ module Ace
         end
 
         def call(args: ARGV)
+          Toolchain.verify_loaded!
           if root_help_request?(args)
             puts Ace::Support::Cli::Help::Usage.new(@registry, program_name: resolve_program_name).render
             return 0
@@ -20,6 +22,7 @@ module Ace
           command_target, remaining, command_name = resolve_target(args)
           command_class = command_target.is_a?(Class) ? command_target : command_target.class
           parsed = @parser_class.new(command_class, command_name: command_name).parse(remaining)
+          Toolchain.verify_loaded!
           result = if command_target.is_a?(Class)
             command_target.new.call(**parsed)
           else
@@ -32,6 +35,8 @@ module Ace
         rescue Ace::Support::Cli::ParseError => e
           raise Ace::Support::Cli::Error.new(e.message)
         rescue Ace::Support::Cli::CommandNotFoundError => e
+          raise Ace::Support::Cli::Error.new(e.message)
+        rescue Toolchain::Error => e
           raise Ace::Support::Cli::Error.new(e.message)
         end
 

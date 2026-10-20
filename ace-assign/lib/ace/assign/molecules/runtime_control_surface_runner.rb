@@ -75,13 +75,13 @@ module Ace
             working_dir: working_dir,
             visible_handoff: visible_handoff
           )
-          runtime.send_command(pane: pane_target, command: shell_command)
+          runtime.send_command(pane: pane_target, command: Ace::Support::Cli::Toolchain.shell_setup + shell_command)
         rescue Ace::Runtime::Error => e
           raise Error, "Failed to send fork command: #{e.message}"
         end
 
         def run_script_in_pane(pane_target:, script_path:)
-          runtime.send_command(pane: pane_target, command: "bash #{File.expand_path(script_path).shellescape}")
+          runtime.send_command(pane: pane_target, command: Ace::Support::Cli::Toolchain.shell_setup + "bash #{File.expand_path(script_path).shellescape}")
         rescue Ace::Runtime::Error => e
           raise Error, "Failed to send fork command: #{e.message}"
         end
@@ -135,6 +135,10 @@ module Ace
         def build_exec_command(command:, env:)
           cmd = Array(command).map { |part| Shellwords.escape(part.to_s) }.join(" ")
           env_hash = env.respond_to?(:to_h) ? env.to_h : {}
+          if Ace::Support::Cli::Toolchain.installed?
+            env_hash = env_hash.merge(Ace::Support::Cli::Toolchain.child_environment)
+            env_hash.keys.grep(/\ABUNDLER?_/).each { |key| env_hash[key] = nil }
+          end
           unset_parts = []
           assign_parts = []
 

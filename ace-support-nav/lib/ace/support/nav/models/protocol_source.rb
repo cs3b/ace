@@ -33,8 +33,19 @@ module Ace
 
                 # Get relative path from config, or use default
                 relative = @config&.dig("relative_path") || "handbook/workflow-instructions"
+                return File.join(gem_dir, relative) unless Ace::Support::Cli::Toolchain.installed?
 
-                File.join(gem_dir, relative)
+                candidate = File.expand_path(relative, gem_dir)
+                if Ace::Support::Cli::Toolchain.installed?
+                  unless Ace::Support::Cli::Toolchain.installed_spec?(spec) &&
+                      candidate.start_with?("#{File.expand_path(gem_dir)}/")
+                    raise Ace::Support::Cli::Toolchain::Error, "generic document source is outside installed gem #{@name}"
+                  end
+                  if File.exist?(candidate) && !File.realpath(candidate).start_with?("#{File.realpath(gem_dir)}/")
+                    raise Ace::Support::Cli::Toolchain::Error, "generic document source escapes installed gem #{@name}"
+                  end
+                end
+                candidate
               rescue Gem::LoadError => e
                 # Gem not found, return a placeholder path
                 warn "Gem '#{@name}' not found: #{e.message}" if ENV["VERBOSE"]

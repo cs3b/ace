@@ -89,6 +89,8 @@ module Ace
               @protocols[key] = protocol_data if key
             end
 
+            return @protocols if Ace::Support::Cli::Toolchain.installed?
+
             # 1. Load from user ~/.ace/nav/protocols/
             load_directory_protocols(File.expand_path("~/.ace/nav/protocols")).each do |protocol_data|
               key = protocol_data["protocol"]

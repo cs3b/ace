@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-require "bundler/setup"
+require "bundler/setup" unless ENV["ACE_TOOLCHAIN"] == "installed"
 require "ace/support/nav"
 require "ace/support/cli"
 

@@ -56,7 +56,7 @@ module Ace
             end
 
             puts "Handoff ready. In the worktree terminal run:"
-            puts "  ace-coworker start --config #{next_leg["start_config"]}"
+            puts "  #{Ace::Support::Cli::Toolchain.shell_command("ace-coworker", "start", "--config", next_leg["start_config"])}"
           rescue Ace::Support::Cli::Error
             raise
           rescue => e

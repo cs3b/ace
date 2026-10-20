@@ -48,3 +48,14 @@ Do not add a journal, queue engine, authority/admission layer, topology registry
 - Never reset or discard unrelated changes. Use path-scoped commits: `ace-git-commit <paths…>`.
 - Temp files: `.ace-local/<subfolder>/` or `/tmp/` — never the project root.
 - Skill-first: if a user names a skill or the task clearly matches one, load and follow it before ad-hoc work. Full planning/execution protocol: `docs/tools.md#agent-engineering-practices`.
+
+## Installed toolchain execution
+
+When `ACE_TOOLCHAIN=installed`, the project is domain/task/worktree data, not
+the runtime source. Use installed ACE executables and packaged generic
+skills/workflows; do not use this checkout's `bin/ace-*`, `bundle exec`, path
+gems or workflow source overrides. Keep project task/configuration and explicit
+domain instructions. Preserve this mode when starting, reusing or resuming
+executors. Report effective CLI/gem/document paths; an unavailable installed
+dependency is a readiness failure, never permission to fall back to source.
+`ACE_TOOLCHAIN=auto` (the default) retains the development behavior described above.

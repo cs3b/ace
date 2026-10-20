@@ -159,7 +159,7 @@ module Ace
         # guess, and so does this description).
         def start_command_of(next_leg)
           config = next_leg.is_a?(Hash) ? next_leg["start_config"].to_s : ""
-          config.empty? ? nil : "ace-coworker start --config #{config}"
+          config.empty? ? nil : Ace::Support::Cli::Toolchain.shell_command("ace-coworker", "start", "--config", config)
         end
 
         # First non-terminal step (id order) whose recorded dependencies

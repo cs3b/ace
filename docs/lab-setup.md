@@ -12,8 +12,11 @@ Ruby ≥ 3.2, git. Żadnego checkoutu repozytorium ACE — wyłącznie RubyGems.
 ## 1. Instalacja
 
 ```bash
-gem install ace-lab ace-overseer ace-coworker ace-herdr
+gem install ace-lab ace-overseer ace-coworker ace-herdr ace-handbook
 ```
+
+`ace-handbook` jest potrzebny dla rzeczywistego procesu `work-on-task`; cztery
+gemy podstawowe nie gwarantują dostępności całego kontekstu tego procesu.
 
 Zależności (w tym ace-task, ace-hitl, ace-assign, ace-review,
 ace-git-worktree) rozwiążą się same z RubyGems. Weryfikacja wersji:
@@ -21,6 +24,21 @@ ace-git-worktree) rozwiążą się same z RubyGems. Weryfikacja wersji:
 ```bash
 ace-lab --version && ace-overseer --version && ace-coworker --version && ace-herdr --version
 ```
+
+Ustaw `ACE_TOOLCHAIN=installed` w środowisku wybranego użytkownika/runtime:
+
+```bash
+export ACE_TOOLCHAIN=installed
+```
+
+W tym trybie checkout projektu jest źródłem tasków i konfiguracji domenowej,
+a nie narzędzi ACE. Nie używaj `bin/ace-*`, `bundle exec` ani lokalnych ścieżek
+źródłowych gemów/workflow. Domyślne `auto` służy nadal do developmentu ACE.
+Brak zainstalowanej zależności jest błędem gotowości, bez fallbacku do checkoutu.
+Sprawdzaj załadowane wersje/ścieżki i `instructions_source` w briefie JSON;
+samo `which` nie dowodzi wybranego runtime. Herdr musi przekazać tryb oraz
+Ruby/GEM_HOME/GEM_PATH po inicjalizacji powłoki także w ponownie użytym pane.
+Istniejący proces nie zmienia środowiska od zmiany konfiguracji workspace.
 
 ## 2. Ścieżka A — konfiguracja z palca (bez roota)
 
@@ -59,12 +77,34 @@ ace-lab verify                # odczytowa weryfikacja gotowości pod kontami
 ## 3. Praca — sekwencja zadania
 
 ```bash
-ace-task create "<zadanie>"            # zadania w .ace-tasks/
-ace-coworker prepare ...               # worktree/assignmenty wg ról (L4/L5)
-ace-coworker start --config .ace-local/coworker/prepare/<rola>.yml
-ace-overseer process-reports           # interpretacja raportów + kontynuacja
-ace-overseer handoff --task <ref>      # przekazanie worktree kolejnej roli
+ace-task create "<zadanie>"            # zapisz zwrócony pełny ID
+ace-coworker prepare --task <ID> --roles worker,reviewer --to <overseer> --format json
 ```
+
+`prepare` przygotowuje worktree, assignmenty i konfiguracje ról; nie uruchamia
+agenta. Odczytaj zwrócone ścieżki i ID, a w przygotowanym worktree wykonaj:
+
+```bash
+ace-coworker start --config .ace-local/coworker/prepare/worker.yml --format json
+```
+
+`start` waliduje i renderuje brief; nie wykonuje zadania. Overseer przekazuje
+brief do rzeczywistego agenta przez `ace-herdr dispatch` (właściwy workspace,
+nowy pane, `--cwd` przygotowanego worktree), a następnie weryfikuje faktyczny
+start. Worker prowadzi konkretny assignment, zawsze z jawnym ID:
+
+```bash
+ace-assign status --assignment <ID-assignmentu>
+ace-assign start --assignment <ID-assignmentu>
+ace-overseer process-reports
+ace-overseer handoff --task <ID-tasku>
+```
+
+Nie wybieraj assignmentu przez przypadkowy domyślny selektor. Wznowienie zachowuje
+konfigurację i `toolchain: installed`; nie tworzy nowej próby tylko dlatego, że
+terminal zniknął. Raport, przyjęcie wyniku i start następnej roli są osobnymi
+zdarzeniami. Przejście tego smoke potwierdza dopiero obserwowany proces i dowody
+wykonania, nie sam render briefu lub zaakceptowanie transportu.
 
 ## 4. Statusy (odczyt)
 

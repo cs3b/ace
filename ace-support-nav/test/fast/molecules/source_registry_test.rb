@@ -17,6 +17,42 @@ module Ace
             cleanup_temp_directory(@test_dir)
           end
 
+          def test_installed_directory_defaults_are_bound_to_gem_not_project_cwd
+            root = Dir.mktmpdir("installed-nav-gem")
+            gem_dir = File.join(root, "gems", "ace-fixture-1.0")
+            source_dir = File.join(gem_dir, ".ace-defaults", "nav", "protocols", "wfi-sources")
+            FileUtils.mkdir_p([source_dir, File.join(root, "specifications"), File.join(gem_dir, "handbook")])
+            spec = Gem::Specification.new { |item| item.name = "ace-fixture"; item.version = "1.0" }
+            spec.loaded_from = File.join(root, "specifications", "ace-fixture-1.0.gemspec")
+            File.write(spec.loaded_from, spec.to_ruby)
+            File.write(File.join(source_dir, "fixture.yml"), {"name" => "fixture", "type" => "directory", "path" => "handbook"}.to_yaml)
+            File.write(File.join(source_dir, "escape.yml"), {"name" => "escape", "type" => "directory", "path" => @test_dir}.to_yaml)
+            old = ENV["ACE_TOOLCHAIN"]
+            ENV["ACE_TOOLCHAIN"] = "installed"
+            each_spec = proc { |&block| block.call(spec) }
+            Gem::Specification.stub(:each, each_spec) do
+              sources = SourceRegistry.new(start_path: @test_dir).sources_for_protocol("wfi")
+              assert_equal ["fixture"], sources.map(&:name)
+              assert_equal File.join(gem_dir, "handbook"), sources.first.full_path
+            end
+          ensure
+            ENV["ACE_TOOLCHAIN"] = old
+            FileUtils.remove_entry(root) if root && File.exist?(root)
+          end
+
+          def test_installed_mode_ignores_real_project_source_registration
+            create_test_source(@test_dir, "wfi", "poison", {"path" => "/poison", "priority" => 0})
+            old = ENV["ACE_TOOLCHAIN"]
+            Dir.chdir(@test_dir) do
+              ENV["ACE_TOOLCHAIN"] = "auto"
+              assert SourceRegistry.new.sources_for_protocol("wfi").any? { |source| source.name == "poison" }
+              ENV["ACE_TOOLCHAIN"] = "installed"
+              refute SourceRegistry.new.sources_for_protocol("wfi").any? { |source| source.name == "poison" }
+            end
+          ensure
+            ENV["ACE_TOOLCHAIN"] = old
+          end
+
           def test_discovers_project_sources
             # Create test source files
             create_test_source(@test_dir, "test", "local", {

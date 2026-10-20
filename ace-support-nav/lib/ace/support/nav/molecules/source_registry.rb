@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "yaml"
+require "ace/support/cli/toolchain"
 require "date"
 require "pathname"
 require "rubygems"
@@ -36,10 +37,10 @@ module Ace
             sources = []
 
             # Discover from user directory
-            sources.concat(discover_user_sources(protocol))
+            sources.concat(discover_user_sources(protocol)) unless Ace::Support::Cli::Toolchain.installed?
 
             # Discover from project hierarchy
-            sources.concat(discover_project_sources(protocol))
+            sources.concat(discover_project_sources(protocol)) unless Ace::Support::Cli::Toolchain.installed?
 
             # Discover packaged defaults from installed ace-* gems
             sources.concat(discover_gem_default_sources(protocol))
@@ -112,12 +113,13 @@ module Ace
 
             Gem::Specification.each do |spec|
               next unless spec.name.start_with?("ace-")
+              next if Ace::Support::Cli::Toolchain.installed? && !Ace::Support::Cli::Toolchain.installed_spec?(spec)
 
               sources_dir = File.join(spec.gem_dir, sources_dir_suffix)
               next unless Dir.exist?(sources_dir)
 
               Dir.glob(File.join(sources_dir, "*.yml")).each do |source_file|
-                source = load_source_file(source_file, "gem-default")
+                source = load_source_file(source_file, "gem-default", gem_root: spec.gem_dir)
                 sources << source if source
               end
             end
@@ -125,12 +127,19 @@ module Ace
             sources
           end
 
-          def load_source_file(file_path, origin)
+          def load_source_file(file_path, origin, gem_root: nil)
             data = YAML.safe_load_file(file_path, permitted_classes: [Date], aliases: true)
             return nil unless data.is_a?(Hash)
 
             # Expand environment variables in path (only for non-gem types)
             path = (data["type"] == "gem") ? nil : expand_path(data["path"]) if data["path"]
+            if Ace::Support::Cli::Toolchain.installed? && data["type"] != "gem"
+              return nil unless gem_root && data["path"]
+
+              path = File.expand_path(data["path"], gem_root)
+              return nil unless File.directory?(path) &&
+                File.realpath(path).start_with?("#{File.realpath(gem_root)}/")
+            end
 
             # Log warning if path is provided for gem type
             if data["type"] == "gem" && data["path"]

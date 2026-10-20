@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "ace/support/cli/toolchain"
+
 require "open3"
 
 module Ace
@@ -9,7 +11,7 @@ module Ace
       # argv contract, ADR-031; injectable runner). ace-hitl owns its files;
       # this molecule never writes HITL state directly.
       class HitlReporter
-        DEFAULT_RUNNER = ->(argv, cwd) { Open3.capture3(*argv, chdir: cwd) }
+        DEFAULT_RUNNER = ->(argv, cwd) { Open3.capture3(Ace::Support::Cli::Toolchain.child_environment, *argv, chdir: cwd) }
 
         Failure = Struct.new(:stage, :message, keyword_init: true)
 
@@ -118,6 +120,8 @@ module Ace
         # Prefer the repo binstub when present (agent shells do not activate
         # mise, so bare ace-* may resolve to stale installed gems).
         def hitl_binary
+          return Ace::Support::Cli::Toolchain.executable("ace-hitl") if Ace::Support::Cli::Toolchain.installed?
+
           binstub = File.join(@project_root, "bin", "ace-hitl")
           File.executable?(binstub) ? binstub : "ace-hitl"
         end

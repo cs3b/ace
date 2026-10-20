@@ -6,10 +6,11 @@ module Ace
       # Immutable validated coworker run configuration.
       class Config
         attr_reader :role, :instructions, :start_prompt, :start_prompt_file, :task, :assignment,
-          :overseer, :reporting_channel, :on_failure, :source_path
+          :overseer, :reporting_channel, :on_failure, :source_path, :toolchain
 
         def initialize(role:, instructions:, start_prompt:, task:, assignment:, overseer:,
-          start_prompt_file: nil, reporting_channel: "hitl", on_failure: "report", source_path: nil)
+          start_prompt_file: nil, reporting_channel: "hitl", on_failure: "report", source_path: nil, toolchain: nil)
+          @toolchain = toolchain&.freeze
           @role = role.freeze
           @instructions = instructions.freeze
           @start_prompt = start_prompt.freeze
@@ -32,11 +33,12 @@ module Ace
             start_prompt: start_prompt, start_prompt_file: start_prompt_file,
             task: task, assignment: assignment, overseer: overseer,
             reporting_channel: reporting_channel, on_failure: on_failure,
-            source_path: source_path)
+            source_path: source_path, toolchain: toolchain)
         end
 
         def to_h
           {
+            "toolchain" => toolchain,
             "role" => role,
             "instructions" => instructions,
             "start_prompt" => start_prompt,

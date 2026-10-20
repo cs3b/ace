@@ -54,6 +54,11 @@ module Ace
           configured_skill_paths = skill_paths || Ace::Assign.config["skill_source_paths"]
           configured_workflow_paths = workflow_paths || Ace::Assign.config["workflow_source_paths"]
 
+          if Ace::Support::Cli::Toolchain.installed?
+            configured_skill_paths = []
+            configured_workflow_paths = []
+          end
+
           canonical_paths = discover_canonical_skill_source_paths
           canonical_workflow_paths = discover_canonical_workflow_source_paths
           override_paths = normalize_paths(configured_skill_paths || [])
@@ -458,6 +463,8 @@ module Ace
               nil
             end
           end
+
+          return registry_paths.uniq if Ace::Support::Cli::Toolchain.installed?
 
           (registry_paths + discover_package_default_source_paths(package_glob)).uniq
         end

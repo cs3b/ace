@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "ace/support/cli/toolchain"
+
 require "open3"
 require "json"
 
@@ -9,7 +11,7 @@ module Ace
       # Probes assignment truth via `ace-assign status --assignment <id> --format json`
       # with an injectable runner (ADR-031: argv array + explicit cwd).
       class AssignmentProbe
-        DEFAULT_RUNNER = ->(argv, cwd) { Open3.capture3(*argv, chdir: cwd) }
+        DEFAULT_RUNNER = ->(argv, cwd) { Open3.capture3(Ace::Support::Cli::Toolchain.child_environment, *argv, chdir: cwd) }
 
         def initialize(project_root:, runner: DEFAULT_RUNNER)
           @project_root = project_root
@@ -48,6 +50,8 @@ module Ace
         # Prefer the repo binstub when present (agent shells do not activate
         # mise, so bare ace-* may resolve to stale installed gems).
         def assign_binary
+          return Ace::Support::Cli::Toolchain.executable("ace-assign") if Ace::Support::Cli::Toolchain.installed?
+
           binstub = File.join(@project_root, "bin", "ace-assign")
           File.executable?(binstub) ? binstub : "ace-assign"
         end

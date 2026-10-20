@@ -14,6 +14,21 @@ module Ace
           )
         end
 
+        def test_installed_mode_sets_toolchain_after_shell_start_on_reused_pane
+          old = ENV["ACE_TOOLCHAIN"]
+          ENV["ACE_TOOLCHAIN"] = "installed"
+          @dispatcher.dispatch(label: "worker", prompt: "work", workspace_id: "ws-1", pane: "p9")
+          command = @executor.calls_of(:pane_run).first[:args][:command]
+          assert_includes command, "ACE_TOOLCHAIN=installed"
+          assert_includes command, "BUNDLER_SETUP"
+          assert_includes command, "GEM_HOME="
+          assert_includes command, "PATH="
+          assert_empty @executor.calls_of(:tab_create)
+          assert_equal 1, @executor.calls_of(:agent_start).length
+        ensure
+          ENV["ACE_TOOLCHAIN"] = old
+        end
+
         def test_dispatch_creates_tab_exports_env_starts_and_prompts
           @executor = HerdrTestHelper::FakeExecutor.new(outcomes: {
             tab_create: tab_result("t1", "p9")
