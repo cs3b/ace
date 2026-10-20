@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.2] - 2026-10-20
+
+### Fixed
+
+- Resolve the existing Hermes Telegram adapter using its `Platform.TELEGRAM`
+  enum identity in outbound delivery and readiness checks. A connected gateway
+  no longer leaves native requests in `waiting_gateway` because a string misses
+  the enum-keyed adapter map. Existing waiting requests retain their identity;
+  uncertain sends remain protected from automatic retries.
+
 ## [0.9.1] - 2026-10-20
 
 ### Fixed

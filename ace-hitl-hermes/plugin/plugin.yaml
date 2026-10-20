@@ -1,4 +1,4 @@
 name: ace-hitl-hermes
-version: 0.9.1
+version: 0.9.2
 description: "Scoped ACE HITL replies and native folder transport through an existing Hermes gateway."
 author: "cs3b"

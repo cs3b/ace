@@ -305,10 +305,11 @@ async def gateway_send(chat_id, text):
     # Existing Hermes live-adapter seam: never fall back to a standalone bot,
     # read credentials, or create a Telegram client. Active-profile selection is
     # supplied by Hermes' resolver, exactly as its send_message tool uses it.
+    from gateway.config import Platform
     from tools.send_message_senders import _live_adapter
     from tools.send_message_tool import _dispatch_on_gateway_loop
 
-    runner, adapter = _live_adapter("telegram")
+    runner, adapter = _live_adapter(Platform.TELEGRAM)
     if runner is None or adapter is None or not adapter.is_connected:
         raise GatewayUnavailable("existing Telegram adapter unavailable before send")
     result = await _dispatch_on_gateway_loop(
@@ -323,8 +324,9 @@ async def gateway_send(chat_id, text):
 def gateway_available():
     """Hot-reload readiness only; no client construction or credentials."""
     try:
+        from gateway.config import Platform
         from tools.send_message_senders import _live_adapter
-        runner, adapter = _live_adapter("telegram")
+        runner, adapter = _live_adapter(Platform.TELEGRAM)
         return runner is not None and adapter is not None and adapter.is_connected
     except Exception:
         return False

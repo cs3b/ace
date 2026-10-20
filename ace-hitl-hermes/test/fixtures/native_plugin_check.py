@@ -1,5 +1,6 @@
 """Executed by ace-test; stdlib only, PATH intentionally contains no Ruby."""
 import asyncio
+from enum import Enum
 import importlib.util
 import json
 import os
@@ -145,18 +146,43 @@ class NativePluginTest(unittest.IsolatedAsyncioTestCase):
         async def dispatch(runner, callback, _message):
             return await callback()
 
-        sys.modules["tools"] = types.ModuleType("tools")
         senders = types.ModuleType("tools.send_message_senders")
-        senders._live_adapter = lambda platform: (object(), Adapter())
+        # Hermes uses a plain Enum (not str/StrEnum) as its adapter-map key.
+        # A permissive mock accepting any argument hid the real startup failure.
+        class Platform(Enum):
+            TELEGRAM = "telegram"
+
+        gateway_config = types.ModuleType("gateway.config")
+        gateway_config.Platform = Platform
+        for name in ("gateway", "gateway.config", "tools", "tools.send_message_senders", "tools.send_message_tool"):
+            previous = sys.modules.get(name)
+            self.addCleanup(lambda name=name, previous=previous:
+                            sys.modules.pop(name, None) if previous is None else sys.modules.__setitem__(name, previous))
+        sys.modules["tools"] = types.ModuleType("tools")
+        sys.modules["gateway"] = types.ModuleType("gateway")
+        sys.modules["gateway.config"] = gateway_config
+        adapter = Adapter()
+        adapters = {Platform.TELEGRAM: adapter}
+        senders._live_adapter = lambda platform: (object(), adapters.get(platform))
         tool = types.ModuleType("tools.send_message_tool")
         tool._dispatch_on_gateway_loop = dispatch
         sys.modules["tools.send_message_senders"] = senders
         sys.modules["tools.send_message_tool"] = tool
+        self.assertTrue(native.gateway_available())
         result = await native.gateway_send("-100", "Question")
         self.assertEqual(["1", "2"], result["message_ids"])
         self.assertEqual([{"chat_id": "-100", "content": "Question"}], calls)
+        adapter.is_connected = False
+        self.assertFalse(native.gateway_available())
+        with self.assertRaises(native.GatewayUnavailable):
+            await native.gateway_send("-100", "Question")
+        adapters.clear()
+        self.assertFalse(native.gateway_available())
+        with self.assertRaises(native.GatewayUnavailable):
+            await native.gateway_send("-100", "Question")
         senders._live_adapter = lambda platform: (None, None)
-        with self.assertRaises(RuntimeError):
+        self.assertFalse(native.gateway_available())
+        with self.assertRaises(native.GatewayUnavailable):
             await native.gateway_send("-100", "Question")
         self.assertEqual(1, len(calls))
 

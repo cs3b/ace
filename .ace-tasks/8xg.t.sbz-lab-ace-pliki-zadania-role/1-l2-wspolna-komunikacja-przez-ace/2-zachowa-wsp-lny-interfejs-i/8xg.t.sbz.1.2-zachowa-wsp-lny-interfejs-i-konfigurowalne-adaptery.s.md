@@ -203,3 +203,31 @@ wszystkich trzech modułów pluginu. R2 czeka na świeży niezależny verdict;
 R1 pozostaje REJECT dla swojego SHA. Wersje 0.23.2/0.9.1 nieopublikowane.
 Wdrożenie wymaga wyłączenia starego hooka przy aktywacji nowego pojedynczego
 hooka, zachowując istniejący broker, wszystkie grupy i oczekujące pytania.
+
+
+## Installed Lab92 correction: Hermes platform identity (2026-10-20)
+
+Published 0.9.1 activated successfully and Telegram polling was healthy, but the
+first native case remained `waiting_gateway` before any outbound effect. The
+existing Hermes `_live_adapter` resolves an enum-keyed map; ACE passed string
+`"telegram"` instead of `gateway.config.Platform.TELEGRAM`. Its prior fixture
+accepted every argument and hid this deployed boundary mismatch.
+
+Source correction completed for 0.9.2: both outbound delivery and readiness use
+the actual enum. The regression now uses a plain Enum-keyed map and verifies
+connected, disconnected, absent-adapter and absent-runner behavior, with no
+extra send. Red before fix: native fixture wrapper 3 tests / 24 assertions /
+1 failure. Green after fix: `bin/ace-test ace-hitl-hermes` 211 tests / 1221
+assertions / 0 failures / 0 errors.
+
+A read-only probe inside the actual Hermes Docker image used its real Platform,
+`_live_adapter`, authorization resolver and gateway loop dispatcher. String
+lookup returned no adapter; enum lookup returned the adapter. Candidate
+readiness and send passed with only `adapter.send` replaced to avoid any real
+Telegram message. No source override or candidate plugin was installed live.
+
+Independent review, source integration, publication and installed exact-Reply
+acceptance remain delivery gates. Preserve the original waiting case and its
+receipts; do not recreate it, reset uncertain sends or claim polling readiness
+as proof of HITL delivery. This record belongs to existing sbz.1.2; the overall
+task remains in progress until deployed acceptance.

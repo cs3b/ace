@@ -9,7 +9,8 @@ one `ace-hitl-hermes sync` pass. Installing files does not activate the plugin.
 The Python adapter uses the existing Hermes live-adapter and gateway-loop
 interfaces (`tools.send_message_senders._live_adapter`,
 `tools.send_message_tool._dispatch_on_gateway_loop`, `adapter.is_connected`,
-`adapter.send`). These were inspected against Hermes 0.21.3. If those interfaces
+`adapter.send`). Adapter lookup uses `gateway.config.Platform.TELEGRAM`,
+not a string: Hermes keys its scoped adapter map by a plain enum. These were inspected against Hermes 0.21.3. If those interfaces
 are unavailable, do not enable the route: no standalone bot fallback exists.
 Hermes cancels the task through `ctx.spawn_task` on plugin unload/reload.
 Its early background plugin discovery has no event loop. The plugin registers
