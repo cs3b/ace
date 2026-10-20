@@ -21,6 +21,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Keep spool acceptance separate from confirmed Telegram delivery. Startup
   waits before sending; interrupted/ambiguous sends remain unknown without
   automatic retries. Duplicate Reply imports preserve the first answer.
+- Activate the supervised native task through the existing Telegram adapter's
+  connect factory after Hermes' synchronous background plugin discovery.
+- Preserve old exact Replies and other host groups through an optional packaged
+  transition adapter to the existing broker, with one pre-dispatch hook and no
+  duplicate owner, new service, arbitrary code import or replay of old OTPs.
 - Require ace-hitl >= 0.23.2 within the 0.23 series. The native route is opt-in;
   see `docs/native-folder.md` for recipient selectors, explicit root allowlists,
   package asset installation, single-owner cutover and pending installed gates.

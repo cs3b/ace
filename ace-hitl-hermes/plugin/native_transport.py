@@ -318,3 +318,13 @@ async def gateway_send(chat_id, text):
     if getattr(result, "message_id", None):
         ids.append(result.message_id)
     return {"success": bool(result.success), "message_ids": ids}
+
+
+def gateway_available():
+    """Hot-reload readiness only; no client construction or credentials."""
+    try:
+        from tools.send_message_senders import _live_adapter
+        runner, adapter = _live_adapter("telegram")
+        return runner is not None and adapter is not None and adapter.is_connected
+    except Exception:
+        return False

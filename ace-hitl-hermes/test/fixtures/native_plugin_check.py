@@ -183,7 +183,7 @@ class NativePluginTest(unittest.IsolatedAsyncioTestCase):
         config_path.write_text(json.dumps(self.config))
         saved = os.environ.get("ACE_HITL_HERMES_CONFIG")
         os.environ["ACE_HITL_HERMES_CONFIG"] = str(config_path)
-        tasks, hooks = [], []
+        tasks, hooks, factories = [], [], []
 
         class Context:
             def register_command(self, *_args, **_kwargs):
@@ -194,6 +194,10 @@ class NativePluginTest(unittest.IsolatedAsyncioTestCase):
 
             def spawn_task(self, coro, name):
                 tasks.append(asyncio.create_task(coro, name=name))
+                return tasks[-1]
+
+            def register_platform_handler(self, platform, callback):
+                factories.append((platform, callback))
 
         def forbidden(*_args, **_kwargs):
             raise AssertionError("native plugin must not launch a Ruby subprocess")
@@ -201,6 +205,9 @@ class NativePluginTest(unittest.IsolatedAsyncioTestCase):
         plugin.subprocess.run = forbidden
         try:
             plugin.register(Context())
+            self.assertEqual("telegram", factories[0][0])
+            factories[0][1](None, None)
+            factories[0][1](None, None)
             self.assertEqual(1, len(tasks))
             self.assertEqual("ace-hitl-native-folder", tasks[0].get_name())
             self.assertEqual("pre_gateway_dispatch", hooks[0][0])

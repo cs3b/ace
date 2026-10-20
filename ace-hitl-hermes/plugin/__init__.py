@@ -13,11 +13,12 @@ import importlib.util
 from pathlib import Path
 
 _native = None
+_transition = None
 
 
-def _native_module():
+def _packaged_module(name):
     spec = importlib.util.spec_from_file_location(
-        __name__ + ".native_transport", Path(__file__).with_name("native_transport.py"))
+        __name__ + "." + name, Path(__file__).with_name(name + ".py"))
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
@@ -30,6 +31,8 @@ def _handle(_args):
 
 
 def _pre_dispatch(event, **_kwargs):
+    if _transition is not None:
+        return _transition.receive(event)
     if _native is not None:
         return _native.receive(event)
     source = getattr(event, "source", None)
@@ -72,24 +75,39 @@ def _pre_dispatch(event, **_kwargs):
 
 
 def register(ctx):
-    global _native
+    global _native, _transition
     config_path = os.environ.get("ACE_HITL_HERMES_CONFIG", "")
     config = json.loads(Path(config_path).read_text()) if config_path else {}
     _native = None
+    _transition = None
     if config.get("mode") == "native-folder":
-        module = _native_module()
+        module = _packaged_module("native_transport")
         # Validate before registering any hook: a rejected native configuration
         # must not accidentally install the unrelated lifecycle interception.
         _native = module.NativeTransport(config, module.gateway_send)
+        if config.get("legacy_broker") is not None:
+            _transition = _packaged_module("legacy_transition").LegacyTransition(config["legacy_broker"], _native)
     ctx.register_command("hitl-reply", handler=_handle,
                          description="Answer one correlated ACE HITL request.",
                          args_hint="ID ANSWER")
     ctx.register_hook("pre_gateway_dispatch", _pre_dispatch)
     if _native is not None:
-        # Hermes plugin discovery can also run in a CLI without a live gateway.
-        # Only its existing event loop owns this task; no background process.
+        native = _native
+        task = None
+
+        def activate(_native_client=None, _adapter=None):
+            nonlocal task
+            if task is None or task.done():
+                task = ctx.spawn_task(native.run(), name="ace-hitl-native-folder")
+
+        # Hermes pre-discovers plugins synchronously in a background thread.
+        # Its existing adapter-connect factory runs later on the gateway loop,
+        # even when idempotent discover does not call register a second time.
+        ctx.register_platform_handler("telegram", activate)
+        # Hot reload of an already connected gateway has no new connect call.
         try:
             asyncio.get_running_loop()
         except RuntimeError:
             return
-        ctx.spawn_task(_native.run(), name="ace-hitl-native-folder")
+        if module.gateway_available():
+            activate()

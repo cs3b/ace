@@ -12,6 +12,12 @@ interfaces (`tools.send_message_senders._live_adapter`,
 `adapter.send`). These were inspected against Hermes 0.21.3. If those interfaces
 are unavailable, do not enable the route: no standalone bot fallback exists.
 Hermes cancels the task through `ctx.spawn_task` on plugin unload/reload.
+Its early background plugin discovery has no event loop. The plugin registers
+`ctx.register_platform_handler("telegram", ...)`; Telegram's existing async
+`connect` calls that factory and starts the supervised task. An outbound-only
+request therefore does not wait for an incoming message. Repeated connect
+callbacks retain one running task. Reload into an already connected gateway
+starts through the same guarded activation on its existing loop.
 
 ## Configuration and activation
 
@@ -20,8 +26,9 @@ requests and current route ownership first. Keep one poller. Never activate
 `ace-hitl-hermes serve` alongside an already polling Hermes gateway. Keep other
 groups and their owners intact; switch the selected group's old hook/route and
 this native hook as one coordinated cutover, so two handlers never claim it.
-Pending old-protocol questions keep their original reply handler until drained;
-native transport does not relabel or discard them.
+Pending old-protocol questions keep their original broker owner through the
+optional transition adapter below; they need not be cancelled or reissued.
+Native transport does not relabel or discard them.
 
 Use an existing private shared directory visible to both processes, owned by
 their mapped non-root UID, mode 0700. The path may differ on the two machines.
@@ -100,18 +107,75 @@ path or project supplied in Telegram text. Group IDs and user IDs above are
 fixtures, not usable account configuration. A channel has exactly one chat,
 folder and instruction owner; duplicate ownership fails configuration loading.
 
+### Existing broker and host groups during cutover
+
+When the current plugin also owns host groups or old pending questions, a
+native-only replacement is insufficient. Enable the packaged transition
+adapter in the **same** gateway config:
+
+```json
+{
+  "legacy_broker": {
+    "socket": "/run/lab-hitl/broker.sock",
+    "service_uid": 0,
+    "channels": "/run/lab-hitl/channels.json",
+    "correlations": "/run/lab-hitl/correlations.json"
+  }
+}
+```
+
+Merge this object alongside `mode` and `channels`, not instead of them. Paths
+and service UID must match the existing endpoint in the gateway's namespace.
+The peer UID is checked using Unix socket credentials; file ownership alone is
+not endpoint identity. Projection files must be regular, not symlinks, owned by
+the configured service or current user, and not writable by other roles.
+No bot secret, broker credential, new service or grant belongs in this config.
+
+The single packaged pre-dispatch callback selects one owner:
+
+1. An exact Reply to a recorded legacy question, including in the newly native
+   Lab group, goes to the existing broker after the original channel/user check.
+   An ambiguous correlation is refused. Old OTP questions are never recreated,
+   replayed as fresh challenges, copied into native cases or automatically sent.
+2. Other selected native-group events go to native transport. This includes
+   native exact Replies and plain instructions for its coordinator.
+3. Other registered host groups retain their original broker channel.
+   `/hitl-reply` remains the explicit legacy broker command.
+4. Unknown Replies never become plain instructions. Unauthorized senders produce
+   no broker request or native file. Unknown unrelated groups keep their current
+   Hermes behavior.
+
+The adapter reads the broker's current sanitized projections and calls its
+existing `reply`, `command` or `overseer-message` protocol. It does not edit the
+projections or decide the broker's result. A lost broker response is not retried
+and never falls back into a native case; reconcile through the existing owner.
+No answer text is written to plugin logs. The broker's own state remains the
+result authority; this adapter does not reproduce the former optional emoji
+reaction acknowledgement.
+
+Deploy all packaged plugin files, including `legacy_transition.py`, and disable
+the former `lab-hitl` hook in the same reviewed plugin configuration change.
+Keep its broker, channel table and correlation files intact. Do **not** run both
+hooks: Hermes executes all pre-dispatch callbacks before interpreting `skip`,
+so callback ordering cannot prevent duplicate effects. No outside Python module
+is imported as a compatibility override. An owner may later remove the
+transition config only after all groups and old questions have a replacement
+owner and preserved evidence.
+
 Install assets from the released gem into a fresh, user-owned staging path:
 
 ```sh
 ace-hitl-hermes plugin install --path /absolute/staging/ace-hitl-hermes
 ```
 
-Review the staged `plugin.yaml`, `__init__.py` and `native_transport.py` against
+Review the staged `plugin.yaml`, `__init__.py`, `native_transport.py` and
+`legacy_transition.py` against
 the installed gem, then deploy those package assets through the existing
 gateway's user plugin mechanism. Point the gateway at the reviewed native
 config and use its existing reload procedure after accounting for pending
-messages. No Ruby or ACE executable is installed in the gateway. A CLI-only
-plugin discovery does not spawn a gateway task.
+messages and disabling the previous hook when using the transition adapter.
+No Ruby or ACE executable is installed in the gateway. A CLI-only plugin
+discovery registers the deferred factory but does not spawn a gateway task.
 
 ## Sending, Reply and owner reconciliation
 

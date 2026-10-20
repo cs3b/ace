@@ -153,3 +153,53 @@ jednego właściciela grupy i granice retencji są opisane w
 Brak publikacji, instalacji, aktywacji lub wysłania wiadomości Telegram w ramach
 tego wycinka. Rzeczywisty odbiór z wydanych gemów i istniejącego współdzielonego
 folderu pozostaje otwarty; zadanie nadal in-progress.
+
+Review R1 dla `af7038c81d9252a5f893e922b8118c6914c8559f`: REJECT. Reviewer
+wykazał rzeczywistą kolejność startu Hermesa: background plugin discovery przed
+pętlą gatewaya, a późniejsze discover jest idempotentne. Samo `spawn_task`
+warunkowe przy register nie uruchamiało transportu po takim pre-discovery.
+Poprawka ma użyć istniejącego `register_platform_handler` wywoływanego w
+`TelegramAdapter.connect`, bez nowego pollera lub wątku usługi.
+
+Dodatkowy audit wdrożenia wykazał brak cutover: zainstalowany plugin lab-hitl
+3.1.0 obsługuje też grupy hosta i wcześniejsze Reply. Zastąpienie całego pluginu
+native-only je odcina, a dwa aktywne hooki mogą wykonać dwa skutki, bo Hermes
+wywołuje wszystkie callbacki przed oceną skip. Usunięcie grupy Lab z konfiguracji
+starego pluginu odcina również autoryzację dawnych odpowiedzi z tej grupy.
+Autoryzowana korekta: jeden hook w pakiecie, z opcjonalnym adapterem przejściowym
+istniejącego protokołu brokera. Dokładne legacy Reply zachowuje starego właściciela;
+nowy ruch natywny i grupy hosta mają rozłączne decyzje routingu. Brak importu
+zewnętrznego kodu Pythona, nowego procesu/usługi i zmian live.
+
+Korekta R2 wykonana host-side: factory Telegram connect startuje jeden
+supervised task po synchronicznym pre-discovery, również przy samym outbound.
+Test obejmuje ponowne wywołanie factory bez duplikatu i anulowanie przy unload.
+Jeden pakietowy hook obsługuje opcjonalny `legacy_broker`: stare dokładne Reply
+w grupie Lab i grupach hosta zostają w brokerze, nowy ruch Labu jest natywny,
+pozostałe grupy hosta używają dotychczasowych kanałów. Testy obejmują nieznane
+Reply, odmowę nadawcy, przerwaną odpowiedź brokera bez ponowienia/fallbacku,
+niedostępną projekcję oraz rzeczywisty tymczasowy Unix socket z kontrolą peer UID.
+Stare projekcje nie są zapisywane, a pytania OTP nie są odtwarzane.
+
+Read-only w rzeczywistym gatewayu: socket i obie projekcje są własnością UID1000
+(odpowiednio 0600 i 0440); zapytanie SO_PEERCRED bez wysłania bajtów żądania
+potwierdziło UID0/GID0 serwera. Konfiguracja przejściowa wiąże więc peer UID0,
+nie UID właściciela pliku socketu. Nie wywołano operacji brokera.
+
+```text
+bin/ace-test hitl-hermes all
+211 tests, 1219 assertions, 0 failures, 0 errors
+report: ace-hitl-hermes/.ace-local/test/reports/hitl-hermes/e904c446-685d-4abe-a16b-e158d2bc0ea7/
+
+Końcowe sprawdzenie wszystkich trzech zapakowanych modułów:
+bin/ace-test hitl-hermes test/fast/commands/native_plugin_test.rb
+3 tests, 32 assertions, 0 failures, 0 errors
+report: ace-hitl-hermes/.ace-local/test/reports/hitl-hermes/f7ca912d-4dd7-4244-9917-c21f05403c9b/
+```
+
+W środku testów komend wykonano 9 przypadków natywnych i 9 startup/transition
+w Pythonie bez Ruby/CLI w PATH oraz build/extract gema z porównaniem bajtów
+wszystkich trzech modułów pluginu. R2 czeka na świeży niezależny verdict;
+R1 pozostaje REJECT dla swojego SHA. Wersje 0.23.2/0.9.1 nieopublikowane.
+Wdrożenie wymaga wyłączenia starego hooka przy aktywacji nowego pojedynczego
+hooka, zachowując istniejący broker, wszystkie grupy i oczekujące pytania.

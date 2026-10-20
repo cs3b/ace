@@ -27,7 +27,7 @@ class NativePluginTest < AceHermesTestCase
     require "rubygems/user_interaction"
     package = File.expand_path("../../..", __dir__)
     spec = Dir.chdir(package) { Gem::Specification.load("ace-hitl-hermes.gemspec") }
-    %w[plugin/__init__.py plugin/native_transport.py plugin/plugin.yaml].each do |path|
+    %w[plugin/__init__.py plugin/native_transport.py plugin/legacy_transition.py plugin/plugin.yaml].each do |path|
       assert_includes spec.files, path
     end
     Dir.mktmpdir do |tmp|
@@ -41,12 +41,27 @@ class NativePluginTest < AceHermesTestCase
       assert dependency.match?("ace-hitl", "0.23.2")
       extracted = File.join(tmp, "extracted")
       built.extract_files(extracted)
-      assert_equal File.binread(File.join(package, "plugin/native_transport.py")),
-        File.binread(File.join(extracted, "plugin/native_transport.py"))
+      %w[__init__.py native_transport.py legacy_transition.py].each do |asset|
+        assert_equal File.binread(File.join(package, "plugin", asset)),
+          File.binread(File.join(extracted, "plugin", asset))
+      end
       installed = File.join(tmp, "plugin")
       Ace::Hitl::Hermes::CLI.start(["plugin", "install", "--path", installed], output: StringIO.new)
       assert_equal File.binread(File.join(package, "plugin/native_transport.py")),
         File.binread(File.join(installed, "native_transport.py"))
     end
+  end
+
+  def test_real_startup_order_and_single_owner_transition_without_ruby
+    python, status = Open3.capture2("which", "python3")
+    assert status.success?
+    package = File.expand_path("../../..", __dir__)
+    out, err, status = Open3.capture3({"PATH" => "/nonexistent", "PYTHONDONTWRITEBYTECODE" => "1"},
+      python.strip, File.join(package, "test/fixtures/native_startup_transition_check.py"),
+      File.join(package, "plugin"))
+    assert status.success?, out + err
+    assert_includes err, "Ran 9 tests"
+    assert_includes err, "OK"
+    refute_includes out + err, "private response"
   end
 end
