@@ -20,4 +20,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `t.unknown` / `unknown-<slug>`; directory-name normalization
   (`t.ddd.0.0`) keeps the same chain.
 
-0.27.3
