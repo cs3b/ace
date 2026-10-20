@@ -31,7 +31,7 @@ module Ace
               config = {"hitl" => {"root_dir" => root,
                 "machine" => "lab01",
                 "recipients" => {"overseer" => {"machine" => "lab01", "folder" => root}},
-                "adapters" => {"routes" => routes}}}
+                "adapters" => {"routes" => routes.map { |route| {"recipients" => ["overseer"]}.merge(route) }}}}
               with_cli_root(root, config: config) do
                 yield root
               end

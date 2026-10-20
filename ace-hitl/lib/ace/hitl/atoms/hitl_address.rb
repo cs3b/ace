@@ -11,6 +11,7 @@ module Ace
       # Display strings align with the hermes <machine>/<name>/<id> shape.
       class HitlAddress
         TOKEN_PATTERN = /\A[a-z0-9][a-z0-9_-]*\z/i.freeze
+        PANEL_PATTERN = /\A[a-z0-9][a-z0-9_:-]{0,127}\z/i.freeze
 
         class InvalidAddress < StandardError; end
 
@@ -48,8 +49,8 @@ module Ace
               address["id"] = id.to_s
             end
           else
-            unless panel.to_s.match?(TOKEN_PATTERN)
-              raise InvalidAddress, "address panel '#{panel}' is not a valid token"
+            unless panel.to_s.match?(PANEL_PATTERN)
+              raise InvalidAddress, "address panel '#{panel}' is not a valid terminal handle"
             end
 
             address["panel"] = panel.to_s

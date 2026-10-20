@@ -1,6 +1,6 @@
 ---
 id: 8xg.t.sbz.1.2
-status: done
+status: in-progress
 priority: medium
 created_at: "2026-10-17 18:54:11"
 estimate: medium
@@ -66,3 +66,41 @@ Dla wielu skonfigurowanych tras pokazać wynik każdej. Sukces jednej trasy nie 
 
 Źródła: `docs/lab-flow.md`, ADR-034 i `ace-hitl-hermes/README.md`.
 Weryfikacja implementacji: powyższe scenariusze pozytywne i błędne, testy zmienionych pakietów i niezależny review. Ten przegląd specyfikacji nie jest odbiorem implementacji.
+
+## Korekta z rzeczywistego wdrożenia — 2026-10-20
+
+Opublikowany nadawca wysyła adresowane zdarzenie wszystkimi trasami. Terminal
+interpretuje nazwę kanału Kapitana jako pane, a poprawne dostarczenie inną trasą
+kończy się błędem całości. Obecny plugin Hermesa wywołuje Ruby CLI, którego nie ma
+w rzeczywistym kontenerze Hermesa; `serve` wymaga starego endpointu lifecycle.
+Te braki należą do tego istniejącego zadania, z korelacją z .1.1 i retencją .1.3.
+
+Aktualny kontrakt: trasa deklaruje nazwy odbiorców, rozwiązywane do dokładnego
+adresu zapisanego na zdarzeniu. Wysyłane są tylko pasujące trasy; zero dopasowań
+to błąd bez skutku. Kilka jawnie pasujących tras oznacza żądane dostarczenie
+każdą z nich, z niezależnym wynikiem. Błędna trasa nie powoduje zmiany odbiorcy.
+
+Istniejący gateway Hermesa pozostaje jedynym pollerem Telegrama. Plugin
+dostarczany w gemie obsługuje pliki natywnych zdarzeń bez Ruby i bez endpointu
+lifecycle; nie tworzy nowego procesu usługi. Konfiguracja ogranicza kanały,
+nadawców i projekty. Transport wiąże odpowiedź z dokładnym pierwotnym projektem,
+worktree i sprawą. Tylko `ace-hitl` aktualizuje swoją sprawę; jednorazowe
+uzgodnienie transportu wykonuje istniejący nadzorca podczas przebudzenia.
+Zwykła wiadomość w grupie jest nową instrukcją dla skonfigurowanego koordynatora,
+nie odpowiedzią na przypadkowe oczekujące pytanie.
+
+Plan poprawki: selekcja tras i test bez efektów ubocznych; natywny kontrakt
+plikowy i import odpowiedzi przez właściciela; plugin gatewaya i test bez Ruby;
+testy duplikatów, restartu, dwóch worktree i błędnej korelacji; dokumentacja
+konfiguracji, testy pakietów oraz niezależny review. Wdrożenie, rzeczywisty
+Telegram i odbiór instalacji pozostają osobnymi niewykonanymi bramkami.
+
+Pierwszy wycinek poprawia również błąd wykryty przy rzeczywistym `prepare`:
+walidator panelu odrzucał natywny uchwyt Herdr `w7:p1`. Panel zachowuje teraz
+ten dokładny identyfikator; reguły machine/folder i odrzucenie ścieżek pozostają.
+Testy nadawcy: 40 testów, 209 asercji, bez błędów. Próba całego `hitl all`:
+332 testy, 1724 asercje, 1 failure, 0 errors, 5 skipped. Jedyny failure jest
+w niezmienionym teście TLS `test_service_admits_exactly_the_pinned_client_identity`:
+spodziewany komunikat o fingerprint, otrzymane `ECONNRESET`. To nie jest PASS
+całego pakietu ani dowód wdrożenia. Raport próby:
+`ace-hitl/.ace-local/test/reports/hitl/a0e2359d-eeab-4767-a3b2-e7eb7a2141be/`.

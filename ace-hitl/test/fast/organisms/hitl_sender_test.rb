@@ -32,7 +32,7 @@ module Ace
             "root_dir" => root,
             "machine" => "lab01",
             "recipients" => {"overseer" => {"machine" => "lab01", "folder" => root}},
-            "adapters" => {"routes" => routes}
+            "adapters" => {"routes" => routes.map { |route| {"recipients" => ["overseer"]}.merge(route) }}
           }}
         end
 
@@ -128,6 +128,43 @@ module Ace
               HitlSender.new(manager: manager, config: config).send(event.id)
             end
             assert_includes error.message, "no adapter routes configured"
+          end
+        end
+
+        def test_addressed_routes_only_invoke_the_exact_recipient_and_ignore_unrelated_failures
+          with_hitl_dir do |root|
+            config = routes_config(root,
+              {"route" => "local", "adapter" => "alpha", "recipients" => ["overseer"]},
+              {"route" => "telegram", "adapter" => "beta", "recipients" => ["captain"]})
+            config["hitl"]["recipients"]["captain"] = {"machine" => "lab01", "panel" => "captain"}
+            local = register_recording_adapter(:alpha)
+            remote = register_recording_adapter(:beta, outcome: StandardError.new("must never run"))
+            manager = HitlManager.new(root_dir: root, config: config)
+            event = create_question(manager)
+
+            report = HitlSender.new(manager: manager, config: config).send(event.id)
+
+            assert report.all_delivered?
+            assert_equal ["local"], report.results.map(&:route)
+            assert_equal 1, local.size
+            assert_empty remote
+            refute manager.show(event.id)[:event].metadata.fetch("delivery").key?("telegram")
+          end
+        end
+
+        def test_changed_alias_does_not_redirect_an_existing_event
+          with_hitl_dir do |root|
+            config = routes_config(root, {"adapter" => "alpha"})
+            deliveries = register_recording_adapter(:alpha)
+            manager = HitlManager.new(root_dir: root, config: config)
+            event = create_question(manager)
+            config["hitl"]["recipients"]["overseer"] = {"machine" => "other", "panel" => "new-owner"}
+
+            assert_raises(Molecules::HitlRouteLoader::NoRoutesError) do
+              HitlSender.new(manager: manager, config: config).send(event.id)
+            end
+            assert_empty deliveries
+            assert_nil manager.show(event.id)[:event].metadata["delivery"]
           end
         end
 

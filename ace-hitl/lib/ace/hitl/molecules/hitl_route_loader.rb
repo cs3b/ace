@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative "hitl_address_resolver"
+
 module Ace
   module Hitl
     module Molecules
@@ -64,7 +66,35 @@ module Ace
 
           normalized["route"] = route
           normalized["adapter"] = adapter
+          if normalized.key?("recipients") &&
+              (!normalized["recipients"].is_a?(Array) || normalized["recipients"].empty? ||
+               !normalized["recipients"].all? { |name| name.is_a?(String) && !name.strip.empty? })
+            raise InvalidRouteError, "route '#{route}' recipients must be a non-empty list of configured recipient names"
+          end
           normalized
+        end
+
+        # Selection happens before adapter construction or delivery-state writes.
+        # Names are configuration references, not labels copied onto an event:
+        # compare their resolved addresses to the event's immutable destination.
+        def self.for_recipient(routes, recipient:, config:)
+          return routes if recipient.nil?
+
+          resolver = HitlAddressResolver.new(config: config)
+          destination = recipient.reject { |key, _| key == "id" }
+          selected = routes.select do |route|
+            addresses = Array(route["recipients"]).map do |name|
+              resolver.resolve(name).reject { |key, _| key == "id" }
+            end
+            addresses.include?(destination)
+          end
+          if selected.empty?
+            raise NoRoutesError, "no adapter route matches recipient #{Atoms::HitlAddress.to_s(recipient)}; " \
+              "set route recipients to configured recipient names in #{CONFIG_LOCATION}"
+          end
+          selected
+        rescue HitlAddressResolver::UnknownRecipientError, HitlAddressResolver::InvalidAddressError => e
+          raise InvalidRouteError, e.message
         end
 
         def self.stringified(entry)

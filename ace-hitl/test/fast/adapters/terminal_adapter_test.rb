@@ -91,6 +91,14 @@ module Ace
           refute_includes @calls.map { |c| c[:pane] }, "wrong-pane"
         end
 
+        def test_native_herdr_handle_reaches_runtime_unchanged
+          adapter = route(machine: "lab", pane: "w7:p1")
+          recipient = Atoms::HitlAddress.validate!(machine: "lab", panel: "w7:p1")
+          result = adapter.deliver(event: nil, text: "ready", recipient: recipient, reply_to: nil)
+          assert result.delivered?
+          assert_equal [{pane: "w7:p1", text: "ready"}], @calls
+        end
+
         def test_foreign_machine_recipient_is_refused_without_send
           adapter = route(machine: "lab01", pane: "wrong-pane")
           recipient = {"machine" => "other-host", "panel" => "right-pane"}
