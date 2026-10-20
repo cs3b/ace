@@ -31,9 +31,9 @@ Po przyjęciu L9 przygotować spójny zestaw wersji gemów, CHANGELOG, minimalne
 
 ## Kryteria odbioru
 
-- [ ] Manifest wskazuje dokładne wersje, źródło i artefakty; instalacja przygotowanych paczek rozwiązuje wymagane zależności.
-- [ ] Niezgodny floor lub paczka spoza przyjętego zestawu zatrzymuje przygotowanie wydania; samo przygotowanie nie oznacza publikacji.
-- [ ] Wynik jest zgodny z kontraktem programu i możliwy do użycia przez następną rolę lub narzędzie.
+- [x] Manifest wskazuje dokładne wersje, źródło i artefakty; instalacja przygotowanych paczek rozwiązuje wymagane zależności.
+- [x] Niezgodny floor lub paczka spoza przyjętego zestawu zatrzymuje przygotowanie wydania; samo przygotowanie nie oznacza publikacji.
+- [x] Wynik jest zgodny z kontraktem programu i możliwy do użycia przez następną rolę lub narzędzie.
 
 ## Plan weryfikacji
 
