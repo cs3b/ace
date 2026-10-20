@@ -250,6 +250,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `--step` is documented as selecting an existing preset-catalog step
   definition only — it cannot mint a new step name.
 
+## [0.6.0] - 2026-10-20
+
 ## [0.5.0] - 2026-10-18
 
 ### Added
