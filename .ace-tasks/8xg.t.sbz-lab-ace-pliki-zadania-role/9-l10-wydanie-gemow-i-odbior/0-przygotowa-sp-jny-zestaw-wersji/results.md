@@ -82,3 +82,16 @@ rozwiązuje zależności — potwierdzone eksperymentalnie (scenariusz błędu).
   użyć po `gem push`; przy częściowym niepowodzeniu kontynuować brakujące
   publikacje po sprawdzeniu dostępnych wersji (nie deklarować pełnego
   release bez potwierdzeń).
+
+## Weryfikacja zewnętrzna — powtórna, po review `review-8xjj3w` (2026-10-20)
+
+- `gem list --remote --exact ace-hitl-contract` → `ace-hitl-contract
+  (0.3.0)` — potwierdza redukcję zestawu 14 → 13 (contract opublikowany).
+- Audyt luk ponowiony komendą z sekcji „Wykonana weryfikacja": wynik
+  ponownie **17 luk** (13 do publikacji + 4 pominięte; arytmetyka 13+4=17).
+- Suite: raporty per-pakiet w `.ace-local/test/reports/*/` (worktree),
+  podsumowanie 52/0 failed w logu fali.
+- Instrukcja dla 9.1 (z review): przed KAŻDYM `gem push` porównać
+  `shasum -a 256` pliku z `.ace-local/release/wave4/` z hashem w manifeście
+  i NIE przebudowywać artefaktów między weryfikacją a pushem.
+
