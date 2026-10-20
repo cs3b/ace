@@ -9,18 +9,18 @@ audytu, atrybucji floorów, kategoryzacji root CHANGELOG, checkboxów odbioru).
 
 | # | Pakiet | Wersja | Bump | Artefakt (SHA256) |
 |---|--------|--------|------|-------------------|
-| 1 | ace-support-config | 0.18.3 | patch | `3355a92a47721a589c593ef54b25aa58c8c9ae4a11fed8f9695f119ac4a6411e` |
-| 2 | ace-review | 0.62.1 | patch | `7b896a3f67f9ada2898636cfaa27412dbe926b527b15879d6dafca6b5d2e7edc` |
-| 3 | ace-git-worktree | 0.27.3 | patch | `3dbcba6d84cb719193bba01d522626886d8662e32a64d94cade0019285b75f59` |
-| 4 | ace-handbook | 0.36.0 | minor | `e3df7fa4d6b8892b0b79ceb6b9ea5b9d5339be016f03e3104b3662aee3b53746` |
+| 1 | ace-support-config | 0.18.3 | patch | `fa2928638a7df3b2496e0f4d8225983aa5c05acb036ee0deeae3329f72a5f260` |
+| 2 | ace-review | 0.62.1 | patch | `916c79bd8cfaab1933de90da86c3027c8ea17f716bee0422bb9824e4bfd51b67` |
+| 3 | ace-git-worktree | 0.27.3 | patch | `9b6bd83cfa995dbd0fc35f5ec7622c4852c74c251bd6b1ccb4e98a768c589cc3` |
+| 4 | ace-handbook | 0.36.0 | minor | `3c01bdc99e9413830f2b6e9b7b000218082dacaecb1928c6d8eb19343090a935` |
 | 5 | ace-task | 0.41.0 | floor* | `d75785ce5cf15027b96788aa9261d068ee722573d006ab9642848f407d73a66e` |
 | 6 | ace-hitl | 0.23.1 | floor* | `6900a830d3cd95a5fc1e7b7fb412e272816788814e39bcf1ef41bdaf4b7da56c` |
-| 7 | ace-assign | 0.73.0 | minor | `1063cd8f8970e996e92c14718f3b15b0dae8963f423f3b5930861ccbc41bdd95` |
-| 8 | ace-herdr | 0.8.0 | minor | `4cb5e952455d7c909b9377dfebd11a21a32e62061339d71195ad83df65d474c8` |
-| 9 | ace-coworker | 0.6.0 | minor | `6cc6bbad5e718558a2386dc0adc80a7d4ea64e9dcf84924d487db5ecfce44109` |
-| 10 | ace-handbook-integration-pi | 0.6.0 | minor | `b35c29c2a3951c7206547c798f20ed0ac742f73b530ea9e69027ddf36c0f941b` |
-| 11 | ace-lab | 0.13.0 | (wersja ustawiona wcześniej; wpis CHANGELOG dodany teraz) | `3e510b5adf9673f943a6148f1e3f7c744c51bf763a6e6da463b4b569b638c3ec` |
-| 12 | ace-overseer | 0.25.0 | minor | `ee1e6100745f8c52bde8204886ac1ca325c431d1b1bf84017c1046c4d30f874c` |
+| 7 | ace-assign | 0.73.0 | minor | `b7c49073651a958a636143fd496f904079335223c7ce7f7fc455bd889254aff2` |
+| 8 | ace-herdr | 0.8.0 | minor | `46ff6ea42d18ebc91e8d3bd28f38541c12d5b6c2d04ae88e47e6e72fdab342b4` |
+| 9 | ace-coworker | 0.6.0 | minor | `32726c1fd498591f7db5e3cd2343399e282cd536c53ed570899aa54dd5f1bdeb` |
+| 10 | ace-handbook-integration-pi | 0.6.0 | minor | `7190231c59a41979f3b1663eeb9433091e350f474e5898cedca810c8e8ec3cb2` |
+| 11 | ace-lab | 0.13.0 | (wersja ustawiona wcześniej; wpis CHANGELOG dodany teraz) | `42c9725b9199d9b26d155c0f56d1c4e668e6d71dc04d8a176f8028b668460b1a` |
+| 12 | ace-overseer | 0.25.0 | minor | `e90a26cfa9c3c38595a766325a771a7521d1292fb73656350cb43a40f69a3b84` |
 | 13 | ace-hitl-hermes | 0.9.0 | floor* | `878e98d0bfbd48f68b3575f68f7b6c8fd31c615f2329d032d07d6187482ba974` |
 
 \* „floor”: wersja była już przygotowana w repo (version.rb + wpis
@@ -36,8 +36,10 @@ rozwiązuje zależności — potwierdzone eksperymentalnie (scenariusz błędu).
 - Źródło: worktree `t-sbz-wave-4`, branch `t-sbz-wave-4`, commit
   przygotowania wydania (coordinated release commit, patrz historia).
 - Artefakty: `gem build` z katalogów pakietów; pliki `.gem` w
-  `.ace-local/release/wave4/`. Hashe dotyczą przebudowanych po naprawie
-  CHANGELOGów artefaktów — 9.1 publikuje wyłącznie te pliki.
+  `.ace-local/release/wave4/`. Hasze dotyczą artefaktów przebudowanych PO
+  wszystkich naprawach CHANGELOGów (ruch treści pod nagłówki wersji,
+  usunięcie stray-line, kategoryzacja root) — 9.1 publikuje wyłącznie te
+  pliki, bez przebudowy między weryfikacją hasha a pushem.
 
 ## Wykonana weryfikacja
 
@@ -94,4 +96,3 @@ rozwiązuje zależności — potwierdzone eksperymentalnie (scenariusz błędu).
 - Instrukcja dla 9.1 (z review): przed KAŻDYM `gem push` porównać
   `shasum -a 256` pliku z `.ace-local/release/wave4/` z hashem w manifeście
   i NIE przebudowywać artefaktów między weryfikacją a pushem.
-
