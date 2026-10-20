@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.6.11] - 2026-10-20
+
+### Fixed
+- Installed executable dispatch uses the RubyGems launcher so child processes activate their own gem before closure verification, preserving source-injection checks.
+
 ## [0.6.10] - 2026-10-20
 
 ### Added

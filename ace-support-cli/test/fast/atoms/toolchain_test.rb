@@ -4,6 +4,8 @@ require_relative "../../test_helper"
 require "tmpdir"
 require "fileutils"
 require "open3"
+require "rubygems/package"
+require "rubygems/installer"
 
 class ToolchainTest < AceSupportCliTestCase
   Toolchain = Ace::Support::Cli::Toolchain
@@ -50,7 +52,7 @@ class ToolchainTest < AceSupportCliTestCase
         s.executables = ["ace-fixture"]
       end
       File.write("#{root}/specifications/ace-fixture-1.0.gemspec", spec.to_ruby)
-      File.write("#{gem_root}/exe/ace-fixture", "#!/usr/bin/env ruby\nputs 'installed'\n")
+      File.write("#{gem_root}/exe/ace-fixture", "#!/usr/bin/env ruby\nrequire_relative '../lib/ace/support/cli/toolchain'\nAce::Support::Cli::Toolchain.verify_loaded!\nputs 'installed'\n")
       File.chmod(0o755, "#{gem_root}/exe/ace-fixture")
       File.write("#{root}/project/bin/ace-fixture", "#!/bin/sh\ntouch #{root}/poison\n")
       File.chmod(0o755, "#{root}/project/bin/ace-fixture")
@@ -58,6 +60,11 @@ class ToolchainTest < AceSupportCliTestCase
       File.write("#{root}/project/poison.rb", "raise 'poison Ruby preload'\n")
       helper = File.expand_path("../../../lib/ace/support/cli/toolchain", __dir__)
       FileUtils.cp("#{helper}.rb", "#{gem_root}/lib/ace/support/cli/toolchain.rb")
+      # Install a real built gem, including RubyGems' generated activation wrapper.
+      spec.files = ["exe/ace-fixture", "lib/ace/support/cli/toolchain.rb"]
+      artifact = Dir.chdir(gem_root) { Gem::Package.build(spec, true) }
+      FileUtils.mv("#{gem_root}/#{artifact}", "#{root}/#{artifact}")
+      Gem::Installer.at("#{root}/#{artifact}", install_dir: root, wrappers: true).install
       script = <<~RUBY
         gem "ace-fixture", "1.0"
         require "ace/support/cli/toolchain"
@@ -72,7 +79,7 @@ class ToolchainTest < AceSupportCliTestCase
              "RUBYOPT" => nil, "RUBYLIB" => nil, "BUNDLE_GEMFILE" => nil, "BUNDLER_SETUP" => nil}
       out, err, status = Open3.capture3(env, Gem.ruby, "-e", script, chdir: "#{root}/project")
       assert status.success?, err
-      assert_equal "#{gem_root}/exe/ace-fixture\ninstalled", out.strip
+      assert_equal "#{root}/bin/ace-fixture\ninstalled", out.strip
       refute File.exist?("#{root}/poison")
       _, err, status = Open3.capture3(env, Gem.ruby, "-e", script.sub('t.executable("ace-fixture"', 't.executable("missing-cli"'), chdir: "#{root}/project")
       refute status.success?
@@ -87,6 +94,10 @@ class ToolchainTest < AceSupportCliTestCase
       _, err, status = Open3.capture3(env, Gem.ruby, "-e", poisoned, chdir: "#{root}/project")
       refute status.success?
       assert_includes err, "loaded source dependency ace-source"
+      FileUtils.rm("#{root}/bin/ace-fixture")
+      _, err, status = Open3.capture3(env, Gem.ruby, "-e", script, chdir: "#{root}/project")
+      refute status.success?
+      assert_includes err, "installed launcher ace-fixture missing"
     end
   end
 

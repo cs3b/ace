@@ -108,3 +108,34 @@ ACE `ace-task doctor` exit 0: Tasks scanned: 860; Folders checked: 31; Warnings 
 Independent R1 rejected candidate f9771808: actual installed six-gem export resolved packaged Nav workflow sources, but Assign discarded those external gem-default paths in `external_implicit_source?`, leaving no workflow/skill paths. Negative poison-only tests missed the positive installed discovery contract. Correct this shared filter and add a real installed-gem fixture covering both workflow rendering and skill discovery before renewed review.
 
 R1 correction: installed gem-default sources are accepted by Assign after Nav has confined them to installed gem directories; auto's external-source rule is unchanged. New filesystem regression covers positive installed workflow rendering and assign-capable skill discovery outside the project. Focused Assign result: 29 tests, 96 assertions, 0 failures, 0 errors. Also built/installed the corrected ace-assign 0.73.1 into a separate temporary gem home and executed against the independent review's installed dependency tree (no source load path): loaded-closure verification passed, `wfi://coworker/worker` resolved inside installed ace-coworker 0.6.1, and 10 assign-capable packaged skills were discovered. This is local built-gem evidence, not published Lab acceptance.
+
+
+### Published acceptance follow-up: executable activation (2026-10-20)
+
+After the eight gems were published and installed in lab92-v2, real
+`ace-overseer status` exposed a fresh-child failure. Its coworker probe selected
+`gems/ace-assign-0.73.1/exe/ace-assign`; that file uses `require_relative`, which
+loads its code without registering its own specification in `Gem.loaded_specs`.
+The installed closure guard then correctly refused the unactivated code. The
+same command through the RubyGems-generated `bin/ace-assign` passed. This was not
+PATH drift, a source override, or the separate preexisting stale manager ledger.
+
+Correction: ace-support-cli 0.6.11 selects the installed RubyGems launcher after
+validating both package executable and launcher; it retains child environment
+cleaning and loaded-source rejection. A missing launcher fails closed. A real
+built/installed fixture now executes the closure guard in a virgin subprocess,
+without preactivating its package; prior tests only printed a constant in that
+child. Poisoned project and injected-source rejection remain covered.
+
+Executed package suite: 67 tests, 239 assertions, zero failures/errors. Built
+ace-support-cli 0.6.11 and installed it only into `/tmp/lab92-activation-check` on
+the host, using previously installed released dependencies. A new Ruby process
+loaded only the toolchain helper, selected the installed ace-assign launcher,
+and spawned `list --all --format json`: `[]`, exit 0. No all-gem preactivation,
+Lab override, publication or deployed acceptance is claimed. Independent review
+and the next published Lab run remain required.
+
+Test setup: local development bundle reused from the prior host review tree.
+Initial real-gem test placed its archive in the target installation directory;
+RubyGems removes that directory during install. Moving the archive outside its
+target fixed the fixture; no production workaround was introduced.

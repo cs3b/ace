@@ -67,7 +67,14 @@ module Ace
           unless File.executable?(path) && File.realpath(path).start_with?("#{File.realpath(spec.full_gem_path)}/")
             raise Error, "installed executable #{name} missing or outside its gem: #{path}"
           end
-          path
+          # The raw gem executable often uses require_relative and does not
+          # activate its own specification. Run RubyGems' installed launcher so
+          # the child records its actual dependency closure before verifying it.
+          launcher = File.join(Gem.bindir(spec.base_dir), name)
+          unless File.executable?(launcher) && File.realpath(launcher).start_with?("#{File.realpath(spec.base_dir)}/")
+            raise Error, "installed launcher #{name} missing or outside its gem installation: #{launcher}"
+          end
+          launcher
         end
 
         # Bundler/Ruby source injection must not leak into subprocesses. Domain

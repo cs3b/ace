@@ -383,7 +383,7 @@ PATH
 PATH
   remote: ace-support-cli
   specs:
-    ace-support-cli (0.6.10)
+    ace-support-cli (0.6.11)
 
 PATH
   remote: ace-support-config
