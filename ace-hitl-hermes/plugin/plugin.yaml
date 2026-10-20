@@ -1,4 +1,4 @@
 name: ace-hitl-hermes
-version: 0.2.0
-description: "Scoped ACE HITL Telegram replies with protected secret ingress."
+version: 0.9.1
+description: "Scoped ACE HITL replies and native folder transport through an existing Hermes gateway."
 author: "cs3b"

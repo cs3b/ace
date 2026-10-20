@@ -27,6 +27,7 @@ module Ace
         end
 
         class NotAnswerableError < StandardError; end
+        class AnswerConflictError < StandardError; end
 
         attr_reader :root_dir, :last_list_total, :last_folder_counts, :config
 
@@ -151,6 +152,21 @@ module Ace
 
           loader = Molecules::HitlLoader.new
           loader.load(current_path, id: event.id, special_folder: current_special)
+        end
+
+        # Transport imports are first-answer-wins. The case's own write lock
+        # checks the answer again, so replay cannot overwrite a human answer.
+        # Explicit `update --answer` remains an intentional editing operation.
+        def accept_answer(ref, answer:, scope: nil)
+          resolved = resolve_for_mutation(ref, scope: scope)
+          return nil unless resolved
+          event = resolved[:event]
+          raise NotAnswerableError, "reports do not await an answer" if event.report?
+          raise NotAnswerableError, "managed requests require their authenticated lifecycle" if event.metadata["lab_request_id"]
+          raise ArgumentError, "answer is empty" if answer.to_s.strip.empty?
+          apply_field_and_answer_updates(event.file_path, set: {}, add: {}, remove: {},
+            answer: answer, first_answer: true)
+          Molecules::HitlLoader.new.load(event.path, id: event.id, special_folder: event.special_folder)
         end
 
         def wait_for_answer(ref, scope: nil, poll_every: 600, timeout: 14_400, waiter: {}, now_proc: nil, sleeper: nil)
@@ -408,7 +424,7 @@ module Ace
           File.unlink(tmp_path) if tmp_path && File.exist?(tmp_path)
         end
 
-        def apply_field_and_answer_updates(file_path, set:, add:, remove:, answer:)
+        def apply_field_and_answer_updates(file_path, set:, add:, remove:, answer:, first_answer: false)
           File.open(file_path, File::RDWR) do |file|
             file.flock(File::LOCK_EX)
             file.rewind
@@ -416,6 +432,11 @@ module Ace
             content = file.read
             frontmatter, body = Ace::Support::Items::Atoms::FrontmatterParser.parse(content)
             body = body.sub(/\A\n/, "")
+            previous = body.match(/^## Answer[ \t]*(?:\n(.*))?\z/m)&.[](1).to_s.strip
+            if first_answer && (frontmatter["answered"] == true || !previous.empty?)
+              raise AnswerConflictError, "case already has a different answer" unless previous == answer.to_s.strip
+              return
+            end
 
             Ace::Support::Items::Molecules::FieldUpdater.apply_set(frontmatter, set)
             Ace::Support::Items::Molecules::FieldUpdater.apply_add(frontmatter, add)

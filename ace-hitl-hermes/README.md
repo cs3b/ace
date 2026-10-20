@@ -1,5 +1,11 @@
 # ace-hitl-hermes
 
+For an already running Hermes gateway, use the
+[native folder transport](docs/native-folder.md). Its packaged plugin runs
+without Ruby and keeps the gateway as the sole Telegram poller. ACE retains
+ownership of canonical question/answer files and reconciles one pass per wake.
+This mode is explicit and does not use the lifecycle endpoint described below.
+
 Folder-as-interface HITL transport plugin for the hermes relay. The shared
 folder between the lab and hermes **is** the transport:
 
