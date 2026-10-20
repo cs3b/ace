@@ -3,6 +3,56 @@
 require_relative "../../test_helper"
 
 class SkillAssignSourceResolverTest < AceAssignTestCase
+  def test_installed_gem_outside_project_supplies_workflow_and_assign_skill
+    with_temp_cache do |root|
+      project = File.join(root, "project")
+      gem_home = File.join(root, "installed")
+      gem_root = File.join(gem_home, "gems", "ace-context-fixture-1.0")
+      skill_root = File.join(gem_root, "handbook", "skills", "as-installed-fixture")
+      workflow_root = File.join(gem_root, "handbook", "workflow-instructions", "fixture")
+      FileUtils.mkdir_p([project, skill_root, workflow_root, File.join(gem_home, "specifications")])
+      spec = Gem::Specification.new { |item| item.name = "ace-context-fixture"; item.version = "1.0" }
+      spec.loaded_from = File.join(gem_home, "specifications", "ace-context-fixture-1.0.gemspec")
+      File.write(spec.loaded_from, spec.to_ruby)
+      {"skill" => "handbook/skills", "wfi" => "handbook/workflow-instructions"}.each do |protocol, relative|
+        folder = File.join(gem_root, ".ace-defaults", "nav", "protocols", "#{protocol}-sources")
+        FileUtils.mkdir_p(folder)
+        File.write(File.join(folder, "fixture.yml"), {"name" => spec.name, "type" => "gem", "config" => {"relative_path" => relative}}.to_yaml)
+      end
+      File.write(File.join(skill_root, "SKILL.md"), <<~MD)
+        ---
+        name: as-installed-fixture
+        user-invocable: true
+        skill:
+          kind: workflow
+          execution:
+            workflow: wfi://fixture/work
+        assign:
+          steps:
+            - name: installed-fixture
+        ---
+        Installed skill.
+      MD
+      File.write(File.join(workflow_root, "work.wf.md"), "---\nname: fixture\n---\nInstalled workflow body.\n")
+      previous = ENV["ACE_TOOLCHAIN"]
+      ENV["ACE_TOOLCHAIN"] = "installed"
+      original_lookup = Gem::Specification.method(:find_by_name)
+      lookup = ->(name, *requirements) { name == spec.name ? spec : original_lookup.call(name, *requirements) }
+      each_spec = proc { |&block| block.call(spec) }
+      Gem::Specification.stub(:each, each_spec) do
+        Gem::Specification.stub(:find_by_name, lookup) do
+          resolver = Ace::Assign::Molecules::SkillAssignSourceResolver.new(project_root: project)
+          assert_includes resolver.assign_capable_skill_names, "as-installed-fixture"
+          rendering = resolver.resolve_workflow_rendering("wfi://fixture/work")
+          assert_equal "Installed workflow body.", rendering.fetch("body")
+          assert_equal File.join(workflow_root, "work.wf.md"), rendering.fetch("workflow_path")
+        end
+      end
+    ensure
+      ENV["ACE_TOOLCHAIN"] = previous
+    end
+  end
+
   def test_installed_mode_excludes_explicit_and_repository_workflow_sources
     with_temp_cache do |root|
       source = File.join(root, "ace-poison", ".ace-defaults", "nav", "protocols", "wfi-sources")

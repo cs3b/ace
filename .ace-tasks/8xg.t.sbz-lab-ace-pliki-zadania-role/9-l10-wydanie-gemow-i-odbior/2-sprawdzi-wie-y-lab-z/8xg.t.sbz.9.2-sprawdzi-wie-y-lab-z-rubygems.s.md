@@ -104,3 +104,7 @@ Ran 1 test in 0.001s
 OK
 ```
 ACE `ace-task doctor` exit 0: Tasks scanned: 860; Folders checked: 31; Warnings (509); Health Score: 0/100 (Poor). Clean base has the same 509 warnings/0 health; no broad ledger cleanup included. `git diff --check` passed.
+
+Independent R1 rejected candidate f9771808: actual installed six-gem export resolved packaged Nav workflow sources, but Assign discarded those external gem-default paths in `external_implicit_source?`, leaving no workflow/skill paths. Negative poison-only tests missed the positive installed discovery contract. Correct this shared filter and add a real installed-gem fixture covering both workflow rendering and skill discovery before renewed review.
+
+R1 correction: installed gem-default sources are accepted by Assign after Nav has confined them to installed gem directories; auto's external-source rule is unchanged. New filesystem regression covers positive installed workflow rendering and assign-capable skill discovery outside the project. Focused Assign result: 29 tests, 96 assertions, 0 failures, 0 errors. Also built/installed the corrected ace-assign 0.73.1 into a separate temporary gem home and executed against the independent review's installed dependency tree (no source load path): loaded-closure verification passed, `wfi://coworker/worker` resolved inside installed ace-coworker 0.6.1, and 10 assign-capable packaged skills were discovered. This is local built-gem evidence, not published Lab acceptance.

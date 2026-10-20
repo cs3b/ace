@@ -508,6 +508,8 @@ module Ace
         end
 
         def external_implicit_source?(source, directory)
+          return false if Ace::Support::Cli::Toolchain.installed? && source.origin.to_s == "gem-default"
+
           return false if path_within_project?(directory)
           return false if explicit_registration?(source)
 
