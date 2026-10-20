@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ace-coworker's executor probe), so the yml/yaml policy no longer
   diverges between loaders (8xi1p4z9).
 
+## [0.18.3] - 2026-10-20
+
 ## [0.18.2] - 2026-09-27
 
 ### Technical

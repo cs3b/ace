@@ -3,7 +3,7 @@
 module Ace
   module Support
     module Config
-      VERSION = '0.18.2'
+      VERSION = '0.18.3'
     end
   end
 end
