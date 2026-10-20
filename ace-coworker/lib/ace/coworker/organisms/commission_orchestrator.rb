@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "ace/support/cli/toolchain"
+
 require "fileutils"
 require "tmpdir"
 
@@ -103,6 +105,7 @@ module Ace
             "assignment" => assignment,
             "overseer" => overseer
           }
+          config["toolchain"] = "installed" if Ace::Support::Cli::Toolchain.installed?
           config["reporting"] = {"channel" => preset["reporting"]} unless preset["reporting"].to_s.empty?
           config["errors"] = {"on_failure" => preset["errors"]} unless preset["errors"].to_s.empty?
           config

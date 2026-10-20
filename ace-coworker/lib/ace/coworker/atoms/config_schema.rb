@@ -27,6 +27,9 @@ module Ace
             end
           end
 
+          if raw.key?("toolchain") && !%w[auto installed].include?(raw["toolchain"])
+            errors << "toolchain must be auto or installed"
+          end
           errors.concat(prompt_errors(raw))
           errors.concat(nested_mapping_errors(raw, "reporting"))
           errors.concat(nested_mapping_errors(raw, "errors"))
@@ -41,6 +44,7 @@ module Ace
         #   by the loader (IO does not belong in this pure atom).
         def self.normalize(raw)
           {
+            "toolchain" => raw["toolchain"],
             "role" => str(raw["role"]),
             "instructions" => str(raw["instructions"]),
             "start_prompt" => str(raw["start_prompt"]),
@@ -50,7 +54,7 @@ module Ace
             "overseer" => str(raw["overseer"]),
             "reporting" => {"channel" => nested_str(raw, "reporting", "channel").empty? ? "hitl" : nested_str(raw, "reporting", "channel")},
             "errors" => {"on_failure" => nested_str(raw, "errors", "on_failure").empty? ? "report" : nested_str(raw, "errors", "on_failure")}
-          }
+          }.compact
         end
 
         # Protocol instructions reference an external resource; plain paths

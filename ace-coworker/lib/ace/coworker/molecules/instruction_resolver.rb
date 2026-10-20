@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "ace/support/cli/toolchain"
+
 require "open3"
 
 module Ace
@@ -9,7 +11,7 @@ module Ace
       # project root, or a protocol URI (wfi://, prompt:// tmpl://) resolved
       # through ace-nav.
       class InstructionResolver
-        DEFAULT_NAV_RUNNER = ->(argv, cwd) { Open3.capture3(*argv, chdir: cwd) }
+        DEFAULT_NAV_RUNNER = ->(argv, cwd) { Open3.capture3(Ace::Support::Cli::Toolchain.child_environment, *argv, chdir: cwd) }
 
         # The ace-nav CLI itself is missing (ENOENT on exec): the resolver
         # never ran, so no verdict exists. Prepare treats this distinctly
@@ -72,6 +74,8 @@ module Ace
         # executes the repository-controlled binstub — PATH only
         # (trust-posture parity with ace-lab Verify#nav_binary).
         def nav_binary
+          return Ace::Support::Cli::Toolchain.executable("ace-nav") if Ace::Support::Cli::Toolchain.installed?
+
           binstub = File.join(@project_root, "bin", "ace-nav")
           use_binstub = !Process.uid.zero? && File.executable?(binstub)
           use_binstub ? binstub : "ace-nav"

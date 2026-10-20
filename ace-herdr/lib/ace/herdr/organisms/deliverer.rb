@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "shellwords"
+require "ace/support/cli/toolchain"
 require "time"
 require "ace/hitl/contract"
 
@@ -179,7 +180,7 @@ module Ace
         # delivery; otherwise the record to prompt. Bootstrap failures are
         # terminal: an immediate retry cannot heal a broken pane.
         def bootstrap_and_wait(ref, record, kind, label)
-          export = "export HERDR_SESSION=#{Shellwords.escape(ref.session)} " \
+          export = Ace::Support::Cli::Toolchain.shell_setup + "export HERDR_SESSION=#{Shellwords.escape(ref.session)} " \
             "HERDR_PANE=#{Shellwords.escape(ref.pane)}"
           begin
             @executor.pane_run(ref.pane, export)

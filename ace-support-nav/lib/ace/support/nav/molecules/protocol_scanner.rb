@@ -352,6 +352,8 @@ module Ace
             # Remove @ prefix if present
             name = alias_name.start_with?("@") ? alias_name[1..] : alias_name
 
+            return nil if Ace::Support::Cli::Toolchain.installed? && %w[project local user global].include?(name)
+
             # Handle special aliases
             case name
             when "project", "local"

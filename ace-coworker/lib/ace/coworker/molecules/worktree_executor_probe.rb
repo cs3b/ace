@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "ace/support/cli/toolchain"
+
 require "open3"
 require "json"
 require "yaml"
@@ -16,7 +18,7 @@ module Ace
       # `ace-assign list --all --format json` (subprocess argv contract
       # with explicit cwd, ADR-031).
       class WorktreeExecutorProbe
-        DEFAULT_RUNNER = ->(argv, cwd) { Open3.capture3(*argv, chdir: cwd) }
+        DEFAULT_RUNNER = ->(argv, cwd) { Open3.capture3(Ace::Support::Cli::Toolchain.child_environment, *argv, chdir: cwd) }
         # Coworker config cascade files that may carry a `config_path`
         # override for the probed worktree (project `.ace` and user tiers;
         # the gem-defaults tier equals the loader's built-in default).
@@ -130,6 +132,8 @@ module Ace
         # mise, so bare ace-* may resolve to stale installed gems); the
         # subprocess still runs with cwd = the probed worktree.
         def assign_binary
+          return Ace::Support::Cli::Toolchain.executable("ace-assign") if Ace::Support::Cli::Toolchain.installed?
+
           binstub = File.join(@project_root, "bin", "ace-assign")
           File.executable?(binstub) ? binstub : "ace-assign"
         end

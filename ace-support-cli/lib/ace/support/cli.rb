@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "cli/version"
+require_relative "cli/toolchain"
 require_relative "cli/errors"
 require_relative "cli/error"
 require_relative "cli/standard_options"

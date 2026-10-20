@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "ace/support/cli/toolchain"
+
 require "yaml"
 
 module Ace
@@ -46,6 +48,10 @@ module Ace
             raise Error, "invalid config #{relativize(target)}: #{errors.join('; ')}"
           end
 
+          if raw["toolchain"] == "installed" && !Ace::Support::Cli::Toolchain.installed?
+            raise Error, "this coworker run requires ACE_TOOLCHAIN=installed; restart through the installed executable"
+          end
+          Ace::Support::Cli::Toolchain.verify_loaded! if raw["toolchain"] == "installed"
           build_config(Atoms::ConfigSchema.normalize(raw), target)
         end
 
@@ -86,7 +92,7 @@ module Ace
             overseer: normalized["overseer"],
             reporting_channel: normalized.dig("reporting", "channel"),
             on_failure: normalized.dig("errors", "on_failure"),
-            source_path: target
+            source_path: target, toolchain: normalized["toolchain"]
           )
         end
 

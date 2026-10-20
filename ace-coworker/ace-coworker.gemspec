@@ -49,13 +49,13 @@ Gem::Specification.new do |spec|
   # binary still fails with an explicit Coworker::Error. The shipped
   # reviewer role workflow drives `ace-review`/`ace-review-feedback` as its
   # primary function, so ace-review is a runtime dependency as well.
-  spec.add_dependency "ace-support-cli", "~> 0.6"
+  spec.add_dependency "ace-support-cli", "~> 0.6", ">= 0.6.10"
   spec.add_dependency "ace-support-core", "~> 0.31"
   spec.add_dependency "ace-support-config", "~> 0.18"
   spec.add_dependency "ace-support-fs", "~> 0.3"
-  spec.add_dependency "ace-support-nav", "~> 0.28"
+  spec.add_dependency "ace-support-nav", "~> 0.28", ">= 0.28.8"
   spec.add_dependency "ace-task", "~> 0.41"
-  spec.add_dependency "ace-assign", "~> 0.72"
+  spec.add_dependency "ace-assign", "~> 0.72", ">= 0.73.1"
   spec.add_dependency "ace-hitl", "~> 0.22"
   spec.add_dependency "ace-git-worktree", "~> 0.27"
   spec.add_dependency "ace-review", "~> 0.62"

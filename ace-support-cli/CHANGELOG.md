@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.6.10] - 2026-10-20
+
+### Added
+- Explicit installed toolchain policy: installed executable selection, loaded closure verification, child environment and runtime-origin evidence. Default auto preserves source development.
+
 ## [0.6.9] - 2026-09-29
 
 ### Fixed

@@ -17,6 +17,17 @@ module Ace
           FileUtils.remove_entry(@dir)
         end
 
+        def test_resume_cannot_silently_drop_recorded_installed_mode
+          path = CoworkerFixture.build_config(@dir, assignment: "abc123", task: "8xg.t.sbz.2")
+          File.open(path, "a") { |file| file.puts "toolchain: installed" }
+          old = ENV["ACE_TOOLCHAIN"]
+          ENV["ACE_TOOLCHAIN"] = "auto"
+          error = assert_raises(Error) { @loader.load }
+          assert_includes error.message, "requires ACE_TOOLCHAIN=installed"
+        ensure
+          ENV["ACE_TOOLCHAIN"] = old
+        end
+
         def test_missing_config_raises_not_ready_with_specific_path
           error = assert_raises(Error) { @loader.load }
           assert_equal "not ready: .ace-local/coworker/config.yml not found", error.message

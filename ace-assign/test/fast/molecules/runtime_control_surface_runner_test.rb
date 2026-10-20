@@ -42,6 +42,22 @@ class RuntimeControlSurfaceRunnerTest < AceAssignTestCase
     super
   end
 
+  def test_installed_fork_pins_environment_after_shell_start_and_ignores_source_override
+    adapter = register_fake_runtime
+    runner = build_runner(runtime: "faketmux")
+    old = ENV["ACE_TOOLCHAIN"]
+    ENV["ACE_TOOLCHAIN"] = "installed"
+    runner.run_invocation_in_pane(pane_target: "%3", command: ["pi"],
+      env: {"ACE_TOOLCHAIN" => "auto", "BUNDLE_GEMFILE" => "/poison", "RUBYOPT" => "-r/poison"})
+    command = adapter.calls.last[:command]
+    assert_includes command, "ACE_TOOLCHAIN=installed"
+    assert_includes command, "-u BUNDLE_GEMFILE"
+    assert_includes command, "-u RUBYOPT"
+    refute_includes command, "/poison"
+  ensure
+    ENV["ACE_TOOLCHAIN"] = old
+  end
+
   def test_detect_runtime_reads_environment_only
     assert_equal "tmux", build_runner(env: {"TMUX" => "/tmp/sock,0,0"}).detect_runtime
     assert_equal "herdr", build_runner(env: {"HERDR_SESSION" => "ws", "HERDR_PANE" => "p1"}).detect_runtime

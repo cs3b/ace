@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "shellwords"
+require "ace/support/cli/toolchain"
 
 module Ace
   module Herdr
@@ -364,7 +365,7 @@ module Ace
             name = agent["name"] || pane[:spec]["label"] || "agent"
             @executor.pane_run(
               pane_id,
-              "export HERDR_SESSION=#{Shellwords.escape(workspace_id.to_s)} " \
+              Ace::Support::Cli::Toolchain.shell_setup + "export HERDR_SESSION=#{Shellwords.escape(workspace_id.to_s)} " \
               "HERDR_PANE=#{Shellwords.escape(pane_id)}"
             )
             @executor.agent_start(

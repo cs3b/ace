@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "ace/support/cli/toolchain"
+
 module Ace
   module Coworker
     module Models
@@ -17,6 +19,7 @@ module Ace
 
         def to_h
           {
+            "toolchain" => Ace::Support::Cli::Toolchain.evidence,
             "role" => config.role,
             "instructions" => config.instructions,
             "instructions_source" => instructions_source,

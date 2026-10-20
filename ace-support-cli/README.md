@@ -45,3 +45,28 @@ Verification commands:
 ---
 
 Part of [ACE](https://github.com/cs3b/ace)
+
+## Installed toolchain
+
+`ACE_TOOLCHAIN=installed` selects installed RubyGems executables and rejects a
+loaded path-gem closure. The default `auto` keeps source development. Shared
+`Ace::Support::Cli::Toolchain` resolves executables, cleans Bundler/Ruby source
+injection from child environments, supplies post-shell startup environment for
+Herdr and reports loaded gem origins. It does not grant permissions or replace
+project domain configuration.
+
+Installed navigation uses packaged protocol definitions and generic document
+sources; Assign excludes `skill_source_paths`, `workflow_source_paths` and
+repository package discovery in this mode. Coworker briefs expose the selected
+mode and document origin. Missing installed dependencies fail rather than using
+project binstubs. The flag is an execution policy, not a sandbox against code
+that deliberately clears it.
+
+For a user-owned installed runtime, start from its Ruby/GEM_HOME/GEM_PATH and run
+`ACE_TOOLCHAIN=installed ace-coworker start --config <project-run-config> --format json`.
+Inspect `toolchain.mode`, loaded gem paths/versions and `instructions_source`;
+`which` alone is not loaded-closure evidence. Commissioned installed runs retain
+`toolchain: installed` in their existing run config; source-mode resume is rejected.
+Herdr installs the selected Ruby/gem environment after shell startup, including
+reused shell panes. Changing an already-running agent's environment is not
+supported: start a fresh executor with the selected toolchain instead.

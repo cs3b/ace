@@ -9,6 +9,11 @@ module Ace
           h = brief.to_h
           lines = []
           lines << "Coworker brief"
+          lines << "  toolchain:         #{h.dig('toolchain', 'mode')}"
+          if h.dig("toolchain", "mode") == "installed"
+            lines << "  runtime rule:      keep ACE_TOOLCHAIN=installed; use installed ACE commands and packaged generic instructions, never project binstubs or bundle exec"
+            lines << "  project context:   retain domain instructions/tasks/config; source-development launch advice does not select this runtime"
+          end
           lines << "  role:              #{h['role']}"
           lines << "  instructions:      #{h['instructions']}"
           lines << "  instructions src:  #{h['instructions_source']}"

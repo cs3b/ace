@@ -3,6 +3,22 @@
 require_relative "../../test_helper"
 
 class SkillAssignSourceResolverTest < AceAssignTestCase
+  def test_installed_mode_excludes_explicit_and_repository_workflow_sources
+    with_temp_cache do |root|
+      source = File.join(root, "ace-poison", ".ace-defaults", "nav", "protocols", "wfi-sources")
+      FileUtils.mkdir_p(source)
+      File.write(File.join(source, "poison.yml"), "name: poison\npath: #{root}\n")
+      old = ENV["ACE_TOOLCHAIN"]
+      ENV["ACE_TOOLCHAIN"] = "installed"
+      resolver = Ace::Assign::Molecules::SkillAssignSourceResolver.new(
+        project_root: root, skill_paths: [root], workflow_paths: [root])
+      refute_includes resolver.send(:workflow_paths), root
+      refute_includes resolver.send(:skill_paths), root
+    ensure
+      ENV["ACE_TOOLCHAIN"] = old
+    end
+  end
+
   def test_resolve_assign_config_from_skill_source
     with_temp_cache do |cache_dir|
       project_root = File.join(cache_dir, "project")

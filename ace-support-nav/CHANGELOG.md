@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.8] - 2026-10-20
+
+### Fixed
+- Honor `ACE_TOOLCHAIN=installed` for published-gem execution and context propagation without source-runtime fallback; retain default auto development behavior.
+
 ## [0.28.7] - 2026-09-27
 
 ### Technical

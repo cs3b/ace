@@ -100,8 +100,16 @@ module Ace
           # @param command_parts [Array<String>] Command parts for safe execution
           # @return [Integer] Exit code (0 for success, 1 for failure)
           def execute_command(command_parts)
+            if Ace::Support::Cli::Toolchain.installed?
+              command_parts = command_parts.dup
+              command_parts[0] = Ace::Support::Cli::Toolchain.executable(command_parts.fetch(0))
+            end
             # Use system with array argument for safety (no shell interpolation)
-            success = system(*command_parts)
+            success = if Ace::Support::Cli::Toolchain.installed?
+              system(Ace::Support::Cli::Toolchain.child_environment, *command_parts)
+            else
+              system(*command_parts)
+            end
 
             # Return exit code
             if success.nil?

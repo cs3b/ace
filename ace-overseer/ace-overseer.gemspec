@@ -39,19 +39,19 @@ Gem::Specification.new do |spec|
   spec.executables = spec.files.grep(%r{\Aexe/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
 
-  spec.add_dependency "ace-support-cli", "~> 0.6"
+  spec.add_dependency "ace-support-cli", "~> 0.6", ">= 0.6.10"
   spec.add_dependency "ace-support-core", "~> 0.31"
   spec.add_dependency "ace-support-config", "~> 0.18"
   spec.add_dependency "ace-support-fs", "~> 0.3"
-  spec.add_dependency "ace-assign", "~> 0.70"
+  spec.add_dependency "ace-assign", "~> 0.70", ">= 0.73.1"
   spec.add_dependency "ace-git", "~> 0.30"
   spec.add_dependency "ace-git-worktree", "~> 0.27"
   spec.add_dependency "ace-task", "~> 0.40"
-  spec.add_dependency "ace-coworker", "~> 0.5"
+  spec.add_dependency "ace-coworker", "~> 0.5", ">= 0.6.1"
   spec.add_dependency "ace-hitl", "~> 0.23"
   spec.add_dependency "ace-runtime", "~> 0.3"
   spec.add_dependency "ace-tmux", "~> 0.18"
-  spec.add_dependency "ace-herdr", "~> 0.6"
+  spec.add_dependency "ace-herdr", "~> 0.6", ">= 0.8.1"
   spec.add_dependency "ace-lab", "~> 0.8"
   spec.add_dependency "ace-review", "~> 0.62.0"
 
