@@ -47,4 +47,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Validate the forge source `limit` config: `Integer()` parsing with a fallback to the default (typos, missing values), explicit `0` lists nothing, and negative values clamp to `0`.
 - Restore `ace-overseer prune --preservation` patch-range proofs after the attempt/journal removal: squash/cherry-pick transfers into a destination that also carries unrelated content can be proven and cleaned up again without any attempt-recorded baseline.
 
-0.25.0
