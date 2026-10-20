@@ -36,13 +36,15 @@ rozwiązuje zależności — potwierdzone eksperymentalnie (scenariusz błędu).
 - Źródło: worktree `t-sbz-wave-4`, branch `t-sbz-wave-4`, commit
   przygotowania wydania (coordinated release commit, patrz historia).
 - Artefakty: `gem build` z katalogów pakietów; pliki `.gem` w
-  `.ace-local/release/wave4/`. Hasze dotyczą artefaktów przebudowanych PO
+  `.ace-local/release/wave4/`. Hasze 10 artefaktów spoza floorów dotyczą buildów PO
   wszystkich naprawach CHANGELOGów (ruch treści pod nagłówki wersji,
   usunięcie stray-line, kategoryzacja root) — 9.1 publikuje wyłącznie te
   pliki, bez przebudowy między weryfikacją hasha a pushem. Przebudowano
   wszystkie 10 artefaktów spoza floorów (identyczna treść też zmienia hash —
   stąd nowy hash ace-review bez zmiany źródła w zakresie delty); floory
-  (ace-task, ace-hitl, ace-hitl-hermes) zachowują wcześniejsze buildy.
+  (ace-task, ace-hitl, ace-hitl-hermes) zachowują wcześniejsze buildy;
+  żródła pakietów floorów nie zmieniły się po ich buildach (diff
+  origin/main..HEAD nie dotyka ace-task/ace-hitl/ace-hitl-hermes).
 
 ## Wykonana weryfikacja
 
@@ -99,4 +101,5 @@ rozwiązuje zależności — potwierdzone eksperymentalnie (scenariusz błędu).
 - Instrukcja dla 9.1 (z review): przed KAŻDYM `gem push` porównać
   `shasum -a 256` pliku z `.ace-local/release/wave4/` z hashem w manifeście
   i NIE przebudowywać artefaktów między weryfikacją a pushem; wyjścia
-  komend shasum zachować w receiptach 9.1 jako dowód.
+  komend shasum zachować jako dowód w ścieżce trackowanej
+  `9-l10-wydanie-gemow-i-odbior/1-opublikowa-gemy-w-kolejno-ci/receipts/<package>.md`.
