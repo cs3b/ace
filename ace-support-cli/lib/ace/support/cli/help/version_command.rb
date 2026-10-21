@@ -5,22 +5,28 @@ module Ace
     module Cli
       module Help
         module VersionCommand
-          def self.build(gem_name:, version:)
-            Class.new(Command) do
+          # Statically declared command class: Spinel bakes the class
+          # graph at compile time (Class.new is unsupported in AOT).
+          # build returns an instance; Runner dispatches instance
+          # targets via #call.
+          class Command < ::Ace::Support::Cli::Command
+            desc "Show version information"
+
+            attr_reader :gem_name, :version
+
+            def initialize(gem_name:, version:)
               @gem_name = gem_name
               @version = version
-
-              class << self
-                attr_reader :gem_name, :version
-              end
-
-              desc "Show version information"
-
-              def call(**_params)
-                puts "#{self.class.gem_name} #{self.class.version}"
-                0
-              end
             end
+
+            def call(**_params)
+              puts "#{gem_name} #{version}"
+              0
+            end
+          end
+
+          def self.build(gem_name:, version:)
+            Command.new(gem_name: gem_name, version: version)
           end
 
           def self.module(gem_name:, version:)

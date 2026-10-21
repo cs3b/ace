@@ -55,7 +55,21 @@ module Ace
         private
 
         def ensure_path(name)
-          parts = name.to_s.split(" ")
+          text = name.to_s
+          parts = Array.new
+          cur = ""
+          i = 0
+          while i < text.length
+            ch = text[i]
+            if ch == " "
+              parts << cur unless cur == ""
+              cur = ""
+            else
+              cur = "#{cur}#{ch}"
+            end
+            i += 1
+          end
+          parts << cur unless cur == ""
           raise ArgumentError, "Command name cannot be empty" if parts.empty?
 
           parts.reduce(@root) do |node, part|

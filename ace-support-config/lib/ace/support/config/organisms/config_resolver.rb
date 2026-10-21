@@ -110,7 +110,14 @@ module Ace
             # - compact: remove nil values
             # - stringify + strip: handle symbols and whitespace
             # - reject empty: filter out empty strings after stripping
-            clean_segments = segments.flatten.compact.map(&:to_s).map(&:strip).reject(&:empty?)
+            clean_segments = []
+            flattened_segments = segments.flatten
+            flattened_segments.each do |segment|
+              next if segment.nil?
+
+              part = segment.to_s.strip
+              clean_segments << part unless part.empty?
+            end
 
             # Security: Validate segments don't contain path traversal or absolute paths
             validate_namespace_segments!(clean_segments)

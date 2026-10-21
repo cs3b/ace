@@ -1,0 +1,21 @@
+# RBS seed for Spinel inference on ace-b36ts.
+#
+# Ivar bridges: dead-in-binary wrappers (CompactIdEncoder.encode,
+# EncodeCommand.parse_time) keep generic params whose return feeds
+# Time-typed chains; the seeded Time ivars re-type those values.
+
+module Ace
+  module B36ts
+    module Atoms
+      class CompactIdEncoder
+        @encode_time: Time
+      end
+    end
+
+    module Commands
+      class EncodeCommand
+        @parsed_time: Time
+      end
+    end
+  end
+end
