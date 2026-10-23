@@ -7,7 +7,7 @@ doc-type: workflow
 purpose: RubyGems publishing workflow
 update:
   frequency: on-change
-  last-updated: "2026-10-17"
+  last-updated: "2026-10-23"
 ---
 
 # RubyGems Publish Workflow
@@ -127,7 +127,7 @@ Choose exactly ONE path:
 |-----------|--------------|
 | Credential resolves in the agent shell (agent can run `--prepare`) | `--dry-run` -> `--prepare` -> hand off the single live command |
 | No credential or no TTY in the agent shell | `--dry-run` only -> state the wave plan -> hand off the single live command. `--prepare` is optional: `--interactive` re-resolves a stale prepared queue itself |
-| Operator explicitly authorizes agent-driven publishing | request ONE fresh OTP (see below), wait, then run the live publisher yourself |
+| Operator explicitly authorizes agent-driven publishing | request ONE fresh OTP (see below), wait through the semantic wait, then run the live publisher yourself |
 | Requested versions are already live on RubyGems | do not re-run the publisher; go to post-publish verification |
 
 ### Operator handoff (default)
@@ -150,8 +150,17 @@ correct completion of the agent's part.
 
 The owner permits short-lived OTP values in operator chat/HITL. When the
 operator explicitly authorizes the agent to run the publish itself, request one
-fresh OTP, wait for it, then run the live publisher immediately with the OTP in
-the environment (never in argv):
+fresh OTP, wait through the semantic wait, then run the live publisher
+immediately with the OTP in the environment (never in argv). The semantic wait:
+while the answer is pending, register exactly ONE in-process `/watch` scoped to
+the project ace-hitl transport folder (the folder holding that case's
+request/reply files, e.g. `.ace-local/hitl`), then end the turn. On wake, run
+the project `ace-hitl-hermes sync` ONCE, reconcile the exact case state
+(`ace-hitl show <ref>` — answered, not merely replies>0), and act within the
+answer window or report the precise blocker. Never block a model turn with
+sleep/poll loops; no cron/systemd/external heartbeat exists or may be
+introduced. Observed defect: during the eyes-20261023 OTP wait a supervising
+session blocked its turn with a 36x sleep-8 poll loop.
 
 ```bash
 # 1. Ask for exactly one fresh OTP (do not persist it anywhere else)
@@ -160,10 +169,14 @@ ace-hitl create "RubyGems publish OTP" \
   --question "Reply with one fresh six-digit RubyGems OTP (valid ~30-45s)." \
   --tags release,rubygems,security
 
-# 2. Wait for / consume the answer (or read the operator chat reply)
-ace-hitl wait <ref>
+# 2. While the answer is pending: register exactly ONE in-process /watch
+#    scoped to the project ace-hitl transport folder (e.g. .ace-local/hitl),
+#    then END THE TURN. Never sleep/poll, never run ace-hitl wait here.
+# 3. On wake: run the project ace-hitl-hermes sync ONCE, reconcile the exact
+#    case state with `ace-hitl show <ref>` (answered, not merely replies>0),
+#    and publish within the answer window or report the precise blocker.
 
-# 3. Publish immediately; RubyGems reads GEM_HOST_OTP_CODE from the environment
+# 4. Publish immediately; RubyGems reads GEM_HOST_OTP_CODE from the environment
 GEM_HOST_OTP_CODE=<otp> .ace-bin/ace-rubygems-publish [gem-name...]
 ```
 
