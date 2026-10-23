@@ -1,13 +1,13 @@
 ---
 id: 8xg.t.sbz.4.4
-status: draft
+status: pending
 priority: medium
 created_at: "2026-10-17 18:54:18"
 estimate: medium
 dependencies: [8xg.t.sbz.4.0, 8xg.t.sbz.4.2, 8xg.t.sbz.4.3]
 tags: [lab, lab-l5, file-based]
 parent: 8xg.t.sbz.4
-needs_review: true
+needs_review: false
 bundle:
   presets: [project]
   files: [AGENTS.md, .ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/contract.md, .ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/8xg.t.sbz-lab-ace-pliki-zadania-role-i-komunikacja.s.md, ace-review/handbook/workflow-instructions/review/pr.wf.md, ace-review/docs/usage.md, ace-assign/README.md, .ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/4-l5-role-coworkera-i-jednoznaczne/8xg.t.sbz.4-l5-role-coworkera-i-jednoznaczne-reguly-ukonczenia.s.md, .ace-tasks/_archive/8x/x/8xg.t.qn6-python-ruby-migration-file-based/8xg.t.qn6-python-ruby-migration-file-based-lab-zero.s.md, .ace-tasks/_archive/8x/x/8xg.t.qn6-python-ruby-migration-file-based/4-ace-coworker-gem-worker-loop/8xg.t.qn6.4-ace-coworker-gem-worker-loop-that-takes.s.md, .ace-tasks/_archive/8x/v/8wr.t.qkc-prove-the-complete-forge-neutral/8wr.t.qkc-prove-the-complete-forge-neutral-delivery-acceptance.s.md, .ace-tasks/_archive/8x/v/8wr.t.qkc-prove-the-complete-forge-neutral/0-accept-forge-neutral-urls-in/8wr.t.qkc.0-accept-forge-neutral-urls-in-typed-review.s.md, .ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/4-l5-role-coworkera-i-jednoznaczne/4-ujednolici-workflow-review-i-obs/ux/usage.md, .ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/execution-order.md, ace-git/lib/ace/git/providers/base.rb, ace-git/lib/ace/git/providers/evidence.rb, ace-git/lib/ace/git/organisms/pull_request_lifecycle.rb, ace-git/lib/ace/git/cli/commands/pr.rb, ace-git-forgejo/lib/ace/git/forgejo/provider.rb, ace-git-forgejo/lib/ace/git/forgejo/pull_request_api.rb, ace-git-github/lib/ace/git/github/provider.rb, ace-coworker/handbook/workflow-instructions/coworker/reviewer.wf.md, ace-coworker/handbook/workflow-instructions/coworker/integrator.wf.md, docs/lab-flow.md]
@@ -41,7 +41,7 @@ Ujednolicić as-pr-review, workflow i presety z regułami ról. Zachować neutra
 - Scenariusz błędu / niepoprawnego wejścia: Zero i błędne referencje są odrzucane przed ekstrakcją bundle; parsowanie nie odpytuje sieci ani nie zgaduje github.com. Stare protected receipt gates nie wracają przez presety.
 - Zapisać rzeczywisty wynik i odnośniki do testów lub przeglądu w folderze tego taska.
 
-Dla zmian implementacji: `bin/ace-test <zmieniony-pakiet> all`, `bin/ace-test-suite` i niezależny review przed merge; commity ograniczone do właściwych ścieżek. Dla samych instrukcji: weryfikacja rozwiązywania workflow, kompletności i zgodności scenariuszy. Poniższe scenariusze są wymaganiami odbioru, nie deklaracją wykonanych testów.
+Dla zmian implementacji: `bin/ace-test <zmieniony-pakiet> all` i niezależny review przed merge; commity ograniczone do właściwych ścieżek. Dla samych instrukcji: weryfikacja rozwiązywania workflow, kompletności i zgodności scenariuszy. Poniższe scenariusze są wymaganiami odbioru, nie deklaracją wykonanych testów.
 
 ## Zależności i granice
 
@@ -187,7 +187,7 @@ provisioning/deployment. Ta specyfikacja nie upoważnia do mutacji dowolnego PR.
 Kontrole implementacji: `bin/ace-test ace-git all`,
 `bin/ace-test ace-git-forgejo all`, `bin/ace-test ace-git-github all`,
 `bin/ace-test ace-coworker all`, `bin/ace-test ace-review all`,
-`bin/ace-test-suite`, niezależny review przed integracją. Zachować surowe
+niezależny review przed integracją. Pełny niepowiązany monorepo suite nie jest bramką tego wycinka. Zachować surowe
 wyniki w folderze taska/istniejących raportach. Testy deterministyczne nie
 zastępują rzeczywistych publicznych artefaktów; źródło, publikacja gemów,
 wdrożenie kont i live acceptance są odrębnymi dowodami.
@@ -202,3 +202,17 @@ Potem potwierdzono merge. Zachowane źródła: lab-config
 `docs/retirement-operations/2026-10-23/README.md` i aktualny wpis `gad.b`.
 To receipt migracji, nie generyczny interfejs ani autonomiczne wdrożenie ról.
 Nie używać go jako fallbacku ani odtwarzać fikcyjnego legacy Work.
+
+
+## Review gotowości formalnego approval — 2026-10-23
+
+Niezależny root/main reviewer przeczytał pełny diff trzech plików na head
+`95196fbed8b391eef973ea36a3b9c1c3c7db6d13`: **VERDICT: READY**. Jedyna
+korekta przed promocją ogranicza obowiązkowe testy do pięciu wskazanych
+pakietów zamiast niepowiązanego pełnego monorepo suite; kontrakt zachowania
+pozostaje bez zmian. Skill `as-task-review` i workflow `wfi://task/review`
+wykonano, następnie `ace-task update` promował istniejący task do `pending`,
+`needs_review: false`, z bezpośrednim `show`. Rodzic pozostaje `in-progress`.
+To akceptacja specyfikacji, nie implementacji ani rzeczywistych publicznych
+approval/merge. Nowe checkboxy pozostają otwarte; historia starego zakresu
+zachowana. Wdrożenie tożsamości i dowody dostępu kont pozostają w `gad.b`.
