@@ -70,7 +70,19 @@ module Ace
               "Forgejo server reports #{version}; PR delivery requires #{MINIMUM_SERVER_VERSION} " \
               "(server-enforced expected-head merge is not documented below it)"
           end
+          @server_version = version
           @version_supported = true
+        end
+
+        # Formal create-with-event preserves explicit commit_id in the
+        # inspected Forgejo v11.0.0 and v16.0.5 router/service/model sources.
+        # Pending submission does not: it rebinds to current HEAD and is unused.
+        def ensure_formal_review_supported!
+          ensure_version_supported!
+          unless @server_version >= Gem::Version.new("11.0.0")
+            raise Ace::Git::ProviderUnsupportedCapabilityError,
+              "Formal exact-commit approval requires Forgejo 11.0.0 or newer"
+          end
         end
 
         # @return [Hash] the raw validated pull request payload

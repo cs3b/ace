@@ -81,3 +81,12 @@ after a lost response; do not blindly repeat a mutation or switch identities.
 The integrator consumes current evidence through read-only `ace-git pr approval`
 and the existing integration gate; it never publishes approval in place of the
 independent reviewer. Review-round and authorization rules above still apply.
+
+
+Deployment must provide a dedicated automation reviewer identity and one writer
+per actor/repository/PR before formal publication. Missing evidence of that
+mapping/ownership blocks live use; a role name grants no account permission.
+Do not share that identity with manual clients or another host writer. Preserve
+and report unrelated pending reviews/comments instead of publishing over them.
+Resume only when the provider's path preserves the accepted commit/content;
+unsafe or unsupported pending recovery remains blocked with retained evidence.

@@ -229,3 +229,12 @@ and reported. Anything less is an error outcome with the cause named.
   `.ace-local/review/` to ace-review, `.ace-local/hitl/` to ace-hitl.
 - Inside the ACE repository itself, invoke every tool as `bin/ace-*` (the
   binstubs pin the checkout's bundle).
+
+
+Deployment must provide a dedicated automation reviewer identity and one writer
+per actor/repository/PR before formal publication. Missing evidence of that
+mapping/ownership blocks live use; a role name grants no account permission.
+Do not share that identity with manual clients or another host writer. Preserve
+and report unrelated pending reviews/comments instead of publishing over them.
+Resume only when the provider's path preserves the accepted commit/content;
+unsafe or unsupported pending recovery remains blocked with retained evidence.

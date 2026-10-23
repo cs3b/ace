@@ -214,3 +214,124 @@ confirmed main `df906`. The new source worktree lacked dependency gems; a
 gitignored vendor symlink reused the already prepared dependency tree. No
 credentials changed, no gems installed, and both draft/review workflow loaders
 subsequently succeeded. Neither workaround changes the product runtime.
+
+
+## Independent source review REJECT — 2026-10-23 (recorded before fixes)
+
+Reviewed head `9bcc26015a9c0916d2a529640e9fc90b1187d8a7`; independent report
+`/tmp/ace-formal-approval-code-review.md`, VERDICT: REJECT. Four findings
+are the remaining implementation work (no fix or live acceptance asserted):
+
+- R1 High: Forgejo pending-submit resolves the current PR head and can publish
+  approval for an unreviewed commit during a push race. Post-send unknown does
+  not undo the effect; old mock preserved commit incorrectly. Inspect official
+  supported-version source; use a commit-preserving mutation or refuse before effects.
+- R2 High: valid REQUEST_REVIEW user/team rows can lack commit/user fields;
+  generic all-rows requirements reject the whole PR. Normalize documented row
+  types in the Forgejo adapter; test approval publication and consumption.
+- R3 High: Forgejo create reuses an actor's pending review and can overwrite
+  unrelated body/comments. Refuse unrelated pending and model actual reuse,
+  concurrent correlations and lost responses.
+- R4 Medium: GitHub /user cannot resolve deployment App installation credentials.
+  Explicitly support verified actor resolution or refuse the credential
+  capability before mutation; integration HTTP403 is not network unreachability.
+
+Initial append command used the default lab-config cwd and failed with
+FileNotFoundError before mutation; corrected to this absolute task result path
+before any fixes. Official Codeberg raw pages were unavailable through the web
+reader; inspecting anonymous upstream source through another read-only transport
+is the next research step, not permission for provider API/model calls.
+
+
+R2 regression fixture correction recorded before retry: the first revised
+`bin/ace-test ace-git all` stopped with 439 tests / 1443 assertions / 1 error
+(report `d53a25e8-64b0-453d-a7ca-705d9d0d8f44`). The null-actor-comment case
+created fixture review ID2 after existing ID1 but then requested ID42. This
+is a fixture ID allocation mismatch, not provider semantics. Correct the
+fixture allocator to reserve approval IDs from42; keep the failing run and
+verify the null-actor scenario in the next package run.
+
+
+R3 concurrency fixture correction before retry: Forgejo package run
+`bc46a1ad-37ac-4aec-9b6f-85dba7d4bf3a` stopped at150 tests /639 assertions /
+1 error. Concurrent calls attempted Minitest `stub(:pull_request)` on the same
+object, whose alias bookkeeping is not thread-safe. Move the single stub
+outside the concurrent provider calls; preserve real shared-policy flock and
+actual pending-reuse protocol fixture. Do not treat the aborted run as green.
+
+
+## REJECT fixes and verified protocol scope — 2026-10-23
+
+R1: formal publication now directly creates the provider approval with an
+explicit accepted commit ID. Forgejo never calls pending-submit by ID, whose
+source replaces the commit with current HEAD. Regression fixtures implement
+that distinction and assert the actual provider review commit after a push
+race, not merely the local unknown exception. Formal Forgejo capability floor
+is separately guarded at 11.0.0; v11.0.0 and deployed-target v16.0.5 router/model/
+service sources were anonymously downloaded and inspected.
+
+R2: Forgejo adapter excludes documented user/team REQUEST_REVIEW rows, which
+have no reviewed commit and may have no user. Generic list validation no longer
+requires every unrelated comment to identify a current actor/commit; selected
+approval and relevant revocations still require full evidence. User requests,
+team requests, null-actor comments, and invalid selected actors are tested in
+publish/readback paths.
+
+R3: a dedicated automation reviewer and one writer per actor/repo/PR are now
+MANDATORY deployment preconditions owned by gad.b, per root decision. The local
+lock covers all correlations and worktrees for the same OS account/normalized
+provider/repo/PR, independent of server alias, cwd and worktree TMPDIR. Visible
+unrelated pending refuses before mutation. Exact own comment-free pending can
+recover through Forgejo's verified direct-create reuse, retaining original
+body/commit/review ID; comments or uncertain identity are preserved with a
+refusal. Tests model actual pending reuse, concurrency and lost recovery reply.
+No server-side pending CAS or exclusion of other host/manual clients is claimed.
+Those clients sharing the automation identity violate the deployment contract;
+no broker or new state registry was introduced.
+
+R4: GitHub actor proof now uses GraphQL viewer login/databaseId with the same
+configured token, a path explicitly demonstrated in official installation-auth
+documentation. PAT/App user and App installation identities use the same proof;
+REST /user is never used for installation-token actor resolution. Unverified
+viewer and integration 403 yield capability/authentication refusal before
+approval, rather than guessed identity, token borrowing or network error.
+Tests use a bot viewer plus realistic /user 403, GraphQL 403 and null/error
+responses. Current deployment App live proof remains the root operator's
+bounded read-only acceptance, not a passing fixture claim.
+
+Source URLs, pinned source hashes, protocol guarantees and unavoidable API
+limits are preserved in `formal-approval-protocol-evidence.md`.
+
+Re-executed affected package suites after fixes (hermetic mode; no authenticated
+provider/model requests):
+
+```text
+$ bin/ace-test ace-git all
+609 tests, 1931 assertions, 0 failures, 0 errors (2.12s)
+report: ace-git/.ace-local/test/reports/git/9b6345c3-d181-481a-ae32-59fb322af2b1/
+
+$ bin/ace-test ace-git-forgejo all
+188 tests, 931 assertions, 0 failures, 0 errors (1.02s)
+report: ace-git-forgejo/.ace-local/test/reports/git-forgejo/254c2b3c-8be3-457c-8a44-aed92a7a4fa3/
+
+$ bin/ace-test ace-git-github all
+98 tests, 396 assertions, 0 failures, 0 errors (838.82ms)
+report: ace-git-github/.ace-local/test/reports/git-github/c6c4ec26-1981-443f-b99f-b5646d745eca/
+
+$ bin/ace-test ace-coworker all
+396 tests, 1860 assertions, 0 failures, 0 errors (1m 11s)
+report: ace-coworker/.ace-local/test/reports/coworker/7253104a-463b-4868-b126-0c869863497f/
+
+$ bin/ace-test ace-review all
+929 tests, 2780 assertions, 0 failures, 0 errors, 4 skipped (4.85s)
+report: ace-review/.ace-local/test/reports/review/0dc53074-3c8e-4011-ac05-178475b7edd6/
+```
+
+Total 2220 tests / 7898 assertions; four unchanged optional performance/example
+skips. No actual public approval/merge, account change, publication or deployment
+was performed. Live permissions/public artifacts remain open in gad.b.
+GitHub known-pending recovery remains an explicit unverified capability limit:
+no safe recovery protocol is asserted, pending is retained, and its acceptance
+criterion stays open. Normal GitHub direct approval and lost-submitted-response
+reconciliation are implemented. Source candidate awaits fresh independent
+review; this record does not erase the earlier REJECT or claim APPROVE.

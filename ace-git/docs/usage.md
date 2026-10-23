@@ -355,15 +355,41 @@ and JSON error categories apply. Role instructions confer no provider permission
 credentials remain with the deployment-configured account.
 
 Correlation is scoped to the selected provider/server/repository/PR. Reusing it
-with changed visible evidence conflicts. A same-account local flock serializes
-concurrent publication; this is not a distributed uniqueness service. Provider
+with changed visible evidence conflicts. A same-account local per-PR flock serializes all correlations/worktrees
+for concurrent publication; this is not a distributed uniqueness service. Provider
 visibility may hide another account's pending reviews, and separate hosts do not
 share this lock. No success is inferred for invisible evidence. Save the receipt
 in the existing review/assignment artifacts; there is no new journal.
 
-After an unknown create/submit outcome, explicitly resume the same publication
+After an unknown direct-create outcome, explicitly resume the same publication
 to reconcile provider state first. Mutations are never automatically retried.
 Changed head, stale/dismissed/nonofficial approval, unavailable evidence or
 unsupported capability withholds success rather than using a comment, another
 identity, or weaker branch protection. Actual provider/account acceptance remains
 a separate deployment proof from deterministic package tests.
+
+
+Formal approval requires a **dedicated automation reviewer identity and one
+writer per actor/repository/PR**, supplied by deployment. All local correlations
+share a private per-PR lock in the system temporary directory, independently of
+worktree/TMPDIR. Another host or manual client sharing that identity violates
+the supported execution contract: neither provider offers a pending-review CAS
+through this path. This precondition must be verified before live use; role
+instructions and topology discovery do not establish it.
+
+Both adapters directly create approval with the accepted full commit ID.
+Forgejo 11+ preserves that explicit ID; its pending-submit route instead rebinds
+to current HEAD and is never used. Direct create can reuse pending, so visible
+unrelated pending refuses before mutation. A matching, comment-free own pending
+can resume through Forgejo's verified direct-create path. Pending with comments
+or an unverified safe recovery path (including current GitHub pending recovery)
+is retained with an explicit refusal. Lost direct-create replies reconcile the
+submitted review, without a second automatic POST. No claim of server-atomic
+pending isolation or cross-host mutual exclusion is made.
+
+GitHub actor proof uses authenticated GraphQL viewer login/databaseId under the
+same configured PAT, App user or App installation token. REST `/user` is not
+used for installation credentials. Unavailable/unverifiable viewer or integration
+access refusal is a truthful capability/authentication failure before approval,
+never a guessed bot identity, borrowed token or apparent network outage. Live
+App/account/public-review proof remains separate from deterministic fixtures.

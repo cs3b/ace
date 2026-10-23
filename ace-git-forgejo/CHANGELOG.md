@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Formal reviewer-owned, exact-head provider approval and read-only approval verification through the forge-neutral review flow; comments do not substitute for approval.
 
 
+### Fixed
+
+- Publish formal approval directly at explicit commit_id instead of rebinding pending-submit; retain safe comment-free owned pending recovery, refuse unrelated pending, ignore request/team rows, and require the verified formal-review API floor.
+
 ## [0.7.0] - 2026-10-16
 
 ### Added

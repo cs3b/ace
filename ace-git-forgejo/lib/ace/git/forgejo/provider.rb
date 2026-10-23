@@ -924,17 +924,22 @@ module Ace
         end
 
         def formal_approval
-          pr_api.ensure_version_supported!
+          pr_api.ensure_formal_review_supported!
           request = lambda do |method, path, payload|
             path = "/api/v1/user" if path == :actor
-            if path.to_s.end_with?("/submit")
-              path = path.delete_suffix("/submit")
-              payload = payload.merge("event" => "APPROVED")
-            end
+            payload = payload.merge("event" => "APPROVED") if method == :post
             review_http.request(method, path, body: payload)
           end
           Ace::Git::Providers::FormalApproval.new(provider: self, request: request,
-            list: ->(path) { review_http.paginate(path) }, official: true)
+            list: method(:formal_review_rows), official: true, pending_reuse: true)
+        end
+
+        # Forgejo lists review requests alongside actual reviews. User and
+        # team requests have no reviewed commit; they are not approval evidence.
+        def formal_review_rows(path)
+          review_http.paginate(path).reject do |row|
+            row.is_a?(Hash) && row["state"] == "REQUEST_REVIEW"
+          end
         end
 
         def review_http

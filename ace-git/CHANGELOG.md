@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Formal reviewer-owned, exact-head provider approval and read-only approval verification through the forge-neutral review flow; comments do not substitute for approval.
 
 
+### Fixed
+
+- Serialize all local review correlations per normalized PR, validate selected/relevant review actors without rejecting unrelated historical comments, and preserve unsafe pending reviews with explicit refusal.
+
 ## [0.30.1] - 2026-10-17
 
 ### Changed

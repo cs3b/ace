@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Formal reviewer-owned, exact-head provider approval and read-only approval verification through the forge-neutral review flow; comments do not substitute for approval.
 
 
+### Fixed
+
+- Prove PAT/App user/App installation actors through authenticated GraphQL viewer instead of REST /user; classify unverifiable viewers and integration access refusals truthfully before approval.
+
 ## [0.4.0] - 2026-10-03
 
 ### Added

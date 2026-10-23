@@ -10,7 +10,7 @@ parent: 8xg.t.sbz.4
 needs_review: false
 bundle:
   presets: [project]
-  files: [AGENTS.md, .ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/contract.md, .ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/8xg.t.sbz-lab-ace-pliki-zadania-role-i-komunikacja.s.md, ace-review/handbook/workflow-instructions/review/pr.wf.md, ace-review/docs/usage.md, ace-assign/README.md, .ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/4-l5-role-coworkera-i-jednoznaczne/8xg.t.sbz.4-l5-role-coworkera-i-jednoznaczne-reguly-ukonczenia.s.md, .ace-tasks/_archive/8x/x/8xg.t.qn6-python-ruby-migration-file-based/8xg.t.qn6-python-ruby-migration-file-based-lab-zero.s.md, .ace-tasks/_archive/8x/x/8xg.t.qn6-python-ruby-migration-file-based/4-ace-coworker-gem-worker-loop/8xg.t.qn6.4-ace-coworker-gem-worker-loop-that-takes.s.md, .ace-tasks/_archive/8x/v/8wr.t.qkc-prove-the-complete-forge-neutral/8wr.t.qkc-prove-the-complete-forge-neutral-delivery-acceptance.s.md, .ace-tasks/_archive/8x/v/8wr.t.qkc-prove-the-complete-forge-neutral/0-accept-forge-neutral-urls-in/8wr.t.qkc.0-accept-forge-neutral-urls-in-typed-review.s.md, .ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/4-l5-role-coworkera-i-jednoznaczne/4-ujednolici-workflow-review-i-obs/ux/usage.md, .ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/execution-order.md, ace-git/lib/ace/git/providers/base.rb, ace-git/lib/ace/git/providers/evidence.rb, ace-git/lib/ace/git/organisms/pull_request_lifecycle.rb, ace-git/lib/ace/git/cli/commands/pr.rb, ace-git-forgejo/lib/ace/git/forgejo/provider.rb, ace-git-forgejo/lib/ace/git/forgejo/pull_request_api.rb, ace-git-github/lib/ace/git/github/provider.rb, ace-coworker/handbook/workflow-instructions/coworker/reviewer.wf.md, ace-coworker/handbook/workflow-instructions/coworker/integrator.wf.md, docs/lab-flow.md]
+  files: [AGENTS.md, .ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/contract.md, .ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/8xg.t.sbz-lab-ace-pliki-zadania-role-i-komunikacja.s.md, ace-review/handbook/workflow-instructions/review/pr.wf.md, ace-review/docs/usage.md, ace-assign/README.md, .ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/4-l5-role-coworkera-i-jednoznaczne/8xg.t.sbz.4-l5-role-coworkera-i-jednoznaczne-reguly-ukonczenia.s.md, .ace-tasks/_archive/8x/x/8xg.t.qn6-python-ruby-migration-file-based/8xg.t.qn6-python-ruby-migration-file-based-lab-zero.s.md, .ace-tasks/_archive/8x/x/8xg.t.qn6-python-ruby-migration-file-based/4-ace-coworker-gem-worker-loop/8xg.t.qn6.4-ace-coworker-gem-worker-loop-that-takes.s.md, .ace-tasks/_archive/8x/v/8wr.t.qkc-prove-the-complete-forge-neutral/8wr.t.qkc-prove-the-complete-forge-neutral-delivery-acceptance.s.md, .ace-tasks/_archive/8x/v/8wr.t.qkc-prove-the-complete-forge-neutral/0-accept-forge-neutral-urls-in/8wr.t.qkc.0-accept-forge-neutral-urls-in-typed-review.s.md, .ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/4-l5-role-coworkera-i-jednoznaczne/4-ujednolici-workflow-review-i-obs/ux/usage.md, .ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/execution-order.md, ace-git/lib/ace/git/providers/base.rb, ace-git/lib/ace/git/providers/evidence.rb, ace-git/lib/ace/git/organisms/pull_request_lifecycle.rb, ace-git/lib/ace/git/cli/commands/pr.rb, ace-git-forgejo/lib/ace/git/forgejo/provider.rb, ace-git-forgejo/lib/ace/git/forgejo/pull_request_api.rb, ace-git-github/lib/ace/git/github/provider.rb, ace-coworker/handbook/workflow-instructions/coworker/reviewer.wf.md, ace-coworker/handbook/workflow-instructions/coworker/integrator.wf.md, docs/lab-flow.md, .ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/4-l5-role-coworkera-i-jednoznaczne/4-ujednolici-workflow-review-i-obs/formal-approval-protocol-evidence.md]
   commands: []
 title: Ujednolicić workflow review i obsługę forge
 ---
@@ -231,3 +231,38 @@ ukrywać pending innego konta. Nie deklarować globalnej unikalności ukrytych r
 lub między hostami, której provider nie pozwala zaobserwować. Ten limit trzeba
 zachować w raporcie odbioru; brak możliwości potwierdzenia właściwej tożsamości
 lub efektywnego approval nadal oznacza odmowę, nie pozorny sukces.
+
+
+### Korekta protokołu po niezależnym REJECT — 2026-10-23
+
+Wymagany jest dedykowany automation reviewer i dokładnie jeden writer na
+aktora/repozytorium/PR; wdrożeniowym właścicielem tego warunku jest lab-config
+`gad.b`. Lokalna blokada obejmuje wszystkie correlation i worktree tego
+konta, niezależnie od bieżącego katalogu, aliasu serwera i worktree TMPDIR.
+Inny host/manualny klient używający tego samego aktora narusza ten kontrakt;
+API nie zapewnia atomowego expected-pending CAS. Nie wolno deklarować takiej
+gwarancji ani obchodzić braku dedykowanego konta przez worker/root credential.
+
+Approval powstaje bezpośrednio z jawnym przyjętym `commit_id`. Forgejo
+pending-submit po ID wiąże review z bieżącym headem i NIE jest używany.
+Direct create zachowuje jawny commit, ale potrafi przejąć pending tego aktora.
+Dlatego obcy pending odmawia przed mutacją; wyłącznie dokładnie własny, znany
+pending bez code comments może być dokończony przez sprawdzony direct create
+pod wyłącznym writerem. Pending z komentarzami lub bez dowiedzionej tożsamości
+pozostaje zachowany z odmową. GitHub pending recovery bez dowiedzionego
+bezpiecznego protokołu zwraca capability refusal; ten limit odbioru pozostaje
+otwarty, zamiast udawać kompletne wznowienie. Lost direct-create reply
+uzgadnia już opublikowane review bez kolejnego POST.
+
+Forgejo ma osobny floor formal review 11.0.0 (badane źródła 11.0.0 i 16.0.5).
+`REQUEST_REVIEW` użytkowników/teamów nie jest zatwierdzeniem i może nie mieć
+commita/usera; adapter odróżnia je od dowodów approval. Pełna tożsamość i commit
+są wymagane dla wybranego approval i istotnych odwołań, nie każdej obcej notatki.
+
+GitHub ustala aktora przez `GraphQL viewer { login databaseId }` tego samego
+skonfigurowanego credentialu; obejmuje PAT/App user/App installation zgodnie
+z oficjalnym kontraktem GraphQL. Nie używać `/user` jako dowodu aktora
+installation token. Brak dowodliwego viewera lub integracyjne 403 oznacza
+capability/auth refusal przed mutacją, nie pozorną awarię sieci ani token fallback.
+Szczegóły i hashe źródeł: `formal-approval-protocol-evidence.md` w tym folderze.
+Publiczny odbiór i dowody dostępu kont nadal są niewykonane.

@@ -906,15 +906,36 @@ end
         def formal_approval
           request = lambda do |method, path, payload|
             if path == :actor
-              gh_api("user", global: true)
+              formal_review_actor
             else
-              # GitHub calls pending review submission an events endpoint.
-              path = path.sub(%r{/submit\z}, "/events")
               gh_api(path, method: method, payload: payload)
             end
           end
           Ace::Git::Providers::FormalApproval.new(provider: self, request: request,
             list: ->(path) { gh_api_pages(path) })
+        end
+
+        # GitHub documents installation-token GraphQL viewer queries. Use the
+        # same configured credential for PAT/App user/App installation identities;
+        # REST /user is not an installation-token actor endpoint.
+        def formal_review_actor
+          result = gh_api("graphql", method: :post, global: true,
+            payload: {"query" => "query { viewer { login databaseId } }"})
+          viewer = result.is_a?(Hash) && result.dig("data", "viewer")
+          errors = result.is_a?(Hash) && result["errors"]
+          unless (!errors || errors == []) && viewer.is_a?(Hash) &&
+              viewer["databaseId"].is_a?(Integer) && viewer["databaseId"].positive? &&
+              viewer["login"].is_a?(String) && !viewer["login"].empty?
+            raise Ace::Git::ProviderUnsupportedCapabilityError,
+              "Configured GitHub credential cannot provide a verified GraphQL viewer actor; no approval performed"
+          end
+          {"id" => viewer["databaseId"], "login" => viewer["login"]}
+        rescue Ace::Git::ProviderAuthenticationError => error
+          if error.message.match?(/resource not accessible by integration/i)
+            raise Ace::Git::ProviderUnsupportedCapabilityError,
+              "Configured GitHub integration credential cannot verify its GraphQL viewer actor; no approval performed"
+          end
+          raise
         end
 
         def gh_api_pages(suffix)
@@ -1191,7 +1212,7 @@ end
           message = stderr.to_s
           if message.match?(PrFetcher::PR_NOT_FOUND_PATTERN)
             raise Ace::Git::ProviderObjectNotFoundError, "Object not found: #{context}: #{message}"
-          elsif message.match?(PrFetcher::AUTH_ERROR_PATTERN)
+          elsif message.match?(PrFetcher::AUTH_ERROR_PATTERN) || message.match?(/HTTP 40[13]|resource not accessible by integration/i)
             raise Ace::Git::ProviderAuthenticationError, "Not authenticated with GitHub: #{message}"
           elsif message.match?(/match[- ]head[- ]commit|head commit/i)
             raise Ace::Git::ProviderExpectedHeadConflictError,
