@@ -38,7 +38,10 @@ class NativePluginTest < AceHermesTestCase
       built = Gem::Package.new(artifact)
       dependency = built.spec.dependencies.find { |item| item.name == "ace-hitl" }
       refute dependency.match?("ace-hitl", "0.23.1")
-      assert dependency.match?("ace-hitl", "0.23.2")
+      refute dependency.match?("ace-hitl", "0.23.2")
+      refute dependency.match?("ace-hitl", "0.23.99")
+      assert dependency.match?("ace-hitl", "0.24.0")
+      assert dependency.match?("ace-hitl", "0.24.99")
       extracted = File.join(tmp, "extracted")
       built.extract_files(extracted)
       %w[__init__.py native_transport.py legacy_transition.py].each do |asset|
