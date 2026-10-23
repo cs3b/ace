@@ -3,8 +3,8 @@ doc-type: workflow
 title: HITL Workflow
 purpose: Standardize human-attention handling for blocked and completed work using ace-hitl events.
 ace-docs:
-  last-updated: '2026-10-18'
-  last-checked: '2026-10-18'
+  last-updated: '2026-10-23'
+  last-checked: '2026-10-23'
 ---
 
 # HITL Workflow
@@ -98,11 +98,19 @@ ace-hitl show <hitl-id>
 ace-hitl update <hitl-id> --answer "<human decision>"
 ```
 
-Polling is the default reliability path for the requesting agent:
-
-```bash
-ace-hitl wait <hitl-id>
-```
+Waiting on a pending answer is semantic, never a blocking poll. While an
+answer is pending (for example a RubyGems OTP window of ~30–45 s), the
+waiting session registers exactly ONE in-process `/watch` scoped to the
+project ace-hitl transport folder (the folder holding that case's
+request/reply files, e.g. `.ace-local/hitl`), then ends its turn. On wake:
+run the project `ace-hitl-hermes sync` ONCE, reconcile the exact case state
+(`ace-hitl show <hitl-id>` — answered, not merely replies>0), and act within
+the answer window or report the precise blocker. Never block a model turn
+with sleep/poll loops (`ace-hitl wait` blocks the turn — it is a sleep/poll
+command, not a waiting strategy), and never introduce cron, systemd, or any
+external heartbeat — none exists and none may be added. Observed defect
+(eyes-20261023 OTP wait): the supervising session blocked its turn with a
+36x sleep-8 poll loop.
 
 ### 4b) Remote delivery through configured adapter routes
 
