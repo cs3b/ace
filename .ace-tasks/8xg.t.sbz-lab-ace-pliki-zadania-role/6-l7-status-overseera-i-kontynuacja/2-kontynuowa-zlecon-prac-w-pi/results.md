@@ -82,3 +82,73 @@ Zastosowano 4 zweryfikowane ustalenia z `.ace-local/review/sessions/review-8xij7
 4. **L-3 (Low, 8xijeywi)** — przy asercji `deliverAs: "followUp"` dodano jednolinijkowy komentarz: asercja przypina kontrakt dostarczania wyłącznie przez kolejkę; semantyka pojedynczej egzekucji żyje w hoście pi, którego fake nie może sfalsyfikować.
 
 Weryfikacja: `bin/ace-test ace-handbook-integration-pi all` — 10 testów, 89 asercji, 0 failures (pełny suite JS, w tym nowy test katalogowy na prawdziwym FS, wykonuje się wewnątrz warstwy fast). Zakres zapisów: wyłącznie `ace-handbook-integration-pi/**` plus ten plik results.
+
+
+## Niezależny review gotowości nowego zakresu — 2026-10-23
+
+Reviewowany head: `937ee0dbe1d16bd9a8c0d0d52e693846ddaf1dd2` (Forgejo PR #70).
+**VERDICT: READY** — brak blokujących pytań specyfikacyjnych. Recenzent
+nie jest autorem draftu. To ocena gotowości specyfikacji, nie implementacji.
+Wcześniejsze wyniki powyżej pozostają historią starego zakresu; nie dowodzą
+realizacji nowych wymagań.
+
+Przeczytano lokalne AGENTS.md, trzy zmienione pliki, kontrakt programu,
+`.sbz.5.4`, mapę właścicieli stanu i wejście rozszerzenia pi wake. Wykonano
+lokalny skill `.agents/skills/as-task-review/SKILL.md` oraz
+`bin/ace-bundle wfi://task/review` (exit 0), rozwiązujący workflow
+`ace-task/handbook/workflow-instructions/task/review.wf.md`.
+
+Zakres jest rzeczywistym wycinkiem HITL/coworker → obserwacja → właściwy żywy
+overseer, z zachowaniem własności przyjęcia raportu w `.sbz.5.4`. Kontrakt
+obejmuje stabilną tożsamość bez metadanych odpytywania/mtime/ack, brak tur bez
+zmiany, trwałe scalanie pending, restart i wyścig przy ack, brak ponawiania
+niepewnych efektów zewnętrznych, jawne terminy, ograniczenia bezczynności,
+trwałą blokadę quota oraz wycofanie aktora bez utraty pending. Wszystkie
+mają konkretne scenariusze odbioru, w tym błędy i prawdziwy opublikowany pi.
+Wybór istniejącego mechanizmu trwałości i skończonych wartości budżetu jest
+zadaniem implementacji, wymagającym weryfikacji przed jej odbiorem.
+
+Wykonane kontrole przed promocją:
+
+```text
+$ git diff --check HEAD^ HEAD
+[exit 0, brak output]
+
+$ python3 [asercje dokładnego headu, świeżej treści, metadanych i bundle]
+HEAD: 937ee0dbe1d16bd9a8c0d0d52e693846ddaf1dd2
+Changed files: 3; new-head content assertion: PASS
+Child draft/needs_review=true and parent in-progress: PASS
+Bundle files exist: 20 / 20
+Working-tree status: ''
+[exit 0]
+
+$ bin/ace-task doctor
+Tasks scanned: 860
+Folders checked: 31
+Warnings (509)
+[exit 0; brak błędów, ostrzeżenia całego repozytorium]
+
+$ bin/ace-task doctor --check frontmatter --errors-only --no-color
+Tasks scanned: 860
+Folders checked: 0
+✅ All tasks healthy
+📈 Health Score: 0/100 (Poor)
+505 warnings
+Completed in 212ms
+[exit 0]
+
+$ bin/ace-task update 8xg.t.sbz.6.2 --set status=pending,needs_review=false --no-git-commit
+Task updated: 8xg.t.sbz.6.2 Kontynuować zleconą pracę w pi
+
+$ bin/ace-task show 8xg.t.sbz.6.2
+○ 8xg.t.sbz.6.2  Kontynuować zleconą pracę w pi
+  status: pending  |  priority: medium  |  estimate: medium
+  tags: lab, lab-l7, file-based
+  depends: 8xg.t.sbz.5, 8xg.t.sbz.1
+  parent: 8xg.t.sbz.6
+```
+
+Nie uruchamiano usług, zatrzymanych pętli ani wywołań modelu. Nie wykonano
+implementacji, publikacji, instalacji, pełnego testu HITL/coworker ani
+24 godzin obserwacji live. Wszystkie nowe checkboxy pozostają otwarte.
+Promocja nie uchyla zależności implementacyjnych. Rodzic pozostaje in-progress.

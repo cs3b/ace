@@ -1,13 +1,13 @@
 ---
 id: 8xg.t.sbz.6.2
-status: draft
+status: pending
 priority: medium
 created_at: "2026-10-17 18:54:23"
 estimate: medium
 dependencies: [8xg.t.sbz.5, 8xg.t.sbz.1]
 tags: [lab, lab-l7, file-based]
 parent: 8xg.t.sbz.6
-needs_review: true
+needs_review: false
 bundle:
   presets: [project]
   files: [AGENTS.md, .ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/contract.md, .ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/8xg.t.sbz-lab-ace-pliki-zadania-role-i-komunikacja.s.md, ace-overseer/docs/usage.md, ace-herdr/README.md, ace-git-worktree/docs/usage.md, ace-handbook-integration-pi/handbook/extensions/ace-wake/index.js, .ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/6-l7-status-overseera-i-kontynuacja/8xg.t.sbz.6-l7-status-overseera-i-kontynuacja-zleconej-pracy.s.md, .ace-tasks/_archive/8x/x/8xg.t.qn6-python-ruby-migration-file-based/8xg.t.qn6-python-ruby-migration-file-based-lab-zero.s.md, .ace-tasks/_archive/8x/x/8xg.t.qn6-python-ruby-migration-file-based/0-ace-herdr-status-spaces-tabs/8xg.t.qn6.0-ace-herdr-status-spaces-tabs-and-panes.s.md, .ace-tasks/_archive/8x/x/8xg.t.qn6-python-ruby-migration-file-based/1-ace-lab-status-lab-configuration/8xg.t.qn6.1-ace-lab-status-lab-configuration-and-state.s.md, .ace-tasks/_archive/8x/x/8xg.t.qn6-python-ruby-migration-file-based/4-ace-coworker-gem-worker-loop/8xg.t.qn6.4-ace-coworker-gem-worker-loop-that-takes.s.md, .ace-tasks/_archive/8x/w/8xa.t.h8x-deliver-project-specific-supervision-workflows/8xa.t.h8x-deliver-project-specific-supervision-workflows-and.s.md, .ace-tasks/_archive/8x/x/8xd.t.cm3-durable-goal-capability-for-pi/8xd.t.cm3-durable-goal-capability-for-pi-agents-objective.s.md, .ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/6-l7-status-overseera-i-kontynuacja/2-kontynuowa-zlecon-prac-w-pi/ux/usage.md, .ace-tasks/8xg.t.k9y-ace-git-worktree-list-active/8xg.t.k9y-ace-git-worktree-list-active-worktree-table.s.md, .ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/execution-order.md, docs/lab-flow.md, docs/decisions/ADR-034-file-based-lab-state-ownership.md, ace-herdr/lib/ace/herdr/molecules/native_queue_executor.rb]
@@ -173,3 +173,15 @@ Lokalna estymata pi: 153,70818339 USD — **nie faktura dostawcy**. Zapisany/
 wiadomości w tym tasku. Cztery loop w trzech sesjach usunięto 23.10 o
 09:10:36 UTC, dwie trwające tury zatrzymano o 09:11:30; ostatnie odczyty
 wykazały puste loops/watches. Jest to stan obserwowany, nie odbiór nowej funkcji.
+
+
+## Review gotowości rozszerzenia — 2026-10-23
+
+Niezależny review specyfikacji na head
+`937ee0dbe1d16bd9a8c0d0d52e693846ddaf1dd2`: **VERDICT: READY**.
+Workflow `as-task-review` / `wfi://task/review` wykonany; brak pytań blokujących.
+Task promowano narzędziem do `pending`, `needs_review: false`; opis draftu powyżej
+zachowuje historię ponownego otwarcia. Rodzic pozostaje `in-progress`.
+Dowody gotowości zapisano w `results.md` w tym folderze. Nowe kryteria pozostają
+niewykonane; review nie jest odbiorem implementacji, publikacji ani 24h live.
+Przed startem implementacji sprawdzić zadeklarowane dependencies.
