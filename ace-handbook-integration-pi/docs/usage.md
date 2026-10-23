@@ -35,6 +35,7 @@ The `ace-wake` extension runs inside the live Pi process. It lets an agent sleep
 - **Busy agent** (streaming or executing a tool): the wake is queued as a follow-up. It never interrupts an in-flight tool operation; user conversation stays responsive. Concurrent sources deliver into an active run immediately -- unrelated sources never wait for that run's settlement.
 - **Coalescing:** while one wake for a source is queued, repeated triggers of the same source coalesce into the pending wake. Different sources stay independent (`loop:NAME` and `watch:NAME` are distinct).
 - **Messages are bounded** and prefixed with their source, e.g. `[ace-wake loop:heartbeat] check the build`.
+- **Watch wakes carry the change delta**: each changed target appears with its watched path, change kind (created/modified/deleted), and BEFORE→AFTER change signatures; when the file content is readable the wake also carries a capped sanitized excerpt (first ~200 bytes) so the woken agent can identify the case without a full reload. Readable targets sign a content hash, so rewriting a file with identical bytes never wakes twice; targets without readable content (directories, denied files) keep the `mtimeMs:size` stat-only signature.
 
 ### Recovery when delivery is unconfirmed
 

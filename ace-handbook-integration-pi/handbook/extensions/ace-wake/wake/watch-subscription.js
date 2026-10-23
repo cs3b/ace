@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import * as nodeFs from "node:fs";
 import * as nodePath from "node:path";
 import { WakeError } from "./types.js";
@@ -43,6 +44,14 @@ export function canonicalizeWatchPath(baseDir, path) {
  * at the previously delivered state: the queued wake covers the change, and a
  * further change queues a fresh follow-up after settlement.
  *
+ * A readable target's signature is its content hash, so a rewrite with
+ * identical bytes (fresh mtime, same size) is not a change and never wakes;
+ * targets whose content is not readable (directories, denied files) keep the
+ * `mtimeMs:size` stat-only signature. Every wake callback receives a delta of
+ * the changed targets — watched path, change kind (created/modified/deleted),
+ * BEFORE→AFTER signatures, and a short capped content excerpt when the file is
+ * readable — so the woken agent can identify the case without a full reload.
+ *
  * A watcher runtime error on the configured (primary) path closes the
  * handle, marks the subscription inactive with a visible error via the
  * injected `onDeactivate` hook, and never retries: the user removes and
@@ -56,6 +65,10 @@ export function canonicalizeWatchPath(baseDir, path) {
  * @param {object} ports
  * @param {(path: string, handlers: {onChange: () => void, onError: (error: Error) => void}) => {close: () => void}} ports.watchFactory
  * @param {(path: string) => {mtimeMs: number, size: number}} ports.statFn
+ * @param {(path: string) => Buffer | undefined} [ports.readFn] Content reader for
+ *   signatures and excerpts; returns undefined when the content is not readable
+ *   (missing target, directory, denied content) and never throws. Defaults to
+ *   a node:fs read of the whole file.
  * @param {string} [ports.baseDir] Resolution base for relative watch paths.
  * @param {(baseDir: string, path: string) => string} [ports.canonicalizeFn] Path canonicalization; defaults to resolve + realpath.
  * @param {(reconcile: () => void) => unknown} [ports.scheduleReconcile] Schedules
@@ -66,7 +79,7 @@ export function canonicalizeWatchPath(baseDir, path) {
  * @param {() => void} [ports.onDeactivate] Invoked when a subscription leaves
  *   the active state so callers can refresh visible status.
  * @returns {{
- *   start: (definition: import("./types.js").WatchDefinition, onWake: (definition: import("./types.js").WatchDefinition) => {delivered: boolean, reason?: string} | undefined) => string,
+ *   start: (definition: import("./types.js").WatchDefinition, onWake: (definition: import("./types.js").WatchDefinition, delta: Array<import("./types.js").WatchDelta>) => {delivered: boolean, reason?: string} | undefined) => string,
  *   stop: (name: string) => void,
  *   stopAll: () => void,
  *   fail: (name: string, message: string) => void,
@@ -78,8 +91,12 @@ const RECONCILE_DELAY_MS = 500;
 // How far above a not-yet-existing target an ancestor watch may climb
 // (enough for <worktree>/.ace-local/hitl inside any sane worktree layout).
 const MAX_ANCESTOR_CLIMB = 6;
+// Content excerpt capped into a wake delta, in bytes.
+const EXCERPT_BYTES = 200;
+// Fingerprint segment of a target that does not (yet) exist.
+const ABSENT_SEGMENT = "absent";
 
-export function createWatchPort({ watchFactory, statFn, baseDir = process.cwd(), canonicalizeFn = canonicalizeWatchPath, resolveTargets = expandInboxWatchTargets, scheduleReconcile = defaultScheduleReconcile, onDeactivate }) {
+export function createWatchPort({ watchFactory, statFn, readFn = nodeReadFn, baseDir = process.cwd(), canonicalizeFn = canonicalizeWatchPath, resolveTargets = expandInboxWatchTargets, scheduleReconcile = defaultScheduleReconcile, onDeactivate }) {
   /** @type {Map<string, {watchers: Array<{path: string, watchPath: string, watcher: {close: () => void}}>, paths: string[], definition: import("./types.js").WatchDefinition, fingerprint: string, previousFingerprint: string, dirty: boolean}>} */
   const active = new Map();
   /** @type {Map<string, string>} */
@@ -158,7 +175,7 @@ export function createWatchPort({ watchFactory, statFn, baseDir = process.cwd(),
           entry.dirty = false;
           continue;
         }
-        const outcome = onWake(entry.definition);
+        const outcome = onWake(entry.definition, deltaOf(entry.fingerprint, next));
         // The fingerprint advances only when the wake actually crossed —
         // a deferred outcome stays dirty for the next settlement boundary.
         if (outcome && outcome.delivered === false) {
@@ -259,7 +276,7 @@ export function createWatchPort({ watchFactory, statFn, baseDir = process.cwd(),
     if (next === entry.fingerprint) {
       return;
     }
-    const outcome = onWake(definition);
+    const outcome = onWake(definition, deltaOf(entry.fingerprint, next));
     if (outcome && outcome.delivered === false) {
       // Coalesced (a queued wake covers this change) or serialized (held back
       // by the dispatch transition window): the change itself is undelivered,
@@ -586,18 +603,53 @@ export function createWatchPort({ watchFactory, statFn, baseDir = process.cwd(),
       .sort()
       .map((path) => {
         if (forcedAbsent?.has(path)) {
-          return `${path}=absent`;
+          return `${path}=${ABSENT_SEGMENT}`;
         }
         if (path === primaryPath) {
-          return `${path}=${fingerprintOf(statFn(path))}`;
+          return `${path}=${fingerprintOf(statFn(path), readFn(path))}`;
         }
         try {
-          return `${path}=${fingerprintOf(statFn(path))}`;
+          return `${path}=${fingerprintOf(statFn(path), readFn(path))}`;
         } catch {
-          return `${path}=absent`;
+          return `${path}=${ABSENT_SEGMENT}`;
         }
       })
       .join("|");
+  }
+
+  /**
+   * Build the wake delta for one delivered-fingerprint transition: every
+   * target whose signature changed, described by path, change kind, and
+   * BEFORE→AFTER signatures, plus a capped sanitized content excerpt when the
+   * target's content is readable.
+   *
+   * @param {string} before aggregate fingerprint of the last delivered state
+   * @param {string} after current aggregate fingerprint
+   * @returns {Array<import("./types.js").WatchDelta>}
+   */
+  function deltaOf(before, after) {
+    const previous = segmentMap(before);
+    const deltas = [];
+    for (const [path, next] of segmentMap(after)) {
+      const prior = previous.get(path);
+      if (prior === next) {
+        continue;
+      }
+      const delta = {
+        path,
+        kind: changeKind(prior, next),
+        before: prior ?? ABSENT_SEGMENT,
+        after: next,
+      };
+      if (next !== ABSENT_SEGMENT) {
+        const content = readFn(path);
+        if (content !== undefined) {
+          delta.excerpt = excerptOf(content);
+        }
+      }
+      deltas.push(delta);
+    }
+    return deltas;
   }
 }
 
@@ -614,10 +666,59 @@ export function defaultScheduleReconcile(reconcile) {
 }
 
 /**
- * @param {{mtimeMs: number, size: number}} stats
+ * Split an aggregate fingerprint into its per-target `path=signature` map.
+ *
+ * @param {string} fingerprint
+ * @returns {Map<string, string>}
+ */
+function segmentMap(fingerprint) {
+  return new Map(fingerprint.split("|").map((segment) => {
+    const at = segment.indexOf("=");
+    return [segment.slice(0, at), segment.slice(at + 1)];
+  }));
+}
+
+/**
+ * @param {string | undefined} before previous signature (undefined = never seen)
+ * @param {string} after current signature
+ * @returns {"created" | "modified" | "deleted"}
+ */
+function changeKind(before, after) {
+  if (after === ABSENT_SEGMENT) {
+    return "deleted";
+  }
+  return before === undefined || before === ABSENT_SEGMENT ? "created" : "modified";
+}
+
+/**
+ * First bytes of the content as one sanitized single line: control characters
+ * are dropped and whitespace runs (newlines, tabs) collapse to single spaces.
+ *
+ * @param {Buffer} content
  * @returns {string}
  */
-function fingerprintOf(stats) {
+function excerptOf(content) {
+  const head = content.subarray(0, EXCERPT_BYTES).toString("utf8");
+  return head
+    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/**
+ * Change signature of one target. Readable content signs a hash of the bytes,
+ * so a content-only rewrite (identical bytes, fresh mtime) is not a change;
+ * when the content is not readable (directory, denied file) the stat pair
+ * remains the signature.
+ *
+ * @param {{mtimeMs: number, size: number}} stats
+ * @param {Buffer | undefined} content
+ * @returns {string}
+ */
+function fingerprintOf(stats, content) {
+  if (content !== undefined) {
+    return `sha256:${createHash("sha256").update(content).digest("hex")}`;
+  }
   return `${stats.mtimeMs}:${stats.size}`;
 }
 
@@ -689,4 +790,20 @@ export function nodeStatFn(path) {
   nodeFs.accessSync(path, nodeFs.constants.R_OK);
   const stats = nodeFs.statSync(path);
   return { mtimeMs: stats.mtimeMs, size: stats.size };
+}
+
+/**
+ * Default readFn over node:fs. Returns the file's bytes, or undefined when
+ * the content is not readable (missing target, directory, denied content):
+ * signature and excerpt reads must never fail a watch that stat validates.
+ *
+ * @param {string} path
+ * @returns {Buffer | undefined}
+ */
+export function nodeReadFn(path) {
+  try {
+    return nodeFs.readFileSync(path);
+  } catch {
+    return undefined;
+  }
 }

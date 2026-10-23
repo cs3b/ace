@@ -1,4 +1,5 @@
 import * as assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import * as nodeFs from "node:fs";
 import * as nodeOs from "node:os";
 import * as nodePath from "node:path";
@@ -210,6 +211,146 @@ describe("createWatchPort", () => {
     host.triggerWatch(WATCHED);
 
     assert.equal(deactivations, 1, "callers must learn about deactivation to refresh status");
+  });
+});
+
+describe("createWatchPort wake delta", () => {
+  const FILE = "/fake/project/dep.txt";
+
+  const sha = (content) => `sha256:${createHash("sha256").update(content).digest("hex")}`;
+
+  function startDeltaWatch(host, contents, overrides = {}) {
+    const port = createWatchPort({
+      watchFactory: host.watchFactory,
+      statFn: host.statFn,
+      readFn: overrides.readFn ?? ((path) => contents.get(path)),
+      baseDir: "/fake/project",
+      ...overrides.ports,
+    });
+    const wakes = [];
+    host.setFile(FILE, { mtimeMs: 100, size: contents.get(FILE)?.length ?? 10 });
+    port.start(
+      { kind: "watch", name: "dep", path: overrides.path ?? FILE, message: "changed" },
+      (_definition, delta) => wakes.push(delta),
+    );
+    return { port, wakes };
+  }
+
+  it("delivers path, change kind, BEFORE→AFTER signatures, and a capped sanitized excerpt", () => {
+    const host = createFakeHost();
+    const contents = new Map([[FILE, Buffer.from("alpha")]]);
+    const { wakes } = startDeltaWatch(host, contents);
+    assert.equal(wakes.length, 0, "registration never wakes");
+
+    const next = Buffer.from(`beta line\n\n${"x".repeat(400)}`);
+    contents.set(FILE, next);
+    host.setFile(FILE, { mtimeMs: 200, size: next.length });
+    host.triggerWatch(FILE);
+
+    assert.equal(wakes.length, 1);
+    const [delta] = wakes.flat();
+    assert.equal(delta.path, FILE);
+    assert.equal(delta.kind, "modified");
+    assert.equal(delta.before, sha("alpha"));
+    assert.equal(delta.after, sha(next));
+    assert.ok(delta.excerpt.startsWith("beta line x"), `sanitized to one line, got: ${delta.excerpt}`);
+    assert.ok(!delta.excerpt.includes("\n"), "excerpt must be a single sanitized line");
+    assert.ok(delta.excerpt.length <= 200, `excerpt capped at ~200 bytes, got ${delta.excerpt.length}`);
+  });
+
+  it("does not wake again when a readable file is rewritten with identical content", () => {
+    const host = createFakeHost();
+    const contents = new Map([[FILE, Buffer.from("same bytes")]]);
+    const { port, wakes } = startDeltaWatch(host, contents);
+
+    // A real content change wakes once.
+    contents.set(FILE, Buffer.from("new bytes"));
+    host.setFile(FILE, { mtimeMs: 200, size: 9 });
+    host.triggerWatch(FILE);
+    assert.equal(wakes.length, 1);
+
+    // The same content rewritten (fresh mtime, same bytes) is NOT a change:
+    // the content-hash signature filters the touch.
+    contents.set(FILE, Buffer.from("new bytes"));
+    host.setFile(FILE, { mtimeMs: 300, size: 9 });
+    host.triggerWatch(FILE);
+    assert.equal(wakes.length, 1, "an identical-content rewrite must not wake twice");
+    assert.equal(port.errorOf("dep"), undefined);
+  });
+
+  it("wakes on a content change even when stat metadata is unchanged", () => {
+    const host = createFakeHost();
+    const contents = new Map([[FILE, Buffer.from("one")]]);
+    const { wakes } = startDeltaWatch(host, contents);
+
+    contents.set(FILE, Buffer.from("two"));
+    host.setFile(FILE, { mtimeMs: 100, size: 3 });
+    host.triggerWatch(FILE);
+
+    assert.equal(wakes.length, 1, "an mtime-undetectable content rewrite must wake via the hash");
+    assert.equal(wakes.flat()[0].after, sha("two"));
+  });
+
+  it("falls back to stat-only signatures when the content is unreadable", () => {
+    const host = createFakeHost();
+    const { wakes } = startDeltaWatch(host, new Map(), { readFn: () => undefined });
+
+    host.setFile(FILE, { mtimeMs: 200, size: 12 });
+    host.triggerWatch(FILE);
+
+    assert.equal(wakes.length, 1);
+    const [delta] = wakes.flat();
+    assert.equal(delta.kind, "modified");
+    assert.equal(delta.before, "100:10", "the stat pair is the signature when content is unreadable");
+    assert.equal(delta.after, "200:12");
+    assert.equal(delta.excerpt, undefined, "no excerpt without readable content");
+  });
+
+  it("reports created and deleted kinds for absent→present and present→absent targets", () => {
+    const host = createFakeHost();
+    const contents = new Map();
+    const reconciles = [];
+    const targets = ["/fake/project/.ace-local/hitl", "/fake/wt/task-9/.ace-local/hitl"];
+    host.setFile("/fake/project/.ace-local/hitl", { mtimeMs: 1, size: 10 });
+    host.setFile("/fake/wt/task-9/.ace-local", { mtimeMs: 1, size: 1 });
+    const port = createWatchPort({
+      watchFactory: host.watchFactory,
+      statFn: host.statFn,
+      readFn: (path) => contents.get(path),
+      baseDir: "/fake/project",
+      resolveTargets: () => [...targets],
+      scheduleReconcile: (reconcile) => reconciles.push(reconcile),
+    });
+    const wakes = [];
+    port.start(
+      { kind: "watch", name: "reports", path: "/fake/project/.ace-local/hitl", message: "m" },
+      (_definition, delta) => wakes.push(delta),
+    );
+
+    // The worktree inbox did not exist at registration (watched through its
+    // ancestor, baseline records the proven absent state): its appearance is
+    // a creation.
+    contents.set(targets[1], Buffer.from("first report"));
+    host.setFile(targets[1], { mtimeMs: 5, size: 12 });
+    host.triggerWatch("/fake/wt/task-9/.ace-local");
+    assert.equal(wakes.length, 1);
+    const created = wakes.flat().find((delta) => delta.path === targets[1]);
+    assert.equal(created.kind, "created");
+    assert.equal(created.before, "absent");
+    assert.equal(created.after, sha(Buffer.from("first report")));
+    assert.equal(created.excerpt, "first report");
+
+    // The target's disappearance (worktree inbox removed without a watcher
+    // error) is a deletion.
+    wakes.length = 0;
+    contents.delete(targets[1]);
+    host.setFile(targets[1], { missing: true });
+    host.triggerWatch(targets[1]);
+    assert.equal(wakes.length, 1);
+    const deleted = wakes.flat().find((delta) => delta.path === targets[1]);
+    assert.equal(deleted.kind, "deleted");
+    assert.equal(deleted.after, "absent");
+    assert.equal(deleted.excerpt, undefined, "a deleted target has no excerpt");
   });
 });
 

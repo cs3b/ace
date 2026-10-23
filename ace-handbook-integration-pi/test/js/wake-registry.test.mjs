@@ -4,6 +4,7 @@ import { describe, it } from "node:test";
 import { WakeDispatcher } from "../../handbook/extensions/ace-wake/wake/wake-dispatcher.js";
 import {
   MAX_WAKE_MESSAGE_CHARS,
+  formatWatchDelta,
 } from "../../handbook/extensions/ace-wake/wake/types.js";
 import {
   MAX_INTERVAL_SECONDS,
@@ -54,6 +55,33 @@ function buildRegistry(host, overrides = {}) {
   });
   return { registry, stateStore, dispatcher };
 }
+
+describe("formatWatchDelta", () => {
+  it("appends path, change kind, BEFORE→AFTER signatures, and the excerpt to the wake message", () => {
+    const composed = formatWatchDelta("watch wake", [
+      { path: "/p/dep.txt", kind: "modified", before: "1:2", after: "3:4", excerpt: "new head" },
+    ]);
+
+    assert.equal(composed, "watch wake\nchanged: /p/dep.txt (modified) 1:2 → 3:4\nexcerpt: new head");
+  });
+
+  it("omits the excerpt line when the content was unreadable and keeps multiple targets", () => {
+    const composed = formatWatchDelta("m", [
+      { path: "/p/a", kind: "created", before: "absent", after: "5:6" },
+      { path: "/p/b", kind: "deleted", before: "7:8", after: "absent" },
+    ]);
+
+    assert.equal(
+      composed,
+      "m\nchanged: /p/a (created) absent → 5:6\nchanged: /p/b (deleted) 7:8 → absent",
+    );
+  });
+
+  it("keeps the bare message without a delta", () => {
+    assert.equal(formatWatchDelta("bare", []), "bare");
+    assert.equal(formatWatchDelta("bare", undefined), "bare");
+  });
+});
 
 describe("WakeDispatcher", () => {
   it("delivers one wake per source and coalesces repeats while pending", () => {

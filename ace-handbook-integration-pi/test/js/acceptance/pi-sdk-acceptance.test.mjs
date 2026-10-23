@@ -446,7 +446,13 @@ describe("ace-wake installed acceptance", { timeout: 90_000 }, () => {
       fs.writeFileSync(watched, "version-2 with more content");
       const wake = await waitFor(() => wakeTexts(session).find((text) => text.includes("watch:dep")), { timeoutMs: 15_000 });
       assert.ok(wake, "file change must wake the idle agent");
-      assert.equal(wake, "[ace-wake watch:dep] file changed");
+      assert.match(wake, /^\[ace-wake watch:dep\] file changed\n/, "the wake keeps its source-prefixed message head");
+      assert.match(
+        wake,
+        new RegExp(`changed: ${watched.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")} \\(modified\\) sha256:[0-9a-f]{64} → sha256:[0-9a-f]{64}`),
+        "the wake carries path, change kind, and BEFORE→AFTER signatures",
+      );
+      assert.match(wake, /excerpt: version-2 with more content/, "the readable file's excerpt rides along");
 
       const before = wakeTexts(session).length;
       await session.prompt("/watch add ghost --path missing.txt --message never");

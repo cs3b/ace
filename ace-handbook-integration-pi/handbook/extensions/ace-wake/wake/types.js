@@ -41,6 +41,19 @@ export const SESSION_ENTRY_TYPE = "ace-wake";
  */
 
 /**
+ * One changed target of a watch wake: the watched path, the change kind, the
+ * BEFORE→AFTER change signatures, and — when the file content was readable —
+ * a short capped sanitized excerpt of the new content.
+ *
+ * @typedef {object} WatchDelta
+ * @property {string} path Absolute path of the changed target.
+ * @property {"created" | "modified" | "deleted"} kind Change kind.
+ * @property {string} before Signature of the last delivered state.
+ * @property {string} after Signature of the current state.
+ * @property {string} [excerpt] Sanitized single-line head of the new content.
+ */
+
+/**
  * Persisted session snapshot handed to the state port.
  *
  * @typedef {object} WakeSnapshot
@@ -75,4 +88,25 @@ export function boundMessage(text) {
     return trimmed;
   }
   return `${trimmed.slice(0, MAX_WAKE_MESSAGE_CHARS - marker.length)}${marker}`;
+}
+
+/**
+ * Append the watch change delta to a watch wake message: one line per changed
+ * target with path, change kind, and BEFORE→AFTER signatures, plus an
+ * `excerpt:` line when the file content was readable. Loop wakes and watch
+ * wakes without a delta keep the bare message.
+ *
+ * @param {string} message
+ * @param {Array<WatchDelta>} deltas
+ * @returns {string}
+ */
+export function formatWatchDelta(message, deltas) {
+  if (!Array.isArray(deltas) || deltas.length === 0) {
+    return message;
+  }
+  const lines = deltas.map((delta) => {
+    const head = `changed: ${delta.path} (${delta.kind}) ${delta.before} → ${delta.after}`;
+    return delta.excerpt === undefined ? head : `${head}\nexcerpt: ${delta.excerpt}`;
+  });
+  return `${message}\n${lines.join("\n")}`;
 }

@@ -3,6 +3,7 @@ import {
   MAX_NAME_CHARS,
   WATCH_SOURCE_PREFIX,
   WakeError,
+  formatWatchDelta,
 } from "./types.js";
 
 /**
@@ -146,10 +147,11 @@ export class WakeRegistry {
     const definition = { kind: "watch", name, path, message };
     // The watch port validates readability, takes its baseline, and resolves
     // the configured path to a canonical absolute path — an unreadable or
-    // invalid path fails the command loudly before anything is persisted.
+    // invalid path fails the command loudly before anything is persisted. The
+    // delta argument carries the changed targets of each wake.
     definition.path = this.#watches.start(
       definition,
-      () => this.#fire(WATCH_SOURCE_PREFIX, name, definition.message),
+      (watch, delta) => this.#fire(WATCH_SOURCE_PREFIX, name, definition.message, delta),
     );
 
     this.#snapshot.watches.push(definition);
@@ -235,7 +237,7 @@ export class WakeRegistry {
       try {
         this.#watches.start(
           watch,
-          () => this.#fire(WATCH_SOURCE_PREFIX, watch.name, watch.message),
+          (definition, delta) => this.#fire(WATCH_SOURCE_PREFIX, watch.name, watch.message, delta),
         );
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
@@ -287,7 +289,7 @@ export class WakeRegistry {
       this.#closeDispatchWindow();
     }
     this.#drainRetained();
-    this.#watches.flushDirty((watch) => this.#fire(WATCH_SOURCE_PREFIX, watch.name, watch.message));
+    this.#watches.flushDirty((watch, delta) => this.#fire(WATCH_SOURCE_PREFIX, watch.name, watch.message, delta));
     this.#refreshStatus();
   }
 
@@ -348,7 +350,7 @@ export class WakeRegistry {
     this.#retained.clear();
     this.#dispatcher.settleAll();
     this.flushRetained();
-    this.#watches.flushDirty((watch) => this.#fire(WATCH_SOURCE_PREFIX, watch.name, watch.message));
+    this.#watches.flushDirty((watch, delta) => this.#fire(WATCH_SOURCE_PREFIX, watch.name, watch.message, delta));
     this.#refreshStatus();
   }
 
@@ -396,9 +398,9 @@ export class WakeRegistry {
     this.#snapshot = this.#state.load();
   }
 
-  #fire(sourcePrefix, name, message) {
+  #fire(sourcePrefix, name, message, delta) {
     try {
-      const outcome = this.#dispatch(sourcePrefix, name, message);
+      const outcome = this.#dispatch(sourcePrefix, name, message, delta);
       this.#refreshStatus();
       return outcome;
     } catch {
@@ -414,7 +416,7 @@ export class WakeRegistry {
     }
   }
 
-  #dispatch(sourcePrefix, name, message) {
+  #dispatch(sourcePrefix, name, message, delta) {
     const sourceKey = `${sourcePrefix}${name}`;
     if (this.#dispatcher.isPending(sourceKey)) {
       // Same-source repeats coalesce regardless of the transition window.
@@ -446,7 +448,10 @@ export class WakeRegistry {
       this.#retained.set(sourceKey, { prefix: sourcePrefix, name, message });
       return { delivered: false, reason: "serialized" };
     }
-    const outcome = this.#dispatcher.wake(sourceKey, message);
+    const text = sourcePrefix === WATCH_SOURCE_PREFIX && delta !== undefined
+      ? formatWatchDelta(message, delta)
+      : message;
+    const outcome = this.#dispatcher.wake(sourceKey, text);
     if (!outcome.delivered) {
       // A refused watch wake (no model selected, broken authentication) has
       // no next tick, settlement, or lifecycle event to retry it: without a
@@ -508,7 +513,7 @@ export class WakeRegistry {
       if (this.#disposed) {
         return;
       }
-      this.#watches.flushDirty((watch) => this.#fire(WATCH_SOURCE_PREFIX, watch.name, watch.message));
+      this.#watches.flushDirty((watch, delta) => this.#fire(WATCH_SOURCE_PREFIX, watch.name, watch.message, delta));
       this.#refreshStatus();
     }, this.#dispatchRecoveryMs);
     this.#dirtyRetryTimer.unref?.();
@@ -546,7 +551,7 @@ export class WakeRegistry {
     this.#inFlightWatchNames.clear();
     this.#dispatchPending = false;
     this.#drainRetained();
-    this.#watches.flushDirty((watch) => this.#fire(WATCH_SOURCE_PREFIX, watch.name, watch.message));
+    this.#watches.flushDirty((watch, delta) => this.#fire(WATCH_SOURCE_PREFIX, watch.name, watch.message, delta));
     this.#refreshStatus();
   }
 
@@ -601,7 +606,7 @@ export class WakeRegistry {
     this.#dispatchPending = false;
     this.#dispatcher.settleAll();
     this.#revertInFlightWatchAttempts();
-    this.#watches.flushDirty((watch) => this.#fire(WATCH_SOURCE_PREFIX, watch.name, watch.message));
+    this.#watches.flushDirty((watch, delta) => this.#fire(WATCH_SOURCE_PREFIX, watch.name, watch.message, delta));
     this.#refreshStatus();
   }
 

@@ -22,7 +22,7 @@ import { registerEyes } from "./wake/eyes-runtime.js";
 import { WakeDispatcher } from "./wake/wake-dispatcher.js";
 import { parseWakeCommand } from "./wake/wake-command-parser.js";
 import { createLoopPort } from "./wake/loop-subscription.js";
-import { createWatchPort, nodeStatFn, nodeWatchFactory } from "./wake/watch-subscription.js";
+import { createWatchPort, nodeReadFn, nodeStatFn, nodeWatchFactory } from "./wake/watch-subscription.js";
 import {
   SESSION_ENTRY_TYPE,
   WakeError,
@@ -186,6 +186,7 @@ function createRegistry(pi, ctx, ports) {
     watches: createWatchPort({
       watchFactory: ports.watchFactory ?? nodeWatchFactory,
       statFn: ports.statFn ?? nodeStatFn,
+      readFn: ports.readFn ?? nodeReadFn,
       baseDir: ctx.cwd,
       // The report-inbox watch covers every linked worktree's
       // .ace-local/hitl by default (the same git worktree discovery

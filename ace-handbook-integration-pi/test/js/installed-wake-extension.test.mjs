@@ -204,6 +204,30 @@ describe("ace-wake delivery", () => {
     assert.match(host.sends[1].text, /watch:dep/);
   });
 
+  it("delivers the change delta in every watch wake message", async () => {
+    const host = createFakeHost();
+    const FILE = "/fake/project/dep.txt";
+    const contents = new Map([[FILE, Buffer.from("one")]]);
+    const session = await startSession(host, { readFn: (path) => contents.get(path) });
+    host.setFile(FILE, { mtimeMs: 1, size: 3 });
+    await host.runCommand("watch", "add dep --path dep.txt --message watch wake");
+
+    contents.set(FILE, Buffer.from("two\nwith detail"));
+    host.setFile(FILE, { mtimeMs: 2, size: 14 });
+    host.triggerWatch(FILE);
+
+    assert.equal(host.sends.length, 1);
+    const text = host.sends[0].text;
+    assert.match(text, /^\[ace-wake watch:dep\] watch wake\n/, "the source-prefixed message stays the wake head");
+    assert.match(
+      text,
+      /changed: \/fake\/project\/dep\.txt \(modified\) sha256:[0-9a-f]{64} → sha256:[0-9a-f]{64}/,
+      "the wake carries the watched path, change kind, and BEFORE→AFTER signatures",
+    );
+    assert.match(text, /excerpt: two with detail/, "the readable file's sanitized excerpt rides along");
+    await session.settle();
+  });
+
   it("retains wakes during compaction and flushes them after compaction state clears", async () => {
     const host = createFakeHost();
     const session = await startSession(host);
