@@ -24,6 +24,8 @@ class Ace::Handbook::Integration::PiExtensionAssetsTest < Minitest::Test
     assert_includes gem_files, "handbook/extensions/ace-wake/wake/loop-subscription.js"
     assert_includes gem_files, "handbook/extensions/ace-wake/wake/watch-subscription.js"
     assert_includes gem_files, "handbook/extensions/ace-wake/wake/wake-command-parser.js"
+    assert_includes gem_files, "handbook/extensions/ace-wake/wake/eyes.js"
+    assert_includes gem_files, "handbook/extensions/ace-wake/wake/eyes-runtime.js"
     assert gem_files.grep(%r{^test/js/}).empty?, "test assets must not ship in the gem"
   end
 

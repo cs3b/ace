@@ -13,7 +13,7 @@ function portsOf(host, extraPorts = {}) {
  * factory's optional second argument.
  */
 export async function startSession(host, extraPorts = {}) {
-  const events = [];
+  let events = [];
   host.pi.on = (event, handler) => {
     events.push([event, handler]);
     return () => {};
@@ -21,34 +21,30 @@ export async function startSession(host, extraPorts = {}) {
   aceWakeFactory(host.pi, portsOf(host, extraPorts));
 
   const handlerFor = (event) => {
-    const found = events.find(([name]) => name === event);
-    if (!found) {
-      throw new Error(`extension did not register ${event}`);
-    }
-    return found[1];
+    const found = events.filter(([name]) => name === event);
+    if (!found.length) throw new Error(`extension did not register ${event}`);
+    return async (...args) => { for (const [, handler] of found) await handler(...args); };
   };
 
   await handlerFor("session_start")({ type: "session_start", reason: "startup" }, host.commandContext);
 
   return {
+    emit: (event, payload) => handlerFor(event)(payload, host.commandContext),
     /**
      * Simulate an extension reload with real pi semantics: the old runtime
      * receives session_shutdown(reason reload), then the factory reruns and
      * session_start fires with reason "reload".
      */
     reload: async () => {
-      const shutdown = events.find(([name]) => name === "session_shutdown");
-      if (shutdown) {
-        await shutdown[1]({ type: "session_shutdown", reason: "reload" }, host.commandContext);
-      }
+      await handlerFor("session_shutdown")({ type: "session_shutdown", reason: "reload" }, host.commandContext);
       const reloadEvents = [];
       host.pi.on = (event, handler) => {
         reloadEvents.push([event, handler]);
         return () => {};
       };
       aceWakeFactory(host.pi, portsOf(host, extraPorts));
-      const found = reloadEvents.find(([name]) => name === "session_start");
-      await found[1]({ type: "session_start", reason: "reload" }, host.commandContext);
+      events = reloadEvents;
+      await handlerFor("session_start")({ type: "session_start", reason: "reload" }, host.commandContext);
     },
     settle: () => handlerFor("agent_settled")({ type: "agent_settled" }, host.commandContext),
     agentStart: () => handlerFor("agent_start")({ type: "agent_start" }, host.commandContext),

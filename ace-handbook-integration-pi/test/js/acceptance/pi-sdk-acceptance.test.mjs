@@ -10,6 +10,7 @@ import * as assert from "node:assert/strict";
 import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
+import { createRequire } from "node:module";
 import { pathToFileURL } from "node:url";
 import { describe, it } from "node:test";
 
@@ -24,12 +25,14 @@ if (!PI_PKG_ROOT || !EXT_PATH) {
 
 const { createAgentSession, DefaultResourceLoader, ModelRuntime, SessionManager, SettingsManager } =
   await import(pathToFileURL(path.join(PI_PKG_ROOT, "dist", "index.js")).href);
-const { createAssistantMessageEventStream } = await import(
-  pathToFileURL(path.join(PI_PKG_ROOT, "node_modules", "@earendil-works", "pi-ai", "dist", "index.js")).href
-);
-const { Type } = await import(
-  pathToFileURL(path.join(PI_PKG_ROOT, "node_modules", "typebox", "build", "index.mjs")).href
-);
+const sdkRequire = createRequire(path.join(PI_PKG_ROOT, "package.json"));
+const dependencyEntry = (name, entry) => {
+  const found = sdkRequire.resolve.paths(name).map(root => path.join(root, name, entry)).find(file => fs.existsSync(file));
+  if (!found) throw new Error(`SDK dependency missing: ${name}/${entry}`);
+  return pathToFileURL(found).href;
+};
+const { createAssistantMessageEventStream } = await import(dependencyEntry("@earendil-works/pi-ai", "dist/index.js"));
+const { Type } = await import(dependencyEntry("typebox", "build/index.mjs"));
 
 /**
  * Scripted fake model stream handler: each stream request consumes the next
@@ -50,7 +53,7 @@ function streamHandler(script) {
           timestamp: Date.now(),
         };
         if (response.kind === "tool") {
-          const toolCall = { type: "toolCall", id: `call-${Date.now()}-${Math.random()}`, name: response.toolName, arguments: {} };
+          const toolCall = { type: "toolCall", id: `call-${Date.now()}-${Math.random()}`, name: response.toolName, arguments: response.arguments || {} };
           const withCall = { ...base, content: [toolCall], stopReason: "toolUse" };
           stream.push({ type: "start", partial: { ...base, content: [] } });
           stream.push({ type: "toolcall_start", contentIndex: 0, partial: withCall });
@@ -185,6 +188,21 @@ function lastWakeMessage(session) {
 }
 
 describe("ace-wake installed acceptance", { timeout: 90_000 }, () => {
+  it("registers the eyes acknowledgement tool with the real SDK schema validator", async () => {
+    const { session, cleanup } = await startWakeSession({script:[
+      {kind:"tool",toolName:"ace_eyes",arguments:{action:"status"}},
+      {kind:"text",text:"read status"}
+    ]});
+    try {
+      await session.prompt("Read the eyes status with its tool.");
+      const result = session.messages.find(message => message.role === "toolResult" && message.toolName === "ace_eyes");
+      assert.ok(result, "SDK must discover and execute the projected eyes tool");
+      assert.ok(!result.isError, JSON.stringify(result.content));
+      assert.equal(JSON.parse(result.content[0].text).enabled, false);
+      assert.equal(JSON.parse(result.content[0].text).pending && Object.keys(JSON.parse(result.content[0].text).pending).length, 0);
+    } finally {cleanup();}
+  });
+
   it("is discovered automatically from the projected project directory", async () => {
     const { session, cleanup } = await startWakeSession({ autoDiscover: true });
     try {

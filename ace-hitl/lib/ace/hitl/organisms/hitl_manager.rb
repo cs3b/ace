@@ -94,10 +94,12 @@ module Ace
           }
         end
 
-        def list(status: nil, kind: nil, type: nil, delivery: nil, in_folder: "next", tags: [], scope: nil)
+        def list(status: nil, kind: nil, type: nil, delivery: nil, in_folder: "next", tags: [], scope: nil, limit: nil, strict: false)
           effective_scope = @scope_resolver.effective_scope(scope)
           scan_results = scan_results_for_scope(effective_scope, in_folder: in_folder)
+          raise ArgumentError, "observation exceeds configured event budget" if limit && scan_results.size > limit
           events = load_events(scan_results)
+          raise ArgumentError, "incomplete HITL observation" if strict && events.size != scan_results.size
 
           events = events.select { |event| event.status == status } if status
           events = events.select { |event| event.kind == kind } if kind

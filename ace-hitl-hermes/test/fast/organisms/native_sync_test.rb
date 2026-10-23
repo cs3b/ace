@@ -152,6 +152,42 @@ class NativeSyncTest < AceHermesTestCase
     assert_includes events.first.tags, "hermes-instruction"
   end
 
+  def test_native_reply_to_semantic_eyes_runs_real_commands_without_model_or_broker
+    event = question
+    record = publish(event)
+    receipt(record)
+    reply(record, text: "private-eyes-answer")
+    project = File.dirname(File.dirname(@roots.first))
+    FileUtils.mkdir_p(File.join(project, ".ace", "hitl"))
+    File.write(File.join(project, ".ace", "hitl", "config.yml"), {"root_dir" => @roots.first, "machine" => "lab", "recipients" => {"self" => {"machine" => "lab", "panel" => "w1:p1"}}}.to_yaml)
+    route_path = File.join(@tmp, "route.json")
+    File.write(route_path, JSON.generate(@route))
+    source_root = File.expand_path("../../../..", __dir__)
+    eyes_root = File.join(source_root, "ace-handbook-integration-pi/handbook/extensions/ace-wake/wake")
+    script = <<~JS
+      import assert from "node:assert/strict";
+      import { Eyes } from #{File.join(eyes_root, "eyes.js").to_json};
+      import { observeHitl } from #{File.join(eyes_root, "eyes-runtime.js").to_json};
+      let snapshot, sends=[];
+      const build=()=>new Eyes({snapshot,save:s=>{snapshot=s;},
+        observe:config=>observeHitl(#{project.to_json},config),
+        deliver:batch=>{sends.push(batch);return true;}});
+      let eyes=build();eyes.start({syncRoutes:[#{route_path.to_json}]});
+      await eyes.tick();assert.equal(sends.length,1);
+      const [key,value]=sends[0][0];eyes.ack(key,value.revision);
+      await eyes.tick();eyes.dispose();eyes=build();await eyes.tick();
+      assert.equal(sends.length,1);assert.equal(snapshot.breaker,null);
+      assert.ok(!JSON.stringify(snapshot).includes("private-eyes-answer"));
+      console.log("native-sync/semantic-observe/eyes/ack/restart PASS");
+    JS
+    env = {"PATH" => "#{File.join(source_root, 'bin')}:#{ENV.fetch('PATH')}",
+      "BUNDLE_GEMFILE" => File.join(source_root, "Gemfile")}
+    out, err, status = Open3.capture3(env, "node", "--input-type=module", "-e", script)
+    assert status.success?, "eyes integration failed: #{out} #{err}"
+    assert_includes out, "eyes/ack/restart PASS"
+    assert_equal "private-eyes-answer", owner(@roots.first).show(event.id, scope: "current")[:event].answer
+  end
+
   def test_sync_cli_needs_no_lifecycle_endpoint_and_prints_no_reply_content
     record = publish(question)
     receipt(record)

@@ -78,3 +78,88 @@ ace-handbook sync --provider pi
 ```
 
 Projects skills, prompts, and the extension in one pass. The extension projection records a receipt (`.pi/extensions/.ace-handbook-projection.json`) so stale projected files are pruned without touching extensions you authored yourself.
+
+## Semantic eyes (opt-in replacement for periodic model wakes)
+
+After projecting this package's extension with `ace-handbook sync --provider pi`,
+open the project's existing Pi session and run `/eyes start /absolute/path/eyes.json`.
+The selected runtime must provide this release's `ace-overseer observe` and
+`ace-hitl observe`; when native
+Telegram import is configured it also needs `ace-hitl-hermes sync`. These execute
+from the project cwd through the selected runtime's PATH. Missing commands,
+malformed projections, timeouts and unsuccessful syncs fail closed. This does not
+install gems, choose a model, grant permission or create a second bot poller.
+
+A project-owned configuration can be as small as:
+
+```json
+{"recipient":"self","scope":"all","syncRoutes":[],"intervalSeconds":30,"maxObservationsPerHour":120,"maxWakesPerHour":20}
+```
+
+`recipient` names a real entry in `.ace/hitl/config.yml`'s `recipients` mapping
+for this observer (default alias `self`; it must actually be configured). It is
+an address selector, never a grant. The HITL owner selects directed incoming
+reports/questions, answers belonging to this origin, and instructions imported
+into this coordinator's own event root. Outbound Captain questions/reports and
+other recipients are excluded. `ace-overseer observe` then consults the existing
+private task tree, including archived managers, to suppress adopted reports only
+when their entire managing tree is terminal. A recorded report on an active tree
+remains eligible to reconcile an incomplete continuation. Canonical terminal
+settlements can retire matching pending notifications without another wake;
+notification acknowledgement alone never changes those task records.
+
+`current` observes the current project/worktree; `all` includes only its linked
+Git worktrees. Set `syncRoutes` to the absolute paths of existing native route JSON
+files to import real Hermes delivery/reply/instruction records before observing.
+An empty list observes canonical local HITL only and makes no Telegram-readiness
+claim. Event roots, channel ownership and authorization remain in those existing
+route configurations. The observer does not discover unrelated repositories.
+
+The interval invokes deterministic native sync and read-only `ace-overseer observe`,
+not the model. The HITL owner emits identities and semantic revision hashes,
+without message/answer text. Content, answers, report results and status change
+revisions; delivery timestamps, own acknowledgement, file mtime and polling
+bookkeeping do not. Nested records are scanned by the canonical HITL scanner.
+Existing unhandled incoming records are initially pending, so adopting a new
+observer can produce one reconciliation wake; closed canonical history is excluded; subsequent unchanged polls produce none.
+
+Pi's existing session custom entries retain bounded pending revisions,
+acknowledgements, deadlines and breaker/budget state. There is no second report
+journal or execution queue. One notification batch (at most 20 revisions) stays
+in flight until explicit handling. Further changes coalesce by canonical event
+identity, preserving the newest revision. Restart reconciles the same pending
+revisions; accepted notification or agent settlement never means business work
+completed. The agent reads originals and invokes the existing `ace-overseer
+process-reports`/assignment/task owners, which retain report adoption and effect
+receipts. It then calls `ace_eyes` with `action: "ack"`, `key`, and exact `revision`.
+A newer revision arriving during handling remains pending. Never rerun a merge,
+publish or worker start merely because a notification reappeared; reconcile its
+existing operation receipt. Operator equivalents are `/eyes status` and
+`/eyes ack KEY REVISION`.
+
+Only an actual operation deadline is wake-worthy. The agent tool accepts
+`action: "deadline"`, operation `key`, `revision`, and epoch-millisecond `at`;
+the operator equivalent is `/eyes deadline NAME REVISION EPOCH_MS`. Deadlines
+are one-shot per identity/revision/time. Cancel with `action: "cancel"` or
+`/eyes cancel NAME` when the condition no longer applies. Registering a deadline
+is an owner decision, not an authorization or an automatic business action.
+
+Observation failures are capped (`maxErrors`, default 3), subprocesses have a
+10-second timeout and 1 MiB output bound, event count defaults to 500, and retained
+pending/acknowledged identities to 2000. Observation and notification-attempt
+budgets persist across restart; notification counts are not token billing.
+Quota/credit/billing-limit errors, exceeded budgets, or repeated source failures
+open a visible breaker, stop the observer, and retain pending. No model fallback
+or automatic quota retry occurs. After checking the underlying quota/source and
+operation state, the operator explicitly runs `/eyes resume quota-verified`.
+This checks deterministic source readiness, not provider billing. The agent tool
+cannot resume the breaker. Retention exhaustion needs owner reconciliation and
+handoff to a new session; do not clear history to suppress pending work.
+
+Starting eyes removes this actor's legacy `/loop` and `/watch` subscriptions and
+refuses new ones while eyes owns observation. `/eyes retire` also stops eyes,
+preserves pending for handoff, and permanently prevents that session actor from
+restarting itself (including after reload). Other sessions are untouched. No
+watchdog revives dead processes. Published installation, real Telegram delivery,
+and a live 24-hour no-change window remain separate acceptance checks; the source
+suite uses an accelerated clock and real temporary native transport files.

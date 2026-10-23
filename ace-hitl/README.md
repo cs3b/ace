@@ -78,3 +78,15 @@ bin/ace-test ace-hitl all
 `ace-hitl` owns HITL event semantics and the markdown contract.
 `ace-support-items` remains generic support infrastructure and does not absorb
 HITL-specific behaviour.
+
+### Read semantic event revisions
+
+`ace-hitl observe --scope current --limit 500` prints one JSON object with schema
+`ace.hitl.observation/v1` and a bounded `events` list. `--scope all` includes linked
+worktrees of this repository. Each row contains a hashed canonical file identity,
+event ID, semantic revision hash, type/status and task/assignment references.
+It emits no private message or answer text. It reads active (non-special-folder) canonical events and
+does not import transports, acknowledge, archive, resume or mutate events.
+Delivery/poll timestamps and filesystem mtime are excluded from revisions;
+content, answers and report/status changes are included. Exceeding the configured
+limit refuses the entire projection rather than silently truncating it.

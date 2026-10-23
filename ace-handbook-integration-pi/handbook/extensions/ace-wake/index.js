@@ -18,6 +18,7 @@
 
 import { clearInterval, setInterval } from "node:timers";
 
+import { registerEyes } from "./wake/eyes-runtime.js";
 import { WakeDispatcher } from "./wake/wake-dispatcher.js";
 import { parseWakeCommand } from "./wake/wake-command-parser.js";
 import { createLoopPort } from "./wake/loop-subscription.js";
@@ -47,6 +48,7 @@ export default function (pi, ports = {}) {
   /** @type {{registry: WakeRegistry} | undefined} */
   let runtime;
 
+  let eyes;
   const getRuntime = () => runtime;
   const bindRuntime = (ctx) => {
     runtime?.registry.dispose();
@@ -57,6 +59,9 @@ export default function (pi, ports = {}) {
   pi.registerCommand("loop", {
     description: "Manage named timer loops that wake this agent (add | list | remove)",
     handler: async (args, ctx) => {
+      if (eyes.active() && args.trim().startsWith("add")) {
+        ctx.ui?.notify?.("Legacy loops are retired while eyes owns observation", "error"); return;
+      }
       await handleCommand(ctx, "loop", args, getRuntime, bindRuntime);
     },
   });
@@ -64,6 +69,9 @@ export default function (pi, ports = {}) {
   pi.registerCommand("watch", {
     description: "Manage named file watches that wake this agent (add | list | remove)",
     handler: async (args, ctx) => {
+      if (eyes.active() && args.trim().startsWith("add")) {
+        ctx.ui?.notify?.("Legacy watches are retired while eyes owns observation", "error"); return;
+      }
       await handleCommand(ctx, "watch", args, getRuntime, bindRuntime);
     },
   });
@@ -77,6 +85,16 @@ export default function (pi, ports = {}) {
   pi.on("session_tree", async (_event, ctx) => {
     bindRuntime(ctx);
   });
+
+  eyes = registerEyes(pi, { ...ports.eyes,
+    retireLegacy: () => {
+      if (!runtime) return;
+      const list = runtime.registry.list();
+      for (const entry of list) {
+        if (entry.kind === "loop") runtime.registry.removeLoop(entry.name);
+        else runtime.registry.removeWatch(entry.name);
+      }
+    } });
 
   // A run has begun: wakes dispatched concurrently during the idle-to-running
   // transition can now enter the follow-up queue safely, so the registry

@@ -8,6 +8,7 @@ require_relative "cli/commands/operator_question"
 require_relative "cli/commands/read"
 require_relative "cli/commands/show"
 require_relative "cli/commands/list"
+require_relative "cli/commands/observe"
 require_relative "cli/commands/update"
 require_relative "cli/commands/wait"
 require_relative "cli/commands/deliver"
@@ -31,6 +32,7 @@ module Ace
         ["read", "Read authenticated lifecycle request facts"],
         ["show", "Show HITL event details"],
         ["list", "List HITL events"],
+        ["observe", "Read semantic event revisions"],
         ["update", "Update HITL event metadata or answer"],
         ["send", "Send a HITL event through the configured adapter routes"],
         ["wait", "Wait for an answer on a specific HITL event"],
@@ -58,6 +60,7 @@ module Ace
       register "read", CLI::Commands::Read
       register "show", CLI::Commands::Show
       register "list", CLI::Commands::List
+      register "observe", CLI::Commands::Observe
       register "update", CLI::Commands::Update
       register "send", CLI::Commands::Send
       register "wait", CLI::Commands::Wait

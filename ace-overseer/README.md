@@ -98,3 +98,14 @@ or create your own.
 
 ---
 [Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md) | Part of [ACE](https://github.com/cs3b/ace)
+
+### Read-only event observation
+
+`ace-overseer observe --owner self --scope all --limit 500` combines the HITL
+owner's semantic incoming-event projection with canonical report adoption from
+the existing private task tree. `self` must be a configured HITL recipient alias.
+The JSON contains `events` requiring reconciliation and `settled` revisions whose
+matched managing tree is fully terminal (including archived managers). Recorded
+reports on active managers remain eligible: adoption does not prove continuation.
+No report, task, assignment, worktree, process or external operation is mutated.
+Pi eyes uses this view, then the agent uses normal `process-reports` gates.

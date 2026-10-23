@@ -6,6 +6,7 @@ require_relative "cli/commands/work_on"
 require_relative "cli/commands/handoff"
 require_relative "cli/commands/process_reports"
 require_relative "cli/commands/status"
+require_relative "cli/commands/observe"
 require_relative "cli/commands/prune"
 require_relative "cli/commands/projects"
 require_relative "cli/commands/agents"
@@ -21,6 +22,7 @@ module Ace
         ["work-on", "Start local task work"],
         ["handoff", "Hand the task worktree to the next role"],
         ["process-reports", "Process ace-hitl reports and continue the queue"],
+        ["observe", "Read semantic events needing reconciliation"],
         ["status", "Show status of task worktrees"],
         ["prune", "Remove stale task worktrees"],
         ["projects", "List visible public projects"],
@@ -38,6 +40,7 @@ module Ace
       register "work-on", Commands::WorkOn
       register "handoff", Commands::Handoff
       register "process-reports", Commands::ProcessReports
+      register "observe", Commands::Observe
       register "status", Commands::Status
       register "prune", Commands::Prune
       register "projects", Commands::Projects

@@ -24,7 +24,8 @@ class Ace::Handbook::Integration::PiSdkAcceptanceTest < Minitest::Test
         config: {}
       )
       result = syncer.sync(provider: "pi").first
-      assert_equal 9, result.fetch(:projected_extensions)
+      expected_assets = Dir.glob(File.join(package_root, "handbook", "extensions", "**", "*")).count { |path| File.file?(path) }
+      assert_equal expected_assets, result.fetch(:projected_extensions)
 
       projected_entry = File.join(project_root, ".pi", "extensions", "ace-wake", "index.js")
       assert File.file?(projected_entry), "sync must project the extension entrypoint"
@@ -46,11 +47,12 @@ class Ace::Handbook::Integration::PiSdkAcceptanceTest < Minitest::Test
 
   def node_bin
     candidate = ENV.fetch("NODE_BIN", "node")
-    system("command", "-v", candidate, out: File::NULL) ? candidate : nil
+    paths = candidate.include?(File::SEPARATOR) ? [candidate] : ENV.fetch("PATH", "").split(File::PATH_SEPARATOR).map { |dir| File.join(dir, candidate) }
+    paths.find { |path| File.file?(path) && File.executable?(path) }
   end
 
   def pi_package_root
-    candidates = []
+    candidates = [ENV["PI_PKG_ROOT"]].compact
     npm_root = IO.popen(["npm", "root", "-g"], &:read).to_s.strip
     candidates << File.join(npm_root, "@earendil-works", "pi-coding-agent") unless npm_root.empty?
 
