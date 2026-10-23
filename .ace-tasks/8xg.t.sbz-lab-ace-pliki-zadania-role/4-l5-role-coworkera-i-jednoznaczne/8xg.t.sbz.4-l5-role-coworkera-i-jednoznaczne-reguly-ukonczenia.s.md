@@ -1,6 +1,6 @@
 ---
 id: 8xg.t.sbz.4
-status: done
+status: in-progress
 priority: high
 created_at: "2026-10-17 18:53:35"
 estimate: large
@@ -71,3 +71,12 @@ Rozmiar orientacyjny: large. Nie otwierać osobnej usługi lub magazynu stanu dl
 Zachować przydatny kod, worktree i dowody z poprzednich zadań. Nie oznaczać ich ponownie jako wykonanych bez sprawdzenia zakresu; nie odtwarzać odrzuconych mechanizmów starego laba.
 
 Poprawka qkc.0 ma zapisany commit `9b9d72d65` i wcześniejszy wynik 91 testów / 182 asercji. To historyczny dowód źródła; finalny niezależny review, integracja i wydanie pozostają do sprawdzenia w nowym programie.
+
+
+## Ponowne otwarcie L5 — 2026-10-23
+
+Rodzic ponownie `in-progress`: istniejący liść `.4.4` ma nowy draft formalnego
+approval providera GitHub/Forgejo i przekazania do integratora. Pełny kontrakt
+i nowe, niewykonane kryteria są wyłącznie w tym liściu. Wcześniejsze dowody
+pozostają zachowane; nie oznaczają dostarczenia formalnego approval. `.4.1`,
+`.4.2` i `.4.3` zachowują zakres i historię, bez nowych siblingów lub usług.

@@ -21,3 +21,25 @@ Oczekiwany wynik: Zero i błędne referencje są odrzucane przed ekstrakcją bun
 ## Reguły wspólne
 
 Reguły wspólne są częścią tej specyfikacji: [kontrakt programu](.ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/contract.md). Obowiązuje zatwierdzony model plikowy; stare materiały są źródłem kontekstu, nie nakazem zachowania ich architektury.
+
+
+## Draft: formalny approval pod kontem reviewera
+
+Planowany interfejs, jeszcze niedostępny:
+
+```sh
+ace-git pr approve PR --expected-head SHA --body-file REVIEW_REPORT --correlation REVIEW_ID --server SERVER --format json
+```
+
+Po zaakceptowanym niezależnym review reviewer używa własnego skonfigurowanego
+konta providera. Wynik zawiera dokładne repo/PR/head, tożsamość reviewera,
+ID/URL formalnego review, efektywny approval, correlation i digest raportu.
+Integrator pod własnym kontem odczytuje approval i wykonuje oddzielnie zleconą
+integrację. Komentarz i `pr ready` nie odblokowują tej bramki.
+
+Ponowienie tej samej publikacji odczytuje istniejący efekt. Zmieniony head,
+własny PR, brak praw, niejednoznaczny stan lub lost reply nie daje sukcesu;
+niepewna mutacja wymaga uzgodnienia przed kontynuacją. Nie ma root fallbacku,
+przekazania tokenów ani nowej usługi. Konkretne mapowanie kont jest wdrożeniowym
+zakresem lab-config `gad.b`. Normatywny kontrakt i odbiór obu providerów:
+[specyfikacja](../8xg.t.sbz.4.4-ujednolici-workflow-review-i-obs-ug-forge.s.md).
