@@ -6,8 +6,8 @@ doc-type: workflow
 title: Overseer Workflow
 purpose: Binding process contract for the overseer lifecycle (work-on, status, prune) with executed-check contracts for prune safety and status truth.
 ace-docs:
-  last-updated: '2026-09-29'
-  last-checked: '2026-09-29'
+  last-updated: '2026-10-23'
+  last-checked: '2026-10-23'
 ---
 # Overseer Workflow
 
@@ -144,6 +144,20 @@ candidate:
    Report the blocked candidate (ref, head SHA, missing proof) to the
    operator; never silently drop it and never bypass a failed proof with
    `--force`. Preserve on ambiguity.
+
+### 4) Wait: pending answers use the semantic wake, never polling
+
+While an answer is pending (for example a RubyGems OTP window of ~30-45 s
+during publication), the supervising session registers exactly ONE
+in-process `/watch` scoped to the project ace-hitl transport folder (the
+folder holding that case's reply/request files, e.g. `.ace-local/hitl`),
+then ends its turn. On wake: run the project `ace-hitl-hermes sync` ONCE,
+reconcile the exact case state (`ace-hitl show <id>`: answered, not merely
+replies>0), and act within the answer window or report the precise blocker.
+Never block a model turn with sleep/poll loops, and never introduce
+cron/systemd/external heartbeats - none exists and none may be added.
+Observed defect (eyes-20261023 OTP wait): the supervising session blocked
+its turn with a 36x sleep-8 poll loop.
 
 ## Non-Negotiable Contracts Summary
 
