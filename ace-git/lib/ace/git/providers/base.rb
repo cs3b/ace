@@ -168,6 +168,16 @@ module Ace
           raise NotImplementedError, "Providers must implement #{self.class}#repository_file"
         end
 
+        # Formal approval is distinct from comments. Unsupported adapters refuse;
+        # they must never project an approval as a comment or switch identity.
+        def approve_pull_request(number:, expected_head:, body:, correlation:)
+          raise ProviderUnsupportedCapabilityError, "Formal approval is unsupported by #{self.class}"
+        end
+
+        def pull_request_approval(number:, expected_head:, review_id:)
+          raise ProviderUnsupportedCapabilityError, "Formal approval evidence is unsupported by #{self.class}"
+        end
+
         # Create a top-level PR comment. `correlation` is a stable session key
         # embedded in the body so a retry can find exactly one prior send.
         # A possible post-send transport failure raises ProviderUnknownOutcomeError.

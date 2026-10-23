@@ -212,3 +212,13 @@ ace-review-feedback skip abc123 --reason "Design: intentional choice"
 ace-review --help
 ace-review-feedback --help
 ```
+
+
+Formal approval is a separate reviewer-owned operation after an accepted
+independent review and required executed checks: `ace-git pr approve PR
+--expected-head SHA --body-file REVIEW_REPORT --correlation REVIEW_ID --server
+SERVER --format json`. `--post-comment` still posts only a comment. Keep the
+verified approval receipt with the existing review artifacts; integrators read
+current evidence through `ace-git pr approval`, without publishing approval on
+the reviewer's behalf. Missing rights/capability or unknown outcomes block the
+integration handoff and require reconciliation through the configured account.

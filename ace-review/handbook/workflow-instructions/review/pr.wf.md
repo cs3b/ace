@@ -63,3 +63,21 @@ records each finished round with the deterministic 3/2/10 counter tooling
 That role workflow is the authority for role handoff and round-limit
 enforcement; this document stays the authority for running the review rounds
 themselves. Do not duplicate or re-implement the counters here.
+
+
+## Formal provider approval (reviewer-owned)
+
+After the accepted independent review and executed tests cover the current full
+head, a commissioned reviewer publishes the accepted report using
+`ace-git pr approve PR --expected-head SHA --body-file REVIEW_REPORT
+--correlation REVIEW_ID --server SERVER --format json` (or the retained
+`--default-server`). Preserve the returned effective approval receipt in the
+existing review/task/assignment artifacts. `--post-comment`, a description edit
+and `ace-git pr ready` remain separate operations and cannot substitute for a
+formal approval. Own-PR approval is refused; role instructions never grant
+provider credentials. Missing rights/capability and uncertain publication block
+a successful integration handoff. Reconcile the same target-scoped correlation
+after a lost response; do not blindly repeat a mutation or switch identities.
+The integrator consumes current evidence through read-only `ace-git pr approval`
+and the existing integration gate; it never publishes approval in place of the
+independent reviewer. Review-round and authorization rules above still apply.

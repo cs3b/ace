@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "json"
+require "ace/git/providers/formal_approval"
 require "uri"
 require "ace/git/atoms/server_url"
 require_relative "cli_executor"
@@ -338,6 +339,14 @@ module Ace
           Base64.strict_decode64(data["content"].delete("\n"))
         rescue ArgumentError => e
           raise Ace::Git::ProviderMalformedOutputError, "Malformed Forgejo repository file content: #{e.message}"
+        end
+
+        def approve_pull_request(number:, expected_head:, body:, correlation:)
+          formal_approval.approve(number: number, expected_head: expected_head, body: body, correlation: correlation)
+        end
+
+        def pull_request_approval(number:, expected_head:, review_id:)
+          formal_approval.read(number: number, expected_head: expected_head, review_id: review_id)
         end
 
         def create_pull_request_comment(number:, expected_head:, body:, correlation:)
@@ -912,6 +921,20 @@ module Ace
 
           raise Ace::Git::ProviderUnsupportedCapabilityError,
             "Cannot post review comment to PR ##{pr.number} in #{pr.state} state"
+        end
+
+        def formal_approval
+          pr_api.ensure_version_supported!
+          request = lambda do |method, path, payload|
+            path = "/api/v1/user" if path == :actor
+            if path.to_s.end_with?("/submit")
+              path = path.delete_suffix("/submit")
+              payload = payload.merge("event" => "APPROVED")
+            end
+            review_http.request(method, path, body: payload)
+          end
+          Ace::Git::Providers::FormalApproval.new(provider: self, request: request,
+            list: ->(path) { review_http.paginate(path) }, official: true)
         end
 
         def review_http

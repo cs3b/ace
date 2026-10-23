@@ -93,7 +93,21 @@ the exact candidate head. Otherwise WITHHOLD the merge and report/escalate.
      invalidates the review: the gate reports a stale review even when the
      verdict says accept.
 
-4. **Merge only a ready candidate.**
+4. **Consume formal approval, then merge only a ready candidate.**
+   - For PR integration, read the reviewer's receipt from the existing report
+     and verify current provider evidence without minting another approval:
+     `ace-git pr approval PR --expected-head SHA --review-id REVIEW_ID
+     --server SERVER --format json` (or the retained `--default-server`). Here
+     REVIEW_ID is the numeric provider review ID, not the publication correlation.
+   - Require effective `approved` evidence and compare repository, PR, full head,
+     reviewer identity, correlation and evidence SHA256 with the accepted
+     reviewer report/receipt. The authenticated reviewer must differ from the
+     PR author. A stale/dismissed/nonofficial review, comment, unavailable
+     evidence or missing account permissions withholds integration. Return to
+     the reviewer/overseer; do not issue approval on the reviewer's behalf,
+     copy their token or bypass branch protection. This read does not replace
+     the dependency/test/current-head gate or authorize a merge by itself.
+
    - Verdict `ready`: perform the project-defined integration with the
      existing tools (`git` / `ace-git`, scoped to the commissioned paths;
      never force-push; fetch first and resolve conflicts explicitly).

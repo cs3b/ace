@@ -142,6 +142,21 @@ module Ace
           )
         end
 
+        def approve(identifier, expected_head:, body_file:, correlation:)
+          body = load_body(body_file, limit: 64 * 1024 + 1)
+          reference = parse_identifier(identifier)
+          provider = provider_for(resolve_server_for(reference))
+          provider.approve_pull_request(number: reference.number, expected_head: expected_head,
+            body: body, correlation: correlation)
+        end
+
+        def approval(identifier, expected_head:, review_id:)
+          reference = parse_identifier(identifier)
+          provider = provider_for(resolve_server_for(reference))
+          provider.pull_request_approval(number: reference.number, expected_head: expected_head,
+            review_id: review_id)
+        end
+
         def post_review_comment(identifier, expected_head:, body:, correlation:)
           reference = parse_identifier(identifier)
           provider = provider_for(resolve_server_for(reference))
@@ -344,11 +359,11 @@ module Ace
           Ace::Git::Providers.for(server, timeout: @timeout, runner: @runner)
         end
 
-        def load_body(path)
+        def load_body(path, limit: nil)
           raise ArgumentError, "--body-file is required" unless path
           raise ArgumentError, "Body file not found: #{path}" unless File.file?(path)
 
-          File.read(path)
+          File.read(path, limit)
         rescue SystemCallError => e
           raise ArgumentError, "Cannot read body file #{path}: #{e.message}"
         end

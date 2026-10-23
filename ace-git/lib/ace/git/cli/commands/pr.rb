@@ -204,6 +204,38 @@ module Ace
             end
           end
 
+          class Approve < BaseCommand
+            desc "Publish a formal approval under the configured reviewer identity"
+            argument :identifier, required: true, desc: "PR number, owner/repo#number, or URL"
+            option :expected_head, type: :string, required: true, desc: "Exact accepted head SHA"
+            option :body_file, type: :string, required: true, desc: "Accepted review report file"
+            option :correlation, type: :string, required: true, desc: "Stable approval publication identity"
+
+            def call(identifier:, expected_head:, body_file:, correlation:, **options)
+              result = lifecycle(options).approve(identifier, expected_head: expected_head,
+                body_file: body_file, correlation: correlation)
+              render_evidence(options, header: "Formal approval confirmed", **result.to_h)
+            rescue Ace::Git::Error, ArgumentError => e
+              render_failure(options, e)
+              raise Ace::Support::Cli::Error.new(e.message)
+            end
+          end
+
+          class Approval < BaseCommand
+            desc "Read and verify an effective exact-head approval without mutation"
+            argument :identifier, required: true, desc: "PR number, owner/repo#number, or URL"
+            option :expected_head, type: :string, required: true, desc: "Exact accepted head SHA"
+            option :review_id, type: :integer, required: true, desc: "Review ID from the approval receipt"
+
+            def call(identifier:, expected_head:, review_id:, **options)
+              result = lifecycle(options).approval(identifier, expected_head: expected_head, review_id: review_id)
+              render_evidence(options, header: "Formal approval verified", **result.to_h)
+            rescue Ace::Git::Error, ArgumentError => e
+              render_failure(options, e)
+              raise Ace::Support::Cli::Error.new(e.message)
+            end
+          end
+
           # `ace-git pr merge ID --expected-head SHA --method squash|merge|rebase`
           class Merge < BaseCommand
             desc "Merge with provider-side expected-head enforcement; no default method"

@@ -1,6 +1,6 @@
 ---
 id: 8xg.t.sbz.4.4
-status: pending
+status: in-progress
 priority: medium
 created_at: "2026-10-17 18:54:18"
 estimate: medium
@@ -121,7 +121,8 @@ wycofanie review i zarządzanie branch protection pozostają poza tym wycinkiem.
    odczytać formalne review u jego właściciela. Nie kopiować credentiali ani
    prywatnej konfiguracji do wyniku. Raport i wynik przechowywać w istniejących
    artefaktach review/assignmentu; nie budować nowego journala ani magazynu prawdy.
-5. Jedna correlation oznacza ten sam repo/PR/head/aktor/raport. Ponowienie
+5. Correlation ma namespace wybranego providera/serwera/repozytorium/PR.
+   W tym zakresie jedna correlation oznacza ten sam head/aktor/raport. Ponowienie
    uzgadnia dokładnie pasujące istniejące approval albo oczekujące review;
    zmieniony raport/head/aktor pod tym ID i wiele pasujących review odmawiają.
    Równoległe wywołania tej samej publikacji nie tworzą dwóch approval.
@@ -216,3 +217,17 @@ wykonano, następnie `ace-task update` promował istniejący task do `pending`,
 To akceptacja specyfikacji, nie implementacji ani rzeczywistych publicznych
 approval/merge. Nowe checkboxy pozostają otwarte; historia starego zakresu
 zachowana. Wdrożenie tożsamości i dowody dostępu kont pozostają w `gad.b`.
+
+
+### Doprecyzowanie wykonawcze — 2026-10-23
+
+Integrator odczytuje aktualny formalny approval przez neutralny, niemutujący
+`ace-git pr approval PR --expected-head SHA --review-id NUMERIC_ID --server SERVER
+--format json`; porównuje zweryfikowany receipt z raportem reviewera. Correlation
+ma zakres wybranego providera/serwera/repo/PR, zgodnie z potwierdzeniem main
+reviewera; nie zakładać globalnego rejestru correlation ani przeszukiwania obcych PR.
+Lokalna blokada serializuje publikację tej samej tożsamości wykonawczej; API może
+ukrywać pending innego konta. Nie deklarować globalnej unikalności ukrytych review
+lub między hostami, której provider nie pozwala zaobserwować. Ten limit trzeba
+zachować w raporcie odbioru; brak możliwości potwierdzenia właściwej tożsamości
+lub efektywnego approval nadal oznacza odmowę, nie pozorny sukces.

@@ -330,3 +330,40 @@ Configure servers in `.ace/git/config.yml` under `git.servers`, then
 resolve them by name, by default, or from a git remote URL. Every failure path is
 classified (missing CLI, unauthenticated, unreachable, malformed output, object
 not found) with no silent fallbacks.
+
+
+### Formal provider approval
+
+```sh
+ace-git pr approve 25 --expected-head FULL_SHA --body-file accepted-review.md --correlation review-123 --server forge --format json
+ace-git pr approval 25 --expected-head FULL_SHA --review-id 99 --server forge --format json
+```
+
+`approve` publishes an already accepted independent review under the configured
+provider identity; it does not invoke a model or decide the review verdict. The
+UTF-8 report must be nonempty, contain no reserved approval marker, and fit in
+64KiB. The PR must be open, ready and at the full lowercase expected SHA; its
+author cannot approve it. GitHub and Forgejo return a verified effective formal
+approval, including exact repository/PR/head, reviewer ID/login, review ID/URL,
+evidence SHA256, correlation, and `created|existing`. Forgejo additionally checks
+official review status. A comment or `pr ready` is a separate operation.
+
+`approval` is read-only and verifies the current effective approval identified by
+the numeric provider review ID. Integrators compare its receipt with the accepted
+reviewer artifact; they do not mint a substitute review. Existing server selection
+and JSON error categories apply. Role instructions confer no provider permission;
+credentials remain with the deployment-configured account.
+
+Correlation is scoped to the selected provider/server/repository/PR. Reusing it
+with changed visible evidence conflicts. A same-account local flock serializes
+concurrent publication; this is not a distributed uniqueness service. Provider
+visibility may hide another account's pending reviews, and separate hosts do not
+share this lock. No success is inferred for invisible evidence. Save the receipt
+in the existing review/assignment artifacts; there is no new journal.
+
+After an unknown create/submit outcome, explicitly resume the same publication
+to reconcile provider state first. Mutations are never automatically retried.
+Changed head, stale/dismissed/nonofficial approval, unavailable evidence or
+unsupported capability withholds success rather than using a comment, another
+identity, or weaker branch protection. Actual provider/account acceptance remains
+a separate deployment proof from deterministic package tests.

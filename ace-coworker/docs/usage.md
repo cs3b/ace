@@ -562,3 +562,14 @@ would-be outcome.
 - Reporting via `ace-hitl` and resume-after-interruption ship with
   `ace-coworker` 0.4.0+; role presets resolve their `wfi://` instruction
   sources through `ace-nav` (runtime dependency since 0.5.0).
+
+
+For commissioned PR work the reviewer publishes formal approval only after the
+accepted review-round verdict and executed tests, using `ace-git pr approve`.
+Its receipt stays with the existing report. The integrator verifies that receipt
+against read-only `ace-git pr approval` and the current candidate before the
+existing integration gate. A comment, local verdict or draft-ready transition
+does not substitute for provider approval. Accounts and credentials come from
+deployment, independently of the role preset; no identity switching or token
+borrowing is performed by coworker. Missing permission or uncertain publication
+blocks successful integration handoff.

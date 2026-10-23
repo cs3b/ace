@@ -43,3 +43,16 @@ niepewna mutacja wymaga uzgodnienia przed kontynuacją. Nie ma root fallbacku,
 przekazania tokenów ani nowej usługi. Konkretne mapowanie kont jest wdrożeniowym
 zakresem lab-config `gad.b`. Normatywny kontrakt i odbiór obu providerów:
 [specyfikacja](../8xg.t.sbz.4.4-ujednolici-workflow-review-i-obs-ug-forge.s.md).
+
+
+Integrator odczytuje, bez mutacji:
+
+```sh
+ace-git pr approval PR --expected-head SHA --review-id NUMERIC_PROVIDER_REVIEW_ID --server SERVER --format json
+```
+
+Porównuje repo/PR/head, aktora, correlation i digest raportu z przyjętym
+artefaktem reviewera. Correlation jest namespacowana przez wybrany
+provider/serwer/repo/PR. Lokalna blokada nie gwarantuje widoczności pending
+innych kont ani unikalności między hostami. Wynik źródłowych testów nie jest
+odbiórem publicznego PR ani wdrożonych kont — te dowody pozostają otwarte.

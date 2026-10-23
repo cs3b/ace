@@ -162,7 +162,27 @@ product decision is escalated to the overseer instead.
      outcome from the ace-assign verdict and refuses a forced success on an
      incomplete assignment - the tool floor, not a courtesy.
 
-8. **Record and hand off.**
+8. **Publish formal approval, then hand off.**
+   - For a commissioned PR review, only AFTER the review-round verdict is
+     `accept`, required executed tests pass, and the accepted report binds the
+     current full head, publish through the configured reviewer account:
+     `ace-git pr approve PR --expected-head SHA --body-file REVIEW_REPORT
+     --correlation REVIEW_ID --server SERVER --format json` (or the retained
+     `--default-server` selection). Keep the report and returned receipt in the
+     existing task/review/assignment artifacts. Use one stable REVIEW_ID for
+     this repository/PR publication; changed report/head needs a new publication.
+   - A comment, local acceptance or `pr ready` is not formal approval. Confirm
+     the receipt's exact repo/PR/head/reviewer/evidence digest and effective
+     approval. Missing permission, unsupported capability or unknown outcome
+     blocks successful integration handoff; report the concrete cause via the
+     existing HITL/report path. Resume by reconciling the same publication,
+     never blindly repeating a POST or switching credentials.
+   - Reviewer purpose and provider permissions are independent: deployment
+     selects the OS/provider identity. Never borrow worker/admin credentials;
+     the PR author cannot approve their own PR. Local-only reviews have no
+     remote approval to publish and must not claim one.
+
+8a. **Record and hand off.**
    - `ace-coworker report` writes the durable record
      (`<task>/coworker/<assignment>.md`) and delivers the HITL report.
    - The final report names: the exact candidate head, executed checks,

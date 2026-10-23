@@ -53,7 +53,7 @@ module Ace
         ["diff", "Show filtered git diff output"],
         ["status", "Show repository status and PR context"],
         ["branch", "Show current branch information"],
-        ["pr", "Forge-neutral pull request lifecycle: show, create, update, ready, merge"],
+        ["pr", "Forge-neutral pull request lifecycle: show, create, update, ready, approve, approval, merge"],
         ["service merge", "Fixed receiver-owned exact-head merge envelope"],
         ["service create", "Fixed receiver-owned draft PR creation"],
         ["service update", "Fixed receiver-owned draft PR update"],
@@ -74,6 +74,8 @@ module Ace
       register "pr create", Commands::Pr::Create.new
       register "pr update", Commands::Pr::Update.new
       register "pr ready", Commands::Pr::Ready.new
+      register "pr approve", Commands::Pr::Approve.new
+      register "pr approval", Commands::Pr::Approval.new
       register "pr merge", Commands::Pr::Merge.new
       register "service merge", Commands::ServiceMerge.new
       %w[create update ready].each do |operation|

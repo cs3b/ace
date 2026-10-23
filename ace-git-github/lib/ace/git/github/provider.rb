@@ -3,6 +3,7 @@
 require "digest"
 require "open3"
 require "json"
+require "ace/git/providers/formal_approval"
 require "uri"
 
 module Ace
@@ -510,6 +511,14 @@ end
           raise Ace::Git::ProviderMalformedOutputError, "Malformed GitHub repository file content: #{e.message}"
         end
 
+        def approve_pull_request(number:, expected_head:, body:, correlation:)
+          formal_approval.approve(number: number, expected_head: expected_head, body: body, correlation: correlation)
+        end
+
+        def pull_request_approval(number:, expected_head:, review_id:)
+          formal_approval.read(number: number, expected_head: expected_head, review_id: review_id)
+        end
+
         def create_pull_request_comment(number:, expected_head:, body:, correlation:)
           pr = verify_expected_head!(pull_request(number: number), expected_head)
           require_open_pr!(pr)
@@ -894,6 +903,20 @@ end
           )
         end
 
+        def formal_approval
+          request = lambda do |method, path, payload|
+            if path == :actor
+              gh_api("user", global: true)
+            else
+              # GitHub calls pending review submission an events endpoint.
+              path = path.sub(%r{/submit\z}, "/events")
+              gh_api(path, method: method, payload: payload)
+            end
+          end
+          Ace::Git::Providers::FormalApproval.new(provider: self, request: request,
+            list: ->(path) { gh_api_pages(path) })
+        end
+
         def gh_api_pages(suffix)
           data = gh_api(suffix, paginate: true)
           pages = data.is_a?(Array) ? data : nil
@@ -903,13 +926,13 @@ end
           pages.flatten(1)
         end
 
-        def gh_api(suffix, method: :get, body: nil, paginate: false)
+        def gh_api(suffix, method: :get, body: nil, paginate: false, payload: nil, global: false)
           target = Ace::Git::Atoms::ServerUrl.normalize(server.url)
           host, repository = target.split("/", 2)
           unless repository&.match?(%r{\A[^/]+/[^/]+\z})
             raise Ace::Git::ConfigError, "Invalid selected GitHub repository #{server.url}"
           end
-          args = ["repos/#{repository}/#{suffix}", "--hostname", host]
+          args = [global ? suffix : "repos/#{repository}/#{suffix}", "--hostname", host]
           args += ["--paginate", "--slurp"] if paginate
           stdin = nil
           if %i[post patch].include?(method)
@@ -917,7 +940,7 @@ end
             # command argument: argv leaks into process listings and
             # timeout errors, and huge review bodies exceed arg limits.
             args += ["-X", method.to_s.upcase, "--input", "-"]
-            stdin = JSON.generate(body: body)
+            stdin = JSON.generate(payload || {body: body})
           end
           result = CliExecutor.execute("api", args, timeout: timeout, runner: runner, stdin: stdin)
           classify_failure(result[:stderr], context: "api #{suffix}") unless result[:success]

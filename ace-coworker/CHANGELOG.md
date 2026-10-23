@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Formal reviewer-owned, exact-head provider approval and read-only approval verification through the forge-neutral review flow; comments do not substitute for approval.
+
+
 ## [0.6.1] - 2026-10-20
 
 ### Fixed

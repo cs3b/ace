@@ -48,6 +48,13 @@ module Ace
       :idempotency
     )
 
+    # Effective formal review, verified against the current provider state.
+    ProviderApprovalReceipt = Data.define(
+      :provider, :server_name, :repository_url, :pr_number, :pr_url, :head_sha,
+      :reviewer_id, :reviewer, :review_id, :review_url, :state, :effective, :official,
+      :correlation, :evidence_sha256, :idempotency
+    )
+
     # Normalized repository evidence.
     ProviderRepository = Data.define(:server_name, :full_name, :default_branch, :url)
 
