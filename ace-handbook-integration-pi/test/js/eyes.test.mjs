@@ -103,3 +103,11 @@ it("cancelling an in-flight deadline releases coalesced actual events", async()=
   f.rows=[event()];await f.eyes.tick();f.eyes.cancelDeadline("review");await f.eyes.tick();
   assert.equal(f.sends.length,2);assert.equal(f.sends[1][0][0],event().key);
 });
+
+it("unconfirmed host delivery persists a breaker across restart without automatic retry",async()=>{
+  const f=fixture();f.rows=[event()];f.eyes.deliveryStatus=()=>"uncertain";
+  await f.eyes.tick();await f.eyes.tick();assert.equal(f.saved.breaker.reason,"notification-unconfirmed");
+  f.eyes=f.build();for(let i=0;i<10;i++)await f.eyes.tick();
+  assert.equal(f.sends.length,1);assert.equal(Object.keys(f.saved.pending).length,1);
+  await f.eyes.resume();assert.equal(f.sends.length,2,"only explicit owner resume can retry after reconciliation");
+});

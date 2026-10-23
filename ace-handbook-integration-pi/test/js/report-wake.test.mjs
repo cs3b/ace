@@ -101,7 +101,7 @@ describe("report wake (L7.3 continuation transport)", () => {
     const { host, session } = await overseerSession();
 
     reportArrives(host, 2);
-    session.settle();
+    await session.settle();
 
     // A genuinely new report after the run settled wakes the SAME session
     // once more; there is still only one overseer execution channel.
@@ -181,7 +181,7 @@ describe("report wake (L7.3 continuation transport)", () => {
       `the now-existing inbox must be watched directly, got ${host.watcherPaths()}`);
     assert.ok(!host.watcherPaths().includes("/fake/wt/task-9/.ace-local"),
       "the ancestor watch must be closed once the real target exists");
-    session.settle();
+    await session.settle();
 
     // Second report INTO the now-existing inbox: Linux inotify is
     // non-recursive, so only a direct watch on the inbox directory can

@@ -21,7 +21,7 @@ export async function observeHitl(cwd, config) {
 
 export function registerEyes(pi, { retireLegacy, observe = observeHitl, now = Date.now,
   schedule = (fn, ms) => setInterval(fn, ms), cancel = clearInterval } = {}) {
-  let eyes, timer;
+  let eyes, timer, attempt, compacting = false, running = false;
   const stopTimer = () => { if (timer !== undefined) cancel(timer); timer = undefined; };
   function arm() {
     stopTimer();
@@ -31,7 +31,7 @@ export function registerEyes(pi, { retireLegacy, observe = observeHitl, now = Da
     }
   }
   const bind = (ctx) => {
-    stopTimer(); eyes?.dispose();
+    stopTimer(); eyes?.dispose(); attempt = undefined; compacting = false; running = false;
     const entries = ctx.sessionManager.getBranch();
     const snapshot = [...entries].reverse().find((e) => e.type === "custom" && e.customType === EYES_ENTRY)?.data;
     if (snapshot?.enabled || snapshot?.retired) retireLegacy?.();
@@ -48,13 +48,26 @@ export function registerEyes(pi, { retireLegacy, observe = observeHitl, now = Da
         if (state.breaker || state.retired) stopTimer();
       },
       observe: (config) => observe(ctx.cwd, config),
+      canDeliver: () => !compacting && (ctx.isIdle() || running),
+      deliveryStatus: () => {
+        if (attempt?.accepted) return "accepted";
+        // sendUserMessage is a void wrapper. Busy/queued is uncertain, not
+        // acceptance or rejection. Idle without confirmation is uncertain:
+        // async input/auth preflight may still be running, so never blind-retry.
+        return compacting || !ctx.isIdle() || ctx.hasPendingMessages() ? "waiting" : "uncertain";
+      },
       deliver: async (batch) => {
         if (!ctx.model) return false;
-        const accepted = await pi.sendUserMessage(`[ace-eyes] Pending canonical HITL/deadline revisions: ${JSON.stringify(batch)}. ` +
+        const text = `[ace-eyes] Pending canonical HITL/deadline revisions: ${JSON.stringify(batch)}. ` +
           "Read original events; adopt reports through ace-overseer process-reports and existing task/assignment gates. " +
           "Reconcile uncertain effects; never repeat external actions on wake alone. After handling each exact revision, " +
-          "acknowledge with the ace_eyes tool (action ack, key, revision). Settlement alone is not acknowledgement.", { deliverAs: "followUp" });
-        return accepted !== false;
+          "acknowledge with the ace_eyes tool (action ack, key, revision). Settlement alone is not acknowledgement.";
+        attempt = { text, accepted: false };
+        const result = pi.sendUserMessage(text, { deliverAs: "followUp" });
+        // Some hosts expose a promise, the standard ExtensionAPI exposes void.
+        // Neither completion nor void is proof of message consumption.
+        if (result?.then) await result;
+        return result !== false;
       } });
     if (eyes.s.enabled || eyes.s.retired) retireLegacy?.();
     arm();
@@ -62,7 +75,17 @@ export function registerEyes(pi, { retireLegacy, observe = observeHitl, now = Da
   };
   pi.on("session_start", async (_event, ctx) => bind(ctx));
   pi.on("session_tree", async (_event, ctx) => bind(ctx));
-  pi.on("session_compact", async () => { eyes?.persist(); });
+  pi.on("agent_start", async () => { running = true; });
+  pi.on("agent_settled", async () => { running = false; });
+  pi.on("message_start", async (event) => {
+    if (event.message?.role !== "user" || !attempt) return;
+    const text = typeof event.message.content === "string" ? event.message.content :
+      (event.message.content || []).filter(part => part.type === "text").map(part => part.text).join("");
+    if (text === attempt.text) attempt.accepted = true;
+  });
+  pi.on("session_before_compact", async (event) => { if (event.reason === "manual") compacting = true; });
+  pi.on("session_compact", async () => { compacting = false; eyes?.persist(); });
+  pi.on("session_compact_failed", async () => { compacting = false; });
   pi.on("session_shutdown", async () => { stopTimer(); eyes?.dispose(); });
   pi.on("message_end", async (event) => {
     const message = event.message;

@@ -22,7 +22,7 @@ export function validateConfig(input) {
 /** Observation/delivery bookkeeping in the existing Pi session, not a work
  * queue. It never starts tasks or accepts reports on behalf of their owner. */
 export class Eyes {
-  constructor({ snapshot, save, observe, deliver, now = Date.now, status = () => {} }) {
+  constructor({ snapshot, save, observe, deliver, now = Date.now, status = () => {}, deliveryStatus = () => "accepted", canDeliver = () => true }) {
     this.s = structuredClone(snapshot || { enabled: false, retired: false, config: defaults,
       pending: {}, acknowledged: {}, deadlines: {}, breaker: null, errors: 0, window: null });
     this.s.config = validateConfig(this.s.config);
@@ -31,6 +31,7 @@ export class Eyes {
     if (typeof this.s.enabled !== "boolean" || typeof this.s.retired !== "boolean" ||
         !Number.isInteger(this.s.errors) || this.s.errors < 0) throw new Error("Invalid persisted eyes state");
     this.save = save; this.observe = observe; this.deliver = deliver; this.now = now; this.status = status;
+    this.deliveryStatus = deliveryStatus; this.canDeliver = canDeliver;
     this.busy = false; this.disposed = false;
     // A process restart does not imply receipt acknowledgement. Reconcile the
     // same pending revisions; business-effect idempotence remains with .5.4.
@@ -126,7 +127,10 @@ export class Eyes {
         this.block("retention-budget"); return;
       }
       this.persist();
-      if (!this.inflight && !this.s.breaker && Object.keys(this.s.pending).length) {
+      if (this.inflight && this.deliveryStatus() === "uncertain") {
+        this.block("notification-unconfirmed"); return;
+      }
+      if (!this.inflight && !this.s.breaker && Object.keys(this.s.pending).length && this.canDeliver()) {
         // Retain identities before attempting delivery. A rejected send leaves
         // pending intact; acceptance by Pi is not application acknowledgement.
         if ((this.s.window.wakes || 0) >= this.s.config.maxWakesPerHour) { this.block("wake-budget"); return; }
@@ -137,7 +141,7 @@ export class Eyes {
         if (this.inflight) this.sent = new Map(batch.map(([key, value]) => [key, value.revision]));
         if (!this.inflight) throw new Error("wake delivery refused");
       }
-      if (this.s.errors) { this.s.errors = 0; this.persist(); }
+      if (this.s.errors && (!this.inflight || this.deliveryStatus() === "accepted")) { this.s.errors = 0; this.persist(); }
     } catch {
       this.s.errors++; this.persist();
       if (this.s.errors >= this.s.config.maxErrors) this.block("observation-or-delivery-failure");

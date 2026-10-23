@@ -163,3 +163,15 @@ restarting itself (including after reload). Other sessions are untouched. No
 watchdog revives dead processes. Published installation, real Telegram delivery,
 and a live 24-hour no-change window remain separate acceptance checks; the source
 suite uses an accelerated clock and real temporary native transport files.
+
+Pi's `sendUserMessage` wrapper returns no asynchronous acceptance receipt. Eyes
+therefore defers during compaction, tracks matching user `message_start` as host
+acceptance, and retains uncertain busy/queued follow-ups without duplicating them.
+A returned void value or agent settlement is never acknowledgement. If the host
+becomes idle with no queued message but the attempted notification was not seen,
+Eyes opens `notification-unconfirmed` and preserves pending. This may represent a
+rejected prompt or a still-delayed input/auth preflight; it must not be blindly
+retried. Reconcile actual session messages/preflight first, then explicitly resume
+only when another attempt is safe. Compaction before submission simply defers to
+the next bounded observation once the host can accept, without consuming a wake
+attempt or invoking a model.

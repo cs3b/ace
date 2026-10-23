@@ -84,7 +84,7 @@ function streamHandler(script) {
  * extension from the project `.pi/extensions/` directory on its own — the
  * installed behavior a real `pi` session relies on.
  */
-async function startWakeSession({ script = [], extraFactories = [], extraTools = [], autoDiscover = false } = {}) {
+async function startWakeSession({ script = [], extraFactories = [], extraTools = [], autoDiscover = false, loadProjected = true } = {}) {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "wake-accept-"));
   const cwd = path.join(tmp, "project");
   const agentDir = path.join(tmp, "agent");
@@ -116,7 +116,7 @@ async function startWakeSession({ script = [], extraFactories = [], extraTools =
   const resourceLoader = new DefaultResourceLoader({
     cwd,
     agentDir,
-    additionalExtensionPaths: autoDiscover ? [] : [EXT_PATH],
+    additionalExtensionPaths: autoDiscover || !loadProjected ? [] : [EXT_PATH],
     extensionFactories: [...extraFactories],
   });
   await resourceLoader.reload();
@@ -188,6 +188,101 @@ function lastWakeMessage(session) {
 }
 
 describe("ace-wake installed acceptance", { timeout: 90_000 }, () => {
+  it("recovers the exact async compaction rejection without stranding or duplicate delivery", async () => {
+    const { registerEyes } = await import(pathToFileURL(path.join(path.dirname(EXT_PATH), "wake/eyes-runtime.js")).href);
+    let tick, rows=[];
+    const {session,cwd,cleanup}=await startWakeSession({loadProjected:false,extraFactories:[pi=>registerEyes(pi,{
+      observe:async()=>({schema:"ace.hitl.observation/v1",events:rows}),schedule:fn=>{tick=fn;return 1;},cancel:()=>{}
+    })]});
+    const flush=()=>new Promise(resolve=>setImmediate(resolve));
+    try {
+      fs.writeFileSync(path.join(cwd,"eyes.json"),"{}");await session.prompt("/eyes start eyes.json");
+      session._compactionAbortController=new AbortController();
+      rows=[{key:"a".repeat(64),revision:"b".repeat(64),id:"event1"}];tick();await flush();
+      assert.equal(userTextsOf(session).filter(text=>text.includes("[ace-eyes]")).length,0);
+      session._compactionAbortController=undefined;
+      for(let i=0;i<6;i++){tick();await flush();}
+      await waitFor(()=>session.isIdle);
+      const state=session.sessionManager.getBranch().filter(e=>e.customType==="ace-wake-eyes").at(-1).data;
+      assert.equal(userTextsOf(session).filter(text=>text.includes("[ace-eyes]")).length,1);
+      assert.equal(state.window.wakes,1,"defer during compaction, then one actually accepted notification");
+      assert.equal(Object.keys(state.pending).length,1,"notification acceptance is not business acknowledgement");
+      assert.equal(state.breaker,null);
+    } finally {session._compactionAbortController=undefined;cleanup();}
+  });
+
+  it("preserves uncertain async interception behind a breaker until explicit owner reconciliation", async () => {
+    const { registerEyes } = await import(pathToFileURL(path.join(path.dirname(EXT_PATH), "wake/eyes-runtime.js")).href);
+    let tick, rows=[],reject=true;
+    const {session,cwd,cleanup}=await startWakeSession({loadProjected:false,extraFactories:[pi=>{
+      registerEyes(pi,{observe:async()=>({schema:"ace.hitl.observation/v1",events:rows}),schedule:fn=>{tick=fn;return 1;},cancel:()=>{}});
+      pi.on("input",async event=>{if(reject&&event.text.includes("[ace-eyes]")){await Promise.resolve();return {action:"handled"};}});
+      pi.registerCommand("eyes-test-reload",{handler:async(_args,ctx)=>ctx.reload()});
+    }]});
+    const flush=()=>new Promise(resolve=>setImmediate(resolve));
+    try {
+      fs.writeFileSync(path.join(cwd,"eyes.json"),"{}");await session.prompt("/eyes start eyes.json");
+      rows=[{key:"a".repeat(64),revision:"b".repeat(64),id:"event1"}];
+      for(let i=0;i<10;i++){tick();await flush();}
+      let state=session.sessionManager.getBranch().filter(e=>e.customType==="ace-wake-eyes").at(-1).data;
+      assert.equal(userTextsOf(session).filter(text=>text.includes("[ace-eyes]")).length,0);
+      assert.equal(state.window.wakes,1);assert.equal(state.breaker.reason,"notification-unconfirmed");
+      await session.prompt("/eyes-test-reload");await flush();
+      state=session.sessionManager.getBranch().filter(e=>e.customType==="ace-wake-eyes").at(-1).data;
+      assert.equal(state.breaker.reason,"notification-unconfirmed","reload must preserve the uncertain-delivery breaker");
+      assert.equal(Object.keys(state.pending).length,1);
+      reject=false;await session.prompt("/eyes resume quota-verified");await flush();
+      for(let i=0;i<3;i++){tick();await flush();}
+      assert.equal(userTextsOf(session).filter(text=>text.includes("[ace-eyes]")).length,1);
+      state=session.sessionManager.getBranch().filter(e=>e.customType==="ace-wake-eyes").at(-1).data;
+      assert.equal(Object.keys(state.pending).length,1);assert.equal(state.breaker,null);
+    }finally{cleanup();}
+  });
+
+  it("never retries a delayed asynchronous input preflight even while the SDK reports idle", async () => {
+    const { registerEyes } = await import(pathToFileURL(path.join(path.dirname(EXT_PATH), "wake/eyes-runtime.js")).href);
+    let tick,rows=[],release;
+    const gate=new Promise(resolve=>{release=resolve;});
+    const {session,cwd,cleanup}=await startWakeSession({loadProjected:false,extraFactories:[pi=>{
+      pi.on("input",async event=>{if(event.text.includes("[ace-eyes]")) await gate;});
+      registerEyes(pi,{observe:async()=>({schema:"ace.hitl.observation/v1",events:rows}),schedule:fn=>{tick=fn;return 1;},cancel:()=>{}});
+    }]});
+    const flush=()=>new Promise(resolve=>setImmediate(resolve));
+    try {
+      fs.writeFileSync(path.join(cwd,"eyes.json"),"{}");await session.prompt("/eyes start eyes.json");
+      rows=[{key:"a".repeat(64),revision:"b".repeat(64),id:"event1"}];
+      for(let i=0;i<8;i++){tick();await flush();}
+      const state=session.sessionManager.getBranch().filter(e=>e.customType==="ace-wake-eyes").at(-1).data;
+      assert.equal(state.window.wakes,1);assert.equal(state.breaker.reason,"notification-unconfirmed");
+      release();await flush();await waitFor(()=>session.isIdle);
+      assert.equal(userTextsOf(session).filter(text=>text.includes("[ace-eyes]")).length,1,"the delayed accepted original must not acquire duplicates");
+    }finally{release();cleanup();}
+  });
+
+  it("retains one uncertain busy follow-up until the actual host consumes it", async () => {
+    const { registerEyes } = await import(pathToFileURL(path.join(path.dirname(EXT_PATH), "wake/eyes-runtime.js")).href);
+    let tick,rows=[],release,entered=false;
+    const gate=new Promise(resolve=>{release=resolve;});
+    const block={name:"block",label:"Block",description:"Scripted blocking tool",parameters:Type.Object({}),execute:async()=>{
+      entered=true;await gate;return {content:[{type:"text",text:"released"}],details:{}};
+    }};
+    const {session,cwd,cleanup}=await startWakeSession({loadProjected:false,script:[{kind:"tool",toolName:"block"}],extraTools:[block],extraFactories:[pi=>registerEyes(pi,{
+      observe:async()=>({schema:"ace.hitl.observation/v1",events:rows}),schedule:fn=>{tick=fn;return 1;},cancel:()=>{}
+    })]});
+    const flush=()=>new Promise(resolve=>setImmediate(resolve));
+    try {
+      fs.writeFileSync(path.join(cwd,"eyes.json"),"{}");await session.prompt("/eyes start eyes.json");
+      const running=session.prompt("Run the scripted blocking tool");await waitFor(()=>entered);
+      rows=[{key:"a".repeat(64),revision:"b".repeat(64),id:"event1"}];
+      for(let i=0;i<4;i++){tick();await flush();}
+      let state=session.sessionManager.getBranch().filter(e=>e.customType==="ace-wake-eyes").at(-1).data;
+      assert.equal(state.window.wakes,1,"queued follow-up must never be retried while host busy");
+      release();await running;await waitFor(()=>session.isIdle);
+      for(let i=0;i<3;i++){tick();await flush();}
+      assert.equal(userTextsOf(session).filter(text=>text.includes("[ace-eyes]")).length,1);
+    }finally{release();cleanup();}
+  });
+
   it("registers the eyes acknowledgement tool with the real SDK schema validator", async () => {
     const { session, cleanup } = await startWakeSession({script:[
       {kind:"tool",toolName:"ace_eyes",arguments:{action:"status"}},

@@ -369,7 +369,7 @@ describe("ace-wake delivery", () => {
     // The run starts: follow-ups are queue-safe now, so the deferred watch
     // delivers without waiting for a full settlement.
     host.setIdle(false);
-    session.agentStart();
+    await session.agentStart();
     assert.equal(host.sends.length, 2, "the deferred watch queues once the run starts");
     assert.match(host.sends[1].text, /watch:dep/);
 
