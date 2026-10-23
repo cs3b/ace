@@ -3,6 +3,7 @@
 require "digest"
 require "json"
 require "securerandom"
+require "ace/hitl/hermes/errors"
 require_relative "hermes_contract"
 require_relative "hermes_atomic_writer"
 

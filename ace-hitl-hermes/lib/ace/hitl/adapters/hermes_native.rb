@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "ace/hitl/adapters"
+require "ace/hitl/hermes/errors"
 require "ace/hitl/hermes/molecules/native_folder"
 
 module Ace
