@@ -26,3 +26,18 @@ Reguły wspólne są częścią tej specyfikacji: [kontrakt programu](.ace-tasks
 
 Wykorzystać istniejący transport pi wskazany konfiguracją Herdr (`ACE_HERDR_PI_QUEUE_CLIENT` / obecny adapter). Kod integracji pozostaje po stronie istniejącego adaptera/rozszerzenia pi, bez drugiej kolejki w ACE. Dostarczenie podczas aktywnej tury nie uruchamia drugiego overseera; oczekująca sesja podejmuje zlecony proces.
 Po restarcie sesji prompt wznowienia odczytuje zadania _overseer, assignmenty i stan projektu. Test aktywnej i oczekującej sesji, restartu i powtórzonego raportu. Weryfikacja prawdziwego pi jest częścią odbioru; brak dostępnego runtime to niewykonany scenariusz, nie powód do budowania zastępczego serwisu. Nie szukać nowych zadań poza zleceniem.
+
+## Rozszerzenie draft: zdarzeniowe oczy bez pustych tur LLM
+
+Normatywny kontrakt i niewykonane kryteria: [specyfikacja](../8xg.t.sbz.6.2-kontynuowa-zlecon-prac-w-pi.s.md).
+Nie są to nowe dostępne flagi CLI; dokładne nazwy ustawień dobiera implementacja
+w istniejącej konfiguracji pi, bez drugiego serwisu lub właściciela stanu.
+
+- **Cisza:** źródła HITL/raportów bez zmian przez 24h, brak jawnego terminu.
+  Obserwator pokazuje bezczynność i zużycie własnego budżetu; zero tur modelu.
+- **Zdarzenie:** nowy raport, a następnie dokładna Reply. Właściwy overseer
+  otrzymuje scalone pending, przyjmuje wynik przez istniejący mechanizm .5.4;
+  ponowny odczyt lub restart nie powtarza operacji zewnętrznej.
+- **Quota lub awaria:** zachowane pending i widoczny powód blokady, bez kolejnych
+  prób LLM i zmiany modelu. Jawne wznowienie po sprawdzeniu dostępności podejmuje
+  ten sam proces; wycofanie aktora usuwa jego stare wake i przekazuje pending.

@@ -1,6 +1,6 @@
 ---
 id: 8xg.t.sbz.6
-status: done
+status: in-progress
 priority: high
 created_at: "2026-10-17 18:53:36"
 estimate: large
@@ -77,3 +77,11 @@ Wszystkie dzieci objęto review osobno. Pending oznacza gotową specyfikację, n
 
 Źródła: `docs/lab-flow.md`, ADR-034 i review poszczególnych dzieci.
 Weryfikacja implementacji: powyższe scenariusze pozytywne i błędne, testy zmienionych pakietów i niezależny review. Ten przegląd specyfikacji nie jest odbiorem implementacji.
+
+## Ponowne otwarcie L7 — 2026-10-23
+
+Rodzina jest ponownie `in-progress` z powodu przygotowania nowego draftu
+`8xg.t.sbz.6.2`: zdarzeniowe oczy, brak tur LLM bez zmiany, budżet bezczynności
+oraz blokada quota. Szczegółowy kontrakt i wszystkie nowe kryteria są wyłącznie
+w tym liściu; wcześniejsze dowody L7 pozostają zachowane. Nie oznacza to nowej
+implementacji ani zgody na ponowne włączenie odstawionych pętli.

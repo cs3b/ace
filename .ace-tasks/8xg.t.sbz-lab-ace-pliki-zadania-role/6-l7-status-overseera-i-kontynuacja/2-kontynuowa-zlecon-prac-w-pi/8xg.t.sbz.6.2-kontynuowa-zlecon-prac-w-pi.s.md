@@ -1,13 +1,13 @@
 ---
 id: 8xg.t.sbz.6.2
-status: done
+status: draft
 priority: medium
 created_at: "2026-10-17 18:54:23"
 estimate: medium
 dependencies: [8xg.t.sbz.5, 8xg.t.sbz.1]
 tags: [lab, lab-l7, file-based]
 parent: 8xg.t.sbz.6
-needs_review: false
+needs_review: true
 bundle:
   presets: [project]
   files: [AGENTS.md, .ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/contract.md, .ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/8xg.t.sbz-lab-ace-pliki-zadania-role-i-komunikacja.s.md, ace-overseer/docs/usage.md, ace-herdr/README.md, ace-git-worktree/docs/usage.md, ace-handbook-integration-pi/handbook/extensions/ace-wake/index.js, .ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/6-l7-status-overseera-i-kontynuacja/8xg.t.sbz.6-l7-status-overseera-i-kontynuacja-zleconej-pracy.s.md, .ace-tasks/_archive/8x/x/8xg.t.qn6-python-ruby-migration-file-based/8xg.t.qn6-python-ruby-migration-file-based-lab-zero.s.md, .ace-tasks/_archive/8x/x/8xg.t.qn6-python-ruby-migration-file-based/0-ace-herdr-status-spaces-tabs/8xg.t.qn6.0-ace-herdr-status-spaces-tabs-and-panes.s.md, .ace-tasks/_archive/8x/x/8xg.t.qn6-python-ruby-migration-file-based/1-ace-lab-status-lab-configuration/8xg.t.qn6.1-ace-lab-status-lab-configuration-and-state.s.md, .ace-tasks/_archive/8x/x/8xg.t.qn6-python-ruby-migration-file-based/4-ace-coworker-gem-worker-loop/8xg.t.qn6.4-ace-coworker-gem-worker-loop-that-takes.s.md, .ace-tasks/_archive/8x/w/8xa.t.h8x-deliver-project-specific-supervision-workflows/8xa.t.h8x-deliver-project-specific-supervision-workflows-and.s.md, .ace-tasks/_archive/8x/x/8xd.t.cm3-durable-goal-capability-for-pi/8xd.t.cm3-durable-goal-capability-for-pi-agents-objective.s.md, .ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/6-l7-status-overseera-i-kontynuacja/2-kontynuowa-zlecon-prac-w-pi/ux/usage.md, .ace-tasks/8xg.t.k9y-ace-git-worktree-list-active/8xg.t.k9y-ace-git-worktree-list-active-worktree-table.s.md, .ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/execution-order.md, docs/lab-flow.md, docs/decisions/ADR-034-file-based-lab-state-ownership.md, ace-herdr/lib/ace/herdr/molecules/native_queue_executor.rb]
@@ -73,3 +73,103 @@ Po restarcie sesji prompt wznowienia odczytuje zadania _overseer, assignmenty i 
 
 Źródła: `docs/lab-flow.md`, ADR-034 i `ace-herdr/lib/ace/herdr/molecules/native_queue_executor.rb`.
 Weryfikacja implementacji: powyższe scenariusze pozytywne i błędne, testy zmienionych pakietów i niezależny review. Ten przegląd specyfikacji nie jest odbiorem implementacji.
+
+## Ponowne otwarcie: zdarzeniowe „oczy” overseera (2026-10-23)
+
+Status `draft` / `needs_review: true` dotyczy nowych kryteriów poniżej. Poprzedni
+zakres kontynuacji został zapisany jako `done`; jego historia, wyniki i dowody
+pozostają zachowane. Nie oznacza to odbioru poniższych ograniczeń kosztu ani
+wdrożenia ich w opublikowanych gemach. Rozmiar rozszerzenia: medium.
+
+### Zachowanie wymagane
+
+1. Żywy overseer obserwuje zlecony proces deterministycznie, wewnątrz istniejącej
+   integracji pi. Brak zmiany oznacza **zero wywołań modelu**, nie turę LLM
+   odpowiadającą „bez zmian”. Odczyt plików i upływ interwału nie są zdarzeniem
+   wymagającym decyzji. Bez nowego demona, crona, systemd timera, drugiego
+   harmonogramu, kolejki wykonania ani journala. Martwego procesu nie wskrzesza
+   ten mechanizm; pozostaje to decyzją nadrzędnego overseera.
+2. Pierwszy kompletny wycinek obejmuje prawdziwe wiadomości/odpowiedzi HITL i
+   raporty coworkerów. Nowa treść wymagająca decyzji budzi właściwego właściciela
+   przez istniejący transport. Zdarzenia spoza projektu/zlecenia nie uruchamiają
+   jego pracy. Decyzja co dalej pozostaje u agenta, nie w obserwatorze.
+3. Tożsamość zmiany opiera się na stabilnej semantyce: źródle, projekcie,
+   identyfikatorze wiadomości/raportu i istotnej rewizji treści/stanu. Wyklucza
+   czas ostatniego odpytywania, kolejność serializacji i inne zmienne metadane
+   obserwacyjne. Powtórzony odczyt, zmiana mtime bez zmiany treści lub zapis
+   własnego potwierdzenia nie wywołuje kolejnej tury. Faktyczna nowa odpowiedź,
+   zmieniony wynik lub jawna zmiana decyzji pozostaje widoczna.
+4. Seria zmian scala się w jedno oczekujące powiadomienie, zachowując wszystkie
+   nieprzyjęte identyfikatory/rewizje. Aktywna tura dostaje istniejący follow-up,
+   bez drugiego agenta i bez równoległego wykonania tego samego kroku. Zmiana
+   przychodząca w trakcie przyjęcia poprzedniej nie może zostać utracona.
+5. Sam odczyt ani próba wysłania wake nie oznaczają przyjęcia. Oczekujący stan
+   przetrwa błąd transportu, przerwanie i restart. Wznowienie uzgadnia go z
+   istniejącym potwierdzeniem właściciela; nie uznaje wszystkich obecnych plików
+   za nowe i nie pomija nieprzyjętych. Potwierdzenie ma jasno odróżniać dostarczenie
+   powiadomienia od zastosowania wyniku. Przyjęcie raportu i jego ID pozostają
+   własnością `8xg.t.sbz.5.4` w istniejącym tasku zarządzającym; nie kopiować
+   jego logiki lub zakładać dodatkowego magazynu prawdy. Implementacja wybiera
+   istniejący mechanizm trwałości i wykazuje brak luki między zmianą a ack.
+6. Ponowione powiadomienie nie jest pozwoleniem na powtórny merge/publish/start.
+   Niepewny wynik operacji wymaga odczytania jej istniejącego identyfikatora i
+   uzgodnienia skutku przed decyzją o dalszym działaniu. Brak danych nie jest
+   sukcesem, nowym zadaniem ani automatycznym retry efektu zewnętrznego.
+7. Termin zapisany dla konkretnej decyzji może stać się osobnym zdarzeniem raz
+   dla danej tożsamości i rewizji terminu. Nie tworzyć sztucznych terminów tylko
+   po to, aby budzić model. Zmiana/anulowanie terminu unieważnia stary sygnał;
+   restart nie odtwarza już przyjętych alarmów. Nie zmieniać istniejących zasad
+   autoryzacji, w tym warunków użycia okna HITL.
+8. Obserwacja ma jawny skończony budżet pracy w bezczynności (częstotliwość,
+   zakres źródeł, czas i limit błędów); przekroczenie pokazuje konkretny stan
+   ograniczenia bez pętli eskalacji przez LLM. Własne metryki nie generują wake.
+   Potwierdzone wyczerpanie quota/budżetu zamyka bramkę wywołań modelu: brak
+   automatycznych ponowień, zmiany providera/modelu lub powiększenia budżetu.
+   Zdarzenia pozostają oczekujące; jeden zapis blokady wskazuje przyczynę i
+   właściciela. Wznowienie wymaga jawnej decyzji uprawnionego właściciela po
+   sprawdzeniu dostępności; restart sam nie resetuje blokady.
+9. Przy wycofaniu aktora usuwa się jego stare loop/watch oraz przywiązania
+   powiadomień, zachowując nieprzyjęte zdarzenia i przekazanie odpowiedzialności.
+   Nie uruchamiać ponownie odstawionych pętli GLM dla testu. Ogólne usunięcie
+   starego przepływu pozostaje w `8xg.t.sbz.0.1`; ten liść odpowiada za własne
+   źródła pobudzeń. Rollout nie utrzymuje równoległych starych cyklicznych tur
+   LLM jako fallbacku do nowych oczu.
+
+### Odbiór nowego zakresu (niewykonany)
+
+- [ ] 24 godziny logicznego czasu bez zmiany źródeł, bez zadanego terminu i bez
+  poleceń użytkownika: 0 wywołań modelu, także przy zmianach poll timestamps,
+  mtime i własnych ack; pomiary obserwatora pozostają w zadanym budżecie.
+- [ ] Jeden rzeczywisty raport i dokładna odpowiedź HITL w opublikowanym runtime
+  budzą właściwego idle overseera; przy aktywnej turze wynik trafia do tego
+  samego procesu. Seria zmian jest scalona bez utraty identyfikatorów.
+- [ ] Awaria przed wysłaniem, po wysłaniu przed ack i podczas przyjęcia oraz
+  restart zachowują oczekujące zmiany; odebrane raporty nie uruchamiają nowego
+  assignmentu. Niepewny merge/publish nie jest automatycznie powtarzany.
+- [ ] Nowa zmiana w trakcie ack nie ginie; cudzy projekt nie budzi tego aktora;
+  zmieniony/anulowany termin i restart dają wyłącznie właściwy nowy sygnał.
+- [ ] Quota failure zamyka bramkę przed następnym wywołaniem; 100 kolejnych
+  odczytów i restart dają 0 prób LLM. Jawne wznowienie zachowuje pending oraz
+  wymaga sprawdzenia dostępności, bez cichego fallbacku modelu.
+- [ ] Wycofany aktor nie ma aktywnych loop/watch ani dostarczeń; właściciel
+  przejmujący przyjmuje zachowane zdarzenia bez podwójnych efektów.
+
+Testy deterministyczne mogą przyspieszać czas, ale nie zastępują odbioru na
+prawdziwym pi. W dowodach oddzielić testy źródłowe, publikację i instalację
+oraz rzeczywisty czas obserwacji; nie deklarować 24h live na podstawie zegara
+w teście. Podczas odbioru zachować zatrzymanie legacy i skończony budżet.
+
+### Pochodzenie incydentu, nie definicja kontraktu
+
+Obserwacja hosta za 22 października 2026, Canary (21.10 23:00 UTC–22.10
+23:00 UTC): 12 694 wpisy assistant, w tym 10 161 poprawnych unikalnych ID
+oraz 2 533 błędy quota z zerowym użyciem; 5 712 wpisów wake i 5 080 odpowiedzi
+końcowych sklasyfikowanych jako idle/no-change. Nowe dwie sesje wykonały
+4 930 HITL sync; stare sesje: 151 tool calls, 129 Git, 22 inne. Liczniki tokenów:
+input 21 535 913, output 637 134, cache read 5 005 307 648, cache write 0.
+Lokalna estymata pi: 153,70818339 USD — **nie faktura dostawcy**. Zapisany/
+żądany model GLM-5.3-Flash nie dowodzi modelu użytego do rozliczenia serwerowego.
+Źródło audytu: lab-config commit `707d805`; nie utrwalać kluczy ani prywatnych
+wiadomości w tym tasku. Cztery loop w trzech sesjach usunięto 23.10 o
+09:10:36 UTC, dwie trwające tury zatrzymano o 09:11:30; ostatnie odczyty
+wykazały puste loops/watches. Jest to stan obserwowany, nie odbiór nowej funkcji.
