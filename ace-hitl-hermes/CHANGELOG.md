@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.3] - 2026-10-23
+
+### Changed
+
+- Require HITL 0.24 for the coordinated semantic-observation runtime; transport behavior is unchanged.
+
 ## [0.9.2] - 2026-10-20
 
 ### Fixed

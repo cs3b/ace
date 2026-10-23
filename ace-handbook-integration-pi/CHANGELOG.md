@@ -4,6 +4,12 @@ All notable changes to ace-handbook-integration-pi will be documented in this fi
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-10-23
+
+### Added
+
+- Add durable in-process semantic eyes, coalescing, explicit deadlines, bounded budgets and actual Pi notification acceptance; retire the actor’s old loops when enabled.
+
 
 ## [0.6.0] - 2026-10-20
 

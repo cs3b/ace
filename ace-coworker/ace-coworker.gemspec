@@ -58,7 +58,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "ace-assign", "~> 0.72", ">= 0.73.1"
   spec.add_dependency "ace-hitl", "~> 0.22"
   spec.add_dependency "ace-git-worktree", "~> 0.27"
-  spec.add_dependency "ace-review", "~> 0.62"
+  spec.add_dependency "ace-review", "~> 0.62.2"
 
   spec.add_development_dependency "ace-support-test-helpers", "~> 0.14"
   spec.add_development_dependency "bundler", "~> 2.0"

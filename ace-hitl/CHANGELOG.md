@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.24.0] - 2026-10-23
+
+### Added
+
+- Add read-only semantic event observations with configured-owner filtering; exclude delivery metadata and unrelated recipients.
+
 ## [0.23.2] - 2026-10-20
 
 ### Fixed
