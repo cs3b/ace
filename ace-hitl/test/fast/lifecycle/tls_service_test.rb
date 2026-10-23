@@ -80,15 +80,30 @@ class TlsServiceTest < AceHitlTestCase
   def test_service_admits_exactly_the_pinned_client_identity
     start_service
 
+    # FrameServing attempts an error frame after authentication rejection,
+    # then closes; the client may receive that frame or a connection reset.
+    # Observe the REAL exact pin failure locally rather than require its
+    # message to survive transport teardown.
+    refusals = Queue.new
+    authorize = @service.method(:authorize!)
+    @service.define_singleton_method(:authorize!) do |socket|
+      authorize.call(socket)
+    rescue Ace::Hitl::Lifecycle::TransportError => error
+      refusals << error.message
+      raise
+    end
+
     # A different client certificate from the SAME CA never grants the
     # project: the single allowed SAN/fingerprint pair is the identity.
     other = TlsFixtures.mint_identity(ca: @ca, uri_sans: [CLIENT_SAN], eku: "clientAuth")
     write_variant("other", other)
-    error = assert_raises(Ace::Hitl::Lifecycle::TransportError) do
+    assert_raises(Ace::Hitl::Lifecycle::TransportError) do
       peer(variant: "other").request("ping")
     end
-    assert_match(/certificate fingerprint does not match the configured pin/, error.message)
+    reason = Timeout.timeout(2) { refusals.pop }
+    assert_match(/certificate fingerprint does not match the configured pin/, reason)
     assert_empty store_requests
+    assert_equal true, peer.request("ping")["pong"], "the exact pinned identity still succeeds"
   end
 
   def test_missing_client_certificate_is_refused_before_any_frame
