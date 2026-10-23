@@ -7,7 +7,7 @@ doc-type: workflow
 purpose: specialized RubyGems publication baseline with non-mutating default
 update:
   frequency: on-change
-  last-updated: "2026-08-12"
+  last-updated: "2026-10-23"
 ---
 
 # RubyGems Publish Workflow (Baseline)
@@ -96,9 +96,10 @@ When a project overlay authorizes live `gem push`, use this timing contract so o
 2. **Build every pending `.gem` artifact** before asking for OTP
 3. Show the final queue (order, versions, artifact paths, count)
 4. Prompt once for OTP — codes are short-lived (**~30–45s**)
-5. Push immediately in dependency-respecting waves of **up to 5 concurrent** `gem push --otp` calls; aim to finish the burst in **≤30s**
-6. Verify RubyGems metadata **after** the burst (not between pushes)
-7. On expired/incorrect OTP: stop, list remaining gems, request a fresh OTP, resume without rebuilding unless an artifact is missing
+5. Wait for the OTP answer with the semantic wait: register exactly ONE in-process `/watch` scoped to the project ace-hitl transport folder (the folder holding that case's request/reply files), end the turn; on wake run the project `ace-hitl-hermes sync` ONCE and reconcile the exact case state — never a sleep/poll loop (during eyes-20261023 a 36x sleep-8 loop blocked the turn through the whole OTP window)
+6. Push immediately in dependency-respecting waves of **up to 5 concurrent** `gem push --otp` calls; aim to finish the burst in **≤30s**
+7. Verify RubyGems metadata **after** the burst (not between pushes)
+8. On expired/incorrect OTP: stop, list remaining gems, request a fresh OTP, resume without rebuilding unless an artifact is missing
 
 Suggested overlay commands (executed only under a project publication contract):
 
