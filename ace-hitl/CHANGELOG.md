@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.24.1] - 2026-10-25
+
+### Changed
+
+- Replace wait-by-polling with the semantic wake contract in the HITL workflow (PR74): one scoped watch per pending answer, end the turn, reconcile on wake.
+
 ## [0.24.0] - 2026-10-23
 
 ### Added

@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.4] - 2026-10-25
+
+### Fixed
+
+- Require hermes errors along every native entrypoint path (adapter, molecule, organism) so contract failures raise `Ace::Hitl::Hermes::ContractError` instead of `NameError` in the live lazy-entrypoint load order (PR75).
+
 ## [0.9.3] - 2026-10-23
 
 ### Changed

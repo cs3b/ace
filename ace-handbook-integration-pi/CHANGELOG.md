@@ -4,6 +4,12 @@ All notable changes to ace-handbook-integration-pi will be documented in this fi
 
 ## [Unreleased]
 
+## [0.7.1] - 2026-10-25
+
+### Added
+
+- Deliver change deltas in watch wakes: watched path, change kind, before→after content-hash signatures (sha256 for readable content) and a capped sanitized excerpt, so the woken agent identifies the case without a full reload (PR74).
+
 ## [0.7.0] - 2026-10-23
 
 ### Added

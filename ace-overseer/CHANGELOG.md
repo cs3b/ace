@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.26.1] - 2026-10-25
+
+### Changed
+
+- Add the semantic wake contract for pending delivery answers to the overseer workflow (PR74): scoped watch, end-of-turn wait, wake reconciliation.
+
 ## [0.26.0] - 2026-10-23
 
 ### Added
