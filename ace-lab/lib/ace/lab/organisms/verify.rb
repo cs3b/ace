@@ -4,6 +4,7 @@ require_relative "../errors"
 require_relative "../molecules/install_manifest_loader"
 require_relative "../molecules/key_provisioner"
 require_relative "../molecules/role_verifier"
+require_relative "../molecules/gemset_provisioner"
 require_relative "../molecules/hitl_routes"
 require_relative "../molecules/caller_authorizer"
 require_relative "../atoms/topology_schema"
@@ -77,7 +78,7 @@ module Ace
         # @return [Hash] {ready:, machine:, manifest:,
         #   authorization_path:, checks: {accounts:, directories:,
         #   keys:, roles:, repositories:, grants:, registry:,
-        #   overseer:, adapters:, tools:}, counts: {pass:, fail:,
+        #   overseer:, adapters:, tools:, gems:}, counts: {pass:, fail:,
         #   unknown:}}
         # @raise [Ace::Lab::InvalidConfigurationError] missing,
         #   untrusted or schema-invalid manifest — same classification
@@ -97,7 +98,8 @@ module Ace
             "registry" => check_registry(manifest),
             "overseer" => check_overseer(manifest),
             "adapters" => check_adapters(manifest, executors),
-            "tools" => check_tools(manifest, executors)
+            "tools" => check_tools(manifest, executors),
+            "gems" => check_gems(manifest)
           }
           flat = checks.values.flatten(1)
           {
@@ -548,6 +550,72 @@ module Ace
               {"tool" => tool, "status" => UNKNOWN,
                "reason" => "PATH is unset; cannot probe tool '#{tool}' availability"}
             end
+          end
+        end
+
+        # Declared gem set (gad.2 gap #1, owner spec 8xg.t.sbz.7): every
+        # declared gem must be installed at its EXACT declared version in
+        # the declared target runtime (GEM_HOME) — read-only, through the
+        # SAME probe the provisioner converges from
+        # (GemsetProvisioner#runtime_versions), so readiness and
+        # convergence can never drift. A missing, symlinked or
+        # non-directory runtime fails every declared gem as a dependency
+        # (nothing could have converged into it); a gem at a wrong or
+        # missing version is a classified failure with an
+        # `ace-lab install` remedy; an environment without the `gem`
+        # executable degrades to unknown (the offline posture) and does
+        # not block by itself. Extra undeclared versions are not judged:
+        # the manifest is the single owner of the DECLARED set.
+        def check_gems(manifest)
+          gemset = manifest["gemset"]
+          gems = gemset["gems"]
+          return [] if gems.empty?
+
+          gem_home = gemset["gem_home"]
+          runtime_reason = gem_runtime_reason(gem_home)
+          provisioner = Molecules::GemsetProvisioner.new(runner: @runner)
+          gems.map do |gem|
+            if runtime_reason
+              next {"gem" => gem["name"], "version" => gem["version"], "gem_home" => gem_home,
+                    "status" => FAIL, "reason" => runtime_reason}
+            end
+
+            kind, versions_or_message = provisioner.runtime_versions(
+              name: gem["name"], gem_home: gem_home
+            )
+            reason = case kind
+            when :unknown, :failed then versions_or_message
+            when :ok then gem_version_reason(gem, versions_or_message, gem_home)
+            end
+            status = case kind
+            when :ok then reason ? FAIL : PASS
+            when :unknown then UNKNOWN
+            else FAIL
+            end
+            {"gem" => gem["name"], "version" => gem["version"], "gem_home" => gem_home,
+             "status" => status, "reason" => reason}
+          end
+        end
+
+        def gem_version_reason(gem, versions, gem_home)
+          return nil if versions.include?(gem["version"])
+          if versions.empty?
+            "gem '#{gem["name"]}' is not installed in gem runtime '#{gem_home}'; " \
+              "rerun ace-lab install"
+          else
+            "gem '#{gem["name"]}' is installed as #{versions.join(", ")} in " \
+              "'#{gem_home}' but the manifest declares #{gem["version"]}; rerun ace-lab install"
+          end
+        end
+
+        def gem_runtime_reason(gem_home)
+          stat = lstat(gem_home)
+          if stat.nil?
+            "gem runtime '#{gem_home}' is missing; rerun ace-lab install"
+          elsif stat.symlink?
+            "gem runtime '#{gem_home}' is a symbolic link"
+          elsif !stat.directory?
+            "'#{gem_home}' exists but is not a directory"
           end
         end
 

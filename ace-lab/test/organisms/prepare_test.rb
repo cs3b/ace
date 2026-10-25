@@ -58,7 +58,7 @@ module Organisms
         assert_equal false, report["dry_run"]
         assert_equal "lab01", report["machine"]
         assert_equal "/etc/lab/ace-lab/install.yml", report["manifest"]
-        assert_equal ["ok", "dry_run", "machine", "manifest", "accounts", "directories", "keys", "roles"],
+        assert_equal ["ok", "dry_run", "machine", "manifest", "accounts", "directories", "keys", "roles", "gems"],
           report.keys
         assert_equal [{"username" => "ace-worker", "status" => "exists",
                        "uid" => Process.uid, "message" => nil}], report["accounts"]
@@ -66,7 +66,92 @@ module Organisms
         assert_equal "created", report["keys"].first["status"]
         assert_match(/\ASHA256:/, report["keys"].first["fingerprint"])
         assert_equal "verified", report["roles"].first["status"]
+        assert_empty report["gems"]
         assert File.directory?(File.join(dir, "labs"))
+      end
+    end
+
+    # --- gem set convergence (gad.2 gap #1, owner spec 8xg.t.sbz.7) ----
+
+    def test_declared_gem_set_converges_into_the_runtime_after_roles
+      Dir.mktmpdir do |gemdir|
+        gem_home = build_and_install_gem(gemdir, "ace-lab-probe", "0.13.0")
+        manifest = MANIFEST + <<~YAML
+          gemset:
+            gem_home: #{gem_home}
+            gems:
+              - name: ace-lab-probe
+                version: 0.13.0
+        YAML
+        with_manifest(manifest) do |organism, _dir|
+          report = organism.call
+
+          assert_equal true, report["ok"], report.inspect
+          assert_equal "exists", report["gems"].first["status"]
+          assert_equal "ace-lab-probe", report["gems"].first["name"]
+          assert_equal gem_home, report["gems"].first["gem_home"]
+        end
+      end
+    end
+
+    def test_dry_run_predicts_gem_installation_without_touching_the_runtime
+      Dir.mktmpdir do |gemdir|
+        gem_home = File.join(gemdir, "runtime")
+        FileUtils.mkdir_p(gem_home)
+        manifest = MANIFEST + <<~YAML
+          gemset:
+            gem_home: #{gem_home}
+            gems:
+              - name: ace-lab-probe
+                version: 0.13.0
+        YAML
+        with_manifest(manifest, dry_run: true) do |organism, _dir|
+          report = organism.call
+
+          assert_equal true, report["ok"]
+          assert_equal "would_install", report["gems"].first["status"]
+          # prediction with zero mutations: the runtime stays empty
+          assert_equal [], Dir.children(gem_home)
+        end
+      end
+    end
+
+    def test_missing_gem_runtime_requires_privileges_and_fails_the_aggregate
+      Dir.mktmpdir do |gemdir|
+        manifest = MANIFEST + <<~YAML
+          gemset:
+            gem_home: #{gemdir}/runtime
+            gems:
+              - name: ace-lab-probe
+                version: 0.13.0
+        YAML
+        with_manifest(manifest) do |organism, _dir|
+          report = organism.call
+
+          assert_equal false, report["ok"]
+          gem = report["gems"].first
+          assert_equal "failed", gem["status"]
+          assert_match(/requires administrator privileges/, gem["message"])
+        end
+      end
+    end
+
+    def test_dry_run_predicts_the_wet_runtime_privilege_failure
+      Dir.mktmpdir do |gemdir|
+        manifest = MANIFEST + <<~YAML
+          gemset:
+            gem_home: #{gemdir}/runtime
+            gems:
+              - name: ace-lab-probe
+                version: 0.13.0
+        YAML
+        with_manifest(manifest, dry_run: true) do |organism, _dir|
+          report = organism.call
+
+          assert_equal false, report["ok"]
+          assert_equal "failed", report["gems"].first["status"]
+          assert_match(/requires administrator privileges/, report["gems"].first["message"])
+        end
       end
     end
 

@@ -16,13 +16,13 @@ module Ace
             "accounts" => "account", "directories" => "directory", "keys" => "account",
             "roles" => "id", "repositories" => "project", "grants" => "principal",
             "registry" => "project", "overseer" => "project",
-            "adapters" => "adapter", "tools" => "tool"
+            "adapters" => "adapter", "tools" => "tool", "gems" => "gem"
           }.freeze
 
           desc "Verify the installed lab's readiness under the target accounts (read-only): " \
             "accounts, directories, key pairs, role instructions, repository origins and " \
             "target-executor access, grant-based project visibility, private _overseer " \
-            "folders, configured communication/HITL adapters, required tools"
+            "folders, configured communication/HITL adapters, required tools, declared gem set"
 
           example [
             "--format json        # Machine-readable report for the overseer / next tool",

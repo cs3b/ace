@@ -137,7 +137,7 @@ module Organisms
         assert_equal true, report["ok"]
         assert_equal false, report["dry_run"]
         assert_equal "lab01", report["machine"]
-        assert_equal %w[ok dry_run machine manifest prepare projects grants adapters tools verify],
+        assert_equal %w[ok dry_run machine manifest prepare projects grants adapters tools gemset verify],
           report.keys
         assert_equal [false], prepare.calls
         assert_equal [{id: "atlas", path: File.join(dir, "atlas"),
@@ -171,6 +171,90 @@ module Organisms
         assert project_add.calls.all? { |call| call[:dry_run] == true }
         assert_equal "would_create", report["grants"]["status"]
         refute File.exist?(auth_path)
+      end
+    end
+
+    # gad.2: the declared gem set is echoed in the aggregated report
+    # (like adapters/tools) and converged through prepare's gems phase.
+    def test_declared_gemset_is_echoed_and_converged_through_prepare
+      prepare = FakePrepare.new(OK_PREPARE)
+      manifest = manifest_yaml("/tmp/x") + <<~YAML
+        gemset:
+          gem_home: /opt/lab/gems
+          gems:
+            - name: ace-lab
+              version: 0.13.0
+      YAML
+
+      with_install(manifest: manifest, prepare: prepare,
+        project_add: FakeProjectAdd.new("atlas" => ok_project("atlas"),
+          "borealis" => ok_project("borealis"))) do |organism|
+        report = organism.call
+
+        assert_equal true, report["ok"]
+        assert_equal({"gem_home" => "/opt/lab/gems",
+          "gems" => [{"name" => "ace-lab", "version" => "0.13.0"}]}, report["gemset"])
+      end
+    end
+
+    # A failing gems phase is a machine-level failure: projects and
+    # grants gate exactly as when prepare's other sections fail. The
+    # gemset declares a MISSING runtime; the enoent runner keeps the
+    # scenario hermetic regardless of the invoking euid (root would
+    # create the runtime and then fail the probe).
+    def test_failing_gem_set_gates_projects_and_grants_as_dependencies
+      manifest = manifest_yaml("/tmp/x") + <<~YAML
+        gemset:
+          gem_home: /nonexistent-gem-runtime/gems
+          gems:
+            - name: ace-lab
+              version: 0.13.0
+      YAML
+      enoent = ->(_argv) { {"status" => "enoent", "out" => "", "err" => ""} }
+      prepare = Ace::Lab::Organisms::Prepare.new(
+        manifest_path: "/etc/lab/ace-lab/install.yml", runner: enoent, platform: "linux"
+      )
+      project_add = FakeProjectAdd.new({})
+
+      with_install(manifest: manifest, prepare: prepare, project_add: project_add) do |organism|
+        report = organism.call
+
+        assert_equal false, report["ok"]
+        assert_equal "failed", report["prepare"]["gems"].first["status"]
+        assert_empty project_add.calls
+        %w[atlas borealis].each do |id|
+          project = report["projects"].find { |entry| entry["project"] == id }
+          assert_equal "failed", project["repository"]["status"]
+          assert_match(/fix the prepare phase first/, project["repository"]["message"])
+        end
+        assert_equal "failed", report["grants"]["status"]
+      end
+    end
+
+    def test_dry_run_with_gemset_predicts_without_installing
+      Dir.mktmpdir do |gemdir|
+        gem_home = File.join(gemdir, "runtime")
+        FileUtils.mkdir_p(gem_home)
+        manifest = manifest_yaml("/tmp/x") + <<~YAML
+          gemset:
+            gem_home: #{gem_home}
+            gems:
+              - name: ace-lab
+                version: 0.13.0
+        YAML
+        empty_probe = ->(_argv) { {"status" => "ok", "out" => "", "err" => ""} }
+        prepare = Ace::Lab::Organisms::Prepare.new(
+          manifest_path: "/etc/lab/ace-lab/install.yml", runner: empty_probe, platform: "linux"
+        )
+
+        with_install(manifest: manifest, prepare: prepare) do |organism, _dir, _auth_path|
+          report = organism.call(dry_run: true)
+
+          assert_equal true, report["ok"]
+          assert_equal "would_install", report["prepare"]["gems"].first["status"]
+          # prediction with zero mutations: the runtime stays empty
+          assert_equal [], Dir.children(gem_home)
+        end
       end
     end
 

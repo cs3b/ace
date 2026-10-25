@@ -7,6 +7,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Gem-set installation into the target lab runtime (gad.2 acceptance
+  gap #1, owner spec 8xg.t.sbz.7, L8 install group): the trusted
+  install manifest (still schema v1) gains an optional `gemset` section
+  — a sibling of `tools` — declaring the target runtime (`gem_home`,
+  an absolute path converged as GEM_HOME and GEM_PATH) and the required
+  gem set (`name` + exact `version`; unique names, versions validated
+  as real Gem versions, so ranges and "latest" are rejected at load).
+  A manifest without the section behaves exactly as before.
+  `ace-lab prepare` (and therefore `ace-lab install`) converges the gem
+  set into the declared runtime idempotently through a new
+  `GemsetProvisioner` molecule: exact version present = no-op
+  (`exists`), missing = installed, different version present = updated
+  (the declared version installed; RubyGems keeps versions side by
+  side and verify judges the declared set). The gem subprocesses run
+  with `GEM_HOME`/`GEM_PATH` pinned to the runtime through the same
+  argv runner seam as every other prepare step — with the invoking
+  process's bundler context stripped (`RUBYOPT`, `RUBYLIB`,
+  `BUNDLE_*`/`BUNDLER_*`), so `bundle exec ace-lab prepare` converges
+  the LAB runtime instead of its own bundle. The runtime directory is
+  created only with administrator privileges (the AccountProvisioner
+  seam); a symlink or non-directory runtime is refused (the
+  DirectoryProvisioner takeover posture); runtime failures fail every
+  gem item as a dependency and gate the install's projects and grants
+  like any other machine-level failure. `--dry-run` predicts
+  `would_install`/`would_update`/`exists` read-only and predicts the
+  wet privilege failure. The install report echoes the declared gemset
+  under `gemset`. `ace-lab verify` gained a matching read-only `gems`
+  check — every declared gem must be installed at its exact version in
+  the declared runtime, judged through the SAME probe the provisioner
+  converges from (a missing `gem` executable reports `unknown`, the
+  offline posture). `project add` stays project-scoped: gem
+  installation is machine-level provisioning and is deliberately not
+  added there.
+
 
 ## [0.13.0] - 2026-10-20
 

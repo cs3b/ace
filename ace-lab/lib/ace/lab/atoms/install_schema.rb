@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "rubygems/version"
+
 module Ace
   module Lab
     module Atoms
@@ -13,7 +15,7 @@ module Ace
         SCHEMA_VERSION = 1
         TOP_LEVEL_KEYS =
           %w[schema_version machine accounts directories keys roles projects grants
-             adapters tools].freeze
+             adapters tools gemset].freeze
         ENTRY_KEYS = {
           "accounts" => %w[username role create home],
           "directories" => %w[path owner mode],
@@ -29,6 +31,9 @@ module Ace
         DEFAULT_MODE = "0755"
         DEFAULT_KEY_TYPE = "ed25519"
         KEY_TYPES = [DEFAULT_KEY_TYPE].freeze
+        GEMSET_KEYS = %w[gem_home gems].freeze
+        GEM_KEYS = %w[name version].freeze
+        GEM_NAME_PATTERN = /\A[A-Za-z0-9._-]+\z/
 
         class << self
           # @param document [Object] parsed YAML document
@@ -71,7 +76,8 @@ module Ace
               "projects" => projects,
               "grants" => normalize_grants(document["grants"], projects.map { |p| p["id"] }),
               "adapters" => normalize_adapters(document["adapters"]),
-              "tools" => normalize_tools(document["tools"])
+              "tools" => normalize_tools(document["tools"]),
+              "gemset" => normalize_gemset(document["gemset"])
             }
           end
 
@@ -315,6 +321,71 @@ module Ace
               raise_invalid "tools list a tool more than once"
             end
             tools.map(&:strip).uniq
+          end
+
+          # Target lab runtime and required gem set (gad.2 gap #1, owner
+          # spec 8xg.t.sbz.7): a sibling of `tools` declaring WHERE the
+          # lab's gems must live (`gem_home`, converged as GEM_HOME/
+          # GEM_PATH) and WHICH gems at WHICH exact versions. Absent =
+          # no runtime declared, behavior unchanged. Names must be real
+          # gem names; versions must parse as exact Gem versions (the
+          # same parser the runtime uses) — ranges and bare names are
+          # rejected so convergence is always exact-version.
+          def normalize_gemset(raw)
+            return {"gem_home" => nil, "gems" => []} if raw.nil?
+            unless raw.is_a?(Hash)
+              raise_invalid "gemset must be a mapping"
+            end
+
+            unknown = raw.keys - GEMSET_KEYS
+            unless unknown.empty?
+              raise_invalid "gemset has unknown key '#{unknown.sort.first}'"
+            end
+
+            gem_home = raw["gem_home"]
+            unless gem_home.is_a?(String) && !gem_home.strip.empty? && absolute_path?(gem_home.strip)
+              raise_invalid "gemset gem_home is required and must be an absolute path"
+            end
+
+            {"gem_home" => gem_home.strip, "gems" => normalize_gems(raw["gems"])}
+          end
+
+          def normalize_gems(raw)
+            gems = raw.nil? ? [] : raw
+            unless gems.is_a?(Array)
+              raise_invalid "gemset gems must be a list"
+            end
+            gems.each_with_index do |entry, index|
+              unless entry.is_a?(Hash)
+                raise_invalid "gemset gems entry ##{index} must be a mapping"
+              end
+              unknown = entry.keys - GEM_KEYS
+              unless unknown.empty?
+                raise_invalid "gemset gems entry ##{index} has unknown key '#{unknown.sort.first}'"
+              end
+            end
+
+            gems.map do |entry|
+              name = entry["name"]
+              unless name.is_a?(String) && name.strip =~ GEM_NAME_PATTERN
+                raise_invalid_entry("gemset gems", "name is required and must be a gem name")
+              end
+              version = entry["version"]
+              unless version.is_a?(String) && !version.strip.empty?
+                raise_invalid_entry("gemset gems", "version is required and must be an exact version")
+              end
+              begin
+                Gem::Version.new(version.strip)
+              rescue ArgumentError
+                raise_invalid_entry("gemset gems", "version must be an exact gem version")
+              end
+
+              {"name" => name.strip, "version" => version.strip}
+            end.tap do |gems|
+              duplicates_of(gems.map { |gem| gem["name"] }) do |_name|
+                raise_invalid_entry("gemset gems", "name is declared more than once")
+              end
+            end
           end
 
           def optional_string(entry, section_name, field)

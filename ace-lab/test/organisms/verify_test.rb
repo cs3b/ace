@@ -739,6 +739,127 @@ module Organisms
         assert_equal "pass", check(report, "repositories")["status"]
       end
     end
+
+    # --- gad.2: declared gem set blocks readiness -----------------------
+
+    def gemset_manifest(gem_home, name = "ace-lab-probe", version = "0.13.0")
+      <<~YAML
+        gemset:
+          gem_home: #{gem_home}
+          gems:
+            - name: #{name}
+              version: #{version}
+      YAML
+    end
+
+    def test_installed_declared_gem_set_passes_and_a_fresh_install_verifies_ready
+      Dir.mktmpdir do |gemdir|
+        gem_home = build_and_install_gem(gemdir, "ace-lab-probe", "0.13.0")
+
+        with_lab(extra_manifest: gemset_manifest(gem_home)) do |fixture|
+          install_report = install_run(fixture, lookup_for(fixture))
+          assert_equal true, install_report["ok"], install_report["verify"].inspect
+          assert_equal "exists", install_report["prepare"]["gems"].first["status"]
+
+          report = verify_run(fixture)
+
+          assert_equal true, report["ready"], report.inspect
+          gem_check = check(report, "gems")
+          assert_equal "pass", gem_check["status"]
+          assert_equal "ace-lab-probe", gem_check["gem"]
+          assert_equal gem_home, gem_check["gem_home"]
+        end
+      end
+    end
+
+    def test_missing_gem_runtime_fails_every_declared_gem
+      Dir.mktmpdir do |gemdir|
+        gem_home = File.join(gemdir, "absent-runtime")
+
+        with_lab(extra_manifest: gemset_manifest(gem_home)) do |fixture|
+          install_report = install_run(fixture, lookup_for(fixture))
+          assert_equal false, install_report["ok"], "missing runtime must block install success"
+
+          report = verify_run(fixture)
+
+          assert_equal false, report["ready"]
+          gem_check = check(report, "gems")
+          assert_equal "fail", gem_check["status"]
+          assert_match(/gem runtime '#{gem_home}' is missing; rerun ace-lab install/, gem_check["reason"])
+        end
+      end
+    end
+
+    def test_missing_declared_gem_in_an_existing_runtime_fails_the_check
+      Dir.mktmpdir do |gemdir|
+        gem_home = File.join(gemdir, "runtime")
+        FileUtils.mkdir_p(gem_home)
+
+        with_lab do |fixture|
+          assert install_run(fixture, lookup_for(fixture))["ok"]
+          # the gemset declaration arrives after a converged install:
+          # the declared gem is missing while every other check stays
+          # healthy (failure beside healthy data)
+          document = YAML.safe_load_file(fixture["manifest"])
+          document["gemset"] = {"gem_home" => gem_home,
+            "gems" => [{"name" => "ace-lab-probe", "version" => "0.13.0"}]}
+          File.write(fixture["manifest"], YAML.dump(document))
+
+          report = verify_run(fixture)
+
+          assert_equal false, report["ready"]
+          gem_check = check(report, "gems")
+          assert_equal "fail", gem_check["status"]
+          assert_match(/gem 'ace-lab-probe' is not installed in gem runtime '#{gem_home}'; rerun ace-lab install/,
+            gem_check["reason"])
+          assert_equal "pass", check(report, "accounts")["status"]
+          assert_equal "pass", check(report, "repositories")["status"]
+        end
+      end
+    end
+
+    def test_gem_installed_at_a_different_version_fails_with_the_found_versions
+      Dir.mktmpdir do |gemdir|
+        gem_home = build_and_install_gem(gemdir, "ace-lab-probe", "0.12.0")
+
+        with_lab(extra_manifest: gemset_manifest(gem_home, "ace-lab-probe", "0.13.0")) do |fixture|
+          report = verify_run(fixture)
+
+          assert_equal false, report["ready"]
+          gem_check = check(report, "gems")
+          assert_equal "fail", gem_check["status"]
+          assert_match(/is installed as 0\.12\.0 in '#{gem_home}' but the manifest declares 0\.13\.0/,
+            gem_check["reason"])
+        end
+      end
+    end
+
+    def test_manifest_without_gemset_reports_no_gem_checks
+      with_lab do |fixture|
+        assert install_run(fixture, lookup_for(fixture))["ok"]
+
+        report = verify_run(fixture)
+
+        assert_equal true, report["ready"]
+        assert_empty report["checks"]["gems"]
+      end
+    end
+
+    def test_gem_probe_without_gem_executable_is_unknown_and_does_not_block
+      Dir.mktmpdir do |dir|
+        gem_home = File.join(dir, "runtime")
+        FileUtils.mkdir_p(gem_home)
+        organism = Ace::Lab::Organisms::Verify.new(
+          runner: ->(_argv) { {"status" => "enoent", "out" => "", "err" => ""} }
+        )
+
+        gemset = {"gem_home" => gem_home, "gems" => [{"name" => "ace-lab-probe", "version" => "0.13.0"}]}
+        checks = organism.send(:check_gems, {"gemset" => gemset})
+
+        assert_equal "unknown", checks.first["status"]
+        assert_match(/gem not found in PATH/, checks.first["reason"])
+      end
+    end
   end
 end
 

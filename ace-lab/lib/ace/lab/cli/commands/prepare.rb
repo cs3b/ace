@@ -18,14 +18,16 @@ module Ace
             "accounts" => ->(item) { item["username"] },
             "directories" => ->(item) { item["path"] },
             "keys" => ->(item) { "#{item['account']}:#{item['path']}" },
-            "roles" => ->(item) { item["id"] }
+            "roles" => ->(item) { item["id"] },
+            "gems" => ->(item) { "#{item['name']} #{item['version']}" }
           }.freeze
 
           # "SHA256:" plus the first 20 base64 characters is enough to
           # eyeball-match a key without ballooning the table row.
           FINGERPRINT_WIDTH = 27
 
-          desc "Prepare accounts, directories, permissions, keys and roles from the trusted install manifest"
+          desc "Prepare accounts, directories, permissions, keys, roles and the declared " \
+            "gem set from the trusted install manifest"
 
           example [
             "--dry-run            # Predict all sections without mutating",

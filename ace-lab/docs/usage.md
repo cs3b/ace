@@ -170,14 +170,23 @@ projects:                    # optional (consumed by ace-lab install)
 grants:                      # optional: trusted-tier principal grants
   ace-overseer:              # principal → declared project ids
     - atlas
+gemset:                      # optional (gad.2): target runtime + required gem set
+  gem_home: /opt/lab/gems    # absolute; converged as GEM_HOME and GEM_PATH
+  gems:                      # exact versions, unique names
+    - name: ace-lab
+      version: 0.13.0        # must be an exact gem version (no ranges)
 ```
 
 Statuses: accounts `created|exists|would_create|failed`; directories
 `created|exists|mode_fixed|would_create|would_fix_mode|failed`; keys
 `created|exists|would_create|would_repair_public|would_fix_mode|failed`
-(with the public `fingerprint`); roles `verified|failed`. `ok` in the
+(with the public `fingerprint`); roles `verified|failed`; gems
+`installed|updated|exists|would_install|would_update|failed` (one item
+per declared gem). `ok` in the
 JSON report means zero failed items. Key/role items whose account
-failed are reported as dependency failures instead of being attempted.
+failed are reported as dependency failures instead of being attempted;
+gem items fail as dependencies when the declared runtime did not
+prepare.
 
 `--dry-run` is a faithful prediction of the wet run (`would_*`
 statuses, zero mutations): keys and roles of an account the account
@@ -299,6 +308,26 @@ Behavior and guarantees:
   group, or other. A readable file behind an unsearchable directory
   (e.g. 0644 inside a 0700 directory owned by someone else) is
   `failed`, not `verified`. ACLs remain out of scope.
+- **Gem-set convergence (gad.2).** When the manifest declares a
+  `gemset`, prepare converges the declared gem set into the declared
+  target runtime (`gem_home`): a gem whose exact declared version is
+  already present is a no-op (`exists`), a missing gem is installed
+  (`installed`), a gem present at a different version is updated (the
+  declared version is installed; RubyGems keeps versions side by side
+  and verify judges the declared set). The `gem` subprocesses run with
+  `GEM_HOME`/`GEM_PATH` pinned to the runtime (through the POSIX `env`
+  command, argv arrays only) and with the invoking process's bundler
+  context stripped (`RUBYOPT`, `RUBYLIB`, `BUNDLE_*`/`BUNDLER_*`), so
+  a `bundle exec ace-lab prepare` converges the LAB runtime, never its
+  own bundle. The runtime directory is created only with
+  administrator privileges; a symlink or non-directory at `gem_home`
+  is refused (takeover posture). Installs fetch from the `gem`
+  command's configured sources (provisioning network access, like
+  cloning a declared remote) with `--no-document`. `--dry-run` is a
+  faithful prediction: the read-only probe runs, statuses are
+  `would_install`/`would_update`/`exists`, nothing is created or
+  installed, and a runtime that would need privileges predicts the wet
+  failure.
 - **Exit codes.** A wet run with failed items prints the report, then
   exits non-zero enumerating each `<section>/<item>: <message>`;
   `--dry-run` exits 0 whenever a report renders (conflicts appear as
@@ -408,8 +437,9 @@ existing molecules in a fixed order:
    present) must not grant projects the manifest does not declare: a
    ready or foreign lab is refused with a classified error and zero
    writes, identically in wet runs and `--dry-run` (prediction parity).
-2. **prepare (L8.1)** — accounts → directories → keys → roles, exactly
-   as `ace-lab prepare` (same organism, same per-item report).
+2. **prepare (L8.1)** — accounts → directories → keys → roles → gems,
+   exactly as `ace-lab prepare` (same organism, same per-item report;
+   the declared gem set converges into the declared target runtime).
 3. **project add (L8.2) per declared project** — repository, private
    `_overseer`, project registry, exactly as `ace-lab project add`.
    Projects are isolated: one failing project does not block the
@@ -486,6 +516,7 @@ never taken over, never cleaned:
 | --- | --- | --- |
 | declared directory | symlink, non-directory, or foreign ownership | step fails with a resolve-manually message; projects and grants are gated as dependency failures |
 | key pair | foreign-owned key files or `.ssh`, non-regular file | step fails with a resolve-manually message |
+| gem set | symlinked or non-directory runtime, missing privileges, or a failed probe/install | every gem item fails with a classified message; projects and grants are gated as dependency failures |
 | project repository | non-empty non-Git directory, or a Git repository with a different origin | step fails: "refusing to take over a foreign location" / "refusing to overwrite an existing registration"; the other projects still run (isolation) |
 | grants | trusted document granting projects outside the manifest, or a document that fails verification/parsing | the whole install refuses before any mutation ("refusing to install over a foreign lab"), wet and in `--dry-run` alike |
 
@@ -533,6 +564,9 @@ a concrete reason (never a bare boolean):
 | grants | the trusted document is present and verifiable, and every manifest principal's grants resolve through the real read-side mechanics (`CallerAuthorizer`) to the declared projects |
 | registry | each project is registered in its `.ace/lab/config.yml` (visibility through the configuration cascade) |
 | overseer | `.ace-tasks/_overseer/` exists and is ignored by Git (`git check-ignore`) |
+| adapters | configuration is a mapping; a declared local command resolves (probed for the target executors); `kind: hitl` routes are installed in every project's `.ace/hitl/config.yml` and satisfy the runtime loader's rules |
+| tools | each required tool resolves to an executable the target executors can run (presence + permission probe, no execution) |
+| gems | each declared gem is installed at its EXACT declared version in the declared target runtime — judged through the same read-only probe prepare converges from; a missing runtime, a missing gem or a version mismatch blocks readiness (a missing `gem` executable reports `unknown`, the offline posture) |
 
 The overall verdict is `ready` only when no check failed. A failure
 never hides healthy data: the full report renders first (table or

@@ -452,5 +452,78 @@ module Atoms
       end
       assert_match(/tools must be a list of non-empty strings/, error.message)
     end
+
+    # --- gemset: target runtime + required gem set (gad.2) --------------
+
+    def test_gemset_normalizes_with_defaults
+      result = normalize(manifest("gemset" => {
+        "gem_home" => " /opt/lab/gems ",
+        "gems" => [{"name" => " ace-lab ", "version" => " 0.13.0 "}]
+      }))
+
+      assert_equal "/opt/lab/gems", result["gemset"]["gem_home"]
+      assert_equal [{"name" => "ace-lab", "version" => "0.13.0"}], result["gemset"]["gems"]
+    end
+
+    def test_absent_gemset_defaults_to_no_runtime_and_no_gems
+      result = normalize(manifest)
+
+      assert_equal({"gem_home" => nil, "gems" => []}, result["gemset"])
+    end
+
+    def test_gemset_section_validation
+      [
+        ["accounts", /gemset must be a mapping/],
+        [{"gems" => []}, /gemset gem_home is required and must be an absolute path/],
+        [{"gem_home" => "opt/lab/gems"}, /gemset gem_home is required and must be an absolute path/],
+        [{"gem_home" => "/opt/g", "gems" => "ace-lab"}, /gemset gems must be a list/],
+        [{"gem_home" => "/opt/g", "gems" => ["ace-lab"]}, /gemset gems entry #0 must be a mapping/],
+        [{"gem_home" => "/opt/g", "gems" => [{"version" => "0.13.0"}]},
+         /gemset gems entry name is required and must be a gem name/],
+        [{"gem_home" => "/opt/g", "gems" => [{"name" => "ACE::Lab", "version" => "0.13.0"}]},
+         /gemset gems entry name is required and must be a gem name/],
+        [{"gem_home" => "/opt/g", "gems" => [{"name" => "ace-lab"}]},
+         /gemset gems entry version is required and must be an exact version/],
+        [{"gem_home" => "/opt/g", "gems" => [{"name" => "ace-lab", "version" => "  "}]},
+         /gemset gems entry version is required and must be an exact version/],
+        [{"gem_home" => "/opt/g", "gems" => [{"name" => "ace-lab", "version" => "~> 0.13"}]},
+         /gemset gems entry version must be an exact gem version/],
+        [{"gem_home" => "/opt/g", "gems" => [{"name" => "ace-lab", "version" => "latest"}]},
+         /gemset gems entry version must be an exact gem version/],
+        [{"gem_home" => "/opt/g", "gems" => [{"name" => "ace-lab", "version" => "0.13.0", "extra" => 1}]},
+         /gemset gems entry #0 has unknown key 'extra'/],
+        [{"gem_home" => "/opt/g", "platform" => "linux"}, /gemset has unknown key 'platform'/]
+      ].each do |gemset, pattern|
+        gemset = [gemset] if gemset.is_a?(String)
+        error = assert_raises(Ace::Lab::InvalidConfigurationError) do
+          normalize(manifest("gemset" => gemset))
+        end
+
+        assert_match(pattern, error.message)
+      end
+    end
+
+    def test_gemset_rejects_duplicate_gem_names
+      error = assert_raises(Ace::Lab::InvalidConfigurationError) do
+        normalize(manifest("gemset" => {
+          "gem_home" => "/opt/lab/gems",
+          "gems" => [
+            {"name" => "ace-lab", "version" => "0.13.0"},
+            {"name" => "ace-lab", "version" => "0.14.0"}
+          ]
+        }))
+      end
+
+      assert_match(/gemset gems entry name is declared more than once/, error.message)
+    end
+
+    def test_gemset_accepts_exact_pre_release_versions
+      result = normalize(manifest("gemset" => {
+        "gem_home" => "/opt/lab/gems",
+        "gems" => [{"name" => "ace-lab", "version" => "1.0.0.pre.1"}]
+      }))
+
+      assert_equal "1.0.0.pre.1", result["gemset"]["gems"].first["version"]
+    end
   end
 end

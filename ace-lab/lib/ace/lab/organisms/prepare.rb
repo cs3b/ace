@@ -6,17 +6,19 @@ require_relative "../molecules/account_provisioner"
 require_relative "../molecules/directory_provisioner"
 require_relative "../molecules/key_provisioner"
 require_relative "../molecules/role_verifier"
+require_relative "../molecules/gemset_provisioner"
 
 module Ace
   module Lab
     module Organisms
       # Orchestrates the preparation phase (L8.1) from the trusted install
-      # manifest: accounts → directories → keys → roles, in that fixed
+      # manifest: accounts → directories → keys → roles → gems, in that fixed
       # order, each through its idempotent provisioner molecule. The
       # aggregated report is the contract consumed by `ace-lab project add`
       # (7.1) and `ace-lab install` (7.2); `ok` means zero failed items.
       # Key and role items whose account failed are reported as dependency
-      # failures instead of being attempted. No state is written beyond
+      # failures instead of being attempted; gem items fail as dependencies
+      # when the declared runtime did not prepare. No state is written beyond
       # what the manifest declares — this organism owns no journal.
       class Prepare
         attr_reader :manifest_path, :dry_run, :platform
@@ -48,16 +50,18 @@ module Ace
           keys = prepare_keys(manifest["keys"], manifest["machine"], manifest["accounts"], available,
             unresolved, effective_dry_run)
           roles = prepare_roles(manifest["roles"], available, unresolved, effective_dry_run)
+          gems = prepare_gems(manifest["gemset"], effective_dry_run)
 
           {
-            "ok" => [accounts, directories, keys, roles].flatten.none? { |item| item["status"] == "failed" },
+            "ok" => [accounts, directories, keys, roles, gems].flatten.none? { |item| item["status"] == "failed" },
             "dry_run" => effective_dry_run,
             "machine" => manifest["machine"],
             "manifest" => manifest_path,
             "accounts" => accounts,
             "directories" => directories,
             "keys" => keys,
-            "roles" => roles
+            "roles" => roles,
+            "gems" => gems
           }
         end
 
@@ -136,6 +140,16 @@ module Ace
                "message" => "account '#{role['account']}' is not available; fix the account phase first"}
             end
           end
+        end
+
+        # The declared gem set converged into the declared runtime
+        # (gad.2): machine-level like every other section — independent
+        # of the account phases, gated by its own runtime preparation.
+        def prepare_gems(runtime, dry_run)
+          provisioner = Molecules::GemsetProvisioner.new(
+            runner: @runner, privileged: @privileged, dry_run: dry_run
+          )
+          provisioner.call(runtime: runtime)
         end
 
         def available_accounts(account_reports)

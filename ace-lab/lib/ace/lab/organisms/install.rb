@@ -19,7 +19,9 @@ module Ace
       #      authorization document must not grant projects this
       #      manifest does not declare — a ready/foreign lab is refused
       #      with a classified error and zero writes;
-      #   2. `Prepare` (L8.1): accounts → directories → keys → roles;
+      #   2. `Prepare` (L8.1): accounts → directories → keys → roles →
+      #      gems (the declared gem set converged into the declared
+      #      target runtime, gad.2);
       #   3. `ProjectAdd` (L8.2) per declared project: repository,
       #      private `_overseer`, project registry, runtime HITL route
       #      configuration (the manifest's `kind: hitl` adapters
@@ -30,12 +32,14 @@ module Ace
       #      make the installed projects visible to `ace-lab projects`
       #      and `ace-overseer projects`;
       #   5. `Verify` (final stage, task 8xg.t.sbz.7.4): the declared
-      #      adapters and required tools are part of the SAME trusted
-      #      manifest (validated at load, reported under `adapters` /
-      #      `tools`), and the converged lab must prove ready UNDER THE
-      #      TARGET ACCOUNTS — tool availability, adapter commands and
-      #      every other readiness check — or install reports not ok.
-      #      Dry runs skip this stage (nothing has converged to verify).
+      #      adapters, required tools and the declared gem set are part
+      #      of the SAME trusted manifest (validated at load, reported
+      #      under `adapters` / `tools` / `gemset`), and the converged
+      #      lab must prove ready UNDER THE
+      #      TARGET ACCOUNTS — tool availability, adapter commands,
+      #      gem-set versions and every other readiness check — or
+      #      install reports not ok. Dry runs skip this stage (nothing
+      #      has converged to verify).
       #
       # Every step is idempotent, so an interrupted re-run converges
       # where steps already completed (the resume contract .7.3 builds
@@ -64,7 +68,7 @@ module Ace
         #   constructor default (the CLI passes its --dry-run here)
         # @return [Hash] aggregated report (ok / dry_run / machine /
         #   manifest / prepare / projects / grants / adapters / tools /
-        #   verify)
+        #   gemset / verify)
         # @raise [Ace::Lab::InvalidConfigurationError] missing, untrusted
         #   or invalid manifest, or a foreign lab refusing overwrite
         #   before any mutation
@@ -123,6 +127,7 @@ module Ace
             "grants" => grants,
             "adapters" => manifest["adapters"],
             "tools" => manifest["tools"],
+            "gemset" => manifest["gemset"],
             "verify" => verify_report
           }
         end

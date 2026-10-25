@@ -9,7 +9,7 @@ module Ace
         class InstallCommandTest < Minitest::Test
           OK_PREPARE = {
             "ok" => true, "dry_run" => false, "machine" => "lab01",
-            "accounts" => [], "directories" => [], "keys" => [], "roles" => []
+            "accounts" => [], "directories" => [], "keys" => [], "roles" => [], "gems" => []
           }.freeze
 
           def ok_project(id)
@@ -111,11 +111,12 @@ module Ace
               parsed = JSON.parse(out)
               assert_equal true, parsed["ok"]
               assert_equal "lab01", parsed["machine"]
-              assert_equal %w[prepare projects grants adapters tools verify],
+              assert_equal %w[prepare projects grants adapters tools gemset verify],
                 parsed.keys - %w[ok dry_run machine manifest]
               assert_equal true, parsed.dig("verify", "ready")
               assert_empty parsed["adapters"]
               assert_empty parsed["tools"]
+              assert_equal({"gem_home" => nil, "gems" => []}, parsed["gemset"])
               assert_equal "atlas", parsed["projects"].first["project"]
               assert_equal "created", parsed["grants"]["status"]
             end
