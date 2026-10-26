@@ -21,7 +21,7 @@ class HitlCliTest < AceHitlTestCase
     assert_match(/list/, result[:stdout])
     assert_match(/update/, result[:stdout])
     assert_match(/wait/, result[:stdout])
-    refute_match(/\bask\b/, result[:stdout])
+    assert_match(/\bask\b/, result[:stdout])
     refute_match(/proposal/, result[:stdout])
   end
 

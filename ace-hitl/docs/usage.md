@@ -304,6 +304,28 @@ ace-hitl wait abc123 --scope current
 The default wait is indefinite; a positive `--timeout` bounds only this call
 and never expires the request. `wait` never invents an answer.
 
+## Ask
+
+One-turn ask: create the question, send it through the configured routes,
+block until the answer arrives, and print it. `ask` is the glue of
+`create` + `send` + `wait` for the common case where one turn ends with the
+question and resumes from the printed answer:
+
+```bash
+ace-hitl ask "Continue with batch 2?" --to captain --kind approval --question "Proceed?"
+ace-hitl ask "Auth strategy?" --to overseer --task 8xg.t.sbz.1.1 --timeout 3600
+```
+
+```
+HITL event created: 8xhkep Continue with batch 2?
+HITL event 8xhkep sent through 1 route(s):
+  captain (hermes_native): delivered - native transport ...
+Answer: Proceed with JWT
+```
+
+Exit 0 only when the answer arrived and was printed. Undelivered routes,
+a timeout, or a vanished event exit 1 with a concrete error.
+
 ## Lifecycle event names
 
 HITL lifecycle signals use this namespace:
