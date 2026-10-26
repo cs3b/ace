@@ -20,6 +20,15 @@ module Ace
         # single path segment (no dots).
         ROUTE_NAME_PATTERN = /\A[a-z0-9][a-z0-9_-]*\z/i.freeze
 
+        # A route's `recipients` list is first-class ORDERED data: each entry
+        # is a configured recipient name, position is meaningful (primary
+        # first), and the loader preserves the list verbatim — never
+        # reordered, never deduped. Selection matches an event addressed to
+        # ANY listed name, so extending coverage (a second-captain entry
+        # tomorrow) is a configuration change only: add the name under
+        # `hitl.recipients` and append it to the route's list. Duplicates
+        # carry no order meaning and are rejected as invalid.
+
         # @param config [Hash] merged hitl namespace config
         # @return [Array<Hash>] validated string-keyed routes
         # @raise [NoRoutesError, InvalidRouteError]
@@ -66,10 +75,19 @@ module Ace
 
           normalized["route"] = route
           normalized["adapter"] = adapter
-          if normalized.key?("recipients") &&
-              (!normalized["recipients"].is_a?(Array) || normalized["recipients"].empty? ||
-               !normalized["recipients"].all? { |name| name.is_a?(String) && !name.strip.empty? })
-            raise InvalidRouteError, "route '#{route}' recipients must be a non-empty list of configured recipient names"
+          if normalized.key?("recipients")
+            list = normalized["recipients"]
+            unless list.is_a?(Array) && !list.empty? && list.all? { |name| name.is_a?(String) && !name.strip.empty? }
+              raise InvalidRouteError, "route '#{route}' recipients must be a non-empty list of configured recipient names"
+            end
+            names = list.map(&:strip)
+            duplicates = names.tally.select { |_, count| count > 1 }.keys
+            unless duplicates.empty?
+              raise InvalidRouteError,
+                "route '#{route}' recipients list repeats #{duplicates.join(", ")}: recipients are ordered data " \
+                "and must list each configured name once"
+            end
+            normalized["recipients"] = names
           end
           normalized
         end

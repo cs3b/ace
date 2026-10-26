@@ -159,7 +159,10 @@ hitl:
   adapters:
     routes:
       - route: overseer-terminal   # display name; defaults to the adapter name
-        recipients: [overseer]     # configured names resolved to the stored destination
+        recipients: [overseer]     # ordered: configured names, primary first;
+                                   # resolved to the stored destination before
+                                   # any adapter runs; appending a name extends
+                                   # coverage with zero code change
         adapter: terminal          # built-in: any ace-runtime terminal
         runtime: herdr             # tmux | herdr
         pane: p5                   # opaque pane handle (runtime-owned)

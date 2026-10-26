@@ -106,6 +106,50 @@ module Ace
             HitlRouteLoader.for_recipient(HitlRouteLoader.load(cfg), recipient: address, config: cfg)
           end
         end
+
+        # Recipients are first-class ordered data: a second-captain entry
+        # tomorrow is a configuration change only — no loader, sender, or
+        # adapter code changes. Position is preserved verbatim, and an event
+        # addressed to ANY listed name selects the route.
+        def test_recipients_are_ordered_data_extendable_without_code_change
+          cfg = config([
+            {"route" => "captain", "adapter" => "terminal", "runtime" => "herdr", "pane" => "p1",
+             "recipients" => ["captain", "second-captain"]},
+            {"route" => "overseer-terminal", "adapter" => "terminal", "runtime" => "herdr", "pane" => "p2",
+             "recipients" => ["overseer", "captain"]}
+          ])
+          cfg["hitl"]["recipients"] = {
+            "captain" => {"machine" => "lab", "panel" => "ace"},
+            "second-captain" => {"machine" => "lab", "panel" => "ace-2"},
+            "overseer" => {"machine" => "lab", "panel" => "w6:p2S"}
+          }
+
+          routes = HitlRouteLoader.load(cfg)
+          assert_equal ["captain", "second-captain"], routes.first["recipients"],
+            "the loader preserves the configured order verbatim"
+
+          captain = {"machine" => "lab", "panel" => "ace"}
+          second_captain = {"machine" => "lab", "panel" => "ace-2"}
+          selected_for_captain = HitlRouteLoader.for_recipient(routes, recipient: captain, config: cfg)
+            .map { |route| route["route"] }
+          selected_for_second = HitlRouteLoader.for_recipient(routes, recipient: second_captain, config: cfg)
+            .map { |route| route["route"] }
+          assert_includes selected_for_captain, "captain"
+          assert_equal ["captain"], selected_for_second,
+            "the appended second-captain entry selects the same route with zero code change"
+          assert_equal ["captain", "overseer-terminal"],
+            HitlRouteLoader.for_recipient(routes, recipient: captain, config: cfg).map { |route| route["route"] },
+            "route attempt order follows the configured route list, independent of recipients order"
+        end
+
+        def test_duplicate_recipient_names_are_rejected_as_invalid
+          cfg = config([{"adapter" => "terminal", "recipients" => ["captain", "captain"]}])
+          cfg["hitl"]["recipients"] = {"captain" => {"machine" => "lab", "panel" => "ace"}}
+          error = assert_raises(HitlRouteLoader::InvalidRouteError) do
+            HitlRouteLoader.load(cfg)
+          end
+          assert_includes error.message, "recipients list repeats captain"
+        end
       end
     end
   end
