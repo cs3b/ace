@@ -166,9 +166,10 @@ class NativeSyncTest < AceHermesTestCase
     reply(record, text: "private-eyes-answer")
     project = File.dirname(File.dirname(@roots.first))
     FileUtils.mkdir_p(File.join(project, ".ace", "hitl"))
-    File.write(File.join(project, ".ace", "hitl", "config.yml"), {"root_dir" => @roots.first, "machine" => "lab", "recipients" => {"self" => {"machine" => "lab", "panel" => "w1:p1"}}}.to_yaml)
-    route_path = File.join(@tmp, "route.json")
-    File.write(route_path, JSON.generate(@route))
+    File.write(File.join(project, ".ace", "hitl", "config.yml"),
+      {"hitl" => {"root_dir" => @roots.first, "machine" => "lab",
+                  "recipients" => {"self" => {"machine" => "lab", "panel" => "w1:p1"}},
+                  "adapters" => {"routes" => [@route]}}}.to_yaml)
     source_root = File.expand_path("../../../..", __dir__)
     eyes_root = File.join(source_root, "ace-wake/wake")
     script = <<~JS
@@ -179,7 +180,7 @@ class NativeSyncTest < AceHermesTestCase
       const build=()=>new Eyes({snapshot,save:s=>{snapshot=s;},
         observe:config=>observeHitl(#{project.to_json},config),
         deliver:batch=>{sends.push(batch);return true;}});
-      let eyes=build();eyes.start({syncRoutes:[#{route_path.to_json}]});
+      let eyes=build();eyes.start({syncRoutes:[{config:#{File.join(project, '.ace', 'hitl', 'config.yml').to_json},route:#{@route['route'].to_json}}]});
       await eyes.tick();assert.equal(sends.length,1);
       const [key,value]=sends[0][0];eyes.ack(key,value.revision);
       await eyes.tick();eyes.dispose();eyes=build();await eyes.tick();
@@ -195,17 +196,55 @@ class NativeSyncTest < AceHermesTestCase
     assert_equal "private-eyes-answer", owner(@roots.first).show(event.id, scope: "current")[:event].answer
   end
 
-  def test_sync_cli_needs_no_lifecycle_endpoint_and_prints_no_reply_content
+  def test_sync_reads_the_project_config_route_without_a_second_file
     record = publish(question)
     receipt(record)
     reply(record, text: "123456")
-    path = File.join(@tmp, "route.json")
-    File.write(path, JSON.generate(@route))
+    project = File.dirname(File.dirname(@roots.first))
+    FileUtils.mkdir_p(File.join(project, ".ace", "hitl"))
+    File.write(File.join(project, ".ace", "hitl", "config.yml"),
+      {"hitl" => {"machine" => "lab", "adapters" => {"routes" => [@route]}}}.to_yaml)
+
     out = StringIO.new
-    H::Hermes::CLI.start(["sync", "--config", path], output: out)
-    assert_equal 1, JSON.parse(out.string)["replies"]
+    Dir.chdir(project) { H::Hermes::CLI.start(["sync"], output: out) }
+    result = JSON.parse(out.string)
+    assert_equal 1, result["replies"]
     refute_includes out.string, "123456"
     assert_equal 0o600, File.stat(File.join(@folder, "request-#{record['key']}.json")).mode & 0o777
+  end
+
+  def test_sync_selects_routes_from_the_project_config_explicitly_or_unambiguously
+    project = File.dirname(File.dirname(@roots.first))
+    config_path = File.join(project, ".ace", "hitl", "config.yml")
+    FileUtils.mkdir_p(File.dirname(config_path))
+    other = @route.merge("route" => "captain-2")
+
+    # Ambiguous without --route when two native routes are declared.
+    File.write(config_path, {"adapters" => {"routes" => [@route, other]}}.to_yaml)
+    error = assert_raises(Ace::Support::Cli::Error) do
+      Dir.chdir(project) { H::Hermes::CLI.start(["sync"], output: StringIO.new) }
+    end
+    assert_includes error.message, "choose --route NAME"
+
+    # --route selects; a flat (non-shaped) config document works too.
+    Dir.chdir(project) do
+      out = StringIO.new
+      H::Hermes::CLI.start(["sync", "--route", "captain-2"], output: out)
+      assert_equal 0, JSON.parse(out.string)["replies"]
+    end
+
+    # An unknown --route name is a concrete error.
+    error = assert_raises(Ace::Support::Cli::Error) do
+      Dir.chdir(project) { H::Hermes::CLI.start(["sync", "--route", "absent"], output: StringIO.new) }
+    end
+    assert_includes error.message, "no hermes_native route 'absent'"
+
+    # A non-default root is addressed with an explicit --config.
+    elsewhere = File.join(@tmp, "elsewhere.yml")
+    File.write(elsewhere, {"hitl" => {"adapters" => {"routes" => [@route]}}}.to_yaml)
+    out = StringIO.new
+    H::Hermes::CLI.start(["sync", "--config", elsewhere, "--route", "captain"], output: out)
+    assert_kind_of Integer, JSON.parse(out.string)["replies"]
   end
 
   def test_real_ruby_frame_python_gateway_fixture_and_ruby_owner_round_trip

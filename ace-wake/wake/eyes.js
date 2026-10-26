@@ -14,8 +14,10 @@ export function validateConfig(input) {
     if (!Number.isInteger(config[key]) || config[key] < min || config[key] > max) throw new Error(`Invalid ${key}`);
   }
   if (typeof config.recipient !== "string" || !/^[a-zA-Z0-9_-]{1,64}$/.test(config.recipient)) throw new Error("Invalid observer recipient");
+  const validSource = (p) => typeof p === "object" && p !== null && typeof p.config === "string" && p.config.startsWith("/") &&
+    (p.route === undefined || (typeof p.route === "string" && /^[a-zA-Z0-9_-]{1,64}$/.test(p.route)));
   if (!["current", "all"].includes(config.scope) || !Array.isArray(config.syncRoutes) || config.syncRoutes.length > 10 ||
-      config.syncRoutes.some((p) => typeof p !== "string" || !p.startsWith("/"))) throw new Error("Invalid eyes sources");
+      config.syncRoutes.some((p) => !validSource(p))) throw new Error("Invalid eyes sources");
   return config;
 }
 

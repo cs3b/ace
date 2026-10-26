@@ -10,8 +10,12 @@ const execute = promisify(execFile);
  * No Ruby parsing, private text, shell command strings or model work here. */
 export async function observeHitl(cwd, config) {
   const options = { cwd, timeout: config.timeoutMs, maxBuffer: 1024 * 1024, encoding: "utf8" };
-  for (const route of config.syncRoutes) {
-    const { stdout } = await execute("ace-hitl-hermes", ["sync", "--config", route], options);
+  for (const source of config.syncRoutes) {
+    // One source per project: each entry names the project hitl config and,
+    // when several hermes_native routes exist there, the route to reconcile.
+    const argv = ["sync", "--config", source.config];
+    if (source.route !== undefined) argv.push("--route", source.route);
+    const { stdout } = await execute("ace-hitl-hermes", argv, options);
     const result = JSON.parse(stdout);
     if (!Array.isArray(result.errors) || result.errors.length) throw new Error("Native synchronization incomplete");
   }

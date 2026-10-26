@@ -110,11 +110,13 @@ settlements can retire matching pending notifications without another wake;
 notification acknowledgement alone never changes those task records.
 
 `current` observes the current project/worktree; `all` includes only its linked
-Git worktrees. Set `syncRoutes` to the absolute paths of existing native route JSON
-files to import real Hermes delivery/reply/instruction records before observing.
-An empty list observes canonical local HITL only and makes no Telegram-readiness
-claim. Event roots, channel ownership and authorization remain in those existing
-route configurations. The observer does not discover unrelated repositories.
+Git worktrees. Set `syncRoutes` to entries `{config, route}` — the absolute path
+of the project's `.ace/hitl/config.yml` plus, when several `hermes_native`
+routes exist there, the route name — to import real Hermes delivery/reply/
+instruction records before observing. An empty list observes canonical local
+HITL only and makes no Telegram-readiness claim. Event roots, channel ownership
+and authorization remain in that single project route configuration. The
+observer does not discover unrelated repositories.
 
 The interval invokes deterministic native sync and read-only `ace-overseer observe`,
 not the model. The HITL owner emits identities and semantic revision hashes,

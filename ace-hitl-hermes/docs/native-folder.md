@@ -206,12 +206,18 @@ An exact Telegram Reply to any of those message IDs binds to the original
 project, event root, file and case. Replies from other users are refused.
 Unknown Replies are retained privately and never become instructions.
 
-For `sync`, save the exact native route object above as a JSON file (same
-`route`, `folder`, `project`, `channel`, `machine` and root lists). The owner runs:
+For `sync`, the route comes straight from the project's own
+`.ace/hitl/config.yml` (`hitl.adapters.routes`) — no second native-route JSON
+file exists. From inside the project, the owner runs:
 
 ```sh
-ace-hitl-hermes sync --config /absolute/project-native-route.json
+ace-hitl-hermes sync
 ```
+
+`--route NAME` selects among several `hermes_native` routes; a single native
+route needs no name. `--config /absolute/other/.ace/hitl/config.yml` addresses
+a non-default project root. The config document may be shaped (`hitl:`
+namespace) or flat; both are accepted.
 
 This is one pass, not a service. It reads transport delivery receipts, updates
 the original event's existing `delivery.<route>` status, and imports exact
