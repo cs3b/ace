@@ -1,4 +1,4 @@
-import aceWakeFactory from "../../handbook/extensions/ace-wake/index.js";
+import aceWakeFactory from "../index.js";
 
 const HOST_PORTS = ["setIntervalFn", "clearIntervalFn", "watchFactory", "statFn", "resolveTargets"];
 

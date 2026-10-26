@@ -5,44 +5,52 @@ require_relative "../test_helper"
 class Ace::Handbook::Integration::PiExtensionAssetsTest < Minitest::Test
   def setup
     @package_root = File.expand_path("../..", __dir__)
+    # The ace-wake extension moved out of this package: its canonical source
+    # is the repository-top-level ace-wake/ directory, deployed by the host
+    # lane. These tests pin that boundary.
+    @extension_root = File.join(@package_root, "..", "ace-wake")
   end
 
-  def test_provider_manifest_declares_extension_projection
+  def test_provider_manifest_declares_no_extension_projection
     manifest = provider_manifest
 
-    assert_equal ".pi/extensions", manifest.fetch("extensions_dir")
+    refute manifest.key?("extensions_dir"),
+      "the pi manifest must not declare an extensions_dir: the extension no longer ships in this package"
   end
 
-  def test_extension_entrypoint_and_modules_ship_in_the_gem
+  def test_extension_does_not_ship_in_the_gem
     gem_files = gemspec_file_list
 
-    assert_includes gem_files, "handbook/extensions/ace-wake/index.js"
-    assert_includes gem_files, "handbook/extensions/ace-wake/package.json"
-    assert_includes gem_files, "handbook/extensions/ace-wake/wake/types.js"
-    assert_includes gem_files, "handbook/extensions/ace-wake/wake/wake-dispatcher.js"
-    assert_includes gem_files, "handbook/extensions/ace-wake/wake/wake-registry.js"
-    assert_includes gem_files, "handbook/extensions/ace-wake/wake/loop-subscription.js"
-    assert_includes gem_files, "handbook/extensions/ace-wake/wake/watch-subscription.js"
-    assert_includes gem_files, "handbook/extensions/ace-wake/wake/wake-command-parser.js"
-    assert_includes gem_files, "handbook/extensions/ace-wake/wake/eyes.js"
-    assert_includes gem_files, "handbook/extensions/ace-wake/wake/eyes-runtime.js"
-    assert gem_files.grep(%r{^test/js/}).empty?, "test assets must not ship in the gem"
+    assert gem_files.grep(%r{handbook/extensions}).empty?,
+      "the gem must not carry the extension; ace-wake/ is the single source"
+    assert gem_files.grep(%r{test/js/}).empty?, "test assets must not ship in the gem"
+  end
+
+  def test_extension_source_lives_at_the_repository_top_level
+    assert File.directory?(File.expand_path(@extension_root)),
+      "ace-wake/ must exist at the repository top level"
+    assert File.file?(File.join(@extension_root, "index.js"))
+    assert File.file?(File.join(@extension_root, "README.md")), "provenance must be documented"
+    %w[types.js wake-dispatcher.js wake-registry.js loop-subscription.js
+      watch-subscription.js wake-command-parser.js eyes.js eyes-runtime.js].each do |module_file|
+      assert File.file?(File.join(@extension_root, "wake", module_file)), "missing wake module: #{module_file}"
+    end
   end
 
   def test_extension_entrypoint_is_a_discoverable_subdirectory_index
     # Pi's extension discovery accepts direct .ts/.js files and subdirectories
     # containing an index.js/index.ts; a .mjs entrypoint would never load
     # unless explicitly passed.
-    assert File.file?(File.join(@package_root, "handbook", "extensions", "ace-wake", "index.js"))
-    refute File.file?(File.join(@package_root, "handbook", "extensions", "ace-wake", "index.mjs"))
-    entry = File.read(File.join(@package_root, "handbook", "extensions", "ace-wake", "index.js"))
+    assert File.file?(File.join(@extension_root, "index.js"))
+    refute File.file?(File.join(@extension_root, "index.mjs"))
+    entry = File.read(File.join(@extension_root, "index.js"))
 
     imports = entry.scan(/import\s+[^"']*["']([^"']+)["']/).flatten
     offenders = imports.reject { |name| name.start_with?(".", "node:") }
     assert_empty offenders, "the extension must rely only on relative modules and node builtins"
   end
 
-  def test_extension_projects_through_handbook_sync_into_pi_extensions
+  def test_sync_projects_no_extension_assets_for_pi
     Dir.mktmpdir do |tmpdir|
       project_root = File.join(tmpdir, "project")
       FileUtils.mkdir_p(project_root)
@@ -57,30 +65,17 @@ class Ace::Handbook::Integration::PiExtensionAssetsTest < Minitest::Test
 
       result = syncer.sync(provider: "pi").first
 
-      assert_equal ".pi/extensions", result.fetch(:relative_extensions_dir)
-      assert_equal projected_relative_paths.size, result.fetch(:projected_extensions)
-      assert_equal 0, result.fetch(:removed_extension_entries)
-
-      projected_relative_paths.each do |relative_path|
-        projected = File.join(project_root, ".pi", "extensions", relative_path)
-        assert File.file?(projected), "projected extension asset missing: #{relative_path}"
-        assert FileUtils.compare_file(projected, File.join(@package_root, "handbook", "extensions", relative_path))
-      end
-
-      receipt_path = File.join(project_root, ".pi", "extensions", ".ace-handbook-projection.json")
-      receipt = JSON.parse(File.read(receipt_path))
-      assert_equal "ace-handbook-integration-pi", receipt.fetch("source")
-      assert_equal projected_relative_paths.sort, receipt.fetch("files").sort
-
-      second = syncer.sync(provider: "pi").first
-      assert_equal 0, second.fetch(:updated_extension_files), "projection must be idempotent"
+      refute result.key?(:relative_extensions_dir),
+        "pi sync must not project extension assets anymore"
+      refute File.exist?(File.join(project_root, ".pi", "extensions")),
+        "no .pi/extensions directory may appear from a package without extension assets"
     end
   end
 
   def test_javascript_suite_passes_on_the_installed_node_runtime
     skip "node is not installed" unless node_bin
 
-    output = +`#{node_bin} --test #{File.join(@package_root, "test", "js", "*.test.mjs")} 2>&1`
+    output = +`#{node_bin} --test #{File.join(@extension_root, "test", "*.test.mjs")} 2>&1`
     assert_equal 0, $?.exitstatus, "node test suite failed:\n#{output}"
     assert_match(/^ℹ pass \d+/m, output, "node test summary missing:\n#{output}")
     assert_match(/^ℹ fail 0$/m, output, "node test failures:\n#{output}")
@@ -98,13 +93,6 @@ class Ace::Handbook::Integration::PiExtensionAssetsTest < Minitest::Test
     Dir.chdir(@package_root) do
       spec.files
     end
-  end
-
-  def projected_relative_paths
-    source_root = File.join(@package_root, "handbook", "extensions")
-    Dir.glob(File.join(source_root, "**", "*"))
-       .select { |path| File.file?(path) }
-       .map { |path| Pathname.new(path).relative_path_from(Pathname.new(source_root)).to_s }
   end
 
   def node_bin

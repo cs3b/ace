@@ -74,7 +74,10 @@ describe("report wake (L7.3 continuation transport)", () => {
     host.resetSends();
     await session.reload();
 
-    assert.equal(host.watcherCount(), 1, "restart re-registers the report watch exactly once");
+    // The report watch re-registers exactly once; the ask bridge's anchor on
+    // the (existing) inbox folder is the extension's second native handle.
+    assert.equal(host.watcherCountFor(HITL_DIR), 2,
+      "restart re-registers the report watch exactly once next to the ask bridge anchor");
     assert.equal(reportSends(host).length, 0, "restart never replays past reports");
 
     // The same commissioned process continues: the next report wakes the
@@ -212,7 +215,8 @@ describe("report wake (L7.3 continuation transport)", () => {
     const render = host.statusRenders.at(-1);
     assert.ok(render, "the deactivation must refresh the visible status");
     assert.match(render.text, /watch reports error/, `got: ${render?.text}`);
-    assert.equal(host.watcherCount(), 0, "the subscription is fully torn down, never retried");
+    assert.equal(host.watcherCount(), 1,
+      "the failed subscription is fully torn down, never retried; only the ask bridge anchor remains");
   });
 
   it("re-expands the worktree targets exactly once per restart", async () => {
@@ -221,8 +225,9 @@ describe("report wake (L7.3 continuation transport)", () => {
     host.resetSends();
     await session.reload();
 
-    // One subscription, two targets: main inbox + worktree inbox.
-    assert.equal(host.watcherCount(), 2, "restart re-registers one watcher per discovered inbox");
+    // One subscription, two targets: main inbox + worktree inbox, plus the
+    // ask bridge's anchor on the main inbox folder.
+    assert.equal(host.watcherCount(), 3, "restart re-registers one watcher per discovered inbox");
     assert.equal(reportSends(host).length, 0, "restart never replays past reports");
 
     host.setFile(WORKTREE_INBOX, { mtimeMs: 30, size: 60 });

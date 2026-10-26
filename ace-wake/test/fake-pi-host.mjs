@@ -11,6 +11,7 @@ export function createFakeHost() {
   let currentTime = 0;
   let nextIntervalId = 1;
   const intervals = new Map();
+  /** Watchers per registered path: path -> Map(id -> watcher). */
   const watchers = new Map();
   let nextWatcherId = 1;
 
@@ -98,17 +99,30 @@ export function createFakeHost() {
 
     commands,
 
-    /** Fire the filesystem change callback of the watcher covering path.
+    /** Fire the filesystem change callback of EVERY watcher covering path.
      * The production watchFactory watches the target itself for directory
-     * targets and the target's parent directory for file targets, so the
-     * fake resolves the watcher through both shapes. */
+     * targets and the target's parent directory for file targets; several
+     * subscriptions may watch the same directory (e.g. the registry's inbox
+     * watch and the ask bridge's anchor), and a real event reaches them all. */
     triggerWatch(path) {
-      watcherFor(path).onChange();
+      const covering = watchersCovering(path);
+      if (covering.length === 0) {
+        throw new Error(`no watcher registered covering ${path}`);
+      }
+      for (const watcher of covering) {
+        watcher.onChange();
+      }
     },
 
-    /** Fail a registered watcher the way node:fs.watch reports runtime errors. */
+    /** Fail EVERY watcher covering path the way node:fs.watch reports runtime errors. */
     failWatch(path, message) {
-      watcherFor(path).onError(new Error(message));
+      const covering = watchersCovering(path);
+      if (covering.length === 0) {
+        throw new Error(`no watcher registered covering ${path}`);
+      }
+      for (const watcher of covering) {
+        watcher.onError(new Error(message));
+      }
     },
 
     /** The directory watchFactory callbacks receive for a watched file. */
@@ -117,12 +131,28 @@ export function createFakeHost() {
     },
 
     watcherCount() {
-      return watchers.size;
+      let total = 0;
+      for (const bucket of watchers.values()) {
+        total += bucket.size;
+      }
+      return total;
     },
 
-    /** The exact paths native watchers are registered on (not targets). */
+    /** Live watchers registered on exactly this path (not ancestors). */
+    watcherCountFor(path) {
+      return watchers.get(path)?.size ?? 0;
+    },
+
+    /** The exact paths native watchers are registered on (not targets); one
+     * entry per live watcher, duplicates included. */
     watcherPaths() {
-      return [...watchers.keys()];
+      const paths = [];
+      for (const [path, bucket] of watchers) {
+        for (let index = 0; index < bucket.size; index += 1) {
+          paths.push(path);
+        }
+      }
+      return paths;
     },
 
     /** Invoke a registered slash command. */
@@ -176,12 +206,17 @@ export function createFakeHost() {
   };
 
   // Port: filesystem watcher factory used by the watch subscription.
-  function watcherFor(path) {
-    const watcher = watchers.get(path) ?? watchers.get(path.slice(0, path.lastIndexOf("/")));
-    if (!watcher) {
-      throw new Error(`no watcher registered covering ${path}`);
+  // Watchers are keyed per path but several may coexist on one path (the
+  // registry's inbox watch and the ask bridge's anchor, for instance),
+  // mirroring the independent native handles of node:fs.watch.
+  function watchersCovering(path) {
+    const direct = watchers.get(path);
+    if (direct && direct.size > 0) {
+      return [...direct.values()];
     }
-    return watcher;
+    const parent = path.slice(0, path.lastIndexOf("/"));
+    const parentBucket = watchers.get(parent);
+    return parentBucket ? [...parentBucket.values()] : [];
   }
 
   const watchFactory = (path, handlers) => {
@@ -191,7 +226,10 @@ export function createFakeHost() {
       throw failure;
     }
     const id = nextWatcherId++;
-    watchers.set(path, {
+    if (!watchers.has(path)) {
+      watchers.set(path, new Map());
+    }
+    watchers.get(path).set(id, {
       onChange: handlers.onChange,
       onError: handlers.onError,
       path,
@@ -199,10 +237,8 @@ export function createFakeHost() {
     });
     return {
       close: () => {
-        for (const [key, watcher] of watchers) {
-          if (watcher.id === id) {
-            watchers.delete(key);
-          }
+        for (const bucket of watchers.values()) {
+          bucket.delete(id);
         }
       },
     };

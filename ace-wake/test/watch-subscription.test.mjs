@@ -9,8 +9,8 @@ import {
   createWatchPort,
   nodeStatFn,
   nodeWatchFactory,
-} from "../../handbook/extensions/ace-wake/wake/watch-subscription.js";
-import { WakeDispatcher } from "../../handbook/extensions/ace-wake/wake/wake-dispatcher.js";
+} from "../wake/watch-subscription.js";
+import { WakeDispatcher } from "../wake/wake-dispatcher.js";
 import { createFakeHost } from "./fake-pi-host.mjs";
 
 const WATCHED = "/fake/project/dep.txt";

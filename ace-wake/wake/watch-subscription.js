@@ -62,6 +62,14 @@ export function canonicalizeWatchPath(baseDir, path) {
  * records the same inactive-error state without a native handle, which
  * reconciliation uses for subscriptions that could not be restarted.
  *
+ * Mount-aware poll fallback: on mounts where inotify events are unreliable
+ * (FUSE/virtiofs — the HITL transport folder mounts report no child events,
+ * so a registered watch would never fire), the port classifies each target
+ * through the injected `statfsFn` port and runs a 2.5 s reconcile timer
+ * that re-stats the fingerprint and wakes on change. fs.watch stays primary
+ * everywhere else; a failing or unsupported statfs keeps fs.watch primary
+ * rather than failing the watch.
+ *
  * @param {object} ports
  * @param {(path: string, handlers: {onChange: () => void, onError: (error: Error) => void}) => {close: () => void}} ports.watchFactory
  * @param {(path: string) => {mtimeMs: number, size: number}} ports.statFn
@@ -76,6 +84,13 @@ export function canonicalizeWatchPath(baseDir, path) {
  *   asynchronous on some platforms, so a change landing in the registration
  *   gap may produce no callback; the reconcile re-stats once and wakes on a
    * missed change. Defaults to a delayed macrotask.
+ * @param {(path: string) => {type: string | number}} [ports.statfsFn] Mount
+ *   classifier for the poll fallback; `type` is the filesystem type (string
+ *   where the platform reports one, Linux f_type magic number otherwise).
+ *   Throws when the mount type is unavailable; the watch then keeps fs.watch
+ *   primary. Defaults to node:fs.statfsSync.
+ * @param {number} [ports.pollIntervalMs] Reconcile cadence for targets on
+ *   mounts with unreliable inotify events. Defaults to 2500.
  * @param {() => void} [ports.onDeactivate] Invoked when a subscription leaves
  *   the active state so callers can refresh visible status.
  * @returns {{
@@ -88,6 +103,16 @@ export function canonicalizeWatchPath(baseDir, path) {
  * }}
  */
 const RECONCILE_DELAY_MS = 500;
+// Reconcile cadence for targets on mounts whose inotify events are
+// unreliable: fast enough that an ask+wait turn feels responsive, slow
+// enough that a fingerprint re-stat per subscription stays cheap.
+const POLL_INTERVAL_MS = 2500;
+// Filesystem types whose event delivery cannot be trusted (the HITL
+// transport folder is a virtiofs mount and is deaf to fs.watch).
+const UNRELIABLE_FSTYPES = new Set(["virtiofs", "fuse", "fuseblk", "fusectl"]);
+// Linux f_type magic numbers for the same unreliable family (node:fs.statfs
+// reports the numeric f_type on Linux): VIRTIOFS, FUSE, FUSECTL.
+const UNRELIABLE_FSTYPE_MAGIC = new Set([0x49475649, 0x65735546, 0x65735543]);
 // How far above a not-yet-existing target an ancestor watch may climb
 // (enough for <worktree>/.ace-local/hitl inside any sane worktree layout).
 const MAX_ANCESTOR_CLIMB = 6;
@@ -96,11 +121,16 @@ const EXCERPT_BYTES = 200;
 // Fingerprint segment of a target that does not (yet) exist.
 const ABSENT_SEGMENT = "absent";
 
-export function createWatchPort({ watchFactory, statFn, readFn = nodeReadFn, baseDir = process.cwd(), canonicalizeFn = canonicalizeWatchPath, resolveTargets = expandInboxWatchTargets, scheduleReconcile = defaultScheduleReconcile, onDeactivate }) {
-  /** @type {Map<string, {watchers: Array<{path: string, watchPath: string, watcher: {close: () => void}}>, paths: string[], definition: import("./types.js").WatchDefinition, fingerprint: string, previousFingerprint: string, dirty: boolean}>} */
+export function createWatchPort({ watchFactory, statFn, readFn = nodeReadFn, baseDir = process.cwd(), canonicalizeFn = canonicalizeWatchPath, resolveTargets = expandInboxWatchTargets, scheduleReconcile = defaultScheduleReconcile, statfsFn = nodeStatfsFn, pollIntervalMs = POLL_INTERVAL_MS, onDeactivate }) {
+  /** @type {Map<string, {watchers: Array<{path: string, watchPath: string, watcher: {close: () => void}}>, paths: string[], primaryPath: string, definition: import("./types.js").WatchDefinition, fingerprint: string, previousFingerprint: string, dirty: boolean, poll: boolean, onWake: Function}>} */
   const active = new Map();
   /** @type {Map<string, string>} */
   const errors = new Map();
+  /** Cached mount classification per target path (mount types do not flip
+   * at interactive timescales; a failed classification is not cached). */
+  const mountClassCache = new Map();
+  /** @type {import("node:timers").NodeJS.Timeout | null} */
+  let pollTimer = null;
 
   return {
     /**
@@ -125,10 +155,21 @@ export function createWatchPort({ watchFactory, statFn, readFn = nodeReadFn, bas
       const provenAbsent = new Set(watchers.filter((each) => each.watchPath !== each.path).map((each) => each.path));
       const fingerprint = aggregateFingerprint(paths, canonicalPath, provenAbsent);
 
-      active.set(definition.name, { watchers, paths, primaryPath: canonicalPath, definition, fingerprint, previousFingerprint: fingerprint, dirty: false });
+      active.set(definition.name, {
+        watchers,
+        paths,
+        primaryPath: canonicalPath,
+        definition,
+        fingerprint,
+        previousFingerprint: fingerprint,
+        dirty: false,
+        poll: paths.some((path) => mountIsUnreliable(path)),
+        onWake,
+      });
       // Close the registration gap: a change between baseline capture and
       // watcher effectiveness produces no callback, so re-stat once.
       scheduleReconcile(() => handleChange(definition, onWake));
+      ensurePollTimer();
       return canonicalPath;
     },
 
@@ -253,6 +294,69 @@ export function createWatchPort({ watchFactory, statFn, readFn = nodeReadFn, bas
       }
       active.delete(name);
     }
+    if (pollTimer !== null && !anyUnreliableActive()) {
+      stopPollTimer();
+    }
+  }
+
+  /** @returns {boolean} true when any active subscription watches an unreliable mount. */
+  function anyUnreliableActive() {
+    for (const entry of active.values()) {
+      if (entry.poll) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /** Arm the reconcile timer exactly while an unreliable-mount subscription exists. */
+  function ensurePollTimer() {
+    if (pollTimer !== null || !anyUnreliableActive()) {
+      return;
+    }
+    pollTimer = setInterval(() => {
+      // One reconcile pass re-stats every active subscription's fingerprint;
+      // reliable-mount subscriptions compare identical and never wake.
+      for (const entry of [...active.values()]) {
+        handleChange(entry.definition, entry.onWake);
+      }
+      if (!anyUnreliableActive()) {
+        stopPollTimer();
+      }
+    }, pollIntervalMs);
+    // Never hold the host process open on the extension's behalf.
+    pollTimer.unref?.();
+  }
+
+  function stopPollTimer() {
+    if (pollTimer !== null) {
+      clearInterval(pollTimer);
+      pollTimer = null;
+    }
+  }
+
+  /**
+   * Classify one target path's mount for the poll fallback. Best-effort:
+   * an unsupported or failing statfs keeps fs.watch primary instead of
+   * failing the watch, and such failures are not cached so a transient
+   * error retries on the next pass.
+   *
+   * @param {string} path
+   * @returns {boolean}
+   */
+  function mountIsUnreliable(path) {
+    const cached = mountClassCache.get(path);
+    if (cached !== undefined) {
+      return cached;
+    }
+    let unreliable = false;
+    try {
+      unreliable = mountTypeIsUnreliable(statfsFn(path));
+    } catch {
+      unreliable = false;
+    }
+    mountClassCache.set(path, unreliable);
+    return unreliable;
   }
 
   /** Shared change path for watcher callbacks and the reconcile pass. */
@@ -492,6 +596,12 @@ export function createWatchPort({ watchFactory, statFn, readFn = nodeReadFn, bas
       entry.watchers.push(attachedWatcher[0]);
       entry.paths = entry.watchers.map((each) => each.path);
       attachedAny = true;
+      if (mountIsUnreliable(target) && !entry.poll) {
+        // A newly discovered target sits on an unreliable mount: the whole
+        // subscription joins the poll fallback.
+        entry.poll = true;
+        ensurePollTimer();
+      }
       if (attachedWatcher[0].watchPath !== target) {
         // The baseline records the "absent" state PROVEN by the ancestor
         // climb, never a re-stat: a report created between the two must
@@ -666,6 +776,34 @@ export function defaultScheduleReconcile(reconcile) {
 }
 
 /**
+ * @param {{type: string | number}} statsfs
+ * @returns {boolean}
+ */
+function mountTypeIsUnreliable(statsfs) {
+  const type = statsfs?.type;
+  if (typeof type === "string") {
+    return UNRELIABLE_FSTYPES.has(type.toLowerCase());
+  }
+  if (typeof type === "number") {
+    return UNRELIABLE_FSTYPE_MAGIC.has(type);
+  }
+  return false;
+}
+
+/**
+ * Default statfsFn over node:fs. Reports the mount's filesystem type for the
+ * poll-fallback classification; throws when the platform has no statfs (the
+ * watch then keeps fs.watch primary).
+ *
+ * @param {string} path
+ * @returns {{type: string | number}}
+ */
+export function nodeStatfsFn(path) {
+  const stats = nodeFs.statfsSync(path);
+  return { type: stats.type };
+}
+
+/**
  * Split an aggregate fingerprint into its per-target `path=signature` map.
  *
  * @param {string} fingerprint
@@ -698,11 +836,37 @@ function changeKind(before, after) {
  * @returns {string}
  */
 function excerptOf(content) {
+  const answer = answerExcerpt(content);
+  if (answer !== undefined) {
+    return answer;
+  }
   const head = content.subarray(0, EXCERPT_BYTES).toString("utf8");
   return head
     .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+/**
+ * The `## Answer` section of an answered HITL case, sanitized to one line:
+ * an ask wake must carry the answer content, not the file's frontmatter
+ * head. Returns undefined when the content carries no answer section (the
+ * head excerpt applies).
+ *
+ * @param {Buffer} content
+ * @returns {string | undefined}
+ */
+function answerExcerpt(content) {
+  const match = content.toString("utf8").match(/^## Answer\s*\n([\s\S]*?)(?=\n## |\s*$)/m);
+  const text = match?.[1]?.trim();
+  if (!text) {
+    return undefined;
+  }
+  const head = text.slice(0, EXCERPT_BYTES);
+  return `answer: ${head
+    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()}`;
 }
 
 /**

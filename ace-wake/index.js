@@ -17,12 +17,14 @@
 //   /watch remove NAME
 
 import { clearInterval, setInterval } from "node:timers";
+import * as nodePath from "node:path";
 
 import { registerEyes } from "./wake/eyes-runtime.js";
 import { WakeDispatcher } from "./wake/wake-dispatcher.js";
 import { parseWakeCommand } from "./wake/wake-command-parser.js";
 import { createLoopPort } from "./wake/loop-subscription.js";
-import { createWatchPort, nodeReadFn, nodeStatFn, nodeWatchFactory } from "./wake/watch-subscription.js";
+import { createWatchPort, nodeReadFn, nodeStatFn, nodeStatfsFn, nodeWatchFactory } from "./wake/watch-subscription.js";
+import { armPendingAskWatches, requestsDirFor } from "./wake/ask-bridge.js";
 import {
   SESSION_ENTRY_TYPE,
   WakeError,
@@ -48,12 +50,17 @@ export default function (pi, ports = {}) {
   /** @type {{registry: WakeRegistry} | undefined} */
   let runtime;
 
+  /** The ask bridge's own watch port (one per session, replaced on re-bind). */
+  let askBridgePort;
+
   let eyes;
   const getRuntime = () => runtime;
   const bindRuntime = (ctx) => {
     runtime?.registry.dispose();
+    askBridgePort?.stopAll();
     runtime = { registry: createRegistry(pi, ctx, ports) };
     runtime.registry.reconcile();
+    askBridgePort = startAskBridge(ctx, ports, runtime.registry);
   };
 
   pi.registerCommand("loop", {
@@ -136,6 +143,8 @@ export default function (pi, ports = {}) {
   pi.on("session_shutdown", async () => {
     runtime?.registry.dispose();
     runtime = undefined;
+    askBridgePort?.stopAll();
+    askBridgePort = undefined;
   });
 
   /**
@@ -171,6 +180,93 @@ export default function (pi, ports = {}) {
   }
 }
 
+/**
+ * The ask bridge: consume `ace-hitl ask` wake requests without any agent
+ * turn activity. The bridge owns a small watch port anchored on the
+ * session's wake-request folder — or, while that folder does not exist yet
+ * (a fresh worktree; the first `ask` creates it), on its nearest existing
+ * ancestor, promoted to the real folder as soon as it appears. Its
+ * reconcile passes (registration, the delayed registration-gap reconcile,
+ * folder events — and the poll fallback on unreliable mounts) arm one
+ * scoped `ask-<case id>` watch per pending request through the registry,
+ * which owns delivery, coalescing, and persistence for the wakes.
+ *
+ * @param {object} ctx Session context (cwd selects the request folder).
+ * @param {object} ports Injectable host ports (same surface as the registry).
+ * @param {WakeRegistry} registry
+ * @returns {{stopAll: () => void}}
+ */
+function startAskBridge(ctx, ports, registry) {
+  const requestsDir = requestsDirFor(ctx.cwd);
+  const statFn = ports.statFn ?? nodeStatFn;
+  const armPass = () => {
+    try {
+      armPendingAskWatches({ requestsDir, registry });
+    } catch {
+      // Arming must never break the extension host.
+    }
+  };
+  const bridgePort = createWatchPort({
+    watchFactory: ports.watchFactory ?? nodeWatchFactory,
+    statFn,
+    statfsFn: ports.statfsFn ?? nodeStatfsFn,
+    pollIntervalMs: ports.pollIntervalMs,
+    baseDir: ctx.cwd,
+  });
+  let anchoredTo;
+  const promote = () => {
+    if (anchoredTo === requestsDir) {
+      return;
+    }
+    try {
+      statFn(requestsDir);
+    } catch {
+      return; // Still absent: the ancestor anchor remains the channel.
+    }
+    bridgePort.stop("__ace_ask_requests");
+    startAnchor();
+    // Mirror the registration-gap posture: a request landing between the
+    // anchor switch and the new watcher's effectiveness re-arms once.
+    armPass();
+  };
+  const onEvent = () => {
+    armPass();
+    promote();
+    return { delivered: true };
+  };
+  function startAnchor() {
+    let candidate = requestsDir;
+    let attempts = 0;
+    for (;;) {
+      try {
+        statFn(candidate);
+        break;
+      } catch {
+        if (attempts >= 6 || candidate === nodePath.dirname(candidate)) {
+          return false; // Nothing watchable (synthetic host): arm pass only.
+        }
+        attempts += 1;
+        candidate = nodePath.dirname(candidate);
+      }
+    }
+    try {
+      bridgePort.start(
+        { kind: "watch", name: "__ace_ask_requests", path: candidate, message: "" },
+        onEvent,
+      );
+      anchoredTo = candidate;
+      return true;
+    } catch {
+      return false;
+    }
+  }
+  startAnchor();
+  // Requests that landed while the session was down arm at startup; the
+  // port's registration-gap reconcile covers the arming race.
+  armPass();
+  return bridgePort;
+}
+
 function createRegistry(pi, ctx, ports) {
   const dispatcher = new WakeDispatcher({
     deliver: (sourceKey, text) => deliverWake(pi, ctx, sourceKey, text),
@@ -187,6 +283,11 @@ function createRegistry(pi, ctx, ports) {
       watchFactory: ports.watchFactory ?? nodeWatchFactory,
       statFn: ports.statFn ?? nodeStatFn,
       readFn: ports.readFn ?? nodeReadFn,
+      // Mount classifier for the poll fallback (virtiofs/fuse targets are
+      // deaf to fs.watch and reconcile on a timer instead); injectable for
+      // deterministic tests.
+      statfsFn: ports.statfsFn ?? nodeStatfsFn,
+      pollIntervalMs: ports.pollIntervalMs,
       baseDir: ctx.cwd,
       // The report-inbox watch covers every linked worktree's
       // .ace-local/hitl by default (the same git worktree discovery

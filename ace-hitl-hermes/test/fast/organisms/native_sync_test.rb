@@ -163,7 +163,7 @@ class NativeSyncTest < AceHermesTestCase
     route_path = File.join(@tmp, "route.json")
     File.write(route_path, JSON.generate(@route))
     source_root = File.expand_path("../../../..", __dir__)
-    eyes_root = File.join(source_root, "ace-handbook-integration-pi/handbook/extensions/ace-wake/wake")
+    eyes_root = File.join(source_root, "ace-wake/wake")
     script = <<~JS
       import assert from "node:assert/strict";
       import { Eyes } from #{File.join(eyes_root, "eyes.js").to_json};

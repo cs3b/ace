@@ -3,8 +3,8 @@ import { describe, it } from "node:test";
 
 import { createFakeHost } from "./fake-pi-host.mjs";
 import { startSession } from "./session-harness.mjs";
-import aceWakeFactory from "../../handbook/extensions/ace-wake/index.js";
-import { MAX_WAKE_MESSAGE_CHARS } from "../../handbook/extensions/ace-wake/wake/types.js";
+import aceWakeFactory from "../index.js";
+import { MAX_WAKE_MESSAGE_CHARS } from "../wake/types.js";
 
 describe("ace-wake commands", () => {
   it("registers /loop and /watch", async () => {

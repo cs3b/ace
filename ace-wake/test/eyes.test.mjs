@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { Eyes } from "../../handbook/extensions/ace-wake/wake/eyes.js";
+import { Eyes } from "../wake/eyes.js";
 
 const event = (n = "a", revision = "b") => ({ key: n.repeat(64), revision: revision.repeat(64), id: `event${n}` });
 function fixture(snapshot) {
