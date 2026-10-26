@@ -307,24 +307,31 @@ and never expires the request. `wait` never invents an answer.
 ## Ask
 
 One-turn ask: create the question, send it through the configured routes,
-block until the answer arrives, and print it. `ask` is the glue of
-`create` + `send` + `wait` for the common case where one turn ends with the
-question and resumes from the printed answer:
+arm the asking agent's own wake for the case answer, and END THE TURN. ask
+glues `create` + `send` + wake-arming into one command for the common case
+where asking is the last action of a turn:
 
 ```bash
 ace-hitl ask "Continue with batch 2?" --to captain --kind approval --question "Proceed?"
-ace-hitl ask "Auth strategy?" --to overseer --task 8xg.t.sbz.1.1 --timeout 3600
+ace-hitl ask "Auth strategy?" --to overseer --task 8xg.t.sbz.1.1
 ```
 
 ```
 HITL event created: 8xhkep Continue with batch 2?
 HITL event 8xhkep sent through 1 route(s):
   captain (hermes_native): delivered - native transport ...
-Answer: Proceed with JWT
+8xhkep
 ```
 
-Exit 0 only when the answer arrived and was printed. Undelivered routes,
-a timeout, or a vanished event exit 1 with a concrete error.
+The final stdout line is always the bare case id. ask never blocks and never
+polls, carries no urgency language, and has no asker-side timeouts — the
+Captain replies whenever he wants. The answer is delivered TO the agent as
+an ace-wake wake carrying the answer content (see the ace-wake README's ask
+bridge contract); on wake, the agent acts immediately.
+
+Exit 0 only when the question was created, delivered on every route, and
+the wake was armed. Undelivered routes exit 1 with a concrete error, and no
+wake request is dropped.
 
 ## Lifecycle event names
 

@@ -35,7 +35,7 @@ module Ace
         ["list", "List HITL events"],
         ["observe", "Read semantic event revisions"],
         ["update", "Update HITL event metadata or answer"],
-        ["ask", "Create, send, and wait for one HITL question; prints the answer"],
+        ["ask", "Ask: create, send, arm the answer wake, and end the turn"],
         ["send", "Send a HITL event through the configured adapter routes"],
         ["wait", "Wait for an answer on a specific HITL event"],
         ["deliver", "Deliver an answer (stdin) to a pending HITL relay request"],
@@ -55,7 +55,8 @@ module Ace
         "ace-hitl update abc123 --answer \"Use JWT with refresh tokens\"",
         "ace-hitl send 8xhkep",
         "ace-hitl wait abc123 --poll-every 600 --timeout 14400",
-        "ace-hitl ask \"Continue?\" --to captain --kind approval --question \"Proceed?\""
+        "ace-hitl ask \"Continue?\" --to captain --kind approval --question \"Proceed?\"",
+        "ace-hitl ask \"Auth strategy?\" --to overseer --task 8xg.t.sbz.1.1"
       ].freeze
 
       register "create", CLI::Commands::Create
