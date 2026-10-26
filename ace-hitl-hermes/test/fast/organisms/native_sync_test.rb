@@ -120,19 +120,26 @@ class NativeSyncTest < AceHermesTestCase
     assert_equal "Human decision", owner(@roots[0]).show(event.id, scope: "current")[:event].answer
   end
 
-  def test_strict_owner_allowlist_and_real_symlink_refusal
+  # Guard policy (cycle-2): origin-roots and folder ownership/privacy checks
+  # warn and proceed — the frame goes through, the reason lands on stderr and
+  # in the receipt. Frame-content integrity (symlinked reply file) stays a
+  # hard refusal: it decides WHAT is read, never whether a sender may ask.
+  def test_out_of_policy_origins_and_folders_warn_and_proceed
     event = question
     wrong = @route.merge("event_roots" => [@roots[1]])
-    assert_raises(H::Hermes::ContractError) { N.new(wrong).publish(event, "Question") }
+    out = capture_io { N.new(wrong).publish(event, "Question") }
+    refute_empty Dir.children(@folder).grep(/request/), "the frame goes through"
+    assert_match(/outside the configured project\/worktree roots/, out[1])
+
     link = File.join(@tmp, "linked")
     File.symlink(@folder, link)
-    assert_raises(H::Hermes::ContractError) { N.new(@route.merge("folder" => link)) }
+    out = capture_io { N.new(@route.merge("folder" => link)) }
+    assert_match(/not a real, private, non-root-owned directory/, out[1])
+
     record = publish(event)
     path = File.join(@folder, "reply-#{record['key']}.json")
     File.symlink(event.file_path, path)
     assert_raises(H::Hermes::ContractError) { N.new(@route).read("reply", record["key"]) }
-    File.chmod(0o750, @folder)
-    assert_raises(H::Hermes::ContractError) { N.new(@route) }
   end
 
   def test_plain_instructions_import_only_coordinator_and_replay_without_duplicates

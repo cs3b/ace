@@ -28,7 +28,7 @@ module Ace
 
           def run
             @folder.synchronize do
-              result = {"replies" => 0, "instructions" => 0, "deliveries" => [], "errors" => []}
+              result = {"replies" => 0, "instructions" => 0, "deliveries" => [], "errors" => [], "warnings" => []}
               @folder.keys("request").each do |key|
                 request = @folder.read("request", key)
                 next unless request["project"] == @folder.project
@@ -48,6 +48,7 @@ module Ace
                 end
               end
               import_instructions(result)
+              result["warnings"].concat(@folder.warnings - result["warnings"])
               result
             end
           end
@@ -124,7 +125,12 @@ module Ace
           def import_instructions(result)
             root = @route["instruction_root"]
             return unless root
-            raise ContractError, "instruction_root must be an explicit event root" unless @folder.event_roots.include?(root)
+            unless @folder.event_roots.include?(root)
+              # Guard policy: an instruction root outside the declared event
+              # roots is a configuration smell, never a reason to block the
+              # coordinator's own channel.
+              @folder.warn_once("instruction_root #{root} is not a declared event root; proceeding")
+            end
             @folder.validate_root!(root)
             @folder.keys("instruction").each do |key|
               item = @folder.read("instruction", key)

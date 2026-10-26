@@ -23,12 +23,24 @@ module Ace
             confirmed = receipt && receipt["state"] == "delivered" &&
               receipt["message_ids"].is_a?(Array) && !receipt["message_ids"].empty? &&
               receipt["message_ids"].all? { |id| id.is_a?(String) && !id.empty? }
+            state = confirmed ? "delivered" : receipt&.fetch("state", nil) || "queued"
             Adapters::RouteResult.new(route: @route.fetch("route"), adapter: "hermes_native",
               status: confirmed ? :delivered : :unavailable,
-              detail: "native transport #{record.fetch('key')}: #{receipt&.fetch('state', nil) || 'queued'}")
+              detail: receipt_detail(record, state))
           rescue ContractError, SystemCallError, TypeError => e
             Adapters::RouteResult.new(route: @route.fetch("route"), adapter: "hermes_native",
               status: :failed, detail: e.message)
+          end
+
+          private
+
+          # The receipt carries the guard warnings with their reasons: the
+          # frame went through, and the delivery frontmatter shows why the
+          # transport flagged it.
+          def receipt_detail(record, state)
+            detail = "native transport #{record.fetch('key')}: #{state}"
+            warnings = @folder.warnings
+            warnings.empty? ? detail : "#{detail} (warnings: #{warnings.join("; ")})"
           end
         end
       end

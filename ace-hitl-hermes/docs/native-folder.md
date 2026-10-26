@@ -75,6 +75,17 @@ and `..` are refused. Add explicit roots for a different project layout. Route
 selection resolves recipient names to their exact stored address before any
 adapter runs. Unrelated terminal/Telegram routes are not invoked.
 
+Guard policy: origin-roots, worktree-roots, and ownership/privacy checks warn
+and proceed — a sender outside the configured roots (or a folder/root with the
+wrong owner or mode) still publishes its frame; the reason goes to stderr and
+into the receipt (the route's `delivery.<route>` detail on send, the run
+result's `warnings` on sync). The policy avoids mistakes, it does not block:
+an ask must never be lost to a stale root list. Frame identity and content
+integrity stay hard failures: schema/key binding, frame size, symlinked frame
+files, and conflicting immutable frames are refused — they decide what is
+read, never whether a sender may ask. A missing transport folder is an
+operational error, not a warning: the frame physically cannot go through.
+
 The gateway JSON config selected by its existing `ACE_HITL_HERMES_CONFIG`
 environment variable:
 

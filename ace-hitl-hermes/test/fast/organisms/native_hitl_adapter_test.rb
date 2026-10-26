@@ -125,10 +125,11 @@ class NativeHitlAdapterTest < AceHermesTestCase
     assert_empty Dir.children(@folder)
   end
 
-  # The 2026-10-23 host hit: the route's channel folder exists but is not
-  # private. The contract failure must surface as Hermes ContractError with
-  # its real message — never as NameError masking it.
-  def test_non_private_route_folder_reports_contract_error_not_nameerror
+  # The 2026-10-23 host hit regression: contract failures surface with their
+  # real class, never a NameError. The transport guard policy is now warn +
+  # proceed, so a non-private route folder delivers WITH a warning in the
+  # receipt instead of refusing; a NameError would still mask everything.
+  def test_non_private_route_folder_warns_and_proceeds_without_nameerror
     operator_folder = File.join(@tmp, "hitl-address", "operator")
     FileUtils.mkdir_p(operator_folder, mode: 0o755)
     operator_route = @route.merge("route" => "operator", "channel" => "operator",
@@ -141,12 +142,46 @@ class NativeHitlAdapterTest < AceHermesTestCase
     event = operator_owner.create("Work done", to: "operator", type: "report", result: "success",
       body: ["done"], time: Time.utc(2026, 10, 23, 12, 1, 0))
 
-    result = send_event(event.id, config: config)
+    result = nil
+    _out, err = capture_io { result = send_event(event.id, config: config) }
 
-    assert_equal :failed, result.status
-    assert_includes result.detail, "Ace::Hitl::Hermes::ContractError"
-    assert_includes result.detail, "native Hermes folder must be real, private, and owned by the non-root user"
+    assert_equal :unavailable, result.status, "the frame goes through (queued for the gateway)"
+    assert_includes result.detail, "warnings:"
+    assert_includes result.detail, "native Hermes folder is not a real, private, non-root-owned directory"
+    assert_includes err, "ace-hitl-hermes: warning:"
     refute_includes result.detail, "NameError"
+    refute_empty Dir.children(operator_folder).grep(/request/), "the frame is published"
+  end
+
+  # Point-4 acceptance: a sender outside the old configured roots succeeds
+  # WITH a warning — the frame is published, the receipt (delivery frontmatter
+  # detail and RouteResult) carries the reason, and the send exits 0 once the
+  # gateway confirms delivery.
+  def test_sender_outside_configured_roots_succeeds_with_warning
+    outsider = File.join(@tmp, "another-project", ".ace-local", "hitl")
+    FileUtils.mkdir_p(outsider)
+    File.chmod(0o700, outsider)
+    outsider_config = @config.merge("hitl" => @config["hitl"].merge("root_dir" => outsider))
+    event = H::Organisms::HitlManager.new(root_dir: outsider, config: outsider_config)
+      .create("Question from outside", to: "captain", kind: "clarification", questions: ["Answer me?"],
+        time: Time.utc(2026, 10, 23, 12, 2, 0))
+
+    result = nil
+    _out, err = capture_io { result = send_event(event.id, config: outsider_config) }
+
+    assert_equal :unavailable, result.status, "queued: the frame went through"
+    assert_includes result.detail, "warnings:"
+    assert_match(/outside the configured project\/worktree roots/, result.detail)
+    assert_includes err, "ace-hitl-hermes: warning:"
+    frame = N.new(@route).read("request", N.new(@route).keys("request").first)
+    assert_equal event.id, frame.dig("origin", "case_id")
+
+    confirm_gateway_delivery
+    redelivered = nil
+    _out, err = capture_io { redelivered = send_event(event.id, config: outsider_config, force: true) }
+    assert_equal :delivered, redelivered.status
+    assert_match(/outside the configured project\/worktree roots/, redelivered.detail)
+    assert_includes err, "ace-hitl-hermes: warning:"
   end
 
   # Route validation itself raises the Hermes contract error class.
@@ -162,8 +197,6 @@ class NativeHitlAdapterTest < AceHermesTestCase
   # raises Ace::Hitl::Hermes::ContractError. Before the require-chain fix the
   # raised class was NameError, masking the real failure.
   def test_live_entrypoint_loading_raises_hermes_contract_error_not_nameerror
-    bad_folder = File.join(@tmp, "hitl-address", "operator")
-    FileUtils.mkdir_p(bad_folder, mode: 0o755)
     script = File.join(@tmp, "live_loading_check.rb")
     File.write(script, <<~RUBY)
       require "ace/hitl"
@@ -181,10 +214,11 @@ class NativeHitlAdapterTest < AceHermesTestCase
         recipient: {"machine" => "lab", "panel" => "elsewhere"}, reply_to: nil)
       puts "RESULT \#{result.status} \#{result.detail}"
 
-      # Construction-level contract failure (folder not private): the raised
-      # class must be Ace::Hitl::Hermes::ContractError.
+      # Construction-level contract failure (invalid channel token — a hard
+      # identity guard, unlike the warn-and-proceed folder policy): the
+      # raised class must be Ace::Hitl::Hermes::ContractError.
       begin
-        Ace::Hitl::Adapters.resolve(:hermes_native, route: route.merge("folder" => ENV.fetch("NATIVE_BAD_FOLDER")))
+        Ace::Hitl::Adapters.resolve(:hermes_native, route: route.merge("channel" => "BAD TOKEN!"))
         puts "NO-RAISE"
       rescue => e
         puts "RAISED \#{e.class}"
@@ -195,7 +229,7 @@ class NativeHitlAdapterTest < AceHermesTestCase
       .select { |path| Dir.exist?(path) }
       .flat_map { |path| ["-I", path] }
     out, err, status = Open3.capture3(
-      {"NATIVE_ROUTE" => JSON.generate(@route), "NATIVE_BAD_FOLDER" => bad_folder,
+      {"NATIVE_ROUTE" => JSON.generate(@route),
        "BUNDLE_GEMFILE" => nil, "RUBYOPT" => nil, "RUBYLIB" => nil},
       RbConfig.ruby, *libs, script)
     assert status.success?, "child failed:\n#{out}#{err}"
