@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.1] - 2026-10-26
+
 ### Added
 
 - Gem-set installation into the target lab runtime (gad.2 acceptance
@@ -41,7 +43,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   converges from (a missing `gem` executable reports `unknown`, the
   offline posture). `project add` stays project-scoped: gem
   installation is machine-level provisioning and is deliberately not
-  added there.
+  added there. (PR #77)
 
 
 ## [0.13.0] - 2026-10-20
