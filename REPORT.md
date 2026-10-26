@@ -1,248 +1,231 @@
-# Release worker report: wake-20261025
+# Release worker report: gemset-20261026
 
-Role: release worker per `WORKER-BRIEF.md`. Worktree
-`/lab/projects/ace/.ace-wt/release-wake-20261025` (branch `release-wake-20261025`,
-base `57b2f7fc` = merged main with PR74+PR75). Release range: `5f430fd6..57b2f7fc`
-(changes since the eyes-20261023 cut). Date: 2026-10-25.
+Role: release worker for the gad.2 cycle 1 release phase, dispatched by the
+ACE project overseer. Worktree
+`/lab/projects/ace/.ace-wt/release-gemset-20261026` (branch
+`release-gemset-20261026`, base `9b75eb44e` = merged main with PR #77).
+Release range: `e38c669fe..9b75eb44e` (the single range commit). Date:
+2026-10-26.
 
-Closure status: artifacts built + staged, suites green, committed locally.
+Closure status: artifact built + staged, suite green, committed locally.
 **No push, no PR, no publication** — the live publish is handed off to the
-publisher (see §7).
+operator (see §7).
 
 ---
 
 ## 1. Inventory
 
-### 1.1 Tool inventory (`.ace-bin/ace-rubygems-needs-release`, pre-bump)
+### 1.1 Release range
 
-Network read-only (`gem search --remote`). Output: header only — every local
-version equals the highest published version, i.e. nothing is pending **until
-the version bumps below are applied**. Spot check of the five candidates
-confirmed remote state: `ace-handbook (0.36.0)`, `ace-hitl (0.24.0)`,
-`ace-hitl-hermes (0.9.3)`, `ace-overseer (0.26.0)`,
-`ace-handbook-integration-pi (0.7.0)`.
+Exactly one merged commit in the range `e38c669fe..HEAD`:
 
-### 1.2 Packaged-change inventory (git `5f430fd6..57b2f7fc`, verified against gemspec file lists)
+- `9b75eb44e` — `feat(lab): converge the declared gem set into the target
+  lab runtime` (PR #77; closes gad.2 acceptance gap #1, owner spec
+  8xg.t.sbz.7, L8 install group).
 
-Files changed in the range (21 files) were mapped to packages and filtered by
-each gemspec's `spec.files` globs. A workflow-text change counts only where
-`handbook/**/*` (or `lib/**/*`) is packaged — it is, in all five packages
-below.
+One package affected: **ace-lab** (all 17 changed files live under
+`ace-lab/`).
 
-| Package | Bump | Changed packaged files | Source commit(s) |
+### 1.2 Tool inventory (`.ace-bin/ace-rubygems-needs-release`, pre-bump)
+
+Output: header only (`gem local remote status`, exit 0) — every local
+version equals the highest published version, i.e. nothing is pending
+**until the version bump below is applied**. Spot check confirmed remote
+state: `ace-lab (0.13.0)` via read-only `gem search --remote ^ace-lab$`.
+
+### 1.3 Packaged-change inventory (git `e38c669fe..9b75eb44e`, verified against the ace-lab gemspec file lists)
+
+The gemspec globs are `lib/**/*`, `docs/**/*`, `exe/*`,
+`.ace-defaults/**/*`, `*.md`, `LICENSE`, `Rakefile`. Of the 17 changed
+files, **9 are packaged** (plus `lib/ace/lab/version.rb` changed by the
+bump itself → 10 verified inside the artifact, §4.3):
+
+| Package | Bump | Changed packaged files | Source commit |
 |---|---|---|---|
-| ace-handbook | 0.36.0 → **0.36.1** | `handbook/workflow-instructions/release/rubygems-publish.wf.md`, `handbook/skills/as-release-rubygems-publish/SKILL.md` | `80d606eca` (PR74) |
-| ace-hitl | 0.24.0 → **0.24.1** | `handbook/workflow-instructions/hitl.wf.md` | `b5c684cc3` (PR74) |
-| ace-hitl-hermes | 0.9.3 → **0.9.4** | `lib/ace/hitl/adapters/hermes_native.rb`, `lib/ace/hitl/hermes/molecules/native_folder.rb`, `lib/ace/hitl/hermes/organisms/native_sync.rb` | `57b2f7fc2` (PR75) |
-| ace-overseer | 0.26.0 → **0.26.1** | `handbook/workflow-instructions/overseer.wf.md` | `f31597129` (PR74) |
-| ace-handbook-integration-pi | 0.7.0 → **0.7.1** | `handbook/extensions/ace-wake/index.js`, `handbook/extensions/ace-wake/wake/types.js`, `handbook/extensions/ace-wake/wake/wake-registry.js`, `handbook/extensions/ace-wake/wake/watch-subscription.js` | `60b8c8b50` (PR74) |
+| ace-lab | 0.13.0 → **0.13.1** | `CHANGELOG.md`, `docs/usage.md`, `lib/ace/lab/atoms/install_schema.rb`, `lib/ace/lab/cli/commands/prepare.rb`, `lib/ace/lab/cli/commands/verify.rb`, `lib/ace/lab/molecules/gemset_provisioner.rb`, `lib/ace/lab/organisms/install.rb`, `lib/ace/lab/organisms/prepare.rb`, `lib/ace/lab/organisms/verify.rb` | `9b75eb44e` (PR #77) |
 
-Adjusted vs. the brief's expectation (two packages): the inventory says **five** —
-the PR74 handbook/workflow text is packaged inside `ace-handbook`, `ace-hitl`
-and `ace-overseer` via their `handbook/**/*` gemspec globs, so those packages'
-shipped content changed too.
+Changed in the range but **not packaged** (correctly excluded): the 8
+`ace-lab/test/*` files (`test/atoms/install_schema_test.rb`,
+`test/commands/install_test.rb`, `test/commands/prepare_test.rb`,
+`test/molecules/gemset_provisioner_test.rb`,
+`test/organisms/install_test.rb`, `test/organisms/prepare_test.rb`,
+`test/organisms/verify_test.rb`, `test/test_helper.rb`) — `test/` is not
+in the gemspec globs; tests do not ship. Confirmed against the built
+artifact: no `test/` files inside the gem (§4.3).
 
-Changed in the range but **not packaged** (correctly excluded): `.ace-handbook/*`
-and `.agents/skills/*` (worktree sync copies, no gem), `.ace-tasks/*` (task
-data), `ace-handbook-integration-pi/docs/usage.md` + `test/js/*` (outside the
-pi gemspec globs), `ace-hitl-hermes/test/*` (tests do not ship).
+Dependency pins: no gemspec edits required. The ace-lab runtime deps
+(`ace-support-cli ~> 0.6`, `ace-support-core ~> 0.31`,
+`ace-support-config ~> 0.18`, `ace-git-forgejo ~> 0.7`) are unchanged by
+the range and none of them are republished.
 
-Dependency pins: no gemspec edits required. Verified no pin excludes the new
-patch versions (`~> 0.9.3` allows 0.9.4; `~> 0.24` allows 0.24.1; `~> 0.26`
-allows 0.26.1; `~> 0.32/0.33` allows 0.36.1; `~> 0.22` allows 0.24.1).
+## 2. Version bump + CHANGELOG (committed)
 
-## 2. Version bumps + CHANGELOGs (committed)
+Single patch bump: `ace-lab/lib/ace/lab/version.rb` `0.13.0` → **0.13.1**.
+`ace-lab/CHANGELOG.md` gained the dated `## [0.13.1] - 2026-10-26` /
+`### Added` section (Keep a Changelog) from the previously Unreleased
+gem-set entry, now referencing PR #77; an empty `## [Unreleased]` section
+remains on top (same shape as the wake-20261025 cut). `Gemfile.lock`
+refreshed by `bundle install` — exactly the one `ace-lab (0.13.1)` PATH
+version line changed, nothing else.
 
-Per-package patch bumps with Keep-a-Changelog entries dated 2026-10-25,
-referencing PR74/PR75 (see §6 commit for full text). `Gemfile.lock` refreshed
-by `bundle install` (exactly the five version lines changed — same as the
-eyes-20261023 release commit).
+## 3. Test suite (raw output)
 
-## 3. Test suites (raw outputs)
-
-All five affected packages, full suite (`bin/ace-test <package> all` = fast +
-feat + edge; deterministic mode). Raw outputs + `report.json`/`summary.json`
-retained under each report path.
+Full suite, deterministic mode (`bin/ace-test ace-lab all` via the
+checkout binstub, `ACE_TOOLCHAIN=auto`):
 
 ```
-$ bin/ace-test ace-hitl-hermes all
-✅ 218 tests, 1277 assertions, 0 failures, 0 errors (32.08s)
-report: .ace-local/test/reports/hitl-hermes/ac918d8e-6448-41bc-bbc0-128dbfea1ae6/
-summary: passed 218, failed 0, errors 0, skipped 0, total 218, assertions 1277, success true
-```
-(Eyes-20261023 release baseline was 212/1228; +6 tests are the PR75
-`native_hitl_adapter_test.rb` regressions, incl. the child-process
-lazy-entrypoint NameError reproduction.)
-
-```
-$ bin/ace-test ace-handbook-integration-pi all
-✅ 10 tests, 99 assertions, 0 failures, 0 errors (12.9s)
-report: .ace-local/test/reports/handbook-integration-pi/8c825729-b145-478b-b0bb-6f7cb055f1f7/
-summary: passed 10, failed 0, errors 0, skipped 0, total 10, assertions 99, success true
-```
-(Same 10/99 as the eyes cut's real-SDK validation; the fast suite shells out to
-`node --test` for the extension JS suite. Node v24.19.0.)
-
-```
-$ cd ace-handbook-integration-pi && node --test test/js/*.test.mjs   # explicit raw record
-ℹ tests 117
-ℹ suites 17
-ℹ pass 117
-ℹ fail 0
-ℹ cancelled 0
-ℹ skipped 0
-ℹ todo 0
-ℹ duration_ms 2542.267467
+$ bin/ace-test ace-lab all
+⚠️ 594 tests, 2808 assertions, 0 failures, 0 errors, 4 skipped (18.48s)
+report: .ace-local/test/reports/lab/9412000a-732d-47df-ab17-fe2b3a550d15/
+summary: passed 590, failed 0, errors 0, skipped 4, total 594, assertions 2808, success true
 ```
 
-```
-$ bin/ace-test ace-hitl all
-⚠️ 357 tests, 1806 assertions, 0 failures, 0 errors, 6 skipped (42.57s)
-report: .ace-local/test/reports/hitl/6a8e923e-e377-4d3d-bf43-c755831cc004/
-summary: passed 351, failed 0, errors 0, skipped 6, total 357, assertions 1806, success true
-```
-(Byte-identical to the eyes cut's release-validated full run: 357/1806, zero
-failures/errors, six skips. The 6 skips are environmental `CredentialPathPolicyTest`
-root-owned-layout cases + `MultiUidBoundaryTest`, requiring root/multi-uid;
-they skip identically on the validated baseline.)
+Matches the brief's expectation of ~594 tests with zero failures/errors.
+Reproduced twice through the runner (18.48s / 18.52s, same totals).
+Per-phase subtotals (full run): atoms 85, molecules 294, organisms 132,
+models 22, commands 61 = 594.
+
+### 3.1 The 4 skips — environmental, identified individually
+
+Molecules phase (3), all `ForgejoMergeAdapterTest` (guard at
+`test/molecules/forgejo_merge_adapter_test.rb:33`):
 
 ```
-$ bin/ace-test ace-overseer all
-✅ 373 tests, 1674 assertions, 0 failures, 0 errors (28.41s)
-report: .ace-local/test/reports/overseer/f9ff0b3f-9f63-4c83-8699-4785353acee9/
-summary: passed 373, failed 0, errors 0, skipped 0, total 373, assertions 1674, success true
-```
-(Identical totals to the eyes cut's 373/1674.)
-
-```
-$ bin/ace-test ace-handbook all
-✅ 82 tests, 603 assertions, 0 failures, 0 errors (14.34s)
-report: .ace-local/test/reports/handbook/2241ca59-da91-4018-a134-5a341aae0ff7/
-summary: passed 82, failed 0, errors 0, skipped 0, total 82, assertions 603, success true
+ACE_LAB_TEST_FORGE_TOKEN is not set — adapter acceptance needs a scoped token
+against https://forgejo.tail6c0887.ts.net (deployed acceptance happens later
+against the provisioned /etc/lab/ace-lab/forge-merge.yml)
 ```
 
-### 3.1 Monorepo-level checks (same as eyes-20261023 cut)
+Commands phase (1):
 
 ```
-$ bin/ace-task doctor
-860 tasks … 509 warnings … 📈 Health Score: 0/100 (Poor) — 509 warnings, completed in 4.13s
-```
-(Exactly the eyes-cut baseline: 509 pre-existing warnings, unchanged score.)
-
-```
-$ gitleaks detect --log-opts="5f430fd6..HEAD" --redact
-8 commits scanned … no leaks found          (exit 0)
-$ gitleaks detect --no-git --source <working diff> --redact
-no leaks found                              (exit 0)
-```
-(Note: `gitleaks detect --no-git` on the worktree ignores file args in this
-version and scans everything — 59 pre-existing findings across task/retro
-fixtures, out of release scope. Both release-scoped scans are clean.)
-
-```
-Trailing whitespace in added lines: git diff 5f430fd6..HEAD → 0 hits; working diff → 0 hits
+FreshInstallTest#test_installed_cli_succeeds_with_controlled_grants
+(test/commands/fresh_install_test.rb:56): requires root plus
+ACE_LAB_TEST_SYSTEM_GRANTS=1 on a disposable host to provision
+/etc/lab/ace-lab/authorization.yml
 ```
 
-## 4. Build + artifact verification (same builder recipe as eyes-20261023)
+Both guards are deliberate deterministic-mode postures (no live
+credentials, no root provisioning during release verification); they skip
+identically regardless of the release changes. Note these are separate
+from the `build_and_install_gem` sandbox skips in `test_helper.rb` (which
+did NOT fire — the gem-toolchain fixture built and installed cleanly).
 
-Builder: `.ace-bin/ace-rubygems-publish` (publisher), `--dry-run` then
-`--prepare` — the recipe that produced the eyes cut's
-`.ace-local/rubygems-publish/pending-queue.yml`. `--prepare` validated the
-credential via the read-only ownership probe (`gem owner ace-support-core`),
-built all five artifacts with `gem build`, and recorded the queue. **No OTP
-consumed, no push.**
+### 3.2 Monorepo-level checks (same as wake-20261025 cut)
 
 ```
-$ .ace-bin/ace-rubygems-publish --dry-run ace-handbook ace-handbook-integration-pi ace-hitl ace-hitl-hermes ace-overseer
-[DRY RUN] Would publish 5 gem(s) in 5 wave(s):
-   1. wave 1  ace-handbook                         0.36.1     ace-handbook/ace-handbook-0.36.1.gem
-   2. wave 2  ace-hitl                             0.24.1     ace-hitl/ace-hitl-0.24.1.gem
-   3. wave 3  ace-hitl-hermes                      0.9.4      ace-hitl-hermes/ace-hitl-hermes-0.9.4.gem
-   4. wave 4  ace-overseer                         0.26.1     ace-overseer/ace-overseer-0.26.1.gem
-   5. wave 5  ace-handbook-integration-pi          0.7.1      ace-handbook-integration-pi/ace-handbook-integration-pi-0.7.1.gem
+$ gitleaks detect --log-opts="e38c669fe..HEAD" --redact
+1 commits scanned … no leaks found          (exit 0)
 
-$ .ace-bin/ace-rubygems-publish --prepare …
-✓ 5 artifact(s) ready: 5 newly built, 0 reused from disk (no rebuild)
+Trailing whitespace in added lines:
+git diff e38c669fe..HEAD --check → 0 hits; working diff --check → 0 hits
+```
+
+## 4. Build + artifact verification
+
+Builder: `.ace-bin/ace-rubygems-publish` (publisher, repo-local), `--dry-run`
+then `--prepare` — the wake-20261025 recipe that produced the
+`.ace-local/rubygems-publish/pending-queue.yml`. **No OTP consumed, no
+push, no `--interactive`.**
+
+```
+$ .ace-bin/ace-rubygems-publish --dry-run ace-lab
+[DRY RUN] Would publish 1 gem(s) in 1 wave(s):
+   1. wave 1  ace-lab                              0.13.1     ace-lab/ace-lab-0.13.1.gem
+
+$ .ace-bin/ace-rubygems-publish --prepare ace-lab
+✓ 1 artifact(s) ready: 1 newly built, 0 reused from disk (no rebuild)
 Prepared all artifacts. Publish with: .ace-bin/ace-rubygems-publish --interactive
 ```
 
+The artifact was built from the post-bump tree, i.e. it matches release
+commit `01d6b77a6` byte-for-byte in packaged content (proven in §4.3).
+
 ### 4.1 Staged publish queue (recorded by the publisher)
 
-`.ace-local/rubygems-publish/pending-queue.yml`, recorded_at 2026-10-25T22:00:27Z:
+`.ace-local/rubygems-publish/pending-queue.yml`, recorded_at
+2026-10-26T14:06:52Z:
 
 | wave | gem | version | artifact |
 |---|---|---|---|
-| 1 | ace-handbook | 0.36.1 | `ace-handbook/ace-handbook-0.36.1.gem` |
-| 2 | ace-hitl | 0.24.1 | `ace-hitl/ace-hitl-0.24.1.gem` |
-| 3 | ace-hitl-hermes | 0.9.4 | `ace-hitl-hermes/ace-hitl-hermes-0.9.4.gem` |
-| 4 | ace-overseer | 0.26.1 | `ace-overseer/ace-overseer-0.26.1.gem` |
-| 5 | ace-handbook-integration-pi | 0.7.1 | `ace-handbook-integration-pi/ace-handbook-integration-pi-0.7.1.gem` |
+| 1 | ace-lab | 0.13.1 | `ace-lab/ace-lab-0.13.1.gem` |
 
-(The manifest lives under gitignored `.ace-local/` by publisher contract — the
-live run re-resolves from a fresh remote snapshot and treats the manifest as
-ephemeral local state; the queue record above is the committed trace.)
+(The manifest lives under gitignored `.ace-local/` by publisher contract —
+the live run re-resolves from a fresh remote snapshot and treats the
+manifest as ephemeral local state; the queue record above is the committed
+trace.)
 
-### 4.2 Artifact SHA256 digests
+### 4.2 Artifact SHA256 digest
 
 ```
-62dd7319d219a36a3d19ff680a4b968fa5da0b7f60050e51fc2d089fd75055c1  ace-handbook/ace-handbook-0.36.1.gem
-40917cc06e9a1599e00370508900a56fa4a8be4560ae9c78b8bc08d0430cf5cb  ace-hitl/ace-hitl-0.24.1.gem
-59d28ee11a3dee9102800d437acc76b02eb2e409887d9a8182801a469d913b7c  ace-hitl-hermes/ace-hitl-hermes-0.9.4.gem
-bdc7d6f317dc9ff3f6c777f1442d2352b245c973e4e02f3419eb79d622b1144c  ace-overseer/ace-overseer-0.26.1.gem
-643e6b592fc2803e3104ec8d9a7f8d4e6c9f0359bb11cf604c65d4047b64e066  ace-handbook-integration-pi/ace-handbook-integration-pi-0.7.1.gem
+2bd349c2b1924c798023d4ce3ab6b412064785af3745d50e1270ba585dd557ba  ace-lab/ace-lab-0.13.1.gem
 ```
+
+(104960 bytes; gitignored by design via `*.gem` in `.gitignore`, remains on
+disk for the operator.)
 
 ### 4.3 Artifact content verification
 
-- All 11 changed packaged files (§1.2) are present inside the built gems and
-  **byte-identical to source** (`cmp` on extracted `data.tar.gz` members):
-  11 identical, 0 differ.
-- Publisher `validate_artifact!` confirmed each artifact's spec name/version.
-- Isolated host GEM_HOME install (eyes-cut release verification): all five
-  artifacts + published dependencies (43 gems total) installed into a clean
-  temp `GEM_HOME` without source-path gems or Bundler/RUBYOPT/RUBYLIB
-  overrides; all five exact versions (`ace-handbook 0.36.1`, `ace-hitl 0.24.1`,
-  `ace-hitl-hermes 0.9.4`, `ace-overseer 0.26.1`,
-  `ace-handbook-integration-pi 0.7.1`) activated together from the private
-  install; PR75 regression proven on the **installed** artifact — the live
-  lazy-entrypoint order raises `Ace::Hitl::Hermes::ContractError`, never
-  `NameError`; the wake asset (`handbook/extensions/ace-wake/wake/watch-subscription.js`)
-  ships in the pi gem. Temp GEM_HOME removed afterwards.
+- Gem spec: `ace-lab` version `0.13.1` (`gem specification`).
+- All **10** changed packaged files (§1.3, incl. the bump-touched
+  `lib/ace/lab/version.rb` and `CHANGELOG.md`) extracted from the gem's
+  `data.tar.gz` and **byte-identical to source** (`cmp`): 10 identical,
+  0 differ.
+- Negative check: no `test/` files inside the gem — the 8 unpackaged test
+  files correctly do not ship.
+- Full gem file list matches the gemspec globs: 58 packaged files
+  (`lib/**/*`, `docs/usage.md`, `exe/ace-lab`, `.ace-defaults/lab/config.yml`,
+  `README.md`, `CHANGELOG.md`, `LICENSE`, `Rakefile`).
+
+Deviation vs. wake-20261025 §4.3 (per brief scope): the isolated-host
+GEM_HOME install + activation regression proof was not repeated; the brief
+scoped step 5 to digest + extract/`cmp` content verification, and the
+changed code's behavior is regression-proven in-tree by the PR #77 test
+files (gemset provisioner/schema/verify organisms), which run in the §3
+suite.
 
 ## 5. Commits (local only — no push)
 
 | Commit | Content |
 |---|---|
-| `cb7876a24` | `chore(release): prepare semantic wake and hermes require-chain gems` — 11 files: 5 × `version.rb`, 5 × `CHANGELOG.md`, `Gemfile.lock` |
-| *(this report)* | `docs(release)` commit of `REPORT.md`, created immediately after `cb7876a24` (`git log --oneline -3` shows both) |
+| `01d6b77a6` | `chore(release): prepare the ace-lab 0.13.1 gem-set convergence gem` — 3 files: `ace-lab/lib/ace/lab/version.rb`, `ace-lab/CHANGELOG.md`, `Gemfile.lock` |
+| *(this report)* | `docs(release)` commit of `REPORT.md`, created immediately after `01d6b77a6` |
 
-`WORKER-BRIEF.md` remains untracked (brief input, mirroring the eyes cut).
-Built `.gem` artifacts are gitignored by design (`*.gem` in `.gitignore`) and
-remain on disk for the publisher.
+Built `.gem` artifact and the pending queue are gitignored by design and
+remain on disk for the operator. No other files touched; worktree clean
+after both commits.
 
 ## 6. Environment / toolchain
 
-- ruby 3.4.8 (mise), node v24.19.0, gitleaks installed at `/usr/bin/gitleaks`.
-- Publisher: `.ace-bin/ace-rubygems-publish` (repo-local, same recipe as eyes-20261023).
-- Tests via `bin/ace-test` binstubs (BUNDLE_GEMFILE pinned to this checkout).
-- Network use: read-only `gem search`/`gem owner` probes, `gem install` of
-  published dependencies in the isolated GEM_HOME. No push, no publication,
-  no credential read/print (existence + ownership probe only).
+- ruby 3.4.8 (mise), gitleaks at `/usr/bin/gitleaks`, node v24.19.0
+  available.
+- Publisher: `.ace-bin/ace-rubygems-publish` (repo-local, same recipe as
+  wake-20261025). Inventory: `.ace-bin/ace-rubygems-needs-release`.
+- Tests via `bin/ace-test` binstubs (BUNDLE_GEMFILE pinned to this
+  checkout; `ACE_TOOLCHAIN=auto` authorized in this worktree for test
+  execution only). Vendor bundle pre-provisioned at `.ace-local/vendor/bundle`.
+- Network use: read-only `gem search --remote` probe only. No push, no
+  publication, no credential read/print, no OTP consumed.
 
-## 7. Handoff (publisher runs separately, with OTP)
+## 7. Handoff (operator runs separately, with OTP)
 
 Everything is prepared. The single live command for the operator is:
 
 ```text
-Everything is ready — run in your terminal:
+Everything is ready — run in your terminal (FROM THE MERGED MAIN CHECKOUT):
   .ace-bin/ace-rubygems-publish --interactive
 
-It reuses the five prepared artifacts, then prompts once (silent) for the OTP.
-Waves: 1 ace-handbook 0.36.1 · 2 ace-hitl 0.24.1 · 3 ace-hitl-hermes 0.9.4 ·
-4 ace-overseer 0.26.1 · 5 ace-handbook-integration-pi 0.7.1
+It reuses the prepared artifact, then prompts once (silent) for the OTP.
+Wave: 1 ace-lab 0.13.1
 ```
 
-After the burst: post-publish verification per
+Note: the staged queue record (§4.1) points at this worktree's absolute
+artifact path; running `--interactive` from the merged main checkout after
+the overseer lands the release commit re-resolves and rebuilds/reuses the
+`ace-lab-0.13.1.gem` from that checkout per publisher contract (fresh
+remote snapshot, ephemeral local state). The digest in §4.2 is the
+worktree-built artifact of record for this cut.
+
+After the publish: post-publish verification per
 `ace-handbook/handbook/workflow-instructions/release/rubygems-publish.wf.md`
-(fresh dry-run + RubyGems metadata + `ace-test-e2e ace-monorepo-e2e TS-MONO-001`
-with `ace-handbook/docs/release-rubygems-proof.md` classification).
+(fresh dry-run + RubyGems metadata).
