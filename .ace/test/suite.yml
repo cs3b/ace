@@ -132,6 +132,11 @@ test_suite:
       group: tools
       priority: 2
 
+    - name: ace-wake
+      path: ace-wake
+      group: tools
+      priority: 2
+
     - name: ace-git-worktree
       path: ace-git-worktree
       group: tools
