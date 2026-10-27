@@ -18,9 +18,12 @@ const PI_PKG_ROOT = process.env.PI_PKG_ROOT;
 const EXT_PATH = process.env.EXT_PATH;
 
 if (!PI_PKG_ROOT || !EXT_PATH) {
-  throw new Error(
-    "pi-sdk-acceptance requires PI_PKG_ROOT (pi-coding-agent package dir) and EXT_PATH (projected ace-wake.js)",
-  );
+  // Env-gated acceptance: the default suite (`node --test test/*.test.mjs`)
+  // must pass in a bare checkout, so a missing environment skips this file
+  // instead of failing it. The pi integration feat harness runs it with both
+  // variables set (see ace-handbook-integration-pi/test/feat).
+  console.log("skip: pi-sdk acceptance requires PI_PKG_ROOT and EXT_PATH");
+  process.exit(0);
 }
 
 const { createAgentSession, DefaultResourceLoader, ModelRuntime, SessionManager, SettingsManager } =

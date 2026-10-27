@@ -59,10 +59,26 @@ above; that fallback is what makes ask work end to end there.
 ## Tests
 
 ```sh
-node --test test/
+node --test test/*.test.mjs
 ```
 
-The tests inject every host port (watch factory, stat, statfs, timers), so
-the suite is deterministic and never touches real mounts. The acceptance
-case `test/poll-fallback.test.mjs` proves a watcher whose `fs.watch` never
-fires still wakes via the poll fallback.
+Run from this directory. The glob covers the deterministic unit/acceptance
+suites only; the env-gated real-runtime acceptance in `test/acceptance/` is
+excluded and skipped when its environment is missing.
+
+Two environment caveats:
+
+- `test/report-wake-worktree.test.mjs` spawns this clone's `bin/ace-hitl`,
+  which needs the repository's bundler setup and `ACE_TOOLCHAIN=auto` (the
+  repo dev default). An inherited `ACE_TOOLCHAIN=installed` shell makes
+  those two tests fail.
+- `test/acceptance/pi-sdk-acceptance.test.mjs` runs the extension inside the
+  REAL Pi SDK runtime. It needs `PI_PKG_ROOT` (the pi-coding-agent package
+  directory) and `EXT_PATH` (the deployable `ace-wake/index.js`), and is
+  normally driven by the ace-handbook-integration-pi feat harness
+  (`bin/ace-test ace-handbook-integration-pi feat`):
+
+  ```sh
+  PI_PKG_ROOT="$(npm root -g)/@earendil-works/pi-coding-agent" \
+    EXT_PATH="$PWD/index.js" node --test test/acceptance/pi-sdk-acceptance.test.mjs
+  ```
