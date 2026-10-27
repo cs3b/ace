@@ -1,11 +1,11 @@
-// Installed-extension acceptance for ace-wake on the real Pi runtime.
+// Installed-artifact acceptance for ace-wake on the real Pi runtime.
 //
-// Requires PI_PKG_ROOT (pi-coding-agent package dir) and EXT_PATH (a
-// projected ace-wake.js). The Ruby suite projects the package via
-// ProviderSyncer and invokes this suite against the projected
-// .pi/extensions/ace-wake/index.js, proving the installed artifact — not the
-// source tree — wakes idle and busy agents through queued user messages
-// with no external timer or service.
+// Requires PI_PKG_ROOT (pi-coding-agent package dir) and EXT_PATH (the
+// deployable ace-wake entrypoint). The pi integration feat harness invokes
+// this suite with EXT_PATH pointing at the repository-top-level
+// ace-wake/index.js — the artifact the host lane deploys — proving that
+// artifact, not the test source tree, wakes idle and busy agents through
+// queued user messages with no external timer or service.
 import * as assert from "node:assert/strict";
 import * as fs from "node:fs";
 import * as os from "node:os";

@@ -3,15 +3,18 @@
 require "open3"
 require_relative "../test_helper"
 
-# Installed-extension acceptance: projects the package through the real
-# ProviderSyncer into a throwaway project and runs the JavaScript acceptance
-# suite against the projected .pi/extensions/ace-wake/index.js inside the real Pi
-# SDK runtime (no external timer or service).
+# Installed-extension acceptance: the ace-wake extension lives at the
+# repository-top-level ace-wake/ and is deployed from there by the host lane
+# (the pi integration package no longer ships or projects extension assets).
+# This target proves the deployable artifact — ace-wake/index.js, not the
+# test source tree — wakes agents through the real Pi SDK runtime by running
+# the JavaScript acceptance suite against it (no external timer or service).
 class Ace::Handbook::Integration::PiSdkAcceptanceTest < Minitest::Test
-  def test_projected_extension_wakes_agents_through_real_pi_runtime
+  def test_extension_artifact_wakes_agents_through_real_pi_runtime
     skip "node is not installed" unless node_bin
     pi_root = pi_package_root
     skip "pi-coding-agent package not found (install the pi CLI)" unless pi_root
+    skip "ace-wake source not found next to this package" unless File.file?(extension_entry)
 
     Dir.mktmpdir do |tmpdir|
       project_root = File.join(tmpdir, "project")
@@ -24,17 +27,17 @@ class Ace::Handbook::Integration::PiSdkAcceptanceTest < Minitest::Test
         config: {}
       )
       result = syncer.sync(provider: "pi").first
-      expected_assets = Dir.glob(File.join(package_root, "handbook", "extensions", "**", "*")).count { |path| File.file?(path) }
-      assert_equal expected_assets, result.fetch(:projected_extensions)
-
-      projected_entry = File.join(project_root, ".pi", "extensions", "ace-wake", "index.js")
-      assert File.file?(projected_entry), "sync must project the extension entrypoint"
+      # The package carries no extension assets anymore: pi sync must not
+      # project any extension into the throwaway project.
+      refute result.key?(:relative_extensions_dir),
+        "pi sync must not project extension assets (ace-wake/ is the single source)"
+      refute File.exist?(File.join(project_root, ".pi", "extensions"))
 
       stdout, stderr, status = Open3.capture3(
-        { "PI_PKG_ROOT" => pi_root, "EXT_PATH" => projected_entry },
-        node_bin, "--test", File.join(package_root, "test", "js", "acceptance", "pi-sdk-acceptance.test.mjs")
+        { "PI_PKG_ROOT" => pi_root, "EXT_PATH" => extension_entry },
+        node_bin, "--test", acceptance_target
       )
-      assert status.success?, "installed-extension acceptance failed:\n#{stdout}\n#{stderr}"
+      assert status.success?, "ace-wake acceptance failed:\n#{stdout}\n#{stderr}"
       assert_match(/^ℹ fail 0$/m, stdout)
     end
   end
@@ -43,6 +46,14 @@ class Ace::Handbook::Integration::PiSdkAcceptanceTest < Minitest::Test
 
   def package_root
     File.expand_path("../..", __dir__)
+  end
+
+  def extension_entry
+    File.expand_path("../../../ace-wake/index.js", __dir__)
+  end
+
+  def acceptance_target
+    File.expand_path("../../../ace-wake/test/acceptance/pi-sdk-acceptance.test.mjs", __dir__)
   end
 
   def node_bin
