@@ -106,6 +106,58 @@ module Ace
             end
           end
 
+          # Point-3 interplay: native-style transports accept first and
+          # confirm later — an accepted QUEUED frame is ask-complete: exit 0,
+          # wake request dropped, stderr warning emitted.
+          def test_ask_arms_the_wake_when_the_frame_is_accepted_queued
+            Adapters.register(:queued, ->(route) do
+              adapter = Object.new
+              adapter.define_singleton_method(:deliver) do |event:, text:, recipient:, reply_to:|
+                Adapters::RouteResult.new(route: route["route"], adapter: "queued",
+                  status: :unavailable, detail: "native transport queued")
+              end
+              adapter
+            end)
+            with_hitl_dir do |root|
+              config = routes_config(root).tap do |cfg|
+                cfg["hitl"]["adapters"]["routes"].first["adapter"] = "queued"
+              end
+              with_cli_root(root, config: config) do
+                result = run_cli(["ask", "Anyone there?", "--to", "captain", "--question", "Proceed?"])
+                assert_equal 0, result[:exit_code], result[:stderr]
+                case_id = result[:stdout].lines.last&.strip
+                assert_match(/\A[0-9a-z]{6}\z/, case_id)
+                assert File.file?(File.join(root, "wake-requests", "#{case_id}.json")),
+                  "a queued frame must still arm the wake"
+                assert_includes result[:stderr], "ace-hitl: warning: delivery unconfirmed (queued on captain)"
+              end
+            end
+          end
+
+          def test_ask_exits_1_without_a_wake_request_when_a_route_rejects
+            Adapters.register(:rejecting, ->(route) do
+              adapter = Object.new
+              adapter.define_singleton_method(:deliver) do |event:, text:, recipient:, reply_to:|
+                Adapters::RouteResult.new(route: route["route"], adapter: "rejecting",
+                  status: :failed, detail: "simulated reject")
+              end
+              adapter
+            end)
+            with_hitl_dir do |root|
+              config = routes_config(root).tap do |cfg|
+                cfg["hitl"]["adapters"]["routes"].first["adapter"] = "rejecting"
+              end
+              with_cli_root(root, config: config) do
+                result = run_cli(["ask", "Anyone there?", "--to", "captain"])
+                assert_equal 1, result[:exit_code]
+                assert_match(/rejected: captain: simulated reject/, result[:stderr])
+                requests_dir = File.join(root, "wake-requests")
+                assert !File.directory?(requests_dir) || Dir.empty?(requests_dir),
+                  "a rejected ask must not drop a wake request"
+              end
+            end
+          end
+
           def test_ask_requires_the_recipient
             with_hitl_dir do |root|
               with_cli_root(root) do

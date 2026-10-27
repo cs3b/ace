@@ -84,18 +84,29 @@ module Ace
 
           def deliver(event, options)
             report = Organisms::HitlSender.new.send(event.id)
-            return if options[:quiet]
-
-            puts "HITL event #{report.event_id} sent through #{report.results.size} route(s):"
-            report.results.each do |result|
-              detail = result.detail ? " - #{result.detail}" : ""
-              puts "  #{result.route} (#{result.adapter}): #{result.status}#{detail}"
+            rejected = report.results.select { |result| result.status == :failed }
+            unless rejected.empty?
+              # A genuine reject (ContractError, unknown adapter): the frame
+              # never went through, so arming a wake would strand the ask.
+              detail = rejected.map { |result| "#{result.route}: #{result.detail}" }.join("; ")
+              raise Ace::Support::Cli::Error.new("HITL event '#{event.id}' rejected: #{detail}")
             end
-            return if report.all_delivered?
-
-            raise Ace::Support::Cli::Error.new(
-              "HITL event '#{report.event_id}' not delivered on all routes"
-            )
+            unless options[:quiet]
+              puts "HITL event #{report.event_id} sent through #{report.results.size} route(s):"
+              report.results.each do |result|
+                detail = result.detail ? " - #{result.detail}" : ""
+                puts "  #{result.route} (#{result.adapter}): #{result.status}#{detail}"
+              end
+            end
+            # Native-style transports accept first and confirm later: an
+            # ACCEPTED QUEUED frame is ask-complete. The answer wake fires
+            # whenever the transport confirms — delivered-later states are
+            # asynchronous, never an asker-side failure.
+            queued = report.results.select { |result| result.status == :unavailable }
+            unless queued.empty?
+              warn "ace-hitl: warning: delivery unconfirmed (queued on " \
+                "#{queued.map { |result| result.route }.join(", ")}); the answer wake fires when the transport delivers"
+            end
           end
 
           # Drop the wake request the ace-wake extension consumes through its

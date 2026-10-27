@@ -332,9 +332,12 @@ Captain replies whenever he wants. The answer is delivered TO the agent as
 an ace-wake wake carrying the answer content (see the ace-wake README's ask
 bridge contract); on wake, the agent acts immediately.
 
-Exit 0 only when the question was created, delivered on every route, and
-the wake was armed. Undelivered routes exit 1 with a concrete error, and no
-wake request is dropped.
+Exit 0 when the question was created, the routes accepted the frame, and
+the wake was armed — including the native-style accepted-queued case (a
+stderr warning notes that delivery is unconfirmed; confirmation is
+asynchronous). Exit 1 only for genuine rejects (a route refusing the
+frame, or a concrete configuration error); no wake request is dropped for
+a rejected ask.
 
 ## Lifecycle event names
 
