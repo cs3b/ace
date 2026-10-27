@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.24.2] - 2026-10-27
+
+### Added
+
+- Add the one-turn `ask` command: create + send the question through the configured route, auto-arm the asking agent's own answer wake (ace.wake.ask/v1 request delivered through the ace-wake bridge), print the bare case id as the final stdout line, and end the turn — never block, never poll, no asker-side timeouts; undelivered routes exit 1 before any wake request is dropped, and `ask` completes on accepted-queued frames.
+
+### Changed
+
+- Formalize route recipients as first-class ordered data in the route loader.
+
 ## [0.24.1] - 2026-10-25
 
 ### Changed

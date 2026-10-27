@@ -4,6 +4,12 @@ All notable changes to ace-handbook-integration-pi will be documented in this fi
 
 ## [Unreleased]
 
+## [0.7.2] - 2026-10-27
+
+### Changed
+
+- Ship the new "Asking the Counterpart" handbook guide through the pi provider defaults; drop the retired `extensions_dir` (ace-wake moved to its own top-level home) and retarget the pi-SDK feat acceptance harness accordingly; document the `syncRoutes {config, route}` one-source-per-project contract.
+
 ## [0.7.1] - 2026-10-25
 
 ### Added

@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.5] - 2026-10-27
+
+### Added
+
+- Transport guards warn and proceed, never block: contract failures on delivery and read paths degrade to warnings instead of hard stops.
+
+### Changed
+
+- Native sync reads the project's single `.ace/hitl/config.yml` route source — one source per project; `syncRoutes` entries are `{config, route}` pairs instead of per-route JSON discovery.
+
 ## [0.9.4] - 2026-10-25
 
 ### Fixed

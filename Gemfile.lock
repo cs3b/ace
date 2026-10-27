@@ -188,7 +188,7 @@ PATH
 PATH
   remote: ace-handbook-integration-pi
   specs:
-    ace-handbook-integration-pi (0.7.1)
+    ace-handbook-integration-pi (0.7.2)
       ace-handbook (~> 0.33)
       ace-hitl-hermes (~> 0.9.3)
       ace-overseer (~> 0.26)
@@ -196,7 +196,7 @@ PATH
 PATH
   remote: ace-handbook
   specs:
-    ace-handbook (0.36.1)
+    ace-handbook (0.36.2)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.18)
       ace-support-core (~> 0.31)
@@ -222,7 +222,7 @@ PATH
 PATH
   remote: ace-hitl-hermes
   specs:
-    ace-hitl-hermes (0.9.4)
+    ace-hitl-hermes (0.9.5)
       ace-hitl (~> 0.24)
       ace-hitl-contract (~> 0.3.0)
       ace-support-cli (~> 0.6)
@@ -231,7 +231,7 @@ PATH
 PATH
   remote: ace-hitl
   specs:
-    ace-hitl (0.24.1)
+    ace-hitl (0.24.2)
       ace-b36ts (~> 0.14)
       ace-hitl-contract (~> 0.3.0)
       ace-runtime (~> 0.3)
