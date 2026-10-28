@@ -9,9 +9,12 @@ release range is `eb416468f..351368c5a3` — the 11 commits after the
 gemset-20261026 release report commit (`eb416468f`) up to the base. Date:
 2026-10-27.
 
-Closure status: artifacts built + staged, suites green, committed locally.
-**No push, no PR, no publication, no OTP** — the live publish is handed off
-to the overseer/Captain lane via the staged pending queue (see §6).
+Closure status: artifacts built + staged, suites green, committed and
+pushed to the PR80 review lane. **No publication, no OTP, no merges** —
+the live publish is handed off to the overseer/Captain lane via the staged
+pending queue (see §6). The PR80 REQUEST_CHANGES delta (drop the
+completion-ping fragment) was applied on the same branch and pushed to the
+same topic.
 
 ---
 
@@ -65,10 +68,15 @@ ace-handbook-integration-pi  0.7.2   0.7.1  pending
 
 The cycle's diff touches the handbook paragraph file itself (it creates
 `ace-handbook/handbook/guides/asking-the-counterpart.g.md`), so the
-conditional fired: appended exactly one line to that paragraph —
-"completion ping: an agent that finishes work for another agent pings its
-pane directly (herdr agent prompt)." — and verified the line is inside the
-built ace-handbook-0.36.2.gem artifact (§5.2).
+conditional fired during the first staging pass and one line ("completion
+ping: an agent that finishes work for another agent pings its pane
+directly (herdr agent prompt).") was appended to that paragraph. **PR80
+disposition REQUEST_CHANGES dropped it**: the guide is restored byte-exact
+to the PR79-reviewed text, the changelog entry no longer references the
+ping rule, and the ace-handbook artifact was rebuilt and re-staged (new
+sha256, §5.2). The completion-ping sentence lands later as a reviewed
+feature commit (next standing-loops task) — it rides no artifact in this
+release.
 
 ## 2. Version bump + CHANGELOG (committed as `ea4e99d71`)
 
@@ -165,13 +173,17 @@ and this report).
 ```
 
 Every other ace-* gem reported `already published on RubyGems`. **No
-publish, no interactive prompt, no OTP consumed.**
+publish, no interactive prompt, no OTP consumed.** After the PR80
+REQUEST_CHANGES disposition the staging step was re-run for the corrected
+content: `1 newly built, 3 reused from disk` — only ace-handbook's bytes
+changed (§5.2); the pending queue still lists exactly the same 4 gems in
+the same waves.
 
 ### 5.2 Staged artifacts — sha256 digests
 
 | Artifact (wave) | sha256 |
 |---|---|
-| ace-handbook-0.36.2.gem (1) | `01991a7db276dfc831b974276cd343045116704e16fc38c615eee748765c90fc` |
+| ace-handbook-0.36.2.gem (1) | `6c01b1aabd8690531ca4d60ab5468cf239300045c0bd9073f66725c9d8722216` |
 | ace-hitl-0.24.2.gem (2) | `3d94213c05ff194066428d919c80f820d58faf30ad05ccea2b1ec005245452fc` |
 | ace-hitl-hermes-0.9.5.gem (3) | `95a69b928347f250565ae34ee271ed99105c049da436a457ce2299d975e5d2a3` |
 | ace-handbook-integration-pi-0.7.2.gem (4) | `cb278c86e64048e0a672847978f022775793acf7e5849afc729bb2c563f33757` |
@@ -179,13 +191,22 @@ publish, no interactive prompt, no OTP consumed.**
 Artifact spot checks: the built versions are inside the artifacts
 (`VERSION = "0.24.2" / "0.9.5" / "0.7.2"` extracted from the gems), the
 ace-handbook gem packages
-`handbook/guides/asking-the-counterpart.g.md` **including** the
-completion-ping line, and none of the four artifacts ship any `test/`
+`handbook/guides/asking-the-counterpart.g.md` byte-exact to the PR79
+reviewed text (zero completion-ping matches in the artifact), and none of
+the four artifacts ship any `test/`
 files (0 matches per gem).
+
+The ace-handbook digest above is the post-disposition rebuild; the first
+staging pass produced
+`01991a7db276dfc831b974276cd343045116704e16fc38c615eee748765c90fc` and is
+superseded — that artifact carried the unreviewed completion-ping fragment
+and was replaced in the queue.
 
 ## 6. Handoff
 
 The staged queue (`.ace-local/rubygems-publish/pending-queue.yml`) is the
 publish contract: a later live run publishes exactly these 4 gems in wave
 order. The overseer reports staged-state to the Captain via Lab::ACE. No
-pushes, no PRs, no merges, no HITL sends were performed by this worker.
+publication, no OTP, no merges, no HITL sends were performed by this
+worker; pushes went only to the PR80 AGit review lane (`refs/for/main`,
+topic `release-cycle2-20261027`) as the disposition directs.
