@@ -118,7 +118,10 @@ module Ace
               parser.on(*switches, String, desc) do |value|
                 key, parsed_value = parse_hash_pair(value, option)
                 current = options[option.name] || {}
-                options[option.name] = current.merge(key => parsed_value)
+                # explicit dup+assign: Hash#merge is not AOT-compilable, see REPORT.md
+                merged_current = current.dup
+                merged_current[key] = parsed_value
+                options[option.name] = merged_current
               end
             else
               switches = option.optional_value ? optional_value_switches(option, "VALUE") : value_switches(option, "VALUE")

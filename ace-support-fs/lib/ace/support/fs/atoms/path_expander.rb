@@ -163,8 +163,8 @@ module Ace
             expanded = path.to_s.dup
 
             # Expand environment variables (uses class_get_env for testability)
-            expanded.gsub!(/\$([A-Z_][A-Z0-9_]*)/i) do |match|
-              class_get_env(match[1..-1]) || match
+            expanded = expanded.gsub(/\$([A-Z_][A-Z0-9_]*)/i) do |match|
+              class_get_env(match[1, match.length - 1]) || match
             end
 
             # Expand tilde
@@ -297,14 +297,14 @@ module Ace
             expanded = path.dup
 
             # Handle ${VAR} format
-            expanded.gsub!(/\$\{([A-Z_][A-Z0-9_]*)\}/i) do |match|
-              var_name = match[2..-2] # Remove ${ and }
+            expanded = expanded.gsub(/\$\{([A-Z_][A-Z0-9_]*)\}/i) do |match|
+              var_name = match[2, match.length - 3] # Remove ${ and }
               get_env(var_name) || match
             end
 
             # Handle $VAR format
-            expanded.gsub!(/\$([A-Z_][A-Z0-9_]*)/i) do |match|
-              get_env(match[1..-1]) || match
+            expanded = expanded.gsub(/\$([A-Z_][A-Z0-9_]*)/i) do |match|
+              get_env(match[1, match.length - 1]) || match
             end
 
             expanded
