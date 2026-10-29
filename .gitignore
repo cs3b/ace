@@ -74,3 +74,4 @@ _current
 
 # ZCode local state (plans, session artifacts)
 .zcode/
+/_overseer/

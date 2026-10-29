@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+# overseer-start — boots the ACE project overseer into a herdr pane with the
+# PACKAGED role instructions (ace-overseer gem) and the registry model profile.
+# Interim entry point until the gem grows a real `ace-overseer start`.
+
+set -euo pipefail
+
+RUNTIME=/home/mo/.local/share/ace-lab/runtimes/lab92-v2
+PROJECT=/lab/projects/ace
+REGISTRY_AGENTS=/etc/lab/registry/current/agents.json
+HERDR=/usr/local/lib/lab/herdr
+
+# 1. Resolve the NEWEST installed ace-overseer gem's standing instructions.
+INSTR=$(ls -d "$RUNTIME"/gems/ace-overseer-*/handbook/workflow-instructions/overseer.wf.md 2>/dev/null | sort -V | tail -1)
+[ -f "$INSTR" ] || { echo "overseer-start: no packaged overseer.wf.md under $RUNTIME" >&2; exit 1; }
+
+# 2. Resolve the model profile from the registry (overseer-default).
+read -r PROVIDER MODEL THINKING HARNESS < <(python3 - "$REGISTRY_AGENTS" <<'PY'
+import json, sys
+d = json.load(open(sys.argv[1]))
+p = d.get("model_profiles", {}).get("overseer-default", {})
+print(p.get("provider", "zai"), p.get("model", "glm-5.3-flash"),
+      p.get("thinking", "high"), p.get("harness", "pi"))
+PY
+)
+
+# 3. Boot: fresh herdr tab in the project, pi with the packaged instructions.
+TAB_JSON=$("$HERDR" --session lab tab create --cwd "$PROJECT" --label overseer-ace --no-focus 2>&1)
+PANE=$(printf '%s' "$TAB_JSON" | python3 -c 'import json,sys; print(json.load(sys.stdin)["result"]["root_pane"]["pane_id"])')
+echo "overseer-start: pane $PANE | $PROVIDER/$MODEL:$THINKING ($HARNESS)"
+echo "overseer-start: instructions: $INSTR"
+
+# pi loads the packaged guide as standing instructions via --append-system-prompt.
+printf 'cd %s\n' "$PROJECT" > /tmp/ovs-boot.$$
+"$HERDR" --session lab pane run "$PANE" "cd $PROJECT" >/dev/null
+rm -f /tmp/ovs-boot.$$
+
+"$HERDR" --session lab agent start ace-overseer --kind "$HARNESS" --pane "$PANE" -- \
+  --model "$PROVIDER/$MODEL" --thinking "$THINKING" \
+  --append-system-prompt "$INSTR"
+
+echo "overseer-start: DONE — pane $PANE, role instructions loaded, agent idle."
+echo "overseer-start: wake it with: $HERDR --session lab agent prompt ace-overseer 'resume your tasks (bin/ace-task list --in _overseer)'"

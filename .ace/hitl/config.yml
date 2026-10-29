@@ -1,0 +1,53 @@
+{
+  "hitl": {
+    "machine": "lab",
+    "recipients": {
+      "overseer": {
+        "machine": "lab",
+        "panel": "w6:p2S"
+      },
+      "lab92-ace-coordinator": {
+        "machine": "lab",
+        "panel": "w6:p2S"
+      },
+      "captain": {
+        "machine": "lab",
+        "panel": "ace"
+      }
+    },
+    "adapters": {
+      "routes": [
+        {
+          "route": "ace-coordinator-terminal",
+          "adapter": "terminal",
+          "runtime": "herdr",
+          "machine": "lab",
+          "pane": "w6:p2S",
+          "recipients": [
+            "overseer",
+            "lab92-ace-coordinator"
+          ]
+        },
+        {
+          "route": "captain",
+          "adapter": "hermes_native",
+          "recipients": [
+            "captain"
+          ],
+          "machine": "lab",
+          "channel": "ace",
+          "project": "ace",
+          "folder": "/lab/state/hitl-address/ace",
+          "event_roots": [
+            "/lab/projects/ace/.ace-local/hitl",
+            "/lab/projects/ace/.ace-wt/overseer-lab92/.ace-local/hitl"
+          ],
+          "worktree_roots": [
+            "/lab/projects/ace"
+          ],
+          "instruction_root": "/lab/projects/ace/.ace-wt/overseer-lab92/.ace-local/hitl"
+        }
+      ]
+    }
+  }
+}
