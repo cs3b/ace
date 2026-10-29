@@ -5,11 +5,14 @@ require_relative "../molecules/install_manifest_loader"
 require_relative "../molecules/key_provisioner"
 require_relative "../molecules/role_verifier"
 require_relative "../molecules/gemset_provisioner"
+require_relative "../molecules/extension_provisioner"
 require_relative "../molecules/hitl_routes"
 require_relative "../molecules/caller_authorizer"
 require_relative "../atoms/topology_schema"
 require "open3"
 require "yaml"
+require "json"
+require "fileutils"
 require "date"
 
 module Ace
@@ -99,7 +102,8 @@ module Ace
             "overseer" => check_overseer(manifest),
             "adapters" => check_adapters(manifest, executors),
             "tools" => check_tools(manifest, executors),
-            "gems" => check_gems(manifest)
+            "gems" => check_gems(manifest),
+            "extensions" => check_extensions(manifest)
           }
           flat = checks.values.flatten(1)
           {
@@ -583,18 +587,105 @@ module Ace
             kind, versions_or_message = provisioner.runtime_versions(
               name: gem["name"], gem_home: gem_home
             )
-            reason = case kind
-            when :unknown, :failed then versions_or_message
-            when :ok then gem_version_reason(gem, versions_or_message, gem_home)
-            end
-            status = case kind
-            when :ok then reason ? FAIL : PASS
-            when :unknown then UNKNOWN
-            else FAIL
+            status, reason = if kind != :ok
+              [kind == :unknown ? UNKNOWN : FAIL, versions_or_message]
+            else
+              verify_present_gem(provisioner, gem, versions_or_message, gem_home)
             end
             {"gem" => gem["name"], "version" => gem["version"], "gem_home" => gem_home,
              "status" => status, "reason" => reason}
           end
+        end
+
+        # A gem whose exact declared version is present must ALSO prove
+        # (1) its runtime dependency closure resolves in the target
+        # runtime — a gem listed in `gem list` with a missing
+        # transitive dependency is NOT ready (task 8xs.t.pu0.0) — and
+        # (2) no NEWER version sits beside the declared one: RubyGems
+        # activates the highest installed version, so a newer sibling
+        # would silently take over the runtime's CLI.
+        def verify_present_gem(provisioner, gem, versions, gem_home)
+          reason = gem_version_reason(gem, versions, gem_home)
+          return [FAIL, reason] if reason
+
+          newer_kind, newer_or_message = provisioner.newer_versions(
+            name: gem["name"], declared_version: gem["version"], gem_home: gem_home
+          )
+          if newer_kind != :ok
+            return [newer_kind == :unknown ? UNKNOWN : FAIL, newer_or_message]
+          end
+          unless newer_or_message.empty?
+            return [FAIL,
+              "gem '#{gem["name"]}' has newer version(s) #{newer_or_message.join(", ")} beside " \
+                "the declared #{gem["version"]} in '#{gem_home}'; the newer version would take " \
+                "over CLI activation; rerun ace-lab install"]
+          end
+
+          closure = provisioner.closure_failures(
+            name: gem["name"], version: gem["version"], gem_home: gem_home
+          )
+          return [FAIL, closure.join("; ")] unless closure.empty?
+
+          [PASS, nil]
+        end
+
+        # Declared harness extension projections (task 8xs.t.pu0.0):
+        # re-derived from the same receipts and installed gem trees the
+        # provisioner converges — the receipt must name the declared
+        # gem at its exact declared version, and every projected file
+        # must match the installed gem's handbook/extensions content.
+        def check_extensions(manifest)
+          gemset = manifest["gemset"]
+          gemset["extensions"].map do |entry|
+            declared = gemset["gems"].find { |gem| gem["name"] == entry["gem"] }
+            reason = if declared.nil?
+              "extension source gem '#{entry["gem"]}' is not declared in the gemset"
+            else
+              extension_reason(entry, declared, gemset["gem_home"])
+            end
+            {"extension" => entry["gem"], "gem" => entry["gem"], "path" => entry["path"],
+             "account" => entry["account"], "status" => reason ? FAIL : PASS, "reason" => reason}
+          end
+        end
+
+        def extension_reason(entry, declared, gem_home)
+          source_root = File.join(gem_home, "gems", "#{entry["gem"]}-#{declared["version"]}",
+            "handbook", "extensions")
+          return "gem '#{entry["gem"]}' #{declared["version"]} is not installed with a " \
+            "handbook/extensions tree in '#{gem_home}'; rerun ace-lab install" unless File.directory?(source_root)
+
+          receipt_path = File.join(entry["path"], Molecules::ExtensionProvisioner::RECEIPT_NAME)
+          unless File.file?(receipt_path)
+            return "extension projection receipt '#{receipt_path}' is missing; rerun ace-lab install"
+          end
+
+          begin
+            receipt = JSON.parse(File.read(receipt_path))
+          rescue JSON::ParserError
+            return "extension projection receipt '#{receipt_path}' is not valid JSON; rerun ace-lab install"
+          end
+          if receipt["gem"] != entry["gem"] || receipt["version"] != declared["version"]
+            return "extension projection at '#{entry["path"]}' was projected from " \
+              "'#{receipt["gem"]} #{receipt["version"]}' but the manifest declares " \
+              "'#{entry["gem"]} #{declared["version"]}'; rerun ace-lab install"
+          end
+
+          expected = Dir.glob(File.join(source_root, "**", "*")).select { |path| File.file?(path) }
+            .to_h { |path| [path.delete_prefix("#{source_root}/"), path] }
+          listed = receipt.fetch("files", [])
+          if listed.sort != expected.keys.sort
+            return "extension projection at '#{entry["path"]}' lists different files than " \
+              "gem '#{entry["gem"]}' #{declared["version"]} carries; rerun ace-lab install"
+          end
+
+          mismatch = expected.find do |relative, source|
+            target = File.join(entry["path"], relative)
+            !File.file?(target) || !FileUtils.compare_file(source, target)
+          end
+          return "extension projection file '#{mismatch.first}' differs from gem " \
+            "'#{entry["gem"]}' #{declared["version"]}; rerun ace-lab install" if mismatch
+
+          nil
         end
 
         def gem_version_reason(gem, versions, gem_home)

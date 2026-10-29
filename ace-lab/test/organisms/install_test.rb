@@ -193,7 +193,7 @@ module Organisms
 
         assert_equal true, report["ok"]
         assert_equal({"gem_home" => "/opt/lab/gems",
-          "gems" => [{"name" => "ace-lab", "version" => "0.13.0"}]}, report["gemset"])
+          "gems" => [{"name" => "ace-lab", "version" => "0.13.0"}], "extensions" => []}, report["gemset"])
       end
     end
 

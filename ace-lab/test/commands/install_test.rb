@@ -116,7 +116,7 @@ module Ace
               assert_equal true, parsed.dig("verify", "ready")
               assert_empty parsed["adapters"]
               assert_empty parsed["tools"]
-              assert_equal({"gem_home" => nil, "gems" => []}, parsed["gemset"])
+              assert_equal({"gem_home" => nil, "gems" => [], "extensions" => []}, parsed["gemset"])
               assert_equal "atlas", parsed["projects"].first["project"]
               assert_equal "created", parsed["grants"]["status"]
             end

@@ -49,7 +49,12 @@ module Ace
             if runtime_failure
               base(gem, gem_home).merge("status" => "failed", "message" => runtime_failure)
             else
-              converge(base(gem, gem_home), gem, gem_home)
+              report = converge(base(gem, gem_home), gem, gem_home)
+              if %w[exists installed updated].include?(report["status"])
+                converge_post_presence(report, gem, gem_home)
+              else
+                report
+              end
             end
           end
         end
@@ -76,6 +81,53 @@ module Ace
           end
 
           [:ok, versions]
+        end
+
+        # Public READ-ONLY probes (verify, task 8xs.t.pu0.0): the same
+        # primitives convergence runs, exposed so readiness reuses the
+        # identical logic instead of reimplementing it.
+        #
+        # Unsatisfied runtime dependencies of the declared gem — the
+        # concrete missing-dependency list readiness reports.
+        # @return [Array<String>] classified reasons (empty = closed)
+        def closure_failures(name:, version:, gem_home:)
+          queue = [[name, version]]
+          seen = {}
+          reasons = []
+          until queue.empty?
+            current_name, current_version = queue.shift
+            next if seen[[current_name, current_version]]
+
+            seen[[current_name, current_version]] = true
+            deps = runtime_dependencies(name: current_name, version: current_version, gem_home: gem_home)
+            return [deps] if deps.is_a?(String)
+
+            deps.each do |dep|
+              kind, versions_or_message = runtime_versions(name: dep["name"], gem_home: gem_home)
+              return [versions_or_message] if kind != :ok
+
+              satisfying = satisfying_versions(dep, versions_or_message)
+              if satisfying.empty?
+                reasons << "dependency '#{dep["name"]} (#{dep["requirement"]})' required by gem " \
+                  "'#{current_name}' is not satisfied in runtime '#{gem_home}'"
+              else
+                queue << [dep["name"], satisfying.max_by { |v| Gem::Version.new(v) }]
+              end
+            end
+          end
+          reasons
+        end
+
+        # Installed versions of `name` NEWER than the declared one —
+        # the versions that would win activation and take over the CLI.
+        # @return [Array(String, Object)] [:ok, versions] or the probe's
+        #   [:unknown/:failed, message]
+        def newer_versions(name:, declared_version:, gem_home:)
+          kind, versions_or_message = runtime_versions(name: name, gem_home: gem_home)
+          return [kind, versions_or_message] if kind != :ok
+
+          declared = Gem::Version.new(declared_version)
+          [:ok, versions_or_message.select { |version| Gem::Version.new(version) > declared }]
         end
 
         private
@@ -129,6 +181,153 @@ module Ace
             base.merge("status" => "installed", "message" => nil)
           else
             base.merge("status" => "updated", "message" => nil)
+          end
+        end
+
+        # Post-presence convergence (task 8xs.t.pu0.0): the declared
+        # version being present is necessary but not sufficient.
+        #   1. NEWER versions of the declared gem sitting beside the
+        #      declared one would win RubyGems activation and take over
+        #      the runtime's CLI — the manifest is the single owner of
+        #      the declared set, so convergence removes them from the
+        #      target runtime.
+        #   2. The dependency closure must actually resolve in the
+        #      runtime: a gem whose version already figures in
+        #      `gem list` can still miss a transitive runtime
+        #      dependency (the manually-repaired `json` class of gap);
+        #      missing dependencies are converged by installing them
+        #      at the parent's requirement, and an unsatisfiable
+        #      dependency is a classified failure — never readiness.
+        # A dry run predicts both without writing (would_uninstall /
+        # would_install) and stops recursion at the prediction.
+        def converge_post_presence(report, gem, gem_home)
+          removal = converge_newer_versions(gem, gem_home)
+          return report.merge("status" => "failed", "message" => removal) if removal.is_a?(String)
+          report["removed_newer_versions"] = removal
+
+          closure = converge_closure(gem, gem_home)
+          return report.merge("status" => "failed", "message" => closure) if closure.is_a?(String)
+          report["closure"] = closure
+          report
+        end
+
+        # @return [Array<Hash>, String] per-version removal reports or a
+        #   classified failure message
+        def converge_newer_versions(gem, gem_home)
+          kind, versions_or_message = runtime_versions(name: gem["name"], gem_home: gem_home)
+          return versions_or_message if kind != :ok
+
+          declared = Gem::Version.new(gem["version"])
+          newer = versions_or_message.select { |version| Gem::Version.new(version) > declared }
+          return [] if newer.empty?
+
+          return newer.map { |version| {"version" => version, "status" => "would_uninstall"} } if @dry_run
+
+          newer.map do |version|
+            result = @runner.call(runtime_argv(gem_home,
+              ["gem", "uninstall", gem["name"], "--version", version, "-x", "--force"]))
+            if result["status"] != "ok"
+              break command_failure("gem uninstall #{gem["name"]} #{version}", result)
+            end
+            {"version" => version, "status" => "uninstalled"}
+          end
+        end
+
+        # Breadth-first walk of the gem's RUNTIME dependency closure in
+        # the target runtime. `gem dependency` output is plain text (no
+        # marshaled objects), development dependencies are ignored.
+        # @return [Array<Hash>, String] per-dependency convergence
+        #   actions or a classified failure message
+        def converge_closure(gem, gem_home)
+          queue = [[gem["name"], gem["version"]]]
+          seen = {}
+          actions = []
+          until queue.empty?
+            name, version = queue.shift
+            next if seen[[name, version]]
+
+            seen[[name, version]] = true
+            deps = runtime_dependencies(name: name, version: version, gem_home: gem_home)
+            return deps if deps.is_a?(String)
+
+            deps.each do |dep|
+              kind, versions_or_message = runtime_versions(name: dep["name"], gem_home: gem_home)
+              return versions_or_message if kind != :ok
+
+              satisfying = satisfying_versions(dep, versions_or_message)
+              if satisfying.empty?
+                if @dry_run
+                  actions << {"name" => dep["name"], "requirement" => dep["requirement"],
+                              "status" => "would_install"}
+                  next # recursion stops at the prediction
+                end
+
+                failure = install_dependency(dep, gem_home)
+                return failure if failure
+
+                kind, versions_or_message = runtime_versions(name: dep["name"], gem_home: gem_home)
+                return versions_or_message if kind != :ok
+                satisfying = satisfying_versions(dep, versions_or_message)
+                if satisfying.empty?
+                  return "dependency '#{dep["name"]} (#{dep["requirement"]})' required by gem " \
+                    "'#{name}' is not satisfiable in runtime '#{gem_home}' after install; " \
+                    "check the gem source or the manifest declaration"
+                end
+                actions << {"name" => dep["name"], "requirement" => dep["requirement"],
+                            "status" => "installed"}
+              end
+
+              chosen = satisfying.max_by { |v| Gem::Version.new(v) }
+              queue << [dep["name"], chosen]
+            end
+          end
+          actions
+        end
+
+        # Installs a missing dependency at the parent requirement: the
+        # requirement string the runtime's own resolver would accept
+        # (`gem install name -v "~> 2.7"`).
+        # @return [String, nil] classified failure, nil on success
+        def install_dependency(dep, gem_home)
+          result = @runner.call(runtime_argv(gem_home,
+            ["gem", "install", dep["name"], "--version", dep["requirement"], "--no-document"]))
+          return nil if result["status"] == "ok"
+
+          command_failure("gem install #{dep["name"]}", result)
+        end
+
+        # The runtime (non-development) dependencies of an installed
+        # gem, from `gem dependency <name> --version <v>` plain-text
+        # output: "dep (~> 2.0, runtime)" lines under the gem header.
+        # @return [Array<Hash{"name","requirement"}>, String] or a
+        #   classified failure message
+        def runtime_dependencies(name:, version:, gem_home:)
+          result = @runner.call(runtime_argv(gem_home,
+            ["gem", "dependency", name, "--version", version]))
+          if result["status"] == "enoent"
+            return "gem not found in PATH; install RubyGems and rerun ace-lab prepare"
+          end
+          return "gem dependency failed (#{exit_detail(result["status"])}); rerun ace-lab prepare" \
+            unless result["status"] == "ok"
+
+          result["out"].lines.filter_map do |line|
+            match = line.match(/\A\s+([A-Za-z0-9._-]+) \(([^)]*)\)\s*\z/)
+            next if match.nil?
+
+            parts = match[2].split(",").map(&:strip)
+            type = %w[runtime development].include?(parts.last) ? parts.pop : "runtime"
+            next if type == "development"
+
+            requirement = parts.join(", ")
+            requirement = ">= 0" if requirement.empty?
+            {"name" => match[1], "requirement" => requirement}
+          end
+        end
+
+        def satisfying_versions(dep, versions)
+          requirement = dep["requirement"].split(",").map(&:strip)
+          versions.select do |version|
+            Gem::Dependency.new(dep["name"], *requirement).match?(dep["name"], version)
           end
         end
 

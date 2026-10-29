@@ -58,8 +58,8 @@ module Organisms
         assert_equal false, report["dry_run"]
         assert_equal "lab01", report["machine"]
         assert_equal "/etc/lab/ace-lab/install.yml", report["manifest"]
-        assert_equal ["ok", "dry_run", "machine", "manifest", "accounts", "directories", "keys", "roles", "gems"],
-          report.keys
+        assert_equal ["ok", "dry_run", "machine", "manifest", "accounts", "directories", "keys", "roles", "gems",
+          "extensions"], report.keys
         assert_equal [{"username" => "ace-worker", "status" => "exists",
                        "uid" => Process.uid, "message" => nil}], report["accounts"]
         assert_equal "created", report["directories"].first["status"]
@@ -112,6 +112,58 @@ module Organisms
           assert_equal "would_install", report["gems"].first["status"]
           # prediction with zero mutations: the runtime stays empty
           assert_equal [], Dir.children(gem_home)
+        end
+      end
+    end
+
+    # 8xs.t.pu0.0: prepare converges declared extension projections
+    # from the installed gem's exact declared version and reports the
+    # loaded version plus the restart need.
+    def test_gemset_extensions_project_from_the_installed_exact_version
+      Dir.mktmpdir do |gemdir|
+        gem_home = File.join(gemdir, "runtime")
+        FileUtils.mkdir_p(gem_home)
+        source = File.join(gem_home, "gems", "ace-wake-probe-0.1.0", "handbook", "extensions")
+        FileUtils.mkdir_p(File.join(source, "ace-wake-probe"))
+        File.write(File.join(source, "ace-wake-probe", "index.js"), "// entry\n")
+        target = File.join(gemdir, "pi-extensions")
+
+        manifest = MANIFEST + <<~YAML
+          gemset:
+            gem_home: #{gem_home}
+            gems:
+              - name: ace-wake-probe
+                version: 0.1.0
+            extensions:
+              - gem: ace-wake-probe
+                path: #{target}
+                account: ace-worker
+        YAML
+        runner = lambda do |argv|
+          if argv.include?("list")
+            {"status" => "ok", "out" => "ace-wake-probe (0.1.0)\n", "err" => ""}
+          elsif argv.include?("dependency")
+            {"status" => "ok", "out" => "ace-wake-probe (0.1.0)\n", "err" => ""}
+          else
+            {"status" => "ok", "out" => "", "err" => ""}
+          end
+        end
+
+        with_manifest(manifest, runner: runner) do |organism, _dir|
+          report = organism.call
+
+          assert_equal "exists", report["gems"].first["status"]
+          extension = report["extensions"].first
+          assert_equal "projected", extension["status"]
+          assert_equal "0.1.0", extension["version"]
+          assert_nil extension["loaded_version"]
+          assert_equal true, extension["restart_required"]
+          assert_equal "// entry\n", File.read(File.join(target, "ace-wake-probe", "index.js"))
+
+          second = organism.call
+          assert_equal "unchanged", second["extensions"].first["status"]
+          assert_equal "0.1.0", second["extensions"].first["loaded_version"]
+          assert_equal false, second["extensions"].first["restart_required"]
         end
       end
     end

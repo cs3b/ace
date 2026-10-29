@@ -834,6 +834,114 @@ module Organisms
       end
     end
 
+    # 8xs.t.pu0.0: a gem whose version figures in `gem list` but whose
+    # transitive runtime dependency is missing is NOT ready.
+    def test_missing_transitive_dependency_blocks_readiness_even_when_gem_listed
+      Dir.mktmpdir do |gemdir|
+        gem_home = build_and_install_gem(gemdir, "ace-lab-probe", "0.13.0",
+          dependencies: {"lab-missing-dep" => ">= 0"}, ignore_dependencies: true)
+
+        with_lab(extra_manifest: gemset_manifest(gem_home, "ace-lab-probe", "0.13.0")) do |fixture|
+          report = verify_run(fixture)
+
+          assert_equal false, report["ready"]
+          gem_check = check(report, "gems")
+          assert_equal "fail", gem_check["status"]
+          assert_match(/dependency 'lab-missing-dep \(>= 0\)'.*not satisfied/, gem_check["reason"])
+        end
+      end
+    end
+
+    # 8xs.t.pu0.0: a newer version beside the declared one would win
+    # activation and take over the CLI — not ready.
+    def test_newer_version_beside_the_declared_one_blocks_readiness
+      Dir.mktmpdir do |gemdir|
+        gem_home = build_and_install_gem(gemdir, "ace-lab-probe", "0.13.0")
+        build_and_install_gem(gemdir, "ace-lab-probe", "0.14.0")
+
+        with_lab(extra_manifest: gemset_manifest(gem_home, "ace-lab-probe", "0.13.0")) do |fixture|
+          report = verify_run(fixture)
+
+          assert_equal false, report["ready"]
+          gem_check = check(report, "gems")
+          assert_equal "fail", gem_check["status"]
+          assert_match(/newer version\(s\) 0\.14\.0 beside the declared 0\.13\.0.*take over CLI activation/,
+            gem_check["reason"])
+        end
+      end
+    end
+
+    # 8xs.t.pu0.0: declared extension projections are re-derived from
+    # the installed gem tree and the projection receipt.
+    def extension_manifest(gem_home, target)
+      <<~YAML
+        gemset:
+          gem_home: #{gem_home}
+          gems:
+            - name: ace-wake-probe
+              version: 0.1.0
+          extensions:
+            - gem: ace-wake-probe
+              path: #{target}
+              account: ace-worker
+      YAML
+    end
+
+    def test_extension_projection_check_fails_without_a_receipt_and_passes_after_projection
+      Dir.mktmpdir do |gemdir|
+        gem_home = File.join(gemdir, "runtime")
+        source = File.join(gem_home, "gems", "ace-wake-probe-0.1.0", "handbook", "extensions")
+        FileUtils.mkdir_p(File.join(source, "ace-wake-probe"))
+        File.write(File.join(source, "ace-wake-probe", "index.js"), "// entry\n")
+        target = File.join(gemdir, "pi-extensions")
+
+        with_lab(extra_manifest: extension_manifest(gem_home, target)) do |fixture|
+          before = verify_run(fixture)
+          assert_equal false, before["ready"]
+          ext_check = check(before, "extensions")
+          assert_equal "fail", ext_check["status"]
+          assert_match(/receipt .* is missing; rerun ace-lab install/, ext_check["reason"])
+
+          Ace::Lab::Molecules::ExtensionProvisioner.new(gem_home: gem_home).call(
+            extensions: [{"gem" => "ace-wake-probe", "path" => target, "account" => "ace-worker"}],
+            gems: [{"name" => "ace-wake-probe", "version" => "0.1.0"}]
+          )
+
+          after = verify_run(fixture)
+          assert_equal "pass", check(after, "extensions")["status"]
+        end
+      end
+    end
+
+    def test_extension_projection_version_mismatch_blocks_readiness
+      Dir.mktmpdir do |gemdir|
+        gem_home = File.join(gemdir, "runtime")
+        %w[0.1.0 0.2.0].each do |probe_version|
+          source = File.join(gem_home, "gems", "ace-wake-probe-#{probe_version}", "handbook", "extensions")
+          FileUtils.mkdir_p(File.join(source, "ace-wake-probe"))
+          File.write(File.join(source, "ace-wake-probe", "index.js"), "// entry #{probe_version}\n")
+        end
+        target = File.join(gemdir, "pi-extensions")
+
+        with_lab(extra_manifest: extension_manifest(gem_home, target)) do |fixture|
+          Ace::Lab::Molecules::ExtensionProvisioner.new(gem_home: gem_home).call(
+            extensions: [{"gem" => "ace-wake-probe", "path" => target, "account" => "ace-worker"}],
+            gems: [{"name" => "ace-wake-probe", "version" => "0.1.0"}]
+          )
+          # the manifest now declares a newer version than projected
+          document = YAML.safe_load_file(fixture["manifest"])
+          document["gemset"]["gems"].first["version"] = "0.2.0"
+          File.write(fixture["manifest"], YAML.dump(document))
+
+          report = verify_run(fixture)
+          ext_check = check(report, "extensions")
+          assert_equal "fail", ext_check["status"]
+          assert_match(/was projected from 'ace-wake-probe 0\.1\.0' but the manifest declares 'ace-wake-probe 0\.2\.0'/,
+            ext_check["reason"])
+        end
+      end
+    end
+
     def test_manifest_without_gemset_reports_no_gem_checks
       with_lab do |fixture|
         assert install_run(fixture, lookup_for(fixture))["ok"]

@@ -71,9 +71,13 @@ module Molecules
         assert_equal "exists", gem["status"]
         assert_nil gem["message"]
         assert_equal File.join(dir, "gems"), gem["gem_home"]
-        # the probe ran inside the pinned runtime; nothing was installed
-        assert_equal [runtime_env(File.join(dir, "gems")) +
-          ["gem", "list", "ace-lab", "--exact", "--local"]], runner.calls
+        # presence probe, newer-version probe, closure probe — all
+        # read-only, nothing installed (8xs.t.pu0.0 post-presence)
+        env = runtime_env(File.join(dir, "gems"))
+        assert_equal [env + ["gem", "list", "ace-lab", "--exact", "--local"],
+                      env + ["gem", "list", "ace-lab", "--exact", "--local"],
+                      env + ["gem", "dependency", "ace-lab", "--version", "0.13.0"]],
+                     runner.calls
       end
     end
 
@@ -86,7 +90,10 @@ module Molecules
         assert_equal "installed", report.first["status"]
         assert_equal runtime_env(File.join(dir, "gems")) +
           ["gem", "install", "ace-lab", "--version", "0.13.0", "--no-document"],
-          runner.calls.last
+          runner.calls[1]
+        # post-presence probes: newer-version list + closure dependency
+        assert_equal ["gem", "list", "ace-lab", "--exact", "--local"], runner.calls[2][17..]
+        assert_equal ["gem", "dependency", "ace-lab", "--version", "0.13.0"], runner.calls[3][17..]
       end
     end
 
@@ -98,7 +105,8 @@ module Molecules
           .call(runtime: converged_runtime(dir))
 
         assert_equal "updated", report.first["status"]
-        assert_equal 2, runner.calls.size
+        # list, install, then post-presence list + dependency probes
+        assert_equal 4, runner.calls.size
       end
     end
 
@@ -262,9 +270,12 @@ module Molecules
         ).call(runtime: {"gem_home" => runtime_dir, "gems" => gems})
 
         assert_equal %w[would_update would_install exists], report.map { |item| item["status"] }
-        # prediction parity: the probe ran, the install never did
-        assert_equal 3, runner.calls.size
-        assert runner.calls.all? { |argv| argv.include?("list") }
+        # prediction parity: the probes ran, the install never did; the
+        # already-present gem additionally gets the post-presence
+        # newer/closure probes (8xs.t.pu0.0)
+        assert_equal 5, runner.calls.size
+        assert runner.calls[0, 4].all? { |argv| argv.include?("list") }
+        assert runner.calls[4].include?("dependency")
       end
     end
 
@@ -323,6 +334,149 @@ module Molecules
 
         assert_equal :ok, kind
         assert_empty versions
+      end
+    end
+
+    # --- post-presence convergence (8xs.t.pu0.0) -----------------------
+
+    def dependency_listing(name, version, deps)
+      body = deps.map { |dep, requirement| "  #{dep} (#{requirement}, runtime)\n" }.join
+      {"status" => "ok", "out" => "#{name} (#{version})\n#{body}", "err" => ""}
+    end
+
+    def test_missing_transitive_dependency_is_installed_even_when_gem_listed
+      runner = FakeRunner.new([
+        listing("ace-lab", %w[0.13.0]),                     # presence probe
+        listing("ace-lab", %w[0.13.0]),                     # newer probe
+        dependency_listing("ace-lab", "0.13.0", {"json" => "~> 2.7"}),
+        listing("json", []),                                # dep probe: missing
+        {"status" => "ok", "out" => "", "err" => ""},       # gem install json
+        listing("json", %w[2.7.2]),                         # dep probe: satisfied
+        dependency_listing("json", "2.7.2", {})             # dep's own closure
+      ])
+      Dir.mktmpdir do |dir|
+        report = Ace::Lab::Molecules::GemsetProvisioner.new(runner: runner)
+          .call(runtime: converged_runtime(dir))
+
+        gem = report.first
+        assert_equal "exists", gem["status"]
+        assert_equal [{"name" => "json", "requirement" => "~> 2.7", "status" => "installed"}],
+          gem["closure"]
+        assert_equal ["gem", "install", "json", "--version", "~> 2.7", "--no-document"],
+          runner.calls[4][17..]
+      end
+    end
+
+    def test_unsatisfiable_dependency_is_a_classified_failure_never_readiness
+      runner = FakeRunner.new([
+        listing("ace-lab", %w[0.13.0]),
+        listing("ace-lab", %w[0.13.0]),
+        dependency_listing("ace-lab", "0.13.0", {"json" => "~> 2.7"}),
+        listing("json", []),                                # missing
+        {"status" => "ok", "out" => "", "err" => ""},       # install claims ok…
+        listing("json", [])                                 # …but the dep never appeared
+      ])
+      Dir.mktmpdir do |dir|
+        report = Ace::Lab::Molecules::GemsetProvisioner.new(runner: runner)
+          .call(runtime: converged_runtime(dir))
+
+        gem = report.first
+        assert_equal "failed", gem["status"]
+        assert_match(/dependency 'json \(~> 2\.7\)'.*not satisfiable/, gem["message"])
+      end
+    end
+
+    def test_failed_dependency_install_is_a_classified_failure
+      runner = FakeRunner.new([
+        listing("ace-lab", %w[0.13.0]),
+        listing("ace-lab", %w[0.13.0]),
+        dependency_listing("ace-lab", "0.13.0", {"json" => "~> 2.7"}),
+        listing("json", []),                                # missing
+        {"status" => 2, "out" => "", "err" => "ERROR:  Could not find a valid gem 'json'\n"}
+      ])
+      Dir.mktmpdir do |dir|
+        report = Ace::Lab::Molecules::GemsetProvisioner.new(runner: runner)
+          .call(runtime: converged_runtime(dir))
+
+        gem = report.first
+        assert_equal "failed", gem["status"]
+        assert_match(/gem install json failed.*'json'/, gem["message"])
+      end
+    end
+
+    def test_newer_version_beside_the_declared_one_is_uninstalled
+      runner = FakeRunner.new([
+        listing("ace-lab", %w[0.14.0 0.13.0]),              # presence probe
+        listing("ace-lab", %w[0.14.0 0.13.0]),              # newer probe
+        {"status" => "ok", "out" => "", "err" => ""},       # gem uninstall 0.14.0
+        dependency_listing("ace-lab", "0.13.0", {})         # closure
+      ])
+      Dir.mktmpdir do |dir|
+        report = Ace::Lab::Molecules::GemsetProvisioner.new(runner: runner)
+          .call(runtime: converged_runtime(dir))
+
+        gem = report.first
+        assert_equal "exists", gem["status"]
+        assert_equal [{"version" => "0.14.0", "status" => "uninstalled"}], gem["removed_newer_versions"]
+        assert_equal ["gem", "uninstall", "ace-lab", "--version", "0.14.0", "-x", "--force"],
+          runner.calls[2][17..]
+      end
+    end
+
+    def test_dry_run_predicts_uninstall_and_dependency_install_without_mutation
+      runner = FakeRunner.new([
+        listing("ace-lab", %w[0.14.0 0.13.0]),              # presence probe
+        listing("ace-lab", %w[0.14.0 0.13.0]),              # newer probe
+        dependency_listing("ace-lab", "0.13.0", {"json" => "~> 2.7"}),
+        listing("json", [])                                 # dep probe: missing
+      ])
+      Dir.mktmpdir do |dir|
+        report = Ace::Lab::Molecules::GemsetProvisioner.new(runner: runner, dry_run: true)
+          .call(runtime: converged_runtime(dir))
+
+        gem = report.first
+        assert_equal "exists", gem["status"]
+        assert_equal [{"version" => "0.14.0", "status" => "would_uninstall"}], gem["removed_newer_versions"]
+        assert_equal [{"name" => "json", "requirement" => "~> 2.7", "status" => "would_install"}],
+          gem["closure"]
+        assert runner.calls.none? { |argv| argv.include?("uninstall") || argv.include?("install") }
+      end
+    end
+
+    def test_development_dependencies_do_not_converge
+      runner = FakeRunner.new([
+        listing("ace-lab", %w[0.13.0]),
+        listing("ace-lab", %w[0.13.0]),
+        {"status" => "ok", "out" => "ace-lab (0.13.0)\n  rake (>= 0, development)\n", "err" => ""}
+      ])
+      Dir.mktmpdir do |dir|
+        report = Ace::Lab::Molecules::GemsetProvisioner.new(runner: runner)
+          .call(runtime: converged_runtime(dir))
+
+        assert_equal "exists", report.first["status"]
+        assert_empty report.first["closure"]
+        assert_equal 3, runner.calls.size
+      end
+    end
+
+    def test_read_only_probes_report_closure_gaps_and_newer_versions
+      runner = FakeRunner.new([
+        dependency_listing("ace-lab", "0.13.0", {"json" => "~> 2.7"}),
+        listing("json", []),                                # json missing
+        listing("ace-lab", %w[0.14.0 0.13.0])               # newer probe
+      ])
+      Dir.mktmpdir do |dir|
+        gem_home = File.join(dir, "gems")
+        FileUtils.mkdir_p(gem_home)
+        provisioner = Ace::Lab::Molecules::GemsetProvisioner.new(runner: runner)
+
+        reasons = provisioner.closure_failures(name: "ace-lab", version: "0.13.0", gem_home: gem_home)
+        assert_equal 1, reasons.size
+        assert_match(/dependency 'json \(~> 2\.7\)'.*not satisfied/, reasons.first)
+
+        kind, newer = provisioner.newer_versions(name: "ace-lab", declared_version: "0.13.0", gem_home: gem_home)
+        assert_equal :ok, kind
+        assert_equal %w[0.14.0], newer
       end
     end
   end

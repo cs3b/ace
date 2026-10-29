@@ -7,6 +7,7 @@ require_relative "../molecules/directory_provisioner"
 require_relative "../molecules/key_provisioner"
 require_relative "../molecules/role_verifier"
 require_relative "../molecules/gemset_provisioner"
+require_relative "../molecules/extension_provisioner"
 
 module Ace
   module Lab
@@ -51,9 +52,11 @@ module Ace
             unresolved, effective_dry_run)
           roles = prepare_roles(manifest["roles"], available, unresolved, effective_dry_run)
           gems = prepare_gems(manifest["gemset"], effective_dry_run)
+          extensions = prepare_extensions(manifest["gemset"], effective_dry_run, gems)
 
           {
-            "ok" => [accounts, directories, keys, roles, gems].flatten.none? { |item| item["status"] == "failed" },
+            "ok" => [accounts, directories, keys, roles, gems, extensions].flatten
+              .none? { |item| item["status"] == "failed" },
             "dry_run" => effective_dry_run,
             "machine" => manifest["machine"],
             "manifest" => manifest_path,
@@ -61,7 +64,8 @@ module Ace
             "directories" => directories,
             "keys" => keys,
             "roles" => roles,
-            "gems" => gems
+            "gems" => gems,
+            "extensions" => extensions
           }
         end
 
@@ -150,6 +154,27 @@ module Ace
             runner: @runner, privileged: @privileged, dry_run: dry_run
           )
           provisioner.call(runtime: runtime)
+        end
+
+        # Harness extension projections (task 8xs.t.pu0.0): converged
+        # from the installed gem's exact declared version after the
+        # gemset phase; a gem phase failure fails every extension as a
+        # dependency (the projection source would not exist).
+        def prepare_extensions(runtime, dry_run, gems)
+          entries = runtime["extensions"]
+          return [] if entries.empty?
+
+          if gems.any? { |gem| gem["status"] == "failed" }
+            return entries.map do |entry|
+              {"extension" => entry["gem"], "gem" => entry["gem"], "version" => nil,
+               "path" => entry["path"], "account" => entry["account"], "status" => "failed",
+               "loaded_version" => nil, "restart_required" => false, "files" => [],
+               "message" => "gemset convergence failed; fix the gem phase first"}
+            end
+          end
+
+          Molecules::ExtensionProvisioner.new(gem_home: runtime["gem_home"], dry_run: dry_run)
+            .call(extensions: entries, gems: runtime["gems"])
         end
 
         def available_accounts(account_reports)

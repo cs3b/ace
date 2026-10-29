@@ -468,7 +468,7 @@ module Atoms
     def test_absent_gemset_defaults_to_no_runtime_and_no_gems
       result = normalize(manifest)
 
-      assert_equal({"gem_home" => nil, "gems" => []}, result["gemset"])
+      assert_equal({"gem_home" => nil, "gems" => [], "extensions" => []}, result["gemset"])
     end
 
     def test_gemset_section_validation

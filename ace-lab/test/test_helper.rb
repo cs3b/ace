@@ -28,7 +28,13 @@ module LabTestHelper
   # (nil unsets in spawn env) so the gem lands in the tmpdir runtime,
   # never the bundle. Returns the gem_home path; skips when the gem
   # toolchain is unavailable.
-  def build_and_install_gem(dir, name, version)
+  # dependencies: {"name" => "requirement"} runtime dependencies baked
+  # into the fixture gem; ignore_dependencies installs with RubyGems'
+  # --ignore-dependencies so a closure gap can be staged offline.
+  def build_and_install_gem(dir, name, version, dependencies: {}, ignore_dependencies: false)
+    dependency_lines = dependencies.map do |dep_name, requirement|
+      "        s.add_dependency #{dep_name.inspect}, #{requirement.inspect}"
+    end.join("\n")
     gemspec = File.join(dir, "#{name}.gemspec")
     File.write(gemspec, <<~SPEC)
       Gem::Specification.new do |s|
@@ -37,6 +43,7 @@ module LabTestHelper
         s.summary = "lab test fixture"
         s.authors = ["ace-lab tests"]
         s.files = []
+#{dependency_lines}
       end
     SPEC
     built = system("gem", "build", gemspec, chdir: dir, out: File::NULL, err: File::NULL)
@@ -45,12 +52,13 @@ module LabTestHelper
 
     gem_home = File.join(dir, "runtime")
     FileUtils.mkdir_p(gem_home)
+    install_argv = ["gem", "install", "--local", gem_file, "--no-document"]
+    install_argv << "--ignore-dependencies" if ignore_dependencies
     installed = system({"GEM_HOME" => gem_home, "GEM_PATH" => gem_home,
       "RUBYOPT" => nil, "RUBYLIB" => nil, "BUNDLER_SETUP" => nil,
       "BUNDLE_BIN_PATH" => nil, "BUNDLE_GEMFILE" => nil,
       "BUNDLER_VERSION" => nil, "BUNDLE_BUNDLER_VERSION" => nil},
-      "gem", "install", "--local", gem_file, "--no-document",
-      out: File::NULL, err: File::NULL)
+      *install_argv, out: File::NULL, err: File::NULL)
     skip "gem install unavailable" unless installed
 
     gem_home

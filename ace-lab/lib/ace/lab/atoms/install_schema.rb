@@ -31,9 +31,10 @@ module Ace
         DEFAULT_MODE = "0755"
         DEFAULT_KEY_TYPE = "ed25519"
         KEY_TYPES = [DEFAULT_KEY_TYPE].freeze
-        GEMSET_KEYS = %w[gem_home gems].freeze
+        GEMSET_KEYS = %w[gem_home gems extensions].freeze
         GEM_KEYS = %w[name version].freeze
         GEM_NAME_PATTERN = /\A[A-Za-z0-9._-]+\z/
+        EXTENSION_KEYS = %w[gem path account].freeze
 
         class << self
           # @param document [Object] parsed YAML document
@@ -77,7 +78,7 @@ module Ace
               "grants" => normalize_grants(document["grants"], projects.map { |p| p["id"] }),
               "adapters" => normalize_adapters(document["adapters"]),
               "tools" => normalize_tools(document["tools"]),
-              "gemset" => normalize_gemset(document["gemset"])
+              "gemset" => normalize_gemset(document["gemset"], accounts.map { |a| a["username"] })
             }
           end
 
@@ -323,16 +324,22 @@ module Ace
             tools.map(&:strip).uniq
           end
 
-          # Target lab runtime and required gem set (gad.2 gap #1, owner
-          # spec 8xg.t.sbz.7): a sibling of `tools` declaring WHERE the
+          # Target lab runtime, required gem set and harness extension
+          # projections (gad.2 gap #1, owner spec 8xg.t.sbz.7; task
+          # 8xs.t.pu0.0): a sibling of `tools` declaring WHERE the
           # lab's gems must live (`gem_home`, converged as GEM_HOME/
-          # GEM_PATH) and WHICH gems at WHICH exact versions. Absent =
-          # no runtime declared, behavior unchanged. Names must be real
+          # GEM_PATH), WHICH gems at WHICH exact versions, and WHICH
+          # installed gems' handbook/extensions trees are projected
+          # into WHICH target extension directories. Absent = no
+          # runtime declared, behavior unchanged. Names must be real
           # gem names; versions must parse as exact Gem versions (the
           # same parser the runtime uses) — ranges and bare names are
-          # rejected so convergence is always exact-version.
-          def normalize_gemset(raw)
-            return {"gem_home" => nil, "gems" => []} if raw.nil?
+          # rejected so convergence is always exact-version. An
+          # extension entry must reference a declared gem and a
+          # declared account (the executor whose harness loads the
+          # projection) and carries an absolute target path.
+          def normalize_gemset(raw, usernames)
+            return {"gem_home" => nil, "gems" => [], "extensions" => []} if raw.nil?
             unless raw.is_a?(Hash)
               raise_invalid "gemset must be a mapping"
             end
@@ -347,7 +354,55 @@ module Ace
               raise_invalid "gemset gem_home is required and must be an absolute path"
             end
 
-            {"gem_home" => gem_home.strip, "gems" => normalize_gems(raw["gems"])}
+            {"gem_home" => gem_home.strip, "gems" => normalize_gems(raw["gems"]),
+             "extensions" => normalize_extensions(raw["extensions"], raw["gems"], usernames)}
+          end
+
+          # Harness extension projections: each entry names a DECLARED
+          # gem (the projection source — the gem's handbook/extensions
+          # tree at its exact declared version), an absolute target
+          # path (the harness extension directory) and the declared
+          # account whose executor loads it. The manifest stays the
+          # single owner of the declaration; the projection itself is
+          # re-derived from the installed gem on every run.
+          def normalize_extensions(raw, gems, usernames)
+            entries = raw.nil? ? [] : raw
+            unless entries.is_a?(Array)
+              raise_invalid "gemset extensions must be a list"
+            end
+            entries.each_with_index do |entry, index|
+              unless entry.is_a?(Hash)
+                raise_invalid "gemset extensions entry ##{index} must be a mapping"
+              end
+              unknown = entry.keys - EXTENSION_KEYS
+              unless unknown.empty?
+                raise_invalid "gemset extensions entry ##{index} has unknown key '#{unknown.sort.first}'"
+              end
+            end
+
+            declared = (gems || []).filter_map do |gem|
+              gem.is_a?(Hash) && gem["name"].is_a?(String) ? gem["name"].strip : nil
+            end
+            entries.map do |entry|
+              gem = required_string(entry, "gemset extensions", "gem")
+              unless declared.include?(gem)
+                raise_invalid_entry("gemset extensions",
+                  "gem '#{gem}' must be declared in gemset gems before it can project an extension")
+              end
+
+              path = required_string(entry, "gemset extensions", "path")
+              unless absolute_path?(path)
+                raise_invalid_entry("gemset extensions", "path must be an absolute path")
+              end
+
+              account = required_string(entry, "gemset extensions", "account")
+              unless usernames.include?(account)
+                raise_invalid_entry("gemset extensions",
+                  "account must reference a declared account")
+              end
+
+              {"gem" => gem, "path" => path.strip, "account" => account}
+            end
           end
 
           def normalize_gems(raw)

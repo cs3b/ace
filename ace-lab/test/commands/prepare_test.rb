@@ -53,7 +53,7 @@ module Ace
               assert_equal "lab01", parsed["machine"]
               assert_equal "exists", parsed["accounts"].first["status"]
               assert_equal "verified", parsed["roles"].first["status"]
-              assert_equal %w[accounts directories keys roles gems],
+              assert_equal %w[accounts directories keys roles gems extensions],
                 parsed.keys - %w[ok dry_run machine manifest]
             end
           end
