@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.16] - 2026-10-29
+
 ### Fixed
 
 - Frontmatter flow sequences serialize every string element with the same quoting rules as flat values, so a question or tag containing `: ` parses back as the same string instead of a single-pair hash; compound elements raise `ArgumentError` instead of emitting Ruby rocket syntax that is not YAML (the 8xsdfo ask-flow corruption: recipient/reply_to frontmatter was silently dropped, so native sync refused the captain's reply and the answer wake never fired).
