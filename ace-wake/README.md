@@ -13,8 +13,18 @@ and moved here (verbatim, with its JavaScript test suite) as its top-level
 home. The deployed copy at `~/.pi/agent/extensions/ace-wake` is root-owned,
 dated 2026-10-16, and is a STALE generation of this source (no eyes, no
 worktree inbox discovery, no watch deltas); it was intentionally left
-untouched. Deployment of this directory is a host lane action after merge —
-copy this directory to `~/.pi/agent/extensions/ace-wake`.
+untouched.
+
+This package is a publishable gem (task 8xs.t.pu0.0). The extension source
+lives at `handbook/extensions/ace-wake/` (single copy) and ships in the
+`ace-wake` gem; deployment is converged, not manual:
+
+- `ace-handbook sync --provider pi` projects it into a project's
+  `.pi/extensions` (the pi provider manifest declares
+  `extensions_package: ace-wake`);
+- the `ace-lab` installer projects it from the EXACT installed gem version
+  into each manifest-declared extension directory (`gemset.extensions`),
+  reporting the loaded version and any restart need.
 
 ## Mount-aware poll fallback
 

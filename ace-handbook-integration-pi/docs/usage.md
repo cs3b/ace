@@ -1,6 +1,6 @@
 # ace-handbook-integration-pi Usage
 
-PI provider integration: canonical ACE skills project to `.pi/skills`, prompt templates to `.pi/prompts`, and the bundled **ace-wake** extension to `.pi/extensions` -- all via `ace-handbook sync --provider pi`.
+PI provider integration: canonical ACE skills project to `.pi/skills`, prompt templates to `.pi/prompts`, and the **ace-wake** extension (shipped by the `ace-wake` asset package; this package declares `extensions_package: ace-wake`) to `.pi/extensions` -- all via `ace-handbook sync --provider pi`.
 
 This package owns no task, assignment, or queue state. The ace-wake timers/watch
 are a local in-process utility: no cron, daemon, or delivery-queue engine.

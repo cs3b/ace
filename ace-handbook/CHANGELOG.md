@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Provider manifests can declare `extensions_package`: extension assets project
+  from the named asset package (local sibling directory first, installed gem
+  second), enabling gem-backed extension shipping such as `ace-wake` for the pi
+  provider (task 8xs.t.pu0.0).
+
 ## [0.36.2] - 2026-10-27
 
 ### Added

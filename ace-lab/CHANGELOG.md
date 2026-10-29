@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Gem-set dependency closure convergence: missing transitive runtime dependencies
+  (e.g. `json`) are installed at the parent requirement even when the parent version
+  already figures in `gem list`; unsatisfiable dependencies are classified failures
+  (task 8xs.t.pu0.0).
+- Newer versions of a declared gem beside the declared one are removed from the
+  declared runtime during convergence, and `verify` fails while any newer sibling
+  would win CLI activation.
+- `gemset.extensions` manifest entries: harness extension projections from the
+  installed gem's exact declared version (`ExtensionProvisioner`), receipt-based
+  pruning, `loaded_version`/`restart_required` reporting, and read-only
+  re-derivation in `verify`.
+
 ## [0.13.1] - 2026-10-26
 
 ### Added

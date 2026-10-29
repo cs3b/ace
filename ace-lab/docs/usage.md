@@ -175,6 +175,10 @@ gemset:                      # optional (gad.2): target runtime + required gem s
   gems:                      # exact versions, unique names
     - name: ace-lab
       version: 0.13.0        # must be an exact gem version (no ranges)
+  extensions:                # optional (8xs.t.pu0.0): harness extension projections
+    - gem: ace-wake          # must be declared in gems above
+      path: /Users/overseer/.pi/agent/extensions  # absolute target directory
+      account: lab-overseer  # must be a declared account (the loading executor)
 ```
 
 Statuses: accounts `created|exists|would_create|failed`; directories
@@ -328,6 +332,35 @@ Behavior and guarantees:
   `would_install`/`would_update`/`exists`, nothing is created or
   installed, and a runtime that would need privileges predicts the wet
   failure.
+- **Dependency closure and CLI activation (8xs.t.pu0.0).** Presence of
+  the exact declared version is necessary but not sufficient. Prepare
+  also walks each declared gem's runtime dependency closure in the
+  target runtime and installs missing transitive dependencies at the
+  parent's requirement — a gem whose version already figures in
+  `gem list` but misses a transitive dependency (the manually repaired
+  `json` class of gap) is repaired by `ace-lab install`, and an
+  unsatisfiable dependency is a classified failure, never readiness.
+  A NEWER version of a declared gem sitting beside the declared one
+  would win RubyGems activation and silently take over the runtime's
+  CLI; convergence removes it from the declared runtime (the manifest
+  is the single owner of the declared set) and `verify` fails the gem
+  while any newer sibling remains. `verify` re-derives both facts with
+  the same probes convergence uses — readiness means the closure
+  resolves AND the declared version wins activation.
+- **Extension projections (8xs.t.pu0.0).** Each `gemset.extensions`
+  entry projects the installed gem's `handbook/extensions` tree — at
+  its EXACT declared version, never the checkout and never a newer
+  sibling — into the declared target directory. The projection is
+  receipt-based: only files recorded in the target's
+  `.ace-lab-extension-projection.json` receipt are ever removed, so
+  user-authored extensions in the same directory stay untouched. The
+  report carries `loaded_version` (the version the running harness
+  still holds) and `restart_required` — a changed projection means the
+  executor's processes hold the old extension, and the installer
+  REPORTS the restart need; it never restarts an executor on its own.
+  `verify` re-derives the projection from the installed gem tree and
+  the receipt: a missing receipt, a version mismatch, or a differing
+  file fails readiness.
 - **Exit codes.** A wet run with failed items prints the report, then
   exits non-zero enumerating each `<section>/<item>: <message>`;
   `--dry-run` exits 0 whenever a report renders (conflicts appear as

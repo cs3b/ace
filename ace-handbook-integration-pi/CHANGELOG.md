@@ -4,6 +4,14 @@ All notable changes to ace-handbook-integration-pi will be documented in this fi
 
 ## [Unreleased]
 
+### Changed
+
+- The ace-wake extension now ships from the publishable `ace-wake` asset package:
+  the pi provider manifest declares `extensions_dir: .pi/extensions` with
+  `extensions_package: ace-wake`, the gemspec depends on `ace-wake`, and sync
+  projects the extension from that package — no second editable JavaScript copy
+  in this package (task 8xs.t.pu0.0).
+
 ## [0.7.2] - 2026-10-27
 
 ### Changed
