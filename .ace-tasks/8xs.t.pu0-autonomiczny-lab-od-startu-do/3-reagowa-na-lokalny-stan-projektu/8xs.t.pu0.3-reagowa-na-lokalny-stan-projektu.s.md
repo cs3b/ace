@@ -1,14 +1,17 @@
 ---
 id: 8xs.t.pu0.3
-status: draft
+status: pending
 priority: medium
 created_at: "2026-10-29 17:13:42"
 estimate: large
 dependencies: [8xs.t.pu0.2]
 tags: []
 parent: 8xs.t.pu0
-needs_review: true
-bundle: {"presets": ["project"], "files": ["AGENTS.md", "docs/lab-flow.md", "docs/tools.md", ".ace-tasks/8xs.t.pu0-autonomiczny-lab-od-startu-do/docs/brief.md", ".ace-tasks/8xs.t.pu0-autonomiczny-lab-od-startu-do/docs/context.md", ".ace-tasks/8xs.t.pu0-autonomiczny-lab-od-startu-do/docs/session-problems.md", "ace-overseer/docs/usage.md", "ace-hitl/docs/usage.md", "ace-coworker/docs/usage.md", "ace-overseer/handbook/workflow-instructions/overseer/queue.wf.md", "ace-handbook-integration-pi/handbook/extensions/ace-wake/wake/eyes.js", "ace-handbook-integration-pi/handbook/extensions/ace-wake/wake/eyes-runtime.js", ".ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/5-l6-kolejka-overseera-w-prywatnym/8xg.t.sbz.5-l6-kolejka-overseera-w-prywatnym-ace-task.s.md", ".ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/6-l7-status-overseera-i-kontynuacja/8xg.t.sbz.6-l7-status-overseera-i-kontynuacja-zleconej-pracy.s.md", ".ace-tasks/8xs.t.pu0-autonomiczny-lab-od-startu-do/2-uruchamia-obserwatory-zmian-przez-watch/8xs.t.pu0.2-uruchamia-obserwatory-zmian-przez-watch.s.md", ".ace-tasks/8xs.t.pu0-autonomiczny-lab-od-startu-do/3-reagowa-na-lokalny-stan-projektu/ux/usage.md"], "commands": []}
+needs_review: false
+bundle:
+  presets: [project]
+  files: [AGENTS.md, docs/lab-flow.md, docs/tools.md, .ace-tasks/8xs.t.pu0-autonomiczny-lab-od-startu-do/docs/brief.md, .ace-tasks/8xs.t.pu0-autonomiczny-lab-od-startu-do/docs/context.md, .ace-tasks/8xs.t.pu0-autonomiczny-lab-od-startu-do/docs/session-problems.md, ace-overseer/docs/usage.md, ace-hitl/docs/usage.md, ace-coworker/docs/usage.md, ace-overseer/handbook/workflow-instructions/overseer/queue.wf.md, .ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/5-l6-kolejka-overseera-w-prywatnym/8xg.t.sbz.5-l6-kolejka-overseera-w-prywatnym-ace-task.s.md, .ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/6-l7-status-overseera-i-kontynuacja/8xg.t.sbz.6-l7-status-overseera-i-kontynuacja-zleconej-pracy.s.md, .ace-tasks/8xs.t.pu0-autonomiczny-lab-od-startu-do/2-uruchamia-obserwatory-zmian-przez-watch/8xs.t.pu0.2-uruchamia-obserwatory-zmian-przez-watch.s.md, .ace-tasks/8xs.t.pu0-autonomiczny-lab-od-startu-do/3-reagowa-na-lokalny-stan-projektu/ux/usage.md, .ace-tasks/8xs.t.pu0-autonomiczny-lab-od-startu-do/docs/review-source-map.md, .ace-tasks/8xs.t.pu0-autonomiczny-lab-od-startu-do/docs/sources/standing-wake-af68f8fc1.md, ace-test-runner/docs/usage.md]
+  commands: []
 ---
 
 # Reagować na lokalny stan projektu
@@ -20,7 +23,7 @@ Sprawić, żeby nadzorca projektu sam zauważał zmianę i kontynuował pracę, 
 ## Specyfikacja zachowania
 
 Krok 04/16. Typ: bezpośredni podtask. Rozmiar orientacyjny: large.
-Wejście: skonfigurowane środowisko i stan wymagany przez poprzedni krok. Wyjście: obserwowalny rezultat poniżej.
+Wejście: konfiguracja i jawne warunki poniżej; po odbiorze poprzednika, jeśli istnieje. Wyjście: obserwowalny rezultat i dowody określone w tym wycinku.
 
 - Start uzbraja obserwację zadań, dostępnego zespołu, worktree, postępu assignmentów i raportów HITL.
 - Po wybudzeniu nadzorca odczytuje stan od właścicieli, interpretuje raport i wybiera dozwolony następny krok. Nie tworzy osobnej kolejki.
@@ -67,13 +70,42 @@ Starsze zakresy do wykorzystania: 8xg.t.sbz.5, 8xg.t.sbz.6.
 
 ## Decyzje i granice
 
-Zachowanie wynika z zaakceptowanego briefu. Szczegóły techniczne wymagają review aktualnych źródeł przed wykonaniem. Brak nowych pytań produktowych blokujących zapis draftu.
+Review 2026-10-29: źródła, decyzje i sprawdzalne granice są zapisane poniżej oraz w docs/review-source-map.md tej rodziny. Brak pytań wymagających decyzji człowieka dla tego wycinka.
 Nie tworzyć wnuków, nowej kolejki ani magazynu stanu. Nie implementować innych kroków pod pozorem zależności; ujawnioną zmianę krytycznej ścieżki zapisać w tej rodzinie.
 
 ## Rezultaty do dostarczenia
 
 - Zachowanie i dokumentacja opisane powyżej, z dowodami akceptacji oraz ograniczeniami.
 - Aktualny wynik pracy w tasku/assignmencie; brak sekretów i fabrykowanych identyfikatorów.
+
+## Ustalenia review i kontrakt wykonania — 2026-10-29
+
+Start uzbraja lokalne źródła: taski projektu i _overseer, role/dostępność zespołu,
+worktree, assignment progress oraz HITL. `ace-overseer observe` rozszerza istniejącą
+projekcję o te źródła; dane odczytuje od ich właścicieli. Session-owned stan obserwacji
+przechowuje tylko rewizje/ACK, nigdy drugi stan zadań. ACK następuje po przyjęciu przez
+właściwy task/assignment; settled modelu nie jest dowodem obsłużenia.
+
+Po starcie najpierw reconcile zaległych raportów i aktualnych assignmentów, następnie
+wybór pracy przez istniejący plan/dependencies. Gotowe zadania wybierać według istniejącej
+kolejności ace-task; niespełnione zależności pozostają blocked. Pusty zbiór jest idle.
+Zmiana powstała przed startem nie może zniknąć jako nowy baseline. Rozpoznawanie live/stale
+coworkera używa istniejących identyfikatorów uruchomienia, nie samych nazw pane.
+
+Awaria jednego źródła degraduje tylko to źródło i ma ograniczone ponowienia z backoff;
+pozostałe działają. Default lokalnego reconcile 15 s, wykrycie <=2 interwały przy zdrowym
+źródle. Completion ping do adresu z briefu jest szybką wskazówką; trwały raport HITL
+pozostaje podstawą kontynuacji. Brak pane kieruje raport do HITL bez nowej kolejki.
+Konsumenci: ace-overseer, ace-wake, ace-task, ace-assign, ace-coworker, ace-hitl, Herdr.
+
+### Mapa kryteriów do dowodów
+
+| Kryterium | Wymagany dowód |
+|---|---|
+| 1 | Przy każdej z sześciu klas źródeł zmiana → semantyczny wake → odczyt → poprawna czynność; raport worker → handoff oraz pusta kolejka. |
+| 2 | Raport przy zatrzymanym nadzorcy, utracony ping, nowy worktree w idle; start wykrywa zaległy stan i kontynuuje. |
+| 3 | Duplikat raportu oraz awaria jednego źródła: jeden skutek, zdrowe źródła działają; ACK i własne zapisy nie tworzą pętli. |
+| 4–5 | Kontrola właścicieli zapisów i diffu, wykonana ścieżka producent → konsument, negatywna próba oraz aktualne usage; reguły w review-source-map.md. |
 
 ## Referencje
 
@@ -87,9 +119,9 @@ Nie tworzyć wnuków, nowej kolejki ani magazynu stanu. Nie implementować innyc
 - ace-hitl/docs/usage.md
 - ace-coworker/docs/usage.md
 - ace-overseer/handbook/workflow-instructions/overseer/queue.wf.md
-- ace-handbook-integration-pi/handbook/extensions/ace-wake/wake/eyes.js
-- ace-handbook-integration-pi/handbook/extensions/ace-wake/wake/eyes-runtime.js
 - .ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/5-l6-kolejka-overseera-w-prywatnym/8xg.t.sbz.5-l6-kolejka-overseera-w-prywatnym-ace-task.s.md
 - .ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/6-l7-status-overseera-i-kontynuacja/8xg.t.sbz.6-l7-status-overseera-i-kontynuacja-zleconej-pracy.s.md
 - .ace-tasks/8xs.t.pu0-autonomiczny-lab-od-startu-do/2-uruchamia-obserwatory-zmian-przez-watch/8xs.t.pu0.2-uruchamia-obserwatory-zmian-przez-watch.s.md
 - .ace-tasks/8xs.t.pu0-autonomiczny-lab-od-startu-do/3-reagowa-na-lokalny-stan-projektu/ux/usage.md
+- .ace-tasks/8xs.t.pu0-autonomiczny-lab-od-startu-do/docs/review-source-map.md
+- .ace-tasks/8xs.t.pu0-autonomiczny-lab-od-startu-do/docs/sources/standing-wake-af68f8fc1.md

@@ -10,3 +10,6 @@
 Tekst „zaczynam od #1?” w historycznym raporcie nie jest aktualną instrukcją wykonania.
 Obowiązuje zaakceptowany liniowy podział nowego taska. Te źródła są materiałem specyfikacji,
 nie potwierdzeniem obecnego stanu maszyn.
+
+- standing-wake-af68f8fc1.md: pełny spec 8xr.t.9o9 odczytany podczas review
+  z Forgejo `af68f8fc1cc7f1645e2d3caed7abb92f0262b47b`; provenance w docs/review-source-map.md.

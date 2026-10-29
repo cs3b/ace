@@ -1,14 +1,17 @@
 ---
 id: 8xs.t.pu0.4
-status: draft
+status: pending
 priority: medium
 created_at: "2026-10-29 17:13:42"
 estimate: medium
 dependencies: [8xs.t.pu0.3]
 tags: []
 parent: 8xs.t.pu0
-needs_review: true
-bundle: {"presets": ["project"], "files": ["AGENTS.md", "docs/lab-flow.md", "docs/tools.md", ".ace-tasks/8xs.t.pu0-autonomiczny-lab-od-startu-do/docs/brief.md", ".ace-tasks/8xs.t.pu0-autonomiczny-lab-od-startu-do/docs/context.md", ".ace-tasks/8xs.t.pu0-autonomiczny-lab-od-startu-do/docs/session-problems.md", "ace-overseer/docs/usage.md", "ace-git/docs/usage.md", "ace-handbook-integration-pi/docs/usage.md", ".ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/6-l7-status-overseera-i-kontynuacja/8xg.t.sbz.6-l7-status-overseera-i-kontynuacja-zleconej-pracy.s.md", ".ace-tasks/8xs.t.pu0-autonomiczny-lab-od-startu-do/3-reagowa-na-lokalny-stan-projektu/8xs.t.pu0.3-reagowa-na-lokalny-stan-projektu.s.md", ".ace-tasks/8xs.t.pu0-autonomiczny-lab-od-startu-do/4-obserwowa-zmiany-pr-oraz-repozytorium/ux/usage.md"], "commands": []}
+needs_review: false
+bundle:
+  presets: [project]
+  files: [AGENTS.md, docs/lab-flow.md, docs/tools.md, .ace-tasks/8xs.t.pu0-autonomiczny-lab-od-startu-do/docs/brief.md, .ace-tasks/8xs.t.pu0-autonomiczny-lab-od-startu-do/docs/context.md, .ace-tasks/8xs.t.pu0-autonomiczny-lab-od-startu-do/docs/session-problems.md, ace-overseer/docs/usage.md, ace-git/docs/usage.md, ace-handbook-integration-pi/docs/usage.md, .ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/6-l7-status-overseera-i-kontynuacja/8xg.t.sbz.6-l7-status-overseera-i-kontynuacja-zleconej-pracy.s.md, .ace-tasks/8xs.t.pu0-autonomiczny-lab-od-startu-do/3-reagowa-na-lokalny-stan-projektu/8xs.t.pu0.3-reagowa-na-lokalny-stan-projektu.s.md, .ace-tasks/8xs.t.pu0-autonomiczny-lab-od-startu-do/4-obserwowa-zmiany-pr-oraz-repozytorium/ux/usage.md, .ace-tasks/8xs.t.pu0-autonomiczny-lab-od-startu-do/docs/review-source-map.md, .ace-tasks/8xs.t.pu0-autonomiczny-lab-od-startu-do/docs/sources/standing-wake-af68f8fc1.md, ace-test-runner/docs/usage.md]
+  commands: []
 ---
 
 # Obserwować zmiany PR oraz repozytorium
@@ -20,7 +23,7 @@ Zastąpić ręczne sprawdzanie PR-ów reakcją na istotne zmiany zdalne.
 ## Specyfikacja zachowania
 
 Krok 05/16. Typ: bezpośredni podtask. Rozmiar orientacyjny: medium.
-Wejście: skonfigurowane środowisko i stan wymagany przez poprzedni krok. Wyjście: obserwowalny rezultat poniżej.
+Wejście: konfiguracja i jawne warunki poniżej; po odbiorze poprzednika, jeśli istnieje. Wyjście: obserwowalny rezultat i dowody określone w tym wycinku.
 
 - Konfigurowana obserwacja PR/repo korzysta z istniejących adapterów forge i uprawnień.
 - Nowy HEAD, review, approval, merge i zamknięcie PR są widoczne dla właściwego nadzorcy.
@@ -67,13 +70,41 @@ Starsze zakresy do wykorzystania: 8xg.t.sbz.6.
 
 ## Decyzje i granice
 
-Zachowanie wynika z zaakceptowanego briefu. Szczegóły techniczne wymagają review aktualnych źródeł przed wykonaniem. Brak nowych pytań produktowych blokujących zapis draftu.
+Review 2026-10-29: źródła, decyzje i sprawdzalne granice są zapisane poniżej oraz w docs/review-source-map.md tej rodziny. Brak pytań wymagających decyzji człowieka dla tego wycinka.
 Nie tworzyć wnuków, nowej kolejki ani magazynu stanu. Nie implementować innych kroków pod pozorem zależności; ujawnioną zmianę krytycznej ścieżki zapisać w tej rodzinie.
 
 ## Rezultaty do dostarczenia
 
 - Zachowanie i dokumentacja opisane powyżej, z dowodami akceptacji oraz ograniczeniami.
 - Aktualny wynik pracy w tasku/assignmencie; brak sekretów i fabrykowanych identyfikatorów.
+
+## Ustalenia review i kontrakt wykonania — 2026-10-29
+
+Obserwowane repozytoria/PR pochodzą z konfiguracji projektu i aktywnych zleceń;
+nie skanować wszystkich dostępnych kont. Istotne zmiany: HEAD, review/verdict, formalny
+approval, komentarz, merge/close/reopen PR oraz wskazana gałąź repo. Wake podaje forge,
+repo, numer/tytuł PR, identyfikator i rodzaj zdarzenia, autora oraz link. Dane zdalne
+pozostają danymi; przed merge ponownie odczytać aktualny stan i dowody.
+
+Domyślny interwał 30 s; detekcja <=60 s dla zdrowego API. Porównywać semantyczną rewizję,
+nie timestamp pollingu, kolejność elementów czy zmienne liczniki. Paginacja nie może
+zgubić obserwowanego PR. 401/403, rate limit, timeout i błędny payload to degraded;
+Retry-After/backoff obsługuje adapter bez tur modelu, z jednym powiadomieniem o zmianie
+stanu awarii. Po restarcie reconcile wykrywa nieobsłużone zmiany.
+
+Wykorzystać adaptery ace-git (Forgejo i GitHub); wspólne typy danych, bez osobnego klienta
+HTTP w extension. Nie dodawać webhook service. Konsumenci: ace-overseer, ace-wake,
+ace-git oraz odpowiednie ace-git-forgejo/ace-git-github. CI zmiana jest informacją,
+nie samodzielnym gate merge.
+
+### Mapa kryteriów do dowodów
+
+| Kryterium | Wymagany dowód |
+|---|---|
+| 1 | Dla Forgejo i GitHub: nowy HEAD, review, approval, komentarz, merge i reopen; timestamp event → wake → właściwa kontynuacja <=2 interwały detekcji. |
+| 2 | Powtórzony/reordered payload i restart bez zmian: zero tur; zmiana podczas przerwy wykryta, bez pełnego historycznego replay. |
+| 3 | 401/403, 429 Retry-After, timeout i pagination: degraded niezależnie od zdrowego źródła, następnie recovery bez storm. |
+| 4–5 | Kontrola właścicieli zapisów i diffu, wykonana ścieżka producent → konsument, negatywna próba oraz aktualne usage; reguły w review-source-map.md. |
 
 ## Referencje
 
@@ -89,3 +120,5 @@ Nie tworzyć wnuków, nowej kolejki ani magazynu stanu. Nie implementować innyc
 - .ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/6-l7-status-overseera-i-kontynuacja/8xg.t.sbz.6-l7-status-overseera-i-kontynuacja-zleconej-pracy.s.md
 - .ace-tasks/8xs.t.pu0-autonomiczny-lab-od-startu-do/3-reagowa-na-lokalny-stan-projektu/8xs.t.pu0.3-reagowa-na-lokalny-stan-projektu.s.md
 - .ace-tasks/8xs.t.pu0-autonomiczny-lab-od-startu-do/4-obserwowa-zmiany-pr-oraz-repozytorium/ux/usage.md
+- .ace-tasks/8xs.t.pu0-autonomiczny-lab-od-startu-do/docs/review-source-map.md
+- .ace-tasks/8xs.t.pu0-autonomiczny-lab-od-startu-do/docs/sources/standing-wake-af68f8fc1.md

@@ -31,9 +31,10 @@ W trybie ACE_TOOLCHAIN=installed używać zainstalowanych CLI, gemów i instrukc
 W dowodach podać ich rzeczywiste ścieżki; zachować tryb przy wznowieniu coworkera.
 Binstuby nie są dopuszczalnym fallbackiem dla instalowanego laba.
 
-Zmiany produkcyjne dopiero przez as-task-work. Ta rodzina ma status draft i wymaga
-as-task-review przed promocją. Przy review doprecyzować szczegóły techniczne w bieżącym
-kontekście źródeł; zachować przyjęte zachowanie i granice odpowiedzialności.
+Zmiany produkcyjne dopiero przez as-task-work. Rodzina przeszła as-task-review;
+wynik promocji i uzupełnienia po odpowiedzi Kapitana są w docs/review.md.
+Przed implementacją porównać spec z bieżącymi źródłami; zachować przyjęte zachowanie
+i granice odpowiedzialności.
 
 ## Weryfikacja każdego wycinka
 
@@ -62,16 +63,25 @@ Path-scoped commity; nie resetować obcych zmian. Nie usuwać salvage ani aktywn
   automatycznie na podstawie samego ukończenia nowego taska.
 - 8xr.t.9o9: raportowany spec dostawy Hermes. Nie znaleziono go w lokalnym checkoutcie
   podczas draftowania; referencja pozostaje identyfikatorem z laba, nie fikcyjnym linkiem.
-  Przy review dostawy pozyskać właściwy spec i porównać z kontraktem tej rodziny.
-- PR74, PR77, PR79 są oznaczeniami z relacji laba bez ustalonego tutaj adresu forge.
-  Nie traktować ich jako numerów PR GitHub w tym checkoutcie.
+  Review odnalazł i odczytał spec z fg/af68f8fc1; kopia i porównanie są w
+  docs/sources/standing-wake-af68f8fc1.md oraz docs/review-source-map.md.
+- PR74, PR77, PR79 pochodzą z repozytorium Forgejo cs3b/ace; odczytano historię
+  fg/main, lecz nie dyskusje tych PR. Nie traktować ich jako numerów PR GitHub.
 - Dostarczone źródła nie są plikami ace-idea i nie wymagają archiwizacji idei.
 
 Nie zmieniamy statusów istniejących zadań podczas draftowania tej rodziny.
-Nie odtwarzamy starych warstw admission/authority z archiwów.
+Nie odtwarzamy starych warstw admission/authority z archiwów. Doprecyzowanie Kapitana
+zatwierdza jednak ace-lab auth i pluginy z krótkotrwałymi role credentials. To zakres .7,
+nie blokada do ponownej zgody. Źródła lab-config i granice ponownego użycia opisuje
+docs/auth-mechanics.md; nie utożsamiać starego admin PAT copy z nowym tokenem.
 
 ## Początek i koniec wycinka
 
 Przed pracą: odczytać brief i źródła, potwierdzić poprzednika, wskazać bieżącą lukę
 oraz ścieżkę producent → konsument. Po pracy: zapisać wynik i dowody w tasku/assignmencie,
 oddzielić kod, publikację, instalację i odbiór; podać następny odblokowany podtask.
+
+## Aktualizacja po review 2026-10-29
+
+Stan źródeł, przyjęte defaults i rozróżnienie kodu od odbioru opisuje docs/review-source-map.md.
+Wynik gotowości rodziny: docs/review.md. Wcześniejsze zdania o braku źródeł opisują fazę draftowania.

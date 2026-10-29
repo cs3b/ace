@@ -96,6 +96,12 @@ ograniczony zadaniem i czasem; jego zakończenie jest częścią cyklu. Generowa
 jest dozwolone tylko w jawnie przyznanym zakresie. Sekrety pozostają w bezpiecznych
 mechanizmach przekazania, nie w promptach, raportach lub transkryptach.
 
+Doprecyzowanie Kapitana podczas review 2026-10-29: docelowy interfejs to `ace-lab auth`,
+z pluginami Forgejo (issue/revoke), GitHub i env. Agent prosi o krótkotrwały dostęp
+właściwej roli (np. developer/reviewer). Krok .7 pakuje istniejące mechaniki lab-config,
+wraz z zakresem, terminami, bezpiecznym handoff i cleanup; źródła w docs/auth-mechanics.md.
+Expiry providera, zaplanowany revoke hosta i ekspozycja static env są jawnie rozróżniane.
+
 Właściwy wzorzec kont według raportu laba: lab-overseer jako autor i merger,
 lab-merge-ace jako formalny approver po niezależnym review.
 Uprawnienia sprawdzamy w docelowym środowisku; samo posiadanie tokena nie rozszerza roli.
@@ -109,6 +115,8 @@ Obowiązuje docs/lab-flow.md: taski projektu w .ace-tasks/, prywatne zadania nad
 w .ace-tasks/_overseer/, assignmenty, coworkerzy i HITL u obecnych właścicieli.
 Topologia korzysta z istniejącej konfiguracji ace-lab. Nie dodajemy kolejki, journala,
 rejestru topologii, warstwy autoryzacji mutacji ani dodatkowego cache'u stanu.
+Jawnie zatwierdzony cykl auth ma jednego właściciela w ace-lab i minimalny rekord lease;
+.7 aktualizuje mapę właścicieli oraz ADR-034. Nie kopiuje do auth postępu tasków/assignmentów.
 
 Implementację przygotowujemy na hoście; lab odbiera opublikowane wydania i służy do
 potwierdzenia działania. Rozróżniamy źródła, integrację, publikację, instalację i odbiór.

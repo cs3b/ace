@@ -1,14 +1,17 @@
 ---
 id: 8xs.t.pu0.0
-status: draft
+status: pending
 priority: medium
 created_at: "2026-10-29 17:13:40"
 estimate: large
 dependencies: []
 tags: []
 parent: 8xs.t.pu0
-needs_review: true
-bundle: {"presets": ["project"], "files": ["AGENTS.md", "docs/lab-flow.md", "docs/tools.md", ".ace-tasks/8xs.t.pu0-autonomiczny-lab-od-startu-do/docs/brief.md", ".ace-tasks/8xs.t.pu0-autonomiczny-lab-od-startu-do/docs/context.md", ".ace-tasks/8xs.t.pu0-autonomiczny-lab-od-startu-do/docs/session-problems.md", "ace-lab/docs/usage.md", "ace-handbook-integration-pi/docs/usage.md", "ace-lab/.ace-defaults/lab/config.yml", ".ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/7-l8-instalacja-nowego-laba-i/8xg.t.sbz.7-l8-instalacja-nowego-laba-i-dodawanie-projektu.s.md", ".ace-tasks/8xs.t.pu0-autonomiczny-lab-od-startu-do/0-zapewni-kompletny-runtime-z-instalatora/ux/usage.md"], "commands": []}
+needs_review: false
+bundle:
+  presets: [project]
+  files: [AGENTS.md, docs/lab-flow.md, docs/tools.md, .ace-tasks/8xs.t.pu0-autonomiczny-lab-od-startu-do/docs/brief.md, .ace-tasks/8xs.t.pu0-autonomiczny-lab-od-startu-do/docs/context.md, .ace-tasks/8xs.t.pu0-autonomiczny-lab-od-startu-do/docs/session-problems.md, ace-lab/docs/usage.md, ace-handbook-integration-pi/docs/usage.md, ace-lab/.ace-defaults/lab/config.yml, .ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/7-l8-instalacja-nowego-laba-i/8xg.t.sbz.7-l8-instalacja-nowego-laba-i-dodawanie-projektu.s.md, .ace-tasks/8xs.t.pu0-autonomiczny-lab-od-startu-do/0-zapewni-kompletny-runtime-z-instalatora/ux/usage.md, .ace-tasks/8xs.t.pu0-autonomiczny-lab-od-startu-do/docs/review-source-map.md, .ace-tasks/8xs.t.pu0-autonomiczny-lab-od-startu-do/docs/sources/standing-wake-af68f8fc1.md, ace-test-runner/docs/usage.md]
+  commands: []
 ---
 
 # Zapewnić kompletny runtime z instalatora
@@ -20,7 +23,7 @@ Usunąć ręczne uzupełnianie środowiska przed każdym odbiorem zmian.
 ## Specyfikacja zachowania
 
 Krok 01/16. Typ: bezpośredni podtask. Rozmiar orientacyjny: large.
-Wejście: skonfigurowane środowisko i stan wymagany przez poprzedni krok. Wyjście: obserwowalny rezultat poniżej.
+Wejście: konfiguracja i jawne warunki poniżej; po odbiorze poprzednika, jeśli istnieje. Wyjście: obserwowalny rezultat i dowody określone w tym wycinku.
 
 - Instalator uzgadnia manifest i rzeczywiste wersje gemów wraz z wymaganymi zależnościami przechodnimi; wykorzystuje istniejący wynik sbz.7.
 - Rozszerzenia harnessu pochodzą z odpowiedniego zainstalowanego gema. Wynik wskazuje ścieżki CLI/gemów/instrukcji oraz potrzebę restartu procesów.
@@ -66,13 +69,42 @@ Starsze zakresy do wykorzystania: 8xg.t.sbz.7.
 
 ## Decyzje i granice
 
-Zachowanie wynika z zaakceptowanego briefu. Szczegóły techniczne wymagają review aktualnych źródeł przed wykonaniem. Brak nowych pytań produktowych blokujących zapis draftu.
+Review 2026-10-29: źródła, decyzje i sprawdzalne granice są zapisane poniżej oraz w docs/review-source-map.md tej rodziny. Brak pytań wymagających decyzji człowieka dla tego wycinka.
 Nie tworzyć wnuków, nowej kolejki ani magazynu stanu. Nie implementować innych kroków pod pozorem zależności; ujawnioną zmianę krytycznej ścieżki zapisać w tej rodzinie.
 
 ## Rezultaty do dostarczenia
 
 - Zachowanie i dokumentacja opisane powyżej, z dowodami akceptacji oraz ograniczeniami.
 - Aktualny wynik pracy w tasku/assignmencie; brak sekretów i fabrykowanych identyfikatorów.
+
+## Ustalenia review i kontrakt wykonania — 2026-10-29
+
+Istniejące install/resume/verify pozostają właścicielami konwergencji. Manifest to
+`/etc/lab/ace-lab/install.yml`, bez nowej flagi wyboru manifestu. `install --dry-run`
+niczego nie zapisuje; ready wymaga po instalacji osobnego `verify` i wykonanych prób
+aktywacji pod kontem docelowym. Obecne offline unknown nie jest dowodem działającego runtime.
+
+Docelowy właściciel przeniesionego rozszerzenia to pakiet assetów `ace-wake` w istniejącym
+top-level `ace-wake/`: dodać publikowalne opakowanie gema i włączyć je w discovery/release/test.
+`ace-handbook-integration-pi` korzysta z tego pakietu i standardowej projekcji handbook;
+nie pozostawia drugiej edytowalnej kopii JS. Instalacja projektuje assets z dokładnej
+wersji gema i raportuje potrzebę restartu oraz faktycznie załadowaną wersję. Nie restartuje
+po cichu aktywnego wykonawcy. Brak manifestowego pakietu lub dependency closure blokuje odbiór.
+Istniejący gem z brakującą zależnością musi zostać naprawiony także wtedy, gdy jego wersja
+już figuruje w gem list. Nowsza wersja obecna obok zadeklarowanej nie może przejąć CLI.
+
+Konsumenci: ace-lab, ace-wake, ace-handbook, ace-handbook-integration-pi, discovery/test/release
+monorepo. Zakres obejmuje gemspecy, zależności, projekcję rozszerzeń, manifest i dokumentację;
+sam update numerów wersji nie wystarcza.
+
+### Mapa kryteriów do dowodów
+
+| Kryterium | Wymagany dowód |
+|---|---|
+| 1 | Czysty runtime: install → projekcja → rzeczywisty start CLI/harnessu; wersje/ścieżki i dependency closure zgodne z manifestem. |
+| 2 | Przerwać po gem install i po projekcji; ponowić, także z dodatkową nowszą wersją oraz brakiem json przy już obecnym gemie. |
+| 3 | Nieosiągalna zależność lub stara aktywna extension: brak ready; dry-run bez zmian plików i procesów. |
+| 4–5 | Kontrola właścicieli zapisów i diffu, wykonana ścieżka producent → konsument, negatywna próba oraz aktualne usage; reguły w review-source-map.md. |
 
 ## Referencje
 
@@ -87,3 +119,5 @@ Nie tworzyć wnuków, nowej kolejki ani magazynu stanu. Nie implementować innyc
 - ace-lab/.ace-defaults/lab/config.yml
 - .ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/7-l8-instalacja-nowego-laba-i/8xg.t.sbz.7-l8-instalacja-nowego-laba-i-dodawanie-projektu.s.md
 - .ace-tasks/8xs.t.pu0-autonomiczny-lab-od-startu-do/0-zapewni-kompletny-runtime-z-instalatora/ux/usage.md
+- .ace-tasks/8xs.t.pu0-autonomiczny-lab-od-startu-do/docs/review-source-map.md
+- .ace-tasks/8xs.t.pu0-autonomiczny-lab-od-startu-do/docs/sources/standing-wake-af68f8fc1.md

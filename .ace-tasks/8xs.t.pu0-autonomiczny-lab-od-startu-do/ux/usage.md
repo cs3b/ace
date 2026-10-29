@@ -22,3 +22,10 @@ Po ponowieniu odpowiedź trafia do właściwej sprawy i wywołuje najwyżej jede
 
 W repo używać bin/ace-*. W installed labie używać zainstalowanych CLI/gemów/workflow.
 To kontrakt docelowy, nie deklaracja obecnego działania.
+
+## Dostęp wykonawcy
+
+Po delegacji agent prosi przez ace-lab auth o profil właściwej roli i zadania.
+Dostaje bezpieczną referencję, scope i rzeczywiste terminy. Praca kończy się raportem
+oraz potwierdzonym cleanup; odmowa lub niepewny revoke pozostaje widoczną blokadą.
+Szczegółowe scenariusze: krok .7, `7-delegowa-zadania-z-w-a/ux/usage.md`.

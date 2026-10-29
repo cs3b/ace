@@ -1,4 +1,4 @@
-# Uruchamiać projekty z katalogu laba — draft usage
+# Uruchamiać projekty z katalogu laba — usage specyfikacji
 
 ## Powierzchnia interfejsu
 
@@ -27,3 +27,23 @@ Oczekiwany wynik: Zdrowy projekt działa, a brak drugiego jest konkretnie raport
 W repo: bin/ace-*. W installed labie: zainstalowane CLI i workflow.
 Pełną dokumentację interfejsu uzupełnić podczas as-task-work przez workflow aktualizacji usage.
 Kryteria i kontekst: .ace-tasks/8xs.t.pu0-autonomiczny-lab-od-startu-do/a-uruchamia-projekty-z-katalogu-laba/8xs.t.pu0.a-uruchamia-projekty-z-katalogu-laba.s.md.
+
+## Uściślenia review
+
+Rozszerzyć kontrakt start z kroku 02 o scope lab w konfiguracji katalogu laba.
+Lista projektów i ich kanoniczne lokalizacje pochodzi z istniejącej konfiguracji
+ace-lab (`topology.projects`: id/path/remote), z normalnym odczytem dopuszczonego zakresu.
+Nie wyprowadzać path z publicznego id/label ani z nazwy repo; nie tworzyć drugiej listy
+w overseer. ace-lab udostępnia wewnętrzny odczyt lokalizacji dla startu, zachowując
+sanityzowaną publiczną projekcję. Brak path jest błędem danego projektu.
+
+Lab tworzy/reużywa swój space i sesję, a projekt startuje przez tę samą operację co start
+samodzielny. Tożsamość projektu: kanoniczny root + skonfigurowane id; nazwa tab nie wystarcza.
+Root laba jest osobnym katalogiem koordynacji z własnym _overseer. Jeśli ten sam katalog
+deklaruje sprzeczne role lab/project, start odmawia bez zgadywania. Pusta lista projektów
+daje ready/idle z liczbą 0; uszkodzony projekt daje partial i nonzero, zdrowe kontynuują.
+Powtórzenie start naprawia tylko braki. Nie zamyka ręcznych pane, nie restartuje zdrowych.
+
+Status pokazuje osobne wyniki projektów i eskalacje. `--dry-run` nie tworzy space/sesji
+ani tasków; table/json/quiet zachowują kontrakt .1. Konsumenci: ace-lab topology/registry,
+ace-overseer start/status, ace-herdr/ace-runtime i guide obu ról.

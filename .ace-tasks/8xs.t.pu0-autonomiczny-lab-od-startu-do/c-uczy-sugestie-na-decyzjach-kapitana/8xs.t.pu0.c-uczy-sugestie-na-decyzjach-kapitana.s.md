@@ -1,14 +1,17 @@
 ---
 id: 8xs.t.pu0.c
-status: draft
+status: pending
 priority: medium
 created_at: "2026-10-29 17:13:46"
 estimate: medium
 dependencies: [8xs.t.pu0.b]
 tags: []
 parent: 8xs.t.pu0
-needs_review: true
-bundle: {"presets": ["project"], "files": ["AGENTS.md", "docs/lab-flow.md", "docs/tools.md", ".ace-tasks/8xs.t.pu0-autonomiczny-lab-od-startu-do/docs/brief.md", ".ace-tasks/8xs.t.pu0-autonomiczny-lab-od-startu-do/docs/context.md", ".ace-tasks/8xs.t.pu0-autonomiczny-lab-od-startu-do/docs/session-problems.md", "ace-hitl/docs/usage.md", "ace-coworker/docs/usage.md", "ace-hitl-hermes/docs/usage.md", ".ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/1-l2-wspolna-komunikacja-przez-ace/8xg.t.sbz.1-l2-wspolna-komunikacja-przez-ace-hitl-i.s.md", ".ace-tasks/8xs.t.pu0-autonomiczny-lab-od-startu-do/b-proponowa-odpowiedzi-jako-second-captain/8xs.t.pu0.b-proponowa-odpowiedzi-jako-second-captain.s.md", ".ace-tasks/8xs.t.pu0-autonomiczny-lab-od-startu-do/c-uczy-sugestie-na-decyzjach-kapitana/ux/usage.md"], "commands": []}
+needs_review: false
+bundle:
+  presets: [project]
+  files: [AGENTS.md, docs/lab-flow.md, docs/tools.md, .ace-tasks/8xs.t.pu0-autonomiczny-lab-od-startu-do/docs/brief.md, .ace-tasks/8xs.t.pu0-autonomiczny-lab-od-startu-do/docs/context.md, .ace-tasks/8xs.t.pu0-autonomiczny-lab-od-startu-do/docs/session-problems.md, ace-hitl/docs/usage.md, ace-coworker/docs/usage.md, ace-hitl-hermes/docs/usage.md, .ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/1-l2-wspolna-komunikacja-przez-ace/8xg.t.sbz.1-l2-wspolna-komunikacja-przez-ace-hitl-i.s.md, .ace-tasks/8xs.t.pu0-autonomiczny-lab-od-startu-do/b-proponowa-odpowiedzi-jako-second-captain/8xs.t.pu0.b-proponowa-odpowiedzi-jako-second-captain.s.md, .ace-tasks/8xs.t.pu0-autonomiczny-lab-od-startu-do/c-uczy-sugestie-na-decyzjach-kapitana/ux/usage.md, .ace-tasks/8xs.t.pu0-autonomiczny-lab-od-startu-do/docs/review-source-map.md, .ace-tasks/8xs.t.pu0-autonomiczny-lab-od-startu-do/docs/sources/standing-wake-af68f8fc1.md, ace-hitl-hermes/docs/native-folder.md]
+  commands: []
 ---
 
 # Uczyć sugestie na decyzjach Kapitana
@@ -20,7 +23,7 @@ Poprawiać kolejne sugestie na podstawie rzeczywistych decyzji człowieka i ich 
 ## Specyfikacja zachowania
 
 Krok 13/16. Typ: bezpośredni podtask. Rozmiar orientacyjny: medium.
-Wejście: skonfigurowane środowisko i stan wymagany przez poprzedni krok. Wyjście: obserwowalny rezultat poniżej.
+Wejście: konfiguracja i jawne warunki poniżej; po odbiorze poprzednika, jeśli istnieje. Wyjście: obserwowalny rezultat i dowody określone w tym wycinku.
 
 - Po decyzji Kapitana agent porównuje ją z własną propozycją i zapisuje wnioski przy tej samej sprawie.
 - Kolejna sugestia otrzymuje odpowiednią, dostępną w swoim zakresie historię; wskazuje sprawy źródłowe i ograniczenia podobieństwa.
@@ -68,13 +71,40 @@ Starsze zakresy do wykorzystania: 8xg.t.sbz.1.
 
 ## Decyzje i granice
 
-Zachowanie wynika z zaakceptowanego briefu. Szczegóły techniczne wymagają review aktualnych źródeł przed wykonaniem. Brak nowych pytań produktowych blokujących zapis draftu.
+Review 2026-10-29: źródła, decyzje i sprawdzalne granice są zapisane poniżej oraz w docs/review-source-map.md tej rodziny. Brak pytań wymagających decyzji człowieka dla tego wycinka.
 Nie tworzyć wnuków, nowej kolejki ani magazynu stanu. Nie implementować innych kroków pod pozorem zależności; ujawnioną zmianę krytycznej ścieżki zapisać w tej rodzinie.
 
 ## Rezultaty do dostarczenia
 
 - Zachowanie i dokumentacja opisane powyżej, z dowodami akceptacji oraz ograniczeniami.
 - Aktualny wynik pracy w tasku/assignmencie; brak sekretów i fabrykowanych identyfikatorów.
+
+## Ustalenia review i kontrakt wykonania — 2026-10-29
+
+Trigger uczenia to zaakceptowana nietajna odpowiedź człowieka do sprawy z sugestią.
+Wniosek zapisuje ace-hitl przy tej sprawie jako lesson z odwołaniem do dokładnych rewizji
+pytania/sugestii/decyzji, autorem agenta i czasem. Idempotencja po case + decision revision;
+wniosek nie jest nową decyzją i nie zmienia jej autora. Brak sugestii oznacza brak
+porównania, nie zmyśloną zgodność. Race zamknięcia nie kasuje historii ani nie wznawia operacji.
+
+Default retrieval ograniczony do tego samego projektu i obecnie dostępnych nietajnych
+spraw; nie korzystać z szerszego dostępu nadzorcy laba jako przyzwolenia na dzielenie
+historii. Wybierać podobny temat/rodzaj decyzji, podać referencje i ograniczenia; nowsza
+jawna korekta Kapitana ma pierwszeństwo nad wcześniejszą sugestią. Brak podstaw jest
+widoczny. Bez embedding-store, indeksu decyzji ani kopii korpusu poza HITL.
+
+Filtr secret/OTP i uprawnień działa przed przekazaniem historii do modelu; także treść
+sugestii/wniosku nie może przywrócić wykluczonych wartości. Konsumenci: ace-hitl
+odczyt/sekcje/historia, ace-coworker instrukcje second-captain, ace-overseer trigger.
+
+### Mapa kryteriów do dowodów
+
+| Kryterium | Wymagany dowód |
+|---|---|
+| 1 | Kapitan odrzuca propozycję → lesson → podobne pytanie wykorzystuje prawdziwą korektę; brak propozycji nie tworzy fikcyjnego porównania. |
+| 2 | Odczytać wszystkie cytowane case/revision i autora; zmieniony/zamknięty case zachowuje pytanie, suggestion, Answer i lesson. |
+| 3 | Powtórzony trigger i restart nie mnożą lessons; OTP oraz niedostępny projekt odfiltrowane przed modelem; brak precedensu jest jawny. |
+| 4–5 | Kontrola właścicieli zapisów i diffu, wykonana ścieżka producent → konsument, negatywna próba oraz aktualne usage; reguły w review-source-map.md. |
 
 ## Referencje
 
@@ -90,3 +120,5 @@ Nie tworzyć wnuków, nowej kolejki ani magazynu stanu. Nie implementować innyc
 - .ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/1-l2-wspolna-komunikacja-przez-ace/8xg.t.sbz.1-l2-wspolna-komunikacja-przez-ace-hitl-i.s.md
 - .ace-tasks/8xs.t.pu0-autonomiczny-lab-od-startu-do/b-proponowa-odpowiedzi-jako-second-captain/8xs.t.pu0.b-proponowa-odpowiedzi-jako-second-captain.s.md
 - .ace-tasks/8xs.t.pu0-autonomiczny-lab-od-startu-do/c-uczy-sugestie-na-decyzjach-kapitana/ux/usage.md
+- .ace-tasks/8xs.t.pu0-autonomiczny-lab-od-startu-do/docs/review-source-map.md
+- .ace-tasks/8xs.t.pu0-autonomiczny-lab-od-startu-do/docs/sources/standing-wake-af68f8fc1.md

@@ -1,29 +1,63 @@
-# Delegować zadania z właściwymi uprawnieniami — draft usage
+# Delegacja i ace-lab auth — usage specyfikacji
 
-## Powierzchnia interfejsu
+To kontrakt docelowy kroku .7, nie opis obecnie dostępnego polecenia. W repo używać
+bin/ace-*; w installed — instalowanych executables i instrukcji. TASK, ASSIGNMENT,
+PROFILE i LEASE pochodzą z rzeczywistego zlecenia/odpowiedzi CLI.
 
-Kontrakt CLI, konfiguracji lub workflow agenta opisany w specyfikacji. To scenariusze docelowe; nie deklarują aktualnej dostępności.
+## Agent prosi o dostęp
 
-## Scenariusz 1: Pełna delegacja
+Nadzorca przygotowuje task/worktree/assignment i rolę zwykłym commission/prepare.
+Wykonawca ma w briefie nazwę skonfigurowanego profilu oraz zasady zakończenia dostępu.
 
-Wejście / wywołanie: Nadzorca przygotowuje i zleca zadanie przez ace-coworker.
+```text
+ace-lab auth request --profile PROFILE --role developer --task TASK --assignment ASSIGNMENT --ttl 30m --format json
+ace-lab auth status LEASE --format json
+ace-lab auth exec LEASE -- COMMAND ...
+```
 
-Oczekiwany wynik: Wykonawca pracuje w poprawnym worktree z assignmentem i raportuje do nadzorcy.
+Request zwraca referencję, rzeczywisty principal, repo/scopes, use_until,
+provider_expires_at i expiry_mode. Sekret dostaje wyłącznie proces COMMAND przez
+kanał profilu. Exec pracuje jako wykonawca, nie jako issuer. Po zakończeniu odwołuje
+lease i raportuje oddzielnie wynik komendy oraz cleanup. Kolejna operacja po revoke
+wymaga nowego request; status nigdy nie przedłuża dostępu.
 
-## Scenariusz 2: Brak uprawnienia
+## Review i inne role
 
-Wejście / wywołanie: Zlecić operację bez wymaganego dostępu.
+Reviewer używa osobnego profilu i tożsamości. Developer nie otrzymuje approval/merge
+przez zmianę --role. Host sprawdza faktyczne konto, zadanie i zakres. W razie odmowy
+agent zgłasza przez HITL konkretny brak; nie używa tokenu nadzorcy. Nazwa developer
+mapuje istniejącego coworkera worker, nie dodaje drugiej roli wykonawczej.
 
-Oczekiwany wynik: Coworker raportuje konkretną blokadę przez HITL.
+## Forgejo, GitHub i env
 
-## Scenariusz 3: Zakończenie przydziału
+Forgejo wydaje osobny token na rolę/przydział i usuwa jego ID. GitHub wydaje token
+instalacji App z wybranym repo i permissions, natywnym expiry i jawnym revoke.
+Oba mogą używać env jako sposobu przekazania. Static env sam nie odwołuje zdalnego
+sekretu: status pokazuje process-scoped exposure, a profil wymagający remote expiry
+odrzuca takie źródło. Brak pluginu lub konfiguracji oznacza not-ready, bez przejścia
+na domyślne globalne credentials.
 
-Wejście / wywołanie: Zakończyć albo przerwać zlecenie z czasowym dostępem.
+## Koniec, przerwanie i recovery
 
-Oczekiwany wynik: Przydział kończy się zgodnie z zakresem; sekret nie pojawia się w raporcie.
+```text
+ace-lab auth revoke LEASE
+ace-lab auth status LEASE --format json
+```
 
-## Uwagi do wykonania
+Zwykłe zakończenie/cancel/pause odwołuje token od razu; termin jest także pilnowany
+niezależnie od coworkera. Status rozróżnia native expiry i host-revoke. Przy braku
+łączności pokazuje revoke-pending, blokuje lokalne użycie i eskaluje bez deklaracji
+zdalnego sukcesu. Uprawniony host wykonuje `ace-lab auth reconcile` po restarcie
+oraz przy retry. Wznowienie pracy po expiry wymaga ponownego request; nie rozszerza
+roli. Dwa request dla tego samego żywego przydziału nie tworzą dwóch tokenów.
 
-W repo: bin/ace-*. W installed labie: zainstalowane CLI i workflow.
-Pełną dokumentację interfejsu uzupełnić podczas as-task-work przez workflow aktualizacji usage.
-Kryteria i kontekst: .ace-tasks/8xs.t.pu0-autonomiczny-lab-od-startu-do/7-delegowa-zadania-z-w-a/8xs.t.pu0.7-delegowa-zadania-z-w-a-ciwymi-uprawnieniami.s.md.
+## Granice i dowody
+
+Domyślny TTL 30 min, domyślne maksimum 60 min; host może ustalić inne limity profilu.
+Brak wymaganego schedulera host-revoke jest odmową przed przekazaniem sekretu.
+Awaria całego hosta/sieci może opóźnić host-revoke; profil wymagający niezależnego
+od hosta expiry musi używać providera z taką zdolnością. Samo skasowanie pliku/env
+nie jest dowodem revoke. Próby live muszą wykazać odrzucenie ponownego użycia tokenu.
+
+Pełny kontrakt i mapa kryteriów: ../8xs.t.pu0.7-delegowa-zadania-z-w-a-ciwymi-uprawnieniami.s.md.
+Źródła istniejącej mechaniki: ../../docs/auth-mechanics.md.
