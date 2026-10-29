@@ -82,6 +82,12 @@ Projects skills, prompts, and the extension in one pass. The extension projectio
 
 ## Semantic eyes (opt-in replacement for periodic model wakes)
 
+Eyes and `/watch`/`/loop` coexist by contract (8xs.t.pu0.2): eyes owns
+standing observation of canonical HITL events, the registry owns timers and
+file watches, and both deliver through the same wake infrastructure. Eyes
+never rejects `/watch add` (or `/loop add`) and never removes an active
+subscription.
+
 After projecting this package's extension with `ace-handbook sync --provider pi`,
 open the project's existing Pi session and run `/eyes start /absolute/path/eyes.json`.
 The selected runtime must provide this release's `ace-overseer observe` and

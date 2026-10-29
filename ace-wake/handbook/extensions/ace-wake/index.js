@@ -63,12 +63,15 @@ export default function (pi, ports = {}) {
     askBridgePort = startAskBridge(ctx, ports, runtime.registry);
   };
 
+  // Eyes and user subscriptions coexist by contract (8xs.t.pu0.2):
+  // eyes owns STANDING observation of canonical HITL events, the
+  // registry owns /loop timers and /watch file subscriptions, and both
+  // deliver through the same sendUserMessage infrastructure. Eyes never
+  // rejects /watch (or /loop) add and never removes an active
+  // subscription — there is no competing observation ownership here.
   pi.registerCommand("loop", {
     description: "Manage named timer loops that wake this agent (add | list | remove)",
     handler: async (args, ctx) => {
-      if (eyes.active() && args.trim().startsWith("add")) {
-        ctx.ui?.notify?.("Legacy loops are retired while eyes owns observation", "error"); return;
-      }
       await handleCommand(ctx, "loop", args, getRuntime, bindRuntime);
     },
   });
@@ -76,9 +79,6 @@ export default function (pi, ports = {}) {
   pi.registerCommand("watch", {
     description: "Manage named file watches that wake this agent (add | list | remove)",
     handler: async (args, ctx) => {
-      if (eyes.active() && args.trim().startsWith("add")) {
-        ctx.ui?.notify?.("Legacy watches are retired while eyes owns observation", "error"); return;
-      }
       await handleCommand(ctx, "watch", args, getRuntime, bindRuntime);
     },
   });
@@ -93,15 +93,7 @@ export default function (pi, ports = {}) {
     bindRuntime(ctx);
   });
 
-  eyes = registerEyes(pi, { ...ports.eyes,
-    retireLegacy: () => {
-      if (!runtime) return;
-      const list = runtime.registry.list();
-      for (const entry of list) {
-        if (entry.kind === "loop") runtime.registry.removeLoop(entry.name);
-        else runtime.registry.removeWatch(entry.name);
-      }
-    } });
+  eyes = registerEyes(pi, ports.eyes);
 
   // A run has begun: wakes dispatched concurrently during the idle-to-running
   // transition can now enter the follow-up queue safely, so the registry

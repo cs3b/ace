@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- Eyes and user subscriptions coexist (task 8xs.t.pu0.2): `/eyes start` no
+  longer retires active loops/watches, and `/watch add`/`/loop add` are no
+  longer rejected while eyes observes — one shared delivery infrastructure,
+  no competing observation ownership.
+- Coexistence is pinned by public-command tests: `/watch add` under active
+  eyes registers and delivers exactly one wake per change, eyes activation
+  preserves existing watches, and healthy silence produces no extra turns.
+
 ## [0.1.0] - 2026-10-30
 
 ### Added

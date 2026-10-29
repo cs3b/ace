@@ -23,7 +23,7 @@ export async function observeHitl(cwd, config) {
   return JSON.parse(stdout);
 }
 
-export function registerEyes(pi, { retireLegacy, observe = observeHitl, now = Date.now,
+export function registerEyes(pi, { observe = observeHitl, now = Date.now,
   schedule = (fn, ms) => setInterval(fn, ms), cancel = clearInterval } = {}) {
   let eyes, timer, attempt, compacting = false, running = false;
   const stopTimer = () => { if (timer !== undefined) cancel(timer); timer = undefined; };
@@ -38,7 +38,6 @@ export function registerEyes(pi, { retireLegacy, observe = observeHitl, now = Da
     stopTimer(); eyes?.dispose(); attempt = undefined; compacting = false; running = false;
     const entries = ctx.sessionManager.getBranch();
     const snapshot = [...entries].reverse().find((e) => e.type === "custom" && e.customType === EYES_ENTRY)?.data;
-    if (snapshot?.enabled || snapshot?.retired) retireLegacy?.();
     const ownerCwd = path.resolve(ctx.cwd);
     if (snapshot?.ownerCwd && snapshot.ownerCwd !== ownerCwd) {
       eyes = undefined;
@@ -73,7 +72,6 @@ export function registerEyes(pi, { retireLegacy, observe = observeHitl, now = Da
         if (result?.then) await result;
         return result !== false;
       } });
-    if (eyes.s.enabled || eyes.s.retired) retireLegacy?.();
     arm();
     if (eyes.s.enabled) void eyes.tick();
   };
@@ -126,7 +124,7 @@ export function registerEyes(pi, { retireLegacy, observe = observeHitl, now = Da
           case "start": {
             if (!a || b) throw new Error("Use eyes start CONFIG_JSON");
             const config = JSON.parse(fs.readFileSync(path.resolve(ctx.cwd, a), "utf8"));
-            eyes.start(config); retireLegacy?.(); arm(); await eyes.tick(); break;
+            eyes.start(config); arm(); await eyes.tick(); break;
           }
           case "status": ctx.ui?.notify?.(JSON.stringify({ ...eyes.summary(), pending: eyes.s.pending, deadlines: eyes.s.deadlines }), "info"); break;
           case "ack": eyes.ack(a, b); await eyes.tick(); break;
@@ -137,7 +135,7 @@ export function registerEyes(pi, { retireLegacy, observe = observeHitl, now = Da
           case "resume":
             if (a !== "quota-verified" || b) throw new Error("Explicit owner verification required: eyes resume quota-verified");
             await eyes.resume(); arm(); break;
-          case "retire": eyes.retire(); retireLegacy?.(); stopTimer(); break;
+          case "retire": eyes.retire(); stopTimer(); break;
           default: throw new Error("Unknown eyes command; use start, status, ack, deadline, cancel, resume or retire");
         }
       } catch (error) {
