@@ -10,6 +10,7 @@ require_relative "cli/commands/observe"
 require_relative "cli/commands/prune"
 require_relative "cli/commands/projects"
 require_relative "cli/commands/agents"
+require_relative "cli/commands/start"
 
 module Ace
   module Overseer
@@ -37,6 +38,7 @@ module Ace
         "ace-overseer prune                    # Clean up finished tasks"
       ].freeze
 
+      register "start", Commands::Start
       register "work-on", Commands::WorkOn
       register "handoff", Commands::Handoff
       register "process-reports", Commands::ProcessReports

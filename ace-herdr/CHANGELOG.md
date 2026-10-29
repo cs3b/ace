@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- `HerdrExecutor#agent_start` accepts harness passthrough `args:` forwarded
+  after `--` (model/thinking/standing-instruction flags), used by
+  `ace-overseer start` (8xs.t.pu0.1).
+
 ## [0.8.1] - 2026-10-20
 
 ### Fixed

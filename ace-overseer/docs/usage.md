@@ -16,8 +16,9 @@ ace-docs:
 
 ## Command Surface
 
-Local work uses five primary commands (`projects` lists configured lab projects):
+Local work uses six primary commands (`projects` lists configured lab projects):
 
+- `ace-overseer start` - start or reuse the project overseer session from configuration.
 - `ace-overseer work-on` - prepare a worktree, assignment, and terminal.
 - `ace-overseer handoff` - hand the task worktree to the next role in the prepared sequence.
 - `ace-overseer process-reports` - interpret ace-hitl reports and continue the queue.
@@ -28,6 +29,51 @@ Local work uses five primary commands (`projects` lists configured lab projects)
 launcher are removed in L1 and are not normal paths. Status and prune read
 local assignment/task/worktree/Git state only; there is no journal, attempt or
 authority execution model. tmux and Herdr are transports, never state owners.
+
+## `ace-overseer start`
+
+Start or reuse the PROJECT overseer session from the directory's own
+configuration (task 8xs.t.pu0.1). The start contract is explicit — nothing is
+guessed and no interim default model applies:
+
+```yaml
+# .ace/overseer/config.yml (project tier of the cascade)
+start:
+  scope: project            # project | lab (lab: not implemented yet)
+  profile: overseer-default # reference into the profiles map below
+  instructions: wfi://overseer/start  # handbook source (or absolute file path)
+profiles:
+  overseer-default:
+    harness: pi
+    model: zai/glm-5.3-flash
+    thinking: high
+```
+
+| Option | Purpose |
+|--------|---------|
+| `--dry-run` | Show the start plan; no session, no sync, no model call |
+| `--format` | `table` (default) or `json` |
+
+Behavior:
+
+- The project root is canonical: a subdirectory, a symlinked checkout, and a
+  linked worktree of one repository resolve to the SAME owner, so one project
+  never runs two whole-project overseers.
+- Session identity is Herdr's: the tab/pane label `overseer-<project>` on the
+  caller's herdr workspace. A live owner pane is REUSED (`status: reused`); a
+  live pane whose cwd resolves elsewhere is a conflict (`status: blocked`,
+  never taken over); a dead owner pane is replaced and the new identity is
+  reported (`replaced_pane`).
+- The guide resolves through the normal handbook chain (`wfi://` sources via
+  the project's `ace-nav`; absolute paths verbatim) and boots the harness
+  agent as standing instructions with the configured profile.
+- The report carries `status` (`started|reused|blocked|dry_run`), `scope`,
+  `root`, `label`, `workspace`, `pane`, `agent`, `profile`, `instructions`
+  (`source` + resolved `path`) and a `message`. Exit 0 only for a ready
+  start/reuse (dry-run included); a blocked start is a CLI error naming the
+  missing configuration.
+- The started overseer coordinates and delegates (guide:
+  `wfi://overseer/start`); it never substitutes for a missing coworker.
 
 ## `ace-overseer work-on`
 

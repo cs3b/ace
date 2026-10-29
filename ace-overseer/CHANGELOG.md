@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `ace-overseer start [--dry-run] [--format table|json]` (task 8xs.t.pu0.1):
+  starts or reuses the project overseer session from an explicit `start`
+  section (scope/profile/instructions) in the `.ace/overseer/config.yml`
+  cascade. Canonical project-root resolution (subdirectory, symlink, and
+  worktree share one owner), Herdr-backed session identity
+  (`overseer-<project>` label) with reuse/conflict/dead-replacement
+  semantics, guide resolution through the handbook chain, and the packaged
+  project-overseer start guide (`wfi://overseer/start`).
+
 ## [0.26.1] - 2026-10-25
 
 ### Changed

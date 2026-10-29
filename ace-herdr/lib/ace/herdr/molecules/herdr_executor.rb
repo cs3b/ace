@@ -52,9 +52,14 @@ module Ace
 
         # Start an agent in a pane at an interactive shell prompt.
         # Success means the agent was detected and is ready for input.
-        def agent_start(name:, kind:, pane:, timeout_ms:)
-          run!([@binary, "agent", "start", name, "--kind", kind,
-            "--pane", pane, "--timeout", timeout_ms.to_s])
+        # `args` are harness passthrough arguments forwarded verbatim
+        # after `--` (e.g. pi's --model/--thinking/--append-system-prompt;
+        # the overseer start contract, 8xs.t.pu0.1).
+        def agent_start(name:, kind:, pane:, timeout_ms:, args: [])
+          cmd = [@binary, "agent", "start", name, "--kind", kind,
+            "--pane", pane, "--timeout", timeout_ms.to_s]
+          cmd += ["--", *args] unless args.empty?
+          run!(cmd)
         end
 
         # Submit a prompt to the agent in a pane (push delivery). herdr
