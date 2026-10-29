@@ -101,4 +101,28 @@ class FrontmatterParserTest < AceSupportItemsTestCase
     assert_equal({}, frontmatter)
     assert_equal "", body
   end
+
+  # --- strict parse for mutating paths (8xsdfo ask-flow corruption) ---
+
+  def test_parse_bang_raises_on_unparsable_frontmatter_block
+    # The rocket-hash form is what the old serializer emitted after a flow
+    # scalar with `: ` had been mis-parsed into a hash.
+    content = "---\nquestions: [{\"Test\" => \"asks\"}]\n---\n\n# Body"
+
+    assert_raises(Psych::SyntaxError) { FP.parse!(content) }
+  end
+
+  def test_parse_stays_tolerant_on_the_same_block
+    frontmatter, body = FP.parse("---\nquestions: [{\"Test\" => \"asks\"}]\n---\n\n# Body")
+
+    assert_equal({}, frontmatter)
+    assert_includes body, "# Body"
+  end
+
+  def test_parse_bang_parses_valid_frontmatter
+    frontmatter, body = FP.parse!("---\nid: 8xsdfo\nstatus: pending\n---\n\n# Body")
+
+    assert_equal "8xsdfo", frontmatter["id"]
+    assert_includes body, "# Body"
+  end
 end

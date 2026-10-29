@@ -31,7 +31,7 @@ module Ace
           end
 
           # Serialize a single key-value entry with indentation support.
-          def self.serialize_entry(lines, key, value, indent:)
+          private_class_method def self.serialize_entry(lines, key, value, indent:)
             prefix = "  " * indent
             case value
             when Hash
@@ -43,7 +43,7 @@ module Ace
               lines << if value.empty?
                 "#{prefix}#{key}: []"
               else
-                "#{prefix}#{key}: [#{value.join(", ")}]"
+                "#{prefix}#{key}: [#{value.map { |element| flow_element(element, key) }.join(", ")}]"
               end
             when String
               lines << if needs_quoting?(value)
@@ -56,7 +56,27 @@ module Ace
             end
           end
 
-          private_class_method :serialize_entry
+          # One element inside a flow sequence: strings follow the same
+          # quoting rules as flat values (a plain scalar containing `: ` would
+          # parse back as a hash, silently corrupting the value across
+          # read-modify-write cycles). Numbers, booleans and nil serialize to
+          # their YAML literals; compound values have no safe flow form and
+          # fail loudly instead of emitting YAML that parses back as a
+          # different structure (the 8xsdfo ask-flow corruption).
+          def self.flow_element(element, key)
+            case element
+            when String
+              needs_quoting?(element) ? "\"#{escape_yaml_string(element)}\"" : element
+            when Integer, Float, true, false
+              element.to_s
+            when nil
+              "null"
+            else
+              raise ArgumentError,
+                "frontmatter array '#{key}' cannot safely carry a #{element.class} element; use scalar strings"
+            end
+          end
+          private_class_method :flow_element
 
           # Check if a string value needs YAML quoting
           # @param value [String] Value to check

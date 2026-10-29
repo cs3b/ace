@@ -13,6 +13,21 @@ module Ace
           # @param content [String] The markdown content with optional frontmatter
           # @return [Hash] Parsed frontmatter data (empty hash if no frontmatter)
           def self.parse_frontmatter(content)
+            parse_frontmatter!(content)
+          rescue Psych::SyntaxError
+            # Read paths tolerate arbitrary user files: an unparsable block
+            # yields an empty hash instead of crashing scans.
+            {}
+          end
+
+          # Strict variant for mutating paths (FieldUpdater and friends): a
+          # syntax error must stop the change instead of silently rebuilding
+          # the file from an empty frontmatter (the 8xsdfo ask-flow corruption
+          # amplified one bad line into total frontmatter loss).
+          # @param content [String] The markdown content with optional frontmatter
+          # @return [Hash] Parsed frontmatter data (empty hash if no frontmatter)
+          # @raise [Psych::SyntaxError] when a frontmatter block is unparsable
+          def self.parse_frontmatter!(content)
             return {} if content.nil? || content.empty?
             return {} unless content.start_with?("---\n")
 
@@ -21,11 +36,7 @@ module Ace
 
             yaml_content = content[4...end_index]
 
-            begin
-              YAML.safe_load(yaml_content, permitted_classes: [Date, Time, Symbol]) || {}
-            rescue Psych::SyntaxError
-              {}
-            end
+            YAML.safe_load(yaml_content, permitted_classes: [Date, Time, Symbol]) || {}
           end
 
           # Extract content after frontmatter
@@ -49,6 +60,14 @@ module Ace
           # @return [Array(Hash, String)] Tuple of [frontmatter, body]
           def self.parse(content)
             [parse_frontmatter(content), extract_body(content)]
+          end
+
+          # Strict parse for mutating paths: raises on an unparsable block.
+          # @param content [String] The markdown content
+          # @return [Array(Hash, String)] Tuple of [frontmatter, body]
+          # @raise [Psych::SyntaxError] when a frontmatter block is unparsable
+          def self.parse!(content)
+            [parse_frontmatter!(content), extract_body(content)]
           end
         end
       end

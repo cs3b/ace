@@ -25,7 +25,7 @@ module Ace
 
               file.rewind
               content = file.read
-              frontmatter, body = Atoms::FrontmatterParser.parse(content)
+              frontmatter, body = parse_strict(file_path, content)
               # Strip leading newline from body so rebuild doesn't double-space
               body = body.sub(/\A\n/, "")
 
@@ -116,6 +116,16 @@ module Ace
             file.write(content)
             file.flush
             file.fsync
+          end
+
+          # Strict parse with an actionable message: an unparsable block must
+          # abort the update (the rewrite would silently drop the whole
+          # frontmatter), never proceed with an empty hash.
+          def self.parse_strict(file_path, content)
+            Atoms::FrontmatterParser.parse!(content)
+          rescue Psych::SyntaxError => e
+            raise ArgumentError,
+              "#{file_path}: frontmatter YAML is invalid (#{e.message}); refusing to rewrite the file"
           end
 
           private_class_method :apply_nested_set, :rewrite_locked_file

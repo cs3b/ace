@@ -168,6 +168,52 @@ class FieldUpdaterTest < AceSupportItemsTestCase
     assert_includes content, "needs_review: false"
   end
 
+  # --- fail-closed rewrites (8xsdfo ask-flow corruption regression) ---
+
+  def test_update_preserves_frontmatter_across_repeated_writes_with_colon_values
+    # The live sequence: a question containing `: ` was serialized unquoted,
+    # mis-parsed into a hash, re-emitted as Ruby rocket syntax, and the next
+    # update silently rebuilt the file from an empty frontmatter — dropping
+    # recipient_*/reply_to_* so the native sync could no longer bind replies.
+    path = create_spec_file_with_body(
+      "id" => "8xsdfo",
+      "status" => "pending",
+      "questions" => ["Test nowego przeplywu: odpowiedz jednym slowem OK"],
+      "recipient_machine" => "lab",
+      "recipient_panel" => "ace",
+      "reply_to_machine" => "lab",
+      "reply_to_folder" => "/lab/ace/.ace-local/hitl",
+      "reply_to_id" => "8xsdfo"
+    )
+
+    Updater.update(path, set: {"delivery.captain.status" => "in_flight"})
+    Updater.update(path, set: {
+      "delivery.captain.status" => "unavailable",
+      "delivery.captain.detail" => "native transport abc: queued"
+    })
+
+    frontmatter, = Ace::Support::Items::Atoms::FrontmatterParser.parse(File.read(path))
+    assert_equal "8xsdfo", frontmatter["id"]
+    assert_equal ["Test nowego przeplywu: odpowiedz jednym slowem OK"], frontmatter["questions"]
+    assert_equal "lab", frontmatter["recipient_machine"]
+    assert_equal "ace", frontmatter["recipient_panel"]
+    assert_equal "8xsdfo", frontmatter["reply_to_id"]
+    assert_equal "unavailable", frontmatter.dig("delivery", "captain", "status")
+    assert_equal "native transport abc: queued", frontmatter.dig("delivery", "captain", "detail")
+  end
+
+  def test_update_refuses_to_rewrite_a_file_with_invalid_frontmatter
+    path = create_spec_file_raw("---\nquestions: [{\"Test\" => \"asks\"}]\n---\n\n# Body\n")
+    before = File.read(path)
+
+    error = assert_raises(ArgumentError) do
+      Updater.update(path, set: {"status" => "answered"})
+    end
+
+    assert_match(/frontmatter YAML is invalid/, error.message)
+    assert_equal before, File.read(path)
+  end
+
   private
 
   def create_spec_file(frontmatter)
