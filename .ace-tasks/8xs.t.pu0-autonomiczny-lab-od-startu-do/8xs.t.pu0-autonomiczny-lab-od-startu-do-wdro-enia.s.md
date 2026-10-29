@@ -1,6 +1,6 @@
 ---
 id: 8xs.t.pu0
-status: pending
+status: in-progress
 priority: high
 created_at: "2026-10-29 17:13:21"
 estimate: large
@@ -11,6 +11,12 @@ bundle:
   presets: [project]
   files: [AGENTS.md, docs/lab-flow.md, docs/tools.md, .ace-tasks/8xs.t.pu0-autonomiczny-lab-od-startu-do/docs/brief.md, .ace-tasks/8xs.t.pu0-autonomiczny-lab-od-startu-do/docs/context.md, .ace-tasks/8xs.t.pu0-autonomiczny-lab-od-startu-do/docs/session-problems.md, ace-overseer/docs/usage.md, ace-lab/docs/usage.md, .ace-tasks/8xg.t.sbz-lab-ace-pliki-zadania-role/8xg.t.sbz-lab-ace-pliki-zadania-role-i-komunikacja.s.md, .ace-tasks/8xs.t.pu0-autonomiczny-lab-od-startu-do/ux/usage.md, .ace-tasks/8xs.t.pu0-autonomiczny-lab-od-startu-do/docs/review-source-map.md, .ace-tasks/8xs.t.pu0-autonomiczny-lab-od-startu-do/docs/sources/standing-wake-af68f8fc1.md, .ace-tasks/8xs.t.pu0-autonomiczny-lab-od-startu-do/docs/review.md, .ace-tasks/8xs.t.pu0-autonomiczny-lab-od-startu-do/docs/auth-mechanics.md]
   commands: []
+worktree:
+  branch: pu0-autonomiczny-lab-od-startu-do-wdroenia
+  path: .ace-wt/ace-t.pu0
+  created_at: "2026-10-30 00:08:28"
+  updated_at: "2026-10-30 00:08:28"
+  target_branch: main
 ---
 
 ## Review Questions — rozstrzygnięte 2026-10-29
