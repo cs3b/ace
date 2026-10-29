@@ -5,8 +5,8 @@ import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
 
-import { createWatchPort, nodeStatFn, nodeWatchFactory } from "../wake/watch-subscription.js";
-import { expandInboxWatchTargets } from "../wake/inbox-discovery.js";
+import { createWatchPort, nodeStatFn, nodeWatchFactory } from "../handbook/extensions/ace-wake/wake/watch-subscription.js";
+import { expandInboxWatchTargets } from "../handbook/extensions/ace-wake/wake/inbox-discovery.js";
 
 // PR393 P2 reproduction with REAL pieces: a real git linked worktree, a
 // real `bin/ace-hitl create` executed inside the coworker worktree (the

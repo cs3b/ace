@@ -192,6 +192,7 @@ PATH
       ace-handbook (~> 0.33)
       ace-hitl-hermes (~> 0.9.3)
       ace-overseer (~> 0.26)
+      ace-wake (~> 0.1)
 
 PATH
   remote: ace-handbook
@@ -506,6 +507,11 @@ PATH
       ace-support-core (~> 0.31)
       ace-support-fs (~> 0.3)
 
+PATH
+  remote: ace-wake
+  specs:
+    ace-wake (0.1.0)
+
 GEM
   remote: https://rubygems.org/
   specs:
@@ -673,6 +679,7 @@ DEPENDENCIES
   ace-test-runner!
   ace-test-runner-e2e!
   ace-tmux!
+  ace-wake!
   bundler (~> 2.4)
   minitest (~> 5.20)
   minitest-reporters (~> 1.8)

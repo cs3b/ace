@@ -27,4 +27,5 @@ Gem::Specification.new do |spec|
   spec.add_dependency "ace-handbook", "~> 0.33"
   spec.add_dependency "ace-overseer", "~> 0.26"
   spec.add_dependency "ace-hitl-hermes", "~> 0.9.3"
+  spec.add_dependency "ace-wake", "~> 0.1"
 end

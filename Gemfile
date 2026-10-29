@@ -48,6 +48,7 @@ gem 'ace-handbook-integration-codex', path: 'ace-handbook-integration-codex'
 gem 'ace-handbook-integration-gemini', path: 'ace-handbook-integration-gemini'
 gem 'ace-handbook-integration-opencode', path: 'ace-handbook-integration-opencode'
 gem 'ace-handbook-integration-pi', path: 'ace-handbook-integration-pi'
+gem 'ace-wake', path: 'ace-wake'
 
 # Shared dev/test tools for all gems
 group :development, :test do

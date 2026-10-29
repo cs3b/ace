@@ -4,8 +4,8 @@ import * as nodeOs from "node:os";
 import * as nodePath from "node:path";
 import { describe, it } from "node:test";
 
-import { ASK_REQUEST_SCHEMA, armPendingAskWatches, requestsDirFor } from "../wake/ask-bridge.js";
-import { createWatchPort, nodeReadFn, nodeStatFn, nodeStatfsFn, nodeWatchFactory } from "../wake/watch-subscription.js";
+import { ASK_REQUEST_SCHEMA, armPendingAskWatches, requestsDirFor } from "../handbook/extensions/ace-wake/wake/ask-bridge.js";
+import { createWatchPort, nodeReadFn, nodeStatFn, nodeStatfsFn, nodeWatchFactory } from "../handbook/extensions/ace-wake/wake/watch-subscription.js";
 
 const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -162,6 +162,7 @@ describe("ask bridge (ace-hitl ask wake requests)", () => {
     const casePath = nodePath.join(tmp, "8xhkep-continue.hitl.s.md");
     try {
       nodeFs.writeFileSync(casePath, PENDING_CASE("Continue"));
+      const caseRealPath = nodeFs.realpathSync(casePath);
       const port = createWatchPort({
         // Silent watcher: the deaf mount never delivers an event.
         watchFactory: () => ({ close: () => {} }),
@@ -185,7 +186,7 @@ describe("ask bridge (ace-hitl ask wake requests)", () => {
 
       assert.equal(wakes.length, 1);
       assert.equal(wakes[0].definition.name, "ask-8xhkep");
-      assert.equal(wakes[0].delta[0].path, casePath);
+      assert.equal(wakes[0].delta[0].path, caseRealPath);
       assert.equal(wakes[0].delta[0].kind, "modified");
       assert.equal(wakes[0].delta[0].excerpt, "answer: Proceed with JWT");
       port.stopAll();

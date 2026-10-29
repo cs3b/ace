@@ -42,6 +42,21 @@ module Ace
           manifest(provider)["extensions_dir"]
         end
 
+        # Source root for a provider's extension assets: the package the
+        # manifest names through `extensions_package` (an asset package
+        # such as ace-wake that is NOT an integration package), falling
+        # back to the manifest's own package. The named package resolves
+        # like every other package: the sibling package directory in the
+        # local project first, the installed gem second — so a monorepo
+        # checkout projects the working tree and an installed lab
+        # projects the exact installed gem (task 8xs.t.pu0.0).
+        def extensions_source_root(provider)
+          package = manifest(provider)["extensions_package"]
+          return package_root(provider) if package.nil? || package.to_s.strip.empty?
+
+          resolve_named_package(package.to_s.strip) || package_root(provider)
+        end
+
         def package_root(provider)
           manifest_dir = File.dirname(manifest(provider).fetch("_manifest_path"))
           File.expand_path("../../..", manifest_dir)
@@ -62,6 +77,22 @@ module Ace
         end
 
         private
+
+        # A package named through `extensions_package` resolves like the
+        # registry's own packages: the sibling directory inside the local
+        # project first (monorepo checkout), the installed gem second.
+        # Only a package that actually carries handbook/extensions counts.
+        def resolve_named_package(name)
+          local = File.join(project_root, name)
+          return local if File.directory?(File.join(local, "handbook", "extensions"))
+
+          spec = Gem::Specification.find_by_name(name)
+          return nil unless File.directory?(File.join(spec.full_gem_path, "handbook", "extensions"))
+
+          spec.full_gem_path
+        rescue Gem::LoadError, ArgumentError
+          nil
+        end
 
         def local_manifest_paths
           LOCAL_MANIFEST_GLOBS.flat_map do |glob|

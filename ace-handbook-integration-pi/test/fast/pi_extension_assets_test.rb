@@ -2,59 +2,58 @@
 
 require_relative "../test_helper"
 
+# Task 8xs.t.pu0.0 contract: the ace-wake extension ships from the
+# publishable `ace-wake` asset package. This package declares the
+# projection (extensions_dir + extensions_package) and depends on the
+# gem; it must NOT carry a second editable JavaScript copy.
 class Ace::Handbook::Integration::PiExtensionAssetsTest < Minitest::Test
   def setup
     @package_root = File.expand_path("../..", __dir__)
-    # The ace-wake extension moved out of this package: its canonical source
-    # is the repository-top-level ace-wake/ directory, deployed by the host
-    # lane. These tests pin that boundary.
-    @extension_root = File.join(@package_root, "..", "ace-wake")
   end
 
-  def test_provider_manifest_declares_no_extension_projection
+  def test_provider_manifest_declares_gem_backed_extension_projection
     manifest = provider_manifest
 
-    refute manifest.key?("extensions_dir"),
-      "the pi manifest must not declare an extensions_dir: the extension no longer ships in this package"
+    assert_equal ".pi/extensions", manifest["extensions_dir"],
+      "the pi manifest must project extensions into .pi/extensions"
+    assert_equal "ace-wake", manifest["extensions_package"],
+      "the pi manifest must source extensions from the ace-wake asset package"
   end
 
   def test_extension_does_not_ship_in_the_gem
     gem_files = gemspec_file_list
 
     assert gem_files.grep(%r{handbook/extensions}).empty?,
-      "the gem must not carry the extension; ace-wake/ is the single source"
+      "the gem must not carry the extension; the ace-wake gem is the single source"
     assert gem_files.grep(%r{test/js/}).empty?, "test assets must not ship in the gem"
   end
 
-  def test_extension_source_lives_at_the_repository_top_level
-    assert File.directory?(File.expand_path(@extension_root)),
-      "ace-wake/ must exist at the repository top level"
-    assert File.file?(File.join(@extension_root, "index.js"))
-    assert File.file?(File.join(@extension_root, "README.md")), "provenance must be documented"
-    %w[types.js wake-dispatcher.js wake-registry.js loop-subscription.js
-      watch-subscription.js wake-command-parser.js eyes.js eyes-runtime.js].each do |module_file|
-      assert File.file?(File.join(@extension_root, "wake", module_file)), "missing wake module: #{module_file}"
-    end
+  def test_gemspec_declares_the_ace_wake_dependency
+    spec = Gem::Specification.load(File.join(@package_root, "ace-handbook-integration-pi.gemspec"))
+
+    dependency = spec.dependencies.find { |dep| dep.name == "ace-wake" }
+    refute_nil dependency, "the gemspec must depend on the ace-wake asset package"
+    assert_match(/\A~> 0\./, dependency.requirement.to_s,
+      "the ace-wake constraint must track the published release line")
   end
 
-  def test_extension_entrypoint_is_a_discoverable_subdirectory_index
-    # Pi's extension discovery accepts direct .ts/.js files and subdirectories
-    # containing an index.js/index.ts; a .mjs entrypoint would never load
-    # unless explicitly passed.
-    assert File.file?(File.join(@extension_root, "index.js"))
-    refute File.file?(File.join(@extension_root, "index.mjs"))
-    entry = File.read(File.join(@extension_root, "index.js"))
+  def test_gem_backed_extension_source_resolves
+    registry = Ace::Handbook::Atoms::ProviderRegistry.new(project_root: repo_root)
 
-    imports = entry.scan(/import\s+[^"']*["']([^"']+)["']/).flatten
-    offenders = imports.reject { |name| name.start_with?(".", "node:") }
-    assert_empty offenders, "the extension must rely only on relative modules and node builtins"
+    source_root = registry.extensions_source_root("pi")
+    refute_nil source_root
+    assert File.file?(File.join(source_root, "handbook", "extensions", "ace-wake", "index.js")),
+      "the resolved ace-wake package must carry the extension entrypoint"
   end
 
-  def test_sync_projects_no_extension_assets_for_pi
+  def test_sync_projects_extension_assets_from_the_ace_wake_package
     Dir.mktmpdir do |tmpdir|
       project_root = File.join(tmpdir, "project")
       FileUtils.mkdir_p(project_root)
+      # The project under test carries only the pi package plus the
+      # ace-wake asset package — the standard monorepo layout.
       FileUtils.cp_r(@package_root, File.join(project_root, "ace-handbook-integration-pi"))
+      FileUtils.cp_r(File.join(repo_root, "ace-wake"), File.join(project_root, "ace-wake"))
 
       registry = Ace::Handbook::Atoms::ProviderRegistry.new(project_root: project_root)
       syncer = Ace::Handbook::Organisms::ProviderSyncer.new(
@@ -65,23 +64,25 @@ class Ace::Handbook::Integration::PiExtensionAssetsTest < Minitest::Test
 
       result = syncer.sync(provider: "pi").first
 
-      refute result.key?(:relative_extensions_dir),
-        "pi sync must not project extension assets anymore"
-      refute File.exist?(File.join(project_root, ".pi", "extensions")),
-        "no .pi/extensions directory may appear from a package without extension assets"
+      assert_equal ".pi/extensions", result.fetch(:relative_extensions_dir)
+      assert File.file?(File.join(project_root, ".pi", "extensions", "ace-wake", "index.js")),
+        "the ace-wake entrypoint must project from the asset package"
+      assert File.file?(File.join(project_root, ".pi", "extensions", "ace-wake", "wake", "wake-registry.js"))
+      receipt = JSON.parse(File.read(File.join(project_root, ".pi", "extensions", ".ace-handbook-projection.json")))
+      assert_includes receipt.fetch("files"), "ace-wake/index.js"
+
+      # Second sync is idempotent: the same projection stays standing.
+      second = syncer.sync(provider: "pi").first
+      assert_equal result.fetch(:projected_extensions), second.fetch(:projected_extensions)
+      assert File.file?(File.join(project_root, ".pi", "extensions", "ace-wake", "index.js"))
     end
   end
 
-  def test_javascript_suite_passes_on_the_installed_node_runtime
-    skip "node is not installed" unless node_bin
-
-    output = +`#{node_bin} --test #{File.join(@extension_root, "test", "*.test.mjs")} 2>&1`
-    assert_equal 0, $?.exitstatus, "node test suite failed:\n#{output}"
-    assert_match(/^ℹ pass \d+/m, output, "node test summary missing:\n#{output}")
-    assert_match(/^ℹ fail 0$/m, output, "node test failures:\n#{output}")
-  end
-
   private
+
+  def repo_root
+    File.expand_path("..", @package_root)
+  end
 
   def provider_manifest
     path = File.join(@package_root, ".ace-defaults", "handbook", "providers", "pi.yml")
@@ -92,14 +93,6 @@ class Ace::Handbook::Integration::PiExtensionAssetsTest < Minitest::Test
     spec = Gem::Specification.load(File.join(@package_root, "ace-handbook-integration-pi.gemspec"))
     Dir.chdir(@package_root) do
       spec.files
-    end
-  end
-
-  def node_bin
-    @node_bin ||= begin
-      candidate = ENV.fetch("NODE_BIN", "node")
-      found = system("command -v #{candidate} >/dev/null 2>&1")
-      found ? candidate : nil
     end
   end
 end

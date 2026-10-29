@@ -184,7 +184,7 @@ module Ace
           extensions_dir = registry.extensions_dir(provider)
           return nil if extensions_dir.nil? || extensions_dir.to_s.empty?
 
-          source_dir = File.join(registry.package_root(provider), "handbook", "extensions")
+          source_dir = File.join(registry.extensions_source_root(provider), "handbook", "extensions")
           expected = extension_source_files(source_dir)
           output_dir = File.join(project_root, extensions_dir)
           FileUtils.mkdir_p(output_dir)

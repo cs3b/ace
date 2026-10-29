@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { createWatchPort } from "../wake/watch-subscription.js";
+import { createWatchPort } from "../handbook/extensions/ace-wake/wake/watch-subscription.js";
 import { createFakeHost } from "./fake-pi-host.mjs";
 
 // The HITL transport folder (/lab/state/hitl-address/ace) is a FUSE/virtiofs
