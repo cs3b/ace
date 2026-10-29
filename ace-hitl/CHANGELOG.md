@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Answer and field-update rebuilds parse the case file strictly: an unparsable frontmatter block aborts the mutation instead of silently rebuilding the case from an empty frontmatter (HOTFIX cycle-2b follow-up to the 8xsdfo ask-flow corruption).
+
 ## [0.24.2] - 2026-10-27
 
 ### Added

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Live-evidence regression for the answer-wake cycle: a colon-bearing ask question survives the sender's delivery stamping, and the native sync consumes the captain's reply — case answered, case file changed, reply spool acked (HOTFIX cycle-2b, ask 8xsdfo).
+
 ## [0.9.5] - 2026-10-27
 
 ### Added

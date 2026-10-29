@@ -247,6 +247,55 @@ class NativeSyncTest < AceHermesTestCase
     assert_kind_of Integer, JSON.parse(out.string)["replies"]
   end
 
+  # Live-evidence regression (HOTFIX cycle-2b, ask 8xsdfo): a colon-bearing
+  # question must survive the sender's delivery stamping, and the armed
+  # answer wake's sync must consume the captain's reply — case answered,
+  # case file changed, reply spool acked. Before the frontmatter serializer
+  # fix, the stamping turned `questions: [Test: asks]` into a hash, re-emitted
+  # Ruby rocket syntax, and the next stamp rebuilt the case file from an
+  # empty frontmatter — dropping recipient_*/reply_to_* so the sync refused
+  # the reply ("native original case changed") and the wake never fired.
+  def test_live_ask_reply_cycle_with_colon_question_reaches_answered_case_file
+    question_text = "Test nowego przeplywu: odpowiedz jednym slowem OK kiedy bedziesz mial chwile."
+    event = owner(@roots[0]).create("LIVE TEST ask-flow: reply OK when convenient",
+      to: "captain", kind: "clarification", questions: [question_text],
+      time: Time.utc(2026, 10, 29, 8, 57, 26))
+
+    sender_route = @route.merge("recipients" => ["captain"])
+    sender_config = @config.merge("hitl" => @config["hitl"].merge(
+      "root_dir" => @roots[0], "adapters" => {"routes" => [sender_route]}))
+    report = H::Organisms::HitlSender.new(config: sender_config).send(event.id)
+    assert_equal :unavailable, report.results.first.status
+
+    # The stamping must not have eaten the binding metadata.
+    frontmatter, = Ace::Support::Items::Atoms::FrontmatterParser.parse(File.read(event.file_path))
+    assert_equal "lab", frontmatter["recipient_machine"]
+    assert_equal @roots[0], frontmatter["reply_to_folder"]
+    assert_equal event.id, frontmatter["reply_to_id"]
+
+    folder = N.new(@route)
+    keys = folder.keys("request")
+    assert_equal 1, keys.size
+    record = folder.read("request", keys.first)
+    refute_nil record
+    receipt(record)
+    reply(record, text: "ok", reply_to: "10")
+
+    result = S.new(@route).run
+    assert_empty result["errors"]
+    assert_equal 1, result["replies"]
+
+    answered = owner(@roots[0]).show(event.id, scope: "current")[:event]
+    assert_equal "ok", answered.answer
+    assert_equal "delivered", answered.metadata.dig("delivery", "captain", "status")
+    file = File.read(event.file_path)
+    assert_includes file, "status: answered"
+    assert_includes file, "## Answer\n\nok"
+    assert_includes file, "questions: [\"#{question_text}\"]"
+    # The consumed reply is acked from the spool: the wake reconcile is done.
+    assert_nil N.new(@route).read("reply", record["key"])
+  end
+
   def test_real_ruby_frame_python_gateway_fixture_and_ruby_owner_round_trip
     event = question
     record = publish(event)

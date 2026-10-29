@@ -410,7 +410,7 @@ module Ace
 
         def apply_answer_update(file_path, answer)
           content = File.read(file_path)
-          frontmatter, body = Ace::Support::Items::Atoms::FrontmatterParser.parse(content)
+          frontmatter, body = Ace::Support::Items::Atoms::FrontmatterParser.parse!(content)
 
           updated_body = Molecules::HitlAnswerEditor.apply(body, answer)
           answered = !answer.to_s.strip.empty?
@@ -432,7 +432,7 @@ module Ace
             file.rewind
 
             content = file.read
-            frontmatter, body = Ace::Support::Items::Atoms::FrontmatterParser.parse(content)
+            frontmatter, body = Ace::Support::Items::Atoms::FrontmatterParser.parse!(content)
             body = body.sub(/\A\n/, "")
             previous = body.match(/^## Answer[ \t]*(?:\n(.*))?\z/m)&.[](1).to_s.strip
             if first_answer && (frontmatter["answered"] == true || !previous.empty?)
@@ -525,7 +525,7 @@ module Ace
 
           event = current[:event]
           content = File.read(event.file_path)
-          frontmatter, body = Ace::Support::Items::Atoms::FrontmatterParser.parse(content)
+          frontmatter, body = Ace::Support::Items::Atoms::FrontmatterParser.parse!(content)
           updated_body = body.to_s.sub(/\s*\z/, "")
           updated_body << "\n\n## Resume Dispatch\n\n#{note}\n"
           rebuilt = Ace::Support::Items::Atoms::FrontmatterSerializer.rebuild(frontmatter, updated_body)
