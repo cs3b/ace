@@ -61,3 +61,20 @@ zależnościami z RubyGems, uruchomione z ACE_TOOLCHAIN=installed.
 
 Pozostałe bramki bez zmian: niezależny review + approval + merge PR #398,
 publikacja (OTP Kapitana), zimny cykl na labie.
+
+## Dodatek 2: PR description + próba review (2026-10-30, runda 19)
+
+- **PR #398 description zaktualizowana** pełnym zestawieniem kroku po kroku
+  (16 wierszy tabeli deliverables, weryfikacja, bramka merge) przez
+  `ace-git pr update` (head 3e05c9933); tytuł odzwierciednia staged release
+  set. Draft pozostaje do niezależnego review.
+- **Próba automated review**: packet full-diff (~169k tokenów) i deltas
+  przekraczają budżet 128k; delta ostatnich 8 kommitów (od 02ed496f4)
+  mieści się w budżecie i przygotowuje się poprawnie, ale wykonanie LLM
+  (pi:zai/glm-5.3) kończy się błędem środowiskowym `node:fs` — ten sam,
+  który wcześniej blokował `ace-task plan` i `ace-git-commit` w tej sesji.
+  Review verdict wymaga działającego providera poza tą sesją lub roli
+  ludzkiego reviewera; to pozostaje warunkiem bramki merge.
+
+Bramki końcowe (bez zmian): niezależny review → formalny approval → merge →
+publish (OTP) → zimny cykl na labie.
