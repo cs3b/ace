@@ -366,6 +366,39 @@ echo "Proceed with batch 2" | ace-hitl reply 8xhkep --stdin
   durable record; the armed ask wake consumes the change whenever the
   asking session returns.
 
+## Case lifecycle
+
+The canonical case file carries the whole lifecycle (task 8xs.t.pu0.6) —
+there is no second registry:
+
+- receipt: `pending` → `received` (the answer was durably delivered);
+- application: `pending` → `applied` → `closed`, or `cancelled` (terminal
+  without application). Reports stay `recorded` — they never await an
+  answer or application.
+
+```bash
+ace-hitl apply 8xhkep --ref pr:398   # the effect owner reference verified by the consumer
+ace-hitl close 8xhkep                # terminal, only after the applied proof
+ace-hitl sweep                       # list transport leftovers of terminal cases
+ace-hitl sweep --apply               # remove ONLY the proven leftovers
+```
+
+Exactly-once belongs to the EFFECT, not the notification count: after a
+crash between effect and `applied`, the consumer first re-checks the effect
+at its owner (PR/release/assignment); an undecidable outcome is an explicit
+reconciliation block, never a blind retry. Re-applying the same effect
+reference is a no-op (`duplicate`); a different reference for an applied
+case is a conflict. A duplicate close is a no-op. A late different answer
+was already rejected at delivery, and a closed case never re-opens — an
+explicit decision change needs a NEW case.
+
+`ace-hitl sweep` qualifies the ask-wake request files against the canonical
+cases: deletion candidates are ONLY requests whose case is terminally
+`closed` or `cancelled`. Active cases (pending/received/applied), unknown
+ids, unparseable requests and the canonical decision history (including the
+history Second Captain learns from) are always preserved; without `--apply`
+the command only lists.
+
 ## Lifecycle event names
 
 HITL lifecycle signals use this namespace:

@@ -9,6 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Case lifecycle (task 8xs.t.pu0.6): `ace-hitl apply CASE --ref OWNER_REF`
+  records the applied effect with its owner reference (idempotent per
+  reference, conflicting references rejected), `ace-hitl close CASE` is
+  terminal only after the applied proof (duplicate no-op, closed cases never
+  re-open), `cancel_case` terminates without application, and
+  `ace-hitl sweep [--apply]` lists/removes ONLY the ask-wake request
+  leftovers of terminally closed/cancelled cases — active cases, unknown
+  ids and the canonical decision history are always preserved. Lifecycle
+  state lives in the canonical case file (receipt pending/received,
+  application pending/applied/closed/cancelled); transitions are locked and
+  conflict-rejecting.
+
 - `ace-hitl reply CASE_ID --stdin` (task 8xs.t.pu0.5): receiver-side answer
   delivery on the owner's machine. Output carries only the case and its state
   (`received`/`duplicate`); the reference must be the exact case id (no

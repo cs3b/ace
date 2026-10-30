@@ -29,6 +29,7 @@ module Ace
         class NotAnswerableError < StandardError; end
         class AnswerConflictError < StandardError; end
         class UnknownCaseError < StandardError; end
+        class LifecycleTransitionError < StandardError; end
 
         attr_reader :root_dir, :last_list_total, :last_folder_counts, :config
 
@@ -156,6 +157,220 @@ module Ace
           apply_field_and_answer_updates(event.file_path, set: {}, add: {}, remove: {},
             answer: answer, first_answer: true)
           :received
+        end
+
+        # --- case lifecycle (task 8xs.t.pu0.6) ------------------------------
+
+        # The case's lifecycle facts, read from the canonical file only:
+        # receipt (pending/received) and application
+        # (pending/applied/closed/cancelled). Reports stay `recorded` —
+        # they never await an answer or application.
+        # @return [Hash] {"receipt"=>, "application"=>, "answered"=>,
+        #   "effect_ref"=>, "answered_at"=>}
+        def case_lifecycle(ref, scope: nil)
+          event = exact_case(ref, scope: scope)
+          frontmatter, _body = read_frontmatter(event.file_path)
+          {"receipt" => frontmatter["answered"] ? "received" : "pending",
+           "application" => frontmatter.dig("application", "state") || "pending",
+           "answered" => frontmatter["answered"] == true,
+           "effect_ref" => frontmatter.dig("application", "ref"),
+           "answered_at" => frontmatter["answered_at"]}
+        end
+
+        # Record that the answer's effect was applied — with the
+        # reference to the effect OWNER (task/assignment/PR) the
+        # consumer verified. Idempotent per reference: re-recording the
+        # same effect ref is a no-op; a different effect ref for an
+        # applied case is a conflict. Closing happens only after this
+        # proof exists.
+        # @return [Symbol] :applied or :duplicate
+        def apply_answer_effect(ref, effect_ref, scope: nil)
+          require_effect_ref!(effect_ref)
+          event = exact_case(ref, scope: scope)
+          ensure_answered!(event)
+
+          transition(event.file_path) do |frontmatter, _body|
+            application = frontmatter["application"] || {}
+            case application["state"].to_s
+            when "", "pending"
+              frontmatter["application"] = {"state" => "applied", "ref" => effect_ref,
+                "applied_at" => timestamp}
+              :applied
+            when "applied"
+              raise LifecycleTransitionError,
+                "case '#{event.id}' already applied with effect '#{application["ref"]}'; " \
+                  "a different effect reference is a conflict" unless application["ref"] == effect_ref
+
+              :duplicate
+            when "closed"
+              raise LifecycleTransitionError,
+                "case '#{event.id}' is closed; a closed case never re-opens — " \
+                  "an explicit decision change needs a new case"
+            else
+              raise LifecycleTransitionError,
+                "case '#{event.id}' is #{application["state"]}; it cannot be applied"
+            end
+          end
+        end
+
+        # Terminal close: only with a proven applied effect. A duplicate
+        # close is a no-op; a close without the applied proof fails —
+        # exactly-once belongs to the EFFECT, never to the close itself.
+        # @return [Symbol] :closed or :duplicate
+        def close_case(ref, scope: nil)
+          event = exact_case(ref, scope: scope)
+          ensure_answered!(event)
+
+          transition(event.file_path) do |frontmatter, _body|
+            application = frontmatter["application"] || {}
+            case application["state"].to_s
+            when "", "pending"
+              raise LifecycleTransitionError,
+                "case '#{event.id}' has no applied effect; close only after the " \
+                  "applied proof (ace-hitl apply CASE --ref OWNER_REF)"
+            when "applied"
+              frontmatter["application"] = application.merge("state" => "closed",
+                "closed_at" => timestamp)
+              :closed
+            when "closed"
+              :duplicate
+            else
+              raise LifecycleTransitionError,
+                "case '#{event.id}' is #{application["state"]}; it cannot be closed"
+            end
+          end
+        end
+
+        # Terminal without application: the question was abandoned
+        # (superseded, withdrawn) without its answer ever being applied.
+        # Only from the not-yet-applied states — an applied effect is
+        # history and is closed, not cancelled.
+        # @return [Symbol] :cancelled or :duplicate
+        def cancel_case(ref, scope: nil)
+          event = exact_case(ref, scope: scope)
+
+          transition(event.file_path) do |frontmatter, _body|
+            application = frontmatter["application"] || {}
+            case application["state"].to_s
+            when "", "pending"
+              frontmatter["application"] = {"state" => "cancelled",
+                "cancelled_at" => timestamp}
+              :cancelled
+            when "cancelled"
+              :duplicate
+            else
+              raise LifecycleTransitionError,
+                "case '#{event.id}' is #{application["state"]}; only an unanswered, " \
+                  "unapplied case can be cancelled"
+            end
+          end
+        end
+
+        private
+
+        def timestamp
+          Time.now.utc.strftime("%Y-%m-%d %H:%M:%S UTC")
+        end
+
+        public
+
+        # Sweep of transport leftovers (task 8xs.t.pu0.6): qualify the
+        # ask-bridge wake-request drop files (and any recorded delivery
+        # remnants) against the CANONICAL case files. Deletion candidates
+        # are ONLY requests whose case is terminally closed or cancelled;
+        # active cases (pending/received/applied), unknown ids and the
+        # canonical decision history are always preserved.
+        # @return [Hash] {"qualified" => [{request:, case:, application:}],
+        #   "preserved" => [{request:, reason:}]}
+        def sweep(apply: false)
+          requests_dir = File.join(File.expand_path(@root_dir), "wake-requests")
+          return {"qualified" => [], "preserved" => [], "removed" => []} unless Dir.exist?(requests_dir)
+
+          qualified = []
+          preserved = []
+          removed = []
+          Dir.glob(File.join(requests_dir, "*.json")).sort.each do |request_path|
+            request = JSON.parse(File.read(request_path))
+            case_id = request["case_id"].to_s
+            lifecycle = begin
+              case_lifecycle(case_id)
+            rescue UnknownCaseError, AmbiguousReferenceError
+              nil
+            end
+            application = lifecycle && lifecycle["application"]
+            if %w[closed cancelled].include?(application.to_s)
+              entry = {"request" => request_path, "case" => case_id, "application" => application}
+              qualified << entry
+              if apply
+                File.delete(request_path)
+                removed << entry
+              end
+            else
+              preserved << {"request" => request_path, "case" => case_id,
+                "reason" => application.nil? ? "unknown case — preserved" :
+                  "case application is '#{application}' (active)"}
+            end
+          rescue JSON::ParserError
+            preserved << {"request" => request_path, "case" => nil,
+              "reason" => "unparseable request — preserved"}
+          end
+          {"qualified" => qualified, "preserved" => preserved, "removed" => removed}
+        end
+
+        def exact_case(ref, scope: nil)
+          resolved = resolve_for_mutation(ref, scope: scope)
+          raise UnknownCaseError, "no HITL case with exact id '#{ref}'" if resolved.nil?
+          if resolved[:event].id.to_s != ref.to_s
+            raise UnknownCaseError,
+              "'#{ref}' is not an exact case id (resolved to '#{resolved[:event].id}')"
+          end
+
+          resolved[:event]
+        end
+
+        def require_effect_ref!(effect_ref)
+          unless effect_ref.is_a?(String) && !effect_ref.strip.empty?
+            raise LifecycleTransitionError,
+              "an effect reference is required (the task/assignment/PR that owns the effect)"
+          end
+        end
+
+        def ensure_answered!(event)
+          frontmatter, _body = read_frontmatter(event.file_path)
+          return if frontmatter["answered"] == true
+
+          raise LifecycleTransitionError,
+            "case '#{event.id}' has no received answer; deliver the answer first " \
+              "(ace-hitl reply CASE --stdin)"
+        end
+
+        def read_frontmatter(file_path)
+          content = File.read(file_path)
+          frontmatter, body = Ace::Support::Items::Atoms::FrontmatterParser.parse!(content)
+          [frontmatter, body.sub(/\A\n/, "")]
+        end
+
+        # Atomic, conflict-rejecting lifecycle transition: exclusive lock,
+        # validate-and-mutate frontmatter in one pass, serialize back.
+        def transition(file_path)
+          File.open(file_path, File::RDWR) do |file|
+            file.flock(File::LOCK_EX)
+            file.rewind
+            content = file.read
+            frontmatter, body = Ace::Support::Items::Atoms::FrontmatterParser.parse!(content)
+            result = yield(frontmatter, body.sub(/\A\n/, ""))
+            new_content = Ace::Support::Items::Atoms::FrontmatterSerializer.rebuild(frontmatter, body)
+            file.rewind
+            file.truncate(0)
+            file.write(new_content)
+            file.flush
+            file.fsync
+            result
+          end
+        end
+
+        def timestamp
+          Time.now.utc.strftime("%Y-%m-%d %H:%M:%S UTC")
         end
 
         def update(ref, set: {}, add: {}, remove: {}, move_to: nil, answer: nil, scope: nil)
