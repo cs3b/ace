@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "../../test_helper"
+require_relative "../../support/sibling_cli"
 require "fileutils"
 require "open3"
 require "json"
@@ -76,7 +77,7 @@ module Ace
             # its step and dispatching the continuation — exactly the
             # state a process death leaves on disk.
             impl_step = "#{manager}.1"
-            run_cli(TASK_BIN, "update", impl_step, "--set",
+            run_task("update", impl_step, "--set",
               "status=done,processed_report=#{worker_event},report_result=success")
 
             # Run 2: the persisted report is a duplicate with recorded
@@ -132,7 +133,7 @@ module Ace
             prepared, _worktree, manager = prepare_sequence
             prep_step = "#{manager}.0"
             readiness_event = prepared["report"]["event"]
-            run_cli(TASK_BIN, "update", prep_step, "--set",
+            run_task("update", prep_step, "--set",
               "status=done,processed_report=#{readiness_event},report_result=success")
 
             out = process_reports
@@ -184,7 +185,7 @@ module Ace
           end
 
           def deliver_report(title:, assignment:)
-            out, err, status = run_cli(HITL_BIN, "create", title,
+            out, err, status = run_hitl("create", title,
               "--type", "report", "--result", "success", "--to", "overseer",
               "--task", TASK_REF, "--assignment", assignment, "-b", "#{title} body")
             assert status.success?, "ace-hitl create failed: #{out}#{err}"
@@ -195,13 +196,13 @@ module Ace
 
           def drive_assignment_to_completion(worktree, assignment_id)
             loop do
-              out, err, status = run_cli(ASSIGN_BIN, "status", "--assignment", assignment_id, chdir: worktree)
+              out, err, status = run_assign("status", "--assignment", assignment_id, chdir: worktree)
               assert status.success?, "ace-assign status failed: #{out}#{err}"
               break if out.include?("Status: completed")
 
-              out, err, status = run_cli(ASSIGN_BIN, "start", "--assignment", assignment_id, chdir: worktree)
+              out, err, status = run_assign("start", "--assignment", assignment_id, chdir: worktree)
               assert status.success?, "ace-assign start failed: #{out}#{err}"
-              out, err, status = run_cli(ASSIGN_BIN, "finish", "--assignment", assignment_id,
+              out, err, status = run_assign("finish", "--assignment", assignment_id,
                 "-m", "step done", chdir: worktree)
               assert status.success?, "ace-assign finish failed: #{out}#{err}"
             end
@@ -211,7 +212,7 @@ module Ace
           def create_task(title, parent)
             argv = ["create", title, "--in", "_overseer"]
             argv += ["--child-of", parent] if parent
-            out, err, status = run_cli(TASK_BIN, *argv)
+            out, err, status = run_task(*argv)
             assert status.success?, "ace-task create failed: #{out}#{err}"
             ref = out[/Created task (\S+)/, 1]
             refute_nil ref, "ace-task create returned no ref: #{out}#{err}"
@@ -219,7 +220,7 @@ module Ace
           end
 
           def update_task(ref, sets)
-            out, err, status = run_cli(TASK_BIN, "update", ref, "--set", sets)
+            out, err, status = run_task("update", ref, "--set", sets)
             assert status.success?, "ace-task update failed: #{out}#{err}"
           end
 
@@ -328,6 +329,25 @@ module Ace
             run_git("-C", @dir, "add", "-A")
             run_git("-C", @dir, "-c", "user.email=t@t", "-c", "user.name=t",
               "commit", "-q", "-m", message)
+          end
+
+          # Sibling choreography (ace-task/ace-assign/ace-hitl) runs
+          # in-process through the same CLI entries minus process boot
+          # (see SiblingCli). The packages under test — ace-coworker and
+          # ace-overseer — keep running through their binstubs.
+          def run_task(*argv, chdir: @dir)
+            SiblingCli.run_task(*argv, chdir: chdir,
+              env: {"BUNDLE_GEMFILE" => File.join(REPO_ROOT, "Gemfile"), "RUBYLIB" => @rt_dir})
+          end
+
+          def run_assign(*argv, chdir: @dir)
+            SiblingCli.run_assign(*argv, chdir: chdir,
+              env: {"BUNDLE_GEMFILE" => File.join(REPO_ROOT, "Gemfile"), "RUBYLIB" => @rt_dir})
+          end
+
+          def run_hitl(*argv, chdir: @dir)
+            SiblingCli.run_hitl(*argv, chdir: chdir,
+              env: {"BUNDLE_GEMFILE" => File.join(REPO_ROOT, "Gemfile"), "RUBYLIB" => @rt_dir})
           end
 
           def run_cli(*argv, chdir: @dir)
