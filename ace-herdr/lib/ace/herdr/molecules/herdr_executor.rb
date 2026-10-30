@@ -63,9 +63,17 @@ module Ace
         end
 
         # Submit a prompt to the agent in a pane (push delivery). herdr
-        # rejects blocked agents pre-send with agent_blocked.
-        def agent_prompt(pane:, text:)
-          run!([@binary, "agent", "prompt", pane, text])
+        # rejects blocked agents pre-send with agent_blocked. With
+        # wait: herdr's activity gate applies — a prompt sent from a
+        # non-working state must produce observed working/blocked
+        # activity, so success confirms the turn actually began
+        # (agent_prompt_stalled / timeout otherwise; timeout_ms bounds
+        # the wait).
+        def agent_prompt(pane:, text:, wait: false, timeout_ms: nil)
+          cmd = [@binary, "agent", "prompt", pane, text]
+          cmd += ["--wait"] if wait
+          cmd += ["--timeout", timeout_ms.to_s] if timeout_ms
+          run!(cmd)
         end
 
         # A bounded, payload-free wake. The child deadline is managed by

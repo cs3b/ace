@@ -104,6 +104,17 @@ module Ace
           assert_equal ["herdr", "agent", "prompt", "p5", "line1\nline2"], executor.commands.first
         end
 
+        def test_agent_prompt_wait_builds_activity_gated_argv
+          executor = StubbedExecutor.new
+
+          executor.agent_prompt(pane: "p5", text: "begin", wait: true, timeout_ms: 120_000)
+
+          assert_equal(
+            ["herdr", "agent", "prompt", "p5", "begin", "--wait", "--timeout", "120000"],
+            executor.commands.first
+          )
+        end
+
         def test_bounded_wake_terminates_stalled_subprocess
           Dir.mktmpdir do |dir|
             script = File.join(dir, "stalled-herdr")
