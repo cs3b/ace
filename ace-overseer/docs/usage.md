@@ -157,6 +157,21 @@ through its normal revision. Remote data stays data: re-read the current
 state and evidence before any merge decision. CI check changes are
 information, never a merge gate.
 
+### Cold-cycle acceptance (8xs.t.pu0.e)
+
+`wfi://overseer/cold-cycle-acceptance` binds the end-to-end acceptance of
+the whole family: explicit preconditions (a fresh runtime from the
+PUBLISHED set — a missing dependency is a readiness failure, never a
+binstub fallback), the run's non-interference contract (the operator only
+answers decisions/OTP), the ONE identity axis every acceptance record
+captures (task → assignments/roles + auth leases → HITL case/suggestion/
+decision/lesson → PR+HEAD → head-bound review/tests → publish versions+
+digests → installed runtime paths + target-account result → record PR), the
+mandatory negative flow (refuse one install step after publish: no done, no
+record, correct escalation; resume the same cycle without re-publishing),
+and re-run idempotence (a start after closure re-publishes, re-delegates
+and re-applies nothing).
+
 ## `ace-overseer work-on`
 
 Create or reuse local worktrees and prepare one assignment.
