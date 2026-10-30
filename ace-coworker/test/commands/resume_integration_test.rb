@@ -2,6 +2,7 @@
 
 require_relative "../test_helper"
 require_relative "../support/coworker_fixture"
+require_relative "../support/sibling_cli"
 require "open3"
 require "json"
 
@@ -17,7 +18,6 @@ module Ace
         # complete-but-undelivered resends the same HITL event ID.
         class ResumeIntegrationTest < AceCoworkerTestCase
           REPO_ROOT = File.expand_path("../../..", __dir__)
-          ASSIGN_BIN = File.join(REPO_ROOT, "bin", "ace-assign")
           COWORKER_BIN = File.join(REPO_ROOT, "bin", "ace-coworker")
 
           def setup
@@ -47,7 +47,7 @@ module Ace
                   instructions: |
                     Write docs.
             YAML
-            out, err, _status = run_cli(ASSIGN_BIN, "create", "--yaml", job)
+            out, err, _status = run_assign("create", "--yaml", job)
             @assignment_id = out[/Assignment: .* \((\w+)\)/, 1]
             refute_nil @assignment_id, "ace-assign create returned no id: #{err}#{out}"
 
@@ -72,9 +72,9 @@ module Ace
           end
 
           def test_mid_step_interruption_preserves_work_and_returns_to_remaining
-            run_cli(ASSIGN_BIN, "start", "--assignment", @assignment_id)
-            run_cli(ASSIGN_BIN, "finish", "--assignment", @assignment_id, "--message", "first done")
-            run_cli(ASSIGN_BIN, "start", "--assignment", @assignment_id)
+            run_assign("start", "--assignment", @assignment_id)
+            run_assign("finish", "--assignment", @assignment_id, "--message", "first done")
+            run_assign("start", "--assignment", @assignment_id)
             # "Interruption": local change survives, second step not finished.
             File.write(File.join(@dir, "local-notes.md"), "mid-flight note\n")
 
@@ -101,9 +101,9 @@ module Ace
           end
 
           def test_uncertain_external_effect_gets_check_or_block_guidance
-            run_cli(ASSIGN_BIN, "start", "--assignment", @assignment_id)
-            run_cli(ASSIGN_BIN, "finish", "--assignment", @assignment_id, "--message", "first done")
-            run_cli(ASSIGN_BIN, "start", "--assignment", @assignment_id)
+            run_assign("start", "--assignment", @assignment_id)
+            run_assign("finish", "--assignment", @assignment_id, "--message", "first done")
+            run_assign("start", "--assignment", @assignment_id)
             File.write(File.join(@dir, "local-notes.md"), "x")
 
             out, _err, status = run_cli(COWORKER_BIN, "resume")
@@ -115,10 +115,10 @@ module Ace
           end
 
           def test_failed_step_surfaces_recorded_cause
-            run_cli(ASSIGN_BIN, "start", "--assignment", @assignment_id)
-            run_cli(ASSIGN_BIN, "finish", "--assignment", @assignment_id, "--message", "first done")
-            run_cli(ASSIGN_BIN, "start", "--assignment", @assignment_id)
-            run_cli(ASSIGN_BIN, "fail", "--assignment", @assignment_id, "--message", "merge conflict in lib/a.rb")
+            run_assign("start", "--assignment", @assignment_id)
+            run_assign("finish", "--assignment", @assignment_id, "--message", "first done")
+            run_assign("start", "--assignment", @assignment_id)
+            run_assign("fail", "--assignment", @assignment_id, "--message", "merge conflict in lib/a.rb")
 
             out, _err, status = run_cli(COWORKER_BIN, "resume")
             assert status.success?
@@ -128,12 +128,12 @@ module Ace
           end
 
           def test_complete_but_undelivered_resumes_report_with_same_event_id
-            run_cli(ASSIGN_BIN, "start", "--assignment", @assignment_id)
-            run_cli(ASSIGN_BIN, "finish", "--assignment", @assignment_id, "--message", "first done")
-            run_cli(ASSIGN_BIN, "start", "--assignment", @assignment_id)
-            run_cli(ASSIGN_BIN, "finish", "--assignment", @assignment_id, "--message", "merge done")
-            run_cli(ASSIGN_BIN, "start", "--assignment", @assignment_id)
-            run_cli(ASSIGN_BIN, "finish", "--assignment", @assignment_id, "--message", "docs done")
+            run_assign("start", "--assignment", @assignment_id)
+            run_assign("finish", "--assignment", @assignment_id, "--message", "first done")
+            run_assign("start", "--assignment", @assignment_id)
+            run_assign("finish", "--assignment", @assignment_id, "--message", "merge done")
+            run_assign("start", "--assignment", @assignment_id)
+            run_assign("finish", "--assignment", @assignment_id, "--message", "docs done")
 
             # First resume: complete + no routes -> create + failed delivery.
             out, err, status = run_cli(COWORKER_BIN, "resume")
@@ -148,12 +148,12 @@ module Ace
           end
 
           def test_complete_and_delivered_is_informational
-            run_cli(ASSIGN_BIN, "start", "--assignment", @assignment_id)
-            run_cli(ASSIGN_BIN, "finish", "--assignment", @assignment_id, "--message", "first done")
-            run_cli(ASSIGN_BIN, "start", "--assignment", @assignment_id)
-            run_cli(ASSIGN_BIN, "finish", "--assignment", @assignment_id, "--message", "merge done")
-            run_cli(ASSIGN_BIN, "start", "--assignment", @assignment_id)
-            run_cli(ASSIGN_BIN, "finish", "--assignment", @assignment_id, "--message", "docs done")
+            run_assign("start", "--assignment", @assignment_id)
+            run_assign("finish", "--assignment", @assignment_id, "--message", "first done")
+            run_assign("start", "--assignment", @assignment_id)
+            run_assign("finish", "--assignment", @assignment_id, "--message", "merge done")
+            run_assign("start", "--assignment", @assignment_id)
+            run_assign("finish", "--assignment", @assignment_id, "--message", "docs done")
 
             # Deliver once by faking the delivered state through report+send
             # with a terminal route that always fails is not possible; use
@@ -184,6 +184,12 @@ module Ace
             Open3.capture3(*argv, chdir: @dir)
           ensure
             ENV["BUNDLE_GEMFILE"] = previous
+          end
+
+          # ace-assign choreography in-process (see SiblingCli): fixture
+          # state setup runs through the same CLI entry minus process boot.
+          def run_assign(*argv)
+            SiblingCli.run_assign(*argv, chdir: @dir)
           end
 
           def run_git(*argv)

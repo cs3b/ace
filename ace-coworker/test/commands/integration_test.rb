@@ -2,6 +2,7 @@
 
 require_relative "../test_helper"
 require_relative "../support/coworker_fixture"
+require_relative "../support/sibling_cli"
 require "open3"
 require "json"
 
@@ -15,7 +16,6 @@ module Ace
         # and the leaf .2.1 drive/verdict behavior with a real added step.
         class IntegrationTest < AceCoworkerTestCase
           REPO_ROOT = File.expand_path("../../..", __dir__)
-          ASSIGN_BIN = File.join(REPO_ROOT, "bin", "ace-assign")
           COWORKER_BIN = File.join(REPO_ROOT, "bin", "ace-coworker")
 
           def setup
@@ -39,7 +39,7 @@ module Ace
                   instructions: |
                     Verify the fixture.
             YAML
-            out, err, _status = run_cli(ASSIGN_BIN, "create", "--yaml", @job)
+            out, err, _status = run_assign("create", "--yaml", @job)
             @assignment_id = out[/Assignment: .* \((\w+)\)/, 1]
             refute_nil @assignment_id, "ace-assign create returned no id: #{err}#{out}"
 
@@ -64,8 +64,8 @@ module Ace
           end
 
           def test_drive_to_completion_and_verdict_complete
-            run_cli(ASSIGN_BIN, "start", "--assignment", @assignment_id)
-            run_cli(ASSIGN_BIN, "finish", "--assignment", @assignment_id, "--message", "fixture step done")
+            run_assign("start", "--assignment", @assignment_id)
+            run_assign("finish", "--assignment", @assignment_id, "--message", "fixture step done")
             # Added check stays part of the same plan and is visible via ace-assign.
             add_yaml = File.join(@dir, "add.yaml")
             File.write(add_yaml, <<~YAML)
@@ -74,9 +74,9 @@ module Ace
                   instructions: |
                     Additional verification added mid-run.
             YAML
-            run_cli(ASSIGN_BIN, "add", "--yaml", add_yaml, "--assignment", @assignment_id)
-            run_cli(ASSIGN_BIN, "start", "--assignment", @assignment_id)
-            run_cli(ASSIGN_BIN, "finish", "--assignment", @assignment_id, "--message", "extra check done")
+            run_assign("add", "--yaml", add_yaml, "--assignment", @assignment_id)
+            run_assign("start", "--assignment", @assignment_id)
+            run_assign("finish", "--assignment", @assignment_id, "--message", "extra check done")
 
             out, _err, _status = run_cli(COWORKER_BIN, "status", "--format", "json")
             payload = JSON.parse(out)
@@ -93,6 +93,12 @@ module Ace
           end
 
           private
+
+          # ace-assign choreography in-process (see SiblingCli): fixture
+          # state setup runs through the same CLI entry minus process boot.
+          def run_assign(*argv)
+            SiblingCli.run_assign(*argv, chdir: @dir)
+          end
 
           def run_cli(*argv)
             previous = ENV["BUNDLE_GEMFILE"]

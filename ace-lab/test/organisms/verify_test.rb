@@ -96,13 +96,28 @@ module Organisms
       ->(name) { name == "ace-worker" ? entry : nil }
     end
 
-    def install_run(fixture, lookup)
+    # install_run drives a REAL install as the fixture for these Verify
+    # tests; each test then exercises the REAL Verify organism itself
+    # (verify_run below). Install's own final verification stage would
+    # run that same Verify a second time per test (~0.3s each), so it is
+    # delegated away here. Install's real final-verify integration stays
+    # covered in install_test.rb (real Verify injected) and
+    # install_resume_test.rb.
+    class DelegatedVerify
+      def call
+        {"ready" => true, "status" => "skipped",
+         "message" => "verify_test runs the real Verify organism itself"}
+      end
+    end
+
+    def install_run(fixture, lookup, real_verify: false)
       documents = {fixture["manifest"] => File.read(fixture["manifest"])}
       documents[fixture["auth"]] = File.read(fixture["auth"]) if File.exist?(fixture["auth"])
       Ace::Lab::Molecules::GrantResolver.stub :read_verified,
         ->(path) { documents.fetch(path) { File.file?(path) ? File.read(path) : nil } } do
         Ace::Lab::Organisms::Install.new(
           manifest_path: fixture["manifest"], account_lookup: lookup, platform: "linux",
+          verify: real_verify ? nil : DelegatedVerify.new,
           grants: Ace::Lab::Molecules::GrantProvisioner.new(
             resolver: StubResolver.new(documents), authorization_path: fixture["auth"]
           )
@@ -608,7 +623,7 @@ module Organisms
 
     def test_install_reports_adapter_and_tool_declarations_and_runs_final_verify
       with_lab(extra_manifest: "tools:\n  - git\nadapters:\n  - id: hermes\n    kind: communication\n    command: git") do |fixture|
-        report = install_run(fixture, lookup_for(fixture))
+        report = install_run(fixture, lookup_for(fixture), real_verify: true)
 
         assert report["ok"], report["verify"].inspect
         assert_equal %w[hermes], report["adapters"].map { |a| a["id"] }
@@ -621,7 +636,7 @@ module Organisms
 
     def test_install_with_a_missing_tool_reports_not_ok_through_final_verify
       with_lab(extra_manifest: "tools:\n  - definitely-not-a-lab-tool-xyz") do |fixture|
-        report = install_run(fixture, lookup_for(fixture))
+        report = install_run(fixture, lookup_for(fixture), real_verify: true)
 
         refute report["ok"], "missing tool must block install success"
         assert_equal false, report["verify"]["ready"]
@@ -641,7 +656,7 @@ module Organisms
 
     def test_hitl_adapter_declarations_become_runtime_routes_in_every_project
       with_lab(extra_manifest: "adapters:\n  - id: console\n    kind: hitl\n    config:\n      runtime: tmux") do |fixture|
-        report = install_run(fixture, lookup_for(fixture))
+        report = install_run(fixture, lookup_for(fixture), real_verify: true)
 
         assert report["ok"], report["verify"].inspect
         %w[atlas borealis].each do |project|
@@ -757,7 +772,7 @@ module Organisms
         gem_home = build_and_install_gem(gemdir, "ace-lab-probe", "0.13.0")
 
         with_lab(extra_manifest: gemset_manifest(gem_home)) do |fixture|
-          install_report = install_run(fixture, lookup_for(fixture))
+          install_report = install_run(fixture, lookup_for(fixture), real_verify: true)
           assert_equal true, install_report["ok"], install_report["verify"].inspect
           assert_equal "exists", install_report["prepare"]["gems"].first["status"]
 

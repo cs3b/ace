@@ -2,6 +2,7 @@
 
 require_relative "../test_helper"
 require_relative "../support/coworker_fixture"
+require_relative "../support/sibling_cli"
 require "open3"
 require "json"
 require "digest"
@@ -20,7 +21,6 @@ module Ace
         # ace-hitl instead of overwriting work, dry-run and invalid input.
         class PrepareIntegrationTest < AceCoworkerTestCase
           REPO_ROOT = File.expand_path("../../..", __dir__)
-          ASSIGN_BIN = File.join(REPO_ROOT, "bin", "ace-assign")
           COWORKER_BIN = File.join(REPO_ROOT, "bin", "ace-coworker")
 
           def setup
@@ -587,7 +587,7 @@ module Ace
                   instructions: |
                     Do the work.
             YAML
-            out, err, _status = run_cli(ASSIGN_BIN, "create", "--yaml", job, chdir: worktree)
+            out, err, _status = SiblingCli.run_assign("create", "--yaml", job, chdir: worktree)
             assignment_id = out[/Assignment: .* \((\w+)\)/, 1]
             refute_nil assignment_id, "ace-assign create returned no id: #{err}#{out}"
             assignment_id
@@ -621,7 +621,7 @@ module Ace
                   instructions: |
                     Do the work.
             YAML
-            out, err, _status = run_cli(ASSIGN_BIN, "create", "--yaml", job, chdir: worktree)
+            out, err, _status = SiblingCli.run_assign("create", "--yaml", job, chdir: worktree)
             assignment_id = out[/Assignment: .* \((\w+)\)/, 1]
             refute_nil assignment_id, "ace-assign create returned no id: #{err}#{out}"
 
@@ -636,7 +636,7 @@ module Ace
               overseer: overseer
             YAML
 
-            run_cli(ASSIGN_BIN, "start", "--assignment", assignment_id, chdir: worktree)
+            SiblingCli.run_assign("start", "--assignment", assignment_id, chdir: worktree)
             assignment_id
           end
 
@@ -700,6 +700,12 @@ module Ace
             run_git("-C", @dir, "add", "-A")
             run_git("-C", @dir, "-c", "user.email=t@t", "-c", "user.name=t",
               "commit", "-q", "-m", message)
+          end
+
+          # ace-assign choreography in-process (see SiblingCli): fixture
+          # state setup runs through the same CLI entry minus process boot.
+          def run_assign(*argv, chdir: @dir)
+            SiblingCli.run_assign(*argv, chdir: chdir)
           end
 
           def run_cli(*argv, chdir: @dir)

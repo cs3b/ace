@@ -2,6 +2,7 @@
 
 require_relative "../test_helper"
 require_relative "../support/coworker_fixture"
+require_relative "../support/sibling_cli"
 require "open3"
 require "json"
 
@@ -16,7 +17,6 @@ module Ace
         # outcome/delivery separation, error cause, refusal of false success.
         class ReportIntegrationTest < AceCoworkerTestCase
           REPO_ROOT = File.expand_path("../../..", __dir__)
-          ASSIGN_BIN = File.join(REPO_ROOT, "bin", "ace-assign")
           COWORKER_BIN = File.join(REPO_ROOT, "bin", "ace-coworker")
 
           def setup
@@ -40,7 +40,7 @@ module Ace
                   instructions: |
                     Verify the fixture.
             YAML
-            out, err, _status = run_cli(ASSIGN_BIN, "create", "--yaml", job)
+            out, err, _status = run_assign("create", "--yaml", job)
             @assignment_id = out[/Assignment: .* \((\w+)\)/, 1]
             refute_nil @assignment_id, "ace-assign create returned no id: #{err}#{out}"
 
@@ -66,8 +66,8 @@ module Ace
           end
 
           def test_completed_assignment_creates_success_report_event
-            run_cli(ASSIGN_BIN, "start", "--assignment", @assignment_id)
-            run_cli(ASSIGN_BIN, "finish", "--assignment", @assignment_id, "--message", "step done")
+            run_assign("start", "--assignment", @assignment_id)
+            run_assign("finish", "--assignment", @assignment_id, "--message", "step done")
 
             out, err, status = run_cli(COWORKER_BIN, "report", "--no-send")
             assert status.success?, "success with --no-send exits 0: #{out}#{err}"
@@ -94,8 +94,8 @@ module Ace
           end
 
           def test_failed_step_reports_error_with_cause
-            run_cli(ASSIGN_BIN, "start", "--assignment", @assignment_id)
-            run_cli(ASSIGN_BIN, "fail", "--assignment", @assignment_id, "--message", "verifier crashed with exit 1")
+            run_assign("start", "--assignment", @assignment_id)
+            run_assign("fail", "--assignment", @assignment_id, "--message", "verifier crashed with exit 1")
 
             out, err, status = run_cli(COWORKER_BIN, "report", "--no-send")
             refute status.success?, "error outcome never exits success"
@@ -112,8 +112,8 @@ module Ace
           end
 
           def test_delivery_failure_preserves_outcome_and_rerun_resends
-            run_cli(ASSIGN_BIN, "start", "--assignment", @assignment_id)
-            run_cli(ASSIGN_BIN, "finish", "--assignment", @assignment_id, "--message", "step done")
+            run_assign("start", "--assignment", @assignment_id)
+            run_assign("finish", "--assignment", @assignment_id, "--message", "step done")
 
             run_cli(COWORKER_BIN, "report")
             assert_equal 1, hitl_events.size
@@ -130,6 +130,12 @@ module Ace
           end
 
           private
+
+          # ace-assign choreography in-process (see SiblingCli): fixture
+          # state setup runs through the same CLI entry minus process boot.
+          def run_assign(*argv)
+            SiblingCli.run_assign(*argv, chdir: @dir)
+          end
 
           def run_cli(*argv)
             previous = ENV["BUNDLE_GEMFILE"]
