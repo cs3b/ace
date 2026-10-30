@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `wfi://release/publisher` (task 8xs.t.pu0.9): the publisher coworker role —
+  existing release workflows, ace-lab auth access, OTP as a secret HITL ask,
+  resume that recognizes already-published artifacts by version+digest, and
+  the hand-off to install/verify/record.
+- `wfi://release/cycle-record`: the delivery-cycle evidence record contract
+  (task/cycle, source HEAD, bound review/test evidence, publish
+  versions+digests, runtime paths and outcome) through a normal record-only
+  PR that never triggers a release by itself.
+
+### Added
+
 - Provider manifests can declare `extensions_package`: extension assets project
   from the named asset package (local sibling directory first, installed gem
   second), enabling gem-backed extension shipping such as `ace-wake` for the pi

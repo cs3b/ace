@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `ace-hitl ask --secret` (task 8xs.t.pu0.9): the expected answer (e.g. an
+  OTP) is marked secret AT CREATION — no title heuristics; the case carries
+  `secret: true` and the armed wake request flags the bridge to wake with the
+  case reference only, never the value.
+
 - Case lifecycle (task 8xs.t.pu0.6): `ace-hitl apply CASE --ref OWNER_REF`
   records the applied effect with its owner reference (idempotent per
   reference, conflicting references rejected), `ace-hitl close CASE` is

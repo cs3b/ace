@@ -326,8 +326,13 @@ HITL event 8xhkep sent through 1 route(s):
 8xhkep
 ```
 
-The final stdout line is always the bare case id. ask never blocks and never
-polls, carries no urgency language, and has no asker-side timeouts — the
+The final stdout line is always the bare case id. `--secret` marks the
+EXPECTED answer as a secret (e.g. an OTP) at creation — the armed wake then
+carries the CASE REFERENCE ONLY (the value never passes through the model;
+the executor reads it from the case file through its secure channel), and a
+rejected or expired secret answer needs a NEW case, never a replay. ask
+never blocks and never polls, carries no urgency language, and has no
+asker-side timeouts — the
 Captain replies whenever he wants. The answer is delivered TO the agent as
 an ace-wake wake carrying the answer content (see the ace-wake README's ask
 bridge contract); on wake, the agent acts immediately.

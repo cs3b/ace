@@ -29,6 +29,7 @@ module Ace
           step: nil,
           step_name: nil,
           resume_instructions: nil,
+          secret: nil,
           move_to: nil,
           recipient: nil,
           reply_to: nil,
@@ -80,6 +81,7 @@ module Ace
               "step_name" => step_name,
               "resume_instructions" => resume_instructions,
               "answered" => false,
+              "secret" => secret == true ? true : nil,
               "created_at" => time
             }.merge(recipient_keys(recipient, id))
               .merge(reply_to_keys(reply_to, id))

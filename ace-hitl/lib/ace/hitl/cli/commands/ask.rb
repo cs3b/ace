@@ -36,6 +36,8 @@ module Ace
           option :question, type: :string, repeat: true, aliases: %w[-Q], desc: "Question line (repeatable)"
           option :task, type: :string, desc: "Task reference"
           option :tags, type: :string, aliases: %w[-T], desc: "Comma-separated tags"
+          option :secret, type: :boolean, default: false,
+            desc: "The expected answer is a secret (e.g. OTP): the wake carries the case reference only, never the value"
 
           option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
           option :verbose, type: :boolean, aliases: %w[-v], desc: "Show verbose output"
@@ -78,7 +80,8 @@ module Ace
               type: "question",
               task: options[:task],
               questions: Array(options[:question]).map(&:strip).reject(&:empty?),
-              tags: parse_tags(options[:tags])
+              tags: parse_tags(options[:tags]),
+              secret: options[:secret] == true
             )
           end
 
@@ -111,8 +114,11 @@ module Ace
 
           # Drop the wake request the ace-wake extension consumes through its
           # own reconcile pass and turns into a scoped watch on the case file:
-          # when the answer lands, the wake carries the answer content. The
-          # atomic replace keeps the consumer from reading a torn request.
+          # when the answer lands, the wake carries the answer content —
+          # EXCEPT for a secret ask (8xs.t.pu0.9), where the wake carries the
+          # case reference only and the executor reads the value from the
+          # case file through its secure channel. The atomic replace keeps
+          # the consumer from reading a torn request.
           def arm_wake(event, manager)
             requests_dir = File.join(File.expand_path(manager.root_dir), "wake-requests")
             FileUtils.mkdir_p(requests_dir)
@@ -122,6 +128,7 @@ module Ace
               "case_id" => event.id,
               "case_path" => File.expand_path(event.file_path)
             }
+            request["secret"] = true if event.metadata["secret"] == true
             temporary = File.join(requests_dir, ".#{event.id}-#{SecureRandom.hex(8)}.tmp")
             final = File.join(requests_dir, "#{event.id}.json")
             File.write(temporary, JSON.generate(request))

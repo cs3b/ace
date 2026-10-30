@@ -63,7 +63,10 @@ export function armPendingAskWatches({ requestsDir, registry }) {
       registry.addWatch({
         name: watchName,
         path: request.case_path,
-        message: `HITL answer for case ${request.case_id}: run /continue-work only when this wake names the answer`,
+        message: request.secret
+          ? `HITL answer for case ${request.case_id}: the value was delivered to the case file; read it through the secure channel (never this wake)`
+          : `HITL answer for case ${request.case_id}: run /continue-work only when this wake names the answer`,
+        redact: request.secret === true,
       });
     } catch {
       // The case file is unreadable or the watch is invalid: keep the

@@ -145,13 +145,22 @@ export class WakeRegistry {
     }
 
     const definition = { kind: "watch", name, path, message };
+    // A secret answer case (8xs.t.pu0.9): the wake carries the change
+    // event and its REFERENCE only — the delta's content excerpt is
+    // stripped so the value never passes through the model. The
+    // executor reads the value from the case file through its secure
+    // channel, never from the wake.
+    if (input.redact === true) {
+      definition.redact = true;
+    }
     // The watch port validates readability, takes its baseline, and resolves
     // the configured path to a canonical absolute path — an unreadable or
     // invalid path fails the command loudly before anything is persisted. The
     // delta argument carries the changed targets of each wake.
     definition.path = this.#watches.start(
       definition,
-      (watch, delta) => this.#fire(WATCH_SOURCE_PREFIX, name, definition.message, delta),
+      (watch, delta) => this.#fire(WATCH_SOURCE_PREFIX, name, definition.message,
+        redacted(definition, delta)),
     );
 
     this.#snapshot.watches.push(definition);
@@ -237,7 +246,8 @@ export class WakeRegistry {
       try {
         this.#watches.start(
           watch,
-          (definition, delta) => this.#fire(WATCH_SOURCE_PREFIX, watch.name, watch.message, delta),
+          (definition, delta) => this.#fire(WATCH_SOURCE_PREFIX, watch.name, watch.message,
+            redacted(watch, delta)),
         );
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
@@ -735,6 +745,25 @@ function removeByName(definitions, name, kind) {
 /** @param {string} name */
 export function loopSourceKey(name) {
   return `${LOOP_SOURCE_PREFIX}${name}`;
+}
+
+/**
+ * Redacted delta for a secret watch (8xs.t.pu0.9): every entry keeps its
+ * path/kind/signature reference, the content excerpt is stripped.
+ *
+ * @param {{redact?: boolean}} definition
+ * @param {Array<object> | undefined} delta
+ * @returns {Array<object> | undefined}
+ */
+function redacted(definition, delta) {
+  if (definition?.redact !== true || !Array.isArray(delta)) {
+    return delta;
+  }
+  return delta.map((entry) => {
+    const { excerpt, ...reference } = entry;
+    void excerpt;
+    return reference;
+  });
 }
 
 /** @param {string} name */
