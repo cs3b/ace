@@ -52,9 +52,12 @@ module Ace
         #   session, syncing, or invoking any model
         # @return [Hash] {status: started|reused|blocked|dry_run, scope,
         #   root, label, workspace, pane, agent, profile, instructions,
-        #   replaced_pane, message}
+        #   replaced_pane, message}; scope lab additionally carries
+        #   {projects: [{id, path, status, ...}], project_count, ready}
         def call(dry_run: false)
           plan = Atoms::StartContract.normalize(@config)
+          return lab_start(plan, dry_run) if plan["scope"] == "lab"
+
           root = @root_resolver.resolve(cwd: @cwd)
           label = Atoms::StartContract.session_label(root)
           instructions_path = resolve_instructions(plan["instructions"], root)
@@ -92,6 +95,110 @@ module Ace
         end
 
         private
+
+        # --- lab scope (task 8xs.t.pu0.a) -----------------------------------
+        # The lab root is its own coordination directory with its own
+        # _overseer. The project list and canonical locations come from
+        # the existing ace-lab topology configuration (topology.projects
+        # id/path) — never from the sanitized public projection and
+        # never derived from an id/label/repo name. Each project starts
+        # through the SAME operation as a standalone start (its own
+        # cascade, its own session identity); an unhealthy project is
+        # reported per-project while healthy projects continue; a
+        # repeated start repairs only what is missing and never
+        # restarts healthy sessions or closes manual panes.
+        def lab_start(plan, dry_run)
+          lab_root = File.realpath(@cwd)
+          instructions_path = resolve_instructions(plan["instructions"], lab_root)
+          base = {"status" => nil, "scope" => "lab", "root" => lab_root,
+            "label" => Atoms::StartContract.session_label(lab_root),
+            "workspace" => nil, "pane" => nil, "agent" => AGENT_NAME,
+            "profile" => plan["profile_name"],
+            "instructions" => {"source" => plan["instructions"], "path" => instructions_path},
+            "replaced_pane" => nil, "projects" => [], "project_count" => 0,
+            "ready" => nil, "message" => nil}
+
+          projects = begin
+            Ace::Lab::Molecules::ProjectLocations.read(lab_root)
+          rescue StandardError => e
+            return base.merge("status" => "blocked",
+              "message" => "lab topology could not be read: #{e.class}: #{e.message}")
+          end
+
+          if projects.any? { |project| project["path"].to_s.empty? == false &&
+            File.directory?(project["path"]) && File.realpath(project["path"]) == lab_root }
+            return base.merge("status" => "blocked",
+              "message" => "the lab root '#{lab_root}' is itself declared as a project; " \
+                "conflicting lab/project roles are refused")
+          end
+
+          return base.merge("status" => "dry_run", "project_count" => projects.size,
+            "projects" => projects.map { |project| {"id" => project["id"], "path" => project["path"],
+              "status" => "would_start"}},
+            "message" => "dry-run: the lab space and #{projects.size} project overseer(s) " \
+              "would start; nothing was created") if dry_run
+
+          # An empty configured list is a valid idle lab.
+          if projects.empty?
+            return base.merge("status" => "ready", "ready" => true, "project_count" => 0,
+              "message" => "no projects configured; the lab overseer is idle")
+          end
+
+          workspace = lab_workspace
+          base["workspace"] = workspace
+
+          results = projects.map { |project| start_project(project, lab_root) }
+          ready = results.all? { |result| %w[started reused].include?(result["status"]) }
+          base.merge("status" => ready ? "ready" : "partial", "ready" => ready,
+            "projects" => results, "project_count" => results.size,
+            "message" => "#{results.count { |r| %w[started reused].include?(r["status"]) }}/" \
+              "#{results.size} project overseers ready")
+        end
+
+        # The lab's own herdr space, created once and reused by title.
+        def lab_workspace
+          existing = @executor.workspace_list.parsed_json
+          list = existing.is_a?(Hash) ? Array(existing["result"] || existing["workspaces"]) : Array(existing)
+          found = list.find { |entry| entry["title"] == "overseer-lab" || entry["label"] == "overseer-lab" }
+          return found["id"] if found && (found["id"] || found["workspace_id"])
+
+          created = @executor.workspace_create(label: "overseer-lab").parsed_json
+          result = created.is_a?(Hash) ? created["result"] : nil
+          dig_workspace(result.is_a?(Hash) ? result : created)
+        rescue Ace::Herdr::ExecutorUnavailableError => e
+          raise Ace::Overseer::Error, "herdr is unavailable: #{e.message}"
+        end
+
+        def dig_workspace(payload)
+          return nil unless payload.is_a?(Hash)
+
+          payload["workspace_id"] || payload["id"] || payload.dig("workspace", "id")
+        end
+
+        # One project through the SAME operation as a standalone start:
+        # its own cascade (config_at), its own canonical root and session
+        # identity. A missing path or unreadable directory is THAT
+        # project's failure — the others continue.
+        def start_project(project, lab_root)
+          id = project["id"]
+          path = project["path"]
+          if path.nil? || path.to_s.strip.empty?
+            return {"id" => id, "path" => nil, "status" => "blocked",
+              "message" => "project '#{id}' declares no path in the lab topology"}
+          end
+          unless File.directory?(path)
+            return {"id" => id, "path" => path, "status" => "blocked",
+              "message" => "project '#{id}' directory '#{path}' does not exist"}
+          end
+
+          project_config = Ace::Overseer.config_at(path)
+          orchestrator = self.class.new(config: project_config, executor: @executor,
+            root_resolver: @root_resolver, nav_runner: @nav_runner, cwd: path)
+          report = orchestrator.call
+          report.merge("id" => id, "path" => path)
+        rescue Ace::Overseer::Error, Ace::Herdr::ExecutorError => e
+          {"id" => id, "path" => path, "status" => "blocked", "message" => e.message}
+        end
 
         def base_report(plan, root, label, instructions_path)
           {"status" => nil, "scope" => plan["scope"], "root" => root, "label" => label,

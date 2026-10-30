@@ -75,6 +75,33 @@ Behavior:
 - The started overseer coordinates and delegates (guide:
   `wfi://overseer/start`); it never substitutes for a missing coworker.
 
+### Lab scope (8xs.t.pu0.a)
+
+`scope: lab` in the LAB coordination directory's own `.ace/overseer/config.yml`
+starts the whole lab from one external entry point:
+
+- The project list and CANONICAL locations come from the existing ace-lab
+  topology (`topology.projects` id/path, read internally — the public
+  projection keeps its no-paths allowlist; locations are never derived from
+  an id/label/repo name). The lab root is a coordination directory with its
+  own `_overseer`; a directory declaring itself as both lab and project is
+  refused.
+- The lab creates/reuses its own herdr space (`overseer-lab`), then starts
+  or finds EVERY project overseer through the SAME operation as a
+  standalone start (each project's own cascade, root, and session identity).
+- Statuses: `ready` (all projects started/reused; an empty configured list
+  is a valid idle lab), `partial` (an unhealthy project is reported with its
+  concrete reason while healthy projects run — never false success),
+  `blocked` (unreadable topology / conflicting roles). A repeated start
+  repairs only what is missing: healthy sessions are reused, manual panes
+  are never closed, nothing healthy is restarted.
+- `--dry-run` lists the plan (space + per-project would_start) and creates
+  nothing. The report carries per-project results (`projects`), the count,
+  and the lab-level readiness; exit 0 for ready, non-zero for partial and
+  blocked. The lab guide (`wfi://overseer/lab-start`) binds the lab
+  overseer to cross-project coordination, delegation to project overseers,
+  and per-project escalation.
+
 ## `ace-overseer observe`
 
 Read-only standing observation the started overseer's eyes poll (task

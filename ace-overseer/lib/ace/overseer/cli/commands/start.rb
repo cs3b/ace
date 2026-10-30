@@ -39,7 +39,7 @@ module Ace
             end
 
             case report["status"]
-            when "started", "reused", "dry_run" then nil
+            when "started", "reused", "ready", "dry_run" then nil
             else
               raise Ace::Support::Cli::Error, report["message"] || "start blocked"
             end

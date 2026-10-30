@@ -42,14 +42,13 @@ module Atoms
       end
     end
 
-    def test_lab_scope_reports_the_unimplemented_capability
-      error = assert_raises(Ace::Overseer::Error) do
-        Ace::Overseer::Atoms::StartContract.normalize(
-          config("scope" => "lab", "profile" => "overseer-default",
-            "instructions" => "wfi://overseer/start")
-        )
-      end
-      assert_match(/scope 'lab' is not implemented yet/, error.message)
+    def test_lab_scope_is_a_valid_scope_for_the_lab_start
+      plan = Ace::Overseer::Atoms::StartContract.normalize(
+        config("scope" => "lab", "profile" => "overseer-default",
+          "instructions" => "wfi://overseer/lab-start")
+      )
+
+      assert_equal "lab", plan["scope"]
     end
 
     def test_unknown_profile_reference_is_an_error

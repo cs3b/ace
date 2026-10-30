@@ -98,6 +98,25 @@ module Ace
       warn "ace-overseer: Could not load config: #{e.class} - #{e.message}" if debug?
       load_gem_defaults_fallback
     end
+
+    # Internal config read for a DIFFERENT directory (task 8xs.t.pu0.a):
+    # the lab start reads each project's own start configuration when it
+    # starts that project through the same operation as a standalone
+    # start. The global memoized config stays untouched; test-mode mocks
+    # are bypassed — a location-scoped read must see the REAL cascade.
+    # @param dir [String] directory whose cascade to read
+    # @return [Hash]
+    def self.config_at(dir)
+      Dir.chdir(dir) do
+        resolver = Ace::Support::Config.create(
+          config_dir: ".ace",
+          defaults_dir: ".ace-defaults",
+          gem_path: gem_root,
+          test_mode: false
+        )
+        resolver.resolve_namespace("overseer").data
+      end
+    end
     private_class_method :load_config
 
     def self.load_gem_defaults_fallback

@@ -44,12 +44,6 @@ module Ace
             raise Ace::Overseer::Error,
               "start scope must be one of: #{SCOPES.join(', ')} (got '#{scope}')"
           end
-          if scope == "lab"
-            raise Ace::Overseer::Error,
-              "start scope 'lab' is not implemented yet (planned with the " \
-                "lab-level start, step 8xs.t.pu0.a); this slice starts a " \
-                "single project overseer"
-          end
 
           profile_name = required(start, "profile")
           profile = profile_for(config, profile_name)
