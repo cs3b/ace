@@ -89,7 +89,9 @@ module Ace
         #
         # Unsatisfied runtime dependencies of the declared gem — the
         # concrete missing-dependency list readiness reports.
-        # @return [Array<String>] classified reasons (empty = closed)
+        # @return [Array(Symbol, Object)] [:ok, reasons] (empty reasons
+        #   = closed) or the failing probe's [:unknown/:failed,
+        #   message] — the same shape newer_versions returns.
         def closure_failures(name:, version:, gem_home:)
           queue = [[name, version]]
           seen = {}
@@ -100,11 +102,11 @@ module Ace
 
             seen[[current_name, current_version]] = true
             deps = runtime_dependencies(name: current_name, version: current_version, gem_home: gem_home)
-            return [deps] if deps.is_a?(String)
+            return [:failed, deps] if deps.is_a?(String)
 
             deps.each do |dep|
               kind, versions_or_message = runtime_versions(name: dep["name"], gem_home: gem_home)
-              return [versions_or_message] if kind != :ok
+              return [kind, versions_or_message] if kind != :ok
 
               satisfying = satisfying_versions(dep, versions_or_message)
               if satisfying.empty?
@@ -115,7 +117,7 @@ module Ace
               end
             end
           end
-          reasons
+          [:ok, reasons]
         end
 
         # Installed versions of `name` NEWER than the declared one —
@@ -374,8 +376,10 @@ module Ace
         # gem's own version, every other part is an additionally
         # installed version — both are present in the runtime, so the
         # normalized list carries the marked version in place of the
-        # marker. A present-but-unparseable line is a failed probe
-        # (nil, fail closed), never a guessed empty list.
+        # marker. Every candidate is validated by Gem::Version itself —
+        # platform-suffixed or otherwise malformed strings fail the
+        # probe (nil, fail closed) instead of crashing a later
+        # Gem::Version.new caller; never a guessed empty list.
         def parse_versions(out, name)
           line = out.lines.find { |candidate| candidate.start_with?("#{name} ") }
           return [] if line.nil?
@@ -387,7 +391,11 @@ module Ace
             default = part.match(/\Adefault: (\S+)\z/)
             default ? default[1] : part
           end
-          return nil unless versions.all? { |version| version.match?(/\A\d/) }
+          begin
+            versions.each { |version| Gem::Version.new(version) }
+          rescue ArgumentError
+            return nil
+          end
 
           versions
         end

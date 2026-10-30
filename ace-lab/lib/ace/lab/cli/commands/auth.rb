@@ -28,6 +28,8 @@ module Ace
           option :ttl, type: :integer, desc: "Requested TTL minutes (request)"
           option :cmd, type: :string, repeat: true,
             desc: "Exec command, one argument per repeat, in order (exec)"
+          option :force, type: :boolean, default: false,
+            desc: "Close a revoke-pending lease whose credential is gone (operator-forced terminal; revoke)"
           option :format, default: "table", desc: "Output format (table, json)"
           option :quiet, aliases: ["-q"], type: :boolean, default: false, desc: "Suppress non-essential output"
 
@@ -49,11 +51,17 @@ module Ace
               command = Array(options[:cmd])
               raise Ace::Support::Cli::Error.new("exec requires a command (--cmd, one argument per repeat)") if command.empty?
 
-              service.exec(lease_id: target, argv: command)
+              report = service.exec(lease_id: target, argv: command)
+              render(report, options[:format])
+              # The child's REAL exit code is the exec exit code — after
+              # the report is printed, so both outcomes stay visible.
+              exit(report["exit"]) unless report["exit"].zero?
+              report
             when "revoke"
               raise Ace::Support::Cli::Error, "revoke requires a lease id" if target.nil?
 
-              {"lease" => target, "cleanup" => service.revoke(lease_id: target).to_s}
+              {"lease" => target, "cleanup" => service.revoke(lease_id: target,
+                force: options[:force]).to_s}
             when "reconcile"
               {"reconciled" => service.reconcile}
             else
@@ -77,8 +85,10 @@ module Ace
             end
           end
 
-          def render(result, format)
-            puts format == "json" ? JSON.pretty_generate(result) : JSON.pretty_generate(result)
+          def render(result, _format)
+            # Both formats print the same structured JSON report: the
+            # data is the interface agents consume.
+            puts JSON.pretty_generate(result)
           end
         end
       end

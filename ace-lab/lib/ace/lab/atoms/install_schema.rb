@@ -401,7 +401,13 @@ module Ace
                   "account must reference a declared account")
               end
 
-              {"gem" => gem, "path" => path.strip, "account" => account}
+              {"gem" => gem, "path" => path, "account" => account}
+            end.tap do |extensions|
+              duplicates_of(extensions.map { |extension| extension["path"] }) do |_path|
+                raise_invalid_entry("gemset extensions",
+                  "path is declared more than once — a duplicate projection path would overwrite " \
+                    "another entry's receipt")
+              end
             end
           end
 
@@ -456,7 +462,7 @@ module Ace
             unless value.is_a?(String) && !value.strip.empty?
               raise_invalid_entry(section_name, "#{field} is required and must be a non-empty string")
             end
-            value
+            value.strip
           end
 
           def normalize_mode(raw)

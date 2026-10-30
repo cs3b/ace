@@ -14,9 +14,11 @@ module Ace
       # A profile declares: provider (forgejo|github|env), the roles and
       # principals allowed to request it, repos/scopes, ttl (default 30m,
       # max 60m unless the host sets an explicit profile limit), the
-      # expiry mode (provider | host-revoke | process), the handoff
-      # style, and REFERENCES to issuer credentials (paths — values stay
-      # in the host's protected store).
+      # expiry mode (provider | host-revoke | process), and REFERENCES
+      # to issuer credentials (paths — values stay in the host's
+      # protected store). The credential handoff is always the
+      # ephemeral per-lease file (CredentialHandoff) — there is no
+      # configurable handoff style.
       class ProfileSchema
         # The bundled providers; an explicitly registered plugin (tests,
         # host extensions) resolves through the registry at request
@@ -26,7 +28,7 @@ module Ace
         DEFAULT_TTL_MINUTES = 30
         DEFAULT_MAX_TTL_MINUTES = 60
         PROFILE_KEYS = %w[provider roles principals repos scopes ttl_minutes max_ttl_minutes
-          expiry_mode handoff issuer env_names].freeze
+          expiry_mode issuer env_names].freeze
 
         class << self
           # @param document [Hash] parsed authorization document
@@ -89,7 +91,6 @@ module Ace
              "repos" => repos, "scopes" => string_list(raw["scopes"], name, "scopes"),
              "ttl_minutes" => ttl, "max_ttl_minutes" => max_ttl,
              "expiry_mode" => expiry_mode,
-             "handoff" => raw["handoff"] || "file",
              "issuer" => raw["issuer"].is_a?(Hash) ? raw["issuer"] : {},
              "env_names" => string_list(raw["env_names"], name, "env_names")}
           end

@@ -103,7 +103,7 @@ module Ace
             "adapters" => check_adapters(manifest, executors),
             "tools" => check_tools(manifest, executors),
             "gems" => check_gems(manifest),
-            "extensions" => check_extensions(manifest)
+            "extensions" => check_extensions(manifest, entries)
           }
           flat = checks.values.flatten(1)
           {
@@ -621,36 +621,41 @@ module Ace
                 "over CLI activation; rerun ace-lab install"]
           end
 
-          closure = provisioner.closure_failures(
+          closure_kind, closure_or_message = provisioner.closure_failures(
             name: gem["name"], version: gem["version"], gem_home: gem_home
           )
-          return [FAIL, closure.join("; ")] unless closure.empty?
+          return [closure_kind == :unknown ? UNKNOWN : FAIL, closure_or_message] if closure_kind != :ok
+          return [FAIL, closure_or_message.join("; ")] unless closure_or_message.empty?
 
           [PASS, nil]
         end
 
         # Declared harness extension projections (task 8xs.t.pu0.0):
         # re-derived from the same receipts and installed gem trees the
-        # provisioner converges — the receipt must name the declared
-        # gem at its exact declared version, and every projected file
-        # must match the installed gem's handbook/extensions content.
-        def check_extensions(manifest)
+        # provisioner converges (shared ExtensionProjection helpers) —
+        # the receipt must name the declared gem at its exact declared
+        # version, every projected file must match the installed gem's
+        # handbook/extensions content, the destination must not escape
+        # the extensions directory through a symlinked component, and
+        # the projected files must grant the declared account read.
+        def check_extensions(manifest, entries)
           gemset = manifest["gemset"]
           gemset["extensions"].map do |entry|
             declared = gemset["gems"].find { |gem| gem["name"] == entry["gem"] }
             reason = if declared.nil?
               "extension source gem '#{entry["gem"]}' is not declared in the gemset"
             else
-              extension_reason(entry, declared, gemset["gem_home"])
+              extension_reason(entry, declared, gemset["gem_home"], entries[entry["account"]])
             end
             {"extension" => entry["gem"], "gem" => entry["gem"], "path" => entry["path"],
              "account" => entry["account"], "status" => reason ? FAIL : PASS, "reason" => reason}
           end
         end
 
-        def extension_reason(entry, declared, gem_home)
-          source_root = File.join(gem_home, "gems", "#{entry["gem"]}-#{declared["version"]}",
-            "handbook", "extensions")
+        def extension_reason(entry, declared, gem_home, account_entry)
+          source_root = Molecules::ExtensionProjection.gem_source_root(
+            gem_home, entry["gem"], declared["version"]
+          )
           return "gem '#{entry["gem"]}' #{declared["version"]} is not installed with a " \
             "handbook/extensions tree in '#{gem_home}'; rerun ace-lab install" unless File.directory?(source_root)
 
@@ -663,6 +668,9 @@ module Ace
             receipt = JSON.parse(File.read(receipt_path))
           rescue JSON::ParserError
             return "extension projection receipt '#{receipt_path}' is not valid JSON; rerun ace-lab install"
+          rescue Errno::EACCES, Errno::ENOENT
+            return "extension projection receipt '#{receipt_path}' is not readable; " \
+              "rerun ace-lab install"
           end
           if receipt["gem"] != entry["gem"] || receipt["version"] != declared["version"]
             return "extension projection at '#{entry["path"]}' was projected from " \
@@ -670,12 +678,22 @@ module Ace
               "'#{entry["gem"]} #{declared["version"]}'; rerun ace-lab install"
           end
 
-          expected = Dir.glob(File.join(source_root, "**", "*")).select { |path| File.file?(path) }
-            .to_h { |path| [path.delete_prefix("#{source_root}/"), path] }
+          expected = Molecules::ExtensionProjection.source_files(source_root)
           listed = receipt.fetch("files", [])
           if listed.sort != expected.keys.sort
             return "extension projection at '#{entry["path"]}' lists different files than " \
               "gem '#{entry["gem"]}' #{declared["version"]} carries; rerun ace-lab install"
+          end
+
+          # A destination that escapes the extensions directory through
+          # a symlinked component is refused before any comparison (the
+          # same validate_destination posture convergence applies).
+          begin
+            expected.each_key do |relative|
+              Molecules::ExtensionProjection.validate_destination!(entry["path"], relative)
+            end
+          rescue Ace::Lab::Error => e
+            return "#{e.message}; rerun ace-lab install"
           end
 
           mismatch = expected.find do |relative, source|
@@ -685,7 +703,28 @@ module Ace
           return "extension projection file '#{mismatch.first}' differs from gem " \
             "'#{entry["gem"]}' #{declared["version"]}; rerun ace-lab install" if mismatch
 
+          # Declared-account readability (stat-based — the verifier
+          # does not run as the declared account): a projected file is
+          # readable when it is world-readable, or owner-readable AND
+          # owned by the declared account's uid.
+          unreadable = expected.keys.find do |relative|
+            unreadable_reason(File.join(entry["path"], relative), account_entry)
+          end
+          return "extension projection file '#{unreadable}' is not readable by the declared " \
+            "account '#{entry["account"]}'; rerun ace-lab install" if unreadable
+
           nil
+        end
+
+        def unreadable_reason(path, account_entry)
+          stat = lstat(path)
+          return true if stat.nil? || !stat.file? || stat.symlink?
+
+          mode = stat.mode & 0o777
+          return false if (mode & 0o004) != 0 # world-readable
+          return false if (mode & 0o400) != 0 && account_entry && stat.uid == account_entry.uid
+
+          true
         end
 
         def gem_version_reason(gem, versions, gem_home)

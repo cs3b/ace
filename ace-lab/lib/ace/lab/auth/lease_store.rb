@@ -1,9 +1,10 @@
-# frozen_string_string: true
 # frozen_string_literal: true
 
 require "securerandom"
 require "json"
 require "fileutils"
+require "digest"
+require "time"
 
 module Ace
   module Lab
@@ -42,13 +43,17 @@ module Ace
         # live: a revoke-pending record (an interrupted issue or a lost
         # revoke) was never (or is no longer) a usable grant — a retry
         # mints a fresh lease while reconcile finishes the pending one.
-        # A finished or scope-changed correlation does not match either.
+        # A finished or scope-changed correlation does not match, and
+        # DEADLINE-AWARENESS is part of the match: an issued record
+        # past its use_until/provider expiry is not returned, so a
+        # retry mints a fresh grant while reconcile retires the expired
+        # one — an expired grant is never handed back as "live".
         def find_live(task:, assignment:, profile:, role:)
           all.filter_map do |lease|
             next unless lease["task"] == task && lease["assignment"] == assignment &&
               lease["profile"] == profile && lease["role"] == role &&
               lease["state"] == "issued"
-            lease
+            lease if live?(lease)
           end.min_by { |lease| lease["requested_at"].to_s }
         end
 
@@ -98,6 +103,20 @@ module Ace
           File.rename(temporary, path)
           FileUtils.chmod(0o600, path)
           lease
+        end
+
+        # One request flow at a time per correlation (task/assignment/
+        # profile/role): a BLOCKING exclusive lock on the correlation's
+        # lockfile so the find_live + create + issue sequence is atomic
+        # against a concurrent identical request — the second caller
+        # waits and then returns the first caller's live lease.
+        def with_correlation_lock(task:, assignment:, profile:, role:)
+          FileUtils.mkdir_p(@dir)
+          key = Digest::SHA256.hexdigest([task, assignment, profile, role].join("\e"))
+          File.open(File.join(@dir, "correlation-#{key}.lock"), File::CREAT | File::RDWR) do |lock|
+            lock.flock(File::LOCK_EX)
+            yield
+          end
         end
 
         # One exec at a time per lease: an exclusive lock on the lease's

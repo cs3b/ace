@@ -173,8 +173,9 @@ module Ace
             end
           end
 
-          Molecules::ExtensionProvisioner.new(gem_home: runtime["gem_home"], dry_run: dry_run)
-            .call(extensions: entries, gems: runtime["gems"])
+          Molecules::ExtensionProvisioner.new(
+            gem_home: runtime["gem_home"], dry_run: dry_run, account_lookup: @account_lookup
+          ).call(extensions: entries, gems: runtime["gems"])
         end
 
         def available_accounts(account_reports)

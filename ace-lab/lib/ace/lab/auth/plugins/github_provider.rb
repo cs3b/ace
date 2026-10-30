@@ -3,6 +3,7 @@
 require "json"
 require "openssl"
 require "base64"
+require "tempfile"
 
 module Ace
   module Lab
@@ -39,15 +40,24 @@ module Ace
             raise Providers::RefusedError, "app key file '#{key_file}' is not readable" unless File.readable?(key_file)
 
             jwt = app_jwt(app_id, File.read(key_file))
-            payload = JSON.generate({"repositories" => lease.fetch("repos"),
+            repos = lease.fetch("repos")
+            if repos.empty?
+              raise Providers::RefusedError,
+                "an empty repository list would mint a token for ALL installation " \
+                "repositories — refuse before issuing"
+            end
+
+            payload = JSON.generate({"repositories" => repos,
               "permissions" => github_permissions(profile.fetch("scopes"))}.compact)
-            result = @runner.call(
-              ["curl", "-sS", "-f", "-X", "POST",
-                "#{base}/app/installations/#{installation}/access_tokens",
-                "-H", "Accept: application/vnd.github+json",
-                "-H", "Authorization: Bearer #{jwt}",
-                "-d", payload]
-            )
+            result = with_secret_header("Authorization: Bearer #{jwt}") do |header|
+              @runner.call(
+                ["curl", "-sS", "-f", "-X", "POST",
+                  "#{base}/app/installations/#{installation}/access_tokens",
+                  "-H", "Accept: application/vnd.github+json",
+                  *header,
+                  "-d", payload]
+              )
+            end
             body = JSON.parse(result)
             token = body["token"] or raise Providers::TransientError, "github did not return an installation token"
             {"token" => token, "token_ref" => body["id"].to_s,
@@ -75,12 +85,14 @@ module Ace
 
             issuer = profile.fetch("issuer")
             base = issuer["api_url"] || "https://api.github.com"
-            _out, err, status = @capture.call(
-              ["curl", "-sS", "-f", "-X", "DELETE",
-                "#{base}/installation/token",
-                "-H", "Accept: application/vnd.github+json",
-                "-H", "Authorization: Bearer #{token}"]
-            )
+            _out, err, status = with_secret_header("Authorization: Bearer #{token}") do |header|
+              @capture.call(
+                ["curl", "-sS", "-f", "-X", "DELETE",
+                  "#{base}/installation/token",
+                  "-H", "Accept: application/vnd.github+json",
+                  *header]
+              )
+            end
             return :revoked if status.success?
 
             if err.to_s.match?(/\b401\b/)
@@ -95,13 +107,28 @@ module Ace
 
           private
 
-          # Profile scopes map onto installation token permissions
-          # (read/write per subject); the deployment's App installation
-          # must already grant them — the request cannot widen rights.
+          # The Authorization secret NEVER appears in curl argv (visible
+          # in ps): the header value lives in a 0600 ephemeral file for
+          # the duration of one request, passed as `curl -H @file`.
+          def with_secret_header(header)
+            Tempfile.create("ace-lab-curl-header") do |file|
+              file.chmod(0o600)
+              file.write("#{header}\n")
+              file.close
+              yield ["-H", "@#{file.path}"]
+            end
+          end
+
+          # Profile scopes map onto installation token permissions as
+          # `level:subject` strings (e.g. `write:repository` →
+          # {"repository" => "write"}); the deployment's App
+          # installation must already grant them — the request cannot
+          # widen rights.
           def github_permissions(scopes)
             scopes.to_h do |scope|
-              subject, level = scope.split(":", 2)
-              [subject, level || "read"]
+              level, subject = scope.split(":", 2)
+              subject, level = scope, "read" if subject.nil?
+              [subject, level]
             end
           end
 

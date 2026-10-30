@@ -692,19 +692,27 @@ Contract highlights:
 - TTL: default 30m, max 60m unless the host sets an explicit profile limit;
   exceeding the limit is a REFUSAL, never a silent clip. Status always shows
   the actual use-until and — separately — the provider-guaranteed expiry.
-- exec preserves the child's exit code; on process success a cleanup failure
-  is itself an error and the report carries both outcomes; one exec at a time
-  per lease; normal end/cancel revokes immediately, a SIGKILL'd executor is
-  cleaned up no later than the recorded deadline (host scheduler) and
-  `reconcile` resolves interrupted cycles.
+- exec preserves the child's exit code and EXITS with it (`ace-lab auth exec`
+  returns the child's code after printing the report); on process success a
+  cleanup failure is itself an error and the report carries both outcomes;
+  one exec at a time per lease; normal end/cancel revokes immediately, a
+  SIGKILL'd executor is cleaned up no later than the recorded deadline (host
+  scheduler) and `reconcile` resolves interrupted cycles.
 - Refusals are non-zero with a reason and the escalation addressee; there is
   no fallback identity. A network-shaped revoke stays visibly
   `revoke-pending` — a revocation is never claimed before the provider
-  confirms it.
+  confirms it. A revoke-pending lease whose credential file is already gone
+  can be closed by an explicit operator decision (`ace-lab auth revoke
+  LEASE --force` → forced-terminal with the unconfirmed outcome recorded),
+  never silently marked revoked.
 - Plugins (explicit registry, like the ace-git providers): `forgejo` (one
   scoped token per lease on the configured role account; revoke deletes that
   exact token id — never a prefix wipe), `github` (App JWT → installation
   token for chosen repos/permissions with the real `expires_at`; DELETE to
   revoke; 401 = already invalid), `env` (named values of configured safe
   sources, process-scoped only — a standalone env profile cannot declare
-  remote expiry/revoke).
+  remote expiry/revoke). Scopes are `level:subject` strings for every
+  provider (`write:repository`, `read:organization`); for github they map to
+  installation-token permissions (`write:repository` →
+  `{"repository": "write"}`). Provider Authorization headers travel in 0600
+  ephemeral files (`curl -H @file`), never in argv visible to `ps`.

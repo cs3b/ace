@@ -953,6 +953,90 @@ module Organisms
       end
     end
 
+    # 8xth38bv: projected extension files must grant the DECLARED
+    # account read — judged stat-based (mode bits), never by running
+    # as the declared account.
+    def test_extension_projection_unreadable_for_declared_account_blocks_readiness
+      Dir.mktmpdir do |gemdir|
+        gem_home = File.join(gemdir, "runtime")
+        source = File.join(gem_home, "gems", "ace-wake-probe-0.1.0", "handbook", "extensions")
+        FileUtils.mkdir_p(File.join(source, "ace-wake-probe"))
+        File.write(File.join(source, "ace-wake-probe", "index.js"), "// entry\n")
+        target = File.join(gemdir, "pi-extensions")
+
+        with_lab(extra_manifest: extension_manifest(gem_home, target)) do |fixture|
+          Ace::Lab::Molecules::ExtensionProvisioner.new(gem_home: gem_home).call(
+            extensions: [{"gem" => "ace-wake-probe", "path" => target, "account" => "ace-worker"}],
+            gems: [{"name" => "ace-wake-probe", "version" => "0.1.0"}]
+          )
+          # owner-only read, and the declared account is NOT the owner
+          # (verify must judge from the mode bits, not its own uid)
+          foreign = FakeEntry.new(name: "ace-worker", uid: Process.uid + 99, gid: Process.gid,
+            dir: fixture["home"], shell: "/bin/zsh")
+          FileUtils.chmod(0o600, File.join(target, "ace-wake-probe", "index.js"))
+
+          report = verify_run(fixture, lookup: ->(name) { name == "ace-worker" ? foreign : nil })
+
+          ext_check = check(report, "extensions")
+          assert_equal "fail", ext_check["status"]
+          assert_match(/is not readable by the declared account 'ace-worker'/, ext_check["reason"])
+        end
+      end
+    end
+
+    # 8xth38bt: a projection destination that escapes the extensions
+    # directory through a symlinked component fails the check before
+    # any content comparison.
+    def test_extension_projection_symlink_escape_blocks_readiness
+      Dir.mktmpdir do |gemdir|
+        gem_home = File.join(gemdir, "runtime")
+        source = File.join(gem_home, "gems", "ace-wake-probe-0.1.0", "handbook", "extensions")
+        FileUtils.mkdir_p(File.join(source, "ace-wake-probe"))
+        File.write(File.join(source, "ace-wake-probe", "index.js"), "// entry\n")
+        target = File.join(gemdir, "pi-extensions")
+
+        with_lab(extra_manifest: extension_manifest(gem_home, target)) do |fixture|
+          Ace::Lab::Molecules::ExtensionProvisioner.new(gem_home: gem_home).call(
+            extensions: [{"gem" => "ace-wake-probe", "path" => target, "account" => "ace-worker"}],
+            gems: [{"name" => "ace-wake-probe", "version" => "0.1.0"}]
+          )
+          FileUtils.rm_rf(File.join(target, "ace-wake-probe"))
+          File.symlink(source, File.join(target, "ace-wake-probe")) # same content, escapes anyway
+
+          report = verify_run(fixture)
+          ext_check = check(report, "extensions")
+          assert_equal "fail", ext_check["status"]
+          assert_match(/symlinked path component would escape the projection directory/, ext_check["reason"])
+        end
+      end
+    end
+
+    # 8xth38bz: an unreadable receipt (EACCES) degrades to a classified
+    # verify failure, never a crash.
+    def test_extension_projection_unreadable_receipt_is_a_classified_failure
+      Dir.mktmpdir do |gemdir|
+        gem_home = File.join(gemdir, "runtime")
+        source = File.join(gem_home, "gems", "ace-wake-probe-0.1.0", "handbook", "extensions")
+        FileUtils.mkdir_p(File.join(source, "ace-wake-probe"))
+        File.write(File.join(source, "ace-wake-probe", "index.js"), "// entry\n")
+        target = File.join(gemdir, "pi-extensions")
+
+        with_lab(extra_manifest: extension_manifest(gem_home, target)) do |fixture|
+          Ace::Lab::Molecules::ExtensionProvisioner.new(gem_home: gem_home).call(
+            extensions: [{"gem" => "ace-wake-probe", "path" => target, "account" => "ace-worker"}],
+            gems: [{"name" => "ace-wake-probe", "version" => "0.1.0"}]
+          )
+          FileUtils.chmod(0o000, File.join(target,
+            Ace::Lab::Molecules::ExtensionProvisioner::RECEIPT_NAME))
+
+          report = verify_run(fixture)
+          ext_check = check(report, "extensions")
+          assert_equal "fail", ext_check["status"]
+          assert_match(/receipt .* is not readable/, ext_check["reason"])
+        end
+      end
+    end
+
     def test_gem_probe_without_gem_executable_is_unknown_and_does_not_block
       Dir.mktmpdir do |dir|
         gem_home = File.join(dir, "runtime")

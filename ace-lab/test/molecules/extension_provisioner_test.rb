@@ -150,5 +150,77 @@ module Molecules
         assert_match(/is not installed in runtime/, report["message"])
       end
     end
+
+    # 8xth38bs: a fresh-lab dry run predicts the projection (the gem
+    # phase predicts would_install for the same missing gem) instead
+    # of reporting a failure the wet run would not produce.
+    def test_dry_run_predicts_projection_when_the_source_gem_is_absent
+      Dir.mktmpdir do |dir|
+        gem_home = File.join(dir, "gems")
+        FileUtils.mkdir_p(gem_home)
+        target = File.join(dir, "extensions")
+
+        report = provisioner(gem_home, dry_run: true).call(
+          extensions: [entry(target)], gems: [{"name" => "ace-wake", "version" => "0.1.0"}]
+        ).first
+
+        assert_equal "would_project", report["status"]
+        assert_equal "0.1.0", report["version"]
+        assert_equal true, report["restart_required"]
+        assert_nil report["message"]
+        refute File.exist?(target), "dry-run must not create the projection"
+      end
+    end
+
+    # 8xth38bt: a destination component that is a symlink (and would
+    # escape the extensions directory) is refused before any write —
+    # in wet AND dry runs (the wet run would refuse the same way).
+    def test_symlinked_destination_component_is_refused_before_writes
+      Dir.mktmpdir do |dir|
+        gem_home = File.join(dir, "gems")
+        FileUtils.mkdir_p(gem_home)
+        installed_gem(gem_home, "ace-wake", "0.1.0", {"ace-wake/index.js" => "// entry\n"})
+        target = File.join(dir, "extensions")
+        FileUtils.mkdir_p(target)
+        File.symlink(dir, File.join(target, "ace-wake")) # escapes via symlink
+        gems = [{"name" => "ace-wake", "version" => "0.1.0"}]
+
+        wet = provisioner(gem_home).call(extensions: [entry(target)], gems: gems).first
+        assert_equal "failed", wet["status"]
+        assert_match(/symlinked path component would escape the projection directory/, wet["message"])
+        refute File.exist?(File.join(dir, "index.js")), "nothing may be written through the symlink"
+
+        dry = provisioner(gem_home, dry_run: true).call(extensions: [entry(target)], gems: gems).first
+        assert_equal "failed", dry["status"]
+        assert_match(/symlinked path component would escape/, dry["message"])
+      end
+    end
+
+    # 8xth38bv: projection converges file mode/ownership — a drifted
+    # mode is converged back even when the content is unchanged.
+    def test_projection_converges_owner_read_write_mode
+      Dir.mktmpdir do |dir|
+        gem_home = File.join(dir, "gems")
+        FileUtils.mkdir_p(gem_home)
+        installed_gem(gem_home, "ace-wake", "0.1.0", {"ace-wake/index.js" => "// entry\n"})
+        target = File.join(dir, "extensions")
+        gems = [{"name" => "ace-wake", "version" => "0.1.0"}]
+        lookup = ->(name) { FakeEntry.new(name: name, uid: Process.uid, gid: Process.gid) }
+        options = {extensions: [entry(target)], gems: gems}
+
+        Ace::Lab::Molecules::ExtensionProvisioner.new(gem_home: gem_home, account_lookup: lookup)
+          .call(**options)
+        projected = File.join(target, "ace-wake", "index.js")
+        assert_equal 0o644, File.stat(projected).mode & 0o777
+
+        FileUtils.chmod(0o600, projected) # drift: no world read
+        report = Ace::Lab::Molecules::ExtensionProvisioner.new(gem_home: gem_home, account_lookup: lookup)
+          .call(**options).first
+
+        assert_equal "unchanged", report["status"]
+        assert_equal 0o644, File.stat(projected).mode & 0o777
+        assert_equal Process.uid, File.stat(projected).uid
+      end
+    end
   end
 end

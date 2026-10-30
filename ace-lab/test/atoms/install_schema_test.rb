@@ -525,5 +525,35 @@ module Atoms
 
       assert_equal "1.0.0.pre.1", result["gemset"]["gems"].first["version"]
     end
+
+    # 8xth38c0: required_string strips every field, not only paths —
+    # extension gem/account declarations normalize without whitespace.
+    def test_gemset_extensions_strip_gem_and_account_fields
+      result = normalize(manifest("gemset" => {
+        "gem_home" => "/opt/lab/gems",
+        "gems" => [{"name" => "ace-wake", "version" => "0.1.0"}],
+        "extensions" => [{"gem" => " ace-wake ", "path" => " /opt/ext ", "account" => " ace-worker "}]
+      }))
+
+      assert_equal [{"gem" => "ace-wake", "path" => "/opt/ext", "account" => "ace-worker"}],
+        result["gemset"]["extensions"]
+    end
+
+    # 8xth38bu: a duplicate extension path would overwrite the first
+    # entry's receipt — rejected with a schema error.
+    def test_gemset_extensions_reject_duplicate_paths
+      error = assert_raises(Ace::Lab::InvalidConfigurationError) do
+        normalize(manifest("gemset" => {
+          "gem_home" => "/opt/lab/gems",
+          "gems" => [{"name" => "ace-wake", "version" => "0.1.0"}],
+          "extensions" => [
+            {"gem" => "ace-wake", "path" => "/opt/ext", "account" => "ace-worker"},
+            {"gem" => "ace-wake", "path" => "/opt/ext", "account" => "ace-worker"}
+          ]
+        }))
+      end
+
+      assert_match(/gemset extensions entry path is declared more than once/, error.message)
+    end
   end
 end

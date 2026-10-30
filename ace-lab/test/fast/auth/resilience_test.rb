@@ -3,13 +3,16 @@
 require_relative "../../test_helper"
 require "ace/lab/auth"
 
-module Auth
-  # Crash-boundary matrix for the lease lifecycle (task 8xs.t.pu0.f):
-  # issue interrupted before handoff, an unknown issue outcome, a
-  # SIGKILL'd executor, and a network loss during revoke — every recovery
-  # continues the right stage without a second active grant, a silent
-  # success, or a blind replay.
-  class ResilienceTest < Minitest::Test
+module Ace
+  module Lab
+    module Auth
+      # Crash-boundary matrix for the lease lifecycle (task 8xs.t.pu0.f):
+      # issue interrupted before handoff, an unknown issue outcome, a
+      # SIGKILL'd executor, a network loss during revoke, an expired
+      # grant reuse, and a stuck revoke-pending with a lost credential —
+      # every recovery continues the right stage without a second active
+      # grant, a silent success, or a blind replay.
+      class ResilienceTest < Minitest::Test
     class FlakyProvider
       attr_accessor :issue_fails, :revoke_fails, :issued, :revoked
 
@@ -67,6 +70,7 @@ module Auth
 
     def teardown
       FileUtils.remove_entry(@dir) if @dir
+      Providers.reset!
     end
 
     def service
@@ -193,5 +197,59 @@ module Auth
         assert_includes @flaky.revoked, interrupted["token_ref"]
       end
     end
+
+    # 8xti21n3: an ISSUED record past its use_until must not be handed
+    # back by find_live as "live" — a retry mints a fresh grant while
+    # reconcile retires the expired one (never two live grants).
+    def test_expired_lease_is_not_reused_by_a_retry_and_reconcile_retires_it
+      svc = service
+      expired = svc.request(profile_name: "developer", role: "developer",
+        task: "t", assignment: "a", repos: %w[ace])
+      svc.store.update(expired["id"]) { |record| record["use_until"] = "2020-01-01T00:00:00Z" }
+
+      refute svc.store.live?(svc.store.load(expired["id"]))
+      assert_nil svc.store.find_live(task: "t", assignment: "a",
+        profile: "developer", role: "developer"),
+        "find_live is deadline-aware: the expired grant is not returned"
+
+      fresh = svc.request(profile_name: "developer", role: "developer",
+        task: "t", assignment: "a", repos: %w[ace])
+      refute_equal expired["id"], fresh["id"], "a fresh grant replaces the expired one"
+      assert_equal "issued", fresh["state_detail"]
+      assert_equal 2, @flaky.issued.size
+      assert_equal 1, svc.store.all.count { |record| svc.store.live?(record) },
+        "exactly one live grant after expiry + retry"
+
+      entry = svc.reconcile.find { |item| item["lease"] == expired["id"] }
+      assert_equal "revoked", entry["reconciled"], "reconcile retires the expired lease"
+    end
+
+    # 8xtiatf1: a revoke-pending lease whose credential file is gone
+    # cannot present the token to the provider ever again — the
+    # operator's explicit --force closes it as forced-terminal without
+    # ever CLAIMING the provider confirmed the revocation.
+    def test_force_revoke_closes_a_pending_lease_whose_credential_is_gone
+      svc = service
+      lease = svc.request(profile_name: "developer", role: "developer",
+        task: "t", assignment: "a", repos: %w[ace])
+      @flaky.revoke_fails = 1
+      assert_match(/revoke-pending/, svc.revoke(lease_id: lease["id"]).to_s)
+      File.delete(Dir.glob(File.join(@dir, "credentials", "*")).first)
+
+      # without the operator force it stays a visible pending open item
+      @flaky.revoke_fails = 1
+      assert_match(/revoke-pending/, svc.revoke(lease_id: lease["id"]).to_s)
+      assert_equal "revoke-pending", svc.status(lease_id: lease["id"])["state"]
+
+      forced = svc.revoke(lease_id: lease["id"], force: true)
+      assert_equal :forced_terminal, forced
+      record = svc.store.load(lease["id"])
+      assert_equal "revoked", record["state"]
+      assert_equal "forced-terminal", record["cleanup"]["result"]
+      assert_match(/outcome unconfirmed/, record["cleanup"]["note"],
+        "the unconfirmed provider outcome stays recorded")
+    end
   end
+end
+end
 end

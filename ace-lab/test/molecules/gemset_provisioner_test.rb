@@ -191,6 +191,22 @@ module Molecules
       end
     end
 
+    # 8xtiatf5: a candidate that Gem::Version itself rejects (e.g. a
+    # platform-suffixed string) fails the probe CLOSED — it must never
+    # reach a later Gem::Version.new caller as a "version".
+    def test_platform_suffixed_version_fails_the_probe_closed
+      runner = FakeRunner.new([raw_listing("some-gem", ["1.0-x86_64-linux"])])
+      Dir.mktmpdir do |dir|
+        gem_home = File.join(dir, "gems")
+        FileUtils.mkdir_p(gem_home)
+        kind, outcome = Ace::Lab::Molecules::GemsetProvisioner.new(runner: runner)
+          .runtime_versions(name: "some-gem", gem_home: gem_home)
+
+        assert_equal :failed, kind
+        assert_match(/could not determine installed versions/, outcome)
+      end
+    end
+
     def test_mixed_default_and_installed_versions_list_both_plain_versions
       runner = FakeRunner.new([raw_listing("json", ["2.9.4", "default: 2.9.1"])] * 2)
       Dir.mktmpdir do |dir|
@@ -562,13 +578,33 @@ module Molecules
         FileUtils.mkdir_p(gem_home)
         provisioner = Ace::Lab::Molecules::GemsetProvisioner.new(runner: runner)
 
-        reasons = provisioner.closure_failures(name: "ace-lab", version: "0.13.0", gem_home: gem_home)
+        kind, reasons = provisioner.closure_failures(name: "ace-lab", version: "0.13.0", gem_home: gem_home)
+        assert_equal :ok, kind
         assert_equal 1, reasons.size
         assert_match(/dependency 'json \(~> 2\.7\)'.*not satisfied/, reasons.first)
 
         kind, newer = provisioner.newer_versions(name: "ace-lab", declared_version: "0.13.0", gem_home: gem_home)
         assert_equal :ok, kind
         assert_equal %w[0.14.0], newer
+      end
+    end
+
+    # 8xth38c4: closure_failures returns the SAME status-tuple shape
+    # newer_versions returns — probe failures surface as
+    # [:unknown/:failed, message], never a bare message list.
+    def test_closure_failures_reports_probe_failures_as_status_tuples
+      runner = FakeRunner.new([
+        dependency_listing("ace-lab", "0.13.0", {"json" => "~> 2.7"}),
+        {"status" => "enoent", "out" => "", "err" => ""} # json probe: no gem executable
+      ])
+      Dir.mktmpdir do |dir|
+        gem_home = File.join(dir, "gems")
+        FileUtils.mkdir_p(gem_home)
+        provisioner = Ace::Lab::Molecules::GemsetProvisioner.new(runner: runner)
+
+        kind, message = provisioner.closure_failures(name: "ace-lab", version: "0.13.0", gem_home: gem_home)
+        assert_equal :unknown, kind
+        assert_match(/gem not found in PATH/, message)
       end
     end
   end

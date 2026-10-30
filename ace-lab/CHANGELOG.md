@@ -14,6 +14,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   a LIVE grant — a retry after an interrupted issue returned the dead grant
   instead of minting a fresh one. Only an ISSUED record inside its deadlines
   is live; the interrupted record stays a visible open item for reconcile.
+- Auth service hardening (PR #398 review round 8xthaf): the provider and its
+  expiry capability are resolved BEFORE any lease record exists (no orphaned
+  records); an empty repository intersection is refused before issuing (an
+  empty `repositories` payload means ALL repos provider-side — the github and
+  forgejo plugins refuse it too); TTL must be a positive integer; concurrent
+  identical requests serialize through a per-correlation lock (one token, not
+  two); `find_live` is deadline-aware (an expired grant is never returned as
+  live); exec refuses a live lease without its delivered credential; revoke
+  and reconcile degrade cleanly when the profile was removed from the
+  authorization document; a revoke-pending lease whose credential is gone can
+  be closed by an explicit operator `revoke --force` (forced-terminal, never
+  a claimed revocation); exec preserves and EXITS with the child's real exit
+  code; status never prints `token_ref`; provider Authorization headers live
+  in 0600 ephemeral files (`curl -H @file`), never in argv visible to `ps`;
+  github scopes are correctly oriented `level:subject` (`write:repository` →
+  `{"repository" => "write"}` installation permission).
+- Installer robustness: `gemset_provisioner` validates every parsed version
+  with `Gem::Version` itself (platform-suffixed strings fail the probe closed)
+  and normalizes default-gem `default: V` markers from real `gem list` output;
+  `ProjectLocations` reads the lab configuration by explicit path (no
+  `Dir.chdir`) and returns nil for nil/blank project path encodings instead
+  of raising.
 
 ### Added
 
@@ -32,9 +54,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   process-scoped values; standalone env cannot declare remote expiry).
 - Canonical owner map (docs/lab-flow.md) and ADR-034 amendment for the
   Captain-approved lease record and handoff channel.
-
-### Added
-
+- `ProjectLocations` internal molecule (task 8xs.t.pu0.a): the lab-level
+  start reads the configured projects' canonical locations from the raw
+  topology cascade document — never derived from a public id or repo name.
 - Gem-set dependency closure convergence: missing transitive runtime dependencies
   (e.g. `json`) are installed at the parent requirement even when the parent version
   already figures in `gem list`; unsatisfiable dependencies are classified failures

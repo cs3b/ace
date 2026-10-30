@@ -24,25 +24,30 @@ module Ace
         # @raise [Ace::Lab::InvalidConfigurationError] the topology
         #   configuration could not be read or has no project list
         def self.read(lab_root)
-          Dir.chdir(lab_root) do
-            document = YAML.safe_load_file(".ace/lab/config.yml",
-              permitted_classes: [Date], aliases: true)
-            unless document.is_a?(Hash)
-              raise Ace::Lab::InvalidConfigurationError, ".ace/lab/config.yml must be a mapping"
-            end
-
-            raw = document.dig("topology", "projects")
-            unless raw.is_a?(Array)
-              raise Ace::Lab::InvalidConfigurationError,
-                "topology.projects must be a list in .ace/lab/config.yml"
-            end
-
-            raw.map do |entry|
-              next {"id" => nil, "path" => nil} unless entry.is_a?(Hash)
-
-              {"id" => entry["id"].to_s, "path" => entry["path"].to_s}
-            end.sort_by { |project| project["id"].to_s }
+          config_path = File.join(lab_root, ".ace/lab/config.yml")
+          document = YAML.safe_load_file(config_path,
+            permitted_classes: [Date], aliases: true)
+          unless document.is_a?(Hash)
+            raise Ace::Lab::InvalidConfigurationError, ".ace/lab/config.yml must be a mapping"
           end
+
+          raw = document.dig("topology", "projects")
+          unless raw.is_a?(Array)
+            raise Ace::Lab::InvalidConfigurationError,
+              "topology.projects must be a list in .ace/lab/config.yml"
+          end
+
+          raw.map do |entry|
+            next {"id" => nil, "path" => nil} unless entry.is_a?(Hash)
+
+            # A nil/blank path encoding is returned as a nil path (the
+            # project's OWN start reports the concrete error) — never a
+            # bogus empty-string path, never an exception. The config is
+            # read by explicit path: no global cwd mutation.
+            path = entry["path"]
+            path = nil unless path.is_a?(String) && !path.strip.empty?
+            {"id" => entry["id"].to_s, "path" => path}
+          end.sort_by { |project| project["id"].to_s }
         rescue Errno::ENOENT
           raise Ace::Lab::InvalidConfigurationError,
             "no lab configuration at #{lab_root}/.ace/lab/config.yml; run " \

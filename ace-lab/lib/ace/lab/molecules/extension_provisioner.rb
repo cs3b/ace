@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 require_relative "../errors"
+require_relative "extension_projection"
+require "etc"
 require "fileutils"
 require "json"
 
@@ -27,14 +29,19 @@ module Ace
       # installer REPORTS the restart need, it never restarts an
       # executor on its own.
       class ExtensionProvisioner
-        RECEIPT_NAME = ".ace-lab-extension-projection.json"
+        RECEIPT_NAME = ExtensionProjection::RECEIPT_NAME
+        FILE_MODE = 0o644
+        DIR_MODE = 0o755
 
         # @param gem_home [String] target runtime the gems were
         #   converged into
         # @param dry_run [Boolean] predict without writing
-        def initialize(gem_home:, dry_run: false)
+        # @param account_lookup [Proc, nil] passwd lookup seam for the
+        #   declared accounts (projection ownership convergence)
+        def initialize(gem_home:, dry_run: false, account_lookup: nil)
           @gem_home = gem_home
           @dry_run = dry_run
+          @account_lookup = account_lookup || method(:lookup_passwd)
         end
 
         # @param extensions [Array<Hash>] normalized manifest gemset
@@ -54,26 +61,37 @@ module Ace
         def converge(entry, gems)
           declared = gems.find { |gem| gem["name"] == entry["gem"] }
           version = declared && declared["version"]
-          source = version && gem_source_root(entry["gem"], version)
+          source = version && ExtensionProjection.gem_source_root(@gem_home, entry["gem"], version)
 
           if source.nil?
+            # Fresh-lab dry run (the gem phase predicts would_install
+            # for the same missing gem): predict the projection the
+            # converged gem would feed instead of reporting a failure
+            # the wet run would not produce.
+            if @dry_run
+              return entry_report(entry, version, "would_project", nil, true, [])
+            end
             return failed(entry, version,
               "gem '#{entry["gem"]}' is not installed in runtime '#{@gem_home}' at declared " \
-              "version '#{version}'; converge the gemset first (ace-lab install)")
+                "version '#{version}'; converge the gemset first (ace-lab install)")
           end
 
-          expected = source_files(source)
+          expected = ExtensionProjection.source_files(source)
           if expected.empty?
             return failed(entry, version,
               "gem '#{entry["gem"]}' #{version} carries no handbook/extensions tree")
           end
 
           output_dir = entry["path"]
+          escape = projection_escape_reason(output_dir, expected.keys)
+          return failed(entry, version, escape) if escape
+
           receipt = read_receipt(output_dir)
           loaded_version = receipt && receipt["gem"] == entry["gem"] ? receipt["version"] : nil
 
           changed = projection_changed?(output_dir, expected, receipt, version)
           if !changed
+            converge_modes(output_dir, expected, entry)
             return entry_report(entry, version, "unchanged", loaded_version, false,
               receipt ? receipt.fetch("files") : expected.keys)
           end
@@ -83,6 +101,10 @@ module Ace
 
           project(output_dir, expected, entry, version)
           entry_report(entry, version, "projected", loaded_version, true, expected.keys)
+        rescue SystemCallError => e
+          failed(entry, version,
+            "extension projection into '#{output_dir}' failed (#{e.class.name}); " \
+              "rerun ace-lab prepare with sudo or adjust ownership manually")
         end
 
         def failed(entry, version, message)
@@ -95,6 +117,16 @@ module Ace
            "path" => entry["path"], "account" => entry["account"], "status" => status,
            "loaded_version" => loaded_version, "restart_required" => restart_required,
            "files" => files, "message" => nil}
+        end
+
+        # Refuse a destination that escapes the projection directory
+        # through a symlinked component BEFORE anything is written (the
+        # provider_syncer validate_projection_destination posture).
+        def projection_escape_reason(output_dir, relative_paths)
+          relative_paths.each { |relative| ExtensionProjection.validate_destination!(output_dir, relative) }
+          nil
+        rescue Ace::Lab::Error => e
+          e.message
         end
 
         # A projection changed when the receipt is absent, names a
@@ -133,6 +165,35 @@ module Ace
           end
 
           write_receipt(output_dir, entry, version, (expected.keys + retained).sort)
+          converge_modes(output_dir, expected, entry)
+        end
+
+        # Mode/ownership convergence (the key-provisioner posture):
+        # projected files carry owner read/write plus world read
+        # (0644), projection directories 0755, and both are owned by
+        # the declared account whenever the passwd lookup resolves it —
+        # so the target executor can always read its extensions.
+        def converge_modes(output_dir, expected, entry)
+          account = @account_lookup.call(entry["account"])
+          targets = expected.keys.map { |relative| File.join(output_dir, relative) }
+          targets << File.join(output_dir, RECEIPT_NAME)
+          targets.each do |target|
+            next unless File.file?(target)
+
+            FileUtils.chmod(FILE_MODE, target)
+            FileUtils.chown(account.uid, account.gid, target) if account
+          end
+          root = File.realpath(output_dir)
+          dirs = expected.keys.filter_map do |relative|
+            File.dirname(File.join(root, relative)) if relative.include?(File::SEPARATOR)
+          end.uniq
+          until dirs.empty?
+            dir = dirs.pop
+            FileUtils.chmod(DIR_MODE, dir)
+            FileUtils.chown(account.uid, account.gid, dir) if account
+            parent = File.dirname(dir)
+            dirs << parent if dir != root && parent.start_with?("#{root}/") && !dirs.include?(parent) && parent != root
+          end
         end
 
         def write_receipt(output_dir, entry, version, files)
@@ -154,18 +215,10 @@ module Ace
           nil
         end
 
-        # The installed gem's own tree at the EXACT declared version.
-        def gem_source_root(name, version)
-          candidate = File.join(@gem_home, "gems", "#{name}-#{version}")
-          extensions = File.join(candidate, "handbook", "extensions")
-          File.directory?(extensions) ? extensions : nil
-        end
-
-        # Relative path → absolute source file for every file under the
-        # gem's handbook/extensions tree (e.g. "ace-wake/index.js").
-        def source_files(source_root)
-          Dir.glob(File.join(source_root, "**", "*")).select { |path| File.file?(path) }
-            .to_h { |path| [path.delete_prefix("#{source_root}/"), path] }
+        def lookup_passwd(username)
+          Etc.getpwnam(username)
+        rescue ArgumentError
+          nil
         end
       end
     end

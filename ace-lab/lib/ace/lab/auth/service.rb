@@ -28,7 +28,20 @@ module Ace
         # @param runner [Proc] argv runner for the exec'd child
         def initialize(authorization_path: nil, runner: nil, principal: nil)
           @authorization_path = authorization_path || Ace::Lab.authorization_path
-          @runner = runner || ->(argv, env) { system(env, *argv) ? 0 : 1 }
+          # The default runner PRESERVES the child's real exit status
+          # (nil-status spawn failure degrades to 127, signals to
+          # 128+signum) — exec's report and the CLI exit code carry it.
+          @runner = runner || lambda { |argv, env|
+            system(env, *argv)
+            status = $?
+            if status.nil?
+              127
+            elsif status.success?
+              0
+            else
+              status.exitstatus || 128 + status.termsig.to_i
+            end
+          }
           @principal = principal || -> { Etc.getpwuid(Process.uid).name }
           @config = load_config
           @store = LeaseStore.new(@config["leases_dir"] || DEFAULT_LEASES_DIR)
@@ -58,6 +71,9 @@ module Ace
           end
 
           ttl = ttl_minutes || profile["ttl_minutes"]
+          unless ttl.is_a?(Integer) && ttl.positive?
+            raise Refusal.new("ttl must be a positive number of minutes, got #{ttl.inspect}; refused")
+          end
           if ttl > profile["max_ttl_minutes"]
             raise Refusal.new("ttl #{ttl}m exceeds the profile limit #{profile['max_ttl_minutes']}m; " \
               "refused, not clipped")
@@ -65,29 +81,18 @@ module Ace
 
           # The granted scope is computed BEFORE the live-lease lookup
           # so a retry is judged against what THIS request asked for.
-          repos = (profile["repos"].empty? ? repos : profile["repos"] & repos).sort
-
-          existing = @store.find_live(task: task, assignment: assignment,
-            profile: profile_name, role: role)
-          if existing && @store.live?(existing)
-            # Idempotency holds only for the IDENTICAL request: a live
-            # lease with a different granted scope or principal is a
-            # mismatched retry — refusing it never silently reuses a
-            # wider grant for a narrower ask.
-            unless existing["repos"] == repos && existing["principal"] == principal
-              raise Refusal.new("a live lease for task '#{task}' assignment '#{assignment}' " \
-                "profile '#{profile_name}' role '#{role}' already exists with scope " \
-                "[#{existing["repos"].join(", ")}] for principal '#{existing["principal"]}'; " \
-                "revoke it first or repeat the identical request")
-            end
-            return existing.merge("state_detail" => "live")
+          requested = Array(repos).map(&:to_s).sort
+          repos = (profile["repos"].empty? ? requested : profile["repos"] & requested)
+          if repos.empty?
+            raise Refusal.new("the granted repository scope would be empty (profile " \
+              "'#{profile_name}' repos: [#{profile["repos"].join(", ")}]; requested: " \
+              "[#{requested.join(", ")}]); an empty repository grant means ALL " \
+              "repositories provider-side — refused before issuing")
           end
 
-          lease = @store.create(profile: profile_name, role: role, principal: principal,
-            task: task, assignment: assignment, repos: repos,
-            use_until: Time.at(Time.now.utc + ttl * 60).strftime("%Y-%m-%dT%H:%M:%SZ"),
-            provider_expiry: nil)
-
+          # The provider is resolved and capability-verified BEFORE any
+          # record exists: a failed resolve or an expiry the provider
+          # cannot back must not orphan a lease record.
           issue = Providers.resolve(profile["provider"])
           # A provider unable to back the profile's NATIVE expiry must
           # be visible BEFORE handoff, never hidden behind use_until.
@@ -97,45 +102,73 @@ module Ace
               "profile's native expiry")
           end
 
-          begin
-            granted = issue.issue(profile: profile, lease: lease)
-          rescue Providers::RefusedError => e
-            @store.update(lease["id"]) { |record| record["state"] = "revoked" }
-            raise Refusal.new("provider refused: #{e.message}")
-          rescue Providers::TransientError, Providers::OutcomeUnknownError => e
-            @store.update(lease["id"]) { |record| record["state"] = "revoke-pending" }
-            raise Error.new("issuance failed with unknown outcome: #{e.message}; " \
-              "reconcile resolves the pending record")
-          end
+          # One request flow at a time per correlation: find_live +
+          # create + issue are atomic against a concurrent identical
+          # request — the second waits, then returns the first's LIVE
+          # lease instead of minting a second token.
+          @store.with_correlation_lock(task: task, assignment: assignment,
+            profile: profile_name, role: role) do
+            existing = @store.find_live(task: task, assignment: assignment,
+              profile: profile_name, role: role)
+            if existing && @store.live?(existing)
+              # Idempotency holds only for the IDENTICAL request: a live
+              # lease with a different granted scope or principal is a
+              # mismatched retry — refusing it never silently reuses a
+              # wider grant for a narrower ask.
+              unless existing["repos"] == repos && existing["principal"] == principal
+                raise Refusal.new("a live lease for task '#{task}' assignment '#{assignment}' " \
+                  "profile '#{profile_name}' role '#{role}' already exists with scope " \
+                  "[#{existing["repos"].join(", ")}] for principal '#{existing["principal"]}'; " \
+                  "revoke it first or repeat the identical request")
+              end
+              next existing.merge("state_detail" => "live")
+            end
 
-          @store.update(lease["id"]) do |record|
-            record["token_ref"] = granted["token_ref"]
-            record["provider_expiry"] = granted["provider_expiry"]&.to_s
-            record["via"] = granted["via"]
-          end
-          # The secret goes ONLY to the ephemeral handoff; the returned
-          # lease record carries references, never values. A failed
-          # delivery is never a live grant: the token may exist
-          # provider-side, so the record becomes revoke-pending for
-          # reconcile to finish — an interrupted handoff must not be
-          # reusable by a retry.
-          handoff = CredentialHandoff.new(@credentials_dir, recipient: principal)
-          begin
-            handoff.deliver(lease["id"], granted["token"])
-          rescue StandardError => e
-            @store.update(lease["id"]) { |record| record["state"] = "revoke-pending" }
-            raise Error.new("credential handoff failed: #{e.message}; " \
-              "reconcile resolves the pending record")
-          end
-          @store.update(lease["id"]) { |record| record["cleanup_due_at"] = record["use_until"] }
+            lease = @store.create(profile: profile_name, role: role, principal: principal,
+              task: task, assignment: assignment, repos: repos,
+              use_until: Time.at(Time.now.utc + ttl * 60).strftime("%Y-%m-%dT%H:%M:%SZ"),
+              provider_expiry: nil)
 
-          @store.load(lease["id"]).merge("state_detail" => "issued")
+            begin
+              granted = issue.issue(profile: profile, lease: lease)
+            rescue Providers::RefusedError => e
+              @store.update(lease["id"]) { |record| record["state"] = "revoked" }
+              raise Refusal.new("provider refused: #{e.message}")
+            rescue Providers::TransientError, Providers::OutcomeUnknownError => e
+              @store.update(lease["id"]) { |record| record["state"] = "revoke-pending" }
+              raise Error.new("issuance failed with unknown outcome: #{e.message}; " \
+                "reconcile resolves the pending record")
+            end
+
+            @store.update(lease["id"]) do |record|
+              record["token_ref"] = granted["token_ref"]
+              record["provider_expiry"] = granted["provider_expiry"]&.to_s
+              record["via"] = granted["via"]
+            end
+            # The secret goes ONLY to the ephemeral handoff; the returned
+            # lease record carries references, never values. A failed
+            # delivery is never a live grant: the token may exist
+            # provider-side, so the record becomes revoke-pending for
+            # reconcile to finish — an interrupted handoff must not be
+            # reusable by a retry.
+            handoff = CredentialHandoff.new(@credentials_dir, recipient: principal)
+            begin
+              handoff.deliver(lease["id"], granted["token"])
+            rescue StandardError => e
+              @store.update(lease["id"]) { |record| record["state"] = "revoke-pending" }
+              raise Error.new("credential handoff failed: #{e.message}; " \
+                "reconcile resolves the pending record")
+            end
+            @store.update(lease["id"]) { |record| record["cleanup_due_at"] = record["use_until"] }
+
+            @store.load(lease["id"]).merge("state_detail" => "issued")
+          end
         end
 
         # --- status --------------------------------------------------------
 
         def status(lease_id: nil)
-          return @store.load(lease_id) if lease_id
+          return public_view(@store.load(lease_id)) if lease_id
 
           @store.all.map { |lease| public_view(lease) }
         end
@@ -155,11 +188,25 @@ module Ace
           @store.with_exec_lock(lease_id) do
             profile = profile_for(lease["profile"])
             handoff = CredentialHandoff.new(@credentials_dir, recipient: lease["principal"])
+            credential = handoff.path(lease_id)
+            # A live lease without its delivered credential is not
+            # executable — degrade with a clear reason instead of an
+            # unrescued ENOENT from the child env merge.
+            unless File.file?(credential)
+              raise Refusal.new("lease '#{lease_id}' has no delivered credential at " \
+                "'#{credential}'; run reconcile or request a fresh lease")
+            end
+
             child_env = {**env,
               "ACE_LAB_LEASE" => lease_id,
-              "ACE_LAB_CREDENTIAL_FILE" => handoff.path(lease_id)}
+              "ACE_LAB_CREDENTIAL_FILE" => credential}
             if profile["provider"] == "env"
-              child_env.merge!(JSON.parse(File.read(handoff.path(lease_id))))
+              begin
+                child_env.merge!(JSON.parse(File.read(credential)))
+              rescue JSON::ParserError, Errno::ENOENT => e
+                raise Refusal.new("lease '#{lease_id}' credential could not be read as " \
+                  "an env handoff (#{e.class.name}); reconcile or request a fresh lease")
+              end
             end
 
             exit_code = @runner.call(argv, child_env)
@@ -177,9 +224,14 @@ module Ace
         # Idempotent; an unknown/foreign lease id is refused; a network
         # outcome stays visible as revoke-pending — a revocation is
         # never CLAIMED before the provider confirms it.
-        def revoke(lease_id:)
+        #
+        # `force:` is the explicit OPERATOR decision shape for a lease
+        # stuck revoke-pending with its credential already gone (the
+        # token cannot be presented to the provider anymore): it closes
+        # the record as forced-terminal with the unconfirmed outcome
+        # recorded — never a claimed revocation.
+        def revoke(lease_id:, force: false)
           lease = @store.load(lease_id)
-          profile = profile_for(lease["profile"])
           handoff = CredentialHandoff.new(@credentials_dir, recipient: lease["principal"])
 
           # An already-revoked lease never re-dials the provider: the
@@ -187,6 +239,27 @@ module Ace
           if lease["state"] == "revoked"
             handoff.clear(lease_id)
             return :revoked
+          end
+
+          if force && lease["state"] == "revoke-pending" &&
+            !File.file?(handoff.path(lease_id))
+            @store.update(lease_id) do |record|
+              record["state"] = "revoked"
+              record["cleanup"] = {"result" => "forced-terminal",
+                "note" => "credential absent; provider outcome unconfirmed — operator-forced close",
+                "at" => Time.now.utc.strftime("%Y-%m-%dT%H:%M:%SZ")}
+            end
+            return :forced_terminal
+          end
+
+          # A removed profile cannot resolve its provider: the lease
+          # stays a visible revoke-pending open item instead of
+          # crashing the caller.
+          begin
+            profile = profile_for(lease["profile"])
+          rescue Refusal
+            @store.update(lease_id) { |record| record["state"] = "revoke-pending" }
+            return :"revoke-pending (profile '#{lease["profile"]}' removed from the authorization document)"
           end
 
           cleanup(lease, profile, handoff)
@@ -202,16 +275,28 @@ module Ace
         def reconcile
           results = []
           @store.all.each do |lease|
-            profile = profile_for(lease["profile"])
             handoff = CredentialHandoff.new(@credentials_dir, recipient: lease["principal"])
             outcome =
               if lease["state"] == "revoked"
                 handoff.clear(lease["id"])
                 :already_revoked
-              elsif lease["state"] == "revoke-pending" || !@store.live?(lease)
-                cleanup(lease, profile, handoff)
               else
-                :live
+                begin
+                  profile = profile_for(lease["profile"])
+                rescue Refusal
+                  # A removed profile cannot resolve its provider: keep
+                  # the lease a visible revoke-pending open item (the
+                  # operator closes it with `revoke --force` when the
+                  # credential is gone) instead of crashing reconcile.
+                  @store.update(lease["id"]) { |record| record["state"] = "revoke-pending" }
+                  :"revoke-pending (profile '#{lease["profile"]}' removed)"
+                else
+                  if lease["state"] == "revoke-pending" || !@store.live?(lease)
+                    cleanup(lease, profile, handoff)
+                  else
+                    :live
+                  end
+                end
               end
             results << {"lease" => lease["id"], "state" => lease["state"], "reconciled" => outcome.to_s}
           end
