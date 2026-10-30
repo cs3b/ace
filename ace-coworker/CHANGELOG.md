@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `second-captain` advisory role preset + `wfi://coworker/second-captain`
+  workflow (task 8xs.t.pu0.b): delegated per HITL case to write one marked
+  suggestion and stop; never answers in the human's name, approves, gates
+  work, or touches secret cases.
+
 ### Changed
 
 - Integration gate binds ALL evidence to the exact candidate head (task

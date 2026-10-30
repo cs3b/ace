@@ -371,6 +371,22 @@ echo "Proceed with batch 2" | ace-hitl reply 8xhkep --stdin
   durable record; the armed ask wake consumes the change whenever the
   asking session returns.
 
+## Suggest (Second Captain)
+
+`ace-hitl suggest CASE_ID --by AUTHOR --text ... --rationale ... [--refs a,b]`
+(task 8xs.t.pu0.b): the advisory Second Captain's MARKED proposal — its own
+`## Suggestion` section in the exact case, with author, timestamp, grounds,
+proposal and rationale, inserted BEFORE the `## Answer` section so an answer
+rewrite can never remove it. It is not an Answer, never satisfies a gate,
+and never acts in the human's name: the human decision always outranks it.
+
+- One proposal per case: an identical repeat reports `duplicate` (no-op); a
+  different second proposal is refused.
+- A case the human already answered refuses the suggestion ("discard the
+  late suggestion") without writing; a case marked `secret` (OTP) is never
+  delegated to the advisor.
+- Shortcuts/unknown ids are refused exactly like `reply`.
+
 ## Case lifecycle
 
 The canonical case file carries the whole lifecycle (task 8xs.t.pu0.6) —

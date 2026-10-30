@@ -9,6 +9,7 @@ require_relative "../molecules/hitl_scanner"
 require_relative "../molecules/hitl_loader"
 require_relative "../molecules/hitl_creator"
 require_relative "../molecules/hitl_answer_editor"
+require_relative "../molecules/hitl_suggestion_editor"
 require_relative "../molecules/resume_dispatcher"
 require_relative "../molecules/worktree_scope_resolver"
 
@@ -30,6 +31,11 @@ module Ace
         class AnswerConflictError < StandardError; end
         class UnknownCaseError < StandardError; end
         class LifecycleTransitionError < StandardError; end
+
+        # A late suggestion on an already-answered case is discarded by
+        # the advisor, never written (the human decision stands and needs
+        # no second approval); a suggestion never touches a secret case.
+        class SuggestionRefusedError < StandardError; end
 
         attr_reader :root_dir, :last_list_total, :last_folder_counts, :config
 
@@ -282,6 +288,61 @@ module Ace
         # canonical decision history are always preserved.
         # @return [Hash] {"qualified" => [{request:, case:, application:}],
         #   "preserved" => [{request:, reason:}]}
+        # --- marked suggestions (task 8xs.t.pu0.b) -------------------------
+        #
+        # One marked suggestion per case: an ADVISORY proposal with its
+        # author, rationale and grounds, written as its own section
+        # before the Answer (an answer rewrite can never remove it). It
+        # is not an Answer, never satisfies a gate, and never acts in
+        # the human's name. Idempotent: an identical repeat is a no-op;
+        # a case that already carries ANY suggestion refuses a second,
+        # different one. A secret case is never delegated; a late
+        # suggestion on an answered case is discarded, never written.
+        # @return [Symbol] :written or :duplicate
+        def add_suggestion(ref, author:, text:, rationale:, refs: [], scope: nil)
+          event = exact_case(ref, scope: scope)
+          frontmatter, body = read_frontmatter(event.file_path)
+
+          if frontmatter["secret"] == true
+            raise SuggestionRefusedError,
+              "case '#{event.id}' is marked secret; secret cases are never delegated to the advisor"
+          end
+          if frontmatter["answered"] == true
+            raise SuggestionRefusedError,
+              "case '#{event.id}' is already answered; discard the late suggestion - " \
+                "the human decision stands and needs no second approval"
+          end
+
+          if body.include?("## Suggestion")
+            return :duplicate if suggestion_matches?(body, author, text)
+
+            raise SuggestionRefusedError,
+              "case '#{event.id}' already carries a suggestion; one proposal per case"
+          end
+
+          suggestion = {"id" => "#{event.id}-s1", "author" => author.to_s,
+            "text" => text.to_s.strip, "rationale" => rationale.to_s.strip,
+            "refs" => Array(refs).map(&:to_s).reject(&:empty?),
+            "at" => timestamp}
+          updated = Molecules::HitlSuggestionEditor.apply(body, suggestion)
+
+          File.open(event.file_path, File::RDWR) do |file|
+            file.flock(File::LOCK_EX)
+            file.rewind
+            content = file.read
+            current_frontmatter, current_body = Ace::Support::Items::Atoms::FrontmatterParser.parse!(content)
+            new_content = Ace::Support::Items::Atoms::FrontmatterSerializer.rebuild(
+              current_frontmatter, updated
+            )
+            file.rewind
+            file.truncate(0)
+            file.write(new_content)
+            file.flush
+            file.fsync
+          end
+          :written
+        end
+
         def sweep(apply: false)
           requests_dir = File.join(File.expand_path(@root_dir), "wake-requests")
           return {"qualified" => [], "preserved" => [], "removed" => []} unless Dir.exist?(requests_dir)
@@ -537,6 +598,11 @@ module Ace
         end
 
         private
+
+        def suggestion_matches?(body, author, text)
+          body.match?(/^author: #{Regexp.escape(author.to_s)}$/) &&
+            body.match?(/^proposal: #{Regexp.escape(text.to_s.strip)}$/)
+        end
 
         def load_config
           Molecules::HitlConfigLoader.load

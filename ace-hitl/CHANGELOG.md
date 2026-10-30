@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `ace-hitl suggest` and `HitlManager#add_suggestion` (task 8xs.t.pu0.b): the
+  Second Captain's marked advisory proposal — own section before the Answer
+  (survives answer rewrites), author/rationale/grounds recorded, one per case
+  (identical repeat = duplicate), refused on answered or secret cases, never
+  an answer or approval.
+
 - `ace-hitl ask --secret` (task 8xs.t.pu0.9): the expected answer (e.g. an
   OTP) is marked secret AT CREATION — no title heuristics; the case carries
   `secret: true` and the armed wake request flags the bridge to wake with the

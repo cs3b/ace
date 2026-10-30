@@ -1,0 +1,18 @@
+---
+# Second Captain role preset (shipped gem defaults, overridable per project
+# via .ace/coworker/roles/second-captain.yml). Advisory ONLY: delegated per
+# HITL case to propose a marked answer with rationale and grounds (task
+# 8xs.t.pu0.b). Never answers in the human's name, never approves or gates
+# work, never touches secret/OTP cases.
+name: second-captain
+description: Advisory Second Captain; proposes one marked answer with rationale and grounds into the exact HITL case and stops — never a human decision, approval, or gate
+instructions: wfi://coworker/second-captain
+start_prompt: >-
+  Work as the {{role}} on case {{case}} (task {{task}}): read the exact HITL
+  case and its referenced evidence, write one marked suggestion with
+  rationale and grounds through assignment {{assignment}}, reporting to the
+  overseer at {{overseer}} — then stop.
+reporting:
+  channel: hitl
+errors:
+  on_failure: report
