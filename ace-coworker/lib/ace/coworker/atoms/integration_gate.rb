@@ -11,7 +11,8 @@ module Ace
       # executed/passed without a head covers nothing), (d) a fresh
       # independent review verdict accepts the EXACT candidate head, and
       # (e) the formal approval — when required — also names this head
-      # and was given by a DIFFERENT account than the author. Any
+      # and was given by a NAMED, DIFFERENT account than the author (an
+      # anonymous approval proves nothing). Any
       # unknown or contradictory fact is a blocking reason - a code
       # change or rebase after tests or review invalidates those bases
       # for the old candidate; uncertainty must be verified against the
@@ -106,7 +107,11 @@ module Ace
               failed << :approval
             end
             author = str(input["author"])
-            if !approved_by.empty? && !author.empty? && approved_by.downcase == author.downcase
+            if approved_by.empty?
+              reasons << "formal approval is anonymous: no approving account is recorded — " \
+                "the author≠approver guarantee is vacuous; record the approving lane account"
+              failed << :approval
+            elsif !author.empty? && approved_by.downcase == author.downcase
               reasons << "formal approval by the author's own account '#{approved_by}': the formal " \
                 "approver must be a different configured lane account"
               failed << :approval

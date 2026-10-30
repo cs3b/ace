@@ -184,6 +184,23 @@ module Ace
           assert_includes self_approved[:failed_checks], :approval
         end
 
+        def test_anonymous_formal_approval_blocks
+          anonymous = IntegrationGate.evaluate(ready_input(
+            "approval" => {"head" => "1a2b3c4"},
+            "author" => "lab-overseer"
+          ))
+          assert_equal :blocked, anonymous[:verdict]
+          assert(anonymous[:reasons].any? { |reason| reason.include?("formal approval is anonymous") })
+          assert_includes anonymous[:failed_checks], :approval
+
+          blank = IntegrationGate.evaluate(ready_input(
+            "approval" => {"head" => "1a2b3c4", "by" => "  "},
+            "author" => "lab-overseer"
+          ))
+          assert_equal :blocked, blank[:verdict]
+          assert(blank[:reasons].any? { |reason| reason.include?("formal approval is anonymous") })
+        end
+
         def test_omitted_formal_approval_keeps_the_previous_semantics
           result = IntegrationGate.evaluate(ready_input)
 
