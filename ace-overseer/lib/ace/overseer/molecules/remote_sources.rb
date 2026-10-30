@@ -40,7 +40,20 @@ module Ace
           sources = {}
           events = []
 
-          pull_requests.group_by { |entry| entry["server"] }.each do |server, entries|
+          # Validate entries BEFORE grouping: a malformed entry (non-Hash,
+          # missing server/number) must degrade its group to a health
+          # marker, never crash the whole observation pass.
+          valid, invalid = Array(pull_requests).partition do |entry|
+            entry.is_a?(Hash) && !entry["server"].to_s.empty? && !entry["number"].to_s.empty?
+          end
+          invalid.group_by { |entry| entry.is_a?(Hash) ? entry["server"].to_s : "" }.each do |server, entries|
+            next if server.empty?
+
+            sources["pr:#{server}"] ||= {"state" => "degraded",
+              "reason" => "invalid observe.remote.pull_requests entry: #{entries.first.inspect}"}
+          end
+
+          valid.group_by { |entry| entry["server"] }.each do |server, entries|
             collect(sources, events, "pr:#{server}") do
               entries.flat_map { |entry| project(server, entry["number"]) }
             end

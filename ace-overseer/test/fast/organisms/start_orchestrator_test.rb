@@ -204,6 +204,51 @@ module Organisms
       assert_empty executor.tabs
     end
 
+    def test_herdr_pane_list_failure_surfaces_as_blocked_naming_herdr
+      executor = FakeExecutor.new(pane_current: {"result" => {"workspace_id" => "ws1"}})
+      def executor.pane_list
+        raise Ace::Herdr::CommandError, "herdr exited 1: socket closed"
+      end
+
+      report = orchestrator(executor).call
+
+      assert_equal "blocked", report["status"]
+      assert_match(/herdr failed while preparing the overseer session/, report["message"])
+
+      # dry-run probes no herdr state, so a failing herdr cannot break it
+      dry = orchestrator(executor).call(dry_run: true)
+      assert_equal "dry_run", dry["status"]
+    end
+
+    def test_herdr_agent_probe_failure_surfaces_as_blocked_naming_herdr
+      panes = [{"id" => "p7", "title" => "overseer-project", "cwd" => @root}]
+      executor = FakeExecutor.new(panes: panes,
+        pane_current: {"result" => {"workspace_id" => "ws1"}})
+      def executor.agent_get(_pane)
+        raise Ace::Herdr::CommandError, "agent probe failed"
+      end
+
+      report = orchestrator(executor).call
+
+      assert_equal "blocked", report["status"]
+      assert_match(/herdr failed while preparing the overseer session/, report["message"])
+    end
+
+    def test_prompt_failure_after_a_started_agent_is_reported_distinctly
+      executor = FakeExecutor.new(pane_current: {"result" => {"workspace_id" => "ws1"}})
+      def executor.agent_prompt(pane:, text:)
+        raise Ace::Herdr::CommandError, "prompt pipe closed"
+      end
+
+      report = orchestrator(executor).call
+
+      assert_equal "started", report["status"],
+        "a live, idle agent must never be reported as not started"
+      assert_equal 1, executor.agent_started.size
+      assert_equal true, report["prompt_failed"]
+      assert_match(/agent is started and idle, but the first prompt failed/, report["message"])
+    end
+
     def test_live_owner_with_a_foreign_cwd_is_a_conflict_never_taken_over
       other = File.join(@dir, "other-project")
       FileUtils.mkdir_p(other)

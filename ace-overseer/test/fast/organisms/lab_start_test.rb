@@ -37,7 +37,7 @@ module Organisms
       def workspace_create(label:)
         @workspaces_created << label
         @workspaces << {"id" => "ws-#{label}", "title" => label}
-        FakePaneResult.new({"result" => {"id" => "ws-#{label}"}})
+        FakePaneResult.new({"result" => {"workspace_id" => "ws-#{label}"}})
       end
 
       def pane_current
@@ -155,14 +155,14 @@ module Organisms
       assert(report["projects"].all? { |project| project["status"] == "started" })
       # the lab space plus ONE OWN space per project — never one shared
       # space for all tabs (review F2 / readiness line 28)
-      assert_equal %w[overseer-lab overseer-alpha overseer-beta], executor.workspaces_created
-      assert_equal "ws-overseer-lab", report["workspace"]
+      assert_equal %w[lab-overseer overseer-alpha overseer-beta], executor.workspaces_created
+      assert_equal "ws-lab-overseer", report["workspace"]
       # the lab's OWN overseer session boots in the lab space (review
       # 8xte508e): the lab-start instructions reach a real agent
       lab_tab = executor.tabs.find { |tab| tab[:cwd] == File.realpath(@lab_root) }
       assert lab_tab, "a lab session tab with the lab root as cwd must exist"
       assert_equal "overseer-lab", lab_tab[:label]
-      assert_equal "ws-overseer-lab", lab_tab[:workspace_id]
+      assert_equal "ws-lab-overseer", lab_tab[:workspace_id]
       assert_equal "p-overseer-lab", report["pane"]
       # each project session lives in its OWN space with its own cwd
       by_label = executor.tabs.to_h { |tab| [tab[:label], tab] }
@@ -198,7 +198,7 @@ module Organisms
 
       assert_equal "ready", report["status"], report.inspect
       by_label = executor.tabs.to_h { |tab| [tab[:label], tab] }
-      assert_equal "ws-overseer-lab", by_label["overseer-lab"][:workspace_id]
+      assert_equal "ws-lab-overseer", by_label["overseer-lab"][:workspace_id]
       assert_equal "ws-overseer-alpha", by_label["overseer-alpha"][:workspace_id]
       assert_equal "ws-overseer-beta", by_label["overseer-beta"][:workspace_id]
     end
@@ -215,7 +215,7 @@ module Organisms
 
       assert_equal "ready", second["status"]
       assert(second["projects"].all? { |project| project["status"] == "reused" })
-      assert_equal %w[overseer-lab overseer-alpha overseer-beta], executor.workspaces_created,
+      assert_equal %w[lab-overseer overseer-alpha overseer-beta], executor.workspaces_created,
         "every space is found by title, none recreated"
       assert_equal first["project_count"], second["project_count"]
       assert_equal 3, executor.tabs.size, "no duplicate sessions"
@@ -243,19 +243,19 @@ module Organisms
       assert_equal "p-alpha-live", by_id["alpha"]["pane"]
       assert_equal "ws-manual", by_id["alpha"]["workspace"],
         "the live session's actual space is reported"
-      assert_equal %w[overseer-lab overseer-beta], executor.workspaces_created,
+      assert_equal %w[lab-overseer overseer-beta], executor.workspaces_created,
         "no empty alpha space is left behind by a pure reuse; beta still gets its own"
     end
 
     def test_a_titled_space_without_an_id_is_reused_never_duplicated
       executor = FakeExecutor.new
-      # a live overseer-lab entry carries a title but no id
+      # a live lab-overseer entry carries a title but no id
       def executor.workspace_list
-        @titled ||= [{"title" => "overseer-lab"}]
+        @titled ||= [{"title" => "lab-overseer"}]
         FakePaneResult.new({"result" => @titled})
       end
       def executor.workspace_create(label:)
-        raise "must not create a duplicate '#{label}' space" if label == "overseer-lab"
+        raise "must not create a duplicate '#{label}' space" if label == "lab-overseer"
 
         super
       end
@@ -263,7 +263,7 @@ module Organisms
       report = orchestrator(executor).call
 
       assert_equal "ready", report["status"], report.inspect
-      assert_equal "overseer-lab", report["workspace"],
+      assert_equal "lab-overseer", report["workspace"],
         "the titled-but-idless space is reused by its title"
     end
 
@@ -280,6 +280,61 @@ module Organisms
       assert_equal File.realpath(@lab_root), report["root"]
       assert_equal "overseer-lab", report["label"]
       assert_match(/lab start failed: herdr is unavailable/, report["message"])
+    end
+
+    def test_a_lab_level_herdr_command_error_surfaces_as_blocked_with_lab_context
+      executor = FakeExecutor.new
+      def executor.workspace_list
+        raise Ace::Herdr::CommandError, "herdr exited 1: socket closed"
+      end
+
+      report = orchestrator(executor).call
+
+      assert_equal "blocked", report["status"]
+      assert_equal "lab", report["scope"]
+      assert_match(/lab start failed: herdr exited 1/, report["message"])
+    end
+
+    def test_a_project_declaring_lab_scope_is_refused_not_recursed
+      executor = FakeExecutor.new
+      # beta's own cascade declares scope lab — a nested lab start
+      beta = File.join(@dir, "beta")
+      File.write(File.join(beta, ".ace", "overseer", "config.yml"), <<~YAML)
+        start:
+          scope: lab
+          profile: ovs
+          instructions: #{beta}/guide.md
+        profiles:
+          ovs:
+            harness: pi
+            model: zai/glm-5.3-flash
+            thinking: high
+      YAML
+
+      report = orchestrator(executor).call
+
+      assert_equal "partial", report["status"]
+      by_id = report["projects"].to_h { |project| [project["id"], project] }
+      assert_equal "started", by_id["alpha"]["status"], "the healthy project runs"
+      assert_equal "blocked", by_id["beta"]["status"]
+      assert_match(/nested lab scopes are refused/, by_id["beta"]["message"])
+    end
+
+    def test_prompt_failure_on_the_lab_overseer_does_not_hide_the_started_agent
+      executor = FakeExecutor.new
+      # only the LAB session's prompt fails; the agent itself started
+      def executor.agent_prompt(pane:, text:)
+        raise Ace::Herdr::CommandError, "prompt pipe closed" if pane == "p-overseer-lab"
+
+        @prompts << {pane: pane, text: text}
+        FakePaneResult.new({"status" => "sent"})
+      end
+
+      report = orchestrator(executor).call
+
+      assert_equal "ready", report["status"], report.inspect
+      assert_equal true, report["prompt_failed"]
+      assert_match(/started and idle, but the first prompt failed/, report["message"])
     end
 
     def test_lab_owner_pane_in_a_foreign_cwd_is_a_conflict
@@ -309,7 +364,7 @@ module Organisms
       assert_equal "started", by_id["alpha"]["status"], "the healthy project runs"
       assert_equal "blocked", by_id["beta"]["status"]
       assert_match(/does not exist/, by_id["beta"]["message"])
-      assert_equal %w[overseer-lab overseer-alpha], executor.workspaces_created,
+      assert_equal %w[lab-overseer overseer-alpha], executor.workspaces_created,
         "the unhealthy project creates no space"
     end
 

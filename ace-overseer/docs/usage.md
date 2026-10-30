@@ -68,13 +68,16 @@ Behavior:
   the project's `ace-nav`; absolute paths verbatim) and boots the harness
   agent as standing instructions with the configured profile. The `ace-nav`
   binary follows the repo toolchain policy: auto mode prefers the project's
-  `bin/` binstub and falls back to PATH, while `ACE_TOOLCHAIN=installed`
+  `bin/` binstub for a NON-ROOT caller and falls back to PATH, while
+  `ACE_TOOLCHAIN=installed`
   always uses the installed gem launcher — a checkout inside the project is
   data, never the runtime source. Because
   `herdr agent start` success only means the interactive agent is ready for
   input, the start submits a first-turn prompt right after the agent starts —
   the session actually begins its first turn (state read, `/eyes` arming);
-  a reused session is never prompted again.
+  a reused session is never prompted again. A prompt delivery failure after
+  a started agent never reports the start as failed: the report stays
+  `started` with `prompt_failed: true` and a repairable warning.
 - The report carries `status` (`started|reused|blocked|dry_run`), `scope`,
   `root`, `label`, `workspace`, `pane`, `agent`, `profile`, `instructions`
   (`source` + resolved `path`) and a `message`. Exit 0 only for a ready
@@ -93,8 +96,14 @@ starts the whole lab from one external entry point:
   projection keeps its no-paths allowlist; locations are never derived from
   an id/label/repo name). The lab root is a coordination directory with its
   own `_overseer`; a directory declaring itself as both lab and project is
-  refused.
-- The lab creates/reuses its own herdr space (`overseer-lab`) and boots or
+  refused, and a project whose own cascade declares `scope: lab` is refused
+  per-project (a nested lab start never recurses). An unreadable topology
+  (missing or unparseable `.ace/lab/config.yml`) is a blocked start with
+  the concrete cause.
+- The lab creates/reuses its own herdr space (`lab-overseer` — namespaced
+  so it can never collide with a session/space title derived from a project
+  directory name, e.g. a project rooted at a directory named `lab` owns
+  `overseer-lab`) and boots or
   reuses the lab's OWN overseer session there (label `overseer-<lab-root>`,
   cwd at the lab root, the lab guide as standing instructions, first-turn
   prompt included) — the lab-start instructions always reach a real agent,

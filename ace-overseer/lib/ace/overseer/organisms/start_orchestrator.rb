@@ -30,6 +30,12 @@ module Ace
       class StartOrchestrator
         AGENT_NAME = "ace-overseer"
         START_TIMEOUT_MS = 60_000
+        # The lab's own herdr space title. Namespaced ("lab-overseer",
+        # never "overseer-…") so it can never collide with a session or
+        # per-project space title derived from a directory name — e.g. a
+        # project rooted at a directory literally named "lab" owns the
+        # session/space title "overseer-lab".
+        LAB_SPACE_TITLE = "lab-overseer"
         # `herdr agent start` success only means the interactive agent is
         # READY for input — the session begins its first turn when this
         # prompt arrives, exactly as the standing instructions' "First
@@ -111,11 +117,19 @@ module Ace
           report["workspace"] = workspace
 
           pane = boot_session(workspace, label, root, plan, instructions_path)
+          prompt_warning = first_prompt(pane)
           report.merge("status" => "started", "pane" => pane,
-            "message" => "project overseer session started; the agent reads its " \
+            "prompt_failed" => !prompt_warning.nil?,
+            "message" => prompt_warning ||
+              "project overseer session started; the agent reads its " \
               "private tasks and project state and stays idle when there is no work")
-        rescue Ace::Overseer::Error, Ace::Herdr::ExecutorUnavailableError => e
+        rescue Ace::Overseer::Error => e
           blocked(e.message)
+        rescue Ace::Herdr::ExecutorError => e
+          # herdr failures (pane list, agent probe, session boot) surface
+          # as a blocked start report naming herdr — never an unhandled
+          # exception out of `ace-overseer start`
+          blocked("herdr failed while preparing the overseer session: #{e.message}")
         end
 
         private
@@ -148,9 +162,9 @@ module Ace
 
           projects = begin
             Ace::Lab::Molecules::ProjectLocations.read(lab_root)
-          rescue StandardError => e
+          rescue Ace::Lab::InvalidConfigurationError => e
             return base.merge("status" => "blocked",
-              "message" => "lab topology could not be read: #{e.class}: #{e.message}")
+              "message" => "lab topology could not be read: #{e.message}")
           end
 
           if projects.any? { |project| project["path"].to_s.empty? == false &&
@@ -178,29 +192,38 @@ module Ace
 
           base["pane"] = session["pane"]
           base["replaced_pane"] = session["replaced_pane"]
+          base["prompt_failed"] = session["prompt_failed"] if session["prompt_failed"]
 
           # An empty configured list is a valid idle lab: the lab
           # overseer itself still runs.
           if projects.empty?
+            message = "no projects configured; the lab overseer is idle"
+            message += "; #{session["message"]}" if session["message"]
             return base.merge("status" => "ready", "ready" => true, "project_count" => 0,
-              "message" => "no projects configured; the lab overseer is idle")
+              "message" => message)
           end
 
           results = projects.map { |project| start_project(project, lab_root) }
           ready = results.all? { |result| %w[started reused].include?(result["status"]) }
+          summary = "#{results.count { |r| %w[started reused].include?(r["status"]) }}/" \
+            "#{results.size} project overseers ready"
+          summary += "; #{session["message"]}" if session["message"]
           base.merge("status" => ready ? "ready" : "partial", "ready" => ready,
             "projects" => results, "project_count" => results.size,
-            "message" => "#{results.count { |r| %w[started reused].include?(r["status"]) }}/" \
-              "#{results.size} project overseers ready")
-        rescue Ace::Overseer::Error, Ace::Herdr::ExecutorUnavailableError => e
+            "message" => summary)
+        rescue Ace::Overseer::Error, Ace::Herdr::ExecutorError => e
           # A lab-level failure keeps the lab context (scope/root/label)
           # so callers can tell it from a per-project blocked result.
           base.merge("status" => "blocked", "message" => "lab start failed: #{e.message}")
         end
 
         # The lab's own herdr space, created once and reused by title.
+        # The title is namespaced (see LAB_SPACE_TITLE) so it can never
+        # collide with a session/space title derived from a project
+        # directory name (e.g. a project rooted at a directory literally
+        # named "lab" owns "overseer-lab").
         def lab_workspace
-          find_or_create_workspace("overseer-lab")
+          find_or_create_workspace(LAB_SPACE_TITLE)
         end
 
         # A herdr space by title, created when absent: the lab space
@@ -253,13 +276,16 @@ module Ace
                 "message" => "owner pane '#{owner["id"]}' works in '#{owner_cwd}', which is " \
                   "not the lab root '#{lab_root}'; refusing to take over a foreign session"}
             end
-            return {"status" => "reused", "pane" => owner["id"], "replaced_pane" => nil} if agent_alive?(owner["id"])
+            return {"status" => "reused", "pane" => owner["id"], "replaced_pane" => nil,
+              "prompt_failed" => false} if agent_alive?(owner["id"])
 
             replaced = owner["id"]
           end
 
           pane = boot_session(workspace, label, lab_root, plan, instructions_path)
-          {"status" => "started", "pane" => pane, "replaced_pane" => replaced}
+          prompt_warning = first_prompt(pane)
+          {"status" => "started", "pane" => pane, "replaced_pane" => replaced,
+            "prompt_failed" => !prompt_warning.nil?, "message" => prompt_warning}
         rescue Ace::Overseer::Error => e
           {"status" => "blocked", "pane" => nil, "replaced_pane" => nil, "message" => e.message}
         end
@@ -281,6 +307,14 @@ module Ace
           end
 
           project_config = Ace::Overseer.config_at(path)
+          # a project cascade that itself declares scope lab would
+          # recurse (a nested lab start) — refused, never executed
+          if project_config.is_a?(Hash) && project_config.dig("start", "scope") == "lab"
+            return {"id" => id, "path" => path, "status" => "blocked",
+              "message" => "project '#{id}' declares scope lab in its own " \
+                ".ace/overseer/config.yml; nested lab scopes are refused"}
+          end
+
           orchestrator = self.class.new(config: project_config, executor: @executor,
             root_resolver: @root_resolver, nav_runner: @nav_runner,
             workspace_factory: ->(label) { find_or_create_workspace(label) }, cwd: path)
@@ -298,13 +332,14 @@ module Ace
            "workspace" => nil, "pane" => nil, "agent" => AGENT_NAME,
            "profile" => plan["profile_name"], "instructions" =>
              {"source" => plan["instructions"], "path" => instructions_path},
-           "replaced_pane" => nil, "message" => nil}
+           "replaced_pane" => nil, "prompt_failed" => false, "message" => nil}
         end
 
         def blocked(message)
           {"status" => "blocked", "scope" => nil, "root" => nil, "label" => nil,
            "workspace" => nil, "pane" => nil, "agent" => AGENT_NAME, "profile" => nil,
-           "instructions" => nil, "replaced_pane" => nil, "message" => message}
+           "instructions" => nil, "replaced_pane" => nil, "prompt_failed" => false,
+           "message" => message}
         end
 
         # wfi:// (and sibling protocol) sources resolve through the
@@ -320,7 +355,8 @@ module Ace
           return source unless source.include?("://")
 
           binary = begin
-            Ace::Support::Cli::Toolchain.executable("ace-nav", project_root: root)
+            Ace::Support::Cli::Toolchain.executable("ace-nav", project_root: root,
+              prefer_project: !Process.uid.zero?)
           rescue Ace::Support::Cli::Toolchain::Error => e
             raise Ace::Overseer::Error,
               "cannot resolve the ace-nav executable for the start instructions: #{e.message}"
@@ -409,7 +445,9 @@ module Ace
         # Boots the session: one herdr tab labeled with the owner
         # identity, cwd at the project root, then the harness agent with
         # the configured profile and the packaged guide as standing
-        # instructions (passthrough args).
+        # instructions (passthrough args). Ends at the started agent —
+        # the first prompt is a SEPARATE step (first_prompt) so a
+        # delivery failure never reports a live agent as not started.
         def boot_session(workspace, label, root, plan, instructions_path)
           tab = @executor.tab_create(workspace_id: workspace, label: label, cwd: root)
             .parsed_json
@@ -427,13 +465,22 @@ module Ace
 
           @executor.agent_start(name: AGENT_NAME, kind: plan["profile"]["harness"],
             pane: pane, timeout_ms: START_TIMEOUT_MS, args: args)
-          # `agent start` only readies the interactive agent for input;
-          # the first prompt begins the session's first turn (state
-          # read, /eyes arming) — without it the agent sits idle.
-          @executor.agent_prompt(pane: pane, text: FIRST_TURN_PROMPT)
           pane
         rescue Ace::Herdr::CommandError => e
           raise Ace::Overseer::Error, "herdr failed to start the overseer session: #{e.message}"
+        end
+
+        # `agent start` success only means the interactive agent is
+        # ready for input; the first prompt begins the session's first
+        # turn (state read, /eyes arming). A prompt failure AFTER a
+        # started agent is a repairable warning (the agent is live and
+        # idle), returned as a message — never raised as a failed start.
+        def first_prompt(pane)
+          @executor.agent_prompt(pane: pane, text: FIRST_TURN_PROMPT)
+          nil
+        rescue Ace::Herdr::ExecutorError => e
+          "the agent is started and idle, but the first prompt failed " \
+            "(#{e.message}); re-send it to begin the first turn"
         end
 
         def extract_panes(json)
@@ -455,12 +502,15 @@ module Ace
           json["pane_id"] || json["pane"] || json["id"]
         end
 
+        # Exactly the canonical workspace keys ace-herdr itself digs
+        # (workspace_id/workspaceId, as in HerdrExecutor consumers like
+        # Dispatcher/ControlSurface) — no broader key guessing.
         def dig_workspace(json)
           result = json.is_a?(Hash) ? json["result"] : nil
           source = result.is_a?(Hash) ? result : json
           return nil unless source.is_a?(Hash)
 
-          source["workspace_id"] || source["workspaceId"] || source["workspace"] || source["id"]
+          source["workspace_id"] || source["workspaceId"]
         end
 
         def run_nav(argv, cwd)

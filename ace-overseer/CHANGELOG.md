@@ -70,7 +70,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   a session booted without a prompt sat idle (no state read, no `/eyes`
   arming). `boot_session` now submits a first-turn prompt (the standing
   instructions' "First turn after start" contract) right after the agent
-  starts; a reused session is never prompted again.
+  starts; a reused session is never prompted again. The prompt is a separate
+  step from the boot (review 8xtiatf0): a delivery failure after a started
+  agent stays `started` with `prompt_failed: true` and a repairable warning —
+  a live idle agent is never reported as a failed start.
+- herdr failures surface as blocked starts, never raw exceptions (reviews
+  8xth38bw/8xtiatez): the project path's rescue now covers every
+  `Ace::Herdr::ExecutorError` (pane list, agent probe, session boot) with a
+  "herdr failed while preparing the overseer session: …" message, and the
+  lab-level rescue covers `CommandError` from workspace/pane calls with the
+  lab context intact ("lab start failed: …"). Dry-run probes no herdr state.
+- The lab space title is namespaced to `lab-overseer` (review 8xtiatf4): a
+  project rooted at a directory literally named `lab` owns the session/space
+  title `overseer-lab`; the old lab space title collided with it. Session
+  labels (`overseer-<root>`) are unchanged.
+- Workspace ids dig with exactly ace-herdr's canonical keys
+  (`workspace_id`/`workspaceId`, review 8xtiatf2) — no broader key guessing.
+- Auto-mode binstub use is again root-guarded (review 8xtiatf3): `start`
+  passes `prefer_project: !Process.uid.zero?` to the toolchain executable
+  resolver, so root never executes a project-owned `bin/` binstub (installed
+  mode ignores the flag).
+- A project cascade declaring `scope: lab` is refused per-project (review
+  8xthrjsm) — a nested lab start never recurses. The topology read rescue is
+  narrowed to `Ace::Lab::InvalidConfigurationError` (review 8xthrjsn) so
+  programming errors surface instead of becoming "topology could not be
+  read" blocks.
 
 ## [0.26.1] - 2026-10-25
 

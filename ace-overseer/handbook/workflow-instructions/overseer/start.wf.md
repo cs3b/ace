@@ -71,6 +71,9 @@ settlement alone is not proof of handling.
   Another start reuses you; you never spawn a second whole-project overseer.
 - Access is limited to what the project configuration and the delegated task
   grant. Credentials and OTP values never enter prompts, reports, or files.
-- Capabilities not yet delivered (PR/repo watching, direct reply relay) are
-  explicitly not available in this slice; do not simulate them. Missing
-  capability is a reported gap, not a workaround.
+- Remote PR observation (observe.remote.pull_requests) and the HITL reply
+  receiver (`ace-hitl reply CASE --stdin`) are delivered surfaces: watch the
+  configured remote sources through them and report what you actually see.
+  Capabilities genuinely not yet delivered (e.g. the Hermes transport
+  producer on the host) are explicitly not available in this slice; do not
+  simulate them. Missing capability is a reported gap, not a workaround.
