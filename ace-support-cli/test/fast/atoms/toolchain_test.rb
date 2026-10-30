@@ -79,7 +79,10 @@ class ToolchainTest < AceSupportCliTestCase
              "RUBYOPT" => nil, "RUBYLIB" => nil, "BUNDLE_GEMFILE" => nil, "BUNDLER_SETUP" => nil}
       out, err, status = Open3.capture3(env, Gem.ruby, "-e", script, chdir: "#{root}/project")
       assert status.success?, err
-      assert_equal "#{root}/bin/ace-fixture\ninstalled", out.strip
+      # On macOS the child resolves the tmpdir through its realpath
+      # (/private/var) while mktmpdir returns the /var spelling; both sides
+      # are normalized so the same launcher path compares equal.
+      assert_equal "#{File.realpath(root)}/bin/ace-fixture\ninstalled", out.strip
       refute File.exist?("#{root}/poison")
       _, err, status = Open3.capture3(env, Gem.ruby, "-e", script.sub('t.executable("ace-fixture"', 't.executable("missing-cli"'), chdir: "#{root}/project")
       refute status.success?
