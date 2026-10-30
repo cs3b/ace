@@ -26,6 +26,7 @@ point here instead of defining a second queue, journal, cache, or state service.
 | HITL agent events | `.ace-local/hitl/` | `ace-hitl`; a report needs no answer, a question is answered on the exact case |
 | Project task worktree | `.ace-wt/<task>/` | `ace-git-worktree`; one worktree per project task |
 | Trusted-tier principal grants (deployment document) | `/etc/lab/ace-lab/authorization.yml` `principals` mapping (root-owned, outside the caller-writable cascade) | `ace-lab install` (L8.3), converged from the trusted install manifest; grants only grow, every other section of the document is preserved |
+| Short-lived role-access leases and the auth profile declarations (same trusted document's `auth:` section) | `/var/lib/lab/ace-lab/auth/leases/<id>.json` (minimal lease record: correlation, token REFERENCE, deadlines, cleanup outcome — never secrets, never task progress) | `ace-lab auth` (8xs.t.pu0.7); the ephemeral credential handoff lives under `/run/lab/credentials/` per lease+recipient and carries references, never values |
 | Lab topology / project registry (per project) | `<project>/.ace/lab/config.yml` (project tier of the lab-config cascade, committed) | `ace-lab`, via `ace-lab project add` (also driven by `ace-lab install`); the same document every consumer already reads (`ace-lab status`, `ace-lab projects`, `ace-overseer projects`) — no second registry |
 
 Task progress that must survive between turns is written inside that task's own

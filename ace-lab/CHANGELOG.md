@@ -9,6 +9,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `ace-lab auth request|status|exec|revoke|reconcile` (task 8xs.t.pu0.7):
+  short-lived role-scoped access. Host-owned profiles in the trusted
+  authorization document's `auth:` section; one minimal lease record (token
+  REFERENCE, deadlines, cleanup outcome — never secrets); ephemeral
+  credential handoff under /run/lab/credentials; idempotent requests per live
+  correlation; scope = profile∩request (never widened by task/config edits);
+  TTL refusals instead of clipping; exec preserves exit codes with both
+  process and cleanup outcomes; revoke idempotent, network outcomes stay
+  revoke-pending; reconcile resolves interrupted cycles.
+- Auth plugins (explicit registry): forgejo (per-lease scoped token on the
+  role account, exact-id revoke), github (App JWT → installation token with
+  real expires_at, DELETE revoke, 401 = already invalid), env (named
+  process-scoped values; standalone env cannot declare remote expiry).
+- Canonical owner map (docs/lab-flow.md) and ADR-034 amendment for the
+  Captain-approved lease record and handoff channel.
+
+### Added
+
 - Gem-set dependency closure convergence: missing transitive runtime dependencies
   (e.g. `json`) are installed at the parent requirement even when the parent version
   already figures in `gem list`; unsatisfiable dependencies are classified failures

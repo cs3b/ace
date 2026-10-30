@@ -639,3 +639,72 @@ The installed authority/admission/journal/command path is removed in L1: the
 and `command execute` commands no longer exist. The local file-based flow does
 not use them. The Forgejo merge adapter and its trusted configuration loader
 remain as provider building blocks; the local flow does not invoke them.
+
+## Auth (8xs.t.pu0.7)
+
+`ace-lab auth request|status|exec|revoke|reconcile` — short-lived, role-scoped
+access for delegated work. The host owns the profile declarations in the SAME
+trusted document (`/etc/lab/ace-lab/authorization.yml`, `auth:` section —
+converged by install); the existing `principals` map stays a visibility map and
+grants no issuance. A project/coworker config only NAMES a profile — it can
+never widen one.
+
+```yaml
+auth:
+  leases_dir: /var/lib/lab/ace-lab/auth/leases
+  credentials_dir: /run/lab/credentials
+  profiles:
+    developer-forgejo:
+      provider: forgejo          # forgejo | github | env
+      roles: [developer]
+      principals: [lab-overseer] # who may REQUEST (empty = any verified account)
+      repos: [ace]
+      scopes: ["write:repository"]
+      ttl_minutes: 30            # default 30; max 60 unless the host sets otherwise
+      expiry_mode: host-revoke   # provider | host-revoke | process
+      issuer:                    # references into the host's protected store
+        url: https://forge.example.com
+        account: lab-role-dev
+        token_file: /etc/lab/ace-lab/secrets/forgejo.token
+```
+
+```bash
+ace-lab auth request --profile developer-forgejo --role developer \
+  --task 8xs.t.pu0.7 --assignment job-7 --repo ace
+ace-lab auth status [LEASE]                 # read-only readiness view
+ace-lab auth exec LEASE --cmd bin/ace-test --cmd ace-lab
+ace-lab auth revoke LEASE                   # idempotent
+ace-lab auth reconcile                      # resolves interrupted cycles
+```
+
+Contract highlights:
+
+- The lease record (`/var/lib/lab/ace-lab/auth/leases/<id>.json`) is the ONE
+  minimal record: correlation, provider token REFERENCE, deadlines, cleanup
+  outcome. No secrets, no task progress. The ephemeral handoff
+  (`/run/lab/credentials/<lease>-<recipient>`, 0400) carries the reference the
+  child reads (`ACE_LAB_CREDENTIAL_FILE`); no command ever prints a token.
+- Request is idempotent per the live task/assignment/profile/role correlation
+  (concurrent requests mint one token); the granted scope is the intersection
+  of the host profile and the request — a request may narrow, never widen, and
+  editing the task or project config grants nothing. The calling ACCOUNT is
+  verified against the profile's principals.
+- TTL: default 30m, max 60m unless the host sets an explicit profile limit;
+  exceeding the limit is a REFUSAL, never a silent clip. Status always shows
+  the actual use-until and — separately — the provider-guaranteed expiry.
+- exec preserves the child's exit code; on process success a cleanup failure
+  is itself an error and the report carries both outcomes; one exec at a time
+  per lease; normal end/cancel revokes immediately, a SIGKILL'd executor is
+  cleaned up no later than the recorded deadline (host scheduler) and
+  `reconcile` resolves interrupted cycles.
+- Refusals are non-zero with a reason and the escalation addressee; there is
+  no fallback identity. A network-shaped revoke stays visibly
+  `revoke-pending` — a revocation is never claimed before the provider
+  confirms it.
+- Plugins (explicit registry, like the ace-git providers): `forgejo` (one
+  scoped token per lease on the configured role account; revoke deletes that
+  exact token id — never a prefix wipe), `github` (App JWT → installation
+  token for chosen repos/permissions with the real `expires_at`; DELETE to
+  revoke; 401 = already invalid), `env` (named values of configured safe
+  sources, process-scoped only — a standalone env profile cannot declare
+  remote expiry/revoke).

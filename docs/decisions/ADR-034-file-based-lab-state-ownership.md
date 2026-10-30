@@ -94,6 +94,17 @@ policy or queue is added.
 - L2-L10 planned waves (HITL interface, coworker, planner, roles, private
   overseer queue, status/continuation, installer, acceptance, release) build on
   this map without introducing another state store.
+- Amendment (2026-10-29, Captain-approved, task 8xs.t.pu0.7): `ace-lab auth`
+  owns exactly one additional record — the minimal short-lived access LEASE
+  (`/var/lib/lab/ace-lab/auth/leases/<id>.json`), declared in the same trusted
+  authorization document's `auth:` section. The lease record carries the
+  delegation correlation, the provider token REFERENCE, the deadlines and the
+  cleanup outcome — never a secret value, never task progress or another
+  tool's state. The ephemeral credential handoff (`/run/lab/credentials/`,
+  per lease and recipient, mode 0400) is a reference channel, not a store.
+  This is NOT the retired admission/broker layer: it issues scoped
+  credentials from host-owned profiles; it admits no mutations and queues
+  nothing.
 - No compatibility layer is kept for the removed lab mechanisms (ADR-024).
 - Old worktrees, branches, reports, and archives are not deleted by this
   decision.

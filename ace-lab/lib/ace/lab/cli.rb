@@ -13,6 +13,7 @@ require_relative "cli/commands/prepare"
 require_relative "cli/commands/project_add"
 require_relative "cli/commands/install"
 require_relative "cli/commands/verify"
+require_relative "cli/commands/auth"
 
 module Ace
   module Lab
@@ -33,7 +34,8 @@ module Ace
         ["prepare", "Prepare accounts, directories, permissions, keys and roles from the trusted install manifest"],
         ["project add", "Register a project and make it ready for team work (repository, _overseer, lab config)"],
         ["install", "Perform the full new-lab installation from the trusted install manifest"],
-        ["verify", "Verify the installed lab's readiness under the target accounts (read-only)"]
+        ["verify", "Verify the installed lab's readiness under the target accounts (read-only)"],
+        ["auth", "Short-lived role access: request, status, exec, revoke, reconcile"]
       ].freeze
 
       HELP_EXAMPLES = [
@@ -67,6 +69,7 @@ module Ace
       register "project add", CLI::Commands::ProjectAdd.new
       register "install", CLI::Commands::Install.new
       register "verify", CLI::Commands::Verify.new
+      register "auth", CLI::Commands::Auth.new
 
       # Register version command
       version_cmd = Ace::Support::Cli::VersionCommand.build(
