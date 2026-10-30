@@ -28,6 +28,7 @@ module Ace
 
         class NotAnswerableError < StandardError; end
         class AnswerConflictError < StandardError; end
+        class UnknownCaseError < StandardError; end
 
         attr_reader :root_dir, :last_list_total, :last_folder_counts, :config
 
@@ -108,6 +109,53 @@ module Ace
           events = filter_by_tags(events, tags) if tags.any?
 
           events
+        end
+
+        # Receive a delivered human answer for EXACTLY one case (task
+        # 8xs.t.pu0.5 — the reply half of the Hermes → owner-machine
+        # delivery). The reference must be the case's exact id — no
+        # shortcut or latest-match resolution, so a reply can never land
+        # in a foreign case on collision. Idempotent: re-delivering the
+        # same answer for an already-answered case reports :duplicate
+        # without a second write; a DIFFERENT answer conflicts and never
+        # overwrites the human decision. The durable case file is the
+        # record — an absent asker is fine, the armed wake consumes the
+        # change whenever the asking session returns.
+        # @return [Symbol] :received or :duplicate
+        # @raise [UnknownCaseError] no case with this exact id
+        # @raise [AmbiguousReferenceError] the reference collides
+        # @raise [NotAnswerableError] the case is a report
+        # @raise [AnswerConflictError] a different answer already exists
+        def receive_answer(ref, answer, scope: nil)
+          resolved = resolve_for_mutation(ref, scope: scope)
+          raise UnknownCaseError, "no HITL case with exact id '#{ref}'" if resolved.nil?
+          if resolved[:event].id.to_s != ref.to_s
+            raise UnknownCaseError,
+              "'#{ref}' is not an exact case id (resolved to '#{resolved[:event].id}'); " \
+                "reply requires the exact case id from the ask"
+          end
+
+          event = resolved[:event]
+          if event.report?
+            raise NotAnswerableError,
+              "HITL event '#{event.id}' is a report; reports do not await an answer"
+          end
+
+          content = File.read(event.file_path)
+          frontmatter, body = Ace::Support::Items::Atoms::FrontmatterParser.parse!(content)
+          previous = body.sub(/\A\n/, "").match(/^## Answer[ \t]*(?:\n(.*))?\z/m)&.[](1).to_s.strip
+          if frontmatter["answered"] == true || !previous.empty?
+            if previous == answer.to_s.strip
+              return :duplicate
+            end
+
+            raise AnswerConflictError,
+              "case '#{event.id}' already has a different answer; a reply never overwrites a decision"
+          end
+
+          apply_field_and_answer_updates(event.file_path, set: {}, add: {}, remove: {},
+            answer: answer, first_answer: true)
+          :received
         end
 
         def update(ref, set: {}, add: {}, remove: {}, move_to: nil, answer: nil, scope: nil)

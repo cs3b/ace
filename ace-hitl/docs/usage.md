@@ -339,6 +339,33 @@ asynchronous). Exit 1 only for genuine rejects (a route refusing the
 frame, or a concrete configuration error); no wake request is dropped for
 a rejected ask.
 
+## Reply
+
+`ace-hitl reply CASE_ID --stdin` (task 8xs.t.pu0.5) is the receiver-side
+half of answer delivery: the transport (Hermes) runs it ON THE OWNER'S
+MACHINE, in the owner's directory, with the answer text on stdin — never
+as a shell command or an argv element:
+
+```bash
+echo "Proceed with batch 2" | ace-hitl reply 8xhkep --stdin
+{"case":"8xhkep","state":"received"}
+```
+
+- The output names ONLY the case and its state: `received`, or `duplicate`
+  when the identical answer is redelivered (idempotent — the case file is
+  never rewritten). Success means ace-hitl confirmed the DURABLE write; a
+  reply frame sitting in a transport is not delivery.
+- The reference must be the case's EXACT id from the ask — no shortcut or
+  latest-match resolution, so a reply can never land in a foreign case on
+  collision.
+- Every failure is an explicit non-delivery with no side effects: an empty
+  answer, a report instead of a question, a conflicting (different)
+  answer — a reply never overwrites a human decision — or an unknown
+  reference all exit 1 without writing.
+- The receiver does not need to be running: the answered case file is the
+  durable record; the armed ask wake consumes the change whenever the
+  asking session returns.
+
 ## Lifecycle event names
 
 HITL lifecycle signals use this namespace:

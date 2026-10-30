@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `ace-hitl reply CASE_ID --stdin` (task 8xs.t.pu0.5): receiver-side answer
+  delivery on the owner's machine. Output carries only the case and its state
+  (`received`/`duplicate`); the reference must be the exact case id (no
+  shortcut/latest resolution), identical redelivery is idempotent without a
+  rewrite, a conflicting answer never overwrites the decision, and empty
+  answers/reports/unknown references fail as explicit non-deliveries.
+
 ## [0.24.3] - 2026-10-29
 
 ### Fixed

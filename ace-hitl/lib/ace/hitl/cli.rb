@@ -4,6 +4,7 @@ require "ace/support/cli"
 require_relative "../hitl/version"
 require_relative "cli/commands/create"
 require_relative "cli/commands/ask"
+require_relative "cli/commands/reply"
 require_relative "cli/commands/send"
 require_relative "cli/commands/operator_question"
 require_relative "cli/commands/read"
@@ -67,6 +68,7 @@ module Ace
       register "observe", CLI::Commands::Observe
       register "update", CLI::Commands::Update
       register "ask", CLI::Commands::Ask
+      register "reply", CLI::Commands::Reply
       register "send", CLI::Commands::Send
       register "wait", CLI::Commands::Wait
       register "deliver", CLI::Commands::Deliver
