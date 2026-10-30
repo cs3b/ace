@@ -78,3 +78,18 @@ publikacja (OTP Kapitana), zimny cykl na labie.
 
 Bramki końcowe (bez zmian): niezależny review → formalny approval → merge →
 publish (OTP) → zimny cykl na labie.
+
+## Dodatek 3: weryfikacja packagingu gemów (2026-10-30, runda 20)
+
+- 9/9 gemów buduje się czysto z katalogów pakietów (wcześniejszy błąd
+  wywołania z roota to artefakt relatywnych globów gemspeców, nie defekt).
+- **ace-wake 0.1.0**: zainstalowany gem zawiera komplet rozszerzenia
+  (index.js + 10 modułów wake/ + lib/ace/wake/version.rb).
+- **Łańcuch projekcji udowodniony na zainstalowanych gemach**: pi 0.8.0
+  (manifest extensions_package: ace-wake) → registry rozwiązuje pakiet →
+  ProviderSyncer projektuje 12 plików do .pi/extensions z obecnym
+  entrypointem ace-wake/index.js (lokalny sibling wygrywa z gemem —
+  poprawna precedencja; na labie bez checkoutu użyje zainstalowanego
+  gema przez tę samą ścieżkę).
+
+Bramki końcowe bez zmian (review/approval/merge → publish → lab).
