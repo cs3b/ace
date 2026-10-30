@@ -123,7 +123,7 @@ module Ace
           # frontmatter), never proceed with an empty hash.
           def self.parse_strict(file_path, content)
             Atoms::FrontmatterParser.parse!(content)
-          rescue Psych::SyntaxError => e
+          rescue Psych::Exception => e
             raise ArgumentError,
               "#{file_path}: frontmatter YAML is invalid (#{e.message}); refusing to rewrite the file"
           end
