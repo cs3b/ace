@@ -109,7 +109,13 @@ module Ace
         def update(id)
           path = lease_path(id)
           with_write_lock(id) do
-            lease = JSON.parse(File.read(path))
+            lease = begin
+              JSON.parse(File.read(path))
+            rescue JSON::ParserError, Errno::ENOENT => e
+              # A corrupt/missing record is a named store failure, never a
+              # raw parser error escaping through the update seam.
+              raise Error, "lease '#{id}' cannot be read at #{path}: #{e.class} #{e.message}"
+            end
             yield(lease)
             atomic_write(path, lease)
             lease
@@ -180,13 +186,15 @@ module Ace
             file.flush
             file.fsync
           end
+          # 0600 BEFORE the rename: the record never exists at the target
+          # path with umask-default permissions, even for an instant.
+          FileUtils.chmod(0o600, temporary)
           begin
             File.rename(temporary, path)
           rescue Errno::ENOENT
             FileUtils.mkdir_p(File.dirname(path))
             File.rename(temporary, path)
           end
-          FileUtils.chmod(0o600, path)
         end
 
         def lease_path(id)

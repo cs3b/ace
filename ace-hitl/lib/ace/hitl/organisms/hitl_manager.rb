@@ -920,6 +920,7 @@ module Ace
           with_case_lock(file_path) do
             content = File.read(file_path)
             frontmatter, body = Ace::Support::Items::Atoms::FrontmatterParser.parse!(content)
+            body = body.sub(/\A\n/, "")
 
             updated_body = Molecules::HitlAnswerEditor.apply(body, answer)
             answered = !answer.to_s.strip.empty?
@@ -1036,7 +1037,7 @@ module Ace
           with_case_lock(event.file_path) do
             content = File.read(event.file_path)
             frontmatter, body = Ace::Support::Items::Atoms::FrontmatterParser.parse!(content)
-            updated_body = body.to_s.sub(/\s*\z/, "")
+            updated_body = body.to_s.sub(/\A\n/, "").sub(/\s*\z/, "")
             updated_body << "\n\n## Resume Dispatch\n\n#{note}\n"
             write_atomic(event.file_path,
               Ace::Support::Items::Atoms::FrontmatterSerializer.rebuild(frontmatter, updated_body))

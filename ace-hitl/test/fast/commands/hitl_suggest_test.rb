@@ -191,20 +191,25 @@ module Ace
           # always the complete old or new content with the answer kept.
           def test_a_killed_field_update_never_loses_the_answer
             deliver_answer("Proceed\n")
+            signaled = 0
 
-            10.times do |i|
+            12.times do |i|
               pid = Process.fork do
-                exit!( (@manager.update(@event.id, set: {"waiter_tick" => i.to_s}) || true) ? 0 : 1 )
+                @manager.update(@event.id, set: {"waiter_tick" => i.to_s})
+                exit!(0)
               end
-              sleep 0.015
+              sleep [0.002, 0.006, 0.012, 0.02][i % 4]
               Process.kill("KILL", pid) rescue nil
-              Process.wait(pid) rescue nil
+              _pid, status = Process.wait2(pid)
+              signaled += 1 if status.signaled?
 
               content = File.read(@event.file_path)
               assert_operator content.size, :>, 0, "trial #{i}: the case file is never zero bytes"
               assert_match(/^Proceed$/, content, "trial #{i}: the human answer survives")
               Ace::Support::Items::Atoms::FrontmatterParser.parse!(content)
             end
+            assert_operator signaled, :>=, 1,
+              "at least one trial must actually die mid-update (#{signaled}/12 signaled)"
           end
 
           # Regression (round 3b): EVERY manager writer path takes the

@@ -43,7 +43,18 @@ module Ace
         def apply_fields(file_path, set: {}, add: {}, remove: {})
           with_case_lock(file_path) do
             content = File.read(file_path)
-            frontmatter, body = Ace::Support::Items::Atoms::FrontmatterParser.parse!(content)
+            begin
+              frontmatter, body = Ace::Support::Items::Atoms::FrontmatterParser.parse!(content)
+            rescue Psych::SyntaxError => e
+              # Same error shape as FieldUpdater.parse_strict: a corrupt
+              # case file is a named, path-carrying refusal to rewrite —
+              # never a raw parser error escaping the writer.
+              raise ArgumentError, "#{file_path}: refusing to rewrite the file (#{e.message})"
+            end
+            # Strip the body's leading newline: rebuild re-inserts the
+            # frontmatter/body separator, so keeping it would add one
+            # blank line per write — compounding on every field update.
+            body = body.sub(/\A\n/, "")
             Ace::Support::Items::Molecules::FieldUpdater.apply_set(frontmatter, set)
             Ace::Support::Items::Molecules::FieldUpdater.apply_add(frontmatter, add)
             Ace::Support::Items::Molecules::FieldUpdater.apply_remove(frontmatter, remove)
