@@ -56,7 +56,8 @@ module Ace
         # @raise [Error] on unknown role, identity mismatch, invalid
         #   assembly, a refused overwrite, a config path escaping the
         #   project root, or a directory config target
-        def call(role:, task:, assignment:, overseer:, start_prompt: nil, force: false, dry_run: false)
+        def call(role:, task:, assignment:, overseer:, start_prompt: nil, hitl_case: nil,
+          force: false, dry_run: false)
           preset = @preset_loader.fetch(role)
 
           # Canonicalize the task identity first: the assignment match and
@@ -69,10 +70,17 @@ module Ace
           canonical_task = resolved.id.to_s
           @assignment_metadata.verify_task_match!(assignment, canonical_task)
 
-          prompt = start_prompt.to_s.strip.empty? ? render_prompt(preset, role, canonical_task, assignment, overseer) : start_prompt
+          hitl_case = hitl_case.to_s.strip
+          if start_prompt.to_s.strip.empty? && preset["start_prompt"].to_s.include?("{{case}}") && hitl_case.empty?
+            raise Error,
+              "the '#{role}' start_prompt delegates to a HITL case ({{case}}); " \
+                "pass the exact case id (--hitl-case CASE_ID) or a literal --start-prompt"
+          end
+
+          prompt = start_prompt.to_s.strip.empty? ? render_prompt(preset, role, canonical_task, assignment, overseer, hitl_case) : start_prompt
 
           config = build_config(preset, role: role, task: canonical_task, assignment: assignment,
-            overseer: overseer, prompt: prompt)
+            overseer: overseer, prompt: prompt, hitl_case: hitl_case)
           errors = Atoms::ConfigSchema.errors(config)
           unless errors.empty?
             raise Error, "commissioned config is invalid: #{errors.join('; ')}"
@@ -91,12 +99,13 @@ module Ace
 
         private
 
-        def render_prompt(preset, role, task, assignment, overseer)
+        def render_prompt(preset, role, task, assignment, overseer, hitl_case)
           Atoms::PromptTemplate.render(preset["start_prompt"],
-            {"task" => task, "assignment" => assignment, "role" => role, "overseer" => overseer})
+            {"task" => task, "assignment" => assignment, "role" => role,
+             "overseer" => overseer, "case" => hitl_case})
         end
 
-        def build_config(preset, role:, task:, assignment:, overseer:, prompt:)
+        def build_config(preset, role:, task:, assignment:, overseer:, prompt:, hitl_case: "")
           config = {
             "role" => role,
             "instructions" => preset["instructions"],
@@ -105,6 +114,7 @@ module Ace
             "assignment" => assignment,
             "overseer" => overseer
           }
+          config["case"] = hitl_case unless hitl_case.empty?
           config["toolchain"] = "installed" if Ace::Support::Cli::Toolchain.installed?
           config["reporting"] = {"channel" => preset["reporting"]} unless preset["reporting"].to_s.empty?
           config["errors"] = {"on_failure" => preset["errors"]} unless preset["errors"].to_s.empty?

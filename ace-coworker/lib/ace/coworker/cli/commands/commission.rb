@@ -15,6 +15,7 @@ module Ace
           option :task, desc: "Task reference that must resolve in this worktree (required)"
           option :assignment, desc: "Assignment id pinned to the role (required)"
           option :overseer, desc: "Overseer reporting address (required)"
+          option :"hitl-case", desc: "HITL case id for per-case delegation roles (renders the preset's {{case}})"
           option :"start-prompt", desc: "Literal start prompt overriding the preset template"
           option :config, desc: "Config path (default from cascade: .ace-local/coworker/config.yml)"
           option :force, type: :boolean, default: false, desc: "Allow overwriting an existing config"
@@ -47,7 +48,7 @@ module Ace
             orchestrator = @orchestrator || build_orchestrator(options[:config])
             result = orchestrator.call(
               role: role, task: task, assignment: assignment, overseer: overseer,
-              start_prompt: options[:"start-prompt"],
+              start_prompt: options[:"start-prompt"], hitl_case: options[:"hitl-case"],
               force: options[:force] == true, dry_run: options[:"dry-run"] == true
             )
 

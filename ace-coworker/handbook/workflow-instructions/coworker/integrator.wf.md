@@ -82,12 +82,16 @@ the exact candidate head. Otherwise WITHHOLD the merge and report/escalate.
 3. **Evaluate the gate (deterministic).**
    - `ace-coworker gate --candidate-head <sha> --review-head <sha>
      --review-verdict accept|continue|escalate --tests executed,passed
-     --dep <leaf>=integrated --dep <leaf>=missing`
+     --tests-head <sha> --dep <leaf>=integrated --dep <leaf>=missing`
      (repeat `--dep` per dependency; omit `--candidate-head`/`--review-head`
      when genuinely unknown so the gate blocks on the missing evidence).
+     `--tests-head` is REQUIRED whenever test evidence is supplied: it is
+     the candidate head the executed test run covered, and the gate
+     blocks on stale test evidence without it.
    - The gate (`Ace::Coworker::Atoms::IntegrationGate`) is pure: it returns
      `ready` or `blocked` with per-check reasons (dependencies, candidate
-     drift, review freshness/verdict, executed+passing tests). `blocked` is a
+     drift, review freshness/verdict, executed+passing tests bound to the
+     tested head). `blocked` is a
      legitimate outcome with exit 0; only invalid input fails the command.
    - A candidate change after the review (candidate head != reviewed head)
      invalidates the review: the gate reports a stale review even when the

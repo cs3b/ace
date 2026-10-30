@@ -174,6 +174,53 @@ module Ace
           assert_equal "config path '.ace-local/coworker/nested' is a directory; --config must name a file", error.message
           assert_empty Dir.glob(File.join(dir_target, "*"))
         end
+
+        # Per-case delegation roles (second-captain, task 8xs.t.pu0.b): the
+        # preset's {{case}} placeholder receives the exact HITL case id.
+        # Regression (PR #398 review, F10): a literal {{case}} left in the
+        # rendered prompt meant the default preset never delegated to a
+        # concrete case.
+        def per_case_loader
+          FakePresetLoader.of(
+            "second-captain" => {
+              "name" => "second-captain", "description" => "Advisory", "source" => "gem",
+              "instructions" => "wfi://coworker/second-captain",
+              "start_prompt" => "Work as the {{role}} on case {{case}} (task {{task}}) " \
+                "through assignment {{assignment}}, reporting to {{overseer}} — then stop.",
+              "reporting" => "hitl", "errors" => "report"
+            }
+          )
+        end
+
+        def test_a_per_case_preset_receives_the_exact_hitl_case_id
+          @loader = per_case_loader
+          result = orchestrator.call(role: "second-captain", task: "8xh.t.ccc", assignment: "asg01",
+            overseer: "overseer@lab", hitl_case: "8xtcase01")
+
+          assert_includes result.config["start_prompt"], "on case 8xtcase01"
+          refute_includes result.config["start_prompt"], "{{case}}",
+            "the rendered prompt never carries a literal placeholder"
+          assert_equal "8xtcase01", result.config["case"],
+            "the written config records the delegated case id"
+        end
+
+        def test_a_per_case_preset_without_a_case_is_refused_not_silently_rendered
+          @loader = per_case_loader
+          error = assert_raises(Error) do
+            orchestrator.call(role: "second-captain", task: "8xh.t.ccc", assignment: "asg01",
+              overseer: "overseer@lab")
+          end
+          assert_match(/delegates to a HITL case.*--hitl-case/, error.message)
+          refute File.exist?(File.join(@dir, ".ace-local", "coworker", "config.yml")),
+            "a refused commission writes nothing"
+        end
+
+        def test_a_literal_start_prompt_still_overrides_the_per_case_template
+          @loader = per_case_loader
+          result = orchestrator.call(role: "second-captain", task: "8xh.t.ccc", assignment: "asg01",
+            overseer: "overseer@lab", start_prompt: "Literal advisory prompt.")
+          assert_equal "Literal advisory prompt.", result.config["start_prompt"]
+        end
       end
     end
   end

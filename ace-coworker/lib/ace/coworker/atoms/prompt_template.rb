@@ -7,7 +7,9 @@ module Ace
       # placeholders from a context hash; unknown placeholders stay literal.
       # No IO.
       class PromptTemplate
-        PLACEHOLDERS = %w[task assignment role overseer].freeze
+        # `case` carries the HITL case id for per-case delegation roles
+        # (e.g. second-captain); roles without it simply never reference it.
+        PLACEHOLDERS = %w[task assignment role overseer case].freeze
         PLACEHOLDER_PATTERN = /\{\{(#{PLACEHOLDERS.map { |p| Regexp.escape(p) }.join('|')})\}\}/.freeze
 
         # @param template [String] preset start_prompt with {{placeholders}}

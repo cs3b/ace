@@ -52,6 +52,7 @@ module Ace
             "task" => str(raw["task"]),
             "assignment" => str(raw["assignment"]),
             "overseer" => str(raw["overseer"]),
+            "case" => str(raw["case"]),
             "reporting" => {"channel" => nested_str(raw, "reporting", "channel").empty? ? "hitl" : nested_str(raw, "reporting", "channel")},
             "errors" => {"on_failure" => nested_str(raw, "errors", "on_failure").empty? ? "report" : nested_str(raw, "errors", "on_failure")}
           }.compact

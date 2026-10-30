@@ -51,6 +51,12 @@ module Ace
           # being re-expanded into a later placeholder's value.
           assert_equal "Drive {{overseer}} for ov.", rendered
         end
+
+        def test_the_case_placeholder_renders_the_delegated_hitl_case
+          rendered = PromptTemplate.render("Work the {{role}} on case {{case}}.",
+            {"role" => "second-captain", "case" => "8xtcase01"})
+          assert_equal "Work the second-captain on case 8xtcase01.", rendered
+        end
       end
     end
   end

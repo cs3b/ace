@@ -23,8 +23,9 @@ ace-coworker resume [--dry-run]                # Resume interrupted work in this
 ace-coworker prepare --task REF --roles worker,reviewer [--to ADDR] [--dry-run]
 ace-coworker roles                             # List role presets (gem + project)
 ace-coworker commission --role worker --task REF --assignment ID --overseer ADDR
+                         [--hitl-case CASE_ID]  # renders {{case}} in per-case presets
 ace-coworker gate --candidate-head SHA --review-head SHA --review-verdict accept
-                 --tests executed,passed --dep LEAF=integrated
+                 --tests executed,passed --tests-head SHA --dep LEAF=integrated
 ```
 
 - `prepare` — the planner side: accept a preparation commission (task +
