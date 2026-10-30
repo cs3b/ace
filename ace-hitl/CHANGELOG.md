@@ -18,7 +18,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   regression test added), and unlocked writer paths are closed. Terminal
   cases (closed/cancelled) refuse new answers, suggestions and lessons;
   history capture is section-scoped; `history --format table`/`--quiet`
-  are real.
+  are real. Case files are created 0600 and every tmp write
+  is 0600 before rename; corrupt-file parses refuse with a named error
+  (Psych::Exception aligned across paths).
 
 ### Added
 

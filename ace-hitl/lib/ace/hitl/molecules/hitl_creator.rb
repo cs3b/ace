@@ -93,7 +93,10 @@ module Ace
           content = Ace::Support::Items::Atoms::FrontmatterSerializer.rebuild(frontmatter, body_text)
 
           item_file = File.join(item_dir, Atoms::HitlFilePattern.filename(id, file_slug))
-          File.write(item_file, content)
+          # 0600 from the first byte: a HITL case can carry secret
+          # material (secret asks), so it is never world-readable — even
+          # between creation and any later hardening write.
+          File.open(item_file, "w", 0o600) { |file| file.write(content) }
 
           loader = HitlLoader.new
           special_folder = Ace::Support::Items::Atoms::SpecialFolderDetector.detect_in_path(

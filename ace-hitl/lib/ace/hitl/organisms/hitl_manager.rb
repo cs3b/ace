@@ -579,13 +579,15 @@ module Ace
           end
         end
 
-        # Crash-atomic replace: the new content is fsynced to a tmp file
-        # and renamed over the case file, so a crash mid-write never
-        # leaves a truncated or half-serialized case behind. Callers hold
-        # the sidecar lock, so the rename never breaks mutual exclusion.
+        # Crash-atomic replace: the new content is fsynced to a 0600 tmp
+        # file (never world-readable for an instant, even before the
+        # rename) and renamed over the case file, so a crash mid-write
+        # never leaves a truncated or half-serialized case behind.
+        # Callers hold the sidecar lock, so the rename never breaks
+        # mutual exclusion.
         private def write_atomic(file_path, new_content)
           tmp_path = "#{file_path}.tmp.#{Process.pid}.#{Thread.current.object_id}"
-          File.open(tmp_path, "w") do |tmp|
+          File.open(tmp_path, "w", 0o600) do |tmp|
             tmp.write(new_content)
             tmp.flush
             tmp.fsync
