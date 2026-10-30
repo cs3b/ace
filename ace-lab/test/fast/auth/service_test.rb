@@ -26,6 +26,12 @@ module Ace
             @capabilities
           end
 
+          # No deterministic remote identity: the reference only exists
+          # after the (possibly lost) creation response.
+          def token_ref_for(lease_id:)
+            nil
+          end
+
           def issue(profile:, lease:)
             raise @failure if @failure
 
@@ -356,6 +362,40 @@ module Ace
           single = svc.status(lease_id: lease["id"])
           refute_includes single.keys, "token_ref"
           refute_includes svc.status.map(&:keys).flatten.uniq, "token_ref"
+        end
+
+        # R6 (re-review): a REALLY spawned child must not inherit any
+        # ambient credential override the lease does not contain — the
+        # child environment is an allowlist, not a merge.
+        def test_exec_real_child_does_not_inherit_unleased_credential_overrides
+          require "rbconfig"
+          svc = Molecules::GrantResolver.stub :read_verified, @document do
+            Service.new(principal: -> { "test-worker" }) # default runner: real spawn via env -i
+          end
+          lease = svc.request(profile_name: "developer", role: "developer",
+            task: "t", assignment: "a", repos: %w[ace])
+
+          previous = ENV["GH_TOKEN"]
+          ENV["GH_TOKEN"] = "SYNTHETIC-AMBIENT-OVERRIDE"
+          observed = File.join(@dir, "child-observation.json")
+          child = "require 'json'; File.write(ARGV.fetch(0), JSON.generate(" \
+            "{'ambient_credential_present' => ENV.key?('GH_TOKEN'), " \
+            "'path_present' => ENV.key?('PATH'), " \
+            "'lease' => ENV['ACE_LAB_LEASE']}))"
+          report = nil
+          begin
+            report = svc.exec(lease_id: lease["id"],
+              argv: [RbConfig.ruby, "-e", child, observed])
+          ensure
+            previous ? ENV["GH_TOKEN"] = previous : ENV.delete("GH_TOKEN")
+          end
+
+          assert_equal 0, report["exit"]
+          observed_env = JSON.parse(File.read(observed))
+          refute observed_env["ambient_credential_present"],
+            "the child inherited a credential outside the lease"
+          assert observed_env["path_present"], "allowlisted runtime vars survive"
+          assert_equal lease["id"], observed_env["lease"]
         end
       end
     end

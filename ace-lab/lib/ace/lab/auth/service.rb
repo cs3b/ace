@@ -21,6 +21,12 @@ module Ace
       class Service
         DEFAULT_LEASES_DIR = "/var/lib/lab/ace-lab/auth/leases"
         DEFAULT_CREDENTIALS_DIR = "/run/lab/credentials"
+        # The child environment is an ALLOWLIST: only non-secret runtime
+        # variables the child needs to execute, plus the leased
+        # credential reference — the issuer's whole environment (and
+        # any ambient credential override like GH_TOKEN in it) is never
+        # inherited past the lease's own scope.
+        CHILD_ENV_ALLOWLIST = %w[PATH HOME TMPDIR LANG LC_ALL TZ USER LOGNAME SHELL].freeze
 
         attr_reader :config, :store
 
@@ -28,11 +34,16 @@ module Ace
         # @param runner [Proc] argv runner for the exec'd child
         def initialize(authorization_path: nil, runner: nil, principal: nil)
           @authorization_path = authorization_path || Ace::Lab.authorization_path
-          # The default runner PRESERVES the child's real exit status
-          # (nil-status spawn failure degrades to 127, signals to
-          # 128+signum) — exec's report and the CLI exit code carry it.
+          # The default runner spawns the child through `env -i` so the
+          # allowlisted child environment is EXACTLY what the child
+          # sees — Ruby's system(env, ...) MERGES the hash into the
+          # inherited environment, which would leak every ambient
+          # credential override past the profile's scope. The real exit
+          # status is preserved (nil-status spawn failure degrades to
+          # 127, signals to 128+signum).
           @runner = runner || lambda { |argv, env|
-            system(env, *argv)
+            spawned = ["env", "-i", *env.map { |key, value| "#{key}=#{value}" }, *argv]
+            system(*spawned)
             status = $?
             if status.nil?
               127
@@ -124,10 +135,28 @@ module Ace
               next existing.merge("state_detail" => "live")
             end
 
-            lease = @store.create(profile: profile_name, role: role, principal: principal,
+            # An unresolved predecessor (issue lost to a crash while
+            # PREPARING, or a lost response after possible remote
+            # issuance) is settled DETERMINISTICALLY before any re-mint
+            # — the remote token, if it exists, is revoked through the
+            # record's deterministic reference. A settlement that
+            # cannot be confirmed refuses the retry: a local pending
+            # record is never proof the remote token is gone.
+            settle_unresolved(task: task, assignment: assignment,
+              profile: profile_name, role: role, principal: principal)
+
+            lease_id = "lease-#{SecureRandom.hex(8)}"
+            # Duck-typed capability: bundled providers always implement
+            # token_ref_for; an external plugin without one simply has no
+            # deterministic identity (unsettled issues then wait for
+            # reconcile/native expiry instead).
+            token_ref = issue.token_ref_for(lease_id: lease_id) if issue.respond_to?(:token_ref_for)
+            lease = @store.create(id: lease_id,
+              profile: profile_name, role: role, principal: principal,
               task: task, assignment: assignment, repos: repos,
               use_until: Time.at(Time.now.utc + ttl * 60).strftime("%Y-%m-%dT%H:%M:%SZ"),
-              provider_expiry: nil)
+              provider_expiry: nil,
+              token_ref: token_ref)
 
             begin
               granted = issue.issue(profile: profile, lease: lease)
@@ -141,7 +170,7 @@ module Ace
             end
 
             @store.update(lease["id"]) do |record|
-              record["token_ref"] = granted["token_ref"]
+              record["token_ref"] = granted["token_ref"] || record["token_ref"]
               record["provider_expiry"] = granted["provider_expiry"]&.to_s
               record["via"] = granted["via"]
             end
@@ -159,7 +188,14 @@ module Ace
               raise Error.new("credential handoff failed: #{e.message}; " \
                 "reconcile resolves the pending record")
             end
-            @store.update(lease["id"]) { |record| record["cleanup_due_at"] = record["use_until"] }
+            # ISSUED means a COMPLETE, usable grant: credential
+            # delivered, deadlines recorded, cleanup due. Until this
+            # write the record is PREPARING — never delivered, never
+            # returned as live, and recoverable after a hard death.
+            @store.update(lease["id"]) do |record|
+              record["state"] = "issued"
+              record["cleanup_due_at"] = record["use_until"]
+            end
 
             # The REQUEST return keeps token_ref (the holder just minted
             # the lease and may need the reference for reconcile), while
@@ -201,9 +237,17 @@ module Ace
                 "'#{credential}'; run reconcile or request a fresh lease")
             end
 
-            child_env = {**env,
+            # ALLOWLISTED child environment: required non-secret
+            # runtime variables plus the leased credential reference —
+            # nothing else is inherited, so an ambient credential
+            # override (GH_TOKEN, GIT_* auth, ...) can never bypass the
+            # profile's scope.
+            child_env = CHILD_ENV_ALLOWLIST.each_with_object({}) do |key, allowlist|
+              allowlist[key] = ENV[key] if ENV[key]
+            end
+            child_env.merge!(env,
               "ACE_LAB_LEASE" => lease_id,
-              "ACE_LAB_CREDENTIAL_FILE" => credential}
+              "ACE_LAB_CREDENTIAL_FILE" => credential)
             if profile["provider"] == "env"
               begin
                 child_env.merge!(JSON.parse(File.read(credential)))
@@ -272,16 +316,24 @@ module Ace
         # --- reconcile -----------------------------------------------------
 
         # Resolves interrupted issue/revoke cycles and expired
-        # assignments in the SAME store: revoke-pending and past-deadline
-        # leases are revocation-retried, leftover handoff files are
-        # cleared, and the report is explicit about what stays unknown.
-        # Assignments themselves are not reconstructed here.
+        # assignments in the SAME store: preparing (dead mid-issue),
+        # revoke-pending and past-deadline leases are
+        # revocation-retried, leftover handoff files are cleared, a
+        # corrupt record is a VISIBLE recovery error, and the report is
+        # explicit about what stays unknown. Assignments themselves are
+        # not reconstructed here.
         def reconcile
           results = []
           @store.all.each do |lease|
             handoff = CredentialHandoff.new(@credentials_dir, recipient: lease["principal"])
             outcome =
-              if lease["state"] == "revoked"
+              if lease["corrupt"]
+                # An unparseable record is a visible recovery problem —
+                # the remote token may still be live; it must never
+                # silently vanish from the inventory.
+                record = File.basename(lease["_path"].to_s)
+                :"corrupt (unparseable lease record #{record}; manual recovery required — the remote token may still be live)"
+              elsif lease["state"] == "revoked"
                 handoff.clear(lease["id"])
                 :already_revoked
               else
@@ -295,7 +347,8 @@ module Ace
                   @store.update(lease["id"]) { |record| record["state"] = "revoke-pending" }
                   :"revoke-pending (profile '#{lease["profile"]}' removed)"
                 else
-                  if lease["state"] == "revoke-pending" || !@store.live?(lease)
+                  if lease["state"] == "preparing" || lease["state"] == "revoke-pending" ||
+                    !@store.live?(lease)
                     cleanup(lease, profile, handoff)
                   else
                     :live
@@ -308,6 +361,51 @@ module Ace
         end
 
         private
+
+        # R5: a previous issue with an UNRESOLVED remote outcome (lost
+        # response after possible issuance, or a hard death while
+        # PREPARING) is settled before any re-mint. Settlement runs the
+        # normal cleanup — the record's DETERMINISTIC token_ref (written
+        # at creation) identifies the remote token, the handoff file
+        # supplies the secret when it exists — and only a confirmed
+        # :revoked/:already_invalid/:cleared lets the retry proceed. A
+        # pending/unknown settlement REFUSES the retry: never a blind
+        # second mint, never treating a local pending record as a
+        # remote revocation.
+        def settle_unresolved(task:, assignment:, profile:, role:, principal:)
+          unresolved = @store.all.select do |record|
+            record["task"] == task && record["assignment"] == assignment &&
+              record["profile"] == profile && record["role"] == role &&
+              %w[preparing revoke-pending].include?(record["state"])
+          end
+          return if unresolved.empty?
+
+          record_profile = profile_for(profile)
+          unresolved.each do |record|
+            # An unknown ISSUE outcome (revoke-pending after a lost
+            # response) without a deterministic remote identity can
+            # NEVER be confirmed settled — the retry is refused until
+            # reconcile or the provider's native expiry settles it. A
+            # PREPARING record (issuer died mid-flight, nothing ever
+            # delivered) is settled best-effort through the provider
+            # below; only a confirmed outcome lets the retry proceed.
+            if record["state"] == "revoke-pending" && record["token_ref"].to_s.empty?
+              raise Refusal.new("a previous issue for task '#{task}' assignment '#{assignment}' " \
+                "profile '#{profile}' has an unresolved remote outcome (lease '#{record["id"]}', " \
+                "no deterministic remote identity); it was NOT re-minted — run reconcile, wait " \
+                "for the provider's native expiry, or close it explicitly before requesting again")
+            end
+
+            handoff = CredentialHandoff.new(@credentials_dir, recipient: record["principal"] || principal)
+            outcome = cleanup(record, record_profile, handoff)
+            next if %i[revoked already_invalid cleared].include?(outcome)
+
+            raise Refusal.new("a previous issue for task '#{task}' assignment '#{assignment}' " \
+              "profile '#{profile}' has an unresolved remote outcome (lease '#{record["id"]}', " \
+              "state #{record["state"]}); it was NOT re-minted — run reconcile, wait for the " \
+              "provider's native expiry, or close it explicitly before requesting again")
+          end
+        end
 
         # Revocation hands the provider the ISSUED secret from the
         # ephemeral handoff when the file still exists — GitHub's

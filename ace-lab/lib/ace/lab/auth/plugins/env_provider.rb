@@ -24,6 +24,12 @@ module Ace
             @issuer_env = issuer_env
           end
 
+          # Deterministic remote identity: the exposure is process-
+          # scoped, so the reference is fixed and revocation is local.
+          def token_ref_for(lease_id:)
+            "env:#{lease_id}"
+          end
+
           def issue(profile:, lease:)
             names = profile.fetch("env_names")
             raise Providers::RefusedError,

@@ -7,11 +7,12 @@ module Ace
     module CLI
       module Commands
         # `ace-lab auth request|status|exec|revoke|reconcile` (task
-        # 8xs.t.pu0.7): the public short-lived-access interface. Table
-        # or JSON output; refusals and errors are non-zero with a
-        # reason and the escalation addressee; NO command ever prints a
-        # token or exports one to shell history. status is the
-        # read-only readiness view (alongside ace-lab verify).
+        # 8xs.t.pu0.7): the public short-lived-access interface. A
+        # single structured JSON report; refusals and errors are
+        # non-zero with a reason and the escalation addressee; NO
+        # command ever prints a token or exports one to shell history.
+        # status is the read-only readiness view (alongside ace-lab
+        # verify).
         class Auth < Ace::Support::Cli::Command
           include Ace::Support::Cli::Base
 
@@ -63,7 +64,7 @@ module Ace
                 "unknown auth action '#{action}' (request, status, exec, revoke, reconcile)"
             end
 
-            render(result, options[:format])
+            render(result)
             # The child's REAL exit code is the exec exit code — raised
             # AFTER the single report render, so both outcomes stay
             # visible without duplicating the report.
@@ -86,7 +87,7 @@ module Ace
             end
           end
 
-          def render(result, _format = nil)
+          def render(result)
             # A single structured JSON report: the data is the interface
             # agents consume (no table form exists for auth reports).
             puts JSON.pretty_generate(result)

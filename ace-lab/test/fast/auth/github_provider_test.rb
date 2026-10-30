@@ -40,7 +40,7 @@ module Ace
         def profile
           {"issuer" => {"installation_id" => 42, "app_id" => 99,
             "key_file" => "/nonexistent-key.pem", "api_url" => "https://api.github.com"},
-           "scopes" => ["write:repository", "read:organization"]}
+           "scopes" => ["write:contents", "read:pull_requests"]}
         end
 
         # The Authorization value for the `curl -H @file` entry, from the
@@ -129,13 +129,46 @@ module Ace
           assert_equal "ghs_X", granted["token"]
           argv = seen.fetch(0)
           payload = JSON.parse(argv[argv.index("-d") + 1])
-          assert_equal({"repository" => "write", "organization" => "read"},
+          assert_equal({"contents" => "write", "pull_requests" => "read"},
             payload["permissions"],
-            "write:repository must orient to {'repository' => 'write'}")
+            "write:contents orients to GitHub's real installation permission keys")
           assert_equal %w[ace], payload["repositories"]
           assert_match(/\AAuthorization: Bearer /, header_of(headers),
             "the App JWT also travels in the ephemeral header file, never in argv")
           refute_match(/Bearer /, argv.join(" "), "no secret in argv")
+        end
+
+        # R8 (re-review): GitHub permission names are their OWN schema
+        # (contents, pull_requests, members, ...) — a Forgejo-shaped
+        # subject like `repository` is refused instead of silently
+        # producing a permission key the endpoint does not have.
+        def test_non_github_permission_subjects_are_refused
+          key = File.join(Dir.mktmpdir, "key.pem")
+          File.write(key, OpenSSL::PKey::RSA.new(1024).to_pem)
+          issuer = profile["issuer"].merge("key_file" => key)
+          runner = ->(_argv) { flunk "no request may be sent for an invalid permission" }
+
+          ["write:repository", "read:organization"].each do |scope|
+            error = assert_raises(Providers::RefusedError) do
+              Plugins::GithubProvider.new(runner: runner)
+                .issue(profile: profile.merge("issuer" => issuer, "scopes" => [scope]),
+                  lease: {"repos" => %w[ace]})
+            end
+            assert_match(/is not a GitHub installation permission/, error.message)
+            assert_match(/contents, pull_requests, members/, error.message)
+          end
+
+          error = assert_raises(Providers::RefusedError) do
+            Plugins::GithubProvider.new(runner: runner)
+              .issue(profile: profile.merge("issuer" => issuer, "scopes" => ["grant:contents"]),
+                lease: {"repos" => %w[ace]})
+          end
+          assert_match(/level in read\|write\|admin/, error.message)
+        end
+
+        def test_no_deterministic_remote_identity
+          assert_nil Plugins::GithubProvider.new.token_ref_for(lease_id: "lease-0000000000000000"),
+            "the installation token id only exists in the creation response"
         end
 
         def test_issue_refuses_an_empty_repository_list

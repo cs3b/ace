@@ -16,8 +16,19 @@ module Ace
       # principal), the provider TOKEN REFERENCE (never the secret
       # value), the deadlines and the cleanup outcome — never task
       # progress, queues, or another tool's state.
+      #
+      # Lifecycle: a record is born PREPARING (issue in flight — a hard
+      # process death in that window leaves a recoverable record, never
+      # a phantom "live" grant); it becomes ISSUED only after a
+      # complete, usable credential handoff; an unresolved remote
+      # outcome (lost response, lost revoke) is REVOKE-PENDING until
+      # reconciled; REVOKED is terminal. Every write is atomic
+      # (temporary file + fsync + rename) under a STABLE sidecar write
+      # lock — a crash mid-write can never truncate or half-replace a
+      # record, and an unparseable record surfaces as a visible CORRUPT
+      # marker instead of silently vanishing from the inventory.
       class LeaseStore
-        STATES = %w[issued revoke-pending revoked].freeze
+        STATES = %w[preparing issued revoke-pending revoked].freeze
 
         attr_reader :dir
 
@@ -25,25 +36,32 @@ module Ace
           @dir = dir
         end
 
-        # @return [Hash] the created lease record
+        # @param id [String, nil] caller-generated lease id (so the
+        #   provider's deterministic token_ref can be computed from it
+        #   and written in the SAME atomic creation write)
+        # @param token_ref [String, nil] the provider's DETERMINISTIC
+        #   remote identity for this lease, written at creation so an
+        #   interrupted issue can still be reconciled against the
+        #   remote side (the response may never have arrived).
+        # @return [Hash] the created (PREPARING) lease record
         def create(profile:, role:, principal:, task:, assignment:, repos:,
-          use_until:, provider_expiry:)
-          lease = {"id" => "lease-#{SecureRandom.hex(8)}",
+          use_until:, provider_expiry:, token_ref: nil, id: nil)
+          lease = {"id" => id || "lease-#{SecureRandom.hex(8)}",
                    "profile" => profile, "role" => role, "principal" => principal,
                    "task" => task, "assignment" => assignment, "repos" => repos.sort,
-                   "state" => "issued", "requested_at" => now,
+                   "state" => "preparing", "requested_at" => now,
                    "use_until" => use_until, "provider_expiry" => provider_expiry,
-                   "token_ref" => nil, "cleanup" => nil}
+                   "token_ref" => token_ref, "cleanup" => nil}
           write(lease)
           lease
         end
 
         # Idempotency: the LIVE lease for the same task/assignment/
         # profile/role correlation, if any. Only an ISSUED record is
-        # live: a revoke-pending record (an interrupted issue or a lost
-        # revoke) was never (or is no longer) a usable grant — a retry
-        # mints a fresh lease while reconcile finishes the pending one.
-        # A finished or scope-changed correlation does not match, and
+        # live: preparing (issue in flight or dead mid-issue) and
+        # revoke-pending (unresolved remote outcome) records are never
+        # returned — recovery settles them instead. A finished or
+        # scope-changed correlation does not match, and
         # DEADLINE-AWARENESS is part of the match: an issued record
         # past its use_until/provider expiry is not returned, so a
         # retry mints a fresh grant while reconcile retires the expired
@@ -66,43 +84,49 @@ module Ace
           raise Error, "lease record '#{id}' is unreadable"
         end
 
+        # The full inventory, including CORRUPT records as explicit
+        # markers: a record that cannot be parsed is a visible recovery
+        # problem (the remote token may still be live) — never a
+        # silently skipped entry that disappears from reconcile.
         def all
           return [] unless Dir.exist?(@dir)
 
           Dir.glob(File.join(@dir, "*.json")).sort.filter_map do |path|
             JSON.parse(File.read(path))
-          rescue JSON::ParserError, Errno::EACCES
+          rescue Errno::EACCES
             nil
+          rescue JSON::ParserError
+            {"id" => File.basename(path, ".json"), "state" => nil,
+             "corrupt" => true, "_path" => path}
           end
         end
 
-        # Atomic update under an exclusive lease lock: transitions and
-        # token-ref/cleanup writes never race a concurrent exec/revoke.
+        # Atomic update under a STABLE sidecar write lock: the record is
+        # read, modified and replaced via temporary-file + fsync +
+        # rename. A crash at any point leaves either the old or the new
+        # complete record — never a truncated file — and the lock
+        # survives the replacement (it is not held on the record inode).
         def update(id)
           path = lease_path(id)
-          File.open(path, File::RDWR) do |file|
-            file.flock(File::LOCK_EX)
-            file.rewind
-            lease = JSON.parse(file.read)
+          with_write_lock(id) do
+            lease = JSON.parse(File.read(path))
             yield(lease)
-            file.rewind
-            file.truncate(0)
-            content = JSON.pretty_generate(lease)
-            file.write(content)
-            file.flush
-            file.fsync
+            atomic_write(path, lease)
             lease
           end
         end
 
         def write(lease)
-          FileUtils.mkdir_p(@dir)
-          path = lease_path(lease["id"])
-          temporary = "#{path}.#{Process.pid}.tmp"
-          File.write(temporary, JSON.pretty_generate(lease))
-          File.rename(temporary, path)
-          FileUtils.chmod(0o600, path)
+          atomic_write(lease_path(lease["id"]), lease)
           lease
+        end
+
+        def with_write_lock(id)
+          FileUtils.mkdir_p(@dir)
+          File.open(File.join(@dir, "#{id}.write.lock"), File::CREAT | File::RDWR) do |lock|
+            lock.flock(File::LOCK_EX)
+            yield
+          end
         end
 
         # One request flow at a time per correlation (task/assignment/
@@ -133,8 +157,9 @@ module Ace
         end
 
         # Usable NOW: only an ISSUED record inside its deadlines. A
-        # revoke-pending record has no valid handoff (interrupted issue)
-        # or is mid-revocation — it is never usable and never "live".
+        # preparing record was never delivered (or the process died
+        # mid-issue) and a revoke-pending record has no valid handoff
+        # or is mid-revocation — neither is ever usable or "live".
         def live?(lease, at: Time.now)
           return false unless lease["state"] == "issued"
           return false if lease["use_until"] && Time.parse(lease["use_until"]) <= at
@@ -146,6 +171,23 @@ module Ace
         end
 
         private
+
+        def atomic_write(path, lease)
+          FileUtils.mkdir_p(@dir)
+          temporary = "#{path}.#{Process.pid}.tmp"
+          File.open(temporary, "w") do |file|
+            file.write(JSON.pretty_generate(lease))
+            file.flush
+            file.fsync
+          end
+          begin
+            File.rename(temporary, path)
+          rescue Errno::ENOENT
+            FileUtils.mkdir_p(File.dirname(path))
+            File.rename(temporary, path)
+          end
+          FileUtils.chmod(0o600, path)
+        end
 
         def lease_path(id)
           raise Error, "invalid lease id" unless id.to_s.match?(/\Alease-[a-f0-9]{16}\z/)

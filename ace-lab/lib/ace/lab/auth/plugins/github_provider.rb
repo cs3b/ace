@@ -105,6 +105,36 @@ module Ace
               "github revoke outcome unknown: #{err.to_s.lines.first&.strip}"
           end
 
+          # No deterministic remote identity: the installation token's
+          # id is only known from the creation RESPONSE — an unknown
+          # issue outcome cannot be settled by reconstruction and must
+          # wait for reconcile/native expiry, never a blind re-mint.
+          def token_ref_for(lease_id:)
+            nil
+          end
+
+          # GitHub's OWN permission schema for installation tokens —
+          # these are the real permission keys of the
+          # POST /app/installations/{id}/access_tokens contract (NOT
+          # Forgejo repository rights): blanket-mapping one provider's
+          # subjects onto the other silently produces permission keys
+          # the endpoint rejects or ignores.
+          INSTALLATION_PERMISSIONS = %w[
+            actions administration checks content_references contents
+            deployments environments issues labels members merge_queues
+            metadata organization_administration organization_custom_org_roles
+            organization_custom_properties organization_hooks
+            organization_packages organization_personal_access_requests
+            organization_personal_access_tokens organization_plan
+            organization_projects organization_rulesets organization_secrets
+            organization_self_hosted_runners organization_user_blocking
+            packages pages pull_requests repository_advisories
+            repository_hooks repository_projects secret_scanning_alerts
+            secrets security_events statuses team_discussions
+            vulnerability_alerts workflows
+          ].freeze
+          PERMISSION_LEVELS = %w[read write admin].freeze
+
           private
 
           # The Authorization secret NEVER appears in curl argv (visible
@@ -120,16 +150,25 @@ module Ace
           end
 
           # Profile scopes map onto installation token permissions as
-          # `level:subject` strings (e.g. `write:repository` →
-          # {"repository" => "write"}); the deployment's App
-          # installation must already grant them — the request cannot
-          # widen rights.
+          # `level:subject` strings validated against GitHub's actual
+          # permission schema (e.g. `write:contents` →
+          # {"contents" => "write"}); the deployment's App installation
+          # must already grant them — the request cannot widen rights.
           def github_permissions(scopes)
             scopes.to_h do |scope|
               level, subject = scope.split(":", 2)
               subject, level = scope, "read" if subject.nil?
-              raise Providers::RefusedError,
-                "github scope '#{scope}' is malformed (expected level:subject, e.g. write:repository)" if subject.empty? || level.empty?
+              if subject.empty? || level.empty? || !PERMISSION_LEVELS.include?(level)
+                raise Providers::RefusedError,
+                  "github scope '#{scope}' is malformed (expected level:subject with " \
+                  "level in #{PERMISSION_LEVELS.join('|')}, e.g. write:contents)"
+              end
+              unless INSTALLATION_PERMISSIONS.include?(subject)
+                raise Providers::RefusedError,
+                  "github scope '#{scope}': '#{subject}' is not a GitHub installation " \
+                  "permission (real examples: contents, pull_requests, members, issues) " \
+                  "— GitHub permission names are not Forgejo repository scopes"
+              end
 
               [subject, level]
             end

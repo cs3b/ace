@@ -13,6 +13,12 @@ module Ace
       #
       # Plugin contract (duck type):
       #   capabilities -> {expiry_mode:} which the profile must accept
+      #   token_ref_for(lease_id:) -> String | nil — the provider's
+      #     DETERMINISTIC remote identity for the lease, written to the
+      #     record at creation; nil when the identity is only knowable
+      #     from the creation response (an unresolved issue then waits
+      #     for reconcile/native expiry instead of deterministic
+      #     settlement)
       #   issue(profile:, lease:) ->
       #     {"token" => secret (never serialized), "token_ref" => provider id,
       #      "provider_expiry" => time-ish | nil, "via" => handoff descriptor}
@@ -22,7 +28,9 @@ module Ace
       #     (`token` is the issued secret from the handoff — providers
       #     that revoke BY the token value, e.g. GitHub's installation
       #     token endpoint, require it; providers revoking by a server
-      #     id ignore it)
+      #     id ignore it; a 404-shaped unknown id settles as
+      #     :already_invalid so interrupted issues recover
+      #     deterministically)
       class Providers
         class RefusedError < StandardError; end
         class TransientError < StandardError; end

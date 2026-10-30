@@ -27,6 +27,13 @@ module Ace
         {"expiry_mode" => "host-revoke"}
       end
 
+      # Deterministic remote identity (the forgejo shape): the token
+      # reference is derived from the lease id alone, known before any
+      # response — the R5 settlement anchor.
+      def token_ref_for(lease_id:)
+        "tok-#{lease_id}"
+      end
+
       def issue(profile:, lease:)
         if @issue_fails.positive?
           @issue_fails -= 1
@@ -90,16 +97,18 @@ module Ace
       end
       assert_match(/unknown outcome/, error.message)
 
-      # the retry mints the working lease; the interrupted record is NOT
-      # live (exactly one active grant — no double issuance)
+      # The retry settles the unresolved predecessor FIRST (the fake
+      # provider's revoke succeeds, so settlement is confirmed) and
+      # then mints the working lease — exactly one active grant, no
+      # double issuance.
       lease = svc.request(profile_name: "developer", role: "developer",
         task: "t", assignment: "a", repos: %w[ace])
       assert_equal "issued", lease["state_detail"]
       live = svc.store.all.count { |record| svc.store.live?(record) }
       assert_equal 1, live, "exactly one live grant after an interrupted issue + retry"
       interrupted = svc.store.all.reject { |record| record["id"] == lease["id"] }
-      assert(interrupted.all? { |record| record["state"] == "revoke-pending" },
-        "the interrupted record stays a visible open item for reconcile")
+      assert(interrupted.all? { |record| record["state"] == "revoked" },
+        "the interrupted record is deterministically settled before the re-mint")
     end
 
     def test_sigkilled_executors_grant_dies_at_use_until_and_never_resurrects
@@ -182,19 +191,21 @@ module Ace
         refute svc.store.live?(interrupted)
         assert_equal 1, @flaky.issued.size, "the token WAS issued provider-side"
 
-        # recovery: the retry mints a working lease; reconcile revokes
-        # the interrupted token by its recorded reference
+        # recovery: the retry settles the interrupted token first (its
+        # reference was recorded before the handoff attempt), then
+        # mints a working lease
         FileUtils.rm(File.join(dir, "credentials"))
         lease = svc.request(profile_name: "developer", role: "developer",
           task: "t", assignment: "a", repos: %w[ace])
         assert_equal "issued", lease["state_detail"]
         refute_equal interrupted["id"], lease["id"]
         assert_equal 1, svc.store.all.count { |record| svc.store.live?(record) }
+        assert_includes @flaky.revoked, interrupted["token_ref"],
+          "the interrupted token is revoked through its recorded reference"
 
         report = svc.reconcile
         entry = report.find { |item| item["lease"] == interrupted["id"] }
-        assert_equal "revoked", entry["reconciled"]
-        assert_includes @flaky.revoked, interrupted["token_ref"]
+        assert_equal "already_revoked", entry["reconciled"]
       end
     end
 
@@ -248,6 +259,156 @@ module Ace
       assert_equal "forced-terminal", record["cleanup"]["result"]
       assert_match(/outcome unconfirmed/, record["cleanup"]["note"],
         "the unconfirmed provider outcome stays recorded")
+    end
+
+    # R4 (re-review): a hard process death during issue leaves a
+    # PREPARING record — never a phantom live grant. The retry settles
+    # it and returns a COMPLETE grant (credential delivered), and exec
+    # on the never-delivered record is refused.
+    class KillingProvider < FlakyProvider
+      attr_accessor :crash
+
+      def issue(profile:, lease:)
+        Process.kill("KILL", Process.pid) if @crash
+        super
+      end
+    end
+
+    def test_killed_issuer_leaves_a_recoverable_preparing_record_not_a_live_grant
+      killer = KillingProvider.new
+      killer.crash = true
+      Ace::Lab::Auth::Providers.register("flaky", killer)
+      svc = service
+
+      child = fork do
+        svc.request(profile_name: "developer", role: "developer",
+          task: "t", assignment: "a", repos: %w[ace])
+        exit! 0
+      end
+      _pid, status = Process.wait2(child)
+      assert status.signaled?, "the SIGKILL boundary must actually execute"
+      killer.crash = false # the retry below must issue normally in the parent
+
+      record = svc.store.all.fetch(0)
+      assert_equal "preparing", record["state"],
+        "a lease whose issue died mid-flight is never marked issued"
+      refute svc.store.live?(record), "never-delivered is not active access"
+      refute File.file?(File.join(@dir, "credentials", "#{record["id"]}-test-worker"))
+
+      error = assert_raises(Ace::Lab::Auth::Refusal) do
+        svc.exec(lease_id: record["id"], argv: %w[true])
+      end
+      assert_match(/not live/, error.message)
+
+      # recovery: the retry settles the dead predecessor (the fake
+      # provider revokes by reference) and returns a COMPLETE grant
+      retry_lease = svc.request(profile_name: "developer", role: "developer",
+        task: "t", assignment: "a", repos: %w[ace])
+      assert_equal "issued", retry_lease["state_detail"]
+      assert File.file?(File.join(@dir, "credentials", "#{retry_lease["id"]}-test-worker")),
+        "a grant reported issued always has its delivered credential"
+      assert_equal "revoked", svc.store.load(record["id"])["state"],
+        "the never-delivered predecessor is settled, not left live"
+    end
+
+    # R5 (re-review): when the unknown outcome CANNOT be settled, the
+    # retry is refused — never a blind second mint of a possibly-live
+    # remote token.
+    def test_retry_after_an_unresolvable_unknown_issue_is_refused
+      stuck = FlakyProvider.new
+      stuck.issue_fails = 1
+      stuck.revoke_fails = 100 # settlement can never be confirmed
+      Ace::Lab::Auth::Providers.register("flaky", stuck)
+      svc = service
+
+      error = assert_raises(Ace::Lab::Error) do
+        svc.request(profile_name: "developer", role: "developer",
+          task: "t", assignment: "a", repos: %w[ace])
+      end
+      assert_match(/unknown outcome/, error.message)
+
+      refusal = assert_raises(Ace::Lab::Auth::Refusal) do
+        svc.request(profile_name: "developer", role: "developer",
+          task: "t", assignment: "a", repos: %w[ace])
+      end
+      assert_match(/unresolved remote outcome.*reconcile/, refusal.message)
+      assert_equal 0, stuck.issued.size, "no blind re-mint after an unknown outcome"
+      assert_empty stuck.revoked
+    end
+
+    # R5 (re-review): with a DETERMINISTIC remote identity (the
+    # Forgejo shape), the retry settles the unknown-issue predecessor
+    # through its recorded reference BEFORE minting — at most one
+    # remote grant outstanding.
+    def test_deterministic_remote_identity_settles_an_unknown_issue_before_re_mint
+      deterministic = FlakyProvider.new
+      def deterministic.token_ref_for(lease_id:)
+        "ace-lab-#{lease_id}"
+      end
+
+      deterministic.issue_fails = 1
+      Ace::Lab::Auth::Providers.register("flaky", deterministic)
+      svc = service
+
+      assert_raises(Ace::Lab::Error) do
+        svc.request(profile_name: "developer", role: "developer",
+          task: "t", assignment: "a", repos: %w[ace])
+      end
+      interrupted = svc.store.all.fetch(0)
+      assert_equal "ace-lab-#{interrupted["id"]}", interrupted["token_ref"],
+        "the deterministic reference is on the record at creation, before any response"
+
+      lease = svc.request(profile_name: "developer", role: "developer",
+        task: "t", assignment: "a", repos: %w[ace])
+      assert_equal "issued", lease["state_detail"]
+      assert_includes deterministic.revoked, "ace-lab-#{interrupted["id"]}",
+        "the possibly-minted remote token is revoked by name before the re-mint"
+      assert_operator(deterministic.issued.size - deterministic.revoked.size, :<=, 1,
+        "at most one outstanding remote grant")
+    end
+
+    # R3 (re-review): a record update killed between write and rename
+    # leaves the PREVIOUS complete record — never a truncated file the
+    # inventory silently drops.
+    def test_record_update_is_atomic_against_process_death_mid_write
+      svc = service
+      lease = svc.request(profile_name: "developer", role: "developer",
+        task: "t", assignment: "a", repos: %w[ace])
+      path = File.join(svc.store.dir, "#{lease["id"]}.json")
+
+      child = fork do
+        File.singleton_class.prepend(Module.new do
+          define_method(:rename) do |from, to|
+            Process.kill("KILL", Process.pid) if to == path
+            super(from, to)
+          end
+        end)
+        svc.store.update(lease["id"]) { |record| record["state"] = "revoke-pending" }
+        exit! 0
+      end
+      _pid, status = Process.wait2(child)
+      assert status.signaled?, "the SIGKILL boundary must actually execute"
+
+      record = JSON.parse(File.read(path))
+      assert_equal "issued", record["state"], "the previous complete record survives"
+      assert_equal 1, svc.store.all.size,
+        "the lease stays in the reconcile inventory while its token is live"
+    end
+
+    # R3 (re-review): an unparseable record is a VISIBLE recovery
+    # error — never a silently skipped entry.
+    def test_corrupt_record_surfaces_as_a_recovery_error
+      svc = service
+      lease = svc.request(profile_name: "developer", role: "developer",
+        task: "t", assignment: "a", repos: %w[ace])
+      path = File.join(svc.store.dir, "#{lease["id"]}.json")
+      File.write(path, "{ truncated by an external failure")
+
+      assert(svc.store.all.any? { |record| record["corrupt"] && record["id"] == lease["id"] },
+        "the corrupt record stays visible in the inventory")
+      entry = svc.reconcile.find { |item| item["lease"] == lease["id"] }
+      assert_match(/corrupt \(unparseable lease record/, entry["reconciled"])
+      assert_match(/remote token may still be live/, entry["reconciled"])
     end
   end
 end

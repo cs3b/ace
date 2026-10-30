@@ -658,19 +658,19 @@ auth:
       provider: forgejo          # forgejo | github | env
       roles: [developer]
       principals: [lab-overseer] # who may REQUEST (empty = any verified account)
-      repos: [ace]
+      repos: [cs3b/ace]          # owner/name — Forgejo RepoTargetOption targets
       scopes: ["write:repository"]
       ttl_minutes: 30            # default 30; max 60 unless the host sets otherwise
       expiry_mode: host-revoke   # provider | host-revoke | process
-      issuer:                    # references into the host's protected store
+      issuer:                    # an ADMIN PAT: the token-authenticated admin API
         url: https://forge.example.com
         account: lab-role-dev
-        token_file: /etc/lab/ace-lab/secrets/forgejo.token
+        token_file: /etc/lab/ace-lab/secrets/forgejo.admin.token
 ```
 
 ```bash
 ace-lab auth request --profile developer-forgejo --role developer \
-  --task 8xs.t.pu0.7 --assignment job-7 --repo ace
+  --task 8xs.t.pu0.7 --assignment job-7 --repo cs3b/ace
 ace-lab auth status [LEASE]                 # read-only readiness view
 ace-lab auth exec LEASE --cmd bin/ace-test --cmd ace-lab
 ace-lab auth revoke LEASE                   # idempotent
@@ -680,15 +680,26 @@ ace-lab auth reconcile                      # resolves interrupted cycles
 Contract highlights:
 
 - The lease record (`/var/lib/lab/ace-lab/auth/leases/<id>.json`) is the ONE
-  minimal record: correlation, provider token REFERENCE, deadlines, cleanup
-  outcome. No secrets, no task progress. The ephemeral handoff
+  minimal record: correlation, provider token REFERENCE (the DETERMINISTIC
+  remote identity, written at creation), deadlines, cleanup outcome. No
+  secrets, no task progress. The ephemeral handoff
   (`/run/lab/credentials/<lease>-<recipient>`, 0400) carries the reference the
   child reads (`ACE_LAB_CREDENTIAL_FILE`); no command ever prints a token.
+  A record is born `preparing` and becomes `issued` only after a COMPLETE,
+  usable handoff — an issuer killed mid-flight leaves a recoverable record,
+  never a phantom live grant; every record write is atomic (tmp+fsync+rename)
+  and an unparseable record surfaces as a visible `corrupt` recovery error in
+  `reconcile`, never a silently skipped entry.
 - Request is idempotent per the live task/assignment/profile/role correlation
-  (concurrent requests mint one token); the granted scope is the intersection
-  of the host profile and the request — a request may narrow, never widen, and
-  editing the task or project config grants nothing. The calling ACCOUNT is
-  verified against the profile's principals.
+  (concurrent requests mint one token under a per-correlation lock); the
+  granted scope is the intersection of the host profile and the request — a
+  request may narrow, never widen, and editing the task or project config
+  grants nothing. The calling ACCOUNT is verified against the profile's
+  principals. A retry after an UNRESOLVED issue outcome never blind-mints a
+  second remote token: the predecessor is settled first through its
+  deterministic reference (Forgejo: the `ace-lab-<lease id>` token name, where
+  a 404 settles as already-invalid), and an unresolvable outcome refuses the
+  retry until reconcile or the provider's native expiry.
 - TTL: default 30m, max 60m unless the host sets an explicit profile limit;
   exceeding the limit is a REFUSAL, never a silent clip. Status always shows
   the actual use-until and — separately — the provider-guaranteed expiry.
@@ -697,7 +708,10 @@ Contract highlights:
   cleanup failure is itself an error and the report carries both outcomes;
   one exec at a time per lease; normal end/cancel revokes immediately, a
   SIGKILL'd executor is cleaned up no later than the recorded deadline (host
-  scheduler) and `reconcile` resolves interrupted cycles.
+  scheduler) and `reconcile` resolves interrupted cycles. The child runs with
+  an ALLOWLISTED environment (PATH/HOME &c. plus the leased credential
+  reference) — ambient credential overrides (GH_TOKEN, GIT_* auth, ...) are
+  never inherited past the profile's scope.
 - Refusals are non-zero with a reason and the escalation addressee; there is
   no fallback identity. A network-shaped revoke stays visibly
   `revoke-pending` — a revocation is never claimed before the provider
@@ -706,13 +720,19 @@ Contract highlights:
   LEASE --force` → forced-terminal with the unconfirmed outcome recorded),
   never silently marked revoked.
 - Plugins (explicit registry, like the ace-git providers): `forgejo` (one
-  scoped token per lease on the configured role account; revoke deletes that
-  exact token id — never a prefix wipe), `github` (App JWT → installation
-  token for chosen repos/permissions with the real `expires_at`; DELETE to
-  revoke; 401 = already invalid), `env` (named values of configured safe
-  sources, process-scoped only — a standalone env profile cannot declare
-  remote expiry/revoke). Scopes are `level:subject` strings for every
-  provider (`write:repository`, `read:organization`); for github they map to
-  installation-token permissions (`write:repository` →
-  `{"repository": "write"}`). Provider Authorization headers travel in 0600
-  ephemeral files (`curl -H @file`), never in argv visible to `ps`.
+  scoped token per lease through the TOKEN-AUTHENTICATED ADMIN API
+  (`/api/v1/admin/users/{account}/tokens`; the user endpoint requires
+  BasicAuth, not a PAT) with owner/name RepoTargetOption repository targets —
+  a repo without an owner is refused, never an all-repositories token — and
+  the response's granted scopes validated against the request; revoke deletes
+  that exact token name, 404 = already invalid), `github` (App JWT →
+  installation token for chosen repos/permissions with the real `expires_at`;
+  DELETE to revoke; 401 = already invalid), `env` (named values of configured
+  safe sources, process-scoped only — a standalone env profile cannot declare
+  remote expiry/revoke). Scopes are `level:subject` strings, validated per
+  provider: forgejo uses its own scope strings (`write:repository`); github
+  validates subjects against the REAL installation-permission names
+  (`write:contents`, `read:pull_requests`, `members`, ...) and refuses
+  Forgejo-shaped subjects like `write:repository`. Provider Authorization
+  headers travel in 0600 ephemeral files (`curl -H @file`), never in argv
+  visible to `ps`.

@@ -9,6 +9,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Forgejo wire contract (PR #398 re-review R1): issue/revoke use the
+  token-authenticated ADMIN endpoints (`/api/v1/admin/users/{account}/tokens`)
+  — the user endpoint requires BasicAuth and does not accept a PAT;
+  repository scoping uses the server's RepoTargetOption shape
+  (`owner/name` → owner+name objects) and an unidentifiable repo is refused
+  before any request, never an all-repositories token; the creation
+  response's granted scopes are validated against the request.
+- GitHub scope semantics (re-review R8): requested subjects are validated
+  against the REAL installation-permission names (`contents`,
+  `pull_requests`, `members`, ...) — Forgejo-shaped subjects like
+  `write:repository` are refused instead of producing permission keys the
+  endpoint does not have; docs use correct examples.
+- Lease durability (re-review R3/R4/R5): every record write is atomic
+  (tmp+fsync+rename under a stable sidecar write lock) and an unparseable
+  record surfaces as a visible `corrupt` recovery error in reconcile, never
+  a silently skipped entry; a record is born `preparing` and becomes
+  `issued` only after a complete usable handoff (a killed issuer leaves a
+  recoverable record, never a phantom live grant); the deterministic remote
+  identity (Forgejo token name) is written at creation, and a retry after
+  an unresolved issue settles the predecessor through it (404 =
+  already-invalid) or refuses — never a blind second mint.
+- exec environment isolation (re-review R6): the child runs through
+  `env -i` with an ALLOWLISTED environment (PATH/HOME &c. plus the leased
+  credential reference) — ambient credential overrides (GH_TOKEN, GIT_*
+  auth, ...) are never inherited past the profile's scope; verified with a
+  real spawned child.
 - Auth lease resilience (task 8xs.t.pu0.f): `LeaseStore#find_live`/`#live?`
   treated a revoke-pending record (an interrupted issue or a lost revoke) as
   a LIVE grant — a retry after an interrupted issue returned the dead grant
@@ -36,6 +62,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `ProjectLocations` reads the lab configuration by explicit path (no
   `Dir.chdir`) and returns nil for nil/blank project path encodings instead
   of raising.
+- `ace-lab auth` no longer advertises `--format` (Changed, re-review 8xttao06):
+  the reports are always a single structured JSON document — the option
+  previously parsed and was silently ignored (no table form exists for auth
+  reports), so callers following the lab-wide `--format json` convention now
+  get a documented hard error instead of a silently ignored flag.
 
 ### Added
 
