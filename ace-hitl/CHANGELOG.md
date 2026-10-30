@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `ace-hitl lesson` + `HitlManager#add_lesson` and `ace-hitl history` +
+  `#decision_history` (task 8xs.t.pu0.c): learning from real decisions — one
+  Lesson section per case citing exact question/suggestion/decision
+  revisions (idempotent, never overwriting history, requiring a suggestion
+  to compare against), and a citable, scope-local, secret-free decision
+  history for the next suggestion.
+
 - `ace-hitl suggest` and `HitlManager#add_suggestion` (task 8xs.t.pu0.b): the
   Second Captain's marked advisory proposal — own section before the Answer
   (survives answer rewrites), author/rationale/grounds recorded, one per case

@@ -9,6 +9,8 @@ require_relative "cli/commands/apply"
 require_relative "cli/commands/close"
 require_relative "cli/commands/sweep"
 require_relative "cli/commands/suggest"
+require_relative "cli/commands/lesson"
+require_relative "cli/commands/history"
 require_relative "cli/commands/send"
 require_relative "cli/commands/operator_question"
 require_relative "cli/commands/read"
@@ -77,6 +79,8 @@ module Ace
       register "close", CLI::Commands::Close
       register "sweep", CLI::Commands::Sweep
       register "suggest", CLI::Commands::Suggest
+      register "lesson", CLI::Commands::Lesson
+      register "history", CLI::Commands::History
       register "send", CLI::Commands::Send
       register "wait", CLI::Commands::Wait
       register "deliver", CLI::Commands::Deliver

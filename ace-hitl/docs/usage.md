@@ -387,6 +387,26 @@ and never acts in the human's name: the human decision always outranks it.
   delegated to the advisor.
 - Shortcuts/unknown ids are refused exactly like `reply`.
 
+## Lesson & History (Second Captain learning)
+
+`ace-hitl lesson CASE_ID --by AGENT --relation accepted|rejected|modified
+--takeaway ...` (task 8xs.t.pu0.c): after the human answers a case that
+carried a suggestion, the advisory agent writes ONE `## Lesson` section at
+the same case — its comparison takeaway with references to the exact
+question/suggestion/decision revisions, its own author and time. The lesson
+never overwrites the question, suggestion or decision, never changes the
+answer's author, and reprocessing is idempotent (an identical repeat is a
+`duplicate`; a second different lesson is refused). A case without a
+suggestion has nothing to compare — refused, never a fabricated agreement.
+
+`ace-hitl history [--scope current] [--limit N]`: the citable decision
+history for the NEXT suggestion — answered, NON-SECRET question cases of
+this scope, each row with its checkable references (case id, suggestion,
+decision, lesson+relation). Secret/OTP cases are filtered out before
+anything reaches a model; there is no embedding store, decision index, or
+corpus copy — HITL stays the single source, and the wider lab overseer's
+access is not a license to share other projects' history.
+
 ## Case lifecycle
 
 The canonical case file carries the whole lifecycle (task 8xs.t.pu0.6) —

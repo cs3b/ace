@@ -36,6 +36,10 @@ module Ace
         # the advisor, never written (the human decision stands and needs
         # no second approval); a suggestion never touches a secret case.
         class SuggestionRefusedError < StandardError; end
+        # A lesson needs a suggestion to compare against and an accepted
+        # human decision to learn from — a missing suggestion is no
+        # comparison, never a fabricated agreement.
+        class LessonRefusedError < StandardError; end
 
         attr_reader :root_dir, :last_list_total, :last_folder_counts, :config
 
@@ -342,6 +346,116 @@ module Ace
           end
           :written
         end
+
+        # --- lessons on real decisions (task 8xs.t.pu0.c) -------------------
+        #
+        # After the human answers a case that carries a suggestion, the
+        # advisory agent compares the decision with its proposal and
+        # writes ONE lesson at the same case: relation
+        # (accepted|rejected|modified), the takeaway, references to the
+        # exact question/suggestion/decision revisions, its own author
+        # identity and time. The lesson never overwrites the question,
+        # the suggestion, or the decision, never changes the answer's
+        # author, and is idempotent per case+decision (an identical
+        # repeat is a no-op). A case WITHOUT a suggestion has nothing to
+        # compare — refused, never a fabricated agreement.
+        # @return [Symbol] :written or :duplicate
+        def add_lesson(ref, by:, relation:, takeaway:, refs: [], scope: nil)
+          event = exact_case(ref, scope: scope)
+          frontmatter, body = read_frontmatter(event.file_path)
+
+          unless body.include?("## Suggestion")
+            raise LessonRefusedError,
+              "case '#{event.id}' carries no suggestion; there is nothing to compare"
+          end
+          unless frontmatter["answered"] == true
+            raise LessonRefusedError,
+              "case '#{event.id}' has no accepted human decision to learn from"
+          end
+
+          if body.include?("## Lesson")
+            return :duplicate if lesson_matches?(body, by, takeaway)
+
+            raise LessonRefusedError,
+              "case '#{event.id}' already carries a lesson; reprocessing does not multiply them"
+          end
+
+          unless %w[accepted rejected modified].include?(relation.to_s)
+            raise LessonRefusedError,
+              "relation must be accepted, rejected or modified (got '#{relation}')"
+          end
+
+          lesson = {"id" => "#{event.id}-l1", "author" => by.to_s,
+            "relation" => relation.to_s, "takeaway" => takeaway.to_s.strip,
+            "refs" => Array(refs).map(&:to_s).reject(&:empty?).push(
+              "case:#{event.id}", "suggestion:#{event.id}-s1",
+              "decision:#{frontmatter["answered_at"]}"
+            ).uniq,
+            "at" => timestamp}
+          updated = Molecules::HitlLessonEditor.apply(body, lesson)
+
+          File.open(event.file_path, File::RDWR) do |file|
+            file.flock(File::LOCK_EX)
+            file.rewind
+            content = file.read
+            current_frontmatter, _current_body = Ace::Support::Items::Atoms::FrontmatterParser.parse!(content)
+            new_content = Ace::Support::Items::Atoms::FrontmatterSerializer.rebuild(
+              current_frontmatter, updated
+            )
+            file.rewind
+            file.truncate(0)
+            file.write(new_content)
+            file.flush
+            file.fsync
+          end
+          :written
+        end
+
+        # Decision history for the advisory agent's NEXT suggestion (task
+        # 8xs.t.pu0.c): the answered, NON-SECRET question cases of THIS
+        # project scope — each row carrying the citable references (case
+        # id, kind, suggestion proposal, decision, lesson takeaway+refs)
+        # so every appeal to a precedent is checkable at its source.
+        # Secret/OTP cases are filtered OUT before anything reaches a
+        # model; the wider lab overseer's access is not a license to
+        # share other projects' history. No embedding store, no decision
+        # index, no corpus copy: HITL stays the single source.
+        # @return [Array<Hash>]
+        def decision_history(scope: "current", limit: 50)
+          events = list(in_folder: "all", scope: scope, type: "question")
+          events.select { |event| history_eligible?(event) }.first(limit).map do |event|
+            body = File.read(event.file_path)
+            frontmatter, _case_body = Ace::Support::Items::Atoms::FrontmatterParser.parse!(body)
+            {"id" => event.id, "title" => event.title, "kind" => event.kind,
+             "status" => event.status,
+             "suggestion" => body[/^proposal: (.+)$/, 1],
+             "decision" => body[/^## Answer\s*\n\s*(.+)$/m, 1]&.strip,
+             "lesson" => body[/^takeaway: (.+)$/, 1],
+             "lesson_relation" => body[/^relation: (accepted|rejected|modified)$/, 1],
+             "decision_at" => frontmatter["answered_at"]}
+          end
+        end
+
+        private
+
+        def history_eligible?(event)
+          frontmatter = read_frontmatter(event.file_path)[0]
+          return false if frontmatter["secret"] == true
+          return false unless frontmatter["answered"] == true
+
+          # Only cases whose decision the advisor may cite: they carry a
+          # visible decision in this scope's own store.
+          true
+        rescue Errno::ENOENT
+          false
+        end
+
+        def lesson_matches?(body, author, takeaway)
+          body.match?(/^author: #{Regexp.escape(author.to_s)}$/) &&
+            body.match?(/^takeaway: #{Regexp.escape(takeaway.to_s.strip)}$/)
+        end
+
+        public
 
         def sweep(apply: false)
           requests_dir = File.join(File.expand_path(@root_dir), "wake-requests")

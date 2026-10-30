@@ -32,12 +32,39 @@ grounds it references (task/assignment/report evidence). If the grounds are
 insufficient for a defensible proposal, say so in the suggestion — never
 fabricate precedent or confidence.
 
-### 2) Write the suggestion into the case
+### 2) Learn from every real decision
+
+When the Captain answers a case that carried your suggestion, compare the
+decision with your proposal and write ONE lesson at that case (task
+8xs.t.pu0.c):
+
+```bash
+ace-hitl lesson CASE_ID --by second-captain \
+  --relation accepted|rejected|modified \
+  --takeaway "what the next suggestion should learn"
+```
+
+A case without your suggestion has NOTHING to compare — never fabricate
+agreement. Identical reprocessing is a no-op. The lesson cites the exact
+question/suggestion/decision revisions; it never overwrites them and never
+changes the decision's author.
+
+### 3) Ground the next suggestion in citable history
+
+Before proposing, read the decision history available to THIS project
+(`ace-hitl history`): answered, non-secret cases with their suggestions,
+decisions and lessons. Cite the real case ids you relied on and note the
+limits of the similarity; a NEWER explicit Captain correction outranks an
+older suggestion. When you have no applicable precedent, SAY SO — a visible
+lack of grounds is honest, a fabricated precedent is not. Secret/OTP values
+never enter your proposals, takeaways, or citations.
+
+### 4) Write the suggestion into the case
 
 ```bash
 ace-hitl suggest CASE_ID --by second-captain \
   --text "proposed answer" \
-  --rationale "why this is the defensible choice" \
+  --rationale "why this is the defensible choice — cite case ids you relied on" \
   --refs task:8xs.t.pu0,assignment:job-7
 ```
 
@@ -45,7 +72,7 @@ One suggestion per case/revision; an identical repeat is a no-op. The
 suggestion lands as its own marked section in the case — never as the
 Answer.
 
-### 3) Stop
+### 5) Stop
 
 Your assignment ends with the written suggestion. Do not wake the Captain,
 do not open a new case, do not apply or await the answer.
