@@ -2,6 +2,7 @@
 
 require "date"
 require "yaml"
+require "ace/support/cli/toolchain"
 
 module Ace
   module Handbook
@@ -79,10 +80,16 @@ module Ace
         private
 
         # A package named through `extensions_package` resolves like the
-        # registry's own packages: the sibling directory inside the local
-        # project first (monorepo checkout), the installed gem second.
-        # Only a package that actually carries handbook/extensions counts.
+        # registry's own packages: the sibling directory inside the
+        # local project first (monorepo checkout), the installed gem
+        # second. In installed mode (ACE_TOOLCHAIN=installed) the
+        # checkout directory is project DATA, never the runtime source:
+        # the package must come from an installed gem, and only an
+        # installed spec counts. Only a package that actually carries
+        # handbook/extensions counts.
         def resolve_named_package(name)
+          return installed_package(name) if Ace::Support::Cli::Toolchain.installed?
+
           local = File.join(project_root, name)
           return local if File.directory?(File.join(local, "handbook", "extensions"))
 
@@ -92,6 +99,17 @@ module Ace
           spec.full_gem_path
         rescue Gem::LoadError, ArgumentError
           nil
+        end
+
+        # Installed mode: the packaged extension source must be the
+        # installed gem (max version), never the checkout directory.
+        def installed_package(name)
+          spec = Gem::Specification.find_all
+            .select { |candidate| candidate.name == name && Ace::Support::Cli::Toolchain.installed_spec?(candidate) }
+            .max_by(&:version)
+          return nil if spec.nil? || !File.directory?(File.join(spec.full_gem_path, "handbook", "extensions"))
+
+          spec.full_gem_path
         end
 
         def local_manifest_paths
