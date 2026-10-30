@@ -160,7 +160,7 @@ module Ace
 
           content = File.read(event.file_path)
           frontmatter, body = Ace::Support::Items::Atoms::FrontmatterParser.parse!(content)
-          previous = body.sub(/\A\n/, "").match(/^## Answer[ \t]*(?:\n(.*))?\z/m)&.[](1).to_s.strip
+          previous = body_section(body, "Answer").strip
           if frontmatter["answered"] == true || !previous.empty?
             if previous == answer.to_s.strip
               return :duplicate
@@ -190,8 +190,8 @@ module Ace
         def case_lifecycle(ref, scope: nil)
           event = exact_case(ref, scope: scope)
           frontmatter, _body = read_frontmatter(event.file_path)
-          {"receipt" => frontmatter["answered"] ? "received" : "pending",
-           "application" => frontmatter.dig("application", "state") || "pending",
+          {"receipt" => event.report? ? "recorded" : (frontmatter["answered"] ? "received" : "pending"),
+           "application" => event.report? ? "recorded" : (frontmatter.dig("application", "state") || "pending"),
            "answered" => frontmatter["answered"] == true,
            "effect_ref" => frontmatter.dig("application", "ref"),
            "answered_at" => frontmatter["answered_at"]}
@@ -281,18 +281,10 @@ module Ace
             else
               raise LifecycleTransitionError,
                 "case '#{event.id}' is #{application["state"]}; only an unanswered, " \
-                  "unapplied case can be cancelled"
+                  "unapplied case can be cancelled — close applied cases instead"
             end
           end
         end
-
-        private
-
-        def timestamp
-          Time.now.utc.strftime("%Y-%m-%d %H:%M:%S UTC")
-        end
-
-        public
 
         # Sweep of transport leftovers (task 8xs.t.pu0.6): qualify the
         # ask-bridge wake-request drop files (and any recorded delivery
@@ -362,6 +354,7 @@ module Ace
           event = exact_case(ref, scope: scope)
 
           rewrite_case(event.file_path) do |frontmatter, body|
+            refuse_terminal!(frontmatter, event.id)
             unless body.include?("## Suggestion")
               raise LessonRefusedError,
                 "case '#{event.id}' carries no suggestion; there is nothing to compare"
@@ -383,12 +376,11 @@ module Ace
                 "relation must be accepted, rejected or modified (got '#{relation}')"
             end
 
+            decision_refs = ["case:#{event.id}", "suggestion:#{event.id}-s1"]
+            decision_refs << "decision:#{frontmatter["answered_at"]}" if frontmatter["answered_at"]
             lesson = {"id" => "#{event.id}-l1", "author" => by.to_s,
               "relation" => relation.to_s, "takeaway" => takeaway.to_s.strip,
-              "refs" => Array(refs).map(&:to_s).reject(&:empty?).push(
-                "case:#{event.id}", "suggestion:#{event.id}-s1",
-                "decision:#{frontmatter["answered_at"]}"
-              ).uniq,
+              "refs" => Array(refs).map(&:to_s).reject(&:empty?).push(*decision_refs).uniq,
               "at" => timestamp}
             updated = Molecules::HitlLessonEditor.apply(body, lesson)
 
@@ -471,7 +463,14 @@ module Ace
           preserved = []
           removed = []
           Dir.glob(File.join(requests_dir, "*.json")).sort.each do |request_path|
-            request = JSON.parse(File.read(request_path))
+            begin
+              request = JSON.parse(File.read(request_path))
+              raise TypeError, "not a JSON object" unless request.is_a?(Hash)
+            rescue JSON::ParserError, TypeError, Errno::ENOENT, Errno::EACCES
+              preserved << {"request" => request_path, "case" => nil,
+                "reason" => "unreadable request — preserved"}
+              next
+            end
             case_id = request["case_id"].to_s
             lifecycle = begin
               case_lifecycle(case_id)
@@ -498,7 +497,7 @@ module Ace
           {"qualified" => qualified, "preserved" => preserved, "removed" => removed}
         end
 
-        def exact_case(ref, scope: nil)
+        private def exact_case(ref, scope: nil)
           resolved = resolve_for_mutation(ref, scope: scope)
           raise UnknownCaseError, "no HITL case with exact id '#{ref}'" if resolved.nil?
           if resolved[:event].id.to_s != ref.to_s
@@ -509,14 +508,14 @@ module Ace
           resolved[:event]
         end
 
-        def require_effect_ref!(effect_ref)
+        private def require_effect_ref!(effect_ref)
           unless effect_ref.is_a?(String) && !effect_ref.strip.empty?
             raise LifecycleTransitionError,
               "an effect reference is required (the task/assignment/PR that owns the effect)"
           end
         end
 
-        def ensure_answered!(event)
+        private def ensure_answered!(event)
           frontmatter, _body = read_frontmatter(event.file_path)
           return if frontmatter["answered"] == true
 
@@ -525,7 +524,7 @@ module Ace
               "(ace-hitl reply CASE --stdin)"
         end
 
-        def read_frontmatter(file_path)
+        private def read_frontmatter(file_path)
           content = File.read(file_path)
           frontmatter, body = Ace::Support::Items::Atoms::FrontmatterParser.parse!(content)
           [frontmatter, body.sub(/\A\n/, "")]
@@ -533,19 +532,15 @@ module Ace
 
         # Atomic, conflict-rejecting lifecycle transition: exclusive lock,
         # validate-and-mutate frontmatter in one pass, serialize back.
-        def transition(file_path)
+        private def transition(file_path)
           File.open(file_path, File::RDWR) do |file|
             file.flock(File::LOCK_EX)
             file.rewind
             content = file.read
             frontmatter, body = Ace::Support::Items::Atoms::FrontmatterParser.parse!(content)
             result = yield(frontmatter, body.sub(/\A\n/, ""))
-            new_content = Ace::Support::Items::Atoms::FrontmatterSerializer.rebuild(frontmatter, body)
-            file.rewind
-            file.truncate(0)
-            file.write(new_content)
-            file.flush
-            file.fsync
+            write_atomic(file_path,
+              Ace::Support::Items::Atoms::FrontmatterSerializer.rebuild(frontmatter, body))
             result
           end
         end
@@ -557,7 +552,7 @@ module Ace
         # landing between read and lock). The block returns
         # [result, frontmatter, body]; a nil body means "no write" (the
         # idempotent duplicate path leaves the file untouched).
-        def rewrite_case(file_path)
+        private def rewrite_case(file_path)
           File.open(file_path, File::RDWR) do |file|
             file.flock(File::LOCK_EX)
             file.rewind
@@ -565,25 +560,32 @@ module Ace
             frontmatter, body = Ace::Support::Items::Atoms::FrontmatterParser.parse!(content)
             result, new_frontmatter, new_body = yield(frontmatter, body.sub(/\A\n/, ""))
             if new_body
-              new_content = Ace::Support::Items::Atoms::FrontmatterSerializer.rebuild(new_frontmatter, new_body)
-              file.rewind
-              file.truncate(0)
-              file.write(new_content)
-              file.flush
-              file.fsync
+              write_atomic(file_path,
+                Ace::Support::Items::Atoms::FrontmatterSerializer.rebuild(new_frontmatter, new_body))
             end
             result
           end
         end
 
+        # Crash-atomic replace: the new content lands via tmp-file +
+        # rename, so a crash mid-write never leaves a truncated or
+        # half-serialized case file behind.
+        private def write_atomic(file_path, new_content)
+          tmp_path = "#{file_path}.tmp.#{Process.pid}.#{Thread.current.object_id}"
+          File.write(tmp_path, new_content)
+          File.rename(tmp_path, file_path)
+        ensure
+          File.unlink(tmp_path) if tmp_path && File.exist?(tmp_path)
+        end
+
         # The case's application state when it is terminal (closed or
         # cancelled), else nil.
-        def terminal_application_state(frontmatter)
+        private def terminal_application_state(frontmatter)
           state = frontmatter.dig("application", "state").to_s
           %w[closed cancelled].include?(state) ? state : nil
         end
 
-        def refuse_terminal!(frontmatter, case_id)
+        private def refuse_terminal!(frontmatter, case_id)
           state = terminal_application_state(frontmatter)
           return unless state
 
@@ -591,7 +593,7 @@ module Ace
             "case '#{case_id}' is #{state}; a terminal case never accepts a late answer or suggestion"
         end
 
-        def timestamp
+        private def timestamp
           Time.now.utc.strftime("%Y-%m-%d %H:%M:%S UTC")
         end
 
@@ -760,7 +762,7 @@ module Ace
 
         private
 
-        def suggestion_matches?(body, author, text)
+        private def suggestion_matches?(body, author, text)
           section = body_section(body, "Suggestion")
           section.match?(/^author: #{Regexp.escape(author.to_s)}$/) &&
             section.match?(/^proposal: #{Regexp.escape(text.to_s.strip)}$/)
@@ -925,7 +927,7 @@ module Ace
             content = file.read
             frontmatter, body = Ace::Support::Items::Atoms::FrontmatterParser.parse!(content)
             body = body.sub(/\A\n/, "")
-            previous = body.match(/^## Answer[ \t]*(?:\n(.*))?\z/m)&.[](1).to_s.strip
+            previous = body_section(body, "Answer").strip
             if first_answer && (frontmatter["answered"] == true || !previous.empty?)
               raise AnswerConflictError, "case already has a different answer" unless previous == answer.to_s.strip
               return
@@ -951,12 +953,8 @@ module Ace
             frontmatter["status"] = answered ? "answered" : (frontmatter["status"] || "pending")
             frontmatter["answered_at"] = answered ? Time.now.utc : nil
 
-            new_content = Ace::Support::Items::Atoms::FrontmatterSerializer.rebuild(frontmatter, updated_body)
-            file.rewind
-            file.truncate(0)
-            file.write(new_content)
-            file.flush
-            file.fsync
+            write_atomic(file_path,
+              Ace::Support::Items::Atoms::FrontmatterSerializer.rebuild(frontmatter, updated_body))
           end
         end
 

@@ -10,7 +10,7 @@ module Ace
         # wake + END TURN. ask never blocks, never polls, and carries no
         # timeouts; the answer arrives as an ace-wake wake carrying the
         # content. The bridge contract (wake-request drop file) is consumed
-        # by ace-wake's ask bridge (ace-wake/wake/ask-bridge.js).
+        # by ace-wake's ask bridge (ace-wake/handbook/extensions/ace-wake/wake/ask-bridge.js).
         class HitlCliAskTest < AceHitlTestCase
           def setup
             Adapters.reset_registry!

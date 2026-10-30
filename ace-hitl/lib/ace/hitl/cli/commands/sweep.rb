@@ -25,8 +25,6 @@ module Ace
           def call(apply: false, **)
             report = Ace::Hitl::Organisms::HitlManager.new.sweep(apply: apply)
             puts JSON.pretty_generate(report)
-          rescue Ace::Hitl::Organisms::HitlManager::Error => e
-            raise Ace::Support::Cli::Error.new(e.message)
           end
         end
       end

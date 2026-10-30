@@ -27,7 +27,7 @@ module Ace
           desc "Receive a delivered human answer for one exact case; answer on stdin"
 
           example [
-            'echo "Proceed with batch 2" | ace-hitl reply 8xs.t.ab1 --stdin'
+            'echo "Proceed with batch 2" | ace-hitl reply 8xtab1cd --stdin'
           ]
 
           argument :case_id, required: true, desc: "Exact HITL case id from the ask"
