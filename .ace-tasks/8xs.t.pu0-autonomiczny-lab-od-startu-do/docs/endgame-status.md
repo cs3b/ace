@@ -20,8 +20,13 @@
 
 ## Bramka merge (decyzja Kapitana 2026-09-27)
 
-Wykonane testy ✓ (powyżej). Zalega: **niezależny review** PR #398 (rola
-reviewera; gate z kroku 09 wiąże review z HEAD 566acf491) i formalny
+Wykonane testy ✓ (powyżej; runda 3 poniżej). Zalega: **niezależny review**
+PR #398 — pełna konwergencja review wykonana 2026-10-30 w 7 segmentach
+pokrywających całą deltę PR dokładnie raz (sesje review-8xtgnr/gv8/h39/haf/
+hiv/hrl/i23; 84 findings → 20 valid naprawionych w rundzie 3, pozostałe
+already-fixed/invalid/skip z uzasadnieniami), ale **werdykt gate musi być
+ponowiony na finalnym HEAD** zawierającym poprawki rundy 3 (dawne
+powiązanie z HEAD 566acf491/dbfd58a89 jest nieaktualne). Dalej: formalny
 approval właściwym kontem lane (merge przez integratora z expected-head).
 
 ## Do wykonania po merge (wymaga dostępu poza tą sesją)
