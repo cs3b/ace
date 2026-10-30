@@ -70,7 +70,7 @@ class Ace::Handbook::Atoms::ProviderRegistryTest < Minitest::Test
     FileUtils.rm_rf(@checkout_pkg)
 
     Gem::Specification.stub(:find_by_name, ->(_name) { raise Gem::LoadError, "ace-wake is not installed" }) do
-      error = assert_raises(StandardError) { registry.extensions_source_root("wake") }
+      error = assert_raises(Ace::Handbook::Atoms::ProviderRegistry::UnresolvableExtensionsPackageError) { registry.extensions_source_root("wake") }
       assert_match(/extensions_package 'ace-wake' cannot be resolved/, error.message)
     end
   end

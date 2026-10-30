@@ -107,8 +107,12 @@ module Ace
           raise_unresolvable_extensions_package(name, e.message)
         end
 
+        # A typed contract for an unresolvable extensions_package: callers
+        # (syncers, tests) rescue this precisely, never bare StandardError.
+        class UnresolvableExtensionsPackageError < StandardError; end
+
         def raise_unresolvable_extensions_package(name, detail)
-          raise StandardError,
+          raise UnresolvableExtensionsPackageError,
             "the configured extensions_package '#{name}' cannot be resolved (#{detail}): " \
             "neither a sibling package directory under #{project_root} nor an installed gem " \
             "carries the extension assets. Install the package or fix the provider manifest — " \
