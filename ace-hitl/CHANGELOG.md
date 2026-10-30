@@ -7,14 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.25.0] - 2026-10-30
 
-### Fixed (review rounds 3/3b)
+### Fixed (review rounds 3/3b + re-review R2)
 
-- Case writes are crash-atomic under a stable sidecar lock (`<case>.lock`):
-  every writer path (reply, suggestion, lesson, lifecycle, field updates,
-  resume notes) holds the sidecar across tmp+fsync+rename — the flock+rename
-  lost-update race and unlocked writer paths are closed. Terminal cases
-  (closed/cancelled) refuse new answers, suggestions and lessons; history
-  capture is section-scoped; `history --format table`/`--quiet` are real.
+- Case writes are crash-atomic under a stable sidecar lock (`<case>.lock`)
+  through the shared `Molecules::CaseFileWriter`: every writer path (reply,
+  suggestion, lesson, lifecycle, field updates, delivery persistence,
+  resume notes) holds the sidecar across tmp+fsync+rename — the
+  flock+rename lost-update race, the in-place `truncate(0)` field update
+  (a killed process could zero the case and lose the answer; SIGKILL
+  regression test added), and unlocked writer paths are closed. Terminal
+  cases (closed/cancelled) refuse new answers, suggestions and lessons;
+  history capture is section-scoped; `history --format table`/`--quiet`
+  are real.
 
 ### Added
 

@@ -5,6 +5,7 @@ require "ace/support/items"
 require_relative "../adapters"
 require_relative "../atoms/hitl_event_text"
 require_relative "../molecules/hitl_route_loader"
+require_relative "../molecules/case_file_writer"
 require_relative "../molecules/hitl_delivery_state"
 require_relative "hitl_manager"
 
@@ -105,10 +106,12 @@ module Ace
           [attempted, skipped]
         end
 
-        # Nested dot-keys through FieldUpdater: exclusive-flock atomic
-        # rewrite of the event's own file (single state owner).
+        # Nested dot-keys applied through the crash-atomic case writer
+        # (sidecar lock + tmp/fsync/rename, re-review R2): a killed
+        # process leaves the case intact, and delivery state keeps a
+        # single owner — the event's own file.
         def persist_delivery(event, route, status, detail)
-          Ace::Support::Items::Molecules::FieldUpdater.update(event.file_path,
+          Molecules::CaseFileWriter.apply_fields(event.file_path,
             set: {
               "delivery.#{route["route"]}.status" => status,
               "delivery.#{route["route"]}.adapter" => route["adapter"],

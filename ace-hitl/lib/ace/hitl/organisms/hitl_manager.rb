@@ -10,6 +10,7 @@ require_relative "../molecules/hitl_loader"
 require_relative "../molecules/hitl_creator"
 require_relative "../molecules/hitl_answer_editor"
 require_relative "../molecules/hitl_suggestion_editor"
+require_relative "../molecules/case_file_writer"
 require_relative "../molecules/resume_dispatcher"
 require_relative "../molecules/worktree_scope_resolver"
 
@@ -625,17 +626,7 @@ module Ace
           if has_field_updates && !answer.nil?
             apply_field_and_answer_updates(event.file_path, set: set, add: add, remove: remove, answer: answer)
           elsif has_field_updates
-            # FieldUpdater flocks the case FILE; the manager's exclusion
-            # contract is the sidecar lock, so the whole field update runs
-            # under it — no window against the locked manager writers.
-            with_case_lock(event.file_path) do
-              Ace::Support::Items::Molecules::FieldUpdater.update(
-                event.file_path,
-                set: set,
-                add: add,
-                remove: remove
-              )
-            end
+            apply_field_updates(event.file_path, set: set, add: add, remove: remove)
           else
             apply_answer_update(event.file_path, answer) unless answer.nil?
           end
@@ -915,6 +906,14 @@ module Ace
           else
             raise Error, "invalid delivery filter '#{delivery}' (undelivered, delivered)"
           end
+        end
+
+        # Field-only update (e.g. the waiter lease refresh): the SAME
+        # crash-atomic posture as every other case writer — one locked
+        # read-modify-write replaced via tmp+fsync+rename (see
+        # Molecules::CaseFileWriter; re-review R2).
+        private def apply_field_updates(file_path, set:, add:, remove:)
+          Molecules::CaseFileWriter.apply_fields(file_path, set: set, add: add, remove: remove)
         end
 
         private def apply_answer_update(file_path, answer)

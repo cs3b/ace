@@ -166,6 +166,47 @@ module Ace
               "the suggestion is refused against the answered case, not silently written"
           end
 
+          # Regression (re-review R2): field-only updates are crash-atomic —
+          # the write lands via tmp+fsync+rename (new inode), never an
+          # in-place truncate(0) that a killed process would leave as a
+          # zero-byte case file with the human answer lost.
+          def test_a_field_update_replaces_the_file_atomically
+            deliver_answer("Proceed\n")
+            before_inode = File.stat(@event.file_path).ino
+
+            @manager.update(@event.id, set: {"waiter_state" => "waiting"})
+
+            after_inode = File.stat(@event.file_path).ino
+            refute_equal before_inode, after_inode,
+              "field updates land via atomic rename, never in-place truncate"
+            body = File.read(@event.file_path)
+            assert_match(/waiter_state: waiting/, body)
+            assert_match(/^Proceed$/, body, "the human answer survives the field update")
+            assert_operator File.size(@event.file_path), :>, 0
+          end
+
+          # Regression (re-review R2, SIGKILL reproduction): a process
+          # killed mid field-update NEVER leaves a truncated case file —
+          # the write lands via fsynced tmp + rename, so the case is
+          # always the complete old or new content with the answer kept.
+          def test_a_killed_field_update_never_loses_the_answer
+            deliver_answer("Proceed\n")
+
+            10.times do |i|
+              pid = Process.fork do
+                exit!( (@manager.update(@event.id, set: {"waiter_tick" => i.to_s}) || true) ? 0 : 1 )
+              end
+              sleep 0.015
+              Process.kill("KILL", pid) rescue nil
+              Process.wait(pid) rescue nil
+
+              content = File.read(@event.file_path)
+              assert_operator content.size, :>, 0, "trial #{i}: the case file is never zero bytes"
+              assert_match(/^Proceed$/, content, "trial #{i}: the human answer survives")
+              Ace::Support::Items::Atoms::FrontmatterParser.parse!(content)
+            end
+          end
+
           # Regression (round 3b): EVERY manager writer path takes the
           # sidecar case lock — a field-only update (waiter lease refresh)
           # must wait for a concurrent suggestion, never race it.
