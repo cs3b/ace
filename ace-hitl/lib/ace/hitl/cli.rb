@@ -50,7 +50,14 @@ module Ace
         ["cancel", "Cancel one HITL relay request with an audited reason"],
         ["pending", "List answerable HITL relay requests (transport)"],
         ["states", "List public HITL lifecycle projections (transport)"],
-        ["duty", "Project pending and escalated HITL requests (transport)"]
+        ["duty", "Project pending and escalated HITL requests (transport)"],
+        ["reply", "Receive a delivered human answer for one exact case (stdin)"],
+        ["suggest", "Write the Second Captain's marked advisory suggestion into one exact case"],
+        ["lesson", "Write the lesson drawn from the human decision vs the suggestion"],
+        ["history", "List the citable decision history (answered, non-secret cases)"],
+        ["apply", "Record the answer's applied effect with its owner reference"],
+        ["close", "Close a case terminally after its applied effect"],
+        ["sweep", "List (and with --apply, remove) transport leftovers of terminal cases"]
       ].freeze
 
       HELP_EXAMPLES = [

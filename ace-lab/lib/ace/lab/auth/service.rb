@@ -7,6 +7,9 @@ require "open3"
 module Ace
   module Lab
     module Auth
+      # Explicit error base for the auth surface (the CLI rescues it).
+      class Error < ::Ace::Lab::Error; end
+
       # The auth service core (task 8xs.t.pu0.7): request / status /
       # exec / revoke / reconcile over the trusted host configuration
       # and the plugin registry. It owns the lease lifecycle and the
