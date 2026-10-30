@@ -123,3 +123,17 @@ administracyjnym.
 
 Wszystkie scenariusze osiągalne w tej sesji wykonane. Pozostają bramki
 zewnętrzne (review/approval/merge → publish z OTP → zimny cykl na labie).
+
+## Dodatek 6: finalny zestaw artefaktów z HEAD dbfd58a89 (2026-10-30, runda 23)
+
+9 gemów przebudowanych z aktualnego HEAD (poprawki z 839e1b093 włączone);
+SHA-256 zapisane w docs/release-artifacts-sha256.md — to jest zestaw do
+publikacji po merge (digesty do weryfikacji resume w publisher workflow).
+
+Sesja wyczerpała pracę osiągalną w sandboxie. Jedyne pozostałe kroki
+wymagają aktorów/infrastruktury poza tą sesją: (1) niezależny review PR
+#398 (provider LLM w sandboxie uszkodzony — node:fs — udokumentowane;
+alternatywnie rola ludzkiego reviewera), (2) formalny approval kontem
+lane, (3) merge integratorem z expected-head, (4) publikacja 9 gemów
+(OTP Kapitana), (5) zimny cykl na labie wg cold-cycle-acceptance i
+wypełnienie raportu zamykającego dowodami z laba.
