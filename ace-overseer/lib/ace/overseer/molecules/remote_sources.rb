@@ -47,10 +47,15 @@ module Ace
             entry.is_a?(Hash) && !entry["server"].to_s.empty? && !entry["number"].to_s.empty?
           end
           invalid.group_by { |entry| entry.is_a?(Hash) ? entry["server"].to_s : "" }.each do |server, entries|
-            next if server.empty?
-
-            sources["pr:#{server}"] ||= {"state" => "degraded",
-              "reason" => "invalid observe.remote.pull_requests entry: #{entries.first.inspect}"}
+            if server.empty?
+              # Non-Hash or server-less entries still surface as health
+              # markers, never silently disappear.
+              sources["observe.remote"] ||= {"state" => "degraded",
+                "reason" => "invalid observe.remote.pull_requests entry: #{entries.first.inspect}"}
+            else
+              sources["pr:#{server}"] ||= {"state" => "degraded",
+                "reason" => "invalid observe.remote.pull_requests entry: #{entries.first.inspect}"}
+            end
           end
 
           valid.group_by { |entry| entry["server"] }.each do |server, entries|
