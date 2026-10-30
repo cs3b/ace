@@ -548,9 +548,13 @@ module Ace
           with_case_lock(file_path) do
             content = File.read(file_path)
             frontmatter, body = Ace::Support::Items::Atoms::FrontmatterParser.parse!(content)
-            result = yield(frontmatter, body.sub(/\A\n/, ""))
+            # Strip before BOTH the yield and the rebuild: rebuild re-inserts
+            # the frontmatter/body separator, so rebuilding the raw body
+            # would add one blank line per transition — compounding.
+            stripped = body.sub(/\A\n/, "")
+            result = yield(frontmatter, stripped)
             write_atomic(file_path,
-              Ace::Support::Items::Atoms::FrontmatterSerializer.rebuild(frontmatter, body))
+              Ace::Support::Items::Atoms::FrontmatterSerializer.rebuild(frontmatter, stripped))
             result
           end
         end

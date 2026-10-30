@@ -185,6 +185,25 @@ module Ace
             assert_operator File.size(@event.file_path), :>, 0
           end
 
+          # Regression (round B): repeated writes never compound blank
+          # lines between the frontmatter and the body — every writer
+          # strips the body's leading newline before rebuild.
+          def test_repeated_writes_do_not_compound_blank_lines
+            deliver_answer("Proceed\n")
+            @manager.update(@event.id, set: {"tick_one" => "1"})
+            @manager.update(@event.id, set: {"tick_two" => "2"})
+            @manager.receive_answer(@event.id, "Proceed\n") # duplicate no-op
+            @manager.cancel_case(@event.id) rescue Organisms::HitlManager::LifecycleTransitionError
+
+            content = File.read(@event.file_path)
+            frontmatter, body = Ace::Support::Items::Atoms::FrontmatterParser.parse!(content)
+            refute body.start_with?("\n\n"),
+              "the body never accumulates leading blank lines: #{body[0, 4].inspect}"
+            blank_run = body.lines.take_while { |line| line.strip.empty? }.size
+            assert_operator blank_run, :<=, 1,
+              "at most the single separator blank line may precede the body (got #{blank_run})"
+          end
+
           # Regression (re-review R2, SIGKILL reproduction): a process
           # killed mid field-update NEVER leaves a truncated case file —
           # the write lands via fsynced tmp + rename, so the case is

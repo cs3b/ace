@@ -27,7 +27,7 @@ module Ace
         # rename). Callers hold the sidecar lock.
         def write_atomic(file_path, new_content)
           tmp_path = "#{file_path}.tmp.#{Process.pid}.#{Thread.current.object_id}"
-          File.open(tmp_path, "w") do |tmp|
+          File.open(tmp_path, "w", 0o600) do |tmp|
             tmp.write(new_content)
             tmp.flush
             tmp.fsync
@@ -45,7 +45,7 @@ module Ace
             content = File.read(file_path)
             begin
               frontmatter, body = Ace::Support::Items::Atoms::FrontmatterParser.parse!(content)
-            rescue Psych::SyntaxError => e
+            rescue Psych::Exception => e
               # Same error shape as FieldUpdater.parse_strict: a corrupt
               # case file is a named, path-carrying refusal to rewrite —
               # never a raw parser error escaping the writer.
