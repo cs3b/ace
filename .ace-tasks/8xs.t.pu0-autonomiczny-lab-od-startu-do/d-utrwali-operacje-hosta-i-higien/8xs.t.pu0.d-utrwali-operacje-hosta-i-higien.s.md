@@ -1,6 +1,6 @@
 ---
 id: 8xs.t.pu0.d
-status: pending
+status: in-progress
 priority: medium
 created_at: "2026-10-29 17:13:46"
 estimate: medium

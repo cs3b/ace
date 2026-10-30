@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `wfi://git/mirror-sync` (task 8xs.t.pu0.d): the repeatable host
+  mirror-sync operation — explicit source/target/ref, both full SHAs read
+  before acting, identity no-op, fast-forward only (`--force-with-lease`
+  with the read SHA), divergence escalated for reviewed reconciliation
+  (never reset/force/ref deletion), reversed-direction detection in the
+  plan, and a mutation-free dry-run.
+
 ## [0.31.0] - 2026-10-23
 
 ### Added
