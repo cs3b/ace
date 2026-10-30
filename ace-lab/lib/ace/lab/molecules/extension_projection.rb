@@ -57,14 +57,17 @@ module Ace
             # component below it can escape
             return File.join(output_dir, *segments)
           end
-          segments.each do |segment|
+          segments.each_with_index do |segment, index|
             current = current.join(segment)
             if File.symlink?(current.to_s)
               raise Ace::Lab::Error,
                 "cannot project #{relative_path} into #{output_dir}: a symlinked path component " \
                   "would escape the projection directory"
             end
-            next if segments.last == segment
+            # The FINAL segment is the file itself — only intermediate
+            # components must be directories (compare by position, not
+            # value: "a/a/index.js" repeats "a" legitimately).
+            next if index == segments.size - 1
 
             if !current.directory? && File.exist?(current.to_s)
               raise Ace::Lab::Error,

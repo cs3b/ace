@@ -61,7 +61,9 @@ class Ace::Handbook::Integration::PiSdkAcceptanceTest < Minitest::Test
   end
 
   def ace_wake_package_root
-    File.expand_path("../..", Ace::Wake.extension_root)
+    # extension_root is <pkg>/handbook/extensions/ace-wake — three levels
+    # up is the package root (two levels reach only <pkg>/handbook).
+    File.expand_path("../../..", Ace::Wake.extension_root)
   end
 
   def acceptance_target

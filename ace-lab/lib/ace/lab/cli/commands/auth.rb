@@ -51,12 +51,7 @@ module Ace
               command = Array(options[:cmd])
               raise Ace::Support::Cli::Error.new("exec requires a command (--cmd, one argument per repeat)") if command.empty?
 
-              report = service.exec(lease_id: target, argv: command)
-              render(report, options[:format])
-              # The child's REAL exit code is the exec exit code — after
-              # the report is printed, so both outcomes stay visible.
-              exit(report["exit"]) unless report["exit"].zero?
-              report
+              service.exec(lease_id: target, argv: command)
             when "revoke"
               raise Ace::Support::Cli::Error, "revoke requires a lease id" if target.nil?
 
@@ -70,6 +65,13 @@ module Ace
             end
 
             render(result, options[:format])
+            # The child's REAL exit code is the exec exit code — raised
+            # AFTER the single report render, so both outcomes stay
+            # visible without duplicating the report.
+            if action == "exec" && result["exit"] && !result["exit"].zero?
+              raise Ace::Support::Cli::Error.new("exec exited #{result["exit"]}",
+                exit_code: result["exit"])
+            end
           rescue ::Ace::Lab::Auth::Refusal => e
             raise Ace::Support::Cli::Error.new("refused: #{e.message}")
           rescue ::Ace::Lab::Auth::Error => e
@@ -85,9 +87,9 @@ module Ace
             end
           end
 
-          def render(result, _format)
-            # Both formats print the same structured JSON report: the
-            # data is the interface agents consume.
+          def render(result, _format = nil)
+            # A single structured JSON report: the data is the interface
+            # agents consume (no table form exists for auth reports).
             puts JSON.pretty_generate(result)
           end
         end

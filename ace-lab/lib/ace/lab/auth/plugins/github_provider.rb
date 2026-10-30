@@ -128,6 +128,9 @@ module Ace
             scopes.to_h do |scope|
               level, subject = scope.split(":", 2)
               subject, level = scope, "read" if subject.nil?
+              raise Providers::RefusedError,
+                "github scope '#{scope}' is malformed (expected level:subject, e.g. write:repository)" if subject.empty? || level.empty?
+
               [subject, level]
             end
           end

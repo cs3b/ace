@@ -161,6 +161,10 @@ module Ace
             end
             @store.update(lease["id"]) { |record| record["cleanup_due_at"] = record["use_until"] }
 
+            # The REQUEST return keeps token_ref (the holder just minted
+            # the lease and may need the reference for reconcile), while
+            # status() strips it to the public view — intentional
+            # reference-vs-value distinction, never the token itself.
             @store.load(lease["id"]).merge("state_detail" => "issued")
           end
         end
