@@ -102,3 +102,61 @@ misleading auth `--format` option dropped; regression test added;
 CHANGELOGs updated for all changed packages. 3 low items skipped with
 recorded reasons. **Final reviewed head: 2c65811c6** — the gate verdict
 binds here.
+
+## Re-review round (2026-10-30 evening) — R1–R8 closed, two clean rounds
+
+The independent re-review of `ea3a01734` (readiness report
+`.ace-local/review/pr398-rereview/readiness.md`) returned REQUEST CHANGES
+with seven P1s; all were fixed and verified:
+
+- R1 Forgejo wire contract → token-authenticated ADMIN endpoints
+  (`/api/v1/admin/users/{account}/tokens`), RepoTargetOption repo targets,
+  ownerless scoping refused pre-request, response-scope validated,
+  404=already_invalid settlement.
+- R2 HITL field-write atomicity → `Molecules::CaseFileWriter` (sidecar lock
+  + fsynced tmp + rename) used by manager AND sender; SIGKILL + inode
+  regressions; the reviewer's two truncate-injection probes fail their own
+  precondition because the boundary no longer exists — the adapted
+  rename-boundary probes (`.ace-local/review/pr398-rereview/flow_test_post_rereview.rb`)
+  pass 2/2, and 7/9 of the reviewer's originals pass.
+- R3 lease durability → atomic record writes under a stable write lock;
+  corrupt records surface as visible recovery errors, never skipped.
+- R4 killed issuer → records born `preparing`; `issued` only after a
+  complete handoff; recovery distinguishes never-delivered from active.
+- R5 no blind re-mint → deterministic `token_ref_for` identity recorded at
+  creation; retries settle the unresolved predecessor inside the
+  correlation lock or refuse.
+- R6 env isolation → allowlisted child env via `env -i`; a REAL spawned
+  child proves ambient credential overrides never leak.
+- R7 false ready → first-turn delivery confirmed through herdr's activity
+  gate (`agent prompt --wait --timeout`); readiness requires confirmed
+  initialization; reuse repairs idle/done sessions through the existing
+  session state.
+- R8 GitHub scope schema → subjects validated against real installation
+  permission names; docs corrected.
+
+Review rounds after the fixes (rule: two consecutive rounds without
+confirmed P0/P1, evidence bound to the exact HEAD):
+- Round A `ea3a01734..4f7732b0e` (review-8xtu7i): 14 findings, ZERO P0/P1
+  (1 medium blank-line accumulation + lows) — all addressed or skipped
+  with reasons.
+- Round B `4f7732b0e..c1cb56472` (review-8xtun7): 8 findings, ZERO P0/P1
+  (2 mediums: transition-rebuild accumulation + compounding test) — fixed.
+- Micro-round `c1cb56472..6b46382c6` (review-8xtute): hardening only
+  (0600 tmp/creation perms, Psych::Exception alignment) — fixed at
+  `e45dbbc05`.
+- Suites at `e45dbbc05`: ace-lab 676, ace-overseer 421, ace-hitl 405,
+  ace-coworker 405, ace-handbook 68, ace-support-items 344, pi 9 + feat
+  12/12, wake wrapper — 0 failures. ace-herdr's bounded-process timing
+  tests are load-flaky in this environment (reproduced identical on a
+  clean tree).
+
+**Gate binding: the review evidence covers the complete delta up to and
+including `e45dbbc05` (docs-only commits after a code HEAD get an explicit
+no-op refresh per wfi://review/pr).** The release set at
+docs/release-artifacts-sha256.md is superseded — fresh build/install
+rehearsal recorded in /tmp/pu0-gem-build-r4 (digests below).
+
+Remaining external gates: formal approval (lane account), integrator merge
+with expected-head, publication (OTP), Hermes→reply transport + host
+revoke scheduler, cold-cycle acceptance on the lab.
