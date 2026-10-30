@@ -80,6 +80,22 @@ module Ace
           )
         end
 
+        def test_agent_start_passes_harness_args_after_separator
+          executor = StubbedExecutor.new(binary: "herdr")
+
+          executor.agent_start(name: "ace-overseer", kind: "pi", pane: "p5", timeout_ms: 60_000,
+            args: ["--model", "zai/glm-5.3-flash", "--thinking", "high",
+              "--append-system-prompt", "/guides/start.md"])
+
+          assert_equal(
+            [["herdr", "agent", "start", "ace-overseer", "--kind", "pi", "--pane", "p5",
+              "--timeout", "60000", "--",
+              "--model", "zai/glm-5.3-flash", "--thinking", "high",
+              "--append-system-prompt", "/guides/start.md"]],
+            executor.commands
+          )
+        end
+
         def test_agent_prompt_passes_text_as_single_argv_element
           executor = StubbedExecutor.new
 
