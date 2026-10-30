@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Auth lease resilience (task 8xs.t.pu0.f): `LeaseStore#find_live`/`#live?`
+  treated a revoke-pending record (an interrupted issue or a lost revoke) as
+  a LIVE grant — a retry after an interrupted issue returned the dead grant
+  instead of minting a fresh one. Only an ISSUED record inside its deadlines
+  is live; the interrupted record stays a visible open item for reconcile.
+
 ### Added
 
 - `ace-lab auth request|status|exec|revoke|reconcile` (task 8xs.t.pu0.7):

@@ -38,13 +38,16 @@ module Ace
         end
 
         # Idempotency: the LIVE lease for the same task/assignment/
-        # profile/role correlation, if any. A finished or scope-changed
-        # correlation does not match — that needs a new request.
+        # profile/role correlation, if any. Only an ISSUED record is
+        # live: a revoke-pending record (an interrupted issue or a lost
+        # revoke) was never (or is no longer) a usable grant — a retry
+        # mints a fresh lease while reconcile finishes the pending one.
+        # A finished or scope-changed correlation does not match either.
         def find_live(task:, assignment:, profile:, role:)
           all.filter_map do |lease|
             next unless lease["task"] == task && lease["assignment"] == assignment &&
               lease["profile"] == profile && lease["role"] == role &&
-              lease["state"] != "revoked"
+              lease["state"] == "issued"
             lease
           end.min_by { |lease| lease["requested_at"].to_s }
         end
@@ -110,8 +113,11 @@ module Ace
           end
         end
 
+        # Usable NOW: only an ISSUED record inside its deadlines. A
+        # revoke-pending record has no valid handoff (interrupted issue)
+        # or is mid-revocation — it is never usable and never "live".
         def live?(lease, at: Time.now)
-          return false if lease["state"] == "revoked"
+          return false unless lease["state"] == "issued"
           return false if lease["use_until"] && Time.parse(lease["use_until"]) <= at
           if lease["provider_expiry"] && Time.parse(lease["provider_expiry"]) <= at
             return false
