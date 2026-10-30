@@ -75,6 +75,29 @@ Behavior:
 - The started overseer coordinates and delegates (guide:
   `wfi://overseer/start`); it never substitutes for a missing coworker.
 
+## `ace-overseer observe`
+
+Read-only standing observation the started overseer's eyes poll (task
+8xs.t.pu0.3). The projection merges the six local source classes, each read
+from its state owner — never a second task/assignment state:
+
+- HITL events (semantic revisions; reports/questions toward this owner),
+- project tasks and private `_overseer` tasks (`ace-task`),
+- worktrees (`ace-git-worktree`),
+- coworker availability and assignment progress (`ace-coworker` probe over the
+  `ace-assign` inventory; live/stale judged by existing run identifiers —
+  commissioned assignment ids — never pane names).
+
+Every row carries a stable `key` and a `revision` that changes only when the
+owner's data changes: identical state projects identical revisions (healthy
+silence consumes zero model turns), and a real change wakes the observer once.
+A failing source degrades ONLY itself — it contributes a `source-health` row
+whose revision is keyed by the failure class (an identical repeated failure
+never re-wakes; a new failure mode wakes once) while the healthy sources keep
+projecting. `sources` maps each source to `ok`/`degraded`. After a restart,
+pending revisions reconcile before new work is chosen, so a report that
+arrived during the overseer's absence is recognized exactly once.
+
 ## `ace-overseer work-on`
 
 Create or reuse local worktrees and prepare one assignment.

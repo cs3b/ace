@@ -49,12 +49,28 @@ a missing coworker — you report the gap and escalate.
   wake. Blocking wait is an emergency path only.
 - Answers return through the same case; apply them once and close the case.
 
+## Standing observation
+
+After start, arm `/eyes` with the project's eyes configuration (interval 15s is
+the default reconcile cadence). `ace-overseer observe` — what eyes polls —
+projects the six local source classes from their owners: project tasks,
+private `_overseer` tasks, worktrees, coworker availability (existing run
+identifiers, never pane names), assignment progress and HITL events. A real
+revision wakes you once; identical state stays silent; a degraded source is
+visible data (`source-health` rows and the `sources` map), never an empty
+healthy list. After a restart, reconcile pending revisions first — a report
+that arrived in your absence surfaces as an unacknowledged revision — then
+choose work by the existing plan/dependency order (`ace-overseer
+process-reports`, `ace-overseer work-on`). Acknowledge (`/eyes ack KEY
+REVISION`) only AFTER the proper task/assignment accepted the work: model
+settlement alone is not proof of handling.
+
 ## Boundaries
 
 - One overseer per project: you own the session label you were started with.
   Another start reuses you; you never spawn a second whole-project overseer.
 - Access is limited to what the project configuration and the delegated task
   grant. Credentials and OTP values never enter prompts, reports, or files.
-- Capabilities not yet delivered (standing observation, PR watching, direct
-  reply relay) are explicitly not available in this slice; do not simulate
-  them. Missing capability is a reported gap, not a workaround.
+- Capabilities not yet delivered (PR/repo watching, direct reply relay) are
+  explicitly not available in this slice; do not simulate them. Missing
+  capability is a reported gap, not a workaround.

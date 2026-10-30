@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `ace-overseer observe` projects the six local source classes (task
+  8xs.t.pu0.3): project and `_overseer` tasks, worktrees, coworker
+  availability and assignment progress alongside HITL events — every row
+  read from its state owner with stable key/revision semantics, per-source
+  health (`ok`/`degraded`), and degraded-source markers that wake once per
+  failure class while healthy sources keep projecting.
+
 - `ace-overseer start [--dry-run] [--format table|json]` (task 8xs.t.pu0.1):
   starts or reuses the project overseer session from an explicit `start`
   section (scope/profile/instructions) in the `.ace/overseer/config.yml`
