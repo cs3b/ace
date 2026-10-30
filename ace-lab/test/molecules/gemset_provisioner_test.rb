@@ -164,6 +164,98 @@ module Molecules
       end
     end
 
+    # --- default gems: REAL `gem list` format (PR #398 F1) ---------------
+
+    # Real RubyGems output marks a default gem's bundled version as
+    # `default: V` inside the version list (`abbrev (default: 0.1.2)`,
+    # `json (2.9.4, default: 2.9.1)`): the marked V is the default
+    # gem's own version, other parts are additionally installed
+    # versions — the normalized list must carry plain versions, never
+    # the literal `default: 2.9.1` string (which crashes
+    # Gem::Version.new in newer-version and closure checks).
+    def raw_listing(name, version_parts)
+      {"status" => "ok", "out" => "#{name} (#{version_parts.join(", ")})\n", "err" => ""}
+    end
+
+    def test_default_gem_marker_normalizes_to_the_default_version
+      runner = FakeRunner.new([raw_listing("abbrev", ["default: 0.1.2"])])
+      Dir.mktmpdir do |dir|
+        gem_home = File.join(dir, "gems")
+        FileUtils.mkdir_p(gem_home)
+        kind, versions = Ace::Lab::Molecules::GemsetProvisioner.new(runner: runner)
+          .runtime_versions(name: "abbrev", gem_home: gem_home)
+
+        assert_equal :ok, kind
+        assert_equal %w[0.1.2], versions
+        assert_equal Gem::Version.new("0.1.2"), Gem::Version.new(versions.first)
+      end
+    end
+
+    def test_mixed_default_and_installed_versions_list_both_plain_versions
+      runner = FakeRunner.new([raw_listing("json", ["2.9.4", "default: 2.9.1"])] * 2)
+      Dir.mktmpdir do |dir|
+        gem_home = File.join(dir, "gems")
+        FileUtils.mkdir_p(gem_home)
+        provisioner = Ace::Lab::Molecules::GemsetProvisioner.new(runner: runner)
+
+        kind, versions = provisioner.runtime_versions(name: "json", gem_home: gem_home)
+        assert_equal :ok, kind
+        assert_equal %w[2.9.4 2.9.1], versions
+        versions.each { |version| Gem::Version.new(version) }
+
+        # the newer-version check consumes the normalized list
+        kind, newer = provisioner.newer_versions(name: "json", declared_version: "2.9.1",
+          gem_home: gem_home)
+        assert_equal :ok, kind
+        assert_equal %w[2.9.4], newer
+
+        # the dependency closure judge consumes it too
+        dep = {"name" => "json", "requirement" => "~> 2.9"}
+        assert_equal %w[2.9.4 2.9.1],
+          provisioner.send(:satisfying_versions, dep, versions)
+      end
+    end
+
+    def test_declared_version_present_only_as_the_default_gem_satisfies_existence
+      runner = FakeRunner.new([
+        raw_listing("abbrev", ["default: 0.1.2"]),   # presence probe
+        raw_listing("abbrev", ["default: 0.1.2"]),   # newer probe
+        dependency_listing("abbrev", "0.1.2", {})
+      ])
+      Dir.mktmpdir do |dir|
+        runtime = converged_runtime(dir, [{"name" => "abbrev", "version" => "0.1.2"}])
+        report = Ace::Lab::Molecules::GemsetProvisioner.new(runner: runner)
+          .call(runtime: runtime)
+
+        assert_equal "exists", report.first["status"], report.inspect
+        assert_empty report.first["removed_newer_versions"]
+      end
+    end
+
+    # Offline real-gem probe of an actual DEFAULT gem shipping with the
+    # running Ruby (json is one): the normalized versions must all be
+    # plain, parseable version strings — exactly the convergence the
+    # reviewer reproduced with a real isolated GEM_HOME.
+    def test_real_runtime_probe_of_a_default_gem_yields_parseable_versions
+      Dir.mktmpdir do |dir|
+        gem_home = File.join(dir, "gems")
+        FileUtils.mkdir_p(gem_home)
+        provisioner = Ace::Lab::Molecules::GemsetProvisioner.new
+
+        kind, versions = provisioner.runtime_versions(name: "json", gem_home: gem_home)
+        assert_equal :ok, kind
+        refute_includes versions.to_s, "default:",
+          "the default-gem marker must never leak into the version list"
+        versions.each do |version|
+          assert_equal Gem::Version.new(version).to_s, version,
+            "real 'gem list' output for default gem json must normalize to plain versions"
+        end
+
+        kind, = provisioner.newer_versions(name: "json", declared_version: "0.0.1", gem_home: gem_home)
+        assert_equal :ok, kind, "version comparisons over real default-gem output must not crash"
+      end
+    end
+
     # --- runtime preparation -------------------------------------------
 
     def test_missing_runtime_requires_privileges_when_not_privileged

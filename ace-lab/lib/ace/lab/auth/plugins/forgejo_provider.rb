@@ -66,7 +66,10 @@ module Ace
             raise Providers::TransientError, "forgejo returned an unparseable response"
           end
 
-          def revoke(profile:, token_ref:)
+          # The lease token is revoked by its server id (the token
+          # NAME) with the issuer's admin credential; the secret value
+          # is not part of this wire contract.
+          def revoke(profile:, token_ref:, token: nil)
             issuer = profile.fetch("issuer")
             url = issuer["url"] or raise Providers::RefusedError, "forgejo profile has no issuer url"
             account = issuer["account"] or raise Providers::RefusedError, "forgejo profile has no role account"

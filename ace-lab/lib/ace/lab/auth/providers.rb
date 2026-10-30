@@ -17,8 +17,12 @@ module Ace
       #     {"token" => secret (never serialized), "token_ref" => provider id,
       #      "provider_expiry" => time-ish | nil, "via" => handoff descriptor}
       #     or raises RefusedError / TransientError / OutcomeUnknownError
-      #   revoke(profile:, token_ref:) -> :revoked | :already_invalid |
+      #   revoke(profile:, token_ref:, token:) -> :revoked | :already_invalid |
       #     raises TransientError / OutcomeUnknownError
+      #     (`token` is the issued secret from the handoff — providers
+      #     that revoke BY the token value, e.g. GitHub's installation
+      #     token endpoint, require it; providers revoking by a server
+      #     id ignore it)
       class Providers
         class RefusedError < StandardError; end
         class TransientError < StandardError; end

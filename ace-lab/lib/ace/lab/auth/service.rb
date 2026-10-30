@@ -37,11 +37,14 @@ module Ace
 
         # --- request -------------------------------------------------------
 
-        # Idempotent per the live task/assignment/profile/role
-        # correlation; concurrent requests never mint two tokens. The
-        # granted scope is the INTERSECTION of the host profile, the
-        # request and the task's repo — a request may narrow, never
-        # widen; editing the task or project config grants nothing.
+        # Idempotent only per the IDENTICAL live request: the
+        # task/assignment/profile/role correlation AND the requested
+        # scope/principal must match; a mismatched retry (e.g. a
+        # narrower repo list) is refused, never silently answered with
+        # the wider existing grant. The granted scope is the
+        # INTERSECTION of the host profile, the request and the task's
+        # repo — a request may narrow, never widen; editing the task or
+        # project config grants nothing.
         def request(profile_name:, role:, task:, assignment:, repos: [],
           ttl_minutes: nil)
           profile = profile_for(profile_name)
@@ -60,11 +63,26 @@ module Ace
               "refused, not clipped")
           end
 
+          # The granted scope is computed BEFORE the live-lease lookup
+          # so a retry is judged against what THIS request asked for.
+          repos = (profile["repos"].empty? ? repos : profile["repos"] & repos).sort
+
           existing = @store.find_live(task: task, assignment: assignment,
             profile: profile_name, role: role)
-          return existing.merge("state_detail" => "live") if existing && @store.live?(existing)
+          if existing && @store.live?(existing)
+            # Idempotency holds only for the IDENTICAL request: a live
+            # lease with a different granted scope or principal is a
+            # mismatched retry — refusing it never silently reuses a
+            # wider grant for a narrower ask.
+            unless existing["repos"] == repos && existing["principal"] == principal
+              raise Refusal.new("a live lease for task '#{task}' assignment '#{assignment}' " \
+                "profile '#{profile_name}' role '#{role}' already exists with scope " \
+                "[#{existing["repos"].join(", ")}] for principal '#{existing["principal"]}'; " \
+                "revoke it first or repeat the identical request")
+            end
+            return existing.merge("state_detail" => "live")
+          end
 
-          repos = (profile["repos"].empty? ? repos : profile["repos"] & repos)
           lease = @store.create(profile: profile_name, role: role, principal: principal,
             task: task, assignment: assignment, repos: repos,
             use_until: Time.at(Time.now.utc + ttl * 60).strftime("%Y-%m-%dT%H:%M:%SZ"),
@@ -96,9 +114,19 @@ module Ace
             record["via"] = granted["via"]
           end
           # The secret goes ONLY to the ephemeral handoff; the returned
-          # lease record carries references, never values.
+          # lease record carries references, never values. A failed
+          # delivery is never a live grant: the token may exist
+          # provider-side, so the record becomes revoke-pending for
+          # reconcile to finish — an interrupted handoff must not be
+          # reusable by a retry.
           handoff = CredentialHandoff.new(@credentials_dir, recipient: principal)
-          handoff.deliver(lease["id"], granted["token"])
+          begin
+            handoff.deliver(lease["id"], granted["token"])
+          rescue StandardError => e
+            @store.update(lease["id"]) { |record| record["state"] = "revoke-pending" }
+            raise Error.new("credential handoff failed: #{e.message}; " \
+              "reconcile resolves the pending record")
+          end
           @store.update(lease["id"]) { |record| record["cleanup_due_at"] = record["use_until"] }
 
           @store.load(lease["id"]).merge("state_detail" => "issued")
@@ -192,10 +220,18 @@ module Ace
 
         private
 
+        # Revocation hands the provider the ISSUED secret from the
+        # ephemeral handoff when the file still exists — GitHub's
+        # installation-token endpoint revokes the token that
+        # authenticates the request, so the token VALUE is required
+        # there; id-revoking providers ignore it.
         def cleanup(lease, profile, handoff)
           provider = Providers.resolve(profile["provider"])
+          credential = handoff.path(lease["id"])
+          token = File.file?(credential) ? File.read(credential) : nil
           begin
-            outcome = provider.revoke(profile: profile, token_ref: lease["token_ref"])
+            outcome = provider.revoke(profile: profile, token_ref: lease["token_ref"],
+              token: token)
           rescue Providers::TransientError, Providers::OutcomeUnknownError => e
             @store.update(lease["id"]) { |record| record["state"] = "revoke-pending" }
             return :"revoke-pending (#{e.class})"

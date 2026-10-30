@@ -368,7 +368,13 @@ module Ace
 
         # `gem list <name> --exact --local` prints one `name (v1, v2)`
         # line when the name is present in the runtime and nothing when
-        # it is absent. A present-but-unparseable line is a failed probe
+        # it is absent. A DEFAULT gem's bundled version appears as a
+        # `default: V` part (`abbrev (default: 0.1.2)`,
+        # `json (2.9.4, default: 2.9.1)`): the marked V is the default
+        # gem's own version, every other part is an additionally
+        # installed version — both are present in the runtime, so the
+        # normalized list carries the marked version in place of the
+        # marker. A present-but-unparseable line is a failed probe
         # (nil, fail closed), never a guessed empty list.
         def parse_versions(out, name)
           line = out.lines.find { |candidate| candidate.start_with?("#{name} ") }
@@ -377,7 +383,13 @@ module Ace
           match = line.chomp.match(/\A#{Regexp.escape(name)} \((.*)\)\z/)
           return nil if match.nil?
 
-          match[1].split(",").map(&:strip)
+          versions = match[1].split(",").map(&:strip).map do |part|
+            default = part.match(/\Adefault: (\S+)\z/)
+            default ? default[1] : part
+          end
+          return nil unless versions.all? { |version| version.match?(/\A\d/) }
+
+          versions
         end
 
         # Classified one-line command failure: status plus the first

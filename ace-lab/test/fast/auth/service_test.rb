@@ -31,7 +31,7 @@ module Auth
          "provider_expiry" => nil, "via" => {"kind" => "file"}}
       end
 
-      def revoke(profile:, token_ref:)
+      def revoke(profile:, token_ref:, token: nil)
         raise @failure if @failure
 
         @revoked << token_ref
@@ -101,6 +101,23 @@ module Auth
 
       assert_equal first["id"], second["id"]
       assert_equal 1, @fake.issued.size, "concurrent requests mint one token"
+    end
+
+    def test_retry_with_a_different_scope_is_refused_not_answered_with_the_wider_grant
+      svc = service
+      svc.request(profile_name: "developer", role: "developer",
+        task: "t", assignment: "a", repos: %w[ace other])
+
+      error = assert_raises(Ace::Lab::Auth::Refusal) do
+        svc.request(profile_name: "developer", role: "developer",
+          task: "t", assignment: "a", repos: %w[ace])
+      end
+      assert_match(/live lease for task 't' assignment 'a'.*scope \[ace, other\].*revoke it first/,
+        error.message)
+      # the wider grant still exists untouched — no second token, no narrowing
+      assert_equal 1, @fake.issued.size
+      live = svc.store.all.count { |record| svc.store.live?(record) }
+      assert_equal 1, live
     end
 
     def test_role_principal_and_ttl_refusals_carry_reasons

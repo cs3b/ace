@@ -35,7 +35,7 @@ module Auth
          "provider_expiry" => nil, "via" => {"kind" => "file"}}
       end
 
-      def revoke(profile:, token_ref:)
+      def revoke(profile:, token_ref:, token: nil)
         if @revoke_fails.positive?
           @revoke_fails -= 1
           raise Ace::Lab::Auth::Providers::OutcomeUnknownError, "network down"
@@ -150,6 +150,48 @@ module Auth
         "credential cleanup follows the process, not a model decision"
       credential_files = Dir.glob(File.join(@dir, "credentials", "*"))
       assert_empty credential_files, "the handoff is cleared with the lease"
+    end
+
+    # F6 window: the provider ISSUED the token but the credential
+    # handoff write fails afterwards — the record must not stay a
+    # usable/live grant; reconcile finishes it and the retry mints a
+    # fresh lease.
+    def test_failed_handoff_delivery_leaves_no_live_lease
+      Dir.mktmpdir do |dir|
+        document = format(AUTH_YAML, File.join(dir, "leases"), File.join(dir, "credentials"))
+        # occupy the credentials path with a FILE: mkdir_p/deliver fails
+        File.write(File.join(dir, "credentials"), "occupied")
+        svc = Ace::Lab::Molecules::GrantResolver.stub :read_verified, document do
+          Ace::Lab::Auth::Service.new(principal: -> { "test-worker" },
+            runner: ->(_argv, _env) { 0 })
+        end
+
+        error = assert_raises(Ace::Lab::Error) do
+          svc.request(profile_name: "developer", role: "developer",
+            task: "t", assignment: "a", repos: %w[ace])
+        end
+        assert_match(/credential handoff failed/, error.message)
+
+        interrupted = svc.store.all.fetch(0)
+        assert_equal "revoke-pending", interrupted["state"],
+          "the interrupted handoff is a visible open item, never a live grant"
+        refute svc.store.live?(interrupted)
+        assert_equal 1, @flaky.issued.size, "the token WAS issued provider-side"
+
+        # recovery: the retry mints a working lease; reconcile revokes
+        # the interrupted token by its recorded reference
+        FileUtils.rm(File.join(dir, "credentials"))
+        lease = svc.request(profile_name: "developer", role: "developer",
+          task: "t", assignment: "a", repos: %w[ace])
+        assert_equal "issued", lease["state_detail"]
+        refute_equal interrupted["id"], lease["id"]
+        assert_equal 1, svc.store.all.count { |record| svc.store.live?(record) }
+
+        report = svc.reconcile
+        entry = report.find { |item| item["lease"] == interrupted["id"] }
+        assert_equal "revoked", entry["reconciled"]
+        assert_includes @flaky.revoked, interrupted["token_ref"]
+      end
     end
   end
 end

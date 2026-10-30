@@ -20,8 +20,9 @@ module Ace
         # network-shaped stays outcome-unknown, never a claimed
         # revocation).
         class GithubProvider
-          def initialize(runner: nil)
+          def initialize(runner: nil, capture: nil)
             @runner = runner || method(:run_curl)
+            @capture = capture || method(:run_capture)
           end
 
           def capabilities
@@ -56,22 +57,33 @@ module Ace
             raise Providers::TransientError, "github returned an unparseable response"
           end
 
-          def revoke(profile:, token_ref:)
+          # GitHub revokes the installation token that AUTHENTICATES
+          # the request (DELETE /installation/token -> 204): the
+          # credential is the ISSUED lease token, never a fresh App
+          # JWT - an App JWT names no installation token and revokes
+          # nothing. curl runs with --fail so an HTTP error can never
+          # surface as process success; 401 means the token is already
+          # invalid (an idempotent result), anything else
+          # network-shaped stays outcome-unknown, never a claimed
+          # revocation.
+          def revoke(profile:, token_ref:, token: nil)
+            if token.to_s.empty?
+              raise Providers::OutcomeUnknownError,
+                "the issued installation token (token_ref #{token_ref}) is required to revoke " \
+                "it - GitHub revokes the token that authenticates the request; outcome unknown"
+            end
+
             issuer = profile.fetch("issuer")
             base = issuer["api_url"] || "https://api.github.com"
-            installation = issuer["installation_id"] or raise Providers::RefusedError,
-              "github profile has no installation_id"
-            key_file = issuer["key_file"]
-            app_id = issuer["app_id"]
-            jwt = app_jwt(app_id, File.read(key_file))
-            _out, err, status = run_capture(
-              ["curl", "-sS", "-X", "DELETE",
+            _out, err, status = @capture.call(
+              ["curl", "-sS", "-f", "-X", "DELETE",
                 "#{base}/installation/token",
-                "-H", "Authorization: Bearer #{jwt}"]
+                "-H", "Accept: application/vnd.github+json",
+                "-H", "Authorization: Bearer #{token}"]
             )
             return :revoked if status.success?
 
-            if status.exitstatus == 401 || err.include?("401")
+            if err.to_s.match?(/\b401\b/)
               # 401 on the installation endpoint means the token is
               # already invalid — an idempotent result, not a failure.
               return :already_invalid

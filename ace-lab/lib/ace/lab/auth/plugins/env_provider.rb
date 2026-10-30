@@ -42,7 +42,7 @@ module Ace
              "via" => {"kind" => "env", "names" => names.sort}}
           end
 
-          def revoke(profile:, token_ref:)
+          def revoke(profile:, token_ref:, token: nil)
             # Process-scoped exposure ends with the process; there is no
             # remote state to revoke and never a claimed remote expiry.
             :revoked
