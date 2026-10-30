@@ -92,3 +92,13 @@ malformed GitHub scope guard, token_ref consistency comment, and the
 completed private-def migration. 8 low refactor/hygiene items skipped
 with recorded reasons. All suites re-verified green at the final head;
 post-fix probes 9/9.
+
+## Round 3c — closing the loop on the 3b fixes
+
+The 3b delta was itself reviewed (session review-8xtjsg, 9 findings): every
+remaining unlocked HITL writer path now holds the sidecar lock (field-only
+updates, the double answer application in `update`, resume notes); the
+misleading auth `--format` option dropped; regression test added;
+CHANGELOGs updated for all changed packages. 3 low items skipped with
+recorded reasons. **Final reviewed head: 2c65811c6** — the gate verdict
+binds here.
