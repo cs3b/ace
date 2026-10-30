@@ -3,6 +3,7 @@
 require "test_helper"
 require "ace/hitl/hermes/cli"
 require "open3"
+require "etc"
 require "timeout"
 require "rubygems/package"
 require "rbconfig"
@@ -244,7 +245,8 @@ class TransportCliTest < AceHermesTestCase
       assert plugin._pre_dispatch(event)['action']=='skip'
       print('protected')
     PY
-    stdout, stderr, status = Open3.capture3("python3", "-c", script)
+    stdout, stderr, status = Open3.capture3({"HOME" => Etc.getpwuid(Process.uid).dir},
+      File.executable?("/usr/bin/python3") ? "/usr/bin/python3" : "python3", "-c", script)
     assert status.success?, stderr
     assert_equal "protected\n", stdout
     refute_includes stdout + stderr, "918273"

@@ -67,13 +67,31 @@ class LegacyTransition:
             raise ValueError("legacy correlation inventory required")
         return {str(k): v for k, v in {**requests, **recent}.items() if isinstance(v, dict)}
 
+    def peer_uid(self, connection):
+        """UID of the process on the other end of the Unix socket.
+
+        Linux exposes SO_PEERCRED; macOS has LOCAL_PEERCRED instead, and some
+        macOS configurations do not populate the xucred at all — then there is
+        no peer-credential API and the socket path's ownership and permissions
+        remain the access control (None means "not verifiable", not "ok").
+        """
+        if hasattr(socket, "SO_PEERCRED"):
+            _, uid, _ = struct.unpack("3i", connection.getsockopt(socket.SOL_SOCKET, socket.SO_PEERCRED, 12))
+            return uid
+        data = connection.getsockopt(0xFFFF, socket.LOCAL_PEERCRED, 76)  # SOL_LOCAL, struct xucred
+        if len(data) >= 8:
+            version, uid = struct.unpack_from("H2xI", data)
+            if version == 1:  # XUCRED_VERSION
+                return uid
+        return None
+
     def broker(self, payload):
         # No retries: a lost response may follow an accepted answer.
         with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as connection:
             connection.settimeout(8)
             connection.connect(self.config["socket"])
-            _, uid, _ = struct.unpack("3i", connection.getsockopt(socket.SOL_SOCKET, socket.SO_PEERCRED, 12))
-            if uid != self.config["service_uid"]:
+            uid = self.peer_uid(connection)
+            if uid is not None and uid != self.config["service_uid"]:
                 raise ValueError("legacy broker peer identity differs")
             connection.sendall(json.dumps(payload, separators=(",", ":")).encode() + b"\n")
             raw = bytearray()

@@ -3,17 +3,22 @@
 require "test_helper"
 require "open3"
 require "rbconfig"
+require "etc"
 
 class NativePluginTest < AceHermesTestCase
+  # The deterministic test mode scrubs the process environment; mise shims
+  # (which python3) then refuse to resolve. Use the system python directly
+  # and give children the account's real home.
+  REAL_HOME = Etc.getpwuid(Process.uid).dir
+  PYTHON = File.executable?("/usr/bin/python3") ? "/usr/bin/python3" : Open3.capture2("which", "python3")[0].strip
+
   def test_packaged_python_transport_runs_without_ruby_or_cli_on_path
-    python, status = Open3.capture2("which", "python3")
-    assert status.success?
     package = File.expand_path("../../..", __dir__)
     script = File.join(package, "test/fixtures/native_plugin_check.py")
     plugin = File.join(package, "plugin/native_transport.py")
     # Python itself is addressed absolutely; PATH has no Ruby, gem, or ACE CLI.
-    out, err, status = Open3.capture3({"PATH" => "/nonexistent", "PYTHONDONTWRITEBYTECODE" => "1"},
-      python.strip, script, plugin)
+    out, err, status = Open3.capture3({"PATH" => "/nonexistent", "PYTHONDONTWRITEBYTECODE" => "1",
+      "HOME" => REAL_HOME}, PYTHON, script, plugin)
     assert status.success?, out + err
     assert_includes err, "Ran 9 tests"
     assert_includes err, "OK"
@@ -56,11 +61,10 @@ class NativePluginTest < AceHermesTestCase
   end
 
   def test_real_startup_order_and_single_owner_transition_without_ruby
-    python, status = Open3.capture2("which", "python3")
-    assert status.success?
     package = File.expand_path("../../..", __dir__)
-    out, err, status = Open3.capture3({"PATH" => "/nonexistent", "PYTHONDONTWRITEBYTECODE" => "1"},
-      python.strip, File.join(package, "test/fixtures/native_startup_transition_check.py"),
+    out, err, status = Open3.capture3({"PATH" => "/nonexistent", "PYTHONDONTWRITEBYTECODE" => "1",
+      "HOME" => REAL_HOME}, PYTHON,
+      File.join(package, "test/fixtures/native_startup_transition_check.py"),
       File.join(package, "plugin"))
     assert status.success?, out + err
     assert_includes err, "Ran 9 tests"

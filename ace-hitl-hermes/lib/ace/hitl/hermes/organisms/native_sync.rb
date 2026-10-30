@@ -68,7 +68,15 @@ module Ace
             origin = request.fetch("origin")
             owner = manager(origin.fetch("root"))
             event = owner.show(origin.fetch("case_id"), scope: "current")&.fetch(:event)
-            unless event && event.id == origin["case_id"] && event.file_path == origin["file"] &&
+            # Compare canonical paths: on macOS the stored origin file is the
+            # realpath form while the manager's file_path keeps the configured
+            # (/var) spelling of the same file.
+            event_file = begin
+              File.realpath(event.file_path)
+            rescue Errno::ENOENT, Errno::ENOTDIR, Errno::EACCES, Errno::ELOOP
+              nil
+            end if event
+            unless event && event.id == origin["case_id"] && event_file == origin["file"] &&
                 event.reply_to == request["reply_to"] && event.recipient == request["recipient"] &&
                 !event.metadata["lab_request_id"]
               raise ContractError, "native original case changed"

@@ -37,7 +37,10 @@ class Folder:
 
     def verify(self):
         info = self.path.lstat()
-        if (not stat.S_ISDIR(info.st_mode) or self.path.resolve() != self.path
+        # A symlinked final component is rejected by lstat/S_ISDIR above; an
+        # ancestor symlink (macOS /var -> /private/var) still designates the
+        # same private directory, so no string-form realpath comparison here.
+        if (not stat.S_ISDIR(info.st_mode)
                 or info.st_uid != os.geteuid() or info.st_mode & 0o077 or os.geteuid() == 0):
             raise ValueError("transport folder must be private and owned by the non-root user")
 
@@ -169,12 +172,16 @@ class NativeTransport:
         rule = channel["projects"][project]
         origin = request["origin"]
         path, root, case = origin["file"], origin["root"], origin["case_id"]
-        allowed = root in rule.get("event_roots", []) or any(
-            re.fullmatch(re.escape(base) + r"/[^/]+/\.ace-local/hitl", root or "")
+        # macOS serves tmpdirs as /var -> /private/var: configured roots and
+        # stored origins may use either spelling of the same directory, so
+        # every comparison goes through realpath (ace-wake pattern).
+        real = lambda p: os.path.realpath(p or "")
+        allowed = real(root) in {real(r) for r in rule.get("event_roots", [])} or any(
+            re.fullmatch(re.escape(real(base)) + r"/[^/]+/\.ace-local/hitl", real(root))
             for base in rule.get("worktree_roots", []))
         if not allowed or not absolute(path) or not absolute(root) or not TOKEN.fullmatch(case):
             raise ValueError("origin is outside registered roots")
-        if not path.startswith(root + "/") or not PurePosixPath(path).name.startswith(case + "-") or not path.endswith(".hitl.s.md"):
+        if not path.startswith(real(root) + "/") or not PurePosixPath(path).name.startswith(case + "-") or not path.endswith(".hitl.s.md"):
             raise ValueError("origin case path differs")
         if request["key"] != digest([project, path, case]):
             raise ValueError("origin key differs")
@@ -183,7 +190,8 @@ class NativeTransport:
         if request["recipient"] != {"machine": channel["machine"], "panel": channel["name"]}:
             raise ValueError("recipient binding differs")
         if request["event_type"] == "question":
-            if request["reply_to"] != {"machine": channel["machine"], "folder": root, "id": case}:
+            if request["reply_to"] is None or real(request["reply_to"].get("folder")) != real(root) or \
+                    request["reply_to"].get("machine") != channel["machine"] or request["reply_to"].get("id") != case:
                 raise ValueError("Reply address differs")
         elif request["event_type"] != "report" or request["reply_to"] is not None:
             raise ValueError("unsupported native event")

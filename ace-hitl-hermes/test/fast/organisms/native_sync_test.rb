@@ -6,6 +6,14 @@ require "ace/hitl/hermes/organisms/native_sync"
 require "ace/hitl/adapters/hermes_native"
 require "ace/hitl/hermes/cli"
 require "open3"
+require "etc"
+
+# The deterministic test mode scrubs the process environment; children
+# spawned through PATH resolvers (mise shims) then refuse to run because
+# mise stores its config-trust state under the REAL home. Interpreters
+# spawned by these integration probes get the account's actual home so
+# the toolchain resolves exactly as it does outside the suite.
+REAL_HOME = Etc.getpwuid(Process.uid).dir
 
 class NativeSyncTest < AceHermesTestCase
   H = Ace::Hitl
@@ -190,7 +198,7 @@ class NativeSyncTest < AceHermesTestCase
       console.log("native-sync/semantic-observe/eyes/ack/restart PASS");
     JS
     env = {"PATH" => "#{File.join(source_root, 'bin')}:#{ENV.fetch('PATH')}",
-      "BUNDLE_GEMFILE" => File.join(source_root, "Gemfile")}
+      "BUNDLE_GEMFILE" => File.join(source_root, "Gemfile"), "HOME" => REAL_HOME}
     out, err, status = Open3.capture3(env, "node", "--input-type=module", "-e", script)
     assert status.success?, "eyes integration failed: #{out} #{err}"
     assert_includes out, "eyes/ack/restart PASS"
@@ -326,10 +334,11 @@ class NativeSyncTest < AceHermesTestCase
           assert calls==["-100"]
       asyncio.run(run())
     PY
-    python, status = Open3.capture2("which", "python3")
-    assert status.success?
-    out, err, status = Open3.capture3({"PATH" => "/nonexistent", "PYTHONDONTWRITEBYTECODE" => "1"},
-      python.strip, "-c", script)
+    # Bypass PATH/mise entirely: the gateway only needs a real python3,
+    # and the hermetic test env cannot drive mise's shim resolution.
+    python = File.executable?("/usr/bin/python3") ? "/usr/bin/python3" : Open3.capture2("which", "python3")[0].strip
+    out, err, status = Open3.capture3({"PATH" => "/nonexistent", "PYTHONDONTWRITEBYTECODE" => "1",
+      "HOME" => REAL_HOME}, python, "-c", script)
     assert status.success?, out + err
     result = S.new(@route).run
     assert_empty result["errors"]

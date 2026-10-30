@@ -76,7 +76,7 @@ module Ace
             path = File.realpath(event.file_path)
             root = event.reply_to&.fetch("folder", nil) ||
               (@event_roots + @worktree_roots.flat_map { |base| Dir.glob("#{base}/*/.ace-local/hitl") })
-                .find { |candidate| path.start_with?("#{candidate}/") }
+                .find { |candidate| (canonical = real_path_string(candidate)) && path.start_with?("#{canonical}/") }
             if root.nil?
               # Guard policy: outside the configured roots the frame still goes
               # through, bound to the case's own event root (the hitl folder
@@ -84,7 +84,7 @@ module Ace
               root = File.dirname(File.dirname(path))
               warn_once("native origin #{event.id} is outside the configured project/worktree roots; proceeding with its own root #{root}")
             end
-            origin = {"file" => path, "root" => root, "case_id" => event.id}
+            origin = {"file" => path, "root" => real_path_string(root) || root, "case_id" => event.id}
             validate_origin!(origin)
             key = Digest::SHA256.hexdigest(JSON.generate([project, path, event.id]))
             {
@@ -97,19 +97,33 @@ module Ace
             }
           end
 
+          # macOS places tmpdirs behind /var -> /private/var: a configured
+          # path and its canonical form designate the same directory even
+          # when the strings differ. nil when the path does not resolve.
+          def real_path_string(path)
+            File.realpath(path)
+          rescue Errno::ENOENT, Errno::ENOTDIR, Errno::EACCES, Errno::ELOOP
+            nil
+          end
+
           def validate_origin!(origin)
             raise ContractError, "invalid native origin" unless origin.is_a?(Hash)
             path, root, id = origin.values_at("file", "root", "case_id")
+            canonical_root = root.is_a?(String) ? real_path_string(root) : nil
+            canonical_path = path.is_a?(String) ? real_path_string(path) : nil
             # Structure and identity of the origin stay hard: a malformed
-            # origin cannot be bound to a case at all.
-            unless [root, path].all? { |p| p.is_a?(String) && File.realpath(p) == p } &&
-                path.start_with?("#{root}/") && id.is_a?(String) && id.match?(TOKEN) &&
-                File.basename(path).start_with?("#{id}-") && path.end_with?(".hitl.s.md")
+            # origin cannot be bound to a case at all. Canonical forms are
+            # compared so the same directory matches regardless of string form.
+            unless canonical_root && canonical_path &&
+                canonical_path.start_with?("#{canonical_root}/") && id.is_a?(String) && id.match?(TOKEN) &&
+                File.basename(canonical_path).start_with?("#{id}-") && canonical_path.end_with?(".hitl.s.md")
               raise ContractError, "invalid native origin"
             end
-            allowed = @event_roots.include?(root) || @worktree_roots.any? do |base|
-              root.match?(%r{\A#{Regexp.escape(base)}/[^/]+/\.ace-local/hitl\z})
-            end
+            allowed = @event_roots.any? { |configured| real_path_string(configured) == canonical_root } ||
+              @worktree_roots.any? do |base|
+                canonical_base = real_path_string(base)
+                canonical_base && canonical_root.match?(%r{\A#{Regexp.escape(canonical_base)}/[^/]+/\.ace-local/hitl\z})
+              end
             unless allowed
               warn_once("native origin #{id} is outside the configured project/worktree roots; proceeding")
             end
@@ -119,7 +133,7 @@ module Ace
 
           def validate_root!(root)
             stat = File.lstat(root)
-            unless stat.directory? && File.realpath(root) == root &&
+            unless stat.directory? && !stat.symlink? && real_path_string(root) &&
                 stat.uid == Process.euid && (stat.mode & 0o077).zero?
               warn_once("native origin root is not a real, private, current-user directory (#{root}); proceeding")
             end
@@ -210,7 +224,7 @@ module Ace
 
           def verify_folder!
             stat = File.lstat(folder)
-            unless stat.directory? && !stat.symlink? && File.realpath(folder) == folder &&
+            unless stat.directory? && !stat.symlink? && real_path_string(folder) &&
                 stat.uid == Process.euid && (stat.mode & 0o077).zero? && !Process.euid.zero?
               warn_once("native Hermes folder is not a real, private, non-root-owned directory (#{folder}); proceeding")
             end
