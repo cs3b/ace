@@ -165,6 +165,29 @@ module Ace
             assert suggestion_error.is_a?(Organisms::HitlManager::SuggestionRefusedError),
               "the suggestion is refused against the answered case, not silently written"
           end
+
+          # Regression (round 3b): EVERY manager writer path takes the
+          # sidecar case lock — a field-only update (waiter lease refresh)
+          # must wait for a concurrent suggestion, never race it.
+          def test_a_field_update_waits_for_the_case_lock
+            done = nil
+            File.open("#{@event.file_path}.lock", File::RDWR | File::CREAT, 0o600) do |lock|
+              lock.flock(File::LOCK_EX)
+
+              writer = Thread.new do
+                @manager.update(@event.id, set: {"waiter_state" => "waiting"})
+                done = true
+              end
+
+              writer.join(0.3)
+              refute done, "the field update must wait for the sidecar case lock"
+              lock.flock(File::LOCK_UN)
+              writer.join
+            end
+
+            assert done
+            assert_match(/waiter_state: waiting/, File.read(@event.file_path))
+          end
         end
       end
     end

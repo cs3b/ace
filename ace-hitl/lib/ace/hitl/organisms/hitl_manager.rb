@@ -625,15 +625,20 @@ module Ace
           if has_field_updates && !answer.nil?
             apply_field_and_answer_updates(event.file_path, set: set, add: add, remove: remove, answer: answer)
           elsif has_field_updates
-            Ace::Support::Items::Molecules::FieldUpdater.update(
-              event.file_path,
-              set: set,
-              add: add,
-              remove: remove
-            )
+            # FieldUpdater flocks the case FILE; the manager's exclusion
+            # contract is the sidecar lock, so the whole field update runs
+            # under it — no window against the locked manager writers.
+            with_case_lock(event.file_path) do
+              Ace::Support::Items::Molecules::FieldUpdater.update(
+                event.file_path,
+                set: set,
+                add: add,
+                remove: remove
+              )
+            end
+          else
+            apply_answer_update(event.file_path, answer) unless answer.nil?
           end
-
-          apply_answer_update(event.file_path, answer) unless answer.nil?
 
           current_path = event.path
           current_special = event.special_folder
@@ -913,21 +918,19 @@ module Ace
         end
 
         private def apply_answer_update(file_path, answer)
-          content = File.read(file_path)
-          frontmatter, body = Ace::Support::Items::Atoms::FrontmatterParser.parse!(content)
+          with_case_lock(file_path) do
+            content = File.read(file_path)
+            frontmatter, body = Ace::Support::Items::Atoms::FrontmatterParser.parse!(content)
 
-          updated_body = Molecules::HitlAnswerEditor.apply(body, answer)
-          answered = !answer.to_s.strip.empty?
-          frontmatter["answered"] = answered
-          frontmatter["status"] = answered ? "answered" : (frontmatter["status"] || "pending")
-          frontmatter["answered_at"] = answered ? Time.now.utc : nil
+            updated_body = Molecules::HitlAnswerEditor.apply(body, answer)
+            answered = !answer.to_s.strip.empty?
+            frontmatter["answered"] = answered
+            frontmatter["status"] = answered ? "answered" : (frontmatter["status"] || "pending")
+            frontmatter["answered_at"] = answered ? Time.now.utc : nil
 
-          new_content = Ace::Support::Items::Atoms::FrontmatterSerializer.rebuild(frontmatter, updated_body)
-          tmp_path = "#{file_path}.tmp.#{Process.pid}"
-          File.write(tmp_path, new_content)
-          File.rename(tmp_path, file_path)
-        ensure
-          File.unlink(tmp_path) if tmp_path && File.exist?(tmp_path)
+            write_atomic(file_path,
+              Ace::Support::Items::Atoms::FrontmatterSerializer.rebuild(frontmatter, updated_body))
+          end
         end
 
         private def apply_field_and_answer_updates(file_path, set:, add:, remove:, answer:, first_answer: false)
@@ -1031,12 +1034,14 @@ module Ace
           return unless current
 
           event = current[:event]
-          content = File.read(event.file_path)
-          frontmatter, body = Ace::Support::Items::Atoms::FrontmatterParser.parse!(content)
-          updated_body = body.to_s.sub(/\s*\z/, "")
-          updated_body << "\n\n## Resume Dispatch\n\n#{note}\n"
-          rebuilt = Ace::Support::Items::Atoms::FrontmatterSerializer.rebuild(frontmatter, updated_body)
-          File.write(event.file_path, rebuilt)
+          with_case_lock(event.file_path) do
+            content = File.read(event.file_path)
+            frontmatter, body = Ace::Support::Items::Atoms::FrontmatterParser.parse!(content)
+            updated_body = body.to_s.sub(/\s*\z/, "")
+            updated_body << "\n\n## Resume Dispatch\n\n#{note}\n"
+            write_atomic(event.file_path,
+              Ace::Support::Items::Atoms::FrontmatterSerializer.rebuild(frontmatter, updated_body))
+          end
         end
       end
     end

@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.25.0] - 2026-10-30
 
+### Fixed (review rounds 3/3b)
+
+- Case writes are crash-atomic under a stable sidecar lock (`<case>.lock`):
+  every writer path (reply, suggestion, lesson, lifecycle, field updates,
+  resume notes) holds the sidecar across tmp+fsync+rename — the flock+rename
+  lost-update race and unlocked writer paths are closed. Terminal cases
+  (closed/cancelled) refuse new answers, suggestions and lessons; history
+  capture is section-scoped; `history --format table`/`--quiet` are real.
+
 ### Added
 
 - `ace-hitl lesson` + `HitlManager#add_lesson` and `ace-hitl history` +

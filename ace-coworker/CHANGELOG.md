@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.7.0] - 2026-10-30
 
+### Fixed (review rounds 3/3b)
+
+- The integration gate rejects anonymous formal approvals (empty approver);
+  `commission --hitl-case CASE_ID` renders `{{case}}` for per-case presets.
+
 ### Added
 
 - `second-captain` advisory role preset + `wfi://coworker/second-captain`

@@ -30,7 +30,6 @@ module Ace
             desc: "Exec command, one argument per repeat, in order (exec)"
           option :force, type: :boolean, default: false,
             desc: "Close a revoke-pending lease whose credential is gone (operator-forced terminal; revoke)"
-          option :format, default: "table", desc: "Output format (table, json)"
           option :quiet, aliases: ["-q"], type: :boolean, default: false, desc: "Suppress non-essential output"
 
           def call(action:, target: nil, **options)
