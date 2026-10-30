@@ -110,3 +110,16 @@ Bramki końcowe bez zmian (review/approval/merge → publish → lab).
   decyzją" z .b/.c, udowodniony na artefaktach.
 
 Bramki końcowe bez zmian: niezależny review/approval/merge → publish → lab.
+
+## Dodatek 5: postawa bezpieczeństwa instalatora potwierdzona z gemu (2026-10-30, runda 22)
+
+Próba przekazania manifestu przez flagę CLI (`--manifest`) poprawnie
+odrzucona (brak takiej flagi — z założenia); manifest wyłącznie ze stałej
+ścieżki zaufanej `/etc/lab/ace-lab/install.yml` z weryfikacją właściciela
+(root, nie caller-writable). To potwierdza na artefakcie kontrakt
+bezpieczeństwa z review .0 („Manifest to /etc/lab/ace-lab/install.yml,
+bez nowej flagi wyboru manifestu") — fail-closed z konkretnym komunikatem
+administracyjnym.
+
+Wszystkie scenariusze osiągalne w tej sesji wykonane. Pozostają bramki
+zewnętrzne (review/approval/merge → publish z OTP → zimny cykl na labie).
