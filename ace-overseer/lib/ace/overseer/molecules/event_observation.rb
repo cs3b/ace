@@ -15,10 +15,13 @@ module Ace
       # failing source degrades only itself and healthy silence projects
       # identical revisions (no model turns).
       class EventObservation
-        def initialize(hitl: nil, task_manager: nil, local_sources: nil)
+        def initialize(hitl: nil, task_manager: nil, local_sources: nil, remote_sources: nil,
+          config: nil)
           @hitl = hitl || Ace::Hitl::Molecules::EventObservation.new
           @tasks = task_manager || Ace::Task::Organisms::TaskManager.new
           @local_sources = local_sources || LocalSources.new(task_manager: @tasks)
+          @remote_sources = remote_sources || RemoteSources.new
+          @config = config || Ace::Overseer.config
         end
 
         def call(owner:, scope: "current", limit: 500)
@@ -31,13 +34,14 @@ module Ace
           end
 
           local = @local_sources.call
+          remote = remote_projection
           managers = @tasks.list(in_folder: "all").select { |task| !task.metadata["project_task"].to_s.empty? }
 
           if projection.nil?
             # A degraded HITL source degrades only itself: the local
             # sources keep projecting and the failure is visible data.
-            events = local.fetch("events") + [health_marker("hitl", hitl_error)]
-            sources = local.fetch("sources").merge(
+            events = local.fetch("events") + remote.fetch("events") + [health_marker("hitl", hitl_error)]
+            sources = local.fetch("sources").merge(remote.fetch("sources")).merge(
               "hitl" => {"status" => "degraded", "error" => "#{hitl_error.class}: #{hitl_error.message}"}
             )
             return {"schema" => "ace.hitl.observation/v1",
@@ -56,12 +60,25 @@ module Ace
             manager && ([manager] + Array(manager.subtasks)).all? { |task| Ace::Task::Atoms::TaskValidationRules.terminal_status?(task.status.to_s) }
           end
 
-          projection.merge("events" => (pending + local.fetch("events")).sort_by { |row| row["key"] },
+          projection.merge("events" => (pending + local.fetch("events") + remote.fetch("events"))
+              .sort_by { |row| row["key"] },
             "settled" => settled,
-            "sources" => local.fetch("sources").merge("hitl" => {"status" => "ok"}))
+            "sources" => local.fetch("sources").merge(remote.fetch("sources"))
+              .merge("hitl" => {"status" => "ok"}))
         end
 
         private
+
+        # Configured remote observation (8xs.t.pu0.4): the project's own
+        # observe.remote.pull_requests list — never a scan of accessible
+        # accounts. No configuration means no remote rows and no remote
+        # source to degrade.
+        def remote_projection
+          entries = Array(@config.dig("observe", "remote", "pull_requests"))
+          return {"events" => [], "sources" => {}} if entries.empty?
+
+          @remote_sources.call(pull_requests: entries)
+        end
 
         def health_marker(name, error)
           {"key" => "source:#{name}",

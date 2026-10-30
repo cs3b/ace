@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Remote PR observation (task 8xs.t.pu0.4): `observe.remote.pull_requests`
+  configuration projects configured PRs through the existing forge provider
+  adapters — lifecycle rows (new HEAD, merge/close/reopen) and activity rows
+  (review/approval/comment identity sets) with semantic revisions, wake
+  payloads (forge, number/title, event kind, author, link), and per-source
+  degradation on API failures with one wake per failure class.
+
 - `ace-overseer observe` projects the six local source classes (task
   8xs.t.pu0.3): project and `_overseer` tasks, worktrees, coworker
   availability and assignment progress alongside HITL events — every row

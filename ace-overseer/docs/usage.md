@@ -98,6 +98,38 @@ projecting. `sources` maps each source to `ok`/`degraded`. After a restart,
 pending revisions reconcile before new work is chosen, so a report that
 arrived during the overseer's absence is recognized exactly once.
 
+### Remote PR observation
+
+Configure the observed pull requests in the same cascade (task 8xs.t.pu0.4)
+— the project's own declarations, never a scan of every accessible account:
+
+```yaml
+# .ace/overseer/config.yml
+observe:
+  remote:
+    pull_requests:
+      - server: github-cs3b   # configured git server (ace-git ServerRegistry)
+        number: 398
+```
+
+Rows project through the EXISTING forge provider adapters (Forgejo and
+GitHub — `Ace::Git::Providers.for`; no separate HTTP client, no webhook
+service). Each configured PR contributes two rows: its lifecycle (`pr:` —
+new HEAD via `head_sha`, merge, close, reopen, title/draft) and its activity
+(`pr-activity:` — the sorted identity set of reviews and comments, so a new
+review, formal approval or comment revises once while re-ordered payloads and
+volatile counters never do). Row payloads carry the wake facts: forge, PR
+number/title, event kind, author and link. Technical polling of identical
+state projects identical revisions — zero model turns.
+
+A failing forge (401/403, rate limit, timeout, malformed payload) degrades
+only its source (`source-health` marker keyed by failure class: one wake per
+failure mode, never an empty healthy list); retry/backoff stays inside the
+provider adapters. After access returns, the changed state is recognized
+through its normal revision. Remote data stays data: re-read the current
+state and evidence before any merge decision. CI check changes are
+information, never a merge gate.
+
 ## `ace-overseer work-on`
 
 Create or reuse local worktrees and prepare one assignment.
