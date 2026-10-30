@@ -3,26 +3,38 @@
 module Ace
   module Coworker
     module Atoms
-      # Pure pre-merge integration gate (8xg.t.sbz.4.3 / contract): the
-      # integrator merges only a candidate whose (a) dependencies are
-      # integrated predecessors, (b) current head matches the reviewed
-      # head (no drift), (c) tests were executed and passed, and (d) a
-      # fresh independent review verdict accepts the EXACT candidate
-      # head. Any unknown or contradictory fact is a blocking reason -
-      # uncertainty must be verified against the real worktree/reports,
-      # never guessed or retried blind. Explicit :blocked outcome with
-      # reasons, never an exception. No IO, no writes, no merges: the
-      # gate decides readiness only; the role drives git/ace-git.
+      # Pure pre-merge integration gate (8xg.t.sbz.4.3 / contract, HEAD
+      # binding per 8xs.t.pu0.8): the integrator merges only a candidate
+      # whose (a) dependencies are integrated predecessors, (b) current
+      # head matches the reviewed head (no drift), (c) tests were
+      # executed, passed, AND BOUND TO THE EXACT CANDIDATE HEAD (bare
+      # executed/passed without a head covers nothing), (d) a fresh
+      # independent review verdict accepts the EXACT candidate head, and
+      # (e) the formal approval — when required — also names this head
+      # and was given by a DIFFERENT account than the author. Any
+      # unknown or contradictory fact is a blocking reason - a code
+      # change or rebase after tests or review invalidates those bases
+      # for the old candidate; uncertainty must be verified against the
+      # real worktree/reports, never guessed or retried blind. Explicit
+      # :blocked outcome with reasons, never an exception. No IO, no
+      # writes, no merges: the gate decides readiness only; the role
+      # drives git/ace-git (the merge adapter's expected-head condition
+      # refuses a candidate that moved between gate and merge).
       module IntegrationGate
         ACCEPT_VERDICTS = %w[accept].freeze
 
         # @param input [Hash] string-keyed facts:
         #   "candidate_head" => String (current head of the candidate)
         #   "review" => {"head" => String reviewed head, "verdict" => String}
-        #   "tests" => {"executed" => bool, "passed" => bool}
+        #   "tests" => {"executed" => bool, "passed" => bool,
+        #               "head" => String head the test run covered}
+        #   "approval" => {"head" => String, "by" => String account} (a
+        #     nil/empty approval skips the formal-approval check; lanes
+        #     that require it must supply it)
+        #   "author" => String candidate author account (optional)
         #   "dependencies" => {name => bool (integrated predecessor)}
         # @return [Hash] {verdict: :ready | :blocked, reasons: [String],
-        #   failed_checks: [:dependencies|:candidate|:review|:tests|:input]}
+        #   failed_checks: [:dependencies|:candidate|:review|:tests|:approval|:input]}
         def self.evaluate(input)
           unless input.is_a?(Hash) && input.keys.all? { |k| k.is_a?(String) }
             return {verdict: :blocked,
@@ -69,6 +81,36 @@ module Ace
           unless tests["passed"] == true
             reasons << "tests not passing: executed tests failed or their outcome is unknown"
             failed << :tests
+          end
+          tests_head = str(tests["head"])
+          if tests_head.empty?
+            reasons << "test evidence not bound to a candidate head: executed/passed covers no " \
+              "verifiable candidate - re-run the tests on the current head and record it"
+            failed << :tests
+          elsif !candidate_head.empty? && tests_head.downcase != candidate_head.downcase
+            reasons << "stale test evidence: candidate #{candidate_head} is not the tested head #{tests_head}"
+            failed << :tests
+          end
+
+          approval = hash(input["approval"])
+          unless approval.empty?
+            approval_head = str(approval["head"])
+            approved_by = str(approval["by"])
+            if approval_head.empty?
+              reasons << "formal approval not bound to a candidate head: the approval covers no " \
+                "verifiable candidate"
+              failed << :approval
+            elsif !candidate_head.empty? && approval_head.downcase != candidate_head.downcase
+              reasons << "stale formal approval: candidate #{candidate_head} is not the approved " \
+                "head #{approval_head}"
+              failed << :approval
+            end
+            author = str(input["author"])
+            if !approved_by.empty? && !author.empty? && approved_by.downcase == author.downcase
+              reasons << "formal approval by the author's own account '#{approved_by}': the formal " \
+                "approver must be a different configured lane account"
+              failed << :approval
+            end
           end
 
           {verdict: reasons.empty? ? :ready : :blocked,

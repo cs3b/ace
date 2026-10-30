@@ -12,6 +12,7 @@ module Ace
             out, = capture_io do
               Gate.new.call(candidate_head: "1a2b3c4", review_head: "1a2b3c4",
                             review_verdict: "accept", tests: ["executed", "passed"],
+                            tests_head: "1a2b3c4",
                             dep: ["8xg.t.sbz.4.2=integrated"])
             end
             assert_includes out, "Coworker integration gate"
@@ -66,6 +67,7 @@ module Ace
             out, = capture_io do
               Gate.new.call(candidate_head: "1a2b3c4", review_head: "1a2b3c4",
                             review_verdict: "accept", tests: ["executed,passed"],
+                            tests_head: "1a2b3c4",
                             dep: ["dep-a=integrated", "dep-b=integrated"])
             end
             assert_includes out, "verdict:        ready"

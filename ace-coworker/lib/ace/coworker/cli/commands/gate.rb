@@ -13,26 +13,34 @@ module Ace
 
           example [
             "gate --candidate-head 1a2b3c4 --review-head 1a2b3c4 --review-verdict accept \\",
-            "     --tests executed,passed --dep 8xg.t.sbz.4.2=integrated",
+            "     --tests executed,passed --tests-head 1a2b3c4 --dep 8xg.t.sbz.4.2=integrated \\",
+            "     --approval-head 1a2b3c4 --approval-by lab-merge-ace --author lab-overseer",
             "gate --candidate-head 1a2b3c4 --review-head 0d0e0f --review-verdict accept \\",
-            "     --tests executed,passed --dep 8xg.t.sbz.4.2=missing"
+            "     --tests executed,passed --tests-head 1a2b3c4 --dep 8xg.t.sbz.4.2=missing"
           ]
 
           option :candidate_head, desc: "Current head of the candidate branch (omit when unknown)"
           option :review_head, desc: "Candidate head the review verdict covers"
           option :review_verdict, required: true, desc: "Independent review verdict (accept, continue, escalate)"
           option :tests, type: :array, default: [], desc: "Test evidence flags: executed, passed"
+          option :tests_head, desc: "Candidate head the executed test run covered (required with test evidence)"
+          option :approval_head, desc: "Candidate head the formal approval covers (lanes requiring formal approval)"
+          option :approval_by, desc: "Account that gave the formal approval"
+          option :author, desc: "Candidate author account (the formal approver must differ)"
           option :dep, type: :array, default: [], desc: "Dependency states as name=integrated|missing pairs"
           option :format, default: "table", desc: "Output format (table, json)"
           option :quiet, aliases: ["-q"], type: :boolean, default: false, desc: "Suppress non-essential output"
           option :debug, aliases: ["-d"], type: :boolean, default: false, desc: "Show debug output"
 
-          def call(candidate_head: nil, review_head: nil, review_verdict: nil, tests: [], dep: [],
-                   format: "table", **options)
+          def call(candidate_head: nil, review_head: nil, review_verdict: nil, tests: [],
+            tests_head: nil, approval_head: nil, approval_by: nil, author: nil, dep: [],
+            format: "table", **options)
             result = Atoms::IntegrationGate.evaluate(
               "candidate_head" => candidate_head.to_s,
               "review" => {"head" => review_head.to_s, "verdict" => review_verdict.to_s},
-              "tests" => tests_flags(tests),
+              "tests" => tests_flags(tests).merge("head" => tests_head.to_s),
+              "approval" => approval_for(approval_head, approval_by),
+              "author" => author.to_s,
               "dependencies" => dependency_states(dep)
             )
 
@@ -46,6 +54,14 @@ module Ace
           end
 
           private
+
+          # A formal approval participates only when the lane supplied
+          # approval evidence; omitted approval facts skip the check.
+          def approval_for(approval_head, approval_by)
+            return {} if approval_head.to_s.strip.empty? && approval_by.to_s.strip.empty?
+
+            {"head" => approval_head.to_s, "by" => approval_by.to_s}
+          end
 
           def tests_flags(tests)
             flags = Array(tests).flat_map { |value| value.to_s.split(",") }.map { |f| f.strip.downcase }.reject(&:empty?)

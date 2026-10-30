@@ -10,7 +10,7 @@ module Ace
           {
             "candidate_head" => "1a2b3c4",
             "review" => {"head" => "1a2b3c4", "verdict" => "accept"},
-            "tests" => {"executed" => true, "passed" => true},
+            "tests" => {"executed" => true, "passed" => true, "head" => "1a2b3c4"},
             "dependencies" => {"8xg.t.sbz.4.2" => true}
           }.merge(overrides)
         end
@@ -128,8 +128,67 @@ module Ace
             "dependencies" => {"dep-a" => false, "dep-b" => false}
           )
           assert_equal :blocked, result[:verdict]
-          assert_equal 5, result[:reasons].length
           assert_equal %i[dependencies review tests], result[:failed_checks]
+          # 2 review reasons + 3 tests reasons (executed, passed, head binding)
+          assert_equal 6, result[:reasons].length
+        end
+
+        # --- HEAD binding of evidence (8xs.t.pu0.8) ---------------------
+
+        def test_test_evidence_without_a_head_covers_nothing
+          result = IntegrationGate.evaluate(ready_input(
+            "tests" => {"executed" => true, "passed" => true}
+          ))
+
+          assert_equal :blocked, result[:verdict]
+          assert(result[:reasons].any? { |reason| reason.include?("test evidence not bound to a candidate head") })
+          assert_includes result[:failed_checks], :tests
+        end
+
+        def test_stale_test_evidence_after_a_candidate_change_blocks
+          result = IntegrationGate.evaluate(ready_input(
+            "tests" => {"executed" => true, "passed" => true, "head" => "0d0e0f0"}
+          ))
+
+          assert_equal :blocked, result[:verdict]
+          assert(result[:reasons].any? { |reason| reason.include?("stale test evidence") })
+          assert_includes result[:failed_checks], :tests
+        end
+
+        def test_formal_approval_must_name_the_candidate_head_and_differ_from_the_author
+          ok = IntegrationGate.evaluate(ready_input(
+            "approval" => {"head" => "1a2b3c4", "by" => "lab-merge-ace"},
+            "author" => "lab-overseer"
+          ))
+          assert_equal :ready, ok[:verdict]
+
+          stale = IntegrationGate.evaluate(ready_input(
+            "approval" => {"head" => "0d0e0f0", "by" => "lab-merge-ace"},
+            "author" => "lab-overseer"
+          ))
+          assert_equal :blocked, stale[:verdict]
+          assert(stale[:reasons].any? { |reason| reason.include?("stale formal approval") })
+
+          unbound = IntegrationGate.evaluate(ready_input(
+            "approval" => {"by" => "lab-merge-ace"}, "author" => "lab-overseer"
+          ))
+          assert_equal :blocked, unbound[:verdict]
+          assert(unbound[:reasons].any? { |reason| reason.include?("formal approval not bound") })
+
+          self_approved = IntegrationGate.evaluate(ready_input(
+            "approval" => {"head" => "1a2b3c4", "by" => "lab-overseer"},
+            "author" => "lab-overseer"
+          ))
+          assert_equal :blocked, self_approved[:verdict]
+          assert(self_approved[:reasons].any? { |reason| reason.include?("the author's own account") })
+          assert_includes self_approved[:failed_checks], :approval
+        end
+
+        def test_omitted_formal_approval_keeps_the_previous_semantics
+          result = IntegrationGate.evaluate(ready_input)
+
+          assert_equal :ready, result[:verdict]
+          refute_includes result[:failed_checks], :approval
         end
       end
     end

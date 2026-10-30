@@ -171,28 +171,42 @@ errors, non-zero exit).
 ```
 ace-coworker gate --review-verdict accept|continue|escalate
                   [--candidate-head SHA] [--review-head SHA]
-                  [--tests executed,passed] [--dep LEAF=integrated|missing ...]
+                  [--tests executed,passed] [--tests-head SHA]
+                  [--approval-head SHA --approval-by ACCOUNT] [--author ACCOUNT]
+                  [--dep LEAF=integrated|missing ...]
                   [--format table|json] [-q] [-d]
 ```
 
-The integrator role's pre-merge gate (8xg.t.sbz.4.3): a pure, stateless
-evaluation of the four project-defined checks. `--candidate-head` is the
-current candidate head (omit it when genuinely unknown - the gate then
-blocks on the missing evidence instead of guessing); `--review-head` is the
-candidate head the independent review verdict covers; `--tests` takes the
-`executed,passed` evidence flags (any other token is an error, not
-silent missing evidence); each `--dep NAME=integrated|missing` pair
-states one dependency leaf (`missing` or any other value = not
-integrated; the pair must contain `=`, and repeating a name is an
-error). Empty or omitted `--dep` means the caller enumerated no
-dependencies - the gate trusts the caller's dependency enumeration.
-Prints `ready` or `blocked` with per-check reasons (dependencies, candidate
-drift, review freshness/verdict, executed+passing tests). `blocked` is a
-legitimate gate outcome (exit 0) - the role withholds the merge and
-escalates; only malformed input (an invalid `--dep` pair, a duplicate
-`--dep` name, or an invalid `--tests` token) fails with a non-zero exit.
-Heads are recorded and compared as full lowercase SHAs. Nothing is persisted and no git operation is performed: the
-gate decides readiness only.
+The integrator role's pre-merge gate (8xg.t.sbz.4.3; HEAD binding of
+evidence per 8xs.t.pu0.8): a pure, stateless evaluation of the
+project-defined checks. `--candidate-head` is the current candidate head
+(omit it when genuinely unknown - the gate then blocks on the missing
+evidence instead of guessing); `--review-head` is the candidate head the
+independent review verdict covers; `--tests-head` is the head the
+executed test run covered — test evidence without a head, or bound to a
+different head, BLOCKS the merge (a code change or rebase after the tests
+invalidates that basis); `--approval-head`/`--approval-by` supply the
+formal approval's head and account for lanes that require one (an
+approval bound to another head blocks, and an approval by the AUTHOR's
+own account blocks — the formal approver is a different configured lane
+account); each `--dep NAME=integrated|missing` pair states one
+dependency leaf (`missing` or any other value = not integrated; the pair
+must contain `=`, and repeating a name is an error). Empty or omitted
+`--dep` means the caller enumerated no dependencies - the gate trusts the
+caller's dependency enumeration. Prints `ready` or `blocked` with
+per-check reasons (dependencies, candidate drift, review
+freshness/verdict, executed+passing+HEAD-bound tests, formal approval).
+`blocked` is a legitimate gate outcome (exit 0) - the role withholds the
+merge and escalates; only malformed input (an invalid `--dep` pair, a
+duplicate `--dep` name, or an invalid `--tests` token) fails with a
+non-zero exit. Heads are recorded and compared as full lowercase SHAs.
+Nothing is persisted and no git operation is performed: the gate decides
+readiness only — the integrator reads the current HEAD immediately
+before merging and passes it as the merge adapter's expected-head
+condition, so a candidate that moves between gate and merge is refused
+by the adapter (the race never merges a stale candidate). CI status is
+advisory (Captain's decision): a red CI does not block a merge backed by
+executed passing tests and an accepting independent review.
 
 ### `ace-coworker commission`
 

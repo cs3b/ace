@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Integration gate binds ALL evidence to the exact candidate head (task
+  8xs.t.pu0.8): test evidence must carry the head it covered (bare
+  executed/passed blocks; a different tested head is stale evidence), and the
+  formal approval — `--approval-head`/`--approval-by` — must name the same
+  head and come from an account other than the author. The integrator
+  re-reads the HEAD immediately before merging through the merge adapter's
+  expected-head condition, so the gate-to-merge race refuses a stale
+  candidate. CI stays advisory.
+
 ## [0.6.2] - 2026-10-23
 
 ### Added
