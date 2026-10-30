@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.27.0] - 2026-10-30
 
+### Fixed (review rounds 3/3b)
+
+- Start hardening: herdr failures surface as blocked reports on project and
+  lab paths; the first prompt is a separate step (a prompt failure never
+  strands a started agent); installed toolchain resolution never falls back
+  to the checkout; the lab space is `lab-overseer` (no basename collision);
+  nested lab scopes are refused; malformed observe.remote entries degrade
+  to per-source health markers.
+
 ### Added
 
 - Remote PR observation (task 8xs.t.pu0.4): `observe.remote.pull_requests`
