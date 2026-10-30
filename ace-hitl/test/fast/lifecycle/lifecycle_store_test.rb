@@ -405,7 +405,7 @@ class LifecycleStoreTest < AceHitlTestCase
 
       root_store = make_store(root: root, identity: root_identity)
       answerer = Thread.new do
-        sleep 0.3
+        sleep 0.15
         root_store.deliver("hitl001", stdin_reader("654321"))
       end
       consumed = store.consume("hitl001", timeout: 0, operation: "gem-push")

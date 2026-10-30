@@ -472,7 +472,7 @@ class ScopedServiceTest < AceHitlTestCase
     # The answer arrives AFTER the consume starts: absence waits, and
     # the late delivery completes the hand-off (review 8x327bue).
     deliverer = Thread.new do
-      sleep 0.4
+      sleep 0.15
       otp_client.deliver("hitl001", "654321")
     end
     consumed = otp_client.consume("hitl001", timeout: 5, operation: "gem-push")

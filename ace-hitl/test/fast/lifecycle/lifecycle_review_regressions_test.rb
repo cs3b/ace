@@ -114,11 +114,16 @@ class LifecycleReviewRegressionsTest < AceHitlTestCase
 
   def test_timeout_terminates_the_whole_callback_process_group
     Dir.mktmpdir("effect-group-regression") do |folder|
-      declaration = {"argv" => [RbConfig.ruby, "-e", 'fork { sleep 2; File.write("marker", "survived") }; sleep 20'],
-        "cwd" => folder, "timeout_s" => 1}
+      # Timing shape (halved for suite speed, margins kept
+      # proportional): the group is killed at timeout_s, the forked
+      # descendant would write its marker later, and the post-wait
+      # window exceeds the descendant's delay — the kill-boundary
+      # assertion is unchanged.
+      declaration = {"argv" => [RbConfig.ruby, "-e", 'fork { sleep 1; File.write("marker", "survived") }; sleep 10'],
+        "cwd" => folder, "timeout_s" => 0.5}
       _, timed_out = Ace::Hitl::Lifecycle::Effects.execute(declaration, "answer", Process.uid, Process.gid)
       assert timed_out
-      sleep 2.5
+      sleep 1.5
       refute_path_exists File.join(folder, "marker")
     end
   end

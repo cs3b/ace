@@ -210,14 +210,19 @@ module Ace
           # always the complete old or new content with the answer kept.
           def test_a_killed_field_update_never_loses_the_answer
             deliver_answer("Proceed\n")
+            # Widen the mid-write window so every trial's SIGKILL lands
+            # while the atomic rewrite is in flight: a large frontmatter
+            # field makes each update rewrite + fsync a substantial file
+            # (previously 12 short trials were needed to hit the window).
+            @manager.update(@event.id, set: {"filler" => "x" * 400_000})
             signaled = 0
 
-            12.times do |i|
+            3.times do |i|
               pid = Process.fork do
                 @manager.update(@event.id, set: {"waiter_tick" => i.to_s})
                 exit!(0)
               end
-              sleep [0.002, 0.006, 0.012, 0.02][i % 4]
+              sleep [0.004, 0.008, 0.012][i]
               Process.kill("KILL", pid) rescue nil
               _pid, status = Process.wait2(pid)
               signaled += 1 if status.signaled?
@@ -228,7 +233,7 @@ module Ace
               Ace::Support::Items::Atoms::FrontmatterParser.parse!(content)
             end
             assert_operator signaled, :>=, 1,
-              "at least one trial must actually die mid-update (#{signaled}/12 signaled)"
+              "at least one trial must actually die mid-update (#{signaled}/3 signaled)"
           end
 
           # Regression (round 3b): EVERY manager writer path takes the
