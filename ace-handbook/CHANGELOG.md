@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.37.0] - 2026-10-30
 
+### Fixed (review rounds 3/3b)
+
+- `resolve_named_package` raises a typed `UnresolvableExtensionsPackageError`
+  in auto mode when a configured `extensions_package` resolves nowhere;
+  installed mode keeps its fallback rule.
+
 ### Added
 
 - `wfi://release/publisher` (task 8xs.t.pu0.9): the publisher coworker role —
