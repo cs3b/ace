@@ -36,3 +36,28 @@ approval właściwym kontem lane (merge przez integratora z expected-head).
    mapowanie na kryteria gad.2/sbz.9 (bez automatycznego zamykania
    historycznych programów).
 4. Sprzątanie z wykazu .d po odbiorze zimnego startu.
+
+## Dodatek: odbiór z zbudowanych gemów (2026-10-30, runda 18)
+
+Kolejny etap odbioru producer→consumer na poziomie artefaktu: 9 gemów
+zbudowanych, SHA-256 spisane (`/tmp/pu0-gem-build/SHA256SUMS` —przy
+finalnej publikacji), zainstalowane w izolowanym GEM_HOME z opublikowanymi
+zależnościami z RubyGems, uruchomione z ACE_TOOLCHAIN=installed.
+
+- **Defekty znalezione i naprawione** (commit 839e1b093): `ace-lab auth`
+  NameError na niezdefiniowanej klasie `Ace::Lab::Auth::Error` (jawna baza);
+  `ace-hitl help` nie listował 7 nowych komend (dopełniony
+  REGISTERED_COMMANDS). Oba zweryfikowane z przebudowanych gemów.
+- **Pełny cykl HITL z zainstalowanego gema**: create → reply (received,
+  exit 0) → identyczne ponowienie (duplicate, exit 0) → apply --ref →
+  close → sweep — wszystkie wyniki zgodne z kontraktem.
+- **observe (installed)**: projekcja `ace.hitl.observation/v1` z pięcioma
+  lokalnymi źródłami + hitl, źródła zdrowe, schema zgodna.
+- **start --dry-run (installed)**: wfi:// bez zainstalowanego nav =
+  poprawna blokada z konkretnym komunikatem; instructions jako plik =
+  pełny plan (scope/root/label/profile/instrukcje) z poprawnym rootem.
+- **gate (installed)**: stale review blokuje; zgodne HEAD-y +
+  tests-head + approval-head/author przechodzą (ready).
+
+Pozostałe bramki bez zmian: niezależny review + approval + merge PR #398,
+publikacja (OTP Kapitana), zimny cykl na labie.
