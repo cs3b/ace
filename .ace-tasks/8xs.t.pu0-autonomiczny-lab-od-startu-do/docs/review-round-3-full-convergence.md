@@ -78,3 +78,17 @@ verified identical at HEAD before this round; not caused by this branch.
 The gate verdict must be re-bound to the final HEAD of this round
 (endgame-status.md updated accordingly). Formal approval + merge remain
 external gates, unchanged.
+
+## Round 3b — gate-delta review of the round-3 fixes (same day)
+
+The round-3 delta itself (40e8f19a2..) was reviewed as one more segment
+(session review-8xtj7y, 19 findings). Fixed: the flock+rename lost-update
+race in HITL case writes (sidecar `<case>.lock` + tmp+rename data file,
+fsync before rename), the doubled auth-exec report + typed exit code, the
+pi acceptance package-root depth, fsync-before-rename, typed
+UnresolvableExtensionsPackageError, position-based segment check in
+extension projection, degraded markers for non-Hash observe entries,
+malformed GitHub scope guard, token_ref consistency comment, and the
+completed private-def migration. 8 low refactor/hygiene items skipped
+with recorded reasons. All suites re-verified green at the final head;
+post-fix probes 9/9.
