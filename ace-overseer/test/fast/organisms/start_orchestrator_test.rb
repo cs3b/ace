@@ -23,11 +23,13 @@ module Organisms
     class FakeExecutor
       attr_reader :agent_started, :prompts, :tabs
 
-      def initialize(panes: [], pane_current: {}, pane_of_tab: "p1", alive: true)
+      def initialize(panes: [], pane_current: {}, pane_of_tab: "p1", alive: true,
+        state: "idle")
         @panes = panes
         @pane_current = pane_current
         @pane_of_tab = pane_of_tab
         @alive = alive
+        @state = state
         @agent_started = []
         @prompts = []
         @tabs = []
@@ -41,10 +43,12 @@ module Organisms
         FakePaneResult.new(@pane_current)
       end
 
+      # Realistic agent_get payload: the agent lives under result.agent
+      # with its herdr session state; no agent -> AgentNotFoundError.
       def agent_get(_pane)
         raise Ace::Herdr::AgentNotFoundError, "no agent" unless @alive
 
-        FakePaneResult.new({"status" => "idle"})
+        FakePaneResult.new({"result" => {"agent" => {"agent_status" => @state}}})
       end
 
       def tab_create(workspace_id:, label:, cwd: nil, focus: nil)
@@ -57,8 +61,8 @@ module Organisms
         FakePaneResult.new({"status" => "ready"})
       end
 
-      def agent_prompt(pane:, text:)
-        @prompts << {pane: pane, text: text}
+      def agent_prompt(pane:, text:, wait: false, timeout_ms: nil)
+        @prompts << {pane: pane, text: text, wait: wait, timeout_ms: timeout_ms}
         FakePaneResult.new({"status" => "sent"})
       end
     end
@@ -126,7 +130,7 @@ module Organisms
       assert executor.agent_started.all? { |started| started[:pane] == prompt[:pane] }
     end
 
-    def test_reused_session_is_not_prompted_again
+    def test_reused_session_initialization_is_confirmed_not_assumed
       panes = [{"id" => "p7", "title" => "overseer-project", "cwd" => @root}]
       executor = FakeExecutor.new(panes: panes,
         pane_current: {"result" => {"workspace_id" => "ws1"}})
@@ -134,7 +138,11 @@ module Organisms
       report = orchestrator(executor).call
 
       assert_equal "reused", report["status"]
-      assert_empty executor.prompts, "reuse must not start a new first turn"
+      assert_equal false, report["prompt_failed"]
+      # a live process is not a completed start: initialization is
+      # confirmed by the activity-gated re-delivery (see the dedicated
+      # reuse/repair tests above), never assumed
+      assert(executor.prompts.any? { |entry| entry[:pane] == "p7" && entry[:wait] })
     end
 
     def test_explicit_workspace_seam_replaces_ambient_resolution
@@ -148,7 +156,7 @@ module Organisms
       assert_equal "ws-lab", executor.tabs.first[:workspace_id]
     end
 
-    def test_second_start_reuses_the_live_owner_without_a_new_session
+    def test_second_start_reuses_the_live_owner_and_confirms_its_initialization
       panes = [{"id" => "p7", "title" => "overseer-project", "cwd" => @root}]
       executor = FakeExecutor.new(panes: panes,
         pane_current: {"result" => {"workspace_id" => "ws1"}})
@@ -157,8 +165,87 @@ module Organisms
 
       assert_equal "reused", report["status"]
       assert_equal "p7", report["pane"]
+      assert_equal false, report["prompt_failed"]
       assert_empty executor.tabs, "reuse must not create a second session"
       assert_empty executor.agent_started
+      # a live process is not a completed start: the idle reused agent
+      # gets its first-turn prompt re-delivered through the activity
+      # gate, repairing any missing initialization (review R7)
+      repair = executor.prompts.find { |entry| entry[:pane] == "p7" }
+      assert repair, "the reused session's initialization is confirmed"
+      assert repair[:wait]
+      assert_equal Ace::Overseer::Organisms::StartOrchestrator::FIRST_TURN_PROMPT, repair[:text]
+    end
+
+    def test_a_working_reused_agent_is_never_interrupted
+      panes = [{"id" => "p7", "title" => "overseer-project", "cwd" => @root}]
+      executor = FakeExecutor.new(panes: panes, state: "working",
+        pane_current: {"result" => {"workspace_id" => "ws1"}})
+
+      report = orchestrator(executor).call
+
+      assert_equal "reused", report["status"]
+      assert_equal false, report["prompt_failed"],
+        "a mid-conversation agent's first turn is already underway"
+      assert_empty executor.prompts, "a working agent is never prompted"
+    end
+
+    def test_an_unclassifiable_reused_agent_stays_visibly_unconfirmed
+      panes = [{"id" => "p7", "title" => "overseer-project", "cwd" => @root}]
+      executor = FakeExecutor.new(panes: panes, state: "unknown",
+        pane_current: {"result" => {"workspace_id" => "ws1"}})
+
+      report = orchestrator(executor).call
+
+      assert_equal "reused", report["status"]
+      assert_equal true, report["prompt_failed"]
+      assert_match(/could not\s+be verified/, report["message"])
+      assert_empty executor.prompts, "an unknown-state agent is never prompted"
+    end
+
+    def test_restart_after_a_failed_first_prompt_repairs_the_initialization
+      panes = [{"id" => "p7", "title" => "overseer-project", "cwd" => @root}]
+      executor = FakeExecutor.new(panes: panes, alive: false, pane_of_tab: "p7",
+        pane_current: {"result" => {"workspace_id" => "ws1"}})
+      # the boot's first prompt fails: live agent, no first turn
+      failed = ExecutorWithFailingPrompt.new(executor)
+      first = orchestrator(failed).call
+      assert_equal "started", first["status"]
+      assert_equal true, first["prompt_failed"]
+
+      # a repeated start sees the live process and repairs through the
+      # existing session — only then is the start complete (review R7)
+      def executor.agent_get(_pane)
+        FakePaneResult.new({"result" => {"agent" => {"agent_status" => "idle"}}})
+      end
+      second = orchestrator(executor).call
+
+      assert_equal "reused", second["status"]
+      assert_equal false, second["prompt_failed"], "the repair confirms the first turn"
+      assert_equal 2, failed.shared_prompts.size + executor.prompts.size
+    end
+
+    # Delegates to the wrapped fake but fails every prompt delivery.
+    class ExecutorWithFailingPrompt
+      attr_reader :shared_prompts
+
+      def initialize(inner)
+        @inner = inner
+        @shared_prompts = []
+      end
+
+      def agent_prompt(pane:, text:, wait: false, timeout_ms: nil)
+        @shared_prompts << {pane: pane, wait: wait}
+        raise Ace::Herdr::CommandError, "prompt pipe closed"
+      end
+
+      def method_missing(name, *args, **kwargs, &block)
+        @inner.respond_to?(name) ? @inner.public_send(name, *args, **kwargs, &block) : super
+      end
+
+      def respond_to_missing?(name, include_private = false)
+        @inner.respond_to?(name, include_private) || super
+      end
     end
 
     def test_installed_toolchain_never_uses_the_checkout_binstub
@@ -236,7 +323,8 @@ module Organisms
 
     def test_prompt_failure_after_a_started_agent_is_reported_distinctly
       executor = FakeExecutor.new(pane_current: {"result" => {"workspace_id" => "ws1"}})
-      def executor.agent_prompt(pane:, text:)
+      def executor.agent_prompt(pane:, text:, wait: false, timeout_ms: nil)
+        super
         raise Ace::Herdr::CommandError, "prompt pipe closed"
       end
 
@@ -246,7 +334,7 @@ module Organisms
         "a live, idle agent must never be reported as not started"
       assert_equal 1, executor.agent_started.size
       assert_equal true, report["prompt_failed"]
-      assert_match(/agent is started and idle, but the first prompt failed/, report["message"])
+      assert_match(/first turn could not be confirmed delivered/, report["message"])
     end
 
     def test_live_owner_with_a_foreign_cwd_is_a_conflict_never_taken_over

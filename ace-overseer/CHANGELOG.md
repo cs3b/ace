@@ -89,6 +89,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   "herdr failed while preparing the overseer session: …" message, and the
   lab-level rescue covers `CommandError` from workspace/pane calls with the
   lab context intact ("lab start failed: …"). Dry-run probes no herdr state.
+- Readiness requires a CONFIRMED first turn, and a failed delivery is
+  repaired on restart (re-review R7): the first-turn prompt is submitted
+  through herdr's activity gate (`agent prompt --wait` — new `wait:`/
+  `timeout_ms:` options on `HerdrExecutor#agent_prompt`), so success proves
+  observed working activity rather than a mere submission. A lab is `ready`
+  only when every session (lab overseer included) has its first turn
+  confirmed; an unconfirmed delivery keeps `prompt_failed: true` with a
+  visible reason instead of a ready declaration. On a repeated start, a live
+  reused agent is distinguished from a completed start through the existing
+  herdr session state: working/blocked = mid-conversation (never
+  interrupted); idle/done = the first-turn prompt is re-delivered through
+  the existing session, repairing missing initialization without restarting
+  anything; an unclassifiable state stays visibly unconfirmed.
 - The lab space title is namespaced to `lab-overseer` (review 8xtiatf4): a
   project rooted at a directory literally named `lab` owns the session/space
   title `overseer-lab`; the old lab space title collided with it. Session

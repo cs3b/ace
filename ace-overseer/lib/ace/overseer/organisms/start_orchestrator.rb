@@ -30,6 +30,10 @@ module Ace
       class StartOrchestrator
         AGENT_NAME = "ace-overseer"
         START_TIMEOUT_MS = 60_000
+        # Bounds the --wait activity gate on the first-turn prompt: the
+        # turn must BEGIN within this window (herdr enforces its own
+        # 5s activity observation inside the wait).
+        FIRST_TURN_TIMEOUT_MS = 120_000
         # The lab's own herdr space title. Namespaced ("lab-overseer",
         # never "overseer-…") so it can never collide with a session or
         # per-project space title derived from a directory name — e.g. a
@@ -100,10 +104,18 @@ module Ace
               return report.merge("status" => "blocked", "pane" => owner["id"], "message" => conflict)
             end
 
-            if agent_alive?(owner["id"])
+            state = agent_state(owner["id"])
+            if state
+              # a live agent is a PROCESS, not necessarily a completed
+              # start — the missing first-turn initialization is
+              # repaired through the existing session (see
+              # repair_reused_initialization)
+              warning = repair_reused_initialization(owner["id"], state)
               return report.merge("status" => "reused", "pane" => owner["id"],
                 "workspace" => owner["workspace_id"] || owner["workspace"],
-                "message" => "existing project overseer session reused; no second session created")
+                "prompt_failed" => !warning.nil?,
+                "message" => warning ||
+                  "existing project overseer session reused; no second session created")
             end
             # a dead owner is replaced after observing the real state —
             # the new identity is reported, the old pane is left to the
@@ -192,22 +204,27 @@ module Ace
 
           base["pane"] = session["pane"]
           base["replaced_pane"] = session["replaced_pane"]
-          base["prompt_failed"] = session["prompt_failed"] if session["prompt_failed"]
+          base["prompt_failed"] = !session["prompt_failed"].nil? && session["prompt_failed"]
+
+          # Readiness REQUIRES a confirmed first turn (review R7): a
+          # started/reused session whose first-turn delivery failed or
+          # stays unconfirmed is NOT ready, whatever its process state.
+          lab_ready = !session["prompt_failed"]
 
           # An empty configured list is a valid idle lab: the lab
-          # overseer itself still runs.
+          # overseer itself still runs (and must be initialized).
           if projects.empty?
             message = "no projects configured; the lab overseer is idle"
             message += "; #{session["message"]}" if session["message"]
-            return base.merge("status" => "ready", "ready" => true, "project_count" => 0,
-              "message" => message)
+            return base.merge("status" => lab_ready ? "ready" : "partial",
+              "ready" => lab_ready, "project_count" => 0, "message" => message)
           end
 
           results = projects.map { |project| start_project(project, lab_root) }
-          ready = results.all? { |result| %w[started reused].include?(result["status"]) }
-          summary = "#{results.count { |r| %w[started reused].include?(r["status"]) }}/" \
-            "#{results.size} project overseers ready"
-          summary += "; #{session["message"]}" if session["message"]
+          healthy = ->(result) { %w[started reused].include?(result["status"]) && !result["prompt_failed"] }
+          ready = lab_ready && results.all?(&healthy)
+          summary = "#{results.count(&healthy)}/#{results.size} project overseers ready"
+          summary += "; lab overseer: #{session["message"]}" if session["message"]
           base.merge("status" => ready ? "ready" : "partial", "ready" => ready,
             "projects" => results, "project_count" => results.size,
             "message" => summary)
@@ -276,8 +293,12 @@ module Ace
                 "message" => "owner pane '#{owner["id"]}' works in '#{owner_cwd}', which is " \
                   "not the lab root '#{lab_root}'; refusing to take over a foreign session"}
             end
-            return {"status" => "reused", "pane" => owner["id"], "replaced_pane" => nil,
-              "prompt_failed" => false} if agent_alive?(owner["id"])
+            state = agent_state(owner["id"])
+            if state
+              warning = repair_reused_initialization(owner["id"], state)
+              return {"status" => "reused", "pane" => owner["id"], "replaced_pane" => nil,
+                "prompt_failed" => !warning.nil?, "message" => warning}
+            end
 
             replaced = owner["id"]
           end
@@ -435,11 +456,25 @@ module Ace
               "foreign session"
         end
 
-        def agent_alive?(pane)
-          @executor.agent_get(pane)
-          true
+        # Live agent classification from the existing herdr session
+        # state: returns the agent_status string ("idle", "working",
+        # "blocked", "done", "unknown", or "" when the payload carries
+        # no recognizable status), or nil when NO agent lives in the
+        # pane (AgentNotFoundError). This is the "live process" half of
+        # the live-vs-completed-start distinction; delivery
+        # confirmation comes from first_prompt's activity gate.
+        def agent_state(pane)
+          json = @executor.agent_get(pane).parsed_json
+          return nil unless json.is_a?(Hash)
+
+          agent = json["agent"]
+          agent = json["result"]["agent"] if agent.nil? && json["result"].is_a?(Hash)
+          agent = json["result"] if agent.nil? && json["result"].is_a?(Hash)
+          return "" unless agent.is_a?(Hash)
+
+          agent["agent_status"].to_s
         rescue Ace::Herdr::AgentNotFoundError
-          false
+          nil
         end
 
         # Boots the session: one herdr tab labeled with the owner
@@ -472,15 +507,41 @@ module Ace
 
         # `agent start` success only means the interactive agent is
         # ready for input; the first prompt begins the session's first
-        # turn (state read, /eyes arming). A prompt failure AFTER a
-        # started agent is a repairable warning (the agent is live and
-        # idle), returned as a message — never raised as a failed start.
+        # turn (state read, /eyes arming). Delivery is CONFIRMED through
+        # herdr's activity gate (`agent prompt --wait`): success means
+        # herdr observed working/blocked activity, so the turn actually
+        # began — a stall, timeout or pre-send failure is an uncertain
+        # outcome, returned as a visible warning instead of a readiness
+        # claim. Never raised: the agent itself is live and idle.
         def first_prompt(pane)
-          @executor.agent_prompt(pane: pane, text: FIRST_TURN_PROMPT)
+          @executor.agent_prompt(pane: pane, text: FIRST_TURN_PROMPT,
+            wait: true, timeout_ms: FIRST_TURN_TIMEOUT_MS)
           nil
         rescue Ace::Herdr::ExecutorError => e
-          "the agent is started and idle, but the first prompt failed " \
-            "(#{e.message}); re-send it to begin the first turn"
+          "the agent is started and idle, but its first turn could not be " \
+            "confirmed delivered (#{e.message}); re-run start to repair the " \
+              "missing initialization"
+        end
+
+        # A REUSED live agent proves a process, not a completed start.
+        # Classification through the existing herdr session state (no
+        # parallel store): working/blocked = mid-conversation, the first
+        # turn is already underway — never interrupted; idle/done =
+        # ready for input — the first-turn prompt is (re-)delivered
+        # through the existing session with the activity gate, which
+        # repairs a missing initialization without restarting anything
+        # (a healthy agent simply reconciles once and settles); any
+        # other state is visibly unconfirmed, never a readiness claim.
+        def repair_reused_initialization(pane, state)
+          case state
+          when "working", "blocked"
+            nil
+          when "idle", "done"
+            first_prompt(pane)
+          else
+            "the reused agent state is '#{state}'; its first turn could not " \
+              "be verified — inspect the session before relying on it"
+          end
         end
 
         def extract_panes(json)

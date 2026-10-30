@@ -72,8 +72,8 @@ module Organisms
         FakePaneResult.new({"status" => "ready"})
       end
 
-      def agent_prompt(pane:, text:)
-        @prompts << {pane: pane, text: text}
+      def agent_prompt(pane:, text:, wait: false, timeout_ms: nil)
+        @prompts << {pane: pane, text: text, wait: wait, timeout_ms: timeout_ms}
         FakePaneResult.new({"status" => "sent"})
       end
     end
@@ -209,7 +209,7 @@ module Organisms
 
       # Simulate the started panes now being live agents.
       def executor.agent_get(_pane)
-        FakePaneResult.new({"status" => "idle"})
+        FakePaneResult.new({"result" => {"agent" => {"agent_status" => "idle"}}})
       end
       second = orchestrator(executor).call
 
@@ -232,7 +232,7 @@ module Organisms
       executor.add_pane({"id" => "p-alpha-live", "title" => "overseer-alpha",
         "cwd" => alpha, "workspace_id" => "ws-manual"})
       def executor.agent_get(_pane)
-        FakePaneResult.new({"status" => "idle"})
+        FakePaneResult.new({"result" => {"agent" => {"agent_status" => "idle"}}})
       end
 
       report = orchestrator(executor).call
@@ -320,21 +320,69 @@ module Organisms
       assert_match(/nested lab scopes are refused/, by_id["beta"]["message"])
     end
 
-    def test_prompt_failure_on_the_lab_overseer_does_not_hide_the_started_agent
+    # Review R7, probe 1: an unconfirmed first turn is never a ready
+    # lab — no state read, no /eyes arming — while the live agent
+    # stays visible (partial, not blocked).
+    def test_lab_with_no_confirmed_first_turn_is_not_ready
       executor = FakeExecutor.new
-      # only the LAB session's prompt fails; the agent itself started
-      def executor.agent_prompt(pane:, text:)
-        raise Ace::Herdr::CommandError, "prompt pipe closed" if pane == "p-overseer-lab"
-
-        @prompts << {pane: pane, text: text}
-        FakePaneResult.new({"status" => "sent"})
+      # every prompt delivery fails: live agents, no first turn
+      def executor.agent_prompt(pane:, text:, wait: false, timeout_ms: nil)
+        @prompts << {pane: pane, text: text, wait: wait, timeout_ms: timeout_ms}
+        raise Ace::Herdr::CommandError, "synthetic initial delivery failure"
       end
 
       report = orchestrator(executor).call
 
-      assert_equal "ready", report["status"], report.inspect
+      assert_equal true, report["prompt_failed"], report.inspect
+      assert_equal "partial", report["status"]
+      assert_equal false, report["ready"],
+        "no model turn ran and no watchers are armed, yet the lab reports ready"
+      assert(report["projects"].all? { |project| project["prompt_failed"] })
+    end
+
+    # Review R7, probe 2: a repeated start after a failed delivery
+    # repairs the missing initialization through the existing session
+    # — only then is the lab ready.
+    def test_restart_after_failed_delivery_repairs_initialization_then_is_ready
+      executor = FakeExecutor.new
+      failed = true
+      def executor.agent_prompt(pane:, text:, wait: false, timeout_ms: nil)
+        raise Ace::Herdr::CommandError, "synthetic initial delivery failure" if @failed_delivery
+
+        @prompts << {pane: pane, text: text, wait: wait, timeout_ms: timeout_ms}
+        FakePaneResult.new({"status" => "sent"})
+      end
+      executor.instance_variable_set(:@failed_delivery, true)
+      first = orchestrator(executor).call
+      assert_equal false, first["ready"]
+
+      # the agents are live now; delivery works again
+      executor.instance_variable_set(:@failed_delivery, false)
+      def executor.agent_get(_pane)
+        FakePaneResult.new({"result" => {"agent" => {"agent_status" => "idle"}}})
+      end
+      second = orchestrator(executor).call
+
+      assert_equal true, second["ready"], second.inspect
+      assert_equal false, second["prompt_failed"]
+      assert(second["projects"].all? { |project| !project["prompt_failed"] })
+      lab_prompts = executor.prompts.count { |entry| entry[:pane] == "p-overseer-lab" }
+      assert_operator lab_prompts, :>=, 1, "the lab session's first turn is re-delivered"
+      assert_equal 3, executor.tabs.size, "repair reuses the sessions, no restart"
+    end
+
+    def test_empty_lab_with_unconfirmed_first_turn_is_not_ready
+      File.write(File.join(@lab_root, ".ace", "lab", "config.yml"), "topology:\n  projects: []\n")
+      executor = FakeExecutor.new
+      def executor.agent_prompt(pane:, text:, wait: false, timeout_ms: nil)
+        raise Ace::Herdr::CommandError, "synthetic initial delivery failure"
+      end
+
+      report = orchestrator(executor).call
+
       assert_equal true, report["prompt_failed"]
-      assert_match(/started and idle, but the first prompt failed/, report["message"])
+      assert_equal false, report["ready"]
+      assert_equal "partial", report["status"]
     end
 
     def test_lab_owner_pane_in_a_foreign_cwd_is_a_conflict

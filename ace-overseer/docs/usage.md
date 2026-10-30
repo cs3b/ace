@@ -74,10 +74,15 @@ Behavior:
   data, never the runtime source. Because
   `herdr agent start` success only means the interactive agent is ready for
   input, the start submits a first-turn prompt right after the agent starts —
-  the session actually begins its first turn (state read, `/eyes` arming);
-  a reused session is never prompted again. A prompt delivery failure after
-  a started agent never reports the start as failed: the report stays
-  `started` with `prompt_failed: true` and a repairable warning.
+  the session actually begins its first turn (state read, `/eyes` arming).
+  Delivery is confirmed through herdr's activity gate (`agent prompt
+  --wait`): success means observed working activity, so the turn began. A
+  delivery failure after a started agent never reports the start as failed:
+  the report stays `started` with `prompt_failed: true` and a repairable
+  warning. On a later start, a live reused agent ready for input gets the
+  first-turn prompt re-delivered through the same gate (repairing a missing
+  initialization without restarting anything); a working/blocked agent is
+  never interrupted, and an unclassifiable state stays visibly unconfirmed.
 - The report carries `status` (`started|reused|blocked|dry_run`), `scope`,
   `root`, `label`, `workspace`, `pane`, `agent`, `profile`, `instructions`
   (`source` + resolved `path`) and a `message`. Exit 0 only for a ready
@@ -119,12 +124,18 @@ starts the whole lab from one external entry point:
   without creating an empty space. herdr spaces are flat (no parent/child
   nesting): the lab context owns the per-project spaces by creating and
   reusing them from this one start flow.
-- Statuses: `ready` (all projects started/reused; an empty configured list
-  is a valid idle lab), `partial` (an unhealthy project is reported with its
-  concrete reason while healthy projects run — never false success),
-  `blocked` (unreadable topology / conflicting roles). A repeated start
-  repairs only what is missing: healthy sessions are reused, manual panes
-  are never closed, nothing healthy is restarted.
+- Statuses: `ready` (all projects started/reused AND every first turn
+  confirmed delivered — the lab overseer's included; an empty configured
+  list is a valid idle lab once its own session is initialized), `partial`
+  (an unhealthy project — or a session whose first turn failed or stays
+  unconfirmed — is reported with its concrete reason while healthy projects
+  run — never false success), `blocked` (unreadable topology / conflicting
+  roles). A repeated start repairs only what is missing: healthy sessions
+  are reused, manual panes are never closed, nothing healthy is restarted,
+  and a reused session that is ready for input gets its first-turn prompt
+  re-delivered through herdr's activity gate (`agent prompt --wait`) to
+  confirm or repair initialization; a working/blocked agent is never
+  interrupted, and an unclassifiable one stays visibly unconfirmed.
 - `--dry-run` lists the plan (space + per-project would_start) and creates
   nothing. The report carries per-project results (`projects`), the count,
   and the lab-level readiness; exit 0 for ready, non-zero for partial and
