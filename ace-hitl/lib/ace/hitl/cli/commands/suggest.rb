@@ -36,7 +36,8 @@ module Ace
             puts JSON.generate({"case" => case_id, "suggestion" => state.to_s})
           rescue Ace::Hitl::Organisms::HitlManager::UnknownCaseError,
             Ace::Hitl::Organisms::HitlManager::AmbiguousReferenceError,
-            Ace::Hitl::Organisms::HitlManager::SuggestionRefusedError => e
+            Ace::Hitl::Organisms::HitlManager::SuggestionRefusedError,
+            Ace::Hitl::Organisms::HitlManager::TerminalCaseError => e
             raise Ace::Support::Cli::Error.new("suggestion refused: #{e.message}")
           end
         end

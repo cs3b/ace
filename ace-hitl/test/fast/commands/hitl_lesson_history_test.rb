@@ -150,6 +150,76 @@ module Ace
             assert_match(/^## Answer/, body)
             assert_match(/Stop the rollout/, body)
           end
+
+          # Regression (feedback 8xte508c): history captures the Answer up
+          # to the next `## ` header — a Resume Dispatch appended after the
+          # Answer never becomes part of the citable decision.
+          def test_history_decision_stops_at_the_next_section
+            suggest_and_answer
+            lesson
+            content = File.read(@event.file_path)
+            frontmatter, body = Ace::Support::Items::Atoms::FrontmatterParser.parse!(content)
+            File.write(@event.file_path,
+              Ace::Support::Items::Atoms::FrontmatterSerializer.rebuild(
+                frontmatter, body.sub(/\s*\z/, "") + "\n\n## Resume Dispatch\n\nresume later\n"))
+
+            rows = @manager.decision_history
+            assert_equal 1, rows.size
+            assert_equal "Stop the rollout", rows.first["decision"],
+              "the decision row carries ONLY the Answer section"
+            refute rows.first["decision"].include?("Resume Dispatch")
+            refute rows.first["decision"].include?("resume later")
+          end
+
+          # Regression (feedback 8xte508i): idempotency matching is scoped
+          # to the Suggestion/Lesson sections — a `proposal:` line quoted
+          # in the question body never produces a false :duplicate (which
+          # would silently swallow a DIFFERENT second proposal instead of
+          # refusing it).
+          def test_a_quoted_proposal_line_in_the_question_body_is_not_a_duplicate
+            @manager.add_suggestion(@event.id, author: "second-captain",
+              text: "Proceed with batch 2", rationale: "tests green")
+
+            content = File.read(@event.file_path)
+            frontmatter, body = Ace::Support::Items::Atoms::FrontmatterParser.parse!(content)
+            question, rest = body.split(/^## Suggestion\b/, 2)
+            quoted = question.sub(/\s*\z/, "") +
+              "\nthe prior case's suggestion read:\nproposal: Actually stop\n\n"
+            File.write(@event.file_path,
+              Ace::Support::Items::Atoms::FrontmatterSerializer.rebuild(
+                frontmatter, quoted + "## Suggestion" + rest.to_s))
+
+            error = assert_raises(Organisms::HitlManager::SuggestionRefusedError) do
+              @manager.add_suggestion(@event.id, author: "second-captain",
+                text: "Actually stop", rationale: "different proposal")
+            end
+            assert_match(/one proposal per case/, error.message)
+              "the different second proposal is REFUSED, never a silent :duplicate"
+          end
+
+          # Regression (feedback 8xte508f): --format table renders rows and
+          # --quiet prints nothing — the advertised options are real.
+          def test_history_table_format_and_quiet
+            suggest_and_answer
+            lesson
+
+            out, = capture_io do
+              with_cli_root(@root, config: @config) do
+                History.new.call(format: "table")
+              end
+            end
+            assert_match(/^CASE\s+DECISION\s+LESSON/, out)
+            assert_includes out, @event.id
+            assert_includes out, "Stop the rollout"
+            assert_includes out, "rejected"
+
+            quiet_out, = capture_io do
+              with_cli_root(@root, config: @config) do
+                History.new.call(quiet: true)
+              end
+            end
+            assert_empty quiet_out
+          end
         end
       end
     end

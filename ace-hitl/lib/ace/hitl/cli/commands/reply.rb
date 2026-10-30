@@ -54,7 +54,8 @@ module Ace
           rescue Ace::Hitl::Organisms::HitlManager::UnknownCaseError,
             Ace::Hitl::Organisms::HitlManager::AmbiguousReferenceError,
             Ace::Hitl::Organisms::HitlManager::NotAnswerableError,
-            Ace::Hitl::Organisms::HitlManager::AnswerConflictError => e
+            Ace::Hitl::Organisms::HitlManager::AnswerConflictError,
+            Ace::Hitl::Organisms::HitlManager::TerminalCaseError => e
             raise Ace::Support::Cli::Error.new("not delivered: #{e.message}")
           end
         end

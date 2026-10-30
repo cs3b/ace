@@ -23,12 +23,35 @@ module Ace
           option :format, default: "json", desc: "Output format (json, table)"
           option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
 
-          def call(scope: "current", limit: 50, format: "json", **)
+          def call(scope: "current", limit: 50, format: "json", quiet: false, **)
             rows = Ace::Hitl::Organisms::HitlManager.new
               .decision_history(scope: scope, limit: limit)
-            puts JSON.pretty_generate({"history" => rows, "count" => rows.size})
+            return if quiet
+
+            if format == "table"
+              puts render_table(rows)
+            else
+              puts JSON.pretty_generate({"history" => rows, "count" => rows.size})
+            end
           rescue ArgumentError => e
             raise Ace::Support::Cli::Error.new(e.message)
+          end
+
+          private
+
+          # One row per decided case: the case id, the decision (truncated
+          # to one line for the terminal) and the citable lesson relation.
+          def render_table(rows)
+            return "no decided cases in this scope" if rows.empty?
+
+            lines = ["CASE               DECISION                                     LESSON"]
+            rows.each do |row|
+              decision = row["decision"].to_s.gsub(/\s+/, " ")
+              decision = decision.length > 44 ? "#{decision[0, 43]}…" : decision
+              lesson = row["lesson_relation"].to_s.empty? ? "-" : row["lesson_relation"].to_s
+              lines << format("%-18s %-44s %s", row["id"], decision, lesson)
+            end
+            lines.join("\n")
           end
         end
       end

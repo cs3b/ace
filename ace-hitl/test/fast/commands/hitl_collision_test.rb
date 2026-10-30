@@ -45,24 +45,30 @@ module Ace
           end
 
           def test_reply_on_a_colliding_case_id_is_an_explicit_ambiguity
-            out, = capture_io do
+            error = nil
+            capture_io do
               with_cli_root(@roots.first, config: @config) do
                 $stdin = StringIO.new("Proceed\n")
                 begin
                   Reply.new.call(case_id: "8xt0col", stdin: true, quiet: true)
+                rescue Ace::Support::Cli::Error => e
+                  error = e
                 ensure
                   $stdin = STDIN
                 end
               end
             end
 
-            assert_match(/not delivered:.*8xt0col/, out.lines.first.to_s + $stderr.string)
-          rescue Ace::Support::Cli::Error => e
-            assert_match(/8xt0col/, e.message)
+            # Assert on the raised error only: the reply MUST fail closed —
+            # if the ambiguity error ever disappears this fails loudly
+            # instead of reading a restored $stderr.
+            assert error, "a colliding case id must fail the reply, not deliver it"
+            assert_match(/8xt0col/, error.message)
             # neither copy was modified
             @roots.each do |root|
               body = File.read(File.join(root, "8xt0col-collision", "8xt0col-collision.hitl.s.md"))
               refute_match(/^answered: true/, body)
+              refute_match(/^Proceed$/, body)
             end
           end
 

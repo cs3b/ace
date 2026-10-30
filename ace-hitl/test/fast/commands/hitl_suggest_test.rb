@@ -113,6 +113,62 @@ module Ace
             end
             assert_match(/suggestion refused:.*exact case id/, error.message)
           end
+
+          # Regression (PR #398 review, F8): a reply landing between the
+          # case resolution and the suggestion write must survive. The
+          # whole read-validate-write cycle runs under one exclusive lock
+          # against the CURRENT content, so the suggestion operates on the
+          # answered case — and is discarded — instead of overwriting the
+          # stale, unanswered body and deleting the human decision.
+          def test_a_concurrent_reply_between_resolution_and_write_survives
+            suggestion_error = nil
+
+            # Hold the case lock BEFORE the suggestion starts, so the
+            # suggestion blocks before its locked read; land the human
+            # answer (the exact on-disk effect of a concurrent reply),
+            # then let the suggestion through.
+            File.open(@event.file_path, File::RDWR) do |file|
+              file.flock(File::LOCK_EX)
+
+              writer = Thread.new do
+                begin
+                  @manager.add_suggestion(@event.id, author: "second-captain",
+                    text: "Proceed with batch 2", rationale: "tests green")
+                rescue StandardError => e
+                  suggestion_error = e
+                end
+              end
+
+              writer.join(0.3)
+              assert writer.alive?,
+                "the suggestion must wait for the case lock (error: #{suggestion_error.inspect})"
+
+              content = file.read
+              frontmatter, body = Ace::Support::Items::Atoms::FrontmatterParser.parse!(content)
+              frontmatter["answered"] = true
+              frontmatter["status"] = "answered"
+              frontmatter["answered_at"] = Time.now.utc
+              answered_body = Molecules::HitlAnswerEditor.apply(body.sub(/\A\n/, ""), "Stop the batch\n")
+              file.rewind
+              file.truncate(0)
+              file.write(Ace::Support::Items::Atoms::FrontmatterSerializer.rebuild(
+                frontmatter, answered_body))
+              file.flush
+              file.fsync
+              file.flock(File::LOCK_UN)
+              writer.join
+            end
+
+            body = File.read(@event.file_path)
+            assert_match(/^## Answer/, body, "the human answer survives the suggestion write")
+            assert_match(/^Stop the batch$/, body)
+            assert body.include?("answered: true"),
+              "the answered flag from the concurrent reply survives"
+            refute body.include?("## Suggestion"),
+              "a suggestion computed against the answered case is discarded, not written"
+            assert suggestion_error.is_a?(Organisms::HitlManager::SuggestionRefusedError),
+              "the suggestion is refused against the answered case, not silently written"
+          end
         end
       end
     end

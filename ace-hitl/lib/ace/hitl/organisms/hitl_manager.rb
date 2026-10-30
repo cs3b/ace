@@ -31,6 +31,12 @@ module Ace
         class AnswerConflictError < StandardError; end
         class UnknownCaseError < StandardError; end
         class LifecycleTransitionError < StandardError; end
+        # Shared rule for late writes to terminal cases: once the
+        # application is closed or cancelled, no NEW answer, suggestion or
+        # lesson lands in the file. Re-delivering the identical answer to
+        # a terminal case stays an idempotent no-op (transport replay
+        # safety); anything that would change the case is refused.
+        class TerminalCaseError < StandardError; end
 
         # A late suggestion on an already-answered case is discarded by
         # the advisor, never written (the human decision stands and needs
@@ -163,6 +169,10 @@ module Ace
             raise AnswerConflictError,
               "case '#{event.id}' already has a different answer; a reply never overwrites a decision"
           end
+          # A terminal case (closed/cancelled) never accepts a NEW answer;
+          # the answered/duplicate handling above keeps idempotent replay of
+          # an answered case a no-op regardless of application state.
+          refuse_terminal!(frontmatter, event.id)
 
           apply_field_and_answer_updates(event.file_path, set: {}, add: {}, remove: {},
             answer: answer, first_answer: true)
@@ -305,46 +315,34 @@ module Ace
         # @return [Symbol] :written or :duplicate
         def add_suggestion(ref, author:, text:, rationale:, refs: [], scope: nil)
           event = exact_case(ref, scope: scope)
-          frontmatter, body = read_frontmatter(event.file_path)
 
-          if frontmatter["secret"] == true
-            raise SuggestionRefusedError,
-              "case '#{event.id}' is marked secret; secret cases are never delegated to the advisor"
+          rewrite_case(event.file_path) do |frontmatter, body|
+            refuse_terminal!(frontmatter, event.id)
+            if frontmatter["secret"] == true
+              raise SuggestionRefusedError,
+                "case '#{event.id}' is marked secret; secret cases are never delegated to the advisor"
+            end
+            if frontmatter["answered"] == true
+              raise SuggestionRefusedError,
+                "case '#{event.id}' is already answered; discard the late suggestion - " \
+                  "the human decision stands and needs no second approval"
+            end
+
+            if body.include?("## Suggestion")
+              next [:duplicate, nil, nil] if suggestion_matches?(body, author, text)
+
+              raise SuggestionRefusedError,
+                "case '#{event.id}' already carries a suggestion; one proposal per case"
+            end
+
+            suggestion = {"id" => "#{event.id}-s1", "author" => author.to_s,
+              "text" => text.to_s.strip, "rationale" => rationale.to_s.strip,
+              "refs" => Array(refs).map(&:to_s).reject(&:empty?),
+              "at" => timestamp}
+            updated = Molecules::HitlSuggestionEditor.apply(body, suggestion)
+
+            [:written, frontmatter, updated]
           end
-          if frontmatter["answered"] == true
-            raise SuggestionRefusedError,
-              "case '#{event.id}' is already answered; discard the late suggestion - " \
-                "the human decision stands and needs no second approval"
-          end
-
-          if body.include?("## Suggestion")
-            return :duplicate if suggestion_matches?(body, author, text)
-
-            raise SuggestionRefusedError,
-              "case '#{event.id}' already carries a suggestion; one proposal per case"
-          end
-
-          suggestion = {"id" => "#{event.id}-s1", "author" => author.to_s,
-            "text" => text.to_s.strip, "rationale" => rationale.to_s.strip,
-            "refs" => Array(refs).map(&:to_s).reject(&:empty?),
-            "at" => timestamp}
-          updated = Molecules::HitlSuggestionEditor.apply(body, suggestion)
-
-          File.open(event.file_path, File::RDWR) do |file|
-            file.flock(File::LOCK_EX)
-            file.rewind
-            content = file.read
-            current_frontmatter, current_body = Ace::Support::Items::Atoms::FrontmatterParser.parse!(content)
-            new_content = Ace::Support::Items::Atoms::FrontmatterSerializer.rebuild(
-              current_frontmatter, updated
-            )
-            file.rewind
-            file.truncate(0)
-            file.write(new_content)
-            file.flush
-            file.fsync
-          end
-          :written
         end
 
         # --- lessons on real decisions (task 8xs.t.pu0.c) -------------------
@@ -362,53 +360,40 @@ module Ace
         # @return [Symbol] :written or :duplicate
         def add_lesson(ref, by:, relation:, takeaway:, refs: [], scope: nil)
           event = exact_case(ref, scope: scope)
-          frontmatter, body = read_frontmatter(event.file_path)
 
-          unless body.include?("## Suggestion")
-            raise LessonRefusedError,
-              "case '#{event.id}' carries no suggestion; there is nothing to compare"
+          rewrite_case(event.file_path) do |frontmatter, body|
+            unless body.include?("## Suggestion")
+              raise LessonRefusedError,
+                "case '#{event.id}' carries no suggestion; there is nothing to compare"
+            end
+            unless frontmatter["answered"] == true
+              raise LessonRefusedError,
+                "case '#{event.id}' has no accepted human decision to learn from"
+            end
+
+            if body.include?("## Lesson")
+              next [:duplicate, nil, nil] if lesson_matches?(body, by, takeaway)
+
+              raise LessonRefusedError,
+                "case '#{event.id}' already carries a lesson; reprocessing does not multiply them"
+            end
+
+            unless %w[accepted rejected modified].include?(relation.to_s)
+              raise LessonRefusedError,
+                "relation must be accepted, rejected or modified (got '#{relation}')"
+            end
+
+            lesson = {"id" => "#{event.id}-l1", "author" => by.to_s,
+              "relation" => relation.to_s, "takeaway" => takeaway.to_s.strip,
+              "refs" => Array(refs).map(&:to_s).reject(&:empty?).push(
+                "case:#{event.id}", "suggestion:#{event.id}-s1",
+                "decision:#{frontmatter["answered_at"]}"
+              ).uniq,
+              "at" => timestamp}
+            updated = Molecules::HitlLessonEditor.apply(body, lesson)
+
+            [:written, frontmatter, updated]
           end
-          unless frontmatter["answered"] == true
-            raise LessonRefusedError,
-              "case '#{event.id}' has no accepted human decision to learn from"
-          end
-
-          if body.include?("## Lesson")
-            return :duplicate if lesson_matches?(body, by, takeaway)
-
-            raise LessonRefusedError,
-              "case '#{event.id}' already carries a lesson; reprocessing does not multiply them"
-          end
-
-          unless %w[accepted rejected modified].include?(relation.to_s)
-            raise LessonRefusedError,
-              "relation must be accepted, rejected or modified (got '#{relation}')"
-          end
-
-          lesson = {"id" => "#{event.id}-l1", "author" => by.to_s,
-            "relation" => relation.to_s, "takeaway" => takeaway.to_s.strip,
-            "refs" => Array(refs).map(&:to_s).reject(&:empty?).push(
-              "case:#{event.id}", "suggestion:#{event.id}-s1",
-              "decision:#{frontmatter["answered_at"]}"
-            ).uniq,
-            "at" => timestamp}
-          updated = Molecules::HitlLessonEditor.apply(body, lesson)
-
-          File.open(event.file_path, File::RDWR) do |file|
-            file.flock(File::LOCK_EX)
-            file.rewind
-            content = file.read
-            current_frontmatter, _current_body = Ace::Support::Items::Atoms::FrontmatterParser.parse!(content)
-            new_content = Ace::Support::Items::Atoms::FrontmatterSerializer.rebuild(
-              current_frontmatter, updated
-            )
-            file.rewind
-            file.truncate(0)
-            file.write(new_content)
-            file.flush
-            file.fsync
-          end
-          :written
         end
 
         # Decision history for the advisory agent's NEXT suggestion (task
@@ -423,15 +408,26 @@ module Ace
         # @return [Array<Hash>]
         def decision_history(scope: "current", limit: 50)
           events = list(in_folder: "all", scope: scope, type: "question")
-          events.select { |event| history_eligible?(event) }.first(limit).map do |event|
-            body = File.read(event.file_path)
-            frontmatter, _case_body = Ace::Support::Items::Atoms::FrontmatterParser.parse!(body)
+          events.select { |event| history_eligible?(event) }.first(limit).filter_map do |event|
+            begin
+              content = File.read(event.file_path)
+            rescue Errno::ENOENT
+              # The case vanished between the eligibility read and this
+              # read: it leaves history quietly, never crashes the report.
+              next
+            end
+            frontmatter, case_body = Ace::Support::Items::Atoms::FrontmatterParser.parse!(content)
+            answer = body_section(case_body, "Answer").strip
+            suggestion = body_section(case_body, "Suggestion")
+            lesson = body_section(case_body, "Lesson")
+            next if answer.empty?
+
             {"id" => event.id, "title" => event.title, "kind" => event.kind,
              "status" => event.status,
-             "suggestion" => body[/^proposal: (.+)$/, 1],
-             "decision" => body[/^## Answer\s*\n\s*(.+)$/m, 1]&.strip,
-             "lesson" => body[/^takeaway: (.+)$/, 1],
-             "lesson_relation" => body[/^relation: (accepted|rejected|modified)$/, 1],
+             "suggestion" => suggestion[/^proposal: (.+)$/, 1],
+             "decision" => answer,
+             "lesson" => lesson[/^takeaway: (.+)$/, 1],
+             "lesson_relation" => lesson[/^relation: (accepted|rejected|modified)$/, 1],
              "decision_at" => frontmatter["answered_at"]}
           end
         end
@@ -450,9 +446,19 @@ module Ace
           false
         end
 
-        def lesson_matches?(body, author, takeaway)
-          body.match?(/^author: #{Regexp.escape(author.to_s)}$/) &&
-            body.match?(/^takeaway: #{Regexp.escape(takeaway.to_s.strip)}$/)
+        # The content of one `## <Title>` section, up to the next `## `
+        # header: history rows and idempotency checks never bleed into
+        # neighbouring sections — a `proposal:` line quoted in the question
+        # body or a Resume Dispatch appended after the Answer stays where
+        # it belongs.
+        def body_section(body, title)
+          body[/^## #{Regexp.escape(title)}[ \t]*\n(.*?)(?=^## |\z)/m, 1].to_s
+        end
+
+        def lesson_matches?(body, by, takeaway)
+          section = body_section(body, "Lesson")
+          section.match?(/^author: #{Regexp.escape(by.to_s)}$/) &&
+            section.match?(/^takeaway: #{Regexp.escape(takeaway.to_s.strip)}$/)
         end
 
         public
@@ -542,6 +548,47 @@ module Ace
             file.fsync
             result
           end
+        end
+
+        # Read-validate-write in ONE pass under the exclusive lock, against
+        # the CURRENT content: the block reads, validates and drafts from
+        # the same body that is finally written, so a decision made from a
+        # pre-lock read can never overwrite a concurrent write (a reply
+        # landing between read and lock). The block returns
+        # [result, frontmatter, body]; a nil body means "no write" (the
+        # idempotent duplicate path leaves the file untouched).
+        def rewrite_case(file_path)
+          File.open(file_path, File::RDWR) do |file|
+            file.flock(File::LOCK_EX)
+            file.rewind
+            content = file.read
+            frontmatter, body = Ace::Support::Items::Atoms::FrontmatterParser.parse!(content)
+            result, new_frontmatter, new_body = yield(frontmatter, body.sub(/\A\n/, ""))
+            if new_body
+              new_content = Ace::Support::Items::Atoms::FrontmatterSerializer.rebuild(new_frontmatter, new_body)
+              file.rewind
+              file.truncate(0)
+              file.write(new_content)
+              file.flush
+              file.fsync
+            end
+            result
+          end
+        end
+
+        # The case's application state when it is terminal (closed or
+        # cancelled), else nil.
+        def terminal_application_state(frontmatter)
+          state = frontmatter.dig("application", "state").to_s
+          %w[closed cancelled].include?(state) ? state : nil
+        end
+
+        def refuse_terminal!(frontmatter, case_id)
+          state = terminal_application_state(frontmatter)
+          return unless state
+
+          raise TerminalCaseError,
+            "case '#{case_id}' is #{state}; a terminal case never accepts a late answer or suggestion"
         end
 
         def timestamp
@@ -714,8 +761,9 @@ module Ace
         private
 
         def suggestion_matches?(body, author, text)
-          body.match?(/^author: #{Regexp.escape(author.to_s)}$/) &&
-            body.match?(/^proposal: #{Regexp.escape(text.to_s.strip)}$/)
+          section = body_section(body, "Suggestion")
+          section.match?(/^author: #{Regexp.escape(author.to_s)}$/) &&
+            section.match?(/^proposal: #{Regexp.escape(text.to_s.strip)}$/)
         end
 
         def load_config
@@ -881,6 +929,16 @@ module Ace
             if first_answer && (frontmatter["answered"] == true || !previous.empty?)
               raise AnswerConflictError, "case already has a different answer" unless previous == answer.to_s.strip
               return
+            end
+            # Authoritative terminal check under the lock: a case whose
+            # application is closed or cancelled never accepts a NEW
+            # answer (a late reply to a cancelled case is refused, not
+            # recorded). The identical-answer return above keeps
+            # idempotent replay of a closed case a no-op.
+            if first_answer && terminal_application_state(frontmatter)
+              raise TerminalCaseError,
+                "case application is #{frontmatter.dig("application", "state")}; " \
+                  "a terminal case never accepts a late answer"
             end
 
             Ace::Support::Items::Molecules::FieldUpdater.apply_set(frontmatter, set)
