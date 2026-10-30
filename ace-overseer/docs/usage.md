@@ -66,7 +66,15 @@ Behavior:
   reported (`replaced_pane`).
 - The guide resolves through the normal handbook chain (`wfi://` sources via
   the project's `ace-nav`; absolute paths verbatim) and boots the harness
-  agent as standing instructions with the configured profile.
+  agent as standing instructions with the configured profile. The `ace-nav`
+  binary follows the repo toolchain policy: auto mode prefers the project's
+  `bin/` binstub and falls back to PATH, while `ACE_TOOLCHAIN=installed`
+  always uses the installed gem launcher — a checkout inside the project is
+  data, never the runtime source. Because
+  `herdr agent start` success only means the interactive agent is ready for
+  input, the start submits a first-turn prompt right after the agent starts —
+  the session actually begins its first turn (state read, `/eyes` arming);
+  a reused session is never prompted again.
 - The report carries `status` (`started|reused|blocked|dry_run`), `scope`,
   `root`, `label`, `workspace`, `pane`, `agent`, `profile`, `instructions`
   (`source` + resolved `path`) and a `message`. Exit 0 only for a ready
@@ -86,9 +94,22 @@ starts the whole lab from one external entry point:
   an id/label/repo name). The lab root is a coordination directory with its
   own `_overseer`; a directory declaring itself as both lab and project is
   refused.
-- The lab creates/reuses its own herdr space (`overseer-lab`), then starts
-  or finds EVERY project overseer through the SAME operation as a
-  standalone start (each project's own cascade, root, and session identity).
+- The lab creates/reuses its own herdr space (`overseer-lab`) and boots or
+  reuses the lab's OWN overseer session there (label `overseer-<lab-root>`,
+  cwd at the lab root, the lab guide as standing instructions, first-turn
+  prompt included) — the lab-start instructions always reach a real agent,
+  and an empty configured project list still runs the lab overseer (idle).
+- EACH project then starts or is found through the SAME operation as a
+  standalone start (its own cascade, root, and session identity) in its OWN
+  herdr space, titled by its session label (`overseer-<project>`) and
+  created/reused by title by the lab flow — project sessions are isolated
+  from each other and from the lab overseer, never share one space, and
+  never re-resolve the caller's ambient workspace (a plain terminal without
+  a herdr pane works). The per-project report carries its space id; a live
+  session found in another workspace is reused and reports that workspace
+  without creating an empty space. herdr spaces are flat (no parent/child
+  nesting): the lab context owns the per-project spaces by creating and
+  reusing them from this one start flow.
 - Statuses: `ready` (all projects started/reused; an empty configured list
   is a valid idle lab), `partial` (an unhealthy project is reported with its
   concrete reason while healthy projects run — never false success),

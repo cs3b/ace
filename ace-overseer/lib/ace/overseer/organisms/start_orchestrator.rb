@@ -3,6 +3,7 @@
 require_relative "../atoms/start_contract"
 require_relative "../molecules/project_root_resolver"
 require "ace/herdr"
+require "ace/support/cli/toolchain"
 require "json"
 
 module Ace
@@ -29,6 +30,18 @@ module Ace
       class StartOrchestrator
         AGENT_NAME = "ace-overseer"
         START_TIMEOUT_MS = 60_000
+        # `herdr agent start` success only means the interactive agent is
+        # READY for input — the session begins its first turn when this
+        # prompt arrives, exactly as the standing instructions' "First
+        # turn after start" section describes (state read, /eyes arming).
+        FIRST_TURN_PROMPT = <<~PROMPT.chomp
+          Begin your first turn now. Follow the "First turn after start"
+          section of your standing instructions: read your private
+          _overseer tasks and the project state from its owners, continue
+          existing commissioned work before choosing anything new, arm
+          /eyes for standing observation, and remain idle when there is
+          nothing to do.
+        PROMPT
 
         attr_reader :cwd
 
@@ -38,13 +51,21 @@ module Ace
         # @param root_resolver [ProjectRootResolver, nil]
         # @param nav_runner [Proc, nil] (argv, cwd) runner seam for
         #   resolving wfi:// instructions through ace-nav
+        # @param workspace [String, nil] explicit herdr workspace id for
+        #   the session; used verbatim by boot_session
+        # @param workspace_factory [Proc, nil] label -> workspace id
+        #   seam; the lab scope passes one so each project boots in its
+        #   OWN space instead of the caller's ambient workspace. Called
+        #   lazily, only when a session actually boots.
         # @param cwd [String] invocation directory
         def initialize(config: nil, executor: nil, root_resolver: nil, nav_runner: nil,
-          cwd: Dir.pwd)
+          workspace: nil, workspace_factory: nil, cwd: Dir.pwd)
           @config = config || Ace::Overseer.config
           @executor = executor || Ace::Herdr::Molecules::HerdrExecutor.new
           @root_resolver = root_resolver || Molecules::ProjectRootResolver.new
           @nav_runner = nav_runner || method(:run_nav)
+          @workspace = workspace
+          @workspace_factory = workspace_factory
           @cwd = cwd
         end
 
@@ -66,9 +87,6 @@ module Ace
           return report.merge("status" => "dry_run",
             "message" => "dry-run: session would start with this plan; nothing was created") if dry_run
 
-          workspace = resolve_workspace
-          report["workspace"] = workspace
-
           owner = owner_pane(label)
           if owner
             conflict = owner_conflict(owner, root)
@@ -78,6 +96,7 @@ module Ace
 
             if agent_alive?(owner["id"])
               return report.merge("status" => "reused", "pane" => owner["id"],
+                "workspace" => owner["workspace_id"] || owner["workspace"],
                 "message" => "existing project overseer session reused; no second session created")
             end
             # a dead owner is replaced after observing the real state —
@@ -85,6 +104,11 @@ module Ace
             # operator's pane hygiene
             report["replaced_pane"] = owner["id"]
           end
+
+          # resolved only once a session actually boots, so a merely
+          # reused lab project never creates an empty space
+          workspace = boot_workspace(label)
+          report["workspace"] = workspace
 
           pane = boot_session(workspace, label, root, plan, instructions_path)
           report.merge("status" => "started", "pane" => pane,
@@ -101,22 +125,26 @@ module Ace
         # _overseer. The project list and canonical locations come from
         # the existing ace-lab topology configuration (topology.projects
         # id/path) — never from the sanitized public projection and
-        # never derived from an id/label/repo name. Each project starts
-        # through the SAME operation as a standalone start (its own
-        # cascade, its own session identity); an unhealthy project is
-        # reported per-project while healthy projects continue; a
-        # repeated start repairs only what is missing and never
-        # restarts healthy sessions or closes manual panes.
+        # never derived from an id/label/repo name. The lab space hosts
+        # ONLY the lab overseer session; EACH project boots in its OWN
+        # herdr space (created/reused by the project's session label),
+        # so project sessions are isolated from each other and from the
+        # lab overseer. Each project starts through the SAME operation
+        # as a standalone start (its own cascade, its own session
+        # identity); an unhealthy project is reported per-project while
+        # healthy projects continue; a repeated start repairs only what
+        # is missing and never restarts healthy sessions or closes
+        # manual panes.
         def lab_start(plan, dry_run)
           lab_root = File.realpath(@cwd)
-          instructions_path = resolve_instructions(plan["instructions"], lab_root)
           base = {"status" => nil, "scope" => "lab", "root" => lab_root,
             "label" => Atoms::StartContract.session_label(lab_root),
             "workspace" => nil, "pane" => nil, "agent" => AGENT_NAME,
             "profile" => plan["profile_name"],
-            "instructions" => {"source" => plan["instructions"], "path" => instructions_path},
+            "instructions" => {"source" => plan["instructions"], "path" => nil},
             "replaced_pane" => nil, "projects" => [], "project_count" => 0,
             "ready" => nil, "message" => nil}
+          base["instructions"]["path"] = resolve_instructions(plan["instructions"], lab_root)
 
           projects = begin
             Ace::Lab::Molecules::ProjectLocations.read(lab_root)
@@ -135,17 +163,28 @@ module Ace
           return base.merge("status" => "dry_run", "project_count" => projects.size,
             "projects" => projects.map { |project| {"id" => project["id"], "path" => project["path"],
               "status" => "would_start"}},
-            "message" => "dry-run: the lab space and #{projects.size} project overseer(s) " \
-              "would start; nothing was created") if dry_run
+            "message" => "dry-run: the lab space with the lab overseer session and " \
+              "#{projects.size} project space(s)/overseer(s) would start; nothing was created") if dry_run
 
-          # An empty configured list is a valid idle lab.
+          workspace = lab_workspace
+          base["workspace"] = workspace
+
+          # The lab's OWN overseer session (the wfi://overseer/lab-start
+          # guide assumes it): booted or reused in the lab space before
+          # any project, so the lab-start instructions reach an agent.
+          session = boot_lab_session(workspace, plan, base["instructions"]["path"], lab_root)
+          return base.merge("status" => "blocked", "pane" => session["pane"],
+            "message" => session["message"]) if session["status"] == "blocked"
+
+          base["pane"] = session["pane"]
+          base["replaced_pane"] = session["replaced_pane"]
+
+          # An empty configured list is a valid idle lab: the lab
+          # overseer itself still runs.
           if projects.empty?
             return base.merge("status" => "ready", "ready" => true, "project_count" => 0,
               "message" => "no projects configured; the lab overseer is idle")
           end
-
-          workspace = lab_workspace
-          base["workspace"] = workspace
 
           results = projects.map { |project| start_project(project, lab_root) }
           ready = results.all? { |result| %w[started reused].include?(result["status"]) }
@@ -153,26 +192,76 @@ module Ace
             "projects" => results, "project_count" => results.size,
             "message" => "#{results.count { |r| %w[started reused].include?(r["status"]) }}/" \
               "#{results.size} project overseers ready")
+        rescue Ace::Overseer::Error, Ace::Herdr::ExecutorUnavailableError => e
+          # A lab-level failure keeps the lab context (scope/root/label)
+          # so callers can tell it from a per-project blocked result.
+          base.merge("status" => "blocked", "message" => "lab start failed: #{e.message}")
         end
 
         # The lab's own herdr space, created once and reused by title.
         def lab_workspace
-          existing = @executor.workspace_list.parsed_json
-          list = existing.is_a?(Hash) ? Array(existing["result"] || existing["workspaces"]) : Array(existing)
-          found = list.find { |entry| entry["title"] == "overseer-lab" || entry["label"] == "overseer-lab" }
-          return found["id"] if found && (found["id"] || found["workspace_id"])
+          find_or_create_workspace("overseer-lab")
+        end
 
-          created = @executor.workspace_create(label: "overseer-lab").parsed_json
-          result = created.is_a?(Hash) ? created["result"] : nil
-          dig_workspace(result.is_a?(Hash) ? result : created)
+        # A herdr space by title, created when absent: the lab space
+        # ("overseer-lab") and each project's OWN space (titled by the
+        # project's session label, so a repeated lab start converges on
+        # the same space). herdr spaces are flat (tmux-session
+        # analogue, no parent/child nesting) — the lab context owns
+        # them by creating/reusing them from this one start flow.
+        def find_or_create_workspace(title)
+          found = find_workspace(title)
+          return found if found
+
+          created = @executor.workspace_create(label: title).parsed_json
+          dig_workspace(created)
         rescue Ace::Herdr::ExecutorUnavailableError => e
           raise Ace::Overseer::Error, "herdr is unavailable: #{e.message}"
         end
 
-        def dig_workspace(payload)
-          return nil unless payload.is_a?(Hash)
+        # An existing herdr space by title, or nil — never creates. A
+        # titled entry without an id is REUSED (its title is the
+        # workspace reference), never treated as absent: creating a
+        # second space with the same title would duplicate the space.
+        def find_workspace(title)
+          existing = @executor.workspace_list.parsed_json
+          list = existing.is_a?(Hash) ? Array(existing["result"] || existing["workspaces"]) : Array(existing)
+          found = list.find { |entry| entry["title"] == title || entry["label"] == title }
+          return nil unless found
 
-          payload["workspace_id"] || payload["id"] || payload.dig("workspace", "id")
+          found["id"] || found["workspace_id"] || found["title"] || found["label"]
+        rescue Ace::Herdr::ExecutorUnavailableError => e
+          raise Ace::Overseer::Error, "herdr is unavailable: #{e.message}"
+        end
+
+        # The lab's own session through the SAME identity rules as a
+        # project session (label from the lab root, cwd at the lab
+        # root, live owner reused, dead owner replaced). The lab root
+        # is a coordination directory, not a repository, so a live
+        # owner is matched by its cwd directly — never through
+        # project-root resolution.
+        def boot_lab_session(workspace, plan, instructions_path, lab_root)
+          label = Atoms::StartContract.session_label(lab_root)
+          owner = owner_pane(label)
+          replaced = nil
+          if owner
+            owner_cwd = owner["cwd"].to_s
+            matching = !owner_cwd.empty? &&
+              (File.realpath(owner_cwd) == lab_root rescue false)
+            unless matching
+              return {"status" => "blocked", "pane" => nil, "replaced_pane" => nil,
+                "message" => "owner pane '#{owner["id"]}' works in '#{owner_cwd}', which is " \
+                  "not the lab root '#{lab_root}'; refusing to take over a foreign session"}
+            end
+            return {"status" => "reused", "pane" => owner["id"], "replaced_pane" => nil} if agent_alive?(owner["id"])
+
+            replaced = owner["id"]
+          end
+
+          pane = boot_session(workspace, label, lab_root, plan, instructions_path)
+          {"status" => "started", "pane" => pane, "replaced_pane" => replaced}
+        rescue Ace::Overseer::Error => e
+          {"status" => "blocked", "pane" => nil, "replaced_pane" => nil, "message" => e.message}
         end
 
         # One project through the SAME operation as a standalone start:
@@ -193,8 +282,12 @@ module Ace
 
           project_config = Ace::Overseer.config_at(path)
           orchestrator = self.class.new(config: project_config, executor: @executor,
-            root_resolver: @root_resolver, nav_runner: @nav_runner, cwd: path)
+            root_resolver: @root_resolver, nav_runner: @nav_runner,
+            workspace_factory: ->(label) { find_or_create_workspace(label) }, cwd: path)
           report = orchestrator.call
+          # a reused session keeps its reported space: the lab-managed
+          # space titled by the project's session label, when it exists
+          report["workspace"] ||= find_workspace(report["label"])
           report.merge("id" => id, "path" => path)
         rescue Ace::Overseer::Error, Ace::Herdr::ExecutorError => e
           {"id" => id, "path" => path, "status" => "blocked", "message" => e.message}
@@ -215,15 +308,23 @@ module Ace
         end
 
         # wfi:// (and sibling protocol) sources resolve through the
-        # project's own ace-nav (binstub when present, PATH otherwise —
-        # the same binary choice the executor's resolver makes); an
-        # absolute path is used verbatim. The resolved file is the
-        # harness's standing-instruction source.
+        # project's own ace-nav; an absolute path is used verbatim. The
+        # resolved file is the harness's standing-instruction source.
+        # The executable comes from the repo toolchain policy
+        # (Ace::Support::Cli::Toolchain): auto mode prefers the
+        # project's bin/ binstub and falls back to PATH; installed mode
+        # (ACE_TOOLCHAIN=installed) ALWAYS uses the installed gem
+        # launcher — a checkout inside the project is data, never the
+        # runtime source.
         def resolve_instructions(source, root)
           return source unless source.include?("://")
 
-          binstub = File.join(root, "bin", "ace-nav")
-          binary = !Process.uid.zero? && File.executable?(binstub) ? binstub : "ace-nav"
+          binary = begin
+            Ace::Support::Cli::Toolchain.executable("ace-nav", project_root: root)
+          rescue Ace::Support::Cli::Toolchain::Error => e
+            raise Ace::Overseer::Error,
+              "cannot resolve the ace-nav executable for the start instructions: #{e.message}"
+          end
           result = @nav_runner.call([binary, "resolve", source], root)
           path = result["status"] == "ok" ? result["out"].to_s.lines.first.to_s.strip : nil
           if path.nil? || path.empty?
@@ -233,6 +334,16 @@ module Ace
           end
 
           path
+        end
+
+        # The herdr space a NEW session boots in: the explicit id seam,
+        # the lab-managed factory (each project's OWN space, titled by
+        # its session label), or the caller's ambient resolution.
+        def boot_workspace(label)
+          return @workspace if @workspace
+          return @workspace_factory.call(label) if @workspace_factory
+
+          resolve_workspace
         end
 
         # Same workspace policy as ControlSurface: the caller's herdr
@@ -316,6 +427,10 @@ module Ace
 
           @executor.agent_start(name: AGENT_NAME, kind: plan["profile"]["harness"],
             pane: pane, timeout_ms: START_TIMEOUT_MS, args: args)
+          # `agent start` only readies the interactive agent for input;
+          # the first prompt begins the session's first turn (state
+          # read, /eyes arming) — without it the agent sits idle.
+          @executor.agent_prompt(pane: pane, text: FIRST_TURN_PROMPT)
           pane
         rescue Ace::Herdr::CommandError => e
           raise Ace::Overseer::Error, "herdr failed to start the overseer session: #{e.message}"
@@ -345,7 +460,7 @@ module Ace
           source = result.is_a?(Hash) ? result : json
           return nil unless source.is_a?(Hash)
 
-          source["workspace_id"] || source["workspaceId"] || source["workspace"]
+          source["workspace_id"] || source["workspaceId"] || source["workspace"] || source["id"]
         end
 
         def run_nav(argv, cwd)

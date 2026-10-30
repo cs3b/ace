@@ -32,6 +32,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   semantics, guide resolution through the handbook chain, and the packaged
   project-overseer start guide (`wfi://overseer/start`).
 
+### Fixed
+
+- Lab scope starts the lab's OWN overseer session (review 8xte508e): `lab_start`
+  previously created the `overseer-lab` space and only started project sessions,
+  so the lab-start guide reached no agent (`pane` stayed nil). The lab session
+  now boots or is reused in the lab space with the same identity rules as a
+  project session (label from the lab root, cwd at the lab root, live owner
+  reused, foreign owner refused, empty configured list still runs the lab
+  overseer).
+- The lab starts each project in its OWN herdr space (review 8xte508b /
+  readiness F2): the lab space hosts only the lab overseer session; each
+  configured project gets a space titled by its session label
+  (`overseer-<project>`), created/reused by title and passed into the nested
+  start through an explicit workspace factory seam. Project sessions are
+  isolated from each other and from the lab overseer, never re-resolve the
+  caller's ambient workspace (a plain terminal without a herdr pane works),
+  and a live session found in another workspace is reused and reports that
+  workspace without leaving an empty space behind.
+- Installed toolchain isolation for start instructions (readiness F4): the
+  `wfi://` guide resolution now selects the `ace-nav` executable through
+  `Ace::Support::Cli::Toolchain` — under `ACE_TOOLCHAIN=installed` the
+  installed gem launcher is always used, never the checkout's `bin/`
+  binstubs even when the project contains an executable ACE checkout; auto
+  mode is unchanged. An unavailable installed executable is a blocked
+  start, never a fallback to source.
+- Lab-level failures keep their lab context (review 8xte508k): a raise
+  during lab start (e.g. herdr unavailable while resolving the lab space)
+  previously collapsed into the generic project-style blocked report with
+  `scope: nil`; `lab_start` now maps it to `status: blocked` with the lab
+  `scope`/`root`/`label` intact and a "lab start failed: …" message. A
+  herdr workspace entry that carries the title but no id is treated as the
+  space itself (reused by title) instead of falling through to
+  `workspace_create`, which would duplicate the `overseer-lab` space.
+- `start` sends the first prompt after `herdr agent start` (review F3):
+  `agent start` success only means the interactive agent is ready for input, so
+  a session booted without a prompt sat idle (no state read, no `/eyes`
+  arming). `boot_session` now submits a first-turn prompt (the standing
+  instructions' "First turn after start" contract) right after the agent
+  starts; a reused session is never prompted again.
+
 ## [0.26.1] - 2026-10-25
 
 ### Changed

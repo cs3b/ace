@@ -21,7 +21,7 @@ module Organisms
 
     # Minimal HerdrExecutor fake answering by command shape.
     class FakeExecutor
-      attr_reader :agent_started, :tabs
+      attr_reader :agent_started, :prompts, :tabs
 
       def initialize(panes: [], pane_current: {}, pane_of_tab: "p1", alive: true)
         @panes = panes
@@ -29,6 +29,7 @@ module Organisms
         @pane_of_tab = pane_of_tab
         @alive = alive
         @agent_started = []
+        @prompts = []
         @tabs = []
       end
 
@@ -55,6 +56,11 @@ module Organisms
         @agent_started << {name: name, kind: kind, pane: pane, timeout_ms: timeout_ms, args: args}
         FakePaneResult.new({"status" => "ready"})
       end
+
+      def agent_prompt(pane:, text:)
+        @prompts << {pane: pane, text: text}
+        FakePaneResult.new({"status" => "sent"})
+      end
     end
 
     def setup
@@ -77,9 +83,9 @@ module Organisms
       FileUtils.remove_entry(@dir) if @dir
     end
 
-    def orchestrator(executor, cwd: @root, config: @config)
+    def orchestrator(executor, cwd: @root, config: @config, workspace: nil)
       Ace::Overseer::Organisms::StartOrchestrator.new(
-        config: config, executor: executor, nav_runner: @nav_runner, cwd: cwd
+        config: config, executor: executor, nav_runner: @nav_runner, workspace: workspace, cwd: cwd
       )
     end
 
@@ -104,6 +110,44 @@ module Organisms
         "--append-system-prompt", File.join(@root, "guide.md")], start[:args]
     end
 
+    def test_first_start_sends_the_first_prompt_after_the_agent_is_started
+      executor = FakeExecutor.new(pane_current: {"result" => {"workspace_id" => "ws1"}})
+
+      report = orchestrator(executor).call
+
+      assert_equal "started", report["status"]
+      assert_equal 1, executor.agent_started.size
+      prompt = executor.prompts.find { |entry| entry[:pane] == report["pane"] }
+      assert prompt, "a prompt must reach the started agent"
+      assert_equal Ace::Overseer::Organisms::StartOrchestrator::FIRST_TURN_PROMPT,
+        prompt[:text]
+      # the prompt FOLLOWS agent_start: the session's first turn only
+      # begins once the interactive agent is ready for input
+      assert executor.agent_started.all? { |started| started[:pane] == prompt[:pane] }
+    end
+
+    def test_reused_session_is_not_prompted_again
+      panes = [{"id" => "p7", "title" => "overseer-project", "cwd" => @root}]
+      executor = FakeExecutor.new(panes: panes,
+        pane_current: {"result" => {"workspace_id" => "ws1"}})
+
+      report = orchestrator(executor).call
+
+      assert_equal "reused", report["status"]
+      assert_empty executor.prompts, "reuse must not start a new first turn"
+    end
+
+    def test_explicit_workspace_seam_replaces_ambient_resolution
+      # no ambient herdr context: pane_current reports no workspace
+      executor = FakeExecutor.new(pane_current: {"result" => {}})
+
+      report = orchestrator(executor, workspace: "ws-lab").call
+
+      assert_equal "started", report["status"], report.inspect
+      assert_equal "ws-lab", report["workspace"]
+      assert_equal "ws-lab", executor.tabs.first[:workspace_id]
+    end
+
     def test_second_start_reuses_the_live_owner_without_a_new_session
       panes = [{"id" => "p7", "title" => "overseer-project", "cwd" => @root}]
       executor = FakeExecutor.new(panes: panes,
@@ -115,6 +159,49 @@ module Organisms
       assert_equal "p7", report["pane"]
       assert_empty executor.tabs, "reuse must not create a second session"
       assert_empty executor.agent_started
+    end
+
+    def test_installed_toolchain_never_uses_the_checkout_binstub
+      # the project CONTAINS an ACE checkout with an executable binstub
+      # (the reviewer's case a plain no-sources trial cannot detect)
+      binstub = File.join(@root, "bin", "ace-nav")
+      FileUtils.mkdir_p(File.dirname(binstub))
+      File.write(binstub, "#!/bin/sh\n")
+      File.chmod(0o755, binstub)
+
+      seen = []
+      nav_runner = ->(argv, _cwd) do
+        seen << argv.first
+        {"status" => "ok", "out" => "#{File.join(@root, 'guide.md')}\n", "err" => ""}
+      end
+      installed_launcher = "/gems/3.4.5/bin/ace-nav"
+
+      Ace::Support::Cli::Toolchain.stub :executable, installed_launcher do
+        executor = FakeExecutor.new(pane_current: {"result" => {"workspace_id" => "ws1"}})
+        report = Ace::Overseer::Organisms::StartOrchestrator.new(
+          config: @config, executor: executor, nav_runner: nav_runner, cwd: @root
+        ).call
+
+        assert_equal "started", report["status"], report.inspect
+      end
+
+      assert_equal [installed_launcher], seen
+      refute seen.include?(binstub), "installed mode must never reach the checkout binstub"
+    end
+
+    def test_unavailable_installed_executable_blocks_the_start
+      failing = ->(*_args) { raise Ace::Support::Cli::Toolchain::Error, "installed executable ace-nav unavailable" }
+      executor = FakeExecutor.new(pane_current: {"result" => {"workspace_id" => "ws1"}})
+
+      Ace::Support::Cli::Toolchain.stub :executable, failing do
+        report = Ace::Overseer::Organisms::StartOrchestrator.new(
+          config: @config, executor: executor, nav_runner: @nav_runner, cwd: @root
+        ).call
+
+        assert_equal "blocked", report["status"]
+        assert_match(/cannot resolve the ace-nav executable/, report["message"])
+      end
+      assert_empty executor.tabs
     end
 
     def test_live_owner_with_a_foreign_cwd_is_a_conflict_never_taken_over
