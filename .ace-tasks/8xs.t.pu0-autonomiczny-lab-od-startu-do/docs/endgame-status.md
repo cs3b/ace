@@ -93,3 +93,20 @@ publish (OTP) → zimny cykl na labie.
   gema przez tę samą ścieżkę).
 
 Bramki końcowe bez zmian (review/approval/merge → publish → lab).
+
+## Dodatek 4: pełny wątek doradczy i lab-start z zainstalowanych gemów (2026-10-30, runda 21)
+
+- **Lab start (installed)**: pusta topologia → `ready`/idle/0 (poprawny);
+  topologia z projektem → dry-run `would_start`; wet start bez serwera
+  herdr → konkretny błąd transportu z instrukcją (fail-closed, bez
+  zgadywania) — zachowanie zgodne z kontraktem .a (na labie z żywym herdr
+  start kontynuuje).
+- **Pełny wątek Second Captaina z zainstalowanych gemów**: ask (utworzona
+  sprawa; routes nie_skonfigurowane = jawne ostrzeżenie, sprawa istnieje)
+  → suggest (marked suggestion written) → reply (received) → lesson
+  (accepted, written) → history (1 wiersz: suggestion/decision/lesson
+  zgodne). Plik sprawy zawiera wszystkie 3 sekcje (Suggestion/Answer/
+  Lesson) w poprawnej kolejności — dokładnie scenariusz „sugestia przed
+  decyzją" z .b/.c, udowodniony na artefaktach.
+
+Bramki końcowe bez zmian: niezależny review/approval/merge → publish → lab.
