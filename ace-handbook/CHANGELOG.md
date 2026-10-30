@@ -17,13 +17,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (task/cycle, source HEAD, bound review/test evidence, publish
   versions+digests, runtime paths and outcome) through a normal record-only
   PR that never triggers a release by itself.
-
-### Added
-
 - Provider manifests can declare `extensions_package`: extension assets project
   from the named asset package (local sibling directory first, installed gem
   second), enabling gem-backed extension shipping such as `ace-wake` for the pi
-  provider (task 8xs.t.pu0.0).
+  provider (task 8xs.t.pu0.0); in `ACE_TOOLCHAIN=installed` mode the packaged
+  extension source is always the installed gem, never the checkout directory.
 
 ## [0.36.2] - 2026-10-27
 

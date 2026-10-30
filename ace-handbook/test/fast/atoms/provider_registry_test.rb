@@ -62,6 +62,19 @@ class Ace::Handbook::Atoms::ProviderRegistryTest < Minitest::Test
     assert_equal @checkout_pkg, registry.extensions_source_root("wake")
   end
 
+  # PR #398 F4 (8xtgv6a6): an unresolvable extensions_package must raise,
+  # never fall back to "no extensions" — the syncer would otherwise prune
+  # every receipt-owned extension file from the target directory.
+  def test_auto_mode_without_a_resolvable_package_raises
+    ENV["ACE_TOOLCHAIN"] = "auto"
+    FileUtils.rm_rf(@checkout_pkg)
+
+    Gem::Specification.stub(:find_by_name, ->(_name) { raise Gem::LoadError, "ace-wake is not installed" }) do
+      error = assert_raises(StandardError) { registry.extensions_source_root("wake") }
+      assert_match(/extensions_package 'ace-wake' cannot be resolved/, error.message)
+    end
+  end
+
   def test_installed_mode_uses_the_installed_gem_not_the_checkout_directory
     ENV["ACE_TOOLCHAIN"] = "installed"
     with_installed_spec do

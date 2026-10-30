@@ -45,12 +45,14 @@ module Ace
 
         # Source root for a provider's extension assets: the package the
         # manifest names through `extensions_package` (an asset package
-        # such as ace-wake that is NOT an integration package), falling
-        # back to the manifest's own package. The named package resolves
-        # like every other package: the sibling package directory in the
-        # local project first, the installed gem second — so a monorepo
-        # checkout projects the working tree and an installed lab
-        # projects the exact installed gem (task 8xs.t.pu0.0).
+        # such as ace-wake that is NOT an integration package). The named
+        # package resolves like every other package: the sibling package
+        # directory in the local project first, the installed gem second
+        # — so a monorepo checkout projects the working tree and an
+        # installed lab projects the exact installed gem (task
+        # 8xs.t.pu0.0). In auto mode an unresolvable package raises; in
+        # installed mode the manifest's own package root is the fallback
+        # (the installed-mode rule).
         def extensions_source_root(provider)
           package = manifest(provider)["extensions_package"]
           return package_root(provider) if package.nil? || package.to_s.strip.empty?
@@ -86,7 +88,10 @@ module Ace
         # checkout directory is project DATA, never the runtime source:
         # the package must come from an installed gem, and only an
         # installed spec counts. Only a package that actually carries
-        # handbook/extensions counts.
+        # handbook/extensions counts. In auto mode a configured package
+        # that resolves nowhere is a hard error: an unresolvable
+        # extensions_package must never be treated as "no extensions",
+        # which would prune every receipt-owned file from the target.
         def resolve_named_package(name)
           return installed_package(name) if Ace::Support::Cli::Toolchain.installed?
 
@@ -94,11 +99,20 @@ module Ace
           return local if File.directory?(File.join(local, "handbook", "extensions"))
 
           spec = Gem::Specification.find_by_name(name)
-          return nil unless File.directory?(File.join(spec.full_gem_path, "handbook", "extensions"))
+          return spec.full_gem_path if File.directory?(File.join(spec.full_gem_path, "handbook", "extensions"))
 
-          spec.full_gem_path
-        rescue Gem::LoadError, ArgumentError
-          nil
+          raise_unresolvable_extensions_package(name,
+            "the installed gem carries no handbook/extensions tree")
+        rescue Gem::LoadError, ArgumentError => e
+          raise_unresolvable_extensions_package(name, e.message)
+        end
+
+        def raise_unresolvable_extensions_package(name, detail)
+          raise StandardError,
+            "the configured extensions_package '#{name}' cannot be resolved (#{detail}): " \
+            "neither a sibling package directory under #{project_root} nor an installed gem " \
+            "carries the extension assets. Install the package or fix the provider manifest — " \
+            "an unresolvable extensions_package must never be treated as 'no extensions'."
         end
 
         # Installed mode: the packaged extension source must be the
