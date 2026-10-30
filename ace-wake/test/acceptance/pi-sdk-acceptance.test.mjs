@@ -1,11 +1,12 @@
 // Installed-artifact acceptance for ace-wake on the real Pi runtime.
 //
 // Requires PI_PKG_ROOT (pi-coding-agent package dir) and EXT_PATH (the
-// deployable ace-wake entrypoint). The pi integration feat harness invokes
-// this suite with EXT_PATH pointing at the repository-top-level
-// ace-wake/index.js — the artifact the host lane deploys — proving that
-// artifact, not the test source tree, wakes idle and busy agents through
-// queued user messages with no external timer or service.
+// published ace-wake entrypoint). The pi integration feat harness invokes
+// this suite with EXT_PATH pointing at the single published copy under
+// ace-wake/handbook/extensions/ace-wake/index.js — the artifact the pi
+// projection deploys — proving that artifact, not the test source tree,
+// wakes idle and busy agents through queued user messages with no external
+// timer or service.
 import * as assert from "node:assert/strict";
 import * as fs from "node:fs";
 import * as os from "node:os";
@@ -312,6 +313,11 @@ describe("ace-wake installed acceptance", { timeout: 90_000 }, () => {
       const wake = await waitFor(() => wakeTexts(session).find((text) => text.includes("loop:auto")));
       assert.ok(wake, "the projected extension must be auto-discovered without an explicit path");
       assert.equal(wake, "[ace-wake loop:auto] auto tick");
+
+      // Stop the loop before cleanup: a surviving interval timer would tick
+      // after the throwaway project is removed and fail the file via an
+      // unhandled ENOENT from the deleted project directory.
+      await session.prompt("/loop remove auto");
     } finally {
       cleanup();
     }
@@ -328,6 +334,9 @@ describe("ace-wake installed acceptance", { timeout: 90_000 }, () => {
 
       const answered = await waitFor(() => session.messages.some((message) => message.role === "assistant"));
       assert.ok(answered, "agent must answer the wake");
+
+      // Stop the loop before cleanup (see the auto-discovery test).
+      await session.prompt("/loop remove probe");
     } finally {
       cleanup();
     }
@@ -381,6 +390,9 @@ describe("ace-wake installed acceptance", { timeout: 90_000 }, () => {
         session.messages.indexOf(lastWakeMessage(session)) > session.messages.indexOf(toolResult),
         "the wake turn must follow the tool completion",
       );
+
+      // Stop the loop before cleanup (see the auto-discovery test).
+      await session.prompt("/loop remove busy");
     } finally {
       cleanup();
     }
@@ -400,6 +412,11 @@ describe("ace-wake installed acceptance", { timeout: 90_000 }, () => {
         userTextsOf(session).some((text) => text.includes("plain conversation message")),
         "the user message must enter the transcript normally",
       );
+
+      // Stop the loop before cleanup: a surviving 5 s timer would tick after
+      // the throwaway project is removed and fail the file via an unhandled
+      // ENOENT from the deleted project directory.
+      await session.prompt("/loop remove chatter");
     } finally {
       cleanup();
     }
@@ -431,6 +448,9 @@ describe("ace-wake installed acceptance", { timeout: 90_000 }, () => {
 
       assert.ok(fired >= 2, `the reloaded subscription must keep ticking (saw ${fired})`);
       assert.ok(fired <= 3, `exactly one timer survives reload; saw ${fired}, a duplicate would fire 4+`);
+
+      // Stop the loop before cleanup (see the auto-discovery test).
+      await session.prompt("/loop remove ticky");
     } finally {
       cleanup();
     }
@@ -450,9 +470,12 @@ describe("ace-wake installed acceptance", { timeout: 90_000 }, () => {
       const wake = await waitFor(() => wakeTexts(session).find((text) => text.includes("watch:dep")), { timeoutMs: 15_000 });
       assert.ok(wake, "file change must wake the idle agent");
       assert.match(wake, /^\[ace-wake watch:dep\] file changed\n/, "the wake keeps its source-prefixed message head");
+      // The watcher reports the canonical path (on macOS /var → /private/var),
+      // so the assertion compares the realpath, not the constructed path.
+      const canonical = fs.realpathSync(watched);
       assert.match(
         wake,
-        new RegExp(`changed: ${watched.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")} \\(modified\\) sha256:[0-9a-f]{64} → sha256:[0-9a-f]{64}`),
+        new RegExp(`changed: ${canonical.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")} \\(modified\\) sha256:[0-9a-f]{64} → sha256:[0-9a-f]{64}`),
         "the wake carries path, change kind, and BEFORE→AFTER signatures",
       );
       assert.match(wake, /excerpt: version-2 with more content/, "the readable file's excerpt rides along");
@@ -460,6 +483,10 @@ describe("ace-wake installed acceptance", { timeout: 90_000 }, () => {
       const before = wakeTexts(session).length;
       await session.prompt("/watch add ghost --path missing.txt --message never");
       assert.equal(wakeTexts(session).length, before, "a failed watch add must not wake the agent");
+
+      // Stop the watch before cleanup: a surviving fs watcher would fire
+      // after the throwaway project is removed and fail the file.
+      await session.prompt("/watch remove dep");
     } finally {
       cleanup();
     }

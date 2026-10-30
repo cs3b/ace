@@ -71,9 +71,14 @@ class Ace::Handbook::Integration::PiExtensionAssetsTest < Minitest::Test
       receipt = JSON.parse(File.read(File.join(project_root, ".pi", "extensions", ".ace-handbook-projection.json")))
       assert_includes receipt.fetch("files"), "ace-wake/index.js"
 
-      # Second sync is idempotent: the same projection stays standing.
+      # Second sync is idempotent: the same projection stays standing
+      # untouched — no rewrites, no removals, no missing files.
       second = syncer.sync(provider: "pi").first
       assert_equal result.fetch(:projected_extensions), second.fetch(:projected_extensions)
+      assert_equal 0, second.fetch(:updated_extension_files),
+        "a no-op second sync must not rewrite extension files"
+      assert_equal 0, second.fetch(:removed_extension_entries),
+        "a no-op second sync must not remove extension entries"
       assert File.file?(File.join(project_root, ".pi", "extensions", "ace-wake", "index.js"))
     end
   end

@@ -607,9 +607,20 @@ export function createWatchPort({ watchFactory, statFn, readFn = nodeReadFn, bas
         // climb, never a re-stat: a report created between the two must
         // remain a pending change. The follow-up reconcile scheduled
         // below delivers it without waiting for another event.
-        const baseline = aggregateFingerprint(entry.paths, entry.primaryPath, new Set([target]));
-        entry.previousFingerprint = baseline;
-        entry.fingerprint = baseline;
+        // A primary deleted moments earlier (the throwaway project of a
+        // finished session torn down, a pruned worktree root) makes this
+        // computation throw: this pass runs inside watcher event
+        // callbacks, so the throw is routed through the documented
+        // deactivation path instead of escaping into the event loop as
+        // an uncaught ENOENT.
+        try {
+          const baseline = aggregateFingerprint(entry.paths, entry.primaryPath, new Set([target]));
+          entry.previousFingerprint = baseline;
+          entry.fingerprint = baseline;
+        } catch (error) {
+          deactivate(definition.name, `re-attachment failed: ${describeError(error)}`);
+          return;
+        }
       }
     }
     if (attachedAny) {

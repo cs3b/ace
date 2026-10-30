@@ -84,11 +84,13 @@ Two environment caveats:
   those two tests fail.
 - `test/acceptance/pi-sdk-acceptance.test.mjs` runs the extension inside the
   REAL Pi SDK runtime. It needs `PI_PKG_ROOT` (the pi-coding-agent package
-  directory) and `EXT_PATH` (the deployable `ace-wake/index.js`), and is
-  normally driven by the ace-handbook-integration-pi feat harness
+  directory) and `EXT_PATH` (the published entrypoint
+  `handbook/extensions/ace-wake/index.js`), and is normally driven by the
+  ace-handbook-integration-pi feat harness
   (`bin/ace-test ace-handbook-integration-pi feat`):
 
   ```sh
   PI_PKG_ROOT="$(npm root -g)/@earendil-works/pi-coding-agent" \
-    EXT_PATH="$PWD/index.js" node --test test/acceptance/pi-sdk-acceptance.test.mjs
+    EXT_PATH="$PWD/handbook/extensions/ace-wake/index.js" \
+    node --test test/acceptance/pi-sdk-acceptance.test.mjs
   ```

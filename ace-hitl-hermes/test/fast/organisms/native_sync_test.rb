@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "test_helper"
+require "ace/wake"
 require "ace/hitl/hermes/organisms/native_sync"
 require "ace/hitl/adapters/hermes_native"
 require "ace/hitl/hermes/cli"
@@ -171,7 +172,7 @@ class NativeSyncTest < AceHermesTestCase
                   "recipients" => {"self" => {"machine" => "lab", "panel" => "w1:p1"}},
                   "adapters" => {"routes" => [@route]}}}.to_yaml)
     source_root = File.expand_path("../../../..", __dir__)
-    eyes_root = File.join(source_root, "ace-wake/wake")
+    eyes_root = File.join(Ace::Wake.extension_root, "wake")
     script = <<~JS
       import assert from "node:assert/strict";
       import { Eyes } from #{File.join(eyes_root, "eyes.js").to_json};

@@ -16,8 +16,14 @@ class WakeJsSuiteTest < Minitest::Test
     files = TEST_GLOBS.flat_map { |glob| Dir.glob(File.join(PACKAGE_ROOT, glob)) }.sort
     refute_empty files, "ace-wake JavaScript tests not found under #{PACKAGE_ROOT}/test"
 
-    out, err, status = Open3.capture3({ "NODE_OPTIONS" => nil },
-      "node", "--test", *files, chdir: PACKAGE_ROOT)
+    node = ENV.fetch("NODE_BIN", "node")
+    out, err, status = begin
+      Open3.capture3({ "NODE_OPTIONS" => nil },
+        node, "--test", *files, chdir: PACKAGE_ROOT)
+    rescue Errno::ENOENT
+      flunk "node executable #{node.inspect} not found — install Node.js or point " \
+           "NODE_BIN at the node binary to run the ace-wake JavaScript suite"
+    end
 
     assert status.success?,
       "ace-wake node --test failed (exit #{status.exitstatus}):\n#{summarize(out, err)}"
