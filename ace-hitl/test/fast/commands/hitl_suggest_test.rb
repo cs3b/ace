@@ -127,8 +127,8 @@ module Ace
             # suggestion blocks before its locked read; land the human
             # answer (the exact on-disk effect of a concurrent reply),
             # then let the suggestion through.
-            File.open(@event.file_path, File::RDWR) do |file|
-              file.flock(File::LOCK_EX)
+            File.open("#{@event.file_path}.lock", File::RDWR | File::CREAT, 0o600) do |lock|
+              lock.flock(File::LOCK_EX)
 
               writer = Thread.new do
                 begin
@@ -143,19 +143,15 @@ module Ace
               assert writer.alive?,
                 "the suggestion must wait for the case lock (error: #{suggestion_error.inspect})"
 
-              content = file.read
+              content = File.read(@event.file_path)
               frontmatter, body = Ace::Support::Items::Atoms::FrontmatterParser.parse!(content)
               frontmatter["answered"] = true
               frontmatter["status"] = "answered"
               frontmatter["answered_at"] = Time.now.utc
               answered_body = Molecules::HitlAnswerEditor.apply(body.sub(/\A\n/, ""), "Stop the batch\n")
-              file.rewind
-              file.truncate(0)
-              file.write(Ace::Support::Items::Atoms::FrontmatterSerializer.rebuild(
+              File.write(@event.file_path, Ace::Support::Items::Atoms::FrontmatterSerializer.rebuild(
                 frontmatter, answered_body))
-              file.flush
-              file.fsync
-              file.flock(File::LOCK_UN)
+              lock.flock(File::LOCK_UN)
               writer.join
             end
 

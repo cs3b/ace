@@ -20,7 +20,7 @@ module Ace
         class AmbiguousReferenceError < StandardError
           attr_reader :ref, :matches
 
-          def initialize(ref, matches)
+          private def initialize(ref, matches)
             @ref = ref
             @matches = matches
             super("Ambiguous HITL reference '#{ref}'")
@@ -49,7 +49,7 @@ module Ace
 
         attr_reader :root_dir, :last_list_total, :last_folder_counts, :config
 
-        def initialize(root_dir: nil, config: nil, scope_resolver: nil, resume_dispatcher: nil,
+        private def initialize(root_dir: nil, config: nil, scope_resolver: nil, resume_dispatcher: nil,
           address_resolver: nil)
           @config = config || load_config
           @configured_root_setting = @config.dig("hitl", "root_dir") || Molecules::HitlConfigLoader::DEFAULT_ROOT_DIR
@@ -424,9 +424,8 @@ module Ace
           end
         end
 
-        private
 
-        def history_eligible?(event)
+        private def history_eligible?(event)
           frontmatter = read_frontmatter(event.file_path)[0]
           return false if frontmatter["secret"] == true
           return false unless frontmatter["answered"] == true
@@ -443,17 +442,16 @@ module Ace
         # neighbouring sections — a `proposal:` line quoted in the question
         # body or a Resume Dispatch appended after the Answer stays where
         # it belongs.
-        def body_section(body, title)
+        private def body_section(body, title)
           body[/^## #{Regexp.escape(title)}[ \t]*\n(.*?)(?=^## |\z)/m, 1].to_s
         end
 
-        def lesson_matches?(body, by, takeaway)
+        private def lesson_matches?(body, by, takeaway)
           section = body_section(body, "Lesson")
           section.match?(/^author: #{Regexp.escape(by.to_s)}$/) &&
             section.match?(/^takeaway: #{Regexp.escape(takeaway.to_s.strip)}$/)
         end
 
-        public
 
         def sweep(apply: false)
           requests_dir = File.join(File.expand_path(@root_dir), "wake-requests")
@@ -530,13 +528,24 @@ module Ace
           [frontmatter, body.sub(/\A\n/, "")]
         end
 
+        # The case's stable sidecar lock: mutual exclusion for every
+        # read-validate-write cycle on a case file. The lock lives on a
+        # file that is NEVER renamed — locking the case file itself would
+        # break the moment an atomic tmp+rename write replaces its inode
+        # (a waiter blocked on the old inode would then "hold" a lock on
+        # a detached file and silently lose updates).
+        private def with_case_lock(file_path, &block)
+          File.open("#{file_path}.lock", File::RDWR | File::CREAT, 0o600) do |lock|
+            lock.flock(File::LOCK_EX)
+            block.call
+          end
+        end
+
         # Atomic, conflict-rejecting lifecycle transition: exclusive lock,
         # validate-and-mutate frontmatter in one pass, serialize back.
         private def transition(file_path)
-          File.open(file_path, File::RDWR) do |file|
-            file.flock(File::LOCK_EX)
-            file.rewind
-            content = file.read
+          with_case_lock(file_path) do
+            content = File.read(file_path)
             frontmatter, body = Ace::Support::Items::Atoms::FrontmatterParser.parse!(content)
             result = yield(frontmatter, body.sub(/\A\n/, ""))
             write_atomic(file_path,
@@ -553,10 +562,8 @@ module Ace
         # [result, frontmatter, body]; a nil body means "no write" (the
         # idempotent duplicate path leaves the file untouched).
         private def rewrite_case(file_path)
-          File.open(file_path, File::RDWR) do |file|
-            file.flock(File::LOCK_EX)
-            file.rewind
-            content = file.read
+          with_case_lock(file_path) do
+            content = File.read(file_path)
             frontmatter, body = Ace::Support::Items::Atoms::FrontmatterParser.parse!(content)
             result, new_frontmatter, new_body = yield(frontmatter, body.sub(/\A\n/, ""))
             if new_body
@@ -567,12 +574,17 @@ module Ace
           end
         end
 
-        # Crash-atomic replace: the new content lands via tmp-file +
-        # rename, so a crash mid-write never leaves a truncated or
-        # half-serialized case file behind.
+        # Crash-atomic replace: the new content is fsynced to a tmp file
+        # and renamed over the case file, so a crash mid-write never
+        # leaves a truncated or half-serialized case behind. Callers hold
+        # the sidecar lock, so the rename never breaks mutual exclusion.
         private def write_atomic(file_path, new_content)
           tmp_path = "#{file_path}.tmp.#{Process.pid}.#{Thread.current.object_id}"
-          File.write(tmp_path, new_content)
+          File.open(tmp_path, "w") do |tmp|
+            tmp.write(new_content)
+            tmp.flush
+            tmp.fsync
+          end
           File.rename(tmp_path, file_path)
         ensure
           File.unlink(tmp_path) if tmp_path && File.exist?(tmp_path)
@@ -760,7 +772,6 @@ module Ace
           {status: :dispatched, event: archived, mode: result.mode, details: result.details}
         end
 
-        private
 
         private def suggestion_matches?(body, author, text)
           section = body_section(body, "Suggestion")
@@ -768,19 +779,19 @@ module Ace
             section.match?(/^proposal: #{Regexp.escape(text.to_s.strip)}$/)
         end
 
-        def load_config
+        private def load_config
           Molecules::HitlConfigLoader.load
         end
 
-        def resolve_root_dir
+        private def resolve_root_dir
           Molecules::HitlConfigLoader.root_dir(@config)
         end
 
-        def ensure_root_dir
+        private def ensure_root_dir
           FileUtils.mkdir_p(@root_dir) unless Dir.exist?(@root_dir)
         end
 
-        def resolve_for_mutation(ref, scope: nil)
+        private def resolve_for_mutation(ref, scope: nil)
           effective_scope = @scope_resolver.effective_scope(scope)
           roots = hitl_roots_for_scope(effective_scope)
 
@@ -792,7 +803,7 @@ module Ace
           resolved
         end
 
-        def resolve_from_roots(ref, hitl_roots, strict_ambiguity: false)
+        private def resolve_from_roots(ref, hitl_roots, strict_ambiguity: false)
           root_results = hitl_roots.uniq.filter_map do |hitl_root|
             scanner = Molecules::HitlScanner.new(hitl_root)
             results = scanner.scan
@@ -825,7 +836,7 @@ module Ace
           }
         end
 
-        def scan_results_for_scope(scope, in_folder:)
+        private def scan_results_for_scope(scope, in_folder:)
           total = 0
           folder_counts = Hash.new(0)
 
@@ -842,18 +853,18 @@ module Ace
           results
         end
 
-        def load_events(scan_results)
+        private def load_events(scan_results)
           scan_results.filter_map { |scan_result| load_event(scan_result) }
         end
 
-        def load_event(scan_result)
+        private def load_event(scan_result)
           loader = Molecules::HitlLoader.new
           loader.load(scan_result.dir_path,
             id: scan_result.id,
             special_folder: scan_result.special_folder)
         end
 
-        def hitl_roots_for_scope(scope)
+        private def hitl_roots_for_scope(scope)
           roots = @scope_resolver.worktree_roots(scope: scope)
           roots = [@scope_resolver.current_worktree_root].compact if roots.empty?
           roots = [nil] if roots.empty?
@@ -866,7 +877,7 @@ module Ace
           end.uniq
         end
 
-        def current_hitl_root
+        private def current_hitl_root
           root = @scope_resolver.current_worktree_root
           return @root_dir if root.nil?
           return @configured_root_setting if Pathname.new(@configured_root_setting).absolute?
@@ -874,7 +885,7 @@ module Ace
           File.join(root, @configured_root_setting)
         end
 
-        def worktree_root_from_hitl_root(hitl_root)
+        private def worktree_root_from_hitl_root(hitl_root)
           return nil if hitl_root.nil?
           return nil if Pathname.new(@configured_root_setting).absolute?
 
@@ -886,11 +897,11 @@ module Ace
           expanded[0...-suffix.length]
         end
 
-        def filter_by_tags(events, tags)
+        private def filter_by_tags(events, tags)
           events.select { |event| tags.any? { |tag| event.tags.include?(tag) } }
         end
 
-        def filter_by_delivery(events, delivery)
+        private def filter_by_delivery(events, delivery)
           case delivery.to_s
           when "undelivered"
             events.select { |event| Molecules::HitlDeliveryState.undelivered?(event.metadata["delivery"]) }
@@ -901,7 +912,7 @@ module Ace
           end
         end
 
-        def apply_answer_update(file_path, answer)
+        private def apply_answer_update(file_path, answer)
           content = File.read(file_path)
           frontmatter, body = Ace::Support::Items::Atoms::FrontmatterParser.parse!(content)
 
@@ -919,12 +930,9 @@ module Ace
           File.unlink(tmp_path) if tmp_path && File.exist?(tmp_path)
         end
 
-        def apply_field_and_answer_updates(file_path, set:, add:, remove:, answer:, first_answer: false)
-          File.open(file_path, File::RDWR) do |file|
-            file.flock(File::LOCK_EX)
-            file.rewind
-
-            content = file.read
+        private def apply_field_and_answer_updates(file_path, set:, add:, remove:, answer:, first_answer: false)
+          with_case_lock(file_path) do
+            content = File.read(file_path)
             frontmatter, body = Ace::Support::Items::Atoms::FrontmatterParser.parse!(content)
             body = body.sub(/\A\n/, "")
             previous = body_section(body, "Answer").strip
@@ -958,7 +966,7 @@ module Ace
           end
         end
 
-        def parse_archive_date(event)
+        private def parse_archive_date(event)
           raw = event.metadata["answered_at"] || event.metadata["created_at"] || event.created_at
           return nil unless raw
 
@@ -972,7 +980,7 @@ module Ace
           nil
         end
 
-        def refresh_waiter_lease(event, now:, deadline:, poll_every:, waiter_session_id:, waiter_provider:, scope:)
+        private def refresh_waiter_lease(event, now:, deadline:, poll_every:, waiter_session_id:, waiter_provider:, scope:)
           set = {
             "waiter_state" => "waiting",
             "waiter_last_seen_at" => now.iso8601,
@@ -984,7 +992,7 @@ module Ace
           update(event.id, set: set, scope: scope)
         end
 
-        def waiter_active?(event, now:)
+        private def waiter_active?(event, now:)
           return false unless event.metadata["waiter_state"].to_s == "waiting"
 
           last_seen = parse_time(event.metadata["waiter_last_seen_at"])
@@ -995,7 +1003,7 @@ module Ace
           (now - last_seen) <= (interval * 2)
         end
 
-        def parse_time(raw)
+        private def parse_time(raw)
           return raw if raw.is_a?(Time)
           return nil if raw.nil?
 
@@ -1004,21 +1012,21 @@ module Ace
           nil
         end
 
-        def normalize_poll_seconds(value)
+        private def normalize_poll_seconds(value)
           parsed = value.to_i
           return 600 if parsed <= 0
 
           parsed
         end
 
-        def normalize_timeout_seconds(value)
+        private def normalize_timeout_seconds(value)
           parsed = value.to_i
           return 14_400 if parsed <= 0
 
           parsed
         end
 
-        def append_resume_note(ref, note, scope: nil)
+        private def append_resume_note(ref, note, scope: nil)
           current = show(ref, scope: scope)
           return unless current
 

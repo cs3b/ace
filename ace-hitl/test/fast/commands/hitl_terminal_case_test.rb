@@ -75,8 +75,8 @@ module Ace
             # its pre-check passed (unanswered, not terminal); cancel the
             # case, then let the reply through — the locked terminal check
             # must refuse the answer, not write over the cancelled case.
-            File.open(@event.file_path, File::RDWR) do |file|
-              file.flock(File::LOCK_EX)
+            File.open("#{@event.file_path}.lock", File::RDWR | File::CREAT, 0o600) do |lock|
+              lock.flock(File::LOCK_EX)
 
               writer = Thread.new do
                 begin
@@ -89,17 +89,13 @@ module Ace
               writer.join(0.3)
               assert writer.alive?, "the reply must wait for the case lock"
 
-              content = file.read
+              content = File.read(@event.file_path)
               frontmatter, body = Ace::Support::Items::Atoms::FrontmatterParser.parse!(content)
               frontmatter["application"] = {"state" => "cancelled",
                 "cancelled_at" => Time.now.utc}
-              file.rewind
-              file.truncate(0)
-              file.write(Ace::Support::Items::Atoms::FrontmatterSerializer.rebuild(
+              File.write(@event.file_path, Ace::Support::Items::Atoms::FrontmatterSerializer.rebuild(
                 frontmatter, body))
-              file.flush
-              file.fsync
-              file.flock(File::LOCK_UN)
+              lock.flock(File::LOCK_UN)
               writer.join
             end
 
