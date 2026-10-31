@@ -221,3 +221,73 @@ Generic failure-reporting fix preserves the real early blocked message instead
 of replacing it with no-project-scope-report. Independentreviewapproved; full
 Overseer suite451tests/2030assertions/0fail/0errors/1existing skip, report759ef382.
 Not deployed yet.
+
+## Worker and independent verifier completed; final startup still blocked
+
+Worker assignment8xujj4 finished step010 and reported success event8xuk0q.
+It identified renamed-root mise/Pi trust gates, applied per-user trust for
+/lab/ace, preserved project Git state, and removed diagnostic tabs.
+Independent assignment8xujj41 rechecked readiness without repair or launch;
+success event8xuk86. Report/evidence live in executable task8xu.t.jh8 worktree.
+Coordinator received the results and invoked actual reconcile only afterwards.
+
+Fresh target w4:p3 did not boot: shell reported pi command not found. Visible
+environment setup line is very long and its PATH appears truncated. Source
+launcher investigation underway; no project first turn/eyes acceptance claimed.
+
+Permission convergence initial full lab suite:678tests/3266assertions,0fail,
+0errors,4skips,58.39s; reportb08844ac-2d64-4247-b5f5-45b44f113e8f. Independent
+review found missing-transitive-dependency dryrun regression; fixing before
+commit/release. Slowest tests are existing real installation/readiness checks
+(6.19s fresh installation,2.30s installed gemset).
+
+## Follow-up defects verified and repaired in source
+
+Launcher root cause:3613bytes of selector unset plus482bytes remaining text
+exactly fills Linux canonical TTY4095-byte input; PATH tail is lost. Source
+commit0a342ce30194dc5903d3dc5a8a6342af6dcfce55 uses a private0600 script
+in a checked0700 project handoff directory, short dot command, actual output
+acknowledgement before harness start, and cleanup. Independent review approved;
+real canonical PTY regression executed (50tests/280assertions/0fail,1existing
+skip across targeted files, reportd35cc395). Not deployed yet.
+
+Permission review initially missed RubyGems stripping installedspec.files.
+Actual live ace-support-fs specification has0files; initial implementation
+would not repair the real library defect. Correction5e2378eaa inventories
+verified exact-identity cached .gem archive contents, preserves unknown files,
+and refuses absent/mismatched cache. Real fresh installed library0640fixture
+now proves normalization. Independent review approved; full lab680tests,
+3286assertions,0fail/0errors,4skips, report13e7056f.
+
+Live report audit: worker8xujj4 / event8xuk0q and verifier8xujj41 / event8xuk86
+were accepted in sidecar notes but assignment and processed_report fields
+were absent from actual private taskmetadata. Notes were initially written
+to a guessed sibling slug. Never treat these notes as machine receipt proof.
+process-reports dryrun also incorrectly matched readiness8xujjf to remaining
+confirm-start step. No blanket apply was executed. Source fixes under review
+require explicit planner allocation, durable assignment/receipt fields, and
+actual resolved taskpaths; final confirmation must remain coordinator-owned.
+
+Late wake audit:6messages had6distinct batchhashes. Last batches13:34:21,
+13:36:23,13:37:06 reflected distinct earlier revisions; wakecounter stayed6
+through continued observations. No duplicateenqueue defect confirmed; do not
+modify eyes based on stale queued messages alone. Coordinator nowdone/idle
+with eyes active and actualstart blocked awaiting published fix.
+
+## Final source verification before patch release
+
+Report acceptance cc898b91f963b32844b78a78371109d8b177fc0c requires actual
+task-worktree owner resolution, role allocation and completed nonempty
+assignment before success writes (including duplicate continuation). Explicit
+confirm-start remains a coordinator operation. Real queue-cycle integration
+9tests/200assertions passes including premature/wrongrole refusal and crash
+recovery. Independent reviewer approved final source with no open findings.
+
+Monorepo run:52otherpackages passed; Overseer's2 failures exposed the now-fixed
+worktree metadata interpretation. Full final Overseer rerun471tests,
+2209assertions,0fail/0errors,1existing skip (ca974e8c). Lab680tests passed
+(bd73dabb). Other packages were unchanged after that suite; not falsely
+claiming the initial suite invocation itself exited successfully.
+
+Preparing patch-only ace-overseer0.28.1 and ace-lab0.14.1. No dependency
+follower bumps required. These follow-up fixes remain undeployed.
