@@ -125,6 +125,8 @@ All notable changes to this project will be documented in this file.
 - **ace-assign v0.72.0, ace-git-worktree v0.27.2, ace-hitl v0.18.0, ace-runtime v0.4.1**: Remove role-specific exceptions from universal tools: the `_overseer` delegation refusal in `ace-assign`, the `_overseer` worktree refusal and `special_folder` passthrough in `ace-git-worktree`, the unused old-lab Root Overseer reverse-address HITL channel (`overseer-send`/`overseer-pending`/`overseer-ack`, `Lifecycle::Overseer`, the default `mo` responder, `/lab/state/overseer-channel` and its answer-tag/no-ID policy), and the systemd unit-name `overseer` validity check in `ace-runtime`. No replacement role policy, delegation policy, queue, or `.gitignore`/tracking check is added: the overseer decides which tasks it delegates and where the executor starts, and a missing task in a requested worktree is reported by the executor.
 
 ### Fixed
+- **ace-overseer v0.28.1**: Confirm terminal environment setup before launch; preserve startup failures; delegate diagnosis and verify task/assignment ownership before accepting reports. Keep project-start confirmation with the coordinator.
+- **ace-lab v0.14.1**: Converge shared-runtime permissions from verified cached gem payload inventories, preserving unknown files and refusing unsafe paths.
 - **ace-herdr v0.6.1**: Bind real native Pi session paths to immutable session UUIDs for ordinary admission, sharing Inbox normalization and preserving process checks.
 
 - **ace-hitl v0.16.1**: Refuse proposal reconciliation checkpoints for another project.
