@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Preserve concrete child startup failures reported before project scope is
+  established, while continuing to reject unscoped or wrong-scope success.
+
 - Delegate bootstrap diagnosis and reproduction to workers as well as repair;
   a known symptom is enough to commission work. Reconcile project startup only
   after accepted worker completion and independent verification.

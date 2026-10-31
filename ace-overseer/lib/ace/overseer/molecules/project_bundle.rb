@@ -97,6 +97,13 @@ module Ace
           raise Ace::Overseer::Error, "project start output exceeded its limit" if result.oversized
           out, err, status = result.stdout, result.stderr, result.status
           report = JSON.parse(out)
+          # Startup can fail before it establishes project scope. Keep that
+          # concrete failure without admitting an unscoped report as ready.
+          if report.is_a?(Hash) && report["status"] == "blocked" &&
+              report.key?("scope") && report["scope"].nil? &&
+              report["message"].is_a?(String) && !report["message"].strip.empty?
+            raise Ace::Overseer::Error, report["message"]
+          end
           unless report.is_a?(Hash) && report["scope"] == "project" && report["status"].is_a?(String)
             raise Ace::Overseer::Error, "project start returned no project-scope report"
           end
