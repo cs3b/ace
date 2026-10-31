@@ -138,10 +138,11 @@ module Molecules
             assert_nil report["gemfile"]
           end
         end
-        toolchain.stub(:shell_setup, "installed-shell-setup") do
+        toolchain.stub(:child_environment, {"ACE_TOOLCHAIN" => "installed", "GEM_HOME" => "/installed/gems"}) do
           setup = Ace::Overseer::Molecules::ProjectBundle.shell_setup(@dir)
           assert_includes setup, "BUNDLE_APP_CONFIG"
-          assert setup.end_with?("installed-shell-setup")
+          assert_includes setup, "export ACE_TOOLCHAIN=installed"
+          assert_includes setup, "export GEM_HOME=/installed/gems"
         end
       end
     end

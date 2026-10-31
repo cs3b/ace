@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Transfer terminal runtime setup through a private script and require its
+  acknowledgement before launch, preventing canonical-input PATH truncation.
+
+- Bind unassigned readiness only to explicit planner allocations; reject missing
+  report identities and conflicting task/role references. Persist bootstrap
+  assignment and receipt identities in task metadata, using resolved task paths.
+
 - Preserve concrete child startup failures reported before project scope is
   established, while continuing to reject unscoped or wrong-scope success.
 

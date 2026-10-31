@@ -72,6 +72,10 @@ module Organisms
         FakePaneResult.new({"result" => {}})
       end
 
+      def pane_wait_output(_pane, pattern:, timeout_ms:)
+        FakePaneResult.new({"result" => {}})
+      end
+
       def agent_start(name:, kind:, pane:, timeout_ms:, args: [])
         @agent_started << {name: name, kind: kind, pane: pane, timeout_ms: timeout_ms, args: args}
         FakePaneResult.new({"status" => "ready"})
@@ -144,6 +148,21 @@ module Organisms
       # the prompt FOLLOWS agent_start: the session's first turn only
       # begins once the interactive agent is ready for input
       assert executor.agent_started.all? { |started| started[:pane] == prompt[:pane] }
+    end
+
+    def test_unconfirmed_runtime_setup_blocks_harness_and_cleans_handoff
+      executor = FakeExecutor.new(pane_current: {"result" => {"workspace_id" => "ws1"}})
+      executor.define_singleton_method(:pane_wait_output) do |_pane, **_args|
+        raise Ace::Herdr::WaitTimeoutError, "no environment acknowledgement"
+      end
+
+      report = orchestrator(executor).call
+
+      assert_equal "blocked", report["status"]
+      assert_match(/runtime setup was not confirmed/, report["message"])
+      assert_empty executor.agent_started
+      assert_empty executor.prompts
+      assert_empty Dir.glob(File.join(@root, ".ace-local/overseer/runtime-start/*.sh"))
     end
 
     def test_reused_session_initialization_is_confirmed_not_assumed
