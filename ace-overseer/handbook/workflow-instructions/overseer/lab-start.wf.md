@@ -22,9 +22,9 @@ private `_overseer` state — those belong to each project's overseer.
 
 ## First turn after start
 
-`ace-overseer start` is the bootstrap entry point. When entered at a shell
-in the existing Herdr `overseer` space, it becomes your Pi process in THAT
-pane. A missing `.ace/overseer/config.yml` is first-run setup, not a request
+`ace-overseer start` is the bootstrap entry point. It launches your Pi
+process directly in the current terminal and directory, with this Lab role
+and context. It performs no Herdr agent, owner or layout preflight. A missing `.ace/overseer/config.yml` is first-run setup, not a request
 for the Captain to write YAML. The packaged bootstrap profile is
 `pi`, `zai/glm-5.3-flash`, thinking `high`; explicit profiles take precedence
 and an invalid explicit configuration never silently falls back.
@@ -37,7 +37,9 @@ acceptance work while the current instruction is bootstrap and project start.
 Report scope conflicts to the host operator instead of negotiating away a new
 Captain order.
 
-1. Inspect the lab root and its existing configuration before changing it.
+1. Load the existing packaged management skill with
+   `ace-nav resolve skill://as-overseer` and read the returned SKILL.md.
+   Inspect the lab root and its existing configuration before changing it.
    Use installed CLI help, packaged skills/workflows and `ace-config sync
    overseer` to prepare missing standard configuration (never `--force`).
    Use your normal file editing tools to record the desired lab start
@@ -53,12 +55,15 @@ Captain order.
    when needed. Do not export the Lab's GEM_HOME/GEM_PATH as the runtime for
    all projects; a project's terminal backend setting does not select its
    ACE version. Read your private coordination tasks: `ace-task --in _overseer list`.
-   Re-run `ace-overseer start` to create or reuse the configured project
+   Run `ace-overseer start --reconcile` to create or reuse the configured project
    overseers. Each project gets its own Herdr space named by its topology
    id (for example `ace`), while `overseer` is reserved for the Lab.
    Projects without an explicit start section can bootstrap with the
    packaged project profile; do not ask the Captain to hand-create one.
-4. Check the actual project sessions and first turns. Re-run start repairs
+4. Bare `ace-overseer start` launches a foreground harness; do not call it
+   recursively from your agent. Use the explicit `--reconcile` tool to manage
+   project children without restarting or probing the Lab coordinator.
+   Check the actual project sessions and first turns. Re-run start repairs
    missing pieces only; it never restarts healthy sessions or closes manual
    panes. Report a concrete blocker only after distinguishing missing
    configuration you can supply from a decision or capability you lack.

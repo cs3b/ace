@@ -89,11 +89,7 @@ module Ace
           if @scope && plan["scope"] != @scope
             raise Ace::Overseer::Error, "configured start scope '#{plan["scope"]}' conflicts with requested '#{@scope}'; nested lab scopes are refused"
           end
-          if plan["scope"] == "lab"
-            foreground = foreground_start(plan, dry_run)
-            return foreground if foreground
-            return lab_start(plan, dry_run)
-          end
+          return lab_start(plan, dry_run) if plan["scope"] == "lab"
 
           root = @root_resolver.resolve(cwd: @cwd)
           label = Atoms::StartContract.session_label(root)
@@ -152,42 +148,41 @@ module Ace
           blocked("herdr failed while preparing the overseer session: #{e.message}")
         end
 
-        private
-
-        # The command entered in an existing Herdr terminal becomes the
-        # coordinator in that terminal. Sending `agent start` to our own
-        # busy terminal would wait on the CLI itself; the CLI execs this
-        # argv instead. Calls made by an existing agent only reconcile.
-        def foreground_start(plan, dry_run)
-          pane_id = @env["HERDR_PANE_ID"].to_s
-          return nil if pane_id.empty? || agent_state(pane_id)
-
-          pane = @control_surface.list_panes.find { |entry| entry[:id] == pane_id }
-          unless pane && !pane[:cwd].to_s.empty? &&
-              File.realpath(pane[:cwd]) == File.realpath(@cwd)
-            raise Ace::Overseer::Error, "the calling Herdr pane does not belong to the lab directory"
-          end
+        # Bare start is just the foreground harness entrypoint. It does
+        # not discover a terminal, inspect agents or analyze topology.
+        def bootstrap(dry_run: false)
+          plan = Atoms::StartContract.normalize(@config)
           unless plan["profile"]["harness"] == "pi"
-            raise Ace::Overseer::Error, "foreground lab start requires the configured pi harness"
+            raise Ace::Overseer::Error, "foreground start requires the configured pi harness"
           end
-
           root = File.realpath(@cwd)
-          label = Atoms::StartContract.session_label(root)
-          owner = owner_pane(label)
-          return nil if owner && owner["id"] != pane_id
-
-          guide = resolve_instructions(plan["instructions"], root)
+          source = plan["instructions"]
+          guide = if %w[wfi://overseer/lab-start wfi://overseer/start].include?(source)
+            filename = source.end_with?("lab-start") ? "lab-start.wf.md" : "start.wf.md"
+            File.join(Ace::Overseer.gem_root, "handbook/workflow-instructions/overseer", filename)
+          else
+            resolve_instructions(source, root)
+          end
           command = ["pi", "--model", plan["profile"]["model"]]
           thinking = plan["profile"]["thinking"]
           command += ["--thinking", thinking] if thinking
           command += ["--append-system-prompt", guide, FIRST_TURN_PROMPT]
-          @executor.pane_rename(pane_id, label) unless dry_run
-          {"status" => dry_run ? "dry_run" : "foreground", "scope" => "lab",
-           "root" => root, "label" => label, "workspace" => pane[:workspace],
-           "pane" => pane_id, "agent" => AGENT_NAME, "profile" => plan["profile_name"],
-           "instructions" => {"source" => plan["instructions"], "path" => guide},
-           "command" => command, "message" => "start the lab coordinator in the calling terminal"}
+          {"status" => dry_run ? "dry_run" : "foreground", "scope" => plan["scope"],
+            "root" => root, "profile" => plan["profile_name"],
+            "instructions" => {"source" => source, "path" => guide},
+            "command" => command, "message" => "launch the coordinator in the current terminal"}
         end
+
+        # Explicit tool available to the running Lab agent. This operation
+        # manages configured project children, never the coordinator itself.
+        def reconcile(dry_run: false)
+          plan = Atoms::StartContract.normalize(@config)
+          raise Ace::Overseer::Error, "project reconciliation requires lab scope" unless plan["scope"] == "lab"
+
+          lab_start(plan, dry_run, reconcile: true)
+        end
+
+        private
 
         # --- lab scope (task 8xs.t.pu0.a) -----------------------------------
         # The lab root is its own coordination directory with its own
@@ -204,7 +199,7 @@ module Ace
         # healthy projects continue; a repeated start repairs only what
         # is missing and never restarts healthy sessions or closes
         # manual panes.
-        def lab_start(plan, dry_run)
+        def lab_start(plan, dry_run, reconcile: false)
           lab_root = File.realpath(@cwd)
           base = {"status" => nil, "scope" => "lab", "root" => lab_root,
                   "label" => Atoms::StartContract.session_label(lab_root),
@@ -241,31 +236,37 @@ module Ace
                 "#{projects.size} project space(s)/overseer(s) would start; nothing was created")
           end
 
-          workspace = lab_workspace
-          base["workspace"] = workspace
+          if reconcile
+            base["coordinator_managed"] = false
+            session = {}
+            lab_ready = true
+          else
+            workspace = lab_workspace
+            base["workspace"] = workspace
 
-          # The lab's OWN overseer session (the wfi://overseer/lab-start
-          # guide assumes it): booted or reused in the lab space before
-          # any project, so the lab-start instructions reach an agent.
-          session = boot_lab_session(workspace, plan, base["instructions"]["path"], lab_root)
-          if session["status"] == "blocked"
-            return base.merge("status" => "blocked", "pane" => session["pane"],
-              "message" => session["message"])
+            # The lab's OWN overseer session (the wfi://overseer/lab-start
+            # guide assumes it): booted or reused in the lab space before
+            # any project, so the lab-start instructions reach an agent.
+            session = boot_lab_session(workspace, plan, base["instructions"]["path"], lab_root)
+            if session["status"] == "blocked"
+              return base.merge("status" => "blocked", "pane" => session["pane"],
+                "message" => session["message"])
+            end
+
+            base["pane"] = session["pane"]
+            base["replaced_pane"] = session["replaced_pane"]
+            base["prompt_failed"] = !session["prompt_failed"].nil? && session["prompt_failed"]
+
+            # Readiness REQUIRES a confirmed first turn (review R7): a
+            # started/reused session whose first-turn delivery failed or
+            # stays unconfirmed is NOT ready, whatever its process state.
+            lab_ready = !session["prompt_failed"]
           end
-
-          base["pane"] = session["pane"]
-          base["replaced_pane"] = session["replaced_pane"]
-          base["prompt_failed"] = !session["prompt_failed"].nil? && session["prompt_failed"]
-
-          # Readiness REQUIRES a confirmed first turn (review R7): a
-          # started/reused session whose first-turn delivery failed or
-          # stays unconfirmed is NOT ready, whatever its process state.
-          lab_ready = !session["prompt_failed"]
 
           # An empty configured list is a valid idle lab: the lab
           # overseer itself still runs (and must be initialized).
           if projects.empty?
-            message = "no projects configured; the lab overseer is idle"
+            message = reconcile ? "no project children configured" : "no projects configured; the lab overseer is idle"
             message += "; #{session["message"]}" if session["message"]
             return base.merge("status" => lab_ready ? "ready" : "partial",
               "ready" => lab_ready, "project_count" => 0, "message" => message)

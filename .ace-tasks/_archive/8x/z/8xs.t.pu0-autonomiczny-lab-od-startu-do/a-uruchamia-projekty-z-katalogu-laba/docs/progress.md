@@ -118,3 +118,18 @@ over stored tasks/plans and establishes startup plus commissioned project
 overseers before unrelated old auth/publication/full-acceptance backlog. The
 generic project first-turn prompt is unchanged. This is instruction content,
 not a new scheduler or configuration mechanism.
+
+Captain correction: the first bootstrap interpretation still queried native
+layout/agent/cwd before exec. Bare start must only establish coordinator role
+and launch the harness in the current terminal/cwd, without Herdr preflight
+or mandatory skill projection. Reconciliation becomes an explicit agent tool
+(`start --reconcile`); its child operations must not re-bootstrap the Lab.
+This supersedes the earlier pane-environment gating in candidate pre.1.
+
+Pre.2 targeted verification: 28 tests, 134 assertions, 0 failures/errors.
+The actual bare CLI subprocess execs a fake Pi in the same PID/cwd with the
+approved profile and packaged guide, while all HERDR environment is removed
+and a fake herdr command records zero invocations. No skill sync/init or layout
+preflight occurs. Explicit reconcile tests prove only project children are
+started and no Lab pane/agent is probed or restarted. Full regression follows
+on this exact release candidate; installed acceptance is still a host gate.

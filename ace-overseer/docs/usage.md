@@ -33,8 +33,8 @@ authority execution model. tmux and Herdr are transports, never state owners.
 ## `ace-overseer start`
 
 Run `ace-overseer start` at a shell in the Lab's existing Herdr `overseer`
-space. The command becomes the Lab's Pi agent in that same pane; it creates
-no additional Lab pane or space. The agent receives the packaged Lab guide
+space. The command becomes the Lab's Pi agent directly in that same terminal
+and cwd, without any Herdr environment, agent, owner or layout preflight. The agent receives the packaged Lab guide
 and a first-turn prompt to configure itself and the commissioned projects
 using installed CLI, skills and normal configuration editing.
 
@@ -60,6 +60,7 @@ profiles:
 |--------|---------|
 | `--dry-run` | Show the start plan; no session, no sync, no model call |
 | `--format` | `table` (default) or `json` |
+| `--reconcile` | Explicitly reconcile project children after the agent configures the Lab; never restart the coordinator |
 | `--scope` | Explicit `lab` or `project` role; an unconfigured bare start bootstraps the Lab |
 
 Behavior:
@@ -117,7 +118,12 @@ terminal backend and has no meaning as an ACE gem-version selector.
 ### Lab scope (8xs.t.pu0.a)
 
 `scope: lab` in the LAB coordination directory's own `.ace/overseer/config.yml`
-starts the whole lab from one external entry point:
+selects the Lab role. Bare `start` launches the foreground harness;
+`start --reconcile` is the explicit tool the agent uses after configuring its
+projects. Reconciliation manages project children without restarting or probing
+the Lab coordinator. The older full orchestration operation remains available
+explicitly through `start --scope lab`:
+
 
 - The project list and CANONICAL locations come from the existing ace-lab
   topology (`topology.projects` id/path, read internally — the public
