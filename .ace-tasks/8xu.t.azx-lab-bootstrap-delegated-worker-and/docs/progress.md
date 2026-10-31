@@ -138,3 +138,42 @@ independently confirms all three SHA-256 values in release-candidate.json.
 Do not rerun publisher to verify. Installed candidate can now be selected
 after fresh migration preflight. SSH currently requires Tailscale reauthentication;
 no cutover has been executed.
+
+## Live migration completed (publication verified)
+
+Canonical ACE moved to /lab/ace; two worktree HEADs preserved. Forty-nine
+externally shared loose Git objects were isolated with hash verification before
+ownership changes. Tree ownership is mo:mo, named/default ACLs removed and
+directory SGID cleared. Historical transport evidence preserved root-only;
+orphan replies remain unresolved.
+
+Migration verification initially refused because root git status atomically
+recreated exactly two indexes as root:root0664. Independent inspection and
+backup headers identified both; scoped recovery restored mo:mo0660, verified
+all ownership/modes/HEADs and late-frame checks, then resumed only remaining
+steps. Do not rerun apply. Git verification must use mo/GIT_OPTIONAL_LOCKS=0.
+
+Herdr service now selects the published ffa64e closure; mo removed from
+lab-control and fresh service groups verified. Completion receipt:
+/var/lib/lab/backups/8xu.t.azx/ace-cutover-complete.json. No live agent cycle yet.
+
+TS-MONO-001 setup refused missing authoritative full installation manifest;
+12 historical packages lack verified artifact build-source SHAs. Selected
+versions inventory exists locally, but is not substituted for provenance.
+No test case executed; this remains an explicit verification limitation.
+
+## Installed readiness and first coordinator turn
+
+ace-lab install completed ok:true and verify ready:true with58pass/0fail.
+All12 projected wake files independently match published ffa64e runtime and
+are mo:mo. Removed obsolete coordinator self-project entry/grant after
+installer refused foreign-grant mismatch; preserved authorization backup.
+Set UTF-8 locale explicitly (cleanenv previously caused US-ASCII error).
+Coordinator domain instructions and mise selection committed649daed locally;
+unrelated README/Gemfile/vendor WIP preserved.
+
+Bare installed ace-overseer start launched Pi in existing w3:p1 on
+2026-10-31T12:50:02Z. Session:
+/home/mo/.pi/agent/sessions/--home-mo-Labs-overseer-lab--/2026-10-31T12-50-02-003Z_01a19202-8892-7af3-b488-e95a67f9aa68.jsonl
+Actual first turn recognized installed runtime and historical private tasks.
+Delegation/eyes/worker result acceptance still in progress, not yet claimed.
