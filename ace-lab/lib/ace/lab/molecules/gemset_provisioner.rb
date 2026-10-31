@@ -3,6 +3,7 @@
 require_relative "../errors"
 require "open3"
 require "fileutils"
+require_relative "gem_payload_permissions"
 
 module Ace
   module Lab
@@ -210,7 +211,12 @@ module Ace
           closure = converge_closure(gem, gem_home)
           return report.merge("status" => "failed", "message" => closure) if closure.is_a?(String)
           report["closure"] = closure
+          permissions = GemPayloadPermissions.new(gem_home: gem_home, dry_run: @dry_run,
+            privileged: @privileged.call).call(name: gem["name"], version: gem["version"])
+          report["permissions"] = permissions
           report
+        rescue GemPayloadPermissions::Error => e
+          report.merge("status" => "failed", "message" => e.message)
         end
 
         # @return [Array<Hash>, String] per-version removal reports or a
