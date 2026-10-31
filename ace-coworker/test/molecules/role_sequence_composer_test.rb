@@ -26,6 +26,18 @@ module Ace
             gem_sequences_dir: SHIPPED_SEQUENCES)
         end
 
+        def test_shipped_bootstrap_roles_compose_distinct_idempotent_operational_assignments
+          composer = RoleSequenceComposer.new(project_root: @root,
+            gem_sequences_dir: SHIPPED_SEQUENCES)
+          roles = %w[bootstrap-worker bootstrap-verifier]
+          entries = composer.call(task: "8xu.t.azx", roles: roles)
+          assert_equal roles, entries.map { |entry| entry["role"] }
+          assert_equal 2, entries.map { |entry| entry["assignment"] }.uniq.size
+          repeated = composer.call(task: "8xu.t.azx", roles: roles)
+          assert_equal entries.map { |entry| entry["assignment"] }, repeated.map { |entry| entry["assignment"] }
+          assert repeated.all? { |entry| entry["disposition"] == "existing" }
+        end
+
         def teardown
           FileUtils.remove_entry(@root)
           super

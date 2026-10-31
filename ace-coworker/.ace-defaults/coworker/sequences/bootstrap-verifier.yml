@@ -1,0 +1,11 @@
+---
+role: bootstrap-verifier
+description: "Independently verify the prepared canonical project without repairing it for task {{task}}"
+outcome: "Task {{task}} has an evidence-backed bootstrap-verifier result for its exact canonical target."
+steps:
+  - name: bootstrap-verifier
+    workflow: wfi://coworker/bootstrap-verifier
+    instructions:
+      - "Independently verify the prepared canonical project without repairing it for task {{task}} under the scoped bootstrap role workflow."
+      - "Record actual checks, canonical target, operational runtime paths/versions and failures in the task evidence."
+      - "Fail the assignment on missing scope, missing required access or failed acceptance; never force success."

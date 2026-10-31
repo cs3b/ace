@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require "json"
-require "open3"
+require "ace/herdr/molecules/bounded_process"
 require "shellwords"
 require "ace/support/cli/toolchain"
 
@@ -53,7 +53,7 @@ module Ace
             (known + %w[PATH]).map { |key| "BUNDLER_ORIG_#{key}" } +
             %w[HERDR_PANE HERDR_TAB HERDR_PANE_ID HERDR_TAB_ID]
           names.to_h { |name| [name, nil] }.merge(
-            "BUNDLE_GEMFILE" => File.join(root, "Gemfile"),
+            "BUNDLE_GEMFILE" => File.file?(File.join(root, "Gemfile")) ? File.join(root, "Gemfile") : nil,
             "PATH" => [File.join(root, "bin"), env.fetch("PATH", "/usr/bin:/bin")].join(File::PATH_SEPARATOR)
           )
         end
@@ -74,6 +74,10 @@ module Ace
             assigned.map { |name, value| "#{name}=#{Shellwords.escape(value)}" }.join(" ")
         end
 
+        def initialize(timeout_s: 240)
+          @timeout_s = timeout_s
+        end
+
         def call(root:, workspace:, env: ENV)
           installed = Ace::Support::Cli::Toolchain.installed?
           unless installed
@@ -87,7 +91,11 @@ module Ace
           command = File.executable?(binary) ? [binary] : ["bundle", "exec", "ace-overseer"]
           command += ["start", "--scope", "project", "--format", "json"]
           child_env = self.class.environment(root, env: env).merge("HERDR_WORKSPACE_ID" => workspace)
-          out, err, status = Open3.capture3(child_env, *command, chdir: root)
+          result = Ace::Herdr::Molecules::BoundedProcess.call(command,
+            environment: ENV.to_h.merge(child_env).compact, chdir: root,
+            timeout_s: @timeout_s, output_limit: 1_048_576)
+          raise Ace::Overseer::Error, "project start output exceeded its limit" if result.oversized
+          out, err, status = result.stdout, result.stderr, result.status
           report = JSON.parse(out)
           unless report.is_a?(Hash) && report["scope"] == "project" && report["status"].is_a?(String)
             raise Ace::Overseer::Error, "project start returned no project-scope report"
@@ -96,6 +104,10 @@ module Ace
             raise Ace::Overseer::Error, "project start exited #{status.exitstatus} despite a ready report"
           end
           report
+        rescue Timeout::Error
+          raise Ace::Overseer::Error, "project start timed out after #{@timeout_s}s; inspect the existing session before retrying"
+        rescue Ace::Herdr::Molecules::BoundedProcess::PostLaunchError => e
+          raise Ace::Overseer::Error, "project start outcome is uncertain: #{e.message}"
         rescue JSON::ParserError
           raise Ace::Overseer::Error, "project bundle start returned invalid JSON#{": " + err.strip[0, 300] unless err.to_s.empty?}"
         rescue SystemCallError => e

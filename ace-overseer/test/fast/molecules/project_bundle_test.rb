@@ -145,6 +145,21 @@ module Molecules
       end
     end
 
+    def test_child_timeout_is_bounded_and_reports_uncertain_session_effects
+      root = project("hung child", "4.0.0")
+      File.write(File.join(root, "bin/ace-overseer"), "#!/usr/bin/env ruby\nsleep 60\n")
+      error = assert_raises(Ace::Overseer::Error) do
+        Ace::Overseer::Molecules::ProjectBundle.new(timeout_s: 0.1).call(root: root, workspace: "w-hung")
+      end
+      assert_match(/timed out/, error.message)
+      assert_match(/existing session/, error.message)
+    end
+
+    def test_bundleless_auto_shell_does_not_export_nonexistent_gemfile
+      environment = Ace::Overseer::Molecules::ProjectBundle.environment(@dir)
+      assert_nil environment["BUNDLE_GEMFILE"]
+    end
+
     def test_child_binstub_can_choose_its_own_explicit_toolchain_policy
       root = project("explicit child", "4.0.0")
       binary = File.join(root, "bin/ace-overseer")
@@ -173,6 +188,8 @@ module Molecules
 
     def test_new_pane_shell_uses_its_project_bundle_without_parent_gem_exports
       root = File.join(@dir, "root with spaces")
+      FileUtils.mkdir_p(root)
+      File.write(File.join(root, "Gemfile"), "")
       setup = Ace::Overseer::Molecules::ProjectBundle.shell_setup(root)
       script = 'puts ENV.fetch("BUNDLE_GEMFILE"); puts ENV.fetch("PATH").split(File::PATH_SEPARATOR).first; puts ENV.key?("GEM_HOME")'
       command = setup + "; exec " + Shellwords.join([RbConfig.ruby, "-e", script])

@@ -587,3 +587,18 @@ does not substitute for provider approval. Accounts and credentials come from
 deployment, independently of the role preset; no identity switching or token
 borrowing is performed by coworker. Missing permission or uncertain publication
 blocks successful integration handoff.
+
+## Operational bootstrap roles
+
+`bootstrap-worker` and `bootstrap-verifier` prepare and independently verify
+a canonical project named explicitly in a lab task. Their evidence and
+assignments remain in the lab task worktree; only the commissioned target
+configuration may be accessed outside it. They preserve installed runtime
+selection and session-scoped access. They never edit the overseer private
+tree or start the project's overseer. Ordinary worker/reviewer roles retain
+their product-worktree boundaries.
+
+Prepare with `ace-coworker prepare --task <ref> --roles
+bootstrap-worker,bootstrap-verifier --to <configured-owner>`. Preparation and
+`ace-coworker start` do not launch a model process; the coordinator must launch
+a separate agent with the returned brief and confirm its first turn.
