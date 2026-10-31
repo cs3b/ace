@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Delegate bootstrap diagnosis and reproduction to workers as well as repair;
+  a known symptom is enough to commission work. Reconcile project startup only
+  after accepted worker completion and independent verification.
+
 ## [0.28.0] - 2026-10-31
 
 ### Fixed
