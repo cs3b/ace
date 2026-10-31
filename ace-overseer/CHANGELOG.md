@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- `ace-overseer start` bootstraps missing start settings and becomes the Lab
+  coordinator in the calling Herdr pane instead of creating an extra Lab
+  terminal. The coordinator can configure itself using the packaged guide.
+- Lab and project workspaces use `overseer` and topology ids such as `ace`,
+  independently of session ownership labels. Project startup executes each
+  project's own Gemfile/lock and binstub in a separate process; project panes
+  use their own bundle instead of inheriting the Lab's gem runtime.
+
 ## [0.27.0] - 2026-10-30
 
 ### Fixed (review rounds 3/3b)

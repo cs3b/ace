@@ -54,3 +54,38 @@ Host Lab startup failed before creating any overseer. Native `workspace list` re
 Regression reproduced with the live workspace schema: `bin/ace-test ace-overseer test/fast/organisms/lab_start_test.rb:250` -> 1 test, 0 assertions, 1 error, exact TypeError at line 269. Baseline lab tests before regression: 17 tests, 90 assertions, 0 failures/errors.
 
 Fix uses existing ace-herdr ControlSurface list normalization for workspaces and panes; fakes now emit native collection envelopes and native row field names. Independent review, publication, and deployed verification remain required. Bootstrap without manual config and workspace naming are separate Captain-requested behavior gaps; this parser fix does not claim them delivered.
+
+
+## 2026-10-31 — first-run bootstrap correction (Captain-directed)
+
+The published start contract required handwritten start YAML before the agent
+that should configure it could run. It also created a separate lab pane and
+used the Lab process's gem graph for child projects. The correction in this
+commit treats absent start configuration as first-run setup with the approved
+Pi/ZAI flash/high profile, execs the Lab agent in the existing calling Herdr
+pane, reserves workspace `overseer`, and names child workspaces by topology id.
+Explicit malformed configuration still refuses without model fallback.
+
+Child startup runs the project's own binstub/bundle in a separate process with
+its own Gemfile and lock. Parent Bundler/Ruby injection is cleared and each
+new project pane is bound to its own Gemfile/bin. There is no global GEM_HOME
+switch and no import of child gems into the Lab process.
+
+Executed verification before review: `bin/ace-test ace-overseer all` — 444 tests,
+1990 assertions, 0 failures, 0 errors, 1 existing skip. New real-process tests
+prove foreground exec keeps the CLI PID and two locally installed fixture-gem
+versions load independently through two project-local lockfiles. The new
+bootstrap atom tests executed on baseline fc72f8fea fail with 2 errors
+(missing bootstrap method and explicit-start refusal), then pass on the fix.
+Lint auto-fix completed with exit 0; 95 style warnings remain in the touched
+files (including existing code); they are not a correctness verdict.
+
+Status remains in-progress: independent review, publication and the real
+Herdr foreground/self-configuration/project-start exercise are required before
+acceptance. Generic code belongs to ace-overseer; host domain configuration
+and root deployment stay with the lab-config operator.
+
+Additional final focused check: project_bundle_test — 3 tests, 13 assertions,
+0 failures/errors, including real shell setup with a path containing spaces.
+`ace-task doctor` reports 529 archive warnings on both baseline fc72f8fea and
+this candidate (879 tasks / 34 folders); no task metadata was changed here.

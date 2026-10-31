@@ -1,7 +1,7 @@
 ---
 name: overseer-lab-start
 description: Standing instructions for a started LAB overseer session (aggregate project readiness, escalate across projects, delegate to project overseers)
-allowed-tools: Bash, Read
+allowed-tools: Bash, Read, Write, Edit
 doc-type: workflow
 title: Lab Overseer Start Guide
 purpose: Define the lab overseer's coordination role across projects — readiness aggregation, cross-project escalation, delegation to project overseers — without taking over any project's tasks or private state.
@@ -22,13 +22,42 @@ private `_overseer` state — those belong to each project's overseer.
 
 ## First turn after start
 
-1. Read your own coordination tasks: `ace-task --in _overseer list`.
-2. Read per-project readiness from the start report and the state owners
-   (`ace-overseer status`); a project reported `blocked` is an escalation
-   with its concrete reason, never something to work around by starting a
-   duplicate session or doing the project's work yourself.
-3. Re-run `ace-overseer start` to repair missing pieces only — it reuses
-   healthy sessions and never restarts them or closes manual panes.
+`ace-overseer start` is the bootstrap entry point. When entered at a shell
+in the existing Herdr `overseer` space, it becomes your Pi process in THAT
+pane. A missing `.ace/overseer/config.yml` is first-run setup, not a request
+for the Captain to write YAML. The packaged bootstrap profile is
+`pi`, `zai/glm-5.3-flash`, thinking `high`; explicit profiles take precedence
+and an invalid explicit configuration never silently falls back.
+
+1. Inspect the lab root and its existing configuration before changing it.
+   Use installed CLI help, packaged skills/workflows and `ace-config sync
+   overseer` to prepare missing standard configuration (never `--force`).
+   Use your normal file editing tools to record the desired lab start
+   settings and topology in their existing `.ace` configuration files.
+   Preserve existing settings, paths, credentials and project work.
+2. Read the lab topology in `.ace/lab/config.yml`. Configure commissioned
+   project paths from actual repositories and the Captain's brief; never
+   guess a path from a project name. If no projects have been commissioned,
+   an empty `topology.projects` list is valid. Missing configuration is
+   setup work you own. Ambiguous project choices require a Captain decision.
+3. Each project owns its Gemfile/lock, local bundle installation and
+   binstubs. Prepare its published-gem bundle using ordinary Bundler commands
+   when needed. Do not export the Lab's GEM_HOME/GEM_PATH as the runtime for
+   all projects; a project's terminal backend setting does not select its
+   ACE version. Read your private coordination tasks: `ace-task --in _overseer list`.
+   Re-run `ace-overseer start` to create or reuse the configured project
+   overseers. Each project gets its own Herdr space named by its topology
+   id (for example `ace`), while `overseer` is reserved for the Lab.
+   Projects without an explicit start section can bootstrap with the
+   packaged project profile; do not ask the Captain to hand-create one.
+4. Check the actual project sessions and first turns. Re-run start repairs
+   missing pieces only; it never restarts healthy sessions or closes manual
+   panes. Report a concrete blocker only after distinguishing missing
+   configuration you can supply from a decision or capability you lack.
+5. Arm `/eyes` for standing observation and remain idle when no commissioned
+   coordination work remains. Do not expand startup into auth, publishing
+   or full release acceptance unless it is commissioned or actually blocks
+   the current start.
 
 ## Delegation and escalation
 

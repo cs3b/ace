@@ -3,14 +3,9 @@
 module Ace
   module Overseer
     module Atoms
-      # Pure validation and normalization of the `start` contract
-      # (task 8xs.t.pu0.1): the `.ace/overseer/config.yml` cascade must
-      # carry an EXPLICIT start section — `scope: project|lab`, a
-      # `profile` reference into the same document's `profiles` map and
-      # an `instructions` source (wfi:// or an absolute file path).
-      # Nothing is guessed: a missing or ambiguous section is an error
-      # BEFORE any session is created, and no interim default model is
-      # applied anywhere. Pure — no IO, value-free messages.
+      # Validate explicit start configuration, or select the packaged
+      # first-run profile when no start section exists. A malformed explicit
+      # configuration never falls back to another model or harness.
       class StartContract
         SCOPES = %w[project lab].freeze
         SECTION_KEYS = %w[scope profile instructions].freeze
@@ -23,7 +18,25 @@ module Ace
         #   thinking:}, instructions:}
         # @raise [Ace::Overseer::Error] missing/ambiguous/invalid start
         #   configuration
+        BOOTSTRAP_PROFILE = {"harness" => "pi", "model" => "zai/glm-5.3-flash",
+                             "thinking" => "high"}.freeze
+
+        # A missing start configuration is first-run setup, not a reason to
+        # prevent the coordinator that owns setup from starting. Explicit
+        # configurations are still validated without fallback.
+        def self.bootstrap(config, scope: "lab")
+          return config if config.key?("start")
+
+          profiles = config.fetch("profiles", {})
+          raise Ace::Overseer::Error, "profiles must be a mapping" unless profiles.is_a?(Hash)
+
+          config.merge("start" => {"scope" => scope, "profile" => "overseer-default",
+                                   "instructions" => "wfi://overseer/#{(scope == "lab") ? "lab-start" : "start"}"},
+            "profiles" => {"overseer-default" => BOOTSTRAP_PROFILE}.merge(profiles))
+        end
+
         def self.normalize(config)
+          config = bootstrap(config)
           start = config["start"]
           unless start.is_a?(Hash)
             raise Ace::Overseer::Error,
@@ -36,13 +49,13 @@ module Ace
           unless unknown.empty?
             raise Ace::Overseer::Error,
               "start section has unknown key '#{unknown.sort.first}' " \
-              "(allowed: #{SECTION_KEYS.join(', ')})"
+              "(allowed: #{SECTION_KEYS.join(", ")})"
           end
 
           scope = required(start, "scope")
           unless SCOPES.include?(scope)
             raise Ace::Overseer::Error,
-              "start scope must be one of: #{SCOPES.join(', ')} (got '#{scope}')"
+              "start scope must be one of: #{SCOPES.join(", ")} (got '#{scope}')"
           end
 
           profile_name = required(start, "profile")
@@ -50,7 +63,7 @@ module Ace
 
           instructions = required(start, "instructions")
           unless INSTRUCTION_PROTOCOLS.any? { |prefix| instructions.start_with?(prefix) } ||
-            instructions.start_with?("/")
+              instructions.start_with?("/")
             raise Ace::Overseer::Error,
               "start instructions must be a wfi:// (or prompt://, tmpl://) " \
                 "source or an absolute file path"
@@ -81,7 +94,7 @@ module Ace
           unless unknown.empty?
             raise Ace::Overseer::Error,
               "profile '#{profile_name}' has unknown key '#{unknown.sort.first}' " \
-                "(allowed: #{PROFILE_KEYS.join(', ')})"
+                "(allowed: #{PROFILE_KEYS.join(", ")})"
           end
 
           harness = required_value(raw, "harness", "profile '#{profile_name}'")

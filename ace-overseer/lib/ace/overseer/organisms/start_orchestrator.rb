@@ -2,6 +2,7 @@
 
 require_relative "../atoms/start_contract"
 require_relative "../molecules/project_root_resolver"
+require_relative "../molecules/project_bundle"
 require "ace/herdr"
 require "ace/support/cli/toolchain"
 require "json"
@@ -9,13 +10,10 @@ require "json"
 module Ace
   module Overseer
     module Organisms
-      # `ace-overseer start` (task 8xs.t.pu0.1): boots or reuses the
-      # PROJECT overseer session from the directory's own configuration
-      # — an explicit `start` section (scope/profile/instructions) in
-      # the `.ace/overseer/config.yml` cascade, a profile from the same
-      # document's `profiles` map, and the guide resolved through the
-      # normal handbook override chain. No interim defaults: a missing
-      # or ambiguous configuration is a blocked start, never a guess.
+      # `ace-overseer start` boots the Lab in the calling Herdr terminal,
+      # or starts/reuses configured project sessions. Missing start config
+      # uses the packaged bootstrap profile so the coordinator can configure
+      # itself. Explicit malformed configuration remains a blocked start.
       #
       # Session identity is Herdr's: the tab/pane label
       # `overseer-<project>` derives from the canonical repository root
@@ -34,12 +32,9 @@ module Ace
         # turn must BEGIN within this window (herdr enforces its own
         # 5s activity observation inside the wait).
         FIRST_TURN_TIMEOUT_MS = 120_000
-        # The lab's own herdr space title. Namespaced ("lab-overseer",
-        # never "overseer-…") so it can never collide with a session or
-        # per-project space title derived from a directory name — e.g. a
-        # project rooted at a directory literally named "lab" owns the
-        # session/space title "overseer-lab".
-        LAB_SPACE_TITLE = "lab-overseer"
+        # Workspace display names are separate from session identities.
+        # `overseer` belongs to the Lab; project spaces use topology ids.
+        LAB_SPACE_TITLE = "overseer"
         # `herdr agent start` success only means the interactive agent is
         # READY for input — the session begins its first turn when this
         # prompt arrives, exactly as the standing instructions' "First
@@ -69,7 +64,7 @@ module Ace
         #   lazily, only when a session actually boots.
         # @param cwd [String] invocation directory
         def initialize(config: nil, executor: nil, root_resolver: nil, nav_runner: nil,
-          workspace: nil, workspace_factory: nil, cwd: Dir.pwd)
+          workspace: nil, workspace_factory: nil, cwd: Dir.pwd, env: ENV, scope: nil, project_runner: nil)
           @config = config || Ace::Overseer.config
           @executor = executor || Ace::Herdr::Molecules::HerdrExecutor.new
           @control_surface = Ace::Herdr::Organisms::ControlSurface.new(executor: @executor)
@@ -78,6 +73,9 @@ module Ace
           @workspace = workspace
           @workspace_factory = workspace_factory
           @cwd = cwd
+          @env = env
+          @scope = scope
+          @project_runner = project_runner || Molecules::ProjectBundle.new
         end
 
         # @param dry_run [Boolean] report the plan without creating a
@@ -87,16 +85,25 @@ module Ace
         #   replaced_pane, message}; scope lab additionally carries
         #   {projects: [{id, path, status, ...}], project_count, ready}
         def call(dry_run: false)
-          plan = Atoms::StartContract.normalize(@config)
-          return lab_start(plan, dry_run) if plan["scope"] == "lab"
+          plan = Atoms::StartContract.normalize(Atoms::StartContract.bootstrap(@config, scope: @scope || "lab"))
+          if @scope && plan["scope"] != @scope
+            raise Ace::Overseer::Error, "configured start scope '#{plan["scope"]}' conflicts with requested '#{@scope}'; nested lab scopes are refused"
+          end
+          if plan["scope"] == "lab"
+            foreground = foreground_start(plan, dry_run)
+            return foreground if foreground
+            return lab_start(plan, dry_run)
+          end
 
           root = @root_resolver.resolve(cwd: @cwd)
           label = Atoms::StartContract.session_label(root)
           instructions_path = resolve_instructions(plan["instructions"], root)
 
           report = base_report(plan, root, label, instructions_path)
-          return report.merge("status" => "dry_run",
-            "message" => "dry-run: session would start with this plan; nothing was created") if dry_run
+          if dry_run
+            return report.merge("status" => "dry_run",
+              "message" => "dry-run: session would start with this plan; nothing was created")
+          end
 
           owner = owner_pane(label)
           if owner
@@ -147,6 +154,41 @@ module Ace
 
         private
 
+        # The command entered in an existing Herdr terminal becomes the
+        # coordinator in that terminal. Sending `agent start` to our own
+        # busy terminal would wait on the CLI itself; the CLI execs this
+        # argv instead. Calls made by an existing agent only reconcile.
+        def foreground_start(plan, dry_run)
+          pane_id = @env["HERDR_PANE"].to_s
+          return nil if pane_id.empty? || agent_state(pane_id)
+
+          pane = @control_surface.list_panes.find { |entry| entry[:id] == pane_id }
+          unless pane && !pane[:cwd].to_s.empty? &&
+              File.realpath(pane[:cwd]) == File.realpath(@cwd)
+            raise Ace::Overseer::Error, "the calling Herdr pane does not belong to the lab directory"
+          end
+          unless plan["profile"]["harness"] == "pi"
+            raise Ace::Overseer::Error, "foreground lab start requires the configured pi harness"
+          end
+
+          root = File.realpath(@cwd)
+          label = Atoms::StartContract.session_label(root)
+          owner = owner_pane(label)
+          return nil if owner && owner["id"] != pane_id
+
+          guide = resolve_instructions(plan["instructions"], root)
+          command = ["pi", "--model", plan["profile"]["model"]]
+          thinking = plan["profile"]["thinking"]
+          command += ["--thinking", thinking] if thinking
+          command += ["--append-system-prompt", guide, FIRST_TURN_PROMPT]
+          @executor.pane_rename(pane_id, label) unless dry_run
+          {"status" => dry_run ? "dry_run" : "foreground", "scope" => "lab",
+           "root" => root, "label" => label, "workspace" => pane[:workspace],
+           "pane" => pane_id, "agent" => AGENT_NAME, "profile" => plan["profile_name"],
+           "instructions" => {"source" => plan["instructions"], "path" => guide},
+           "command" => command, "message" => "start the lab coordinator in the calling terminal"}
+        end
+
         # --- lab scope (task 8xs.t.pu0.a) -----------------------------------
         # The lab root is its own coordination directory with its own
         # _overseer. The project list and canonical locations come from
@@ -165,12 +207,12 @@ module Ace
         def lab_start(plan, dry_run)
           lab_root = File.realpath(@cwd)
           base = {"status" => nil, "scope" => "lab", "root" => lab_root,
-            "label" => Atoms::StartContract.session_label(lab_root),
-            "workspace" => nil, "pane" => nil, "agent" => AGENT_NAME,
-            "profile" => plan["profile_name"],
-            "instructions" => {"source" => plan["instructions"], "path" => nil},
-            "replaced_pane" => nil, "projects" => [], "project_count" => 0,
-            "ready" => nil, "message" => nil}
+                  "label" => Atoms::StartContract.session_label(lab_root),
+                  "workspace" => nil, "pane" => nil, "agent" => AGENT_NAME,
+                  "profile" => plan["profile_name"],
+                  "instructions" => {"source" => plan["instructions"], "path" => nil},
+                  "replaced_pane" => nil, "projects" => [], "project_count" => 0,
+                  "ready" => nil, "message" => nil}
           base["instructions"]["path"] = resolve_instructions(plan["instructions"], lab_root)
 
           projects = begin
@@ -180,18 +222,24 @@ module Ace
               "message" => "lab topology could not be read: #{e.message}")
           end
 
-          if projects.any? { |project| project["path"].to_s.empty? == false &&
-            File.directory?(project["path"]) && File.realpath(project["path"]) == lab_root }
+          if projects.any? { |project|
+            project["path"].to_s.empty? == false &&
+                File.directory?(project["path"]) && File.realpath(project["path"]) == lab_root
+          }
             return base.merge("status" => "blocked",
               "message" => "the lab root '#{lab_root}' is itself declared as a project; " \
                 "conflicting lab/project roles are refused")
           end
 
-          return base.merge("status" => "dry_run", "project_count" => projects.size,
-            "projects" => projects.map { |project| {"id" => project["id"], "path" => project["path"],
-              "status" => "would_start"}},
-            "message" => "dry-run: the lab space with the lab overseer session and " \
-              "#{projects.size} project space(s)/overseer(s) would start; nothing was created") if dry_run
+          if dry_run
+            return base.merge("status" => "dry_run", "project_count" => projects.size,
+              "projects" => projects.map { |project|
+                {"id" => project["id"], "path" => project["path"],
+                 "status" => "would_start"}
+              },
+              "message" => "dry-run: the lab space with the lab overseer session and " \
+                "#{projects.size} project space(s)/overseer(s) would start; nothing was created")
+          end
 
           workspace = lab_workspace
           base["workspace"] = workspace
@@ -200,8 +248,10 @@ module Ace
           # guide assumes it): booted or reused in the lab space before
           # any project, so the lab-start instructions reach an agent.
           session = boot_lab_session(workspace, plan, base["instructions"]["path"], lab_root)
-          return base.merge("status" => "blocked", "pane" => session["pane"],
-            "message" => session["message"]) if session["status"] == "blocked"
+          if session["status"] == "blocked"
+            return base.merge("status" => "blocked", "pane" => session["pane"],
+              "message" => session["message"])
+          end
 
           base["pane"] = session["pane"]
           base["replaced_pane"] = session["replaced_pane"]
@@ -286,17 +336,21 @@ module Ace
           if owner
             owner_cwd = owner["cwd"].to_s
             matching = !owner_cwd.empty? &&
-              (File.realpath(owner_cwd) == lab_root rescue false)
+              begin
+                File.realpath(owner_cwd) == lab_root
+              rescue
+                false
+              end
             unless matching
               return {"status" => "blocked", "pane" => nil, "replaced_pane" => nil,
-                "message" => "owner pane '#{owner["id"]}' works in '#{owner_cwd}', which is " \
+                      "message" => "owner pane '#{owner["id"]}' works in '#{owner_cwd}', which is " \
                   "not the lab root '#{lab_root}'; refusing to take over a foreign session"}
             end
             state = agent_state(owner["id"])
             if state
               warning = repair_reused_initialization(owner["id"], state)
               return {"status" => "reused", "pane" => owner["id"], "replaced_pane" => nil,
-                "prompt_failed" => !warning.nil?, "message" => warning}
+                      "prompt_failed" => !warning.nil?, "message" => warning}
             end
 
             replaced = owner["id"]
@@ -305,7 +359,7 @@ module Ace
           pane = boot_session(workspace, label, lab_root, plan, instructions_path)
           prompt_warning = first_prompt(pane)
           {"status" => "started", "pane" => pane, "replaced_pane" => replaced,
-            "prompt_failed" => !prompt_warning.nil?, "message" => prompt_warning}
+           "prompt_failed" => !prompt_warning.nil?, "message" => prompt_warning}
         rescue Ace::Overseer::Error => e
           {"status" => "blocked", "pane" => nil, "replaced_pane" => nil, "message" => e.message}
         end
@@ -319,29 +373,27 @@ module Ace
           path = project["path"]
           if path.nil? || path.to_s.strip.empty?
             return {"id" => id, "path" => nil, "status" => "blocked",
-              "message" => "project '#{id}' declares no path in the lab topology"}
+                    "message" => "project '#{id}' declares no path in the lab topology"}
           end
           unless File.directory?(path)
             return {"id" => id, "path" => path, "status" => "blocked",
-              "message" => "project '#{id}' directory '#{path}' does not exist"}
+                    "message" => "project '#{id}' directory '#{path}' does not exist"}
           end
 
-          project_config = Ace::Overseer.config_at(path)
-          # a project cascade that itself declares scope lab would
-          # recurse (a nested lab start) — refused, never executed
-          if project_config.is_a?(Hash) && project_config.dig("start", "scope") == "lab"
+          if id == LAB_SPACE_TITLE
             return {"id" => id, "path" => path, "status" => "blocked",
-              "message" => "project '#{id}' declares scope lab in its own " \
-                ".ace/overseer/config.yml; nested lab scopes are refused"}
+                    "message" => "project id '#{id}' is reserved for the lab workspace"}
           end
+          root = @root_resolver.resolve(cwd: path)
+          label = Atoms::StartContract.session_label(root)
+          owner = owner_pane(label)
+          workspace = if owner && agent_state(owner["id"])
+            owner["workspace"] || owner["workspace_id"]
+          else
+            find_or_create_workspace(id)
+          end
+          report = @project_runner.call(root: root, workspace: workspace, env: @env)
 
-          orchestrator = self.class.new(config: project_config, executor: @executor,
-            root_resolver: @root_resolver, nav_runner: @nav_runner,
-            workspace_factory: ->(label) { find_or_create_workspace(label) }, cwd: path)
-          report = orchestrator.call
-          # a reused session keeps its reported space: the lab-managed
-          # space titled by the project's session label, when it exists
-          report["workspace"] ||= find_workspace(report["label"])
           report.merge("id" => id, "path" => path)
         rescue Ace::Overseer::Error, Ace::Herdr::ExecutorError => e
           {"id" => id, "path" => path, "status" => "blocked", "message" => e.message}
@@ -382,7 +434,7 @@ module Ace
               "cannot resolve the ace-nav executable for the start instructions: #{e.message}"
           end
           result = @nav_runner.call([binary, "resolve", source], root)
-          path = result["status"] == "ok" ? result["out"].to_s.lines.first.to_s.strip : nil
+          path = (result["status"] == "ok") ? result["out"].to_s.lines.first.to_s.strip : nil
           if path.nil? || path.empty?
             raise Ace::Overseer::Error,
               "start instructions '#{source}' do not resolve through ace-nav " \
@@ -491,6 +543,7 @@ module Ace
               "herdr created tab '#{label}' but reported no root pane"
           end
 
+          @executor.pane_run(pane, Molecules::ProjectBundle.shell_setup(root, env: @env))
           args = ["--model", plan["profile"]["model"]]
           if plan["profile"]["thinking"]
             args += ["--thinking", plan["profile"]["thinking"]]
