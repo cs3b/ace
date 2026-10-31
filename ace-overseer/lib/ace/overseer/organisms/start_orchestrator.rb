@@ -576,7 +576,10 @@ module Ace
               "herdr created tab '#{label}' but reported no root pane"
           end
 
-          @executor.pane_run(pane, Molecules::ProjectBundle.shell_setup(root, env: @env))
+          Molecules::ProjectBundle.with_shell_setup(root, env: @env) do |command, marker|
+            @executor.pane_run(pane, command)
+            @executor.pane_wait_output(pane, pattern: marker, timeout_ms: START_TIMEOUT_MS)
+          end
           args = ["--model", plan["profile"]["model"]]
           if plan["profile"]["thinking"]
             args += ["--thinking", plan["profile"]["thinking"]]
@@ -586,6 +589,8 @@ module Ace
           @executor.agent_start(name: AGENT_NAME, kind: plan["profile"]["harness"],
             pane: pane, timeout_ms: START_TIMEOUT_MS, args: args)
           pane
+        rescue Ace::Herdr::WaitTimeoutError => e
+          raise Ace::Overseer::Error, "runtime setup was not confirmed; agent not started: #{e.message}"
         rescue Ace::Herdr::CommandError => e
           raise Ace::Overseer::Error, "herdr failed to start the overseer session: #{e.message}"
         end

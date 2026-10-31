@@ -3,6 +3,9 @@
 require "json"
 require "ace/herdr/molecules/bounded_process"
 require "shellwords"
+require "tempfile"
+require "securerandom"
+require "fileutils"
 require "ace/support/cli/toolchain"
 
 module Ace
@@ -59,19 +62,53 @@ module Ace
         end
 
         def self.shell_setup(root, env: ENV)
+          values = environment(root, env: env).reject { |name, _| %w[HERDR_PANE HERDR_TAB HERDR_PANE_ID HERDR_TAB_ID].include?(name) }
           if Ace::Support::Cli::Toolchain.installed?
             # A server-created shell may contain selectors absent from this
             # caller. Clear the same known selectors before applying the
             # installed closure; never inherit server-side Bundler injection.
             names = BUNDLE_SELECTORS + BUNDLE_SELECTORS.map { |key| "BUNDLER_ORIG_#{key}" }
-            return "unset #{names.map { |name| Shellwords.escape(name) }.join(' ')}; " +
-              Ace::Support::Cli::Toolchain.shell_setup
+            values = names.to_h { |name| [name, nil] }.merge(values)
           end
 
-          values = environment(root, env: env).reject { |name, _| %w[HERDR_PANE HERDR_TAB HERDR_PANE_ID HERDR_TAB_ID].include?(name) }
           cleared, assigned = values.partition { |_, value| value.nil? }
-          "unset #{cleared.map { |name, _| Shellwords.escape(name) }.join(" ")}; export " +
-            assigned.map { |name, value| "#{name}=#{Shellwords.escape(value)}" }.join(" ")
+          # Guard every operation: e.g. a readonly inherited selector must
+          # refuse setup rather than print readiness after a failed unset.
+          commands = cleared.map { |name, _| "unset #{Shellwords.escape(name)}" } +
+            assigned.map { |name, value| "export #{name}=#{Shellwords.escape(value)}" }
+          commands.join(" &&\n")
+        end
+
+        # pane_run types through a terminal: Linux canonical input truncates
+        # a line after 4095 bytes. Keep the environment in a private shared
+        # project file, not /tmp (Herdr can use a different PrivateTmp).
+        # The caller must observe the marker before launching the harness.
+        def self.with_shell_setup(root, env: ENV)
+          directory = root
+          %w[.ace-local overseer runtime-start].each do |part|
+            directory = File.join(directory, part)
+            raise Ace::Overseer::Error, "runtime setup directory is a symlink: #{directory}" if File.symlink?(directory)
+
+            Dir.mkdir(directory, 0o700) unless File.exist?(directory)
+            raise Ace::Overseer::Error, "runtime setup path is not a directory: #{directory}" unless File.directory?(directory)
+          end
+          info = File.stat(directory)
+          unless info.uid == Process.uid && (info.mode & 0o077).zero?
+            raise Ace::Overseer::Error, "runtime setup directory must be private and owned by the current user: #{directory}"
+          end
+          marker = "ACE_OVERSEER_ENV_READY_#{SecureRandom.hex(16)}"
+          Tempfile.create(["environment-", ".sh"], directory) do |file|
+            setup = shell_setup(root, env: env).strip.sub(/;\z/, "")
+            file.write("#{setup} && printf '%s\\n' #{Shellwords.escape(marker)}\n")
+            file.flush
+            file.fsync
+            # The tab is created in root. An explicit ./ prevents dot from
+            # searching PATH; a relative path also keeps terminal input short.
+            relative = "./.ace-local/overseer/runtime-start/#{File.basename(file.path)}"
+            yield ". #{Shellwords.escape(relative)}", marker
+          end
+        rescue SystemCallError => e
+          raise Ace::Overseer::Error, "runtime setup file could not be prepared: #{e.message}"
         end
 
         def initialize(timeout_s: 240)

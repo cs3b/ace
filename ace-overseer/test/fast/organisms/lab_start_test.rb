@@ -86,6 +86,10 @@ module Organisms
         FakePaneResult.new({"result" => {}})
       end
 
+      def pane_wait_output(_pane, pattern:, timeout_ms:)
+        FakePaneResult.new({"result" => {}})
+      end
+
       def agent_start(name:, kind:, pane:, timeout_ms:, args: [])
         FakePaneResult.new({"status" => "ready"})
       end
