@@ -29,6 +29,14 @@ for the Captain to write YAML. The packaged bootstrap profile is
 `pi`, `zai/glm-5.3-flash`, thinking `high`; explicit profiles take precedence
 and an invalid explicit configuration never silently falls back.
 
+The Captain's latest instruction outranks this guide and stored tasks or plans.
+On this first turn, establish your own configuration and the commissioned
+project overseers before resuming unrelated stored backlog. Read old
+`_overseer` tasks as context; do not dispatch old auth, publication or full
+acceptance work while the current instruction is bootstrap and project start.
+Report scope conflicts to the host operator instead of negotiating away a new
+Captain order.
+
 1. Inspect the lab root and its existing configuration before changing it.
    Use installed CLI help, packaged skills/workflows and `ace-config sync
    overseer` to prepare missing standard configuration (never `--force`).

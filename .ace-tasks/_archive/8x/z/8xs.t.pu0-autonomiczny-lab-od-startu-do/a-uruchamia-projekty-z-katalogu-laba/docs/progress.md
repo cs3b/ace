@@ -112,3 +112,9 @@ after the native-id and target-shell corrections: 447 tests, 2002 assertions,
 0 failures, 0 errors, 1 existing skip. A permanent regression now seeds foreign
 BUNDLE_PATH, BUNDLE_APP_CONFIG, BUNDLER_ORIG_BUNDLE_PATH and BUNDLE_FROZEN in
 the target server shell while the CLI has none, and verifies all are cleared.
+
+The packaged Lab guide now explicitly gives the latest Captain order priority
+over stored tasks/plans and establishes startup plus commissioned project
+overseers before unrelated old auth/publication/full-acceptance backlog. The
+generic project first-turn prompt is unchanged. This is instruction content,
+not a new scheduler or configuration mechanism.
