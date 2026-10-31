@@ -108,3 +108,22 @@ evidence, with orphan replies explicitly unresolved. Apply has NOT run.
 Three release versions are prepared (not published): ace-wake 0.2.0,
 ace-coworker 0.8.0, ace-overseer 0.28.0. Rebuild after final source corrections;
 do not deploy the earlier prepared artifacts as the final candidate.
+
+## Reviewed candidate ffa64e234
+
+Independent review approved the final missing-workspace refusal, first-turn
+agent-callable eyes instruction and binding-generation guard against late
+source-health writes from disposed sessions. Wake full suite passed through
+ace-test; targeted lab-start tests passed 21/135. Earlier full suites remain
+green as recorded above. Review approval is not live acceptance.
+
+Fresh installed rehearsal resolved 42 gems, including transitive json and
+ace-hitl-hermes 0.9.6. One public dependency ships 0640 source files: the
+root-owned public runtime requires a+rX,go-w convergence so mo can load it.
+This permission normalization does not apply to project/private files.
+
+Host policy docs committed 0b3d3c7 after independent review. Focused host tests:
+18 passed,1 skipped,1 baseline missing evidence_transfer failure, reproduced
+from clean e176247cd93281e5216193250e750efeeffa547e. No host deployment yet.
+Candidate checksums are in release-candidate.json. OTP/publication, migration,
+new runtime activation and the live delegated cycle remain outstanding.
