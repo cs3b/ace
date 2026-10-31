@@ -35,7 +35,7 @@ export function registerEyes(pi, { observe = observeHitl, now = Date.now,
     }
   }
   const bind = (ctx) => {
-    stopTimer(); eyes?.dispose(); attempt = undefined; compacting = false; running = false;
+    stopTimer(); eyes?.dispose(); attempt = undefined; observedSources = undefined; compacting = false; running = false;
     const entries = ctx.sessionManager.getBranch();
     const snapshot = [...entries].reverse().find((e) => e.type === "custom" && e.customType === EYES_ENTRY)?.data;
     const ownerCwd = path.resolve(ctx.cwd);

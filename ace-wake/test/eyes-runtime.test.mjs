@@ -79,3 +79,32 @@ it("agent arms eyes through its tool, acknowledges baseline and stays silent unt
     assert.equal(host.sends.length,1,"acknowledged revision is not replayed after reload");
   } finally {await session.shutdown();fs.rmSync(dir,{recursive:true,force:true});}
 });
+
+it("rebinding clears source health until the new observation completes", async()=>{
+  const dir=fs.mkdtempSync(path.join(os.tmpdir(),"ace-eyes-rebind-"));
+  const host=createFakeHost(), tools=new Map();
+  host.pi.registerTool=(tool)=>tools.set(tool.name,tool);
+  let calls=0, finishObservation;
+  const session=await startSession(host,{eyes:{
+    now:host.clock.now,schedule:host.setIntervalFn,cancel:host.clearIntervalFn,
+    observe:async()=>{
+      calls++;
+      if(calls===1)return {schema:"ace.hitl.observation/v1",events:[],sources:{tasks:{status:"ok"}}};
+      return new Promise(resolve=>{finishObservation=resolve;});
+    }
+  }});
+  try {
+    const file=path.join(dir,"eyes.json");fs.writeFileSync(file,"{}");
+    const tool=tools.get("ace_eyes");
+    const initial=await tool.execute("start",{action:"start",configPath:file},null,null,host.commandContext);
+    assert.deepEqual(initial.details.sources,{tasks:{status:"ok"}});
+    await session.emit("session_tree",{});
+    const rebinding=await tool.execute("status",{action:"status"});
+    assert.equal(rebinding.details.sources,undefined,"previous session health is not evidence for a new binding");
+    assert.equal(calls,2);
+    finishObservation({schema:"ace.hitl.observation/v1",events:[],sources:{tasks:{status:"degraded"}}});
+    await flush();
+    const observed=await tool.execute("status",{action:"status"});
+    assert.deepEqual(observed.details.sources,{tasks:{status:"degraded"}});
+  } finally {await session.shutdown();fs.rmSync(dir,{recursive:true,force:true});}
+});
