@@ -33,3 +33,12 @@ The overseer does not install, configure or repair the project itself.
 Use existing task/assignment/HITL/eyes owners. No queue engine or second state
 store. No tracked-binstub workaround. No Second Captain expansion. Keep this
 family in-progress until live acceptance, regardless of unit test results.
+
+## Additional Captain decisions
+
+Project roots use `/lab/<project>` and are owned by `mo:mo`; keep task worktrees
+and project state inside their roots. Use one versioned operational ACE closure
+in installed mode, separately from project development bundles. Inject extra
+access for each executor session; do not grant it permanently to all projects.
+Captain explicitly authorized stopping Lab agents and the two host lab-config
+writer sessions to perform this migration. Preserve their data and history.
