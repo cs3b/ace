@@ -43,9 +43,10 @@ module Ace
           Begin your first turn now. Follow the "First turn after start"
           section of your standing instructions: read your private
           _overseer tasks and the project state from its owners, continue
-          existing commissioned work before choosing anything new, arm
-          /eyes for standing observation, and remain idle when there is
-          nothing to do.
+          existing commissioned work before choosing anything new. Arm
+          standing observation with the ace_eyes tool, action start and
+          configPath naming your eyes configuration; verify its returned
+          observation state. Remain idle when there is nothing to do.
         PROMPT
 
         attr_reader :cwd
@@ -390,7 +391,13 @@ module Ace
           label = Atoms::StartContract.session_label(root)
           owner = owner_pane(label)
           workspace = if owner && agent_state(owner["id"])
-            owner["workspace"] || owner["workspace_id"]
+            reference = owner["workspace"] || owner["workspace_id"]
+            if reference.to_s.strip.empty?
+              raise Ace::Overseer::Error,
+                "live project owner '#{owner["id"]}' reports no workspace; " \
+                "refusing ambient fallback or a separate project workspace"
+            end
+            reference
           else
             find_or_create_workspace(id)
           end

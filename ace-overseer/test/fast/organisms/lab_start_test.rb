@@ -230,6 +230,11 @@ module Organisms
       assert(executor.prompts.all? do |entry|
         entry[:text] == Ace::Overseer::Organisms::StartOrchestrator::FIRST_TURN_PROMPT
       end)
+      executor.prompts.each do |entry|
+        assert_includes entry[:text], "ace_eyes tool, action start"
+        assert_includes entry[:text], "configPath"
+        refute_includes entry[:text], "/eyes"
+      end
     end
 
     def test_lab_start_works_without_ambient_herdr_context
@@ -288,6 +293,31 @@ module Organisms
         "the live session's actual space is reported"
       assert_equal %w[overseer beta], executor.workspaces_created,
         "no empty alpha space is left behind by a pure reuse; beta still gets its own"
+    end
+
+    def test_live_project_owner_without_workspace_blocks_without_ambient_fallback_or_dispatch
+      [nil, ""].each do |missing_workspace|
+        executor = FakeExecutor.new
+        alpha = File.realpath(File.join(@dir, "alpha"))
+        executor.add_pane({"id" => "p-alpha-live", "title" => "overseer-alpha",
+          "cwd" => alpha, "workspace_id" => missing_workspace})
+        def executor.agent_get(_pane)
+          FakePaneResult.new({"result" => {"agent" => {"agent_status" => "idle"}}})
+        end
+        def executor.pane_current
+          raise "must not resolve an ambient workspace for a live owner"
+        end
+
+        report = orchestrator(executor).call
+
+        by_id = report["projects"].to_h { |project| [project["id"], project] }
+        assert_equal "blocked", by_id["alpha"]["status"]
+        assert_match(/live project owner 'p-alpha-live' reports no workspace/, by_id["alpha"]["message"])
+        assert_equal %w[overseer beta], executor.workspaces_created
+        refute executor.tabs.any? { |tab| tab[:cwd] == alpha }, "no replacement project session"
+        refute executor.prompts.any? { |entry| entry[:pane] == "p-alpha-live" }, "no child dispatch into an unknown workspace"
+        assert_equal "started", by_id["beta"]["status"], "healthy project still starts"
+      end
     end
 
     def test_native_workspace_list_envelope_starts_and_reuses_existing_lab_space
