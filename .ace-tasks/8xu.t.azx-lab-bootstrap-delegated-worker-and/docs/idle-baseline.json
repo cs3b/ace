@@ -1,0 +1,17 @@
+{
+  "at": "2026-10-31T13:10:42.036133+00:00",
+  "session": "/home/mo/.pi/agent/sessions/--home-mo-Labs-overseer-lab--/2026-10-31T12-50-02-003Z_01a19202-8892-7af3-b488-e95a67f9aa68.jsonl",
+  "assistant_messages": 41,
+  "last_assistant": "2026-10-31T13:08:27.101Z",
+  "eyes_entries": 105,
+  "eyes_last_time": "2026-10-31T13:10:41.662Z",
+  "enabled": true,
+  "errors": 0,
+  "breaker": null,
+  "window": {
+    "start": 1793451071615,
+    "count": 40,
+    "wakes": 1
+  },
+  "pending_count": 0
+}

@@ -1,0 +1,13 @@
+{
+  "status": "pass",
+  "duration_seconds": 326.811733,
+  "assistant_messages_before": 41,
+  "assistant_messages_after": 41,
+  "additional_observations": 10,
+  "additional_wakes": 0,
+  "evidence": [
+    "idle-baseline.json",
+    "idle-after.json"
+  ],
+  "scope": "coordinator while bootstrap worker executes; not project overseer startup acceptance"
+}

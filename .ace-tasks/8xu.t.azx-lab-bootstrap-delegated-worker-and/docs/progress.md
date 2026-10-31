@@ -192,3 +192,32 @@ Packaged guide fix a71893d93 assigns diagnosis/reproduction to the worker,
 requires only observed symptom+desired outcome for commission, and gates
 project startup on worker+independent verification. Independently reviewed,
 not yet published/deployed. Current lab remains published0.28.0.
+
+## First real worker and least privilege evidence
+
+Independent read-only audit confirms bootstrap-worker PID2937792 in w5:p1,
+assignment8xujj4, task8xu.t.jh8, worktree .ace-wt/t.jh8. UID/GID1000 and only
+supplementary group1000; installed ffa64e runtime, no Bundler/Ruby overrides,
+packaged bootstrap-worker guide loaded. Coordinator ended turn at
+13:04:45.549Z after dispatch; eyes delivered one baseline pending-revision wake.
+At13:10:42Z coordinator had41 assistant messages (last13:08:27.101Z), active
+eyes,0errors,no breaker,0pending,40observations/1wake. Idle verification ongoing.
+
+Guest permission audit: sudo denies mo; primary group only; sudoers.d/Polkit
+local rules empty; inspected local wrappers have no setuid/capability grants;
+legacy lab-admin scripts gate operations by effective identity. Host mo Incus
+operator capability remains deliberately separate. No extra privileged lease
+was needed by this bootstrap worker.
+
+## Live idle acceptance PASS
+
+Paired snapshots cover326.812seconds (>=5minutes): assistant messages
+41→41, observations40→50, wakes1→1, pending0→0, eyesenabled and0errors.
+Coordinator Herdr status idle; worker independentlyworking. Evidence is
+idle-baseline.json, idle-after.json and idle-result.json. This verifies the
+coordinator silence requirement, not worker completion or project readiness.
+
+Generic failure-reporting fix preserves the real early blocked message instead
+of replacing it with no-project-scope-report. Independentreviewapproved; full
+Overseer suite451tests/2030assertions/0fail/0errors/1existing skip, report759ef382.
+Not deployed yet.
