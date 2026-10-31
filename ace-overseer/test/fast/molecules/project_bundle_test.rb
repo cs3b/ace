@@ -58,7 +58,7 @@ module Molecules
         require "bundler/setup"
         require "ace_start_fixture"
         abort "wrong child role" unless ARGV == %w[start --scope project --format json]
-        puts %({"status":"started","scope":"project","version":"#{AceStartFixture::VERSION}","gemfile":#{ENV.fetch("BUNDLE_GEMFILE").inspect},"workspace":#{ENV.fetch("HERDR_WORKSPACE_ID").inspect},"rubyopt_present":#{ENV.fetch("RUBYOPT", "").include?("nonexistent_parent_injection")}})
+        puts %({"status":"started","scope":"project","version":"#{AceStartFixture::VERSION}","gemfile":#{ENV.fetch("BUNDLE_GEMFILE").inspect},"workspace":#{ENV.fetch("HERDR_WORKSPACE_ID").inspect},"rubyopt_present":#{ENV.fetch("RUBYOPT", "").include?("nonexistent_parent_injection")},"toolchain":#{ENV.fetch("ACE_TOOLCHAIN", "unset").inspect}})
       SCRIPT
       FileUtils.chmod(0o755, File.join(root, "bin/ace-overseer"))
       root
@@ -80,6 +80,54 @@ module Molecules
       assert_equal "w-beta", beta["workspace"]
       refute alpha["rubyopt_present"]
       assert_equal "/foreign/Gemfile", env["BUNDLE_GEMFILE"], "parent environment is never mutated"
+    end
+
+    def test_project_path_dependency_does_not_inherit_parent_installed_mode
+      root = project("source project", "3.0.0")
+      source = File.join(root, "fixture-package")
+      File.write(File.join(source, "ace-start-fixture.gemspec"), <<~RUBY)
+        Gem::Specification.new do |spec|
+          spec.name = "ace-start-fixture"
+          spec.version = "3.0.0"
+          spec.summary = "Project-owned source dependency"
+          spec.authors = ["ACE tests"]
+          spec.files = ["lib/ace_start_fixture.rb"]
+        end
+      RUBY
+      File.write(File.join(source, "lib/ace_start_fixture.rb"), 'module AceStartFixture; VERSION = "source-selected"; end')
+      File.write(File.join(root, "Gemfile"), "gem 'ace-start-fixture', path: 'fixture-package'\n")
+      File.write(File.join(root, "Gemfile.lock"), <<~LOCK)
+        PATH
+          remote: fixture-package
+          specs:
+            ace-start-fixture (3.0.0)
+
+        GEM
+          specs:
+
+        PLATFORMS
+          ruby
+
+        DEPENDENCIES
+          ace-start-fixture!
+
+        BUNDLED WITH
+           #{Bundler::VERSION}
+      LOCK
+      report = Ace::Overseer::Molecules::ProjectBundle.new.call(root: root, workspace: "w-source",
+        env: ENV.to_h.merge("ACE_TOOLCHAIN" => "installed"))
+      assert_equal "source-selected", report["version"], "the child must load its own path dependency"
+      assert_equal "unset", report["toolchain"], "the Lab must not force installed or auto"
+    end
+
+    def test_child_binstub_can_choose_its_own_explicit_toolchain_policy
+      root = project("explicit child", "4.0.0")
+      binary = File.join(root, "bin/ace-overseer")
+      script = File.read(binary).sub('require "bundler/setup"', "ENV['ACE_TOOLCHAIN'] = 'installed'\nrequire \"bundler/setup\"")
+      File.write(binary, script)
+      report = Ace::Overseer::Molecules::ProjectBundle.new.call(root: root, workspace: "w-explicit",
+        env: ENV.to_h.merge("ACE_TOOLCHAIN" => "auto"))
+      assert_equal "installed", report["toolchain"], "the child's own selection must survive"
     end
 
     def test_child_process_clears_native_parent_pane_and_tab_ids
@@ -116,6 +164,14 @@ module Molecules
       out, err, status = Open3.capture3(foreign, "/bin/bash", "--noprofile", "--norc", "-c", command)
       assert status.success?, err
       assert_equal "unset|unset|unset|unset", out
+    end
+
+    def test_server_toolchain_flag_absent_from_cli_is_not_imposed_on_the_child
+      setup = Ace::Overseer::Molecules::ProjectBundle.shell_setup(@dir, env: {"PATH" => "/usr/bin:/bin"})
+      out, err, status = Open3.capture3({"ACE_TOOLCHAIN" => "installed"}, "/bin/bash", "--noprofile", "--norc",
+        "-c", setup + '; printf "%s" "${ACE_TOOLCHAIN-unset}"')
+      assert status.success?, err
+      assert_equal "unset", out
     end
   end
 end

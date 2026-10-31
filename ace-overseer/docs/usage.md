@@ -110,8 +110,11 @@ For each project the Lab runs its `bin/ace-overseer start --scope project`
 (or `bundle exec ace-overseer` when no binstub exists) in a separate process
 bound to that project's Gemfile. Parent Bundler/Ruby injection variables are
 cleared. The project pane receives its own Gemfile and `bin/` in PATH, so its
-Pi agent and subsequent commands stay with that project's locked published
-gems. Missing Gemfile/lock is a concrete project-readiness error; the Lab
+Pi agent and subsequent commands stay with that project's locked
+dependencies, including source/path gems when selected by that project. The
+Lab clears its inherited ACE_TOOLCHAIN flag rather than forcing installed or
+auto; a child's own binstub or environment may select its policy. Missing
+Gemfile/lock is a concrete project-readiness error; the Lab
 never substitutes its own gem graph. `runtime: auto|herdr|tmux` selects the
 terminal backend and has no meaning as an ACE gem-version selector.
 

@@ -36,7 +36,7 @@ module Ace
           BUNDLE_VERBOSE BUNDLE_VERSION BUNDLE_WITH BUNDLE_WITHOUT
           BUNDLER_SETUP BUNDLER_VERSION
         ].freeze
-        RUBY_SELECTORS = %w[RUBYOPT RUBYLIB GEM_HOME GEM_PATH].freeze
+        RUBY_SELECTORS = %w[RUBYOPT RUBYLIB GEM_HOME GEM_PATH ACE_TOOLCHAIN].freeze
 
         def self.environment(root, env: ENV)
           known = BUNDLE_SELECTORS + RUBY_SELECTORS
@@ -45,7 +45,6 @@ module Ace
             %w[HERDR_PANE HERDR_TAB HERDR_PANE_ID HERDR_TAB_ID]
           names.to_h { |name| [name, nil] }.merge(
             "BUNDLE_GEMFILE" => File.join(root, "Gemfile"),
-            "ACE_TOOLCHAIN" => "installed",
             "PATH" => [File.join(root, "bin"), env.fetch("PATH", "/usr/bin:/bin")].join(File::PATH_SEPARATOR)
           )
         end
@@ -60,7 +59,7 @@ module Ace
         def call(root:, workspace:, env: ENV)
           %w[Gemfile Gemfile.lock].each do |name|
             unless File.file?(File.join(root, name))
-              raise Ace::Overseer::Error, "project bundle missing #{name}; prepare this project's published gem bundle first"
+              raise Ace::Overseer::Error, "project bundle missing #{name}; prepare this project's own bundle first"
             end
           end
           binary = File.join(root, "bin", "ace-overseer")
