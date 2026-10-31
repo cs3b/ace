@@ -80,6 +80,7 @@ task:
 ```bash
 ace-task create "Manage: <scope>" --in _overseer --tags queue
 ace-task create "Prepare <scope>" --child-of <manager-ref>
+ace-task update <prep-ref> --set role=planner
 ace-task create "Implement <scope>" --child-of <manager-ref>
 ace-task create "Review <scope>" --child-of <manager-ref>
 ace-task create "Integrate <scope>" --child-of <manager-ref>
@@ -94,7 +95,11 @@ Rules:
 - Add worktree/assignment references only after they really exist (the
   planner prepares them); never fabricate references ahead of preparation.
   Record them on the step that owns them, e.g.
-  `ace-task update <step-ref> --set worktree=.ace-wt/<task>/`.
+  `ace-task update <step-ref> --set assignment=<actual-id> --set role=<allocated-role> --set worktree=<actual-path>`.
+  Read back the fields; notes alone do not bind reports. `role=planner` denotes
+  only the allocation that prepares assignments, never bootstrap-worker or
+  confirmation of a running project. Resolve note folders from `ace-task show`;
+  never guess their title-derived paths.
 
 - Cross-task ordering goes through the integration step: a step of task B
   that requires A's merge depends on A's *integrate* subtask, not on A's
@@ -162,8 +167,9 @@ When a report arrives (ace-hitl event or message):
 1. Match its message ID plus task/assignment/step references to the current
    order. A report that fits no open allocation is kept for clarification,
    not counted as success.
-2. Record the outcome and the processed report ID in the managing task /
-   step (task-folder notes), then update statuses:
+2. Persist the exact accepted event ID and result on the owning step:
+   `ace-task update <step-ref> --set processed_report=<event-id> --set report_result=<result>`.
+   Add evidence notes in the folder returned by `ace-task show`, then update statuses:
    `ace-task update <step-ref> --set status=done` (or keep open / escalate).
 3. For success: end the current allocation, then continue with the next
    unblocked step per rule 3. For a repeated report: check the recorded
@@ -174,14 +180,23 @@ When a report arrives (ace-hitl event or message):
 
 `ace-overseer process-reports` executes rules 1-3 mechanically: it matches
 each incoming event (assignment recorded on a step, or the managing task's
-project_task with exactly one non-terminal step), records the outcome and
+project_task with exactly one explicitly allocated `role=planner` non-terminal
+step having no assignment). Task and any supplied role must agree; an event
+without an ID is refused. Unassigned readiness never closes worker, verifier,
+integration or confirm-start allocations. Before recording assigned success, the processor reads the actual coworker role
+allocation and ace-assign state: exact task/assignment/role, a completed nonempty
+plan, and every step done are required in dry-run and apply. Unavailable owner
+state refuses acceptance. It records the outcome and
 the processed report ID on the step through the ordinary ace-task update
 surface, and continues with the next unblocked step through the existing
 gates — `ace-overseer handoff` for the next role when the family records a
 worktree, otherwise the `work-on` dependency gate. A repeated delivery is
 answered from the recorded `processed_report` and re-runs nothing; an error
 report or question never advances a step; a report matching no open
-allocation stays for clarification. `--dry-run` interprets without effects.
+allocation stays for clarification. A `role=confirm-start` continuation remains
+a coordinator operation; no generic worker is dispatched and no managing task
+closes until first-turn and observation evidence is accepted. `--dry-run`
+interprets without effects.
 
 ### 6) Close
 

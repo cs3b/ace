@@ -16,7 +16,8 @@ module Ace
       class ReportProcessor
         OUTCOME_STATUSES = %i[success error needs_answer duplicate unmatched].freeze
 
-        def initialize(inbox: nil, task_manager: nil, handoff: nil, work_on: nil)
+        def initialize(inbox: nil, task_manager: nil, handoff: nil, work_on: nil, completion_check: nil)
+          @completion_check = completion_check || Molecules::ReportCompletionCheck.new
           @inbox = inbox || Molecules::HitlInbox.new
           @task_manager = task_manager || Ace::Task::Organisms::TaskManager.new
           @handoff = handoff || Organisms::HandoffOrchestrator.new(task_loader: @task_manager)
@@ -44,6 +45,12 @@ module Ace
 
         def process_event(event, dry_run:, progress:)
           verdict = Atoms::ReportInterpretation.evaluate(event: event, managers: private_managers)
+
+          if verdict[:status] == :success || (verdict[:status] == :duplicate && verdict[:recorded_result] == "success")
+            refusal = @completion_check.call(event: event,
+              manager: @task_manager.show(verdict[:manager_ref]), step: @task_manager.show(verdict[:step_ref]))
+            verdict = {status: :unmatched, reason: refusal} if refusal
+          end
 
           case verdict[:status]
           when :unmatched
@@ -135,6 +142,11 @@ module Ace
             return {action: "none", reason: reason}
           end
 
+          if next_step.metadata["role"] == "confirm-start"
+            return {action: "coordinator", step_ref: next_step.id.to_s,
+                    reason: "confirm project first turn and active eyes through the standard start operation; keep this step and manager open until proven"}
+          end
+
           begin
             if family_worktree(manager)
               result = @handoff.call(task_ref: manager.metadata["project_task"].to_s)
@@ -217,7 +229,7 @@ module Ace
           case continuation[:action]
           when "handoff"
             if continuation[:status] == "sequence_complete"
-              "sequence complete - the worktree has no next role; close the managing task per the queue workflow"
+              "sequence complete - the worktree has no next role; pending coordination steps still require acceptance before closing the managing task"
             elsif continuation[:start_command]
               "window ensured in #{continuation[:worktree_path]} for the next role " \
                 "(#{continuation.dig(:next, 'role')}); run there: #{continuation[:start_command]}"
@@ -231,6 +243,7 @@ module Ace
             else
               "next step #{continuation[:step_ref]} started via work-on"
             end
+          when "coordinator" then "coordinator action for #{continuation[:step_ref]}: #{continuation[:reason]}"
           when "blocked" then "continuation blocked: #{continuation[:reason]}"
           when "none" then continuation[:reason]
           end

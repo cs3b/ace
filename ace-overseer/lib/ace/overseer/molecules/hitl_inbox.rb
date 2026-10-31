@@ -34,6 +34,7 @@ module Ace
             "result" => event.result,
             "task" => event.metadata["task"],
             "assignment" => event.metadata["assignment"],
+            "role" => event.metadata["role"],
             "title" => event.title
           }
         end

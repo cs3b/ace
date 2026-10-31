@@ -32,7 +32,9 @@ its task folder. Include the canonical target repository path, required
 configuration, observed failure, desired outcome, allowed changes, runtime
 mode, acceptance checks and report recipient. Assign diagnosis and reproduction
 as well as preparation to the worker. This is lab infrastructure work, not a project product task.
-Workers must not edit the private coordination tree.
+Workers must not edit the private coordination tree. Resolve each task folder
+from `ace-task show <ref>` before writing commission, dispatch or receipt notes;
+never construct a folder from a guessed or expanded title slug.
 
 Explicit `ACE_TOOLCHAIN=installed` remains installed in every subprocess,
 worker and resumed session. The project checkout is domain data. Never modify
@@ -55,7 +57,19 @@ report that capability gap. Do not claim that mentioning `/eyes` armed it.
 Use `ace-coworker prepare --task <executable-task> --roles bootstrap-worker,bootstrap-verifier
 --to <configured-overseer-address> --format json`. Read its returned worktree,
 assignment IDs and start-config paths; record these on the matching private
-steps before launch. A preparation readiness report is not worker completion.
+steps before launch through the task API, not only in prose:
+
+```bash
+ace-task update <prepare-step> --set assignment=<worker-assignment> --set role=bootstrap-worker --set worktree=<returned-worktree>
+ace-task update <verify-step> --set assignment=<verifier-assignment> --set role=bootstrap-verifier --set worktree=<returned-worktree>
+ace-task update <confirm-step> --set role=confirm-start
+```
+
+Read back the steps with `ace-task show` and verify exact returned identities.
+A preparation readiness report is not worker completion. It does not complete
+any of these three steps; never label bootstrap execution as `role=planner`.
+Only a separate, explicitly commissioned planner preparation allocation may
+accept an unassigned readiness report.
 The task must be present in the execution worktree before any agent starts.
 
 `ace-coworker start --config <returned-path>` validates and prints a brief;
@@ -79,7 +93,13 @@ report ID, task, assignment and role; a preparation report, process exit or
 unmatched message is not success. Use `ace-overseer process-reports --dry-run`
 to inspect the matching and continuation before applying it. Only accept
 worker success with a completed non-empty assignment and the promised evidence.
-Record receipt through task APIs before acknowledging the eyes revision.
+Record the actual accepted HITL event ID and result in step metadata through
+`ace-task update <step> --set processed_report=<event-id> --set report_result=<result>`
+(or let `process-reports` perform that same write after its dry run is checked).
+Mark done only after acceptance; errors keep the step open. Receipt notes in
+the path returned by `ace-task show` supplement these fields, never replace them.
+Read back the recorded identity before acknowledging the eyes revision.
+Never put a preparation readiness ID on a worker, verifier or confirm-start step.
 
 Use the existing role handoff gate to prepare the independent reviewer after
 worker completion. As with the worker, a printed start command is not a live
