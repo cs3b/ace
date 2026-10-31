@@ -1,0 +1,21 @@
+{
+  "source_sha": "3296afb4723b5cd69e5c6b81587650a19c3ee784",
+  "publication": "prepared-not-published",
+  "live_acceptance": "blocked-awaiting-patch-deployment",
+  "artifacts": [
+    {
+      "name": "ace-lab",
+      "version": "0.14.1",
+      "path": "ace-lab/ace-lab-0.14.1.gem",
+      "sha256": "49fdee0abefdcd3d0409d855af359c0dd5de45129942906f3decae30aa6efc88"
+    },
+    {
+      "name": "ace-overseer",
+      "version": "0.28.1",
+      "path": "ace-overseer/ace-overseer-0.28.1.gem",
+      "sha256": "a5a07cc002a9c5ed1b42e748f434caa37e8b8a3c8cf78561da496048baf61284"
+    }
+  ],
+  "installed_rehearsal": "passed",
+  "rehearsal_evidence": "followup-installed-rehearsal.json"
+}
