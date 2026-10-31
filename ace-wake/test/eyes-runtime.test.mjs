@@ -108,3 +108,33 @@ it("rebinding clears source health until the new observation completes", async()
     assert.deepEqual(observed.details.sources,{tasks:{status:"degraded"}});
   } finally {await session.shutdown();fs.rmSync(dir,{recursive:true,force:true});}
 });
+
+it("an old in-flight observation cannot overwrite source health after rebind", async()=>{
+  const dir=fs.mkdtempSync(path.join(os.tmpdir(),"ace-eyes-rebind-race-"));
+  const host=createFakeHost(), tools=new Map();
+  host.pi.registerTool=(tool)=>tools.set(tool.name,tool);
+  let calls=0, finishOldObservation;
+  const freshSources={tasks:{status:"ok"},assignments:{status:"ok"}};
+  const session=await startSession(host,{eyes:{
+    now:host.clock.now,schedule:host.setIntervalFn,cancel:host.clearIntervalFn,
+    observe:async()=>{
+      calls++;
+      if(calls===2)return new Promise(resolve=>{finishOldObservation=resolve;});
+      return {schema:"ace.hitl.observation/v1",events:[],sources:calls===1?{tasks:{status:"ok"}}:freshSources};
+    }
+  }});
+  try {
+    const file=path.join(dir,"eyes.json");fs.writeFileSync(file,"{}");
+    const tool=tools.get("ace_eyes");
+    await tool.execute("start",{action:"start",configPath:file},null,null,host.commandContext);
+    host.clock.advance(30000);await flush();
+    assert.equal(calls,2,"old binding has an observation in flight");
+    await session.emit("session_tree",{});await flush();
+    assert.equal(calls,3,"new binding completes its own observation");
+    assert.deepEqual((await tool.execute("status",{action:"status"})).details.sources,freshSources);
+    finishOldObservation({schema:"ace.hitl.observation/v1",events:[],sources:{tasks:{status:"degraded"}}});
+    await flush();
+    assert.deepEqual((await tool.execute("status",{action:"status"})).details.sources,freshSources,
+      "late disposed-binding results cannot replace fresh source health");
+  } finally {await session.shutdown();fs.rmSync(dir,{recursive:true,force:true});}
+});
