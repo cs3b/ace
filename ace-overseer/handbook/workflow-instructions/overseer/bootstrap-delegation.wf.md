@@ -10,6 +10,16 @@ purpose: Complete one lab-owned startup commission without the overseer doing th
 
 ## Commission and ownership
 
+The overseer reads owner state and public CLI contracts to establish scope,
+existing execution and the observed symptom. Technical diagnosis, source-code
+investigation, troubleshooting and reproduction commands belong to the worker.
+Record the known failure and desired outcome in the commission; discovering
+the root cause is part of the assigned work, never a prerequisite for dispatch.
+Use existing readiness state, or a startup dry run only when that state is
+otherwise unknown. Do not turn that check into a technical investigation.
+Once the symptom is known, proceed to task creation/reconciliation, observation
+and worker dispatch, then end the turn.
+
 Read existing tasks and assignments first. Reuse the open commission for the
 same project and goal; unknown execution state never means free capacity.
 Create one lab coordination task in `_overseer`, with three direct children:
@@ -19,8 +29,9 @@ predecessor. Only the lab overseer updates this private tree.
 Create a separate executable lab task through `ace-task` for the bootstrap
 work, linking it as the manager's `project_task`. Keep its specification in
 its task folder. Include the canonical target repository path, required
-configuration, allowed changes, runtime mode, acceptance checks and report
-recipient. This is lab infrastructure work, not a project product task.
+configuration, observed failure, desired outcome, allowed changes, runtime
+mode, acceptance checks and report recipient. Assign diagnosis and reproduction
+as well as preparation to the worker. This is lab infrastructure work, not a project product task.
 Workers must not edit the private coordination tree.
 
 Explicit `ACE_TOOLCHAIN=installed` remains installed in every subprocess,
@@ -77,8 +88,8 @@ confirm first-turn delivery. Do not launch a second executor while an earlier
 one is active or its state is unknown. On repeated delivery, reconcile existing
 assignments and agents instead of dispatching again.
 
-After accepted independent verification, the overseer performs its coordination
-operation `ace-overseer start --reconcile`. Confirm the target's session, first
+Only after accepted worker completion and independent verification does the
+overseer perform this commission's project-start coordination operation `ace-overseer start --reconcile`. Confirm the target's session, first
 turn and active eyes from actual session evidence. A ready process alone is
 not initialized observation. Close the confirmation step and managing task
 only with these proofs; the worker report alone cannot close the family.
