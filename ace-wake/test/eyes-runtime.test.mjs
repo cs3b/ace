@@ -49,3 +49,33 @@ it("real config enables eyes coexisting with loops, survives reload, exposes exa
     await session.shutdown();assert.equal(host.intervals.size,0);
   } finally {fs.rmSync(dir,{recursive:true,force:true});}
 });
+
+it("agent arms eyes through its tool, acknowledges baseline and stays silent until change", async()=>{
+  const dir=fs.mkdtempSync(path.join(os.tmpdir(),"ace-eyes-tool-"));
+  const host=createFakeHost(), tools=new Map();
+  host.pi.registerTool=(tool)=>tools.set(tool.name,tool);
+  let current=revision;
+  const session=await startSession(host,{eyes:{
+    now:host.clock.now,schedule:host.setIntervalFn,cancel:host.clearIntervalFn,
+    observe:async()=>({schema:"ace.hitl.observation/v1",events:[{key,revision:current,id:"report1"}]})
+  }});
+  try {
+    const file=path.join(dir,"eyes.json");fs.writeFileSync(file,"{}");
+    const tool=tools.get("ace_eyes");
+    await assert.rejects(tool.execute("start",{action:"start"},null,null,host.commandContext));
+    const result=await tool.execute("start",{action:"start",configPath:file},null,null,host.commandContext);
+    assert.equal(result.details.enabled,true);
+    assert.equal(result.details.errors,0);
+    assert.equal(host.intervals.size,1);
+    assert.equal(host.sends.length,0,"arming returns baseline without a redundant wake");
+    await tool.execute("ack",{action:"ack",key,revision});
+    await session.settle();
+    for(let i=0;i<10;i++){host.clock.advance(30000);await flush();}
+    assert.equal(host.sends.length,0,"five idle minutes invoke no model");
+    current="c".repeat(64);host.clock.advance(30000);await flush();
+    assert.equal(host.sends.length,1,"new revision wakes the overseer");
+    await tool.execute("ack",{action:"ack",key,revision:current});
+    await session.reload();await flush();
+    assert.equal(host.sends.length,1,"acknowledged revision is not replayed after reload");
+  } finally {await session.shutdown();fs.rmSync(dir,{recursive:true,force:true});}
+});

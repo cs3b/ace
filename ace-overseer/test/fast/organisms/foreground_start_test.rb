@@ -22,7 +22,7 @@ module Organisms
       report = Ace::Overseer::Organisms::StartOrchestrator.new(config: {},
         executor: ForbiddenHerdr.new, cwd: @root, env: {}).bootstrap
       assert_equal "foreground", report["status"]
-      assert_equal @root, report["root"]
+      assert_equal File.realpath(@root), report["root"]
       assert_equal ["pi", "--model", "zai/glm-5.3-flash", "--thinking", "high"], report["command"].first(5)
       assert_equal "wfi://overseer/lab-start", report["instructions"]["source"]
       assert File.file?(report["instructions"]["path"])

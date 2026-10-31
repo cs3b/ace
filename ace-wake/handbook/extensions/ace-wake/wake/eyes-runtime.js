@@ -25,7 +25,7 @@ export async function observeHitl(cwd, config) {
 
 export function registerEyes(pi, { observe = observeHitl, now = Date.now,
   schedule = (fn, ms) => setInterval(fn, ms), cancel = clearInterval } = {}) {
-  let eyes, timer, attempt, compacting = false, running = false;
+  let eyes, timer, attempt, observedSources, compacting = false, running = false, arming = false;
   const stopTimer = () => { if (timer !== undefined) cancel(timer); timer = undefined; };
   function arm() {
     stopTimer();
@@ -50,8 +50,12 @@ export function registerEyes(pi, { observe = observeHitl, now = Date.now,
         ctx.ui?.setStatus?.("ace-eyes", `eyes ${state.retired ? "retired" : state.breaker?.reason || (state.enabled ? "observing" : "off")} pending:${state.pending}`);
         if (state.breaker || state.retired) stopTimer();
       },
-      observe: (config) => observe(ctx.cwd, config),
-      canDeliver: () => !compacting && (ctx.isIdle() || running),
+      observe: async (config) => {
+        const result = await observe(ctx.cwd, config);
+        observedSources = result.sources;
+        return result;
+      },
+      canDeliver: () => !arming && !compacting && (ctx.isIdle() || running),
       deliveryStatus: () => {
         if (attempt?.accepted) return "accepted";
         // sendUserMessage is a void wrapper. Busy/queued is uncertain, not
@@ -61,8 +65,8 @@ export function registerEyes(pi, { observe = observeHitl, now = Date.now,
       },
       deliver: async (batch) => {
         if (!ctx.model) return false;
-        const text = `[ace-eyes] Pending canonical HITL/deadline revisions: ${JSON.stringify(batch)}. ` +
-          "Read original events; adopt reports through ace-overseer process-reports and existing task/assignment gates. " +
+        const text = `[ace-eyes] Pending task/assignment/HITL/deadline revisions: ${JSON.stringify(batch)}. ` +
+          "Read ace-overseer observe and the original state owners; adopt reports through ace-overseer process-reports and existing task/assignment gates. " +
           "Reconcile uncertain effects; never repeat external actions on wake alone. After handling each exact revision, " +
           "acknowledge with the ace_eyes tool (action ack, key, revision). Settlement alone is not acknowledgement.";
         attempt = { text, accepted: false };
@@ -94,9 +98,10 @@ export function registerEyes(pi, { observe = observeHitl, now = Date.now,
     if (message?.role === "assistant" && message.stopReason === "error") eyes?.quota(message.errorMessage);
   });
   pi.registerTool?.({
-    name: "ace_eyes", label: "Eyes acknowledgement", description: "Read pending semantic events or acknowledge an exact handled revision. Does not accept reports, authorize effects, start actors or reset quota. Use existing report/assignment owners first. Deadlines require an operation identity and revision; cancel when no longer active.",
+    name: "ace_eyes", label: "Eyes observation", description: "Start standing observation with an existing config file, read pending semantic events or acknowledge an exact handled revision. Does not accept reports, authorize effects, start actors or reset quota. Use existing report/assignment owners first. Deadlines require an operation identity and revision; cancel when no longer active.",
     parameters: { type: "object", properties: {
-      action: { type: "string", enum: ["status", "ack", "deadline", "cancel"] },
+      action: { type: "string", enum: ["start", "status", "ack", "deadline", "cancel"] },
+      configPath: { type: "string" },
       key: { type: "string" }, revision: { type: "string" }, at: { type: "integer" }
     }, required: ["action"], additionalProperties: false },
     execute: async (_id, args, _signal, _onUpdate, ctx) => {
@@ -104,13 +109,24 @@ export function registerEyes(pi, { observe = observeHitl, now = Date.now,
         if (!ctx) throw new Error("Eyes session not initialized");
         bind(ctx);
       }
-      if (args.action === "ack") eyes.ack(args.key, args.revision);
+      if (args.action === "start") {
+        if (!ctx || typeof args.configPath !== "string" || !args.configPath.trim()) {
+          throw new Error("Eyes start requires configPath and the current session context");
+        }
+        const config = JSON.parse(fs.readFileSync(path.resolve(ctx.cwd, args.configPath), "utf8"));
+        eyes.start(config); arm();
+        // Observe now, but do not enqueue a redundant model turn inside the
+        // caller's turn. Pending revisions are returned to the caller below.
+        arming = true;
+        try { await eyes.tick(); } finally { arming = false; }
+      }
+      else if (args.action === "ack") eyes.ack(args.key, args.revision);
       else if (args.action === "deadline") eyes.deadline(args.key, args.at, args.revision);
       else if (args.action === "cancel") eyes.cancelDeadline(args.key);
       else if (args.action !== "status") throw new Error("Unknown eyes action");
       // Do not send a second wake from inside the running model turn. The next
       // observation delivers remaining coalesced revisions through the same owner.
-      const details = { ...eyes.summary(), pending: eyes.s.pending, deadlines: eyes.s.deadlines };
+      const details = { ...eyes.summary(), sources: observedSources, pending: eyes.s.pending, deadlines: eyes.s.deadlines };
       return { content: [{ type: "text", text: JSON.stringify(details) }], details };
     }
   });

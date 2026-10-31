@@ -82,7 +82,7 @@ module Molecules
       assert_equal "/foreign/Gemfile", env["BUNDLE_GEMFILE"], "parent environment is never mutated"
     end
 
-    def test_project_path_dependency_does_not_inherit_parent_installed_mode
+    def test_auto_mode_preserves_project_path_dependencies
       root = project("source project", "3.0.0")
       source = File.join(root, "fixture-package")
       File.write(File.join(source, "ace-start-fixture.gemspec"), <<~RUBY)
@@ -115,9 +115,34 @@ module Molecules
            #{Bundler::VERSION}
       LOCK
       report = Ace::Overseer::Molecules::ProjectBundle.new.call(root: root, workspace: "w-source",
-        env: ENV.to_h.merge("ACE_TOOLCHAIN" => "installed"))
+        env: ENV.to_h.merge("ACE_TOOLCHAIN" => "auto"))
       assert_equal "source-selected", report["version"], "the child must load its own path dependency"
-      assert_equal "unset", report["toolchain"], "the Lab must not force installed or auto"
+      assert_equal "unset", report["toolchain"], "auto mode does not force an installed closure"
+    end
+
+    def test_installed_mode_ignores_project_binstub_and_missing_gemfile
+      binary = File.join(@dir, "installed-overseer")
+      File.write(binary, <<~'SCRIPT')
+        #!/usr/bin/env ruby
+        require "json"
+        puts JSON.generate(status: "started", scope: "project", toolchain: ENV["ACE_TOOLCHAIN"], gemfile: ENV["BUNDLE_GEMFILE"])
+      SCRIPT
+      FileUtils.chmod(0o755, binary)
+      toolchain = Ace::Support::Cli::Toolchain
+      toolchain.stub(:installed?, true) do
+        toolchain.stub(:executable, binary) do
+          toolchain.stub(:child_environment, {"ACE_TOOLCHAIN" => "installed", "BUNDLE_GEMFILE" => nil, "RUBYOPT" => nil}) do
+            report = Ace::Overseer::Molecules::ProjectBundle.new.call(root: @dir, workspace: "w-installed")
+            assert_equal "installed", report["toolchain"]
+            assert_nil report["gemfile"]
+          end
+        end
+        toolchain.stub(:shell_setup, "installed-shell-setup") do
+          setup = Ace::Overseer::Molecules::ProjectBundle.shell_setup(@dir)
+          assert_includes setup, "BUNDLE_APP_CONFIG"
+          assert setup.end_with?("installed-shell-setup")
+        end
+      end
     end
 
     def test_child_binstub_can_choose_its_own_explicit_toolchain_policy

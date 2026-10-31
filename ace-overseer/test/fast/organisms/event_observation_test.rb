@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 require_relative "../../test_helper"
 require "ace/overseer/molecules/event_observation"
+require "open3"
 
 class OverseerEventObservationTest < AceOverseerTestCase
   # Local sources stubbed off for the HITL-adoption semantics; the merged
@@ -57,7 +58,7 @@ class OverseerEventObservationTest < AceOverseerTestCase
       result = observer.call(owner: "self")
 
       assert_equal "ace.hitl.observation/v1", result["schema"]
-      keys = result["events"].map { |row| row["key"] }
+      keys = result["events"].map { |row| row["source_key"] || row["key"] }
       assert_includes keys, "task:8xs.t.zz9"
       assert_equal({"status" => "ok"}, result["sources"]["hitl"])
       assert_equal "degraded", result["sources"]["worktrees"]["status"]
@@ -83,9 +84,36 @@ class OverseerEventObservationTest < AceOverseerTestCase
       assert_equal "degraded", result["sources"]["hitl"]["status"]
       assert_match(/unknown recipient/, result["sources"]["hitl"]["error"])
       marker = result["events"].find { |row| row["type"] == "source-health" }
-      assert_equal "source:hitl", marker["key"]
+      assert_equal "source:hitl", marker["source_key"]
       # the healthy local source still projects
-      assert_includes result["events"].map { |row| row["key"] }, "task:8xs.t.zz9"
+      assert_includes result["events"].map { |row| row["source_key"] || row["key"] }, "task:8xs.t.zz9"
     end
   end
+  def test_real_local_source_projection_is_accepted_by_the_shipped_eyes_validator
+    Dir.mktmpdir do |tmp|
+      tasks = Ace::Task::Organisms::TaskManager.new(root_dir: File.join(tmp, "tasks"))
+      tasks.create("Bootstrap ACE", status: "pending")
+      worktrees = Object.new
+      def worktrees.list_all = {success: true, worktrees: []}
+      local = Ace::Overseer::Molecules::LocalSources.new(task_manager: tasks, worktree_manager: worktrees)
+      hitl = Object.new
+      def hitl.call(**) = {"schema" => "ace.hitl.observation/v1", "events" => []}
+      observer = Ace::Overseer::Molecules::EventObservation.new(hitl: hitl, task_manager: tasks, local_sources: local)
+      result = observer.call(owner: "self")
+      refute_empty result.fetch("events")
+      source = File.expand_path("../ace-wake/handbook/extensions/ace-wake/wake/eyes.js", Ace::Overseer.gem_root)
+      script = <<~JS
+        import {pathToFileURL} from 'node:url';
+        const {Eyes} = await import(pathToFileURL(process.argv[1]));
+        const eyes = new Eyes({save:()=>{}, observe:async()=>{}, deliver:async()=>{}});
+        let data=''; for await (const chunk of process.stdin) data+=chunk;
+        eyes.validate(JSON.parse(data));
+      JS
+      _, err, status = Open3.capture3("node", "--input-type=module", "-e", script, source,
+        stdin_data: JSON.generate(result))
+      assert status.success?, err
+      assert_equal result, observer.call(owner: "self"), "unchanged state keeps the same wire revisions"
+    end
+  end
+
 end
