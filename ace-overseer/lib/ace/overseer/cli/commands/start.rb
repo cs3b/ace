@@ -16,6 +16,7 @@ module Ace
 
           desc "Start or reuse the project overseer session from .ace/overseer/config.yml"
 
+          option :reconcile, type: :boolean, default: false, desc: "Explicitly reconcile configured project overseers without restarting the lab coordinator"
           option :scope, type: :string, desc: "Coordinator role (lab or project); omitted means lab bootstrap"
           option :dry_run, type: :boolean, default: false, desc: "Show the start plan without creating a session"
           option :format, default: "table", desc: "Output format (table, json)"
@@ -29,11 +30,18 @@ module Ace
             @launcher = launcher || ->(argv) { Kernel.exec(*argv) }
           end
 
-          def call(dry_run: false, format: "table", scope: nil, **options)
+          def call(dry_run: false, format: "table", scope: nil, reconcile: false, **options)
             unless scope.nil? || Atoms::StartContract::SCOPES.include?(scope)
               raise Ace::Support::Cli::Error, "scope must be lab or project"
             end
-            report = orchestrator(scope: scope).call(dry_run: dry_run)
+            operation = orchestrator(scope: scope)
+            report = if reconcile
+              operation.reconcile(dry_run: dry_run)
+            elsif scope
+              operation.call(dry_run: dry_run)
+            else
+              operation.bootstrap(dry_run: dry_run)
+            end
             return @launcher.call(report.fetch("command")) if report["status"] == "foreground"
 
             if options[:quiet]

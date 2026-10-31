@@ -166,6 +166,16 @@ module Organisms
       assert(report["projects"].all? { |project| project["scope"] == "project" })
     end
 
+    def test_explicit_reconcile_manages_only_children_without_a_lab_agent_probe_or_boot
+      executor = FakeExecutor.new
+      report = orchestrator(executor).reconcile
+      assert_equal "ready", report["status"], report.inspect
+      assert_equal false, report["coordinator_managed"]
+      assert_equal %w[alpha beta], executor.workspaces_created
+      assert_equal %w[overseer-alpha overseer-beta], executor.tabs.map { |tab| tab[:label] }
+      assert_nil report["pane"]
+    end
+
     def test_lab_start_boots_the_lab_overseer_and_each_project_in_its_own_space
       executor = FakeExecutor.new
 
