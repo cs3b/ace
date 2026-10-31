@@ -4,6 +4,7 @@ require_relative "../../test_helper"
 require "rubygems/package"
 require "rubygems/installer"
 require "ace/overseer/molecules/project_bundle"
+require "ace/overseer/organisms/start_orchestrator"
 
 module Molecules
   class ProjectBundleTest < AceOverseerTestCase
@@ -143,6 +144,39 @@ module Molecules
           assert setup.end_with?("installed-shell-setup")
         end
       end
+    end
+
+    def test_early_blocked_child_preserves_the_original_startup_failure
+      root = project("blocked child", "4.0.0")
+      message = "Herdr workspace lookup failed: connection refused"
+      payload = Ace::Overseer::Organisms::StartOrchestrator.allocate.send(:blocked, message)
+      write_child_report(root, payload, exit_code: 1)
+      error = assert_raises(Ace::Overseer::Error) do
+        Ace::Overseer::Molecules::ProjectBundle.new.call(root: root, workspace: "w-child")
+      end
+      assert_equal message, error.message
+    end
+
+    def test_unscoped_or_wrong_scope_success_and_malformed_failure_are_refused
+      root = project("invalid child", "4.0.0")
+      [
+        {"status" => "ready", "scope" => nil},
+        {"status" => "ready", "scope" => "lab"},
+        {"status" => "blocked", "scope" => "lab", "message" => "wrong scope"},
+        {"status" => "blocked", "scope" => nil, "message" => " "},
+        {"status" => "blocked", "message" => "missing scope"}
+      ].each do |payload|
+        write_child_report(root, payload)
+        error = assert_raises(Ace::Overseer::Error) do
+          Ace::Overseer::Molecules::ProjectBundle.new.call(root: root, workspace: "w-child")
+        end
+        assert_equal "project start returned no project-scope report", error.message
+      end
+    end
+
+    def write_child_report(root, payload, exit_code: 0)
+      File.write(File.join(root, "bin/ace-overseer"),
+        "#!/usr/bin/env ruby\nputs #{JSON.generate(payload).inspect}\nexit #{exit_code}\n")
     end
 
     def test_child_timeout_is_bounded_and_reports_uncertain_session_effects
