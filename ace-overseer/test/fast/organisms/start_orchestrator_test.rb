@@ -59,6 +59,10 @@ module Organisms
         FakePaneResult.new({"result" => {"root_pane" => {"pane_id" => @pane_of_tab}}})
       end
 
+      def pane_run(_pane, _command)
+        FakePaneResult.new({"result" => {}})
+      end
+
       def agent_start(name:, kind:, pane:, timeout_ms:, args: [])
         @agent_started << {name: name, kind: kind, pane: pane, timeout_ms: timeout_ms, args: args}
         FakePaneResult.new({"status" => "ready"})
@@ -78,11 +82,11 @@ module Organisms
       `git -C #{@root.shellescape} init --quiet`
       File.write(File.join(@root, "guide.md"), "# guide\n")
       @config = {"start" => {"scope" => "project", "profile" => "ovs",
-        "instructions" => "wfi://overseer/start"},
-        "profiles" => {"ovs" => {"harness" => "pi", "model" => "zai/glm-5.3-flash",
-          "thinking" => "high"}}}
+                             "instructions" => "wfi://overseer/start"},
+                 "profiles" => {"ovs" => {"harness" => "pi", "model" => "zai/glm-5.3-flash",
+                                          "thinking" => "high"}}}
       @nav_runner = ->(argv, _cwd) {
-        {"status" => "ok", "out" => "#{File.join(@root, 'guide.md')}\n", "err" => ""}
+        {"status" => "ok", "out" => "#{File.join(@root, "guide.md")}\n", "err" => ""}
       }
     end
 
@@ -262,7 +266,7 @@ module Organisms
       seen = []
       nav_runner = ->(argv, _cwd) do
         seen << argv.first
-        {"status" => "ok", "out" => "#{File.join(@root, 'guide.md')}\n", "err" => ""}
+        {"status" => "ok", "out" => "#{File.join(@root, "guide.md")}\n", "err" => ""}
       end
       installed_launcher = "/gems/3.4.5/bin/ace-nav"
 
@@ -373,7 +377,7 @@ module Organisms
       report = orchestrator(executor, config: {}).call
 
       assert_equal "blocked", report["status"]
-      assert_match(/requires an explicit 'start' section/, report["message"])
+      assert_match(/lab topology could not be read/, report["message"])
       assert_empty executor.tabs
     end
 

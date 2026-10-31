@@ -32,14 +32,21 @@ authority execution model. tmux and Herdr are transports, never state owners.
 
 ## `ace-overseer start`
 
-Start or reuse the PROJECT overseer session from the directory's own
-configuration (task 8xs.t.pu0.1). The start contract is explicit — nothing is
-guessed and no interim default model applies:
+Run `ace-overseer start` at a shell in the Lab's existing Herdr `overseer`
+space. The command becomes the Lab's Pi agent in that same pane; it creates
+no additional Lab pane or space. The agent receives the packaged Lab guide
+and a first-turn prompt to configure itself and the commissioned projects
+using installed CLI, skills and normal configuration editing.
+
+No local start YAML is required for first run. The packaged bootstrap profile
+is `pi`, `zai/glm-5.3-flash`, thinking `high`, in Lab scope. An explicit start
+section overrides bootstrap and is validated without fallback. For an
+explicit project start use:
 
 ```yaml
 # .ace/overseer/config.yml (project tier of the cascade)
 start:
-  scope: project            # project | lab (lab: not implemented yet)
+  scope: project            # project | lab
   profile: overseer-default # reference into the profiles map below
   instructions: wfi://overseer/start  # handbook source (or absolute file path)
 profiles:
@@ -53,6 +60,7 @@ profiles:
 |--------|---------|
 | `--dry-run` | Show the start plan; no session, no sync, no model call |
 | `--format` | `table` (default) or `json` |
+| `--scope` | Explicit `lab` or `project` role; an unconfigured bare start bootstraps the Lab |
 
 Behavior:
 
@@ -86,10 +94,25 @@ Behavior:
 - The report carries `status` (`started|reused|blocked|dry_run`), `scope`,
   `root`, `label`, `workspace`, `pane`, `agent`, `profile`, `instructions`
   (`source` + resolved `path`) and a `message`. Exit 0 only for a ready
-  start/reuse (dry-run included); a blocked start is a CLI error naming the
-  missing configuration.
+  start/reuse (dry-run included); a blocked start is a CLI error naming the concrete invalid configuration
+  or unavailable capability.
 - The started overseer coordinates and delegates (guide:
   `wfi://overseer/start`); it never substitutes for a missing coworker.
+
+### Project-local bundles
+
+Each project owns its `Gemfile`, `Gemfile.lock`, local `bundle install`, and
+binstubs under `bin/`. The Lab's bundle selects the Lab coordinator's ACE
+version; it does not select the version for every project.
+
+For each project the Lab runs its `bin/ace-overseer start --scope project`
+(or `bundle exec ace-overseer` when no binstub exists) in a separate process
+bound to that project's Gemfile. Parent Bundler/Ruby injection variables are
+cleared. The project pane receives its own Gemfile and `bin/` in PATH, so its
+Pi agent and subsequent commands stay with that project's locked published
+gems. Missing Gemfile/lock is a concrete project-readiness error; the Lab
+never substitutes its own gem graph. `runtime: auto|herdr|tmux` selects the
+terminal backend and has no meaning as an ACE gem-version selector.
 
 ### Lab scope (8xs.t.pu0.a)
 
@@ -105,17 +128,14 @@ starts the whole lab from one external entry point:
   per-project (a nested lab start never recurses). An unreadable topology
   (missing or unparseable `.ace/lab/config.yml`) is a blocked start with
   the concrete cause.
-- The lab creates/reuses its own herdr space (`lab-overseer` — namespaced
-  so it can never collide with a session/space title derived from a project
-  directory name, e.g. a project rooted at a directory named `lab` owns
-  `overseer-lab`) and boots or
+- The lab creates/reuses its own herdr space (`overseer`, reserved for the Lab) and boots or
   reuses the lab's OWN overseer session there (label `overseer-<lab-root>`,
   cwd at the lab root, the lab guide as standing instructions, first-turn
   prompt included) — the lab-start instructions always reach a real agent,
   and an empty configured project list still runs the lab overseer (idle).
-- EACH project then starts or is found through the SAME operation as a
+- EACH project then starts or is found through its own bundle and the SAME operation as a
   standalone start (its own cascade, root, and session identity) in its OWN
-  herdr space, titled by its session label (`overseer-<project>`) and
+  herdr space, titled by its topology id (for example `ace`) and
   created/reused by title by the lab flow — project sessions are isolated
   from each other and from the lab overseer, never share one space, and
   never re-resolve the caller's ambient workspace (a plain terminal without
@@ -350,6 +370,7 @@ ace-overseer status --watch
 | Option | Purpose |
 |--------|---------|
 | `--format` | `table` (default) or `json` |
+| `--scope` | Explicit `lab` or `project` role; an unconfigured bare start bootstraps the Lab |
 | `--watch`, `-w` | Auto-refresh the worktree dashboard |
 | `--runtime` | Terminal backend used for pane checks |
 | `--quiet`, `-q` | Suppress non-essential output |

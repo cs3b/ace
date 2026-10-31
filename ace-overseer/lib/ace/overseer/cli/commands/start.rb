@@ -16,19 +16,25 @@ module Ace
 
           desc "Start or reuse the project overseer session from .ace/overseer/config.yml"
 
+          option :scope, type: :string, desc: "Coordinator role (lab or project); omitted means lab bootstrap"
           option :dry_run, type: :boolean, default: false, desc: "Show the start plan without creating a session"
           option :format, default: "table", desc: "Output format (table, json)"
           option :quiet, aliases: ["-q"], type: :boolean, default: false, desc: "Suppress non-essential output"
           option :debug, aliases: ["-d"], type: :boolean, default: false, desc: "Show debug output"
 
-          def initialize(orchestrator: nil, config: nil)
+          def initialize(orchestrator: nil, config: nil, launcher: nil)
             super()
             @orchestrator = orchestrator
             @config = config
+            @launcher = launcher || ->(argv) { Kernel.exec(*argv) }
           end
 
-          def call(dry_run: false, format: "table", **options)
-            report = orchestrator.call(dry_run: dry_run)
+          def call(dry_run: false, format: "table", scope: nil, **options)
+            unless scope.nil? || Atoms::StartContract::SCOPES.include?(scope)
+              raise Ace::Support::Cli::Error, "scope must be lab or project"
+            end
+            report = orchestrator(scope: scope).call(dry_run: dry_run)
+            return @launcher.call(report.fetch("command")) if report["status"] == "foreground"
 
             if options[:quiet]
               # quiet still fails loudly on a blocked start
@@ -51,24 +57,24 @@ module Ace
 
           private
 
-          def orchestrator
-            @orchestrator || Organisms::StartOrchestrator.new(config: @config || Ace::Overseer.config)
+          def orchestrator(scope: nil)
+            @orchestrator || Organisms::StartOrchestrator.new(config: @config || Ace::Overseer.config, scope: scope)
           end
 
           def render_table(report)
-            puts "ace-overseer start: #{report['status']}"
-            puts "  scope:         #{report['scope'] || '-'}"
-            puts "  root:          #{report['root'] || '-'}"
-            puts "  label:         #{report['label'] || '-'}"
-            puts "  profile:       #{report['profile'] || '-'}"
+            puts "ace-overseer start: #{report["status"]}"
+            puts "  scope:         #{report["scope"] || "-"}"
+            puts "  root:          #{report["root"] || "-"}"
+            puts "  label:         #{report["label"] || "-"}"
+            puts "  profile:       #{report["profile"] || "-"}"
             if report["instructions"]
-              puts "  instructions:  #{report['instructions']['source']} -> #{report['instructions']['path']}"
+              puts "  instructions:  #{report["instructions"]["source"]} -> #{report["instructions"]["path"]}"
             end
-            puts "  workspace:     #{report['workspace'] || '-'}"
-            puts "  pane:          #{report['pane'] || '-'}"
-            puts "  agent:         #{report['agent']}"
-            puts "  replaced pane: #{report['replaced_pane'] || '-'}" if report["replaced_pane"]
-            puts "  #{report['message']}" if report["message"]
+            puts "  workspace:     #{report["workspace"] || "-"}"
+            puts "  pane:          #{report["pane"] || "-"}"
+            puts "  agent:         #{report["agent"]}"
+            puts "  replaced pane: #{report["replaced_pane"] || "-"}" if report["replaced_pane"]
+            puts "  #{report["message"]}" if report["message"]
           end
         end
       end

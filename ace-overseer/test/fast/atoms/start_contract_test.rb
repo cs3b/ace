@@ -7,10 +7,10 @@ module Atoms
   # reference, instructions source — and nothing is guessed.
   class StartContractTest < Minitest::Test
     def config(start_section = {"scope" => "project", "profile" => "overseer-default",
-      "instructions" => "wfi://overseer/start"})
+                                "instructions" => "wfi://overseer/start"})
       {"start" => start_section,
        "profiles" => {"overseer-default" => {"harness" => "pi",
-         "model" => "zai/glm-5.3-flash", "thinking" => "high"}}}
+                                             "model" => "zai/glm-5.3-flash", "thinking" => "high"}}}
     end
 
     def test_valid_project_start_normalizes
@@ -23,17 +23,28 @@ module Atoms
       assert_equal "wfi://overseer/start", plan["instructions"]
     end
 
-    def test_missing_start_section_is_an_error_before_any_session
-      error = assert_raises(Ace::Overseer::Error) do
-        Ace::Overseer::Atoms::StartContract.normalize({})
-      end
-      assert_match(/requires an explicit 'start' section/, error.message)
+    def test_missing_start_section_bootstraps_the_lab_with_the_approved_profile
+      plan = Ace::Overseer::Atoms::StartContract.normalize({})
+      assert_equal "lab", plan["scope"]
+      assert_equal "wfi://overseer/lab-start", plan["instructions"]
+      assert_equal({"harness" => "pi", "model" => "zai/glm-5.3-flash", "thinking" => "high"}, plan["profile"])
+    end
+
+    def test_bootstrap_for_a_child_project_has_project_scope
+      config = Ace::Overseer::Atoms::StartContract.bootstrap({}, scope: "project")
+      plan = Ace::Overseer::Atoms::StartContract.normalize(config)
+      assert_equal "project", plan["scope"]
+      assert_equal "wfi://overseer/start", plan["instructions"]
+    end
+
+    def test_explicit_invalid_configuration_never_falls_back_to_bootstrap
+      assert_raises(Ace::Overseer::Error) { Ace::Overseer::Atoms::StartContract.normalize({"start" => nil}) }
     end
 
     def test_missing_scope_profile_or_instructions_is_an_error
       [["scope", {}], ["profile", {}], ["instructions", {}]].each do |key, _|
         section = {"scope" => "project", "profile" => "overseer-default",
-          "instructions" => "wfi://overseer/start"}
+                   "instructions" => "wfi://overseer/start"}
         section.delete(key)
         error = assert_raises(Ace::Overseer::Error) do
           Ace::Overseer::Atoms::StartContract.normalize(config(section))
