@@ -53,7 +53,7 @@ PATH
 PATH
   remote: ace-coworker
   specs:
-    ace-coworker (0.7.0)
+    ace-coworker (0.8.0)
       ace-assign (~> 0.72, >= 0.73.1)
       ace-git-worktree (~> 0.27)
       ace-hitl (~> 0.22)
@@ -295,12 +295,12 @@ PATH
 PATH
   remote: ace-overseer
   specs:
-    ace-overseer (0.28.0.pre.3)
+    ace-overseer (0.28.0)
       ace-assign (~> 0.70, >= 0.73.1)
-      ace-coworker (~> 0.7)
+      ace-coworker (~> 0.8)
       ace-git (~> 0.30)
       ace-git-worktree (~> 0.27)
-      ace-herdr (~> 0.6, >= 0.8.1)
+      ace-herdr (~> 0.9)
       ace-hitl (~> 0.24)
       ace-lab (~> 0.8)
       ace-review (~> 0.62.2)
@@ -510,7 +510,7 @@ PATH
 PATH
   remote: ace-wake
   specs:
-    ace-wake (0.1.0)
+    ace-wake (0.2.0)
 
 GEM
   remote: https://rubygems.org/
