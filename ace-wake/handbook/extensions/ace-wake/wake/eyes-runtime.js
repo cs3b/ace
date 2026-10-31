@@ -25,7 +25,7 @@ export async function observeHitl(cwd, config) {
 
 export function registerEyes(pi, { observe = observeHitl, now = Date.now,
   schedule = (fn, ms) => setInterval(fn, ms), cancel = clearInterval } = {}) {
-  let eyes, timer, attempt, observedSources, compacting = false, running = false, arming = false;
+  let eyes, timer, attempt, observedSources, bindingGeneration = 0, compacting = false, running = false, arming = false;
   const stopTimer = () => { if (timer !== undefined) cancel(timer); timer = undefined; };
   function arm() {
     stopTimer();
@@ -35,6 +35,7 @@ export function registerEyes(pi, { observe = observeHitl, now = Date.now,
     }
   }
   const bind = (ctx) => {
+    const generation = ++bindingGeneration;
     stopTimer(); eyes?.dispose(); attempt = undefined; observedSources = undefined; compacting = false; running = false;
     const entries = ctx.sessionManager.getBranch();
     const snapshot = [...entries].reverse().find((e) => e.type === "custom" && e.customType === EYES_ENTRY)?.data;
@@ -52,7 +53,9 @@ export function registerEyes(pi, { observe = observeHitl, now = Date.now,
       },
       observe: async (config) => {
         const result = await observe(ctx.cwd, config);
-        observedSources = result.sources;
+        // A disposed binding can still finish its asynchronous owner read.
+        // Its source health is never evidence for the current session binding.
+        if (generation === bindingGeneration) observedSources = result.sources;
         return result;
       },
       canDeliver: () => !arming && !compacting && (ctx.isIdle() || running),
