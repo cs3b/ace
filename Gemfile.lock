@@ -295,7 +295,7 @@ PATH
 PATH
   remote: ace-overseer
   specs:
-    ace-overseer (0.28.0.pre.2)
+    ace-overseer (0.28.0.pre.3)
       ace-assign (~> 0.70, >= 0.73.1)
       ace-coworker (~> 0.7)
       ace-git (~> 0.30)

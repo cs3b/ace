@@ -133,3 +133,21 @@ and a fake herdr command records zero invocations. No skill sync/init or layout
 preflight occurs. Explicit reconcile tests prove only project children are
 started and no Lab pane/agent is probed or restarted. Full regression follows
 on this exact release candidate; installed acceptance is still a host gate.
+
+Real deployed pre.2 finding: child ProjectBundle forced ACE_TOOLCHAIN=installed,
+rejecting a legitimate project's own monorepo Gemfile path dependencies. The
+Herdr daemon also retained an inherited installed flag. Captain clarified the
+child Gemfile/source policy is authoritative; clear the parent mode rather
+than impose installed or auto globally. The Lab guide also over-restricted
+routine project STARTUP configuration and dependency preparation. Correct only
+those generic boundaries in pre.3; retain the accepted minimal bare launcher.
+An old project ACE version without start still needs its own reviewed owner
+update, never replacement of its monorepo Gemfile or an installed-gem patch.
+
+Pre.3 focused tests: 14 tests, 49 assertions, 0 failures/errors. Real child
+Bundler process loads its own path dependency with the Lab's installed flag
+removed; a child binstub can still explicitly choose installed mode. A real
+new server shell seeded with ACE_TOOLCHAIN=installed but absent from CLI env
+is cleared, while accepted bare CLI same-PID/zero-Herdr regression still passes.
+No launcher implementation changed. Generic child code/version update remains
+owned by that project's reviewed workflow, not the Lab's Gemfile replacement.
