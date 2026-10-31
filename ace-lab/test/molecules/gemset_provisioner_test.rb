@@ -415,8 +415,20 @@ module Molecules
         assert_equal %w[0.13.0], versions
 
         runtime = {"gem_home" => gem_home, "gems" => [{"name" => "ace-lab-probe", "version" => "0.13.0"}]}
+        payload = File.join(gem_home, "specifications", "ace-lab-probe-0.13.0.gemspec")
+        File.chmod(0o640, payload)
+        unknown = File.join(gem_home, "private-credential")
+        File.write(unknown, "not package-owned")
+        File.chmod(0o600, unknown)
+        predicted = Ace::Lab::Molecules::GemsetProvisioner.new(dry_run: true).call(runtime: runtime)
+        assert_equal "exists", predicted.first["status"], predicted.first["message"]
+        assert_equal 0o640, File.stat(payload).mode & 0o777
         report = provisioner.call(runtime: runtime)
-        assert_equal "exists", report.first["status"]
+        assert_equal "exists", report.first["status"], report.first["message"]
+        assert_equal 0o644, File.stat(payload).mode & 0o777
+        assert_equal 0o600, File.stat(unknown).mode & 0o777
+        assert_equal predicted.first["permissions"].map { |r| r["path"] }, report.first["permissions"].map { |r| r["path"] }
+        assert_empty provisioner.call(runtime: runtime).first["permissions"]
       end
     end
 
@@ -450,6 +462,27 @@ module Molecules
     def dependency_listing(name, version, deps)
       body = deps.map { |dep, requirement| "  #{dep} (#{requirement}, runtime)\n" }.join
       {"status" => "ok", "out" => "#{name} (#{version})\n#{body}", "err" => ""}
+    end
+
+    def test_real_dry_run_validates_installed_parent_while_predicting_missing_dependency
+      Dir.mktmpdir do |dir|
+        dependency = "ace-lab-absent-permission-probe"
+        gem_home = build_and_install_gem(dir, "ace-lab-parent-probe", "1.0.0",
+          dependencies: {dependency => "= 1.0.0"}, ignore_dependencies: true)
+        spec = File.join(gem_home, "specifications", "ace-lab-parent-probe-1.0.0.gemspec")
+        File.chmod(0o640, spec)
+        runtime = {"gem_home" => gem_home, "gems" => [{"name" => "ace-lab-parent-probe", "version" => "1.0.0"}]}
+        report = Ace::Lab::Molecules::GemsetProvisioner.new(dry_run: true).call(runtime: runtime).first
+        assert_equal "exists", report["status"], report["message"]
+        assert_equal [{"name" => dependency, "requirement" => "= 1.0.0", "status" => "would_install"}], report["closure"]
+        assert report["permissions"].any? { |item| item["path"] == File.realpath(spec) && item["status"] == "would_normalize" }
+        assert_equal 0o640, File.stat(spec).mode & 0o777
+        refute File.exist?(File.join(gem_home, "specifications", "#{dependency}-1.0.0.gemspec"))
+        assert_raises(Ace::Lab::Molecules::GemPayloadPermissions::Error) do
+          Ace::Lab::Molecules::GemPayloadPermissions.new(gem_home: gem_home, dry_run: false, privileged: false)
+            .call(name: "ace-lab-parent-probe", version: "1.0.0")
+        end
+      end
     end
 
     def test_missing_transitive_dependency_is_installed_even_when_gem_listed
