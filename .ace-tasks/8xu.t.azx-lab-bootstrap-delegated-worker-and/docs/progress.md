@@ -23,7 +23,7 @@ Existing Omarchy artifacts, not rebuilt or claimed accepted:
   c6e83d2e8ea87397687223c9fe7c3aa5e4d8cb58562b860e03302a538074a640
 - `.ace-local/candidates/pre3/ace-overseer-0.28.0.pre.3.gem`:
   c493fee37aca75ccdae62bb1c132c5fe25aa3cb70de95cc041dfc5a1a93cd3ae
-Their build-source provenance is not yet verified from archive contents.
+Payload source equivalence is now verified in prerelease-provenance.md (all68files); actual historical build invocation is not attested.
 
 ## Defects found
 
@@ -177,3 +177,18 @@ Bare installed ace-overseer start launched Pi in existing w3:p1 on
 /home/mo/.pi/agent/sessions/--home-mo-Labs-overseer-lab--/2026-10-31T12-50-02-003Z_01a19202-8892-7af3-b488-e95a67f9aa68.jsonl
 Actual first turn recognized installed runtime and historical private tasks.
 Delegation/eyes/worker result acceptance still in progress, not yet claimed.
+
+## Delegation behavior finding
+
+Eyes enabled and healthy on the live coordinator, but the initial turn pursued
+project runtime implementation diagnosis instead of commissioning a worker.
+An explicit current commission superseded historical HITL8xu80c; a second
+clarification explicitly assigned diagnosis to the worker. The actor then
+created private8xu.t.jh7 with three children and executable8xu.t.jh8.
+A regex parse truncated child IDs and created a self-dependency; the actor
+recognized and corrected its task metadata. No worker launch proven yet.
+
+Packaged guide fix a71893d93 assigns diagnosis/reproduction to the worker,
+requires only observed symptom+desired outcome for commission, and gates
+project startup on worker+independent verification. Independently reviewed,
+not yet published/deployed. Current lab remains published0.28.0.
