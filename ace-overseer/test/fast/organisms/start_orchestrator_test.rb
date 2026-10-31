@@ -35,8 +35,11 @@ module Organisms
         @tabs = []
       end
 
-      def pane_list
-        FakePaneResult.new(@panes)
+      def pane_list(workspace_id: nil)
+        rows = @panes.map do |pane|
+          pane.transform_keys { |key| {"id" => "pane_id", "title" => "terminal_title"}.fetch(key, key) }
+        end
+        FakePaneResult.new({"result" => {"panes" => rows}})
       end
 
       def pane_current
@@ -293,7 +296,7 @@ module Organisms
 
     def test_herdr_pane_list_failure_surfaces_as_blocked_naming_herdr
       executor = FakeExecutor.new(pane_current: {"result" => {"workspace_id" => "ws1"}})
-      def executor.pane_list
+      def executor.pane_list(workspace_id: nil)
         raise Ace::Herdr::CommandError, "herdr exited 1: socket closed"
       end
 

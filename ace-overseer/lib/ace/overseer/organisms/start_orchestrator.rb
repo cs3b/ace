@@ -72,6 +72,7 @@ module Ace
           workspace: nil, workspace_factory: nil, cwd: Dir.pwd)
           @config = config || Ace::Overseer.config
           @executor = executor || Ace::Herdr::Molecules::HerdrExecutor.new
+          @control_surface = Ace::Herdr::Organisms::ControlSurface.new(executor: @executor)
           @root_resolver = root_resolver || Molecules::ProjectRootResolver.new
           @nav_runner = nav_runner || method(:run_nav)
           @workspace = workspace
@@ -264,12 +265,10 @@ module Ace
         # workspace reference), never treated as absent: creating a
         # second space with the same title would duplicate the space.
         def find_workspace(title)
-          existing = @executor.workspace_list.parsed_json
-          list = existing.is_a?(Hash) ? Array(existing["result"] || existing["workspaces"]) : Array(existing)
-          found = list.find { |entry| entry["title"] == title || entry["label"] == title }
+          found = @control_surface.list_workspaces.find { |entry| entry[:title] == title }
           return nil unless found
 
-          found["id"] || found["workspace_id"] || found["title"] || found["label"]
+          found[:id] || found[:title]
         rescue Ace::Herdr::ExecutorUnavailableError => e
           raise Ace::Overseer::Error, "herdr is unavailable: #{e.message}"
         end
@@ -426,8 +425,8 @@ module Ace
 
         # The live pane owning this project's overseer label.
         def owner_pane(label)
-          panes = extract_panes(@executor.pane_list.parsed_json)
-          panes.find { |pane| pane["title"] == label || pane["label"] == label }
+          pane = @control_surface.list_panes.find { |entry| entry[:title] == label }
+          pane&.transform_keys(&:to_s)
         rescue Ace::Herdr::ExecutorUnavailableError => e
           raise Ace::Overseer::Error, "herdr is unavailable: #{e.message}"
         end
@@ -541,14 +540,6 @@ module Ace
           else
             "the reused agent state is '#{state}'; its first turn could not " \
               "be verified — inspect the session before relying on it"
-          end
-        end
-
-        def extract_panes(json)
-          case json
-          when Array then json
-          when Hash then Array(json["result"] || json["panes"] || [])
-          else []
           end
         end
 

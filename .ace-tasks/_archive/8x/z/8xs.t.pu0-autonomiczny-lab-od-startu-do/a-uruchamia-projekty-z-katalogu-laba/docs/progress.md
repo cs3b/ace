@@ -46,3 +46,11 @@ space'ami — odbiór na labie odroczony na koniec programu.
 - Odbiór na labie: prawdziwe space'y Herdr, ≥2 skonfigurowane projekty,
   dołączenie już działającego projektu, praca na prawdziwej topologii z
   ace-lab install; publikacja gemów.
+
+## 2026-10-31 — real native Herdr startup regression (reopened)
+
+Host Lab startup failed before creating any overseer. Native `workspace list` returns `{id: "cli:workspace:list", result: {type: "workspace_list", workspaces: [...]}}`; StartOrchestrator treated the result Hash as an Array of rows and raised `TypeError: no implicit conversion of String into Integer` at find_workspace. Pane listing used the same incorrect envelope assumption. Existing test fakes emitted invented flat arrays and concealed the defect.
+
+Regression reproduced with the live workspace schema: `bin/ace-test ace-overseer test/fast/organisms/lab_start_test.rb:250` -> 1 test, 0 assertions, 1 error, exact TypeError at line 269. Baseline lab tests before regression: 17 tests, 90 assertions, 0 failures/errors.
+
+Fix uses existing ace-herdr ControlSurface list normalization for workspaces and panes; fakes now emit native collection envelopes and native row field names. Independent review, publication, and deployed verification remain required. Bootstrap without manual config and workspace naming are separate Captain-requested behavior gaps; this parser fix does not claim them delivered.
