@@ -159,7 +159,7 @@ module Ace
         # busy terminal would wait on the CLI itself; the CLI execs this
         # argv instead. Calls made by an existing agent only reconcile.
         def foreground_start(plan, dry_run)
-          pane_id = @env["HERDR_PANE"].to_s
+          pane_id = @env["HERDR_PANE_ID"].to_s
           return nil if pane_id.empty? || agent_state(pane_id)
 
           pane = @control_surface.list_panes.find { |entry| entry[:id] == pane_id }

@@ -82,6 +82,15 @@ module Molecules
       assert_equal "/foreign/Gemfile", env["BUNDLE_GEMFILE"], "parent environment is never mutated"
     end
 
+    def test_child_process_clears_native_parent_pane_and_tab_ids
+      env = {"HERDR_PANE_ID" => "w3:p1", "HERDR_TAB_ID" => "w3:t1", "HERDR_PANE" => "", "HERDR_TAB" => ""}
+      child = Ace::Overseer::Molecules::ProjectBundle.environment(@dir, env: env)
+      %w[HERDR_PANE_ID HERDR_TAB_ID HERDR_PANE HERDR_TAB].each { |key| assert_nil child[key] }
+      setup = Ace::Overseer::Molecules::ProjectBundle.shell_setup(@dir, env: env)
+      refute_includes setup, "HERDR_PANE_ID"
+      refute_includes setup, "HERDR_TAB_ID"
+    end
+
     def test_missing_project_bundle_refuses_parent_runtime_fallback
       error = assert_raises(Ace::Overseer::Error) do
         Ace::Overseer::Molecules::ProjectBundle.new.call(root: @dir, workspace: "w1")
@@ -97,6 +106,16 @@ module Molecules
       out, err, status = Open3.capture3({"GEM_HOME" => "/foreign/gems"}, "/bin/sh", "-c", command)
       assert status.success?, err
       assert_equal [File.join(root, "Gemfile"), File.join(root, "bin"), "false"], out.lines.map(&:strip)
+    end
+
+    def test_server_bundle_selectors_absent_from_cli_are_cleared_in_new_shell
+      setup = Ace::Overseer::Molecules::ProjectBundle.shell_setup(@dir, env: {"PATH" => "/usr/bin:/bin"})
+      foreign = {"BUNDLE_PATH" => "/foreign/server/vendor", "BUNDLE_APP_CONFIG" => "/foreign/config",
+        "BUNDLER_ORIG_BUNDLE_PATH" => "/foreign/original", "BUNDLE_FROZEN" => "true"}
+      command = setup + '; printf "%s|%s|%s|%s" "${BUNDLE_PATH-unset}" "${BUNDLE_APP_CONFIG-unset}" "${BUNDLER_ORIG_BUNDLE_PATH-unset}" "${BUNDLE_FROZEN-unset}"'
+      out, err, status = Open3.capture3(foreign, "/bin/bash", "--noprofile", "--norc", "-c", command)
+      assert status.success?, err
+      assert_equal "unset|unset|unset|unset", out
     end
   end
 end

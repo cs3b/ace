@@ -89,3 +89,26 @@ Additional final focused check: project_bundle_test — 3 tests, 13 assertions,
 0 failures/errors, including real shell setup with a path containing spaces.
 `ace-task doctor` reports 529 archive warnings on both baseline fc72f8fea and
 this candidate (879 tasks / 34 folders); no task metadata was changed here.
+
+
+Real deployment preflight correction: native shell exposes HERDR_PANE_ID and
+HERDR_TAB_ID, not HERDR_PANE/HERDR_TAB. The first bootstrap candidate used the
+wrong pane environment name, so it would miss the foreground path. Recorded
+before continuing: bind foreground to the actual HERDR_PANE_ID, clear native
+parent pane/tab IDs for child CLI processes, and preserve the actual child
+pane IDs when applying its own bundle shell setup. Release candidate 0.28.0.pre.1 for installed acceptance before stable publication.
+
+Independent review rejected fce6d7db3 with three executed PoCs: native pane id
+not read; native parent pane/tab ids not cleared; and a target Herdr shell
+can hold BUNDLE_PATH absent from the requesting CLI, so derived-only cleanup
+leaves a foreign bundle selector. First two are corrected in the candidate;
+third will use an explicit complete known Bundler/Ruby cleanup set independent
+of the requesting process environment, with a real target-shell regression.
+All reviewer PoCs must rerun before approval.
+
+Revised candidate verification: all three reviewer PoCs rerun exactly —
+8 tests, 27 assertions, 0 failures/errors. Full `bin/ace-test ace-overseer all`
+after the native-id and target-shell corrections: 447 tests, 2002 assertions,
+0 failures, 0 errors, 1 existing skip. A permanent regression now seeds foreign
+BUNDLE_PATH, BUNDLE_APP_CONFIG, BUNDLER_ORIG_BUNDLE_PATH and BUNDLE_FROZEN in
+the target server shell while the CLI has none, and verifies all are cleared.

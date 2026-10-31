@@ -52,7 +52,8 @@ module Organisms
 
     def start(dry_run: false, config: {})
       Ace::Overseer::Organisms::StartOrchestrator.new(config: config,
-        executor: @executor, cwd: @root, env: {"HERDR_PANE" => "w1:p1"},
+        executor: @executor, cwd: @root, env: {"HERDR_PANE" => "", "HERDR_PANE_ID" => "w1:p1",
+          "HERDR_TAB" => "", "HERDR_WORKSPACE_ID" => "w1"},
         nav_runner: ->(*) { {"status" => "ok", "out" => @guide} }).call(dry_run: dry_run)
     end
 
