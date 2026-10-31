@@ -35,7 +35,7 @@ authority execution model. tmux and Herdr are transports, never state owners.
 Run `ace-overseer start` at a shell in the Lab's existing Herdr `overseer`
 space. The command becomes the Lab's Pi agent directly in that same terminal
 and cwd, without any Herdr environment, agent, owner or layout preflight. The agent receives the packaged Lab guide
-and a first-turn prompt to configure itself and the commissioned projects
+and a first-turn prompt to delegate configuration of commissioned projects
 using installed CLI, skills and normal configuration editing.
 
 No local start YAML is required for first run. The packaged bootstrap profile
@@ -102,21 +102,20 @@ Behavior:
 
 ### Project-local bundles
 
-Each project owns its `Gemfile`, `Gemfile.lock`, local `bundle install`, and
-binstubs under `bin/`. The Lab's bundle selects the Lab coordinator's ACE
-version; it does not select the version for every project.
+In auto mode each project owns its Gemfile/lock and binstubs. Child starts
+clear parent Bundler/Ruby injection and select the project's bundle.
 
-For each project the Lab runs its `bin/ace-overseer start --scope project`
-(or `bundle exec ace-overseer` when no binstub exists) in a separate process
-bound to that project's Gemfile. Parent Bundler/Ruby injection variables are
-cleared. The project pane receives its own Gemfile and `bin/` in PATH, so its
-Pi agent and subsequent commands stay with that project's locked
-dependencies, including source/path gems when selected by that project. The
-Lab clears its inherited ACE_TOOLCHAIN flag rather than forcing installed or
-auto; a child's own binstub or environment may select its policy. Missing
-Gemfile/lock is a concrete project-readiness error; the Lab
-never substitutes its own gem graph. `runtime: auto|herdr|tmux` selects the
-terminal backend and has no meaning as an ACE gem-version selector.
+Explicit `ACE_TOOLCHAIN=installed` is preserved instead: the installed
+Toolchain launcher and gem closure start the child without reading its
+Gemfile or executing its binstub. Missing installed dependencies fail visibly;
+there is no fallback to checkout code. Terminal backend selection does not
+change toolchain mode.
+
+The lab overseer delegates bundle/configuration preparation to a lab worker;
+it never edits the project's binstub or installs gems itself. Follow
+`wfi://overseer/bootstrap-delegation` for the task, worker, independent
+verification and observed completion cycle. `ace-coworker start` prints a
+brief; a separate Herdr agent launch and first prompt are required.
 
 ### Lab scope (8xs.t.pu0.a)
 

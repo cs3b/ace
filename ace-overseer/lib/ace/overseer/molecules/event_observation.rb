@@ -45,7 +45,7 @@ module Ace
               "hitl" => {"status" => "degraded", "error" => "#{hitl_error.class}: #{hitl_error.message}"}
             )
             return {"schema" => "ace.hitl.observation/v1",
-                    "events" => events.sort_by { |row| row["key"] },
+                    "events" => wire_events(events).sort_by { |row| row["key"] },
                     "settled" => [], "sources" => sources}
           end
 
@@ -60,7 +60,7 @@ module Ace
             manager && ([manager] + Array(manager.subtasks)).all? { |task| Ace::Task::Atoms::TaskValidationRules.terminal_status?(task.status.to_s) }
           end
 
-          projection.merge("events" => (pending + local.fetch("events") + remote.fetch("events"))
+          projection.merge("events" => (pending + wire_events(local.fetch("events") + remote.fetch("events")))
               .sort_by { |row| row["key"] },
             "settled" => settled,
             "sources" => local.fetch("sources").merge(remote.fetch("sources"))
@@ -68,6 +68,17 @@ module Ace
         end
 
         private
+
+        # Local owners expose readable keys, whereas eyes consumes the HITL
+        # wire envelope (hashed key, revision and a safe id). Normalize only
+        # local/remote rows; canonical HITL identities remain untouched.
+        def wire_events(rows)
+          rows.map do |row|
+            key = Digest::SHA256.hexdigest("overseer:#{row.fetch('key')}")
+            row.merge("source_key" => row.fetch("key"), "source_id" => row["id"],
+              "key" => key, "id" => key)
+          end
+        end
 
         # Configured remote observation (8xs.t.pu0.4): the project's own
         # observe.remote.pull_requests list — never a scan of accessible

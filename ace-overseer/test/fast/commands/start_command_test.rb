@@ -88,7 +88,7 @@ module Commands
         before = out[/BEFORE=(\d+)/, 1]
         assert before
         assert_equal before, out[/AFTER=(\d+)/, 1]
-        assert_includes out, "CWD=#{root}"
+        assert_includes out, "CWD=#{File.realpath(root)}"
         assert_includes out, "ARGS=--model|zai/glm-5.3-flash|--thinking|high|--append-system-prompt|"
         assert_includes out, "lab-start.wf.md"
         refute File.exist?(marker), "bare start must never invoke Herdr"

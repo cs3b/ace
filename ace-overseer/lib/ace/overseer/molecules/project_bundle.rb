@@ -3,6 +3,7 @@
 require "json"
 require "open3"
 require "shellwords"
+require "ace/support/cli/toolchain"
 
 module Ace
   module Overseer
@@ -39,6 +40,14 @@ module Ace
         RUBY_SELECTORS = %w[RUBYOPT RUBYLIB GEM_HOME GEM_PATH ACE_TOOLCHAIN].freeze
 
         def self.environment(root, env: ENV)
+          if Ace::Support::Cli::Toolchain.installed?
+            # Reuse the installed closure; the project checkout is domain data.
+            # Do not let a project binstub or Gemfile select source dependencies.
+            return Ace::Support::Cli::Toolchain.child_environment.merge(
+              "HERDR_PANE" => nil, "HERDR_TAB" => nil,
+              "HERDR_PANE_ID" => nil, "HERDR_TAB_ID" => nil
+            )
+          end
           known = BUNDLE_SELECTORS + RUBY_SELECTORS
           names = env.keys.grep(/\ABUNDLER?_/) + known +
             (known + %w[PATH]).map { |key| "BUNDLER_ORIG_#{key}" } +
@@ -50,6 +59,15 @@ module Ace
         end
 
         def self.shell_setup(root, env: ENV)
+          if Ace::Support::Cli::Toolchain.installed?
+            # A server-created shell may contain selectors absent from this
+            # caller. Clear the same known selectors before applying the
+            # installed closure; never inherit server-side Bundler injection.
+            names = BUNDLE_SELECTORS + BUNDLE_SELECTORS.map { |key| "BUNDLER_ORIG_#{key}" }
+            return "unset #{names.map { |name| Shellwords.escape(name) }.join(' ')}; " +
+              Ace::Support::Cli::Toolchain.shell_setup
+          end
+
           values = environment(root, env: env).reject { |name, _| %w[HERDR_PANE HERDR_TAB HERDR_PANE_ID HERDR_TAB_ID].include?(name) }
           cleared, assigned = values.partition { |_, value| value.nil? }
           "unset #{cleared.map { |name, _| Shellwords.escape(name) }.join(" ")}; export " +
@@ -57,12 +75,15 @@ module Ace
         end
 
         def call(root:, workspace:, env: ENV)
-          %w[Gemfile Gemfile.lock].each do |name|
-            unless File.file?(File.join(root, name))
-              raise Ace::Overseer::Error, "project bundle missing #{name}; prepare this project's own bundle first"
+          installed = Ace::Support::Cli::Toolchain.installed?
+          unless installed
+            %w[Gemfile Gemfile.lock].each do |name|
+              unless File.file?(File.join(root, name))
+                raise Ace::Overseer::Error, "project bundle missing #{name}; prepare this project's own bundle first"
+              end
             end
           end
-          binary = File.join(root, "bin", "ace-overseer")
+          binary = installed ? Ace::Support::Cli::Toolchain.executable("ace-overseer") : File.join(root, "bin", "ace-overseer")
           command = File.executable?(binary) ? [binary] : ["bundle", "exec", "ace-overseer"]
           command += ["start", "--scope", "project", "--format", "json"]
           child_env = self.class.environment(root, env: env).merge("HERDR_WORKSPACE_ID" => workspace)
