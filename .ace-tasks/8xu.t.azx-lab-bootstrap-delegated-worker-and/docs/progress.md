@@ -127,3 +127,14 @@ Host policy docs committed 0b3d3c7 after independent review. Focused host tests:
 from clean e176247cd93281e5216193250e750efeeffa547e. No host deployment yet.
 Candidate checksums are in release-candidate.json. OTP/publication, migration,
 new runtime activation and the live delegated cycle remain outstanding.
+
+## Published release and integration
+
+PR400 merged by rebase after Captain approval, integrated main
+2f6da30113e01378d369e493448ea5ba46bf40e1. The tree matches the reviewed
+branch; source artifact provenance remains ffa64e23419eb3cf15ee0f15ba28b4843bcc98d0.
+Operator published all three versions in5.1seconds. RubyGems v2 metadata
+independently confirms all three SHA-256 values in release-candidate.json.
+Do not rerun publisher to verify. Installed candidate can now be selected
+after fresh migration preflight. SSH currently requires Tailscale reauthentication;
+no cutover has been executed.

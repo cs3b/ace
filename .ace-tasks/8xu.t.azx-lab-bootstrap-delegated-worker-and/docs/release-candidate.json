@@ -1,6 +1,6 @@
 {
   "source_sha": "ffa64e23419eb3cf15ee0f15ba28b4843bcc98d0",
-  "publication": "pending",
+  "publication": "verified",
   "live_acceptance": "pending",
   "artifacts": [
     {
@@ -18,5 +18,8 @@
       "version": "0.28.0",
       "sha256": "71fdcecd4ccc5d43319c0602fd89204b45b8ae7cc38b78e3f8abb669821cc5ba"
     }
-  ]
+  ],
+  "publication_verified_at": "2026-10-31T12:36:11.923259+00:00",
+  "integrated_main_sha": "2f6da30113e01378d369e493448ea5ba46bf40e1",
+  "publication_evidence": "Operator reported 3 successful pushes; RubyGems v2 metadata matches all three prepared SHA-256 values."
 }
