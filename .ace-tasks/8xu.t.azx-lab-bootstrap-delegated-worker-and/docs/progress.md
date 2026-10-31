@@ -298,7 +298,7 @@ Source3296afb4723b5cd69e5c6b81587650a19c3ee784 independently approved.
 Publisher dryrun+prepare produced exactly two fresh artifacts, no publication:
 ace-lab0.14.1 then ace-overseer0.28.1 (two dependency waves). Checksums and
 installed rehearsal are preserved in followup-release-candidate.json and
-followup-installed-rehearsal.json. Fresh35-gem isolated closure passed actual
+followup-installed-rehearsal.json. Fresh40-gem isolated closure passed actual
 CLI/version/packagedguide checks; real ace-support-fs0640payload→0644 with
 unknown0600fixture unchanged;14,733byte environment passed canonicalPTY and
 acknowledgement/cleanup. Rootchown and real Lab handoff still require deployment.
