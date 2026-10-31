@@ -31,12 +31,12 @@ module Organisms
       end
 
       def workspace_list
-        FakePaneResult.new({"result" => @workspaces})
+        FakePaneResult.new({"result" => {"workspaces" => @workspaces}})
       end
 
       def workspace_create(label:)
         @workspaces_created << label
-        @workspaces << {"id" => "ws-#{label}", "title" => label}
+        @workspaces << {"workspace_id" => "ws-#{label}", "label" => label}
         FakePaneResult.new({"result" => {"workspace_id" => "ws-#{label}"}})
       end
 
@@ -46,11 +46,14 @@ module Organisms
         FakePaneResult.new({"result" => {}})
       end
 
-      def pane_list
-        FakePaneResult.new(@tabs.map do |tab|
+      def pane_list(workspace_id: nil)
+        panes = @tabs.map do |tab|
           {"id" => "p-#{tab[:label]}", "title" => tab[:label], "cwd" => tab[:cwd],
            "workspace_id" => tab[:workspace_id]}
-        end + @extra_panes)
+        end + @extra_panes
+        FakePaneResult.new({"result" => {"panes" => panes.map do |pane|
+          pane.transform_keys { |key| {"id" => "pane_id", "title" => "terminal_title"}.fetch(key, key) }
+        end}})
       end
 
       # A pane that exists OUTSIDE this fake's created tabs (e.g. a
@@ -247,12 +250,33 @@ module Organisms
         "no empty alpha space is left behind by a pure reuse; beta still gets its own"
     end
 
+    def test_native_workspace_list_envelope_starts_and_reuses_existing_lab_space
+      executor = FakeExecutor.new
+      def executor.workspace_list
+        FakePaneResult.new({"id" => "cli:workspace:list", "result" => {
+          "type" => "workspace_list", "workspaces" => [
+            {"active_tab_id" => "w1:t1", "agent_status" => "unknown", "focused" => true,
+             "label" => "~", "number" => 1, "pane_count" => 1, "tab_count" => 1,
+             "workspace_id" => "w1"},
+            {"label" => "lab-overseer", "workspace_id" => "existing-lab"}
+          ]
+        }})
+      end
+
+      report = orchestrator(executor).call
+
+      assert_equal "ready", report["status"], report.inspect
+      assert_equal "existing-lab", report["workspace"]
+      refute_includes executor.workspaces_created, "lab-overseer"
+      assert_equal %w[overseer-alpha overseer-beta], executor.workspaces_created
+    end
+
     def test_a_titled_space_without_an_id_is_reused_never_duplicated
       executor = FakeExecutor.new
       # a live lab-overseer entry carries a title but no id
       def executor.workspace_list
-        @titled ||= [{"title" => "lab-overseer"}]
-        FakePaneResult.new({"result" => @titled})
+        @titled ||= [{"label" => "lab-overseer"}]
+        FakePaneResult.new({"result" => {"workspaces" => @titled}})
       end
       def executor.workspace_create(label:)
         raise "must not create a duplicate '#{label}' space" if label == "lab-overseer"
@@ -388,9 +412,9 @@ module Organisms
     def test_lab_owner_pane_in_a_foreign_cwd_is_a_conflict
       executor = FakeExecutor.new
       # a pane already owns the lab label but works in another directory
-      def executor.pane_list
+      def executor.pane_list(workspace_id: nil)
         @foreign_cwd ||= Dir.mktmpdir
-        FakePaneResult.new([{"id" => "p9", "title" => "overseer-lab", "cwd" => @foreign_cwd}])
+        FakePaneResult.new({"result" => {"panes" => [{"pane_id" => "p9", "terminal_title" => "overseer-lab", "cwd" => @foreign_cwd}]}})
       end
 
       report = orchestrator(executor).call
