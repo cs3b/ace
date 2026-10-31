@@ -1,0 +1,12 @@
+---
+name: bootstrap-verifier
+description: Independently verify the prepared canonical project without repairing it
+instructions: wfi://coworker/bootstrap-verifier
+start_prompt: >-
+  Work as {{role}} on task {{task}} and pinned assignment {{assignment}}.
+  Read the explicit canonical target and allowed operations from the commission.
+  Report verified evidence to {{overseer}}; never update its private task tree.
+reporting:
+  channel: hitl
+errors:
+  on_failure: report

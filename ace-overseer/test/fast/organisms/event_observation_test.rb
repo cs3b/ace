@@ -93,6 +93,7 @@ class OverseerEventObservationTest < AceOverseerTestCase
     Dir.mktmpdir do |tmp|
       tasks = Ace::Task::Organisms::TaskManager.new(root_dir: File.join(tmp, "tasks"))
       tasks.create("Bootstrap ACE", status: "pending")
+      tasks.create("Verify ACE", status: "pending")
       worktrees = Object.new
       def worktrees.list_all = {success: true, worktrees: []}
       local = Ace::Overseer::Molecules::LocalSources.new(task_manager: tasks, worktree_manager: worktrees)
@@ -101,6 +102,9 @@ class OverseerEventObservationTest < AceOverseerTestCase
       observer = Ace::Overseer::Molecules::EventObservation.new(hitl: hitl, task_manager: tasks, local_sources: local)
       result = observer.call(owner: "self")
       refute_empty result.fetch("events")
+      error = assert_raises(ArgumentError) { observer.call(owner: "self", limit: 1) }
+      assert_match(/exceeding limit/, error.message)
+
       source = File.expand_path("../ace-wake/handbook/extensions/ace-wake/wake/eyes.js", Ace::Overseer.gem_root)
       script = <<~JS
         import {pathToFileURL} from 'node:url';

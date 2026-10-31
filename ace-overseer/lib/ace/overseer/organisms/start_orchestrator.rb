@@ -163,6 +163,7 @@ module Ace
           else
             resolve_instructions(source, root)
           end
+          raise Ace::Overseer::Error, "standing instructions file is missing: #{guide}" unless File.file?(guide)
           command = ["pi", "--model", plan["profile"]["model"]]
           thinking = plan["profile"]["thinking"]
           command += ["--thinking", thinking] if thinking
@@ -208,7 +209,7 @@ module Ace
                   "instructions" => {"source" => plan["instructions"], "path" => nil},
                   "replaced_pane" => nil, "projects" => [], "project_count" => 0,
                   "ready" => nil, "message" => nil}
-          base["instructions"]["path"] = resolve_instructions(plan["instructions"], lab_root)
+          base["instructions"]["path"] = resolve_instructions(plan["instructions"], lab_root) unless reconcile
 
           projects = begin
             Ace::Lab::Molecules::ProjectLocations.read(lab_root)
@@ -478,8 +479,32 @@ module Ace
 
         # The live pane owning this project's overseer label.
         def owner_pane(label)
-          pane = @control_surface.list_panes.find { |entry| entry[:title] == label }
-          pane&.transform_keys(&:to_s)
+          # boot_session names the TAB, not the terminal title. Pi and shell
+          # applications may change terminal titles at any time.
+          tabs = @control_surface.list_tabs.select { |entry| entry[:title] == label }
+          return nil if tabs.empty?
+
+          panes = @control_surface.list_panes
+          owners = tabs.map do |tab|
+            matches = panes.select { |pane| pane[:tab] == tab[:id] }
+            if tab[:id].to_s.empty? || matches.length != 1 || matches.first[:id].to_s.empty?
+              raise Ace::Overseer::Error,
+                "overseer tab '#{label}' has no unique owner pane; refusing an ambiguous session"
+            end
+            matches.first
+          end
+          if owners.length > 1
+            # A replaced dead owner may retain its tab. Only a single live
+            # agent identifies an unambiguous current owner; never pick the
+            # first of multiple live or dead candidates.
+            live = owners.select { |pane| !agent_state(pane[:id]).nil? }
+            unless live.length == 1
+              raise Ace::Overseer::Error,
+                "multiple overseer tabs '#{label}' have no unique live owner; refusing an ambiguous session"
+            end
+            owners = live
+          end
+          owners.first.transform_keys(&:to_s)
         rescue Ace::Herdr::ExecutorUnavailableError => e
           raise Ace::Overseer::Error, "herdr is unavailable: #{e.message}"
         end

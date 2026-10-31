@@ -38,8 +38,17 @@ module Organisms
       def pane_list(workspace_id: nil)
         rows = @panes.map do |pane|
           pane.transform_keys { |key| {"id" => "pane_id", "title" => "terminal_title"}.fetch(key, key) }
+            .merge("tab_id" => pane["tab_id"] || "t-#{pane['id']}")
         end
         FakePaneResult.new({"result" => {"panes" => rows}})
+      end
+
+      def tab_list(workspace_id: nil)
+        rows = @panes.map do |pane|
+          {"tab_id" => pane["tab_id"] || "t-#{pane['id']}",
+           "label" => pane["tab_label"] || pane["title"], "workspace_id" => pane["workspace_id"]}
+        end.uniq
+        FakePaneResult.new({"result" => {"tabs" => rows}})
       end
 
       def pane_current
@@ -150,6 +159,55 @@ module Organisms
       # confirmed by the activity-gated re-delivery (see the dedicated
       # reuse/repair tests above), never assumed
       assert(executor.prompts.any? { |entry| entry[:pane] == "p7" && entry[:wait] })
+    end
+
+    def test_owner_reuse_uses_tab_label_after_pi_changes_terminal_title
+      panes = [{"id" => "p7", "tab_id" => "t7", "tab_label" => "overseer-project",
+                "title" => "π - project", "cwd" => @root}]
+      executor = FakeExecutor.new(panes: panes, state: "working")
+      report = orchestrator(executor).call
+      assert_equal "reused", report["status"], report.inspect
+      assert_equal "p7", report["pane"]
+      assert_empty executor.tabs
+      assert_empty executor.agent_started
+    end
+
+    def test_duplicate_live_owner_tabs_are_blocked_without_starting_another_agent
+      panes = %w[p7 p8].map do |id|
+        {"id" => id, "tab_label" => "overseer-project", "title" => "π - project", "cwd" => @root}
+      end
+      executor = FakeExecutor.new(panes: panes, state: "working")
+      report = orchestrator(executor).call
+      assert_equal "blocked", report["status"]
+      assert_match(/ambiguous session/, report["message"])
+      assert_empty executor.tabs
+      assert_empty executor.agent_started
+    end
+
+    def test_replaced_dead_tab_does_not_hide_the_unique_live_owner
+      panes = %w[p7 p8].map do |id|
+        {"id" => id, "tab_label" => "overseer-project", "title" => "π - project", "cwd" => @root}
+      end
+      executor = FakeExecutor.new(panes: panes, state: "working")
+      def executor.agent_get(pane)
+        raise Ace::Herdr::AgentNotFoundError, "old owner exited" if pane == "p7"
+        super
+      end
+      report = orchestrator(executor).call
+      assert_equal "reused", report["status"], report.inspect
+      assert_equal "p8", report["pane"]
+      assert_empty executor.tabs
+    end
+
+    def test_split_owner_tab_is_ambiguous_and_never_taken_over
+      panes = %w[p7 p8].map do |id|
+        {"id" => id, "tab_id" => "t7", "tab_label" => "overseer-project", "title" => "shell", "cwd" => @root}
+      end
+      executor = FakeExecutor.new(panes: panes)
+      report = orchestrator(executor).call
+      assert_equal "blocked", report["status"]
+      assert_match(/no unique owner pane/, report["message"])
+      assert_empty executor.tabs
     end
 
     def test_explicit_workspace_seam_replaces_ambient_resolution
@@ -298,9 +356,9 @@ module Organisms
       assert_empty executor.tabs
     end
 
-    def test_herdr_pane_list_failure_surfaces_as_blocked_naming_herdr
+    def test_herdr_tab_list_failure_surfaces_as_blocked_naming_herdr
       executor = FakeExecutor.new(pane_current: {"result" => {"workspace_id" => "ws1"}})
-      def executor.pane_list(workspace_id: nil)
+      def executor.tab_list(workspace_id: nil)
         raise Ace::Herdr::CommandError, "herdr exited 1: socket closed"
       end
 

@@ -44,6 +44,7 @@ module Ace
             sources = local.fetch("sources").merge(remote.fetch("sources")).merge(
               "hitl" => {"status" => "degraded", "error" => "#{hitl_error.class}: #{hitl_error.message}"}
             )
+            ensure_budget!(events.length, limit)
             return {"schema" => "ace.hitl.observation/v1",
                     "events" => wire_events(events).sort_by { |row| row["key"] },
                     "settled" => [], "sources" => sources}
@@ -60,6 +61,7 @@ module Ace
             manager && ([manager] + Array(manager.subtasks)).all? { |task| Ace::Task::Atoms::TaskValidationRules.terminal_status?(task.status.to_s) }
           end
 
+          ensure_budget!(pending.length + settled.length + local.fetch("events").length + remote.fetch("events").length, limit)
           projection.merge("events" => (pending + wire_events(local.fetch("events") + remote.fetch("events")))
               .sort_by { |row| row["key"] },
             "settled" => settled,
@@ -68,6 +70,12 @@ module Ace
         end
 
         private
+
+        def ensure_budget!(count, limit)
+          return if count <= limit
+
+          raise ArgumentError, "observation has #{count} rows, exceeding limit #{limit}; increase maxEvents/--limit or archive accepted history before arming eyes"
+        end
 
         # Local owners expose readable keys, whereas eyes consumes the HITL
         # wire envelope (hashed key, revision and a safe id). Normalize only

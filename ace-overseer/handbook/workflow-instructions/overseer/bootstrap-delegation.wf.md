@@ -41,7 +41,7 @@ report that capability gap. Do not claim that mentioning `/eyes` armed it.
 
 ## Prepare and actually launch a worker
 
-Use `ace-coworker prepare --task <executable-task> --roles worker,reviewer
+Use `ace-coworker prepare --task <executable-task> --roles bootstrap-worker,bootstrap-verifier
 --to <configured-overseer-address> --format json`. Read its returned worktree,
 assignment IDs and start-config paths; record these on the matching private
 steps before launch. A preparation readiness report is not worker completion.
@@ -52,7 +52,9 @@ it does NOT launch an agent. Use the configured Herdr provider/profile to
 start a separate worker agent in the returned worktree, load the returned
 role instructions, and send its first prompt. The prompt commissions only
 that task and pinned assignment, requires the worker to read its start brief,
-drive that assignment, and finish with `ace-coworker report`. Use CLI help for
+drive that assignment, and finish with `ace-coworker report`. These operational roles explicitly allow the commissioned canonical target
+outside the lab task worktree; ordinary product worker/reviewer roles do not.
+Use CLI help for
 Herdr's current arguments. Record the returned pane/agent identity and verify
 first-turn delivery. Never replace a missing executor with your own work.
 

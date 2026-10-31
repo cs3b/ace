@@ -48,12 +48,23 @@ module Organisms
 
       def pane_list(workspace_id: nil)
         panes = @tabs.map do |tab|
-          {"id" => "p-#{tab[:label]}", "title" => tab[:label], "cwd" => tab[:cwd],
+          {"id" => "p-#{tab[:label]}", "tab_id" => "t-#{tab[:label]}", "title" => "π - #{tab[:label]}", "cwd" => tab[:cwd],
            "workspace_id" => tab[:workspace_id]}
         end + @extra_panes
         FakePaneResult.new({"result" => {"panes" => panes.map do |pane|
           pane.transform_keys { |key| {"id" => "pane_id", "title" => "terminal_title"}.fetch(key, key) }
+            .merge("tab_id" => pane["tab_id"] || "t-#{pane['id']}")
         end}})
+      end
+
+      def tab_list(workspace_id: nil)
+        rows = @tabs.map do |tab|
+          {"tab_id" => "t-#{tab[:label]}", "label" => tab[:label], "workspace_id" => tab[:workspace_id]}
+        end + @extra_panes.map do |pane|
+          {"tab_id" => pane["tab_id"] || "t-#{pane['id']}",
+           "label" => pane["tab_label"] || pane["title"], "workspace_id" => pane["workspace_id"]}
+        end
+        FakePaneResult.new({"result" => {"tabs" => rows}})
       end
 
       # A pane that exists OUTSIDE this fake's created tabs (e.g. a
@@ -440,11 +451,11 @@ module Organisms
 
     def test_lab_owner_pane_in_a_foreign_cwd_is_a_conflict
       executor = FakeExecutor.new
-      # a pane already owns the lab label but works in another directory
-      def executor.pane_list(workspace_id: nil)
-        @foreign_cwd ||= Dir.mktmpdir
-        FakePaneResult.new({"result" => {"panes" => [{"pane_id" => "p9", "terminal_title" => "overseer-lab", "cwd" => @foreign_cwd}]}})
-      end
+      # Stable tab ownership survives an unrelated foreground title.
+      foreign = File.join(@dir, "foreign")
+      FileUtils.mkdir_p(foreign)
+      executor.add_pane({"id" => "p9", "tab_label" => "overseer-lab",
+                         "title" => "π - foreign", "cwd" => foreign})
 
       report = orchestrator(executor).call
 

@@ -1,0 +1,11 @@
+---
+role: bootstrap-worker
+description: "Prepare the explicitly commissioned canonical project configuration for task {{task}}"
+outcome: "Task {{task}} has an evidence-backed bootstrap-worker result for its exact canonical target."
+steps:
+  - name: bootstrap-worker
+    workflow: wfi://coworker/bootstrap-worker
+    instructions:
+      - "Prepare the explicitly commissioned canonical project configuration for task {{task}} under the scoped bootstrap role workflow."
+      - "Record actual checks, canonical target, operational runtime paths/versions and failures in the task evidence."
+      - "Fail the assignment on missing scope, missing required access or failed acceptance; never force success."

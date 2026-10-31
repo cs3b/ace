@@ -34,6 +34,9 @@ module Ace
             unless scope.nil? || Atoms::StartContract::SCOPES.include?(scope)
               raise Ace::Support::Cli::Error, "scope must be lab or project"
             end
+            if reconcile && scope == "project"
+              raise Ace::Support::Cli::Error, "--reconcile requires lab scope"
+            end
             operation = orchestrator(scope: scope)
             report = if reconcile
               operation.reconcile(dry_run: dry_run)

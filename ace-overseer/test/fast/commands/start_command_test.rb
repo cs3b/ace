@@ -95,6 +95,13 @@ module Commands
       end
     end
 
+    def test_project_scope_refuses_reconcile_before_orchestration
+      error = assert_raises(Ace::Support::Cli::Error) do
+        Ace::Overseer::CLI::Commands::Start.new(config: {}).call(scope: "project", reconcile: true)
+      end
+      assert_match(/requires lab scope/, error.message)
+    end
+
     def test_started_report_renders_json_and_exits_clean
       out = run_command({"status" => "started", "root" => "/lab/projects/ace",
         "message" => "session started"})

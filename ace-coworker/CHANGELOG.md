@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- Scoped bootstrap-worker and independent bootstrap-verifier roles use existing
+  assignments to prepare an explicitly commissioned canonical project outside
+  the lab task worktree, without relaxing ordinary product worker boundaries.
+
 ## [0.7.0] - 2026-10-30
 
 ### Fixed (review rounds 3/3b)
