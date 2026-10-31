@@ -67,3 +67,24 @@ Live inspection also found NO eyes configuration and NO persisted eyes state
 in the coordinator's current/previous sessions. The live Pi has installed mode
 but a coordinator-local bundle; its parent shell references a removed runtime.
 Explicit runtime selection and extension reload are required for acceptance.
+
+## Preservation and review checkpoint
+
+All lab agents and the two identified host lab-config writers were stopped by
+explicit Captain authorization. Herdr session `lab` returned agents: [].
+Snapshot: `/var/lib/lab/backups/8xu.t.azx/projects-before.tar` (root-only),
+SHA256 893b8394b67647256907fed6f7a0713822de6b4f4a082261b8a76470a6f7a974.
+Includes canonical ACE and coordinator, ACL/xattrs/numeric ownership.
+
+Independent direct review found mutable terminal titles used as ownership;
+fixed using stable tab identity with ambiguity refusal. Imported subprocess
+startup now uses existing bounded runner. Dedicated operational bootstrap roles
+resolve the ordinary worker's worktree-only scope conflict. Latest full
+Overseer suite:448 tests/1986 assertions,0 failures,1 existing skip.
+Coworker suite:405 tests/1900 assertions,0 failures; added shipped-role
+composition regression:21 tests/134 assertions,0 failures. Eyes JS suite is
+executed through its Ruby test wrapper, not just syntax checked.
+
+Provider review review-8xub4g covered an earlier snapshot; findings are being
+verified and fixed, and a new full-delta review is running. No release verdict
+yet. Host documentation updated for new policy; actual cutover is not yet done.

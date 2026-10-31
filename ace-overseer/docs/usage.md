@@ -378,7 +378,6 @@ ace-overseer status --watch
 | Option | Purpose |
 |--------|---------|
 | `--format` | `table` (default) or `json` |
-| `--scope` | Explicit `lab` or `project` role; an unconfigured bare start bootstraps the Lab |
 | `--watch`, `-w` | Auto-refresh the worktree dashboard |
 | `--runtime` | Terminal backend used for pane checks |
 | `--quiet`, `-q` | Suppress non-essential output |
