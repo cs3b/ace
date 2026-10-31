@@ -1,0 +1,358 @@
+{
+  "candidate": "3296afb4723b5cd69e5c6b81587650a19c3ee784",
+  "gem_home": "/Users/mc/Ps/ace/.ace-wt/codex-lab-bootstrap-delegation/.ace-local/release/rehearsal-3296afb4723b5cd69e5c6b81587650a19c3ee784",
+  "artifacts": {
+    "ace-lab/ace-lab-0.14.1.gem": "49fdee0abefdcd3d0409d855af359c0dd5de45129942906f3decae30aa6efc88",
+    "ace-overseer/ace-overseer-0.28.1.gem": "a5a07cc002a9c5ed1b42e748f434caa37e8b8a3c8cf78561da496048baf61284"
+  },
+  "mode": "installed",
+  "gems": {
+    "error_highlight": {
+      "version": "0.7.0",
+      "path": "/Users/mc/.local/share/mise/installs/ruby/3.4.8/lib/ruby/gems/3.4.0/gems/error_highlight-0.7.0"
+    },
+    "did_you_mean": {
+      "version": "2.0.0",
+      "path": "/Users/mc/.local/share/mise/installs/ruby/3.4.8/lib/ruby/gems/3.4.0/gems/did_you_mean-2.0.0"
+    },
+    "syntax_suggest": {
+      "version": "2.0.2",
+      "path": "/Users/mc/.local/share/mise/installs/ruby/3.4.8/lib/ruby/gems/3.4.0/gems/syntax_suggest-2.0.2"
+    },
+    "json": {
+      "version": "2.21.2",
+      "path": "/Users/mc/Ps/ace/.ace-wt/codex-lab-bootstrap-delegation/.ace-local/release/rehearsal-3296afb4723b5cd69e5c6b81587650a19c3ee784/gems/json-2.21.2"
+    },
+    "fileutils": {
+      "version": "1.7.3",
+      "path": "/Users/mc/.local/share/mise/installs/ruby/3.4.8/lib/ruby/gems/3.4.0/gems/fileutils-1.7.3"
+    },
+    "timeout": {
+      "version": "0.4.3",
+      "path": "/Users/mc/.local/share/mise/installs/ruby/3.4.8/lib/ruby/gems/3.4.0/gems/timeout-0.4.3"
+    },
+    "ace-support-cli": {
+      "version": "0.6.11",
+      "path": "/Users/mc/Ps/ace/.ace-wt/codex-lab-bootstrap-delegation/.ace-local/release/rehearsal-3296afb4723b5cd69e5c6b81587650a19c3ee784/gems/ace-support-cli-0.6.11"
+    },
+    "ace-support-fs": {
+      "version": "0.3.4",
+      "path": "/Users/mc/Ps/ace/.ace-wt/codex-lab-bootstrap-delegation/.ace-local/release/rehearsal-3296afb4723b5cd69e5c6b81587650a19c3ee784/gems/ace-support-fs-0.3.4"
+    },
+    "ace-support-config": {
+      "version": "0.18.3",
+      "path": "/Users/mc/Ps/ace/.ace-wt/codex-lab-bootstrap-delegation/.ace-local/release/rehearsal-3296afb4723b5cd69e5c6b81587650a19c3ee784/gems/ace-support-config-0.18.3"
+    },
+    "ace-support-core": {
+      "version": "0.32.0",
+      "path": "/Users/mc/Ps/ace/.ace-wt/codex-lab-bootstrap-delegation/.ace-local/release/rehearsal-3296afb4723b5cd69e5c6b81587650a19c3ee784/gems/ace-support-core-0.32.0"
+    },
+    "uri": {
+      "version": "1.0.4",
+      "path": "/Users/mc/.local/share/mise/installs/ruby/3.4.8/lib/ruby/gems/3.4.0/gems/uri-1.0.4"
+    },
+    "net-http": {
+      "version": "0.6.0",
+      "path": "/Users/mc/.local/share/mise/installs/ruby/3.4.8/lib/ruby/gems/3.4.0/gems/net-http-0.6.0"
+    },
+    "faraday-net_http": {
+      "version": "3.5.0",
+      "path": "/Users/mc/Ps/ace/.ace-wt/codex-lab-bootstrap-delegation/.ace-local/release/rehearsal-3296afb4723b5cd69e5c6b81587650a19c3ee784/gems/faraday-net_http-3.5.0"
+    },
+    "logger": {
+      "version": "1.6.4",
+      "path": "/Users/mc/.local/share/mise/installs/ruby/3.4.8/lib/ruby/gems/3.4.0/gems/logger-1.6.4"
+    },
+    "faraday": {
+      "version": "2.15.1",
+      "path": "/Users/mc/Ps/ace/.ace-wt/codex-lab-bootstrap-delegation/.ace-local/release/rehearsal-3296afb4723b5cd69e5c6b81587650a19c3ee784/gems/faraday-2.15.1"
+    },
+    "faraday-retry": {
+      "version": "2.4.0",
+      "path": "/Users/mc/Ps/ace/.ace-wt/codex-lab-bootstrap-delegation/.ace-local/release/rehearsal-3296afb4723b5cd69e5c6b81587650a19c3ee784/gems/faraday-retry-2.4.0"
+    },
+    "ace-support-models": {
+      "version": "0.12.4",
+      "path": "/Users/mc/Ps/ace/.ace-wt/codex-lab-bootstrap-delegation/.ace-local/release/rehearsal-3296afb4723b5cd69e5c6b81587650a19c3ee784/gems/ace-support-models-0.12.4"
+    },
+    "public_suffix": {
+      "version": "7.0.5",
+      "path": "/Users/mc/Ps/ace/.ace-wt/codex-lab-bootstrap-delegation/.ace-local/release/rehearsal-3296afb4723b5cd69e5c6b81587650a19c3ee784/gems/public_suffix-7.0.5"
+    },
+    "addressable": {
+      "version": "2.9.1",
+      "path": "/Users/mc/Ps/ace/.ace-wt/codex-lab-bootstrap-delegation/.ace-local/release/rehearsal-3296afb4723b5cd69e5c6b81587650a19c3ee784/gems/addressable-2.9.1"
+    },
+    "rexml": {
+      "version": "3.4.4",
+      "path": "/Users/mc/Ps/ace/.ace-wt/codex-lab-bootstrap-delegation/.ace-local/release/rehearsal-3296afb4723b5cd69e5c6b81587650a19c3ee784/gems/rexml-3.4.4"
+    },
+    "kramdown": {
+      "version": "2.5.2",
+      "path": "/Users/mc/Ps/ace/.ace-wt/codex-lab-bootstrap-delegation/.ace-local/release/rehearsal-3296afb4723b5cd69e5c6b81587650a19c3ee784/gems/kramdown-2.5.2"
+    },
+    "kramdown-parser-gfm": {
+      "version": "1.1.0",
+      "path": "/Users/mc/Ps/ace/.ace-wt/codex-lab-bootstrap-delegation/.ace-local/release/rehearsal-3296afb4723b5cd69e5c6b81587650a19c3ee784/gems/kramdown-parser-gfm-1.1.0"
+    },
+    "ace-llm": {
+      "version": "0.42.0",
+      "path": "/Users/mc/Ps/ace/.ace-wt/codex-lab-bootstrap-delegation/.ace-local/release/rehearsal-3296afb4723b5cd69e5c6b81587650a19c3ee784/gems/ace-llm-0.42.0"
+    },
+    "ace-llm-providers-cli": {
+      "version": "0.36.2",
+      "path": "/Users/mc/Ps/ace/.ace-wt/codex-lab-bootstrap-delegation/.ace-local/release/rehearsal-3296afb4723b5cd69e5c6b81587650a19c3ee784/gems/ace-llm-providers-cli-0.36.2"
+    },
+    "ace-git": {
+      "version": "0.32.0",
+      "path": "/Users/mc/Ps/ace/.ace-wt/codex-lab-bootstrap-delegation/.ace-local/release/rehearsal-3296afb4723b5cd69e5c6b81587650a19c3ee784/gems/ace-git-0.32.0"
+    },
+    "ace-support-nav": {
+      "version": "0.28.8",
+      "path": "/Users/mc/Ps/ace/.ace-wt/codex-lab-bootstrap-delegation/.ace-local/release/rehearsal-3296afb4723b5cd69e5c6b81587650a19c3ee784/gems/ace-support-nav-0.28.8"
+    },
+    "ace-b36ts": {
+      "version": "0.14.11",
+      "path": "/Users/mc/Ps/ace/.ace-wt/codex-lab-bootstrap-delegation/.ace-local/release/rehearsal-3296afb4723b5cd69e5c6b81587650a19c3ee784/gems/ace-b36ts-0.14.11"
+    },
+    "ace-git-github": {
+      "version": "0.5.0",
+      "path": "/Users/mc/Ps/ace/.ace-wt/codex-lab-bootstrap-delegation/.ace-local/release/rehearsal-3296afb4723b5cd69e5c6b81587650a19c3ee784/gems/ace-git-github-0.5.0"
+    },
+    "fiddle": {
+      "version": "1.1.6",
+      "path": "/Users/mc/.local/share/mise/installs/ruby/3.4.8/lib/ruby/gems/3.4.0/gems/fiddle-1.1.6"
+    },
+    "ace-runtime": {
+      "version": "0.4.1",
+      "path": "/Users/mc/Ps/ace/.ace-wt/codex-lab-bootstrap-delegation/.ace-local/release/rehearsal-3296afb4723b5cd69e5c6b81587650a19c3ee784/gems/ace-runtime-0.4.1"
+    },
+    "base64": {
+      "version": "0.3.0",
+      "path": "/Users/mc/Ps/ace/.ace-wt/codex-lab-bootstrap-delegation/.ace-local/release/rehearsal-3296afb4723b5cd69e5c6b81587650a19c3ee784/gems/base64-0.3.0"
+    },
+    "websocket-extensions": {
+      "version": "0.1.5",
+      "path": "/Users/mc/Ps/ace/.ace-wt/codex-lab-bootstrap-delegation/.ace-local/release/rehearsal-3296afb4723b5cd69e5c6b81587650a19c3ee784/gems/websocket-extensions-0.1.5"
+    },
+    "websocket-driver": {
+      "version": "0.8.2",
+      "path": "/Users/mc/Ps/ace/.ace-wt/codex-lab-bootstrap-delegation/.ace-local/release/rehearsal-3296afb4723b5cd69e5c6b81587650a19c3ee784/gems/websocket-driver-0.8.2"
+    },
+    "ace-hitl-contract": {
+      "version": "0.3.0",
+      "path": "/Users/mc/Ps/ace/.ace-wt/codex-lab-bootstrap-delegation/.ace-local/release/rehearsal-3296afb4723b5cd69e5c6b81587650a19c3ee784/gems/ace-hitl-contract-0.3.0"
+    },
+    "ace-herdr": {
+      "version": "0.9.0",
+      "path": "/Users/mc/Ps/ace/.ace-wt/codex-lab-bootstrap-delegation/.ace-local/release/rehearsal-3296afb4723b5cd69e5c6b81587650a19c3ee784/gems/ace-herdr-0.9.0"
+    },
+    "ace-compressor": {
+      "version": "0.25.5",
+      "path": "/Users/mc/Ps/ace/.ace-wt/codex-lab-bootstrap-delegation/.ace-local/release/rehearsal-3296afb4723b5cd69e5c6b81587650a19c3ee784/gems/ace-compressor-0.25.5"
+    },
+    "ace-bundle": {
+      "version": "0.45.1",
+      "path": "/Users/mc/Ps/ace/.ace-wt/codex-lab-bootstrap-delegation/.ace-local/release/rehearsal-3296afb4723b5cd69e5c6b81587650a19c3ee784/gems/ace-bundle-0.45.1"
+    },
+    "ace-git-forgejo": {
+      "version": "0.8.0",
+      "path": "/Users/mc/Ps/ace/.ace-wt/codex-lab-bootstrap-delegation/.ace-local/release/rehearsal-3296afb4723b5cd69e5c6b81587650a19c3ee784/gems/ace-git-forgejo-0.8.0"
+    },
+    "ace-support-items": {
+      "version": "0.15.16",
+      "path": "/Users/mc/Ps/ace/.ace-wt/codex-lab-bootstrap-delegation/.ace-local/release/rehearsal-3296afb4723b5cd69e5c6b81587650a19c3ee784/gems/ace-support-items-0.15.16"
+    },
+    "ace-support-markdown": {
+      "version": "0.3.6",
+      "path": "/Users/mc/Ps/ace/.ace-wt/codex-lab-bootstrap-delegation/.ace-local/release/rehearsal-3296afb4723b5cd69e5c6b81587650a19c3ee784/gems/ace-support-markdown-0.3.6"
+    },
+    "ace-task": {
+      "version": "0.41.0",
+      "path": "/Users/mc/Ps/ace/.ace-wt/codex-lab-bootstrap-delegation/.ace-local/release/rehearsal-3296afb4723b5cd69e5c6b81587650a19c3ee784/gems/ace-task-0.41.0"
+    },
+    "ace-review": {
+      "version": "0.62.2",
+      "path": "/Users/mc/Ps/ace/.ace-wt/codex-lab-bootstrap-delegation/.ace-local/release/rehearsal-3296afb4723b5cd69e5c6b81587650a19c3ee784/gems/ace-review-0.62.2"
+    },
+    "ace-tmux": {
+      "version": "0.19.0",
+      "path": "/Users/mc/Ps/ace/.ace-wt/codex-lab-bootstrap-delegation/.ace-local/release/rehearsal-3296afb4723b5cd69e5c6b81587650a19c3ee784/gems/ace-tmux-0.19.0"
+    },
+    "ace-assign": {
+      "version": "0.73.1",
+      "path": "/Users/mc/Ps/ace/.ace-wt/codex-lab-bootstrap-delegation/.ace-local/release/rehearsal-3296afb4723b5cd69e5c6b81587650a19c3ee784/gems/ace-assign-0.73.1"
+    },
+    "ace-git-worktree": {
+      "version": "0.27.3",
+      "path": "/Users/mc/Ps/ace/.ace-wt/codex-lab-bootstrap-delegation/.ace-local/release/rehearsal-3296afb4723b5cd69e5c6b81587650a19c3ee784/gems/ace-git-worktree-0.27.3"
+    },
+    "ace-hitl": {
+      "version": "0.25.0",
+      "path": "/Users/mc/Ps/ace/.ace-wt/codex-lab-bootstrap-delegation/.ace-local/release/rehearsal-3296afb4723b5cd69e5c6b81587650a19c3ee784/gems/ace-hitl-0.25.0"
+    },
+    "ace-coworker": {
+      "version": "0.8.0",
+      "path": "/Users/mc/Ps/ace/.ace-wt/codex-lab-bootstrap-delegation/.ace-local/release/rehearsal-3296afb4723b5cd69e5c6b81587650a19c3ee784/gems/ace-coworker-0.8.0"
+    },
+    "ace-lab": {
+      "version": "0.14.1",
+      "path": "/Users/mc/Ps/ace/.ace-wt/codex-lab-bootstrap-delegation/.ace-local/release/rehearsal-3296afb4723b5cd69e5c6b81587650a19c3ee784/gems/ace-lab-0.14.1"
+    },
+    "ace-overseer": {
+      "version": "0.28.1",
+      "path": "/Users/mc/Ps/ace/.ace-wt/codex-lab-bootstrap-delegation/.ace-local/release/rehearsal-3296afb4723b5cd69e5c6b81587650a19c3ee784/gems/ace-overseer-0.28.1"
+    },
+    "yaml": {
+      "version": "0.4.0",
+      "path": "/Users/mc/.local/share/mise/installs/ruby/3.4.8/lib/ruby/gems/3.4.0/gems/yaml-0.4.0"
+    },
+    "stringio": {
+      "version": "3.1.2",
+      "path": "/Users/mc/.local/share/mise/installs/ruby/3.4.8/lib/ruby/gems/3.4.0/gems/stringio-3.1.2"
+    },
+    "date": {
+      "version": "3.4.1",
+      "path": "/Users/mc/.local/share/mise/installs/ruby/3.4.8/lib/ruby/gems/3.4.0/gems/date-3.4.1"
+    },
+    "psych": {
+      "version": "5.2.2",
+      "path": "/Users/mc/.local/share/mise/installs/ruby/3.4.8/lib/ruby/gems/3.4.0/gems/psych-5.2.2"
+    },
+    "pathname": {
+      "version": "0.4.0",
+      "path": "/Users/mc/.local/share/mise/installs/ruby/3.4.8/lib/ruby/gems/3.4.0/gems/pathname-0.4.0"
+    },
+    "open3": {
+      "version": "0.2.1",
+      "path": "/Users/mc/.local/share/mise/installs/ruby/3.4.8/lib/ruby/gems/3.4.0/gems/open3-0.2.1"
+    },
+    "time": {
+      "version": "0.4.1",
+      "path": "/Users/mc/.local/share/mise/installs/ruby/3.4.8/lib/ruby/gems/3.4.0/gems/time-0.4.1"
+    },
+    "shellwords": {
+      "version": "0.2.2",
+      "path": "/Users/mc/.local/share/mise/installs/ruby/3.4.8/lib/ruby/gems/3.4.0/gems/shellwords-0.2.2"
+    },
+    "optparse": {
+      "version": "0.6.0",
+      "path": "/Users/mc/.local/share/mise/installs/ruby/3.4.8/lib/ruby/gems/3.4.0/gems/optparse-0.6.0"
+    },
+    "ipaddr": {
+      "version": "1.2.7",
+      "path": "/Users/mc/.local/share/mise/installs/ruby/3.4.8/lib/ruby/gems/3.4.0/gems/ipaddr-1.2.7"
+    },
+    "digest": {
+      "version": "3.2.0",
+      "path": "/Users/mc/.local/share/mise/installs/ruby/3.4.8/lib/ruby/gems/3.4.0/gems/digest-3.2.0"
+    },
+    "securerandom": {
+      "version": "0.4.1",
+      "path": "/Users/mc/.local/share/mise/installs/ruby/3.4.8/lib/ruby/gems/3.4.0/gems/securerandom-0.4.1"
+    },
+    "set": {
+      "version": "1.1.1",
+      "path": "/Users/mc/.local/share/mise/installs/ruby/3.4.8/lib/ruby/gems/3.4.0/gems/set-1.1.1"
+    },
+    "cgi": {
+      "version": "0.4.2",
+      "path": "/Users/mc/.local/share/mise/installs/ruby/3.4.8/lib/ruby/gems/3.4.0/gems/cgi-0.4.2"
+    },
+    "forwardable": {
+      "version": "1.3.3",
+      "path": "/Users/mc/.local/share/mise/installs/ruby/3.4.8/lib/ruby/gems/3.4.0/gems/forwardable-1.3.3"
+    },
+    "prettyprint": {
+      "version": "0.2.0",
+      "path": "/Users/mc/.local/share/mise/installs/ruby/3.4.8/lib/ruby/gems/3.4.0/gems/prettyprint-0.2.0"
+    },
+    "pp": {
+      "version": "0.6.2",
+      "path": "/Users/mc/.local/share/mise/installs/ruby/3.4.8/lib/ruby/gems/3.4.0/gems/pp-0.6.2"
+    },
+    "net-protocol": {
+      "version": "0.2.2",
+      "path": "/Users/mc/.local/share/mise/installs/ruby/3.4.8/lib/ruby/gems/3.4.0/gems/net-protocol-0.2.2"
+    },
+    "io-wait": {
+      "version": "0.3.2",
+      "path": "/Users/mc/.local/share/mise/installs/ruby/3.4.8/lib/ruby/gems/3.4.0/gems/io-wait-0.3.2"
+    },
+    "resolv": {
+      "version": "0.6.2",
+      "path": "/Users/mc/.local/share/mise/installs/ruby/3.4.8/lib/ruby/gems/3.4.0/gems/resolv-0.6.2"
+    },
+    "zlib": {
+      "version": "3.2.1",
+      "path": "/Users/mc/.local/share/mise/installs/ruby/3.4.8/lib/ruby/gems/3.4.0/gems/zlib-3.2.1"
+    },
+    "openssl": {
+      "version": "3.3.1",
+      "path": "/Users/mc/.local/share/mise/installs/ruby/3.4.8/lib/ruby/gems/3.4.0/gems/openssl-3.3.1"
+    },
+    "io-nonblock": {
+      "version": "0.3.2",
+      "path": "/Users/mc/.local/share/mise/installs/ruby/3.4.8/lib/ruby/gems/3.4.0/gems/io-nonblock-0.3.2"
+    },
+    "tempfile": {
+      "version": "0.3.1",
+      "path": "/Users/mc/.local/share/mise/installs/ruby/3.4.8/lib/ruby/gems/3.4.0/gems/tempfile-0.3.1"
+    },
+    "delegate": {
+      "version": "0.4.0",
+      "path": "/Users/mc/.local/share/mise/installs/ruby/3.4.8/lib/ruby/gems/3.4.0/gems/delegate-0.4.0"
+    },
+    "tmpdir": {
+      "version": "0.3.1",
+      "path": "/Users/mc/.local/share/mise/installs/ruby/3.4.8/lib/ruby/gems/3.4.0/gems/tmpdir-0.3.1"
+    },
+    "etc": {
+      "version": "1.4.6",
+      "path": "/Users/mc/.local/share/mise/installs/ruby/3.4.8/lib/ruby/gems/3.4.0/gems/etc-1.4.6"
+    },
+    "io-console": {
+      "version": "0.8.1",
+      "path": "/Users/mc/.local/share/mise/installs/ruby/3.4.8/lib/ruby/gems/3.4.0/gems/io-console-0.8.1"
+    },
+    "fcntl": {
+      "version": "1.2.0",
+      "path": "/Users/mc/.local/share/mise/installs/ruby/3.4.8/lib/ruby/gems/3.4.0/gems/fcntl-1.2.0"
+    },
+    "find": {
+      "version": "0.2.0",
+      "path": "/Users/mc/.local/share/mise/installs/ruby/3.4.8/lib/ruby/gems/3.4.0/gems/find-0.2.0"
+    }
+  },
+  "guide": "/Users/mc/Ps/ace/.ace-wt/codex-lab-bootstrap-delegation/.ace-local/release/rehearsal-3296afb4723b5cd69e5c6b81587650a19c3ee784/gems/ace-overseer-0.28.1/handbook/workflow-instructions/overseer/lab-start.wf.md",
+  "permissions": {
+    "payload": "/Users/mc/Ps/ace/.ace-wt/codex-lab-bootstrap-delegation/.ace-local/release/rehearsal-3296afb4723b5cd69e5c6b81587650a19c3ee784/gems/ace-support-fs-0.3.4/lib/ace/support/fs.rb",
+    "before": "0640",
+    "after": "0644",
+    "unknown": "0600 unchanged",
+    "dry_run": "passed",
+    "idempotence": "passed",
+    "normalized_count": 36
+  },
+  "pty": {
+    "result": "passed",
+    "canonical_input": true,
+    "setup_bytes": 14733,
+    "harness_lookup": "passed",
+    "inherited_bundle_cleared": true,
+    "handoff_removed": true
+  },
+  "result": "passed",
+  "cli": {
+    "ace-lab": "/Users/mc/Ps/ace/.ace-wt/codex-lab-bootstrap-delegation/.ace-local/release/rehearsal-3296afb4723b5cd69e5c6b81587650a19c3ee784/bin/ace-lab",
+    "ace-overseer": "/Users/mc/Ps/ace/.ace-wt/codex-lab-bootstrap-delegation/.ace-local/release/rehearsal-3296afb4723b5cd69e5c6b81587650a19c3ee784/bin/ace-overseer"
+  },
+  "cli_versions": {
+    "ace-lab": "0.14.1",
+    "ace-overseer": "0.28.1"
+  },
+  "limitations": [
+    "Artifact rehearsal only; does not replace blocked TS-MONO001 manifest gate or live Lab acceptance",
+    "Ownership as root not exercised on this unprivileged macOS host"
+  ]
+}
