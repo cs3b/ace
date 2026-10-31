@@ -560,3 +560,15 @@ ace-overseer prune --dry-run
 ace-overseer prune --yes
 ace-overseer prune --dry-run
 ```
+
+### Workspace names and foreground instructions
+
+Topology IDs reserve workspace titles for the commissioned lab projects.
+Reconciliation may reuse an existing workspace with that title, but never
+replaces its manual panes; project ownership is the stable overseer tab label
+plus canonical cwd, not the mutable terminal title. Ambiguous ownership blocks.
+
+Foreground bootstrap pins the two built-in start guides to their packaged
+files. An explicit custom instruction source remains configurable; missing
+files block before launching Pi. Project development dependencies do not select
+the operational runtime when installed mode is chosen.
