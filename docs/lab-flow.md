@@ -13,6 +13,22 @@ flow, and every piece of persisted information has exactly one write location
 and one owner. This document is the canonical map. Package docs and workflows
 point here instead of defining a second queue, journal, cache, or state service.
 
+## Project layout and operational runtime
+
+Lab projects live at `/lab/<project>`, owned by `mo:mo`. Each canonical root
+contains its `.git`, `.ace`, `.ace-tasks`, `.ace-local` and `.ace-wt` directories.
+Worktrees and project state do not require parallel top-level lab directories.
+Root-owned system configuration and shared service state remain outside project
+roots, under their existing `/etc/lab` and `/var/lib/lab` owners.
+
+The lab uses one explicitly selected, versioned installed ACE gem closure.
+Project development bundles are separate: developing ACE must not replace the
+tools operating its workers. Preserve `ACE_TOOLCHAIN=installed` through starts,
+delegation and resume. Extra credentials/privileges are scoped to the executor
+session through existing access mechanisms, never permanent broad project
+ownership or shared-group grants. Preserve private file modes during ownership
+changes; published runtime and system configuration stay root-owned.
+
 ## One Write Location Per Information
 
 | Information | Write location | Owner |

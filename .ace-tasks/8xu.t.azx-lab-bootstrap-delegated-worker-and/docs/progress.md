@@ -88,3 +88,23 @@ executed through its Ruby test wrapper, not just syntax checked.
 Provider review review-8xub4g covered an earlier snapshot; findings are being
 verified and fixed, and a new full-delta review is running. No release verdict
 yet. Host documentation updated for new policy; actual cutover is not yet done.
+
+## Current full-delta review and ownership gate
+
+Provider review `review-8xubj5` completed against the functional integration
+delta and found no merge-blocking core defects. Its missing-owner-workspace
+edge case is being hardened to explicit refusal; first-turn eyes wording and
+session source-health reset are also being corrected before artifact rebuild.
+The status-option documentation finding was already fixed before this report.
+
+Captain explicitly requires canonical projects owned by `mo:mo` and additional
+access scoped to executor sessions. The ACE-only cutover preflight passed for
+2 worktrees, 63,395 filesystem entries and 4 configuration files. It found
+49 loose Git objects hardlinked outside ACE: isolate verified bytes before any
+ownership change. Two exact assignment selector symlinks retain the same IDs
+using relative targets. 38 historical transport envelopes are preserved as
+evidence, with orphan replies explicitly unresolved. Apply has NOT run.
+
+Three release versions are prepared (not published): ace-wake 0.2.0,
+ace-coworker 0.8.0, ace-overseer 0.28.0. Rebuild after final source corrections;
+do not deploy the earlier prepared artifacts as the final candidate.
