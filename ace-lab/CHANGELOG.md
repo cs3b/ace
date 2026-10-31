@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Converge public installed gem payload permissions for shared operational
   runtimes, including resolved dependencies and native extension outputs.
-  Validate specification-owned paths before changes; preserve unknown files
+  Validate cached archive identity and archive-owned payload paths before changes; preserve unknown files
   and reject symlink escapes, with identical dry-run inventory validation.
 
 ## [0.14.0] - 2026-10-30

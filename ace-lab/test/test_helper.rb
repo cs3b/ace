@@ -31,10 +31,16 @@ module LabTestHelper
   # dependencies: {"name" => "requirement"} runtime dependencies baked
   # into the fixture gem; ignore_dependencies installs with RubyGems'
   # --ignore-dependencies so a closure gap can be staged offline.
-  def build_and_install_gem(dir, name, version, dependencies: {}, ignore_dependencies: false)
+  def build_and_install_gem(dir, name, version, dependencies: {}, ignore_dependencies: false, files: {})
     dependency_lines = dependencies.map do |dep_name, requirement|
       "        s.add_dependency #{dep_name.inspect}, #{requirement.inspect}"
     end.join("\n")
+    files.each do |relative, content|
+      file = File.join(dir, relative)
+      FileUtils.mkdir_p(File.dirname(file))
+      File.write(file, content)
+      File.chmod(0o640, file)
+    end
     gemspec = File.join(dir, "#{name}.gemspec")
     File.write(gemspec, <<~SPEC)
       Gem::Specification.new do |s|
@@ -42,7 +48,7 @@ module LabTestHelper
         s.version = #{version.inspect}
         s.summary = "lab test fixture"
         s.authors = ["ace-lab tests"]
-        s.files = []
+        s.files = #{files.keys.inspect}
 #{dependency_lines}
       end
     SPEC

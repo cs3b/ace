@@ -8,13 +8,16 @@ require "find"
 module Ace
   module Lab
     module Molecules
-      # Installed specifications own public payloads; no recursive runtime sweep.
+      # Installed specifications select identity; cached gem archives own payload
+      # membership (installed gemspecs omit files). No recursive runtime sweep.
       class GemPayloadPermissions
         class Error < StandardError; end
         INVENTORY = <<~'CODE'
           require 'json'
           require 'rubygems'
-          Gem.use_paths(ARGV.shift)
+          require 'rubygems/package'
+          home = ARGV.shift
+          Gem.use_paths(home)
           queue = [Gem::Specification.find_by_name(ARGV.shift, ARGV.shift)]
           dry_run = ARGV.shift == "dry-run"
           seen = {}; rows = []
@@ -23,8 +26,19 @@ module Ace
             next if seen[spec.full_name]
             seen[spec.full_name] = true
             unless spec.default_gem?
+              cache = File.join(home, "cache", "#{spec.full_name}.gem")
+              unless File.file?(cache) && !File.symlink?(cache) && !File.symlink?(File.dirname(cache))
+                puts JSON.generate(error: "installed gem payload cache missing or symlinked: #{cache}")
+                exit 1
+              end
+              package = Gem::Package.new(cache)
+              package.verify
+              unless package.spec.full_name == spec.full_name
+                puts JSON.generate(error: "installed gem payload cache identity mismatch: #{cache}")
+                exit 1
+              end
               rows << {root: spec.full_gem_path, spec: spec.loaded_from,
-                files: spec.files, executables: spec.executables,
+                files: package.contents, executables: spec.executables,
                 bindir: spec.bindir, extension: spec.extensions.empty? ? nil : spec.extension_dir}
             end
             spec.runtime_dependencies.each do |dep|
@@ -55,7 +69,14 @@ module Ace
           env = ENV.keys.grep(/\ABUNDLE/).to_h { |key| [key, nil] }
           env.merge!("RUBYOPT" => nil, "RUBYLIB" => nil, "GEM_HOME" => @home, "GEM_PATH" => @home)
           out, _err, status = Open3.capture3(env, RbConfig.ruby, "-e", INVENTORY, @home, name, version, @dry_run ? "dry-run" : "apply")
-          raise Error, "could not inventory installed gem payload #{name} #{version}" unless status.success?
+          unless status.success?
+            detail = begin
+              JSON.parse(out)["error"]
+            rescue JSON::ParserError
+              nil
+            end
+            raise Error, detail || "could not inventory installed gem payload #{name} #{version}"
+          end
 
           converge(JSON.parse(out))
         rescue SystemCallError, JSON::ParserError => e

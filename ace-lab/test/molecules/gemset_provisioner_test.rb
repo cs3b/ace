@@ -407,7 +407,7 @@ module Molecules
 
     def test_real_runtime_reports_exists_for_the_installed_version
       Dir.mktmpdir do |dir|
-        gem_home = build_and_install_gem(dir, "ace-lab-probe", "0.13.0")
+        gem_home = build_and_install_gem(dir, "ace-lab-probe", "0.13.0", files: {"lib/probe.rb" => "# public fixture\n"})
         provisioner = Ace::Lab::Molecules::GemsetProvisioner.new
 
         kind, versions = provisioner.runtime_versions(name: "ace-lab-probe", gem_home: gem_home)
@@ -415,7 +415,9 @@ module Molecules
         assert_equal %w[0.13.0], versions
 
         runtime = {"gem_home" => gem_home, "gems" => [{"name" => "ace-lab-probe", "version" => "0.13.0"}]}
-        payload = File.join(gem_home, "specifications", "ace-lab-probe-0.13.0.gemspec")
+        installed_spec = Gem::Specification.load(File.join(gem_home, "specifications", "ace-lab-probe-0.13.0.gemspec"))
+        assert_empty installed_spec.files, "fixture must exercise RubyGems stripped installed payload metadata"
+        payload = File.join(gem_home, "gems", "ace-lab-probe-0.13.0", "lib", "probe.rb")
         File.chmod(0o640, payload)
         unknown = File.join(gem_home, "private-credential")
         File.write(unknown, "not package-owned")
@@ -429,6 +431,35 @@ module Molecules
         assert_equal 0o600, File.stat(unknown).mode & 0o777
         assert_equal predicted.first["permissions"].map { |r| r["path"] }, report.first["permissions"].map { |r| r["path"] }
         assert_empty provisioner.call(runtime: runtime).first["permissions"]
+      end
+    end
+
+    def test_missing_or_wrong_cached_archive_refuses_permission_changes
+      Dir.mktmpdir do |dir|
+        gem_home = build_and_install_gem(dir, "ace-lab-cache-probe", "1.0.0",
+          files: {"lib/probe.rb" => "# public fixture\n"})
+        cache = File.join(gem_home, "cache", "ace-lab-cache-probe-1.0.0.gem")
+        payload = File.join(gem_home, "gems", "ace-lab-cache-probe-1.0.0", "lib", "probe.rb")
+        File.chmod(0o640, payload)
+        File.unlink(cache)
+        [true, false].each do |dry_run|
+          error = assert_raises(Ace::Lab::Molecules::GemPayloadPermissions::Error) do
+            Ace::Lab::Molecules::GemPayloadPermissions.new(gem_home: gem_home, dry_run: dry_run, privileged: false)
+              .call(name: "ace-lab-cache-probe", version: "1.0.0")
+          end
+          assert_match(/cache missing/, error.message)
+          assert_equal 0o640, File.stat(payload).mode & 0o777
+        end
+        Dir.mktmpdir do |other|
+          other_home = build_and_install_gem(other, "ace-lab-other-probe", "1.0.0")
+          FileUtils.cp(File.join(other_home, "cache", "ace-lab-other-probe-1.0.0.gem"), cache)
+          error = assert_raises(Ace::Lab::Molecules::GemPayloadPermissions::Error) do
+            Ace::Lab::Molecules::GemPayloadPermissions.new(gem_home: gem_home, dry_run: false, privileged: false)
+              .call(name: "ace-lab-cache-probe", version: "1.0.0")
+          end
+          assert_match(/identity mismatch/, error.message)
+          assert_equal 0o640, File.stat(payload).mode & 0o777
+        end
       end
     end
 
