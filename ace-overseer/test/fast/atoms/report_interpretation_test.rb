@@ -35,10 +35,10 @@ class ReportInterpretationTest < AceOverseerTestCase
     assert_equal "success", verdict[:set]["report_result"]
   end
 
-  def test_report_without_assignment_matches_project_task_with_single_active_step
+  def test_report_without_assignment_matches_explicit_planner_allocation
     manager = manager("8xg.t.mgr", steps: [
       step("8xg.t.mgr.0", status: "done"),
-      step("8xg.t.mgr.1", status: "progress")
+      step("8xg.t.mgr.1", status: "progress", metadata: {"role" => "planner"})
     ], metadata: {"project_task" => "8xg.t.prj"})
 
     verdict = Ace::Overseer::Atoms::ReportInterpretation.evaluate(
@@ -100,8 +100,8 @@ class ReportInterpretationTest < AceOverseerTestCase
 
   def test_ambiguous_project_task_match_is_unmatched
     manager = manager("8xg.t.mgr", steps: [
-      step("8xg.t.mgr.0", status: "progress"),
-      step("8xg.t.mgr.1", status: "progress")
+      step("8xg.t.mgr.0", status: "progress", metadata: {"role" => "planner"}),
+      step("8xg.t.mgr.1", status: "progress", metadata: {"role" => "planner"})
     ], metadata: {"project_task" => "8xg.t.prj"})
 
     verdict = Ace::Overseer::Atoms::ReportInterpretation.evaluate(
@@ -181,8 +181,8 @@ class ReportInterpretationTest < AceOverseerTestCase
 
   def test_ambiguous_cross_manager_project_task_match_is_unmatched
     managers = [
-      manager("8xg.t.mgr.a", steps: [step("8xg.t.mgr.a.0")], metadata: {"project_task" => "8xg.t.prj"}),
-      manager("8xg.t.mgr.b", steps: [step("8xg.t.mgr.b.0")], metadata: {"project_task" => "8xg.t.prj"})
+      manager("8xg.t.mgr.a", steps: [step("8xg.t.mgr.a.0", metadata: {"role" => "planner"})], metadata: {"project_task" => "8xg.t.prj"}),
+      manager("8xg.t.mgr.b", steps: [step("8xg.t.mgr.b.0", metadata: {"role" => "planner"})], metadata: {"project_task" => "8xg.t.prj"})
     ]
 
     verdict = Ace::Overseer::Atoms::ReportInterpretation.evaluate(
@@ -209,7 +209,7 @@ class ReportInterpretationTest < AceOverseerTestCase
 
   def test_planner_readiness_report_completes_only_a_preparation_step
     manager = manager("8xg.t.mgr", steps: [
-      step("8xg.t.mgr.0", status: "progress")
+      step("8xg.t.mgr.0", status: "progress", metadata: {"role" => "planner"})
     ], metadata: {"project_task" => "8xg.t.prj"})
 
     verdict = Ace::Overseer::Atoms::ReportInterpretation.evaluate(
@@ -236,4 +236,53 @@ class ReportInterpretationTest < AceOverseerTestCase
     assert_equal :unmatched, verdict[:status]
     assert_equal "pending", manager.subtasks.last.status
   end
+  def test_readiness_cannot_complete_unassigned_confirm_start_or_bootstrap_worker
+    [nil, "confirm-start", "bootstrap-worker", "bootstrap-verifier"].each do |role|
+      target = step("8xg.t.mgr.2", status: "blocked", metadata: {"role" => role})
+      tree = manager("8xg.t.mgr", steps: [step("8xg.t.mgr.0", status: "done"),
+        step("8xg.t.mgr.1", status: "done"), target], metadata: {"project_task" => "8xg.t.prj"})
+      verdict = Ace::Overseer::Atoms::ReportInterpretation.evaluate(event: report(assignment: nil), managers: [tree])
+      assert_equal :unmatched, verdict[:status], role.inspect
+      assert_equal "blocked", target.status
+    end
+  end
+
+  def test_missing_report_identity_never_matches_or_looks_like_a_duplicate
+    tree = manager("8xg.t.mgr", steps: [step("8xg.t.mgr.0", metadata: {"assignment" => "w1"})])
+    [nil, "", " "].each do |id|
+      verdict = Ace::Overseer::Atoms::ReportInterpretation.evaluate(event: report(id: id), managers: [tree])
+      assert_equal :unmatched, verdict[:status]
+    end
+  end
+
+  def test_explicit_assignment_with_conflicting_project_task_is_unmatched
+    tree = manager("8xg.t.mgr", steps: [step("8xg.t.mgr.0", metadata: {"assignment" => "w1"})],
+      metadata: {"project_task" => "8xg.t.prj"})
+    verdict = Ace::Overseer::Atoms::ReportInterpretation.evaluate(event: report(task: "another-task"), managers: [tree])
+    assert_equal :unmatched, verdict[:status]
+  end
+
+  def test_real_worker_and_verifier_reports_match_their_persisted_allocations
+    worker = step("8xu.t.jh7.0", metadata: {"role" => "bootstrap-worker", "assignment" => "8xujj4"})
+    verifier = step("8xu.t.jh7.1", metadata: {"role" => "bootstrap-verifier", "assignment" => "8xujj41"})
+    tree = manager("8xu.t.jh7", steps: [worker, verifier,
+      step("8xu.t.jh7.2", metadata: {"role" => "confirm-start"})], metadata: {"project_task" => "8xu.t.jh8"})
+    [["8xuk0q", "8xujj4", worker], ["8xuk86", "8xujj41", verifier]].each do |id, assignment, target|
+      verdict = Ace::Overseer::Atoms::ReportInterpretation.evaluate(
+        event: report(id: id, task: "8xu.t.jh8", assignment: assignment), managers: [tree])
+      assert_equal :success, verdict[:status]
+      assert_equal target.id, verdict[:step_ref]
+      assert_equal id, verdict[:set]["processed_report"]
+    end
+  end
+
+  def test_supplied_role_and_replayed_report_references_must_agree
+    tree = manager("8xg.t.mgr", steps: [step("8xg.t.mgr.0", status: "done",
+      metadata: {"assignment" => "w1", "role" => "bootstrap-worker", "processed_report" => "ab12cd", "report_result" => "success"})],
+      metadata: {"project_task" => "8xg.t.prj"})
+    [report.merge("role" => "bootstrap-verifier"), report(task: "another-task"), report(assignment: "other-assignment")].each do |event|
+      assert_equal :unmatched, Ace::Overseer::Atoms::ReportInterpretation.evaluate(event: event, managers: [tree])[:status]
+    end
+  end
+
 end

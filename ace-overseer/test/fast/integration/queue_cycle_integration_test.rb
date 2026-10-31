@@ -122,6 +122,32 @@ module Ace
               "the stray report is recorded nowhere"
           end
 
+          def test_real_incomplete_assignment_and_wrong_role_never_accept_success
+            prepared, worktree, manager = prepare_sequence
+            process_reports # accept planner readiness, without executing the worker
+            assignment = prepared["assignments"][0]["assignment"]
+            impl_step = "#{manager}.1"
+            event = deliver_report(title: "Premature success", assignment: assignment)
+            [true, false].each do |dry_run|
+              args = [OVERSEER_BIN, "process-reports"]
+              args << "--dry-run" if dry_run
+              out, err, status = run_cli(*args)
+              assert status.success?, out + err
+              assert_includes out, "assignment is not complete"
+              refute_equal "done", step_status(impl_step)
+              assert_nil step_metadata(impl_step)["processed_report"]
+            end
+            drive_assignment_to_completion(worktree, assignment)
+            update_task(impl_step, "role=reviewer")
+            out = process_reports
+            assert_includes out, "assignment role disagrees"
+            assert_nil step_metadata(impl_step)["processed_report"]
+            update_task(impl_step, "role=worker")
+            out = process_reports
+            assert_includes out, "recorded success on #{impl_step}"
+            assert_equal event, step_metadata(impl_step)["processed_report"]
+          end
+
           # Crash cut at the FIRST boundary (PR #393 final audit finding
           # #4): preparation became done and its readiness report was
           # recorded, but the process died before the handoff dispatch.
@@ -160,6 +186,7 @@ module Ace
             impl = create_task("Implement cycle", manager)
             review = create_task("Review cycle", manager)
             update_task(manager, "project_task=#{TASK_REF}")
+            update_task(prep, "role=planner")
             update_task(impl, "dependencies=#{prep}")
             update_task(review, "dependencies=#{impl}")
 
@@ -168,8 +195,8 @@ module Ace
             # references ahead of preparation).
             worker_assignment = payload["assignments"][0]["assignment"]
             reviewer_assignment = payload["assignments"][1]["assignment"]
-            update_task(impl, "assignment=#{worker_assignment},worktree=#{worktree_rel(worktree)}")
-            update_task(review, "assignment=#{reviewer_assignment}")
+            update_task(impl, "assignment=#{worker_assignment},role=worker,worktree=#{worktree_rel(worktree)}")
+            update_task(review, "assignment=#{reviewer_assignment},role=reviewer,worktree=#{worktree_rel(worktree)}")
 
             [payload, worktree, manager]
           end
@@ -351,6 +378,8 @@ module Ace
           end
 
           def run_cli(*argv, chdir: @dir)
+            previous_path = ENV["PATH"]
+            ENV["PATH"] = File.join(REPO_ROOT, "bin") + File::PATH_SEPARATOR + previous_path.to_s
             previous_gemfile = ENV["BUNDLE_GEMFILE"]
             previous_rubylib = ENV["RUBYLIB"]
             ENV["BUNDLE_GEMFILE"] = File.join(REPO_ROOT, "Gemfile")
@@ -359,6 +388,7 @@ module Ace
           ensure
             ENV["BUNDLE_GEMFILE"] = previous_gemfile
             ENV["RUBYLIB"] = previous_rubylib
+            ENV["PATH"] = previous_path
           end
 
           def run_git(*argv)

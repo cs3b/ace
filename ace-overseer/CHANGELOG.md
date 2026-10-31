@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Bind unassigned readiness only to explicit planner allocations; reject missing
   report identities and conflicting task/role references. Persist bootstrap
   assignment and receipt identities in task metadata, using resolved task paths.
+  Check real completed assignment and role ownership before accepting success;
+  leave confirm-start continuation to the coordinator without worker dispatch.
 
 - Preserve concrete child startup failures reported before project scope is
   established, while continuing to reject unscoped or wrong-scope success.

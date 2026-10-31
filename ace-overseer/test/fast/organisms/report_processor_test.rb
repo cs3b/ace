@@ -105,7 +105,7 @@ class ReportProcessorTest < AceOverseerTestCase
   end
 
   def processor(events:, managers:, handoff: FakeHandoff.new, work_on: FakeWorkOn.new)
-    Ace::Overseer::Organisms::ReportProcessor.new(
+    Ace::Overseer::Organisms::ReportProcessor.new(completion_check: ->(**) { nil },
       inbox: FakeInbox.new(events),
       task_manager: FakeTaskManager.new(managers),
       handoff: handoff,
@@ -155,6 +155,7 @@ class ReportProcessorTest < AceOverseerTestCase
     assert_includes message, "window ensured"
     assert_includes message, "ace-coworker start --config .ace-local/coworker/prepare/reviewer.yml"
     refute_includes message, "handed to the next role"
+    refute_includes message, "close the managing task"
   end
 
   def test_repeated_report_rechecks_continuation_without_second_start
@@ -165,7 +166,7 @@ class ReportProcessorTest < AceOverseerTestCase
     task_manager = FakeTaskManager.new([manager(steps: steps)])
     handoff = FakeHandoff.new
     work_on = FakeWorkOn.new
-    orchestrator = Ace::Overseer::Organisms::ReportProcessor.new(
+    orchestrator = Ace::Overseer::Organisms::ReportProcessor.new(completion_check: ->(**) { nil },
       inbox: FakeInbox.new([report]), task_manager: task_manager,
       handoff: handoff, work_on: work_on)
 
@@ -196,7 +197,7 @@ class ReportProcessorTest < AceOverseerTestCase
     task_manager = FakeTaskManager.new([manager(steps: steps,
       metadata: {"project_task" => "8xg.t.prj", "worktree" => ".ace-wt/prj"})])
     failed = FakeHandoff.new(error: Ace::Overseer::Error.new("terminal temporarily unavailable"))
-    first = Ace::Overseer::Organisms::ReportProcessor.new(
+    first = Ace::Overseer::Organisms::ReportProcessor.new(completion_check: ->(**) { nil },
       inbox: FakeInbox.new([report]), task_manager: task_manager, handoff: failed).call
 
     assert_equal 1, first[:counts][:success]
@@ -206,7 +207,7 @@ class ReportProcessorTest < AceOverseerTestCase
     # run must resume the continuation from the recorded duplicate instead
     # of letting it suppress the next role forever.
     recovered = FakeHandoff.new
-    second = Ace::Overseer::Organisms::ReportProcessor.new(
+    second = Ace::Overseer::Organisms::ReportProcessor.new(completion_check: ->(**) { nil },
       inbox: FakeInbox.new([report]), task_manager: task_manager, handoff: recovered).call
 
     assert_equal 1, second[:counts][:duplicate]
@@ -237,7 +238,7 @@ class ReportProcessorTest < AceOverseerTestCase
   def test_question_surfaces_answer_path_and_writes_nothing
     managers = [manager(steps: [step("8xg.t.mgr.0", metadata: {"assignment" => "w1"})])]
     task_manager = FakeTaskManager.new(managers)
-    orchestrator = Ace::Overseer::Organisms::ReportProcessor.new(
+    orchestrator = Ace::Overseer::Organisms::ReportProcessor.new(completion_check: ->(**) { nil },
       inbox: FakeInbox.new([report(type: "question")]), task_manager: task_manager,
       handoff: FakeHandoff.new, work_on: FakeWorkOn.new)
 
@@ -251,7 +252,7 @@ class ReportProcessorTest < AceOverseerTestCase
 
   def test_report_about_unknown_task_is_kept_for_clarification
     task_manager = FakeTaskManager.new([manager(steps: [step("8xg.t.mgr.0", metadata: {"assignment" => "w1"})])])
-    orchestrator = Ace::Overseer::Organisms::ReportProcessor.new(
+    orchestrator = Ace::Overseer::Organisms::ReportProcessor.new(completion_check: ->(**) { nil },
       inbox: FakeInbox.new([report(task: "8xg.t.other", assignment: "zz9")]),
       task_manager: task_manager, handoff: FakeHandoff.new, work_on: FakeWorkOn.new)
 
@@ -268,7 +269,7 @@ class ReportProcessorTest < AceOverseerTestCase
     ]
     task_manager = FakeTaskManager.new([manager(steps: steps)])
 
-    result = Ace::Overseer::Organisms::ReportProcessor.new(
+    result = Ace::Overseer::Organisms::ReportProcessor.new(completion_check: ->(**) { nil },
       inbox: FakeInbox.new([report(assignment: "stale-assignment")]),
       task_manager: task_manager, handoff: FakeHandoff.new, work_on: FakeWorkOn.new).call
 
@@ -289,7 +290,7 @@ class ReportProcessorTest < AceOverseerTestCase
     ]
     task_manager = FakeTaskManager.new([manager(steps: steps)])
 
-    result = Ace::Overseer::Organisms::ReportProcessor.new(
+    result = Ace::Overseer::Organisms::ReportProcessor.new(completion_check: ->(**) { nil },
       inbox: FakeInbox.new([report(id: "planner-ready", assignment: nil)]),
       task_manager: task_manager, handoff: FakeHandoff.new, work_on: FakeWorkOn.new).call
 
@@ -335,7 +336,7 @@ class ReportProcessorTest < AceOverseerTestCase
       step("8xg.t.mgr.1", status: "pending", dependencies: ["8xg.t.mgr.0"])
     ])]
     task_manager = FakeTaskManager.new(managers)
-    orchestrator = Ace::Overseer::Organisms::ReportProcessor.new(
+    orchestrator = Ace::Overseer::Organisms::ReportProcessor.new(completion_check: ->(**) { nil },
       inbox: FakeInbox.new([report]), task_manager: task_manager,
       handoff: FakeHandoff.new, work_on: FakeWorkOn.new)
 
@@ -371,7 +372,7 @@ class ReportProcessorTest < AceOverseerTestCase
     ])]
     handoff = FakeHandoff.new
     work_on = FakeWorkOn.new
-    orchestrator = Ace::Overseer::Organisms::ReportProcessor.new(
+    orchestrator = Ace::Overseer::Organisms::ReportProcessor.new(completion_check: ->(**) { nil },
       inbox: FakeInbox.new([report(id: "ef99xy")]), task_manager: FakeTaskManager.new(managers),
       handoff: handoff, work_on: work_on)
 
@@ -398,7 +399,7 @@ class ReportProcessorTest < AceOverseerTestCase
       step("8xg.t.mgr.1", status: "pending", dependencies: ["8xg.t.mgr.0"])
     ])]
     work_on = FakeWorkOn.new
-    orchestrator = Ace::Overseer::Organisms::ReportProcessor.new(
+    orchestrator = Ace::Overseer::Organisms::ReportProcessor.new(completion_check: ->(**) { nil },
       inbox: FakeInbox.new([report]), task_manager: FakeTaskManager.new(managers, vanish: "8xg.t.mgr.0"),
       handoff: FakeHandoff.new, work_on: work_on)
 
@@ -423,6 +424,52 @@ class ReportProcessorTest < AceOverseerTestCase
     message = result[:outcomes].first[:message]
     assert_includes message, "sequence complete"
     refute_includes message, "handed to the next role"
+    refute_includes message, "close the managing task"
+    assert_includes message, "pending coordination steps"
   end
+  def test_readiness_cannot_close_confirm_start_without_an_executor_assignment
+    steps = [step("8xg.t.mgr.0", status: "done"), step("8xg.t.mgr.1", status: "done"),
+      step("8xg.t.mgr.2", status: "blocked", metadata: {"role" => "confirm-start"})]
+    task_manager = FakeTaskManager.new([manager(steps: steps)])
+    handoff, work_on = FakeHandoff.new, FakeWorkOn.new
+    result = Ace::Overseer::Organisms::ReportProcessor.new(completion_check: ->(**) { nil },
+      inbox: FakeInbox.new([report(id: "planner-ready", assignment: nil)]),
+      task_manager: task_manager, handoff: handoff, work_on: work_on).call
+    assert_equal 1, result[:counts][:unmatched]
+    assert_equal "blocked", steps.last.status
+    assert_empty task_manager.updates
+    assert_empty handoff.calls
+    assert_empty work_on.calls
+  end
+
+  def test_completion_refusal_blocks_dry_run_and_apply_before_any_task_write
+    [true, false].each do |dry_run|
+      tasks = FakeTaskManager.new([manager(steps: [step("8xg.t.mgr.0", metadata: {"assignment" => "w1"})])])
+      handoff, work_on = FakeHandoff.new, FakeWorkOn.new
+      result = Ace::Overseer::Organisms::ReportProcessor.new(
+        completion_check: ->(**) { "assignment plan is empty" }, inbox: FakeInbox.new([report]),
+        task_manager: tasks, handoff: handoff, work_on: work_on).call(dry_run: dry_run)
+      assert_equal 1, result[:counts][:unmatched]
+      assert_empty tasks.updates
+      assert_empty handoff.calls
+      assert_empty work_on.calls
+      assert_includes result[:outcomes].first[:message], "not treated as success"
+    end
+  end
+
+  def test_accepted_verifier_leaves_confirm_start_to_coordinator_without_dispatch
+    tasks = FakeTaskManager.new([manager(steps: [
+      step("8xg.t.mgr.0", metadata: {"assignment" => "w1", "role" => "bootstrap-verifier"}),
+      step("8xg.t.mgr.1", status: "pending", metadata: {"role" => "confirm-start"}, dependencies: ["8xg.t.mgr.0"])
+    ], metadata: {"project_task" => "8xg.t.prj", "worktree" => ".ace-wt/prj"})])
+    handoff, work_on = FakeHandoff.new, FakeWorkOn.new
+    result = Ace::Overseer::Organisms::ReportProcessor.new(completion_check: ->(**) { nil },
+      inbox: FakeInbox.new([report]), task_manager: tasks, handoff: handoff, work_on: work_on).call
+    assert_equal "coordinator", result[:outcomes].first[:continuation][:action]
+    assert_equal "pending", tasks.show("8xg.t.mgr.1").status
+    assert_empty handoff.calls
+    assert_empty work_on.calls
+  end
+
 end
 

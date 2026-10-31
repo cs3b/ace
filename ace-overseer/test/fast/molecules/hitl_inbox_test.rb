@@ -52,18 +52,19 @@ class HitlInboxTest < AceOverseerTestCase
   def test_normalizes_events_to_the_keys_the_atom_matches_on
     manager = FakeManager.new([
       event("r1", "report", created_at: Time.at(1000),
-        metadata: {"task" => "8xg.t.prj", "assignment" => "w1", "step" => "8xg.t.mgr.1"},
+        metadata: {"task" => "8xg.t.prj", "assignment" => "w1", "role" => "bootstrap-worker", "step" => "8xg.t.mgr.1"},
         title: "Worker finished")
     ])
 
     events = Ace::Overseer::Molecules::HitlInbox.new(manager: manager).incoming_events
 
-    assert_equal ["id", "type", "result", "task", "assignment", "title"], events.first.keys
+    assert_equal ["id", "type", "result", "task", "assignment", "role", "title"], events.first.keys
     assert_equal "r1", events.first["id"]
     assert_equal "report", events.first["type"]
     assert_equal "success", events.first["result"]
     assert_equal "8xg.t.prj", events.first["task"]
     assert_equal "w1", events.first["assignment"]
+    assert_equal "bootstrap-worker", events.first["role"]
     assert_equal "Worker finished", events.first["title"]
   end
 

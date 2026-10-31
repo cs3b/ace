@@ -15,7 +15,7 @@ module Ace
       #   assignment that matches no step is :unmatched), or — only for
       #   reports without an assignment (planner readiness) — by the
       #   managing task's project_task plus exactly one non-terminal
-      #   step whose own assignment is blank (the preparation role). An
+      #   step explicitly allocated to role planner with no assignment. An
       #   event that fits no open allocation is :unmatched, kept
       #   for clarification, never success (an ambiguous cross-manager
       #   match is also :unmatched).
@@ -45,6 +45,8 @@ module Ace
         #      recorded_result:}
         #   {status: :unmatched, reason:}
         def self.evaluate(event:, managers:)
+          return {status: :unmatched, reason: "event has no report identity"} if event["id"].to_s.strip.empty?
+
           matched = match(event, managers)
           return {status: :unmatched, reason: unmatched_reason(event)} unless matched
 
@@ -142,16 +144,11 @@ module Ace
         # because a stale report for a different assignment must never
         # complete whichever step happens to remain.
         #
-        # Without an assignment (a planner readiness report carries task
-        # + result only) the report binds to the PREPARATION role alone:
-        # the managing task's project_task must match the reported task
-        # AND leave exactly one non-terminal step whose own assignment is
-        # blank (the preparation step). A sole remaining step that is
-        # bound to a role assignment belongs to that role, not to the
-        # report — absence of an assignment is never evidence that
-        # whichever role remains just finished. A match that is ambiguous
-        # across managers (or across steps) fits no open allocation and
-        # returns nil.
+        # Unassigned readiness can complete only an explicitly allocated
+        # planner step. A missing assignment says nothing about the role:
+        # confirm-start and bootstrap execution also have unassigned windows.
+        # Task identity and any supplied role must agree with the allocation.
+        # Ambiguous allocations never advance.
         #
         # @return [Hash{manager:, step:, terminal:}, nil]
         def self.match(event, managers)
@@ -161,8 +158,10 @@ module Ace
           assignment = event["assignment"].to_s
           if assignment != ""
             matches = managers.flat_map do |manager|
+              next [] unless task_agrees?(event, manager)
+
               steps_of(manager).filter_map do |step|
-                {manager: manager, step: step} if step.metadata["assignment"].to_s == assignment
+                {manager: manager, step: step} if step.metadata["assignment"].to_s == assignment && role_agrees?(event, step)
               end
             end
             # No step records this assignment: unmatched, never a
@@ -182,7 +181,9 @@ module Ace
             next unless manager.metadata["project_task"].to_s == task && task != ""
 
             active = steps_of(manager).reject { |step| terminal?(step) }
-            preparation = active.reject { |step| step.metadata["assignment"].to_s != "" }
+            preparation = active.select do |step|
+              step.metadata["assignment"].to_s.empty? && step.metadata["role"] == "planner" && role_agrees?(event, step)
+            end
             {manager: manager, step: preparation.first} if preparation.size == 1
           end
           return nil if matches.size > 1
@@ -201,13 +202,26 @@ module Ace
         def self.recorded_match(event, managers)
           matches = managers.flat_map do |manager|
             steps_of(manager).filter_map do |step|
-              {manager: manager, step: step} if step.metadata[PROCESSED_REPORT_KEY] == event["id"]
+              {manager: manager, step: step} if step.metadata[PROCESSED_REPORT_KEY] == event["id"] &&
+                task_agrees?(event, manager) && role_agrees?(event, step) &&
+                (event["assignment"].to_s.empty? || step.metadata["assignment"].to_s == event["assignment"].to_s)
             end
           end
           return nil if matches.size != 1
 
           {manager: matches.first[:manager], step: matches.first[:step],
            terminal: terminal?(matches.first[:step])}
+        end
+
+        def self.task_agrees?(event, manager)
+          expected = manager.metadata["project_task"].to_s
+          actual = event["task"].to_s
+          expected.empty? || expected == actual
+        end
+
+        def self.role_agrees?(event, step)
+          role = event["role"].to_s
+          role.empty? || step.metadata["role"].to_s == role
         end
 
         # @return [String] why the event fit no open allocation
