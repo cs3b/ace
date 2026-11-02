@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Require direct ACE checks and their actual exit status in bootstrap worker and verifier evidence.
+
 ## [0.8.0] - 2026-10-31
 
 ### Added
