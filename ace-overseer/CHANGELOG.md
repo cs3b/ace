@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Correct private task commands and require complete bootstrap commission files in the worker worktree before launch.
+
 ## [0.28.1] - 2026-10-31
 
 ### Fixed
