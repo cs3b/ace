@@ -49,6 +49,12 @@ host's `zai` Pi credential into the working VM. It checks that the installed
 runtime and native Herdr are already present and does not start the overseer.
 This setup path has not yet passed a complete VM run.
 
+The seeded ACE revision has no project Overseer start configuration and also
+contains an old tracked HITL route for another lab, including Hermes paths.
+Those are deliberate input defects for the bootstrap commission. No Hermes
+service runs in this fixture; project readiness requires the worker to leave a
+working local route rather than relying on the old machine or its paths.
+
 `bin/lab-vm-lab-start RUN_ID` is the initial launch path under development. It
 starts a real headless Herdr server, creates the lab workspace and local HITL
 route, launches `ace-overseer start`, and delivers a single high-level project

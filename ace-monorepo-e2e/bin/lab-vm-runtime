@@ -53,7 +53,7 @@ begin
       key_path = File.join(LabVm.local_dir, "bootstrap/operator_ed25519")
       ssh_options = ["-o", "BatchMode=yes", "-o", "StrictHostKeyChecking=yes", "-o", "UserKnownHostsFile=#{known_hosts}", "-i", key_path]
       raise "artifact verification failed" unless system(File.join(__dir__, "lab-vm-artifacts"))
-      code, output = LabVm.guest_exec(uuid, "/bin/sh", "-c", "test ! -e /var/lib/ace-e2e/input && install -d -o lab-operator -g lab-operator -m 0700 /home/lab-operator/ace-e2e-input")
+      code, output = LabVm.guest_exec(uuid, "/bin/sh", "-c", "test ! -e /var/lib/ace-e2e/input && test ! -L /var/lib/ace-e2e/input && test ! -e /home/lab-operator/ace-e2e-input && test ! -L /home/lab-operator/ace-e2e-input && install -d -o lab-operator -g lab-operator -m 0700 /home/lab-operator/ace-e2e-input")
       raise "working clone is not fresh: #{output}" unless code.zero?
       root = File.join(LabVm::ROOT, "ace-monorepo-e2e/lab-vm")
       inputs = [File.join(LabVm.local_dir, "artifacts"), File.join(root, "pi"), File.join(root, "release-manifest.json"),

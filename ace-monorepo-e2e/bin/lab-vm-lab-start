@@ -91,7 +91,7 @@ begin
         "adapters" => {"routes" => [{"route" => "overseer-terminal", "recipients" => ["overseer"],
           "adapter" => "terminal", "runtime" => "herdr", "pane" => pane_id, "machine" => "utm-e2e"}]}}}
       encoded = Base64.strict_encode64(JSON.generate(config))
-      setup = "set -eu; test ! -L /lab/.ace; test ! -e /lab/.ace/hitl/config.yml; test ! -L /lab/.ace/hitl/config.yml; test ! -L /lab/.ace/hitl; mkdir -p /lab/.ace/hitl; printf '%s' '#{encoded}' | base64 -d > /lab/.ace/hitl/config.yml; chmod 0600 /lab/.ace/hitl/config.yml"
+      setup = "set -eu; test ! -L /home/mo/.ace; test ! -e /home/mo/.ace/hitl/config.yml; test ! -L /home/mo/.ace/hitl/config.yml; test ! -L /home/mo/.ace/hitl; mkdir -p /home/mo/.ace/hitl; printf '%s' '#{encoded}' | base64 -d > /home/mo/.ace/hitl/config.yml; chmod 0600 /home/mo/.ace/hitl/config.yml"
       code, = guest_mo(uuid, "/bin/sh", "-c", setup)
       raise "local HITL route setup failed" unless code.zero?
       guest_json(uuid, "herdr", "pane", "run", pane_id, "ace-overseer start")
