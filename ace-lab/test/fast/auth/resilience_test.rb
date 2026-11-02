@@ -321,7 +321,11 @@ module Ace
       assert_match(/revoke-pending/, svc.revoke(lease_id: lease["id"]).to_s)
       assert_equal "revoke-pending", svc.status(lease_id: lease["id"])["state"]
 
-      forced = svc.revoke(lease_id: lease["id"], force: true)
+      assert_raises(Refusal) { svc.revoke(lease_id: lease["id"], force: true) }
+      operator = Ace::Lab::Molecules::GrantResolver.stub(:read_verified, @document) do
+        Ace::Lab::Auth::Service.new(principal: -> { "root" })
+      end
+      forced = Process.stub(:uid, 0) { operator.revoke(lease_id: lease["id"], force: true) }
       assert_equal :forced_terminal, forced
       record = svc.store.load(lease["id"])
       assert_equal "revoked", record["state"]

@@ -3,6 +3,7 @@
 require "etc"
 require "json"
 require "open3"
+require_relative "session_runner"
 
 module Ace
   module Lab
@@ -33,8 +34,28 @@ module Ace
 
         # @param authorization_path [String] trusted document location
         # @param runner [Proc] argv runner for the exec'd child
-        def initialize(authorization_path: nil, runner: nil, principal: nil)
+        # @param session_uid [Integer, nil] authenticated peer uid supplied by
+        #   a trusted system entry point, never a client-provided identity
+        # @param session_cwd [String, nil] peer's verified working directory
+        # @param session_id [String, nil] trusted systemd invocation identity
+        def initialize(authorization_path: nil, runner: nil, principal: nil, session_uid: nil, session_cwd: nil, session_id: nil)
           @authorization_path = authorization_path || Ace::Lab.authorization_path
+          @injected_runner = !runner.nil?
+          if session_uid
+            raise ArgumentError, "session execution requires a root issuer" unless Process.euid.zero?
+            raise ArgumentError, "session execution does not accept caller-supplied identity or runner" if principal || runner
+            unless session_id.is_a?(String) && session_id.match?(/\A[0-9a-f]{32}\z/)
+              raise ArgumentError, "session execution requires a verified systemd invocation identity"
+            end
+
+            @session_runner = SessionRunner.new(uid: session_uid, cwd: session_cwd)
+            account = Etc.getpwuid(Integer(session_uid))
+            @session_uid = account.uid
+            @session_id = session_id
+            @principal = -> { account.name }
+          else
+            @principal = principal || -> { Etc.getpwuid(Process.uid).name }
+          end
           # The default runner spawns the child through `env -i` so the
           # allowlisted child environment is EXACTLY what the child
           # sees — Ruby's system(env, ...) MERGES the hash into the
@@ -42,7 +63,7 @@ module Ace
           # credential override past the profile's scope. The real exit
           # status is preserved (nil-status spawn failure degrades to
           # 127, signals to 128+signum).
-          @runner = runner || lambda { |argv, env|
+          @runner = @session_runner || runner || lambda { |argv, env|
             spawned = ["env", "-i", *env.map { |key, value| "#{key}=#{value}" }, *argv]
             system(*spawned)
             status = $?
@@ -54,7 +75,6 @@ module Ace
               status.exitstatus || 128 + status.termsig.to_i
             end
           }
-          @principal = principal || -> { Etc.getpwuid(Process.uid).name }
           @config = load_config
           @store = LeaseStore.new(@config["leases_dir"] || DEFAULT_LEASES_DIR)
           @credentials_dir = @config["credentials_dir"] || DEFAULT_CREDENTIALS_DIR
@@ -72,7 +92,13 @@ module Ace
         # project config grants nothing.
         def request(profile_name:, role:, task:, assignment:, repos: [],
           ttl_minutes: nil)
+          if Process.euid.zero? && !@session_uid && !@injected_runner
+            raise Refusal.new("root issuance requires an authenticated non-root session identity")
+          end
           profile = profile_for(profile_name)
+          if @session_uid && profile["principals"].empty?
+            raise Refusal.new("session auth profile '#{profile_name}' requires an explicit principal allowlist")
+          end
           unless profile["roles"].include?(role)
             raise Refusal.new("role '#{role}' is not allowed by profile '#{profile_name}'")
           end
@@ -80,6 +106,12 @@ module Ace
           unless profile["principals"].empty? || profile["principals"].include?(principal)
             raise Refusal.new("principal '#{principal}' is not allowed by profile '#{profile_name}'; " \
               "escalate to the host owner")
+          end
+          if @session_uid
+            # A dynamic uid can be recycled after a unit exits. Until the
+            # system entry point proves session-bound cleanup and revocation,
+            # even a provider-expiring credential file could outlive its uid.
+            raise Refusal.new("session access requires revocation supervision and session-bound cleanup before issuance")
           end
 
           ttl = ttl_minutes || profile["ttl_minutes"]
@@ -118,6 +150,12 @@ module Ace
               "profile's native expiry")
           end
 
+          # A privileged session must have a safe handoff destination before
+          # a remote token exists. Delivery can still fail later (e.g. disk
+          # full), in which case the existing revoke-pending recovery applies.
+          handoff = CredentialHandoff.new(@credentials_dir, recipient: principal, owner_uid: @session_uid)
+          handoff.prepare! if @session_uid
+
           # One request flow at a time per correlation: find_live +
           # create + issue are atomic against a concurrent identical
           # request — the second waits, then returns the first's LIVE
@@ -131,7 +169,7 @@ module Ace
               # lease with a different granted scope or principal is a
               # mismatched retry — refusing it never silently reuses a
               # wider grant for a narrower ask.
-              unless existing["repos"] == repos && existing["principal"] == principal
+              unless existing["repos"] == repos && existing["principal"] == principal && session_matches?(existing)
                 raise Refusal.new("a live lease for task '#{task}' assignment '#{assignment}' " \
                   "profile '#{profile_name}' role '#{role}' already exists with scope " \
                   "[#{existing["repos"].join(", ")}] for principal '#{existing["principal"]}'; " \
@@ -161,7 +199,7 @@ module Ace
               task: task, assignment: assignment, repos: repos,
               use_until: Time.at(Time.now.utc + ttl * 60).strftime("%Y-%m-%dT%H:%M:%SZ"),
               provider_expiry: nil,
-              token_ref: token_ref)
+              token_ref: token_ref, session_uid: @session_uid, session_id: @session_id)
 
             begin
               granted = issue.issue(profile: profile, lease: lease)
@@ -185,7 +223,6 @@ module Ace
             # provider-side, so the record becomes revoke-pending for
             # reconcile to finish — an interrupted handoff must not be
             # reusable by a retry.
-            handoff = CredentialHandoff.new(@credentials_dir, recipient: principal)
             begin
               handoff.deliver(lease["id"], granted["token"])
             rescue StandardError => e
@@ -228,6 +265,12 @@ module Ace
         # per lease.
         def exec(lease_id:, argv:, env: {})
           lease = @store.load(lease_id)
+          unless lease["principal"] == @principal.call && session_matches?(lease)
+            raise Refusal.new("lease '#{lease_id}' belongs to a different principal")
+          end
+          if Process.euid.zero? && !@session_uid && !@injected_runner
+            raise Refusal.new("root execution requires an authenticated non-root session identity")
+          end
           raise Refusal.new("lease '#{lease_id}' is not live") unless @store.live?(lease)
 
           @store.with_exec_lock(lease_id) do
@@ -273,8 +316,12 @@ module Ace
               end
             rescue Providers::RefusedError, Providers::UnsupportedError => e
               raise Refusal.new("provider execution refused: #{e.message}")
+            ensure
+              # A failed spawn, provider error or interrupted caller must not
+              # leave an issued credential live merely because no exit code
+              # was returned. Reconciliation retains unresolved revocations.
+              cleanup = cleanup(lease, profile, handoff)
             end
-            cleanup = cleanup(lease, profile, handoff)
             if exit_code.zero? && cleanup != :revoked && cleanup != :cleared
               raise Error.new("process succeeded (exit 0) but cleanup failed: #{cleanup}")
             end
@@ -296,6 +343,14 @@ module Ace
         # recorded — never a claimed revocation.
         def revoke(lease_id:, force: false)
           lease = @store.load(lease_id)
+          principal = @principal.call
+          operator = @session_uid.nil? && Process.uid.zero? && principal == "root"
+          unless (lease["principal"] == principal && session_matches?(lease)) || operator
+            raise Refusal.new("lease '#{lease_id}' belongs to a different principal")
+          end
+          if force && !operator
+            raise Refusal.new("forced terminal revocation requires the root operator")
+          end
           handoff = CredentialHandoff.new(@credentials_dir, recipient: lease["principal"])
 
           # An already-revoked lease never re-dials the provider: the
@@ -453,6 +508,14 @@ module Ace
           raise Refusal.new("unknown auth profile '#{name}'") if profile.nil?
 
           profile
+        end
+
+        def session_matches?(lease)
+          if @session_uid
+            lease["session_uid"] == @session_uid && lease["session_id"] == @session_id
+          else
+            !lease.key?("session_uid")
+          end
         end
 
         # No caller or provider projection may silently replace the selected

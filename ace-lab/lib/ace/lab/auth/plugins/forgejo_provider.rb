@@ -78,6 +78,16 @@ module Ace
                   fi
                 SH
               end
+              # When a root issuer delegates to an isolated OS session, the
+              # session can read its files but cannot replace directories
+              # while root removes the projection after execution.
+              owner = File.stat(credential)
+              if Process.euid.zero? && !owner.uid.zero?
+                File.chmod(0o711, dir)
+                File.chmod(0o711, login_dir)
+                File.chown(owner.uid, owner.gid, File.join(login_dir, "keys.json"))
+                File.chown(owner.uid, owner.gid, askpass)
+              end
               yield({"XDG_DATA_HOME" => dir, "GIT_ASKPASS" => askpass, "GIT_TERMINAL_PROMPT" => "0",
                 "GIT_CONFIG_COUNT" => "2", "GIT_CONFIG_KEY_0" => "credential.helper", "GIT_CONFIG_VALUE_0" => "",
                 "GIT_CONFIG_KEY_1" => "credential.useHttpPath", "GIT_CONFIG_VALUE_1" => "false", "LC_ALL" => "C",

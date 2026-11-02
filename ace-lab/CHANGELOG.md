@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Bind lease execution and revocation to the owning principal; only the root
+  operator can force an unconfirmed revocation closed.
+- Keep temporary credential files private from their creation, including when
+  the issuing process has a permissive umask.
 - Resolve role instructions with the installed ACE CLI and a clean child environment when `ACE_TOOLCHAIN=installed`.
 - Recognize explicitly installed prerelease gems when verifying a runtime
   dependency closure, matching RubyGems activation behavior.

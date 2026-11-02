@@ -45,13 +45,17 @@ module Ace
         #   remote side (the response may never have arrived).
         # @return [Hash] the created (PREPARING) lease record
         def create(profile:, role:, principal:, task:, assignment:, repos:,
-          use_until:, provider_expiry:, token_ref: nil, id: nil)
+          use_until:, provider_expiry:, token_ref: nil, id: nil, session_uid: nil, session_id: nil)
           lease = {"id" => id || "lease-#{SecureRandom.hex(8)}",
                    "profile" => profile, "role" => role, "principal" => principal,
                    "task" => task, "assignment" => assignment, "repos" => repos.sort,
                    "state" => "preparing", "requested_at" => now,
                    "use_until" => use_until, "provider_expiry" => provider_expiry,
                    "token_ref" => token_ref, "cleanup" => nil}
+          if session_uid
+            lease["session_uid"] = session_uid
+            lease["session_id"] = session_id
+          end
           write(lease)
           lease
         end

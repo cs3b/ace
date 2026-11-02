@@ -61,7 +61,11 @@ PY
 apt-get -o Dir::Etc::sourcelist=/var/lib/ace-e2e/debian-snapshot.list -o Dir::Etc::sourceparts=- update
 apt-get -o Dir::Etc::sourcelist=/var/lib/ace-e2e/debian-snapshot.list -o Dir::Etc::sourceparts=- install -y build-essential ca-certificates curl git libssl-dev zlib1g-dev \
   libyaml-dev libreadline-dev libffi-dev libgdbm-dev libncurses-dev libgmp-dev \
-  pkg-config xz-utils musl-tools
+  pkg-config xz-utils musl-tools libnss-systemd
+# Isolated sessions rely on the same kernel restriction as ace-runtime's
+# protected peer checks. This is applied only to disposable working clones.
+printf '%s\n' 'kernel.yama.ptrace_scope = 2' > /etc/sysctl.d/90-ace-e2e.conf
+sysctl -w kernel.yama.ptrace_scope=2
 mkdir -p "$runtime/toolchains" "$runtime/runtime" /var/lib/ace-e2e/build
 cd /var/lib/ace-e2e/build
 

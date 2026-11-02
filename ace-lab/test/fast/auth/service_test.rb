@@ -103,6 +103,125 @@ module Ace
           assert_equal 0o400, File.stat(credential).mode & 0o777
         end
 
+        def test_another_principal_cannot_execute_a_live_lease
+          owner = Molecules::GrantResolver.stub(:read_verified, @document) do
+            Service.new(principal: -> { "test-worker" })
+          end
+          lease = owner.request(profile_name: "developer", role: "developer",
+            task: "t", assignment: "a", repos: %w[ace])
+          ran = false
+          other = Molecules::GrantResolver.stub(:read_verified, @document) do
+            Service.new(principal: -> { "other-worker" }, runner: ->(_argv, _env) { ran = true; 0 })
+          end
+
+          error = assert_raises(Refusal) { other.exec(lease_id: lease["id"], argv: ["true"]) }
+          assert_match(/principal/, error.message)
+          refute ran
+          assert_equal "issued", owner.status(lease_id: lease["id"])["state"]
+        end
+
+        def test_another_principal_cannot_revoke_a_live_lease
+          owner = service
+          lease = owner.request(profile_name: "developer", role: "developer",
+            task: "t", assignment: "a", repos: %w[ace])
+          other = Molecules::GrantResolver.stub(:read_verified, @document) do
+            Service.new(principal: -> { "other-worker" }, runner: ->(_argv, _env) { 0 })
+          end
+
+          error = assert_raises(Refusal) { other.revoke(lease_id: lease["id"]) }
+          assert_match(/principal/, error.message)
+          assert_empty @fake.revoked
+          assert_equal "issued", owner.status(lease_id: lease["id"])["state"]
+        end
+
+        def test_runner_failure_still_revokes_and_clears_its_lease
+          failing = Molecules::GrantResolver.stub(:read_verified, @document) do
+            Service.new(principal: -> { "test-worker" }, runner: ->(_argv, _env) { raise Errno::ENOENT })
+          end
+          lease = failing.request(profile_name: "developer", role: "developer",
+            task: "t", assignment: "a", repos: %w[ace])
+
+          assert_raises(Errno::ENOENT) { failing.exec(lease_id: lease["id"], argv: ["missing-command"]) }
+          assert_equal "revoked", failing.status(lease_id: lease["id"])["state"]
+          assert_empty Dir.children(File.join(@dir, "credentials"))
+        end
+
+        def test_privileged_session_request_rejects_an_unrestricted_principal_profile
+          skip "requires a non-root account for the fake peer" if Process.uid.zero?
+
+          Process.stub(:euid, 0) do
+            isolated = Molecules::GrantResolver.stub(:read_verified, @document) do
+              Service.new(session_uid: Process.uid, session_cwd: Dir.pwd, session_id: "a" * 32)
+            end
+            error = assert_raises(Refusal) do
+              isolated.request(profile_name: "wide", role: "developer", task: "t", assignment: "a", repos: ["ace"])
+            end
+            assert_match(/explicit.*principal/i, error.message)
+            assert_empty @fake.issued
+          end
+        end
+
+        def test_session_does_not_issue_host_revoked_token_without_supervision
+          skip "requires a non-root account for the fake peer" if Process.uid.zero?
+
+          account = Etc.getpwuid(Process.uid)
+          document = YAML.safe_load(@document)
+          document["auth"]["profiles"]["developer"]["principals"] = [account.name]
+          document["auth"]["profiles"]["developer"]["expiry_mode"] = "host-revoke"
+          Process.stub(:euid, 0) do
+            isolated = Molecules::GrantResolver.stub(:read_verified, YAML.dump(document)) do
+              Service.new(session_uid: account.uid, session_cwd: Dir.pwd, session_id: "a" * 32)
+            end
+            error = assert_raises(Refusal) do
+              isolated.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: ["ace"])
+            end
+            assert_match(/revocation supervision/i, error.message)
+            assert_empty @fake.issued
+          end
+        end
+
+        def test_session_uid_reuse_cannot_execute_another_invocations_lease
+          skip "requires a non-root account for the fake peer" if Process.uid.zero?
+
+          Process.stub(:euid, 0) do
+            isolated = Molecules::GrantResolver.stub(:read_verified, @document) do
+              Service.new(session_uid: Process.uid, session_cwd: Dir.pwd, session_id: "a" * 32)
+            end
+            account = Etc.getpwuid(Process.uid)
+            lease = isolated.store.create(profile: "developer", role: "developer", principal: account.name,
+              task: "t", assignment: "a", repos: ["ace"], use_until: (Time.now.utc + 60).iso8601,
+              provider_expiry: nil, session_uid: account.uid, session_id: "b" * 32)
+            isolated.store.update(lease["id"]) { |record| record["state"] = "issued" }
+            error = assert_raises(Refusal) { isolated.exec(lease_id: lease["id"], argv: ["true"]) }
+            assert_match(/different principal/, error.message)
+          end
+        end
+
+        def test_root_exec_without_a_non_root_session_is_refused
+          owner = Molecules::GrantResolver.stub(:read_verified, @document) do
+            Service.new(principal: -> { "test-worker" })
+          end
+          lease = owner.request(profile_name: "developer", role: "developer",
+            task: "t", assignment: "a", repos: %w[ace])
+          error = Process.stub(:euid, 0) do
+            assert_raises(Refusal) { owner.exec(lease_id: lease["id"], argv: ["true"]) }
+          end
+          assert_match(/authenticated non-root session/, error.message)
+        end
+
+        def test_root_request_without_a_non_root_session_does_not_issue
+          owner = Molecules::GrantResolver.stub(:read_verified, @document) do
+            Service.new(principal: -> { "test-worker" })
+          end
+          error = Process.stub(:euid, 0) do
+            assert_raises(Refusal) do
+              owner.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: ["ace"])
+            end
+          end
+          assert_match(/authenticated non-root session/, error.message)
+          assert_empty @fake.issued
+        end
+
         def test_request_is_idempotent_for_the_same_live_correlation
           svc = service
           first = svc.request(profile_name: "developer", role: "developer",
@@ -451,6 +570,7 @@ module Ace
         # ambient credential override the lease does not contain — the
         # child environment is an allowlist, not a merge.
         def test_exec_real_child_does_not_inherit_unleased_credential_overrides
+          skip "the unprivileged direct runner is not available to a root issuer" if Process.euid.zero?
           require "rbconfig"
           svc = Molecules::GrantResolver.stub :read_verified, @document do
             Service.new(principal: -> { "test-worker" }) # default runner: real spawn via env -i

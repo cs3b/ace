@@ -108,9 +108,8 @@ conflated:
   carries the path-bearing message.
 
 Runtime *configuration* is echoed (project/user `runtime/config.yml`, then the
-`ACE_RUNTIME` environment variable) with its value and origin. No runtime
-detection and no `ace-runtime` dependency: runtime availability is
-`ace-herdr status`'s dimension.
+`ACE_RUNTIME` environment variable) with its value and origin. This status
+does not detect runtime availability; that is `ace-herdr status`'s dimension.
 
 Local state covers `.ace-tasks/`, `.ace-tasks/_overseer/` (presence only —
 private, never enumerated), `.ace-local/assign/`, `.ace-local/hitl/`,
