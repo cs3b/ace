@@ -111,6 +111,62 @@ module Ace
         "the interrupted record is deterministically settled before the re-mint")
     end
 
+    def test_unconfirmed_forgejo_scope_is_settled_before_a_retry_is_minted
+      issuer_password = File.join(@dir, "issuer-password")
+      File.write(issuer_password, "issuer-secret")
+      document = <<~YAML
+        auth:
+          leases_dir: #{@dir}/leases
+          credentials_dir: #{@dir}/credentials
+          profiles:
+            developer:
+              provider: forgejo-test
+              roles: [developer]
+              principals: [test-worker]
+              repos: [cs3b/ace]
+              scopes: [write:repository]
+              issuer:
+                url: https://forge.example.com
+                account: test-worker
+                admin_username: admin
+                password_file: #{issuer_password}
+      YAML
+      minted = []
+      runner = lambda do |argv|
+        payload = JSON.parse(argv.fetch(argv.index("-d") + 1))
+        minted << payload.fetch("name")
+        response = {"sha1" => "SECRET", "scopes" => ["write:repository"]}
+        response["repositories"] = [{"full_name" => "cs3b/ace"}] if minted.size > 1
+        JSON.generate(response)
+      end
+      provider = Plugins::ForgejoProvider.new(runner: runner)
+      Providers.register("forgejo-test", provider)
+      svc = Ace::Lab::Molecules::GrantResolver.stub :read_verified, document do
+        Ace::Lab::Auth::Service.new(principal: -> { "test-worker" })
+      end
+      request = -> { svc.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: ["cs3b/ace"]) }
+
+      assert_raises(Ace::Lab::Error) { request.call }
+      pending = svc.store.all.fetch(0)
+      assert_equal "revoke-pending", pending["state"]
+      refute svc.store.live?(pending)
+      refute File.exist?(File.join(@dir, "credentials", pending["id"]))
+
+      revoked = []
+      unavailable = ->(**_args) { raise Providers::TransientError, "network down" }
+      provider.stub(:revoke, unavailable) do
+        assert_raises(Ace::Lab::Auth::Refusal) { request.call }
+      end
+      assert_equal 1, minted.size, "unsettled scope must not trigger another remote grant"
+      settle = ->(profile:, token_ref:, token: nil) { revoked << token_ref; :revoked }
+      lease = provider.stub(:revoke, settle) { request.call }
+      assert_equal [pending["token_ref"]], revoked
+      assert_equal "revoked", svc.store.load(pending["id"])["state"]
+      assert_equal "issued", lease["state_detail"]
+      assert_equal 2, minted.size
+      assert_equal 1, svc.store.all.count { |record| svc.store.live?(record) }
+    end
+
     def test_sigkilled_executors_grant_dies_at_use_until_and_never_resurrects
       svc = service
       lease = svc.request(profile_name: "developer", role: "developer",
