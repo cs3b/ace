@@ -123,7 +123,7 @@ export class Eyes {
       for (const [name, deadline] of Object.entries(this.s.deadlines)) {
         const { at, operationRevision } = deadline;
         const key = `deadline:${name}`, revision = hash([name, at, operationRevision]);
-        if (now >= at && this.s.acknowledged[key] !== revision) this.s.pending[key] = { id: name, revision };
+        if (this.now() >= at && this.s.acknowledged[key] !== revision) this.s.pending[key] = { id: name, revision };
       }
       if (Object.keys(this.s.pending).length + Object.keys(this.s.acknowledged).length > this.s.config.maxPending) {
         this.block("retention-budget"); return;

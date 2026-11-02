@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Give installed multi-worktree observations a 60-second default timeout, with an explicit bounded override up to 120 seconds.
+- Give each observation command a 60-second default timeout, with an explicit bounded override up to 120 seconds. Existing sessions retain their saved timeout until eyes is restarted with the desired configuration.
 
 ## [0.2.0] - 2026-10-31
 

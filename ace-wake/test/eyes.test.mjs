@@ -113,7 +113,7 @@ it("unconfirmed host delivery persists a breaker across restart without automati
 });
 
 // The real installed ARM64 lab needed 17 seconds to read two worktrees.
-it("allows a slow installed observation without disabling bounded failure", async () => {
+it("uses a bounded observation timeout by default and validates overrides", async () => {
   const f = fixture();
   let timeout;
   f.eyes.observe = async config => { timeout = config.timeoutMs; return { schema: "ace.hitl.observation/v1", events: [] }; };
@@ -121,4 +121,13 @@ it("allows a slow installed observation without disabling bounded failure", asyn
   assert.equal(timeout, 60000);
   assert.equal(validateConfig({ timeoutMs: 120000 }).timeoutMs, 120000);
   assert.throws(() => validateConfig({ timeoutMs: 120001 }), /timeoutMs/);
+});
+
+it("delivers a deadline that expires during a slow observation", async () => {
+  const f = fixture();
+  f.eyes.deadline("review", 100, "head-a");
+  f.eyes.observe = async () => { f.time = 101; return { schema: "ace.hitl.observation/v1", events: [] }; };
+  await f.eyes.tick();
+  assert.equal(f.sends.length, 1);
+  assert.equal(f.sends[0][0][0], "deadline:review");
 });
