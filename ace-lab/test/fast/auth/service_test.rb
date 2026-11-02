@@ -344,6 +344,15 @@ module Ace
           assert_match(/not live/, error.message)
         end
 
+        def test_exec_refuses_when_the_registered_provider_disappears
+          svc = service
+          lease = svc.request(profile_name: "developer", role: "developer",
+            task: "t", assignment: "a", repos: %w[ace])
+          Providers.reset!
+          error = assert_raises(Refusal) { svc.exec(lease_id: lease["id"], argv: %w[true]) }
+          assert_match(/provider execution refused/, error.message)
+        end
+
         def test_exec_without_the_delivered_credential_degrades_to_a_refusal
           svc = service
           lease = svc.request(profile_name: "developer", role: "developer",

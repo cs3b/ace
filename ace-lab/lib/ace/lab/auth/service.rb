@@ -258,8 +258,8 @@ module Ace
               end
             end
 
-            provider = Providers.resolve(profile["provider"])
             begin
+              provider = Providers.resolve(profile["provider"])
               exit_code = if provider.respond_to?(:with_exec_environment)
                 provider.with_exec_environment(profile: profile, credential: credential) do |provider_env|
                   @runner.call(argv, preserve_installed_runtime!(child_env.merge(provider_env)))
@@ -267,7 +267,7 @@ module Ace
               else
                 @runner.call(argv, preserve_installed_runtime!(child_env))
               end
-            rescue Providers::RefusedError => e
+            rescue Providers::RefusedError, Providers::UnsupportedError => e
               raise Refusal.new("provider execution refused: #{e.message}")
             end
             cleanup = cleanup(lease, profile, handoff)
