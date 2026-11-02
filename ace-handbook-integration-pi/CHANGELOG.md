@@ -2,6 +2,12 @@
 
 All notable changes to ace-handbook-integration-pi will be documented in this file.
 
+## [Unreleased]
+
+### Fixed
+
+- Correct private task list and show commands in the overseer resume prompt.
+
 ## [0.8.0] - 2026-10-30
 
 ### Changed
