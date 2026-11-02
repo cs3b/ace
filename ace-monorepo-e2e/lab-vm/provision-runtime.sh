@@ -120,8 +120,14 @@ gem install --local --no-document "./ace-lab-$lab_version.gem"
 # dependencies; RubyGems does not otherwise select prereleases implicitly.
 herdr_version=$(python3 -c 'import json,sys; print(next(g["version"] for g in json.load(open(sys.argv[1]))["gems"] if g["name"] == "ace-herdr"))' "$input/release-manifest.json")
 gem install --local --no-document "./ace-herdr-$herdr_version.gem"
-ruby - "$forgejo_version" "$lab_version" "$herdr_version" <<'RUBY'
-%w[ace-git-forgejo ace-lab ace-herdr].zip(ARGV).each do |name, version|
+# The changed overseer and Pi instructions are installed as pinned candidate
+# gems, not loaded from the project checkout.
+overseer_version=$(python3 -c 'import json,sys; print(next(g["version"] for g in json.load(open(sys.argv[1]))["gems"] if g["name"] == "ace-overseer"))' "$input/release-manifest.json")
+pi_integration_version=$(python3 -c 'import json,sys; print(next(g["version"] for g in json.load(open(sys.argv[1]))["gems"] if g["name"] == "ace-handbook-integration-pi"))' "$input/release-manifest.json")
+gem install --local --no-document "./ace-overseer-$overseer_version.gem"
+gem install --local --no-document "./ace-handbook-integration-pi-$pi_integration_version.gem"
+ruby - "$forgejo_version" "$lab_version" "$herdr_version" "$overseer_version" "$pi_integration_version" <<'RUBY'
+%w[ace-git-forgejo ace-lab ace-herdr ace-overseer ace-handbook-integration-pi].zip(ARGV).each do |name, version|
   gem name, "= #{version}"
   abort "pinned #{name} did not activate" unless Gem.loaded_specs.fetch(name).version.to_s == version
 end

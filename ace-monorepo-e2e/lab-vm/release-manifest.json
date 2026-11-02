@@ -72,9 +72,10 @@
     },
     {
       "name": "ace-handbook-integration-pi",
-      "version": "0.8.0",
-      "sha256": "e5028dc023eef7e2a488c32e324ddf7ca3a0fc2232bfd574481884e4cbcf0e66",
-      "source": "https://rubygems.org"
+      "version": "0.8.1.pre.utm1",
+      "sha256": "2853966d7ccdb4a1487988323c1fc75a3b74c31849a1d10dacef1f3f0ae8287c",
+      "source": "local",
+      "source_commit": "4c4f735f2db76e13f1de512ddca511da3f6eece5"
     },
     {
       "name": "ace-herdr",
@@ -122,9 +123,10 @@
     },
     {
       "name": "ace-overseer",
-      "version": "0.28.1",
-      "sha256": "d40887bc45e2373a5818b303c4e41ad00c11f8cecfe41d7bbb88f40b8497f300",
-      "source": "https://rubygems.org"
+      "version": "0.28.2.pre.utm1",
+      "sha256": "8871f7420f9b30167c85bbe908c856e4dd111bd842c1224769ad72bda2312d89",
+      "source": "local",
+      "source_commit": "4c4f735f2db76e13f1de512ddca511da3f6eece5"
     },
     {
       "name": "ace-review",
