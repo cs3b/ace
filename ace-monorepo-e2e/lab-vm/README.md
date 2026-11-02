@@ -87,9 +87,11 @@ in its sidecar before restoring it, then extract it into the evidence directory:
 ```sh
 shasum -a 256 .ace-local/lab-vm/evidence/UUID.utm.zip
 ditto -x -k .ace-local/lab-vm/evidence/UUID.utm.zip .ace-local/lab-vm/evidence
+ruby -e 'load "ace-monorepo-e2e/bin/lab-vm"; puts LabVm.package_fingerprint(ARGV.fetch(0))' .ace-local/lab-vm/evidence/UUID.utm
 ```
 
 Before removing an uncompressed exported package, the archived copy was
 extracted and its complete file fingerprint was compared with the original;
-the verified package fingerprint is recorded in the sidecar. Archives may
+compare the printed fingerprint with `package_fingerprint` in the sidecar.
+Archives may
 contain test credentials and must remain private.
