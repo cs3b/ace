@@ -714,6 +714,8 @@ Contract highlights:
   and the leased credential
   reference) — ambient credential overrides (GH_TOKEN, GIT_* auth, ...) are
   never inherited past the profile's scope.
+  When the selected toolchain is `installed`, its runtime paths also take
+  precedence over caller and provider environment values.
 - Refusals are non-zero with a reason and the escalation addressee; there is
   no fallback identity. A network-shaped revoke stays visibly
   `revoke-pending` — a revocation is never claimed before the provider

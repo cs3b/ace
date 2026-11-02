@@ -2,6 +2,7 @@
 
 require_relative "../../test_helper"
 require "ace/lab/auth"
+require "open3"
 
 module Ace
   module Lab
@@ -273,6 +274,9 @@ module Ace
         end
 
         def test_exec_preserves_the_selected_installed_runtime
+          @fake.define_singleton_method(:with_exec_environment) do |profile:, credential:, &block|
+            block.call({"ACE_TOOLCHAIN" => "auto", "GEM_PATH" => "/provider/source"})
+          end
           svc = service
           lease = svc.request(profile_name: "developer", role: "developer",
             task: "t", assignment: "a", repos: %w[ace])

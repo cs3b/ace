@@ -258,23 +258,14 @@ module Ace
               end
             end
 
-            # An explicitly selected installed runtime must survive both
-            # caller-supplied env and any env-provider values. An absent gem
-            # path remains absent instead of being replaced by project state.
-            if ENV["ACE_TOOLCHAIN"] == "installed"
-              %w[ACE_TOOLCHAIN GEM_HOME GEM_PATH PATH].each do |key|
-                ENV.key?(key) ? child_env[key] = ENV[key] : child_env.delete(key)
-              end
-            end
-
             provider = Providers.resolve(profile["provider"])
             begin
               exit_code = if provider.respond_to?(:with_exec_environment)
                 provider.with_exec_environment(profile: profile, credential: credential) do |provider_env|
-                  @runner.call(argv, child_env.merge(provider_env))
+                  @runner.call(argv, preserve_installed_runtime!(child_env.merge(provider_env)))
                 end
               else
-                @runner.call(argv, child_env)
+                @runner.call(argv, preserve_installed_runtime!(child_env))
               end
             rescue Providers::RefusedError => e
               raise Refusal.new("provider execution refused: #{e.message}")
@@ -458,6 +449,17 @@ module Ace
           raise Refusal.new("unknown auth profile '#{name}'") if profile.nil?
 
           profile
+        end
+
+        # No caller or provider projection may silently replace the selected
+        # installed runtime. An absent path stays absent.
+        def preserve_installed_runtime!(environment)
+          if ENV["ACE_TOOLCHAIN"] == "installed"
+            %w[ACE_TOOLCHAIN GEM_HOME GEM_PATH PATH].each do |key|
+              ENV.key?(key) ? environment[key] = ENV[key] : environment.delete(key)
+            end
+          end
+          environment
         end
 
         def public_view(lease)
