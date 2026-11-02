@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Correct private task commands, require complete bootstrap commission files in the worker worktree, and delegate full installation verification to the worker.
+- Correct private task commands, require complete bootstrap commission files in the worker worktree, delegate full installation verification, and reserve project-start checks for the coordinator after independent verification.
 
 ## [0.28.1] - 2026-10-31
 

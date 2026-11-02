@@ -32,6 +32,13 @@ its task folder. Include the canonical target repository path, required
 configuration, observed failure, desired outcome, allowed changes, runtime
 mode, acceptance checks and report recipient. Assign diagnosis and reproduction
 as well as preparation to the worker. This is lab infrastructure work, not a project product task.
+
+The preparation and verifier acceptance checks stop at a validated project
+configuration and readiness to start. Do not require a running project
+Overseer, a first turn, or active project eyes in either worker assignment:
+those are the coordinator's confirm-start checks after verification. Workers
+must not start the project Overseer themselves. This prevents a circular gate.
+
 Put all commission and supporting files in the executable task's own tracked
 folder, never in the private `_overseer` tree. Before preparing its worktree,
 commit those files and the task specification using the task/commit tools.
