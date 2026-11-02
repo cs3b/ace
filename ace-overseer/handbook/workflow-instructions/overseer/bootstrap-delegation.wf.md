@@ -107,8 +107,8 @@ outside the lab task worktree; ordinary product worker/reviewer roles do not.
 Before submitting a commission, arm one eyes deadline for first-turn evidence:
 call `ace_eyes` with `action=deadline`, a unique `key` for this assignment,
 `revision` set to the assignment ID, and `at` set to the current Unix time in
-milliseconds plus 60000. Submit with `herdr agent prompt <pane> <prompt>`
-without `--wait` or `--until`: those flags block on the worker's state. Do not
+milliseconds plus 60000. Submit with `herdr agent prompt <pane> <prompt>`,
+passing the prompt as one safely quoted argument and excluding secrets, without `--wait` or `--until`: those flags block on the worker's state. Do not
 use `herdr agent wait`, sleep or polling to await completion. After the prompt
 is accepted, record the pane/agent identity, acknowledge handled revisions and
 end your turn. Assignment changes and the worker report wake you through eyes.
