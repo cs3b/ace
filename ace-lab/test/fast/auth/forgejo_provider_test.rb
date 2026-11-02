@@ -257,6 +257,17 @@ module Ace
           assert_empty seen
         end
 
+        def test_rejects_plain_http_to_non_loopback_issuer
+          config = profile
+          config["issuer"]["url"] = "http://forge.example.com"
+          prov = provider
+          error = assert_raises(Providers::RefusedError) do
+            prov.issue(profile: config, lease: {"id" => "lease-x", "repos" => %w[cs3b/ace]})
+          end
+          assert_match(/HTTPS except on loopback/, error.message)
+          assert_empty seen
+        end
+
         def test_token_name_is_deterministic_from_the_lease_id
           assert_equal "ace-lab-lease-x",
             Plugins::ForgejoProvider.new.token_ref_for(lease_id: "lease-x"),

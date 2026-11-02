@@ -726,7 +726,8 @@ Contract highlights:
 - Plugins (explicit registry, like the ace-git providers): `forgejo` (one
   scoped token per lease through `/api/v1/users/{account}/tokens`, using
   administrator Basic authentication and a `Sudo` header. The host issuer
-  must protect the administrator password from delegated workers. It uses
+  must protect the administrator password from delegated workers. Remote
+  issuers require HTTPS; plain HTTP is accepted only on loopback. Tokens use
   owner/name RepoTargetOption repository targets —
   a repo without an owner is refused, never an all-repositories token — and
   the response must confirm exactly the requested scopes and repositories.

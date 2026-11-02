@@ -9,6 +9,7 @@ require "tmpdir"
 require "fileutils"
 require "uri"
 require "rbconfig"
+require "ipaddr"
 require_relative "../credential_handoff"
 
 module Ace
@@ -160,9 +161,20 @@ module Ace
                 ["", "/"].include?(url.path.to_s) && url.query.nil? && url.fragment.nil?
               raise Providers::RefusedError, "forgejo issuer url must be a bare HTTP(S) origin"
             end
+            if url.scheme == "http" && !loopback_host?(url.hostname)
+              raise Providers::RefusedError, "forgejo issuer requires HTTPS except on loopback"
+            end
             url
           rescue URI::InvalidURIError, KeyError, TypeError
             raise Providers::RefusedError, "forgejo issuer url is invalid"
+          end
+
+          def loopback_host?(host)
+            return true if host.casecmp?("localhost")
+
+            IPAddr.new(host).loopback?
+          rescue IPAddr::InvalidAddressError
+            false
           end
 
           def issuer_header(issuer)
