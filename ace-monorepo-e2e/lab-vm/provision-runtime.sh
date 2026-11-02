@@ -125,12 +125,15 @@ gem install --local --no-document "./ace-herdr-$herdr_version.gem"
 overseer_version=$(python3 -c 'import json,sys; print(next(g["version"] for g in json.load(open(sys.argv[1]))["gems"] if g["name"] == "ace-overseer"))' "$input/release-manifest.json")
 pi_integration_version=$(python3 -c 'import json,sys; print(next(g["version"] for g in json.load(open(sys.argv[1]))["gems"] if g["name"] == "ace-handbook-integration-pi"))' "$input/release-manifest.json")
 wake_version=$(python3 -c 'import json,sys; print(next(g["version"] for g in json.load(open(sys.argv[1]))["gems"] if g["name"] == "ace-wake"))' "$input/release-manifest.json")
+coworker_version=$(python3 -c 'import json,sys; print(next(g["version"] for g in json.load(open(sys.argv[1]))["gems"] if g["name"] == "ace-coworker"))' "$input/release-manifest.json")
+# The pinned coworker prerelease must be present before overseer resolves it.
+gem install --local --no-document "./ace-coworker-$coworker_version.gem"
 gem install --local --no-document "./ace-overseer-$overseer_version.gem"
 # RubyGems does not discover a prerelease dependency implicitly.
 gem install --local --no-document "./ace-wake-$wake_version.gem"
 gem install --local --no-document "./ace-handbook-integration-pi-$pi_integration_version.gem"
-ruby - "$forgejo_version" "$lab_version" "$herdr_version" "$overseer_version" "$pi_integration_version" "$wake_version" <<'RUBY'
-%w[ace-git-forgejo ace-lab ace-herdr ace-overseer ace-handbook-integration-pi ace-wake].zip(ARGV).each do |name, version|
+ruby - "$forgejo_version" "$lab_version" "$herdr_version" "$overseer_version" "$pi_integration_version" "$wake_version" "$coworker_version" <<'RUBY'
+%w[ace-git-forgejo ace-lab ace-herdr ace-overseer ace-handbook-integration-pi ace-wake ace-coworker].zip(ARGV).each do |name, version|
   gem name, "= #{version}"
   abort "pinned #{name} did not activate" unless Gem.loaded_specs.fetch(name).version.to_s == version
 end
