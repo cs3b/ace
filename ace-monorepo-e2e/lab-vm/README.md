@@ -31,8 +31,7 @@ lockfile pins its dependency graph and integrity hashes. Locally built test
 gems are rebuilt from the manifest's exact commits by `bin/lab-vm-build-gem`
 and must match their pinned hashes; they are never published. The operational
 gem repository is populated only from manifest entries, not every cached gem.
-`bin/lab-vm-runtime
-provision` starts a fresh work clone, verifies its SSH host key via the QEMU
+`bin/lab-vm-runtime provision` starts a fresh work clone, verifies its SSH host key via the QEMU
 guest agent, copies these inputs and invokes the guest-side runtime installer
 and unprivileged native Herdr build. The pinned ARM64 Herdr binary and its
 provenance can be reused from a private local artifact cache; both hashes and
@@ -63,9 +62,11 @@ of distinct, short-lived worker and reviewer credentials.
 host's `zai` Pi credential into the working VM. It checks that the installed
 runtime and native Herdr are already present and does not start the overseer.
 Before starting agents, the fixture installs the pinned Herdr binary's own Pi
-integration into the root-owned Pi extensions directory and checks its status
-as `mo`; this supplies Herdr with Pi lifecycle and session identity reports.
-This setup path has not yet passed a complete VM run.
+integration and checks its status as `mo`; this supplies Herdr with Pi lifecycle
+and session identity reports. The current extension projection is writable by
+`mo` and its parent can be replaced by `mo`; it does not yet satisfy the
+root-owned operational-runtime requirement. This setup path has not yet passed
+a complete VM run.
 
 The seeded ACE revision has no project Overseer start configuration and also
 contains an old tracked HITL route for another lab, including Hermes paths.
@@ -76,8 +77,11 @@ working local route rather than relying on the old machine or its paths.
 `bin/lab-vm-lab-start RUN_ID` is the initial launch path under development. It
 starts a real headless Herdr server, creates the lab workspace and local HITL
 route, launches `ace-overseer start`, and delivers a single high-level project
-goal. It records the returned identities and refuses to repeat a start after
-an uncertain outcome. It does not create the overseer's tasks or launch its
+goal. A separate `captain` terminal displays local HITL questions without
+interpreting them as shell commands; the operator can inspect its pane from
+the receipt and answer the exact case through `ace-hitl reply`. It records the
+returned identities and refuses to repeat any attempted start. For a new run,
+reset the working VM and prepare a new fixture. It does not create the overseer's tasks or launch its
 workers. The returned prompt receipt does not establish successful delegation.
 
 The intended acceptance is a full autonomous cycle: a lab Overseer delegates

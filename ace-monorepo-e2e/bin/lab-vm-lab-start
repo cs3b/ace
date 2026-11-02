@@ -10,7 +10,7 @@ load File.expand_path("lab-vm", __dir__)
 
 def guest_mo(uuid, *argv, timeout_s: 90)
   LabVm.guest_exec(uuid, "/usr/sbin/runuser", "-u", "mo", "--", "/bin/sh", "-c",
-    '. /etc/profile.d/ace-e2e.sh; cd /lab; exec "$@"', "ace-e2e", *argv, timeout_s: timeout_s)
+    'set -e; . /etc/profile.d/ace-e2e.sh; cd /lab; exec "$@"', "ace-e2e", *argv, timeout_s: timeout_s)
 end
 
 def guest_json(uuid, *argv)
@@ -50,11 +50,11 @@ begin
       uuid = work.fetch("uuid")
       raise "fixture belongs to a different working VM" unless fixture.fetch("vm_uuid").casecmp?(uuid)
       code, head = guest_mo(uuid, "git", "-C", "/lab/ace", "rev-parse", "HEAD")
-      raise "guest checkout does not match fixture" unless code.zero? && head.strip == fixture.fetch("initial_sha")
+      raise "guest checkout does not match fixture" unless code.zero? && head.to_s.strip == fixture.fetch("initial_sha")
       code, remote = guest_mo(uuid, "git", "-C", "/lab/ace", "remote", "get-url", "origin")
-      raise "guest checkout has a different origin" unless code.zero? && remote.strip == "http://127.0.0.1:3000/#{fixture.fetch('repository')}.git"
+      raise "guest checkout has a different origin" unless code.zero? && remote.to_s.strip == "http://127.0.0.1:3000/#{fixture.fetch('repository')}.git"
       digest = LabVm.runtime_configuration_fingerprint
-      ready = "test -f /var/lib/ace-e2e/runtime-ready.sha256; test ! -L /var/lib/ace-e2e/runtime-ready.sha256; test \"$(cat /var/lib/ace-e2e/runtime-ready.sha256)\" = '#{digest}'"
+      ready = "test -f /var/lib/ace-e2e/runtime-ready.sha256; test ! -L /var/lib/ace-e2e/runtime-ready.sha256; test \"$(stat -c '%U:%G' /var/lib/ace-e2e/runtime-ready.sha256)\" = root:root; test \"$(cat /var/lib/ace-e2e/runtime-ready.sha256)\" = '#{digest}'"
       code, = LabVm.guest_exec(uuid, "/bin/sh", "-ec", ready)
       raise "installed runtime receipt does not match" unless code.zero?
       status = guest_json(uuid, "herdr", "status", "server", "--json")
@@ -68,14 +68,14 @@ begin
         file.fsync
       end
       mutated = true
-      launch = '. /etc/profile.d/ace-e2e.sh; cd /lab; umask 077; mkdir -p .ace-local/e2e; nohup herdr server > .ace-local/e2e/herdr-server.log 2>&1 < /dev/null &'
+      launch = 'set -e; . /etc/profile.d/ace-e2e.sh; cd /lab; umask 077; mkdir -p .ace-local/e2e; nohup herdr server > .ace-local/e2e/herdr-server.log 2>&1 < /dev/null &'
       code, = LabVm.guest_exec(uuid, "/usr/sbin/runuser", "-u", "mo", "--", "/bin/sh", "-c", launch)
       raise "Herdr server launch failed" unless code.zero?
       deadline = LabVm.uptime + 60
       loop do
         status = guest_json(uuid, "herdr", "status", "server", "--json")
         break if status["running"] == true && status["compatible"] == true
-        raise "Herdr server did not become ready" if LabVm.uptime >= deadline
+        raise "Herdr server did not become ready (running: #{status["running"].inspect}, compatible: #{status["compatible"].inspect})" if LabVm.uptime >= deadline
         sleep 1
       end
       workspace = guest_json(uuid, "herdr", "workspace", "create", "--cwd", "/lab", "--label", "overseer", "--env", "ACE_TOOLCHAIN=installed")
@@ -87,10 +87,31 @@ begin
       receipt.merge!("workspace" => workspace_id, "pane" => pane_id, "status" => "workspace_created")
       save_start_receipt(output_path, receipt)
 
+      # A local operator is a distinct recipient, not the coordinator's own
+      # pane. Keep its terminal in cat so delivered text is displayed rather
+      # than interpreted by a shell. The host can read it and answer the exact
+      # case through the existing HITL CLI; no agent or relay is introduced.
+      operator = guest_json(uuid, "herdr", "workspace", "create", "--cwd", "/lab", "--label", "captain")
+      operator_workspace = operator.dig("result", "workspace", "workspace_id")
+      operator_pane = operator.dig("result", "root_pane", "pane_id")
+      unless operator_workspace.to_s.match?(/\A[a-zA-Z0-9_:-]+\z/) && operator_pane.to_s.match?(/\A[a-zA-Z0-9_:-]+\z/) && operator_pane != pane_id
+        raise "Herdr returned invalid operator workspace or pane identity"
+      end
+      receipt.merge!("operator_workspace" => operator_workspace, "operator_pane" => operator_pane)
+      save_start_receipt(output_path, receipt)
+      code, = guest_mo(uuid, "herdr", "pane", "run", operator_pane,
+        "printf '%s%s\\n' ACE_E2E_ OPERATOR_READY; exec cat")
+      raise "local operator pane launch failed" unless code.zero?
+      code, = guest_mo(uuid, "herdr", "pane", "wait-output", "--match", "ACE_E2E_OPERATOR_READY", "--timeout", "30000", operator_pane)
+      raise "local operator pane did not become ready" unless code.zero?
+
       config = {"hitl" => {"machine" => "utm-e2e", "default_recipient" => "overseer",
-        "recipients" => {"overseer" => {"machine" => "utm-e2e", "panel" => pane_id}},
+        "recipients" => {"overseer" => {"machine" => "utm-e2e", "panel" => pane_id},
+          "captain" => {"machine" => "utm-e2e", "panel" => operator_pane}},
         "adapters" => {"routes" => [{"route" => "overseer-terminal", "recipients" => ["overseer"],
-          "adapter" => "terminal", "runtime" => "herdr", "pane" => pane_id, "machine" => "utm-e2e"}]}}}
+          "adapter" => "terminal", "runtime" => "herdr", "pane" => pane_id, "machine" => "utm-e2e"},
+          {"route" => "captain-terminal", "recipients" => ["captain"], "adapter" => "terminal",
+            "runtime" => "herdr", "pane" => operator_pane, "machine" => "utm-e2e"}]}}}
       encoded = Base64.strict_encode64(JSON.generate(config))
       setup = "set -eu; test ! -L /home/mo/.ace; test ! -e /home/mo/.ace/hitl/config.yml; test ! -L /home/mo/.ace/hitl/config.yml; test ! -L /home/mo/.ace/hitl; mkdir -p /home/mo/.ace/hitl; printf '%s' '#{encoded}' | base64 -d > /home/mo/.ace/hitl/config.yml; chmod 0600 /home/mo/.ace/hitl/config.yml"
       code, = guest_mo(uuid, "/bin/sh", "-c", setup)
@@ -102,16 +123,20 @@ begin
       save_start_receipt(output_path, receipt)
 
       deadline = LabVm.uptime + 180
+      last_status = "not detected"
       loop do
         listing = guest_json(uuid, "herdr", "agent", "list")
         agents = listing.dig("result", "agents")
         raise "invalid Herdr agent inventory" unless agents.is_a?(Array)
         matches = agents.select { |agent| agent["pane_id"] == pane_id && agent["agent"] == "pi" }
         raise "ambiguous coordinator identity" if matches.length > 1
+        last_status = matches.first["agent_status"].to_s if matches.length == 1
         # A detected Pi can accept a prompt while working, idle or done.
         # Native Herdr does not expose interactive_ready for pane-run Pi.
+        # These status names are the pinned Herdr build's contract; recheck
+        # them when updating that binary.
         break if matches.length == 1 && %w[working idle done].include?(matches.first["agent_status"])
-        raise "lab coordinator did not become ready" if LabVm.uptime >= deadline
+        raise "lab coordinator did not become ready (last state: #{last_status})" if LabVm.uptime >= deadline
         sleep 1
       end
       receipt["status"] = "prompt_pending"
@@ -121,7 +146,7 @@ begin
       receipt["status"] = "prompt_delivered"
       save_start_receipt(output_path, receipt)
       puts JSON.pretty_generate(receipt.merge("receipt" => output_path))
-    rescue StandardError
+    rescue StandardError, Interrupt
       if mutated
         begin
           current = LabVm.status["work"]
@@ -137,6 +162,9 @@ begin
       raise
     end
   end
+rescue Interrupt
+  warn "lab-vm-lab-start: interrupted; inspect the VM and run receipt before retrying."
+  exit 130
 rescue JSON::ParserError
   warn "lab-vm-lab-start: a provider response was not valid JSON"
   exit 1
