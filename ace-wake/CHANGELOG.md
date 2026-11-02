@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Give installed multi-worktree observations a 60-second default timeout, with an explicit bounded override up to 120 seconds.
+
 ## [0.2.0] - 2026-10-31
 
 ### Added

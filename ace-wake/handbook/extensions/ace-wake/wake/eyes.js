@@ -3,14 +3,14 @@ import { createHash } from "node:crypto";
 const hash = (value) => createHash("sha256").update(JSON.stringify(value)).digest("hex");
 export const EYES_ENTRY = "ace-wake-eyes";
 export const defaults = { intervalSeconds: 30, maxEvents: 500, maxObservationsPerHour: 120, maxWakesPerHour: 20,
-  timeoutMs: 10000, maxErrors: 3, maxPending: 2000, scope: "current", recipient: "self", syncRoutes: [] };
+  timeoutMs: 60000, maxErrors: 3, maxPending: 2000, scope: "current", recipient: "self", syncRoutes: [] };
 
 export function validateConfig(input) {
   if (!input || typeof input !== "object" || Array.isArray(input) ||
       Object.keys(input).some(key => !(key in defaults))) throw new Error("Invalid eyes configuration");
   const config = { ...defaults, ...input };
   for (const [key, min, max] of [["intervalSeconds", 1, 3600], ["maxEvents", 1, 2000],
-    ["maxObservationsPerHour", 1, 3600], ["maxWakesPerHour", 1, 1000], ["timeoutMs", 100, 30000], ["maxErrors", 1, 10], ["maxPending", 1, 10000]]) {
+    ["maxObservationsPerHour", 1, 3600], ["maxWakesPerHour", 1, 1000], ["timeoutMs", 100, 120000], ["maxErrors", 1, 10], ["maxPending", 1, 10000]]) {
     if (!Number.isInteger(config[key]) || config[key] < min || config[key] > max) throw new Error(`Invalid ${key}`);
   }
   if (typeof config.recipient !== "string" || !/^[a-zA-Z0-9_-]{1,64}$/.test(config.recipient)) throw new Error("Invalid observer recipient");

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { Eyes } from "../handbook/extensions/ace-wake/wake/eyes.js";
+import { Eyes, validateConfig } from "../handbook/extensions/ace-wake/wake/eyes.js";
 
 const event = (n = "a", revision = "b") => ({ key: n.repeat(64), revision: revision.repeat(64), id: `event${n}` });
 function fixture(snapshot) {
@@ -110,4 +110,15 @@ it("unconfirmed host delivery persists a breaker across restart without automati
   f.eyes=f.build();for(let i=0;i<10;i++)await f.eyes.tick();
   assert.equal(f.sends.length,1);assert.equal(Object.keys(f.saved.pending).length,1);
   await f.eyes.resume();assert.equal(f.sends.length,2,"only explicit owner resume can retry after reconciliation");
+});
+
+// The real installed ARM64 lab needed 17 seconds to read two worktrees.
+it("allows a slow installed observation without disabling bounded failure", async () => {
+  const f = fixture();
+  let timeout;
+  f.eyes.observe = async config => { timeout = config.timeoutMs; return { schema: "ace.hitl.observation/v1", events: [] }; };
+  await f.eyes.tick();
+  assert.equal(timeout, 60000);
+  assert.equal(validateConfig({ timeoutMs: 120000 }).timeoutMs, 120000);
+  assert.throws(() => validateConfig({ timeoutMs: 120001 }), /timeoutMs/);
 });
