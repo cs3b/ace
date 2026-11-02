@@ -105,17 +105,23 @@ that task and pinned assignment, requires the worker to read its start brief,
 drive that assignment, and finish with `ace-coworker report`. These operational roles explicitly allow the commissioned canonical target
 outside the lab task worktree; ordinary product worker/reviewer roles do not.
 Before submitting a commission, arm one eyes deadline for first-turn evidence:
-call `ace_eyes` with `action=deadline`, a unique `key` for this assignment,
-`revision` set to the assignment ID, and `at` set to the current Unix time in
-milliseconds plus 60000. Submit with `herdr agent prompt <pane> <prompt>`,
-passing the prompt as one safely quoted argument and excluding secrets, without `--wait` or `--until`: those flags block on the worker's state. Do not
+call `ace_eyes` with `action=deadline`, `key=bootstrap-<assignment-id>`
+(using only letters, digits, underscore or hyphen), `revision` set to the
+assignment ID, and `at` set to the current Unix time in milliseconds plus 60000. Submit with `herdr agent prompt <pane> <prompt>`,
+passing the prompt as one safely quoted argument and excluding secrets. Omit
+`--wait` and `--until`: those flags block on the worker's state. Do not
 use `herdr agent wait`, sleep or polling to await completion. After the prompt
 is accepted, record the pane/agent identity, acknowledge handled revisions and
-end your turn. Assignment changes and the worker report wake you through eyes.
+end your turn. If submission is refused or fails, cancel its deadline, record
+the failure and escalate the actual blocker. Assignment changes and the
+worker report wake you through eyes.
 On a wake, inspect the recorded pane once with `herdr agent list` and
-`herdr agent read <pane>` to verify the first turn; cancel the deadline when confirmed. If the
-deadline fires without first-turn evidence, record the blocked dispatch and
-escalate with a precise HITL case. Never replace a missing executor with your
+`herdr agent read <pane>` to verify the first turn. A transition from idle to
+working after submission or attributable first-turn output is evidence;
+acceptance alone or a previously working status is not.
+Cancel the deadline when confirmed. If the deadline fires without evidence,
+record the start as unconfirmed and escalate with a precise HITL case; do not
+assert that a slow agent failed. Never replace a missing executor with your
 own work or create another dispatch while its state is unknown.
 
 End the overseer's turn immediately after dispatch. The eyes timer observes
@@ -139,7 +145,8 @@ Never put a preparation readiness ID on a worker, verifier or confirm-start step
 Use the existing role handoff gate to prepare the independent reviewer after
 worker completion. As with the worker, a printed start command is not a live
 agent: launch the reviewer separately with its own returned role/config, using
-the same nonblocking prompt and first-turn deadline. Do not launch a second
+the same nonblocking prompt and its own first-turn deadline keyed to the
+reviewer assignment. Do not launch a second
 executor while an earlier one is active or its state is unknown. On repeated delivery, reconcile existing
 assignments and agents instead of dispatching again.
 
