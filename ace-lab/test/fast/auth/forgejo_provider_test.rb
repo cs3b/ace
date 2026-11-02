@@ -143,23 +143,23 @@ module Ace
             provider = Plugins::ForgejoProvider.new
             provider.stub(:linux_xdg?, true) do
               provider.with_exec_environment(profile: profile, credential: credential) do |env|
-              projection = env.fetch("XDG_DATA_HOME")
-              path = File.join(projection, "forgejo-cli", "keys.json")
-              data = JSON.parse(File.read(path))
-              assert_equal({"forge.example.com" => {"type" => "Application", "token" => "LEASE-TOKEN"}}, data["hosts"])
-              assert_empty data["aliases"]
-              assert_equal 0o600, File.stat(path).mode & 0o777
-              refute_includes env.values, "LEASE-TOKEN"
-              env = env.merge("ACE_LAB_CREDENTIAL_FILE" => credential)
-              askpass = env.fetch("GIT_ASKPASS")
-              username, status = Open3.capture2(env, askpass, "Username for 'https://forge.example.com': ")
-              assert status.success?
-              assert_equal "lab-role-dev\n", username
-              password, status = Open3.capture2(env, askpass, "Password for 'https://lab-role-dev@forge.example.com': ")
-              assert status.success?
-              assert_equal "LEASE-TOKEN", password
-              _output, status = Open3.capture2(env, askpass, "Password for 'https://lab-role-dev@other.example.com': ")
-              refute status.success?, "the credential must not be offered to a different forge"
+                projection = env.fetch("XDG_DATA_HOME")
+                path = File.join(projection, "forgejo-cli", "keys.json")
+                data = JSON.parse(File.read(path))
+                assert_equal({"forge.example.com" => {"type" => "Application", "token" => "LEASE-TOKEN"}}, data["hosts"])
+                assert_empty data["aliases"]
+                assert_equal 0o600, File.stat(path).mode & 0o777
+                refute_includes env.values, "LEASE-TOKEN"
+                env = env.merge("ACE_LAB_CREDENTIAL_FILE" => credential)
+                askpass = env.fetch("GIT_ASKPASS")
+                username, status = Open3.capture2(env, askpass, "Username for 'https://forge.example.com': ")
+                assert status.success?
+                assert_equal "lab-role-dev\n", username
+                password, status = Open3.capture2(env, askpass, "Password for 'https://lab-role-dev@forge.example.com': ")
+                assert status.success?
+                assert_equal "LEASE-TOKEN", password
+                _output, status = Open3.capture2(env, askpass, "Password for 'https://lab-role-dev@other.example.com': ")
+                refute status.success?, "the credential must not be offered to a different forge"
               end
             end
             refute File.exist?(projection)

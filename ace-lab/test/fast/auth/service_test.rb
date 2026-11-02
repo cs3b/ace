@@ -275,12 +275,13 @@ module Ace
 
         def test_exec_preserves_the_selected_installed_runtime
           @fake.define_singleton_method(:with_exec_environment) do |profile:, credential:, &block|
-            block.call({"ACE_TOOLCHAIN" => "auto", "GEM_PATH" => "/provider/source"})
+            block.call({"ACE_TOOLCHAIN" => "auto", "GEM_PATH" => "/provider/source", "PATH" => "/provider/source/bin"})
           end
           svc = service
           lease = svc.request(profile_name: "developer", role: "developer",
             task: "t", assignment: "a", repos: %w[ace])
-          selected = {"ACE_TOOLCHAIN" => "installed", "GEM_HOME" => "/opt/ace/gems", "GEM_PATH" => "/opt/ace/gems"}
+          selected = {"ACE_TOOLCHAIN" => "installed", "GEM_HOME" => "/opt/ace/gems", "GEM_PATH" => "/opt/ace/gems",
+            "PATH" => "/opt/ace/runtime/bin:/usr/bin:/bin"}
           original = selected.to_h { |key, _| [key, ENV[key]] }
           selected.each { |key, value| ENV[key] = value }
           begin
