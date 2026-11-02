@@ -105,6 +105,36 @@ module Ace
           end
         end
 
+        def test_accepts_forgejo_canonical_repository_case
+          prov = provider({"sha1" => "SECRET", "scopes" => ["write:repository"],
+            "repositories" => [{"full_name" => "cs3b/ace"}]})
+          grant = prov.issue(profile: profile, lease: {"id" => "lease-x", "repos" => ["Cs3b/ACE"]})
+          assert_equal "SECRET", grant["token"]
+        end
+
+        def test_refuses_invalid_issuer_inputs_before_network
+          cases = [
+            {"account" => "dev\nSudo: root"},
+            {"admin_username" => "admin:other"},
+            {"password_file" => "/nonexistent/forgejo-password"}
+          ]
+          cases.each do |overrides|
+            config = profile
+            config["issuer"].merge!(overrides)
+            prov = provider
+            assert_raises(Providers::RefusedError) do
+              prov.issue(profile: config, lease: {"id" => "lease-x", "repos" => ["cs3b/ace"]})
+            end
+            assert_empty seen
+          end
+          config = profile
+          File.write(config["issuer"]["password_file"], "\n")
+          assert_raises(Providers::RefusedError) do
+            provider.issue(profile: config, lease: {"id" => "lease-x", "repos" => ["cs3b/ace"]})
+          end
+          assert_empty seen
+        end
+
         def test_rejects_unconfirmed_or_extra_scopes
           [nil, ["write:repository", "write:issue"]].each do |scopes|
             prov = provider({"sha1" => "SECRET", "id" => 1, "scopes" => scopes,

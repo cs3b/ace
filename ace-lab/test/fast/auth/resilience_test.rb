@@ -150,6 +150,19 @@ module Ace
       assert_equal 1, @flaky.revoked.size, "the exact token, revoked once"
     end
 
+    def test_refused_revocation_leaves_grant_pending_and_not_live
+      svc = service
+      lease = svc.request(profile_name: "developer", role: "developer",
+        task: "t", assignment: "a", repos: %w[ace])
+      refusal = ->(**_args) { raise Providers::RefusedError, "issuer credential unavailable" }
+      @flaky.stub(:revoke, refusal) do
+        assert_match(/revoke-pending/, svc.revoke(lease_id: lease["id"]).to_s)
+      end
+      record = svc.store.load(lease["id"])
+      assert_equal "revoke-pending", record["state"]
+      refute svc.store.live?(record)
+    end
+
     def test_cleanup_is_independent_of_any_model_turn
       svc = service
       lease = svc.request(profile_name: "developer", role: "developer",

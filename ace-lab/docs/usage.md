@@ -726,8 +726,8 @@ Contract highlights:
   must protect the administrator password from delegated workers. It uses
   owner/name RepoTargetOption repository targets —
   a repo without an owner is refused, never an all-repositories token — and
-  the response must confirm exactly the requested scopes and repositories; revoke deletes
-  that exact token name, 404 = already invalid), `github` (App JWT →
+  the response must confirm exactly the requested scopes and repositories.
+  Revoke deletes that exact token name; 404 = already invalid), `github` (App JWT →
   installation token for chosen repos/permissions with the real `expires_at`;
   DELETE to revoke; 401 = already invalid), `env` (named values of configured
   safe sources, process-scoped only — a standalone env profile cannot declare

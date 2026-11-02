@@ -419,7 +419,7 @@ module Ace
           begin
             outcome = provider.revoke(profile: profile, token_ref: lease["token_ref"],
               token: token)
-          rescue Providers::TransientError, Providers::OutcomeUnknownError => e
+          rescue Providers::TransientError, Providers::OutcomeUnknownError, Providers::RefusedError => e
             @store.update(lease["id"]) { |record| record["state"] = "revoke-pending" }
             return :"revoke-pending (#{e.class})"
           end

@@ -39,7 +39,8 @@ module Ace
 
             token_name = token_ref_for(lease_id: lease["id"])
             scopes = profile.fetch("scopes")
-            repositories = repo_targets(lease.fetch("repos"))
+            requested_repos = lease.fetch("repos")
+            repositories = repo_targets(requested_repos)
 
             payload = JSON.generate({
               "name" => token_name,
@@ -61,7 +62,7 @@ module Ace
               raise Providers::TransientError, "forgejo did not return the token secret (check server API version)"
             end
             validate_granted_scopes(body, scopes)
-            validate_granted_repositories(body, lease.fetch("repos"))
+            validate_granted_repositories(body, requested_repos)
 
             {"token" => secret, "token_ref" => token_name,
              "provider_expiry" => nil,
@@ -110,8 +111,8 @@ module Ace
 
           def validate_granted_repositories(body, requested)
             repos = body["repositories"]
-            granted = repos.map { |repo| repo.is_a?(Hash) ? repo["full_name"].to_s : "" }.sort if repos.is_a?(Array)
-            return if granted && granted == requested.map(&:to_s).sort
+            granted = repos.map { |repo| repo.is_a?(Hash) ? repo["full_name"].to_s.downcase : "" }.sort if repos.is_a?(Array)
+            return if granted && granted == requested.map { |repo| repo.to_s.downcase }.sort
 
             raise Providers::TransientError, "forgejo did not confirm the requested repository restrictions"
           end
