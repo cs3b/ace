@@ -8,8 +8,11 @@ purpose: Complete one lab-owned startup commission without the overseer doing th
 ---
 # Delegated project bootstrap
 
-If tool output truncates any instruction, read the packaged workflow file
-directly before proceeding. Never infer a missing deadline or command.
+If tool output truncates any instruction, reload this workflow with
+`wfi://overseer/bootstrap-delegation --output cache --compressor off` and read
+the returned file before proceeding. In installed mode run `ace-bundle`; in
+an ACE source checkout in auto mode use its `bin/ace-bundle`. Never infer a
+missing deadline or command.
 
 ## Commission and ownership
 
