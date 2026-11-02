@@ -21,7 +21,7 @@ Persisted lab state has one write location and one owner; the canonical map and
 executable local flow are in [lab-flow.md](lab-flow.md). Project tasks live in
 `.ace-tasks/`; the private overseer list is the lab-prepared, gitignored
 `_overseer` folder inside that same task tree (`.ace-tasks/_overseer/`, reached
-with `ace-task --in _overseer`). Assignment plans live in `.ace-local/assign/`,
+with `ace-task list --in _overseer`). Assignment plans live in `.ace-local/assign/`,
 HITL events in `.ace-local/hitl/`, and task worktrees in `.ace-wt/`. There is no
 journal, queue engine, authority/admission layer, listener/daemon, topology
 registry, or extra state cache; tmux, Herdr, and Hermes are transports only.

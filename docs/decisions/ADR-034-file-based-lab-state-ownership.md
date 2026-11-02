@@ -26,7 +26,7 @@ scope or into version control.
 | Information | Write location | Owner |
 |---|---|---|
 | Project task specs and progress | `.ace-tasks/` | `ace-task` |
-| Private overseer task list | `.ace-tasks/_overseer/` (untracked via `.gitignore`) | the owning overseer, via `ace-task --in _overseer` |
+| Private overseer task list | `.ace-tasks/_overseer/` (untracked via `.gitignore`) | the owning overseer, via `ace-task list --in _overseer` |
 | Assignment execution plan and step reports | `.ace-local/assign/` | `ace-assign`; steps are not copied elsewhere |
 | Coworker run configuration (reserved for L3) | `.ace-local/coworker/` | `ace-coworker` in L3: role, instruction source, start prompt, task, assignment reference, overseer address, reporting and error rules |
 | HITL agent events | `.ace-local/hitl/` | `ace-hitl`; reports need no answer, questions are answered on the exact case |

@@ -34,7 +34,7 @@ changes; published runtime and system configuration stay root-owned.
 | Information | Write location | Owner |
 |---|---|---|
 | Project task specs and their progress | `.ace-tasks/` (tracked) | `ace-task`; one project task per folder |
-| Private overseer task list | `.ace-tasks/_overseer/` (untracked via `.gitignore`) | the overseer that owns it, via `ace-task --in _overseer` |
+| Private overseer task list | `.ace-tasks/_overseer/` (untracked via `.gitignore`) | the overseer that owns it, via `ace-task list --in _overseer` |
 | Assignment execution plan and step reports | `.ace-local/assign/` | `ace-assign`; steps are not copied into another queue or config |
 | Coworker run configuration (L3) | `.ace-local/coworker/` | reserved in L3: role, instruction source, start prompt, task, assignment reference, overseer address, reporting and error rules |
 | Per-role executor start configs (L4.3) | `.ace-local/coworker/prepare/<role>.yml` in the task worktree | `ace-coworker` (the planner, via `ace-coworker prepare`); one leg config per planned sequence role, written through the `commission` primitive so `start --config` accepts it; `commission` stays the single writer of the default `config.yml` target |

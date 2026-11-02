@@ -20,7 +20,7 @@ state cache. tmux, Herdr, and Hermes are transports only.
 | Information | Owner | Location |
 |---|---|---|
 | Project tasks | `ace-task` | `.ace-tasks/` |
-| Private overseer task list | overseer via `ace-task --in _overseer` | `.ace-tasks/_overseer/` (gitignored) |
+| Private overseer task list | overseer via `ace-task list --in _overseer` | `.ace-tasks/_overseer/` (gitignored) |
 | Assignment plan and steps | `ace-assign` | `.ace-local/assign/` |
 | Coworker configuration (L3) | `ace-coworker` | `.ace-local/coworker/` |
 | Review-round history (3/2/10) | `ace-coworker` (reviewer role) | `.ace-local/coworker/review-rounds/` |
