@@ -99,16 +99,6 @@ begin
           test ! -L "$path"
         done
         test "$(stat -c '%U:%G' /lab)" = mo:mo
-        # Visibility of the single fixture project is deployment policy, not
-        # a Forgejo credential or sudo permission. The worker cannot edit it.
-        test -d /etc/lab/ace-lab
-        test ! -L /etc/lab/ace-lab
-        test ! -e /etc/lab/ace-lab/authorization.yml
-        test ! -L /etc/lab/ace-lab/authorization.yml
-        umask 022
-        printf 'principals:\n  mo:\n    projects: [ace]\n' > /etc/lab/ace-lab/authorization.yml
-        chmod 0644 /etc/lab/ace-lab/authorization.yml
-        test "$(stat -c '%U:%G' /etc/lab/ace-lab/authorization.yml)" = root:root
         cp -R /home/lab-operator/lab/. /lab/
         chown -R mo:mo /lab/.ace /lab/.gitignore
         test "$(stat -c '%U:%G' /lab)" = mo:mo
@@ -126,12 +116,28 @@ begin
         runuser -u mo -- git -C /lab/ace remote set-url origin http://127.0.0.1:3000/#{repo}.git
         runuser -u mo -- git -C /lab/ace config user.name 'ACE E2E Worker'
         runuser -u mo -- git -C /lab/ace config user.email 'ace-e2e@example.invalid'
+        # The trusted deployment manifest declares project visibility; only
+        # ace-lab install converges the root-owned authorization document.
+        test ! -e /etc/lab/ace-lab/authorization.yml
+        test ! -L /etc/lab/ace-lab/authorization.yml
+        cat >> /etc/lab/ace-lab/install.yml <<'YAML'
+        projects:
+          - id: ace
+            path: /lab/ace
+            remote: http://127.0.0.1:3000/#{repo}.git
+            label: ACE E2E fixture
+        grants:
+          mo: [ace]
+        YAML
+        . /etc/profile.d/ace-e2e.sh
+        GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=safe.directory GIT_CONFIG_VALUE_0=/lab/ace ace-lab install
+        test "$(stat -c '%U:%G' /etc/lab/ace-lab/authorization.yml)" = root:root
         test ! -e /lab/ace/.ace/overseer/config.yml
         test "$(stat -c '%U:%G' /lab/ace)" = mo:mo
         rm -f /tmp/ace-e2e-fixture.bundle /home/lab-operator/fixture.bundle
         printf 'Fixture prepared; overseer has not been started.\n'
       SH
-      code, output = LabVm.guest_exec(uuid, "/bin/sh", "-c", guest_setup, timeout_s: 180)
+      code, output = LabVm.guest_exec(uuid, "/bin/sh", "-c", guest_setup, timeout_s: 7200)
       puts output
       raise "fixture setup failed; working VM preserved" unless code.zero?
       complete = true
