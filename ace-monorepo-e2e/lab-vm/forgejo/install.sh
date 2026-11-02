@@ -7,6 +7,11 @@ test "$(id -u)" = 0
 test ! -e /etc/forgejo/app.ini
 test ! -e /var/lib/forgejo
 test ! -e /opt/ace/runtime/bin/fj
+python3 - <<'PY'
+import socket
+with socket.socket() as listener:
+    listener.bind(('127.0.0.1', 3000))
+PY
 id forgejo >/dev/null 2>&1 || useradd --system --home-dir /var/lib/forgejo --shell /usr/sbin/nologin forgejo
 install -d -o forgejo -g forgejo -m 0750 /var/lib/forgejo /var/lib/forgejo/custom /var/lib/forgejo/data /var/lib/forgejo/log
 install -d -o root -g forgejo -m 0750 /etc/forgejo
@@ -89,6 +94,11 @@ for attempt in range(90):
 else:
     raise SystemExit('Forgejo did not become ready')
 PY
+systemctl is-active --quiet ace-e2e-forgejo.service
+pid=$(systemctl show --property MainPID --value ace-e2e-forgejo.service)
+case "$pid" in ''|*[!0-9]*) exit 1 ;; esac
+test "$pid" -gt 1
+ss -lntp '( sport = :3000 )' | grep -F "pid=$pid," >/dev/null
 # Passwords and token output remain root-only, inside the working VM.
 install -d -o root -g root -m 0700 /run/ace-e2e-forgejo
 for user in e2e-admin e2e-integrator e2e-reviewer; do
