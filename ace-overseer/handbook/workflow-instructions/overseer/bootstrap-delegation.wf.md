@@ -105,8 +105,9 @@ that task and pinned assignment, requires the worker to read its start brief,
 drive that assignment, and finish with `ace-coworker report`. These operational roles explicitly allow the commissioned canonical target
 outside the lab task worktree; ordinary product worker/reviewer roles do not.
 Before submitting a commission, record the pane and its current agent status.
-Submit only when the agent is idle or done; if it is working, blocked or
-unknown, reconcile the existing session and do not send a duplicate prompt.
+Submit only when the agent is idle or done; for any other state, including
+working, busy, blocked or unknown, reconcile the existing session and do not
+send a duplicate prompt.
 Then arm one eyes deadline for first-turn evidence:
 call `ace_eyes` with `action=deadline`, `key=bootstrap-<assignment-id>`
 (using only letters, digits, underscore or hyphen), `revision` set to the
