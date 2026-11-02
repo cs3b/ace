@@ -60,6 +60,9 @@ begin
       test ! -L /lab
       test -d /etc/lab/ace-lab
       test ! -L /etc/lab/ace-lab
+      test -f /etc/lab/ace-lab/install.yml
+      test ! -L /etc/lab/ace-lab/install.yml
+      test "$(stat -c '%U:%G %a' /etc/lab/ace-lab/install.yml)" = 'root:root 644'
       test ! -e /etc/lab/ace-lab/authorization.yml
       test ! -L /etc/lab/ace-lab/authorization.yml
       for path in /home/mo /home/mo/.pi /home/mo/.pi/agent; do test ! -L "$path"; done
@@ -120,6 +123,10 @@ begin
         # ace-lab install converges the root-owned authorization document.
         test ! -e /etc/lab/ace-lab/authorization.yml
         test ! -L /etc/lab/ace-lab/authorization.yml
+        test -f /etc/lab/ace-lab/install.yml
+        test ! -L /etc/lab/ace-lab/install.yml
+        test "$(stat -c '%U:%G %a' /etc/lab/ace-lab/install.yml)" = 'root:root 644'
+        python3 -c 'import pathlib,re; s=pathlib.Path("/etc/lab/ace-lab/install.yml").read_text(); assert s.endswith("\\n") and not re.search(r"(?m)^(projects|grants)\\s*:",s), "unexpected install manifest"'
         cat >> /etc/lab/ace-lab/install.yml <<'YAML'
         projects:
           - id: ace
@@ -131,13 +138,17 @@ begin
         YAML
         . /etc/profile.d/ace-e2e.sh
         GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=safe.directory GIT_CONFIG_VALUE_0=/lab/ace ace-lab install
-        test "$(stat -c '%U:%G' /etc/lab/ace-lab/authorization.yml)" = root:root
+        test "$(stat -c '%U:%G %a' /etc/lab/ace-lab/authorization.yml)" = 'root:root 644'
+        cd /lab
+        runuser -u mo -- env "PATH=$PATH" GEM_HOME=/opt/ace/runtime/gems GEM_PATH=/opt/ace/runtime/gems ACE_TOOLCHAIN=installed ace-lab resolve --id ace --format json
         test ! -e /lab/ace/.ace/overseer/config.yml
         test "$(stat -c '%U:%G' /lab/ace)" = mo:mo
         rm -f /tmp/ace-e2e-fixture.bundle /home/lab-operator/fixture.bundle
         printf 'Fixture prepared; overseer has not been started.\n'
       SH
-      code, output = LabVm.guest_exec(uuid, "/bin/sh", "-c", guest_setup, timeout_s: 7200)
+      # A real ARM64 install took over ten minutes due to dependency closure
+      # probes; permit retries without allowing an unbounded hung fixture.
+      code, output = LabVm.guest_exec(uuid, "/bin/sh", "-c", guest_setup, timeout_s: 3600)
       puts output
       raise "fixture setup failed; working VM preserved" unless code.zero?
       complete = true
