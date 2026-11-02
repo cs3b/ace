@@ -31,6 +31,11 @@ module Ace
       #     id ignore it; a 404-shaped unknown id settles as
       #     :already_invalid so interrupted issues recover
       #     deterministically)
+      #   with_exec_environment(profile:, credential:) { |env| ... }
+      #     optional scoped child-environment projection. Raise RefusedError
+      #     before dispatch on failure; clean up temporary secrets when the
+      #     block exits. Crash-recoverable projections use the existing
+      #     CredentialHandoff.projection_prefix lifecycle.
       class Providers
         class RefusedError < StandardError; end
         class TransientError < StandardError; end

@@ -187,6 +187,38 @@ module Ace
           end
         end
 
+        def test_exec_uses_literal_ipv6_authority_and_refuses_other_prompts
+          Dir.mktmpdir do |dir|
+            credential = File.join(dir, "lease-worker")
+            File.write(credential, "LEASE-TOKEN")
+            config = profile
+            config["issuer"]["url"] = "http://[::1]:3000"
+            provider = Plugins::ForgejoProvider.new
+            provider.stub(:linux_xdg?, true) do
+              provider.with_exec_environment(profile: config, credential: credential) do |env|
+                data = JSON.parse(File.read(File.join(env.fetch("XDG_DATA_HOME"), "forgejo-cli", "keys.json")))
+                assert data["hosts"].key?("[::1]:3000")
+                env = env.merge("ACE_LAB_CREDENTIAL_FILE" => credential)
+                output, status = Open3.capture2(env, env.fetch("GIT_ASKPASS"), "Password for 'http://lab-role-dev@[::1]:3000': ")
+                assert status.success?
+                assert_equal "LEASE-TOKEN", output
+                _output, status = Open3.capture2(env, env.fetch("GIT_ASKPASS"), "Password for 'http://lab-role-dev@::1:3000': ")
+                refute status.success?
+              end
+            end
+          end
+        end
+
+        def test_exec_reports_missing_lease_credential_as_refusal
+          provider = Plugins::ForgejoProvider.new
+          provider.stub(:linux_xdg?, true) do
+            error = assert_raises(Providers::RefusedError) do
+              provider.with_exec_environment(profile: profile, credential: "/nonexistent/lease") { flunk }
+            end
+            assert_match(/credential is unreadable/, error.message)
+          end
+        end
+
         def test_rejects_unconfirmed_or_extra_scopes
           [nil, ["write:repository", "write:issue"]].each do |scopes|
             prov = provider({"sha1" => "SECRET", "id" => 1, "scopes" => scopes,

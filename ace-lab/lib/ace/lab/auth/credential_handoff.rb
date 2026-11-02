@@ -12,6 +12,10 @@ module Ace
       # REFERENCE (path), never the value in argv or the serialized
       # report. Removal after the lease is idempotent.
       class CredentialHandoff
+        def self.projection_prefix(credential)
+          "#{File.basename(credential)}.forgejo-session-"
+        end
+
         def initialize(credentials_dir, recipient: )
           @credentials_dir = credentials_dir
           @recipient = recipient
@@ -39,7 +43,7 @@ module Ace
           File.delete(target) if File.file?(target) && !File.symlink?(target)
           # A killed Forgejo executor may leave its private fj login
           # projection behind; it belongs to this same handoff lifecycle.
-          prefix = "#{File.basename(target)}.forgejo-session-"
+          prefix = self.class.projection_prefix(target)
           Dir.children(@credentials_dir).grep(/^#{Regexp.escape(prefix)}/).each do |name|
             dir = File.join(@credentials_dir, name)
             raise Error, "session projection is a symlink; refusing cleanup" if File.symlink?(dir)

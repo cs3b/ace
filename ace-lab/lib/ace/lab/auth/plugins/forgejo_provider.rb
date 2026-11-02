@@ -9,6 +9,7 @@ require "tmpdir"
 require "fileutils"
 require "uri"
 require "rbconfig"
+require_relative "../credential_handoff"
 
 module Ace
   module Lab
@@ -51,13 +52,18 @@ module Ace
                 ["", "/"].include?(url.path.to_s) && url.query.nil? && url.fragment.nil?
               raise Providers::RefusedError, "forgejo issuer url must be a bare HTTP(S) origin"
             end
-            authority = url.host.include?(":") ? "[#{url.host}]" : url.host
+            host = url.hostname
+            authority = host.include?(":") ? "[#{host}]" : host
             authority += ":#{url.port}" if url.port != url.default_port
             account = profile.fetch("issuer")["account"].to_s
             raise Providers::RefusedError, "forgejo role account is invalid" unless account.match?(/\A[a-zA-Z0-9_.-]+\z/)
-            token = File.read(credential).strip
+            token = begin
+              File.read(credential).strip
+            rescue SystemCallError => e
+              raise Providers::RefusedError, "forgejo lease credential is unreadable (#{e.class.name})"
+            end
             raise Providers::RefusedError, "forgejo lease credential is empty" if token.empty?
-            prefix = "#{File.basename(credential)}.forgejo-session-"
+            prefix = CredentialHandoff.projection_prefix(credential)
             Dir.mktmpdir(prefix, File.dirname(credential)) do |dir|
               login_dir = File.join(dir, "forgejo-cli")
               Dir.mkdir(login_dir, 0o700)
@@ -69,11 +75,13 @@ module Ace
               File.open(askpass, File::WRONLY | File::CREAT | File::EXCL, 0o700) do |file|
                 file.write(<<~'SH')
                   #!/bin/sh
-                  case "$1" in
-                    "Username for '$ACE_LAB_FORGEJO_ORIGIN': "*) printf '%s\n' "$ACE_LAB_FORGEJO_ACCOUNT" ;;
-                    "Password for '$ACE_LAB_FORGEJO_SCHEME://$ACE_LAB_FORGEJO_ACCOUNT@$ACE_LAB_FORGEJO_AUTHORITY': "*) cat "$ACE_LAB_CREDENTIAL_FILE" ;;
-                    *) exit 1 ;;
-                  esac
+                  if [ "$1" = "Username for '$ACE_LAB_FORGEJO_ORIGIN': " ]; then
+                    printf '%s\n' "$ACE_LAB_FORGEJO_ACCOUNT"
+                  elif [ "$1" = "Password for '$ACE_LAB_FORGEJO_SCHEME://$ACE_LAB_FORGEJO_ACCOUNT@$ACE_LAB_FORGEJO_AUTHORITY': " ]; then
+                    cat "$ACE_LAB_CREDENTIAL_FILE"
+                  else
+                    exit 1
+                  fi
                 SH
               end
               yield({"XDG_DATA_HOME" => dir, "GIT_ASKPASS" => askpass, "GIT_TERMINAL_PROMPT" => "0",

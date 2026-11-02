@@ -303,6 +303,33 @@ module Ace
           assert_equal "revoked", svc.status(lease_id: lease["id"])["state"]
         end
 
+        def test_exec_connects_real_forgejo_projection_to_the_lease_handoff
+          projection = Plugins::ForgejoProvider.new
+          @fake.define_singleton_method(:with_exec_environment) do |profile:, credential:, &block|
+            effective = profile.merge("issuer" => {"url" => "http://127.0.0.1:3000", "account" => "reviewer"})
+            projection.stub(:linux_xdg?, true) do
+              projection.with_exec_environment(profile: effective, credential: credential, &block)
+            end
+          end
+          observed = nil
+          svc = Molecules::GrantResolver.stub(:read_verified, @document) do
+            Service.new(principal: -> { "test-worker" }, runner: lambda { |_argv, env|
+              data = JSON.parse(File.read(File.join(env.fetch("XDG_DATA_HOME"), "forgejo-cli", "keys.json")))
+              token = data.fetch("hosts").fetch("127.0.0.1:3000").fetch("token")
+              value, status = Open3.capture2(env, env.fetch("GIT_ASKPASS"), "Password for 'http://reviewer@127.0.0.1:3000': ")
+              observed = [token, value, status.success?, env.fetch("XDG_DATA_HOME")]
+              0
+            })
+          end
+          lease = svc.request(profile_name: "developer", role: "developer",
+            task: "t", assignment: "a", repos: %w[ace])
+          svc.exec(lease_id: lease["id"], argv: %w[true])
+          assert_equal "SECRET-#{lease['id']}", observed[0]
+          assert_equal observed[0], observed[1]
+          assert observed[2]
+          refute File.exist?(observed[3])
+        end
+
         def test_exec_on_a_dead_or_parallel_lease_is_refused
           svc = service
           lease = svc.request(profile_name: "developer", role: "developer",
