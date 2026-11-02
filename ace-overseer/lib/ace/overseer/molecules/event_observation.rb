@@ -89,14 +89,15 @@ module Ace
         end
 
         # Configured remote observation (8xs.t.pu0.4): the project's own
-        # observe.remote.pull_requests list — never a scan of accessible
-        # accounts. No configuration means no remote rows and no remote
-        # source to degrade.
+        # observe.remote pull request and issue lists — never a scan of
+        # accessible accounts. No configuration means no remote rows and
+        # no remote source to degrade.
         def remote_projection
           entries = Array(@config.dig("observe", "remote", "pull_requests"))
-          return {"events" => [], "sources" => {}} if entries.empty?
+          issues = Array(@config.dig("observe", "remote", "issues"))
+          return {"events" => [], "sources" => {}} if entries.empty? && issues.empty?
 
-          @remote_sources.call(pull_requests: entries)
+          @remote_sources.call(pull_requests: entries, issues: issues)
         end
 
         def health_marker(name, error)

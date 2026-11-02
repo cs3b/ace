@@ -194,7 +194,7 @@ projecting. `sources` maps each source to `ok`/`degraded`. After a restart,
 pending revisions reconcile before new work is chosen, so a report that
 arrived during the overseer's absence is recognized exactly once.
 
-### Remote PR observation
+### Remote issue and PR observation
 
 Configure the observed pull requests in the same cascade (task 8xs.t.pu0.4)
 — the project's own declarations, never a scan of every accessible account:
@@ -203,10 +203,24 @@ Configure the observed pull requests in the same cascade (task 8xs.t.pu0.4)
 # .ace/overseer/config.yml
 observe:
   remote:
+    issues:
+      - server: forgejo-lab  # the configured project repository
     pull_requests:
       - server: github-cs3b   # configured git server (ace-git ServerRegistry)
         number: 398
 ```
+
+Each configured issue source observes the selected repository's open issues
+as one collection. New, changed and closed issues change its semantic
+revision, while reordered identical results do not. Read the current issue
+before acting. The revision covers issue identity, title, state, author, URL
+and available labels; issue comments are not observed by this source. A
+listing with more than 500 open issues, an unsupported
+provider, or an authentication failure degrades the source visibly rather
+than treating a partial or unavailable list as complete. Session credentials
+must be available to the observation command for the duration of observation.
+Currently the Forgejo provider implements issue listing; GitHub does not.
+The Forgejo listing does not currently expose labels to this observation.
 
 Rows project through the EXISTING forge provider adapters (Forgejo and
 GitHub — `Ace::Git::Providers.for`; no separate HTTP client, no webhook

@@ -6,12 +6,10 @@ require "json"
 module Ace
   module Overseer
     module Molecules
-      # Remote PR/repo observation (task 8xs.t.pu0.4): projects configured
-      # pull requests through the EXISTING forge provider adapters
+      # Remote issue and PR observation through the existing forge adapters
       # (Ace::Git::Providers.for — Forgejo and GitHub; no separate HTTP
-      # client here). Observed PRs come from the project's own
-      # configuration (`observe.remote.pull_requests` in the overseer
-      # cascade) — never a scan of every accessible account.
+      # client here). Observed repositories and PRs come from the project's
+      # own configuration — never a scan of every accessible account.
       #
       # Rows follow the standing-observation contract of LocalSources:
       # stable key + SEMANTIC revision (state, head SHA, review/comment
@@ -26,6 +24,8 @@ module Ace
       # class wakes once per failure mode, never as an empty healthy
       # list — and recovery re-observes the real state.
       class RemoteSources
+        ISSUE_LIMIT = 500
+
         def initialize(provider_factory: nil, timeout: nil)
           @provider_factory = provider_factory || ->(server_name) {
             server = Ace::Git::ServerRegistry.resolve(server_name)
@@ -35,8 +35,9 @@ module Ace
 
         # @param pull_requests [Array<Hash>] {"server" =>, "number" =>}
         #   entries from the project's observe.remote configuration
+        # @param issues [Array<Hash>] {"server" =>} repository entries
         # @return [Hash] {"events" => Array, "sources" => {name => health}}
-        def call(pull_requests:)
+        def call(pull_requests:, issues: [])
           sources = {}
           events = []
 
@@ -46,16 +47,9 @@ module Ace
           valid, invalid = Array(pull_requests).partition do |entry|
             entry.is_a?(Hash) && !entry["server"].to_s.empty? && !entry["number"].to_s.empty?
           end
-          invalid.group_by { |entry| entry.is_a?(Hash) ? entry["server"].to_s : "" }.each do |server, entries|
-            if server.empty?
-              # Non-Hash or server-less entries still surface as health
-              # markers, never silently disappear.
-              sources["observe.remote"] ||= {"state" => "degraded",
-                "reason" => "invalid observe.remote.pull_requests entry: #{entries.first.inspect}"}
-            else
-              sources["pr:#{server}"] ||= {"state" => "degraded",
-                "reason" => "invalid observe.remote.pull_requests entry: #{entries.first.inspect}"}
-            end
+          unless invalid.empty?
+            index = Array(pull_requests).index(invalid.first)
+            collect(sources, events, "pr:configuration") { raise ArgumentError, "invalid observe.remote.pull_requests entry at index #{index}" }
           end
 
           valid.group_by { |entry| entry["server"] }.each do |server, entries|
@@ -64,10 +58,46 @@ module Ace
             end
           end
 
+          Array(issues).each_with_index do |entry, index|
+            unless entry.is_a?(Hash) && entry["server"].is_a?(String) && !entry["server"].strip.empty?
+              unless sources.key?("issues:configuration")
+                collect(sources, events, "issues:configuration") { raise ArgumentError, "invalid observe.remote.issues entry at index #{index}" }
+              end
+              next
+            end
+
+            server = entry["server"]
+            next if sources.key?("issues:#{server}")
+
+            collect(sources, events, "issues:#{server}") { [issue_snapshot(server)] }
+          end
+
           {"events" => events, "sources" => sources}
         end
 
         private
+
+        # A single collection revision also detects a closed/deleted issue,
+        # which would simply disappear if each open issue had its own row.
+        # Refuse a truncated collection instead of silently missing work. The
+        # provider must paginate completely and return min(limit, total).
+        def issue_snapshot(server)
+          provider = @provider_factory.call(server)
+          unless provider.respond_to?(:recent_issues)
+            raise Ace::Git::ProviderUnsupportedCapabilityError,
+              "the selected provider has no issue-listing API; issues are unavailable, not empty"
+          end
+          issues = provider.recent_issues(limit: ISSUE_LIMIT + 1)
+          raise ArgumentError, "too many open issues to observe completely" if issues.length > ISSUE_LIMIT
+
+          items = issues.map do |issue|
+            {"number" => issue.number, "title" => issue.title, "state" => issue.state.to_s,
+             "author" => issue.author, "url" => issue.url, "labels" => Array(issue.labels).map(&:to_s).sort}
+          end.sort_by { |item| item.fetch("number") }
+          {"key" => "issues:#{server}", "revision" => digest(items), "type" => "issues",
+           "forge" => server, "count" => items.length,
+           "issue_numbers" => items.first(20).map { |item| item.fetch("number") }}
+        end
 
         def collect(sources, events, name)
           rows = yield

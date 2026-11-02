@@ -76,7 +76,8 @@ settlement alone is not proof of handling.
   handoff for the required role and repository; if it is unavailable, create a
   precise HITL blocker for that capability and end the turn. Never ask a human
   to paste a token or replace the lease with a durable shared credential.
-- Remote PR observation (observe.remote.pull_requests) and the HITL reply
+- Remote issue and PR observation (`observe.remote.issues` and
+  `observe.remote.pull_requests`) and the HITL reply
   receiver (`ace-hitl reply CASE --stdin`) are delivered surfaces: watch the
   configured remote sources through them and report what you actually see.
   Capabilities genuinely not yet delivered (e.g. the Hermes transport

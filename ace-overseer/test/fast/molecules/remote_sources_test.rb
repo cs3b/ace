@@ -16,6 +16,7 @@ module Molecules
       :url, :path, :line, :head_sha, :resolved, :thread_id)
     Evidence = Data.define(:server_name, :repository_url, :pr_number, :head_sha,
       :comments, :reviews)
+    Issue = Data.define(:server_name, :number, :title, :state, :author, :url, :labels)
 
     class FakeProvider
       def initialize(pr:, evidence: nil)
@@ -139,6 +140,66 @@ module Molecules
       assert_equal marker["revision"],
         repeat["events"].find { |row| row["key"] == "source:pr:gh" }["revision"],
         "an identical failure class never re-wakes"
+    end
+
+    def test_issue_collection_wakes_on_new_and_closed_issues_but_not_reordering
+      a = Issue.new(server_name: "forge", number: 1, title: "first", state: :open,
+        author: "user", url: "http://forge/issues/1", labels: ["b", "a"])
+      b = a.with(number: 2, title: "second", url: "http://forge/issues/2")
+      provider = Object.new
+      provider.define_singleton_method(:recent_issues) { |limit:| [a, b] }
+      observer = sources(provider)
+      config = [{"server" => "forge"}]
+      original = observer.call(pull_requests: [], issues: config)
+      provider.define_singleton_method(:recent_issues) { |limit:| [b, a.with(labels: ["a", "b"])] }
+      assert_equal original, observer.call(pull_requests: [], issues: config)
+      provider.define_singleton_method(:recent_issues) { |limit:| [b] }
+      changed = observer.call(pull_requests: [], issues: config)
+      refute_equal original["events"].first["revision"], changed["events"].first["revision"]
+      assert_equal [2], changed["events"].first["issue_numbers"]
+      assert_equal 1, changed["events"].first["count"]
+    end
+
+    def test_issue_overflow_is_degraded_instead_of_silently_missing_work
+      provider = Object.new
+      provider.define_singleton_method(:recent_issues) { |limit:| Array.new(limit) }
+      result = sources(provider).call(pull_requests: [], issues: [{"server" => "forge"}])
+      assert_equal "degraded", result.fetch("sources").fetch("issues:forge").fetch("status")
+      assert_equal "source-health", result.fetch("events").first.fetch("type")
+    end
+
+    def test_unsupported_issue_listing_is_explicitly_degraded
+      result = sources(Object.new).call(pull_requests: [], issues: [{"server" => "forge"}])
+      health = result.fetch("sources").fetch("issues:forge")
+      assert_equal "degraded", health.fetch("status")
+      assert_match(/ProviderUnsupportedCapabilityError.*no issue-listing API/, health.fetch("error"))
+    end
+
+    def test_invalid_issue_configuration_degrades_once
+      result = sources(Object.new).call(pull_requests: [], issues: [nil, {}])
+      assert_equal "degraded", result.fetch("sources").fetch("issues:configuration").fetch("status")
+      assert_match(/index 0/, result.fetch("sources").fetch("issues:configuration").fetch("error"))
+      assert_equal ["source:issues:configuration"], result.fetch("events").map { |row| row.fetch("key") }
+    end
+
+    def test_invalid_pr_configuration_wakes_as_degraded_without_hiding_valid_prs
+      result = sources(FakeProvider.new(pr: pr, evidence: evidence)).call(
+        pull_requests: entries + [{"server" => "gh"}, nil])
+      assert_equal "degraded", result.fetch("sources").fetch("pr:configuration").fetch("status")
+      assert_match(/index 1/, result.fetch("sources").fetch("pr:configuration").fetch("error"))
+      assert_equal "ok", result.fetch("sources").fetch("pr:gh").fetch("status")
+      assert result.fetch("events").any? { |row| row["key"] == "source:pr:configuration" }
+      assert result.fetch("events").any? { |row| row["key"] == "pr:gh:398" }
+    end
+
+    def test_configured_issue_and_pr_sources_project_together
+      provider = FakeProvider.new(pr: pr, evidence: evidence)
+      provider.define_singleton_method(:recent_issues) { |limit:| [] }
+      result = sources(provider).call(pull_requests: entries, issues: [{"server" => "forge"}])
+      assert_equal "ok", result.fetch("sources").fetch("pr:gh").fetch("status")
+      assert_equal "ok", result.fetch("sources").fetch("issues:forge").fetch("status")
+      assert_includes result.fetch("events").map { |row| row.fetch("key") }, "issues:forge"
+      assert_includes result.fetch("events").map { |row| row.fetch("key") }, "pr:gh:398"
     end
   end
 end

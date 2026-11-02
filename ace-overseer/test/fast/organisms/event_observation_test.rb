@@ -89,6 +89,41 @@ class OverseerEventObservationTest < AceOverseerTestCase
       assert_includes result["events"].map { |row| row["source_key"] || row["key"] }, "task:8xs.t.zz9"
     end
   end
+
+  def test_configured_issue_source_is_projected_as_an_eyes_event
+    Dir.mktmpdir do |tmp|
+      tasks = Ace::Task::Organisms::TaskManager.new(root_dir: File.join(tmp, "tasks"))
+      hitl = Object.new
+      def hitl.call(**) = {"schema" => "ace.hitl.observation/v1", "events" => []}
+      issue = Ace::Git::ProviderIssue.new(server_name: "forge", number: 7, title: "work",
+        state: :open, author: "user", url: "http://forge/issues/7", labels: [])
+      provider = Object.new
+      provider.define_singleton_method(:recent_issues) { |limit:| [issue] }
+      remote = Ace::Overseer::Molecules::RemoteSources.new(provider_factory: ->(_) { provider })
+      observer = Ace::Overseer::Molecules::EventObservation.new(hitl: hitl, task_manager: tasks,
+        local_sources: no_local_sources, remote_sources: remote,
+        config: {"observe" => {"remote" => {"issues" => [{"server" => "forge"}]}}})
+
+      result = observer.call(owner: "self")
+      row = result.fetch("events").fetch(0)
+      assert_equal "issues:forge", row.fetch("source_key")
+      assert_match(/\A[a-f0-9]{64}\z/, row.fetch("key"))
+      assert_equal [7], row.fetch("issue_numbers")
+      assert_equal({"status" => "ok"}, result.fetch("sources").fetch("issues:forge"))
+      source = File.expand_path("../ace-wake/handbook/extensions/ace-wake/wake/eyes.js", Ace::Overseer.gem_root)
+      script = <<~JS
+        import {pathToFileURL} from 'node:url';
+        const {Eyes} = await import(pathToFileURL(process.argv[1]));
+        const eyes = new Eyes({save:()=>{}, observe:async()=>{}, deliver:async()=>{}});
+        let data=''; for await (const chunk of process.stdin) data+=chunk;
+        eyes.validate(JSON.parse(data));
+      JS
+      _, err, status = Open3.capture3("node", "--input-type=module", "-e", script, source,
+        stdin_data: JSON.generate(result))
+      assert status.success?, err
+    end
+  end
+
   def test_real_local_source_projection_is_accepted_by_the_shipped_eyes_validator
     Dir.mktmpdir do |tmp|
       tasks = Ace::Task::Organisms::TaskManager.new(root_dir: File.join(tmp, "tasks"))

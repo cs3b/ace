@@ -7,7 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Observe configured Forgejo issue collections through semantic revisions, including closures and visible source failures.
+
 ### Fixed
+
+- Surface invalid remote PR observation entries as degraded source events without masking valid sources.
 
 - Escalate missing forge access through session-scoped auth instead of searching for or configuring persistent credentials.
 
