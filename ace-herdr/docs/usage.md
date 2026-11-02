@@ -87,6 +87,11 @@ prompt semantics: text becomes one self-submitting agent prompt, and a single
 trailing Enter is dropped and reported. A command must be declared before any
 key.
 
+For the native `herdr agent prompt` command, `--wait` without `--until`
+waits for a settled state. Use `--wait --until working --until blocked` to
+wait for observed activity instead. A stalled or timed-out prompt has an
+uncertain delivery outcome; inspect the existing agent before retrying.
+
 ## Workspaces, tabs, and presets
 
 Presets resolve through the ADR-022 cascade (`.ace/herdr/` > `~/.ace/herdr/` >
