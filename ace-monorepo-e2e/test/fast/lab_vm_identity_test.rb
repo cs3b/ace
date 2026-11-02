@@ -73,6 +73,28 @@ class LabVmIdentityTest < AceMonorepoE2eTestCase
     assert_operator Process.clock_gettime(Process::CLOCK_MONOTONIC) - started, :<, 5
   end
 
+  def test_staging_rejects_traversal_and_shell_metacharacters
+    ["relative/path", "/tmp/../other", "/tmp/$(touch bad)", "/tmp/line\nbreak"].each do |path|
+      assert_raises(RuntimeError) { LabVm.staging_command(path, "/tmp/destination") }
+      assert_raises(RuntimeError) { LabVm.staging_command("/tmp/source", path) }
+    end
+  end
+
+  def test_runtime_fingerprint_binds_scripts_manifest_and_lockfile
+    LabVm::RUNTIME_INPUTS.each do |relative|
+      path = File.join(@root, relative)
+      FileUtils.mkdir_p(File.dirname(path))
+      File.write(path, relative)
+    end
+    before = LabVm.runtime_configuration_fingerprint(root: @root)
+    lockfile = File.join(@root, "ace-monorepo-e2e/lab-vm/pi/package-lock.json")
+    File.write(lockfile, "changed")
+    refute_equal before, LabVm.runtime_configuration_fingerprint(root: @root)
+    File.unlink(lockfile)
+    File.symlink("/dev/null", lockfile)
+    assert_raises(RuntimeError) { LabVm.runtime_configuration_fingerprint(root: @root) }
+  end
+
   def test_failed_base_preparation_requests_shutdown_and_preserves_it
     operations = []
     LabVm.stub(:with_lifecycle_lock, ->(&block) { block.call }) do

@@ -52,7 +52,7 @@ begin
       raise "guest checkout does not match fixture" unless code.zero? && head.strip == fixture.fetch("initial_sha")
       code, remote = guest_mo(uuid, "git", "-C", "/lab/ace", "remote", "get-url", "origin")
       raise "guest checkout has a different origin" unless code.zero? && remote.strip == "https://github.com/#{fixture.fetch('repository')}.git"
-      digest = Digest::SHA256.file(File.join(LabVm::ROOT, "ace-monorepo-e2e/lab-vm/release-manifest.json")).hexdigest
+      digest = LabVm.runtime_configuration_fingerprint
       ready = "test -f /var/lib/ace-e2e/runtime-ready.sha256; test ! -L /var/lib/ace-e2e/runtime-ready.sha256; test \"$(cat /var/lib/ace-e2e/runtime-ready.sha256)\" = '#{digest}'"
       code, = LabVm.guest_exec(uuid, "/bin/sh", "-ec", ready)
       raise "installed runtime receipt does not match" unless code.zero?

@@ -46,7 +46,7 @@ begin
     raise "verified VM host key missing; provision the runtime first" unless File.file?(known_hosts) && !File.symlink?(known_hosts)
     key = File.join(LabVm.local_dir, "bootstrap/operator_ed25519")
     options = ["-o", "BatchMode=yes", "-o", "StrictHostKeyChecking=yes", "-o", "UserKnownHostsFile=#{known_hosts}", "-i", key]
-    digest = Digest::SHA256.file(File.join(LabVm::ROOT, "ace-monorepo-e2e/lab-vm/release-manifest.json")).hexdigest
+    digest = LabVm.runtime_configuration_fingerprint
     check = <<~SH
       set -eu
       test -x /opt/ace/runtime/bin/herdr

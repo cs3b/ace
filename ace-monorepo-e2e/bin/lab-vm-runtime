@@ -11,6 +11,7 @@ begin
   LabVm.with_lifecycle_lock do
     begin
       state = LabVm.read_state
+      runtime_fingerprint = LabVm.runtime_configuration_fingerprint
       work = LabVm.status.fetch("work")
       raise "create a fresh working clone first" unless work && state.dig("work", "phase") == "created"
       uuid = work.fetch("uuid")
@@ -53,14 +54,23 @@ begin
       key_path = File.join(LabVm.local_dir, "bootstrap/operator_ed25519")
       ssh_options = ["-o", "BatchMode=yes", "-o", "StrictHostKeyChecking=yes", "-o", "UserKnownHostsFile=#{known_hosts}", "-i", key_path]
       raise "artifact verification failed" unless system(File.join(__dir__, "lab-vm-artifacts"))
+      raise "runtime inputs changed during preparation" unless LabVm.runtime_configuration_fingerprint == runtime_fingerprint
       code, output = LabVm.guest_exec(uuid, "/bin/sh", "-c", "test ! -e /var/lib/ace-e2e/input && test ! -L /var/lib/ace-e2e/input && test ! -e /home/lab-operator/ace-e2e-input && test ! -L /home/lab-operator/ace-e2e-input && install -d -o lab-operator -g lab-operator -m 0700 /home/lab-operator/ace-e2e-input")
       raise "working clone is not fresh: #{output}" unless code.zero?
       root = File.join(LabVm::ROOT, "ace-monorepo-e2e/lab-vm")
       inputs = [File.join(LabVm.local_dir, "artifacts"), File.join(root, "pi"), File.join(root, "release-manifest.json"),
         File.join(root, "provision-runtime.sh"), File.join(root, "build-herdr.sh"), File.join(root, "gem-graph.rb")]
       raise "fixture copy failed" unless system("scp", "-q", "-r", *ssh_options, *inputs, "lab-operator@#{address}:/home/lab-operator/ace-e2e-input/")
-      code, output = LabVm.guest_exec(uuid, "/bin/sh", "-c", "install -d -m 0755 /var/lib/ace-e2e/input && cp -a /home/lab-operator/ace-e2e-input/. /var/lib/ace-e2e/input/ && chown -R root:root /var/lib/ace-e2e/input && chmod -R go-w /var/lib/ace-e2e/input")
+      stage = LabVm.staging_command("/home/lab-operator/ace-e2e-input", "/var/lib/ace-e2e/input")
+      code, output = LabVm.guest_exec(uuid, "/bin/sh", "-c", stage)
       raise "guest input preparation failed: #{output}" unless code.zero?
+      %w[release-manifest.json provision-runtime.sh build-herdr.sh gem-graph.rb pi/package.json pi/package-lock.json].each do |relative|
+        local_path = File.join(root, relative)
+        expected = Digest::SHA256.file(local_path).hexdigest
+        code, output = LabVm.guest_exec(uuid, "/usr/bin/sha256sum", "/var/lib/ace-e2e/input/#{relative}")
+        raise "guest runtime input does not match: #{relative}" unless code.zero? && output.split.first == expected
+      end
+      raise "runtime inputs changed during transfer" unless LabVm.runtime_configuration_fingerprint == runtime_fingerprint
 
       code, output = LabVm.guest_exec(uuid, "/bin/sh", "/var/lib/ace-e2e/input/provision-runtime.sh", timeout_s: 7200)
       puts output
@@ -100,8 +110,9 @@ begin
       code, output = LabVm.guest_exec(uuid, "/usr/sbin/runuser", "-u", "mo", "--", "/bin/sh", "-c", probe)
       puts output
       raise "installed runtime is unavailable to mo; working VM preserved" unless code.zero?
+      raise "runtime inputs changed during provisioning" unless LabVm.runtime_configuration_fingerprint == runtime_fingerprint
       digest = Digest::SHA256.file(File.join(LabVm::ROOT, "ace-monorepo-e2e/lab-vm/release-manifest.json")).hexdigest
-      marker = "test \"$(sha256sum /var/lib/ace-e2e/input/release-manifest.json | cut -d' ' -f1)\" = '#{digest}' && test ! -e /var/lib/ace-e2e/runtime-ready.sha256 && test ! -L /var/lib/ace-e2e/runtime-ready.sha256 && printf '%s\\n' '#{digest}' > /var/lib/ace-e2e/runtime-ready.sha256 && chmod 0644 /var/lib/ace-e2e/runtime-ready.sha256"
+      marker = "test \"$(sha256sum /var/lib/ace-e2e/input/release-manifest.json | cut -d' ' -f1)\" = '#{digest}' && test ! -e /var/lib/ace-e2e/runtime-ready.sha256 && test ! -L /var/lib/ace-e2e/runtime-ready.sha256 && printf '%s\\n' '#{runtime_fingerprint}' > /var/lib/ace-e2e/runtime-ready.sha256 && chmod 0644 /var/lib/ace-e2e/runtime-ready.sha256"
       code, output = LabVm.guest_exec(uuid, "/bin/sh", "-c", marker)
       raise "runtime receipt could not be recorded: #{output}" unless code.zero?
       puts "Runtime and verified Herdr installed; scenario readiness still requires verification."

@@ -21,6 +21,18 @@ module LabVm
   UTMCTL = "/Applications/UTM.app/Contents/MacOS/utmctl"
   UTM_ROOT = File.expand_path("~/Library/Containers/com.utmapp.UTM/Data/Documents")
   UUID = /\A[0-9A-Fa-f]{8}(-[0-9A-Fa-f]{4}){3}-[0-9A-Fa-f]{12}\z/
+  RUNTIME_INPUTS = %w[
+    ace-monorepo-e2e/bin/lab-vm
+    ace-monorepo-e2e/bin/lab-vm-artifacts
+    ace-monorepo-e2e/bin/lab-vm-runtime
+    ace-monorepo-e2e/lab-vm/profile.yml
+    ace-monorepo-e2e/lab-vm/release-manifest.json
+    ace-monorepo-e2e/lab-vm/provision-runtime.sh
+    ace-monorepo-e2e/lab-vm/build-herdr.sh
+    ace-monorepo-e2e/lab-vm/gem-graph.rb
+    ace-monorepo-e2e/lab-vm/pi/package.json
+    ace-monorepo-e2e/lab-vm/pi/package-lock.json
+  ].freeze
 
   # Validate the UUID against both UTM inventory and the on-disk package.
   # Neither a matching display name nor a user-writable state file is enough.
@@ -85,6 +97,39 @@ module LabVm
   def self.base_configuration_fingerprint
     release = JSON.parse(File.read(File.join(ROOT, "ace-monorepo-e2e/lab-vm/release-manifest.json")))
     Digest::SHA256.hexdigest(JSON.generate({"profile" => profile, "apt_snapshot" => release.fetch("apt_snapshot"), "cloud_config_schema" => 3}))
+  end
+
+  def self.runtime_configuration_fingerprint(root: ROOT)
+    entries = RUNTIME_INPUTS.map do |relative|
+      path = File.join(root, relative)
+      raise "runtime input is not a regular file: #{relative}" unless File.file?(path) && !File.symlink?(path)
+      [relative, Digest::SHA256.file(path).hexdigest]
+    end
+    Digest::SHA256.hexdigest(JSON.generate(entries))
+  end
+
+  # The payload contains only public archives and versioned scripts. Copying
+  # a directory with cp -a would overwrite the destination's mode with the
+  # operator's private 0700 mode, preventing the nonroot native builder from
+  # traversing it. Keep it root-owned but readable after staging.
+  def self.staging_command(source, destination)
+    [source, destination].each do |path|
+      raise "invalid staging path" unless path.is_a?(String) && path.match?(%r{\A/(?:[A-Za-z0-9_.-]+/)*[A-Za-z0-9_.-]+\z}) &&
+        path.split("/").none? { |part| part == "." || part == ".." }
+    end
+    <<~SH
+      set -eu
+      test -d #{source}
+      test ! -L #{source}
+      test ! -e #{destination}
+      test ! -L #{destination}
+      install -d -m 0755 #{destination}
+      cp -R #{source}/. #{destination}/
+      test -z "$(find #{destination} ! -type d ! -type f -print -quit)"
+      chown -R root:root #{destination}
+      find #{destination} -type d -exec chmod 0755 {} +
+      find #{destination} -type f -exec chmod 0644 {} +
+    SH
   end
 
   def self.parse_inventory(output)
