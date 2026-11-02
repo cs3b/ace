@@ -595,6 +595,14 @@ module Ace
             return :"revoke-pending (#{e.class})"
           end
 
+          # An interrupted issue may still be executing at the forge after
+          # our HTTP client timed out or died. A 404 before that request
+          # commits is not proof that its token can never appear later.
+          if outcome == :already_invalid && token.nil? && %w[preparing revoke-pending].include?(lease["state"])
+            @store.update(lease["id"]) { |record| record["state"] = "revoke-pending" }
+            return :"revoke-pending (issue outcome remains unknown)"
+          end
+
           handoff.clear(lease["id"])
           @store.update(lease["id"]) do |record|
             record["state"] = "revoked"

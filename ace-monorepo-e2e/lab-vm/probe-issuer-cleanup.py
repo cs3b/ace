@@ -16,6 +16,7 @@ parser.add_argument("--ruby", required=True)
 parser.add_argument("--gem-home", required=True)
 parser.add_argument("--shared-gems", required=True)
 parser.add_argument("--version", required=True)
+parser.add_argument("--startup-recovery", action="store_true")
 args = parser.parse_args()
 if os.geteuid() != 0:
     parser.error("requires root inside the disposable Linux VM")
@@ -70,6 +71,10 @@ try:
     with open(bootstrap, "x") as file:
         file.write(ruby.split("if ARGV.fetch(0)=='seed'")[0])
     os.chmod(bootstrap, 0o600)
+    stop_hook = "" if args.startup_recovery else (
+        f"ExecStopPost=/bin/sh -c '{args.ruby} {args.gem_home}/gems/ace-lab-{args.version}/libexec/issuer-cleanup "
+        f"cleanup {root} {nonce}; rc=$?; echo $rc > {root}/result.tmp; mv {root}/result.tmp {root}/result; exit $rc'"
+    )
     content = f'''[Unit]
 Description=Disposable ACE actual issuer cleanup probe
 [Service]
@@ -80,7 +85,7 @@ Environment=ACE_TOOLCHAIN=installed
 Environment=ACE_E2E_GEM_VERSION={args.version}
 Environment=RUBYOPT=-r{bootstrap}
 ExecStart={args.ruby} {script} seed {root} {nonce}
-ExecStopPost=/bin/sh -c '{args.ruby} {args.gem_home}/gems/ace-lab-{args.version}/libexec/issuer-cleanup cleanup {root} {nonce}; rc=$?; echo $rc > {root}/result.tmp; mv {root}/result.tmp {root}/result; exit $rc'
+{stop_hook}
 '''
     with open(unit_file, "x") as file:
         file.write(content)
@@ -95,6 +100,34 @@ ExecStopPost=/bin/sh -c '{args.ruby} {args.gem_home}/gems/ace-lab-{args.version}
     with open(root + "/ready") as file:
         lease, path = file.read().split(" ", 1)
     subprocess.run(["/usr/bin/systemctl", "kill", "--kill-whom=main", "--signal=KILL", unit], check=True, timeout=30)
+    if args.startup_recovery:
+        for _ in range(200):
+            state = subprocess.check_output(
+                ["/usr/bin/systemctl", "show", "-p", "ActiveState", "--value", unit], text=True
+            ).strip()
+            if state in ("inactive", "failed"):
+                break
+            time.sleep(0.1)
+        else:
+            raise RuntimeError("issuer did not stop before startup recovery")
+        env = {
+            "GEM_HOME": args.gem_home,
+            "GEM_PATH": args.gem_home + ":" + args.shared_gems,
+            "ACE_TOOLCHAIN": "installed",
+            "ACE_E2E_GEM_VERSION": args.version,
+            "RUBYOPT": "-r" + bootstrap,
+            "PATH": "/usr/bin:/bin",
+        }
+        recovery = subprocess.run(
+            [args.ruby, f"{args.gem_home}/gems/ace-lab-{args.version}/libexec/issuer-recover", "cleanup", root, nonce],
+            env=env, capture_output=True, text=True, timeout=45,
+        )
+        fd = os.open(root + "/recovery.log", os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+        with os.fdopen(fd, "w") as file:
+            file.write(recovery.stdout + "\n" + recovery.stderr)
+        with open(root + "/result.tmp", "w") as file:
+            file.write(str(recovery.returncode))
+        os.replace(root + "/result.tmp", root + "/result")
     for _ in range(300):
         if os.path.exists(root + "/result"):
             break
@@ -109,7 +142,8 @@ ExecStopPost=/bin/sh -c '{args.ruby} {args.gem_home}/gems/ace-lab-{args.version}
         if json.load(file)["state"] != "revoked":
             raise RuntimeError("lease not revoked")
     passed = True
-    print("installed_sigkill_cleanup=true provider_confirmed=true handoff_removed=true")
+    path_name = "startup_recovery" if args.startup_recovery else "sigkill_cleanup"
+    print(f"installed_{path_name}=true provider_confirmed=true handoff_removed=true")
 finally:
     subprocess.run(["/usr/bin/systemctl", "stop", unit], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=30)
     try:

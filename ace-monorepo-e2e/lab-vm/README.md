@@ -107,7 +107,10 @@ python3 probe-issuer-cleanup.py --ruby /opt/ace/toolchains/ruby-VERSION/bin/ruby
 The probe removes its temporary unit and, on success, its files. On failure it
 prints the retained guest paths for diagnosis. It does not contact Forgejo or
 prove the real issuer's installation, host reboot recovery or the autonomous
-Overseer acceptance scenario.
+Overseer acceptance scenario. Add `--startup-recovery` to kill the temporary
+issuer without `ExecStopPost` and then exercise the installed startup recovery
+entry point against its remaining lease; this simulates an interrupted process
+and does not reboot the VM.
 
 `probe-forgejo-revoke.py` takes the same arguments and runs as root inside a
 provisioned working VM with `ace-e2e-forgejo.service` active. It creates a
@@ -118,6 +121,13 @@ file. On success the probe removes its temporary administrator and files; on
 failure it prints the retained guest paths and account name so an operator can
 recover any uncertain token before removing them. This is a provider probe,
 not a full autonomous cycle or a power-loss test.
+
+`probe-issuer-socket.py` takes the same arguments and creates temporary socket,
+issuer and isolated session units. It checks that the installed request entry
+point is activated by a real Unix socket, authenticates the session, and
+refuses a nonexistent profile. It cleans up only its uniquely named units and
+restores the previous Yama setting. Its successful refusal does not mean that
+session token issuance has been enabled.
 
 ### Restoring a compressed diagnostic export
 

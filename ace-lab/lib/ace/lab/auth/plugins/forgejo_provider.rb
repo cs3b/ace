@@ -114,7 +114,7 @@ module Ace
             }.compact)
             result = with_secret_header(header_value) do |header|
               @runner.call(
-                ["curl", "-sS", "-f", "-X", "POST",
+                ["curl", "-q", "--connect-timeout", "5", "--max-time", "20", "-sS", "-f", "-X", "POST",
                   "#{url}/api/v1/users/#{account}/tokens",
                   "-H", "Content-Type: application/json",
                   *header,
@@ -148,13 +148,14 @@ module Ace
             account = issuer["account"] or raise Providers::RefusedError, "forgejo profile has no role account"
             _out, err, status = with_secret_header(issuer_header(issuer)) do |header|
               @capture.call(
-                ["curl", "-sS", "-f", "-X", "DELETE",
+                ["curl", "-q", "--connect-timeout", "5", "--max-time", "20", "-sS", "-f", "-X", "DELETE",
                   "#{url}/api/v1/users/#{account}/tokens/#{token_ref}",
                   *header]
               )
             end
             return :revoked if status.success?
-            return :already_invalid if err.to_s.match?(/\b404\b/)
+            return :already_invalid if status.exitstatus == 22 &&
+              err.to_s.match?(/(?:\A|\n)curl: \(22\) The requested URL returned error: 404\s*(?:\n|\z)/)
 
             raise Providers::TransientError,
               "forgejo revoke failed: #{err.to_s.lines.first&.strip}"

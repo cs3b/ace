@@ -20,6 +20,7 @@ module Ace
           Gem.use_paths(home)
           queue = [Gem::Specification.find_by_name(ARGV.shift, ARGV.shift)]
           dry_run = ARGV.shift == "dry-run"
+          require_complete = ARGV.shift == "complete"
           seen = {}; rows = []
           until queue.empty?
             spec = queue.shift
@@ -47,28 +48,34 @@ module Ace
               rescue Gem::MissingSpecError
                 # Convergence already predicts installing absent dependencies.
                 # Validate the existing payload; do not invent future files.
-                raise unless dry_run
+                raise unless dry_run && !require_complete
               end
             end
           end
           puts JSON.generate(rows)
         CODE
 
-        def initialize(gem_home:, dry_run:, privileged:)
+        def initialize(gem_home:, dry_run:, privileged:, require_complete: false)
           @declared_home = File.expand_path(gem_home)
           raise Error, "gem runtime is a symlink" if File.symlink?(@declared_home)
           @home = File.realpath(@declared_home)
           @dry_run, @privileged = dry_run, privileged
+          @require_complete = require_complete
         end
 
         def call(name:, version:)
           # Default Ruby gems need no mutation in this runtime. With no local
           # specifications there cannot be any owned installed payload here.
-          return [] unless File.directory?(File.join(@home, "specifications"))
+          unless File.directory?(File.join(@home, "specifications"))
+            raise Error, "installed gem specifications are missing" if @require_complete
+            return []
+          end
 
           env = ENV.keys.grep(/\ABUNDLE/).to_h { |key| [key, nil] }
-          env.merge!("RUBYOPT" => nil, "RUBYLIB" => nil, "GEM_HOME" => @home, "GEM_PATH" => @home)
-          out, _err, status = Open3.capture3(env, RbConfig.ruby, "-e", INVENTORY, @home, name, version, @dry_run ? "dry-run" : "apply")
+          env.merge!("RUBYOPT" => nil, "RUBYLIB" => nil, "RUBYGEMS_GEMDEPS" => nil, "GEM_SPEC_CACHE" => nil,
+            "LD_PRELOAD" => nil, "LD_LIBRARY_PATH" => nil, "LD_AUDIT" => nil, "GEM_HOME" => @home, "GEM_PATH" => @home)
+          out, _err, status = Open3.capture3(env, RbConfig.ruby, "-e", INVENTORY, @home, name, version,
+            @dry_run ? "dry-run" : "apply", @require_complete ? "complete" : "partial")
           unless status.success?
             detail = begin
               JSON.parse(out)["error"]

@@ -47,7 +47,9 @@ module Ace
 
           assert_equal "SECRET", granted["token"]
           argv = seen.fetch(0)
-          assert_equal "https://forge.example.com/api/v1/users/lab-role-dev/tokens", argv[5]
+          assert_includes argv, "https://forge.example.com/api/v1/users/lab-role-dev/tokens"
+          assert_equal "-q", argv[1]
+          assert_equal "20", argv[argv.index("--max-time") + 1]
           assert_equal "POST", argv[argv.index("-X") + 1]
           assert_equal "Authorization: Basic #{Base64.strict_encode64("forge-admin:ISSUER-SECRET")}\nSudo: lab-role-dev", header_of
           refute_includes argv, "ISSUER-SECRET", "the issuer secret never appears in argv (ps)"
@@ -324,8 +326,8 @@ module Ace
           assert_equal :revoked,
             prov.revoke(profile: profile, token_ref: "ace-lab-lease-x")
           argv, header = captures.fetch(0)
-          assert_equal "https://forge.example.com/api/v1/users/lab-role-dev/tokens/ace-lab-lease-x",
-            argv[5]
+          assert_includes argv, "https://forge.example.com/api/v1/users/lab-role-dev/tokens/ace-lab-lease-x"
+          assert_equal "20", argv[argv.index("--max-time") + 1]
           assert_equal "DELETE", argv[argv.index("-X") + 1]
           assert_equal "Authorization: Basic #{Base64.strict_encode64("forge-admin:ISSUER-SECRET")}\nSudo: lab-role-dev", header
         end
@@ -351,6 +353,14 @@ module Ace
             prov.revoke(profile: profile, token_ref: "ace-lab-lease-x")
           end
           assert_match(/forgejo revoke failed/, error.message)
+        end
+
+        def test_revoke_timeout_is_not_a_confirmed_404
+          capture = ->(_argv) { ["", "curl: (28) timed out after 404 milliseconds", Status.new(success?: false, exitstatus: 28)] }
+          prov = Plugins::ForgejoProvider.new(capture: capture)
+          assert_raises(Providers::TransientError) do
+            prov.revoke(profile: profile, token_ref: "ace-lab-lease-x")
+          end
         end
       end
     end

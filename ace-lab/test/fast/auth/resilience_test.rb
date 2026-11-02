@@ -409,6 +409,21 @@ module Ace
       assert_empty stuck.revoked
     end
 
+    def test_not_found_after_unknown_issue_does_not_prove_the_inflight_request_finished
+      @flaky.issue_fails = 1
+      svc = service
+      request = -> { svc.request(profile_name: "developer", role: "developer", task: "t", assignment: "a", repos: %w[ace]) }
+      assert_raises(Ace::Lab::Error) { request.call }
+      interrupted = svc.store.all.fetch(0)
+      checked = []
+      @flaky.stub(:revoke, ->(token_ref:, **) { checked << token_ref; :already_invalid }) do
+        assert_raises(Ace::Lab::Auth::Refusal) { request.call }
+        assert_equal "revoke-pending", svc.store.load(interrupted.fetch("id"))["state"]
+        assert_empty @flaky.issued
+        assert_equal [interrupted.fetch("token_ref")], checked
+      end
+    end
+
     # R5 (re-review): with a DETERMINISTIC remote identity (the
     # Forgejo shape), the retry settles the unknown-issue predecessor
     # through its recorded reference BEFORE minting — at most one

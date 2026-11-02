@@ -470,6 +470,20 @@ module Molecules
       end
     end
 
+    def test_strict_dry_run_rejects_an_incomplete_dependency_closure
+      Dir.mktmpdir do |dir|
+        gem_home = build_and_install_gem(dir, "ace-lab-closure-probe", "1.0.0",
+          dependencies: {"ace-lab-missing-probe" => ">= 1.0"}, ignore_dependencies: true)
+        ordinary = Ace::Lab::Molecules::GemPayloadPermissions.new(gem_home: gem_home, dry_run: true, privileged: false)
+        assert_kind_of Array, ordinary.call(name: "ace-lab-closure-probe", version: "1.0.0")
+        strict = Ace::Lab::Molecules::GemPayloadPermissions.new(gem_home: gem_home, dry_run: true,
+          privileged: false, require_complete: true)
+        assert_raises(Ace::Lab::Molecules::GemPayloadPermissions::Error) do
+          strict.call(name: "ace-lab-closure-probe", version: "1.0.0")
+        end
+      end
+    end
+
     def test_real_runtime_dry_run_predicts_update_for_a_different_declared_version
       Dir.mktmpdir do |dir|
         gem_home = build_and_install_gem(dir, "ace-lab-probe", "0.12.0")
