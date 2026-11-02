@@ -38,6 +38,8 @@ configuration and readiness to start. Do not require a running project
 Overseer, a first turn, or active project eyes in either worker assignment:
 those are the coordinator's confirm-start checks after verification. Workers
 must not start the project Overseer themselves. This prevents a circular gate.
+The project's private task directory is `<project>/.ace-tasks/_overseer`;
+never require or create a top-level `<project>/_overseer` directory.
 
 Put all commission and supporting files in the executable task's own tracked
 folder, never in the private `_overseer` tree. Before preparing its worktree,
