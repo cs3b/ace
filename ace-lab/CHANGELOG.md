@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and require the response to confirm the requested scopes and repositories.
   The previously documented administrator-token endpoint is unavailable in
   Forgejo 15; issuer credentials remain restricted to the host issuer.
+  Reject malformed issuer origins, remote HTTP and invalid token responses.
 - Preserve the selected installed ACE toolchain and gem paths in leased child
   processes while continuing to strip ambient credential overrides.
 - Project a Forgejo lease into an isolated, temporary `fj` login and Git

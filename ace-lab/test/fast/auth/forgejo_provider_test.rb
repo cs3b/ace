@@ -257,6 +257,21 @@ module Ace
           assert_empty seen
         end
 
+        def test_missing_issuer_is_refused_before_network
+          config = profile
+          config.delete("issuer")
+          prov = provider
+          assert_raises(Providers::RefusedError) do
+            prov.issue(profile: config, lease: {"id" => "lease-x", "repos" => %w[cs3b/ace]})
+          end
+          assert_empty seen
+          prov.stub(:linux_xdg?, true) do
+            assert_raises(Providers::RefusedError) do
+              prov.with_exec_environment(profile: config, credential: "/unused") { flunk }
+            end
+          end
+        end
+
         def test_rejects_plain_http_to_non_loopback_issuer
           config = profile
           config["issuer"]["url"] = "http://forge.example.com"

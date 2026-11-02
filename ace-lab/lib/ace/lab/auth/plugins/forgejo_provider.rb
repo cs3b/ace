@@ -44,11 +44,12 @@ module Ace
             unless linux_xdg?
               raise Providers::RefusedError, "forgejo session projection currently requires Linux XDG data directories"
             end
-            url = issuer_origin!(profile.fetch("issuer"))
+            issuer = profile["issuer"]
+            url = issuer_origin!(issuer)
             host = url.hostname
             authority = host.include?(":") ? "[#{host}]" : host
             authority += ":#{url.port}" if url.port != url.default_port
-            account = profile.fetch("issuer")["account"].to_s
+            account = issuer["account"].to_s
             raise Providers::RefusedError, "forgejo role account is invalid" unless account.match?(/\A[a-zA-Z0-9_.-]+\z/)
             token = begin
               File.read(credential).strip
@@ -86,7 +87,7 @@ module Ace
           end
 
           def issue(profile:, lease:)
-            issuer = profile.fetch("issuer")
+            issuer = profile["issuer"]
             url = issuer_origin!(issuer).to_s.chomp("/")
             account = issuer["account"] or raise Providers::RefusedError, "forgejo profile has no role account"
             header_value = issuer_header(issuer)
@@ -132,7 +133,7 @@ module Ace
           # contract. 404 is the idempotent already-invalid result —
           # deterministic recovery of an interrupted issue.
           def revoke(profile:, token_ref:, token: nil)
-            issuer = profile.fetch("issuer")
+            issuer = profile["issuer"]
             url = issuer_origin!(issuer).to_s.chomp("/")
             account = issuer["account"] or raise Providers::RefusedError, "forgejo profile has no role account"
             _out, err, status = with_secret_header(issuer_header(issuer)) do |header|
@@ -156,6 +157,7 @@ module Ace
           end
 
           def issuer_origin!(issuer)
+            raise Providers::RefusedError, "forgejo issuer is invalid" unless issuer.is_a?(Hash)
             url = URI.parse(issuer.fetch("url"))
             unless %w[http https].include?(url.scheme) && url.host && url.userinfo.nil? &&
                 ["", "/"].include?(url.path.to_s) && url.query.nil? && url.fragment.nil?

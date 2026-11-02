@@ -73,7 +73,7 @@ class LabVmArtifactsTest < AceMonorepoE2eTestCase
     File.write(File.join(@cache, "ace-lab-0.14.2.pre.test.gem"), @data)
     out, err, result = run_fetcher
     assert result.success?, err
-    assert_equal 6, JSON.parse(out).fetch("cached")
+    assert_equal 5 + release.fetch("gems").size, JSON.parse(out).fetch("cached")
     release["gems"][0]["source_commit"] = "not-a-commit"
     File.write(path, JSON.generate(release))
     _out, err, result = run_fetcher
