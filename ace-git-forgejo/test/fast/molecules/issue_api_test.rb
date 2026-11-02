@@ -77,6 +77,19 @@ class ForgejoIssueApiTest < AceGitForgejoTestCase
     assert_match(/repeated a page/, error.message)
   end
 
+  def test_issue_listing_refuses_blank_titles_or_non_open_issues
+    base = {"id" => 1, "number" => 1, "title" => "First", "state" => "open",
+      "html_url" => "https://forge.example.com/owner/repo/issues/1"}
+    [{"title" => " "}, {"state" => "closed"}].each do |change|
+      runner = lambda do |args:, **_rest|
+        entries = args[2].include?("page=1") ? [base.merge(change)] : []
+        {success: true, status: 200, stdout: entries.to_json}
+      end
+      provider = Ace::Git::Forgejo::Provider.new(server: SERVER, runner: runner)
+      assert_raises(Ace::Git::ProviderMalformedOutputError) { provider.recent_issues(limit: 10) }
+    end
+  end
+
   def test_issue_listing_collects_multiple_distinct_pages
     runner = lambda do |args:, **_rest|
       page = args[2][/page=(\d+)/, 1].to_i
