@@ -39,7 +39,7 @@ for name, wanted in files:
         raise SystemExit('checksum mismatch: ' + name)
 print('verified', len(files), 'artifacts')
 PY
-chmod 0644 "$input"/artifacts/*
+find "$input/artifacts" -mindepth 1 -maxdepth 1 -type f -exec chmod 0644 {} +
 chmod 0755 "$input/artifacts/rustup-init"
 
 export DEBIAN_FRONTEND=noninteractive
@@ -126,8 +126,10 @@ overseer_version=$(python3 -c 'import json,sys; print(next(g["version"] for g in
 pi_integration_version=$(python3 -c 'import json,sys; print(next(g["version"] for g in json.load(open(sys.argv[1]))["gems"] if g["name"] == "ace-handbook-integration-pi"))' "$input/release-manifest.json")
 gem install --local --no-document "./ace-overseer-$overseer_version.gem"
 gem install --local --no-document "./ace-handbook-integration-pi-$pi_integration_version.gem"
-ruby - "$forgejo_version" "$lab_version" "$herdr_version" "$overseer_version" "$pi_integration_version" <<'RUBY'
-%w[ace-git-forgejo ace-lab ace-herdr ace-overseer ace-handbook-integration-pi].zip(ARGV).each do |name, version|
+wake_version=$(python3 -c 'import json,sys; print(next(g["version"] for g in json.load(open(sys.argv[1]))["gems"] if g["name"] == "ace-wake"))' "$input/release-manifest.json")
+gem install --local --no-document "./ace-wake-$wake_version.gem"
+ruby - "$forgejo_version" "$lab_version" "$herdr_version" "$overseer_version" "$pi_integration_version" "$wake_version" <<'RUBY'
+%w[ace-git-forgejo ace-lab ace-herdr ace-overseer ace-handbook-integration-pi ace-wake].zip(ARGV).each do |name, version|
   gem name, "= #{version}"
   abort "pinned #{name} did not activate" unless Gem.loaded_specs.fetch(name).version.to_s == version
 end

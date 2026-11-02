@@ -38,7 +38,10 @@ and unprivileged native Herdr build. The pinned ARM64 Herdr binary and its
 provenance can be reused from a private local artifact cache; both hashes and
 `ace-herdr native-source verify` are checked before use. If the cache is
 absent, the same source build is performed and must match the pinned hashes
-before being cached. A corrupted or partially present cache blocks provisioning.
+before being cached. A corrupted, stale or partially present cache blocks provisioning.
+The cache is `.ace-local/lab-vm/artifacts/herdr-native`; after changing the pinned
+Herdr build, move the old cache aside so the next build can establish the new
+artifact, and retain it if it is needed as evidence.
 This provisioning path is still being validated. It does not configure Pi credentials, create a Forgejo fixture or
 run an E2E scenario. Downloaded inputs or successful provisioning alone are not
 proof that ACE is operational.

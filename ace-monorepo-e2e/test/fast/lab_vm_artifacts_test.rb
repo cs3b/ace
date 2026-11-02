@@ -67,10 +67,10 @@ class LabVmArtifactsTest < AceMonorepoE2eTestCase
   def test_local_candidate_is_pinned_and_never_downloaded_from_rubygems
     path = File.join(@fixture, "release-manifest.json")
     release = JSON.parse(File.read(path))
-    release["gems"] << {"name" => "ace-lab", "version" => "0.14.2.pre.test",
+    release["gems"] << {"name" => "ace-wake", "version" => "0.2.1.pre.test",
       "source" => "local", "source_commit" => "a" * 40, "sha256" => Digest::SHA256.hexdigest(@data)}
     File.write(path, JSON.generate(release))
-    File.write(File.join(@cache, "ace-lab-0.14.2.pre.test.gem"), @data)
+    File.write(File.join(@cache, "ace-wake-0.2.1.pre.test.gem"), @data)
     out, err, result = run_fetcher
     assert result.success?, err
     assert_equal 5 + release.fetch("gems").size, JSON.parse(out).fetch("cached")
