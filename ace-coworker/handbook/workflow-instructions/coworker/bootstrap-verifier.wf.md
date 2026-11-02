@@ -34,8 +34,8 @@ coordinator, not permission to borrow an account or change ownership.
 
 Drive the pinned ace-assign step through start/finish/fail. Store evidence in
 the executable task's docs. Run each `ace-*` check directly, without a pipe or
-redirection, and record its actual exit status and output. Never use the exit
-status of `head`, another pipeline command or `echo` as the check's result.
+redirection, and record its actual exit status and output in task docs; when
+it prints a file path, read that file. Never use the exit status of `head`, another pipeline command or `echo` as the check's result.
 Failed, unavailable or inconclusive required checks block success.
 Use `ace-coworker report --config <returned path>` for the truthful assignment
 outcome. A process exit, prepared config or printed CLI brief is not completion.
