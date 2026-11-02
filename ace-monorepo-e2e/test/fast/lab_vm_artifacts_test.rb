@@ -63,4 +63,21 @@ class LabVmArtifactsTest < AceMonorepoE2eTestCase
     assert_includes err, "unpinned npm artifact"
     assert_equal @data, File.read(File.join(@cache, "ruby.tar.gz"))
   end
+
+  def test_local_candidate_is_pinned_and_never_downloaded_from_rubygems
+    path = File.join(@fixture, "release-manifest.json")
+    release = JSON.parse(File.read(path))
+    release["gems"] << {"name" => "ace-lab", "version" => "0.14.2.pre.test",
+      "source" => "local", "source_commit" => "a" * 40, "sha256" => Digest::SHA256.hexdigest(@data)}
+    File.write(path, JSON.generate(release))
+    File.write(File.join(@cache, "ace-lab-0.14.2.pre.test.gem"), @data)
+    out, err, result = run_fetcher
+    assert result.success?, err
+    assert_equal 6, JSON.parse(out).fetch("cached")
+    release["gems"][0]["source_commit"] = "not-a-commit"
+    File.write(path, JSON.generate(release))
+    _out, err, result = run_fetcher
+    refute result.success?
+    assert_includes err, "invalid local gem build source"
+  end
 end

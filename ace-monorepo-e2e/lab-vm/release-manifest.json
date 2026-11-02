@@ -77,9 +77,10 @@
     },
     {
       "name": "ace-herdr",
-      "version": "0.9.0",
-      "sha256": "c4badf26f19542895a474c9c62bdb81aa6014d0018a3935f0124687a70ad769e",
-      "source": "https://rubygems.org"
+      "version": "0.9.1.pre.utm1",
+      "sha256": "9b90bc7566db45e4b00c61c2f19c0f098611c0d483c3c741d3f6f0568cd16a8b",
+      "source": "local",
+      "source_commit": "3039d3bb0f96506f44084d1725365e18dfbfd969"
     },
     {
       "name": "ace-hitl",
@@ -101,9 +102,10 @@
     },
     {
       "name": "ace-lab",
-      "version": "0.14.1",
-      "sha256": "4fe436ed7bcecbf5da87f5c77cc596a8460744b8bd2fe364452c10277bef6c38",
-      "source": "https://rubygems.org"
+      "version": "0.14.2.pre.utm7",
+      "sha256": "a365c9e3c4cebfac95d62873c6ce04ad5638f9da7118c3f2100f67c80e6cb210",
+      "source": "local",
+      "source_commit": "156503d58c87c7196bda61bc16b332be50932a25"
     },
     {
       "name": "ace-llm",

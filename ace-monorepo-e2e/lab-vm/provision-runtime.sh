@@ -59,7 +59,7 @@ for archive, suite, key in [('debian', 'trixie', 'debian_release_sha256'),
 open('/var/lib/ace-e2e/debian-snapshot.list', 'w').writelines(lines)
 PY
 apt-get -o Dir::Etc::sourcelist=/var/lib/ace-e2e/debian-snapshot.list -o Dir::Etc::sourceparts=- update
-apt-get -o Dir::Etc::sourcelist=/var/lib/ace-e2e/debian-snapshot.list -o Dir::Etc::sourceparts=- install -y build-essential ca-certificates curl gh git libssl-dev zlib1g-dev \
+apt-get -o Dir::Etc::sourcelist=/var/lib/ace-e2e/debian-snapshot.list -o Dir::Etc::sourceparts=- install -y build-essential ca-certificates curl git libssl-dev zlib1g-dev \
   libyaml-dev libreadline-dev libffi-dev libgdbm-dev libncurses-dev libgmp-dev \
   pkg-config xz-utils musl-tools
 mkdir -p "$runtime/toolchains" "$runtime/runtime" /var/lib/ace-e2e/build
@@ -95,7 +95,14 @@ mkdir -p "$GEM_HOME" /var/lib/ace-e2e/gem-repository/gems
 # checked independently. Listing every transitive dependency as another root
 # makes ace-lab traverse the same closures repeatedly on every reset.
 ruby "$input/gem-graph.rb" "$input/release-manifest.json" "$input/artifacts" /var/lib/ace-e2e/install-roots.json
-cp "$input"/artifacts/*.gem /var/lib/ace-e2e/gem-repository/gems/
+python3 - "$input/release-manifest.json" "$input/artifacts" /var/lib/ace-e2e/gem-repository/gems <<'PY'
+import json, pathlib, shutil, sys
+manifest = json.load(open(sys.argv[1]))
+source, destination = map(pathlib.Path, sys.argv[2:])
+for gem in manifest['gems']:
+    name = gem['name'] + '-' + gem['version'] + '.gem'
+    shutil.copyfile(source / name, destination / name)
+PY
 cd /var/lib/ace-e2e/gem-repository/gems
 cat > /root/.gemrc <<'EOF'
 ---
@@ -106,6 +113,10 @@ gem install --local --no-document "./builder-$builder_version.gem"
 gem install --local --no-document "./rubygems-generate_index-$index_version.gem"
 gem generate_index --directory /var/lib/ace-e2e/gem-repository
 gem install --local --no-document "./ace-lab-$lab_version.gem"
+# Explicitly activate the pinned prerelease builder before other roots resolve
+# dependencies; RubyGems does not otherwise select prereleases implicitly.
+herdr_version=$(python3 -c 'import json,sys; print(next(g["version"] for g in json.load(open(sys.argv[1]))["gems"] if g["name"] == "ace-herdr"))' "$input/release-manifest.json")
+gem install --local --no-document "./ace-herdr-$herdr_version.gem"
 
 # The installer is the state owner for the operational gem set. Its source is
 # the verified local repository, so transitive fetches cannot escape the pin.

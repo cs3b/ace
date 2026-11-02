@@ -27,7 +27,11 @@ Provisioning requires at least 25 GiB of free host disk.
 
 `bin/lab-vm-artifacts` downloads the release manifest's public gem, Ruby, Node,
 Zig and Rust bootstrap archives and rejects any checksum mismatch. The Pi npm
-lockfile pins its dependency graph and integrity hashes. `bin/lab-vm-runtime
+lockfile pins its dependency graph and integrity hashes. Locally built test
+gems are rebuilt from the manifest's exact commits by `bin/lab-vm-build-gem`
+and must match their pinned hashes; they are never published. The operational
+gem repository is populated only from manifest entries, not every cached gem.
+`bin/lab-vm-runtime
 provision` starts a fresh work clone, verifies its SSH host key via the QEMU
 guest agent, copies these inputs and invokes the guest-side runtime installer
 and unprivileged native Herdr build. This provisioning path is still being

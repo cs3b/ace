@@ -24,6 +24,7 @@ module LabVm
   RUNTIME_INPUTS = %w[
     ace-monorepo-e2e/bin/lab-vm
     ace-monorepo-e2e/bin/lab-vm-artifacts
+    ace-monorepo-e2e/bin/lab-vm-build-gem
     ace-monorepo-e2e/bin/lab-vm-runtime
     ace-monorepo-e2e/lab-vm/profile.yml
     ace-monorepo-e2e/lab-vm/release-manifest.json

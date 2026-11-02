@@ -75,7 +75,7 @@ begin
       code, output = LabVm.guest_exec(uuid, "/bin/sh", "/var/lib/ace-e2e/input/provision-runtime.sh", timeout_s: 7200)
       puts output
       raise "runtime provisioning failed; working VM preserved" unless code.zero?
-      code, output = LabVm.guest_exec(uuid, "/usr/sbin/runuser", "-u", "lab-operator", "--", "/bin/sh", "/var/lib/ace-e2e/input/build-herdr.sh", timeout_s: 5400)
+      code, output = LabVm.guest_exec(uuid, "/usr/sbin/runuser", "-u", "lab-operator", "--", "/bin/sh", "/var/lib/ace-e2e/input/build-herdr.sh", timeout_s: 10800)
       puts output
       raise "Herdr build failed; working VM preserved" unless code.zero?
       install = <<~SH

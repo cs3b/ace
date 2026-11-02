@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-# Rebuild the test-only ace-lab artifact from an immutable source commit.
+# Rebuild a test-only operational artifact from an immutable source commit.
 require "fileutils"
 require "tmpdir"
 require "open3"
@@ -16,8 +16,9 @@ def checked(*args, chdir: nil, env: {})
 end
 
 begin
-  raise "usage: lab-vm-build-lab-gem FULL_COMMIT VERSION" unless ARGV.length == 2
-  commit, version = ARGV
+  raise "usage: lab-vm-build-gem PACKAGE FULL_COMMIT VERSION" unless ARGV.length == 3
+  package, commit, version = ARGV
+  namespace = {"ace-lab" => "lab", "ace-herdr" => "herdr"}.fetch(package) { raise "unsupported local gem" }
   raise "full commit SHA required" unless commit.match?(/\A[0-9a-f]{40}\z/)
   raise "invalid test version" unless version.match?(/\A[0-9]+(?:\.[a-zA-Z0-9]+)+\z/)
   actual = checked("git", "rev-parse", "#{commit}^{commit}", chdir: LabVm::ROOT)
@@ -25,36 +26,39 @@ begin
   epoch = checked("git", "show", "-s", "--format=%ct", commit, chdir: LabVm::ROOT)
   raise "invalid commit timestamp" unless epoch.match?(/\A[0-9]+\z/)
   cache = File.join(LabVm.local_dir, "artifacts")
-  FileUtils.mkdir_p(cache, mode: 0o700)
-  destination = File.join(cache, "ace-lab-#{version}.gem")
+  raise "artifact cache is a symlink" if File.symlink?(cache)
+  Dir.mkdir(cache, 0o700) unless File.exist?(cache)
+  info = File.stat(cache)
+  raise "artifact cache is not private and owned" unless info.directory? && info.uid == Process.uid && (info.mode & 0o077).zero?
+  destination = File.join(cache, "#{package}-#{version}.gem")
   raise "output path is a symlink" if File.symlink?(destination)
   Dir.mktmpdir("lab-gem-build-", LabVm.local_dir) do |dir|
     archive = File.join(dir, "source.tar")
-    checked("git", "archive", "--format=tar", "--output=#{archive}", commit, "ace-lab", chdir: LabVm::ROOT)
+    checked("git", "archive", "--format=tar", "--output=#{archive}", commit, package, chdir: LabVm::ROOT)
     checked("tar", "-xf", archive, "-C", dir)
-    source = File.join(dir, "ace-lab")
-    version_file = File.join(source, "lib/ace/lab/version.rb")
+    source = File.join(dir, package)
+    version_file = File.join(source, "lib/ace/#{namespace}/version.rb")
     original = File.read(version_file)
     updated = original.sub(/VERSION = "[^"]+"/, "VERSION = \"#{version}\"")
     raise "version declaration not found" if updated == original
     File.write(version_file, updated)
-    gemspec = File.join(source, "ace-lab.gemspec")
+    gemspec = File.join(source, "#{package}.gemspec")
     original = File.read(gemspec)
     updated = original.sub('spec.date = Time.now.utc.strftime("%Y-%m-%d")', "spec.date = Time.at(#{epoch}).utc.strftime(\"%Y-%m-%d\")")
     raise "gemspec release date declaration not found" if updated == original
     File.write(gemspec, updated)
     candidate = File.join(dir, "candidate.gem")
-    checked("gem", "build", "ace-lab.gemspec", "-o", candidate, chdir: source, env: {"SOURCE_DATE_EPOCH" => epoch})
+    checked("gem", "build", "#{package}.gemspec", "-o", candidate, chdir: source, env: {"SOURCE_DATE_EPOCH" => epoch})
     digest = Digest::SHA256.file(candidate).hexdigest
     if File.exist?(destination)
       raise "existing artifact has a different SHA-256; refusing overwrite" unless File.file?(destination) && Digest::SHA256.file(destination).hexdigest == digest
     else
       File.rename(candidate, destination)
     end
-    puts JSON.pretty_generate({"name" => "ace-lab", "version" => version, "source_commit" => commit,
+    puts JSON.pretty_generate({"name" => package, "version" => version, "source_commit" => commit,
       "source_date_epoch" => epoch.to_i, "sha256" => digest, "artifact" => destination})
   end
 rescue StandardError => error
-  warn "lab-vm-build-lab-gem: #{error.message}"
+  warn "lab-vm-build-gem: #{error.message}"
   exit 1
 end

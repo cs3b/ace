@@ -9,6 +9,7 @@ import os
 from pathlib import Path
 import re
 import tempfile
+import subprocess
 import urllib.parse
 import urllib.request
 
@@ -33,10 +34,17 @@ def inventory():
         name, version = item["name"], item["version"]
         if not re.fullmatch(r"[a-zA-Z0-9_-]+", name) or not re.fullmatch(r"[a-zA-Z0-9.]+", version):
             raise ValueError("invalid gem name or version")
-        if item["source"] != "https://rubygems.org":
-            raise ValueError("unexpected gem source")
         filename = f"{name}-{version}.gem"
-        entries.append((filename, f"https://rubygems.org/downloads/{filename}", item["sha256"]))
+        if item["source"] == "https://rubygems.org":
+            url = f"https://rubygems.org/downloads/{filename}"
+        elif item["source"] == "local":
+            commit = item.get("source_commit", "")
+            if name not in ("ace-lab", "ace-herdr") or not re.fullmatch(r"[a-f0-9]{40}", commit):
+                raise ValueError("invalid local gem build source")
+            url = f"local:{name}:{version}:{commit}"
+        else:
+            raise ValueError("unexpected gem source")
+        entries.append((filename, url, item["sha256"]))
     for key in ("ruby_source", "node", "zig", "rustup"):
         item = manifest[key]
         parsed = urllib.parse.urlsplit(item["url"])
@@ -86,6 +94,13 @@ def fetch(entry):
     destination = CACHE / name
     if verified(destination, expected):
         return name, "cached"
+    if url.startswith("local:"):
+        _, package, version, commit = url.split(":")
+        builder = ROOT / "ace-monorepo-e2e" / "bin" / "lab-vm-build-gem"
+        subprocess.run([str(builder), package, commit, version], check=True, stdout=subprocess.DEVNULL)
+        if not verified(destination, expected):
+            raise ValueError(f"local build SHA-256 mismatch for {name}")
+        return name, "built"
     fd, temporary = tempfile.mkstemp(prefix=".download-", dir=CACHE)
     try:
         digest = hashlib.sha256()
@@ -121,6 +136,7 @@ def main():
     with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
         results = list(executor.map(fetch, entries))
     print(json.dumps({"artifacts": len(results), "downloaded": sum(s == "downloaded" for _, s in results),
+                      "built": sum(s == "built" for _, s in results),
                       "cached": sum(s == "cached" for _, s in results), "cache": str(CACHE)}, indent=2))
 
 
